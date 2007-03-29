@@ -1,22 +1,22 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 02/12] ipr: Remove auto RAID create module parameter
-Date: Thu, 29 Mar 2007 12:42:47 -0500
-Message-ID: <200703291742.l2THglM6018053@d03av04.boulder.ibm.com>
+Subject: [PATCH 04/12] ipr: Enable logging of debug error data for all devices
+Date: Thu, 29 Mar 2007 12:43:01 -0500
+Message-ID: <200703291743.l2THh3o8029555@d03av02.boulder.ibm.com>
 References: <11751901593854-patch-mail.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:47082 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934278AbXC2Rmu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 13:42:50 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2THgmXC012376
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:42:48 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2THgmx7170560
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 11:42:48 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2THgmZl018106
-	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 11:42:48 -0600
+Received: from e34.co.us.ibm.com ([32.97.110.152]:35087 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934308AbXC2RnF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 13:43:05 -0400
+Received: from westrelay02.boulder.ibm.com (westrelay02.boulder.ibm.com [9.17.195.11])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2THh4fI019499
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 13:43:04 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by westrelay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2THh4vU122546
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 11:43:04 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2THh3D1029594
+	for <linux-scsi@vger.kernel.org>; Thu, 29 Mar 2007 11:43:04 -0600
 In-Reply-To: <11751901593854-patch-mail.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -24,42 +24,46 @@ To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
-Remove the auto RAID 0 array creation module parameter, since
-support for this function has been removed from the firmware.
+The ipr driver has a sysfs attribute which can be used to
+adjust the logging level of the driver for error events.
+The error response data for commands can be dumped by
+increasing the logging level of the ipr driver. This
+currently only works for JBOD passthrough devices.
+This patch enables this function for all devices, including
+RAID devices, to aid in debugging problems.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- linux-2.6-bjking1/drivers/scsi/ipr.c |    5 -----
- 1 files changed, 5 deletions(-)
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_remove_auto_create drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_remove_auto_create	2007-03-23 15:21:41.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-03-23 15:21:41.000000000 -0500
-@@ -92,7 +92,6 @@ static unsigned int ipr_fastfail = 0;
- static unsigned int ipr_transop_timeout = 0;
- static unsigned int ipr_enable_cache = 1;
- static unsigned int ipr_debug = 0;
--static int ipr_auto_create = 1;
- static DEFINE_SPINLOCK(ipr_driver_lock);
+diff -puN drivers/scsi/ipr.c~ipr_dump_vset_ioasa drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_dump_vset_ioasa	2007-03-23 15:24:12.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-03-23 15:24:12.000000000 -0500
+@@ -4473,6 +4473,9 @@ static void ipr_dump_ioasa(struct ipr_io
+ 		if (ioasa->ilid != 0)
+ 			return;
  
- /* This table describes the differences between DMA controller chips */
-@@ -159,8 +158,6 @@ module_param_named(enable_cache, ipr_ena
- MODULE_PARM_DESC(enable_cache, "Enable adapter's non-volatile write cache (default: 1)");
- module_param_named(debug, ipr_debug, int, 0);
- MODULE_PARM_DESC(debug, "Enable device driver debugging logging. Set to 1 to enable. (default: 0)");
--module_param_named(auto_create, ipr_auto_create, int, 0);
--MODULE_PARM_DESC(auto_create, "Auto-create single device RAID 0 arrays when initialized (default: 1)");
- MODULE_LICENSE("GPL");
- MODULE_VERSION(IPR_DRIVER_VERSION);
++		if (!ipr_is_gscsi(res))
++			return;
++
+ 		if (ipr_error_table[error_index].log_ioasa == 0)
+ 			return;
+ 	}
+@@ -4632,11 +4635,11 @@ static void ipr_erp_start(struct ipr_ioa
+ 		return;
+ 	}
  
-@@ -7116,8 +7113,6 @@ static void __devinit ipr_init_ioa_cfg(s
- 	ioa_cfg->pdev = pdev;
- 	ioa_cfg->log_level = ipr_log_level;
- 	ioa_cfg->doorbell = IPR_DOORBELL;
--	if (!ipr_auto_create)
--		ioa_cfg->doorbell |= IPR_RUNTIME_RESET;
- 	sprintf(ioa_cfg->eye_catcher, IPR_EYECATCHER);
- 	sprintf(ioa_cfg->trace_start, IPR_TRACE_START_LABEL);
- 	sprintf(ioa_cfg->ipr_free_label, IPR_FREEQ_LABEL);
+-	if (ipr_is_gscsi(res))
+-		ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
+-	else
++	if (!ipr_is_gscsi(res))
+ 		ipr_gen_sense(ipr_cmd);
+ 
++	ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
++
+ 	switch (ioasc & IPR_IOASC_IOASC_MASK) {
+ 	case IPR_IOASC_ABORTED_CMD_TERM_BY_HOST:
+ 		if (ipr_is_naca_model(res))
 _
