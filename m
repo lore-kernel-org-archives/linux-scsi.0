@@ -1,114 +1,155 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: Panics for AACRAID driver during 'insmod' for kexec
-	test.
-Date: Thu, 29 Mar 2007 08:41:56 +0530
-Message-ID: <20070329031156.GA9582@in.ibm.com>
-References: <20070328215432.GE25856@shell0.pdx.osdl.net>
-Reply-To: vgoyal@in.ibm.com
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [patch 3/3] libata: handle AN interrupt
+Date: Thu, 29 Mar 2007 08:38:07 -0400
+Message-ID: <460BB32F.8030904@emulex.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fastboot-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <20070328215432.GE25856@shell0.pdx.osdl.net>
-List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linux-foundation.org/pipermail/fastboot>
-List-Post: <mailto:fastboot@lists.linux-foundation.org>
-List-Help: <mailto:fastboot-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/fastboot>,
-	<mailto:fastboot-request@lists.linux-foundation.org?subject=subscribe>
-Sender: fastboot-bounces@lists.linux-foundation.org
-Errors-To: fastboot-bounces@lists.linux-foundation.org
-To: Judith Lebzelter <judith@linux-foundation.org>
-Cc: aacraid@adaptec.com, fastboot@lists.osdl.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:40516 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753410AbXC2Mid (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 08:38:33 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Mar 28, 2007 at 02:54:32PM -0700, Judith Lebzelter wrote:
-> Hello, =
+fyi...
 
-> =
+For FC, we have several async events, and allow for LLDDs to send their own
+data or augment the generic transport event w/ additional LLDD-data. The
+infrastructure is implemented generically within the scsi midlayer.
+We are using Netlink w/ broadcasts to deliver the events rather than kobject_uevent().
+We considered using a variant of kobject events, but the general consensus was
+we didn't want to wrap transport events into the kobject infrastructure, and using
+netlink natively allowed for transport data to be sent with the event. Additionally,
+with the broadcast, we could support any number of tools concurrently listening for
+change events. To date, this has worked very well. You may want to consider this,
+especially if the types of events is expected to grow beyond the simple "change"
+notification.
 
-> I have been running a series of kexec tests using LKDTT on the =
-
-> aacraid driver on this card (ASR-4805SAS (Marauder-E)) on x86_64
-> using the latest top of scsi-misc git-tree(as of yesterday), and =
-
-> I have found that it is not coming up consistantly when booted =
-
-> through kexec.
-> =
-
-> I have included 4 different types of failures I found here because =
-
-> I assume they might be related, and thought maybe there could =
-
-> be an issue with the card's state on reboot (through kexec).
-> =
-
-> The most common problem is this oops/panic, which has happened =
-
-> with various types of crash points (6 times out of 40):
-> =
-
-> Loading aacraid.Adaptec aacraid driver (1.1-5[2437]-mh4)^M
-> ko module^M
-> ACPI: PCI Interrupt 0000:03:0e.0[A] -> Link [LNKC] -> GSI 3 (level, low) =
--> IRQ 3^M
-> general protection fault: 0000 [1] ^M
-> CPU 0 ^M
-> Modules linked in: aacraid^M
-> Pid: 0, comm: swapper Not tainted 2.6.21-rc3-kdump #1^M
-> RIP: 0010:[<ffffffff88008a99>]  [<ffffffff88008a99>] :aacraid:aac_intr_no=
-rmal+0x17a/0x1b1^M
-> RSP: 0000:ffffffff81523ed8  EFLAGS: 00010006^M
-> RAX: ffff810004102000 RBX: ffff8100014f01e0 RCX: 0000000000000086^M
-> RDX: ffff810004041540 RSI: ffff8100014f01e0 RDI: cccccccccccccccc^M
-> RBP: ffff810004702cd8 R08: 00000000a6037e6c R09: 00000016001562d7^M
-> R10: 0000000000000023 R11: 0000000000000000 R12: 0000000000000011^M
-> R13: ffff810004702cd8 R14: ffff810004001400 R15: 0000000000000000^M
-> FS:  0000000000000000(0000) GS:ffffffff814d5000(0000) knlGS:0000000000000=
-000^M
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b^M
-> CR2: 00000000006ba5a0 CR3: 000000000474d000 CR4: 00000000000006e0^M
-> Process swapper (pid: 0, threadinfo ffffffff814e4000, task ffffffff814703=
-60)^M
-> Stack:  0000000000000011 ffff810004702cd8 0000000000000100 00000000000000=
-03^M
->  0000000000000001 ffffffff88009470 0000000000000000 ffff810004041540^M
->  ffffffff814d5080 ffffffff810428f4 0000000000000000 ffffffff814d5080^M
-> Call Trace:^M
->  <IRQ>  [<ffffffff88009470>] :aacraid:aac_rx_intr_message+0x2c/0x60^M
->  [<ffffffff810428f4>] note_interrupt+0xd3/0x1db^M
->  [<ffffffff8104319b>] handle_level_irq+0x7e/0xab^M
->  [<ffffffff8100b0b1>] do_IRQ+0xd7/0x132^M
->  [<ffffffff810085a1>] mwait_idle+0x0/0x43^M
->  [<ffffffff81009651>] ret_from_intr+0x0/0xa^M
->  <EOI>  [<ffffffff810085e0>] mwait_idle+0x3f/0x43^M
->  [<ffffffff81008540>] cpu_idle+0x3d/0x5c^M
->  [<ffffffff814e78d2>] start_kernel+0x28f/0x29b^M
->  [<ffffffff814e7140>] _sinittext+0x140/0x144^M
-> ^M
-> ^M
-> Code: ff 53 38 eb 20 9c 58 fa 83 7b 30 00 75 07 c7 43 30 01 00 00 ^M
-> RIP  [<ffffffff88008a99>] :aacraid:aac_intr_normal+0x17a/0x1b1^M
-> Kernel panic - not syncing: Aiee, killing interrupt handler!^M
->  =
-
-> =
+-- james s
 
 
-I don't much about the aacraid code but looking little bit, it looks like
-the typical case where driver in second kernel receives the pending
-interrupt from the device and in the interrupt handler it accesses some
-data structures which are not even initialized yet. This interrupt must
-have been pending from crashed kernel's context.
 
-Either we should reset the device before doing request_irq(), so that
-interrupts are cleared or do some kind of ABORT, FLUSH messages or
-whatever the card firmware supports to clear the pending interrupts and =
+ >List:       linux-kernel
+ >Subject:    [patch 3/3] libata: handle AN interrupt
+ >From:       Kristen Carlson Accardi <kristen.c.accardi () intel ! com>
+ >Date:       2007-03-28 23:44:57
+ >Message-ID: 20070328164457.a675a7d2.kristen.c.accardi () intel ! com
+ >[Download message RAW]
+ >
+ >When we get an SDB FIS with the 'N' bit set, we should send
+ >an event to user space to indicate that there has been a
+ >media change.  The ahci host controller will send the
+ >event via KOBJ_CHANGE uevent.
+ >
+ >Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+ >Index: 2.6-mm/drivers/ata/ahci.c
+ >===================================================================
+ >--- 2.6-mm.orig/drivers/ata/ahci.c
+ >+++ 2.6-mm/drivers/ata/ahci.c
+ >@@ -1164,6 +1164,26 @@ static void ahci_host_intr(struct ata_po
+ > 		return;
+ > 	}
+ >
+ >+	if (status & PORT_IRQ_SDB_FIS) {
+ >+		/*
+ >+		 * if this is an ATAPI device with AN turned on,
+ >+		 * then we should interrogate the device to
+ >+		 * determine the cause of the interrupt
+ >+		 *
+ >+		 * for AN - this we should check the SDB FIS
+ >+		 * and find the I and N bits set
+ >+		 */
+ >+		const u32 *f = pp->rx_fis + RX_FIS_SDB;
+ >+
+ >+		/* check the 'N' bit in word 0 of the FIS */
+ >+		if (f[0] & (1 << 15)) {
+ >+			int port_addr =  ((f[0] & 0x00000f00) >> 8);
+ >+			struct ata_device *adev = &ap->device[port_addr];
+ >+			ata_port_printk(ap, KERN_INFO, "N bit set on SDB FIS!\n");
+ >+			if (adev->flags & ATA_DFLAG_AN)
+ >+				ata_async_notify(adev);
+ >+		}
+ >+	}
+ > 	if (ap->sactive)
+ > 		qc_active = readl(port_mmio + PORT_SCR_ACT);
+ > 	else
+ >Index: 2.6-mm/include/linux/libata.h
+ >===================================================================
+ >--- 2.6-mm.orig/include/linux/libata.h
+ >+++ 2.6-mm/include/linux/libata.h
+ >@@ -492,6 +492,7 @@ struct ata_device {
+ > 	/* ACPI objects info */
+ > 	acpi_handle obj_handle;
+ > #endif
+ >+	struct work_struct	async_notify;
+ > };
+ >
+ > /* Offset into struct ata_device.  Fields above it are maintained
+ >@@ -826,6 +827,7 @@ extern void ata_scsi_slave_destroy(struc
+ > extern int ata_scsi_change_queue_depth(struct scsi_device *sdev,
+ > 				       int queue_depth);
+ > extern struct ata_device *ata_dev_pair(struct ata_device *adev);
+ >+extern void ata_async_notify(struct ata_device *atadev);
+ > extern int ata_do_set_mode(struct ata_port *ap, struct ata_device **r_failed_dev);
+ > extern u8 ata_irq_on(struct ata_port *ap);
+ > extern u8 ata_dummy_irq_on(struct ata_port *ap);
+ >Index: 2.6-mm/drivers/ata/libata-core.c
+ >===================================================================
+ >--- 2.6-mm.orig/drivers/ata/libata-core.c
+ >+++ 2.6-mm/drivers/ata/libata-core.c
+ >@@ -1576,6 +1576,26 @@ static void ata_dev_config_ncq(struct at
+ > 		snprintf(desc, desc_sz, "NCQ (depth %d/%d)", hdepth, ddepth);
+ > }
+ >
+ >+static void async_notify_thread(struct work_struct *work)
+ >+{
+ >+	struct ata_device *atadev =
+ >+		container_of(work, struct ata_device, async_notify);
+ >+
+ >+	/*
+ >+	 * TBD - who should send this event?  I couldn't find an
+ >+	 * easy way to map an ata_device to a genhd device, so
+ >+	 * decided maybe the ata host should send the event and
+ >+	 * allow user space to figure out what happened?
+ >+	 */
+ >+	kobject_uevent(&atadev->ap->host->dev->kobj, KOBJ_CHANGE);
+ >+}
+ >+
+ >+void ata_async_notify(struct ata_device *atadev)
+ >+{
+ >+	schedule_work(&atadev->async_notify);
+ >+}
+ >+
+ >+
+ > /**
+ >  *	ata_dev_configure - Configure the specified ATA/ATAPI device
+ >  *	@dev: Target device to configure
+ >@@ -1761,6 +1781,7 @@ int ata_dev_configure(struct ata_device
+ > 				goto err_out_nosup;
+ > 			}
+ > 			dev->flags |= ATA_DFLAG_AN;
+ >+			INIT_WORK(&dev->async_notify, async_notify_thread);
+ > 		}
+ >
+ > 		if (ata_id_cdb_intr(dev->id)) {
+ >@@ -6650,6 +6671,7 @@ EXPORT_SYMBOL_GPL(ata_dummy_irq_on);
+ > EXPORT_SYMBOL_GPL(ata_irq_ack);
+ > EXPORT_SYMBOL_GPL(ata_dummy_irq_ack);
+ > EXPORT_SYMBOL_GPL(ata_dev_try_classify);
+ >+EXPORT_SYMBOL_GPL(ata_async_notify);
+ >
+ > EXPORT_SYMBOL_GPL(ata_cable_40wire);
+ > EXPORT_SYMBOL_GPL(ata_cable_80wire);
+ >
+-- 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Please read the FAQ at  http://www.tux.org/lkml/
 
-flush exisiting commands before doing request_irq().
-
-Thanks
-Vivek
