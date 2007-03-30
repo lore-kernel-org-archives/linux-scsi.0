@@ -1,51 +1,81 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 1/1] scsi: Add EH Start Unit retry
-Date: Thu, 29 Mar 2007 18:02:07 -0400
-Message-ID: <460C375F.1000000@torque.net>
-References: <11751999513070-patch-mail.ibm.com>
-Reply-To: dougg@torque.net
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] bsg: minor bug fixes
+Date: Fri, 30 Mar 2007 10:39:02 +0900
+Message-ID: <20070330103902U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37473 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1422655AbXC2WD6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 18:03:58 -0400
-In-Reply-To: <11751999513070-patch-mail.ibm.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:35530 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752582AbXC3Bh5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 21:37:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> Currently, the scsi error handler will issue a START_UNIT
-> command if the drive indicates it needs its motor started
-> and the allow_restart flag is set in the scsi_device. If,
-> after the scsi error handler invokes a host adapter reset
-> due to error recovery, a device is in a unit attention
-> state AND also needs a START_UNIT, that device will be placed
-> offline. The disk array devices on an ipr RAID adapter
-> will do exactly this when in a dual initiator configuration.
-> This patch adds a single retry to the EH initiated
-> START_UNIT.
+This fixes the following minor issues:
 
-I have no objection to this patch. Just seems a pity
-that SCSI devices go to the trouble of sending unit
-attentions while OSes just throw them away.
+- When bsg_register_queue is called with a request queue that doesn't
+have request_fn, it returns -EINVAL instead of zero.
 
-Perhaps the scsi_device sysfs directory could have entries
-like:
-  last_ua_asc
-  last_ua_ascq
-  last_ua_timestamp
-where code could place the asc/ascq codes and a timestamp
-then continue doing a retry.
-Could we get a log entry, hotplug event?
+- add EXPORT_SYMBOL_GPL for bsg_register_queue and
+bsg_unregister_queue.
 
-Logical units may queue unit attentions (sam4r10.pdf
-section 5.8.7) so it is possible that one retry may
-not be enough. With my suggestion above, only the last
-one would persist for a reasonable time.
+- shut up gcc warnings
 
-Doug Gilbert
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/bsg.c         |    6 ++++--
+ include/linux/bsg.h |    2 +-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 4ef3cc5..53bf6d4 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -961,8 +961,9 @@ void bsg_unregister_queue(struct request
+ 	bsg_device_nr--;
+ 	mutex_unlock(&bsg_mutex);
+ }
++EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+ 
+-int bsg_register_queue(struct request_queue *q, char *name)
++int bsg_register_queue(struct request_queue *q, const char *name)
+ {
+ 	struct bsg_class_device *bcd, *__bcd;
+ 	dev_t dev;
+@@ -973,7 +974,7 @@ int bsg_register_queue(struct request_qu
+ 	 * we need a proper transport to send commands, not a stacked device
+ 	 */
+ 	if (!q->request_fn)
+-		return 0;
++		return -EINVAL;
+ 
+ 	bcd = &q->bsg_dev;
+ 	memset(bcd, 0, sizeof(*bcd));
+@@ -1025,6 +1026,7 @@ err:
+ 	mutex_unlock(&bsg_mutex);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(bsg_register_queue);
+ 
+ static int bsg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
+ {
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index 0475a6d..0dd01f9 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -51,7 +51,7 @@ struct bsg_class_device {
+ 	struct request_queue *queue;
+ };
+ 
+-extern int bsg_register_queue(struct request_queue *, char *);
++extern int bsg_register_queue(struct request_queue *, const char *);
+ extern void bsg_unregister_queue(struct request_queue *);
+ #else
+ struct bsg_class_device { };
+-- 
+1.4.3.2
+
