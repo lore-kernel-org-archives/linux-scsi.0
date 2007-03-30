@@ -1,76 +1,39 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
 Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Fri, 30 Mar 2007 22:38:00 +0900
-Message-ID: <460D12B8.6050101@gmail.com>
-References: <460CDBA6.5030608@gmail.com> <1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+Date: Fri, 30 Mar 2007 15:40:42 +0200
+Message-ID: <20070330154042.4c7deb72__9788.47605078972$1175297624$gmane$org@gondolin.boeblingen.de.ibm.com>
+References: <460CDBA6.5030608@gmail.com>
+	<20070330151926.18fc12a0@gondolin.boeblingen.de.ibm.com>
+	<460D0E78.3040200@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:23514 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751408AbXC3NiH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Mar 2007 09:38:07 -0400
-Received: by nz-out-0506.google.com with SMTP id s1so422435nze
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 06:38:07 -0700 (PDT)
-In-Reply-To: <1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:19188 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751473AbXC3Nik (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Mar 2007 09:38:40 -0400
+In-Reply-To: <460D0E78.3040200@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Fri, 2007-03-30 at 18:43 +0900, Tejun Heo wrote:
->> Orphaning sysfs nodes on unregistration is a big step in this
->> direction.  With sysfs reference counting out of the picture,
->> implementing 'disconnect immediate' interface only on a few components
->> (including request_queue) should suffice for most block device
->> drivers.  I'm not familiar with other drivers but I don't think
->> they'll be very different.
+On Fri, 30 Mar 2007 22:19:52 +0900,
+Tejun Heo <htejun@gmail.com> wrote:
+
+> > Shouldn't getting/putting the module refcount be solely done in
+> > kobject.c? Grab the module reference when the kobject is created and
+> > release the module reference in kobject_cleanup() after the release
+> > function has been called. This doesn't make kobject_get() heavier, and
+> > it ensures we don't delete the module until after the last kobject it is
+> > supposed to clean up has been released.
 > 
-> I agree with this statement.  The big question in my mind is how do we
-> do it?
-> 
-> The essential problem, and the reason why the lifetime rules are
-> entangled is that fundamentally, sysfs entries are managed by kobjects.
-> The things the device drivers are interested in is struct device, which
-> is usually embedded in driver data structures.  Unfortunately, the
-> required kobject is usually embedded in struct device meaning that the
-> relevant driver structure cannot be freed while the sysfs entry still
-> exists.
-> 
-> It seems to me that the only way to Orphan the sysfs entries is to
-> separate the kobject and the struct device so their lifetime rules are
-> no longer entangled.  Then we can free the driver structure with the
-> embedded struct device while still keeping the necessary kobject around
-> to perform orphaned sysfs operations.
-> 
-> So it seems to me that what we need to do is to give struct device its
-> own kref and a pointer to a kobject.  Then we can manage the separate
-> lifetimes independently.  The device would basically allocate and take a
-> reference to the kobject on device_add() and relinquish it again (and
-> null out the kobject pointer) on device_del().  The complexity here is
-> that we now have to allocate the kobject somewhere else ... probably in
-> device_add() (it doesn't come for free with the device structures).
+> If we do that, we wouldn't be able to unload a module if there is any
+> kobject referencing it even when the node has no openers, so no easy way
+> out there.  :-(
 
-My plan was to make sysfs more independent from struct device/kobject.
-e.g. Something like the following.
-
-* kobject_get() on attr/symlink creation
-* open() doesn't need extra kobject reference
-* deleting a node makes it release the kobject reference and the kobject
-pointer is nullified.
-
-This way the sysfs reference counting can be put completely out of
-picture without impacting the rest of code.  Handling symlink and
-suicidal attributes might need some extra attention but I think they can
-be done.
-
-In the long term, I think sysfs should be independent from driver model
-and kobject such that an entity which wants to use sysfs but is not a
-device doesn't have to dance with kobject just to use sysfs.
-
-Thanks.
-
--- 
-tejun
+But we must not unload the module when there is still a kobject around
+referencing a release function in the module, or we will oops if the
+kobject is finally released. If needed, the module must clean up its
+kobjects in its exit function.
