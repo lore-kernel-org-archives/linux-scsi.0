@@ -1,81 +1,50 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] bsg: minor bug fixes
-Date: Fri, 30 Mar 2007 10:39:02 +0900
-Message-ID: <20070330103902U.fujita.tomonori@lab.ntt.co.jp>
+From: Vivek Goyal <vgoyal@in.ibm.com>
+Subject: Re: [Fastboot] Panics for AACRAID driver during 'insmod' for kexec test.
+Date: Fri, 30 Mar 2007 11:35:45 +0530
+Message-ID: <20070330060545.GA16248@in.ibm.com>
+References: <20070329031156.GA9582@in.ibm.com> <AE4F746F2AECFC4DA4AADD66A1DFEF017A9C85@otce2k301.adaptec.com>
+Reply-To: vgoyal@in.ibm.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:35530 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752582AbXC3Bh5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Mar 2007 21:37:57 -0400
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:56571 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752552AbXC3GGv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Mar 2007 02:06:51 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2U66nM6014006
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 02:06:49 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2U66nb6260336
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 02:06:49 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2U66m6W004034
+	for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 02:06:49 -0400
+Content-Disposition: inline
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9C85@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Judith Lebzelter <judith@linux-foundation.org>, linux-scsi@vger.kernel.org, AACRAID <aacraid@adaptec.com>, fastboot@lists.osdl.org
 
-This fixes the following minor issues:
+On Thu, Mar 29, 2007 at 10:17:18AM -0400, Salyzyn, Mark wrote:
+> I have been working on a patch to the driver to do just this, reset the
+> adapter during init if necessary. We want to limit the adapter's reset
+> as it takes time (an additional 45 seconds or longer) for the Firmware
+> to cycle... I will bump the priority of the testing for this patch.
+> 
+Hi,
 
-- When bsg_register_queue is called with a request queue that doesn't
-have request_fn, it returns -EINVAL instead of zero.
+Thanks for looking into this. You can make device reset conditional. Now
+one command line parameter "reset_devices" has been defined for the kernel.
+You can reset the device only if the user has passed reset_devices command
+line option otherwise you can continue to boot normaly.
 
-- add EXPORT_SYMBOL_GPL for bsg_register_queue and
-bsg_unregister_queue.
+I have introduced this parameter to handle the concern that in normal
+BIOS boot total boot time will increase.
 
-- shut up gcc warnings
+kexec/kdump will pass this parameter to second kernel so that device will
+be reset during initialization and normal BIOS boot will reamin unaffected.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c         |    6 ++++--
- include/linux/bsg.h |    2 +-
- 2 files changed, 5 insertions(+), 3 deletions(-)
-
-diff --git a/block/bsg.c b/block/bsg.c
-index 4ef3cc5..53bf6d4 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -961,8 +961,9 @@ void bsg_unregister_queue(struct request
- 	bsg_device_nr--;
- 	mutex_unlock(&bsg_mutex);
- }
-+EXPORT_SYMBOL_GPL(bsg_unregister_queue);
- 
--int bsg_register_queue(struct request_queue *q, char *name)
-+int bsg_register_queue(struct request_queue *q, const char *name)
- {
- 	struct bsg_class_device *bcd, *__bcd;
- 	dev_t dev;
-@@ -973,7 +974,7 @@ int bsg_register_queue(struct request_qu
- 	 * we need a proper transport to send commands, not a stacked device
- 	 */
- 	if (!q->request_fn)
--		return 0;
-+		return -EINVAL;
- 
- 	bcd = &q->bsg_dev;
- 	memset(bcd, 0, sizeof(*bcd));
-@@ -1025,6 +1026,7 @@ err:
- 	mutex_unlock(&bsg_mutex);
- 	return ret;
- }
-+EXPORT_SYMBOL_GPL(bsg_register_queue);
- 
- static int bsg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
- {
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index 0475a6d..0dd01f9 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -51,7 +51,7 @@ struct bsg_class_device {
- 	struct request_queue *queue;
- };
- 
--extern int bsg_register_queue(struct request_queue *, char *);
-+extern int bsg_register_queue(struct request_queue *, const char *);
- extern void bsg_unregister_queue(struct request_queue *);
- #else
- struct bsg_class_device { };
--- 
-1.4.3.2
-
+Thanks
+Vivek
