@@ -1,55 +1,70 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Fri, 30 Mar 2007 08:29:10 -0400
-Message-ID: <1175257751.3760.19.camel__6645.44823016531$1175295505$gmane$org@mulgrave.il.steeleye.com>
-References: <460CDBA6.5030608@gmail.com>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH 1/4] [SCSI]stex: fix id mapping issue
+Date: Fri, 30 Mar 2007 15:21:33 -0700
+Message-ID: <NONAMEBZNuIkdg0MZMt000005d3@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:55458 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750992AbXC3M3o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Mar 2007 08:29:44 -0400
-In-Reply-To: <460CDBA6.5030608@gmail.com>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:2362 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933056AbXC3XLi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Mar 2007 19:11:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
-On Fri, 2007-03-30 at 18:43 +0900, Tejun Heo wrote:
-> Orphaning sysfs nodes on unregistration is a big step in this
-> direction.  With sysfs reference counting out of the picture,
-> implementing 'disconnect immediate' interface only on a few components
-> (including request_queue) should suffice for most block device
-> drivers.  I'm not familiar with other drivers but I don't think
-> they'll be very different.
+The internal id/lun mapping of st_vsc and st_vsc1 controllers is different
+from st_shasta. The original driver code can only  map first 16 'entities'
+for st_vsc and st_vsc1 while there are actually 128 available.
 
-I agree with this statement.  The big question in my mind is how do we
-do it?
+Also the  ST_MAX_LUN_PER_TARGET should be 8, although this can do
+no harm because inquiries beyond boundary are discarded by firmware.
 
-The essential problem, and the reason why the lifetime rules are
-entangled is that fundamentally, sysfs entries are managed by kobjects.
-The things the device drivers are interested in is struct device, which
-is usually embedded in driver data structures.  Unfortunately, the
-required kobject is usually embedded in struct device meaning that the
-relevant driver structure cannot be freed while the sysfs entry still
-exists.
+The correct internal mapping should be:
+id:0~15, lun:0~7 (st_shasta)
+id:0, lun:0~127 (st_yosemite)
+id:0~127, lun:0 (st_vsc and st_vsc1)
+To scsi mid layer they are all channel:0~7, id:0~15, lun:0, with a maximun
+'entity' number of 128. The RAID console only interfaces to scsi mid layer
+and is always mapped at channel:0, id:16, lun:0.
 
-It seems to me that the only way to Orphan the sysfs entries is to
-separate the kobject and the struct device so their lifetime rules are
-no longer entangled.  Then we can free the driver structure with the
-embedded struct device while still keeping the necessary kobject around
-to perform orphaned sysfs operations.
-
-So it seems to me that what we need to do is to give struct device its
-own kref and a pointer to a kobject.  Then we can manage the separate
-lifetimes independently.  The device would basically allocate and take a
-reference to the kobject on device_add() and relinquish it again (and
-null out the kobject pointer) on device_del().  The complexity here is
-that we now have to allocate the kobject somewhere else ... probably in
-device_add() (it doesn't come for free with the device structures).
-
-James
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 69be132..4d68533 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -115,7 +115,7 @@ enum {
+ 
+ 	ST_MAX_ARRAY_SUPPORTED			= 16,
+ 	ST_MAX_TARGET_NUM			= (ST_MAX_ARRAY_SUPPORTED+1),
+-	ST_MAX_LUN_PER_TARGET			= 16,
++	ST_MAX_LUN_PER_TARGET			= 8,
+ 
+ 	st_shasta				= 0,
+ 	st_vsc					= 1,
+@@ -645,12 +645,16 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	req = stex_alloc_req(hba);
+ 
+-	if (hba->cardtype == st_yosemite) {
+-		req->lun = lun * (ST_MAX_TARGET_NUM - 1) + id;
+-		req->target = 0;
+-	} else {
++	if (hba->cardtype == st_shasta) {
+ 		req->lun = lun;
+ 		req->target = id;
++	} else if (hba->cardtype == st_yosemite){
++		req->lun = id * ST_MAX_LUN_PER_TARGET + lun;
++		req->target = 0;
++	} else {
++		/* st_vsc and st_vsc1 */
++		req->lun = 0;
++		req->target = id * ST_MAX_LUN_PER_TARGET + lun;
+ 	}
+ 
+ 	/* cdb */
 
 
