@@ -1,82 +1,48 @@
-From: Greg KH <gregkh@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Fri, 30 Mar 2007 10:41:58 -0700
-Message-ID: <20070330174158.GB4469@suse.de>
-References: <460CDBA6.5030608@gmail.com> <1175257751.3760.19.camel@mulgrave.il.steeleye.com> <460D12B8.6050101@gmail.com>
+Date: Fri, 30 Mar 2007 12:58:21 -0500
+Message-ID: <1175277501.3760.32.camel@mulgrave.il.steeleye.com>
+References: <460CDBA6.5030608@gmail.com>
+	 <1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+	 <d120d5000703300615y7b367d82hb42f1c58ca8a6328@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <460D12B8.6050101@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, hugh@veritas.com, cornelia.huck@de.ibm.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:58248 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752008AbXC3R6o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Mar 2007 13:58:44 -0400
+In-Reply-To: <d120d5000703300615y7b367d82hb42f1c58ca8a6328@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
+Cc: Tejun Heo <htejun@gmail.com>, gregkh@suse.de, hugh@veritas.com, cornelia.huck@de.ibm.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, Mar 30, 2007 at 10:38:00PM +0900, Tejun Heo wrote:
-> James Bottomley wrote:
-> > On Fri, 2007-03-30 at 18:43 +0900, Tejun Heo wrote:
-> >> Orphaning sysfs nodes on unregistration is a big step in this
-> >> direction.  With sysfs reference counting out of the picture,
-> >> implementing 'disconnect immediate' interface only on a few components
-> >> (including request_queue) should suffice for most block device
-> >> drivers.  I'm not familiar with other drivers but I don't think
-> >> they'll be very different.
-> > 
-> > I agree with this statement.  The big question in my mind is how do we
-> > do it?
-> > 
-> > The essential problem, and the reason why the lifetime rules are
-> > entangled is that fundamentally, sysfs entries are managed by kobjects.
-> > The things the device drivers are interested in is struct device, which
-> > is usually embedded in driver data structures.  Unfortunately, the
-> > required kobject is usually embedded in struct device meaning that the
-> > relevant driver structure cannot be freed while the sysfs entry still
-> > exists.
-> > 
-> > It seems to me that the only way to Orphan the sysfs entries is to
-> > separate the kobject and the struct device so their lifetime rules are
-> > no longer entangled.  Then we can free the driver structure with the
-> > embedded struct device while still keeping the necessary kobject around
-> > to perform orphaned sysfs operations.
-> > 
-> > So it seems to me that what we need to do is to give struct device its
-> > own kref and a pointer to a kobject.  Then we can manage the separate
-> > lifetimes independently.  The device would basically allocate and take a
-> > reference to the kobject on device_add() and relinquish it again (and
-> > null out the kobject pointer) on device_del().  The complexity here is
-> > that we now have to allocate the kobject somewhere else ... probably in
-> > device_add() (it doesn't come for free with the device structures).
-> 
-> My plan was to make sysfs more independent from struct device/kobject.
-> e.g. Something like the following.
-> 
-> * kobject_get() on attr/symlink creation
-> * open() doesn't need extra kobject reference
-> * deleting a node makes it release the kobject reference and the kobject
-> pointer is nullified.
+On Fri, 2007-03-30 at 09:15 -0400, Dmitry Torokhov wrote:
+> If you want to manage lifetime rules independently you might want to
+> not embed struct device into you subsystems objects but attach them
+> via pointers and use device_create(). Now that we orphan sysfs access
+> upon unregistering device this will severe all ties from driver core
+> to your system once you start teardown of a device and you should be
+> in clear.
 
-Hm, this sounds good, but I think it will be racy.
+But that wouldn't really help ... all objects have lifetimes.  What
+Tejun is pointing out is that we have two different lifetime
+requirements:  driver internal (and subsystem) objects and sysfs
+objects ... we still need something embedded in the driver objects, so
+it may as well be struct device ... trying to manage struct device
+outside of the driver objects would turn into another nasty refcounting
+problem.  The struct device is usually the generic abstraction of the
+specific structure it's embedded in, so I think it really does make
+sense to keep these pieces together.
 
-Although separating the very tight tie between sysfs and kobject would
-be very good to have.  Pat originally wanted to do that years ago,
-but he's now lost to the land of a million sheep...
+> However there are simpler subsystems (input, serio, etc.) where there
+> is only one core module which provides services to device drivers and
+> handles registration and deregistration. For such substustems it makes
+> sense to embed struct devices and manage lifetime for all components
+> at once.
 
-So I don't object to this goal at all.
+James
 
-> This way the sysfs reference counting can be put completely out of
-> picture without impacting the rest of code.  Handling symlink and
-> suicidal attributes might need some extra attention but I think they can
-> be done.
 
-Ok, I'll but I really want to see that code :)
-
-> In the long term, I think sysfs should be independent from driver model
-> and kobject such that an entity which wants to use sysfs but is not a
-> device doesn't have to dance with kobject just to use sysfs.
-
-I agree.
-
-thanks,
-
-greg k-h
