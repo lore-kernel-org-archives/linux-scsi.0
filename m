@@ -1,50 +1,41 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [Fastboot] Panics for AACRAID driver during 'insmod' for kexec test.
-Date: Fri, 30 Mar 2007 11:35:45 +0530
-Message-ID: <20070330060545.GA16248@in.ibm.com>
-References: <20070329031156.GA9582@in.ibm.com> <AE4F746F2AECFC4DA4AADD66A1DFEF017A9C85@otce2k301.adaptec.com>
-Reply-To: vgoyal@in.ibm.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] bsg: minor bug fixes
+Date: Fri, 30 Mar 2007 08:38:04 +0200
+Message-ID: <20070330063804.GE6320@kernel.dk>
+References: <20070330103902U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:56571 "EHLO e5.ny.us.ibm.com"
+Received: from brick.kernel.dk ([62.242.22.158]:7983 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752552AbXC3GGv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Mar 2007 02:06:51 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2U66nM6014006
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 02:06:49 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2U66nb6260336
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 02:06:49 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2U66m6W004034
-	for <linux-scsi@vger.kernel.org>; Fri, 30 Mar 2007 02:06:49 -0400
+	id S1753042AbXC3GnF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Mar 2007 02:43:05 -0400
 Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9C85@otce2k301.adaptec.com>
+In-Reply-To: <20070330103902U.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Judith Lebzelter <judith@linux-foundation.org>, linux-scsi@vger.kernel.org, AACRAID <aacraid@adaptec.com>, fastboot@lists.osdl.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, Mar 29, 2007 at 10:17:18AM -0400, Salyzyn, Mark wrote:
-> I have been working on a patch to the driver to do just this, reset the
-> adapter during init if necessary. We want to limit the adapter's reset
-> as it takes time (an additional 45 seconds or longer) for the Firmware
-> to cycle... I will bump the priority of the testing for this patch.
+On Fri, Mar 30 2007, FUJITA Tomonori wrote:
+> This fixes the following minor issues:
 > 
-Hi,
+> - When bsg_register_queue is called with a request queue that doesn't
+> have request_fn, it returns -EINVAL instead of zero.
 
-Thanks for looking into this. You can make device reset conditional. Now
-one command line parameter "reset_devices" has been defined for the kernel.
-You can reset the device only if the user has passed reset_devices command
-line option otherwise you can continue to boot normaly.
+Seems a little backwards, you wont be able to talk to the device then.
+So, what is the purpose of this patch?
 
-I have introduced this parameter to handle the concern that in normal
-BIOS boot total boot time will increase.
+> - add EXPORT_SYMBOL_GPL for bsg_register_queue and
+> bsg_unregister_queue.
 
-kexec/kdump will pass this parameter to second kernel so that device will
-be reset during initialization and normal BIOS boot will reamin unaffected.
+ok
 
-Thanks
-Vivek
+> - shut up gcc warnings
+
+ok
+
+
+-- 
+Jens Axboe
+
