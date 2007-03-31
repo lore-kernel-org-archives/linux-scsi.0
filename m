@@ -1,36 +1,101 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 3/4] [SCSI]stex: fix reset recovery for console device
-Date: Sat, 31 Mar 2007 13:46:27 -0500
-Message-ID: <1175366787.3760.68.camel@mulgrave.il.steeleye.com>
-References: <NONAMEB98KtdhQYZkxO000005d5@nonameb.ptu.promise.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: aic94xx driver woes
+Date: Sat, 31 Mar 2007 15:05:52 -0400
+Message-ID: <460EB110.8060706@torque.net>
+References: <460E90F3.9070601@torque.net> <460EA211.2060501@us.ibm.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:40335 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753824AbXCaSqb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Mar 2007 14:46:31 -0400
-In-Reply-To: <NONAMEB98KtdhQYZkxO000005d5@nonameb.ptu.promise.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:36810 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753202AbXCaTH7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Mar 2007 15:07:59 -0400
+In-Reply-To: <460EA211.2060501@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ed Lin <ed.lin@promise.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, James.Bottomley@SteelEye.com
 
-On Fri, 2007-03-30 at 15:21 -0700, Ed Lin wrote:
-> After reset completed, the scsi error handler sends out START_STOP
-> and TEST_UNIT_READY to the device. For 'normal' devices these
-> commands will be handled by firmware. However, because the RAID
-> console only interfaces to scsi mid layer, the firmware will not process
-> these commands for it. This will make the console to be offlined right
-> after reset. Add the handling in driver to fix this problem.
+Darrick J. Wong wrote:
+> Douglas Gilbert wrote:
+> 
+>> So that is almost 12 months that I have been reporting
+>> this driver as broken. Is it just me or my hardware?
+> 
+> I seem to recall you saying that the LSI Fusion card was plugged into
+> the same expander as the 48300?  If so, does unplugging the Fusion card
+> from the expander make it work?
 
-I don't see how this explanation can be correct.  The error handler only
-sends a START_STOP command if sdev->allow_restart is one, which you have
-to set in the slave_configure routines (which stex doesn't).  If you're
-seeing a START_STOP in the eh path, there's something else wrong.
-TEST_UNIT_READY, certainly ... it's part of a restart check.
+Darrick,
+There is a LSI Fusion card in the adjacent PCI-X
+slot but it wasn't connected to anything so it
+should not have been interfering.
 
-James
+I have another Fusion card in a second machine
+which was off. I'll turn the second machine on
+now to show the topology of my SAS domain.
+
+Topology (seen from the second machine's MPT Fusion
+phy which is both an initiator and a target):
+
+# smp_discover -mb
+Device <500605b0000033ef>, expander (only connected phys shown):
+  phy   3:S:attached:[500605b00006f260:00  i(SSP+STP+SMP) t(SSP)]  3 Gbps
+  phy   5:T:attached:[500605b000000af0:02 exp t(SMP)]  3 Gbps
+  phy   6:T:attached:[50000d10002dc000:00  i(SSP+STP+SMP)]  3 Gbps
+  phy   9:T:attached:[5000c500005208ee:01  t(SSP)]  3 Gbps
+  phy  11:T:attached:[5000c50001b0213a:01  t(SSP)]  3 Gbps
+
+# smp_discover -mb -s 0x500605b000000af0
+Device <500605b000000af0>, expander (only connected phys shown):
+  phy   2:S:attached:[500605b0000033ef:05 exp t(SMP)]  3 Gbps
+  phy  10:T:attached:[5000c50001b02139:00  t(SSP)]  3 Gbps
+  phy  11:T:attached:[5000c500005208ed:00  t(SSP)]  3 Gbps
+
+James, note the SAS address of the first expander.
+
+So with the second machine off, the expander entry
+on 0x500605b0000033ef phy_id 3 is not there. [The
+mainline aic94xx driver fails the same way with the
+second machine off or on.]
+
+>> aic94xx: Found sequencer Firmware version 1.1 (V17/10c6)
+> 
+> Have you tried the V30 sequencer?
+
+No. But I note that Luben's driver is still using
+V17/10c6 successfully (in lk 2.6.21-rc4).
+
+How would I know that the official driver needs firmware,
+where to get it and what was the recommended version
+with a Kconfig entry like this:
+
+config SCSI_AIC94XX
+        tristate "Adaptec AIC94xx SAS/SATA support"
+        depends on PCI
+        select SCSI_SAS_LIBSAS
+        select FW_LOADER
+        help
+                This driver supports Adaptec's SAS/SATA 3Gb/s 64 bit PCI-X
+                AIC94xx chip based host adapters.
+
+config AIC94XX_DEBUG
+        bool "Compile in debug mode"
+        default y
+        depends on SCSI_AIC94XX
+        help
+                Compiles the aic94xx driver in debug mode.  In debug mode,
+                the driver prints some messages to the console.
+
+??
+
+Is there some useful documentation somewhere else?
+If so perhaps I link to it could be placed in the
+Kconfig entry.
+
+
+Doug Gilbert
 
 
