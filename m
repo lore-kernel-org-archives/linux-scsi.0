@@ -1,43 +1,36 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: aic94xx driver woes
-Date: Sat, 31 Mar 2007 11:01:53 -0700
-Message-ID: <460EA211.2060501@us.ibm.com>
-References: <460E90F3.9070601@torque.net>
-Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 3/4] [SCSI]stex: fix reset recovery for console device
+Date: Sat, 31 Mar 2007 13:46:27 -0500
+Message-ID: <1175366787.3760.68.camel@mulgrave.il.steeleye.com>
+References: <NONAMEB98KtdhQYZkxO000005d5@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e1.ny.us.ibm.com ([32.97.182.141]:53906 "EHLO e1.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753761AbXCaSBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 31 Mar 2007 14:01:52 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e1.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l2VI1oWV015218
-	for <linux-scsi@vger.kernel.org>; Sat, 31 Mar 2007 14:01:50 -0400
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l2VI1o9b311398
-	for <linux-scsi@vger.kernel.org>; Sat, 31 Mar 2007 14:01:50 -0400
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l2VI1omQ018328
-	for <linux-scsi@vger.kernel.org>; Sat, 31 Mar 2007 14:01:50 -0400
-In-Reply-To: <460E90F3.9070601@torque.net>
+Received: from hancock.steeleye.com ([71.30.118.248]:40335 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753824AbXCaSqb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 31 Mar 2007 14:46:31 -0400
+In-Reply-To: <NONAMEB98KtdhQYZkxO000005d5@nonameb.ptu.promise.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Ed Lin <ed.lin@promise.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
-Douglas Gilbert wrote:
+On Fri, 2007-03-30 at 15:21 -0700, Ed Lin wrote:
+> After reset completed, the scsi error handler sends out START_STOP
+> and TEST_UNIT_READY to the device. For 'normal' devices these
+> commands will be handled by firmware. However, because the RAID
+> console only interfaces to scsi mid layer, the firmware will not process
+> these commands for it. This will make the console to be offlined right
+> after reset. Add the handling in driver to fix this problem.
 
-> So that is almost 12 months that I have been reporting
-> this driver as broken. Is it just me or my hardware?
+I don't see how this explanation can be correct.  The error handler only
+sends a START_STOP command if sdev->allow_restart is one, which you have
+to set in the slave_configure routines (which stex doesn't).  If you're
+seeing a START_STOP in the eh path, there's something else wrong.
+TEST_UNIT_READY, certainly ... it's part of a restart check.
 
-I seem to recall you saying that the LSI Fusion card was plugged into
-the same expander as the 48300?  If so, does unplugging the Fusion card
-from the expander make it work?
+James
 
-> aic94xx: Found sequencer Firmware version 1.1 (V17/10c6)
 
-Have you tried the V30 sequencer?
-
---D
