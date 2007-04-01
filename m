@@ -1,71 +1,41 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/1] scsi: Add EH Start Unit retry
-Date: Sun, 01 Apr 2007 11:36:18 -0500
-Message-ID: <1175445379.27675.3.camel@mulgrave.il.steeleye.com>
-References: <11751999513070-patch-mail.ibm.com>
+Subject: Re: [PATCH] aacraid: Panics for AACRAID driver
+	during	'insmod' for kexec test.
+Date: Sun, 01 Apr 2007 12:46:46 -0500
+Message-ID: <1175449607.27675.8.camel@mulgrave.il.steeleye.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9F1C@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50323 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933635AbXDAQgW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Apr 2007 12:36:22 -0400
-In-Reply-To: <11751999513070-patch-mail.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fastboot-bounces@lists.linux-foundation.org>
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017A9F1C@otce2k301.adaptec.com>
+List-Unsubscribe: <https://lists.linux-foundation.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linux-foundation.org/pipermail/fastboot>
+List-Post: <mailto:fastboot@lists.linux-foundation.org>
+List-Help: <mailto:fastboot-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linux-foundation.org/mailman/listinfo/fastboot>,
+	<mailto:fastboot-request@lists.linux-foundation.org?subject=subscribe>
+Sender: fastboot-bounces@lists.linux-foundation.org
+Errors-To: fastboot-bounces@lists.linux-foundation.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: fastboot@lists.osdl.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com
 
-On Thu, 2007-03-29 at 15:25 -0500, Brian King wrote:
-> -		int rtn;
-> +		int retry_cnt = 1, rtn;
->  
-> +retry_stu:
->  		rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
->  					START_UNIT_TIMEOUT, 0);
-> -		if (rtn == SUCCESS)
-> +
-> +		switch (rtn) {
-> +		case SUCCESS:
->  			return 0;
-> +		case NEEDS_RETRY:
-> +			if (retry_cnt--)
-> +				goto retry_stu;
-> +			/*FALLTHRU*/
-> +		default:
-> +			return 1;
-> +		}
+On Fri, 2007-03-30 at 14:48 -0400, Salyzyn, Mark wrote:
+> My tree I am working on is 'more advanced' as it includes the series of o=
+ther patches submitted over the past week :-( We have some interference goi=
+ng on. I suggest pulling this patch until the others have cleared.
 
-This is pretty much an open coded for loop ... how about just doing a
-for loop as attached below?
+It applies OK for me (modulo the first make function static which
+already went in) to scsi-misc-2.6
 
-The two advantages to this are:
+I've put it in scsi-misc-2.6 ... you can either pull it from there or
+try -mm in a few days when Andrew refreshes from the maintainer trees.
 
-     1. it's cleaner and more readable
-     2. the compiler knows how to optimize it better
+Mark .. this also alters the way it gets treated ... since it's now on
+upstream track, you need to tell me to pull it out if it has any
+failures in testing, otherwise it will go into the vanilla kernel in
+2.6.21
 
 James
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 7a1a1bb..28a266c 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -932,10 +932,12 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
- 	static unsigned char stu_command[6] = {START_STOP, 0, 0, 0, 1, 0};
- 
- 	if (scmd->device->allow_restart) {
--		int rtn;
-+		int i, rtn = NEEDS_RETRY;
-+
-+		for (i = 0; rtn == NEEDS_RETRY && i < 2; i++)
-+			rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
-+						START_UNIT_TIMEOUT, 0);
- 
--		rtn = scsi_send_eh_cmnd(scmd, stu_command, 6,
--					START_UNIT_TIMEOUT, 0);
- 		if (rtn == SUCCESS)
- 			return 0;
- 	}
-
-
