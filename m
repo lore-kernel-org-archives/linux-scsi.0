@@ -1,33 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] Block layer: separate out queue-oriented ioctls Re:
-	[PATCH] Block layer: separate out queue-oriented ioctls
-Date: Mon, 02 Apr 2007 09:34:57 -0500
-Message-ID: <1175524497.3680.0.camel@mulgrave.il.steeleye.com>
-References: <200704020828.l328SICc009264@burner.fokus.fraunhofer.de>
-	 <Pine.LNX.4.44L0.0704020951180.1743-100000@netrider.rowland.org>
-	 <20070402142318.GA14256@kernel.dk>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Mon, 2 Apr 2007 17:34:43 +0200
+Message-ID: <20070402173443.0a3b5c51@gondolin.boeblingen.de.ibm.com>
+References: <460CDBA6.5030608@gmail.com>
+	<1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+	<460D12B8.6050101@gmail.com>
+	<1175278774.3760.44.camel@mulgrave.il.steeleye.com>
+	<20070401195943.GA29627@htj.dyndns.org>
+	<20070402112048.047867c1@gondolin.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:58677 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965509AbXDBOhV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 10:37:21 -0400
-In-Reply-To: <20070402142318.GA14256@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070402112048.047867c1@gondolin.boeblingen.de.ibm.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Joerg Schilling <schilling@fokus.fraunhofer.de>, dougg@torque.net, SCSI development list <linux-scsi@vger.kernel.org>, Kernel development list <linux-kernel@vger.kernel.org>
 
-On Mon, 2007-04-02 at 16:23 +0200, Jens Axboe wrote:
-> FWIW, it had my ack, I think we were just waiting for Doug to ack the sg
-> bits.
+On Mon, 2 Apr 2007 11:20:48 +0200,
+Cornelia Huck <cornelia.huck@de.ibm.com> wrote:
 
-And there's really nothing I can do (well, except write the thing) since
-the changes are not in any SCSI pieces I maintain directly ... they're
-block and sg.
+> Cool. However, there's something fishy there (not sure whether it's in
+> your patch or a latent bug in the ccw bus code that just has been
+> uncovered):
 
-James
-
-
+Similar bug when loading/unloading a module that creates a driver
+attribute. The winner seems to be kfree(sd->s_element) in
+release_sysfs_dirent() (in case of an attribute, it will point to the
+attribute structure, which is usually statically created)...
