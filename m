@@ -1,51 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: aic94xx driver woes
-Date: Mon, 02 Apr 2007 12:52:32 -0500
-Message-ID: <1175536352.3680.52.camel@mulgrave.il.steeleye.com>
-References: <460E90F3.9070601@torque.net> <460EA211.2060501@us.ibm.com>
-	 <460EB110.8060706@torque.net>
-	 <1175383041.3760.70.camel@mulgrave.il.steeleye.com>
-	 <4610161D.7060709@torque.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: SMP pass through interface via bsg
+Date: Tue, 3 Apr 2007 02:54:10 +0900 (JST)
+Message-ID: <20070402221349L.fujita.tomonori@lab.ntt.co.jp>
+References: <20070403012747O.fujita.tomonori@lab.ntt.co.jp>
+	<20070403014349E.fujita.tomonori@lab.ntt.co.jp>
+	<1175533302.3680.31.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:60364 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S965550AbXDBRxB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 13:53:01 -0400
-In-Reply-To: <4610161D.7060709@torque.net>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:42318 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752837AbXDBRyb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 13:54:31 -0400
+In-Reply-To: <1175533302.3680.31.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: "Darrick J. Wong" <djwong@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James.Bottomley@SteelEye.com
+Cc: fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, dougg@torque.net, James.Smart@Emulex.Com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-On Sun, 2007-04-01 at 16:29 -0400, Douglas Gilbert wrote:
-> ...
-> sas: phy3 added to port0, phy_mask:0x8
-> sas: DOING DISCOVERY on port 0, pid:2110
-> aic94xx: scb:0x80 timed out
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SMP pass through interface via bsg
+Date: Mon, 02 Apr 2007 12:01:41 -0500
 
-This might be the problem.
+> On Tue, 2007-04-03 at 01:43 +0900, FUJITA Tomonori wrote:
+> > OK. I found another bug in smp_test tool (sends bogus response buffer
+> > len to kernel). I've uploaded a new patch:
+> > 
+> > http://zaal.org/bsg/smp-test2.diff
+> 
+> That sort of works; you have a final bug in that the manufacturer info
+> response frame is 64 bytes, not 128 bytes, but with that corrected
+> everything goes through and I get the result back:
+> 
+> hobholes:~# /home/jejb/git/sgv4-tools/smp_test /sys/class/bsg/expander-2\:0
+>   SAS-1.1 format: 0
+>   vendor identification: LSILOGIC
+>   product identification: SASx12 A.0      
+>   product revision level: 
+> 
+> So we can class this one as a success ... 
+>
+> Thanks!
 
-I see this periodically when a phy goes out to lunch on my system ...
-with me, it always seems to be phy0 of a port containing phy0-4 ... so
-phy1-3 still function to get messages.
+Great! Thanks. I'll try to finish the mpt driver's hook
+sometime. Finally, We have a bsg user (though it also needs proper
+bidi support).
 
-Can you try sending a link reset to phy3?
-
-It should be something like
-
-echo 1 > /sys/class/sas_phy/phy-X:3/link_reset
-
-and see if it just produces 
-
-aic94xx: scb:0x80 timed out
-
-Again?
-
-Thanks,
-
-James
-
-
+Jens, what remains to be done before bsg is merged into mainline?
