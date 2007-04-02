@@ -1,187 +1,52 @@
-From: Judith Lebzelter <judith@linux-foundation.org>
-Subject: Re: [PATCH] aacraid: Panics during init time reset (Was: [PATCH] aacraid: [Fastboot] Panics for AACRAID driver during 'insmod' for kexec test)
-Date: Mon, 2 Apr 2007 14:18:23 -0700
-Message-ID: <20070402211823.GG2364@shell0.pdx.osdl.net>
-References: <20070402201659.GF2364@shell0.pdx.osdl.net> <AE4F746F2AECFC4DA4AADD66A1DFEF017AA164@otce2k301.adaptec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: brking@linux.vnet.ibm.com
+Subject: [patch 1/1] scsi: Disable short inquiry log by default
+Date: Mon, 02 Apr 2007 16:20:22 -0500
+Message-ID: <200704022120.l32LKOZU018499@d03av02.boulder.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.osdl.org ([65.172.181.24]:46328 "EHLO smtp.osdl.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965931AbXDBVSb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Apr 2007 17:18:31 -0400
-Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017AA164@otce2k301.adaptec.com>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:58879 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965918AbXDBVU1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 17:20:27 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l32LKQ71011252
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 17:20:26 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l32LKPVs141148
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 15:20:25 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l32LKOpw018577
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 15:20:25 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Judith Lebzelter <judith@linux-foundation.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Duane Cox <dcox@conxxus.com>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
-On Mon, Apr 02, 2007 at 04:29:35PM -0400, Salyzyn, Mark wrote:
-> Cool! Look forward to your results.
-> 
-> Sorry for being so snitty sounding with the 5 minute comment, I was just
-> admiring the pace of activity!
 
-No problem.  I thought it was funny.:)
+If a scsi device reports less than 36 bytes of standard inquiry
+data, scsi core logs a KERN_INFO printk indicating this. It was
+observed that this results in lots of clutter in the log on
+systems with devices that respond to a SCSI Inquiry with PQ=3 or
+PQ=1 with less than 36 bytes of inquiry data, such as ibmvscsi.
+Disable this log by default.
 
-Judith
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> > -----Original Message-----
-> > From: Judith Lebzelter [mailto:judith@linux-foundation.org] 
-> > Sent: Monday, April 02, 2007 4:17 PM
-> > To: Salyzyn, Mark
-> > Cc: Judith Lebzelter; James Bottomley; 
-> > linux-scsi@vger.kernel.org; Duane Cox
-> > Subject: Re: [PATCH] aacraid: Panics during init time reset 
-> > (Was: [PATCH] aacraid: [Fastboot] Panics for AACRAID driver 
-> > during 'insmod' for kexec test)
-> > 
-> > 
-> > On Mon, Apr 02, 2007 at 03:56:50PM -0400, Salyzyn, Mark wrote:
-> > > Judith, another layer on this onion also discovered by Duane, the
-> > > interrupt enable handler also needed to be set ... The 
-> > interrupt enable
-> > > was called from within the synchronous command handler.
-> > > 
-> > > My private email with the fix was sent a whole 5 minutes 
-> > ahead of yours
-> > > ;-> Here is the jist of it for the observers:
-> > 
-> > I saw it the second I hit 'submit'.
-> > 
-> > > 
-> > >     /* Failure to reset here is an option ... */
-> > >     dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
-> > > +   dev->a_ops.adapter_enable_int = aac_rx_disable_interrupt;
-> > >     dev->OIMR = status = rx_readb (dev, MUnit.OIMR);
-> > > 
-> > > Yes, the disable interrupt method patched into the enable 
-> > int platform
-> > > function. Later init code will reset it accordingly.
-> > > 
-> > > Sincerely -- Mark Salyzyn
-> > 
-> > Yes, that works now.  I will run a series to check if the 
-> > other IRQ interrupt 
-> > problem is resolved.
-> > 
-> > Judith
-> > 
-> > > 
-> > > 
-> > > > -----Original Message-----
-> > > > From: Judith Lebzelter [mailto:judith@linux-foundation.org] 
-> > > > Sent: Monday, April 02, 2007 3:44 PM
-> > > > To: Salyzyn, Mark
-> > > > Cc: Judith Lebzelter; James Bottomley; 
-> > > > linux-scsi@vger.kernel.org; Duane Cox
-> > > > Subject: Re: [PATCH] aacraid: Panics during init time reset 
-> > > > (Was: [PATCH] aacraid: [Fastboot] Panics for AACRAID driver 
-> > > > during 'insmod' for kexec test)
-> > > > 
-> > > > 
-> > > > On Mon, Apr 02, 2007 at 02:34:36PM -0400, Salyzyn, Mark wrote:
-> > > > > Duane discovered in the scsi-misc-2.6 code that the reset 
-> > > > handler could
-> > > > > be called without the sync command handler set up resulting 
-> > > > in a panic.
-> > > > > Judith discovered this issue within minutes and has 
-> > > > recently reported
-> > > > > it. Here is a fix.
-> > > > 
-> > > > Mark,
-> > > > 
-> > > > I applied this patch and ran a kexec test again and I still 
-> > > > got a panic:
-> > > > 
-> > > > Loading aacraid.Adaptec aacraid driver (1.1-5[2437]-mh4)^M
-> > > > ko module^M
-> > > > ACPI: PCI Interrupt 0000:03:0e.0[A] -> Link [LNKC] -> GSI 3 
-> > > > (level, low) -> IRQ 3^M
-> > > > Unable to handle kernel NULL pointer dereference at 
-> > > > 0000000000000000 RIP: ^M
-> > > >  [<0000000000000000>]^M
-> > > > PGD 4791067 PUD 473c067 PMD 0 ^M
-> > > > Oops: 0010 [1] ^M
-> > > > CPU 0 ^M
-> > > > Modules linked in: aacraid^M
-> > > > Pid: 977, comm: insmod Not tainted 2.6.21-rc3-kdump #1^M
-> > > > RIP: 0010:[<0000000000000000>]  [<0000000000000000>]^M
-> > > > RSP: 0000:ffff81000474dbf0  EFLAGS: 00010246^M
-> > > > RAX: ffffc20000010000 RBX: ffff810004fe4cd8 RCX: 
-> > 000000005b540e96^M
-> > > > RDX: ffffc20000010000 RSI: ffff81000443cf40 RDI: 
-> > ffff810004fe4cd8^M
-> > > > RBP: 00000000fffee138 R08: ffffffff81001c20 R09: 
-> > ffffffff8143593e^M
-> > > > R10: ffff810004c537a0 R11: 0000000000000000 R12: 
-> > ffff81000474dc7c^M
-> > > > R13: 0000000000000000 R14: 0000000000000000 R15: 
-> > 0000000000000000^M
-> > > > FS:  000000000057b850(0063) GS:ffffffff814d6000(0000) 
-> > > > knlGS:0000000000000000^M
-> > > > CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b^M
-> > > > CR2: 0000000000000000 CR3: 0000000004745000 CR4: 
-> > 00000000000006e0^M
-> > > > Process insmod (pid: 977, threadinfo ffff81000474c000, task 
-> > > > ffff81000443cf40)^M
-> > > > Stack:  ffffffff88008e82 00003e00fc1f0000 0000000000000000 
-> > > > ffff810004fe4cd8^M
-> > > >  ffff810004fe4800 0000000000000000 ffffffff8800a6dd 
-> > 0000000000000032^M
-> > > >  ffffffff88008c3b 0000000000000000 ffffffff00000000 
-> > ffff81000474dc7c^M
-> > > > Call Trace:^M
-> > > >  [<ffffffff88008e82>] :aacraid:rx_sync_cmd+0x15c/0x16a^M
-> > > >  [<ffffffff88008c3b>] :aacraid:aac_rx_restart_adapter+0x7e/0x169^M
-> > > >  [<ffffffff88009121>] :aacraid:_aac_rx_init+0x7b/0x2fc^M
-> > > >  [<ffffffff88002b1f>] :aacraid:aac_probe_one+0x1a2/0x457^M
-> > > >  [<ffffffff8112be3d>] pci_device_probe+0x4c/0x75^M
-> > > >  [<ffffffff8117d41e>] really_probe+0xc4/0x148^M
-> > > >  [<ffffffff8117d64f>] __driver_attach+0x6d/0xab^M
-> > > >  [<ffffffff8117d5e2>] __driver_attach+0x0/0xab^M
-> > > >  [<ffffffff8117d5e2>] __driver_attach+0x0/0xab^M
-> > > >  [<ffffffff8117c8f6>] bus_for_each_dev+0x43/0x6e^M
-> > > >  [<ffffffff8117cc38>] bus_add_driver+0x6b/0x18d^M
-> > > >  [<ffffffff8112bfdb>] __pci_register_driver+0x72/0xa7^M
-> > > >  [<ffffffff8801203a>] :aacraid:aac_init+0x3a/0x75^M
-> > > >  [<ffffffff8103bbcc>] sys_init_module+0x1195/0x12e6^M
-> > > >  [<ffffffff8100913e>] system_call+0x7e/0x83^M
-> > > > ^M
-> > > > ^M
-> > > > Code:  Bad RIP value.^M
-> > > > RIP  [<0000000000000000>]^M
-> > > >  RSP <ffff81000474dbf0>^M
-> > > > CR2: 0000000000000000^M
-> > > > 
-> > > > There is an extra line in the call trace for the 'rx_sync_cmd'.
-> > > > 
-> > > > Judith
-> > > > 
-> > > > > 
-> > > > > IMHO, this needs to be applied immediately regardless of 
-> > > > the status of
-> > > > > the kexec patch as this issue is present in the 
-> > > > scsi-misc-2.6 driver for
-> > > > > all existing init-time recovery actions. This patch in 
-> > > > principal would
-> > > > > not be different w/o the kexec patch.
-> > > > > 
-> > > > > ObligatoryDisclaimer: Please accept my condolences 
-> > > > regarding Outlook's
-> > > > > handling of patches.
-> > > > > 
-> > > > > This attached patch is against current scsi-misc-2.6
-> > > > >  
-> > > > > Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-> > > > > 
-> > > > > ---
-> > > > > 
-> > > > > Sincerely -- Mark Salyzyn
-> > > > 
-> > > > 
-> > > > 
-> > 
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/scsi_scan.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff -puN drivers/scsi/scsi_scan.c~scsi_scan_short_inq_log drivers/scsi/scsi_scan.c
+--- linux-2.6/drivers/scsi/scsi_scan.c~scsi_scan_short_inq_log	2007-04-02 15:10:46.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/scsi_scan.c	2007-04-02 15:13:39.000000000 -0500
+@@ -662,8 +662,8 @@ static int scsi_probe_lun(struct scsi_de
+ 	 * strings.
+ 	 */
+ 	if (sdev->inquiry_len < 36) {
+-		printk(KERN_INFO "scsi scan: INQUIRY result too short (%d),"
+-				" using 36\n", sdev->inquiry_len);
++		SCSI_LOG_SCAN_BUS(1, printk(KERN_INFO "scsi scan: INQUIRY result too"
++					    " short (%d), using 36\n", sdev->inquiry_len));
+ 		sdev->inquiry_len = 36;
+ 	}
+ 
+_
