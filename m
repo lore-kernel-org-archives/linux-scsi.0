@@ -1,84 +1,69 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SMP pass through interface via bsg
-Date: Sun, 01 Apr 2007 22:57:42 -0500
-Message-ID: <1175486263.27675.11.camel@mulgrave.il.steeleye.com>
-References: <20070402110125U.fujita.tomonori@lab.ntt.co.jp>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Mon, 2 Apr 2007 11:20:48 +0200
+Message-ID: <20070402112048.047867c1@gondolin.boeblingen.de.ibm.com>
+References: <460CDBA6.5030608@gmail.com>
+	<1175257751.3760.19.camel@mulgrave.il.steeleye.com>
+	<460D12B8.6050101@gmail.com>
+	<1175278774.3760.44.camel@mulgrave.il.steeleye.com>
+	<20070401195943.GA29627@htj.dyndns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:54421 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752834AbXDBD6H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Apr 2007 23:58:07 -0400
-In-Reply-To: <20070402110125U.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070401195943.GA29627@htj.dyndns.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: hch@infradead.org, dougg@torque.net, James.Smart@Emulex.Com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-On Mon, 2007-04-02 at 11:49 +0900, FUJITA Tomonori wrote:
-> I started to work on SMP pass through via bsg as a non-SCSI command
-> experimentation. I asked Doug to try the patch but it seems to take
-> some time to make Doug's hardware work with the mainline aic94xxx
-> driver.
+On Mon, 2 Apr 2007 04:59:43 +0900,
+Tejun Heo <htejun@gmail.com> wrote:
 
-If you post the code, others who also have the hardware can try it
-too ...
+> Okay, here's preliminary patch.  I've tested it very lightly so it's
+> likely to contain bugs and definitely needs to be splitted.
 
-> How should a user-space tool (like Doug's smp_utils) send a request
-> and get the response via bsg?
+Cool. However, there's something fishy there (not sure whether it's in
+your patch or a latent bug in the ccw bus code that just has been
+uncovered):
 
-Basic frame in/frame out ... this is why we need the block layer
-bidirectional support
+------------[ cut here ]------------
+kernel BUG at mm/slab.c:607!
+illegal operation: 0001 [#1]
+CPU:    1    Not tainted
+Process kslowcrw (pid: 36, task: 0000000001a80cc0, ksp:
+0000000001a87ce0) Krnl PSW : 0404000180000000 00000000000b21b0
+(kfree+0x144/0x154) R:0 T:1 IO:0 EX:0 Key:0 M:1 W:0 P:0 AS:0 CC:0 PM:0
+EA:3 Krnl GPRS: 0000000000000000 0000000000000000 00000000009836d8
+000003fffd22ffe0 00000000000b20aa 0000000000396ba8 0000000001a6d100
+0000000000986c88 0700000001a879d8 0000000000555428 000000000344a5b0
+0000000001a879c8 000000000344a500 0000000000390ca8 00000000000b20aa
+0000000001a879c8 Krnl Code: 00000000000b21a2: e392c0480024
+stg     %r9,72(%r2,%r12) 00000000000b21a8: a7f4ffc9           brc
+15,1000b213a 00000000000b21ac: a7f40001           brc     15,b21ae
+          >00000000000b21b0: a7f4ff9d           brc     15,1000b20ea
+           00000000000b21b4: e33030100004       lg      %r3,16(%r3)
+           00000000000b21ba: a7f4ff90           brc     15,1000b20da
+           00000000000b21be: 0707               bcr     0,%r7
+           00000000000b21c0: eb8ff0580024       stmg
+%r8,%r15,88(%r15) Call Trace:
+([<00000000000b20aa>] kfree+0x3e/0x154)
+ [<00000000001166f2>] release_sysfs_dirent+0x3e/0xf4
+ [<0000000000114914>] sysfs_hash_and_remove+0x150/0x154
+ [<0000000000118aec>] remove_files+0x48/0x68
+ [<0000000000118b84>] sysfs_remove_group+0x78/0xe8
+ [<00000000001cce3c>] device_remove_groups+0x48/0x68
+ [<00000000001cd4c0>] device_remove_attrs+0x3c/0x7c
+ [<00000000001cd70e>] device_del+0x20e/0x3a8
+ [<00000000001cd8d2>] device_unregister+0x2a/0x44
+ [<000000000022fb2c>] css_sch_device_unregister+0x3c/0x54
+ [<0000000000230124>] css_evaluate_subchannel+0x2f0/0x400
+ [<000000000023041a>] css_trigger_slow_path+0xda/0x154
+ [<0000000000054c9a>] run_workqueue+0x136/0x1fc
+ [<0000000000054e3a>] worker_thread+0xda/0x170
+ [<000000000005b05a>] kthread+0x122/0x15c
+ [<0000000000019912>] kernel_thread_starter+0x6/0xc
+ [<000000000001990c>] kernel_thread_starter+0x0/0xc
 
-> -- each SAS object (host, device, expander, etc) has the own bsg
-> device
-
-I think so; probably attached via the transport class.
-
-> A user-space tool opens a bsg device for a sas object that it wants to
-> send a request to.
-> 
-> -- one bsg device handles multiple SAS objects
-> 
-> Some options: one bsg device in the whole system; one bsg device per
-> SAS driver; one bsg device per SAS host; etc.
-> 
-> With this approach, we need to invent a header incluing routing
-> information.
-> 
-> My hacky patch creates one bsg device per SAS host and invents:
-> 
-> struct smp_passthrough_hdr {
->         __u64 sas_address;
->         __u8 phy_identifier;
-> };
-
-I'd really rather not go this route unless the one device per object
-approach becomes untenable.
-
-> a user-space tool sends this header instead of scb via bsg and put a
-> SMP request at dout_xfer and a buffer response at din_xfer (note that
-> now I do bidi transfer in a hacky way).
-> 
-> 
-> - SAS implementation details
-> 
-> As I said, the patch is too hacky. I just tried to implement a
-> smp_portal alternative by using bsg.
-> 
-> The patch adds a hook into sas transport class. sas_host_setup calls
-> bsg_register_queue. Then, the request_fn calls smp_execute_task to
-> send a smp request and get the response. It doesn't look good to link
-> the sas transport class with libsas. In addition, the mpt driver
-> handles smp request/response in a very different way.
-> 
-> Any suggestion to bind SMP pass through via bsg to aic94xx and mpt
-> cleanly?
-
-bind in the transport class, not the driver ...
-
-James
-
-
+This happens when I detach a device (which causes it to be
+unregistered). I'll look at it when I'm fully operational.
