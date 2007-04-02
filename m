@@ -1,8 +1,8 @@
 From: "Duane Cox" <dcox@conxxus.com>
 Subject: RE: [PATCH] aacraid: Panics during init time reset (Was: [PATCH] aacraid: [Fastboot] Panics for AACRAID driver during 'insmod' for kexec test)
-Date: Mon, 2 Apr 2007 15:03:50 -0500
-Message-ID: <6B78FD05EF2B0C46AB4CBE68D7923A3B0AB4A7@mantle.conxxus.com>
-References: <20070402194358.GE2364@shell0.pdx.osdl.net> <AE4F746F2AECFC4DA4AADD66A1DFEF017AA143@otce2k301.adaptec.com>
+Date: Mon, 2 Apr 2007 15:04:54 -0500
+Message-ID: <6B78FD05EF2B0C46AB4CBE68D7923A3B0AB4A8@mantle.conxxus.com>
+References: <20070402194358.GE2364@shell0.pdx.osdl.net> <AE4F746F2AECFC4DA4AADD66A1DFEF017AA143@otce2k301.adaptec.com> <6B78FD05EF2B0C46AB4CBE68D7923A3B0AB4A7@mantle.conxxus.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
@@ -10,14 +10,25 @@ Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from conxxus-gw.pxtnil.ntwk.conxxus.net ([63.252.228.142]:63377 "EHLO
 	exchange.conxxus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992729AbXDDILm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2007 04:11:42 -0400
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF017AA143@otce2k301.adaptec.com>
+	with ESMTP id S2992716AbXDDILl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2007 04:11:41 -0400
+In-Reply-To: <6B78FD05EF2B0C46AB4CBE68D7923A3B0AB4A7@mantle.conxxus.com>
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Judith Lebzelter <judith@linux-foundation.org>
+To: Duane Cox <dcox@conxxus.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Judith Lebzelter <judith@linux-foundation.org>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+
+By bad... 'interrpt' typo
+
+-----Original Message-----
+From: Duane Cox 
+Sent: Monday, April 02, 2007 3:04 PM
+To: 'Salyzyn, Mark'; Judith Lebzelter
+Cc: James Bottomley; linux-scsi@vger.kernel.org
+Subject: RE: [PATCH] aacraid: Panics during init time reset (Was:
+[PATCH] aacraid: [Fastboot] Panics for AACRAID driver during 'insmod'
+for kexec test)
 
 Attempted to compile 2.6.20.3 kernel results in...
 
@@ -34,7 +45,7 @@ make[1]: *** [drivers/scsi] Error 2
 make: *** [drivers] Error 2
 
 -----Original Message-----
-From: Salyzyn, Mark [mailto:mark_salyzyn@adaptec.com] 
+From: Salyzyn, Mark [mailto:mark_salyzyn@adaptec.com]
 Sent: Monday, April 02, 2007 2:57 PM
 To: Judith Lebzelter
 Cc: James Bottomley; linux-scsi@vger.kernel.org; Duane Cox
@@ -82,13 +93,13 @@ Sincerely -- Mark Salyzyn
 > 
 > Mark,
 > 
-> I applied this patch and ran a kexec test again and I still got a 
+> I applied this patch and ran a kexec test again and I still got a
 > panic:
 > 
 > Loading aacraid.Adaptec aacraid driver (1.1-5[2437]-mh4)^M ko module^M
-> ACPI: PCI Interrupt 0000:03:0e.0[A] -> Link [LNKC] -> GSI 3 (level, 
+> ACPI: PCI Interrupt 0000:03:0e.0[A] -> Link [LNKC] -> GSI 3 (level,
 > low) -> IRQ 3^M Unable to handle kernel NULL pointer dereference at 
-> 0000000000000000 RIP: ^M  [<0000000000000000>]^M PGD 4791067 PUD 
+> 0000000000000000 RIP: ^M  [<0000000000000000>]^M PGD 4791067 PUD
 > 473c067 PMD 0 ^M
 > Oops: 0010 [1] ^M
 > CPU 0 ^M
@@ -117,7 +128,7 @@ Sincerely -- Mark Salyzyn
 >  [<ffffffff88008c3b>] :aacraid:aac_rx_restart_adapter+0x7e/0x169^M
 >  [<ffffffff88009121>] :aacraid:_aac_rx_init+0x7b/0x2fc^M
 >  [<ffffffff88002b1f>] :aacraid:aac_probe_one+0x1a2/0x457^M
->  [<ffffffff8112be3d>] pci_device_probe+0x4c/0x75^M  
+>  [<ffffffff8112be3d>] pci_device_probe+0x4c/0x75^M 
 > [<ffffffff8117d41e>] really_probe+0xc4/0x148^M  [<ffffffff8117d64f>] 
 > __driver_attach+0x6d/0xab^M  [<ffffffff8117d5e2>] 
 > __driver_attach+0x0/0xab^M  [<ffffffff8117d5e2>] 
