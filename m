@@ -1,70 +1,86 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: SMP pass through interface via bsg
-Date: Tue, 03 Apr 2007 03:55:42 +0900
-Message-ID: <20070403035542B.fujita.tomonori@lab.ntt.co.jp>
-References: <1175533302.3680.31.camel@mulgrave.il.steeleye.com>
-	<20070402221349L.fujita.tomonori@lab.ntt.co.jp>
-	<20070402181238.GB15273@kernel.dk>
+From: Brian King <brking@us.ibm.com>
+Subject: Re: [PATCH 1/1] scsi: Add EH Start Unit retry
+Date: Mon, 02 Apr 2007 13:57:56 -0500
+Message-ID: <46115234.20308@us.ibm.com>
+References: <11751999513070-patch-mail.ibm.com> <460C375F.1000000@torque.net>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:57566 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965680AbXDBS4A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 14:56:00 -0400
-In-Reply-To: <20070402181238.GB15273@kernel.dk>
+Received: from e32.co.us.ibm.com ([32.97.110.150]:38214 "EHLO
+	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965693AbXDBS6B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 14:58:01 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l32Itq4t001470
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 14:55:52 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l32Iw05o198200
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 12:58:00 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l32IvxYO006813
+	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 12:58:00 -0600
+In-Reply-To: <460C375F.1000000@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, hch@infradead.org, dougg@torque.net, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: dougg@torque.net
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: SMP pass through interface via bsg
-Date: Mon, 2 Apr 2007 20:12:38 +0200
-
-> On Tue, Apr 03 2007, FUJITA Tomonori wrote:
-> > From: James Bottomley <James.Bottomley@SteelEye.com>
-> > Subject: Re: SMP pass through interface via bsg
-> > Date: Mon, 02 Apr 2007 12:01:41 -0500
-> > 
-> > > On Tue, 2007-04-03 at 01:43 +0900, FUJITA Tomonori wrote:
-> > > > OK. I found another bug in smp_test tool (sends bogus response buffer
-> > > > len to kernel). I've uploaded a new patch:
-> > > > 
-> > > > http://zaal.org/bsg/smp-test2.diff
-> > > 
-> > > That sort of works; you have a final bug in that the manufacturer info
-> > > response frame is 64 bytes, not 128 bytes, but with that corrected
-> > > everything goes through and I get the result back:
-> > > 
-> > > hobholes:~# /home/jejb/git/sgv4-tools/smp_test /sys/class/bsg/expander-2\:0
-> > >   SAS-1.1 format: 0
-> > >   vendor identification: LSILOGIC
-> > >   product identification: SASx12 A.0      
-> > >   product revision level: 
-> > > 
-> > > So we can class this one as a success ... 
-> > >
-> > > Thanks!
-> > 
-> > Great! Thanks. I'll try to finish the mpt driver's hook
-> > sometime. Finally, We have a bsg user (though it also needs proper
-> > bidi support).
-> > 
-> > Jens, what remains to be done before bsg is merged into mainline?
+Douglas Gilbert wrote:
+> Brian King wrote:
+>> Currently, the scsi error handler will issue a START_UNIT
+>> command if the drive indicates it needs its motor started
+>> and the allow_restart flag is set in the scsi_device. If,
+>> after the scsi error handler invokes a host adapter reset
+>> due to error recovery, a device is in a unit attention
+>> state AND also needs a START_UNIT, that device will be placed
+>> offline. The disk array devices on an ipr RAID adapter
+>> will do exactly this when in a dual initiator configuration.
+>> This patch adds a single retry to the EH initiated
+>> START_UNIT.
 > 
-> Well the bi-dir stuff and sg v4 design were the two bits that needed to
-> get done before pushing bsg made sense, so we are getting there...
-> Probably a 2.6.23 target, leaving the bidi bits a revision cycle to get
-> sorted out.
+> I have no objection to this patch. Just seems a pity
+> that SCSI devices go to the trouble of sending unit
+> attentions while OSes just throw them away.
 
-sg v4 design issues refer to:
+I agree. The reason the ipr adapter firmware added this UA
+in this configuration was to support SCSI 1 reservations and
+communicate to the host that any reservation previously
+held to the disk array is now lost since the adapter was reset.
 
-- iovec support
+> Perhaps the scsi_device sysfs directory could have entries
+> like:
+>   last_ua_asc
+>   last_ua_ascq
+>   last_ua_timestamp
+> where code could place the asc/ascq codes and a timestamp
+> then continue doing a retry.
+> Could we get a log entry, hotplug event?
 
-- an alternative to the read/write interface
+If we did have a way to communicate UA's to userspace like this
+it seems like it would allow usage of SCSI 1 reservations
+in this config and make it easier for an out of band tool to
+manage these reservations. I wonder if it would be cleaner if
+UAs could simply be sent up as netlink events / uevents, so they
+could contain all the information needed in one packet, rather
+than having to read sysfs attributes to figure out what happened.
 
-- scsi command tag (possibly larger than 64 bits)
+> Logical units may queue unit attentions (sam4r10.pdf
+> section 5.8.7) so it is possible that one retry may
+> not be enough. With my suggestion above, only the last
+> one would persist for a reasonable time.
 
-What else?
+Yep. I've already ran into that with dual ported SAS devices.
+While one retry is sufficient for the ipr disk array devices I am
+trying to fix this for, I have no objection to increasing it.
+Maybe its just a case of increasing it later if it ends up
+being an issue.
+
+Brian
+
+-- 
+Brian King
+eServer Storage I/O
+IBM Linux Technology Center
+
