@@ -1,86 +1,101 @@
-From: Brian King <brking@us.ibm.com>
-Subject: Re: [PATCH 1/1] scsi: Add EH Start Unit retry
-Date: Mon, 02 Apr 2007 13:57:56 -0500
-Message-ID: <46115234.20308@us.ibm.com>
-References: <11751999513070-patch-mail.ibm.com> <460C375F.1000000@torque.net>
-Reply-To: brking@linux.vnet.ibm.com
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
+Date: Mon, 2 Apr 2007 12:24:28 -0700 (PDT)
+Message-ID: <875017.73166.qm@web31811.mail.mud.yahoo.com>
+References: <460DD1B0.4080605@gmail.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:38214 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965693AbXDBS6B (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 14:58:01 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l32Itq4t001470
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 14:55:52 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l32Iw05o198200
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 12:58:00 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l32IvxYO006813
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Apr 2007 12:58:00 -0600
-In-Reply-To: <460C375F.1000000@torque.net>
+Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:26102 "HELO
+	web31811.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S965714AbXDBTY3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 15:24:29 -0400
+In-Reply-To: <460DD1B0.4080605@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com
+To: Tejun Heo <htejun@gmail.com>, Cornelia Huck <cornelia.huck@de.ibm.com>
+Cc: gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, James.Bottomley@SteelEye.com, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Douglas Gilbert wrote:
-> Brian King wrote:
->> Currently, the scsi error handler will issue a START_UNIT
->> command if the drive indicates it needs its motor started
->> and the allow_restart flag is set in the scsi_device. If,
->> after the scsi error handler invokes a host adapter reset
->> due to error recovery, a device is in a unit attention
->> state AND also needs a START_UNIT, that device will be placed
->> offline. The disk array devices on an ipr RAID adapter
->> will do exactly this when in a dual initiator configuration.
->> This patch adds a single retry to the EH initiated
->> START_UNIT.
+--- Tejun Heo <htejun@gmail.com> wrote:
+> Cornelia Huck wrote:
+> > On Sat, 31 Mar 2007 00:08:19 +0900,
+> > Tejun Heo <htejun@gmail.com> wrote:
+> > 
+> >> (3) make sure all existing kobjects are released by module exit function.
+> >>
+> >> For example, let's say there is a hypothetical disk device /dev/dk0
+> >> driven by a hypothetical driver mydrv.  /dev/dk0 is represented like the
+> >> following in the sysfs tree.
+> >>
+> >> /sys/devices/pci0000:00/0000:00:1f.0/dk0/{myknob0,myknob1}
+> >>
+> >> Owner of both attrs myknob0 and myknob1 is mydrv and opening either
+> >> increases the reference counts of dk0 and mydrv and closing does the
+> >> opposite.
+> >>
+> >> * When there is no opener of either knob and the /dev/dk0 isn't used by
+> >> anyone.  Reference count of dk0 is 1, mydrv 0.
+> > 
+> > Hm, but as long as dk0 is registered, it can be looked up and someone
+> > could get a reference on it.
 > 
-> I have no objection to this patch. Just seems a pity
-> that SCSI devices go to the trouble of sending unit
-> attentions while OSes just throw them away.
+> Yeah, exactly.  That's why any getting any kobject reference backed by a
+> module must be accompanied by try_module_get().
 
-I agree. The reason the ipr adapter firmware added this UA
-in this configuration was to support SCSI 1 reservations and
-communicate to the host that any reservation previously
-held to the disk array is now lost since the adapter was reset.
+Tejun,
 
-> Perhaps the scsi_device sysfs directory could have entries
-> like:
->   last_ua_asc
->   last_ua_ascq
->   last_ua_timestamp
-> where code could place the asc/ascq codes and a timestamp
-> then continue doing a retry.
-> Could we get a log entry, hotplug event?
+This has always been the case.
 
-If we did have a way to communicate UA's to userspace like this
-it seems like it would allow usage of SCSI 1 reservations
-in this config and make it easier for an out of band tool to
-manage these reservations. I wonder if it would be cleaner if
-UAs could simply be sent up as netlink events / uevents, so they
-could contain all the information needed in one packet, rather
-than having to read sysfs attributes to figure out what happened.
+By design, the kobject infrastructure is one such that allows for
+different behavior implementations.  You could use it to accomplish
+what you want and describe in your RFD, or you could use it to implement
+what we have today or you could use it to implement completely different
+(refcount) infrastructure.
 
-> Logical units may queue unit attentions (sam4r10.pdf
-> section 5.8.7) so it is possible that one retry may
-> not be enough. With my suggestion above, only the last
-> one would persist for a reasonable time.
+    Luben
 
-Yep. I've already ran into that with dual ported SAS devices.
-While one retry is sufficient for the ipr disk array devices I am
-trying to fix this for, I have no objection to increasing it.
-Maybe its just a case of increasing it later if it ends up
-being an issue.
 
-Brian
-
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+> 
+> int mydrv_get_dk(struct dk *dk)
+> {
+> 	rc = try_module_get(mydrv);
+> 	if (rc)
+> 		return rc;
+> 	kobject_get(&dk->kobj);
+> 	return 0;
+> }
+> 
+> >> * User issues rmmod mydrv.  As mydrv's reference count is zero, unload
+> >> proceeds and mydrv's exit function is called.
+> >>
+> >> * mydrv's exit function looks like the following.
+> >>
+> >>   mydrv_exit()
+> >>   {
+> >> 	sysfs_remove_file(dk0, myknob0);
+> >> 	sysfs_remove_file(dk1, myknob1);
+> >> 	device_del(dk0);
+> >> 	deinit controller;
+> >> 	release all resources;
+> >>   }
+> >>
+> >> The device_del(dk0) drops dk0's reference count to zero and its
+> >> ->release is invoked immediately.
+> > 
+> > And here is the problem if someone else still has a reference. The
+> > module will be unloaded, but ->release will not be called until the
+> > "someone else" gives up the reference...
+> 
+> Exactly, in that case, module reference count must not be zero.  You and
+> I are saying the same thing.  Why are we running in circle?
+> 
+> -- 
+> tejun
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
