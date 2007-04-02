@@ -1,55 +1,65 @@
-From: "Mr. James W. Laferriere" <babydr@baby-dragons.com>
-Subject: RE: MPT Fusion LSI22320 ,  Domain validation loops .
-Date: Sun, 1 Apr 2007 17:55:00 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0704011743200.21023@filesrv1.baby-dragons.com>
-References: <664A4EBB07F29743873A87CF62C26D70650FD9@NAMAIL4.ad.lsil.com>
- <Pine.LNX.4.64.0703202347010.27070@filesrv1.baby-dragons.com>
- <Pine.LNX.4.64.0703232202020.21973@filesrv1.baby-dragons.com>
- <Pine.LNX.4.64.0703311324090.3026@filesrv1.baby-dragons.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: SMP pass through interface via bsg
+Date: Mon, 2 Apr 2007 11:49:56 +0900 (JST)
+Message-ID: <20070402110125U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns3.system-techniques.com ([204.91.156.41]:40648 "EHLO
-	ns3.baby-dragons.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751153AbXDBAzE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Apr 2007 20:55:04 -0400
-In-Reply-To: <Pine.LNX.4.64.0703311324090.3026@filesrv1.baby-dragons.com>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55053 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752109AbXDBCud (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Apr 2007 22:50:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Linux Scsi maillist <linux-scsi@vger.kernel.org>
+To: hch@infradead.org, James.Bottomley@SteelEye.com, dougg@torque.net, James.Smart@Emulex.Com, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
- 	Hello Eric & All ,
+I started to work on SMP pass through via bsg as a non-SCSI command
+experimentation. I asked Doug to try the patch but it seems to take
+some time to make Doug's hardware work with the mainline aic94xxx
+driver. Meanwhile, I'd like to discuss some issues.
 
-On Sat, 31 Mar 2007, Mr. James W. Laferriere wrote:
-> 	Hello Eric & All ,  As a further on the subject matter .  The very 
-> same controllerworks flawlessly with the SuperMicro 4 bay U320 CSE-SCA-833S2 
-> Backplane .
-> 	So that (again) leaves the HP DS-SL13R-BA 4354R 14drive ultra3 
-> racKmount cabinet w/ dualbus & dualps as the culprit .
->
-> 	Does anyone have information on this disk chassis ?
-> 	There is a rj45 connector on the opposite side from the vhdci 
-> connectors .  Is that port usable for diagnostics ?  Maybe I can at least 
-> determine what it is doing that fails so miserably .
+- user/kernel interface
 
- 	Just tried attaching the same HP DS-SL13R-BA 4354R disk cabinet to the 
-aic7902 embedded controller .  This produced essentially the same effects as 
-when attached to the lsi22320 controller .
+How should a user-space tool (like Doug's smp_utils) send a request
+and get the response via bsg?
 
- 	As a point to note ,  Not all of the 4352r's are capable of U320 ,  In 
-point mine .
- 	The u320controller -> u160 -> u320disks ,  seems to be causing these 
-controllers to loose the ability to validate .  Or the drivers .
+-- each SAS object (host, device, expander, etc) has the own bsg device
 
- 	Output of the (attempt to) boot to linux 2.6.17.13 is here ...
+A user-space tool opens a bsg device for a sas object that it wants to
+send a request to.
 
-http://www.baby-dragons.com/filesrv1b-aic79xx-problem.log
+-- one bsg device handles multiple SAS objects
 
- 	Hth ,  JimL
--- 
-+-----------------------------------------------------------------+
-| James   W.   Laferriere | System   Techniques | Give me VMS     |
-| Network        Engineer | 663  Beaumont  Blvd |  Give me Linux  |
-| babydr@baby-dragons.com | Pacifica, CA. 94044 |   only  on  AXP |
-+-----------------------------------------------------------------+
+Some options: one bsg device in the whole system; one bsg device per
+SAS driver; one bsg device per SAS host; etc.
+
+With this approach, we need to invent a header incluing routing
+information.
+
+My hacky patch creates one bsg device per SAS host and invents:
+
+struct smp_passthrough_hdr {
+	__u64 sas_address;
+	__u8 phy_identifier;
+};
+
+a user-space tool sends this header instead of scb via bsg and put a
+SMP request at dout_xfer and a buffer response at din_xfer (note that
+now I do bidi transfer in a hacky way).
+
+
+- SAS implementation details
+
+As I said, the patch is too hacky. I just tried to implement a
+smp_portal alternative by using bsg.
+
+The patch adds a hook into sas transport class. sas_host_setup calls
+bsg_register_queue. Then, the request_fn calls smp_execute_task to
+send a smp request and get the response. It doesn't look good to link
+the sas transport class with libsas. In addition, the mpt driver
+handles smp request/response in a very different way.
+
+Any suggestion to bind SMP pass through via bsg to aic94xx and mpt
+cleanly?
