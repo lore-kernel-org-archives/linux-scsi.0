@@ -1,472 +1,197 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: SMP pass through interface via bsg
-Date: Mon, 02 Apr 2007 21:43:25 +0900
-Message-ID: <20070402214325Y.fujita.tomonori@lab.ntt.co.jp>
-References: <20070402110125U.fujita.tomonori@lab.ntt.co.jp>
-	<1175486263.27675.11.camel@mulgrave.il.steeleye.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] Add support for asynchronous scans to libata
+Date: Mon, 02 Apr 2007 09:21:54 -0400
+Message-ID: <46110372.4070101@emulex.com>
+References: <20061208211236.GC29763@parisc-linux.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:37037 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934021AbXDBMoT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 08:44:19 -0400
-In-Reply-To: <1175486263.27675.11.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20061208211236.GC29763@parisc-linux.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jgarzik@pobox.com
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: fujita.tomonori@lab.ntt.co.jp, hch@infradead.org, dougg@torque.net, James.Smart@Emulex.Com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SMP pass through interface via bsg
-Date: Sun, 01 Apr 2007 22:57:42 -0500
+Matt,
 
-> On Mon, 2007-04-02 at 11:49 +0900, FUJITA Tomonori wrote:
-> > I started to work on SMP pass through via bsg as a non-SCSI command
-> > experimentation. I asked Doug to try the patch but it seems to take
-> > some time to make Doug's hardware work with the mainline aic94xxx
-> > driver.
-> 
-> If you post the code, others who also have the hardware can try it
-> too ...
+Have your resolved the unload race conditions yet?
 
-I've attached a patch against Jens' bsg tree and uploaed a patch
-against the sgv4-tools tree:
+We'd like to update lpfc for the async scans, but our testing gets blocked
+very quickly by the bugs. The bugs are not necessarily specific to lpfc
+or to FC.
 
-http://zaal.org/bsg/smp-test.diff
+Stack traces are below. Simple ismod/rmmod loop can trigger them....
 
-The sgv4-tools tree is at:
-
-http://git.kernel.org/?p=linux/kernel/git/tomo/sgv4-tools.git;a=summary
+-- james s
 
 
-If everything works:
 
-gazania:/sys/class/bsg# ls
-end_device-0:0  end_device-0:1  expander-0:0  sas_host0  sda  sdb
+First one is an rmmod while lpfc is active in it's scan_start function.
+I think we're in a sleep waiting for the board to be ready when the driver
+is yanked out from underneath us.
 
-gazania:/home/fujita/sgv4-tools# ./smp_test /sys/class/bsg/expander-0\:0
+Second one is an rmmod while do_scsi_scan_host is in a loop calling
+scan_finished.
 
-
-smp_test works like Doug's smp_rep_manufacturer.
-
-Note that `smp_test /sys/class/bsg/expander-0\:0/` doesn't work.
-
-I've not tested these patches at all since I don't have proper
-hardware. So please don't be surprised if the kernel crashes.
+Third one is an rmmod immediately after completion of do_scan_async.
 
 
-> > How should a user-space tool (like Doug's smp_utils) send a request
-> > and get the response via bsg?
-> 
-> Basic frame in/frame out ... this is why we need the block layer
-> bidirectional support
+STACK TRACE 1
+-------------
 
-Yeah. Currently, I use a dirty hack to use sense buffer for bidi.
+BUG: unable to handle kernel paging request at virtual address f8941836
+  printing eip:
+f8941836
+*pde = 37e59067
+Oops: 0000 [#1]
+SMP
+Modules linked in: autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs i2c_e6
+  printing eip:
+f8941836
+*pde = 37e59067
+  chipreg pcspkr tg3 scsi_transport_fc mptspi mptscsih mptbase scsi_transport_spi sd_mod scsi_mod exd
+CPU:    2
+EIP:    0060:[<f8941836>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.20-rc7-jimp #1)
+EIP is at 0xf8941836
+eax: 00000000   ebx: 00000000   ecx: c1900000   edx: 00000286
+esi: f7ab6000   edi: f887158d   ebp: f7ab62e8   esp: ecec9f30
+ds: 007b   es: 007b   ss: 0068
+Process scsi_scan_6 (pid: 15927, ti=ecec9000 task=f2309000 task.ti=ecec9000)
+Stack: c04a2183 f65b6cc4 f8963c80 f8963c80 f71e38d0 ffffffef c04a1cef 00008180
+        00000008 f6e4aa00 00000000 00000046 00000000 f7ab62e8 f7ab6000 f887158d
+        f75fa3e0 f7ab62e8 f7ab6000 f887158d f75fa3e0 f894d6dc f89593e4 f7ab6000
+Call Trace:
+  [<c04a2183>] sysfs_dirent_exist+0x20/0x5f
+  [<c04a1cef>] sysfs_add_file+0x66/0x70
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f88713e0>] do_scsi_scan_host+0x30/0x8b [scsi_mod]
+  [<f88715aa>] do_scan_async+0x1d/0x126 [scsi_mod]
+  [<c041f7b4>] complete+0x39/0x48
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<c0436924>] kthread+0xb0/0xd8
+  [<c0436874>] kthread+0x0/0xd8
+  [<c0404977>] kernel_thread_helper+0x7/0x10
+  =======================
+Code:  Bad EIP value.
+EIP: [<f8941836>] 0xf8941836 SS:ESP 0068:ecec9f30
+  <0>Oops: 0000 [#2]
+SMP
+Modules linked in: autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs i2c_ed
+CPU:    3
+EIP:    0060:[<f8941836>]    Not tainted VLI
+EFLAGS: 00010246   (2.6.20-rc7-jimp #1)
+EIP is at 0xf8941836
+eax: 00000000   ebx: 00000000   ecx: c1902000   edx: 00000286
+esi: f74ff000   edi: f887158d   ebp: f74ff2e8   esp: ec3c1f30
+ds: 007b   es: 007b   ss: 0068
+Process scsi_scan_5 (pid: 15919, ti=ec3c1000 task=f7b92000 task.ti=ec3c1000)
+Stack: c04a2183 ece3821c f8963c80 f8963c80 f6b3942c ffffffef c04a1cef 00008180
+        00000008 f6efea00 00000000 00000046 00000002 f74ff2e8 f74ff000 f887158d
+        f7897de0 f74ff2e8 f74ff000 f887158d f7897de0 f894d6dc f89593e4 f74ff000
+Call Trace:
+  [<c04a2183>] sysfs_dirent_exist+0x20/0x5f
+  [<c04a1cef>] sysfs_add_file+0x66/0x70
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<f88713e0>] do_scsi_scan_host+0x30/0x8b [scsi_mod]
+  [<f88715aa>] do_scan_async+0x1d/0x126 [scsi_mod]
+  [<f887158d>] do_scan_async+0x0/0x126 [scsi_mod]
+  [<c0436924>] kthread+0xb0/0xd8
+  [<c0436874>] kthread+0x0/0xd8
+  [<c0404977>] kernel_thread_helper+0x7/0x10
+  =======================
 
+STACK TRACE 2
+-------------
 
-> > -- each SAS object (host, device, expander, etc) has the own bsg
-> > device
-> 
-> I think so; probably attached via the transport class.
+BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
+  printing eip:
+c0548435
+*pde = 00000000
+Oops: 0000 [#3]
+SMP
+Modules linked in: lpfc autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs d
+CPU:    3
+EIP:    0060:[<c0548435>]    Not tainted VLI
+EFLAGS: 00010202   (2.6.20-rc7-jimp #1)
+EIP is at make_class_name+0x27/0x7d
+eax: 00000000   ebx: ffffffff   ecx: ffffffff   edx: 0000000b
+esi: f887c29a   edi: 00000000   ebp: 00000000   esp: edd27ec4
+ds: 007b   es: 007b   ss: 0068
+Process fc_wq_7 (pid: 16050, ti=edd27000 task=f68b4550 task.ti=edd27000)
+Stack: f65d35f8 f8889e20 f65d35f8 f65d35f0 f8889da0 c0548616 00000000 f65d35f0
+        f69f0030 f6fdc000 00000000 c054869c f65d3400 f88720f8 f65d3400 f69f0030
+        f8872152 f65d3400 f69f0000 f88721c9 f6fdc014 f6d1d848 f8872233 f8872247
+Call Trace:
+  [<c0548616>] class_device_del+0x8c/0x10a
+  [<c054869c>] class_device_unregister+0x8/0x10
+  [<f88720f8>] __scsi_remove_device+0x1d/0x60 [scsi_mod]
+  [<f8872152>] scsi_remove_device+0x17/0x20 [scsi_mod]
+  [<f88721c9>] __scsi_remove_target+0x6e/0xa1 [scsi_mod]
+  [<f8872233>] __remove_child+0x0/0x18 [scsi_mod]
+  [<f8872247>] __remove_child+0x14/0x18 [scsi_mod]
+  [<c0545dc0>] device_for_each_child+0x1a/0x3c
+  [<f887222a>] scsi_remove_target+0x2e/0x37 [scsi_mod]
+  [<f88b7ae6>] fc_rport_final_delete+0x51/0x9a [scsi_transport_fc]
+  [<c04339ff>] run_workqueue+0x85/0x125
+  [<c042eb72>] do_sigaction+0x10f/0x149
+  [<f88b7a95>] fc_rport_final_delete+0x0/0x9a [scsi_transport_fc]
+  [<c0434359>] worker_thread+0xf9/0x124
+  [<c0421072>] default_wake_function+0x0/0xc
+  [<c0434260>] worker_thread+0x0/0x124
+  [<c0436924>] kthread+0xb0/0xd8
+  [<c0436874>] kthread+0x0/0xd8
+  [<c0404977>] kernel_thread_helper+0x7/0x10
+  =======================
+Code: 5b 04 5b c3 55 31 ed 57 89 c7 56 89 c6 53 83 cb ff 83 ec 04 89 d9 89 14 24 89 e8 f2 ae f7 d1
 
-I see. I changed my patch to use this approach.
+STACK TRACE 3
+-------------
 
+BUG: unable to handle kernel NULL pointer dereference at virtual address 00000000
+  printing eip:
+00000000
+*pde = 00000000
+Oops: 0000 [#1]
+SMP
+Modules linked in: lpfc autofs4 hidp rfcomm l2cap bluetooth sunrpc ipv6 dm_mirror dm_mod video sbs d
+CPU:    0
+EIP:    0060:[<00000000>]    Not tainted VLI
+EFLAGS: 00010206   (2.6.20-rc7-jimp #1)
+EIP is at _stext+0x3fbffc70/0x14
+eax: f64c2830   ebx: f64c2830   ecx: f887181b   edx: f6ee1414
+esi: f6ee1414   edi: f6ee1414   ebp: c054a70a   esp: eb5f4e98
+ds: 007b   es: 007b   ss: 0068
+Process vol_id (pid: 32421, ti=eb5f4000 task=e50c1550 task.ti=eb5f4000)
+Stack: c054a625 00000000 c04daa3e ec23d4c0 e9fa4000 f6ee1400 f6ee1414 e7df8800
+        f887184f e7df8a84 f6ee1400 00000286 e7df8800 c0433bc4 f8871a7c f6ee1414
+        e7df890c c06c44a8 c06c4440 f6ee148c c0433bc4 c0545cc9 ffffffff eb1f8e90
+Call Trace:
+  [<c054a625>] attribute_container_device_trigger+0x33/0xa2
+  [<c04daa3e>] kobject_cleanup+0x3e/0x5e
+  [<f887184f>] scsi_target_reap_usercontext+0x34/0x89 [scsi_mod]
+  [<c0433bc4>] execute_in_process_context+0x16/0x38
+  [<f8871a7c>] scsi_device_dev_release_usercontext+0x92/0xba [scsi_mod]
+  [<c0433bc4>] execute_in_process_context+0x16/0x38
+  [<c0545cc9>] device_release+0x26/0x6b
+  [<c04daa3e>] kobject_cleanup+0x3e/0x5e
+  [<c04daa5e>] kobject_release+0x0/0x8
+  [<c04db507>] kref_put+0x60/0x6d
+  [<c04860fa>] invalidate_bh_lru+0x26/0x37
+  [<f886a0ac>] scsi_device_put+0x16/0x2e [scsi_mod]
+  [<f88322d7>] scsi_disk_put+0x22/0x2e [sd_mod]
+  [<f8832c19>] sd_release+0x69/0x70 [sd_mod]
+  [<c04570bb>] truncate_inode_pages+0x17/0x1c
+  [<c048a4be>] __blkdev_put+0x5b/0x103
+  [<c046c70f>] __fput+0xa5/0x15b
+  [<c046a23b>] filp_close+0x51/0x58
+  [<c046b168>] sys_close+0x6d/0xa3
+  [<c0403d9c>] syscall_call+0x7/0xb
+  =======================
+Code:  Bad EIP value.
+EIP: [<00000000>] _stext+0x3fbffc70/0x14 SS:ESP 0068:eb5f4e98
 
-> > A user-space tool opens a bsg device for a sas object that it wants to
-> > send a request to.
-> > 
-> > -- one bsg device handles multiple SAS objects
-> > 
-> > Some options: one bsg device in the whole system; one bsg device per
-> > SAS driver; one bsg device per SAS host; etc.
-> > 
-> > With this approach, we need to invent a header incluing routing
-> > information.
-> > 
-> > My hacky patch creates one bsg device per SAS host and invents:
-> > 
-> > struct smp_passthrough_hdr {
-> >         __u64 sas_address;
-> >         __u8 phy_identifier;
-> > };
-> 
-> I'd really rather not go this route unless the one device per object
-> approach becomes untenable.
-
-OK. Probably, Dougs has some comments on this. I chose this because
-Dougs prefers it and at the workshop Christoph seemed to be neutral in
-two approaches.
-
-Anyway, as I said, the attached patch uses "one bsg device per one SAS
-object" approach.
-
-
-> > a user-space tool sends this header instead of scb via bsg and put a
-> > SMP request at dout_xfer and a buffer response at din_xfer (note that
-> > now I do bidi transfer in a hacky way).
-> > 
-> > 
-> > - SAS implementation details
-> > 
-> > As I said, the patch is too hacky. I just tried to implement a
-> > smp_portal alternative by using bsg.
-> > 
-> > The patch adds a hook into sas transport class. sas_host_setup calls
-> > bsg_register_queue. Then, the request_fn calls smp_execute_task to
-> > send a smp request and get the response. It doesn't look good to link
-> > the sas transport class with libsas. In addition, the mpt driver
-> > handles smp request/response in a very different way.
-> > 
-> > Any suggestion to bind SMP pass through via bsg to aic94xx and mpt
-> > cleanly?
-> 
-> bind in the transport class, not the driver ...
-
-Yeah. The problem is that requests go to libsas for aic94xx while requests
-directly go to the mpt driver.
-
-I added a hook for SMP to struct sas_function_template.
-
-diff --git a/block/bsg.c b/block/bsg.c
-index a333c93..6c7802f 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -230,8 +230,8 @@ static int blk_fill_sgv4_hdr_rq(request_
- 	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
- 			   hdr->request_len))
- 		return -EFAULT;
--	if (blk_verify_command(rq->cmd, has_write_perm))
--		return -EPERM;
-+/* 	if (blk_verify_command(rq->cmd, has_write_perm)) */
-+/* 		return -EPERM; */
- 
- 	/*
- 	 * fill in request structure
-@@ -263,7 +263,7 @@ bsg_validate_sgv4_hdr(request_queue_t *q
- 		return -EIO;
- 
- 	/* not supported currently */
--	if (hdr->protocol || hdr->subprotocol)
-+	if (hdr->protocol)
- 		return -EINVAL;
- 
- 	/*
-@@ -273,7 +273,7 @@ bsg_validate_sgv4_hdr(request_queue_t *q
- 		return 0;
- 
- 	/* not supported currently */
--	if (hdr->dout_xfer_len && hdr->din_xfer_len)
-+	if (!hdr->subprotocol && hdr->dout_xfer_len && hdr->din_xfer_len)
- 		return -EINVAL;
- 
- 	*rw = hdr->dout_xfer_len ? WRITE : READ;
-@@ -312,6 +312,12 @@ bsg_map_hdr(struct bsg_device *bd, struc
- 		return ERR_PTR(ret);
- 	}
- 
-+	if (hdr->subprotocol) {
-+		rq->sense_len = hdr->dout_xfer_len;
-+		rq->sense = (void*)(unsigned long)hdr->dout_xferp;
-+		hdr->dout_xfer_len = 0;
-+	}
-+
- 	if (hdr->dout_xfer_len) {
- 		dxfer_len = hdr->dout_xfer_len;
- 		dxferp = (void*)(unsigned long)hdr->dout_xferp;
-@@ -361,8 +367,10 @@ static void bsg_rq_end_io(struct request
- static void bsg_add_command(struct bsg_device *bd, request_queue_t *q,
- 			    struct bsg_command *bc, struct request *rq)
- {
--	rq->sense = bc->sense;
--	rq->sense_len = 0;
-+	if (!bc->hdr.subprotocol) {
-+		rq->sense = bc->sense;
-+		rq->sense_len = 0;
-+	}
- 
- 	/*
- 	 * add bc command to busy queue and submit rq for io
-@@ -449,7 +457,7 @@ static int blk_complete_sgv4_hdr_rq(stru
- 	hdr->din_resid = rq->data_len;
- 	hdr->response_len = 0;
- 
--	if (rq->sense_len && hdr->response) {
-+	if (!hdr->subprotocol && rq->sense_len && hdr->response) {
- 		int len = min((unsigned int) hdr->max_response_len,
- 			      rq->sense_len);
- 
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index 404c014..2fa4863 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -51,6 +51,8 @@ #include <linux/errno.h>
- #include <linux/jiffies.h>
- #include <linux/workqueue.h>
- #include <linux/delay.h>	/* for mdelay */
-+#include <linux/blkdev.h>
-+#include <linux/bio.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -1324,11 +1326,24 @@ mptsas_get_bay_identifier(struct sas_rph
- 	return rc;
- }
- 
-+static int mptsas_smp_request(struct Scsi_Host *host, struct sas_rphy *rphy,
-+			      struct request *req)
-+{
-+	{
-+		char *buf = bio_data(req->bio);
-+		printk("%s %d: %x %x %x %x\n", __FUNCTION__, __LINE__,
-+		       buf[0], buf[1], buf[2], buf[3]);
-+	}
-+
-+	return 0;
-+}
-+
- static struct sas_function_template mptsas_transport_functions = {
- 	.get_linkerrors		= mptsas_get_linkerrors,
- 	.get_enclosure_identifier = mptsas_get_enclosure_identifier,
- 	.get_bay_identifier	= mptsas_get_bay_identifier,
- 	.phy_reset		= mptsas_phy_reset,
-+	.smp_request		= mptsas_smp_request,
- };
- 
- static struct scsi_transport_template *mptsas_transport_template;
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index dc70c18..a082fe2 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -24,6 +24,7 @@
- 
- #include <linux/pci.h>
- #include <linux/scatterlist.h>
-+#include <linux/blkdev.h>
- 
- #include "sas_internal.h"
- 
-@@ -1915,3 +1916,47 @@ out:
- 	return res;
- }
- #endif
-+
-+int sas_smp_request(struct Scsi_Host *shost, struct sas_rphy *rphy,
-+		    struct request *req)
-+{
-+	struct domain_device *dev;
-+	char *rsp;
-+	int error, type = rphy->identify.device_type;
-+
-+	/* seems aic94xx doesn't support */
-+	if (!rphy) {
-+		printk("can we send a smp request to a host?\n");
-+		return -EINVAL;
-+	}
-+
-+	if (type != SAS_EDGE_EXPANDER_DEVICE &&
-+	    type != SAS_FANOUT_EXPANDER_DEVICE) {
-+		printk("can we send a smp request to a device?\n");
-+		return -EINVAL;
-+	}
-+
-+	dev = sas_find_dev_by_rphy(rphy);
-+	if (!dev) {
-+		printk("fail to find a domain_device?\n");
-+		return -EINVAL;
-+	}
-+
-+	rsp = kzalloc(req->sense_len, GFP_KERNEL);
-+	if (!rsp) {
-+		printk("fail to alloc smp response buffer\n");
-+		return -ENOMEM;
-+	}
-+
-+	/* TODO: multiple pages */
-+	error = smp_execute_task(dev, bio_data(req->bio),
-+				 req->data_len,
-+				 rsp, req->sense_len);
-+
-+	if (copy_to_user(req->sense, rsp, req->sense_len))
-+		printk("%s %d: fault\n", __FUNCTION__, __LINE__);
-+
-+	kfree(rsp);
-+
-+	return error;
-+}
-diff --git a/drivers/scsi/libsas/sas_init.c b/drivers/scsi/libsas/sas_init.c
-index 965698c..a15b2f6 100644
---- a/drivers/scsi/libsas/sas_init.c
-+++ b/drivers/scsi/libsas/sas_init.c
-@@ -259,6 +259,7 @@ static struct sas_function_template sft
- 	.phy_reset = sas_phy_reset,
- 	.set_phy_speed = sas_set_phy_speed,
- 	.get_linkerrors = sas_get_linkerrors,
-+	.smp_request = sas_smp_request,
- };
- 
- struct scsi_transport_template *
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index b2ef71a..bc17025 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -29,6 +29,8 @@ #include <linux/jiffies.h>
- #include <linux/err.h>
- #include <linux/slab.h>
- #include <linux/string.h>
-+#include <linux/blkdev.h>
-+#include <linux/bsg.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -152,6 +154,77 @@ static struct {
- sas_bitfield_name_search(linkspeed, sas_linkspeed_names)
- sas_bitfield_name_set(linkspeed, sas_linkspeed_names)
- 
-+static void sas_smp_fn(struct request_queue *q, struct Scsi_Host *shost,
-+		       struct sas_rphy *rphy)
-+{
-+	struct request *req;
-+	int error;
-+
-+	while (!blk_queue_plugged(q)) {
-+		req = elv_next_request(q);
-+		if (!req)
-+			break;
-+
-+		blkdev_dequeue_request(req);
-+
-+		spin_unlock(q->queue_lock);
-+
-+		printk("%s %d: %u %p %u\n", __FUNCTION__, __LINE__,
-+		       req->data_len, req->sense, req->sense_len);
-+
-+		error = to_sas_internal(shost->transportt)->f->smp_request(shost, rphy, req);
-+
-+		spin_lock_irq(q->queue_lock);
-+		req->end_io(req, error);
-+	}
-+}
-+
-+static void sas_host_smp_fn(struct request_queue *q)
-+{
-+	printk("%s %d\n", __FUNCTION__, __LINE__);
-+
-+	sas_smp_fn(q, (struct Scsi_Host *)q->queuedata, NULL);
-+}
-+
-+static void sas_non_host_smp_fn(struct request_queue *q)
-+{
-+	struct sas_rphy *rphy = q->queuedata;
-+
-+	printk("%s %d\n", __FUNCTION__, __LINE__);
-+
-+	sas_smp_fn(q, rphy_to_shost(rphy), rphy);
-+}
-+
-+static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy,
-+			      char *name)
-+{
-+	struct request_queue *q;
-+	int error;
-+
-+	if (!to_sas_internal(shost->transportt)->f->smp_request)
-+		return 0;
-+
-+	if (rphy)
-+		q = blk_init_queue(sas_non_host_smp_fn, NULL);
-+	else
-+		q = blk_init_queue(sas_host_smp_fn, NULL);
-+	if (!q)
-+		return -ENOMEM;
-+
-+	error = bsg_register_queue(q, name);
-+	if (error) {
-+		blk_cleanup_queue(q);
-+		return -ENOMEM;
-+	}
-+
-+	if (rphy)
-+		q->queuedata = rphy;
-+	else
-+		q->queuedata = shost;
-+
-+	return 0;
-+}
-+
- /*
-  * SAS host attributes
-  */
-@@ -161,12 +234,19 @@ static int sas_host_setup(struct transpo
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+	char name[BUS_ID_SIZE];
- 
- 	INIT_LIST_HEAD(&sas_host->rphy_list);
- 	mutex_init(&sas_host->lock);
- 	sas_host->next_target_id = 0;
- 	sas_host->next_expander_id = 0;
- 	sas_host->next_port_id = 0;
-+
-+	snprintf(name, sizeof(name), "sas_host%d", shost->host_no);
-+	if (sas_bsg_initialize(shost, NULL, name))
-+		dev_printk(KERN_ERR, dev, "fail to a bsg device %d\n",
-+			   shost->host_no);
-+
- 	return 0;
- }
- 
-@@ -1221,6 +1301,9 @@ struct sas_rphy *sas_end_device_alloc(st
- 	sas_rphy_initialize(&rdev->rphy);
- 	transport_setup_device(&rdev->rphy.dev);
- 
-+	if (sas_bsg_initialize(shost, &rdev->rphy, rdev->rphy.dev.bus_id))
-+		printk("fail to a bsg device %s\n", rdev->rphy.dev.bus_id);
-+
- 	return &rdev->rphy;
- }
- EXPORT_SYMBOL(sas_end_device_alloc);
-@@ -1260,6 +1343,9 @@ struct sas_rphy *sas_expander_alloc(stru
- 	sas_rphy_initialize(&rdev->rphy);
- 	transport_setup_device(&rdev->rphy.dev);
- 
-+	if (sas_bsg_initialize(shost, &rdev->rphy, rdev->rphy.dev.bus_id))
-+		printk("fail to a bsg device %s\n", rdev->rphy.dev.bus_id);
-+
- 	return &rdev->rphy;
- }
- EXPORT_SYMBOL(sas_expander_alloc);
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index ad0182e..83af586 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -662,4 +662,6 @@ int __sas_task_abort(struct sas_task *);
- int sas_eh_device_reset_handler(struct scsi_cmnd *cmd);
- int sas_eh_bus_reset_handler(struct scsi_cmnd *cmd);
- 
-+extern int sas_smp_request(struct Scsi_Host *shost, struct sas_rphy *rphy,
-+			   struct request *req);
- #endif /* _SASLIB_H_ */
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 9aedc19..29631c7 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -7,7 +7,7 @@ #include <linux/mutex.h>
- 
- struct scsi_transport_template;
- struct sas_rphy;
--
-+struct request;
- 
- enum sas_device_type {
- 	SAS_PHY_UNUSED,
-@@ -166,6 +166,7 @@ struct sas_function_template {
- 	int (*phy_reset)(struct sas_phy *, int);
- 	int (*phy_enable)(struct sas_phy *, int);
- 	int (*set_phy_speed)(struct sas_phy *, struct sas_phy_linkrates *);
-+	int (*smp_request)(struct Scsi_Host *, struct sas_rphy *, struct request *);
- };
- 
- 
