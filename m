@@ -1,64 +1,51 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: RE: [PATCH 1/4] [SCSI]stex: fix id mapping issue
-Date: Mon, 2 Apr 2007 10:46:17 -0700
-Message-ID: <B70A50D07063384EB9BCE3330D18414F0327EBB2@nonameb.ptu.promise.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: aic94xx driver woes
+Date: Mon, 02 Apr 2007 12:52:32 -0500
+Message-ID: <1175536352.3680.52.camel@mulgrave.il.steeleye.com>
+References: <460E90F3.9070601@torque.net> <460EA211.2060501@us.ibm.com>
+	 <460EB110.8060706@torque.net>
+	 <1175383041.3760.70.camel@mulgrave.il.steeleye.com>
+	 <4610161D.7060709@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:49097 "EHLO
-	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752900AbXDBRoq convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 13:44:46 -0400
-content-class: urn:content-classes:message
+Received: from hancock.steeleye.com ([71.30.118.248]:60364 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965550AbXDBRxB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 13:53:01 -0400
+In-Reply-To: <4610161D.7060709@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, Promise_Linux <Promise_Linux@promise.com>
+To: dougg@torque.net
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+On Sun, 2007-04-01 at 16:29 -0400, Douglas Gilbert wrote:
+> ...
+> sas: phy3 added to port0, phy_mask:0x8
+> sas: DOING DISCOVERY on port 0, pid:2110
+> aic94xx: scb:0x80 timed out
+
+This might be the problem.
+
+I see this periodically when a phy goes out to lunch on my system ...
+with me, it always seems to be phy0 of a port containing phy0-4 ... so
+phy1-3 still function to get messages.
+
+Can you try sending a link reset to phy3?
+
+It should be something like
+
+echo 1 > /sys/class/sas_phy/phy-X:3/link_reset
+
+and see if it just produces 
+
+aic94xx: scb:0x80 timed out
+
+Again?
+
+Thanks,
+
+James
 
 
-
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org] 
-> Sent: Saturday, March 31, 2007 2:27 AM
-> To: Ed Lin
-> Cc: linux-scsi; linux-kernel; james.Bottomley; jeff; Promise_Linux
-> Subject: Re: [PATCH 1/4] [SCSI]stex: fix id mapping issue
-> 
-> 
-> On Fri, Mar 30, 2007 at 03:21:33PM -0700, Ed Lin wrote:
-> > +	if (hba->cardtype == st_shasta) {
-> >  		req->lun = lun;
-> >  		req->target = id;
-> > +	} else if (hba->cardtype == st_yosemite){
-> > +		req->lun = id * ST_MAX_LUN_PER_TARGET + lun;
-> > +		req->target = 0;
-> > +	} else {
-> > +		/* st_vsc and st_vsc1 */
-> > +		req->lun = 0;
-> > +		req->target = id * ST_MAX_LUN_PER_TARGET + lun;
-> 
-> I don't get why you can't export id as targer and lun as lun for
-> the !st_shasta types.  Could you explain in detail what the problem
-> with that approach would be?
-> 
->
-
-Of course I can do that. That will result in 1 target and 128 lun
-for st_yosemite and 128 target and 1 lun for st_vsc. That seems
-a little weird and I am afraid it will be turned down. Also
-I can keep a same mapping for the console in the original code.
-
-If you think it's ok, that's really better, because it makes the
-hot path a bit faster. Also because of the CONFIG_SCSI_MULTI_LUN
-option, I have to map lun to channel otherwise many entities
-will disappear when that option is not selected. Plus I have to
-reserve a slot for the RAID console, so the final mapping may be:
-
-channel:0~7, id:0~16(st_shasta, channel 0,id 16 is reserved for console)
-channel:0~127, id:0~1(st_yosemite, channel 0,id 1 is reserved for
-console)
-channel:0, id:0~128(st_vsc, channel 0,id 128 is reserved for console)
-
-I don't know whether this is acceptable. 
