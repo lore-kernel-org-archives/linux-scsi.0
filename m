@@ -1,31 +1,41 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [patch 1/1] scsi: Disable short inquiry log by default
-Date: Mon, 2 Apr 2007 15:35:39 -0600
-Message-ID: <20070402213539.GI826@parisc-linux.org>
+Date: Mon, 02 Apr 2007 16:42:16 -0500
+Message-ID: <1175550136.3680.84.camel@mulgrave.il.steeleye.com>
 References: <200704022120.l32LKOZU018499@d03av02.boulder.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:43692 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965920AbXDBVfk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 17:35:40 -0400
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:34031 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S965959AbXDBVmU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 17:42:20 -0400
 In-Reply-To: <200704022120.l32LKOZU018499@d03av02.boulder.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: brking@linux.vnet.ibm.com
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Apr 02, 2007 at 04:20:22PM -0500, brking@linux.vnet.ibm.com wrote:
->  	if (sdev->inquiry_len < 36) {
-> -		printk(KERN_INFO "scsi scan: INQUIRY result too short (%d),"
-> -				" using 36\n", sdev->inquiry_len);
-> +		SCSI_LOG_SCAN_BUS(1, printk(KERN_INFO "scsi scan: INQUIRY result too"
-> +					    " short (%d), using 36\n", sdev->inquiry_len));
->  		sdev->inquiry_len = 36;
+On Mon, 2007-04-02 at 16:20 -0500, brking@linux.vnet.ibm.com wrote:
+> If a scsi device reports less than 36 bytes of standard inquiry
+> data, scsi core logs a KERN_INFO printk indicating this. It was
+> observed that this results in lots of clutter in the log on
+> systems with devices that respond to a SCSI Inquiry with PQ=3 or
+> PQ=1 with less than 36 bytes of inquiry data, such as ibmvscsi.
+> Disable this log by default.
 
-The wrapping's a bit awkward.  How about:
-+		SCSI_LOG_SCAN_BUS(1, printk(KERN_INFO "scsi scan: INQUIRY "
-+					"result too short (%d), using 36\n",
-+					sdev->inquiry_len);
+It shouldn't be doing this ... the standards are pretty clear, say SPC-3
+section 6.4.2
+
+"The standard INQUIRY data shall contain at least 36 bytes"
+
+Horrible things happen when this rule is violated (as it is by some
+badly constructed devices), so I'd really like to leave the print in so
+we know what we're debugging.
+
+Can't you fix ibmvscsi to be standards compliant?
+
+James
+
+
