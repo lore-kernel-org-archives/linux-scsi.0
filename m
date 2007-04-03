@@ -1,40 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [RFD driver-core] Lifetime problems of the current driver model
-Date: Tue, 03 Apr 2007 12:08:40 +0900
-Message-ID: <4611C538.7050007@gmail.com>
-References: <460CDBA6.5030608@gmail.com>	<1175257751.3760.19.camel@mulgrave.il.steeleye.com>	<460D12B8.6050101@gmail.com>	<1175278774.3760.44.camel@mulgrave.il.steeleye.com>	<20070401195943.GA29627@htj.dyndns.org>	<20070402112048.047867c1@gondolin.boeblingen.de.ibm.com> <20070402173443.0a3b5c51@gondolin.boeblingen.de.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/1] scsi: Add EH Start Unit retry
+Date: Mon, 02 Apr 2007 22:09:51 -0500
+Message-ID: <1175569791.3680.94.camel@mulgrave.il.steeleye.com>
+References: <11751999513070-patch-mail.ibm.com>
+	 <460C375F.1000000@torque.net>  <46115234.20308@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070402173443.0a3b5c51@gondolin.boeblingen.de.ibm.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, gregkh@suse.de, hugh@veritas.com, dmitry.torokhov@gmail.com, oneukum@suse.de, maneesh@in.ibm.com, rpurdie@rpsys.net, Jeff Garzik <jgarzik@pobox.com>, lkml <linux-kernel@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:36274 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751149AbXDCDKr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 2 Apr 2007 23:10:47 -0400
+In-Reply-To: <46115234.20308@us.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: dougg@torque.net, linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com
 
-Cornelia Huck wrote:
-> On Mon, 2 Apr 2007 11:20:48 +0200,
-> Cornelia Huck <cornelia.huck@de.ibm.com> wrote:
-> 
->> Cool. However, there's something fishy there (not sure whether it's in
->> your patch or a latent bug in the ccw bus code that just has been
->> uncovered):
-> 
-> Similar bug when loading/unloading a module that creates a driver
-> attribute. The winner seems to be kfree(sd->s_element) in
-> release_sysfs_dirent() (in case of an attribute, it will point to the
-> attribute structure, which is usually statically created)...
+On Mon, 2007-04-02 at 13:57 -0500, Brian King wrote:
+> I agree. The reason the ipr adapter firmware added this UA
+> in this configuration was to support SCSI 1 reservations and
+> communicate to the host that any reservation previously
+> held to the disk array is now lost since the adapter was reset.
 
-Thanks for finding it out.  I was suspecting that last minute change.
-The code should be
+For that particular case, scsi_report_bus_reset() was the original
+design concept ... it's asynchronous when the problem occurs ... if you
+have to wait until UA, you don't necessarily find there's a problem
+until much later.
 
-if (dir node)
-	kfree(s_element)
-else if (symlink node)
-	do things and kfree()
+James
 
-Thanks.
 
--- 
-tejun
+
