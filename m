@@ -1,139 +1,127 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: Linux tape drivers
-Date: Thu, 5 Apr 2007 00:54:19 +0300 (EEST)
-Message-ID: <Pine.LNX.4.64.0704050016010.8139@kai.makisara.local>
-References: <200704031508.37222.kern@sibbald.com>
- <20070403133904.0029ccd2.akpm@linux-foundation.org>
- <Pine.LNX.4.64.0704042029430.8139@kai.makisara.local> <200704042258.50296.kern@sibbald.com>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH 1/4] stex: fix id mapping issue(v3)
+Date: Wed, 4 Apr 2007 16:56:26 -0700
+Message-ID: <NONAMEB8v5DkoQ4qcm500000733@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emh04.mail.saunalahti.fi ([62.142.5.110]:32779 "EHLO
-	emh04.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751959AbXDDVyY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2007 17:54:24 -0400
-In-Reply-To: <200704042258.50296.kern@sibbald.com>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:45923 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752871AbXDDXyu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2007 19:54:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kern Sibbald <kern@sibbald.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Willem Riede <wrlk@riede.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "james.Bottomley" <james.Bottomley@SteelEye.com>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
-On Wed, 4 Apr 2007, Kern Sibbald wrote:
 
-> On Wednesday 04 April 2007 20:46, Kai Makisara wrote:
-...
-> > > >   c. There is a real lack of information about any error condition
-> > > >       (read/write). One can probably get it via direct SCSI commands, 
-> but
-> > > >       why not through an ioctl.
-> > 
-> > This is true. The problem is what and how to tell the user so that the 
-> > solution is satisfactory for a reasonable number of years. The solutions I 
-> > have thought about have not passed this test. One alternative is to pass 
-> > the latest sense data to the user but thinking about the different error 
-> > conditions, this is a problematic choice. Here also suggestions from and 
-> > discussion with real users is needed.
-> 
-> Well, you have in front of you a "real" user.
+The correct internal mapping of stex controllers should be:
+id:0~15, lun:0~7 (st_shasta)
+id:0, lun:0~127 (st_yosemite)
+id:0~127, lun:0 (st_vsc and st_vsc1)
 
-Yes, you are one of the people I meant with "real users".
+Unfortunately we can not use the internal id/lun as scsi
+mid layer id/lun. The Linux kernel has a config option
+CONFIG_SCSI_MULTI_LUN. This option is not selected
+in some major Linux releases. If it is not selected,
+then st_shasta can expose 16 LDs(logical drive)
+at most, while st_yosemite can expose only one LD.
+This is clearly unacceptable.
 
->                                               I was thinking about a new 
-> ioctl() that would hopefully be simple, generic, and extensible enough that 
-> it might be picked up by all Unixes. This is one case were even if it is a 
-> Linux only solution, I will be really happy. Basically, when I get a -1 
-> return from a read/write and ERRNO=EIO, I would like to be able to call an 
-> ioctl() and get back some basic info about soft errors, hard errors, ...  If 
-> you don't tell me that a new ioctl() is out of the question, I'll make a 
-> proposal -- it will take me some time to put it together.
-> 
-The general attitude seems to be against new ioctls but I don't want to 
-rule out that. The mt interface already uses ioctls and they solve the 
-serialisation problem nicely in this case.
+This patch is a workaround for this issue.  Since every
+LD is 'normal', and should be ignored/skipped in no
+circumstances, we report that the max_id for LD is
+128, then when commands are sent out by scsi
+mid layer, we map id/lun pair based on controller type.
 
-Whatever the method of delivery will be, the most difficult question is 
-the contents and format. I don't know any good examples from other 
-systems, so it has to be Linux-specific (and hopefully adopted by others 
-as you say). I will wait with interest for your suggestion.
+Please consider the situation, and apply the patch.
+Thanks.
 
-...
-> > > >    e. Apparently only root can do the following (IMO, this is a bug or 
-> > > >        programming oversight): 
-> > > > 
-> > > >          struct mtop mt;
-> > > >          mt.mt_op = MTSETDRVBUFFER;
-> > > >          mt.mt_count = MT_ST_CLEARBOOLEANS;
-> > > >          mt.mt_count |= MT_ST_FAST_MTEOM;
-> > > >          ...
-> > > >          ioctl(fd, MIOCTOP, &mt);
-> > > > 
-> > > >       Typically Bacula runs tape daemon as non-root.  Is there a good 
-> reason 
-> > > >        why program that has write permission on the device cannot do 
-> this
-> > > >        ioctl() and is it possible to change this?
-> > > > 
-> > This is not a bug or an oversight, it is a design decision. The idea is 
-> > that the system provides the same view of the tape to all users. This view 
-> > is defined by the system manager (probably with startup scripts). If each 
-> > user can change the behaviour, the next user never knows what to expect. 
-> 
-> Well, I agree that all users should have the same view.  However, when Bacula 
-> has the drive open, it has it open exclusively, so no other users can view 
-> the drive. When Bacula opens the drive, it should be able to ensure that the 
-> drive, agrees with Bacula's concept of the drive.  When Bacula closes the 
-> drive, I have no problem if the OS resets values to the common view.  Today, 
-> if Bacula is running as bacula:disk rather than root:root, it cannot make the 
-> above changes, even if the disk group has write access to the drive.
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 69be132..d114e4c 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -113,10 +113,6 @@ enum {
+ 	SG_CF_64B				= 0x40,	/* 64 bit item */
+ 	SG_CF_HOST				= 0x20,	/* sg in host memory */
+ 
+-	ST_MAX_ARRAY_SUPPORTED			= 16,
+-	ST_MAX_TARGET_NUM			= (ST_MAX_ARRAY_SUPPORTED+1),
+-	ST_MAX_LUN_PER_TARGET			= 16,
+-
+ 	st_shasta				= 0,
+ 	st_vsc					= 1,
+ 	st_vsc1					= 2,
+@@ -581,12 +577,11 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ {
+ 	struct st_hba *hba;
+ 	struct Scsi_Host *host;
+-	unsigned int id,lun;
++	unsigned int id;
+ 	struct req_msg *req;
+ 	u16 tag;
+ 	host = cmd->device->host;
+ 	id = cmd->device->id;
+-	lun = cmd->device->channel; /* firmware lun issue work around */
+ 	hba = (struct st_hba *) &host->hostdata[0];
+ 
+ 	switch (cmd->cmnd[0]) {
+@@ -606,9 +601,9 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 		return 0;
+ 	}
+ 	case INQUIRY:
+-		if (id != ST_MAX_ARRAY_SUPPORTED)
++		if (id != host->max_id - 1)
+ 			break;
+-		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
++		if ((cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+ 			stex_direct_copy(cmd, console_inq_page,
+ 				sizeof(console_inq_page));
+ 			cmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+@@ -624,7 +619,7 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 			ver.oem = ST_OEM;
+ 			ver.build = ST_BUILD_VER;
+ 			ver.signature[0] = PASSTHRU_SIGNATURE;
+-			ver.console_id = ST_MAX_ARRAY_SUPPORTED;
++			ver.console_id = host->max_id - 1;
+ 			ver.host_no = hba->host->host_no;
+ 			cmd->result = stex_direct_copy(cmd, &ver, sizeof(ver)) ?
+ 				DID_OK << 16 | COMMAND_COMPLETE << 8 :
+@@ -645,11 +640,15 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	req = stex_alloc_req(hba);
+ 
+-	if (hba->cardtype == st_yosemite) {
+-		req->lun = lun * (ST_MAX_TARGET_NUM - 1) + id;
++	if (hba->cardtype == st_shasta) {
++ 		req->lun = id % 8;
++ 		req->target = id / 8;
++	} else if (hba->cardtype == st_yosemite){
++		req->lun = id;
+ 		req->target = 0;
+ 	} else {
+-		req->lun = lun;
++		/* st_vsc and st_vsc1 */
++		req->lun = 0;
+ 		req->target = id;
+ 	}
+ 
+@@ -1229,11 +1228,8 @@ stex_probe(struct pci_dev *pdev, const s
+ 	hba->copy_buffer = hba->dma_mem + MU_BUFFER_SIZE;
+ 	hba->mu_status = MU_STATE_STARTING;
+ 
+-	/* firmware uses id/lun pair for a logical drive, but lun would be
+-	   always 0 if CONFIG_SCSI_MULTI_LUN not configured, so we use
+-	   channel to map lun here */
+-	host->max_channel = ST_MAX_LUN_PER_TARGET - 1;
+-	host->max_id = ST_MAX_TARGET_NUM;
++	host->max_channel = 0;
++	host->max_id = 128 + 1;
+ 	host->max_lun = 1;
+ 	host->unique_id = host->host_no;
+ 	host->max_cmd_len = STEX_CDB_LENGTH;
 
-OK. I have not thought about this properly but one possible solution might
-be something like this:
-- separate the current and permanent behaviour flags; the current flags 
-  define the behaviour
-- the permanent flags are copied into the current flags when the device is
-  opened (or at some other well-defined point)
-- the booleans set with MTSETDRVBUFFER change always the current flags; if
-  the user has CAP_SYS_ADMIN, also the permanent flags are changed
 
-This would enable anyone to change the behaviour for his/her own purposes 
-but there would still be a stable system-defined behaviour. There already 
-are attributes that have a current and default value like block size.
-
-I can see several problems in the details of this suggestion but I will 
-think about those. One is that if someone having CAP_SYS_ADMIN wants just 
-a temporary change, it is not possible. A solution would to have a new 
-op code for temporary changes but this would require explicit changes to 
-programs. Comments are welcome.
-
-...
-> > Strictly speaking MTSETDRVBUFFER does not need root privileges. It needs 
-> > CAP_SYS_ADMIN. (Now I see that the error message is misleading and must be 
-> > fixed.) Does using some other capability make your use easier but, at same 
-> > time, limit the access to this command to a selected group of users?
-> 
-> Being relatively ignorant of the kernel, I wasn't aware of CAP_SYS_ADMIN.  I 
-> now have a rough idea of what it is, I am unsure if another capability would 
-> resolve the problem, because I'm not familar with how they are set.  
-> 
-Yes, setting the capabilities may be a problem. I don't know how well the 
-different distributions are able to handle these finer-grained rights. 
-A software package has to support ideally all distributions and the common 
-denominator may be to be root for CAP_SYS_ADMIN ;-)
-
-> It seems to me that anyone who is the "owner" or in the "group" and has write 
-> permission on the device should be able to do MTSETDRVBUFFER.  There is no 
-> need for any "other" who has write permission to have such access. I think 
-> this would allow the sys admin to restrict it appropriately.
-> 
-This would be one solution but it sounds complicated. The primary test for 
-a file is just if there is write access or not. It does not matter if the 
-access right comes as user, group, or other.
-
-> 
-> Thanks for your responses.  I see I have some work to do organizing my 
-> thoughts :-)
-
-Thanks for your input.
-
--- 
-Kai
