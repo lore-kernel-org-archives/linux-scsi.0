@@ -1,60 +1,168 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [patch 1/1] scsi: Disable short inquiry log by default
-Date: Wed, 04 Apr 2007 13:18:13 -0500
-Message-ID: <4613EBE5.40504@linux.vnet.ibm.com>
-References: <200704022120.l32LKOZU018499@d03av02.boulder.ibm.com> <1175550136.3680.84.camel@mulgrave.il.steeleye.com>
-Reply-To: brking@linux.vnet.ibm.com
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: RE: [PATCH 1/4] [SCSI]stex: fix id mapping issue
+Date: Wed, 4 Apr 2007 11:37:08 -0700
+Message-ID: <NONAMEBqfT7eEmP9CDB00000710@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:50873 "EHLO e2.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1422667AbXDDSSQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Apr 2007 14:18:16 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l34IIFvu032460
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Apr 2007 14:18:15 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l34IIEx9226436
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Apr 2007 14:18:14 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l34IIE2a024117
-	for <linux-scsi@vger.kernel.org>; Wed, 4 Apr 2007 14:18:14 -0400
-In-Reply-To: <1175550136.3680.84.camel@mulgrave.il.steeleye.com>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:7199 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753933AbXDDSfg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Apr 2007 14:35:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: "james.Bottomley" <james.Bottomley@SteelEye.com>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
 
-James Bottomley wrote:
-> On Mon, 2007-04-02 at 16:20 -0500, brking@linux.vnet.ibm.com wrote:
->> If a scsi device reports less than 36 bytes of standard inquiry
->> data, scsi core logs a KERN_INFO printk indicating this. It was
->> observed that this results in lots of clutter in the log on
->> systems with devices that respond to a SCSI Inquiry with PQ=3 or
->> PQ=1 with less than 36 bytes of inquiry data, such as ibmvscsi.
->> Disable this log by default.
+
+
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Wednesday, April 04, 2007 10:36 AM
+> To: Ed Lin
+> Cc: linux-scsi; linux-kernel; jeff; Promise_Linux
+> Subject: RE: [PATCH 1/4] [SCSI]stex: fix id mapping issue
 > 
-> It shouldn't be doing this ... the standards are pretty clear, say SPC-3
-> section 6.4.2
 > 
-> "The standard INQUIRY data shall contain at least 36 bytes"
+> On Wed, 2007-04-04 at 10:31 -0700, Ed Lin wrote:
 > 
-> Horrible things happen when this rule is violated (as it is by some
-> badly constructed devices), so I'd really like to leave the print in so
-> we know what we're debugging.
+> > Sorry. It seems the mail server has problem. The patch is 
+> here in plain
+> > text. I hope this time it does not mess up. I have problem with
+> > linux-scsi
+> > mail list, if you have comment please cc me. Thanks.
+> > --Ed Lin
 > 
-> Can't you fix ibmvscsi to be standards compliant?
+> The lines are still broken, I'm afraid ... you can just resend as an
+> attachement git-applypatch copes fine with that ... inline is 
+> just good
+> for quoting and replying.
+> > +	if (hba->cardtype == st_shasta) {
+> > +		host->max_channel = 7;
+> > +		host->max_id = 16 + 1;
+> > +	} else if (hba->cardtype == st_yosemite) {
+> > +		host->max_channel = 127;
+> > +		host->max_id = 1 + 1;
+> > +	} else {
+> > +		/* st_vsc and st_vsc1 */
+> > +		host->max_channel = 0;
+> > +		host->max_id = 128 + 1;
+> 
+> This is OK.  The use of ->channel is still a bit strange ... could we
+> not simply use lun instead of channel (i.e. map the adapter id/lun to
+> the mid-layer id/lun instead of using id/channel)?
+> 
 
-James,
+This is because there is a CONFIG_SCSI_MULTI_LUN option.
+If this option is not selected, max_scsi_luns will be set to 1 and
+the RAID arrays with lun>0 will disappear(because they are not
+scanned). That is unacceptable from a user's view point.  I have
+also explained this in the code comment:
 
-You can drop this patch. I've verified that the current ibmvscsi server
-does not do this. I wasn't using the latest ibmvscsi server implementation.
+	/*
+	 * firmware uses id/lun pair for a logical drive, but lun would be
+	 * always 0 if CONFIG_SCSI_MULTI_LUN not configured, so we use
+	 * channel to map lun here
+	 */
 
-Brian
+If it is not allowed to map channel to lun, then maybe I have to
+report 128 targets and do the mapping in queuecommand...
+After all there must be a mapping somewhere so I don't see
+much difference here...
 
--- 
-Brian King
-eServer Storage I/O
-IBM Linux Technology Center
+I paste the patch again, is the format ok?
+
+
+
+The internal id/lun mapping of st_vsc and st_vsc1 controllers is different
+from st_shasta. The original driver code can only  map first 16 'entities'
+for st_vsc and st_vsc1 while there are actually 128 available.
+
+The correct mapping should be:
+channel:0~7, id:0~15 (st_shasta, console is channel:0, id:16, lun:0)
+channel:0~127, id:0 (st_yosemite, console is channel:0, id:1, lun:0)
+channel:0, id:0~127 (st_vsc and st_vsc1, console is channel:0, id:128, lun:0)
+
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 69be132..29a7b61 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -113,10 +113,6 @@ enum {
+ 	SG_CF_64B				= 0x40,	/* 64 bit item */
+ 	SG_CF_HOST				= 0x20,	/* sg in host memory */
+ 
+-	ST_MAX_ARRAY_SUPPORTED			= 16,
+-	ST_MAX_TARGET_NUM			= (ST_MAX_ARRAY_SUPPORTED+1),
+-	ST_MAX_LUN_PER_TARGET			= 16,
+-
+ 	st_shasta				= 0,
+ 	st_vsc					= 1,
+ 	st_vsc1					= 2,
+@@ -606,7 +602,7 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 		return 0;
+ 	}
+ 	case INQUIRY:
+-		if (id != ST_MAX_ARRAY_SUPPORTED)
++		if (id != host->max_id - 1)
+ 			break;
+ 		if (lun == 0 && (cmd->cmnd[1] & INQUIRY_EVPD) == 0) {
+ 			stex_direct_copy(cmd, console_inq_page,
+@@ -624,7 +620,7 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 			ver.oem = ST_OEM;
+ 			ver.build = ST_BUILD_VER;
+ 			ver.signature[0] = PASSTHRU_SIGNATURE;
+-			ver.console_id = ST_MAX_ARRAY_SUPPORTED;
++			ver.console_id = host->max_id - 1;
+ 			ver.host_no = hba->host->host_no;
+ 			cmd->result = stex_direct_copy(cmd, &ver, sizeof(ver)) ?
+ 				DID_OK << 16 | COMMAND_COMPLETE << 8 :
+@@ -645,13 +641,8 @@ stex_queuecommand(struct scsi_cmnd *cmd,
+ 
+ 	req = stex_alloc_req(hba);
+ 
+-	if (hba->cardtype == st_yosemite) {
+-		req->lun = lun * (ST_MAX_TARGET_NUM - 1) + id;
+-		req->target = 0;
+-	} else {
+-		req->lun = lun;
+-		req->target = id;
+-	}
++	req->lun = lun;
++	req->target = id;
+ 
+ 	/* cdb */
+ 	memcpy(req->cdb, cmd->cmnd, STEX_CDB_LENGTH);
+@@ -1229,11 +1220,22 @@ stex_probe(struct pci_dev *pdev, const s
+ 	hba->copy_buffer = hba->dma_mem + MU_BUFFER_SIZE;
+ 	hba->mu_status = MU_STATE_STARTING;
+ 
+-	/* firmware uses id/lun pair for a logical drive, but lun would be
+-	   always 0 if CONFIG_SCSI_MULTI_LUN not configured, so we use
+-	   channel to map lun here */
+-	host->max_channel = ST_MAX_LUN_PER_TARGET - 1;
+-	host->max_id = ST_MAX_TARGET_NUM;
++	/*
++	 * firmware uses id/lun pair for a logical drive, but lun would be
++	 * always 0 if CONFIG_SCSI_MULTI_LUN not configured, so we use
++	 * channel to map lun here
++	 */
++	if (hba->cardtype == st_shasta) {
++		host->max_channel = 7;
++		host->max_id = 16 + 1;
++	} else if (hba->cardtype == st_yosemite) {
++		host->max_channel = 127;
++		host->max_id = 1 + 1;
++	} else {
++		/* st_vsc and st_vsc1 */
++		host->max_channel = 0;
++		host->max_id = 128 + 1;
++	}
+ 	host->max_lun = 1;
+ 	host->unique_id = host->host_no;
+ 	host->max_cmd_len = STEX_CDB_LENGTH;
+
+
+
