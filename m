@@ -1,51 +1,36 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 1/4] stex: fix id mapping issue(v3)
-Date: Thu, 05 Apr 2007 08:58:13 -0500
-Message-ID: <1175781493.3714.6.camel@mulgrave.il.steeleye.com>
-References: <NONAMEB8v5DkoQ4qcm500000733@nonameb.ptu.promise.com>
-	 <1175735159.3693.55.camel@mulgrave.il.steeleye.com>
-	 <20070405074215.GA25196@infradead.org>
+Subject: Re: [PATCH] Perverting cciss
+Date: Thu, 05 Apr 2007 09:09:10 -0500
+Message-ID: <1175782151.3714.13.camel@mulgrave.il.steeleye.com>
+References: <4614C82E.1020100@suse.de>
+	 <20070405100326.GA19092@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:38247 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1766996AbXDEN6W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2007 09:58:22 -0400
-In-Reply-To: <20070405074215.GA25196@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1767000AbXDEOJ1@vger.kernel.org>
+In-Reply-To: <20070405100326.GA19092@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Ed Lin <ed.lin@promise.com>, linux-scsi <linux-scsi@vger.kernel.org>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
+Cc: Hannes Reinecke <hare@suse.de>, Mike Miller <mike.miller@hp.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2007-04-05 at 08:42 +0100, Christoph Hellwig wrote:
-> On Wed, Apr 04, 2007 at 08:05:59PM -0500, James Bottomley wrote:
-> > Erm, there's a simple way out of this:  That's the BLIST_FORCELUN
-> > option.  This is why most of the RAID devices have entries in
-> > scsi_devinfo.c like:
+On Thu, 2007-04-05 at 11:03 +0100, Christoph Hellwig wrote:
+> On Thu, Apr 05, 2007 at 11:58:06AM +0200, Hannes Reinecke wrote:
+> > Hi All,
 > > 
-> >         {"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
-> > 
-> > Which overrides the CONFIG_SCSI_MULTI_LUN setting for the particular
-> > device.  We can easily add an entry for stex as well.
+> > this patch adds the SG_IO ioctl to the cciss driver.
+> > As the driver is capable of sending SCSI CDBs to the controller there is
+> > no reason why we shouldn't exploit it.
+> > This way we get to use all the nice sg_utils for the cciss driver.
+> > And a persistent device name for free.
 > 
-> IMHO we should kill CONFIG_SCSI_MULTI_LUN and add blacklist enries for
-> devices that don't handle scanning for luns > 1 instead.  I think the
-> RH/Fedora kernel has started collecting these blacklist entries for
-> a long time already.
+> Instead of adding yet another implementation of SG_IO please implement
+> support for REQ_TYPE_BLOCK_PC requests and add all the nice block layer
+> passthrough ioctls to it.
 
-I wouldn't disagree with that.  There have been several schools of
-thought on this:  One was that every multi-lun device since SPC should
-support REPORT LUNS, so MULTI_LUN should be off by default and we
-whitelist non SPC compliant multi-lun devices.  If we also added a host
-hook to allow RAID devices to declare themselves, then I think we
-capture 99% of the current cases.
-
-Another is just to make it on by default.  I note that both SLES10 and
-RHEL5 now define it on, so I can't see much argument in support of a
-distro setting it off.
+Actually, I happen to know that HP is in the process of implementing
+this correctly (via REQ_TYPE_BLOCK_PC).  I can't reveal the details but
+it has something to do with a well known Linux High Availability company
+needing SG_IO for sg_persist to work ...
 
 James
-
-
