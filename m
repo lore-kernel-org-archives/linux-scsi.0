@@ -1,206 +1,239 @@
-From: Kern Sibbald <kern@sibbald.com>
-Subject: Re: Linux tape drivers
-Date: Thu, 5 Apr 2007 10:32:44 +0200
-Message-ID: <200704051032.45249.kern@sibbald.com>
-References: <200704031508.37222.kern@sibbald.com> <200704042258.50296.kern@sibbald.com> <Pine.LNX.4.64.0704050016010.8139@kai.makisara.local>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Perverting cciss
+Date: Thu, 05 Apr 2007 11:58:06 +0200
+Message-ID: <4614C82E.1020100@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------080503000304070401030802"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from matou.sibbald.com ([194.158.240.20]:28260 "EHLO
-	matou.sibbald.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946102AbXDEIdJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2007 04:33:09 -0400
-In-Reply-To: <Pine.LNX.4.64.0704050016010.8139@kai.makisara.local>
-Content-Disposition: inline
+Received: from ns2.suse.de ([195.135.220.15]:44775 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752691AbXDEJ6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Apr 2007 05:58:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Willem Riede <wrlk@riede.org>
+To: Mike Miller <mike.miller@hp.com>
+Cc: Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wednesday 04 April 2007 23:54, Kai Makisara wrote:
-> On Wed, 4 Apr 2007, Kern Sibbald wrote:
-> 
-> > On Wednesday 04 April 2007 20:46, Kai Makisara wrote:
-> ...
-> > > > >   c. There is a real lack of information about any error condition
-> > > > >       (read/write). One can probably get it via direct SCSI 
-commands, 
-> > but
-> > > > >       why not through an ioctl.
-> > > 
-> > > This is true. The problem is what and how to tell the user so that the 
-> > > solution is satisfactory for a reasonable number of years. The solutions 
-I 
-> > > have thought about have not passed this test. One alternative is to pass 
-> > > the latest sense data to the user but thinking about the different error 
-> > > conditions, this is a problematic choice. Here also suggestions from and 
-> > > discussion with real users is needed.
-> > 
-> > Well, you have in front of you a "real" user.
-> 
-> Yes, you are one of the people I meant with "real users".
+This is a multi-part message in MIME format.
+--------------080503000304070401030802
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-OK, I'll address this issue in my "second" description that I mention below.
+Hi All,
 
-> 
-> >                                               I was thinking about a new 
-> > ioctl() that would hopefully be simple, generic, and extensible enough 
-that 
-> > it might be picked up by all Unixes. This is one case were even if it is a 
-> > Linux only solution, I will be really happy. Basically, when I get a -1 
-> > return from a read/write and ERRNO=EIO, I would like to be able to call an 
-> > ioctl() and get back some basic info about soft errors, hard errors, ...  
-If 
-> > you don't tell me that a new ioctl() is out of the question, I'll make a 
-> > proposal -- it will take me some time to put it together.
-> > 
-> The general attitude seems to be against new ioctls but I don't want to 
-> rule out that. The mt interface already uses ioctls and they solve the 
-> serialisation problem nicely in this case.
-> 
-> Whatever the method of delivery will be, the most difficult question is 
-> the contents and format. I don't know any good examples from other 
-> systems, so it has to be Linux-specific (and hopefully adopted by others 
-> as you say). I will wait with interest for your suggestion.
+this patch adds the SG_IO ioctl to the cciss driver.
+As the driver is capable of sending SCSI CDBs to the controller there is
+no reason why we shouldn't exploit it.
+This way we get to use all the nice sg_utils for the cciss driver.
+And a persistent device name for free.
 
-OK, I don't think that I have the knowledge of the kernel to be able to make a 
-specific proposal, but I will do the following (unless someone suggests 
-otherwise).  
+Makes one wonder why this one is not implemented as a SCSI driver in the
+first place.
 
-First explain to everyone the pains that were caused with the O_NONBLOCK 
-change to opening tape drives.  I don't imagine we will go back to the old 
-behavior, but I hope something similar won't happen again, and will propose 
-how a slight change in philosophy could have created less chaos.  This I can 
-do in the next few days.
+Cheers,
 
-Second, I can describe what would be a reasonably complete tape interface from 
-the applications programmers point of view (i.e. Bacula), and how I think we 
-might get there given your input above -- my basic premise is that there does 
-not exist any real Unix tape API, but rather a whole slew of different ioctls 
-on different systems, making applications programming difficult.  I think we 
-need a real Unix tape API, but not necessarily a lot more ioctls.  This will 
-take at least a week (I think).
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
 
-> 
-> ...
-> > > > >    e. Apparently only root can do the following (IMO, this is a bug 
-or 
-> > > > >        programming oversight): 
-> > > > > 
-> > > > >          struct mtop mt;
-> > > > >          mt.mt_op = MTSETDRVBUFFER;
-> > > > >          mt.mt_count = MT_ST_CLEARBOOLEANS;
-> > > > >          mt.mt_count |= MT_ST_FAST_MTEOM;
-> > > > >          ...
-> > > > >          ioctl(fd, MIOCTOP, &mt);
-> > > > > 
-> > > > >       Typically Bacula runs tape daemon as non-root.  Is there a 
-good 
-> > reason 
-> > > > >        why program that has write permission on the device cannot do 
-> > this
-> > > > >        ioctl() and is it possible to change this?
-> > > > > 
-> > > This is not a bug or an oversight, it is a design decision. The idea is 
-> > > that the system provides the same view of the tape to all users. This 
-view 
-> > > is defined by the system manager (probably with startup scripts). If 
-each 
-> > > user can change the behaviour, the next user never knows what to expect. 
-> > 
-> > Well, I agree that all users should have the same view.  However, when 
-Bacula 
-> > has the drive open, it has it open exclusively, so no other users can view 
-> > the drive. When Bacula opens the drive, it should be able to ensure that 
-the 
-> > drive, agrees with Bacula's concept of the drive.  When Bacula closes the 
-> > drive, I have no problem if the OS resets values to the common view.  
-Today, 
-> > if Bacula is running as bacula:disk rather than root:root, it cannot make 
-the 
-> > above changes, even if the disk group has write access to the drive.
-> 
-> OK. I have not thought about this properly but one possible solution might
-> be something like this:
-> - separate the current and permanent behaviour flags; the current flags 
->   define the behaviour
-> - the permanent flags are copied into the current flags when the device is
->   opened (or at some other well-defined point)
-> - the booleans set with MTSETDRVBUFFER change always the current flags; if
->   the user has CAP_SYS_ADMIN, also the permanent flags are changed
-> 
-> This would enable anyone to change the behaviour for his/her own purposes 
-> but there would still be a stable system-defined behaviour. There already 
-> are attributes that have a current and default value like block size.
-> 
-> I can see several problems in the details of this suggestion but I will 
-> think about those. One is that if someone having CAP_SYS_ADMIN wants just 
-> a temporary change, it is not possible. A solution would to have a new 
-> op code for temporary changes but this would require explicit changes to 
-> programs. Comments are welcome.
+--------------080503000304070401030802
+Content-Type: text/plain;
+ name="cciss-add-SG_IO"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="cciss-add-SG_IO"
 
-The above would solve the problem for me.  
+Add SG_IO ioctl to cciss
 
-Today, when root (or someone having CAP_SYS_ADMIN) does a MTSETDRVBUFFER, 
-doesn't it alter the permanent flags? I think we should look at how the other 
-flags are set under various permissions and try to get the MTSETDRVBUFFER to 
-follow the same rules.  
+The cciss driver is actually capable of sending SCSI CDB to the
+controller. So it would only be logical to have it accepting 
+SG_IO ioctl, too.
+Now we can use all the nice sg_utils and get a persistent device name
+for free, too.
 
-The basic problem I see with MTSETDRVBUFFER is that it requires CAP_SYS_ADMIN, 
-while the other ones (e.g. MTSETBLK) do not (i.e. an inconsistency).  If they 
-all work the same and permit changes without CAP_SYS_ADMIN, then the rules 
-will be much easier for everyone to understand.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-> 
-> ...
-> > > Strictly speaking MTSETDRVBUFFER does not need root privileges. It needs 
-> > > CAP_SYS_ADMIN. (Now I see that the error message is misleading and must 
-be 
-> > > fixed.) Does using some other capability make your use easier but, at 
-same 
-> > > time, limit the access to this command to a selected group of users?
-> > 
-> > Being relatively ignorant of the kernel, I wasn't aware of CAP_SYS_ADMIN.  
-I 
-> > now have a rough idea of what it is, I am unsure if another capability 
-would 
-> > resolve the problem, because I'm not familar with how they are set.  
-> > 
-> Yes, setting the capabilities may be a problem. I don't know how well the 
-> different distributions are able to handle these finer-grained rights. 
-> A software package has to support ideally all distributions and the common 
-> denominator may be to be root for CAP_SYS_ADMIN ;-)
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 0c716ee..33e7b83 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -45,6 +45,9 @@ #include <linux/dma-mapping.h>
+ #include <linux/blkdev.h>
+ #include <linux/genhd.h>
+ #include <linux/completion.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_ioctl.h>
++#include <scsi/sg.h>
+ 
+ #define CCISS_DRIVER_VERSION(maj,min,submin) ((maj<<16)|(min<<8)|(submin))
+ #define DRIVER_NAME "HP CISS Driver (v 3.6.14)"
+@@ -1152,6 +1155,163 @@ #endif
+ 			kfree(ioc);
+ 			return status;
+ 		}
++	case SG_IO: {
++		struct sg_io_hdr hdr;
++		CommandList_struct *c;
++		char *buff = NULL;
++		u64bit temp64;
++		unsigned long flags;
++		DECLARE_COMPLETION_ONSTACK(wait);
++
++		if (!capable(CAP_SYS_RAWIO))
++			return -EPERM;
++
++		if (copy_from_user(&hdr, argp, sizeof(hdr)))
++			return -EFAULT;
++
++		if (hdr.interface_id != 'S')
++			return -EINVAL;
++
++		/* cciss only supports 16-byte commands */
++		if (hdr.cmd_len > 16)
++			return -EINVAL;
++
++		/* We don't support proper scatter-gather (yet) */
++		if (hdr.iovec_count)
++			return -EINVAL;
++
++		if ((hdr.dxfer_len < 1) &&
++		    (hdr.dxfer_direction != SG_DXFER_NONE))
++			return -EINVAL;
++
++		if (hdr.dxfer_len > 0) {
++			buff = kmalloc(hdr.dxfer_len, GFP_KERNEL);
++			if (buff == NULL)
++				return -EFAULT;
++		}
++		if ((hdr.dxfer_direction == SG_DXFER_TO_DEV) ||
++		    (hdr.dxfer_direction == SG_DXFER_TO_FROM_DEV)) {
++			/* Copy the data into the buffer we created */
++			if (copy_from_user (buff, hdr.dxferp,
++					    hdr.dxfer_len)) {
++				kfree(buff);
++				return -EFAULT;
++			}
++		} else
++			memset(buff, 0, hdr.dxfer_len);
++
++		if ((c = cmd_alloc(host, 0)) == NULL) {
++			kfree(buff);
++			return -ENOMEM;
++		}
++
++		/* Copy CDB */
++		if (copy_from_user(c->Request.CDB, hdr.cmdp, hdr.cmd_len))
++			return -EFAULT;
++
++		/* Fill in the command type */
++		c->cmd_type = CMD_IOCTL_PEND;
++		/* Fill in Command Header */
++		c->Header.ReplyQueue = 0;
++		if (hdr.dxfer_len > 0) {
++			c->Header.SGList = 1;
++			c->Header.SGTotal = 1;
++		} else {
++			c->Header.SGList = 0;
++			c->Header.SGTotal = 0;
++		}
++		/* Default to LUN the ioctl was directed to */
++		c->Header.LUN.LogDev.VolId = drv->LunID & 0x3FFFFFFF;
++		c->Header.LUN.LogDev.Mode = 0x01; /* Logical volume */
++		c->Header.Tag.lower = c->busaddr;
++
++		/* Fill in Request block */
++		c->Request.CDBLen = hdr.cmd_len;
++		c->Request.Type.Type = TYPE_CMD;
++		c->Request.Type.Attribute = ATTR_SIMPLE;
++		switch(hdr.dxfer_direction) {
++		    case SG_DXFER_NONE:
++			c->Request.Type.Direction = XFER_NONE;
++			break;
++		    case SG_DXFER_TO_DEV:
++			c->Request.Type.Direction = XFER_WRITE;
++			break;
++		    case SG_DXFER_FROM_DEV:
++			c->Request.Type.Direction = XFER_READ;
++			break;
++		    case SG_DXFER_TO_FROM_DEV:
++			c->Request.Type.Direction = XFER_RSVD;
++			break;
++		}
++		c->Request.Timeout = hdr.timeout;
++
++		/* Fill in the scatter gather information */
++		if (hdr.dxfer_len > 0) {
++			temp64.val = pci_map_single(host->pdev, buff,
++						    hdr.dxfer_len,
++						    PCI_DMA_BIDIRECTIONAL);
++			c->SG[0].Addr.lower = temp64.val32.lower;
++			c->SG[0].Addr.upper = temp64.val32.upper;
++			c->SG[0].Len = hdr.dxfer_len;
++			c->SG[0].Ext = 0;
++		}
++		c->waiting = &wait;
++
++		/* Put the request on the tail of the request queue */
++		spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
++		addQ(&host->reqQ, c);
++		host->Qdepth++;
++		start_io(host);
++		spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
++
++		wait_for_completion(&wait);
++
++		/* unlock the buffers from DMA */
++		temp64.val32.lower = c->SG[0].Addr.lower;
++		temp64.val32.upper = c->SG[0].Addr.upper;
++		pci_unmap_single(host->pdev, (dma_addr_t) temp64.val,
++				 hdr.dxfer_len,
++				 PCI_DMA_BIDIRECTIONAL);
++
++		/* Copy the error information out */
++		hdr.status = c->err_info->ScsiStatus;
++		if (c->err_info->SenseLen && hdr.mx_sb_len > 0) {
++			int sense_len = c->err_info->SenseLen;
++
++			if (sense_len > hdr.mx_sb_len)
++				sense_len = hdr.mx_sb_len;
++
++			if (copy_to_user(hdr.sbp, c->err_info->SenseInfo,
++					 sense_len)) {
++				kfree(buff);
++				cmd_free(host, c, 0);
++				return -EFAULT;
++			}
++			hdr.sb_len_wr = sense_len;
++		}
++		hdr.resid = c->err_info->ResidualCnt;
++		/* Copy out the header */
++		if (copy_to_user(argp, &hdr, sizeof(hdr))) {
++			kfree(buff);
++			cmd_free(host, c, 0);
++			return -EFAULT;
++		}
++
++		if ((hdr.dxfer_direction == SG_DXFER_FROM_DEV) ||
++		    (hdr.dxfer_direction == SG_DXFER_TO_FROM_DEV)) {
++			/* Copy the data out to the buffer we created */
++			if (copy_to_user
++			    (hdr.dxferp, buff, hdr.dxfer_len)) {
++				kfree(buff);
++				cmd_free(host, c, 0);
++				return -EFAULT;
++			}
++		}
++
++		kfree(buff);
++		cmd_free(host, c, 0);
++		return 0;
++		}
+ 	default:
+ 		return -ENOTTY;
+ 	}
 
-To the best of my knowledge Linux is the only system that requires root; this 
-is true at least for the values that Bacula sets.  I've only been adding such 
-OS dependent functions for a year or so to attempt to reduce support problems 
-(i.e. making Bacula "self-configure" tape drives to a limited extent). 
-Requiring root permission to configure the tape drive is for Bacula a 
-security problem and thus probably not the best solution.
-
-> 
-> > It seems to me that anyone who is the "owner" or in the "group" and has 
-write 
-> > permission on the device should be able to do MTSETDRVBUFFER.  There is no 
-> > need for any "other" who has write permission to have such access. I think 
-> > this would allow the sys admin to restrict it appropriately.
-> > 
-> This would be one solution but it sounds complicated. The primary test for 
-> a file is just if there is write access or not. It does not matter if the 
-> access right comes as user, group, or other.
-
-Yes, I can see that would be complicated, and probably not possible, but from 
-an applications (my) stand point, it seems reasonable.
-
-> 
-> > 
-> > Thanks for your responses.  I see I have some work to do organizing my 
-> > thoughts :-)
-> 
-> Thanks for your input.
-> 
-> -- 
-> Kai
-> 
+--------------080503000304070401030802--
