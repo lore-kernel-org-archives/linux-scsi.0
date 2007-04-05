@@ -1,33 +1,41 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/4] stex: fix id mapping issue(v3)
-Date: Thu, 5 Apr 2007 08:42:15 +0100
-Message-ID: <20070405074215.GA25196@infradead.org>
-References: <NONAMEB8v5DkoQ4qcm500000733@nonameb.ptu.promise.com> <1175735159.3693.55.camel@mulgrave.il.steeleye.com>
+From: Jeff Garzik <jgarzik@pobox.com>
+Subject: Re: [patch 2/3] libata: expose AN support to user space via sysfs
+Date: Thu, 05 Apr 2007 04:03:20 -0400
+Message-ID: <4614AD48.1080005@pobox.com>
+References: <20070328230108.597741522@intel.com> <20070328164450.b89d5156.kristen.c.accardi@intel.com> <460B0539.9040103@pobox.com> <460B1F6B.5050108@gmail.com> <460B2249.4010200@pobox.com> <460B26AB.8060307@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:41708 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1946048AbXDEHm3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2007 03:42:29 -0400
-Content-Disposition: inline
-In-Reply-To: <1175735159.3693.55.camel@mulgrave.il.steeleye.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:52442 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1946072AbXDEIDZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Apr 2007 04:03:25 -0400
+In-Reply-To: <460B26AB.8060307@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Ed Lin <ed.lin@promise.com>, linux-scsi <linux-scsi@vger.kernel.org>, jeff <jeff@garzik.org>, promise_linux <promise_linux@promise.com>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Apr 04, 2007 at 08:05:59PM -0500, James Bottomley wrote:
-> Erm, there's a simple way out of this:  That's the BLIST_FORCELUN
-> option.  This is why most of the RAID devices have entries in
-> scsi_devinfo.c like:
+Tejun Heo wrote:
+> Jeff Garzik wrote:
+>> AN is a generic concept that I feel will propagate elsewhere.
 > 
->         {"ADAPTEC", "AACRAID", NULL, BLIST_FORCELUN},
+> I think SCSI already has it or am I imagining things again?  :-)
 > 
-> Which overrides the CONFIG_SCSI_MULTI_LUN setting for the particular
-> device.  We can easily add an entry for stex as well.
+>> Though perhaps it should be in a 'capability_flags' file rather than a 
+>> 'media_change_event' file.
+> 
+> IMHO, if it's genhd.capability_flags then the flag should be 
+> MEDIA_CHANGE_NOTIFY not ASYNC_NOTIFICATION because AN itself doesn't 
+> imply any specific event.  It's just a notification mechanism, for ATAPI 
+> devices, it means media change, for PMP it has a different meaning, so I 
+> think we need to export the processed meaning not the specific mechanism 
+> to userland.
 
-IMHO we should kill CONFIG_SCSI_MULTI_LUN and add blacklist enries for
-devices that don't handle scanning for luns > 1 instead.  I think the
-RH/Fedora kernel has started collecting these blacklist entries for
-a long time already.
+Agreed, sounds good.
+
+	Jeff
+
+
+
