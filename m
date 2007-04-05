@@ -1,41 +1,206 @@
-From: Jeff Garzik <jgarzik@pobox.com>
-Subject: Re: [patch 2/3] libata: expose AN support to user space via sysfs
-Date: Thu, 05 Apr 2007 04:03:20 -0400
-Message-ID: <4614AD48.1080005@pobox.com>
-References: <20070328230108.597741522@intel.com> <20070328164450.b89d5156.kristen.c.accardi@intel.com> <460B0539.9040103@pobox.com> <460B1F6B.5050108@gmail.com> <460B2249.4010200@pobox.com> <460B26AB.8060307@gmail.com>
+From: Kern Sibbald <kern@sibbald.com>
+Subject: Re: Linux tape drivers
+Date: Thu, 5 Apr 2007 10:32:44 +0200
+Message-ID: <200704051032.45249.kern@sibbald.com>
+References: <200704031508.37222.kern@sibbald.com> <200704042258.50296.kern@sibbald.com> <Pine.LNX.4.64.0704050016010.8139@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52442 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946072AbXDEIDZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Apr 2007 04:03:25 -0400
-In-Reply-To: <460B26AB.8060307@gmail.com>
+Received: from matou.sibbald.com ([194.158.240.20]:28260 "EHLO
+	matou.sibbald.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1946102AbXDEIdJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2007 04:33:09 -0400
+In-Reply-To: <Pine.LNX.4.64.0704050016010.8139@kai.makisara.local>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Willem Riede <wrlk@riede.org>
 
-Tejun Heo wrote:
-> Jeff Garzik wrote:
->> AN is a generic concept that I feel will propagate elsewhere.
+On Wednesday 04 April 2007 23:54, Kai Makisara wrote:
+> On Wed, 4 Apr 2007, Kern Sibbald wrote:
 > 
-> I think SCSI already has it or am I imagining things again?  :-)
+> > On Wednesday 04 April 2007 20:46, Kai Makisara wrote:
+> ...
+> > > > >   c. There is a real lack of information about any error condition
+> > > > >       (read/write). One can probably get it via direct SCSI 
+commands, 
+> > but
+> > > > >       why not through an ioctl.
+> > > 
+> > > This is true. The problem is what and how to tell the user so that the 
+> > > solution is satisfactory for a reasonable number of years. The solutions 
+I 
+> > > have thought about have not passed this test. One alternative is to pass 
+> > > the latest sense data to the user but thinking about the different error 
+> > > conditions, this is a problematic choice. Here also suggestions from and 
+> > > discussion with real users is needed.
+> > 
+> > Well, you have in front of you a "real" user.
 > 
->> Though perhaps it should be in a 'capability_flags' file rather than a 
->> 'media_change_event' file.
+> Yes, you are one of the people I meant with "real users".
+
+OK, I'll address this issue in my "second" description that I mention below.
+
 > 
-> IMHO, if it's genhd.capability_flags then the flag should be 
-> MEDIA_CHANGE_NOTIFY not ASYNC_NOTIFICATION because AN itself doesn't 
-> imply any specific event.  It's just a notification mechanism, for ATAPI 
-> devices, it means media change, for PMP it has a different meaning, so I 
-> think we need to export the processed meaning not the specific mechanism 
-> to userland.
+> >                                               I was thinking about a new 
+> > ioctl() that would hopefully be simple, generic, and extensible enough 
+that 
+> > it might be picked up by all Unixes. This is one case were even if it is a 
+> > Linux only solution, I will be really happy. Basically, when I get a -1 
+> > return from a read/write and ERRNO=EIO, I would like to be able to call an 
+> > ioctl() and get back some basic info about soft errors, hard errors, ...  
+If 
+> > you don't tell me that a new ioctl() is out of the question, I'll make a 
+> > proposal -- it will take me some time to put it together.
+> > 
+> The general attitude seems to be against new ioctls but I don't want to 
+> rule out that. The mt interface already uses ioctls and they solve the 
+> serialisation problem nicely in this case.
+> 
+> Whatever the method of delivery will be, the most difficult question is 
+> the contents and format. I don't know any good examples from other 
+> systems, so it has to be Linux-specific (and hopefully adopted by others 
+> as you say). I will wait with interest for your suggestion.
 
-Agreed, sounds good.
+OK, I don't think that I have the knowledge of the kernel to be able to make a 
+specific proposal, but I will do the following (unless someone suggests 
+otherwise).  
 
-	Jeff
+First explain to everyone the pains that were caused with the O_NONBLOCK 
+change to opening tape drives.  I don't imagine we will go back to the old 
+behavior, but I hope something similar won't happen again, and will propose 
+how a slight change in philosophy could have created less chaos.  This I can 
+do in the next few days.
 
+Second, I can describe what would be a reasonably complete tape interface from 
+the applications programmers point of view (i.e. Bacula), and how I think we 
+might get there given your input above -- my basic premise is that there does 
+not exist any real Unix tape API, but rather a whole slew of different ioctls 
+on different systems, making applications programming difficult.  I think we 
+need a real Unix tape API, but not necessarily a lot more ioctls.  This will 
+take at least a week (I think).
 
+> 
+> ...
+> > > > >    e. Apparently only root can do the following (IMO, this is a bug 
+or 
+> > > > >        programming oversight): 
+> > > > > 
+> > > > >          struct mtop mt;
+> > > > >          mt.mt_op = MTSETDRVBUFFER;
+> > > > >          mt.mt_count = MT_ST_CLEARBOOLEANS;
+> > > > >          mt.mt_count |= MT_ST_FAST_MTEOM;
+> > > > >          ...
+> > > > >          ioctl(fd, MIOCTOP, &mt);
+> > > > > 
+> > > > >       Typically Bacula runs tape daemon as non-root.  Is there a 
+good 
+> > reason 
+> > > > >        why program that has write permission on the device cannot do 
+> > this
+> > > > >        ioctl() and is it possible to change this?
+> > > > > 
+> > > This is not a bug or an oversight, it is a design decision. The idea is 
+> > > that the system provides the same view of the tape to all users. This 
+view 
+> > > is defined by the system manager (probably with startup scripts). If 
+each 
+> > > user can change the behaviour, the next user never knows what to expect. 
+> > 
+> > Well, I agree that all users should have the same view.  However, when 
+Bacula 
+> > has the drive open, it has it open exclusively, so no other users can view 
+> > the drive. When Bacula opens the drive, it should be able to ensure that 
+the 
+> > drive, agrees with Bacula's concept of the drive.  When Bacula closes the 
+> > drive, I have no problem if the OS resets values to the common view.  
+Today, 
+> > if Bacula is running as bacula:disk rather than root:root, it cannot make 
+the 
+> > above changes, even if the disk group has write access to the drive.
+> 
+> OK. I have not thought about this properly but one possible solution might
+> be something like this:
+> - separate the current and permanent behaviour flags; the current flags 
+>   define the behaviour
+> - the permanent flags are copied into the current flags when the device is
+>   opened (or at some other well-defined point)
+> - the booleans set with MTSETDRVBUFFER change always the current flags; if
+>   the user has CAP_SYS_ADMIN, also the permanent flags are changed
+> 
+> This would enable anyone to change the behaviour for his/her own purposes 
+> but there would still be a stable system-defined behaviour. There already 
+> are attributes that have a current and default value like block size.
+> 
+> I can see several problems in the details of this suggestion but I will 
+> think about those. One is that if someone having CAP_SYS_ADMIN wants just 
+> a temporary change, it is not possible. A solution would to have a new 
+> op code for temporary changes but this would require explicit changes to 
+> programs. Comments are welcome.
 
+The above would solve the problem for me.  
+
+Today, when root (or someone having CAP_SYS_ADMIN) does a MTSETDRVBUFFER, 
+doesn't it alter the permanent flags? I think we should look at how the other 
+flags are set under various permissions and try to get the MTSETDRVBUFFER to 
+follow the same rules.  
+
+The basic problem I see with MTSETDRVBUFFER is that it requires CAP_SYS_ADMIN, 
+while the other ones (e.g. MTSETBLK) do not (i.e. an inconsistency).  If they 
+all work the same and permit changes without CAP_SYS_ADMIN, then the rules 
+will be much easier for everyone to understand.
+
+> 
+> ...
+> > > Strictly speaking MTSETDRVBUFFER does not need root privileges. It needs 
+> > > CAP_SYS_ADMIN. (Now I see that the error message is misleading and must 
+be 
+> > > fixed.) Does using some other capability make your use easier but, at 
+same 
+> > > time, limit the access to this command to a selected group of users?
+> > 
+> > Being relatively ignorant of the kernel, I wasn't aware of CAP_SYS_ADMIN.  
+I 
+> > now have a rough idea of what it is, I am unsure if another capability 
+would 
+> > resolve the problem, because I'm not familar with how they are set.  
+> > 
+> Yes, setting the capabilities may be a problem. I don't know how well the 
+> different distributions are able to handle these finer-grained rights. 
+> A software package has to support ideally all distributions and the common 
+> denominator may be to be root for CAP_SYS_ADMIN ;-)
+
+To the best of my knowledge Linux is the only system that requires root; this 
+is true at least for the values that Bacula sets.  I've only been adding such 
+OS dependent functions for a year or so to attempt to reduce support problems 
+(i.e. making Bacula "self-configure" tape drives to a limited extent). 
+Requiring root permission to configure the tape drive is for Bacula a 
+security problem and thus probably not the best solution.
+
+> 
+> > It seems to me that anyone who is the "owner" or in the "group" and has 
+write 
+> > permission on the device should be able to do MTSETDRVBUFFER.  There is no 
+> > need for any "other" who has write permission to have such access. I think 
+> > this would allow the sys admin to restrict it appropriately.
+> > 
+> This would be one solution but it sounds complicated. The primary test for 
+> a file is just if there is write access or not. It does not matter if the 
+> access right comes as user, group, or other.
+
+Yes, I can see that would be complicated, and probably not possible, but from 
+an applications (my) stand point, it seems reasonable.
+
+> 
+> > 
+> > Thanks for your responses.  I see I have some work to do organizing my 
+> > thoughts :-)
+> 
+> Thanks for your input.
+> 
+> -- 
+> Kai
+> 
