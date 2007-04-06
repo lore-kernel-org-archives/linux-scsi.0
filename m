@@ -1,37 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Perverting cciss
-Date: Thu, 5 Apr 2007 11:03:26 +0100
-Message-ID: <20070405100326.GA19092@infradead.org>
-References: <4614C82E.1020100@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: "mahesh" <mahesh@msys-tech.com>
+Subject: Documents for SCSI mid layer
+Date: Thu, 5 Apr 2007 18:30:52 -0700
+Message-ID: <ev2s05$c7c$1@sea.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37615 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752902AbXDEKDb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2007 06:03:31 -0400
-Content-Disposition: inline
-In-Reply-To: <4614C82E.1020100@suse.de>
+Received: from main.gmane.org ([80.91.229.2]:48012 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992722AbXDENfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Apr 2007 09:35:45 -0400
+Received: from root by ciao.gmane.org with local (Exim 4.43)
+	id 1HZS7C-0006Og-2e
+	for linux-scsi@vger.kernel.org; Thu, 05 Apr 2007 15:35:02 +0200
+Received: from 219.64.119.222 ([219.64.119.222])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Apr 2007 15:35:02 +0200
+Received: from mahesh by 219.64.119.222 with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Thu, 05 Apr 2007 15:35:02 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Mike Miller <mike.miller@hp.com>, Linux Kernel <linux-kernel@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On Thu, Apr 05, 2007 at 11:58:06AM +0200, Hannes Reinecke wrote:
-> Hi All,
-> 
-> this patch adds the SG_IO ioctl to the cciss driver.
-> As the driver is capable of sending SCSI CDBs to the controller there is
-> no reason why we shouldn't exploit it.
-> This way we get to use all the nice sg_utils for the cciss driver.
-> And a persistent device name for free.
+Hi
 
-Instead of adding yet another implementation of SG_IO please implement
-support for REQ_TYPE_BLOCK_PC requests and add all the nice block layer
-passthrough ioctls to it.
+Where can I find documents for Linux SCSI mid layer
 
-> Makes one wonder why this one is not implemented as a SCSI driver in the
-> first place.
+Mahesh 
 
-It probably should have been a scsi driver, but it's far too late now.
+
 
