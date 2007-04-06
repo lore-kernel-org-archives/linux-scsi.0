@@ -1,52 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Andrew Burgess <aab@cichlid.com>
 Subject: Re: Oops in scsi_send_eh_cmnd 2.6.21-rc5-git6,7,10,13
-Date: Thu, 05 Apr 2007 19:51:00 -0500
-Message-ID: <1175820660.3714.48.camel@mulgrave.il.steeleye.com>
-References: <200704052213.l35MDRRR015981@cichlid.com>
-	 <20070405.153649.104035809.davem@davemloft.net>
-	 <1175817739.3714.43.camel@mulgrave.il.steeleye.com>
-	 <20070405.171506.125894469.davem@davemloft.net>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Date: Thu, 5 Apr 2007 19:21:13 -0700
+Message-ID: <200704060221.l362LD4s025776@cichlid.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:44085 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767464AbXDFAwE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Apr 2007 20:52:04 -0400
-In-Reply-To: <20070405.171506.125894469.davem@davemloft.net>
+Received: from dsl-63-249-106-23.cruzio.com ([63.249.106.23]:49339 "EHLO
+	cichlid.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1767492AbXDFCVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Apr 2007 22:21:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: aab@cichlid.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: davem@davemloft.net, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Thu, 2007-04-05 at 17:15 -0700, David Miller wrote:
-> This won't work I believe.
-> 
-> There are cases that use smaller sense buffers than the minimum
-> specified by the SCSI layer.
-> 
-> One example is that do_sr_ioctl() stuff when the cgc passed
-> in has a sense buffer.  That will only be as large as a
-> "struct request_sense".
-> 
-> I'm pretty sure that's one of the reasons why we cons up a local sense
-> buffer in this EH code.
-> 
-> So we could walk past the end of that and corrupt memory with
-> your patch.
 
-That should be fine ... the application copies the sense out of
-scmnd->sense_buffer ... it can take as much or as little as it wants
-(sense_buffer is actually a SCSI_SENSE_BUFFERSIZE array inside the
-command). There was one thing I missed, which is that the sense buffer
-size of the command is 252, whereas I need to set it back down to
-sizeof(scmnd->sense_buffer).
+On Thu, 2007-04-05 at 15:36 -0700, David Miller wrote:
+> From: Andrew Burgess <aab@cichlid.com>
+> Date: Thu, 5 Apr 2007 15:13:27 -0700
+> 
+> > David, do you see any other problems with scsi_send_eh_cmnd?
+> > 
+> > I've switched back to 2.6.18 which seems to not oops 
+> > and am happy to try patches.
+> 
+> Does 2.6.20 with my patch OOPS too?  Does reverting my patch
+> make the oops go away?
+> 
+> If reverting my patch makes the OOPS go away, we need to
+> verify if page_address() is returning crap for some reason
+> or the length is wrong.
 
-This is another area where we "could do better" ... the request actually
-gives us a sense buffer, but we use our own and later copy data out of
-it back into the request.
+2.6.20.4 with your patch dies in the memcpy (as does 21-gitN)
 
-James
+2.6.20.4 without your patch dies in the subsequent __free_page
+with a null pointer ref at 000...008
+
+James should I try your posted patch? On which kernel?
+
+This machine will die in boot on these kernels until I power
+cycle it (which somehow fixes the disk/controller for a
+while), 2.6.18 continue to work (gets the scsi errors and
+continues)
 
 
