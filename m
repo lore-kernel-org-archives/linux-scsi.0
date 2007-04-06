@@ -1,43 +1,31 @@
-From: Andrew Burgess <aab@cichlid.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Oops in scsi_send_eh_cmnd 2.6.21-rc5-git6,7,10,13
-Date: Thu, 5 Apr 2007 19:21:13 -0700
-Message-ID: <200704060221.l362LD4s025776@cichlid.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl-63-249-106-23.cruzio.com ([63.249.106.23]:49339 "EHLO
-	cichlid.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767492AbXDFCVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Apr 2007 22:21:18 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Date: Fri, 06 Apr 2007 08:44:54 -0500
+Message-ID: <1175867094.3677.5.camel@mulgrave.il.steeleye.com>
+References: <200704060221.l362LD4s025776@cichlid.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1767644AbXDFNq0@vger.kernel.org>
+In-Reply-To: <200704060221.l362LD4s025776@cichlid.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Burgess <aab@cichlid.com>
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: davem@davemloft.net, James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-On Thu, 2007-04-05 at 15:36 -0700, David Miller wrote:
-> From: Andrew Burgess <aab@cichlid.com>
-> Date: Thu, 5 Apr 2007 15:13:27 -0700
+On Thu, 2007-04-05 at 19:21 -0700, Andrew Burgess wrote:
+> 2.6.20.4 with your patch dies in the memcpy (as does 21-gitN)
 > 
-> > David, do you see any other problems with scsi_send_eh_cmnd?
-> > 
-> > I've switched back to 2.6.18 which seems to not oops 
-> > and am happy to try patches.
+> 2.6.20.4 without your patch dies in the subsequent __free_page
+> with a null pointer ref at 000...008
 > 
-> Does 2.6.20 with my patch OOPS too?  Does reverting my patch
-> make the oops go away?
-> 
-> If reverting my patch makes the OOPS go away, we need to
-> verify if page_address() is returning crap for some reason
-> or the length is wrong.
+> James should I try your posted patch? On which kernel?
 
-2.6.20.4 with your patch dies in the memcpy (as does 21-gitN)
+Well, mine will work, but will also cover up the problem.  It looks like
+the scatterlist is getting corrupted by the HBA driver somehow ... we
+really need to root cause this, otherwise other things will go wrong in
+strange ways.
 
-2.6.20.4 without your patch dies in the subsequent __free_page
-with a null pointer ref at 000...008
+Just to confirm, the HBA with the problem is 3w-xxxx?
 
-James should I try your posted patch? On which kernel?
-
-This machine will die in boot on these kernels until I power
-cycle it (which somehow fixes the disk/controller for a
-while), 2.6.18 continue to work (gets the scsi errors and
-continues)
-
-
+James
