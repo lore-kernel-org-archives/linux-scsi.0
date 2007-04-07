@@ -1,184 +1,87 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] tgt: fix rdma transfer bugs
-Date: Sat, 7 Apr 2007 18:10:00 +0900 (JST)
-Message-ID: <20070407181030M.fujita.tomonori@lab.ntt.co.jp>
-References: <20070407172701S.fujita.tomonori@lab.ntt.co.jp>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: imm module issues
+Date: Sat, 7 Apr 2007 09:49:43 -0700
+Message-ID: <20070407094943.d0e02a47.randy.dunlap@oracle.com>
+References: <200703101600.28449.microchip@chello.be>
+	<20070406223433.67536b21.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:49623 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965641AbXDGJKH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Apr 2007 05:10:07 -0400
-In-Reply-To: <20070407172701S.fujita.tomonori@lab.ntt.co.jp>
+Received: from agminet01.oracle.com ([141.146.126.228]:54215 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966090AbXDGQsQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Apr 2007 12:48:16 -0400
+In-Reply-To: <20070406223433.67536b21.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: Grozdan Nikolov <microchip@chello.be>
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] tgt: fix rdma transfer bugs
-Date: Sat, 7 Apr 2007 17:26:56 +0900 (JST)
+On Fri, 6 Apr 2007 22:34:33 -0700 Randy Dunlap wrote:
 
-> From: Bastian Blank <bastian@waldi.eu.org>
+> [moving from lkml to linux-scsi]
 > 
-> - ibmstgt hits the max rdma transfer size (128k).
-> - libsrp returns rdma transfer errors properly.
+> On Sat, 10 Mar 2007 16:00:28 +0100 Grozdan Nikolov wrote:
 > 
-> Signed-off-by: Bastian Blank <bastian@waldi.eu.org>
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > Hi,
+> > 
+> > I've compiled the 2.6.20.2 kernel today (I took the SuSE HEAD kernel instead 
+> > of the vanilla one) and I'm having issues with the "imm" module. I still use 
+> > a ZIP drive here for small backups and the "imm" module worked flawless on 
+> > kernel 2.6.18.8 but with kernel 2.6.20.2 I get error messages that the device 
+> > is offline even if the device is switched on and has a ZIP disk inside of it.
+> 
+> Has there been any progress on this?
+> 
+> If not, can you narrow the regression down to a specific kernel version?
+
+Gordon replied to me:  (for archives)
+
+Yes, since I've upgraded to 2.6.21, all is working again. I'm using at the 
+moment 2.6.21-rc5 and all seem fine. Strange that none of the 2.6.20.x 
+kernels I've tried had this problem fixed
+
+
+> > This is what I get from "dmesg" (Sorry for posting this here if it's the wrong 
+> > place, but I wasn't sure if I should report this to Novell's bugzilla because 
+> > I'm using the SuSE head kernel which is not officially supported)
+> > 
+> > imm: Version 2.05 (for Linux 2.4.0)
+> > imm: Found device at ID 6, Attempting to use EPP 32 bit
+> > imm: Communication established at 0x378 with ID 6 using EPP 32 bit
+> > scsi1 : Iomega VPI2 (imm) interface
+> > scsi 1:0:6:0: Direct-Access     IOMEGA   ZIP 250          L.58 PQ: 0 ANSI: 2
+> > sd 1:0:6:0: scsi: Device offlined - not ready after error recovery
+> > sd 1:0:6:0: rejecting I/O to offline device
+> > sd 1:0:6:0: rejecting I/O to offline device
+> > sd 1:0:6:0: rejecting I/O to offline device
+> > sd 1:0:6:0: rejecting I/O to offline device
+> > sda : READ CAPACITY failed.
+> > sda : status=0, message=00, host=1, driver=00
+> > sda : sense not available.
+> > sd 1:0:6:0: rejecting I/O to offline device
+> > sda: Write Protect is off
+> > sda: Mode Sense: 00 00 00 00
+> > sd 1:0:6:0: rejecting I/O to offline device
+> > sda: asking for cache data failed
+> > sda: assuming drive cache: write through
+> > sd 1:0:6:0: Attached scsi removable disk sda
+> > sd 1:0:6:0: Attached scsi generic sg0 type 0
+> > -- 
+> > go openSUSE go!
+> > -
+> 
 > ---
->  drivers/scsi/ibmvscsi/ibmvstgt.c |   18 +++++++++---------
->  drivers/scsi/libsrp.c            |   12 ++++++------
->  2 files changed, 15 insertions(+), 15 deletions(-)
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-Sorry, I sent a wrong patch. Here's a proper one.
 
 ---
-From: Bastian Blank <bastian@waldi.eu.org>
-
-- ibmstgt hits the max rdma transfer size (128k).
-- libsrp returns a rdma transfer error properly.
-
-Signed-off-by: Bastian Blank <bastian@waldi.eu.org>
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/ibmvscsi/ibmvstgt.c |   18 +++++++++---------
- drivers/scsi/libsrp.c            |   12 ++++++------
- 2 files changed, 15 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
-index a7fbd10..84363c1 100644
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c
-+++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -35,7 +35,7 @@
- #include "ibmvscsi.h"
- 
- #define	INITIAL_SRP_LIMIT	16
--#define	DEFAULT_MAX_SECTORS	512
-+#define	DEFAULT_MAX_SECTORS	256
- 
- #define	TGT_NAME	"ibmvstgt"
- 
-@@ -248,8 +248,8 @@ static int ibmvstgt_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
- 						  md[i].va + mdone);
- 
- 			if (err != H_SUCCESS) {
--				eprintk("rdma error %d %d\n", dir, slen);
--				goto out;
-+				eprintk("rdma error %d %d %ld\n", dir, slen, err);
-+				return -EIO;
- 			}
- 
- 			mlen -= slen;
-@@ -265,14 +265,13 @@ static int ibmvstgt_rdma(struct scsi_cmnd *sc, struct scatterlist *sg, int nsg,
- 				if (sidx > nsg) {
- 					eprintk("out of sg %p %d %d\n",
- 						iue, sidx, nsg);
--					goto out;
-+					return -EIO;
- 				}
- 			}
- 		};
- 
- 		rest -= mlen;
- 	}
--out:
- 	return 0;
- }
- 
-@@ -282,18 +281,19 @@ static int ibmvstgt_cmd_done(struct scsi_cmnd *sc,
- 	unsigned long flags;
- 	struct iu_entry *iue = (struct iu_entry *) sc->SCp.ptr;
- 	struct srp_target *target = iue->target;
-+	int err = 0;
- 
- 	dprintk("%p %p %x %u\n", iue, target, vio_iu(iue)->srp.cmd.cdb[0],
- 		cmd->usg_sg);
- 
- 	if (sc->use_sg)
--		srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvstgt_rdma, 1, 1);
-+		err = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvstgt_rdma, 1, 1);
- 
- 	spin_lock_irqsave(&target->lock, flags);
- 	list_del(&iue->ilist);
- 	spin_unlock_irqrestore(&target->lock, flags);
- 
--	if (sc->result != SAM_STAT_GOOD) {
-+	if (err|| sc->result != SAM_STAT_GOOD) {
- 		eprintk("operation failed %p %d %x\n",
- 			iue, sc->result, vio_iu(iue)->srp.cmd.cdb[0]);
- 		send_rsp(iue, sc, HARDWARE_ERROR, 0x00);
-@@ -493,7 +493,8 @@ static void process_iu(struct viosrp_crq *crq, struct srp_target *target)
- {
- 	struct vio_port *vport = target_to_port(target);
- 	struct iu_entry *iue;
--	long err, done;
-+	long err;
-+	int done = 1;
- 
- 	iue = srp_iu_get(target);
- 	if (!iue) {
-@@ -508,7 +509,6 @@ static void process_iu(struct viosrp_crq *crq, struct srp_target *target)
- 
- 	if (err != H_SUCCESS) {
- 		eprintk("%ld transferring data error %p\n", err, iue);
--		done = 1;
- 		goto out;
- 	}
- 
-diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
-index 89403b0..37a0f4d 100644
---- a/drivers/scsi/libsrp.c
-+++ b/drivers/scsi/libsrp.c
-@@ -225,8 +225,7 @@ static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
- 	struct srp_direct_buf *md = NULL;
- 	struct scatterlist dummy, *sg = NULL;
- 	dma_addr_t token = 0;
--	long err;
--	unsigned int done = 0;
-+	int err = 0;
- 	int nmd, nsg = 0, len;
- 
- 	if (dma_map || ext_desc) {
-@@ -258,8 +257,8 @@ static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
- 		sg_dma_address(&dummy) = token;
- 		err = rdma_io(sc, &dummy, 1, &id->table_desc, 1, DMA_TO_DEVICE,
- 			      id->table_desc.len);
--		if (err < 0) {
--			eprintk("Error copying indirect table %ld\n", err);
-+		if (err) {
-+			eprintk("Error copying indirect table %d\n", err);
- 			goto free_mem;
- 		}
- 	} else {
-@@ -272,6 +271,7 @@ rdma:
- 		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg, DMA_BIDIRECTIONAL);
- 		if (!nsg) {
- 			eprintk("fail to map %p %d\n", iue, sc->use_sg);
-+			err = -EIO;
- 			goto free_mem;
- 		}
- 		len = min(sc->request_bufflen, id->len);
-@@ -287,7 +287,7 @@ free_mem:
- 	if (token && dma_map)
- 		dma_free_coherent(iue->target->dev, id->table_desc.len, md, token);
- 
--	return done;
-+	return err;
- }
- 
- static int data_out_desc_size(struct srp_cmd *cmd)
-@@ -352,7 +352,7 @@ int srp_transfer_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
- 		break;
- 	default:
- 		eprintk("Unknown format %d %x\n", dir, format);
--		break;
-+		err = -EINVAL;
- 	}
- 
- 	return err;
--- 
-1.4.4.3
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
