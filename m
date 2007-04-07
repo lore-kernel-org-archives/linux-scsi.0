@@ -1,24 +1,45 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] tgt: fix rdma transfer bugs
-Date: Sat, 7 Apr 2007 17:26:56 +0900 (JST)
-Message-ID: <20070407172701S.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] tgt: fix rdma transfer bugs
+Date: Sat, 7 Apr 2007 18:10:00 +0900 (JST)
+Message-ID: <20070407181030M.fujita.tomonori@lab.ntt.co.jp>
+References: <20070407172701S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:41518 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965672AbXDGI1J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Apr 2007 04:27:09 -0400
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:49623 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965641AbXDGJKH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 7 Apr 2007 05:10:07 -0400
+In-Reply-To: <20070407172701S.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org
 
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] tgt: fix rdma transfer bugs
+Date: Sat, 7 Apr 2007 17:26:56 +0900 (JST)
+
+> From: Bastian Blank <bastian@waldi.eu.org>
+> 
+> - ibmstgt hits the max rdma transfer size (128k).
+> - libsrp returns rdma transfer errors properly.
+> 
+> Signed-off-by: Bastian Blank <bastian@waldi.eu.org>
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/scsi/ibmvscsi/ibmvstgt.c |   18 +++++++++---------
+>  drivers/scsi/libsrp.c            |   12 ++++++------
+>  2 files changed, 15 insertions(+), 15 deletions(-)
+
+Sorry, I sent a wrong patch. Here's a proper one.
+
+---
 From: Bastian Blank <bastian@waldi.eu.org>
 
 - ibmstgt hits the max rdma transfer size (128k).
-- libsrp returns rdma transfer errors properly.
+- libsrp returns a rdma transfer error properly.
 
 Signed-off-by: Bastian Blank <bastian@waldi.eu.org>
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
@@ -28,7 +49,7 @@ Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
  2 files changed, 15 insertions(+), 15 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
-index a7fbd10..46f9ca1 100644
+index a7fbd10..84363c1 100644
 --- a/drivers/scsi/ibmvscsi/ibmvstgt.c
 +++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
 @@ -35,7 +35,7 @@
@@ -36,7 +57,7 @@ index a7fbd10..46f9ca1 100644
  
  #define	INITIAL_SRP_LIMIT	16
 -#define	DEFAULT_MAX_SECTORS	512
-+#define	DEFAULT_MAX_SECTORS	128
++#define	DEFAULT_MAX_SECTORS	256
  
  #define	TGT_NAME	"ibmvstgt"
  
