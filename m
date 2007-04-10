@@ -1,56 +1,49 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: [BUG] unable to handle kernel paging request at virtual address
- 0800000e
-Date: Mon, 09 Apr 2007 16:48:01 -0400
-Message-ID: <461AA681.50605@redhat.com>
-References: <4616CBF4.8020205@m3y3r.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: [ANNOUNCE] sdparm 1.01
+Date: Mon, 09 Apr 2007 22:37:53 -0400
+Message-ID: <461AF881.6080301@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965393AbXDIUsU@vger.kernel.org>
-In-Reply-To: <4616CBF4.8020205@m3y3r.de>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030325AbXDJCmQ@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
 List-Id: linux-scsi@vger.kernel.org
 
-Thomas Meyer wrote:
-> dmesg output:
-> 
-> pktcdvd: pkt_get_last_written failed
-> BUG: unable to handle kernel paging request at virtual address 0800000e
-<SNIP>
-> EFLAGS: 00010203   (2.6.21-rc6 #295)
-<SNIP>
-> cdrom: This disc doesn't have any tracks I recognize!
-> 
-> This happens while calling command pktsetup.
-> 
+sdparm is a command line utility designed to get and set
+SCSI device parameters (cf hdparm for ATA disks). The
+parameters are held in mode pages. Apart from SCSI devices
+(e.g. disks, tapes and enclosures) sdparm can be used on
+any device that uses a SCSI command set. Virtually all CD/DVD
+drives use the SCSI MMC set irrespective of the transport.
+sdparm also can decode VPD pages including the device
+identification page. Commands to start and stop the media;
+load and unload removable media and some other housekeeping
+functions are supported. sdparm supports both the linux
+kernel 2.4 and 2.6 series with ports to FreeBSD and Windows.
 
-Well that's very strange.
+ChangeLog for sdparm-1.01 [20070405]
+  - add element address assignment mode page (smc)
+  - improve error handling in lk 2.4 series mapping to
+    sg devices
+  - add configure.ac rule for mingw (Windows)
+    - include <inttypes.h> to use PRIx64 instead of %llx
+  - add LUICLR bit to extended inquiry VPD page
+  - correct some headers for C++ inclusion
+    - fix some C code to compile under C++
+  - fix bug when unusual transport or vendor given
+  - add a Fujitsu vendor mode page
+  - add "initial priority" to control extension mpage
+  - add "disconnect-reconnect" mpage to generic list;
+    there are still transport specific versions
+  - extend block limits VPD page (sbc3r09)
+  - sync with sg3_utils-1.24 pass-through code
 
-long do_sys_open(int dfd, const char __user *filename, int flags, int mode)
-{
-        char *tmp = getname(filename);
-        int fd = PTR_ERR(tmp);
+For more information and downloads see:
+http://www.torque.net/sg/sdparm.html
 
-        if (!IS_ERR(tmp)) {
-                fd = get_unused_fd();
-                if (fd >= 0) {
-============>           struct file *f = do_filp_open(dfd, tmp, flags, mode);
-                        if (IS_ERR(f)) {
-                                put_unused_fd(fd);
-                                fd = PTR_ERR(f);
-                        } else {
-                                fsnotify_open(f->f_path.dentry);
-                                fd_install(fd, f);
-                        }
-                }
-                putname(tmp);
-        }
+A release announcement has been sent to freshmeat.net .
 
-do_filp_open has returned 0x8000002
-
-Isn't that a SCSI error of some kind?
-
-IAC we have tried to do fsnotify_open(f->f_path.dentry) with that result...
+Doug Gilbert
