@@ -1,49 +1,45 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [ANNOUNCE] sdparm 1.01
-Date: Mon, 09 Apr 2007 22:37:53 -0400
-Message-ID: <461AF881.6080301@torque.net>
-Reply-To: dougg@torque.net
+From: David Miller <davem@davemloft.net>
+Subject: scsi_set_tag_type()
+Date: Tue, 10 Apr 2007 00:30:11 -0700 (PDT)
+Message-ID: <20070410.003011.48528785.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1030325AbXDJCmQ@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, tomfa@debian.org, kumba@gentoo.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:51129
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751917AbXDJHaM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Apr 2007 03:30:12 -0400
+Received: from localhost (localhost [127.0.0.1])
+	by sunset.davemloft.net (Postfix) with ESMTP id 6F39BAE41FD
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Apr 2007 00:30:11 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-sdparm is a command line utility designed to get and set
-SCSI device parameters (cf hdparm for ATA disks). The
-parameters are held in mode pages. Apart from SCSI devices
-(e.g. disks, tapes and enclosures) sdparm can be used on
-any device that uses a SCSI command set. Virtually all CD/DVD
-drives use the SCSI MMC set irrespective of the transport.
-sdparm also can decode VPD pages including the device
-identification page. Commands to start and stop the media;
-load and unload removable media and some other housekeeping
-functions are supported. sdparm supports both the linux
-kernel 2.4 and 2.6 series with ports to FreeBSD and Windows.
 
-ChangeLog for sdparm-1.01 [20070405]
-  - add element address assignment mode page (smc)
-  - improve error handling in lk 2.4 series mapping to
-    sg devices
-  - add configure.ac rule for mingw (Windows)
-    - include <inttypes.h> to use PRIx64 instead of %llx
-  - add LUICLR bit to extended inquiry VPD page
-  - correct some headers for C++ inclusion
-    - fix some C code to compile under C++
-  - fix bug when unusual transport or vendor given
-  - add a Fujitsu vendor mode page
-  - add "initial priority" to control extension mpage
-  - add "disconnect-reconnect" mpage to generic list;
-    there are still transport specific versions
-  - extend block limits VPD page (sbc3r09)
-  - sync with sg3_utils-1.24 pass-through code
+I don't believe this function behaves as some call sites intend.
 
-For more information and downloads see:
-http://www.torque.net/sg/sdparm.html
+For example, if the driver implements the ->change_queue_type()
+method, and I say to use simple tags in sysfs, and sdev->ordered_tags
+is already set, I am not going to get simple tags since
+sdev->ordered_tags will stay set and scsi_get_tag_type() always
+returns MSG_ORDERED_TAG when sdev->ordered_tags is set.
 
-A release announcement has been sent to freshmeat.net .
+It's not "setting" the tag type, it's accumulating binary states
+until "0" is given which clears them all.
 
-Doug Gilbert
+Also, what is the thinking about what drivers should use as the
+default tag type via these interfaces?  There appears to be a lot of
+inconsistency here.  For example, unless overridden by the user, the
+aic7xxx driver uses orderred tags by default.  On the other hand,
+libsas uses simple tags by default.
+
+Wouldn't we want to use simple tags by default to allow the target to
+reorder tagged requests as much as possible?  Regardless of the
+thinking, I don't think this policy does not belong in the drivers at
+all.
+
+I'm trying to figure out what I should do in a driver I'm hacking
+on which is why I'm noticing all of this stuff :-)
