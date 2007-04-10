@@ -1,137 +1,221 @@
-From: "Zhao Forrest" <forrest.zhao@gmail.com>
-Subject: RAID1 can't be written after pulling out the secondary hard disk
-Date: Tue, 10 Apr 2007 17:00:35 +0800
-Message-ID: <ac8af0be0704100200v63194731i91c9125ff7bff951@mail.gmail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [Fwd: Fix BusLogic to stop using check_region]
+Date: Tue, 10 Apr 2007 08:53:08 -0500
+Message-ID: <1176213188.3712.0.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.170]:28350 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966121AbXDJJAh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2007 05:00:37 -0400
-Received: by ug-out-1314.google.com with SMTP id 44so33146uga
-        for <linux-scsi@vger.kernel.org>; Tue, 10 Apr 2007 02:00:36 -0700 (PDT)
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:48899 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753778AbXDJNxL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2007 09:53:11 -0400
+Received: from [172.17.6.40] (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (8.11.6/8.11.6) with ESMTP id l3ADr9k09987
+	for <linux-scsi@vger.kernel.org>; Tue, 10 Apr 2007 09:53:09 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com
-Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, support@lsi.com
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi Eric,
-We conducted the following test on a SUN Galaxy x64 server, then RAID1
-can't be written anymore, fs become read-only. The steps of
-reproducing the bug:
-1. Create RAID1 with 2 disks (slot 0, 1) in LSI setup utility
-2. Install RHEL5
-3. Pull the disk(the secondary one) out from slot 1.
-4. FS became read-only
-5. dmesg shows a lot of errors
-6 mount -oremount,rw /dev/sda2 can't recover fs to read-write state
+-------- Forwarded Message --------
+Subject: Fix BusLogic to stop using check_region
+From: Zachary Amsden <zach@vmware.com>
 
-We reproduced the bug with RHEL5(2.6.18-8.el5), kernel 2.6.18.8,
-2.6.20.6 and 2.6.21-rc6.
-But can't reproduce the bug with RHEL4-U4. It seems that the MPT
-driver of version between 3.02 and 3.04 introduced this bug.
-Let me know if you need other information.
+I got so sick of seing the check_region warnings from BusLogic.c I actually
+fixed it properly.  Never use check region, reserve it before the probe
+with request region instead and check the error result; free region if
+setup fails.  Should be functionally identical to the original except for
+fixing the potential race.
 
-Thanks,
-Forrest
-The log messages in dmesg:
-----------------------------------------------------------------------------------
-mptbase: ioc0: RAID STATUS CHANGE for PhysDisk 0
-mptbase: ioc0:   PhysDisk is now missing
-mptbase: ioc0: RAID STATUS CHANGE for PhysDisk 0
-mptbase: ioc0:   PhysDisk is now missing, out of sync
-mptbase: ioc0: RAID STATUS CHANGE for VolumeID 0
-mptbase: ioc0:   volume is now degraded, enabled
-mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO
-Executed}, SubCode(0x0000)
-mptbase: ioc0: LogInfo(0x31140000): Originator={PL}, Code={IO
-Executed}, SubCode(0x0000)
-mptsas: ioc0: removing ssp device, channel 0, id 1, phy 1
-sd 0:1:0:0: SCSI error: return code = 0x00010000
-end_request: I/O error, dev sda, sector 266877
-sd 0:1:0:0: SCSI error: return code = 0x00010000
-end_request: I/O error, dev sda, sector 98644445
-Buffer I/O error on device sda2, logical block 12304450
-lost page write due to I/O error on sda2
-mptscsih: ioc0: ERROR - Received a mf that was already freed
-mptscsih: ioc0: ERROR - req_idx=1580 req_idx_MR=1580
-mf=ffff8803c9f42d80 mr=0000000000000000 sc=ffff880004821c00
-Aborting journal on device sda2.
-journal commit I/O error
-ext3_abort called.
-EXT3-fs error (device sda2): ext3_journal_start_sb: Detected aborted journal
-Remounting filesystem read-only
-mptscsih: ioc0: ERROR - Received a mf that was already freed
-mptscsih: ioc0: ERROR - req_idx=2d80 req_idx_MR=2d80
-mf=ffff8803c9f52080 mr=0000000000000000 sc=0000000000000000
-------------------------------------------------------------------------------
-The output of lspci:
-------------------------------------------------------------------------------
-00:00.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev a3)
-00:01.0 ISA bridge: nVidia Corporation CK804 ISA Bridge (rev f3)
-00:01.1 SMBus: nVidia Corporation CK804 SMBus (rev a2)
-00:02.0 USB Controller: nVidia Corporation CK804 USB Controller (rev a2)
-00:02.1 USB Controller: nVidia Corporation CK804 USB Controller (rev a3)
-00:06.0 IDE interface: nVidia Corporation CK804 IDE (rev f2)
-00:09.0 PCI bridge: nVidia Corporation CK804 PCI Bridge (rev f2)
-00:0b.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev f3)
-00:0c.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev f3)
-00:0d.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev f3)
-00:0e.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
-00:10.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8132 PCI-X Bridge (rev 12)
-00:10.1 PIC: Advanced Micro Devices [AMD] AMD-8132 PCI-X IOAPIC (rev 12)
-00:11.0 PCI bridge: Advanced Micro Devices [AMD] AMD-8132 PCI-X Bridge (rev 12)
-00:11.1 PIC: Advanced Micro Devices [AMD] AMD-8132 PCI-X IOAPIC (rev 12)
-00:18.0 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] HyperTransport Technology Configuration
-00:18.1 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Address Map
-00:18.2 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] DRAM Controller
-00:18.3 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Miscellaneous Control
-00:19.0 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] HyperTransport Technology Configuration
-00:19.1 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Address Map
-00:19.2 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] DRAM Controller
-00:19.3 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Miscellaneous Control
-00:1a.0 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] HyperTransport Technology Configuration
-00:1a.1 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Address Map
-00:1a.2 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] DRAM Controller
-00:1a.3 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Miscellaneous Control
-00:1b.0 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] HyperTransport Technology Configuration
-00:1b.1 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Address Map
-00:1b.2 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] DRAM Controller
-00:1b.3 Host bridge: Advanced Micro Devices [AMD] K8
-[Athlon64/Opteron] Miscellaneous Control
-01:06.0 VGA compatible controller: ATI Technologies Inc Rage XL (rev 27)
-06:01.0 Ethernet controller: Intel Corporation 82546EB Gigabit
-Ethernet Controller (Copper) (rev 03)
-06:01.1 Ethernet controller: Intel Corporation 82546EB Gigabit
-Ethernet Controller (Copper) (rev 03)
-06:02.0 Ethernet controller: Intel Corporation 82546EB Gigabit
-Ethernet Controller (Copper) (rev 03)
-06:02.1 Ethernet controller: Intel Corporation 82546EB Gigabit
-Ethernet Controller (Copper) (rev 03)
-07:04.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1064
-PCI-X Fusion-MPT SAS (rev 02)
-80:00.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev a3)
-80:01.0 Memory controller: nVidia Corporation CK804 Memory Controller (rev f3)
-80:0b.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev f3)
-80:0c.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev f3)
-80:0d.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev f3)
-80:0e.0 PCI bridge: nVidia Corporation CK804 PCIE Bridge (rev a3)
---------------------------------------------------------------------------
+Signed-off-by: Zachary Amsden <zach@vmware.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/BusLogic.c |   73 ++++++++++++++++++++++++--------------
+ 1 file changed, 48 insertions(+), 25 deletions(-)
+
+diff -puN drivers/scsi/BusLogic.c~fix-buslogic-to-stop-using-check_region drivers/scsi/BusLogic.c
+--- a/drivers/scsi/BusLogic.c~fix-buslogic-to-stop-using-check_region
++++ a/drivers/scsi/BusLogic.c
+@@ -579,17 +579,17 @@ static void __init BusLogic_InitializePr
+ 	/*
+ 	   Append the list of standard BusLogic MultiMaster ISA I/O Addresses.
+ 	 */
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe330 : check_region(0x330, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe330)
+ 		BusLogic_AppendProbeAddressISA(0x330);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe334 : check_region(0x334, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe334)
+ 		BusLogic_AppendProbeAddressISA(0x334);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe230 : check_region(0x230, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe230)
+ 		BusLogic_AppendProbeAddressISA(0x230);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe234 : check_region(0x234, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe234)
+ 		BusLogic_AppendProbeAddressISA(0x234);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe130 : check_region(0x130, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe130)
+ 		BusLogic_AppendProbeAddressISA(0x130);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe134 : check_region(0x134, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe134)
+ 		BusLogic_AppendProbeAddressISA(0x134);
+ }
+ 
+@@ -795,7 +795,9 @@ static int __init BusLogic_InitializeMul
+ 	   host adapters are probed.
+ 	 */
+ 	if (!BusLogic_ProbeOptions.NoProbeISA)
+-		if (PrimaryProbeInfo->IO_Address == 0 && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe330 : check_region(0x330, BusLogic_MultiMasterAddressCount) == 0)) {
++		if (PrimaryProbeInfo->IO_Address == 0 &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe330)) {
+ 			PrimaryProbeInfo->HostAdapterType = BusLogic_MultiMaster;
+ 			PrimaryProbeInfo->HostAdapterBusType = BusLogic_ISA_Bus;
+ 			PrimaryProbeInfo->IO_Address = 0x330;
+@@ -805,15 +807,25 @@ static int __init BusLogic_InitializeMul
+ 	   omitting the Primary I/O Address which has already been handled.
+ 	 */
+ 	if (!BusLogic_ProbeOptions.NoProbeISA) {
+-		if (!StandardAddressSeen[1] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe334 : check_region(0x334, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[1] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe334))
+ 			BusLogic_AppendProbeAddressISA(0x334);
+-		if (!StandardAddressSeen[2] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe230 : check_region(0x230, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[2] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe230))
+ 			BusLogic_AppendProbeAddressISA(0x230);
+-		if (!StandardAddressSeen[3] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe234 : check_region(0x234, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[3] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe234))
+ 			BusLogic_AppendProbeAddressISA(0x234);
+-		if (!StandardAddressSeen[4] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe130 : check_region(0x130, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[4] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe130))
+ 			BusLogic_AppendProbeAddressISA(0x130);
+-		if (!StandardAddressSeen[5] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe134 : check_region(0x134, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[5] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe134))
+ 			BusLogic_AppendProbeAddressISA(0x134);
+ 	}
+ 	/*
+@@ -2220,22 +2232,35 @@ static int __init BusLogic_init(void)
+ 		HostAdapter->PCI_Device = ProbeInfo->PCI_Device;
+ 		HostAdapter->IRQ_Channel = ProbeInfo->IRQ_Channel;
+ 		HostAdapter->AddressCount = BusLogic_HostAdapterAddressCount[HostAdapter->HostAdapterType];
++
++		/*
++		   Make sure region is free prior to probing.
++		 */
++		if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount,
++					"BusLogic"))
++			continue;
+ 		/*
+ 		   Probe the Host Adapter.  If unsuccessful, abort further initialization.
+ 		 */
+-		if (!BusLogic_ProbeHostAdapter(HostAdapter))
++		if (!BusLogic_ProbeHostAdapter(HostAdapter)) {
++			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
++		}
+ 		/*
+ 		   Hard Reset the Host Adapter.  If unsuccessful, abort further
+ 		   initialization.
+ 		 */
+-		if (!BusLogic_HardwareResetHostAdapter(HostAdapter, true))
++		if (!BusLogic_HardwareResetHostAdapter(HostAdapter, true)) {
++			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
++		}
+ 		/*
+ 		   Check the Host Adapter.  If unsuccessful, abort further initialization.
+ 		 */
+-		if (!BusLogic_CheckHostAdapter(HostAdapter))
++		if (!BusLogic_CheckHostAdapter(HostAdapter)) {
++			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
++		}
+ 		/*
+ 		   Initialize the Driver Options field if provided.
+ 		 */
+@@ -2247,16 +2272,6 @@ static int __init BusLogic_init(void)
+ 		 */
+ 		BusLogic_AnnounceDriver(HostAdapter);
+ 		/*
+-		   Register usage of the I/O Address range.  From this point onward, any
+-		   failure will be assumed to be due to a problem with the Host Adapter,
+-		   rather than due to having mistakenly identified this port as belonging
+-		   to a BusLogic Host Adapter.  The I/O Address range will not be
+-		   released, thereby preventing it from being incorrectly identified as
+-		   any other type of Host Adapter.
+-		 */
+-		if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount, "BusLogic"))
+-			continue;
+-		/*
+ 		   Register the SCSI Host structure.
+ 		 */
+ 
+@@ -2280,6 +2295,12 @@ static int __init BusLogic_init(void)
+ 		   Acquire the System Resources necessary to use the Host Adapter, then
+ 		   Create the Initial CCBs, Initialize the Host Adapter, and finally
+ 		   perform Target Device Inquiry.
++
++		   From this point onward, any failure will be assumed to be due to a
++		   problem with the Host Adapter, rather than due to having mistakenly
++		   identified this port as belonging to a BusLogic Host Adapter.  The
++		   I/O Address range will not be released, thereby preventing it from
++		   being incorrectly identified as any other type of Host Adapter.
+ 		 */
+ 		if (BusLogic_ReadHostAdapterConfiguration(HostAdapter) &&
+ 		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) &&
+@@ -3598,6 +3619,7 @@ static void __exit BusLogic_exit(void)
+ 
+ __setup("BusLogic=", BusLogic_Setup);
+ 
++#ifdef MODULE
+ static struct pci_device_id BusLogic_pci_tbl[] __devinitdata = {
+ 	{ PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+@@ -3607,6 +3629,7 @@ static struct pci_device_id BusLogic_pci
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ }
+ };
++#endif
+ MODULE_DEVICE_TABLE(pci, BusLogic_pci_tbl);
+ 
+ module_init(BusLogic_init);
+_
+
+Patches currently in -mm which might be from zach@vmware.com are
+
+proper-fix-for-highmem-kmap_atomic-functions-for-vmi-for-2621.patch
+fix-buslogic-to-stop-using-check_region.patch
+revert-proper-fix-for-highmem-kmap_atomic-functions-for-vmi-for-2621.patch
+paravirt_ops-update-maintainers.patch
+paravirt_ops-allow-paravirt-backend-to-choose-kernel-pmd-sharing.patch
+paravirt_ops-rename-struct-paravirt_patch-to-paravirt_patch_site-for-clarity.patch
+paravirt_ops-use-patch-site-ids-computed-from-offset-in-paravirt_ops-structure.patch
+paravirt_ops-fix-patch-site-clobbers-to-include-return-register.patch
+paravirt_ops-consistently-wrap-paravirt-ops-callsites-to-make-them-patchable.patch
+paravirt_ops-add-common-patching-machinery.patch
+paravirt_ops-revert-map_pt_hook.patch
+paravirt_ops-add-kmap_atomic_pte-for-mapping-highpte-pages.patch
+i386-relocate-vdso-elf-headers-to-match-mapped-location-with-compat_vdso.patch
+i386-make-compat_vdso-runtime-selectable.patch
+i386-sysenter-arch-pages-fix.patch
+i386-acpi-remove-earlyquirk-warning.patch
+i386-mcheck-p4-grotesque-and-needless-warning-fix.patch
+i386-pgd-clone-under-lock-fix.patch
+vmi-supports-compat-vdso.patch
+resurrect-the-vmi-lazy-mode-fixes.patch
+vmi-kmap_atomic_pte-fix.patch
+vmi-timer-update.patch
+i386-use-pte_update_defer-in-ptep_test_and_clear_dirtyyoung.patch
+i386-use-pte_update_defer-in-ptep_test_and_clear_dirtyyoung-fix.patch
+ignore-stolen-time-in-the-softlockup-watchdog.patch
+
