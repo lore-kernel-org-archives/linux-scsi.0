@@ -1,87 +1,143 @@
-From: "=?UTF-8?Q?Kristian_H=C3=B8gsberg?=" <krh@bitplanet.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH 4/5] Do an agent reset on error recovery.
-Date: Wed, 11 Apr 2007 12:49:39 -0400
-Message-ID: <59ad55d30704110949x7bd26dder9e6f999b10354de7@mail.gmail.com>
-References: <1176243080579-git-send-email-krh@redhat.com>
-	<11762430853030-git-send-email-krh@redhat.com>
-	<11762430863671-git-send-email-krh@redhat.com>
-	<11762430863077-git-send-email-krh@redhat.com>
-	<461C1D11.7070003@s5r6.in-berlin.de>
+Date: Wed, 11 Apr 2007 20:10:25 +0200
+Message-ID: <461D2491.1010806@s5r6.in-berlin.de>
+References: <1176243080579-git-send-email-krh@redhat.com>	 <11762430853030-git-send-email-krh@redhat.com>	 <11762430863671-git-send-email-krh@redhat.com>	 <11762430863077-git-send-email-krh@redhat.com>	 <461C1D11.7070003@s5r6.in-berlin.de> <59ad55d30704110949x7bd26dder9e6f999b10354de7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <461C1D11.7070003@s5r6.in-berlin.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: =?UTF-8?Q?Kristian_H=C3=B8gsberg?= <krh@redhat.com>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:44065 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753512AbXDKSKw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Apr 2007 14:10:52 -0400
+In-Reply-To: <59ad55d30704110949x7bd26dder9e6f999b10354de7@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: =?UTF-8?B?S3Jpc3RpYW4gSMO4Z3NiZXJn?= <krh@bitplanet.net>
+Cc: =?UTF-8?B?S3Jpc3RpYW4gSMO4Z3NiZXJn?= <krh@redhat.com>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-T24gNC8xMC8wNywgU3RlZmFuIFJpY2h0ZXIgPHN0ZWZhbnJAczVyNi5pbi1iZXJsaW4uZGU+IHdy
-b3RlOgo+IChhZGRlZCBDYzogTFNNTCkKPgo+IEtyaXN0aWFuIEjDuGdzYmVyZyB3cm90ZToKPiA+
-IEFsc28sIGltcGxlbWVudCB0aGUgLmVoX2hvc3RfcmVzZXRfaGFuZGxlciBjYWxsYmFjayBpbnN0
-ZWFkIG9mCj4gPiAuZWhfYWJvcnRfaGFuZGxlciBzaW5jZSB0aGF0J3Mgd2hhdCB3ZSdyZSBhY3R1
-YWxseSBkb2luZy4KPgo+IFlvdSByZXNldCB0aGUgdGFyZ2V0IHBvcnQgKG9yIHNwZWNpZmljYWxs
-eSwgdGhlIGZldGNoIGFnZW50IGFjdGluZyBvbgo+IHRoYXQgdGFyZ2V0IHBvcnQpLiAgQnV0IHRo
-ZSAuZWhfaG9zdF9yZXNldF9oYW5kbGVyIGlzIHRvICJhc2sgW3RoZV0gaG9zdAo+IGFkYXB0ZXIg
-dG8gcmVzZXQgaXRzZWxmIi4gT3IgaW4gdGhlIHdvcmRzIG9mIHNjc2lfbWlkX2xvd19hcGkudHh0
-Ogo+ICAgIGVoX2Fib3J0X2hhbmRsZXIgLSBhYm9ydCBnaXZlbiBjb21tYW5kCj4gICAgZWhfYnVz
-X3Jlc2V0X2hhbmRsZXIgLSBpc3N1ZSBTQ1NJIGJ1cyByZXNldAo+ICAgIGVoX2RldmljZV9yZXNl
-dF9oYW5kbGVyIC0gaXNzdWUgU0NTSSBkZXZpY2UgcmVzZXQKPiAgICBlaF9ob3N0X3Jlc2V0X2hh
-bmRsZXIgLSByZXNldCBob3N0IChob3N0IGJ1cyBhZGFwdGVyKQoKWWVhaCwgYW5kIGFzIEkgdW5k
-ZXJzdGFuZCBpdCwgaWRlYWxseSB5b3UgaW1wbGVtZW50IHRoZSBtb3N0IHNwZWNpZmljCmNhbmNl
-bGxhdGlvbiBjYWxsYmFjaywgaS5lLiBpZiB5b3VyIGNvbnRyb2xsZXIgY2FuIGNhbmNlbCBhIHNw
-ZWNpZmljCmNvbW1hbmQgdGhlIFNDU0kgc3RhY2sgd2lsbCB1c2UgdGhhdCwgYnV0IGZhbGwgYmFj
-ayB0byBtb3JlIGFuZCBtb3JlCmJyb2FkIGNhbmNlbCBmdW5jdGlvbnMuCgpUaGUgcmVhc29uIEkg
-bWFkZSB0aGlzIGNoYW5nZSB3YXMgdGhhdCBJIHdhcyBsb29raW5nIGF0IHNicDIuYywgYXQgdGhl
-CndheSBpdCBoYW5kbGVzIGNhbmNlbGxhdGlvbiBsb29rcyB3cm9uZyB0byBtZS4gIEl0IGltcGxl
-bWVudHMgYm90aAphYm9ydF9oYW5kbGVyIGFuZCBkZXZpY2VfcmVzZXQsIGJ1dCB0aGUgb25seSBj
-b21tYW5kIGl0IHNlbmRzIHRvIHRoZQpkZXZpY2UgaW4gZWl0aGVyIGNhc2UgaXQgYW4gYWdlbnQg
-cmVzZXQuICBBcyBJIHVuZGVyc3RhbmQgdGhlIFNDU0kKZXJyb3IgaGFuZGxpbmcsIHRoZSBkZXZp
-Y2VfcmVzZXQgaXMgb25seSBjYWxsZWQgaWYgYWJvcnRfaGFuZGxlciBmYWlscwp0byBhYm9ydCB0
-aGUgY29tbWFuZC4gIFdoYXQncyBhbiBleHRyYSBhZ2VudCByZXNldCBnb2luZyB0byBkbyB0aGVu
-PwpBbmQgdGhlIHNicDIuYyBhYm9ydF9oYW5kbGVyIGFsd2F5cyByZXR1cm5zIFNVQ0NFU1MsIGJ0
-dy4KClNvIHVubGVzcyB3ZSB3YW50IHRvIGltcGxlbWVudCAiYWJvcnQgdGFzayIgKGZpbmVyIGdy
-YWluZWQpIG9yIHRhcmdldApyZXNldC93cml0ZSBSRVNFVF9TVEFSVCB0byBTVEFURV9TRVQgKGNv
-YXJzZXIgZ3JhaW5lZCkgaXQgZG9lc24ndCBtYWtlCnNlbnNlIHRvIGhhdmUgbW9yZSB0aGFuIG9u
-ZSBlcnJvciBoYW5kbGVyIGNhbGxiYWNrLiAgIEFuZCBzaW5jZSB3ZQpoYXZlIG9uZSBTQ1NJIGhv
-c3QgcGVyIGZldGNoIGFnZW50LCBpdCBkb2Vzbid0IG1ha2UgbXVjaCBvZiBhCmRpZmZlcmVuY2Ug
-d2hpY2ggZXJyb3IgaGFuZGxlciB3ZSBpbXBsZW1lbnQuCgo+IFRoZSBjbG9zZXN0IGNvbmNlcHQg
-dG8gImhvc3QgYnVzIGFkcGF0ZXJzIiBpbiBTQlAtMiBhcmUgaW5pdGlhdG9yIHBvcnRzLAo+IGFu
-ZCB0aGVyZSBpcyBubyBub3Rpb24gb2YgcmVzZXR0aW5nIGFuIFNCUC0yIGluaXRpYXRvciBwb3J0
-LgoKQ291bGQgYSBmZXRjaCBhZ2VudCBub3QgYmUgdmlld2VkIGFzIGEgaG9zdCBidXMgYWRhcHRl
-cj8gIFRoZSB3YXkgSQpzZWUgaXQgaXMgdGhhdCBpdCBoYXMgYSBzZXQgb2YgcmVnaXN0ZXJzIHRo
-YXQgYXJlIGF2YWlsYWJsZSB0byB0aGUgQ1BVCnRocm91Z2ggc29tZSBidXMuICBJbiB0aGlzIGNh
-c2UgdGhlIGJ1cyBpcyBJRUVFMTM5NCBidXQgaXQgY291bGQgYmUKdGhlIFBDSSBidXMuCgo+IEJ1
-dCB0aGVvcmV0aWMgc2VtYW50aWNzIGFzaWRlOiAgQ2hlY2sgZHJpdmVycy9zY3NpL3Njc2lfZXJy
-b3IuYyBmb3Igd2hhdAo+IGNvbWVzIGFmdGVyIG9uZSBvciBhbm90aGVyIGhvc3R0LT5laF8gaGFu
-ZGxlciB3YXMgY2FsbGVkLiAgRG8geW91IHdhbnQKPiB0aGUgc3Vic2VxdWVudCBjYWxsIHRvIHNj
-c2lfcmVwb3J0X2J1c19yZXNldCgpPyAgUHJvYmFibHkgbm90LiAgQnV0Cj4gcGVyaGFwcyB5b3Ug
-d2FudCB3aGF0IGNvbWVzIGFmdGVyIGhvc3R0LT5laF9kZXZpY2VfcmVzZXRfaGFuZGxlciB3YXMg
-Y2FsbGVkLgoKVGhpcyBpcyB0aGUgY2FsbCBjaGFpbjoKCiAgICAgICAgaWYgKF9fc2NzaV90cnlf
-dG9fYWJvcnRfY21kKHNjbWQpICE9IFNVQ0NFU1MpCiAgICAgICAgICAgICAgICBpZiAoc2NzaV90
-cnlfYnVzX2RldmljZV9yZXNldChzY21kKSAhPSBTVUNDRVNTKQogICAgICAgICAgICAgICAgICAg
-ICAgICBpZiAoc2NzaV90cnlfYnVzX3Jlc2V0KHNjbWQpICE9IFNVQ0NFU1MpCiAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBzY3NpX3RyeV9ob3N0X3Jlc2V0KHNjbWQpOwoKV2UgZG9uJ3Qg
-c3VwcG9ydCBhYm9ydGluZyBpbmRpdmlkdWFsIGNvbW1hbmRzIG9yIGluZGl2aWR1YWwgTFVOcywg
-YW5kCndlJ3JlIG5vdCBkb2luZyBhIFNDU0kgYnVzIHJlc2V0Li4uIEkgZHVubm8sIEkgdGhpbmsg
-dGhlIGhvc3QgcmVzZXQKc2VlbXMgYXBwcm9wcmlhdGUsIGJ1dCBJIGRvbid0IHJlYWxseSBrbm93
-IG11Y2ggYWJvdXQgU0NTSSA6KQoKY2hlZXJzLApLcmlzdGlhbgotLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tClRh
-a2UgU3VydmV5cy4gRWFybiBDYXNoLiBJbmZsdWVuY2UgdGhlIEZ1dHVyZSBvZiBJVApKb2luIFNv
-dXJjZUZvcmdlLm5ldCdzIFRlY2hzYXkgcGFuZWwgYW5kIHlvdSdsbCBnZXQgdGhlIGNoYW5jZSB0
-byBzaGFyZSB5b3VyCm9waW5pb25zIG9uIElUICYgYnVzaW5lc3MgdG9waWNzIHRocm91Z2ggYnJp
-ZWYgc3VydmV5cy1hbmQgZWFybiBjYXNoCmh0dHA6Ly93d3cudGVjaHNheS5jb20vZGVmYXVsdC5w
-aHA/cGFnZT1qb2luLnBocCZwPXNvdXJjZWZvcmdlJkNJRD1ERVZERVYKX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KbWFpbGluZyBsaXN0IGxpbnV4MTM5NC1k
-ZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQKaHR0cHM6Ly9saXN0cy5zb3VyY2Vmb3JnZS5uZXQv
-bGlzdHMvbGlzdGluZm8vbGludXgxMzk0LWRldmVsCg==
+Kristian H=C3=B8gsberg wrote:
+[hostt->eh_ flavors]
+> The reason I made this change was that I was looking at sbp2.c, at th=
+e
+> way it handles cancellation looks wrong to me.  It implements both
+> abort_handler and device_reset, but the only command it sends to the
+> device in either case it an agent reset.  As I understand the SCSI
+> error handling, the device_reset is only called if abort_handler fail=
+s
+> to abort the command.  What's an extra agent reset going to do then?
+> And the sbp2.c abort_handler always returns SUCCESS, btw.
+
+That's of course bogus, and it is that way because I didn't take the
+time yet to clean this up. :-)
+
+> So unless we want to implement "abort task" (finer grained) or target
+> reset/write RESET_START to STATE_SET (coarser grained) it doesn't mak=
+e
+> sense to have more than one error handler callback.
+
+Yes.
+
+> And since we have one SCSI host per fetch agent, it doesn't make much
+> of a difference which error handler we implement.
+
+There are differences, if you look at scsi_error.c.  I'm just not sure
+at the moment how relevant these differences for sbp2/ fw-sbp2 are.
+(See below.)
+
+Besides, one Scsi_Host per LU doesn't have to stay that way.  It's just
+another thing which could be cleaned up.
+
+>> The closest concept to "host bus adpaters" in SBP-2 are initiator po=
+rts,
+>> and there is no notion of resetting an SBP-2 initiator port.
+>=20
+> Could a fetch agent not be viewed as a host bus adapter?  The way I
+> see it is that it has a set of registers that are available to the CP=
+U
+> through some bus.  In this case the bus is IEEE1394 but it could be
+> the PCI bus.
+
+=46orget the "host bus adapters" which are mentioned in Linux SCSI core=
+=2E
+What are meant there are cards which connect SCSI Parallel Interconnect
+with a local bus.  The stuff that Linux SCSI core does with its "host
+bus adapters" is stuff for SPI drivers.  It's in the Linux SCSI core no=
+t
+because it belongs there but because nobody took it out of there.  The
+other transport drivers besides SPI drivers take what Linux SCSI core's
+low-level API offers them and deal with it one way or another.
+
+The SBP-2 fetch agent is part of the target.  Talking to it by means of
+its registers and the initiator's status FIFO is part of an transport
+driver on initiator side.  We talk to the fetch agent via the SCSI
+interconnect, which is the IEEE 1394 Serial Bus.
+
+The target's fetch agents are _not_ elements between the SCSI
+interconnect and a local bus, like "host bus adapters" are.
+
+>> But theoretic semantics aside:  Check drivers/scsi/scsi_error.c for =
+what
+>> comes after one or another hostt->eh_ handler was called.  Do you wa=
+nt
+>> the subsequent call to scsi_report_bus_reset()?  Probably not.  But
+>> perhaps you want what comes after hostt->eh_device_reset_handler was=
+ called.
+>=20
+> This is the call chain:
+>=20
+>         if (__scsi_try_to_abort_cmd(scmd) !=3D SUCCESS)
+>                 if (scsi_try_bus_device_reset(scmd) !=3D SUCCESS)
+>                         if (scsi_try_bus_reset(scmd) !=3D SUCCESS)
+>                                scsi_try_host_reset(scmd);
+
+Yes, and these stages do different things.
+
+> We don't support aborting individual commands
+
+Correct.
+
+> or individual LUNs,
+
+No. One scsi_device maps to one SBP-2 Logical Unit (LU).  SBP-2 always
+deals only with individual LUs, except that a target's configuration RO=
+M
+is first examined as a whole to discover LUs.
+
+> and we're not doing a SCSI bus reset...
+
+Correct, because a "SCSI bus reset" is something specific to SCSI
+Parallel Interconnect.  The term "SCSI bus reset" implies "SCSI bus" =3D=
+=3D
+SCSI Parallel Interconnect.
+
+Some other interconnects, for example the Serial Bus, define bus resets
+too.  However, such bus resets play entirely different roles for the
+different transport protocols.
+
+> I dunno, I think the host reset seems appropriate, but I don't really
+> know much about SCSI :)
+
+_device_reset comes close to a fetch agent reset; but as I said I'm not
+sure about the rest which happens in scsi_try_bus_device_reset if
+hostt->eh_device_reset_handler(scmd) =3D=3D SUCCESS.
+
+The expecting_cc_ua bit becomes effective in scsi_error.c::scsi_check_s=
+ense:
+http://lxr.free-electrons.com/source/drivers/scsi/scsi_error.c?v=3D2.6.=
+20#329
+I don't know yet what to make of it.  Perhaps a kind reader at LSML can
+give further pointers.
+
+The was_reset bit has ramifications for the st (tape) driver.  That
+should be looked into too.
+--=20
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D-- -=3D-=3D=3D
+http://arcgraph.de/sr/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
