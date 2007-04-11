@@ -1,143 +1,111 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: "=?UTF-8?Q?Kristian_H=C3=B8gsberg?=" <krh@bitplanet.net>
 Subject: Re: [PATCH 4/5] Do an agent reset on error recovery.
-Date: Wed, 11 Apr 2007 20:10:25 +0200
-Message-ID: <461D2491.1010806@s5r6.in-berlin.de>
-References: <1176243080579-git-send-email-krh@redhat.com>	 <11762430853030-git-send-email-krh@redhat.com>	 <11762430863671-git-send-email-krh@redhat.com>	 <11762430863077-git-send-email-krh@redhat.com>	 <461C1D11.7070003@s5r6.in-berlin.de> <59ad55d30704110949x7bd26dder9e6f999b10354de7@mail.gmail.com>
+Date: Wed, 11 Apr 2007 14:45:30 -0400
+Message-ID: <59ad55d30704111145p472282ew612646dcb6927c13@mail.gmail.com>
+References: <1176243080579-git-send-email-krh@redhat.com>
+	<11762430853030-git-send-email-krh@redhat.com>
+	<11762430863671-git-send-email-krh@redhat.com>
+	<11762430863077-git-send-email-krh@redhat.com>
+	<461C1D11.7070003@s5r6.in-berlin.de>
+	<59ad55d30704110949x7bd26dder9e6f999b10354de7@mail.gmail.com>
+	<461D2491.1010806@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:44065 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753512AbXDKSKw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Apr 2007 14:10:52 -0400
-In-Reply-To: <59ad55d30704110949x7bd26dder9e6f999b10354de7@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <461D2491.1010806@s5r6.in-berlin.de>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: =?UTF-8?Q?Kristian_H=C3=B8gsberg?= <krh@redhat.com>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?S3Jpc3RpYW4gSMO4Z3NiZXJn?= <krh@bitplanet.net>
-Cc: =?UTF-8?B?S3Jpc3RpYW4gSMO4Z3NiZXJn?= <krh@redhat.com>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-Kristian H=C3=B8gsberg wrote:
-[hostt->eh_ flavors]
-> The reason I made this change was that I was looking at sbp2.c, at th=
-e
-> way it handles cancellation looks wrong to me.  It implements both
-> abort_handler and device_reset, but the only command it sends to the
-> device in either case it an agent reset.  As I understand the SCSI
-> error handling, the device_reset is only called if abort_handler fail=
-s
-> to abort the command.  What's an extra agent reset going to do then?
-> And the sbp2.c abort_handler always returns SUCCESS, btw.
-
-That's of course bogus, and it is that way because I didn't take the
-time yet to clean this up. :-)
-
-> So unless we want to implement "abort task" (finer grained) or target
-> reset/write RESET_START to STATE_SET (coarser grained) it doesn't mak=
-e
-> sense to have more than one error handler callback.
-
-Yes.
-
-> And since we have one SCSI host per fetch agent, it doesn't make much
-> of a difference which error handler we implement.
-
-There are differences, if you look at scsi_error.c.  I'm just not sure
-at the moment how relevant these differences for sbp2/ fw-sbp2 are.
-(See below.)
-
-Besides, one Scsi_Host per LU doesn't have to stay that way.  It's just
-another thing which could be cleaned up.
-
->> The closest concept to "host bus adpaters" in SBP-2 are initiator po=
-rts,
->> and there is no notion of resetting an SBP-2 initiator port.
->=20
-> Could a fetch agent not be viewed as a host bus adapter?  The way I
-> see it is that it has a set of registers that are available to the CP=
-U
-> through some bus.  In this case the bus is IEEE1394 but it could be
-> the PCI bus.
-
-=46orget the "host bus adapters" which are mentioned in Linux SCSI core=
-=2E
-What are meant there are cards which connect SCSI Parallel Interconnect
-with a local bus.  The stuff that Linux SCSI core does with its "host
-bus adapters" is stuff for SPI drivers.  It's in the Linux SCSI core no=
-t
-because it belongs there but because nobody took it out of there.  The
-other transport drivers besides SPI drivers take what Linux SCSI core's
-low-level API offers them and deal with it one way or another.
-
-The SBP-2 fetch agent is part of the target.  Talking to it by means of
-its registers and the initiator's status FIFO is part of an transport
-driver on initiator side.  We talk to the fetch agent via the SCSI
-interconnect, which is the IEEE 1394 Serial Bus.
-
-The target's fetch agents are _not_ elements between the SCSI
-interconnect and a local bus, like "host bus adapters" are.
-
->> But theoretic semantics aside:  Check drivers/scsi/scsi_error.c for =
-what
->> comes after one or another hostt->eh_ handler was called.  Do you wa=
-nt
->> the subsequent call to scsi_report_bus_reset()?  Probably not.  But
->> perhaps you want what comes after hostt->eh_device_reset_handler was=
- called.
->=20
-> This is the call chain:
->=20
->         if (__scsi_try_to_abort_cmd(scmd) !=3D SUCCESS)
->                 if (scsi_try_bus_device_reset(scmd) !=3D SUCCESS)
->                         if (scsi_try_bus_reset(scmd) !=3D SUCCESS)
->                                scsi_try_host_reset(scmd);
-
-Yes, and these stages do different things.
-
-> We don't support aborting individual commands
-
-Correct.
-
-> or individual LUNs,
-
-No. One scsi_device maps to one SBP-2 Logical Unit (LU).  SBP-2 always
-deals only with individual LUs, except that a target's configuration RO=
-M
-is first examined as a whole to discover LUs.
-
-> and we're not doing a SCSI bus reset...
-
-Correct, because a "SCSI bus reset" is something specific to SCSI
-Parallel Interconnect.  The term "SCSI bus reset" implies "SCSI bus" =3D=
-=3D
-SCSI Parallel Interconnect.
-
-Some other interconnects, for example the Serial Bus, define bus resets
-too.  However, such bus resets play entirely different roles for the
-different transport protocols.
-
-> I dunno, I think the host reset seems appropriate, but I don't really
-> know much about SCSI :)
-
-_device_reset comes close to a fetch agent reset; but as I said I'm not
-sure about the rest which happens in scsi_try_bus_device_reset if
-hostt->eh_device_reset_handler(scmd) =3D=3D SUCCESS.
-
-The expecting_cc_ua bit becomes effective in scsi_error.c::scsi_check_s=
-ense:
-http://lxr.free-electrons.com/source/drivers/scsi/scsi_error.c?v=3D2.6.=
-20#329
-I don't know yet what to make of it.  Perhaps a kind reader at LSML can
-give further pointers.
-
-The was_reset bit has ramifications for the st (tape) driver.  That
-should be looked into too.
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D-- -=3D-=3D=3D
-http://arcgraph.de/sr/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+T24gNC8xMS8wNywgU3RlZmFuIFJpY2h0ZXIgPHN0ZWZhbnJAczVyNi5pbi1iZXJsaW4uZGU+IHdy
+b3RlOgo+IEtyaXN0aWFuIEjDuGdzYmVyZyB3cm90ZToKLi4uCj4gPj4gVGhlIGNsb3Nlc3QgY29u
+Y2VwdCB0byAiaG9zdCBidXMgYWRwYXRlcnMiIGluIFNCUC0yIGFyZSBpbml0aWF0b3IgcG9ydHMs
+Cj4gPj4gYW5kIHRoZXJlIGlzIG5vIG5vdGlvbiBvZiByZXNldHRpbmcgYW4gU0JQLTIgaW5pdGlh
+dG9yIHBvcnQuCj4gPgo+ID4gQ291bGQgYSBmZXRjaCBhZ2VudCBub3QgYmUgdmlld2VkIGFzIGEg
+aG9zdCBidXMgYWRhcHRlcj8gIFRoZSB3YXkgSQo+ID4gc2VlIGl0IGlzIHRoYXQgaXQgaGFzIGEg
+c2V0IG9mIHJlZ2lzdGVycyB0aGF0IGFyZSBhdmFpbGFibGUgdG8gdGhlIENQVQo+ID4gdGhyb3Vn
+aCBzb21lIGJ1cy4gIEluIHRoaXMgY2FzZSB0aGUgYnVzIGlzIElFRUUxMzk0IGJ1dCBpdCBjb3Vs
+ZCBiZQo+ID4gdGhlIFBDSSBidXMuCj4KPiBGb3JnZXQgdGhlICJob3N0IGJ1cyBhZGFwdGVycyIg
+d2hpY2ggYXJlIG1lbnRpb25lZCBpbiBMaW51eCBTQ1NJIGNvcmUuCj4gV2hhdCBhcmUgbWVhbnQg
+dGhlcmUgYXJlIGNhcmRzIHdoaWNoIGNvbm5lY3QgU0NTSSBQYXJhbGxlbCBJbnRlcmNvbm5lY3QK
+PiB3aXRoIGEgbG9jYWwgYnVzLgoKT3IgbWF5YmUgbW9yZSBnZW5lcmFsbHkgYnJpZGdlIGNoaXBz
+ZXRzIHRoYXQgY29ubmVjdCBTQ1NJIFBhcmFsbGVsCmludGVyY29ubmVjdCB3aXRoIGEgbm9uLVND
+U0ksIGJ1dCBub3QgbmVjZXNzYXJpbHkgbG9jYWwsIGJ1cyAoUENJIG9yCklFRUUxMzk0KT8KCj4g
+VGhlIHN0dWZmIHRoYXQgTGludXggU0NTSSBjb3JlIGRvZXMgd2l0aCBpdHMgImhvc3QKPiBidXMg
+YWRhcHRlcnMiIGlzIHN0dWZmIGZvciBTUEkgZHJpdmVycy4gIEl0J3MgaW4gdGhlIExpbnV4IFND
+U0kgY29yZSBub3QKPiBiZWNhdXNlIGl0IGJlbG9uZ3MgdGhlcmUgYnV0IGJlY2F1c2Ugbm9ib2R5
+IHRvb2sgaXQgb3V0IG9mIHRoZXJlLiAgVGhlCj4gb3RoZXIgdHJhbnNwb3J0IGRyaXZlcnMgYmVz
+aWRlcyBTUEkgZHJpdmVycyB0YWtlIHdoYXQgTGludXggU0NTSSBjb3JlJ3MKPiBsb3ctbGV2ZWwg
+QVBJIG9mZmVycyB0aGVtIGFuZCBkZWFsIHdpdGggaXQgb25lIHdheSBvciBhbm90aGVyLgo+Cj4g
+VGhlIFNCUC0yIGZldGNoIGFnZW50IGlzIHBhcnQgb2YgdGhlIHRhcmdldC4gIFRhbGtpbmcgdG8g
+aXQgYnkgbWVhbnMgb2YKPiBpdHMgcmVnaXN0ZXJzIGFuZCB0aGUgaW5pdGlhdG9yJ3Mgc3RhdHVz
+IEZJRk8gaXMgcGFydCBvZiBhbiB0cmFuc3BvcnQKPiBkcml2ZXIgb24gaW5pdGlhdG9yIHNpZGUu
+ICBXZSB0YWxrIHRvIHRoZSBmZXRjaCBhZ2VudCB2aWEgdGhlIFNDU0kKPiBpbnRlcmNvbm5lY3Qs
+IHdoaWNoIGlzIHRoZSBJRUVFIDEzOTQgU2VyaWFsIEJ1cy4KPgo+IFRoZSB0YXJnZXQncyBmZXRj
+aCBhZ2VudHMgYXJlIF9ub3RfIGVsZW1lbnRzIGJldHdlZW4gdGhlIFNDU0kKPiBpbnRlcmNvbm5l
+Y3QgYW5kIGEgbG9jYWwgYnVzLCBsaWtlICJob3N0IGJ1cyBhZGFwdGVycyIgYXJlLgoKV2h5IG5v
+dCB0aG91Z2g/ICBJIG1lYW4sIElFRUUxMzk0IGlzbid0IGEgbG9jYWwgYnVzLCBidXQgb3RoZXIg
+dGhhbgp0aGF0IHRoZSBhcmNoaXRlY2h0dXJlIGxvb2tzIGEgbG90IGxpa2UgdGhlIFBDSSBhZGFw
+dG9yIGNhc2UuCgo+ID4+IEJ1dCB0aGVvcmV0aWMgc2VtYW50aWNzIGFzaWRlOiAgQ2hlY2sgZHJp
+dmVycy9zY3NpL3Njc2lfZXJyb3IuYyBmb3Igd2hhdAo+ID4+IGNvbWVzIGFmdGVyIG9uZSBvciBh
+bm90aGVyIGhvc3R0LT5laF8gaGFuZGxlciB3YXMgY2FsbGVkLiAgRG8geW91IHdhbnQKPiA+PiB0
+aGUgc3Vic2VxdWVudCBjYWxsIHRvIHNjc2lfcmVwb3J0X2J1c19yZXNldCgpPyAgUHJvYmFibHkg
+bm90LiAgQnV0Cj4gPj4gcGVyaGFwcyB5b3Ugd2FudCB3aGF0IGNvbWVzIGFmdGVyIGhvc3R0LT5l
+aF9kZXZpY2VfcmVzZXRfaGFuZGxlciB3YXMgY2FsbGVkLgo+ID4KPiA+IFRoaXMgaXMgdGhlIGNh
+bGwgY2hhaW46Cj4gPgo+ID4gICAgICAgICBpZiAoX19zY3NpX3RyeV90b19hYm9ydF9jbWQoc2Nt
+ZCkgIT0gU1VDQ0VTUykKPiA+ICAgICAgICAgICAgICAgICBpZiAoc2NzaV90cnlfYnVzX2Rldmlj
+ZV9yZXNldChzY21kKSAhPSBTVUNDRVNTKQo+ID4gICAgICAgICAgICAgICAgICAgICAgICAgaWYg
+KHNjc2lfdHJ5X2J1c19yZXNldChzY21kKSAhPSBTVUNDRVNTKQo+ID4gICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgIHNjc2lfdHJ5X2hvc3RfcmVzZXQoc2NtZCk7Cj4KPiBZZXMsIGFuZCB0
+aGVzZSBzdGFnZXMgZG8gZGlmZmVyZW50IHRoaW5ncy4KCk9oIHJpZ2h0Li4uIHllYWgsIHRoZXJl
+IGFyZSBzdWJ0bGUgZGlmZmVyZW5jZXMgaW4gcmVjb3ZlcnkgZGVwZW5kaW5nCm9uIHdoaWNoIG9m
+IHRoZSBlcnJvciBoYW5kbGVycyBzdWNjZWVkLgoKPiA+IFdlIGRvbid0IHN1cHBvcnQgYWJvcnRp
+bmcgaW5kaXZpZHVhbCBjb21tYW5kcwo+Cj4gQ29ycmVjdC4KPgo+ID4gb3IgaW5kaXZpZHVhbCBM
+VU5zLAo+Cj4gTm8uIE9uZSBzY3NpX2RldmljZSBtYXBzIHRvIG9uZSBTQlAtMiBMb2dpY2FsIFVu
+aXQgKExVKS4gIFNCUC0yIGFsd2F5cwo+IGRlYWxzIG9ubHkgd2l0aCBpbmRpdmlkdWFsIExVcywg
+ZXhjZXB0IHRoYXQgYSB0YXJnZXQncyBjb25maWd1cmF0aW9uIFJPTQo+IGlzIGZpcnN0IGV4YW1p
+bmVkIGFzIGEgd2hvbGUgdG8gZGlzY292ZXIgTFVzLgoKWWVhaCwgYW5kIHRoYXQncyBicm9rZW4u
+ICBzYnAyLmMgYWRkcyB0d28gc2NzaV9ob3N0cyBmb3IgZWFjaCBsdW4KZm91bmQgYnV0IHRoZXkg
+Ym90aCB0cnkgdG8gYWNjZXNzIHRoZSBzYW1lIGZldGNoIGFnZW50IHJlZ2lzdGVycy4KVGhlcmUn
+cyBubyB3YXkgdGhhdCBjYW4gd29yay4gIEluIGZ3LXNicDIuYyBJIGp1c3QgZG9uJ3Qgc3VwcG9y
+dCB0aGF0CnlldCAoSSBoYXZlIG5vIGRldmljZXMgdGhhdCBoYXZlIHRoYXQgY29uZmlndXJhdGlv
+biksIGJ1dCBJIHdhbnQgdG8KYWRkIGJvdGggTFVOcyB0byB0aGUgc2FtZSBzY3NpX2hvc3QsIGJl
+Y2F1c2UgdGhhdCdzIHRoZSBvbmx5IHRoaW5nCnRoYXQgY2FuIHdvcmsuCgpTQlAtMiAodGhlIHBy
+b3RvY29sKSBoYXMgYSB0YXNrIG1hbmFnZW1lbnQgcmVxdWVzdCBmb3IgcmVzZXR0aW5nIGEgTFVO
+CndoaWNoIGNvdWxkIGJlIHVzZWQgZm9yIGRldmljZV9yZXNldCBpbiB0aGlzIHNpdHVhdGlvbi4K
+Cj4gPiBhbmQgd2UncmUgbm90IGRvaW5nIGEgU0NTSSBidXMgcmVzZXQuLi4KPgo+IENvcnJlY3Qs
+IGJlY2F1c2UgYSAiU0NTSSBidXMgcmVzZXQiIGlzIHNvbWV0aGluZyBzcGVjaWZpYyB0byBTQ1NJ
+Cj4gUGFyYWxsZWwgSW50ZXJjb25uZWN0LiAgVGhlIHRlcm0gIlNDU0kgYnVzIHJlc2V0IiBpbXBs
+aWVzICJTQ1NJIGJ1cyIgPT0KPiBTQ1NJIFBhcmFsbGVsIEludGVyY29ubmVjdC4KPgo+IFNvbWUg
+b3RoZXIgaW50ZXJjb25uZWN0cywgZm9yIGV4YW1wbGUgdGhlIFNlcmlhbCBCdXMsIGRlZmluZSBi
+dXMgcmVzZXRzCj4gdG9vLiAgSG93ZXZlciwgc3VjaCBidXMgcmVzZXRzIHBsYXkgZW50aXJlbHkg
+ZGlmZmVyZW50IHJvbGVzIGZvciB0aGUKPiBkaWZmZXJlbnQgdHJhbnNwb3J0IHByb3RvY29scy4K
+Cll1cCwgZGlmZmVyZW50IGJ1c2VzLCBkaWZmZXJlbnQgdHlwZXMgb2YgcmVzZXRzLgoKPiA+IEkg
+ZHVubm8sIEkgdGhpbmsgdGhlIGhvc3QgcmVzZXQgc2VlbXMgYXBwcm9wcmlhdGUsIGJ1dCBJIGRv
+bid0IHJlYWxseQo+ID4ga25vdyBtdWNoIGFib3V0IFNDU0kgOikKPgo+IF9kZXZpY2VfcmVzZXQg
+Y29tZXMgY2xvc2UgdG8gYSBmZXRjaCBhZ2VudCByZXNldDsgYnV0IGFzIEkgc2FpZCBJJ20gbm90
+Cj4gc3VyZSBhYm91dCB0aGUgcmVzdCB3aGljaCBoYXBwZW5zIGluIHNjc2lfdHJ5X2J1c19kZXZp
+Y2VfcmVzZXQgaWYKPiBob3N0dC0+ZWhfZGV2aWNlX3Jlc2V0X2hhbmRsZXIoc2NtZCkgPT0gU1VD
+Q0VTUy4KCldlbGwsIGZldGNoIGFnZW50IHJlc2V0cyBhbGwgdGhlIExVTnMgY29udHJvbGxlZCBi
+eSB0aGUgZmV0Y2ggYWdlbnRzLAphbmQgdGh1cyBoYXMgYSBicm9hZGVyIHNjb3BlIHRoYW4ganVz
+dCBkZXZpY2VfcmVzZXQuCgpjaGVlcnMsCktyaXN0aWFuCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGFrZSBT
+dXJ2ZXlzLiBFYXJuIENhc2guIEluZmx1ZW5jZSB0aGUgRnV0dXJlIG9mIElUCkpvaW4gU291cmNl
+Rm9yZ2UubmV0J3MgVGVjaHNheSBwYW5lbCBhbmQgeW91J2xsIGdldCB0aGUgY2hhbmNlIHRvIHNo
+YXJlIHlvdXIKb3BpbmlvbnMgb24gSVQgJiBidXNpbmVzcyB0b3BpY3MgdGhyb3VnaCBicmllZiBz
+dXJ2ZXlzLWFuZCBlYXJuIGNhc2gKaHR0cDovL3d3dy50ZWNoc2F5LmNvbS9kZWZhdWx0LnBocD9w
+YWdlPWpvaW4ucGhwJnA9c291cmNlZm9yZ2UmQ0lEPURFVkRFVgpfX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fXwptYWlsaW5nIGxpc3QgbGludXgxMzk0LWRldmVs
+QGxpc3RzLnNvdXJjZWZvcmdlLm5ldApodHRwczovL2xpc3RzLnNvdXJjZWZvcmdlLm5ldC9saXN0
+cy9saXN0aW5mby9saW51eDEzOTQtZGV2ZWwK
