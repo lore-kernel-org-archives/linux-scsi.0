@@ -1,50 +1,54 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 4/5] Do an agent reset on error recovery.
-Date: Wed, 11 Apr 2007 02:18:58 +0200
-Message-ID: <461C2972.9060505@s5r6.in-berlin.de>
-References: <1176243080579-git-send-email-krh@redhat.com> <11762430853030-git-send-email-krh@redhat.com> <11762430863671-git-send-email-krh@redhat.com> <11762430863077-git-send-email-krh@redhat.com> <461C1D11.7070003@s5r6.in-berlin.de>
+From: Martin Geier <linux-scsi@ml.martin.geweb.net>
+Subject: Re: SCSI breakage on PowerMac 9500 (oldworld) between 2.6.19.7 and 2.6.20
+Date: Wed, 11 Apr 2007 03:08:50 +0200
+Message-ID: <20070411010850.GA27421@galaxy.int.geweb.net>
+References: <20070410221217.GA21776@galaxy.int.geweb.net> <20070410155359.cf82f5ea.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:42971 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030632AbXDKATK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Apr 2007 20:19:10 -0400
-In-Reply-To: <461C1D11.7070003@s5r6.in-berlin.de>
+Received: from bigmac.geweb.net ([217.197.85.170]:4569 "EHLO bigmac.geweb.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161157AbXDKBJA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Apr 2007 21:09:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20070410155359.cf82f5ea.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-I wrote:
-> Kristian H=F8gsberg wrote:
->> Also, implement the .eh_host_reset_handler callback instead of
->> .eh_abort_handler since that's what we're actually doing.
->=20
-> You reset the target port (or specifically, the fetch agent acting on
-> that target port).  But the .eh_host_reset_handler is to "ask [the] h=
-ost
-> adapter to reset itself".
-=2E..
-> But theoretic semantics aside:  Check drivers/scsi/scsi_error.c for w=
-hat
-> comes after one or another hostt->eh_ handler was called.  Do you wan=
-t
-> the subsequent call to scsi_report_bus_reset()?  Probably not.  But
-> perhaps you want what comes after hostt->eh_device_reset_handler was =
-called.
+Hi
 
-BTW, as you probably know there are different ways to (try to) bring an
-SBP-2 target back to reason.  A while ago someone posted an extended
-abort/reset scheme but I still haven't looked into it in detail and
-tested it for its practical effects.
-http://me.in-berlin.de/~s5r6/linux1394/work-in-progress/sbp2-scsi-abort=
--and-reset-of-non-responding-devices.patch
+On Tue, Apr 10, 2007 at 03:53:59PM -0700, Randy Dunlap wrote:
+> On Wed, 11 Apr 2007 00:12:17 +0200 Martin Geier wrote:
+(..)
+> > Maybe it's connected to http://marc.info/?l=3Dlinux-scsi&m=3D117596=
+425706527&w=3D2
+> > but my test of 2.6.21-rc5 failed similarly to the test of 2.6.20.
+(..)
+> There was a similar report for the imm driver, with a follow-up
+> report that 2.6.21-rc5 works.  Could you test 2.6.21-rc6?
+I think I saw that one (in case you mean the one mentioned above).
+rc5 (*) didn't work, but fortunately rc6 does work. Do you have any
+idea which commit fixed this (and if I can apply it against 2.6.20.6)?
+
+Martin
+
+*)
+http://www.de.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.21-rc5=
+=2Etar.bz2
+vs.
+http://www.de.kernel.org/pub/linux/kernel/v2.6/testing/linux-2.6.21-rc6=
+=2Etar.bz2
+
+
 --=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D-- -=3D-=3D=3D
-http://arcgraph.de/sr/
+ /=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=
+=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=
+=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF=AF\=20
+| PGP-Key 0x0F10B493 available via www.de.pgp.net, see header for fpr |
+ \___________________________________________________________________/=20
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
