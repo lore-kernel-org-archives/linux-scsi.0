@@ -1,52 +1,40 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: qla_wxyz pci_set_mwi question
-Date: Fri, 13 Apr 2007 12:43:43 +1000
-Message-ID: <1176432224.5764.59.camel@localhost.localdomain>
-References: <20070411221507.69c97257.randy.dunlap@oracle.com>
-	 <20070412172038.GG10124@andrew-vasquezs-computer.local>
-	 <20070412185347.GL26692@parisc-linux.org>
-	 <20070412193713.GB14510@andrew-vasquezs-computer.local>
-	 <20070412200438.GM26692@parisc-linux.org>
-	 <1176431662.5764.56.camel@localhost.localdomain>
-	 <461EEDAA.7090503@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] scsi: iterate over devices individually for /proc/scsi/scsi
+Date: Fri, 13 Apr 2007 08:25:07 +0100
+Message-ID: <20070413072506.GA20326@infradead.org>
+References: <461E89C8.7040507@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:58744 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751649AbXDMCoD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Apr 2007 22:44:03 -0400
-In-Reply-To: <461EEDAA.7090503@oracle.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:48356 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330AbXDMHZI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 03:25:08 -0400
+Content-Disposition: inline
+In-Reply-To: <461E89C8.7040507@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Vasquez <andrew.vasquez@qlogic.com>, scsi <linux-scsi@vger.kernel.org>, gregkh <greg@kroah.com>, David Somayajulu <david.somayajulu@qlogic.com>, linuxppc-dev@ozlabs.org, linux-driver@qlogic.com, PCI <linux-pci@atrey.karlin.mff.cuni.cz>
+To: Jeff Mahoney <jeffm@suse.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-
-> Willy was referring to this from include/asm-powerpc/pci.h:
+On Thu, Apr 12, 2007 at 03:34:32PM -0400, Jeff Mahoney wrote:
+>  On systems with very large numbers (> 1600 or so) of SCSI devices,
+>  cat /proc/scsi/scsi ends up failing with -ENOMEM. This is due to
+>  the show routine simply iterating over all of the devices with
+>  bus_for_each_dev(), and trying to dump all of them into the buffer
+>  at the same time. On my test system (using scsi_debug with 4064 devices),
+>  the output ends up being ~ 632k, far more than kmalloc will typically allow.
 > 
-> #ifdef CONFIG_PPC64
-> 
-> /*
->  * We want to avoid touching the cacheline size or MWI bit.
->  * pSeries firmware sets the cacheline size (which is not the cpu cacheline
->  * size in all cases) and hardware treats MWI the same as memory write.
->  */
-> #define PCI_DISABLE_MWI
-> 
-> 
-> which makes pci_set_mwi() do nothing other than return 0;
+>  This patch uses seq_file directly instead of single_file, and breaks up
+>  the operations into the 4 seq_file callbacks. The result is that
+>  each show() operation only dumps ~ 180 bytes into the buffer at a time
+>  so we don't run out of memory.
 
-Interesting... I think I missed that we had that bit for some time :-)
+The simpler answer is don't use /proc/scsi/scsi, but lsscsi instead.
+It even has an option to provide /proc/scsi/scsi-style output.
 
-Well, I suppose that on pSeries and probably pmac too, the firmware will
-set the MWI bit for us anyway, but that's a bit dodgy to apply that to
-all ppc64... they aren't all pSeries.
-
-I'll have to look into that again one of these days.
-
-Cheers,
-Ben.
-
+This already came up the last time someone from SuSE sent a patch
+to fix an "issue" like that.  That time at least the patch was
+massageable into something sane, which this one isn't.  So please
+take the advice this time and stop using /proc/scsi/scsi.
 
