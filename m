@@ -1,33 +1,58 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: RAID1 can't be written after pulling out the secondary hard disk
-Date: Fri, 13 Apr 2007 13:53:59 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D706BF8E0@NAMAIL4.ad.lsil.com>
-References: <ac8af0be0704100200v63194731i91c9125ff7bff951@mail.gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH 1/1] cciss: include scsi/scsi.h unconditionally
+Date: Fri, 13 Apr 2007 14:34:13 -0700
+Message-ID: <20070413143413.6b9ac0e7.akpm@linux-foundation.org>
+References: <20070413142312.GA24021@quandary.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:62468 "EHLO mail0.lsil.com"
+Received: from smtp.osdl.org ([65.172.181.24]:53361 "EHLO smtp.osdl.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932140AbXDMTyS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 15:54:18 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <ac8af0be0704100200v63194731i91c9125ff7bff951@mail.gmail.com>
+	id S1030505AbXDMVeW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 13 Apr 2007 17:34:22 -0400
+In-Reply-To: <20070413142312.GA24021@quandary.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhao Forrest <forrest.zhao@gmail.com>
-Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, "Support, Software" <support@lsi.com>
+To: steve.cameron@hp.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, james.bottomley@steeleye.com
 
-On Tuesday, April 10, 2007 3:01 AM,  Zhao Forrest wrote: 
+On Fri, 13 Apr 2007 09:23:12 -0500
+Stephen Cameron <steve.cameron@hp.com> wrote:
 
-> Hi Eric,
-> We conducted the following test on a SUN Galaxy x64 server, then RAID1
-> can't be written anymore, fs become read-only. The steps of
-> reproducing the bug:
+> Make cciss unconditionally include scsi/scsi.h
 
-I sent you earlier a patch via Novell Bugzilla 244006.   Please let me
-know if this satisfies your needs, then I will post a port of that patch
-here to lsml@.
+For what reason?
 
-Eric
+> 
+> From: Stephen M. Cameron <steve.cameron@hp.com>
+> Signed-off-by: Stephen M. Cameron <steve.cameron@hp.com>
+> 
+> ---
+> 
+>  drivers/block/cciss.c      |    1 +
+>  drivers/block/cciss_scsi.c |    1 -
+>  2 files changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff -puN drivers/block/cciss.c~include_scsi_h_unconditionally drivers/block/cciss.c
+> --- linux-2.6.21-rc6/drivers/block/cciss.c~include_scsi_h_unconditionally	2007-04-13 08:23:07.000000000 -0500
+> +++ linux-2.6.21-rc6-scameron/drivers/block/cciss.c	2007-04-13 08:25:05.000000000 -0500
+> @@ -45,6 +45,7 @@
+>  #include <linux/blkdev.h>
+>  #include <linux/genhd.h>
+>  #include <linux/completion.h>
+> +#include <scsi/scsi.h>
+>  #include <scsi/sg.h>
+>  #include <scsi/scsi_ioctl.h>
+>  #include <linux/cdrom.h>
+> diff -puN drivers/block/cciss_scsi.c~include_scsi_h_unconditionally drivers/block/cciss_scsi.c
+> --- linux-2.6.21-rc6/drivers/block/cciss_scsi.c~include_scsi_h_unconditionally	2007-04-13 08:23:53.000000000 -0500
+> +++ linux-2.6.21-rc6-scameron/drivers/block/cciss_scsi.c	2007-04-13 08:24:34.000000000 -0500
+> @@ -35,7 +35,6 @@
+>  
+>  #include <asm/atomic.h>
+>  
+> -#include <scsi/scsi.h> 
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_host.h> 
