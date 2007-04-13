@@ -1,119 +1,57 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: 2.6.21-rc6-mm1 aacraid not finding device
-Date: Fri, 13 Apr 2007 08:35:25 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF018164DE@otce2k301.adaptec.com>
-References: <1176243661.5949.59.camel@drfickle.rchland.ibm.com>
+From: "Cameron, Steve" <Steve.Cameron@hp.com>
+Subject: RE: [PATCH 1/1] cciss: kconfig patch to make cciss dependent onscsi for SG_IO ioctl
+Date: Fri, 13 Apr 2007 13:58:41 +0100
+Message-ID: <558F4D473FD7FE419B019232BF2D37B40B2472@G3W0634.americas.hpqcorp.net>
+References: <20070412212741.GA10654@beardog.cca.cpqcorp.net> <1176415635.3711.25.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C77DC8.35EF5408"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:34670 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753965AbXDMMf1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 08:35:27 -0400
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:51623 "EHLO
+	ccerelbas01.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753544AbXDMNRp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 09:17:45 -0400
 Content-class: urn:content-classes:message
-In-Reply-To: <1176243661.5949.59.camel@drfickle.rchland.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Duane Cox <dcox@conxxus.com>, James.Bottomley@SteelEye.com, Steve Fox <drfickle@linux.vnet.ibm.com>
-
-This is a multi-part message in MIME format.
-
-------_=_NextPart_001_01C77DC8.35EF5408
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Thanks for the help from Steve Fox and Duane Cox investigating this
-issue, I'd like to report that we found the problem. The issue is with
-the patch Steve Fox isolated below, by not accommodating older adapters
-properly and issuing a command they do not support when retrieving
-storage parameters about the arrays. This simple patch resolves the
-problem (and more accurately mimics the logic of the original code
-before the patch).
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patches.
-
-This attached patch is against current scsi-misc-2.6 and can apply to
-2.6.21-rc6-mm1. Please consider it for expedited inclusion.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
----
-
-Sincerely -- Mark Salyzyn
+To: James Bottomley <James.Bottomley@SteelEye.com>, "Mike Miller (OS Dev)" <mikem@beardog.cca.cpqcorp.net>
+Cc: akpm@linux-foundation.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-> -----Original Message-----
-> From: Steve Fox [mailto:drfickle@linux.vnet.ibm.com]=20
-> Sent: Tuesday, April 10, 2007 6:21 PM
-> To: Andrew Morton
-> Cc: linux-kernel@vger.kernel.org; Salyzyn, Mark;=20
-> markh@linux-foundation.org; James.Bottomley@SteelEye.com;=20
-> linux-scsi@vger.kernel.org
-> Subject: Re: 2.6.21-rc6-mm1 aacraid not finding device
->=20
->=20
-> On Sun, 2007-04-08 at 14:35 -0700, Andrew Morton wrote:
-> >=20
->
-ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.21-rc6
-/2.6.21-rc6-mm1/
-
-Since 2.6.21-rc5-mm1, one of the test.kernel.org machines (elm3b239) has
-not been able to boot because it cannot find the SCSI device. You can
-view http://test.kernel.org/abat/82623/debug/console.log for the latest
-boot log (rc6-mm1).
-
-I tracked this down to the git-scsi-misc patch in the -mm tree and then
-bisected the scsi-misc git tree until I reached the commit below from
-Mark Salyzyn:
-
-fe76df4235986cfacc2d3b71cef7c42bc1a6dd6c
-
-[SCSI] aacraid: Fix blocking issue with container probing function (cast
-update)
-
-This is a pretty big patch, so hopefully Mark can take a look at it.
-lspci shows
-
-01:02.0 RAID bus controller: Adaptec AAC-RAID (rev 02)
-0f:02.0 SCSI storage controller: Adaptec AIC-9410W SAS (Razor ASIC
-non-RAID) (rev 08)
-1d:02.0 SCSI storage controller: Adaptec AIC-9410W SAS (Razor ASIC
-non-RAID) (rev 08)
-2b:02.0 SCSI storage controller: Adaptec AIC-9410W SAS (Razor ASIC
-non-RAID) (rev 08)
-
-on 2.6.21-rc6. Let me know if I can provide more details.
-
---=20
-
-Steve Fox
-IBM Linux Technology Center
+Well, with SCSI turned off, it didn't compile:
 
 
-------_=_NextPart_001_01C77DC8.35EF5408
-Content-Type: application/octet-stream;
-	name="aacraid_logical_bugfix.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_logical_bugfix.patch
-Content-Disposition: attachment;
-	filename="aacraid_logical_bugfix.patch"
+drivers/block/cciss.c: In function `cciss_ioctl':
+drivers/block/cciss.c:1180: error: `SCSI_IOCTL_GET_IDLUN' undeclared (first use in this function)
+drivers/block/cciss.c:1180: error: (Each undeclared identifier is reported only once
+drivers/block/cciss.c:1180: error: for each function it appears in.)
+drivers/block/cciss.c:1181: error: `SCSI_IOCTL_GET_BUS_NUMBER' undeclared (first use in this function)
+make[2]: *** [drivers/block/cciss.o] Error 1
+make[1]: *** [drivers/block] Error 2
+make: *** [drivers] Error 2
 
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDQtMTIgMTU6NTQ6MjUuMjQ0Mzk5MTAyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDQtMTIgMTU6NTc6MDMuODA2NDY4Mjk3IC0wNDAwCkBAIC01MDMsOCAr
-NTAzLDcgQEAKIAlkcmVzcCA9IChzdHJ1Y3QgYWFjX21vdW50ICopIGZpYl9kYXRhKGZpYnB0cik7
-CiAJZHJlc3AtPm1udFswXS5jYXBhY2l0eWhpZ2ggPSAwOwogCWlmICgobGUzMl90b19jcHUoZHJl
-c3AtPnN0YXR1cykgIT0gU1RfT0spIHx8Ci0JICAgICgobGUzMl90b19jcHUoZHJlc3AtPm1udFsw
-XS52b2wpICE9IENUX05PTkUpICYmCi0JICAgICAobGUzMl90b19jcHUoZHJlc3AtPm1udFswXS5z
-dGF0ZSkgPT0gRlNDU19ISURERU4pKSkKKwkgICAgKGxlMzJfdG9fY3B1KGRyZXNwLT5tbnRbMF0u
-dm9sKSAhPSBDVF9OT05FKSkKIAkJcmV0dXJuIF9hYWNfcHJvYmVfY29udGFpbmVyMihjb250ZXh0
-LCBmaWJwdHIpOwogCXNjc2ljbWQgPSAoc3RydWN0IHNjc2lfY21uZCAqKSBjb250ZXh0OwogCXNj
-c2ljbWQtPlNDcC5waGFzZSA9IEFBQ19PV05FUl9NSURMRVZFTDsK
+-- steve
 
-------_=_NextPart_001_01C77DC8.35EF5408--
+
+-----Original Message-----
+From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+Sent: Thu 4/12/2007 5:07 PM
+To: Mike Miller (OS Dev)
+Cc: akpm@linux-foundation.org; jens.axboe@oracle.com; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Cameron, Steve
+Subject: Re: [PATCH 1/1] cciss: kconfig patch to make cciss dependent onscsi for SG_IO ioctl
+ 
+On Thu, 2007-04-12 at 16:27 -0500, Mike Miller (OS Dev) wrote:
+> This kconfig patch makes cciss dependent on scsi for the new SG_IO ioctl we just
+> added. If cciss is built into the kernel it makes sures that scsi is also statically
+> linked. If scsi is a module then cciss will also be built as a module. Please consider
+> this for inclusion.
+
+Erm, I don't think this is necessary: SG_IO is a property of the block
+layer, not SCSI (as in it will work without SCSI even present).  SCSI
+has a special driver: the sg driver that has its own implementation of
+SG_IO, but that's the only connection.
+
+James
+
+
+
