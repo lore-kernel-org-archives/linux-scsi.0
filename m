@@ -1,28 +1,33 @@
-From: "Joe Kappus" <joecool1029@gmail.com>
-Subject: Re: [BUG] unable to handle kernel paging request at virtual address 0800000e
-Date: Fri, 13 Apr 2007 15:45:29 -0400
-Message-ID: <d4757e600704131245j7a045fa7sb2bca8cb8370f6d0@mail.gmail.com>
-References: <4616CBF4.8020205@m3y3r.de>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: RAID1 can't be written after pulling out the secondary hard disk
+Date: Fri, 13 Apr 2007 13:53:59 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D706BF8E0@NAMAIL4.ad.lsil.com>
+References: <ac8af0be0704100200v63194731i91c9125ff7bff951@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.247]:59789 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932112AbXDMTpa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 15:45:30 -0400
-Received: by an-out-0708.google.com with SMTP id b33so1028029ana
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Apr 2007 12:45:29 -0700 (PDT)
-In-Reply-To: <4616CBF4.8020205@m3y3r.de>
-Content-Disposition: inline
+Received: from mail0.lsil.com ([147.145.40.20]:62468 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932140AbXDMTyS convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 15:54:18 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <ac8af0be0704100200v63194731i91c9125ff7bff951@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Meyer <thomas@m3y3r.de>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Zhao Forrest <forrest.zhao@gmail.com>
+Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, "Support, Software" <support@lsi.com>
 
-I can confirm the same oops on 2.6.20-ck1 with pktcdvd either as
-module or as built-in.
+On Tuesday, April 10, 2007 3:01 AM,  Zhao Forrest wrote: 
 
-I can assume perhaps this is not so much an issue with the pktcdvd
-driver as it is with the libata drivers and scsi.  Beats me, I'll
-leave it up to you.
+> Hi Eric,
+> We conducted the following test on a SUN Galaxy x64 server, then RAID1
+> can't be written anymore, fs become read-only. The steps of
+> reproducing the bug:
+
+I sent you earlier a patch via Novell Bugzilla 244006.   Please let me
+know if this satisfies your needs, then I will post a port of that patch
+here to lsml@.
+
+Eric
