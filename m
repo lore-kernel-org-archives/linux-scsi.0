@@ -1,47 +1,78 @@
-From: "Cameron, Steve" <Steve.Cameron@hp.com>
-Subject: RE: [PATCH 1/1] cciss: include scsi/scsi.h unconditionally
-Date: Fri, 13 Apr 2007 23:48:28 +0100
-Message-ID: <558F4D473FD7FE419B019232BF2D37B40B247B@G3W0634.americas.hpqcorp.net>
-References: <20070413142312.GA24021@quandary.cca.cpqcorp.net> <20070413143413.6b9ac0e7.akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Last SCSI bug fix for 2.6.21
+Date: Sat, 14 Apr 2007 09:45:32 -0500
+Message-ID: <1176561932.3709.15.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas03.cce.hp.com ([161.114.21.106]:46856 "EHLO
-	ccerelbas03.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965654AbXDMWt0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Apr 2007 18:49:26 -0400
-Content-class: urn:content-classes:message
+Received: from hancock.steeleye.com ([71.30.118.248]:53114 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030890AbXDNOpm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Apr 2007 10:45:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, james.bottomley@steeleye.com
+To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+
+After some investigation, there turned out only to be one, so this is
+the final bug fix I have in SCSI.
+
+It's in
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+
+but since there's only one, I also attach it below.
+
+James
+
+----
+>From 6e3b2bbb197eb12b2bef35bcf2ac3bd6a5facab2 Mon Sep 17 00:00:00 2001
+From: James Bottomley <James.Bottomley@steeleye.com>
+Date: Fri, 6 Apr 2007 11:14:56 -0500
+Subject: [SCSI] 3w-xxxx: fix oops caused by incorrect REQUEST_SENSE handling
+
+3w-xxxx emulates a REQUEST_SENSE response by simply returning nothing.
+Unfortunately, it's assuming that the REQUEST_SENSE command is
+implemented with use_sg == 0, which is no longer the case.  The oops
+occurs because it's clearing the scatterlist in request_buffer instead
+of the memory region.
+
+This is fixed by using tw_transfer_internal() to transfer correctly to
+the scatterlist.
+
+Acked-by: adam radford <aradford@gmail.com>
+Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+---
+ drivers/scsi/3w-xxxx.c |   11 +++++++++--
+ 1 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index bf5d63e..656bdb1 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1864,10 +1864,17 @@ static int tw_scsiop_read_write(TW_Device_Extension *tw_dev, int request_id)
+ /* This function will handle the request sense scsi command */
+ static int tw_scsiop_request_sense(TW_Device_Extension *tw_dev, int request_id)
+ {
++	char request_buffer[18];
++
+ 	dprintk(KERN_NOTICE "3w-xxxx: tw_scsiop_request_sense()\n");
+ 
+-	/* For now we just zero the request buffer */
+-	memset(tw_dev->srb[request_id]->request_buffer, 0, tw_dev->srb[request_id]->request_bufflen);
++	memset(request_buffer, 0, sizeof(request_buffer));
++	request_buffer[0] = 0x70; /* Immediate fixed format */
++	request_buffer[7] = 10;	/* minimum size per SPC: 18 bytes */
++	/* leave all other fields zero, giving effectively NO_SENSE return */
++	tw_transfer_internal(tw_dev, request_id, request_buffer,
++			     sizeof(request_buffer));
++
+ 	tw_dev->state[request_id] = TW_S_COMPLETED;
+ 	tw_state_request_finish(tw_dev, request_id);
+ 
+-- 
+1.5.0.6
 
 
-Andrew Morton [mailto:akpm@linux-foundation.org] wrote:
 
-> On Fri, 13 Apr 2007 09:23:12 -0500
-> Stephen Cameron <steve.cameron@hp.com> wrote:
->
-> > Make cciss unconditionally include scsi/scsi.h
-> 
-> For what reason?
-
-Because the use of:
-
-        case SCSI_IOCTL_GET_IDLUN:
-        case SCSI_IOCTL_GET_BUS_NUMBER:
-
-
-At first, I thought the solution should be make
-cciss dependent on CONFIG_SCSI.  Then James Bottomley
-convinced me otherwise, and my first instinct was just
-to comment out those cases above, since they fall through
-to a default case anyway.  Then Christoph Hellwig commented
-that with CONFIG_SCSI, we picked up scsi/scsi.h which made
-it compile, but only accidentally.  So then I thought to 
-include scsi/scsi.h unconditionally.  If it would be preferable
-to just comment out those cases and let the default case
-handle it, that's fine be me too.
-
--- steve
