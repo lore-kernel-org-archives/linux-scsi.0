@@ -1,78 +1,77 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Last SCSI bug fix for 2.6.21
-Date: Sat, 14 Apr 2007 09:45:32 -0500
-Message-ID: <1176561932.3709.15.camel@mulgrave.il.steeleye.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: SMP pass through interface via bsg
+Date: Sun, 15 Apr 2007 20:14:43 +0300
+Message-ID: <46225D83.2020204@panasas.com>
+References: <20070403012747O.fujita.tomonori@lab.ntt.co.jp> <20070403014349E.fujita.tomonori@lab.ntt.co.jp> <1175533302.3680.31.camel@mulgrave.il.steeleye.com> <20070402221349L.fujita.tomonori@lab.ntt.co.jp> <20070402181238.GB15273@kernel.dk> <46114C24.1030003@cs.wisc.edu> <20070402183002.GF15273@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:53114 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030890AbXDNOpm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Apr 2007 10:45:42 -0400
+Received: from gw-e.panasas.com ([65.194.124.178]:60254 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753156AbXDORPY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Apr 2007 13:15:24 -0400
+In-Reply-To: <20070402183002.GF15273@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>, Linus Torvalds <torvalds@osdl.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com, hch@infradead.org, dougg@torque.net, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-After some investigation, there turned out only to be one, so this is
-the final bug fix I have in SCSI.
+Jens Axboe wrote:
+> On Mon, Apr 02 2007, Mike Christie wrote:
+>> Jens Axboe wrote:
+>>> On Tue, Apr 03 2007, FUJITA Tomonori wrote:
+>>>> From: James Bottomley <James.Bottomley@SteelEye.com>
+>>>> Subject: Re: SMP pass through interface via bsg
+>>>> Date: Mon, 02 Apr 2007 12:01:41 -0500
+>>>>
+>>>>> On Tue, 2007-04-03 at 01:43 +0900, FUJITA Tomonori wrote:
+>>>>>> OK. I found another bug in smp_test tool (sends bogus response buffer
+>>>>>> len to kernel). I've uploaded a new patch:
+>>>>>>
+>>>>>> http://zaal.org/bsg/smp-test2.diff
+>>>>> That sort of works; you have a final bug in that the manufacturer info
+>>>>> response frame is 64 bytes, not 128 bytes, but with that corrected
+>>>>> everything goes through and I get the result back:
+>>>>>
+>>>>> hobholes:~# /home/jejb/git/sgv4-tools/smp_test /sys/class/bsg/expander-2\:0
+>>>>>   SAS-1.1 format: 0
+>>>>>   vendor identification: LSILOGIC
+>>>>>   product identification: SASx12 A.0      
+>>>>>   product revision level: 
+>>>>>
+>>>>> So we can class this one as a success ... 
+>>>>>
+>>>>> Thanks!
+>>>> Great! Thanks. I'll try to finish the mpt driver's hook
+>>>> sometime. Finally, We have a bsg user (though it also needs proper
+>>>> bidi support).
+>>>>
+>>>> Jens, what remains to be done before bsg is merged into mainline?
+>>> Well the bi-dir stuff and sg v4 design were the two bits that needed to
+>>> get done before pushing bsg made sense, so we are getting there...
+>>> Probably a 2.6.23 target, leaving the bidi bits a revision cycle to get
+>>> sorted out.
+>>>
+>> Could we get the bidi parts in without having to do the other sg clean
+>> ups (my patches to merge the blk_rq_map* with the scsi ULD (sg, etc,
+>> etc) equivalents or do the clean ups have to be done first?
+> 
+> IMO the sg cleanups are an orthogonal effort.
+> 
 
-It's in
+Following this e-mail is a patchset for bidi-support at the block layer.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-but since there's only one, I also attach it below.
+Mike's sg patches will not apply trivially over the bidi patchset,
+mainly at ll_rw_blk.c and scsi_lib.c. There were other people doing
+cleanups in the direction of removing scsi_execute_async(). If these patches
+add to ll_rw_blk.c/blkdev.h and eventually touch scsi_lib.c they might have
+issues also. My suggestion is that Mike (and others) send me their latest patches
+against Jens's block tree. (or point me to a git tree) so I can then help.
 
-James
+Boaz Harrosh
 
-----
->From 6e3b2bbb197eb12b2bef35bcf2ac3bd6a5facab2 Mon Sep 17 00:00:00 2001
-From: James Bottomley <James.Bottomley@steeleye.com>
-Date: Fri, 6 Apr 2007 11:14:56 -0500
-Subject: [SCSI] 3w-xxxx: fix oops caused by incorrect REQUEST_SENSE handling
-
-3w-xxxx emulates a REQUEST_SENSE response by simply returning nothing.
-Unfortunately, it's assuming that the REQUEST_SENSE command is
-implemented with use_sg == 0, which is no longer the case.  The oops
-occurs because it's clearing the scatterlist in request_buffer instead
-of the memory region.
-
-This is fixed by using tw_transfer_internal() to transfer correctly to
-the scatterlist.
-
-Acked-by: adam radford <aradford@gmail.com>
-Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
----
- drivers/scsi/3w-xxxx.c |   11 +++++++++--
- 1 files changed, 9 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index bf5d63e..656bdb1 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -1864,10 +1864,17 @@ static int tw_scsiop_read_write(TW_Device_Extension *tw_dev, int request_id)
- /* This function will handle the request sense scsi command */
- static int tw_scsiop_request_sense(TW_Device_Extension *tw_dev, int request_id)
- {
-+	char request_buffer[18];
-+
- 	dprintk(KERN_NOTICE "3w-xxxx: tw_scsiop_request_sense()\n");
- 
--	/* For now we just zero the request buffer */
--	memset(tw_dev->srb[request_id]->request_buffer, 0, tw_dev->srb[request_id]->request_bufflen);
-+	memset(request_buffer, 0, sizeof(request_buffer));
-+	request_buffer[0] = 0x70; /* Immediate fixed format */
-+	request_buffer[7] = 10;	/* minimum size per SPC: 18 bytes */
-+	/* leave all other fields zero, giving effectively NO_SENSE return */
-+	tw_transfer_internal(tw_dev, request_id, request_buffer,
-+			     sizeof(request_buffer));
-+
- 	tw_dev->state[request_id] = TW_S_COMPLETED;
- 	tw_state_request_finish(tw_dev, request_id);
- 
--- 
-1.5.0.6
 
 
 
