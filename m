@@ -1,76 +1,92 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: SMP pass through interface via bsg
-Date: Sun, 15 Apr 2007 20:14:43 +0300
-Message-ID: <46225D83.2020204@panasas.com>
-References: <20070403012747O.fujita.tomonori@lab.ntt.co.jp> <20070403014349E.fujita.tomonori@lab.ntt.co.jp> <1175533302.3680.31.camel@mulgrave.il.steeleye.com> <20070402221349L.fujita.tomonori@lab.ntt.co.jp> <20070402181238.GB15273@kernel.dk> <46114C24.1030003@cs.wisc.edu> <20070402183002.GF15273@kernel.dk>
+Subject: [PATCH 0/4] bidi support: block layer bidirectional io.
+Date: Sun, 15 Apr 2007 20:17:12 +0300
+Message-ID: <46225E18.7070404@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:60254 "EHLO
+Received: from gw-e.panasas.com ([65.194.124.178]:60318 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753156AbXDORPY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Apr 2007 13:15:24 -0400
-In-Reply-To: <20070402183002.GF15273@kernel.dk>
+	with ESMTP id S1753179AbXDORRy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 15 Apr 2007 13:17:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com, hch@infradead.org, dougg@torque.net, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@osdl.org>, Mike Christie <michaelc@cs.wisc.edu>, Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Linux-ide <linux-ide@vger.kernel.org>, Benny Halevy <bhalevy@panasas.com>, osd-dev@open-osd.org, bharrosh@panasas.com
 
-Jens Axboe wrote:
-> On Mon, Apr 02 2007, Mike Christie wrote:
->> Jens Axboe wrote:
->>> On Tue, Apr 03 2007, FUJITA Tomonori wrote:
->>>> From: James Bottomley <James.Bottomley@SteelEye.com>
->>>> Subject: Re: SMP pass through interface via bsg
->>>> Date: Mon, 02 Apr 2007 12:01:41 -0500
->>>>
->>>>> On Tue, 2007-04-03 at 01:43 +0900, FUJITA Tomonori wrote:
->>>>>> OK. I found another bug in smp_test tool (sends bogus response buffer
->>>>>> len to kernel). I've uploaded a new patch:
->>>>>>
->>>>>> http://zaal.org/bsg/smp-test2.diff
->>>>> That sort of works; you have a final bug in that the manufacturer info
->>>>> response frame is 64 bytes, not 128 bytes, but with that corrected
->>>>> everything goes through and I get the result back:
->>>>>
->>>>> hobholes:~# /home/jejb/git/sgv4-tools/smp_test /sys/class/bsg/expander-2\:0
->>>>>   SAS-1.1 format: 0
->>>>>   vendor identification: LSILOGIC
->>>>>   product identification: SASx12 A.0      
->>>>>   product revision level: 
->>>>>
->>>>> So we can class this one as a success ... 
->>>>>
->>>>> Thanks!
->>>> Great! Thanks. I'll try to finish the mpt driver's hook
->>>> sometime. Finally, We have a bsg user (though it also needs proper
->>>> bidi support).
->>>>
->>>> Jens, what remains to be done before bsg is merged into mainline?
->>> Well the bi-dir stuff and sg v4 design were the two bits that needed to
->>> get done before pushing bsg made sense, so we are getting there...
->>> Probably a 2.6.23 target, leaving the bidi bits a revision cycle to get
->>> sorted out.
->>>
->> Could we get the bidi parts in without having to do the other sg clean
->> ups (my patches to merge the blk_rq_map* with the scsi ULD (sg, etc,
->> etc) equivalents or do the clean ups have to be done first?
-> 
-> IMO the sg cleanups are an orthogonal effort.
-> 
+Following are 4 (large) patches for support of bidirectional
+block I/O in kernel. (not including SCSI-ml or iSCSI)
 
-Following this e-mail is a patchset for bidi-support at the block layer.
+The submitted work is against linux-2.6-block tree as of
+2007/04/15, and will only cleanly apply in succession.
 
+The patches are based on the RFC I sent 3 months ago. They only
+cover the block layer at this point. I suggest they get included
+in Morton's tree until they reach the kernel so they can get
+compiled on all architectures/platforms. There is still a chance
+that architectures I did not compile were not fully converted.
+(FWIW, my search for use of struct request members failed to find
+them). If you find such a case, please send me the file
+name and I will fix it ASAP.
 
-Mike's sg patches will not apply trivially over the bidi patchset,
-mainly at ll_rw_blk.c and scsi_lib.c. There were other people doing
-cleanups in the direction of removing scsi_execute_async(). If these patches
-add to ll_rw_blk.c/blkdev.h and eventually touch scsi_lib.c they might have
-issues also. My suggestion is that Mike (and others) send me their latest patches
-against Jens's block tree. (or point me to a git tree) so I can then help.
+Patches summary:
+1. [PATCH 1/4] bidi support: request dma_data_direction
+	- Convert REQ_RW bit flag to a dma_data_direction member like in SCSI-ml use.
+	- removed rq_data_dir() and added other APIs for querying request's direction.
+	- fix usage of rq_data_dir() and peeking at req->cmd_flags & REQ_RW to using
+	  new api.
+	- clean-up bad usage of DMA_BIDIRECTIONAL and bzero of none-queue requests,
+	  to use the new blk_rq_init_unqueued_req()
 
-Boaz Harrosh
+2. [PATCH 2/4] bidi support: fix req->cmd == INT cases
+	- Digging into all these old drivers, I have found traces of past life
+	  where request->cmd was the command type. This patch fixes some of these
+	  places. All drivers touched by this patch are clear indication of drivers
+	  that were not used for a while. Should we removed them from Kernel? 
+	  These Are:
+		drivers/acorn/block/fd1772.c, drivers/acorn/block/mfmhd.c,
+		drivers/block/nbd.c, drivers/cdrom/aztcd.c, drivers/cdrom/cm206.c
+		drivers/cdrom/gscd.c, drivers/cdrom/mcdx.c, drivers/cdrom/optcd.c
+		drivers/cdrom/sjcd.c, drivers/ide/legacy/hd.c, drivers/block/amiflop.c
+
+2. [PATCH 3/4] bidi support: request_io_part
+	- extract io related fields in struct request into struct request_io_part
+	  in preparation to full bidi support.
+	- new rq_uni() API to access the sub-structure. (Please read below comment
+	  on why an API and not open code the access)
+	- Convert All users to new API.
+
+3. [PATCH 4/4] bidi support: bidirectional block layer
+	- add one more request_io_part member for bidi support in struct request.
+	- add block layer API functions for mapping and accessing bidi data buffers
+	  and for ending a block request as a whole (end_that_request_block())
+
+--------------------------------------------------------------------------------------------
+Developer comments:
+
+patch 1/4: Borrow from struct scsi_cmnd use of enum dma_data_direction. Further work (in
+progress) is the removal of the corresponding member from struct scsi_cmnd and converting
+all users to directly access rq_dma_dir(sc->req).
+
+patch 3/4: The reasons for introducing the rq_uni(req) API rather than directly accessing
+req->uni are:
+
+* WARN(!bidi_dir(req)) is life saving when developing bidi enabled paths.  Once we, bidi
+  users, start to push bidi requests down the kernel paths, we immediately get warned of
+  paths we did not anticipate. Otherwise, they will be very hard to find, and will hurt
+  kernel stability.
+
+* A cleaner and saner future implementation could be in/out members rather than
+  uni/bidi_read.  This way the dma_direction member can deprecated and the uni sub-
+  structure can be maintained using a pointer in struct req.
+  With this API we are free to change the implementation in the future without
+  touching any users of the API. We can also experiment with what's best. Also, with the
+  API it is much easier to convert uni-directional drivers for bidi (look in
+  ll_rw_block.c in patch 4/4).
+
+* Note, that internal uses inside the block layer access req->uni directly, as they will
+  need to be changed if the implementation of req->{uni, bidi_read} changes.
 
 
 
