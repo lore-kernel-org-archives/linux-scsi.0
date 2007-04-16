@@ -1,25 +1,25 @@
 From: <vignesh.babu@wipro.com>
-Subject: [KJ][PATCH]ch.c-kzalloc
-Date: Mon, 16 Apr 2007 11:35:33 +0530
-Message-ID: <1176703533.13066.10.camel@wriver-t81fb058.linuxcoe>
+Subject: [KJ][PATCH]dpt_i2o.c-kzalloc
+Date: Mon, 16 Apr 2007 11:35:38 +0530
+Message-ID: <1176703538.13066.11.camel@wriver-t81fb058.linuxcoe>
 Mime-Version: 1.0
 Content-Type: multipart/signed;
 	micalg=sha1;
 	protocol="application/x-pkcs7-signature";
-	boundary="=-Dli1DCiTja+cXNN69ucQ"
+	boundary="=-CIcEvWFqU8fUTOLYyzai"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:49014 "EHLO
+Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:49029 "EHLO
 	wip-cdc-wd.wipro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753963AbXDPGKC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Apr 2007 02:10:02 -0400
+	with ESMTP id S932081AbXDPGKH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Apr 2007 02:10:07 -0400
 Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
+To: aacraid@adaptec.com
 Cc: linux-scsi@vger.kernel.org, kernel-janitors@lists.osdl.org
 
 
---=-Dli1DCiTja+cXNN69ucQ
+--=-CIcEvWFqU8fUTOLYyzai
 Content-Type: text/plain
 Content-Transfer-Encoding: quoted-printable
 
@@ -28,47 +28,89 @@ Replacing kmalloc/memset combination with kzalloc.
 
 Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
 ---
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 2a2cc6c..2311019 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -319,10 +319,9 @@ ch_readconfig(scsi_changer *ch)
- 	int     result,id,lun,i;
- 	u_int   elem;
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index cd36e81..2184fcb 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1311,13 +1311,12 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
+ 		schedule_timeout_uninterruptible(1);
+ 	} while (m =3D=3D EMPTY_QUEUE);
 =20
--	buffer =3D kmalloc(512, GFP_KERNEL | GFP_DMA);
-+	buffer =3D kzalloc(512, GFP_KERNEL | GFP_DMA);
- 	if (!buffer)
+-	status =3D kmalloc(4, GFP_KERNEL|ADDR32);
++	status =3D kzalloc(4, GFP_KERNEL|ADDR32);
+ 	if(status =3D=3D NULL) {
+ 		adpt_send_nop(pHba, m);
+ 		printk(KERN_ERR"IOP reset failed - no free memory.\n");
  		return -ENOMEM;
--	memset(buffer,0,512);
- =09
- 	memset(cmd,0,sizeof(cmd));
- 	cmd[0] =3D MODE_SENSE;
-@@ -530,10 +529,9 @@ ch_set_voltag(scsi_changer *ch, u_int elem,
- 	u_char  *buffer;
- 	int result;
+ 	}
+-	memset(status,0,4);
 =20
--	buffer =3D kmalloc(512, GFP_KERNEL);
-+	buffer =3D kzalloc(512, GFP_KERNEL);
- 	if (!buffer)
+ 	msg[0]=3DEIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
+ 	msg[1]=3DI2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
+@@ -1507,21 +1506,19 @@ static int adpt_i2o_parse_lct(adpt_hba* pHba)
+ 					continue;
+ 				}
+ 				if( pHba->channel[bus_no].device[scsi_id] =3D=3D NULL){
+-					pDev =3D  kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
++					pDev =3D  kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
+ 					if(pDev =3D=3D NULL) {
+ 						return -ENOMEM;
+ 					}
+ 					pHba->channel[bus_no].device[scsi_id] =3D pDev;
+-					memset(pDev,0,sizeof(struct adpt_device));
+ 				} else {
+ 					for( pDev =3D pHba->channel[bus_no].device[scsi_id];=09
+ 							pDev->next_lun; pDev =3D pDev->next_lun){
+ 					}
+-					pDev->next_lun =3D kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
++					pDev->next_lun =3D kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
+ 					if(pDev->next_lun =3D=3D NULL) {
+ 						return -ENOMEM;
+ 					}
+-					memset(pDev->next_lun,0,sizeof(struct adpt_device));
+ 					pDev =3D pDev->next_lun;
+ 				}
+ 				pDev->tid =3D tid;
+@@ -1670,12 +1667,11 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __=
+user *arg)
+ 		reply_size =3D REPLY_FRAME_SIZE;
+ 	}
+ 	reply_size *=3D 4;
+-	reply =3D kmalloc(REPLY_FRAME_SIZE*4, GFP_KERNEL);
++	reply =3D kzalloc(REPLY_FRAME_SIZE*4, GFP_KERNEL);
+ 	if(reply =3D=3D NULL) {
+ 		printk(KERN_WARNING"%s: Could not allocate reply buffer\n",pHba->name);
  		return -ENOMEM;
--	memset(buffer,0,512);
-=20
- 	dprintk("%s %s voltag: 0x%x =3D> \"%s\"\n",
- 		clear     ? "clear"     : "set",
-@@ -922,11 +920,10 @@ static int ch_probe(struct device *dev)
- 	if (sd->type !=3D TYPE_MEDIUM_CHANGER)
- 		return -ENODEV;
-    =20
--	ch =3D kmalloc(sizeof(*ch), GFP_KERNEL);
-+	ch =3D kzalloc(sizeof(*ch), GFP_KERNEL);
- 	if (NULL =3D=3D ch)
- 		return -ENOMEM;
-=20
--	memset(ch,0,sizeof(*ch));
- 	ch->minor =3D ch_devcount;
- 	sprintf(ch->name,"ch%d",ch->minor);
- 	mutex_init(&ch->lock);
+ 	}
+-	memset(reply,0,REPLY_FRAME_SIZE*4);
+ 	sg_offset =3D (msg[0]>>4)&0xf;
+ 	msg[2] =3D 0x40000000; // IOCTL context
+ 	msg[3] =3D (u32)reply;
+@@ -2447,7 +2443,7 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
+ 				}
+ 				pDev =3D pHba->channel[bus_no].device[scsi_id];=09
+ 				if( pDev =3D=3D NULL){
+-					pDev =3D  kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
++					pDev =3D  kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
+ 					if(pDev =3D=3D NULL) {
+ 						return -ENOMEM;
+ 					}
+@@ -2456,12 +2452,11 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
+ 					while (pDev->next_lun) {
+ 						pDev =3D pDev->next_lun;
+ 					}
+-					pDev =3D pDev->next_lun =3D kmalloc(sizeof(struct adpt_device),GFP_KE=
+RNEL);
++					pDev =3D pDev->next_lun =3D kzalloc(sizeof(struct adpt_device),GFP_KE=
+RNEL);
+ 					if(pDev =3D=3D NULL) {
+ 						return -ENOMEM;
+ 					}
+ 				}
+-				memset(pDev,0,sizeof(struct adpt_device));
+ 				pDev->tid =3D d->lct_data.tid;
+ 				pDev->scsi_channel =3D bus_no;
+ 				pDev->scsi_id =3D scsi_id;
 
 --=20
 Regards, =20
@@ -76,7 +118,7 @@ Vignesh Babu BM =20
 _____________________________________________________________ =20
 "Why is it that every time I'm with you, makes me believe in magic?"
 
---=-Dli1DCiTja+cXNN69ucQ
+--=-CIcEvWFqU8fUTOLYyzai
 Content-Type: application/x-pkcs7-signature; name=smime.p7s
 Content-Disposition: attachment; filename=smime.p7s
 Content-Transfer-Encoding: base64
@@ -126,17 +168,17 @@ ZV+V2vf3h9bGCE6u9uo05RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBi
 MQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoG
 A1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBRBWlnPDDQELOU4iM67
 /5AwCQYFKw4DAhoFAKCCAW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUx
-DxcNMDcwNDE2MDYwNTMzWjAjBgkqhkiG9w0BCQQxFgQUrbI8kcd4UeFWLI7AFcJQ0VNhrW0wgYUG
+DxcNMDcwNDE2MDYwNTM3WjAjBgkqhkiG9w0BCQQxFgQUnpQzvf+D2g1dFk8/mj7PdhxefLswgYUG
 CSsGAQQBgjcQBDF4MHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5n
 IChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENB
 AhAUQVpZzww0BCzlOIjOu/+QMIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAj
 BgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJz
 b25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAUQVpZzww0BCzlOIjOu/+QMA0GCSqGSIb3DQEBAQUA
-BIIBAMCQlvo6MxPgcxvx0gLwMQrgfEj3O30vnTj7Yt3oIWdjMCPRRrdpj6FSYHmDXVB7JKaaOHbW
-bnpK9IeIexRbnDtIBvGDfRDa9bBrgk1GGio6e1Z07/WvHGCdgLl2yYgyIz3tmXoVgwnVMZHzivzb
-8cSKYGyerCAsWkqA6UEbl2vUg/mYgTpMFO3+9mPYbzgOiNo5Rppf3rKbndyxdjVy7T30yhmSy3y+
-NdegNb7qQakpjFzKGEHkf5nca/Wpr3OISXddvBEcZJPJbwP6u6x0KLBW6VpdIeC9IyLBzdqji/CH
-Nn6DWahWElRBHErZyyeoErSqKTCvMbO/CjdfMDr/OX0AAAAAAAA=
+BIIBAFCo5QiOxdoq+y9e3NZr7BktvfIlz/Shq9hEXsrvPGumJLW+KUc27emsCFpAyOUMjf7Z6LWj
+DDzec0FgoR0W9ppX1eJo88YpPqc1rBS1RJAozhaGr+pbWOqGP70oHvPbhKviXsLoklAGLT75CKDk
+CaARpO6tNZPKU7jca9edE7FGWYPQaGUoNtuMQ+AL7pc7wnFYxf0DyLawmlKNFD2v2xt7X7QyaRKU
+qFczpCGCDdPG3hmSfw9/O9QYLlqrtg1h7anoHFT7TSRqY9p3cPVesJmCEDXVuJJxBALOzKpsTxZs
+qgsZ42UG8wAVu5+eaN1zobboHJF5TJLD+QcG3udmgDcAAAAAAAA=
 
 
---=-Dli1DCiTja+cXNN69ucQ--
+--=-CIcEvWFqU8fUTOLYyzai--
