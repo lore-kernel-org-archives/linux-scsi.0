@@ -1,184 +1,299 @@
-From: <vignesh.babu@wipro.com>
-Subject: [KJ][PATCH]dpt_i2o.c-kzalloc
-Date: Mon, 16 Apr 2007 11:35:38 +0530
-Message-ID: <1176703538.13066.11.camel@wriver-t81fb058.linuxcoe>
+From: David Miller <davem@davemloft.net>
+Subject: Major qla2xxx regression on sparc64
+Date: Mon, 16 Apr 2007 01:02:18 -0700 (PDT)
+Message-ID: <20070416.010218.130850966.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-	micalg=sha1;
-	protocol="application/x-pkcs7-signature";
-	boundary="=-CIcEvWFqU8fUTOLYyzai"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:49029 "EHLO
-	wip-cdc-wd.wipro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932081AbXDPGKH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Apr 2007 02:10:07 -0400
-Content-class: urn:content-classes:message
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56311
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S964834AbXDPICT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Apr 2007 04:02:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: aacraid@adaptec.com
-Cc: linux-scsi@vger.kernel.org, kernel-janitors@lists.osdl.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, andrew.vasquez@qlogic.com, James.Bottomley@SteelEye.com, ema@debian.org
 
 
---=-CIcEvWFqU8fUTOLYyzai
-Content-Type: text/plain
-Content-Transfer-Encoding: quoted-printable
+Sparc64 systems which have an on-board qla2xxx chip (such as
+SunBlade-1000 and SunBlade-2000, there are probably some other systems
+like this too) do not have any NVRAM information present, in fact the
+NVRAM is basically all 0's from what I can tell.
 
+This always worked just fine since the code would previously just use
+a bunch of defaults when an inconsistent NVRAM was detected.
 
-Replacing kmalloc/memset combination with kzalloc.
+But the changeset below at the end of this email broke this and now
+I'm seeing bug reports from sparc64 users and I was just able to
+reproduce the problem myself just today as well.  I verified that
+reverting the patch below gets things working again.
 
-Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
----
-diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-index cd36e81..2184fcb 100644
---- a/drivers/scsi/dpt_i2o.c
-+++ b/drivers/scsi/dpt_i2o.c
-@@ -1311,13 +1311,12 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
- 		schedule_timeout_uninterruptible(1);
- 	} while (m =3D=3D EMPTY_QUEUE);
-=20
--	status =3D kmalloc(4, GFP_KERNEL|ADDR32);
-+	status =3D kzalloc(4, GFP_KERNEL|ADDR32);
- 	if(status =3D=3D NULL) {
- 		adpt_send_nop(pHba, m);
- 		printk(KERN_ERR"IOP reset failed - no free memory.\n");
- 		return -ENOMEM;
+Emanuele, you can feed the patch below to "patch -p1 -R" to get that
+working again so we can move on to the other sparc64 bug we're looking
+into :-)
+
+The failure mode isn't nice, it actually ends up crashing with an OOPS
+in qla2xxx_init_host_attr() because ha->node_name is NULL, it's
+supposed to be initialized by functions like qla2x00_nvram_config()
+
+Can we revert the patch below or do something similar to get things
+working again on sparc64?
+
+The most important thing which qla2x00_nvram_config() seems to want to
+get is the WWN port_name and node_name.  These are provided in the OFW
+device tree so we could pluck them out of there with something like:
+
+#ifdef CONFIG_SPARC
+#include <asm/prom.h>
+#include <asm/pbm.h>
+#endif
+
+...
+
+#ifdef CONFIG_SPARC
+	struct pcidev_cookie *pcp = pdev->sysdata;
+	u8 *port_name, *node_name;
+
+	port_name = of_get_property(pcp->prom_node, "port-wwn", NULL);
+	node_name = of_get_property(pcp->prom_node, "node-wwn", NULL);
+#endif
+
+Those will hold a pointer to the property values or NULL if the
+property does not exist.  This is private data, so you should make
+copies of them into your local data structure and not use references
+to them.
+
+I don't see any OFW properties present that could be used to fill in
+the rest of the NVRAM parameters, so we'd need to use the defaults
+that the code before the change was using.
+
+But even if that fails, I think the fallback code should be put back,
+since it obviously was used by at least one system and it's probable
+that there are some other applications of using this qla2xxx chip that
+will have an empty NVRAM too.
+
+I can understand the apprehension in using a fixed port_name[] value,
+since it could conflict with other FC controllers on the mesh, but if
+that is so important just choose some random value that is a valid FC
+ID or use some characteristic ID that can be used to compose part of
+the port WWN in order to give it at least some uniqueness.
+
+I'm happy to test out any patches you come up with, thanks.
+
+commit 7aef45ac92f49e76d990b51b7ecd714b9a608be1
+Author: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date:   Mon Jan 29 10:22:26 2007 -0800
+
+    [SCSI] qla2xxx: Fail initialization when inconsistent NVRAM detected.
+    
+    Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ee4b79e..b247bc2 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -88,7 +88,12 @@ qla2x00_initialize_adapter(scsi_qla_host_t *ha)
+ 
+ 	qla_printk(KERN_INFO, ha, "Configure NVRAM parameters...\n");
+ 
+-	ha->isp_ops.nvram_config(ha);
++	rval = ha->isp_ops.nvram_config(ha);
++	if (rval) {
++		DEBUG2(printk("scsi(%ld): Unable to verify NVRAM data.\n",
++		    ha->host_no));
++		return rval;
++	}
+ 
+ 	if (ha->flags.disable_serdes) {
+ 		/* Mask HBA via NVRAM settings? */
+@@ -1404,7 +1409,6 @@ qla2x00_set_model_info(scsi_qla_host_t *ha, uint8_t *model, size_t len, char *de
+ int
+ qla2x00_nvram_config(scsi_qla_host_t *ha)
+ {
+-	int             rval;
+ 	uint8_t         chksum = 0;
+ 	uint16_t        cnt;
+ 	uint8_t         *dptr1, *dptr2;
+@@ -1413,8 +1417,6 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
+ 	uint8_t         *ptr = (uint8_t *)ha->request_ring;
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+ 
+-	rval = QLA_SUCCESS;
+-
+ 	/* Determine NVRAM starting address. */
+ 	ha->nvram_size = sizeof(nvram_t);
+ 	ha->nvram_base = 0;
+@@ -1438,55 +1440,7 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
+ 		qla_printk(KERN_WARNING, ha, "Inconsistent NVRAM detected: "
+ 		    "checksum=0x%x id=%c version=0x%x.\n", chksum, nv->id[0],
+ 		    nv->nvram_version);
+-		qla_printk(KERN_WARNING, ha, "Falling back to functioning (yet "
+-		    "invalid -- WWPN) defaults.\n");
+-
+-		/*
+-		 * Set default initialization control block.
+-		 */
+-		memset(nv, 0, ha->nvram_size);
+-		nv->parameter_block_version = ICB_VERSION;
+-
+-		if (IS_QLA23XX(ha)) {
+-			nv->firmware_options[0] = BIT_2 | BIT_1;
+-			nv->firmware_options[1] = BIT_7 | BIT_5;
+-			nv->add_firmware_options[0] = BIT_5;
+-			nv->add_firmware_options[1] = BIT_5 | BIT_4;
+-			nv->frame_payload_size = __constant_cpu_to_le16(2048);
+-			nv->special_options[1] = BIT_7;
+-		} else if (IS_QLA2200(ha)) {
+-			nv->firmware_options[0] = BIT_2 | BIT_1;
+-			nv->firmware_options[1] = BIT_7 | BIT_5;
+-			nv->add_firmware_options[0] = BIT_5;
+-			nv->add_firmware_options[1] = BIT_5 | BIT_4;
+-			nv->frame_payload_size = __constant_cpu_to_le16(1024);
+-		} else if (IS_QLA2100(ha)) {
+-			nv->firmware_options[0] = BIT_3 | BIT_1;
+-			nv->firmware_options[1] = BIT_5;
+-			nv->frame_payload_size = __constant_cpu_to_le16(1024);
+-		}
+-
+-		nv->max_iocb_allocation = __constant_cpu_to_le16(256);
+-		nv->execution_throttle = __constant_cpu_to_le16(16);
+-		nv->retry_count = 8;
+-		nv->retry_delay = 1;
+-
+-		nv->port_name[0] = 33;
+-		nv->port_name[3] = 224;
+-		nv->port_name[4] = 139;
+-
+-		nv->login_timeout = 4;
+-
+-		/*
+-		 * Set default host adapter parameters
+-		 */
+-		nv->host_p[1] = BIT_2;
+-		nv->reset_delay = 5;
+-		nv->port_down_retry_count = 8;
+-		nv->max_luns_per_target = __constant_cpu_to_le16(8);
+-		nv->link_down_timeout = 60;
+-
+-		rval = 1;
++		return QLA_FUNCTION_FAILED;
  	}
--	memset(status,0,4);
-=20
- 	msg[0]=3DEIGHT_WORD_MSG_SIZE|SGL_OFFSET_0;
- 	msg[1]=3DI2O_CMD_ADAPTER_RESET<<24|HOST_TID<<12|ADAPTER_TID;
-@@ -1507,21 +1506,19 @@ static int adpt_i2o_parse_lct(adpt_hba* pHba)
- 					continue;
- 				}
- 				if( pHba->channel[bus_no].device[scsi_id] =3D=3D NULL){
--					pDev =3D  kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
-+					pDev =3D  kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
- 					if(pDev =3D=3D NULL) {
- 						return -ENOMEM;
- 					}
- 					pHba->channel[bus_no].device[scsi_id] =3D pDev;
--					memset(pDev,0,sizeof(struct adpt_device));
- 				} else {
- 					for( pDev =3D pHba->channel[bus_no].device[scsi_id];=09
- 							pDev->next_lun; pDev =3D pDev->next_lun){
- 					}
--					pDev->next_lun =3D kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
-+					pDev->next_lun =3D kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
- 					if(pDev->next_lun =3D=3D NULL) {
- 						return -ENOMEM;
- 					}
--					memset(pDev->next_lun,0,sizeof(struct adpt_device));
- 					pDev =3D pDev->next_lun;
- 				}
- 				pDev->tid =3D tid;
-@@ -1670,12 +1667,11 @@ static int adpt_i2o_passthru(adpt_hba* pHba, u32 __=
-user *arg)
- 		reply_size =3D REPLY_FRAME_SIZE;
+ 
+ #if defined(CONFIG_IA64_GENERIC) || defined(CONFIG_IA64_SGI_SN2)
+@@ -1699,11 +1653,7 @@ qla2x00_nvram_config(scsi_qla_host_t *ha)
+ 		}
  	}
- 	reply_size *=3D 4;
--	reply =3D kmalloc(REPLY_FRAME_SIZE*4, GFP_KERNEL);
-+	reply =3D kzalloc(REPLY_FRAME_SIZE*4, GFP_KERNEL);
- 	if(reply =3D=3D NULL) {
- 		printk(KERN_WARNING"%s: Could not allocate reply buffer\n",pHba->name);
- 		return -ENOMEM;
+ 
+-	if (rval) {
+-		DEBUG2_3(printk(KERN_WARNING
+-		    "scsi(%ld): NVRAM configuration failed!\n", ha->host_no));
+-	}
+-	return (rval);
++	return QLA_SUCCESS;
+ }
+ 
+ static void
+@@ -3121,7 +3071,9 @@ qla2x00_abort_isp(scsi_qla_host_t *ha)
+ 
+ 		ha->isp_ops.get_flash_version(ha, ha->request_ring);
+ 
+-		ha->isp_ops.nvram_config(ha);
++		rval = ha->isp_ops.nvram_config(ha);
++		if (rval)
++			goto isp_abort_retry;
+ 
+ 		if (!qla2x00_restart_isp(ha)) {
+ 			clear_bit(RESET_MARKER_NEEDED, &ha->dpc_flags);
+@@ -3151,6 +3103,7 @@ qla2x00_abort_isp(scsi_qla_host_t *ha)
+ 				}
+ 			}
+ 		} else {	/* failed the ISP abort */
++isp_abort_retry:
+ 			ha->flags.online = 1;
+ 			if (test_bit(ISP_ABORT_RETRY, &ha->dpc_flags)) {
+ 				if (ha->isp_abort_cnt == 0) {
+@@ -3340,7 +3293,6 @@ qla24xx_reset_adapter(scsi_qla_host_t *ha)
+ int
+ qla24xx_nvram_config(scsi_qla_host_t *ha)
+ {
+-	int   rval;
+ 	struct init_cb_24xx *icb;
+ 	struct nvram_24xx *nv;
+ 	uint32_t *dptr;
+@@ -3348,7 +3300,6 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
+ 	uint32_t chksum;
+ 	uint16_t cnt;
+ 
+-	rval = QLA_SUCCESS;
+ 	icb = (struct init_cb_24xx *)ha->init_cb;
+ 	nv = (struct nvram_24xx *)ha->request_ring;
+ 
+@@ -3381,51 +3332,7 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
+ 		qla_printk(KERN_WARNING, ha, "Inconsistent NVRAM detected: "
+ 		    "checksum=0x%x id=%c version=0x%x.\n", chksum, nv->id[0],
+ 		    le16_to_cpu(nv->nvram_version));
+-		qla_printk(KERN_WARNING, ha, "Falling back to functioning (yet "
+-		    "invalid -- WWPN) defaults.\n");
+-
+-		/*
+-		 * Set default initialization control block.
+-		 */
+-		memset(nv, 0, ha->nvram_size);
+-		nv->nvram_version = __constant_cpu_to_le16(ICB_VERSION);
+-		nv->version = __constant_cpu_to_le16(ICB_VERSION);
+-		nv->frame_payload_size = __constant_cpu_to_le16(2048);
+-		nv->execution_throttle = __constant_cpu_to_le16(0xFFFF);
+-		nv->exchange_count = __constant_cpu_to_le16(0);
+-		nv->hard_address = __constant_cpu_to_le16(124);
+-		nv->port_name[0] = 0x21;
+-		nv->port_name[1] = 0x00 + PCI_FUNC(ha->pdev->devfn);
+-		nv->port_name[2] = 0x00;
+-		nv->port_name[3] = 0xe0;
+-		nv->port_name[4] = 0x8b;
+-		nv->port_name[5] = 0x1c;
+-		nv->port_name[6] = 0x55;
+-		nv->port_name[7] = 0x86;
+-		nv->node_name[0] = 0x20;
+-		nv->node_name[1] = 0x00;
+-		nv->node_name[2] = 0x00;
+-		nv->node_name[3] = 0xe0;
+-		nv->node_name[4] = 0x8b;
+-		nv->node_name[5] = 0x1c;
+-		nv->node_name[6] = 0x55;
+-		nv->node_name[7] = 0x86;
+-		nv->login_retry_count = __constant_cpu_to_le16(8);
+-		nv->interrupt_delay_timer = __constant_cpu_to_le16(0);
+-		nv->login_timeout = __constant_cpu_to_le16(0);
+-		nv->firmware_options_1 =
+-		    __constant_cpu_to_le32(BIT_14|BIT_13|BIT_2|BIT_1);
+-		nv->firmware_options_2 = __constant_cpu_to_le32(2 << 4);
+-		nv->firmware_options_2 |= __constant_cpu_to_le32(BIT_12);
+-		nv->firmware_options_3 = __constant_cpu_to_le32(2 << 13);
+-		nv->host_p = __constant_cpu_to_le32(BIT_11|BIT_10);
+-		nv->efi_parameters = __constant_cpu_to_le32(0);
+-		nv->reset_delay = 5;
+-		nv->max_luns_per_target = __constant_cpu_to_le16(128);
+-		nv->port_down_retry_count = __constant_cpu_to_le16(30);
+-		nv->link_down_timeout = __constant_cpu_to_le16(30);
+-
+-		rval = 1;
++		return QLA_FUNCTION_FAILED;
  	}
--	memset(reply,0,REPLY_FRAME_SIZE*4);
- 	sg_offset =3D (msg[0]>>4)&0xf;
- 	msg[2] =3D 0x40000000; // IOCTL context
- 	msg[3] =3D (u32)reply;
-@@ -2447,7 +2443,7 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
- 				}
- 				pDev =3D pHba->channel[bus_no].device[scsi_id];=09
- 				if( pDev =3D=3D NULL){
--					pDev =3D  kmalloc(sizeof(struct adpt_device),GFP_KERNEL);
-+					pDev =3D  kzalloc(sizeof(struct adpt_device),GFP_KERNEL);
- 					if(pDev =3D=3D NULL) {
- 						return -ENOMEM;
- 					}
-@@ -2456,12 +2452,11 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
- 					while (pDev->next_lun) {
- 						pDev =3D pDev->next_lun;
- 					}
--					pDev =3D pDev->next_lun =3D kmalloc(sizeof(struct adpt_device),GFP_KE=
-RNEL);
-+					pDev =3D pDev->next_lun =3D kzalloc(sizeof(struct adpt_device),GFP_KE=
-RNEL);
- 					if(pDev =3D=3D NULL) {
- 						return -ENOMEM;
- 					}
- 				}
--				memset(pDev,0,sizeof(struct adpt_device));
- 				pDev->tid =3D d->lct_data.tid;
- 				pDev->scsi_channel =3D bus_no;
- 				pDev->scsi_id =3D scsi_id;
-
---=20
-Regards, =20
-Vignesh Babu BM =20
-_____________________________________________________________ =20
-"Why is it that every time I'm with you, makes me believe in magic?"
-
---=-CIcEvWFqU8fUTOLYyzai
-Content-Type: application/x-pkcs7-signature; name=smime.p7s
-Content-Disposition: attachment; filename=smime.p7s
-Content-Transfer-Encoding: base64
-
-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
-CQYDVQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoGA1UE
-AxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0EwgZ8wDQYJKoZIhvcNAQEBBQAD
-gY0AMIGJAoGBAMSmPFVzVftOucqZWh5owHUEcJ3f6f+jHuy9zfVb8hp2vX8MOmHyv1HOAdTlUAow
-1wJjWiyJFXCO3cnwK4Vaqj9xVsuvPAsH5/EfkTYkKhPPK9Xzgnc9A74r/rsYPge/QIACZNenpruf
-ZdHFKlSFD0gEf6e20TxhBEAeZBlyYLf7AgMBAAGjgZQwgZEwEgYDVR0TAQH/BAgwBgEB/wIBADBD
-BgNVHR8EPDA6MDigNqA0hjJodHRwOi8vY3JsLnRoYXd0ZS5jb20vVGhhd3RlUGVyc29uYWxGcmVl
-bWFpbENBLmNybDALBgNVHQ8EBAMCAQYwKQYDVR0RBCIwIKQeMBwxGjAYBgNVBAMTEVByaXZhdGVM
-YWJlbDItMTM4MA0GCSqGSIb3DQEBBQUAA4GBAEiM0VCD6gsuzA2jZqxnD3+vrL7CF6FDlpSdf0wh
-uPg2H6otnzYvwPQcUCCTcDz9reFhYsPZOhl+hLGZGwDFGguCdJ4lUJRix9sncVcljd2pnDmOjCBP
-ZV+V2vf3h9bGCE6u9uo05RAaWzVNd+NWIXiC3CEZNd4ksdMdRv9dX2VPMYIDEDCCAwwCAQEwdjBi
-MQswCQYDVQQGEwJaQTElMCMGA1UEChMcVGhhd3RlIENvbnN1bHRpbmcgKFB0eSkgTHRkLjEsMCoG
-A1UEAxMjVGhhd3RlIFBlcnNvbmFsIEZyZWVtYWlsIElzc3VpbmcgQ0ECEBRBWlnPDDQELOU4iM67
-/5AwCQYFKw4DAhoFAKCCAW8wGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0BCQUx
-DxcNMDcwNDE2MDYwNTM3WjAjBgkqhkiG9w0BCQQxFgQUnpQzvf+D2g1dFk8/mj7PdhxefLswgYUG
-CSsGAQQBgjcQBDF4MHYwYjELMAkGA1UEBhMCWkExJTAjBgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5n
-IChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJzb25hbCBGcmVlbWFpbCBJc3N1aW5nIENB
-AhAUQVpZzww0BCzlOIjOu/+QMIGHBgsqhkiG9w0BCRACCzF4oHYwYjELMAkGA1UEBhMCWkExJTAj
-BgNVBAoTHFRoYXd0ZSBDb25zdWx0aW5nIChQdHkpIEx0ZC4xLDAqBgNVBAMTI1RoYXd0ZSBQZXJz
-b25hbCBGcmVlbWFpbCBJc3N1aW5nIENBAhAUQVpZzww0BCzlOIjOu/+QMA0GCSqGSIb3DQEBAQUA
-BIIBAFCo5QiOxdoq+y9e3NZr7BktvfIlz/Shq9hEXsrvPGumJLW+KUc27emsCFpAyOUMjf7Z6LWj
-DDzec0FgoR0W9ppX1eJo88YpPqc1rBS1RJAozhaGr+pbWOqGP70oHvPbhKviXsLoklAGLT75CKDk
-CaARpO6tNZPKU7jca9edE7FGWYPQaGUoNtuMQ+AL7pc7wnFYxf0DyLawmlKNFD2v2xt7X7QyaRKU
-qFczpCGCDdPG3hmSfw9/O9QYLlqrtg1h7anoHFT7TSRqY9p3cPVesJmCEDXVuJJxBALOzKpsTxZs
-qgsZ42UG8wAVu5+eaN1zobboHJF5TJLD+QcG3udmgDcAAAAAAAA=
-
-
---=-CIcEvWFqU8fUTOLYyzai--
+ 
+ 	/* Reset Initialization control block */
+@@ -3570,11 +3477,7 @@ qla24xx_nvram_config(scsi_qla_host_t *ha)
+ 		ha->flags.process_response_queue = 1;
+ 	}
+ 
+-	if (rval) {
+-		DEBUG2_3(printk(KERN_WARNING
+-		    "scsi(%ld): NVRAM configuration failed!\n", ha->host_no));
+-	}
+-	return (rval);
++	return QLA_SUCCESS;
+ }
+ 
+ static int
