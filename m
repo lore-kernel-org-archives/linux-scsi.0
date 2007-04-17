@@ -1,35 +1,39 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Major qla2xxx regression on sparc64
-Date: Mon, 16 Apr 2007 22:02:08 -0700 (PDT)
-Message-ID: <20070416.220208.94071670.davem@davemloft.net>
-References: <20070416234705.GA15937@dmccrory-d810.qlogic.org>
-	<20070416.170504.02298047.davem@davemloft.net>
-	<20070417024107.GE16469@dmccrory-d810.qlogic.org>
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Subject: [PATCH] qla1280: use DMA_64BIT_MASK instead of ~ 0ULL
+Date: Tue, 17 Apr 2007 09:58:36 +0200
+Message-ID: <20070417075836.GA22931@traven>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:57893
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753918AbXDQFCH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Apr 2007 01:02:07 -0400
-In-Reply-To: <20070417024107.GE16469@dmccrory-d810.qlogic.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752463AbXDQIBy@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-driver@qlogic.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: seokmann.ju@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Date: Mon, 16 Apr 2007 19:41:07 -0700
+QLA1280: call pci_set_dma_mask with DMA_64BIT_MASK instead of  ~ 0ULL
 
-> That verbiage sounds fine -- so would you consider the previous patch
-> I submitted (with module parameter) along with the wording above?
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
-Yes, that sounds fine.
+---
 
-> I'm in transit for a redeye to NY so I won't be able to modify the
-> patch, If you would be amenable to the above, Seokmann, could you
-> rework the patch?
-
-Thanks guys.
+diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
+index 6777e8a..54d8bdf 100644
+--- a/drivers/scsi/qla1280.c
++++ b/drivers/scsi/qla1280.c
+@@ -4293,7 +4293,7 @@ qla1280_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ha->devnum = devnum;	/* specifies microcode load address */
+ 
+ #ifdef QLA_64BIT_PTR
+-	if (pci_set_dma_mask(ha->pdev, (dma_addr_t) ~ 0ULL)) {
++	if (pci_set_dma_mask(ha->pdev, DMA_64BIT_MASK)) {
+ 		if (pci_set_dma_mask(ha->pdev, DMA_32BIT_MASK)) {
+ 			printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 			       "suitable DMA mask - aborting\n", ha->host_no); 
+-- 
+              Comunicar bichos a <bug-coreutils@gnu.org>
+                     (LANG=es_ES uname --help)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+                                                                  `-
