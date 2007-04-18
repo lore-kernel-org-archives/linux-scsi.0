@@ -1,48 +1,51 @@
 From: David Miller <davem@davemloft.net>
 Subject: Re: Major qla2xxx regression on sparc64
-Date: Wed, 18 Apr 2007 13:12:21 -0700 (PDT)
-Message-ID: <20070418.131221.35665053.davem@davemloft.net>
-References: <20070416.220208.94071670.davem@davemloft.net>
-	<A6970E9A290F3F4682E1EAD0EA14F32BDF5854@AVEXCH2.qlogic.org>
-	<20070418171632.GB16471@infradead.org>
+Date: Wed, 18 Apr 2007 13:13:41 -0700 (PDT)
+Message-ID: <20070418.131341.129061984.davem@davemloft.net>
+References: <20070416200857.GH10822@andrew-vasquezs-computer.local>
+	<20070418171346.GA16471@infradead.org>
+	<20070418172802.GD12708@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56633
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56639
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S2992486AbXDRUMS (ORCPT
+	by vger.kernel.org with ESMTP id S2992490AbXDRUNi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Apr 2007 16:12:18 -0400
-In-Reply-To: <20070418171632.GB16471@infradead.org>
+	Wed, 18 Apr 2007 16:13:38 -0400
+In-Reply-To: <20070418172802.GD12708@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hch@infradead.org
-Cc: seokmann.ju@qlogic.com, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
+To: andrew.vasquez@qlogic.com
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
 
-From: Christoph Hellwig <hch@infradead.org>
-Date: Wed, 18 Apr 2007 18:16:32 +0100
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Date: Wed, 18 Apr 2007 10:28:02 -0700
 
-> On Tue, Apr 17, 2007 at 11:28:07AM -0700, Seokmann Ju wrote:
-> > Hello David,
-> > On Mon 4/16/2007 10:02 PM, David Miller wrote:
-> > > > I'm in transit for a redeye to NY so I won't be able to modify the 
-> > > > patch, If you would be amenable to the above, Seokmann, could you 
-> > > > rework the patch?
-> > > 
-> > > Thanks guys.
-> > Here, I've attached updated patch. Please take this.
-> > Sorry for late.
+> On Wed, 18 Apr 2007, Christoph Hellwig wrote:
 > 
-> I don't think there should be a warning in the sparc case where the
-> wwn's are stored in the device tree.  This is the way sun intended
-> the hardware to work on sparc.  
+> > I don't think a module option is a good idea at this point.  The problem
+> > is you broke some so far perfectly working setups, which is not okay.
+> > The only first step can be printing a really big warning.  After this
+> > has been in for a while (at lest half a year) we can make it a non-default
+> > option or turn if off completely in case the warning never triggered in
+> > practice.
+> > 
+> > The only resonable thing for 2.6.21 is to put in David's patch, possible
+> > with an even more drastic warning when the rom is invalid and there's
+> > no prom-fallback available.
+> > 
+> > Note that I expect Sun put in the invalid ROM intentionally, as we have
+> > similar cases with other cards that have totally messed up ROMs in
+> > Sun-branded versions.  Personally I think that's an utterly bad decision
+> > from Sun's side, but we'll have to live with this.
+> 
+> Fine.  I'll rework an alternate patch for the 2.6.22 timeframe...
 
-Yep, that's the main point.
+We need to fix things now for 2.6.21 and the 2.6.x -stable branches
+because users have unusable systems currently.
 
-Sun provides device parameters via openprom properties in lieu
-of existing mechanisms chip vendors usually use for this on
-other platforms such as NVRAM and the BIOS.
+If it's just a time issue I can work on and push the patch, especially
+since I have the means to test things here.
 
-They do this for just about every scsi, networking, and video
-chip.  It works this way on PowerPC as well.
