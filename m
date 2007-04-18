@@ -1,51 +1,42 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Major qla2xxx regression on sparc64
-Date: Wed, 18 Apr 2007 13:13:41 -0700 (PDT)
-Message-ID: <20070418.131341.129061984.davem@davemloft.net>
-References: <20070416200857.GH10822@andrew-vasquezs-computer.local>
-	<20070418171346.GA16471@infradead.org>
-	<20070418172802.GD12708@andrew-vasquezs-computer.local>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: iSCSI fun in 2.6.21-rc6
+Date: Wed, 18 Apr 2007 17:19:31 -0400
+Message-ID: <46268B63.8000201@cs.wisc.edu>
+References: <200704181622.16171.olaf.kirch@oracle.com> <46263B7D.5090200@cs.wisc.edu> <200704182102.42805.olaf.kirch@oracle.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56639
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S2992490AbXDRUNi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Apr 2007 16:13:38 -0400
-In-Reply-To: <20070418172802.GD12708@andrew-vasquezs-computer.local>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49806 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992838AbXDRWTU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Apr 2007 18:19:20 -0400
+In-Reply-To: <200704182102.42805.olaf.kirch@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: andrew.vasquez@qlogic.com
-Cc: hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
+To: Olaf Kirch <olaf.kirch@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Date: Wed, 18 Apr 2007 10:28:02 -0700
-
-> On Wed, 18 Apr 2007, Christoph Hellwig wrote:
+Olaf Kirch wrote:
+> On Wednesday 18 April 2007 17:38, Mike Christie wrote:
+>> Could you send the trace? It is weird that we would get a storm of data
+>> out commands for a IO that was only 4096 bytes (assuming part of the log
+>> did not get cut off and the above line is the last one).
 > 
-> > I don't think a module option is a good idea at this point.  The problem
-> > is you broke some so far perfectly working setups, which is not okay.
-> > The only first step can be printing a really big warning.  After this
-> > has been in for a while (at lest half a year) we can make it a non-default
-> > option or turn if off completely in case the warning never triggered in
-> > practice.
-> > 
-> > The only resonable thing for 2.6.21 is to put in David's patch, possible
-> > with an even more drastic warning when the rom is invalid and there's
-> > no prom-fallback available.
-> > 
-> > Note that I expect Sun put in the invalid ROM intentionally, as we have
-> > similar cases with other cards that have totally messed up ROMs in
-> > Sun-branded versions.  Personally I think that's an utterly bad decision
-> > from Sun's side, but we'll have to live with this.
+> It turns out max_xmit_dlength was 0, hence it kept looping
+> forever in an attempt to chop a 4096 byte payload into an
+> infinite number of 0-sized pieces :-)
 > 
-> Fine.  I'll rework an alternate patch for the 2.6.22 timeframe...
+> It turns out there was an old iscsid in $PATH that spoke an
+> older netlink dialect, so any parameters set by iscsid never
+> reached the iscsi transport, and the connection essentially went
+> unconfigured.
+> 
+> So, how about some consistency checks prior to connecting?
+> I'll submit a patch if you'd be willing to consider it.
+> 
 
-We need to fix things now for 2.6.21 and the 2.6.x -stable branches
-because users have unusable systems currently.
-
-If it's just a time issue I can work on and push the patch, especially
-since I have the means to test things here.
-
+Ok send it. I added checks in userspace to make sure we got valid input
+from users. This is in the svn code. In the kernel I only added minimal
+checking for invalid burst length settings we could get from some
+targets iscsi_conn_start. In the kernel I would add on to them.
