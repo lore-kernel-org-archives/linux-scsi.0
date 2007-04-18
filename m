@@ -1,43 +1,61 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: iSCSI fun in 2.6.21-rc6
-Date: Wed, 18 Apr 2007 10:38:37 -0500
-Message-ID: <46263B7D.5090200@cs.wisc.edu>
-References: <200704181622.16171.olaf.kirch@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: Major qla2xxx regression on sparc64
+Date: Wed, 18 Apr 2007 18:13:46 +0100
+Message-ID: <20070418171346.GA16471@infradead.org>
+References: <20070416.010218.130850966.davem@davemloft.net> <20070416163712.GA10822@andrew-vasquezs-computer.local> <20070416.123743.07452378.davem@davemloft.net> <20070416200857.GH10822@andrew-vasquezs-computer.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:49082 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753329AbXDRPiw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Apr 2007 11:38:52 -0400
-In-Reply-To: <200704181622.16171.olaf.kirch@oracle.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35734 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992876AbXDRRN5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2007 13:13:57 -0400
+Content-Disposition: inline
+In-Reply-To: <20070416200857.GH10822@andrew-vasquezs-computer.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Kirch <olaf.kirch@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
 
-Olaf Kirch wrote:
-> Hi,
-> 
-> I tried to use the iSCSI initiator with iscsitarget on 2.6.21-rc6 today,
-> with rather mixed results.
-> 
-> I could log in okay, and a device would appear. Trying to mount
-> that device would hang though:
-> 
-> kernel: iscsi: ctask enq [read cid 0 sc df57e500 cdb 0x28 itt 0x1c len 4096 cmdsn 29 win 33]
-> kernel: iscsi: cmdrsp [op 0x25 cid 0 itt 0x1c len 0]
-> ...
-> kernel: iscsi: ctask enq [read cid 0 sc df57e500 cdb 0x28 itt 0x2b len 4096 cmdsn 44 win 33]
-> kernel: iscsi: cmdrsp [op 0x25 cid 0 itt 0x2b len 0]
-> kernel: kjournald starting.  Commit interval 5 seconds
-> kernel: iscsi: ctask enq [write cid 0 sc df57e500 cdb 0x2a itt 0x2c len 4096 cmdsn 45 win 33]
-> 
-> Nothing in the logs. tcpdump shows lots of data being transmitted, and tracing
-> iscsitarget shows a storm of data_out commands being received.
-> 
+On Mon, Apr 16, 2007 at 01:08:57PM -0700, Andrew Vasquez wrote:
+> Sorry, but in a SATA/SCSI environment that may be true, but in the
+> case of FC that expectation is unrealistic.  There are thousands of FC
+> installations where there are several thousand endpoints (including
+> initiators and targets) all interconnected.  Let's use your case --
+> just connect two sparc machines within the same fabric to your
+> storage, with the old code, there's still a problem.
 
-Could you send the trace? It is weird that we would get a storm of data
-out commands for a IO that was only 4096 bytes (assuming part of the log
-did not get cut off and the above line is the last one).
+Multi-initiator setups are probably the majority in the FC world by now.
+But there has been a time around 2000 where various of companies thought
+FC is so l33t that they'd put it in as default.  E.g. the early SGI
+Origin 3000 used to have FC-attached root disks.  I think Sun has similar
+machines.
+
+> > They DON'T
+> > CARE, they want their systems to work and if you don't give them that
+> > you're not being a good driver maintainer.
+> 
+> Let's push aside attitudes and unrealistic statistics, could we
+> perhaps agree to re-add the use of doctored NVRAM (and thus
+> non-random WWPN/WWNN) when NVRAM is corrupted or non-present with a
+> module-parameter (which defaults to 0) which indicates the user
+> *really* knows what she is doing and recognizes WWPN collisions may
+> occur -- non-zero the parameter value indicates doctored values will
+> be used, zero value (the default) fails initialization.  In both cases
+> a big FAT warning is issued.
+
+I don't think a module option is a good idea at this point.  The problem
+is you broke some so far perfectly working setups, which is not okay.
+The only first step can be printing a really big warning.  After this
+has been in for a while (at lest half a year) we can make it a non-default
+option or turn if off completely in case the warning never triggered in
+practice.
+
+The only resonable thing for 2.6.21 is to put in David's patch, possible
+with an even more drastic warning when the rom is invalid and there's
+no prom-fallback available.
+
+Note that I expect Sun put in the invalid ROM intentionally, as we have
+similar cases with other cards that have totally messed up ROMs in
+Sun-branded versions.  Personally I think that's an utterly bad decision
+from Sun's side, but we'll have to live with this.
