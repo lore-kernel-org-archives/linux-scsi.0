@@ -1,38 +1,48 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Major qla2xxx regression on sparc64
-Date: Wed, 18 Apr 2007 10:28:02 -0700
-Message-ID: <20070418172802.GD12708@andrew-vasquezs-computer.local>
-References: <20070416.010218.130850966.davem@davemloft.net> <20070416163712.GA10822@andrew-vasquezs-computer.local> <20070416.123743.07452378.davem@davemloft.net> <20070416200857.GH10822@andrew-vasquezs-computer.local> <20070418171346.GA16471@infradead.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: iSCSI fun in 2.6.21-rc6
+Date: Wed, 18 Apr 2007 12:57:53 -0500
+Message-ID: <46265C21.1070402@cs.wisc.edu>
+References: <200704181622.16171.olaf.kirch@oracle.com> <46263B7D.5090200@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:22321 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992916AbXDRR2H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2007 13:28:07 -0400
-Content-Disposition: inline
-In-Reply-To: <20070418171346.GA16471@infradead.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:49413 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S2992969AbXDRR6H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Apr 2007 13:58:07 -0400
+In-Reply-To: <46263B7D.5090200@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
+To: Olaf Kirch <olaf.kirch@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 18 Apr 2007, Christoph Hellwig wrote:
-
-> I don't think a module option is a good idea at this point.  The problem
-> is you broke some so far perfectly working setups, which is not okay.
-> The only first step can be printing a really big warning.  After this
-> has been in for a while (at lest half a year) we can make it a non-default
-> option or turn if off completely in case the warning never triggered in
-> practice.
+Mike Christie wrote:
+> Olaf Kirch wrote:
+>> Hi,
+>>
+>> I tried to use the iSCSI initiator with iscsitarget on 2.6.21-rc6 today,
+>> with rather mixed results.
+>>
+>> I could log in okay, and a device would appear. Trying to mount
+>> that device would hang though:
+>>
+>> kernel: iscsi: ctask enq [read cid 0 sc df57e500 cdb 0x28 itt 0x1c len 4096 cmdsn 29 win 33]
+>> kernel: iscsi: cmdrsp [op 0x25 cid 0 itt 0x1c len 0]
+>> ...
+>> kernel: iscsi: ctask enq [read cid 0 sc df57e500 cdb 0x28 itt 0x2b len 4096 cmdsn 44 win 33]
+>> kernel: iscsi: cmdrsp [op 0x25 cid 0 itt 0x2b len 0]
+>> kernel: kjournald starting.  Commit interval 5 seconds
+>> kernel: iscsi: ctask enq [write cid 0 sc df57e500 cdb 0x2a itt 0x2c len 4096 cmdsn 45 win 33]
+>>
+>> Nothing in the logs. tcpdump shows lots of data being transmitted, and tracing
+>> iscsitarget shows a storm of data_out commands being received.
+>>
 > 
-> The only resonable thing for 2.6.21 is to put in David's patch, possible
-> with an even more drastic warning when the rom is invalid and there's
-> no prom-fallback available.
-> 
-> Note that I expect Sun put in the invalid ROM intentionally, as we have
-> similar cases with other cards that have totally messed up ROMs in
-> Sun-branded versions.  Personally I think that's an utterly bad decision
-> from Sun's side, but we'll have to live with this.
+> Could you send the trace? It is weird that we would get a storm of data
+> out commands for a IO that was only 4096 bytes (assuming part of the log
+> did not get cut off and the above line is the last one).
 
-Fine.  I'll rework an alternate patch for the 2.6.22 timeframe...
-
+Oh yeah, does reverting the endien patches
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commitdiff;h=b4377356450e2358f5f92d34f130d6cb6574bf76
+make any difference?
