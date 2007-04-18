@@ -1,42 +1,42 @@
-From: Olaf Kirch <olaf.kirch@oracle.com>
-Subject: Re: iSCSI fun in 2.6.21-rc6
-Date: Wed, 18 Apr 2007 21:02:41 +0200
-Message-ID: <200704182102.42805.olaf.kirch@oracle.com>
-References: <200704181622.16171.olaf.kirch@oracle.com> <46263B7D.5090200@cs.wisc.edu>
+From: David Miller <davem@davemloft.net>
+Subject: Re: Major qla2xxx regression on sparc64
+Date: Wed, 18 Apr 2007 13:10:54 -0700 (PDT)
+Message-ID: <20070418.131054.70219428.davem@davemloft.net>
+References: <20070416.123743.07452378.davem@davemloft.net>
+	<20070416200857.GH10822@andrew-vasquezs-computer.local>
+	<20070418171346.GA16471@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:23865 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2993031AbXDRTD0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Apr 2007 15:03:26 -0400
-In-Reply-To: <46263B7D.5090200@cs.wisc.edu>
-Content-Disposition: inline
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:56625
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S2992481AbXDRUKv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Apr 2007 16:10:51 -0400
+In-Reply-To: <20070418171346.GA16471@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org
+To: hch@infradead.org
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
 
-On Wednesday 18 April 2007 17:38, Mike Christie wrote:
-> Could you send the trace? It is weird that we would get a storm of data
-> out commands for a IO that was only 4096 bytes (assuming part of the log
-> did not get cut off and the above line is the last one).
+From: Christoph Hellwig <hch@infradead.org>
+Date: Wed, 18 Apr 2007 18:13:46 +0100
 
-It turns out max_xmit_dlength was 0, hence it kept looping
-forever in an attempt to chop a 4096 byte payload into an
-infinite number of 0-sized pieces :-)
+> Note that I expect Sun put in the invalid ROM intentionally, as we have
+> similar cases with other cards that have totally messed up ROMs in
+> Sun-branded versions.  Personally I think that's an utterly bad decision
+> from Sun's side, but we'll have to live with this.
 
-It turns out there was an old iscsid in $PATH that spoke an
-older netlink dialect, so any parameters set by iscsid never
-reached the iscsi transport, and the connection essentially went
-unconfigured.
+The way configuration paramters are provided on Sun systems is via
+openfirmware properties, this is how they do everything and that is
+why they never setup the NVRAMs on various chips.
 
-So, how about some consistency checks prior to connecting?
-I'll submit a patch if you'd be willing to consider it.
+This happens on PowerPC too.  One of many examples is determining the
+clock parameters of the ATI Radeon graphics card, it's provided as an
+openfirmware property not in some config area in the BIOS.
 
-Olaf
--- 
-Olaf Kirch  |  --- o --- Nous sommes du soleil we love when we play
-okir@lst.de |    / | \   sol.dhoop.naytheet.ah kin.ir.samse.qurax
+We can either be anti-social and _demand_ that these systems get their
+NVRAMs fixed, which in reality will never happen and is totally
+unreasonable, or we can say ok this is how we get the information we
+need on these platforms we'll look for it there.
