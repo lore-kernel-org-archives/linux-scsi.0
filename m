@@ -1,67 +1,52 @@
-From: Jan-Benedict Glaw <jbglaw@lug-owl.de>
-Subject: Re: [PATCH] add two SCSI command opcodes
-Date: Thu, 19 Apr 2007 17:47:43 +0200
-Message-ID: <20070419154743.GA18325@lug-owl.de>
-References: <20070419151053.GA10199@localdomain>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH] cciss: Fix warnings during compilation under 32bit environment
+Date: Thu, 19 Apr 2007 16:12:49 -0000
+Message-ID: <226E1C65E4F6164E8EA5FD3CC913AE8CF462EE@G3W0639.americas.hpqcorp.net>
+References: <6.0.0.20.2.20070418160231.043f23c8@172.19.0.2> <226E1C65E4F6164E8EA5FD3CC913AE8CF461DE@G3W0639.americas.hpqcorp.net> <1176995934.31764.7.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="azLHFNyN32YCQGCU"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1766760AbXDSPrp@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070419151053.GA10199@localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:42707 "EHLO
+	ccerelbas02.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1766834AbXDSQNj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Apr 2007 12:13:39 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1176995934.31764.7.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, akpm@linux-foundation.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Cameron, Steve" <steve.cameron@hp.com>
 
+ 
 
---azLHFNyN32YCQGCU
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> -----Original Message-----
+> From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
+> Sent: Thursday, April 19, 2007 10:19 AM
+> To: Miller, Mike (OS Dev)
+> Cc: Hisashi Hifumi; akpm@linux-foundation.org; 
+> jens.axboe@oracle.com; linux-kernel@vger.kernel.org; 
+> linux-scsi@vger.kernel.org; Cameron, Steve
+> Subject: RE: [PATCH] cciss: Fix warnings during compilation 
+> under 32bit environment
+> 
+> On Thu, 2007-04-19 at 15:09 +0000, Miller, Mike (OS Dev) wrote:
+> > Nak. You still haven't told where you saw these warnings. What 
+> > compiler are you using? I do not see these in my 32-bit environment.
+> 
+> I think it's seen with CONFIG_LBD=n on 32 bits
+> 
+> In that configuration, sector_t is a u32 (it's u64 even on 32 
+> bits with CONFIG_LBD=y).  The proposed code change is a 
+> simple cut and paste from the sd driver.
 
-On Thu, 2007-04-19 18:10:54 +0300, Dan Aloni <da-x@monatomic.org> wrote:
-> diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-> index 5c0e979..dff842a 100644
-> --- a/include/scsi/scsi.h
-> +++ b/include/scsi/scsi.h
-> @@ -103,6 +103,7 @@ extern const unsigned char scsi_command_size[8];
->  #define READ_12               0xa8
->  #define WRITE_12              0xaa
->  #define WRITE_VERIFY_12       0xae
-> +#define VERIFY_12             0xaf
->  #define SEARCH_HIGH_12        0xb0
->  #define SEARCH_EQUAL_12       0xb1
->  #define SEARCH_LOW_12         0xb2
-> @@ -111,6 +112,7 @@ extern const unsigned char scsi_command_size[8];
->  #define WRITE_LONG_2          0xea
->  #define READ_16               0x88
->  #define WRITE_16              0x8a
-> +#define WRITE_VERIFY_16       0x8e
->  #define VERIFY_16	      0x8f
->  #define SERVICE_ACTION_IN     0x9e
->  /* values for service action in */
+Isn't there a better way than testing each one?
 
-Where's the user?
+mikem
 
-MfG, JBG
-
---=20
-      Jan-Benedict Glaw      jbglaw@lug-owl.de              +49-172-7608481
-  Signature of:                          Zensur im Internet? Nein danke!
-  the second  :
-
---azLHFNyN32YCQGCU
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFGJ48fHb1edYOZ4bsRAru2AJ0WB/UbLueFiJcRZAET/XrpYFt7yACdGyAx
-hKrW2X2BOfbJvvX6cmb/YHc=
-=IV2Q
------END PGP SIGNATURE-----
-
---azLHFNyN32YCQGCU--
+> 
+> James
+> 
+> 
+> 
