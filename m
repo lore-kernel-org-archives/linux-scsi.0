@@ -1,43 +1,34 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: [PATCH] add two SCSI command opcodes
-Date: Thu, 19 Apr 2007 18:10:54 +0300
-Message-ID: <20070419151053.GA10199@localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] cciss: Fix warnings during compilation under 32bit
+	environment
+Date: Thu, 19 Apr 2007 11:18:54 -0400
+Message-ID: <1176995934.31764.7.camel@mulgrave.il.steeleye.com>
+References: <6.0.0.20.2.20070418160231.043f23c8@172.19.0.2>
+	 <226E1C65E4F6164E8EA5FD3CC913AE8CF461DE@G3W0639.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1766785AbXDSPLO@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linux Kernel List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:41389 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1766812AbXDSPTb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Apr 2007 11:19:31 -0400
+In-Reply-To: <226E1C65E4F6164E8EA5FD3CC913AE8CF461DE@G3W0639.americas.hpqcorp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Cc: Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, akpm@linux-foundation.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "Cameron, Steve" <steve.cameron@hp.com>
 
-Applies for 2.6.20.7 and beyond.
+On Thu, 2007-04-19 at 15:09 +0000, Miller, Mike (OS Dev) wrote:
+> Nak. You still haven't told where you saw these warnings. What compiler
+> are you using? I do not see these in my 32-bit environment.
 
-Signed-off-by: Dan Aloni <da-x@monatomic.org>
+I think it's seen with CONFIG_LBD=n on 32 bits
 
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 5c0e979..dff842a 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -103,6 +103,7 @@ extern const unsigned char scsi_command_size[8];
- #define READ_12               0xa8
- #define WRITE_12              0xaa
- #define WRITE_VERIFY_12       0xae
-+#define VERIFY_12             0xaf
- #define SEARCH_HIGH_12        0xb0
- #define SEARCH_EQUAL_12       0xb1
- #define SEARCH_LOW_12         0xb2
-@@ -111,6 +112,7 @@ extern const unsigned char scsi_command_size[8];
- #define WRITE_LONG_2          0xea
- #define READ_16               0x88
- #define WRITE_16              0x8a
-+#define WRITE_VERIFY_16       0x8e
- #define VERIFY_16	      0x8f
- #define SERVICE_ACTION_IN     0x9e
- /* values for service action in */
+In that configuration, sector_t is a u32 (it's u64 even on 32 bits with
+CONFIG_LBD=y).  The proposed code change is a simple cut and paste from
+the sd driver.
+
+James
 
 
--- 
-Dan Aloni
-XIV LTD, http://www.xivstorage.com
-da-x (at) monatomic.org, dan (at) xiv.co.il
