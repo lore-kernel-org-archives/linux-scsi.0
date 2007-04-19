@@ -1,30 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] add two SCSI command opcodes
-Date: Thu, 19 Apr 2007 10:49:53 -0600
-Message-ID: <20070419164952.GA19438@parisc-linux.org>
-References: <20070419151053.GA10199@localdomain> <20070419154743.GA18325@lug-owl.de> <20070419163959.GA25595@localdomain>
+From: David Milburn <dmilburn@redhat.com>
+Subject: [PATCH] megaraid: update version reported by MEGAIOC_QDRVRVER
+Date: Thu, 19 Apr 2007 12:10:24 -0500
+Message-ID: <20070419171024.GA6885@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38653 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1766868AbXDSQty (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Apr 2007 12:49:54 -0400
+Received: from mx1.redhat.com ([66.187.233.31]:51974 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161504AbXDSRL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Apr 2007 13:11:28 -0400
 Content-Disposition: inline
-In-Reply-To: <20070419163959.GA25595@localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Jan-Benedict Glaw <jbglaw@lug-owl.de>, Linux Kernel List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, dmilburn@redhat.com
 
-On Thu, Apr 19, 2007 at 07:39:59PM +0300, Dan Aloni wrote:
-> On Thu, Apr 19, 2007 at 05:47:43PM +0200, Jan-Benedict Glaw wrote:
-> > Where's the user?
-> 
-> A privately maintained kernel driver.
-> 
-> Do we _must_ have in-tree users? I'd consider the change for completion's
-> sake.
+Update the driver version reported by MEGAIOC_QDRVRVER to
+match LSI_COMMON_MOD_VERSION.
 
-I agree with Dan -- if they're published in a SCSI spec, we should
-include them in this header file.
+Signed-off-by: David Milburn <dmilburn@redhat.com>
+---
+
+ drivers/scsi/megaraid/megaraid_mm.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
+index f33a678..e075a52 100644
+--- a/drivers/scsi/megaraid/megaraid_mm.c
++++ b/drivers/scsi/megaraid/megaraid_mm.c
+@@ -60,7 +60,7 @@ EXPORT_SYMBOL(mraid_mm_unregister_adp);
+ EXPORT_SYMBOL(mraid_mm_adapter_app_handle);
+ 
+ static int majorno;
+-static uint32_t drvr_ver	= 0x02200206;
++static uint32_t drvr_ver	= 0x02200207;
+ 
+ static int adapters_count_g;
+ static struct list_head adapters_list_g;
