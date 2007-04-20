@@ -1,119 +1,70 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] cciss: Fix warnings during compilation under
- 32bitenvironment
-Date: Thu, 19 Apr 2007 22:20:28 -0700
-Message-ID: <20070419222028.d33c7f86.akpm@linux-foundation.org>
-References: <6.0.0.20.2.20070418160231.043f23c8@172.19.0.2>
-	<226E1C65E4F6164E8EA5FD3CC913AE8CF461DE@G3W0639.americas.hpqcorp.net>
-	<1176995934.31764.7.camel@mulgrave.il.steeleye.com>
-	<226E1C65E4F6164E8EA5FD3CC913AE8CF462EE@G3W0639.americas.hpqcorp.net>
-	<1176999730.31764.15.camel@mulgrave.il.steeleye.com>
-	<558F4D473FD7FE419B019232BF2D37B401167D74@G3W0634.americas.hpqcorp.net>
+From: Gerhard Schneider <gs@ilsb.tuwien.ac.at>
+Subject: mpt: sync offset errors?
+Date: Fri, 20 Apr 2007 09:57:01 +0200
+Message-ID: <4628724D.5060507@ilsb.tuwien.ac.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enig75CAEEBF1FA76A710C893094"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:39006 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1030202AbXDTFVQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2007 01:21:16 -0400
-In-Reply-To: <558F4D473FD7FE419B019232BF2D37B401167D74@G3W0634.americas.hpqcorp.net>
+Received: from gh-gw2.ilsb.tuwien.ac.at ([128.130.23.15]:48764 "EHLO
+	gh-gw2.ilsb.tuwien.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992723AbXDTJKr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Apr 2007 05:10:47 -0400
+Received: from [128.130.71.82] (gs.ilsb.tuwien.ac.at [128.130.71.82])
+	by gh-gw2.ilsb.tuwien.ac.at (8.13.8/8.13.8/Debian-3) with ESMTP id l3K7v4E2009638
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Apr 2007 09:57:06 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Cameron, Steve" <Steve.Cameron@hp.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, 19 Apr 2007 16:27:26 -0000 "Cameron, Steve" <Steve.Cameron@hp.com> wrote:
-
-> 
-> Something like 
-> 
-> if (sizeof(blah) > 4) {
->    do all the assignments with shifts
-> }
-> 
-> might be slighly better since the CDB is already zeroed
-> by cmd_alloc() and doesn't need to be zeroed a 2nd time.
-> 
-> -- steve
-> 
-> -----Original Message-----
-> From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-> Sent: Thu 4/19/2007 11:22 AM
-> To: Miller, Mike (OS Dev)
-> Cc: Hisashi Hifumi; akpm@linux-foundation.org; jens.axboe@oracle.com; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Cameron, Steve
-> Subject: RE: [PATCH] cciss: Fix warnings during compilation under 32bitenvironment
->  
-> On Thu, 2007-04-19 at 16:12 +0000, Miller, Mike (OS Dev) wrote:
-> > > > Nak. You still haven't told where you saw these warnings. What 
-> > > > compiler are you using? I do not see these in my 32-bit environment.
-> > > 
-> > > I think it's seen with CONFIG_LBD=n on 32 bits
-> > > 
-> > > In that configuration, sector_t is a u32 (it's u64 even on 32 
-> > > bits with CONFIG_LBD=y).  The proposed code change is a 
-> > > simple cut and paste from the sd driver.
-> > 
-> > Isn't there a better way than testing each one?
-> 
-> It's not such a bad option.  The sizeof() test is compile time
-> determinable, so the compiler simply zeros the fields in the
-> CONFIG_LBD=n case and does the shift for CONFIG_LBD=y.  It certainly
-> never compiles to four inline condition checks.
-> 
-
-Boy you guys make a mess of a nice email trail :(
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enig75CAEEBF1FA76A710C893094
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
 
 
---- linux-2.6.21-rc7.org/drivers/block/cciss.c	2007-04-17 16:36:02.000000000 +0900
-+++ linux-2.6.21-rc7/drivers/block/cciss.c	2007-04-17 16:25:53.000000000 +0900
-@@ -2552,10 +2552,10 @@ static void do_cciss_request(request_que
- 	} else {
- 		c->Request.CDBLen = 16;
- 		c->Request.CDB[1]= 0;
--		c->Request.CDB[2]= (start_blk >> 56) & 0xff;	//MSB
--		c->Request.CDB[3]= (start_blk >> 48) & 0xff;
--		c->Request.CDB[4]= (start_blk >> 40) & 0xff;
--		c->Request.CDB[5]= (start_blk >> 32) & 0xff;
-+		c->Request.CDB[2]= sizeof(start_blk) > 4 ? (start_blk >> 56) & 0xff : 0;	//MSB
-+		c->Request.CDB[3]= sizeof(start_blk) > 4 ? (start_blk >> 48) & 0xff : 0;
-+		c->Request.CDB[4]= sizeof(start_blk) > 4 ? (start_blk >> 40) & 0xff : 0;
-+		c->Request.CDB[5]= sizeof(start_blk) > 4 ? (start_blk >> 32) & 0xff : 0;
- 		c->Request.CDB[6]= (start_blk >> 24) & 0xff;
- 		c->Request.CDB[7]= (start_blk >> 16) & 0xff;
- 		c->Request.CDB[8]= (start_blk >>  8) & 0xff;
+System: linux-2.6.21rc3
 
-This is not the first time we've hit this problem and presumably it won't
-be the last time.
+3 53c1030
 
-Could we do something like
+2 times 53c1030 PCI-X Fusion-MPT Dual Ultra320 SCSI
+        version: 08
 
-#if (BITS_PER_LONG > 32) || defined(CONFIG_LBD)
-#define sector_upper_32(sector) ((sector) >> 32)
-#else
-#define sector_upper_32(sector) (0)
-#endif
+1 time version: 07
 
-and then cciss can do
+After adding another disk array I'm getting some
 
--	c->Request.CDB[2]= start_blk >> 56;
-+	c->Request.CDB[2]= sector_upper_32(start_blk) >> 24;
+kernel: mptbase: ioc1: LogInfo(0x11040000): F/W: SYNC Offset Error
+        mptbase: ioc4: LogInfo(0x11040000): F/W: SYNC Offset Error
 
-which will do the right thing.
+(both are the new disk cage)
+
+But the system seems to be working as expected (performance o.k.)
+
+What could be the reason of that? Should I be afraid?
+
+                               Gerhard Schneider
+--=20
+Gerhard Schneider
+Institute of Lightweight Design and          e-Mail:gs@ilsb.tuwien.ac.at
+Structural Biomechanics (E317)                 Tel.:   +43 1 58801 31716
+Vienna University of Technology / Austria      Fax:    +43 1 58801 31799
+A-1040 Wien, Gusshausstrasse 27-29     http://www.ilsb.tuwien.ac.at/~gs/
 
 
-- I think it's safer as a macro - if we make it an inline then the
-  compiler might still try to evaluate the argument and will still warn
+--------------enig75CAEEBF1FA76A710C893094
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
 
-- we could do something like
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.2.2 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
 
-  static inline sector_t sector_shifted_right_by(sector_t s, int distance)
-  {
-	<fancy code goes here>
-  }
+iD8DBQFGKHJQE6e53f4wQG4RAqHeAKCqcQz8awEf1pvMRzisQKEgiqBZCwCdEWhI
+7bFQX6f0XO/z/INN9PcTrK4=
+=Nm6I
+-----END PGP SIGNATURE-----
 
-  But I think that won't be as generally useful as the very basic
-  sector_upper_32().
-
-- sector_upper_32() isn't a vey nice name, but it has clarity-of-purpose..
+--------------enig75CAEEBF1FA76A710C893094--
