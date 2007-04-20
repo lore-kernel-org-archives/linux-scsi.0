@@ -1,46 +1,133 @@
-From: =?iso-8859-1?q?Ren=E9_Rebe?= <rene@exactcode.de>
-Subject: Re: InitIO SCSI: Volunteers required
-Date: Fri, 20 Apr 2007 19:23:16 +0200
-Message-ID: <200704201923.16996.rene@exactcode.de>
-References: <20070420103849.7358f1f1@the-village.bc.nu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] cciss: Fix warnings during compilation under
+ 32bitenvironment
+Date: Fri, 20 Apr 2007 11:43:37 -0700
+Message-ID: <20070420114337.12a67141.akpm@linux-foundation.org>
+References: <6.0.0.20.2.20070418160231.043f23c8@172.19.0.2>
+	<226E1C65E4F6164E8EA5FD3CC913AE8CF461DE@G3W0639.americas.hpqcorp.net>
+	<1176995934.31764.7.camel@mulgrave.il.steeleye.com>
+	<226E1C65E4F6164E8EA5FD3CC913AE8CF462EE@G3W0639.americas.hpqcorp.net>
+	<1176999730.31764.15.camel@mulgrave.il.steeleye.com>
+	<558F4D473FD7FE419B019232BF2D37B401167D74@G3W0634.americas.hpqcorp.net>
+	<20070419222028.d33c7f86.akpm@linux-foundation.org>
+	<1177074641.3718.5.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx02.qsc.de ([213.148.130.14]:34803 "EHLO mx02.qsc.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1767165AbXDTRr6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Apr 2007 13:47:58 -0400
-In-Reply-To: <20070420103849.7358f1f1@the-village.bc.nu>
-Content-Disposition: inline
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:41354 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1767182AbXDTSnw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Apr 2007 14:43:52 -0400
+In-Reply-To: <1177074641.3718.5.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Cameron, Steve" <Steve.Cameron@hp.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Friday 20 April 2007 11:38:49 Alan Cox wrote:
-> I'm looking for some testers for a revamp of the initio driver. No re=
-al
-> code changes other than to hopefully stop it exploding on load on 64b=
-it,
-> but a major reorganisation, commenting and "de-windowsification" so t=
-he
-> code is actually readable and I can do the pci_find_device to
-> pci_get_device transitions.
+On Fri, 20 Apr 2007 09:10:41 -0400
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-I once had  such a card flying around, feel free to attach it to me
-and I can see if I find the card in some box over the weekend :-)
+> On Thu, 2007-04-19 at 22:20 -0700, Andrew Morton wrote:
+> > On Thu, 19 Apr 2007 16:27:26 -0000 "Cameron, Steve" <Steve.Cameron@hp.com> wrote:
+> > > 
+> > > Something like 
+> > > 
+> > > if (sizeof(blah) > 4) {
+> > >    do all the assignments with shifts
+> > > }
+> > > 
+> > > might be slighly better since the CDB is already zeroed
+> > > by cmd_alloc() and doesn't need to be zeroed a 2nd time.
+> > > 
+> > > -- steve
+> > > 
+> > > -----Original Message-----
+> > > From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
+> > > Sent: Thu 4/19/2007 11:22 AM
+> > > To: Miller, Mike (OS Dev)
+> > > Cc: Hisashi Hifumi; akpm@linux-foundation.org; jens.axboe@oracle.com; linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; Cameron, Steve
+> > > Subject: RE: [PATCH] cciss: Fix warnings during compilation under 32bitenvironment
+> > >  
+> > > On Thu, 2007-04-19 at 16:12 +0000, Miller, Mike (OS Dev) wrote:
+> > > > > > Nak. You still haven't told where you saw these warnings. What 
+> > > > > > compiler are you using? I do not see these in my 32-bit environment.
+> > > > > 
+> > > > > I think it's seen with CONFIG_LBD=n on 32 bits
+> > > > > 
+> > > > > In that configuration, sector_t is a u32 (it's u64 even on 32 
+> > > > > bits with CONFIG_LBD=y).  The proposed code change is a 
+> > > > > simple cut and paste from the sd driver.
+> > > > 
+> > > > Isn't there a better way than testing each one?
+> > > 
+> > > It's not such a bad option.  The sizeof() test is compile time
+> > > determinable, so the compiler simply zeros the fields in the
+> > > CONFIG_LBD=n case and does the shift for CONFIG_LBD=y.  It certainly
+> > > never compiles to four inline condition checks.
+> > > 
+> > 
+> > Boy you guys make a mess of a nice email trail :(
+> > 
+> > 
+> > --- linux-2.6.21-rc7.org/drivers/block/cciss.c	2007-04-17 16:36:02.000000000 +0900
+> > +++ linux-2.6.21-rc7/drivers/block/cciss.c	2007-04-17 16:25:53.000000000 +0900
+> > @@ -2552,10 +2552,10 @@ static void do_cciss_request(request_que
+> >  	} else {
+> >  		c->Request.CDBLen = 16;
+> >  		c->Request.CDB[1]= 0;
+> > -		c->Request.CDB[2]= (start_blk >> 56) & 0xff;	//MSB
+> > -		c->Request.CDB[3]= (start_blk >> 48) & 0xff;
+> > -		c->Request.CDB[4]= (start_blk >> 40) & 0xff;
+> > -		c->Request.CDB[5]= (start_blk >> 32) & 0xff;
+> > +		c->Request.CDB[2]= sizeof(start_blk) > 4 ? (start_blk >> 56) & 0xff : 0;	//MSB
+> > +		c->Request.CDB[3]= sizeof(start_blk) > 4 ? (start_blk >> 48) & 0xff : 0;
+> > +		c->Request.CDB[4]= sizeof(start_blk) > 4 ? (start_blk >> 40) & 0xff : 0;
+> > +		c->Request.CDB[5]= sizeof(start_blk) > 4 ? (start_blk >> 32) & 0xff : 0;
+> >  		c->Request.CDB[6]= (start_blk >> 24) & 0xff;
+> >  		c->Request.CDB[7]= (start_blk >> 16) & 0xff;
+> >  		c->Request.CDB[8]= (start_blk >>  8) & 0xff;
+> > 
+> > This is not the first time we've hit this problem and presumably it won't
+> > be the last time.
+> > 
+> > Could we do something like
+> > 
+> > #if (BITS_PER_LONG > 32) || defined(CONFIG_LBD)
+> > #define sector_upper_32(sector) ((sector) >> 32)
+> > #else
+> > #define sector_upper_32(sector) (0)
+> > #endif
+> > 
+> > and then cciss can do
+> > 
+> > -	c->Request.CDB[2]= start_blk >> 56;
+> > +	c->Request.CDB[2]= sector_upper_32(start_blk) >> 24;
+> > 
+> > which will do the right thing.
+> 
+> Sure, we could do that.  The slight problem is that we don't have
+> general agreement in the kernel how to handle sector_t.  So, the only
+> consumer in scsi, sd, does the sizeof(block) ? thing.  If you look in
+> libata you'll see that it unconditionally uses a u64 for picking up the
+> value of sector_t so the shift is never invalid ... if we're going to
+> start making macros for handling this, we probably need to ask the
+> janitors to fix all of our existing code to use them ... or we could
+> just let sleeping dogs lie ..
 
-Yours,
+Let's decide how we _should_ do it, implement that, then teach cciss about
+it, then try to ensure that new code uses the approved interfaces.  Over
+time, people may (or may not) migrate existing code over to the new
+interfaces.
 
---=20
-  Ren=E9 Rebe - ExactCODE GmbH - Europe, Germany, Berlin
-  Gesch=E4ftsf=FChrer: Susanne Klaus, Ren=E9 Rebe
-  Sitz: Berlin, Amtsgericht Charlottenburg HRB 105 123 B
-  USt-IdNr.: DE251602478
-  http://exactcode.de | http://t2-project.org | http://rene.rebe.name
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+They may also merge new code which uses open-coded hand-rolled stuff, too :(
+
+> Is there even a valid use for CONFIG_LBD=n anymore, anyway?
+
+Lots and lots and lots of systems don't have any disks larger than 2TB.
+
+CONFIG_LBD=y gives us an additional 3kb of instructions on i386
+allnoconfig.  Other architectures might do less well.  It's not a huge
+difference, but that's the way in which creeping bloatiness happens.
+
