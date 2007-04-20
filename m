@@ -1,116 +1,109 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Fri, 20 Apr 2007 15:47:20 -0500
-Message-ID: <20070420204720.GM31947@austin.ibm.com>
-References: <20070420204114.GL31947@austin.ibm.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH] cciss: Fix warnings during compilation under
+ 32bitenvironment
+Date: Fri, 20 Apr 2007 14:12:18 -0700
+Message-ID: <20070420141218.a0222472.akpm@linux-foundation.org>
+References: <6.0.0.20.2.20070418160231.043f23c8@172.19.0.2>
+	<226E1C65E4F6164E8EA5FD3CC913AE8CF461DE@G3W0639.americas.hpqcorp.net>
+	<1176995934.31764.7.camel@mulgrave.il.steeleye.com>
+	<226E1C65E4F6164E8EA5FD3CC913AE8CF462EE@G3W0639.americas.hpqcorp.net>
+	<1176999730.31764.15.camel@mulgrave.il.steeleye.com>
+	<558F4D473FD7FE419B019232BF2D37B401167D74@G3W0634.americas.hpqcorp.net>
+	<20070419222028.d33c7f86.akpm@linux-foundation.org>
+	<1177074641.3718.5.camel@mulgrave.il.steeleye.com>
+	<20070420114337.12a67141.akpm@linux-foundation.org>
+	<1177095007.3718.43.camel@mulgrave.il.steeleye.com>
+	<20070420123041.94aac1e1.akpm@linux-foundation.org>
+	<1177100459.3718.45.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:47757 "EHLO e3.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754502AbXDTUr1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 20 Apr 2007 16:47:27 -0400
-Content-Disposition: inline
-In-Reply-To: <20070420204114.GL31947@austin.ibm.com>
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:58509 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754496AbXDTVM3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Apr 2007 17:12:29 -0400
+In-Reply-To: <1177100459.3718.45.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Cameron, Steve" <Steve.Cameron@hp.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+
+On Fri, 20 Apr 2007 16:20:59 -0400
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+
+> On Fri, 2007-04-20 at 12:30 -0700, Andrew Morton wrote:
+> > On Fri, 20 Apr 2007 14:50:06 -0400
+> > James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> > 
+> > > > CONFIG_LBD=y gives us an additional 3kb of instructions on i386
+> > > > allnoconfig.  Other architectures might do less well.  It's not a huge
+> > > > difference, but that's the way in which creeping bloatiness happens.
+> > > 
+> > > OK, sure, but if we really care about this saving, then unconditionally
+> > > casting to u64 is therefore wrong as well ... this is starting to open
+> > > quite a large can of worms ...
+> > > 
+> > > For the record, if we have to do this, I fancy sector_upper_32() ... we
+> > > should already have some similar accessor for dma_addr_t as well.
+> > 
+> > hm.  How about this?
+> > 
+> > --- a/include/linux/kernel.h~upper-32-bits
+> > +++ a/include/linux/kernel.h
+> > @@ -40,6 +40,17 @@ extern const char linux_proc_banner[];
+> >  #define DIV_ROUND_UP(n,d) (((n) + (d) - 1) / (d))
+> >  #define roundup(x, y) ((((x) + ((y) - 1)) / (y)) * (y))
+> >  
+> > +/**
+> > + * upper_32_bits - return bits 32-63 of a number
+> > + * @n: the number we're accessing
+> > + *
+> > + * A basic shift-right of a 64- or 32-bit quantity.  Use this to suppress
+> > + * the "right shift count >= width of type" warning when that quantity is
+> > + * 32-bits.
+> > + */
+> > +#define upper_32_bits(n) (((u64)(n)) >> 32)
+> 
+> Won't this have the unwanted side effect of promoting everything in a
+> calculation to long long on 32 bit platforms, even if n was only 32
+> bits?
+
+bummer.
+
+> > +
+> > +
+> >  #define	KERN_EMERG	"<0>"	/* system is unusable			*/
+> >  #define	KERN_ALERT	"<1>"	/* action must be taken immediately	*/
+> >  #define	KERN_CRIT	"<2>"	/* critical conditions			*/
+> > _
+> > 
+> > It seems to generate the desired code.  I avoided Alan's ((n >> 31) >> 1)
+> > trick because it'll generate peculiar results with signed 64-bit
+> > quantities.
+> 
+> I've seen the trick done similarly with ((n >> 16) >> 16) which
+> shouldn't have the issue.
+
+That works if we know the caller is treating the return value as 32 bits,
+but we don't know that.
+
+If we have
+
+#define upper_32_bits(x)  ((x >> 16) >> 16)
+
+then
+
+	upper_32_bits(0x8888777766665555)
+
+will return 0x88887777 if it's treated as 32-bits, but it'll return
+0xffffffff88887777 if the caller is using 64-bits.
+
+I spose
+
+#define upper_32_bits(x)  ((u32)((x >> 16) >> 16))
+
+will do the trick.
 
 
-Implement the so-called "first failure data capture" (FFDC) for the
-symbios PCI error recovery.  After a PCI error event is reported,
-the driver requests that MMIO be enabled. Once enabled, it 
-then reads and dumps assorted status registers, and concludes
-by requesting the usual reset sequence.
-
-(includes a whitespace fix for bad indentation).
-
-Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
-
-----
- drivers/scsi/sym53c8xx_2/sym_glue.c |   15 +++++++++++++++
- drivers/scsi/sym53c8xx_2/sym_glue.h |    1 +
- drivers/scsi/sym53c8xx_2/sym_hipd.c |   18 ++++++++++++++----
- 3 files changed, 30 insertions(+), 4 deletions(-)
-
-Index: linux-2.6.21-rc4-git4/drivers/scsi/sym53c8xx_2/sym_glue.c
-===================================================================
---- linux-2.6.21-rc4-git4.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-04-20 12:52:01.000000000 -0500
-+++ linux-2.6.21-rc4-git4/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-04-20 15:25:35.000000000 -0500
-@@ -1987,6 +1987,20 @@ static pci_ers_result_t sym2_io_error_de
- 	disable_irq(pdev->irq);
- 	pci_disable_device(pdev);
- 
-+	/* Request that MMIO be enabled, so register dump can be taken. */
-+	return PCI_ERS_RESULT_CAN_RECOVER;
-+}
-+
-+/**
-+ * sym2_io_slot_dump -- Enable MMIO and dump debug registers
-+ * @pdev: pointer to PCI device
-+ */
-+static pci_ers_result_t sym2_io_slot_dump (struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	sym_dump_registers(np);
-+
- 	/* Request a slot reset. */
- 	return PCI_ERS_RESULT_NEED_RESET;
- }
-@@ -2241,6 +2255,7 @@ MODULE_DEVICE_TABLE(pci, sym2_id_table);
- 
- static struct pci_error_handlers sym2_err_handler = {
- 	.error_detected = sym2_io_error_detected,
-+	.mmio_enabled = sym2_io_slot_dump,
- 	.slot_reset = sym2_io_slot_reset,
- 	.resume = sym2_io_resume,
- };
-Index: linux-2.6.21-rc4-git4/drivers/scsi/sym53c8xx_2/sym_glue.h
-===================================================================
---- linux-2.6.21-rc4-git4.orig/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-04-20 12:15:07.000000000 -0500
-+++ linux-2.6.21-rc4-git4/drivers/scsi/sym53c8xx_2/sym_glue.h	2007-04-20 15:21:31.000000000 -0500
-@@ -270,5 +270,6 @@ void sym_xpt_async_bus_reset(struct sym_
- void sym_xpt_async_sent_bdr(struct sym_hcb *np, int target);
- int  sym_setup_data_and_start (struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- void sym_log_bus_error(struct sym_hcb *np);
-+void sym_dump_registers(struct sym_hcb *np);
- 
- #endif /* SYM_GLUE_H */
-Index: linux-2.6.21-rc4-git4/drivers/scsi/sym53c8xx_2/sym_hipd.c
-===================================================================
---- linux-2.6.21-rc4-git4.orig/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-04-20 12:18:59.000000000 -0500
-+++ linux-2.6.21-rc4-git4/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-04-20 15:18:01.000000000 -0500
-@@ -1180,10 +1180,10 @@ static void sym_log_hard_error(struct sy
- 			scr_to_cpu((int) *(u32 *)(script_base + script_ofs)));
- 	}
- 
--        printf ("%s: regdump:", sym_name(np));
--        for (i=0; i<24;i++)
--            printf (" %02x", (unsigned)INB_OFF(np, i));
--        printf (".\n");
-+	printf ("%s: regdump:", sym_name(np));
-+	for (i=0; i<24;i++)
-+	    printf (" %02x", (unsigned)INB_OFF(np, i));
-+	printf (".\n");
- 
- 	/*
- 	 *  PCI BUS error.
-@@ -1192,6 +1192,16 @@ static void sym_log_hard_error(struct sy
- 		sym_log_bus_error(np);
- }
- 
-+void sym_dump_registers(struct sym_hcb *np)
-+{
-+	u_short sist;
-+	u_char dstat;
-+
-+	sist = INW(np, nc_sist);
-+	dstat = INB(np, nc_dstat);
-+	sym_log_hard_error(np, sist, dstat);
-+}
-+
- static struct sym_chip sym_dev_table[] = {
-  {PCI_DEVICE_ID_NCR_53C810, 0x0f, "810", 4, 8, 4, 64,
-  FE_ERL}
