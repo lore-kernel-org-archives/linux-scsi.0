@@ -1,43 +1,40 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] utilities: add helper functions for safe 64-bit integer
- operations as 32-bit halves
-Date: Sun, 22 Apr 2007 13:38:23 +0100
-Message-ID: <20070422133823.4bd3eaed@the-village.bc.nu>
-References: <20070420114337.12a67141.akpm@linux-foundation.org>
-	<1177095007.3718.43.camel@mulgrave.il.steeleye.com>
-	<20070420123041.94aac1e1.akpm@linux-foundation.org>
-	<1177100459.3718.45.camel@mulgrave.il.steeleye.com>
-	<20070420141218.a0222472.akpm@linux-foundation.org>
-	<alpine.DEB.0.98.0704201732240.11655@sigma.j-a-k-j.com>
-	<alpine.DEB.0.98.0704202040150.16687@sigma.j-a-k-j.com>
-	<20070421030825.bed0b8a9.akpm@linux-foundation.org>
-	<20070421220147.7144113e@the-village.bc.nu>
-	<20070421140622.dc197b38.akpm@linux-foundation.org>
-	<20070422091816.GC1558@infradead.org>
+From: Srdjan Todorovic <todorovic.s@googlemail.com>
+Subject: Re: InitIO SCSI: Volunteers required
+Date: Sun, 22 Apr 2007 14:20:26 +0100 (BST)
+Message-ID: <Pine.LNX.4.64.0704221416440.5217@thor.lan>
+References: <20070420103849.7358f1f1@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57691 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1030649AbXDVMgp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2007 08:36:45 -0400
-In-Reply-To: <20070422091816.GC1558@infradead.org>
+Received: from ug-out-1314.google.com ([66.249.92.169]:38291 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030848AbXDVNMI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2007 09:12:08 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so1242169uga
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Apr 2007 06:12:07 -0700 (PDT)
+In-Reply-To: <20070420103849.7358f1f1@the-village.bc.nu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "John Anthony Kazos Jr." <jakj@j-a-k-j.com>, James Bottomley <James.Bottomley@SteelEye.com>, "Cameron, Steve" <Steve.Cameron@hp.com>, "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>, Hisashi Hifumi <hifumi.hisashi@oss.ntt.co.jp>, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, trivial@kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> > > over-engineering. Call it sector_upper32() do it the simple way and stop
-> > > trying to solve a problem we don't have
-> > 
-> > James said we have the same problem with dma_addr_t.
+On Fri, 20 Apr 2007, Alan Cox wrote:
+
+> I'm looking for some testers for a revamp of the initio driver. No real
+> code changes other than to hopefully stop it exploding on load on 64bit,
+> but a major reorganisation, commenting and "de-windowsification" so the
+> code is actually readable and I can do the pci_find_device to
+> pci_get_device transitions.
 > 
-> Yes.  It's in fact the far more common case and we have a bread of
-> macros dealing with the issue in various drivers.
+> Alan
 
-So we still only need it for unsigned 32/64bit values ?
+I have such a card in my box right now, and would definitely be happy to
+test any changes.
 
+I also have a couple of patches for the driver, but need to regenerate
+the diffs and test them. Hopefully I can do that sometime this coming
+week, and I'll be sure to CC you when I post them to linux-scsi ML.
 
+Thanks
 
-Alan
+Srdjan Todorovic
