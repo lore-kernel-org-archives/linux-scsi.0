@@ -1,47 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: Major qla2xxx regression on sparc64
-Date: Sun, 22 Apr 2007 15:31:21 +0100
-Message-ID: <20070422143121.GA10947@infradead.org>
-References: <20070416.123743.07452378.davem@davemloft.net> <20070416200857.GH10822@andrew-vasquezs-computer.local> <20070418171346.GA16471@infradead.org> <20070418.131054.70219428.davem@davemloft.net>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: InitIO SCSI: Volunteers required
+Date: Sun, 22 Apr 2007 16:13:02 +0100
+Message-ID: <20070422161302.2a52b908@the-village.bc.nu>
+References: <20070420103849.7358f1f1@the-village.bc.nu>
+	<20070422141423.GA8928@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46203 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030922AbXDVOb0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2007 10:31:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20070418.131054.70219428.davem@davemloft.net>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49976 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1030937AbXDVPJd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Apr 2007 11:09:33 -0400
+In-Reply-To: <20070422141423.GA8928@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: hch@infradead.org, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com, ema@debian.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: rene@exactcode.de, todorovic.s@googlemail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Apr 18, 2007 at 01:10:54PM -0700, David Miller wrote:
-> From: Christoph Hellwig <hch@infradead.org>
-> Date: Wed, 18 Apr 2007 18:13:46 +0100
+> Once again a pci_get_device conversation isn't all that helpfull at all.
+> fortunately in this case I've done a patch to convert this driver to
+> proper pci probing in 2004, and I've attached the forward-ported version
+> below now that we've actually found some testers that weren't locatable
+> back then..
 > 
-> > Note that I expect Sun put in the invalid ROM intentionally, as we have
-> > similar cases with other cards that have totally messed up ROMs in
-> > Sun-branded versions.  Personally I think that's an utterly bad decision
-> > from Sun's side, but we'll have to live with this.
-> 
-> The way configuration paramters are provided on Sun systems is via
-> openfirmware properties, this is how they do everything and that is
-> why they never setup the NVRAMs on various chips.
-> 
-> This happens on PowerPC too.  One of many examples is determining the
-> clock parameters of the ATI Radeon graphics card, it's provided as an
-> openfirmware property not in some config area in the BIOS.
-> 
-> We can either be anti-social and _demand_ that these systems get their
-> NVRAMs fixed, which in reality will never happen and is totally
-> unreasonable, or we can say ok this is how we get the information we
-> need on these platforms we'll look for it there.
+> This doesn't change much outside the initialization and irq code, so
+> any additional de-crappyfication will hopefully apply ontop.
 
-Personally I think it is reasonable to expect manufacturer-provided
-config space to always be in the same place, regardless what kind
-of executable rom is there.  Then again most vendors seem to think
-it's unresonable, and even if it wasn't we'll have to make sure our
-drivers work with whatever it out there - so this discussion is
-rather moot.
+Can this wait Christoph as it'll clash horribly with all the work I've
+done. Once the original changes are checked out by folks who have
+volunteered to do that I'll see these get merged in as well.
+
+Alan
+
