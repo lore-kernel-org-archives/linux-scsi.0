@@ -1,88 +1,260 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: AACRAID fails to initialize after an kexec operation
-Date: Mon, 23 Apr 2007 13:19:13 +0530
-Message-ID: <20070423074913.GC14664@in.ibm.com>
-Reply-To: vgoyal@in.ibm.com
+From: Andi Kleen <ak@suse.de>
+Subject: Fwd: [PATCH 23/28] Fix BusLogic to stop using check_region
+Date: Mon, 23 Apr 2007 12:35:34 +0200
+Message-ID: <200704231235.34341.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Multipart/Mixed;
+  boundary="Boundary-00=_2vILGwuH6AUvd93"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:35317 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S965663AbXDWHt7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Apr 2007 03:49:59 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3N7nugF023872
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Apr 2007 03:49:56 -0400
-Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3N7nkDP118674
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Apr 2007 01:49:56 -0600
-Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3N7nkXx010714
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Apr 2007 01:49:46 -0600
-Content-Disposition: inline
+Received: from mail.suse.de ([195.135.220.2]:54812 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161364AbXDWKvm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Apr 2007 06:51:42 -0400
+Received: from Relay2.suse.de (mail2.suse.de [195.135.221.8])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by mx1.suse.de (Postfix) with ESMTP id 3D3AB12498
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Apr 2007 12:51:41 +0200 (CEST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, aacraid@adaptec.com
-Cc: Kexec Mailing List <kexec@lists.infradead.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+To: linux-scsi@vger.kernel.org
 
-Hi,
-
-I am trying to kexec into 2.6.21-rc6-mm1 kernel on an x86_64 machine and
-aacraid panics in the second kernel. Following is the panic message.
-
-Any idea what's going on? Please let me know if more details are required.
-
-Adaptec aacraid driver (1.1-5[2437]-mh4)
-ACPI: PCI Interrupt 0000:01:02.0[A] -> GSI 25 (level, low) -> IRQ 25
-Unable to handle kernel NULL pointer dereference at 0000000000000000 RIP:
- [<0000000000000000>]
-PGD 0
-Oops: 0000 [1] SMP
-last sysfs file:
-CPU 4
-Modules linked in:
-Pid: 1, comm: swapper Not tainted 2.6.21-rc6-mm1 #2
-RIP: 0010:[<0000000000000000>]  [<0000000000000000>]
-RSP: 0018:ffff810100c9fc78  EFLAGS: 00010246
-RAX: ffff810100c9fcc4 RBX: 0000000000000000 RCX: 0000000000000000
-RDX: 0000000000000000 RSI: 0000000000001001 RDI: ffff810100e02d30
-RBP: ffff810100e02d30 R08: 0000000000000000 R09: 0000000000000000
-R10: 0000000000000000 R11: 0000000000000002 R12: ffff810100e02800
-R13: 0000000000000000 R14: ffffffff80690ee1 R15: 000000000000002d
-FS:  0000000000000000(0000) GS:ffff810100cf6440(0000) knlGS:0000000000000000
-CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-CR2: 0000000000000000 CR3: 0000000000201000 CR4: 00000000000006e0
-Process swapper (pid: 1, threadinfo ffff810100c9e000, task ffff810100c9d450)
-Stack:  ffffffff8045952f 0000000000000000 ffffffff00000000 ffff810100c9fcc4
- 0000000000000000 0000000000000000 0000000000000000 0000000000000000
- ffffffff80690ee1 000000000000002d ffff810100e02d30 0000000000000001
-Call Trace:
-Inexact backtrace:
- [<ffffffff8045952f>] aac_rx_restart_adapter+0x7e/0x169
- [<ffffffff80459a0a>] _aac_rx_init+0x70/0x2f6
- [<ffffffff80280ee4>] cache_alloc_refill+0xdb/0x1db
- [<ffffffff8045317f>] aac_probe_one+0x1a9/0x462
- [<ffffffff8035f3a0>] pci_device_probe+0xd1/0x138
- [<ffffffff803b3251>] driver_probe_device+0xf7/0x174
- [<ffffffff803b33e4>] __driver_attach+0x6f/0xae
- [<ffffffff803b3375>] __driver_attach+0x0/0xae
- [<ffffffff803b3375>] __driver_attach+0x0/0xae
- [<ffffffff803b261e>] bus_for_each_dev+0x43/0x6e
- [<ffffffff803b2993>] bus_add_driver+0x78/0x19a
- [<ffffffff8035f578>] __pci_register_driver+0x58/0x8d
- [<ffffffff8084a909>] aac_init+0x35/0x70
- [<ffffffff8082d8ad>] kernel_init+0x167/0x2d1
- [<ffffffff8020a998>] child_rip+0xa/0x12
- [<ffffffff8036bd60>] acpi_ds_init_one_object+0x0/0x7c
- [<ffffffff8082d746>] kernel_init+0x0/0x2d1
- [<ffffffff8020a98e>] child_rip+0x0/0x12
+--Boundary-00=_2vILGwuH6AUvd93
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
 
-Code:  Bad RIP value.
-RIP  [<0000000000000000>]
- RSP <ffff810100c9fc78>
-CR2: 0000000000000000
-Kernel panic - not syncing: Attempted to kill init!
+Something for the SCSI tree
 
-Thanks
-Vivek
+-Andi
+
+--Boundary-00=_2vILGwuH6AUvd93
+Content-Type: message/rfc822;
+  name="forwarded message"
+Content-Transfer-Encoding: 7bit
+Content-Description: Jeremy Fitzhardinge <jeremy@goop.org>: [PATCH 23/28] Fix BusLogic to stop using check_region
+Content-Disposition: inline
+
+Return-Path: <jeremy@goop.org>
+Received: from imap.suse.de ([unix socket])
+	by imap-dhs (Cyrus v2.1.16) with LMTP; Sat, 14 Apr 2007 23:20:25 +0200
+X-Sieve: CMU Sieve 2.2
+Received: from Relay2.suse.de (relay2.suse.de [149.44.160.89])
+	(using TLSv1 with cipher EDH-RSA-DES-CBC3-SHA (168/168 bits))
+	(Client CN "relay.suse.de", Issuer "CAcert Class 3 Root" (verified OK))
+	by imap.suse.de (Postfix) with ESMTP id 36E14CF4957
+	for <ak@imap-dhs.suse.de>; Sat, 14 Apr 2007 23:20:25 +0200 (CEST)
+Received: by Relay2.suse.de (Postfix)
+	id 1D563C77F; Sat, 14 Apr 2007 23:20:25 +0200 (CEST)
+Received: from Relay2.suse.de (localhost [127.0.0.1])
+	by Relay2.suse.de (Postfix) with ESMTP id 10E06C74D
+	for <ak@suse.de>; Sat, 14 Apr 2007 23:20:25 +0200 (CEST)
+Received: from Relay2.suse.de ([127.0.0.1])
+ by Relay2.suse.de (Relay2 [127.0.0.1]) (amavisd-new, port 10026) with ESMTP
+ id 27487-14 for <ak@suse.de>; Sat, 14 Apr 2007 23:20:24 +0200 (CEST)
+Received: from mx1.suse.de (mail.suse.de [195.135.220.2])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(No client certificate requested)
+	by Relay2.suse.de (Postfix) with ESMTP id 2B0F5C798
+	for <ak@suse.de>; Sat, 14 Apr 2007 23:20:24 +0200 (CEST)
+Received: from mail.goop.org (gw.goop.org [64.81.55.164])
+	by mx1.suse.de (Postfix) with ESMTP id 35E45122D5
+	for <ak@suse.de>; Sat, 14 Apr 2007 23:20:21 +0200 (CEST)
+Received: by mail.goop.org (Postfix, from userid 500)
+	id 84B8F6383FA; Sat, 14 Apr 2007 14:19:39 -0700 (PDT)
+Message-Id: <20070414204925.105615645@goop.org>
+References: <20070414204154.871250608@goop.org>
+User-Agent: quilt/0.46-1
+Date: Sat, 14 Apr 2007 13:42:17 -0700
+From: Jeremy Fitzhardinge <jeremy@goop.org>
+To: Andi Kleen <ak@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>,
+ virtualization@lists.osdl.org,
+ lkml <linux-kernel@vger.kernel.org>,
+ Zachary Amsden <zach@vmware.com>,
+ "Lenoard N. Zubkoff" <lnz@dandelion.com>,
+ Michael Clay <claym@osuosl.org>
+Subject: [PATCH 23/28] Fix BusLogic to stop using check_region
+Content-Disposition: inline; filename=buslogic-check-range-fixes.patch
+X-Virus-Scanned: by amavisd-new at Relay2.suse.de
+X-Spam-Status: No, hits=0.0 tagged_above=-20.0 required=5.0 tests=BAYES_50
+X-Spam-Level: 
+X-Length: 10672
+X-UID: 104148
+
+I got so sick of seing the check_region warnings from BusLogic.c I actually
+fixed it properly.  Never use check region, reserve it before the probe
+with request region instead and check the error result; free region if
+setup fails.  Should be functionally identical to the original except for
+fixing the potential race.
+
+From: Zachary Amsden <zach@vmware.com>
+Signed-off-by: Zachary Amsden <zach@vmware.com>
+CC: Lenoard N. Zubkoff <lnz@dandelion.com>
+CC: Michael Clay <claym@osuosl.org>
+
+---
+ drivers/scsi/BusLogic.c |   73 ++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 48 insertions(+), 25 deletions(-)
+
+===================================================================
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -579,17 +579,17 @@ static void __init BusLogic_InitializePr
+ 	/*
+ 	   Append the list of standard BusLogic MultiMaster ISA I/O Addresses.
+ 	 */
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe330 : check_region(0x330, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe330)
+ 		BusLogic_AppendProbeAddressISA(0x330);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe334 : check_region(0x334, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe334)
+ 		BusLogic_AppendProbeAddressISA(0x334);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe230 : check_region(0x230, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe230)
+ 		BusLogic_AppendProbeAddressISA(0x230);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe234 : check_region(0x234, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe234)
+ 		BusLogic_AppendProbeAddressISA(0x234);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe130 : check_region(0x130, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe130)
+ 		BusLogic_AppendProbeAddressISA(0x130);
+-	if (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe134 : check_region(0x134, BusLogic_MultiMasterAddressCount) == 0)
++	if (!BusLogic_ProbeOptions.LimitedProbeISA || BusLogic_ProbeOptions.Probe134)
+ 		BusLogic_AppendProbeAddressISA(0x134);
+ }
+ 
+@@ -795,7 +795,9 @@ static int __init BusLogic_InitializeMul
+ 	   host adapters are probed.
+ 	 */
+ 	if (!BusLogic_ProbeOptions.NoProbeISA)
+-		if (PrimaryProbeInfo->IO_Address == 0 && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe330 : check_region(0x330, BusLogic_MultiMasterAddressCount) == 0)) {
++		if (PrimaryProbeInfo->IO_Address == 0 &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe330)) {
+ 			PrimaryProbeInfo->HostAdapterType = BusLogic_MultiMaster;
+ 			PrimaryProbeInfo->HostAdapterBusType = BusLogic_ISA_Bus;
+ 			PrimaryProbeInfo->IO_Address = 0x330;
+@@ -805,15 +807,25 @@ static int __init BusLogic_InitializeMul
+ 	   omitting the Primary I/O Address which has already been handled.
+ 	 */
+ 	if (!BusLogic_ProbeOptions.NoProbeISA) {
+-		if (!StandardAddressSeen[1] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe334 : check_region(0x334, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[1] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe334))
+ 			BusLogic_AppendProbeAddressISA(0x334);
+-		if (!StandardAddressSeen[2] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe230 : check_region(0x230, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[2] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe230))
+ 			BusLogic_AppendProbeAddressISA(0x230);
+-		if (!StandardAddressSeen[3] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe234 : check_region(0x234, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[3] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe234))
+ 			BusLogic_AppendProbeAddressISA(0x234);
+-		if (!StandardAddressSeen[4] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe130 : check_region(0x130, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[4] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe130))
+ 			BusLogic_AppendProbeAddressISA(0x130);
+-		if (!StandardAddressSeen[5] && (BusLogic_ProbeOptions.LimitedProbeISA ? BusLogic_ProbeOptions.Probe134 : check_region(0x134, BusLogic_MultiMasterAddressCount) == 0))
++		if (!StandardAddressSeen[5] &&
++				(!BusLogic_ProbeOptions.LimitedProbeISA ||
++				 BusLogic_ProbeOptions.Probe134))
+ 			BusLogic_AppendProbeAddressISA(0x134);
+ 	}
+ 	/*
+@@ -2220,22 +2232,35 @@ static int __init BusLogic_init(void)
+ 		HostAdapter->PCI_Device = ProbeInfo->PCI_Device;
+ 		HostAdapter->IRQ_Channel = ProbeInfo->IRQ_Channel;
+ 		HostAdapter->AddressCount = BusLogic_HostAdapterAddressCount[HostAdapter->HostAdapterType];
++
++		/*
++		   Make sure region is free prior to probing.
++		 */
++		if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount,
++					"BusLogic"))
++			continue;
+ 		/*
+ 		   Probe the Host Adapter.  If unsuccessful, abort further initialization.
+ 		 */
+-		if (!BusLogic_ProbeHostAdapter(HostAdapter))
++		if (!BusLogic_ProbeHostAdapter(HostAdapter)) {
++			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
++		}
+ 		/*
+ 		   Hard Reset the Host Adapter.  If unsuccessful, abort further
+ 		   initialization.
+ 		 */
+-		if (!BusLogic_HardwareResetHostAdapter(HostAdapter, true))
++		if (!BusLogic_HardwareResetHostAdapter(HostAdapter, true)) {
++			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
++		}
+ 		/*
+ 		   Check the Host Adapter.  If unsuccessful, abort further initialization.
+ 		 */
+-		if (!BusLogic_CheckHostAdapter(HostAdapter))
++		if (!BusLogic_CheckHostAdapter(HostAdapter)) {
++			release_region(HostAdapter->IO_Address, HostAdapter->AddressCount);
+ 			continue;
++		}
+ 		/*
+ 		   Initialize the Driver Options field if provided.
+ 		 */
+@@ -2247,16 +2272,6 @@ static int __init BusLogic_init(void)
+ 		 */
+ 		BusLogic_AnnounceDriver(HostAdapter);
+ 		/*
+-		   Register usage of the I/O Address range.  From this point onward, any
+-		   failure will be assumed to be due to a problem with the Host Adapter,
+-		   rather than due to having mistakenly identified this port as belonging
+-		   to a BusLogic Host Adapter.  The I/O Address range will not be
+-		   released, thereby preventing it from being incorrectly identified as
+-		   any other type of Host Adapter.
+-		 */
+-		if (!request_region(HostAdapter->IO_Address, HostAdapter->AddressCount, "BusLogic"))
+-			continue;
+-		/*
+ 		   Register the SCSI Host structure.
+ 		 */
+ 
+@@ -2280,6 +2295,12 @@ static int __init BusLogic_init(void)
+ 		   Acquire the System Resources necessary to use the Host Adapter, then
+ 		   Create the Initial CCBs, Initialize the Host Adapter, and finally
+ 		   perform Target Device Inquiry.
++
++		   From this point onward, any failure will be assumed to be due to a
++		   problem with the Host Adapter, rather than due to having mistakenly
++		   identified this port as belonging to a BusLogic Host Adapter.  The
++		   I/O Address range will not be released, thereby preventing it from
++		   being incorrectly identified as any other type of Host Adapter.
+ 		 */
+ 		if (BusLogic_ReadHostAdapterConfiguration(HostAdapter) &&
+ 		    BusLogic_ReportHostAdapterConfiguration(HostAdapter) &&
+@@ -3598,6 +3619,7 @@ static void __exit BusLogic_exit(void)
+ 
+ __setup("BusLogic=", BusLogic_Setup);
+ 
++#ifdef MODULE
+ static struct pci_device_id BusLogic_pci_tbl[] __devinitdata = {
+ 	{ PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+@@ -3607,6 +3629,7 @@ static struct pci_device_id BusLogic_pci
+ 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
+ 	{ }
+ };
++#endif
+ MODULE_DEVICE_TABLE(pci, BusLogic_pci_tbl);
+ 
+ module_init(BusLogic_init);
+
+-- 
+
+
+--Boundary-00=_2vILGwuH6AUvd93--
