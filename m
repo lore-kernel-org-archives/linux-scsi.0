@@ -1,101 +1,108 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid: fails to initialize after a  kexec operation
-Date: Mon, 23 Apr 2007 13:20:32 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF0188AE58@otce2k301.adaptec.com>
-References: <20070423161203.GA2129@in.ibm.com>
+From: Josef Bacik <jwhiter@redhat.com>
+Subject: Re: [RFC][PATCH] fix for async scsi scan sysfs problem (resend)
+Date: Mon, 23 Apr 2007 14:13:19 -0400
+Message-ID: <20070423181318.GD22873@korben.rdu.redhat.com>
+References: <20070419132459.GB1481@korben.rdu.redhat.com> <1176991356.31764.3.camel@mulgrave.il.steeleye.com> <20070419150655.GC1481@korben.rdu.redhat.com> <20070421002345.673d9988.akpm@linux-foundation.org> <20070421135956.GA22873@korben.rdu.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:45590 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030817AbXDWRUf convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Apr 2007 13:20:35 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070423161203.GA2129@in.ibm.com>
+Received: from mx1.redhat.com ([66.187.233.31]:52204 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1161224AbXDWSMJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Apr 2007 14:12:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20070421135956.GA22873@korben.rdu.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vgoyal@in.ibm.com
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Kexec Mailing List <kexec@lists.infradead.org>, Judith Lebzelter <judith@linux-foundation.org>
+To: Josef Bacik <jwhiter@redhat.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-That is a failure to route the interrupts and is possibly an issue with
-the kernel and the hardware, and not the driver directly (since there is
-an expectation that request_irq will connect the interrupt to the
-interrupt service routine). Judith reported success in the past with
-this patch on her hardware, perhaps the motherboard on your system has
-some odd BIOS setup of the hardware that is giving acpi or the apic some
-headaches? Can you check out success or failure on other motherboards?
-Please try the suggestions from the driver (safe flags)?
+On Sat, Apr 21, 2007 at 09:59:56AM -0400, Josef Bacik wrote:
+> On Sat, Apr 21, 2007 at 12:23:45AM -0700, Andrew Morton wrote:
+> > On Thu, 19 Apr 2007 11:06:56 -0400 Josef Bacik <jwhiter@redhat.com> wrote:
+> > 
+> > > On Thu, Apr 19, 2007 at 10:02:36AM -0400, James Bottomley wrote:
+> > > > On Thu, 2007-04-19 at 09:25 -0400, Josef Bacik wrote:
+> > > > > Looking through everything I came to the conclusion that we don't really need
+> > > > > the scsi_sysfs_add_devices in scsi_finish_async_scan, which gets run everytime
+> > > > > we do a do_scan_async.  In doing the scanning, if we come upon anything we will
+> > > > > already be registering the device with sysfs so the scsi_sysfs_add_devices step
+> > > > > is kind of useless.
+> > > > 
+> > > > Unfortunately, it isn't.  The registration step while scanning is at the
+> > > > end of scsi_add_lun():
+> > > > 
+> > > > 
+> > > > 	if (!async && scsi_sysfs_add_sdev(sdev) != 0)
+> > > > 		return SCSI_SCAN_NO_RESPONSE;
+> > > > 
+> > > > 	return SCSI_SCAN_LUN_PRESENT;
+> > > > 
+> > > > The !async should mean that the addition *only* occurs for the non async
+> > > > scan case ... if you remove the post async scan add, we'll lose devices.
+> > > > 
 
-Sincerely -- Mark Salyzyn
+Ok I have a new patch that I've built and tested on both my UP and SMP machine
+and it appears to work fine.  I took the async check out of scsi_add_lun, I
+don't really see the point in waiting to do the sysfs registration stuff (if
+theres a reason I haven't been able to find it in the original submission of
+this functionality).  Please let me know if this is incorrect.  Thank you,
 
-> -----Original Message-----
-> From: Vivek Goyal [mailto:vgoyal@in.ibm.com] 
-> Sent: Monday, April 23, 2007 12:12 PM
-> To: Salyzyn, Mark
-> Cc: linux-scsi@vger.kernel.org; James Bottomley; Kexec 
-> Mailing List; Judith Lebzelter
-> Subject: Re: [PATCH] aacraid: fails to initialize after a 
-> kexec operation
-> 
-> 
-> On Mon, Apr 23, 2007 at 09:38:43AM -0400, Salyzyn, Mark wrote:
-> > Missing portion of the kexec changes to the aacraid driver. 
-> The platform
-> > functions were not initialized when the restart function is 
-> activated
-> > resulting in a panic when these platform functions are 
-> called. Please
-> > note that it is NOT a mistake that the disable interrupt 
-> handler is used
-> > as the initial value of the enable interrupt platform 
-> function, it will
-> > be set up correctly once the adapter is discovered and initialized.
-> > 
-> > Please note that aacraid_kexec_5.patch contains this fix, since an
-> > earlier aacraid_kexec patch was applied to the tree and 
-> appears to have
-> > propagated, this is meant to supersede the earlier patch 
-> and bring it up
-> > to date with aacraid_kexec_5.patch, but expected to break when the
-> > aacraid_kexec_5.patch propagates... James, can you sort out 
-> this mess
-> > (either by stopping aacraid_kexec_5.patch, or by letting 
-> this enclosed
-> > patch move with some level of priority)?
-> > 
-> > ObligatoryDisclaimer: Please accept my condolences 
-> regarding Outlook's
-> > handling of patches.
-> > 
-> > This attached patch is against current scsi-misc-2.6. Also 
-> expect this
-> > patch can be applied to 2.6.21-rc6-mm1
-> > 
-> > Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-> > 
-> > ---
-> > 
-> 
-> Thanks Mark,
-> 
-> I applied this patch but it still does not work. Now oops is gone but
-> I get following while aacraid is trying to initialize.
-> 
-> Adaptec aacraid driver (1.1-5[2437]-mh4)
-> ACPI: PCI Interrupt 0000:01:02.0[A] -> GSI 25 (level, low) -> IRQ 25
-> aacraid: aac_fib_send: first asynchronous command timed out.
-> Usually a result of a PCI interrupt routing problem;
-> update mother board BIOS or consider utilizing one of
-> the SAFE mode kernel options (acpi, apic etc)
-> aac_fib_free, XferState != 0, fibptr = 0xffff810104140000, 
-> XferState = 0x810ad
-> ACPI: PCI interrupt for device 0000:01:02.0 disabled
-> aacraid: probe of 0000:01:02.0 failed with error -110
-> 
-> 
-> Thanks
-> Vivek
-> 
-> 
+Josef
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 0949145..8af1e16 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -712,7 +712,7 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+  *     SCSI_SCAN_LUN_PRESENT: a new scsi_device was allocated and initialized
+  **/
+ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+-		int *bflags, int async)
++		int *bflags)
+ {
+ 	/*
+ 	 * XXX do not save the inquiry, since it can change underneath us,
+@@ -912,7 +912,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	 * register it and tell the rest of the kernel
+ 	 * about it.
+ 	 */
+-	if (!async && scsi_sysfs_add_sdev(sdev) != 0)
++	if (scsi_sysfs_add_sdev(sdev) != 0)
+ 		return SCSI_SCAN_NO_RESPONSE;
+ 
+ 	return SCSI_SCAN_LUN_PRESENT;
+@@ -1081,7 +1081,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
+ 		goto out_free_result;
+ 	}
+ 
+-	res = scsi_add_lun(sdev, result, &bflags, shost->async_scan);
++	res = scsi_add_lun(sdev, result, &bflags);
+ 	if (res == SCSI_SCAN_LUN_PRESENT) {
+ 		if (bflags & BLIST_KEY) {
+ 			sdev->lockable = 0;
+@@ -1661,15 +1661,6 @@ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
+ 	return 0;
+ }
+ 
+-static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+-{
+-	struct scsi_device *sdev;
+-	shost_for_each_device(sdev, shost) {
+-		if (scsi_sysfs_add_sdev(sdev) != 0)
+-			scsi_destroy_sdev(sdev);
+-	}
+-}
+-
+ /**
+  * scsi_prep_async_scan - prepare for an async scan
+  * @shost: the host which will be scanned
+@@ -1741,8 +1732,6 @@ static void scsi_finish_async_scan(struct async_scan_data *data)
+ 
+ 	wait_for_completion(&data->prev_finished);
+ 
+-	scsi_sysfs_add_devices(shost);
+-
+ 	spin_lock(&async_scan_lock);
+ 	shost->async_scan = 0;
+ 	list_del(&data->list);
