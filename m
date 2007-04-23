@@ -1,42 +1,62 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC][PATCH] fix for async scsi scan sysfs problem (resend)
-Date: Mon, 23 Apr 2007 14:26:26 -0400
-Message-ID: <1177352786.6284.51.camel@mulgrave.il.steeleye.com>
-References: <20070419132459.GB1481@korben.rdu.redhat.com>
-	 <1176991356.31764.3.camel@mulgrave.il.steeleye.com>
-	 <20070419150655.GC1481@korben.rdu.redhat.com>
-	 <20070421002345.673d9988.akpm@linux-foundation.org>
-	 <20070421135956.GA22873@korben.rdu.redhat.com>
-	 <20070423181318.GD22873@korben.rdu.redhat.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [2/3] 2.6.21-rc7: known regressions (v2)
+Date: Mon, 23 Apr 2007 23:48:57 +0200
+Message-ID: <20070423214857.GC3468@stusta.de>
+References: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:49706 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1161268AbXDWS0n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Apr 2007 14:26:43 -0400
-In-Reply-To: <20070423181318.GD22873@korben.rdu.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-acpi-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
+Sender: linux-acpi-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Olaf Kirch <okir@lst.de>, lenb@kernel.org, linux-acpi@vger.kernel.org, Michal Jaegermann <michal@ellpspace.math.ualberta.ca>, jgarzik@pobox.com, linux-ide@vger.kernel.org, Stephen Clark <Stephen.Clark@seclark.us>, netdev@vger.kernel.org, David Miller <davem@davemloft.net>, Robert Peterson <rpeterso@redhat.com>, linux-driver@qlogic.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Josef Bacik <jwhiter@redhat.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On Mon, 2007-04-23 at 14:13 -0400, Josef Bacik wrote:
-> Ok I have a new patch that I've built and tested on both my UP and SMP machine
-> and it appears to work fine.  I took the async check out of scsi_add_lun, I
-> don't really see the point in waiting to do the sysfs registration stuff (if
-> theres a reason I haven't been able to find it in the original submission of
-> this functionality).  Please let me know if this is incorrect.  Thank you,
+This email lists some known regressions in Linus' tree compared to 2.6.20.
 
-Yes, it's incorrect ... if you do this, the devices will come up in a
-random order for multiple SCSI cards.  One of the original design goals
-was not to require udev, so the final ordering should be the same as for
-the sync case.
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way
+possibly involved with one or more of these issues.
 
-I think the root cause of the problem is somewhere in the fc transport
-rport addition code.
+Due to the huge amount of recipients, please trim the Cc when answering.
 
-James
+
+Subject    : ACPI: Crashes + hangs during modprobe processor
+                   unless "processor.nocst"
+References : http://bugzilla.kernel.org/show_bug.cgi?id=8346
+Submitter  : Olaf Kirch <okir@lst.de>
+Status     : unknown
+
+
+Subject    : kernels fail to boot with drives on ATIIXP controller
+             (ACPI/IRQ related)
+References : https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=229621
+             http://lkml.org/lkml/2007/3/4/257
+Submitter  : Michal Jaegermann <michal@ellpspace.math.ualberta.ca>
+Status     : unknown
+
+
+Subject    : ali_pata: boot from CD fails
+References : http://lkml.org/lkml/2007/3/31/160
+Submitter  : Stephen Clark <Stephen.Clark@seclark.us>
+Status     : unknown
+
+
+Subject    : boot failure: rtl8139: exception in interrupt routine
+References : http://lkml.org/lkml/2007/3/31/160
+Submitter  : Stephen Clark <Stephen.Clark@seclark.us>
+Status     : unknown
+
+
+Subject    : qla2xxx driver no longer works
+References : http://lkml.org/lkml/2007/4/16/49
+             http://lkml.org/lkml/2007/4/20/224
+Submitter  : David Miller <davem@davemloft.net>
+             Robert Peterson <rpeterso@redhat.com>
+Handled-By : David Miller <davem@davemloft.net>
+Patch      : http://lkml.org/lkml/2007/4/16/234
+Status     : patch was suggested
 
 
