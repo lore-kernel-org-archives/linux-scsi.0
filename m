@@ -1,101 +1,34 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 7/7] libata: send event when AN received
-Date: Tue, 24 Apr 2007 14:38:27 -0700
-Message-ID: <20070424143827.4a2b672e.kristen.c.accardi@intel.com>
-References: <20070424074856.005152262@intel.com>
-	<20070423170024.73b74a37.kristen.c.accardi@intel.com>
-	<20070424090910.1d145c24@the-village.bc.nu>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: old ISA DMA bug in 2.6.12?
+Date: Tue, 24 Apr 2007 17:01:46 -0500 (CDT)
+Message-ID: <20070424220146.2EA64DBA1@gherkin.frus.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:30552 "EHLO mga02.intel.com"
+Received: from gherkin.frus.com ([192.158.254.49]:45682 "EHLO gherkin.frus.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423143AbXDXVlL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Apr 2007 17:41:11 -0400
-In-Reply-To: <20070424090910.1d145c24@the-village.bc.nu>
+	id S1161023AbXDXWBv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Apr 2007 18:01:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-When we get an SDB FIS with the 'N' bit set, we should send
-an event to user space to indicate that there has been a
-media change.  This will be done via the block device. 
+I was enjoying yet another session of beating my head against the wall
+trying to do useful things with old hardware :-), and managed to cause a
+kernel panic by simply trying to mount a cdrom in the context of a DSL-N
+installation.
 
-changed from last version:
-* Make sure that port_addr is within ATA_MAX_DEVICES
+The SCSI host adapter is an Adaptec AHA-1542B, and when I try to mount a
+cdrom, I manage to run afoul of the BAD_DMA() check in aha1542.c: the
+buffer returned is not in the lower 16 MB of memory.
 
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Index: 2.6-git/drivers/ata/ahci.c
-===================================================================
---- 2.6-git.orig/drivers/ata/ahci.c
-+++ 2.6-git/drivers/ata/ahci.c
-@@ -1147,6 +1147,28 @@ static void ahci_host_intr(struct ata_po
- 		return;
- 	}
- 
-+	if (status & PORT_IRQ_SDB_FIS) {
-+		/*
-+		 * if this is an ATAPI device with AN turned on,
-+		 * then we should interrogate the device to
-+		 * determine the cause of the interrupt
-+		 *
-+		 * for AN - this we should check the SDB FIS
-+		 * and find the I and N bits set
-+		 */
-+		const u32 *f = pp->rx_fis + RX_FIS_SDB;
-+
-+		/* check the 'N' bit in word 0 of the FIS */
-+		if (f[0] & (1 << 15)) {
-+			int port_addr =  ((f[0] & 0x00000f00) >> 8);
-+			struct ata_device *adev;
-+			if (port_addr < ATA_MAX_DEVICES) {
-+				adev = &ap->device[port_addr];
-+				if (adev->flags & ATA_DFLAG_AN)
-+					ata_scsi_media_change_notify(adev);
-+			}
-+		}
-+	}
- 	if (ap->sactive)
- 		qc_active = readl(port_mmio + PORT_SCR_ACT);
- 	else
-Index: 2.6-git/include/linux/libata.h
-===================================================================
---- 2.6-git.orig/include/linux/libata.h
-+++ 2.6-git/include/linux/libata.h
-@@ -737,6 +737,7 @@ extern void ata_host_init(struct ata_hos
- extern int ata_scsi_detect(struct scsi_host_template *sht);
- extern int ata_scsi_ioctl(struct scsi_device *dev, int cmd, void __user *arg);
- extern int ata_scsi_queuecmd(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *));
-+extern void ata_scsi_media_change_notify(struct ata_device *atadev);
- extern void ata_sas_port_destroy(struct ata_port *);
- extern struct ata_port *ata_sas_port_alloc(struct ata_host *,
- 					   struct ata_port_info *, struct Scsi_Host *);
-Index: 2.6-git/drivers/ata/libata-scsi.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-scsi.c
-+++ 2.6-git/drivers/ata/libata-scsi.c
-@@ -3057,6 +3057,22 @@ static void ata_scsi_remove_dev(struct a
- }
- 
- /**
-+ *	ata_scsi_media_change_notify - send media change event
-+ *	@atadev: Pointer to the disk device with media change event
-+ *
-+ *	Tell the block layer to send a media change notification
-+ *	event.
-+ *
-+ * 	LOCKING:
-+ * 	interrupt context, may not sleep.
-+ */
-+void ata_scsi_media_change_notify(struct ata_device *atadev)
-+{
-+	genhd_media_change_notify(atadev->sdev->disk);
-+}
-+EXPORT_SYMBOL_GPL(ata_scsi_media_change_notify);
-+
-+/**
-  *	ata_scsi_hotplug - SCSI part of hotplug
-  *	@work: Pointer to ATA port to perform SCSI hotplug on
-  *
+The same 2.6.12 kernel + hardware combination works fine as long as I
+confine my I/O to the hard disk that's also attached to the AHA-1542B.
+
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
