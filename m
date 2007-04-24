@@ -1,134 +1,192 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [PATCH] aacraid: fails to initialize after a  kexec operation
-Date: Tue, 24 Apr 2007 14:14:44 +0530
-Message-ID: <20070424084444.GC22742@in.ibm.com>
-References: <20070423161203.GA2129@in.ibm.com> <AE4F746F2AECFC4DA4AADD66A1DFEF0188AE58@otce2k301.adaptec.com>
-Reply-To: vgoyal@in.ibm.com
+From: Constantin Teodorescu <brailateo@gmail.com>
+Subject: Kernel crash with AIC94xx
+Date: Tue, 24 Apr 2007 11:52:13 +0300
+Message-ID: <462DC53D.6060108@gmail.com>
+Reply-To: brailateo@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:47338 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031037AbXDXIqU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Apr 2007 04:46:20 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3O8jqwv004550
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Apr 2007 04:45:52 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3O8jqe0096958
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Apr 2007 02:45:52 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3O8jp7s010741
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Apr 2007 02:45:52 -0600
-Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0188AE58@otce2k301.adaptec.com>
+Received: from [89.41.136.3] ([89.41.136.3]:44739 "EHLO iqm.ro"
+	rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1750844AbXDXI65 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Apr 2007 04:58:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Kexec Mailing List <kexec@lists.infradead.org>, Judith Lebzelter <judith@linux-foundation.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Apr 23, 2007 at 01:20:32PM -0400, Salyzyn, Mark wrote:
-> That is a failure to route the interrupts and is possibly an issue with
-> the kernel and the hardware, and not the driver directly (since there is
-> an expectation that request_irq will connect the interrupt to the
-> interrupt service routine). Judith reported success in the past with
-> this patch on her hardware, perhaps the motherboard on your system has
-> some odd BIOS setup of the hardware that is giving acpi or the apic some
-> headaches? Can you check out success or failure on other motherboards?
-> Please try the suggestions from the driver (safe flags)?
-> 
-> Sincerely -- Mark Salyzyn
-> 
+Hello, I hope I can get a little help from you regarding this kind of 
+crash !
 
-Hi Mark,
+Hardware:
+- server, TYAN Tempest i5000VS S5372 BIOS v1.0.4
+- 8 SATA drives Seagate 136 Gb attached on a AIC-9410 controller
+- one IDE (boot disk and system)
+- 8 Gb RAM
 
-We don't even go through BIOS in kexec and kdump. So BIOS should not be an
-issue.
+Software:
+- OpenSUSE 10.2 x86_64 (tried also with SLES 10 but didn't succed in 
+compiling adp94xx driver from Adaptec)
 
-Looks like you sent some message to controller and then waiting for an
-interrupt from the controller as an indication of completion of command. In
-this case you never seem to get an interrupt hence timeout.
+Kernels: i tried with any  of them : linux-2.6.20.1 ,  linux-2.6.20.4 ,  
+linux-2.6.20.7 , linux-2.6.21.rc7
+The last one has the 1.0.3 version of aic94xx driver but the results are 
+the same :-(
 
-To bypass this problem, I am now booting my second kernel with "irqpoll"
-command line option. This will make sure that aacraid interrupt handler
-gets invoked even if there is an interrupt routing issue.
+Description:
+- the server is running a very heavy loaded PostgreSQL database with 
+tables spread on those SAS drives, a lot of writes and reads
+- at least 4, 5 times a day I got some warnings in /var/log/messages 
+(sas: Enter sas_scsi_recover_host , trying to find task XXX ---> 
+aic94xx: came back from clear nexus) but the system is still working
+- more rarely (once per day) I got the following bug in 
+/var/log/messages and the system is crashed, SAS drivers are not working 
+anymore, shutdown command is waiting forever, need to hardware reset the 
+system
 
-This option does help in progressing the things but it ends up corrupting
-something or other on the disk. In three attempts I get three types of
-errors.
 
-In first attempt I get continuous stream of following messages once
-root file system has been mounted.
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8101c9f5e2c0, task 
+0xffff81005bfcb080, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff810047f9dd00, task 
+0xffff81007df80cc0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff810164d31180, task 
+0xffff8101247ad500, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81021b8af380, task 
+0xffff81012e550ac0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8101698c3940, task 
+0xffff8101a3b69b80, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81011e865680, task 
+0xffff8101a3b69380, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81000ce37340, task 
+0xffff8101a3b69580, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff810164d31a40, task 
+0xffff810058a93dc0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8100bc25b940, task 
+0xffff81005bfcbc80, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81000ce37880, task 
+0xffff81015856bd00, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81022fa2f940, task 
+0xffff8101d2cf87c0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8100bc25b080, task 
+0xffff81005bfcb880, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81000ce37dc0, task 
+0xffff8101d186a940, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81009c620640, task 
+0xffff81010d46a940, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8100531ae1c0, task 
+0xffff81012e9bf4c0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8100531ae380, task 
+0xffff8101d186a740, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81011e8654c0, task 
+0xffff8101247ad100, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81009c620480, task 
+0xffff81012e5502c0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81000ce37180, task 
+0xffff8101d2cf89c0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81017d5268c0, task 
+0xffff8101d186a540, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff8101c9f5e800, task 
+0xffff81015856b900, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81014f8db600, task 
+0xffff81007df808c0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81011e865bc0, task 
+0xffff81012e550cc0, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: command 0xffff81009c620100, task 
+0xffff8101a3b69980, timed out: EH_NOT_HANDLED
+Apr 24 07:22:20 bnd kernel: sas: Enter sas_scsi_recover_host
+Apr 24 07:22:20 bnd kernel: sas: trying to find task 0xffff81005bfcb080
+Apr 24 07:22:20 bnd kernel: sas: sas_scsi_find_task: aborting task 
+0xffff81005bfcb080
+Apr 24 07:22:25 bnd kernel: aic94xx: tmf timed out
+Apr 24 07:22:25 bnd kernel: aic94xx: tmf came back
+Apr 24 07:22:25 bnd kernel: aic94xx: task not done, clearing nexus
+Apr 24 07:22:25 bnd kernel: aic94xx: asd_clear_nexus_index: PRE
+Apr 24 07:22:25 bnd kernel: aic94xx: asd_clear_nexus_index: POST
+Apr 24 07:22:25 bnd kernel: aic94xx: asd_clear_nexus_index: clear nexus 
+posted, waiting...
+Apr 24 07:22:30 bnd kernel: aic94xx: asd_clear_nexus_timedout: here
+Apr 24 07:22:35 bnd kernel: aic94xx: came back from clear nexus
+Apr 24 07:22:35 bnd kernel: aic94xx: task not done, clearing nexus
+Apr 24 07:22:35 bnd kernel: aic94xx: asd_clear_nexus_index: PRE
+Apr 24 07:22:35 bnd kernel: aic94xx: asd_clear_nexus_index: POST
+Apr 24 07:22:35 bnd kernel: aic94xx: asd_clear_nexus_index: clear nexus 
+posted, waiting...
+Apr 24 07:22:35 bnd kernel: aic94xx: asd_clear_nexus_tasklet_complete: here
+Apr 24 07:22:35 bnd kernel: aic94xx: asd_clear_nexus_tasklet_complete: 
+opcode: 0x0
+Apr 24 07:22:40 bnd kernel: aic94xx: came back from clear nexus
+Apr 24 07:22:40 bnd kernel: ------------[ cut here ]------------
+Apr 24 07:22:40 bnd kernel: kernel BUG at 
+drivers/scsi/aic94xx/aic94xx_hwi.h:354!
+Apr 24 07:22:40 bnd kernel: invalid opcode: 0000 [1] SMP
+Apr 24 07:22:40 bnd kernel: CPU 0
+Apr 24 07:22:40 bnd kernel: Modules linked in: aic94xx libsas xfs
+Apr 24 07:22:40 bnd kernel: Pid: 3504, comm: scsi_eh_0 Not tainted 
+2.6.21-rc7_RC7 #1
+Apr 24 07:22:40 bnd kernel: RIP: 0010:[<ffffffff88089f51>]  
+[<ffffffff88089f51>] :aic94xx:asd_abort_task+0x423/0x54a
+Apr 24 07:22:40 bnd kernel: RSP: 0000:ffff81023117fde0  EFLAGS: 00010287
+Apr 24 07:22:40 bnd kernel: RAX: 0000000000000000 RBX: ffff810231618000 
+RCX: ffff81022f66a800
+Apr 24 07:22:40 bnd kernel: RDX: ffffffff88089ebf RSI: ffff81005bfcb080 
+RDI: ffff81005bfcb098
+Apr 24 07:22:40 bnd kernel: RBP: 0000000000000000 R08: ffff81005bfcb080 
+R09: 0000000000000001
+Apr 24 07:22:40 bnd kernel: R10: ffffffff88089ea6 R11: ffff81013ba5bf80 
+R12: ffff81005bfcb080
+Apr 24 07:22:40 bnd kernel: R13: ffff810156e4f580 R14: ffff8101d49fb9c0 
+R15: ffff81022f66a800
+Apr 24 07:22:40 bnd kernel: FS:  0000000000000000(0000) 
+GS:ffffffff80712000(0000) knlGS:0000000000000000
+Apr 24 07:22:40 bnd kernel: CS:  0010 DS: 0018 ES: 0018 CR0: 
+000000008005003b
+Apr 24 07:22:40 bnd kernel: CR2: 00002b110eff3fe8 CR3: 00000001e75f6000 
+CR4: 00000000000006e0
+Apr 24 07:22:40 bnd kernel: Process scsi_eh_0 (pid: 3504, threadinfo 
+ffff81023117e000, task ffff810232274fe0)
+Apr 24 07:22:40 bnd kernel: Stack:  ffff81023117dac8 00000000c9f5e2c0 
+ffff81023117fe50 ffff81005bfcb080
+Apr 24 07:22:40 bnd kernel:  0000000000000000 ffff8101c9f5e2c0 
+ffff81005bfcb098 ffffffff88073293
+Apr 24 07:22:40 bnd kernel:  ffff810231618010 ffff81023046c000 
+ffff8102316181e0 ffff81023046c000
+Apr 24 07:22:40 bnd kernel: Call Trace:
+Apr 24 07:22:40 bnd kernel:  [<ffffffff88073293>] 
+:libsas:sas_scsi_recover_host+0x1c2/0x83b
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8023f7d6>] 
+keventd_create_kthread+0x0/0x6d
+Apr 24 07:22:40 bnd kernel:  [<ffffffff80403b26>] 
+scsi_error_handler+0x6e/0x2d7
+Apr 24 07:22:40 bnd kernel:  [<ffffffff80403ab8>] 
+scsi_error_handler+0x0/0x2d7
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8023fa46>] kthread+0xd1/0x103
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8020a148>] child_rip+0xa/0x12
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8023f7d6>] 
+keventd_create_kthread+0x0/0x6d
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8023c327>] run_workqueue+0x10/0x179
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8023f975>] kthread+0x0/0x103
+Apr 24 07:22:40 bnd kernel:  [<ffffffff8020a13e>] child_rip+0x0/0x12
+Apr 24 07:22:40 bnd kernel:
+Apr 24 07:22:40 bnd kernel:
+Apr 24 07:22:40 bnd kernel: Code: 0f 0b eb fe 48 8d bb 68 4b 00 00 e8 38 
+df 4a f8 41 8b 95 d0
+Apr 24 07:22:40 bnd kernel: RIP  [<ffffffff88089f51>] 
+:aic94xx:asd_abort_task+0x423/0x54a
+Apr 24 07:22:40 bnd kernel:  RSP <ffff81023117fde0>
 
-=============================================
-sda1: rw=0, want=9261304112, limit=41945652
-attempt to access beyond end of device
-sda1: rw=0, want=9261304112, limit=41945652
-attempt to access beyond end of device
-sda1: rw=0, want=9261304112, limit=41945652
-attempt to access beyond end of device
-sda1: rw=0, want=9261304112, limit=41945652
-attempt to access beyond end of device
-sda1: rw=0, want=9261304112, limit=41945652
-attempt to access beyond end of device
-============================================
+-------------------------------------------------------------------------------------------------------------------------------- 
 
-In second attempt, it mounted the file system but it found some issue
-with "resize" inode and asked me to run fsck manually. Which in turn 
-deleted whole lot of inodes.
+I tried to fetch and compile the 
+Adaptec_adp94xx-OpenBuild-B11662.i386.rpm driver from adaptec but got a 
+lot of stupid compile errors.
+Is there anything that I can do in order to make it work ? Would you 
+need more information that could help you understand the problem?
+Please Cc: me at    brailateo@flex.ro
 
-In third attemt it panics later when it finds ext3 to be corrupted.
+Big , BIG, BIG thanks in advance !
+Constantin Teodorescu
+ROMANIA
 
-=========================================
-Creating block device nodes.
-Trying to resume from LABEL=SWAP-sda3
-No suspend signature on swap, not resuming.
-Creating root device.
-Mounting root filesystem.
-EXT3-fs: Magic mismatch, very weird !
-mount: error mouKernel panic - not syncing: Attempted to kill init!
-nting /dev/root
-=================================================== 
 
-Following are relevant aacraid initiliazation messages on serial console.
 
-===================================================================
-Adaptec aacraid driver (1.1-5[2437]-mh4)
-ACPI: PCI Interrupt 0000:01:02.0[A] -> GSI 25 (level, low) -> IRQ 25
-AAC0: kernel 5.2-0[11835] Jan  9 2007
-AAC0: monitor 5.2-0[11835]
-AAC0: bios 5.2-0[11835]
-AAC0: serial 1625d1
-AAC0: 64bit support enabled.
-AAC0: 64 Bit DAC enabled
-scsi0 : ServeRAID
-scsi 0:0:0:0: Direct-Access     IBM      x366             V1.0 PQ: 0 ANSI: 2
-scsi 0:1:0:0: Direct-Access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
-scsi 0:1:1:0: Direct-Access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
-scsi 0:1:2:0: Direct-Access     IBM-ESXS ST973401SS       B519 PQ: 0 ANSI: 5
-scsi 0:3:0:0: Enclosure         IBM      SAS SES-2 DEVICE 0.09 PQ: 0 ANSI: 5
-sd 0:0:0:0: [sda] 429459456 512-byte hardware sectors (219883 MB)
-sd 0:0:0:0: [sda] Assuming Write Enabled
-sd 0:0:0:0: [sda] Assuming drive cache: write through
-sd 0:0:0:0: [sda] 429459456 512-byte hardware sectors (219883 MB)
-sd 0:0:0:0: [sda] Assuming Write Enabled
-sd 0:0:0:0: [sda] Assuming drive cache: write through
- sda: sda1 sda2 sda3 sda4 < sda5 >
-sd 0:0:0:0: [sda] Attached SCSI removable disk
-sd 0:0:0:0: Attached scsi generic sg0 type 0
-scsi 0:1:0:0: Attached scsi generic sg1 type 0
-scsi 0:1:1:0: Attached scsi generic sg2 type 0
-scsi 0:1:2:0: Attached scsi generic sg3 type 0
-scsi 0:3:0:0: Attached scsi generic sg4 type 13
-================================================
 
-I am not sure why this reset leaves file system in corrupted state and
-is there a better way to handle this? Link syncing the existing commands
-before restarting it.
-
-Should one keep a dedicated partition on the disk and not mount it in first
-kernel. Mount this partition only in second kernel to save the dump. I shall
-have to test such configuration.
-
-Thanks
-Vivek
