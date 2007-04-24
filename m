@@ -1,32 +1,28 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2/7] genhd: expose AN to user space
-Date: Tue, 24 Apr 2007 14:30:10 -0700
-Message-ID: <20070424143010.f37333f7.kristen.c.accardi@intel.com>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Tue, 24 Apr 2007 14:36:21 -0700
+Message-ID: <20070424143621.82c5c815.kristen.c.accardi@intel.com>
 References: <20070424074856.005152262@intel.com>
-	<20070423165950.7d64bd8e.kristen.c.accardi@intel.com>
-	<462DBA33.9060207@gmail.com>
+	<20070423170010.5514072e.kristen.c.accardi@intel.com>
+	<462DBDB3.9010102@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga09.intel.com ([134.134.136.24]:29843 "EHLO mga09.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:31311 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423128AbXDXVcp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Apr 2007 17:32:45 -0400
-In-Reply-To: <462DBA33.9060207@gmail.com>
+	id S1423130AbXDXViy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Apr 2007 17:38:54 -0400
+In-Reply-To: <462DBDB3.9010102@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
 Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Allow user space to determine if a disk supports Asynchronous Notification
-of media changes.  This is done by adding a new sysfs file "capability_flags",
-which is documented in (insert file name).  This sysfs file will export all
-disk capabilities flags to user space.  We also define a new flag to define
-the media change notification capability.
+Send an uevent to user space to indicate that a media change event has occurred.
 
-Changed from last version:
-* changed sysfs filename to "capability" from "capability_flags"
+Changes from last version:
+* use get/put_device to increment reference count on the device struct
 
 Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
@@ -34,66 +30,69 @@ Index: 2.6-git/block/genhd.c
 ===================================================================
 --- 2.6-git.orig/block/genhd.c
 +++ 2.6-git/block/genhd.c
-@@ -370,7 +370,10 @@ static ssize_t disk_size_read(struct gen
- {
- 	return sprintf(page, "%llu\n", (unsigned long long)get_capacity(disk));
- }
--
-+static ssize_t disk_capability_read(struct gendisk *disk, char *page)
-+{
-+	return sprintf(page, "%x\n", disk->flags);
-+}
- static ssize_t disk_stats_read(struct gendisk * disk, char *page)
- {
- 	preempt_disable();
-@@ -413,6 +416,10 @@ static struct disk_attribute disk_attr_s
- 	.attr = {.name = "size", .mode = S_IRUGO },
- 	.show	= disk_size_read
+@@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
+ 	.show	= diskstats_show
  };
-+static struct disk_attribute disk_attr_capability = {
-+	.attr = {.name = "capability", .mode = S_IRUGO },
-+	.show	= disk_capability_read
-+};
- static struct disk_attribute disk_attr_stat = {
- 	.attr = {.name = "stat", .mode = S_IRUGO },
- 	.show	= disk_stats_read
-@@ -453,6 +460,7 @@ static struct attribute * default_attrs[
- 	&disk_attr_removable.attr,
- 	&disk_attr_size.attr,
- 	&disk_attr_stat.attr,
-+	&disk_attr_capability.attr,
- #ifdef CONFIG_FAIL_MAKE_REQUEST
- 	&disk_attr_fail.attr,
- #endif
+ 
++static void media_change_notify_thread(struct work_struct *work)
++{
++	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
++	char event[] = "MEDIA_CHANGE=1";
++	char *envp[] = { event, NULL };
++
++	/*
++	 * set enviroment vars to indicate which event this is for
++	 * so that user space will know to go check the media status.
++	 */
++	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
++	put_device(gd->driverfs_dev);
++}
++
++void genhd_media_change_notify(struct gendisk *disk)
++{
++	get_device(disk->driverfs_dev);
++	schedule_work(&disk->async_notify);
++}
++EXPORT_SYMBOL_GPL(genhd_media_change_notify);
++
+ struct gendisk *alloc_disk(int minors)
+ {
+ 	return alloc_disk_node(minors, -1);
+@@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
+ 		kobj_set_kset_s(disk,block_subsys);
+ 		kobject_init(&disk->kobj);
+ 		rand_initialize_disk(disk);
++		INIT_WORK(&disk->async_notify,
++			media_change_notify_thread);
+ 	}
+ 	return disk;
+ }
 Index: 2.6-git/include/linux/genhd.h
 ===================================================================
 --- 2.6-git.orig/include/linux/genhd.h
 +++ 2.6-git/include/linux/genhd.h
-@@ -94,6 +94,7 @@ struct hd_struct {
+@@ -66,6 +66,7 @@ struct partition {
+ #include <linux/smp.h>
+ #include <linux/string.h>
+ #include <linux/fs.h>
++#include <linux/workqueue.h>
  
- #define GENHD_FL_REMOVABLE			1
- #define GENHD_FL_DRIVERFS			2
-+#define GENHD_FL_MEDIA_CHANGE_NOTIFY		4
- #define GENHD_FL_CD				8
- #define GENHD_FL_UP				16
- #define GENHD_FL_SUPPRESS_PARTITION_INFO	32
-Index: 2.6-git/Documentation/block/capability.txt
-===================================================================
---- /dev/null
-+++ 2.6-git/Documentation/block/capability.txt
-@@ -0,0 +1,15 @@
-+Generic Block Device Capability
-+===============================================================================
-+This file documents the sysfs file block/<disk>/capability
-+
-+capability is a hex word indicating which capabilities a specific disk
-+supports.  For more information on bits not listed here, see
-+include/linux/genhd.h
-+
-+Capability				Value
-+-------------------------------------------------------------------------------
-+GENHD_FL_MEDIA_CHANGE_NOTIFY		4
-+	When this bit is set, the disk supports Asynchronous Notification
-+	of media change events.  These events will be broadcast to user
-+	space via kernel uevent.
-+
+ struct partition {
+ 	unsigned char boot_ind;		/* 0x80 - active */
+@@ -139,6 +140,7 @@ struct gendisk {
+ #else
+ 	struct disk_stats dkstats;
+ #endif
++	struct work_struct async_notify;
+ };
+ 
+ /* Structure for sysfs attributes on block devices */
+@@ -419,7 +421,7 @@ extern struct gendisk *alloc_disk_node(i
+ extern struct gendisk *alloc_disk(int minors);
+ extern struct kobject *get_disk(struct gendisk *disk);
+ extern void put_disk(struct gendisk *disk);
+-
++extern void genhd_media_change_notify(struct gendisk *disk);
+ extern void blk_register_region(dev_t dev, unsigned long range,
+ 			struct module *module,
+ 			struct kobject *(*probe)(dev_t, int *, void *),
