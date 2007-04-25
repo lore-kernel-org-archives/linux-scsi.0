@@ -1,556 +1,422 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 2/16] lpfc 8.1.12 : Modify ELS abort handling to prevent
-	double completion
-Date: Wed, 25 Apr 2007 09:51:38 -0400
-Message-ID: <1177509098.23155.9.camel@localhost.localdomain>
+Subject: [PATCH 3/16] lpfc 8.1.12 : Rework offline path to solve HBA reset
+	issues
+Date: Wed, 25 Apr 2007 09:51:45 -0400
+Message-ID: <1177509105.23155.10.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:51538 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:51549 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031003AbXDYNva (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2007 09:51:30 -0400
+	with ESMTP id S1031007AbXDYNvh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2007 09:51:37 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l3PDpTrW006467
-	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2007 06:51:29 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l3PDpaDA006477
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2007 06:51:36 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Modify ELS abort handling to prevent double completion
-
-Rework portions of ELS abort handling to prevent double completion
- - Rework ELS iotags and correct abort routine
- - Move the (badly wrong) ELS completion logic from the initial ELS
-   abort request function to the ELS completion function.
- - Fixup the iocb completion handling to account for the ELS abort
-   completions.
+Rework offline path to solve HBA reset issues
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
+diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2007-04-24 11:12:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2007-04-24 11:12:41.000000000 -0400
+@@ -20,6 +20,7 @@
+  *******************************************************************/
+ 
+ #include <linux/ctype.h>
++#include <linux/delay.h>
+ #include <linux/pci.h>
+ #include <linux/interrupt.h>
+ 
+@@ -213,6 +214,7 @@ lpfc_issue_lip(struct Scsi_Host *host)
+ 	int mbxstatus = MBXERR_ERROR;
+ 
+ 	if ((phba->fc_flag & FC_OFFLINE_MODE) ||
++	    (phba->fc_flag & FC_BLOCK_MGMT_IO) ||
+ 	    (phba->hba_state != LPFC_HBA_READY))
+ 		return -EPERM;
+ 
+@@ -247,19 +249,62 @@ lpfc_issue_lip(struct Scsi_Host *host)
+ }
+ 
+ static int
+-lpfc_selective_reset(struct lpfc_hba *phba)
++lpfc_do_offline(struct lpfc_hba *phba, uint32_t type)
+ {
+ 	struct completion online_compl;
++	struct lpfc_sli_ring *pring;
++	struct lpfc_sli *psli;
+ 	int status = 0;
++	int cnt = 0;
++	int i;
+ 
+ 	init_completion(&online_compl);
+ 	lpfc_workq_post_event(phba, &status, &online_compl,
+-			      LPFC_EVT_OFFLINE);
++			      LPFC_EVT_OFFLINE_PREP);
+ 	wait_for_completion(&online_compl);
+ 
+ 	if (status != 0)
+ 		return -EIO;
+ 
++	psli = &phba->sli;
++
++	for (i = 0; i < psli->num_rings; i++) {
++		pring = &psli->ring[i];
++		/* The linkdown event takes 30 seconds to timeout. */
++		while (pring->txcmplq_cnt) {
++			msleep(10);
++			if (cnt++ > 3000) {
++				lpfc_printf_log(phba,
++					KERN_WARNING, LOG_INIT,
++					"%d:0466 Outstanding IO when "
++					"bringing Adapter offline\n",
++					phba->brd_no);
++				break;
++			}
++		}
++	}
++
++	init_completion(&online_compl);
++	lpfc_workq_post_event(phba, &status, &online_compl, type);
++	wait_for_completion(&online_compl);
++
++	if (status != 0)
++		return -EIO;
++
++	return 0;
++}
++
++static int
++lpfc_selective_reset(struct lpfc_hba *phba)
++{
++	struct completion online_compl;
++	int status = 0;
++
++	status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
++
++	if (status != 0)
++		return status;
++
+ 	init_completion(&online_compl);
+ 	lpfc_workq_post_event(phba, &status, &online_compl,
+ 			      LPFC_EVT_ONLINE);
+@@ -324,23 +369,19 @@ lpfc_board_mode_store(struct class_devic
+ 
+ 	init_completion(&online_compl);
+ 
+-	if(strncmp(buf, "online", sizeof("online") - 1) == 0)
++	if(strncmp(buf, "online", sizeof("online") - 1) == 0) {
+ 		lpfc_workq_post_event(phba, &status, &online_compl,
+ 				      LPFC_EVT_ONLINE);
+-	else if (strncmp(buf, "offline", sizeof("offline") - 1) == 0)
+-		lpfc_workq_post_event(phba, &status, &online_compl,
+-				      LPFC_EVT_OFFLINE);
++		wait_for_completion(&online_compl);
++	} else if (strncmp(buf, "offline", sizeof("offline") - 1) == 0)
++		status = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
+ 	else if (strncmp(buf, "warm", sizeof("warm") - 1) == 0)
+-		lpfc_workq_post_event(phba, &status, &online_compl,
+-				      LPFC_EVT_WARM_START);
+- 	else if (strncmp(buf, "error", sizeof("error") - 1) == 0)
+-		lpfc_workq_post_event(phba, &status, &online_compl,
+-				      LPFC_EVT_KILL);
++		status = lpfc_do_offline(phba, LPFC_EVT_WARM_START);
++	else if (strncmp(buf, "error", sizeof("error") - 1) == 0)
++		status = lpfc_do_offline(phba, LPFC_EVT_KILL);
+ 	else
+ 		return -EINVAL;
+ 
+-	wait_for_completion(&online_compl);
+-
+ 	if (!status)
+ 		return strlen(buf);
+ 	else
+@@ -645,9 +686,7 @@ lpfc_soft_wwpn_store(struct class_device
+ 	dev_printk(KERN_NOTICE, &phba->pcidev->dev,
+ 		   "lpfc%d: Reinitializing to use soft_wwpn\n", phba->brd_no);
+ 
+-	init_completion(&online_compl);
+-	lpfc_workq_post_event(phba, &stat1, &online_compl, LPFC_EVT_OFFLINE);
+-	wait_for_completion(&online_compl);
++	stat1 = lpfc_do_offline(phba, LPFC_EVT_OFFLINE);
+ 	if (stat1)
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 			"%d:0463 lpfc_soft_wwpn attribute set failed to reinit "
+@@ -1307,6 +1346,12 @@ sysfs_mbox_read(struct kobject *kobj, ch
+ 			return -EPERM;
+ 		}
+ 
++		if (phba->fc_flag & FC_BLOCK_MGMT_IO) {
++			sysfs_mbox_idle(phba);
++			spin_unlock_irq(host->host_lock);
++			return  -EAGAIN;
++		}
++
+ 		if ((phba->fc_flag & FC_OFFLINE_MODE) ||
+ 		    (!(phba->sli.sli_flag & LPFC_SLI2_ACTIVE))){
+ 
+@@ -1551,6 +1596,9 @@ lpfc_get_stats(struct Scsi_Host *shost)
+ 	unsigned long seconds;
+ 	int rc = 0;
+ 
++	if (phba->fc_flag & FC_BLOCK_MGMT_IO)
++		return NULL;
++
+ 	pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!pmboxq)
+ 		return NULL;
+@@ -1651,6 +1699,9 @@ lpfc_reset_stats(struct Scsi_Host *shost
+ 	MAILBOX_t *pmb;
+ 	int rc = 0;
+ 
++	if (phba->fc_flag & FC_BLOCK_MGMT_IO)
++		return;
++
+ 	pmboxq = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
+ 	if (!pmboxq)
+ 		return;
 diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2007-03-12 13:56:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2007-04-24 11:12:40.000000000 -0400
-@@ -66,8 +66,7 @@ int lpfc_disc_state_machine(struct lpfc_
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2007-04-24 11:12:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2007-04-24 11:12:41.000000000 -0400
+@@ -112,7 +112,10 @@ void lpfc_hba_init(struct lpfc_hba *, ui
+ int lpfc_post_buffer(struct lpfc_hba *, struct lpfc_sli_ring *, int, int);
+ void lpfc_decode_firmware_rev(struct lpfc_hba *, char *, int);
+ int lpfc_online(struct lpfc_hba *);
+-int lpfc_offline(struct lpfc_hba *);
++void lpfc_block_mgmt_io(struct lpfc_hba *);
++void lpfc_unblock_mgmt_io(struct lpfc_hba *);
++void lpfc_offline_prep(struct lpfc_hba *);
++void lpfc_offline(struct lpfc_hba *);
  
- int lpfc_check_sparm(struct lpfc_hba *, struct lpfc_nodelist *,
- 		     struct serv_parm *, uint32_t);
--int lpfc_els_abort(struct lpfc_hba *, struct lpfc_nodelist * ndlp,
--			int);
-+int lpfc_els_abort(struct lpfc_hba *, struct lpfc_nodelist * ndlp);
- int lpfc_els_abort_flogi(struct lpfc_hba *);
- int lpfc_initial_flogi(struct lpfc_hba *);
- int lpfc_issue_els_plogi(struct lpfc_hba *, uint32_t, uint8_t);
-@@ -162,8 +161,8 @@ int lpfc_sli_ringpostbuf_put(struct lpfc
- struct lpfc_dmabuf *lpfc_sli_ringpostbuf_get(struct lpfc_hba *,
- 					     struct lpfc_sli_ring *,
- 					     dma_addr_t);
--int lpfc_sli_issue_abort_iotag32(struct lpfc_hba *, struct lpfc_sli_ring *,
--				 struct lpfc_iocbq *);
-+int lpfc_sli_issue_abort_iotag(struct lpfc_hba *, struct lpfc_sli_ring *,
-+			       struct lpfc_iocbq *);
- int lpfc_sli_sum_iocb(struct lpfc_hba *, struct lpfc_sli_ring *, uint16_t,
- 			  uint64_t, lpfc_ctx_cmd);
- int lpfc_sli_abort_iocb(struct lpfc_hba *, struct lpfc_sli_ring *, uint16_t,
-diff -upNr a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
---- a/drivers/scsi/lpfc/lpfc_els.c	2007-04-24 11:12:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_els.c	2007-04-24 11:12:40.000000000 -0400
-@@ -582,24 +582,8 @@ lpfc_els_abort_flogi(struct lpfc_hba * p
- 		icmd = &iocb->iocb;
- 		if (icmd->ulpCommand == CMD_ELS_REQUEST64_CR) {
- 			ndlp = (struct lpfc_nodelist *)(iocb->context1);
--			if (ndlp && (ndlp->nlp_DID == Fabric_DID)) {
--				list_del(&iocb->list);
--				pring->txcmplq_cnt--;
--
--				if ((icmd->un.elsreq64.bdl.ulpIoTag32)) {
--					lpfc_sli_issue_abort_iotag32
--						(phba, pring, iocb);
--				}
--				if (iocb->iocb_cmpl) {
--					icmd->ulpStatus = IOSTAT_LOCAL_REJECT;
--					icmd->un.ulpWord[4] =
--					    IOERR_SLI_ABORTED;
--					spin_unlock_irq(phba->host->host_lock);
--					(iocb->iocb_cmpl) (phba, iocb, iocb);
--					spin_lock_irq(phba->host->host_lock);
--				} else
--					lpfc_sli_release_iocbq(phba, iocb);
--			}
-+			if (ndlp && (ndlp->nlp_DID == Fabric_DID))
-+				lpfc_sli_issue_abort_iotag(phba, pring, iocb);
- 		}
- 	}
- 	spin_unlock_irq(phba->host->host_lock);
-@@ -3245,7 +3229,6 @@ lpfc_els_timeout_handler(struct lpfc_hba
- 	struct lpfc_iocbq *tmp_iocb, *piocb;
- 	IOCB_t *cmd = NULL;
- 	struct lpfc_dmabuf *pcmd;
--	struct list_head *dlp;
- 	uint32_t *elscmd;
- 	uint32_t els_command;
- 	uint32_t timeout;
-@@ -3262,7 +3245,6 @@ lpfc_els_timeout_handler(struct lpfc_hba
- 	timeout = (uint32_t)(phba->fc_ratov << 1);
- 
- 	pring = &phba->sli.ring[LPFC_ELS_RING];
--	dlp = &pring->txcmplq;
- 
- 	list_for_each_entry_safe(piocb, tmp_iocb, &pring->txcmplq, list) {
- 		cmd = &piocb->iocb;
-@@ -3288,19 +3270,12 @@ lpfc_els_timeout_handler(struct lpfc_hba
- 			continue;
- 		}
- 
--		list_del(&piocb->list);
--		pring->txcmplq_cnt--;
--
- 		if (cmd->ulpCommand == CMD_GEN_REQUEST64_CR) {
- 			struct lpfc_nodelist *ndlp;
- 			spin_unlock_irq(phba->host->host_lock);
- 			ndlp = lpfc_findnode_rpi(phba, cmd->ulpContext);
- 			spin_lock_irq(phba->host->host_lock);
- 			remote_ID = ndlp->nlp_DID;
--			if (cmd->un.elsreq64.bdl.ulpIoTag32) {
--				lpfc_sli_issue_abort_iotag32(phba,
--					pring, piocb);
--			}
- 		} else {
- 			remote_ID = cmd->un.elsreq64.remoteID;
- 		}
-@@ -3312,17 +3287,7 @@ lpfc_els_timeout_handler(struct lpfc_hba
- 				phba->brd_no, els_command,
- 				remote_ID, cmd->ulpCommand, cmd->ulpIoTag);
- 
--		/*
--		 * The iocb has timed out; abort it.
--		 */
--		if (piocb->iocb_cmpl) {
--			cmd->ulpStatus = IOSTAT_LOCAL_REJECT;
--			cmd->un.ulpWord[4] = IOERR_SLI_ABORTED;
--			spin_unlock_irq(phba->host->host_lock);
--			(piocb->iocb_cmpl) (phba, piocb, piocb);
--			spin_lock_irq(phba->host->host_lock);
--		} else
--			lpfc_sli_release_iocbq(phba, piocb);
-+		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
- 	}
- 	if (phba->sli.ring[LPFC_ELS_RING].txcmplq_cnt)
- 		mod_timer(&phba->els_tmofunc, jiffies + HZ * timeout);
-@@ -3336,9 +3301,6 @@ lpfc_els_flush_cmd(struct lpfc_hba * phb
- 	struct lpfc_sli_ring *pring;
- 	struct lpfc_iocbq *tmp_iocb, *piocb;
- 	IOCB_t *cmd = NULL;
--	struct lpfc_dmabuf *pcmd;
--	uint32_t *elscmd;
--	uint32_t els_command;
- 
- 	pring = &phba->sli.ring[LPFC_ELS_RING];
- 	spin_lock_irq(phba->host->host_lock);
-@@ -3357,10 +3319,6 @@ lpfc_els_flush_cmd(struct lpfc_hba * phb
- 			continue;
- 		}
- 
--		pcmd = (struct lpfc_dmabuf *) piocb->context2;
--		elscmd = (uint32_t *) (pcmd->virt);
--		els_command = *elscmd;
--
- 		list_del(&piocb->list);
- 		pring->txq_cnt--;
- 
-@@ -3381,22 +3339,8 @@ lpfc_els_flush_cmd(struct lpfc_hba * phb
- 		if (piocb->iocb_flag & LPFC_IO_LIBDFC) {
- 			continue;
- 		}
--		pcmd = (struct lpfc_dmabuf *) piocb->context2;
--		elscmd = (uint32_t *) (pcmd->virt);
--		els_command = *elscmd;
--
--		list_del(&piocb->list);
--		pring->txcmplq_cnt--;
- 
--		cmd->ulpStatus = IOSTAT_LOCAL_REJECT;
--		cmd->un.ulpWord[4] = IOERR_SLI_ABORTED;
--
--		if (piocb->iocb_cmpl) {
--			spin_unlock_irq(phba->host->host_lock);
--			(piocb->iocb_cmpl) (phba, piocb, piocb);
--			spin_lock_irq(phba->host->host_lock);
--		} else
--			lpfc_sli_release_iocbq(phba, piocb);
-+		lpfc_sli_issue_abort_iotag(phba, pring, piocb);
- 	}
- 	spin_unlock_irq(phba->host->host_lock);
- 	return;
+ int lpfc_sli_setup(struct lpfc_hba *);
+ int lpfc_sli_queue_setup(struct lpfc_hba *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+--- a/drivers/scsi/lpfc/lpfc_disc.h	2007-03-12 13:56:16.000000000 -0500
++++ b/drivers/scsi/lpfc/lpfc_disc.h	2007-04-24 11:12:41.000000000 -0400
+@@ -31,6 +31,7 @@
+ /* worker thread events */
+ enum lpfc_work_type {
+ 	LPFC_EVT_ONLINE,
++	LPFC_EVT_OFFLINE_PREP,
+ 	LPFC_EVT_OFFLINE,
+ 	LPFC_EVT_WARM_START,
+ 	LPFC_EVT_KILL,
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2007-04-24 11:12:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2007-04-24 11:12:41.000000000 -0400
+@@ -244,6 +244,7 @@ struct lpfc_hba {
+ #define FC_FABRIC               0x100	/* We are fabric attached */
+ #define FC_ESTABLISH_LINK       0x200	/* Reestablish Link */
+ #define FC_RSCN_DISCOVERY       0x400	/* Authenticate all devices after RSCN*/
++#define FC_BLOCK_MGMT_IO        0x800   /* Don't allow mgmt mbx or iocb cmds */
+ #define FC_LOADING		0x1000	/* HBA in process of loading drvr */
+ #define FC_UNLOADING		0x2000	/* HBA in process of unloading drvr */
+ #define FC_SCSI_SCAN_TMO        0x4000	/* scsi scan timer running */
 diff -upNr a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
 --- a/drivers/scsi/lpfc/lpfc_hbadisc.c	2007-04-24 11:12:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2007-04-24 11:12:40.000000000 -0400
-@@ -1596,7 +1596,7 @@ lpfc_freenode(struct lpfc_hba * phba, st
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c	2007-04-24 11:12:41.000000000 -0400
+@@ -185,29 +185,35 @@ lpfc_work_list_done(struct lpfc_hba * ph
+ 				*(int *)(evtp->evt_arg1)  = 0;
+ 			complete((struct completion *)(evtp->evt_arg2));
+ 			break;
+-		case LPFC_EVT_OFFLINE:
++		case LPFC_EVT_OFFLINE_PREP:
+ 			if (phba->hba_state >= LPFC_LINK_DOWN)
+-				lpfc_offline(phba);
++				lpfc_offline_prep(phba);
++			*(int *)(evtp->evt_arg1) = 0;
++			complete((struct completion *)(evtp->evt_arg2));
++			break;
++		case LPFC_EVT_OFFLINE:
++			lpfc_offline(phba);
+ 			lpfc_sli_brdrestart(phba);
+ 			*(int *)(evtp->evt_arg1) =
+-				lpfc_sli_brdready(phba,HS_FFRDY | HS_MBRDY);
++				lpfc_sli_brdready(phba, HS_FFRDY | HS_MBRDY);
++			lpfc_unblock_mgmt_io(phba);
+ 			complete((struct completion *)(evtp->evt_arg2));
+ 			break;
+ 		case LPFC_EVT_WARM_START:
+-			if (phba->hba_state >= LPFC_LINK_DOWN)
+-				lpfc_offline(phba);
++			lpfc_offline(phba);
+ 			lpfc_reset_barrier(phba);
+ 			lpfc_sli_brdreset(phba);
+ 			lpfc_hba_down_post(phba);
+ 			*(int *)(evtp->evt_arg1) =
+ 				lpfc_sli_brdready(phba, HS_MBRDY);
++			lpfc_unblock_mgmt_io(phba);
+ 			complete((struct completion *)(evtp->evt_arg2));
+ 			break;
+ 		case LPFC_EVT_KILL:
+-			if (phba->hba_state >= LPFC_LINK_DOWN)
+-				lpfc_offline(phba);
++			lpfc_offline(phba);
+ 			*(int *)(evtp->evt_arg1)
+ 				= (phba->stopped) ? 0 : lpfc_sli_brdkill(phba);
++			lpfc_unblock_mgmt_io(phba);
+ 			complete((struct completion *)(evtp->evt_arg2));
+ 			break;
+ 		}
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2007-04-24 11:12:40.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2007-04-24 11:12:41.000000000 -0400
+@@ -549,12 +549,15 @@ lpfc_handle_eratt(struct lpfc_hba * phba
+ 		 * There was a firmware error.  Take the hba offline and then
+ 		 * attempt to restart it.
+ 		 */
++		lpfc_offline_prep(phba);
+ 		lpfc_offline(phba);
+ 		lpfc_sli_brdrestart(phba);
+ 		if (lpfc_online(phba) == 0) {	/* Initialize the HBA */
+ 			mod_timer(&phba->fc_estabtmo, jiffies + HZ * 60);
++			lpfc_unblock_mgmt_io(phba);
+ 			return;
+ 		}
++		lpfc_unblock_mgmt_io(phba);
+ 	} else {
+ 		/* The if clause above forces this code path when the status
+ 		 * failure is a value other than FFER6.  Do not call the offline
+@@ -572,7 +575,9 @@ lpfc_handle_eratt(struct lpfc_hba * phba
+ 				SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_EMULEX);
+ 
+ 		psli->sli_flag &= ~LPFC_SLI2_ACTIVE;
++		lpfc_offline_prep(phba);
+ 		lpfc_offline(phba);
++		lpfc_unblock_mgmt_io(phba);
+ 		phba->hba_state = LPFC_HBA_ERROR;
+ 		lpfc_hba_down_post(phba);
  	}
- 	spin_unlock_irq(phba->host->host_lock);
+@@ -1286,55 +1291,87 @@ lpfc_online(struct lpfc_hba * phba)
+ 		       "%d:0458 Bring Adapter online\n",
+ 		       phba->brd_no);
  
--	lpfc_els_abort(phba,ndlp,0);
-+	lpfc_els_abort(phba,ndlp);
+-	if (!lpfc_sli_queue_setup(phba))
++	lpfc_block_mgmt_io(phba);
++
++	if (!lpfc_sli_queue_setup(phba)) {
++		lpfc_unblock_mgmt_io(phba);
+ 		return 1;
++	}
+ 
+-	if (lpfc_sli_hba_setup(phba))	/* Initialize the HBA */
++	if (lpfc_sli_hba_setup(phba)) {	/* Initialize the HBA */
++		lpfc_unblock_mgmt_io(phba);
+ 		return 1;
++	}
+ 
  	spin_lock_irq(phba->host->host_lock);
- 	ndlp->nlp_flag &= ~NLP_DELAY_TMO;
+ 	phba->fc_flag &= ~FC_OFFLINE_MODE;
  	spin_unlock_irq(phba->host->host_lock);
-diff -upNr a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c	2007-03-12 13:56:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c	2007-04-24 11:12:40.000000000 -0400
-@@ -168,8 +168,7 @@ lpfc_check_elscmpl_iocb(struct lpfc_hba 
-  * routine effectively results in a "software abort".
-  */
- int
--lpfc_els_abort(struct lpfc_hba * phba, struct lpfc_nodelist * ndlp,
--	int send_abts)
-+lpfc_els_abort(struct lpfc_hba * phba, struct lpfc_nodelist * ndlp)
- {
- 	struct lpfc_sli *psli;
- 	struct lpfc_sli_ring *pring;
-@@ -215,48 +214,17 @@ lpfc_els_abort(struct lpfc_hba * phba, s
- 		spin_unlock_irq(phba->host->host_lock);
- 	} while (found);
  
--	/* Everything on txcmplq will be returned by firmware
--	 * with a no rpi / linkdown / abort error.  For ring 0,
--	 * ELS discovery, we want to get rid of it right here.
--	 */
- 	/* Next check the txcmplq */
--	do {
--		found = 0;
--		spin_lock_irq(phba->host->host_lock);
--		list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq,
--					 list) {
--			/* Check to see if iocb matches the nport we are looking
--			   for */
--			if ((lpfc_check_sli_ndlp (phba, pring, iocb, ndlp))) {
--				found = 1;
--				/* It matches, so deque and call compl with an
--				   error */
--				list_del(&iocb->list);
--				pring->txcmplq_cnt--;
--
--				icmd = &iocb->iocb;
--				/* If the driver is completing an ELS
--				 * command early, flush it out of the firmware.
--				 */
--				if (send_abts &&
--				   (icmd->ulpCommand == CMD_ELS_REQUEST64_CR) &&
--				   (icmd->un.elsreq64.bdl.ulpIoTag32)) {
--					lpfc_sli_issue_abort_iotag32(phba,
--							     pring, iocb);
--				}
--				if (iocb->iocb_cmpl) {
--					icmd->ulpStatus = IOSTAT_LOCAL_REJECT;
--					icmd->un.ulpWord[4] = IOERR_SLI_ABORTED;
--					spin_unlock_irq(phba->host->host_lock);
--					(iocb->iocb_cmpl) (phba, iocb, iocb);
--					spin_lock_irq(phba->host->host_lock);
--				} else
--					lpfc_sli_release_iocbq(phba, iocb);
++	lpfc_unblock_mgmt_io(phba);
+ 	return 0;
+ }
+ 
+-int
+-lpfc_offline(struct lpfc_hba * phba)
++void
++lpfc_block_mgmt_io(struct lpfc_hba * phba)
+ {
+-	struct lpfc_sli_ring *pring;
+-	struct lpfc_sli *psli;
+ 	unsigned long iflag;
+-	int i;
+-	int cnt = 0;
+ 
+-	if (!phba)
+-		return 0;
++	spin_lock_irqsave(phba->host->host_lock, iflag);
++	phba->fc_flag |= FC_BLOCK_MGMT_IO;
++	spin_unlock_irqrestore(phba->host->host_lock, iflag);
++}
++
++void
++lpfc_unblock_mgmt_io(struct lpfc_hba * phba)
++{
++	unsigned long iflag;
++
++	spin_lock_irqsave(phba->host->host_lock, iflag);
++	phba->fc_flag &= ~FC_BLOCK_MGMT_IO;
++	spin_unlock_irqrestore(phba->host->host_lock, iflag);
++}
++
++void
++lpfc_offline_prep(struct lpfc_hba * phba)
++{
++	struct lpfc_nodelist  *ndlp, *next_ndlp;
++	struct list_head *listp, *node_list[7];
++	int i;
+ 
+ 	if (phba->fc_flag & FC_OFFLINE_MODE)
+-		return 0;
++		return;
+ 
+-	psli = &phba->sli;
++	lpfc_block_mgmt_io(phba);
+ 
+ 	lpfc_linkdown(phba);
+-	lpfc_sli_flush_mbox_queue(phba);
+ 
+-	for (i = 0; i < psli->num_rings; i++) {
+-		pring = &psli->ring[i];
+-		/* The linkdown event takes 30 seconds to timeout. */
+-		while (pring->txcmplq_cnt) {
+-			msleep(10);
+-			if (cnt++ > 3000) {
+-				lpfc_printf_log(phba,
+-					KERN_WARNING, LOG_INIT,
+-					"%d:0466 Outstanding IO when "
+-					"bringing Adapter offline\n",
+-					phba->brd_no);
 -				break;
 -			}
-+	spin_lock_irq(phba->host->host_lock);
-+	list_for_each_entry_safe(iocb, next_iocb, &pring->txcmplq, list) {
-+		/* Check to see if iocb matches the nport we are looking
-+		   for */
-+		if ((lpfc_check_sli_ndlp (phba, pring, iocb, ndlp))) {
-+			icmd = &iocb->iocb;
-+			lpfc_sli_issue_abort_iotag(phba, pring, iocb);
- 		}
--		spin_unlock_irq(phba->host->host_lock);
--	} while(found);
-+	}
-+	spin_unlock_irq(phba->host->host_lock);
- 
- 	/* If we are delaying issuing an ELS command, cancel it */
- 	if (ndlp->nlp_flag & NLP_DELAY_TMO)
-@@ -404,7 +372,7 @@ lpfc_rcv_plogi(struct lpfc_hba * phba,
- 	 */
- 	if (ndlp->nlp_state == NLP_STE_PLOGI_ISSUE) {
- 		/* software abort outstanding PLOGI */
--		lpfc_els_abort(phba, ndlp, 1);
-+		lpfc_els_abort(phba, ndlp);
- 	}
- 
- 	lpfc_els_rsp_acc(phba, ELS_CMD_PLOGI, cmdiocb, ndlp, mbox, 0);
-@@ -697,7 +665,7 @@ lpfc_rcv_logo_plogi_issue(struct lpfc_hb
- 	cmdiocb = (struct lpfc_iocbq *) arg;
- 
- 	/* software abort outstanding PLOGI */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	lpfc_rcv_logo(phba, ndlp, cmdiocb, ELS_CMD_LOGO);
- 	return ndlp->nlp_state;
-@@ -712,7 +680,7 @@ lpfc_rcv_els_plogi_issue(struct lpfc_hba
- 	cmdiocb = (struct lpfc_iocbq *) arg;
- 
- 	/* software abort outstanding PLOGI */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	if (evt == NLP_EVT_RCV_LOGO) {
- 		lpfc_els_rsp_acc(phba, ELS_CMD_ACC, cmdiocb, ndlp, NULL, 0);
-@@ -855,7 +823,7 @@ lpfc_device_rm_plogi_issue(struct lpfc_h
- 	}
- 	else {
- 		/* software abort outstanding PLOGI */
--		lpfc_els_abort(phba, ndlp, 1);
-+		lpfc_els_abort(phba, ndlp);
- 
- 		lpfc_nlp_list(phba, ndlp, NLP_NO_LIST);
- 		return NLP_STE_FREED_NODE;
-@@ -868,7 +836,7 @@ lpfc_device_recov_plogi_issue(struct lpf
- 			    uint32_t evt)
- {
- 	/* software abort outstanding PLOGI */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	ndlp->nlp_prev_state = NLP_STE_PLOGI_ISSUE;
- 	ndlp->nlp_state = NLP_STE_NPR_NODE;
-@@ -888,7 +856,7 @@ lpfc_rcv_plogi_adisc_issue(struct lpfc_h
- 	struct lpfc_iocbq *cmdiocb;
- 
- 	/* software abort outstanding ADISC */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	cmdiocb = (struct lpfc_iocbq *) arg;
- 
-@@ -926,7 +894,7 @@ lpfc_rcv_logo_adisc_issue(struct lpfc_hb
- 	cmdiocb = (struct lpfc_iocbq *) arg;
- 
- 	/* software abort outstanding ADISC */
--	lpfc_els_abort(phba, ndlp, 0);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	lpfc_rcv_logo(phba, ndlp, cmdiocb, ELS_CMD_LOGO);
- 	return ndlp->nlp_state;
-@@ -1016,7 +984,7 @@ lpfc_device_rm_adisc_issue(struct lpfc_h
- 	}
- 	else {
- 		/* software abort outstanding ADISC */
--		lpfc_els_abort(phba, ndlp, 1);
-+		lpfc_els_abort(phba, ndlp);
- 
- 		lpfc_nlp_list(phba, ndlp, NLP_NO_LIST);
- 		return NLP_STE_FREED_NODE;
-@@ -1029,7 +997,7 @@ lpfc_device_recov_adisc_issue(struct lpf
- 			    uint32_t evt)
- {
- 	/* software abort outstanding ADISC */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	ndlp->nlp_prev_state = NLP_STE_ADISC_ISSUE;
- 	ndlp->nlp_state = NLP_STE_NPR_NODE;
-@@ -1230,7 +1198,7 @@ lpfc_rcv_logo_prli_issue(struct lpfc_hba
- 	cmdiocb = (struct lpfc_iocbq *) arg;
- 
- 	/* Software abort outstanding PRLI before sending acc */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	lpfc_rcv_logo(phba, ndlp, cmdiocb, ELS_CMD_LOGO);
- 	return ndlp->nlp_state;
-@@ -1330,7 +1298,7 @@ lpfc_device_rm_prli_issue(struct lpfc_hb
- 	}
- 	else {
- 		/* software abort outstanding PLOGI */
--		lpfc_els_abort(phba, ndlp, 1);
-+		lpfc_els_abort(phba, ndlp);
- 
- 		lpfc_nlp_list(phba, ndlp, NLP_NO_LIST);
- 		return NLP_STE_FREED_NODE;
-@@ -1359,7 +1327,7 @@ lpfc_device_recov_prli_issue(struct lpfc
- 			   struct lpfc_nodelist * ndlp, void *arg, uint32_t evt)
- {
- 	/* software abort outstanding PRLI */
--	lpfc_els_abort(phba, ndlp, 1);
-+	lpfc_els_abort(phba, ndlp);
- 
- 	ndlp->nlp_prev_state = NLP_STE_PRLI_ISSUE;
- 	ndlp->nlp_state = NLP_STE_NPR_NODE;
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2007-04-24 11:12:40.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2007-04-24 11:12:40.000000000 -0400
-@@ -816,6 +816,14 @@ lpfc_sli_process_sol_iocb(struct lpfc_hb
- 			 * All other are passed to the completion callback.
- 			 */
- 			if (pring->ringno == LPFC_ELS_RING) {
-+				if (cmdiocbp->iocb_flag & LPFC_DRIVER_ABORTED) {
-+					cmdiocbp->iocb_flag &=
-+						~LPFC_DRIVER_ABORTED;
-+					saveq->iocb.ulpStatus =
-+						IOSTAT_LOCAL_REJECT;
-+					saveq->iocb.un.ulpWord[4] =
-+						IOERR_SLI_ABORTED;
-+				}
- 				spin_unlock_irqrestore(phba->host->host_lock,
- 						       iflag);
- 				(cmdiocbp->iocb_cmpl) (phba, cmdiocbp, saveq);
-@@ -2728,85 +2736,81 @@ lpfc_sli_ringpostbuf_get(struct lpfc_hba
- }
- 
- static void
--lpfc_sli_abort_elsreq_cmpl(struct lpfc_hba * phba, struct lpfc_iocbq * cmdiocb,
--			   struct lpfc_iocbq * rspiocb)
-+lpfc_sli_abort_els_cmpl(struct lpfc_hba * phba, struct lpfc_iocbq * cmdiocb,
-+			struct lpfc_iocbq * rspiocb)
- {
--	struct lpfc_dmabuf *buf_ptr, *buf_ptr1;
--	/* Free the resources associated with the ELS_REQUEST64 IOCB the driver
--	 * just aborted.
--	 * In this case, context2  = cmd,  context2->next = rsp, context3 = bpl
--	 */
--	if (cmdiocb->context2) {
--		buf_ptr1 = (struct lpfc_dmabuf *) cmdiocb->context2;
--
--		/* Free the response IOCB before completing the abort
--		   command.  */
--		buf_ptr = NULL;
--		list_remove_head((&buf_ptr1->list), buf_ptr,
--				 struct lpfc_dmabuf, list);
--		if (buf_ptr) {
--			lpfc_mbuf_free(phba, buf_ptr->virt, buf_ptr->phys);
--			kfree(buf_ptr);
 -		}
--		lpfc_mbuf_free(phba, buf_ptr1->virt, buf_ptr1->phys);
--		kfree(buf_ptr1);
--	}
--
--	if (cmdiocb->context3) {
--		buf_ptr = (struct lpfc_dmabuf *) cmdiocb->context3;
--		lpfc_mbuf_free(phba, buf_ptr->virt, buf_ptr->phys);
--		kfree(buf_ptr);
--	}
--
-+	spin_lock_irq(phba->host->host_lock);
- 	lpfc_sli_release_iocbq(phba, cmdiocb);
-+	spin_unlock_irq(phba->host->host_lock);
- 	return;
- }
- 
- int
--lpfc_sli_issue_abort_iotag32(struct lpfc_hba * phba,
--			     struct lpfc_sli_ring * pring,
--			     struct lpfc_iocbq * cmdiocb)
-+lpfc_sli_issue_abort_iotag(struct lpfc_hba * phba,
-+			   struct lpfc_sli_ring * pring,
-+			   struct lpfc_iocbq * cmdiocb)
- {
- 	struct lpfc_iocbq *abtsiocbp;
- 	IOCB_t *icmd = NULL;
- 	IOCB_t *iabt = NULL;
-+	int retval = IOCB_ERROR;
++	/* Issue an unreg_login to all nodes */
++	node_list[0] = &phba->fc_npr_list;  /* MUST do this list first */
++	node_list[1] = &phba->fc_nlpmap_list;
++	node_list[2] = &phba->fc_nlpunmap_list;
++	node_list[3] = &phba->fc_prli_list;
++	node_list[4] = &phba->fc_reglogin_list;
++	node_list[5] = &phba->fc_adisc_list;
++	node_list[6] = &phba->fc_plogi_list;
++	for (i = 0; i < 7; i++) {
++		listp = node_list[i];
++		if (list_empty(listp))
++			continue;
 +
-+	/* There are certain command types we don't want
-+	 * to abort.
-+	 */
-+	icmd = &cmdiocb->iocb;
-+	if ((icmd->ulpCommand == CMD_ABORT_XRI_CN) ||
-+	    (icmd->ulpCommand == CMD_CLOSE_XRI_CN))
-+		return 0;
-+
-+	/* If we're unloading, interrupts are disabled so we
-+	 * need to cleanup the iocb here.
-+	 */
-+	if (phba->fc_flag & FC_UNLOADING)
-+		goto abort_iotag_exit;
- 
- 	/* issue ABTS for this IOCB based on iotag */
- 	abtsiocbp = lpfc_sli_get_iocbq(phba);
- 	if (abtsiocbp == NULL)
- 		return 0;
- 
-+	/* This signals the response to set the correct status
-+	 * before calling the completion handler.
-+	 */
-+	cmdiocb->iocb_flag |= LPFC_DRIVER_ABORTED;
-+
- 	iabt = &abtsiocbp->iocb;
--	icmd = &cmdiocb->iocb;
--	switch (icmd->ulpCommand) {
--	case CMD_ELS_REQUEST64_CR:
--		/* Even though we abort the ELS command, the firmware may access
--		 * the BPL or other resources before it processes our
--		 * ABORT_MXRI64. Thus we must delay reusing the cmdiocb
--		 * resources till the actual abort request completes.
--		 */
--		abtsiocbp->context1 = (void *)((unsigned long)icmd->ulpCommand);
--		abtsiocbp->context2 = cmdiocb->context2;
--		abtsiocbp->context3 = cmdiocb->context3;
--		cmdiocb->context2 = NULL;
--		cmdiocb->context3 = NULL;
--		abtsiocbp->iocb_cmpl = lpfc_sli_abort_elsreq_cmpl;
--		break;
--	default:
--		lpfc_sli_release_iocbq(phba, abtsiocbp);
--		return 0;
--	}
-+	iabt->un.acxri.abortType = ABORT_TYPE_ABTS;
-+	iabt->un.acxri.abortContextTag = icmd->ulpContext;
-+	iabt->un.acxri.abortIoTag = icmd->ulpIoTag;
-+	iabt->ulpLe = 1;
-+	iabt->ulpClass = icmd->ulpClass;
- 
--	iabt->un.amxri.abortType = ABORT_TYPE_ABTS;
--	iabt->un.amxri.iotag32 = icmd->un.elsreq64.bdl.ulpIoTag32;
-+	if (phba->hba_state >= LPFC_LINK_UP)
-+		iabt->ulpCommand = CMD_ABORT_XRI_CN;
-+	else
-+		iabt->ulpCommand = CMD_CLOSE_XRI_CN;
- 
--	iabt->ulpLe = 1;
--	iabt->ulpClass = CLASS3;
--	iabt->ulpCommand = CMD_ABORT_MXRI64_CN;
-+	abtsiocbp->iocb_cmpl = lpfc_sli_abort_els_cmpl;
-+	retval = lpfc_sli_issue_iocb(phba, pring, abtsiocbp, 0);
- 
--	if (lpfc_sli_issue_iocb(phba, pring, abtsiocbp, 0) == IOCB_ERROR) {
--		lpfc_sli_release_iocbq(phba, abtsiocbp);
--		return 0;
-+abort_iotag_exit:
-+
-+	/* If we could not issue an abort dequeue the iocb and handle
-+	 * the completion here.
-+	 */
-+	if (retval == IOCB_ERROR) {
-+		list_del(&cmdiocb->list);
-+		pring->txcmplq_cnt--;
-+
-+		if (cmdiocb->iocb_cmpl) {
-+			icmd->ulpStatus = IOSTAT_LOCAL_REJECT;
-+			icmd->un.ulpWord[4] = IOERR_SLI_ABORTED;
-+			spin_unlock_irq(phba->host->host_lock);
-+			(cmdiocb->iocb_cmpl) (phba, cmdiocb, cmdiocb);
-+			spin_lock_irq(phba->host->host_lock);
-+		} else
-+			lpfc_sli_release_iocbq(phba, cmdiocb);
++		list_for_each_entry_safe(ndlp, next_ndlp, listp, nlp_listp)
++			lpfc_unreg_rpi(phba, ndlp);
  	}
  
- 	return 1;
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2007-03-12 13:56:16.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2007-04-24 11:12:40.000000000 -0400
-@@ -39,9 +39,10 @@ struct lpfc_iocbq {
- 	IOCB_t iocb;		/* IOCB cmd */
- 	uint8_t retry;		/* retry counter for IOCB cmd - if needed */
- 	uint8_t iocb_flag;
--#define LPFC_IO_LIBDFC	1	/* libdfc iocb */
--#define LPFC_IO_WAKE	2	/* High Priority Queue signal flag */
--#define LPFC_IO_FCP	4	/* FCP command -- iocbq in scsi_buf */
-+#define LPFC_IO_LIBDFC		1	/* libdfc iocb */
-+#define LPFC_IO_WAKE		2	/* High Priority Queue signal flag */
-+#define LPFC_IO_FCP		4	/* FCP command -- iocbq in scsi_buf */
-+#define LPFC_DRIVER_ABORTED	8	/* driver aborted this request */
++	lpfc_sli_flush_mbox_queue(phba);
++}
++
++void
++lpfc_offline(struct lpfc_hba * phba)
++{
++	unsigned long iflag;
++
++	if (phba->fc_flag & FC_OFFLINE_MODE)
++		return;
  
- 	uint8_t abort_count;
- 	uint8_t rsvd2;
+ 	/* stop all timers associated with this hba */
+ 	lpfc_stop_timer(phba);
+@@ -1354,7 +1391,6 @@ lpfc_offline(struct lpfc_hba * phba)
+ 	spin_lock_irqsave(phba->host->host_lock, iflag);
+ 	phba->fc_flag |= FC_OFFLINE_MODE;
+ 	spin_unlock_irqrestore(phba->host->host_lock, iflag);
+-	return 0;
+ }
+ 
+ /******************************************************************************
 
 
