@@ -1,34 +1,39 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: old ISA DMA bug in 2.6.12?
-Date: Tue, 24 Apr 2007 17:01:46 -0500 (CDT)
-Message-ID: <20070424220146.2EA64DBA1@gherkin.frus.com>
+From: Olivier Galibert <galibert@pobox.com>
+Subject: Re: [patch 1/7] libata: check for AN support
+Date: Wed, 25 Apr 2007 02:49:46 +0200
+Message-ID: <20070425004946.GA63747@dspnet.fr.eu.org>
+References: <20070424074856.005152262@intel.com> <20070423165943.0cc67bc5.kristen.c.accardi@intel.com> <20070424090713.65657495@the-village.bc.nu> <20070424102304.GA58841@dspnet.fr.eu.org> <20070424084904.61932994.kristen.c.accardi@intel.com> <20070424180552.GA17319@dspnet.fr.eu.org> <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:45682 "EHLO gherkin.frus.com"
+Received: from dspnet.fr.eu.org ([213.186.44.138]:4197 "EHLO dspnet.fr.eu.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161023AbXDXWBv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Apr 2007 18:01:51 -0400
+	id S1754667AbXDYAts (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Apr 2007 20:49:48 -0400
+Content-Disposition: inline
+In-Reply-To: <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
 
-I was enjoying yet another session of beating my head against the wall
-trying to do useful things with old hardware :-), and managed to cause a
-kernel panic by simply trying to mount a cdrom in the context of a DSL-N
-installation.
+On Tue, Apr 24, 2007 at 01:53:27PM -0700, Kristen Carlson Accardi wrote:
+> Check to see if an ATAPI device supports Asynchronous Notification.
+> If so, enable it.
+> 
+> changes from last version: 
+> * fix typo in ata_id_has_AN and make word 76 test more clear
+> * If we fail to set the AN feature, just print a warning and continue
+>  
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> @@ -299,6 +305,8 @@ struct ata_taskfile {
+>  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+>  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+>  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
+> +#define ata_id_has_AN(id)	\
+> +	(((id[76] != 0x0000) && (id[76] != 0xffff)) && ((id)[78] & (1 << 5)))
 
-The SCSI host adapter is an Adaptec AHA-1542B, and when I try to mount a
-cdrom, I manage to run afoul of the BAD_DMA() check in aha1542.c: the
-buffer returned is not in the lower 16 MB of memory.
+(id)[76] I guess ?  Sorry for being a pain :/
 
-The same 2.6.12 kernel + hardware combination works fine as long as I
-confine my I/O to the hard disk that's also attached to the AHA-1542B.
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
+  OG.
