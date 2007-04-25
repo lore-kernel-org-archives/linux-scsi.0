@@ -1,39 +1,44 @@
-From: Olivier Galibert <galibert@pobox.com>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Wed, 25 Apr 2007 02:49:46 +0200
-Message-ID: <20070425004946.GA63747@dspnet.fr.eu.org>
-References: <20070424074856.005152262@intel.com> <20070423165943.0cc67bc5.kristen.c.accardi@intel.com> <20070424090713.65657495@the-village.bc.nu> <20070424102304.GA58841@dspnet.fr.eu.org> <20070424084904.61932994.kristen.c.accardi@intel.com> <20070424180552.GA17319@dspnet.fr.eu.org> <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/16] lpfc 8.1.12 :  lpfc 8.1.12 patches
+Date: Wed, 25 Apr 2007 09:51:10 -0400
+Message-ID: <1177509070.23155.7.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dspnet.fr.eu.org ([213.186.44.138]:4197 "EHLO dspnet.fr.eu.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754667AbXDYAts (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Apr 2007 20:49:48 -0400
-Content-Disposition: inline
-In-Reply-To: <20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>
+Received: from emulex.emulex.com ([138.239.112.1]:51505 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031000AbXDYNvL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2007 09:51:11 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l3PDpAH1006431
+	for <linux-scsi@vger.kernel.org>; Wed, 25 Apr 2007 06:51:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+To: linux-scsi@vger.kernel.org
 
-On Tue, Apr 24, 2007 at 01:53:27PM -0700, Kristen Carlson Accardi wrote:
-> Check to see if an ATAPI device supports Asynchronous Notification.
-> If so, enable it.
-> 
-> changes from last version: 
-> * fix typo in ata_id_has_AN and make word 76 test more clear
-> * If we fail to set the AN feature, just print a warning and continue
->  
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> 
-> @@ -299,6 +305,8 @@ struct ata_taskfile {
->  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
->  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
->  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
-> +#define ata_id_has_AN(id)	\
-> +	(((id[76] != 0x0000) && (id[76] != 0xffff)) && ((id)[78] & (1 << 5)))
 
-(id)[76] I guess ?  Sorry for being a pain :/
+Update lpfc driver to revision 8.1.12
 
-  OG.
+Changes:
+ - Misc bug fixes and code cleanup
+ - Modify ELS abort handling to prevent double completion
+ - Rework offline path to solve HBA reset issues
+ - Fix unlock inside list traversal.
+ - Reorganize lpfc_nlp_list() and callers to prepare for nodelist simplification
+ - Round 2 of Miscellaneous fixes:
+ - Fixed recovery of rport after race with dev_loss_tmo
+ - Improve diagnostic messages and change local loopback message to KERN_INFO
+ - Improve handling of failed ELS aborts.
+ - Reference count node structures for node lifetime management.
+ - Collapse discovery lists to a single node list.
+ - Don't process ERATT interrupts when issuing KILL_BOARD mbx command
+ - Add support for async scanning
+ - Added support for 8G speed and new HBAs.
+ - Update copyright year to 2007
+ - Change version number to 8.1.12
+
+-- james s
+
+
