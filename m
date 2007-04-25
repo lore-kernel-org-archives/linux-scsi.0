@@ -1,49 +1,56 @@
-From: Matt Sealey <matt@genesi-usa.com>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Wed, 25 Apr 2007 21:59:37 +0100
-Message-ID: <462FC139.3040703@genesi-usa.com>
-References: <20070424074856.005152262@intel.com>	<20070423165943.0cc67bc5.kristen.c.accardi@intel.com>	<20070424090713.65657495@the-village.bc.nu>	<20070424102304.GA58841@dspnet.fr.eu.org>	<20070424084904.61932994.kristen.c.accardi@intel.com>	<20070424180552.GA17319@dspnet.fr.eu.org>	<20070424135327.8fe0b0ba.kristen.c.accardi@intel.com>	<20070425004946.GA63747@dspnet.fr.eu.org>	<20070425114002.1975da48.kristen.c.accardi@intel.com>	<462FA923.5000301@genesi-usa.com> <20070425133447.ca9000b3.kristen.c.accardi@intel.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.21-rc7: known regressions with patches
+Date: Thu, 26 Apr 2007 01:40:43 +0200
+Message-ID: <20070425234043.GI3468@stusta.de>
+References: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070425133447.ca9000b3.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Olivier Galibert <galibert@pobox.com>, Alan Cox <alan@lxorguk.ukuu.org.uk>, jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:34566 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754524AbXDYXkd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2007 19:40:33 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, CIJOML <cijoml@volny.cz>, Markus Rechberger <markus.rechberger@amd.com>, v4l-dvb-maintainer@linuxtv.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Takashi Iwai <tiwai@suse.de>, perex@suse.cz, alsa-devel@alsa-project.org, David Miller <davem@davemloft.net>, Robert Peterson <rpeterso@redhat.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+
+This email lists some known regressions in Linus' tree compared to 2.6.20
+with patches available.
+
+If you find your name in the Cc header, you are either submitter of one
+of the bugs, maintainer of an affectected subsystem or driver, a patch
+of you caused a breakage or I'm considering you in any other way
+possibly involved with one or more of these issues.
+
+Due to the huge amount of recipients, please trim the Cc when answering.
 
 
+Subject    : Oops when changing USB DVB-T adapter
+References : http://lkml.org/lkml/2007/3/9/212
+             http://lkml.org/lkml/2007/4/5/154
+Submitter  : CIJOML <cijoml@volny.cz>
+Handled-By : Markus Rechberger <markus.rechberger@amd.com>
+Status     : patches available
 
-Kristen Carlson Accardi wrote:
-> On Wed, 25 Apr 2007 20:16:51 +0100
-> Matt Sealey <matt@genesi-usa.com> wrote:
-> 
->>> +#define ata_id_has_AN(id)	\
->>> +	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
->>> +	  ((id)[78] & (1 << 5)) )
->> ??
->>
->>> --- 2.6-git.orig/include/linux/libata.h
->>> +++ 2.6-git/include/linux/libata.h
->>> @@ -136,6 +136,7 @@ enum {
->>>  	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
->>>  	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
->>>  	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
->>> +	ATA_DFLAG_AN		= (1 << 5), /* device supports Async notification */
->>>  	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
->> Why don't the macros use the enums? It makes the code hard to read without
->> painful cross-reference doesn't it? Surely (id)[76] & (ATA_DFLAG_AN) is a
->> lot more readable than 1 << 5 - even if the flag is obviously that, a lot
->> of values and registers can have 1 << 5 as a flag and mean a lot of different
->> things.
-> 
-> It's really just a coincidence that the ATA_DFLAG_AN bit is the same as the bit
-> in the identify device word, so this would not be appropriate.
 
-Okay, that makes sense.. I just had a bad day cross-referencing some terrible
-code in another project, was in the mood to nit :D
+Subject    : snd_intel8x0: divide error: 0000
+References : http://lkml.org/lkml/2007/3/5/252
+Submitter  : Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Handled-By : Takashi Iwai <tiwai@suse.de>
+Patch      : http://lkml.org/lkml/2007/4/20/117
+Status     : patch available
 
--- 
-Matt Sealey <matt@genesi-usa.com>
-Genesi, Manager, Developer Relations
+
+Subject    : qla2xxx driver no longer works
+References : http://lkml.org/lkml/2007/4/16/49
+             http://lkml.org/lkml/2007/4/20/224
+Submitter  : David Miller <davem@davemloft.net>
+             Robert Peterson <rpeterso@redhat.com>
+Handled-By : David Miller <davem@davemloft.net>
+Patch      : http://lkml.org/lkml/2007/4/16/234
+Status     : patch was suggested
+
+
