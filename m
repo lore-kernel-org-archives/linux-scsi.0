@@ -1,76 +1,91 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: filesystem corruption with md raid6
-Date: Thu, 26 Apr 2007 16:17:19 -0400
-Message-ID: <1177618639.6284.161.camel@mulgrave.il.steeleye.com>
-References: <200704261827.l3QIRX0T023077@focus.uchicago.edu>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/8] ipr: Prevent overlapped adapter resets
+Date: Thu, 26 Apr 2007 16:00:06 -0500
+Message-ID: <200704262101.l3QL1I42010256@d01av01.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:48864 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752237AbXDZURV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Apr 2007 16:17:21 -0400
-In-Reply-To: <200704261827.l3QIRX0T023077@focus.uchicago.edu>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:57374 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755081AbXDZVBU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Apr 2007 17:01:20 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3QL2DhX026115
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 17:02:13 -0400
+Received: from d01av01.pok.ibm.com (d01av01.pok.ibm.com [9.56.224.215])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3QL1Jl0549842
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 17:01:19 -0400
+Received: from d01av01.pok.ibm.com (loopback [127.0.0.1])
+	by d01av01.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3QL1Ixf010314
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 17:01:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Clem Pryke <pryke@focus.uchicago.edu>
-Cc: linux-scsi@vger.kernel.org
-
-On Thu, 2007-04-26 at 13:27 -0500, Clem Pryke wrote:
-> I have a system with 12 SATA disks attached via SAS. When copying into the 
-> array during re-sync I get filesystem errors and corruption for raid6 but not 
-> for raid5. This problem is repeatable. I actually have 2 separate 12 disk 
-> arrays and get the same behavior on both.
-
-If the data is sound for raid5 but not raid6, it tends to indicate that
-it might be a md issue; you should perhaps crosspost to
-linux-raid@vger.kernel.org which is where the md people hang out.
-
-> Does this sound familiar to anyone?
-> 
-> Here's a little more detail:
-> 
-> - 8 core AMD64 system running RHEL4U4 kernel 2.6.9-42.0.3.ELsmp
-
-This is a vendor supported kernel ... perhaps you should start first
-with them ... most linux lists are going to want you to try and
-reproduce this with the latest kernel ...
-
-> - 12 Seagate ST3750640NS disks via LSI SAS1068 card and mptsas driver provided 
-> with kernel. Disk chassis is Promise VTrak J300s
-> - build raid5/6 arrays using mdadm in the normal way
-> - build filesystem using e2fs in the normal way
-> - mount the array
-> - fail out and re-add a disk using "mdadm -f/-r/-a /dev/sdd1"
-> - while re-sync in progress start an rsync to copy large amount of data into 
-> the array
-> 
-> For raid 5 array while rsync is running re-sync slows down enormously (as 
-> shown in /proc/mdstat), then speeds up again once rsync complete and all is 
-> good. Unmounting the array and running e2fsck shows no errors.
-> 
-> For raid 6 re-sync slows down once rsync starts, but then after a few minutes 
-> I see the errors below and rsync stops. In this case unmounting and running 
-> e2fsck shows loads of errors.
-> 
-> Apr 26 11:30:50 spt kernel: attempt to access beyond end of device
-> Apr 26 11:30:50 spt kernel: md0: rw=1, want=14801215240, limit=14651489280
-> Apr 26 11:30:50 spt kernel: Aborting journal on device md0.
-> Apr 26 11:30:50 spt kernel: ext3_abort called.
-> Apr 26 11:30:50 spt kernel: EXT3-fs error (device md0): ext3_journal_start_sb: 
-> Detected aborted journal
-> Apr 26 11:30:50 spt kernel: Remounting filesystem read-only
-> Apr 26 11:30:50 spt kernel: EXT3-fs error (device md0) in start_transaction: 
-> Journal has aborted
-
-This definitely indicates some type of corruption.  I assume a corrupt
-inode value caused a read beyond the limits of the device ...
-unfortunately, with no other kernel messages, it's difficult to tell
-whether it was MD, SCSI or the device driver (or even the device) that
-caused it.  Like I said, if it doesn't occur with RAID5, my money would
-be on MD.
-
-James
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
+This patch fixes some scenarios where an ipr adapter
+could get reset overlapped, which could cause very
+long timeouts to occur, or PCI bus errors.
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/ipr.c |   24 +++++++++++++++++++++++-
+ 1 file changed, 23 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_fix_overlapped_resets drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_fix_overlapped_resets	2007-04-26 09:15:37.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-04-26 09:17:16.000000000 -0500
+@@ -2635,8 +2635,13 @@ static ssize_t ipr_store_diagnostics(str
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+ 
+-	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	while(ioa_cfg->in_reset_reload) {
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	}
++
+ 	ioa_cfg->errors_logged = 0;
+ 	ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NORMAL);
+ 
+@@ -2958,6 +2963,11 @@ static int ipr_update_ioa_ucode(struct i
+ 	unsigned long lock_flags;
+ 
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	while(ioa_cfg->in_reset_reload) {
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	}
+ 
+ 	if (ioa_cfg->ucode_sglist) {
+ 		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+@@ -7434,6 +7444,12 @@ static void __ipr_remove(struct pci_dev 
+ 	ENTER;
+ 
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, host_lock_flags);
++	while(ioa_cfg->in_reset_reload) {
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
++		wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, host_lock_flags);
++	}
++
+ 	ipr_initiate_ioa_bringdown(ioa_cfg, IPR_SHUTDOWN_NORMAL);
+ 
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, host_lock_flags);
+@@ -7557,6 +7573,12 @@ static void ipr_shutdown(struct pci_dev 
+ 	unsigned long lock_flags = 0;
+ 
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	while(ioa_cfg->in_reset_reload) {
++		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
++		wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
++		spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
++	}
++
+ 	ipr_initiate_ioa_bringdown(ioa_cfg, IPR_SHUTDOWN_NORMAL);
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
+ 	wait_event(ioa_cfg->reset_wait_q, !ioa_cfg->in_reset_reload);
+_
