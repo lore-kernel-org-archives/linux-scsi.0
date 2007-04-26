@@ -1,77 +1,68 @@
 From: akpm@linux-foundation.org
-Subject: [patch 27/30] sas_scsi_host: partially convert to use the kthread API
-Date: Thu, 26 Apr 2007 00:35:30 -0700
-Message-ID: <200704260735.l3Q7ZURV024291@shell0.pdx.osdl.net>
+Subject: [patch 22/30] fdomain.c: get rid of unused stuff
+Date: Thu, 26 Apr 2007 00:35:26 -0700
+Message-ID: <200704260735.l3Q7ZQdM024275@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:57656 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:33101 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933166AbXDZHgd (ORCPT
+	by vger.kernel.org with ESMTP id S933506AbXDZH6B (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:36:33 -0400
+	Thu, 26 Apr 2007 03:58:01 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ebiederm@xmission.com, James.Bottomley@steeleye.com, djwong@us.ibm.com
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, parag.warudkar@gmail.com
 
-From: Eric W. Biederman <ebiederm@xmission.com>
+From: Parag Warudkar <parag.warudkar@gmail.com>
 
-This patch modifies the sas scsi host thread startup to use kthread_run not
-kernel_thread and deamonize.  kthread_run is slightly simpler and more
-maintainable.
+fdomain.c uses the below stuff only if PCMCIA is not defined.  This causes
+unused variables to be defined when PCMCIA is not defined.  Wrap variables
+and functions around #ifndef PCMCIA appropriately to avoid this.
 
-akpm: the driver should also be converted to use kthread_should_stop() and
-kthread_stop().
+4 less compiler warnings.
 
-Cc: Darrick J. Wong <djwong@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
-Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
+Signed-off-by: Parag Warudkar <parag.warudkar@gmail.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/libsas/sas_scsi_host.c |   11 ++++++-----
- 1 file changed, 6 insertions(+), 5 deletions(-)
+ drivers/scsi/fdomain.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/libsas/sas_scsi_host.c~sas_scsi_host-partially-convert-to-use-the-kthread-api drivers/scsi/libsas/sas_scsi_host.c
---- a/drivers/scsi/libsas/sas_scsi_host.c~sas_scsi_host-partially-convert-to-use-the-kthread-api
-+++ a/drivers/scsi/libsas/sas_scsi_host.c
-@@ -38,6 +38,7 @@
+diff -puN drivers/scsi/fdomain.c~fdomainc-get-rid-of-unused-stuff drivers/scsi/fdomain.c
+--- a/drivers/scsi/fdomain.c~fdomainc-get-rid-of-unused-stuff
++++ a/drivers/scsi/fdomain.c
+@@ -410,6 +410,7 @@ static irqreturn_t       do_fdomain_16x0
+ static char * fdomain = NULL;
+ module_param(fdomain, charp, 0);
  
- #include <linux/err.h>
- #include <linux/blkdev.h>
-+#include <linux/kthread.h>
- #include <linux/scatterlist.h>
++#ifndef PCMCIA
+ static unsigned long addresses[] = {
+    0xc8000,
+    0xca000,
+@@ -502,6 +503,7 @@ static struct signature {
+ };
  
- /* ---------- SCSI Host glue ---------- */
-@@ -869,7 +870,6 @@ static int sas_queue_thread(void *_sas_h
- 	struct sas_ha_struct *sas_ha = _sas_ha;
- 	struct scsi_core *core = &sas_ha->core;
+ #define SIGNATURE_COUNT ARRAY_SIZE(signatures)
++#endif /* ifndef PCMCIA */
  
--	daemonize("sas_queue_%d", core->shost->host_no);
- 	current->flags |= PF_NOFREEZE;
- 
- 	complete(&queue_th_comp);
-@@ -888,19 +888,20 @@ static int sas_queue_thread(void *_sas_h
- 
- int sas_init_queue(struct sas_ha_struct *sas_ha)
+ static void print_banner( struct Scsi_Host *shpnt )
  {
--	int res;
- 	struct scsi_core *core = &sas_ha->core;
-+	struct task_struct *task;
- 
- 	spin_lock_init(&core->task_queue_lock);
- 	core->task_queue_size = 0;
- 	INIT_LIST_HEAD(&core->task_queue);
- 	init_MUTEX_LOCKED(&core->queue_thread_sema);
- 
--	res = kernel_thread(sas_queue_thread, sas_ha, 0);
--	if (res >= 0)
-+	task = kthread_run(sas_queue_thread, sas_ha,
-+			   "sas_queue_%d", core->shost->host_no);
-+	if (!IS_ERR(task))
- 		wait_for_completion(&queue_th_comp);
- 
--	return res < 0 ? res : 0;
-+	return IS_ERR(task) ? PTR_ERR(task) : 0;
+@@ -646,7 +648,7 @@ static int fdomain_test_loopback( void )
+    Sometimes it is possible to use the computer's BIOS setup screen to
+    configure a PCI system so that one of these IRQs will be used by the
+    Future Domain card. */
+-
++#ifndef PCMCIA
+ static int fdomain_get_irq( int base )
+ {
+    int options = inb(base + Configuration1);
+@@ -664,6 +666,7 @@ static int fdomain_get_irq( int base )
+    	return 0;
+    return ints[(options & 0x0e) >> 1];
  }
++#endif
  
- void sas_shutdown_queue(struct sas_ha_struct *sas_ha)
+ static int fdomain_isa_detect( int *irq, int *iobase )
+ {
 _
