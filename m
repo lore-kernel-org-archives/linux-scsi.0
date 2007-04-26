@@ -1,96 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/30] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
-Date: Thu, 26 Apr 2007 00:35:15 -0700
-Message-ID: <200704260735.l3Q7ZGwJ024241@shell0.pdx.osdl.net>
+Subject: [patch 21/30] Use unchecked_isa_dma in sd_revalidate_disk()
+Date: Thu, 26 Apr 2007 00:35:25 -0700
+Message-ID: <200704260735.l3Q7ZPJT024272@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:43290 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:38775 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933546AbXDZH6P (ORCPT
+	by vger.kernel.org with ESMTP id S933502AbXDZH6P (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Thu, 26 Apr 2007 03:58:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bwalle@suse.de, jens.axboe@oracle.com
 
-From: Martin Bligh <mbligh@google.com>
+From: Bernhard Walle <bwalle@suse.de>
 
-Fix up compiler warnings in megaraid driver
+In sd_revalidate_disk(), the SCSI Disk driver needs a few bytes DMA memory,
+allocated by kmalloc() and __GFP_DMA.  This patch uses __GFP_DMA only if
+the corresponding host structure has unchecked_isa_dma set.
 
-[akpm@osdl.org: build fix]
-Signed-off-by: Martin J. Bligh <mbligh@google.com>
+Signed-off-by: Bernhard Walle <bwalle@suse.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
+Acked-by: Jens Axboe <jens.axboe@oracle.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |   22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+ drivers/scsi/sd.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
-+++ a/drivers/scsi/megaraid.c
-@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
- module_param(max_mbox_busy_wait, ushort, 0);
- MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+diff -puN drivers/scsi/sd.c~use-unchecked_isa_dma-in-sd_revalidate_disk drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c~use-unchecked_isa_dma-in-sd_revalidate_disk
++++ a/drivers/scsi/sd.c
+@@ -1516,7 +1516,8 @@ static int sd_revalidate_disk(struct gen
+ 	if (!scsi_device_online(sdp))
+ 		goto out;
  
--#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
--#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
--#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
--#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
-+#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
-+							(adapter)->base + 0x20)
-+#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
-+							(adapter)->base + 0x2C)
-+#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
-+							(adapter)->base + 0x20)
-+#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
-+							(adapter)->base + 0x2C)
- 
- /*
-  * Global variables
-@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
- 			/*
- 			 * The user passthru structure
- 			 */
--			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
-+			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
- 
- 			/*
- 			 * Copy in the user passthru here.
-@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
- 				/*
- 				 * Get the user data
- 				 */
--				if( copy_from_user(data, (char __user *)uxferaddr,
-+				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
- 							pthru->dataxferlen) ) {
- 					rval = (-EFAULT);
- 					goto freemem_and_return;
-@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
- 			 * Is data going up-stream
- 			 */
- 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
--				if( copy_to_user((char __user *)uxferaddr, data,
-+				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
- 							pthru->dataxferlen) ) {
- 					rval = (-EFAULT);
- 				}
-@@ -3702,7 +3706,7 @@ freemem_and_return:
- 				/*
- 				 * Get the user data
- 				 */
--				if( copy_from_user(data, (char __user *)uxferaddr,
-+				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
- 							uioc.xferlen) ) {
- 
- 					pci_free_consistent(pdev,
-@@ -3742,7 +3746,7 @@ freemem_and_return:
- 			 * Is data going up-stream
- 			 */
- 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
--				if( copy_to_user((char __user *)uxferaddr, data,
-+				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
- 							uioc.xferlen) ) {
- 
- 					rval = (-EFAULT);
+-	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL | __GFP_DMA);
++	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL |
++			(sdp->host->unchecked_isa_dma ? __GFP_DMA : 0));
+ 	if (!buffer) {
+ 		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory "
+ 			  "allocation failure.\n");
 _
