@@ -1,98 +1,313 @@
 From: akpm@linux-foundation.org
-Subject: [patch 19/30] mpt-fusion: reprogram spi state after host reset
-Date: Thu, 26 Apr 2007 00:35:21 -0700
-Message-ID: <200704260735.l3Q7ZLHH024262@shell0.pdx.osdl.net>
+Subject: [patch 13/30] drivers/scsi/qla4xxx/: possible cleanups
+Date: Thu, 26 Apr 2007 00:35:16 -0700
+Message-ID: <200704260735.l3Q7ZGsY024244@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:35979 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:34406 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933572AbXDZH6X (ORCPT
+	by vger.kernel.org with ESMTP id S933590AbXDZH6e (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:58:23 -0400
+	Thu, 26 Apr 2007 03:58:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, eric.moore@lsi.com, Eric.Moore@lsi.com, markh@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de, ravi.anand@qlogic.com
 
-From: Eric Moore <eric.moore@lsi.com>
+From: Adrian Bunk <bunk@stusta.de>
 
-After host reset, the device are programmed to default asyn narrow nego. 
-We need to reprogram the parameter back to previous values.  If the host
-reset is called as a result of spi_dv_device() commands timing out, its
-possible to get into an infinite loop of dv to host reset.  This will
-prevent that case, as we merely program old values.  If host reset is
-called outside context of domain validation, then we can call
-spi_dv_device.  Please apply.
+- make needlessly global code static
+- #if 0 unused functions
 
-Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
-Cc: Mark Haverkamp <markh@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Acked-by: Ravi Anand <ravi.anand@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptbase.h |    1 +
- drivers/message/fusion/mptspi.c  |   23 +++++++++++++++++++++--
- 2 files changed, 22 insertions(+), 2 deletions(-)
+ drivers/scsi/qla4xxx/ql4_dbg.c  |    4 ++++
+ drivers/scsi/qla4xxx/ql4_glbl.h |    9 ---------
+ drivers/scsi/qla4xxx/ql4_init.c |   18 +++++++++---------
+ drivers/scsi/qla4xxx/ql4_iocb.c |   18 +++++++++---------
+ drivers/scsi/qla4xxx/ql4_mbx.c  |   19 ++++++++++++++-----
+ drivers/scsi/qla4xxx/ql4_os.c   |    9 ++++-----
+ 6 files changed, 40 insertions(+), 37 deletions(-)
 
-diff -puN drivers/message/fusion/mptbase.h~scsi-spi-transport-scsi-domain-validation-after-reset drivers/message/fusion/mptbase.h
---- a/drivers/message/fusion/mptbase.h~scsi-spi-transport-scsi-domain-validation-after-reset
-+++ a/drivers/message/fusion/mptbase.h
-@@ -994,6 +994,7 @@ typedef struct _MPT_SCSI_HOST {
- 	int			  scandv_wait_done;
- 	long			  last_queue_full;
- 	u16			  tm_iocstatus;
-+	u16			  spi_pending;
- 	struct list_head	  target_reset_list;
- } MPT_SCSI_HOST;
+diff -puN drivers/scsi/qla4xxx/ql4_dbg.c~drivers-scsi-qla4xxx-possible-cleanups drivers/scsi/qla4xxx/ql4_dbg.c
+--- a/drivers/scsi/qla4xxx/ql4_dbg.c~drivers-scsi-qla4xxx-possible-cleanups
++++ a/drivers/scsi/qla4xxx/ql4_dbg.c
+@@ -8,6 +8,8 @@
+ #include "ql4_def.h"
+ #include <scsi/scsi_dbg.h>
  
-diff -puN drivers/message/fusion/mptspi.c~scsi-spi-transport-scsi-domain-validation-after-reset drivers/message/fusion/mptspi.c
---- a/drivers/message/fusion/mptspi.c~scsi-spi-transport-scsi-domain-validation-after-reset
-+++ a/drivers/message/fusion/mptspi.c
-@@ -676,7 +676,9 @@ static void mptspi_dv_device(struct _MPT
- 		return;
- 	}
++#if 0
++
+ static void qla4xxx_print_srb_info(struct srb * srb)
+ {
+ 	printk("%s: srb = 0x%p, flags=0x%02x\n", __func__, srb, srb->flags);
+@@ -195,3 +197,5 @@ void qla4xxx_dump_buffer(void *b, uint32
+ 	if (cnt % 16)
+ 		printk(KERN_DEBUG "\n");
+ }
++
++#endif  /*  0  */
+diff -puN drivers/scsi/qla4xxx/ql4_glbl.h~drivers-scsi-qla4xxx-possible-cleanups drivers/scsi/qla4xxx/ql4_glbl.h
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h~drivers-scsi-qla4xxx-possible-cleanups
++++ a/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -43,8 +43,6 @@ int qla4xxx_get_fwddb_entry(struct scsi_
+ 			    uint16_t *tcp_source_port_num,
+ 			    uint16_t *connection_id);
  
-+	hd->spi_pending |= (1 << sdev->id);
- 	spi_dv_device(sdev);
-+	hd->spi_pending &= ~(1 << sdev->id);
+-struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host * ha,
+-				     uint32_t fw_ddb_index);
+ int qla4xxx_set_ddb_entry(struct scsi_qla_host * ha, uint16_t fw_ddb_index,
+ 			  dma_addr_t fw_ddb_entry_dma);
  
- 	if (sdev->channel == 1 &&
- 	    mptscsih_quiesce_raid(hd, 0, vtarget->channel, vtarget->id) < 0)
-@@ -1202,11 +1204,27 @@ mptspi_dv_renegotiate_work(struct work_s
- 		container_of(work, struct work_queue_wrapper, work);
- 	struct _MPT_SCSI_HOST *hd = wqw->hd;
- 	struct scsi_device *sdev;
-+	struct scsi_target *starget;
-+	struct _CONFIG_PAGE_SCSI_DEVICE_1 pg1;
-+	u32 nego;
+@@ -55,18 +53,11 @@ void qla4xxx_get_crash_record(struct scs
+ struct ddb_entry *qla4xxx_alloc_sess(struct scsi_qla_host *ha);
+ int qla4xxx_add_sess(struct ddb_entry *);
+ void qla4xxx_destroy_sess(struct ddb_entry *ddb_entry);
+-int qla4xxx_conn_close_sess_logout(struct scsi_qla_host * ha,
+-				   uint16_t fw_ddb_index,
+-				   uint16_t connection_id,
+-				   uint16_t option);
+-int qla4xxx_clear_database_entry(struct scsi_qla_host * ha,
+-				 uint16_t fw_ddb_index);
+ int qla4xxx_is_nvram_configuration_valid(struct scsi_qla_host * ha);
+ int qla4xxx_get_fw_version(struct scsi_qla_host * ha);
+ void qla4xxx_interrupt_service_routine(struct scsi_qla_host * ha,
+ 				       uint32_t intr_status);
+ int qla4xxx_init_rings(struct scsi_qla_host * ha);
+-void qla4xxx_dump_buffer(void *b, uint32_t size);
+ struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha, uint32_t index);
+ void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb);
+ int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host * ha);
+diff -puN drivers/scsi/qla4xxx/ql4_init.c~drivers-scsi-qla4xxx-possible-cleanups drivers/scsi/qla4xxx/ql4_init.c
+--- a/drivers/scsi/qla4xxx/ql4_init.c~drivers-scsi-qla4xxx-possible-cleanups
++++ a/drivers/scsi/qla4xxx/ql4_init.c
+@@ -7,9 +7,8 @@
  
- 	kfree(wqw);
+ #include "ql4_def.h"
  
--	shost_for_each_device(sdev, hd->ioc->sh)
--		mptspi_dv_device(hd, sdev);
-+	if (hd->spi_pending) {
-+		shost_for_each_device(sdev, hd->ioc->sh) {
-+			if  (hd->spi_pending & (1 << sdev->id))
-+				continue;
-+			starget = scsi_target(sdev);
-+			nego = mptspi_getRP(starget);
-+			pg1.RequestedParameters = cpu_to_le32(nego);
-+			pg1.Reserved = 0;
-+			pg1.Configuration = 0;
-+			mptspi_write_spi_device_pg1(starget, &pg1);
-+		}
-+	} else {
-+		shost_for_each_device(sdev, hd->ioc->sh)
-+			mptspi_dv_device(hd, sdev);
-+	}
+-/*
+- * QLogic ISP4xxx Hardware Support Function Prototypes.
+- */
++static struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
++					    uint32_t fw_ddb_index);
+ 
+ static void ql4xxx_set_mac_number(struct scsi_qla_host *ha)
+ {
+@@ -48,7 +47,8 @@ static void ql4xxx_set_mac_number(struct
+  * This routine deallocates and unlinks the specified ddb_entry from the
+  * adapter's
+  **/
+-void qla4xxx_free_ddb(struct scsi_qla_host *ha, struct ddb_entry *ddb_entry)
++static void qla4xxx_free_ddb(struct scsi_qla_host *ha,
++			     struct ddb_entry *ddb_entry)
+ {
+ 	/* Remove device entry from list */
+ 	list_del_init(&ddb_entry->list);
+@@ -370,9 +370,9 @@ static struct ddb_entry* qla4xxx_get_ddb
+  * must be initialized prior to	calling this routine
+  *
+  **/
+-int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
+-			     struct ddb_entry *ddb_entry,
+-			     uint32_t fw_ddb_index)
++static int qla4xxx_update_ddb_entry(struct scsi_qla_host *ha,
++				    struct ddb_entry *ddb_entry,
++				    uint32_t fw_ddb_index)
+ {
+ 	struct dev_db_entry *fw_ddb_entry = NULL;
+ 	dma_addr_t fw_ddb_entry_dma;
+@@ -450,8 +450,8 @@ int qla4xxx_update_ddb_entry(struct scsi
+  * This routine allocates a ddb_entry, ititializes some values, and
+  * inserts it into the ddb list.
+  **/
+-struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
+-				     uint32_t fw_ddb_index)
++static struct ddb_entry * qla4xxx_alloc_ddb(struct scsi_qla_host *ha,
++					    uint32_t fw_ddb_index)
+ {
+ 	struct ddb_entry *ddb_entry;
+ 
+diff -puN drivers/scsi/qla4xxx/ql4_iocb.c~drivers-scsi-qla4xxx-possible-cleanups drivers/scsi/qla4xxx/ql4_iocb.c
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c~drivers-scsi-qla4xxx-possible-cleanups
++++ a/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -19,8 +19,8 @@
+  *	- advances the request_in pointer
+  *	- checks for queue full
+  **/
+-int qla4xxx_get_req_pkt(struct scsi_qla_host *ha,
+-			struct queue_entry **queue_entry)
++static int qla4xxx_get_req_pkt(struct scsi_qla_host *ha,
++			       struct queue_entry **queue_entry)
+ {
+ 	uint16_t request_in;
+ 	uint8_t status = QLA_SUCCESS;
+@@ -62,8 +62,8 @@ int qla4xxx_get_req_pkt(struct scsi_qla_
+  *
+  * This routine issues a marker IOCB.
+  **/
+-int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
+-			     struct ddb_entry *ddb_entry, int lun)
++static int qla4xxx_send_marker_iocb(struct scsi_qla_host *ha,
++				    struct ddb_entry *ddb_entry, int lun)
+ {
+ 	struct marker_entry *marker_entry;
+ 	unsigned long flags = 0;
+@@ -96,7 +96,7 @@ exit_send_marker:
+ 	return status;
  }
  
- static void
-@@ -1452,6 +1470,7 @@ mptspi_probe(struct pci_dev *pdev, const
- 	init_waitqueue_head(&hd->scandv_waitq);
- 	hd->scandv_wait_done = 0;
- 	hd->last_queue_full = 0;
-+	hd->spi_pending = 0;
+-struct continuation_t1_entry* qla4xxx_alloc_cont_entry(
++static struct continuation_t1_entry* qla4xxx_alloc_cont_entry(
+ 	struct scsi_qla_host *ha)
+ {
+ 	struct continuation_t1_entry *cont_entry;
+@@ -120,7 +120,7 @@ struct continuation_t1_entry* qla4xxx_al
+ 	return cont_entry;
+ }
  
- 	/* Some versions of the firmware don't support page 0; without
- 	 * that we can't get the parameters */
+-uint16_t qla4xxx_calc_request_entries(uint16_t dsds)
++static uint16_t qla4xxx_calc_request_entries(uint16_t dsds)
+ {
+ 	uint16_t iocbs;
+ 
+@@ -133,9 +133,9 @@ uint16_t qla4xxx_calc_request_entries(ui
+ 	return iocbs;
+ }
+ 
+-void qla4xxx_build_scsi_iocbs(struct srb *srb,
+-			      struct command_t3_entry *cmd_entry,
+-			      uint16_t tot_dsds)
++static void qla4xxx_build_scsi_iocbs(struct srb *srb,
++				     struct command_t3_entry *cmd_entry,
++				     uint16_t tot_dsds)
+ {
+ 	struct scsi_qla_host *ha;
+ 	uint16_t avail_dsds;
+diff -puN drivers/scsi/qla4xxx/ql4_mbx.c~drivers-scsi-qla4xxx-possible-cleanups drivers/scsi/qla4xxx/ql4_mbx.c
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c~drivers-scsi-qla4xxx-possible-cleanups
++++ a/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -20,9 +20,9 @@
+  * If outCount is 0, this routine completes successfully WITHOUT waiting
+  * for the mailbox command to complete.
+  **/
+-int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
+-			    uint8_t outCount, uint32_t *mbx_cmd,
+-			    uint32_t *mbx_sts)
++static int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
++				   uint8_t outCount, uint32_t *mbx_cmd,
++				   uint32_t *mbx_sts)
+ {
+ 	int status = QLA_ERROR;
+ 	uint8_t i;
+@@ -170,6 +170,8 @@ mbox_exit:
+ }
+ 
+ 
++#if 0
++
+ /**
+  * qla4xxx_issue_iocb - issue mailbox iocb command
+  * @ha: adapter state pointer.
+@@ -243,6 +245,8 @@ int qla4xxx_clear_database_entry(struct 
+ 	return QLA_SUCCESS;
+ }
+ 
++#endif  /*  0  */
++
+ /**
+  * qla4xxx_initialize_fw_cb - initializes firmware control block.
+  * @ha: Pointer to host adapter structure.
+@@ -570,6 +574,7 @@ int qla4xxx_set_ddb_entry(struct scsi_ql
+ 	return qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]);
+ }
+ 
++#if 0
+ int qla4xxx_conn_open_session_login(struct scsi_qla_host * ha,
+ 				    uint16_t fw_ddb_index)
+ {
+@@ -594,6 +599,7 @@ int qla4xxx_conn_open_session_login(stru
+ 
+ 		return status;
+ }
++#endif  /*  0  */
+ 
+ /**
+  * qla4xxx_get_crash_record - retrieves crash record.
+@@ -649,6 +655,7 @@ exit_get_crash_record:
+ 				  crash_record, crash_record_dma);
+ }
+ 
++#if 0
+ /**
+  * qla4xxx_get_conn_event_log - retrieves connection event log
+  * @ha: Pointer to host adapter structure.
+@@ -738,6 +745,7 @@ exit_get_event_log:
+ 		dma_free_coherent(&ha->pdev->dev, event_log_size, event_log,
+ 				  event_log_dma);
+ }
++#endif  /*  0  */
+ 
+ /**
+  * qla4xxx_reset_lun - issues LUN Reset
+@@ -834,7 +842,8 @@ int qla4xxx_get_fw_version(struct scsi_q
+ 	return QLA_SUCCESS;
+ }
+ 
+-int qla4xxx_get_default_ddb(struct scsi_qla_host *ha, dma_addr_t dma_addr)
++static int qla4xxx_get_default_ddb(struct scsi_qla_host *ha,
++				   dma_addr_t dma_addr)
+ {
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+@@ -855,7 +864,7 @@ int qla4xxx_get_default_ddb(struct scsi_
+ 	return QLA_SUCCESS;
+ }
+ 
+-int qla4xxx_req_ddb_entry(struct scsi_qla_host *ha, uint32_t *ddb_index)
++static int qla4xxx_req_ddb_entry(struct scsi_qla_host *ha, uint32_t *ddb_index)
+ {
+ 	uint32_t mbox_cmd[MBOX_REG_COUNT];
+ 	uint32_t mbox_sts[MBOX_REG_COUNT];
+diff -puN drivers/scsi/qla4xxx/ql4_os.c~drivers-scsi-qla4xxx-possible-cleanups drivers/scsi/qla4xxx/ql4_os.c
+--- a/drivers/scsi/qla4xxx/ql4_os.c~drivers-scsi-qla4xxx-possible-cleanups
++++ a/drivers/scsi/qla4xxx/ql4_os.c
+@@ -14,7 +14,7 @@
+ /*
+  * Driver version
+  */
+-char qla4xxx_version_str[40];
++static char qla4xxx_version_str[40];
+ 
+ /*
+  * SRB allocation cache
+@@ -45,8 +45,7 @@ int ql4_mod_unload = 0;
+ /*
+  * SCSI host template entry points
+  */
+-
+-void qla4xxx_config_dma_addressing(struct scsi_qla_host *ha);
++static void qla4xxx_config_dma_addressing(struct scsi_qla_host *ha);
+ 
+ /*
+  * iSCSI template entry points
+@@ -1352,7 +1351,7 @@ static void __devexit qla4xxx_remove_ada
+  * At exit, the @ha's flags.enable_64bit_addressing set to indicated
+  * supported addressing method.
+  */
+-void qla4xxx_config_dma_addressing(struct scsi_qla_host *ha)
++static void qla4xxx_config_dma_addressing(struct scsi_qla_host *ha)
+ {
+ 	int retval;
+ 
+@@ -1627,7 +1626,7 @@ static struct pci_device_id qla4xxx_pci_
+ };
+ MODULE_DEVICE_TABLE(pci, qla4xxx_pci_tbl);
+ 
+-struct pci_driver qla4xxx_pci_driver = {
++static struct pci_driver qla4xxx_pci_driver = {
+ 	.name		= DRIVER_NAME,
+ 	.id_table	= qla4xxx_pci_tbl,
+ 	.probe		= qla4xxx_probe_adapter,
 _
