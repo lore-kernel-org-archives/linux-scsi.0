@@ -1,114 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/30] megaraid: fix warnings when CONFIG_PROC_FS=n
-Date: Thu, 26 Apr 2007 00:35:09 -0700
-Message-ID: <200704260735.l3Q7Z90W024217@shell0.pdx.osdl.net>
+Subject: [patch 27/30] sas_scsi_host: partially convert to use the kthread API
+Date: Thu, 26 Apr 2007 00:35:30 -0700
+Message-ID: <200704260735.l3Q7ZURV024291@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:60641 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:57656 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933318AbXDZHgG (ORCPT
+	by vger.kernel.org with ESMTP id S933166AbXDZHgd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:36:06 -0400
+	Thu, 26 Apr 2007 03:36:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, wharms@bfs.de, adobriyan@gmail.com, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ebiederm@xmission.com, James.Bottomley@steeleye.com, djwong@us.ibm.com
 
-From: walter harms <wharms@bfs.de>
+From: Eric W. Biederman <ebiederm@xmission.com>
 
-Signed-off-by: walter harms <wharms@bfs.de>
-Signed-off-by: Alexey Dobriyan <adobriyan@gmail.com>
-Cc: Adrian Bunk <bunk@stusta.de>
+This patch modifies the sas scsi host thread startup to use kthread_run not
+kernel_thread and deamonize.  kthread_run is slightly simpler and more
+maintainable.
+
+akpm: the driver should also be converted to use kthread_should_stop() and
+kthread_stop().
+
+Cc: Darrick J. Wong <djwong@us.ibm.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Eric W. Biederman <ebiederm@xmission.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |   17 +++++++++++------
- drivers/scsi/megaraid.h |    4 ++--
- 2 files changed, 13 insertions(+), 8 deletions(-)
+ drivers/scsi/libsas/sas_scsi_host.c |   11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~megaraid-fix-warnings-when-config_proc_fs=n drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~megaraid-fix-warnings-when-config_proc_fs=n
-+++ a/drivers/scsi/megaraid.c
-@@ -3177,7 +3177,10 @@ proc_rdrv(adapter_t *adapter, char *page
+diff -puN drivers/scsi/libsas/sas_scsi_host.c~sas_scsi_host-partially-convert-to-use-the-kthread-api drivers/scsi/libsas/sas_scsi_host.c
+--- a/drivers/scsi/libsas/sas_scsi_host.c~sas_scsi_host-partially-convert-to-use-the-kthread-api
++++ a/drivers/scsi/libsas/sas_scsi_host.c
+@@ -38,6 +38,7 @@
  
- 	return len;
- }
--
-+#else
-+static inline void mega_create_proc_entry(int index, struct proc_dir_entry *parent)
-+{
-+}
- #endif
+ #include <linux/err.h>
+ #include <linux/blkdev.h>
++#include <linux/kthread.h>
+ #include <linux/scatterlist.h>
  
+ /* ---------- SCSI Host glue ---------- */
+@@ -869,7 +870,6 @@ static int sas_queue_thread(void *_sas_h
+ 	struct sas_ha_struct *sas_ha = _sas_ha;
+ 	struct scsi_core *core = &sas_ha->core;
  
-@@ -4342,7 +4345,7 @@ mega_support_cluster(adapter_t *adapter)
- 	return 0;
- }
+-	daemonize("sas_queue_%d", core->shost->host_no);
+ 	current->flags |= PF_NOFREEZE;
  
--
-+#ifdef CONFIG_PROC_FS
- /**
-  * mega_adapinq()
-  * @adapter - pointer to our soft state
-@@ -4447,7 +4450,7 @@ mega_internal_dev_inquiry(adapter_t *ada
+ 	complete(&queue_th_comp);
+@@ -888,19 +888,20 @@ static int sas_queue_thread(void *_sas_h
  
- 	return rval;
- }
--
-+#endif
- 
- /**
-  * mega_internal_command()
-@@ -4965,7 +4968,6 @@ megaraid_remove_one(struct pci_dev *pdev
+ int sas_init_queue(struct sas_ha_struct *sas_ha)
  {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
- 	adapter_t *adapter = (adapter_t *)host->hostdata;
--	char	buf[12] = { 0 };
+-	int res;
+ 	struct scsi_core *core = &sas_ha->core;
++	struct task_struct *task;
  
- 	scsi_remove_host(host);
+ 	spin_lock_init(&core->task_queue_lock);
+ 	core->task_queue_size = 0;
+ 	INIT_LIST_HEAD(&core->task_queue);
+ 	init_MUTEX_LOCKED(&core->queue_thread_sema);
  
-@@ -5011,8 +5013,11 @@ megaraid_remove_one(struct pci_dev *pdev
- 		remove_proc_entry("raiddrives-30-39",
- 				adapter->controller_proc_dir_entry);
- #endif
--		sprintf(buf, "hba%d", adapter->host->host_no);
--		remove_proc_entry(buf, mega_proc_dir_entry);
-+		{
-+			char	buf[12] = { 0 };
-+			sprintf(buf, "hba%d", adapter->host->host_no);
-+			remove_proc_entry(buf, mega_proc_dir_entry);
-+		}
- 	}
- #endif
+-	res = kernel_thread(sas_queue_thread, sas_ha, 0);
+-	if (res >= 0)
++	task = kthread_run(sas_queue_thread, sas_ha,
++			   "sas_queue_%d", core->shost->host_no);
++	if (!IS_ERR(task))
+ 		wait_for_completion(&queue_th_comp);
  
-diff -puN drivers/scsi/megaraid.h~megaraid-fix-warnings-when-config_proc_fs=n drivers/scsi/megaraid.h
---- a/drivers/scsi/megaraid.h~megaraid-fix-warnings-when-config_proc_fs=n
-+++ a/drivers/scsi/megaraid.h
-@@ -1002,7 +1002,6 @@ static int megaraid_reset(Scsi_Cmnd *);
- static int megaraid_abort_and_reset(adapter_t *, Scsi_Cmnd *, int);
- static int megaraid_biosparam(struct scsi_device *, struct block_device *,
- 		sector_t, int []);
--static int mega_print_inquiry(char *, char *);
+-	return res < 0 ? res : 0;
++	return IS_ERR(task) ? PTR_ERR(task) : 0;
+ }
  
- static int mega_build_sglist (adapter_t *adapter, scb_t *scb,
- 			      u32 *buffer, u32 *length);
-@@ -1024,6 +1023,7 @@ static int mega_init_scb (adapter_t *);
- static int mega_is_bios_enabled (adapter_t *);
- 
- #ifdef CONFIG_PROC_FS
-+static int mega_print_inquiry(char *, char *);
- static void mega_create_proc_entry(int, struct proc_dir_entry *);
- static int proc_read_config(char *, char **, off_t, int, int *, void *);
- static int proc_read_stat(char *, char **, off_t, int, int *, void *);
-@@ -1040,10 +1040,10 @@ static int proc_rdrv_20(char *, char **,
- static int proc_rdrv_30(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv_40(char *, char **, off_t, int, int *, void *);
- static int proc_rdrv(adapter_t *, char *, int, int);
--#endif
- 
- static int mega_adapinq(adapter_t *, dma_addr_t);
- static int mega_internal_dev_inquiry(adapter_t *, u8, u8, dma_addr_t);
-+#endif
- 
- static int mega_support_ext_cdb(adapter_t *);
- static mega_passthru* mega_prepare_passthru(adapter_t *, scb_t *,
+ void sas_shutdown_queue(struct sas_ha_struct *sas_ha)
 _
