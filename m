@@ -1,89 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/30] drivers/scsi/: small cleanups
-Date: Thu, 26 Apr 2007 00:35:08 -0700
-Message-ID: <200704260735.l3Q7Z8Km024209@shell0.pdx.osdl.net>
+Subject: [patch 01/30] aacraid: 2.6.21-rc6-mm1 aacraid not finding device
+Date: Thu, 26 Apr 2007 00:35:07 -0700
+Message-ID: <200704260735.l3Q7Z7Ol024206@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:60550 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:49218 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933217AbXDZHf4 (ORCPT
+	by vger.kernel.org with ESMTP id S933187AbXDZHfr (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:35:56 -0400
+	Thu, 26 Apr 2007 03:35:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mark_salyzyn@adaptec.com, aacraid@adaptec.com
 
-From: Adrian Bunk <bunk@stusta.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 
-This patch contains the following cleanups:
-- make needlessly global functions static
-- every file should #include the headers containing the prototypes for
-  it's global functions
+Thanks for the help from Steve Fox and Duane Cox investigating this
+issue, I'd like to report that we found the problem. The issue is with
+the patch Steve Fox isolated below, by not accommodating older adapters
+properly and issuing a command they do not support when retrieving
+storage parameters about the arrays. This simple patch resolves the
+problem (and more accurately mimics the logic of the original code
+before the patch).
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_sysctl.c       |    1 +
- drivers/scsi/scsi_sysfs.c        |    3 ++-
- drivers/scsi/scsi_transport_fc.c |    2 +-
- drivers/scsi/sr.c                |    2 +-
- 4 files changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/aacraid/aachba.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
---- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/scsi_sysctl.c
-@@ -9,6 +9,7 @@
- #include <linux/sysctl.h>
- 
- #include "scsi_logging.h"
-+#include "scsi_priv.h"
- 
- 
- static ctl_table scsi_table[] = {
-diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
---- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/scsi_sysfs.c
-@@ -16,6 +16,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_transport.h>
-+#include <scsi/scsi_driver.h>
- 
- #include "scsi_priv.h"
- #include "scsi_logging.h"
-@@ -799,7 +800,7 @@ void scsi_remove_device(struct scsi_devi
- }
- EXPORT_SYMBOL(scsi_remove_device);
- 
--void __scsi_remove_target(struct scsi_target *starget)
-+static void __scsi_remove_target(struct scsi_target *starget)
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 	unsigned long flags;
-diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
---- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/scsi_transport_fc.c
-@@ -1797,7 +1797,7 @@ fc_rport_final_delete(struct work_struct
-  * Notes:
-  *	This routine assumes no locks are held on entry.
-  **/
--struct fc_rport *
-+static struct fc_rport *
- fc_rport_create(struct Scsi_Host *shost, int channel,
- 	struct fc_rport_identifiers  *ids)
- {
-diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
---- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
-+++ a/drivers/scsi/sr.c
-@@ -173,7 +173,7 @@ static void scsi_cd_put(struct scsi_cd *
-  * an inode for that to work, and we do not always have one.
-  */
- 
--int sr_media_change(struct cdrom_device_info *cdi, int slot)
-+static int sr_media_change(struct cdrom_device_info *cdi, int slot)
- {
- 	struct scsi_cd *cd = cdi->handle;
- 	int retval;
+diff -puN drivers/scsi/aacraid/aachba.c~aacraid-2621-rc6-mm1-aacraid-not-finding-device drivers/scsi/aacraid/aachba.c
+--- a/drivers/scsi/aacraid/aachba.c~aacraid-2621-rc6-mm1-aacraid-not-finding-device
++++ a/drivers/scsi/aacraid/aachba.c
+@@ -503,8 +503,7 @@ static int _aac_probe_container1(void * 
+ 	dresp = (struct aac_mount *) fib_data(fibptr);
+ 	dresp->mnt[0].capacityhigh = 0;
+ 	if ((le32_to_cpu(dresp->status) != ST_OK) ||
+-	    ((le32_to_cpu(dresp->mnt[0].vol) != CT_NONE) &&
+-	     (le32_to_cpu(dresp->mnt[0].state) == FSCS_HIDDEN)))
++	    (le32_to_cpu(dresp->mnt[0].vol) != CT_NONE))
+ 		return _aac_probe_container2(context, fibptr);
+ 	scsicmd = (struct scsi_cmnd *) context;
+ 	scsicmd->SCp.phase = AAC_OWNER_MIDLEVEL;
 _
