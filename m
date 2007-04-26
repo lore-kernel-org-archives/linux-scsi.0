@@ -1,59 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 25/30] scsi: fix CONFIG_SCSI_WAIT_SCAN=m
-Date: Thu, 26 Apr 2007 00:35:28 -0700
-Message-ID: <200704260735.l3Q7ZSG5024284@shell0.pdx.osdl.net>
+Subject: [patch 15/30] SCSI: Fix obvious typo "spin_lock_irqrestore()" in gdth.c
+Date: Thu, 26 Apr 2007 00:35:17 -0700
+Message-ID: <200704260735.l3Q7ZIoP024250@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:45295 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:39657 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933498AbXDZH6A (ORCPT
+	by vger.kernel.org with ESMTP id S933368AbXDZH6O (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:58:00 -0400
+	Thu, 26 Apr 2007 03:58:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hugh@veritas.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com, achim_leubner@adaptec.com
 
-From: Hugh Dickins <hugh@veritas.com>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-CONFIG_MODULES=y
-CONFIG_SCSI=y
-CONFIG_SCSI_SCAN_ASYNC=y
-CONFIG_SCSI_WAIT_SCAN=m
+Fix misspelled "spin_lock_irqrestore" to read "spin_unlock_irqrestore"
+instead.
 
-2.6.21-rc5-mm2 VFS panics unable to find my root on /dev/sda2, but boots
-okay if I change drivers/scsi/Kconfig to "default y" instead of "default m"
-for SCSI_WAIT_SCAN.
+Presumably, GDTH_RTC doesn't get used a lot.
 
-Make sure there's a late_initcall to scsi_complete_async_scans when it's
-built in, so a monolithic SCSI_SCAN_ASYNC kernel can rely on the scans
-being completed before trying to mount root, even if they're slow.
-
-[akpm@linux-foundation.org: build fixes]
-Signed-off-by: Hugh Dickins <hugh@veritas.com>
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Cc: <achim_leubner@adaptec.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_scan.c |    9 +++++++++
- 1 file changed, 9 insertions(+)
+ drivers/scsi/gdth.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m drivers/scsi/scsi_scan.c
---- a/drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m
-+++ a/drivers/scsi/scsi_scan.c
-@@ -184,6 +184,15 @@ int scsi_complete_async_scans(void)
- /* Only exported for the benefit of scsi_wait_scan */
- EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
- 
-+#ifndef MODULE
-+/*
-+ * For async scanning we need to wait for all the scans to complete before
-+ * trying to mount the root fs.  Otherwise non-modular drivers may not be ready
-+ * yet.
-+ */
-+late_initcall(scsi_complete_async_scans);
-+#endif
-+
- /**
-  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
-  * @sdev:	scsi device to send command to
+diff -puN drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc
++++ a/drivers/scsi/gdth.c
+@@ -1955,7 +1955,7 @@ static int __init gdth_search_drives(int
+         for (j = 0; j < 12; ++j) 
+             rtc[j] = CMOS_READ(j);
+     } while (rtc[0] != CMOS_READ(0));
+-    spin_lock_irqrestore(&rtc_lock, flags);
++    spin_unlock_irqrestore(&rtc_lock, flags);
+     TRACE2(("gdth_search_drives(): RTC: %x/%x/%x\n",*(ulong32 *)&rtc[0],
+             *(ulong32 *)&rtc[4], *(ulong32 *)&rtc[8]));
+     /* 3. send to controller firmware */
 _
