@@ -1,48 +1,62 @@
 From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 3/8] ipr: Handle UA on disk array following an adapter reset
-Date: Thu, 26 Apr 2007 16:00:08 -0500
-Message-ID: <200704262101.l3QL1KIJ010441@d03av03.boulder.ibm.com>
+Subject: [PATCH 4/8] ipr: Handle check condition status from disk array device
+Date: Thu, 26 Apr 2007 16:00:10 -0500
+Message-ID: <200704262101.l3QL1Mja004334@d01av04.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:60329 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755083AbXDZVBX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Apr 2007 17:01:23 -0400
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3QL1MVD005729
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 17:01:22 -0400
-Received: from d03av03.boulder.ibm.com (d03av03.boulder.ibm.com [9.17.195.169])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3QL1MGa067496
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 15:01:22 -0600
-Received: from d03av03.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av03.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3QL1MmG010611
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 15:01:22 -0600
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:59126 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755090AbXDZVBY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Apr 2007 17:01:24 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3QK0BZn015921
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 16:00:11 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3QL1NMw547372
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 17:01:23 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3QL1NqP004361
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Apr 2007 17:01:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
 Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
-On certain ipr RAID adapters, which are capable of multi-initiator
-configurations, the disk array, or VSET, resources will be in a POR
-Unit Attention state following an adapter reset. In order for the
-midlayer to handle the UA, I must report a bus reset to the logical
-disk array bus at the end of an adapter reset.
+On newer levels of microcode for ipr RAID adapters supporting
+multi-initiator configurations, the disk array, or VSET, resources
+are capable of generating a check condition. This patch prevents
+ipr from generating sense data in this scenario and retrieving it
+from the logical device instead.
 
 Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 ---
 
- drivers/scsi/ipr.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/ipr.c |    5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff -puN drivers/scsi/ipr.c~ipr_vset_ua_handling drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_vset_ua_handling	2007-04-26 09:17:31.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-04-26 09:17:31.000000000 -0500
-@@ -5379,6 +5379,7 @@ static int ipr_ioa_reset_done(struct ipr
- 			ipr_send_hcam(ioa_cfg, IPR_HCAM_CDB_OP_CODE_CONFIG_CHANGE, hostrcb);
+diff -puN drivers/scsi/ipr.c~ipr_vset_cc_handling drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_vset_cc_handling	2007-04-26 09:17:39.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-04-26 09:17:39.000000000 -0500
+@@ -4672,18 +4672,19 @@ static void ipr_erp_start(struct ipr_ioa
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+ 	struct ipr_resource_entry *res = scsi_cmd->device->hostdata;
+ 	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
++	u32 masked_ioasc = ioasc & IPR_IOASC_IOASC_MASK;
+ 
+ 	if (!res) {
+ 		ipr_scsi_eh_done(ipr_cmd);
+ 		return;
  	}
  
-+	scsi_report_bus_reset(ioa_cfg->host, IPR_VSET_BUS);
- 	dev_info(&ioa_cfg->pdev->dev, "IOA initialized.\n");
+-	if (!ipr_is_gscsi(res))
++	if (!ipr_is_gscsi(res) && masked_ioasc != IPR_IOASC_HW_DEV_BUS_STATUS)
+ 		ipr_gen_sense(ipr_cmd);
  
- 	ioa_cfg->reset_retries = 0;
+ 	ipr_dump_ioasa(ioa_cfg, ipr_cmd, res);
+ 
+-	switch (ioasc & IPR_IOASC_IOASC_MASK) {
++	switch (masked_ioasc) {
+ 	case IPR_IOASC_ABORTED_CMD_TERM_BY_HOST:
+ 		if (ipr_is_naca_model(res))
+ 			scsi_cmd->result |= (DID_ABORT << 16);
 _
