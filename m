@@ -1,44 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 15/30] SCSI: Fix obvious typo "spin_lock_irqrestore()" in gdth.c
-Date: Thu, 26 Apr 2007 00:35:17 -0700
-Message-ID: <200704260735.l3Q7ZIoP024250@shell0.pdx.osdl.net>
+Subject: [patch 18/30] Fix |/|| confusion in fusion driver
+Date: Thu, 26 Apr 2007 00:35:20 -0700
+Message-ID: <200704260735.l3Q7ZK79024259@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:39657 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:54225 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933368AbXDZH6O (ORCPT
+	by vger.kernel.org with ESMTP id S933539AbXDZH6D (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:58:14 -0400
+	Thu, 26 Apr 2007 03:58:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com, achim_leubner@adaptec.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, dmueller@osuse.de, James.Bottomley@steeleye.com, eric.moore@lsi.com
 
-From: "Robert P. J. Day" <rpjday@mindspring.com>
+From: Dirk Mueller <dmueller@osuse.de>
 
-Fix misspelled "spin_lock_irqrestore" to read "spin_unlock_irqrestore"
-instead.
+This patch corrects a |/|| confusion in mptscsih_copy_sense_data.  Using ||
+means that the data that ends up being written is (almost always) 1,
+instead of being bit-wise or'ed.
 
-Presumably, GDTH_RTC doesn't get used a lot.
-
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
-Cc: <achim_leubner@adaptec.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Eric Moore <eric.moore@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/fusion/mptscsih.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc
-+++ a/drivers/scsi/gdth.c
-@@ -1955,7 +1955,7 @@ static int __init gdth_search_drives(int
-         for (j = 0; j < 12; ++j) 
-             rtc[j] = CMOS_READ(j);
-     } while (rtc[0] != CMOS_READ(0));
--    spin_lock_irqrestore(&rtc_lock, flags);
-+    spin_unlock_irqrestore(&rtc_lock, flags);
-     TRACE2(("gdth_search_drives(): RTC: %x/%x/%x\n",*(ulong32 *)&rtc[0],
-             *(ulong32 *)&rtc[4], *(ulong32 *)&rtc[8]));
-     /* 3. send to controller firmware */
+diff -puN drivers/message/fusion/mptscsih.c~fix--confusion-in-fusion-driver drivers/message/fusion/mptscsih.c
+--- a/drivers/message/fusion/mptscsih.c~fix--confusion-in-fusion-driver
++++ a/drivers/message/fusion/mptscsih.c
+@@ -2463,9 +2463,9 @@ mptscsih_copy_sense_data(struct scsi_cmn
+ 				ioc->events[idx].event = MPI_EVENT_SCSI_DEVICE_STATUS_CHANGE;
+ 				ioc->events[idx].eventContext = ioc->eventContext;
+ 
+-				ioc->events[idx].data[0] = (pReq->LUN[1] << 24) ||
+-					(MPI_EVENT_SCSI_DEV_STAT_RC_SMART_DATA << 16) ||
+-					(sc->device->channel << 8) || sc->device->id;
++				ioc->events[idx].data[0] = (pReq->LUN[1] << 24) |
++					(MPI_EVENT_SCSI_DEV_STAT_RC_SMART_DATA << 16) |
++					(sc->device->channel << 8) | sc->device->id;
+ 
+ 				ioc->events[idx].data[1] = (sense_data[13] << 8) || sense_data[12];
+ 
 _
