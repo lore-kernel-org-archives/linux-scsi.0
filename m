@@ -1,48 +1,37 @@
-From: akpm@linux-foundation.org
-Subject: [patch 10/30] sym53c8xx_2 claims cpqarray device
-Date: Thu, 26 Apr 2007 00:35:14 -0700
-Message-ID: <200704260735.l3Q7ZEEK024235@shell0.pdx.osdl.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 01/30] aacraid: 2.6.21-rc6-mm1 aacraid not finding
+ device
+Date: Thu, 26 Apr 2007 00:58:47 -0700
+Message-ID: <20070426005847.cd74b01f.akpm@linux-foundation.org>
+References: <200704260735.l3Q7Z7Ol024206@shell0.pdx.osdl.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:51484 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:32966 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933585AbXDZH65 (ORCPT
+	by vger.kernel.org with ESMTP id S933576AbXDZH7L (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Apr 2007 03:58:57 -0400
+	Thu, 26 Apr 2007 03:59:11 -0400
+In-Reply-To: <200704260735.l3Q7Z7Ol024206@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org
 
-From: Chip Coldwell <coldwell@redhat.com>
 
-Apropos this thread
+James, I've been maintaining some of these patches for one and a half
+years, which is probably enough testing.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
+Could you please review all the patches and either merge them, or nack them
+with reasons or describe what modifications are needed.
 
-which led to this patch
+Emphasis on "all".  Please no longer cherrypick a couple and silently
+ignore the rest.
 
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
+If another maintainer needs to check a patch and I didn't cc the correct
+person, please let me know who the relevant maintainer is, and cc them upon
+that reply.
 
-do we not also need the following patch, nine lines lower in the same file?
+Thanks.
 
-Signed-off-by: Chip Coldwell <coldwell@redhat.com>
-Cc: Matthew Wilcox <willy@debian.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
-+	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
-_
