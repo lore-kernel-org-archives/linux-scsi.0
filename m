@@ -1,56 +1,58 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: 2.6.21-rc7: known regressions with patches
-Date: Thu, 26 Apr 2007 01:40:43 +0200
-Message-ID: <20070425234043.GI3468@stusta.de>
-References: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: akpm@linux-foundation.org
+Subject: [patch 06/30] pci_module_init() convertion in tmscsim.c
+Date: Thu, 26 Apr 2007 00:35:11 -0700
+Message-ID: <200704260735.l3Q7ZBFX024223@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:34566 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754524AbXDYXkd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Apr 2007 19:40:33 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0704151659570.5473@woody.linux-foundation.org>
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:40955 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S933213AbXDZHfy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Apr 2007 03:35:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, CIJOML <cijoml@volny.cz>, Markus Rechberger <markus.rechberger@amd.com>, v4l-dvb-maintainer@linuxtv.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Takashi Iwai <tiwai@suse.de>, perex@suse.cz, alsa-devel@alsa-project.org, David Miller <davem@davemloft.net>, Robert Peterson <rpeterso@redhat.com>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, henne@nachtinwdheim.de, alan@redhat.com, henne@nachtwindheim.de
 
-This email lists some known regressions in Linus' tree compared to 2.6.20
-with patches available.
+From: Henrik Kretzschmar <henne@nachtinwdheim.de>
 
-If you find your name in the Cc header, you are either submitter of one
-of the bugs, maintainer of an affectected subsystem or driver, a patch
-of you caused a breakage or I'm considering you in any other way
-possibly involved with one or more of these issues.
+pci_module_init() convertion in tmscsim.c
 
-Due to the huge amount of recipients, please trim the Cc when answering.
+Signed-off-by: Henrik Kretzschmar <henne@nachtwindheim.de>
+Acked-by: Alan Cox <alan@redhat.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
+ drivers/scsi/tmscsim.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Subject    : Oops when changing USB DVB-T adapter
-References : http://lkml.org/lkml/2007/3/9/212
-             http://lkml.org/lkml/2007/4/5/154
-Submitter  : CIJOML <cijoml@volny.cz>
-Handled-By : Markus Rechberger <markus.rechberger@amd.com>
-Status     : patches available
-
-
-Subject    : snd_intel8x0: divide error: 0000
-References : http://lkml.org/lkml/2007/3/5/252
-Submitter  : Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Handled-By : Takashi Iwai <tiwai@suse.de>
-Patch      : http://lkml.org/lkml/2007/4/20/117
-Status     : patch available
-
-
-Subject    : qla2xxx driver no longer works
-References : http://lkml.org/lkml/2007/4/16/49
-             http://lkml.org/lkml/2007/4/20/224
-Submitter  : David Miller <davem@davemloft.net>
-             Robert Peterson <rpeterso@redhat.com>
-Handled-By : David Miller <davem@davemloft.net>
-Patch      : http://lkml.org/lkml/2007/4/16/234
-Status     : patch was suggested
-
-
+diff -puN drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc drivers/scsi/tmscsim.c
+--- a/drivers/scsi/tmscsim.c~pci_module_init-convertion-in-tmscsimc
++++ a/drivers/scsi/tmscsim.c
+@@ -177,6 +177,8 @@
+  *	2.1d  04/05/27	GL	Moved setting of scan_devices to	*
+  *				slave_alloc/_configure/_destroy, as	*
+  *				suggested by CH.			*
++ *	2.1e  06/09/04	HENKR	change pci_module_init() to		*
++ *				pci_register_driver()			*
+  ***********************************************************************/
+ 
+ /* DEBUG options */
+@@ -244,7 +246,7 @@
+ 
+ 
+ #define DC390_BANNER "Tekram DC390/AM53C974"
+-#define DC390_VERSION "2.1d 2004-05-27"
++#define DC390_VERSION "2.1e 2006-09-04"
+ 
+ #define PCI_DEVICE_ID_AMD53C974 	PCI_DEVICE_ID_AMD_SCSI
+ 
+@@ -2680,7 +2682,7 @@ static int __init dc390_module_init(void
+ 		printk (KERN_INFO "DC390: Using safe settings.\n");
+ 	}
+ 
+-	return pci_module_init(&dc390_driver);
++	return pci_register_driver(&dc390_driver);
+ }
+ 
+ static void __exit dc390_module_exit(void)
+_
