@@ -1,79 +1,87 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: BAD_SG_DMA panic in aha1542
-Date: Fri, 27 Apr 2007 23:13:46 +0100
-Message-ID: <20070427231346.647797bc@the-village.bc.nu>
+Date: Fri, 27 Apr 2007 17:21:39 -0500
+Message-ID: <1177712499.3688.25.camel@mulgrave.il.steeleye.com>
 References: <20070427214709.DC44BDBA2@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757493AbXD0WK7@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:33917 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757487AbXD0WVs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Apr 2007 18:21:48 -0400
 In-Reply-To: <20070427214709.DC44BDBA2@gherkin.frus.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Bob Tracy <rct@gherkin.frus.com>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
+On Fri, 2007-04-27 at 16:47 -0500, Bob Tracy wrote:
+> I previously reported an ISA DMA issue for the 2.6.12 kernel.  The issue
+> persists through at least 2.6.18.  SCSI controller is an Adaptec
+> AHA-1542B (ISA).
+> 
+> The action "mount -t iso9660 /dev/scd0 /mnt/cdrom -r"
+> 
+> produces
+> 
+> (cdrom detection messages as various modules autoload, then...)
+
+Knowing what these messages are is would be helpful; it tells me what
+point in the initialisation it got to. 
+
+> sgpnt[0:1] page c1ee5af0/0x1ee5af0 length 32
+> Kernel panic - not syncing: Buffer at physical address > 16 Mb used for aha1542
+> 
 > As before, no problems using the sda hard disk (which is the boot drive):
 > everything works reliably until I touch the cdrom drive.
+> 
+> I'll be happy to assist with the debugging, but the system with the
+> aha1542 has no development facilities, i.e., I'll have to build test
+> kernels on a different system, and turnaround is going to be slow :-(.
 
-A little quiet contemplation and gnome number 387 suggests trying the following
-(and providing more detailed information such as the last message printed before
-the DMA message). Stuff a BUG() before the panic in BAD_DMA (aha1542.c) if needed
-to get a good trace.
+I'm interested.
 
-Please report success/failure/change.
+This is clearly a use_sg==1 path that has failed to bounce the buffer
+for some reason ... and I was contemplating eliminating the GFP_DMA from
+our sr driver because I thought the block bouncing had it covered.
 
---- drivers/scsi/sr_ioctl.c~	2007-04-27 22:53:33.885035256 +0100
-+++ drivers/scsi/sr_ioctl.c	2007-04-27 22:53:33.885035256 +0100
-@@ -187,9 +187,10 @@
- 	struct scsi_sense_hdr sshdr;
- 	int result, err = 0, retries = 0;
- 	struct request_sense *sense = cgc->sense;
--
-+	void *zebedee = cgc->buffer;
-+	
- 	SDev = cd->device;
--
-+	
- 	if (!sense) {
- 		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
- 		if (!sense) {
-@@ -197,7 +198,22 @@
- 			goto out;
- 		}
- 	}
--
-+	
-+	if (cgc->buflen && cd->device->host->unchecked_isa_dma) {
-+		switch(cgc->data_direction) {
-+			case DMA_NONE:
-+				break;
-+			case DMA_FROM_DEVICE:
-+			case DMA_TO_DEVICE: /* Boing!!!! said Zebedee */
-+				zebedee = kmalloc(cgc->buflen, GFP_KERNEL|GFP_DMA);
-+				if (zebedee ==NULL) {
-+					err = -ENOMEM;
-+					goto out;
-+				}
-+		}
-+		if (cgc->data_direction == DMA_TO_DEVICE)
-+			memcpy(zebedee, cgc->buffer, cgc->buflen);
-+	}
-       retry:
- 	if (!scsi_block_when_processing_errors(SDev)) {
- 		err = -ENODEV;
-@@ -206,10 +222,13 @@
+It might also be helpful to apply this patch.  It should give a stack
+trace of the problem command and not immediately panic the box.
+
+Thanks,
+
+James
+
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index 1d239f6..4ee7d99 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -75,7 +75,7 @@ static void BAD_SG_DMA(Scsi_Cmnd * SCpnt,
+ 	/*
+ 	 * Not safe to continue.
+ 	 */
+-	panic("Buffer at physical address > 16Mb used for aha1542");
++	WARN_ON(1);
+ }
  
- 	memset(sense, 0, sizeof(*sense));
- 	result = scsi_execute(SDev, cgc->cmd, cgc->data_direction,
--			      cgc->buffer, cgc->buflen, (char *)sense,
-+			      zebedee, cgc->buflen, (char *)sense,
- 			      cgc->timeout, IOCTL_RETRIES, 0);
- 
- 	scsi_normalize_sense((char *)sense, sizeof(*sense), &sshdr);
-+	
-+	if (zebedeee != cgc->buffer && cgc->data_direction == DMA_FROM_DEVICE)
-+		memcpy(cgc->buffer, zebedee, cgc->buflen);
- 
- 	/* Minimal error checking.  Ignore cases we know about, and report the rest. */
- 	if (driver_byte(result) != 0) {
+ #include<linux/stat.h>
+@@ -725,8 +725,12 @@ static int aha1542_queuecommand(Scsi_Cmnd * SCpnt, void (*done) (Scsi_Cmnd *))
+ 				panic("Foooooooood fight!");
+ 			};
+ 			any2scsi(cptr[i].dataptr, SCSI_SG_PA(&sgpnt[i]));
+-			if (SCSI_SG_PA(&sgpnt[i]) + sgpnt[i].length - 1 > ISA_DMA_THRESHOLD)
++			if (SCSI_SG_PA(&sgpnt[i]) + sgpnt[i].length - 1 > ISA_DMA_THRESHOLD) {
+ 				BAD_SG_DMA(SCpnt, sgpnt, SCpnt->use_sg, i);
++				SCpnt->result = DID_ERROR << 16;
++				done(SCpnt);
++				return 0;
++			}
+ 			any2scsi(cptr[i].datalen, sgpnt[i].length);
+ 		};
+ 		any2scsi(ccb[mbo].datalen, SCpnt->use_sg * sizeof(struct chain));
+
+
+
+
