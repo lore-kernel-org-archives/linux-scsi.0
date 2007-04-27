@@ -1,49 +1,37 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: BAD_SG_DMA panic in aha1542
-Date: Fri, 27 Apr 2007 16:47:09 -0500 (CDT)
-Message-ID: <20070427214709.DC44BDBA2@gherkin.frus.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] aacraid: Initialize rx/rkt function pointers before calling
+ them
+Date: Fri, 27 Apr 2007 14:49:21 -0700
+Message-ID: <46326FE1.1030605@us.ibm.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF018FD9D2@otce2k301.adaptec.com>
+Reply-To: "Darrick J. Wong" <djwong@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:59503 "EHLO gherkin.frus.com"
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:56150 "EHLO e6.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757358AbXD0VrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Apr 2007 17:47:11 -0400
+	id S1757341AbXD0VtX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 27 Apr 2007 17:49:23 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3RLoHp0006840
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Apr 2007 17:50:17 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3RLnMkj546826
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Apr 2007 17:49:22 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3RLnLps012677
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Apr 2007 17:49:22 -0400
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF018FD9D2@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi@vger.kernel.org, Alexis Bruemmer <alexisb@us.ibm.com>, Vivek Goyal <vgoyal@in.ibm.com>, Judith Lebzelter <judith@linux-foundation.org>
 
-I previously reported an ISA DMA issue for the 2.6.12 kernel.  The issue
-persists through at least 2.6.18.  SCSI controller is an Adaptec
-AHA-1542B (ISA).
+Salyzyn, Mark wrote:
+> As an option for a patch (later), what was the actual value of the
+> Munit.OIMR register (on the x3550 and the x3650 please, just in case)?
 
-The action "mount -t iso9660 /dev/scd0 /mnt/cdrom -r"
+0xF.
 
-produces
-
-(cdrom detection messages as various modules autoload, then...)
-sgpnt[0:1] page c1ee5af0/0x1ee5af0 length 32
-Kernel panic - not syncing: Buffer at physical address > 16 Mb used for aha1542
-
-As before, no problems using the sda hard disk (which is the boot drive):
-everything works reliably until I touch the cdrom drive.
-
-I'll be happy to assist with the debugging, but the system with the
-aha1542 has no development facilities, i.e., I'll have to build test
-kernels on a different system, and turnaround is going to be slow :-(.
-
-Thanks in advance for helping me get this old machine working again.
-No issues with 2.4 kernels.  I have no idea about 2.5 kernels and
-2.6 kernels prior to 2.6.12.  As for why I didn't report this before
-now, the aha1542b was in my parts bin until I cobbled a system together
-approx. two weeks ago, mostly to see if a useful system could still be
-had using legacy hardware and modern GNU/Linux software.  I'm happy to
-report the answer is mostly "yes".
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
+--D
