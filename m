@@ -1,42 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] SCSI: use irq_handler_t where appropriate
-Date: Sat, 28 Apr 2007 14:23:40 -0400
-Message-ID: <20070428182340.GA17508@havoc.gtf.org>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [-mm patch] scsi/lpfc/lpfc_init.c: remove unused variable
+Date: Sat, 28 Apr 2007 21:20:34 +0200
+Message-ID: <20070428192034.GW3468@stusta.de>
+References: <20070425225716.8e9b28ca.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1163473AbXD1SXm@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161029AbXD1TVx@vger.kernel.org>
 Content-Disposition: inline
+In-Reply-To: <20070425225716.8e9b28ca.akpm@linux-foundation.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>
+To: Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Smart <James.Smart@emulex.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+This patch removes a no longer used variable:
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
+<--  snip  -->
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 39ecd0d..ccdf57e 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -499,7 +499,7 @@ struct adapter_ops
- 	int  (*adapter_check_health)(struct aac_dev *dev);
- 	/* Transport operations */
- 	int  (*adapter_ioremap)(struct aac_dev * dev, u32 size);
--	irqreturn_t (*adapter_intr)(int irq, void *dev_id);
-+	irq_handler_t adapter_intr;
- 	/* Packet operations */
- 	int  (*adapter_deliver)(struct fib * fib);
- 	int  (*adapter_bounds)(struct aac_dev * dev, struct scsi_cmnd * cmd, u64 lba);
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 280aa23..e3c77d7 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1632,7 +1632,7 @@ struct qla_init_msix_entry {
- 	uint16_t entry;
- 	uint16_t index;
- 	const char *name;
--	irqreturn_t (*handler)(int, void *);
-+	irq_handler_t handler;
- };
- 
- static struct qla_init_msix_entry imsix_entries[QLA_MSIX_ENTRIES] = {
+=2E..
+  CC      drivers/scsi/lpfc/lpfc_init.o
+/home/bunk/linux/kernel-2.6/linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc=
+_init.c: In function =E2=80=98lpfc_pci_probe_one=E2=80=99:
+/home/bunk/linux/kernel-2.6/linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc=
+_init.c:1419: warning: unused variable =E2=80=98retval=E2=80=99
+=2E..
+
+<--  snip  -->
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+
+---
+--- linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc_init.c.old	2007-04-28 1=
+5:20:42.000000000 +0200
++++ linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc_init.c	2007-04-28 15:20=
+:57.000000000 +0200
+@@ -1416,7 +1416,7 @@
+ 	struct lpfc_sli  *psli;
+ 	struct lpfc_iocbq *iocbq_entry =3D NULL, *iocbq_next =3D NULL;
+ 	unsigned long bar0map_len, bar2map_len;
+-	int error =3D -ENODEV, retval;
++	int error =3D -ENODEV;
+ 	int i;
+ 	uint16_t iotag;
+=20
