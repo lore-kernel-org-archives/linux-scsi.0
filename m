@@ -1,46 +1,74 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [-mm patch] scsi/lpfc/lpfc_init.c: remove unused variable
-Date: Sat, 28 Apr 2007 21:20:34 +0200
-Message-ID: <20070428192034.GW3468@stusta.de>
-References: <20070425225716.8e9b28ca.akpm@linux-foundation.org>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Sun, 29 Apr 2007 04:48:03 +0900
+Message-ID: <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
+References: <46225E18.7070404@panasas.com>
+	<462261E8.5090005@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1161029AbXD1TVx@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070425225716.8e9b28ca.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Randy Dunlap <randy.dunlap@oracle.com>, James Smart <James.Smart@emulex.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <462261E8.5090005@panasas.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com, osd-dev@open-osd.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch removes a no longer used variable:
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 4/4] bidi support: bidirectional request
+Date: Sun, 15 Apr 2007 20:33:28 +0300
 
-<--  snip  -->
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index 645d24b..16a02ee 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -322,6 +322,7 @@ struct request {
+>      void *end_io_data;
+> 
+>      struct request_io_part uni;
+> +    struct request_io_part bidi_read;
+>  };
 
-=2E..
-  CC      drivers/scsi/lpfc/lpfc_init.o
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc=
-_init.c: In function =E2=80=98lpfc_pci_probe_one=E2=80=99:
-/home/bunk/linux/kernel-2.6/linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc=
-_init.c:1419: warning: unused variable =E2=80=98retval=E2=80=99
-=2E..
+Would be more straightforward to have:
 
-<--  snip  -->
+struct request_io_part in;
+struct request_io_part out;
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
----
---- linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc_init.c.old	2007-04-28 1=
-5:20:42.000000000 +0200
-+++ linux-2.6.21-rc7-mm2/drivers/scsi/lpfc/lpfc_init.c	2007-04-28 15:20=
-:57.000000000 +0200
-@@ -1416,7 +1416,7 @@
- 	struct lpfc_sli  *psli;
- 	struct lpfc_iocbq *iocbq_entry =3D NULL, *iocbq_next =3D NULL;
- 	unsigned long bar0map_len, bar2map_len;
--	int error =3D -ENODEV, retval;
-+	int error =3D -ENODEV;
- 	int i;
- 	uint16_t iotag;
-=20
+>  /*
+> @@ -600,6 +601,34 @@ static inline struct request_io_part* rq_uni(struct request* req)
+>      return &req->uni;
+>  }
+>
+> +static inline struct request_io_part* rq_out(struct request* req)
+> +{
+> +    WARN_ON_BIDI_FLAG(req);
+> +    return &req->uni;
+> +}
+> +
+> +static inline struct request_io_part* rq_in(struct request* req)
+> +{
+> +    WARN_ON_BIDI_FLAG(req);
+> +    if (likely(rq_dma_dir(req) != DMA_BIDIRECTIONAL))
+> +        return &req->uni;
+> +
+> +    if (likely(req->cmd_flags & REQ_BIDI))
+> +        return &req->bidi_read;
+> +
+> +    return &req->uni;
+> +}
+> +
+> +static inline struct request_io_part* rq_io(struct request* req,
+> +                                            enum dma_data_direction dir)
+> +{
+> +    if (dir == DMA_FROM_DEVICE)
+> +        return rq_in(req);
+> +
+> +    WARN_ON( (dir != DMA_TO_DEVICE) && (dir != DMA_NONE) );
+> +    return &req->uni;
+> +}
+
+static inline struct request_io_part* rq_io(struct request* req)
+{
+	return (req is WRITE) ? &req->out : &req->in;
+}
