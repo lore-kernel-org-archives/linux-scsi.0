@@ -1,44 +1,93 @@
-From: Wakko Warner <wakko@animx.eu.org>
-Subject: scsi0: device overrun (status a) on 0:0:0
-Date: Sat, 28 Apr 2007 23:06:51 -0400
-Message-ID: <20070429030651.GA4897@animx.eu.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Sun, 29 Apr 2007 18:48:59 +0300
+Message-ID: <4634BE6B.3000808@panasas.com>
+References: <46225E18.7070404@panasas.com>	<462261E8.5090005@panasas.com> <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from animx.eu.org ([216.98.75.249]:43311 "EHLO animx.eu.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754532AbXD2Dgl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 28 Apr 2007 23:36:41 -0400
-Received: from wakko by animx.eu.org with local
-	(Exim 4.64 #1 (Debian Bug?  What bug /\oo/\))
-	id 1HhzkR-0001Hg-1g
-	for linux-scsi@vger.kernel.org; Sat, 28 Apr 2007 23:06:51 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-NOTE: I am not on the list, please always keep me in CC.
+FUJITA Tomonori wrote:
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> Subject: [PATCH 4/4] bidi support: bidirectional request
+> Date: Sun, 15 Apr 2007 20:33:28 +0300
+> 
+>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>> index 645d24b..16a02ee 100644
+>> --- a/include/linux/blkdev.h
+>> +++ b/include/linux/blkdev.h
+>> @@ -322,6 +322,7 @@ struct request {
+>>      void *end_io_data;
+>>
+>>      struct request_io_part uni;
+>> +    struct request_io_part bidi_read;
+>>  };
+> 
+> Would be more straightforward to have:
+> 
+> struct request_io_part in;
+> struct request_io_part out;
+> 
 
-Can anyone tell me what this means:
-Apr 28 22:50:42 vegeta kernel: [179467.422680] scsi0: device overrun (status a) on 0:0:0
-Apr 28 22:50:42 vegeta kernel: [179467.479433] scsi0: device overrun (status a) on 0:0:0
-Apr 28 22:50:42 vegeta kernel: [179467.499404] scsi0: device overrun (status a) on 0:0:0
-Apr 28 22:50:42 vegeta kernel: [179467.565196] scsi0: device overrun (status a) on 0:0:0
-Apr 28 22:50:43 vegeta kernel: [179467.647090] scsi0: device overrun (status a) on 0:0:0
+Yes I wish I could do that. For bidi supporting drivers this is the most logical.
+But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
+the hotish paths, this means we will need a pointer to a uni request_io_part.
+This is bad because:
+1st- There is no defined stage in a request life where to definitely set that pointer,
+     specially in the preparation stages.
+2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
+     very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
+     (not sent yet) but a more long term solution is needed. Once such hacks are
+     cleaned up we can do what you say. This is exactly why I use the access functions
+     rq_uni/rq_io/rq_in/rq_out and not open code access.
 
-Kernel is 2.6.20.
+> 
+>>  /*
+>> @@ -600,6 +601,34 @@ static inline struct request_io_part* rq_uni(struct request* req)
+>>      return &req->uni;
+>>  }
+>>
+>> +static inline struct request_io_part* rq_out(struct request* req)
+>> +{
+>> +    WARN_ON_BIDI_FLAG(req);
+>> +    return &req->uni;
+>> +}
+>> +
+>> +static inline struct request_io_part* rq_in(struct request* req)
+>> +{
+>> +    WARN_ON_BIDI_FLAG(req);
+>> +    if (likely(rq_dma_dir(req) != DMA_BIDIRECTIONAL))
+>> +        return &req->uni;
+>> +
+>> +    if (likely(req->cmd_flags & REQ_BIDI))
+>> +        return &req->bidi_read;
+>> +
+>> +    return &req->uni;
+>> +}
+>> +
+>> +static inline struct request_io_part* rq_io(struct request* req,
+>> +                                            enum dma_data_direction dir)
+>> +{
+>> +    if (dir == DMA_FROM_DEVICE)
+>> +        return rq_in(req);
+>> +
+>> +    WARN_ON( (dir != DMA_TO_DEVICE) && (dir != DMA_NONE) );
+>> +    return &req->uni;
+>> +}
+> 
+> static inline struct request_io_part* rq_io(struct request* req)
+> {
+> 	return (req is WRITE) ? &req->out : &req->in;
+> }
 
-I see this frequently in my logs/dmesg and have no clue what it really
-means.  I have 2 disks that constantly give this, both are SEAGATE
-ST318404LW on an onboard AIC79xx controller (MB: SuperMicro X5DA8).
+Again I'm all for it. But this is a to deep of a change. Too many things changing
+at once. If we keep the access functions than it does not matter, we can do it later.
 
-I see no noticable problems or speed issues.  Kernel 2.6.17 did not show me
-this error.
+Boaz
 
-A grep of the source shows this line is in drivers/scsi/aic7xxx/aic79xx_osm.c
-and nowhere else.
-
--- 
- Lab tests show that use of micro$oft causes cancer in lab animals
- Got Gas???
