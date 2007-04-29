@@ -1,74 +1,44 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-Date: Sun, 29 Apr 2007 04:48:03 +0900
-Message-ID: <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp>
-References: <46225E18.7070404@panasas.com>
-	<462261E8.5090005@panasas.com>
+From: Wakko Warner <wakko@animx.eu.org>
+Subject: scsi0: device overrun (status a) on 0:0:0
+Date: Sat, 28 Apr 2007 23:06:51 -0400
+Message-ID: <20070429030651.GA4897@animx.eu.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <462261E8.5090005@panasas.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com, osd-dev@open-osd.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from animx.eu.org ([216.98.75.249]:43311 "EHLO animx.eu.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754532AbXD2Dgl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 28 Apr 2007 23:36:41 -0400
+Received: from wakko by animx.eu.org with local
+	(Exim 4.64 #1 (Debian Bug?  What bug /\oo/\))
+	id 1HhzkR-0001Hg-1g
+	for linux-scsi@vger.kernel.org; Sat, 28 Apr 2007 23:06:51 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/4] bidi support: bidirectional request
-Date: Sun, 15 Apr 2007 20:33:28 +0300
+NOTE: I am not on the list, please always keep me in CC.
 
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 645d24b..16a02ee 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -322,6 +322,7 @@ struct request {
->      void *end_io_data;
-> 
->      struct request_io_part uni;
-> +    struct request_io_part bidi_read;
->  };
+Can anyone tell me what this means:
+Apr 28 22:50:42 vegeta kernel: [179467.422680] scsi0: device overrun (status a) on 0:0:0
+Apr 28 22:50:42 vegeta kernel: [179467.479433] scsi0: device overrun (status a) on 0:0:0
+Apr 28 22:50:42 vegeta kernel: [179467.499404] scsi0: device overrun (status a) on 0:0:0
+Apr 28 22:50:42 vegeta kernel: [179467.565196] scsi0: device overrun (status a) on 0:0:0
+Apr 28 22:50:43 vegeta kernel: [179467.647090] scsi0: device overrun (status a) on 0:0:0
 
-Would be more straightforward to have:
+Kernel is 2.6.20.
 
-struct request_io_part in;
-struct request_io_part out;
+I see this frequently in my logs/dmesg and have no clue what it really
+means.  I have 2 disks that constantly give this, both are SEAGATE
+ST318404LW on an onboard AIC79xx controller (MB: SuperMicro X5DA8).
 
+I see no noticable problems or speed issues.  Kernel 2.6.17 did not show me
+this error.
 
->  /*
-> @@ -600,6 +601,34 @@ static inline struct request_io_part* rq_uni(struct request* req)
->      return &req->uni;
->  }
->
-> +static inline struct request_io_part* rq_out(struct request* req)
-> +{
-> +    WARN_ON_BIDI_FLAG(req);
-> +    return &req->uni;
-> +}
-> +
-> +static inline struct request_io_part* rq_in(struct request* req)
-> +{
-> +    WARN_ON_BIDI_FLAG(req);
-> +    if (likely(rq_dma_dir(req) != DMA_BIDIRECTIONAL))
-> +        return &req->uni;
-> +
-> +    if (likely(req->cmd_flags & REQ_BIDI))
-> +        return &req->bidi_read;
-> +
-> +    return &req->uni;
-> +}
-> +
-> +static inline struct request_io_part* rq_io(struct request* req,
-> +                                            enum dma_data_direction dir)
-> +{
-> +    if (dir == DMA_FROM_DEVICE)
-> +        return rq_in(req);
-> +
-> +    WARN_ON( (dir != DMA_TO_DEVICE) && (dir != DMA_NONE) );
-> +    return &req->uni;
-> +}
+A grep of the source shows this line is in drivers/scsi/aic7xxx/aic79xx_osm.c
+and nowhere else.
 
-static inline struct request_io_part* rq_io(struct request* req)
-{
-	return (req is WRITE) ? &req->out : &req->in;
-}
+-- 
+ Lab tests show that use of micro$oft causes cancer in lab animals
+ Got Gas???
