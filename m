@@ -1,44 +1,58 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: SAVE_DATA / RESTORE_POINTERS message confusion
-Date: Sun, 29 Apr 2007 22:56:58 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0704292249200.4454@poirot.grange>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: SAVE_DATA / RESTORE_POINTERS message confusion
+Date: Sun, 29 Apr 2007 16:18:19 -0500
+Message-ID: <1177881499.3688.82.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.60.0704292249200.4454@poirot.grange>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:57693 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1161034AbXD2U46 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Apr 2007 16:56:58 -0400
-Received: from lyakh (helo=localhost)
-	by poirot.grange with local-esmtp (Exim 3.36 #1 (Debian))
-	id 1HiGS2-0003QH-00
-	for <linux-scsi@vger.kernel.org>; Sun, 29 Apr 2007 22:56:58 +0200
+Received: from hancock.steeleye.com ([71.30.118.248]:54872 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1161339AbXD2VTB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Apr 2007 17:19:01 -0400
+In-Reply-To: <Pine.LNX.4.60.0704292249200.4454@poirot.grange>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hi all,
+On Sun, 2007-04-29 at 22:56 +0200, Guennadi Liakhovetski wrote:
+> Hi all,
+> 
+> looking at tmscsim (again) I cannot persuade myself that the handling of 
+> the RESTORE_POINTERS command is correct... Therefore a couple of 
+> questions:
+> 
+> 1. do any devices at all use this message-pair?
 
-looking at tmscsim (again) I cannot persuade myself that the handling of 
-the RESTORE_POINTERS command is correct... Therefore a couple of 
-questions:
+Every *device* does ... they're a mandatory part of the SPI standard for
+devices doing disconnect/reselect
 
-1. do any devices at all use this message-pair?
+> 2. are they ever sent apart from when accompanying the DISCONNECT / 
+> RESELECT?
 
-2. are they ever sent apart from when accompanying the DISCONNECT / 
-RESELECT?
+I've never seen an occasion, no.
 
-3. if "yes" to 2 - can the RESTORE be used to "rewind" the pointer to a 
-value smaller than the current?
+> 3. if "yes" to 2 - can the RESTORE be used to "rewind" the pointer to a 
+> value smaller than the current?
 
-4. Some LLDs just pretty much ignore the message. Thereby, AFAIU, they 
-just assume that this is just a part of the RESELECT procedure and that 
-they already have the proper context. Is it sufficient?
+Theoretically, yes.  In practice, no device I've ever heard of has done
+this.
 
->From which I'm trying to derive whether the handling in tmscsim is 
-correct, and, if not, how to correct it...
+> 4. Some LLDs just pretty much ignore the message. Thereby, AFAIU, they 
+> just assume that this is just a part of the RESELECT procedure and that 
+> they already have the proper context. Is it sufficient?
 
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Yes ... the only function use seems to be to save/restore across
+disconnect/reselect, so almost every SPI driver builds this in as part
+of the disconnect/reselect action.
+
+> >From which I'm trying to derive whether the handling in tmscsim is 
+> correct, and, if not, how to correct it...
+
+Hope this helps.
+
+James
+
+
