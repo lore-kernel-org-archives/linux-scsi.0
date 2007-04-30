@@ -1,90 +1,80 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-Date: Mon, 30 Apr 2007 13:11:57 +0200
-Message-ID: <20070430111157.GI21015@kernel.dk>
-References: <46225E18.7070404@panasas.com> <462261E8.5090005@panasas.com> <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp> <4634BE6B.3000808@panasas.com> <1177872588.3688.79.camel@mulgrave.il.steeleye.com>
+From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Subject: [PATCH 06/36] Use menuconfig objects II - fusion
+Date: Mon, 30 Apr 2007 13:26:20 +0200 (MEST)
+Message-ID: <Pine.LNX.4.61.0704301325180.29151@yvahk01.tjqt.qr>
+References: <Pine.LNX.4.61.0704301225060.29151@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1177872588.3688.79.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <tomof@acm.org>, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailer.gwdg.de ([134.76.10.26]:60151 "EHLO mailer.gwdg.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1030996AbXD3L27 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2007 07:28:59 -0400
+In-Reply-To: <Pine.LNX.4.61.0704301225060.29151@yvahk01.tjqt.qr>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eric Moore <Eric.Moore@lsi.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org
 
-On Sun, Apr 29 2007, James Bottomley wrote:
-> On Sun, 2007-04-29 at 18:48 +0300, Boaz Harrosh wrote:
-> > FUJITA Tomonori wrote:
-> > > From: Boaz Harrosh <bharrosh@panasas.com>
-> > > Subject: [PATCH 4/4] bidi support: bidirectional request
-> > > Date: Sun, 15 Apr 2007 20:33:28 +0300
-> > > 
-> > >> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > >> index 645d24b..16a02ee 100644
-> > >> --- a/include/linux/blkdev.h
-> > >> +++ b/include/linux/blkdev.h
-> > >> @@ -322,6 +322,7 @@ struct request {
-> > >>      void *end_io_data;
-> > >>
-> > >>      struct request_io_part uni;
-> > >> +    struct request_io_part bidi_read;
-> > >>  };
-> > > 
-> > > Would be more straightforward to have:
-> > > 
-> > > struct request_io_part in;
-> > > struct request_io_part out;
-> > > 
-> > 
-> > Yes I wish I could do that. For bidi supporting drivers this is the most logical.
-> > But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
-> > the hotish paths, this means we will need a pointer to a uni request_io_part.
-> > This is bad because:
-> > 1st- There is no defined stage in a request life where to definitely set that pointer,
-> >      specially in the preparation stages.
-> > 2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
-> >      very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
-> >      (not sent yet) but a more long term solution is needed. Once such hacks are
-> >      cleaned up we can do what you say. This is exactly why I use the access functions
-> >      rq_uni/rq_io/rq_in/rq_out and not open code access.
-> 
-> I'm still not really convinced about this approach.  The primary job of
-> the block layer is to manage and merge READ and WRITE requests.  It
-> serves a beautiful secondary function of queueing for arbitrary requests
-> it doesn't understand (REQ_TYPE_BLOCK_PC or REQ_TYPE_SPECIAL ... or
-> indeed any non REQ_TYPE_FS).
-> 
-> bidirectional requests fall into the latter category (there's nothing
-> really we can do to merge them ... they're just transported by the block
-> layer).  The only unusual feature is that they carry two bios.  I think
-> the drivers that actually support bidirectional will be a rarity, so it
-> might even be advisable to add it to the queue capability (refuse
-> bidirectional requests at the top rather than perturbing all the drivers
-> to process them).
-> 
-> So, what about REQ_TYPE_BIDIRECTIONAL rather than REQ_BIDI?  That will
-> remove it from the standard path and put it on the special command type
-> path where we can process it specially.  Additionally, if you take this
-> approach, you can probably simply chain the second bio through
-> req->special as an additional request in the stream.  The only thing
-> that would then need modification would be the dequeue of the block
-> driver (it would have to dequeue both requests and prepare them) and
-> that needs to be done only for drivers handling bidirectional requests.
 
-I agree, I'm really not crazy about shuffling the entire request setup
-around just for something as exotic as bidirection commands. How about
-just keeping it simple - have a second request linked off the first one
-for the second data phase? So keep it completely seperate, not just
-overload ->special for 2nd bio list.
+Change Kconfig objects from "menu, config" into "menuconfig" so
+that the user can disable the whole feature without having to
+enter the menu first.
 
-So basically just add a struct request pointer, so you can do rq =
-rq->next_rq or something for the next data phase. I bet this would be a
-LOT less invasive as well, and we can get by with a few helpers to
-support it.
+Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
 
-And it should definitely be a request type.
+---
+ drivers/message/fusion/Kconfig |   14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
--- 
-Jens Axboe
-
+--- linux-2.6.21-mm_20070428.orig/drivers/message/fusion/Kconfig
++++ linux-2.6.21-mm_20070428/drivers/message/fusion/Kconfig
+@@ -1,14 +1,13 @@
+ 
+-menu "Fusion MPT device support"
+-
+-config FUSION
+-	bool
++menuconfig FUSION
++	bool "Fusion MPT device support"
+ 	default n
+ 
++if FUSION
++
+ config FUSION_SPI
+ 	tristate "Fusion MPT ScsiHost drivers for SPI"
+ 	depends on PCI && SCSI
+-	select FUSION
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  SCSI HOST support for a parallel SCSI host adapters.
+@@ -23,7 +22,6 @@ config FUSION_SPI
+ config FUSION_FC
+ 	tristate "Fusion MPT ScsiHost drivers for FC"
+ 	depends on PCI && SCSI
+-	select FUSION
+ 	select SCSI_FC_ATTRS
+ 	---help---
+ 	  SCSI HOST support for a Fiber Channel host adapters.
+@@ -40,7 +38,6 @@ config FUSION_FC
+ config FUSION_SAS
+ 	tristate "Fusion MPT ScsiHost drivers for SAS"
+ 	depends on PCI && SCSI
+- 	select FUSION
+ 	select SCSI_SAS_ATTRS
+ 	---help---
+ 	  SCSI HOST support for a SAS host adapters.
+@@ -54,7 +51,6 @@ config FUSION_SAS
+ 
+ config FUSION_MAX_SGE
+ 	int "Maximum number of scatter gather entries (16 - 128)"
+-	depends on FUSION
+ 	default "128"
+ 	range 16 128
+ 	help
+@@ -100,4 +96,4 @@ config FUSION_LAN
+ 
+ 	  If unsure whether you really want or need this, say N.
+ 
+-endmenu
++endif # FUSION
