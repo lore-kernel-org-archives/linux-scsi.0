@@ -1,36 +1,56 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: BAD_SG_DMA panic in aha1542
-Date: Mon, 30 Apr 2007 19:52:08 +0200
-Message-ID: <20070430175208.GQ21015@kernel.dk>
-References: <20070427214709.DC44BDBA2@gherkin.frus.com> <1177712499.3688.25.camel@mulgrave.il.steeleye.com> <20070430173243.GP21015@kernel.dk> <20070430173927.GA10522@infradead.org>
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: Re: SAVE_DATA / RESTORE_POINTERS message confusion
+Date: Mon, 30 Apr 2007 20:15:17 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0704301947570.15250@poirot.grange>
+References: <Pine.LNX.4.60.0704292249200.4454@poirot.grange>
+ <1177881499.3688.82.camel@mulgrave.il.steeleye.com>
+ <20070429.143759.71876461.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:5093 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1946540AbXD3R4b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Apr 2007 13:56:31 -0400
-Content-Disposition: inline
-In-Reply-To: <20070430173927.GA10522@infradead.org>
+Received: from mail.gmx.net ([213.165.64.20]:37597 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1945895AbXD3SPT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2007 14:15:19 -0400
+In-Reply-To: <20070429.143759.71876461.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Bob Tracy <rct@gherkin.frus.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-On Mon, Apr 30 2007, Christoph Hellwig wrote:
-> On Mon, Apr 30, 2007 at 07:32:45PM +0200, Jens Axboe wrote:
-> > It's due to the crappy ->generic_packet() ioctl stuff, it bypasses the
-> > block layer. So that needs to be converted to use block pc requests and
-> > the block layer interface, then things will just work.
-> > 
-> > Christoph had a sort-of ready patch for that some time ago. Christoph,
-> > did that ever materialize into a full blown patch?
+On Sun, 29 Apr 2007, David Miller wrote:
+
+> From: James Bottomley <James.Bottomley@SteelEye.com>
+> Date: Sun, 29 Apr 2007 16:18:19 -0500
 > 
-> I had a fullblown patch somewhere.  The only drawback was that I didn't
-> convert pcd because I neither understand enough of the hardware nor do
-> I really understand what's going on there.
+> > On Sun, 2007-04-29 at 22:56 +0200, Guennadi Liakhovetski wrote:
+> > > 2. are they ever sent apart from when accompanying the DISCONNECT / 
+> > > RESELECT?
+> > 
+> > I've never seen an occasion, no.
+> 
+> I have.
+> 
+> > > 3. if "yes" to 2 - can the RESTORE be used to "rewind" the pointer to a 
+> > > value smaller than the current?
+> > 
+> > Theoretically, yes.  In practice, no device I've ever heard of has done
+> > this.
+> 
+> I've seen a device do this, and ironically for an inquiry :-)
 
-Cool, pass the patch and I'll try to see if I can convert pcd.
+Ok, looking through t10 docs there seem to be quite a few functions for 
+the SAVE DATA POINTERS / MODIFY DATA POINTER / RESTORE POINTERS (btw, even 
+POINTER vs. POINTERS use was inconsistent between the spi5r06, s2-r10l, 
+ana a random book I have) also apart from the usual DISCONNECT / RESELECT, 
+like re-requesting command / data / status.
 
--- 
-Jens Axboe
+Is there a SCSI driver that does all this pointer management correctly? 
+And that's easy enough to understand and use as an example? For example, 
+tmscsim just would reject MODIFY DP. And for every RESTORE POINTERS with 
+sg there would be a KERN_INFO printk...
 
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
