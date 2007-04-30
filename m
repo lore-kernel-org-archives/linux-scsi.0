@@ -1,70 +1,90 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [PATCH] aacraid: fails to initialize after a  kexec operation
-Date: Mon, 30 Apr 2007 15:23:34 +0530
-Message-ID: <20070430095334.GA17186@in.ibm.com>
-References: <20070424084444.GC22742@in.ibm.com> <AE4F746F2AECFC4DA4AADD66A1DFEF0188AF97@otce2k301.adaptec.com>
-Reply-To: vgoyal@in.ibm.com
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Mon, 30 Apr 2007 13:11:57 +0200
+Message-ID: <20070430111157.GI21015@kernel.dk>
+References: <46225E18.7070404@panasas.com> <462261E8.5090005@panasas.com> <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp> <4634BE6B.3000808@panasas.com> <1177872588.3688.79.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:40132 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031539AbXD3Jxk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2007 05:53:40 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l3U9reEq002622
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Apr 2007 05:53:40 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l3U9reID179198
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Apr 2007 03:53:40 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l3U9rdl1011687
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Apr 2007 03:53:40 -0600
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0188AF97@otce2k301.adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1177872588.3688.79.camel@mulgrave.il.steeleye.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <tomof@acm.org>, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Kexec Mailing List <kexec@lists.infradead.org>, Judith Lebzelter <judith@linux-foundation.org>, linux-scsi@vger.kernel.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On Tue, Apr 24, 2007 at 09:21:35AM -0400, Salyzyn, Mark wrote:
-> The system BIOS sets up the card's PCI configuration and there is code
-> in the kernel that is capable of picking up some of the BIOS'
-> information from the BIOS Data Space (not sure if it is actively
-> collected in your configuration, you need a kernel flag to pick this
-> up). On kexec this BIOS Data Space information is missing (?) and if
-> there was any reconfiguration of the PCI space going on (I think only
-> the Linux BIOS project does this), kexec will inherit it. This issue
-> strikes me as a corrupted PCI configuration inherited in the kexec case,
-> such corrupted PCI configurations could be a motherboard specific issue
-> and can be related to the BIOS' initial setup for the initial kernel. At
-> least that is my thought process in questioning the motherboard BIOS or
-> hardware.
+On Sun, Apr 29 2007, James Bottomley wrote:
+> On Sun, 2007-04-29 at 18:48 +0300, Boaz Harrosh wrote:
+> > FUJITA Tomonori wrote:
+> > > From: Boaz Harrosh <bharrosh@panasas.com>
+> > > Subject: [PATCH 4/4] bidi support: bidirectional request
+> > > Date: Sun, 15 Apr 2007 20:33:28 +0300
+> > > 
+> > >> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> > >> index 645d24b..16a02ee 100644
+> > >> --- a/include/linux/blkdev.h
+> > >> +++ b/include/linux/blkdev.h
+> > >> @@ -322,6 +322,7 @@ struct request {
+> > >>      void *end_io_data;
+> > >>
+> > >>      struct request_io_part uni;
+> > >> +    struct request_io_part bidi_read;
+> > >>  };
+> > > 
+> > > Would be more straightforward to have:
+> > > 
+> > > struct request_io_part in;
+> > > struct request_io_part out;
+> > > 
+> > 
+> > Yes I wish I could do that. For bidi supporting drivers this is the most logical.
+> > But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
+> > the hotish paths, this means we will need a pointer to a uni request_io_part.
+> > This is bad because:
+> > 1st- There is no defined stage in a request life where to definitely set that pointer,
+> >      specially in the preparation stages.
+> > 2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
+> >      very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
+> >      (not sent yet) but a more long term solution is needed. Once such hacks are
+> >      cleaned up we can do what you say. This is exactly why I use the access functions
+> >      rq_uni/rq_io/rq_in/rq_out and not open code access.
 > 
-> Another possibility is that after you have patched over the interrupt
-> routing issues (a PCI configuration problem), the card has a foreign
-> array, and the reset and reconfiguration is taking arrays offline. Add
-> 'aacraid.commit=1' to force the foreign arrays to be accepted by the
-> card.
+> I'm still not really convinced about this approach.  The primary job of
+> the block layer is to manage and merge READ and WRITE requests.  It
+> serves a beautiful secondary function of queueing for arbitrary requests
+> it doesn't understand (REQ_TYPE_BLOCK_PC or REQ_TYPE_SPECIAL ... or
+> indeed any non REQ_TYPE_FS).
 > 
+> bidirectional requests fall into the latter category (there's nothing
+> really we can do to merge them ... they're just transported by the block
+> layer).  The only unusual feature is that they carry two bios.  I think
+> the drivers that actually support bidirectional will be a rarity, so it
+> might even be advisable to add it to the queue capability (refuse
+> bidirectional requests at the top rather than perturbing all the drivers
+> to process them).
+> 
+> So, what about REQ_TYPE_BIDIRECTIONAL rather than REQ_BIDI?  That will
+> remove it from the standard path and put it on the special command type
+> path where we can process it specially.  Additionally, if you take this
+> approach, you can probably simply chain the second bio through
+> req->special as an additional request in the stream.  The only thing
+> that would then need modification would be the dequeue of the block
+> driver (it would have to dequeue both requests and prepare them) and
+> that needs to be done only for drivers handling bidirectional requests.
 
-Hi Mark,
+I agree, I'm really not crazy about shuffling the entire request setup
+around just for something as exotic as bidirection commands. How about
+just keeping it simple - have a second request linked off the first one
+for the second data phase? So keep it completely seperate, not just
+overload ->special for 2nd bio list.
 
-So aacraid.commit=1 and irqpoll combination has done the trick. I can
-kexec/kdump into second kernel. I am using an IBM x366 series machine.
-There is one array and three disks behind it.
+So basically just add a struct request pointer, so you can do rq =
+rq->next_rq or something for the next data phase. I bet this would be a
+LOT less invasive as well, and we can get by with a few helpers to
+support it.
 
-Now few queries.
+And it should definitely be a request type.
 
-- What is the concept of foreign arrays? 
-- Should we pass aacraid.commit=1 all the time or this is only for
-  some special cases? What's the point in resetting an adapter if it
-  does not online the array it is managing?
-- For kexec, it calls the device shutdown routine (aac_shutdown) in this
-  case. If this is the case for normal kexec (not kdump) adapter should
-  not be reset?
-- Still needs to be found out why PCI configuration is getting corrupted
-  and why irq routing is not proper and irqpoll is required.
- 
-Thanks
-Vivek
+-- 
+Jens Axboe
+
