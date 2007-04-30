@@ -1,42 +1,65 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-Date: Mon, 30 Apr 2007 15:07:34 +0200
-Message-ID: <20070430130734.GN21015@kernel.dk>
-References: <46225E18.7070404@panasas.com> <462261E8.5090005@panasas.com> <200704281948.l3SJm9jS001428@mbox.iij4u.or.jp> <4634BE6B.3000808@panasas.com> <1177872588.3688.79.camel@mulgrave.il.steeleye.com> <20070430111157.GI21015@kernel.dk> <4635E9B5.1020708@rtr.ca>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH] deprecate the old NCR53C9x driver
+Date: Mon, 30 Apr 2007 15:16:39 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0704301516190.27246@anakin>
+References: <20070429220548.GA22666@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:10453 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423235AbXD3NLz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Apr 2007 09:11:55 -0400
-Content-Disposition: inline
-In-Reply-To: <4635E9B5.1020708@rtr.ca>
+Received: from hoefnix.telenet-ops.be ([195.130.132.54]:48053 "EHLO
+	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1423252AbXD3NRM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2007 09:17:12 -0400
+Received: from hoboe2bl1.telenet-ops.be (hoboe2bl1.telenet-ops.be [195.130.137.73])
+	by hoefnix.telenet-ops.be (Postfix) with ESMTP id 2F2739FE3E
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Apr 2007 15:17:11 +0200 (CEST)
+In-Reply-To: <20070429220548.GA22666@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <tomof@acm.org>, akpm@osdl.org, michaelc@cs.wisc.edu, hch@infradead.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, bhalevy@panasas.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: jejb@steeleye.com, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-mips@linux-mips.org
 
-On Mon, Apr 30 2007, Mark Lord wrote:
-> Jens Axboe wrote:
-> >
-> >So basically just add a struct request pointer, so you can do rq =
-> >rq->next_rq or something for the next data phase. I bet this would be a
-> >LOT less invasive as well, and we can get by with a few helpers to
-> >support it.
+On Mon, 30 Apr 2007, Christoph Hellwig wrote:
+> Now that we have the much better esp_scsi driver and low level drivers
+> are easy to port over deprecate the old NCR53C9x driver.
 > 
-> Hey, I want a way to issue those (linked requests) from userspace (SG_IO), 
-> too.
-> Specifically for use with the new SMART Command Transport (SCT) feature set
-> on modern SATA drives.  As well as for a disk recovery utility I'm working 
-> on.
+> I've Cc'ed the m68k and mips lists because all but one bus glues are
+> for these platforms.  Chances stand bad for the remaining driver,
+> mca_53c9x which hasn't gotten any non-trivial update since it was
+> merge in late 2.1.x and whos maintainers mail address bounces.
 > 
-> Sounds generally useful, that.
-
-Yep, one of the reasons why I like (my :-) proposal as well, we could
-potentially find other uses for linking commands like that.
 > 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> 
+> Index: linux-2.6/Documentation/feature-removal-schedule.txt
+> ===================================================================
+> --- linux-2.6.orig/Documentation/feature-removal-schedule.txt	2007-04-29 23:44:46.000000000 +0200
+> +++ linux-2.6/Documentation/feature-removal-schedule.txt	2007-04-29 23:45:55.000000000 +0200
+> @@ -6,6 +6,13 @@ be removed from this file.
+>  
+>  ---------------------------
+>  
+> +What:	old NCR53C9x driver
+> +When:	October 2007
+> +Why:	Replaced by the much better esp_scsi driver.  Actual low-level
+> +	driver can ported over almost trivially.
+                  ^
+		  be
 
--- 
-Jens Axboe
+> +Who:	David Miller <davem@davemloft.net>
+> +	Christoph Hellwig <hch@lst.de>
+> +
+>  What:	V4L2 VIDIOC_G_MPEGCOMP and VIDIOC_S_MPEGCOMP
+>  When:	October 2007
+>  Why:	Broken attempt to set MPEG compression parameters. These ioctls are
 
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
