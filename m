@@ -1,307 +1,149 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: Re: BAD_SG_DMA panic in aha1542
-Date: Tue, 1 May 2007 08:42:00 -0500 (CDT)
-Message-ID: <20070501134200.D669ADBA1@gherkin.frus.com>
-References: <20070501133312.GD4653@kernel.dk>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: libata /dev/scd0 problem: mount after burn fails without eject
+Date: Tue, 01 May 2007 10:17:53 -0400
+Message-ID: <46374C11.1010702@rtr.ca>
+References: <20070501135951.GA17072@janus>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:47230 "EHLO gherkin.frus.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423503AbXEANmF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 May 2007 09:42:05 -0400
-In-Reply-To: <20070501133312.GD4653@kernel.dk> "from Jens Axboe at May 1, 2007
- 03:33:12 pm"
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070501135951.GA17072@janus>
+Sender: linux-ide-owner@vger.kernel.org
+To: Frank van Maarseveen <frankvm@frankvm.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-Jens Axboe wrote:
-> Try Alan's patch, it should fix it. As mentioned earlier in this thread,
-> the real fix is to get rid of the cgc stuff and inject into the block
-> layer from cdrom.c. But Alan's patch should work-around the issue for
-> now.
+Forwarding to linux-scsi and linux-ide mailing lists.
 
-Trying that patch is the next thing on my plate.  For now, here's the
-dmesg output James requested (aha1542 debug patch).  Oddly enough, when
-the smoke cleared, the mount succeeded and I could access the cd :-).
+Frank van Maarseveen wrote:
+> Tested on 2.6.20.6 and 2.6.21.1
+> 
+> I decided to swich from the old IDE drivers to libata and now there
+> seems to be a little but annoying problem: cannot mount an ISO image
+> after burning it.
+> 
+> May  1 14:32:55 kernel: attempt to access beyond end of device
+> May  1 14:32:55 kernel: sr0: rw=0, want=68, limit=4
+> May  1 14:32:55 kernel: isofs_fill_super: bread failed, dev=sr0, iso_blknum=16, block=16
+> 
+> an "eject" command seems to fix the state of the PATA DVD writer
+> or driver. The problem occurs for burning a CD and for DVD too with
+> identical error messages.
+> 
+> 
+> relevant kernel boot messages:
+> | ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ffa0 irq 14
+> | ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001ffa8 irq 15
+> | scsi0 : ata_piix
+> | ata1.00: ATA-7: ST3120814A, 3.AAJ, max UDMA/100
+> | ata1.00: 234441648 sectors, multi 8: LBA48 
+> | ata1.00: configured for UDMA/100
+> | scsi1 : ata_piix
+> | ata2.00: ATAPI, max UDMA/33
+> | ata2.01: ATAPI, max UDMA/33
+> | ata2.00: configured for UDMA/33
+> | ata2.01: configured for UDMA/33
+> | scsi 0:0:0:0: Direct-Access     ATA      ST3120814A       3.AA PQ: 0 ANSI: 5
+> | SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+> | sda: Write Protect is off
+> | SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> | SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
+> | sda: Write Protect is off
+> | SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
+> |  sda: sda1 sda2 sda4
+> | sd 0:0:0:0: Attached scsi disk sda
+> | sd 0:0:0:0: Attached scsi generic sg0 type 0
+> | scsi 1:0:0:0: CD-ROM            HP       DVD Writer 640c  CS30 PQ: 0 ANSI: 5
+> | sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
+> | Uniform CD-ROM driver Revision: 3.20
+> | sr 1:0:0:0: Attached scsi generic sg1 type 5
+> | scsi 1:0:1:0: CD-ROM            SAMSUNG  CD-ROM SC-148C   B105 PQ: 0 ANSI: 5
+> | sr1: scsi3-mmc drive: 1x/48x cd/rw xa/form2 cdda tray
+> | sr 1:0:1:0: Attached scsi generic sg2 type 5
+> 
+> stripped config (well, as far of I'm sure it shouldn't matter):
+> | CONFIG_PM=y
+> | CONFIG_PM_LEGACY=y
+> | 
+> | CONFIG_ACPI=y
+> | CONFIG_ACPI_PROCFS=y
+> | CONFIG_ACPI_FAN=y
+> | CONFIG_ACPI_PROCESSOR=y
+> | CONFIG_ACPI_THERMAL=y
+> | CONFIG_ACPI_BLACKLIST_YEAR=0
+> | CONFIG_ACPI_EC=y
+> | CONFIG_ACPI_POWER=y
+> | CONFIG_ACPI_SYSTEM=y
+> | CONFIG_X86_PM_TIMER=y
+> | 
+> | CONFIG_PCI=y
+> | CONFIG_PCI_GOANY=y
+> | CONFIG_PCI_BIOS=y
+> | CONFIG_PCI_DIRECT=y
+> | CONFIG_PCI_MMCONFIG=y
+> | CONFIG_PCIEPORTBUS=y
+> | CONFIG_PCIEAER=y
+> | CONFIG_HT_IRQ=y
+> | CONFIG_ISA_DMA_API=y
+> | 
+> | CONFIG_PNP=y
+> | 
+> | CONFIG_PNPACPI=y
+> | 
+> | CONFIG_CDROM_PKTCDVD=y
+> | CONFIG_CDROM_PKTCDVD_BUFFERS=8
+> | 
+> | CONFIG_IDE=y
+> | 
+> | CONFIG_RAID_ATTRS=y
+> | CONFIG_SCSI=y
+> | CONFIG_SCSI_PROC_FS=y
+> | 
+> | CONFIG_BLK_DEV_SD=y
+> | CONFIG_BLK_DEV_SR=y
+> | CONFIG_CHR_DEV_SG=y
+> | 
+> | CONFIG_SCSI_MULTI_LUN=y
+> | CONFIG_SCSI_CONSTANTS=y
+> | CONFIG_SCSI_LOGGING=y
+> | 
+> | CONFIG_SCSI_SPI_ATTRS=y
+> | 
+> | CONFIG_ATA=y
+> | CONFIG_SATA_AHCI=y
+> | CONFIG_ATA_PIIX=y
+> | CONFIG_SATA_INTEL_COMBINED=y
+> | CONFIG_SATA_ACPI=y
+> | CONFIG_PATA_SERVERWORKS=y
+> 
+> 
+> lspci:
+> 00:00.0 Host bridge: Intel Corporation 82845G/GL[Brookdale-G]/GE/PE DRAM Controller/Host-Hub Interface (rev 01)
+> 00:01.0 PCI bridge: Intel Corporation 82845G/GL[Brookdale-G]/GE/PE Host-to-AGP Bridge (rev 01)
+> 00:1d.0 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #1 (rev 01)
+> 00:1d.1 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #2 (rev 01)
+> 00:1d.2 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #3 (rev 01)
+> 00:1d.7 USB Controller: Intel Corporation 82801DB/DBM (ICH4/ICH4-M) USB2 EHCI Controller (rev 01)
+> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 81)
+> 00:1f.0 ISA bridge: Intel Corporation 82801DB/DBL (ICH4/ICH4-L) LPC Interface Bridge (rev 01)
+> 00:1f.1 IDE interface: Intel Corporation 82801DB (ICH4) IDE Controller (rev 01)
+> 00:1f.3 SMBus: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) SMBus Controller (rev 01)
+> 00:1f.5 Multimedia audio controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) AC'97 Audio Controller (rev 01)
+> 01:00.0 VGA compatible controller: nVidia Corporation NV18 [GeForce4 MX 440 AGP 8x] (rev a2)
+> 02:0c.0 Ethernet controller: Intel Corporation 82541PI Gigabit Ethernet Controller (rev 05)
+> 
+> lspci -v -v -v for IDE
+> 00:1f.1 IDE interface: Intel Corporation 82801DB (ICH4) IDE Controller (rev 01) (prog-if 8a [Master SecP PriP])
+>         Subsystem: Dell Unknown device 0142
+>         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
+>         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+>         Latency: 0
+>         Interrupt: pin A routed to IRQ 17
+>         Region 0: I/O ports at 01f0 [size=8]
+>         Region 1: I/O ports at 03f4 [size=1]
+>         Region 2: I/O ports at 0170 [size=8]
+>         Region 3: I/O ports at 0374 [size=1]
+>         Region 4: I/O ports at ffa0 [size=16]
+>         Region 5: Memory at 50100000 (32-bit, non-prefetchable) [size=1K]
+> 
 
-Initial state: SCSI cdrom drivers not loaded.
-Command: "mount -t iso9660 /dev/scd0 /mnt/cdrom -r"
-
-sr0: scsi3-mmc drive: 16x/16x writer cd/rw xa/form2 cdda tray
-Uniform CD-ROM driver Revision: 3.20
-sr 1:0:4:0: Attached scsi CD-ROM sr0
-sgpnt[0:1] page c3489af0/0x3489af0 length 32
-BUG: warning at drivers/scsi/aha1542.c:78/BAD_SG_DMA()
- [<c4819858>] aha1542_queuecommand+0x4a4/0x4ce [aha1542]
- [<c4833317>] scsi_done+0x0/0x16 [scsi_mod]
- [<c48339f2>] scsi_dispatch_cmd+0x1b0/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a09d4>] __generic_unplug_device+0x1d/0x1f
- [<c01a0a3a>] blk_execute_rq_nowait+0x64/0x6a
- [<c01a0aae>] blk_execute_rq+0x6e/0x8f
- [<c01a02d0>] blk_end_sync_rq+0x0/0x1d
- [<c01354c9>] mempool_alloc+0x1c/0x97
- [<c014d2fc>] bio_phys_segments+0xe/0x14
- [<c019f456>] blk_rq_bio_prep+0x28/0x7c
- [<c483744f>] scsi_execute+0xc6/0xd9 [scsi_mod]
- [<c4942da2>] sr_do_ioctl+0x80/0x1bd [sr_mod]
- [<c483439d>] scsi_set_medium_removal+0x43/0x67 [scsi_mod]
- [<c494209b>] sr_packet+0x1a/0x1f [sr_mod]
- [<c49aad25>] cdrom_open+0x337/0x8ae [cdrom]
- [<c0275aaf>] wait_for_completion+0x5b/0x84
- [<c0111cba>] default_wake_function+0x0/0xc
- [<c0120312>] call_usermodehelper_keys+0xa6/0xb2
- [<c012031e>] __call_usermodehelper+0x0/0x43
- [<c012049b>] request_module+0xc2/0xd0
- [<c01a9b71>] kobject_get+0xf/0x13
- [<c4942324>] sr_block_open+0x74/0x81 [sr_mod]
- [<c014ec4f>] do_open+0x8a/0x313
- [<c4837b01>] scsi_request_fn+0x273/0x2ac [scsi_mod]
- [<c0275d9f>] io_schedule+0xe/0x16
- [<c0276065>] __wait_on_bit+0x50/0x58
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c02760cf>] out_of_line_wait_on_bit+0x62/0x6a
- [<c0122cf0>] wake_bit_function+0x0/0x3c
- [<c014ace5>] __wait_on_buffer+0x1c/0x1f
- [<c48852e1>] __ext3_get_inode_loc+0x263/0x2b1 [ext3]
- [<c015bbd6>] d_splice_alias+0xa9/0xc3
- [<c488b470>] ext3_lookup+0x98/0xb8 [ext3]
- [<c0153018>] do_lookup+0x4f/0x135
- [<c015b1cb>] dput+0x1a/0x10b
- [<c0154e0d>] __link_path_walk+0xa5d/0xba8
- [<c014ef2d>] blkdev_get+0x55/0x60
- [<c014f212>] open_bdev_excl+0x32/0x6e
- [<c014e1f8>] get_sb_bdev+0x14/0x115
- [<c49934c1>] isofs_get_sb+0x12/0x16 [isofs]
- [<c4993987>] isofs_fill_super+0x0/0x899 [isofs]
- [<c014df0a>] vfs_kern_mount+0x88/0xfd
- [<c014dfb2>] do_kern_mount+0x26/0x36
- [<c015eee2>] do_mount+0x589/0x5fb
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c0155007>] link_path_walk+0xaf/0xb9
- [<c013c4fc>] __handle_mm_fault+0x341/0x620
- [<c01552c4>] do_path_lookup+0x195/0x1b5
- [<c013c342>] __handle_mm_fault+0x187/0x620
- [<c0136236>] get_page_from_freelist+0x6e/0x2bb
- [<c0136ae6>] __get_free_pages+0x25/0x3e
- [<c015de80>] copy_mount_options+0x27/0x10a
- [<c015efbe>] sys_mount+0x6a/0xa2
- [<c0102a47>] syscall_call+0x7/0xb
-sgpnt[0:1] page c3489af0/0x3489af0 length 32
-BUG: warning at drivers/scsi/aha1542.c:78/BAD_SG_DMA()
- [<c4819858>] aha1542_queuecommand+0x4a4/0x4ce [aha1542]
- [<c4833317>] scsi_done+0x0/0x16 [scsi_mod]
- [<c48339f2>] scsi_dispatch_cmd+0x1b0/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a1662>] blk_run_queue+0x2a/0x4b
- [<c483725a>] scsi_queue_insert+0x75/0x7d [scsi_mod]
- [<c01a1598>] blk_done_softirq+0x4a/0x55
- [<c0118563>] __do_softirq+0x35/0x75
- [<c01185c5>] do_softirq+0x22/0x26
- [<c0105074>] do_IRQ+0x48/0x50
- [<c0103a9a>] common_interrupt+0x1a/0x20
- [<c48339f6>] scsi_dispatch_cmd+0x1b4/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a09d4>] __generic_unplug_device+0x1d/0x1f
- [<c01a0a3a>] blk_execute_rq_nowait+0x64/0x6a
- [<c01a0aae>] blk_execute_rq+0x6e/0x8f
- [<c01a02d0>] blk_end_sync_rq+0x0/0x1d
- [<c01354c9>] mempool_alloc+0x1c/0x97
- [<c014d2fc>] bio_phys_segments+0xe/0x14
- [<c019f456>] blk_rq_bio_prep+0x28/0x7c
- [<c483744f>] scsi_execute+0xc6/0xd9 [scsi_mod]
- [<c4942da2>] sr_do_ioctl+0x80/0x1bd [sr_mod]
- [<c483439d>] scsi_set_medium_removal+0x43/0x67 [scsi_mod]
- [<c494209b>] sr_packet+0x1a/0x1f [sr_mod]
- [<c49aad25>] cdrom_open+0x337/0x8ae [cdrom]
- [<c0275aaf>] wait_for_completion+0x5b/0x84
- [<c0111cba>] default_wake_function+0x0/0xc
- [<c0120312>] call_usermodehelper_keys+0xa6/0xb2
- [<c012031e>] __call_usermodehelper+0x0/0x43
- [<c012049b>] request_module+0xc2/0xd0
- [<c01a9b71>] kobject_get+0xf/0x13
- [<c4942324>] sr_block_open+0x74/0x81 [sr_mod]
- [<c014ec4f>] do_open+0x8a/0x313
- [<c4837b01>] scsi_request_fn+0x273/0x2ac [scsi_mod]
- [<c0275d9f>] io_schedule+0xe/0x16
- [<c0276065>] __wait_on_bit+0x50/0x58
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c02760cf>] out_of_line_wait_on_bit+0x62/0x6a
- [<c0122cf0>] wake_bit_function+0x0/0x3c
- [<c014ace5>] __wait_on_buffer+0x1c/0x1f
- [<c48852e1>] __ext3_get_inode_loc+0x263/0x2b1 [ext3]
- [<c015bbd6>] d_splice_alias+0xa9/0xc3
- [<c488b470>] ext3_lookup+0x98/0xb8 [ext3]
- [<c0153018>] do_lookup+0x4f/0x135
- [<c015b1cb>] dput+0x1a/0x10b
- [<c0154e0d>] __link_path_walk+0xa5d/0xba8
- [<c014ef2d>] blkdev_get+0x55/0x60
- [<c014f212>] open_bdev_excl+0x32/0x6e
- [<c014e1f8>] get_sb_bdev+0x14/0x115
- [<c49934c1>] isofs_get_sb+0x12/0x16 [isofs]
- [<c4993987>] isofs_fill_super+0x0/0x899 [isofs]
- [<c014df0a>] vfs_kern_mount+0x88/0xfd
- [<c014dfb2>] do_kern_mount+0x26/0x36
- [<c015eee2>] do_mount+0x589/0x5fb
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c0155007>] link_path_walk+0xaf/0xb9
- [<c013c4fc>] __handle_mm_fault+0x341/0x620
- [<c01552c4>] do_path_lookup+0x195/0x1b5
- [<c013c342>] __handle_mm_fault+0x187/0x620
- [<c0136236>] get_page_from_freelist+0x6e/0x2bb
- [<c0136ae6>] __get_free_pages+0x25/0x3e
- [<c015de80>] copy_mount_options+0x27/0x10a
- [<c015efbe>] sys_mount+0x6a/0xa2
- [<c0102a47>] syscall_call+0x7/0xb
-sgpnt[0:1] page c3489af0/0x3489af0 length 32
-BUG: warning at drivers/scsi/aha1542.c:78/BAD_SG_DMA()
- [<c4819858>] aha1542_queuecommand+0x4a4/0x4ce [aha1542]
- [<c4833317>] scsi_done+0x0/0x16 [scsi_mod]
- [<c48339f2>] scsi_dispatch_cmd+0x1b0/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a1662>] blk_run_queue+0x2a/0x4b
- [<c483725a>] scsi_queue_insert+0x75/0x7d [scsi_mod]
- [<c01a1598>] blk_done_softirq+0x4a/0x55
- [<c0118563>] __do_softirq+0x35/0x75
- [<c01185c5>] do_softirq+0x22/0x26
- [<c0105074>] do_IRQ+0x48/0x50
- [<c0103a9a>] common_interrupt+0x1a/0x20
- [<c48339f6>] scsi_dispatch_cmd+0x1b4/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a09d4>] __generic_unplug_device+0x1d/0x1f
- [<c01a0a3a>] blk_execute_rq_nowait+0x64/0x6a
- [<c01a0aae>] blk_execute_rq+0x6e/0x8f
- [<c01a02d0>] blk_end_sync_rq+0x0/0x1d
- [<c01354c9>] mempool_alloc+0x1c/0x97
- [<c014d2fc>] bio_phys_segments+0xe/0x14
- [<c019f456>] blk_rq_bio_prep+0x28/0x7c
- [<c483744f>] scsi_execute+0xc6/0xd9 [scsi_mod]
- [<c4942da2>] sr_do_ioctl+0x80/0x1bd [sr_mod]
- [<c483439d>] scsi_set_medium_removal+0x43/0x67 [scsi_mod]
- [<c494209b>] sr_packet+0x1a/0x1f [sr_mod]
- [<c49aad25>] cdrom_open+0x337/0x8ae [cdrom]
- [<c0275aaf>] wait_for_completion+0x5b/0x84
- [<c0111cba>] default_wake_function+0x0/0xc
- [<c0120312>] call_usermodehelper_keys+0xa6/0xb2
- [<c012031e>] __call_usermodehelper+0x0/0x43
- [<c012049b>] request_module+0xc2/0xd0
- [<c01a9b71>] kobject_get+0xf/0x13
- [<c4942324>] sr_block_open+0x74/0x81 [sr_mod]
- [<c014ec4f>] do_open+0x8a/0x313
- [<c4837b01>] scsi_request_fn+0x273/0x2ac [scsi_mod]
- [<c0275d9f>] io_schedule+0xe/0x16
- [<c0276065>] __wait_on_bit+0x50/0x58
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c02760cf>] out_of_line_wait_on_bit+0x62/0x6a
- [<c0122cf0>] wake_bit_function+0x0/0x3c
- [<c014ace5>] __wait_on_buffer+0x1c/0x1f
- [<c48852e1>] __ext3_get_inode_loc+0x263/0x2b1 [ext3]
- [<c015bbd6>] d_splice_alias+0xa9/0xc3
- [<c488b470>] ext3_lookup+0x98/0xb8 [ext3]
- [<c0153018>] do_lookup+0x4f/0x135
- [<c015b1cb>] dput+0x1a/0x10b
- [<c0154e0d>] __link_path_walk+0xa5d/0xba8
- [<c014ef2d>] blkdev_get+0x55/0x60
- [<c014f212>] open_bdev_excl+0x32/0x6e
- [<c014e1f8>] get_sb_bdev+0x14/0x115
- [<c49934c1>] isofs_get_sb+0x12/0x16 [isofs]
- [<c4993987>] isofs_fill_super+0x0/0x899 [isofs]
- [<c014df0a>] vfs_kern_mount+0x88/0xfd
- [<c014dfb2>] do_kern_mount+0x26/0x36
- [<c015eee2>] do_mount+0x589/0x5fb
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c0155007>] link_path_walk+0xaf/0xb9
- [<c013c4fc>] __handle_mm_fault+0x341/0x620
- [<c01552c4>] do_path_lookup+0x195/0x1b5
- [<c013c342>] __handle_mm_fault+0x187/0x620
- [<c0136236>] get_page_from_freelist+0x6e/0x2bb
- [<c0136ae6>] __get_free_pages+0x25/0x3e
- [<c015de80>] copy_mount_options+0x27/0x10a
- [<c015efbe>] sys_mount+0x6a/0xa2
- [<c0102a47>] syscall_call+0x7/0xb
-sgpnt[0:1] page c3489af0/0x3489af0 length 32
-BUG: warning at drivers/scsi/aha1542.c:78/BAD_SG_DMA()
- [<c4819858>] aha1542_queuecommand+0x4a4/0x4ce [aha1542]
- [<c4833317>] scsi_done+0x0/0x16 [scsi_mod]
- [<c48339f2>] scsi_dispatch_cmd+0x1b0/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a1662>] blk_run_queue+0x2a/0x4b
- [<c483725a>] scsi_queue_insert+0x75/0x7d [scsi_mod]
- [<c01a1598>] blk_done_softirq+0x4a/0x55
- [<c0118563>] __do_softirq+0x35/0x75
- [<c01185c5>] do_softirq+0x22/0x26
- [<c0105074>] do_IRQ+0x48/0x50
- [<c0103a9a>] common_interrupt+0x1a/0x20
- [<c48339f6>] scsi_dispatch_cmd+0x1b4/0x223 [scsi_mod]
- [<c4837abc>] scsi_request_fn+0x22e/0x2ac [scsi_mod]
- [<c01a09d4>] __generic_unplug_device+0x1d/0x1f
- [<c01a0a3a>] blk_execute_rq_nowait+0x64/0x6a
- [<c01a0aae>] blk_execute_rq+0x6e/0x8f
- [<c01a02d0>] blk_end_sync_rq+0x0/0x1d
- [<c01354c9>] mempool_alloc+0x1c/0x97
- [<c014d2fc>] bio_phys_segments+0xe/0x14
- [<c019f456>] blk_rq_bio_prep+0x28/0x7c
- [<c483744f>] scsi_execute+0xc6/0xd9 [scsi_mod]
- [<c4942da2>] sr_do_ioctl+0x80/0x1bd [sr_mod]
- [<c483439d>] scsi_set_medium_removal+0x43/0x67 [scsi_mod]
- [<c494209b>] sr_packet+0x1a/0x1f [sr_mod]
- [<c49aad25>] cdrom_open+0x337/0x8ae [cdrom]
- [<c0275aaf>] wait_for_completion+0x5b/0x84
- [<c0111cba>] default_wake_function+0x0/0xc
- [<c0120312>] call_usermodehelper_keys+0xa6/0xb2
- [<c012031e>] __call_usermodehelper+0x0/0x43
- [<c012049b>] request_module+0xc2/0xd0
- [<c01a9b71>] kobject_get+0xf/0x13
- [<c4942324>] sr_block_open+0x74/0x81 [sr_mod]
- [<c014ec4f>] do_open+0x8a/0x313
- [<c4837b01>] scsi_request_fn+0x273/0x2ac [scsi_mod]
- [<c0275d9f>] io_schedule+0xe/0x16
- [<c0276065>] __wait_on_bit+0x50/0x58
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c014ad1a>] sync_buffer+0x0/0x2e
- [<c02760cf>] out_of_line_wait_on_bit+0x62/0x6a
- [<c0122cf0>] wake_bit_function+0x0/0x3c
- [<c014ace5>] __wait_on_buffer+0x1c/0x1f
- [<c48852e1>] __ext3_get_inode_loc+0x263/0x2b1 [ext3]
- [<c015bbd6>] d_splice_alias+0xa9/0xc3
- [<c488b470>] ext3_lookup+0x98/0xb8 [ext3]
- [<c0153018>] do_lookup+0x4f/0x135
- [<c015b1cb>] dput+0x1a/0x10b
- [<c0154e0d>] __link_path_walk+0xa5d/0xba8
- [<c014ef2d>] blkdev_get+0x55/0x60
- [<c014f212>] open_bdev_excl+0x32/0x6e
- [<c014e1f8>] get_sb_bdev+0x14/0x115
- [<c49934c1>] isofs_get_sb+0x12/0x16 [isofs]
- [<c4993987>] isofs_fill_super+0x0/0x899 [isofs]
- [<c014df0a>] vfs_kern_mount+0x88/0xfd
- [<c014dfb2>] do_kern_mount+0x26/0x36
- [<c015eee2>] do_mount+0x589/0x5fb
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c015e21c>] mntput_no_expire+0x11/0x59
- [<c0155007>] link_path_walk+0xaf/0xb9
- [<c013c4fc>] __handle_mm_fault+0x341/0x620
- [<c01552c4>] do_path_lookup+0x195/0x1b5
- [<c013c342>] __handle_mm_fault+0x187/0x620
- [<c0136236>] get_page_from_freelist+0x6e/0x2bb
- [<c0136ae6>] __get_free_pages+0x25/0x3e
- [<c015de80>] copy_mount_options+0x27/0x10a
- [<c015efbe>] sys_mount+0x6a/0xa2
- [<c0102a47>] syscall_call+0x7/0xb
-ISO 9660 Extensions: Microsoft Joliet Level 1
-ISOFS: changing to secondary root
-
--- 
------------------------------------------------------------------------
-Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
-rct@frus.com
------------------------------------------------------------------------
