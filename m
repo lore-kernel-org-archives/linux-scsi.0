@@ -1,49 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: SAVE_DATA / RESTORE_POINTERS message confusion
-Date: Mon, 30 Apr 2007 14:00:48 -0500
-Message-ID: <1177959648.3674.57.camel@mulgrave.il.steeleye.com>
-References: <20070429.143759.71876461.davem@davemloft.net>
-	 <Pine.LNX.4.60.0704301947570.15250@poirot.grange>
-	 <1177957447.3674.51.camel@mulgrave.il.steeleye.com>
-	 <20070430.114637.41634896.davem@davemloft.net>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: Re: BAD_SG_DMA panic in aha1542
+Date: Mon, 30 Apr 2007 21:10:32 -0500 (CDT)
+Message-ID: <20070501021032.61120DBA1@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:35635 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1946639AbXD3TAx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Apr 2007 15:00:53 -0400
-In-Reply-To: <20070430.114637.41634896.davem@davemloft.net>
+Received: from gherkin.frus.com ([192.158.254.49]:41584 "EHLO gherkin.frus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423675AbXEACKd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 30 Apr 2007 22:10:33 -0400
+In-Reply-To: "from (env: rct) at Apr 30, 2007 09:33:12 am"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, alan@lxorguk.ukuu.org.uk
 
-On Mon, 2007-04-30 at 11:46 -0700, David Miller wrote:
-> The new ESP driver in esp_scsi.c is a good example of doing at least
-> SAVE and RESTORE pointer management properly.  I plan to add the
-> necessary MODIFY bits soon.
-> 
-> I think it's important to get this right because a target can use
-> this to recover from internal errors during an I/O, in order to
-> transfer some block of the data again.
-> 
-> I am pretty sure that the firmware in the aic7xxx, sym53c8xx, et
-> al. have extensive code to handle this completely.  That's why there
-> aren't any good driver examples, not because it isn't being handled,
-> but because all the logic and important details are done in the scsi
-> adapter firmware.
+rct wrote:
+> Apologies to all concerned for an unfortunate delay in resolving this.
+> (...)
+> I'll go retrieve a more conservatively-configured source tree (closer to
+> what DSL-N uses) and start over...
 
-You're right. I can only speak sym53c8xx firmware code.  What that does
-is to save and restore the pointer address correctly ... it does have a
-nice snippet anticipating the save data pointer before a disconnect, but
-I think it's not mandatory.
+Success with the Debian 2.6.18-4-486 build, which is known to work
+almost as well on the test platform as the 2.6.12 kernel that DSL-N
+comes with.  I used an older compiler than Debian used for their
+production build, so I binary-patched the aha1542.ko and sr_mod.ko
+files so insmod wouldn't complain about different vermagic strings.
 
-The Modify Data Pointers is actually handled outside of the firmware in
-sym_hipd.c:sym_modify_dp().  This is what you need to implement to allow
-a device to rewind after an error.
+That's as close as it gets without redoing everything from scratch.
+I'll give Alan's and James' patches a go within the next 13 hours.
 
-James
+(Alan: what *else* would you name a variable associated with a bounce
+buffer besides Zebedee?  Thanks for the occasion to smile...)
 
-
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
