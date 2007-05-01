@@ -1,169 +1,91 @@
-From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
-Subject: Re: libata /dev/scd0 problem: mount after burn fails without eject
-Date: Tue, 1 May 2007 16:31:59 +0200
-Message-ID: <6bffcb0e0705010731v44cfad1awf4342121245f7ab3@mail.gmail.com>
-References: <20070501135951.GA17072@janus> <46374C11.1010702@rtr.ca>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: [PATCH] aacraid: superfluous adapter reset for IBM 8 series ServeRAID controllers
+Date: Tue, 1 May 2007 11:43:06 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF018FDDBD@otce2k301.adaptec.com>
+References: <46326FE1.1030605@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C78C07.6A0BA310"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.230]:20946 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750893AbXEAOcC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2007 10:32:02 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1911252wra
-        for <linux-scsi@vger.kernel.org>; Tue, 01 May 2007 07:32:01 -0700 (PDT)
-In-Reply-To: <46374C11.1010702@rtr.ca>
-Content-Disposition: inline
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:37560 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbXEAPnL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 May 2007 11:43:11 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <46326FE1.1030605@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Frank van Maarseveen <frankvm@frankvm.com>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Alexis Bruemmer <ahbruemm@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>
 
-On 01/05/07, Mark Lord <lkml@rtr.ca> wrote:
-> Forwarding to linux-scsi and linux-ide mailing lists.
->
-> Frank van Maarseveen wrote:
-> > Tested on 2.6.20.6 and 2.6.21.1
-> >
-> > I decided to swich from the old IDE drivers to libata and now there
-> > seems to be a little but annoying problem: cannot mount an ISO image
-> > after burning it.
-> >
-> > May  1 14:32:55 kernel: attempt to access beyond end of device
-> > May  1 14:32:55 kernel: sr0: rw=0, want=68, limit=4
-> > May  1 14:32:55 kernel: isofs_fill_super: bread failed, dev=sr0, iso_blknum=16, block=16
-> >
-> > an "eject" command seems to fix the state of the PATA DVD writer
-> > or driver. The problem occurs for burning a CD and for DVD too with
-> > identical error messages.
-> >
-> >
-> > relevant kernel boot messages:
-> > | ata1: PATA max UDMA/100 cmd 0x000101f0 ctl 0x000103f6 bmdma 0x0001ffa0 irq 14
-> > | ata2: PATA max UDMA/100 cmd 0x00010170 ctl 0x00010376 bmdma 0x0001ffa8 irq 15
-> > | scsi0 : ata_piix
-> > | ata1.00: ATA-7: ST3120814A, 3.AAJ, max UDMA/100
-> > | ata1.00: 234441648 sectors, multi 8: LBA48
-> > | ata1.00: configured for UDMA/100
-> > | scsi1 : ata_piix
-> > | ata2.00: ATAPI, max UDMA/33
-> > | ata2.01: ATAPI, max UDMA/33
-> > | ata2.00: configured for UDMA/33
-> > | ata2.01: configured for UDMA/33
-> > | scsi 0:0:0:0: Direct-Access     ATA      ST3120814A       3.AA PQ: 0 ANSI: 5
-> > | SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
-> > | sda: Write Protect is off
-> > | SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > | SCSI device sda: 234441648 512-byte hdwr sectors (120034 MB)
-> > | sda: Write Protect is off
-> > | SCSI device sda: write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> > |  sda: sda1 sda2 sda4
-> > | sd 0:0:0:0: Attached scsi disk sda
-> > | sd 0:0:0:0: Attached scsi generic sg0 type 0
-> > | scsi 1:0:0:0: CD-ROM            HP       DVD Writer 640c  CS30 PQ: 0 ANSI: 5
-> > | sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-> > | Uniform CD-ROM driver Revision: 3.20
-> > | sr 1:0:0:0: Attached scsi generic sg1 type 5
-> > | scsi 1:0:1:0: CD-ROM            SAMSUNG  CD-ROM SC-148C   B105 PQ: 0 ANSI: 5
-> > | sr1: scsi3-mmc drive: 1x/48x cd/rw xa/form2 cdda tray
-> > | sr 1:0:1:0: Attached scsi generic sg2 type 5
-> >
-> > stripped config (well, as far of I'm sure it shouldn't matter):
-> > | CONFIG_PM=y
-> > | CONFIG_PM_LEGACY=y
-> > |
-> > | CONFIG_ACPI=y
-> > | CONFIG_ACPI_PROCFS=y
-> > | CONFIG_ACPI_FAN=y
-> > | CONFIG_ACPI_PROCESSOR=y
-> > | CONFIG_ACPI_THERMAL=y
-> > | CONFIG_ACPI_BLACKLIST_YEAR=0
-> > | CONFIG_ACPI_EC=y
-> > | CONFIG_ACPI_POWER=y
-> > | CONFIG_ACPI_SYSTEM=y
-> > | CONFIG_X86_PM_TIMER=y
-> > |
-> > | CONFIG_PCI=y
-> > | CONFIG_PCI_GOANY=y
-> > | CONFIG_PCI_BIOS=y
-> > | CONFIG_PCI_DIRECT=y
-> > | CONFIG_PCI_MMCONFIG=y
-> > | CONFIG_PCIEPORTBUS=y
-> > | CONFIG_PCIEAER=y
-> > | CONFIG_HT_IRQ=y
-> > | CONFIG_ISA_DMA_API=y
-> > |
-> > | CONFIG_PNP=y
-> > |
-> > | CONFIG_PNPACPI=y
-> > |
-> > | CONFIG_CDROM_PKTCDVD=y
-> > | CONFIG_CDROM_PKTCDVD_BUFFERS=8
-> > |
-> > | CONFIG_IDE=y
-> > |
-> > | CONFIG_RAID_ATTRS=y
-> > | CONFIG_SCSI=y
-> > | CONFIG_SCSI_PROC_FS=y
-> > |
-> > | CONFIG_BLK_DEV_SD=y
-> > | CONFIG_BLK_DEV_SR=y
-> > | CONFIG_CHR_DEV_SG=y
-> > |
-> > | CONFIG_SCSI_MULTI_LUN=y
-> > | CONFIG_SCSI_CONSTANTS=y
-> > | CONFIG_SCSI_LOGGING=y
-> > |
-> > | CONFIG_SCSI_SPI_ATTRS=y
-> > |
-> > | CONFIG_ATA=y
-> > | CONFIG_SATA_AHCI=y
-> > | CONFIG_ATA_PIIX=y
-> > | CONFIG_SATA_INTEL_COMBINED=y
-> > | CONFIG_SATA_ACPI=y
-> > | CONFIG_PATA_SERVERWORKS=y
-> >
-> >
-> > lspci:
-> > 00:00.0 Host bridge: Intel Corporation 82845G/GL[Brookdale-G]/GE/PE DRAM Controller/Host-Hub Interface (rev 01)
-> > 00:01.0 PCI bridge: Intel Corporation 82845G/GL[Brookdale-G]/GE/PE Host-to-AGP Bridge (rev 01)
-> > 00:1d.0 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #1 (rev 01)
-> > 00:1d.1 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #2 (rev 01)
-> > 00:1d.2 USB Controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) USB UHCI Controller #3 (rev 01)
-> > 00:1d.7 USB Controller: Intel Corporation 82801DB/DBM (ICH4/ICH4-M) USB2 EHCI Controller (rev 01)
-> > 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev 81)
-> > 00:1f.0 ISA bridge: Intel Corporation 82801DB/DBL (ICH4/ICH4-L) LPC Interface Bridge (rev 01)
-> > 00:1f.1 IDE interface: Intel Corporation 82801DB (ICH4) IDE Controller (rev 01)
-> > 00:1f.3 SMBus: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) SMBus Controller (rev 01)
-> > 00:1f.5 Multimedia audio controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M) AC'97 Audio Controller (rev 01)
-> > 01:00.0 VGA compatible controller: nVidia Corporation NV18 [GeForce4 MX 440 AGP 8x] (rev a2)
-> > 02:0c.0 Ethernet controller: Intel Corporation 82541PI Gigabit Ethernet Controller (rev 05)
-> >
-> > lspci -v -v -v for IDE
-> > 00:1f.1 IDE interface: Intel Corporation 82801DB (ICH4) IDE Controller (rev 01) (prog-if 8a [Master SecP PriP])
-> >         Subsystem: Dell Unknown device 0142
-> >         Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B-
-> >         Status: Cap- 66MHz- UDF- FastB2B+ ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-> >         Latency: 0
-> >         Interrupt: pin A routed to IRQ 17
-> >         Region 0: I/O ports at 01f0 [size=8]
-> >         Region 1: I/O ports at 03f4 [size=1]
-> >         Region 2: I/O ports at 0170 [size=8]
-> >         Region 3: I/O ports at 0374 [size=1]
-> >         Region 4: I/O ports at ffa0 [size=16]
-> >         Region 5: Memory at 50100000 (32-bit, non-prefetchable) [size=1K]
-> >
+This is a multi-part message in MIME format.
 
-I added this  to the list of known regressions
-http://kernelnewbies.org/known_regressions
+------_=_NextPart_001_01C78C07.6A0BA310
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-Alan CC'ed.
+The kexec patch introduced a superfluous (and otherwise inert) reset of
+some adapters. The register can have a hardware default value that has
+zeros for the undefined interrupts. This patch refines the test of the
+interrupt enable register to focus on only the interrupts that affect
+the driver in order to detect if an incomplete shutdown of the Adapter
+had occurred (kdump).
 
-Regards,
-Michal
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patches. Dynamic fast paced public patches create confusion.
 
--- 
-Michal K. K. Piotrowski
-Kernel Monkeys
-(http://kernel.wikidot.com/start)
+This attached patch is against current scsi-misc-2.6 *after* either the
+aacraid_kexec_5 or the aacraid_kexec_fix patches have propagated. The
+reason for supplying this patch in this manner is to recognize the lower
+priority of this patch, the dependence and to survive cleanly the
+sequencing and the overlap of patch application. James, say the word and
+I can provide an aacraid_kexec_6 with this rolled in, but my goal is NOT
+to delay aacraid_kexec_5 (or aacraid_kexec_fix as applied to
+aacraid_kexec_2 which currently is in scsi-misc-2.6 and 2.6.21-rc6-mm1+)
+from propagating otherwise.
+
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+---
+
+Sincerely -- Mark Salyzyn
+
+> -----Original Message-----
+> From: Darrick J. Wong [mailto:djwong@us.ibm.com]=20
+> Sent: Friday, April 27, 2007 5:49 PM
+> To: Salyzyn, Mark
+> Cc: linux-scsi@vger.kernel.org; Alexis Bruemmer; Vivek Goyal;=20
+> Judith Lebzelter
+> Subject: Re: [PATCH] aacraid: Initialize rx/rkt function pointers
+before calling them
+>=20
+> Salyzyn, Mark wrote:
+> > As an option for a patch (later), what was the actual value of the
+> > Munit.OIMR register (on the x3550 and the x3650 please,=20
+> just in case)?
+>=20
+> 0xF.
+>=20
+> --D
+
+------_=_NextPart_001_01C78C07.6A0BA310
+Content-Type: application/octet-stream;
+	name="aacraid_aurora.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_aurora.patch
+Content-Disposition: attachment;
+	filename="aacraid_aurora.patch"
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jIGIvZHJpdmVycy9zY3NpL2FhY3Jh
+aWQvcnguYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jCTIwMDctMDUtMDEgMTE6MTc6
+NDYuNjY4MzIxMjYwIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMJMjAwNy0w
+NS0wMSAxMToxODoyNC4zODQ3MDczOTQgLTA0MDAKQEAgLTU0Miw3ICs1NDIsNyBAQAogCWRldi0+
+YV9vcHMuYWRhcHRlcl9zeW5jX2NtZCA9IHJ4X3N5bmNfY21kOwogCWRldi0+YV9vcHMuYWRhcHRl
+cl9lbmFibGVfaW50ID0gYWFjX3J4X2Rpc2FibGVfaW50ZXJydXB0OwogCWRldi0+T0lNUiA9IHN0
+YXR1cyA9IHJ4X3JlYWRiIChkZXYsIE1Vbml0Lk9JTVIpOwotCWlmICgoKChzdGF0dXMgJiAweGZm
+KSAhPSAweGZmKSB8fCByZXNldF9kZXZpY2VzKSAmJgorCWlmICgoKChzdGF0dXMgJiAweDBjKSAh
+PSAweDBjKSB8fCByZXNldF9kZXZpY2VzKSAmJgogCSAgIWFhY19yeF9yZXN0YXJ0X2FkYXB0ZXIo
+ZGV2LCAwKSkKIAkJKytyZXN0YXJ0OwogCS8qCg==
+
+------_=_NextPart_001_01C78C07.6A0BA310--
