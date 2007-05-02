@@ -1,48 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fill in scsi_host_template module owner
-Date: Wed, 2 May 2007 09:37:07 +0100
-Message-ID: <20070502083707.GA24804@infradead.org>
-References: <200704301653.56687.okir@lst.de> <20070430160233.GA27438@infradead.org> <200705021007.44764.okir@lst.de>
+From: "Dr. David Alan Gilbert" <dave@treblig.org>
+Subject: LTO 4 encryption support?
+Date: Wed, 2 May 2007 09:56:32 +0100
+Message-ID: <20070502085632.GA11062@gallifrey>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42818 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S2992907AbXEBIhI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 May 2007 04:37:08 -0400
+Received: from tallyho.bytemark.co.uk ([80.68.81.166]:45081 "EHLO
+	tallyho.bytemark.co.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S2992956AbXEBJiW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 May 2007 05:38:22 -0400
+Received: from mx.treblig.org ([80.68.94.177])
+	by tallyho.bytemark.co.uk with esmtp (Exim 4.52)
+	id 1HjBHx-00068w-ER
+	for linux-scsi@vger.kernel.org; Wed, 02 May 2007 09:38:21 +0000
+Received: from dg by mx.treblig.org with local (Exim 4.50)
+	id 1HjAdU-0002xa-A8
+	for linux-scsi@vger.kernel.org; Wed, 02 May 2007 09:56:32 +0100
 Content-Disposition: inline
-In-Reply-To: <200705021007.44764.okir@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Kirch <okir@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-[please don't remove me from the To: or Cc: line, please - I tend
-to read personal email much faster than list traffic, and it's the
-normal policy for most kernel development lists these days]
+Hi,
+  It is said that LTO 4 drives are starting to be available and
+that they have encryption support built in.
 
-On Wed, May 02, 2007 at 10:07:43AM +0200, Olaf Kirch wrote:
-> On Monday 30 April 2007 18:02, Christoph Hellwig wrote:
-> >  - a driver should handle hot unplugs proper, even if THIS_MODULE
-> >    is set this can happen if the hardware just goes away.
-> 
-> In the case of the iscsi bug I looked at, it wasn't so much the
-> hardware going away, it was the rmmod that was kind of hurtful ;)
+Does anyone know anything about the encryption stuff on it?
+In particular:
 
-In the iscsi case this is true as it's not a traditional driver
-with a ->remove method that is called on a hot unplug.  Every pci
-or usb driver needs to handle hot removal, though.  And yes, I expect
-a lot of lingering bug in those areas outside of the few drivers used
-on modern highend systems.
+  1) How can I tell if it is using encryption?
+  2) How can I set the encryption key on the drive?
 
-> I also thought about adding something like this to
-> scsi_add_host:
-> 
-> +       if (sht->module == NULL && sht->queuecommand &&
-> +           !core_kernel_text((unsigned long) sht->queuecommand))
-> +               printk(KERN_ERR "%s: didn't set module owner field\n", sht->name);
-> 
-> But maybe that's overdoing things a little.
+I guess my biggest worry would be running a drive which I believed
+wasn't encrypting and then only find out when I replace the drive
+that it was encrypted; with some default key I didn't know.
+However it would be nice to run with encryption if I could then
+store that key in a few nice secure places.
 
-->queuecommand is also mandatory, so you could remove the check for it
-beeing present, but I think this is really overding things a little.
+Suggestions welcome.
+
+Dave
+
+-- 
+ -----Open up your eyes, open up your mind, open up your code -------   
+/ Dr. David Alan Gilbert    | Running GNU/Linux on Alpha,68K| Happy  \ 
+\ gro.gilbert @ treblig.org | MIPS,x86,ARM,SPARC,PPC & HPPA | In Hex /
+ \ _________________________|_____ http://www.treblig.org   |_______/
