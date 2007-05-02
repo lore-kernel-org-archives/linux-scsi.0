@@ -1,95 +1,65 @@
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: 2.6.21: known regressions with patches  (for -stable team)
-Date: Wed, 02 May 2007 14:09:58 +0200
-Message-ID: <46387F96.30409@googlemail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-acpi-owner@vger.kernel.org>
-Sender: linux-acpi-owner@vger.kernel.org
-To: stable@kernel.org, David Miller <davem@davemloft.net>, Robert Peterson <rpeterso@redhat.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, Takashi Iwai <tiwai@suse.de>, alsa-devel@alsa-project.org, perex@suse.cz, Markus Rechberger <markus.rechberger@amd.com>, CIJOML <cijoml@volny.cz>, david-b@pacbell.net, Jeff Mahoney <jeffm@suse.com>, reiserfs-dev@namesys.com, Brett Ryland <nappers@gmail.com>, Daniele Venzano <venza@brownhat.org>, netdev@vger.kernel.org, Sebastian Kemper <sebastian_ml@gmx.net>, Len Brown <lenb@kernel.org>, linux-acpi@vger.kernel.org, Mark Lord <lkml@rtr.ca>, Daniel Walker <dwalker@mvista.com>, Thomas Gleixner <tglx@linutronix.de>, Jan Kiszka <jan.kiszka@web.de>, =?ISO-8859-2?Q?Rafa=B3_Bilski?= <rafalbilski@interia.pl>, Dave Jones <davej@codemonkey.org.uk>, Greg KH <gregkh@suse.de>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Better handle adapter boot time errors
+Date: Wed, 02 May 2007 10:44:11 -0500
+Message-ID: <13297.3958076493$1178120690@news.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:58882 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751479AbXEBPoO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 May 2007 11:44:14 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l42FiDug030966
+	for <linux-scsi@vger.kernel.org>; Wed, 2 May 2007 11:44:13 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l42FiDHu534114
+	for <linux-scsi@vger.kernel.org>; Wed, 2 May 2007 11:44:13 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l42FiDbL011819
+	for <linux-scsi@vger.kernel.org>; Wed, 2 May 2007 11:44:13 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Hi all,
-
-Here is a list of known regressions with patches available.
-
-Feel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
 
-Subject    : 2.6.21: longhaul freq-scaling broken
-References : http://lkml.org/lkml/2007/5/1/260
-Submitter  : Jan Kiszka <jan.kiszka@web.de>
-Patch      : http://git.kernel.org/?p=linux/kernel/git/davej/cpufreq.git;a=commitdiff_plain;h=07844252ffd81ec192a62014bada1016c9703765
-Status     : patch available
+If an ipr adapter encounters an adapter error requiring an
+adapter reset to recover from prior to driver load time, the
+error will be ignored and recovery will not happen until the
+initial timeout occurs waiting for the firmware to come ready,
+which means a five minute timeout. Fix is to read the interrupt
+register before clearing any of the interrupts at probe time. 
 
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-Subject    : Kernel hang at "kernel: switched to high resolution mode on cpu 0" when 
-             either/both of CONFIG_NO_HZ, CONFIG_HIGH_RES_TIMERS is used
-References : http://lkml.org/lkml/2007/4/30/464
-Submitter  : Mark Lord <lkml@rtr.ca>
-Handled-By : Daniel Walker <dwalker@mvista.com>
-             Thomas Gleixner <tglx@linutronix.de>
-Patch      : http://lkml.org/lkml/2007/4/13/190
-Status     : patch was suggested
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletion(-)
 
-
-Subject    : ACPI related kernel panic
-References : http://lkml.org/lkml/2007/4/30/193
-             http://bugzilla.kernel.org/show_bug.cgi?id=8385
-Submitter  : Sebastian Kemper <sebastian_ml@gmx.net>
-Patches    : http://bugzilla.kernel.org/attachment.cgi?id=11331&action=view
-             http://bugzilla.kernel.org/attachment.cgi?id=11332&action=view
-Status     : patches was suggested
-
-
-Subject    : sis900 oops in 2.6.21.1 after bringing up the network
-References : http://lkml.org/lkml/2007/4/29/138
-             http://lkml.org/lkml/2007/4/29/151
-Patch      : http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff_plain;h=dc5a144991ba803bc8afded105c9db1dea0e57ab
-Submitter  : Brett Ryland <nappers@gmail.com>
-Status     : patch available
-
-
-Subject    : reiserfs -- circular locking
-References : http://lkml.org/lkml/2007/4/26/648
-Submitter  : David Brownell < david-b@pacbell.net >
-Handled-By : Jeff Mahoney < jeffm@suse.com >
-Patch      : http://lkml.org/lkml/2007/4/27/332
-Status     : patch available
-
-
-Subject    : Oops when changing USB DVB-T adapter
-References : http://lkml.org/lkml/2007/3/9/212
-             http://lkml.org/lkml/2007/4/5/154
-Submitter  : CIJOML <cijoml@volny.cz>
-Handled-By : Markus Rechberger < markus.rechberger@amd.com >
-Status     : patches available
-
-
-Subject    : snd_intel8x0: divide error: 0000
-References : http://lkml.org/lkml/2007/3/5/252
-Submitter  : Michal Piotrowski < michal.k.k.piotrowski@gmail.com >
-Handled-By : Takashi Iwai < tiwai@suse.de >
-Patch      : http://lkml.org/lkml/2007/4/20/117
-Status     : patch available
-
-
-Subject    : qla2xxx driver no longer works
-References : http://lkml.org/lkml/2007/4/16/49
-             http://lkml.org/lkml/2007/4/20/224
-Submitter  : David Miller < davem@davemloft.net >
-             Robert Peterson < rpeterso@redhat.com >
-Handled-By : David Miller < davem@davemloft.net >
-Patch      : http://lkml.org/lkml/2007/4/16/234
-Status     : patch was suggested
-
-
-Regards,
-Michal
-
--- 
-Michal K. K. Piotrowski
-Kernel Monkeys
-(http://kernel.wikidot.com/start)
+diff -puN drivers/scsi/ipr.c~ipr_boot_errors drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_boot_errors	2007-05-01 13:38:17.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-05-01 13:38:17.000000000 -0500
+@@ -7451,7 +7451,7 @@ static int __devinit ipr_probe_ioa(struc
+ 	unsigned long ipr_regs_pci;
+ 	void __iomem *ipr_regs;
+ 	int rc = PCIBIOS_SUCCESSFUL;
+-	volatile u32 mask, uproc;
++	volatile u32 mask, uproc, interrupts;
+ 
+ 	ENTER;
+ 
+@@ -7558,9 +7558,14 @@ static int __devinit ipr_probe_ioa(struc
+ 	 * the card is in an unknown state and needs a hard reset
+ 	 */
+ 	mask = readl(ioa_cfg->regs.sense_interrupt_mask_reg);
++	interrupts = readl(ioa_cfg->regs.sense_interrupt_reg);
+ 	uproc = readl(ioa_cfg->regs.sense_uproc_interrupt_reg);
+ 	if ((mask & IPR_PCII_HRRQ_UPDATED) == 0 || (uproc & IPR_UPROCI_RESET_ALERT))
+ 		ioa_cfg->needs_hard_reset = 1;
++	if (interrupts & IPR_PCII_ERROR_INTERRUPTS)
++		ioa_cfg->needs_hard_reset = 1;
++	if (interrupts & IPR_PCII_IOA_UNIT_CHECKED)
++		ioa_cfg->ioa_unit_checked = 1;
+ 
+ 	ipr_mask_and_clear_interrupts(ioa_cfg, ~IPR_PCII_IOA_TRANS_TO_OPER);
+ 	rc = request_irq(pdev->irq, ipr_isr, IRQF_SHARED, IPR_NAME, ioa_cfg);
+_
