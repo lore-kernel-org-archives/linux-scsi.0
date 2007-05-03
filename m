@@ -1,184 +1,54 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-Date: Thu, 03 May 2007 20:42:44 +0300
-Message-ID: <463A1F14.9080309@panasas.com>
-References: <4634BE6B.3000808@panasas.com>	<1177872588.3688.79.camel@mulgrave.il.steeleye.com>	<20070430111157.GI21015@kernel.dk> <20070502043754N.fujita.tomonori@lab.ntt.co.jp>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [RFC][PATCH] fix for async scsi scan sysfs problem (resend)
+Date: Thu, 03 May 2007 16:00:57 -0400
+Message-ID: <463A3F79.80809@emulex.com>
+References: <20070419132459.GB1481@korben.rdu.redhat.com>	 <1176991356.31764.3.camel@mulgrave.il.steeleye.com>	 <20070419150655.GC1481@korben.rdu.redhat.com>	 <20070421002345.673d9988.akpm@linux-foundation.org>	 <20070421135956.GA22873@korben.rdu.redhat.com>	 <20070423181318.GD22873@korben.rdu.redhat.com> <1177352786.6284.51.camel@mulgrave.il.steeleye.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:33210 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755304AbXECSnx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2007 14:43:53 -0400
-In-Reply-To: <20070502043754N.fujita.tomonori@lab.ntt.co.jp>
+Received: from emulex.emulex.com ([138.239.112.1]:59250 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753708AbXECUD2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2007 16:03:28 -0400
+In-Reply-To: <1177352786.6284.51.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, hch@infradead.org
-Cc: James.Bottomley@SteelEye.com, tomof@acm.org, akpm@osdl.org, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, bhalevy@panasas.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Josef Bacik <jwhiter@redhat.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-FUJITA Tomonori wrote:
-> From: Jens Axboe <jens.axboe@oracle.com>
-> Subject: Re: [PATCH 4/4] bidi support: bidirectional request
-> Date: Mon, 30 Apr 2007 13:11:57 +0200
-> 
->> On Sun, Apr 29 2007, James Bottomley wrote:
->>> On Sun, 2007-04-29 at 18:48 +0300, Boaz Harrosh wrote:
->>>> FUJITA Tomonori wrote:
->>>>> From: Boaz Harrosh <bharrosh@panasas.com>
->>>>> Subject: [PATCH 4/4] bidi support: bidirectional request
->>>>> Date: Sun, 15 Apr 2007 20:33:28 +0300
->>>>>
->>>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
->>>>>> index 645d24b..16a02ee 100644
->>>>>> --- a/include/linux/blkdev.h
->>>>>> +++ b/include/linux/blkdev.h
->>>>>> @@ -322,6 +322,7 @@ struct request {
->>>>>>      void *end_io_data;
->>>>>>
->>>>>>      struct request_io_part uni;
->>>>>> +    struct request_io_part bidi_read;
->>>>>>  };
->>>>> Would be more straightforward to have:
->>>>>
->>>>> struct request_io_part in;
->>>>> struct request_io_part out;
->>>>>
->>>> Yes I wish I could do that. For bidi supporting drivers this is the most logical.
->>>> But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
->>>> the hotish paths, this means we will need a pointer to a uni request_io_part.
->>>> This is bad because:
->>>> 1st- There is no defined stage in a request life where to definitely set that pointer,
->>>>      specially in the preparation stages.
->>>> 2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
->>>>      very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
->>>>      (not sent yet) but a more long term solution is needed. Once such hacks are
->>>>      cleaned up we can do what you say. This is exactly why I use the access functions
->>>>      rq_uni/rq_io/rq_in/rq_out and not open code access.
->>> I'm still not really convinced about this approach.  The primary job of
->>> the block layer is to manage and merge READ and WRITE requests.  It
->>> serves a beautiful secondary function of queueing for arbitrary requests
->>> it doesn't understand (REQ_TYPE_BLOCK_PC or REQ_TYPE_SPECIAL ... or
->>> indeed any non REQ_TYPE_FS).
->>>
->>> bidirectional requests fall into the latter category (there's nothing
->>> really we can do to merge them ... they're just transported by the block
->>> layer).  The only unusual feature is that they carry two bios.  I think
->>> the drivers that actually support bidirectional will be a rarity, so it
->>> might even be advisable to add it to the queue capability (refuse
->>> bidirectional requests at the top rather than perturbing all the drivers
->>> to process them).
->>>
->>> So, what about REQ_TYPE_BIDIRECTIONAL rather than REQ_BIDI?  That will
->>> remove it from the standard path and put it on the special command type
->>> path where we can process it specially.  Additionally, if you take this
->>> approach, you can probably simply chain the second bio through
->>> req->special as an additional request in the stream.  The only thing
->>> that would then need modification would be the dequeue of the block
->>> driver (it would have to dequeue both requests and prepare them) and
->>> that needs to be done only for drivers handling bidirectional requests.
->> I agree, I'm really not crazy about shuffling the entire request setup
->> around just for something as exotic as bidirection commands. How about
->> just keeping it simple - have a second request linked off the first one
->> for the second data phase? So keep it completely seperate, not just
->> overload ->special for 2nd bio list.
->>
->> So basically just add a struct request pointer, so you can do rq =
->> rq->next_rq or something for the next data phase. I bet this would be a
->> LOT less invasive as well, and we can get by with a few helpers to
->> support it.
-> 
-> This patch tried this approach. It's just for seeing how it works.
-> 
-> I added bidi support to open-iscsi and bsg and tested this patch
-> lightly. I've attached only a patch for the block layer and scsl-ml.
-> You can get all the patches are:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/tomo/bidi
-> 
-> If we go with this approach, we need just minor changes to the block
-> layer. The overloading rq->special approach needs more but it's
-> reasonable too.
-> 
-> I need to add the proper error handling code, which might be a bit
-> tricky, but I think that it will not be so complicated.
-> 
-> 
->> And it should definitely be a request type.
-> 
-> I'm not sure about this. I think that bidi can't be a request type to
-> trace bidi pc requests (we have bidi special requests like SMP). I use
-> REQ_BIDI though I've not implemented bidi trace code.
-> 
-> 
-> From 7d278323ff8aad86fb82c823538f7ddfb6ded11c Mon Sep 17 00:00:00 2001
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Date: Wed, 2 May 2007 03:55:56 +0900
-> Subject: [PATCH] add bidi support
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  block/ll_rw_blk.c        |    1 +
->  drivers/scsi/scsi_lib.c  |   72 +++++++++++++++++++++++++++++++++++++++-------
->  include/linux/blkdev.h   |    7 ++++
->  include/scsi/scsi_cmnd.h |    9 ++++++
->  4 files changed, 78 insertions(+), 11 deletions(-)
-> 
+I doubt it's in the fc transport - it's doing what it always did, which has
+nothing to do with coherency of the sdev's.
 
-Well what can I say guys. Just that I told you so.
-After 6 month you all agree on my original solution. Back than I
-wouldn't even dream of touching block layer and struct request.
-The 2 requests approach seemed perfectly fine. But people laughed
-that it is maybe good for out-of-tree debugging but I must do
-a proper support at the request layer. Even then, I say "ok but
-can we do it very ugly but safe on the side?, not to touch any
-legacy code." "No!" people say "do one for in one for out".
-So what should I understand for next time? a "Proper bidi support
-at the block layer" means we'll let you have a bad named pointer
-so you don't have to overload req->end_io_data at the scsi-ml level.
-Thanks I could use req->data for that.
+We're seeing like problems, and it looks like it's related to the scan_mutex
+being held when some of the entry points are being called via the recent
+async scan code (which also still has a bunch of issues around rmmod).
+We should be sending some patches shortly.
 
-Tomo's code is a perfectly valid approach, but it is certainly not
-finished. I have some comments and questions below.
-If anyone cares I put up a patcheset that I've tested to be stable.
-it is here:
-http://www.bhalevy.com/open-osd/download/double_request_bidi/
+-- james s
 
-1. I'm not very experienced with blk_map_user but there is some
-   asymmetry at SCSI-ml between handling of the first WRITE request
-   and second READ request. At scsi_end_request() there is the
-   end_that_request_chunk() calls. Now from my experience
-   with kernel buffers (I am using sglists through scsi_req_map_sg())
-   not calling end_that_request_chunk() on the second request will leak
-   the BIOs. Maybe blk_{,un}map_user() does not care I'm not sure. In my
-   SCSI-ml patch I have hacked up a scsi_end_request_block() to free
-   the BIOs unconditionally, since it is what I want to do. But calling
-   end_that_request_chunk() with the right size should also do the trick.
-   Also at scsi_release_buffers() you better NULL the pointers and check
-   for not NULL as scsi_release_buffers() can be called multiple times now,
-   and on half prepared commands, in the error handling paths.
-   (See my patch: 0002-scsi-midlayer-bidirectional-commands.patch)
-
-2. At struct request the blk_bidi_rq() should just be:
-   #define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
-   The flag gives us nothing but an extra BUG_ON. In fact we don't
-   need the flag at all.
-   And the name next_rq? are we intending to have a chain of these?
-   What's bad with plain bidi_read?
-
-3. On the other hand we need a new flag REQ_IO_ONLY, to stick on
-   the Second READ request. So block layer can avoid doing any
-   extra work on IO_ONLY requests. For now it does not matter
-   since BIDI devices like OSD do not get any regular FS traffic.
-   But when they will, the Second READ request might confuse the
-   elevator handling.
-   (See: 0003-out-of-tree-block-bidi-debugging.patch for what I mean)
-
-Right now I'm not sure how to proceed. You can see my current patchset.
-if any of it you like it's there. If any of it you don't like I can
-change them. Any questions I will answer But I think I'll go crawl
-under a rock for a while before I make a fool of myself...
-oops is that to late?;)
-
-Boaz
-
+James Bottomley wrote:
+> On Mon, 2007-04-23 at 14:13 -0400, Josef Bacik wrote:
+>> Ok I have a new patch that I've built and tested on both my UP and SMP machine
+>> and it appears to work fine.  I took the async check out of scsi_add_lun, I
+>> don't really see the point in waiting to do the sysfs registration stuff (if
+>> theres a reason I haven't been able to find it in the original submission of
+>> this functionality).  Please let me know if this is incorrect.  Thank you,
+> 
+> Yes, it's incorrect ... if you do this, the devices will come up in a
+> random order for multiple SCSI cards.  One of the original design goals
+> was not to require udev, so the final ordering should be the same as for
+> the sync case.
+> 
+> I think the root cause of the problem is somewhere in the fc transport
+> rport addition code.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
