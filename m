@@ -1,139 +1,184 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qla_wxyz pci_set_mwi question
-Date: Thu, 3 May 2007 10:44:46 -0700
-Message-ID: <20070503174446.GB6605@andrew-vasquezs-computer.local>
-References: <20070411221507.69c97257.randy.dunlap@oracle.com> <20070412172038.GG10124@andrew-vasquezs-computer.local> <20070412185347.GL26692@parisc-linux.org> <20070412193713.GB14510@andrew-vasquezs-computer.local> <20070412200438.GM26692@parisc-linux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+Date: Thu, 03 May 2007 20:42:44 +0300
+Message-ID: <463A1F14.9080309@panasas.com>
+References: <4634BE6B.3000808@panasas.com>	<1177872588.3688.79.camel@mulgrave.il.steeleye.com>	<20070430111157.GI21015@kernel.dk> <20070502043754N.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:43488 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767537AbXECRpA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2007 13:45:00 -0400
-Content-Disposition: inline
-In-Reply-To: <20070412200438.GM26692@parisc-linux.org>
+Received: from gw-e.panasas.com ([65.194.124.178]:33210 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755304AbXECSnx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2007 14:43:53 -0400
+In-Reply-To: <20070502043754N.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, David Somayajulu <david.somayajulu@qlogic.com>, scsi <linux-scsi@vger.kernel.org>, PCI <linux-pci@atrey.karlin.mff.cuni.cz>, linux-driver@qlogic.com, gregkh <greg@kroah.com>, linuxppc-dev@ozlabs.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, hch@infradead.org
+Cc: James.Bottomley@SteelEye.com, tomof@acm.org, akpm@osdl.org, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, bhalevy@panasas.com
 
-On Thu, 12 Apr 2007, Matthew Wilcox wrote:
-
-> On Thu, Apr 12, 2007 at 12:37:13PM -0700, Andrew Vasquez wrote:
-> > On Thu, 12 Apr 2007, Matthew Wilcox wrote:
-> > > Why should it fail?  If there's a platform which can't support a
-> > > cacheline size that the qla2xyz card can handle, it should be able to
-> > > happily fall back to doing plain writes instead of MWIs.  IMO, it should
-> > > just call pci_set_mwi() and ignore the result.
-> > 
-> > I believe there were some erratas on some ISP2xxx chips where MWI
-> > needed to be set for proper operation.  I'll go back, verify and
-> > update the patch accordingly.
+FUJITA Tomonori wrote:
+> From: Jens Axboe <jens.axboe@oracle.com>
+> Subject: Re: [PATCH 4/4] bidi support: bidirectional request
+> Date: Mon, 30 Apr 2007 13:11:57 +0200
 > 
-> Hmm.  The thing is that pci_set_mwi() returns success on machines where
-> MWI is disabled (currently only PPC64).  Perhaps it needs to fail
-> instead.
+>> On Sun, Apr 29 2007, James Bottomley wrote:
+>>> On Sun, 2007-04-29 at 18:48 +0300, Boaz Harrosh wrote:
+>>>> FUJITA Tomonori wrote:
+>>>>> From: Boaz Harrosh <bharrosh@panasas.com>
+>>>>> Subject: [PATCH 4/4] bidi support: bidirectional request
+>>>>> Date: Sun, 15 Apr 2007 20:33:28 +0300
+>>>>>
+>>>>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>>>>>> index 645d24b..16a02ee 100644
+>>>>>> --- a/include/linux/blkdev.h
+>>>>>> +++ b/include/linux/blkdev.h
+>>>>>> @@ -322,6 +322,7 @@ struct request {
+>>>>>>      void *end_io_data;
+>>>>>>
+>>>>>>      struct request_io_part uni;
+>>>>>> +    struct request_io_part bidi_read;
+>>>>>>  };
+>>>>> Would be more straightforward to have:
+>>>>>
+>>>>> struct request_io_part in;
+>>>>> struct request_io_part out;
+>>>>>
+>>>> Yes I wish I could do that. For bidi supporting drivers this is the most logical.
+>>>> But for the 99.9% of uni-directional drivers, calling rq_uni(), and being some what on
+>>>> the hotish paths, this means we will need a pointer to a uni request_io_part.
+>>>> This is bad because:
+>>>> 1st- There is no defined stage in a request life where to definitely set that pointer,
+>>>>      specially in the preparation stages.
+>>>> 2nd- hacks like scsi_error.c/scsi_send_eh_cmnd() will not work at all. Now this is a
+>>>>      very bad spot already, and I have a short term fix for it in the SCSI-bidi patches
+>>>>      (not sent yet) but a more long term solution is needed. Once such hacks are
+>>>>      cleaned up we can do what you say. This is exactly why I use the access functions
+>>>>      rq_uni/rq_io/rq_in/rq_out and not open code access.
+>>> I'm still not really convinced about this approach.  The primary job of
+>>> the block layer is to manage and merge READ and WRITE requests.  It
+>>> serves a beautiful secondary function of queueing for arbitrary requests
+>>> it doesn't understand (REQ_TYPE_BLOCK_PC or REQ_TYPE_SPECIAL ... or
+>>> indeed any non REQ_TYPE_FS).
+>>>
+>>> bidirectional requests fall into the latter category (there's nothing
+>>> really we can do to merge them ... they're just transported by the block
+>>> layer).  The only unusual feature is that they carry two bios.  I think
+>>> the drivers that actually support bidirectional will be a rarity, so it
+>>> might even be advisable to add it to the queue capability (refuse
+>>> bidirectional requests at the top rather than perturbing all the drivers
+>>> to process them).
+>>>
+>>> So, what about REQ_TYPE_BIDIRECTIONAL rather than REQ_BIDI?  That will
+>>> remove it from the standard path and put it on the special command type
+>>> path where we can process it specially.  Additionally, if you take this
+>>> approach, you can probably simply chain the second bio through
+>>> req->special as an additional request in the stream.  The only thing
+>>> that would then need modification would be the dequeue of the block
+>>> driver (it would have to dequeue both requests and prepare them) and
+>>> that needs to be done only for drivers handling bidirectional requests.
+>> I agree, I'm really not crazy about shuffling the entire request setup
+>> around just for something as exotic as bidirection commands. How about
+>> just keeping it simple - have a second request linked off the first one
+>> for the second data phase? So keep it completely seperate, not just
+>> overload ->special for 2nd bio list.
+>>
+>> So basically just add a struct request pointer, so you can do rq =
+>> rq->next_rq or something for the next data phase. I bet this would be a
+>> LOT less invasive as well, and we can get by with a few helpers to
+>> support it.
+> 
+> This patch tried this approach. It's just for seeing how it works.
+> 
+> I added bidi support to open-iscsi and bsg and tested this patch
+> lightly. I've attached only a patch for the block layer and scsl-ml.
+> You can get all the patches are:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/tomo/bidi
+> 
+> If we go with this approach, we need just minor changes to the block
+> layer. The overloading rq->special approach needs more but it's
+> reasonable too.
+> 
+> I need to add the proper error handling code, which might be a bit
+> tricky, but I think that it will not be so complicated.
+> 
+> 
+>> And it should definitely be a request type.
+> 
+> I'm not sure about this. I think that bidi can't be a request type to
+> trace bidi pc requests (we have bidi special requests like SMP). I use
+> REQ_BIDI though I've not implemented bidi trace code.
+> 
+> 
+> From 7d278323ff8aad86fb82c823538f7ddfb6ded11c Mon Sep 17 00:00:00 2001
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Wed, 2 May 2007 03:55:56 +0900
+> Subject: [PATCH] add bidi support
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  block/ll_rw_blk.c        |    1 +
+>  drivers/scsi/scsi_lib.c  |   72 +++++++++++++++++++++++++++++++++++++++-------
+>  include/linux/blkdev.h   |    7 ++++
+>  include/scsi/scsi_cmnd.h |    9 ++++++
+>  4 files changed, 78 insertions(+), 11 deletions(-)
+> 
 
-Sorry for the latency on getting this one resolved...  So is Randy's
-proposal for pci_try_set_mwi():
+Well what can I say guys. Just that I told you so.
+After 6 month you all agree on my original solution. Back than I
+wouldn't even dream of touching block layer and struct request.
+The 2 requests approach seemed perfectly fine. But people laughed
+that it is maybe good for out-of-tree debugging but I must do
+a proper support at the request layer. Even then, I say "ok but
+can we do it very ugly but safe on the side?, not to touch any
+legacy code." "No!" people say "do one for in one for out".
+So what should I understand for next time? a "Proper bidi support
+at the block layer" means we'll let you have a bad named pointer
+so you don't have to overload req->end_io_data at the scsi-ml level.
+Thanks I could use req->data for that.
 
-	http://article.gmane.org/gmane.linux.kernel/516349
+Tomo's code is a perfectly valid approach, but it is certainly not
+finished. I have some comments and questions below.
+If anyone cares I put up a patcheset that I've tested to be stable.
+it is here:
+http://www.bhalevy.com/open-osd/download/double_request_bidi/
 
-going to be added in 2.6.22?  If so, I'd like to propose the following
-to qla2xxx which handles the 2300 errata.
+1. I'm not very experienced with blk_map_user but there is some
+   asymmetry at SCSI-ml between handling of the first WRITE request
+   and second READ request. At scsi_end_request() there is the
+   end_that_request_chunk() calls. Now from my experience
+   with kernel buffers (I am using sglists through scsi_req_map_sg())
+   not calling end_that_request_chunk() on the second request will leak
+   the BIOs. Maybe blk_{,un}map_user() does not care I'm not sure. In my
+   SCSI-ml patch I have hacked up a scsi_end_request_block() to free
+   the BIOs unconditionally, since it is what I want to do. But calling
+   end_that_request_chunk() with the right size should also do the trick.
+   Also at scsi_release_buffers() you better NULL the pointers and check
+   for not NULL as scsi_release_buffers() can be called multiple times now,
+   and on half prepared commands, in the error handling paths.
+   (See my patch: 0002-scsi-midlayer-bidirectional-commands.patch)
 
---
+2. At struct request the blk_bidi_rq() should just be:
+   #define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
+   The flag gives us nothing but an extra BUG_ON. In fact we don't
+   need the flag at all.
+   And the name next_rq? are we intending to have a chain of these?
+   What's bad with plain bidi_read?
 
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 6ad1588..8b83e1c 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -130,18 +130,16 @@ qla2x00_initialize_adapter(scsi_qla_host_t *ha)
- int
- qla2100_pci_config(scsi_qla_host_t *ha)
- {
--	uint16_t w, mwi;
-+	uint16_t w;
- 	uint32_t d;
- 	unsigned long flags;
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
- 
- 	pci_set_master(ha->pdev);
--	mwi = 0;
--	if (pci_set_mwi(ha->pdev))
--		mwi = PCI_COMMAND_INVALIDATE;
-+	pci_try_set_mwi(ha->pdev);
- 
- 	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
--	w |= mwi | (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
- 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
- 
- 	/* Reset expansion ROM address decode enable */
-@@ -166,22 +164,21 @@ qla2100_pci_config(scsi_qla_host_t *ha)
- int
- qla2300_pci_config(scsi_qla_host_t *ha)
- {
--	uint16_t	w, mwi;
-+	uint16_t	w;
- 	uint32_t	d;
- 	unsigned long   flags = 0;
- 	uint32_t	cnt;
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
- 
- 	pci_set_master(ha->pdev);
--	mwi = 0;
--	if (pci_set_mwi(ha->pdev))
--		mwi = PCI_COMMAND_INVALIDATE;
-+	pci_try_set_mwi(ha->pdev);
- 
- 	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
--	w |= mwi | (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
- 
- 	if (IS_QLA2322(ha) || IS_QLA6322(ha))
- 		w &= ~PCI_COMMAND_INTX_DISABLE;
-+	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
- 
- 	/*
- 	 * If this is a 2300 card and not 2312, reset the
-@@ -210,7 +207,7 @@ qla2300_pci_config(scsi_qla_host_t *ha)
- 		ha->fb_rev = RD_FB_CMD_REG(ha, reg);
- 
- 		if (ha->fb_rev == FPM_2300)
--			w &= ~PCI_COMMAND_INVALIDATE;
-+			pci_clear_mwi(ha->pdev);
- 
- 		/* Deselect FPM registers. */
- 		WRT_REG_WORD(&reg->ctrl_status, 0x0);
-@@ -227,7 +224,6 @@ qla2300_pci_config(scsi_qla_host_t *ha)
- 
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 	}
--	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
- 
- 	pci_write_config_byte(ha->pdev, PCI_LATENCY_TIMER, 0x80);
- 
-@@ -253,19 +249,17 @@ qla2300_pci_config(scsi_qla_host_t *ha)
- int
- qla24xx_pci_config(scsi_qla_host_t *ha)
- {
--	uint16_t w, mwi;
-+	uint16_t w;
- 	uint32_t d;
- 	unsigned long flags = 0;
- 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
- 	int pcix_cmd_reg, pcie_dctl_reg;
- 
- 	pci_set_master(ha->pdev);
--	mwi = 0;
--	if (pci_set_mwi(ha->pdev))
--		mwi = PCI_COMMAND_INVALIDATE;
-+	pci_try_set_mwi(ha->pdev);
- 
- 	pci_read_config_word(ha->pdev, PCI_COMMAND, &w);
--	w |= mwi | (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
-+	w |= (PCI_COMMAND_PARITY | PCI_COMMAND_SERR);
- 	w &= ~PCI_COMMAND_INTX_DISABLE;
- 	pci_write_config_word(ha->pdev, PCI_COMMAND, w);
- 
+3. On the other hand we need a new flag REQ_IO_ONLY, to stick on
+   the Second READ request. So block layer can avoid doing any
+   extra work on IO_ONLY requests. For now it does not matter
+   since BIDI devices like OSD do not get any regular FS traffic.
+   But when they will, the Second READ request might confuse the
+   elevator handling.
+   (See: 0003-out-of-tree-block-bidi-debugging.patch for what I mean)
+
+Right now I'm not sure how to proceed. You can see my current patchset.
+if any of it you like it's there. If any of it you don't like I can
+change them. Any questions I will answer But I think I'll go crawl
+under a rock for a while before I make a fool of myself...
+oops is that to late?;)
+
+Boaz
+
