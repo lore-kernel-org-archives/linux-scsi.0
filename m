@@ -1,261 +1,88 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: [RFC] [PATCH 5/5] qla4xxx: Add IPv6 support and misc
-Date: Wed, 02 May 2007 19:16:54 -0700
-Message-ID: <1178158614.21709.10.camel@iscsi-sles10>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
+Subject: dead CONFIG_ variables:  drivers/scsi/
+Date: Thu, 3 May 2007 06:10:28 -0400 (EDT)
+Message-ID: <Pine.LNX.4.64.0705030606570.32341@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:39559 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767300AbXECBQv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 May 2007 21:16:51 -0400
+Received: from nic.NetDirect.CA ([216.16.235.2]:49235 "EHLO
+	rubicon.netdirect.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440AbXECKK7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2007 06:10:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, David Somayajulu <david.somayajulu@qlogic.com>, David Wagner <david.wagner@qlogic.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
 
----
- drivers/scsi/qla4xxx/ql4_dbg.c     |    5 
- drivers/scsi/qla4xxx/ql4_glbl.h    |   12 +
- drivers/scsi/qla4xxx/ql4_iocb.c    |   39 ++-
- drivers/scsi/qla4xxx/ql4_nvram.c   |    4 
- drivers/scsi/qla4xxx/ql4_os.c      |   28 ++
- drivers/scsi/qla4xxx/ql4_version.h |    3 
+$ ../dead_config.sh drivers/scsi
+========== 53C700_BE_BUS ==========
+drivers/scsi/53c700.h:266:#ifdef CONFIG_53C700_BE_BUS
+========== ACORNSCSI_CONSTANTS ==========
+drivers/scsi/arm/acornscsi.c:106:#undef CONFIG_ACORNSCSI_CONSTANTS
+drivers/scsi/arm/acornscsi.c:417:#ifdef CONFIG_ACORNSCSI_CONSTANTS
+drivers/scsi/arm/acornscsi.c:495:#ifdef CONFIG_ACORNSCSI_CONSTANTS
+========== AIC7XXX_PROC_STATS ==========
+drivers/scsi/aic7xxx/aic7xxx_osm.c:152:#ifdef CONFIG_AIC7XXX_PROC_STATS
+Documentation/filesystems/proc.txt:636:    AIC7XXX_PROC_STATS     : Disabled
+drivers/scsi/aic7xxx/aic7xxx_osm.c:153:#define AIC7XXX_PROC_STATS
+========== HIGHIO ==========
+drivers/scsi/ips.h:61:   #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20) || defined CONFIG_HIGHIO
+========== NCR53C8XX_PREFETCH ==========
+drivers/scsi/ncr53c8xx.c:1818:#ifdef CONFIG_NCR53C8XX_PREFETCH
+========== SCSI_ACORNSCSI_LINK ==========
+drivers/scsi/arm/acornscsi.c:70:#undef CONFIG_SCSI_ACORNSCSI_LINK
+drivers/scsi/arm/acornscsi.c:169:#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+drivers/scsi/arm/acornscsi.c:1675:#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+drivers/scsi/arm/acornscsi.c:2849:#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+drivers/scsi/arm/acornscsi.c:2880:#ifdef CONFIG_SCSI_ACORNSCSI_LINK
+========== SCSI_DC395x_TRMS1040_TRADMAP ==========
+drivers/scsi/dc395x.c:1176:#ifdef CONFIG_SCSI_DC395x_TRMS1040_TRADMAP
+========== SCSI_G_NCR5380_MEM ==========
+drivers/scsi/g_NCR5380.c:299:#ifdef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:377:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:439:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:449:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:519:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:592:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:599:           /* implies CONFIG_SCSI_G_NCR5380_MEM */
+drivers/scsi/g_NCR5380.c:612:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:619:           /* implies CONFIG_SCSI_G_NCR5380_MEM */
+drivers/scsi/g_NCR5380.c:678:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:684:           /* implies CONFIG_SCSI_G_NCR5380_MEM */
+drivers/scsi/g_NCR5380.c:694:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.c:700:           /* implies CONFIG_SCSI_G_NCR5380_MEM */
+drivers/scsi/g_NCR5380.h:66:#ifndef CONFIG_SCSI_G_NCR5380_MEM
+drivers/scsi/g_NCR5380.h:94:/* therefore CONFIG_SCSI_G_NCR5380_MEM */
+drivers/scsi/g_NCR5380_mmio.c:7:#define SCSI_G_NCR5380_MEM
+========== SCSI_NCR53C8XX_DISABLE_MPARITY_CHECK ==========
+drivers/scsi/ncr53c8xx.h:175:#ifdef CONFIG_SCSI_NCR53C8XX_DISABLE_MPARITY_CHECK
+========== SCSI_NCR53C8XX_DISABLE_PARITY_CHECK ==========
+drivers/scsi/ncr53c8xx.h:184:#ifdef CONFIG_SCSI_NCR53C8XX_DISABLE_PARITY_CHECK
+========== SCSI_NCR53C8XX_FORCE_SYNC_NEGO ==========
+drivers/scsi/ncr53c8xx.h:166:#ifdef CONFIG_SCSI_NCR53C8XX_FORCE_SYNC_NEGO
+========== SCSI_NCR53C8XX_IARB ==========
+drivers/scsi/ncr53c8xx.h:125:#if defined(CONFIG_SCSI_NCR53C8XX_IARB)
+========== SCSI_NCR53C8XX_INTEGRITY_CHECK ==========
+drivers/scsi/ncr53c8xx.h:70:#ifdef      CONFIG_SCSI_NCR53C8XX_INTEGRITY_CHECK
+========== SCSI_NCR53C8XX_NO_WORD_TRANSFERS ==========
+drivers/scsi/ncr53c8xx.h:416:#ifdef CONFIG_SCSI_NCR53C8XX_NO_WORD_TRANSFERS
+drivers/scsi/ncr53c8xx.h:424:#ifdef CONFIG_SCSI_NCR53C8XX_NO_WORD_TRANSFERS
+========== SCSI_NCR53C8XX_TAGGED_QUEUE ==========
+drivers/scsi/ncr53c8xx.h:116:#elif      defined CONFIG_SCSI_NCR53C8XX_TAGGED_QUEUE
+========== WD33C93_PIO ==========
+drivers/scsi/wd33c93.c:172:#ifdef CONFIG_WD33C93_PIO
+drivers/scsi/wd33c93.c:230:#else /* CONFIG_WD33C93_PIO */
+drivers/scsi/wd33c93.c:297:#endif /* CONFIG_WD33C93_PIO */
+drivers/scsi/wd33c93.h:193:#ifdef CONFIG_WD33C93_PIO
 
-diff --git a/drivers/scsi/qla4xxx/ql4_dbg.c b/drivers/scsi/qla4xxx/ql4_dbg.c
-index 7b4e077..81fac0f 100644
---- a/drivers/scsi/qla4xxx/ql4_dbg.c
-+++ b/drivers/scsi/qla4xxx/ql4_dbg.c
-@@ -6,6 +6,11 @@
-  */
- 
- #include "ql4_def.h"
-+#include "ql4_version.h"
-+#include "ql4_glbl.h"
-+#include "ql4_dbg.h"
-+#include "ql4_inline.h"
-+
- #include <scsi/scsi_dbg.h>
- 
- static void qla4xxx_print_srb_info(struct srb * srb)
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index e021eb5..188b4e5 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -8,6 +8,9 @@
- #ifndef __QLA4x_GBL_H
- #define	__QLA4x_GBL_H
- 
-+struct iscsi_cls_conn;
-+
-+void qla4xxx_hw_reset(struct scsi_qla_host *ha);
- int ql4xxx_lock_drvr_wait(struct scsi_qla_host *a);
- int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port);
- int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb);
-@@ -67,14 +70,19 @@ void qla4xxx_interrupt_service_routine(s
- 				       uint32_t intr_status);
- int qla4xxx_init_rings(struct scsi_qla_host * ha);
- void qla4xxx_dump_buffer(void *b, uint32_t size);
--struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha, uint32_t index);
-+struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
-+						uint32_t index);
- void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb);
- int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host * ha);
- int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
- 				uint32_t fw_ddb_index, uint32_t state);
- 
-+int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
-+				uint8_t outCount, uint32_t *mbx_cmd,
-+				uint32_t *mbx_sts);
-+
- extern int ql4xextended_error_logging;
- extern int ql4xdiscoverywait;
- extern int ql4xdontresethba;
- extern int ql4_mod_unload;
--#endif /* _QLA4x_GBL_H */
-+#endif	/* _QLA4x_GBL_H */
-diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
-index d41ce38..51f6753 100644
---- a/drivers/scsi/qla4xxx/ql4_iocb.c
-+++ b/drivers/scsi/qla4xxx/ql4_iocb.c
-@@ -6,6 +6,11 @@
-  */
- 
- #include "ql4_def.h"
-+#include "ql4_version.h"
-+#include "ql4_glbl.h"
-+#include "ql4_dbg.h"
-+#include "ql4_inline.h"
-+
- 
- #include <scsi/scsi_tcq.h>
- 
-@@ -233,23 +238,27 @@ int qla4xxx_send_command_to_isp(struct s
- 	index = (uint32_t)cmd->request->tag;
- 
- 	/* Calculate the number of request entries needed. */
--	if (cmd->use_sg) {
--		sg = (struct scatterlist *)cmd->request_buffer;
--		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
--				      cmd->sc_data_direction);
--		if (tot_dsds == 0)
--			goto queuing_error;
--	} else if (cmd->request_bufflen) {
--		dma_addr_t	req_dma;
--
--		req_dma = pci_map_single(ha->pdev, cmd->request_buffer,
-+	if (srb->flags & SRB_SCSI_PASSTHRU) {
-+		tot_dsds = 1;
-+	} else {
-+		if (cmd->use_sg) {
-+			sg = (struct scatterlist *)cmd->request_buffer;
-+			tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
-+					      cmd->sc_data_direction);
-+			if (tot_dsds == 0)
-+				goto queuing_error;
-+		} else if (cmd->request_bufflen) {
-+			dma_addr_t	req_dma;
-+
-+			req_dma = pci_map_single(ha->pdev, cmd->request_buffer,
- 					 cmd->request_bufflen,
- 					 cmd->sc_data_direction);
--		if (dma_mapping_error(req_dma))
--			goto queuing_error;
-+			if (dma_mapping_error(req_dma))
-+				goto queuing_error;
- 
--		srb->dma_handle = req_dma;
--		tot_dsds = 1;
-+			srb->dma_handle = req_dma;
-+			tot_dsds = 1;
-+		}
- 	}
- 	req_cnt = qla4xxx_calc_request_entries(tot_dsds);
- 
-@@ -359,6 +368,8 @@ int qla4xxx_send_command_to_isp(struct s
- 	return QLA_SUCCESS;
- 
- queuing_error:
-+	if (srb->flags & SRB_SCSI_PASSTHRU)
-+		return QLA_ERROR;
- 
- 	if (cmd->use_sg && tot_dsds) {
- 		sg = (struct scatterlist *) cmd->request_buffer;
-diff --git a/drivers/scsi/qla4xxx/ql4_nvram.c b/drivers/scsi/qla4xxx/ql4_nvram.c
-index 58afd13..67cfd0a 100644
---- a/drivers/scsi/qla4xxx/ql4_nvram.c
-+++ b/drivers/scsi/qla4xxx/ql4_nvram.c
-@@ -6,6 +6,10 @@
-  */
- 
- #include "ql4_def.h"
-+#include "ql4_version.h"
-+#include "ql4_glbl.h"
-+#include "ql4_dbg.h"
-+#include "ql4_inline.h"
- 
- static inline void eeprom_cmd(uint32_t cmd, struct scsi_qla_host *ha)
- {
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 0bfddf8..f7564ee 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -10,6 +10,10 @@ #include <scsi/scsi_tcq.h>
- #include <scsi/scsicam.h>
- 
- #include "ql4_def.h"
-+#include "ql4_version.h"
-+#include "ql4_glbl.h"
-+#include "ql4_dbg.h"
-+#include "ql4_inline.h"
- 
- /*
-  * Driver version
-@@ -283,6 +287,7 @@ int qla4xxx_add_sess(struct ddb_entry *d
- 	}
- 
- 	ddb_entry->sess->recovery_tmo = ddb_entry->ha->port_down_retry_count;
-+
- 	iscsi_if_create_session_done(ddb_entry->conn);
- 	return 0;
- }
-@@ -387,9 +392,10 @@ void qla4xxx_srb_compl(struct scsi_qla_h
- {
- 	struct scsi_cmnd *cmd = srb->cmd;
- 
--	qla4xxx_srb_free_dma(ha, srb);
--
--	mempool_free(srb, ha->srb_mempool);
-+	if (!(srb->flags & SRB_SCSI_PASSTHRU)) {
-+		qla4xxx_srb_free_dma(ha, srb);
-+		mempool_free(srb, ha->srb_mempool);
-+	}
- 
- 	cmd->scsi_done(cmd);
- }
-@@ -712,7 +718,7 @@ static int qla4xxx_cmd_wait(struct scsi_
- 	return stat;
- }
- 
--static void qla4xxx_hw_reset(struct scsi_qla_host *ha)
-+void qla4xxx_hw_reset(struct scsi_qla_host *ha)
- {
- 	uint32_t ctrl_status;
- 	unsigned long flags = 0;
-@@ -1082,13 +1088,13 @@ static void qla4xxx_free_adapter(struct 
- 	if (ha->timer_active)
- 		qla4xxx_stop_timer(ha);
- 
--	/* free extra memory */
--	qla4xxx_mem_free(ha);
--
- 	/* Detach interrupts */
- 	if (test_and_clear_bit(AF_IRQ_ATTACHED, &ha->flags))
- 		free_irq(ha->pdev->irq, ha);
- 
-+	/* free extra memory */
-+	qla4xxx_mem_free(ha);
-+
- 	pci_disable_device(ha->pdev);
- 
- }
-@@ -1197,6 +1203,9 @@ static int __devinit qla4xxx_probe_adapt
- 	ha->host = host;
- 	ha->host_no = host->host_no;
- 
-+	ha->ql4mbx = qla4xxx_mailbox_command;
-+	ha->ql4cmd = qla4xxx_send_command_to_isp;
-+
- 	/* Configure PCI I/O space. */
- 	ret = qla4xxx_iospace_config(ha);
- 	if (ret)
-@@ -1333,6 +1342,11 @@ static void __devexit qla4xxx_remove_ada
- 
- 	ha = pci_get_drvdata(pdev);
- 
-+	qla4xxx_disable_intrs(ha);
-+
-+	while (test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags))
-+		ssleep(1);
-+
- 	/* remove devs from iscsi_sessions to scsi_devices */
- 	qla4xxx_free_ddb_list(ha);
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index e5183a6..2149069 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,5 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.00.07-k1"
-+#define QLA4XXX_DRIVER_VERSION	"5.01.00-k7"
-+
+rday
+
 -- 
-1.4.2.3
+========================================================================
+Robert P. J. Day
+Linux Consulting, Training and Annoying Kernel Pedantry
+Waterloo, Ontario, CANADA
 
-
+http://fsdev.net/wiki/index.php?title=Main_Page
+========================================================================
