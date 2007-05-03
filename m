@@ -1,64 +1,33 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [RFC] [PATCH 0/5] qla4xxx: Add IPv6 support and misc
-Date: Thu, 3 May 2007 14:38:57 +0200
-Message-ID: <200705031439.05500.eike-kernel@sf-tec.de>
-References: <1178157870.20898.35.camel@iscsi-sles10> <4639CAB5.7090308@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: dead CONFIG_ variables:  drivers/scsi/
+Date: Thu, 03 May 2007 09:15:30 -0500
+Message-ID: <1178201730.3714.4.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.64.0705030606570.32341@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart1454928.FfxWEWcl8b";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:35008 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1031302AbXECMpy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 May 2007 08:45:54 -0400
-Received: from  ([::ffff:212.65.3.74] HELO donald.sf-tec.de) (auth=eike-kernel@sf-tec.de)
-	by mail.sf-mail.de (Qsmtpd 0.9) with (DHE-RSA-AES256-SHA encrypted) ESMTPSA
-	for <linux-scsi@vger.kernel.org>; Thu, 03 May 2007 14:39:12 +0200
-In-Reply-To: <4639CAB5.7090308@s5r6.in-berlin.de>
+Received: from hancock.steeleye.com ([71.30.118.248]:55740 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1031313AbXECOPu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 May 2007 10:15:50 -0400
+In-Reply-To: <Pine.LNX.4.64.0705030606570.32341@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, David C Somayajulu <david.somayajulu@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>
+To: "Robert P. J. Day" <rpjday@mindspring.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
---nextPart1454928.FfxWEWcl8b
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+On Thu, 2007-05-03 at 06:10 -0400, Robert P. J. Day wrote:
+> $ ../dead_config.sh drivers/scsi
+> ========== 53C700_BE_BUS ==========
+> drivers/scsi/53c700.h:266:#ifdef CONFIG_53C700_BE_BUS
 
-Stefan Richter wrote:
-> David C Somayajulu wrote:
-> > The following set of patches
-> >         1. add support for ipv6 for qla4032
-> >         2. provide bug fixes
-> >         3. misc. support
+This isn't dead, it's a placeholder ... the 53c700 can be wired either
+LE or BE ... there's only one current BE user, and that's a parisc box
+that has to be runtime switchable (the later integrated SCSI chip was
+wired LE).  However, it was thought there would be ppc users for
+unconditional BE drivers.
 
-> [...]
->
-> I have no technical comments, just a formal one:
->
-> Even though you perhaps don't expect the patches to be committed as-is,
-> you should give each patch an own descriptive patch title (instead of
-> naming them all "qla4xxx: Add IPv6 support and misc").  Also, you could
-> put the above descriptions into the individual patch descriptions.
+James
 
-And sending [n/5] as reply to [0/5] keeps the inbox more readable :)
 
-Eike
-
---nextPart1454928.FfxWEWcl8b
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGOdfpXKSJPmm5/E4RAuOmAKCibiPONolAUMHLt0S3qSdd2zQXSACggojk
-nWflJYx8rsLgqPS8RcG0who=
-=XmAy
------END PGP SIGNATURE-----
-
---nextPart1454928.FfxWEWcl8b--
