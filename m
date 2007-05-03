@@ -1,15 +1,15 @@
 From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: [RFC] [PATCH 4/5] qla4xxx: Add IPv6 support and misc
-Date: Wed, 02 May 2007 19:09:59 -0700
-Message-ID: <1178158199.21709.5.camel@iscsi-sles10>
+Subject: [RFC] [PATCH 5/5] qla4xxx: Add IPv6 support and misc
+Date: Wed, 02 May 2007 19:16:54 -0700
+Message-ID: <1178158614.21709.10.camel@iscsi-sles10>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:38711 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:39559 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1767305AbXECBJz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 May 2007 21:09:55 -0400
+	with ESMTP id S1767300AbXECBQv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 May 2007 21:16:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -18,12 +18,136 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>, David Somayajulu <david.somayajulu@qlo
 Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
 
 ---
- drivers/scsi/qla4xxx/ql4_mbx.c     |  190 ++++++++++------
+ drivers/scsi/qla4xxx/ql4_dbg.c     |    5 
+ drivers/scsi/qla4xxx/ql4_glbl.h    |   12 +
+ drivers/scsi/qla4xxx/ql4_iocb.c    |   39 ++-
+ drivers/scsi/qla4xxx/ql4_nvram.c   |    4 
+ drivers/scsi/qla4xxx/ql4_os.c      |   28 ++
+ drivers/scsi/qla4xxx/ql4_version.h |    3 
 
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index 7f28657..0ef777a 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+diff --git a/drivers/scsi/qla4xxx/ql4_dbg.c b/drivers/scsi/qla4xxx/ql4_dbg.c
+index 7b4e077..81fac0f 100644
+--- a/drivers/scsi/qla4xxx/ql4_dbg.c
++++ b/drivers/scsi/qla4xxx/ql4_dbg.c
+@@ -6,6 +6,11 @@
+  */
+ 
+ #include "ql4_def.h"
++#include "ql4_version.h"
++#include "ql4_glbl.h"
++#include "ql4_dbg.h"
++#include "ql4_inline.h"
++
+ #include <scsi/scsi_dbg.h>
+ 
+ static void qla4xxx_print_srb_info(struct srb * srb)
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index e021eb5..188b4e5 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -8,6 +8,9 @@
+ #ifndef __QLA4x_GBL_H
+ #define	__QLA4x_GBL_H
+ 
++struct iscsi_cls_conn;
++
++void qla4xxx_hw_reset(struct scsi_qla_host *ha);
+ int ql4xxx_lock_drvr_wait(struct scsi_qla_host *a);
+ int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port);
+ int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb);
+@@ -67,14 +70,19 @@ void qla4xxx_interrupt_service_routine(s
+ 				       uint32_t intr_status);
+ int qla4xxx_init_rings(struct scsi_qla_host * ha);
+ void qla4xxx_dump_buffer(void *b, uint32_t size);
+-struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha, uint32_t index);
++struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
++						uint32_t index);
+ void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb);
+ int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host * ha);
+ int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
+ 				uint32_t fw_ddb_index, uint32_t state);
+ 
++int qla4xxx_mailbox_command(struct scsi_qla_host *ha, uint8_t inCount,
++				uint8_t outCount, uint32_t *mbx_cmd,
++				uint32_t *mbx_sts);
++
+ extern int ql4xextended_error_logging;
+ extern int ql4xdiscoverywait;
+ extern int ql4xdontresethba;
+ extern int ql4_mod_unload;
+-#endif /* _QLA4x_GBL_H */
++#endif	/* _QLA4x_GBL_H */
+diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
+index d41ce38..51f6753 100644
+--- a/drivers/scsi/qla4xxx/ql4_iocb.c
++++ b/drivers/scsi/qla4xxx/ql4_iocb.c
+@@ -6,6 +6,11 @@
+  */
+ 
+ #include "ql4_def.h"
++#include "ql4_version.h"
++#include "ql4_glbl.h"
++#include "ql4_dbg.h"
++#include "ql4_inline.h"
++
+ 
+ #include <scsi/scsi_tcq.h>
+ 
+@@ -233,23 +238,27 @@ int qla4xxx_send_command_to_isp(struct s
+ 	index = (uint32_t)cmd->request->tag;
+ 
+ 	/* Calculate the number of request entries needed. */
+-	if (cmd->use_sg) {
+-		sg = (struct scatterlist *)cmd->request_buffer;
+-		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
+-				      cmd->sc_data_direction);
+-		if (tot_dsds == 0)
+-			goto queuing_error;
+-	} else if (cmd->request_bufflen) {
+-		dma_addr_t	req_dma;
+-
+-		req_dma = pci_map_single(ha->pdev, cmd->request_buffer,
++	if (srb->flags & SRB_SCSI_PASSTHRU) {
++		tot_dsds = 1;
++	} else {
++		if (cmd->use_sg) {
++			sg = (struct scatterlist *)cmd->request_buffer;
++			tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
++					      cmd->sc_data_direction);
++			if (tot_dsds == 0)
++				goto queuing_error;
++		} else if (cmd->request_bufflen) {
++			dma_addr_t	req_dma;
++
++			req_dma = pci_map_single(ha->pdev, cmd->request_buffer,
+ 					 cmd->request_bufflen,
+ 					 cmd->sc_data_direction);
+-		if (dma_mapping_error(req_dma))
+-			goto queuing_error;
++			if (dma_mapping_error(req_dma))
++				goto queuing_error;
+ 
+-		srb->dma_handle = req_dma;
+-		tot_dsds = 1;
++			srb->dma_handle = req_dma;
++			tot_dsds = 1;
++		}
+ 	}
+ 	req_cnt = qla4xxx_calc_request_entries(tot_dsds);
+ 
+@@ -359,6 +368,8 @@ int qla4xxx_send_command_to_isp(struct s
+ 	return QLA_SUCCESS;
+ 
+ queuing_error:
++	if (srb->flags & SRB_SCSI_PASSTHRU)
++		return QLA_ERROR;
+ 
+ 	if (cmd->use_sg && tot_dsds) {
+ 		sg = (struct scatterlist *) cmd->request_buffer;
+diff --git a/drivers/scsi/qla4xxx/ql4_nvram.c b/drivers/scsi/qla4xxx/ql4_nvram.c
+index 58afd13..67cfd0a 100644
+--- a/drivers/scsi/qla4xxx/ql4_nvram.c
++++ b/drivers/scsi/qla4xxx/ql4_nvram.c
 @@ -6,6 +6,10 @@
   */
  
@@ -33,424 +157,105 @@ index 7f28657..0ef777a 100644
 +#include "ql4_dbg.h"
 +#include "ql4_inline.h"
  
+ static inline void eeprom_cmd(uint32_t cmd, struct scsi_qla_host *ha)
+ {
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 0bfddf8..f7564ee 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -10,6 +10,10 @@ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsicam.h>
  
- /**
-@@ -191,11 +195,13 @@ qla4xxx_issue_iocb(struct scsi_qla_host 
+ #include "ql4_def.h"
++#include "ql4_version.h"
++#include "ql4_glbl.h"
++#include "ql4_dbg.h"
++#include "ql4_inline.h"
  
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
+ /*
+  * Driver version
+@@ -283,6 +287,7 @@ int qla4xxx_add_sess(struct ddb_entry *d
+ 	}
+ 
+ 	ddb_entry->sess->recovery_tmo = ddb_entry->ha->port_down_retry_count;
 +
- 	mbox_cmd[0] = MBOX_CMD_EXECUTE_IOCB_A64;
- 	mbox_cmd[1] = 0;
- 	mbox_cmd[2] = LSDW(phys_addr);
- 	mbox_cmd[3] = MSDW(phys_addr);
--	status = qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]);
-+
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]);
- 	return status;
+ 	iscsi_if_create_session_done(ddb_entry->conn);
+ 	return 0;
+ }
+@@ -387,9 +392,10 @@ void qla4xxx_srb_compl(struct scsi_qla_h
+ {
+ 	struct scsi_cmnd *cmd = srb->cmd;
+ 
+-	qla4xxx_srb_free_dma(ha, srb);
+-
+-	mempool_free(srb, ha->srb_mempool);
++	if (!(srb->flags & SRB_SCSI_PASSTHRU)) {
++		qla4xxx_srb_free_dma(ha, srb);
++		mempool_free(srb, ha->srb_mempool);
++	}
+ 
+ 	cmd->scsi_done(cmd);
+ }
+@@ -712,7 +718,7 @@ static int qla4xxx_cmd_wait(struct scsi_
+ 	return stat;
  }
  
-@@ -209,11 +215,13 @@ int qla4xxx_conn_close_sess_logout(struc
+-static void qla4xxx_hw_reset(struct scsi_qla_host *ha)
++void qla4xxx_hw_reset(struct scsi_qla_host *ha)
+ {
+ 	uint32_t ctrl_status;
+ 	unsigned long flags = 0;
+@@ -1082,13 +1088,13 @@ static void qla4xxx_free_adapter(struct 
+ 	if (ha->timer_active)
+ 		qla4xxx_stop_timer(ha);
  
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_CONN_CLOSE_SESS_LOGOUT;
- 	mbox_cmd[1] = fw_ddb_index;
- 	mbox_cmd[2] = connection_id;
- 	mbox_cmd[3] = LOGOUT_OPTION_RELOGIN;
--	if (qla4xxx_mailbox_command(ha, 4, 2, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 2, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_CONN_CLOSE_SESS_LOGOUT "
- 			      "option %04x failed sts %04X %04X",
-@@ -234,9 +242,11 @@ int qla4xxx_clear_database_entry(struct 
+-	/* free extra memory */
+-	qla4xxx_mem_free(ha);
+-
+ 	/* Detach interrupts */
+ 	if (test_and_clear_bit(AF_IRQ_ATTACHED, &ha->flags))
+ 		free_irq(ha->pdev->irq, ha);
  
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
++	/* free extra memory */
++	qla4xxx_mem_free(ha);
 +
- 	mbox_cmd[0] = MBOX_CMD_CLEAR_DATABASE_ENTRY;
- 	mbox_cmd[1] = fw_ddb_index;
--	if (qla4xxx_mailbox_command(ha, 2, 5, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS)
- 		return QLA_ERROR;
+ 	pci_disable_device(ha->pdev);
  
-@@ -268,10 +278,13 @@ int qla4xxx_initialize_fw_cb(struct scsi
- 	/* Get Initialize Firmware Control Block. */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_GET_INIT_FW_CTRL_BLOCK;
- 	mbox_cmd[2] = LSDW(init_fw_cb_dma);
- 	mbox_cmd[3] = MSDW(init_fw_cb_dma);
--	if (qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]) !=
-+	mbox_cmd[4] = sizeof(struct init_fw_ctrl_blk);
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		dma_free_coherent(&ha->pdev->dev,
- 				  sizeof(struct init_fw_ctrl_blk),
-@@ -283,51 +296,56 @@ int qla4xxx_initialize_fw_cb(struct scsi
- 	qla4xxx_init_rings(ha);
- 
- 	/* Fill in the request and response queue information. */
--	init_fw_cb->ReqQConsumerIndex = cpu_to_le16(ha->request_out);
--	init_fw_cb->ComplQProducerIndex = cpu_to_le16(ha->response_in);
--	init_fw_cb->ReqQLen = __constant_cpu_to_le16(REQUEST_QUEUE_DEPTH);
--	init_fw_cb->ComplQLen = __constant_cpu_to_le16(RESPONSE_QUEUE_DEPTH);
--	init_fw_cb->ReqQAddrLo = cpu_to_le32(LSDW(ha->request_dma));
--	init_fw_cb->ReqQAddrHi = cpu_to_le32(MSDW(ha->request_dma));
--	init_fw_cb->ComplQAddrLo = cpu_to_le32(LSDW(ha->response_dma));
--	init_fw_cb->ComplQAddrHi = cpu_to_le32(MSDW(ha->response_dma));
--	init_fw_cb->ShadowRegBufAddrLo =
-+	init_fw_cb->pri.rqq_consumer_idx = cpu_to_le16(ha->request_out);
-+	init_fw_cb->pri.compq_producer_idx = cpu_to_le16(ha->response_in);
-+	init_fw_cb->pri.rqq_len = __constant_cpu_to_le16(REQUEST_QUEUE_DEPTH);
-+	init_fw_cb->pri.compq_len = __constant_cpu_to_le16(RESPONSE_QUEUE_DEPTH);
-+	init_fw_cb->pri.rqq_addr_lo = cpu_to_le32(LSDW(ha->request_dma));
-+	init_fw_cb->pri.rqq_addr_hi = cpu_to_le32(MSDW(ha->request_dma));
-+	init_fw_cb->pri.compq_addr_lo = cpu_to_le32(LSDW(ha->response_dma));
-+	init_fw_cb->pri.compq_addr_hi = cpu_to_le32(MSDW(ha->response_dma));
-+	init_fw_cb->pri.shdwreg_addr_lo =
- 		cpu_to_le32(LSDW(ha->shadow_regs_dma));
--	init_fw_cb->ShadowRegBufAddrHi =
-+	init_fw_cb->pri.shdwreg_addr_hi =
- 		cpu_to_le32(MSDW(ha->shadow_regs_dma));
- 
- 	/* Set up required options. */
--	init_fw_cb->FwOptions |=
-+	init_fw_cb->pri.fw_options |=
- 		__constant_cpu_to_le16(FWOPT_SESSION_MODE |
- 				       FWOPT_INITIATOR_MODE);
--	init_fw_cb->FwOptions &= __constant_cpu_to_le16(~FWOPT_TARGET_MODE);
-+	init_fw_cb->pri.fw_options &= __constant_cpu_to_le16(~FWOPT_TARGET_MODE);
- 
- 	/* Save some info in adapter structure. */
--	ha->firmware_options = le16_to_cpu(init_fw_cb->FwOptions);
--	ha->tcp_options = le16_to_cpu(init_fw_cb->TCPOptions);
--	ha->heartbeat_interval = init_fw_cb->HeartbeatInterval;
--	memcpy(ha->ip_address, init_fw_cb->IPAddr,
--	       min(sizeof(ha->ip_address), sizeof(init_fw_cb->IPAddr)));
--	memcpy(ha->subnet_mask, init_fw_cb->SubnetMask,
--	       min(sizeof(ha->subnet_mask), sizeof(init_fw_cb->SubnetMask)));
--	memcpy(ha->gateway, init_fw_cb->GatewayIPAddr,
--	       min(sizeof(ha->gateway), sizeof(init_fw_cb->GatewayIPAddr)));
--	memcpy(ha->name_string, init_fw_cb->iSCSINameString,
-+	ha->firmware_options = le16_to_cpu(init_fw_cb->pri.fw_options);
-+	ha->tcp_options = le16_to_cpu(init_fw_cb->pri.ipv4_tcp_opts);
-+	ha->heartbeat_interval = init_fw_cb->pri.hb_interval;
-+	memcpy(ha->ip_address, init_fw_cb->pri.ipv4_addr,
-+	       min(sizeof(ha->ip_address), sizeof(init_fw_cb->pri.ipv4_addr)));
-+	memcpy(ha->subnet_mask, init_fw_cb->pri.ipv4_subnet,
-+	       min(sizeof(ha->subnet_mask), sizeof(init_fw_cb->pri.ipv4_subnet)));
-+	memcpy(ha->gateway, init_fw_cb->pri.ipv4_gw_addr,
-+	       min(sizeof(ha->gateway), sizeof(init_fw_cb->pri.ipv4_gw_addr)));
-+	memcpy(ha->name_string, init_fw_cb->pri.iscsi_name,
- 	       min(sizeof(ha->name_string),
--		   sizeof(init_fw_cb->iSCSINameString)));
--	memcpy(ha->alias, init_fw_cb->Alias,
--	       min(sizeof(ha->alias), sizeof(init_fw_cb->Alias)));
-+		   sizeof(init_fw_cb->pri.iscsi_name)));
-+	/*memcpy(ha->alias, init_fw_cb->Alias,
-+	       min(sizeof(ha->alias), sizeof(init_fw_cb->Alias)));*/
- 
- 	/* Save Command Line Paramater info */
--	ha->port_down_retry_count = le16_to_cpu(init_fw_cb->KeepAliveTimeout);
-+	ha->port_down_retry_count = le16_to_cpu(init_fw_cb->pri.conn_ka_timeout);
- 	ha->discovery_wait = ql4xdiscoverywait;
- 
- 	/* Send Initialize Firmware Control Block. */
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_INITIALIZE_FIRMWARE;
- 	mbox_cmd[1] = 0;
- 	mbox_cmd[2] = LSDW(init_fw_cb_dma);
- 	mbox_cmd[3] = MSDW(init_fw_cb_dma);
--	if (qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]) ==
-+	mbox_cmd[4] = sizeof(struct init_fw_ctrl_blk);
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]) ==
- 	    QLA_SUCCESS)
- 		status = QLA_SUCCESS;
- 	 else {
-@@ -364,12 +382,14 @@ int qla4xxx_get_dhcp_ip_address(struct s
- 	/* Get Initialize Firmware Control Block. */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	memset(init_fw_cb, 0, sizeof(struct init_fw_ctrl_blk));
- 	mbox_cmd[0] = MBOX_CMD_GET_INIT_FW_CTRL_BLOCK;
- 	mbox_cmd[2] = LSDW(init_fw_cb_dma);
- 	mbox_cmd[3] = MSDW(init_fw_cb_dma);
-+	mbox_cmd[4] = sizeof(struct init_fw_ctrl_blk);
- 
--	if (qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]) !=
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: Failed to get init_fw_ctrl_blk\n",
- 			      ha->host_no, __func__));
-@@ -380,12 +400,12 @@ int qla4xxx_get_dhcp_ip_address(struct s
- 	}
- 
- 	/* Save IP Address. */
--	memcpy(ha->ip_address, init_fw_cb->IPAddr,
--	       min(sizeof(ha->ip_address), sizeof(init_fw_cb->IPAddr)));
--	memcpy(ha->subnet_mask, init_fw_cb->SubnetMask,
--	       min(sizeof(ha->subnet_mask), sizeof(init_fw_cb->SubnetMask)));
--	memcpy(ha->gateway, init_fw_cb->GatewayIPAddr,
--	       min(sizeof(ha->gateway), sizeof(init_fw_cb->GatewayIPAddr)));
-+	memcpy(ha->ip_address, init_fw_cb->pri.ipv4_addr,
-+	       min(sizeof(ha->ip_address), sizeof(init_fw_cb->pri.ipv4_addr)));
-+	memcpy(ha->subnet_mask, init_fw_cb->pri.ipv4_subnet,
-+	       min(sizeof(ha->subnet_mask), sizeof(init_fw_cb->pri.ipv4_subnet)));
-+	memcpy(ha->gateway, init_fw_cb->pri.ipv4_gw_addr,
-+	       min(sizeof(ha->gateway), sizeof(init_fw_cb->pri.ipv4_gw_addr)));
- 
- 	dma_free_coherent(&ha->pdev->dev, sizeof(struct init_fw_ctrl_blk),
- 			  init_fw_cb, init_fw_cb_dma);
-@@ -405,8 +425,10 @@ int qla4xxx_get_firmware_state(struct sc
- 	/* Get firmware version */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_GET_FW_STATE;
--	if (qla4xxx_mailbox_command(ha, 1, 4, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 4, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_GET_FW_STATE failed w/ "
- 			      "status %04X\n", ha->host_no, __func__,
-@@ -434,8 +456,10 @@ int qla4xxx_get_firmware_status(struct s
- 	/* Get firmware version */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_GET_FW_STATUS;
--	if (qla4xxx_mailbox_command(ha, 1, 3, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 3, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_GET_FW_STATUS failed w/ "
- 			      "status %04X\n", ha->host_no, __func__,
-@@ -487,11 +511,14 @@ int qla4xxx_get_fwddb_entry(struct scsi_
- 	}
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_GET_DATABASE_ENTRY;
- 	mbox_cmd[1] = (uint32_t) fw_ddb_index;
- 	mbox_cmd[2] = LSDW(fw_ddb_entry_dma);
- 	mbox_cmd[3] = MSDW(fw_ddb_entry_dma);
--	if (qla4xxx_mailbox_command(ha, 4, 7, &mbox_cmd[0], &mbox_sts[0]) ==
-+	mbox_cmd[4] = sizeof(struct dev_db_entry);
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 7, &mbox_cmd[0], &mbox_sts[0]) ==
- 	    QLA_ERROR) {
- 		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_GET_DATABASE_ENTRY failed"
- 			      " with status 0x%04X\n", ha->host_no, __func__,
-@@ -508,11 +535,11 @@ int qla4xxx_get_fwddb_entry(struct scsi_
- 		dev_info(&ha->pdev->dev, "DDB[%d] MB0 %04x Tot %d Next %d "
- 			   "State %04x ConnErr %08x %d.%d.%d.%d:%04d \"%s\"\n",
- 			   fw_ddb_index, mbox_sts[0], mbox_sts[2], mbox_sts[3],
--			   mbox_sts[4], mbox_sts[5], fw_ddb_entry->ipAddr[0],
--			   fw_ddb_entry->ipAddr[1], fw_ddb_entry->ipAddr[2],
--			   fw_ddb_entry->ipAddr[3],
--			   le16_to_cpu(fw_ddb_entry->portNumber),
--			   fw_ddb_entry->iscsiName);
-+			   mbox_sts[4], mbox_sts[5], fw_ddb_entry->ip_addr[0],
-+			   fw_ddb_entry->ip_addr[1], fw_ddb_entry->ip_addr[2],
-+			   fw_ddb_entry->ip_addr[3],
-+			   le16_to_cpu(fw_ddb_entry->port),
-+			   fw_ddb_entry->iscsi_name);
- 	}
- 	if (num_valid_ddb_entries)
- 		*num_valid_ddb_entries = mbox_sts[2];
-@@ -567,7 +594,9 @@ int qla4xxx_set_ddb_entry(struct scsi_ql
- 	mbox_cmd[1] = (uint32_t) fw_ddb_index;
- 	mbox_cmd[2] = LSDW(fw_ddb_entry_dma);
- 	mbox_cmd[3] = MSDW(fw_ddb_entry_dma);
--	return qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]);
-+	mbox_cmd[4] = sizeof(struct dev_db_entry);
-+
-+	return qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]);
  }
+@@ -1197,6 +1203,9 @@ static int __devinit qla4xxx_probe_adapt
+ 	ha->host = host;
+ 	ha->host_no = host->host_no;
  
- int qla4xxx_conn_open_session_login(struct scsi_qla_host * ha,
-@@ -582,12 +611,12 @@ int qla4xxx_conn_open_session_login(stru
- 	 */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
++	ha->ql4mbx = qla4xxx_mailbox_command;
++	ha->ql4cmd = qla4xxx_send_command_to_isp;
 +
- 	mbox_cmd[0] = MBOX_CMD_CONN_OPEN_SESS_LOGIN;
- 	mbox_cmd[1] = (uint32_t) fw_ddb_index;
--	mbox_cmd[2] = 0;
--	mbox_cmd[3] = 0;
--	mbox_cmd[4] = 0;
--	status = qla4xxx_mailbox_command(ha, 4, 0, &mbox_cmd[0], &mbox_sts[0]);
-+	mbox_cmd[6] = 1;
+ 	/* Configure PCI I/O space. */
+ 	ret = qla4xxx_iospace_config(ha);
+ 	if (ret)
+@@ -1333,6 +1342,11 @@ static void __devexit qla4xxx_remove_ada
+ 
+ 	ha = pci_get_drvdata(pdev);
+ 
++	qla4xxx_disable_intrs(ha);
 +
-+	status = qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 0, &mbox_cmd[0], &mbox_sts[0]);
- 	DEBUG2(printk("%s fw_ddb_index=%d status=%d mbx0_1=0x%x :0x%x\n",
- 		      __func__, fw_ddb_index, status, mbox_sts[0],
- 		      mbox_sts[1]);)
-@@ -608,12 +637,14 @@ void qla4xxx_get_crash_record(struct scs
- 	struct crash_record *crash_record = NULL;
- 	dma_addr_t crash_record_dma = 0;
- 	uint32_t crash_record_size = 0;
++	while (test_bit(DPC_RESET_HA_INTR, &ha->dpc_flags))
++		ssleep(1);
 +
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_cmd));
+ 	/* remove devs from iscsi_sessions to scsi_devices */
+ 	qla4xxx_free_ddb_list(ha);
  
- 	/* Get size of crash record. */
- 	mbox_cmd[0] = MBOX_CMD_GET_CRASH_RECORD;
--	if (qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]) !=
+diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
+index e5183a6..2149069 100644
+--- a/drivers/scsi/qla4xxx/ql4_version.h
++++ b/drivers/scsi/qla4xxx/ql4_version.h
+@@ -5,4 +5,5 @@
+  * See LICENSE.qla4xxx for copyright and licensing details.
+  */
+ 
+-#define QLA4XXX_DRIVER_VERSION	"5.00.07-k1"
++#define QLA4XXX_DRIVER_VERSION	"5.01.00-k7"
 +
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: ERROR: Unable to retrieve size!\n",
- 			      ha->host_no, __func__));
-@@ -633,11 +664,15 @@ void qla4xxx_get_crash_record(struct scs
- 		goto exit_get_crash_record;
- 
- 	/* Get Crash Record. */
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_cmd));
-+
- 	mbox_cmd[0] = MBOX_CMD_GET_CRASH_RECORD;
- 	mbox_cmd[2] = LSDW(crash_record_dma);
- 	mbox_cmd[3] = MSDW(crash_record_dma);
- 	mbox_cmd[4] = crash_record_size;
--	if (qla4xxx_mailbox_command(ha, 5, 5, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS)
- 		goto exit_get_crash_record;
- 
-@@ -671,7 +706,8 @@ void qla4xxx_get_conn_event_log(struct s
- 
- 	/* Get size of crash record. */
- 	mbox_cmd[0] = MBOX_CMD_GET_CONN_EVENT_LOG;
--	if (qla4xxx_mailbox_command(ha, 4, 5, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS)
- 		goto exit_get_event_log;
- 
-@@ -686,10 +722,14 @@ void qla4xxx_get_conn_event_log(struct s
- 		goto exit_get_event_log;
- 
- 	/* Get Crash Record. */
-+	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
-+	memset(&mbox_sts, 0, sizeof(mbox_cmd));
-+
- 	mbox_cmd[0] = MBOX_CMD_GET_CONN_EVENT_LOG;
- 	mbox_cmd[2] = LSDW(event_log_dma);
- 	mbox_cmd[3] = MSDW(event_log_dma);
--	if (qla4xxx_mailbox_command(ha, 4, 5, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: ERROR: Unable to retrieve event "
- 			      "log!\n", ha->host_no, __func__));
-@@ -765,11 +805,13 @@ int qla4xxx_reset_lun(struct scsi_qla_ho
- 	 */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_LUN_RESET;
- 	mbox_cmd[1] = ddb_entry->fw_ddb_index;
- 	mbox_cmd[2] = lun << 8;
- 	mbox_cmd[5] = 0x01;	/* Immediate Command Enable */
--	qla4xxx_mailbox_command(ha, 6, 1, &mbox_cmd[0], &mbox_sts[0]);
-+
-+	qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]);
- 	if (mbox_sts[0] != MBOX_STS_COMMAND_COMPLETE &&
- 	    mbox_sts[0] != MBOX_STS_COMMAND_ERROR)
- 		status = QLA_ERROR;
-@@ -786,12 +828,14 @@ int qla4xxx_get_flash(struct scsi_qla_ho
- 
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_READ_FLASH;
- 	mbox_cmd[1] = LSDW(dma_addr);
- 	mbox_cmd[2] = MSDW(dma_addr);
- 	mbox_cmd[3] = offset;
- 	mbox_cmd[4] = len;
--	if (qla4xxx_mailbox_command(ha, 5, 2, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 2, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_READ_FLASH, failed w/ "
- 		    "status %04X %04X, offset %08x, len %08x\n", ha->host_no,
-@@ -817,8 +861,10 @@ int qla4xxx_get_fw_version(struct scsi_q
- 	/* Get firmware version. */
- 	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
- 	memset(&mbox_sts, 0, sizeof(mbox_sts));
-+
- 	mbox_cmd[0] = MBOX_CMD_ABOUT_FW;
--	if (qla4xxx_mailbox_command(ha, 4, 5, &mbox_cmd[0], &mbox_sts[0]) !=
-+
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 5, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: MBOX_CMD_ABOUT_FW failed w/ "
- 		    "status %04X\n", ha->host_no, __func__, mbox_sts[0]));
-@@ -846,7 +892,7 @@ int qla4xxx_get_default_ddb(struct scsi_
- 	mbox_cmd[2] = LSDW(dma_addr);
- 	mbox_cmd[3] = MSDW(dma_addr);
- 
--	if (qla4xxx_mailbox_command(ha, 4, 1, &mbox_cmd[0], &mbox_sts[0]) !=
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		DEBUG2(printk("scsi%ld: %s: failed status %04X\n",
- 		     ha->host_no, __func__, mbox_sts[0]));
-@@ -866,7 +912,7 @@ int qla4xxx_req_ddb_entry(struct scsi_ql
- 	mbox_cmd[0] = MBOX_CMD_REQUEST_DATABASE_ENTRY;
- 	mbox_cmd[1] = MAX_PRST_DEV_DB_ENTRIES;
- 
--	if (qla4xxx_mailbox_command(ha, 2, 3, &mbox_cmd[0], &mbox_sts[0]) !=
-+	if (qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 3, &mbox_cmd[0], &mbox_sts[0]) !=
- 	    QLA_SUCCESS) {
- 		if (mbox_sts[0] == MBOX_STS_COMMAND_ERROR) {
- 			*ddb_index = mbox_sts[2];
-@@ -909,23 +955,23 @@ int qla4xxx_send_tgts(struct scsi_qla_ho
- 	if (ret_val != QLA_SUCCESS)
- 		goto qla4xxx_send_tgts_exit;
- 
--	memset((void *)fw_ddb_entry->iSCSIAlias, 0,
--	       sizeof(fw_ddb_entry->iSCSIAlias));
-+	memset((void *)fw_ddb_entry->iscsi_alias, 0,
-+	       sizeof(fw_ddb_entry->iscsi_alias));
- 
--	memset((void *)fw_ddb_entry->iscsiName, 0,
--	       sizeof(fw_ddb_entry->iscsiName));
-+	memset((void *)fw_ddb_entry->iscsi_name, 0,
-+	       sizeof(fw_ddb_entry->iscsi_name));
- 
--	memset((void *)fw_ddb_entry->ipAddr, 0, sizeof(fw_ddb_entry->ipAddr));
--	memset((void *)fw_ddb_entry->targetAddr, 0,
--	       sizeof(fw_ddb_entry->targetAddr));
-+	memset((void *)fw_ddb_entry->ip_addr, 0, sizeof(fw_ddb_entry->ip_addr));
-+	memset((void *)fw_ddb_entry->tgt_addr, 0,
-+	       sizeof(fw_ddb_entry->tgt_addr));
- 
- 	fw_ddb_entry->options = (DDB_OPT_DISC_SESSION | DDB_OPT_TARGET);
--	fw_ddb_entry->portNumber = cpu_to_le16(ntohs(port));
-+	fw_ddb_entry->port = cpu_to_le16(ntohs(port));
- 
--	fw_ddb_entry->ipAddr[0] = *ip;
--	fw_ddb_entry->ipAddr[1] = *(ip + 1);
--	fw_ddb_entry->ipAddr[2] = *(ip + 2);
--	fw_ddb_entry->ipAddr[3] = *(ip + 3);
-+	fw_ddb_entry->ip_addr[0] = *ip;
-+	fw_ddb_entry->ip_addr[1] = *(ip + 1);
-+	fw_ddb_entry->ip_addr[2] = *(ip + 2);
-+	fw_ddb_entry->ip_addr[3] = *(ip + 3);
- 
- 	ret_val = qla4xxx_set_ddb_entry(ha, ddb_index, fw_ddb_entry_dma);
- 
+-- 
+1.4.2.3
+
 
