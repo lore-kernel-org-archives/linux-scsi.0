@@ -1,51 +1,74 @@
-From: Frank van Maarseveen <frankvm@frankvm.com>
-Subject: Re: libata /dev/scd0 problem: mount after burn fails without eject
-Date: Fri, 4 May 2007 10:44:52 +0200
-Message-ID: <20070504084452.GA20388@janus>
-References: <20070501135951.GA17072@janus> <46374C11.1010702@rtr.ca> <6bffcb0e0705010731v44cfad1awf4342121245f7ab3@mail.gmail.com> <463AEBE0.7010506@gmail.com> <20070504083735.GA20072@janus> <463AF1C5.4090401@gmail.com>
+From: "Satyam Sharma" <satyam.sharma@gmail.com>
+Subject: Re: [PATCH] SCSI: Remove redundant GFP_KERNEL type flag in kmalloc().
+Date: Fri, 4 May 2007 18:38:37 +0530
+Message-ID: <a781481a0705040608l45aeb106nc75365689dc51ec9@mail.gmail.com>
+References: <Pine.LNX.4.64.0704300434460.3703@localhost.localdomain>
+	 <20070504011535.ff7181fb.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from frankvm.xs4all.nl ([80.126.170.174]:34552 "EHLO
-	janus.localdomain" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754605AbXEDIoy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2007 04:44:54 -0400
+Received: from ug-out-1314.google.com ([66.249.92.174]:37494 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755138AbXEDNIk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2007 09:08:40 -0400
+Received: by ug-out-1314.google.com with SMTP id 44so643972uga
+        for <linux-scsi@vger.kernel.org>; Fri, 04 May 2007 06:08:38 -0700 (PDT)
+In-Reply-To: <20070504011535.ff7181fb.akpm@linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <463AF1C5.4090401@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Frank van Maarseveen <frankvm@frankvm.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Mark Lord <lkml@rtr.ca>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, linux-kernel@vger.kernel.org, Alan Cox <alan@redhat.com>, bzolnier@gmail.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "Robert P. J. Day" <rpjday@mindspring.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Fri, May 04, 2007 at 10:41:41AM +0200, Tejun Heo wrote:
-> Frank van Maarseveen wrote:
-> > On Fri, May 04, 2007 at 10:16:32AM +0200, Tejun Heo wrote:
-> >> Michal Piotrowski wrote:
-> >>> On 01/05/07, Mark Lord <lkml@rtr.ca> wrote:
-> >>>> Forwarding to linux-scsi and linux-ide mailing lists.
-> >>>>
-> >>>> Frank van Maarseveen wrote:
-> >>>>> Tested on 2.6.20.6 and 2.6.21.1
-> >>>>>
-> >>>>> I decided to swich from the old IDE drivers to libata and now there
-> >>>>> seems to be a little but annoying problem: cannot mount an ISO image
-> >>>>> after burning it.
-> >>>>>
-> >>>>> May  1 14:32:55 kernel: attempt to access beyond end of device
-> >>>>> May  1 14:32:55 kernel: sr0: rw=0, want=68, limit=4
-> >>>>> May  1 14:32:55 kernel: isofs_fill_super: bread failed, dev=sr0,
-> >>>> iso_blknum=16, block=16
-> >>>>> an "eject" command seems to fix the state of the PATA DVD writer
-> >>>>> or driver. The problem occurs for burning a CD and for DVD too with
-> >>>>> identical error messages.
-> >> Right after burning, if you run 'fuser -v /dev/sr0', what does it say?
-> > 
-> > Tried the fuser as root to be sure but it didn't show anything.
-> 
-> I guess sr is forgetting to set media changed flag somewhere.
+On 5/4/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> [...]
+> >
+> > -  aic_dev = kmalloc(sizeof(struct aic_dev_data), GFP_ATOMIC | GFP_KERNEL);
+> > +  aic_dev = kmalloc(sizeof(struct aic_dev_data), GFP_ATOMIC);
+>
+> No, this converts the allocation from a robust one which can sleep into a
+> flakey one which cannot.
+>
+> If we want to just clean this code up, we should switch to
+>
+>         GFP_KERNEL|__GFP_HIGH
+>
+> and add a comment explaining why we're turning on __GFP_HIGH (pointlessly,
+> I suspect).
+>
+> However I suspect what the code really meant to do was to use just
+> GFP_KERNEL.
 
-Plausible. I get the same kernel messages when I try to mount the CD
-before burning.
+Yes.
 
--- 
-Frank
+A recap from http://lkml.org/lkml/2007/4/28/160 ...
+
+> > So combining GFP_ATOMIC with GFP_KERNEL gives you
+> > "allow io, allow fs, allow waiting, and use emergency pools when it's
+> > getting tight" which to me looks like a valid, but probably unwanted
+> > combination.
+
+and:
+
+> As a matter of style, the author there could've written (GFP_KERNEL |
+> __GFP_HIGH) instead, but I'm not sure how much sense that makes
+> because once we specify GFP_KERNEL, we essentially bring out the heavy
+> weaponry to *make* some free space for ourselves if it isn't there
+> already (and we're prepared to sleep when all that happens) -- so
+> where's the need left to scavenge into emergency pools anymore?
+> __GFP_HIGH only makes sense for poor atomic contexts for whom sleeping
+> (when we try_to_free other pages to satisfy our allocation request) is
+> not an option, which is precisely how things are presently.
+>
+> [...]
+> 1. If you're in_atomic() context, that GFP_KERNEL is a BUG and *must*
+> be removed.
+>
+> 2. If not, that GFP_ATOMIC is redundant / nonsensical and *can* be removed.
+
+It _was_ established towards the end of that thread that neither of the two
+cases are atomic contexts. And it would still make sense to remove the redundant
+__GFP_HIGH, as we don't want to unnecessarily deplete the emergency
+reserve pool for normal GFP_KERNEL cases thus making ENOMEM on some future
+kmalloc(GFP_ATOMIC) more likely. I'll send out the patches.
