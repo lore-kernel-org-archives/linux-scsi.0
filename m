@@ -1,54 +1,43 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] ipr: Fix ipr ata_do_eh API compile warning
-Date: Fri, 04 May 2007 17:11:52 -0500
-Message-ID: <37199.8143535622$1178316755@news.gmane.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [Bugme-new] [Bug 8426] New: massive slowdown on SCSI
+	CD/DVDdrive connected to mptspi driver
+Date: Fri, 04 May 2007 17:58:52 -0500
+Message-ID: <1178319532.3711.70.camel@mulgrave.il.steeleye.com>
+References: <664A4EBB07F29743873A87CF62C26D7070C3C3@NAMAIL4.ad.lsil.com>
+	 <1178315801.27774.15.camel@athlon>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:47424 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1031510AbXEDWL4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2007 18:11:56 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l44MBuBi013121
-	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2007 18:11:56 -0400
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l44MBt1h185474
-	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2007 16:11:55 -0600
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l44MBsR3019705
-	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2007 16:11:55 -0600
+Received: from hancock.steeleye.com ([71.30.118.248]:39472 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1767749AbXEDW7G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2007 18:59:06 -0400
+In-Reply-To: <1178315801.27774.15.camel@athlon>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, akpm@linux-foundation.org, htejun@gmail.com, jgarzik@pobox.com, brking@linux.vnet.ibm.com
+To: Doug Chapman <doug.chapman@hp.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+
+On Fri, 2007-05-04 at 17:56 -0400, Doug Chapman wrote:
+> I am applying/removing _only_ your patch and the problem goes away with
+> just removing it.
+
+What id and channel is this DVD drive on?  There is a potential bug in
+the move:
+
+-mptscsih_writeIOCPage4(MPT_SCSI_HOST *hd, int channel, int id)
++mptspi_writeIOCPage4(MPT_SCSI_HOST *hd, u8 channel , u8 id)
+
+Note int became u8, but later we have:
 
 
-This patch fixes the following compile warning:
+	pReq->PageAddress = cpu_to_le32(id | (channel << 8 ));
 
-drivers/scsi/ipr.c: In function '__ipr_eh_dev_reset':
-drivers/scsi/ipr.c:3955: warning: passing argument 4 of 'ata_do_eh' from incompatible pointer type
+channel << 8 is always zero as a u8 entity (unless something promotes
+the arithmetic beyond u8).  So if the DVD is on a non-zero channel, we
+might have our cause.
 
-This patch reverts the following commit, which looks to have been pushed
-before the ata_do_eh API change got pushed.
+James
 
-http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=120bda35ff8514c937dac6d4e5c7dc6c01c699ac;hp=771b8dad9653d2659e0ffcc237184cb16c317788
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- linux-2.6-bjking1/drivers/scsi/ipr.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.c~ipr_ata_do_eh_fix drivers/scsi/ipr.c
---- linux-2.6/drivers/scsi/ipr.c~ipr_ata_do_eh_fix	2007-05-04 15:13:08.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-05-04 17:07:34.000000000 -0500
-@@ -3857,8 +3857,7 @@ static int ipr_device_reset(struct ipr_i
-  * Return value:
-  *	0 on success / non-zero on failure
-  **/
--static int ipr_sata_reset(struct ata_port *ap, unsigned int *classes,
--				unsigned long deadline)
-+static int ipr_sata_reset(struct ata_port *ap, unsigned int *classes)
- {
- 	struct ipr_sata_port *sata_port = ap->private_data;
- 	struct ipr_ioa_cfg *ioa_cfg = sata_port->ioa_cfg;
-_
