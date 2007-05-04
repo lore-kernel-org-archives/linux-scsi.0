@@ -1,96 +1,54 @@
-From: Doug Chapman <doug.chapman@hp.com>
-Subject: RE: [Bugme-new] [Bug 8426] New: massive slowdown on SCSI
-	CD/DVDdrive connected to mptspi driver
-Date: Fri, 04 May 2007 17:56:41 -0400
-Message-ID: <1178315801.27774.15.camel@athlon>
-References: <664A4EBB07F29743873A87CF62C26D7070C3C3@NAMAIL4.ad.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Fix ipr ata_do_eh API compile warning
+Date: Fri, 04 May 2007 17:11:52 -0500
+Message-ID: <37199.8143535622$1178316755@news.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60880 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1161559AbXEDV4y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 May 2007 17:56:54 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D7070C3C3@NAMAIL4.ad.lsil.com>
+Received: from e35.co.us.ibm.com ([32.97.110.153]:47424 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1031510AbXEDWL4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2007 18:11:56 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l44MBuBi013121
+	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2007 18:11:56 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l44MBt1h185474
+	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2007 16:11:55 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l44MBsR3019705
+	for <linux-scsi@vger.kernel.org>; Fri, 4 May 2007 16:11:55 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
-
-On Fri, 2007-05-04 at 14:34 -0600, Moore, Eric wrote:
-> On Thursday, May 03, 2007 9:50 PM,  Doug Chapman wrote:
-> > 
-> > ACK, tested this on my system where I originally found the problem and
-> > all is well with this.
-> > 
-> > Ignore my earlier comment about the original patch adding the new
-> > function mptspi_initTarget.  After looking at what is going 
-> > on I realize
-> > that it didn't add this, it was just renamed from mptscsih_initTarget.
-> > 
-> 
-> Are you still having issues?   I'm not clear with the above ACK email.
-
-I was ACKing Andrew's patch as it fixes the issue for me.  Without the
-backup patch it is still broken even in the latest git tree.  (Linus's
-tree).
-
-> 
-> AFAIK, that patch your refering to which I submitted is only moving
-> code, not actually changing any functionality.   If your having a
-> problem with speed, then its most likely a domain validation problem.
-
-I agree it looks that way.  In fact it took me longer to narrow this
-down because I didn't suspect that patch.  But, I tested this multiple
-times backing out just that specific patch and it _does_ make the
-difference.  It is rather dramatic, takes about 10 minutes to read a
-kernel.rpm file from a DVD (takes 2 to 4 seconds normally).
-
-> In this driver, the domain validation is done from the spi transport
-> layer.    When you load the driver, there should be some messages
-> displayed along with the inquiry info during device scan, that would
-> provide the negotiation rates. Search your /var/log/messages or dmesg.
-> You can also look in the SysFS, and all the info is there as well.   If
-> your device is host_W:Channel_X:Target_Y:Lun_Z, then you would look in
-> /sys/class/spi_transport_targetW:X:Y:Z/ , in this folder will be period.
-> The period is found below at the end of the each line in nano seconds
-> units.
-> 
->         factor:0x08   Ultra320 (160 Mega-transfers / second) (6.25 ns)
->         factor:0x09   Ultra160 ( 80 Mega-transfers / second) (12.5 ns)
->         factor:0x0A   Ultra2   ( 40 Mega-transfers / second) (25 ns)
->         factor:0x0B   Ultra2   ( 40 Mega-transfers / second) (30.3 ns)
->         factor:0x0C   Ultra    ( 20 Mega-transfers / second) (50 ns)
->         factor:0x19   FAST     ( 10 Mega-transfers / second)
->         factor:0x32   SCSI     (  5 Mega-transfers / second)
->         factor:0xFF   5 Mega-trasfers/second and asynchronous
-> 
-
-/sys/class/spi_transport/target5:0:2/period is 50 with our without the
-patch in question.
-
-> 
-> Also, in the mpt fusion, I have some debug you could enable, which will
-> dump all the negotiation parameters as they are written and read from
-> via the driver.  The spi transport layer calls these entry points when
-> it wants to change the negotiation parameter for each test it runs.  In
-> the mpt fusion driver Makefile, you need to uncomment the line
-> MPT_DEBUG_DV.   When you do that, then mptspi_print_read_nego and
-> mptspi_print_write_nego would be called.
-
-Perhaps I can look into this monday.
-
-> 
-> I would like to point out that around the same time I supplied that mpt
-> fusion patch, there were changes in scsi_transport_spi.c, that would
-> effect negotitaion with regards to the starting min sync rate value.
-> This file is in /usr/src/linux/drivers/scsi.  You could diff between
-> your kernels to see the changes.
-
-I am applying/removing _only_ your patch and the problem goes away with
-just removing it.
-
-- Doug
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, akpm@linux-foundation.org, htejun@gmail.com, jgarzik@pobox.com, brking@linux.vnet.ibm.com
 
 
+This patch fixes the following compile warning:
+
+drivers/scsi/ipr.c: In function '__ipr_eh_dev_reset':
+drivers/scsi/ipr.c:3955: warning: passing argument 4 of 'ata_do_eh' from incompatible pointer type
+
+This patch reverts the following commit, which looks to have been pushed
+before the ata_do_eh API change got pushed.
+
+http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=120bda35ff8514c937dac6d4e5c7dc6c01c699ac;hp=771b8dad9653d2659e0ffcc237184cb16c317788
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff -puN drivers/scsi/ipr.c~ipr_ata_do_eh_fix drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_ata_do_eh_fix	2007-05-04 15:13:08.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-05-04 17:07:34.000000000 -0500
+@@ -3857,8 +3857,7 @@ static int ipr_device_reset(struct ipr_i
+  * Return value:
+  *	0 on success / non-zero on failure
+  **/
+-static int ipr_sata_reset(struct ata_port *ap, unsigned int *classes,
+-				unsigned long deadline)
++static int ipr_sata_reset(struct ata_port *ap, unsigned int *classes)
+ {
+ 	struct ipr_sata_port *sata_port = ap->private_data;
+ 	struct ipr_ioa_cfg *ioa_cfg = sata_port->ioa_cfg;
+_
