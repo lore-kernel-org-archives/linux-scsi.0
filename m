@@ -1,50 +1,71 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 0/2] bidi support
-Date: Sat, 05 May 2007 18:02:29 +0900
-Message-ID: <200705050902.l4592YeE009469@mbox.iij4u.or.jp>
+Subject: [PATCH 1/2] add linked request support
+Date: Sat, 05 May 2007 18:02:31 +0900
+Message-ID: <200705050902.l4592aCE030982@mbox.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:45214 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:58837 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423160AbXEEJDk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 May 2007 05:03:40 -0400
+	id S1423161AbXEEJEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 May 2007 05:04:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com, jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-This patchset add bidi support for block pc requests.
+This adds a pointer, next_rq, to the request structure for the second
+data phase (e.g. for bidi).
 
-With Jens' linked request proposal, there aren't many changes to the
-block layer, just adding one pointer (next_rq) to the request
-structure. And there is no changes to the existing block-layer
-functions. A bidi request uses two request structures (one in request
-and one out request). The in request is linked and the out request is
-en-queued.
+We need bidi support for block pc requests, special requests, etc so
+instead of introducing REQ_TYPE_BIDI, a bidi requests simply set a
+req->next_rq pointer. linked request support can be used for other
+stuff REQ_BIDI might be nice for the future.
 
+A bidi request uses two request structures (one in request and one out
+request). The in request is linked and the out request is en-queued.
 
-We need some changes to the scsi mid-layer.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/ll_rw_blk.c      |    1 +
+ include/linux/blkdev.h |    4 ++++
+ 2 files changed, 5 insertions(+), 0 deletions(-)
 
-A new structure, scsi_data_buffer is introduced to hold the in-buffer
-information.
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 123003a..9b799ee 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -256,6 +256,7 @@ static void rq_init(request_queue_t *q,
+ 	rq->end_io = NULL;
+ 	rq->end_io_data = NULL;
+ 	rq->completion_data = NULL;
++	rq->next_rq = NULL;
+ }
+ 
+ /**
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index a686eab..5234d17 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -314,6 +314,9 @@ struct request {
+ 	 */
+ 	rq_end_io_fn *end_io;
+ 	void *end_io_data;
++
++	/* for bidi */
++	struct request *next_rq;
+ };
+ 
+ /*
+@@ -543,6 +546,7 @@ #define blk_pm_request(rq)	\
+ #define blk_sorted_rq(rq)	((rq)->cmd_flags & REQ_SORTED)
+ #define blk_barrier_rq(rq)	((rq)->cmd_flags & REQ_HARDBARRIER)
+ #define blk_fua_rq(rq)		((rq)->cmd_flags & REQ_FUA)
++#define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
+ 
+ #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+ 
+-- 
+1.4.3.2
 
-With James' comments via IRC, we should not make the scsi_cmnd
-structure fatter. So the scsi mid-layer uses req->next_rq->special
-pointer for a scsi_data_buffer structure. LLDs don't touch the second
-request (req->next_rq) so it's safe to use req->special. There is no
-change to the scsi_cmnd structure.
-
-The rest of changes include sgtable allocation and deallocation for
-scsi_data_buffer in the block pc request path.
-
-
-I created a new tree, including this patchset and bsg patches:
-
-http://git.kernel.org/?p=linux/kernel/git/tomo/linux-2.6-bidi.git;a=summary
-
-I modified and put Boaz's open-iscsi bidi patch in the tree so you can
-test bidi requests via bsg.
-
-I'll put the SMP pass through patches in the tree later.
