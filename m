@@ -1,19 +1,42 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 2/2] add bidi support for block pc requests
-Date: Sat, 05 May 2007 18:02:33 +0900
-Message-ID: <200705050902.l4592clV009499@mbox.iij4u.or.jp>
+Subject: Re: [PATCH 0/2] bidi support
+Date: Sat, 05 May 2007 18:24:45 +0900
+Message-ID: <200705050924.l459Oo2M020018@mbox.iij4u.or.jp>
+References: <200705050902.l4592YeE009469@mbox.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:58887 "EHLO mo11.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:59716 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423146AbXEEJFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 May 2007 05:05:33 -0400
+	id S1423179AbXEEJZn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 May 2007 05:25:43 -0400
+In-Reply-To: <200705050902.l4592YeE009469@mbox.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
+To: James.Bottomley@SteelEye.com
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
+
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 0/2] bidi support
+Date: Sat, 05 May 2007 18:02:29 +0900
+
+> This patchset add bidi support for block pc requests.
+
+Oh, this patchset is against Linus' tree.
+
+The first patch (the block layer changes) can be applied against Jens'
+tree.
+
+The second patch (the scsi mid-layer changes) has one minor reject
+against the scsi-misc tree. The following patch is against the
+scsi-misc.
+
+---
+>From 6a8c5375f1f6dbd574107920dd0a613527bd556b Mon Sep 17 00:00:00 2001
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Date: Sat, 5 May 2007 18:11:42 +0900
+Subject: [PATCH] add bidi support for block pc requests
 
 This adds bidi support for block pc requests.
 
@@ -33,12 +56,12 @@ the scsi_data_buffer structure easily.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/scsi_lib.c  |  123 +++++++++++++++++++++++++++++++++++++++------
+ drivers/scsi/scsi_lib.c  |  120 +++++++++++++++++++++++++++++++++++++++------
  include/scsi/scsi_cmnd.h |   14 +++++
- 2 files changed, 120 insertions(+), 17 deletions(-)
+ 2 files changed, 118 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 05d79af..3bb62da 100644
+index be8e655..8f7873a 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
 @@ -66,6 +66,12 @@ #undef SP
@@ -172,21 +195,24 @@ index 05d79af..3bb62da 100644
  }
  
  /*
-@@ -848,8 +877,12 @@ void scsi_io_completion(struct scsi_cmnd
- 				memcpy(req->sense, cmd->sense_buffer,  len);
- 				req->sense_len = len;
+@@ -834,6 +863,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 	}
+ 
+ 	if (blk_pc_request(req)) { /* SG_IO ioctl from block level */
++		struct scsi_data_buffer *sdb = scsi_bidi_data_buffer(cmd);
+ 		req->errors = result;
+ 		if (result) {
+ 			clear_errors = 0;
+@@ -850,6 +880,8 @@ void scsi_io_completion(struct scsi_cmnd
  			}
--		} else
-+		} else {
-+			struct scsi_data_buffer *sdb = scsi_bidi_data_buffer(cmd);
- 			req->data_len = cmd->resid;
-+			if (sdb)
-+				req->next_rq->data_len = sdb->resid;
-+		}
+ 		}
+ 		req->data_len = cmd->resid;
++		if (sdb)
++			req->next_rq->data_len = sdb->resid;
  	}
  
  	/*
-@@ -1077,6 +1110,38 @@ static struct scsi_cmnd *scsi_get_cmd_fr
+@@ -1075,6 +1107,38 @@ static struct scsi_cmnd *scsi_get_cmd_fr
  	return cmd;
  }
  
@@ -225,7 +251,7 @@ index 05d79af..3bb62da 100644
  static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
  {
  	BUG_ON(!blk_pc_request(cmd->request));
-@@ -1092,10 +1157,21 @@ static void scsi_blk_pc_done(struct scsi
+@@ -1090,10 +1154,21 @@ static void scsi_blk_pc_done(struct scsi
  static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
  {
  	struct scsi_cmnd *cmd;
@@ -248,7 +274,7 @@ index 05d79af..3bb62da 100644
  
  	/*
  	 * BLOCK_PC requests may transfer data, in which case they must
-@@ -1111,6 +1187,12 @@ static int scsi_setup_blk_pc_cmnd(struct
+@@ -1109,6 +1184,12 @@ static int scsi_setup_blk_pc_cmnd(struct
  		ret = scsi_init_io(cmd);
  		if (unlikely(ret))
  			return ret;
@@ -261,7 +287,7 @@ index 05d79af..3bb62da 100644
  	} else {
  		BUG_ON(req->data_len);
  		BUG_ON(req->data);
-@@ -1124,13 +1206,15 @@ static int scsi_setup_blk_pc_cmnd(struct
+@@ -1122,13 +1203,15 @@ static int scsi_setup_blk_pc_cmnd(struct
  	BUILD_BUG_ON(sizeof(req->cmd) > sizeof(cmd->cmnd));
  	memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
  	cmd->cmd_len = req->cmd_len;
@@ -279,7 +305,7 @@ index 05d79af..3bb62da 100644
  	cmd->transfersize = req->data_len;
  	cmd->allowed = req->retries;
  	cmd->timeout_per_command = req->timeout;
-@@ -1180,6 +1264,11 @@ static int scsi_prep_fn(struct request_q
+@@ -1178,6 +1261,11 @@ static int scsi_prep_fn(struct request_q
  	struct scsi_device *sdev = q->queuedata;
  	int ret = BLKPREP_OK;
  
@@ -292,7 +318,7 @@ index 05d79af..3bb62da 100644
  	 * If the device is not in running state we will reject some
  	 * or all commands.
 diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index d6948d0..4d38e1b 100644
+index a2e0c10..597c48c 100644
 --- a/include/scsi/scsi_cmnd.h
 +++ b/include/scsi/scsi_cmnd.h
 @@ -28,6 +28,18 @@ struct scsi_pointer {
@@ -314,7 +340,7 @@ index d6948d0..4d38e1b 100644
  struct scsi_cmnd {
  	struct scsi_device *device;
  	struct list_head list;  /* scsi_cmnd participates in queue lists */
-@@ -138,4 +150,6 @@ extern void scsi_kunmap_atomic_sg(void *
+@@ -135,4 +147,6 @@ extern void scsi_kunmap_atomic_sg(void *
  extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
  extern void scsi_free_sgtable(struct scatterlist *, int);
  
