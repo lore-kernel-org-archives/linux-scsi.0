@@ -1,43 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [Bugme-new] [Bug 8426] New: massive slowdown on SCSI
-	CD/DVDdrive connected to mptspi driver
-Date: Fri, 04 May 2007 17:58:52 -0500
-Message-ID: <1178319532.3711.70.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D7070C3C3@NAMAIL4.ad.lsil.com>
-	 <1178315801.27774.15.camel@athlon>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 0/2] bidi support
+Date: Sat, 05 May 2007 18:02:29 +0900
+Message-ID: <200705050902.l4592YeE009469@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39472 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1767749AbXEDW7G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 May 2007 18:59:06 -0400
-In-Reply-To: <1178315801.27774.15.camel@athlon>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:45214 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1423160AbXEEJDk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 May 2007 05:03:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Chapman <doug.chapman@hp.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
+To: James.Bottomley@SteelEye.com, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-On Fri, 2007-05-04 at 17:56 -0400, Doug Chapman wrote:
-> I am applying/removing _only_ your patch and the problem goes away with
-> just removing it.
+This patchset add bidi support for block pc requests.
 
-What id and channel is this DVD drive on?  There is a potential bug in
-the move:
-
--mptscsih_writeIOCPage4(MPT_SCSI_HOST *hd, int channel, int id)
-+mptspi_writeIOCPage4(MPT_SCSI_HOST *hd, u8 channel , u8 id)
-
-Note int became u8, but later we have:
+With Jens' linked request proposal, there aren't many changes to the
+block layer, just adding one pointer (next_rq) to the request
+structure. And there is no changes to the existing block-layer
+functions. A bidi request uses two request structures (one in request
+and one out request). The in request is linked and the out request is
+en-queued.
 
 
-	pReq->PageAddress = cpu_to_le32(id | (channel << 8 ));
+We need some changes to the scsi mid-layer.
 
-channel << 8 is always zero as a u8 entity (unless something promotes
-the arithmetic beyond u8).  So if the DVD is on a non-zero channel, we
-might have our cause.
+A new structure, scsi_data_buffer is introduced to hold the in-buffer
+information.
 
-James
+With James' comments via IRC, we should not make the scsi_cmnd
+structure fatter. So the scsi mid-layer uses req->next_rq->special
+pointer for a scsi_data_buffer structure. LLDs don't touch the second
+request (req->next_rq) so it's safe to use req->special. There is no
+change to the scsi_cmnd structure.
+
+The rest of changes include sgtable allocation and deallocation for
+scsi_data_buffer in the block pc request path.
 
 
+I created a new tree, including this patchset and bsg patches:
+
+http://git.kernel.org/?p=linux/kernel/git/tomo/linux-2.6-bidi.git;a=summary
+
+I modified and put Boaz's open-iscsi bidi patch in the tree so you can
+test bidi requests via bsg.
+
+I'll put the SMP pass through patches in the tree later.
