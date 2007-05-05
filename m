@@ -1,71 +1,326 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 1/2] add linked request support
-Date: Sat, 05 May 2007 18:02:31 +0900
-Message-ID: <200705050902.l4592aCE030982@mbox.iij4u.or.jp>
+Subject: [PATCH 2/2] add bidi support for block pc requests
+Date: Sat, 05 May 2007 18:02:33 +0900
+Message-ID: <200705050902.l4592clV009499@mbox.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:58837 "EHLO mo11.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:58887 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1423161AbXEEJEM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 May 2007 05:04:12 -0400
+	id S1423146AbXEEJFd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 May 2007 05:05:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com, jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-This adds a pointer, next_rq, to the request structure for the second
-data phase (e.g. for bidi).
+This adds bidi support for block pc requests.
 
-We need bidi support for block pc requests, special requests, etc so
-instead of introducing REQ_TYPE_BIDI, a bidi requests simply set a
-req->next_rq pointer. linked request support can be used for other
-stuff REQ_BIDI might be nice for the future.
+A bidi request uses req->next_rq pointer for an in request.
 
-A bidi request uses two request structures (one in request and one out
-request). The in request is linked and the out request is en-queued.
+This patch introduces a new structure, scsi_data_buffer to hold the
+data buffer information. To avoid make scsi_cmnd structure fatter, the
+scsi mid-layer uses cmnd->request->next_rq->special pointer for
+a scsi_data_buffer structure. LLDs don't touch the second request
+(req->next_rq) so it's safe to use req->special.
+
+scsi_blk_pc_done() always completes the whole command so
+scsi_end_request() simply completes the bidi chunk too.
+
+A helper function, scsi_bidi_data_buffer() is for LLDs to access to
+the scsi_data_buffer structure easily.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/ll_rw_blk.c      |    1 +
- include/linux/blkdev.h |    4 ++++
- 2 files changed, 5 insertions(+), 0 deletions(-)
+ drivers/scsi/scsi_lib.c  |  123 +++++++++++++++++++++++++++++++++++++++------
+ include/scsi/scsi_cmnd.h |   14 +++++
+ 2 files changed, 120 insertions(+), 17 deletions(-)
 
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 123003a..9b799ee 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -256,6 +256,7 @@ static void rq_init(request_queue_t *q,
- 	rq->end_io = NULL;
- 	rq->end_io_data = NULL;
- 	rq->completion_data = NULL;
-+	rq->next_rq = NULL;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 05d79af..3bb62da 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -66,6 +66,12 @@ #undef SP
+ 
+ static void scsi_run_queue(struct request_queue *q);
+ 
++struct scsi_data_buffer *scsi_bidi_data_buffer(struct scsi_cmnd *cmd)
++{
++	return blk_bidi_rq(cmd->request) ? cmd->request->next_rq->special : NULL;
++}
++EXPORT_SYMBOL(scsi_bidi_data_buffer);
++
+ /*
+  * Function:	scsi_unprep_request()
+  *
+@@ -85,6 +91,7 @@ static void scsi_unprep_request(struct r
+ 	req->cmd_flags &= ~REQ_DONTPREP;
+ 	req->special = NULL;
+ 
++	kfree(scsi_bidi_data_buffer(cmd));
+ 	scsi_put_command(cmd);
  }
  
- /**
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a686eab..5234d17 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -314,6 +314,9 @@ struct request {
- 	 */
- 	rq_end_io_fn *end_io;
- 	void *end_io_data;
+@@ -657,6 +664,7 @@ static struct scsi_cmnd *scsi_end_reques
+ 	request_queue_t *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+ 	unsigned long flags;
++	struct scsi_data_buffer *sdb = scsi_bidi_data_buffer(cmd);
+ 
+ 	/*
+ 	 * If there are blocks left over at the end, set up the command
+@@ -685,6 +693,14 @@ static struct scsi_cmnd *scsi_end_reques
+ 		}
+ 	}
+ 
++	/*
++	 * a REQ_BLOCK_PC command is always completed fully so just do
++	 * end the bidi chunk.
++	 */
++	if (sdb)
++		end_that_request_chunk(req->next_rq, uptodate,
++				       sdb->request_bufflen);
 +
-+	/* for bidi */
-+	struct request *next_rq;
- };
+ 	add_disk_randomness(req->rq_disk);
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+@@ -701,34 +717,35 @@ static struct scsi_cmnd *scsi_end_reques
+ 	return NULL;
+ }
+ 
+-struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++static struct scatterlist *do_scsi_alloc_sgtable(unsigned short use_sg,
++						 unsigned short *sglist_len,
++						 gfp_t gfp_mask)
+ {
+ 	struct scsi_host_sg_pool *sgp;
+-	struct scatterlist *sgl;
+ 
+-	BUG_ON(!cmd->use_sg);
++	BUG_ON(!use_sg);
+ 
+-	switch (cmd->use_sg) {
++	switch (use_sg) {
+ 	case 1 ... 8:
+-		cmd->sglist_len = 0;
++		*sglist_len = 0;
+ 		break;
+ 	case 9 ... 16:
+-		cmd->sglist_len = 1;
++		*sglist_len = 1;
+ 		break;
+ 	case 17 ... 32:
+-		cmd->sglist_len = 2;
++		*sglist_len = 2;
+ 		break;
+ #if (SCSI_MAX_PHYS_SEGMENTS > 32)
+ 	case 33 ... 64:
+-		cmd->sglist_len = 3;
++		*sglist_len = 3;
+ 		break;
+ #if (SCSI_MAX_PHYS_SEGMENTS > 64)
+ 	case 65 ... 128:
+-		cmd->sglist_len = 4;
++		*sglist_len = 4;
+ 		break;
+ #if (SCSI_MAX_PHYS_SEGMENTS  > 128)
+ 	case 129 ... 256:
+-		cmd->sglist_len = 5;
++		*sglist_len = 5;
+ 		break;
+ #endif
+ #endif
+@@ -737,11 +754,14 @@ #endif
+ 		return NULL;
+ 	}
+ 
+-	sgp = scsi_sg_pools + cmd->sglist_len;
+-	sgl = mempool_alloc(sgp->pool, gfp_mask);
+-	return sgl;
++	sgp = scsi_sg_pools + *sglist_len;
++	return mempool_alloc(sgp->pool, gfp_mask);
+ }
+ 
++struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++{
++	return do_scsi_alloc_sgtable(cmd->use_sg, &cmd->sglist_len, gfp_mask);
++}
+ EXPORT_SYMBOL(scsi_alloc_sgtable);
+ 
+ void scsi_free_sgtable(struct scatterlist *sgl, int index)
+@@ -775,6 +795,8 @@ EXPORT_SYMBOL(scsi_free_sgtable);
+  */
+ static void scsi_release_buffers(struct scsi_cmnd *cmd)
+ {
++	struct scsi_data_buffer *sdb = scsi_bidi_data_buffer(cmd);
++
+ 	if (cmd->use_sg)
+ 		scsi_free_sgtable(cmd->request_buffer, cmd->sglist_len);
+ 
+@@ -784,6 +806,13 @@ static void scsi_release_buffers(struct
+ 	 */
+ 	cmd->request_buffer = NULL;
+ 	cmd->request_bufflen = 0;
++
++	if (sdb) {
++		if (sdb->use_sg)
++			scsi_free_sgtable(sdb->request_buffer, sdb->sglist_len);
++		sdb->request_buffer = NULL;
++		sdb->request_bufflen = 0;
++	}
+ }
  
  /*
-@@ -543,6 +546,7 @@ #define blk_pm_request(rq)	\
- #define blk_sorted_rq(rq)	((rq)->cmd_flags & REQ_SORTED)
- #define blk_barrier_rq(rq)	((rq)->cmd_flags & REQ_HARDBARRIER)
- #define blk_fua_rq(rq)		((rq)->cmd_flags & REQ_FUA)
-+#define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
+@@ -848,8 +877,12 @@ void scsi_io_completion(struct scsi_cmnd
+ 				memcpy(req->sense, cmd->sense_buffer,  len);
+ 				req->sense_len = len;
+ 			}
+-		} else
++		} else {
++			struct scsi_data_buffer *sdb = scsi_bidi_data_buffer(cmd);
+ 			req->data_len = cmd->resid;
++			if (sdb)
++				req->next_rq->data_len = sdb->resid;
++		}
+ 	}
  
- #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+ 	/*
+@@ -1077,6 +1110,38 @@ static struct scsi_cmnd *scsi_get_cmd_fr
+ 	return cmd;
+ }
  
++static int scsi_data_buffer_init(struct scsi_cmnd *cmd)
++{
++	struct scatterlist *sgpnt;
++	struct scsi_data_buffer *sdb = scsi_bidi_data_buffer(cmd);
++	struct request *req = cmd->request;
++	int count;
++
++	sdb->use_sg = req->next_rq->nr_phys_segments;
++	sgpnt = do_scsi_alloc_sgtable(sdb->use_sg, &sdb->sglist_len,
++				      GFP_ATOMIC);
++	if (unlikely(!sgpnt)) {
++		scsi_free_sgtable(cmd->request_buffer, cmd->sglist_len);
++		scsi_unprep_request(req);
++		return BLKPREP_DEFER;
++	}
++
++	req->buffer = NULL;
++	sdb->request_buffer = (char *) sgpnt;
++	sdb->request_bufflen = req->next_rq->data_len;
++
++	count = blk_rq_map_sg(req->q, req->next_rq, sgpnt);
++	if (likely(count <= sdb->use_sg)) {
++		sdb->use_sg = count;
++		return BLKPREP_OK;
++	}
++
++	scsi_release_buffers(cmd);
++	scsi_put_command(cmd);
++
++	return BLKPREP_KILL;
++}
++
+ static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
+ {
+ 	BUG_ON(!blk_pc_request(cmd->request));
+@@ -1092,10 +1157,21 @@ static void scsi_blk_pc_done(struct scsi
+ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+ {
+ 	struct scsi_cmnd *cmd;
++	struct scsi_data_buffer *sdb = NULL;
++
++	if (blk_bidi_rq(req)) {
++		sdb = kzalloc(sizeof(*sdb), GFP_ATOMIC);
++		if (unlikely(!sdb))
++			return BLKPREP_DEFER;
++		req->next_rq->special = sdb;
++	}
+ 
+ 	cmd = scsi_get_cmd_from_req(sdev, req);
+-	if (unlikely(!cmd))
++	if (unlikely(!cmd)) {
++		req->next_rq->special = NULL;
++		kfree(sdb);
+ 		return BLKPREP_DEFER;
++	}
+ 
+ 	/*
+ 	 * BLOCK_PC requests may transfer data, in which case they must
+@@ -1111,6 +1187,12 @@ static int scsi_setup_blk_pc_cmnd(struct
+ 		ret = scsi_init_io(cmd);
+ 		if (unlikely(ret))
+ 			return ret;
++
++		if (sdb) {
++			ret = scsi_data_buffer_init(cmd);
++			if (ret != BLKPREP_OK)
++				return ret;
++		}
+ 	} else {
+ 		BUG_ON(req->data_len);
+ 		BUG_ON(req->data);
+@@ -1124,13 +1206,15 @@ static int scsi_setup_blk_pc_cmnd(struct
+ 	BUILD_BUG_ON(sizeof(req->cmd) > sizeof(cmd->cmnd));
+ 	memcpy(cmd->cmnd, req->cmd, sizeof(cmd->cmnd));
+ 	cmd->cmd_len = req->cmd_len;
+-	if (!req->data_len)
++	if (sdb)
++		cmd->sc_data_direction = DMA_BIDIRECTIONAL;
++	else if (!req->data_len)
+ 		cmd->sc_data_direction = DMA_NONE;
+ 	else if (rq_data_dir(req) == WRITE)
+ 		cmd->sc_data_direction = DMA_TO_DEVICE;
+ 	else
+ 		cmd->sc_data_direction = DMA_FROM_DEVICE;
+-	
++
+ 	cmd->transfersize = req->data_len;
+ 	cmd->allowed = req->retries;
+ 	cmd->timeout_per_command = req->timeout;
+@@ -1180,6 +1264,11 @@ static int scsi_prep_fn(struct request_q
+ 	struct scsi_device *sdev = q->queuedata;
+ 	int ret = BLKPREP_OK;
+ 
++	if (WARN_ON(!blk_pc_request(req) && blk_bidi_rq(req))) {
++		ret = BLKPREP_KILL;
++		goto out;
++	}
++
+ 	/*
+ 	 * If the device is not in running state we will reject some
+ 	 * or all commands.
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index d6948d0..4d38e1b 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -28,6 +28,18 @@ struct scsi_pointer {
+ 	volatile int phase;
+ };
+ 
++struct scsi_data_buffer {
++	unsigned short use_sg;		/* Number of pieces of scatter-gather */
++	unsigned short sglist_len;	/* size of malloc'd scatter-gather list */
++	void *request_buffer;		/* Actual requested buffer */
++	unsigned request_bufflen;	/* Actual request size */
++	/*
++	 * Number of bytes requested to be transferred less actual
++	 * number transferred (0 if not supported)
++	*/
++	int resid;
++};
++
+ struct scsi_cmnd {
+ 	struct scsi_device *device;
+ 	struct list_head list;  /* scsi_cmnd participates in queue lists */
+@@ -138,4 +150,6 @@ extern void scsi_kunmap_atomic_sg(void *
+ extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
+ extern void scsi_free_sgtable(struct scatterlist *, int);
+ 
++extern struct scsi_data_buffer *scsi_bidi_data_buffer(struct scsi_cmnd *);
++
+ #endif /* _SCSI_SCSI_CMND_H */
 -- 
 1.4.3.2
 
