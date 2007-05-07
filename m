@@ -1,68 +1,51 @@
-From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [patch 08/30] drivers/scsi/megaraid.c: Replacing yield() with a better alternative
-Date: Mon, 7 May 2007 13:40:32 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229A8631C@NAMAIL2.ad.lsil.com>
-References: <200704260735.l3Q7ZDV9024229@shell0.pdx.osdl.net>
+From: Doug Chapman <doug.chapman@hp.com>
+Subject: RE: [Bugme-new] [Bug 8426] New: massive slowdown on SCSI
+	CD/DVDdrive connected to mptspi driver
+Date: Mon, 07 May 2007 15:47:38 -0400
+Message-ID: <1178567258.27671.13.camel@deimos.americas.hpqcorp.net>
+References: <664A4EBB07F29743873A87CF62C26D7070C3C3@NAMAIL4.ad.lsil.com>
+	 <1178315801.27774.15.camel@athlon>
+	 <1178319532.3711.70.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35852 "EHLO mail0.lsil.com"
+Received: from atlrel8.hp.com ([156.153.255.206]:52663 "EHLO atlrel8.hp.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966299AbXEGTlB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 15:41:01 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <200704260735.l3Q7ZDV9024229@shell0.pdx.osdl.net>
+	id S1750925AbXEGTsA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2007 15:48:00 -0400
+In-Reply-To: <1178319532.3711.70.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, amol@verismonetworks.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Moore, Eric" <Eric.Moore@lsi.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>
 
-Ack.
+Found the problem.  Sending a patch to linux-scsi under a [PATCH]
+subject line.
 
-Thanks.
+- Doug
 
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of
-akpm@linux-foundation.org
-Sent: Thursday, April 26, 2007 12:35 AM
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org;
-amol@verismonetworks.com
-Subject: [patch 08/30] drivers/scsi/megaraid.c: Replacing yield() with a
-better alternative
+On Fri, 2007-05-04 at 17:58 -0500, James Bottomley wrote:
+> On Fri, 2007-05-04 at 17:56 -0400, Doug Chapman wrote:
+> > I am applying/removing _only_ your patch and the problem goes away with
+> > just removing it.
+> 
+> What id and channel is this DVD drive on?  There is a potential bug in
+> the move:
+> 
+> -mptscsih_writeIOCPage4(MPT_SCSI_HOST *hd, int channel, int id)
+> +mptspi_writeIOCPage4(MPT_SCSI_HOST *hd, u8 channel , u8 id)
+> 
+> Note int became u8, but later we have:
+> 
+> 
+> 	pReq->PageAddress = cpu_to_le32(id | (channel << 8 ));
+> 
+> channel << 8 is always zero as a u8 entity (unless something promotes
+> the arithmetic beyond u8).  So if the DVD is on a non-zero channel, we
+> might have our cause.
+> 
+> James
+> 
+> 
 
-From: Amol Lad <amol@verismonetworks.com>
-
-For this driver cond_resched() seems to be a better alternative
-
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/megaraid.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff -puN
-drivers/scsi/megaraid.c~drivers-scsi-megaraidc-replacing-yield-with-a
-drivers/scsi/megaraid.c
----
-a/drivers/scsi/megaraid.c~drivers-scsi-megaraidc-replacing-yield-with-a
-+++ a/drivers/scsi/megaraid.c
-@@ -1754,7 +1754,8 @@ __mega_busywait_mbox (adapter_t *adapter
- 	for (counter = 0; counter < 10000; counter++) {
- 		if (!mbox->m_in.busy)
- 			return 0;
--		udelay(100); yield();
-+		udelay(100);
-+		cond_resched();
- 	}
- 	return -1;		/* give up after 1 second */
- }
-_
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
