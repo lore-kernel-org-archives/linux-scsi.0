@@ -1,84 +1,38 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Tue, 08 May 2007 00:37:34 +0900
-Message-ID: <20070508003734T.fujita.tomonori@lab.ntt.co.jp>
-References: <463F36AC.3010207@vlnb.net>
-	<20070507182837E.fujita.tomonori@lab.ntt.co.jp>
-	<463F455B.3000209@vlnb.net>
+From: Daniel.E.Messinger@seagate.com
+Subject: bidi bsg is non-blocking
+Date: Mon, 7 May 2007 10:21:18 -0500
+Message-ID: <OF8468A26D.D2DDFDA3-ON862572D4.004E5BE6-862572D4.005458FE@seagate.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:64103 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934326AbXEGPhs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 11:37:48 -0400
-In-Reply-To: <463F455B.3000209@vlnb.net>
+Received: from pps0.sv-ext.mailhost.seagate.com ([192.55.4.60]:43738 "EHLO
+	pps0.sv-ext.mailhost.seagate.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934397AbXEGP4A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 11:56:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vst@vlnb.net
-Cc: fujita.tomonori@lab.ntt.co.jp, scst-devel@lists.sourceforge.net, stgt-devel@lists.berlios.de, linux-scsi@vger.kernel.org
+To: tomof@acm.org
+Cc: linux-scsi@vger.kernel.org
 
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Mon, 07 May 2007 19:27:23 +0400
 
-> FUJITA Tomonori wrote:
-> > From: Vladislav Bolkhovitin <vst@vlnb.net>
-> > Subject: Re: [Stgt-devel] Question for pass-through target design
-> > Date: Mon, 07 May 2007 18:24:44 +0400
-> > 
-> > 
-> >>FUJITA Tomonori wrote:
-> >>
-> >>>>>>It looks like the pass-through target support is currently broken, at
-> >>>>>>least as I've checked for ibmvstgt, but I think it's a general problem.
-> >>>>>>I wanted to check my assumptions and get ideas.
-> >>>>>
-> >>>>>Yeah, unfortunately, it works only with the iSCSI target driver (which
-> >>>>>runs in user space).
-> >>>>>
-> >>>>>
-> >>>>>
-> >>>>>
-> >>>>>>The code isn't allocating any memory to pass along to the sg code to store
-> >>>>>>the result of a read or data for a write.  Currently, dxferp for sg_io_hdr
-> >>>>>>or dout_xferp/din_xferp for sg_io_v4 are assigned to the value of uaddr,
-> >>>>>>which is set to 0 in kern_queue_cmd.  With the pointer set to NULL,
-> >>>>>>the pass-through target isn't going to function.  Even if we had memory
-> >>>>>>allocated, there isn't a means of getting data to be written via sg down
-> >>>>>>this code path.
-> >>>>>>
-> >>>>>>What ideas are there as to how the data will get to user-space so that
-> >>>>>>we can use sg?
-> >>>>>
-> >>>>>For kernel-space drivers, we don't need to go to user-space. We can do
-> >>>>>the pass-through in kernel space. I talked with James about this last
-> >>>>>year and he said that if the code is implemented cleanly, he would
-> >>>>>merges it into mainline.
-> >>>>
-> >>>>We already have a pass-through in the kernel space for
-> >>>>kernel space drivers. It is the scsi_tgt* code.
-> >>>
-> >>>
-> >>>Could you elaborate more?
-> >>>
-> >>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
-> >>>SCSI commands from one lld and send them to another lld instead of
-> >>>sending them to user space.
-> >>
-> >>Although the approach of passing SCSI commands from a target LLD to an
-> >>initiator one without any significant interventions from the target
-> >>software looks to be nice and simple, you should realize how limited,
-> >>unsafe and illegal it is, since it badly violates SCSI specs.
-> > 
-> > 
-> > I think that 'implemented cleanly' means that one scsi_host is assigned
-> > to only one initiator.
-> 
-> Sorry, I don't fully understand you. If you mean you are going to limit 
-> only one remote initiator per-target device, then, well, is it even more 
-> limited (and limiting) or not?
+Greetings to all,
 
-The target software assigns one scsi_host to only one remote
-initiator. For FC, NPIV works nicely.
+I'm attempting to use the bidi variant of bsg to talk to an OSD target
+device. I've run into an undesirable situation.
+
+My application has a free-running receive loop (doing a read() on the bsg
+device) waiting for responses to commands sent to bsg by another thread.
+The problem is that the receive thread is getting ENODATA from the read()
+when there are no commands pending.  I have NOT set non-blocking.
+
+Note that the old sg driver was quite willing to block until there was a
+response available. I find this scenario greatly preferable.
+
+Could bsg be fixed so that read() blocks when there is nothing to return?
+
+
+
+Dan Messinger
+Seagate Technology Research
+
+
