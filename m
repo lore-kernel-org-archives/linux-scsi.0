@@ -1,57 +1,98 @@
-From: "Julian Calaby" <julian.calaby@gmail.com>
-Subject: Re: [PATCH] zfcp: Stop system after memory corruption
-Date: Tue, 8 May 2007 01:56:07 +1000
-Message-ID: <646765f40705070856y28d958f8xe2e286ab347d63a5@mail.gmail.com>
-References: <200705071635.04585.swen.schillig@freenet.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Stgt-devel] Question for pass-through target design
+Date: Mon, 07 May 2007 20:52:34 +0400
+Message-ID: <463F5952.9010803@vlnb.net>
+References: <463F36AC.3010207@vlnb.net>	<20070507182837E.fujita.tomonori@lab.ntt.co.jp>	<463F455B.3000209@vlnb.net> <20070508003734T.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.228]:57522 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934400AbXEGP4K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 11:56:10 -0400
-Received: by wr-out-0506.google.com with SMTP id 76so1634834wra
-        for <linux-scsi@vger.kernel.org>; Mon, 07 May 2007 08:56:09 -0700 (PDT)
-In-Reply-To: <200705071635.04585.swen.schillig@freenet.de>
-Content-Disposition: inline
+Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:57213 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934446AbXEGQwj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 12:52:39 -0400
+In-Reply-To: <20070508003734T.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Swen Schillig <swen.schillig@freenet.de>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On 5/8/07, Swen Schillig <swen.schillig@freenet.de> wrote:
-> From: Christof Schmitt <christof.schmitt@de.ibm.com>
-[snip]
-> -                               ZFCP_LOG_NORMAL("bug: unexpected inbound "
-> -                                               "packet on adapter %s "
-> -                                               "(reqid=0x%lx, "
-> -                                               "first_element=%d, "
-> -                                               "elements_processed=%d)\n",
-> -                                               zfcp_get_busid_by_adapter(adapter),
-> -                                               (unsigned long) buffere->addr,
-> -                                               first_element,
-> -                                               elements_processed);
-> -                               ZFCP_LOG_NORMAL("hex dump of inbound buffer "
-> -                                               "at address %p "
-> -                                               "(buffer_index=%d, "
-> -                                               "buffere_index=%d)\n", buffer,
-> -                                               buffer_index, buffere_index);
-> -                               ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_NORMAL,
-> -                                             (char *) buffer, SBAL_SIZE);
+FUJITA Tomonori wrote:
+> From: Vladislav Bolkhovitin <vst@vlnb.net>
+> Subject: Re: [Stgt-devel] Question for pass-through target design
+> Date: Mon, 07 May 2007 19:27:23 +0400
+> 
+> 
+>>FUJITA Tomonori wrote:
+>>
+>>>From: Vladislav Bolkhovitin <vst@vlnb.net>
+>>>Subject: Re: [Stgt-devel] Question for pass-through target design
+>>>Date: Mon, 07 May 2007 18:24:44 +0400
+>>>
+>>>
+>>>
+>>>>FUJITA Tomonori wrote:
+>>>>
+>>>>
+>>>>>>>>It looks like the pass-through target support is currently broken, at
+>>>>>>>>least as I've checked for ibmvstgt, but I think it's a general problem.
+>>>>>>>>I wanted to check my assumptions and get ideas.
+>>>>>>>
+>>>>>>>Yeah, unfortunately, it works only with the iSCSI target driver (which
+>>>>>>>runs in user space).
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>>>The code isn't allocating any memory to pass along to the sg code to store
+>>>>>>>>the result of a read or data for a write.  Currently, dxferp for sg_io_hdr
+>>>>>>>>or dout_xferp/din_xferp for sg_io_v4 are assigned to the value of uaddr,
+>>>>>>>>which is set to 0 in kern_queue_cmd.  With the pointer set to NULL,
+>>>>>>>>the pass-through target isn't going to function.  Even if we had memory
+>>>>>>>>allocated, there isn't a means of getting data to be written via sg down
+>>>>>>>>this code path.
+>>>>>>>>
+>>>>>>>>What ideas are there as to how the data will get to user-space so that
+>>>>>>>>we can use sg?
+>>>>>>>
+>>>>>>>For kernel-space drivers, we don't need to go to user-space. We can do
+>>>>>>>the pass-through in kernel space. I talked with James about this last
+>>>>>>>year and he said that if the code is implemented cleanly, he would
+>>>>>>>merges it into mainline.
+>>>>>>
+>>>>>>We already have a pass-through in the kernel space for
+>>>>>>kernel space drivers. It is the scsi_tgt* code.
+>>>>>
+>>>>>
+>>>>>Could you elaborate more?
+>>>>>
+>>>>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
+>>>>>SCSI commands from one lld and send them to another lld instead of
+>>>>>sending them to user space.
+>>>>
+>>>>Although the approach of passing SCSI commands from a target LLD to an
+>>>>initiator one without any significant interventions from the target
+>>>>software looks to be nice and simple, you should realize how limited,
+>>>>unsafe and illegal it is, since it badly violates SCSI specs.
+>>>
+>>>
+>>>I think that 'implemented cleanly' means that one scsi_host is assigned
+>>>to only one initiator.
+>>
+>>Sorry, I don't fully understand you. If you mean you are going to limit 
+>>only one remote initiator per-target device, then, well, is it even more 
+>>limited (and limiting) or not?
+> 
+> 
+> The target software assigns one scsi_host to only one remote
+> initiator. For FC, NPIV works nicely.
 
-As a minor quibble, may I suggest that these lines belong just above
-the panic introduced above? I assume that they'd be useful for
-debugging should this situation occur.
+OK, if such limitation is OK for your users, then I'm happy for you.
 
-If I'm completely mis-understanding the situation, please disregard this email.
+> _______________________________________________
+> Stgt-devel mailing list
+> Stgt-devel@lists.berlios.de
+> https://lists.berlios.de/mailman/listinfo/stgt-devel
+> 
 
-Thanks,
-
--- 
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
-
-(please note that I'm only subscribed to linux-scsi if replying)
