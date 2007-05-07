@@ -1,31 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 09/30] drivers/scsi/mca_53c9x.c : save_flags()/cli()
-	removal
-Date: Mon, 07 May 2007 14:56:38 -0500
-Message-ID: <1178567798.3729.48.camel@mulgrave.il.steeleye.com>
-References: <200704260735.l3Q7ZExL024232@shell0.pdx.osdl.net>
+From: Doug Chapman <doug.chapman@hp.com>
+Subject: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVD drive
+	connected to mptspi driver
+Date: Mon, 07 May 2007 15:59:46 -0400
+Message-ID: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:43352 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754839AbXEGT4y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 15:56:54 -0400
-In-Reply-To: <200704260735.l3Q7ZExL024232@shell0.pdx.osdl.net>
+Received: from atlrel9.hp.com ([156.153.255.214]:41477 "EHLO atlrel9.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966328AbXEGUAH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2007 16:00:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
+To: eric.moore@lsi.com, doug.chapman@hp.com, linux-scsi@vger.kernel.org
 
-On Thu, 2007-04-26 at 00:35 -0700, akpm@linux-foundation.org wrote:
-> From: Amol Lad <amol@verismonetworks.com>
-> 
-> Replaced save_flags()/cli() with spin_lock alternatives
+Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
 
-This one, there's not much point to ... the driver now needs to be
-converted correctly over to esp_scsi.
+A recent code cleanup that moved code from mptscsih to mptspi
+inadvertently change the order some code was called.  This caused
+a massive slowdown (of 150x to 300x) on the CD/DVD drive on the
+high-end HP Integrity servers.
 
-James
+Signed-off-by: Doug Chapman <doug.chapman@hp.com>
+
+
+
+
+diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+index 85f21b5..2eb5741 100644
+--- a/drivers/message/fusion/mptspi.c
++++ b/drivers/message/fusion/mptspi.c
+@@ -726,13 +726,15 @@ static int mptspi_slave_configure(struct scsi_device *sdev)
+ 	struct _MPT_SCSI_HOST *hd =
+ 		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
+ 	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
+-	int ret = mptscsih_slave_configure(sdev);
++	int ret;
++
++	mptspi_initTarget(hd, vtarget, sdev);
++
++	ret = mptscsih_slave_configure(sdev);
+ 
+ 	if (ret)
+ 		return ret;
+ 
+-	mptspi_initTarget(hd, vtarget, sdev);
+-
+ 	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
+ 		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
+ 		sdev->id, spi_min_period(scsi_target(sdev)),
 
 
