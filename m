@@ -1,82 +1,75 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Mon, 07 May 2007 19:27:23 +0400
-Message-ID: <463F455B.3000209@vlnb.net>
-References: <463B72F6.3000207@torque.net>	<20070506053629P.fujita.tomonori@lab.ntt.co.jp>	<463F36AC.3010207@vlnb.net> <20070507182837E.fujita.tomonori@lab.ntt.co.jp>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 6/7] SCSI: save disk in scsi_device - resend
+Date: Mon, 7 May 2007 08:29:28 -0700
+Message-ID: <20070507082928.17878961.kristen.c.accardi@intel.com>
+References: <20070424074856.005152262@intel.com>
+	<20070504111733.f507501d.kristen.c.accardi@intel.com>
+	<1178310648.3711.56.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-02.mailcluster.net ([85.249.135.243]:60322 "EHLO
-	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965055AbXEGP1h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 11:27:37 -0400
-In-Reply-To: <20070507182837E.fujita.tomonori@lab.ntt.co.jp>
+Received: from mga02.intel.com ([134.134.136.20]:50322 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934219AbXEGPcu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2007 11:32:50 -0400
+In-Reply-To: <1178310648.3711.56.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: jeff@garzik.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, htejun@gmail.com, akpm@linux-foundation.org
 
-FUJITA Tomonori wrote:
-> From: Vladislav Bolkhovitin <vst@vlnb.net>
-> Subject: Re: [Stgt-devel] Question for pass-through target design
-> Date: Mon, 07 May 2007 18:24:44 +0400
-> 
-> 
->>FUJITA Tomonori wrote:
->>
->>>>>>It looks like the pass-through target support is currently broken, at
->>>>>>least as I've checked for ibmvstgt, but I think it's a general problem.
->>>>>>I wanted to check my assumptions and get ideas.
->>>>>
->>>>>Yeah, unfortunately, it works only with the iSCSI target driver (which
->>>>>runs in user space).
->>>>>
->>>>>
->>>>>
->>>>>
->>>>>>The code isn't allocating any memory to pass along to the sg code to store
->>>>>>the result of a read or data for a write.  Currently, dxferp for sg_io_hdr
->>>>>>or dout_xferp/din_xferp for sg_io_v4 are assigned to the value of uaddr,
->>>>>>which is set to 0 in kern_queue_cmd.  With the pointer set to NULL,
->>>>>>the pass-through target isn't going to function.  Even if we had memory
->>>>>>allocated, there isn't a means of getting data to be written via sg down
->>>>>>this code path.
->>>>>>
->>>>>>What ideas are there as to how the data will get to user-space so that
->>>>>>we can use sg?
->>>>>
->>>>>For kernel-space drivers, we don't need to go to user-space. We can do
->>>>>the pass-through in kernel space. I talked with James about this last
->>>>>year and he said that if the code is implemented cleanly, he would
->>>>>merges it into mainline.
->>>>
->>>>We already have a pass-through in the kernel space for
->>>>kernel space drivers. It is the scsi_tgt* code.
->>>
->>>
->>>Could you elaborate more?
->>>
->>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
->>>SCSI commands from one lld and send them to another lld instead of
->>>sending them to user space.
->>
->>Although the approach of passing SCSI commands from a target LLD to an
->>initiator one without any significant interventions from the target
->>software looks to be nice and simple, you should realize how limited,
->>unsafe and illegal it is, since it badly violates SCSI specs.
-> 
-> 
-> I think that 'implemented cleanly' means that one scsi_host is assigned
-> to only one initiator.
+On Fri, 04 May 2007 15:30:48 -0500
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-Sorry, I don't fully understand you. If you mean you are going to limit 
-only one remote initiator per-target device, then, well, is it even more 
-limited (and limiting) or not?
-
-> _______________________________________________
-> Stgt-devel mailing list
-> Stgt-devel@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/stgt-devel
+> On Fri, 2007-05-04 at 11:17 -0700, Kristen Carlson Accardi wrote:
+> > Give anyone who has access to scsi_device access to the genhd struct as well.
+> > 
+> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > Index: 2.6-git/drivers/scsi/sd.c
+> > ===================================================================
+> > --- 2.6-git.orig/drivers/scsi/sd.c
+> > +++ 2.6-git/drivers/scsi/sd.c
+> > @@ -1711,6 +1711,7 @@ static int sd_probe(struct device *dev)
+> >  
+> >  	dev_set_drvdata(dev, sdkp);
+> >  	add_disk(gd);
+> > +	sdp->disk = gd;
+> >  
+> >  	sdev_printk(KERN_NOTICE, sdp, "Attached scsi %sdisk %s\n",
+> >  		    sdp->removable ? "removable " : "", gd->disk_name);
+> > Index: 2.6-git/drivers/scsi/sr.c
+> > ===================================================================
+> > --- 2.6-git.orig/drivers/scsi/sr.c
+> > +++ 2.6-git/drivers/scsi/sr.c
+> > @@ -604,6 +604,7 @@ static int sr_probe(struct device *dev)
+> >  	if (sdev->media_change_notify)
+> >  		disk->flags |= GENHD_FL_MEDIA_CHANGE_NOTIFY;
+> >  	add_disk(disk);
+> > +	sdev->disk = disk;
+> >  
+> >  	sdev_printk(KERN_DEBUG, sdev,
+> >  		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+> > Index: 2.6-git/include/scsi/scsi_device.h
+> > ===================================================================
+> > --- 2.6-git.orig/include/scsi/scsi_device.h
+> > +++ 2.6-git/include/scsi/scsi_device.h
+> > @@ -138,7 +138,7 @@ struct scsi_device {
+> >  
+> >  	struct device		sdev_gendev;
+> >  	struct class_device	sdev_classdev;
+> > -
+> > +	struct gendisk 		*disk;
+> >  	struct execute_work	ew; /* used to get process context on put */
+> >  
+> >  	enum scsi_device_state sdev_state;
+> 
+> If you're going to do this, you need to take on board removing the
+> struct gendisk from all the ULD structures (since it's now become
+> generic).
+> 
+> James
 > 
 
+Ok - I can send that as a separate patch series, or I can include it
+in this one.  Which is preferred?
