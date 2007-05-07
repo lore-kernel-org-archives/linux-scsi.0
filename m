@@ -1,62 +1,61 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] fill in scsi_host_template module owner
-Date: Mon, 07 May 2007 13:25:22 -0500
-Message-ID: <463F6F12.2030002@cs.wisc.edu>
-References: <200704301653.56687.okir@lst.de>
+Subject: Re: [RFC] [PATCH 4/5] qla4xxx: Add IPv6 support and misc
+Date: Mon, 07 May 2007 13:31:12 -0500
+Message-ID: <463F7070.5080601@cs.wisc.edu>
+References: <1178158199.21709.5.camel@iscsi-sles10>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:42346 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42354 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934484AbXEGSZi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 May 2007 14:25:38 -0400
-In-Reply-To: <200704301653.56687.okir@lst.de>
+	id S965749AbXEGSb3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2007 14:31:29 -0400
+In-Reply-To: <1178158199.21709.5.camel@iscsi-sles10>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Olaf Kirch <okir@lst.de>
-Cc: linux-scsi@vger.kernel.org
+To: David C Somayajulu <david.somayajulu@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
 
-Olaf Kirch wrote:
-> I recently ran into an oops that happens because you
-> can shut down all of iSCSI even though you still have
-> iSCSI targets mounted. It turned out that iscsi's
-> scsi_host_template missed a THIS_MODULE, so
-> reference counting wasn't done properly. Brief
-> inspection showed that this seems to be a rather
-> wide-spread problem. Here's a patch to address this.
+David C Somayajulu wrote:
+> Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
 > 
-
-I did not see this in scsi-misc so I am not sure if it matters or you
-need a ack or signed off for iscsi, but the iscsi and iser parts look ok
-
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-
-> Index: linux-2.6/drivers/scsi/iscsi_tcp.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/scsi/iscsi_tcp.c
-> +++ linux-2.6/drivers/scsi/iscsi_tcp.c
-> @@ -2133,6 +2133,7 @@ static void iscsi_tcp_session_destroy(st
->  }
->  
->  static struct scsi_host_template iscsi_sht = {
-> +	.module			= THIS_MODULE,
->  	.name			= "iSCSI Initiator over TCP/IP",
->  	.queuecommand           = iscsi_queuecommand,
->  	.change_queue_depth	= iscsi_change_queue_depth,
-
-
-> Index: linux-2.6/drivers/infiniband/ulp/iser/iscsi_iser.c
-> ===================================================================
-> --- linux-2.6.orig/drivers/infiniband/ulp/iser/iscsi_iser.c
-> +++ linux-2.6/drivers/infiniband/ulp/iser/iscsi_iser.c
-> @@ -543,6 +543,7 @@ iscsi_iser_ep_disconnect(__u64 ep_handle
->  }
->  
->  static struct scsi_host_template iscsi_iser_sht = {
-> +	.module                 = THIS_MODULE,
->  	.name                   = "iSCSI Initiator over iSER, v." DRV_VER,
->  	.queuecommand           = iscsi_queuecommand,
->  	.can_queue		= ISCSI_XMIT_CMDS_MAX - 1,
+> ---
+>  drivers/scsi/qla4xxx/ql4_mbx.c     |  190 ++++++++++------
 > 
+> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+> index 7f28657..0ef777a 100644
+> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+> @@ -6,6 +6,10 @@
+>   */
+>  
+>  #include "ql4_def.h"
+> +#include "ql4_version.h"
+> +#include "ql4_glbl.h"
+> +#include "ql4_dbg.h"
+> +#include "ql4_inline.h"
 
+Did you need to bring in all of these? You did not need version did you?
+
+>  
+> -	memset((void *)fw_ddb_entry->iSCSIAlias, 0,
+> -	       sizeof(fw_ddb_entry->iSCSIAlias));
+> +	memset((void *)fw_ddb_entry->iscsi_alias, 0,
+> +	       sizeof(fw_ddb_entry->iscsi_alias));
+>  
+> -	memset((void *)fw_ddb_entry->iscsiName, 0,
+> -	       sizeof(fw_ddb_entry->iscsiName));
+> +	memset((void *)fw_ddb_entry->iscsi_name, 0,
+> +	       sizeof(fw_ddb_entry->iscsi_name));
+>  
+> -	memset((void *)fw_ddb_entry->ipAddr, 0, sizeof(fw_ddb_entry->ipAddr));
+> -	memset((void *)fw_ddb_entry->targetAddr, 0,
+> -	       sizeof(fw_ddb_entry->targetAddr));
+> +	memset((void *)fw_ddb_entry->ip_addr, 0, sizeof(fw_ddb_entry->ip_addr));
+> +	memset((void *)fw_ddb_entry->tgt_addr, 0,
+> +	       sizeof(fw_ddb_entry->tgt_addr));
+>  
+
+I am not sure if it is a big deal or if it clutters the code, but I do
+not think you need the void * casts in there.
