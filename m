@@ -1,17 +1,17 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [RFC] [PATCH 4/5] qla4xxx: Add IPv6 support and misc
-Date: Mon, 07 May 2007 13:31:12 -0500
-Message-ID: <463F7070.5080601@cs.wisc.edu>
-References: <1178158199.21709.5.camel@iscsi-sles10>
+Subject: Re: [RFC] [PATCH 1/5] qla4xxx: Add IPv6 support and misc
+Date: Mon, 07 May 2007 13:36:32 -0500
+Message-ID: <463F71B0.7000804@cs.wisc.edu>
+References: <1178157907.20898.38.camel@iscsi-sles10>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:42354 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42361 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S965749AbXEGSb3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 May 2007 14:31:29 -0400
-In-Reply-To: <1178158199.21709.5.camel@iscsi-sles10>
+	id S1754713AbXEGSgr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 May 2007 14:36:47 -0400
+In-Reply-To: <1178157907.20898.38.camel@iscsi-sles10>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: David C Somayajulu <david.somayajulu@qlogic.com>
@@ -21,41 +21,30 @@ David C Somayajulu wrote:
 > Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
 > 
 > ---
->  drivers/scsi/qla4xxx/ql4_mbx.c     |  190 ++++++++++------
+>  drivers/scsi/qla4xxx/ql4_def.h     |   84 ++++---
+>  drivers/scsi/qla4xxx/ql4_fw.h      |  426 +++++++++++++++---------------------
 > 
-> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-> index 7f28657..0ef777a 100644
-> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-> @@ -6,6 +6,10 @@
->   */
+> diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+> index 6f4cf2d..7bbc2ab 100644
+> --- a/drivers/scsi/qla4xxx/ql4_def.h
+> +++ b/drivers/scsi/qla4xxx/ql4_def.h
+> @@ -122,8 +122,7 @@ #define MAX_REQS_SERVICED_PER_INTR	16
 >  
->  #include "ql4_def.h"
-> +#include "ql4_version.h"
-> +#include "ql4_glbl.h"
-> +#include "ql4_dbg.h"
-> +#include "ql4_inline.h"
+>  #define ISCSI_IPADDR_SIZE		4	/* IP address size */
+>  #define ISCSI_ALIAS_SIZE		32	/* ISCSI Alais name size */
+> -#define ISCSI_NAME_SIZE			255	/* ISCSI Name size -
+> -						 * usually a string */
+> +#define ISCSI_NAME_SIZE			0xE0	/* ISCSI Name size */
+>  
+>  #define LSDW(x) ((u32)((u64)(x)))
+>  #define MSDW(x) ((u32)((((u64)(x)) >> 16) >> 16))
+> @@ -159,6 +158,7 @@ struct srb {
+>  	struct ddb_entry	*ddb;
+>  	uint16_t flags;		/* (1) Status flags. */
+>  
+> +#define SRB_SCSI_PASSTHRU	BIT_2	/* for scsi passthru cmds */
 
-Did you need to bring in all of these? You did not need version did you?
 
->  
-> -	memset((void *)fw_ddb_entry->iSCSIAlias, 0,
-> -	       sizeof(fw_ddb_entry->iSCSIAlias));
-> +	memset((void *)fw_ddb_entry->iscsi_alias, 0,
-> +	       sizeof(fw_ddb_entry->iscsi_alias));
->  
-> -	memset((void *)fw_ddb_entry->iscsiName, 0,
-> -	       sizeof(fw_ddb_entry->iscsiName));
-> +	memset((void *)fw_ddb_entry->iscsi_name, 0,
-> +	       sizeof(fw_ddb_entry->iscsi_name));
->  
-> -	memset((void *)fw_ddb_entry->ipAddr, 0, sizeof(fw_ddb_entry->ipAddr));
-> -	memset((void *)fw_ddb_entry->targetAddr, 0,
-> -	       sizeof(fw_ddb_entry->targetAddr));
-> +	memset((void *)fw_ddb_entry->ip_addr, 0, sizeof(fw_ddb_entry->ip_addr));
-> +	memset((void *)fw_ddb_entry->tgt_addr, 0,
-> +	       sizeof(fw_ddb_entry->tgt_addr));
->  
-
-I am not sure if it is a big deal or if it clutters the code, but I do
-not think you need the void * casts in there.
+Is this ever set or is the passthrough code in these patches ever used
+or hit in upstream code or is it going to be used? It is doing the same
+thing as sg io or is it different?
