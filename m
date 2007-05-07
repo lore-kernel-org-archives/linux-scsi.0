@@ -1,28 +1,220 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 16/30] drivers/scsi/aic7xxx_old: Convert to generic
- boolean-values
-Date: Mon, 7 May 2007 14:11:07 -0700
-Message-ID: <20070507141107.e9c87d8c.akpm@linux-foundation.org>
-References: <200704260735.l3Q7ZIj7024253@shell0.pdx.osdl.net>
-	<1178567419.3729.44.camel@mulgrave.il.steeleye.com>
-	<20070507140656.3debfb55.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Use PCI-E reset API for new ipr adapter
+Date: Mon, 07 May 2007 17:09:05 -0500
+Message-ID: <48890.8334672034$1178575760@news.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:38974 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754564AbXEGVLk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 17:11:40 -0400
-In-Reply-To: <20070507140656.3debfb55.akpm@linux-foundation.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:47609 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966551AbXEGWJH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 18:09:07 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l47M97NA008649
+	for <linux-scsi@vger.kernel.org>; Mon, 7 May 2007 18:09:07 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l47M97br118614
+	for <linux-scsi@vger.kernel.org>; Mon, 7 May 2007 16:09:07 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l47M96Bb022936
+	for <linux-scsi@vger.kernel.org>; Mon, 7 May 2007 16:09:06 -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, ricknu-0@student.ltu.se
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-On Mon, 7 May 2007 14:06:56 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
 
-> so I'll drop it on those grounds, not on the bogus ones.
+Use a newly added PCI API to issue a PCI Fundamental reset
+(warm reset) to a new ipr PCI-E adapter. Typically, the
+ipr adapter uses the start BIST bit in config space to reset
+an adapter. Issuing start BIST on this particular adapter
+results in the PCI-E logic on the card losing sync, which
+causes PCI-E errors, making the card unusable. The only reset
+mechanism that exists on this hardware that does not have this
+problem is PCI Fundamental reset (warm reset).
 
-However it will come back again.  All subsystem-private implementations
-of TRUE and FALSE are in the firing line now.
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+James,
+
+This patch was waiting for a generic PCI layer change to get merged,
+which has now happened. This patch can now be merged. This is my last
+ipr patch for 2.6.22.
+
+Thanks,
+
+Brian
+---
+
+ linux-2.6-bjking1/drivers/scsi/ipr.c |   70 ++++++++++++++++++++++++++++++++---
+ linux-2.6-bjking1/drivers/scsi/ipr.h |    8 +++-
+ 2 files changed, 72 insertions(+), 6 deletions(-)
+
+diff -puN drivers/scsi/ipr.h~ipr_pci_reset6 drivers/scsi/ipr.h
+--- linux-2.6/drivers/scsi/ipr.h~ipr_pci_reset6	2007-05-07 17:04:09.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.h	2007-05-07 17:04:09.000000000 -0500
+@@ -37,7 +37,7 @@
+ /*
+  * Literals
+  */
+-#define IPR_DRIVER_VERSION "2.4.0"
++#define IPR_DRIVER_VERSION "2.4.1"
+ #define IPR_DRIVER_DATE "(April 24, 2007)"
+ 
+ /*
+@@ -112,6 +112,7 @@
+ 
+ /* Driver data flags */
+ #define IPR_USE_LONG_TRANSOP_TIMEOUT		0x00000001
++#define IPR_USE_PCI_WARM_RESET			0x00000002
+ 
+ #define IPR_DEFAULT_MAX_ERROR_DUMP			984
+ #define IPR_NUM_LOG_HCAMS				2
+@@ -193,6 +194,7 @@
+ #define IPR_WAIT_FOR_RESET_TIMEOUT		(2 * HZ)
+ #define IPR_CHECK_FOR_RESET_TIMEOUT		(HZ / 10)
+ #define IPR_WAIT_FOR_BIST_TIMEOUT		(2 * HZ)
++#define IPR_PCI_RESET_TIMEOUT			(HZ / 2)
+ #define IPR_DUMP_TIMEOUT			(15 * HZ)
+ 
+ /*
+@@ -1091,6 +1093,9 @@ struct ipr_ioa_cfg {
+ 	u8 allow_ml_add_del:1;
+ 	u8 needs_hard_reset:1;
+ 	u8 dual_raid:1;
++	u8 needs_warm_reset:1;
++
++	u8 revid;
+ 
+ 	enum ipr_cache_state cache_state;
+ 	u16 type; /* CCIN of the card */
+@@ -1184,6 +1189,7 @@ struct ipr_ioa_cfg {
+ 	struct pci_pool *ipr_cmd_pool;
+ 
+ 	struct ipr_cmnd *reset_cmd;
++	int (*reset) (struct ipr_cmnd *);
+ 
+ 	struct ata_host ata_host;
+ 	char ipr_cmd_label[8];
+diff -puN drivers/scsi/ipr.c~ipr_pci_reset6 drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_pci_reset6	2007-05-07 17:04:09.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-05-07 17:04:09.000000000 -0500
+@@ -6647,6 +6647,48 @@ static int ipr_reset_start_bist(struct i
+ }
+ 
+ /**
++ * ipr_reset_slot_reset_done - Clear PCI reset to the adapter
++ * @ipr_cmd:	ipr command struct
++ *
++ * Description: This clears PCI reset to the adapter and delays two seconds.
++ *
++ * Return value:
++ * 	IPR_RC_JOB_RETURN
++ **/
++static int ipr_reset_slot_reset_done(struct ipr_cmnd *ipr_cmd)
++{
++	ENTER;
++	pci_set_pcie_reset_state(ipr_cmd->ioa_cfg->pdev, pcie_deassert_reset);
++	ipr_cmd->job_step = ipr_reset_bist_done;
++	ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
++	LEAVE;
++	return IPR_RC_JOB_RETURN;
++}
++
++/**
++ * ipr_reset_slot_reset - Reset the PCI slot of the adapter.
++ * @ipr_cmd:	ipr command struct
++ *
++ * Description: This asserts PCI reset to the adapter.
++ *
++ * Return value:
++ * 	IPR_RC_JOB_RETURN
++ **/
++static int ipr_reset_slot_reset(struct ipr_cmnd *ipr_cmd)
++{
++	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
++	struct pci_dev *pdev = ioa_cfg->pdev;
++
++	ENTER;
++	pci_block_user_cfg_access(pdev);
++	pci_set_pcie_reset_state(pdev, pcie_warm_reset);
++	ipr_cmd->job_step = ipr_reset_slot_reset_done;
++	ipr_reset_start_timer(ipr_cmd, IPR_PCI_RESET_TIMEOUT);
++	LEAVE;
++	return IPR_RC_JOB_RETURN;
++}
++
++/**
+  * ipr_reset_allowed - Query whether or not IOA can be reset
+  * @ioa_cfg:	ioa config struct
+  *
+@@ -6685,7 +6727,7 @@ static int ipr_reset_wait_to_start_bist(
+ 		ipr_cmd->u.time_left -= IPR_CHECK_FOR_RESET_TIMEOUT;
+ 		ipr_reset_start_timer(ipr_cmd, IPR_CHECK_FOR_RESET_TIMEOUT);
+ 	} else {
+-		ipr_cmd->job_step = ipr_reset_start_bist;
++		ipr_cmd->job_step = ioa_cfg->reset;
+ 		rc = IPR_RC_JOB_CONTINUE;
+ 	}
+ 
+@@ -6718,7 +6760,7 @@ static int ipr_reset_alert(struct ipr_cm
+ 		writel(IPR_UPROCI_RESET_ALERT, ioa_cfg->regs.set_uproc_interrupt_reg);
+ 		ipr_cmd->job_step = ipr_reset_wait_to_start_bist;
+ 	} else {
+-		ipr_cmd->job_step = ipr_reset_start_bist;
++		ipr_cmd->job_step = ioa_cfg->reset;
+ 	}
+ 
+ 	ipr_cmd->u.time_left = IPR_WAIT_FOR_RESET_TIMEOUT;
+@@ -7000,8 +7042,11 @@ static pci_ers_result_t ipr_pci_slot_res
+ 	struct ipr_ioa_cfg *ioa_cfg = pci_get_drvdata(pdev);
+ 
+ 	spin_lock_irqsave(ioa_cfg->host->host_lock, flags);
+-	_ipr_initiate_ioa_reset(ioa_cfg, ipr_reset_restore_cfg_space,
+-	                                 IPR_SHUTDOWN_NONE);
++	if (ioa_cfg->needs_warm_reset)
++		ipr_initiate_ioa_reset(ioa_cfg, IPR_SHUTDOWN_NONE);
++	else
++		_ipr_initiate_ioa_reset(ioa_cfg, ipr_reset_restore_cfg_space,
++					IPR_SHUTDOWN_NONE);
+ 	spin_unlock_irqrestore(ioa_cfg->host->host_lock, flags);
+ 	return PCI_ERS_RESULT_RECOVERED;
+ }
+@@ -7489,6 +7534,14 @@ static int __devinit ipr_probe_ioa(struc
+ 	else
+ 		ioa_cfg->transop_timeout = IPR_OPERATIONAL_TIMEOUT;
+ 
++	rc = pci_read_config_byte(pdev, PCI_REVISION_ID, &ioa_cfg->revid);
++
++	if (rc != PCIBIOS_SUCCESSFUL) {
++		dev_err(&pdev->dev, "Failed to read PCI revision ID\n");
++		rc = -EIO;
++		goto out_scsi_host_put;
++	}
++
+ 	ipr_regs_pci = pci_resource_start(pdev, 0);
+ 
+ 	rc = pci_request_regions(pdev, IPR_NAME);
+@@ -7575,6 +7628,13 @@ static int __devinit ipr_probe_ioa(struc
+ 		goto cleanup_nolog;
+ 	}
+ 
++	if ((dev_id->driver_data & IPR_USE_PCI_WARM_RESET) ||
++	    (dev_id->device == PCI_DEVICE_ID_IBM_OBSIDIAN_E && !ioa_cfg->revid)) {
++		ioa_cfg->needs_warm_reset = 1;
++		ioa_cfg->reset = ipr_reset_slot_reset;
++	} else
++		ioa_cfg->reset = ipr_reset_start_bist;
++
+ 	spin_lock(&ipr_driver_lock);
+ 	list_add_tail(&ioa_cfg->queue, &ipr_ioa_head);
+ 	spin_unlock(&ipr_driver_lock);
+@@ -7841,7 +7901,7 @@ static struct pci_device_id ipr_pci_tabl
+ 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B3, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_OBSIDIAN_E,
+ 	      PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_57B7, 0, 0,
+-	      IPR_USE_LONG_TRANSOP_TIMEOUT },
++	      IPR_USE_LONG_TRANSOP_TIMEOUT | IPR_USE_PCI_WARM_RESET },
+ 	{ PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_SNIPE,
+ 		PCI_VENDOR_ID_IBM, IPR_SUBS_DEV_ID_2780, 0, 0, 0 },
+ 	{ PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_SCAMP,
+_
