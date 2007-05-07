@@ -1,54 +1,26 @@
-From: Doug Chapman <doug.chapman@hp.com>
-Subject: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVD drive
-	connected to mptspi driver
-Date: Mon, 07 May 2007 15:59:46 -0400
-Message-ID: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 04/30] megaraid: fix warnings when CONFIG_PROC_FS=n
+Date: Mon, 7 May 2007 13:45:00 -0700
+Message-ID: <20070507134500.e1f2e477.akpm@linux-foundation.org>
+References: <200704260735.l3Q7Z90W024217@shell0.pdx.osdl.net>
+	<0631C836DBF79F42B5A60C8C8D4E8229A8631D@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel9.hp.com ([156.153.255.214]:41477 "EHLO atlrel9.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966328AbXEGUAH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 May 2007 16:00:07 -0400
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:53265 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S966507AbXEGUps (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 16:45:48 -0400
+In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229A8631D@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: eric.moore@lsi.com, doug.chapman@hp.com, linux-scsi@vger.kernel.org
+To: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, wharms@bfs.de, adobriyan@gmail.com, bunk@stusta.de
 
-Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
+On Mon, 7 May 2007 13:40:54 -0600
+"Patro, Sumant" <Sumant.Patro@lsi.com> wrote:
 
-A recent code cleanup that moved code from mptscsih to mptspi
-inadvertently change the order some code was called.  This caused
-a massive slowdown (of 150x to 300x) on the CD/DVD drive on the
-high-end HP Integrity servers.
+> Ack.
 
-Signed-off-by: Doug Chapman <doug.chapman@hp.com>
-
-
-
-
-diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-index 85f21b5..2eb5741 100644
---- a/drivers/message/fusion/mptspi.c
-+++ b/drivers/message/fusion/mptspi.c
-@@ -726,13 +726,15 @@ static int mptspi_slave_configure(struct scsi_device *sdev)
- 	struct _MPT_SCSI_HOST *hd =
- 		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
- 	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
--	int ret = mptscsih_slave_configure(sdev);
-+	int ret;
-+
-+	mptspi_initTarget(hd, vtarget, sdev);
-+
-+	ret = mptscsih_slave_configure(sdev);
- 
- 	if (ret)
- 		return ret;
- 
--	mptspi_initTarget(hd, vtarget, sdev);
--
- 	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
- 		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
- 		sdev->id, spi_min_period(scsi_target(sdev)),
-
-
+Thanks.  Please consider raising a patch adding yourself to ./MAINTAINERS?
