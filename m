@@ -1,98 +1,32 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Mon, 07 May 2007 20:52:34 +0400
-Message-ID: <463F5952.9010803@vlnb.net>
-References: <463F36AC.3010207@vlnb.net>	<20070507182837E.fujita.tomonori@lab.ntt.co.jp>	<463F455B.3000209@vlnb.net> <20070508003734T.fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 05/30] scsi: remove unnecessary check in
+	drivers/scsi/sg.c
+Date: Mon, 07 May 2007 13:11:35 -0500
+Message-ID: <1178561495.3729.31.camel@mulgrave.il.steeleye.com>
+References: <200704260735.l3Q7ZAGn024220@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:57213 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S934446AbXEGQwj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 12:52:39 -0400
-In-Reply-To: <20070508003734T.fujita.tomonori@lab.ntt.co.jp>
+Received: from hancock.steeleye.com ([71.30.118.248]:42398 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934430AbXEGSMU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 May 2007 14:12:20 -0400
+In-Reply-To: <200704260735.l3Q7ZAGn024220@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, snakebyte@gmx.de, dougg@torque.net
 
-FUJITA Tomonori wrote:
-> From: Vladislav Bolkhovitin <vst@vlnb.net>
-> Subject: Re: [Stgt-devel] Question for pass-through target design
-> Date: Mon, 07 May 2007 19:27:23 +0400
+On Thu, 2007-04-26 at 00:35 -0700, akpm@linux-foundation.org wrote:
+> From: Eric Sesterhenn <snakebyte@gmx.de>
 > 
-> 
->>FUJITA Tomonori wrote:
->>
->>>From: Vladislav Bolkhovitin <vst@vlnb.net>
->>>Subject: Re: [Stgt-devel] Question for pass-through target design
->>>Date: Mon, 07 May 2007 18:24:44 +0400
->>>
->>>
->>>
->>>>FUJITA Tomonori wrote:
->>>>
->>>>
->>>>>>>>It looks like the pass-through target support is currently broken, at
->>>>>>>>least as I've checked for ibmvstgt, but I think it's a general problem.
->>>>>>>>I wanted to check my assumptions and get ideas.
->>>>>>>
->>>>>>>Yeah, unfortunately, it works only with the iSCSI target driver (which
->>>>>>>runs in user space).
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>>>The code isn't allocating any memory to pass along to the sg code to store
->>>>>>>>the result of a read or data for a write.  Currently, dxferp for sg_io_hdr
->>>>>>>>or dout_xferp/din_xferp for sg_io_v4 are assigned to the value of uaddr,
->>>>>>>>which is set to 0 in kern_queue_cmd.  With the pointer set to NULL,
->>>>>>>>the pass-through target isn't going to function.  Even if we had memory
->>>>>>>>allocated, there isn't a means of getting data to be written via sg down
->>>>>>>>this code path.
->>>>>>>>
->>>>>>>>What ideas are there as to how the data will get to user-space so that
->>>>>>>>we can use sg?
->>>>>>>
->>>>>>>For kernel-space drivers, we don't need to go to user-space. We can do
->>>>>>>the pass-through in kernel space. I talked with James about this last
->>>>>>>year and he said that if the code is implemented cleanly, he would
->>>>>>>merges it into mainline.
->>>>>>
->>>>>>We already have a pass-through in the kernel space for
->>>>>>kernel space drivers. It is the scsi_tgt* code.
->>>>>
->>>>>
->>>>>Could you elaborate more?
->>>>>
->>>>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
->>>>>SCSI commands from one lld and send them to another lld instead of
->>>>>sending them to user space.
->>>>
->>>>Although the approach of passing SCSI commands from a target LLD to an
->>>>initiator one without any significant interventions from the target
->>>>software looks to be nice and simple, you should realize how limited,
->>>>unsafe and illegal it is, since it badly violates SCSI specs.
->>>
->>>
->>>I think that 'implemented cleanly' means that one scsi_host is assigned
->>>to only one initiator.
->>
->>Sorry, I don't fully understand you. If you mean you are going to limit 
->>only one remote initiator per-target device, then, well, is it even more 
->>limited (and limiting) or not?
-> 
-> 
-> The target software assigns one scsi_host to only one remote
-> initiator. For FC, NPIV works nicely.
+> coverity spotted this (cid #758).  All callers dereference sfp, so we dont
+> need this check.  In addition to this, we dereference it earlier in the
+> function.
 
-OK, if such limitation is OK for your users, then I'm happy for you.
+Awaiting ACK from dougg
 
-> _______________________________________________
-> Stgt-devel mailing list
-> Stgt-devel@lists.berlios.de
-> https://lists.berlios.de/mailman/listinfo/stgt-devel
-> 
+James
+
 
