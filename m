@@ -1,74 +1,37 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 16/30] drivers/scsi/aic7xxx_old: Convert to generic
-	boolean-values
-Date: Tue, 08 May 2007 10:11:00 -0500
-Message-ID: <1178637060.3737.15.camel@mulgrave.il.steeleye.com>
-References: <200704260735.l3Q7ZIj7024253@shell0.pdx.osdl.net>
-	 <1178567419.3729.44.camel@mulgrave.il.steeleye.com>
-	 <20070507140656.3debfb55.akpm@linux-foundation.org>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [PATCH 2/5] zfcp: Fix deadlock between zfcp ERP and SCSI
+Date: Tue, 8 May 2007 17:32:54 +0200
+Message-ID: <20070508153254.GA20009@schmichrtp>
+References: <200705081116.53021.swen@vnet.ibm.com> <4640907B.3080409@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52896 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933977AbXEHPLG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 11:11:06 -0400
-In-Reply-To: <20070507140656.3debfb55.akpm@linux-foundation.org>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:41831 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968146AbXEHPcy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 11:32:54 -0400
+Content-Disposition: inline
+In-Reply-To: <4640907B.3080409@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, ricknu-0@student.ltu.se
+To: James Smart <James.Smart@Emulex.Com>
+Cc: Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-On Mon, 2007-05-07 at 14:06 -0700, Andrew Morton wrote:
-> On Mon, 07 May 2007 14:50:19 -0500
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> 
-> > On Thu, 2007-04-26 at 00:35 -0700, akpm@linux-foundation.org wrote:
-> > > From: Richard Knutsson <ricknu-0@student.ltu.se>
-> > > 
-> > > Convert:
-> > > FALSE -> false
-> > > TRUE  -> true
-> > 
-> > NAK'd by maintainer.
-> > 
-> 
-> I went back and reviewed the previous discussion.  Maintaner's reasons for
-> NAKing were, and remain wholly specious.
+On Tue, May 08, 2007 at 11:00:11AM -0400, James Smart wrote:
+> Curious why you are calling scsi_scan_target() or
+> scsi_target_block()/scsi_target_unblock() directly. I would have
+> thought the add/remove rport code would have done this for you,
+> and it deals with all the flush conditions, etc.
 
-Well, I agree with them.  There are three primary reasons for this
+fc_remote_port_add issues a scsi_scan_target with SCAN_WILD_CARD. This tries to
+get all LUNs for the target via REPORT LUNS for LUN 0. The current design for
+zfcp is to prevent the wildcard scan from the SCSI layer by not allocating a
+device for LUN 0. When a FCP adapter does not support NPIV, the adapter can
+still be shared among multiple Linux systems. Each Linux system can access
+different LUNs, that are activated manually via sysfs. So, the wildcard scan
+from the FC transport class does nothing and zfcp activates the LUNs it wants
+to use via direct calls to scsi_scan_target. If every adapter would support
+NPIV, zfcp could rely on the scan by the FC transport class, unfortunately,
+this is not the case.
 
-     1. In C logical values are arithmetic types by design.  Trying to
-        backfill C++ ideas of separation of logical and arithmetic types
-        is asking for bugs.
-     2. If people have to use boolean values (which I don't like; I
-        prefer simple assignment and checking), I prefer the upper case
-        values because, effectively, they're simple arithmetical
-        constants.
-     3. it's going to generate a huge amount of churn in all the
-        subsystems and drivers for no appreciable benefit.  Unless
-        someone can actually articulate one?  (Other than "because it's
-        there").
-
-The patch in question basically just downcased the TRUE/FALSE in the
-driver, which makes it less readable (mainly because I really don't like
-the way it uses truth values, but that's a maintainer's prerogative, and
-I recognise the upper case values as warning me to be careful).
-
-> That being said, the patch is moderately wrong (or at least incomplete)
-> because it does things like:
-> 
-> -            unsigned char done = FALSE;
-> +            unsigned char done = false;
-> 
-> whereas it should have done
-> 
-> -            unsigned char done = FALSE;
-> +            bool done = false;
-
-And the value to the driver of this transformation?
-
-James
-
-
+Christof Schmitt
