@@ -1,95 +1,42 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH]: Fix old SCSI adapter crashes with CD-ROM (take 2)
-Date: Tue, 8 May 2007 17:17:10 +0100
-Message-ID: <20070508171710.1ac730cd@the-village.bc.nu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH]: Fix old SCSI adapter crashes with CD-ROM (take 2)
+Date: Tue, 8 May 2007 18:14:44 +0200
+Message-ID: <20070508161444.GA4163@kernel.dk>
+References: <20070508171710.1ac730cd@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:59356 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934347AbXEHQM6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 12:12:58 -0400
+Received: from rgminet01.oracle.com ([148.87.113.118]:32634 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934891AbXEHQRC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 12:17:02 -0400
+Content-Disposition: inline
+In-Reply-To: <20070508171710.1ac730cd@the-village.bc.nu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-The CD-ROM layer doesn't bounce requests for old ISA controllers (and
-nor should it). However they get injected into the SCSI layer via
-sr_ioctl which also doesn't bounce them and SCSI then passes the buffer
-along to a device with unchecked_isa_dma set which either panics or
-truncates the buffer to 24bits.
+On Tue, May 08 2007, Alan Cox wrote:
+> The CD-ROM layer doesn't bounce requests for old ISA controllers (and
+> nor should it). However they get injected into the SCSI layer via
+> sr_ioctl which also doesn't bounce them and SCSI then passes the buffer
+> along to a device with unchecked_isa_dma set which either panics or
+> truncates the buffer to 24bits.
+> 
+> According to Jens the right long term fix is for the CD layer to route
+> the requests differently but in the mean time this has been tested by a
+> victim and verified to sort the problem out. For the other 99.9% of users
+> it's a no-op and doesn't bounce data.
+> 
+> Signed-off-by: Alan Cox <alan@redhat.com>
 
-According to Jens the right long term fix is for the CD layer to route
-the requests differently but in the mean time this has been tested by a
-victim and verified to sort the problem out. For the other 99.9% of users
-it's a no-op and doesn't bounce data.
+Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+Christoph passed me his patch to get rid of ->generic_packet() in the
+cdrom layer, so the work is almost complete. This patch is fine as a
+work-around until that gets merged, though.
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.21-rc6-mm1/drivers/scsi/sr_ioctl.c linux-2.6.21-rc6-mm1/drivers/scsi/sr_ioctl.c
---- linux.vanilla-2.6.21-rc6-mm1/drivers/scsi/sr_ioctl.c	2007-04-12 14:14:45.000000000 +0100
-+++ linux-2.6.21-rc6-mm1/drivers/scsi/sr_ioctl.c	2007-05-08 16:55:01.446661608 +0100
-@@ -187,9 +187,10 @@
- 	struct scsi_sense_hdr sshdr;
- 	int result, err = 0, retries = 0;
- 	struct request_sense *sense = cgc->sense;
--
-+	void *zebedee = cgc->buffer;
-+	
- 	SDev = cd->device;
--
-+	
- 	if (!sense) {
- 		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
- 		if (!sense) {
-@@ -197,7 +198,22 @@
- 			goto out;
- 		}
- 	}
--
-+	
-+	if (cgc->buflen && cd->device->host->unchecked_isa_dma) {
-+		switch(cgc->data_direction) {
-+			case DMA_NONE:
-+				break;
-+			case DMA_FROM_DEVICE:
-+			case DMA_TO_DEVICE:
-+				zebedee = kmalloc(cgc->buflen, GFP_KERNEL|GFP_DMA);
-+				if (zebedee ==NULL) {
-+					err = -ENOMEM;
-+					goto out;
-+				}
-+		}
-+		if (cgc->data_direction == DMA_TO_DEVICE)
-+			memcpy(zebedee, cgc->buffer, cgc->buflen);
-+	}
-       retry:
- 	if (!scsi_block_when_processing_errors(SDev)) {
- 		err = -ENODEV;
-@@ -206,10 +222,15 @@
- 
- 	memset(sense, 0, sizeof(*sense));
- 	result = scsi_execute(SDev, cgc->cmd, cgc->data_direction,
--			      cgc->buffer, cgc->buflen, (char *)sense,
-+			      zebedee, cgc->buflen, (char *)sense,
- 			      cgc->timeout, IOCTL_RETRIES, 0);
- 
- 	scsi_normalize_sense((char *)sense, sizeof(*sense), &sshdr);
-+	
-+	if (zebedee != cgc->buffer) {
-+		if (cgc->data_direction == DMA_FROM_DEVICE)
-+			memcpy(cgc->buffer, zebedee, cgc->buflen);
-+	}
- 
- 	/* Minimal error checking.  Ignore cases we know about, and report the rest. */
- 	if (driver_byte(result) != 0) {
-@@ -266,6 +287,8 @@
- 
- 	/* Wake up a process waiting for device */
-       out:
-+	if (zebedee != cgc->buffer)
-+		kfree(zebedee);	/* Time for bed */
- 	if (!cgc->sense)
- 		kfree(sense);
- 	cgc->stat = err;
+-- 
+Jens Axboe
+
