@@ -1,16 +1,16 @@
 From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH 4/5] zfcp: clear adapter failed flag if an fsf request times out.
-Date: Tue, 8 May 2007 11:18:50 +0200
-Message-ID: <200705081118.51048.swen@vnet.ibm.com>
+Subject: [PATCH 5/5] zfcp: clear boxed flag on unit reopen.
+Date: Tue, 8 May 2007 11:19:57 +0200
+Message-ID: <200705081119.57569.swen@vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.uk.ibm.com ([195.212.29.134]:40712 "EHLO
-	mtagate1.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934567AbXEHJQM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 05:16:12 -0400
+Received: from mtagate6.de.ibm.com ([195.212.29.155]:45843 "EHLO
+	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965819AbXEHJRn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 05:17:43 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,32 +19,26 @@ Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
 From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Must clear adapter failed flag if an fsf request times out. This is
-necessary because on link down situations the failed flags gets set
-but the QDIO queues are still up. Since an adapter reopen will be
-skipped if the failed flag is set an adapter_reopen that is issued
-on fsf request timeout has no effect if the local link is down.
-Might lead to locked up system if the SCSI stack is waiting for abort
-completion.
+The boxed flag for units was never cleared. This doesn't hurt, but on
+ACL updates the error recovery could reopen more units than needed.
 
 Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_erp.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_fsf.c |    1 +
+ 1 files changed, 1 insertion(+)
 
---- linux-2.6.orig/drivers/s390/scsi/zfcp_erp.c	2007-05-07 16:26:34.000000000 +0200
-+++ linux-2.6/drivers/s390/scsi/zfcp_erp.c	2007-05-07 16:33:54.000000000 +0200
-@@ -179,7 +179,7 @@
- static void zfcp_fsf_request_timeout_handler(unsigned long data)
- {
- 	struct zfcp_adapter *adapter = (struct zfcp_adapter *) data;
--	zfcp_erp_adapter_reopen(adapter, 0);
-+	zfcp_erp_adapter_reopen(adapter, ZFCP_STATUS_COMMON_ERP_FAILED);
- }
+--- linux-2.6.orig/drivers/s390/scsi/zfcp_fsf.c	2007-05-07 16:26:34.000000000 +0200
++++ linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2007-05-07 16:34:16.000000000 +0200
+@@ -3043,6 +3043,7 @@
+ 	queue_designator = &header->fsf_status_qual.fsf_queue_designator;
 
- void zfcp_fsf_start_timer(struct zfcp_fsf_req *fsf_req, unsigned long timeout)
+ 	atomic_clear_mask(ZFCP_STATUS_COMMON_ACCESS_DENIED |
++			  ZFCP_STATUS_COMMON_ACCESS_BOXED |
+ 			  ZFCP_STATUS_UNIT_SHARED |
+ 			  ZFCP_STATUS_UNIT_READONLY,
+ 			  &unit->status);
 
 
 -------------------------------------------------------
