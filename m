@@ -1,261 +1,273 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: bidi bsg is non-blocking
-Date: Tue, 08 May 2007 16:31:38 +0900
-Message-ID: <20070508163138G.fujita.tomonori@lab.ntt.co.jp>
-References: <OF8468A26D.D2DDFDA3-ON862572D4.004E5BE6-862572D4.005458FE@seagate.com>
-	<20070508162326Q.fujita.tomonori@lab.ntt.co.jp>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH 0/5] zfcp: print S_ID and D_ID with 3 bytes
+Date: Tue, 8 May 2007 11:14:41 +0200
+Message-ID: <200705081114.41970.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: Text/Plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:53255 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934448AbXEHHfW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 03:35:22 -0400
-In-Reply-To: <20070508162326Q.fujita.tomonori@lab.ntt.co.jp>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:43108 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965744AbXEHJMN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 05:12:13 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Daniel.E.Messinger@seagate.com
-Cc: jens.axboe@oracle.com, tomof@acm.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: bidi bsg is non-blocking
-Date: Tue, 08 May 2007 16:23:26 +0900
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-> From: Daniel.E.Messinger@seagate.com
-> Subject: bidi bsg is non-blocking
-> Date: Mon, 7 May 2007 10:21:18 -0500
-> 
-> > I'm attempting to use the bidi variant of bsg to talk to an OSD target
-> > device. I've run into an undesirable situation.
-> > 
-> > My application has a free-running receive loop (doing a read() on the bsg
-> > device) waiting for responses to commands sent to bsg by another thread.
-> > The problem is that the receive thread is getting ENODATA from the read()
-> > when there are no commands pending.  I have NOT set non-blocking.
-> > 
-> > Note that the old sg driver was quite willing to block until there was a
-> > response available. I find this scenario greatly preferable.
-> > 
-> > Could bsg be fixed so that read() blocks when there is nothing to return?
-> 
-> I think that this is a bug.
-> 
-> This patch is against the bsg branch in the Jens' git tree.
-> 
-> I guess that it would be nice to do more cleanups on these parts.
-> 
-> 
-> From 52a9fcf0af72f212ddd93918b7f9f0f0e706c215 Mon Sep 17 00:00:00 2001
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Date: Tue, 8 May 2007 15:57:43 +0900
-> Subject: [PATCH] fix read ENODATA bug
-> 
-> This patch fixes a bug that read() gives ENODATA even with a blocking
-> file descriptor when there are no commands pending.
-> 
-> This also includes some cleanups.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+S_ID and D_ID are defined in the FCP spec as 3 byte fields.
+Change the output in zfcp print statements accordingly to print
+them with only 3 bytes.
 
-Oops, I sent a wrong patch. This is a right one.
-
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 ---
->From 115a65feaadae0c100b5366670eb729e9e6fd243 Mon Sep 17 00:00:00 2001
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date: Tue, 8 May 2007 16:28:36 +0900
-Subject: [PATCH] fix read ENODATA bug
 
-This patch fixes a bug that read() gives ENODATA even with a blocking
-file descriptor when there are no commands pending.
+ drivers/s390/scsi/zfcp_aux.c |    6 +++---
+ drivers/s390/scsi/zfcp_erp.c |   20 ++++++++++----------
+ drivers/s390/scsi/zfcp_fsf.c |   30 +++++++++++++++---------------
+ 3 files changed, 28 insertions(+), 28 deletions(-)
 
-This also includes some cleanups.
+--- linux-2.6.orig/drivers/s390/scsi/zfcp_aux.c	2007-04-26 14:53:13.000000000 +0200
++++ linux-2.6/drivers/s390/scsi/zfcp_aux.c	2007-05-07 13:29:48.000000000 +0200
+@@ -1497,7 +1497,7 @@
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c |   89 +++++++++++++++++-----------------------------------------
- 1 files changed, 26 insertions(+), 63 deletions(-)
+ 	if (!port || (port->wwpn != (*(wwn_t *) &els_plogi->serv_param.wwpn))) {
+ 		ZFCP_LOG_DEBUG("ignored incoming PLOGI for nonexisting port "
+-			       "with d_id 0x%08x on adapter %s\n",
++			       "with d_id 0x%06x on adapter %s\n",
+ 			       status_buffer->d_id,
+ 			       zfcp_get_busid_by_adapter(adapter));
+ 	} else {
+@@ -1522,7 +1522,7 @@
 
-diff --git a/block/bsg.c b/block/bsg.c
-index a333c93..a5a71fc 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -115,9 +115,9 @@ static void bsg_free_command(struct bsg_
- 	wake_up(&bd->wq_free);
- }
- 
--static struct bsg_command *__bsg_alloc_command(struct bsg_device *bd)
-+static struct bsg_command *bsg_alloc_command(struct bsg_device *bd)
- {
--	struct bsg_command *bc = NULL;
-+	struct bsg_command *bc = ERR_PTR(-EINVAL);
- 
- 	spin_lock_irq(&bd->lock);
- 
-@@ -131,6 +131,7 @@ static struct bsg_command *__bsg_alloc_c
- 	if (unlikely(!bc)) {
- 		spin_lock_irq(&bd->lock);
- 		bd->queued_cmds--;
-+		bc = ERR_PTR(-ENOMEM);
- 		goto out;
+ 	if (!port || (port->wwpn != els_logo->nport_wwpn)) {
+ 		ZFCP_LOG_DEBUG("ignored incoming LOGO for nonexisting port "
+-			       "with d_id 0x%08x on adapter %s\n",
++			       "with d_id 0x%06x on adapter %s\n",
+ 			       status_buffer->d_id,
+ 			       zfcp_get_busid_by_adapter(adapter));
+ 	} else {
+@@ -1704,7 +1704,7 @@
+ 	/* looks like a valid d_id */
+         port->d_id = ct_iu_resp->d_id & ZFCP_DID_MASK;
+ 	atomic_set_mask(ZFCP_STATUS_PORT_DID_DID, &port->status);
+-	ZFCP_LOG_DEBUG("adapter %s:  wwpn=0x%016Lx ---> d_id=0x%08x\n",
++	ZFCP_LOG_DEBUG("adapter %s:  wwpn=0x%016Lx ---> d_id=0x%06x\n",
+ 		       zfcp_get_busid_by_port(port), port->wwpn, port->d_id);
+ 	goto out;
+
+--- linux-2.6.orig/drivers/s390/scsi/zfcp_erp.c	2007-05-07 12:37:01.000000000 +0200
++++ linux-2.6/drivers/s390/scsi/zfcp_erp.c	2007-05-07 13:29:48.000000000 +0200
+@@ -342,9 +342,9 @@
+ 	adisc->wwpn = fc_host_port_name(adapter->scsi_host);
+ 	adisc->wwnn = fc_host_node_name(adapter->scsi_host);
+ 	adisc->nport_id = fc_host_port_id(adapter->scsi_host);
+-	ZFCP_LOG_INFO("ADISC request from s_id 0x%08x to d_id 0x%08x "
++	ZFCP_LOG_INFO("ADISC request from s_id 0x%06x to d_id 0x%06x "
+ 		      "(wwpn=0x%016Lx, wwnn=0x%016Lx, "
+-		      "hard_nport_id=0x%08x, nport_id=0x%08x)\n",
++		      "hard_nport_id=0x%06x, nport_id=0x%06x)\n",
+ 		      adisc->nport_id, send_els->d_id, (wwn_t) adisc->wwpn,
+ 		      (wwn_t) adisc->wwnn, adisc->hard_nport_id,
+ 		      adisc->nport_id);
+@@ -352,7 +352,7 @@
+ 	retval = zfcp_fsf_send_els(send_els);
+ 	if (retval != 0) {
+ 		ZFCP_LOG_NORMAL("error: initiation of Send ELS failed for port "
+-				"0x%08x on adapter %s\n", send_els->d_id,
++				"0x%06x on adapter %s\n", send_els->d_id,
+ 				zfcp_get_busid_by_adapter(adapter));
+ 		goto freemem;
  	}
- 
-@@ -198,30 +199,6 @@ unlock:
- 	return ret;
- }
- 
--/*
-- * get a new free command, blocking if needed and specified
-- */
--static struct bsg_command *bsg_get_command(struct bsg_device *bd)
--{
--	struct bsg_command *bc;
--	int ret;
--
--	do {
--		bc = __bsg_alloc_command(bd);
--		if (bc)
--			break;
--
--		ret = bsg_io_schedule(bd, TASK_INTERRUPTIBLE);
--		if (ret) {
--			bc = ERR_PTR(ret);
--			break;
--		}
--
--	} while (1);
--
--	return bc;
--}
--
- static int blk_fill_sgv4_hdr_rq(request_queue_t *q, struct request *rq,
- 				struct sg_io_v4 *hdr, int has_write_perm)
- {
-@@ -397,7 +374,7 @@ static inline struct bsg_command *bsg_ne
- /*
-  * Get a finished command from the done list
-  */
--static struct bsg_command *__bsg_get_done_cmd(struct bsg_device *bd, int state)
-+static struct bsg_command *bsg_get_done_cmd(struct bsg_device *bd)
- {
- 	struct bsg_command *bc;
- 	int ret;
-@@ -407,11 +384,17 @@ static struct bsg_command *__bsg_get_don
- 		if (bc)
- 			break;
- 
--		ret = bsg_io_schedule(bd, state);
--		if (ret) {
--			bc = ERR_PTR(ret);
-+		if (!test_bit(BSG_F_BLOCK, &bd->flags)) {
-+			bc = ERR_PTR(-EAGAIN);
- 			break;
- 		}
-+
-+		ret = wait_event_interruptible(bd->wq_done, bd->done_cmds);
-+		if (ret) {
-+			bc = ERR_PTR(-ERESTARTSYS);
-+			break;
-+		} else
-+			continue;
- 	} while (1);
- 
- 	dprintk("%s: returning done %p\n", bd->name, bc);
-@@ -419,18 +402,6 @@ static struct bsg_command *__bsg_get_don
- 	return bc;
- }
- 
--static struct bsg_command *
--bsg_get_done_cmd(struct bsg_device *bd, const struct iovec *iov)
--{
--	return __bsg_get_done_cmd(bd, TASK_INTERRUPTIBLE);
--}
--
--static struct bsg_command *
--bsg_get_done_cmd_nosignals(struct bsg_device *bd)
--{
--	return __bsg_get_done_cmd(bd, TASK_UNINTERRUPTIBLE);
--}
--
- static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 				    struct bio *bio)
- {
-@@ -492,23 +463,20 @@ static int bsg_complete_all_commands(str
- 	} while (ret != -ENODATA);
- 
- 	/*
--	 * discard done commands
-+	 * discard done commands.
- 	 */
- 	ret = 0;
- 	do {
--		bc = bsg_get_done_cmd_nosignals(bd);
--
--		/*
--		 * we _must_ complete before restarting, because
--		 * bsg_release can't handle this failing.
--		 */
--		if (PTR_ERR(bc) == -ERESTARTSYS)
--			continue;
--		if (IS_ERR(bc)) {
--			ret = PTR_ERR(bc);
-+		spin_lock_irq(&bd->lock);
-+		if (!bd->queued_cmds) {
-+			spin_unlock_irq(&bd->lock);
- 			break;
- 		}
- 
-+		bc = bsg_get_done_cmd(bd);
-+		if (IS_ERR(bc))
-+			break;
-+
- 		tret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio);
- 		if (!ret)
- 			ret = tret;
-@@ -519,11 +487,9 @@ static int bsg_complete_all_commands(str
- 	return ret;
- }
- 
--typedef struct bsg_command *(*bsg_command_callback)(struct bsg_device *bd, const struct iovec *iov);
--
- static ssize_t
--__bsg_read(char __user *buf, size_t count, bsg_command_callback get_bc,
--	   struct bsg_device *bd, const struct iovec *iov, ssize_t *bytes_read)
-+__bsg_read(char __user *buf, size_t count, struct bsg_device *bd,
-+	   const struct iovec *iov, ssize_t *bytes_read)
- {
- 	struct bsg_command *bc;
- 	int nr_commands, ret;
-@@ -534,7 +500,7 @@ __bsg_read(char __user *buf, size_t coun
- 	ret = 0;
- 	nr_commands = count / sizeof(struct sg_io_v4);
- 	while (nr_commands) {
--		bc = get_bc(bd, iov);
-+		bc = bsg_get_done_cmd(bd);
- 		if (IS_ERR(bc)) {
- 			ret = PTR_ERR(bc);
- 			break;
-@@ -598,8 +564,7 @@ bsg_read(struct file *file, char __user
- 
- 	bsg_set_block(bd, file);
- 	bytes_read = 0;
--	ret = __bsg_read(buf, count, bsg_get_done_cmd,
--			bd, NULL, &bytes_read);
-+	ret = __bsg_read(buf, count, bd, NULL, &bytes_read);
- 	*ppos = bytes_read;
- 
- 	if (!bytes_read || (bytes_read && err_block_err(ret)))
-@@ -625,9 +590,7 @@ static ssize_t __bsg_write(struct bsg_de
- 	while (nr_commands) {
- 		request_queue_t *q = bd->queue;
- 
--		bc = bsg_get_command(bd);
--		if (!bc)
--			break;
-+		bc = bsg_alloc_command(bd);
- 		if (IS_ERR(bc)) {
- 			ret = PTR_ERR(bc);
- 			bc = NULL;
--- 
-1.4.3.2
+@@ -398,7 +398,7 @@
+ 	if (send_els->status != 0) {
+ 		ZFCP_LOG_NORMAL("ELS request rejected/timed out, "
+ 				"force physical port reopen "
+-				"(adapter %s, port d_id=0x%08x)\n",
++				"(adapter %s, port d_id=0x%06x)\n",
+ 				zfcp_get_busid_by_adapter(adapter), d_id);
+ 		debug_text_event(adapter->erp_dbf, 3, "forcreop");
+ 		if (zfcp_erp_port_forced_reopen(port, 0))
+@@ -411,9 +411,9 @@
 
+ 	adisc = zfcp_sg_to_address(send_els->resp);
+
+-	ZFCP_LOG_INFO("ADISC response from d_id 0x%08x to s_id "
+-		      "0x%08x (wwpn=0x%016Lx, wwnn=0x%016Lx, "
+-		      "hard_nport_id=0x%08x, nport_id=0x%08x)\n",
++	ZFCP_LOG_INFO("ADISC response from d_id 0x%06x to s_id "
++		      "0x%06x (wwpn=0x%016Lx, wwnn=0x%016Lx, "
++		      "hard_nport_id=0x%06x, nport_id=0x%06x)\n",
+ 		      d_id, fc_host_port_id(adapter->scsi_host),
+ 		      (wwn_t) adisc->wwpn, (wwn_t) adisc->wwnn,
+ 		      adisc->hard_nport_id, adisc->nport_id);
+@@ -1377,7 +1377,7 @@
+
+ 	if (atomic_test_mask(ZFCP_STATUS_PORT_WKA, &port->status))
+ 		ZFCP_LOG_NORMAL("port erp failed (adapter %s, "
+-				"port d_id=0x%08x)\n",
++				"port d_id=0x%06x)\n",
+ 				zfcp_get_busid_by_port(port), port->d_id);
+ 	else
+ 		ZFCP_LOG_NORMAL("port erp failed (adapter %s, wwpn=0x%016Lx)\n",
+@@ -2401,7 +2401,7 @@
+ 				retval = ZFCP_ERP_FAILED;
+ 			}
+ 		} else {
+-			ZFCP_LOG_DEBUG("port 0x%016Lx has d_id=0x%08x -> "
++			ZFCP_LOG_DEBUG("port 0x%016Lx has d_id=0x%06x -> "
+ 				       "trying open\n", port->wwpn, port->d_id);
+ 			retval = zfcp_erp_port_strategy_open_port(erp_action);
+ 		}
+@@ -2441,7 +2441,7 @@
+ 	case ZFCP_ERP_STEP_UNINITIALIZED:
+ 	case ZFCP_ERP_STEP_PHYS_PORT_CLOSING:
+ 	case ZFCP_ERP_STEP_PORT_CLOSING:
+-		ZFCP_LOG_DEBUG("port 0x%016Lx has d_id=0x%08x -> trying open\n",
++		ZFCP_LOG_DEBUG("port 0x%016Lx has d_id=0x%06x -> trying open\n",
+ 			       port->wwpn, port->d_id);
+ 		retval = zfcp_erp_port_strategy_open_port(erp_action);
+ 		break;
+--- linux-2.6.orig/drivers/s390/scsi/zfcp_fsf.c	2007-05-07 12:37:01.000000000 +0200
++++ linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2007-05-07 13:29:48.000000000 +0200
+@@ -828,7 +828,7 @@
+
+ 	if (!port || (port->d_id != (status_buffer->d_id & ZFCP_DID_MASK))) {
+ 		ZFCP_LOG_NORMAL("bug: Reopen port indication received for"
+-				"nonexisting port with d_id 0x%08x on "
++				"nonexisting port with d_id 0x%06x on "
+ 				"adapter %s. Ignored.\n",
+ 				status_buffer->d_id & ZFCP_DID_MASK,
+ 				zfcp_get_busid_by_adapter(adapter));
+@@ -853,7 +853,7 @@
+ 				&status_buffer->status_subtype, sizeof (u32));
+ 		ZFCP_LOG_NORMAL("bug: Undefined status subtype received "
+ 				"for a reopen indication on port with "
+-				"d_id 0x%08x on the adapter %s. "
++				"d_id 0x%06x on the adapter %s. "
+ 				"Ignored. (debug info 0x%x)\n",
+ 				status_buffer->d_id,
+ 				zfcp_get_busid_by_adapter(adapter),
+@@ -1156,7 +1156,7 @@
+ 	}
+
+ 	ZFCP_LOG_DEBUG("Abort FCP Command request initiated "
+-		       "(adapter%s, port d_id=0x%08x, "
++		       "(adapter%s, port d_id=0x%06x, "
+ 		       "unit x%016Lx, old_req_id=0x%lx)\n",
+ 		       zfcp_get_busid_by_adapter(adapter),
+ 		       unit->port->d_id,
+@@ -1554,7 +1554,7 @@
+
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_NORMAL("access denied, cannot send generic service "
+-				"command (adapter %s, port d_id=0x%08x)\n",
++				"command (adapter %s, port d_id=0x%06x)\n",
+ 				zfcp_get_busid_by_port(port), port->d_id);
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+@@ -1576,7 +1576,7 @@
+
+         case FSF_GENERIC_COMMAND_REJECTED:
+ 		ZFCP_LOG_INFO("generic service command rejected "
+-			      "(adapter %s, port d_id=0x%08x)\n",
++			      "(adapter %s, port d_id=0x%06x)\n",
+ 			      zfcp_get_busid_by_port(port), port->d_id);
+ 		ZFCP_LOG_INFO("status qualifier:\n");
+ 		ZFCP_HEX_DUMP(ZFCP_LOG_LEVEL_INFO,
+@@ -1602,7 +1602,7 @@
+
+         case FSF_PORT_BOXED:
+ 		ZFCP_LOG_INFO("port needs to be reopened "
+-			      "(adapter %s, port d_id=0x%08x)\n",
++			      "(adapter %s, port d_id=0x%06x)\n",
+ 			      zfcp_get_busid_by_port(port), port->d_id);
+ 		debug_text_event(adapter->erp_dbf, 2, "fsf_s_pboxed");
+ 		zfcp_erp_port_boxed(port);
+@@ -1683,7 +1683,7 @@
+ 				  NULL, &lock_flags, &fsf_req);
+ 	if (ret < 0) {
+                 ZFCP_LOG_INFO("error: creation of ELS request failed "
+-			      "(adapter %s, port d_id: 0x%08x)\n",
++			      "(adapter %s, port d_id: 0x%06x)\n",
+                               zfcp_get_busid_by_adapter(adapter), d_id);
+                 goto failed_req;
+ 	}
+@@ -1708,7 +1708,7 @@
+                                                 ZFCP_MAX_SBALS_PER_ELS_REQ);
+                 if (bytes <= 0) {
+                         ZFCP_LOG_INFO("error: creation of ELS request failed "
+-				      "(adapter %s, port d_id: 0x%08x)\n",
++				      "(adapter %s, port d_id: 0x%06x)\n",
+ 				      zfcp_get_busid_by_adapter(adapter), d_id);
+                         if (bytes == 0) {
+                                 ret = -ENOMEM;
+@@ -1725,7 +1725,7 @@
+                                                 ZFCP_MAX_SBALS_PER_ELS_REQ);
+                 if (bytes <= 0) {
+                         ZFCP_LOG_INFO("error: creation of ELS request failed "
+-				      "(adapter %s, port d_id: 0x%08x)\n",
++				      "(adapter %s, port d_id: 0x%06x)\n",
+ 				      zfcp_get_busid_by_adapter(adapter), d_id);
+                         if (bytes == 0) {
+                                 ret = -ENOMEM;
+@@ -1739,7 +1739,7 @@
+                 /* reject request */
+ 		ZFCP_LOG_INFO("error: microcode does not support chained SBALs"
+                               ", ELS request too big (adapter %s, "
+-			      "port d_id: 0x%08x)\n",
++			      "port d_id: 0x%06x)\n",
+ 			      zfcp_get_busid_by_adapter(adapter), d_id);
+                 ret = -EOPNOTSUPP;
+                 goto failed_send;
+@@ -1760,13 +1760,13 @@
+ 	ret = zfcp_fsf_req_send(fsf_req);
+ 	if (ret) {
+ 		ZFCP_LOG_DEBUG("error: initiation of ELS request failed "
+-			       "(adapter %s, port d_id: 0x%08x)\n",
++			       "(adapter %s, port d_id: 0x%06x)\n",
+ 			       zfcp_get_busid_by_adapter(adapter), d_id);
+ 		goto failed_send;
+ 	}
+
+ 	ZFCP_LOG_DEBUG("ELS request initiated (adapter %s, port d_id: "
+-		       "0x%08x)\n", zfcp_get_busid_by_adapter(adapter), d_id);
++		       "0x%06x)\n", zfcp_get_busid_by_adapter(adapter), d_id);
+ 	goto out;
+
+  failed_send:
+@@ -1859,7 +1859,7 @@
+ 	case FSF_ELS_COMMAND_REJECTED:
+ 		ZFCP_LOG_INFO("ELS has been rejected because command filter "
+ 			      "prohibited sending "
+-			      "(adapter: %s, port d_id: 0x%08x)\n",
++			      "(adapter: %s, port d_id: 0x%06x)\n",
+ 			      zfcp_get_busid_by_adapter(adapter), d_id);
+
+ 		break;
+@@ -1907,7 +1907,7 @@
+
+ 	case FSF_ACCESS_DENIED:
+ 		ZFCP_LOG_NORMAL("access denied, cannot send ELS command "
+-				"(adapter %s, port d_id=0x%08x)\n",
++				"(adapter %s, port d_id=0x%06x)\n",
+ 				zfcp_get_busid_by_adapter(adapter), d_id);
+ 		for (counter = 0; counter < 2; counter++) {
+ 			subtable = header->fsf_status_qual.halfword[counter * 2];
+@@ -2070,7 +2070,7 @@
+ 	ZFCP_LOG_NORMAL("The adapter %s reported the following characteristics:\n"
+ 			"WWNN 0x%016Lx, "
+ 			"WWPN 0x%016Lx, "
+-			"S_ID 0x%08x,\n"
++			"S_ID 0x%06x,\n"
+ 			"adapter version 0x%x, "
+ 			"LIC version 0x%x, "
+ 			"FC link speed %d Gb/s\n",
+
+
+-------------------------------------------------------
