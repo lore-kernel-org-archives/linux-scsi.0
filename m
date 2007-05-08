@@ -1,37 +1,34 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: bidi bsg is non-blocking
-Date: Tue, 08 May 2007 22:30:59 +0900
-Message-ID: <200705081330.l48DUxOp006228@mbox.iij4u.or.jp>
-References: <20070508122134.GI4163@kernel.dk>
-	<20070508215620M.fujita.tomonori@lab.ntt.co.jp>
-	<20070508130032.GJ4163@kernel.dk>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 0/5] zfcp: print S_ID and D_ID with 3 bytes
+Date: Tue, 08 May 2007 09:26:05 -0500
+Message-ID: <1178634365.3737.6.camel@mulgrave.il.steeleye.com>
+References: <200705081114.41970.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:48387 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934134AbXEHNbZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 May 2007 09:31:25 -0400
-In-Reply-To: <20070508130032.GJ4163@kernel.dk>
+Received: from hancock.steeleye.com ([71.30.118.248]:52469 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S967567AbXEHO0m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 10:26:42 -0400
+In-Reply-To: <200705081114.41970.swen@vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, Daniel.E.Messinger@seagate.com, tomof@acm.org, linux-scsi@vger.kernel.org
+To: Swen Schillig <swen@vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: bidi bsg is non-blocking
-Date: Tue, 8 May 2007 15:00:32 +0200
-
-> On Tue, May 08 2007, FUJITA Tomonori wrote:
-> > BTW, any comments on the bidi patch for the block layer?
+On Tue, 2007-05-08 at 11:14 +0200, Swen Schillig wrote:
+> From: Christof Schmitt <christof.schmitt@de.ibm.com>
 > 
-> Yeah it looks much better. I agree with your notion that bidi should be
-> block layer agnostic at least for now (until a general use comes up),
-> it's just a way to transport these commands. And I do still prefer
-> ->next_rq as the pointer name for partly those reasons.
+> S_ID and D_ID are defined in the FCP spec as 3 byte fields.
+> Change the output in zfcp print statements accordingly to print
+> them with only 3 bytes.
 
-Thanks for the comments. Seems that the block layer part is done. And
-my patch uses ->next_rq pointer name:
+For future reference, if you send out a [PATCH 0/N] it typically
+contains a description of the patches that are coming, not a patch
+itself ... Having six patches numbered 0 to 5 out of 5 is somewhat
+confusing ...
 
-http://marc.info/?l=linux-scsi&m=117835587615642&w=2
+James
+
+
