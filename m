@@ -1,49 +1,69 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: bidi bsg is non-blocking
-Date: Tue, 08 May 2007 16:23:26 +0900
-Message-ID: <20070508162326Q.fujita.tomonori@lab.ntt.co.jp>
+Date: Tue, 08 May 2007 16:31:38 +0900
+Message-ID: <20070508163138G.fujita.tomonori@lab.ntt.co.jp>
 References: <OF8468A26D.D2DDFDA3-ON862572D4.004E5BE6-862572D4.005458FE@seagate.com>
+	<20070508162326Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:46955 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934402AbXEHH1L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 03:27:11 -0400
-In-Reply-To: <OF8468A26D.D2DDFDA3-ON862572D4.004E5BE6-862572D4.005458FE@seagate.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:53255 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934448AbXEHHfW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 03:35:22 -0400
+In-Reply-To: <20070508162326Q.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Daniel.E.Messinger@seagate.com
 Cc: jens.axboe@oracle.com, tomof@acm.org, linux-scsi@vger.kernel.org
 
-From: Daniel.E.Messinger@seagate.com
-Subject: bidi bsg is non-blocking
-Date: Mon, 7 May 2007 10:21:18 -0500
-
-> I'm attempting to use the bidi variant of bsg to talk to an OSD target
-> device. I've run into an undesirable situation.
-> 
-> My application has a free-running receive loop (doing a read() on the bsg
-> device) waiting for responses to commands sent to bsg by another thread.
-> The problem is that the receive thread is getting ENODATA from the read()
-> when there are no commands pending.  I have NOT set non-blocking.
-> 
-> Note that the old sg driver was quite willing to block until there was a
-> response available. I find this scenario greatly preferable.
-> 
-> Could bsg be fixed so that read() blocks when there is nothing to return?
-
-I think that this is a bug.
-
-This patch is against the bsg branch in the Jens' git tree.
-
-I guess that it would be nice to do more cleanups on these parts.
-
-
->From 52a9fcf0af72f212ddd93918b7f9f0f0e706c215 Mon Sep 17 00:00:00 2001
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date: Tue, 8 May 2007 15:57:43 +0900
+Subject: Re: bidi bsg is non-blocking
+Date: Tue, 08 May 2007 16:23:26 +0900
+
+> From: Daniel.E.Messinger@seagate.com
+> Subject: bidi bsg is non-blocking
+> Date: Mon, 7 May 2007 10:21:18 -0500
+> 
+> > I'm attempting to use the bidi variant of bsg to talk to an OSD target
+> > device. I've run into an undesirable situation.
+> > 
+> > My application has a free-running receive loop (doing a read() on the bsg
+> > device) waiting for responses to commands sent to bsg by another thread.
+> > The problem is that the receive thread is getting ENODATA from the read()
+> > when there are no commands pending.  I have NOT set non-blocking.
+> > 
+> > Note that the old sg driver was quite willing to block until there was a
+> > response available. I find this scenario greatly preferable.
+> > 
+> > Could bsg be fixed so that read() blocks when there is nothing to return?
+> 
+> I think that this is a bug.
+> 
+> This patch is against the bsg branch in the Jens' git tree.
+> 
+> I guess that it would be nice to do more cleanups on these parts.
+> 
+> 
+> From 52a9fcf0af72f212ddd93918b7f9f0f0e706c215 Mon Sep 17 00:00:00 2001
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Tue, 8 May 2007 15:57:43 +0900
+> Subject: [PATCH] fix read ENODATA bug
+> 
+> This patch fixes a bug that read() gives ENODATA even with a blocking
+> file descriptor when there are no commands pending.
+> 
+> This also includes some cleanups.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+
+Oops, I sent a wrong patch. This is a right one.
+
+---
+>From 115a65feaadae0c100b5366670eb729e9e6fd243 Mon Sep 17 00:00:00 2001
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Date: Tue, 8 May 2007 16:28:36 +0900
 Subject: [PATCH] fix read ENODATA bug
 
 This patch fixes a bug that read() gives ENODATA even with a blocking
@@ -53,11 +73,11 @@ This also includes some cleanups.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- block/bsg.c |   85 ++++++++++++++--------------------------------------------
- 1 files changed, 21 insertions(+), 64 deletions(-)
+ block/bsg.c |   89 +++++++++++++++++-----------------------------------------
+ 1 files changed, 26 insertions(+), 63 deletions(-)
 
 diff --git a/block/bsg.c b/block/bsg.c
-index a333c93..7fcc77a 100644
+index a333c93..a5a71fc 100644
 --- a/block/bsg.c
 +++ b/block/bsg.c
 @@ -115,9 +115,9 @@ static void bsg_free_command(struct bsg_
@@ -160,7 +180,7 @@ index a333c93..7fcc77a 100644
  static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
  				    struct bio *bio)
  {
-@@ -492,22 +463,13 @@ static int bsg_complete_all_commands(str
+@@ -492,23 +463,20 @@ static int bsg_complete_all_commands(str
  	} while (ret != -ENODATA);
  
  	/*
@@ -179,14 +199,20 @@ index a333c93..7fcc77a 100644
 -			continue;
 -		if (IS_ERR(bc)) {
 -			ret = PTR_ERR(bc);
++		spin_lock_irq(&bd->lock);
++		if (!bd->queued_cmds) {
++			spin_unlock_irq(&bd->lock);
+ 			break;
+ 		}
+ 
 +		bc = bsg_get_done_cmd(bd);
 +		if (IS_ERR(bc))
- 			break;
--		}
- 
++			break;
++
  		tret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio);
  		if (!ret)
-@@ -519,11 +481,9 @@ static int bsg_complete_all_commands(str
+ 			ret = tret;
+@@ -519,11 +487,9 @@ static int bsg_complete_all_commands(str
  	return ret;
  }
  
@@ -200,7 +226,7 @@ index a333c93..7fcc77a 100644
  {
  	struct bsg_command *bc;
  	int nr_commands, ret;
-@@ -534,7 +494,7 @@ __bsg_read(char __user *buf, size_t coun
+@@ -534,7 +500,7 @@ __bsg_read(char __user *buf, size_t coun
  	ret = 0;
  	nr_commands = count / sizeof(struct sg_io_v4);
  	while (nr_commands) {
@@ -209,7 +235,7 @@ index a333c93..7fcc77a 100644
  		if (IS_ERR(bc)) {
  			ret = PTR_ERR(bc);
  			break;
-@@ -598,8 +558,7 @@ bsg_read(struct file *file, char __user
+@@ -598,8 +564,7 @@ bsg_read(struct file *file, char __user
  
  	bsg_set_block(bd, file);
  	bytes_read = 0;
@@ -219,7 +245,7 @@ index a333c93..7fcc77a 100644
  	*ppos = bytes_read;
  
  	if (!bytes_read || (bytes_read && err_block_err(ret)))
-@@ -625,9 +584,7 @@ static ssize_t __bsg_write(struct bsg_de
+@@ -625,9 +590,7 @@ static ssize_t __bsg_write(struct bsg_de
  	while (nr_commands) {
  		request_queue_t *q = bd->queue;
  
