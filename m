@@ -1,30 +1,28 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [patch 16/30] drivers/scsi/aic7xxx_old: Convert to generic
-	boolean-values
-Date: Tue, 08 May 2007 15:41:47 -0500
-Message-ID: <1178656907.3737.93.camel@mulgrave.il.steeleye.com>
-References: <200704260735.l3Q7ZIj7024253@shell0.pdx.osdl.net>
-	 <1178567419.3729.44.camel@mulgrave.il.steeleye.com>
-	 <20070507140656.3debfb55.akpm@linux-foundation.org>
-	 <1178637060.3737.15.camel@mulgrave.il.steeleye.com>
-	 <20070508121411.d187a648.akpm@linux-foundation.org>
-	 <1178652273.3737.67.camel@mulgrave.il.steeleye.com>
-	 <20070508131152.0003b770.akpm@linux-foundation.org>
+ boolean-values
+Date: Tue, 08 May 2007 14:44:45 -0700 (PDT)
+Message-ID: <20070508.144445.88474913.davem@davemloft.net>
+References: <20070508121411.d187a648.akpm@linux-foundation.org>
+	<1178652273.3737.67.camel@mulgrave.il.steeleye.com>
+	<20070508131152.0003b770.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:55977 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934109AbXEHUly (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 16:41:54 -0400
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58702
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S967821AbXEHVop (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 May 2007 17:44:45 -0400
 In-Reply-To: <20070508131152.0003b770.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, ricknu-0@student.ltu.se
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, ricknu-0@student.ltu.se
 
-On Tue, 2007-05-08 at 13:11 -0700, Andrew Morton wrote:
+From: Andrew Morton <akpm@linux-foundation.org>
+Date: Tue, 8 May 2007 13:11:52 -0700
+
 > On Tue, 08 May 2007 14:24:32 -0500
 > James Bottomley <James.Bottomley@SteelEye.com> wrote:
 > 
@@ -38,18 +36,9 @@ On Tue, 2007-05-08 at 13:11 -0700, Andrew Morton wrote:
 > Java gets this right and C cannot and will not and we end up with people
 > using true and false as plain old "1" and "0".
 
-Right, that's the core of my complaint ... zero is false and anything
-else is true ... I rather like the C isms that allow things like
+I think it's more important to be consistent across the entire tree,
+whatever we choose, than to be "nice" and add compat define hacks for
+the sake of a select few stubborn drivers.
 
-if (ptr)
-	*ptr = ...
-
-If there were evidence that the C treatment of logicals as arithmeticals
-was causing huge problems for driver writers, then yes I'd reconsider my
-position ... but really any driver writer has to use bare metal
-arithmetical values interchangeably with logical values because that's
-the way device registers work.
-
-James
-
-
+If you're going to add those ugly "#define TRUE true" bits, the whole
+point of the change is lost so you might as not make it at all.
