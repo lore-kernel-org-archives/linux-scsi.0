@@ -1,88 +1,97 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Wed, 09 May 2007 10:46:34 +0300
-Message-ID: <46417C5A.1090707@panasas.com>
-References: <20070508112553C.fujita.tomonori@lab.ntt.co.jp>	 <4640C724.8030409@panasas.com> <1178654497.3737.81.camel@mulgrave.il.steeleye.com>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH 1/2] zfcp: avoid clutter in erp_dbf
+Date: Wed, 9 May 2007 11:01:20 +0200
+Message-ID: <200705091101.20870.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:56383 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751682AbXEIHr0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 03:47:26 -0400
-In-Reply-To: <1178654497.3737.81.camel@mulgrave.il.steeleye.com>
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:55487 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754582AbXEII6v convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 04:58:51 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, bhalevy@panasas.com, jens.axboe@oracle.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, mp3@de.ibm.com
 
-James Bottomley wrote:
-> I think you'll find that kzalloc comes directly out of a slab for this
-> size of allocation anyway ... you mean you want to see a dedicated pool
-> for this specific allocation?
-Yes, As you said below so we can always send IO for "forward progress
-of freeing memory". My test machine is a Linux cluster in front of a
-pNFS over OSD. The HPC cluster is diskless. It will reach this
-situation very fast.
+>From Martin Peschke <mp3@de.ibm.com>
 
-> There's another problem in that it destroys our forward progress
-> guarantee.  There's always a single reserve command for every HBA so
-> that forward progress for freeing memory can always be made in the
-> system even if the command slab is out and we have to reclaim memory
-> through a HBA with no outstanding commands.  Allocating two commands per
-> bidirectional request hoses that guarantee ... it could be fixed up by
-> increasing the reserve pool to 2, but that's adding further unwanted
-> complexity ...
-> 
-Thanks for catching it! I was afraid of that. If we stick with this solution
-in the interim until we do what you suggested below, we will need to put one
-more for bidi. It should not be a complicated pool thing, just a reserved one
-for the bidi case.
+avoid clutter in erp_dbf
 
-> 
-> There's actually a fourth option you haven't considered:
-> 
-> Roll all the required sglist definitions (request_bufflen,
-> request_buffer, use_sg and sglist_len) into the sgtable pools.
-> 
-> We're getting very close to the point where someone gets to sweep
-> through the drivers eliminating the now superfluous non-sg path in the
-> queuecommand.  When that happens the only cases become no transfer or SG
-> backed commands.  At this point we can do a consolidation of the struct
-> scsi_cmnd fields.  This does represent the ideal time to sweep the sg
-> list handling fields into the sgtable and simply have a single pointer
-> to struct sgtable in the scsi_cmnd (== NULL is the signal for a no
-> transfer command).
-> 
-This is a grate Idea. Let me see if I understand what you mean.
-1. An sgtable is a single allocation with an sgtable header type
-   at the begining and a veriable size array of struct scatterlist.
-   something like:
-   struct sgtable {
-   	struct sgtable_header {
-		unsigned sg_count, sglist_len, length;
-		struct sgtable* next; //for Jens's big io
-   	} hdr;
-	struct scatterlist sglist[];
-   }
-   Slabs are put up for above sgtable of different sizes as
-   done today. (Should they be sized on different ARCHs to
-   align on page boundaries?)
+cleanup zfcp_fsf_req_dismiss functions:
+- avoid clutter in erp_dbf (reqs_active is always 0)
+- fold called three-line function into calling function
+- add meaningful comment
+- coding style
 
-2. The way we can do this in stages: Meaning put up code that has
-   both sets of API, Transfer drivers one-by-one to new API, deprecate
-   old API for a kernel cycle or two. Than submit last piece of
-   code that removes the old API.
-   It can be done. We just need to copy sgtable_header fields
-   to the old fields, and let them stick around for a while.
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 
-3. The second bidi sgtable will hang on request->next_rq->special.
+---
+ drivers/s390/scsi/zfcp_fsf.c |   40 +++++++++++++---------------------------
+ 1 file changed, 13 insertions(+), 27 deletions(-)
 
-> James
-> 
-> 
-If everyone agrees on something like above. I can do it right away.
-It's a solution I wouldn't even dream of. Thanks
 
-Boaz
+--- linux_jb_patched.orig/drivers/s390/scsi/zfcp_fsf.c	2007-05-08 14:47:17.000000000 +0200
++++ linux_jb_patched/drivers/s390/scsi/zfcp_fsf.c	2007-05-08 14:48:08.000000000 +0200
+@@ -156,44 +156,30 @@ zfcp_fsf_req_free(struct zfcp_fsf_req *f
+ 	kfree(fsf_req);
+ }
+ 
+-/**
+- * zfcp_fsf_req_dismiss - dismiss a single fsf request
+- */
+-static void zfcp_fsf_req_dismiss(struct zfcp_adapter *adapter,
+-				 struct zfcp_fsf_req *fsf_req,
+-				 unsigned int counter)
+-{
+-	u64 dbg_tmp[2];
+-
+-	dbg_tmp[0] = (u64) atomic_read(&adapter->reqs_active);
+-	dbg_tmp[1] = (u64) counter;
+-	debug_event(adapter->erp_dbf, 4, (void *) dbg_tmp, 16);
+-	list_del(&fsf_req->list);
+-	fsf_req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
+-	zfcp_fsf_req_complete(fsf_req);
+-}
+-
+-/**
+- * zfcp_fsf_req_dismiss_all - dismiss all remaining fsf requests
++/*
++ * Never ever call this without shutting down the adapter first.
++ * Otherwise the adapter would continue using and corrupting s390 storage.
++ * Included BUG_ON() call to ensure this is done.
++ * ERP is supposed to be the only user of this function.
+  */
+ void zfcp_fsf_req_dismiss_all(struct zfcp_adapter *adapter)
+ {
+-	struct zfcp_fsf_req *request, *tmp;
++	struct zfcp_fsf_req *fsf_req, *tmp;
+ 	unsigned long flags;
+ 	LIST_HEAD(remove_queue);
+-	unsigned int i, counter;
++	unsigned int i;
+ 
++	BUG_ON(atomic_test_mask(ZFCP_STATUS_ADAPTER_QDIOUP, &adapter->status));
+ 	spin_lock_irqsave(&adapter->req_list_lock, flags);
+ 	atomic_set(&adapter->reqs_active, 0);
+-	for (i=0; i<REQUEST_LIST_SIZE; i++)
++	for (i = 0; i < REQUEST_LIST_SIZE; i++)
+ 		list_splice_init(&adapter->req_list[i], &remove_queue);
+-
+ 	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
+ 
+-	counter = 0;
+-	list_for_each_entry_safe(request, tmp, &remove_queue, list) {
+-		zfcp_fsf_req_dismiss(adapter, request, counter);
+-		counter++;
++	list_for_each_entry_safe(fsf_req, tmp, &remove_queue, list) {
++		list_del(&fsf_req->list);
++		fsf_req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
++		zfcp_fsf_req_complete(fsf_req);
+ 	}
+ }
+ 
