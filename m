@@ -1,97 +1,95 @@
 From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH 1/2] zfcp: avoid clutter in erp_dbf
-Date: Wed, 9 May 2007 11:01:20 +0200
-Message-ID: <200705091101.20870.swen@vnet.ibm.com>
+Subject: [PATCH 2/2] zfcp: IO stall after deleting and path checker changes after reenabling zfcp devices
+Date: Wed, 9 May 2007 11:01:24 +0200
+Message-ID: <200705091101.24917.swen@vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate8.de.ibm.com ([195.212.29.157]:55487 "EHLO
-	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754582AbXEII6v convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 04:58:51 -0400
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:12113 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755279AbXEII64 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 04:58:56 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, mp3@de.ibm.com
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, mloehr2@linux.vnet.ibm.com
 
->From Martin Peschke <mp3@de.ibm.com>
+From: Michael Loehr <mloehr2@linux.vnet.ibm.com>
 
-avoid clutter in erp_dbf
+IO stall after deleting and path checker changes after reenabling zfcp device
 
-cleanup zfcp_fsf_req_dismiss functions:
-- avoid clutter in erp_dbf (reqs_active is always 0)
-- fold called three-line function into calling function
-- add meaningful comment
-- coding style
+Setting one zfcp device offline using chccwdev in a multipath
+environment and waiting will lead to IO stall on all paths.
+After setting the zfcp device back online using chccwdev,
+the devices with io stall will have a different path checker.
+Devices corresponding to the deleted units are never freed. 
+This has the effect that 'slave_destroy' is never called and zfcp
+still thinks that this unit is registered
+(ZFCP_STATUS_UNIT_REGISTERED is still set). Hence the erp
+routine is not called correctly and the unit is not enabled properly.
 
-Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Do not delete rport and the sdev. Just set the host to block on
+'offline'. Setting host online again will then remove the blocked status
+and everything is fine again.
+
+Signed-off-by: Michael Loehr <mloehr2@linux.vnet.ibm.com>
 Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
-
+h
 ---
- drivers/s390/scsi/zfcp_fsf.c |   40 +++++++++++++---------------------------
- 1 file changed, 13 insertions(+), 27 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c  |    1 +
+ drivers/s390/scsi/zfcp_ccw.c  |    5 +----
+ drivers/s390/scsi/zfcp_scsi.c |    3 +++
+ 3 files changed, 5 insertions(+), 4 deletions(-)
 
-
---- linux_jb_patched.orig/drivers/s390/scsi/zfcp_fsf.c	2007-05-08 14:47:17.000000000 +0200
-+++ linux_jb_patched/drivers/s390/scsi/zfcp_fsf.c	2007-05-08 14:48:08.000000000 +0200
-@@ -156,44 +156,30 @@ zfcp_fsf_req_free(struct zfcp_fsf_req *f
- 	kfree(fsf_req);
- }
- 
--/**
-- * zfcp_fsf_req_dismiss - dismiss a single fsf request
-- */
--static void zfcp_fsf_req_dismiss(struct zfcp_adapter *adapter,
--				 struct zfcp_fsf_req *fsf_req,
--				 unsigned int counter)
--{
--	u64 dbg_tmp[2];
--
--	dbg_tmp[0] = (u64) atomic_read(&adapter->reqs_active);
--	dbg_tmp[1] = (u64) counter;
--	debug_event(adapter->erp_dbf, 4, (void *) dbg_tmp, 16);
--	list_del(&fsf_req->list);
--	fsf_req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
--	zfcp_fsf_req_complete(fsf_req);
--}
--
--/**
-- * zfcp_fsf_req_dismiss_all - dismiss all remaining fsf requests
-+/*
-+ * Never ever call this without shutting down the adapter first.
-+ * Otherwise the adapter would continue using and corrupting s390 storage.
-+ * Included BUG_ON() call to ensure this is done.
-+ * ERP is supposed to be the only user of this function.
-  */
- void zfcp_fsf_req_dismiss_all(struct zfcp_adapter *adapter)
- {
--	struct zfcp_fsf_req *request, *tmp;
-+	struct zfcp_fsf_req *fsf_req, *tmp;
+Index: linux_jb_patched/drivers/s390/scsi/zfcp_aux.c
+===================================================================
+--- linux_jb_patched.orig/drivers/s390/scsi/zfcp_aux.c
++++ linux_jb_patched/drivers/s390/scsi/zfcp_aux.c
+@@ -1129,6 +1129,7 @@ zfcp_adapter_dequeue(struct zfcp_adapter
+ 	int retval = 0;
  	unsigned long flags;
- 	LIST_HEAD(remove_queue);
--	unsigned int i, counter;
-+	unsigned int i;
  
-+	BUG_ON(atomic_test_mask(ZFCP_STATUS_ADAPTER_QDIOUP, &adapter->status));
- 	spin_lock_irqsave(&adapter->req_list_lock, flags);
- 	atomic_set(&adapter->reqs_active, 0);
--	for (i=0; i<REQUEST_LIST_SIZE; i++)
-+	for (i = 0; i < REQUEST_LIST_SIZE; i++)
- 		list_splice_init(&adapter->req_list[i], &remove_queue);
--
- 	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
++	zfcp_adapter_scsi_unregister(adapter);
+ 	device_unregister(&adapter->generic_services);
+ 	zfcp_sysfs_adapter_remove_files(&adapter->ccw_device->dev);
+ 	dev_set_drvdata(&adapter->ccw_device->dev, NULL);
+Index: linux_jb_patched/drivers/s390/scsi/zfcp_ccw.c
+===================================================================
+--- linux_jb_patched.orig/drivers/s390/scsi/zfcp_ccw.c
++++ linux_jb_patched/drivers/s390/scsi/zfcp_ccw.c
+@@ -189,9 +189,7 @@ zfcp_ccw_set_online(struct ccw_device *c
+  * @ccw_device: pointer to belonging ccw device
+  *
+  * This function gets called by the common i/o layer and sets an adapter
+- * into state offline. Setting an fcp device offline means that it will be
+- * unregistered from the SCSI stack and that the adapter will be shut down
+- * asynchronously.
++ * into state offline.
+  */
+ static int
+ zfcp_ccw_set_offline(struct ccw_device *ccw_device)
+@@ -202,7 +200,6 @@ zfcp_ccw_set_offline(struct ccw_device *
+ 	adapter = dev_get_drvdata(&ccw_device->dev);
+ 	zfcp_erp_adapter_shutdown(adapter, 0);
+ 	zfcp_erp_wait(adapter);
+-	zfcp_adapter_scsi_unregister(adapter);
+ 	zfcp_erp_thread_kill(adapter);
+ 	zfcp_adapter_debug_unregister(adapter);
+ 	up(&zfcp_data.config_sema);
+Index: linux_jb_patched/drivers/s390/scsi/zfcp_scsi.c
+===================================================================
+--- linux_jb_patched.orig/drivers/s390/scsi/zfcp_scsi.c
++++ linux_jb_patched/drivers/s390/scsi/zfcp_scsi.c
+@@ -569,6 +569,9 @@ zfcp_adapter_scsi_register(struct zfcp_a
+ 	int retval = 0;
+ 	static unsigned int unique_id = 0;
  
--	counter = 0;
--	list_for_each_entry_safe(request, tmp, &remove_queue, list) {
--		zfcp_fsf_req_dismiss(adapter, request, counter);
--		counter++;
-+	list_for_each_entry_safe(fsf_req, tmp, &remove_queue, list) {
-+		list_del(&fsf_req->list);
-+		fsf_req->status |= ZFCP_STATUS_FSFREQ_DISMISSED;
-+		zfcp_fsf_req_complete(fsf_req);
- 	}
- }
- 
++	if (adapter->scsi_host)
++		goto out;
++
+ 	/* register adapter as SCSI host with mid layer of SCSI stack */
+ 	adapter->scsi_host = scsi_host_alloc(&zfcp_data.scsi_host_template,
+ 					     sizeof (struct zfcp_adapter *));
