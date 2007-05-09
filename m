@@ -1,64 +1,41 @@
-From: "Qi, Yanling" <Yanling.Qi@lsi.com>
-Subject: RE: SG_IO with >4k buffer size to iscsi sg device causes "Bad page" panic
-Date: Wed, 9 May 2007 10:13:18 -0600
-Message-ID: <0F08E10B769EAF4EA2C43A573B8CC87FB5703A@NAMAIL3.ad.lsil.com>
-References: <4640CFC8.9020004@cs.wisc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH v2] add bidi support for block pc requests
+Date: Wed, 09 May 2007 19:54:32 +0300
+Message-ID: <4641FCC8.4040600@panasas.com>
+References: <4640C724.8030409@panasas.com>	 <1178654497.3737.81.camel@mulgrave.il.steeleye.com>	 <46417C5A.1090707@panasas.com>	 <200705091052.l49Aqano009015@mbox.iij4u.or.jp>	 <4641D380.8050100@panasas.com> <1178722514.3695.23.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43437 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755062AbXEIQOE convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 12:14:04 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4640CFC8.9020004@cs.wisc.edu>
+Received: from gw-e.panasas.com ([65.194.124.178]:39986 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756384AbXEIQ4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 12:56:48 -0400
+In-Reply-To: <1178722514.3695.23.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, open-iscsi@googlegroups.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-iscsi-devel@lists.sourceforge.net, dougg@torque.net, James Bottomley <James.Bottomley@SteelEye.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
+James Bottomley wrote:
+> Actually, the first order of business is to use accessors on the command
+> pointers in the drivers to free them from the internal layout of the
+> structure (and where it is allocated).
+> 
+Thanks! I totally second that. Let me look into my old patches and come
+up with all the needed accessors. I hope 3-5 will be enough.
+I will send some suggestions tomorrow.
+> 
+> No, that's why you do the accessors.  Convert all of the common drivers
+> to accessors on the current structure, then throw the switch to convert
+> to the new structure (whatever form is finally settled on).  Then any
+> unconverted drivers break and people fix the ones they care about.
 
-> -----Original Message-----
-> From: Mike Christie [mailto:michaelc@cs.wisc.edu]
-> Qi, Yanling wrote:
-> Yeah, this problem should occur in the upstream open-iscsi iscsi code.
-> open-iscsi works very similar to linux-scsi where it just sends pages
-> around with sock->ops-sendpage, and it looks like sg uses
-> __get_free_pages in RHEL's kernel and upstream it uses alloc_pages so
-> unless there was a change in those functions or the network layer then
-> we should have a similar problem.
-[Qi, Yanling] 
-Mike,
+Last time I was able to compile 97% of drivers and convert by search-and-replace
+the rest. Not a huge deal.
 
-I tried the same test on a SLES10SP1 with open-iscsi driver (lk
-2.6.16.37-0.23). It works fine.
-What happens is that both "alloc_pages()" and "__get_free_pages()" will
-set page_count to 1 for base page and sub-pages. Because page_count =1,
-the subpages will not be recycled.
+> 
+> James
+> 
+> 
 
-It seems the mm code has changed alloc_pages and __get_free_pages()'s
-behavior along the way from 2.6.9 to 2.6.16.
-
-Therefore, we don't have an issue in the upstream kernel and RHEL5.
-
-0 page:ffff81007f8da240 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-1 page:ffff81007f8da278 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-2 page:ffff81007f8da2b0 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-3 page:ffff81007f8da2e8 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-4 page:ffff81007f8da320 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-5 page:ffff81007f8da358 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-6 page:ffff81007f8da390 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-7 page:ffff81007f8da3c8 flags:0x0100000000004000
-mapping:0000000000000000 mapcount:0 count:1
-
-Thanks,
-Yanling
