@@ -1,37 +1,63 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Wed, 9 May 2007 15:26:21 -0500
-Message-ID: <20070509202621.GA4452@austin.ibm.com>
-References: <20070420204114.GL31947@austin.ibm.com> <20070420204720.GM31947@austin.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ipr: Proper return codes for eh_dev_reset for SATA devices
+Date: Wed, 09 May 2007 15:36:35 -0500
+Message-ID: <40433.2773098305$1178743008@news.gmane.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:36751 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754642AbXEIU0Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 May 2007 16:26:25 -0400
-Content-Disposition: inline
-In-Reply-To: <20070420204720.GM31947@austin.ibm.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:55522 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750893AbXEIUgj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 9 May 2007 16:36:39 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l49KadUh018807
+	for <linux-scsi@vger.kernel.org>; Wed, 9 May 2007 16:36:39 -0400
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l49Kaacx558542
+	for <linux-scsi@vger.kernel.org>; Wed, 9 May 2007 16:36:38 -0400
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l49KaaqX029774
+	for <linux-scsi@vger.kernel.org>; Wed, 9 May 2007 16:36:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, thlin@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
-Hi Matthew,
 
-I had been hoping these patches might make it into 2.6.22,
-... this is a nag note; please forward upstream.
+Currently ipr always returns success from eh_dev_reset when
+called for a SATA device. If ata_do_eh is unable to recover
+for some reason, this can result in commands that are still
+outstanding when ata_do_eh returns. Change ipr to verify no
+commands are outstanding before returning success.
 
---linas
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-On Fri, Apr 20, 2007 at 03:47:20PM -0500, Linas Vepstas wrote:
-> 
-> Implement the so-called "first failure data capture" (FFDC) for the
-> symbios PCI error recovery.  After a PCI error event is reported,
-> the driver requests that MMIO be enabled. Once enabled, it 
-> then reads and dumps assorted status registers, and concludes
-> by requesting the usual reset sequence.
-> 
-> (includes a whitespace fix for bad indentation).
-> 
-> Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
+James,
+
+Looks like this one got dropped. This is a resend.
+
+Thanks,
+
+Brian
+---
+
+ linux-2.6-bjking1/drivers/scsi/ipr.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff -puN drivers/scsi/ipr.c~ipr_sata_dev_reset_fixup drivers/scsi/ipr.c
+--- linux-2.6/drivers/scsi/ipr.c~ipr_sata_dev_reset_fixup	2007-05-09 09:39:19.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ipr.c	2007-05-09 09:39:19.000000000 -0500
+@@ -3954,6 +3954,13 @@ static int __ipr_eh_dev_reset(struct scs
+ 		spin_unlock_irq(scsi_cmd->device->host->host_lock);
+ 		ata_do_eh(ap, NULL, NULL, ipr_sata_reset, NULL);
+ 		spin_lock_irq(scsi_cmd->device->host->host_lock);
++
++		list_for_each_entry(ipr_cmd, &ioa_cfg->pending_q, queue) {
++			if (ipr_cmd->ioarcb.res_handle == res->cfgte.res_handle) {
++				rc = -EIO;
++				break;
++			}
++		}
+ 	} else
+ 		rc = ipr_device_reset(ioa_cfg, res);
+ 	res->resetting_device = 0;
+_
