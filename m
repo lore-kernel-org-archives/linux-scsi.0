@@ -1,147 +1,171 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Thu, 10 May 2007 18:48:50 +0300
-Message-ID: <46433EE2.8020406@panasas.com>
-References: <1178722514.3695.23.camel@mulgrave.il.steeleye.com>	<4641FCC8.4040600@panasas.com>	<20070510155322R.fujita.tomonori@lab.ntt.co.jp> <20070510164535F.fujita.tomonori@lab.ntt.co.jp> <4643121C.600@panasas.com> <464335D2.3020900@torque.net>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 1/7] libata: check for AN support
+Date: Thu, 10 May 2007 10:02:15 -0700
+Message-ID: <20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
+References: <20070510072247.063476979@intel.com>
+	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
+	<20070509220952.5fa34822.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:41643 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754709AbXEJPuN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 11:50:13 -0400
-In-Reply-To: <464335D2.3020900@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070509220952.5fa34822.akpm@linux-foundation.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-Douglas Gilbert wrote:
-> Boaz Harrosh wrote:
->> FUJITA Tomonori wrote:
->>> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
->>> Subject: Re: [PATCH v2] add bidi support for block pc requests
->>> Date: Thu, 10 May 2007 15:53:22 +0900
->>>
->>>> From: Boaz Harrosh <bharrosh@panasas.com>
->>>> Subject: Re: [PATCH v2] add bidi support for block pc requests
->>>> Date: Wed, 09 May 2007 19:54:32 +0300
->>>>
->>>>> James Bottomley wrote:
->>>>>> Actually, the first order of business is to use accessors on the command
->>>>>> pointers in the drivers to free them from the internal layout of the
->>>>>> structure (and where it is allocated).
->>>>>>
->>>>> Thanks! I totally second that. Let me look into my old patches and come
->>>>> up with all the needed accessors. I hope 3-5 will be enough.
->>>>> I will send some suggestions tomorrow.
->>>>>> No, that's why you do the accessors.  Convert all of the common drivers
->>>>>> to accessors on the current structure, then throw the switch to convert
->>>>>> to the new structure (whatever form is finally settled on).  Then any
->>>>>> unconverted drivers break and people fix the ones they care about.
->>>>> Last time I was able to compile 97% of drivers and convert by search-and-replace
->>>>> the rest. Not a huge deal.
->>>> We need to remove the non-use-sg code in the drivers and convert
->>>> them. So it's a bit more complicated than search-and-replace.
->>> Here's a patch to convert ibmvscsi to use helper functions (though it
->>> needs more testings).
->>>
->>> ---
->>> ---
->>> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
->>> index d6948d0..799f204 100644
->>> --- a/include/scsi/scsi_cmnd.h
->>> +++ b/include/scsi/scsi_cmnd.h
->>> @@ -138,4 +138,17 @@ extern void scsi_kunmap_atomic_sg(void *
->>>  extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
->>>  extern void scsi_free_sgtable(struct scatterlist *, int);
->>>  
->>> +extern int scsi_dma_map(struct device *dev, struct scsi_cmnd *cmd);
->>> +extern void scsi_dma_unmap(struct device *dev, struct scsi_cmnd *cmd);
->>> +
->>> +/* moved to scatterlist.h after chaining sg */
->>> +#define sg_next(sg) ((sg) + 1)
->>> +
->>> +#define scsi_for_each_sg(cmd, nseg, i)					\
->>> +	for (i = 0, sg = (cmd)->request_buffer; i < nseg;		\
->>> +		sg = sg_next(sg), i++)					\
->>> +
->> Better we do like Jens's patch
->> +#define for_each_sg(sglist, sg, nr, __i)	\
->> +	for (__i = 0, sg = (sglist); __i < (nr); __i++, sg = sg_next(sg))
->>
->> I think that we should wait for Jens pending patchset and do this work on top
->> of his, then use his sg macros directly. This way the cleaners can also be
->> watchfully for any drivers that might brake with big IO sent to them.
->>
->>> +#define scsi_sg_count(cmd) ((cmd)->use_sg)
->>> +#define scsi_bufferlen(cmd) ((cmd)->request_bufflen)
->>> +
->>>  #endif /* _SCSI_SCSI_CMND_H */
->> Above helpers look good. However I am missing 2 of them:
->>
->> 1.
->> +#define scsi_sgl(cmd) ((struct scatterlist*)(cmd)->request_buffer)
->>
->> This is for drivers like iSCSI that do not do any dma mapping, as dma
->> is done at the lower level in the NICs. And lots of other places that just
->> transfer the sglist around.
->>
->> 2.
->> +#define scsi_resid(cmd) ((cmd)->resid)
-> 
-> I have defined resid in the past as a signed (32 bit)
-> integer following the CAM spec. The cases are:
->    - resid=0 : initiator's DMA engine got (or sent?) the
->                number of bytes it expected
->    - resid>0 : dxfer_len-resid bytes received, less than
->                expected
->    - resid<0 : more bytes received (or could have been)
->                than indicated by dxfer_len
-> 
-> Some definitions of resid make it unsigned which rules out
-> the less common resid<0 case. Can this case happen? Does it
-> happen in practice? Naturally no more than dxfer_len should
-> be placed in the scatter gather list.
-> 
-> SPI and SAS do not convey dxfer_len (or data direction) to
-> a target in their transport frames. This means that the
-> relevant field in the cdb (e.g. transfer length) dictates
-> how much data a target sends back to an initiator in the
-> case of a read like operation. So that opens up the
-> possibility that dxfer_len and the cdb disagree.
-> 
-> FCP does convey dxfer_len and data_direction to a target.
-> So a FCP target can detect a mismatch between this and the
-> cdb and send resid information (either under or over) in its
-> response frame back to the initiator. Alternatively it
-> can treat the "over" case as an error (fcp3r04.pdf section
-> 9.4.2).
-> iSCSI and SRP?
-> 
-> The resid<0 case may become more common if a driver or
-> application does not properly take account of protection
-> information being sent together with the requested
-> data.
-> 
-> So should we keep resid signed?
-> 
-> Doug Gilbert
-You are probably right just that I was afraid of this: req->data_len = sc->resid
-and I saw in iSCSI :
+Check to see if an ATAPI device supports Asynchronous Notification.
+If so, enable it.
 
-iscsi_scsi_cmd_rsp()
-...
+Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+---
+Andrew, I cleaned up the function header to properly comply with kernel
+doc requirements.  Other than that, this patch is the same.  
 
-		if (res_count > 0 && res_count <= sc->request_bufflen)
-			sc->resid = res_count;
-		else
-			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
-
-So I'm confused. It looks like the struct scsi_cmnd member resid is only the
-one case of 0 <= target_resid <= request_bufflen, and the other cases are covered by
-an error result?
-
-Boaz
-
+Index: 2.6-mm/drivers/ata/libata-core.c
+===================================================================
+--- 2.6-mm.orig/drivers/ata/libata-core.c
++++ 2.6-mm/drivers/ata/libata-core.c
+@@ -70,6 +70,7 @@ const unsigned long sata_deb_timing_long
+ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ 					u16 heads, u16 sectors);
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
++static unsigned int ata_dev_set_AN(struct ata_device *dev);
+ static void ata_dev_xfermask(struct ata_device *dev);
+ 
+ unsigned int ata_print_id = 1;
+@@ -1983,6 +1984,22 @@ int ata_dev_configure(struct ata_device 
+ 		}
+ 		dev->cdb_len = (unsigned int) rc;
+ 
++		/*
++		 * check to see if this ATAPI device supports
++		 * Asynchronous Notification
++		 */
++		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
++			int err;
++			/* issue SET feature command to turn this on */
++			err = ata_dev_set_AN(dev);
++			if (err)
++				ata_dev_printk(dev, KERN_ERR,
++						"unable to set AN, err %x\n",
++						err);
++			else
++				dev->flags |= ATA_DFLAG_AN;
++		}
++
+ 		if (ata_id_cdb_intr(dev->id)) {
+ 			dev->flags |= ATA_DFLAG_CDB_INTR;
+ 			cdb_intr_string = ", CDB intr";
+@@ -3910,6 +3927,41 @@ static unsigned int ata_dev_set_xfermode
+ }
+ 
+ /**
++ *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
++ *	@dev: Device to which command will be sent
++ *
++ *	Issue SET FEATURES - SATA FEATURES command to device @dev
++ *	on port @ap with sector count set to indicate Asynchronous
++ *	Notification feature
++ *
++ *	LOCKING:
++ *	PCI/etc. bus probe sem.
++ *
++ *	RETURNS:
++ *	0 on success, AC_ERR_* mask otherwise.
++ */
++static unsigned int ata_dev_set_AN(struct ata_device *dev)
++{
++	struct ata_taskfile tf;
++	unsigned int err_mask;
++
++	/* set up set-features taskfile */
++	DPRINTK("set features - SATA features\n");
++
++	ata_tf_init(dev, &tf);
++	tf.command = ATA_CMD_SET_FEATURES;
++	tf.feature = SETFEATURES_SATA_ENABLE;
++	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
++	tf.protocol = ATA_PROT_NODATA;
++	tf.nsect = SATA_AN;
++
++	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
++
++	DPRINTK("EXIT, err_mask=%x\n", err_mask);
++	return err_mask;
++}
++
++/**
+  *	ata_dev_init_params - Issue INIT DEV PARAMS command
+  *	@dev: Device to which command will be sent
+  *	@heads: Number of heads (taskfile parameter)
+Index: 2.6-mm/include/linux/ata.h
+===================================================================
+--- 2.6-mm.orig/include/linux/ata.h
++++ 2.6-mm/include/linux/ata.h
+@@ -204,6 +204,12 @@ enum {
+ 
+ 	SETFEATURES_SPINUP	= 0x07, /* Spin-up drive */
+ 
++	SETFEATURES_SATA_ENABLE = 0x10, /* Enable use of SATA feature */
++	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
++
++	/* SETFEATURE Sector counts for SATA features */
++	SATA_AN			= 0x05,  /* Asynchronous Notification */
++
+ 	/* ATAPI stuff */
+ 	ATAPI_PKT_DMA		= (1 << 0),
+ 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+@@ -309,6 +315,9 @@ struct ata_taskfile {
+ #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+ #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+ #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
++#define ata_id_has_AN(id)	\
++	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
++	  ((id)[78] & (1 << 5)) )
+ #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
+ #define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
+ #define ata_id_u32(id,n)	\
+Index: 2.6-mm/include/linux/libata.h
+===================================================================
+--- 2.6-mm.orig/include/linux/libata.h
++++ 2.6-mm/include/linux/libata.h
+@@ -136,6 +136,7 @@ enum {
+ 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
+ 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
+ 	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
++	ATA_DFLAG_AN		= (1 << 5), /* device supports Async notification */
+ 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+ 
+ 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+@@ -174,6 +175,7 @@ enum {
+ 	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
+ 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+ 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
++	ATA_FLAG_AN		= (1 << 17), /* controller supports AN */
+ 
+ 	/* The following flag belongs to ap->pflags but is kept in
+ 	 * ap->flags because it's referenced in many LLDs and will be
+Index: 2.6-mm/drivers/ata/ahci.c
+===================================================================
+--- 2.6-mm.orig/drivers/ata/ahci.c
++++ 2.6-mm/drivers/ata/ahci.c
+@@ -327,14 +327,15 @@ static const struct ata_port_operations 
+ static const struct ata_port_info ahci_port_info[] = {
+ 	/* board_ahci */
+ 	{
+-		.flags		= AHCI_FLAG_COMMON,
++		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_AN,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &ahci_ops,
+ 	},
+ 	/* board_ahci_pi */
+ 	{
+-		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
++		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI |
++				  ATA_FLAG_AN,
+ 		.pio_mask	= 0x1f, /* pio0-4 */
+ 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
+ 		.port_ops	= &ahci_ops,
