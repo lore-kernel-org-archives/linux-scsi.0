@@ -1,40 +1,71 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: HDIO_DRIVE_CMD and hdparm
-Date: Thu, 10 May 2007 09:20:18 -0400
-Message-ID: <46431C12.1030207@rtr.ca>
-References: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be>
+From: Doug Chapman <doug.chapman@hp.com>
+Subject: Re: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVD
+	drive connected to mptspi driver
+Date: Thu, 10 May 2007 09:30:37 -0400
+Message-ID: <1178803837.16216.2.camel@athlon>
+References: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([64.26.128.89]:3019 "EHLO mail.rtr.ca"
+Received: from mx2.redhat.com ([66.187.237.31]:34395 "EHLO mx2.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760857AbXEJNUT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 May 2007 09:20:19 -0400
-In-Reply-To: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be>
+	id S1754979AbXEJNd4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 May 2007 09:33:56 -0400
+In-Reply-To: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: eric.moore@lsi.com
+Cc: linux-scsi@vger.kernel.org
 
-Geert Uytterhoeven wrote:
-> 	Hi,
+Eric,
+
+Any feedback on this?  From looking at the code I am pretty sure I have
+only restored things to the order where they were before the cleanup
+patch but you obviously know the code better than I possibly could.
+
+As this is a regression I would like to get this resolved before long.
+
+thanks,
+
+- Doug
+
+On Mon, 2007-05-07 at 15:59 -0400, Doug Chapman wrote:
+> Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
 > 
-> `hdparm -t' uses HDIO_DRIVE_CMD(null) to flush the disk's buffer.
+> A recent code cleanup that moved code from mptscsih to mptspi
+> inadvertently change the order some code was called.  This caused
+> a massive slowdown (of 150x to 300x) on the CD/DVD drive on the
+> high-end HP Integrity servers.
+> 
+> Signed-off-by: Doug Chapman <doug.chapman@hp.com>
+> 
+> 
+> 
+> 
+> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
+> index 85f21b5..2eb5741 100644
+> --- a/drivers/message/fusion/mptspi.c
+> +++ b/drivers/message/fusion/mptspi.c
+> @@ -726,13 +726,15 @@ static int mptspi_slave_configure(struct scsi_device *sdev)
+>  	struct _MPT_SCSI_HOST *hd =
+>  		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
+>  	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
+> -	int ret = mptscsih_slave_configure(sdev);
+> +	int ret;
+> +
+> +	mptspi_initTarget(hd, vtarget, sdev);
+> +
+> +	ret = mptscsih_slave_configure(sdev);
+>  
+>  	if (ret)
+>  		return ret;
+>  
+> -	mptspi_initTarget(hd, vtarget, sdev);
+> -
+>  	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
+>  		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
+>  		sdev->id, spi_min_period(scsi_target(sdev)),
+> 
+> 
 
-More correctly, that command is supposed to act like an I/O queue "barrier"
-operation, not returning from the syscall until everything queued in front
-of it has been issued/completed.
-
-I believe that only the original IDE driver actually implements it, though.
-And hdparm-7.4 (not released yet) will no longer complain about ENOTTY.
-
-Note that current versions of hdparm use SG_IO/ATA_16 (SAT) for nearly everything
-now, only falling back to the older ioctl's for drivers which reject the SAT attempt.
-
-I'd love to find a USB drive enclosure that supports SAT.
-Anyone know of one?
-
-And does the USB storage layer actually pass the ATA_16 packets to the device?
-
-Cheers
