@@ -1,71 +1,77 @@
-From: Doug Chapman <doug.chapman@hp.com>
-Subject: Re: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVD
-	drive connected to mptspi driver
-Date: Thu, 10 May 2007 09:30:37 -0400
-Message-ID: <1178803837.16216.2.camel@athlon>
-References: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
+From: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>
+Subject: Re: use_sg != 0 assumption (was Re: [PATCH 5/9] Drop single buffer
+ request support.)
+Date: Thu, 10 May 2007 09:08:03 -0400
+Message-ID: <46431933.9090300@redhat.com>
+References: <11787529952207-git-send-email-krh@redhat.com> <11787530023454-git-send-email-krh@redhat.com> <11787530031570-git-send-email-krh@redhat.com> <11787530031450-git-send-email-krh@redhat.com> <11787530043878-git-send-email-krh@redhat.com> <4642F627.5040400@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.redhat.com ([66.187.237.31]:34395 "EHLO mx2.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:48820 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754979AbXEJNd4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 May 2007 09:33:56 -0400
-In-Reply-To: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
+	id S1753107AbXEJPLg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 11:11:36 -0400
+In-Reply-To: <4642F627.5040400@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: eric.moore@lsi.com
-Cc: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-Eric,
+Stefan Richter wrote:
+> Kristian H=F8gsberg wrote:
+>> The SCSI layer only passes sg requests down, so drop the
+>> use_sg =3D=3D 0, request_bufflen !=3D 0 case.
+>>
+>> Signed-off-by: Kristian Hoegsberg <krh@redhat.com>
+>> ---
+>>  drivers/firewire/fw-sbp2.c |   43 +--------------------------------=
+----------
+>>  1 files changed, 1 insertions(+), 42 deletions(-)
+>=20
+> [...]
+>=20
+>> @@ -1063,21 +1035,8 @@ static int sbp2_scsi_queuecommand(struct scsi=
+_cmnd *cmd, scsi_done_fn_t done)
+>>  		orb->request.misc |=3D
+>>  			COMMAND_ORB_DIRECTION(SBP2_DIRECTION_TO_MEDIA);
+>> =20
+>> -	if (cmd->use_sg) {
+>> -		if (sbp2_command_orb_map_scatterlist(orb) < 0)
+>> -			goto fail_map_payload;
+>> -	} else if (cmd->request_bufflen > SBP2_MAX_SG_ELEMENT_LENGTH) {
+>> -		/*
+>> -		 * FIXME: Need to split this into a sg list... but
+>> -		 * could we get the scsi or blk layer to do that by
+>> -		 * reporting our max supported block size?
+>> -		 */
+>> -		fw_error("command > 64k\n");
+>> +	if (cmd->use_sg && sbp2_command_orb_map_scatterlist(orb) < 0)
+>>  		goto fail_map_payload;
+>> -	} else if (cmd->request_bufflen > 0) {
+>> -		if (sbp2_command_orb_map_buffer(orb) < 0)
+>> -			goto fail_map_payload;
+>> -	}
+>> =20
+>>  	fw_memcpy_to_be32(&orb->request, &orb->request, sizeof orb->reques=
+t);
+>> =20
+>=20
+> Would a BUG_ON(cmd->use_sg =3D=3D 0); be in order?
 
-Any feedback on this?  From looking at the code I am pretty sure I have
-only restored things to the order where they were before the cleanup
-patch but you obviously know the code better than I possibly could.
+That's a good idea, though it needs to be
 
-As this is a regression I would like to get this resolved before long.
+   BUG_ON(cmd->usg_sg =3D=3D 0 && cmd->request_bufflen > 0);
 
-thanks,
+since commands with no payload have use_sg =3D=3D 0 and request_bufflen=
+ =3D=3D 0.
 
-- Doug
+Kristian
 
-On Mon, 2007-05-07 at 15:59 -0400, Doug Chapman wrote:
-> Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
-> 
-> A recent code cleanup that moved code from mptscsih to mptspi
-> inadvertently change the order some code was called.  This caused
-> a massive slowdown (of 150x to 300x) on the CD/DVD drive on the
-> high-end HP Integrity servers.
-> 
-> Signed-off-by: Doug Chapman <doug.chapman@hp.com>
-> 
-> 
-> 
-> 
-> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-> index 85f21b5..2eb5741 100644
-> --- a/drivers/message/fusion/mptspi.c
-> +++ b/drivers/message/fusion/mptspi.c
-> @@ -726,13 +726,15 @@ static int mptspi_slave_configure(struct scsi_device *sdev)
->  	struct _MPT_SCSI_HOST *hd =
->  		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
->  	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
-> -	int ret = mptscsih_slave_configure(sdev);
-> +	int ret;
-> +
-> +	mptspi_initTarget(hd, vtarget, sdev);
-> +
-> +	ret = mptscsih_slave_configure(sdev);
->  
->  	if (ret)
->  		return ret;
->  
-> -	mptspi_initTarget(hd, vtarget, sdev);
-> -
->  	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
->  		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
->  		sdev->id, spi_min_period(scsi_target(sdev)),
-> 
-> 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
