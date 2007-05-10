@@ -1,53 +1,37 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Thu, 10 May 2007 22:01:17 +0900
-Message-ID: <20070510220117I.fujita.tomonori@lab.ntt.co.jp>
-References: <20070510155322R.fujita.tomonori@lab.ntt.co.jp>
-	<20070510164535F.fujita.tomonori@lab.ntt.co.jp>
-	<4643121C.600@panasas.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: use_sg != 0 assumption (was Re: [PATCH 5/9] Drop single buffer
+ request support.)
+Date: Thu, 10 May 2007 15:09:55 +0200
+Message-ID: <464319A3.3070905@s5r6.in-berlin.de>
+References: <11787529952207-git-send-email-krh@redhat.com> <11787530023454-git-send-email-krh@redhat.com> <11787530031570-git-send-email-krh@redhat.com> <11787530031450-git-send-email-krh@redhat.com> <11787530043878-git-send-email-krh@redhat.com> <4642F627.5040400@s5r6.in-berlin.de> <20070510114411.GA17971@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:62338 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755234AbXEJNCU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 09:02:20 -0400
-In-Reply-To: <4643121C.600@panasas.com>
+Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:37620 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755941AbXEJNKz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 09:10:55 -0400
+In-Reply-To: <20070510114411.GA17971@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com, bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Kristian H?gsberg <krh@redhat.com>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Thu, 10 May 2007 15:37:48 +0300
-
-> > +/* moved to scatterlist.h after chaining sg */
-> > +#define sg_next(sg) ((sg) + 1)
-> > +
-> > +#define scsi_for_each_sg(cmd, nseg, i)					\
-> > +	for (i = 0, sg = (cmd)->request_buffer; i < nseg;		\
-> > +		sg = sg_next(sg), i++)					\
-> > +
+Christoph Hellwig wrote:
+> On Thu, May 10, 2007 at 12:38:31PM +0200, Stefan Richter wrote:
+>> Would a BUG_ON(cmd->use_sg == 0); be in order?
 > 
-> Better we do like Jens's patch
-> +#define for_each_sg(sglist, sg, nr, __i)	\
-> +	for (__i = 0, sg = (sglist); __i < (nr); __i++, sg = sg_next(sg))
-> 
-> I think that we should wait for Jens pending patchset and do this work on top
-> of his, then use his sg macros directly. This way the cleaners can also be
-> watchfully for any drivers that might brake with big IO sent to them.
+> I don't think we should put this into every driver.  If you want to
+> be sure this doesn't happen anymore put it just in front of the queuecommand
+> call.
 
-Yeah, we can use sg list's macro something like:
-
-#define scsi_for_each_sg(cmd, sg, nseg, __i)			\
-	for_each_sg((cmd)->request_buffer, sg, nseg, __i)	
-
-Seems that Jens converted lots of LLDs to use for_each_sg. If
-for_each_sg goes first, we can just replase for_each_sg (but after
-all, we need to touch LLDs to remove the non-use-sg path). On the
-other hand, if we go first, there is no conversion for for_each_sg in
-LLDs.
-
-Jens, do you want the sg list stuff done before our cleanups?
+Thanks for the pointer.  I'm just noticing that Jens Axboe has a patch
+which puts BUG_ON(!cmd->use_sg); into scsi_lib.c's sg table allocation
+path.  (The "Chaining sg lists for bio IO commands v3" patchset from a
+few hours ago, part 11/13 "SCSI: support for allocating large
+scatterlists".)
+-- 
+Stefan Richter
+-=====-=-=== -=-= -=-=-
+http://arcgraph.de/sr/
