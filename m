@@ -1,171 +1,67 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Thu, 10 May 2007 10:02:15 -0700
-Message-ID: <20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
-References: <20070510072247.063476979@intel.com>
-	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
-	<20070509220952.5fa34822.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070509220952.5fa34822.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
+From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Subject: [PATCH] aic94xx: add PCI ID 9005:0416
+Date: Thu, 10 May 2007 19:59:23 +0200
+Message-ID: <200705101759.l4AHxNmU001798@appel.macroscoop.nl>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mondriaan.macroscoop.nl ([82.94.9.2]:2223 "EHLO
+	mondriaan.macroscoop.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756526AbXEJSIV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 14:08:21 -0400
+Received: from appel.macroscoop.nl (appel.macroscoop.nl [IPv6:2001:888:1734:0:219:d1ff:fe39:f483])
+	by mondriaan.macroscoop.nl (envelope-from pim@appel.macroscoop.nl) (8.13.8/8.13.8) with ESMTP id l4AHxNJD002886
+	for <linux-scsi@vger.kernel.org>; Thu, 10 May 2007 19:59:23 +0200
+Received: from appel.macroscoop.nl (localhost [127.0.0.1])
+	by appel.macroscoop.nl (8.13.8/8.13.7) with ESMTP id l4AHxNDP001799
+	for <linux-scsi@vger.kernel.org>; Thu, 10 May 2007 19:59:23 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Check to see if an ATAPI device supports Asynchronous Notification.
-If so, enable it.
+I just received the retail version of an Adaptec 58300 PCI-X SAS adapter
+with PCI ID 9005:0416.
 
-Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
----
-Andrew, I cleaned up the function header to properly comply with kernel
-doc requirements.  Other than that, this patch is the same.  
+Here's the lspci -vvn output:
 
-Index: 2.6-mm/drivers/ata/libata-core.c
-===================================================================
---- 2.6-mm.orig/drivers/ata/libata-core.c
-+++ 2.6-mm/drivers/ata/libata-core.c
-@@ -70,6 +70,7 @@ const unsigned long sata_deb_timing_long
- static unsigned int ata_dev_init_params(struct ata_device *dev,
- 					u16 heads, u16 sectors);
- static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
-+static unsigned int ata_dev_set_AN(struct ata_device *dev);
- static void ata_dev_xfermask(struct ata_device *dev);
- 
- unsigned int ata_print_id = 1;
-@@ -1983,6 +1984,22 @@ int ata_dev_configure(struct ata_device 
- 		}
- 		dev->cdb_len = (unsigned int) rc;
- 
-+		/*
-+		 * check to see if this ATAPI device supports
-+		 * Asynchronous Notification
-+		 */
-+		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
-+			int err;
-+			/* issue SET feature command to turn this on */
-+			err = ata_dev_set_AN(dev);
-+			if (err)
-+				ata_dev_printk(dev, KERN_ERR,
-+						"unable to set AN, err %x\n",
-+						err);
-+			else
-+				dev->flags |= ATA_DFLAG_AN;
-+		}
-+
- 		if (ata_id_cdb_intr(dev->id)) {
- 			dev->flags |= ATA_DFLAG_CDB_INTR;
- 			cdb_intr_string = ", CDB intr";
-@@ -3910,6 +3927,41 @@ static unsigned int ata_dev_set_xfermode
- }
- 
- /**
-+ *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
-+ *	@dev: Device to which command will be sent
-+ *
-+ *	Issue SET FEATURES - SATA FEATURES command to device @dev
-+ *	on port @ap with sector count set to indicate Asynchronous
-+ *	Notification feature
-+ *
-+ *	LOCKING:
-+ *	PCI/etc. bus probe sem.
-+ *
-+ *	RETURNS:
-+ *	0 on success, AC_ERR_* mask otherwise.
-+ */
-+static unsigned int ata_dev_set_AN(struct ata_device *dev)
-+{
-+	struct ata_taskfile tf;
-+	unsigned int err_mask;
-+
-+	/* set up set-features taskfile */
-+	DPRINTK("set features - SATA features\n");
-+
-+	ata_tf_init(dev, &tf);
-+	tf.command = ATA_CMD_SET_FEATURES;
-+	tf.feature = SETFEATURES_SATA_ENABLE;
-+	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
-+	tf.protocol = ATA_PROT_NODATA;
-+	tf.nsect = SATA_AN;
-+
-+	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
-+
-+	DPRINTK("EXIT, err_mask=%x\n", err_mask);
-+	return err_mask;
-+}
-+
-+/**
-  *	ata_dev_init_params - Issue INIT DEV PARAMS command
-  *	@dev: Device to which command will be sent
-  *	@heads: Number of heads (taskfile parameter)
-Index: 2.6-mm/include/linux/ata.h
-===================================================================
---- 2.6-mm.orig/include/linux/ata.h
-+++ 2.6-mm/include/linux/ata.h
-@@ -204,6 +204,12 @@ enum {
- 
- 	SETFEATURES_SPINUP	= 0x07, /* Spin-up drive */
- 
-+	SETFEATURES_SATA_ENABLE = 0x10, /* Enable use of SATA feature */
-+	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
-+
-+	/* SETFEATURE Sector counts for SATA features */
-+	SATA_AN			= 0x05,  /* Asynchronous Notification */
-+
- 	/* ATAPI stuff */
- 	ATAPI_PKT_DMA		= (1 << 0),
- 	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
-@@ -309,6 +315,9 @@ struct ata_taskfile {
- #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
- #define ata_id_removeable(id)	((id)[0] & (1 << 7))
- #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
-+#define ata_id_has_AN(id)	\
-+	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
-+	  ((id)[78] & (1 << 5)) )
- #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
- #define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
- #define ata_id_u32(id,n)	\
-Index: 2.6-mm/include/linux/libata.h
-===================================================================
---- 2.6-mm.orig/include/linux/libata.h
-+++ 2.6-mm/include/linux/libata.h
-@@ -136,6 +136,7 @@ enum {
- 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
- 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
- 	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
-+	ATA_DFLAG_AN		= (1 << 5), /* device supports Async notification */
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
- 
- 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
-@@ -174,6 +175,7 @@ enum {
- 	ATA_FLAG_SETXFER_POLLING= (1 << 14), /* use polling for SETXFER */
- 	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
- 	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
-+	ATA_FLAG_AN		= (1 << 17), /* controller supports AN */
- 
- 	/* The following flag belongs to ap->pflags but is kept in
- 	 * ap->flags because it's referenced in many LLDs and will be
-Index: 2.6-mm/drivers/ata/ahci.c
-===================================================================
---- 2.6-mm.orig/drivers/ata/ahci.c
-+++ 2.6-mm/drivers/ata/ahci.c
-@@ -327,14 +327,15 @@ static const struct ata_port_operations 
- static const struct ata_port_info ahci_port_info[] = {
- 	/* board_ahci */
- 	{
--		.flags		= AHCI_FLAG_COMMON,
-+		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_AN,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
- 	},
- 	/* board_ahci_pi */
- 	{
--		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
-+		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI |
-+				  ATA_FLAG_AN,
- 		.pio_mask	= 0x1f, /* pio0-4 */
- 		.udma_mask	= 0x7f, /* udma0-6 ; FIXME */
- 		.port_ops	= &ahci_ops,
+03:08.0 Class 0107: 9005:0416 (rev 09)
+        Subsystem: 9005:0416
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
+        Status: Cap+ 66Mhz+ UDF- FastB2B- ParErr- DEVSEL=slow >TAbort- <TAbort- <MAbort- >SERR- <PERR-
+        Latency: 32 (32000ns min, 26750ns max), Cache Line Size 08
+        Interrupt: pin A routed to IRQ 11
+        Region 0: Memory at fe700000 (64-bit, non-prefetchable) [size=256K]
+        Region 2: Memory at fe500000 (64-bit, prefetchable) [size=128K]
+        Region 4: I/O ports at bc00 [size=256]
+        Expansion ROM at fe600000 [disabled] [size=512K]
+        Capabilities: [40] PCI-X non-bridge device.
+                Command: DPERE- ERO- RBC=3 OST=4
+                Status: Bus=255 Dev=31 Func=0 64bit+ 133MHz+ SCD- USC-, DC=simple, DMMRBC=3, DMOST=4, DMCRS=4, RSCEM-
+        Capabilities: [58] Power Management version 2
+                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+                Status: D0 PME-Enable- DSel=0 DScale=0 PME-
+        Capabilities: [e0] Message Signalled Interrupts: 64bit+ Queue=0/2 Enable-
+                Address: 0000000000000000  Data: 0000
+
+The aic94xx driver in kernel 2.6.21.1 does not recognize the card.
+With following patch it does:
+
+--- linux-2.6.21.1.orig/drivers/scsi/aic94xx/aic94xx_hwi.h	2007-05-10 18:29:38.000000000 +0200
++++ linux-2.6.21.1/drivers/scsi/aic94xx/aic94xx_hwi.h	2007-05-03 22:42:35.000000000 +0200
+@@ -45,6 +45,7 @@
+  */
+ #define PCI_DEVICE_ID_ADAPTEC2_RAZOR10 0x410
+ #define PCI_DEVICE_ID_ADAPTEC2_RAZOR12 0x412
++#define PCI_DEVICE_ID_ADAPTEC2_RAZOR16 0x416
+ #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1E 0x41E
+ #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1F 0x41F
+ #define PCI_DEVICE_ID_ADAPTEC2_RAZOR30 0x430
+--- linux-2.6.21.1.orig/drivers/scsi/aic94xx/aic94xx_init.c	2007-05-10 18:30:14.000000000 +0200
++++ linux-2.6.21.1/drivers/scsi/aic94xx/aic94xx_init.c	2007-05-03 22:43:29.000000000 +0200
+@@ -837,6 +837,8 @@
+ 	 0, 0, 1},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR12),
+ 	 0, 0, 1},
++	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR16),
++	 0, 0, 1},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1E),
+ 	 0, 0, 1},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1F),
