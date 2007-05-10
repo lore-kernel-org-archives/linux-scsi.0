@@ -1,48 +1,44 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Wed, 9 May 2007 22:25:48 -0700
-Message-ID: <20070509222548.0c878055.akpm@linux-foundation.org>
-References: <20070510072247.063476979@intel.com>
-	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
-	<20070509220952.5fa34822.akpm@linux-foundation.org>
-	<4642AA3E.4090308@garzik.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH v2] add bidi support for block pc requests
+Date: Thu, 10 May 2007 15:53:22 +0900
+Message-ID: <20070510155322R.fujita.tomonori@lab.ntt.co.jp>
+References: <4641D380.8050100@panasas.com>
+	<1178722514.3695.23.camel@mulgrave.il.steeleye.com>
+	<4641FCC8.4040600@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:45335 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755399AbXEJFZz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 May 2007 01:25:55 -0400
-In-Reply-To: <4642AA3E.4090308@garzik.org>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:41276 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755274AbXEJGyi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 02:54:38 -0400
+In-Reply-To: <4641FCC8.4040600@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
+To: bharrosh@panasas.com
+Cc: James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-On Thu, 10 May 2007 01:14:38 -0400 Jeff Garzik <jeff@garzik.org> wrote:
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH v2] add bidi support for block pc requests
+Date: Wed, 09 May 2007 19:54:32 +0300
 
-> Andrew Morton wrote:
-> >> + *	@dev: Device to which command will be sent
-> >> + *
-> >> + *	Issue SET FEATURES - SATA FEATURES command to device @dev
-> >> + *	on port @ap.
-> >> + *
-> >> + *	LOCKING:
-> >> + *	PCI/etc. bus probe sem.
-> >> + *
-> >> + *	RETURNS:
-> >> + *	0 on success, AC_ERR_* mask otherwise.
-> >> + */
+> James Bottomley wrote:
+> > Actually, the first order of business is to use accessors on the command
+> > pointers in the drivers to free them from the internal layout of the
+> > structure (and where it is allocated).
 > > 
-> > ooh, locking and return value documentation.  Often missed, and nice.
+> Thanks! I totally second that. Let me look into my old patches and come
+> up with all the needed accessors. I hope 3-5 will be enough.
+> I will send some suggestions tomorrow.
+> > 
+> > No, that's why you do the accessors.  Convert all of the common drivers
+> > to accessors on the current structure, then throw the switch to convert
+> > to the new structure (whatever form is finally settled on).  Then any
+> > unconverted drivers break and people fix the ones they care about.
 > 
-> 
-> We set high standards in the libata world ;-)
-> 
+> Last time I was able to compile 97% of drivers and convert by search-and-replace
+> the rest. Not a huge deal.
 
-It seems to be working.  This series is perhaps the most idiomatic and
-generally kernelly-looking code I've seen in ages.
-
-Who cares if it works? ;)
+We need to remove the non-use-sg code in the drivers and convert
+them. So it's a bit more complicated than search-and-replace.
