@@ -1,45 +1,94 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: use_sg != 0 assumption (was Re: [PATCH 5/9] Drop single buffer
-	request support.)
-Date: Thu, 10 May 2007 12:44:11 +0100
-Message-ID: <20070510114411.GA17971@infradead.org>
-References: <11787529952207-git-send-email-krh@redhat.com>
-	<11787530023454-git-send-email-krh@redhat.com>
-	<11787530031570-git-send-email-krh@redhat.com>
-	<11787530031450-git-send-email-krh@redhat.com>
-	<11787530043878-git-send-email-krh@redhat.com>
-	<4642F627.5040400@s5r6.in-berlin.de>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: HDIO_DRIVE_CMD and hdparm
+Date: Thu, 10 May 2007 14:12:59 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <4642F627.5040400@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Kristian H?gsberg <krh@redhat.com>, linux1394-devel <linux1394-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:36159 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759194AbXEJMNB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 May 2007 08:13:01 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Thu, May 10, 2007 at 12:38:31PM +0200, Stefan Richter wrote:
-> >  	fw_memcpy_to_be32(&orb->request, &orb->request, sizeof orb->request);
-> >  
-> 
-> Would a BUG_ON(cmd->use_sg == 0); be in order?
+	Hi,
 
-I don't think we should put this into every driver.  If you want to
-be sure this doesn't happen anymore put it just in front of the queuecommand
-call.
+`hdparm -t' uses HDIO_DRIVE_CMD(null) to flush the disk's buffer.
+When using it on my own block device (the new PS3 disk storage driver), hdparm
+gives the following error message:
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+| HDIO_DRIVE_CMD(null) (wait for flush complete) failed: Inappropriate ioctl for device
+
+When using it on an ATA or SCSI device, no such error message is printed.
+
+According to the hdparm sources, hdparm expects the HDIO_DRIVE_CMD(null) ioctl
+to either succeed, or to fail with errno EINVAL.
+
+Apparently handling of ioctls is different for the different device types:
+  - ATA/SATA handle HDIO_DRIVE_CMD(null) (and a few other variants)
+    => fine for hdparm
+  - SCSI doesn't handle HDIO_DRIVE_CMD(null), and returns EINVAL
+    => fine for hdparm
+  - If a block device doesn't support the ioctl, blkdev_driver_ioctl() returns
+    ENOTTY
+    => hdparm error message
+
+Which one is correct?
+  - blkdev_ioctl()/blkdev_driver_ioctl() return -ENOTTY
+  - scsi_cmd_ioctl() returns -ENOTTY
+  - scsi_ioctl() returns -EINVAL
+  - cdrom_ioctl() returns -ENOSYS to mean not handled, continue
+  - some block layer routines return -ENOIOCTLCMD to mean not handled, continue
+
+This causes constructs with different tests like e.g.:
+
+	sr_block_ioctl()
+	{
+		...
+		ret = cdrom_ioctl(...);
+		if (ret != -ENOSYS)
+			return ret;
+		...
+		return scsi_ioctl(...);
+	}
+
+	cdrom_ioctl()
+	{
+		...
+		ret = scsi_cmd_ioctl(...);
+		if (ret != -ENOTTY)
+			return ret;
+		...
+		return -ENOSYS;
+	}
+
+	blkdev_ioctl()
+	{
+		...
+		ret = blkdev_locked_ioctl(...);
+		...
+		if (ret != -ENOIOCTLCMD)
+			return ret;
+
+		return blkdev_driver_ioctl(...);
+	}
+
+My questions:
+  1. Does any of these have to be fixed?
+  2. Shall I add a dummy HDIO_DRIVE_CMD(null) handler to my block device to
+     return -EINVAL?
+  3. Shall I just ignore the hdparm error message?
+
+Thanks!
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- Sony Network and Software Technology Center Europe (NSCE)
+Geert.Uytterhoeven@sonycom.com ------- The Corporate Village, Da Vincilaan 7-D1
+Voice +32-2-7008453 Fax +32-2-7008622 ---------------- B-1935 Zaventem, Belgium
