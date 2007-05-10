@@ -1,30 +1,40 @@
 From: Mark Lord <lkml@rtr.ca>
 Subject: Re: HDIO_DRIVE_CMD and hdparm
-Date: Thu, 10 May 2007 09:13:54 -0400
-Message-ID: <46431A92.8010501@rtr.ca>
-References: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be> <20070510135153.5f6d62f8@the-village.bc.nu>
+Date: Thu, 10 May 2007 09:20:18 -0400
+Message-ID: <46431C12.1030207@rtr.ca>
+References: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070510135153.5f6d62f8@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rtr.ca ([64.26.128.89]:3019 "EHLO mail.rtr.ca"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1760857AbXEJNUT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 May 2007 09:20:19 -0400
+In-Reply-To: <Pine.LNX.4.62.0705101327170.759@pademelon.sonytel.be>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-Alan Cox wrote:
->>   - SCSI doesn't handle HDIO_DRIVE_CMD(null), and returns EINVAL
->>     => fine for hdparm
->>   - If a block device doesn't support the ioctl, blkdev_driver_ioctl() returns
->>     ENOTTY
->>     => hdparm error message
+Geert Uytterhoeven wrote:
+> 	Hi,
 > 
-> Those are both correct
-> 	-ENOTTY 		I don't know this ioctl
-> 	-EINVAL			I know this ioctl, usage wrong
+> `hdparm -t' uses HDIO_DRIVE_CMD(null) to flush the disk's buffer.
 
-Exactly.
-I'll have hdparm-7.4 not complain on ENOTTY as well.
+More correctly, that command is supposed to act like an I/O queue "barrier"
+operation, not returning from the syscall until everything queued in front
+of it has been issued/completed.
 
--ml
+I believe that only the original IDE driver actually implements it, though.
+And hdparm-7.4 (not released yet) will no longer complain about ENOTTY.
+
+Note that current versions of hdparm use SG_IO/ATA_16 (SAT) for nearly everything
+now, only falling back to the older ioctl's for drivers which reject the SAT attempt.
+
+I'd love to find a USB drive enclosure that supports SAT.
+Anyone know of one?
+
+And does the USB storage layer actually pass the ATA_16 packets to the device?
+
+Cheers
