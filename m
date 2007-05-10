@@ -1,23 +1,23 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 1/4] stex: fix id mapping issue
-Date: Thu, 10 May 2007 15:59:45 -0500
-Message-ID: <1178830785.3712.15.camel@mulgrave.il.steeleye.com>
+Date: Thu, 10 May 2007 17:03:21 -0400
+Message-ID: <46438899.3020001@garzik.org>
 References: <NONAMEB29nIvX6bxu8Y00001141@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=iso-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:45154 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758179AbXEJU7v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 16:59:51 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:60337 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762157AbXEJVDY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 May 2007 17:03:24 -0400
 In-Reply-To: <NONAMEB29nIvX6bxu8Y00001141@nonameb.ptu.promise.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ed Lin <ed.lin@promise.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, jeff <jeff@garzik.org>, hch <hch@infradead.org>, promise_linux <promise_linux@promise.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "james.Bottomley" <james.Bottomley@SteelEye.com>, hch <hch@infradead.org>, promise_linux <promise_linux@promise.com>
 
-On Wed, 2007-05-09 at 20:50 -0800, Ed Lin wrote:
+Ed Lin wrote:
 > The correct internal mapping of stex controllers should be:
 > id:0~15, lun:0~7 (st_shasta)
 > id:0, lun:0~127 (st_yosemite)
@@ -36,9 +36,6 @@ On Wed, 2007-05-09 at 20:50 -0800, Ed Lin wrote:
 > 
 > Signed-off-by: Ed Lin <ed.lin@promise.com>
 
-This looks great, thanks for doing it.  I think it can be slid nicely
-into -rc1.
-
-James
+ACK patches 1-4, but some suggestions will follow
 
 
