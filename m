@@ -1,158 +1,91 @@
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
-Subject: Re: [PATCH 2/5] zfcp: Fix deadlock between zfcp ERP and SCSI
-Date: Thu, 10 May 2007 09:49:02 +0200
-Message-ID: <20070510074902.GA7893@osiris.boeblingen.de.ibm.com>
-References: <200705081116.53021.swen@vnet.ibm.com> <4640907B.3080409@emulex.com>
+From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+Subject: [PATCH] PCI legacy I/O port free driver - Making Emulex lpfc driver
+ legacy I/O port free
+Date: Thu, 10 May 2007 19:18:05 +0900
+Message-ID: <4642F15D.5010203@jp.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-2022-JP
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:33852 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756932AbXEJHuI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 03:50:08 -0400
-Content-Disposition: inline
-In-Reply-To: <4640907B.3080409@emulex.com>
+Received: from fgwmail9.fujitsu.co.jp ([192.51.44.39]:52453 "EHLO
+	fgwmail9.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760928AbXEJKTi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 06:19:38 -0400
+Received: from fgwmail7.fujitsu.co.jp (fgwmail7.fujitsu.co.jp [192.51.44.37])
+	by fgwmail9.fujitsu.co.jp (Fujitsu Gateway) with ESMTP id l4AAJaPU012253
+	for <linux-scsi@vger.kernel.org> (envelope-from kusumi.tomohiro@jp.fujitsu.com);
+	Thu, 10 May 2007 19:19:36 +0900
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
+To: james.smart@emulex.com, gregkh@suse.de
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, May 08, 2007 at 11:00:11AM -0400, James Smart wrote:
-> Curious why you are calling scsi_scan_target() or
-> scsi_target_block()/scsi_target_unblock() directly. I would have
-> thought the add/remove rport code would have done this for you,
-> and it deals with all the flush conditions, etc.
-> 
-> -- james
-> 
-> Swen Schillig wrote:
-> >From: Christof Schmitt <christof.schmitt@de.ibm.com>
-> >The SCSI stack requires low level drivers to register and
-> >unregister devices. For zfcp this leads to the situation where
-> >zfcp calls the SCSI stack, the SCSI tries to scan the new device
-> >and the scan SCSI command fails. This would require the zfcp erp,
-> >but the erp thread is already blocked in the register call.
-> >The fix is to make sure that the calls from the ERP thread to
-> >the SCSI stack do not block the ERP thread. In detail:
-> >1) Use a workqueue to avoid blocking of the scsi_scan_target calls.
-> >2) When removing a unit make sure that no scsi_scan_target call is
-> >   pending.
-> >3) Replace scsi_flush_work with scsi_target_unblock. This avoids
-> >   blocking and has the same result.
+Hi
 
-Reading the patch again, I think there is still a race:
+As you can see in the "10. pci_enable_device_bars() and Legacy I/O
+Port space" of the Documentation/pci.txt, the latest kernel has
+interfaces for PCI device drivers to tell the kernel which resource
+the driver want to use, ex. I/O port or MMIO.
 
-> >+static void zfcp_erp_scsi_scan(struct work_struct *work)
-> >+{
-> >+	struct zfcp_erp_add_work *p =
-> >+		container_of(work, struct zfcp_erp_add_work, work);
-> >+	struct zfcp_unit *unit = p->unit;
-> >+	struct fc_rport *rport = unit->port->rport;
-> >+	scsi_scan_target(&rport->dev, 0, rport->scsi_target_id,
-> >+			 unit->scsi_lun, 0);
-> >+	atomic_clear_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING, &unit->status);
-> >+	wake_up(&unit->scsi_scan_wq);
-> >+	zfcp_unit_put(unit);
-> >+	kfree(p);
+I've made a patch which makes Emulex lpfc driver legacy I/O port
+free by using the PCI core changes I mentioned above. The Emulex
+lpfc driver can handle some of its devices without using I/O port.
+So this patch changes the driver not to enable/request I/O port
+region.
 
-This function gets executed via schedule_work() and therefore there is
-nothing that prevents the rport to go. E.g. the following might happen:
-function gets enqueued for execution via schedule_work(), adapter gets
-shut down, call to fc_remort_port_delete(), port->rport gets deleted,
-then zfcp_erp_scsi_scan() gets called and tries to derefence port->rport
-which is NULL. Addressing exception is the result.
+As a result, the driver can handle its device even when there are
+huge number of PCI devices being used on the system and no I/O
+port region assigned to the device.
 
-The patch below should fix that, but it changes the call from
-scsi_scan_target() to scsi_add_device(). I think that should be ok.
+Tomohiro Kusumi
 
-Not-yet-signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
+Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
+
 ---
- drivers/s390/scsi/zfcp_def.h |    1 +
- drivers/s390/scsi/zfcp_erp.c |   37 +++++++++++++++++++------------------
- 2 files changed, 20 insertions(+), 18 deletions(-)
+ lpfc_init.c |   10 ++++++----
+ 1 files changed, 6 insertions(+), 4 deletions(-)
 
-Index: linux-2.6/drivers/s390/scsi/zfcp_def.h
-===================================================================
---- linux-2.6.orig/drivers/s390/scsi/zfcp_def.h
-+++ linux-2.6/drivers/s390/scsi/zfcp_def.h
-@@ -961,6 +961,7 @@ struct zfcp_port {
-         atomic_t               erp_counter;
- 	u32                    maxframe_size;
- 	u32                    supported_classes;
-+	unsigned int	       scsi_target_id;
- };
- 
- /* the struct device sysfs_device must be at the beginning of this structure.
-Index: linux-2.6/drivers/s390/scsi/zfcp_erp.c
-===================================================================
---- linux-2.6.orig/drivers/s390/scsi/zfcp_erp.c
-+++ linux-2.6/drivers/s390/scsi/zfcp_erp.c
-@@ -1591,7 +1591,7 @@ zfcp_erp_strategy_check_adapter(struct z
- }
- 
- struct zfcp_erp_add_work {
--	struct zfcp_unit  *unit;
-+	struct zfcp_unit *unit;
- 	struct work_struct work;
- };
- 
-@@ -1603,15 +1603,14 @@ struct zfcp_erp_add_work {
-  */
- static void zfcp_erp_scsi_scan(struct work_struct *work)
- {
--	struct zfcp_erp_add_work *p =
--		container_of(work, struct zfcp_erp_add_work, work);
--	struct zfcp_unit *unit = p->unit;
--	struct fc_rport *rport = unit->port->rport;
--	scsi_scan_target(&rport->dev, 0, rport->scsi_target_id,
--			 unit->scsi_lun, 0);
--	atomic_clear_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING, &unit->status);
--	wake_up(&unit->scsi_scan_wq);
--	zfcp_unit_put(unit);
-+	struct zfcp_erp_add_work *p;
-+
-+	p = container_of(work, struct zfcp_erp_add_work, work);
-+	scsi_add_device(p->unit->port->adapter->scsi_host, 0,
-+			p->unit->port->scsi_target_id, p->unit->scsi_lun);
-+	atomic_clear_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING, &p->unit->status);
-+	wake_up(&p->unit->scsi_scan_wq);
-+	zfcp_unit_put(p->unit);
- 	kfree(p);
- }
- 
-@@ -3161,25 +3160,27 @@ zfcp_erp_action_cleanup(int action, stru
- 			break;
- 		}
- 
--		if ((result == ZFCP_ERP_SUCCEEDED)
--		    && !port->rport) {
-+		if ((result == ZFCP_ERP_SUCCEEDED) && !port->rport) {
- 			struct fc_rport_identifiers ids;
-+			struct fc_rport *rport;
-+
- 			ids.node_name = port->wwnn;
- 			ids.port_name = port->wwpn;
- 			ids.port_id = port->d_id;
- 			ids.roles = FC_RPORT_ROLE_FCP_TARGET;
--			port->rport =
--				fc_remote_port_add(adapter->scsi_host, 0, &ids);
--			if (!port->rport)
-+			rport = fc_remote_port_add(adapter->scsi_host, 0, &ids);
-+			if (!rport)
- 				ZFCP_LOG_NORMAL("failed registration of rport"
- 						"(adapter %s, wwpn=0x%016Lx)\n",
- 						zfcp_get_busid_by_port(port),
- 						port->wwpn);
- 			else {
--				scsi_target_unblock(&port->rport->dev);
--				port->rport->maxframe_size = port->maxframe_size;
--				port->rport->supported_classes =
-+				port->rport = rport;
-+				port->scsi_target_id = rport->scsi_target_id;
-+				rport->maxframe_size = port->maxframe_size;
-+				rport->supported_classes =
- 					port->supported_classes;
-+				scsi_target_unblock(&port->rport->dev);
- 			}
- 		}
- 		if ((result != ZFCP_ERP_SUCCEEDED) && port->rport) {
+diff -uprN linux-2.6.21.orig/drivers/scsi/lpfc/lpfc_init.c linux-2.6.21/drivers/scsi/lpfc/lpfc_init.c
+--- linux-2.6.21.orig/drivers/scsi/lpfc/lpfc_init.c	2007-04-26 12:08:32.000000000 +0900
++++ linux-2.6.21/drivers/scsi/lpfc/lpfc_init.c	2007-05-09 18:22:10.000000000 +0900
+@@ -1419,10 +1419,11 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
+ 	int error = -ENODEV, retval;
+ 	int i;
+ 	uint16_t iotag;
++	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
+
+-	if (pci_enable_device(pdev))
++	if (pci_enable_device_bars(pdev, bars))
+ 		goto out;
+-	if (pci_request_regions(pdev, LPFC_DRIVER_NAME))
++	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
+ 		goto out_disable_device;
+
+ 	host = scsi_host_alloc(&lpfc_template, sizeof (struct lpfc_hba));
+@@ -1734,7 +1735,7 @@ out_put_host:
+ 	phba->host = NULL;
+ 	scsi_host_put(host);
+ out_release_regions:
+-	pci_release_regions(pdev);
++	pci_release_selected_regions(pdev, bars);
+ out_disable_device:
+ 	pci_disable_device(pdev);
+ out:
+@@ -1748,6 +1749,7 @@ lpfc_pci_remove_one(struct pci_dev *pdev
+ 	struct Scsi_Host   *host = pci_get_drvdata(pdev);
+ 	struct lpfc_hba    *phba = (struct lpfc_hba *)host->hostdata;
+ 	unsigned long iflag;
++	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
+
+ 	lpfc_free_sysfs_attr(phba);
+
+@@ -1792,7 +1794,7 @@ lpfc_pci_remove_one(struct pci_dev *pdev
+ 	iounmap(phba->ctrl_regs_memmap_p);
+ 	iounmap(phba->slim_memmap_p);
+
+-	pci_release_regions(phba->pcidev);
++	pci_release_selected_regions(phba->pcidev, bars);
+ 	pci_disable_device(phba->pcidev);
+
+ 	idr_remove(&lpfc_hba_index, phba->brd_no);
+
