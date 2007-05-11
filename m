@@ -1,52 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: Proposals to change the way all drivers work with SCSI commands
-Date: Fri, 11 May 2007 16:12:47 -0500
-Message-ID: <1178917967.3692.70.camel@mulgrave.il.steeleye.com>
+Date: Fri, 11 May 2007 23:20:31 +0200
+Message-ID: <4644DE1F.8050107@s5r6.in-berlin.de>
 References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
-	 <20070511.130024.104034874.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52188 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761105AbXEKVMv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 17:12:51 -0400
-In-Reply-To: <20070511.130024.104034874.davem@davemloft.net>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:38492 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759463AbXEKVUl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 17:20:41 -0400
+In-Reply-To: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, =?ISO-8859-1?Q?Kristian_H=F8?= =?ISO-8859-1?Q?gsberg?= <krh@bitplanet.net>
 
-On Fri, 2007-05-11 at 13:00 -0700, David Miller wrote:
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> Date: Fri, 11 May 2007 13:33:41 -0500
+James Bottomley wrote:
+> Right at the moment, we're planning to clean up the way SCSI drivers
+> process commands.  The proposals are essentially:
 > 
-> > Right at the moment, we're planning to clean up the way SCSI drivers
-> > process commands.  The proposals are essentially:
-> > 
-> >      1. Get rid of the now unnecessary map_single path (every command is
-> >         either zero transfer or scatter/gather)
-> >      2. use accessors to manipulate the SG lists (mainly so that we can
-> >         alter the implementation without affecting the drivers)
-> > 
-> > It strikes me that in all of this, we could also consider doing the DMA
-> > mapping inside the mid layer (instead of in every driver).  This is
-> > essentially what libata is already doing ... leading to confusion in
-> > SCSI drivers that use libata for SATA.
-> > 
-> > So what do people think about this?
+>      1. Get rid of the now unnecessary map_single path (every command is
+>         either zero transfer or scatter/gather)
+>      2. use accessors to manipulate the SG lists (mainly so that we can
+>         alter the implementation without affecting the drivers)
+
+Should be fine with the old and the new SBP-2 driver.
+
+> It strikes me that in all of this, we could also consider doing the DMA
+> mapping inside the mid layer (instead of in every driver).  This is
+> essentially what libata is already doing ... leading to confusion in
+> SCSI drivers that use libata for SATA.
 > 
-> This would require platforms to handle all of their bus types
-> behind the generic dma_*() and that's isn't true everywhere yet.
-> 
-> For example, SBUS still requires explicitly using sbus_map_sg() etc.
-> 
-> I plan to fix that of course, but we're not there now.
+> So what do people think about this?
 
-I could probably cook up a patch for you, if you like? ... I've already
-done it for several other architectures.
+The old SBP-2 driver needs the virtual addresses of S/G elements if
+compiled with a certain config option.  This option is meant for use
+with FireWire controllers which do not implement OHCI-1394, or to run
+the IEEE 1394 stack in a more secure mode.   However, sbp2 seems to be
+broken in multiple ways with this option at the moment, and I don't plan
+to fix it anytime soon.
 
-James
-
-
+So in short, moving the DMA mapping into mid layer should also be fine
+with the old and the new SBP-2 driver.
+-- 
+Stefan Richter
+-=====-=-=== -=-= -=-==
+http://arcgraph.de/sr/
