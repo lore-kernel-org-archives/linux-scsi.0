@@ -1,41 +1,56 @@
 From: akpm@linux-foundation.org
-Subject: [patch 22/28] drivers/message/i2o/device.c: remove redundant GFP_ATOMIC from kmalloc
-Date: Thu, 10 May 2007 23:01:06 -0700
-Message-ID: <200705110601.l4B616Un008181@shell0.pdx.osdl.net>
+Subject: [patch 24/28] fix for bugzilla 8426: massive slowdown on SCSI CD/DVD drive connected to mptspi driver
+Date: Thu, 10 May 2007 23:01:08 -0700
+Message-ID: <200705110601.l4B6183j008187@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:35337 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:41579 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759247AbXEKGJa (ORCPT
+	by vger.kernel.org with ESMTP id S1758157AbXEKGKd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 May 2007 02:09:30 -0400
+	Fri, 11 May 2007 02:10:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, ssatyam@cse.iitk.ac.in
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, doug.chapman@hp.com, Eric.Moore@lsil.com, stable@kernel.org
 
-From: Satyam Sharma <ssatyam@cse.iitk.ac.in>
+From: Doug Chapman <doug.chapman@hp.com>
 
-drivers/message/i2o/device.c:i2o_parm_field_get() unnecessarily passes
-GFP_ATOMIC (along with GFP_KERNEL) to kmalloc() from a context that is not
-atomic. Remove the pointless GFP_ATOMIC.
+Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
 
-Signed-off-by: Satyam Sharma <ssatyam@cse.iitk.ac.in>
+A recent code cleanup that moved code from mptscsih to mptspi inadvertently
+change the order some code was called.  This caused a massive slowdown (of
+150x to 300x) on the CD/DVD drive on the high-end HP Integrity servers.
+
+Signed-off-by: Doug Chapman <doug.chapman@hp.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: <stable@kernel.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/i2o/device.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/message/fusion/mptspi.c |    8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN drivers/message/i2o/device.c~drivers-message-i2o-devicec-remove-redundant-gfp_atomic-from-kmalloc drivers/message/i2o/device.c
---- a/drivers/message/i2o/device.c~drivers-message-i2o-devicec-remove-redundant-gfp_atomic-from-kmalloc
-+++ a/drivers/message/i2o/device.c
-@@ -485,7 +485,7 @@ int i2o_parm_field_get(struct i2o_device
- 	u8 *resblk;		/* 8 bytes for header */
- 	int rc;
+diff -puN drivers/message/fusion/mptspi.c~fix-for-bugzilla-8426-massive-slowdown-on-scsi-cd-dvd-drive-connected-to-mptspi-driver drivers/message/fusion/mptspi.c
+--- a/drivers/message/fusion/mptspi.c~fix-for-bugzilla-8426-massive-slowdown-on-scsi-cd-dvd-drive-connected-to-mptspi-driver
++++ a/drivers/message/fusion/mptspi.c
+@@ -727,13 +727,15 @@ static int mptspi_slave_configure(struct
+ 	struct _MPT_SCSI_HOST *hd =
+ 		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
+ 	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
+-	int ret = mptscsih_slave_configure(sdev);
++	int ret;
++
++	mptspi_initTarget(hd, vtarget, sdev);
++
++	ret = mptscsih_slave_configure(sdev);
  
--	resblk = kmalloc(buflen + 8, GFP_KERNEL | GFP_ATOMIC);
-+	resblk = kmalloc(buflen + 8, GFP_KERNEL);
- 	if (!resblk)
- 		return -ENOMEM;
+ 	if (ret)
+ 		return ret;
  
+-	mptspi_initTarget(hd, vtarget, sdev);
+-
+ 	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
+ 		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
+ 		sdev->id, spi_min_period(scsi_target(sdev)),
 _
