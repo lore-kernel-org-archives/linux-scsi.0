@@ -1,43 +1,61 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: Proposals to change the way all drivers work with SCSI commands
-Date: Fri, 11 May 2007 16:52:54 -0500
-Message-ID: <1178920374.3692.90.camel@mulgrave.il.steeleye.com>
-References: <1178917967.3692.70.camel@mulgrave.il.steeleye.com>
-	 <20070511.142111.118971174.davem@davemloft.net>
-	 <1178919416.3692.82.camel@mulgrave.il.steeleye.com>
-	 <20070511.144741.41878794.davem@davemloft.net>
+Date: Fri, 11 May 2007 23:58:30 +0200
+Message-ID: <4644E706.5030102@s5r6.in-berlin.de>
+References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>	 <4644DE1F.8050107@s5r6.in-berlin.de> <59ad55d30705111430o3142dd6m37c05475a1b3c6dd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52383 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751349AbXEKVw6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 17:52:58 -0400
-In-Reply-To: <20070511.144741.41878794.davem@davemloft.net>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:39780 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757831AbXEKV6o (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 17:58:44 -0400
+In-Reply-To: <59ad55d30705111430o3142dd6m37c05475a1b3c6dd@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org
+To: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@bitplanet.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Fri, 2007-05-11 at 14:47 -0700, David Miller wrote:
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> Date: Fri, 11 May 2007 16:36:56 -0500
-> 
-> > On PARISC, we actually use a table of function pointers, but then we
-> > also have several other oddities including having to walk up the bus
-> > tree to find our IOMMU (having several) which can actually be on a
-> > different bus type for some of the older systems (i.e. the PCI iommu is
-> > in the GSC bus etc).
-> 
-> Yes and you can store such things in asm/device.h's dev_archdata,
-> that's another approach I considered.
+Kristian H=F8gsberg wrote:
+> On 5/11/07, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> James Bottomley wrote:
+>> > It strikes me that in all of this, we could also consider doing th=
+e DMA
+>> > mapping inside the mid layer (instead of in every driver).
+=2E..
+>> The old SBP-2 driver needs the virtual addresses of S/G elements if
+>> compiled with a certain config option.  This option is meant for use
+>> with FireWire controllers which do not implement OHCI-1394, or to ru=
+n
+>> the IEEE 1394 stack in a more secure mode.
+=2E..
+> Well, if we want to make a more secure mode for fw-sbp2.c where it,
+> like the old driver, manually copies the payload data from the genera=
+l
+> async receive buffer to the destination, we'll still need the virtual
+> address.
 
-yes ... that's sort of why it exists ... arm wanted more than just the
-void *platform_data which is where we stuff the iommu information on
-parisc.  Really, I suppose it's time we eliminated platform_data and
-just used dev_archdata instead.
+Yes, that's right. /If/ we are going to implement such a mode, then (a)
+the virtual addresses have to be passed down to ->queuecommand, and (b)
+DMA mapping would be unnecessary and wasteful.
 
-James
+(For the list:  By "secure" we mean that we wouldn't allow the FireWire
+controller to act as a bus bridge, and would be able to do boundary
+checks on local bus addresses which, in the SBP-2 protocol, are
+generally coming from the _target_.  Without such a mode, the lower 4G
+of the initiator's memory are at the mercy of the target's firmware.)
 
+> How does the usb storage driver handle this?
+>=20
+> Kristian
 
+--=20
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D-=3D -=3D-=3D=3D
+http://arcgraph.de/sr/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
