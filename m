@@ -1,26 +1,23 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: Proposals to change the way all drivers work with SCSI commands
-Date: Sat, 12 May 2007 03:42:58 +0900
-Message-ID: <20070512034258L.fujita.tomonori@lab.ntt.co.jp>
+Date: Fri, 11 May 2007 15:15:37 -0400
+Message-ID: <4644C0D9.70006@garzik.org>
 References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:40958 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757228AbXEKSnE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 14:43:04 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:41337 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966241AbXEKTPk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 May 2007 15:15:40 -0400
 In-Reply-To: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Proposals to change the way all drivers work with SCSI commands
-Date: Fri, 11 May 2007 13:33:41 -0500
-
+James Bottomley wrote:
 > Right at the moment, we're planning to clean up the way SCSI drivers
 > process commands.  The proposals are essentially:
 > 
@@ -34,6 +31,11 @@ Date: Fri, 11 May 2007 13:33:41 -0500
 > essentially what libata is already doing ... leading to confusion in
 > SCSI drivers that use libata for SATA.
 
-Several drivers don't take account of the mapping failure and handling
-the failure for some is tricky. So it would be nice if the mid layer
-takes care about the mapping.
+My eyes are crossed :)  How does doing DMA mapping in the mid layer lead 
+to confusion in SCSI drivers that use libata for SATA?  Are you talking 
+about aic94xx and ipr only, or other drivers?
+
+	Jeff
+
+
+
