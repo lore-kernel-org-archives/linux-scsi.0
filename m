@@ -1,40 +1,96 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/28] drivers/scsi/NCR5380.c: Replacing yield() with a better alternative
-Date: Thu, 10 May 2007 23:00:48 -0700
-Message-ID: <200705110600.l4B60m9e008127@shell0.pdx.osdl.net>
+Subject: [patch 07/28] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
+Date: Thu, 10 May 2007 23:00:51 -0700
+Message-ID: <200705110600.l4B60psY008136@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:37173 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:39746 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756863AbXEKGBY (ORCPT
+	by vger.kernel.org with ESMTP id S1754864AbXEKGBY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 11 May 2007 02:01:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, amol@verismonetworks.com, alan@lxorguk.ukuu.org.uk
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
 
-From: Amol Lad <amol@verismonetworks.com>
+From: Martin Bligh <mbligh@google.com>
 
-Replaced yield() with cond_resched()
+Fix up compiler warnings in megaraid driver
 
-Signed-off-by: Amol Lad <amol@verismonetworks.com>
-Acked-by: Alan Cox <alan@lxorguk.ukuu.org.uk>
+[akpm@osdl.org: build fix]
+Signed-off-by: Martin J. Bligh <mbligh@google.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/NCR5380.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/megaraid.c |   22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c~drivers-scsi-ncr5380c-replacing-yield-with-a
-+++ a/drivers/scsi/NCR5380.c
-@@ -347,7 +347,7 @@ static int NCR5380_poll_politely(struct 
- 		if((r & bit) == val)
- 			return 0;
- 		if(!in_interrupt())
--			yield();
-+			cond_resched();
- 		else
- 			cpu_relax();
- 	}
+diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
++++ a/drivers/scsi/megaraid.c
+@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
+ module_param(max_mbox_busy_wait, ushort, 0);
+ MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+ 
+-#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
+-#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
+-#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
+-#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
++#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x20)
++#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x2C)
++#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x20)
++#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x2C)
+ 
+ /*
+  * Global variables
+@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			/*
+ 			 * The user passthru structure
+ 			 */
+-			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
++			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
+ 
+ 			/*
+ 			 * Copy in the user passthru here.
+@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 					goto freemem_and_return;
+@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Is data going up-stream
+ 			 */
+ 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 				}
+@@ -3702,7 +3706,7 @@ freemem_and_return:
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							uioc.xferlen) ) {
+ 
+ 					pci_free_consistent(pdev,
+@@ -3742,7 +3746,7 @@ freemem_and_return:
+ 			 * Is data going up-stream
+ 			 */
+ 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							uioc.xferlen) ) {
+ 
+ 					rval = (-EFAULT);
 _
