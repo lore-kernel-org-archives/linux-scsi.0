@@ -1,39 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/28] make seagate_st0x_detect() static
+Subject: [patch 09/28] SCSI: Fix obvious typo "spin_lock_irqrestore()" in gdth.c
 Date: Thu, 10 May 2007 23:00:52 -0700
-Message-ID: <200705110600.l4B60qU9008139@shell0.pdx.osdl.net>
+Message-ID: <200705110600.l4B60qNO008142@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:43775 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:41420 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758399AbXEKGBa (ORCPT
+	by vger.kernel.org with ESMTP id S1758541AbXEKGBd (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 May 2007 02:01:30 -0400
+	Fri, 11 May 2007 02:01:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com, achim_leubner@adaptec.com
 
-From: Adrian Bunk <bunk@stusta.de>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-seagate_st0x_detect() can become static.
+Fix misspelled "spin_lock_irqrestore" to read "spin_unlock_irqrestore"
+instead.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Presumably, GDTH_RTC doesn't get used a lot.
+
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Cc: <achim_leubner@adaptec.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/seagate.c |    2 +-
+ drivers/scsi/gdth.c |    2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/seagate.c~make-seagate_st0x_detect-static drivers/scsi/seagate.c
---- a/drivers/scsi/seagate.c~make-seagate_st0x_detect-static
-+++ a/drivers/scsi/seagate.c
-@@ -420,7 +420,7 @@ static inline void borken_wait (void)
- #define ULOOP( i ) for (clock = i*8;;)
- #define TIMEOUT (!(clock--))
- 
--int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
-+static int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
- {
- 	struct Scsi_Host *instance;
- 	int i, j;
+diff -puN drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc
++++ a/drivers/scsi/gdth.c
+@@ -1955,7 +1955,7 @@ static int __init gdth_search_drives(int
+         for (j = 0; j < 12; ++j) 
+             rtc[j] = CMOS_READ(j);
+     } while (rtc[0] != CMOS_READ(0));
+-    spin_lock_irqrestore(&rtc_lock, flags);
++    spin_unlock_irqrestore(&rtc_lock, flags);
+     TRACE2(("gdth_search_drives(): RTC: %x/%x/%x\n",*(ulong32 *)&rtc[0],
+             *(ulong32 *)&rtc[4], *(ulong32 *)&rtc[8]));
+     /* 3. send to controller firmware */
 _
