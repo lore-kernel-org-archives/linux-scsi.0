@@ -1,52 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: Proposals to change the way all drivers work with SCSI commands
-Date: Fri, 11 May 2007 16:10:29 -0400
-Message-ID: <4644CDB5.2070604@garzik.org>
-References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>	 <4644C0D9.70006@garzik.org> <1178912975.3692.61.camel@mulgrave.il.steeleye.com>
+Date: Fri, 11 May 2007 16:12:47 -0500
+Message-ID: <1178917967.3692.70.camel@mulgrave.il.steeleye.com>
+References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
+	 <20070511.130024.104034874.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:41922 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758775AbXEKUKb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 May 2007 16:10:31 -0400
-In-Reply-To: <1178912975.3692.61.camel@mulgrave.il.steeleye.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:52188 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761105AbXEKVMv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 17:12:51 -0400
+In-Reply-To: <20070511.130024.104034874.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: David Miller <davem@davemloft.net>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Fri, 2007-05-11 at 15:15 -0400, Jeff Garzik wrote:
->> James Bottomley wrote:
->>> Right at the moment, we're planning to clean up the way SCSI drivers
->>> process commands.  The proposals are essentially:
->>>
->>>      1. Get rid of the now unnecessary map_single path (every command is
->>>         either zero transfer or scatter/gather)
->>>      2. use accessors to manipulate the SG lists (mainly so that we can
->>>         alter the implementation without affecting the drivers)
->>>
->>> It strikes me that in all of this, we could also consider doing the DMA
->>> mapping inside the mid layer (instead of in every driver).  This is
->>> essentially what libata is already doing ... leading to confusion in
->>> SCSI drivers that use libata for SATA.
->> My eyes are crossed :)  How does doing DMA mapping in the mid layer lead 
->> to confusion in SCSI drivers that use libata for SATA?  Are you talking 
->> about aic94xx and ipr only, or other drivers?
+On Fri, 2007-05-11 at 13:00 -0700, David Miller wrote:
+> From: James Bottomley <James.Bottomley@SteelEye.com>
+> Date: Fri, 11 May 2007 13:33:41 -0500
 > 
-> Those are the only two that use libata for SATA, yes.
+> > Right at the moment, we're planning to clean up the way SCSI drivers
+> > process commands.  The proposals are essentially:
+> > 
+> >      1. Get rid of the now unnecessary map_single path (every command is
+> >         either zero transfer or scatter/gather)
+> >      2. use accessors to manipulate the SG lists (mainly so that we can
+> >         alter the implementation without affecting the drivers)
+> > 
+> > It strikes me that in all of this, we could also consider doing the DMA
+> > mapping inside the mid layer (instead of in every driver).  This is
+> > essentially what libata is already doing ... leading to confusion in
+> > SCSI drivers that use libata for SATA.
+> > 
+> > So what do people think about this?
 > 
-> aic94xx is horrible in this regard ... it has to try to distinguish STP
-> commands that come from libsas (and thus aren't mapped) from ones that
-> come from libata which are ... and it still doesn't get it entirely
-> right.
+> This would require platforms to handle all of their bus types
+> behind the generic dma_*() and that's isn't true everywhere yet.
+> 
+> For example, SBUS still requires explicitly using sbus_map_sg() etc.
+> 
+> I plan to fix that of course, but we're not there now.
 
-I would lean towards fixing libata to -not- DMA-map for those drivers. 
-Splitting up DMA mapping is ugly.
+I could probably cook up a patch for you, if you like? ... I've already
+done it for several other architectures.
 
-	Jeff
-
+James
 
 
