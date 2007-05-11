@@ -1,13 +1,13 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/28] drivers/scsi/wd33c93.c: cleanups
-Date: Thu, 10 May 2007 23:00:50 -0700
-Message-ID: <200705110600.l4B60osv008133@shell0.pdx.osdl.net>
+Subject: [patch 08/28] make seagate_st0x_detect() static
+Date: Thu, 10 May 2007 23:00:52 -0700
+Message-ID: <200705110600.l4B60qU9008139@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:35445 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:43775 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758383AbXEKGB3 (ORCPT
+	by vger.kernel.org with ESMTP id S1758399AbXEKGBa (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 May 2007 02:01:29 -0400
+	Fri, 11 May 2007 02:01:30 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
@@ -15,36 +15,25 @@ Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
 
 From: Adrian Bunk <bunk@stusta.de>
 
-- #include <asm/irq.h> for getting the prototypes of {dis,en}able_irq()
-
-- make the needlessly global wd33c93_setup() static
+seagate_st0x_detect() can become static.
 
 Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/wd33c93.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/seagate.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/wd33c93.c~drivers-scsi-wd33c93c-cleanups drivers/scsi/wd33c93.c
---- a/drivers/scsi/wd33c93.c~drivers-scsi-wd33c93c-cleanups
-+++ a/drivers/scsi/wd33c93.c
-@@ -89,6 +89,8 @@
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
+diff -puN drivers/scsi/seagate.c~make-seagate_st0x_detect-static drivers/scsi/seagate.c
+--- a/drivers/scsi/seagate.c~make-seagate_st0x_detect-static
++++ a/drivers/scsi/seagate.c
+@@ -420,7 +420,7 @@ static inline void borken_wait (void)
+ #define ULOOP( i ) for (clock = i*8;;)
+ #define TIMEOUT (!(clock--))
  
-+#include <asm/irq.h>
-+
- #include "wd33c93.h"
- 
- #define optimum_sx_per(hostdata) (hostdata)->sx_table[1].period_ns
-@@ -1762,7 +1764,7 @@ static char setup_buffer[SETUP_BUFFER_SI
- static char setup_used[MAX_SETUP_ARGS];
- static int done_setup = 0;
- 
--int
-+static int
- wd33c93_setup(char *str)
+-int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
++static int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
  {
- 	int i;
+ 	struct Scsi_Host *instance;
+ 	int i, j;
 _
