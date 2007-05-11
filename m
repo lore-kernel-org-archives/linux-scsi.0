@@ -1,36 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: hdparm 7.3 supports SAT
-Date: Thu, 10 May 2007 17:55:32 -0400
-Message-ID: <464394D4.10503@torque.net>
-Reply-To: dougg@torque.net
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: 2.6.21 broke arm scsi on qemu -M volatilepb
+Date: Thu, 10 May 2007 21:20:46 -0700
+Message-ID: <20070510212046.477dfed1.randy.dunlap@oracle.com>
+References: <200705102359.11315.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42945 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755479AbXEJV65 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 May 2007 17:58:57 -0400
+Received: from agminet01.oracle.com ([141.146.126.228]:58246 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753329AbXEKERb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 00:17:31 -0400
+In-Reply-To: <200705102359.11315.rob@landley.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: mlord@pobox.com
+To: Rob Landley <rob@landley.net>
+Cc: linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>
 
-Mark Lord's hdparm version 7.3 supports the SCSI to ATA
-Translation (SAT) pass-through. So if SAT is supported,
-this allows hdparm to access ATA (e.g. SATA disks) and
-ATAPI (e.g. cd/dvd drives) devices behind SCSI transports.
+[adding linux-scsi]
 
-Note that the SAT layer may be in the kernel (e.g. libata),
-in a HBA's firmware (MPT Fusion SAS HBAs) or external.
-Also one of those "SCSI transports" might be SATA.
+On Thu, 10 May 2007 23:59:10 -0400 Rob Landley wrote:
 
-See http://sourceforge.net/projects/hdparm/
+> Booting a 2.6.20 kernel under qemu works fine and gets me to a shell prompt, 
+> but booting a 2.6.21.1 kernel cycles endlessly on scsi, going:
+> 
+> Loading iSCSI transport class v2.0-724.
+> PCI: enabling device 0000:00:0c.0 (0140 -> 0143)
+> sym0: <895a> rev 0x0 at pci 0000:00:0c.0 irq 0
+> sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+> sym0: SCSI BUS has been reset.
+> scsi0 : sym-2.2.3
+> scsi 0:0:0:0: ABORT operation started.
+> scsi 0:0:0:0: ABORT operation timed-out.
+> scsi 0:0:0:0: DEVICE RESET operation started.
+> scsi 0:0:0:0: DEVICE RESET operation timed-out.
+> scsi 0:0:0:0: BUS RESET operation started.
+> scsi 0:0:0:0: BUS RESET operation timed-out.
+> scsi 0:0:0:0: HOST RESET operation started.
+> sym0: SCSI BUS has been reset.
+> ...
+> And so on.
+> 
+> If you're interested in reproducing this, download the most recent 
+> http://landley.net/hg/firmware snapshot (links up top), run "./build.sh 
+> armv4l", and when that's done "cd build" and "./run-armv4l.sh".
+> 
+> Is this a known issue?  A quick google for "arm scsi 2.6.21" didn't turn up 
+> anything relevant...
+> 
+> Rob
 
 
-Both sdparm and two utilities in sg3_utils used some
-tortured syntax to pipe through ATA IDENTIFY (PACKET)
-DEVICE responses to 'hdparm --Istdin' prior to hdparm 7.x .
-That, in most cases, should no longer be needed.
-
-Doug Gilbert
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
