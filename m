@@ -1,39 +1,50 @@
 From: akpm@linux-foundation.org
-Subject: [patch 28/28] Update Maintainer email-id for MegaRAID SCSI drivers
-Date: Thu, 10 May 2007 23:01:11 -0700
-Message-ID: <200705110601.l4B61B7D008202@shell0.pdx.osdl.net>
+Subject: [patch 17/28] SCSI: use irq_handler_t where appropriate
+Date: Thu, 10 May 2007 23:01:01 -0700
+Message-ID: <200705110601.l4B6113b008166@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([65.172.181.25]:50786 "EHLO
+Received: from smtp1.linux-foundation.org ([65.172.181.25]:34562 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758286AbXEKGJL (ORCPT
+	by vger.kernel.org with ESMTP id S1754958AbXEKGJL (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 11 May 2007 02:09:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, sumant.patro@lsi.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org
 
-From: Sumant Patro <sumant.patro@lsi.com>
+From: Jeff Garzik <jeff@garzik.org>
 
-Update Maintainer email-id for MegaRAID SCSI drivers.
-
-Signed-off-by: Sumant Patro <sumant.patro@lsi.com>
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- MAINTAINERS |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/aacraid.h |    2 +-
+ drivers/scsi/qla2xxx/qla_isr.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff -puN MAINTAINERS~update-maintainer-email-id-for-megaraid-scsi-drivers MAINTAINERS
---- a/MAINTAINERS~update-maintainer-email-id-for-megaraid-scsi-drivers
-+++ a/MAINTAINERS
-@@ -2335,7 +2335,7 @@ S:	Maintained
+diff -puN drivers/scsi/aacraid/aacraid.h~scsi-use-irq_handler_t-where-appropriate drivers/scsi/aacraid/aacraid.h
+--- a/drivers/scsi/aacraid/aacraid.h~scsi-use-irq_handler_t-where-appropriate
++++ a/drivers/scsi/aacraid/aacraid.h
+@@ -464,7 +464,7 @@ struct adapter_ops
+ 	int  (*adapter_restart)(struct aac_dev *dev, int bled);
+ 	/* Transport operations */
+ 	int  (*adapter_ioremap)(struct aac_dev * dev, u32 size);
+-	irqreturn_t (*adapter_intr)(int irq, void *dev_id);
++	irq_handler_t adapter_intr;
+ 	/* Packet operations */
+ 	int  (*adapter_deliver)(struct fib * fib);
+ 	int  (*adapter_bounds)(struct aac_dev * dev, struct scsi_cmnd * cmd, u64 lba);
+diff -puN drivers/scsi/qla2xxx/qla_isr.c~scsi-use-irq_handler_t-where-appropriate drivers/scsi/qla2xxx/qla_isr.c
+--- a/drivers/scsi/qla2xxx/qla_isr.c~scsi-use-irq_handler_t-where-appropriate
++++ a/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1633,7 +1633,7 @@ struct qla_init_msix_entry {
+ 	uint16_t entry;
+ 	uint16_t index;
+ 	const char *name;
+-	irqreturn_t (*handler)(int, void *);
++	irq_handler_t handler;
+ };
  
- MEGARAID SCSI DRIVERS
- P:	Neela Syam Kolli
--M:	Neela.Kolli@engenio.com
-+M:	megaraidlinux@lsi.com
- S:	linux-scsi@vger.kernel.org
- W:	http://megaraid.lsilogic.com
- S:	Maintained
+ static struct qla_init_msix_entry imsix_entries[QLA_MSIX_ENTRIES] = {
 _
