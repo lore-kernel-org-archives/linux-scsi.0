@@ -1,50 +1,40 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: David Miller <davem@davemloft.net>
 Subject: Re: Proposals to change the way all drivers work with SCSI commands
-Date: Fri, 11 May 2007 23:20:31 +0200
-Message-ID: <4644DE1F.8050107@s5r6.in-berlin.de>
+Date: Fri, 11 May 2007 14:21:11 -0700 (PDT)
+Message-ID: <20070511.142111.118971174.davem@davemloft.net>
 References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
+	<20070511.130024.104034874.davem@davemloft.net>
+	<1178917967.3692.70.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:38492 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759463AbXEKVUl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 May 2007 17:20:41 -0400
-In-Reply-To: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:53976
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1761397AbXEKVVI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 May 2007 17:21:08 -0400
+In-Reply-To: <1178917967.3692.70.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, =?ISO-8859-1?Q?Kristian_H=F8?= =?ISO-8859-1?Q?gsberg?= <krh@bitplanet.net>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> Right at the moment, we're planning to clean up the way SCSI drivers
-> process commands.  The proposals are essentially:
-> 
->      1. Get rid of the now unnecessary map_single path (every command is
->         either zero transfer or scatter/gather)
->      2. use accessors to manipulate the SG lists (mainly so that we can
->         alter the implementation without affecting the drivers)
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Date: Fri, 11 May 2007 16:12:47 -0500
 
-Should be fine with the old and the new SBP-2 driver.
+> I could probably cook up a patch for you, if you like? ... I've already
+> done it for several other architectures.
 
-> It strikes me that in all of this, we could also consider doing the DMA
-> mapping inside the mid layer (instead of in every driver).  This is
-> essentially what libata is already doing ... leading to confusion in
-> SCSI drivers that use libata for SATA.
-> 
-> So what do people think about this?
+I don't want to use that "if (bus == &sbus_bus_type)" scheme so
+if that's what your patch will do don't bother :-)
 
-The old SBP-2 driver needs the virtual addresses of S/G elements if
-compiled with a certain config option.  This option is meant for use
-with FireWire controllers which do not implement OHCI-1394, or to run
-the IEEE 1394 stack in a more secure mode.   However, sbp2 seems to be
-broken in multiple ways with this option at the moment, and I don't plan
-to fix it anytime soon.
+I'm consolidating all of the IOMMU handling code on sparc64
+since they all do exactly the same thing, so at least on
+sparc64 there will be essentially direct calls to the IOMMU
+code agnostic of bus type.
 
-So in short, moving the DMA mapping into mid layer should also be fine
-with the old and the new SBP-2 driver.
--- 
-Stefan Richter
--=====-=-=== -=-= -=-==
-http://arcgraph.de/sr/
+Sparc32 will be a bit different, and that platform has no
+active maintainer so it'll have to wait until I have a
+spare weekend to do nothing but sparc32 stuff :-)
+
