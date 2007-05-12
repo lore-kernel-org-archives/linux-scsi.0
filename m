@@ -1,48 +1,48 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 0/19] clean ups on the drivers
-Date: Sat, 12 May 2007 19:05:42 +0900 (JST)
-Message-ID: <20070512190534B.fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Proposals to change the way all drivers work with SCSI commands
+Date: Sat, 12 May 2007 08:04:57 -0500
+Message-ID: <1178975097.3723.2.camel@mulgrave.il.steeleye.com>
+References: <1178908422.3692.58.camel@mulgrave.il.steeleye.com>
+	 <20070512091244.GA7981@osiris.boeblingen.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55716 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755432AbXELKHJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:07:09 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:56257 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756218AbXELNFF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 09:05:05 -0400
+In-Reply-To: <20070512091244.GA7981@osiris.boeblingen.de.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Heiko Carstens <heiko.carstens@de.ibm.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi,
+On Sat, 2007-05-12 at 11:12 +0200, Heiko Carstens wrote:
+> I hope that doesn't mean that each architecture is required to
+> implement all the DMA mapping stuff?
 
-This patchset cleans up 9 scsi drivers, ipr, ibmvscsi, fusion,
-aic7xxx, qla2xxx, lpfc, aacraid, BusLogic and aic79xxx.
+Yes, it will require this ... or at least dma_map_sg() and
+dma_unmap_sg().
 
-- remove the now unnecessary map_single path.
+>  s390 doesn't have any support
+> for DMA at all.
 
-- convert to new accessors for the scsi data buffer, the sg lists,
-bufferlen, resid.
+Well ... it does, you just do it differently.  You seem to construct
+this fsf thing from sbals that are programmed directly from the kernel
+vaddr.
 
-There are two patches for each driver, removing the non-use-sg code
-and converting to use the accessors.
+This would all work in the new scenario if you simply defined
+dma_map_sg() et al. to be a nop, wouldn't it?
 
-You can find the new accessors in the first patch. It includes
-scsi_dma_map/unmap (calling dma_map/unmap_sg) that Christoph proposed
-long ago and several macros (like scsi_for_each_sg, scsi_bufflen, etc)
-to isolate the driver from the sg lists and the parameters.
+>  The current workaround seems to be to sprinkle
+> a lot of BUG() statements in code that simply won't work on such
+> architectures but still compile it in.
+> Lately I introduced CONFIG_HAS_DMA and made building
+> drivers/base/dma-mapping.o and dmapool.o depend on that,
+> so we don't compile all the non working stuff on s390. Hope
+> all that can be sorted out if you go that direction.
 
-This is in preparation for chaining sg lists and bidirectional
-requests and possibly the mid-layer dma mapping, which has been
-discussed. scsi_for_each_sg will be converted to use Jens' chaining sg
-lists (for_each_sg) when it's ready. Jens, sorry about overlapping
-with the chaining sg lists patches for the SCSI drivers.
+James
 
-I tested the patches lightly, booting machines and performing some
-I/Os for few minutes.
 
-This patchset can be applied cleanly to the scsi-misc or Linus' tree.
-
-If this looks ok, I try to clean up the rest of the drivers (though I
-can only do compile tests).
