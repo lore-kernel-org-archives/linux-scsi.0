@@ -1,112 +1,151 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 12/19] lpfc: remove the non-use-sg case
-Date: Sat, 12 May 2007 19:05:44 +0900 (JST)
-Message-ID: <20070512184034Q.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 7/19] fusion: convert to use the data buffer accessors
+Date: Sat, 12 May 2007 19:05:43 +0900 (JST)
+Message-ID: <20070512183510E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44889 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44890 "EHLO
 	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755560AbXELKFz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:55 -0400
+	with ESMTP id S1755564AbXELKF4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: eric.moore@lsi.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-This removes the non-use-sg case.
+This converts fusion to use the data buffer accessors.
+
+TODO: use scsi_for_each_sg()
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c |   52 +---------------------------------------
- 1 files changed, 2 insertions(+), 50 deletions(-)
+ drivers/message/fusion/mptscsih.c |   51 +++++++++++++------------------------
+ 1 files changed, 18 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 9a12d05..4ffaa79 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -176,7 +176,6 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 	dma_addr_t physaddr;
- 	uint32_t i, num_bde = 0;
- 	int datadir = scsi_cmnd->sc_data_direction;
--	int dma_error;
- 
- 	/*
- 	 * There are three possibilities here - use scatter-gather segment, use
-@@ -228,31 +227,6 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 			sgel++;
- 			num_bde++;
- 		}
--	} else if (scsi_cmnd->request_buffer && scsi_cmnd->request_bufflen) {
--		physaddr = dma_map_single(&phba->pcidev->dev,
--					  scsi_cmnd->request_buffer,
--					  scsi_cmnd->request_bufflen,
--					  datadir);
--		dma_error = dma_mapping_error(physaddr);
--		if (dma_error) {
--			lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
--				"%d:0718 Unable to dma_map_single "
--				"request_buffer: x%x\n",
--				phba->brd_no, dma_error);
--			return 1;
--		}
--
--		lpfc_cmd->nonsg_phys = physaddr;
--		bpl->addrLow = le32_to_cpu(putPaddrLow(physaddr));
--		bpl->addrHigh = le32_to_cpu(putPaddrHigh(physaddr));
--		bpl->tus.f.bdeSize = scsi_cmnd->request_bufflen;
--		if (datadir == DMA_TO_DEVICE)
--			bpl->tus.f.bdeFlags = 0;
--		else
--			bpl->tus.f.bdeFlags = BUFF_USE_RCV;
--		bpl->tus.w = le32_to_cpu(bpl->tus.w);
--		num_bde = 1;
--		bpl++;
- 	}
- 
- 	/*
-@@ -279,16 +253,9 @@ lpfc_scsi_unprep_dma_buf(struct lpfc_hba
- 	 * a request buffer, but did not request use_sg.  There is a third
- 	 * case, but it does not require resource deallocation.
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index d7e2fa9..12f59f1 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -260,18 +260,13 @@ mptscsih_AddSGE(MPT_ADAPTER *ioc, struct
+ 	/* Map the data portion, if any.
+ 	 * sges_left  = 0 if no data transfer.
  	 */
--	if ((psb->seg_cnt > 0) && (psb->pCmd->use_sg)) {
-+	if ((psb->seg_cnt > 0) && (psb->pCmd->use_sg))
- 		dma_unmap_sg(&phba->pcidev->dev, psb->pCmd->request_buffer,
--				psb->seg_cnt, psb->pCmd->sc_data_direction);
--	} else {
--		 if ((psb->nonsg_phys) && (psb->pCmd->request_bufflen)) {
--			dma_unmap_single(&phba->pcidev->dev, psb->nonsg_phys,
--						psb->pCmd->request_bufflen,
--						psb->pCmd->sc_data_direction);
--		 }
+-	if ( (sges_left = SCpnt->use_sg) ) {
+-		sges_left = pci_map_sg(ioc->pcidev,
+-			       (struct scatterlist *) SCpnt->request_buffer,
+- 			       SCpnt->use_sg,
+-			       SCpnt->sc_data_direction);
+-		if (sges_left == 0)
+-			return FAILED;
 -	}
-+			     psb->seg_cnt, psb->pCmd->sc_data_direction);
- }
++	sges_left = scsi_dma_map(&ioc->pcidev->dev, SCpnt);
++	if (sges_left < 0)
++		return FAILED;
  
- static void
-@@ -607,21 +574,6 @@ lpfc_scsi_prep_cmnd(struct lpfc_hba * ph
- 			fcp_cmnd->fcpCntl3 = READ_DATA;
- 			phba->fc4InputRequests++;
+ 	/* Handle the SG case.
+ 	 */
+-	sg = (struct scatterlist *) SCpnt->request_buffer;
++	sg = scsi_sglist(SCpnt);
+ 	sg_done  = 0;
+ 	sgeOffset = sizeof(SCSIIORequest_t) - sizeof(SGE_IO_UNION);
+ 	chainSge = NULL;
+@@ -650,7 +645,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
+ 		scsi_state = pScsiReply->SCSIState;
+ 		scsi_status = pScsiReply->SCSIStatus;
+ 		xfer_cnt = le32_to_cpu(pScsiReply->TransferCount);
+-		sc->resid = sc->request_bufflen - xfer_cnt;
++		scsi_resid(sc) = scsi_bufflen(sc) - xfer_cnt;
+ 		log_info = le32_to_cpu(pScsiReply->IOCLogInfo);
+ 
+ 		/*
+@@ -755,7 +750,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
+ 			break;
+ 
+ 		case MPI_IOCSTATUS_SCSI_RESIDUAL_MISMATCH:	/* 0x0049 */
+-			sc->resid = sc->request_bufflen - xfer_cnt;
++			scsi_resid(sc) = scsi_bufflen(sc) - xfer_cnt;
+ 			if((xfer_cnt==0)||(sc->underflow > xfer_cnt))
+ 				sc->result=DID_SOFT_ERROR << 16;
+ 			else /* Sufficient data transfer occurred */
+@@ -804,7 +799,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
+ 			break;
+ 
+ 		case MPI_IOCSTATUS_SCSI_DATA_OVERRUN:		/* 0x0044 */
+-			sc->resid=0;
++			scsi_resid(sc) =0;
+ 		case MPI_IOCSTATUS_SCSI_RECOVERED_ERROR:	/* 0x0040 */
+ 		case MPI_IOCSTATUS_SUCCESS:			/* 0x0000 */
+ 			sc->result = (DID_OK << 16) | scsi_status;
+@@ -887,20 +882,18 @@ #ifdef MPT_DEBUG_REPLY
+ 			    scsi_state, scsi_status, log_info));
+ 
+ 			dreplyprintk(("%s: [%d:%d:%d:%d] resid=%d "
+-			    "bufflen=%d xfer_cnt=%d\n", __FUNCTION__,
+-			    sc->device->host->host_no, sc->device->channel, sc->device->id,
+-			    sc->device->lun, sc->resid, sc->request_bufflen,
+-			    xfer_cnt));
++				      "bufflen=%d xfer_cnt=%d\n", __FUNCTION__,
++				      sc->device->host->host_no,
++				      sc->device->channel, sc->device->id,
++				      sc->device->lun, scsi_resid(sc),
++				      scsi_bufflen(sc), xfer_cnt));
  		}
--	} else if (scsi_cmnd->request_buffer && scsi_cmnd->request_bufflen) {
--		if (datadir == DMA_TO_DEVICE) {
--			iocb_cmd->ulpCommand = CMD_FCP_IWRITE64_CR;
--			iocb_cmd->un.fcpi.fcpi_parm = 0;
--			iocb_cmd->ulpPU = 0;
--			fcp_cmnd->fcpCntl3 = WRITE_DATA;
--			phba->fc4OutputRequests++;
--		} else {
--			iocb_cmd->ulpCommand = CMD_FCP_IREAD64_CR;
--			iocb_cmd->ulpPU = PARM_READ_CHECK;
--			iocb_cmd->un.fcpi.fcpi_parm =
--				scsi_cmnd->request_bufflen;
--			fcp_cmnd->fcpCntl3 = READ_DATA;
--			phba->fc4InputRequests++;
--		}
+ #endif
+ 
+ 	} /* end of address reply case */
+ 
+ 	/* Unmap the DMA buffers, if any. */
+-	if (sc->use_sg)
+-		pci_unmap_sg(ioc->pcidev, (struct scatterlist *) sc->request_buffer,
+-			     sc->use_sg,
+-			     sc->sc_data_direction);
++	scsi_dma_unmap(&ioc->pcidev->dev, sc);
+ 
+ 	sc->scsi_done(sc);		/* Issue the command callback */
+ 
+@@ -955,11 +948,7 @@ mptscsih_flush_running_cmds(MPT_SCSI_HOS
+ 			/* Set status, free OS resources (SG DMA buffers)
+ 			 * Do OS callback
+ 			 */
+-			if (SCpnt->use_sg)
+-				pci_unmap_sg(ioc->pcidev,
+-					(struct scatterlist *) SCpnt->request_buffer,
+-					SCpnt->use_sg,
+-					SCpnt->sc_data_direction);
++			scsi_dma_unmap(&ioc->pcidev->dev, SCpnt);
+ 
+ 			SCpnt->result = DID_RESET << 16;
+ 			SCpnt->host_scribble = NULL;
+@@ -1019,12 +1008,8 @@ mptscsih_search_running_cmds(MPT_SCSI_HO
+ 			mpt_free_msg_frame(hd->ioc, (MPT_FRAME_HDR *)mf);
+ 			if ((unsigned char *)mf != sc->host_scribble)
+ 				continue;
+-			if (sc->use_sg) {
+-				pci_unmap_sg(hd->ioc->pcidev,
+-				(struct scatterlist *) sc->request_buffer,
+-					sc->use_sg,
+-					sc->sc_data_direction);
+-			}
++			scsi_dma_unmap(&hd->ioc->pcidev->dev, sc);
++
+ 			sc->host_scribble = NULL;
+ 			sc->result = DID_NO_CONNECT << 16;
+ 			sc->scsi_done(sc);
+@@ -1355,10 +1340,10 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt, v
+ 	 *    will be no data transfer!  GRRRRR...
+ 	 */
+ 	if (SCpnt->sc_data_direction == DMA_FROM_DEVICE) {
+-		datalen = SCpnt->request_bufflen;
++		datalen = scsi_bufflen(SCpnt);
+ 		scsidir = MPI_SCSIIO_CONTROL_READ;	/* DATA IN  (host<--ioc<--dev) */
+ 	} else if (SCpnt->sc_data_direction == DMA_TO_DEVICE) {
+-		datalen = SCpnt->request_bufflen;
++		datalen = scsi_bufflen(SCpnt);
+ 		scsidir = MPI_SCSIIO_CONTROL_WRITE;	/* DATA OUT (host-->ioc-->dev) */
  	} else {
- 		iocb_cmd->ulpCommand = CMD_FCP_ICMND64_CR;
- 		iocb_cmd->un.fcpi.fcpi_parm = 0;
+ 		datalen = 0;
 -- 
 1.4.3.2
 
