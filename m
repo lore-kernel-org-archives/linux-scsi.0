@@ -1,79 +1,99 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 18/19] aic79xx: remove the non-use-sg case
-Date: Sat, 12 May 2007 19:05:45 +0900 (JST)
-Message-ID: <20070512184621W.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 6/19] fusion: remove the non-use-sg case
+Date: Sat, 12 May 2007 19:05:43 +0900 (JST)
+Message-ID: <20070512183349U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44892 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755623AbXELKF4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:56 -0400
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55490 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755689AbXELKF5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
 This removes the non-use-sg case.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/aic7xxx/aic79xx_osm.c |   24 +++---------------------
- 1 files changed, 3 insertions(+), 21 deletions(-)
+ drivers/message/fusion/mptscsih.c |   35 +++++------------------------------
+ 1 files changed, 5 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 6054881..1b6dbc1 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -381,15 +381,11 @@ ahd_linux_unmap_scb(struct ahd_softc *ah
- 	cmd = scb->io_ctx;
- 	direction = cmd->sc_data_direction;
- 	ahd_sync_sglist(ahd, scb, BUS_DMASYNC_POSTWRITE);
--	if (cmd->use_sg != 0) {
--		struct scatterlist *sg;
- 
-+	if (cmd->request_bufflen) {
-+		struct scatterlist *sg;
- 		sg = (struct scatterlist *)cmd->request_buffer;
- 		pci_unmap_sg(ahd->dev_softc, sg, cmd->use_sg, direction);
--	} else if (cmd->request_bufflen != 0) {
--		pci_unmap_single(ahd->dev_softc,
--				 scb->platform_data->buf_busaddr,
--				 cmd->request_bufflen, direction);
- 	}
- }
- 
-@@ -1494,7 +1490,7 @@ ahd_linux_run_command(struct ahd_softc *
- 	ahd_set_residual(scb, 0);
- 	ahd_set_sense_residual(scb, 0);
- 	scb->sg_count = 0;
--	if (cmd->use_sg != 0) {
-+	if (cmd->request_bufflen) {
- 		void	*sg;
- 		struct	 scatterlist *cur_seg;
- 		u_int	 nseg;
-@@ -1515,20 +1511,6 @@ ahd_linux_run_command(struct ahd_softc *
- 			sg = ahd_sg_setup(ahd, scb, sg, addr, len,
- 					  /*last*/nseg == 1);
- 		}
--	} else if (cmd->request_bufflen != 0) {
--		void *sg;
--		dma_addr_t addr;
--		int dir;
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index fa0f776..d7e2fa9 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -267,18 +267,6 @@ mptscsih_AddSGE(MPT_ADAPTER *ioc, struct
+ 			       SCpnt->sc_data_direction);
+ 		if (sges_left == 0)
+ 			return FAILED;
+-	} else if (SCpnt->request_bufflen) {
+-		SCpnt->SCp.dma_handle = pci_map_single(ioc->pcidev,
+-				      SCpnt->request_buffer,
+-				      SCpnt->request_bufflen,
+-				      SCpnt->sc_data_direction);
+-		dsgprintk((MYIOC_s_INFO_FMT "SG: non-SG for %p, len=%d\n",
+-				ioc->name, SCpnt, SCpnt->request_bufflen));
+-		mptscsih_add_sge((char *) &pReq->SGL,
+-			0xD1000000|MPT_SGE_FLAGS_ADDRESSING|sgdir|SCpnt->request_bufflen,
+-			SCpnt->SCp.dma_handle);
 -
--		sg = scb->sg_list;
--		dir = cmd->sc_data_direction;
--		addr = pci_map_single(ahd->dev_softc,
--				      cmd->request_buffer,
--				      cmd->request_bufflen, dir);
--		scb->platform_data->xfer_len = cmd->request_bufflen;
--		scb->platform_data->buf_busaddr = addr;
--		sg = ahd_sg_setup(ahd, scb, sg, addr,
--				  cmd->request_bufflen, /*last*/TRUE);
+-		return SUCCESS;
  	}
  
- 	LIST_INSERT_HEAD(&ahd->pending_scbs, scb, pending_links);
+ 	/* Handle the SG case.
+@@ -909,13 +897,10 @@ #endif
+ 	} /* end of address reply case */
+ 
+ 	/* Unmap the DMA buffers, if any. */
+-	if (sc->use_sg) {
++	if (sc->use_sg)
+ 		pci_unmap_sg(ioc->pcidev, (struct scatterlist *) sc->request_buffer,
+-			    sc->use_sg, sc->sc_data_direction);
+-	} else if (sc->request_bufflen) {
+-		pci_unmap_single(ioc->pcidev, sc->SCp.dma_handle,
+-				sc->request_bufflen, sc->sc_data_direction);
+-	}
++			     sc->use_sg,
++			     sc->sc_data_direction);
+ 
+ 	sc->scsi_done(sc);		/* Issue the command callback */
+ 
+@@ -970,17 +955,12 @@ mptscsih_flush_running_cmds(MPT_SCSI_HOS
+ 			/* Set status, free OS resources (SG DMA buffers)
+ 			 * Do OS callback
+ 			 */
+-			if (SCpnt->use_sg) {
++			if (SCpnt->use_sg)
+ 				pci_unmap_sg(ioc->pcidev,
+ 					(struct scatterlist *) SCpnt->request_buffer,
+ 					SCpnt->use_sg,
+ 					SCpnt->sc_data_direction);
+-			} else if (SCpnt->request_bufflen) {
+-				pci_unmap_single(ioc->pcidev,
+-					SCpnt->SCp.dma_handle,
+-					SCpnt->request_bufflen,
+-					SCpnt->sc_data_direction);
+-			}
++
+ 			SCpnt->result = DID_RESET << 16;
+ 			SCpnt->host_scribble = NULL;
+ 
+@@ -1044,11 +1024,6 @@ mptscsih_search_running_cmds(MPT_SCSI_HO
+ 				(struct scatterlist *) sc->request_buffer,
+ 					sc->use_sg,
+ 					sc->sc_data_direction);
+-			} else if (sc->request_bufflen) {
+-				pci_unmap_single(hd->ioc->pcidev,
+-					sc->SCp.dma_handle,
+-					sc->request_bufflen,
+-					sc->sc_data_direction);
+ 			}
+ 			sc->host_scribble = NULL;
+ 			sc->result = DID_NO_CONNECT << 16;
 -- 
 1.4.3.2
 
