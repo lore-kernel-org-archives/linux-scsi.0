@@ -1,102 +1,81 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 3/19] ipr: convert to use the data buffer accessors
+Subject: [PATCH 4/19] ibmvscsi: remove the non-use-sg case
 Date: Sat, 12 May 2007 19:05:42 +0900 (JST)
-Message-ID: <20070512182921I.fujita.tomonori@lab.ntt.co.jp>
+Message-ID: <20070512183138K.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55473 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755466AbXELKFx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:53 -0400
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44879 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755431AbXELKFy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com
+To: rcj@linux.vnet.ibm.com
 Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-This converts ipr to use the data buffer accessors.
+This removes the non-use-sg case.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/ipr.c |   26 ++++++++------------------
- 1 files changed, 8 insertions(+), 18 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvscsi.c |   36 +-----------------------------------
+ 1 files changed, 1 insertions(+), 35 deletions(-)
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index 8390bce..8002ecc 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -550,12 +550,7 @@ struct ipr_cmnd *ipr_get_free_ipr_cmnd(s
- static void ipr_unmap_sglist(struct ipr_ioa_cfg *ioa_cfg,
- 			     struct ipr_cmnd *ipr_cmd)
- {
--	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
--
--	if (ipr_cmd->dma_use_sg)
--		pci_unmap_sg(ioa_cfg->pdev, scsi_cmd->request_buffer,
--			     scsi_cmd->use_sg,
--			     scsi_cmd->sc_data_direction);
-+	scsi_dma_unmap(&ioa_cfg->pdev->dev, ipr_cmd->scsi_cmd);
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index b10eefe..57acf86 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -452,38 +452,6 @@ static int map_sg_data(struct scsi_cmnd
  }
  
  /**
-@@ -4279,20 +4274,18 @@ static int ipr_build_ioadl(struct ipr_io
- 			   struct ipr_cmnd *ipr_cmd)
- {
- 	int i, nseg;
--	struct scatterlist *sglist;
-+	struct scatterlist *sg;
- 	u32 length;
- 	u32 ioadl_flags = 0;
- 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
- 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
- 	struct ipr_ioadl_desc *ioadl = ipr_cmd->ioadl;
- 
--	length = scsi_cmd->request_bufflen;
-+	length = scsi_bufflen(scsi_cmd);
- 	if (!length)
- 		return 0;
- 
--	nseg = pci_map_sg(ioa_cfg->pdev, scsi_cmd->request_buffer,
--			  scsi_cmd->use_sg, scsi_cmd->sc_data_direction);
+- * map_single_data: - Maps memory and initializes memory decriptor fields
+- * @cmd:	struct scsi_cmnd with the memory to be mapped
+- * @srp_cmd:	srp_cmd that contains the memory descriptor
+- * @dev:	device for which to map dma memory
+- *
+- * Called by map_data_for_srp_cmd() when building srp cmd from scsi cmd.
+- * Returns 1 on success.
+-*/
+-static int map_single_data(struct scsi_cmnd *cmd,
+-			   struct srp_cmd *srp_cmd, struct device *dev)
+-{
+-	struct srp_direct_buf *data =
+-		(struct srp_direct_buf *) srp_cmd->add_data;
 -
-+	nseg = scsi_dma_map(&ioa_cfg->pdev->dev, scsi_cmd);
- 	if (nseg < 0) {
- 		dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
- 		return -1;
-@@ -4313,8 +4306,6 @@ static int ipr_build_ioadl(struct ipr_io
- 			cpu_to_be32(sizeof(struct ipr_ioadl_desc) * ipr_cmd->dma_use_sg);
- 	}
- 
--	sglist = scsi_cmd->request_buffer;
+-	data->va =
+-		dma_map_single(dev, cmd->request_buffer,
+-			       cmd->request_bufflen,
+-			       DMA_BIDIRECTIONAL);
+-	if (dma_mapping_error(data->va)) {
+-		printk(KERN_ERR
+-		       "ibmvscsi: Unable to map request_buffer for command!\n");
+-		return 0;
+-	}
+-	data->len = cmd->request_bufflen;
+-	data->key = 0;
 -
- 	if (ipr_cmd->dma_use_sg <= ARRAY_SIZE(ioarcb->add_data.u.ioadl)) {
- 		ioadl = ioarcb->add_data.u.ioadl;
- 		ioarcb->write_ioadl_addr =
-@@ -4323,11 +4314,10 @@ static int ipr_build_ioadl(struct ipr_io
- 		ioarcb->read_ioadl_addr = ioarcb->write_ioadl_addr;
- 	}
+-	set_srp_direction(cmd, srp_cmd, 1);
+-
+-	return 1;
+-}
+-
+-/**
+  * map_data_for_srp_cmd: - Calls functions to map data for srp cmds
+  * @cmd:	struct scsi_cmnd with the memory to be mapped
+  * @srp_cmd:	srp_cmd that contains the memory descriptor
+@@ -515,9 +483,7 @@ static int map_data_for_srp_cmd(struct s
  
--	for (i = 0; i < ipr_cmd->dma_use_sg; i++) {
-+	scsi_for_each_sg(scsi_cmd, sg, ipr_cmd->dma_use_sg, i) {
- 		ioadl[i].flags_and_data_len =
--			cpu_to_be32(ioadl_flags | sg_dma_len(&sglist[i]));
--		ioadl[i].address =
--			cpu_to_be32(sg_dma_address(&sglist[i]));
-+			cpu_to_be32(ioadl_flags | sg_dma_len(sg));
-+		ioadl[i].address = cpu_to_be32(sg_dma_address(sg));
- 	}
+ 	if (!cmd->request_buffer)
+ 		return 1;
+-	if (cmd->use_sg)
+-		return map_sg_data(cmd, evt_struct, srp_cmd, dev);
+-	return map_single_data(cmd, srp_cmd, dev);
++	return map_sg_data(cmd, evt_struct, srp_cmd, dev);
+ }
  
- 	ioadl[i-1].flags_and_data_len |= cpu_to_be32(IPR_IOADL_FLAGS_LAST);
-@@ -4793,7 +4783,7 @@ static void ipr_scsi_done(struct ipr_cmn
- 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
- 
--	scsi_cmd->resid = be32_to_cpu(ipr_cmd->ioasa.residual_data_len);
-+	scsi_resid(scsi_cmd) = be32_to_cpu(ipr_cmd->ioasa.residual_data_len);
- 
- 	if (likely(IPR_IOASC_SENSE_KEY(ioasc) == 0)) {
- 		ipr_unmap_sglist(ioa_cfg, ipr_cmd);
+ /* ------------------------------------------------------------
 -- 
 1.4.3.2
 
