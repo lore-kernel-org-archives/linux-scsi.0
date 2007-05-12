@@ -1,48 +1,33 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: ata/scsi crash on halt
-Date: Sat, 12 May 2007 14:30:56 -0500
-Message-ID: <1178998256.3723.24.camel@mulgrave.il.steeleye.com>
-References: <20070512112537.4981f82d.akpm@linux-foundation.org>
+From: Simon Arlott <simon@fire.lp0.eu>
+Subject: Re: default y idiocy
+Date: Sat, 12 May 2007 20:58:47 +0100
+Message-ID: <46461C77.5040404@simon.arlott.org.uk>
+References: <20070512182343.GO4629@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070512112537.4981f82d.akpm@linux-foundation.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from proxima.lp0.eu ([85.158.45.36]:55891 "EHLO proxima.lp0.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754505AbXELT6v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 12 May 2007 15:58:51 -0400
+In-Reply-To: <20070512182343.GO4629@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, 2007-05-12 at 11:25 -0700, Andrew Morton wrote:
-> [  715.196000] sd 2:0:0:0: [sda] Synchronizing SCSI cache
-> [  715.196000] sd 2:0:0:0: [sda] Stopping disk
-> [  715.196000] ata3.00: DISK MIGHT NOT BE SPUN DOWN PROPERLY. UPDATE SHUTDOWN UTILITY
-> [  715.196000] ata3.00: For more info, visit http://linux-ata.org/shutdown.html
-> [  715.196000] BUG: scheduling while atomic: swapper/0x00000100/0
-> [  715.196000]  [<c02e282d>] __sched_text_start+0x55/0x504
-> [  715.196000]  [<c0239faa>] scsi_done+0x0/0x1d
-> [  715.196000]  [<c02e32fb>] schedule_timeout+0x78/0x95
-> [  715.196000]  [<c011ffc2>] process_timeout+0x0/0x5
-> [  715.196000]  [<c011ff87>] msleep+0x10/0x18
-> [  715.196000]  [<c024d455>] ata_scsi_start_stop_xlat+0xe3/0x11b
+On 12/05/07 19:23, Jens Axboe wrote:
+> Hi,
+> 
+> This has bothered me for a long time, and it just seems to be getting
+> worse. Can people please STOP defaulting non-essential stuff to 'y'?
+> Grrr.
 
-This is a bug in libata ... there's a ssleep in the command translation
-path.  The commit that did it was this one:
+Is there a reason why various 10/100/1000Mbit network cards are 'y' too?
+There's even a default SCSI 'm' that seems to be completely hidden from 
+the menu too (CONFIG_SCSI_WAIT_SCAN). It depends on SCSI but I can't 
+disable SCSI...
 
-commit 920a4b1038e442700a1cfac77ea7e20bd615a2c3
-Author: Tejun Heo <htejun@gmail.com>
-Date:   Fri May 4 21:28:48 2007 +0200
-
-    libata: implement libata.spindown_compat
-
-I'm afraid the queuecommand path is not necessarily connected to a user
-process because of the way block scheduling works ... you can't call
-sleeping functions along it. 
-
-Ordinarily, what you'd do if you want to delay calling ->done() is to
-schedule a timer to handle it ... unfortunately I don't see an easy way
-of doing that because of the way this particular layering works.
-
-James
-
-
+-- 
+Simon Arlott
