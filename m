@@ -1,81 +1,119 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 4/19] ibmvscsi: remove the non-use-sg case
-Date: Sat, 12 May 2007 19:05:42 +0900 (JST)
-Message-ID: <20070512183138K.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 19/19] aic79xx: convert to use the data buffer accessors
+Date: Sat, 12 May 2007 19:05:45 +0900 (JST)
+Message-ID: <20070512184624J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44879 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44886 "EHLO
 	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755431AbXELKFy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:54 -0400
+	with ESMTP id S1755554AbXELKFz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rcj@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org
 
-This removes the non-use-sg case.
+This converts aic79xx to use the data buffer accessors.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/ibmvscsi/ibmvscsi.c |   36 +-----------------------------------
- 1 files changed, 1 insertions(+), 35 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c |   33 +++++++++++++--------------------
+ drivers/scsi/aic7xxx/aic79xx_osm.h |    4 ++--
+ 2 files changed, 15 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index b10eefe..57acf86 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -452,38 +452,6 @@ static int map_sg_data(struct scsi_cmnd
- }
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 1b6dbc1..bb23dca 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -376,17 +376,10 @@ static __inline void
+ ahd_linux_unmap_scb(struct ahd_softc *ahd, struct scb *scb)
+ {
+ 	struct scsi_cmnd *cmd;
+-	int direction;
  
- /**
-- * map_single_data: - Maps memory and initializes memory decriptor fields
-- * @cmd:	struct scsi_cmnd with the memory to be mapped
-- * @srp_cmd:	srp_cmd that contains the memory descriptor
-- * @dev:	device for which to map dma memory
-- *
-- * Called by map_data_for_srp_cmd() when building srp cmd from scsi cmd.
-- * Returns 1 on success.
--*/
--static int map_single_data(struct scsi_cmnd *cmd,
--			   struct srp_cmd *srp_cmd, struct device *dev)
--{
--	struct srp_direct_buf *data =
--		(struct srp_direct_buf *) srp_cmd->add_data;
+ 	cmd = scb->io_ctx;
+-	direction = cmd->sc_data_direction;
+ 	ahd_sync_sglist(ahd, scb, BUS_DMASYNC_POSTWRITE);
 -
--	data->va =
--		dma_map_single(dev, cmd->request_buffer,
--			       cmd->request_bufflen,
--			       DMA_BIDIRECTIONAL);
--	if (dma_mapping_error(data->va)) {
--		printk(KERN_ERR
--		       "ibmvscsi: Unable to map request_buffer for command!\n");
--		return 0;
+-	if (cmd->request_bufflen) {
+-		struct scatterlist *sg;
+-		sg = (struct scatterlist *)cmd->request_buffer;
+-		pci_unmap_sg(ahd->dev_softc, sg, cmd->use_sg, direction);
 -	}
--	data->len = cmd->request_bufflen;
--	data->key = 0;
--
--	set_srp_direction(cmd, srp_cmd, 1);
--
--	return 1;
--}
--
--/**
-  * map_data_for_srp_cmd: - Calls functions to map data for srp cmds
-  * @cmd:	struct scsi_cmnd with the memory to be mapped
-  * @srp_cmd:	srp_cmd that contains the memory descriptor
-@@ -515,9 +483,7 @@ static int map_data_for_srp_cmd(struct s
- 
- 	if (!cmd->request_buffer)
- 		return 1;
--	if (cmd->use_sg)
--		return map_sg_data(cmd, evt_struct, srp_cmd, dev);
--	return map_single_data(cmd, srp_cmd, dev);
-+	return map_sg_data(cmd, evt_struct, srp_cmd, dev);
++	scsi_dma_unmap(&ahd->dev_softc->dev, cmd);
  }
  
- /* ------------------------------------------------------------
+ /******************************** Macros **************************************/
+@@ -1418,6 +1411,7 @@ ahd_linux_run_command(struct ahd_softc *
+ 	u_int	 col_idx;
+ 	uint16_t mask;
+ 	unsigned long flags;
++	int nseg;
+ 
+ 	ahd_lock(ahd, &flags);
+ 
+@@ -1490,18 +1484,17 @@ ahd_linux_run_command(struct ahd_softc *
+ 	ahd_set_residual(scb, 0);
+ 	ahd_set_sense_residual(scb, 0);
+ 	scb->sg_count = 0;
+-	if (cmd->request_bufflen) {
+-		void	*sg;
+-		struct	 scatterlist *cur_seg;
+-		u_int	 nseg;
+-		int	 dir;
+-
+-		cur_seg = (struct scatterlist *)cmd->request_buffer;
+-		dir = cmd->sc_data_direction;
+-		nseg = pci_map_sg(ahd->dev_softc, cur_seg,
+-				  cmd->use_sg, dir);
++
++	nseg = scsi_dma_map(&ahd->dev_softc->dev, cmd);
++	BUG_ON(nseg < 0);
++	if (nseg > 0) {
++		void *sg = scb->sg_list;
++		struct scatterlist *cur_seg;
++		int i;
++
+ 		scb->platform_data->xfer_len = 0;
+-		for (sg = scb->sg_list; nseg > 0; nseg--, cur_seg++) {
++
++		scsi_for_each_sg(cmd, cur_seg, nseg, i) {
+ 			dma_addr_t addr;
+ 			bus_size_t len;
+ 
+@@ -1509,7 +1502,7 @@ ahd_linux_run_command(struct ahd_softc *
+ 			len = sg_dma_len(cur_seg);
+ 			scb->platform_data->xfer_len += len;
+ 			sg = ahd_sg_setup(ahd, scb, sg, addr, len,
+-					  /*last*/nseg == 1);
++					  i == (nseg - 1));
+ 		}
+ 	}
+ 
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.h b/drivers/scsi/aic7xxx/aic79xx_osm.h
+index ad9761b..f153986 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.h
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.h
+@@ -781,7 +781,7 @@ int ahd_get_transfer_dir(struct scb *scb
+ static __inline
+ void ahd_set_residual(struct scb *scb, u_long resid)
+ {
+-	scb->io_ctx->resid = resid;
++	scsi_resid(scb->io_ctx) = resid;
+ }
+ 
+ static __inline
+@@ -793,7 +793,7 @@ void ahd_set_sense_residual(struct scb *
+ static __inline
+ u_long ahd_get_residual(struct scb *scb)
+ {
+-	return (scb->io_ctx->resid);
++	return scsi_resid(scb->io_ctx);
+ }
+ 
+ static __inline
 -- 
 1.4.3.2
 
