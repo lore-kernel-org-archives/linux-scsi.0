@@ -1,93 +1,102 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 8/19] aic7xxx: remove the non-use-sg case
-Date: Sat, 12 May 2007 19:05:43 +0900 (JST)
-Message-ID: <20070512183728O.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/19] ipr: convert to use the data buffer accessors
+Date: Sat, 12 May 2007 19:05:42 +0900 (JST)
+Message-ID: <20070512182921I.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55469 "EHLO
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55473 "EHLO
 	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755327AbXELKFx (ORCPT
+	with ESMTP id S1755466AbXELKFx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-This removes the non-use-sg case.
+This converts ipr to use the data buffer accessors.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/aic7xxx/aic7xxx_osm.c |   36 ++----------------------------------
- 1 files changed, 2 insertions(+), 34 deletions(-)
+ drivers/scsi/ipr.c |   26 ++++++++------------------
+ 1 files changed, 8 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 660f26e..b053e6f 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -402,17 +402,12 @@ ahc_linux_unmap_scb(struct ahc_softc *ah
- 
- 	cmd = scb->io_ctx;
- 	ahc_sync_sglist(ahc, scb, BUS_DMASYNC_POSTWRITE);
--	if (cmd->use_sg != 0) {
-+	if (cmd->use_sg) {
- 		struct scatterlist *sg;
- 
- 		sg = (struct scatterlist *)cmd->request_buffer;
- 		pci_unmap_sg(ahc->dev_softc, sg, cmd->use_sg,
- 			     cmd->sc_data_direction);
--	} else if (cmd->request_bufflen != 0) {
--		pci_unmap_single(ahc->dev_softc,
--				 scb->platform_data->buf_busaddr,
--				 cmd->request_bufflen,
--				 cmd->sc_data_direction);
- 	}
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 8390bce..8002ecc 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -550,12 +550,7 @@ struct ipr_cmnd *ipr_get_free_ipr_cmnd(s
+ static void ipr_unmap_sglist(struct ipr_ioa_cfg *ioa_cfg,
+ 			     struct ipr_cmnd *ipr_cmd)
+ {
+-	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+-
+-	if (ipr_cmd->dma_use_sg)
+-		pci_unmap_sg(ioa_cfg->pdev, scsi_cmd->request_buffer,
+-			     scsi_cmd->use_sg,
+-			     scsi_cmd->sc_data_direction);
++	scsi_dma_unmap(&ioa_cfg->pdev->dev, ipr_cmd->scsi_cmd);
  }
  
-@@ -1472,7 +1467,7 @@ ahc_linux_run_command(struct ahc_softc *
- 	ahc_set_residual(scb, 0);
- 	ahc_set_sense_residual(scb, 0);
- 	scb->sg_count = 0;
--	if (cmd->use_sg != 0) {
-+	if (cmd->use_sg) {
- 		struct	ahc_dma_seg *sg;
- 		struct	scatterlist *cur_seg;
- 		struct	scatterlist *end_seg;
-@@ -1516,33 +1511,6 @@ ahc_linux_run_command(struct ahc_softc *
- 		 */
- 		scb->hscb->dataptr = scb->sg_list->addr;
- 		scb->hscb->datacnt = scb->sg_list->len;
--	} else if (cmd->request_bufflen != 0) {
--		struct	 ahc_dma_seg *sg;
--		dma_addr_t addr;
+ /**
+@@ -4279,20 +4274,18 @@ static int ipr_build_ioadl(struct ipr_io
+ 			   struct ipr_cmnd *ipr_cmd)
+ {
+ 	int i, nseg;
+-	struct scatterlist *sglist;
++	struct scatterlist *sg;
+ 	u32 length;
+ 	u32 ioadl_flags = 0;
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+ 	struct ipr_ioarcb *ioarcb = &ipr_cmd->ioarcb;
+ 	struct ipr_ioadl_desc *ioadl = ipr_cmd->ioadl;
+ 
+-	length = scsi_cmd->request_bufflen;
++	length = scsi_bufflen(scsi_cmd);
+ 	if (!length)
+ 		return 0;
+ 
+-	nseg = pci_map_sg(ioa_cfg->pdev, scsi_cmd->request_buffer,
+-			  scsi_cmd->use_sg, scsi_cmd->sc_data_direction);
 -
--		sg = scb->sg_list;
--		addr = pci_map_single(ahc->dev_softc,
--				      cmd->request_buffer,
--				      cmd->request_bufflen,
--				      cmd->sc_data_direction);
--		scb->platform_data->buf_busaddr = addr;
--		scb->sg_count = ahc_linux_map_seg(ahc, scb,
--						  sg, addr,
--						  cmd->request_bufflen);
--		sg->len |= ahc_htole32(AHC_DMA_LAST_SEG);
++	nseg = scsi_dma_map(&ioa_cfg->pdev->dev, scsi_cmd);
+ 	if (nseg < 0) {
+ 		dev_err(&ioa_cfg->pdev->dev, "pci_map_sg failed!\n");
+ 		return -1;
+@@ -4313,8 +4306,6 @@ static int ipr_build_ioadl(struct ipr_io
+ 			cpu_to_be32(sizeof(struct ipr_ioadl_desc) * ipr_cmd->dma_use_sg);
+ 	}
+ 
+-	sglist = scsi_cmd->request_buffer;
 -
--		/*
--		 * Reset the sg list pointer.
--		 */
--		scb->hscb->sgptr =
--			ahc_htole32(scb->sg_list_phys | SG_FULL_RESID);
--
--		/*
--		 * Copy the first SG into the "current"
--		 * data pointer area.
--		 */
--		scb->hscb->dataptr = sg->addr;
--		scb->hscb->datacnt = sg->len;
- 	} else {
- 		scb->hscb->sgptr = ahc_htole32(SG_LIST_NULL);
- 		scb->hscb->dataptr = 0;
+ 	if (ipr_cmd->dma_use_sg <= ARRAY_SIZE(ioarcb->add_data.u.ioadl)) {
+ 		ioadl = ioarcb->add_data.u.ioadl;
+ 		ioarcb->write_ioadl_addr =
+@@ -4323,11 +4314,10 @@ static int ipr_build_ioadl(struct ipr_io
+ 		ioarcb->read_ioadl_addr = ioarcb->write_ioadl_addr;
+ 	}
+ 
+-	for (i = 0; i < ipr_cmd->dma_use_sg; i++) {
++	scsi_for_each_sg(scsi_cmd, sg, ipr_cmd->dma_use_sg, i) {
+ 		ioadl[i].flags_and_data_len =
+-			cpu_to_be32(ioadl_flags | sg_dma_len(&sglist[i]));
+-		ioadl[i].address =
+-			cpu_to_be32(sg_dma_address(&sglist[i]));
++			cpu_to_be32(ioadl_flags | sg_dma_len(sg));
++		ioadl[i].address = cpu_to_be32(sg_dma_address(sg));
+ 	}
+ 
+ 	ioadl[i-1].flags_and_data_len |= cpu_to_be32(IPR_IOADL_FLAGS_LAST);
+@@ -4793,7 +4783,7 @@ static void ipr_scsi_done(struct ipr_cmn
+ 	struct scsi_cmnd *scsi_cmd = ipr_cmd->scsi_cmd;
+ 	u32 ioasc = be32_to_cpu(ipr_cmd->ioasa.ioasc);
+ 
+-	scsi_cmd->resid = be32_to_cpu(ipr_cmd->ioasa.residual_data_len);
++	scsi_resid(scsi_cmd) = be32_to_cpu(ipr_cmd->ioasa.residual_data_len);
+ 
+ 	if (likely(IPR_IOASC_SENSE_KEY(ioasc) == 0)) {
+ 		ipr_unmap_sglist(ioa_cfg, ipr_cmd);
 -- 
 1.4.3.2
 
