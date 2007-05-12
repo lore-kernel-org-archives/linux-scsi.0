@@ -1,213 +1,412 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 13/19] lpfc: convert to use the data buffer accessors
-Date: Sat, 12 May 2007 19:05:44 +0900 (JST)
-Message-ID: <20070512184036J.fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 11/19] qla2xxx: convert to use the data buffer accessors
+Date: Sat, 12 May 2007 19:05:43 +0900 (JST)
+Message-ID: <20070512183903A.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:55499 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755671AbXELKF6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:58 -0400
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44911 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755822AbXELKF7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 12 May 2007 06:05:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
+To: andrew.vasquez@qlogic.com
 Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-This converts lpfc to use the data buffer accessors.
+This converts qla2xxx to use the data buffer accessors.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c |   55 ++++++++++++++++++----------------------
- 1 files changed, 25 insertions(+), 30 deletions(-)
+ drivers/scsi/qla2xxx/qla_dbg.c  |    4 +-
+ drivers/scsi/qla2xxx/qla_iocb.c |   96 +++++++++++++++------------------------
+ drivers/scsi/qla2xxx/qla_isr.c  |   44 +++++++++---------
+ drivers/scsi/qla2xxx/qla_os.c   |    4 +-
+ 4 files changed, 61 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 4ffaa79..96120ec 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -175,7 +175,7 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 	IOCB_t *iocb_cmd = &lpfc_cmd->cur_iocbq.iocb;
- 	dma_addr_t physaddr;
- 	uint32_t i, num_bde = 0;
--	int datadir = scsi_cmnd->sc_data_direction;
-+	int nseg, datadir = scsi_cmnd->sc_data_direction;
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index f6ed696..996c47a 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1411,9 +1411,9 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd
+ 		printk("0x%02x ", cmd->cmnd[i]);
+ 	}
+ 	printk("\n  seg_cnt=%d, allowed=%d, retries=%d\n",
+-	    cmd->use_sg, cmd->allowed, cmd->retries);
++	       scsi_sg_count(cmd), cmd->allowed, cmd->retries);
+ 	printk("  request buffer=0x%p, request buffer len=0x%x\n",
+-	    cmd->request_buffer, cmd->request_bufflen);
++	       scsi_sglist(cmd), scsi_bufflen(cmd));
+ 	printk("  tag=%d, transfersize=0x%x\n",
+ 	    cmd->tag, cmd->transfersize);
+ 	printk("  serial_number=%lx, SP=%p\n", cmd->serial_number, sp);
+diff --git a/drivers/scsi/qla2xxx/qla_iocb.c b/drivers/scsi/qla2xxx/qla_iocb.c
+index 77a6f86..0fbc8b3 100644
+--- a/drivers/scsi/qla2xxx/qla_iocb.c
++++ b/drivers/scsi/qla2xxx/qla_iocb.c
+@@ -155,8 +155,8 @@ void qla2x00_build_scsi_iocbs_32(srb_t *
+ 	uint32_t	*cur_dsd;
+ 	scsi_qla_host_t	*ha;
+ 	struct scsi_cmnd *cmd;
+-	struct scatterlist *cur_seg;
+-	struct scatterlist *end_seg;
++	struct scatterlist *sg;
++	int i;
  
- 	/*
- 	 * There are three possibilities here - use scatter-gather segment, use
-@@ -184,26 +184,22 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 	 * data bde entry.
- 	 */
- 	bpl += 2;
--	if (scsi_cmnd->use_sg) {
-+	nseg = scsi_dma_map(&phba->pcidev->dev, scsi_cmnd);
-+	if (nseg > 0) {
- 		/*
- 		 * The driver stores the segment count returned from pci_map_sg
- 		 * because this a count of dma-mappings used to map the use_sg
- 		 * pages.  They are not guaranteed to be the same for those
- 		 * architectures that implement an IOMMU.
- 		 */
--		sgel = (struct scatterlist *)scsi_cmnd->request_buffer;
--		lpfc_cmd->seg_cnt = dma_map_sg(&phba->pcidev->dev, sgel,
--						scsi_cmnd->use_sg, datadir);
--		if (lpfc_cmd->seg_cnt == 0)
--			return 1;
+ 	cmd = sp->cmd;
  
-+		lpfc_cmd->seg_cnt = nseg;
- 		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
- 			printk(KERN_ERR "%s: Too many sg segments from "
- 			       "dma_map_sg.  Config %d, seg_cnt %d",
- 			       __FUNCTION__, phba->cfg_sg_seg_cnt,
- 			       lpfc_cmd->seg_cnt);
--			dma_unmap_sg(&phba->pcidev->dev, sgel,
--				     lpfc_cmd->seg_cnt, datadir);
-+			scsi_dma_unmap(&phba->pcidev->dev, scsi_cmnd);
- 			return 1;
+@@ -165,7 +165,7 @@ void qla2x00_build_scsi_iocbs_32(srb_t *
+ 	    __constant_cpu_to_le32(COMMAND_TYPE);
+ 
+ 	/* No data transfer */
+-	if (cmd->request_bufflen == 0 || cmd->sc_data_direction == DMA_NONE) {
++	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE) {
+ 		cmd_pkt->byte_count = __constant_cpu_to_le32(0);
+ 		return;
+ 	}
+@@ -180,10 +180,8 @@ void qla2x00_build_scsi_iocbs_32(srb_t *
+ 
+ 	/* Load data segments */
+ 
+-	cur_seg = (struct scatterlist *)cmd->request_buffer;
+-	end_seg = cur_seg + tot_dsds;
+-	while (cur_seg < end_seg) {
+-		cont_entry_t	*cont_pkt;
++	scsi_for_each_sg(cmd, sg, tot_dsds, i) {
++		cont_entry_t *cont_pkt;
+ 
+ 		/* Allocate additional continuation packets? */
+ 		if (avail_dsds == 0) {
+@@ -196,11 +194,9 @@ void qla2x00_build_scsi_iocbs_32(srb_t *
+ 			avail_dsds = 7;
  		}
  
-@@ -213,7 +209,7 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 		 * single scsi command.  Just run through the seg_cnt and format
- 		 * the bde's.
- 		 */
--		for (i = 0; i < lpfc_cmd->seg_cnt; i++) {
-+		scsi_for_each_sg(scsi_cmnd, sgel, nseg, i) {
- 			physaddr = sg_dma_address(sgel);
- 			bpl->addrLow = le32_to_cpu(putPaddrLow(physaddr));
- 			bpl->addrHigh = le32_to_cpu(putPaddrHigh(physaddr));
-@@ -224,10 +220,10 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 				bpl->tus.f.bdeFlags = BUFF_USE_RCV;
- 			bpl->tus.w = le32_to_cpu(bpl->tus.w);
- 			bpl++;
--			sgel++;
- 			num_bde++;
+-		*cur_dsd++ = cpu_to_le32(sg_dma_address(cur_seg));
+-		*cur_dsd++ = cpu_to_le32(sg_dma_len(cur_seg));
++		*cur_dsd++ = cpu_to_le32(sg_dma_address(sg));
++		*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
+ 		avail_dsds--;
+-
+-		cur_seg++;
+ 	}
+ }
+ 
+@@ -219,8 +215,8 @@ void qla2x00_build_scsi_iocbs_64(srb_t *
+ 	uint32_t	*cur_dsd;
+ 	scsi_qla_host_t	*ha;
+ 	struct scsi_cmnd *cmd;
+-	struct scatterlist *cur_seg;
+-	struct scatterlist *end_seg;
++	struct scatterlist *sg;
++	int i;
+ 
+ 	cmd = sp->cmd;
+ 
+@@ -229,7 +225,7 @@ void qla2x00_build_scsi_iocbs_64(srb_t *
+ 	    __constant_cpu_to_le32(COMMAND_A64_TYPE);
+ 
+ 	/* No data transfer */
+-	if (cmd->request_bufflen == 0 || cmd->sc_data_direction == DMA_NONE) {
++	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE) {
+ 		cmd_pkt->byte_count = __constant_cpu_to_le32(0);
+ 		return;
+ 	}
+@@ -243,9 +239,7 @@ void qla2x00_build_scsi_iocbs_64(srb_t *
+ 	cur_dsd = (uint32_t *)&cmd_pkt->dseg_0_address;
+ 
+ 	/* Load data segments */
+-	cur_seg = (struct scatterlist *)cmd->request_buffer;
+-	end_seg = cur_seg + tot_dsds;
+-	while (cur_seg < end_seg) {
++	scsi_for_each_sg(cmd, sg, tot_dsds, i) {
+ 		dma_addr_t	sle_dma;
+ 		cont_a64_entry_t *cont_pkt;
+ 
+@@ -260,13 +254,11 @@ void qla2x00_build_scsi_iocbs_64(srb_t *
+ 			avail_dsds = 5;
  		}
+ 
+-		sle_dma = sg_dma_address(cur_seg);
++		sle_dma = sg_dma_address(sg);
+ 		*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
+ 		*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
+-		*cur_dsd++ = cpu_to_le32(sg_dma_len(cur_seg));
++		*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
+ 		avail_dsds--;
+-
+-		cur_seg++;
+ 	}
+ }
+ 
+@@ -279,7 +271,7 @@ void qla2x00_build_scsi_iocbs_64(srb_t *
+ int
+ qla2x00_start_scsi(srb_t *sp)
+ {
+-	int		ret;
++	int		ret, nseg;
+ 	unsigned long   flags;
+ 	scsi_qla_host_t	*ha;
+ 	struct scsi_cmnd *cmd;
+@@ -287,7 +279,6 @@ qla2x00_start_scsi(srb_t *sp)
+ 	uint32_t        index;
+ 	uint32_t	handle;
+ 	cmd_entry_t	*cmd_pkt;
+-	struct scatterlist *sg;
+ 	uint16_t	cnt;
+ 	uint16_t	req_cnt;
+ 	uint16_t	tot_dsds;
+@@ -325,13 +316,10 @@ qla2x00_start_scsi(srb_t *sp)
+ 		goto queuing_error;
+ 
+ 	/* Map the sg table so we have an accurate count of sg entries needed */
+-	if (cmd->use_sg) {
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
+-		    cmd->sc_data_direction);
+-		if (tot_dsds == 0)
+-			goto queuing_error;
 -	}
-+	} else if (nseg < 0)
-+		return 1;
++	nseg = scsi_dma_map(&ha->pdev->dev, cmd);
++	if (nseg < 0)
++		goto queuing_error;
++	tot_dsds = nseg;
  
- 	/*
- 	 * Finish initializing those IOCB fields that are dependent on the
-@@ -240,7 +236,7 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *
- 		(num_bde * sizeof (struct ulp_bde64));
- 	iocb_cmd->ulpBdeCount = 1;
- 	iocb_cmd->ulpLe = 1;
--	fcp_cmnd->fcpDl = be32_to_cpu(scsi_cmnd->request_bufflen);
-+	fcp_cmnd->fcpDl = be32_to_cpu(scsi_bufflen(scsi_cmnd));
- 	return 0;
+ 	/* Calculate the number of request entries needed. */
+ 	req_cnt = ha->isp_ops.calc_req_entries(tot_dsds);
+@@ -369,7 +357,7 @@ qla2x00_start_scsi(srb_t *sp)
+ 
+ 	/* Load SCSI command packet. */
+ 	memcpy(cmd_pkt->scsi_cdb, cmd->cmnd, cmd->cmd_len);
+-	cmd_pkt->byte_count = cpu_to_le32((uint32_t)cmd->request_bufflen);
++	cmd_pkt->byte_count = cpu_to_le32((uint32_t)scsi_bufflen(cmd));
+ 
+ 	/* Build IOCB segments */
+ 	ha->isp_ops.build_iocbs(sp, cmd_pkt, tot_dsds);
+@@ -401,11 +389,9 @@ qla2x00_start_scsi(srb_t *sp)
+ 	return (QLA_SUCCESS);
+ 
+ queuing_error:
+-	if (cmd->use_sg && tot_dsds) {
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		pci_unmap_sg(ha->pdev, sg, cmd->use_sg,
+-		    cmd->sc_data_direction);
+-	}
++	if (tot_dsds)
++		scsi_dma_unmap(&ha->pdev->dev, cmd);
++
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	return (QLA_FUNCTION_FAILED);
+@@ -617,8 +603,8 @@ qla24xx_build_scsi_iocbs(srb_t *sp, stru
+ 	uint32_t	*cur_dsd;
+ 	scsi_qla_host_t	*ha;
+ 	struct scsi_cmnd *cmd;
+-	struct	scatterlist *cur_seg;
+-	struct	scatterlist *end_seg;
++	struct scatterlist *sg;
++	int i;
+ 
+ 	cmd = sp->cmd;
+ 
+@@ -627,7 +613,7 @@ qla24xx_build_scsi_iocbs(srb_t *sp, stru
+ 	    __constant_cpu_to_le32(COMMAND_TYPE_7);
+ 
+ 	/* No data transfer */
+-	if (cmd->request_bufflen == 0 || cmd->sc_data_direction == DMA_NONE) {
++	if (!scsi_bufflen(cmd) || cmd->sc_data_direction == DMA_NONE) {
+ 		cmd_pkt->byte_count = __constant_cpu_to_le32(0);
+ 		return;
+ 	}
+@@ -648,9 +634,7 @@ qla24xx_build_scsi_iocbs(srb_t *sp, stru
+ 
+ 	/* Load data segments */
+ 
+-	cur_seg = (struct scatterlist *)cmd->request_buffer;
+-	end_seg = cur_seg + tot_dsds;
+-	while (cur_seg < end_seg) {
++	scsi_for_each_sg(cmd, sg, tot_dsds, i) {
+ 		dma_addr_t	sle_dma;
+ 		cont_a64_entry_t *cont_pkt;
+ 
+@@ -665,13 +649,11 @@ qla24xx_build_scsi_iocbs(srb_t *sp, stru
+ 			avail_dsds = 5;
+ 		}
+ 
+-		sle_dma = sg_dma_address(cur_seg);
++		sle_dma = sg_dma_address(sg);
+ 		*cur_dsd++ = cpu_to_le32(LSD(sle_dma));
+ 		*cur_dsd++ = cpu_to_le32(MSD(sle_dma));
+-		*cur_dsd++ = cpu_to_le32(sg_dma_len(cur_seg));
++		*cur_dsd++ = cpu_to_le32(sg_dma_len(sg));
+ 		avail_dsds--;
+-
+-		cur_seg++;
+ 	}
  }
  
-@@ -253,9 +249,8 @@ lpfc_scsi_unprep_dma_buf(struct lpfc_hba
- 	 * a request buffer, but did not request use_sg.  There is a third
- 	 * case, but it does not require resource deallocation.
- 	 */
--	if ((psb->seg_cnt > 0) && (psb->pCmd->use_sg))
--		dma_unmap_sg(&phba->pcidev->dev, psb->pCmd->request_buffer,
--			     psb->seg_cnt, psb->pCmd->sc_data_direction);
-+	if (psb->seg_cnt > 0)
-+		scsi_dma_unmap(&phba->pcidev->dev, psb->pCmd);
- }
+@@ -685,7 +667,7 @@ qla24xx_build_scsi_iocbs(srb_t *sp, stru
+ int
+ qla24xx_start_scsi(srb_t *sp)
+ {
+-	int		ret;
++	int		ret, nseg;
+ 	unsigned long   flags;
+ 	scsi_qla_host_t	*ha;
+ 	struct scsi_cmnd *cmd;
+@@ -693,7 +675,6 @@ qla24xx_start_scsi(srb_t *sp)
+ 	uint32_t        index;
+ 	uint32_t	handle;
+ 	struct cmd_type_7 *cmd_pkt;
+-	struct scatterlist *sg;
+ 	uint16_t	cnt;
+ 	uint16_t	req_cnt;
+ 	uint16_t	tot_dsds;
+@@ -731,13 +712,10 @@ qla24xx_start_scsi(srb_t *sp)
+ 		goto queuing_error;
  
- static void
-@@ -316,14 +311,14 @@ lpfc_handle_fcp_err(struct lpfc_scsi_buf
+ 	/* Map the sg table so we have an accurate count of sg entries needed */
+-	if (cmd->use_sg) {
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		tot_dsds = pci_map_sg(ha->pdev, sg, cmd->use_sg,
+-		    cmd->sc_data_direction);
+-		if (tot_dsds == 0)
++	nseg = scsi_dma_map(&ha->pdev->dev, cmd);
++	if (nseg < 0)
+ 			goto queuing_error;
+-	}
++	tot_dsds = nseg;
+ 
+ 	req_cnt = qla24xx_calc_iocbs(tot_dsds);
+ 	if (ha->req_q_cnt < (req_cnt + 2)) {
+@@ -780,7 +758,7 @@ qla24xx_start_scsi(srb_t *sp)
+ 	memcpy(cmd_pkt->fcp_cdb, cmd->cmnd, cmd->cmd_len);
+ 	host_to_fcp_swap(cmd_pkt->fcp_cdb, sizeof(cmd_pkt->fcp_cdb));
+ 
+-	cmd_pkt->byte_count = cpu_to_le32((uint32_t)cmd->request_bufflen);
++	cmd_pkt->byte_count = cpu_to_le32((uint32_t)scsi_bufflen(cmd));
+ 
+ 	/* Build IOCB segments */
+ 	qla24xx_build_scsi_iocbs(sp, cmd_pkt, tot_dsds);
+@@ -812,11 +790,9 @@ qla24xx_start_scsi(srb_t *sp)
+ 	return QLA_SUCCESS;
+ 
+ queuing_error:
+-	if (cmd->use_sg && tot_dsds) {
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		pci_unmap_sg(ha->pdev, sg, cmd->use_sg,
+-		    cmd->sc_data_direction);
+-	}
++	if (tot_dsds)
++		scsi_dma_unmap(&ha->pdev->dev, cmd);
++
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
+ 	return QLA_FUNCTION_FAILED;
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index ca46346..ccc1712 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -889,19 +889,19 @@ qla2x00_status_entry(scsi_qla_host_t *ha
  		}
+ 		if (scsi_status & (SS_RESIDUAL_UNDER | SS_RESIDUAL_OVER)) {
+ 			resid = resid_len;
+-			cp->resid = resid;
++			scsi_resid(cp) = resid;
+ 			CMD_RESID_LEN(cp) = resid;
+ 
+ 			if (!lscsi_status &&
+-			    ((unsigned)(cp->request_bufflen - resid) <
++			    ((unsigned)(scsi_bufflen(cp) - resid) <
+ 			     cp->underflow)) {
+ 				qla_printk(KERN_INFO, ha,
+-				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
+-				    "detected (%x of %x bytes)...returning "
+-				    "error status.\n", ha->host_no,
+-				    cp->device->channel, cp->device->id,
+-				    cp->device->lun, resid,
+-				    cp->request_bufflen);
++					   "scsi(%ld:%d:%d:%d): Mid-layer underflow "
++					   "detected (%x of %x bytes)...returning "
++					   "error status.\n", ha->host_no,
++					   cp->device->channel, cp->device->id,
++					   cp->device->lun, resid,
++					   scsi_bufflen(cp));
+ 
+ 				cp->result = DID_ERROR << 16;
+ 				break;
+@@ -963,7 +963,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha
+ 			resid = fw_resid_len;
+ 
+ 		if (scsi_status & SS_RESIDUAL_UNDER) {
+-			cp->resid = resid;
++			scsi_resid(cp) = resid;
+ 			CMD_RESID_LEN(cp) = resid;
+ 		} else {
+ 			DEBUG2(printk(KERN_INFO
+@@ -1042,26 +1042,26 @@ qla2x00_status_entry(scsi_qla_host_t *ha
+ 			 */
+ 			if (!(scsi_status & SS_RESIDUAL_UNDER)) {
+ 				DEBUG2(printk("scsi(%ld:%d:%d:%d) Dropped "
+-				    "frame(s) detected (%x of %x bytes)..."
+-				    "retrying command.\n", ha->host_no,
+-				    cp->device->channel, cp->device->id,
+-				    cp->device->lun, resid,
+-				    cp->request_bufflen));
++					      "frame(s) detected (%x of %x bytes)..."
++					      "retrying command.\n", ha->host_no,
++					      cp->device->channel, cp->device->id,
++					      cp->device->lun, resid,
++					      scsi_bufflen(cp)));
+ 
+ 				cp->result = DID_BUS_BUSY << 16;
+ 				break;
+ 			}
+ 
+ 			/* Handle mid-layer underflow */
+-			if ((unsigned)(cp->request_bufflen - resid) <
++			if ((unsigned)(scsi_bufflen(cp) - resid) <
+ 			    cp->underflow) {
+ 				qla_printk(KERN_INFO, ha,
+-				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
+-				    "detected (%x of %x bytes)...returning "
+-				    "error status.\n", ha->host_no,
+-				    cp->device->channel, cp->device->id,
+-				    cp->device->lun, resid,
+-				    cp->request_bufflen);
++					   "scsi(%ld:%d:%d:%d): Mid-layer underflow "
++					   "detected (%x of %x bytes)...returning "
++					   "error status.\n", ha->host_no,
++					   cp->device->channel, cp->device->id,
++					   cp->device->lun, resid,
++					   scsi_bufflen(cp));
+ 
+ 				cp->result = DID_ERROR << 16;
+ 				break;
+@@ -1084,7 +1084,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha
+ 		DEBUG2(printk(KERN_INFO
+ 		    "PID=0x%lx req=0x%x xtra=0x%x -- returning DID_ERROR "
+ 		    "status!\n",
+-		    cp->serial_number, cp->request_bufflen, resid_len));
++		    cp->serial_number, scsi_bufflen(cp), resid_len));
+ 
+ 		cp->result = DID_ERROR << 16;
+ 		break;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index c00cc01..776db19 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2426,9 +2426,7 @@ qla2x00_sp_free_dma(scsi_qla_host_t *ha,
+ 	struct scsi_cmnd *cmd = sp->cmd;
+ 
+ 	if (sp->flags & SRB_DMA_VALID) {
+-		if (cmd->use_sg)
+-			dma_unmap_sg(&ha->pdev->dev, cmd->request_buffer,
+-				     cmd->use_sg, cmd->sc_data_direction);
++		scsi_dma_unmap(&ha->pdev->dev, cmd);
+ 		sp->flags &= ~SRB_DMA_VALID;
  	}
- 
--	cmnd->resid = 0;
-+	scsi_resid(cmnd) = 0;
- 	if (resp_info & RESID_UNDER) {
--		cmnd->resid = be32_to_cpu(fcprsp->rspResId);
-+		scsi_resid(cmnd) = be32_to_cpu(fcprsp->rspResId);
- 
- 		lpfc_printf_log(phba, KERN_INFO, LOG_FCP,
- 				"%d:0716 FCP Read Underrun, expected %d, "
- 				"residual %d Data: x%x x%x x%x\n", phba->brd_no,
--				be32_to_cpu(fcpcmd->fcpDl), cmnd->resid,
-+				be32_to_cpu(fcpcmd->fcpDl), scsi_resid(cmnd),
- 				fcpi_parm, cmnd->cmnd[0], cmnd->underflow);
- 
- 		/*
-@@ -333,15 +328,15 @@ lpfc_handle_fcp_err(struct lpfc_scsi_buf
- 		 */
- 		if ((cmnd->sc_data_direction == DMA_FROM_DEVICE) &&
- 			fcpi_parm &&
--			(cmnd->resid != fcpi_parm)) {
-+			(scsi_resid(cmnd) != fcpi_parm)) {
- 			lpfc_printf_log(phba, KERN_WARNING,
- 				LOG_FCP | LOG_FCP_ERROR,
- 				"%d:0735 FCP Read Check Error and Underrun "
- 				"Data: x%x x%x x%x x%x\n", phba->brd_no,
- 				be32_to_cpu(fcpcmd->fcpDl),
--				cmnd->resid,
-+				scsi_resid(cmnd),
- 				fcpi_parm, cmnd->cmnd[0]);
--			cmnd->resid = cmnd->request_bufflen;
-+			scsi_resid(cmnd) = scsi_bufflen(cmnd);
- 			host_status = DID_ERROR;
- 		}
- 		/*
-@@ -352,13 +347,13 @@ lpfc_handle_fcp_err(struct lpfc_scsi_buf
- 		 */
- 		if (!(resp_info & SNS_LEN_VALID) &&
- 		    (scsi_status == SAM_STAT_GOOD) &&
--		    (cmnd->request_bufflen - cmnd->resid) < cmnd->underflow) {
-+		    (scsi_bufflen(cmnd) - scsi_resid(cmnd) < cmnd->underflow)) {
- 			lpfc_printf_log(phba, KERN_INFO, LOG_FCP,
- 					"%d:0717 FCP command x%x residual "
- 					"underrun converted to error "
- 					"Data: x%x x%x x%x\n", phba->brd_no,
--					cmnd->cmnd[0], cmnd->request_bufflen,
--					cmnd->resid, cmnd->underflow);
-+					cmnd->cmnd[0], scsi_bufflen(cmnd),
-+					scsi_resid(cmnd), cmnd->underflow);
- 
- 			host_status = DID_ERROR;
- 		}
-@@ -367,7 +362,7 @@ lpfc_handle_fcp_err(struct lpfc_scsi_buf
- 				"%d:0720 FCP command x%x residual "
- 				"overrun error. Data: x%x x%x \n",
- 				phba->brd_no, cmnd->cmnd[0],
--				cmnd->request_bufflen, cmnd->resid);
-+				scsi_bufflen(cmnd), scsi_resid(cmnd));
- 		host_status = DID_ERROR;
- 
- 	/*
-@@ -383,7 +378,7 @@ lpfc_handle_fcp_err(struct lpfc_scsi_buf
- 			be32_to_cpu(fcprsp->rspResId),
- 			fcpi_parm, cmnd->cmnd[0]);
- 		host_status = DID_ERROR;
--		cmnd->resid = cmnd->request_bufflen;
-+		scsi_resid(cmnd) = scsi_bufflen(cmnd);
- 	}
- 
-  out:
-@@ -450,7 +445,7 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba
- 				"SNS x%x x%x Data: x%x x%x\n",
- 				phba->brd_no, cmd->device->id,
- 				cmd->device->lun, cmd, cmd->result,
--				*lp, *(lp + 3), cmd->retries, cmd->resid);
-+				*lp, *(lp + 3), cmd->retries, scsi_resid(cmd));
- 	}
- 
- 	result = cmd->result;
-@@ -559,7 +554,7 @@ lpfc_scsi_prep_cmnd(struct lpfc_hba * ph
- 	 * bumping the bpl beyond the fcp_cmnd and fcp_rsp regions to the first
- 	 * data bde entry.
- 	 */
--	if (scsi_cmnd->use_sg) {
-+	if (scsi_sg_count(scsi_cmnd)) {
- 		if (datadir == DMA_TO_DEVICE) {
- 			iocb_cmd->ulpCommand = CMD_FCP_IWRITE64_CR;
- 			iocb_cmd->un.fcpi.fcpi_parm = 0;
-@@ -570,7 +565,7 @@ lpfc_scsi_prep_cmnd(struct lpfc_hba * ph
- 			iocb_cmd->ulpCommand = CMD_FCP_IREAD64_CR;
- 			iocb_cmd->ulpPU = PARM_READ_CHECK;
- 			iocb_cmd->un.fcpi.fcpi_parm =
--				scsi_cmnd->request_bufflen;
-+				scsi_bufflen(scsi_cmnd);
- 			fcp_cmnd->fcpCntl3 = READ_DATA;
- 			phba->fc4InputRequests++;
- 		}
+ 	CMD_SP(cmd) = NULL;
 -- 
 1.4.3.2
 
