@@ -1,54 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Simon Arlott <simon@fire.lp0.eu>
 Subject: Re: why does x86 "make defconfig" build a single, lonely module?
-Date: Sun, 13 May 2007 13:45:22 -0500
-Message-ID: <1179081922.3723.61.camel@mulgrave.il.steeleye.com>
-References: <Pine.LNX.4.64.0705131106160.3197@localhost.localdomain>
-	 <20070513160608.GA29024@redhat.com>
-	 <1179072655.3723.42.camel@mulgrave.il.steeleye.com>
-	 <Pine.LNX.4.64.0705131216440.27468@localhost.localdomain>
-	 <1179073670.3723.48.camel@mulgrave.il.steeleye.com>
-	 <46474E1A.6080904@simon.arlott.org.uk>
-	 <1179078537.3723.53.camel@mulgrave.il.steeleye.com>
-	 <46475857.4010509@simon.arlott.org.uk>
+Date: Sun, 13 May 2007 21:38:59 +0100
+Message-ID: <46477763.5020400@simon.arlott.org.uk>
+References: <Pine.LNX.4.64.0705131106160.3197@localhost.localdomain>	 <20070513160608.GA29024@redhat.com> <1179072655.3723.42.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:34680 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757999AbXEMSpl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 May 2007 14:45:41 -0400
-In-Reply-To: <46475857.4010509@simon.arlott.org.uk>
+Received: from proxima.lp0.eu ([85.158.45.36]:45964 "EHLO proxima.lp0.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754370AbXEMUjI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 13 May 2007 16:39:08 -0400
+In-Reply-To: <1179072655.3723.42.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Simon Arlott <simon@fire.lp0.eu>
-Cc: "Robert P. J. Day" <rpjday@mindspring.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Dave Jones <davej@redhat.com>, "Robert P. J. Day" <rpjday@mindspring.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Sun, 2007-05-13 at 19:26 +0100, Simon Arlott wrote:
-> On 13/05/07 18:48, James Bottomley wrote:
-> > On Sun, 2007-05-13 at 18:42 +0100, Simon Arlott wrote:
-> >>> If you set CONFIG_MODULE=y and build SCSI we assume you could have a
-> >>> SCSI driver module at some point, which would necessitate the wait scan
-> >>> module.
-> >> This should be implemented like "Library routines" and only added if such 
-> >> a SCSI driver module is actually selected. Why can't it at least be a 
-> >> visible option in the menu? (Although even then it looks like it's 
-> >> impossible to disable).
-> > 
-> > There's out of tree modules to consider.
+On 13/05/07 17:10, James Bottomley wrote:
+> On Sun, 2007-05-13 at 12:06 -0400, Dave Jones wrote:
+>> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+>> index e62d23f..0f6c370 100644
+>> --- a/drivers/scsi/Kconfig
+>> +++ b/drivers/scsi/Kconfig
+>> @@ -244,7 +244,7 @@ config SCSI_SCAN_ASYNC
+>>  config SCSI_WAIT_SCAN
+>>  	tristate
+>>  	default m
+>> -	depends on SCSI
+>> +	depends on SCSI_SCAN_ASYNC
 > 
-> Ok, I propose we make dozens of modules default 'm' in case an out of 
-> tree module requires it.
-> 
-> SCSI_SCAN_ASYNC ("Asynchronous SCSI scanning"): "You can load the 
-> scsi_wait_scan module to ensure that all scans have completed."
-> 
-> It looks like SCSI_WAIT_SCAN is pointless unless SCSI_SCAN_ASYNC 
-> is selected - so it should depend on it:
+> No.  SCSI_SCAN_ASYNC is a bool ... if you depend on it, you'll force the
+> wait scan to be built in, which isn't the idea at all.
 
-Why don't you just actually read the thread?  Then you'd understand why
-this isn't correct.
+Try it. It doesn't force it to be built in.
 
-James
+> Plus SCSI_SCAN_ASYNC only sets the *default* for async scanning.  You
+> can alter this at boot time, so you could need the wait scan module even
+> with it set to N.
 
+static int __init wait_scan_init(void)
+{
+    scsi_complete_async_scans();
+    return 0;
+}
 
+Could that not be built-in to SCSI as a sysfs attribute, rather than using 
+a module to tell the kernel to do something? It looks like someone might 
+want to call scsi_complete_async_scans() more than once too - if they also 
+don't allow modules to be unloaded then they can't.
+
+-- 
+Simon Arlott
