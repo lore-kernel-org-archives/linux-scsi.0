@@ -1,58 +1,44 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: ata/scsi crash on halt
-Date: Sun, 13 May 2007 15:03:56 +0200
-Message-ID: <46470CBC.6040308@gmail.com>
-References: <20070512112537.4981f82d.akpm@linux-foundation.org> <1178998256.3723.24.camel@mulgrave.il.steeleye.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 1/19] add data buffer accessors
+Date: Sun, 13 May 2007 16:04:07 +0200
+Message-ID: <46471AD7.5010105@s5r6.in-berlin.de>
+References: <20070512182805L.fujita.tomonori@lab.ntt.co.jp>	<20070512153151.GB8088@infradead.org> <200705130330.l4D3Ut3Y027684@mbox.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1178998256.3723.24.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:48754 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757037AbXEMOEY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 May 2007 10:04:24 -0400
+In-Reply-To: <200705130330.l4D3Ut3Y027684@mbox.iij4u.or.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: hch@infradead.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-Hello, James, Andrew.
+FUJITA Tomonori wrote:
+> From: Christoph Hellwig <hch@infradead.org>
+...
+>> As James already said the device argument should not be needed at all.
+...
+> +int scsi_dma_map(struct scsi_cmnd *cmd)
+> +{
+> +	int nseg = 0;
+> +
+> +	if (scsi_sg_count(cmd)) {
+> +		struct device *dev = cmd->device->host->shost_gendev.parent;
+...
 
-James Bottomley wrote:
-> On Sat, 2007-05-12 at 11:25 -0700, Andrew Morton wrote:
->> [  715.196000] sd 2:0:0:0: [sda] Synchronizing SCSI cache
->> [  715.196000] sd 2:0:0:0: [sda] Stopping disk
->> [  715.196000] ata3.00: DISK MIGHT NOT BE SPUN DOWN PROPERLY. UPDATE SHUTDOWN UTILITY
->> [  715.196000] ata3.00: For more info, visit http://linux-ata.org/shutdown.html
->> [  715.196000] BUG: scheduling while atomic: swapper/0x00000100/0
->> [  715.196000]  [<c02e282d>] __sched_text_start+0x55/0x504
->> [  715.196000]  [<c0239faa>] scsi_done+0x0/0x1d
->> [  715.196000]  [<c02e32fb>] schedule_timeout+0x78/0x95
->> [  715.196000]  [<c011ffc2>] process_timeout+0x0/0x5
->> [  715.196000]  [<c011ff87>] msleep+0x10/0x18
->> [  715.196000]  [<c024d455>] ata_scsi_start_stop_xlat+0xe3/0x11b
-> 
-> This is a bug in libata ... there's a ssleep in the command translation
-> path.  The commit that did it was this one:
-> 
-> commit 920a4b1038e442700a1cfac77ea7e20bd615a2c3
-> Author: Tejun Heo <htejun@gmail.com>
-> Date:   Fri May 4 21:28:48 2007 +0200
-> 
->     libata: implement libata.spindown_compat
-> 
-> I'm afraid the queuecommand path is not necessarily connected to a user
-> process because of the way block scheduling works ... you can't call
-> sleeping functions along it. 
+As a side note:
 
-Right, I missed that.
-
-> Ordinarily, what you'd do if you want to delay calling ->done() is to
-> schedule a timer to handle it ... unfortunately I don't see an easy way
-> of doing that because of the way this particular layering works.
-
-Yeah, thought about doing it with timer but it required modifications to
-command issue hot path, so I tried to cheat there (apparently
-unsuccessfully).  I'll think about something better.
-
-Thanks.
-
+What is currently not supported by SCSI mid layer is that an sdev could
+be moved from one initiator port to another.  If that happens, transport
+layer drivers have to destroy the sdev and create a new one.  Or they
+could represent /all/ initiator ports by a single shost, but then they
+can't use the two new scsi_dma_ wrappers.  (Assuming there aren't any
+other issues which would prevent the single-shost approach.)
 -- 
-tejun
+Stefan Richter
+-=====-=-=== -=-= -==-=
+http://arcgraph.de/sr/
