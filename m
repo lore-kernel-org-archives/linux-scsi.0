@@ -1,104 +1,48 @@
-From: Gerald Britton <gbritton@alum.mit.edu>
-Subject: [PATCH] cciss: Fix pci_driver.shutdown while device is still active
-Date: Mon, 14 May 2007 13:53:01 -0400
-Message-ID: <20070514175301.GA19871@zante.sekrit.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: why does x86 "make defconfig" build a single, lonely module?
+Date: Mon, 14 May 2007 19:46:14 +0100
+Message-ID: <20070514194614.4f00655d@the-village.bc.nu>
+References: <Pine.LNX.4.64.0705131106160.3197@localhost.localdomain>
+	<20070513160608.GA29024@redhat.com>
+	<1179072655.3723.42.camel@mulgrave.il.steeleye.com>
+	<Pine.LNX.4.64.0705131216440.27468@localhost.localdomain>
+	<1179073670.3723.48.camel@mulgrave.il.steeleye.com>
+	<46474E1A.6080904@simon.arlott.org.uk>
+	<1179078537.3723.53.camel@mulgrave.il.steeleye.com>
+	<Pine.LNX.4.61.0705141928230.9570@yvahk01.tjqt.qr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eldorado.sekrit.org ([72.5.28.212]:57341 "EHLO
-	eldorado.sekrit.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753201AbXENS0K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 May 2007 14:26:10 -0400
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:49894 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753152AbXENSm2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 May 2007 14:42:28 -0400
+In-Reply-To: <Pine.LNX.4.61.0705141928230.9570@yvahk01.tjqt.qr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@linux-foundation.org, akpm@linux-foundation.org, mike.miller@hp.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jan Engelhardt <jengelh@linux01.gwdg.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Simon Arlott <simon@fire.lp0.eu>, "Robert P. J. Day" <rpjday@mindspring.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Fix an Oops in the cciss driver caused by system shutdown while a filesystem
-on a cciss device is still active.  The cciss_remove_one function only
-properly removes the device if the device has been cleanly released by its
-users, which is not the case when the pci_driver.shutdown method is called.
+On Mon, 14 May 2007 19:29:12 +0200 (MEST)
+Jan Engelhardt <jengelh@linux01.gwdg.de> wrote:
 
-This patch adds a new cciss_shutdown function to better match the pattern
-used by various SCSI drivers: deactivate device interrupts and flush caches.
-It also alters the cciss_remove_one function to match and readds the
-__devexit annotation that was removed when cciss_remove_one was serving as
-the pci_driver.shutdown method.
+> 
+> On May 13 2007 12:48, James Bottomley wrote:
+> >
+> >> Why does ATA select SCSI anyway? Surely PATA doesn't require it?
+> >
+> >That's a bit offtopic and to the wrong list.
+> >
+> >libata-pata does require SCSI ...
+> 
+> And in the long run, that SCSI parts which are actually used by ATA
+> should be factored out so that SCSI really is SCSI again, and not
+> "Common layer for SCSI, SATA and PATA" or so.
 
-Signed-off-by: Gerald Britton <gbritton@alum.mit.edu>
----
-diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 370dfe1..5acc6c4 100644
---- a/drivers/block/cciss.c
-+++ b/drivers/block/cciss.c
-@@ -3469,13 +3469,39 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
- 	return -1;
- }
- 
--static void cciss_remove_one(struct pci_dev *pdev)
-+static void cciss_shutdown(struct pci_dev *pdev)
- {
- 	ctlr_info_t *tmp_ptr;
--	int i, j;
-+	int i;
- 	char flush_buf[4];
- 	int return_code;
- 
-+	tmp_ptr = pci_get_drvdata(pdev);
-+	if (tmp_ptr == NULL)
-+		return;
-+	i = tmp_ptr->ctlr;
-+	if (hba[i] == NULL)
-+		return;
-+
-+	/* Turn board interrupts off  and send the flush cache command */
-+	/* sendcmd will turn off interrupt, and send the flush...
-+	 * To write all data in the battery backed cache to disks */
-+	memset(flush_buf, 0, 4);
-+	return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 0, 0, 0, NULL,
-+			      TYPE_CMD);
-+	if (return_code == IO_OK) {
-+		printk(KERN_INFO "Completed flushing cache on controller %d\n", i);
-+	} else {
-+		printk(KERN_WARNING "Error flushing cache on controller %d\n", i);
-+	}
-+	free_irq(hba[i]->intr[2], hba[i]);
-+}
-+
-+static void __devexit cciss_remove_one(struct pci_dev *pdev)
-+{
-+	ctlr_info_t *tmp_ptr;
-+	int i, j;
-+
- 	if (pci_get_drvdata(pdev) == NULL) {
- 		printk(KERN_ERR "cciss: Unable to remove device \n");
- 		return;
-@@ -3506,18 +3532,7 @@ static void cciss_remove_one(struct pci_dev *pdev)
- 
- 	cciss_unregister_scsi(i);	/* unhook from SCSI subsystem */
- 
--	/* Turn board interrupts off  and send the flush cache command */
--	/* sendcmd will turn off interrupt, and send the flush...
--	 * To write all data in the battery backed cache to disks */
--	memset(flush_buf, 0, 4);
--	return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 0, 0, 0, NULL,
--			      TYPE_CMD);
--	if (return_code == IO_OK) {
--		printk(KERN_INFO "Completed flushing cache on controller %d\n", i);
--	} else {
--		printk(KERN_WARNING "Error flushing cache on controller %d\n", i);
--	}
--	free_irq(hba[i]->intr[2], hba[i]);
-+	cciss_shutdown(pdev);
- 
- #ifdef CONFIG_PCI_MSI
- 	if (hba[i]->msix_vector)
-@@ -3550,7 +3565,7 @@ static struct pci_driver cciss_pci_driver = {
- 	.probe = cciss_init_one,
- 	.remove = __devexit_p(cciss_remove_one),
- 	.id_table = cciss_pci_device_id,	/* id_table */
--	.shutdown = cciss_remove_one,
-+	.shutdown = cciss_shutdown,
- };
- 
- /*
+The common layer for the queueing is one thing, but the ATAPI devices
+(CD-ROM etc) are SCSI commands over an ATA bus. A subset of SCSI commands
+badly over an ATA bus but SCSI commands nevertheless - so they have the
+same basic dependancies as USB storage does.
+
+Alan
