@@ -1,83 +1,45 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] FC Transport support for vports based on NPIV
-Date: Mon, 14 May 2007 11:57:50 -0400
-Message-ID: <464886FE.7060001@emulex.com>
-References: <1176408091.19824.20.camel@localhost.localdomain> <20070514121239.GA23620@schmichrtp> <464886B6.8050509@emulex.com>
-Reply-To: James.Smart@Emulex.Com
+From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Subject: SMART support for SATA drives in SAS enclosures
+Date: Mon, 14 May 2007 17:58:09 +0200
+Message-ID: <46488711.9020903@macroscoop.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:62767 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753388AbXENP6A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 May 2007 11:58:00 -0400
-In-Reply-To: <464886B6.8050509@emulex.com>
+Received: from mondriaan.macroscoop.nl ([82.94.9.2]:2507 "EHLO
+	mondriaan.macroscoop.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754981AbXENQDc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 May 2007 12:03:32 -0400
+Received: from rousseau.macroscoop.nl (rousseau.macroscoop.nl [IPv6:2001:888:1734:0:214:5eff:fe2a:6a7a])
+	by mondriaan.macroscoop.nl (envelope-from P.Zandbergen@macroscoop.nl) (8.13.8/8.13.8) with ESMTP id l4EFwAIs027103
+	for <linux-scsi@vger.kernel.org>; Mon, 14 May 2007 17:58:10 +0200
+Received: from [82.94.9.131] (botero.macroscoop.nl [82.94.9.131])
+	by rousseau.macroscoop.nl (envelope-from P.Zandbergen@macroscoop.nl) (8.13.8/8.13.8) with ESMTP id l4EFwARI027372
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Mon, 14 May 2007 17:58:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, duane.grigsby@qlogic.com
+To: linux-scsi@vger.kernel.org
 
-reposting w/ the title
+Is SMART support available for SATA drives in SAS enclosures?
 
-James Smart wrote:
-> 
-> Christof Schmitt wrote:
->> James,
->>
->> i try to understand what the introduction of the vports means for 
->> zfcp, since
->> this driver also supports NPIV. The documentation for the fc transport 
->> class
->> describes a driver that would fully control the adapter and the 
->> creation of
->> virtual address. Since you mentioned Xen, i assume that this could be 
->> a dom0.
-> 
-> All true.  But, there is the notion that there is a driver that thinks it's
-> controlling the adapter, but it's actually talking to a virtual thing, that
-> traps the driver's FLOGI's and turns it into FDISCs...
-> 
->> With zfcp, the hardware FCP adapter does NPIV and only hands out the 
->> virtual
->> address to individual Linux instances. zfcp gets the assigned virtual 
->> address
->> for the Linux instance. This address is used for allocating the scsi_host
->> structure. Basically, the whole system uses NPIV, but each Linux only 
->> uses one
->> assigned virtual WWPN.
-> 
-> Yes - I understand. For all intents and purposes, that virtual address is
-> treated as an adapter.
-> 
->> My current understanding is that the vports introduced in the fc 
->> transport
->> class do not affect the Linux systems that only use one virtual 
->> address.  To
->> map this to Xen, the dom0 would use the vports to show all virtual 
->> address, and
->> each domU would use the assigned virtual address without showing the 
->> vport in
->> sysfs. Is this correct?
->>
->> Christof
-> 
-> Agreed. It should mean nothing to the zfcp driver.  Nothing changes in 
-> the driver
-> if it will always be a single address.
-> 
-> Although - if your hardware-to-driver interface had the ability to 
-> instantiate
-> a new address, you could augment your driver to support the vport calls. 
-> That's
-> a choice for you though.
-> 
-> -- james
-> 
-> PS: One thing I didn't call out in the vport patches was the expectation 
-> that
->   the vport-supporting driver had to set the PPN attribute appropriately.
->   And... did you see that T11 is trying to change what the PPN is set to 
-> - the
->   fabric port_name not the physical N_Port port_name.
-> 
+I'm testing this setup
+
+LSI Logic SAS3800X PCI-X SAS controller (mptsas driver)
+Promise V-Trak J300S SAS/SATA enclosure/expander
+12x Seagate ST3500630NS
+Linux kernel 2.6.21.1 x86_64
+smartmontools-5.37-1.1.fc6 from Fedora Core 6
+
+"smartctl -i -d sat /dev/sdc" gives me
+
+Smartctl: Device Read Identity Failed
+
+Same with "-d ata".
+
+If I treat the disk as SCSI ("-d scsi"), the command
+will not fail, but wil only retrieve the serial number.
+
+Thanks,
+Pim
+
