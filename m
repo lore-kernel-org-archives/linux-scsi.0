@@ -1,123 +1,69 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: Correct sa platform support. (Was: [Bug 8469] Bad EIP value on pentium3 SMP kernel-2.6.21.1)
-Date: Tue, 15 May 2007 09:14:21 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF0197D746@otce2k301.adaptec.com>
-References: <20070514222958.a0587f8a.akpm@linux-foundation.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: Weird hard disk noise on shutdown (bug #7674)
+Date: Tue, 15 May 2007 15:47:27 +0200
+Message-ID: <4649B9EF.1070605@gmail.com>
+References: <fa.Ia7dfo7Zd5kB6KhSYisfswa1aj4@ifi.uio.no> <fa.YHt2nIlQmoW5r2enmTSzsaySwH4@ifi.uio.no> <45DD0348.5040005@shaw.ca> <e5ab0f710702231235ucb559eerb3639ec312aa312a@mail.gmail.com> <463B858E.6060002@cfl.rr.com> <463B99EE.2090001@gmail.com> <e5ab0f710705061119k35ba223j2ecca6e0f8495ed5@mail.gmail.com> <46489D3B.8050805@gmail.com> <e5ab0f710705141346o45ac8721jacbcb753f9d45406@mail.gmail.com> <20070515131632.GC16673@khazad-dum.debian.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C796F2.F3F88598"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:49811 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754559AbXEONOZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2007 09:14:25 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070514222958.a0587f8a.akpm@linux-foundation.org>
+Received: from nz-out-0506.google.com ([64.233.162.235]:37242 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755269AbXEONsM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2007 09:48:12 -0400
+Received: by nz-out-0506.google.com with SMTP id r28so146510nza
+        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2007 06:48:11 -0700 (PDT)
+In-Reply-To: <20070515131632.GC16673@khazad-dum.debian.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, stable@kernel.org, Rainer Malitzke-Goes <malitzke@metronets.com>
+To: Henrique de Moraes Holschuh <hmh@debian.org>
+Cc: Francesco Pretto <ceztko@gmail.com>, Phillip Susi <psusi@cfl.rr.com>, linux-kernel <linux-kernel@vger.kernel.org>, pkg-sysvinit-devel@lists.alioth.debian.org, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
 
-This is a multi-part message in MIME format.
+Hello, Henrique.
 
-------_=_NextPart_001_01C796F2.F3F88598
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Henrique de Moraes Holschuh wrote:
+> On Mon, 14 May 2007, Francesco Pretto wrote:
+>> Ubuntu [1] ang Gentoo [2] bugs opened. Sent a mail to Miquel van
+>> Smoorenburg, dev  of sysvinit.
+> 
+> For all Debian sysvinit issues, please send email to
+> pkg-sysvinit-devel@lists.alioth.debian.org (added to CC).
+> 
+> For the Debian sysvinit crew: Guys, have a look at
+> http://linux-ata.org/shutdown.html.  We need to act on it, and also file a
+> bug on all of our current kernels (poweroff causes minor but accumulating-
+> over-time damage to all hardware under control of libata).  This is really
+> something we should be trying to fix on our 2.6.18 kernels and stable
+> sysvinit.
+> 
+>> [1] https://bugs.launchpad.net/upstart/+bug/114683
+>> [2] http://bugs.gentoo.org/show_bug.cgi?id=178559
 
-As discussed in the bugzilla outlined below, we have an sa based
-(Mustang) RAID adapter on the system, a Dell PERC2/QC. Affected
-controllers are HP NetRAID, Adaptec AAC-364, Dell PERC2/QC or Adaptec
-5400S. This problem  coincides with the introduction of the adapter_comm
-and adapter_deliver platform functions (Message [PATCH 1/4] aacraid:
-rework communication support code, January 23 2007, which initially
-migrated to 2.6.21)
+There have been further developments,
 
-The panic occurs with an uninitialized adapter_deliver platform function
-pointer. The enclosed patch, unmodified as tested by Rainer, solves the
-problem.
+	http://article.gmane.org/gmane.linux.ide/18823	(bugfix)
+	http://article.gmane.org/gmane.linux.ide/18846	(in discussion)
 
-This attached patch is against current scsi-misc-2.6, applies cleanly to
-2.6.21-git12. It may require manual intervention to be applied to 2.6.21
-or 2.6.21.1, simple breakage when merely adding a single line to
-aacraid.h:
+The second patch makes libata turn off the warning message and just
+issue STANDBYNOW without userland modification, iff userland
+halt/shutdown doesn't issue STANDBYNOW during shutdown.  I'm not sure
+whether this will be accepted or not.  It makes the change much less
+intrusive for distros which don't issue STANDBYNOW from userland but
+disks will always do emergency-unload on all kernels with this problem.
 
-. . .
-+ int aac_rx_deliver_producer(struct fib * fib);
-  extern int numacb;
-. . .
+> Tejun, am I right to assume that any servers with self-contained SCSI disks
+> (i.e. that are not plugged into externally powered drive enclosures, etc)
+> also get the emergency head unloads when they are powered off?
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
+AFAIK, yes, all SCSI disks attached to a single host and shares power
+on/off status will do emergency unload on poweroff.  In the updated
+kernel, this is controlled by the following sysfs node.
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+ /sys/class/scsi_disk/h:c:i:l/manage_start_stop.
 
-Sincerely -- Mark Salyzyn
+It defaults to 1 for libata devices and 0 for all others.  Echoing 1 to
+it makes the sd driver spindown the device on suspend to ram/disk and
+poweroff.
 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org]=20
-> Sent: Tuesday, May 15, 2007 1:30 AM
-> To: Salyzyn, Mark
-> Subject: Re: [Bug 8469] Bad EIP value on pentium3 SMP kernel-2.6.21.1
->=20
-> On Mon, 14 May 2007 22:10:20 -0700=20
-> bugme-daemon@bugzilla.kernel.org wrote:
->=20
-> > http://bugzilla.kernel.org/show_bug.cgi?id=3D8469
->=20
-> we appear to have a thumbs-up.  Please cc me on the final patch?
->=20
-> Please also consider ccing stable@kernel.org, as this bug affects
-2.6.21.x.
->=20
-> Thanks.
-
-------_=_NextPart_001_01C796F2.F3F88598
-Content-Type: application/octet-stream;
-	name="aacraid_sa_fix.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_sa_fix.patch
-Content-Disposition: attachment;
-	filename="aacraid_sa_fix.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmggYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCTIw
-MDctMDUtMTQgMTE6NTY6MTQuNjQwMTY5OTQ5IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2FhY3JhaWQuaAkyMDA3LTA1LTE0IDExOjU5OjA0LjA4NTkwNTE0NyAtMDQwMApAQCAtMTgy
-Myw2ICsxODIzLDcgQEAKIGludCBhYWNfcHJvYmVfY29udGFpbmVyKHN0cnVjdCBhYWNfZGV2ICpk
-ZXYsIGludCBjaWQpOwogaW50IF9hYWNfcnhfaW5pdChzdHJ1Y3QgYWFjX2RldiAqZGV2KTsKIGlu
-dCBhYWNfcnhfc2VsZWN0X2NvbW0oc3RydWN0IGFhY19kZXYgKmRldiwgaW50IGNvbW0pOworaW50
-IGFhY19yeF9kZWxpdmVyX3Byb2R1Y2VyKHN0cnVjdCBmaWIgKiBmaWIpOwogZXh0ZXJuIGludCBu
-dW1hY2I7CiBleHRlcm4gaW50IGFjYnNpemU7CiBleHRlcm4gY2hhciBhYWNfZHJpdmVyX3ZlcnNp
-b25bXTsKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jIGIvZHJpdmVycy9zY3Np
-L2FhY3JhaWQvcnguYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jCTIwMDctMDUtMTQg
-MTE6NTY6MTQuNjQzMTY5NTM3IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMJ
-MjAwNy0wNS0xNCAxMTo1OTowNC4wODY5MDUwMTAgLTA0MDAKQEAgLTM3OCw3ICszNzgsNyBAQAog
-ICoKICAqCVdpbGwgc2VuZCBhIGZpYiwgcmV0dXJuaW5nIDAgaWYgc3VjY2Vzc2Z1bC4KICAqLwot
-c3RhdGljIGludCBhYWNfcnhfZGVsaXZlcl9wcm9kdWNlcihzdHJ1Y3QgZmliICogZmliKQoraW50
-IGFhY19yeF9kZWxpdmVyX3Byb2R1Y2VyKHN0cnVjdCBmaWIgKiBmaWIpCiB7CiAJc3RydWN0IGFh
-Y19kZXYgKmRldiA9IGZpYi0+ZGV2OwogCXN0cnVjdCBhYWNfcXVldWUgKnEgPSAmZGV2LT5xdWV1
-ZXMtPnF1ZXVlW0FkYXBOb3JtQ21kUXVldWVdOwpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL3NhLmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9zYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL3NhLmMJMjAwNy0wNS0xNCAxMTo1NjoxNC42NDMxNjk1MzcgLTA0MDAKKysrIGIvZHJp
-dmVycy9zY3NpL2FhY3JhaWQvc2EuYwkyMDA3LTA1LTE0IDExOjU5OjA0LjA4NzkwNDg3MyAtMDQw
-MApAQCAtNSw3ICs1LDcgQEAKICAqIGJhc2VkIG9uIHRoZSBvbGQgYWFjcmFpZCBkcml2ZXIgdGhh
-dCBpcy4uCiAgKiBBZGFwdGVjIGFhY3JhaWQgZGV2aWNlIGRyaXZlciBmb3IgTGludXguCiAgKgot
-ICogQ29weXJpZ2h0IChjKSAyMDAwIEFkYXB0ZWMsIEluYy4gKGFhY3JhaWRAYWRhcHRlYy5jb20p
-CisgKiBDb3B5cmlnaHQgKGMpIDIwMDAtMjAwNyBBZGFwdGVjLCBJbmMuIChhYWNyYWlkQGFkYXB0
-ZWMuY29tKQogICoKICAqIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJlOyB5b3UgY2FuIHJl
-ZGlzdHJpYnV0ZSBpdCBhbmQvb3IgbW9kaWZ5CiAgKiBpdCB1bmRlciB0aGUgdGVybXMgb2YgdGhl
-IEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGFzIHB1Ymxpc2hlZCBieQpAQCAtMjU3LDYgKzI1
-NywxMSBAQAogCQkJTlVMTCwgTlVMTCwgTlVMTCwgTlVMTCwgTlVMTCk7CiB9CiAKK3N0YXRpYyBp
-bnQgYWFjX3NhX3Jlc3RhcnRfYWRhcHRlcihzdHJ1Y3QgYWFjX2RldiAqZGV2LCBpbnQgYmxlZCkK
-K3sKKwlyZXR1cm4gLUVJTlZBTDsKK30KKwogLyoqCiAgKglhYWNfc2FfY2hlY2tfaGVhbHRoCiAg
-KglAZGV2OiBkZXZpY2UgdG8gY2hlY2sgaWYgaGVhbHRoeQpAQCAtMzY2LDcgKzM3MSw5IEBACiAJ
-ZGV2LT5hX29wcy5hZGFwdGVyX25vdGlmeSA9IGFhY19zYV9ub3RpZnlfYWRhcHRlcjsKIAlkZXYt
-PmFfb3BzLmFkYXB0ZXJfc3luY19jbWQgPSBzYV9zeW5jX2NtZDsKIAlkZXYtPmFfb3BzLmFkYXB0
-ZXJfY2hlY2tfaGVhbHRoID0gYWFjX3NhX2NoZWNrX2hlYWx0aDsKKwlkZXYtPmFfb3BzLmFkYXB0
-ZXJfcmVzdGFydCA9IGFhY19zYV9yZXN0YXJ0X2FkYXB0ZXI7CiAJZGV2LT5hX29wcy5hZGFwdGVy
-X2ludHIgPSBhYWNfc2FfaW50cjsKKwlkZXYtPmFfb3BzLmFkYXB0ZXJfZGVsaXZlciA9IGFhY19y
-eF9kZWxpdmVyX3Byb2R1Y2VyOwogCWRldi0+YV9vcHMuYWRhcHRlcl9pb3JlbWFwID0gYWFjX3Nh
-X2lvcmVtYXA7CiAKIAkvKgo=
-
-------_=_NextPart_001_01C796F2.F3F88598--
+-- 
+tejun
