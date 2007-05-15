@@ -1,40 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 0/19] clean ups on the drivers
-Date: Tue, 15 May 2007 10:01:16 +0100
-Message-ID: <20070515090116.GA9297@infradead.org>
-References: <20070512190534B.fujita.tomonori@lab.ntt.co.jp> <20070512153023.GA8088@infradead.org> <200705141440.l4EEe3dB004194@mbox.iij4u.or.jp> <4648829A.10602@s5r6.in-berlin.de>
+From: "Simon Arlott" <simon@fire.lp0.eu>
+Subject: Re: why does x86 "make defconfig" build a single, lonely module?
+Date: Tue, 15 May 2007 12:26:29 +0100
+Message-ID: <17841.simon.1179228389@5ec7c279.invalid>
+References: <Pine.LNX.4.64.0705131106160.3197@localhost.localdomain>
+    <20070513160608.GA29024@redhat.com>
+    <1179072655.3723.42.camel@mulgrave.il.steeleye.com>
+    <1179073116.3723.45.camel@mulgrave.il.steeleye.com>
+    <a781481a0705140235h6a96563cw63ed2c7a85a4f736@mail.gmail.com>
+    <a781481a0705140245s6823df32l5bbf81abf92b0347@mail.gmail.com>
+    <a781481a0705140500q32a891d6g69b40c2d45ec40c6@mail.gmail.com>
+    <a781481a0705140523y789e012bj2ec317565e34366f@mail.gmail.com>
+    <1179153096.3703.23.camel@mulgrave.il.steeleye.com>
+    <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:38595 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751690AbXEOJB3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2007 05:01:29 -0400
-Content-Disposition: inline
-In-Reply-To: <4648829A.10602@s5r6.in-berlin.de>
+Received: from proxima.lp0.eu ([85.158.45.36]:44257 "EHLO proxima.lp0.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755936AbXEOL0g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2007 07:26:36 -0400
+In-Reply-To: <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, hch@infradead.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: Satyam Sharma <satyam.sharma@gmail.com>
+Cc: James Bottomley <james.bottomley@steeleye.com>, Dave Jones <davej@redhat.com>, "Robert P. J. Day" <rpjday@mindspring.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-On Mon, May 14, 2007 at 05:39:06PM +0200, Stefan Richter wrote:
-> FUJITA Tomonori wrote:
-> >> > There are two patches for each driver, removing the non-use-sg code
-> >> > and converting to use the accessors.
-> ...
-> > I merged the two. And I finished cleaning up 35 drivers in total.
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-bidi.git cleanups
-> 
-> According to what I see via gitweb, at least usb-storage, ieee1394/sbp2,
-> and firewire/fw-sbp2 weren't treated yet.  If somebody does so for the
-> latter two:  The shost->shost_gendev.parent has to be changed for
-> scsi_dma_{un}map.  I don't know if this can be done without breaking
-> anything.
+On Tue, May 15, 2007 01:41, Satyam Sharma wrote:
+> On 5/14/07, James Bottomley <James.Bottomley@steeleye.com> wrote:
+>> On Mon, 2007-05-14 at 17:53 +0530, Satyam Sharma wrote:
+>> > > I guess this is probably the behaviour that James wanted originally?
+>>
+>> No ... you're still not reading the explanation in the thread:
+>>
+>> The wait scan module is designed to wait for scans of driver modules.
+>> Whether SCSI=y or m has no effect on this ... you can still have modular
+>> drivers with built in SCSI.
+>
+> Ah, I see why we _want_ this built as a _module_ only, and don't even
+> want to expose the Kconfig option to the user, lest he screw himself later.
+> But dangling "default m"'s or "default y"'s not exposed to the user do
+> stand out discomfortingly in Kconfigs, wish there was a better way to
+> handle this.
 
-That means they should not be converted to these helpers for now.
+I've already suggested a sysfs attribute - or something equivalent - would
+be much better. It's just one function that a user might want to run multiple
+times (e.g. after adding scsi devices?) - why should loading a module be used
+for this?
 
-Personally I'd still love to have the dma mapping routines to work on
-any given struct device but walking up the parent chain until an iommu
-is found, but that was vetoed when first proposed.
-
+-- 
+Simon Arlott
