@@ -1,69 +1,47 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Weird hard disk noise on shutdown (bug #7674)
-Date: Tue, 15 May 2007 15:47:27 +0200
-Message-ID: <4649B9EF.1070605@gmail.com>
-References: <fa.Ia7dfo7Zd5kB6KhSYisfswa1aj4@ifi.uio.no> <fa.YHt2nIlQmoW5r2enmTSzsaySwH4@ifi.uio.no> <45DD0348.5040005@shaw.ca> <e5ab0f710702231235ucb559eerb3639ec312aa312a@mail.gmail.com> <463B858E.6060002@cfl.rr.com> <463B99EE.2090001@gmail.com> <e5ab0f710705061119k35ba223j2ecca6e0f8495ed5@mail.gmail.com> <46489D3B.8050805@gmail.com> <e5ab0f710705141346o45ac8721jacbcb753f9d45406@mail.gmail.com> <20070515131632.GC16673@khazad-dum.debian.net>
+From: Simon Arlott <simon@fire.lp0.eu>
+Subject: Re: Asynchronous scsi scanning
+Date: Tue, 15 May 2007 17:30:50 +0100
+Message-ID: <4649E03A.1090004@simon.arlott.org.uk>
+References: <20070513160608.GA29024@redhat.com> <1179072655.3723.42.camel@mulgrave.il.steeleye.com> <1179073116.3723.45.camel@mulgrave.il.steeleye.com> <a781481a0705140235h6a96563cw63ed2c7a85a4f736@mail.gmail.com> <a781481a0705140245s6823df32l5bbf81abf92b0347@mail.gmail.com> <a781481a0705140500q32a891d6g69b40c2d45ec40c6@mail.gmail.com> <a781481a0705140523y789e012bj2ec317565e34366f@mail.gmail.com> <1179153096.3703.23.camel@mulgrave.il.steeleye.com> <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com> <17841.simon.1179228389@5ec7c279.invalid> <20070515120228.GI10562@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.235]:37242 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755269AbXEONsM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 May 2007 09:48:12 -0400
-Received: by nz-out-0506.google.com with SMTP id r28so146510nza
-        for <linux-scsi@vger.kernel.org>; Tue, 15 May 2007 06:48:11 -0700 (PDT)
-In-Reply-To: <20070515131632.GC16673@khazad-dum.debian.net>
+Received: from proxima.lp0.eu ([85.158.45.36]:36107 "EHLO proxima.lp0.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756726AbXEOQbE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 May 2007 12:31:04 -0400
+In-Reply-To: <20070515120228.GI10562@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@debian.org>
-Cc: Francesco Pretto <ceztko@gmail.com>, Phillip Susi <psusi@cfl.rr.com>, linux-kernel <linux-kernel@vger.kernel.org>, pkg-sysvinit-devel@lists.alioth.debian.org, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <james.bottomley@steeleye.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org
 
-Hello, Henrique.
-
-Henrique de Moraes Holschuh wrote:
-> On Mon, 14 May 2007, Francesco Pretto wrote:
->> Ubuntu [1] ang Gentoo [2] bugs opened. Sent a mail to Miquel van
->> Smoorenburg, dev  of sysvinit.
+On 15/05/07 13:02, Matthew Wilcox wrote:
+> On Tue, May 15, 2007 at 12:26:29PM +0100, Simon Arlott wrote:
+>> I've already suggested a sysfs attribute - or something equivalent - would
+>> be much better. It's just one function that a user might want to run multiple
+>> times (e.g. after adding scsi devices?) - why should loading a module be used
+>> for this?
 > 
-> For all Debian sysvinit issues, please send email to
-> pkg-sysvinit-devel@lists.alioth.debian.org (added to CC).
+> It's easy to suggest a sysfs attribute.  What you've failed to do is
+> suggest the pathname of the sysfs attribute, the contents of it, or the
+> semantics of it (read-only?  read-write?  write-only?  blocking?)
+
+I would assume that should be up to SCSI users/maintainer(s). The only thing 
+I use the SCSI driver for is usb-storage/ATAPI.
+
+> My personal favourite would be to add a new verb to /proc/scsi/scsi, but
+> James dislikes that idea.
 > 
-> For the Debian sysvinit crew: Guys, have a look at
-> http://linux-ata.org/shutdown.html.  We need to act on it, and also file a
-> bug on all of our current kernels (poweroff causes minor but accumulating-
-> over-time damage to all hardware under control of libata).  This is really
-> something we should be trying to fix on our 2.6.18 kernels and stable
-> sysvinit.
-> 
->> [1] https://bugs.launchpad.net/upstart/+bug/114683
->> [2] http://bugs.gentoo.org/show_bug.cgi?id=178559
+> I'd *really* like to hear from distro people.  What is the most
+> convenient way for you to implement "load all the scsi modules, then
+> wait until all devices are found"?  James and I had thought that loading
+> a new module would be the easiest way for you, but it seems inconvenient
+> for you.
 
-There have been further developments,
-
-	http://article.gmane.org/gmane.linux.ide/18823	(bugfix)
-	http://article.gmane.org/gmane.linux.ide/18846	(in discussion)
-
-The second patch makes libata turn off the warning message and just
-issue STANDBYNOW without userland modification, iff userland
-halt/shutdown doesn't issue STANDBYNOW during shutdown.  I'm not sure
-whether this will be accepted or not.  It makes the change much less
-intrusive for distros which don't issue STANDBYNOW from userland but
-disks will always do emergency-unload on all kernels with this problem.
-
-> Tejun, am I right to assume that any servers with self-contained SCSI disks
-> (i.e. that are not plugged into externally powered drive enclosures, etc)
-> also get the emergency head unloads when they are powered off?
-
-AFAIK, yes, all SCSI disks attached to a single host and shares power
-on/off status will do emergency unload on poweroff.  In the updated
-kernel, this is controlled by the following sysfs node.
-
- /sys/class/scsi_disk/h:c:i:l/manage_start_stop.
-
-It defaults to 1 for libata devices and 0 for all others.  Echoing 1 to
-it makes the sd driver spindown the device on suspend to ram/disk and
-poweroff.
+It's inconvenient for people who *don't* use it to be unable to stop the 
+module being built and installed.
 
 -- 
-tejun
+Simon Arlott
