@@ -1,72 +1,75 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Thu, 17 May 2007 11:46:48 +0300
-Message-ID: <464C1678.2090608@panasas.com>
-References: <20070508112553C.fujita.tomonori@lab.ntt.co.jp> <4640C724.8030409@panasas.com> <1178654497.3737.81.camel@mulgrave.il.steeleye.com> <46417C5A.1090707@panasas.com> <464B3F91.1010102@panasas.com> <20070516175322.GS23798@kernel.dk> <1179338812.9602.4.camel@mulgrave.il.steeleye.com> <20070516181325.GT23798@kernel.dk>
+Date: Thu, 17 May 2007 11:49:37 +0300
+Message-ID: <464C1721.8030009@panasas.com>
+References: <20070516175322.GS23798@kernel.dk>	<20070517115722T.fujita.tomonori@lab.ntt.co.jp>	<20070517054811.GV23798@kernel.dk> <20070517145958P.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:37180 "EHLO
+Received: from gw-e.panasas.com ([65.194.124.178]:37178 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753875AbXEQIvg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2007 04:51:36 -0400
-In-Reply-To: <20070516181325.GT23798@kernel.dk>
+	with ESMTP id S1752347AbXEQIvc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2007 04:51:32 -0400
+In-Reply-To: <20070517145958P.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, jens.axboe@oracle.com, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-Jens Axboe wrote:
-> On Wed, May 16 2007, James Bottomley wrote:
->> On Wed, 2007-05-16 at 19:53 +0200, Jens Axboe wrote:
->>> The 1-page thing isn't a restriction as such, it's just an optimization.
->>> The scatterlist allocated is purely a kernel entity, so you could do 4
->>> contig pages and larger ios that way, if higher order allocations were
->>> reliable.
+FUJITA Tomonori wrote:
+> From: Jens Axboe <jens.axboe@oracle.com>
+> Subject: Re: [PATCH v2] add bidi support for block pc requests
+> Date: Thu, 17 May 2007 07:48:13 +0200
+> 
+>> On Thu, May 17 2007, FUJITA Tomonori wrote:
+>>> From: Jens Axboe <jens.axboe@oracle.com>
+>>> Subject: Re: [PATCH v2] add bidi support for block pc requests
+>>> Date: Wed, 16 May 2007 19:53:22 +0200
 >>>
->>> But you are right in that we need to tweak the sg pool size so that it
->>> ends up being a nice size, and not something that either spans a little
->>> bit into a second page or doesn't fill a page nicely. On my x86-64 here,
->>> a 128 segment sg table is exactly one page (looking at slabinfo). It
->>> depends on the allocator whether that is just right, or just a little
->>> too much due to management information.
->> Actually, if you look at the slab allocation algorithm (particularly
->> calculate_slab_order()) you'll find it's not as simplistic as you're
->> assuming ... what it actually does is try to allocate > 1 item in n
->> pages to reduce the leftovers.
-> 
-> I'm not assuming anything, I was just being weary of having elements
-> that are exactly page sized if that would cause a bit of spill into a
-> second page. Don't tell me that PAGE_SIZE+10 (or whatever it might be)
-> would ever be an optimal allocation size.
-> 
->> Additionally, remember that turning on redzoning, which seems to be
->> quite popular nowadays, actually blows out the slab size calculations
->> anyway.
-> 
-> Debugging will always throw these things out the window, we can't and
-> should not optimize for that. That goes for slab, and for lots of other
-> things.
-> 
->> The bottom line is that it's better for us just to do exactly what we
->> need and let the allocation algorithms figure out how to do it
->> efficiently rather than trying to second guess them.
-> 
-> Partly true, it's also silly to just hardcore power-of-2 numbers without
-> ever bothering to look at what that results in (or even if it fits
-> normal use patterns).
-> 
-> We can easily be flexible, so it seems silly not to at least do a bit of
-> background research.
-> 
-The thing is that now every thing fits like a glove. i386/32bit-arch
-have 16 bytes scatterlist struct, 256 in a page. x86_64/64bit-arch 32
-byte and 128 fit exactly in a page. If we do any code that throws this
-off it will be a performance regression. Call it beginners luck, call
-it someone spent a long night handcrafting it this way. Just that I
-think the current system is perfect and we should not touch it. There
-are other options for bidi. (just my $0.02)
+>>>> On Wed, May 16 2007, Boaz Harrosh wrote:
+>>>>> now there are 2 issues with this:
+>>>>> 1. Even if I do blk_queue_max_phys_segments(q, 127); I still get
+>>>>>    requests for use_sg=128 which will crash the kernel.
+>>>> That sounds like a serious issue, it should definitely not happen. Stuff
+>>>> like that would bite other drivers as well, are you absolutely sure that
+>>>> is happening? Power-of-2 bug in your code, or in the SCSI code?
+>>> Boaz, how do you send requests to the scsi-ml, via fs, sg, or bsg?
 
+These are regular fs (ext3) requests during bootup. The machine will not
+boot. (Usually from the read ahead code)
+Don't believe me look at the second patch Over Tomo's cleanup.
+If I define SCSI_MAX_SG_SEGMENTS to 127 it will crash even when I
+did in code:
+	blk_queue_max_phys_segments(q, SCSI_MAX_SG_SEGMENTS);
+I suppose someone is looking at a different definition. Or there is
+another call I need to do for this to work.
+
+>>>
+>>>
+>>>>> If anyone wants to see I have done 2 versions of this work. One on top
+>>>>> of Jens's sg-chaining work (ver 5). And one on top of Tomo's cleanup
+>>>>> git. both can be found here:
+>>>>>   http://www.bhalevy.com/open-osd/download/scsi_sg_table/
+>>>> +#define scsi_for_each_sg(cmd, sg, nseg, __i)                   \
+>>>> +       for (__i = 0, sg = scsi_sglist(cmd); __i < (nseg); __i++, (sg)++)
+>>>>
+Yes leftovers from Tomos branch. Sorry for the noise. This is in no way
+finished work Just experimenting. Any way in this git tree no one is
+using this macro. (git-pull of Linus tree, apply ver5, and this patch)
+This branch will work fine because I have not touched the numbers yet
+Just screwed allocations.
+>>>> Hmm?
+>>> When for_each_sg is ready, we convert scsi_for_each_sg to use
+>>> for_each_sg. I finished the cleanups on more than 40 drivers on the
+>>> top of your patches.
+>> But this is from the patch that is based on my sglist branch, so it
+>> looked somewhat odd.
+> 
+> Oops, I didn't see the patch based on the sglist branch. Yeah, it's
+> odd though it isn't used, I guess.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 Boaz
-
