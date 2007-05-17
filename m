@@ -1,91 +1,72 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Thu, 17 May 2007 14:59:58 +0900
-Message-ID: <20070517145958P.fujita.tomonori@lab.ntt.co.jp>
-References: <20070516175322.GS23798@kernel.dk>
-	<20070517115722T.fujita.tomonori@lab.ntt.co.jp>
-	<20070517054811.GV23798@kernel.dk>
+Date: Thu, 17 May 2007 11:46:48 +0300
+Message-ID: <464C1678.2090608@panasas.com>
+References: <20070508112553C.fujita.tomonori@lab.ntt.co.jp> <4640C724.8030409@panasas.com> <1178654497.3737.81.camel@mulgrave.il.steeleye.com> <46417C5A.1090707@panasas.com> <464B3F91.1010102@panasas.com> <20070516175322.GS23798@kernel.dk> <1179338812.9602.4.camel@mulgrave.il.steeleye.com> <20070516181325.GT23798@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:51651 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754139AbXEQHdE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2007 03:33:04 -0400
-In-Reply-To: <20070517054811.GV23798@kernel.dk>
+Received: from gw-e.panasas.com ([65.194.124.178]:37180 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753875AbXEQIvg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2007 04:51:36 -0400
+In-Reply-To: <20070516181325.GT23798@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
+To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH v2] add bidi support for block pc requests
-Date: Thu, 17 May 2007 07:48:13 +0200
-
-> On Thu, May 17 2007, FUJITA Tomonori wrote:
-> > From: Jens Axboe <jens.axboe@oracle.com>
-> > Subject: Re: [PATCH v2] add bidi support for block pc requests
-> > Date: Wed, 16 May 2007 19:53:22 +0200
-> > 
-> > > On Wed, May 16 2007, Boaz Harrosh wrote:
-> > > > Boaz Harrosh wrote:
-> > > > > James Bottomley wrote:
-> > > > >> 
-> > > > >> There's actually a fourth option you haven't considered:
-> > > > >>
-> > > > >> Roll all the required sglist definitions (request_bufflen,
-> > > > >> request_buffer, use_sg and sglist_len) into the sgtable pools.
-> > > > >>
-> > > > > This is a grate Idea. Let me see if I understand what you mean.
-> > > > > ...
-> > > > > ...
-> > > > 
-> > > > Hi Dear James, list.
-> > > > I have worked on proposed solution (If anyone is interested see
-> > > > url blow)
-> > > > 
-> > > > Now it works and all but I hit some problems.
-> > > > What happens is that in 64 bit architectures, well in x86_64,
-> > > > the sizeof scatterlist structure is 32 bytes which means that
-> > > > we can only fit exactly 128 of them in a page. But together with
-> > > > the scsi_sg_table header we are down to 127. Also if we want
-> > > > good alignment/packing of other sized pools we want:
-> > > > static struct scsi_host_sg_pool scsi_sg_pools[] = {
-> > > > 	SP(7),
-> > > > 	SP(15),
-> > > > 	SP(31),
-> > > > 	SP(63),
-> > > > 	SP(127)
-> > > > };
-> > > > 
-> > > > now there are 2 issues with this:
-> > > > 1. Even if I do blk_queue_max_phys_segments(q, 127); I still get
-> > > >    requests for use_sg=128 which will crash the kernel.
-> > > 
-> > > That sounds like a serious issue, it should definitely not happen. Stuff
-> > > like that would bite other drivers as well, are you absolutely sure that
-> > > is happening? Power-of-2 bug in your code, or in the SCSI code?
-> > 
-> > Boaz, how do you send requests to the scsi-ml, via fs, sg, or bsg?
-> > 
-> > 
-> > > > If anyone wants to see I have done 2 versions of this work. One on top
-> > > > of Jens's sg-chaining work (ver 5). And one on top of Tomo's cleanup
-> > > > git. both can be found here:
-> > > >   http://www.bhalevy.com/open-osd/download/scsi_sg_table/
-> > > 
-> > > +#define scsi_for_each_sg(cmd, sg, nseg, __i)                   \
-> > > +       for (__i = 0, sg = scsi_sglist(cmd); __i < (nseg); __i++, (sg)++)
-> > > 
-> > > Hmm?
-> > 
-> > When for_each_sg is ready, we convert scsi_for_each_sg to use
-> > for_each_sg. I finished the cleanups on more than 40 drivers on the
-> > top of your patches.
+Jens Axboe wrote:
+> On Wed, May 16 2007, James Bottomley wrote:
+>> On Wed, 2007-05-16 at 19:53 +0200, Jens Axboe wrote:
+>>> The 1-page thing isn't a restriction as such, it's just an optimization.
+>>> The scatterlist allocated is purely a kernel entity, so you could do 4
+>>> contig pages and larger ios that way, if higher order allocations were
+>>> reliable.
+>>>
+>>> But you are right in that we need to tweak the sg pool size so that it
+>>> ends up being a nice size, and not something that either spans a little
+>>> bit into a second page or doesn't fill a page nicely. On my x86-64 here,
+>>> a 128 segment sg table is exactly one page (looking at slabinfo). It
+>>> depends on the allocator whether that is just right, or just a little
+>>> too much due to management information.
+>> Actually, if you look at the slab allocation algorithm (particularly
+>> calculate_slab_order()) you'll find it's not as simplistic as you're
+>> assuming ... what it actually does is try to allocate > 1 item in n
+>> pages to reduce the leftovers.
 > 
-> But this is from the patch that is based on my sglist branch, so it
-> looked somewhat odd.
+> I'm not assuming anything, I was just being weary of having elements
+> that are exactly page sized if that would cause a bit of spill into a
+> second page. Don't tell me that PAGE_SIZE+10 (or whatever it might be)
+> would ever be an optimal allocation size.
+> 
+>> Additionally, remember that turning on redzoning, which seems to be
+>> quite popular nowadays, actually blows out the slab size calculations
+>> anyway.
+> 
+> Debugging will always throw these things out the window, we can't and
+> should not optimize for that. That goes for slab, and for lots of other
+> things.
+> 
+>> The bottom line is that it's better for us just to do exactly what we
+>> need and let the allocation algorithms figure out how to do it
+>> efficiently rather than trying to second guess them.
+> 
+> Partly true, it's also silly to just hardcore power-of-2 numbers without
+> ever bothering to look at what that results in (or even if it fits
+> normal use patterns).
+> 
+> We can easily be flexible, so it seems silly not to at least do a bit of
+> background research.
+> 
+The thing is that now every thing fits like a glove. i386/32bit-arch
+have 16 bytes scatterlist struct, 256 in a page. x86_64/64bit-arch 32
+byte and 128 fit exactly in a page. If we do any code that throws this
+off it will be a performance regression. Call it beginners luck, call
+it someone spent a long night handcrafting it this way. Just that I
+think the current system is perfect and we should not touch it. There
+are other options for bidi. (just my $0.02)
 
-Oops, I didn't see the patch based on the sglist branch. Yeah, it's
-odd though it isn't used, I guess.
+Boaz
+
