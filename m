@@ -1,45 +1,51 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH] cciss: Fix pci_driver.shutdown while device is still
- active
-Date: Thu, 17 May 2007 15:15:25 -0700
-Message-ID: <20070517151525.00763641.akpm@linux-foundation.org>
-References: <20070514175301.GA19871@zante.sekrit.org>
-	<1179437592.12356.30.camel@beardog.cca.cpqcorp.net>
+From: Peter Jones <pjones@redhat.com>
+Subject: Re: Asynchronous scsi scanning
+Date: Thu, 17 May 2007 18:24:19 -0400
+Message-ID: <464CD613.3090406@redhat.com>
+References: <20070513160608.GA29024@redhat.com> <1179072655.3723.42.camel@mulgrave.il.steeleye.com> <1179073116.3723.45.camel@mulgrave.il.steeleye.com> <a781481a0705140235h6a96563cw63ed2c7a85a4f736@mail.gmail.com> <a781481a0705140245s6823df32l5bbf81abf92b0347@mail.gmail.com> <a781481a0705140500q32a891d6g69b40c2d45ec40c6@mail.gmail.com> <a781481a0705140523y789e012bj2ec317565e34366f@mail.gmail.com> <1179153096.3703.23.camel@mulgrave.il.steeleye.com> <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com> <17841.simon.1179228389@5ec7c279.invalid> <20070515120228.GI10562@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:55193 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756132AbXEQWT0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2007 18:19:26 -0400
-In-Reply-To: <1179437592.12356.30.camel@beardog.cca.cpqcorp.net>
+Received: from mx1.redhat.com ([66.187.233.31]:44994 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756784AbXEQWYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2007 18:24:36 -0400
+In-Reply-To: <20070515120228.GI10562@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mike.miller@hp.com
-Cc: Gerald Britton <gbritton@alum.mit.edu>, jens.axboe@oracle.com, torvalds@linux-foundation.org, ISS StorageDev <iss_storagedev@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Simon Arlott <simon@fire.lp0.eu>, James Bottomley <james.bottomley@steeleye.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org
 
-On Thu, 17 May 2007 16:33:12 -0500
-"MIke Miller (OS Dev)" <mike.miller@hp.com> wrote:
+Matthew Wilcox wrote:
+> On Tue, May 15, 2007 at 12:26:29PM +0100, Simon Arlott wrote:
+>> I've already suggested a sysfs attribute - or something equivalent - would
+>> be much better. It's just one function that a user might want to run multiple
+>> times (e.g. after adding scsi devices?) - why should loading a module be used
+>> for this?
+> 
+> It's easy to suggest a sysfs attribute.  What you've failed to do is
+> suggest the pathname of the sysfs attribute, the contents of it, or the
+> semantics of it (read-only?  read-write?  write-only?  blocking?)
+> 
+> My personal favourite would be to add a new verb to /proc/scsi/scsi, but
+> James dislikes that idea.
+> 
+> I'd *really* like to hear from distro people.  What is the most
+> convenient way for you to implement "load all the scsi modules, then
+> wait until all devices are found"?  James and I had thought that loading
+> a new module would be the easiest way for you, but it seems inconvenient
+> for you.
 
-> On Mon, 2007-05-14 at 17:53 +0000, Gerald Britton wrote:
-> > Fix an Oops in the cciss driver caused by system shutdown while a filesystem
-> > on a cciss device is still active.  The cciss_remove_one function only
-> > properly removes the device if the device has been cleanly released by its
-> > users, which is not the case when the pci_driver.shutdown method is called.
-> > 
-> > This patch adds a new cciss_shutdown function to better match the pattern
-> > used by various SCSI drivers: deactivate device interrupts and flush caches.
-> > It also alters the cciss_remove_one function to match and readds the
-> > __devexit annotation that was removed when cciss_remove_one was serving as
-> > the pci_driver.shutdown method.
-> 
-> Sorry I've taken so long to reply. I've been testing this patch with up
-> to 512 logical volumes. Looks good. I may make a tweak or 2 after it's
-> merged, I have other changes that touch the same code.
-> 
-> ACKed-by: Mike Miller <mike.miller@hp.com>
-> 
+Basically we're going to wind up listening for SUBSYSTEM=block hotplug 
+events.  What would be helpful is if 
+/sys/block/$foo/device/{model,vendor} were populated when we get the 
+event (or, since there are good reasons why they're not, if we got 
+another event afterwards that said they'd been populated).
 
-Thanks.  I marked this as needed-in-2.6.21.x also.
+Even more helpful if there were also sysfs attributes for serial numbers 
+and such from INQUIRY VPD data.  That would make probing for the 
+*correct* drive(s) much simpler.
+
+-- 
+   Peter
