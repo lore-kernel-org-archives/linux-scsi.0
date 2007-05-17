@@ -1,118 +1,48 @@
-From: "MIke Miller (OS Dev)" <mike.miller@hp.com>
-Subject: Re: [PATCH] cciss: Fix pci_driver.shutdown while device is still
-	active
-Date: Thu, 17 May 2007 16:33:12 -0500
-Message-ID: <1179437592.12356.30.camel@beardog.cca.cpqcorp.net>
-References: <20070514175301.GA19871@zante.sekrit.org>
-Reply-To: mike.miller@hp.com
+From: Dave Jones <davej@redhat.com>
+Subject: Re: Asynchronous scsi scanning
+Date: Thu, 17 May 2007 17:42:34 -0400
+Message-ID: <20070517214234.GA398@redhat.com>
+References: <a781481a0705171013j7ddc48edxfb4bdba515a3f53c@mail.gmail.com> <20070517172023.GL10562@parisc-linux.org> <a781481a0705171041y3c3b7fe1m2aa6a8805807942c@mail.gmail.com> <20070517182414.GA12170@infradead.org> <a781481a0705171147s1ef5c205y8873d0bfa201f928@mail.gmail.com> <20070517185115.GA13207@infradead.org> <a781481a0705171204o5b25fafdm36d5970acf9119cd@mail.gmail.com> <20070517193953.GM10562@parisc-linux.org> <20070517194326.GC30571@kvack.org> <20070517213043.GN10562@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas02.cce.hp.com ([161.114.21.105]:60954 "EHLO
-	ccerelbas02.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761574AbXEQVeV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2007 17:34:21 -0400
-In-Reply-To: <20070514175301.GA19871@zante.sekrit.org>
+Received: from mx2.redhat.com ([66.187.237.31]:34184 "EHLO mx2.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754614AbXEQVml (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 17 May 2007 17:42:41 -0400
+Content-Disposition: inline
+In-Reply-To: <20070517213043.GN10562@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gerald Britton <gbritton@alum.mit.edu>
-Cc: jens.axboe@oracle.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, ISS StorageDev <iss_storagedev@hp.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Benjamin LaHaise <bcrl@kvack.org>, James Bottomley <james.bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org, pjones@redhat.com
 
-On Mon, 2007-05-14 at 17:53 +0000, Gerald Britton wrote:
-> Fix an Oops in the cciss driver caused by system shutdown while a filesystem
-> on a cciss device is still active.  The cciss_remove_one function only
-> properly removes the device if the device has been cleanly released by its
-> users, which is not the case when the pci_driver.shutdown method is called.
-> 
-> This patch adds a new cciss_shutdown function to better match the pattern
-> used by various SCSI drivers: deactivate device interrupts and flush caches.
-> It also alters the cciss_remove_one function to match and readds the
-> __devexit annotation that was removed when cciss_remove_one was serving as
-> the pci_driver.shutdown method.
+On Thu, May 17, 2007 at 03:30:43PM -0600, Matthew Wilcox wrote:
+ > On Thu, May 17, 2007 at 03:43:26PM -0400, Benjamin LaHaise wrote:
+ > > On Thu, May 17, 2007 at 01:39:54PM -0600, Matthew Wilcox wrote:
+ > > > On Fri, May 18, 2007 at 12:34:40AM +0530, Satyam Sharma wrote:
+ > > > > Hmmm, actually those other users could easily write and maintain
+ > > > > a 20-line patch that does the wait for async scans thing for them
+ > > > > using /proc/scsi/scsi in any case.
+ > > > 
+ > > > How about the three users who're bothered by this extra module being
+ > > > built maintain a one-line patch to Kconfig and leave well enough alone?
+ > > 
+ > > The module has an added bonus that it doesn't require any new tools to 
+ > > make work.  Doing it via sysfs/procfs means a new rev of whatever tool 
+ > > generates the boot initrd, plus fixing up boot scripts.  Loading a module 
+ > > can be done via a simple option to the existing boot tools.
+ > 
+ > That was what James and I thought.  However, the distros seem unhappy
+ > with it.  Of course, they won't actually *comment* on it, they just
+ > disable the async scan and won't talk about why.
 
-Sorry I've taken so long to reply. I've been testing this patch with up
-to 512 logical volumes. Looks good. I may make a tweak or 2 after it's
-merged, I have other changes that touch the same code.
+FWIW, Fedora 7 has it enabled, and afaik, Peter (mkinitrd maintainer) is happy
+with the current situation.  It's my understanding that the latest ubuntu
+release has it enabled too, though obviously I can't speak for whether
+or not they're happy with the status quo.
 
-ACKed-by: Mike Miller <mike.miller@hp.com>
+	Dave
 
-> 
-> Signed-off-by: Gerald Britton <gbritton@alum.mit.edu>
-> ---
-> diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-> index 370dfe1..5acc6c4 100644
-> --- a/drivers/block/cciss.c
-> +++ b/drivers/block/cciss.c
-> @@ -3469,13 +3469,39 @@ static int __devinit cciss_init_one(struct pci_dev *pdev,
->  	return -1;
->  }
->  
-> -static void cciss_remove_one(struct pci_dev *pdev)
-> +static void cciss_shutdown(struct pci_dev *pdev)
->  {
->  	ctlr_info_t *tmp_ptr;
-> -	int i, j;
-> +	int i;
->  	char flush_buf[4];
->  	int return_code;
->  
-> +	tmp_ptr = pci_get_drvdata(pdev);
-> +	if (tmp_ptr == NULL)
-> +		return;
-> +	i = tmp_ptr->ctlr;
-> +	if (hba[i] == NULL)
-> +		return;
-> +
-> +	/* Turn board interrupts off  and send the flush cache command */
-> +	/* sendcmd will turn off interrupt, and send the flush...
-> +	 * To write all data in the battery backed cache to disks */
-> +	memset(flush_buf, 0, 4);
-> +	return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 0, 0, 0, NULL,
-> +			      TYPE_CMD);
-> +	if (return_code == IO_OK) {
-> +		printk(KERN_INFO "Completed flushing cache on controller %d\n", i);
-> +	} else {
-> +		printk(KERN_WARNING "Error flushing cache on controller %d\n", i);
-> +	}
-> +	free_irq(hba[i]->intr[2], hba[i]);
-> +}
-> +
-> +static void __devexit cciss_remove_one(struct pci_dev *pdev)
-> +{
-> +	ctlr_info_t *tmp_ptr;
-> +	int i, j;
-> +
->  	if (pci_get_drvdata(pdev) == NULL) {
->  		printk(KERN_ERR "cciss: Unable to remove device \n");
->  		return;
-> @@ -3506,18 +3532,7 @@ static void cciss_remove_one(struct pci_dev *pdev)
->  
->  	cciss_unregister_scsi(i);	/* unhook from SCSI subsystem */
->  
-> -	/* Turn board interrupts off  and send the flush cache command */
-> -	/* sendcmd will turn off interrupt, and send the flush...
-> -	 * To write all data in the battery backed cache to disks */
-> -	memset(flush_buf, 0, 4);
-> -	return_code = sendcmd(CCISS_CACHE_FLUSH, i, flush_buf, 4, 0, 0, 0, NULL,
-> -			      TYPE_CMD);
-> -	if (return_code == IO_OK) {
-> -		printk(KERN_INFO "Completed flushing cache on controller %d\n", i);
-> -	} else {
-> -		printk(KERN_WARNING "Error flushing cache on controller %d\n", i);
-> -	}
-> -	free_irq(hba[i]->intr[2], hba[i]);
-> +	cciss_shutdown(pdev);
->  
->  #ifdef CONFIG_PCI_MSI
->  	if (hba[i]->msix_vector)
-> @@ -3550,7 +3565,7 @@ static struct pci_driver cciss_pci_driver = {
->  	.probe = cciss_init_one,
->  	.remove = __devexit_p(cciss_remove_one),
->  	.id_table = cciss_pci_device_id,	/* id_table */
-> -	.shutdown = cciss_remove_one,
-> +	.shutdown = cciss_shutdown,
->  };
->  
->  /*
-
+-- 
+http://www.codemonkey.org.uk
