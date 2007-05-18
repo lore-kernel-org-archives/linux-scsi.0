@@ -1,51 +1,83 @@
-From: Peter Jones <pjones@redhat.com>
+From: "Satyam Sharma" <satyam.sharma@gmail.com>
 Subject: Re: Asynchronous scsi scanning
-Date: Thu, 17 May 2007 18:24:19 -0400
-Message-ID: <464CD613.3090406@redhat.com>
-References: <20070513160608.GA29024@redhat.com> <1179072655.3723.42.camel@mulgrave.il.steeleye.com> <1179073116.3723.45.camel@mulgrave.il.steeleye.com> <a781481a0705140235h6a96563cw63ed2c7a85a4f736@mail.gmail.com> <a781481a0705140245s6823df32l5bbf81abf92b0347@mail.gmail.com> <a781481a0705140500q32a891d6g69b40c2d45ec40c6@mail.gmail.com> <a781481a0705140523y789e012bj2ec317565e34366f@mail.gmail.com> <1179153096.3703.23.camel@mulgrave.il.steeleye.com> <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com> <17841.simon.1179228389@5ec7c279.invalid> <20070515120228.GI10562@parisc-linux.org>
+Date: Fri, 18 May 2007 09:11:58 +0530
+Message-ID: <a781481a0705172041q6bc87f04v7a60eb62ad26d6@mail.gmail.com>
+References: <a781481a0705151627n18d3be55t6b77885fd7775ffd@mail.gmail.com>
+	 <a781481a0705171013j7ddc48edxfb4bdba515a3f53c@mail.gmail.com>
+	 <20070517172023.GL10562@parisc-linux.org>
+	 <a781481a0705171041y3c3b7fe1m2aa6a8805807942c@mail.gmail.com>
+	 <20070517182414.GA12170@infradead.org>
+	 <a781481a0705171147s1ef5c205y8873d0bfa201f928@mail.gmail.com>
+	 <20070517185115.GA13207@infradead.org>
+	 <a781481a0705171204o5b25fafdm36d5970acf9119cd@mail.gmail.com>
+	 <20070517193953.GM10562@parisc-linux.org>
+	 <20070517194326.GC30571@kvack.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44994 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756784AbXEQWYg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 May 2007 18:24:36 -0400
-In-Reply-To: <20070515120228.GI10562@parisc-linux.org>
+Received: from wr-out-0506.google.com ([64.233.184.230]:39127 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756197AbXERDmD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 May 2007 23:42:03 -0400
+Received: by wr-out-0506.google.com with SMTP id 76so864479wra
+        for <linux-scsi@vger.kernel.org>; Thu, 17 May 2007 20:41:59 -0700 (PDT)
+In-Reply-To: <20070517194326.GC30571@kvack.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Simon Arlott <simon@fire.lp0.eu>, James Bottomley <james.bottomley@steeleye.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org
+To: Benjamin LaHaise <bcrl@kvack.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, Simon Arlott <simon@fire.lp0.eu>, James Bottomley <james.bottomley@steeleye.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org, "Robert P. J. Day" <rpjday@mindspring.com>
 
-Matthew Wilcox wrote:
-> On Tue, May 15, 2007 at 12:26:29PM +0100, Simon Arlott wrote:
->> I've already suggested a sysfs attribute - or something equivalent - would
->> be much better. It's just one function that a user might want to run multiple
->> times (e.g. after adding scsi devices?) - why should loading a module be used
->> for this?
-> 
-> It's easy to suggest a sysfs attribute.  What you've failed to do is
-> suggest the pathname of the sysfs attribute, the contents of it, or the
-> semantics of it (read-only?  read-write?  write-only?  blocking?)
-> 
-> My personal favourite would be to add a new verb to /proc/scsi/scsi, but
-> James dislikes that idea.
-> 
-> I'd *really* like to hear from distro people.  What is the most
-> convenient way for you to implement "load all the scsi modules, then
-> wait until all devices are found"?  James and I had thought that loading
-> a new module would be the easiest way for you, but it seems inconvenient
-> for you.
+> On Thu, May 17, 2007 at 01:39:54PM -0600, Matthew Wilcox wrote:
+> > On Fri, May 18, 2007 at 12:34:40AM +0530, Satyam Sharma wrote:
+> > > Hmmm, actually those other users could easily write and maintain
+> > > a 20-line patch that does the wait for async scans thing for them
+> > > using /proc/scsi/scsi in any case.
+> >
+> > How about the three users who're bothered by this extra module being
+> > built maintain a one-line patch to Kconfig and leave well enough alone?
 
-Basically we're going to wind up listening for SUBSYSTEM=block hotplug 
-events.  What would be helpful is if 
-/sys/block/$foo/device/{model,vendor} were populated when we get the 
-event (or, since there are good reasons why they're not, if we got 
-another event afterwards that said they'd been populated).
+So you expect users bothered with this to actually get on lkml / write to it
+and complain about this? And because not everybody else who is
+disgusted with this user-invisible-default-m-module-way-of-solving-this-problem
+(when it shouldn't be a module at all) is doing that, it's just "the three"?
 
-Even more helpful if there were also sysfs attributes for serial numbers 
-and such from INQUIRY VPD data.  That would make probing for the 
-*correct* drive(s) much simpler.
+It is *shocking* / funny how you *still* want to defend that:
 
--- 
-   Peter
+static int __init wait_scan_init(void)
+{
+	scsi_complete_async_scans();
+	return 0;
+/* BTW this could've been return scsi_complete_async_scans();
+ * I see scsi_complete_async_scans() never fails, but still. */
+}
+late_initcall(wait_scan_init);
+
+deserves/must be a separate module, and that doing:
+
+config SCSI_WAIT_SCAN
+	tristate
+	default m
+
+is the best way to solve this !!!
+
+In any case, firstly, I'm not a user of SCSI at all. I'm still
+interested in this,
+but because for me (like I've said twice already) this is simply a (trivial,
+perhaps) matter of doing something in the kernel in a better/proper way,
+than what is being done currently.
+
+It's also somewhat a matter of *taste* (and hence subjective), if you
+_still_ don't get it, Matthew, then there's no point continuing this thread
+and trying to convince you ad infinitum.
+
+On 5/18/07, Benjamin LaHaise <bcrl@kvack.org> wrote:
+> The module has an added bonus that it doesn't require any new tools to
+> make work.  Doing it via sysfs/procfs means a new rev of whatever tool
+> generates the boot initrd, plus fixing up boot scripts.  Loading a module
+> can be done via a simple option to the existing boot tools.
+
+I do not expect the alternative ways to change this that we've discussed
+so far to necessitate any major "fixing up", but yeah a minor touch-up
+would clearly be required.
