@@ -1,102 +1,82 @@
-From: Hugh Dickins <hugh@veritas.com>
-Subject: Re: [patch 14/28] scsi: fix CONFIG_SCSI_WAIT_SCAN=m
-Date: Fri, 18 May 2007 16:31:54 +0100 (BST)
-Message-ID: <Pine.LNX.4.64.0705181610030.24071@blonde.wat.veritas.com>
-References: <200705110600.l4B60vwX008157@shell0.pdx.osdl.net>
- <Pine.LNX.4.64.0705111313190.3350@blonde.wat.veritas.com>
+From: Johan Kragsterman <johan.kragsterman@capvert.se>
+Subject: Re: [Scst-devel] Problems with SCST and QLA 2432 FC Cards
+Date: Fri, 18 May 2007 18:00:28 +0200
+Message-ID: <939b36a7f9795b71218bb5b4905e6250@cgw.capvert.se>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from extu-mxob-1.symantec.com ([216.10.194.28]:49436 "EHLO
-	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756042AbXERPcT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2007 11:32:19 -0400
-In-Reply-To: <Pine.LNX.4.64.0705111313190.3350@blonde.wat.veritas.com>
+Received: from static-213.50.125.130.addr.tdcsong.se ([213.50.125.130]:41584
+	"EHLO ns1.capvert.ins" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754315AbXERQLI convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2007 12:11:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: michal.k.k.piotrowski@gmail.com, matthew@wil.cx, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>, sandip shete <sandipshete@gmail.com>
+Cc: scst-devel@lists.sourceforge.net, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On Fri, 11 May 2007, Hugh Dickins wrote:
-> On Thu, 10 May 2007, akpm@linux-foundation.org wrote:
-> > From: Hugh Dickins <hugh@veritas.com>
-> > 
-> > CONFIG_MODULES=y
-> > CONFIG_SCSI=y
-> > CONFIG_SCSI_SCAN_ASYNC=y
-> > CONFIG_SCSI_WAIT_SCAN=m
-> > 
-> > 2.6.21-rc5-mm2 VFS panics unable to find my root on /dev/sda2, but boots
-> > okay if I change drivers/scsi/Kconfig to "default y" instead of "default m"
-> > for SCSI_WAIT_SCAN.
-> > 
-> > Make sure there's a late_initcall to scsi_complete_async_scans when it's
-> > built in, so a monolithic SCSI_SCAN_ASYNC kernel can rely on the scans
-> > being completed before trying to mount root, even if they're slow.
-> 
-> Thanks for sending this through to James again, Andrew.
-> I'd been gearing up to report it to the regression police:
-> it's certainly still a problem in 2.6.21-git.
+Hi, all!
 
-And still a problem in 2.6.22-rc1-git7.
+>Vladislav Bolkhovitin <vst@vlnb.net> Skrev:=20
+>
 
-Any further news on this regression since 2.6.21?  I was hoping that
-a fix for 2.6.22-rc2 would emerge in the course of the "Asynchronous
-scsi scanning" thread, but that doesn't appear to be heading in any
-useful direction.
+sandip shete wrote:
+>> Hi,
+>>=20
+>> I wish to develop support for QLA 24xx series. If you already have a=
+=20
+>> partial implementaion of the same, i would like to take it forward.
+>> And if there isn't, i would appreciate if you could give me some=20
+>> pointers in that direction.
+>
+>Most probably, the driver by link sent by Matthew Jacob will be a good=
+=20
+>starting point, where you can see examples how to work with the card, =
+so=20
+>you can add it to the qla2x00t driver. Also you will need a manual the=
+=20
+>firmware interface specification for 2400 series of the cards. It is=20
+>under NDA, but you maybe lucky to get one from QLogic. Feel free to as=
+k=20
+>me any SCST or qla2x00t driver related questions.
+>
+>> I have adequate experience of programming in the SCSI domain, howeve=
+r i=20
+>> am not much conversant with the QLA driver code.
 
-It wouldn't be a problem for me to undo my CONFIG_SCSI_SCAN_ASYNC=y,
-but it would still be a little regressive.
+That=B4s a very nice initiativ! Though I believe the most important tar=
+get
+driver to develope is one for a PCI-Express HBA. I believe QLA24xx stan=
+ds
+for PCI-X, doesn=B4t it? And the PCI-Express HBA is called QLE-somethin=
+g? But
+maybe with this driver we will come closer to a PCI-Express HBA target
+driver?
 
-I thought a late_initcall was guaranteed to be called after
-all the potential-root scsi scans had been started; but admit I'm
-ignorant of both initcall sequencing and scsi probing.  Would a
-late_initcall_sync or a rootfs_initcall be more to the point?
+Rgrds Johan
 
-But ignore my gropings, I'd rather be testing what you believe
-to be the right fix.
 
-Thanks,
-Hugh
 
-> 
-> > 
-> > [akpm@linux-foundation.org: build fixes]
-> > Signed-off-by: Hugh Dickins <hugh@veritas.com>
-> > Cc: James Bottomley <James.Bottomley@steeleye.com>
-> > ---
-> > James sayeth "This isn't the right fix ...  this has to be invoked last in the
-> > call sequence ...  I can't see another way of doing this except yet another
-> > file added as a final component to the link."
-> 
-> I didn't reply to James' mail at the time, hoping "the right fix" was
-> about to follow.  I don't see what's wrong with the late_initcall myself.
-> 
-> Hugh
-> 
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > ---
-> > 
-> >  drivers/scsi/scsi_scan.c |    9 +++++++++
-> >  1 file changed, 9 insertions(+)
-> > 
-> > diff -puN drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m drivers/scsi/scsi_scan.c
-> > --- a/drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m
-> > +++ a/drivers/scsi/scsi_scan.c
-> > @@ -184,6 +184,15 @@ int scsi_complete_async_scans(void)
-> >  /* Only exported for the benefit of scsi_wait_scan */
-> >  EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
-> >  
-> > +#ifndef MODULE
-> > +/*
-> > + * For async scanning we need to wait for all the scans to complete before
-> > + * trying to mount the root fs.  Otherwise non-modular drivers may not be ready
-> > + * yet.
-> > + */
-> > +late_initcall(scsi_complete_async_scans);
-> > +#endif
-> > +
-> >  /**
-> >   * scsi_unlock_floptical - unlock device via a special MODE SENSE command
-> >   * @sdev:	scsi device to send command to
-> > _
+>>=20
+>> Thanks and Regards,
+>> Sandip S
+>
+>----------------------------------------------------------------------=
+---
+>This SF.net email is sponsored by DB2 Express
+>Download DB2 Express C - the FREE version of DB2 express and take
+>control of your XML. No limits. Just data. Click to get it now.
+>http://sourceforge.net/powerbar/db2/
+>_______________________________________________
+>Scst-devel mailing list
+>Scst-devel@lists.sourceforge.net
+>https://lists.sourceforge.net/lists/listinfo/scst-devel
+>
+>
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
