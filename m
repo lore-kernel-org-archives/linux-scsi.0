@@ -1,66 +1,72 @@
-From: "Satyam Sharma" <satyam.sharma@gmail.com>
-Subject: Re: Asynchronous scsi scanning
-Date: Fri, 18 May 2007 10:58:05 +0530
-Message-ID: <a781481a0705172228j34e0b3eblade96458163475cb@mail.gmail.com>
-References: <20070516025121.GK10562@parisc-linux.org>
-	 <20070517172023.GL10562@parisc-linux.org>
-	 <a781481a0705171041y3c3b7fe1m2aa6a8805807942c@mail.gmail.com>
-	 <20070517182414.GA12170@infradead.org>
-	 <a781481a0705171147s1ef5c205y8873d0bfa201f928@mail.gmail.com>
-	 <20070517185115.GA13207@infradead.org>
-	 <a781481a0705171204o5b25fafdm36d5970acf9119cd@mail.gmail.com>
-	 <20070517193953.GM10562@parisc-linux.org>
-	 <20070517194326.GC30571@kvack.org>
-	 <20070517213043.GN10562@parisc-linux.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Scst-devel] Problems with SCST and QLA 2432 FC Cards
+Date: Fri, 18 May 2007 11:06:28 +0400
+Message-ID: <464D5074.3080601@vlnb.net>
+References: <88044fc70705171348l64913b26r742718986632f3ca@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.237]:25722 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbXERF2H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 May 2007 01:28:07 -0400
-Received: by wx-out-0506.google.com with SMTP id h31so776899wxd
-        for <linux-scsi@vger.kernel.org>; Thu, 17 May 2007 22:28:06 -0700 (PDT)
-In-Reply-To: <20070517213043.GN10562@parisc-linux.org>
-Content-Disposition: inline
+Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:33310 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754836AbXERHHI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 May 2007 03:07:08 -0400
+In-Reply-To: <88044fc70705171348l64913b26r742718986632f3ca@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Benjamin LaHaise <bcrl@kvack.org>, James Bottomley <james.bottomley@steeleye.com>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org
+To: sandip shete <sandipshete@gmail.com>
+Cc: scst-devel@lists.sourceforge.net, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org
 
-On 5/18/07, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Thu, May 17, 2007 at 03:43:26PM -0400, Benjamin LaHaise wrote:
-> > On Thu, May 17, 2007 at 01:39:54PM -0600, Matthew Wilcox wrote:
-> > > On Fri, May 18, 2007 at 12:34:40AM +0530, Satyam Sharma wrote:
-> > > > Hmmm, actually those other users could easily write and maintain
-> > > > a 20-line patch that does the wait for async scans thing for them
-> > > > using /proc/scsi/scsi in any case.
-> > >
-> > > How about the three users who're bothered by this extra module being
-> > > built maintain a one-line patch to Kconfig and leave well enough alone?
+sandip shete wrote:
+> Hi,
+> 
+> I am working with the SCST 0.9.4 version on linux-2.6.15 with the
+> linux-2.6-qla2xxx-target.patch patch applied.
+> I was using a QLA2312 card on this setup and things were just fine when
+> i used this system as a Target.
+> 
+> Now I have switched to a qla2432 card and even though i do enable
+> "Target Mode" (echo "1" >
+> /sys/class/scsi_host/host../target_mode_enabled) on the corresponding
+> port, this port fails to work as a target, and none of the Fileio Luns
+> are exported to the initiator.
+> Also, on the initiator side the "/sys/class/fc_remote_port/..../role"
+> file should show as "FC Target", which it used to with QLA 2312, but
+> with QLA 2432 the initiator side shows the role of the remote port as
+> "FC Initiator"
+> 
+> The initiator has 2312 cards and 2.6.15 kernel compiled on it.
+> 
+> Also note that, i have the corresponding ql2400_fw.bin firmware binary
+> at the right location and it gets loaded when i load the modules.
+> To check if the qla2432 card was working fine, i connected this to a
+> different 2312 based target system and had it work as a Initiator, this
+> worked fine and i could see all the luns exported on this box.
+> 
+> Now the only problem that i can think of in target mode is, maybe, scst
+> doesn't support the qla 24xx series.
 
-[ BTW, this is the last time I'll try explaining this to you. ]
+Yes, that's correct. Unfortunately, 24xx+ series are not supported yet.
 
-The one-line patch you're suggesting *would*not*allow* one to use the async
-scanning _at_all_. If one really wants to use async scanning reliably (even in
-the future, as it can be turned on at boot-time later, like you very well know),
-that module *must* be built. Making it user-visible and/or optional would *not*
-be a solution but a *problem*. What I have been suggesting is *not* to make
-this *dummy module* user-visible and/or optional but to _not_ use this
-*dummy module* for this purpose in the first place.
+> But i fail to see any part of the code pointing towards that.
 
-[ There. What was this ... third ... fourth time? ]
+You can see in the README for the driver that only 22xx and 23xx series 
+are currently supported.
 
-> > The module has an added bonus that it doesn't require any new tools to
-> > make work.  Doing it via sysfs/procfs means a new rev of whatever tool
-> > generates the boot initrd, plus fixing up boot scripts.  Loading a module
-> > can be done via a simple option to the existing boot tools.
->
-> That was what James and I thought.  However, the distros seem unhappy
-> with it.  Of course, they won't actually *comment* on it, they just
-> disable the async scan and won't talk about why.
+> When i  did some debugging on the initiator side i see that the
+> "qla2x00_get_port_database" does return the status
+> of the remote port as FCT_INITIATOR, i couldn't actually figure out the
+> code wherein the target returns the response to these mbox_commands. I
+> was wondering if SCST plays a part here and sends a different response
+> when 24xx cards are used.
 
-[ This time, I don't see the subject changing, nor a "change in the general
-direction of the thread blah blah blah", and still you feel compelled to not
-maintain the CC list. Wow. ]
+Unfortunately, 24xx+ cards have very different interface, so add support 
+for them is almost the same as write another driver.
+
+> I saw some posts regarding the problems that people were facing with qla24xx
+> series. If this has been fixed in a different verison of Linux/SCST 
+> that what i am using, please let me know.
+> 
+> Thanks and Regards.
+> Sandip S
