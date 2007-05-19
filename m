@@ -1,81 +1,39 @@
-From: Johan Kragsterman <johan.kragsterman@capvert.se>
-Subject: Re: [Scst-devel] Problems with SCST and QLA 2432 FC Cards
-Date: Sat, 19 May 2007 06:57:12 +0200
-Message-ID: <2d19f51c0e0a50bbea21c1a83f21965b@cgw.capvert.se>
+From: Greg KH <greg@kroah.com>
+Subject: Re: sysfs makes scaling suck Re: Asynchronous scsi scanning
+Date: Sat, 19 May 2007 09:30:53 -0700
+Message-ID: <20070519163052.GA4793@kroah.com>
+References: <1179153096.3703.23.camel@mulgrave.il.steeleye.com> <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com> <17841.simon.1179228389@5ec7c279.invalid> <20070515120228.GI10562@parisc-linux.org> <4649E03A.1090004@simon.arlott.org.uk> <20070515172905.GJ10562@parisc-linux.org> <a781481a0705151627n18d3be55t6b77885fd7775ffd@mail.gmail.com> <20070517173238.GA30571@kvack.org> <1179423924.3785.30.camel@mulgrave.il.steeleye.com> <20070517174952.GB30571@kvack.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-213.50.125.130.addr.tdcsong.se ([213.50.125.130]:41864
-	"EHLO ns1.capvert.ins" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755016AbXESEwm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 May 2007 00:52:42 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:35372 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756395AbXESSuG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 May 2007 14:50:06 -0400
+Content-Disposition: inline
+In-Reply-To: <20070517174952.GB30571@kvack.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>, Johan Kragsterman <johan.kragsterman@capvert.se>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, sandip shete <sandipshete@gmail.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: Benjamin LaHaise <bcrl@kvack.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Satyam Sharma <satyam.sharma@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Simon Arlott <simon@fire.lp0.eu>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org, "Robert P. J. Day" <rpjday@mindspring.com>
 
+On Thu, May 17, 2007 at 01:49:52PM -0400, Benjamin LaHaise wrote:
+> On Thu, May 17, 2007 at 01:45:24PM -0400, James Bottomley wrote:
+> > But also, the sysfs with over 4,000 (and higher) devices was
+> > specifically checked by OSDL (actually as part of the CGL testing) some
+> > of the Manoj changes (for unpinning entries etc) were needed to get it
+> > to function, but as of now, I believe an enterprise scaling test works
+> > reasonably well for it ... there certainly wasn't any evidence of it
+> > dying horribly in the tests.
+> 
+> i386 exhausts lowmem very quickly.  SCSI is in a bit better shape than 
+> network devices as the multiplier is only around 4 compared to 16 for network 
+> devices.
 
+And sysfs pushes nodes out of memory when we start to exhaust memory, so
+there should not be a problem at all.  If there is, please let the sysfs
+developers know about it and we will work to fix this.
 
-Andrew Vasquez <andrew.vasquez@qlogic.com> Skrev:=20
->
+thanks,
 
-On Fri, 18 May 2007, Johan Kragsterman wrote:
->
->> >Most probably, the driver by link sent by Matthew Jacob will be a g=
-ood=20
->> >starting point, where you can see examples how to work with the car=
-d, so
->
->> >you can add it to the qla2x00t driver. Also you will need a manual =
-the=20
->> >firmware interface specification for 2400 series of the cards. It i=
-s=20
->> >under NDA, but you maybe lucky to get one from QLogic. Feel free to=
- ask
->
->> >me any SCST or qla2x00t driver related questions.
->> >
->> >> I have adequate experience of programming in the SCSI domain, how=
-ever
->i=20
->> >> am not much conversant with the QLA driver code.
->>=20
->> That=B4s a very nice initiativ! Though I believe the most important =
-target
->> driver to develope is one for a PCI-Express HBA. I believe QLA24xx
->stands
->> for PCI-X, doesn=B4t it? And the PCI-Express HBA is called QLE-somet=
-hing?
->But
->> maybe with this driver we will come closer to a PCI-Express HBA targ=
-et
->> driver?
->
->QLogic doesn't formally release target-mode drivers for their ISP
->chips.  Matthew J. has done a great job at providing a community
->available souce-base from which to draw ideas and code from.
->
->Regards,
->Andrew Vasquez
->
->
-So, Andrew, do you officially represent Qlogic? If so, your point of vi=
-ew
-here is interesting, since you seem to consider that: "Matthew J. has d=
-one a
-great job at providing a community available souce-base from which to d=
-raw
-ideas and code from".
- In what way is Qlogic interested in helping the community with providi=
-ng
-open firmware, drivers and tools?
-
- Rgrds Johan
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+greg k-h
