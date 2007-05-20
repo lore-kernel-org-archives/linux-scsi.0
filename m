@@ -1,39 +1,58 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: sysfs makes scaling suck Re: Asynchronous scsi scanning
-Date: Sat, 19 May 2007 09:30:53 -0700
-Message-ID: <20070519163052.GA4793@kroah.com>
-References: <1179153096.3703.23.camel@mulgrave.il.steeleye.com> <a781481a0705141741u4c2f442dk76c68f757cadc38d@mail.gmail.com> <17841.simon.1179228389@5ec7c279.invalid> <20070515120228.GI10562@parisc-linux.org> <4649E03A.1090004@simon.arlott.org.uk> <20070515172905.GJ10562@parisc-linux.org> <a781481a0705151627n18d3be55t6b77885fd7775ffd@mail.gmail.com> <20070517173238.GA30571@kvack.org> <1179423924.3785.30.camel@mulgrave.il.steeleye.com> <20070517174952.GB30571@kvack.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [Scst-devel] Problems with SCST and QLA 2432 FC Cards
+Date: Sat, 19 May 2007 20:55:39 -0700
+Message-ID: <20070520035539.GB7930@n6502ukq19261.qlogic.org>
+References: <2d19f51c0e0a50bbea21c1a83f21965b@cgw.capvert.se>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35372 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756395AbXESSuG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 May 2007 14:50:06 -0400
+Received: from avexch1.qlogic.com ([198.70.193.115]:26218 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755675AbXETDzn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 May 2007 23:55:43 -0400
 Content-Disposition: inline
-In-Reply-To: <20070517174952.GB30571@kvack.org>
+In-Reply-To: <2d19f51c0e0a50bbea21c1a83f21965b@cgw.capvert.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin LaHaise <bcrl@kvack.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Satyam Sharma <satyam.sharma@gmail.com>, Matthew Wilcox <matthew@wil.cx>, Simon Arlott <simon@fire.lp0.eu>, Dave Jones <davej@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, kernel-packagers@vger.kernel.org, "Robert P. J. Day" <rpjday@mindspring.com>
+To: Johan Kragsterman <johan.kragsterman@capvert.se>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, sandip shete <sandipshete@gmail.com>, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Thu, May 17, 2007 at 01:49:52PM -0400, Benjamin LaHaise wrote:
-> On Thu, May 17, 2007 at 01:45:24PM -0400, James Bottomley wrote:
-> > But also, the sysfs with over 4,000 (and higher) devices was
-> > specifically checked by OSDL (actually as part of the CGL testing) some
-> > of the Manoj changes (for unpinning entries etc) were needed to get it
-> > to function, but as of now, I believe an enterprise scaling test works
-> > reasonably well for it ... there certainly wasn't any evidence of it
-> > dying horribly in the tests.
-> 
-> i386 exhausts lowmem very quickly.  SCSI is in a bit better shape than 
-> network devices as the multiplier is only around 4 compared to 16 for network 
-> devices.
+On Sat, 19 May 2007, Johan Kragsterman wrote:
 
-And sysfs pushes nodes out of memory when we start to exhaust memory, so
-there should not be a problem at all.  If there is, please let the sysfs
-developers know about it and we will work to fix this.
+> Andrew Vasquez <andrew.vasquez@qlogic.com> Skrev: 
+> >
+> >QLogic doesn't formally release target-mode drivers for their ISP
+> >chips.  Matthew J. has done a great job at providing a community
+> >available souce-base from which to draw ideas and code from.
+> >
+> >Regards,
+> >Andrew Vasquez
+> >
+> >
+> So, Andrew, do you officially represent Qlogic? If so, your point of view
+> here is interesting, since you seem to consider that: "Matthew J. has done a
+> great job at providing a community available souce-base from which to draw
+> ideas and code from".
 
-thanks,
+Matthew's driver works on a variety of *nix platforms which QLogic
+does not provide drivers for -- *BSD varients, etc.   He also has a
+fine target-mode driver which others can reference.
 
-greg k-h
+>  In what way is Qlogic interested in helping the community with providing
+> open firmware,
+
+We've worked with various members of the open-source community to
+address some of licensing issues.  At this stage we provide
+firmware-blobs for all our ISPs under the (3 clause) BSD license:
+
+	ftp://ftp.qlogic.com/outgoing/linux/firmware/
+
+Firmware specifications are still tightly circulated.
+
+> drivers and tools?
+
+If there's some specific OS's and 'tools' you'd like to see more work
+on from QLogic, then I can forward your request up-the-chain.
+
+--
+Andrew Vasquez
