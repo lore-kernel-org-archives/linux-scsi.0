@@ -1,61 +1,91 @@
-From: Chris Wright <chrisw@sous-sol.org>
-Subject: [patch 42/69] fix for bugzilla 8426: massive slowdown on SCSI CD/DVD drive connected to mptspi driver
-Date: Mon, 21 May 2007 12:16:54 -0700
-Message-ID: <20070521191739.274076000@sous-sol.org>
-References: <20070521191612.800400000@sous-sol.org>
+From: Hans A Eide <h.a.eide@usit.uio.no>
+Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
+Date: Mon, 21 May 2007 22:00:43 +0200
+Message-ID: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 216-99-217-87.dsl.aracnet.com ([216.99.217.87]:46203 "EHLO
-	sous-sol.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1764253AbXEUTVC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 May 2007 15:21:02 -0400
-Content-Disposition: inline; filename=fix-for-bugzilla-8426-massive-slowdown-on-scsi-cd-dvd-drive-connected-to-mptspi-driver.patch
+Received: from pat.uio.no ([129.240.10.15]:55042 "EHLO pat.uio.no"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935223AbXEUUBA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 21 May 2007 16:01:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@kernel.org, James.Bottomley@steeleye.com
-Cc: Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, Eric.Moore@lsil.com, linux-scsi@vger.kernel.org, doug.chapman@hp.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
--stable review patch.  If anyone has any objections, please let us know.
----------------------
 
-From: Doug Chapman <doug.chapman@hp.com>
+ > Evan Harris wrote:
+ >>
+ >> I have a card that mirrors this one from your list:
+ >>
+ >> Retail name: SATA300 TX4
+ >> Chip label: PDC40718-GP  SATAII300
+ >> Vendor-Device number: 105a:3d17 (rev 02)
+ >>
+ >> Through testing, I've found linux 2.6.16 and 2.6.17 find the  
+ports in
+ >> this order (the list is ordered by linux detection):
+ >>
+ >> 1. silkscreen port 3
+ >> 2. silkscreen port 2
+ >> 3. silkscreen port 4
+ >> 4. silkscreen port 1
+ >>> NOTE: the patch I have submitted (
+ >>> http://marc.theaimsgroup.com/?l=linux- 
+ide&m=114082978311290&w=2 ) is a
+ >>> solution that doesn't know about the older Promise SATA  
+controllers,
+ >>> which are not affected with the "new wiring" problem, so the older
+ >>> controllers will appear screwed if you use it.
+ >>>
+ >>> Hopefully we will collect enough info about all the SATA Promise
+ >>> controllers to distinguish the new and the old wiring controllers,
+ >>> then produce a new patch that will be a correct solution to the  
+"new
+ >>> wiring" problem.
+ >
+ > Mikael Pettersson has been doing some excellent work recently on
+ > sata_promise.  If enough data has been collected on this sata_promise
+ > port enumeration problem, maybe the data could be collated and  
+proposed
+ > via Mikael as a patch?
+ >
+ > 	Jeff
 
-Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
+Sorry, any updates on this?
 
-A recent code cleanup that moved code from mptscsih to mptspi inadvertently
-change the order some code was called.  This caused a massive slowdown (of
-150x to 300x) on the CD/DVD drive on the high-end HP Integrity servers.
+An updated patch for "new wiring" would be
 
-Signed-off-by: Doug Chapman <doug.chapman@hp.com>
-Cc: <Eric.Moore@lsil.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Chris Wright <chrisw@sous-sol.org>
----
-[chrisw: Why is this not upstream yet?]
+--- sata_promise.c      2007-05-20 21:35:54.000000000 +0200
++++ sata_promise.c.new_enum     2007-05-21 21:52:38.000000000 +0200
+@@ -915,9 +915,11 @@
+                 hp->flags |= PDC_FLAG_GEN_II;
+                 /* Fall through */
+         case board_20319:
+-                       probe_ent->n_ports = 4;
+-               pdc_ata_setup_port(&probe_ent->port[2], base + 0x300,  
+base + 0x600);
+-               pdc_ata_setup_port(&probe_ent->port[3], base + 0x380,  
+base + 0x700);
++               probe_ent->n_ports = 4;
++               pdc_ata_setup_port(&probe_ent->port[0], base + 0x380,  
+base + 0x400);
++               pdc_ata_setup_port(&probe_ent->port[1], base + 0x280,  
+base + 0x500);
++               pdc_ata_setup_port(&probe_ent->port[2], base + 0x200,  
+base + 0x600);
++               pdc_ata_setup_port(&probe_ent->port[3], base + 0x300,  
+base + 0x700);
+                 break;
+         case board_2057x:
+                 hp->flags |= PDC_FLAG_GEN_II;
 
- drivers/message/fusion/mptspi.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
 
---- linux-2.6.21.1.orig/drivers/message/fusion/mptspi.c
-+++ linux-2.6.21.1/drivers/message/fusion/mptspi.c
-@@ -726,13 +726,15 @@ static int mptspi_slave_configure(struct
- 	struct _MPT_SCSI_HOST *hd =
- 		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
- 	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
--	int ret = mptscsih_slave_configure(sdev);
-+	int ret;
-+
-+	mptspi_initTarget(hd, vtarget, sdev);
-+
-+	ret = mptscsih_slave_configure(sdev);
- 
- 	if (ret)
- 		return ret;
- 
--	mptspi_initTarget(hd, vtarget, sdev);
--
- 	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
- 		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
- 		sdev->id, spi_min_period(scsi_target(sdev)),
+Correct?
 
--- 
+
+Hans
+
+
