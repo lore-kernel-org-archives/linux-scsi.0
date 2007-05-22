@@ -1,42 +1,85 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [PATCH] FC Transport support for vports based on NPIV
-Date: Tue, 22 May 2007 12:40:08 +0200
-Message-ID: <20070522104007.GA21345@schmichrtp>
-References: <1176408091.19824.20.camel@localhost.localdomain> <20070514121239.GA23620@schmichrtp> <464886B6.8050509@emulex.com> <20070521152718.GA15212@schmichrtp> <4651BE89.7020200@emulex.com>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: [PATCH] aic7xxx/aicasm build failure w/gcc-3.4.6
+Date: Tue, 22 May 2007 06:51:30 -0500 (CDT)
+Message-ID: <20070522115130.9B959DBA1@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed; boundary=ELM836723380-3472-0_
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:6845 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757299AbXEVKkK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 06:40:10 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.13.8/8.13.8) with ESMTP id l4MAe9Rr161172
-	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 10:40:09 GMT
-Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4MAe9nO4141276
-	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 12:40:09 +0200
-Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4MAe8Hu016444
-	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 12:40:08 +0200
-Content-Disposition: inline
-In-Reply-To: <4651BE89.7020200@emulex.com>
+Received: from gherkin.frus.com ([192.158.254.49]:37538 "EHLO gherkin.frus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756606AbXEVLvc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2007 07:51:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org, duane.grigsby@qlogic.com
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, May 21, 2007 at 11:45:13AM -0400, James Smart wrote:
 
-> True - so this means that who-ever is setting the subchannel device
-> permanent_port_name value needs to take into account this conversation,
-> when T11.3 actually makes a choice on what it should be.
+--ELM836723380-3472-0_
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
 
-I will keep this in mind. Probably this would involve the FCP adapter
-and the reporting in zfcp.
+Second try: originally reported this back on April 17th.  2.6.X
+kernel builds started failing after I upgraded my compiler from
+gcc-3.3.X to gcc-3.4.6:
 
-Anyway, my main goal was to understand the changes in the FC transport
-class and the possible impact to zfcp. Thanks for the clarification
-of my questions.
+make -C drivers/scsi/aic7xxx/aicasm
+(...)
+gcc -I/usr/include -I. aicasm.c aicasm_symbol.c aicasm_gram.c aicasm_macro_gram.c aicasm_scan.c aicasm_macro_scan.c -o aicasm -ldb
+aicasm_gram.y:1948: error: conflicting types for 'yyerror'
+aicasm_gram.tab.c:3004: error: previous implicit declaration of 'yyerror' was here
+aicasm_macro_gram.y:162: error: conflicting types for 'mmerror'
+aicasm_macro_gram.tab.c:1196: error: previous implicit declaration of 'mmerror' was here
 
-Christof
+As a workaround, commenting out or deleting the "void" declarations
+for yyerror() and mmerror() in the respective ".y" files fixes the
+problem.  A patch to illustrate the offending code is attached, but
+there's no "signed-off by" line because I'm certain the final form of
+the patch will be different.  The patch applies cleanly to at least
+2.6.21 and later kernels.  gcc-3.3 may have been warning about the
+type conflicts, but I didn't notice: gcc-3.4 treats the type conflicts
+as errors, so I *did* notice :-).
+
+Here's the "gcc -v" output:
+
+Reading specs from /usr/lib/gcc/i486-slackware-linux/3.4.6/specs
+Configured with: ../gcc-3.4.6/configure --prefix=/usr --enable-shared --enable-threads=posix --enable-__cxa_atexit --disable-checking --with-gnu-ld --verbose --target=i486-slackware-linux --host=i486-slackware-linux
+Thread model: posix
+gcc version 3.4.6
+
+-- 
+-----------------------------------------------------------------------
+Bob Tracy                   WTO + WIPO = DMCA? http://www.anti-dmca.org
+rct@frus.com
+-----------------------------------------------------------------------
+
+--ELM836723380-3472-0_
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Disposition: attachment; filename=patch22_aicasm
+
+--- linux/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y.orig	2006-02-06 06:00:58.000000000 -0600
++++ linux/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y	2007-04-16 12:31:08.000000000 -0500
+@@ -1943,7 +1943,7 @@
+ 	versions[newlen + oldlen + 1] = '\0';
+ }
+ 
+-void
++/* void */
+ yyerror(const char *string)
+ {
+ 	stop(string, EX_DATAERR);
+--- linux/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y.orig	2002-12-24 07:09:30.000000000 -0600
++++ linux/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y	2007-04-16 12:32:48.000000000 -0500
+@@ -157,7 +157,7 @@
+ 	}
+ }
+ 
+-void
++/* void */
+ mmerror(const char *string)
+ {
+ 	stop(string, EX_DATAERR);
+
+--ELM836723380-3472-0_--
