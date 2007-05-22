@@ -1,46 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVD
-	drive connected to mptspi driver
-Date: Tue, 22 May 2007 16:27:14 -0500
-Message-ID: <1179869235.3738.55.camel@mulgrave.il.steeleye.com>
-References: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
-	 <1179865510.5479.17.camel@phobos>
+From: Christoph Lameter <clameter@sgi.com>
+Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
+Date: Tue, 22 May 2007 14:44:33 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0705221443030.16285@schroedinger.engr.sgi.com>
+References: <20070521151525.GA581@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:41906 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757829AbXEVV1R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 17:27:17 -0400
-In-Reply-To: <1179865510.5479.17.camel@phobos>
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:59921 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756275AbXEVVoe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 17:44:34 -0400
+In-Reply-To: <20070521151525.GA581@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Chapman <doug.chapman@hp.com>
-Cc: eric.moore@lsi.com, linux-scsi@vger.kernel.org
+To: Bernhard Walle <bwalle@suse.de>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Tue, 2007-05-22 at 14:25 -0600, Doug Chapman wrote:
-> Eric,
+On Mon, 21 May 2007, Bernhard Walle wrote:
+
+> [PATCH] [scsi] Remove __GFP_DMA
 > 
-> Sorry to bother you on this again, I realize you are very busy.
+> After 821de3a27bf33f11ec878562577c586cd5f83c64, it's not necessary to alloate a
+> DMA buffer any more in sd.c.
 > 
-> >From our off-list email and from your comments to Chip Coldwell in
-> redhat BZ 225177 it sounded like you were prepared to ACK this.  Any
-> chance you could send your official ACK so this can be committed?
-> 
-> much appreciated,
+> Signed-off-by: Bernhard Walle <bwalle@suse.de>
 
-Actually I'd like a little analysis of why first, please Eric.
+Great that avoids a DMA kmalloc slab. Any other GFP_DMAs left in the scsi 
+layer?
 
-It seems to me, with the current wrong ordering in the initialisation
-results in a large queue depth being given to the DVD (which are
-habitually very low queue depth ... or even untagged beasts).  So does
-the slowdown result from the fusion accepting N commands for the DVD and
-then rejecting N-1 of them resulting in ping pong between the mid-layer
-and driver?
-
-If so, we probably want to fix the command throttling in the driver.
-
-James
-
-
+Acked-by: Christoph Lameter <clameter@sgi.com>
