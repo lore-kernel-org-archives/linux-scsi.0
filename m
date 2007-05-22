@@ -1,31 +1,42 @@
-From: Christoph Lameter <clameter@sgi.com>
-Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
-Date: Tue, 22 May 2007 14:44:33 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0705221443030.16285@schroedinger.engr.sgi.com>
-References: <20070521151525.GA581@suse.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/19] clean ups on the drivers
+Date: Wed, 23 May 2007 08:32:01 +0900
+Message-ID: <20070523083201E.fujita.tomonori@lab.ntt.co.jp>
+References: <20070512190534B.fujita.tomonori@lab.ntt.co.jp>
+	<20070512153023.GA8088@infradead.org>
+	<200705141440.l4EEe3dB004194@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:59921 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756275AbXEVVoe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 17:44:34 -0400
-In-Reply-To: <20070521151525.GA581@suse.de>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:36957 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756373AbXEVXcN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 19:32:13 -0400
+In-Reply-To: <200705141440.l4EEe3dB004194@mbox.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernhard Walle <bwalle@suse.de>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+To: James.Bottomley@SteelEye.com
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
 
-On Mon, 21 May 2007, Bernhard Walle wrote:
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/19] clean ups on the drivers
+Date: Mon, 14 May 2007 23:40:03 +0900
 
-> [PATCH] [scsi] Remove __GFP_DMA
+> From: Christoph Hellwig <hch@infradead.org>
+> Subject: Re: [PATCH 0/19] clean ups on the drivers
+> Date: Sat, 12 May 2007 16:30:23 +0100
 > 
-> After 821de3a27bf33f11ec878562577c586cd5f83c64, it's not necessary to alloate a
-> DMA buffer any more in sd.c.
+> > On Sat, May 12, 2007 at 07:05:42PM +0900, FUJITA Tomonori wrote:
+> > > There are two patches for each driver, removing the non-use-sg code
+> > > and converting to use the accessors.
+> > 
+> > One patch would probably be fine aswell.
 > 
-> Signed-off-by: Bernhard Walle <bwalle@suse.de>
+> I merged the two. And I finished cleaning up 35 drivers in total.
+> 
+> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-bidi.git cleanups
 
-Great that avoids a DMA kmalloc slab. Any other GFP_DMAs left in the scsi 
-layer?
-
-Acked-by: Christoph Lameter <clameter@sgi.com>
+I rebased the cleanup patchset against the latest scsi-misc
+(352e921f0dd42f79652cdb50dd91122d068d7209). It includes the cleanups
+for more than 40 drivers.
