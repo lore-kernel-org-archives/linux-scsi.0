@@ -1,66 +1,42 @@
-From: Mikael Pettersson <mikpe@it.uu.se>
-Subject: Re: [PATCH] sata_promise: Port enumeration order - SATA 150 TX4,
-Date: Tue, 22 May 2007 10:16:24 +0200
-Message-ID: <18002.42712.248696.433735@alkaid.it.uu.se>
-References: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: Re: [PATCH] FC Transport support for vports based on NPIV
+Date: Tue, 22 May 2007 12:40:08 +0200
+Message-ID: <20070522104007.GA21345@schmichrtp>
+References: <1176408091.19824.20.camel@localhost.localdomain> <20070514121239.GA23620@schmichrtp> <464886B6.8050509@emulex.com> <20070521152718.GA15212@schmichrtp> <4651BE89.7020200@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CEAADB30-FB4E-4F2B-BBF9-DD085FBF9B55@usit.uio.no>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hans A Eide <h.a.eide@usit.uio.no>
-Cc: linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:6845 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757299AbXEVKkK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 06:40:10 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate1.de.ibm.com (8.13.8/8.13.8) with ESMTP id l4MAe9Rr161172
+	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 10:40:09 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4MAe9nO4141276
+	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 12:40:09 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4MAe8Hu016444
+	for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 12:40:08 +0200
+Content-Disposition: inline
+In-Reply-To: <4651BE89.7020200@emulex.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org, duane.grigsby@qlogic.com
 
-[added cc:linux-ide]
+On Mon, May 21, 2007 at 11:45:13AM -0400, James Smart wrote:
 
-Hans A Eide writes:
- > 
- >  > Evan Harris wrote:
- >  >>
- >  >> I have a card that mirrors this one from your list:
- >  >>
- >  >> Retail name: SATA300 TX4
- >  >> Chip label: PDC40718-GP  SATAII300
- >  >> Vendor-Device number: 105a:3d17 (rev 02)
- >  >>
- >  >> Through testing, I've found linux 2.6.16 and 2.6.17 find the  
- > ports in
- >  >> this order (the list is ordered by linux detection):
- >  >>
- >  >> 1. silkscreen port 3
- >  >> 2. silkscreen port 2
- >  >> 3. silkscreen port 4
- >  >> 4. silkscreen port 1
- >  >>> NOTE: the patch I have submitted (
- >  >>> http://marc.theaimsgroup.com/?l=linux- 
- > ide&m=114082978311290&w=2 ) is a
- >  >>> solution that doesn't know about the older Promise SATA  
- > controllers,
- >  >>> which are not affected with the "new wiring" problem, so the older
- >  >>> controllers will appear screwed if you use it.
- >  >>>
- >  >>> Hopefully we will collect enough info about all the SATA Promise
- >  >>> controllers to distinguish the new and the old wiring controllers,
- >  >>> then produce a new patch that will be a correct solution to the  
- > "new
- >  >>> wiring" problem.
- >  >
- >  > Mikael Pettersson has been doing some excellent work recently on
- >  > sata_promise.  If enough data has been collected on this sata_promise
- >  > port enumeration problem, maybe the data could be collated and  
- > proposed
- >  > via Mikael as a patch?
- >  >
- >  > 	Jeff
- > 
- > Sorry, any updates on this?
+> True - so this means that who-ever is setting the subchannel device
+> permanent_port_name value needs to take into account this conversation,
+> when T11.3 actually makes a choice on what it should be.
 
-You should have posted this to linux-ide not linux-scsi.
+I will keep this in mind. Probably this would involve the FCP adapter
+and the reporting in zfcp.
 
-The Promise SATAII TX4 port enumeration issue is fixed in
-current 2.6.22-rc kernels. A patch for 2.6.21 can be found
-in <http://marc.info/?l=linux-ide&m=117728096711046&w=2>.
+Anyway, my main goal was to understand the changes in the FC transport
+class and the possible impact to zfcp. Thanks for the clarification
+of my questions.
 
-/Mikael
+Christof
