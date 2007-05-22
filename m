@@ -1,47 +1,55 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Sg_ses question
-Date: Tue, 22 May 2007 16:29:15 -0400
-Message-ID: <4653529B.9080100@torque.net>
-References: <861B5CF71BC70C478DFEB9EAFE98F6990233CAA7@G3W0068.americas.hpqcorp.net>
-Reply-To: dougg@torque.net
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] bug fix: SCSI async scan sysfs -EEXIST problem
+Date: Tue, 22 May 2007 17:10:34 -0400
+Message-ID: <46535C4A.8020509@emulex.com>
+References: <1178564267.302.15.camel@localhost.localdomain> <1179848907.3738.19.camel@mulgrave.il.steeleye.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:42544 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757005AbXEVUeM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 16:34:12 -0400
-In-Reply-To: <861B5CF71BC70C478DFEB9EAFE98F6990233CAA7@G3W0068.americas.hpqcorp.net>
+Received: from emulex.emulex.com ([138.239.112.1]:39671 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755978AbXEVVLa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 17:11:30 -0400
+In-Reply-To: <1179848907.3738.19.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-Haefliger, Juerg wrote:
-> Hi,
-> 
-> Not sure if this is the right list for my question but I couldn't find a
-> more suitable place to ask it.
-> 
-> I'm trying to set the locator light of a disk in a SAS enclosure using
-> sg_ses but I'm not getting anywhere. I'm dumping the enclosure status
-> diagnostic page using 'sg_ses --page=2 --raw /dev/sgXX > page' and then
-> set the SELECT and RQST IDENT bits of the array device element in
-> question and write it back doing 'sg_ses --control --page=2 --data=-
-> /dev/sgXX < tmp'. The command completes without error but unfortunately,
-> nothing happens. When I read the page back, the IDENT bit is still
-> cleared and the light on the enclosure remains turned off.
-> 
-> Am I doing something wrong or am I missing something? Can't I use sg_ses
-> to achieve this?
 
-The procedure looks correct. I haven't had any (other)
-reports of sg_ses not working lately. The only suggestion
-I can make is to ask if you have selected the element
-control rather than the overall control.
 
-Doug Gilbert
+James Bottomley wrote:
+> On Mon, 2007-05-07 at 14:57 -0400, James Smart wrote:
+>> +       mutex_lock(&shost->scan_mutex);
+>>         scsi_sysfs_add_devices(shost);
+>> +       atomic_set(&shost->async_scan, 0);
+>> +       mutex_unlock(&shost->scan_mutex);
+> 
+> It really seems that the only safety here is expanding the scan mutex to
+> cover more of the code.  I don't really see any value to using the
+> atomic types ... it's not a simultaneous variable update problem, it's a
+> scan race which the mutex can be used to mediate.
+> 
+> James
+
+True. First requirement is that scsi_sysfs_add_devices() must be under
+the scan_mutex.  Additionally, (ignoring the atomic) shost->async_scan,
+based on its use in scsi_add_lun(), should be changed under the mutex
+as well, thus the "proper" placement in the snippet above is while
+under the scan mutex.
+
+The real headache was the other code paths that read the value of
+async_scan and determine whether to enumerate or ignore the sdev.
+Reorganizing that code to place it under scan_mutex was very ugly.
+Converting to an atomic simply addressed the synchronicity on sampling,
+although it essentially makes it independent of the scan_mutex.
+
+Are you suggesting you would rather rework all the other code paths for
+scan_mutex encapsulating async_scan ?
+
+-- james
 
 
 
