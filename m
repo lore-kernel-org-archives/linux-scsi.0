@@ -1,76 +1,56 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] ibmvscsi: fix timeout bugs
-Date: Tue, 22 May 2007 13:50:51 +0900
-Message-ID: <20070522135051C.fujita.tomonori@lab.ntt.co.jp>
+From: tsbogend@alpha.franken.de (Thomas Bogendoerfer)
+Subject: Re: [PATCH] jazz_esp converted to use esp_core
+Date: Tue, 22 May 2007 10:04:20 +0200
+Message-ID: <20070522080420.GA10316@alpha.franken.de>
+References: <20070521210224.GA24573@alpha.franken.de> <20070521230041.GA12090@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:50517 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755944AbXEVEvQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 00:51:16 -0400
+Received: from elvis.franken.de ([193.175.24.41]:51737 "EHLO elvis.franken.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754914AbXEVIEa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2007 04:04:30 -0400
+Content-Disposition: inline
+In-Reply-To: <20070521230041.GA12090@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rcj@linux.vnet.ibm.com
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, davem@davemloft.net
 
-The viosrp_crq timeout field is in seconds.
+On Tue, May 22, 2007 at 12:00:41AM +0100, Christoph Hellwig wrote:
+> On Mon, May 21, 2007 at 11:02:24PM +0200, Thomas Bogendoerfer wrote:
+> > after chasing and fixing two jazz platform bugs and one MIPS dma mapping
+> > bug, I finally succeeded in using the Dave's new esp_core (great work,
+> > thank you Dave). Below is the patch.
+> 
+> Very nice driver.  The only thing that confused me a little are
+> the various helper functions split out of esp_jazz_probe that
+> make the code a bit odd to read.  Are these intentional or a carry
+> over from the previous driver?
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c |   10 +++++-----
- 1 files changed, 5 insertions(+), 5 deletions(-)
+the sparc frontend used them, because most of these helper are
+checking for prom properties, which the jazz doesn't have. I've
+changed that and folded those little helpers into the probe function.
+I'll send a new patch a couple of minutes.
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index b10eefe..9d38c09 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -796,7 +796,7 @@ static void send_mad_adapter_info(struct
- 	init_event_struct(evt_struct,
- 			  adapter_info_rsp,
- 			  VIOSRP_MAD_FORMAT,
--			  init_timeout * HZ);
-+			  init_timeout);
- 	
- 	req = &evt_struct->iu.mad.adapter_info;
- 	memset(req, 0x00, sizeof(*req));
-@@ -893,7 +893,7 @@ static int send_srp_login(struct ibmvscs
- 	init_event_struct(evt_struct,
- 			  login_rsp,
- 			  VIOSRP_SRP_FORMAT,
--			  init_timeout * HZ);
-+			  init_timeout);
- 
- 	login = &evt_struct->iu.srp.login_req;
- 	memset(login, 0x00, sizeof(struct srp_login_req));
-@@ -971,7 +971,7 @@ static int ibmvscsi_eh_abort_handler(str
- 	init_event_struct(evt,
- 			  sync_completion,
- 			  VIOSRP_SRP_FORMAT,
--			  init_timeout * HZ);
-+			  init_timeout);
- 
- 	tsk_mgmt = &evt->iu.srp.tsk_mgmt;
- 	
-@@ -1083,7 +1083,7 @@ static int ibmvscsi_eh_device_reset_hand
- 	init_event_struct(evt,
- 			  sync_completion,
- 			  VIOSRP_SRP_FORMAT,
--			  init_timeout * HZ);
-+			  init_timeout);
- 
- 	tsk_mgmt = &evt->iu.srp.tsk_mgmt;
- 
-@@ -1326,7 +1326,7 @@ static int ibmvscsi_do_host_config(struc
- 	init_event_struct(evt_struct,
- 			  sync_completion,
- 			  VIOSRP_MAD_FORMAT,
--			  init_timeout * HZ);
-+			  init_timeout);
- 
- 	host_config = &evt_struct->iu.mad.host_config;
- 
+> > --- a/drivers/scsi/Makefile
+> > +++ b/drivers/scsi/Makefile
+> > @@ -121,7 +121,7 @@ obj-$(CONFIG_BLK_DEV_3W_XXXX_RAID) += 3w-xxxx.o
+> >  obj-$(CONFIG_SCSI_3W_9XXX)	+= 3w-9xxx.o
+> >  obj-$(CONFIG_SCSI_PPA)		+= ppa.o
+> >  obj-$(CONFIG_SCSI_IMM)		+= imm.o
+> > -obj-$(CONFIG_JAZZ_ESP)		+= NCR53C9x.o	jazz_esp.o
+> > +obj-$(CONFIG_JAZZ_ESP)		+= jazz_esp.o
+> 
+> Note to Dave:  it probably would be nice to just build esp_scsi.o
+> from the makefile like the old NCR53C9x drivers did instead of the
+> Kconfig hackery, what do you think?
+
+after seeing no objection to using esp_scsi.o like NCR53C9x.o, I also
+changed that.
+
+Thomas.
+
 -- 
-1.4.3.2
-
+Crap can work. Given enough thrust pigs will fly, but it's not necessary a
+good idea.                                                [ RFC1925, 2.3 ]
