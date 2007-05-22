@@ -1,69 +1,60 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] aic7xxx/aicasm build failure w/gcc-3.4.6
-Date: Tue, 22 May 2007 09:26:22 -0500
-Message-ID: <1179843982.3738.5.camel@mulgrave.il.steeleye.com>
-References: <20070522115130.9B959DBA1@gherkin.frus.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: Dell CERC ATA100/4ch support
+Date: Tue, 22 May 2007 16:50:23 +0200
+Message-ID: <4653032F.5000406@suse.de>
+References: <01e801c797bf$34f7ef00$15b2a8c0@newbrains> <1179327908.3787.29.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:36890 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755383AbXEVO0Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 10:26:25 -0400
-In-Reply-To: <20070522115130.9B959DBA1@gherkin.frus.com>
+Received: from mx1.suse.de ([195.135.220.2]:53516 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934516AbXEVOud (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 May 2007 10:50:33 -0400
+In-Reply-To: <1179327908.3787.29.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Tracy <rct@gherkin.frus.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Leigh Blackwell <leigh@codacommerce.com>, 374792@bugs.debian.org, akpm@osdl.org, linux-scsi@vger.kernel.org, sumant.patro@lsil.com, Matt Domsch <Matt_Domsch@dell.com>
 
-On Tue, 2007-05-22 at 06:51 -0500, Bob Tracy wrote:
-> Second try: originally reported this back on April 17th.  2.6.X
-> kernel builds started failing after I upgraded my compiler from
-> gcc-3.3.X to gcc-3.4.6:
-> 
-> make -C drivers/scsi/aic7xxx/aicasm
-> (...)
-> gcc -I/usr/include -I. aicasm.c aicasm_symbol.c aicasm_gram.c aicasm_macro_gram.c aicasm_scan.c aicasm_macro_scan.c -o aicasm -ldb
-> aicasm_gram.y:1948: error: conflicting types for 'yyerror'
-> aicasm_gram.tab.c:3004: error: previous implicit declaration of 'yyerror' was here
-> aicasm_macro_gram.y:162: error: conflicting types for 'mmerror'
-> aicasm_macro_gram.tab.c:1196: error: previous implicit declaration of 'mmerror' was here
-> 
-> As a workaround, commenting out or deleting the "void" declarations
-> for yyerror() and mmerror() in the respective ".y" files fixes the
-> problem.
+James Bottomley wrote:
+> On Wed, 2007-05-16 at 14:36 +0100, Leigh Blackwell wrote:
+>> I have been looking at the issue with theses cerc devices, has this=20
+>> bug 374792 been closed based on people reverting the firmware to < 6=
+=2E61.=20
+>>
+>> Unfortunately Dell doesn't support a Firmware version that old on ou=
+r=20
+>> Server, is it possible to re-open this bug? I have been unable to ge=
+t the
+>> current etch install to recognize my driver controller with any of t=
+he
+>> megaraid drivers.
+>=20
+> Umm, but this is a bug in Dell Support isn't it?  I don't think there=
+'s
+> a kernel fix for that.
+>=20
+> LSIs position is that in current kernels they only support this devic=
+e
+> with the new megaraid driver and only for firmware version >=3D 6.61.
+> Surely you just need to get Dell and LSI on the same page?
+>=20
+Provided they have an interest in doing so.
+Dell for one is _not_ interested in supplying an updated firmware.
 
-We really don't want gcc making assumptions about prototypes ... even if
-it's getting them right in all likelihood (doubtless unprototyped
-assumed functions will become a warning and then an error in later gcc
-versions ...), so this is a better fix
+So we're stuck.
 
-James
+Cheers,
 
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-index c328596..6066998 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
-@@ -106,6 +106,7 @@ static void make_expression(expression_t *immed, int value);
- static void add_conditional(symbol_t *symbol);
- static void add_version(const char *verstring);
- static int  is_download_const(expression_t *immed);
-+void yyerror(const char *string);
- 
- #define SRAM_SYMNAME "SRAM_BASE"
- #define SCB_SYMNAME "SCB_BASE"
-diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y b/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-index 439f760..ff46aa6 100644
---- a/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-+++ b/drivers/scsi/aic7xxx/aicasm/aicasm_macro_gram.y
-@@ -65,6 +65,7 @@
- static symbol_t *macro_symbol;
- 
- static void add_macro_arg(const char *argtext, int position);
-+void mmerror(const char *string);
- 
- %}
- 
-
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
