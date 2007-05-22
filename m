@@ -1,72 +1,48 @@
-From: Doug Chapman <doug.chapman@hp.com>
-Subject: Re: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVD
-	drive connected to mptspi driver
-Date: Tue, 22 May 2007 14:25:10 -0600
-Message-ID: <1179865510.5479.17.camel@phobos>
-References: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Sg_ses question
+Date: Tue, 22 May 2007 16:29:15 -0400
+Message-ID: <4653529B.9080100@torque.net>
+References: <861B5CF71BC70C478DFEB9EAFE98F6990233CAA7@G3W0068.americas.hpqcorp.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel9.hp.com ([156.153.255.214]:55047 "EHLO atlrel9.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756514AbXEVUZX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 May 2007 16:25:23 -0400
-In-Reply-To: <1178567987.27671.20.camel@deimos.americas.hpqcorp.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:42544 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757005AbXEVUeM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 16:34:12 -0400
+In-Reply-To: <861B5CF71BC70C478DFEB9EAFE98F6990233CAA7@G3W0068.americas.hpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: eric.moore@lsi.com
+To: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
 Cc: linux-scsi@vger.kernel.org
 
-Eric,
+Haefliger, Juerg wrote:
+> Hi,
+> 
+> Not sure if this is the right list for my question but I couldn't find a
+> more suitable place to ask it.
+> 
+> I'm trying to set the locator light of a disk in a SAS enclosure using
+> sg_ses but I'm not getting anywhere. I'm dumping the enclosure status
+> diagnostic page using 'sg_ses --page=2 --raw /dev/sgXX > page' and then
+> set the SELECT and RQST IDENT bits of the array device element in
+> question and write it back doing 'sg_ses --control --page=2 --data=-
+> /dev/sgXX < tmp'. The command completes without error but unfortunately,
+> nothing happens. When I read the page back, the IDENT bit is still
+> cleared and the light on the enclosure remains turned off.
+> 
+> Am I doing something wrong or am I missing something? Can't I use sg_ses
+> to achieve this?
 
-Sorry to bother you on this again, I realize you are very busy.
+The procedure looks correct. I haven't had any (other)
+reports of sg_ses not working lately. The only suggestion
+I can make is to ask if you have selected the element
+control rather than the overall control.
 
->From our off-list email and from your comments to Chip Coldwell in
-redhat BZ 225177 it sounded like you were prepared to ACK this.  Any
-chance you could send your official ACK so this can be committed?
-
-much appreciated,
-
-- Doug
+Doug Gilbert
 
 
-On Mon, 2007-05-07 at 15:59 -0400, Doug Chapman wrote:
-> Patch for: http://bugzilla.kernel.org/show_bug.cgi?id=8426
-> 
-> A recent code cleanup that moved code from mptscsih to mptspi
-> inadvertently change the order some code was called.  This caused
-> a massive slowdown (of 150x to 300x) on the CD/DVD drive on the
-> high-end HP Integrity servers.
-> 
-> Signed-off-by: Doug Chapman <doug.chapman@hp.com>
-> 
-> 
-> 
-> 
-> diff --git a/drivers/message/fusion/mptspi.c b/drivers/message/fusion/mptspi.c
-> index 85f21b5..2eb5741 100644
-> --- a/drivers/message/fusion/mptspi.c
-> +++ b/drivers/message/fusion/mptspi.c
-> @@ -726,13 +726,15 @@ static int mptspi_slave_configure(struct scsi_device *sdev)
->  	struct _MPT_SCSI_HOST *hd =
->  		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
->  	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
-> -	int ret = mptscsih_slave_configure(sdev);
-> +	int ret;
-> +
-> +	mptspi_initTarget(hd, vtarget, sdev);
-> +
-> +	ret = mptscsih_slave_configure(sdev);
->  
->  	if (ret)
->  		return ret;
->  
-> -	mptspi_initTarget(hd, vtarget, sdev);
-> -
->  	ddvprintk((MYIOC_s_INFO_FMT "id=%d min_period=0x%02x"
->  		" max_offset=0x%02x max_width=%d\n", hd->ioc->name,
->  		sdev->id, spi_min_period(scsi_target(sdev)),
-> 
-> 
+
 
