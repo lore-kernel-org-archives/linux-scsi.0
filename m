@@ -1,56 +1,66 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] bug fix: SCSI async scan sysfs -EEXIST problem
-Date: Tue, 22 May 2007 17:10:34 -0400
-Message-ID: <46535C4A.8020509@emulex.com>
-References: <1178564267.302.15.camel@localhost.localdomain> <1179848907.3738.19.camel@mulgrave.il.steeleye.com>
-Reply-To: James.Smart@Emulex.Com
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Tue, 22 May 2007 14:12:11 -0700
+Message-ID: <20070522141211.fe00333f.akpm@linux-foundation.org>
+References: <20070510072247.063476979@intel.com>
+	<20070509163835.56ad28e0.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:39671 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755978AbXEVVLa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 17:11:30 -0400
-In-Reply-To: <1179848907.3738.19.camel@mulgrave.il.steeleye.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070509163835.56ad28e0.kristen.c.accardi@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
+On Wed, 9 May 2007 16:38:35 -0700
+Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 
-
-James Bottomley wrote:
-> On Mon, 2007-05-07 at 14:57 -0400, James Smart wrote:
->> +       mutex_lock(&shost->scan_mutex);
->>         scsi_sysfs_add_devices(shost);
->> +       atomic_set(&shost->async_scan, 0);
->> +       mutex_unlock(&shost->scan_mutex);
+> Send an uevent to user space to indicate that a media change event has occurred.
 > 
-> It really seems that the only safety here is expanding the scan mutex to
-> cover more of the code.  I don't really see any value to using the
-> atomic types ... it's not a simultaneous variable update problem, it's a
-> scan race which the mutex can be used to mediate.
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > 
-> James
+> Index: 2.6-git/block/genhd.c
+> ===================================================================
+> --- 2.6-git.orig/block/genhd.c
+> +++ 2.6-git/block/genhd.c
+> @@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
+>  	.show	= diskstats_show
+>  };
+>  
+> +static void media_change_notify_thread(struct work_struct *work)
+> +{
+> +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
+> +	char event[] = "MEDIA_CHANGE=1";
+> +	char *envp[] = { event, NULL };
+> +
+> +	/*
+> +	 * set enviroment vars to indicate which event this is for
+> +	 * so that user space will know to go check the media status.
+> +	 */
+> +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
+> +	put_device(gd->driverfs_dev);
+> +}
+> +
+> +void genhd_media_change_notify(struct gendisk *disk)
+> +{
+> +	get_device(disk->driverfs_dev);
+> +	schedule_work(&disk->async_notify);
+> +}
+> +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
+> +
+>  struct gendisk *alloc_disk(int minors)
+>  {
+>  	return alloc_disk_node(minors, -1);
+> @@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
+>  		kobj_set_kset_s(disk,block_subsys);
+>  		kobject_init(&disk->kobj);
+>  		rand_initialize_disk(disk);
+> +		INIT_WORK(&disk->async_notify,
+> +			media_change_notify_thread);
+>  	}
+>  	return disk;
 
-True. First requirement is that scsi_sysfs_add_devices() must be under
-the scan_mutex.  Additionally, (ignoring the atomic) shost->async_scan,
-based on its use in scsi_add_lun(), should be changed under the mutex
-as well, thus the "proper" placement in the snippet above is while
-under the scan mutex.
-
-The real headache was the other code paths that read the value of
-async_scan and determine whether to enumerate or ignore the sdev.
-Reorganizing that code to place it under scan_mutex was very ugly.
-Converting to an atomic simply addressed the synchronicity on sampling,
-although it essentially makes it independent of the scan_mutex.
-
-Are you suggesting you would rather rework all the other code paths for
-scan_mutex encapsulating async_scan ?
-
--- james
-
-
-
-
+Why does this do a schedule_work() rather than calling kobject_uevent_env()
+directly?
