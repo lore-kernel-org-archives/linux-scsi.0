@@ -1,53 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/9] Resurrect sdev during scanning
-Date: Wed, 23 May 2007 10:53:21 +0200
-Message-ID: <46540101.8060608@suse.de>
+From: hare@suse.de (Hannes Reinecke)
+Subject: [PATCH 2/9] Improve error messages in scsi_sysfs_add_sdev()
+Date: Wed, 23 May 2007 10:55:17 +0200
+Message-ID: <20070523085517.187C2D44CB@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:34947 "EHLO mx1.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:49705 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757277AbXEWIxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 04:53:22 -0400
+	id S1762914AbXEWIzW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 May 2007 04:55:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi James,
 
-this is a patchset to address the outstanding 'sdev oops during
-scanning' issue. Problem is that any sdev in state 'SDEV_DEL' is still
-visible to the host until the refcount drops to zero. When a scan occur=
-s
-during this time we access a half-initialized sdev and all hell breaks
-loose.
+When we fail to add a device to the driver core, only the very
+helpful message 'error X' is displayed.
+Print out some meaningful messages.
 
-So to address this issue this patchset implements a
-'scsi_resurrect_device()' function which will put an sdev in state
-SDEV_DEL back to SDEV_RUNNING, thus allowing normal operations again.
-In doing so I also had to clean up the sdev allocation and removal a bi=
-t
-so that we're now more aligned to the state machine and the driver
-core's device_initialize / device_add logic.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/scsi_sysfs.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-The entire patchset has been tested quite heavily with SLES10 SP1.
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 67a38a1..2df7108 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -740,12 +740,14 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 	error = device_add(&sdev->sdev_gendev);
+ 	if (error) {
+ 		put_device(sdev->sdev_gendev.parent);
+-		printk(KERN_INFO "error 1\n");
++		sdev_printk(KERN_INFO, sdev,
++			    "failed to add device (error %d)\n", error);
+ 		return error;
+ 	}
+ 	error = class_device_add(&sdev->sdev_classdev);
+ 	if (error) {
+-		printk(KERN_INFO "error 2\n");
++		sdev_printk(KERN_INFO, sdev,
++			    "failed to add class device (error %d)\n", error);
+ 		goto clean_device;
+ 	}
+ 
+-- 
+1.4.3.4
 
-Comments etc. welcome.
-
-Otherwise, please apply.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
