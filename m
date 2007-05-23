@@ -1,90 +1,53 @@
-From: "Aubrey Li" <aubreylee@gmail.com>
-Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
-Date: Wed, 23 May 2007 10:41:13 +0800
-Message-ID: <6d6a94c50705221941y63f4db7bj174a2265d9eaa61a@mail.gmail.com>
-References: <20070521151525.GA581@suse.de>
-	 <Pine.LNX.4.64.0705221443030.16285@schroedinger.engr.sgi.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/9] Resurrect sdev during scanning
+Date: Wed, 23 May 2007 10:53:21 +0200
+Message-ID: <46540101.8060608@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.230]:13208 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754610AbXEWClP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 May 2007 22:41:15 -0400
-Received: by nz-out-0506.google.com with SMTP id z3so54498nzf
-        for <linux-scsi@vger.kernel.org>; Tue, 22 May 2007 19:41:14 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0705221443030.16285@schroedinger.engr.sgi.com>
-Content-Disposition: inline
+Received: from mx1.suse.de ([195.135.220.2]:34947 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757277AbXEWIxW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 May 2007 04:53:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Lameter <clameter@sgi.com>
-Cc: Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 5/23/07, Christoph Lameter <clameter@sgi.com> wrote:
-> On Mon, 21 May 2007, Bernhard Walle wrote:
->
-> > [PATCH] [scsi] Remove __GFP_DMA
-> >
-> > After 821de3a27bf33f11ec878562577c586cd5f83c64, it's not necessary to alloate a
-> > DMA buffer any more in sd.c.
-> >
-> > Signed-off-by: Bernhard Walle <bwalle@suse.de>
->
-> Great that avoids a DMA kmalloc slab. Any other GFP_DMAs left in the scsi
-> layer?
->
-> Acked-by: Christoph Lameter <clameter@sgi.com>
+Hi James,
 
-Yes, here is another patch
+this is a patchset to address the outstanding 'sdev oops during
+scanning' issue. Problem is that any sdev in state 'SDEV_DEL' is still
+visible to the host until the refcount drops to zero. When a scan occur=
+s
+during this time we access a half-initialized sdev and all hell breaks
+loose.
 
-Signed-off-by: Aubrey.Li <aubreylee@gmail.com>
----
- drivers/scsi/aacraid/commctrl.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+So to address this issue this patchset implements a
+'scsi_resurrect_device()' function which will put an sdev in state
+SDEV_DEL back to SDEV_RUNNING, thus allowing normal operations again.
+In doing so I also had to clean up the sdev allocation and removal a bi=
+t
+so that we're now more aligned to the state machine and the driver
+core's device_initialize / device_add logic.
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 72b0393..405722d 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -580,8 +580,8 @@ static int aac_send_raw_srb(struct aac_dev* dev,
-void __user * arg)
- 			for (i = 0; i < upsg->count; i++) {
- 				u64 addr;
- 				void* p;
--				/* Does this really need to be GFP_DMA? */
--				p = kmalloc(upsg->sg[i].count,GFP_KERNEL|__GFP_DMA);
-+
-+				p = kmalloc(upsg->sg[i].count,GFP_KERNEL);
- 				if(p == 0) {
- 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size
-= %d buffer number %d of %d\n",
- 					  upsg->sg[i].count,i,upsg->count));
-@@ -624,8 +624,8 @@ static int aac_send_raw_srb(struct aac_dev* dev,
-void __user * arg)
- 			for (i = 0; i < usg->count; i++) {
- 				u64 addr;
- 				void* p;
--				/* Does this really need to be GFP_DMA? */
--				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
-+
-+				p = kmalloc(usg->sg[i].count,GFP_KERNEL);
- 				if(p == 0) {
- 					kfree (usg);
- 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size
-= %d buffer number %d of %d\n",
-@@ -666,8 +666,8 @@ static int aac_send_raw_srb(struct aac_dev* dev,
-void __user * arg)
- 			for (i = 0; i < upsg->count; i++) {
- 				u64 addr;
- 				void* p;
--				/* Does this really need to be GFP_DMA? */
--				p = kmalloc(usg->sg[i].count,GFP_KERNEL|__GFP_DMA);
-+
-+				p = kmalloc(usg->sg[i].count,GFP_KERNEL);
- 				if(p == 0) {
- 					dprintk((KERN_DEBUG"aacraid: Could not allocate SG buffer - size
-= %d buffer number %d of %d\n",
- 					  usg->sg[i].count,i,usg->count));
--- 
-1.5.1.1
+The entire patchset has been tested quite heavily with SLES10 SP1.
+
+Comments etc. welcome.
+
+Otherwise, please apply.
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
