@@ -1,81 +1,39 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 5/7] genhd: send async notification on media change
-Date: Wed, 23 May 2007 12:03:55 -0500
-Message-ID: <1179939835.5569.3.camel@mulgrave.il.steeleye.com>
-References: <20070510072247.063476979@intel.com>
-	 <20070509163835.56ad28e0.kristen.c.accardi@intel.com>
-	 <20070522141211.fe00333f.akpm@linux-foundation.org>
-	 <20070523093119.e3a58fcc.kristen.c.accardi@intel.com>
+Subject: RE: [PATCH] Un-remove aacraid devices
+Date: Wed, 23 May 2007 12:07:02 -0500
+Message-ID: <1179940022.5569.7.camel@mulgrave.il.steeleye.com>
+References: <465438AD.8000406@suse.de>
+	 <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B5C@otce2k301.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070523093119.e3a58fcc.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:37705 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757616AbXEWRHE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 13:07:04 -0400
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B5C@otce2k301.adaptec.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, 2007-05-23 at 09:31 -0700, Kristen Carlson Accardi wrote:
-> On Tue, 22 May 2007 14:12:11 -0700
-> Andrew Morton <akpm@linux-foundation.org> wrote:
+On Wed, 2007-05-23 at 12:35 -0400, Salyzyn, Mark wrote:
+> NAK
 > 
-> > On Wed, 9 May 2007 16:38:35 -0700
-> > Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
-> > 
-> > > Send an uevent to user space to indicate that a media change event has occurred.
-> > > 
-> > > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> > > 
-> > > Index: 2.6-git/block/genhd.c
-> > > ===================================================================
-> > > --- 2.6-git.orig/block/genhd.c
-> > > +++ 2.6-git/block/genhd.c
-> > > @@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
-> > >  	.show	= diskstats_show
-> > >  };
-> > >  
-> > > +static void media_change_notify_thread(struct work_struct *work)
-> > > +{
-> > > +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
-> > > +	char event[] = "MEDIA_CHANGE=1";
-> > > +	char *envp[] = { event, NULL };
-> > > +
-> > > +	/*
-> > > +	 * set enviroment vars to indicate which event this is for
-> > > +	 * so that user space will know to go check the media status.
-> > > +	 */
-> > > +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
-> > > +	put_device(gd->driverfs_dev);
-> > > +}
-> > > +
-> > > +void genhd_media_change_notify(struct gendisk *disk)
-> > > +{
-> > > +	get_device(disk->driverfs_dev);
-> > > +	schedule_work(&disk->async_notify);
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
-> > > +
-> > >  struct gendisk *alloc_disk(int minors)
-> > >  {
-> > >  	return alloc_disk_node(minors, -1);
-> > > @@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
-> > >  		kobj_set_kset_s(disk,block_subsys);
-> > >  		kobject_init(&disk->kobj);
-> > >  		rand_initialize_disk(disk);
-> > > +		INIT_WORK(&disk->async_notify,
-> > > +			media_change_notify_thread);
-> > >  	}
-> > >  	return disk;
-> > 
-> > Why does this do a schedule_work() rather than calling kobject_uevent_env()
-> > directly?
-> > 
+> This will break all our management applications, and will not allow us to manipulate the array configurations from within Linux. This will also break online expansion of capacity.
 > 
-> Because it is called at Interrupt time.
+> This flag has been set from the beginning to allow partition tables, capacity and device locking to be changed without requiring an intervening reboot or needing the device to be taken offline. Fixed disk result in these pieces of information being cached.
 
-It better not be ... there's two GFP_KERNEL allocations just above this
-line in the file.
+I thought this problem had been solved since at least 2000 (when
+LifeKeeper ran into the same issue) by sending the BLKRRPART ioctl to
+the device ... whether removable or not, this forces a reread of all the
+vital information (always providing nothing has the nodes open, of
+course, we can't physically yank the information out of applications
+using it).
+
+If there's something BLKRRPART isn't doing we can probably fix it ...
+that's certainly better than lying to the kernel about the devices.
 
 James
 
