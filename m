@@ -1,60 +1,79 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
-Date: Wed, 23 May 2007 11:17:01 -0500
-Message-ID: <1179937021.3700.34.camel@mulgrave.il.steeleye.com>
-References: <20070521151525.GA581@suse.de>
-	 <Pine.LNX.4.64.0705221443030.16285@schroedinger.engr.sgi.com>
-	 <6d6a94c50705221941y63f4db7bj174a2265d9eaa61a@mail.gmail.com>
-	 <1179933494.3700.16.camel@mulgrave.il.steeleye.com>
-	 <Pine.LNX.4.64.0705231153360.7749@localhost.localdomain>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Wed, 23 May 2007 09:31:19 -0700
+Message-ID: <20070523093119.e3a58fcc.kristen.c.accardi@intel.com>
+References: <20070510072247.063476979@intel.com>
+	<20070509163835.56ad28e0.kristen.c.accardi@intel.com>
+	<20070522141211.fe00333f.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934771AbXEWQRl@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0705231153360.7749@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Robert P. J. Day" <rpjday@mindspring.com>
-Cc: Aubrey Li <aubreylee@gmail.com>, Christoph Lameter <clameter@sgi.com>, Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:63868 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756921AbXEWQen (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 May 2007 12:34:43 -0400
+In-Reply-To: <20070522141211.fe00333f.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 
-On Wed, 2007-05-23 at 11:55 -0400, Robert P. J. Day wrote:
-> On Wed, 23 May 2007, James Bottomley wrote:
+On Tue, 22 May 2007 14:12:11 -0700
+Andrew Morton <akpm@linux-foundation.org> wrote:
+
+> On Wed, 9 May 2007 16:38:35 -0700
+> Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 > 
-> > I'll defer to Mark on this one.  However, please remember that you
-> > can't just blindly remove GFP_DMA ... there are some cards which
-> > require it.
-> >
-> > Aacraid is one example ... it has a set of cards that can only DMA
-> > to 31 bits.  For them, the GFP_DMA is necessary:  The allocation in
-> > question is a scatterlist, which must be within the device DMA mask.
+> > Send an uevent to user space to indicate that a media change event has occurred.
+> > 
+> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > 
+> > Index: 2.6-git/block/genhd.c
+> > ===================================================================
+> > --- 2.6-git.orig/block/genhd.c
+> > +++ 2.6-git/block/genhd.c
+> > @@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
+> >  	.show	= diskstats_show
+> >  };
+> >  
+> > +static void media_change_notify_thread(struct work_struct *work)
+> > +{
+> > +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
+> > +	char event[] = "MEDIA_CHANGE=1";
+> > +	char *envp[] = { event, NULL };
+> > +
+> > +	/*
+> > +	 * set enviroment vars to indicate which event this is for
+> > +	 * so that user space will know to go check the media status.
+> > +	 */
+> > +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
+> > +	put_device(gd->driverfs_dev);
+> > +}
+> > +
+> > +void genhd_media_change_notify(struct gendisk *disk)
+> > +{
+> > +	get_device(disk->driverfs_dev);
+> > +	schedule_work(&disk->async_notify);
+> > +}
+> > +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
+> > +
+> >  struct gendisk *alloc_disk(int minors)
+> >  {
+> >  	return alloc_disk_node(minors, -1);
+> > @@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
+> >  		kobj_set_kset_s(disk,block_subsys);
+> >  		kobject_init(&disk->kobj);
+> >  		rand_initialize_disk(disk);
+> > +		INIT_WORK(&disk->async_notify,
+> > +			media_change_notify_thread);
+> >  	}
+> >  	return disk;
 > 
-> a question i asked a while back, and still haven't seen an answer for
-> -- given this in include/linux/gfp.h:
+> Why does this do a schedule_work() rather than calling kobject_uevent_env()
+> directly?
 > 
->   #define GFP_DMA         __GFP_DMA
-> 
-> is there a qualitative difference between these two macros?  is there
-> *supposed* to be?  if there isn't, one would think that just one
-> variation would be sufficient.
 
-__GFP_ are the raw GFP flags ... the GFP_ are combinations of the flags
-with predefined meanings.  There's no convention that you have to use
-one form or the other when making combinations of the allocation flags.
-Historically that's lead to things like
+Because it is called at Interrupt time.
 
-GFP_ATOMIC | __GFP_DMA (indicating additional DMA zone to the usual
-atomic flags)
-
-and
-
-GFP_ATOMIC | GFP_DMA (indicating same thing, but with the defined flags)
-
-You can argue that GFP_DMA has a pretty bogus GFP meaning and should
-never appear on its own, which, to my mind makes the former usage
-preferable.  However, GFP_DMA has been in linux since pretty much the
-dawn of ISA drivers, so I think it's conventionally well understood.
-
-James
-
-
-James
+Kristen
