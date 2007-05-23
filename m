@@ -1,65 +1,82 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] Un-remove aacraid devices
-Date: Wed, 23 May 2007 12:35:08 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B5C@otce2k301.adaptec.com>
-References: <465438AD.8000406@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Wed, 23 May 2007 12:03:55 -0500
+Message-ID: <1179939835.5569.3.camel@mulgrave.il.steeleye.com>
+References: <20070510072247.063476979@intel.com>
+	 <20070509163835.56ad28e0.kristen.c.accardi@intel.com>
+	 <20070522141211.fe00333f.akpm@linux-foundation.org>
+	 <20070523093119.e3a58fcc.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:51043 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935424AbXEWQfQ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 12:35:16 -0400
-Content-class: urn:content-classes:message
-In-reply-to: <465438AD.8000406@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070523093119.e3a58fcc.kristen.c.accardi@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-NAK
+On Wed, 2007-05-23 at 09:31 -0700, Kristen Carlson Accardi wrote:
+> On Tue, 22 May 2007 14:12:11 -0700
+> Andrew Morton <akpm@linux-foundation.org> wrote:
+> 
+> > On Wed, 9 May 2007 16:38:35 -0700
+> > Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
+> > 
+> > > Send an uevent to user space to indicate that a media change event has occurred.
+> > > 
+> > > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > > 
+> > > Index: 2.6-git/block/genhd.c
+> > > ===================================================================
+> > > --- 2.6-git.orig/block/genhd.c
+> > > +++ 2.6-git/block/genhd.c
+> > > @@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
+> > >  	.show	= diskstats_show
+> > >  };
+> > >  
+> > > +static void media_change_notify_thread(struct work_struct *work)
+> > > +{
+> > > +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
+> > > +	char event[] = "MEDIA_CHANGE=1";
+> > > +	char *envp[] = { event, NULL };
+> > > +
+> > > +	/*
+> > > +	 * set enviroment vars to indicate which event this is for
+> > > +	 * so that user space will know to go check the media status.
+> > > +	 */
+> > > +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
+> > > +	put_device(gd->driverfs_dev);
+> > > +}
+> > > +
+> > > +void genhd_media_change_notify(struct gendisk *disk)
+> > > +{
+> > > +	get_device(disk->driverfs_dev);
+> > > +	schedule_work(&disk->async_notify);
+> > > +}
+> > > +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
+> > > +
+> > >  struct gendisk *alloc_disk(int minors)
+> > >  {
+> > >  	return alloc_disk_node(minors, -1);
+> > > @@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
+> > >  		kobj_set_kset_s(disk,block_subsys);
+> > >  		kobject_init(&disk->kobj);
+> > >  		rand_initialize_disk(disk);
+> > > +		INIT_WORK(&disk->async_notify,
+> > > +			media_change_notify_thread);
+> > >  	}
+> > >  	return disk;
+> > 
+> > Why does this do a schedule_work() rather than calling kobject_uevent_env()
+> > directly?
+> > 
+> 
+> Because it is called at Interrupt time.
 
-This will break all our management applications, and will not allow us =
-to manipulate the array configurations from within Linux. This will als=
-o break online expansion of capacity.
+It better not be ... there's two GFP_KERNEL allocations just above this
+line in the file.
 
-This flag has been set from the beginning to allow partition tables, ca=
-pacity and device locking to be changed without requiring an intervenin=
-g reboot or needing the device to be taken offline. Fixed disk result i=
-n these pieces of information being cached.
+James
 
-Sincerely -- Mark Salyzyn
 
------Original Message-----
-=46rom: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-owner@vger.=
-kernel.org] On Behalf Of Hannes Reinecke
-Sent: Wednesday, May 23, 2007 8:51 AM
-To: Salyzyn, Mark
-Cc: SCSI Mailing List
-Subject: [PATCH] Un-remove aacraid devices
-
-Hi Mark,
-
-for some weird reason the aacraid driver insists on presenting all disk=
-s
-as 'removable' devices. This is gross hackery and causes userspace tool=
-s
-to not identify these devices as fixed disks, which most evidently they=
- are.
-
-Please apply.
-
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
