@@ -1,77 +1,50 @@
-From: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
-Subject: RE: Sg_ses question
-Date: Wed, 23 May 2007 20:29:11 -0000
-Message-ID: <861B5CF71BC70C478DFEB9EAFE98F699023A9532@G3W0068.americas.hpqcorp.net>
-References: <861B5CF71BC70C478DFEB9EAFE98F6990233CAA7@G3W0068.americas.hpqcorp.net> <4653529B.9080100@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: akpm@linux-foundation.org
+Subject: [patch 06/25] drivers/scsi/wd33c93.c: cleanups
+Date: Wed, 23 May 2007 14:41:38 -0700
+Message-ID: <200705232141.l4NLfdmE001174@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:50701 "EHLO
-	ccerelbas01.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756044AbXEWU3R convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 16:29:17 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4653529B.9080100@torque.net>
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:37247 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756053AbXEWVvc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 May 2007 17:51:32 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Douglas Gilbert
-> Sent: Tuesday, May 22, 2007 1:29 PM
-> To: Haefliger, Juerg
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: Sg_ses question
-> 
-> Haefliger, Juerg wrote:
-> > Hi,
-> > 
-> > Not sure if this is the right list for my question but I 
-> couldn't find 
-> > a more suitable place to ask it.
-> > 
-> > I'm trying to set the locator light of a disk in a SAS 
-> enclosure using 
-> > sg_ses but I'm not getting anywhere. I'm dumping the 
-> enclosure status 
-> > diagnostic page using 'sg_ses --page=2 --raw /dev/sgXX > page' and 
-> > then set the SELECT and RQST IDENT bits of the array device 
-> element in 
-> > question and write it back doing 'sg_ses --control --page=2 
-> --data=- 
-> > /dev/sgXX < tmp'. The command completes without error but 
-> > unfortunately, nothing happens. When I read the page back, 
-> the IDENT 
-> > bit is still cleared and the light on the enclosure remains 
-> turned off.
-> > 
-> > Am I doing something wrong or am I missing something? Can't I use 
-> > sg_ses to achieve this?
-> 
-> The procedure looks correct. I haven't had any (other) 
-> reports of sg_ses not working lately. The only suggestion I 
-> can make is to ask if you have selected the element control 
-> rather than the overall control.
+From: Adrian Bunk <bunk@stusta.de>
 
-Hmm... Just tried it again and now it works. I don't think I did
-something different than before...
+- #include <asm/irq.h> for getting the prototypes of {dis,en}able_irq()
 
-Thanks
-...juerg
+- make the needlessly global wd33c93_setup() static
 
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/wd33c93.c |    4 +++-
+ 1 files changed, 3 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/wd33c93.c~drivers-scsi-wd33c93c-cleanups drivers/scsi/wd33c93.c
+--- a/drivers/scsi/wd33c93.c~drivers-scsi-wd33c93c-cleanups
++++ a/drivers/scsi/wd33c93.c
+@@ -89,6 +89,8 @@
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_host.h>
  
-> Doug Gilbert
-> 
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe 
-> linux-scsi" in the body of a message to 
-> majordomo@vger.kernel.org More majordomo info at  
-> http://vger.kernel.org/majordomo-info.html
-> 
++#include <asm/irq.h>
++
+ #include "wd33c93.h"
+ 
+ #define optimum_sx_per(hostdata) (hostdata)->sx_table[1].period_ns
+@@ -1762,7 +1764,7 @@ static char setup_buffer[SETUP_BUFFER_SI
+ static char setup_used[MAX_SETUP_ARGS];
+ static int done_setup = 0;
+ 
+-int
++static int
+ wd33c93_setup(char *str)
+ {
+ 	int i;
+_
