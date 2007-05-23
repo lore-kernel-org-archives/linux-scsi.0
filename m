@@ -1,49 +1,105 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
-Date: Wed, 23 May 2007 10:18:14 -0500
-Message-ID: <1179933494.3700.16.camel@mulgrave.il.steeleye.com>
-References: <20070521151525.GA581@suse.de>
-	 <Pine.LNX.4.64.0705221443030.16285@schroedinger.engr.sgi.com>
-	 <6d6a94c50705221941y63f4db7bj174a2265d9eaa61a@mail.gmail.com>
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: [patch 14/28] scsi: fix CONFIG_SCSI_WAIT_SCAN=m
+Date: Wed, 23 May 2007 16:40:47 +0100 (BST)
+Message-ID: <Pine.LNX.4.64.0705231637070.31958@blonde.wat.veritas.com>
+References: <200705110600.l4B60vwX008157@shell0.pdx.osdl.net>
+ <Pine.LNX.4.64.0705111313190.3350@blonde.wat.veritas.com>
+ <Pine.LNX.4.64.0705181610030.24071@blonde.wat.veritas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:34132 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756366AbXEWPSR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 11:18:17 -0400
-In-Reply-To: <6d6a94c50705221941y63f4db7bj174a2265d9eaa61a@mail.gmail.com>
+Received: from extu-mxob-1.symantec.com ([216.10.194.28]:39375 "EHLO
+	extu-mxob-1.symantec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756408AbXEWPlJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 11:41:09 -0400
+In-Reply-To: <Pine.LNX.4.64.0705181610030.24071@blonde.wat.veritas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Aubrey Li <aubreylee@gmail.com>
-Cc: Christoph Lameter <clameter@sgi.com>, Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: michal.k.k.piotrowski@gmail.com, matthew@wil.cx, akpm@linux-foundation.org, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org
 
-On Wed, 2007-05-23 at 10:41 +0800, Aubrey Li wrote:
-> On 5/23/07, Christoph Lameter <clameter@sgi.com> wrote:
-> > On Mon, 21 May 2007, Bernhard Walle wrote:
-> >
-> > > [PATCH] [scsi] Remove __GFP_DMA
-> > >
-> > > After 821de3a27bf33f11ec878562577c586cd5f83c64, it's not necessary to alloate a
-> > > DMA buffer any more in sd.c.
-> > >
-> > > Signed-off-by: Bernhard Walle <bwalle@suse.de>
-> >
-> > Great that avoids a DMA kmalloc slab. Any other GFP_DMAs left in the scsi
-> > layer?
-> >
-> > Acked-by: Christoph Lameter <clameter@sgi.com>
+Regression still outstanding: ping?
+
+On Fri, 18 May 2007, Hugh Dickins wrote:
+> On Fri, 11 May 2007, Hugh Dickins wrote:
+> > On Thu, 10 May 2007, akpm@linux-foundation.org wrote:
+> > > From: Hugh Dickins <hugh@veritas.com>
+> > > 
+> > > CONFIG_MODULES=y
+> > > CONFIG_SCSI=y
+> > > CONFIG_SCSI_SCAN_ASYNC=y
+> > > CONFIG_SCSI_WAIT_SCAN=m
+> > > 
+> > > 2.6.21-rc5-mm2 VFS panics unable to find my root on /dev/sda2, but boots
+> > > okay if I change drivers/scsi/Kconfig to "default y" instead of "default m"
+> > > for SCSI_WAIT_SCAN.
+> > > 
+> > > Make sure there's a late_initcall to scsi_complete_async_scans when it's
+> > > built in, so a monolithic SCSI_SCAN_ASYNC kernel can rely on the scans
+> > > being completed before trying to mount root, even if they're slow.
+> > 
+> > Thanks for sending this through to James again, Andrew.
+> > I'd been gearing up to report it to the regression police:
+> > it's certainly still a problem in 2.6.21-git.
 > 
-> Yes, here is another patch
-
-I'll defer to Mark on this one.  However, please remember that you can't
-just blindly remove GFP_DMA ... there are some cards which require it.
-
-Aacraid is one example ... it has a set of cards that can only DMA to 31
-bits.  For them, the GFP_DMA is necessary:  The allocation in question
-is a scatterlist, which must be within the device DMA mask.
-
-James
-
-
+> And still a problem in 2.6.22-rc1-git7.
+> 
+> Any further news on this regression since 2.6.21?  I was hoping that
+> a fix for 2.6.22-rc2 would emerge in the course of the "Asynchronous
+> scsi scanning" thread, but that doesn't appear to be heading in any
+> useful direction.
+> 
+> It wouldn't be a problem for me to undo my CONFIG_SCSI_SCAN_ASYNC=y,
+> but it would still be a little regressive.
+> 
+> I thought a late_initcall was guaranteed to be called after
+> all the potential-root scsi scans had been started; but admit I'm
+> ignorant of both initcall sequencing and scsi probing.  Would a
+> late_initcall_sync or a rootfs_initcall be more to the point?
+> 
+> But ignore my gropings, I'd rather be testing what you believe
+> to be the right fix.
+> 
+> Thanks,
+> Hugh
+> 
+> > 
+> > > 
+> > > [akpm@linux-foundation.org: build fixes]
+> > > Signed-off-by: Hugh Dickins <hugh@veritas.com>
+> > > Cc: James Bottomley <James.Bottomley@steeleye.com>
+> > > ---
+> > > James sayeth "This isn't the right fix ...  this has to be invoked last in the
+> > > call sequence ...  I can't see another way of doing this except yet another
+> > > file added as a final component to the link."
+> > 
+> > I didn't reply to James' mail at the time, hoping "the right fix" was
+> > about to follow.  I don't see what's wrong with the late_initcall myself.
+> > 
+> > Hugh
+> > 
+> > > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> > > ---
+> > > 
+> > >  drivers/scsi/scsi_scan.c |    9 +++++++++
+> > >  1 file changed, 9 insertions(+)
+> > > 
+> > > diff -puN drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m drivers/scsi/scsi_scan.c
+> > > --- a/drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m
+> > > +++ a/drivers/scsi/scsi_scan.c
+> > > @@ -184,6 +184,15 @@ int scsi_complete_async_scans(void)
+> > >  /* Only exported for the benefit of scsi_wait_scan */
+> > >  EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
+> > >  
+> > > +#ifndef MODULE
+> > > +/*
+> > > + * For async scanning we need to wait for all the scans to complete before
+> > > + * trying to mount the root fs.  Otherwise non-modular drivers may not be ready
+> > > + * yet.
+> > > + */
+> > > +late_initcall(scsi_complete_async_scans);
+> > > +#endif
+> > > +
+> > >  /**
+> > >   * scsi_unlock_floptical - unlock device via a special MODE SENSE command
+> > >   * @sdev:	scsi device to send command to
