@@ -1,48 +1,69 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Wed, 23 May 2007 14:45:42 +0400
-Message-ID: <46541B56.7000501@vlnb.net>
-References: <463B72F6.3000207@torque.net> <20070506053629P.fujita.tomonori@lab.ntt.co.jp> <463F36AC.3010207@vlnb.net> <20070507182837E.fujita.tomonori@lab.ntt.co.jp> <20070522195656.GD5758@austin.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Un-remove aacraid devices
+Date: Wed, 23 May 2007 14:50:53 +0200
+Message-ID: <465438AD.8000406@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------040301030908070305000405"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:34476 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758267AbXEWKpv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 06:45:51 -0400
-In-Reply-To: <20070522195656.GD5758@austin.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:37140 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754497AbXEWMuz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 May 2007 08:50:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Jennings <rcj@linux.vnet.ibm.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, santil@us.ibm.com, stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Robert Jennings wrote:
->>>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
->>>>SCSI commands from one lld and send them to another lld instead of
->>>>sending them to user space.
->>>
->>>Although the approach of passing SCSI commands from a target LLD to an
->>>initiator one without any significant interventions from the target
->>>software looks to be nice and simple, you should realize how limited,
->>>unsafe and illegal it is, since it badly violates SCSI specs.
->>
->>I think that 'implemented cleanly' means that one scsi_host is assigned
->>to only one initiator.
-> 
-> Vladislav listed a number of issues that are inherent in an implementation
-> that does not have a 1:1 relationship of initiators to targets.  The vscsi
-> architecture defines the 1:1 relationship; it's imposible to have more
-> than one initiator per target.
+This is a multi-part message in MIME format.
+--------------040301030908070305000405
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-Just few small notes:
+Hi Mark,
 
-1. As I already wrote, complete 1:1 relationship isn't practically 
-possible, because there is always a local access on the target (i.e. one 
-more initiator) and you can't disable it on practice.
+for some weird reason the aacraid driver insists on presenting all disks
+as 'removable' devices. This is gross hackery and causes userspace tools
+to not identify these devices as fixed disks, which most evidently they are.
 
-2. 1:1 relationship is a serious limitation for usage cases like an SPI 
-tape library serving backup for several servers on an FC net.
+Please apply.
 
-Vlad
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
+
+--------------040301030908070305000405
+Content-Type: text/plain;
+ name="aacraid-unremove-disks"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="aacraid-unremove-disks"
+
+Make aacraid devices fixed
+
+For some reason the aacraid driver insists on making all devices removable.
+This causes userspace tools to not identifying aacraid disks as fixed disks.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 1e82c69..24275d8 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1843,9 +1843,6 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
+ 			} while ((offset += len) < scsicmd->cmnd[13]);
+ 		}
+ 
+-		/* Do not cache partition table for arrays */
+-		scsicmd->device->removable = 1;
+-
+ 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
+ 		scsicmd->scsi_done(scsicmd);
+ 
+
+--------------040301030908070305000405--
