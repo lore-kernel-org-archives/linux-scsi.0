@@ -1,69 +1,36 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Un-remove aacraid devices
-Date: Wed, 23 May 2007 14:50:53 +0200
-Message-ID: <465438AD.8000406@suse.de>
+From: "jidong xiao" <jidong.xiao@gmail.com>
+Subject: [Stgt-devel] Question about the basic concept of SCSI layer and Block layer
+Date: Wed, 23 May 2007 21:55:09 +0800
+Message-ID: <4104961b0705230655j32ae30f9p78b7f7d906a92a92@mail.gmail.com>
+References: <4104961b0705230653y26d0f6f9k92c56d6d913b5d8f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------040301030908070305000405"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37140 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754497AbXEWMuz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 08:50:55 -0400
+Received: from ug-out-1314.google.com ([66.249.92.171]:30386 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756019AbXEWNzL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 09:55:11 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so523805ugf
+        for <linux-scsi@vger.kernel.org>; Wed, 23 May 2007 06:55:10 -0700 (PDT)
+In-Reply-To: <4104961b0705230653y26d0f6f9k92c56d6d913b5d8f@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: stgt-devel@lists.berlios.de, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------040301030908070305000405
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+Hi,All,
+  I have a question, what's the relationship between SCSI layer and
+Block layer?I remember initially there are three types of device
+drivers, say, char device driver, block device driver, network device
+driver, so there is a directory "drivers/block",but recent years,most
+part of the code for block devices have been moved out of the
+directory drivers/block, but there is still a block I/O layer, so I am
+wondering what's the relationship between Block layer and other
+subsystem, like how to connect block layer and filesystem(VFS or the
+actually file system), how to bridge it with scsi layer, for example,
+the scsi disk driver, sd.o. Who can please kindly explain this for me,
+thank you very much!
 
-Hi Mark,
-
-for some weird reason the aacraid driver insists on presenting all disks
-as 'removable' devices. This is gross hackery and causes userspace tools
-to not identify these devices as fixed disks, which most evidently they are.
-
-Please apply.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------040301030908070305000405
-Content-Type: text/plain;
- name="aacraid-unremove-disks"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="aacraid-unremove-disks"
-
-Make aacraid devices fixed
-
-For some reason the aacraid driver insists on making all devices removable.
-This causes userspace tools to not identifying aacraid disks as fixed disks.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 1e82c69..24275d8 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1843,9 +1843,6 @@ int aac_scsi_cmd(struct scsi_cmnd * scsi
- 			} while ((offset += len) < scsicmd->cmnd[13]);
- 		}
- 
--		/* Do not cache partition table for arrays */
--		scsicmd->device->removable = 1;
--
- 		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
- 		scsicmd->scsi_done(scsicmd);
- 
-
---------------040301030908070305000405--
+Best Regards
+Jason
