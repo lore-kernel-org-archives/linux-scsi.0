@@ -1,60 +1,77 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: SMART support for SATA drives in SAS enclosures
-Date: Wed, 23 May 2007 15:49:23 -0400
-Message-ID: <46549AC3.4090105@torque.net>
-References: <46488711.9020903@macroscoop.nl>
-Reply-To: dougg@torque.net
+From: "Haefliger, Juerg" <Juerg.Haefliger@hp.com>
+Subject: RE: Sg_ses question
+Date: Wed, 23 May 2007 20:29:11 -0000
+Message-ID: <861B5CF71BC70C478DFEB9EAFE98F699023A9532@G3W0068.americas.hpqcorp.net>
+References: <861B5CF71BC70C478DFEB9EAFE98F6990233CAA7@G3W0068.americas.hpqcorp.net> <4653529B.9080100@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:50096 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755459AbXEWTye (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 15:54:34 -0400
-In-Reply-To: <46488711.9020903@macroscoop.nl>
+Received: from ccerelbas01.cce.hp.com ([161.114.21.104]:50701 "EHLO
+	ccerelbas01.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756044AbXEWU3R convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 16:29:17 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <4653529B.9080100@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+To: dougg@torque.net
 Cc: linux-scsi@vger.kernel.org
 
-Pim Zandbergen wrote:
-> Is SMART support available for SATA drives in SAS enclosures?
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Douglas Gilbert
+> Sent: Tuesday, May 22, 2007 1:29 PM
+> To: Haefliger, Juerg
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: Sg_ses question
 > 
-> I'm testing this setup
+> Haefliger, Juerg wrote:
+> > Hi,
+> > 
+> > Not sure if this is the right list for my question but I 
+> couldn't find 
+> > a more suitable place to ask it.
+> > 
+> > I'm trying to set the locator light of a disk in a SAS 
+> enclosure using 
+> > sg_ses but I'm not getting anywhere. I'm dumping the 
+> enclosure status 
+> > diagnostic page using 'sg_ses --page=2 --raw /dev/sgXX > page' and 
+> > then set the SELECT and RQST IDENT bits of the array device 
+> element in 
+> > question and write it back doing 'sg_ses --control --page=2 
+> --data=- 
+> > /dev/sgXX < tmp'. The command completes without error but 
+> > unfortunately, nothing happens. When I read the page back, 
+> the IDENT 
+> > bit is still cleared and the light on the enclosure remains 
+> turned off.
+> > 
+> > Am I doing something wrong or am I missing something? Can't I use 
+> > sg_ses to achieve this?
 > 
-> LSI Logic SAS3800X PCI-X SAS controller (mptsas driver)
-> Promise V-Trak J300S SAS/SATA enclosure/expander
-> 12x Seagate ST3500630NS
-> Linux kernel 2.6.21.1 x86_64
-> smartmontools-5.37-1.1.fc6 from Fedora Core 6
+> The procedure looks correct. I haven't had any (other) 
+> reports of sg_ses not working lately. The only suggestion I 
+> can make is to ask if you have selected the element control 
+> rather than the overall control.
+
+Hmm... Just tried it again and now it works. I don't think I did
+something different than before...
+
+Thanks
+...juerg
+
+ 
+> Doug Gilbert
 > 
-> "smartctl -i -d sat /dev/sdc" gives me
 > 
-> Smartctl: Device Read Identity Failed
-
-I presume /dev/sdc is an actual disk rather than a
-RAID device made up of several disks. The SAT standard
-(and smartmontools) don't have a general way of
-addressing individual disks behind RAID infrastructure.
-
-For recent versions of smartmontools version 5.37 and
-MPT Fusion SAS HBAs this should work if /dev/sdc is
-a SATA disk. Your HBA may need a firmware upgrade.
-
-
-You might fetch sg3_utils version 1.24 and try:
-  sg_sat_identify /dev/sdc
-That needs to work before smartctl has a hope.
-
-> Same with "-d ata".
 > 
-> If I treat the disk as SCSI ("-d scsi"), the command
-> will not fail, but wil only retrieve the serial number.
-
-With MPT Fusion SAS hardware (that I have seen) the SAT
-layer is in the HBA firmware. Only later versions of the
-firmware support the SCSI ATA PASS-THROUGH command.
-
-Doug Gilbert
-
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in the body of a message to 
+> majordomo@vger.kernel.org More majordomo info at  
+> http://vger.kernel.org/majordomo-info.html
+> 
