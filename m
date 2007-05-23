@@ -1,95 +1,95 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] Un-remove aacraid devices
-Date: Wed, 23 May 2007 13:56:56 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B91@otce2k301.adaptec.com>
-References: <465438AD.8000406@suse.de> <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B5C@otce2k301.adaptec.com> <1179940022.5569.7.camel@mulgrave.il.steeleye.com> <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B78@otce2k301.adaptec.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 5/7] genhd: send async notification on media change
+Date: Wed, 23 May 2007 11:26:43 -0700
+Message-ID: <20070523112643.955e1426.kristen.c.accardi@intel.com>
+References: <20070510072247.063476979@intel.com>
+	<20070509163835.56ad28e0.kristen.c.accardi@intel.com>
+	<20070522141211.fe00333f.akpm@linux-foundation.org>
+	<20070523093119.e3a58fcc.kristen.c.accardi@intel.com>
+	<1179939835.5569.3.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:53466 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755580AbXEWR5A convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 13:57:00 -0400
-Content-class: urn:content-classes:message
-In-reply-to: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B78@otce2k301.adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762832AbXEWSab@vger.kernel.org>
+In-Reply-To: <1179939835.5569.3.camel@mulgrave.il.steeleye.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Another note, the old old aacraid driver used to report removable device
-in the inquiry. We found we could mitigate the devices report somewhat
-by reporting a fixed dfisk inquiry, but turning on the removable bit for
-the scsi device after the scan but before attachment by setting this in
-the read capacity call. This hack showed the applications that we were a
-fixed disk, but the OS responded as if we were a removable.
+On Wed, 23 May 2007 12:03:55 -0500
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-Hannes, which user space tools are having troubles with the removable
-device designation?
-
--- Mark
-
------Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-Sent: Wednesday, May 23, 2007 1:17 PM
-To: James Bottomley
-Cc: Hannes Reinecke; SCSI Mailing List
-Subject: RE: [PATCH] Un-remove aacraid devices
-
-The applications may issue the start of an expansion, but then
-disappear. The Firmware is responsible for completing the job with the
-help of the driver. We issue a scsi_rescan_device when the job is
-completed, removable bit set turns off the capacity & partition table
-caching.
-
-We would need a similar exported kernel interface for the aacraid driver
-to call after we receive the scan requests via the event (AIF) stream
-from the Firmware. I can not propose adding a flag to
-scsi_rescan_device, as that would change an interface, so a new call
-scsi_rescan_device_blkrrpart?
-
-We have external RAID enclosures that report they are removable devices
-so that they may also transition through expansion. It is merely half a
-lie; it does indicate that the media can change ;-}
-
--- Mark
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Wednesday, May 23, 2007 1:07 PM
-To: Salyzyn, Mark
-Cc: Hannes Reinecke; SCSI Mailing List
-Subject: RE: [PATCH] Un-remove aacraid devices
-
-On Wed, 2007-05-23 at 12:35 -0400, Salyzyn, Mark wrote:
-> NAK
+> On Wed, 2007-05-23 at 09:31 -0700, Kristen Carlson Accardi wrote:
+> > On Tue, 22 May 2007 14:12:11 -0700
+> > Andrew Morton <akpm@linux-foundation.org> wrote:
+> > 
+> > > On Wed, 9 May 2007 16:38:35 -0700
+> > > Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
+> > > 
+> > > > Send an uevent to user space to indicate that a media change event has occurred.
+> > > > 
+> > > > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > > > 
+> > > > Index: 2.6-git/block/genhd.c
+> > > > ===================================================================
+> > > > --- 2.6-git.orig/block/genhd.c
+> > > > +++ 2.6-git/block/genhd.c
+> > > > @@ -643,6 +643,27 @@ struct seq_operations diskstats_op = {
+> > > >  	.show	= diskstats_show
+> > > >  };
+> > > >  
+> > > > +static void media_change_notify_thread(struct work_struct *work)
+> > > > +{
+> > > > +	struct gendisk *gd = container_of(work, struct gendisk, async_notify);
+> > > > +	char event[] = "MEDIA_CHANGE=1";
+> > > > +	char *envp[] = { event, NULL };
+> > > > +
+> > > > +	/*
+> > > > +	 * set enviroment vars to indicate which event this is for
+> > > > +	 * so that user space will know to go check the media status.
+> > > > +	 */
+> > > > +	kobject_uevent_env(&gd->kobj, KOBJ_CHANGE, envp);
+> > > > +	put_device(gd->driverfs_dev);
+> > > > +}
+> > > > +
+> > > > +void genhd_media_change_notify(struct gendisk *disk)
+> > > > +{
+> > > > +	get_device(disk->driverfs_dev);
+> > > > +	schedule_work(&disk->async_notify);
+> > > > +}
+> > > > +EXPORT_SYMBOL_GPL(genhd_media_change_notify);
+> > > > +
+> > > >  struct gendisk *alloc_disk(int minors)
+> > > >  {
+> > > >  	return alloc_disk_node(minors, -1);
+> > > > @@ -672,6 +693,8 @@ struct gendisk *alloc_disk_node(int mino
+> > > >  		kobj_set_kset_s(disk,block_subsys);
+> > > >  		kobject_init(&disk->kobj);
+> > > >  		rand_initialize_disk(disk);
+> > > > +		INIT_WORK(&disk->async_notify,
+> > > > +			media_change_notify_thread);
+> > > >  	}
+> > > >  	return disk;
+> > > 
+> > > Why does this do a schedule_work() rather than calling kobject_uevent_env()
+> > > directly?
+> > > 
+> > 
+> > Because it is called at Interrupt time.
 > 
-> This will break all our management applications, and will not allow us
-to manipulate the array configurations from within Linux. This will also
-break online expansion of capacity.
+> It better not be ... there's two GFP_KERNEL allocations just above this
+> line in the file.
 > 
-> This flag has been set from the beginning to allow partition tables,
-capacity and device locking to be changed without requiring an
-intervening reboot or needing the device to be taken offline. Fixed disk
-result in these pieces of information being cached.
+> James
+> 
 
-I thought this problem had been solved since at least 2000 (when
-LifeKeeper ran into the same issue) by sending the BLKRRPART ioctl to
-the device ... whether removable or not, this forces a reread of all the
-vital information (always providing nothing has the nodes open, of
-course, we can't physically yank the information out of applications
-using it).
+Where?  We are talking about the call to genhd_media_change_notify().
+the calling path is this:
+ahci_host_intr()->ata_scsi_media_change_notify()->genhd_media_change_notify().
 
-If there's something BLKRRPART isn't doing we can probably fix it ...
-that's certainly better than lying to the kernel about the devices.
+I don't see the allocations - are they hidden somewhere?
 
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+thanks,
+Kristen
+ 
