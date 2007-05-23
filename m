@@ -1,68 +1,96 @@
 From: akpm@linux-foundation.org
-Subject: [patch 10/25] fdomain.c: get rid of unused stuff
-Date: Wed, 23 May 2007 14:41:41 -0700
-Message-ID: <200705232141.l4NLffAD001188@shell0.pdx.osdl.net>
+Subject: [patch 07/25] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
+Date: Wed, 23 May 2007 14:41:39 -0700
+Message-ID: <200705232141.l4NLfd1N001178@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:37247 "EHLO
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:58189 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758098AbXEWVvc (ORCPT
+	by vger.kernel.org with ESMTP id S1755560AbXEWVvl (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 17:51:32 -0400
+	Wed, 23 May 2007 17:51:41 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, parag.warudkar@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
 
-From: Parag Warudkar <parag.warudkar@gmail.com>
+From: Martin Bligh <mbligh@google.com>
 
-fdomain.c uses the below stuff only if PCMCIA is not defined.  This causes
-unused variables to be defined when PCMCIA is not defined.  Wrap variables
-and functions around #ifndef PCMCIA appropriately to avoid this.
+Fix up compiler warnings in megaraid driver
 
-4 less compiler warnings.
-
-Signed-off-by: Parag Warudkar <parag.warudkar@gmail.com>
+[akpm@osdl.org: build fix]
+Signed-off-by: Martin J. Bligh <mbligh@google.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/fdomain.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid.c |   22 +++++++++++++---------
+ 1 files changed, 13 insertions(+), 9 deletions(-)
 
-diff -puN drivers/scsi/fdomain.c~fdomainc-get-rid-of-unused-stuff drivers/scsi/fdomain.c
---- a/drivers/scsi/fdomain.c~fdomainc-get-rid-of-unused-stuff
-+++ a/drivers/scsi/fdomain.c
-@@ -410,6 +410,7 @@ static irqreturn_t       do_fdomain_16x0
- static char * fdomain = NULL;
- module_param(fdomain, charp, 0);
+diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
+--- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
++++ a/drivers/scsi/megaraid.c
+@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
+ module_param(max_mbox_busy_wait, ushort, 0);
+ MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
  
-+#ifndef PCMCIA
- static unsigned long addresses[] = {
-    0xc8000,
-    0xca000,
-@@ -502,6 +503,7 @@ static struct signature {
- };
+-#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
+-#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
+-#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
+-#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
++#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x20)
++#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
++							(adapter)->base + 0x2C)
++#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x20)
++#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
++							(adapter)->base + 0x2C)
  
- #define SIGNATURE_COUNT ARRAY_SIZE(signatures)
-+#endif /* ifndef PCMCIA */
+ /*
+  * Global variables
+@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			/*
+ 			 * The user passthru structure
+ 			 */
+-			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
++			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
  
- static void print_banner( struct Scsi_Host *shpnt )
- {
-@@ -646,7 +648,7 @@ static int fdomain_test_loopback( void )
-    Sometimes it is possible to use the computer's BIOS setup screen to
-    configure a PCI system so that one of these IRQs will be used by the
-    Future Domain card. */
--
-+#ifndef PCMCIA
- static int fdomain_get_irq( int base )
- {
-    int options = inb(base + Configuration1);
-@@ -664,6 +666,7 @@ static int fdomain_get_irq( int base )
-    	return 0;
-    return ints[(options & 0x0e) >> 1];
- }
-+#endif
+ 			/*
+ 			 * Copy in the user passthru here.
+@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 					goto freemem_and_return;
+@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
+ 			 * Is data going up-stream
+ 			 */
+ 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							pthru->dataxferlen) ) {
+ 					rval = (-EFAULT);
+ 				}
+@@ -3702,7 +3706,7 @@ freemem_and_return:
+ 				/*
+ 				 * Get the user data
+ 				 */
+-				if( copy_from_user(data, (char __user *)uxferaddr,
++				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
+ 							uioc.xferlen) ) {
  
- static int fdomain_isa_detect( int *irq, int *iobase )
- {
+ 					pci_free_consistent(pdev,
+@@ -3742,7 +3746,7 @@ freemem_and_return:
+ 			 * Is data going up-stream
+ 			 */
+ 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
+-				if( copy_to_user((char __user *)uxferaddr, data,
++				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
+ 							uioc.xferlen) ) {
+ 
+ 					rval = (-EFAULT);
 _
