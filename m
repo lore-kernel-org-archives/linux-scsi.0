@@ -1,96 +1,89 @@
 From: akpm@linux-foundation.org
-Subject: [patch 07/25] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
-Date: Wed, 23 May 2007 14:41:39 -0700
-Message-ID: <200705232141.l4NLfd1N001178@shell0.pdx.osdl.net>
+Subject: [patch 01/25] drivers/scsi/: small cleanups
+Date: Wed, 23 May 2007 14:41:34 -0700
+Message-ID: <200705232141.l4NLfZgU001155@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from smtp1.linux-foundation.org ([207.189.120.13]:58189 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755560AbXEWVvl (ORCPT
+	by vger.kernel.org with ESMTP id S1756005AbXEWVvk (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 17:51:41 -0400
+	Wed, 23 May 2007 17:51:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mbligh@google.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
 
-From: Martin Bligh <mbligh@google.com>
+From: Adrian Bunk <bunk@stusta.de>
 
-Fix up compiler warnings in megaraid driver
+This patch contains the following cleanups:
+- make needlessly global functions static
+- every file should #include the headers containing the prototypes for
+  it's global functions
 
-[akpm@osdl.org: build fix]
-Signed-off-by: Martin J. Bligh <mbligh@google.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid.c |   22 +++++++++++++---------
- 1 files changed, 13 insertions(+), 9 deletions(-)
+ drivers/scsi/scsi_sysctl.c       |    1 +
+ drivers/scsi/scsi_sysfs.c        |    3 ++-
+ drivers/scsi/scsi_transport_fc.c |    2 +-
+ drivers/scsi/sr.c                |    2 +-
+ 4 files changed, 5 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver drivers/scsi/megaraid.c
---- a/drivers/scsi/megaraid.c~scsi-cover-up-bugs-fix-up-compiler-warnings-in-megaraid-driver
-+++ a/drivers/scsi/megaraid.c
-@@ -73,10 +73,14 @@ static unsigned short int max_mbox_busy_
- module_param(max_mbox_busy_wait, ushort, 0);
- MODULE_PARM_DESC(max_mbox_busy_wait, "Maximum wait for mailbox in microseconds if busy (default=MBOX_BUSY_WAIT=10)");
+diff -puN drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysctl.c
+--- a/drivers/scsi/scsi_sysctl.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysctl.c
+@@ -9,6 +9,7 @@
+ #include <linux/sysctl.h>
  
--#define RDINDOOR(adapter)	readl((adapter)->mmio_base + 0x20)
--#define RDOUTDOOR(adapter)	readl((adapter)->mmio_base + 0x2C)
--#define WRINDOOR(adapter,value)	 writel(value, (adapter)->mmio_base + 0x20)
--#define WROUTDOOR(adapter,value) writel(value, (adapter)->mmio_base + 0x2C)
-+#define RDINDOOR(adapter)		readl((volatile void __iomem *) \
-+							(adapter)->base + 0x20)
-+#define RDOUTDOOR(adapter)		readl((volatile void __iomem *) \
-+							(adapter)->base + 0x2C)
-+#define WRINDOOR(adapter,value)		writel(value, (volatile void __iomem *)\
-+							(adapter)->base + 0x20)
-+#define WROUTDOOR(adapter,value)	writel(value, (volatile void __iomem *)\
-+							(adapter)->base + 0x2C)
+ #include "scsi_logging.h"
++#include "scsi_priv.h"
  
- /*
-  * Global variables
-@@ -3571,7 +3575,7 @@ megadev_ioctl(struct inode *inode, struc
- 			/*
- 			 * The user passthru structure
- 			 */
--			upthru = (mega_passthru __user *)MBOX(uioc)->xferaddr;
-+			upthru = (mega_passthru __user *)(unsigned long)MBOX(uioc)->xferaddr;
  
- 			/*
- 			 * Copy in the user passthru here.
-@@ -3623,7 +3627,7 @@ megadev_ioctl(struct inode *inode, struc
- 				/*
- 				 * Get the user data
- 				 */
--				if( copy_from_user(data, (char __user *)uxferaddr,
-+				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
- 							pthru->dataxferlen) ) {
- 					rval = (-EFAULT);
- 					goto freemem_and_return;
-@@ -3649,7 +3653,7 @@ megadev_ioctl(struct inode *inode, struc
- 			 * Is data going up-stream
- 			 */
- 			if( pthru->dataxferlen && (uioc.flags & UIOC_RD) ) {
--				if( copy_to_user((char __user *)uxferaddr, data,
-+				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
- 							pthru->dataxferlen) ) {
- 					rval = (-EFAULT);
- 				}
-@@ -3702,7 +3706,7 @@ freemem_and_return:
- 				/*
- 				 * Get the user data
- 				 */
--				if( copy_from_user(data, (char __user *)uxferaddr,
-+				if( copy_from_user(data, (char __user *)(unsigned long) uxferaddr,
- 							uioc.xferlen) ) {
+ static ctl_table scsi_table[] = {
+diff -puN drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups drivers/scsi/scsi_sysfs.c
+--- a/drivers/scsi/scsi_sysfs.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_sysfs.c
+@@ -16,6 +16,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_transport.h>
++#include <scsi/scsi_driver.h>
  
- 					pci_free_consistent(pdev,
-@@ -3742,7 +3746,7 @@ freemem_and_return:
- 			 * Is data going up-stream
- 			 */
- 			if( uioc.xferlen && (uioc.flags & UIOC_RD) ) {
--				if( copy_to_user((char __user *)uxferaddr, data,
-+				if( copy_to_user((char __user *)(unsigned long) uxferaddr, data,
- 							uioc.xferlen) ) {
+ #include "scsi_priv.h"
+ #include "scsi_logging.h"
+@@ -803,7 +804,7 @@ void scsi_remove_device(struct scsi_devi
+ }
+ EXPORT_SYMBOL(scsi_remove_device);
  
- 					rval = (-EFAULT);
+-void __scsi_remove_target(struct scsi_target *starget)
++static void __scsi_remove_target(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+ 	unsigned long flags;
+diff -puN drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups drivers/scsi/scsi_transport_fc.c
+--- a/drivers/scsi/scsi_transport_fc.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/scsi_transport_fc.c
+@@ -2367,7 +2367,7 @@ fc_rport_final_delete(struct work_struct
+  * Notes:
+  *	This routine assumes no locks are held on entry.
+  **/
+-struct fc_rport *
++static struct fc_rport *
+ fc_rport_create(struct Scsi_Host *shost, int channel,
+ 	struct fc_rport_identifiers  *ids)
+ {
+diff -puN drivers/scsi/sr.c~drivers-scsi-small-cleanups drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~drivers-scsi-small-cleanups
++++ a/drivers/scsi/sr.c
+@@ -175,7 +175,7 @@ static void scsi_cd_put(struct scsi_cd *
+  * an inode for that to work, and we do not always have one.
+  */
+ 
+-int sr_media_change(struct cdrom_device_info *cdi, int slot)
++static int sr_media_change(struct cdrom_device_info *cdi, int slot)
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
 _
