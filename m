@@ -1,23 +1,43 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Subject: RE: [PATCH] Un-remove aacraid devices
-Date: Wed, 23 May 2007 13:17:03 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B78@otce2k301.adaptec.com>
-References: <465438AD.8000406@suse.de> <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B5C@otce2k301.adaptec.com> <1179940022.5569.7.camel@mulgrave.il.steeleye.com>
+Date: Wed, 23 May 2007 13:56:56 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B91@otce2k301.adaptec.com>
+References: <465438AD.8000406@suse.de> <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B5C@otce2k301.adaptec.com> <1179940022.5569.7.camel@mulgrave.il.steeleye.com> <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B78@otce2k301.adaptec.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:52252 "EHLO
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:53466 "EHLO
 	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757580AbXEWRRJ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 13:17:09 -0400
+	with ESMTP id S1755580AbXEWR5A convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 13:57:00 -0400
 Content-class: urn:content-classes:message
-In-reply-to: <1179940022.5569.7.camel@mulgrave.il.steeleye.com>
+In-reply-to: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1B78@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
+
+Another note, the old old aacraid driver used to report removable device
+in the inquiry. We found we could mitigate the devices report somewhat
+by reporting a fixed dfisk inquiry, but turning on the removable bit for
+the scsi device after the scan but before attachment by setting this in
+the read capacity call. This hack showed the applications that we were a
+fixed disk, but the OS responded as if we were a removable.
+
+Hannes, which user space tools are having troubles with the removable
+device designation?
+
+-- Mark
+
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
+Sent: Wednesday, May 23, 2007 1:17 PM
+To: James Bottomley
+Cc: Hannes Reinecke; SCSI Mailing List
+Subject: RE: [PATCH] Un-remove aacraid devices
 
 The applications may issue the start of an expansion, but then
 disappear. The Firmware is responsible for completing the job with the
@@ -69,3 +89,7 @@ that's certainly better than lying to the kernel about the devices.
 James
 
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
