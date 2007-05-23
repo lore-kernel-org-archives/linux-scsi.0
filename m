@@ -1,48 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 05/25] sym53c8xx_2 claims cpqarray device
-Date: Wed, 23 May 2007 14:41:38 -0700
-Message-ID: <200705232141.l4NLfcHi001171@shell0.pdx.osdl.net>
+Subject: [patch 09/25] SCSI: Fix obvious typo "spin_lock_irqrestore()" in gdth.c
+Date: Wed, 23 May 2007 14:41:40 -0700
+Message-ID: <200705232141.l4NLff7b001185@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from smtp1.linux-foundation.org ([207.189.120.13]:60230 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757872AbXEWVvt (ORCPT
+	by vger.kernel.org with ESMTP id S1758228AbXEWVvs (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 17:51:49 -0400
+	Wed, 23 May 2007 17:51:48 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, coldwell@redhat.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com, achim_leubner@adaptec.com
 
-From: Chip Coldwell <coldwell@redhat.com>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-Apropos this thread
+Fix misspelled "spin_lock_irqrestore" to read "spin_unlock_irqrestore"
+instead.
 
-http://marc.theaimsgroup.com/?l=linux-scsi&m=115591706804045&w=2
+Presumably, GDTH_RTC doesn't get used a lot.
 
-which led to this patch
-
-http://www.kernel.org/git/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=b2b3c121076961333977f485f0d54c22121df920
-
-do we not also need the following patch, nine lines lower in the same file?
-
-Signed-off-by: Chip Coldwell <coldwell@redhat.com>
-Cc: Matthew Wilcox <willy@debian.org>
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Cc: <achim_leubner@adaptec.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |    2 +-
+ drivers/scsi/gdth.c |    2 +-
  1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym53c8xx_2-claims-cpqarray-device
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -2094,7 +2094,7 @@ static struct pci_device_id sym2_id_tabl
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C875,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_NCR_53C1510,
--	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL }, /* new */
-+	  PCI_ANY_ID, PCI_ANY_ID,  PCI_CLASS_STORAGE_SCSI<<8,  0xffff00, 0UL }, /* new */
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C895A,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0UL },
- 	{ PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_53C875A,
+diff -puN drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~scsi-fix-obvious-typo-spin_lock_irqrestore-in-gdthc
++++ a/drivers/scsi/gdth.c
+@@ -1955,7 +1955,7 @@ static int __init gdth_search_drives(int
+         for (j = 0; j < 12; ++j) 
+             rtc[j] = CMOS_READ(j);
+     } while (rtc[0] != CMOS_READ(0));
+-    spin_lock_irqrestore(&rtc_lock, flags);
++    spin_unlock_irqrestore(&rtc_lock, flags);
+     TRACE2(("gdth_search_drives(): RTC: %x/%x/%x\n",*(ulong32 *)&rtc[0],
+             *(ulong32 *)&rtc[4], *(ulong32 *)&rtc[8]));
+     /* 3. send to controller firmware */
 _
