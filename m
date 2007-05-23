@@ -1,80 +1,113 @@
 From: akpm@linux-foundation.org
-Subject: [patch 22/25] Use menuconfig objects II - SCSI
-Date: Wed, 23 May 2007 14:41:53 -0700
-Message-ID: <200705232141.l4NLfraq001234@shell0.pdx.osdl.net>
+Subject: [patch 13/25] PCI Error Recovery: Symbios SCSI First Failure
+Date: Wed, 23 May 2007 14:41:44 -0700
+Message-ID: <200705232141.l4NLfiBh001199@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:40495 "EHLO
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:39784 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1757050AbXEWWEO (ORCPT
+	by vger.kernel.org with ESMTP id S1757128AbXEWWEQ (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 18:04:14 -0400
+	Wed, 23 May 2007 18:04:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jengelh@linux01.gwdg.de, jengelh@gmx.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linas@austin.ibm.com, willy@debian.org
 
-From: Jan Engelhardt <jengelh@linux01.gwdg.de>
+From: Linas Vepstas <linas@austin.ibm.com>
 
-Make a "menuconfig" out of the Kconfig objects "menu, ..., endmenu",
-so that the user can disable all the options in that menu at once
-instead of having to disable each option separately.
+Implement the so-called "first failure data capture" (FFDC) for the symbios
+PCI error recovery.  After a PCI error event is reported, the driver
+requests that MMIO be enabled.  Once enabled, it then reads and dumps
+assorted status registers, and concludes by requesting the usual reset
+sequence.
 
-Signed-off-by: Jan Engelhardt <jengelh@gmx.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+(includes a whitespace fix for bad indentation).
+
+Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
+Cc: Matthew Wilcox <willy@debian.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/Kconfig        |    8 ++++++--
- drivers/scsi/pcmcia/Kconfig |    8 ++++++--
- 2 files changed, 12 insertions(+), 4 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |   15 +++++++++++++++
+ drivers/scsi/sym53c8xx_2/sym_glue.h |    1 +
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |   18 ++++++++++++++----
+ 3 files changed, 30 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/Kconfig~use-menuconfig-objects-ii-scsi drivers/scsi/Kconfig
---- a/drivers/scsi/Kconfig~use-menuconfig-objects-ii-scsi
-+++ a/drivers/scsi/Kconfig
-@@ -285,8 +285,12 @@ source "drivers/scsi/libsas/Kconfig"
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-first-failure
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -1987,6 +1987,20 @@ static pci_ers_result_t sym2_io_error_de
+ 	disable_irq(pdev->irq);
+ 	pci_disable_device(pdev);
  
- endmenu
- 
--menu "SCSI low-level drivers"
-+menuconfig SCSI_LOWLEVEL
-+	bool "SCSI low-level drivers"
- 	depends on SCSI!=n
-+	default y
++	/* Request that MMIO be enabled, so register dump can be taken. */
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
 +
-+if SCSI_LOWLEVEL
- 
- config ISCSI_TCP
- 	tristate "iSCSI Initiator over TCP/IP"
-@@ -1803,7 +1807,7 @@ config SCSI_SRP
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called libsrp.
- 
--endmenu
-+endif # SCSI_LOWLEVEL
- 
- source "drivers/scsi/pcmcia/Kconfig"
- 
-diff -puN drivers/scsi/pcmcia/Kconfig~use-menuconfig-objects-ii-scsi drivers/scsi/pcmcia/Kconfig
---- a/drivers/scsi/pcmcia/Kconfig~use-menuconfig-objects-ii-scsi
-+++ a/drivers/scsi/pcmcia/Kconfig
-@@ -2,8 +2,12 @@
- # PCMCIA SCSI adapter configuration
- #
- 
--menu "PCMCIA SCSI adapter support"
-+menuconfig SCSI_LOWLEVEL_PCMCIA
-+	bool "PCMCIA SCSI adapter support"
- 	depends on SCSI!=n && PCMCIA!=n
-+	default y
++/**
++ * sym2_io_slot_dump -- Enable MMIO and dump debug registers
++ * @pdev: pointer to PCI device
++ */
++static pci_ers_result_t sym2_io_slot_dump(struct pci_dev *pdev)
++{
++	struct sym_hcb *np = pci_get_drvdata(pdev);
 +
-+if SCSI_LOWLEVEL_PCMCIA
++	sym_dump_registers(np);
++
+ 	/* Request a slot reset. */
+ 	return PCI_ERS_RESULT_NEED_RESET;
+ }
+@@ -2241,6 +2255,7 @@ MODULE_DEVICE_TABLE(pci, sym2_id_table);
  
- config PCMCIA_AHA152X
- 	tristate "Adaptec AHA152X PCMCIA support"
-@@ -77,4 +81,4 @@ config PCMCIA_SYM53C500
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called sym53c500_cs.
+ static struct pci_error_handlers sym2_err_handler = {
+ 	.error_detected = sym2_io_error_detected,
++	.mmio_enabled = sym2_io_slot_dump,
+ 	.slot_reset = sym2_io_slot_reset,
+ 	.resume = sym2_io_resume,
+ };
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_glue.h
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-first-failure
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
+@@ -270,5 +270,6 @@ void sym_xpt_async_bus_reset(struct sym_
+ void sym_xpt_async_sent_bdr(struct sym_hcb *np, int target);
+ int  sym_setup_data_and_start (struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
+ void sym_log_bus_error(struct sym_hcb *np);
++void sym_dump_registers(struct sym_hcb *np);
  
--endmenu
-+endif # SCSI_LOWLEVEL_PCMCIA
+ #endif /* SYM_GLUE_H */
+diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-first-failure
++++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -1180,10 +1180,10 @@ static void sym_log_hard_error(struct sy
+ 			scr_to_cpu((int) *(u32 *)(script_base + script_ofs)));
+ 	}
+ 
+-        printf ("%s: regdump:", sym_name(np));
+-        for (i=0; i<24;i++)
+-            printf (" %02x", (unsigned)INB_OFF(np, i));
+-        printf (".\n");
++	printf("%s: regdump:", sym_name(np));
++	for (i = 0; i < 24; i++)
++		printf(" %02x", (unsigned)INB_OFF(np, i));
++	printf(".\n");
+ 
+ 	/*
+ 	 *  PCI BUS error.
+@@ -1192,6 +1192,16 @@ static void sym_log_hard_error(struct sy
+ 		sym_log_bus_error(np);
+ }
+ 
++void sym_dump_registers(struct sym_hcb *np)
++{
++	u_short sist;
++	u_char dstat;
++
++	sist = INW(np, nc_sist);
++	dstat = INB(np, nc_dstat);
++	sym_log_hard_error(np, sist, dstat);
++}
++
+ static struct sym_chip sym_dev_table[] = {
+  {PCI_DEVICE_ID_NCR_53C810, 0x0f, "810", 4, 8, 4, 64,
+  FE_ERL}
 _
