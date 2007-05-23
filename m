@@ -1,39 +1,63 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/25] make seagate_st0x_detect() static
-Date: Wed, 23 May 2007 14:41:40 -0700
-Message-ID: <200705232141.l4NLferd001182@shell0.pdx.osdl.net>
+Subject: [patch 11/25] scsi: fix CONFIG_SCSI_WAIT_SCAN=m
+Date: Wed, 23 May 2007 14:41:42 -0700
+Message-ID: <200705232141.l4NLfgfF001193@shell0.pdx.osdl.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:41488 "EHLO
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:60237 "EHLO
 	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756649AbXEWWDu (ORCPT
+	by vger.kernel.org with ESMTP id S1756769AbXEWWDw (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 May 2007 18:03:50 -0400
+	Wed, 23 May 2007 18:03:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hugh@veritas.com
 
-From: Adrian Bunk <bunk@stusta.de>
+From: Hugh Dickins <hugh@veritas.com>
 
-seagate_st0x_detect() can become static.
+CONFIG_MODULES=y
+CONFIG_SCSI=y
+CONFIG_SCSI_SCAN_ASYNC=y
+CONFIG_SCSI_WAIT_SCAN=m
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+2.6.21-rc5-mm2 VFS panics unable to find my root on /dev/sda2, but boots
+okay if I change drivers/scsi/Kconfig to "default y" instead of "default m"
+for SCSI_WAIT_SCAN.
+
+Make sure there's a late_initcall to scsi_complete_async_scans when it's
+built in, so a monolithic SCSI_SCAN_ASYNC kernel can rely on the scans
+being completed before trying to mount root, even if they're slow.
+
+[akpm@linux-foundation.org: build fixes]
+Signed-off-by: Hugh Dickins <hugh@veritas.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+---
+James sayeth "This isn't the right fix ...  this has to be invoked last in the
+call sequence ...  I can't see another way of doing this except yet another
+file added as a final component to the link."
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/seagate.c |    2 +-
- 1 files changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_scan.c |    9 +++++++++
+ 1 files changed, 9 insertions(+)
 
-diff -puN drivers/scsi/seagate.c~make-seagate_st0x_detect-static drivers/scsi/seagate.c
---- a/drivers/scsi/seagate.c~make-seagate_st0x_detect-static
-+++ a/drivers/scsi/seagate.c
-@@ -420,7 +420,7 @@ static inline void borken_wait (void)
- #define ULOOP( i ) for (clock = i*8;;)
- #define TIMEOUT (!(clock--))
+diff -puN drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m drivers/scsi/scsi_scan.c
+--- a/drivers/scsi/scsi_scan.c~scsi-fix-config_scsi_wait_scan=m
++++ a/drivers/scsi/scsi_scan.c
+@@ -184,6 +184,15 @@ int scsi_complete_async_scans(void)
+ /* Only exported for the benefit of scsi_wait_scan */
+ EXPORT_SYMBOL_GPL(scsi_complete_async_scans);
  
--int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
-+static int __init seagate_st0x_detect (struct scsi_host_template * tpnt)
- {
- 	struct Scsi_Host *instance;
- 	int i, j;
++#ifndef MODULE
++/*
++ * For async scanning we need to wait for all the scans to complete before
++ * trying to mount the root fs.  Otherwise non-modular drivers may not be ready
++ * yet.
++ */
++late_initcall(scsi_complete_async_scans);
++#endif
++
+ /**
+  * scsi_unlock_floptical - unlock device via a special MODE SENSE command
+  * @sdev:	scsi device to send command to
 _
