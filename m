@@ -1,54 +1,74 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] [scsi] Remove __GFP_DMA
-Date: Thu, 24 May 2007 12:26:45 -0500
-Message-ID: <1180027605.3692.51.camel@mulgrave.il.steeleye.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1CAA@otce2k301.adaptec.com>
-	 <1180018752.3692.16.camel@mulgrave.il.steeleye.com>
-	 <Pine.LNX.4.64.0705240959310.28086@schroedinger.engr.sgi.com>
-	 <1180026917.3692.47.camel@mulgrave.il.steeleye.com>
-	 <Pine.LNX.4.64.0705241020040.29126@schroedinger.engr.sgi.com>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: Re: [Stgt-devel] Question for pass-through target design
+Date: Thu, 24 May 2007 14:01:36 -0500
+Message-ID: <20070524190136.GA13684@austin.ibm.com>
+References: <463B72F6.3000207@torque.net> <20070506053629P.fujita.tomonori@lab.ntt.co.jp> <463F36AC.3010207@vlnb.net> <20070507182837E.fujita.tomonori@lab.ntt.co.jp> <20070522195656.GD5758@austin.ibm.com> <46541B56.7000501@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:58885 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750698AbXEXR0r (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 13:26:47 -0400
-In-Reply-To: <Pine.LNX.4.64.0705241020040.29126@schroedinger.engr.sgi.com>
+Received: from e2.ny.us.ibm.com ([32.97.182.142]:36910 "EHLO e2.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750811AbXEXTBh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 May 2007 15:01:37 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4OJ1aFV004346
+	for <linux-scsi@vger.kernel.org>; Thu, 24 May 2007 15:01:36 -0400
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4OJ1aVo535922
+	for <linux-scsi@vger.kernel.org>; Thu, 24 May 2007 15:01:37 -0400
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4OJ1ZoN022231
+	for <linux-scsi@vger.kernel.org>; Thu, 24 May 2007 15:01:36 -0400
+Content-Disposition: inline
+In-Reply-To: <46541B56.7000501@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Lameter <clameter@sgi.com>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Aubrey Li <aubreylee@gmail.com>, Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Alan Cox <alan@lxorguk.ukuu.org.uk>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Thu, 2007-05-24 at 10:22 -0700, Christoph Lameter wrote:
-> On Thu, 24 May 2007, James Bottomley wrote:
+* Vladislav Bolkhovitin (vst@vlnb.net) wrote:
+> Robert Jennings wrote:
+> >>>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
+> >>>>SCSI commands from one lld and send them to another lld instead of
+> >>>>sending them to user space.
+> >>>
+> >>>Although the approach of passing SCSI commands from a target LLD to an
+> >>>initiator one without any significant interventions from the target
+> >>>software looks to be nice and simple, you should realize how limited,
+> >>>unsafe and illegal it is, since it badly violates SCSI specs.
+> >>
+> >>I think that 'implemented cleanly' means that one scsi_host is assigned
+> >>to only one initiator.
+> >
+> >Vladislav listed a number of issues that are inherent in an implementation
+> >that does not have a 1:1 relationship of initiators to targets.  The vscsi
+> >architecture defines the 1:1 relationship; it's imposible to have more
+> >than one initiator per target.
 > 
-> > The idea was basically to match an allocation to a device mask.  I was
-> > going to do a generic implementation (which would probably kmalloc,
-> > check the physaddr and fall back to GFP_DMA if we were unlucky) but
-> > allow the architectures to override.
+> Just few small notes:
 > 
-> Hmmmm... We could actually implement something like it in the slab 
-> allocators. The mask parameter would lead the allocator to check if the 
-> objects are in a satisfactory range. If not it could examine its partial 
-> lists for slabs that satisfy the range. If that does not work then it 
-> would eventually go to the page allocator to ask for a page in a fitting 
-> range.
-> 
-> That wont be fast though. How performance sensitive are the allocations?
+> 1. As I already wrote, complete 1:1 relationship isn't practically 
+> possible, because there is always a local access on the target (i.e. one 
+> more initiator) and you can't disable it on practice.
 
-Most of them aren't very.  They're usually things that are set at driver
-intialisation time (shared mailbox memory etc).
+I was proposing a 1:1 relationship of initiator to target within the
+target framework for in-kernel pass-through.  We would still have the
+case that local access on the target is possible; an administrator with
+privileges neccessary to create a target would have the responsibility
+to not then access the device locally.  
 
-If the allocation is performance sensitive and has to be done at command
-or ioctl submission time, we tend to feed the consistent or mapped
-memory into a dma pool which pre allocates and solves the performance
-issue.
+This is no different than if I create my root file system on /dev/sda1,
+I should not also 'dd' data to /dev/sda1 while the system is running.
+It's a bad idea, but nothing stops me; however this is something that
+only a root level user can do.  This would be the same, these targets in
+pass-through have permissions by default that do not allow local access
+by non-root users.
 
-In the aacraid case, the mbox is done at ioctl time, but isn't
-incredibly performance sensitive.
+> 2. 1:1 relationship is a serious limitation for usage cases like an SPI 
+> tape library serving backup for several servers on an FC net.
 
-James
+Restricting the relationship to 1:1 would be for pass-through devices
+only, this would not necessarily dictate other target types which could
+be used for such cases.
 
-
+--Rob
