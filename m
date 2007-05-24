@@ -1,109 +1,53 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: [PATCH 5/8] qla4xxx: Resubmission: update rev num and misc cleanup
-Date: Wed, 23 May 2007 18:14:34 -0700
-Message-ID: <1179969274.16099.27.camel@iscsi-sles10>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 02/25] drivers/scsi/advansys.c: cleanups
+Date: Wed, 23 May 2007 20:22:07 -0500
+Message-ID: <1179969727.5569.69.camel@mulgrave.il.steeleye.com>
+References: <200705232141.l4NLfZ1x001158@shell0.pdx.osdl.net>
+	 <1179962491.5569.62.camel@mulgrave.il.steeleye.com>
+	 <20070523163359.3c71f44e.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:7599 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757251AbXEXBPg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 21:15:36 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:50140 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755709AbXEXBWK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 21:22:10 -0400
+In-Reply-To: <20070523163359.3c71f44e.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, David Somayajulu <david.somayajulu@qlogic.com>, David Wagner <david.wagner@qlogic.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, bunk@stusta.de
 
-Clean up and update version number
+On Wed, 2007-05-23 at 16:33 -0700, Andrew Morton wrote:
+> On Wed, 23 May 2007 18:21:31 -0500
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> 
+> > On Wed, 2007-05-23 at 14:41 -0700, akpm@linux-foundation.org wrote:
+> > > From: Adrian Bunk <bunk@stusta.de>
+> > > 
+> > > - remove the unneeded advansys.h
+> > > - remove the unused advansys_setup()
+> > 
+> > This isn't quite right, though, is it?  advansys_setup() should be used.
+> > 
+> > It looks like there was a bogus conversion away from init/main.c which
+> > left the function dangling.  Isn't the correct thing to do to wire it up
+> > in advansys_detect() which is where it should have been in the first
+> > place.
+> > 
+> 
+> Even going back to linux-2.4.2 I can find no caller to advansys_setup(). 
+> Or was its call buried in the magical template macros?
 
-Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+If I remember rightly, the bootsetups[] array was a 2.0 thing it became
+kernel_param in 2.1.75.  It was gone by 2.4.0, so this removal thing
+must have been in the 2.3 timeframe.
 
- drivers/scsi/qla4xxx/ql4_glbl.h    |    7 ++++++-
- drivers/scsi/qla4xxx/ql4_iocb.c    |    8 ++++++--
- drivers/scsi/qla4xxx/ql4_nvram.c   |    3 +++
- drivers/scsi/qla4xxx/ql4_version.h |    3 ++-
- 4 files changed, 17 insertions(+), 4 deletions(-)
+Still ... it can be put back .. it looks basically sound.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
-index 5b00cb0..a3608e0 100644
---- a/drivers/scsi/qla4xxx/ql4_glbl.h
-+++ b/drivers/scsi/qla4xxx/ql4_glbl.h
-@@ -8,6 +8,9 @@
- #ifndef __QLA4x_GBL_H
- #define	__QLA4x_GBL_H
- 
-+struct iscsi_cls_conn;
-+
-+void qla4xxx_hw_reset(struct scsi_qla_host *ha);
- int ql4xxx_lock_drvr_wait(struct scsi_qla_host *a);
- int qla4xxx_send_tgts(struct scsi_qla_host *ha, char *ip, uint16_t port);
- int qla4xxx_send_command_to_isp(struct scsi_qla_host *ha, struct srb * srb);
-@@ -58,11 +61,13 @@ int qla4xxx_get_fw_version(struct scsi_q
- void qla4xxx_interrupt_service_routine(struct scsi_qla_host * ha,
- 				       uint32_t intr_status);
- int qla4xxx_init_rings(struct scsi_qla_host * ha);
--struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha, uint32_t index);
-+struct srb * qla4xxx_del_from_active_array(struct scsi_qla_host *ha,
-+					uint32_t index);
- void qla4xxx_srb_compl(struct scsi_qla_host *ha, struct srb *srb);
- int qla4xxx_reinitialize_ddb_list(struct scsi_qla_host * ha);
- int qla4xxx_process_ddb_changed(struct scsi_qla_host * ha,
- 				uint32_t fw_ddb_index, uint32_t state);
-+void qla4xxx_dump_buffer(void *b, uint32_t size);
- 
- extern int ql4xextended_error_logging;
- extern int ql4xdiscoverywait;
-diff --git a/drivers/scsi/qla4xxx/ql4_iocb.c b/drivers/scsi/qla4xxx/ql4_iocb.c
-index a216a17..6e3c8c8 100644
---- a/drivers/scsi/qla4xxx/ql4_iocb.c
-+++ b/drivers/scsi/qla4xxx/ql4_iocb.c
-@@ -6,6 +6,10 @@
-  */
- 
- #include "ql4_def.h"
-+#include "ql4_glbl.h"
-+#include "ql4_dbg.h"
-+#include "ql4_inline.h"
-+
- 
- #include <scsi/scsi_tcq.h>
- 
-@@ -243,8 +247,8 @@ int qla4xxx_send_command_to_isp(struct s
- 		dma_addr_t	req_dma;
- 
- 		req_dma = pci_map_single(ha->pdev, cmd->request_buffer,
--					 cmd->request_bufflen,
--					 cmd->sc_data_direction);
-+				 cmd->request_bufflen,
-+				 cmd->sc_data_direction);
- 		if (dma_mapping_error(req_dma))
- 			goto queuing_error;
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_nvram.c b/drivers/scsi/qla4xxx/ql4_nvram.c
-index 58afd13..7fe0482 100644
---- a/drivers/scsi/qla4xxx/ql4_nvram.c
-+++ b/drivers/scsi/qla4xxx/ql4_nvram.c
-@@ -6,6 +6,9 @@
-  */
- 
- #include "ql4_def.h"
-+#include "ql4_glbl.h"
-+#include "ql4_dbg.h"
-+#include "ql4_inline.h"
- 
- static inline void eeprom_cmd(uint32_t cmd, struct scsi_qla_host *ha)
- {
-diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
-index e5183a6..2149069 100644
---- a/drivers/scsi/qla4xxx/ql4_version.h
-+++ b/drivers/scsi/qla4xxx/ql4_version.h
-@@ -5,4 +5,5 @@
-  * See LICENSE.qla4xxx for copyright and licensing details.
-  */
- 
--#define QLA4XXX_DRIVER_VERSION	"5.00.07-k1"
-+#define QLA4XXX_DRIVER_VERSION	"5.01.00-k7"
-+
+James
+
+
+
 
