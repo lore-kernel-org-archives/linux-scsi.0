@@ -1,40 +1,57 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 0/8] qla4xxx: Resubmission of patches to add IPv6
-	support etc
-Date: Thu, 24 May 2007 11:19:28 -0500
-Message-ID: <1180023568.3692.39.camel@mulgrave.il.steeleye.com>
-References: <1179967558.15215.16.camel@iscsi-sles10>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH v2] add bidi support for block pc requests
+Date: Thu, 24 May 2007 19:37:06 +0300
+Message-ID: <4655BF32.2020403@panasas.com>
+References: <20070517054811.GV23798@kernel.dk>	<20070517145958P.fujita.tomonori@lab.ntt.co.jp>	<464C1721.8030009@panasas.com> <20070517201243E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:34147 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750731AbXEXQTb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 12:19:31 -0400
-In-Reply-To: <1179967558.15215.16.camel@iscsi-sles10>
+Received: from gw-e.panasas.com ([65.194.124.178]:40768 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750728AbXEXQiT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 12:38:19 -0400
+In-Reply-To: <20070517201243E.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com
+Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
-On Wed, 2007-05-23 at 17:45 -0700, David C Somayajulu wrote:
-> This series of patches is a resubmission of the previous patch under the title "[RFC] [PATCH]  qla4xxx: Updated add IPv6 and misc support bugfixes cleanup" as set of smaller patches per Mike Christie's advice/feedback. They contain the following:
-> 1. Support for IPv6 and QLA4032.
-> 2. Bug fixes and clean up to confirm to linux coding style.
+FUJITA Tomonori wrote:
+>> FUJITA Tomonori wrote:
+> 
+> One thing that I found is:
+> 
+> +#define scsi_resid(cmd) ((cmd)->sg_table->resid)
+> 
+> 
+> This doesn't work for some drivers (at least ipr) since they set
+> cmd->resid even with commands without data transfer.
+> 
 
-Just so you know ... I consider a patch labelled [RFC] for discussion
-only ... i.e. it's not submitted for inclusion into a branch.
+James, Tomo.
 
-Additionally, if you have to add the Resubmission: piece to the subject,
-do it in the initial square brackets like
+the last accessor:
++#define scsi_resid(cmd) ((cmd)->resid)
 
-[PATCH 6/8, RESUBMISSION (for the fifteenth time)] qla4xxx: ql4_isr.c support for new mbx cmds
+used as an l-value in drivers does not serve our purpose, as seen by the test
+implementation of scsi_sg_table. Now clearly this needs an accessor and it is a
+bidi parameter (need 2 of them).
 
-That way I don't have to edit the subject line of everything.
+I would suggest doing a set_ inline accessor and using that in drivers:
++static inline void scsi_set_resid(struct scsi_cmnd *cmd, resid)
++{
++	cmd->resid = resid;
++}
 
-Thanks,
+I would even suggest to make all accessors inlines and not macros just to make sure
+they are not used as l-value and modified. Though I have not seen such use in
+Tomo's patchset.
 
-James
+example:
++static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
++{
++	return cmd->request_bufflen;
++}
 
-
+Boaz
