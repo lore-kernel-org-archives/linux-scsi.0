@@ -1,34 +1,51 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 14/25] SCSI: use irq_handler_t where appropriate
-Date: Thu, 24 May 2007 01:51:19 -0400
-Message-ID: <465527D7.6030909@garzik.org>
-References: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>	 <4654BB27.6050706@garzik.org> <1179960902.5569.48.camel@mulgrave.il.steeleye.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch 02/25] drivers/scsi/advansys.c: cleanups
+Date: Thu, 24 May 2007 10:48:59 +0100
+Message-ID: <20070524094859.GA28305@infradead.org>
+References: <200705232141.l4NLfZ1x001158@shell0.pdx.osdl.net> <1179962491.5569.62.camel@mulgrave.il.steeleye.com> <20070523163359.3c71f44e.akpm@linux-foundation.org> <1179969727.5569.69.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40882 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757213AbXEXFv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 May 2007 01:51:26 -0400
-In-Reply-To: <1179960902.5569.48.camel@mulgrave.il.steeleye.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35297 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755490AbXEXJtD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 05:49:03 -0400
+Content-Disposition: inline
+In-Reply-To: <1179969727.5569.69.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bunk@stusta.de
 
-James Bottomley wrote:
-> It's not a bug fix or even an enhancement.  Historically, it is quite
-> difficult to get maintainers to ack these ... particularly if you don't
-> cc them.
+On Wed, May 23, 2007 at 08:22:07PM -0500, James Bottomley wrote:
+> On Wed, 2007-05-23 at 16:33 -0700, Andrew Morton wrote:
+> > On Wed, 23 May 2007 18:21:31 -0500
+> > James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> > 
+> > > On Wed, 2007-05-23 at 14:41 -0700, akpm@linux-foundation.org wrote:
+> > > > From: Adrian Bunk <bunk@stusta.de>
+> > > > 
+> > > > - remove the unneeded advansys.h
+> > > > - remove the unused advansys_setup()
+> > > 
+> > > This isn't quite right, though, is it?  advansys_setup() should be used.
+> > > 
+> > > It looks like there was a bogus conversion away from init/main.c which
+> > > left the function dangling.  Isn't the correct thing to do to wire it up
+> > > in advansys_detect() which is where it should have been in the first
+> > > place.
+> > > 
+> > 
+> > Even going back to linux-2.4.2 I can find no caller to advansys_setup(). 
+> > Or was its call buried in the magical template macros?
+> 
+> If I remember rightly, the bootsetups[] array was a 2.0 thing it became
+> kernel_param in 2.1.75.  It was gone by 2.4.0, so this removal thing
+> must have been in the 2.3 timeframe.
+> 
+> Still ... it can be put back .. it looks basically sound.
 
-If neither you nor the maintainers are reading and responding to patches 
-sent to linux-scsi, I don't think the problem is sitting in my chair.
-
-If others have SCSI patches that have been sitting in limbo for weeks or 
-months, send them to me, and I'll queue them in misc-2.6.git#scsi.
-
-	Jeff
-
-
-
+I don't think we should put it back, obviously no ones has missed
+it for te last 10 years.  If we really want boot paramaters for
+advansys it should be using module_param, not a 10 year old legacy
+interface.
