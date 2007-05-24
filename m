@@ -1,53 +1,50 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 02/25] drivers/scsi/advansys.c: cleanups
-Date: Wed, 23 May 2007 20:22:07 -0500
-Message-ID: <1179969727.5569.69.camel@mulgrave.il.steeleye.com>
-References: <200705232141.l4NLfZ1x001158@shell0.pdx.osdl.net>
-	 <1179962491.5569.62.camel@mulgrave.il.steeleye.com>
-	 <20070523163359.3c71f44e.akpm@linux-foundation.org>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
+Date: Wed, 23 May 2007 23:28:50 -0600
+Message-ID: <46552292.3090207@shaw.ca>
+References: <fa.6bUV4KR+za7HW4tT2WBlccqvoq0@ifi.uio.no>
+ <fa.NYl60pD1cwd1ESdKNCPaOwSz1WA@ifi.uio.no>
+ <fa.hW9tQQfgwmXj0gAKQoWXOxVzpvk@ifi.uio.no>
+ <fa.xLFpJ54sTvGq6YIol2Ew31Rrq2s@ifi.uio.no>
+ <fa.JZsPKKyEKOAfxp6reMY5ZwSNjQU@ifi.uio.no>
+ <fa.txrEcCPLxIukzeVBv7UG39WubcI@ifi.uio.no>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50140 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755709AbXEXBWK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 May 2007 21:22:10 -0400
-In-Reply-To: <20070523163359.3c71f44e.akpm@linux-foundation.org>
+Received: from shawidc-mo1.cg.shawcable.net ([24.71.223.10]:42384 "EHLO
+	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758447AbXEXF2x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 01:28:53 -0400
+In-reply-to: <fa.txrEcCPLxIukzeVBv7UG39WubcI@ifi.uio.no>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, bunk@stusta.de
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, Aubrey Li <aubreylee@gmail.com>, Christoph Lameter <clameter@sgi.com>, Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 
-On Wed, 2007-05-23 at 16:33 -0700, Andrew Morton wrote:
-> On Wed, 23 May 2007 18:21:31 -0500
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+Alan Cox wrote:
+> On Wed, 23 May 2007 15:17:08 -0400
+> "Salyzyn, Mark" <mark_salyzyn@adaptec.com> wrote:
 > 
-> > On Wed, 2007-05-23 at 14:41 -0700, akpm@linux-foundation.org wrote:
-> > > From: Adrian Bunk <bunk@stusta.de>
-> > > 
-> > > - remove the unneeded advansys.h
-> > > - remove the unused advansys_setup()
-> > 
-> > This isn't quite right, though, is it?  advansys_setup() should be used.
-> > 
-> > It looks like there was a bogus conversion away from init/main.c which
-> > left the function dangling.  Isn't the correct thing to do to wire it up
-> > in advansys_detect() which is where it should have been in the first
-> > place.
-> > 
+>> The 31 bit limit for some of these cards is a problem, we currently only
+>> do __GFP_DMA for bounce buffer sg elements allocated for user supplied
+>> references in ioctls.
+>>
+>> I figure we should be using pci_alloc_consistent calls for these
+>> allocations to more accurately acquire memory within the 31 bit limit if
+>> necessary, we could switch to these to remove the need for the __GFP_DMA
+>> flag in the aacraid driver?
 > 
-> Even going back to linux-2.4.2 I can find no caller to advansys_setup(). 
-> Or was its call buried in the magical template macros?
+> That didn't used to work right on the AMD boards when I tried it last as
+> we ended up with a buffer that was mapped by the IOMMU for some reason
+> and that was not below 2GB.
 
-If I remember rightly, the bootsetups[] array was a 2.0 thing it became
-kernel_param in 2.1.75.  It was gone by 2.4.0, so this removal thing
-must have been in the 2.3 timeframe.
+The physical address you mean? If that is still happening then it needs 
+to get fixed. The allocation should not succeed if it can't provide 
+memory that's inside the DMA mask for the device..
 
-Still ... it can be put back .. it looks basically sound.
-
-James
-
-
-
+-- 
+Robert Hancock      Saskatoon, SK, Canada
+To email, remove "nospam" from hancockr@nospamshaw.ca
+Home Page: http://www.roberthancock.com/
 
