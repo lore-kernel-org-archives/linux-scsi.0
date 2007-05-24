@@ -1,35 +1,78 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
-Date: Thu, 24 May 2007 11:08:27 +0100
-Message-ID: <20070524110827.65e49b78@the-village.bc.nu>
-References: <fa.6bUV4KR+za7HW4tT2WBlccqvoq0@ifi.uio.no>
-	<fa.NYl60pD1cwd1ESdKNCPaOwSz1WA@ifi.uio.no>
-	<fa.hW9tQQfgwmXj0gAKQoWXOxVzpvk@ifi.uio.no>
-	<fa.xLFpJ54sTvGq6YIol2Ew31Rrq2s@ifi.uio.no>
-	<fa.JZsPKKyEKOAfxp6reMY5ZwSNjQU@ifi.uio.no>
-	<fa.txrEcCPLxIukzeVBv7UG39WubcI@ifi.uio.no>
-	<46552292.3090207@shaw.ca>
+From: Pim Zandbergen <P.Zandbergen@macroscoop.nl>
+Subject: Re: SMART support for SATA drives in SAS enclosures
+Date: Thu, 24 May 2007 13:17:03 +0200
+Message-ID: <4655742F.8010202@macroscoop.nl>
+References: <46488711.9020903@macroscoop.nl> <46549AC3.4090105@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55358 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754768AbXEXKEA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 06:04:00 -0400
-In-Reply-To: <46552292.3090207@shaw.ca>
+Received: from mondriaan.macroscoop.nl ([82.94.9.2]:3948 "EHLO
+	mondriaan.macroscoop.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755519AbXEXLRN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 07:17:13 -0400
+In-Reply-To: <46549AC3.4090105@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Hancock <hancockr@shaw.ca>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, Aubrey Li <aubreylee@gmail.com>, Christoph Lameter <clameter@sgi.com>, Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: dougg@torque.net
+Cc: linux-scsi@vger.kernel.org
 
-> > That didn't used to work right on the AMD boards when I tried it last as
-> > we ended up with a buffer that was mapped by the IOMMU for some reason
-> > and that was not below 2GB.
-> 
-> The physical address you mean? If that is still happening then it needs 
-> to get fixed. The allocation should not succeed if it can't provide 
-> memory that's inside the DMA mask for the device..
+Doug,
 
-But the allocation can succeed - using GFP_DMA at least you can do it as
-you get memory below 2^24 you don't need to map via the IOMMU
+/dev/sdc is indeed a physical SATA disk.
+sg_sat_identify says: "ATA PASS-THROUGH (16) not supported"
+
+I'll look into a firmware update.
+
+Thanks,
+Pim
+
+
+
+Douglas Gilbert wrote:
+> Pim Zandbergen wrote:
+>   
+>> Is SMART support available for SATA drives in SAS enclosures?
+>>
+>> I'm testing this setup
+>>
+>> LSI Logic SAS3800X PCI-X SAS controller (mptsas driver)
+>> Promise V-Trak J300S SAS/SATA enclosure/expander
+>> 12x Seagate ST3500630NS
+>> Linux kernel 2.6.21.1 x86_64
+>> smartmontools-5.37-1.1.fc6 from Fedora Core 6
+>>
+>> "smartctl -i -d sat /dev/sdc" gives me
+>>
+>> Smartctl: Device Read Identity Failed
+>>     
+>
+> I presume /dev/sdc is an actual disk rather than a
+> RAID device made up of several disks. The SAT standard
+> (and smartmontools) don't have a general way of
+> addressing individual disks behind RAID infrastructure.
+>
+> For recent versions of smartmontools version 5.37 and
+> MPT Fusion SAS HBAs this should work if /dev/sdc is
+> a SATA disk. Your HBA may need a firmware upgrade.
+>
+>
+> You might fetch sg3_utils version 1.24 and try:
+>   sg_sat_identify /dev/sdc
+> That needs to work before smartctl has a hope.
+>
+>   
+>> Same with "-d ata".
+>>
+>> If I treat the disk as SCSI ("-d scsi"), the command
+>> will not fail, but wil only retrieve the serial number.
+>>     
+>
+> With MPT Fusion SAS hardware (that I have seen) the SAT
+> layer is in the HBA firmware. Only later versions of the
+> firmware support the SCSI ATA PASS-THROUGH command.
+>
+> Doug Gilbert
+>
+>   
+
