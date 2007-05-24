@@ -1,51 +1,35 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 02/25] drivers/scsi/advansys.c: cleanups
-Date: Thu, 24 May 2007 10:48:59 +0100
-Message-ID: <20070524094859.GA28305@infradead.org>
-References: <200705232141.l4NLfZ1x001158@shell0.pdx.osdl.net> <1179962491.5569.62.camel@mulgrave.il.steeleye.com> <20070523163359.3c71f44e.akpm@linux-foundation.org> <1179969727.5569.69.camel@mulgrave.il.steeleye.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] [scsi] Remove __GFP_DMA
+Date: Thu, 24 May 2007 11:08:27 +0100
+Message-ID: <20070524110827.65e49b78@the-village.bc.nu>
+References: <fa.6bUV4KR+za7HW4tT2WBlccqvoq0@ifi.uio.no>
+	<fa.NYl60pD1cwd1ESdKNCPaOwSz1WA@ifi.uio.no>
+	<fa.hW9tQQfgwmXj0gAKQoWXOxVzpvk@ifi.uio.no>
+	<fa.xLFpJ54sTvGq6YIol2Ew31Rrq2s@ifi.uio.no>
+	<fa.JZsPKKyEKOAfxp6reMY5ZwSNjQU@ifi.uio.no>
+	<fa.txrEcCPLxIukzeVBv7UG39WubcI@ifi.uio.no>
+	<46552292.3090207@shaw.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35297 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755490AbXEXJtD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 05:49:03 -0400
-Content-Disposition: inline
-In-Reply-To: <1179969727.5569.69.camel@mulgrave.il.steeleye.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55358 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754768AbXEXKEA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 06:04:00 -0400
+In-Reply-To: <46552292.3090207@shaw.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bunk@stusta.de
+To: Robert Hancock <hancockr@shaw.ca>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, Aubrey Li <aubreylee@gmail.com>, Christoph Lameter <clameter@sgi.com>, Bernhard Walle <bwalle@suse.de>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 
-On Wed, May 23, 2007 at 08:22:07PM -0500, James Bottomley wrote:
-> On Wed, 2007-05-23 at 16:33 -0700, Andrew Morton wrote:
-> > On Wed, 23 May 2007 18:21:31 -0500
-> > James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> > 
-> > > On Wed, 2007-05-23 at 14:41 -0700, akpm@linux-foundation.org wrote:
-> > > > From: Adrian Bunk <bunk@stusta.de>
-> > > > 
-> > > > - remove the unneeded advansys.h
-> > > > - remove the unused advansys_setup()
-> > > 
-> > > This isn't quite right, though, is it?  advansys_setup() should be used.
-> > > 
-> > > It looks like there was a bogus conversion away from init/main.c which
-> > > left the function dangling.  Isn't the correct thing to do to wire it up
-> > > in advansys_detect() which is where it should have been in the first
-> > > place.
-> > > 
-> > 
-> > Even going back to linux-2.4.2 I can find no caller to advansys_setup(). 
-> > Or was its call buried in the magical template macros?
+> > That didn't used to work right on the AMD boards when I tried it last as
+> > we ended up with a buffer that was mapped by the IOMMU for some reason
+> > and that was not below 2GB.
 > 
-> If I remember rightly, the bootsetups[] array was a 2.0 thing it became
-> kernel_param in 2.1.75.  It was gone by 2.4.0, so this removal thing
-> must have been in the 2.3 timeframe.
-> 
-> Still ... it can be put back .. it looks basically sound.
+> The physical address you mean? If that is still happening then it needs 
+> to get fixed. The allocation should not succeed if it can't provide 
+> memory that's inside the DMA mask for the device..
 
-I don't think we should put it back, obviously no ones has missed
-it for te last 10 years.  If we really want boot paramaters for
-advansys it should be using module_param, not a 10 year old legacy
-interface.
+But the allocation can succeed - using GFP_DMA at least you can do it as
+you get memory below 2^24 you don't need to map via the IOMMU
