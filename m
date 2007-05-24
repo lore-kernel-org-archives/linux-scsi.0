@@ -1,34 +1,48 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch 14/25] SCSI: use irq_handler_t where appropriate
-Date: Thu, 24 May 2007 04:31:30 -0700
-Message-ID: <20070524113130.GC16513@andrew-vasquezs-computer.local>
-References: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [patch 16/25] drivers/scsi/ips.c: remove kernel 2.4 code
+Date: Thu, 24 May 2007 09:19:19 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1CA7@otce2k301.adaptec.com>
+References: <200705232141.l4NLfkPu001210@shell0.pdx.osdl.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:14118 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754443AbXEXLbg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 07:31:36 -0400
-Content-Disposition: inline
-In-Reply-To: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:46876 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756364AbXEXNTV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 May 2007 09:19:21 -0400
+Content-class: urn:content-classes:message
+In-reply-to: <200705232141.l4NLfkPu001210@shell0.pdx.osdl.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, jeff@garzik.org
+To: akpm@linux-foundation.org, James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, bunk@stusta.de
 
-On Wed, 23 May 2007, akpm@linux-foundation.org wrote:
+Looks fine, totally inert. Inspected, could see no flaws.
 
-> Subject: [patch 14/25] SCSI: use irq_handler_t where appropriate
-> Message-Id: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>
+Disclaimer: Resisting application to Adaptec version of the sources
+since we still have to support legacy distributions, will keep
+synchronized none-the-less.
+
+Sincerely -- Mark Salyzyn
+
+> -----Original Message-----
+> From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
+> Sent: Wednesday, May 23, 2007 5:42 PM
+> To: James.Bottomley@steeleye.com
+> Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; 
+> bunk@stusta.de; AACRAID; IpsLinux
+> Subject: [patch 16/25] drivers/scsi/ips.c: remove kernel 2.4 code
 > 
-> From: Jeff Garzik <jeff@garzik.org>
+> From: Adrian Bunk <bunk@stusta.de>
 > 
-> Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> Signed-off-by: Adrian Bunk <bunk@stusta.de>
+> Cc: <aacraid@adaptec.com>
+> Cc: <ipslinux@adaptec.com>
 > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > ---
 > 
->  drivers/scsi/aacraid/aacraid.h |    2 +-
->  drivers/scsi/qla2xxx/qla_isr.c |    2 +-
-
-ACK -- the qla2xxx changes.
+>  drivers/scsi/ips.c |  145 +++++--------------------------------------
+>  drivers/scsi/ips.h |   44 -------------
+>  2 files changed, 20 insertions(+), 169 deletions(-)
