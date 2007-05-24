@@ -1,74 +1,44 @@
-From: Robert Jennings <rcj@linux.vnet.ibm.com>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Thu, 24 May 2007 14:01:36 -0500
-Message-ID: <20070524190136.GA13684@austin.ibm.com>
-References: <463B72F6.3000207@torque.net> <20070506053629P.fujita.tomonori@lab.ntt.co.jp> <463F36AC.3010207@vlnb.net> <20070507182837E.fujita.tomonori@lab.ntt.co.jp> <20070522195656.GD5758@austin.ibm.com> <46541B56.7000501@vlnb.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 14/25] SCSI: use irq_handler_t where appropriate
+Date: Thu, 24 May 2007 16:49:38 -0400
+Message-ID: <4655FA62.7080406@garzik.org>
+References: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>	 <4654BB27.6050706@garzik.org>	 <1179960902.5569.48.camel@mulgrave.il.steeleye.com>	 <465527D7.6030909@garzik.org>	 <1180015447.3692.6.camel@mulgrave.il.steeleye.com>	 <20070524081720.5675ad5d.randy.dunlap@oracle.com> <1180020539.3692.30.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e2.ny.us.ibm.com ([32.97.182.142]:36910 "EHLO e2.ny.us.ibm.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:47651 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750811AbXEXTBh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 May 2007 15:01:37 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e2.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l4OJ1aFV004346
-	for <linux-scsi@vger.kernel.org>; Thu, 24 May 2007 15:01:36 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l4OJ1aVo535922
-	for <linux-scsi@vger.kernel.org>; Thu, 24 May 2007 15:01:37 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l4OJ1ZoN022231
-	for <linux-scsi@vger.kernel.org>; Thu, 24 May 2007 15:01:36 -0400
-Content-Disposition: inline
-In-Reply-To: <46541B56.7000501@vlnb.net>
+	id S1751063AbXEXUtq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 24 May 2007 16:49:46 -0400
+In-Reply-To: <1180020539.3692.30.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Randy Dunlap <randy.dunlap@oracle.com>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-* Vladislav Bolkhovitin (vst@vlnb.net) wrote:
-> Robert Jennings wrote:
-> >>>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
-> >>>>SCSI commands from one lld and send them to another lld instead of
-> >>>>sending them to user space.
-> >>>
-> >>>Although the approach of passing SCSI commands from a target LLD to an
-> >>>initiator one without any significant interventions from the target
-> >>>software looks to be nice and simple, you should realize how limited,
-> >>>unsafe and illegal it is, since it badly violates SCSI specs.
-> >>
-> >>I think that 'implemented cleanly' means that one scsi_host is assigned
-> >>to only one initiator.
-> >
-> >Vladislav listed a number of issues that are inherent in an implementation
-> >that does not have a 1:1 relationship of initiators to targets.  The vscsi
-> >architecture defines the 1:1 relationship; it's imposible to have more
-> >than one initiator per target.
-> 
-> Just few small notes:
-> 
-> 1. As I already wrote, complete 1:1 relationship isn't practically 
-> possible, because there is always a local access on the target (i.e. one 
-> more initiator) and you can't disable it on practice.
+James Bottomley wrote:
+> SCSI is a slightly different subsystem from almost any other in the
+> kernel.  It has something like 15 active driver maintainers plus at
+> least another 15-25 periodically active ones.  Most (but not all) driver
+> maintainers are employed by the company who produces the board/chip and
+> tend to be overloaded with a lot of non-linux work.  Requiring acks for
+> maintained drivers is a courtesy to make sure we don't get maintainers
+> spending time trying to resolve conflicts.  I'm not mandating any
+> particular method of getting acks, just noting that cc'ing maintainers
+> and having specific subject lines mentioning the driver is a reasonable
+> way of getting them to notice.
 
-I was proposing a 1:1 relationship of initiator to target within the
-target framework for in-kernel pass-through.  We would still have the
-case that local access on the target is possible; an administrator with
-privileges neccessary to create a target would have the responsibility
-to not then access the device locally.  
 
-This is no different than if I create my root file system on /dev/sda1,
-I should not also 'dd' data to /dev/sda1 while the system is running.
-It's a bad idea, but nothing stops me; however this is something that
-only a root level user can do.  This would be the same, these targets in
-pass-through have permissions by default that do not allow local access
-by non-root users.
+Linux has never worked that way.  We always have a stream of patches 
+that are multi-subsystem cleanups and the like.  Blocking these patches 
+for months at a time because individual driver maintainers are off doing 
+non-Linux work is just not realistic.
 
-> 2. 1:1 relationship is a serious limitation for usage cases like an SPI 
-> tape library serving backup for several servers on an FC net.
+The system is broken, from where I sit.  In pretty much every other 
+subsystem in the kernel, the subsystem maintainer makes sure patches 
+don't get stuck in limbo for months.
 
-Restricting the relationship to 1:1 would be for pass-through devices
-only, this would not necessarily dictate other target types which could
-be used for such cases.
+	Jeff
 
---Rob
+
