@@ -1,31 +1,28 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: s390 error: implicit declaration of function sg_dma_len
-Date: Fri, 25 May 2007 10:22:38 +0200
-Message-ID: <20070525082238.GA30876@aepfle.de>
+From: David Miller <davem@davemloft.net>
+Subject: Re: s390 error: implicit declaration of function sg_dma_len
+Date: Fri, 25 May 2007 01:55:03 -0700 (PDT)
+Message-ID: <20070525.015503.90123165.davem@davemloft.net>
+References: <20070525082238.GA30876@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-out.m-online.net ([212.18.0.10]:57037 "EHLO
-	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750936AbXEYI30 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2007 04:29:26 -0400
-Received: from mail01.m-online.net (mail.m-online.net [192.168.3.149])
-	by mail-out.m-online.net (Postfix) with ESMTP id 8397A24D0F6
-	for <linux-scsi@vger.kernel.org>; Fri, 25 May 2007 08:22:14 +0000 (UTC)
-Received: from ibook.aepfle.de (DSL01.83.171.168.82.ip-pool.NEFkom.net [83.171.168.82])
-	by mail.mnet-online.de (Postfix) with ESMTP id 11E6A90D2E
-	for <linux-scsi@vger.kernel.org>; Fri, 25 May 2007 10:22:17 +0200 (CEST)
-Content-Disposition: inline
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:46999
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751336AbXEYIzA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 May 2007 04:55:00 -0400
+In-Reply-To: <20070525082238.GA30876@aepfle.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: olaf@aepfle.de
+Cc: linux-scsi@vger.kernel.org
 
+From: Olaf Hering <olaf@aepfle.de>
+Date: Fri, 25 May 2007 10:22:38 +0200
 
-Current Linus tree does not compile on s390 because esp_scsi references
-unavailable functions.
+> Current Linus tree does not compile on s390 because esp_scsi references
+> unavailable functions.
 
-/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c: In function `esp_map_dma':
-/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c:338: error: implicit declaration of function `sg_dma_len'
-/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c: In function `esp_cur_dma_addr':
-/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c:357: error: implicit declaration of function `sg_dma_address'
-
+I have a fix for this pending in my sparc-2.6 tree which I'll
+send to Linus tomorrow, thanks for the report.
