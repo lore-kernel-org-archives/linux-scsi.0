@@ -1,38 +1,51 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] s390 error: implicit declaration of function sg_dma_len
-Date: Fri, 25 May 2007 14:05:54 -0700 (PDT)
-Message-ID: <20070525.140554.98863560.davem@davemloft.net>
-References: <4656A778.2000403@suse.de>
-	<20070525.021303.70218696.davem@davemloft.net>
-	<1180100858.3717.3.camel@mulgrave.il.steeleye.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 1/1] scsi: cover up bugs^W^W^WFix up compiler warnings
+ in megaraid driver
+Date: Fri, 25 May 2007 14:45:34 -0700
+Message-ID: <20070525144534.a76e59b8.akpm@linux-foundation.org>
+References: <200705232311.l4NNBlfZ007264@shell0.pdx.osdl.net>
+	<0631C836DBF79F42B5A60C8C8D4E8229AE1465@NAMAIL2.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52173
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1765708AbXEYVFv (ORCPT
+Received: from smtp1.linux-foundation.org ([207.189.120.13]:44383 "EHLO
+	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1757532AbXEYVqO (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 May 2007 17:05:51 -0400
-In-Reply-To: <1180100858.3717.3.camel@mulgrave.il.steeleye.com>
+	Fri, 25 May 2007 17:46:14 -0400
+In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229AE1465@NAMAIL2.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: hare@suse.de, olaf@aepfle.de, linux-scsi@vger.kernel.org
+To: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, mbligh@google.com
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Date: Fri, 25 May 2007 08:47:38 -0500
+On Fri, 25 May 2007 14:28:19 -0600 "Patro, Sumant" <Sumant.Patro@lsi.com> wrote:
 
-> OK, I won't ... but we're growing users of this base driver now, like
-> this one:
-> 
-> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=352e921f0dd42f79652cdb50dd91122d068d7209
-> 
-> Could you share the updates you're planning with linux-scsi, just so we
-> don't run into problems?
+> Ack.
 
-Only the driver front-end Kconfg's will exist, which will
-properly check for things like platform and bus type
-dependencies, and the Makefile goes:
+Thanks.
 
-obj-$(FOO_ESP)	+= esp_core.o foo_esp.o
+
+
+While we're here...
+
+box:/usr/src/25> grep -i lsi MAINTAINERS
+LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
+M:      Eric.Moore@lsi.com
+M:      support@lsi.com
+L:      mpt_linux_developer@lsi.com
+W:      http://www.lsilogic.com/support
+LSILOGIC/SYMBIOS/NCR 53C8XX and 53C1010 PCI-SCSI drivers
+W:      http://megaraid.lsilogic.com
+USB KAWASAKI LSI DRIVER
+M:      uclinux-v850@lsi.nec.co.jp
+
+box:/usr/src/25> grep -i sumant MAINTAINERS   
+box:/usr/src/25> 
+
+Could I ask that you review the MAINTAINERS file and ensure that
+all appropriate lsil developers are appropriately mentioned and that
+all drivers which lsil look after have the appropriate entries?
+
+Thanks.
