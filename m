@@ -1,42 +1,82 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] s390 error: implicit declaration of function sg_dma_len
-Date: Fri, 25 May 2007 08:47:38 -0500
-Message-ID: <1180100858.3717.3.camel@mulgrave.il.steeleye.com>
-References: <20070525082238.GA30876@aepfle.de> <4656A778.2000403@suse.de>
-	 <20070525.021303.70218696.davem@davemloft.net>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Stgt-devel] Question for pass-through target design
+Date: Fri, 25 May 2007 18:38:20 +0400
+Message-ID: <4656F4DC.5000407@vlnb.net>
+References: <463B72F6.3000207@torque.net> <20070506053629P.fujita.tomonori@lab.ntt.co.jp> <463F36AC.3010207@vlnb.net> <20070507182837E.fujita.tomonori@lab.ntt.co.jp> <20070522195656.GD5758@austin.ibm.com> <46541B56.7000501@vlnb.net> <20070524190136.GA13684@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:46918 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753427AbXEYNrl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2007 09:47:41 -0400
-In-Reply-To: <20070525.021303.70218696.davem@davemloft.net>
+Received: from mail-relay-01.mailcluster.net ([85.249.135.242]:53170 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752654AbXEYOiJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 May 2007 10:38:09 -0400
+In-Reply-To: <20070524190136.GA13684@austin.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: hare@suse.de, olaf@aepfle.de, linux-scsi@vger.kernel.org
+To: Robert Jennings <rcj@linux.vnet.ibm.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, stgt-devel@lists.berlios.de, scst-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Fri, 2007-05-25 at 02:13 -0700, David Miller wrote:
-> From: Hannes Reinecke <hare@suse.de>
-> Date: Fri, 25 May 2007 11:08:08 +0200
+Robert Jennings wrote:
+> * Vladislav Bolkhovitin (vst@vlnb.net) wrote:
 > 
-> > James, please apply. ESP cards simply don't fit in a mainframe :-)
+>>Robert Jennings wrote:
+>>
+>>>>>>What I meant that is that the kernel tgt code (scsi_tgt*) receives
+>>>>>>SCSI commands from one lld and send them to another lld instead of
+>>>>>>sending them to user space.
+>>>>>
+>>>>>Although the approach of passing SCSI commands from a target LLD to an
+>>>>>initiator one without any significant interventions from the target
+>>>>>software looks to be nice and simple, you should realize how limited,
+>>>>>unsafe and illegal it is, since it badly violates SCSI specs.
+>>>>
+>>>>I think that 'implemented cleanly' means that one scsi_host is assigned
+>>>>to only one initiator.
+>>>
+>>>Vladislav listed a number of issues that are inherent in an implementation
+>>>that does not have a 1:1 relationship of initiators to targets.  The vscsi
+>>>architecture defines the 1:1 relationship; it's imposible to have more
+>>>than one initiator per target.
+>>
+>>Just few small notes:
+>>
+>>1. As I already wrote, complete 1:1 relationship isn't practically 
+>>possible, because there is always a local access on the target (i.e. one 
+>>more initiator) and you can't disable it on practice.
 > 
-> No James, please don't, I have a patch in my sparc-2.6 queue which
-> will fix this already, and in a different way.
+> I was proposing a 1:1 relationship of initiator to target within the
+> target framework for in-kernel pass-through.  We would still have the
+> case that local access on the target is possible; an administrator with
+> privileges neccessary to create a target would have the responsibility
+> to not then access the device locally.  
+> 
+> This is no different than if I create my root file system on /dev/sda1,
+> I should not also 'dd' data to /dev/sda1 while the system is running.
+> It's a bad idea, but nothing stops me; however this is something that
+> only a root level user can do.  This would be the same, these targets in
+> pass-through have permissions by default that do not allow local access
+> by non-root users.
 
-OK, I won't ... but we're growing users of this base driver now, like
-this one:
+In principle, yes, but, as usually, on practice it's not so easy. In 
+your file system example the device is accessed via the FS, which 
+provides a shared mode, and everybody doesn't have any need to do 
+anything directly with the device. But in case of non-disk devices they 
+are always accessed directly, so to explain your limitation you will 
+have to write it with HUGE letters everywhere. Once one SCST user 
+cleared Unit Attention on his exported tape device using st driver and 
+asked then me why it isn't delivered to his remote initiator.
 
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=352e921f0dd42f79652cdb50dd91122d068d7209
+>>2. 1:1 relationship is a serious limitation for usage cases like an SPI 
+>>tape library serving backup for several servers on an FC net.
+> 
+> Restricting the relationship to 1:1 would be for pass-through devices
+> only, this would not necessarily dictate other target types which could
+> be used for such cases.
 
-Could you share the updates you're planning with linux-scsi, just so we
-don't run into problems?
+The tape library from my example is the pass-through device. You can't 
+access a parallel SCSI (SPI) device on an Fibre Channel (FC) in any 
+other mode, right?
 
-Thanks,
-
-James
-
-
+Vlad
