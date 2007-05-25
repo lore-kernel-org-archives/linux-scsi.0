@@ -1,52 +1,64 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [patch 14/25] SCSI: use irq_handler_t where appropriate
-Date: Fri, 25 May 2007 11:06:19 +0200
-Message-ID: <4656A70B.60906@s5r6.in-berlin.de>
-References: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>	<4654BB27.6050706@garzik.org>	<1179960902.5569.48.camel@mulgrave.il.steeleye.com>	<465527D7.6030909@garzik.org>	<1180015447.3692.6.camel@mulgrave.il.steeleye.com> <20070524081720.5675ad5d.randy.dunlap@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] s390 error: implicit declaration of function sg_dma_len
+Date: Fri, 25 May 2007 11:08:08 +0200
+Message-ID: <4656A778.2000403@suse.de>
+References: <20070525082238.GA30876@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:37121 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750944AbXEYJGV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2007 05:06:21 -0400
-In-Reply-To: <20070524081720.5675ad5d.randy.dunlap@oracle.com>
+Received: from ns1.suse.de ([195.135.220.2]:48708 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751075AbXEYJIN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 May 2007 05:08:13 -0400
+In-Reply-To: <20070525082238.GA30876@aepfle.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Olaf Hering <olaf@aepfle.de>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-Randy Dunlap wrote:
-> On Thu, 24 May 2007 09:04:06 -0500 James Bottomley wrote:
->> maintainers are not always watching everything ... it would be nice if
->> they were, but to give a patch the best shot at review, you try to
->> attract their attention.  Specifically, in this case, you should cc the
->> maintainers and you should have a subject line explaining that you are
->> modifying their driver.  It is very easy to ignore a patch that's simply
->> waved at the SCSI list with a generic subject line.
-> 
-> I can understand subsystem maintainers ignoring lkml, but ignoring
-> the subsystem mailing list makes no sense to me, especially if the
-> subject contains "[PATCH]".
+Olaf Hering wrote:
+> Current Linus tree does not compile on s390 because esp_scsi referenc=
+es
+> unavailable functions.
+>=20
+> /dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c: In function `esp_map=
+_dma':
+> /dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c:338: error: implicit =
+declaration of function `sg_dma_len'
+> /dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c: In function `esp_cur=
+_dma_addr':
+> /dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c:357: error: implicit =
+declaration of function `sg_dma_address'
+>=20
+Hmm. Try this:
 
-I mostly agree.  It becomes difficult with cross-subsystem patches
-though.  The difficulty with such patches is that the subsystem
-mailinglist which was chosen as adressee doesn't tell the whole picture,
-and the subject, even if chosen carefully, often cannot explicitly tell
-which places it touches.
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index d28c14e..4909863 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1755,7 +1755,7 @@ config SUN3X_ESP
 
-On the other hand, submitters of nontrivial cross-subsystem patches can
-be expected to put some extra care in their submission, i.e. to add
-respective personal addresses.  (And of course to include a diffstat!)
+ config SCSI_ESP_CORE
+        tristate "ESP Scsi Driver Core"
+-       depends on SCSI
++       depends on SCSI && !S390
+        select SCSI_SPI_ATTRS
+        help
+          This is a core driver for NCR53c9x based scsi chipsets,
 
-The patch "SCSI: use irq_handler_t where appropriate" is of course not a
-patch of this kind.  Also, it is of the sort which IMO doesn't need a
-driver maintainer's ACK in the first place.  Sure, it wouldn't have hurt
-a lot to call it for example "SCSI: use irq_handler_t in aacraid and
-qla2xxx", even though that information will be redundant /after/ it went
-into a git tree.
--- 
-Stefan Richter
--=====-=-=== -=-= ==--=
-http://arcgraph.de/sr/
+James, please apply. ESP cards simply don't fit in a mainframe :-)
+
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+GF: Markus Rex, HRB 16746 (AG N=C3=BCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
