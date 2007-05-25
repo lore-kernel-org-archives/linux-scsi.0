@@ -1,54 +1,42 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [patch 14/25] SCSI: use irq_handler_t where appropriate
-Date: Fri, 25 May 2007 11:32:00 +0200
-Message-ID: <4656AD10.3000805@s5r6.in-berlin.de>
-References: <200705232141.l4NLfjq9001203@shell0.pdx.osdl.net>	 <4654BB27.6050706@garzik.org>	 <1179960902.5569.48.camel@mulgrave.il.steeleye.com>	 <465527D7.6030909@garzik.org>	 <1180015447.3692.6.camel@mulgrave.il.steeleye.com>	 <20070524081720.5675ad5d.randy.dunlap@oracle.com> <1180020539.3692.30.camel@mulgrave.il.steeleye.com> <4655FA62.7080406@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] s390 error: implicit declaration of function sg_dma_len
+Date: Fri, 25 May 2007 08:47:38 -0500
+Message-ID: <1180100858.3717.3.camel@mulgrave.il.steeleye.com>
+References: <20070525082238.GA30876@aepfle.de> <4656A778.2000403@suse.de>
+	 <20070525.021303.70218696.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.TU-Cottbus.De ([141.43.120.68]:37203 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751267AbXEYJcC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2007 05:32:02 -0400
-In-Reply-To: <4655FA62.7080406@garzik.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:46918 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753427AbXEYNrl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2007 09:47:41 -0400
+In-Reply-To: <20070525.021303.70218696.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Randy Dunlap <randy.dunlap@oracle.com>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: David Miller <davem@davemloft.net>
+Cc: hare@suse.de, olaf@aepfle.de, linux-scsi@vger.kernel.org
 
-Jeff Garzik wrote:
-> James Bottomley wrote:
->> SCSI is a slightly different subsystem from almost any other in the
->> kernel.  It has something like 15 active driver maintainers plus at
->> least another 15-25 periodically active ones.  Most (but not all) driver
->> maintainers are employed by the company who produces the board/chip and
->> tend to be overloaded with a lot of non-linux work.
-
-(People who do maintenance on a volunteer basis in spare time tend to be
-overloaded with a lot of non-Linux work too.)
-
->> Requiring acks for
->> maintained drivers is a courtesy to make sure we don't get maintainers
->> spending time trying to resolve conflicts.  I'm not mandating any
->> particular method of getting acks, just noting that cc'ing maintainers
->> and having specific subject lines mentioning the driver is a reasonable
->> way of getting them to notice.
+On Fri, 2007-05-25 at 02:13 -0700, David Miller wrote:
+> From: Hannes Reinecke <hare@suse.de>
+> Date: Fri, 25 May 2007 11:08:08 +0200
 > 
-> Linux has never worked that way.  We always have a stream of patches 
-> that are multi-subsystem cleanups and the like.  Blocking these patches 
-> for months at a time because individual driver maintainers are off doing 
-> non-Linux work is just not realistic.
+> > James, please apply. ESP cards simply don't fit in a mainframe :-)
+> 
+> No James, please don't, I have a patch in my sparc-2.6 queue which
+> will fix this already, and in a different way.
 
-I agree.  Merge conflicts and similar issues with such cleanup patches
-or API conversions and the like are issues which driver maintainers and
-even subsystem maintainers just have to cope with.  Of course it's a
-different matter with patches which change functionality.
+OK, I won't ... but we're growing users of this base driver now, like
+this one:
 
-The time spent to resolve conflicts
-   - can pay off if overall time to handle patch flow is reduced,
-   - can be minimized by trying to react quickly on simpler patches.
--- 
-Stefan Richter
--=====-=-=== -=-= ==--=
-http://arcgraph.de/sr/
+http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=352e921f0dd42f79652cdb50dd91122d068d7209
+
+Could you share the updates you're planning with linux-scsi, just so we
+don't run into problems?
+
+Thanks,
+
+James
+
+
