@@ -1,31 +1,31 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 1/7] libata: check for AN support
-Date: Thu, 24 May 2007 23:15:56 -0400
-Message-ID: <465654EC.9080805@garzik.org>
-References: <20070510072247.063476979@intel.com>	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>	<20070509220952.5fa34822.akpm@linux-foundation.org> <20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
+From: Olaf Hering <olaf@aepfle.de>
+Subject: s390 error: implicit declaration of function sg_dma_len
+Date: Fri, 25 May 2007 10:22:38 +0200
+Message-ID: <20070525082238.GA30876@aepfle.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-out.m-online.net ([212.18.0.10]:57037 "EHLO
+	mail-out.m-online.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750936AbXEYI30 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 25 May 2007 04:29:26 -0400
+Received: from mail01.m-online.net (mail.m-online.net [192.168.3.149])
+	by mail-out.m-online.net (Postfix) with ESMTP id 8397A24D0F6
+	for <linux-scsi@vger.kernel.org>; Fri, 25 May 2007 08:22:14 +0000 (UTC)
+Received: from ibook.aepfle.de (DSL01.83.171.168.82.ip-pool.NEFkom.net [83.171.168.82])
+	by mail.mnet-online.de (Postfix) with ESMTP id 11E6A90D2E
+	for <linux-scsi@vger.kernel.org>; Fri, 25 May 2007 10:22:17 +0200 (CEST)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
-> Check to see if an ATAPI device supports Asynchronous Notification.
-> If so, enable it.
-> 
-> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> ---
-> Andrew, I cleaned up the function header to properly comply with kernel
-> doc requirements.  Other than that, this patch is the same.  
 
-I would ask for a simple revision:  update ata_dev_set_AN() such that it 
-takes a second argument 'enable'.  This boolean indicates to the 
-function whether SETFEATURES_SATA_ENABLE or SETFEATURES_SATA_DISABLE 
-should be passed to the device.
+Current Linus tree does not compile on s390 because esp_scsi references
+unavailable functions.
 
-Otherwise than that, it's ready to merge I would say.
+/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c: In function `esp_map_dma':
+/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c:338: error: implicit declaration of function `sg_dma_len'
+/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c: In function `esp_cur_dma_addr':
+/dev/shm/R/linux-2.6.21/drivers/scsi/esp_scsi.c:357: error: implicit declaration of function `sg_dma_address'
 
