@@ -1,43 +1,29 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH] add help to WAIT_SCAN option
-Date: Sat, 26 May 2007 14:50:14 -0500
-Message-ID: <1180209014.3712.69.camel@mulgrave.il.steeleye.com>
+Date: Sat, 26 May 2007 14:44:47 -0600
+Message-ID: <20070526204447.GM5798@parisc-linux.org>
 References: <20070526191127.GB7080@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:48746 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759131AbXEZTuQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 May 2007 15:50:16 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:49507 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760378AbXEZUot (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 May 2007 16:44:49 -0400
+Content-Disposition: inline
 In-Reply-To: <20070526191127.GB7080@colo.lackof.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Grant Grundler <grundler@parisc-linux.org>
-Cc: linux-scsi@vger.kernel.org, Thibaut VARENE <T-Bone@parisc-linux.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Thibaut VARENE <T-Bone@parisc-linux.org>
 
-On Sat, 2007-05-26 at 13:11 -0600, Grant Grundler wrote:
+On Sat, May 26, 2007 at 01:11:27PM -0600, Grant Grundler wrote:
 > Thibaut Varene's parisc box didn't find the root disk.
 > Problem is he had ASYNC_SCAN enabled and the required SYM2 driver builtin
 > but the root disk wasn't discovered before the kernel wanted to mount root.
 > Oh, and he (like many folks who build their own kernels) didn't use
 > an initrd or initramfs. So no chance to load scsi_wait_scan module.
-> 
-> This patch enables one to select "y" for WAIT_SCAN option and adds
-> help text on how/when to use "m" vs "y".
 
-This solution is still as wrong as it was the last three times it was
-submitted to linux-scsi:
-
-http://marc.info/?t=117906989600001
-http://marc.info/?t=117926627700012
-http://marc.info/?t=117923062000004
-
-A better, but still not quite right fix is here:
-
-http://marc.info/?l=linux-scsi&m=117995785931981
-
-James
-
-
+I don't know what Thibaut's problem was, but this explanation is
+definitely incorrect.  If you build in the sym2 driver and the scsi
+core, then we wait for the discs to be discovered automatically.
