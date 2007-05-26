@@ -1,60 +1,54 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [patch 14/25] SCSI: use irq_handler_t where appropriate
-Date: Sat, 26 May 2007 15:45:31 -0500
-Message-ID: <1180212331.3712.73.camel@mulgrave.il.steeleye.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF019E1CEF@otce2k301.adaptec.com>
-	 <1180020111.3692.24.camel@mulgrave.il.steeleye.com>
+From: "Thibaut VARENE" <T-Bone@parisc-linux.org>
+Subject: Re: [PATCH] add help to WAIT_SCAN option
+Date: Sun, 27 May 2007 00:25:22 +0200
+Message-ID: <7d01f9f00705261525k56cd1b9ag531640cc212036ae@mail.gmail.com>
+References: <20070526191127.GB7080@colo.lackof.org>
+	 <20070526204447.GM5798@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:46240 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759317AbXEZUpd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 May 2007 16:45:33 -0400
-In-Reply-To: <1180020111.3692.24.camel@mulgrave.il.steeleye.com>
+Received: from an-out-0708.google.com ([209.85.132.249]:4529 "EHLO
+	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750743AbXEZWZW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 26 May 2007 18:25:22 -0400
+Received: by an-out-0708.google.com with SMTP id d31so325510and
+        for <linux-scsi@vger.kernel.org>; Sat, 26 May 2007 15:25:22 -0700 (PDT)
+In-Reply-To: <20070526204447.GM5798@parisc-linux.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: Jeff Garzik <jeff@garzik.org>, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Grant Grundler <grundler@parisc-linux.org>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Thu, 2007-05-24 at 10:21 -0500, James Bottomley wrote:
-> On Thu, 2007-05-24 at 10:28 -0400, Salyzyn, Mark wrote:
-> > This is not just a maintainer's issue. We see the silent ACK treatment
-> > all the time from all avenues of inspection whether they be maintainers,
-> > illuminati, interested parties or JAFO. There is a little bit of a
-> > volunteer in every one of us.
-> > 
-> > Requiring the maintainer to be cc'd is a burden on the submitter, I do
-> > not want to spank someone that comes up with a useful patch that fails
-> > some bureaucratic litmus test. It is still a good idea, but lets try a
-> > different tactic?
-> > 
-> > James, you are a volunteer, so I can not require an increase in your
-> > burden. But it would be 'nice' if you had a git tree that reported
-> > pending approval (so that makes three persistent trees if I am correct,
-> > scsi-misc-2.6, scsi-rc-fixes-2.6 and scsi-pending-2.6?). This way we can
-> > tell that you saw it, and as a maintainer we can see a change even if we
-> > missed the patch email. It does make it hard for the maintainer to
-> > report *which* patch to approve, but he could do a blanket approval of
-> > what he sees in the pending tree? AndrewM can tell that he no longer
-> > needs to track the patch, as it is now the SCSI list's responsibility
-> > once it is in the pending tree.
-> 
-> We can certainly try that approach.  Please note that scsi-pending-2.6
-> will essentially be a quilt like tree (i.e. constantly rebasing) so it
-> will be impossible to pull incrementally from it ... but you will be
-> able to fetch from it and just check it out to give the patches an
-> inspection/try out.
+On 5/26/07, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Sat, May 26, 2007 at 01:11:27PM -0600, Grant Grundler wrote:
+> > Thibaut Varene's parisc box didn't find the root disk.
+> > Problem is he had ASYNC_SCAN enabled and the required SYM2 driver builtin
+> > but the root disk wasn't discovered before the kernel wanted to mount root.
+> > Oh, and he (like many folks who build their own kernels) didn't use
+> > an initrd or initramfs. So no chance to load scsi_wait_scan module.
+>
+> I don't know what Thibaut's problem was, but this explanation is
+> definitely incorrect.  If you build in the sym2 driver and the scsi
+> core, then we wait for the discs to be discovered automatically.
 
-OK, this is basically done.  I've set up the pending tree here:
+My problem was that:
+- I use a standalone kernel (no init{rd,ramfs})
+- I have CONFIG_MODULES=y
+- I build all my (needed) scsi drivers 'y' (builtin)
 
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-pending-2.6.git;a=summary
+Yet CONFIG_SCSI_WAIT_SCAN defaults to 'm' with no possibility of
+setting it otherwise. So I ended up with a kernel with builtin async
+scsi scan and no wait_scan, thus not waiting for the probes to
+complete before trying to mount rootfs...
 
-Since it's wet out today, I also coded up a git update hook that emails
-people who get patches into this tree and the maintainers nagging about
-needed acks.
+Editing KConfig to allow setting CONFIG_SCSI_WAIT_SCAN=y "fixed" the problem.
 
-James
+HTH
 
+T-Bone
 
+-- 
+Thibaut VARENE
+http://www.parisc-linux.org/~varenet/
