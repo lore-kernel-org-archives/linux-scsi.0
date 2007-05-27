@@ -1,15 +1,15 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/5] SCSI/initio pci_dev, pci_dev->irq simplifications
-Date: Sun, 27 May 2007 10:55:58 -0400
-Message-ID: <20070527145558.GB17085@havoc.gtf.org>
+Subject: [PATCH 3/5] SCSI/initio minor cleanups
+Date: Sun, 27 May 2007 10:57:06 -0400
+Message-ID: <20070527145706.GC17085@havoc.gtf.org>
 References: <20070527145200.GA17017@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:33563 "EHLO havoc.gtf.org"
+Received: from havoc.gtf.org ([69.61.125.42]:33566 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753307AbXE0Oz7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 27 May 2007 10:55:59 -0400
+	id S1753750AbXE0O5I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 27 May 2007 10:57:08 -0400
 Content-Disposition: inline
 In-Reply-To: <20070527145200.GA17017@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -18,136 +18,153 @@ To: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
 Cc: LKML <linux-kernel@vger.kernel.org>
 
 
-Now that pci_dev is available in the adapter table, we can logically
-simplify Addi91u_into_Adapter_table(), HCS and INI_ADPT_STRUCT.
+Two minor cleanups:
+* eliminate unused ADPT_Device struct member
+* eliminate redundant return statements
 
 Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
-0151ba1cfeb6565bd1e79b5ba913423f19602d2e
+8ce38698fb5c65128621823e34830ed6c738f3be
 diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 8951494..d25a228 100644
+index d25a228..2bc2390 100644
 --- a/drivers/scsi/initio.c
 +++ b/drivers/scsi/initio.c
-@@ -582,10 +582,9 @@ void tul_read_eeprom(WORD CurBase)
- 	TUL_WR(CurBase + TUL_GCTRL, gctrl & ~TUL_GCTRL_EEPROM_BIT);
- }				/* read_eeprom */
+@@ -402,7 +402,6 @@ static void tul_se2_instr(WORD CurBase, UCHAR instr)
+ 	}
+ 	TUL_WR(CurBase + TUL_NVRAM, SE2CS);	/* -CLK */
+ 	tul_se2_wait();
+-	return;
+ }
  
--static int Addi91u_into_Adapter_table(WORD wBIOS, WORD wBASE, BYTE bInterrupt,
--				      BYTE bBus, BYTE bDevice,
--				      struct pci_dev *pci_dev)
-+static int Addi91u_into_Adapter_table(WORD wBIOS, struct pci_dev *pci_dev)
- {
-+	WORD wBASE = pci_dev->resource[0].start;
- 	int i, j;
  
- 	for (i = 0; i < MAX_SUPPORTED_ADAPTERS; i++) {
-@@ -600,16 +599,14 @@ static int Addi91u_into_Adapter_table(WORD wBIOS, WORD wBASE, BYTE bInterrupt,
- 		}
- 		for (j = MAX_SUPPORTED_ADAPTERS - 1; j > i; j--) {
+@@ -415,7 +414,6 @@ void tul_se2_ew_en(WORD CurBase)
+ 	tul_se2_instr(CurBase, 0x30);	/* EWEN */
+ 	TUL_WR(CurBase + TUL_NVRAM, 0);		/* -CS  */
+ 	tul_se2_wait();
+-	return;
+ }
+ 
+ 
+@@ -427,7 +425,6 @@ void tul_se2_ew_ds(WORD CurBase)
+ 	tul_se2_instr(CurBase, 0);	/* EWDS */
+ 	TUL_WR(CurBase + TUL_NVRAM, 0);		/* -CS  */
+ 	tul_se2_wait();
+-	return;
+ }
+ 
+ 
+@@ -501,7 +498,6 @@ static void tul_se2_wr(WORD CurBase, UCHAR adr, USHORT writeWord)
+ 			break;	/* write complete */
+ 	}
+ 	TUL_WR(CurBase + TUL_NVRAM, 0);		/* -CS */
+-	return;
+ }
+ 
+ 
+@@ -559,7 +555,6 @@ void tul_se2_update_all(WORD CurBase)
+ 	}
+ 
+ 	tul_se2_ew_ds(CurBase);	/* Disable write   */
+-	return;
+ }
+ 
+ /*************************************************************************
+@@ -601,12 +596,10 @@ static int Addi91u_into_Adapter_table(WORD wBIOS, struct pci_dev *pci_dev)
  			i91u_adpt[j].ADPT_BASE = i91u_adpt[j - 1].ADPT_BASE;
--			i91u_adpt[j].ADPT_INTR = i91u_adpt[j - 1].ADPT_INTR;
  			i91u_adpt[j].ADPT_BIOS = i91u_adpt[j - 1].ADPT_BIOS;
  			i91u_adpt[j].ADPT_Bus = i91u_adpt[j - 1].ADPT_Bus;
- 			i91u_adpt[j].ADPT_Device = i91u_adpt[j - 1].ADPT_Device;
+-			i91u_adpt[j].ADPT_Device = i91u_adpt[j - 1].ADPT_Device;
  		}
  		i91u_adpt[i].ADPT_BASE = wBASE;
--		i91u_adpt[i].ADPT_INTR = bInterrupt;
  		i91u_adpt[i].ADPT_BIOS = wBIOS;
--		i91u_adpt[i].ADPT_Bus = bBus;
--		i91u_adpt[i].ADPT_Device = bDevice;
-+		i91u_adpt[i].ADPT_Bus = pci_dev->bus->number;
-+		i91u_adpt[i].ADPT_Device = pci_dev->devfn >> 3;
+ 		i91u_adpt[i].ADPT_Bus = pci_dev->bus->number;
+-		i91u_adpt[i].ADPT_Device = pci_dev->devfn >> 3;
  		i91u_adpt[i].pci_dev = pci_dev;
  		return 0;
  	}
-@@ -623,7 +620,6 @@ static void init_i91uAdapter_table(void)
- 	for (i = 0; i < MAX_SUPPORTED_ADAPTERS; i++) {	/* Initialize adapter structure */
+@@ -617,13 +610,12 @@ static void init_i91uAdapter_table(void)
+ {
+ 	int i;
+ 
+-	for (i = 0; i < MAX_SUPPORTED_ADAPTERS; i++) {	/* Initialize adapter structure */
++	/* Initialize adapter structure */
++	for (i = 0; i < MAX_SUPPORTED_ADAPTERS; i++) {
  		i91u_adpt[i].ADPT_BIOS = 0xffff;
  		i91u_adpt[i].ADPT_BASE = 0xffff;
--		i91u_adpt[i].ADPT_INTR = 0xff;
  		i91u_adpt[i].ADPT_Bus = 0xff;
- 		i91u_adpt[i].ADPT_Device = 0xff;
+-		i91u_adpt[i].ADPT_Device = 0xff;
  	}
-@@ -647,8 +643,6 @@ static void get_tulipPCIConfig(HCS * pCurHcb, int ch_idx)
- 	pCurHcb->pci_dev = i91u_adpt[ch_idx].pci_dev;
- 	pCurHcb->HCS_Base = i91u_adpt[ch_idx].ADPT_BASE;	/* Supply base address  */
- 	pCurHcb->HCS_BIOS = i91u_adpt[ch_idx].ADPT_BIOS;	/* Supply BIOS address  */
--	pCurHcb->HCS_Intr = i91u_adpt[ch_idx].ADPT_INTR;	/* Supply interrupt line */
+-	return;
+ }
+ 
+ static void tul_stop_bm(HCS * pCurHcb)
+@@ -915,8 +907,8 @@ static void tul_unlink_pend_scb(HCS * pCurHcb, SCB * pCurScb)
+ 		pPrevScb = pTmpScb;
+ 		pTmpScb = pTmpScb->SCB_NxtScb;
+ 	}
+-	return;
+ }
++
+ /***************************************************************************/
+ static void tul_append_busy_scb(HCS * pCurHcb, SCB * scbp)
+ {
+@@ -990,7 +982,6 @@ static void tul_unlink_busy_scb(HCS * pCurHcb, SCB * pCurScb)
+ 		pPrevScb = pTmpScb;
+ 		pTmpScb = pTmpScb->SCB_NxtScb;
+ 	}
 -	return;
  }
  
  /***************************************************************************/
-@@ -777,7 +771,7 @@ static int init_tulip(HCS * pCurHcb, SCB * scbp, int tul_num_scb,
- 		pCurHcb->HCS_MaxTags[i] = 0xFF;
- 	}			/* for                          */
- 	printk("i91u: PCI Base=0x%04X, IRQ=%d, BIOS=0x%04X0, SCSI ID=%d\n",
--	       pCurHcb->HCS_Base, pCurHcb->HCS_Intr,
-+	       pCurHcb->HCS_Base, pCurHcb->pci_dev->irq,
- 	       pCurHcb->HCS_BIOS, pCurHcb->HCS_SCSI_ID);
- /*------------------- reset SCSI Bus ---------------------------*/
- 	if (pCurHcb->HCS_Config & HCC_SCSI_RESET) {
-@@ -2788,13 +2782,7 @@ static int tul_NewReturnNumberOfAdapters(void)
- 				continue;
- 			}
- 
--			if (Addi91u_into_Adapter_table(wBIOS,
--							(pDev->resource[0].start),
--						       	pDev->irq,
--						       	pDev->bus->number,
--					       		(pDev->devfn >> 3),
--							pDev
--		    		) == 0)
-+			if (Addi91u_into_Adapter_table(wBIOS, pDev) == 0)
- 				iAdapters++;
- 		}
+@@ -1297,7 +1288,6 @@ static void tul_exec_scb(HCS * pCurHcb, SCB * pCurScb)
+ 		TUL_WR(pCurHcb->HCS_Base + TUL_Mask, 0x0F);
  	}
-@@ -2865,15 +2853,17 @@ static int i91u_detect(struct scsi_host_template * tpnt)
- 		hreg->unique_id = pHCB->HCS_Base;
- 		hreg->max_id = pHCB->HCS_MaxTar;
- 		hreg->max_lun = 32;	/* 10/21/97                     */
--		hreg->irq = pHCB->HCS_Intr;
-+		hreg->irq = pHCB->pci_dev->irq;
- 		hreg->this_id = pHCB->HCS_SCSI_ID;	/* Assign HCS index           */
- 		hreg->base = (unsigned long)pHCB;
- 		hreg->sg_tablesize = TOTAL_SG_ENTRY;	/* Maximun support is 32 */
+ 	spin_unlock_irqrestore(&(pCurHcb->HCS_SemaphLock), flags);
+-	return;
+ }
  
- 		/* Initial tulip chip           */
--		ok = request_irq(pHCB->HCS_Intr, i91u_intr, IRQF_DISABLED | IRQF_SHARED, "i91u", hreg);
-+		ok = request_irq(pHCB->pci_dev->irq, i91u_intr,
-+				 IRQF_DISABLED | IRQF_SHARED, "i91u", hreg);
- 		if (ok < 0) {
--			printk(KERN_WARNING "i91u: unable to request IRQ %d\n\n", pHCB->HCS_Intr);
-+			printk(KERN_ERR "i91u: unable to request IRQ %d\n\n",
-+			       pHCB->pci_dev->irq);
- 			return 0;
- 		}
+ /***************************************************************************/
+@@ -1507,7 +1497,6 @@ void tulip_scsi(HCS * pCurHcb)
+ 		pCurScb->SCB_HaStat = 0x16;	/* bad command */
+ 		tul_append_done_scb(pCurHcb, pCurScb);
  	}
+-	return;
+ }
+ 
+ 
+@@ -2548,7 +2537,6 @@ void tul_select_atn_stop(HCS * pCurHcb, SCB * pCurScb)
+ 	pCurHcb->HCS_ActScb = pCurScb;
+ 	pCurHcb->HCS_ActTcs = &pCurHcb->HCS_Tcs[pCurScb->SCB_Target];
+ 	TUL_WR(pCurHcb->HCS_Base + TUL_SCmd, TSC_SELATNSTOP);
+-	return;
+ }
+ 
+ 
+@@ -2566,7 +2554,6 @@ void tul_select_atn(HCS * pCurHcb, SCB * pCurScb)
+ 	pCurHcb->HCS_ActTcs = &pCurHcb->HCS_Tcs[pCurScb->SCB_Target];
+ 	pCurHcb->HCS_ActScb = pCurScb;
+ 	TUL_WR(pCurHcb->HCS_Base + TUL_SCmd, TSC_SEL_ATN);
+-	return;
+ }
+ 
+ /***************************************************************************/
+@@ -2585,7 +2572,6 @@ void tul_select_atn3(HCS * pCurHcb, SCB * pCurScb)
+ 	pCurHcb->HCS_ActTcs = &pCurHcb->HCS_Tcs[pCurScb->SCB_Target];
+ 	pCurHcb->HCS_ActScb = pCurScb;
+ 	TUL_WR(pCurHcb->HCS_Base + TUL_SCmd, TSC_SEL_ATN3);
+-	return;
+ }
+ 
+ /***************************************************************************/
 diff --git a/drivers/scsi/initio.h b/drivers/scsi/initio.h
-index dcd42e2..817b696 100644
+index 817b696..8186d14 100644
 --- a/drivers/scsi/initio.h
 +++ b/drivers/scsi/initio.h
-@@ -528,7 +528,6 @@ typedef struct I91u_Adpt_Struc {
+@@ -527,7 +527,6 @@ typedef struct I91u_Adpt_Struc {
+ 	UWORD ADPT_BIOS;	/* 0 */
  	UWORD ADPT_BASE;	/* 1 */
  	UBYTE ADPT_Bus;		/* 2 */
- 	UBYTE ADPT_Device;	/* 3 */
--	UBYTE ADPT_INTR;	/* 4 */
+-	UBYTE ADPT_Device;	/* 3 */
  	struct pci_dev *pci_dev;
  } INI_ADPT_STRUCT;
  
-@@ -536,10 +535,15 @@ typedef struct I91u_Adpt_Struc {
- /***********************************************************************
- 	      Host Adapter Control Structure
- ************************************************************************/
-+/*
-+ * TODO: Remove the "xxx_Unused" struct members only after determining
-+ * that this struct does not have special GFP_DMA alignment/padding
-+ * restrictions that hamper modification of Ha_Ctrl_Struc.
-+ */
- typedef struct Ha_Ctrl_Struc {
- 	UWORD HCS_Base;		/* 00 */
- 	UWORD HCS_BIOS;		/* 02 */
--	UBYTE HCS_Intr;		/* 04 */
-+	UBYTE HCS_Intr_Unused;	/* 04 */
- 	UBYTE HCS_SCSI_ID;	/* 05 */
- 	UBYTE HCS_MaxTar;	/* 06 */
- 	UBYTE HCS_NumScbs;	/* 07 */
