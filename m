@@ -1,59 +1,52 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: cciss broken with 2.6.22-rc2
-Date: Tue, 29 May 2007 14:01:23 +0200
-Message-ID: <465C1613.4050600@suse.de>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH 3/3] zfcp: Don't report device as LUN 0 to SCSI stack
+Date: Tue, 29 May 2007 15:29:54 +0200
+Message-ID: <200705291529.54785.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46070 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750903AbXE2MBZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 May 2007 08:01:25 -0400
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:41570 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762690AbXE2N0q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 May 2007 09:26:46 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Miller <mike.miller@hp.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schmichr@de.ibm.com
 
-Hi Mike,
+From: Christof Schmitt <schmichr@de.ibm.com>
 
-with the latest git snapshot the cciss driver hangs during
-initialisation. Enabling debug output I get:
+zfcp reported units to the SCSI stack starting
+with number 0. LUN 0 reported to the SCSI stack is usually 
+not the FCP LUN 0. When scanning for devices, 
+the SCSI stack tried to issue a REPORT LUN command to LUN 0. 
+The current design for zfcp does not want the SCSI stack to scan
+for devices, since they are configured explicitly via sysfs.
+This patch changes the numbering to always start with LUN 1 and therefore
+prevent the SCSI stack sending REPORT LUN command.
 
-cciss0: <0x3230> at PCI 0000:06:00.0 IRQ 4338 using DAC
-Sending cff0000 - down to controller
-cciss:  FIFO Empty read
-cciss:  Read cff00000 back from board
-Sending cff0000 - down to controller
-cciss:  FIFO Empty read
-cciss:  Read cff00002 back from board
-LUN Data
---------------------------
-Sending cff0000 - down to controller
-cciss:  FIFO Empty read
-cciss:  Read cff00000 back from board
-      blocks=3D 286677120 block_size=3D 512
-Sending cff0000 - down to controller
-cciss:  FIFO Empty read
-cciss:  Read cff00002 back from board
-      heads=3D255, sectors=3D32, cylinders=3D35132
+Signed-off-by: Christof Schmitt <schmichr@de.ibm.com>
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 
-Sending 5103000 - down to controller
+---
 
-and then the machine hangs.
-I'll try to investigate, but as I'm no expert in cciss my results might
-be limited.
-Looks like one of your recent fixes broke it; 2.6.21 worked fine.
+ drivers/s390/scsi/zfcp_aux.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Index: linux_jb_patched/drivers/s390/scsi/zfcp_aux.c
+===================================================================
+--- linux_jb_patched.orig/drivers/s390/scsi/zfcp_aux.c
++++ linux_jb_patched/drivers/s390/scsi/zfcp_aux.c
+@@ -864,7 +864,8 @@ zfcp_unit_enqueue(struct zfcp_port *port
+ 
+ 	zfcp_unit_get(unit);
+ 
+-	scsi_lun = 0;
++	/* Don't report LUN 0 to prevent the REPORT LUNS command from SCSI. */
++	scsi_lun = 1;
+ 	found = 0;
+ 	write_lock_irq(&zfcp_data.config_lock);
+ 	list_for_each_entry(tmp_unit, &port->unit_list_head, list) {
