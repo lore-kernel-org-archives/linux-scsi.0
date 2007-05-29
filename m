@@ -1,74 +1,44 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVDdrive
-	connected to mptspi driver
-Date: Tue, 29 May 2007 17:02:32 -0500
-Message-ID: <1180476152.3700.91.camel@mulgrave.il.steeleye.com>
-References: <664A4EBB07F29743873A87CF62C26D70787EAA@NAMAIL4.ad.lsil.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVDdriveconnected to mptspi driver
+Date: Tue, 29 May 2007 16:46:40 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70787ECB@NAMAIL4.ad.lsil.com>
+References: <1180476152.3700.91.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:48637 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750699AbXE2WCf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 May 2007 18:02:35 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D70787EAA@NAMAIL4.ad.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:57208 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750883AbXE2Wqt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 May 2007 18:46:49 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1180476152.3700.91.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Doug Chapman <doug.chapman@hp.com>, linux-scsi@vger.kernel.org
 
-On Tue, 2007-05-29 at 15:40 -0600, Moore, Eric wrote:
-> On Tuesday, May 22, 2007 3:27 PM, James Bottomley wrote:
+On Tuesday, May 29, 2007 4:03 PM,  James Bottomley wrote:
+
+> The device is presumably returning BUSY when you try to send a second
+> command when it's already processing the first ... that should be
+> propagated back to the mid-layer causing it to throttle the 
+> queue ... it
+> seems this wasn't happening for some reason to get such a massive
+> slowdown.  Is this a more generic problem in the fusion or is it a
+> simple issue only affecting the untagged case? 
 > 
-> > On Tue, 2007-05-22 at 14:25 -0600, Doug Chapman wrote:
-> > > Eric,
-> > > 
-> > > Sorry to bother you on this again, I realize you are very busy.
-> > > 
-> > > >From our off-list email and from your comments to Chip Coldwell in
-> > > redhat BZ 225177 it sounded like you were prepared to ACK this.  Any
-> > > chance you could send your official ACK so this can be committed?
-> > > 
-> > > much appreciated,
-> > 
-> > Actually I'd like a little analysis of why first, please Eric.
-> > 
-> > It seems to me, with the current wrong ordering in the initialisation
-> > results in a large queue depth being given to the DVD (which are
-> > habitually very low queue depth ... or even untagged beasts).  So does
-> > the slowdown result from the fusion accepting N commands for 
-> > the DVD and
-> > then rejecting N-1 of them resulting in ping pong between the 
-> > mid-layer
-> > and driver?
-> > 
-> > If so, we probably want to fix the command throttling in the driver.
-> > 
-> 
-> James - Sorry, for delay, somehow I missed this email.
-> 
-> I approve the patch that was submitted by Doug Chapman.      Here is the
-> reasoning:   The DVD device that Doug is using is either a SCSI_1
-> device, or it doesn't support Q-tags.  The problem is the driver is
-> setting the Queue depth to 32, when it should of been 1.   With the
-> queue depth set larger than one,  this device doesn't work properly.
 
-The device is presumably returning BUSY when you try to send a second
-command when it's already processing the first ... that should be
-propagated back to the mid-layer causing it to throttle the queue ... it
-seems this wasn't happening for some reason to get such a massive
-slowdown.  Is this a more generic problem in the fusion or is it a
-simple issue only affecting the untagged case? 
+Right, probably SELECTION_TIMEOUT.  Or command timeout with error
+handling threads getting called.   Either way, the customer hasn't
+provided a dmesg log or scsi bus trace, so we don't know for sure. But
+is this analysis really required?     Dont' you think the driver should
+return that it doens't support queued commands when
+sdev->tagged_supported (look at scsi_scan.c function scsi_add_lun) is
+set to zero?      It appears that is what other drivers in the kernel
+tree do.    When I reorganized the code in a patch I provided back in
+February,  I moved analyzing the sdev->tagged_supported flag to after I
+set the queue depth, not before.
 
-> This bug came about when I reorganized some spi functions by moving them
-> from mptscsih.c over to mptspi.c.   When I did that, there were some
-> flags not set correctly in mptscsih_change_queue_depth.  The function
-> that sets these flags is mptspi_setTargetNegoParms.    Prior to
-> reorganizing the code, I was calling mptscsi_setTargetNegoParms before I
-> set the queue depth, the current code does it after.    If you accept
-> this patch, then it sets the flags properly.   
-
-James
-
-
+Eric  
