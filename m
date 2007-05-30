@@ -1,46 +1,58 @@
-From: Bill Nottingham <notting@redhat.com>
-Subject: [PATCH RFC] qla2xxx: fix timeout in qla2x00_down_timeout
-Date: Wed, 30 May 2007 04:16:43 -0400
-Message-ID: <20070530081643.GA29004@nostromo.devel.redhat.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [patch 6/7] ps3: ROM Storage Driver
+Date: Wed, 30 May 2007 12:01:45 +0200
+Message-ID: <20070530100145.GA24586@lst.de>
+References: <20070525083607.784351000@sonycom.com> <20070525083632.677742000@sonycom.com> <20070529104948.GC29351@lst.de> <Pine.LNX.4.62.0705291818560.7698@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:44186 "EHLO mx1.redhat.com"
+Received: from verein.lst.de ([213.95.11.210]:54777 "EHLO mail.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750796AbXE3ISb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 May 2007 04:18:31 -0400
+	id S1751396AbXE3KCX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 May 2007 06:02:23 -0400
 Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.62.0705291818560.7698@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-driver@qlogic.com, linux-kernel@vger.kernel.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Christoph Hellwig <hch@lst.de>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-iterations is unsigned, so it is impossible to get out of the loop
-and return -ETIMEDOUT.
+On Tue, May 29, 2007 at 06:21:36PM +0200, Geert Uytterhoeven wrote:
+> On Tue, 29 May 2007, Christoph Hellwig wrote:
+> > > +/*
+> > > + * copy data from device into scatter/gather buffer
+> > > + */
+> > > +static int fill_from_dev_buffer(struct scsi_cmnd *cmd, const void *buf,
+> > > +				int buflen)
+> > > +{
+> > > +	int k, req_len, act_len, len, active;
+> > > +	void *kaddr;
+> > > +	struct scatterlist *sgpnt;
+> > > +
+> > > +	if (!cmd->request_bufflen)
+> > > +		return 0;
+> > > +
+> > > +	if (!cmd->request_buffer)
+> > > +		return DID_ERROR << 16;
+> > > +
+> > > +	if (cmd->sc_data_direction != DMA_BIDIRECTIONAL &&
+> > > +	    cmd->sc_data_direction != DMA_FROM_DEVICE)
+> > > +		return DID_ERROR << 16;
+> > > +
+> > > +	if (!cmd->use_sg) {
+> > > +		req_len = cmd->request_bufflen;
+> > > +		act_len = min(req_len, buflen);
+> > > +		memcpy(cmd->request_buffer, buf, act_len);
+> > > +		cmd->resid = req_len - act_len;
+> > > +		return 0;
+> > > +	}
+> > 
+> > This is never true anymore.
+> 
+> Just to be sure: all four if-cases or only the last one?
 
-Signed-off-by: Bill Nottingham <notting@redhat.com>
+That's just in reference to the last one.  The checks above could
+be condensed a little more aswell, but I'll comment on further in
+the second round of review, in the hope that the command submission
+path is a lot more streamline by then already.
 
----
-
-If the intention *is* to never fall out of the end of the loop, ignore
-this, and just replace it with do {} while (1);.
-
---- drivers/scsi/qla2xxx/qla_os.c.foo	2007-05-30 04:07:52.000000000 -0400
-+++ drivers/scsi/qla2xxx/qla_os.c	2007-05-30 04:08:31.000000000 -0400
-@@ -2587,15 +2587,15 @@ qla2x00_down_timeout(struct semaphore *s
- 	unsigned int iterations = jiffies_to_msecs(timeout)/100;
- 
- 	do {
- 		if (!down_trylock(sema))
- 			return 0;
- 		if (msleep_interruptible(step))
- 			break;
--	} while (--iterations >= 0);
-+	} while (--iterations > 0);
- 
- 	return -ETIMEDOUT;
- }
- 
- /* Firmware interface routines. */
- 
- #define FW_BLOBS	5
