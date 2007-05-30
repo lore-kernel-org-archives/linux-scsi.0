@@ -1,33 +1,63 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [patch 6/7] ps3: ROM Storage Driver
-Date: Wed, 30 May 2007 12:13:49 +0200
-Message-ID: <20070530101348.GD24586@lst.de>
-References: <20070525083607.784351000@sonycom.com> <20070525083632.677742000@sonycom.com> <20070529104948.GC29351@lst.de> <Pine.LNX.4.62.0705291308280.7698@pademelon.sonytel.be>
+From: "Seokmann Ju" <seokmann.ju@qlogic.com>
+Subject: RE: [PATCH RFC] qla2xxx: fix timeout in qla2x00_down_timeout
+Date: Wed, 30 May 2007 04:25:32 -0700
+Message-ID: <A6970E9A290F3F4682E1EAD0EA14F32B0108CA30@AVEXCH2.qlogic.org>
+References: <20070530081643.GA29004@nostromo.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:54958 "EHLO mail.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751578AbXE3KO0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 May 2007 06:14:26 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0705291308280.7698@pademelon.sonytel.be>
+Received: from avexch2.qlogic.com ([198.70.193.116]:6507 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751576AbXE3Lkl convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2007 07:40:41 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20070530081643.GA29004@nostromo.devel.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Christoph Hellwig <hch@lst.de>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bill Nottingham <notting@redhat.com>, linux-scsi@vger.kernel.org
+Cc: Linux Driver <Linux-Driver@qlogic.com>, linux-kernel@vger.kernel.org
 
-On Tue, May 29, 2007 at 01:11:41PM +0200, Geert Uytterhoeven wrote:
-> > This looks very inefficient.  Just set sg_tablesize of your driver
-> > to 1 to avoid getting mutiple segments.
+Thanks for finding. 
+Acked-by: Seokmann Ju <seokmann.ju@qlogic.com>
+
+> -----Original Message-----
+> From: Bill Nottingham [mailto:notting@redhat.com] 
+> Sent: Wednesday, May 30, 2007 1:17 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: Linux Driver; linux-kernel@vger.kernel.org
+> Subject: [PATCH RFC] qla2xxx: fix timeout in qla2x00_down_timeout
 > 
-> The disadvantage of setting sg_tablesize = 1 is that the driver will get small
-> requests (PAGE_SIZE) most of the time, which is very bad for performance.
-
-If you set .clustering = 1 in your host template you will frequently
-get larger requests.
-
-For any sane hypervisor or hardware the copy should be worth
-than that.  Then again a sane hardware or hypervisor would support
-SG requests..
-
+> iterations is unsigned, so it is impossible to get out of the 
+> loop and return -ETIMEDOUT.
+> 
+> Signed-off-by: Bill Nottingham <notting@redhat.com>
+> 
+> ---
+> 
+> If the intention *is* to never fall out of the end of the 
+> loop, ignore this, and just replace it with do {} while (1);.
+> 
+> --- drivers/scsi/qla2xxx/qla_os.c.foo	2007-05-30 
+> 04:07:52.000000000 -0400
+> +++ drivers/scsi/qla2xxx/qla_os.c	2007-05-30 
+> 04:08:31.000000000 -0400
+> @@ -2587,15 +2587,15 @@ qla2x00_down_timeout(struct semaphore *s
+>  	unsigned int iterations = jiffies_to_msecs(timeout)/100;
+>  
+>  	do {
+>  		if (!down_trylock(sema))
+>  			return 0;
+>  		if (msleep_interruptible(step))
+>  			break;
+> -	} while (--iterations >= 0);
+> +	} while (--iterations > 0);
+>  
+>  	return -ETIMEDOUT;
+>  }
+>  
+>  /* Firmware interface routines. */
+>  
+>  #define FW_BLOBS	5
+> 
