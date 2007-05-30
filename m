@@ -1,68 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Deadlock during DV when queue is full
-Date: Wed, 30 May 2007 14:22:52 -0500
-Message-ID: <1180552972.3697.52.camel@mulgrave.il.steeleye.com>
-References: <1180395725.1292.43.camel@bluto.andrew>
-	 <20070530180138.GQ15559@kernel.dk>
-	 <1180550612.3697.39.camel@mulgrave.il.steeleye.com>
-	 <20070530185526.GV15559@kernel.dk>
-	 <1180551722.3697.41.camel@mulgrave.il.steeleye.com>
-	 <20070530190309.GW15559@kernel.dk>
-	 <1180552075.3697.44.camel@mulgrave.il.steeleye.com>
-	 <20070530191110.GY15559@kernel.dk>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: Re: kexec and aacraid broken
+Date: Wed, 30 May 2007 14:19:49 -0700
+Message-ID: <86802c440705301419g2ed59773vda15c3d2a9e90479@mail.gmail.com>
+References: <20070530141723.GB3773@in.ibm.com>
+	 <AE4F746F2AECFC4DA4AADD66A1DFEF01A55010@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:58217 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754153AbXE3TWz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2007 15:22:55 -0400
-In-Reply-To: <20070530191110.GY15559@kernel.dk>
+Received: from wa-out-1112.google.com ([209.85.146.179]:42335 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753409AbXE3VTu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2007 17:19:50 -0400
+Received: by wa-out-1112.google.com with SMTP id j4so1230421wah
+        for <linux-scsi@vger.kernel.org>; Wed, 30 May 2007 14:19:49 -0700 (PDT)
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55010@otce2k301.adaptec.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Patterson <andrew.patterson@hp.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Moore, Eric" <Eric.Moore@lsi.com>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: vgoyal@in.ibm.com, Andrew Morton <akpm@linux-foundation.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-On Wed, 2007-05-30 at 21:11 +0200, Jens Axboe wrote:
-> > > > > > > There's no other solution than maintaining a cached request + command
-> > > > > > > for this. libata has a similar issue wrt error handling with ncq, we may
-> > > > > > > need a command in error handling to retrieve the log page.
-> > > > > > 
-> > > > > > Actually, there is another solution: DV is careful only to be using a
-> > > > > > single command for its processes ... if we could use the eh command for
-> > > > > > this, then I think the problem would go away ... unfortunately, that's a
-> > > > > > bit more complex to achieve than it sounds.
-> > > 
-> > > (btw this is not another solution, it's indeed the solution of keeping a
-> > > reserved request :-)
-> > > 
-> > > > > That would be fine, the key is just to have such a reserved command. Is
-> > > > > there also a reserved request?
-> > > > 
-> > > > Yes ... we clean out the failing command in error recovery and reuse it,
-> > > > so we know it has both a command and a request.
-> > > 
-> > > Sounds a bit hackish, unless the failed command never needs to be
-> > > retried.
-> > 
-> > Oh, it does.  We clean it out, save the necessary on the stack and reuse
-> > it, then restore the data and send it for a retry.  Up until a while ago
-> > it was what all the old_ fields were for in the SCSI command; now, after
-> > Christoph fixed it, we save them on the stack instead.
-> 
-> I guess the scsi command doesn't need a whole lot of saved state, but
-> the request does.
+On 5/30/07, Salyzyn, Mark <mark_salyzyn@adaptec.com> wrote:
+> Vivek Goyal [mailto:vgoyal@in.ibm.com] writes:
+> > So most likely if we start disabling the interrupts
+> > in .shutdown routine we might skip resetting adapter
+> > on every kexec without any side affects?
+>
+> Not that simple. The .shutdown would need to perform more resource
+> cleanups of the .remove call to prevent side effects. I need to move
+> some of the .remove activity into the .shutdown handler to make sure the
+> adapter is quiesced.
+>
+> I will hold off on submitting any of these changes until they are
+> evaluated and tested; I am waiting for feedback from Yinghai on the
+> other mitigations that I feel are closer to the root cause.
+>
+1. [SCSI] aacraid: superfluous adapter reset for IBM 8 series
+ServeRAID controllers
+2. [SCSI] aacraid: kexec fix (reset interrupt handler)
+3. aacraid_commit_reset.patch
+4. [PATCH] aacraid: fix shutdown handler to also disable interrupts
 
-Well, we're careful never to let the block layer see it again.  We have
-a special injection point scsi_send_eh_cmnd() for this.  On the other
-hand ... supposing we were to push it back on the block queue for a
-resend, what would we need to save?  It's fully prepared and set up as
-special because of the attached command, so I'm not sure there would be
-anything, as long as we don't let it go into the normal block completion
-paths ... I'm just wondering if we can get rid of the special injection
-path.
+the kernel with this patch -4  and even without 1, 2, 3
 
-James
+can load other kernel with or without patch 1,2,3
 
-
+YH
