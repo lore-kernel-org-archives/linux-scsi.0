@@ -1,116 +1,83 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: kexec and aacraid broken
-Date: Wed, 30 May 2007 09:57:08 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01A54FEE@otce2k301.adaptec.com>
-References: <20070530132430.GA3773@in.ibm.com>
+Subject: [PATCH] aacraid: Changeable queue depth
+Date: Wed, 30 May 2007 10:01:14 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01A54FF1@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF019E18B5@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C7A2C2.FCC8FBB4"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:52891 "EHLO
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:52982 "EHLO
 	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755573AbXE3N5L convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2007 09:57:11 -0400
+	with ESMTP id S1753587AbXE3OBR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2007 10:01:17 -0400
+Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id EE6751851BC
+	for <linux-scsi@vger.kernel.org>; Wed, 30 May 2007 07:01:15 -0700 (PDT)
 Content-class: urn:content-classes:message
-In-reply-to: <20070530132430.GA3773@in.ibm.com>
+In-reply-to: <AE4F746F2AECFC4DA4AADD66A1DFEF019E18B5@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vgoyal@in.ibm.com
-Cc: Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yhlu.kernel@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is clouding the issue, Vivek.
+This is a multi-part message in MIME format.
 
-There should be no harm, except to time, resetting the adapter. I do
-want to optimize for boot time, but do not view this as a 'bug' if the
-Adapter should reset during the initialization procedure. We need
-instead to harden the driver to deal with Adapters that behave in an
-untimely manner as a result of the reset since this generically deals
-with all possible transitions (boot w/o BIOS, w/BIOS, kexec and kdump).
+------_=_NextPart_001_01C7A2C2.FCC8FBB4
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: quoted-printable
 
-I will look into a possibility the driver is not performing the clean
-shutdown as a result of a kexec, but that is a refinement and should not
-be considered a fix for *this* reported problem; it merely moves the
-problem to a kdump. The driver only disables the interrupts when the
-driver is .remove'd (aac_remove_one) and not for .shutdown
-(aac_shutdown). The later merely tells the firmware to stop performing
-builds if in progress, flush the cache, and all subsequent writes are
-performed in write-through mode; it does not clear out the driver
-resources and leaves that to the .remove function only. The failure of
-.remove being called may be a result of this being a boot driver?
+Inspired by Brian King's patch to the ibmvscsi driver. Adds support for
+a changeable queue depth to the aacraid driver.
 
-Also, the code:
+This attached patch is against current scsi-misc-2.6
 
-        dev->OIMR = status = rx_readb (dev, MUnit.OIMR);
-        if ((((status & 0x0c) != 0x0c) . . .
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patch attachments.
 
-detects if the adapter's interrupts were disabled, as would happen on a
-clean shutdown. Some of the Adapters can NOT disable their interrupts,
-and some have a default state with the interrupts enabled. If the
-Adapter still has active interrupts, then there is no telling what
-transpired before and it is considered a safety measure to reset the
-Adapter in these cases. I'd prefer to err on the side of resetting the
-Adapter superfluously than deal with a condition where the Adapter could
-be in an unknown state with a possibility of sustaining an outstanding
-command and associated interrupt (which was the whole reason this code
-was introduced).
-
-In time I am sure, I will refine this code to incorporate Quirks for
-adapters that have unusual conditions for the above stated interrupt and
-remove the possible superfluous reset.
-
-Yinghai, can you please provide the Adapter designation just in case it
-could be the first in this refined list. I will NOT consider this
-refinement a bugfix for the same reasons stated above.
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
 Sincerely -- Mark Salyzyn
 
-> -----Original Message-----
-> From: Vivek Goyal [mailto:vgoyal@in.ibm.com] 
-> Sent: Wednesday, May 30, 2007 9:25 AM
-> To: Salyzyn, Mark
-> Cc: Andrew Morton; Yinghai Lu; Eric W. Biederman; Linux 
-> Kernel Mailing List; linux-scsi@vger.kernel.org; Michal Piotrowski
-> Subject: Re: kexec and aacraid broken
-> 
-> 
-> On Wed, May 30, 2007 at 07:44:02AM -0400, Salyzyn, Mark wrote:
-> > I believe this issue is a result of the 
-> aacraid_commit_reset patch (as
-> > posted for scsi-misc-2.6, enclosed to permit testing) not 
-> yet propagated
-> > to the 2.6.22-rc3 tree.
-> > 
-> > This is the adapter taking longer than 3 minutes to start 
-> after a reset.
-> > I seriously doubt either of these patches suggested below 
-> will have an
-> > affect. And if they do, they are not root cause, one 
-> reduces the chances
-> > that the card will be reset during initialization (thus 
-> applied would
-> > likely mitigate this problem), the other prevents a panic when the
-> > Adapter is reset (removed, would result in dogs and cats 
-> sleeping with
-> > each other).
-> > 
-> > Please use kernel parameter aacraid.startup_timeout=540 
-> (merely larger
-> > than the default 180 seconds) when spawning the kexec or see if the
-> > aacraid_commit_reset.patch resolves the issue to confirm my hunch.
-> > 
-> 
-> Hi Mark,
-> 
-> During a normal kexec (not kdump) adapter reset should not have taken
-> place at all. device_shutdown() routines should have taken care to
-> bring the device to a known sane state in first kernel so that second
-> kernel can initialize it without doing a reset.
-> 
-> With reset patch, now reset triggers on every kexec. Previously
-> that was not the case with kexec and adapter used to come up. I think
-> this needs to be looked into.
-> 
-> Thanks
-> Vivek
-> 
+------_=_NextPart_001_01C7A2C2.FCC8FBB4
+Content-Type: application/octet-stream;
+	name="aacraid_change_queue_depth.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_change_queue_depth.patch
+Content-Disposition: attachment;
+	filename="aacraid_change_queue_depth.patch"
+
+ZGlmZiAtcnUgYS8vZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYyBiLy9kcml2ZXJzL3Njc2kv
+YWFjcmFpZC9saW5pdC5jCi0tLSBhLy9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDct
+MDUtMzAgMDk6MjY6NDEuNTg3OTE3OTg3IC0wNDAwCisrKyBiLy9kcml2ZXJzL3Njc2kvYWFjcmFp
+ZC9saW5pdC5jCTIwMDctMDUtMzAgMDk6Mjg6NTIuNzgwOTM3NDg1IC0wNDAwCkBAIC00NDYsNiAr
+NDQ2LDQzIEBACiAJcmV0dXJuIDA7CiB9CiAKKy8qKgorICoJYWFjX2NoYW5nZV9xdWV1ZV9kZXB0
+aAkJLQlhbHRlciBxdWV1ZSBkZXB0aHMKKyAqCUBzZGV2OglTQ1NJIGRldmljZSB3ZSBhcmUgY29u
+c2lkZXJpbmcKKyAqCUBkZXB0aDoJZGVzaXJlZCBxdWV1ZSBkZXB0aAorICoKKyAqCUFsdGVycyBx
+dWV1ZSBkZXB0aHMgZm9yIHRhcmdldCBkZXZpY2UgYmFzZWQgb24gdGhlIGhvc3QgYWRhcHRlcidz
+CisgKgl0b3RhbCBjYXBhY2l0eSBhbmQgdGhlIHF1ZXVlIGRlcHRoIHN1cHBvcnRlZCBieSB0aGUg
+dGFyZ2V0IGRldmljZS4KKyAqLworCitzdGF0aWMgaW50IGFhY19jaGFuZ2VfcXVldWVfZGVwdGgo
+c3RydWN0IHNjc2lfZGV2aWNlICpzZGV2LCBpbnQgZGVwdGgpCit7CisJaWYgKHNkZXYtPnRhZ2dl
+ZF9zdXBwb3J0ZWQgJiYgKHNkZXYtPnR5cGUgPT0gVFlQRV9ESVNLKSAmJgorCSAgICAoc2Rldl9j
+aGFubmVsKHNkZXYpID09IENPTlRBSU5FUl9DSEFOTkVMKSkgeworCQlzdHJ1Y3Qgc2NzaV9kZXZp
+Y2UgKiBkZXY7CisJCXN0cnVjdCBTY3NpX0hvc3QgKmhvc3QgPSBzZGV2LT5ob3N0OworCQl1bnNp
+Z25lZCBudW0gPSAwOworCisJCV9fc2hvc3RfZm9yX2VhY2hfZGV2aWNlKGRldiwgaG9zdCkgewor
+CQkJaWYgKGRldi0+dGFnZ2VkX3N1cHBvcnRlZCAmJiAoZGV2LT50eXBlID09IFRZUEVfRElTSykg
+JiYKKwkJCSAgICAoc2Rldl9jaGFubmVsKGRldikgPT0gQ09OVEFJTkVSX0NIQU5ORUwpKQorCQkJ
+CSsrbnVtOworCQkJKytudW07CisJCX0KKwkJaWYgKG51bSA+PSBob3N0LT5jYW5fcXVldWUpCisJ
+CQludW0gPSBob3N0LT5jYW5fcXVldWUgLSAxOworCQlpZiAoZGVwdGggPiAoaG9zdC0+Y2FuX3F1
+ZXVlIC0gbnVtKSkKKwkJCWRlcHRoID0gaG9zdC0+Y2FuX3F1ZXVlIC0gbnVtOworCQlpZiAoZGVw
+dGggPiAyNTYpCisJCQlkZXB0aCA9IDI1NjsKKwkJZWxzZSBpZiAoZGVwdGggPCAyKQorCQkJZGVw
+dGggPSAyOworCQlzY3NpX2FkanVzdF9xdWV1ZV9kZXB0aChzZGV2LCBNU0dfT1JERVJFRF9UQUcs
+IGRlcHRoKTsKKwl9IGVsc2UKKwkJc2NzaV9hZGp1c3RfcXVldWVfZGVwdGgoc2RldiwgMCwgMSk7
+CisJcmV0dXJuIHNkZXYtPnF1ZXVlX2RlcHRoOworfQorCiBzdGF0aWMgaW50IGFhY19pb2N0bChz
+dHJ1Y3Qgc2NzaV9kZXZpY2UgKnNkZXYsIGludCBjbWQsIHZvaWQgX191c2VyICogYXJnKQogewog
+CXN0cnVjdCBhYWNfZGV2ICpkZXYgPSAoc3RydWN0IGFhY19kZXYgKilzZGV2LT5ob3N0LT5ob3N0
+ZGF0YTsKQEAgLTg0NCw2ICs4ODEsNyBAQAogCS5iaW9zX3BhcmFtICAgICAJCT0gYWFjX2Jpb3Nw
+YXJtLAkKIAkuc2hvc3RfYXR0cnMJCQk9IGFhY19hdHRycywKIAkuc2xhdmVfY29uZmlndXJlCQk9
+IGFhY19zbGF2ZV9jb25maWd1cmUsCisJLmNoYW5nZV9xdWV1ZV9kZXB0aAkJPSBhYWNfY2hhbmdl
+X3F1ZXVlX2RlcHRoLAogCS5laF9hYm9ydF9oYW5kbGVyCQk9IGFhY19laF9hYm9ydCwKIAkuZWhf
+aG9zdF9yZXNldF9oYW5kbGVyCQk9IGFhY19laF9yZXNldCwKIAkuY2FuX3F1ZXVlICAgICAgCQk9
+IEFBQ19OVU1fSU9fRklCLAkK
+
+------_=_NextPart_001_01C7A2C2.FCC8FBB4--
