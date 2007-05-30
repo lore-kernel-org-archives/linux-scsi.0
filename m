@@ -1,97 +1,48 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: kexec and aacraid broken
-Date: Tue, 29 May 2007 19:13:47 -0700
-Message-ID: <20070529191347.9b1edd8b.akpm@linux-foundation.org>
-References: <86802c440705291859y39a4ca27uf5ddb84810f33510@mail.gmail.com>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: Re: [PATCH 1/3] zfcp: IO stall after path checker changes
+Date: Wed, 30 May 2007 08:36:11 +0200
+Message-ID: <200705300836.11645.swen@vnet.ibm.com>
+References: <200705291529.39677.swen.schillig@freenet.de> <1180453916.3700.29.camel@mulgrave.il.steeleye.com> <1180454082.3700.32.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:49513 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750839AbXE3CN5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 May 2007 22:13:57 -0400
-In-Reply-To: <86802c440705291859y39a4ca27uf5ddb84810f33510@mail.gmail.com>
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:45150 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751299AbXE3GdC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 May 2007 02:33:02 -0400
+In-Reply-To: <1180454082.3700.32.camel@mulgrave.il.steeleye.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Yinghai Lu <yhlu.kernel@gmail.com>
-Cc: Vivek Goyal <vgoyal@in.ibm.com>, "Eric W. Biederman" <ebiederm@xmission.com>, aacraid@adaptec.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, mloehr2@linux.vnet.ibm.com
 
-On Tue, 29 May 2007 18:59:32 -0700 "Yinghai Lu" <yhlu.kernel@gmail.com> wrote:
-
-> latest tree, can not use kexec to load 2.6.22-rc3 at least.
+On Tuesday 29 May 2007 17:54, James Bottomley wrote:
+> On Tue, 2007-05-29 at 10:51 -0500, James Bottomley wrote:
+> > On Tue, 2007-05-29 at 15:55 +0200, Swen Schillig wrote:
+> > > I just saw that I posted this patch on 9th already, 
+> > > but todays git pull from your tree didn't show the inclusion of this one (and another patch posted the same day).
+> > > Event though it's reported in your summary from the 26 !
+> > > If I'm to quick then I'm sorry for sending it twice, if there's any other
+> > > reason for this patch to not be included please let me know.
+> > 
+> > Sorry ... must have missed it.  I'll add it to rc-fixes (unfortunately I
+> > need linus to pull before I can push into this tree, so there'll be a
+> > slight delay).
 > 
-> got:
+> Actually, forget that; this is it, isn't it?
 > 
-> AAC0: adapter kernel panic'd fffffffd
-> AAC0: adapter kernel failed to start, init status=0
-
-One of the two diffs below, I guess.  Please do a `patch -R -p1' of this
-email and retest?
-
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-rc-fixes-2.6.git;a=commit;h=9f28745a6b554fdd6b0dbc9856077701a55f9569
 > 
-> but can load 2.6.21.3
+> In which case it's awaiting a pull into Linus' tree head.
 > 
+> James
+> 
+> 
+Yeah, that's it.
 
-Michal, can you please add this to the regression list?
+Thanks.
 
-
-
-
-commit 9e4d4a5d71d673901d9c1df5146ce545c2cc0cc0
-Author: Salyzyn, Mark <mark_salyzyn@adaptec.com>
-Date:   Tue May 1 11:43:06 2007 -0400
-
-    [SCSI] aacraid: superfluous adapter reset for IBM 8 series ServeRAID controllers
-    
-    The kexec patch introduced a superfluous (and otherwise inert) reset of
-    some adapters. The register can have a hardware default value that has
-    zeros for the undefined interrupts. This patch refines the test of the
-    interrupt enable register to focus on only the interrupts that affect
-    the driver in order to detect if an incomplete shutdown of the Adapter
-    had occurred (kdump).
-    
-    Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
-index b6ee3c0..291cd14 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -542,7 +542,7 @@ int _aac_rx_init(struct aac_dev *dev)
- 	dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
- 	dev->a_ops.adapter_enable_int = aac_rx_disable_interrupt;
- 	dev->OIMR = status = rx_readb (dev, MUnit.OIMR);
--	if ((((status & 0xff) != 0xff) || reset_devices) &&
-+	if ((((status & 0x0c) != 0x0c) || reset_devices) &&
- 	  !aac_rx_restart_adapter(dev, 0))
- 		++restart;
- 	/*
-commit a5694ec545a880f9d23463fddc894f5096cc68fa
-Author: Salyzyn, Mark <mark_salyzyn@adaptec.com>
-Date:   Mon Apr 30 13:22:24 2007 -0400
-
-    [SCSI] aacraid: kexec fix (reset interrupt handler)
-    
-    Another layer on this onion also discovered by Duane, the
-    interrupt enable handler also needed to be set ... The interrupt enable
-    was called from within the synchronous command handler.
-    
-    Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
-index 0c71315..b6ee3c0 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -539,6 +539,8 @@ int _aac_rx_init(struct aac_dev *dev)
- 	}
- 
- 	/* Failure to reset here is an option ... */
-+	dev->a_ops.adapter_sync_cmd = rx_sync_cmd;
-+	dev->a_ops.adapter_enable_int = aac_rx_disable_interrupt;
- 	dev->OIMR = status = rx_readb (dev, MUnit.OIMR);
- 	if ((((status & 0xff) != 0xff) || reset_devices) &&
- 	  !aac_rx_restart_adapter(dev, 0))
-
+Swen
