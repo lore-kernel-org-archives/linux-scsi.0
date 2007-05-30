@@ -1,44 +1,70 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH] fix for BZ 8426 - massive slowdown on SCSI CD/DVDdriveconnected to mptspi driver
-Date: Tue, 29 May 2007 16:46:40 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70787ECB@NAMAIL4.ad.lsil.com>
-References: <1180476152.3700.91.camel@mulgrave.il.steeleye.com>
+From: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Subject: RE: [patch 1/1] scsi: cover up bugs^W^W^WFix up compiler warnings in megaraid driver
+Date: Tue, 29 May 2007 19:10:10 -0600
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229AE165A@NAMAIL2.ad.lsil.com>
+References: <20070525144534.a76e59b8.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:57208 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:63249 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750883AbXE2Wqt convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 May 2007 18:46:49 -0400
+	id S1752579AbXE3BK1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 May 2007 21:10:27 -0400
 Content-class: urn:content-classes:message
-In-Reply-To: <1180476152.3700.91.camel@mulgrave.il.steeleye.com>
+In-Reply-To: <20070525144534.a76e59b8.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Doug Chapman <doug.chapman@hp.com>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, mbligh@google.com
 
-On Tuesday, May 29, 2007 4:03 PM,  James Bottomley wrote:
+Hello Andrew,
 
-> The device is presumably returning BUSY when you try to send a second
-> command when it's already processing the first ... that should be
-> propagated back to the mid-layer causing it to throttle the 
-> queue ... it
-> seems this wasn't happening for some reason to get such a massive
-> slowdown.  Is this a more generic problem in the fusion or is it a
-> simple issue only affecting the untagged case? 
-> 
+	The email-id megaraidlinux@lsi.com is the alias for driver
+developers for MegaRAID product. This id includes my name. Recently I
+submitted patch to update the MAINTAINERS to add this id.	
 
-Right, probably SELECTION_TIMEOUT.  Or command timeout with error
-handling threads getting called.   Either way, the customer hasn't
-provided a dmesg log or scsi bus trace, so we don't know for sure. But
-is this analysis really required?     Dont' you think the driver should
-return that it doens't support queued commands when
-sdev->tagged_supported (look at scsi_scan.c function scsi_add_lun) is
-set to zero?      It appears that is what other drivers in the kernel
-tree do.    When I reorganized the code in a patch I provided back in
-February,  I moved analyzing the sdev->tagged_supported flag to after I
-set the queue depth, not before.
+Regards,
 
-Eric  
+Sumant
+
+-----Original Message-----
+From: Andrew Morton [mailto:akpm@linux-foundation.org] 
+Sent: Friday, May 25, 2007 2:46 PM
+To: Patro, Sumant
+Cc: James.Bottomley@steeleye.com; linux-scsi@vger.kernel.org;
+mbligh@google.com
+Subject: Re: [patch 1/1] scsi: cover up bugs^W^W^WFix up compiler
+warnings in megaraid driver
+
+On Fri, 25 May 2007 14:28:19 -0600 "Patro, Sumant"
+<Sumant.Patro@lsi.com> wrote:
+
+> Ack.
+
+Thanks.
+
+
+
+While we're here...
+
+box:/usr/src/25> grep -i lsi MAINTAINERS
+LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
+M:      Eric.Moore@lsi.com
+M:      support@lsi.com
+L:      mpt_linux_developer@lsi.com
+W:      http://www.lsilogic.com/support
+LSILOGIC/SYMBIOS/NCR 53C8XX and 53C1010 PCI-SCSI drivers
+W:      http://megaraid.lsilogic.com
+USB KAWASAKI LSI DRIVER
+M:      uclinux-v850@lsi.nec.co.jp
+
+box:/usr/src/25> grep -i sumant MAINTAINERS   
+box:/usr/src/25> 
+
+Could I ask that you review the MAINTAINERS file and ensure that
+all appropriate lsil developers are appropriately mentioned and that
+all drivers which lsil look after have the appropriate entries?
+
+Thanks.
