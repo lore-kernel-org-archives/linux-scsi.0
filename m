@@ -1,264 +1,81 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH 15/19] aacraid: convert to use the data buffer accessors
-Date: Thu, 31 May 2007 10:59:23 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01A552B7@otce2k301.adaptec.com>
-References: <20070512184228J.fujita.tomonori@lab.ntt.co.jp>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: 2.6.22-rc3-mm1
+Date: Thu, 31 May 2007 17:11:07 +0200
+Message-ID: <20070531171107.3d665158@gondolin.boeblingen.de.ibm.com>
+References: <20070530235823.793f00d9.akpm@linux-foundation.org>
+	<20070531140922.2e55aefb@gondolin.boeblingen.de.ibm.com>
+	<20070531121557.GQ23968@parisc-linux.org>
+	<20070531142048.05edf133@gondolin.boeblingen.de.ibm.com>
+	<465EC101.7010105@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:59697 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbXEaO7Z convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 May 2007 10:59:25 -0400
-Content-class: urn:content-classes:message
-In-reply-to: <20070512184228J.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757444AbXEaPLY@vger.kernel.org>
+In-Reply-To: <465EC101.7010105@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Dan Williams <dan.j.williams@intel.com>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-ACK Inspected and compile tested
+On Thu, 31 May 2007 08:35:13 -0400,
+Jeff Garzik <jeff@garzik.org> wrote:
 
-Sincerely -- Mark Salyzyn
+> Cornelia Huck wrote:
+> > On Thu, 31 May 2007 06:15:57 -0600,
+> > Matthew Wilcox <matthew@wil.cx> wrote:
+> > 
+> >> On Thu, May 31, 2007 at 02:09:22PM +0200, Cornelia Huck wrote:
+> >>> I split those functions out into a new file. Builds on s390 and i386.
+> >> Why not just put #ifdef CONFIG_HAS_DMA / #endif around the pair of
+> >> functions?  I don't see the need to add a new Kconfig symbol and a new
+> >> file for this.
+> > 
+> > I prefer a new file over #ifdefs in c files. (New dma-dependent stuff
+> > would also have a place where it could go to.)
+> > 
+> > But I'll do whatever ends up as consensus :)
+> 
+> 50 lines isn't much need for a new file.
 
-> -----Original Message-----
-> From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp] 
-> Sent: Saturday, May 12, 2007 6:06 AM
-> To: Salyzyn, Mark
-> Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com
-> Subject: [PATCH 15/19] aacraid: convert to use the data 
-> buffer accessors
-> 
-> 
-> This converts aacraid to use the data buffer accessors.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/aacraid/aachba.c |   96 
-> +++++++++++++++++-----------------------
->  1 files changed, 41 insertions(+), 55 deletions(-)
-> 
-> diff --git a/drivers/scsi/aacraid/aachba.c 
-> b/drivers/scsi/aacraid/aachba.c
-> index 5cdfea3..813f89f 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -341,7 +341,7 @@ static void aac_internal_transfer(struct
->  {
->  	void *buf;
->  	unsigned int transfer_len;
-> -	struct scatterlist *sg = scsicmd->request_buffer;
-> +	struct scatterlist *sg = scsi_sglist(scsicmd);
->  
->  	buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
->  	transfer_len = min(sg->length, len + offset);
-> @@ -1033,7 +1033,7 @@ static int aac_scsi_64(struct fib * fib,
->  	struct aac_srb * srbcmd = aac_scsi_common(fib, cmd);
->  
->  	aac_build_sg64(cmd, (struct sgmap64*) &srbcmd->sg);
-> -	srbcmd->count = cpu_to_le32(cmd->request_bufflen);
-> +	srbcmd->count = cpu_to_le32(scsi_bufflen(cmd));
->  
->  	memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
->  	memcpy(srbcmd->cdb, cmd->cmnd, cmd->cmd_len);
-> @@ -1061,7 +1061,7 @@ static int aac_scsi_32(struct fib * fib,
->  	struct aac_srb * srbcmd = aac_scsi_common(fib, cmd);
->  
->  	aac_build_sg(cmd, (struct sgmap*)&srbcmd->sg);
-> -	srbcmd->count = cpu_to_le32(cmd->request_bufflen);
-> +	srbcmd->count = cpu_to_le32(scsi_bufflen(cmd));
->  
->  	memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
->  	memcpy(srbcmd->cdb, cmd->cmnd, cmd->cmd_len);
-> @@ -1363,12 +1363,8 @@ static void io_callback(void *context, s
->  	}
->  
->  	BUG_ON(fibptr == NULL);
-> -		
-> -	if(scsicmd->use_sg)
-> -		pci_unmap_sg(dev->pdev, 
-> -			(struct scatterlist *)scsicmd->request_buffer,
-> -			scsicmd->use_sg,
-> -			scsicmd->sc_data_direction);
-> +
-> +	scsi_dma_unmap(&dev->pdev->dev, scsicmd);
->  
->  	readreply = (struct aac_read_reply *)fib_data(fibptr);
->  	if (le32_to_cpu(readreply->status) == ST_OK)
-> @@ -2135,15 +2131,11 @@ static void aac_srb_callback(void *conte
->  	/*
->  	 *	Calculate resid for sg 
->  	 */
-> -	 
-> -	scsicmd->resid = scsicmd->request_bufflen - 
-> +
-> +	scsi_resid(scsicmd) = scsi_bufflen(scsicmd) -
->  		le32_to_cpu(srbreply->data_xfer_length);
->  
-> -	if(scsicmd->use_sg)
-> -		pci_unmap_sg(dev->pdev, 
-> -			(struct scatterlist *)scsicmd->request_buffer,
-> -			scsicmd->use_sg,
-> -			scsicmd->sc_data_direction);
-> +	scsi_dma_unmap(&dev->pdev->dev, scsicmd);
->  
->  	/*
->  	 * First check the fib status
-> @@ -2329,34 +2321,33 @@ static unsigned long aac_build_sg(struct
->  {
->  	struct aac_dev *dev;
->  	unsigned long byte_count = 0;
-> +	int nseg;
->  
->  	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
->  	// Get rid of old data
->  	psg->count = 0;
->  	psg->sg[0].addr = 0;
-> -	psg->sg[0].count = 0;  
-> -	if (scsicmd->use_sg) {
-> +	psg->sg[0].count = 0;
-> +
-> +	nseg = scsi_dma_map(&dev->pdev->dev, scsicmd);
-> +	BUG_ON(nseg < 0);
-> +	if (nseg) {
->  		struct scatterlist *sg;
->  		int i;
-> -		int sg_count;
-> -		sg = (struct scatterlist *) scsicmd->request_buffer;
->  
-> -		sg_count = pci_map_sg(dev->pdev, sg, scsicmd->use_sg,
-> -			scsicmd->sc_data_direction);
-> -		psg->count = cpu_to_le32(sg_count);
-> +		psg->count = cpu_to_le32(nseg);
->  
-> -		for (i = 0; i < sg_count; i++) {
-> +		scsi_for_each_sg(scsicmd, sg, nseg, i) {
->  			psg->sg[i].addr = 
-> cpu_to_le32(sg_dma_address(sg));
->  			psg->sg[i].count = cpu_to_le32(sg_dma_len(sg));
->  			byte_count += sg_dma_len(sg);
-> -			sg++;
->  		}
->  		/* hba wants the size to be exact */
-> -		if(byte_count > scsicmd->request_bufflen){
-> -			u32 temp = le32_to_cpu(psg->sg[i-1].count) - 
-> -				(byte_count - scsicmd->request_bufflen);
-> +		if (byte_count > scsi_bufflen(scsicmd)) {
-> +			u32 temp = le32_to_cpu(psg->sg[i-1].count) -
-> +				(byte_count - scsi_bufflen(scsicmd));
->  			psg->sg[i-1].count = cpu_to_le32(temp);
-> -			byte_count = scsicmd->request_bufflen;
-> +			byte_count = scsi_bufflen(scsicmd);
->  		}
->  		/* Check for command underflow */
->  		if(scsicmd->underflow && (byte_count < 
-> scsicmd->underflow)){
-> @@ -2373,6 +2364,7 @@ static unsigned long aac_build_sg64(stru
->  	struct aac_dev *dev;
->  	unsigned long byte_count = 0;
->  	u64 addr;
-> +	int nseg;
->  
->  	dev = (struct aac_dev *)scsicmd->device->host->hostdata;
->  	// Get rid of old data
-> @@ -2380,31 +2372,28 @@ static unsigned long aac_build_sg64(stru
->  	psg->sg[0].addr[0] = 0;
->  	psg->sg[0].addr[1] = 0;
->  	psg->sg[0].count = 0;
-> -	if (scsicmd->use_sg) {
-> +
-> +	nseg = scsi_dma_map(&dev->pdev->dev, scsicmd);
-> +	BUG_ON(nseg < 0);
-> +	if (nseg) {
->  		struct scatterlist *sg;
->  		int i;
-> -		int sg_count;
-> -		sg = (struct scatterlist *) scsicmd->request_buffer;
->  
-> -		sg_count = pci_map_sg(dev->pdev, sg, scsicmd->use_sg,
-> -			scsicmd->sc_data_direction);
-> -
-> -		for (i = 0; i < sg_count; i++) {
-> +		scsi_for_each_sg(scsicmd, sg, nseg, i) {
->  			int count = sg_dma_len(sg);
->  			addr = sg_dma_address(sg);
->  			psg->sg[i].addr[0] = cpu_to_le32(addr & 
-> 0xffffffff);
->  			psg->sg[i].addr[1] = cpu_to_le32(addr>>32);
->  			psg->sg[i].count = cpu_to_le32(count);
->  			byte_count += count;
-> -			sg++;
->  		}
-> -		psg->count = cpu_to_le32(sg_count);
-> +		psg->count = cpu_to_le32(nseg);
->  		/* hba wants the size to be exact */
-> -		if(byte_count > scsicmd->request_bufflen){
-> -			u32 temp = le32_to_cpu(psg->sg[i-1].count) - 
-> -				(byte_count - scsicmd->request_bufflen);
-> +		if (byte_count > scsi_bufflen(scsicmd)) {
-> +			u32 temp = le32_to_cpu(psg->sg[i-1].count) -
-> +				(byte_count - scsi_bufflen(scsicmd));
->  			psg->sg[i-1].count = cpu_to_le32(temp);
-> -			byte_count = scsicmd->request_bufflen;
-> +			byte_count = scsi_bufflen(scsicmd);
->  		}
->  		/* Check for command underflow */
->  		if(scsicmd->underflow && (byte_count < 
-> scsicmd->underflow)){
-> @@ -2420,6 +2409,7 @@ static unsigned long aac_build_sgraw(str
->  	struct Scsi_Host *host = scsicmd->device->host;
->  	struct aac_dev *dev = (struct aac_dev *)host->hostdata;
->  	unsigned long byte_count = 0;
-> +	int nseg;
->  
->  	// Get rid of old data
->  	psg->count = 0;
-> @@ -2430,16 +2420,13 @@ static unsigned long aac_build_sgraw(str
->  	psg->sg[0].count = 0;
->  	psg->sg[0].flags = 0;
->  
-> -	if (scsicmd->use_sg) {
-> +	nseg = scsi_dma_map(&dev->pdev->dev, scsicmd);
-> +	BUG_ON(nseg < 0);
-> +	if (nseg) {
->  		struct scatterlist *sg;
->  		int i;
-> -		int sg_count;
-> -		sg = (struct scatterlist *) scsicmd->request_buffer;
-> -
-> -		sg_count = pci_map_sg(dev->pdev, sg, scsicmd->use_sg,
-> -			scsicmd->sc_data_direction);
->  
-> -		for (i = 0; i < sg_count; i++) {
-> +		scsi_for_each_sg(scsicmd, sg, nseg, i) {
->  			int count = sg_dma_len(sg);
->  			u64 addr = sg_dma_address(sg);
->  			psg->sg[i].next = 0;
-> @@ -2449,15 +2436,14 @@ static unsigned long aac_build_sgraw(str
->  			psg->sg[i].count = cpu_to_le32(count);
->  			psg->sg[i].flags = 0;
->  			byte_count += count;
-> -			sg++;
->  		}
-> -		psg->count = cpu_to_le32(sg_count);
-> +		psg->count = cpu_to_le32(nseg);
->  		/* hba wants the size to be exact */
-> -		if(byte_count > scsicmd->request_bufflen){
-> -			u32 temp = le32_to_cpu(psg->sg[i-1].count) - 
-> -				(byte_count - scsicmd->request_bufflen);
-> +		if (byte_count > scsi_bufflen(scsicmd)) {
-> +			u32 temp = le32_to_cpu(psg->sg[i-1].count) -
-> +				(byte_count - scsi_bufflen(scsicmd));
->  			psg->sg[i-1].count = cpu_to_le32(temp);
-> -			byte_count = scsicmd->request_bufflen;
-> +			byte_count = scsi_bufflen(scsicmd);
->  		}
->  		/* Check for command underflow */
->  		if(scsicmd->underflow && (byte_count < 
-> scsicmd->underflow)){
-> -- 
-> 1.4.3.2
-> 
-> 
+OK, so here's an alternative patch:
+
+
+scsi: Don't build scsi_dma_{map,unmap} for !HAS_DMA
+
+Use #ifdef CONFIG_HAS_DMA for the two dma-dependent functions.
+
+Signed-off-by: Cornelia Huck <cornelia.huck@de.ibm.com>
+
+---
+ drivers/scsi/scsi_lib.c  |    2 ++
+ include/scsi/scsi_cmnd.h |    2 ++
+ 2 files changed, 4 insertions(+)
+
+--- linux-2.6.orig/drivers/scsi/scsi_lib.c
++++ linux-2.6/drivers/scsi/scsi_lib.c
+@@ -2291,6 +2291,7 @@ void scsi_kunmap_atomic_sg(void *virt)
+ }
+ EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
+ 
++#ifdef CONFIG_HAS_DMA
+ /**
+  * scsi_dma_map - perform DMA mapping against command's sg lists
+  * @cmd:	scsi command
+@@ -2328,3 +2329,4 @@ void scsi_dma_unmap(struct scsi_cmnd *cm
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_dma_unmap);
++#endif
+--- linux-2.6.orig/include/scsi/scsi_cmnd.h
++++ linux-2.6/include/scsi/scsi_cmnd.h
+@@ -135,8 +135,10 @@ extern void scsi_kunmap_atomic_sg(void *
+ extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
+ extern void scsi_free_sgtable(struct scatterlist *, int);
+ 
++#ifdef CONFIG_HAS_DMA
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
++#endif
+ 
+ #define scsi_sg_count(cmd) ((cmd)->use_sg)
+ #define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
