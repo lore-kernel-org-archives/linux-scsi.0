@@ -1,40 +1,26 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: 2.6.22-rc3-mm1
-Date: Thu, 31 May 2007 08:35:13 -0400
-Message-ID: <465EC101.7010105@garzik.org>
-References: <20070530235823.793f00d9.akpm@linux-foundation.org>	<20070531140922.2e55aefb@gondolin.boeblingen.de.ibm.com>	<20070531121557.GQ23968@parisc-linux.org> <20070531142048.05edf133@gondolin.boeblingen.de.ibm.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: kexec and aacraid broken
+Date: Thu, 31 May 2007 08:37:58 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01A5523A@otce2k301.adaptec.com>
+References: <86802c440705301511vb8b2065xeb59e1b06aff2fea@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:42877 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761304AbXEaMfu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 May 2007 08:35:50 -0400
-In-Reply-To: <20070531142048.05edf133@gondolin.boeblingen.de.ibm.com>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:56655 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760158AbXEaMiK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 May 2007 08:38:10 -0400
+Content-class: urn:content-classes:message
+In-reply-to: <86802c440705301511vb8b2065xeb59e1b06aff2fea@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Cornelia Huck <cornelia.huck@de.ibm.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Dan Williams <dan.j.williams@intel.com>
+To: Yinghai Lu <yhlu.kernel@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Vivek Goyal <vgoyal@in.ibm.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-Cornelia Huck wrote:
-> On Thu, 31 May 2007 06:15:57 -0600,
-> Matthew Wilcox <matthew@wil.cx> wrote:
-> 
->> On Thu, May 31, 2007 at 02:09:22PM +0200, Cornelia Huck wrote:
->>> I split those functions out into a new file. Builds on s390 and i386.
->> Why not just put #ifdef CONFIG_HAS_DMA / #endif around the pair of
->> functions?  I don't see the need to add a new Kconfig symbol and a new
->> file for this.
-> 
-> I prefer a new file over #ifdefs in c files. (New dma-dependent stuff
-> would also have a place where it could go to.)
-> 
-> But I'll do whatever ends up as consensus :)
+> No, still get adapter kernel panic
 
-50 lines isn't much need for a new file.
+Which adapter are you using?
 
-	Jeff
-
-
-
+Sincerely -- Mark Salyzyn
