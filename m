@@ -1,80 +1,73 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.22-rc3-mm1
-Date: Thu, 31 May 2007 15:10:05 -0700
-Message-ID: <20070531151005.5c5db8af.akpm@linux-foundation.org>
-References: <20070530235823.793f00d9.akpm@linux-foundation.org>
-	<20070531140922.2e55aefb@gondolin.boeblingen.de.ibm.com>
-	<20070531121557.GQ23968@parisc-linux.org>
-	<20070531142048.05edf133@gondolin.boeblingen.de.ibm.com>
-	<465EC101.7010105@garzik.org>
-	<20070531151338.GA759@infradead.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: linux-2.6.22-rc3-g3f0a6766 build #287 failed in
+	drivers/scsi/aic7xxx/aic7xxx.ko
+Date: Thu, 31 May 2007 18:22:55 -0400
+Message-ID: <1180650175.3743.108.camel@mulgrave.il.steeleye.com>
+References: <200705311835.50881.toralf.foerster@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp1.linux-foundation.org ([207.189.120.13]:56277 "EHLO
-	smtp1.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753218AbXEaWKY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 May 2007 18:10:24 -0400
-In-Reply-To: <20070531151338.GA759@infradead.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:40847 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757797AbXEaWW5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 May 2007 18:22:57 -0400
+In-Reply-To: <200705311835.50881.toralf.foerster@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Cornelia Huck <cornelia.huck@de.ibm.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, SCSI development list <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Dan Williams <dan.j.williams@intel.com>
+To: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>
+Cc: gibbs@scsiguy.com, linux-scsi@vger.kernel.org
 
-On Thu, 31 May 2007 16:13:38 +0100
-Christoph Hellwig <hch@infradead.org> wrote:
+On Thu, 2007-05-31 at 18:35 +0200, Toralf F=C3=B6rster wrote:
+> Hello,
+>=20
+> the build with the attached .config failed, make ends with:
+> ...
+>   CC      arch/i386/boot/compresse
+>   HOSTCC  arch/i386/boot/tools/build
+>   BUILD   arch/i386/boot/bzImage
+> Root device is (3, 8)
+> Boot sector 512 bytes.
+> Setup is 7178 bytes.
+> System is 2513 kB
+> Kernel: arch/i386/boot/bzImage is ready  (#1)
+>   Building modules, stage 2.
+>   MODPOST 363 modules
+> ERROR: "spi_dv_device" [drivers/scsi/aic7xxx/aic7xxx.ko] undefined!
+> ERROR: "spi_attach_transport" [drivers/scsi/aic7xxx/aic7xxx.ko] undef=
+ined!
+> ERROR: "spi_populate_ppr_msg" [drivers/scsi/aic7xxx/aic7xxx.ko] undef=
+ined!
+> ERROR: "spi_populate_width_msg" [drivers/scsi/aic7xxx/aic7xxx.ko] und=
+efined!
+> ERROR: "spi_release_transport" [drivers/scsi/aic7xxx/aic7xxx.ko] unde=
+fined!
+> ERROR: "spi_display_xfer_agreement" [drivers/scsi/aic7xxx/aic7xxx.ko]=
+ undefined!
+> ERROR: "spi_populate_sync_msg" [drivers/scsi/aic7xxx/aic7xxx.ko] unde=
+fined!
+> ERROR: "spi_dv_device" [drivers/scsi/53c700.ko] undefined!
+> ERROR: "spi_attach_transport" [drivers/scsi/53c700.ko] undefined!
+> ERROR: "spi_schedule_dv_device" [drivers/scsi/53c700.ko] undefined!
+> ERROR: "spi_release_transport" [drivers/scsi/53c700.ko] undefined!
+> ERROR: "spi_display_xfer_agreement" [drivers/scsi/53c700.ko] undefine=
+d!
+> ERROR: "spi_populate_sync_msg" [drivers/scsi/53c700.ko] undefined!
+> ERROR: "spi_print_msg" [drivers/scsi/53c700.ko] undefined!
+> ERROR: "ROOT_DEV" [drivers/mtd/maps/nettel.ko] undefined!
+> make[1]: *** [__modpost] Error 1
+> make: *** [modules] Error 2
 
-> On Thu, May 31, 2007 at 08:35:13AM -0400, Jeff Garzik wrote:
-> > Cornelia Huck wrote:
-> > >On Thu, 31 May 2007 06:15:57 -0600,
-> > >Matthew Wilcox <matthew@wil.cx> wrote:
-> > >
-> > >>On Thu, May 31, 2007 at 02:09:22PM +0200, Cornelia Huck wrote:
-> > >>>I split those functions out into a new file. Builds on s390 and i386.
-> > >>Why not just put #ifdef CONFIG_HAS_DMA / #endif around the pair of
-> > >>functions?  I don't see the need to add a new Kconfig symbol and a new
-> > >>file for this.
-> > >
-> > >I prefer a new file over #ifdefs in c files. (New dma-dependent stuff
-> > >would also have a place where it could go to.)
-> > >
-> > >But I'll do whatever ends up as consensus :)
-> > 
-> > 50 lines isn't much need for a new file.
-> 
-> The scsi core shouldn't know anything about dma mappings, so a separate
-> file is a good idea just to keep the separation clean.
+This looks like some build issue.  The symbols (except the last
+ROOT_DEV) are defined in scsi_transport_spi.o which should have been
+compiled in your build log because your .config has
+CONFIG_SCSI_SPI_ATTRS=3Dy which should build it.
 
-ok, let's go this way.
+James
 
-Cornelia, afaict your patch has no actual delendency upon Dan's
-dma-mapping-prevent-dma-dependent-code-from-linking-on.patch, correct?  If
-so, I can merge it via James and then merge Dan's patch once James has
-merged.
 
-If there is a dependency then I guess I merge both into a single diff and
-merge it all in one hit.
-
-btw, this:
-
-diff -puN include/scsi/scsi_cmnd.h~scsi-dont-build-scsi_dma_mapunmap-for-has_dma include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h~scsi-dont-build-scsi_dma_mapunmap-for-has_dma
-+++ a/include/scsi/scsi_cmnd.h
-@@ -135,8 +135,10 @@ extern void scsi_kunmap_atomic_sg(void *
- extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
- extern void scsi_free_sgtable(struct scatterlist *, int);
- 
-+#ifdef CONFIG_SCSI_DMA
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
-+#endif
- 
- #define scsi_sg_count(cmd) ((cmd)->use_sg)
- #define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
-
-We don't really need the ifdefs here.  If someone incorrectly calls these
-functions then they'll get a link-time failure anyway.  The downside of
-removing these ifdefs is that they won't get a compile-time warning, but I
-tend to think that this small cost is worth it.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
