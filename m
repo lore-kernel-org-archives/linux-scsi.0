@@ -1,32 +1,28 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 1/2] iscsi_tcp: convert to use the data buffer accessors
-Date: Fri, 01 Jun 2007 13:25:49 -0500
-Message-ID: <466064AD.7090508@cs.wisc.edu>
-References: <dcbf60d819ad4d62643fc074968699563f25621b.1180539510.git.fujita.tomonori@lab.ntt.co.jp> <20070531033019V.fujita.tomonori@lab.ntt.co.jp>
+From: "Yinghai Lu" <yhlu.kernel@gmail.com>
+Subject: Re: [2/3] 2.6.22-rc3: known regressions v2
+Date: Fri, 1 Jun 2007 12:54:58 -0700
+Message-ID: <86802c440706011254k4aa5bc05rf63e573b1e0ed9bd@mail.gmail.com>
+References: <20070601175344.GA13721@in.ibm.com>
+	 <AE4F746F2AECFC4DA4AADD66A1DFEF01A55540@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:57954 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761484AbXFAS0Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 1 Jun 2007 14:26:25 -0400
-In-Reply-To: <20070531033019V.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55540@otce2k301.adaptec.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: vgoyal@in.ibm.com, Andrew Morton <akpm@linux-foundation.org>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, open-iscsi@googlegroups.com
 
-FUJITA Tomonori wrote:
-> iscsi_tcp: convert to use the data buffer accessors
-> 
-> - remove the unnecessary map_single path.
-> 
-> - convert to use the new accessors for the sg lists and the
-> parameters.
-> 
+On 6/1/07, Salyzyn, Mark <mark_salyzyn@adaptec.com> wrote:
+> Agree, but overstated somewhat.
+>
+> The card in question that the regression is reported against is not a
+> released card and as such could have a flawed environment, Hardware,
+> Firmware or other Incompatibility. The fix for the root cause will
+> likely not touch the driver or the kernel
 
-I put this in the iscsi git tree with Olaf's recv path rewrite and I
-converted his patch to use the new accessors. We can test all this
-together. Have fun Boaz :) At least you did not have to rediff the
-patches for once :)
+So aacraid.reset_devices=1 works with Vivek's test system?
+
+YH
