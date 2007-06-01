@@ -1,119 +1,46 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: linux-2.6.22-rc3-g3f0a6766 build #287 failed in
-	drivers/scsi/aic7xxx/aic7xxx.ko
-Date: Fri, 01 Jun 2007 09:23:13 -0400
-Message-ID: <1180704193.3743.119.camel@mulgrave.il.steeleye.com>
-References: <200705311835.50881.toralf.foerster@gmx.de>
-	 <1180650175.3743.108.camel@mulgrave.il.steeleye.com>
-	 <20070531165631.ee7f23d4.randy.dunlap@oracle.com>
-	 <1180703269.3743.115.camel@mulgrave.il.steeleye.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Stgt-devel] Question for pass-through target design
+Date: Fri, 01 Jun 2007 19:12:01 +0400
+Message-ID: <46603741.308@vlnb.net>
+References: <20070504160712.GB16528@austin.ibm.com>	<200705041704.l44H4WXa003789@mbox.iij4u.or.jp>	<463B72F6.3000207@torque.net> <20070506053629P.fujita.tomonori@lab.ntt.co.jp> <463F36AC.3010207@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:45875 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754663AbXFANXQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 09:23:16 -0400
-In-Reply-To: <1180703269.3743.115.camel@mulgrave.il.steeleye.com>
+Received: from mail-relay-02.mailcluster.net ([85.249.135.243]:34477 "EHLO
+	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1759125AbXFAPL6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 11:11:58 -0400
+In-Reply-To: <463F36AC.3010207@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Toralf =?ISO-8859-1?Q?F=F6rster?= <toralf.foerster@gmx.de>, gibbs@scsiguy.com, linux-scsi@vger.kernel.org
+To: stgt-devel@lists.berlios.de
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dougg@torque.net, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-On Fri, 2007-06-01 at 09:07 -0400, James Bottomley wrote:
-> On Thu, 2007-05-31 at 16:56 -0700, Randy Dunlap wrote:
-> > On Thu, 31 May 2007 18:22:55 -0400 James Bottomley wrote:
-> >=20
-> > > On Thu, 2007-05-31 at 18:35 +0200, Toralf F=C3=B6rster wrote:
-> > > > Hello,
-> > > >=20
-> > > > the build with the attached .config failed, make ends with:
-> > > > ...
-> > > >   CC      arch/i386/boot/compresse
-> > > >   HOSTCC  arch/i386/boot/tools/build
-> > > >   BUILD   arch/i386/boot/bzImage
-> > > > Root device is (3, 8)
-> > > > Boot sector 512 bytes.
-> > > > Setup is 7178 bytes.
-> > > > System is 2513 kB
-> > > > Kernel: arch/i386/boot/bzImage is ready  (#1)
-> > > >   Building modules, stage 2.
-> > > >   MODPOST 363 modules
-> > > > ERROR: "spi_dv_device" [drivers/scsi/aic7xxx/aic7xxx.ko] undefi=
-ned!
-> > > > ERROR: "spi_attach_transport" [drivers/scsi/aic7xxx/aic7xxx.ko]=
- undefined!
-> > > > ERROR: "spi_populate_ppr_msg" [drivers/scsi/aic7xxx/aic7xxx.ko]=
- undefined!
-> > > > ERROR: "spi_populate_width_msg" [drivers/scsi/aic7xxx/aic7xxx.k=
-o] undefined!
-> > > > ERROR: "spi_release_transport" [drivers/scsi/aic7xxx/aic7xxx.ko=
-] undefined!
-> > > > ERROR: "spi_display_xfer_agreement" [drivers/scsi/aic7xxx/aic7x=
-xx.ko] undefined!
-> > > > ERROR: "spi_populate_sync_msg" [drivers/scsi/aic7xxx/aic7xxx.ko=
-] undefined!
-> > > > ERROR: "spi_dv_device" [drivers/scsi/53c700.ko] undefined!
-> > > > ERROR: "spi_attach_transport" [drivers/scsi/53c700.ko] undefine=
-d!
-> > > > ERROR: "spi_schedule_dv_device" [drivers/scsi/53c700.ko] undefi=
-ned!
-> > > > ERROR: "spi_release_transport" [drivers/scsi/53c700.ko] undefin=
-ed!
-> > > > ERROR: "spi_display_xfer_agreement" [drivers/scsi/53c700.ko] un=
-defined!
-> > > > ERROR: "spi_populate_sync_msg" [drivers/scsi/53c700.ko] undefin=
-ed!
-> > > > ERROR: "spi_print_msg" [drivers/scsi/53c700.ko] undefined!
-> > > > ERROR: "ROOT_DEV" [drivers/mtd/maps/nettel.ko] undefined!
-> > > > make[1]: *** [__modpost] Error 1
-> > > > make: *** [modules] Error 2
-> > >=20
-> > > This looks like some build issue.  The symbols (except the last
-> > > ROOT_DEV) are defined in scsi_transport_spi.o which should have b=
-een
-> > > compiled in your build log because your .config has
-> > > CONFIG_SCSI_SPI_ATTRS=3Dy which should build it.
-> >=20
-> > Easily reproducible.  and scsi_transport_spi.o is compiled.
-> > but apparently not linked.  I suppose that it's due to
-> > CONFIG_SCSI=3Dm, but we still have:
-> >=20
-> > #
-> > # SCSI Transports
-> > #
-> > CONFIG_SCSI_SPI_ATTRS=3Dy
-> > CONFIG_SCSI_FC_ATTRS=3Dm
-> > CONFIG_SCSI_ISCSI_ATTRS=3Dm
-> > CONFIG_SCSI_SAS_ATTRS=3Dm
-> > CONFIG_SCSI_SAS_LIBSAS=3Dm
-> >=20
-> > Should these modules be constrained to =3Dm when CONFIG_SCSI=3Dm ?
->=20
-> Yes, they should.  If there's no SCSI module there's nothing to link
-> them into.  I thought the depends SCSI directive enforced this
-> requirement (as in you can't make SCSI_SPI_ATTRS y if SCSI is m and w=
-e
-> depend on it) ... is this incorrect?
+Vladislav Bolkhovitin wrote:
+> So, if you need in-kernel pass-through I would suggest you to look at
+> SCST project (http://scst.sf.net), which is currently stable and mature,
+> although also not fully finished yet. It was historically from the very
+> beginning designed for full feature in-kernel pass-through for not only
+> stateless SCSI devices, like disks, but also for stateful SCSI devices
+> (like SSC ones a.k.a. tapes), where the correct handling of all above is
+> essential. In additional to considerably better performance, the
+> complete in-kernel approach makes the code simpler, smaller and cleaner
+> as well as allows such things as zero-copy buffered file IO, i.e. when 
+> data are sent to remote initiators or received from them directly 
+> from/to the page cache (currently under development). For those who need 
+> implementing SCSI devices in the user space scst_user module is about to 
+> be added. Since the SCSI state machine is in kernel the interface 
+> provided by scst_user is very simple, it essentially consists from only 
+> a single IOCTL and allows to have overhead as low as a single syscall 
+> per SCSI command without any additional context switches. It is already 
+> implemented and works. For some legal reasons I can't at the moment 
+> publish it, but you can see its full description in the project's SVN 
+> docs (you can get them using command "svn co 
+> https://svn.sourceforge.net/svnroot/scst/trunk/doc").
 
-I just tried it on my setup.  When SCSI=3Dm this is what I get:
+Now I released scst_user module and it is available from the SCST SVN, 
+so you can check how simply it allows to write SCSI devices, like a VTL, 
+in the user space.
 
-*
-* SCSI Transports
-*
-Parallel SCSI (SPI) Transport Attributes (SCSI_SPI_ATTRS) [M/y/?] (NEW)=
-=20
-
-Also, all the SCSI dependent device drivers are doing this too ... I'm
-sure this didn't used to be the case, so I suspect we have a bug in
-Kconfig somewhere.
-
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Vlad
