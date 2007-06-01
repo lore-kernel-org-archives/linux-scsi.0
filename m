@@ -1,46 +1,29 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Stgt-devel] Question for pass-through target design
-Date: Fri, 01 Jun 2007 19:12:01 +0400
-Message-ID: <46603741.308@vlnb.net>
-References: <20070504160712.GB16528@austin.ibm.com>	<200705041704.l44H4WXa003789@mbox.iij4u.or.jp>	<463B72F6.3000207@torque.net> <20070506053629P.fujita.tomonori@lab.ntt.co.jp> <463F36AC.3010207@vlnb.net>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [2/3] 2.6.22-rc3: known regressions v2
+Date: Fri, 1 Jun 2007 09:01:15 -0700
+Message-ID: <20070601090115.3271a397.akpm@linux-foundation.org>
+References: <465FED20.3090206@googlemail.com>
+	<46600F27.1090202@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-02.mailcluster.net ([85.249.135.243]:34477 "EHLO
-	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759125AbXFAPL6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 11:11:58 -0400
-In-Reply-To: <463F36AC.3010207@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <46600F27.1090202@googlemail.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, Mark Salyzyn <aacraid@adaptec.com>, Yinghai Lu <yhlu.kernel@gmail.com>, Vivek Goyal <vgoyal@in.ibm.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
 List-Id: linux-scsi@vger.kernel.org
-To: stgt-devel@lists.berlios.de
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, dougg@torque.net, scst-devel <scst-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> So, if you need in-kernel pass-through I would suggest you to look at
-> SCST project (http://scst.sf.net), which is currently stable and mature,
-> although also not fully finished yet. It was historically from the very
-> beginning designed for full feature in-kernel pass-through for not only
-> stateless SCSI devices, like disks, but also for stateful SCSI devices
-> (like SSC ones a.k.a. tapes), where the correct handling of all above is
-> essential. In additional to considerably better performance, the
-> complete in-kernel approach makes the code simpler, smaller and cleaner
-> as well as allows such things as zero-copy buffered file IO, i.e. when 
-> data are sent to remote initiators or received from them directly 
-> from/to the page cache (currently under development). For those who need 
-> implementing SCSI devices in the user space scst_user module is about to 
-> be added. Since the SCSI state machine is in kernel the interface 
-> provided by scst_user is very simple, it essentially consists from only 
-> a single IOCTL and allows to have overhead as low as a single syscall 
-> per SCSI command without any additional context switches. It is already 
-> implemented and works. For some legal reasons I can't at the moment 
-> publish it, but you can see its full description in the project's SVN 
-> docs (you can get them using command "svn co 
-> https://svn.sourceforge.net/svnroot/scst/trunk/doc").
+On Fri, 01 Jun 2007 14:20:55 +0200 Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
 
-Now I released scst_user module and it is available from the SCST SVN, 
-so you can check how simply it allows to write SCSI devices, like a VTL, 
-in the user space.
+> SCSI
+> 
+> Subject    : aacraid: adapter kernel panic'd fffffffd (kexec)
+> References : http://lkml.org/lkml/2007/5/29/491
+> Submitter  : Yinghai Lu <yhlu.kernel@gmail.com>
+> Handled-By : Salyzyn, Mark <mark_salyzyn@adaptec.com>
+>              Vivek Goyal <vgoyal@in.ibm.com>
+> Status     : problem is being debugged
 
-Vlad
+Mark's aacraid-fix-shutdown-handler-to-also-disable-interrupts.patch is
+known to fix this, so we can move this to "known regressions with patches"
