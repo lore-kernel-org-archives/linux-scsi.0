@@ -1,28 +1,72 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: [2/3] 2.6.22-rc3: known regressions v2
-Date: Fri, 1 Jun 2007 12:54:58 -0700
-Message-ID: <86802c440706011254k4aa5bc05rf63e573b1e0ed9bd@mail.gmail.com>
-References: <20070601175344.GA13721@in.ibm.com>
-	 <AE4F746F2AECFC4DA4AADD66A1DFEF01A55540@otce2k301.adaptec.com>
+From: Mark Lobo <ntdeveloper2002@yahoo.com>
+Subject: IOs stuck in SG
+Date: Sat, 2 Jun 2007 03:56:03 +0800 (CST)
+Message-ID: <894089.97203.qm@web63904.mail.re1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55540@otce2k301.adaptec.com>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: vgoyal@in.ibm.com, Andrew Morton <akpm@linux-foundation.org>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pcmcia@lists.infradead.org, Robert de Rooy <robert.de.rooy@gmail.com>, Alan Cox <alan@redhat.com>, Tejun Heo <htejun@gmail.com>, linux-ide@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Gregor Jasny <gjasny@googlemail.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Mikael Pettersson <mikpe@it.uu.se>
+Content-Type: text/plain; charset=ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web63904.mail.re1.yahoo.com ([69.147.97.119]:26405 "HELO
+	web63904.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1762589AbXFAT4G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 15:56:06 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On 6/1/07, Salyzyn, Mark <mark_salyzyn@adaptec.com> wrote:
-> Agree, but overstated somewhat.
->
-> The card in question that the regression is reported against is not a
-> released card and as such could have a flawed environment, Hardware,
-> Firmware or other Incompatibility. The fix for the root cause will
-> likely not touch the driver or the kernel
 
-So aacraid.reset_devices=1 works with Vivek's test system?
+I am seeing a problem where IOs get stuck in SG for a _long_ time. The 
 
-YH
+initiator driver is our own, and we dont see any IOs in there that are 
+
+pending. We are running 2.4.30.  
+
+ 
+
+This is what I see in the proc file for SG. The act: acc to documentation means: 
+
+act: mid level (adapter driver or device) has command. 
+
+ 
+
+Has anyone seen this problem? If yes, is there a patch for this problem? 
+
+ 
+
+>>> device=sg97 scsi4 chan=0 id=17 lun=0   em=0 sg_tablesize=64 excl=0 
+
+   FD(1): timeout=60000ms bufflen=4096 (res)sgat=0 low_dma=0 
+
+   cmd_q=1 f_packid=1 k_orphan=0 closed=0 
+
+     act: id=1856404224 blen=8 t_o/elap=15000/54615000ms sgat=0 op=0x25 
+
+ >>> device=sg98 scsi4 chan=0 id=18 lun=0   em=0 sg_tablesize=64 excl=0 
+
+   FD(1): timeout=60000ms bufflen=4096 (res)sgat=0 low_dma=0 
+
+   cmd_q=1 f_packid=1 k_orphan=0 closed=0 
+
+     act: id=1883362756 blen=255 t_o/elap=15000/54474000ms sgat=0 op=0x1c 
+
+ 
+
+ 
+
+-- Mark 
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+____________________________________________________________________________________
+Need Mail bonding?
+Go to the Yahoo! Mail Q&A for great tips from Yahoo! Answers users.
+http://answers.yahoo.com/dir/?link=list&sid=396546091
