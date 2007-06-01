@@ -1,55 +1,53 @@
-From: "Yinghai Lu" <yhlu.kernel@gmail.com>
-Subject: Re: [PATCH] aacraid: fix shutdown handler to also disable interrupts.
-Date: Fri, 1 Jun 2007 10:07:48 -0700
-Message-ID: <86802c440706011007r7c9162c3w1fe0ba1952361f19@mail.gmail.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55010@otce2k301.adaptec.com>
-	 <AE4F746F2AECFC4DA4AADD66A1DFEF01A55087@otce2k301.adaptec.com>
-	 <20070601110845.GC20714@in.ibm.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid: fix shutdown handler to also disable interrupts.
+Date: Fri, 1 Jun 2007 13:34:24 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01A5551E@otce2k301.adaptec.com>
+References: <86802c440706011007r7c9162c3w1fe0ba1952361f19@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:63722 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760771AbXFARHt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 13:07:49 -0400
-Received: by wa-out-1112.google.com with SMTP id j4so565834wah
-        for <linux-scsi@vger.kernel.org>; Fri, 01 Jun 2007 10:07:48 -0700 (PDT)
-In-Reply-To: <20070601110845.GC20714@in.ibm.com>
-Content-Disposition: inline
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:37224 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761570AbXFARe1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 13:34:27 -0400
+Content-class: urn:content-classes:message
+In-reply-to: <86802c440706011007r7c9162c3w1fe0ba1952361f19@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vgoyal@in.ibm.com
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Yinghai Lu <yhlu.kernel@gmail.com>, vgoyal@in.ibm.com
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, "Eric W. Biederman" <ebiederm@xmission.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On 6/1/07, Vivek Goyal <vgoyal@in.ibm.com> wrote:
-> On Wed, May 30, 2007 at 11:59:13AM -0400, Salyzyn, Mark wrote:
-> > Moves quiesce, thread and interrupt shutdown into aacraid drivers'
-> > .shutdown handler. This fix to the aac_shutdown handler will remove the
-> > superfluous reset of the adapter during a (clean) kexec.
-> >
-> > This fix may mitigate the active investigation 'kexec and aacraid
-> > broken' but it is unlikely to affect the root cause (issue likely
-> > present in both kexec and kdump). This patch reduces the chance the
-> > problem will occur with a kexec. The fix for root cause is currently
-> > expected to be the minimum value check to the aacraid.startup_timeout
-> > driver variable after an adapter reset within aacraid_commit_reset.patch
-> > submitted on 05/22/2007 and awaiting testing by Yinghai to confirm.
-> >
-> > This attached patch is against current scsi-misc-2.6
-> >
-> > ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-> > handling of patch attachments.
-> >
-> > Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-> >
->
-> Thanks Mark. This does fix the issue of unnecessary reset of aacraid
-> adapter over kexec on my machine.
->
-i'm little confused about that.
-this patch is some clear shutdown, so even next start will have tight
-condition will not try to reset the adapter fw. right Mark?
-Maybe the driver could be smart to find out if it need to reset adaptec fw.
+Yes, this patch makes sure that the Adapter is shut down correctly, and
+thus when the kexec driver loads, it does not automatically reset the
+adapter during initialization. This regression was a result of adding
+code to the driver to detect if the adapter needed a reset as a result
+of an unclean shutdown in order to deal with an issue that came up with
+kdump. Kdump does not issue a clean shutdown. As you see, it was the
+process of making the driver smarter to find out if it needed to reset
+the adaptec fw that triggered the problem.
 
-YH
+As noted before, please be advised to go through SUN channels. Upgrade
+your Drive(s), SES, Motherboard and Card Firmware to the latest
+versions; and make sure you are using compatible drives and drive bays
+to see if this problem dealing with the superfluous reset on your
+pre-release system goes away. You will be able to trigger this by trying
+to perform a kdump on the system, OR by reverting this patch and running
+your kexec test. The superfluous reset has yet to cause an issue with a
+released card beyond noticing a superfluous Firmware reset as Vivek has
+pointed out.
+
+Sincerely -- Mark Salyzyn
+
+From: Yinghai Lu [mailto:yhlu.kernel@gmail.com] sez:
+> On 6/1/07, Vivek Goyal <vgoyal@in.ibm.com> wrote:
+> > Thanks Mark. This does fix the issue of unnecessary reset of aacraid
+> > adapter over kexec on my machine.
+> i'm little confused about that.
+> this patch is some clear shutdown, so even next start will have tight
+> condition will not try to reset the adapter fw. right Mark?
+> Maybe the driver could be smart to find out if it need to 
+> reset adaptec fw.
+> 
+> YH 
