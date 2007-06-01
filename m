@@ -1,46 +1,42 @@
-From: Vivek Goyal <vgoyal@in.ibm.com>
-Subject: Re: [PATCH] aacraid: fix shutdown handler to also disable interrupts.
-Date: Fri, 1 Jun 2007 16:38:45 +0530
-Message-ID: <20070601110845.GC20714@in.ibm.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55010@otce2k301.adaptec.com> <AE4F746F2AECFC4DA4AADD66A1DFEF01A55087@otce2k301.adaptec.com>
-Reply-To: vgoyal@in.ibm.com
+From: =?iso-8859-1?b?RW1tYW51ZWwgRnVzdOk=?= <emmanuel.fuste@laposte.net>
+Subject: Re: [AIC7xxx] tree things to report
+Date: Fri,  1 Jun 2007 13:24:48 +0200
+Message-ID: <JIYFPC$33BC2E30DFCF74DC16DB0A245DEA830E@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e35.co.us.ibm.com ([32.97.110.153]:37032 "EHLO
-	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752136AbXFALJF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 07:09:05 -0400
-Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55087@otce2k301.adaptec.com>
+Received: from mx.laposte.net ([81.255.54.16]:17906 "EHLO mx.laposte.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755489AbXFALYt convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 07:24:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Yinghai Lu <yhlu.kernel@gmail.com>, "Eric W. Biederman" <ebiederm@xmission.com>, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: hare <hare@suse.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "James.Bottomley" <James.Bottomley@SteelEye.com>
 
-On Wed, May 30, 2007 at 11:59:13AM -0400, Salyzyn, Mark wrote:
-> Moves quiesce, thread and interrupt shutdown into aacraid drivers'
-> .shutdown handler. This fix to the aac_shutdown handler will remove the
-> superfluous reset of the adapter during a (clean) kexec.
-> 
-> This fix may mitigate the active investigation 'kexec and aacraid
-> broken' but it is unlikely to affect the root cause (issue likely
-> present in both kexec and kdump). This patch reduces the chance the
-> problem will occur with a kexec. The fix for root cause is currently
-> expected to be the minimum value check to the aacraid.startup_timeout
-> driver variable after an adapter reset within aacraid_commit_reset.patch
-> submitted on 05/22/2007 and awaiting testing by Yinghai to confirm.
-> 
-> This attached patch is against current scsi-misc-2.6
-> 
-> ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-> handling of patch attachments.
-> 
-> Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-> 
+=20
+> Please try the attached patch and see if it helps.
+>=20
+> James, I know that the aic7xxx has some 'next_queued_hscb' pointer wh=
+ich
+> might be utilized for this sort of thing. But I didn't really figure =
+out
+> how this thing is supposed to work nor how we could utilize it.
+> So I figured that the added complexity is not really worth it.
+>=20
+Did you have time to look at the new logs this the patch applied ? Do y=
+ou need something else ?
 
-Thanks Mark. This does fix the issue of unnecessary reset of aacraid
-adapter over kexec on my machine.
+Cheers,
+Emmanuel.
+---
 
-Thanks
-Vivek
+Cr=E9ez votre adresse =E9lectronique prenom.nom@laposte.net=20
+1 Go d'espace de stockage, anti-spam et anti-virus int=E9gr=E9s.
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
