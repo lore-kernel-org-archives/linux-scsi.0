@@ -1,72 +1,56 @@
-From: Mark Lobo <ntdeveloper2002@yahoo.com>
-Subject: IOs stuck in SG
-Date: Sat, 2 Jun 2007 03:56:03 +0800 (CST)
-Message-ID: <894089.97203.qm@web63904.mail.re1.yahoo.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH v2] add bidi support for block pc requests
+Date: Fri, 01 Jun 2007 16:21:04 -0400
+Message-ID: <46607FB0.4040103@garzik.org>
+References: <464C1721.8030009@panasas.com>	<1179408422.3785.5.camel@mulgrave.il.steeleye.com>	<464C5FF5.6000705@panasas.com> <20070517231127T.fujita.tomonori@lab.ntt.co.jp> <464C799D.7080405@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web63904.mail.re1.yahoo.com ([69.147.97.119]:26405 "HELO
-	web63904.mail.re1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1762589AbXFAT4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Jun 2007 15:56:06 -0400
+Received: from srv5.dvmed.net ([207.36.208.214]:55470 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1764515AbXFAUVO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 1 Jun 2007 16:21:14 -0400
+In-Reply-To: <464C799D.7080405@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, bhalevy@panasas.com, hch@infradead.org, akpm@linux-foundation.org, michaelc@cs.wisc.edu
 
+Boaz Harrosh wrote:
+> FUJITA Tomonori wrote:
+>> From: Boaz Harrosh <bharrosh@panasas.com>
+>> Subject: Re: [PATCH v2] add bidi support for block pc requests
+>> Date: Thu, 17 May 2007 17:00:21 +0300
+>>
+>>> Yes Tomo found it at ata_scsi_slave_config(). Attached below the way I
+>>> fixed it. Now it works with 127.
+>> I think that we can just remove blk_queue_max_phys_segments since the
+>> ata drivers seem to set sg_tablesize to LIBATA_MAX_PRD.
+>>
+> 
+> Who should send a patch upstream? (I cc'ed Jeff Garzik)
+> 
+> Boaz
+> 
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index dd81fa7..3660f3e 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -800,8 +800,6 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
+> 
+>  	ata_scsi_sdev_config(sdev);
+> 
+> -	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
+> -
+>  	sdev->manage_start_stop = 1;
 
-I am seeing a problem where IOs get stuck in SG for a _long_ time. The 
+I don't mind the patch, but could someone refresh me as to the context?
 
-initiator driver is our own, and we dont see any IOs in there that are 
+Is there something wrong with the above code, or is it simply redundant 
+to the scsi_host_template settings in each LLDD?
 
-pending. We are running 2.4.30.  
-
- 
-
-This is what I see in the proc file for SG. The act: acc to documentation means: 
-
-act: mid level (adapter driver or device) has command. 
-
- 
-
-Has anyone seen this problem? If yes, is there a patch for this problem? 
-
- 
-
->>> device=sg97 scsi4 chan=0 id=17 lun=0   em=0 sg_tablesize=64 excl=0 
-
-   FD(1): timeout=60000ms bufflen=4096 (res)sgat=0 low_dma=0 
-
-   cmd_q=1 f_packid=1 k_orphan=0 closed=0 
-
-     act: id=1856404224 blen=8 t_o/elap=15000/54615000ms sgat=0 op=0x25 
-
- >>> device=sg98 scsi4 chan=0 id=18 lun=0   em=0 sg_tablesize=64 excl=0 
-
-   FD(1): timeout=60000ms bufflen=4096 (res)sgat=0 low_dma=0 
-
-   cmd_q=1 f_packid=1 k_orphan=0 closed=0 
-
-     act: id=1883362756 blen=255 t_o/elap=15000/54474000ms sgat=0 op=0x1c 
-
- 
-
- 
-
--- Mark 
+	Jeff
 
 
 
-
-
-
-
-
-
-
-
-
- 
-____________________________________________________________________________________
-Need Mail bonding?
-Go to the Yahoo! Mail Q&A for great tips from Yahoo! Answers users.
-http://answers.yahoo.com/dir/?link=list&sid=396546091
