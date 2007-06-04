@@ -1,55 +1,34 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] bsg: fix the deadlock on discarding done commands
-Date: Mon, 4 Jun 2007 16:04:15 +0200
-Message-ID: <20070604140414.GI32105@kernel.dk>
-References: <20070603221813U.fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] m68k: Atari SCSI driver update_timeout removal
+Date: Mon, 04 Jun 2007 09:52:16 -0500
+Message-ID: <1180968737.3711.2.camel@mulgrave.il.steeleye.com>
+References: <Pine.LNX.4.64.0706031250190.9351@anakin>
+	 <20070604072839.GA15390@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:2227 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753857AbXFDOF5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 4 Jun 2007 10:05:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20070603221813U.fujita.tomonori@lab.ntt.co.jp>
+Received: from hancock.steeleye.com ([71.30.118.248]:38714 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750758AbXFDOwU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jun 2007 10:52:20 -0400
+In-Reply-To: <20070604072839.GA15390@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 
-On Sun, Jun 03 2007, FUJITA Tomonori wrote:
-> The previous commit to fix a blocking read bug put a bug that leads a
-> deadlock on discarding done commands. We don't need bsg_device's lock
-> there.
+On Mon, 2007-06-04 at 08:28 +0100, Christoph Hellwig wrote:
+> On Sun, Jun 03, 2007 at 12:55:04PM +0200, Geert Uytterhoeven wrote:
+> > From: Michael Schmitz <schmitz@opal.biophys.uni-duesseldorf.de>
+> > 
+> > Atari SCSI driver fixes: remove update_timeout kludge
 > 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  block/bsg.c |    5 +----
->  1 files changed, 1 insertions(+), 4 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 2f78d7d..9b5f6d7 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -466,11 +466,8 @@ static int bsg_complete_all_commands(str
->  	 */
->  	ret = 0;
->  	do {
-> -		spin_lock_irq(&bd->lock);
-> -		if (!bd->queued_cmds) {
-> -			spin_unlock_irq(&bd->lock);
-> +		if (!bd->queued_cmds)
->  			break;
-> -		}
->  
->  		bc = bsg_get_done_cmd(bd);
->  		if (IS_ERR(bc))
+> Looks good. James, can you send this on for 2.6.22 so the accidentally
+> added cludge doesn't end up in any release version?
 
-int read should be atomic, but it probably still needs serialization.
-I'd be more comfortable with just adding the appropriate
-spin_unlock_irq() before bsg_get_done_cmd(). It's not a fast path
-anyway, just for device going away.
+Yes, sure ... I'm just preparing the -rc updates for SCSI now.
 
--- 
-Jens Axboe
+James
+
 
