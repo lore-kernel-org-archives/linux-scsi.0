@@ -1,67 +1,121 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [SCSI]: JAZZ ESP and SUN ESP need SPI_ATTRS
-Date: Sun, 03 Jun 2007 18:38:36 -0700 (PDT)
-Message-ID: <20070603.183836.35031446.davem@davemloft.net>
-References: <20070603.173625.85704021.davem@davemloft.net>
-	<20070603175604.0d500198.randy.dunlap@oracle.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] m68k: Atari SCSI driver update_timeout removal
+Date: Mon, 4 Jun 2007 08:28:39 +0100
+Message-ID: <20070604072839.GA15390@infradead.org>
+References: <Pine.LNX.4.64.0706031250190.9351@anakin>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:43472
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751464AbXFDBiW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jun 2007 21:38:22 -0400
-In-Reply-To: <20070603175604.0d500198.randy.dunlap@oracle.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35057 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751912AbXFDH2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Jun 2007 03:28:46 -0400
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0706031250190.9351@anakin>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: randy.dunlap@oracle.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Date: Sun, 3 Jun 2007 17:56:04 -0700
-
-> On Sun, 03 Jun 2007 17:36:25 -0700 (PDT) David Miller wrote:
+On Sun, Jun 03, 2007 at 12:55:04PM +0200, Geert Uytterhoeven wrote:
+> From: Michael Schmitz <schmitz@opal.biophys.uni-duesseldorf.de>
 > 
-> > 
-> > Reported by Meelis Roos.
-> > 
-> > Signed-off-by: David S. Miller <davem@davemloft.net>
-> > 
-> > diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> > index 572034c..e2b2838 100644
-> > --- a/drivers/scsi/Kconfig
-> > +++ b/drivers/scsi/Kconfig
-> > @@ -1532,6 +1532,7 @@ source "drivers/scsi/arm/Kconfig"
-> >  config JAZZ_ESP
-> >  	bool "MIPS JAZZ FAS216 SCSI support"
-> >  	depends on MACH_JAZZ && SCSI
-> > +	select CONFIG_SCSI_SPI_ATTRS
-> 
-> 	select SCSI_SPI_ATTRS
-> (no CONFIG_)
-> 
-> also below.
+> Atari SCSI driver fixes: remove update_timeout kludge
 
-My bad, sorry.  Here is the fixed version.
+Looks good. James, can you send this on for 2.6.22 so the accidentally
+added cludge doesn't end up in any release version?
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 572034c..2b2f5c1 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1532,6 +1532,7 @@ source "drivers/scsi/arm/Kconfig"
- config JAZZ_ESP
- 	bool "MIPS JAZZ FAS216 SCSI support"
- 	depends on MACH_JAZZ && SCSI
-+	select SCSI_SPI_ATTRS
- 	help
- 	  This is the driver for the onboard SCSI host adapter of MIPS Magnum
- 	  4000, Acer PICA, Olivetti M700-10 and a few other identical OEM
-@@ -1756,6 +1757,7 @@ config SUN3X_ESP
- config SCSI_SUNESP
- 	tristate "Sparc ESP Scsi Driver"
- 	depends on SBUS && SCSI
-+	select SCSI_SPI_ATTRS
- 	help
- 	  This is the driver for the Sun ESP SCSI host adapter. The ESP
- 	  chipset is present in most SPARC SBUS-based computers.
+> Signed-off-by: Michael Schmitz <schmitz@debian.org>
+> Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> ---
+> This removes the timeout kludge in commit
+> fb810d121bceb945c5e576356bccba11cbfad7e3 that was NAK'ed by Christoph.
+> 
+>  drivers/scsi/atari_NCR5380.c |   44 +------------------------------------------
+>  1 file changed, 2 insertions(+), 42 deletions(-)
+> 
+> --- a/drivers/scsi/atari_NCR5380.c
+> +++ b/drivers/scsi/atari_NCR5380.c
+> @@ -894,45 +894,6 @@ static int NCR5380_init(struct Scsi_Host
+>  }
+>  
+>  /*
+> - * our own old-style timeout update
+> - */
+> -/*
+> - * The strategy is to cause the timer code to call scsi_times_out()
+> - * when the soonest timeout is pending.
+> - * The arguments are used when we are queueing a new command, because
+> - * we do not want to subtract the time used from this time, but when we
+> - * set the timer, we want to take this value into account.
+> - */
+> -
+> -int atari_scsi_update_timeout(Scsi_Cmnd * SCset, int timeout)
+> -{
+> -	int rtn;
+> -
+> -	/*
+> -	 * We are using the new error handling code to actually register/deregister
+> -	 * timers for timeout.
+> -	 */
+> -
+> -	if (!timer_pending(&SCset->eh_timeout))
+> -		rtn = 0;
+> -	else
+> -		rtn = SCset->eh_timeout.expires - jiffies;
+> -
+> -	if (timeout == 0) {
+> -		del_timer(&SCset->eh_timeout);
+> -		SCset->eh_timeout.data = (unsigned long)NULL;
+> -		SCset->eh_timeout.expires = 0;
+> -	} else {
+> -		if (SCset->eh_timeout.data != (unsigned long)NULL)
+> -			del_timer(&SCset->eh_timeout);
+> -		SCset->eh_timeout.data = (unsigned long)SCset;
+> -		SCset->eh_timeout.expires = jiffies + timeout;
+> -		add_timer(&SCset->eh_timeout);
+> -	}
+> -	return rtn;
+> -}
+> -
+> -/*
+>   * Function : int NCR5380_queue_command (Scsi_Cmnd *cmd,
+>   *	void (*done)(Scsi_Cmnd *))
+>   *
+> @@ -956,7 +917,6 @@ static int NCR5380_queue_command(Scsi_Cm
+>  	Scsi_Cmnd *tmp;
+>  	int oldto;
+>  	unsigned long flags;
+> -	// extern int update_timeout(Scsi_Cmnd * SCset, int timeout);
+>  
+>  #if (NDEBUG & NDEBUG_NO_WRITE)
+>  	switch (cmd->cmnd[0]) {
+> @@ -1029,9 +989,9 @@ static int NCR5380_queue_command(Scsi_Cm
+>  	 * alter queues and touch the lock.
+>  	 */
+>  	if (!IS_A_TT()) {
+> -		oldto = atari_scsi_update_timeout(cmd, 0);
+> +		/* perhaps stop command timer here */
+>  		falcon_get_lock();
+> -		atari_scsi_update_timeout(cmd, oldto);
+> +		/* perhaps restart command timer here */
+>  	}
+>  	if (!(hostdata->issue_queue) || (cmd->cmnd[0] == REQUEST_SENSE)) {
+>  		LIST(cmd, hostdata->issue_queue);
+> 
+> Gr{oetje,eeting}s,
+> 
+> 						Geert
+> 
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> 
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+> 							    -- Linus Torvalds
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+---end quoted text---
