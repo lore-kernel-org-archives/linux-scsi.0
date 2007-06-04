@@ -1,52 +1,42 @@
-From: "Robert P. J. Day" <rpjday@mindspring.com>
-Subject: [PATCH] IDE: Remove references to the non-existent CONFIG_SCSI_EATA_DMA
- variable.
-Date: Sun, 3 Jun 2007 13:55:59 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0706031353540.24889@localhost.localdomain>
+From: David Miller <davem@davemloft.net>
+Subject: [SCSI]: JAZZ ESP and SUN ESP need SPI_ATTRS
+Date: Sun, 03 Jun 2007 17:36:25 -0700 (PDT)
+Message-ID: <20070603.173625.85704021.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nic.NetDirect.CA ([216.16.235.2]:55019 "EHLO
-	rubicon.netdirect.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750718AbXFCR51 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jun 2007 13:57:27 -0400
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:58476
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1750832AbXFDAgL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Jun 2007 20:36:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bzolnier@gmail.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com
 
 
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Reported by Meelis Roos.
 
----
+Signed-off-by: David S. Miller <davem@davemloft.net>
 
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index 3cebed7..969e385 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -144,7 +144,7 @@ static inline void do_identify (ide_drive_t *drive, u8 cmd)
- 	local_irq_enable();
- 	ide_fix_driveid(id);
-
--#if defined (CONFIG_SCSI_EATA_DMA) || defined (CONFIG_SCSI_EATA_PIO) || defined (CONFIG_SCSI_EATA)
-+#if defined (CONFIG_SCSI_EATA_PIO) || defined (CONFIG_SCSI_EATA)
- 	/*
- 	 * EATA SCSI controllers do a hardware ATA emulation:
- 	 * Ignore them if there is a driver for them available.
-@@ -154,7 +154,7 @@ static inline void do_identify (ide_drive_t *drive, u8 cmd)
- 		printk("%s: EATA SCSI HBA %.10s\n", drive->name, id->model);
- 		goto err_misc;
- 	}
--#endif /* CONFIG_SCSI_EATA_DMA || CONFIG_SCSI_EATA_PIO */
-+#endif /* CONFIG_SCSI_EATA || CONFIG_SCSI_EATA_PIO */
-
- 	/*
- 	 *  WIN_IDENTIFY returns little-endian info,
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://fsdev.net/wiki/index.php?title=Main_Page
-========================================================================
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 572034c..e2b2838 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1532,6 +1532,7 @@ source "drivers/scsi/arm/Kconfig"
+ config JAZZ_ESP
+ 	bool "MIPS JAZZ FAS216 SCSI support"
+ 	depends on MACH_JAZZ && SCSI
++	select CONFIG_SCSI_SPI_ATTRS
+ 	help
+ 	  This is the driver for the onboard SCSI host adapter of MIPS Magnum
+ 	  4000, Acer PICA, Olivetti M700-10 and a few other identical OEM
+@@ -1756,6 +1757,7 @@ config SUN3X_ESP
+ config SCSI_SUNESP
+ 	tristate "Sparc ESP Scsi Driver"
+ 	depends on SBUS && SCSI
++	select CONFIG_SCSI_SPI_ATTRS
+ 	help
+ 	  This is the driver for the Sun ESP SCSI host adapter. The ESP
+ 	  chipset is present in most SPARC SBUS-based computers.
