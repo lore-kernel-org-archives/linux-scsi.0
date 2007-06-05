@@ -1,134 +1,89 @@
-From: bloch@verdurin.com
-Subject: Very slow writes with mptsas
-Date: Tue, 5 Jun 2007 17:16:21 +0100
-Message-ID: <20070605161620.GB6519@bloch.config>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] lpfc 8.2.1 : Refactoring and addition of NPIV support
+Date: Tue, 05 Jun 2007 15:21:42 -0400
+Message-ID: <1181071302.23368.4.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 87-194-8-112.bethere.co.uk ([87.194.8.112]:55949 "EHLO
-	bloch.verdurin.priv" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756168AbXFERSK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2007 13:18:10 -0400
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:53619 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760242AbXFETVU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 5 Jun 2007 15:21:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: linux-precision@dell.com
+Cc: james.bottomley@steeleye.com, hch@infradead.org
 
-Hello
+All,
 
-I'm seeing very slow writes on a Dell Precision 690 with the Dell SAS5
-adapter, serving a RAID1 array of SATA-II disks.
+For the past several months, Emulex has been updating our driver to support
+the N_Port ID Virtualization (NPIV).  We have reached a maturity point
+where we would like to move the NPIV support into our upstream driver.
+The patches, as an RFC, were posted 5/1 for review:
+    http://marc.info/?l=linux-scsi&m=117798737903334&w=2
+This post formally requests inclusion of the NPIV modifications.
 
-It's very similar to the problem in FreeBSD, described here:
+NPIV is a mechanism by which a FC port can acquire more than 1 Address
+on a FC fabric. Using this mechanism, virtual FC ports can be instantiated
+on the same physical Port. Each NPIV instance is a unique WWPN and
+N_Port ID on the fabric. For all intents, it is another hba on the fabric.
+Each instance has its own view of what is present on the fabric, each has
+its own discovery engine, and each NPIV instances has a separate and unique
+login context with each remote port.
 
-http://unix.derkeiler.com/Mailing-Lists/FreeBSD/stable/2007-03/msg00756.html
+In order to support NPIV, there were 3 major blocks of changes made to
+the driver:
+ - First, the driver is reorganized to separate the handling of the 
+   adapter from the handling of the FC port. Adapter handling includes
+   submissions of command requests, receiving responses, and managing
+   adapter resources.  The FC port includes the discovery engine, login
+   handling, and the mapping of a Scsi_Host on the "port".  Although
+   not a large functional change, as it touches core structures and
+   functions, resulting in a large text delta.
 
-I'm running FC6 with the latest kernel.
+ - Second, NPIV support is only available via new adapter interface
+   extensions, termed SLI-3. This interface changes some of the basic
+   behaviors such as command and response ring element sizes and data
+   structures, as well as a change in buffer posting.  Note: the new
+   firmware extensions are found only on our mid-range and enterprise
+   4Gig adapters - so NPIV support is available only on these newer
+   adapters. The latest firmware can be downloaded from the Emulex
+   support page. 
 
-Reads are quite fast, writes terribly slow.
+ - Lastly, NPIV support is added to the driver.  It utilizes the
+   interfaces of the fc transport for the creation and deletion of
+   vports. Within the driver, a new Scsi_Host is created for each
+   NPIV instance, and is paired with a new instance of a FC port.
+   This allows N FC Port elements to share a single Adapter.
 
-dmesg and lspci out below.
+Beyond the original 3 patches above, posted in the RFC, this patch set
+includes the following:
 
-Is the Linux driver suffering from a similar problem?
+ - A rather large set of miscellaneous bug fixes found during further
+   testing and qualification.
 
-Adam
+ - A patch to include support for the data buffer accessors. This is
+   a rework of the original patch by Fujita Tomonori:
+      http://marc.info/?l=linux-scsi&m=117896446832171&w=2
+
+ - A patch to up the revision to 8.2.1
+
+There are 6 patches in total.
+
+Given that the patch sets are rather large, I have placed them on
+our lpfc page on SourceForge. See:
+https://sourceforge.net/project/showfiles.php?group_id=103050&package_id=188761&release_id=513811
+
+The patches are labeled and numbered per the descriptions above. They
+apply on top of the current lpfc driver in scsi-misc-2.6 (the 8.1.12 driver).
+SourceForge also includes a final tarball of the resulting driver.
+
+Thank You
+
+-- james s
 
 
-SCSI subsystem initialized
-Fusion MPT base driver 3.04.03
-Copyright (c) 1999-2007 LSI Logic Corporation
-Fusion MPT SAS Host driver 3.04.03
-ACPI: PCI Interrupt 0000:05:0b.0[A] -> GSI 24 (level, low) -> IRQ 24
-mptbase: Initiating ioc0 bringup
-ioc0: SAS1068: Capabilities={Initiator}
-scsi0 : ioc0: LSISAS1068, FwRev=00063200h, Ports=1, MaxQ=511, IRQ=24
-scsi 0:0:0:0: Direct-Access     ATA      WDC WD5000KS-75M 2E08 PQ: 0
-ANSI: 5
-scsi 0:0:1:0: Direct-Access     ATA      HDS725050KLA360  AB5A PQ: 0
-ANSI: 5
-scsi 0:1:0:0: Direct-Access     Dell     VIRTUAL DISK     1028 PQ: 0
-ANSI: 5
-SCSI device sda: 976562176 512-byte hdwr sectors (500000 MB)
-sda: Write Protect is off
-sda: Mode Sense: 03 00 00 08
-SCSI device sda: write cache: disabled, read cache: enabled, doesn't
-support DPO or FUA
-SCSI device sda: 976562176 512-byte hdwr sectors (500000 MB)
-sda: Write Protect is off
-sda: Mode Sense: 03 00 00 08
-SCSI device sda: write cache: disabled, read cache: enabled, doesn't
-support DPO or FUA
- sda: sda1 sda2 sda3
-sd 0:1:0:0: Attached scsi disk sda
 
-There are no cache-related options in the controller BIOS.
-
-00:00.0 Host bridge: Intel Corporation 5000X Chipset Memory Controller
-Hub (rev 12)
-00:02.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4
-Port 2 (rev 12)
-00:03.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4
-Port 3 (rev 12)
-00:04.0 PCI bridge: Intel Corporation 5000X Chipset PCI Express x16 Port
-4-7 (rev 12)
-00:05.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4
-Port 5 (rev 12)
-00:06.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4
-Port 6 (rev 12)
-00:07.0 PCI bridge: Intel Corporation 5000 Series Chipset PCI Express x4
-Port 7 (rev 12)
-00:10.0 Host bridge: Intel Corporation 5000 Series Chipset Error
-Reporting Registers (rev 12)
-00:10.1 Host bridge: Intel Corporation 5000 Series Chipset Error
-Reporting Registers (rev 12)
-00:10.2 Host bridge: Intel Corporation 5000 Series Chipset Error
-Reporting Registers (rev 12)
-00:11.0 Host bridge: Intel Corporation 5000 Series Chipset Reserved
-Registers (rev 12)
-00:13.0 Host bridge: Intel Corporation 5000 Series Chipset Reserved
-Registers (rev 12)
-00:15.0 Host bridge: Intel Corporation 5000 Series Chipset FBD Registers
-(rev 12)
-00:16.0 Host bridge: Intel Corporation 5000 Series Chipset FBD Registers
-(rev 12)
-00:1b.0 Audio device: Intel Corporation 631xESB/632xESB High Definition
-Audio Controller (rev 09)
-00:1c.0 PCI bridge: Intel Corporation 631xESB/632xESB/3100 Chipset PCI
-Express Root Port 1 (rev 09)
-00:1d.0 USB Controller: Intel Corporation 631xESB/632xESB/3100 Chipset
-UHCI USB Controller #1 (rev 09)
-00:1d.1 USB Controller: Intel Corporation 631xESB/632xESB/3100 Chipset
-UHCI USB Controller #2 (rev 09)
-00:1d.2 USB Controller: Intel Corporation 631xESB/632xESB/3100 Chipset
-UHCI USB Controller #3 (rev 09)
-00:1d.3 USB Controller: Intel Corporation 631xESB/632xESB/3100 Chipset
-UHCI USB Controller #4 (rev 09)
-00:1d.7 USB Controller: Intel Corporation 631xESB/632xESB/3100 Chipset
-EHCI USB2 Controller (rev 09)
-00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev d9)
-00:1f.0 ISA bridge: Intel Corporation 631xESB/632xESB/3100 Chipset LPC
-Interface Controller (rev 09)
-00:1f.1 IDE interface: Intel Corporation 631xESB/632xESB IDE Controller
-(rev 09)
-00:1f.2 SATA controller: Intel Corporation 631xESB/632xESB SATA Storage
-Controller AHCI (rev 09)
-00:1f.3 SMBus: Intel Corporation 631xESB/632xESB/3100 Chipset SMBus
-Controller (rev 09)
-01:00.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express
-Upstream Port (rev 01)
-01:00.3 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express to
-PCI-X Bridge (rev 01)
-02:00.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express
-Downstream Port E1 (rev 01)
-02:01.0 PCI bridge: Intel Corporation 6311ESB/6321ESB PCI Express
-Downstream Port E2 (rev 01)
-05:0b.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1068 PCI-X
-Fusion-MPT SAS (rev 01)
-07:00.0 VGA compatible controller: nVidia Corporation Quadro FX 3500
-(rev a1)
-0b:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5752
-Gigabit Ethernet PCI Express (rev 02)
-0c:0a.0 FireWire (IEEE 1394): Texas Instruments TSB43AB22/A
-IEEE-1394a-2000 Controller (PHY/Link)
 
