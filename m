@@ -1,57 +1,41 @@
-From: Kev Jackson <foamdino@gmail.com>
-Subject: [patch] Use DMA_32BIT_MASK where appropriate in drivers/scsi/3w-xxxx.c|h
-Date: Wed, 06 Jun 2007 16:53:30 +0700
-Message-ID: <4666841A.8010207@gmail.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Very slow writes with mptsas
+Date: Wed, 06 Jun 2007 20:06:24 +0200
+Message-ID: <4666F7A0.8080605@torque.net>
+References: <20070605161620.GB6519@bloch.config> <7579f7fb0706052232x44db1f7he88a50646a3c57db@mail.gmail.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.229]:35162 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754011AbXFFJxl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2007 05:53:41 -0400
-Received: by nz-out-0506.google.com with SMTP id n1so89887nzf
-        for <linux-scsi@vger.kernel.org>; Wed, 06 Jun 2007 02:53:40 -0700 (PDT)
+Received: from pentafluge.infradead.org ([213.146.154.40]:57761 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759459AbXFFSGu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 6 Jun 2007 14:06:50 -0400
+In-Reply-To: <7579f7fb0706052232x44db1f7he88a50646a3c57db@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linuxraid@amcc.com, linux-scsi@vger.kernel.org
+To: Matthew Jacob <lydianconcepts@gmail.com>
+Cc: "bloch@verdurin.com" <bloch@verdurin.com>, linux-scsi@vger.kernel.org, linux-precision@dell.com
 
-From: Kev Jackson <foamdino@gmail.com>
+Matthew Jacob wrote:
+> The FreeBSD problem was fixed by Scott Long a couple of days ago by
+> doing some cut through SAS stuff that enabled Write Cache for SATA
+> drives. Why LSI-Logic couldn't just blitheringly synthesize mode page
+> 8 is beyond me, but okay.
+> 
+> I dunno whether the issue here is the same one Scott tackled- probably
+> given the messages. Eric- you listening in on this?
 
--Remove TW_DMA_MASK and use DMA_32BIT_MASK as listed in kernel janitors TODO list
+Matt,
+Just in case Eric doesn't answer, I suspect if the
+HBA firmware can be upgraded (from Dell or LSI?) then
+WCE (write cache enable) in the caching mode page
+will be supported. It is one of the few mode page
+settings that is required to be implemented in SAT.
 
-Signed-off-by: Kev Jackson <foamdino@gmail.com>
+The other field that should be changeable is DRA
+(disable read ahead). Both work on my LSI SAS HBA.
 
----
- drivers/scsi/3w-xxxx.c |    2 +-
- drivers/scsi/3w-xxxx.h |    1 -
- 2 files changed, 1 insertion(+), 2 deletions(-)
+Doug Gilbert
 
--patch applies fine on current kernel tree & new kernel compiles
--previously submitted to kernel-janitors@lists.osdl.org
-
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 656bdb1..15ca2a0 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -2338,7 +2338,7 @@ static int __devinit tw_probe(struct pci_dev *pdev, const struct pci_device_id *
-
- 	pci_set_master(pdev);
-
--	retval = pci_set_dma_mask(pdev, TW_DMA_MASK);
-+	retval = pci_set_dma_mask(pdev, DMA_32BIT_MASK);
- 	if (retval) {
- 		printk(KERN_WARNING "3w-xxxx: Failed to set dma mask.");
- 		goto out_disable_device;
-diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
-index 0742e68..4efd6c2 100644
---- a/drivers/scsi/3w-xxxx.h
-+++ b/drivers/scsi/3w-xxxx.h
-@@ -234,7 +234,6 @@ static unsigned char tw_sense_table[][4] =
- #define TW_IOCTL_TIMEOUT                      25 /* 25 seconds */
- #define TW_IOCTL_CHRDEV_TIMEOUT               60 /* 60 seconds */
- #define TW_IOCTL_CHRDEV_FREE                  -1
--#define TW_DMA_MASK			      DMA_32BIT_MASK
- #define TW_MAX_CDB_LEN			      16
-
- /* Bitmask macros to eliminate bitfields */
