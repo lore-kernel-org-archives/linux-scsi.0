@@ -1,105 +1,50 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: add SCSI SYNCHONIZE_CACHE range checking.
-Date: Thu, 7 Jun 2007 13:21:04 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55E7E@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55087@otce2k301.adaptec.com>
+From: bloch@verdurin.com
+Subject: Re: Very slow writes with mptsas
+Date: Thu, 7 Jun 2007 22:42:32 +0100
+Message-ID: <20070607214229.GG6519@bloch.config>
+References: <20070605161620.GB6519@bloch.config> <7579f7fb0706052232x44db1f7he88a50646a3c57db@mail.gmail.com> <4666F7A0.8080605@torque.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7A928.3AB02749"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:51140 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754088AbXFGRVH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2007 13:21:07 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 24D6D12F50E
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Jun 2007 10:21:05 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-reply-to: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55087@otce2k301.adaptec.com>
+Received: from 87-194-8-112.bethere.co.uk ([87.194.8.112]:53864 "EHLO
+	bloch.config" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1753575AbXFGVmp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 7 Jun 2007 17:42:45 -0400
+Content-Disposition: inline
+In-Reply-To: <4666F7A0.8080605@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: Matthew Jacob <lydianconcepts@gmail.com>, linux-scsi@vger.kernel.org, linux-precision@dell.com
 
-This is a multi-part message in MIME format.
+On Wed, 06 Jun 2007, Douglas Gilbert wrote:
 
-------_=_NextPart_001_01C7A928.3AB02749
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
+> Matthew Jacob wrote:
+> > The FreeBSD problem was fixed by Scott Long a couple of days ago by
+> > doing some cut through SAS stuff that enabled Write Cache for SATA
+> > drives. Why LSI-Logic couldn't just blitheringly synthesize mode page
+> > 8 is beyond me, but okay.
+> > 
+> > I dunno whether the issue here is the same one Scott tackled- probably
+> > given the messages. Eric- you listening in on this?
+> 
+> Matt,
+> Just in case Eric doesn't answer, I suspect if the
+> HBA firmware can be upgraded (from Dell or LSI?) then
+> WCE (write cache enable) in the caching mode page
+> will be supported. It is one of the few mode page
+> settings that is required to be implemented in SAT.
+> 
+> The other field that should be changeable is DRA
+> (disable read ahead). Both work on my LSI SAS HBA.
+> 
+> Doug Gilbert
+> 
 
-Customer running an application that issues SYNCHRONIZE_CACHE calls
-directly noticed the broad stroke of the current implementation in the
-aacraid driver resulting in multiple applications feeding I/O to the
-storage causing the issuing application to stall for long periods of
-time. By only waiting for the current WRITE commands, rather than all
-commands, to complete; and those that are in range of the
-SYNCHRONIZE_CACHE call that would associate more tightly with the
-issuing application before telling the Firmware to flush it's dirty
-cache, we managed to reduce the stalling. The Firmware itself still
-flushes all the dirty cache associated with the array ignoring the
-range, it just does so in a more timely manner.
+I upgraded to the latest Dell firmware, but the kernel message is the
+same - write cache disabled, and the write speed is still very bad.  No
+sign of new changeable options.
 
-This attached patch is against current scsi-misc-2.6
+Can't actually see any firmware on the LSI site.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C7A928.3AB02749
-Content-Type: application/octet-stream;
-	name="aacraid_synch_range.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_synch_range.patch
-Content-Disposition: attachment;
-	filename="aacraid_synch_range.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDYtMDcgMTI6NTI6NDQuOTUxNzUwMzM0IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDYtMDcgMTM6MDQ6MzQuNTY0MTg5NzQxIC0wNDAwCkBAIC0xNTg3LDcg
-KzE1ODcsNyBAQAogCQkJQ09NTUFORF9DT01QTEVURSA8PCA4IHwgU0FNX1NUQVRfR09PRDsKIAll
-bHNlIHsKIAkJc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2ID0gY21kLT5kZXZpY2U7Ci0JCXN0cnVj
-dCBhYWNfZGV2ICpkZXYgPSAoc3RydWN0IGFhY19kZXYgKilzZGV2LT5ob3N0LT5ob3N0ZGF0YTsK
-KwkJc3RydWN0IGFhY19kZXYgKmRldiA9IGZpYnB0ci0+ZGV2OwogCQl1MzIgY2lkID0gc2Rldl9p
-ZChzZGV2KTsKIAkJcHJpbnRrKEtFUk5fV0FSTklORyAKIAkJICAgICAic3luY2hyb25pemVfY2Fs
-bGJhY2s6IHN5bmNocm9uaXplIGZhaWxlZCwgc3RhdHVzID0gJWRcbiIsCkBAIC0xNjE4LDYgKzE2
-MTgsOSBAQAogCXN0cnVjdCBzY3NpX2RldmljZSAqc2RldiA9IHNjc2ljbWQtPmRldmljZTsKIAlp
-bnQgYWN0aXZlID0gMDsKIAlzdHJ1Y3QgYWFjX2RldiAqYWFjOworCXU2NCBsYmEgPSAoKHU2NClz
-Y3NpY21kLT5jbW5kWzJdIDw8IDI0KSB8IChzY3NpY21kLT5jbW5kWzNdIDw8IDE2KSB8CisJCShz
-Y3NpY21kLT5jbW5kWzRdIDw8IDgpIHwgc2NzaWNtZC0+Y21uZFs1XTsKKwl1MzIgY291bnQgPSAo
-c2NzaWNtZC0+Y21uZFs3XSA8PCA4KSB8IHNjc2ljbWQtPmNtbmRbOF07CiAJdW5zaWduZWQgbG9u
-ZyBmbGFnczsKIAogCS8qCkBAIC0xNjI2LDExICsxNjI5LDU0IEBACiAJICovCiAJc3Bpbl9sb2Nr
-X2lycXNhdmUoJnNkZXYtPmxpc3RfbG9jaywgZmxhZ3MpOwogCWxpc3RfZm9yX2VhY2hfZW50cnko
-Y21kLCAmc2Rldi0+Y21kX2xpc3QsIGxpc3QpCi0JCWlmIChjbWQgIT0gc2NzaWNtZCAmJiBjbWQt
-PlNDcC5waGFzZSA9PSBBQUNfT1dORVJfRklSTVdBUkUpIHsKKwkJaWYgKGNtZC0+U0NwLnBoYXNl
-ID09IEFBQ19PV05FUl9GSVJNV0FSRSkgeworCQkJdTY0IGNtbmRfbGJhOworCQkJdTMyIGNtbmRf
-Y291bnQ7CisKKwkJCWlmIChjbWQtPmNtbmRbMF0gPT0gV1JJVEVfNikgeworCQkJCWNtbmRfbGJh
-ID0gKChjbWQtPmNtbmRbMV0gJiAweDFGKSA8PCAxNikgfAorCQkJCQkoY21kLT5jbW5kWzJdIDw8
-IDgpIHwKKwkJCQkJY21kLT5jbW5kWzNdOworCQkJCWNtbmRfY291bnQgPSBjbWQtPmNtbmRbNF07
-CisJCQkJaWYgKGNtbmRfY291bnQgPT0gMCkKKwkJCQkJY21uZF9jb3VudCA9IDI1NjsKKwkJCX0g
-ZWxzZSBpZiAoY21kLT5jbW5kWzBdID09IFdSSVRFXzE2KSB7CisJCQkJY21uZF9sYmEgPSAoKHU2
-NCljbWQtPmNtbmRbMl0gPDwgNTYpIHwKKwkJCQkJKCh1NjQpY21kLT5jbW5kWzNdIDw8IDQ4KSB8
-CisJCQkJCSgodTY0KWNtZC0+Y21uZFs0XSA8PCA0MCkgfAorCQkJCQkoKHU2NCljbWQtPmNtbmRb
-NV0gPDwgMzIpIHwKKwkJCQkJKCh1NjQpY21kLT5jbW5kWzZdIDw8IDI0KSB8CisJCQkJCShjbWQt
-PmNtbmRbN10gPDwgMTYpIHwKKwkJCQkJKGNtZC0+Y21uZFs4XSA8PCA4KSB8CisJCQkJCWNtZC0+
-Y21uZFs5XTsKKwkJCQljbW5kX2NvdW50ID0gKGNtZC0+Y21uZFsxMF0gPDwgMjQpIHwKKwkJCQkJ
-KGNtZC0+Y21uZFsxMV0gPDwgMTYpIHwKKwkJCQkJKGNtZC0+Y21uZFsxMl0gPDwgOCkgfAorCQkJ
-CQljbWQtPmNtbmRbMTNdOworCQkJfSBlbHNlIGlmIChjbWQtPmNtbmRbMF0gPT0gV1JJVEVfMTIp
-IHsKKwkJCQljbW5kX2xiYSA9ICgodTY0KWNtZC0+Y21uZFsyXSA8PCAyNCkgfAorCQkJCQkoY21k
-LT5jbW5kWzNdIDw8IDE2KSB8CisJCQkJCShjbWQtPmNtbmRbNF0gPDwgOCkgfAorCQkJCQljbWQt
-PmNtbmRbNV07CisJCQkJY21uZF9jb3VudCA9IChjbWQtPmNtbmRbNl0gPDwgMjQpIHwKKwkJCQkJ
-KGNtZC0+Y21uZFs3XSA8PCAxNikgfAorCQkJCQkoY21kLT5jbW5kWzhdIDw8IDgpIHwKKwkJCQkJ
-Y21kLT5jbW5kWzldOworCQkJfSBlbHNlIGlmIChjbWQtPmNtbmRbMF0gPT0gV1JJVEVfMTApIHsK
-KwkJCQljbW5kX2xiYSA9ICgodTY0KWNtZC0+Y21uZFsyXSA8PCAyNCkgfAorCQkJCQkoY21kLT5j
-bW5kWzNdIDw8IDE2KSB8CisJCQkJCShjbWQtPmNtbmRbNF0gPDwgOCkgfAorCQkJCQljbWQtPmNt
-bmRbNV07CisJCQkJY21uZF9jb3VudCA9IChjbWQtPmNtbmRbN10gPDwgOCkgfAorCQkJCQljbWQt
-PmNtbmRbOF07CisJCQl9IGVsc2UKKwkJCQljb250aW51ZTsKKwkJCWlmICgoKGNtbmRfbGJhICsg
-Y21uZF9jb3VudCkgPCBsYmEpIHx8CisJCQkgIChjb3VudCAmJiAoKGxiYSArIGNvdW50KSA8IGNt
-bmRfbGJhKSkpCisJCQkJY29udGludWU7IAogCQkJKythY3RpdmU7CiAJCQlicmVhazsKIAkJfQot
-CiAJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmc2Rldi0+bGlzdF9sb2NrLCBmbGFncyk7CiAKIAkv
-Kgo=
-
-------_=_NextPart_001_01C7A928.3AB02749--
+Adam
