@@ -1,68 +1,44 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: Very slow writes with mptsas
-Date: Thu, 7 Jun 2007 16:23:42 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D707C473C@NAMAIL4.ad.lsil.com>
-References: <4666F7A0.8080605@torque.net>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:44315 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936855AbXFGWXv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 7 Jun 2007 18:23:51 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4666F7A0.8080605@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: SG_IO with >4k buffer size to iscsi sg device causes "Bad page" panic
+Date: Fri, 08 Jun 2007 16:22:12 +1000
+Message-ID: <E1HwXrQ-0005Rn-00@gondolin.me.apana.org.au>
+References: <0F08E10B769EAF4EA2C43A573B8CC87FB572B9@NAMAIL3.ad.lsil.com>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <0F08E10B769EAF4EA2C43A573B8CC87FB572B9@NAMAIL3.ad.lsil.com>
+Sender: netdev-owner@vger.kernel.org
+To: "Qi, Yanling" <Yanling.Qi@lsi.com>
+Cc: open-iscsi@googlegroups.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-iscsi-devel@lists.sourceforge.net, michaelc@cs.wisc.edu, dougg@torque.net, James.Bottomley@steeleye.com
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net, Matthew Jacob <lydianconcepts@gmail.com>
-Cc: bloch@verdurin.com, linux-scsi@vger.kernel.org, linux-precision@dell.com
 
-On Wednesday, June 06, 2007 12:06 PM, Douglas Gilbert wrote: 
+Please don't drop CCs.
 
-> 
-> Matthew Jacob wrote:
-> > The FreeBSD problem was fixed by Scott Long a couple of days ago by
-> > doing some cut through SAS stuff that enabled Write Cache for SATA
-> > drives. Why LSI-Logic couldn't just blitheringly synthesize 
-> mode page
-> > 8 is beyond me, but okay.
-> > 
-> > I dunno whether the issue here is the same one Scott 
-> tackled- probably
-> > given the messages. Eric- you listening in on this?
-> 
-> Matt,
-> Just in case Eric doesn't answer, I suspect if the
-> HBA firmware can be upgraded (from Dell or LSI?) then
-> WCE (write cache enable) in the caching mode page
-> will be supported. It is one of the few mode page
-> settings that is required to be implemented in SAT.
-> 
-> The other field that should be changeable is DRA
-> (disable read ahead). Both work on my LSI SAS HBA.
-> 
+Qi, Yanling <Yanling.Qi@lsi.com> wrote:
+>
+>> Qi, Yanling <Yanling.Qi@lsi.com> wrote:
+>> > @@ -2571,6 +2572,13 @@ sg_page_malloc(int rqSz, int lowDma, int
+>> >                resp = (char *) __get_free_pages(page_mask, order);
+>> > /* try half */
+>> >                resSz = a_size;
+>> >        }
+>> > +       tmppage = virt_to_page(resp);
+>> > +       for( m = PAGE_SIZE; m < resSz; m += PAGE_SIZE )
+>> > +       {
+>> > +               tmppage++;
+>> > +               SetPageReserved(tmppage);
+>> > +       }
+>> > +
+>> 
+> [Qi, Yanling]
+> If I do a get_page() at sg_page_malloc() time and then do a put_page()
+> at sg_page_free() time, I worry about a race condition that the page
+> gets re-used before calling free_pages().
 
-There is two ways this can be done.    
+Could you explain what is going to cause this page to be reused if it
+has a non-zero reference count?
 
-(1) In Linux, we expose hidden raid components to the sg layer, and you
-can use some of Doug Gilberts sg utilties to modify the WCE bit in the
-caching mode pages to each physical disk.  I've used sg_modes to read
-them, and sg_wr_modes to write them back out.   
-
-(2) You can enable write caching in the volume settings of the firmware
-config page called RAID_VOLUME_PAGE_0.    In the VolumeSettings, bit 0,
-there is "WriteCachingEnabled" bit.
-When this is set to one, all the write caching is enabled for all the
-hidden physical disks.    You can modify the VolumeSettings by sending a
-RAID_ACTION request, with the MPI_RAID_ACTION set to
-CHANGE_VOLUME_SETTINGS, with the ActionDataWord field corresponding to
-the VolumeSettings; e.g. set bit 0 to one.    We have a tool called
-lsiutil that will enable this.   Let me know, and I will send that
-source over.    I don't know why the firmware doesn't allows the caching
-page to be modified to the volume.
-
-Eric
-
-
+Thanks,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
