@@ -1,28 +1,45 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH] IDE: Remove references to the non-existent CONFIG_SCSI_EATA_DMA variable.
-Date: Fri, 8 Jun 2007 14:07:01 +0200
-Message-ID: <200706081407.01157.bzolnier@gmail.com>
-References: <Pine.LNX.4.64.0706031353540.24889@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 4/4] bsg: Kconfig updates
+Date: Sat, 9 Jun 2007 00:12:02 +0900 (JST)
+Message-ID: <20070608133114B.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:48213 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S967862AbXFHNJI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 09:09:08 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so950349ugf
-        for <linux-scsi@vger.kernel.org>; Fri, 08 Jun 2007 06:09:07 -0700 (PDT)
-In-Reply-To: <Pine.LNX.4.64.0706031353540.24889@localhost.localdomain>
-Content-Disposition: inline
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:45393 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S938672AbXFHPMX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 11:12:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Robert P. J. Day" <rpjday@mindspring.com>
+To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org
 
-On Sunday 03 June 2007, Robert P. J. Day wrote:
-> 
-> Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+- bsg supports sg v4
+- bsg depends on SCSI
+- it might be better to mark it experimental for a while
 
-applied
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/Kconfig |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/block/Kconfig b/block/Kconfig
+index 4d1cd1b..22dc027 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -53,9 +53,10 @@ endif
+ 
+ config BLK_DEV_BSG
+ 	bool "Block layer SG support"
++	depends on SCSI && EXPERIMENTAL
+ 	default y
+ 	---help---
+-	Saying Y here will enable generic SG (SCSI generic) v3
++	Saying Y here will enable generic SG (SCSI generic) v4
+ 	support for any block device.
+ 
+ source block/Kconfig.iosched
+-- 
+1.4.3.2
+
