@@ -1,51 +1,31 @@
 From: sandip shete <sandipshete@gmail.com>
-Subject: Re: How to send inquiry command to thorugh sd path (i.e. /dev/sda)
- by using SG_IO ioctl
-Date: Fri, 8 Jun 2007 00:18:15 -0700 (PDT)
-Message-ID: <11021647.post@talk.nabble.com>
-References: <9429164.post@talk.nabble.com>
+Subject: "MEDIUM FORMAT CORRUPTED" error
+Date: Fri, 8 Jun 2007 00:15:43 -0700 (PDT)
+Message-ID: <11021579.post@talk.nabble.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kuber.nabble.com ([216.139.236.158]:58747 "EHLO
+Received: from kuber.nabble.com ([216.139.236.158]:58748 "EHLO
 	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968261AbXFHHlJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 03:41:09 -0400
+	with ESMTP id S968077AbXFHHlK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 03:41:10 -0400
 Received: from isper.nabble.com ([192.168.236.156])
 	by kuber.nabble.com with esmtp (Exim 4.63)
 	(envelope-from <lists@nabble.com>)
-	id 1HwYjf-00009x-1d
-	for linux-scsi@vger.kernel.org; Fri, 08 Jun 2007 00:18:15 -0700
-In-Reply-To: <9429164.post@talk.nabble.com>
+	id 1HwYhE-00007G-2Q
+	for linux-scsi@vger.kernel.org; Fri, 08 Jun 2007 00:15:44 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-download sg_utils3 and use the sg_inq command to do so
-
-
-MasthanUsha wrote:
-> 
-> 
-> Hi All,
->  
-> Any one og you have any idea on scsi inquiry command ?
->  
-> I want to send an Inquiry command to a scsi device through sd path (.i.e.
-> /dev/sda or /dev/sdb) by using SG_IO ioctl. Please explain me...
->  
->  
-> Your help is appreciated
->  
-> Regards
-> Masthan
->  
-> 
-> 
-
+Hi,
+  I recieved the following ASC/ASCQ values as Additional Sense data :
+31/00.
+  I looked it up and found that it stands for "MEDIUM FORMAT CORRUPTED".
+Does it mean that the target disk has bad sectors?
 -- 
-View this message in context: http://www.nabble.com/How-to-send-inquiry-command-to-thorugh-sd-path-%28i.e.--dev-sda%29-by-using-SG_IO-ioctl-tf3387437.html#a11021647
+View this message in context: http://www.nabble.com/%22MEDIUM-FORMAT-CORRUPTED%22-error-tf3888112.html#a11021579
 Sent from the linux-scsi mailing list archive at Nabble.com.
 
