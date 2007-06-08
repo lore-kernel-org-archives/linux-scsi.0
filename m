@@ -1,44 +1,51 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: SG_IO with >4k buffer size to iscsi sg device causes "Bad page" panic
-Date: Fri, 08 Jun 2007 16:22:12 +1000
-Message-ID: <E1HwXrQ-0005Rn-00@gondolin.me.apana.org.au>
-References: <0F08E10B769EAF4EA2C43A573B8CC87FB572B9@NAMAIL3.ad.lsil.com>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <0F08E10B769EAF4EA2C43A573B8CC87FB572B9@NAMAIL3.ad.lsil.com>
-Sender: netdev-owner@vger.kernel.org
-To: "Qi, Yanling" <Yanling.Qi@lsi.com>
-Cc: open-iscsi@googlegroups.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-iscsi-devel@lists.sourceforge.net, michaelc@cs.wisc.edu, dougg@torque.net, James.Bottomley@steeleye.com
+From: sandip shete <sandipshete@gmail.com>
+Subject: Re: How to send inquiry command to thorugh sd path (i.e. /dev/sda)
+ by using SG_IO ioctl
+Date: Fri, 8 Jun 2007 00:18:15 -0700 (PDT)
+Message-ID: <11021647.post@talk.nabble.com>
+References: <9429164.post@talk.nabble.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kuber.nabble.com ([216.139.236.158]:58747 "EHLO
+	kuber.nabble.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S968261AbXFHHlJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 03:41:09 -0400
+Received: from isper.nabble.com ([192.168.236.156])
+	by kuber.nabble.com with esmtp (Exim 4.63)
+	(envelope-from <lists@nabble.com>)
+	id 1HwYjf-00009x-1d
+	for linux-scsi@vger.kernel.org; Fri, 08 Jun 2007 00:18:15 -0700
+In-Reply-To: <9429164.post@talk.nabble.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Please don't drop CCs.
 
-Qi, Yanling <Yanling.Qi@lsi.com> wrote:
->
->> Qi, Yanling <Yanling.Qi@lsi.com> wrote:
->> > @@ -2571,6 +2572,13 @@ sg_page_malloc(int rqSz, int lowDma, int
->> >                resp = (char *) __get_free_pages(page_mask, order);
->> > /* try half */
->> >                resSz = a_size;
->> >        }
->> > +       tmppage = virt_to_page(resp);
->> > +       for( m = PAGE_SIZE; m < resSz; m += PAGE_SIZE )
->> > +       {
->> > +               tmppage++;
->> > +               SetPageReserved(tmppage);
->> > +       }
->> > +
->> 
-> [Qi, Yanling]
-> If I do a get_page() at sg_page_malloc() time and then do a put_page()
-> at sg_page_free() time, I worry about a race condition that the page
-> gets re-used before calling free_pages().
+download sg_utils3 and use the sg_inq command to do so
 
-Could you explain what is going to cause this page to be reused if it
-has a non-zero reference count?
 
-Thanks,
+MasthanUsha wrote:
+> 
+> 
+> Hi All,
+>  
+> Any one og you have any idea on scsi inquiry command ?
+>  
+> I want to send an Inquiry command to a scsi device through sd path (.i.e.
+> /dev/sda or /dev/sdb) by using SG_IO ioctl. Please explain me...
+>  
+>  
+> Your help is appreciated
+>  
+> Regards
+> Masthan
+>  
+> 
+> 
+
 -- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+View this message in context: http://www.nabble.com/How-to-send-inquiry-command-to-thorugh-sd-path-%28i.e.--dev-sda%29-by-using-SG_IO-ioctl-tf3387437.html#a11021647
+Sent from the linux-scsi mailing list archive at Nabble.com.
+
