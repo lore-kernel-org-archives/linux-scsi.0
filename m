@@ -1,24 +1,30 @@
 From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: [PATCH] qla4xxx: allow hba to be online when initiator ip address
-	is uninitialized
-Date: Fri, 08 Jun 2007 17:29:21 -0700
-Message-ID: <1181348961.8711.4.camel@q-iscsi-upstream.site>
+Subject: Re: [PATCH] qla4xxx: allow hba to be online when initiator ip
+	address is uninitialized
+Date: Fri, 08 Jun 2007 17:37:16 -0700
+Message-ID: <1181349436.8711.8.camel@q-iscsi-upstream.site>
+References: <1181348961.8711.4.camel@q-iscsi-upstream.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:28327 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:29231 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S968694AbXFIAaS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 20:30:18 -0400
+	with ESMTP id S1756558AbXFIAiM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 8 Jun 2007 20:38:12 -0400
+In-Reply-To: <1181348961.8711.4.camel@q-iscsi-upstream.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Mike Christie <michaelc@cs.wisc.edu>, David Wagner <david.wagner@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>
 
-This patch provides the following:
-1. remove warning ignoring the return value of pci_set_mwi()
-2. allows HBA to be online when the initiator ip address is uninitialized.
+On Fri, 2007-06-08 at 17:29 -0700, David C Somayajulu wrote:
+> This patch provides the following:
+> 1. remove warning ignoring the return value of pci_set_mwi()
+> 2. allows HBA to be online when the initiator ip address is uninitialized.
+Including 
+
+Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
 
  drivers/scsi/qla4xxx/ql4_init.c |   23 +++++++++++------------
  1 files changed, 11 insertions(+), 12 deletions(-)
