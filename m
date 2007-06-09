@@ -1,10 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: Move dm hw handlers to lower level subsystems
-Date: Sat, 09 Jun 2007 14:07:57 -0500
-Message-ID: <11814160842916-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/7] scsi-hw-handler: add REQ_LB_OP_TRANSITION
+	and errors
+Date: Sat, 09 Jun 2007 14:07:58 -0500
+Message-ID: <11814160853812-git-send-email-michaelc@cs.wisc.edu>
+References: <11814160842916-git-send-email-michaelc@cs.wisc.edu>
 Reply-To: michaelc@cs.wisc.edu,
 	device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <11814160842916-git-send-email-michaelc@cs.wisc.edu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -15,48 +18,93 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
 
-The following patches remove the dm hw handlers and move them
-to scsi (there is only one hw handler dm-emc, but I also added
-one for old hp boxes which cannot be upgraded).
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Why move this piece of code to the scsi layer or dasd layer
-or wherever they are needed?
-- dm is only a BIO mapper/router. It does not know anything about
-scsi and it would be nice that it did not have to.
-- In the future we can use the scsi hw handlers for more advanced
-things. For example, during scanning they can check a devices
-state (check it if is a passive path using whatever vendor specific
-checks it needs to), then we can set some bits or do
-some magic so that when we get commands to passive devices later
-(like from partition scanning or userspace app scanning) we
-can avoid retries and filling the logs with noisey error messages.
+This patch adds REQ_LB_OP_TRANSITION which is a REQ_TYPE_LINUX_BLOCK
+type of command. It also adds the error codes which are used by
+REQ_LB_OP_TRANSITION to blkdev.h.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ block/ll_rw_blk.c      |    2 +-
+ include/linux/blkdev.h |   41 +++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+), 1 deletions(-)
 
-The drawbacks?
-- I think sending REQ_TYPE_BLOCK_PC from dm hw handlers is very
-simple. There is no needed for the REQ_TYPE_LINUX_BLOCK/REQ_LB_OP_TRANSITION
-abstraction.
-
-The patches I am sending converts what is in mainline. In the past
-I was converting every patch that has been sent to dm-devel, so I could
-make sure it all work or was going to work or was just as horrible as
-dm :), but I think it would be an easier transition to just get what
-is in mainline coverted so we can began doing more advanced things like
-Ed and Chandra's patches (I am working on patches for that once this
-is done).
-
-The patches should work with the existing multipath tools. The dm multipath
-argument code, will load the scsi hw handler when it see the dm one.
-The only thing we do not handle in a nice backward compat way in the
-kernel is the dm hw handler specific arguments. Because the hw handlers
-move to a different subsytem, there was not nice way to do some sort
-of compat code in the kernel. And there was actually only one hw handler,
-and I guess Hannes or Ed, in a previous thread said the defaults for it
-should be fine most of the time initially so I did not worry.
-
-I did testing on the code, but I do not actaully have any of this hardware,
-so I hacked up scsi_debug. This was nice because I can test all the code
-paths, but I am not really sure how realistic the testing is. So if you
-have a old hp/compaq hsv/msa box where the firmware cannot be upgraded
-or a emc clariion box try it out.
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 6b5173a..c063792 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -3396,7 +3396,7 @@ static int __end_that_request_first(stru
+ 	 * for a REQ_BLOCK_PC request, we want to carry any eventual
+ 	 * sense key with us all the way through
+ 	 */
+-	if (!blk_pc_request(req))
++	if (!blk_pc_request(req) && !blk_linux_request(req))
+ 		req->errors = 0;
+ 
+ 	if (!uptodate) {
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index db5b00a..e02e208 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -175,8 +175,48 @@ enum {
+ 	 */
+ 	REQ_LB_OP_EJECT	= 0x40,		/* eject request */
+ 	REQ_LB_OP_FLUSH = 0x41,		/* flush device */
++	REQ_LB_OP_TRANSITION = 0x42,	/* failover/failback a device */
+ };
+ 
++enum {
++	BLKERR_OK = 0,
++	/*
++	 * device errors
++	 */
++	BLKERR_DEV_FAILED,	/* generic device error */
++	BLKERR_DEV_TEMP_BUSY,
++	BLKERR_DEVICE_MAX,	/* max device blkerr definition */
++
++	/*
++	 * transport errors
++	 */
++	BLKERR_NOTCONN = BLKERR_DEVICE_MAX + 1,
++	BLKERR_CONN_FAILURE,
++	BLKERR_TRANSPORT_MAX,	/* max transport blkerr definition */
++
++	/*
++	 * driver and generic errors
++	 */
++	BLKERR_IO = BLKERR_TRANSPORT_MAX + 1,	/* generic error */
++	BLKERR_INVALID_IO,
++	BLKERR_RETRY,		/* retry the req, but not immediately */
++	BLKERR_IMM_RETRY,	/* immediately retry the req */
++	BLKERR_TIMED_OUT,
++	BLKERR_RES_TEMP_UNAVAIL,
++	BLKERR_DEV_OFFLINED,
++	BLKERR_NOSYS,
++	BLKERR_DRIVER_MAX,
++};
++
++#define blk_dev_err(_err) \
++	(_err > BLKERR_OK  && _err < BLKERR_DEVICE_MAX)
++
++ #define blkerr_transport_err(_err) \
++	(_err > BLKERR_DEVICE_MAX && _err < BLKERR_TRANSPORT_MAX)
++
++#define blkerr_driver_err(_err) \
++	(_err > BLKERR_TRANSPORT_MAX)
++
+ /*
+  * request type modified bits. first three bits match BIO_RW* bits, important
+  */
+@@ -529,6 +569,7 @@ #define blk_fs_request(rq)	((rq)->cmd_ty
+ #define blk_pc_request(rq)	((rq)->cmd_type == REQ_TYPE_BLOCK_PC)
+ #define blk_special_request(rq)	((rq)->cmd_type == REQ_TYPE_SPECIAL)
+ #define blk_sense_request(rq)	((rq)->cmd_type == REQ_TYPE_SENSE)
++#define blk_linux_request(rq)	((rq)->cmd_type == REQ_TYPE_LINUX_BLOCK)
+ 
+ #define blk_noretry_request(rq)	((rq)->cmd_flags & REQ_FAILFAST)
+ #define blk_rq_started(rq)	((rq)->cmd_flags & REQ_STARTED)
+-- 
+1.4.1.1
