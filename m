@@ -1,17 +1,18 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 6/7] scsi-hw-handler: rm dm-hw-handler code
-Date: Sat, 09 Jun 2007 14:08:03 -0500
-Message-ID: <118141608864-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 7/7] scsi-hw-handler: rm dm-emc code
+Date: Sat, 09 Jun 2007 14:08:04 -0500
+Message-ID: <11814160890-git-send-email-michaelc@cs.wisc.edu>
 References: <11814160842916-git-send-email-michaelc@cs.wisc.edu>
 	<11814160853812-git-send-email-michaelc@cs.wisc.edu>
 	<1181416085774-git-send-email-michaelc@cs.wisc.edu>
 	<11814160863051-git-send-email-michaelc@cs.wisc.edu>
 	<11814160871580-git-send-email-michaelc@cs.wisc.edu>
 	<11814160881707-git-send-email-michaelc@cs.wisc.edu>
+	<118141608864-git-send-email-michaelc@cs.wisc.edu>
 Reply-To: michaelc@cs.wisc.edu,
 	device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <11814160881707-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <118141608864-git-send-email-michaelc@cs.wisc.edu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -27,315 +28,411 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-dm-hw-handler is no longer used.
+dm-emc.c is no longer used and is replaced by
+drivers/scsi/hw_emc.c.
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/md/Makefile        |    2 
- drivers/md/dm-hw-handler.c |  215 --------------------------------------------
- drivers/md/dm-hw-handler.h |   62 -------------
- 3 files changed, 1 insertions(+), 278 deletions(-)
+ drivers/md/Kconfig  |    6 -
+ drivers/md/Makefile |    1 
+ drivers/md/dm-emc.c |  362 ---------------------------------------------------
+ 3 files changed, 0 insertions(+), 369 deletions(-)
 
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 7df934d..35968f9 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -256,12 +256,6 @@ config DM_MULTIPATH
+ 	---help---
+ 	  Allow volume managers to support multipath hardware.
+ 
+-config DM_MULTIPATH_EMC
+-	tristate "EMC CX/AX multipath support (EXPERIMENTAL)"
+-	depends on DM_MULTIPATH && BLK_DEV_DM && EXPERIMENTAL
+-	---help---
+-	  Multipath support for EMC CX/AX series hardware.
+-
+ config DM_DELAY
+ 	tristate "I/O delaying target (EXPERIMENTAL)"
+ 	depends on BLK_DEV_DM && EXPERIMENTAL
 diff --git a/drivers/md/Makefile b/drivers/md/Makefile
-index 3875408..d2ccc48 100644
+index d2ccc48..0ca8f2f 100644
 --- a/drivers/md/Makefile
 +++ b/drivers/md/Makefile
-@@ -4,7 +4,7 @@ #
- 
- dm-mod-objs	:= dm.o dm-table.o dm-target.o dm-linear.o dm-stripe.o \
- 		   dm-ioctl.o dm-io.o kcopyd.o
--dm-multipath-objs := dm-hw-handler.o dm-path-selector.o dm-mpath.o
-+dm-multipath-objs := dm-path-selector.o dm-mpath.o
- dm-snapshot-objs := dm-snap.o dm-exception-store.o
- dm-mirror-objs	:= dm-log.o dm-raid1.o
- md-mod-objs     := md.o bitmap.o
-diff --git a/drivers/md/dm-hw-handler.c b/drivers/md/dm-hw-handler.c
+@@ -33,7 +33,6 @@ obj-$(CONFIG_BLK_DEV_DM)	+= dm-mod.o
+ obj-$(CONFIG_DM_CRYPT)		+= dm-crypt.o
+ obj-$(CONFIG_DM_DELAY)		+= dm-delay.o
+ obj-$(CONFIG_DM_MULTIPATH)	+= dm-multipath.o dm-round-robin.o
+-obj-$(CONFIG_DM_MULTIPATH_EMC)	+= dm-emc.o
+ obj-$(CONFIG_DM_SNAPSHOT)	+= dm-snapshot.o
+ obj-$(CONFIG_DM_MIRROR)		+= dm-mirror.o
+ obj-$(CONFIG_DM_ZERO)		+= dm-zero.o
+diff --git a/drivers/md/dm-emc.c b/drivers/md/dm-emc.c
 deleted file mode 100644
-index baafaab..0000000
---- a/drivers/md/dm-hw-handler.c
+index 265c467..0000000
+--- a/drivers/md/dm-emc.c
 +++ /dev/null
-@@ -1,215 +0,0 @@
+@@ -1,362 +0,0 @@
 -/*
+- * Copyright (C) 2004 SUSE LINUX Products GmbH. All rights reserved.
 - * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
 - *
 - * This file is released under the GPL.
 - *
-- * Multipath hardware handler registration.
+- * Multipath support for EMC CLARiiON AX/CX-series hardware.
 - */
 -
 -#include "dm.h"
 -#include "dm-hw-handler.h"
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_cmnd.h>
 -
--#include <linux/slab.h>
+-#define DM_MSG_PREFIX "multipath emc"
 -
--struct hwh_internal {
--	struct hw_handler_type hwht;
+-struct emc_handler {
+-	spinlock_t lock;
 -
--	struct list_head list;
--	long use;
+-	/* Whether we should send the short trespass command (FC-series)
+-	 * or the long version (default for AX/CX CLARiiON arrays). */
+-	unsigned short_trespass;
+-	/* Whether or not to honor SCSI reservations when initiating a
+-	 * switch-over. Default: Don't. */
+-	unsigned hr;
+-
+-	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
 -};
 -
--#define hwht_to_hwhi(__hwht) container_of((__hwht), struct hwh_internal, hwht)
+-#define TRESPASS_PAGE 0x22
+-#define EMC_FAILOVER_TIMEOUT (60 * HZ)
 -
--static LIST_HEAD(_hw_handlers);
--static DECLARE_RWSEM(_hwh_lock);
+-/* Code borrowed from dm-lsi-rdac by Mike Christie */
 -
--static struct hwh_internal *__find_hw_handler_type(const char *name)
+-static inline void free_bio(struct bio *bio)
 -{
--	struct hwh_internal *hwhi;
--
--	list_for_each_entry(hwhi, &_hw_handlers, list) {
--		if (!strcmp(name, hwhi->hwht.name))
--			return hwhi;
--	}
--
--	return NULL;
+-	__free_page(bio->bi_io_vec[0].bv_page);
+-	bio_put(bio);
 -}
 -
--static struct hwh_internal *get_hw_handler(const char *name)
+-static int emc_endio(struct bio *bio, unsigned int bytes_done, int error)
 -{
--	struct hwh_internal *hwhi;
+-	struct dm_path *path = bio->bi_private;
 -
--	down_read(&_hwh_lock);
--	hwhi = __find_hw_handler_type(name);
--	if (hwhi) {
--		if ((hwhi->use == 0) && !try_module_get(hwhi->hwht.module))
--			hwhi = NULL;
--		else
--			hwhi->use++;
--	}
--	up_read(&_hwh_lock);
+-	if (bio->bi_size)
+-		return 1;
 -
--	return hwhi;
--}
+-	/* We also need to look at the sense keys here whether or not to
+-	 * switch to the next PG etc.
+-	 *
+-	 * For now simple logic: either it works or it doesn't.
+-	 */
+-	if (error)
+-		dm_pg_init_complete(path, MP_FAIL_PATH);
+-	else
+-		dm_pg_init_complete(path, 0);
 -
--struct hw_handler_type *dm_get_hw_handler(const char *name)
--{
--	struct hwh_internal *hwhi;
--
--	if (!name)
--		return NULL;
--
--	hwhi = get_hw_handler(name);
--	if (!hwhi) {
--		request_module("dm-%s", name);
--		hwhi = get_hw_handler(name);
--	}
--
--	return hwhi ? &hwhi->hwht : NULL;
--}
--
--void dm_put_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi;
--
--	if (!hwht)
--		return;
--
--	down_read(&_hwh_lock);
--	hwhi = __find_hw_handler_type(hwht->name);
--	if (!hwhi)
--		goto out;
--
--	if (--hwhi->use == 0)
--		module_put(hwhi->hwht.module);
--
--	BUG_ON(hwhi->use < 0);
--
--      out:
--	up_read(&_hwh_lock);
--}
--
--static struct hwh_internal *_alloc_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi = kmalloc(sizeof(*hwhi), GFP_KERNEL);
--
--	if (hwhi) {
--		memset(hwhi, 0, sizeof(*hwhi));
--		hwhi->hwht = *hwht;
--	}
--
--	return hwhi;
--}
--
--int dm_register_hw_handler(struct hw_handler_type *hwht)
--{
--	int r = 0;
--	struct hwh_internal *hwhi = _alloc_hw_handler(hwht);
--
--	if (!hwhi)
--		return -ENOMEM;
--
--	down_write(&_hwh_lock);
--
--	if (__find_hw_handler_type(hwht->name)) {
--		kfree(hwhi);
--		r = -EEXIST;
--	} else
--		list_add(&hwhi->list, &_hw_handlers);
--
--	up_write(&_hwh_lock);
--
--	return r;
--}
--
--int dm_unregister_hw_handler(struct hw_handler_type *hwht)
--{
--	struct hwh_internal *hwhi;
--
--	down_write(&_hwh_lock);
--
--	hwhi = __find_hw_handler_type(hwht->name);
--	if (!hwhi) {
--		up_write(&_hwh_lock);
--		return -EINVAL;
--	}
--
--	if (hwhi->use) {
--		up_write(&_hwh_lock);
--		return -ETXTBSY;
--	}
--
--	list_del(&hwhi->list);
--
--	up_write(&_hwh_lock);
--
--	kfree(hwhi);
+-	/* request is freed in block layer */
+-	free_bio(bio);
 -
 -	return 0;
 -}
 -
--unsigned dm_scsi_err_handler(struct hw_handler *hwh, struct bio *bio)
+-static struct bio *get_failover_bio(struct dm_path *path, unsigned data_size)
 -{
+-	struct bio *bio;
+-	struct page *page;
+-
+-	bio = bio_alloc(GFP_ATOMIC, 1);
+-	if (!bio) {
+-		DMERR("get_failover_bio: bio_alloc() failed.");
+-		return NULL;
+-	}
+-
+-	bio->bi_rw |= (1 << BIO_RW);
+-	bio->bi_bdev = path->dev->bdev;
+-	bio->bi_sector = 0;
+-	bio->bi_private = path;
+-	bio->bi_end_io = emc_endio;
+-
+-	page = alloc_page(GFP_ATOMIC);
+-	if (!page) {
+-		DMERR("get_failover_bio: alloc_page() failed.");
+-		bio_put(bio);
+-		return NULL;
+-	}
+-
+-	if (bio_add_page(bio, page, data_size, 0) != data_size) {
+-		DMERR("get_failover_bio: alloc_page() failed.");
+-		__free_page(page);
+-		bio_put(bio);
+-		return NULL;
+-	}
+-
+-	return bio;
+-}
+-
+-static struct request *get_failover_req(struct emc_handler *h,
+-					struct bio *bio, struct dm_path *path)
+-{
+-	struct request *rq;
+-	struct block_device *bdev = bio->bi_bdev;
+-	struct request_queue *q = bdev_get_queue(bdev);
+-
+-	/* FIXME: Figure out why it fails with GFP_ATOMIC. */
+-	rq = blk_get_request(q, WRITE, __GFP_WAIT);
+-	if (!rq) {
+-		DMERR("get_failover_req: blk_get_request failed");
+-		return NULL;
+-	}
+-
+-	rq->bio = rq->biotail = bio;
+-	blk_rq_bio_prep(q, rq, bio);
+-
+-	rq->rq_disk = bdev->bd_contains->bd_disk;
+-
+-	/* bio backed don't set data */
+-	rq->buffer = rq->data = NULL;
+-	/* rq data_len used for pc cmd's request_bufflen */
+-	rq->data_len = bio->bi_size;
+-
+-	rq->sense = h->sense;
+-	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
+-	rq->sense_len = 0;
+-
+-	memset(&rq->cmd, 0, BLK_MAX_CDB);
+-
+-	rq->timeout = EMC_FAILOVER_TIMEOUT;
+-	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+-	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
+-
+-	return rq;
+-}
+-
+-static struct request *emc_trespass_get(struct emc_handler *h,
+-					struct dm_path *path)
+-{
+-	struct bio *bio;
+-	struct request *rq;
+-	unsigned char *page22;
+-	unsigned char long_trespass_pg[] = {
+-		0, 0, 0, 0,
+-		TRESPASS_PAGE,        /* Page code */
+-		0x09,                 /* Page length - 2 */
+-		h->hr ? 0x01 : 0x81,  /* Trespass code + Honor reservation bit */
+-		0xff, 0xff,           /* Trespass target */
+-		0, 0, 0, 0, 0, 0      /* Reserved bytes / unknown */
+-		};
+-	unsigned char short_trespass_pg[] = {
+-		0, 0, 0, 0,
+-		TRESPASS_PAGE,        /* Page code */
+-		0x02,                 /* Page length - 2 */
+-		h->hr ? 0x01 : 0x81,  /* Trespass code + Honor reservation bit */
+-		0xff,                 /* Trespass target */
+-		};
+-	unsigned data_size = h->short_trespass ? sizeof(short_trespass_pg) :
+-				sizeof(long_trespass_pg);
+-
+-	/* get bio backing */
+-	if (data_size > PAGE_SIZE)
+-		/* this should never happen */
+-		return NULL;
+-
+-	bio = get_failover_bio(path, data_size);
+-	if (!bio) {
+-		DMERR("emc_trespass_get: no bio");
+-		return NULL;
+-	}
+-
+-	page22 = (unsigned char *)bio_data(bio);
+-	memset(page22, 0, data_size);
+-
+-	memcpy(page22, h->short_trespass ?
+-		short_trespass_pg : long_trespass_pg, data_size);
+-
+-	/* get request for block layer packet command */
+-	rq = get_failover_req(h, bio, path);
+-	if (!rq) {
+-		DMERR("emc_trespass_get: no rq");
+-		free_bio(bio);
+-		return NULL;
+-	}
+-
+-	/* Prepare the command. */
+-	rq->cmd[0] = MODE_SELECT;
+-	rq->cmd[1] = 0x10;
+-	rq->cmd[4] = data_size;
+-	rq->cmd_len = COMMAND_SIZE(rq->cmd[0]);
+-
+-	return rq;
+-}
+-
+-static void emc_pg_init(struct hw_handler *hwh, unsigned bypassed,
+-			struct dm_path *path)
+-{
+-	struct request *rq;
+-	struct request_queue *q = bdev_get_queue(path->dev->bdev);
+-
+-	/*
+-	 * We can either blindly init the pg (then look at the sense),
+-	 * or we can send some commands to get the state here (then
+-	 * possibly send the fo cmnd), or we can also have the
+-	 * initial state passed into us and then get an update here.
+-	 */
+-	if (!q) {
+-		DMINFO("emc_pg_init: no queue");
+-		goto fail_path;
+-	}
+-
+-	/* FIXME: The request should be pre-allocated. */
+-	rq = emc_trespass_get(hwh->context, path);
+-	if (!rq) {
+-		DMERR("emc_pg_init: no rq");
+-		goto fail_path;
+-	}
+-
+-	DMINFO("emc_pg_init: sending switch-over command");
+-	elv_add_request(q, rq, ELEVATOR_INSERT_FRONT, 1);
+-	return;
+-
+-fail_path:
+-	dm_pg_init_complete(path, MP_FAIL_PATH);
+-}
+-
+-static struct emc_handler *alloc_emc_handler(void)
+-{
+-	struct emc_handler *h = kmalloc(sizeof(*h), GFP_KERNEL);
+-
+-	if (h) {
+-		memset(h, 0, sizeof(*h));
+-		spin_lock_init(&h->lock);
+-	}
+-
+-	return h;
+-}
+-
+-static int emc_create(struct hw_handler *hwh, unsigned argc, char **argv)
+-{
+-	struct emc_handler *h;
+-	unsigned hr, short_trespass;
+-
+-	if (argc == 0) {
+-		/* No arguments: use defaults */
+-		hr = 0;
+-		short_trespass = 0;
+-	} else if (argc != 2) {
+-		DMWARN("incorrect number of arguments");
+-		return -EINVAL;
+-	} else {
+-		if ((sscanf(argv[0], "%u", &short_trespass) != 1)
+-			|| (short_trespass > 1)) {
+-			DMWARN("invalid trespass mode selected");
+-			return -EINVAL;
+-		}
+-
+-		if ((sscanf(argv[1], "%u", &hr) != 1)
+-			|| (hr > 1)) {
+-			DMWARN("invalid honor reservation flag selected");
+-			return -EINVAL;
+-		}
+-	}
+-
+-	h = alloc_emc_handler();
+-	if (!h)
+-		return -ENOMEM;
+-
+-	hwh->context = h;
+-
+-	if ((h->short_trespass = short_trespass))
+-		DMWARN("short trespass command will be send");
+-	else
+-		DMWARN("long trespass command will be send");
+-
+-	if ((h->hr = hr))
+-		DMWARN("honor reservation bit will be set");
+-	else
+-		DMWARN("honor reservation bit will not be set (default)");
+-
+-	return 0;
+-}
+-
+-static void emc_destroy(struct hw_handler *hwh)
+-{
+-	struct emc_handler *h = (struct emc_handler *) hwh->context;
+-
+-	kfree(h);
+-	hwh->context = NULL;
+-}
+-
+-static unsigned emc_error(struct hw_handler *hwh, struct bio *bio)
+-{
+-	/* FIXME: Patch from axboe still missing */
 -#if 0
--	int sense_key, asc, ascq;
+-	int sense;
 -
 -	if (bio->bi_error & BIO_SENSE) {
--		/* FIXME: This is just an initial guess. */
--		/* key / asc / ascq */
--		sense_key = (bio->bi_error >> 16) & 0xff;
--		asc = (bio->bi_error >> 8) & 0xff;
--		ascq = bio->bi_error & 0xff;
+-		sense = bio->bi_error & 0xffffff; /* sense key / asc / ascq */
 -
--		switch (sense_key) {
--			/* This block as a whole comes from the device.
--			 * So no point retrying on another path. */
--		case 0x03:	/* Medium error */
--		case 0x05:	/* Illegal request */
--		case 0x07:	/* Data protect */
--		case 0x08:	/* Blank check */
--		case 0x0a:	/* copy aborted */
--		case 0x0c:	/* obsolete - no clue ;-) */
--		case 0x0d:	/* volume overflow */
--		case 0x0e:	/* data miscompare */
--		case 0x0f:	/* reserved - no idea either. */
--			return MP_ERROR_IO;
--
--			/* For these errors it's unclear whether they
--			 * come from the device or the controller.
--			 * So just lets try a different path, and if
--			 * it eventually succeeds, user-space will clear
--			 * the paths again... */
--		case 0x02:	/* Not ready */
--		case 0x04:	/* Hardware error */
--		case 0x09:	/* vendor specific */
--		case 0x0b:	/* Aborted command */
--			return MP_FAIL_PATH;
--
--		case 0x06:	/* Unit attention - might want to decode */
--			if (asc == 0x04 && ascq == 0x01)
--				/* "Unit in the process of
--				 * becoming ready" */
--				return 0;
--			return MP_FAIL_PATH;
--
--			/* FIXME: For Unit Not Ready we may want
--			 * to have a generic pg activation
--			 * feature (START_UNIT). */
--
--			/* Should these two ever end up in the
--			 * error path? I don't think so. */
--		case 0x00:	/* No sense */
--		case 0x01:	/* Recovered error */
+-		if (sense == 0x020403) {
+-			/* LUN Not Ready - Manual Intervention Required
+-			 * indicates this is a passive path.
+-			 *
+-			 * FIXME: However, if this is seen and EVPD C0
+-			 * indicates that this is due to a NDU in
+-			 * progress, we should set FAIL_PATH too.
+-			 * This indicates we might have to do a SCSI
+-			 * inquiry in the end_io path. Ugh. */
+-			return MP_BYPASS_PG | MP_RETRY_IO;
+-		} else if (sense == 0x052501) {
+-			/* An array based copy is in progress. Do not
+-			 * fail the path, do not bypass to another PG,
+-			 * do not retry. Fail the IO immediately.
+-			 * (Actually this is the same conclusion as in
+-			 * the default handler, but lets make sure.) */
 -			return 0;
+-		} else if (sense == 0x062900) {
+-			/* Unit Attention Code. This is the first IO
+-			 * to the new path, so just retry. */
+-			return MP_RETRY_IO;
 -		}
 -	}
 -#endif
 -
--	/* We got no idea how to decode the other kinds of errors ->
--	 * assume generic error condition. */
--	return MP_FAIL_PATH;
+-	/* Try default handler */
+-	return dm_scsi_err_handler(hwh, bio);
 -}
 -
--EXPORT_SYMBOL_GPL(dm_register_hw_handler);
--EXPORT_SYMBOL_GPL(dm_unregister_hw_handler);
--EXPORT_SYMBOL_GPL(dm_scsi_err_handler);
-diff --git a/drivers/md/dm-hw-handler.h b/drivers/md/dm-hw-handler.h
-deleted file mode 100644
-index e0832e6..0000000
---- a/drivers/md/dm-hw-handler.h
-+++ /dev/null
-@@ -1,62 +0,0 @@
--/*
-- * Copyright (C) 2004 Red Hat, Inc. All rights reserved.
-- *
-- * This file is released under the GPL.
-- *
-- * Multipath hardware handler registration.
-- */
--
--#ifndef	DM_HW_HANDLER_H
--#define	DM_HW_HANDLER_H
--
--#include <linux/device-mapper.h>
--
--#include "dm-mpath.h"
--
--struct hw_handler_type;
--struct hw_handler {
--	struct hw_handler_type *type;
--	struct mapped_device *md;
--	void *context;
+-static struct hw_handler_type emc_hwh = {
+-	.name = "emc",
+-	.module = THIS_MODULE,
+-	.create = emc_create,
+-	.destroy = emc_destroy,
+-	.pg_init = emc_pg_init,
+-	.error = emc_error,
 -};
 -
--/*
-- * Constructs a hardware handler object, takes custom arguments
-- */
--/* Information about a hardware handler type */
--struct hw_handler_type {
--	char *name;
--	struct module *module;
+-static int __init dm_emc_init(void)
+-{
+-	int r = dm_register_hw_handler(&emc_hwh);
 -
--	int (*create) (struct hw_handler *handler, unsigned int argc,
--		       char **argv);
--	void (*destroy) (struct hw_handler *hwh);
+-	if (r < 0)
+-		DMERR("register failed %d", r);
 -
--	void (*pg_init) (struct hw_handler *hwh, unsigned bypassed,
--			 struct dm_path *path);
--	unsigned (*error) (struct hw_handler *hwh, struct bio *bio);
--	int (*status) (struct hw_handler *hwh, status_type_t type,
--		       char *result, unsigned int maxlen);
--};
+-	DMINFO("version 0.0.3 loaded");
 -
--/* Register a hardware handler */
--int dm_register_hw_handler(struct hw_handler_type *type);
+-	return r;
+-}
 -
--/* Unregister a hardware handler */
--int dm_unregister_hw_handler(struct hw_handler_type *type);
+-static void __exit dm_emc_exit(void)
+-{
+-	int r = dm_unregister_hw_handler(&emc_hwh);
 -
--/* Returns a registered hardware handler type */
--struct hw_handler_type *dm_get_hw_handler(const char *name);
+-	if (r < 0)
+-		DMERR("unregister failed %d", r);
+-}
 -
--/* Releases a hardware handler  */
--void dm_put_hw_handler(struct hw_handler_type *hwht);
+-module_init(dm_emc_init);
+-module_exit(dm_emc_exit);
 -
--/* Default err function */
--unsigned dm_scsi_err_handler(struct hw_handler *hwh, struct bio *bio);
--
--/* Error flags for err and dm_pg_init_complete */
--#define MP_FAIL_PATH 1
--#define MP_BYPASS_PG 2
--#define MP_ERROR_IO  4	/* Don't retry this I/O */
--
--#endif
+-MODULE_DESCRIPTION(DM_NAME " EMC CX/AX/FC-family multipath");
+-MODULE_AUTHOR("Lars Marowsky-Bree <lmb@suse.de>");
+-MODULE_LICENSE("GPL");
 -- 
 1.4.1.1
