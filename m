@@ -1,48 +1,62 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH 3/4] bsg: add SCSI transport-level request support
-Date: Sat, 9 Jun 2007 08:59:36 -0400
-Message-ID: <20070609125936.GB1714@osc.edu>
-References: <20070608133042I.fujita.tomonori@lab.ntt.co.jp>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:53849 "EHLO marge.padd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756473AbXFINWW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 9 Jun 2007 09:22:22 -0400
-Content-Disposition: inline
-In-Reply-To: <20070608133042I.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+From: michaelc@cs.wisc.edu
+Subject: Move dm hw handlers to lower level subsystems
+Date: Sat, 09 Jun 2007 14:07:57 -0500
+Message-ID: <11814160842916-git-send-email-michaelc@cs.wisc.edu>
+Reply-To: michaelc@cs.wisc.edu,
+	device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-fujita.tomonori@lab.ntt.co.jp wrote on Sat, 09 Jun 2007 00:12 +0900:
-> SCSI transport-level requests such as SAS management protocol (SMP)
-> skip blk_verify_command().
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  block/bsg.c         |   27 +++++++++++++++++++++------
->  include/linux/bsg.h |    6 ++++++
->  2 files changed, 27 insertions(+), 6 deletions(-)
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 13ecc95..f2a9979 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -208,7 +208,11 @@ static int blk_fill_sgv4_hdr_rq(request_
->  	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
->  			   hdr->request_len))
->  		return -EFAULT;
-> -	if (blk_verify_command(rq->cmd, has_write_perm))
-> +
-> +	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
-> +		if (blk_verify_command(rq->cmd, has_write_perm))
-> +			return -EPERM;
-> +	} else if (capable(CAP_SYS_RAWIO))
->  		return -EPERM;
+The following patches remove the dm hw handlers and move them
+to scsi (there is only one hw handler dm-emc, but I also added
+one for old hp boxes which cannot be upgraded).
 
-Do you mean !capable here?
+Why move this piece of code to the scsi layer or dasd layer
+or wherever they are needed?
+- dm is only a BIO mapper/router. It does not know anything about
+scsi and it would be nice that it did not have to.
+- In the future we can use the scsi hw handlers for more advanced
+things. For example, during scanning they can check a devices
+state (check it if is a passive path using whatever vendor specific
+checks it needs to), then we can set some bits or do
+some magic so that when we get commands to passive devices later
+(like from partition scanning or userspace app scanning) we
+can avoid retries and filling the logs with noisey error messages.
 
-		-- Pete
+The drawbacks?
+- I think sending REQ_TYPE_BLOCK_PC from dm hw handlers is very
+simple. There is no needed for the REQ_TYPE_LINUX_BLOCK/REQ_LB_OP_TRANSITION
+abstraction.
+
+The patches I am sending converts what is in mainline. In the past
+I was converting every patch that has been sent to dm-devel, so I could
+make sure it all work or was going to work or was just as horrible as
+dm :), but I think it would be an easier transition to just get what
+is in mainline coverted so we can began doing more advanced things like
+Ed and Chandra's patches (I am working on patches for that once this
+is done).
+
+The patches should work with the existing multipath tools. The dm multipath
+argument code, will load the scsi hw handler when it see the dm one.
+The only thing we do not handle in a nice backward compat way in the
+kernel is the dm hw handler specific arguments. Because the hw handlers
+move to a different subsytem, there was not nice way to do some sort
+of compat code in the kernel. And there was actually only one hw handler,
+and I guess Hannes or Ed, in a previous thread said the defaults for it
+should be fine most of the time initially so I did not worry.
+
+I did testing on the code, but I do not actaully have any of this hardware,
+so I hacked up scsi_debug. This was nice because I can test all the code
+paths, but I am not really sure how realistic the testing is. So if you
+have a old hp/compaq hsv/msa box where the firmware cannot be upgraded
+or a emc clariion box try it out.
