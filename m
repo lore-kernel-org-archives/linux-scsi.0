@@ -1,15 +1,17 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 4/7] scsi-hw-handler: add emc clariion handler
-Date: Sat, 09 Jun 2007 14:08:01 -0500
-Message-ID: <11814160871580-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 5/7] scsi-hw-handler: convert dm-mpath to scsi hw
+	handlers
+Date: Sat, 09 Jun 2007 14:08:02 -0500
+Message-ID: <11814160881707-git-send-email-michaelc@cs.wisc.edu>
 References: <11814160842916-git-send-email-michaelc@cs.wisc.edu>
 	<11814160853812-git-send-email-michaelc@cs.wisc.edu>
 	<1181416085774-git-send-email-michaelc@cs.wisc.edu>
 	<11814160863051-git-send-email-michaelc@cs.wisc.edu>
+	<11814160871580-git-send-email-michaelc@cs.wisc.edu>
 Reply-To: michaelc@cs.wisc.edu,
 	device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <11814160863051-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <11814160871580-git-send-email-michaelc@cs.wisc.edu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -25,412 +27,344 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-This adds support for clarrions. It is just a port of what
-is in mainline. Ed's patches will be intergrated in a
-different patch which adds more advanced functionality.
+This patch converts dm-mpath to scsi hw handlers. It does
+not add any new functionality and old behaviors and userspace
+tools should be supported except we use the safe clariion
+default instead of using the userspace setting.
+
+This is just the dm-mpath parts which are necessary to use
+REQ_TYPE_LINUX_BLOCK and REQ_LB_OP_TRANSITION. In later mails
+I will send patches which remove old code and add more
+functionality.
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/Kconfig  |    6 +
- drivers/scsi/Makefile |    1 
- drivers/scsi/hw_emc.c |  362 +++++++++++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 369 insertions(+), 0 deletions(-)
+ drivers/md/dm-mpath.c |  199 +++++++++++++++++++++++++++----------------------
+ 1 files changed, 111 insertions(+), 88 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3122346..f8bf5ce 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -296,6 +296,12 @@ config SCSI_HP_SW
- 	 be sent to start it and cannot upgrade the firmware then select y.
- 	 Otherwise, say N.
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index de54b39..5655d16 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -7,7 +7,6 @@
  
-+config SCSI_CLARIION
-+	tristate "EMC CLARiiON Driver"
-+	depends on SCSI
-+	 help
-+	 If you have a EMC CLARiiON select y. Otherwise, say N.
-+
- endmenu
+ #include "dm.h"
+ #include "dm-path-selector.h"
+-#include "dm-hw-handler.h"
+ #include "dm-bio-list.h"
+ #include "dm-bio-record.h"
  
- menu "SCSI low-level drivers"
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index c86e3c0..ceffe0e 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -130,6 +130,7 @@ obj-$(CONFIG_SCSI_IBMVSCSIS)	+= ibmvscsi
- obj-$(CONFIG_SCSI_HPTIOP)	+= hptiop.o
- obj-$(CONFIG_SCSI_STEX)		+= stex.o
- obj-$(CONFIG_SCSI_HP_SW)	+= hw_hp_sw.o
-+obj-$(CONFIG_SCSI_CLARIION)	+= hw_emc.o
+@@ -60,9 +59,9 @@ struct multipath {
  
- obj-$(CONFIG_ARM)		+= arm/
+ 	spinlock_t lock;
  
-diff --git a/drivers/scsi/hw_emc.c b/drivers/scsi/hw_emc.c
-new file mode 100644
-index 0000000..1095aee
---- /dev/null
-+++ b/drivers/scsi/hw_emc.c
-@@ -0,0 +1,362 @@
-+/*
-+ * Target driver for EMC CLARiiON AX/CX-series hardware.
-+ * Based on code from Lars Marowsky-Bree <lmb@suse.de>
-+ * and Ed Goggin <egoggin@emc.com>.
-+ *
-+ * Copyright (C) 2006 Red Hat, Inc.  All rights reserved.
-+ * Copyright (C) 2006 Mike Christie
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
-+#include <linux/blkdev.h>
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_driver.h>
-+
-+#define CLARIION_NAME			"emc_clarrion"
-+
-+#define CLARIION_TRESPASS_PAGE		0x22
-+#define CLARIION_BUFFER_SIZE		0x80
-+#define CLARIION_TIMEOUT		(60 * HZ)
-+#define CLARIION_UNBOUND_LU		-1
-+#define CLARIION_RETRIES		3
-+
-+struct clariion_sdev {
-+	/*
-+	 * Use short trespass command (FC-series) or the long version
-+	 * (default for AX/CX CLARiiON arrays).
-+	 */
-+        unsigned short_trespass;
-+	/*
-+	 * Whether or not (default) to honor SCSI reservations when
-+	 * initiating a switch-over.
-+	 */
-+	unsigned hr;
-+	/* I/O buffer for both MODE_SELECT and INQUIRY commands. */
-+	char buffer[CLARIION_BUFFER_SIZE];
-+	/*
-+	 * SCSI sense buffer for commands -- assumes serial issuance
-+	 * and completion sequence of all commands for same multipath.
-+	 */
-+	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
-+};
-+
-+static unsigned char long_trespass[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x09,			/* Page length - 2 */
-+	0x81,			/* Trespass code + Honor reservation bit */
-+	0xff, 0xff,		/* Trespass target */
-+	0, 0, 0, 0, 0, 0	/* Reserved bytes / unknown */
-+};
-+
-+static unsigned char long_trespass_hr[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x09,			/* Page length - 2 */
-+	0x01,			/* Trespass code + Honor reservation bit */
-+	0xff, 0xff,		/* Trespass target */
-+	0, 0, 0, 0, 0, 0	/* Reserved bytes / unknown */
-+};
-+
-+static unsigned char short_trespass[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x02,			/* Page length - 2 */
-+	0x81,			/* Trespass code + Honor reservation bit */
-+	0xff,			/* Trespass target */
-+};
-+
-+static unsigned char short_trespass_hr[] = {
-+	0, 0, 0, 0,
-+	CLARIION_TRESPASS_PAGE,	/* Page code */
-+	0x02,			/* Page length - 2 */
-+	0x01,			/* Trespass code + Honor reservation bit */
-+	0xff,			/* Trespass target */
-+};
-+
-+/*
-+ * Parse MODE_SELECT cmd reply.
-+ */
-+static int parse_trespass_rsp(struct scsi_device *sdev, char *sense,
-+			       int result)
+-	struct hw_handler hw_handler;
+ 	unsigned nr_priority_groups;
+ 	struct list_head priority_groups;
++	char *hw_handler_name;
+ 	unsigned pg_init_required;	/* pg_init needs calling? */
+ 	unsigned pg_init_in_progress;	/* Only one pg_init allowed at once */
+ 
+@@ -106,6 +105,9 @@ static struct kmem_cache *_mpio_cache;
+ struct workqueue_struct *kmultipathd;
+ static void process_queued_ios(struct work_struct *work);
+ static void trigger_event(struct work_struct *work);
++static void bypass_pg(struct multipath *m, struct priority_group *pg,
++		      int bypassed);
++static int fail_path(struct pgpath *pgpath);
+ 
+ 
+ /*-----------------------------------------------
+@@ -190,18 +192,13 @@ static struct multipath *alloc_multipath
+ static void free_multipath(struct multipath *m)
+ {
+ 	struct priority_group *pg, *tmp;
+-	struct hw_handler *hwh = &m->hw_handler;
+ 
+ 	list_for_each_entry_safe(pg, tmp, &m->priority_groups, list) {
+ 		list_del(&pg->list);
+ 		free_priority_group(pg, m->ti);
+ 	}
+ 
+-	if (hwh->type) {
+-		hwh->type->destroy(hwh);
+-		dm_put_hw_handler(hwh->type);
+-	}
+-
++	kfree(m->hw_handler_name);
+ 	mempool_destroy(m->mpio_pool);
+ 	kfree(m);
+ }
+@@ -213,12 +210,10 @@ static void free_multipath(struct multip
+ 
+ static void __switch_pg(struct multipath *m, struct pgpath *pgpath)
+ {
+-	struct hw_handler *hwh = &m->hw_handler;
+-
+ 	m->current_pg = pgpath->pg;
+ 
+ 	/* Must we initialise the PG first, and queue I/O till it's ready? */
+-	if (hwh->type && hwh->type->pg_init) {
++	if (m->hw_handler_name) {
+ 		m->pg_init_required = 1;
+ 		m->queue_io = 1;
+ 	} else {
+@@ -400,11 +395,106 @@ static void dispatch_queued_ios(struct m
+ 	}
+ }
+ 
++static void __pg_init_done(struct dm_path *path, int errors)
 +{
-+	struct scsi_sense_hdr sshdr;
-+	int err = 0;
++	struct pgpath *pgpath = path_to_pgpath(path);
++	struct priority_group *pg = pgpath->pg;
++	struct multipath *m = pg->m;
++	unsigned long flags;
 +
-+	if (status_byte(result) == CHECK_CONDITION &&
-+	    scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, &sshdr)) {
-+		sdev_printk(KERN_ERR, sdev, "Found valid sense data 0x%2x, "
-+			    "0x%2x, 0x%2x while sending CLARiiON trespass "
-+			    "command.\n", sshdr.sense_key, sshdr.asc,
-+			     sshdr.ascq);
-+
-+		if ((sshdr.sense_key = 0x05) && (sshdr.asc = 0x04) &&
-+		     (sshdr.ascq = 0x00)) {
-+			/*
-+			 * Array based copy in progress -- do not send
-+			 * pg_init or copy will be aborted mid-stream.
-+			 */
-+			sdev_printk(KERN_INFO, sdev, "Array Based Copy in "
-+				    "progress while sending CLARiiON trespass "
-+				    "command.\n");
-+			err = BLKERR_DEV_TEMP_BUSY;
-+		} else if ((sshdr.sense_key = 0x02) && (sshdr.asc = 0x04) &&
-+			    (sshdr.ascq = 0x03)) {
-+			/*
-+			 * LUN Not Ready - Manual Intervention Required
-+			 * indicates in-progress ucode upgrade (NDU).
-+			 */
-+			sdev_printk(KERN_INFO, sdev, "Detected in-progress "
-+				    "ucode upgrade NDU operation while sending "
-+				    "CLARiiON trespass command.\n");
-+			err = BLKERR_DEV_TEMP_BUSY;
-+		} else
-+			err = BLKERR_DEV_FAILED;
-+	} else if (result) {
-+		sdev_printk(KERN_ERR, sdev, "Error 0x%x while sending "
-+			    "CLARiiON trespass command.\n", result);
-+		err = BLKERR_IO;
++	if (blkerr_transport_err(errors)) {
++		/*
++		 * Old dm behavior had us fail a path on any error.
++		 * In future patches, since we have finer grained errors now,
++		 * we do not have to fail the path on the first transient
++		 * error.
++		 */
++		fail_path(pgpath);
++		goto cleanup;
 +	}
 +
-+	return err;
++	/* device or driver problems */
++	switch (errors) {
++	case BLKERR_OK:
++		break;
++	case BLKERR_NOSYS:
++		if (!m->hw_handler_name) {
++			errors = 0;
++			break;
++		}
++		DMERR("Cannot failover device because hw-%s may not be "
++		      "loaded.", m->hw_handler_name);
++		/*
++		 * Fail path for now, so we do not ping poing
++		 */
++		fail_path(pgpath);
++		break;
++	case BLKERR_DEV_TEMP_BUSY:
++		/*
++		 * Probably doing something like FW upgrade on the
++		 * controller so try the other pg.
++		 */
++		bypass_pg(m, pg, 1);
++		break;
++	/* TODO: For BLKERR_RETRY we should wait a couple seconds */
++	case BLKERR_RETRY:
++	case BLKERR_IMM_RETRY:
++	case BLKERR_RES_TEMP_UNAVAIL:
++		break;
++	default:
++		/*
++		 * We probably do not want to fail the path for a device
++		 * error, but this is what the old dm did. In future
++		 * patches we can do more advanced handling.
++		 */
++		fail_path(pgpath);
++	}
++
++cleanup:
++	spin_lock_irqsave(&m->lock, flags);
++	if (errors) {
++		DMERR("Could not failover device. Error %d.", errors);
++		m->current_pgpath = NULL;
++		m->current_pg = NULL;
++	} else if (!m->pg_init_required) {
++		m->queue_io = 0;
++		pg->bypassed = 0;
++	}
++
++	m->pg_init_in_progress = 0;
++	queue_work(kmultipathd, &m->process_queued_ios);
++	spin_unlock_irqrestore(&m->lock, flags);
 +}
 +
-+static void trespass_done(struct request *req, int uptodate)
++static void pg_init_done(struct request *req, int err)
 +{
-+	struct request *act_req = req->end_io_data;
-+	struct scsi_device *sdev = req->q->queuedata;
-+	int err_flags, result = req->errors;
-+	char *sense = req->sense;
-+
-+	sdev_printk(KERN_NOTICE, sdev, "Trespass compeleted. Uptodate %d error "
-+		    "%d.\n", uptodate, req->errors);
-+
++	__pg_init_done(req->end_io_data, req->errors);
 +	__blk_put_request(req->q, req);
-+
-+	err_flags = parse_trespass_rsp(sdev, sense, result);
-+	if (err_flags) {
-+		scsi_blk_linux_cmd_done(act_req, err_flags);
-+		return;
-+	}
-+
-+	scsi_blk_linux_cmd_done(act_req, BLKERR_OK);
 +}
 +
-+static int execute_trespass(struct request *act_req)
++static void pg_init(struct dm_path *path)
 +{
-+	struct scsi_device *sdev = act_req->q->queuedata;
-+	struct clariion_sdev *csdev = sdev->sdevt_data;
 +	struct request *req;
-+	unsigned char *page22;
-+	unsigned size;
 +
-+	if (csdev->short_trespass) {
-+		page22 = csdev->hr ? short_trespass_hr : short_trespass;
-+		size = sizeof(short_trespass);
-+	} else {
-+		page22 = csdev->hr ? long_trespass_hr : long_trespass;
-+		size = sizeof(long_trespass);
-+	}
-+
-+	req = blk_get_request(sdev->request_queue, 1, GFP_ATOMIC);
-+	if (!req)
-+		return BLKERR_RES_TEMP_UNAVAIL;
-+
-+	req->cmd_type = REQ_TYPE_BLOCK_PC;
-+	req->cmd_flags |= REQ_FAILFAST;
-+	req->timeout = CLARIION_TIMEOUT;
-+	req->retries = CLARIION_RETRIES;
-+	req->end_io_data = act_req;
-+	req->sense = csdev->sense;
-+	memset(req->sense, 0, SCSI_SENSE_BUFFERSIZE);
-+	req->sense_len = 0;
-+
-+	memset(req->cmd, 0, MAX_COMMAND_SIZE);
-+	req->cmd[0] = MODE_SELECT;
-+	req->cmd[1] = 0x10;
-+	req->cmd[4] = size;
-+	req->cmd_len = COMMAND_SIZE(MODE_SELECT);
-+	memcpy(csdev->buffer, page22, size);
-+
-+	if (blk_rq_map_kern(sdev->request_queue, req, csdev->buffer,
-+                            size, GFP_ATOMIC)) {
-+                __blk_put_request(req->q, req);
-+                return BLKERR_RES_TEMP_UNAVAIL;
-+        }
-+
-+	sdev_printk(KERN_NOTICE, sdev, "Failing over device\n.");
-+        blk_execute_rq_nowait(req->q, NULL, req, 1, trespass_done);
-+	return BLKERR_OK;
-+}
-+
-+static void clariion_transition(struct request *req)
-+{
-+	int err;
-+
-+	err = execute_trespass(req);
-+	if (err)
-+		scsi_blk_linux_cmd_done(req, err);
-+}
-+
-+static int clariion_check_sense(struct scsi_sense_hdr *sense_hdr)
-+{
-+	switch (sense_hdr->sense_key) {
-+	case NOT_READY:
-+		if (sense_hdr->asc == 0x04 && sense_hdr->ascq == 0x03)
-+			/*
-+			 * LUN Not Ready - Manual Intervention Required
-+			 * indicates this is a passive path.
-+			 *
-+			 * FIXME: However, if this is seen and EVPD C0
-+			 * indicates that this is due to a NDU in
-+			 * progress, we should set FAIL_PATH too.
-+			 * This indicates we might have to do a SCSI
-+			 * inquiry in the end_io path. Ugh.
-+			 */
-+			return FAILED;
-+		break;
-+	case ILLEGAL_REQUEST:
-+		if (sense_hdr->asc == 0x25 && sense_hdr->ascq == 0x01)
-+			/*
-+			 * An array based copy is in progress. Do not
-+			 * fail the path, do not bypass to another PG,
-+			 * do not retry. Fail the IO immediately.
-+			 * (Actually this is the same conclusion as in
-+			 * the default handler, but lets make sure.)
-+			 */
-+			return FAILED;
-+		break;
-+	case UNIT_ATTENTION:
-+		if (sense_hdr->asc == 0x29 && sense_hdr->ascq == 0x00)
-+			/*
-+			 * Unit Attention Code. This is the first IO
-+			 * to the new path, so just retry.
-+			 */
-+			return NEEDS_RETRY;
-+		break;
-+	}
-+
-+	/* success just means we do not care what scsi-ml does */
-+	return SUCCESS;
-+}
-+
-+static struct scsi_device_template clariion_template = {
-+	.name		= CLARIION_NAME,
-+	.module		= THIS_MODULE,
-+	.check_sense	= clariion_check_sense,
-+	.transition	= clariion_transition,
-+};
-+
-+static const struct {
-+        char *vendor;
-+        char *model;
-+} clariion_dev_list[] = {
-+	{"DGC", "RAID"},
-+	{"DGC", "DISK"},
-+	{NULL, NULL},
-+};
-+
-+/*
-+ * TODO: need some interface so we can set trespass values
-+ */
-+static int clariion_add(struct class_device *clsdev,
-+			struct class_interface *interface)
-+{
-+	struct scsi_device *sdev = to_scsi_device(clsdev->dev);
-+	struct clariion_sdev *csdev;
-+	int i, found = 0;
-+	unsigned long flags;
-+
-+	for (i = 0; clariion_dev_list[i].vendor; i++) {
-+		if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
-+			     strlen(clariion_dev_list[i].vendor)) &&
-+		    !strncmp(sdev->model, clariion_dev_list[i].model,
-+			     strlen(clariion_dev_list[i].model))) {
-+			found = 1;
-+			break;
-+		}
-+	}
-+	if (!found)
-+		return -ENODEV;
-+
-+	csdev = kzalloc(sizeof(*csdev), GFP_KERNEL);
-+	if (!csdev)
-+		return -ENOMEM;
-+
-+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-+	sdev->sdevt_data = csdev;
-+	sdev->sdevt = &clariion_template;
-+	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+
-+	sdev_printk(KERN_NOTICE, sdev, "Attached %s.\n",
-+		    clariion_template.name);
-+	return 0;
-+}
-+
-+static void clariion_remove(struct class_device *clsdev,
-+			    struct class_interface *interface)
-+{
-+	struct scsi_device *sdev = to_scsi_device(clsdev->dev);
-+	struct clariion_sdev *csdev = sdev->sdevt_data;
-+	int i, found = 0;
-+	unsigned long flags;
-+
-+	for (i = 0; clariion_dev_list[i].vendor; i++) {
-+		if (!strncmp(sdev->vendor, clariion_dev_list[i].vendor,
-+			     strlen(clariion_dev_list[i].vendor)) &&
-+		    !strncmp(sdev->model, clariion_dev_list[i].model,
-+			     strlen(clariion_dev_list[i].model))) {
-+			found = 1;
-+			break;
-+		}
-+	}
-+	if (!found)
++	req = blk_get_request(bdev_get_queue(path->dev->bdev), 1, GFP_NOIO);
++	if (!req) {
++		/* retry later */
++		__pg_init_done(path, BLKERR_RES_TEMP_UNAVAIL);
 +		return;
++	}
 +
-+	spin_lock_irqsave(sdev->request_queue->queue_lock, flags);
-+	sdev->sdevt_data = NULL;
-+	sdev->sdevt = NULL;
-+	spin_unlock_irqrestore(sdev->request_queue->queue_lock, flags);
-+
-+	sdev_printk(KERN_NOTICE, sdev, "Dettached %s.\n",
-+		    clariion_template.name);
-+
-+	kfree(csdev);
++	req->cmd[0] = REQ_LB_OP_TRANSITION;
++	req->cmd_type = REQ_TYPE_LINUX_BLOCK;
++	req->end_io_data = path;
++	/* TODO: does this need to be configurable or is it HW specific? */
++	req->retries = 5;
++	blk_execute_rq_nowait(req->q, NULL, req, 1, pg_init_done);
 +}
 +
-+static struct class_interface clariion_interface = {
-+	.add		= clariion_add,
-+	.remove		= clariion_remove,
-+};
-+
-+static int __init clariion_init(void)
-+{
-+	return scsi_register_interface(&clariion_interface);
-+}
-+
-+static void __exit clariion_exit(void)
-+{
-+	scsi_unregister_interface(&clariion_interface);
-+}
-+
-+module_init(clariion_init);
-+module_exit(clariion_exit);
-+
-+MODULE_DESCRIPTION("EMC CX/AX/FC-family driver");
-+MODULE_AUTHOR("Mike Christie <michaelc@cs.wisc.edu");
-+MODULE_LICENSE("GPL");
+ static void process_queued_ios(struct work_struct *work)
+ {
+ 	struct multipath *m =
+ 		container_of(work, struct multipath, process_queued_ios);
+-	struct hw_handler *hwh = &m->hw_handler;
+ 	struct pgpath *pgpath = NULL;
+ 	unsigned init_required = 0, must_queue = 1;
+ 	unsigned long flags;
+@@ -433,7 +523,7 @@ out:
+ 	spin_unlock_irqrestore(&m->lock, flags);
+ 
+ 	if (init_required)
+-		hwh->type->pg_init(hwh, pgpath->pg->bypassed, &pgpath->path);
++		pg_init(&pgpath->path);
+ 
+ 	if (!must_queue)
+ 		dispatch_queued_ios(m);
+@@ -646,10 +736,9 @@ static struct priority_group *parse_prio
+ 
+ static int parse_hw_handler(struct arg_set *as, struct multipath *m)
+ {
++	struct dm_target *ti = m->ti;
+ 	int r;
+-	struct hw_handler_type *hwht;
+ 	unsigned hw_argc;
+-	struct dm_target *ti = m->ti;
+ 
+ 	static struct param _params[] = {
+ 		{0, 1024, "invalid number of hardware handler args"},
+@@ -662,25 +751,9 @@ static int parse_hw_handler(struct arg_s
+ 	if (!hw_argc)
+ 		return 0;
+ 
+-	hwht = dm_get_hw_handler(shift(as));
+-	if (!hwht) {
+-		ti->error = "unknown hardware handler type";
+-		return -EINVAL;
+-	}
+-
+-	m->hw_handler.md = dm_table_get_md(ti->table);
+-	dm_put(m->hw_handler.md);
+-
+-	r = hwht->create(&m->hw_handler, hw_argc - 1, as->argv);
+-	if (r) {
+-		dm_put_hw_handler(hwht);
+-		ti->error = "hardware handler constructor failed";
+-		return r;
+-	}
+-
+-	m->hw_handler.type = hwht;
++	m->hw_handler_name = kstrdup(shift(as), GFP_KERNEL);
++	request_module("hw-%s", m->hw_handler_name);
+ 	consume(as, hw_argc - 1);
+-
+ 	return 0;
+ }
+ 
+@@ -979,45 +1052,11 @@ static int bypass_pg_num(struct multipat
+ }
+ 
+ /*
+- * pg_init must call this when it has completed its initialisation
+- */
+-void dm_pg_init_complete(struct dm_path *path, unsigned err_flags)
+-{
+-	struct pgpath *pgpath = path_to_pgpath(path);
+-	struct priority_group *pg = pgpath->pg;
+-	struct multipath *m = pg->m;
+-	unsigned long flags;
+-
+-	/* We insist on failing the path if the PG is already bypassed. */
+-	if (err_flags && pg->bypassed)
+-		err_flags |= MP_FAIL_PATH;
+-
+-	if (err_flags & MP_FAIL_PATH)
+-		fail_path(pgpath);
+-
+-	if (err_flags & MP_BYPASS_PG)
+-		bypass_pg(m, pg, 1);
+-
+-	spin_lock_irqsave(&m->lock, flags);
+-	if (err_flags) {
+-		m->current_pgpath = NULL;
+-		m->current_pg = NULL;
+-	} else if (!m->pg_init_required)
+-		m->queue_io = 0;
+-
+-	m->pg_init_in_progress = 0;
+-	queue_work(kmultipathd, &m->process_queued_ios);
+-	spin_unlock_irqrestore(&m->lock, flags);
+-}
+-
+-/*
+  * end_io handling
+  */
+ static int do_end_io(struct multipath *m, struct bio *bio,
+ 		     int error, struct mpath_io *mpio)
+ {
+-	struct hw_handler *hwh = &m->hw_handler;
+-	unsigned err_flags = MP_FAIL_PATH;	/* Default behavior */
+ 	unsigned long flags;
+ 
+ 	if (!error)
+@@ -1044,19 +1083,8 @@ static int do_end_io(struct multipath *m
+ 	}
+ 	spin_unlock_irqrestore(&m->lock, flags);
+ 
+-	if (hwh->type && hwh->type->error)
+-		err_flags = hwh->type->error(hwh, bio);
+-
+-	if (mpio->pgpath) {
+-		if (err_flags & MP_FAIL_PATH)
+-			fail_path(mpio->pgpath);
+-
+-		if (err_flags & MP_BYPASS_PG)
+-			bypass_pg(m, mpio->pgpath->pg, 1);
+-	}
+-
+-	if (err_flags & MP_ERROR_IO)
+-		return -EIO;
++	if (mpio->pgpath)
++		fail_path(mpio->pgpath);
+ 
+       requeue:
+ 	dm_bio_restore(&mpio->details, bio);
+@@ -1141,7 +1169,6 @@ static int multipath_status(struct dm_ta
+ 	int sz = 0;
+ 	unsigned long flags;
+ 	struct multipath *m = (struct multipath *) ti->private;
+-	struct hw_handler *hwh = &m->hw_handler;
+ 	struct priority_group *pg;
+ 	struct pgpath *p;
+ 	unsigned pg_num;
+@@ -1157,12 +1184,10 @@ static int multipath_status(struct dm_ta
+ 	else
+ 		DMEMIT("0 ");
+ 
+-	if (hwh->type && hwh->type->status)
+-		sz += hwh->type->status(hwh, type, result + sz, maxlen - sz);
+-	else if (!hwh->type || type == STATUSTYPE_INFO)
+-		DMEMIT("0 ");
++	if (m->hw_handler_name)
++		DMEMIT("1 %s ", m->hw_handler_name);
+ 	else
+-		DMEMIT("1 %s ", hwh->type->name);
++		DMEMIT("0 ");
+ 
+ 	DMEMIT("%u ", m->nr_priority_groups);
+ 
+@@ -1387,8 +1412,6 @@ static void __exit dm_multipath_exit(voi
+ 	kmem_cache_destroy(_mpio_cache);
+ }
+ 
+-EXPORT_SYMBOL_GPL(dm_pg_init_complete);
+-
+ module_init(dm_multipath_init);
+ module_exit(dm_multipath_exit);
+ 
 -- 
 1.4.1.1
