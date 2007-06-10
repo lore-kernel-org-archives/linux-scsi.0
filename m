@@ -1,74 +1,74 @@
-From: Csillag Tamas <cstamas@digitus.itk.ppke.hu>
-Subject: qla2xxx errors? (2.6.19)
-Date: Sun, 10 Jun 2007 12:00:11 +0200
-Message-ID: <20070610100011.GG5705@digitus>
+From: Hans de Goede <j.w.r.degoede@hhs.nl>
+Subject: HP PSC 1350 cardreader problem + fix, needs new unusal_dev FLAG
+Date: Sun, 10 Jun 2007 18:43:47 +0200
+Message-ID: <466C2A43.8030300@hhs.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jugis.itk.ppke.hu ([193.225.109.42]:48916 "EHLO
-	jugis.itk.ppke.hu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752859AbXFJKGm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 10 Jun 2007 06:06:42 -0400
-Received: from jugis (jugis [127.0.0.1])
-	by checked.jugis.itk.ppke.hu (Postfix) with ESMTP id E03FD154DFD
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Jun 2007 12:06:41 +0200 (CEST)
-Received: from jugis (jugis [127.0.0.1])
-	by checked.jugis.itk.ppke.hu (Postfix) with ESMTP id 1F0201637F7
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Jun 2007 12:00:30 +0200 (CEST)
-Received: from rivendell2 (rivendell.itk.ppke.hu [193.225.109.193])
-	by jugis.itk.ppke.hu (Postfix) with ESMTP id EB47314B322
-	for <linux-scsi@vger.kernel.org>; Sun, 10 Jun 2007 12:00:11 +0200 (CEST)
-Content-Disposition: inline
+Received: from smtp2.versatel.nl ([62.58.50.89]:60193 "EHLO smtp2.versatel.nl"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752640AbXFJQwS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 10 Jun 2007 12:52:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: stern@rowland.harvard.edu
 
-Hi,
+<I'm not subscribed, please keep me CC-ed>
 
-The university I work at has 4 Blade HS20 servers connected to a IBM
-DS400 storage via Fibre Channel.
-The fibre channel module is:
+Hi all,
 
-06:01.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 02)
-06:01.1 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 02)
+I send this mail initially to the usb-storage list, and Alan Stren (in the CC) 
+though it would be a good idea to discuss parts of this here.
 
-# lsmod
-Module                  Size  Used by
-...
-qla2xxx               143584  1
+After encountering this bug in RH bugzilla while doing bug triaging:
+https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=158717
 
-# l /lib/firmware 
-total 244
-lrwxrwxrwx 1 root root     21 2007-05-05 22:02 ql2300_fw.bin -> ql2300_fw.bin.3.03.18
+I thought hey, that reminds me the reader in my PSC has troubles too, lets see
+if I can fix this.
 
-With recent kernels filesystem corruption occurs under high disk I/O.
-I have just tried 2.6.19 and I got the same, but kernel 2.6.18 and
-before looks safe.
+So after 3 long evenings of debugging, I finally have my cardreader working
+"properly" (what a piece of <beep>).
 
-The test I use is the following:
-I first checkout the kernel's git tree:
-# git-clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git linux-2.6.git
-Then
-# for i in {100..400}; do; rsync -a linux-2.6.git/ c2_$i& done
-.... waiting for finish
-# for i in {100..400}; do; rsync -a linux-2.6.git/ c3_$i& done
-.... waiting for finish
-# for i in {100..400}; do; rsync -a linux-2.6.git/ c4_$i& done
+At first I tried and succeeded with US_FL_FIX_CAPACITY, that worked but gave me
+warnings that the partition was larger then the device, and read access beyond
+the end of device errors. But it worked now!
 
-Some error messages:
-ReiserFS: warning: is_tree_node: node level 32010 does not match to the expected one 1
-ReiserFS: sdb1: warning: vs-5150: search_by_key: invalid format found in block 8093723. Fsck?
-ReiserFS: sdb1: warning: vs-13070: reiserfs_read_locked_inode: i/o failure occurred trying to find stat data of [961831 1064427 0x0 SD]
+Further debugging has lead me to the following conclusion (with a few not
+suitable for submitting usb-storage mods to proof it, proof as in it works).
 
-I am able to reproduce this errors.
+The HP PSC 1350 reader will "crash" and from that moment on no longer
+communicate in any sane way, if you try to read the last sector of an sdcard*
+in a read that is more then 1 sector, so trying to read 8 sectors starting at
+sector capicity-8 will crash it, as will reading 2 sectors starting at sector
+capicity-2, however reading the last sector in a one 1 sector read will
+succeed! (* xdcards seem to be fine).
 
-With other filesystems I get similar errors.
+I haven't tried if it will crash on larger then 1 sector writes which include
+the last sector too, I immediately added code to not do that in both the read
+and write paths. I have tested reading and writing the end of the disk with
+this kludge in and it works.
 
-I suspect a bug in qla2xxx, but I am not sure.
-Can you help me how to track down this problem?
+As said I currently have an "really ugly" (tm) patch which modifies READ_10 and
+WRITE_10 commands as they are passed through the usb-storage driver. Before I 
+write a "proper" patch I have some questions:
+1) currently I have decided to add quirk code for this to the usb-storage
+    driver, as I don't want to polute the generic scsi code with this, but maybe
+    it would be better to add a quirk for this to the scsi layer?
+2) What on earth should I name the flag for this?
+3) Currently I just shorten the read / write by one sector. The scsi layer then
+    notices the 1 sector to short read/write and sends a new command for the
+    last sector. This works well, but is it ok to depend on the scsi layer
+    behaving this way?
+4) Should I be checking for other READ_X and WRITE_x commands too?
 
-Thanks in advance.
 
-PS: please cc to me.
--- 
-CSILLAG Tamas (cstamas) - http://digitus.itk.ppke.hu/~cstamas
+Alan said that questions 1,3 and 4 would be best asked (and hopefully answered) 
+here.
+
+<I'm not subscribed, please keep me CC-ed>
+
+Thanks & Regards,
+
+Hans
