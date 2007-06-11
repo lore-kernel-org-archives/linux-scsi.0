@@ -1,36 +1,36 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: scsi_debug fault-injection question
-Date: Mon, 11 Jun 2007 09:42:07 -0700
-Message-ID: <20070611094207.168a7664.randy.dunlap@oracle.com>
+From: "Seokmann Ju" <seokmann.ju@qlogic.com>
+Subject: Question: vport_disable attribute under /sys/class/fc_vport
+Date: Mon, 11 Jun 2007 10:05:46 -0700
+Message-ID: <A6970E9A290F3F4682E1EAD0EA14F32B011417B7@AVEXCH2.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:59089 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753072AbXFKQmO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jun 2007 12:42:14 -0400
+Received: from avexch2.qlogic.com ([198.70.193.116]:49419 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751172AbXFKRG1 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jun 2007 13:06:27 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: dgilbert@interlog.com
+To: James Smart <James.Smart@Emulex.Com>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>
 
-Hi Doug,
+Hello James,
 
-scsi_debug.c says:
+I've got a question on NPIV framwork that is included in FC transport
+layer. I'm using 2.6.22-rc3 with your NPIV-based vport patchset.
+If I understood correctly, vport_disable and vport_delete attributes
+have to be listed under /sys/class/fc_vport/vport-2:0-2/, once the
+'vport-2:0-2' created successfully.
+To make this happen, fc_function_template for the vport has modified to
+add wrapper function for vport_disable and vport_delete in the driver.
+However, in my result, I am only able to see vport_delete.
+For some reason, vport_disable is not listed under the directory.
 
-MODULE_PARM_DESC(every_nth, "timeout every nth command(def=100)");
+Can you please comment what possible reasons are there for this?
 
-I don't see where the default of 100 is set.
+Thank you,
 
-#define DEF_EVERY_NTH   0
-...
-static int scsi_debug_every_nth = DEF_EVERY_NTH;
-
-
-Can you clarify for me, please?
-
-Thanks.
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Seokmann
