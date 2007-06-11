@@ -1,182 +1,102 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: probe related code cleanup
-Date: Mon, 11 Jun 2007 16:17:55 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01AB880E@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55E7E@otce2k301.adaptec.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 1/7] libata: check for AN support
+Date: Mon, 11 Jun 2007 13:20:38 -0700
+Message-ID: <20070611132038.cca35aec.kristen.c.accardi@intel.com>
+References: <20070510072247.063476979@intel.com>
+	<20070509163809.7b0b3fde.kristen.c.accardi@intel.com>
+	<20070509220952.5fa34822.akpm@linux-foundation.org>
+	<20070510100215.94c3a2ea.kristen.c.accardi@intel.com>
+	<465654EC.9080805@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7AC65.989D85CB"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:44824 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751885AbXFKUR5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jun 2007 16:17:57 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 9BB0017CECA
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Jun 2007 13:17:56 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-reply-to: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55E7E@otce2k301.adaptec.com>
+Received: from mga01.intel.com ([192.55.52.88]:9174 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750919AbXFKUYG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 11 Jun 2007 16:24:06 -0400
+In-Reply-To: <465654EC.9080805@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, "Randy.Dunlap" <rdunlap@xenotime.net>
 
-This is a multi-part message in MIME format.
+On Thu, 24 May 2007 23:15:56 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-------_=_NextPart_001_01C7AC65.989D85CB
-Content-Type: text/plain;
-	charset="US-ASCII"
-Content-Transfer-Encoding: quoted-printable
+> Kristen Carlson Accardi wrote:
+> > Check to see if an ATAPI device supports Asynchronous Notification.
+> > If so, enable it.
+> > 
+> > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > ---
+> > Andrew, I cleaned up the function header to properly comply with kernel
+> > doc requirements.  Other than that, this patch is the same.  
+> 
+> I would ask for a simple revision:  update ata_dev_set_AN() such that it 
+> takes a second argument 'enable'.  This boolean indicates to the 
+> function whether SETFEATURES_SATA_ENABLE or SETFEATURES_SATA_DISABLE 
+> should be passed to the device.
+> 
+> Otherwise than that, it's ready to merge I would say.
+> 
 
-Sundry cleanups:
-1) Use kzalloc instead of kmalloc.
-2) Make sure probe worked before recalling the SCSI command to finalize
-processing.
-3) _aac_probe_container2 and _aac_probe_container1 return value goes
-unused, change return to void.
-4) Use a lower depth pointer reference to pick up the driver instance
-variable.
-5) Although effectively unused except to fake for scsicmd validity, set
-the scsi_done in probe code to aac_probe_container_callback1 instead of
-the less valid dummy reference to _aac_probe_container1.
-6) SCp.phase is set in aac_valid_context, drop setting up this value in
-caller when unnecessary.
-7) take container target id at the beginning, rather than referencing
-scmd_id() to pick it up.
+Jeff - can you fold this into the original patch, or would you like me
+to resubmit the whole thing?
 
-There should be no side effects or functionality changes.
+Kristen
 
-This attached patch is against current scsi-misc-2.6, scsi-rc-fixes-2.6
-& scsi-pending-2.6
+Modify ata_dev_set_AN to take a second argument 'enable'.  This
+boolean indicates to the function whether SETFEATURES_SATA_ENABLE
+or SETFEATURES_SATA_DISABLE should be passed to the device.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
+Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c |   64
-++++++++++++++++++++++++++++++---------------------------------
- 1 file changed, 31 insertions(+), 33 deletions(-)
-
-------_=_NextPart_001_01C7AC65.989D85CB
-Content-Type: application/octet-stream;
-	name="aacraid_probe_cleanup.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_probe_cleanup.patch
-Content-Disposition: attachment;
-	filename="aacraid_probe_cleanup.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDYtMTEgMTU6MTU6MzguOTA4ODI4NDYyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDYtMTEgMTU6NTE6MzAuMzUyODI2NTc3IC0wNDAwCkBAIC0zMTIsMTEg
-KzMxMiwxMCBAQAogCiAJaWYgKG1heGltdW1fbnVtX2NvbnRhaW5lcnMgPCBNQVhJTVVNX05VTV9D
-T05UQUlORVJTKQogCQltYXhpbXVtX251bV9jb250YWluZXJzID0gTUFYSU1VTV9OVU1fQ09OVEFJ
-TkVSUzsKLQlmc2FfZGV2X3B0ciA9ICBrbWFsbG9jKHNpemVvZigqZnNhX2Rldl9wdHIpICogbWF4
-aW11bV9udW1fY29udGFpbmVycywKKwlmc2FfZGV2X3B0ciA9IGt6YWxsb2Moc2l6ZW9mKCpmc2Ff
-ZGV2X3B0cikgKiBtYXhpbXVtX251bV9jb250YWluZXJzLAogCQkJR0ZQX0tFUk5FTCk7CiAJaWYg
-KCFmc2FfZGV2X3B0cikKIAkJcmV0dXJuIC1FTk9NRU07Ci0JbWVtc2V0KGZzYV9kZXZfcHRyLCAw
-LCBzaXplb2YoKmZzYV9kZXZfcHRyKSAqIG1heGltdW1fbnVtX2NvbnRhaW5lcnMpOwogCiAJZGV2
-LT5mc2FfZGV2ID0gZnNhX2Rldl9wdHI7CiAJZGV2LT5tYXhpbXVtX251bV9jb250YWluZXJzID0g
-bWF4aW11bV9udW1fY29udGFpbmVyczsKQEAgLTQ0Niw3ICs0NDUsNyBAQAogewogCXN0cnVjdCBm
-c2FfZGV2X2luZm8gKmZzYV9kZXZfcHRyID0gKChzdHJ1Y3QgYWFjX2RldiAqKShzY3NpY21kLT5k
-ZXZpY2UtPmhvc3QtPmhvc3RkYXRhKSktPmZzYV9kZXY7CiAKLQlpZiAoZnNhX2Rldl9wdHJbc2Nt
-ZF9pZChzY3NpY21kKV0udmFsaWQpCisJaWYgKChmc2FfZGV2X3B0cltzY21kX2lkKHNjc2ljbWQp
-XS52YWxpZCAmIDEpKQogCQlyZXR1cm4gYWFjX3Njc2lfY21kKHNjc2ljbWQpOwogCiAJc2NzaWNt
-ZC0+cmVzdWx0ID0gRElEX05PX0NPTk5FQ1QgPDwgMTY7CkBAIC00NTQsMTggKzQ1MywxOCBAQAog
-CXJldHVybiAwOwogfQogCi1zdGF0aWMgaW50IF9hYWNfcHJvYmVfY29udGFpbmVyMih2b2lkICog
-Y29udGV4dCwgc3RydWN0IGZpYiAqIGZpYnB0cikKK3N0YXRpYyB2b2lkIF9hYWNfcHJvYmVfY29u
-dGFpbmVyMih2b2lkICogY29udGV4dCwgc3RydWN0IGZpYiAqIGZpYnB0cikKIHsKIAlzdHJ1Y3Qg
-ZnNhX2Rldl9pbmZvICpmc2FfZGV2X3B0cjsKIAlpbnQgKCpjYWxsYmFjaykoc3RydWN0IHNjc2lf
-Y21uZCAqKTsKIAlzdHJ1Y3Qgc2NzaV9jbW5kICogc2NzaWNtZCA9IChzdHJ1Y3Qgc2NzaV9jbW5k
-ICopY29udGV4dDsKIAotCWlmICghYWFjX3ZhbGlkX2NvbnRleHQoc2NzaWNtZCwgZmlicHRyKSkK
-LQkJcmV0dXJuIDA7CiAKLQlmc2FfZGV2X3B0ciA9ICgoc3RydWN0IGFhY19kZXYgKikoc2NzaWNt
-ZC0+ZGV2aWNlLT5ob3N0LT5ob3N0ZGF0YSkpLT5mc2FfZGV2OworCWlmICghYWFjX3ZhbGlkX2Nv
-bnRleHQoc2NzaWNtZCwgZmlicHRyKSkKKwkJcmV0dXJuOwogCiAJc2NzaWNtZC0+U0NwLlN0YXR1
-cyA9IDA7CisJZnNhX2Rldl9wdHIgPSBmaWJwdHItPmRldi0+ZnNhX2RldjsKIAlpZiAoZnNhX2Rl
-dl9wdHIpIHsKIAkJc3RydWN0IGFhY19tb3VudCAqIGRyZXNwID0gKHN0cnVjdCBhYWNfbW91bnQg
-KikgZmliX2RhdGEoZmlicHRyKTsKIAkJZnNhX2Rldl9wdHIgKz0gc2NtZF9pZChzY3NpY21kKTsK
-QEAgLTQ4OCwxMCArNDg3LDExIEBACiAJYWFjX2ZpYl9mcmVlKGZpYnB0cik7CiAJY2FsbGJhY2sg
-PSAoaW50ICgqKShzdHJ1Y3Qgc2NzaV9jbW5kICopKShzY3NpY21kLT5TQ3AucHRyKTsKIAlzY3Np
-Y21kLT5TQ3AucHRyID0gTlVMTDsKLQlyZXR1cm4gKCpjYWxsYmFjaykoc2NzaWNtZCk7CisJKCpj
-YWxsYmFjaykoc2NzaWNtZCk7CisJcmV0dXJuOwogfQogCi1zdGF0aWMgaW50IF9hYWNfcHJvYmVf
-Y29udGFpbmVyMSh2b2lkICogY29udGV4dCwgc3RydWN0IGZpYiAqIGZpYnB0cikKK3N0YXRpYyB2
-b2lkIF9hYWNfcHJvYmVfY29udGFpbmVyMSh2b2lkICogY29udGV4dCwgc3RydWN0IGZpYiAqIGZp
-YnB0cikKIHsKIAlzdHJ1Y3Qgc2NzaV9jbW5kICogc2NzaWNtZDsKIAlzdHJ1Y3QgYWFjX21vdW50
-ICogZHJlc3A7CkBAIC01MDEsMTMgKzUwMSwxNCBAQAogCWRyZXNwID0gKHN0cnVjdCBhYWNfbW91
-bnQgKikgZmliX2RhdGEoZmlicHRyKTsKIAlkcmVzcC0+bW50WzBdLmNhcGFjaXR5aGlnaCA9IDA7
-CiAJaWYgKChsZTMyX3RvX2NwdShkcmVzcC0+c3RhdHVzKSAhPSBTVF9PSykgfHwKLQkgICAgKGxl
-MzJfdG9fY3B1KGRyZXNwLT5tbnRbMF0udm9sKSAhPSBDVF9OT05FKSkKLQkJcmV0dXJuIF9hYWNf
-cHJvYmVfY29udGFpbmVyMihjb250ZXh0LCBmaWJwdHIpOworCSAgICAobGUzMl90b19jcHUoZHJl
-c3AtPm1udFswXS52b2wpICE9IENUX05PTkUpKSB7CisJCV9hYWNfcHJvYmVfY29udGFpbmVyMihj
-b250ZXh0LCBmaWJwdHIpOworCQlyZXR1cm47CisJfQogCXNjc2ljbWQgPSAoc3RydWN0IHNjc2lf
-Y21uZCAqKSBjb250ZXh0OwotCXNjc2ljbWQtPlNDcC5waGFzZSA9IEFBQ19PV05FUl9NSURMRVZF
-TDsKIAogCWlmICghYWFjX3ZhbGlkX2NvbnRleHQoc2NzaWNtZCwgZmlicHRyKSkKLQkJcmV0dXJu
-IDA7CisJCXJldHVybjsKIAogCWFhY19maWJfaW5pdChmaWJwdHIpOwogCkBAIC01MjIsMjEgKzUy
-MywxOCBAQAogCQkJICBzaXplb2Yoc3RydWN0IGFhY19xdWVyeV9tb3VudCksCiAJCQkgIEZzYU5v
-cm1hbCwKIAkJCSAgMCwgMSwKLQkJCSAgKGZpYl9jYWxsYmFjaykgX2FhY19wcm9iZV9jb250YWlu
-ZXIyLAorCQkJICBfYWFjX3Byb2JlX2NvbnRhaW5lcjIsCiAJCQkgICh2b2lkICopIHNjc2ljbWQp
-OwogCS8qCiAJICoJQ2hlY2sgdGhhdCB0aGUgY29tbWFuZCBxdWV1ZWQgdG8gdGhlIGNvbnRyb2xs
-ZXIKIAkgKi8KLQlpZiAoc3RhdHVzID09IC1FSU5QUk9HUkVTUykgeworCWlmIChzdGF0dXMgPT0g
-LUVJTlBST0dSRVNTKQogCQlzY3NpY21kLT5TQ3AucGhhc2UgPSBBQUNfT1dORVJfRklSTVdBUkU7
-Ci0JCXJldHVybiAwOwotCX0KLQlpZiAoc3RhdHVzIDwgMCkgeworCWVsc2UgaWYgKHN0YXR1cyA8
-IDApIHsKIAkJLyogSW5oZXJpdCByZXN1bHRzIGZyb20gVk1fTmFtZVNlcnZlLCBpZiBhbnkgKi8K
-IAkJZHJlc3AtPnN0YXR1cyA9IGNwdV90b19sZTMyKFNUX09LKTsKLQkJcmV0dXJuIF9hYWNfcHJv
-YmVfY29udGFpbmVyMihjb250ZXh0LCBmaWJwdHIpOworCQlfYWFjX3Byb2JlX2NvbnRhaW5lcjIo
-Y29udGV4dCwgZmlicHRyKTsKIAl9Ci0JcmV0dXJuIDA7CiB9CiAKIHN0YXRpYyBpbnQgX2FhY19w
-cm9iZV9jb250YWluZXIoc3RydWN0IHNjc2lfY21uZCAqIHNjc2ljbWQsIGludCAoKmNhbGxiYWNr
-KShzdHJ1Y3Qgc2NzaV9jbW5kICopKQpAQCAtNTYxLDcgKzU1OSw3IEBACiAJCQkgIHNpemVvZihz
-dHJ1Y3QgYWFjX3F1ZXJ5X21vdW50KSwKIAkJCSAgRnNhTm9ybWFsLAogCQkJICAwLCAxLAotCQkJ
-ICAoZmliX2NhbGxiYWNrKSBfYWFjX3Byb2JlX2NvbnRhaW5lcjEsCisJCQkgIF9hYWNfcHJvYmVf
-Y29udGFpbmVyMSwKIAkJCSAgKHZvaWQgKikgc2NzaWNtZCk7CiAJCS8qCiAJCSAqCUNoZWNrIHRo
-YXQgdGhlIGNvbW1hbmQgcXVldWVkIHRvIHRoZSBjb250cm9sbGVyCkBAIC02MTUsNyArNjEzLDcg
-QEAKIAkJcmV0dXJuIC1FTk9NRU07CiAJfQogCXNjc2ljbWQtPmxpc3QubmV4dCA9IE5VTEw7Ci0J
-c2NzaWNtZC0+c2NzaV9kb25lID0gKHZvaWQgKCopKHN0cnVjdCBzY3NpX2NtbmQqKSlfYWFjX3By
-b2JlX2NvbnRhaW5lcjE7CisJc2NzaWNtZC0+c2NzaV9kb25lID0gKHZvaWQgKCopKHN0cnVjdCBz
-Y3NpX2NtbmQqKSlhYWNfcHJvYmVfY29udGFpbmVyX2NhbGxiYWNrMTsKIAogCXNjc2ljbWQtPmRl
-dmljZSA9IHNjc2lkZXY7CiAJc2NzaWRldi0+c2Rldl9zdGF0ZSA9IDA7CkBAIC0xMzI5LDcgKzEz
-MjcsNyBAQAogCWlmICghYWFjX3ZhbGlkX2NvbnRleHQoc2NzaWNtZCwgZmlicHRyKSkKIAkJcmV0
-dXJuOwogCi0JZGV2ID0gKHN0cnVjdCBhYWNfZGV2ICopc2NzaWNtZC0+ZGV2aWNlLT5ob3N0LT5o
-b3N0ZGF0YTsKKwlkZXYgPSBmaWJwdHItPmRldjsKIAljaWQgPSBzY21kX2lkKHNjc2ljbWQpOwog
-CiAJaWYgKG5ibGFuayhkcHJpbnRrKHgpKSkgewpAQCAtMTU4Nyw3ICsxNTg1LDcgQEAKIAkJCUNP
-TU1BTkRfQ09NUExFVEUgPDwgOCB8IFNBTV9TVEFUX0dPT0Q7CiAJZWxzZSB7CiAJCXN0cnVjdCBz
-Y3NpX2RldmljZSAqc2RldiA9IGNtZC0+ZGV2aWNlOwotCQlzdHJ1Y3QgYWFjX2RldiAqZGV2ID0g
-KHN0cnVjdCBhYWNfZGV2ICopc2Rldi0+aG9zdC0+aG9zdGRhdGE7CisJCXN0cnVjdCBhYWNfZGV2
-ICpkZXYgPSBmaWJwdHItPmRldjsKIAkJdTMyIGNpZCA9IHNkZXZfaWQoc2Rldik7CiAJCXByaW50
-ayhLRVJOX1dBUk5JTkcgCiAJCSAgICAgInN5bmNocm9uaXplX2NhbGxiYWNrOiBzeW5jaHJvbml6
-ZSBmYWlsZWQsIHN0YXR1cyA9ICVkXG4iLApAQCAtMTY5NCw3ICsxNjkyLDcgQEAKICAKIGludCBh
-YWNfc2NzaV9jbWQoc3RydWN0IHNjc2lfY21uZCAqIHNjc2ljbWQpCiB7Ci0JdTMyIGNpZCA9IDA7
-CisJdTMyIGNpZDsKIAlzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0ID0gc2NzaWNtZC0+ZGV2aWNlLT5o
-b3N0OwogCXN0cnVjdCBhYWNfZGV2ICpkZXYgPSAoc3RydWN0IGFhY19kZXYgKilob3N0LT5ob3N0
-ZGF0YTsKIAlzdHJ1Y3QgZnNhX2Rldl9pbmZvICpmc2FfZGV2X3B0ciA9IGRldi0+ZnNhX2RldjsK
-QEAgLTE3MDYsMTUgKzE3MDQsMTUgQEAKIAkgKglUZXN0IGRvZXMgbm90IGFwcGx5IHRvIElEIDE2
-LCB0aGUgcHNldWRvIGlkIGZvciB0aGUgY29udHJvbGxlcgogCSAqCWl0c2VsZi4KIAkgKi8KLQlp
-ZiAoc2NtZF9pZChzY3NpY21kKSAhPSBob3N0LT50aGlzX2lkKSB7Ci0JCWlmICgoc2NtZF9jaGFu
-bmVsKHNjc2ljbWQpID09IENPTlRBSU5FUl9DSEFOTkVMKSkgewotCQkJaWYoKHNjbWRfaWQoc2Nz
-aWNtZCkgPj0gZGV2LT5tYXhpbXVtX251bV9jb250YWluZXJzKSB8fAorCWNpZCA9IHNjbWRfaWQo
-c2NzaWNtZCk7CisJaWYgKGNpZCAhPSBob3N0LT50aGlzX2lkKSB7CisJCWlmIChzY21kX2NoYW5u
-ZWwoc2NzaWNtZCkgPT0gQ09OVEFJTkVSX0NIQU5ORUwpIHsKKwkJCWlmKChjaWQgPj0gZGV2LT5t
-YXhpbXVtX251bV9jb250YWluZXJzKSB8fAogCQkJCQkoc2NzaWNtZC0+ZGV2aWNlLT5sdW4gIT0g
-MCkpIHsKIAkJCQlzY3NpY21kLT5yZXN1bHQgPSBESURfTk9fQ09OTkVDVCA8PCAxNjsKIAkJCQlz
-Y3NpY21kLT5zY3NpX2RvbmUoc2NzaWNtZCk7CiAJCQkJcmV0dXJuIDA7CiAJCQl9Ci0JCQljaWQg
-PSBzY21kX2lkKHNjc2ljbWQpOwogCiAJCQkvKgogCQkJICoJSWYgdGhlIHRhcmdldCBjb250YWlu
-ZXIgZG9lc24ndCBleGlzdCwgaXQgbWF5IGhhdmUKQEAgLTE3NzcsNyArMTc3NSw3IEBACiAJewog
-CQlzdHJ1Y3QgaW5xdWlyeV9kYXRhIGlucV9kYXRhOwogCi0JCWRwcmludGsoKEtFUk5fREVCVUcg
-IklOUVVJUlkgY29tbWFuZCwgSUQ6ICVkLlxuIiwgc2NtZF9pZChzY3NpY21kKSkpOworCQlkcHJp
-bnRrKChLRVJOX0RFQlVHICJJTlFVSVJZIGNvbW1hbmQsIElEOiAlZC5cbiIsIGNpZCkpOwogCQlt
-ZW1zZXQoJmlucV9kYXRhLCAwLCBzaXplb2YgKHN0cnVjdCBpbnF1aXJ5X2RhdGEpKTsKIAogCQlp
-bnFfZGF0YS5pbnFkX3ZlciA9IDI7CS8qIGNsYWltIGNvbXBsaWFuY2UgdG8gU0NTSS0yICovCkBA
-IC0xNzg5LDcgKzE3ODcsNyBAQAogCQkgKglTZXQgdGhlIFZlbmRvciwgUHJvZHVjdCwgYW5kIFJl
-dmlzaW9uIExldmVsCiAJCSAqCXNlZTogPHZlbmRvcj4uYyBpLmUuIGFhYy5jCiAJCSAqLwotCQlp
-ZiAoc2NtZF9pZChzY3NpY21kKSA9PSBob3N0LT50aGlzX2lkKSB7CisJCWlmIChjaWQgPT0gaG9z
-dC0+dGhpc19pZCkgewogCQkJc2V0aW5xc3RyKGRldiwgKHZvaWQgKikgKGlucV9kYXRhLmlucWRf
-dmlkKSwgQVJSQVlfU0laRShjb250YWluZXJfdHlwZXMpKTsKIAkJCWlucV9kYXRhLmlucWRfcGR0
-ID0gSU5RRF9QRFRfUFJPQzsJLyogUHJvY2Vzc29yIGRldmljZSAqLwogCQkJYWFjX2ludGVybmFs
-X3RyYW5zZmVyKHNjc2ljbWQsICZpbnFfZGF0YSwgMCwgc2l6ZW9mKGlucV9kYXRhKSk7CkBAIC0y
-MTYwLDEwICsyMTU4LDEwIEBACiAJaWYgKCFhYWNfdmFsaWRfY29udGV4dChzY3NpY21kLCBmaWJw
-dHIpKQogCQlyZXR1cm47CiAKLQlkZXYgPSAoc3RydWN0IGFhY19kZXYgKilzY3NpY21kLT5kZXZp
-Y2UtPmhvc3QtPmhvc3RkYXRhOwotCiAJQlVHX09OKGZpYnB0ciA9PSBOVUxMKTsKIAorCWRldiA9
-IGZpYnB0ci0+ZGV2OworCiAJc3JicmVwbHkgPSAoc3RydWN0IGFhY19zcmJfcmVwbHkgKikgZmli
-X2RhdGEoZmlicHRyKTsKIAogCXNjc2ljbWQtPnNlbnNlX2J1ZmZlclswXSA9ICdcMCc7ICAvKiBJ
-bml0aWFsaXplIHNlbnNlIHZhbGlkIGZsYWcgdG8gZmFsc2UgKi8K
-
-------_=_NextPart_001_01C7AC65.989D85CB--
+Index: 2.6-git/drivers/ata/libata-core.c
+===================================================================
+--- 2.6-git.orig/drivers/ata/libata-core.c
++++ 2.6-git/drivers/ata/libata-core.c
+@@ -70,7 +70,7 @@ const unsigned long sata_deb_timing_long
+ static unsigned int ata_dev_init_params(struct ata_device *dev,
+ 					u16 heads, u16 sectors);
+ static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
+-static unsigned int ata_dev_set_AN(struct ata_device *dev);
++static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable);
+ static void ata_dev_xfermask(struct ata_device *dev);
+ 
+ unsigned int ata_print_id = 1;
+@@ -2010,7 +2010,7 @@ int ata_dev_configure(struct ata_device 
+ 		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
+ 			int err;
+ 			/* issue SET feature command to turn this on */
+-			err = ata_dev_set_AN(dev);
++			err = ata_dev_set_AN(dev, SETFEATURES_SATA_ENABLE);
+ 			if (err)
+ 				ata_dev_printk(dev, KERN_ERR,
+ 						"unable to set AN, err %x\n",
+@@ -3966,6 +3966,7 @@ static unsigned int ata_dev_set_xfermode
+ /**
+  *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
+  *	@dev: Device to which command will be sent
++ *	@enable: Whether to enable or disable the feature
+  *
+  *	Issue SET FEATURES - SATA FEATURES command to device @dev
+  *	on port @ap with sector count set to indicate Asynchronous
+@@ -3977,7 +3978,7 @@ static unsigned int ata_dev_set_xfermode
+  *	RETURNS:
+  *	0 on success, AC_ERR_* mask otherwise.
+  */
+-static unsigned int ata_dev_set_AN(struct ata_device *dev)
++static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable)
+ {
+ 	struct ata_taskfile tf;
+ 	unsigned int err_mask;
+@@ -3987,7 +3988,7 @@ static unsigned int ata_dev_set_AN(struc
+ 
+ 	ata_tf_init(dev, &tf);
+ 	tf.command = ATA_CMD_SET_FEATURES;
+-	tf.feature = SETFEATURES_SATA_ENABLE;
++	tf.feature = enable;
+ 	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+ 	tf.protocol = ATA_PROT_NODATA;
+ 	tf.nsect = SATA_AN;
