@@ -1,46 +1,38 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: scsi_debug fault-injection question
-Date: Mon, 11 Jun 2007 14:26:55 -0400
-Message-ID: <466D93EF.8060609@torque.net>
-References: <20070611094207.168a7664.randy.dunlap@oracle.com>
-Reply-To: dougg@torque.net
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH] scsi_debug: correct parameter default text
+Date: Mon, 11 Jun 2007 11:36:40 -0700
+Message-ID: <20070611113640.a2ec2afd.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:38482 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753602AbXFKS1f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jun 2007 14:27:35 -0400
-In-Reply-To: <20070611094207.168a7664.randy.dunlap@oracle.com>
+Received: from rgminet01.oracle.com ([148.87.113.118]:34276 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753638AbXFKSgk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 11 Jun 2007 14:36:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, dgilbert@interlog.com
+To: dougg@torque.net, jejb <james.bottomley@steeleye.com>
+Cc: scsi <linux-scsi@vger.kernel.org>
 
-Randy Dunlap wrote:
-> Hi Doug,
-> 
-> scsi_debug.c says:
-> 
-> MODULE_PARM_DESC(every_nth, "timeout every nth command(def=100)");
-> 
-> I don't see where the default of 100 is set.
-> 
-> #define DEF_EVERY_NTH   0
-> ...
-> static int scsi_debug_every_nth = DEF_EVERY_NTH;
-> 
-> 
-> Can you clarify for me, please?
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Randy,
-s/100/0/
+Correct the module info text for the default value of
+"every_nth" to 0.
 
-The string in MODULE_PARM_DESC is wrong. The support
-web page, http://www.torque.net/sg/sdebug26.html
-is accurate stating the default is 0 and notes:
-"for error injection: 0 -> off".
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ drivers/scsi/scsi_debug.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Doug Gilbert
-
+--- linux-2622-rc4.orig/drivers/scsi/scsi_debug.c
++++ linux-2622-rc4/drivers/scsi/scsi_debug.c
+@@ -2405,7 +2405,7 @@ MODULE_PARM_DESC(add_host, "0..127 hosts
+ MODULE_PARM_DESC(delay, "# of jiffies to delay response(def=1)");
+ MODULE_PARM_DESC(dev_size_mb, "size in MB of ram shared by devs(def=8)");
+ MODULE_PARM_DESC(dsense, "use descriptor sense format(def=0 -> fixed)");
+-MODULE_PARM_DESC(every_nth, "timeout every nth command(def=100)");
++MODULE_PARM_DESC(every_nth, "timeout every nth command(def=0)");
+ MODULE_PARM_DESC(fake_rw, "fake reads/writes instead of copying (def=0)");
+ MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=1)");
+ MODULE_PARM_DESC(no_lun_0, "no LU number 0 (def=0 -> have lun 0)");
