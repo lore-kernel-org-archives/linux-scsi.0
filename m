@@ -1,28 +1,55 @@
-From: Arjan van de Ven <arjan@linux.intel.com>
-Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI
- controllers.
-Date: Mon, 11 Jun 2007 20:59:46 -0700
-Message-ID: <466E1A32.90306@linux.intel.com>
-References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 0/3] AHCI Link Power Management
+Date: Tue, 12 Jun 2007 13:13:05 +0900
+Message-ID: <466E1D51.9070007@gmail.com>
+References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com> <466DFDB5.9030901@gmail.com> <466E0642.5020506@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070612035928.GB9808@khazad-dum.debian.net>
-Sender: linux-ide-owner@vger.kernel.org
-To: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Cc: Jeff Garzik <jeff@garzik.org>, =?ISO-8859-1?Q?Dagfinn_Ilmari_Mann?= =?ISO-8859-1?Q?s=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.182]:25129 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750738AbXFLENT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 00:13:19 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2391499wah
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Jun 2007 21:13:19 -0700 (PDT)
+In-Reply-To: <466E0642.5020506@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Arjan van de Ven <arjan@linux.intel.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pavel Machek <pavel@ucw.cz>, Jens Axboe <jens.axboe@oracle.com>
 
-Henrique de Moraes Holschuh wrote:
-> On Mon, 11 Jun 2007, Jeff Garzik wrote:
->>>> on/off doesn't really make sense if the question is "do you favor power
->>>> or do you favor performance".......
+Arjan van de Ven wrote:
+>> I'm not sure about this.  We need better PM framework to support 
+>> powersaving in other controllers and some ahcis don't save much
+>> when only link power management is used,
 > 
-> Actually, it does if you think of it as "do you need hotplug right now or
-> not?".
+> do you have data to support this?
 
-that's a temporary shortcoming; even with these power savings you can 
-do hotplug as long as you're willing to poll for it at a reasonable 
-interval and are willing to wait the time between polls for a hotplug 
-to take effect..
+Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
+hardware.  Pavel, what was the notebook which didn't save much power
+with standard SATA power save but needed port to be completely turned off?
+
+> The data we have from this patch is that it saves typically a Watt of
+> power (depends on the machine of course, but the range is 0.5W to
+> 1.5W). If you want to also have an even more agressive thing where
+> you want to start disabling the entire controller... I don't see how
+> this is in conflict with saving power on the link level by "just"
+> enabling a hardware feature ....
+
+Well, both implement about the same thing.  I prefer software
+implementation because it's more generic and ALPE/ASP seems too
+aggressive to me.  Here are reasons why sw implementation wasn't merged.
+
+1. It didn't have proper interface with userland.  This was mainly
+because of missing ATA sysfs nodes.  I'm not sure whether adding this to
+scsi node is a good idea.
+
+2. It was focused on SATA link PS and couldn't cover the Lenovo case.
+
+I think we need something at the block layer.
+
+Thanks.
+
+-- 
+tejun
