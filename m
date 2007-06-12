@@ -1,51 +1,27 @@
-From: vignesh babu <vignesh.babu@wipro.com>
-Subject: [PATCH]is_power_of_2-scsi/esp_scsi.c
-Date: Tue, 12 Jun 2007 10:54:41 +0530
-Message-ID: <1181625881.11780.25.camel@merlin.linuxcoe.com>
-Reply-To: vignesh.babu@wipro.com
+From: Matthew Garrett <mjg59@srcf.ucam.org>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
+Date: Tue, 12 Jun 2007 10:09:41 +0100
+Message-ID: <20070612090940.GA9719@srcf.ucam.org>
+References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net> <466E1A32.90306@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:40062 "EHLO
-	wip-cdc-wd.wipro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753262AbXFLF3c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 01:29:32 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752594AbXFLJK2@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <466E1A32.90306@linux.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@linux.intel.com>
+Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>, Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, Kernel Janitors List <kernel-janitors@lists.osdl.org>
 
+On Mon, Jun 11, 2007 at 08:59:46PM -0700, Arjan van de Ven wrote:
 
-Replacing (n & (n-1)) in the context of power of 2 checks
-with is_power_of_2
+> that's a temporary shortcoming; even with these power savings you can 
+> do hotplug as long as you're willing to poll for it at a reasonable 
+> interval and are willing to wait the time between polls for a hotplug 
+> to take effect..
 
-Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
---- 
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index ec71061..c416154 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -14,6 +14,7 @@
- #include <linux/moduleparam.h>
- #include <linux/init.h>
- #include <linux/irqreturn.h>
-+#include <linux/log2.h>
- 
- #include <asm/irq.h>
- #include <asm/io.h>
-@@ -1130,7 +1131,7 @@ static int esp_reconnect(struct esp *esp)
- 		if (!(bits & esp->scsi_id_mask))
- 			goto do_reset;
- 		bits &= ~esp->scsi_id_mask;
--		if (!bits || (bits & (bits - 1)))
-+		if (!is_power_of_2(bits))
- 			goto do_reset;
- 
- 		target = ffs(bits) - 1;
+On laptops, I suspect that we'll probably get an ACPI interrupt even if 
+the AHCI hotplug pathway can't manage.
 
 -- 
-Vignesh Babu BM 
-_____________________________________________________________ 
-"Why is it that every time I'm with you, makes me believe in magic?"
-
+Matthew Garrett | mjg59@srcf.ucam.org
