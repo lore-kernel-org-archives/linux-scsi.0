@@ -1,86 +1,228 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qla2xxx errors? (2.6.19)
-Date: Tue, 12 Jun 2007 10:48:54 -0700
-Message-ID: <20070612174854.GD12266@plap.qlogic.org>
-References: <20070610100011.GG5705@digitus>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
+Date: Tue, 12 Jun 2007 10:46:31 -0700
+Message-ID: <20070612104631.44dab4a3.kristen.c.accardi@intel.com>
+References: <20070611184146.448266229@intel.com>
+	<20070611114820.5290a903.kristen.c.accardi@intel.com>
+	<466DA9DD.8080004@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:44119 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755015AbXFLRt5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 13:49:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20070610100011.GG5705@digitus>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <466DA9DD.8080004@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Csillag Tamas <cstamas@digitus.itk.ppke.hu>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, 10 Jun 2007, Csillag Tamas wrote:
+Expose Power Management Policy option to users
 
-> The university I work at has 4 Blade HS20 servers connected to a IBM
-> DS400 storage via Fibre Channel.
-> The fibre channel module is:
-> 
-> 06:01.0 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 02)
-> 06:01.1 Fibre Channel: QLogic Corp. QLA2312 Fibre Channel Adapter (rev 02)
-> 
-> # lsmod
-> Module                  Size  Used by
-> ...
-> qla2xxx               143584  1
-> 
-> # l /lib/firmware 
-> total 244
-> lrwxrwxrwx 1 root root     21 2007-05-05 22:02 ql2300_fw.bin -> ql2300_fw.bin.3.03.18
-> 
-> With recent kernels filesystem corruption occurs under high disk I/O.
-> I have just tried 2.6.19 and I got the same, but kernel 2.6.18 and
-> before looks safe.
+This patch will modify the scsi subsystem to allow
+users to set a power management policy for the link.
 
-Could you load the driver with the ql2xextended_error_logging module
-parameter enabled:
+The scsi subsystem will create a new sysfs file for each
+host in /sys/class/scsi_host called "link_power_management_policy".
+This file can have 3 possible values:
 
-	$ echo "6 4 1 7"  > /proc/sys/kernel/printk
-	$ insmod qla2xxx.ko ql2xextended_error_logging=1
+Value		Meaning
+-------------------------------------------------------------------
+min_power	User wishes the link to conserve power as much as
+		possible, even at the cost of some performance
 
-and forward over the resultant messages file beginning with the load
-of the driver to the point at which the File-system failure occurs.
+max_performance User wants priority to be on performance, not power
+		savings
 
-> The test I use is the following:
-> I first checkout the kernel's git tree:
-> # git-clone git://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux-2.6.git linux-2.6.git
-> Then
-> # for i in {100..400}; do; rsync -a linux-2.6.git/ c2_$i& done
-> .... waiting for finish
-> # for i in {100..400}; do; rsync -a linux-2.6.git/ c3_$i& done
-> .... waiting for finish
-> # for i in {100..400}; do; rsync -a linux-2.6.git/ c4_$i& done
-> 
-> Some error messages:
-> ReiserFS: warning: is_tree_node: node level 32010 does not match to the expected one 1
-> ReiserFS: sdb1: warning: vs-5150: search_by_key: invalid format found in block 8093723. Fsck?
-> ReiserFS: sdb1: warning: vs-13070: reiserfs_read_locked_inode: i/o failure occurred trying to find stat data of [961831 1064427 0x0 SD]
+medium_power	User wants power savings, with less performance cost
+		than min_power (but less power savings as well).
 
-I can setup somthing similar locally, I take it you are writing
-directly some some lun exported off the DS400, and not using DM?
 
-> I am able to reproduce this errors.
-> 
-> With other filesystems I get similar errors.
-
-Just curious, what are those errors?
-
-> I suspect a bug in qla2xxx, but I am not sure.
-> Can you help me how to track down this problem?
-
-Please also provide the output of:
-
-	$ cat /proc/scsi/scsi
-	$ lspci -vvx
-
-and your .config file.
-
-Regards,
-Andrew Vasquez
+Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Index: 2.6-git/drivers/scsi/hosts.c
+===================================================================
+--- 2.6-git.orig/drivers/scsi/hosts.c
++++ 2.6-git/drivers/scsi/hosts.c
+@@ -54,6 +54,25 @@ static struct class shost_class = {
+ };
+ 
+ /**
++ *	scsi_host_set_link_pm - Change the link power management policy
++ *	@shost:	scsi host to change the policy of.
++ *	@policy:	policy to change to.
++ *
++ *	Returns zero if successful or an error if the requested
++ *	transition is illegal.
++ **/
++int scsi_host_set_link_pm(struct Scsi_Host *shost,
++		enum scsi_host_link_pm policy)
++{
++	struct scsi_host_template *sht = shost->hostt;
++	if (sht->set_link_pm_policy)
++		sht->set_link_pm_policy(shost, policy);
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(scsi_host_set_link_pm);
++
++/**
+  *	scsi_host_set_state - Take the given host through the host
+  *		state model.
+  *	@shost:	scsi host to change the state of.
+Index: 2.6-git/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- 2.6-git.orig/drivers/scsi/scsi_sysfs.c
++++ 2.6-git/drivers/scsi/scsi_sysfs.c
+@@ -189,6 +189,74 @@ show_shost_state(struct class_device *cl
+ 
+ static CLASS_DEVICE_ATTR(state, S_IRUGO | S_IWUSR, show_shost_state, store_shost_state);
+ 
++static const struct {
++	enum scsi_host_link_pm	value;
++	char			*name;
++} shost_link_pm_policy[] = {
++	{ SHOST_NOT_AVAILABLE, "max_performance" },
++	{ SHOST_MIN_POWER, "min_power" },
++	{ SHOST_MAX_PERFORMANCE, "max_performance" },
++	{ SHOST_MEDIUM_POWER, "medium_power" },
++};
++
++const char *scsi_host_link_pm_policy(enum scsi_host_link_pm policy)
++{
++	int i;
++	char *name = NULL;
++
++	for (i = 0; i < ARRAY_SIZE(shost_link_pm_policy); i++) {
++		if (shost_link_pm_policy[i].value == policy) {
++			name = shost_link_pm_policy[i].name;
++			break;
++		}
++	}
++	return name;
++}
++
++static ssize_t store_link_pm_policy(struct class_device *class_dev,
++	const char *buf, size_t count)
++{
++	struct Scsi_Host *shost = class_to_shost(class_dev);
++	enum scsi_host_link_pm policy = 0;
++	int i;
++
++	/*
++ 	 * we are skipping array location 0 on purpose - this
++ 	 * is because a value of SHOST_NOT_AVAILABLE is displayed
++ 	 * to the user as max_performance, but when the user
++ 	 * writes "max_performance", they actually want the
++ 	 * value to match SHOST_MAX_PERFORMANCE.
++ 	 */
++	for (i = 1; i < ARRAY_SIZE(shost_link_pm_policy); i++) {
++		const int len = strlen(shost_link_pm_policy[i].name);
++		if (strncmp(shost_link_pm_policy[i].name, buf, len) == 0 &&
++		   buf[len] == '\n') {
++			policy = shost_link_pm_policy[i].value;
++			break;
++		}
++	}
++	if (!policy)
++		return -EINVAL;
++
++	if (scsi_host_set_link_pm(shost, policy))
++		return -EINVAL;
++	return count;
++}
++static ssize_t
++show_link_pm_policy(struct class_device *class_dev, char *buf)
++{
++	struct Scsi_Host *shost = class_to_shost(class_dev);
++	const char *policy =
++		scsi_host_link_pm_policy(shost->shost_link_pm_policy);
++
++	if (!policy)
++		return -EINVAL;
++
++	return snprintf(buf, 23, "%s\n", policy);
++}
++static CLASS_DEVICE_ATTR(link_power_management_policy, S_IRUGO | S_IWUSR,
++		show_link_pm_policy, store_link_pm_policy);
++
+ shost_rd_attr(unique_id, "%u\n");
+ shost_rd_attr(host_busy, "%hu\n");
+ shost_rd_attr(cmd_per_lun, "%hd\n");
+@@ -207,6 +275,7 @@ static struct class_device_attribute *sc
+ 	&class_device_attr_proc_name,
+ 	&class_device_attr_scan,
+ 	&class_device_attr_state,
++	&class_device_attr_link_power_management_policy,
+ 	NULL
+ };
+ 
+Index: 2.6-git/include/scsi/scsi_host.h
+===================================================================
+--- 2.6-git.orig/include/scsi/scsi_host.h
++++ 2.6-git/include/scsi/scsi_host.h
+@@ -42,6 +42,16 @@ enum scsi_eh_timer_return {
+ 	EH_RESET_TIMER,
+ };
+ 
++/*
++ * shost pm policy: If you alter this, you also need to alter scsi_sysfs.c
++ * (for the ascii descriptions)
++ */
++enum scsi_host_link_pm {
++	SHOST_NOT_AVAILABLE,
++	SHOST_MIN_POWER,
++	SHOST_MAX_PERFORMANCE,
++	SHOST_MEDIUM_POWER,
++};
+ 
+ struct scsi_host_template {
+ 	struct module *module;
+@@ -345,6 +355,12 @@ struct scsi_host_template {
+ 	int (*suspend)(struct scsi_device *, pm_message_t state);
+ 
+ 	/*
++ 	 * link power management support
++ 	 */
++	int (*set_link_pm_policy)(struct Scsi_Host *, enum scsi_host_link_pm);
++	enum scsi_host_link_pm default_link_pm_policy;
++
++	/*
+ 	 * Name of proc directory
+ 	 */
+ 	char *proc_name;
+@@ -642,6 +658,7 @@ struct Scsi_Host {
+ 	
+ 
+ 	enum scsi_host_state shost_state;
++	enum scsi_host_link_pm shost_link_pm_policy;
+ 
+ 	/* ldm bits */
+ 	struct device		shost_gendev;
+@@ -749,4 +766,5 @@ extern struct Scsi_Host *scsi_register(s
+ extern void scsi_unregister(struct Scsi_Host *);
+ extern int scsi_host_set_state(struct Scsi_Host *, enum scsi_host_state);
+ 
++extern int scsi_host_set_link_pm(struct Scsi_Host *, enum scsi_host_link_pm);
+ #endif /* _SCSI_SCSI_HOST_H */
+Index: 2.6-git/Documentation/scsi/link_power_management_policy.txt
+===================================================================
+--- /dev/null
++++ 2.6-git/Documentation/scsi/link_power_management_policy.txt
+@@ -0,0 +1,19 @@
++This parameter allows the user to set the link (interface) power management.
++There are 3 possible options:
++
++Value			Effect
++----------------------------------------------------------------------------
++min_power		Tell the controller to try to make the link use the
++			least possible power when possible.  This may
++			sacrifice some performance due to increased latency
++			when coming out of lower power states.
++
++max_performance		Generally, this means no power management.  Tell
++			the controller to have performance be a priority
++			over power management.
++
++medium_power		Tell the controller to enter a lower power state
++			when possible, but do not enter the lowest power
++			state, thus improving latency over min_power setting.
++
++
