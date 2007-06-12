@@ -1,27 +1,45 @@
-From: Matthew Garrett <mjg59@srcf.ucam.org>
-Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
-Date: Tue, 12 Jun 2007 10:09:41 +0100
-Message-ID: <20070612090940.GA9719@srcf.ucam.org>
-References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net> <466E1A32.90306@linux.intel.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Question: vport_disable attribute under /sys/class/fc_vport
+Date: Tue, 12 Jun 2007 07:23:56 -0400
+Message-ID: <466E824C.8080703@emulex.com>
+References: <A6970E9A290F3F4682E1EAD0EA14F32B011417B7@AVEXCH2.qlogic.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752594AbXFLJK2@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <466E1A32.90306@linux.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@linux.intel.com>
-Cc: Henrique de Moraes Holschuh <hmh@hmh.eng.br>, Jeff Garzik <jeff@garzik.org>, Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:39299 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752649AbXFLLYL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 07:24:11 -0400
+In-Reply-To: <A6970E9A290F3F4682E1EAD0EA14F32B011417B7@AVEXCH2.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>
 
-On Mon, Jun 11, 2007 at 08:59:46PM -0700, Arjan van de Ven wrote:
 
-> that's a temporary shortcoming; even with these power savings you can 
-> do hotplug as long as you're willing to poll for it at a reasonable 
-> interval and are willing to wait the time between polls for a hotplug 
-> to take effect..
+The only thing that should keep the attribute being shown is whether
+you have a non-zero value for the template .vport_disable function.
 
-On laptops, I suspect that we'll probably get an ACPI interrupt even if 
-the AHCI hotplug pathway can't manage.
+Double-checked it on my systems...
 
--- 
-Matthew Garrett | mjg59@srcf.ucam.org
+-- james s
+
+Seokmann Ju wrote:
+> Hello James,
+> 
+> I've got a question on NPIV framwork that is included in FC transport
+> layer. I'm using 2.6.22-rc3 with your NPIV-based vport patchset.
+> If I understood correctly, vport_disable and vport_delete attributes
+> have to be listed under /sys/class/fc_vport/vport-2:0-2/, once the
+> 'vport-2:0-2' created successfully.
+ >
+> To make this happen, fc_function_template for the vport has modified to
+> add wrapper function for vport_disable and vport_delete in the driver.
+> However, in my result, I am only able to see vport_delete.
+> For some reason, vport_disable is not listed under the directory.
+> 
+> Can you please comment what possible reasons are there for this?
+
+
