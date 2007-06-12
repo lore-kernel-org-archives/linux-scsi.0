@@ -1,192 +1,185 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2b/3] Expose Power Management Policy option to users
-Date: Tue, 12 Jun 2007 10:47:12 -0700
-Message-ID: <20070612104712.59a71529.kristen.c.accardi@intel.com>
-References: <20070611184146.448266229@intel.com>
-	<20070611114820.5290a903.kristen.c.accardi@intel.com>
-	<466DA9DD.8080004@garzik.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: scsi_cmnd accessors issues
+Date: Tue, 12 Jun 2007 21:02:20 +0300
+Message-ID: <466EDFAC.9020104@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------030803050905060302040501"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32679 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755280AbXFLRuj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jun 2007 13:50:39 -0400
-In-Reply-To: <466DA9DD.8080004@garzik.org>
+Received: from gw-e.panasas.com ([65.194.124.178]:52577 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755016AbXFLSCu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 14:02:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+To: linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: Ed Lin <ed.lin@promise.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 
-Enable link power management for ata drivers
+This is a multi-part message in MIME format.
+--------------030803050905060302040501
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-libata drivers can define a function (enable_pm) that will
-perform hardware specific actions to enable whatever power
-management policy the user set up from the scsi sysfs 
-interface if the driver supports it.  This power management 
-policy will be activated after all disks have been 
-enumerated and intialized.
+2 things
 
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Index: 2.6-git/drivers/ata/libata-scsi.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-scsi.c
-+++ 2.6-git/drivers/ata/libata-scsi.c
-@@ -2890,6 +2890,51 @@ void ata_scsi_simulate(struct ata_device
+[1]
+There are 2 files (see attached patch) that use scsi_befflen() & scsi_sg_count() as
+L-value. If I try the scsi_sgtable approach and do:
+
+#define scsi_sg_count(cmd) ((cmd)->sg_table ? (cmd)->sg_table->sg_count : 0)
+#define scsi_sglist(cmd) ((cmd)->sg_table ? (cmd)->sg_table->sglist : NULL)
+#define scsi_bufflen(cmd) ((cmd)->sg_table ? (cmd)->sg_table->length : 0)
+
+I get compilation errors. Attached solution is to add scsi_set_ accessors to these
+members. But it would be best to STOP these drivers from doing that ugly hack of
+modifying sg_count and bufflen.
+(CC sign-off-by maintainers of the drivers in question. Files are
+drivers/scsi/tmscsim.c & drivers/scsi/stex.c )
+
+see: http://www.bhalevy.com/open-osd/download/sgtable_bidi_varlen/
+     for the full bidi over scsi_sgtable solution
+
+[2]
+if I use __deprecated on request_buffer, request_bufflen, and use_sg with
+scsi_sgtable implementation Than I get below list of files complaining:
+drivers/ata/libata-scsi.c
+drivers/firewire/fw-sbp2.c
+drivers/infiniband/ulp/srp/ib_srp.c
+drivers/message/i2o/i2o_scsi.c
+drivers/scsi/aacraid/aachba.c
+drivers/scsi/lpfc/lpfc_scsi.c
+drivers/scsi/aha152x.c
+drivers/scsi/pcmcia/nsp_cs.c
+drivers/scsi/sym53c8xx_2/sym_glue.h
+drivers/scsi/sym53c8xx_2/sym_glue.c
+drivers/scsi/ncr53c8xx.c
+drivers/scsi/sd.c
+drivers/scsi/sr.c
+drivers/scsi/advansys.c
+drivers/scsi/psi240i.c
+drivers/scsi/aha1542.c
+drivers/scsi/ips.c
+drivers/scsi/fd_mcs.c
+drivers/scsi/in2000.c
+drivers/scsi/NCR5380.c
+drivers/scsi/qla1280.c
+drivers/scsi/seagate.c
+drivers/scsi/dc395x.c
+drivers/scsi/atp870u.c
+drivers/scsi/gdth.c
+drivers/scsi/ide-scsi.c
+drivers/scsi/ppa.c
+drivers/scsi/imm.c
+drivers/scsi/hptiop.c
+drivers/usb/image/microtek.c
+drivers/usb/storage/protocol.c
+drivers/usb/storage/transport.c
+drivers/usb/storage/shuttle_usbat.c
+drivers/usb/storage/sddr09.c
+drivers/usb/storage/freecom.c
+drivers/usb/storage/isd200.c
+
+and also these files from scsi-ml that need changing when implementation changes:
+drivers/scsi/scsi.c
+drivers/scsi/scsi_error.c
+drivers/scsi/scsi_debug.c
+
+(see: 0004-Convert-scsi-ml-to-use-of-new-scsi_sgtable.patch at scsi_cmnd.h)
+
+Which of the files do you have pending patches for? Which do you need that I send
+what I have for them?
+
+Thanks
+Boaz
+
+
+
+
+--------------030803050905060302040501
+Content-Type: text/plain;
+ name="0003-Add-scsi_set_-accessors-to-bufflen-and-sg_count.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="0003-Add-scsi_set_-accessors-to-bufflen-and-sg_count.patch"
+
+>From 4f3c5a3b6dd6acb6240a52cecf52fc6787f625e8 Mon Sep 17 00:00:00 2001
+From: Boaz Harrosh <bharrosh@bh-buildlin2.(none)>
+Date: Mon, 11 Jun 2007 17:19:39 +0300
+Subject: [PATCH] Add scsi_set_ accessors to bufflen and sg_count
+
+ - drivers/scsi/stex.c && drivers/scsi/tmscsim.c modify bufflen and sg_count
+   members from struct scsi_cmnd. This will not compile when in the future
+   accessors are implemented over scsi_sgtable. So we add set_ accessors for these
+   drivers to use.
+ - It would be best if these drivers STOP modifying these members and this patch is
+   reverted
+---
+ drivers/scsi/stex.c      |    4 ++--
+ drivers/scsi/tmscsim.c   |    4 ++--
+ include/scsi/scsi_cmnd.h |   10 ++++++++++
+ 3 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index adda296..4795d53 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -719,8 +719,8 @@ static void stex_ys_commands(struct st_hba *hba,
+ 
+ 	if (ccb->cmd->cmnd[0] == MGT_CMD &&
+ 		resp->scsi_status != SAM_STAT_CHECK_CONDITION) {
+-		scsi_bufflen(ccb->cmd) =
+-			le32_to_cpu(*(__le32 *)&resp->variable[0]);
++		scsi_set_bufflen(ccb->cmd,
++			le32_to_cpu(*(__le32 *)&resp->variable[0]));
+ 		return;
  	}
+ 
+diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
+index 73c5ca0..bfc718a 100644
+--- a/drivers/scsi/tmscsim.c
++++ b/drivers/scsi/tmscsim.c
+@@ -1728,7 +1728,7 @@ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb*
+ 		       (u32) pcmd->result, (u32) pSRB->TotalXferredLen));
+ 	    } else {
+ 		SET_RES_DRV(pcmd->result, DRIVER_SENSE);
+-		scsi_sg_count(pcmd) = pSRB->SavedSGCount;
++		scsi_set_sg_count(pcmd, pSRB->SavedSGCount);
+ 		//pSRB->ScsiCmdLen	 = (u8) (pSRB->Segment1[0] >> 8);
+ 		DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
+ 		pSRB->TotalXferredLen = 0;
+@@ -1750,7 +1750,7 @@ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb*
+ 	else if( status_byte(status) == QUEUE_FULL )
+ 	{
+ 	    scsi_track_queue_full(pcmd->device, pDCB->GoingSRBCnt - 1);
+-	    scsi_sg_count(pcmd) = pSRB->SavedSGCount;
++	    scsi_set_sg_count(pcmd, pSRB->SavedSGCount);
+ 	    DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
+ 	    pSRB->TotalXferredLen = 0;
+ 	    SET_RES_DID(pcmd->result, DID_SOFT_ERROR);
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 53e1705..d0c1101 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -152,6 +152,16 @@ static inline int scsi_get_resid(struct scsi_cmnd *cmd)
+ 	return cmd->resid;
  }
  
-+int ata_scsi_set_link_pm_policy(struct Scsi_Host *shost,
-+		enum scsi_host_link_pm policy)
++static inline void scsi_set_sg_count(struct scsi_cmnd *cmd, int sg_count)
 +{
-+	struct ata_port *ap = ata_shost_to_port(shost);
-+	int rc = -EINVAL;
-+	int i;
-+
-+	/*
-+ 	 * make sure no broken devices are on this port,
-+ 	 * and that all devices support interface power
-+ 	 * management
-+ 	 */
-+	for (i = 0; i < ATA_MAX_DEVICES; i++) {
-+		struct ata_device *dev = &ap->device[i];
-+
-+		/* only check drives which exist */
-+		if (!ata_dev_enabled(dev))
-+			continue;
-+
-+		/*
-+ 		 * do we need to handle the case where we've hotplugged
-+ 		 * a broken drive (since hotplug and ALPM are mutually
-+ 		 * exclusive) ?
-+ 		 *
-+ 		 * If so, if we detect a broken drive on a port with
-+ 		 * alpm already enabled, then we should reset the policy
-+ 		 * to off for the entire port.
-+ 		 */
-+		if ((dev->horkage & ATA_HORKAGE_ALPM) ||
-+			!(dev->flags & ATA_DFLAG_IPM)) {
-+			ata_dev_printk(dev, KERN_ERR,
-+				"Unable to set Link PM policy\n");
-+			ap->pm_policy = SHOST_MAX_PERFORMANCE;
-+		}
-+	}
-+
-+	if (ap->ops->enable_pm)
-+		rc = ap->ops->enable_pm(ap, policy);
-+
-+	if (!rc)
-+		shost->shost_link_pm_policy = ap->pm_policy;
-+	return rc;
++	cmd->use_sg = sg_count;
 +}
-+EXPORT_SYMBOL_GPL(ata_scsi_set_link_pm_policy);
 +
- int ata_scsi_add_hosts(struct ata_host *host, struct scsi_host_template *sht)
- {
- 	int i, rc;
-@@ -2912,7 +2957,7 @@ int ata_scsi_add_hosts(struct ata_host *
- 		shost->max_lun = 1;
- 		shost->max_channel = 1;
- 		shost->max_cmd_len = 16;
--
-+		shost->shost_link_pm_policy = ap->pm_policy;
- 		rc = scsi_add_host(ap->scsi_host, ap->host->dev);
- 		if (rc)
- 			goto err_add;
-Index: 2.6-git/include/linux/libata.h
-===================================================================
---- 2.6-git.orig/include/linux/libata.h
-+++ 2.6-git/include/linux/libata.h
-@@ -136,6 +136,7 @@ enum {
- 	ATA_DFLAG_CDB_INTR	= (1 << 2), /* device asserts INTRQ when ready for CDB */
- 	ATA_DFLAG_NCQ		= (1 << 3), /* device supports NCQ */
- 	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
-+	ATA_DFLAG_IPM		= (1 << 6), /* device supports interface PM */
- 	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
- 
- 	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
-@@ -300,6 +301,7 @@ enum {
- 	ATA_HORKAGE_NONCQ	= (1 << 2),	/* Don't use NCQ */
- 	ATA_HORKAGE_MAX_SEC_128	= (1 << 3),	/* Limit max sects to 128 */
- 	ATA_HORKAGE_DMA_RW_ONLY	= (1 << 4),	/* ATAPI DMA for RW only */
-+	ATA_HORKAGE_ALPM	= (1 << 5), 	/* ALPM problems */
- };
- 
- enum hsm_task_states {
-@@ -548,6 +550,7 @@ struct ata_port {
- 
- 	pm_message_t		pm_mesg;
- 	int			*pm_result;
-+	enum scsi_host_link_pm	pm_policy;
- 
- 	void			*private_data;
- 
-@@ -607,7 +610,7 @@ struct ata_port_operations {
- 
- 	int (*port_suspend) (struct ata_port *ap, pm_message_t mesg);
- 	int (*port_resume) (struct ata_port *ap);
--
-+	int (*enable_pm) (struct ata_port *ap, enum scsi_host_link_pm policy);
- 	int (*port_start) (struct ata_port *ap);
- 	void (*port_stop) (struct ata_port *ap);
- 
-@@ -812,7 +815,7 @@ extern int ata_cable_40wire(struct ata_p
- extern int ata_cable_80wire(struct ata_port *ap);
- extern int ata_cable_sata(struct ata_port *ap);
- extern int ata_cable_unknown(struct ata_port *ap);
--
-+extern int ata_scsi_set_link_pm_policy(struct Scsi_Host *shost, enum scsi_host_link_pm);
- /*
-  * Timing helpers
-  */
-Index: 2.6-git/drivers/ata/libata-core.c
-===================================================================
---- 2.6-git.orig/drivers/ata/libata-core.c
-+++ 2.6-git/drivers/ata/libata-core.c
-@@ -2019,6 +2019,9 @@ int ata_dev_configure(struct ata_device 
- 	if (dev->flags & ATA_DFLAG_LBA48)
- 		dev->max_sectors = ATA_MAX_SECTORS_LBA48;
- 
-+	if (ata_id_has_hipm(dev->id))
-+		dev->flags |= ATA_DFLAG_IPM;
++static inline void scsi_set_bufflen(struct scsi_cmnd *cmd, int length)
++{
++	cmd->request_bufflen = length;
++}
 +
- 	if (dev->horkage & ATA_HORKAGE_DIAGNOSTIC) {
- 		/* Let the user know. We don't want to disallow opens for
- 		   rescue purposes, or in case the vendor is just a blithering
-@@ -2048,6 +2051,13 @@ int ata_dev_configure(struct ata_device 
- 	if (ata_device_blacklisted(dev) & ATA_HORKAGE_DMA_RW_ONLY)
- 		dev->horkage |= ATA_HORKAGE_DMA_RW_ONLY;
+ #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
+ 	for (__i = 0, sg = scsi_sglist(cmd); __i < (nseg); __i++, (sg)++)
  
-+	if (ata_device_blacklisted(dev) & ATA_HORKAGE_ALPM) {
-+		dev->horkage |= ATA_HORKAGE_ALPM;
-+
-+		/* reset link pm_policy for this port to no pm */
-+		ap->pm_policy = SHOST_MAX_PERFORMANCE;
-+	}
-+
- 	if (ap->ops->dev_config)
- 		ap->ops->dev_config(dev);
- 
-@@ -6394,6 +6404,8 @@ int ata_host_register(struct ata_host *h
- 		struct ata_port *ap = host->ports[i];
- 
- 		ata_scsi_scan_host(ap);
-+		ata_scsi_set_link_pm_policy(ap->scsi_host,
-+				ap->pm_policy);
- 	}
- 
- 	return 0;
-Index: 2.6-git/include/linux/ata.h
-===================================================================
---- 2.6-git.orig/include/linux/ata.h
-+++ 2.6-git/include/linux/ata.h
-@@ -320,6 +320,8 @@ struct ata_taskfile {
- 	  ((u64) (id)[(n) + 0]) )
- 
- #define ata_id_cdb_intr(id)	(((id)[0] & 0x60) == 0x20)
-+#define ata_id_has_hipm(id)	((id)[76] & (1 << 9))
-+#define ata_id_has_dipm(id)	((id)[78] & (1 << 3))
- 
- static inline unsigned int ata_id_major_version(const u16 *id)
- {
+-- 
+1.5.0.4.402.g8035
+
+
+
+--------------030803050905060302040501--
