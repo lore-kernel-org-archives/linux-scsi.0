@@ -1,70 +1,36 @@
-From: bloch@verdurin.com
-Subject: Re: Very slow writes with mptsas
-Date: Tue, 12 Jun 2007 15:15:11 +0100
-Message-ID: <20070612141511.GB4347@bloch.config>
-References: <20070605161620.GB6519@bloch.config>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
+Date: Tue, 12 Jun 2007 11:17:14 -0300
+Message-ID: <20070612141714.GB20408@khazad-dum.debian.net>
+References: <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org> <20070612035928.GB9808@khazad-dum.debian.net> <466E1A32.90306@linux.intel.com> <20070612090940.GA9719@srcf.ucam.org> <20070612121819.GA20408@khazad-dum.debian.net> <20070612135010.GA12601@srcf.ucam.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 87-194-8-112.bethere.co.uk ([87.194.8.112]:59726 "EHLO
-	bloch.config" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751777AbXFLOPU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 12 Jun 2007 10:15:20 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070605161620.GB6519@bloch.config>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20070612135010.GA12601@srcf.ucam.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Matthew Garrett <mjg59@srcf.ucam.org>
+Cc: Arjan van de Ven <arjan@linux.intel.com>, Jeff Garzik <jeff@garzik.org>, Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-precision@dell.com
 
-On Tue, 05 Jun 2007, bloch@verdurin.com wrote:
-
-> Hello
+On Tue, 12 Jun 2007, Matthew Garrett wrote:
+> On Tue, Jun 12, 2007 at 09:18:19AM -0300, Henrique de Moraes Holschuh wrote:
+> > On Tue, 12 Jun 2007, Matthew Garrett wrote:
+> > > 
+> > > On laptops, I suspect that we'll probably get an ACPI interrupt even if 
+> > > the AHCI hotplug pathway can't manage.
+> > 
+> > As long as we don't crash the drive or AHCI controller because we hotplugged
+> > it in a way it didn't like (like trying to hotplug a ICH5R would cause).
 > 
-> I'm seeing very slow writes on a Dell Precision 690 with the Dell SAS5
-> adapter, serving a RAID1 array of SATA-II disks.
-> 
-> It's very similar to the problem in FreeBSD, described here:
-> 
-> http://unix.derkeiler.com/Mailing-Lists/FreeBSD/stable/2007-03/msg00756.html
-> 
-> I'm running FC6 with the latest kernel.
-> 
-> Reads are quite fast, writes terribly slow.
-> 
+> Laptop bays are designed to deal with hotplugging PATA - I don't think 
+> this is too much of an issue :)
 
-Thanks to all who replied to this query, especially the very detailed
-response from Eric Moore at LSI.
+The new SATA ones use the SATA hardware hotplug ;-)   Just like the pci-e
+cards use usb2.0 and pci-e hotplug...
 
-The first important facet is that we need to operate on the two hidden
-physical disks, not the RAID device.  lsscsi differentiates them:
-
-# lsscsi
-[0:0:0:0]    disk    ATA      WDC WD5000KS-75M 2E08  -       
-[0:0:1:0]    disk    ATA      HDS725050KLA360  AB5A  -       
-[0:1:0:0]    disk    Dell     VIRTUAL DISK     1028  /dev/sda
-
-sg_map gives the generic device numbers:
-
-# sg_map -i -x
-/dev/sg0  0 0 0 0  0  ATA       WDC WD5000KS-75M  2E08
-/dev/sg1  0 0 1 0  0  ATA       HDS725050KLA360   AB5A
-
-The write cache can then be enabled using sdparm:
-
-sdparm -s WCE=1 -S /dev/sg0
-
-and the result checked with
-
-# sdparm -g WCE /dev/sg1
-/dev/sg1: ATA       HDS725050KLA360   AB5A
-WCE         1  [cha: y]
-
-This seems to make the write performance much better.
-
-The question for Dell is why their version of the BIOS doesn't set the
-write cache in the first place or allow it to be altered by the user.
-
-Cheers,
-Adam
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
