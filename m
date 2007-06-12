@@ -1,45 +1,44 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: Question: vport_disable attribute under /sys/class/fc_vport
-Date: Tue, 12 Jun 2007 07:23:56 -0400
-Message-ID: <466E824C.8080703@emulex.com>
-References: <A6970E9A290F3F4682E1EAD0EA14F32B011417B7@AVEXCH2.qlogic.org>
-Reply-To: James.Smart@Emulex.Com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH]is_power_of_2-scsi/NCR53C9x.c
+Date: Tue, 12 Jun 2007 05:50:00 -0600
+Message-ID: <20070612114959.GD11591@parisc-linux.org>
+References: <1181625877.11780.24.camel@merlin.linuxcoe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:39299 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752649AbXFLLYL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 07:24:11 -0400
-In-Reply-To: <A6970E9A290F3F4682E1EAD0EA14F32B011417B7@AVEXCH2.qlogic.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:60140 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751974AbXFLLuB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 07:50:01 -0400
+Content-Disposition: inline
+In-Reply-To: <1181625877.11780.24.camel@merlin.linuxcoe.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Vasquez <andrew.vasquez@qlogic.com>, Duane Grigsby <duane.grigsby@qlogic.com>
+To: vignesh babu <vignesh.babu@wipro.com>
+Cc: linux-scsi@vger.kernel.org, Kernel Janitors List <kernel-janitors@lists.osdl.org>
 
+On Tue, Jun 12, 2007 at 10:54:36AM +0530, vignesh babu wrote:
+> @@ -1651,7 +1652,7 @@ static inline int reconnect_target(struct NCR_ESP *esp, struct ESP_regs *eregs)
+>  	if(!(it & me))
+>  		return -1;
+>  	it &= ~me;
+> -	if(it & (it - 1))
+> +	if(!is_power_of_2(it))
+>  		return -1;
+>  	while(!(it & 1))
+>  		targ++, it >>= 1;
 
-The only thing that should keep the attribute being shown is whether
-you have a non-zero value for the template .vport_disable function.
+I think you actually want to do:
 
-Double-checked it on my systems...
+-	if(!(it & me))
+-		return -1;
+ 	it &= ~me;
+-	if(it & (it - 1))
++	if (!is_power_of_2(it))
+ 		return -1;
 
--- james s
+as it looks to me like the first test is checking for the n != 0 case in
+is_power_of_two().
 
-Seokmann Ju wrote:
-> Hello James,
-> 
-> I've got a question on NPIV framwork that is included in FC transport
-> layer. I'm using 2.6.22-rc3 with your NPIV-based vport patchset.
-> If I understood correctly, vport_disable and vport_delete attributes
-> have to be listed under /sys/class/fc_vport/vport-2:0-2/, once the
-> 'vport-2:0-2' created successfully.
- >
-> To make this happen, fc_function_template for the vport has modified to
-> add wrapper function for vport_disable and vport_delete in the driver.
-> However, in my result, I am only able to see vport_delete.
-> For some reason, vport_disable is not listed under the directory.
-> 
-> Can you please comment what possible reasons are there for this?
-
-
+Not that it'll matter much -- AIUI, this driver is scheduled for
+deletion soon.
