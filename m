@@ -1,36 +1,41 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 0/3] AHCI Link Power Management
-Date: Mon, 11 Jun 2007 23:18:24 -0400
-Message-ID: <466E1080.4070504@garzik.org>
-References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com> <466DFDB5.9030901@gmail.com> <466E0642.5020506@linux.intel.com> <466E0F30.3000700@garzik.org> <466E0F28.3040701@linux.intel.com>
+From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI controllers.
+Date: Tue, 12 Jun 2007 00:59:28 -0300
+Message-ID: <20070612035928.GB9808@khazad-dum.debian.net>
+References: <20070611184146.448266229@intel.com> <20070611114839.907bcae2.kristen.c.accardi@intel.com> <20070612011148.GA9808@khazad-dum.debian.net> <466DF3E9.30303@linux.intel.com> <d8jr6oikkcz.fsf@nygaard.ping.uio.no> <466DFE09.3020408@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <466E0F28.3040701@linux.intel.com>
+Content-Disposition: inline
+In-Reply-To: <466DFE09.3020408@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: Arjan van de Ven <arjan@linux.intel.com>
-Cc: Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Dagfinn Ilmari =?iso-8859-1?Q?Manns=E5ker?= <ilmari@ilmari.org>, Arjan van de Ven <arjan@linux.intel.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-Arjan van de Ven wrote:
-> Jeff Garzik wrote:
->> SATA standard defines lower power phy states.  So the same argument 
->> you're using for AHCI applies there too -- "just" enabling an existing 
->> hardware feature.
+On Mon, 11 Jun 2007, Jeff Garzik wrote:
+> >>on/off doesn't really make sense if the question is "do you favor power
+> >>or do you favor performance".......
 
-> yes I'm not arguing against that. I was trying to find out (and 
-> suggest-unless-proven-otherwise) that the 2 are not exclusive or 
-> conflicting... in fact I assume both are wanted concurrently.
+Actually, it does if you think of it as "do you need hotplug right now or
+not?".
 
-Yes and no.  As I understand it, AHCI's capability is an automatic 
-version of what standard SATA phys provide manually.  In AHCI's case, 
-the hardware automatically manages the link power, possibly cycling it 
-hundreds of times per second.  In the standard case, software must 
-determine when a different power state is appropriate based on current 
-conditions, and update the phy appropriately.
+> >How about just making it a numeric scale with 0 meaning no power saving
+> >and then some fixed number of levels (e.g 0-9)?
+> 
+> The original proposal seems far more intuitive than these alternatives.
 
-	Jeff
+There is nothing intuitive about the text or the levels.  All cases need
+proper documentation.  I'd never expect link powersaving to kill hotplug,
+unless I read the AHCI docs.
 
+And enable/disable ain't intuitive either :(  But enable/disable is useful
+to get stuff like SATA bay hotplug, dock/undock and other stuff that needs
+hotplug to be working right, unless we can make that automatic so that power
+saving is always disabled in all situations we'd need hotplug to be working?
 
-
+-- 
+  "One disk to rule them all, One disk to find them. One disk to bring
+  them all and in the darkness grind them. In the Land of Redmond
+  where the shadows lie." -- The Silicon Valley Tarot
+  Henrique Holschuh
