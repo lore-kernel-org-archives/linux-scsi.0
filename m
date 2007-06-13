@@ -1,44 +1,34 @@
-From: David Miller <davem@davemloft.net>
-Subject: [PATCH]: ESP reset bug fix
-Date: Wed, 13 Jun 2007 12:58:53 -0700 (PDT)
-Message-ID: <20070613.125853.119242891.davem@davemloft.net>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [patch 0/3] AHCI Link Power Management
+Date: Wed, 13 Jun 2007 14:51:06 +0000
+Message-ID: <20070613145106.GA8053@ucw.cz>
+References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com> <466DFDB5.9030901@gmail.com> <466E0642.5020506@linux.intel.com> <466E1D51.9070007@gmail.com> <466E1EC6.90509@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:41568
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751673AbXFMT6h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jun 2007 15:58:37 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <466E1EC6.90509@linux.intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@linux.intel.com>
+Cc: Tejun Heo <htejun@gmail.com>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, tsbogend@alpha.franken.de
 
+Hi!
 
-James could you please push this bug fix from Thomas to Linus?
+> >Yeah, it was some Lenovo notebook.  Pavel is more 
+> >familiar with the
+> >hardware.  Pavel, what was the notebook which didn't 
+> >save much power
+> >with standard SATA power save but needed port to be 
+> >completely turned off?
+> 
+> Pavel, if you have time, could you measure this with 
+> Kristen's patch?
 
-Thanks a lot!
+Kristen has same machine as me, and I have seen similar '1W' saving
+with previous version of the patch. I'd trust her results.
 
-[SCSI] ESP: Don't forget to clear ESP_FLAG_RESETTING.
-
-From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-
-esp_reset_cleanup() does everything necessary except clear
-the flag, so we never exit resetting state.
-
-Signed-off-by: David S. Miller <davem@davemloft.net>
-
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index ec71061..71caf2d 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -2033,6 +2033,7 @@ static void esp_reset_cleanup(struct esp *esp)
- 			starget_for_each_device(tp->starget, NULL,
- 						esp_clear_hold);
- 	}
-+	esp->flags &= ~ESP_FLAG_RESETTING;
- }
- 
- /* Runs under host->lock */
+							Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
