@@ -1,245 +1,66 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 3/6] mpt fusion: remove unused header - mpi_inb.h
-Date: Wed, 13 Jun 2007 16:33:05 -0600
-Message-ID: <20070613223305.GA21108@lsil.com>
+Subject: [PATCH 4/6] mpt fusion: remove unused header - linux_compat.h
+Date: Wed, 13 Jun 2007 16:33:48 -0600
+Message-ID: <20070613223347.GA21141@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35604 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:35643 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755476AbXFMWhT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jun 2007 18:37:19 -0400
+	id S1755508AbXFMWiC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jun 2007 18:38:02 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, DL-MPTFusionLinux@lsi.com
 
-fc inband managment header deleted
+remove unused header
 
 Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
 
-diff -uarpN b/drivers/message/fusion/lsi/mpi_inb.h a/drivers/message/fusion/lsi/mpi_inb.h
---- b/drivers/message/fusion/lsi/mpi_inb.h	2007-06-12 15:29:07.000000000 -0600
-+++ a/drivers/message/fusion/lsi/mpi_inb.h	1969-12-31 17:00:00.000000000 -0700
-@@ -1,221 +0,0 @@
--/*
-- *  Copyright (c) 2003-2004 LSI Logic Corporation.
-- *
-- *
-- *           Name:  mpi_inb.h
-- *          Title:  MPI Inband structures and definitions
-- *  Creation Date:  September 30, 2003
-- *
-- *    mpi_inb.h Version:  01.05.01
-- *
-- *  Version History
-- *  ---------------
-- *
-- *  Date      Version   Description
-- *  --------  --------  ------------------------------------------------------
-- *  05-11-04  01.03.01  Original release.
-- *  08-19-04  01.05.01  Original release for MPI v1.5.
-- *  --------------------------------------------------------------------------
-- */
+diff -uarpN b/drivers/message/fusion/linux_compat.h a/drivers/message/fusion/linux_compat.h
+--- b/drivers/message/fusion/linux_compat.h	2007-04-25 21:08:32.000000000 -0600
++++ a/drivers/message/fusion/linux_compat.h	1969-12-31 17:00:00.000000000 -0700
+@@ -1,9 +0,0 @@
+-/* drivers/message/fusion/linux_compat.h */
 -
--#ifndef MPI_INB_H
--#define MPI_INB_H
+-#ifndef FUSION_LINUX_COMPAT_H
+-#define FUSION_LINUX_COMPAT_H
 -
--/******************************************************************************
--*
--*        I n b a n d    M e s s a g e s
--*
--*******************************************************************************/
+-#include <linux/version.h>
+-#include <scsi/scsi_device.h>
 -
--
--/****************************************************************************/
--/* Inband Buffer Post Request                                               */
--/****************************************************************************/
--
--typedef struct _MSG_INBAND_BUFFER_POST_REQUEST
--{
--    U8                      Reserved1;          /* 00h */
--    U8                      BufferCount;        /* 01h */
--    U8                      ChainOffset;        /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U32                     Reserved4;          /* 0Ch */
--    SGE_TRANS_SIMPLE_UNION  SGL;                /* 10h */
--} MSG_INBAND_BUFFER_POST_REQUEST, MPI_POINTER PTR_MSG_INBAND_BUFFER_POST_REQUEST,
--  MpiInbandBufferPostRequest_t , MPI_POINTER pMpiInbandBufferPostRequest_t;
--
--
--typedef struct _WWN_FC_FORMAT
--{
--    U64                     NodeName;           /* 00h */
--    U64                     PortName;           /* 08h */
--} WWN_FC_FORMAT, MPI_POINTER PTR_WWN_FC_FORMAT,
--  WwnFcFormat_t, MPI_POINTER pWwnFcFormat_t;
--
--typedef struct _WWN_SAS_FORMAT
--{
--    U64                     WorldWideID;        /* 00h */
--    U32                     Reserved1;          /* 08h */
--    U32                     Reserved2;          /* 0Ch */
--} WWN_SAS_FORMAT, MPI_POINTER PTR_WWN_SAS_FORMAT,
--  WwnSasFormat_t, MPI_POINTER pWwnSasFormat_t;
--
--typedef union _WWN_INBAND_FORMAT
--{
--    WWN_FC_FORMAT           Fc;
--    WWN_SAS_FORMAT          Sas;
--} WWN_INBAND_FORMAT, MPI_POINTER PTR_WWN_INBAND_FORMAT,
--  WwnInbandFormat, MPI_POINTER pWwnInbandFormat;
--
--
--/* Inband Buffer Post reply message */
--
--typedef struct _MSG_INBAND_BUFFER_POST_REPLY
--{
--    U16                     Reserved1;          /* 00h */
--    U8                      MsgLength;          /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U16                     Reserved4;          /* 0Ch */
--    U16                     IOCStatus;          /* 0Eh */
--    U32                     IOCLogInfo;         /* 10h */
--    U32                     TransferLength;     /* 14h */
--    U32                     TransactionContext; /* 18h */
--    WWN_INBAND_FORMAT       Wwn;                /* 1Ch */
--    U32                     IOCIdentifier[4];   /* 2Ch */
--} MSG_INBAND_BUFFER_POST_REPLY, MPI_POINTER PTR_MSG_INBAND_BUFFER_POST_REPLY,
--  MpiInbandBufferPostReply_t, MPI_POINTER pMpiInbandBufferPostReply_t;
--
--
--/****************************************************************************/
--/* Inband Send Request                                                      */
--/****************************************************************************/
--
--typedef struct _MSG_INBAND_SEND_REQUEST
--{
--    U16                     Reserved1;          /* 00h */
--    U8                      ChainOffset;        /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U32                     Reserved4;          /* 0Ch */
--    WWN_INBAND_FORMAT       Wwn;                /* 10h */
--    U32                     Reserved5;          /* 20h */
--    SGE_IO_UNION            SGL;                /* 24h */
--} MSG_INBAND_SEND_REQUEST, MPI_POINTER PTR_MSG_INBAND_SEND_REQUEST,
--  MpiInbandSendRequest_t , MPI_POINTER pMpiInbandSendRequest_t;
--
--
--/* Inband Send reply message */
--
--typedef struct _MSG_INBAND_SEND_REPLY
--{
--    U16                     Reserved1;          /* 00h */
--    U8                      MsgLength;          /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U16                     Reserved4;          /* 0Ch */
--    U16                     IOCStatus;          /* 0Eh */
--    U32                     IOCLogInfo;         /* 10h */
--    U32                     ResponseLength;     /* 14h */
--} MSG_INBAND_SEND_REPLY, MPI_POINTER PTR_MSG_INBAND_SEND_REPLY,
--  MpiInbandSendReply_t, MPI_POINTER pMpiInbandSendReply_t;
--
--
--/****************************************************************************/
--/* Inband Response Request                                                  */
--/****************************************************************************/
--
--typedef struct _MSG_INBAND_RSP_REQUEST
--{
--    U16                     Reserved1;          /* 00h */
--    U8                      ChainOffset;        /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U32                     Reserved4;          /* 0Ch */
--    WWN_INBAND_FORMAT       Wwn;                /* 10h */
--    U32                     IOCIdentifier[4];   /* 20h */
--    U32                     ResponseLength;     /* 30h */
--    SGE_IO_UNION            SGL;                /* 34h */
--} MSG_INBAND_RSP_REQUEST, MPI_POINTER PTR_MSG_INBAND_RSP_REQUEST,
--  MpiInbandRspRequest_t , MPI_POINTER pMpiInbandRspRequest_t;
--
--
--/* Inband Response reply message */
--
--typedef struct _MSG_INBAND_RSP_REPLY
--{
--    U16                     Reserved1;          /* 00h */
--    U8                      MsgLength;          /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U16                     Reserved4;          /* 0Ch */
--    U16                     IOCStatus;          /* 0Eh */
--    U32                     IOCLogInfo;         /* 10h */
--} MSG_INBAND_RSP_REPLY, MPI_POINTER PTR_MSG_INBAND_RSP_REPLY,
--  MpiInbandRspReply_t, MPI_POINTER pMpiInbandRspReply_t;
--
--
--/****************************************************************************/
--/* Inband Abort Request                                                     */
--/****************************************************************************/
--
--typedef struct _MSG_INBAND_ABORT_REQUEST
--{
--    U8                      Reserved1;          /* 00h */
--    U8                      AbortType;          /* 01h */
--    U8                      ChainOffset;        /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U32                     Reserved4;          /* 0Ch */
--    U32                     ContextToAbort;     /* 10h */
--} MSG_INBAND_ABORT_REQUEST, MPI_POINTER PTR_MSG_INBAND_ABORT_REQUEST,
--  MpiInbandAbortRequest_t , MPI_POINTER pMpiInbandAbortRequest_t;
--
--#define MPI_INBAND_ABORT_TYPE_ALL_BUFFERS       (0x00)
--#define MPI_INBAND_ABORT_TYPE_EXACT_BUFFER      (0x01)
--#define MPI_INBAND_ABORT_TYPE_SEND_REQUEST      (0x02)
--#define MPI_INBAND_ABORT_TYPE_RESPONSE_REQUEST  (0x03)
--
--
--/* Inband Abort reply message */
--
--typedef struct _MSG_INBAND_ABORT_REPLY
--{
--    U8                      Reserved1;          /* 00h */
--    U8                      AbortType;          /* 01h */
--    U8                      MsgLength;          /* 02h */
--    U8                      Function;           /* 03h */
--    U16                     Reserved2;          /* 04h */
--    U8                      Reserved3;          /* 06h */
--    U8                      MsgFlags;           /* 07h */
--    U32                     MsgContext;         /* 08h */
--    U16                     Reserved4;          /* 0Ch */
--    U16                     IOCStatus;          /* 0Eh */
--    U32                     IOCLogInfo;         /* 10h */
--} MSG_INBAND_ABORT_REPLY, MPI_POINTER PTR_MSG_INBAND_ABORT_REPLY,
--  MpiInbandAbortReply_t, MPI_POINTER pMpiInbandAbortReply_t;
--
--
--#endif
--
+-#endif /* _LINUX_COMPAT_H */
+diff -uarpN b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
+--- b/drivers/message/fusion/mptfc.c	2007-06-13 14:46:14.000000000 -0600
++++ a/drivers/message/fusion/mptfc.c	2007-06-13 15:36:48.000000000 -0600
+@@ -43,7 +43,6 @@
+     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+-#include "linux_compat.h"	/* linux-2.6 tweaks */
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
+--- b/drivers/message/fusion/mptscsih.c	2007-06-13 14:45:42.000000000 -0600
++++ a/drivers/message/fusion/mptscsih.c	2007-06-13 15:37:26.000000000 -0600
+@@ -44,7 +44,6 @@
+ */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ 
+-#include "linux_compat.h"	/* linux-2.6 tweaks */
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
+diff -uarpN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
+--- b/drivers/message/fusion/mptspi.c	2007-06-13 14:45:25.000000000 -0600
++++ a/drivers/message/fusion/mptspi.c	2007-06-13 15:37:47.000000000 -0600
+@@ -44,7 +44,6 @@
+ */
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ 
+-#include "linux_compat.h"	/* linux-2.6 tweaks */
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+ #include <linux/init.h>
