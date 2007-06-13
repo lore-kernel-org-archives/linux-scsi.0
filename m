@@ -1,49 +1,49 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 5/5] ibmvscsi: Abort path fix
-Date: Wed, 13 Jun 2007 17:12:40 -0500
-Message-ID: <200706132212.l5DMCeBp013228@d01av04.pok.ibm.com>
-References: <11817727312836-patch-mail.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 3/5] ibmvscsi: Add eh_host_reset_handler
+Date: Wed, 13 Jun 2007 18:30:21 -0400
+Message-ID: <46706FFD.5030704@garzik.org>
+References: <11817727312836-patch-mail.ibm.com> <200706132212.l5DMCQD9002964@d01av02.pok.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:55307 "EHLO e5.ny.us.ibm.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:40464 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754980AbXFMWMn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jun 2007 18:12:43 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5DMCflD032709
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2007 18:12:41 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5DMCfVk556656
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2007 18:12:41 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5DMCfwe013239
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2007 18:12:41 -0400
-In-Reply-To: <11817727312836-patch-mail.ibm.com>
+	id S1753847AbXFMWaZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jun 2007 18:30:25 -0400
+In-Reply-To: <200706132212.l5DMCQD9002964@d01av02.pok.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: santil@linux.vnet.ibm.com
-Cc: rcjenn@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: santil@linux.vnet.ibm.com, rcjenn@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+
+Brian King wrote:
+> +	spin_lock_irqsave(hostdata->host->host_lock, flags);
+> +	list_for_each_entry_safe(tmp_evt, pos, &hostdata->sent, list) {
+> +		list_del(&tmp_evt->list);
+> +		del_timer(&tmp_evt->timer);
+> +		if (tmp_evt->cmnd) {
+> +			tmp_evt->cmnd->result = (error_code << 16);
+> +			unmap_cmd_data(&tmp_evt->iu.srp.cmd,
+> +				       tmp_evt,
+> +				       tmp_evt->hostdata->dev);
+> +			if (tmp_evt->cmnd_done)
+> +				tmp_evt->cmnd_done(tmp_evt->cmnd);
+> +		} else if (tmp_evt->done)
+> +			tmp_evt->done(tmp_evt);
+> +		free_event_struct(&tmp_evt->hostdata->pool, tmp_evt);
+> +	}
+> +	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
 
 
-Since it is completely possible for scsi core to call 
-a LLDD's eh_abort function after the command has completed,
-fix ibmvscsi to return SUCCESS if this is the case.
+Since it's been so long since I bothered with the old-style error 
+handling, a dumb question:
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
+Are you sure that you should be completing the commands in the host 
+reset handler?  I thought EH took care of that, and your sole task in 
+the host reset handler was to reset everything attached to a single 
+scsi_host.
 
- linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+	Jeff
 
-diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_abort_fix drivers/scsi/ibmvscsi/ibmvscsi.c
---- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_abort_fix	2007-06-12 14:50:50.000000000 -0500
-+++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2007-06-12 14:50:50.000000000 -0500
-@@ -1018,7 +1018,7 @@ static int ibmvscsi_eh_abort_handler(str
- 
- 	if (!found_evt) {
- 		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
--		return FAILED;
-+		return SUCCESS;
- 	}
- 
- 	evt = get_event_struct(&hostdata->pool);
-_
+
