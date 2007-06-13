@@ -1,67 +1,36 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: RE: scsi_cmnd accessors issues
-Date: Wed, 13 Jun 2007 19:45:13 +0900
-Message-ID: <20070613194513H.fujita.tomonori@lab.ntt.co.jp>
-References: <466EDFAC.9020104@panasas.com>
-	<20070613085118P.fujita.tomonori@lab.ntt.co.jp>
-	<E472128B1EB43941B4E7FB268020C89B0250B912@riverside.int.panasas.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: blktrace for all SCSI devices
+Date: Wed, 13 Jun 2007 13:34:17 +0200
+Message-ID: <20070613113417.GA14694@schmichrtp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:48528 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756281AbXFMKpM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jun 2007 06:45:12 -0400
-In-Reply-To: <E472128B1EB43941B4E7FB268020C89B0250B912@riverside.int.panasas.com>
+Received: from mtagate2.uk.ibm.com ([195.212.29.135]:39603 "EHLO
+	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757411AbXFMLeU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jun 2007 07:34:20 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, ed.lin@promise.com, g.liakhovetski@gmx.de
+To: linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org
 
-From: "Harrosh, Boaz" <bharrosh@panasas.com>
-Subject: RE: scsi_cmnd accessors issues
-Date: Wed, 13 Jun 2007 06:32:23 -0400
+As a follow-up to earlier discussions about adding statistics to the
+SCSI layer (http://lkml.org/lkml/2006/9/26/151), i am looking what
+data blktrace can provide.
 
-> From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp]
-> Sent: Tue 6/12/2007 7:51 PM
-> To: Harrosh, Boaz
-> Cc: linux-scsi@vger.kernel.org; fujita.tomonori@lab.ntt.co.jp; ed.lin@promise.com; g.liakhovetski@gmx.de
-> Subject: Re: scsi_cmnd accessors issues
->  
-> > From: Boaz Harrosh <bharrosh@panasas.com>
-> > Subject: scsi_cmnd accessors issues
-> > Date: Tue, 12 Jun 2007 21:02:20 +0300
-> >
-> >> [2]
-> >> if I use __deprecated on request_buffer, request_bufflen, and use_sg with
-> >> scsi_sgtable implementation Than I get below list of files complaining:
-> >
-> >(snip)
-> >
-> >> and also these files from scsi-ml that need changing when implementation changes:
-> >> drivers/scsi/scsi.c
-> >> drivers/scsi/scsi_error.c
-> >> drivers/scsi/scsi_debug.c
-> >> 
-> >> (see: 0004-Convert-scsi-ml-to-use-of-new-scsi_sgtable.patch at scsi_cmnd.h)
-> >> 
-> >> Which of the files do you have pending patches for? Which do you need that I send
-> >> what I have for them?
-> >
-> >I don't think that SCSI-ml bidi will be got into 2.6.23. 2.6.23 will
-> >convert as many LLDs as possible. I don't think that we need such
-> >patches in scsi-misc or scsi-pending now.
-> >
-> >We need to agree on what the scsi bidi looks like first. When we add
-> >bidi support to scsi core, we can change scsi core (scsi.c, etc)
-> >together.
-> 
-> OK! But what about the _set_ accessors what are we doing with these? are we fixing the 
-> code or are we adding new _set_ accessors?
+One problem is that blktrace currently can only get the trace data
+from block device files. This excludes retrieving trace data from
+other SCSI devices, especially from tape drives. Looking at the code,
+the SCSI layer internally uses the same request_queue per device. It
+looks like the blktrace ioctls as interface to userspace are the first
+thing that is missing. Is this all?
 
-There are just two llds. I suspect that we can fix them. Or they can
-access to the data directly (without the accessors) if we can't.
+What would be a going idea to make the blktrace ioctls available for
+all SCSI devices? My first approach would be to add them to the sg
+devices. Any comments?
 
-I don't think that introducing something like scsi_set_sg_count, which
-is meaningless to most of llds, is a good idea.
+If there are now objections, i will try to implement the ioctls for sg
+devices, to see if this actually works.
+
+--
+Christof Schmitt
