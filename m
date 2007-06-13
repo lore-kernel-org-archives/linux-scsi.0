@@ -1,46 +1,63 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: scsi_cmnd accessors issues
-Date: Wed, 13 Jun 2007 08:51:18 +0900
-Message-ID: <20070613085118P.fujita.tomonori@lab.ntt.co.jp>
-References: <466EDFAC.9020104@panasas.com>
+From: vignesh babu <vignesh.babu@wipro.com>
+Subject: [PATCH][RESEND]is_power_of_2-scsi/NCR53C9x.c
+Date: Wed, 13 Jun 2007 10:49:19 +0530
+Message-ID: <1181711960.13391.47.camel@merlin.linuxcoe.com>
+Reply-To: vignesh.babu@wipro.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:51188 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754428AbXFLXvV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 12 Jun 2007 19:51:21 -0400
-In-Reply-To: <466EDFAC.9020104@panasas.com>
+Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:50314 "EHLO
+	wip-cdc-wd.wipro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750772AbXFMFST (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jun 2007 01:18:19 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp, ed.lin@promise.com, g.liakhovetski@gmx.de
+To: matthew@wil.cx
+Cc: linux-scsi@vger.kernel.org, Kernel Janitors List <kernel-janitors@lists.osdl.org>
 
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: scsi_cmnd accessors issues
-Date: Tue, 12 Jun 2007 21:02:20 +0300
+David S. Miller (davem@caip.rutgers.edu)
+LSILOGIC/SYMBIOS/NCR 53C8XX and 53C1010 PCI-SCSI drivers
+P:	Matthew Wilcox
+M:	matthew@wil.cx
+L:	linux-scsi@vger.kernel.org
+S:	Maintained
 
-> [2]
-> if I use __deprecated on request_buffer, request_bufflen, and use_sg with
-> scsi_sgtable implementation Than I get below list of files complaining:
 
-(snip)
+Replacing (n & (n-1)) in the context of power of 2 checks
+with is_power_of_2
 
-> and also these files from scsi-ml that need changing when implementation changes:
-> drivers/scsi/scsi.c
-> drivers/scsi/scsi_error.c
-> drivers/scsi/scsi_debug.c
-> 
-> (see: 0004-Convert-scsi-ml-to-use-of-new-scsi_sgtable.patch at scsi_cmnd.h)
-> 
-> Which of the files do you have pending patches for? Which do you need that I send
-> what I have for them?
+Thanks Mathew for pointing out the double check that was going on for 0.I have fixed that.
 
-I don't think that SCSI-ml bidi will be got into 2.6.23. 2.6.23 will
-convert as many LLDs as possible. I don't think that we need such
-patches in scsi-misc or scsi-pending now.
+Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
+--- 
+diff --git a/drivers/scsi/NCR53C9x.c b/drivers/scsi/NCR53C9x.c
+index 8b5334c..60692dc 100644
+--- a/drivers/scsi/NCR53C9x.c
++++ b/drivers/scsi/NCR53C9x.c
+@@ -33,6 +33,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/stat.h>
+ #include <linux/init.h>
++#include <linux/log2.h>
+ 
+ #include "scsi.h"
+ #include <scsi/scsi_host.h>
+@@ -1648,10 +1649,8 @@ static inline int reconnect_target(struct NCR_ESP *esp, struct ESP_regs *eregs)
+ 	if(2 != fcount(esp, eregs))
+ 		return -1;
+ 	it = esp_read(eregs->esp_fdata);
+-	if(!(it & me))
+-		return -1;
+ 	it &= ~me;
+-	if(it & (it - 1))
++	if(!is_power_of_2(it))
+ 		return -1;
+ 	while(!(it & 1))
+ 		targ++, it >>= 1;
 
-We need to agree on what the scsi bidi looks like first. When we add
-bidi support to scsi core, we can change scsi core (scsi.c, etc)
-together.
+-- 
+Vignesh Babu BM 
+_____________________________________________________________ 
+"Why is it that every time I'm with you, makes me believe in magic?"
+
