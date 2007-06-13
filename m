@@ -1,33 +1,37 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 1/5] ibmvscsi: Remove unnecessary map_sg check
-Date: Wed, 13 Jun 2007 18:30:54 -0400
-Message-ID: <4670701E.2010404@garzik.org>
-References: <11817727312836-patch-mail.ibm.com>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: [PATCH] mpt fusion: update MAINTAINERS
+Date: Wed, 13 Jun 2007 16:29:28 -0600
+Message-ID: <20070613222927.GA20787@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40476 "EHLO mail.dvmed.net"
+Received: from mail0.lsil.com ([147.145.40.20]:35436 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754313AbXFMWa5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 13 Jun 2007 18:30:57 -0400
-In-Reply-To: <11817727312836-patch-mail.ibm.com>
+	id S1755245AbXFMWdu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 13 Jun 2007 18:33:50 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: santil@linux.vnet.ibm.com, rcjenn@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, DL-MPTFusionLinux@lsi.com
 
-Brian King wrote:
-> Since sg_tablesize is set appropriately in the scsi host template,
-> remove the unnecessary check to make sure it is not exceeded
-> following the dma_map_sg call.
-> 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
-> ---
-> 
->  linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c |    7 -------
->  1 file changed, 7 deletions(-)
+LSI has a new distribution list for linux support and associated inquires.  The previous list at mpt_linux_developer@lsi.com has been deleted.  I will continue maintaining this driver, as well as others at LSI.
 
-Patches 1-5 look OK to me... modulo the question I just sent
+Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
 
-
+--- b/MAINTAINERS	2007-06-12 12:21:42.000000000 -0600
++++ a/MAINTAINERS	2007-06-13 14:38:30.000000000 -0600
+@@ -2277,11 +2277,10 @@ L:	linux-ntfs-dev@lists.sourceforge.net
+ W:	http://www.linux-ntfs.org/content/view/19/37/
+ S:	Maintained
+ 
+-LSILOGIC MPT FUSION DRIVERS (FC/SAS/SPI)
+-P:	Eric Moore
+-M:	Eric.Moore@lsi.com
++LSI MPT FUSION DRIVERS (FC/SAS/SPI)
++P:	MPT Fusion Linux Team
++M:	DL-MPTFusionLinux@lsi.com
+ M:	support@lsi.com
+-L:	mpt_linux_developer@lsi.com
+ L:	linux-scsi@vger.kernel.org
+ W:	http://www.lsilogic.com/support
+ S:	Supported
