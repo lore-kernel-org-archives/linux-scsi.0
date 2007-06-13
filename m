@@ -1,33 +1,52 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
-Date: Wed, 13 Jun 2007 16:48:03 -0400
-Message-ID: <46705803.4000901@garzik.org>
-References: <20070611184146.448266229@intel.com>	 <20070611114820.5290a903.kristen.c.accardi@intel.com>	 <466DA9DD.8080004@garzik.org>	 <20070612104631.44dab4a3.kristen.c.accardi@intel.com> <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/5] ibmvscsi: Remove unnecessary map_sg check
+Date: Wed, 13 Jun 2007 17:12:11 -0500
+Message-ID: <5884.8507040695$1181772746@news.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e33.co.us.ibm.com ([32.97.110.151]:45920 "EHLO
+	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752911AbXFMWMQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jun 2007 18:12:16 -0400
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e33.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5DMCETb031518
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2007 18:12:14 -0400
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5DMCE41209602
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2007 16:12:14 -0600
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5DMCDK6019731
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Jun 2007 16:12:13 -0600
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-James Bottomley wrote:
-> To take the model I understand: SAS; the links are managed at the phy
-> level, so the power policy should be set there and thus should probably
-> be a property of the phy object, which doesn't even exist in the SCSI
-> model, it only exists in the transport class.  It strikes me that even
-> for ATA, the same thing is probably true.
-> 
-> Now, I can see that the power management models of all the transports
-> might share some similarities (particularly at this three stage granular
-> level); if so, it might make sense to export helpers from the mid-layer
-> for the transport classes to use for this.
+To: santil@linux.vnet.ibm.com
+Cc: rcjenn@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
 
 
-Agreed, in principle.
+Since sg_tablesize is set appropriately in the scsi host template,
+remove the unnecessary check to make sure it is not exceeded
+following the dma_map_sg call.
 
-	Jeff
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
+ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
+diff -puN drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_remove_map_sg_check drivers/scsi/ibmvscsi/ibmvscsi.c
+--- linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c~ibmvscsi_remove_map_sg_check	2007-06-11 11:15:52.000000000 -0500
++++ linux-2.6-bjking1/drivers/scsi/ibmvscsi/ibmvscsi.c	2007-06-11 11:16:12.000000000 -0500
+@@ -408,13 +408,6 @@ static int map_sg_data(struct scsi_cmnd 
+ 		return 1;
+ 	}
+ 
+-	if (sg_mapped > SG_ALL) {
+-		printk(KERN_ERR
+-		       "ibmvscsi: More than %d mapped sg entries, got %d\n",
+-		       SG_ALL, sg_mapped);
+-		return 0;
+-	}
+-
+ 	indirect->table_desc.va = 0;
+ 	indirect->table_desc.len = sg_mapped * sizeof(struct srp_direct_buf);
+ 	indirect->table_desc.key = 0;
+_
