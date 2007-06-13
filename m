@@ -1,78 +1,99 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] i2o: convert to use the data buffer accessors
-Date: Thu, 14 Jun 2007 00:41:06 +0900
-Message-ID: <20070614004106F.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: scsi_cmnd accessors issues
+Date: Thu, 14 Jun 2007 00:41:22 +0900
+Message-ID: <20070614004122T.fujita.tomonori@lab.ntt.co.jp>
+References: <466EDFAC.9020104@panasas.com>
+	<20070613202442F.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:48197 "EHLO
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:48289 "EHLO
 	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757738AbXFMPk5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jun 2007 11:40:57 -0400
+	with ESMTP id S1758054AbXFMPlY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 13 Jun 2007 11:41:24 -0400
+In-Reply-To: <20070613202442F.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org
+To: fujita.tomonori@lab.ntt.co.jp
+Cc: bharrosh@panasas.com, linux-scsi@vger.kernel.org, ed.lin@promise.com, g.liakhovetski@gmx.de, James.Bottomley@SteelEye.com
 
-- remove the unnecessary map_single path.
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: scsi_cmnd accessors issues
+Date: Wed, 13 Jun 2007 20:24:42 +0900
 
-- convert to use the new accessors for the sg lists and the
-parameters.
+> > drivers/scsi/sym53c8xx_2/sym_glue.h
+> > drivers/scsi/sym53c8xx_2/sym_glue.c
+> 
+> The patch was in my old bidi tree but seems that it's in neither
+> scsi-misc nor scsi-pending. I'll resend this.
 
-Note: needs to change i2o_dma_map_sg when the chaining sg is ready.
+Oops, this is in scsi-pending tree.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Here's the summary.
+
 ---
- drivers/message/i2o/i2o_scsi.c |   24 +++++++-----------------
- 1 files changed, 7 insertions(+), 17 deletions(-)
+o Not converted yet
 
-diff --git a/drivers/message/i2o/i2o_scsi.c b/drivers/message/i2o/i2o_scsi.c
-index 1045c8a..aa6fb94 100644
---- a/drivers/message/i2o/i2o_scsi.c
-+++ b/drivers/message/i2o/i2o_scsi.c
-@@ -377,12 +377,8 @@ static int i2o_scsi_reply(struct i2o_con
- 		osm_err("SCSI error %08x\n", error);
- 
- 	dev = &c->pdev->dev;
--	if (cmd->use_sg)
--		dma_unmap_sg(dev, cmd->request_buffer, cmd->use_sg,
--			     cmd->sc_data_direction);
--	else if (cmd->SCp.dma_handle)
--		dma_unmap_single(dev, cmd->SCp.dma_handle, cmd->request_bufflen,
--				 cmd->sc_data_direction);
-+
-+	scsi_dma_unmap(cmd);
- 
- 	cmd->scsi_done(cmd);
- 
-@@ -664,21 +660,15 @@ #endif
- 
- 	if (sgl_offset != SGL_OFFSET_0) {
- 		/* write size of data addressed by SGL */
--		*mptr++ = cpu_to_le32(SCpnt->request_bufflen);
-+		*mptr++ = cpu_to_le32(scsi_bufflen(SCpnt));
- 
- 		/* Now fill in the SGList and command */
--		if (SCpnt->use_sg) {
--			if (!i2o_dma_map_sg(c, SCpnt->request_buffer,
--					    SCpnt->use_sg,
-+
-+		if (scsi_sg_count(SCpnt)) {
-+			if (!i2o_dma_map_sg(c, scsi_sglist(SCpnt),
-+					    scsi_sg_count(SCpnt),
- 					    SCpnt->sc_data_direction, &mptr))
- 				goto nomem;
--		} else {
--			SCpnt->SCp.dma_handle =
--			    i2o_dma_map_single(c, SCpnt->request_buffer,
--					       SCpnt->request_bufflen,
--					       SCpnt->sc_data_direction, &mptr);
--			if (dma_mapping_error(SCpnt->SCp.dma_handle))
--				goto nomem;
- 		}
- 	}
- 
--- 
-1.4.3.2
+> drivers/ata/libata-scsi.c
+> drivers/firewire/fw-sbp2.c
+> drivers/scsi/advansys.c
+> drivers/scsi/psi240i.c
+> drivers/scsi/aha1542.c
+> drivers/scsi/fd_mcs.c
+> drivers/scsi/in2000.c
+> drivers/scsi/NCR5380.c
+> drivers/scsi/qla1280.c
+> drivers/scsi/seagate.c
+> drivers/scsi/atp870u.c
+> drivers/scsi/gdth.c
+> drivers/scsi/ide-scsi.c
+> drivers/scsi/ppa.c
+> drivers/scsi/imm.c
+> drivers/scsi/aha152x.c
+> drivers/scsi/pcmcia/nsp_cs.c
+> drivers/usb/image/microtek.c
+> drivers/usb/storage/protocol.c
+> drivers/usb/storage/transport.c
+> drivers/usb/storage/shuttle_usbat.c
+> drivers/usb/storage/sddr09.c
+> drivers/usb/storage/freecom.c
+> drivers/usb/storage/isd200.c
+
+
+o In scsi-pending tree and waits for ACKs
+
+> drivers/infiniband/ulp/srp/ib_srp.c
+> drivers/scsi/sym53c8xx_2/sym_glue.h
+> drivers/scsi/sym53c8xx_2/sym_glue.c
+> drivers/scsi/ncr53c8xx.c
+> drivers/scsi/ibmvscsi/ibmvscsi.c
+
+
+o In scsi-pending tree and got the ACKs
+
+> drivers/scsi/aacraid/aachba.c
+> drivers/scsi/hptiop.c
+> drivers/scsi/mesh.c
+> drivers/scsi/esp_scsi.c
+> drivers/scsi/dc395x.c
+
+
+o Not in scsi-pending tree and waits for ACKs
+
+> drivers/scsi/iscsi_tcp.c
+> drivers/scsi/libiscsi.c
+> drivers/infiniband/ulp/iser/iscsi_iser.c
+> drivers/infiniband/ulp/iser/iser_initiator.c
+> drivers/message/i2o/i2o_scsi.c
+
+
+o Not in scsi-pending tree and got the ACKs
+
+> drivers/scsi/ips.c
+
+
+o In scsi-pending tree but not necessary now
+
+> drivers/scsi/lpfc/lpfc_scsi.c
 
