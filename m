@@ -1,38 +1,75 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: missing patches
-Date: Thu, 14 Jun 2007 12:18:48 +0200
-Message-ID: <200706141218.48955.swen@vnet.ibm.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] FC_Transport: Check portstates before invoking target
+ scan
+Date: Thu, 14 Jun 2007 07:57:05 -0400
+Message-ID: <46712D11.1010506@emulex.com>
+References: <4670EDCA.5070302@suse.de>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:47471 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750829AbXFNKPW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 06:15:22 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.13.8/8.13.8) with ESMTP id l5EAFKmE182552
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2007 10:15:20 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5EAFKwJ4079672
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2007 12:15:20 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5EAFKem001947
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Jun 2007 12:15:20 +0200
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:36362 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982AbXFNL5X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 07:57:23 -0400
+In-Reply-To: <4670EDCA.5070302@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James
+Sounds reasonable...  Only change I'd make is rather than comparing all the
+different states, simply compare  (rport->port_state != FC_PORTSTATE_ONLINE)
 
-on the 29th of may I posted 3 patches for the zfcp driver named
+-- james s
 
-[PATCH 2/3] zfcp: clear adapter status flags during adapter shutdown
-[PATCH 3/3] zfcp: Don't report device as LUN 0 to SCSI stack
-
-unfortunately I can't find them in the tree so far, is there any reason for that ?
-
-Thanks Swen
+Hannes Reinecke wrote:
+> Hi James (& James, too :-),
+> 
+> scsi_transport_fc.c:fc_user_scan() should check the portstates prior to
+> calling scsi_scan_target(). Otherwise we might get a nice oops as the
+> rport might already been disconnected from the host by the time we're
+> calling scsi_scan_target(). Thus the traversal from the rport to the
+> scsi_host in scsi_scan_target() will fail, resulting in a nice Oops.
+> Plus it's quite pointless to scan a target if the portstates already
+> told us that we can't communicate with it.
+> 
+> Please apply.
+> 
+> Cheers,
+> 
+> Hannes
+> 
+> 
+> ------------------------------------------------------------------------
+> 
+> scsi_transport_fc: Check portstates before invoking target scan
+> 
+> When a target scan is initiated from sysfs, we should check the
+> portstate prior to invoke scsi_scan_target().
+> Otherwise scsi_scan_target() might oops as the rport might already
+> been removed from the scsi host and the traversal from the rport to
+> the scsi_host in scsi_scan_target() will fail.
+> Also the portstate already told us that communication with the target
+> has failed, so it's quite pointless to try.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> 
+> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+> index 4953f0d..bd73615 100644
+> --- a/drivers/scsi/scsi_transport_fc.c
+> +++ b/drivers/scsi/scsi_transport_fc.c
+> @@ -1943,6 +1943,12 @@ static int fc_user_scan(struct Scsi_Host
+>  		if (rport->scsi_target_id == -1)
+>  			continue;
+>  
+> +		if ((rport->port_state == FC_PORTSTATE_NOTPRESENT) ||
+> +		    (rport->port_state == FC_PORTSTATE_UNKNOWN) ||
+> +		    (rport->port_state == FC_PORTSTATE_DELETED) ||
+> +		    (rport->port_state == FC_PORTSTATE_BLOCKED))
+> +			continue;
+> +
+>  		if ((channel == SCAN_WILD_CARD || channel == rport->channel) &&
+>  		    (id == SCAN_WILD_CARD || id == rport->scsi_target_id)) {
+>  			scsi_scan_target(&rport->dev, rport->channel,
