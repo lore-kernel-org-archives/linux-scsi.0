@@ -1,51 +1,31 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH] qla4xxx: allow hba to be online when initiator ip
- address is uninitialized
-Date: Thu, 14 Jun 2007 10:54:03 -0700
-Message-ID: <20070614105403.7857a8a6.randy.dunlap@oracle.com>
-References: <1181348961.8711.4.camel@q-iscsi-upstream.site>
-	<1181349436.8711.8.camel@q-iscsi-upstream.site>
-	<4670D80C.2090708@cs.wisc.edu>
-	<1181842033.3423.3.camel@q-iscsi-upstream.site>
-	<20070614174420.GB16880@plap.qlogic.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/3] Restrict scsi accessors access to read-only
+Date: Thu, 14 Jun 2007 14:50:11 -0400
+Message-ID: <46718DE3.3000401@garzik.org>
+References: <466EDFAC.9020104@panasas.com>	<20070613085118P.fujita.tomonori@lab.ntt.co.jp>	<E472128B1EB43941B4E7FB268020C89B0250B912@riverside.int.panasas.com> <20070613194513H.fujita.tomonori@lab.ntt.co.jp> <46716C45.1090107@panasas.com> <46716DD3.1030501@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:25737 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750862AbXFNRx2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 13:53:28 -0400
-In-Reply-To: <20070614174420.GB16880@plap.qlogic.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:48298 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752523AbXFNSuT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2007 14:50:19 -0400
+In-Reply-To: <46716DD3.1030501@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: David C Somayajulu <david.somayajulu@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Ed Lin <ed.lin@promise.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>, linux-scsi@vger.kernel.org
 
-On Thu, 14 Jun 2007 10:44:20 -0700 Andrew Vasquez wrote:
-
-> On Thu, 14 Jun 2007, David Somayajulu wrote:
-> 
-> > On Thu, 2007-06-14 at 01:54 -0400, Mike Christie wrote:
-> > > David C Somayajulu wrote:
-> > > 
-> > > It looks ok, but creating the status variable and setting it like this,
-> > > just to quiet the compile warning, and never doing anything else with it
-> > > doesn't seem nice.
-> > I don't like it either. I tried with 
-> > (void)pci_set_mwi(ha->pdev); 
-> > and this is what I see
-> 
-> I was hoping that Randy's proposal for pci_try_set_mwi() was accepted:
-> 
-> 	http://article.gmane.org/gmane.linux.scsi/31230/
-> 
-> that way drivers could safely ignore the return (if necessary).
-
-Andrew seems to still be trying to push it (i.e., he hasn't
-given up on it yet).
+Boaz Harrosh wrote:
+> +static inline struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
+> +{
+> +	return (struct scatterlist *)cmd->request_buffer;
+> +}
 
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+It is quite nice to have this accessor, especially.
+
+	Jeff
+
+
