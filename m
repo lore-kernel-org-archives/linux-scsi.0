@@ -1,77 +1,52 @@
-From: David C Somayajulu <david.somayajulu@qlogic.com>
-Subject: Re: [PATCH] qla4xxx: allow hba to be online when initiator
-	ip	address is uninitialized
-Date: Thu, 14 Jun 2007 10:27:13 -0700
-Message-ID: <1181842033.3423.3.camel@q-iscsi-upstream.site>
-References: <1181348961.8711.4.camel@q-iscsi-upstream.site>
-	 <1181349436.8711.8.camel@q-iscsi-upstream.site>
-	 <4670D80C.2090708@cs.wisc.edu>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
+Date: Thu, 14 Jun 2007 13:44:23 -0400
+Message-ID: <46717E77.3050706@garzik.org>
+References: <20070611184146.448266229@intel.com>	<20070611114820.5290a903.kristen.c.accardi@intel.com>	<466DA9DD.8080004@garzik.org>	<20070612104631.44dab4a3.kristen.c.accardi@intel.com>	<1181748408.3421.7.camel@mulgrave.il.steeleye.com> <20070614093952.c8ebef17.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:58738 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751320AbXFNR16 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 13:27:58 -0400
-In-Reply-To: <4670D80C.2090708@cs.wisc.edu>
+Received: from srv5.dvmed.net ([207.36.208.214]:47744 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750725AbXFNRo1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2007 13:44:27 -0400
+In-Reply-To: <20070614093952.c8ebef17.kristen.c.accardi@intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>, David Somayajulu <david.somayajulu@qlogic.com>
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 
-On Thu, 2007-06-14 at 01:54 -0400, Mike Christie wrote:
-> David C Somayajulu wrote:
-> > On Fri, 2007-06-08 at 17:29 -0700, David C Somayajulu wrote:
-> >> This patch provides the following:
-> >> 1. remove warning ignoring the return value of pci_set_mwi()
-> >> 2. allows HBA to be online when the initiator ip address is uninit=
-ialized.
-> > Including=20
-> >=20
-> > Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
-> >=20
-> >  drivers/scsi/qla4xxx/ql4_init.c |   23 +++++++++++------------
-> >  1 files changed, 11 insertions(+), 12 deletions(-)
-> >=20
-> > diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx=
-/ql4_init.c
-> > index d8c064c..1e29f51 100644
-> > --- a/drivers/scsi/qla4xxx/ql4_init.c
-> > +++ b/drivers/scsi/qla4xxx/ql4_init.c
-> > @@ -883,11 +883,12 @@ static int qla4xxx_config_nvram(struct s
-> >  static void qla4x00_pci_config(struct scsi_qla_host *ha)
-> >  {
-> >  	uint16_t w;
-> > +	int status;
-> > =20
-> >  	dev_info(&ha->pdev->dev, "Configuring PCI space...\n");
-> > =20
-> >  	pci_set_master(ha->pdev);
-> > -	pci_set_mwi(ha->pdev);
-> > +	status =3D pci_set_mwi(ha->pdev);
->=20
->=20
-> It looks ok, but creating the status variable and setting it like thi=
-s,
-> just to quiet the compile warning, and never doing anything else with=
- it
-> doesn't seem nice.
-I don't like it either. I tried with=20
-(void)pci_set_mwi(ha->pdev);=20
-and this is what I see
+Kristen Carlson Accardi wrote:
+> Ok - sorry for my ignorance about SCSI - but my sources (i.e. Arjan) tell 
+> me that the problem is that Link in ATA land means something different than 
+> Link in SCSI land, and that what I really need to do is leave this code under
+> the Host class, but rename it to something that more accurately reflects
+> what it means under SCSI.
 
-  CC [M]  drivers/scsi/qla4xxx/ql4_init.o
-drivers/scsi/qla4xxx/ql4_init.c: In function =E2=80=98qla4x00_pci_confi=
-g=E2=80=99:
-drivers/scsi/qla4xxx/ql4_init.c:890: warning: ignoring return value of =
-=E2=80=98pci_set_mwi=E2=80=99, declared with attribute warn_unused_resu=
-lt
-  LD [M]  drivers/scsi/qla4xxx/qla4xxx.o
+James' analogy holds, and is even more true once SATA Port Multipliers 
+are in the picture.  Then you have remote SATA phys.  And James has 
+essentially stated a long term libata problem:  libata wants its own ATA 
+transport class, and perhaps a cleaning-up and coalescing of the 
+in-kernel SATA phy objects and processes.
+
+The main difference is that SATA doesn't have to worry about target phys 
+and initiator phys, largely just the initiator phy.  And phys in SATA 
+don't have unique identifiers (WWNs).
+
+I don't think we should delay ALPM in order to complete phy objects and 
+an ATA transport class.  But OTOH a transport class may be the best 
+place to put these new sysfs nodes.  But#2, that train of logic leads 
+one down the road of implementing a minimal ATA transport class across 
+all supported ATA devices, which is something that probably only James 
+is an expert at (transport classes that is, not ATA).
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Should I rename the file to "segment_power_management_policy"?
+
+No.
+
+	Jeff
+
+
+
