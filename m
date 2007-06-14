@@ -1,35 +1,50 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 0/3] AHCI Link Power Management
-Date: Thu, 14 Jun 2007 16:56:43 +0900
-Message-ID: <4670F4BB.3060306@gmail.com>
-References: <20070611114600.7fca1c24.kristen.c.accardi@intel.com>	<466DFDB5.9030901@gmail.com>	<466E0642.5020506@linux.intel.com>	<466E1D51.9070007@gmail.com>	<20070613090430.GK13747@elf.ucw.cz> <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH] zfcp: Replace kmalloc/memset with kzalloc
+Date: Thu, 14 Jun 2007 12:15:26 +0200
+Message-ID: <200706141215.26997.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070613092607.4ddf0f79.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Arjan van de Ven <arjan@linux.intel.com>, jeff@garzik.org, james.bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:25896 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751923AbXFNKMB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 06:12:01 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org
 
-Kristen Carlson Accardi wrote:
->>>>> I'm not sure about this.  We need better PM framework to support 
->>>>> powersaving in other controllers and some ahcis don't save much
->>>>> when only link power management is used,
->>>> do you have data to support this?
->>> Yeah, it was some Lenovo notebook.  Pavel is more familiar with the
->>> hardware.  Pavel, what was the notebook which didn't save much power
->>> with standard SATA power save but needed port to be completely turned off?
->> Thinkpad x60. Some one Kristen probably used while developing the
->> patch :-).
-> 
-> Yes - that confirms my conclusion that the first patch just wasn't
-> done correctly - cause when I measure the power savings with a power
-> meter on the X60 with my patches I see ~ 1W.
+From: Swen Schillig <swen@vnet.ibm.com>
 
-Hmmm... Could it be that the controller doesn't enter powersave state
-when SControl is written to?
+Memory allocated with kmalloc is always initialzed to 0 with memset.
+Replace the two calls with kzalloc, that already does both steps.
 
--- 
-tejun
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+---
+
+ drivers/s390/scsi/zfcp_erp.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
+
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
+--- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2007-06-14 10:32:45.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2007-06-14 10:33:29.000000000 +0200
+@@ -1626,7 +1626,7 @@ zfcp_erp_schedule_work(struct zfcp_unit 
+ {
+ 	struct zfcp_erp_add_work *p;
+ 
+-	p = kmalloc(sizeof(*p), GFP_KERNEL);
++	p = kzalloc(sizeof(*p), GFP_KERNEL);
+ 	if (!p) {
+ 		ZFCP_LOG_NORMAL("error: Out of resources. Could not register "
+ 				"the FCP-LUN 0x%Lx connected to "
+@@ -1639,7 +1639,6 @@ zfcp_erp_schedule_work(struct zfcp_unit 
+ 	}
+ 
+ 	zfcp_unit_get(unit);
+-	memset(p, 0, sizeof(*p));
+ 	atomic_set_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING, &unit->status);
+ 	INIT_WORK(&p->work, zfcp_erp_scsi_scan);
+ 	p->unit = unit;
