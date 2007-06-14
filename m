@@ -1,94 +1,93 @@
-From: "Ed Lin" <ed.lin@promise.com>
-Subject: RE: [PATCH 3/3] Farther clean up of stex.c driver
-Date: Thu, 14 Jun 2007 12:29:05 -0700
-Message-ID: <B70A50D07063384EB9BCE3330D18414F036011DF@nonameb.ptu.promise.com>
+From: Andrew Patterson <andrew.patterson@hp.com>
+Subject: Re: doubts about sg driver
+Date: Thu, 14 Jun 2007 13:51:31 -0600
+Message-ID: <1181850692.23655.117.camel@bluto.andrew>
+References: <84219.67525.qm@web30104.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:18766 "EHLO
-	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753413AbXFNTk6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 15:40:58 -0400
-content-class: urn:content-classes:message
+Received: from atlrel6.hp.com ([156.153.255.205]:48378 "EHLO atlrel6.hp.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750961AbXFNTwE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2007 15:52:04 -0400
+In-Reply-To: <84219.67525.qm@web30104.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+To: Parav Pandit <paravpandit@yahoo.com>
 Cc: linux-scsi@vger.kernel.org
 
+Hi Parav,
 
+On Thu, 2007-06-14 at 10:47 -0700, Parav Pandit wrote:
+> Hi,
+> 
+> Few basic questions on sg driver:
+> 
+> 1. Are there any hooks that low level HBA driver needs
+> to implement - for providing support for SG (SCSI
+> generic) driver?
 
-> -----Original Message-----
-> From: Boaz Harrosh [mailto:bharrosh@panasas.com] 
-> Sent: Thursday, June 14, 2007 9:34 AM
-> To: FUJITA Tomonori; Ed Lin; Guennadi Liakhovetski
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 3/3] Farther clean up of stex.c driver
+No. This is all done in the sg/scsi-midlayer.
+
+> Or SG always interacts with scsi_mod and it is
+> transparent to the HBA drivers?
+
+Yes.
+
+> From the tldp How-to and sg.c it looks like it doesn't
+> directly talk with Low level HBA driver, but want to
+> confirm.
+
+Correct.
+
 > 
+> 2. Can applications talk with SCSI RAID controller
+> device (some targets exposes LUN-0 as controller) 
+> through sg interface or it is only for storage
+> devices?
+
+Any SCSI device.
+
 > 
-> From 2b82909202cab8dc35184daef45b4b388f93112a Mon Sep 17 00:00:00 2001
-> From: Boaz Harrosh <bharrosh@bh-buildlin2.(none)>
-> Date: Thu, 14 Jun 2007 19:14:40 +0300
-> Subject: [PATCH] Farther clean up of stex.c driver
-> 
->  - now that scsi-ml accessors do not allow modifying of 
-> sg_count bufflen and
->    sglist. The code in question is open coded to directly 
-> hack the scsi_cmnd
->    structure. When implementation changes the driver will 
-> need to change with it.
-> 
->  - Maintainer of this driver should please review again if we 
-> absolutely need this
->    read-sense length fixing. What if less bytes are read and 
-> 0 are left at the end.
->    Also no check is made if the buffer is large enough.
-> ---
->  drivers/scsi/stex.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-> index adda296..d784b58 100644
-> --- a/drivers/scsi/stex.c
-> +++ b/drivers/scsi/stex.c
-> @@ -719,7 +719,7 @@ static void stex_ys_commands(struct st_hba *hba,
-> 
->  	if (ccb->cmd->cmnd[0] == MGT_CMD &&
->  		resp->scsi_status != SAM_STAT_CHECK_CONDITION) {
-> -		scsi_bufflen(ccb->cmd) =
-> +		ccb->cmd->request_bufflen =
->  			le32_to_cpu(*(__le32 *)&resp->variable[0]);
->  		return;
->  	}
-> -- 
-> 1.5.0.4.402.g8035
-> 
-> 
+> 3. How is the mapping between /dev/sda /dev/sdb etc to
+> /dev/sg0 /dev/sg1 etc?
+> Is this information is accessible via procfs or sysfs
+> interface?
 > 
 
-The software allocates a big enough buffer(so don't worry about this),
-and it trims the data size based on returned length. So it needs the
-actual data length. So this length fix is necessary if software doesn't
-change policy. The whole thing is guaranteed by both software and
-firmware, software will do a check, firmware will do a check, so a check
-in driver is not necessary.
+In 2.6 kernels, you can looks at:
 
-I wonder whether the following will go upstream:
-#define scsi_sg_count(cmd) ((cmd)->sg_table ? (cmd)->sg_table->sg_count
-: 0)
-#define scsi_sglist(cmd) ((cmd)->sg_table ? (cmd)->sg_table->sglist :
-NULL)
-#define scsi_bufflen(cmd) ((cmd)->sg_table ? (cmd)->sg_table->length :
-0)
+/sys/class/scsi_device/h:c:t:l/scsi_generic:sg# 
 
-For this particular case, because there is data exchange, so
-(cmd)->sg_table is not NULL, so we can have something like:
-		ccb->cmd->sg_table->length =
-  			le32_to_cpu(*(__le32 *)&resp->variable[0]);
-Although I am not sure whether the software can work without change
-after the scsi_sgtable approach becomes upstream. But I just wonder why
-we use some code that is known to be temporary even before its
-introduction.
+in 2.4 and 2.6 you can look at /proc/scsi/sg/devices.  Where the
+contents is:
 
---Ed Lin
+seq_printf(s, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
+                              scsidp->host->host_no, scsidp->channel,
+                              scsidp->id, scsidp->lun, (int)          scsidp->type,
+                              1,
+                              (int) scsidp->queue_depth,
+                              (int) scsidp->device_busy,
+                              (int) scsi_device_online(scsidp));
+
+
+
+> Regards,
+> Parav Pandit
+> 
+> 
+> 
+>        
+> ____________________________________________________________________________________
+> Be a better Globetrotter. Get better travel answers from someone who knows. Yahoo! Answers - Check it out.
+> http://answers.yahoo.com/dir/?link=list&sid=396545469
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Andrew Patterson
+Hewlett-Packard Company
+
