@@ -1,82 +1,79 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 2/3] Farther clean-up of tmscsim driver
-Date: Thu, 14 Jun 2007 19:33:37 +0300
-Message-ID: <46716DE1.6070607@panasas.com>
-References: <466EDFAC.9020104@panasas.com>	<20070613085118P.fujita.tomonori@lab.ntt.co.jp>	<E472128B1EB43941B4E7FB268020C89B0250B912@riverside.int.panasas.com> <20070613194513H.fujita.tomonori@lab.ntt.co.jp> <46716C45.1090107@panasas.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 2a/3] Expose Power Management Policy option to users
+Date: Thu, 14 Jun 2007 09:39:52 -0700
+Message-ID: <20070614093952.c8ebef17.kristen.c.accardi@intel.com>
+References: <20070611184146.448266229@intel.com>
+	<20070611114820.5290a903.kristen.c.accardi@intel.com>
+	<466DA9DD.8080004@garzik.org>
+	<20070612104631.44dab4a3.kristen.c.accardi@intel.com>
+	<1181748408.3421.7.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:57224 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750911AbXFNQdv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 12:33:51 -0400
-In-Reply-To: <46716C45.1090107@panasas.com>
+Received: from mga02.intel.com ([134.134.136.20]:14468 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751074AbXFNQoD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2007 12:44:03 -0400
+In-Reply-To: <1181748408.3421.7.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Ed Lin <ed.lin@promise.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 
->From 4a7ac954dcc11531a09fa07d6a6365d98c67b216 Mon Sep 17 00:00:00 2001
-From: Boaz Harrosh <bharrosh@bh-buildlin2.(none)>
-Date: Thu, 14 Jun 2007 19:04:17 +0300
-Subject: [PATCH] Farther clean-up of tmscsim driver
+On Wed, 13 Jun 2007 08:26:48 -0700
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
- - this is a followup of commit 85289f2efa108d1586a86d0c426ffc9d641bbdc2
-   [SCSI] tmscsim: convert to use the data buffer accessors.
-   The saved sg_count was a leftover from the time the driver was doing
-   dma mapping by himself. But now that scsi-ml is called for the mapping
-   it is not the drivers responsibility.
----
- drivers/scsi/tmscsim.c |    3 ---
- drivers/scsi/tmscsim.h |    1 -
- 2 files changed, 0 insertions(+), 4 deletions(-)
+> On Tue, 2007-06-12 at 10:46 -0700, Kristen Carlson Accardi wrote:
+> > Expose Power Management Policy option to users
+> > 
+> > This patch will modify the scsi subsystem to allow
+> > users to set a power management policy for the link.
+> > 
+> > The scsi subsystem will create a new sysfs file for each
+> > host in /sys/class/scsi_host called "link_power_management_policy".
+> > This file can have 3 possible values:
+> 
+> I'm afraid the host isn't really the right place to put the link power
+> management policy (assuming you want to manage the individual links
+> separately) because there isn't a one to one correspondence between
+> links and hosts.
+> 
+> To take the model I understand: SAS; the links are managed at the phy
+> level, so the power policy should be set there and thus should probably
+> be a property of the phy object, which doesn't even exist in the SCSI
+> model, it only exists in the transport class.  It strikes me that even
+> for ATA, the same thing is probably true.
+> 
+> Now, I can see that the power management models of all the transports
+> might share some similarities (particularly at this three stage granular
+> level); if so, it might make sense to export helpers from the mid-layer
+> for the transport classes to use for this.
 
-diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
-index 73c5ca0..5758f20 100644
---- a/drivers/scsi/tmscsim.c
-+++ b/drivers/scsi/tmscsim.c
-@@ -1680,7 +1680,6 @@ dc390_RequestSense(struct dc390_acb* pACB, struct dc390_dcb*
-pDCB, struct dc390_
- 			      pcmd->cmnd[0], pDCB->TargetID, pDCB->TargetLUN));
+Ok - sorry for my ignorance about SCSI - but my sources (i.e. Arjan) tell 
+me that the problem is that Link in ATA land means something different than 
+Link in SCSI land, and that what I really need to do is leave this code under
+the Host class, but rename it to something that more accurately reflects
+what it means under SCSI.  So, is the word "segment" more appropriate?
+Should I rename the file to "segment_power_management_policy"?
 
- 	pSRB->SRBFlag |= AUTO_REQSENSE;
--	pSRB->SavedSGCount = scsi_sg_count(pcmd);
- 	pSRB->SavedTotXLen = pSRB->TotalXferredLen;
- 	pSRB->AdaptStatus = 0;
- 	pSRB->TargetStatus = 0; /* CHECK_CONDITION<<1; */
-@@ -1728,7 +1727,6 @@ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb*
-pDCB, struct dc390_srb*
- 		       (u32) pcmd->result, (u32) pSRB->TotalXferredLen));
- 	    } else {
- 		SET_RES_DRV(pcmd->result, DRIVER_SENSE);
--		scsi_sg_count(pcmd) = pSRB->SavedSGCount;
- 		//pSRB->ScsiCmdLen	 = (u8) (pSRB->Segment1[0] >> 8);
- 		DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid,
-pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
- 		pSRB->TotalXferredLen = 0;
-@@ -1750,7 +1748,6 @@ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb*
-pDCB, struct dc390_srb*
- 	else if( status_byte(status) == QUEUE_FULL )
- 	{
- 	    scsi_track_queue_full(pcmd->device, pDCB->GoingSRBCnt - 1);
--	    scsi_sg_count(pcmd) = pSRB->SavedSGCount;
- 	    DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid,
-pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
- 	    pSRB->TotalXferredLen = 0;
- 	    SET_RES_DID(pcmd->result, DID_SOFT_ERROR);
-diff --git a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
-index c3d8c80..fbe7a3e 100644
---- a/drivers/scsi/tmscsim.h
-+++ b/drivers/scsi/tmscsim.h
-@@ -57,7 +57,6 @@ u8		SGcount;
+Thanks,
+kristen
 
- u8		MsgCnt;
- u8		EndMessage;
--u8		SavedSGCount;			
 
- u8		MsgInBuf[6];
- u8		MsgOutBuf[6];
--- 
-1.5.0.4.402.g8035
-
+> 
+> > Value		Meaning
+> > -------------------------------------------------------------------
+> > min_power	User wishes the link to conserve power as much as
+> > 		possible, even at the cost of some performance
+> > 
+> > max_performance User wants priority to be on performance, not power
+> > 		savings
+> > 
+> > medium_power	User wants power savings, with less performance cost
+> > 		than min_power (but less power savings as well).
+> 
+> These seem like nicely sane and generic values.
+> 
+> James
+> 
