@@ -1,36 +1,49 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] qla4xxx: allow hba to be online when initiator ip	address is uninitialized
-Date: Thu, 14 Jun 2007 10:44:20 -0700
-Message-ID: <20070614174420.GB16880@plap.qlogic.org>
-References: <1181348961.8711.4.camel@q-iscsi-upstream.site> <1181349436.8711.8.camel@q-iscsi-upstream.site> <4670D80C.2090708@cs.wisc.edu> <1181842033.3423.3.camel@q-iscsi-upstream.site>
+From: Parav Pandit <paravpandit@yahoo.com>
+Subject: doubts about sg driver
+Date: Thu, 14 Jun 2007 10:47:10 -0700 (PDT)
+Message-ID: <84219.67525.qm@web30104.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:2990 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751409AbXFNRpW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 13:45:22 -0400
-Content-Disposition: inline
-In-Reply-To: <1181842033.3423.3.camel@q-iscsi-upstream.site>
+Received: from web30104.mail.mud.yahoo.com ([209.191.69.36]:30112 "HELO
+	web30104.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751102AbXFNRrM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2007 13:47:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: linux-scsi@vger.kernel.org
 
-On Thu, 14 Jun 2007, David Somayajulu wrote:
+Hi,
 
-> On Thu, 2007-06-14 at 01:54 -0400, Mike Christie wrote:
-> > David C Somayajulu wrote:
-> > 
-> > It looks ok, but creating the status variable and setting it like this,
-> > just to quiet the compile warning, and never doing anything else with it
-> > doesn't seem nice.
-> I don't like it either. I tried with 
-> (void)pci_set_mwi(ha->pdev); 
-> and this is what I see
+Few basic questions on sg driver:
 
-I was hoping that Randy's proposal for pci_try_set_mwi() was accepted:
+1. Are there any hooks that low level HBA driver needs
+to implement - for providing support for SG (SCSI
+generic) driver?
+Or SG always interacts with scsi_mod and it is
+transparent to the HBA drivers?
+>From the tldp How-to and sg.c it looks like it doesn't
+directly talk with Low level HBA driver, but want to
+confirm.
 
-	http://article.gmane.org/gmane.linux.scsi/31230/
+2. Can applications talk with SCSI RAID controller
+device (some targets exposes LUN-0 as controller) 
+through sg interface or it is only for storage
+devices?
 
-that way drivers could safely ignore the return (if necessary).
+3. How is the mapping between /dev/sda /dev/sdb etc to
+/dev/sg0 /dev/sg1 etc?
+Is this information is accessible via procfs or sysfs
+interface?
+
+Regards,
+Parav Pandit
+
+
+
+       
+____________________________________________________________________________________
+Be a better Globetrotter. Get better travel answers from someone who knows. Yahoo! Answers - Check it out.
+http://answers.yahoo.com/dir/?link=list&sid=396545469
