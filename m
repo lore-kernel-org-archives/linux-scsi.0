@@ -1,61 +1,51 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/3] Restrict scsi accessors access to read-only
-Date: Thu, 14 Jun 2007 19:33:23 +0300
-Message-ID: <46716DD3.1030501@panasas.com>
+Subject: Re: [PATCH 3/3] Farther clean up of stex.c driver
+Date: Thu, 14 Jun 2007 19:33:44 +0300
+Message-ID: <46716DE8.3030607@panasas.com>
 References: <466EDFAC.9020104@panasas.com>	<20070613085118P.fujita.tomonori@lab.ntt.co.jp>	<E472128B1EB43941B4E7FB268020C89B0250B912@riverside.int.panasas.com> <20070613194513H.fujita.tomonori@lab.ntt.co.jp> <46716C45.1090107@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:57207 "EHLO
+Received: from gw-e.panasas.com ([65.194.124.178]:57226 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751074AbXFNQdg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 12:33:36 -0400
+	with ESMTP id S1750771AbXFNQdz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 14 Jun 2007 12:33:55 -0400
 In-Reply-To: <46716C45.1090107@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Ed Lin <ed.lin@promise.com>, Guennadi Liakhovetski <g.liakhovetski@gmx.de>
 Cc: linux-scsi@vger.kernel.org
 
->From 33dff41f5aaa05efd4aca80e12be4aaf4692a113 Mon Sep 17 00:00:00 2001
+>From 2b82909202cab8dc35184daef45b4b388f93112a Mon Sep 17 00:00:00 2001
 From: Boaz Harrosh <bharrosh@bh-buildlin2.(none)>
-Date: Thu, 14 Jun 2007 18:55:18 +0300
-Subject: [PATCH] Restrict scsi accessors access to read-only
+Date: Thu, 14 Jun 2007 19:14:40 +0300
+Subject: [PATCH] Farther clean up of stex.c driver
 
-- Users of scsi_cmnd might not change sg_count bufflen or sglist.
-  So reflect that in code.
+ - now that scsi-ml accessors do not allow modifying of sg_count bufflen and
+   sglist. The code in question is open coded to directly hack the scsi_cmnd
+   structure. When implementation changes the driver will need to change with it.
+
+ - Maintainer of this driver should please review again if we absolutely need this
+   read-sense length fixing. What if less bytes are read and 0 are left at the end.
+   Also no check is made if the buffer is large enough.
 ---
- include/scsi/scsi_cmnd.h |   17 ++++++++++++++---
- 1 files changed, 14 insertions(+), 3 deletions(-)
+ drivers/scsi/stex.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 53e1705..aaf8282 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -138,9 +138,20 @@ extern void scsi_free_sgtable(struct scatterlist *, int);
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index adda296..d784b58 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -719,7 +719,7 @@ static void stex_ys_commands(struct st_hba *hba,
 
--#define scsi_sg_count(cmd) ((cmd)->use_sg)
--#define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
--#define scsi_bufflen(cmd) ((cmd)->request_bufflen)
-+static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
-+{
-+	return cmd->use_sg;
-+}
-+
-+static inline struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
-+{
-+	return (struct scatterlist *)cmd->request_buffer;
-+}
-+
-+static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
-+{
-+	return cmd->request_bufflen;
-+}
-
- static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
- {
+ 	if (ccb->cmd->cmnd[0] == MGT_CMD &&
+ 		resp->scsi_status != SAM_STAT_CHECK_CONDITION) {
+-		scsi_bufflen(ccb->cmd) =
++		ccb->cmd->request_bufflen =
+ 			le32_to_cpu(*(__le32 *)&resp->variable[0]);
+ 		return;
+ 	}
 -- 
 1.5.0.4.402.g8035
 
