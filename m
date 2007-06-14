@@ -1,52 +1,81 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] qla4xxx: allow hba to be online when initiator ip	address
- is uninitialized
-Date: Thu, 14 Jun 2007 01:54:20 -0400
-Message-ID: <4670D80C.2090708@cs.wisc.edu>
-References: <1181348961.8711.4.camel@q-iscsi-upstream.site> <1181349436.8711.8.camel@q-iscsi-upstream.site>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] FC_Transport: Check portstates before invoking target scan
+Date: Thu, 14 Jun 2007 09:27:06 +0200
+Message-ID: <4670EDCA.5070302@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------050301030106020401060009"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:60562 "EHLO sabe.cs.wisc.edu"
+Received: from ns1.suse.de ([195.135.220.2]:45704 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750960AbXFNGyd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 14 Jun 2007 02:54:33 -0400
-In-Reply-To: <1181349436.8711.8.camel@q-iscsi-upstream.site>
+	id S1751380AbXFNH1I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 14 Jun 2007 03:27:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: James Smart <James.Smart@Emulex.Com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-David C Somayajulu wrote:
-> On Fri, 2007-06-08 at 17:29 -0700, David C Somayajulu wrote:
->> This patch provides the following:
->> 1. remove warning ignoring the return value of pci_set_mwi()
->> 2. allows HBA to be online when the initiator ip address is uninitialized.
-> Including 
-> 
-> Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
-> 
->  drivers/scsi/qla4xxx/ql4_init.c |   23 +++++++++++------------
->  1 files changed, 11 insertions(+), 12 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-> index d8c064c..1e29f51 100644
-> --- a/drivers/scsi/qla4xxx/ql4_init.c
-> +++ b/drivers/scsi/qla4xxx/ql4_init.c
-> @@ -883,11 +883,12 @@ static int qla4xxx_config_nvram(struct s
->  static void qla4x00_pci_config(struct scsi_qla_host *ha)
->  {
->  	uint16_t w;
-> +	int status;
->  
->  	dev_info(&ha->pdev->dev, "Configuring PCI space...\n");
->  
->  	pci_set_master(ha->pdev);
-> -	pci_set_mwi(ha->pdev);
-> +	status = pci_set_mwi(ha->pdev);
+This is a multi-part message in MIME format.
+--------------050301030106020401060009
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
+Hi James (& James, too :-),
 
-It looks ok, but creating the status variable and setting it like this,
-just to quiet the compile warning, and never doing anything else with it
-doesn't seem nice.
+scsi_transport_fc.c:fc_user_scan() should check the portstates prior to
+calling scsi_scan_target(). Otherwise we might get a nice oops as the
+rport might already been disconnected from the host by the time we're
+calling scsi_scan_target(). Thus the traversal from the rport to the
+scsi_host in scsi_scan_target() will fail, resulting in a nice Oops.
+Plus it's quite pointless to scan a target if the portstates already
+told us that we can't communicate with it.
+
+Please apply.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
+
+--------------050301030106020401060009
+Content-Type: text/plain;
+ name="fc_transport_check-portstates-before-scanning"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="fc_transport_check-portstates-before-scanning"
+
+scsi_transport_fc: Check portstates before invoking target scan
+
+When a target scan is initiated from sysfs, we should check the
+portstate prior to invoke scsi_scan_target().
+Otherwise scsi_scan_target() might oops as the rport might already
+been removed from the scsi host and the traversal from the rport to
+the scsi_host in scsi_scan_target() will fail.
+Also the portstate already told us that communication with the target
+has failed, so it's quite pointless to try.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 4953f0d..bd73615 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -1943,6 +1943,12 @@ static int fc_user_scan(struct Scsi_Host
+ 		if (rport->scsi_target_id == -1)
+ 			continue;
+ 
++		if ((rport->port_state == FC_PORTSTATE_NOTPRESENT) ||
++		    (rport->port_state == FC_PORTSTATE_UNKNOWN) ||
++		    (rport->port_state == FC_PORTSTATE_DELETED) ||
++		    (rport->port_state == FC_PORTSTATE_BLOCKED))
++			continue;
++
+ 		if ((channel == SCAN_WILD_CARD || channel == rport->channel) &&
+ 		    (id == SCAN_WILD_CARD || id == rport->scsi_target_id)) {
+ 			scsi_scan_target(&rport->dev, rport->channel,
+
+--------------050301030106020401060009--
