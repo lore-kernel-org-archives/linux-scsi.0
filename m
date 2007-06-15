@@ -1,18 +1,18 @@
 From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: [patch 5/6] ps3: ROM Storage Driver
-Date: Fri, 15 Jun 2007 13:39:24 +0200
-Message-ID: <20070615120848.454492000@pademelon.sonytel.be>
+Subject: [patch 6/6] ps3: FLASH ROM Storage Driver
+Date: Fri, 15 Jun 2007 13:39:25 +0200
+Message-ID: <20070615120848.558678000@pademelon.sonytel.be>
 References: <20070615113919.142332000@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:49692 "EHLO
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:49693 "EHLO
 	vervifontaine.sonycom.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753884AbXFOMLY (ORCPT
+	by vger.kernel.org with ESMTP id S1753527AbXFOMLY (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 15 Jun 2007 08:11:24 -0400
-Content-Disposition: inline; filename=ps3-stable/ps3stor_rom.diff
+Content-Disposition: inline; filename=ps3-stable/ps3stor_flash.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org
@@ -20,87 +20,65 @@ Cc: Jens Axboe <axboe@kernel.dk>, linux-kernel@vger.kernel.org, "James E.J. Bott
 
 =46rom: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-Add a CD/DVD/BD Storage Driver for the PS3:
-  - Implemented as a SCSI device driver
-  - Uses software scatter-gather with a 64 KiB bounce buffer as the hyp=
-ervisor
-    doesn't support scatter-gather
+Add a FLASH ROM Storage Driver for the PS3:
+  - Implemented as a misc character device driver
+  - Uses a fixed 256 KiB buffer allocated from boot memory as the hyper=
+visor
+    requires the writing of aligned 256 KiB blocks
 
 CC: Geoff Levand <geoffrey.levand@am.sony.com>
 Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 ---
 Changes since previous submission:
       o Don't use `default y' in Kconfig
-      o Add missing #include <linux/highmem.h>
-      o Remove ps3rom_private.scsi_done, use scsi_cmnd.scsi_done instea=
-d
-      o Use scsi_device.host.hostdata
-      o Remove empty ps3rom_slave_{alloc,destroy}()
-      o Kill superfluous test for command in progress
-      o Move scsi_host_put() last in cleanup sequence
-      o Remove scsi_command(), use scsi_print_command() for debugging
-      o scsi_cmnd.use_sg is always > 0 these days
-      o Allocate struct ps3rom_private using scsi_host_alloc()
-      o Remove the thread for handling requests
-      o Remove unused position parameter enum
-      o Remove unused NA_PROTO and DIR_NA
-      o Derive buffer length, data direction, and transfer protocol fro=
-m the
-	struct scsi_command, instead of using a big switch() statement
-      o Kill superfluous spinlock
-      o Remove manual request sense, as modern hypervisors always do au=
-to sense
-      o Pass all SCSI commands to the hypervisor as ATAPI commands, exc=
-ept for
-        READ_*/WRITE_*
-      o Don't print errors for SCSI commands that are not allowed for a=
-n
-        Other OS by the hypervisor
-      o Remove superfluous tests for data directions in
-        {fill_from,fetch_to}_dev_buffer()
-      o Handle errors in {fill_from,fetch_to}_dev_buffer()
-      o Reorder routines
-      o Manually inline ps3rom_send_atapi_command()
-      o Fix all FIXMEs
+      o #include <linux/uaccess.h> instead of <asm/uaccess.h>
+      o Set up sysfs links between misc character device and PS3 system=
+ device:
+	  . /sys/class/misc/ps3flash/device -> ../../../devices/ps3_system/sb_=
+01
+	  . /sys/devices/ps3_system/sb_01/misc:ps3flash -> ../../../class/misc=
+/ps3flash
 
- arch/powerpc/platforms/ps3/Kconfig |   10=20
- drivers/scsi/Makefile              |    1=20
- drivers/scsi/ps3rom.c              |  568 ++++++++++++++++++++++++++++=
+ arch/powerpc/platforms/ps3/Kconfig |   11 +
+ drivers/char/Makefile              |    2=20
+ drivers/char/ps3flash.c            |  404 ++++++++++++++++++++++++++++=
 +++++++++
- 3 files changed, 579 insertions(+)
+ 3 files changed, 417 insertions(+)
 
 --- a/arch/powerpc/platforms/ps3/Kconfig
 +++ b/arch/powerpc/platforms/ps3/Kconfig
-@@ -112,4 +112,14 @@ config PS3_DISK
- 	  This support is required to access the PS3 hard disk.
+@@ -122,4 +122,15 @@ config PS3_ROM
+ 	  This support is required to access the PS3 BD/DVD/CD-ROM drive.
  	  In general, all users will say Y or M.
 =20
-+config PS3_ROM
-+	tristate "PS3 ROM Storage Driver"
-+	depends on PPC_PS3 && BLK_DEV_SR
++config PS3_FLASH
++	tristate "PS3 FLASH ROM Storage Driver"
++	depends on PPC_PS3
 +	select PS3_STORAGE
 +	help
-+	  Include support for the PS3 ROM Storage.
++	  Include support for the PS3 FLASH ROM Storage.
 +
-+	  This support is required to access the PS3 BD/DVD/CD-ROM drive.
++	  This support is required to access the PS3 FLASH ROM, which
++	  contains the boot loader and some boot options.
 +	  In general, all users will say Y or M.
 +
  endmenu
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -132,6 +132,7 @@ obj-$(CONFIG_SCSI_IBMVSCSI)	+=3D ibmvscsi/
- obj-$(CONFIG_SCSI_IBMVSCSIS)	+=3D ibmvscsi/
- obj-$(CONFIG_SCSI_HPTIOP)	+=3D hptiop.o
- obj-$(CONFIG_SCSI_STEX)		+=3D stex.o
-+obj-$(CONFIG_PS3_ROM)		+=3D ps3rom.o
+--- a/drivers/char/Makefile
++++ b/drivers/char/Makefile
+@@ -104,6 +104,8 @@ obj-$(CONFIG_IPMI_HANDLER)	+=3D ipmi/
+ obj-$(CONFIG_HANGCHECK_TIMER)	+=3D hangcheck-timer.o
+ obj-$(CONFIG_TCG_TPM)		+=3D tpm/
 =20
- obj-$(CONFIG_ARM)		+=3D arm/
++obj-$(CONFIG_PS3_FLASH)		+=3D ps3flash.o
++
+ # Files generated that shall be removed upon make clean
+ clean-files :=3D consolemap_deftbl.c defkeymap.c
 =20
 --- /dev/null
-+++ b/drivers/scsi/ps3rom.c
-@@ -0,0 +1,568 @@
++++ b/drivers/char/ps3flash.c
+@@ -0,0 +1,404 @@
 +/*
-+ * PS3 ROM Storage Driver
++ * PS3 FLASH ROM Storage Driver
 + *
 + * Copyright (C) 2007 Sony Computer Entertainment Inc.
 + * Copyright 2007 Sony Corp.
@@ -122,562 +100,401 @@ nc.,
 + * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 + */
 +
-+#include <linux/cdrom.h>
-+#include <linux/highmem.h>
++#include <linux/dma-mapping.h>
 +#include <linux/interrupt.h>
-+#include <linux/kthread.h>
++#include <linux/miscdevice.h>
++#include <linux/uaccess.h>
 +
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_host.h>
-+
-+#include <asm/lv1call.h>
 +#include <asm/ps3stor.h>
 +
 +
-+#define DEVICE_NAME			"ps3rom"
++#define DEVICE_NAME		"ps3flash"
 +
-+#define BOUNCE_SIZE			(64*1024)
-+
-+#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE / CD_FRAMESIZE)
-+
-+#define LV1_STORAGE_SEND_ATAPI_COMMAND	(1)
++#define FLASH_BLOCK_SIZE	(256*1024)
 +
 +
-+struct ps3rom_private {
-+	struct ps3_storage_device *dev;
-+	struct scsi_cmnd *cmd;
++struct ps3flash_private {
++	struct mutex mutex;	/* Bounce buffer mutex */
 +};
-+#define ps3rom_priv(dev)	((dev)->sbd.core.driver_data)
++#define ps3flash_priv(dev)	((dev)->sbd.core.driver_data)
 +
-+struct lv1_atapi_cmnd_block {
-+	u8	pkt[32];	/* packet command block           */
-+	u32	pktlen;		/* should be 12 for ATAPI 8020    */
-+	u32	blocks;
-+	u32	block_size;
-+	u32	proto;		/* transfer mode                  */
-+	u32	in_out;		/* transfer direction             */
-+	u64	buffer;		/* parameter except command block */
-+	u32	arglen;		/* length above                   */
-+};
++static struct ps3_storage_device *ps3flash_dev;
 +
-+enum lv1_atapi_proto {
-+	NON_DATA_PROTO     =3D 0,
-+	PIO_DATA_IN_PROTO  =3D 1,
-+	PIO_DATA_OUT_PROTO =3D 2,
-+	DMA_PROTO =3D 3
-+};
-+
-+enum lv1_atapi_in_out {
-+	DIR_WRITE =3D 0, /* memory -> device */
-+	DIR_READ =3D 1 /* device -> memory */
-+};
-+
-+
-+static int ps3rom_slave_configure(struct scsi_device *scsi_dev)
++static ssize_t ps3flash_read_write_sectors(struct ps3_storage_device *=
+dev,
++					   u64 lpar, u64 start_sector,
++					   u64 sectors, int write)
 +{
-+	struct ps3rom_private *priv;
-+	struct ps3_storage_device *dev;
-+
-+	priv =3D (struct ps3rom_private *)scsi_dev->host->hostdata;
-+	dev =3D priv->dev;
-+	dev_dbg(&dev->sbd.core, "%s:%u: id %u, lun %u, channel %u\n", __func_=
-_,
-+		__LINE__, scsi_dev->id, scsi_dev->lun, scsi_dev->channel);
-+
-+	/*
-+	 * ATAPI SFF8020 devices use MODE_SENSE_10,
-+	 * so we can prohibit MODE_SENSE_6
-+	 */
-+	scsi_dev->use_10_for_ms =3D 1;
-+
-+	return 0;
++	const char *op =3D write ? "write" : "read";
++	u64 res =3D ps3stor_read_write_sectors(dev, lpar, start_sector, secto=
+rs,
++					     write);
++	if (res) {
++		dev_err(&dev->sbd.core, "%s:%u: %s failed 0x%lx\n", __func__,
++			__LINE__, op, res);
++		return -EIO;
++	}
++	return sectors;
 +}
 +
-+/*
-+ * copy data from device into scatter/gather buffer
-+ */
-+static int fill_from_dev_buffer(struct scsi_cmnd *cmd, const void *buf=
-)
++static ssize_t ps3flash_read_sectors(struct ps3_storage_device *dev,
++				     u64 start_sector, u64 sectors,
++				     unsigned int sector_offset)
 +{
-+	int k, req_len, act_len, len, active;
-+	void *kaddr;
-+	struct scatterlist *sgpnt;
-+	unsigned int buflen;
++	u64 max_sectors, lpar;
 +
-+	buflen =3D cmd->request_bufflen;
-+	if (!buflen)
++	max_sectors =3D dev->bounce_size / dev->blk_size;
++	if (sectors > max_sectors) {
++		dev_dbg(&dev->sbd.core, "%s:%u Limiting sectors to %lu\n",
++			__func__, __LINE__, max_sectors);
++		sectors =3D max_sectors;
++	}
++
++	lpar =3D dev->bounce_lpar + sector_offset * dev->blk_size;
++	return ps3flash_read_write_sectors(dev, lpar, start_sector, sectors,
++					   0);
++}
++
++static ssize_t ps3flash_write_chunk(struct ps3_storage_device *dev,
++				    u64 start_sector)
++{
++       u64 sectors =3D dev->bounce_size / dev->blk_size;
++       return ps3flash_read_write_sectors(dev, dev->bounce_lpar, start=
+_sector,
++					  sectors, 1);
++}
++
++static loff_t ps3flash_llseek(struct file *file, loff_t offset, int or=
+igin)
++{
++	struct ps3_storage_device *dev =3D ps3flash_dev;
++	u64 size =3D dev->regions[dev->region_idx].size*dev->blk_size;
++
++	switch (origin) {
++	case 1:
++		offset +=3D file->f_pos;
++		break;
++	case 2:
++		offset +=3D size;
++		break;
++	}
++	if (offset < 0)
++		return -EINVAL;
++
++	file->f_pos =3D offset;
++	return file->f_pos;
++}
++
++static ssize_t ps3flash_read(struct file *file, char __user *buf, size=
+_t count,
++			     loff_t *pos)
++{
++	struct ps3_storage_device *dev =3D ps3flash_dev;
++	struct ps3flash_private *priv =3D ps3flash_priv(dev);
++	u64 size, start_sector, end_sector, offset;
++	ssize_t sectors_read;
++	size_t remaining, n;
++
++	dev_dbg(&dev->sbd.core,
++		"%s:%u: Reading %zu bytes at position %lld to user 0x%p\n",
++		__func__, __LINE__, count, *pos, buf);
++
++	size =3D dev->regions[dev->region_idx].size*dev->blk_size;
++	if (*pos >=3D size || !count)
 +		return 0;
 +
-+	if (!cmd->request_buffer)
-+		return -1;
-+
-+	sgpnt =3D cmd->request_buffer;
-+	active =3D 1;
-+	for (k =3D 0, req_len =3D 0, act_len =3D 0; k < cmd->use_sg; ++k, ++s=
-gpnt) {
-+		if (active) {
-+			kaddr =3D kmap_atomic(sgpnt->page, KM_USER0);
-+			if (!kaddr)
-+				return -1;
-+			len =3D sgpnt->length;
-+			if ((req_len + len) > buflen) {
-+				active =3D 0;
-+				len =3D buflen - req_len;
-+			}
-+			memcpy(kaddr + sgpnt->offset, buf + req_len, len);
-+			kunmap_atomic(kaddr, KM_USER0);
-+			act_len +=3D len;
-+		}
-+		req_len +=3D sgpnt->length;
-+	}
-+	cmd->resid =3D req_len - act_len;
-+	return 0;
-+}
-+
-+/*
-+ * copy data from scatter/gather into device's buffer
-+ */
-+static int fetch_to_dev_buffer(struct scsi_cmnd *cmd, void *buf)
-+{
-+	int k, req_len, len, fin;
-+	void *kaddr;
-+	struct scatterlist *sgpnt;
-+	unsigned int buflen;
-+
-+	buflen =3D cmd->request_bufflen;
-+	if (!buflen)
-+		return 0;
-+
-+	if (!cmd->request_buffer)
-+		return -1;
-+
-+	sgpnt =3D cmd->request_buffer;
-+	for (k =3D 0, req_len =3D 0, fin =3D 0; k < cmd->use_sg; ++k, ++sgpnt=
-) {
-+		kaddr =3D kmap_atomic(sgpnt->page, KM_USER0);
-+		if (!kaddr)
-+			return -1;
-+		len =3D sgpnt->length;
-+		if ((req_len + len) > buflen) {
-+			len =3D buflen - req_len;
-+			fin =3D 1;
-+		}
-+		memcpy(buf + req_len, kaddr + sgpnt->offset, len);
-+		kunmap_atomic(kaddr, KM_USER0);
-+		if (fin)
-+			return req_len + len;
-+		req_len +=3D sgpnt->length;
-+	}
-+	return req_len;
-+}
-+
-+static int ps3rom_atapi_request(struct ps3_storage_device *dev,
-+				struct scsi_cmnd *cmd)
-+{
-+	struct lv1_atapi_cmnd_block atapi_cmnd;
-+	unsigned char opcode =3D cmd->cmnd[0];
-+	int res;
-+	u64 lpar;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u: send ATAPI command 0x%02x\n", __func_=
-_,
-+		__LINE__, opcode);
-+
-+	memset(&atapi_cmnd, 0, sizeof(struct lv1_atapi_cmnd_block));
-+	memcpy(&atapi_cmnd.pkt, cmd->cmnd, 12);
-+	atapi_cmnd.pktlen =3D 12;
-+	atapi_cmnd.block_size =3D 1; /* transfer size is block_size * blocks =
-*/
-+	atapi_cmnd.blocks =3D atapi_cmnd.arglen =3D cmd->request_bufflen;
-+	atapi_cmnd.buffer =3D dev->bounce_lpar;
-+
-+	switch (cmd->sc_data_direction) {
-+	case DMA_FROM_DEVICE:
-+		if (cmd->request_bufflen >=3D CD_FRAMESIZE)
-+			atapi_cmnd.proto =3D DMA_PROTO;
-+		else
-+			atapi_cmnd.proto =3D PIO_DATA_IN_PROTO;
-+		atapi_cmnd.in_out =3D DIR_READ;
-+		break;
-+
-+	case DMA_TO_DEVICE:
-+		if (cmd->request_bufflen >=3D CD_FRAMESIZE)
-+			atapi_cmnd.proto =3D DMA_PROTO;
-+		else
-+			atapi_cmnd.proto =3D PIO_DATA_OUT_PROTO;
-+		atapi_cmnd.in_out =3D DIR_WRITE;
-+		res =3D fetch_to_dev_buffer(cmd, dev->bounce_buf);
-+		if (res < 0)
-+			return DID_ERROR << 16;
-+		break;
-+
-+	default:
-+		atapi_cmnd.proto =3D NON_DATA_PROTO;
-+		break;
-+	}
-+
-+	lpar =3D ps3_mm_phys_to_lpar(__pa(&atapi_cmnd));
-+	res =3D lv1_storage_send_device_command(dev->sbd.dev_id,
-+					      LV1_STORAGE_SEND_ATAPI_COMMAND,
-+					      lpar, sizeof(atapi_cmnd),
-+					      atapi_cmnd.buffer,
-+					      atapi_cmnd.arglen, &dev->tag);
-+	if (res =3D=3D LV1_DENIED_BY_POLICY) {
++	if (*pos+count > size) {
 +		dev_dbg(&dev->sbd.core,
-+			"%s:%u: ATAPI command 0x%02x denied by policy\n",
-+			__func__, __LINE__, opcode);
-+		return DID_ERROR << 16;
++			"%s:%u Truncating count from %zu to %llu\n", __func__,
++			__LINE__, count, size - *pos);
++		count =3D size - *pos;
 +	}
 +
-+	if (res) {
-+		dev_err(&dev->sbd.core,
-+			"%s:%u: ATAPI command 0x%02x failed %d\n", __func__,
-+			__LINE__, opcode, res);
-+		return DID_ERROR << 16;
++	start_sector =3D do_div_llr(*pos, dev->blk_size, &offset);
++	end_sector =3D DIV_ROUND_UP(*pos+count, dev->blk_size);
++
++	remaining =3D count;
++	do {
++		mutex_lock(&priv->mutex);
++
++		sectors_read =3D ps3flash_read_sectors(dev, start_sector,
++						     end_sector-start_sector,
++						     0);
++		if (sectors_read < 0) {
++			mutex_unlock(&priv->mutex);
++			return sectors_read;
++		}
++
++		n =3D min(remaining, sectors_read*dev->blk_size-offset);
++		dev_dbg(&dev->sbd.core,
++			"%s:%u: copy %lu bytes from 0x%p to user 0x%p\n",
++			__func__, __LINE__, n, dev->bounce_buf+offset, buf);
++		if (copy_to_user(buf, dev->bounce_buf+offset, n)) {
++			mutex_unlock(&priv->mutex);
++			return -EFAULT;
++		}
++
++		mutex_unlock(&priv->mutex);
++
++		*pos +=3D n;
++		buf +=3D n;
++		remaining -=3D n;
++		start_sector +=3D sectors_read;
++		offset =3D 0;
++	} while (remaining > 0);
++
++	return count;
++}
++
++static ssize_t ps3flash_write(struct file *file, const char __user *bu=
+f,
++			      size_t count, loff_t *pos)
++{
++	struct ps3_storage_device *dev =3D ps3flash_dev;
++	struct ps3flash_private *priv =3D ps3flash_priv(dev);
++	u64 size, chunk_sectors, start_write_sector, end_write_sector,
++	    end_read_sector, start_read_sector, head, tail, offset;
++	ssize_t res;
++	size_t remaining, n;
++	unsigned int sec_off;
++
++	dev_dbg(&dev->sbd.core,
++		"%s:%u: Writing %zu bytes at position %lld from user 0x%p\n",
++		__func__, __LINE__, count, *pos, buf);
++
++	size =3D dev->regions[dev->region_idx].size*dev->blk_size;
++	if (*pos >=3D size || !count)
++		return 0;
++
++	if (*pos+count > size) {
++		dev_dbg(&dev->sbd.core,
++			"%s:%u Truncating count from %zu to %llu\n", __func__,
++			__LINE__, count, size - *pos);
++		count =3D size - *pos;
 +	}
 +
-+	return 0;
-+}
++	chunk_sectors =3D dev->bounce_size / dev->blk_size;
 +
-+static inline unsigned int srb6_lba(const struct scsi_cmnd *cmd)
-+{
-+	/* LUN is always zero */
-+	return cmd->cmnd[1] << 16 | cmd->cmnd[2] << 8 | cmd->cmnd[3];
-+}
++	start_write_sector =3D do_div_llr(*pos, dev->bounce_size, &offset) *
++			     chunk_sectors;
++	end_write_sector =3D DIV_ROUND_UP(*pos+count, dev->bounce_size) *
++			   chunk_sectors;
 +
-+static inline unsigned int srb6_len(const struct scsi_cmnd *cmd)
-+{
-+	return cmd->cmnd[4];
-+}
++	end_read_sector =3D DIV_ROUND_UP(*pos, dev->blk_size);
++	start_read_sector =3D (*pos+count) / dev->blk_size;
 +
-+static inline unsigned int srb10_lba(const struct scsi_cmnd *cmd)
-+{
-+	return cmd->cmnd[2] << 24 | cmd->cmnd[3] << 16 | cmd->cmnd[4] << 8 |
-+	       cmd->cmnd[5];
-+}
-+
-+static inline unsigned int srb10_len(const struct scsi_cmnd *cmd)
-+{
-+	return cmd->cmnd[7] << 8 | cmd->cmnd[8];
-+}
-+
-+static int ps3rom_read_request(struct ps3_storage_device *dev,
-+			       struct scsi_cmnd *cmd, u32 start_sector,
-+			       u32 sectors)
-+{
-+	int res;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u: read %u sectors starting at %u\n",
-+		__func__, __LINE__, sectors, start_sector);
-+
-+	res =3D lv1_storage_read(dev->sbd.dev_id,
-+			       dev->regions[dev->region_idx].id, start_sector,
-+			       sectors, 0, dev->bounce_lpar, &dev->tag);
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: read failed %d\n", __func__,
-+			__LINE__, res);
-+		return DID_ERROR << 16;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ps3rom_write_request(struct ps3_storage_device *dev,
-+				struct scsi_cmnd *cmd, u32 start_sector,
-+				u32 sectors)
-+{
-+	int res;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u: write %u sectors starting at %u\n",
-+		__func__, __LINE__, sectors, start_sector);
-+
-+	res =3D fetch_to_dev_buffer(cmd, dev->bounce_buf);
-+	if (res < 0)
-+		return DID_ERROR << 16;
-+
-+	res =3D lv1_storage_write(dev->sbd.dev_id,
-+				dev->regions[dev->region_idx].id, start_sector,
-+				sectors, 0, dev->bounce_lpar, &dev->tag);
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: write failed %d\n", __func__,
-+			__LINE__, res);
-+		return DID_ERROR << 16;
-+	}
-+
-+	return 0;
-+}
-+
-+static int ps3rom_queuecommand(struct scsi_cmnd *cmd,
-+			       void (*done)(struct scsi_cmnd *))
-+{
-+	struct ps3rom_private *priv;
-+	struct ps3_storage_device *dev;
-+	unsigned char opcode;
-+	int res;
-+
-+#ifdef DEBUG
-+	scsi_print_command(cmd);
-+#endif
-+
-+	priv =3D (struct ps3rom_private *)cmd->device->host->hostdata;
-+	dev =3D priv->dev;
-+	priv->cmd =3D cmd;
-+	cmd->scsi_done =3D done;
-+
-+	opcode =3D cmd->cmnd[0];
 +	/*
-+	 * While we can submit READ/WRITE SCSI commands as ATAPI commands,
-+	 * it's recommended to use lv1_storage_{read,write}() instead
-+	 */
-+	switch (opcode) {
-+	case READ_6:
-+		res =3D ps3rom_read_request(dev, cmd, srb6_lba(cmd),
-+					  srb6_len(cmd));
-+		break;
-+
-+	case READ_10:
-+		res =3D ps3rom_read_request(dev, cmd, srb10_lba(cmd),
-+					  srb10_len(cmd));
-+		break;
-+
-+	case WRITE_6:
-+		res =3D ps3rom_write_request(dev, cmd, srb6_lba(cmd),
-+					   srb6_len(cmd));
-+		break;
-+
-+	case WRITE_10:
-+		res =3D ps3rom_write_request(dev, cmd, srb10_lba(cmd),
-+					   srb10_len(cmd));
-+		break;
-+
-+	default:
-+		res =3D ps3rom_atapi_request(dev, cmd);
-+		break;
-+	}
-+
-+	if (res) {
-+		memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-+		cmd->result =3D res;
-+		cmd->sense_buffer[0] =3D 0x70;
-+		cmd->sense_buffer[2] =3D ILLEGAL_REQUEST;
-+		priv->cmd =3D NULL;
-+		cmd->scsi_done(cmd);
-+	}
-+
-+	return 0;
-+}
-+
-+static int decode_lv1_status(u64 status, unsigned char *sense_key,
-+			     unsigned char *asc, unsigned char *ascq)
-+{
-+	if (((status >> 24) & 0xff) !=3D SAM_STAT_CHECK_CONDITION)
-+		return -1;
-+
-+	*sense_key =3D (status >> 16) & 0xff;
-+	*asc       =3D (status >>  8) & 0xff;
-+	*ascq      =3D  status        & 0xff;
-+	return 0;
-+}
-+
-+static irqreturn_t ps3rom_interrupt(int irq, void *data)
-+{
-+	struct ps3_storage_device *dev =3D data;
-+	struct Scsi_Host *host;
-+	struct ps3rom_private *priv;
-+	struct scsi_cmnd *cmd;
-+	int res;
-+	u64 tag, status;
-+	unsigned char sense_key, asc, ascq;
-+
-+	res =3D lv1_storage_get_async_status(dev->sbd.dev_id, &tag, &status);
-+	/*
-+	 * status =3D -1 may mean that ATAPI transport completed OK, but
-+	 * ATAPI command itself resulted CHECK CONDITION
-+	 * so, upper layer should issue REQUEST_SENSE to check the sense data
++	 * As we have to write in 256 KiB chunks, while we can read in blk_si=
+ze
++	 * (usually 512 bytes) chunks, we perform the following steps:
++	 *   1. Read from start_write_sector to end_read_sector ("head")
++	 *   2. Read from start_read_sector to end_write_sector ("tail")
++	 *   3. Copy data to buffer
++	 *   4. Write from start_write_sector to end_write_sector
++	 * All of this is complicated by using only one 256 KiB bounce buffer=
+=2E
 +	 */
 +
-+	if (tag !=3D dev->tag)
-+		dev_err(&dev->sbd.core,
-+			"%s:%u: tag mismatch, got %lx, expected %lx\n",
-+			__func__, __LINE__, tag, dev->tag);
++	head =3D end_read_sector-start_write_sector;
++	tail =3D end_write_sector-start_read_sector;
 +
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: res=3D%d status=3D0x%lx\n",
-+			__func__, __LINE__, res, status);
-+		return IRQ_HANDLED;
-+	}
++	remaining =3D count;
++	do {
++		mutex_lock(&priv->mutex);
 +
-+	host =3D ps3rom_priv(dev);
-+	priv =3D (struct ps3rom_private *)host->hostdata;
-+	cmd =3D priv->cmd;
-+
-+	if (!status) {
-+		/* OK, completed */
-+		if (cmd->sc_data_direction =3D=3D DMA_FROM_DEVICE) {
-+			res =3D fill_from_dev_buffer(cmd, dev->bounce_buf);
-+			if (res) {
-+				cmd->result =3D DID_ERROR << 16;
-+				goto done;
++		if (end_read_sector >=3D start_read_sector) {
++			/* Merge head and tail */
++			dev_dbg(&dev->sbd.core,
++				"Merged head and tail: %lu sectors at %lu\n",
++				chunk_sectors, start_write_sector);
++			res =3D ps3flash_read_sectors(dev, start_write_sector,
++						    chunk_sectors, 0);
++			if (res < 0)
++				goto fail;
++		} else {
++			if (head) {
++				/* Read head */
++				dev_dbg(&dev->sbd.core,
++					"head: %lu sectors at %lu\n", head,
++					start_write_sector);
++				res =3D ps3flash_read_sectors(dev,
++							    start_write_sector,
++							    head, 0);
++				if (res < 0)
++					goto fail;
++			}
++			if (start_read_sector <
++			    start_write_sector+chunk_sectors) {
++				/* Read tail */
++				dev_dbg(&dev->sbd.core,
++					"tail: %lu sectors at %lu\n", tail,
++					start_read_sector);
++				sec_off =3D start_read_sector-start_write_sector;
++				res =3D ps3flash_read_sectors(dev,
++							    start_read_sector,
++							    tail, sec_off);
++				if (res < 0)
++					goto fail;
 +			}
 +		}
-+		cmd->result =3D DID_OK << 16;
-+		goto done;
-+	}
 +
-+	if (cmd->cmnd[0] =3D=3D REQUEST_SENSE) {
-+		/* SCSI spec says request sense should never get error */
-+		dev_err(&dev->sbd.core, "%s:%u: end error without autosense\n",
-+			__func__, __LINE__);
-+		cmd->result =3D DID_ERROR << 16 | SAM_STAT_CHECK_CONDITION;
-+		goto done;
-+	}
++		n =3D min(remaining, dev->bounce_size-offset);
++		dev_dbg(&dev->sbd.core,
++			"%s:%u: copy %lu bytes from user 0x%p to 0x%p\n",
++			__func__, __LINE__, n, buf, dev->bounce_buf+offset);
++		if (copy_from_user(dev->bounce_buf+offset, buf, n)) {
++			res =3D -EFAULT;
++			goto fail;
++		}
 +
-+	if (decode_lv1_status(status, &sense_key, &asc, &ascq)) {
-+		cmd->result =3D DID_ERROR << 16;
-+		goto done;
-+	}
++		res =3D ps3flash_write_chunk(dev, start_write_sector);
++		if (res < 0)
++			goto fail;
 +
-+	cmd->sense_buffer[0]  =3D 0x70;
-+	cmd->sense_buffer[2]  =3D sense_key;
-+	cmd->sense_buffer[7]  =3D 16 - 6;
-+	cmd->sense_buffer[12] =3D asc;
-+	cmd->sense_buffer[13] =3D ascq;
-+	cmd->result =3D SAM_STAT_CHECK_CONDITION;
++		mutex_unlock(&priv->mutex);
 +
-+done:
-+	priv->cmd =3D NULL;
-+	cmd->scsi_done(cmd);
-+	return IRQ_HANDLED;
++		*pos +=3D n;
++		buf +=3D n;
++		remaining -=3D n;
++		start_write_sector +=3D chunk_sectors;
++		head =3D 0;
++		offset =3D 0;
++	} while (remaining > 0);
++
++	return count;
++
++fail:
++	mutex_unlock(&priv->mutex);
++	return res;
 +}
 +
-+static struct scsi_host_template ps3rom_host_template =3D {
-+	.name =3D			DEVICE_NAME,
-+	.slave_configure =3D	ps3rom_slave_configure,
-+	.queuecommand =3D		ps3rom_queuecommand,
-+	.can_queue =3D		1,
-+	.this_id =3D		7,
-+	.sg_tablesize =3D		SG_ALL,
-+	.cmd_per_lun =3D		1,
-+	.emulated =3D             1,		/* only sg driver uses this */
-+	.max_sectors =3D		PS3ROM_MAX_SECTORS,
-+	.use_clustering =3D	ENABLE_CLUSTERING,
-+	.module =3D		THIS_MODULE,
++
++static const struct file_operations ps3flash_fops =3D {
++	.owner	=3D THIS_MODULE,
++	.llseek	=3D ps3flash_llseek,
++	.read	=3D ps3flash_read,
++	.write	=3D ps3flash_write,
 +};
 +
++static struct miscdevice ps3flash_misc =3D {
++	.minor	=3D MISC_DYNAMIC_MINOR,
++	.name	=3D DEVICE_NAME,
++	.fops	=3D &ps3flash_fops,
++};
 +
-+static int __devinit ps3rom_probe(struct ps3_system_bus_device *_dev)
++static int __devinit ps3flash_probe(struct ps3_system_bus_device *_dev=
+)
 +{
 +	struct ps3_storage_device *dev =3D to_ps3_storage_device(&_dev->core)=
 ;
++	struct ps3flash_private *priv;
 +	int error;
-+	struct Scsi_Host *host;
-+	struct ps3rom_private *priv;
++	unsigned long tmp;
 +
-+	if (dev->blk_size !=3D CD_FRAMESIZE) {
++	tmp =3D dev->regions[dev->region_idx].start*dev->blk_size;
++	if (tmp % FLASH_BLOCK_SIZE) {
 +		dev_err(&dev->sbd.core,
-+			"%s:%u: cannot handle block size %lu\n", __func__,
-+			__LINE__, dev->blk_size);
++			"%s:%u region start %lu is not aligned\n", __func__,
++			__LINE__, tmp);
++		return -EINVAL;
++	}
++	tmp =3D dev->regions[dev->region_idx].size*dev->blk_size;
++	if (tmp % FLASH_BLOCK_SIZE) {
++		dev_err(&dev->sbd.core,
++			"%s:%u region size %lu is not aligned\n", __func__,
++			__LINE__, tmp);
 +		return -EINVAL;
 +	}
 +
-+	dev->bounce_size =3D BOUNCE_SIZE;
-+	dev->bounce_buf =3D kmalloc(BOUNCE_SIZE, GFP_DMA);
-+	if (!dev->bounce_buf) {
++	/* use static buffer, kmalloc cannot allocate 256 KiB */
++	if (!ps3flash_bounce_buffer.address)
 +		return -ENOMEM;
++
++	if (ps3flash_dev) {
++		dev_err(&dev->sbd.core,
++			"Only one FLASH device is supported\n");
++		return -EBUSY;
 +	}
++
++	ps3flash_dev =3D dev;
++
++	priv =3D kzalloc(sizeof(*priv), GFP_KERNEL);
++	if (!priv) {
++		error =3D -ENOMEM;
++		goto fail;
++	}
++
++	ps3flash_priv(dev) =3D priv;
++	mutex_init(&priv->mutex);
++
++	dev->bounce_size =3D ps3flash_bounce_buffer.size;
++	dev->bounce_buf =3D ps3flash_bounce_buffer.address;
 +
 +	error =3D ps3stor_setup(dev);
 +	if (error)
-+		goto fail_free_bounce;
++		goto fail_free_priv;
 +
-+	/* override the interrupt handler */
-+	free_irq(dev->irq, dev);
-+	error =3D request_irq(dev->irq, ps3rom_interrupt, IRQF_DISABLED,
-+			    dev->sbd.core.driver->name, dev);
++	ps3flash_misc.parent =3D &dev->sbd.core;
++	error =3D misc_register(&ps3flash_misc);
 +	if (error) {
-+		dev_err(&dev->sbd.core, "%s:%u: request_irq failed %d\n",
++		dev_err(&dev->sbd.core, "%s:%u: misc_register failed %d\n",
 +			__func__, __LINE__, error);
 +		goto fail_teardown;
 +	}
 +
-+	host =3D scsi_host_alloc(&ps3rom_host_template,
-+			       sizeof(struct ps3rom_private));
-+	if (!host) {
-+		dev_err(&dev->sbd.core, "%s:%u: scsi_host_alloc failed\n",
-+			__func__, __LINE__);
-+		goto fail_teardown;
-+	}
-+
-+	priv =3D (struct ps3rom_private *)host->hostdata;
-+	ps3rom_priv(dev) =3D host;
-+	priv->dev =3D dev;
-+
-+	/* One device/LUN per SCSI bus */
-+	host->max_id =3D 1;
-+	host->max_lun =3D 1;
-+
-+	error =3D scsi_add_host(host, &dev->sbd.core);
-+	if (error) {
-+		dev_err(&dev->sbd.core, "%s:%u: scsi_host_alloc failed %d\n",
-+			__func__, __LINE__, error);
-+		error =3D -ENODEV;
-+		goto fail_host_put;
-+	}
-+
-+	scsi_scan_host(host);
++	dev_info(&dev->sbd.core, "%s:%u: registered misc device %d\n",
++		 __func__, __LINE__, ps3flash_misc.minor);
 +	return 0;
 +
-+fail_host_put:
-+	scsi_host_put(host);
 +fail_teardown:
 +	ps3stor_teardown(dev);
-+fail_free_bounce:
-+	kfree(dev->bounce_buf);
++fail_free_priv:
++	kfree(priv);
++fail:
++	ps3flash_dev =3D NULL;
 +	return error;
 +}
 +
-+static int ps3rom_remove(struct ps3_system_bus_device *_dev)
++static int ps3flash_remove(struct ps3_system_bus_device *_dev)
 +{
 +	struct ps3_storage_device *dev =3D to_ps3_storage_device(&_dev->core)=
 ;
-+	struct Scsi_Host *host =3D ps3rom_priv(dev);
 +
-+	scsi_remove_host(host);
++	misc_deregister(&ps3flash_misc);
 +	ps3stor_teardown(dev);
-+	kfree(dev->bounce_buf);
-+	scsi_host_put(host);
++	kfree(ps3flash_priv(dev));
++	ps3flash_dev =3D NULL;
 +	return 0;
 +}
 +
-+static struct ps3_system_bus_driver ps3rom =3D {
-+	.match_id	=3D PS3_MATCH_ID_STOR_ROM,
++
++static struct ps3_system_bus_driver ps3flash =3D {
++	.match_id	=3D PS3_MATCH_ID_STOR_FLASH,
 +	.core.name	=3D DEVICE_NAME,
 +	.core.owner	=3D THIS_MODULE,
-+	.probe		=3D ps3rom_probe,
-+	.remove		=3D ps3rom_remove
++	.probe		=3D ps3flash_probe,
++	.remove		=3D ps3flash_remove,
++	.shutdown	=3D ps3flash_remove,
 +};
 +
 +
-+static int __init ps3rom_init(void)
++static int __init ps3flash_init(void)
 +{
-+	return ps3_system_bus_driver_register(&ps3rom);
++	return ps3_system_bus_driver_register(&ps3flash);
 +}
 +
-+static void __exit ps3rom_exit(void)
++static void __exit ps3flash_exit(void)
 +{
-+	ps3_system_bus_driver_unregister(&ps3rom);
++	ps3_system_bus_driver_unregister(&ps3flash);
 +}
 +
-+module_init(ps3rom_init);
-+module_exit(ps3rom_exit);
++module_init(ps3flash_init);
++module_exit(ps3flash_exit);
 +
 +MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("PS3 ROM Storage Driver");
++MODULE_DESCRIPTION("PS3 FLASH ROM Storage Driver");
 +MODULE_AUTHOR("Sony Corporation");
-+MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_ROM);
++MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_FLASH);
 
 --=20
 With kind regards,
