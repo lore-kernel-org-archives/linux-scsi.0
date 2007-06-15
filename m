@@ -1,143 +1,37 @@
-From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 2/2] mpt fusion: fix for mounted raid volume filesytem that goes read-only
-Date: Fri, 15 Jun 2007 17:27:21 -0600
-Message-ID: <20070615232721.GA12851@lsil.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: RAID1 can't be written after pulling out the secondary hard disk
+Date: Fri, 15 Jun 2007 17:33:43 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D707EECD7@NAMAIL4.ad.lsil.com>
+References: <E564CC29982232499B35D3C15964CE68016EF45B@exchange.clear2pay.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:59481 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:59564 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756016AbXFOXb4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 15 Jun 2007 19:31:56 -0400
-Content-Disposition: inline
+	id S1754983AbXFOXds convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 15 Jun 2007 19:33:48 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <E564CC29982232499B35D3C15964CE68016EF45B@exchange.clear2pay.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, DL-MPTFusionLinux@lsi.com
+To: Lee Webb <lwebb@clear2pay.com.au>, linux-scsi@vger.kernel.org
 
-If there is IO going to the volume while a hidden disk is being torn down,
-there is a case where we would return a DID_NO_CONNECT for IO sent to the
-volume. The end result is the volume goes read-only. This problem is due to the
-fact the firmware mapped target ids saved in per device object is phys_disk_num
-for hidden  raid components, and target_id for the volume. There is a single
-case when both phys_disk_num and target_id are equal, so enters this issue. We
-fix this issue by checking the tflags when the device is torned down,
-insuring the IO being completed is meant for hidden raid component, not the
-volume.  In addition to this fix, there are a couple other cases to address
-hidden raid components. For instance task_abort and device reset are not
-supported by mpt fw for hidden raid components, a bus reset would be required
-or target reset to volume.
+On Thursday, June 14, 2007 8:05 PM, Lee Webb wrote: 
+> 
+> Can I ask which kernel version the fix for this issue was 
+> introduced in?
+> 
+> I have recently installed CentOS5 running a 2.6.18-8.1.4.el5 
+> kernel on a
+> new Dell PowerEdge SC1435 & appear to be having the same issue as that
+> reported by Zhao. I'm trying to track down the fix for it, 
+> but am having
+> trouble.
+> 
 
-Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+The fix was just posted to lsml.  I have already provided ports to both
+Red Hat and Suse.
 
-diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2007-06-15 17:05:12.000000000 -0600
-+++ a/drivers/message/fusion/mptscsih.c	2007-06-15 17:16:48.000000000 -0600
-@@ -447,7 +447,12 @@ mptscsih_issue_sep_command(MPT_ADAPTER *
- 	MPT_FRAME_HDR *mf;
- 	SEPRequest_t 	 *SEPMsg;
- 
--	if (ioc->bus_type == FC)
-+	if (ioc->bus_type != SAS)
-+		return;
-+
-+	/* Not supported for hidden raid components
-+	 */
-+	if (vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT)
- 		return;
- 
- 	if ((mf = mpt_get_msg_frame(ioc->InternalCtx, ioc)) == NULL) {
-@@ -991,14 +996,19 @@ mptscsih_search_running_cmds(MPT_SCSI_HO
- 			mf = (SCSIIORequest_t *)MPT_INDEX_2_MFPTR(hd->ioc, ii);
- 			if (mf == NULL)
- 				continue;
-+			/* If the device is a hidden raid component, then its
-+			 * expected that the mf->function will be RAID_SCSI_IO
-+			 */
-+			if (vdevice->vtarget->tflags &
-+			    MPT_TARGET_FLAGS_RAID_COMPONENT && mf->Function !=
-+			    MPI_FUNCTION_RAID_SCSI_IO_PASSTHROUGH)
-+				continue;
-+
- 			int_to_scsilun(vdevice->lun, &lun);
- 			if ((mf->Bus != vdevice->vtarget->channel) ||
- 			    (mf->TargetID != vdevice->vtarget->id) ||
- 			    memcmp(lun.scsi_lun, mf->LUN, 8))
- 				continue;
--			dsprintk(( "search_running: found (sc=%p, mf = %p) "
--			    "channel %d id %d, lun %d \n", hd->ScsiLookup[ii],
--			    mf, mf->Bus, mf->TargetID, vdevice->lun));
- 
- 			/* Cleanup
- 			 */
-@@ -1008,9 +1018,11 @@ mptscsih_search_running_cmds(MPT_SCSI_HO
- 			if ((unsigned char *)mf != sc->host_scribble)
- 				continue;
- 			scsi_dma_unmap(sc);
--
- 			sc->host_scribble = NULL;
- 			sc->result = DID_NO_CONNECT << 16;
-+			dsprintk(( "search_running: found (sc=%p, mf = %p) "
-+			    "channel %d id %d, lun %d \n", sc, mf,
-+			    vdevice->vtarget->channel, vdevice->vtarget->id, vdevice->lun));
- 			sc->scsi_done(sc);
- 		}
- 	}
-@@ -1756,6 +1768,16 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
- 		goto out;
- 	}
- 
-+	/* Task aborts are not supported for hidden raid components.
-+	 */
-+	if (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
-+		dtmprintk((MYIOC_s_DEBUG_FMT "task abort: hidden raid "
-+		    "component (sc=%p)\n", ioc->name, SCpnt));
-+		SCpnt->result = DID_RESET << 16;
-+		retval = FAILED;
-+		goto out;
-+	}
-+
- 	/* Find this command
- 	 */
- 	if ((scpnt_idx = SCPNT_TO_LOOKUP_IDX(SCpnt)) < 0) {
-@@ -1849,6 +1871,13 @@ mptscsih_dev_reset(struct scsi_cmnd * SC
- 		goto out;
- 	}
- 
-+	/* Target reset to hidden raid component is not supported
-+	 */
-+	if (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT) {
-+		retval = FAILED;
-+		goto out;
-+	}
-+
- 	retval = mptscsih_TMHandler(hd, MPI_SCSITASKMGMT_TASKTYPE_TARGET_RESET,
- 	    vdevice->vtarget->channel, vdevice->vtarget->id, 0, 0,
- 	    mptscsih_get_tm_timeout(ioc));
-@@ -3131,6 +3160,16 @@ mptscsih_synchronize_cache(MPT_SCSI_HOST
- {
- 	INTERNAL_CMD		 iocmd;
- 
-+	/* Ignore hidden raid components, this is handled when the command
-+	 * is sent to the volume
-+	 */
-+	if (vdevice->vtarget->tflags & MPT_TARGET_FLAGS_RAID_COMPONENT)
-+		return;
-+
-+	if (vdevice->vtarget->type != TYPE_DISK || vdevice->vtarget->deleted ||
-+	    !vdevice->configured_lun)
-+		return;
-+
- 	/* Following parameters will not change
- 	 * in this routine.
- 	 */
-@@ -3145,9 +3184,7 @@ mptscsih_synchronize_cache(MPT_SCSI_HOST
- 	iocmd.id = vdevice->vtarget->id;
- 	iocmd.lun = vdevice->lun;
- 
--	if ((vdevice->vtarget->type == TYPE_DISK) &&
--	    (vdevice->configured_lun))
--		mptscsih_do_cmd(hd, &iocmd);
-+	mptscsih_do_cmd(hd, &iocmd);
- }
- 
- EXPORT_SYMBOL(mptscsih_remove);
+Eric Moore
