@@ -1,31 +1,34 @@
-From: Hari Hara Kumar M <hari@xsigo.com>
-Subject: need help with kmap_atomic() behavior
-Date: Sat, 16 Jun 2007 14:52:21 -0700
-Message-ID: <1182030741.26268.59.camel@hmaharaj-ws.xsigo.com>
-References: <20070501180113.20160.77978.sendpatchset@thinktank.campus.ltu.se>
-	 <Pine.LNX.4.64.0705011415070.13459@localhost.localdomain>
-	 <1178044924.4320.29.camel@mulgrave.il.steeleye.com>
-	 <463796B1.9060706@student.ltu.se>
-Reply-To: hari@xsigo.com
+From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
+Subject: rootfs on sda & async scan?
+Date: Sun, 17 Jun 2007 00:42:44 +0200 (CEST)
+Message-ID: <Pine.LNX.4.60.0706170035450.3805@poirot.grange>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757419AbXFPVwc@vger.kernel.org>
-In-Reply-To: <463796B1.9060706@student.ltu.se>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:42016 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1756399AbXFPWmo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 16 Jun 2007 18:42:44 -0400
+Received: from lyakh (helo=localhost)
+	by poirot.grange with local-esmtp (Exim 3.36 #1 (Debian))
+	id 1Hzgyi-0000HE-00
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Jun 2007 00:42:44 +0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello
+Hi
 
-We are mapping struct page ptrs from scattergather list entries using
-kmap_atomic(page_ptr, KM_USER0) to get the virtual address for doing a
-copy to work around some alignment restrictions in our driver.
+This is a basic confusion: if I read kernel config help to SCSI_SCAN_ASYNC 
+correctly "If you build your SCSI drivers into the kernel, then everything         
+will work fine if you say Y here." means I can have async "on" and root on 
+sd* as long as the respective ldd is linked into the kernel. Now, this 
+just didn't work for me under 2.6.22-rc3-... (scsi-misc-2.6) with 
+sym53c8xx_2. I'd expected it would let scan run asynchronously, but wait 
+as long as root on an sd* is requested. Do I understand it wrong or is 
+this a bug somewhere. I also have 2 more ldd's compiled as modules.
 
-If the first entry in the scatterlist has length > 4k (say 11k) and has
-an offset of 1k then, will kmap of the struct page ptr in this
-scattergather entry map all of the relevant pages (3 in this case for
-11k) needed to cover this sg entry?
-
-Thanks in advance.
--Hari
+Thanks
+Guennadi
+---
+Guennadi Liakhovetski
