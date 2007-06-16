@@ -1,36 +1,31 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: scsi_cmnd accessors issues
-Date: Sat, 16 Jun 2007 10:45:33 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0706161042270.5144@poirot.grange>
-References: <466EDFAC.9020104@panasas.com>
+From: Hari Hara Kumar M <hari@xsigo.com>
+Subject: need help with kmap_atomic() behavior
+Date: Sat, 16 Jun 2007 14:52:21 -0700
+Message-ID: <1182030741.26268.59.camel@hmaharaj-ws.xsigo.com>
+References: <20070501180113.20160.77978.sendpatchset@thinktank.campus.ltu.se>
+	 <Pine.LNX.4.64.0705011415070.13459@localhost.localdomain>
+	 <1178044924.4320.29.camel@mulgrave.il.steeleye.com>
+	 <463796B1.9060706@student.ltu.se>
+Reply-To: hari@xsigo.com
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:45472 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751776AbXFPIpg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 16 Jun 2007 04:45:36 -0400
-In-Reply-To: <466EDFAC.9020104@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757419AbXFPVwc@vger.kernel.org>
+In-Reply-To: <463796B1.9060706@student.ltu.se>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Ed Lin <ed.lin@promise.com>
 
-Hi
+Hello
 
-On Tue, 12 Jun 2007, Boaz Harrosh wrote:
+We are mapping struct page ptrs from scattergather list entries using
+kmap_atomic(page_ptr, KM_USER0) to get the virtual address for doing a
+copy to work around some alignment restrictions in our driver.
 
-> I get compilation errors. Attached solution is to add scsi_set_ 
-> accessors to these members. But it would be best to STOP these drivers 
-> from doing that ugly hack of modifying sg_count and bufflen.
-> (CC sign-off-by maintainers of the drivers in question. Files are
-> drivers/scsi/tmscsim.c & drivers/scsi/stex.c )
+If the first entry in the scatterlist has length > 4k (say 11k) and has
+an offset of 1k then, will kmap of the struct page ptr in this
+scattergather entry map all of the relevant pages (3 in this case for
+11k) needed to cover this sg entry?
 
-Thanks for the patch. I think, getting rid of the SavedSGCount field is a 
-bit more complicated (would be better if you had sent the patch inline). 
-I'm currently working on a solution, please, give me some time.
-
-Thanks
-Guennadi
----
-Guennadi Liakhovetski
+Thanks in advance.
+-Hari
