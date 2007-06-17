@@ -1,157 +1,227 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: [patch 1/5] 53c700 scsi: m68k support for the 53c700 SCSI core
-Date: Sun, 17 Jun 2007 14:47:05 +0200
-Message-ID: <20070617125029.864159199@mail.of.borg>
+Subject: [patch 3/5] 53c700 scsi: m68k MVME16x NCR53C710 SCSI
+Date: Sun, 17 Jun 2007 14:47:07 +0200
+Message-ID: <20070617125030.281210045@mail.of.borg>
 References: <20070617124704.800461751@mail.of.borg>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759593AbXFQMvq@vger.kernel.org>
-Content-Disposition: inline; filename=m68k-53c700-core.diff
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hoefnix.telenet-ops.be ([195.130.132.54]:36102 "EHLO
+	hoefnix.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754738AbXFQMvy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jun 2007 08:51:54 -0400
+Received: from hoboe1bl1.telenet-ops.be (hoboe1bl1.telenet-ops.be [195.130.137.72])
+	by hoefnix.telenet-ops.be (Postfix) with ESMTP id 9042F9DD7D
+	for <linux-scsi@vger.kernel.org>; Sun, 17 Jun 2007 14:51:53 +0200 (CEST)
+Content-Disposition: inline; filename=m68k-53c700-mvme16x.diff
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
 Cc: Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, Kars de Jong <jongk@linux-m68k.org>, Richard Hirst <rhirst@levanta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 From: Kars de Jong <jongk@linux-m68k.org>
 
-Add m68k support to the 53c700 SCSI driver
+New driver for the MVME16x NCR53C710 SCSI controller, using the 53c700 SCSI
+core.
 
 Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
 ---
- drivers/scsi/53c700.c |   20 ++++++++++----------
- drivers/scsi/53c700.h |    5 +++++
- drivers/scsi/Kconfig  |   13 +++++--------
- 3 files changed, 20 insertions(+), 18 deletions(-)
+ drivers/scsi/Kconfig        |    6 -
+ drivers/scsi/Makefile       |    1 
+ drivers/scsi/mvme16x_scsi.c |  158 ++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 162 insertions(+), 3 deletions(-)
 
---- a/drivers/scsi/53c700.c
-+++ b/drivers/scsi/53c700.c
-@@ -653,7 +653,6 @@ NCR_700_chip_setup(struct Scsi_Host *hos
- {
- 	struct NCR_700_Host_Parameters *hostdata = 
- 		(struct NCR_700_Host_Parameters *)host->hostdata[0];
--	__u32 dcntl_extra = 0;
- 	__u8 min_period;
- 	__u8 min_xferp = (hostdata->chip710 ? NCR_710_MIN_XFERP : NCR_700_MIN_XFERP);
- 
-@@ -678,13 +677,14 @@ NCR_700_chip_setup(struct Scsi_Host *hos
- 			        burst_disable = BURST_DISABLE;
- 			        break;
- 		}
--		dcntl_extra = COMPAT_700_MODE;
-+		hostdata->dcntl_extra |= COMPAT_700_MODE;
- 
--		NCR_700_writeb(dcntl_extra, host, DCNTL_REG);
-+		NCR_700_writeb(hostdata->dcntl_extra, host, DCNTL_REG);
- 		NCR_700_writeb(burst_length | hostdata->dmode_extra,
- 			       host, DMODE_710_REG);
--		NCR_700_writeb(burst_disable | (hostdata->differential ? 
--						DIFF : 0), host, CTEST7_REG);
-+		NCR_700_writeb(burst_disable | hostdata->ctest7_extra |
-+			       (hostdata->differential ? DIFF : 0),
-+			       host, CTEST7_REG);
- 		NCR_700_writeb(BTB_TIMER_DISABLE, host, CTEST0_REG);
- 		NCR_700_writeb(FULL_ARBITRATION | ENABLE_PARITY | PARITY
- 			       | AUTO_ATN, host, SCNTL0_REG);
-@@ -719,13 +719,13 @@ NCR_700_chip_setup(struct Scsi_Host *hos
- 		 * of spec: sync divider 2, async divider 3 */
- 		DEBUG(("53c700: sync 2 async 3\n"));
- 		NCR_700_writeb(SYNC_DIV_2_0, host, SBCL_REG);
--		NCR_700_writeb(ASYNC_DIV_3_0 | dcntl_extra, host, DCNTL_REG);
-+		NCR_700_writeb(ASYNC_DIV_3_0 | hostdata->dcntl_extra, host, DCNTL_REG);
- 		hostdata->sync_clock = hostdata->clock/2;
- 	} else	if(hostdata->clock > 50  && hostdata->clock <= 75) {
- 		/* sync divider 1.5, async divider 3 */
- 		DEBUG(("53c700: sync 1.5 async 3\n"));
- 		NCR_700_writeb(SYNC_DIV_1_5, host, SBCL_REG);
--		NCR_700_writeb(ASYNC_DIV_3_0 | dcntl_extra, host, DCNTL_REG);
-+		NCR_700_writeb(ASYNC_DIV_3_0 | hostdata->dcntl_extra, host, DCNTL_REG);
- 		hostdata->sync_clock = hostdata->clock*2;
- 		hostdata->sync_clock /= 3;
- 		
-@@ -733,18 +733,18 @@ NCR_700_chip_setup(struct Scsi_Host *hos
- 		/* sync divider 1, async divider 2 */
- 		DEBUG(("53c700: sync 1 async 2\n"));
- 		NCR_700_writeb(SYNC_DIV_1_0, host, SBCL_REG);
--		NCR_700_writeb(ASYNC_DIV_2_0 | dcntl_extra, host, DCNTL_REG);
-+		NCR_700_writeb(ASYNC_DIV_2_0 | hostdata->dcntl_extra, host, DCNTL_REG);
- 		hostdata->sync_clock = hostdata->clock;
- 	} else if(hostdata->clock > 25 && hostdata->clock <=37) {
- 		/* sync divider 1, async divider 1.5 */
- 		DEBUG(("53c700: sync 1 async 1.5\n"));
- 		NCR_700_writeb(SYNC_DIV_1_0, host, SBCL_REG);
--		NCR_700_writeb(ASYNC_DIV_1_5 | dcntl_extra, host, DCNTL_REG);
-+		NCR_700_writeb(ASYNC_DIV_1_5 | hostdata->dcntl_extra, host, DCNTL_REG);
- 		hostdata->sync_clock = hostdata->clock;
- 	} else {
- 		DEBUG(("53c700: sync 1 async 1\n"));
- 		NCR_700_writeb(SYNC_DIV_1_0, host, SBCL_REG);
--		NCR_700_writeb(ASYNC_DIV_1_0 | dcntl_extra, host, DCNTL_REG);
-+		NCR_700_writeb(ASYNC_DIV_1_0 | hostdata->dcntl_extra, host, DCNTL_REG);
- 		/* sync divider 1, async divider 1 */
- 		hostdata->sync_clock = hostdata->clock;
- 	}
---- a/drivers/scsi/53c700.h
-+++ b/drivers/scsi/53c700.h
-@@ -177,6 +177,7 @@ struct NCR_700_command_slot {
- 	__u8	state;
- 	#define NCR_700_FLAG_AUTOSENSE	0x01
- 	__u8	flags;
-+	__u8	pad1[2];	/* Needed for m68k where min alignment is 2 bytes */
- 	int	tag;
- 	__u32	resume_offset;
- 	struct scsi_cmnd *cmnd;
-@@ -196,6 +197,8 @@ struct NCR_700_Host_Parameters {
- 	void __iomem	*base;		/* the base for the port (copied to host) */
- 	struct device	*dev;
- 	__u32	dmode_extra;	/* adjustable bus settings */
-+	__u32	dcntl_extra;	/* adjustable bus settings */
-+	__u32	ctest7_extra;	/* adjustable bus settings */
- 	__u32	differential:1;	/* if we are differential */
- #ifdef CONFIG_53C700_LE_ON_BE
- 	/* This option is for HP only.  Set it if your chip is wired for
-@@ -352,6 +355,7 @@ struct NCR_700_Host_Parameters {
- #define		SEL_TIMEOUT_DISABLE	0x10 /* 710 only */
- #define         DFP                     0x08
- #define         EVP                     0x04
-+#define         CTEST7_TT1              0x02
- #define		DIFF			0x01
- #define CTEST6_REG                      0x1A
- #define	TEMP_REG			0x1C
-@@ -385,6 +389,7 @@ struct NCR_700_Host_Parameters {
- #define		SOFTWARE_RESET		0x01
- #define		COMPAT_700_MODE		0x01
- #define 	SCRPTS_16BITS		0x20
-+#define		EA_710			0x20
- #define		ASYNC_DIV_2_0		0x00
- #define		ASYNC_DIV_1_5		0x40
- #define		ASYNC_DIV_1_0		0x80
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1006,6 +1006,11 @@ config SCSI_STEX
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called stex.
+@@ -1008,7 +1008,7 @@ config SCSI_STEX
  
-+config 53C700_BE_BUS
-+	bool
-+	depends on M68K
-+	default y
-+
+ config 53C700_BE_BUS
+ 	bool
+-	depends on BVME6000_SCSI
++	depends on MVME16x_SCSI || BVME6000_SCSI
+ 	default y
+ 
  config SCSI_SYM53C8XX_2
- 	tristate "SYM53C8XX Version 2 SCSI support"
- 	depends on PCI && SCSI
-@@ -1728,14 +1733,6 @@ config BVME6000_SCSI
- 	  SCSI controller chip.  Almost everyone using one of these boards
- 	  will want to say Y to this question.
+@@ -1716,8 +1716,8 @@ config MVME147_SCSI
+ 	  single-board computer.
  
--config SCSI_NCR53C7xx_FAST
--	bool "allow FAST-SCSI [10MHz]"
--	depends on SCSI_AMIGA7XX || MVME16x_SCSI || BVME6000_SCSI
--	help
--	  This will enable 10MHz FAST-SCSI transfers with your host
--	  adapter. Some systems have problems with that speed, so it's safest
--	  to say N here.
--
- config SUN3_SCSI
- 	tristate "Sun3 NCR5380 SCSI"
- 	depends on SUN3 && SCSI
+ config MVME16x_SCSI
+-	bool "NCR53C710 SCSI driver for MVME16x"
+-	depends on MVME16x && SCSI && BROKEN
++	tristate "NCR53C710 SCSI driver for MVME16x"
++	depends on MVME16x && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	help
+ 	  The Motorola MVME162, 166, 167, 172 and 177 boards use the NCR53C710
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -52,6 +52,7 @@ obj-$(CONFIG_ATARI_SCSI)	+= atari_scsi.o
+ obj-$(CONFIG_MAC_SCSI)		+= mac_scsi.o
+ obj-$(CONFIG_SCSI_MAC_ESP)	+= mac_esp.o	NCR53C9x.o
+ obj-$(CONFIG_SUN3_SCSI)		+= sun3_scsi.o  sun3_scsi_vme.o
++obj-$(CONFIG_MVME16x_SCSI)	+= 53c700.o	mvme16x_scsi.o
+ obj-$(CONFIG_BVME6000_SCSI)	+= 53c700.o	bvme6000_scsi.o
+ obj-$(CONFIG_SCSI_SIM710)	+= 53c700.o	sim710.o
+ obj-$(CONFIG_SCSI_ADVANSYS)	+= advansys.o
+--- /dev/null
++++ b/drivers/scsi/mvme16x_scsi.c
+@@ -0,0 +1,158 @@
++/*
++ * Detection routine for the NCR53c710 based MVME16x SCSI Controllers for Linux.
++ *
++ * Based on work by Alan Hourihane
++ *
++ * Rewritten to use 53c700.c by Kars de Jong <jongk@linux-m68k.org>
++ */
++
++#include <linux/module.h>
++#include <linux/blkdev.h>
++#include <linux/device.h>
++#include <linux/platform_device.h>
++#include <linux/init.h>
++#include <linux/interrupt.h>
++#include <asm/mvme16xhw.h>
++#include <scsi/scsi_host.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_transport.h>
++#include <scsi/scsi_transport_spi.h>
++
++#include "53c700.h"
++
++MODULE_AUTHOR("Kars de Jong <jongk@linux-m68k.org>");
++MODULE_DESCRIPTION("MVME16x NCR53C710 driver");
++MODULE_LICENSE("GPL");
++
++static struct scsi_host_template mvme16x_scsi_driver_template = {
++	.name			= "MVME16x NCR53c710 SCSI",
++	.proc_name		= "MVME16x",
++	.this_id		= 7,
++	.module			= THIS_MODULE,
++};
++
++static struct platform_device *mvme16x_scsi_device;
++
++static __devinit int
++mvme16x_probe(struct device *dev)
++{
++	struct Scsi_Host * host = NULL;
++	struct NCR_700_Host_Parameters *hostdata;
++
++	if (!MACH_IS_MVME16x)
++		goto out;
++
++	if (mvme16x_config & MVME16x_CONFIG_NO_SCSICHIP) {
++		printk(KERN_INFO "mvme16x-scsi: detection disabled, "
++				 "SCSI chip not present\n");
++		goto out;
++	}
++
++	hostdata = kmalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
++	if (hostdata == NULL) {
++		printk(KERN_ERR "mvme16x-scsi: "
++				"Failed to allocate host data\n");
++		goto out;
++	}
++	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
++
++	/* Fill in the required pieces of hostdata */
++	hostdata->base = (void __iomem *)0xfff47000UL;
++	hostdata->clock = 50;	/* XXX - depends on the CPU clock! */
++	hostdata->chip710 = 1;
++	hostdata->dmode_extra = DMODE_FC2;
++	hostdata->dcntl_extra = EA_710;
++	hostdata->ctest7_extra = CTEST7_TT1;
++
++	/* and register the chip */
++	host = NCR_700_detect(&mvme16x_scsi_driver_template, hostdata, dev);
++	if (!host) {
++		printk(KERN_ERR "mvme16x-scsi: No host detected; "
++				"board configuration problem?\n");
++		goto out_free;
++	}
++	host->this_id = 7;
++	host->base = 0xfff47000UL;
++	host->irq = MVME16x_IRQ_SCSI;
++	if (request_irq(host->irq, NCR_700_intr, 0, "mvme16x-scsi", host)) {
++		printk(KERN_ERR "mvme16x-scsi: request_irq failed\n");
++		goto out_put_host;
++	}
++
++	/* Enable scsi chip ints */
++	{
++		volatile unsigned long v;
++
++		/* Enable scsi interrupts at level 4 in PCCchip2 */
++		v = in_be32(0xfff4202c);
++		v = (v & ~0xff) | 0x10 | 4;
++		out_be32(0xfff4202c, v);
++	}
++
++	scsi_scan_host(host);
++
++	return 0;
++
++ out_put_host:
++	scsi_host_put(host);
++ out_free:
++	kfree(hostdata);
++ out:
++	return -ENODEV;
++}
++
++static __devexit int
++mvme16x_device_remove(struct device *dev)
++{
++	struct Scsi_Host *host = dev_to_shost(dev);
++	struct NCR_700_Host_Parameters *hostdata = shost_priv(host);
++
++	/* Disable scsi chip ints */
++	{
++		volatile unsigned long v;
++
++		v = in_be32(0xfff4202c);
++		v &= ~0x10;
++		out_be32(0xfff4202c, v);
++	}
++	scsi_remove_host(host);
++	NCR_700_release(host);
++	kfree(hostdata);
++	free_irq(host->irq, host);
++
++	return 0;
++}
++
++static struct device_driver mvme16x_scsi_driver = {
++	.name	= "mvme16x-scsi",
++	.bus	= &platform_bus_type,
++	.probe	= mvme16x_probe,
++	.remove	= __devexit_p(mvme16x_device_remove),
++};
++
++static int __init mvme16x_scsi_init(void)
++{
++	int err;
++
++	err = driver_register(&mvme16x_scsi_driver);
++	if (err)
++		return err;
++
++	mvme16x_scsi_device = platform_device_register_simple("mvme16x-scsi",
++							      -1, NULL, 0);
++	if (IS_ERR(mvme16x_scsi_device)) {
++		driver_unregister(&mvme16x_scsi_driver);
++		return PTR_ERR(mvme16x_scsi_device);
++	}
++
++	return 0;
++}
++
++static void __exit mvme16x_scsi_exit(void)
++{
++	platform_device_unregister(mvme16x_scsi_device);
++	driver_unregister(&mvme16x_scsi_driver);
++}
++
++module_init(mvme16x_scsi_init);
++module_exit(mvme16x_scsi_exit);
 
 -- 
 Gr{oetje,eeting}s,
@@ -164,3 +234,4 @@ Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 In personal conversations with technical people, I call myself a hacker. But
 when I'm talking to journalists I just say "programmer" or something like that.
 							    -- Linus Torvalds
+
