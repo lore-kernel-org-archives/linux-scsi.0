@@ -1,8 +1,7 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH 4/5] ieee1394: sbp2: change some module parameters from int to
-	bool
-Date: Sun, 17 Jun 2007 23:54:52 +0200 (CEST)
-Message-ID: <tkrat.9092f99d37d86bbe@s5r6.in-berlin.de>
+Subject: [PATCH 5/5] firewire: fw-sbp2: implement nonexclusive login
+Date: Sun, 17 Jun 2007 23:55:41 +0200 (CEST)
+Message-ID: <tkrat.4c361607a17422f0@s5r6.in-berlin.de>
 References: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,67 +22,66 @@ To: linux1394-devel@lists.sourceforge.net
 Cc: =?iso-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is upwards compatible, except that integer values other than 0 or 1
-are no longer accepted.  But values like "Y", "N", "no", "nnoooh!" work
-now.
-
-Also, improve a comment on the serialize_io parameter and make the
-ORB_SET_EXCLUSIVE macro ultra-safe.
-
 Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/ieee1394/sbp2.c |   15 +++++++--------
- drivers/ieee1394/sbp2.h |    2 +-
- 2 files changed, 8 insertions(+), 9 deletions(-)
+ drivers/firewire/fw-sbp2.c |   22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-Index: linux/drivers/ieee1394/sbp2.c
+Index: linux/drivers/firewire/fw-sbp2.c
 ===================================================================
---- linux.orig/drivers/ieee1394/sbp2.c
-+++ linux/drivers/ieee1394/sbp2.c
-@@ -118,14 +118,13 @@ MODULE_PARM_DESC(max_speed, "Force max s
- 		 "(3 = 800Mb/s, 2 = 400Mb/s, 1 = 200Mb/s, 0 = 100Mb/s)");
+--- linux.orig/drivers/firewire/fw-sbp2.c
++++ linux/drivers/firewire/fw-sbp2.c
+@@ -31,6 +31,7 @@
+ #include <linux/err.h>
+ #include <linux/kernel.h>
+ #include <linux/module.h>
++#include <linux/moduleparam.h>
+ #include <linux/mod_devicetable.h>
+ #include <linux/device.h>
+ #include <linux/scatterlist.h>
+@@ -48,6 +49,18 @@
+ #include "fw-topology.h"
+ #include "fw-device.h"
  
- /*
-- * Set serialize_io to 1 if you'd like only one scsi command sent
-- * down to us at a time (debugging). This might be necessary for very
-- * badly behaved sbp2 devices.
-+ * Set serialize_io to 0 or N to use dynamically appended lists of command ORBs.
-+ * This is and always has been buggy in multiple subtle ways. See above TODOs.
-  */
- static int sbp2_serialize_io = 1;
--module_param_named(serialize_io, sbp2_serialize_io, int, 0444);
--MODULE_PARM_DESC(serialize_io, "Serialize I/O coming from scsi drivers "
--		 "(default = 1, faster = 0)");
-+module_param_named(serialize_io, sbp2_serialize_io, bool, 0444);
-+MODULE_PARM_DESC(serialize_io, "Serialize requests coming from SCSI drivers "
-+		 "(default = Y, faster but buggy = N)");
- 
- /*
-  * Bump up max_sectors if you'd like to support very large sized
-@@ -154,9 +153,9 @@ MODULE_PARM_DESC(max_sectors, "Change ma
-  * are possible on OXFW911 and newer Oxsemi bridges.
-  */
- static int sbp2_exclusive_login = 1;
--module_param_named(exclusive_login, sbp2_exclusive_login, int, 0644);
-+module_param_named(exclusive_login, sbp2_exclusive_login, bool, 0644);
- MODULE_PARM_DESC(exclusive_login, "Exclusive login to sbp2 device "
--		 "(default = 1)");
++/*
++ * So far only bridges from Oxford Semiconductor are known to support
++ * concurrent logins. Depending on firmware, four or two concurrent logins
++ * are possible on OXFW911 and newer Oxsemi bridges.
++ *
++ * Concurrent logins are useful together with cluster filesystems.
++ */
++static int sbp2_param_exclusive_login = 1;
++module_param_named(exclusive_login, sbp2_param_exclusive_login, bool, 0644);
++MODULE_PARM_DESC(exclusive_login, "Exclusive login to sbp2 device "
 +		 "(default = Y, use N for concurrent initiators)");
++
+ /* I don't know why the SCSI stack doesn't define something like this... */
+ typedef void (*scsi_done_fn_t)(struct scsi_cmnd *);
  
- /*
-  * If any of the following workarounds is required for your device to work,
-Index: linux/drivers/ieee1394/sbp2.h
-===================================================================
---- linux.orig/drivers/ieee1394/sbp2.h
-+++ linux/drivers/ieee1394/sbp2.h
-@@ -67,7 +67,7 @@ struct sbp2_command_orb {
- #define ORB_SET_LUN(v)			((v) & 0xffff)
- #define ORB_SET_FUNCTION(v)		(((v) & 0xf) << 16)
- #define ORB_SET_RECONNECT(v)		(((v) & 0xf) << 20)
--#define ORB_SET_EXCLUSIVE(v)		(((v) & 0x1) << 28)
-+#define ORB_SET_EXCLUSIVE(v)		((v) ? 1 << 28 : 0)
- #define ORB_SET_LOGIN_RESP_LENGTH(v)	((v) & 0xffff)
- #define ORB_SET_PASSWD_LENGTH(v)	(((v) & 0xffff) << 16)
+@@ -157,7 +170,7 @@ struct sbp2_orb {
+ #define MANAGEMENT_ORB_LUN(v)			((v))
+ #define MANAGEMENT_ORB_FUNCTION(v)		((v) << 16)
+ #define MANAGEMENT_ORB_RECONNECT(v)		((v) << 20)
+-#define MANAGEMENT_ORB_EXCLUSIVE		((1) << 28)
++#define MANAGEMENT_ORB_EXCLUSIVE(v)		((v) ? 1 << 28 : 0)
+ #define MANAGEMENT_ORB_REQUEST_FORMAT(v)	((v) << 29)
+ #define MANAGEMENT_ORB_NOTIFY			((1) << 31)
+ 
+@@ -433,14 +446,9 @@ sbp2_send_management_orb(struct fw_unit 
+ 	orb->request.status_fifo.high = sd->address_handler.offset >> 32;
+ 	orb->request.status_fifo.low  = sd->address_handler.offset;
+ 
+-	/*
+-	 * FIXME: Yeah, ok this isn't elegant, we hardwire exclusive
+-	 * login and 1 second reconnect time.  The reconnect setting
+-	 * is probably fine, but the exclusive login should be an option.
+-	 */
+ 	if (function == SBP2_LOGIN_REQUEST) {
+ 		orb->request.misc |=
+-			MANAGEMENT_ORB_EXCLUSIVE |
++			MANAGEMENT_ORB_EXCLUSIVE(sbp2_param_exclusive_login) |
+ 			MANAGEMENT_ORB_RECONNECT(0);
+ 	}
  
 
 -- 
