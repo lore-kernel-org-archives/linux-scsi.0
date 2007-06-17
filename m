@@ -1,7 +1,8 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH 3/5] firewire: fw-sbp2: use sdev->hostdata
-Date: Sun, 17 Jun 2007 23:53:24 +0200 (CEST)
-Message-ID: <tkrat.d4dc501547d4ae77@s5r6.in-berlin.de>
+Subject: [PATCH 4/5] ieee1394: sbp2: change some module parameters from int to
+	bool
+Date: Sun, 17 Jun 2007 23:54:52 +0200 (CEST)
+Message-ID: <tkrat.9092f99d37d86bbe@s5r6.in-berlin.de>
 References: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,82 +23,67 @@ To: linux1394-devel@lists.sourceforge.net
 Cc: =?iso-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-to simplify a few pointer expressions.
+This is upwards compatible, except that integer values other than 0 or 1
+are no longer accepted.  But values like "Y", "N", "no", "nnoooh!" work
+now.
+
+Also, improve a comment on the serialize_io parameter and make the
+ORB_SET_EXCLUSIVE macro ultra-safe.
 
 Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/firewire/fw-sbp2.c |   17 +++++++----------
- 1 file changed, 7 insertions(+), 10 deletions(-)
+ drivers/ieee1394/sbp2.c |   15 +++++++--------
+ drivers/ieee1394/sbp2.h |    2 +-
+ 2 files changed, 8 insertions(+), 9 deletions(-)
 
-Index: linux/drivers/firewire/fw-sbp2.c
+Index: linux/drivers/ieee1394/sbp2.c
 ===================================================================
---- linux.orig/drivers/firewire/fw-sbp2.c
-+++ linux/drivers/firewire/fw-sbp2.c
-@@ -602,7 +602,7 @@ static void sbp2_login(struct work_struc
+--- linux.orig/drivers/ieee1394/sbp2.c
++++ linux/drivers/ieee1394/sbp2.c
+@@ -118,14 +118,13 @@ MODULE_PARM_DESC(max_speed, "Force max s
+ 		 "(3 = 800Mb/s, 2 = 400Mb/s, 1 = 200Mb/s, 0 = 100Mb/s)");
  
- 	/* FIXME: Loop over luns here. */
- 	lun = 0;
--	sdev = __scsi_add_device(host, 0, 0, lun, NULL);
-+	sdev = __scsi_add_device(host, 0, 0, lun, sd);
- 	if (IS_ERR(sdev)) {
- 		sbp2_send_management_orb(unit, sd->node_id, sd->generation,
- 					 SBP2_LOGOUT_REQUEST, sd->login_id,
-@@ -897,8 +897,7 @@ complete_command_orb(struct sbp2_orb *ba
- 
- static int sbp2_command_orb_map_scatterlist(struct sbp2_command_orb *orb)
- {
--	struct sbp2_device *sd =
--		(struct sbp2_device *)orb->cmd->device->host->hostdata;
-+	struct sbp2_device *sd = orb->cmd->device->hostdata;
- 	struct fw_unit *unit = sd->unit;
- 	struct fw_device *device = fw_device(unit->device.parent);
- 	struct scatterlist *sg;
-@@ -983,8 +982,7 @@ static int sbp2_command_orb_map_scatterl
- 
- static int sbp2_scsi_queuecommand(struct scsi_cmnd *cmd, scsi_done_fn_t done)
- {
--	struct sbp2_device *sd =
--		(struct sbp2_device *)cmd->device->host->hostdata;
-+	struct sbp2_device *sd = cmd->device->hostdata;
- 	struct fw_unit *unit = sd->unit;
- 	struct fw_device *device = fw_device(unit->device.parent);
- 	struct sbp2_command_orb *orb;
-@@ -1065,7 +1063,7 @@ static int sbp2_scsi_queuecommand(struct
- 
- static int sbp2_scsi_slave_alloc(struct scsi_device *sdev)
- {
--	struct sbp2_device *sd = (struct sbp2_device *)sdev->host->hostdata;
-+	struct sbp2_device *sd = sdev->hostdata;
- 
- 	sdev->allow_restart = 1;
- 
-@@ -1076,7 +1074,7 @@ static int sbp2_scsi_slave_alloc(struct 
- 
- static int sbp2_scsi_slave_configure(struct scsi_device *sdev)
- {
--	struct sbp2_device *sd = (struct sbp2_device *)sdev->host->hostdata;
-+	struct sbp2_device *sd = sdev->hostdata;
- 	struct fw_unit *unit = sd->unit;
- 
- 	sdev->use_10_for_rw = 1;
-@@ -1101,8 +1099,7 @@ static int sbp2_scsi_slave_configure(str
+ /*
+- * Set serialize_io to 1 if you'd like only one scsi command sent
+- * down to us at a time (debugging). This might be necessary for very
+- * badly behaved sbp2 devices.
++ * Set serialize_io to 0 or N to use dynamically appended lists of command ORBs.
++ * This is and always has been buggy in multiple subtle ways. See above TODOs.
   */
- static int sbp2_scsi_abort(struct scsi_cmnd *cmd)
- {
--	struct sbp2_device *sd =
--		(struct sbp2_device *)cmd->device->host->hostdata;
-+	struct sbp2_device *sd = cmd->device->hostdata;
- 	struct fw_unit *unit = sd->unit;
+ static int sbp2_serialize_io = 1;
+-module_param_named(serialize_io, sbp2_serialize_io, int, 0444);
+-MODULE_PARM_DESC(serialize_io, "Serialize I/O coming from scsi drivers "
+-		 "(default = 1, faster = 0)");
++module_param_named(serialize_io, sbp2_serialize_io, bool, 0444);
++MODULE_PARM_DESC(serialize_io, "Serialize requests coming from SCSI drivers "
++		 "(default = Y, faster but buggy = N)");
  
- 	fw_notify("sbp2_scsi_abort\n");
-@@ -1133,7 +1130,7 @@ sbp2_sysfs_ieee1394_id_show(struct devic
+ /*
+  * Bump up max_sectors if you'd like to support very large sized
+@@ -154,9 +153,9 @@ MODULE_PARM_DESC(max_sectors, "Change ma
+  * are possible on OXFW911 and newer Oxsemi bridges.
+  */
+ static int sbp2_exclusive_login = 1;
+-module_param_named(exclusive_login, sbp2_exclusive_login, int, 0644);
++module_param_named(exclusive_login, sbp2_exclusive_login, bool, 0644);
+ MODULE_PARM_DESC(exclusive_login, "Exclusive login to sbp2 device "
+-		 "(default = 1)");
++		 "(default = Y, use N for concurrent initiators)");
  
- 	if (!sdev)
- 		return 0;
--	sd = (struct sbp2_device *)sdev->host->hostdata;
-+	sd = sdev->hostdata;
- 	unit = sd->unit;
- 	device = fw_device(unit->device.parent);
+ /*
+  * If any of the following workarounds is required for your device to work,
+Index: linux/drivers/ieee1394/sbp2.h
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.h
++++ linux/drivers/ieee1394/sbp2.h
+@@ -67,7 +67,7 @@ struct sbp2_command_orb {
+ #define ORB_SET_LUN(v)			((v) & 0xffff)
+ #define ORB_SET_FUNCTION(v)		(((v) & 0xf) << 16)
+ #define ORB_SET_RECONNECT(v)		(((v) & 0xf) << 20)
+-#define ORB_SET_EXCLUSIVE(v)		(((v) & 0x1) << 28)
++#define ORB_SET_EXCLUSIVE(v)		((v) ? 1 << 28 : 0)
+ #define ORB_SET_LOGIN_RESP_LENGTH(v)	((v) & 0xffff)
+ #define ORB_SET_PASSWD_LENGTH(v)	(((v) & 0xffff) << 16)
  
 
 -- 
