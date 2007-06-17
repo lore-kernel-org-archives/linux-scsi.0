@@ -1,38 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 3/3] zfcp: Don't report device as LUN 0 to SCSI stack
-Date: Sun, 17 Jun 2007 15:50:12 -0500
-Message-ID: <1182113412.19498.7.camel@mulgrave.il.steeleye.com>
-References: <200705291529.54785.swen@vnet.ibm.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH 0/5] small fw-sbp2 and sbp2 updates
+Date: Sun, 17 Jun 2007 23:51:30 +0200 (CEST)
+Message-ID: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:56724 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756075AbXFQUuU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 17 Jun 2007 16:50:20 -0400
-In-Reply-To: <200705291529.54785.swen@vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: =?iso-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Swen Schillig <swen@vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schmichr@de.ibm.com
 
-On Tue, 2007-05-29 at 15:29 +0200, Swen Schillig wrote: 
-> From: Christof Schmitt <schmichr@de.ibm.com>
-> 
-> zfcp reported units to the SCSI stack starting
-> with number 0. LUN 0 reported to the SCSI stack is usually 
-> not the FCP LUN 0. When scanning for devices, 
-> the SCSI stack tried to issue a REPORT LUN command to LUN 0. 
-> The current design for zfcp does not want the SCSI stack to scan
-> for devices, since they are configured explicitly via sysfs.
-> This patch changes the numbering to always start with LUN 1 and therefore
-> prevent the SCSI stack sending REPORT LUN command.
-
-As a general principle, this does sound to be wrong (at least shifting
-the LUNs).  Wouldn't something like the existing blacklist preventing
-the REPORT LUN command from being sent be more appropriate?
-
-James
+Here come
+1/5 firewire: fw-sbp2: implement max sectors limit for some old bridges
+2/5 firewire: fw-sbp2: let SCSI shutdown commands through before logout
+3/5 firewire: fw-sbp2: use sdev->hostdata
+4/5 ieee1394: sbp2: change some module parameters from int to bool
+5/5 firewire: fw-sbp2: implement nonexclusive login
+-- 
+Stefan Richter
+-=====-=-=== -==- =---=
+http://arcgraph.de/sr/
 
 
+-------------------------------------------------------------------------
+This SF.net email is sponsored by DB2 Express
+Download DB2 Express C - the FREE version of DB2 express and take
+control of your XML. No limits. Just data. Click to get it now.
+http://sourceforge.net/powerbar/db2/
