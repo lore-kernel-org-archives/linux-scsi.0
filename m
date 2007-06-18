@@ -1,97 +1,57 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH 5/5] firewire: fw-sbp2: implement nonexclusive login
-Date: Sun, 17 Jun 2007 23:55:41 +0200 (CEST)
-Message-ID: <tkrat.4c361607a17422f0@s5r6.in-berlin.de>
-References: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 3/3] zfcp: Don't report device as LUN 0 to SCSI stack
+Date: Mon, 18 Jun 2007 10:47:28 +0200
+Message-ID: <467646A0.3070105@suse.de>
+References: <200705291529.54785.swen@vnet.ibm.com> <1182113412.19498.7.camel@mulgrave.il.steeleye.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: =?iso-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.suse.de ([195.135.220.2]:55801 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752634AbXFRIre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jun 2007 04:47:34 -0400
+In-Reply-To: <1182113412.19498.7.camel@mulgrave.il.steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Swen Schillig <swen@vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schmichr@de.ibm.com
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
- drivers/firewire/fw-sbp2.c |   22 +++++++++++++++-------
- 1 file changed, 15 insertions(+), 7 deletions(-)
+James Bottomley wrote:
+> On Tue, 2007-05-29 at 15:29 +0200, Swen Schillig wrote:=20
+>> From: Christof Schmitt <schmichr@de.ibm.com>
+>>
+>> zfcp reported units to the SCSI stack starting
+>> with number 0. LUN 0 reported to the SCSI stack is usually=20
+>> not the FCP LUN 0. When scanning for devices,=20
+>> the SCSI stack tried to issue a REPORT LUN command to LUN 0.=20
+>> The current design for zfcp does not want the SCSI stack to scan
+>> for devices, since they are configured explicitly via sysfs.
+>> This patch changes the numbering to always start with LUN 1 and ther=
+efore
+>> prevent the SCSI stack sending REPORT LUN command.
+>=20
+> As a general principle, this does sound to be wrong (at least shiftin=
+g
+> the LUNs).  Wouldn't something like the existing blacklist preventing
+> the REPORT LUN command from being sent be more appropriate?
+>=20
+IMO the zfcp driver should export the FCP LUNs and not building their
+own internal SCSI LUN to FCP LUN mapping table.
+That would avoid this issue, too. And would make the zfcp driver more i=
+n
+line with everyone else ...
 
-Index: linux/drivers/firewire/fw-sbp2.c
-===================================================================
---- linux.orig/drivers/firewire/fw-sbp2.c
-+++ linux/drivers/firewire/fw-sbp2.c
-@@ -31,6 +31,7 @@
- #include <linux/err.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
-+#include <linux/moduleparam.h>
- #include <linux/mod_devicetable.h>
- #include <linux/device.h>
- #include <linux/scatterlist.h>
-@@ -48,6 +49,18 @@
- #include "fw-topology.h"
- #include "fw-device.h"
- 
-+/*
-+ * So far only bridges from Oxford Semiconductor are known to support
-+ * concurrent logins. Depending on firmware, four or two concurrent logins
-+ * are possible on OXFW911 and newer Oxsemi bridges.
-+ *
-+ * Concurrent logins are useful together with cluster filesystems.
-+ */
-+static int sbp2_param_exclusive_login = 1;
-+module_param_named(exclusive_login, sbp2_param_exclusive_login, bool, 0644);
-+MODULE_PARM_DESC(exclusive_login, "Exclusive login to sbp2 device "
-+		 "(default = Y, use N for concurrent initiators)");
-+
- /* I don't know why the SCSI stack doesn't define something like this... */
- typedef void (*scsi_done_fn_t)(struct scsi_cmnd *);
- 
-@@ -157,7 +170,7 @@ struct sbp2_orb {
- #define MANAGEMENT_ORB_LUN(v)			((v))
- #define MANAGEMENT_ORB_FUNCTION(v)		((v) << 16)
- #define MANAGEMENT_ORB_RECONNECT(v)		((v) << 20)
--#define MANAGEMENT_ORB_EXCLUSIVE		((1) << 28)
-+#define MANAGEMENT_ORB_EXCLUSIVE(v)		((v) ? 1 << 28 : 0)
- #define MANAGEMENT_ORB_REQUEST_FORMAT(v)	((v) << 29)
- #define MANAGEMENT_ORB_NOTIFY			((1) << 31)
- 
-@@ -433,14 +446,9 @@ sbp2_send_management_orb(struct fw_unit 
- 	orb->request.status_fifo.high = sd->address_handler.offset >> 32;
- 	orb->request.status_fifo.low  = sd->address_handler.offset;
- 
--	/*
--	 * FIXME: Yeah, ok this isn't elegant, we hardwire exclusive
--	 * login and 1 second reconnect time.  The reconnect setting
--	 * is probably fine, but the exclusive login should be an option.
--	 */
- 	if (function == SBP2_LOGIN_REQUEST) {
- 		orb->request.misc |=
--			MANAGEMENT_ORB_EXCLUSIVE |
-+			MANAGEMENT_ORB_EXCLUSIVE(sbp2_param_exclusive_login) |
- 			MANAGEMENT_ORB_RECONNECT(0);
- 	}
- 
+Cheers,
 
--- 
-Stefan Richter
--=====-=-=== -==- =---=
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
