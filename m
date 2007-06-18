@@ -1,68 +1,120 @@
 From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 7/11] Implement scsi_configure_device()
-Date: Mon, 18 Jun 2007 11:02:00 +0200
-Message-ID: <20070618090200.88566D44CB@pentland.suse.de>
+Subject: [PATCH 9/11] Implement scsi_resurrect_device()
+Date: Mon, 18 Jun 2007 11:02:09 +0200
+Message-ID: <20070618090209.7D00DD44CB@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.suse.de ([195.135.220.2]:56584 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34350 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756983AbXFRJCB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jun 2007 05:02:01 -0400
+	id S1757082AbXFRJCK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jun 2007 05:02:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
 
-This patch implements scsi_configure_device(). This function
-elevates an sdev into SDEV_RUNNING and configures it properly so that
-I/O is possible on the device.
+This patch implements a function scsi_resurrect_device()
+which elevates a sdev from state SDEV_CANCEL back into
+SDEV_RUNNING.
+So during a scan any sdev in SDEV_DEL is put into
+SDEV_CANCEL and then scsi_resurrect_device() is called.
+This will put the device into SDEV_RUNNING and the scan
+can proceed.
+To allow this the state machine has to be expanded, as no
+transistion out of SDEV_CANCEL into SDEV_RUNNING and from
+SDEV_DEL into SDEV_CANCEL are now perfectly possible.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_scan.c |   67 +++++++++++++++++++++++++++++++++------------
- 1 files changed, 49 insertions(+), 18 deletions(-)
+ drivers/scsi/scsi.c      |    3 ++
+ drivers/scsi/scsi_lib.c  |    2 +
+ drivers/scsi/scsi_scan.c |   53 ++++++++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 58 insertions(+), 0 deletions(-)
 
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 4c1e313..11f0f0d 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -950,6 +950,9 @@ struct scsi_device *scsi_device_lookup_b
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	sdev = __scsi_device_lookup_by_target(starget, lun);
++	/* This triggers a resurrection of the sdev */
++	if (sdev && sdev->sdev_state == SDEV_DEL)
++		scsi_device_set_state(sdev, SDEV_CANCEL);
+ 	if (sdev && scsi_device_get(sdev))
+ 		sdev = NULL;
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index bb32747..d1dc7ce 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1954,6 +1954,7 @@ scsi_device_set_state(struct scsi_device
+ 		case SDEV_OFFLINE:
+ 		case SDEV_QUIESCE:
+ 		case SDEV_BLOCK:
++		case SDEV_CANCEL:
+ 			break;
+ 		default:
+ 			goto illegal;
+@@ -1999,6 +2000,7 @@ scsi_device_set_state(struct scsi_device
+ 		case SDEV_QUIESCE:
+ 		case SDEV_OFFLINE:
+ 		case SDEV_BLOCK:
++		case SDEV_DEL:
+ 			break;
+ 		default:
+ 			goto illegal;
 diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 9195ffb..d1bca80 100644
+index bf62089..a97c889 100644
 --- a/drivers/scsi/scsi_scan.c
 +++ b/drivers/scsi/scsi_scan.c
-@@ -698,6 +698,43 @@ static int scsi_probe_lun(struct scsi_de
+@@ -735,6 +735,52 @@ int scsi_configure_device(struct scsi_de
  }
  
  /**
-+ * scsi_configure_device - configure a scsi_device
-+ * @sdev:	The scsi_device to configure
++ * scsi_resurrect_device - resurrect a deleted scsi_device
++ * @sdev:	The scsi_device to resurrect
 + *
 + * Description:
-+ *    Configure an existing scsi_device. This function
-+ *    elevates a scsi_device from state SDEV_CREATED or
-+ *    SDEV_CANCEL into SDEV_RUNNING.
-+ *
-+ *    On failure the device is put into SDEV_CANCEL.
++ *    Elevate a deleted scsi_device back to SDEV_RUNNING.
++ *    The scsi_device has to be in SDEV_CANCEL.
++ *    The resurrection process calls scsi_configure_device()
++ *    to setup transport and LLDD and then attaches it to sysfs
++ *    with scsi_sysfs_add_sdev().
++ *    On success the device is in SDEV_RUNNING and ready to
++ *    accept I/O.
++ *    On failure the device is put back into SDEV_CANCEL.
++ *    It should be set to SDEV_DEL afterwards by eg.
++ *    a call to scsi_destroy_device().
 + *
 + * Return:
 + *    0  On Success
 + *    <0 On failure.
 + *
 + **/
-+int scsi_configure_device(struct scsi_device *sdev)
++int scsi_resurrect_device(struct scsi_device *sdev)
 +{
 +	int ret = 0;
 +
-+	/* set the device running here so that slave configure
-+	 * may do I/O */
-+	if (scsi_device_set_state(sdev, SDEV_RUNNING) != 0)
-+		return -EBUSY;
++	/* Ignore devices not in state SDEV_CANCEL */
++	if (sdev->sdev_state != SDEV_CANCEL)
++		return 0;
 +
-+	transport_configure_device(&sdev->sdev_gendev);
++	ret = scsi_configure_device(sdev);
++	if (ret)
++		return ret;
 +
-+	if (sdev->host->hostt->slave_configure)
-+		ret = sdev->host->hostt->slave_configure(sdev);
++	/*
++	 * Ok, the device is now all set up, we can
++	 * register it and tell the rest of the kernel
++	 * about it.
++	 */
++	ret = scsi_sysfs_add_sdev(sdev);
 +
-+	/* slave configure failed, device is not useable */
 +	if (ret)
 +		scsi_device_set_state(sdev, SDEV_CANCEL);
 +
@@ -73,58 +125,27 @@ index 9195ffb..d1bca80 100644
   * scsi_add_lun - allocate and fully initialze a scsi_device
   * @sdevscan:	holds information to be stored in the new scsi_device
   * @sdevnew:	store the address of the newly allocated scsi_device
-@@ -717,6 +754,8 @@ static int scsi_probe_lun(struct scsi_de
- static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		int *bflags, int async)
- {
-+	int ret;
-+
- 	/*
- 	 * XXX do not save the inquiry, since it can change underneath us,
- 	 * save just vendor/model/rev.
-@@ -880,10 +919,6 @@ static int scsi_add_lun(struct scsi_devi
- 	if (*bflags & BLIST_USE_10_BYTE_MS)
- 		sdev->use_10_for_ms = 1;
- 
--	/* set the device running here so that slave configure
--	 * may do I/O */
--	scsi_device_set_state(sdev, SDEV_RUNNING);
--
- 	if (*bflags & BLIST_MS_192_BYTES_FOR_3F)
- 		sdev->use_192_bytes_for_3f = 1;
- 
-@@ -893,21 +928,17 @@ static int scsi_add_lun(struct scsi_devi
- 	if (*bflags & BLIST_RETRY_HWERROR)
- 		sdev->retry_hwerror = 1;
- 
--	transport_configure_device(&sdev->sdev_gendev);
--
--	if (sdev->host->hostt->slave_configure) {
--		int ret = sdev->host->hostt->slave_configure(sdev);
--		if (ret) {
--			/*
--			 * if LLDD reports slave not present, don't clutter
--			 * console with alloc failure messages
--			 */
--			if (ret != -ENXIO) {
--				sdev_printk(KERN_ERR, sdev,
--					"failed to configure device\n");
--			}
--			return SCSI_SCAN_NO_RESPONSE;
-+	ret = scsi_configure_device(sdev);
-+	if (ret) {
-+		/*
-+		 * if LLDD reports slave not present, don't clutter
-+		 * console with alloc failure messages
-+		 */
-+		if (ret != -ENXIO) {
-+			sdev_printk(KERN_ERR, sdev,
-+				    "failed to configure device\n");
- 		}
-+		return SCSI_SCAN_NO_RESPONSE;
+@@ -1013,6 +1059,10 @@ static int scsi_probe_and_add_lun(struct
+ 	 */
+ 	sdev = scsi_device_lookup_by_target(starget, lun);
+ 	if (sdev) {
++		if (scsi_resurrect_device(sdev)) {
++			scsi_destroy_device(sdev);
++			return SCSI_SCAN_NO_RESPONSE;
++		}
+ 		if (rescan || sdev->sdev_state != SDEV_CREATED) {
+ 			SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO
+ 				"scsi scan: device exists on %s\n",
+@@ -1330,6 +1380,9 @@ static int scsi_report_lun_scan(struct s
+ 			return 0;
+ 		if (scsi_device_get(sdev))
+ 			return 0;
++	} else if (scsi_resurrect_device(sdev)) {
++		scsi_destroy_device(sdev);
++		return 0;
  	}
  
- 	/*
+ 	sprintf(devname, "host %d channel %d id %d",
 -- 
 1.4.3.4
 
