@@ -1,71 +1,81 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 3/3] zfcp: Don't report device as LUN 0 to SCSI stack
-Date: Mon, 18 Jun 2007 09:25:24 -0500
-Message-ID: <1182176724.3464.30.camel@mulgrave.il.steeleye.com>
-References: <200705291529.54785.swen@vnet.ibm.com>
-	 <1182113412.19498.7.camel@mulgrave.il.steeleye.com>
-	 <467646A0.3070105@suse.de>
-	 <20070618135614.GD3580@osiris.boeblingen.de.ibm.com>
+From: "Harrosh, Boaz" <bharrosh@panasas.com>
+Subject: RE: [PATCH 0/0] scsi_cmnd accessors issues
+Date: Mon, 18 Jun 2007 11:24:46 -0400
+Message-ID: <E472128B1EB43941B4E7FB268020C89B0250B915@riverside.int.panasas.com>
+References: <20070613194513H.fujita.tomonori@lab.ntt.co.jp><46716C45.1090107@panasas.com><467502AD.6090309@panasas.com> <20070618232433H.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:36231 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758722AbXFROZ0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jun 2007 10:25:26 -0400
-In-Reply-To: <20070618135614.GD3580@osiris.boeblingen.de.ibm.com>
+Received: from gw-e.panasas.com ([65.194.124.178]:44710 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1764004AbXFRPZB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jun 2007 11:25:01 -0400
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schmichr@de.ibm.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: ed.lin@promise.com, g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org
 
-On Mon, 2007-06-18 at 15:56 +0200, Heiko Carstens wrote:
-> One of my current disks has an FCP LUN of 0x401040ba00000000... That's just
+FUJITA Tomonori wrote:
+>> Boaz Harrosh wrote:
+>> Hi Tomo.
+>> 
+>> I do not understand.
+>> - Do you not accept my first patch. This is to go in now for  2.6.23.
+>>   It is for protection against out-of-tree and the rest of the not
+>>   converted drivers. To not use new accessors as l-value.
+>> 
+>> - Guennadi have you had a look at second patch it is clear that SavedSGCount
+>>   is no longer used and that scsi_sg_count(pcmd) needs not be saved since it
+>>   never changes.
+>> 
+>> - Tomo, Ed. The 3rd patch was sent so the first patch can be accepted now. As
+>>   stated, it is a fix to the first cleanup patch that wrongfully used scsi_bufflen
+>>   as l-value.
+>
+>As Ed (and I) said, the 3rd patch is temporary.
+>
+>Now we will change:
+>
+>-		scsi_bufflen(ccb->cmd) =
+>+		ccb->cmd->request_bufflen =
+> 			le32_to_cpu(*(__le32 *)&resp->variable[0]);
+>
+>
+>Then with the bidi support, we will change again:
+>
+>		if (ccb->sg_table) {
+>			ccb->sg_table->length = 
+>	 			le32_to_cpu(*(__le32 *)&resp->variable[0]);
+>
+>
+>We can live without the first patch. We don't need to care about
+>out-of-tree drivers and we can handle the rest of the not-converted
+>drivers.
+>
+>So I prefer applying the first patch with the bidi support and the
+>proper stex fix than putting the temporary third patch now thought it
+>doesn't matter much.
+>
+>I'm not sure why you think that the first patch is so important and we
+>must push it to 2.6.23.
 
-That's correct and coped with ... SCSI LUNs are BE ... this is still
-only a four byte lun ... it actually says Flat Space addressing, 2 level
-LUN: 16-168
+I think first patch is so important because accessors were wrongly defined
+to look like l-value which they must not be. Currently code is only in 
+scsi-misc tree and was never in any official Linux tree. Once it will go 
+into 2.6.23-rcx it will be official. And it better be right. We do not know 
+how long it will stay the way it is, it can be for a long time. The way I see 
+it, this is the last chance we have to fix it, before it goes in. Than it 
+will be to late.
 
-> the limit that scsilun_to_int() (four bytes that is) still works with.
-> Just wondering if there are patches around that make the SCSI stack work
-> with eight byte LUNs?
+The 3rd patch is not a temporary hack. It is a "Revert". You submitted a patch
+that wrongfully changed:  
+-		ccb->cmd->request_bufflen =
++		scsi_bufflen(ccb->cmd) =
+ 			le32_to_cpu(*(__le32 *)&resp->variable[0]);
 
-We've been around this several times, but no-one's ever seen a LUN that
-goes beyond 2 levels (and our current scheme correctly copes with all 2
-level LUNs)... to go beyond 2 level, it's a simple case of converting
-the LUN to u64 and updating the accessors, but we still haven't found a
-reason to do it yet.
+I'm simply reverting it to what it is originally in 2.6.22 .
 
-> Otherwise this looks like replacing a broken approach with a different but
-> at least incomplete approach. The above LUN would be translated to a SCSI
-> stack internal LUN of 1085947920. Hmm... 
-
-The only broken bit about our approach is the fact that we print the
-translated value (as you show) which doesn't correspond to the actual
-hierarchy.  We could quietly update to use the correct number, but we'd
-probably have to change our device ID. For only single level LUs, it's
-easy, we still use
-
-H:C:I:L
-
-for flat space, I could see something like
-
-H:C:I:L4-L3-L2-L1
-
-Or we could just combine them into a single enumerated LUN.
-
-For peripheral Encoding, perhaps something like:
-
-H:C:I:B4,L4-B3,L3-B2,L2-B1,L1
-
-Logical Unit addressing is starting to look really horrible: something
-like:
-
-H:C:I:T4,B4,L4-T3,B3,L3...
-
-And obviously, there's no translation for the extended address method.
-
-James
-
+Boaz
 
