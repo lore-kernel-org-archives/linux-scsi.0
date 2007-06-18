@@ -1,61 +1,51 @@
 From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 1/11] Add scsi_destroy_device()
-Date: Mon, 18 Jun 2007 11:01:28 +0200
-Message-ID: <20070618090128.DE82FD44CB@pentland.suse.de>
+Subject: [PATCH 2/11] Improve error messages in scsi_sysfs_add_sdev()
+Date: Mon, 18 Jun 2007 11:01:35 +0200
+Message-ID: <20070618090135.353ADD44CB@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns2.suse.de ([195.135.220.15]:34314 "EHLO mx2.suse.de"
+Received: from cantor2.suse.de ([195.135.220.15]:34320 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755372AbXFRJB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jun 2007 05:01:29 -0400
+	id S1754208AbXFRJBg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jun 2007 05:01:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
 
-This patchs adds a new helper scsi_destroy_device(). It will transition
-and sdev into the 'SDEV_DEL' state.
+When we fail to add a device to the driver core, only the very
+helpful message 'error X' is displayed.
+Print out some meaningful messages.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/scsi_scan.c   |    3 +--
- include/scsi/scsi_device.h |    6 ++++++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/scsi_sysfs.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index a67f315..4874bdd 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -921,8 +921,7 @@ static inline void scsi_destroy_sdev(str
- 	scsi_device_set_state(sdev, SDEV_DEL);
- 	if (sdev->host->hostt->slave_destroy)
- 		sdev->host->hostt->slave_destroy(sdev);
--	transport_destroy_device(&sdev->sdev_gendev);
--	put_device(&sdev->sdev_gendev);
-+	scsi_destroy_device(sdev);
- }
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ed72086..a31104f 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -721,12 +721,14 @@ int scsi_sysfs_add_sdev(struct scsi_devi
+ 	error = device_add(&sdev->sdev_gendev);
+ 	if (error) {
+ 		put_device(sdev->sdev_gendev.parent);
+-		printk(KERN_INFO "error 1\n");
++		sdev_printk(KERN_INFO, sdev,
++			    "failed to add device (error %d)\n", error);
+ 		return error;
+ 	}
+ 	error = class_device_add(&sdev->sdev_classdev);
+ 	if (error) {
+-		printk(KERN_INFO "error 2\n");
++		sdev_printk(KERN_INFO, sdev,
++			    "failed to add class device (error %d)\n", error);
+ 		goto clean_device;
+ 	}
  
- #ifdef CONFIG_SCSI_LOGGING
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 2f3c5b8..dad55d2 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -322,6 +322,12 @@ static inline unsigned int sdev_id(struc
- #define scmd_id(scmd) sdev_id((scmd)->device)
- #define scmd_channel(scmd) sdev_channel((scmd)->device)
- 
-+static inline void scsi_destroy_device(struct scsi_device *sdev)
-+{
-+	scsi_device_set_state(sdev, SDEV_DEL);
-+	put_device(&sdev->sdev_gendev);
-+}
-+
- static inline int scsi_device_online(struct scsi_device *sdev)
- {
- 	return sdev->sdev_state != SDEV_OFFLINE;
 -- 
 1.4.3.4
 
