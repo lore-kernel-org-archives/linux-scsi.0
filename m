@@ -1,46 +1,49 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] zfcp: Don't report device as LUN 0 to SCSI stack
-Date: Mon, 18 Jun 2007 10:47:28 +0200
-Message-ID: <467646A0.3070105@suse.de>
-References: <200705291529.54785.swen@vnet.ibm.com> <1182113412.19498.7.camel@mulgrave.il.steeleye.com>
+Subject: [PATCH 0/11] Take #2: Resurrect sdev during scanning
+Date: Mon, 18 Jun 2007 11:00:45 +0200
+Message-ID: <467649BD.7040206@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:55801 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34292 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752634AbXFRIre (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 18 Jun 2007 04:47:34 -0400
-In-Reply-To: <1182113412.19498.7.camel@mulgrave.il.steeleye.com>
+	id S1753581AbXFRJAq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jun 2007 05:00:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Swen Schillig <swen@vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, schmichr@de.ibm.com
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> On Tue, 2007-05-29 at 15:29 +0200, Swen Schillig wrote:=20
->> From: Christof Schmitt <schmichr@de.ibm.com>
->>
->> zfcp reported units to the SCSI stack starting
->> with number 0. LUN 0 reported to the SCSI stack is usually=20
->> not the FCP LUN 0. When scanning for devices,=20
->> the SCSI stack tried to issue a REPORT LUN command to LUN 0.=20
->> The current design for zfcp does not want the SCSI stack to scan
->> for devices, since they are configured explicitly via sysfs.
->> This patch changes the numbering to always start with LUN 1 and ther=
-efore
->> prevent the SCSI stack sending REPORT LUN command.
->=20
-> As a general principle, this does sound to be wrong (at least shiftin=
-g
-> the LUNs).  Wouldn't something like the existing blacklist preventing
-> the REPORT LUN command from being sent be more appropriate?
->=20
-IMO the zfcp driver should export the FCP LUNs and not building their
-own internal SCSI LUN to FCP LUN mapping table.
-That would avoid this issue, too. And would make the zfcp driver more i=
-n
-line with everyone else ...
+Hi James,
+
+this is a rework of my earlier patchset to address the outstanding 'sde=
+v
+oops during scanning' issue. Problem is that any sdev in state
+'SDEV_DEL' is still visible to the host until the refcount drops to
+zero. When a scan occurs during this time we access a half-initialized
+sdev and all hell breaks loose.
+
+To address this issue this patchset expands the sdev state-machine to
+allow a transition from SDEV_DEL back to SDEV_RUNNING. This is
+implemented in the function scsi_resurrect_device(). So during scan we
+only have to make sure to call scsi_resurrect_device() on all sdevs as
+this will guarantee us that the sdev is operational during scanning.
+
+In order to do so I reworked the sdev allocation and removal so that
+we're more aligned with the sdev state machine and the driver core's
+device_initialize / device_add logic.
+
+Additionally I have expanded the state machine even more by introducing
+a SDEV_NEW state, which will transition into SDEV_CREATED once
+slave_alloc() is run.  This will allow us to detect from within the
+->release function whether slave_destroy() should be called.
+With this we don't have to modify any LLDD, thus addressing the issue
+hch had with the earlier patchset.
+
+Comments etc. welcome.
+
+Otherwise, please apply.
 
 Cheers,
 
