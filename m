@@ -1,52 +1,64 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 2/5] firewire: fw-sbp2: let SCSI shutdown commands	through
-	before logout
-Date: Mon, 18 Jun 2007 18:34:05 +0200
-Message-ID: <4676B3FD.9010604@s5r6.in-berlin.de>
-References: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>	
-	<tkrat.86a8cf28dc784b39@s5r6.in-berlin.de>
-	<1182180417.7928.13.camel@hinata.boston.redhat.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH] cciss: force ignore of responses to unsent scsi commands after kexec reboot
+Date: Mon, 18 Jun 2007 16:39:28 -0000
+Message-ID: <226E1C65E4F6164E8EA5FD3CC913AE8C015CF43A@G3W0639.americas.hpqcorp.net>
+References: <20070614153119.GC32137@hmsreliant.homelinux.net> <226E1C65E4F6164E8EA5FD3CC913AE8C0156B740@G3W0639.americas.hpqcorp.net> <20070614192523.GB1110@hmsreliant.homelinux.net> <20070618043037.GA14758@in.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1182180417.7928.13.camel@hinata.boston.redhat.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ccerelbas04.cce.hp.com ([161.114.21.107]:39547 "EHLO
+	ccerelbas04.cce.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751706AbXFRQjb convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jun 2007 12:39:31 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20070618043037.GA14758@in.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vgoyal@in.ibm.com, Neil Horman <nhorman@tuxdriver.com>
+Cc: linux-kernel@vger.kernel.org, ISS StorageDev <iss_storagedev@hp.com>, akpm@linux-foundation.org, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Kristian H=F8gsberg wrote:
-> On Sun, 2007-06-17 at 23:52 +0200, Stefan Richter wrote:
->> This affects of course only the "soft shutdown" case, e.g. "modprobe
->> -r
->> firewire-sbp2", while it doesn't matter for hot unplug.
-> =
+Vivek wrote: 
 
-> Isn't this done when we remove the host?
+> 
+> I think this is not the right usage of reset_devices 
+> parameter. This parameter instructs the driver to reset the 
+> device before going ahead with rest of the initialization 
+> before as underlying device might not be in a sane state. 
+> kexec/kdump is one of the usages and this can also be useful 
+> in the case of BIOS not doing its job.
+> 
+> When I had proposed crash_boot parameter for kexec/kdump 
+> purposes, that time andrew had suggested that he is afraid 
+> that driver authors will use this parameter to solve all kind 
+> of problems. 
+> 
+> I think we should stick to the theme of the parameter and 
+> implement the reset routine for cciss driver instead of 
+> simply returning back. Consider the case of hypothetical 
+> scenario where somebody booted the kernel with reset_device 
+> parameter (because of unreliable bios) and if there is a 
+> problem on kernel side that after it issues the command it 
+> lost track of that (because of kernel bug) then driver will 
+> never catch that bug as upon receiving the response it will 
+> simply ignore that.
+> 
+> Mike, you know most about this device. Can you please help 
+> out with implementing a reset routing for it?
+> 
+Vivek
+I think I finally have an idea that will work. (`bout time!) We actually
+have 2 different issues. One is that there may outstanding commands on
+the controller when the kdump kernel initializes. Our SAS controllers
+support the reset message defined in the open CISS spec which will
+(hopefully) resolve this issue. The second problem is that I cannot
+allocate my MSI-X vectors because I couldn't free the vectors then
+disable MSI. So the cciss driver would most likely panic at that time.
+My idea for this is to put the card into INTx mode rather than MSI or
+MSI-X. That should the 2nd issue.
+I haven't tested the 64xx series to see if they support the reset
+message. I should to write the code today, maybe test by tomorrow and
+then send something upstream.
 
-Yes, we only need to defer the logout until after the host is removed.
-I'll send updates to patch 2/5 and 3/5 in an hour which kick out the
-sd->sdev member which I added in 2/5.
-
-Of course all of this will be touched soon again when multi-LU support
-is implemented.
--- =
-
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D=3D- =3D--=3D-
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+mikem
