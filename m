@@ -1,62 +1,92 @@
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [patch 4/6] ps3: Disk Storage Driver
-Date: Tue, 19 Jun 2007 09:06:43 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0706190905560.5713@pademelon.sonytel.be>
-References: <20070615171545.316dfac7@the-village.bc.nu>
- <20070615.141917.85409547.davem@davemloft.net> <20070619055358.GD18542@lst.de>
- <20070618.230357.08341020.davem@davemloft.net>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [patch 0/5] m68k 53c700 SCSI
+Date: Tue, 19 Jun 2007 09:47:28 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0706190942180.3234@anakin>
+References: <20070617124704.800461751@mail.of.borg>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584337861-78175883-1182236803=:5713"
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:51135 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754719AbXFSHGt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jun 2007 03:06:49 -0400
-In-Reply-To: <20070618.230357.08341020.davem@davemloft.net>
+Received: from ananke.telenet-ops.be ([195.130.137.78]:55983 "EHLO
+	ananke.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751409AbXFSHrc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 03:47:32 -0400
+In-Reply-To: <20070617124704.800461751@mail.of.borg>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: hch@lst.de, alan@lxorguk.ukuu.org.uk, axboe@kernel.dk, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, paulus@samba.org, dwmw2@infradead.org
+To: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, Kars de Jong <jongk@linux-m68k.org>, Richard Hirst <rhirst@levanta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+	Hi James,
 
----584337861-78175883-1182236803=:5713
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-On Mon, 18 Jun 2007, David Miller wrote:
-> What I really care about is what will work transparently for existing
-> userspace.  In particular, distribution installers and existing tools
-> like fdisk.
+On Sun, 17 Jun 2007, Geert Uytterhoeven wrote:
+> These patches add support for m68k to the 53c700 SCSI core and introduce new
+> drivers for various m68k hardware using this 53c700 SCSI core, to replace the
+> just removed drivers using the old 53c7xx SCSI core.
 > 
-> When a slice it being exported, it's not being exported like that so
-> that the client can just spam a disk label into it, it's for exporting
-> one slice.  So we might want (using the scsi naming as an arbitrary
-> example case) /dev/sda1 to be created but not /dev/sda
+>   [1] [PATCH] 53c700 scsi: m68k support for the 53c700 SCSI core
+>   [2] [PATCH] 53c700 scsi: m68k BVME6000 NCR53C710 SCSI
+>   [3] [PATCH] 53c700 scsi: m68k MVME16x NCR53C710 SCSI
+>   [4] [PATCH] 53c700 scsi: Amiga 4000T NCR53c710 SCSI
+>   [5] [PATCH] 53c700 scsi: Amiga Zorro NCR53c710 SCSI
 > 
-> How exactly do you envision this kind of thing working?
+> Please apply for 2.6.23. Thx!
 
-How do distribution installers handle USB disks and memory cards? Some tend
-to be partitioned, some don't.
+Apparently I made some major mistakes when preparing these patches.
+Here are the fixes.
+---
 
-With kind regards,
+Fixup m68k 53c700 drivers:
+  - a4000t.c: Add missing include, needed in some configurations
+  - bvme6000_scsi.c: Kill bogus opening brace
+  - zorro7xx.c: Remove MODULE_DEVICE_TABLE, it should be part of another
+                patch
+
+Signed-off-by: Geert Uytterhoeven <geert@linux-m68k.org>
+---
+ drivers/scsi/a4000t.c        |    1 +
+ drivers/scsi/bvme6000_scsi.c |    2 +-
+ drivers/scsi/zorro7xx.c      |    1 -
+ 3 files changed, 2 insertions(+), 2 deletions(-)
+
+--- a/drivers/scsi/a4000t.c
++++ b/drivers/scsi/a4000t.c
+@@ -12,6 +12,7 @@
+ #include <linux/platform_device.h>
+ #include <linux/init.h>
+ #include <linux/interrupt.h>
++#include <asm/amigahw.h>
+ #include <asm/amigaints.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_transport_spi.h>
+--- a/drivers/scsi/bvme6000_scsi.c
++++ b/drivers/scsi/bvme6000_scsi.c
+@@ -112,7 +112,7 @@ static int __init bvme6000_scsi_init(voi
+ 	int err;
  
-Geert Uytterhoeven
-Software Architect
-
-Sony Network and Software Technology Center Europe
-The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+ 	err = driver_register(&bvme6000_scsi_driver);
+-	if (err) {
++	if (err)
+ 		return err;
  
-Phone:    +32 (0)2 700 8453	
-Fax:      +32 (0)2 700 8622	
-E-mail:   Geert.Uytterhoeven@sonycom.com	
-Internet: http://www.sony-europe.com/
- 	
-Sony Network and Software Technology Center Europe	
-A division of Sony Service Centre (Europe) N.V.	
-Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium	
-VAT BE 0413.825.160 · RPR Brussels	
-Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
----584337861-78175883-1182236803=:5713--
+ 	bvme6000_scsi_device = platform_device_register_simple("bvme6000-scsi",
+--- a/drivers/scsi/zorro7xx.c
++++ b/drivers/scsi/zorro7xx.c
+@@ -65,7 +65,6 @@ static struct zorro_device_id zorro7xx_z
+ 	},
+ 	{ 0 }
+ };
+-MODULE_DEVICE_TABLE(zorro, zorro7xx_zorro_tbl);
+ 
+ static int __devinit zorro7xx_init_one(struct zorro_dev *z,
+ 				       const struct zorro_device_id *ent)
+
+Gr{oetje,eeting}s,
+
+						Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
