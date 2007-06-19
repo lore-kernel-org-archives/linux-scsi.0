@@ -1,35 +1,36 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [patch 0/5] m68k 53c700 SCSI
-Date: Tue, 19 Jun 2007 18:22:54 +0100
-Message-ID: <20070619172254.GA461@infradead.org>
-References: <20070617124704.800461751@mail.of.borg>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aacraid: change srb status busy return
+Date: Tue, 19 Jun 2007 12:40:45 -0500
+Message-ID: <1182274845.3432.31.camel@mulgrave.il.steeleye.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22D5D@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:60083 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758397AbXFSRW7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 13:22:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20070617124704.800461751@mail.of.borg>
+Received: from hancock.steeleye.com ([71.30.118.248]:48789 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758080AbXFSRks (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 13:40:48 -0400
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22D5D@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, Kars de Jong <jongk@linux-m68k.org>, Richard Hirst <rhirst@levanta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, Jun 17, 2007 at 02:47:04PM +0200, Geert Uytterhoeven wrote:
-> 	Hi James,
-> 
-> These patches add support for m68k to the 53c700 SCSI core and introduce new
-> drivers for various m68k hardware using this 53c700 SCSI core, to replace the
-> just removed drivers using the old 53c7xx SCSI core.
-> 
->   [1] [PATCH] 53c700 scsi: m68k support for the 53c700 SCSI core
->   [2] [PATCH] 53c700 scsi: m68k BVME6000 NCR53C710 SCSI
->   [3] [PATCH] 53c700 scsi: m68k MVME16x NCR53C710 SCSI
->   [4] [PATCH] 53c700 scsi: Amiga 4000T NCR53c710 SCSI
->   [5] [PATCH] 53c700 scsi: Amiga Zorro NCR53c710 SCSI
-> 
-> Please apply for 2.6.23. Thx!
+On Tue, 2007-06-19 at 11:41 -0400, Salyzyn, Mark wrote:
+> This patch is more like a spelling correction than a fix. It was
+> discovered that if we had a busy status return from the Adapter for the
+> SCSI srb command to a physical component, that we returned
+> DID_NO_CONNECT rather than what one would expect DID_BUS_BUSY.
 
-The patches all look very nice to me, thanks a lot.
+Are you sure you want DID_BUS_BUSY?  I'm just asking because I'm not
+sure of the firmware ramifications.  DID_BUS_BUSY will turn the command
+around for an immediate retry.  If there's a firmware resource issue,
+you should return something like DID_REQUEUE which will throttle the
+queue and reissue this command when another one returns (I'm afraid it
+throttles the device queue, not the host queue, which may not be what
+you want but we can add another DID_HOST_REQUEUE or something).
+
+James
+
+
