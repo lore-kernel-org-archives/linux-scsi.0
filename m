@@ -1,21 +1,19 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Boaz Harrosh <boaz@electrozaur.com>
 Subject: [PATCH] Remove of not compiling acsi.c
-Date: Tue, 19 Jun 2007 19:23:37 +0300
-Message-ID: <46780309.8000103@panasas.com>
+Date: Tue, 19 Jun 2007 19:20:47 +0300
+Message-ID: <4678025F.1070001@electrozaur.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:50742 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753485AbXFSQXl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 12:23:41 -0400
-Received: from riverside.int.panasas.com (localhost.localdomain [127.0.0.1])
-	by cassoulet.panasas.com (8.13.1/8.13.1) with ESMTP id l5JGNexG031219
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 12:23:40 -0400
+Received: from sa14.bezeqint.net ([192.115.104.29]:37492 "EHLO
+	sa14.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753994AbXFSRB1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 13:01:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Roman Hodek <Roman.Hodek@informatik.uni-erlangen.de>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 
  This drivers has not been compiling for a very long time and is not a
@@ -200,7 +198,7 @@ above */
 -    unsigned long    dummy[2];
 -    unsigned long    sector_size;
 -    unsigned char    format_code;
--#define ATARI_SENSE_FORMAT_FIX    1
+-#define ATARI_SENSE_FORMAT_FIX    1   
 -#define ATARI_SENSE_FORMAT_CHNG    2
 -    unsigned char    cylinders_h;
 -    unsigned char    cylinders_l;
@@ -258,7 +256,7 @@ above */
 -       (sd).atari.format_code == 2)) ? SENSE_TYPE_ATARI :    \
 -     ((sd).scsi.dummy1 >= 11) ? SENSE_TYPE_SCSI :            \
 -     SENSE_TYPE_UNKNOWN)
--
+-     
 -#define CAPACITY(sd)                            \
 -    (SENSE_TYPE(sd) == SENSE_TYPE_ATARI ?        \
 -     ATARI_CAPACITY((sd).atari) :                \
@@ -462,7 +460,7 @@ acsi_info_struct *aip);
 -        long tries = loops_per_jiffy / 8 * timeout;
 -        while( --tries >= 0 )
 -            if (!(mfp.par_dt_reg & 0x20)) return( 1 );
--    }
+-    }       
 -    return( 0 ); /* timeout! */
 -}
 -
@@ -479,7 +477,7 @@ acsi_info_struct *aip);
 -        long tries = loops_per_jiffy * timeout / 8;
 -        while( tries-- >= 0 )
 -            if (mfp.par_dt_reg & 0x20) return( 1 );
--    }
+-    }       
 -    return( 0 ); /* timeout! */
 -}
 -
@@ -530,7 +528,7 @@ rwflag, int enable)
 -        return( 0 );
 -    }
 -#endif
--
+-   
 -    rwflag = rwflag ? 0x100 : 0;
 -    paddr = virt_to_phys( buffer );
 -
@@ -563,8 +561,8 @@ rwflag, int enable)
 -        if (!acsi_wait_for_IRQ( HZ/2 )) return( 0 ); /* timeout */
 -    }
 -
--    /* Clear FIFO and switch DMA to correct direction */
--    dma_wd.dma_mode_status = 0x92 | (rwflag ^ 0x100);
+-    /* Clear FIFO and switch DMA to correct direction */ 
+-    dma_wd.dma_mode_status = 0x92 | (rwflag ^ 0x100); 
 -    MFPDELAY();
 -    dma_wd.dma_mode_status = 0x92 | rwflag;
 -    MFPDELAY();
@@ -572,7 +570,7 @@ rwflag, int enable)
 -    /* How many sectors for DMA */
 -    dma_wd.fdc_acces_seccount = blocks;
 -    MFPDELAY();
--
+-   
 -    /* send last command byte */
 -    dma_wd.dma_mode_status = 0x8a | rwflag;
 -    MFPDELAY();
@@ -615,7 +613,7 @@ rwflag, int enable)
 -    if (enable)
 -        ENABLE_IRQ();
 -    udelay(80);
--
+-   
 -    return( 1 );
 -    /* Note that the ACSI interrupt is still disabled after this
 -     * function. If you want to get the IRQ delivered, enable it manually!
@@ -640,9 +638,9 @@ rwflag, int enable)
 -    if (!acsi_wait_for_IRQ( 10 )) return( 0 );
 -    acsi_getstatus();
 -    dma_cache_maintenance( virt_to_phys(buffer), 16, 0 );
--
+-   
 -    return( 1 );
--}
+-}   
 -
 -
 -/*
@@ -747,7 +745,7 @@ acsi_info_struct *aip)
 -            errcode = errblk[2] & 0x0f;
 -        else
 -            errcode = errblk[0] & 0x0f;
--
+-   
 -    printk( KERN_ERR "ACSI error 0x%02x", errcode );
 -
 -    if (errblk[0] & 0x80)
@@ -758,7 +756,7 @@ acsi_info_struct *aip)
 -    arr = atari_err ? atari_acsi_errors : scsi_acsi_errors;
 -    i = atari_err ? sizeof(atari_acsi_errors)/sizeof(*atari_acsi_errors) :
 -                    sizeof(scsi_acsi_errors)/sizeof(*scsi_acsi_errors);
--
+-   
 -    for( --i; i >= 0; --i )
 -        if (arr[i].code == errcode) break;
 -    if (i >= 0)
@@ -821,7 +819,7 @@ acsi_info_struct *aip)
 -static void read_intr( void )
 -
 -{    int        status;
--
+-   
 -    status = acsi_getstatus();
 -    if (status != 0) {
 -        struct gendisk *disk = CURRENT->rq_disk;
@@ -913,7 +911,7 @@ CurrentNSect*512, 0 );
 -{    int                    i;
 -    char                *src, *dst;
 -    struct buffer_head    *bh;
--
+-   
 -    src = CURRENT->buffer;
 -    dst = acsi_buffer;
 -    bh = CURRENT->bh;
@@ -935,7 +933,7 @@ CurrentNSect*512, 0 );
 -{    int                    i;
 -    char                *src, *dst;
 -    struct buffer_head    *bh;
--
+-   
 -    dst = CURRENT->buffer;
 -    src = acsi_buffer;
 -    bh = CURRENT->bh;
@@ -1039,7 +1037,7 @@ device at block %ld.\n",
 -        end_request(CURRENT, 0);
 -        goto repeat;
 -    }
--
+-   
 -    target = aip->target;
 -    lun    = aip->lun;
 -
@@ -1231,10 +1229,10 @@ medium) */
 -static void acsi_prevent_removal(struct acsi_info_struct *aip, int flag)
 -{
 -    stdma_lock( NULL, NULL );
--
+-   
 -    CMDSET_TARG_LUN(pa_med_rem_cmd, aip->target, aip->lun);
 -    CMDSET_LEN( pa_med_rem_cmd, flag );
--
+-   
 -    if (acsicmd_nodma(pa_med_rem_cmd, 0) && acsi_wait_for_IRQ(3*HZ))
 -        acsi_getstatus();
 -    /* Do not report errors -- some devices may not know this command. */
@@ -1340,7 +1338,7 @@ disk->disk_name );
 -    *sd = *(SENSE_DATA *)acsi_buffer;
 -
 -    /* Validity check, depending on type of data */
--
+-   
 -    switch( SENSE_TYPE(*sd) ) {
 -
 -      case SENSE_TYPE_ATARI:
@@ -1357,7 +1355,7 @@ disk->disk_name );
 -
 -        printk( KERN_ERR "ACSI target %d, lun %d: Cannot interpret "
 -                "sense data\n", target, lun );
--
+-       
 -      invalid_sense:
 -
 -#ifdef DEBUG
@@ -1372,7 +1370,7 @@ valid:",
 -#endif
 -        return( 0 );
 -    }
--
+-       
 -    return( 1 );
 -}
 -
@@ -1461,7 +1459,7 @@ valid:",
 - * DEV_SUPPORTED.
 - *
 - */
--
+-   
 -#define DEV_NONE    0
 -#define DEV_UNKNOWN    1
 -#define DEV_SUPPORTED    2
@@ -1485,7 +1483,7 @@ valid:",
 -#endif
 -        return DEV_NONE;
 -    }
--
+-       
 -    /*************************/
 -    /* Read the ACSI status. */
 -    /*************************/
@@ -1615,11 +1613,11 @@ valid:",
 -        aip->removable = 0;
 -        aip->old_atari_disk = 1;
 -    }
--
+-   
 -    /******************/
 -    /* We've done it. */
 -    /******************/
--
+-   
 -    return DEV_SUPPORTED;
 -}
 -
@@ -1695,7 +1693,7 @@ and thus
 -    }
 -    phys_acsi_buffer = virt_to_phys( acsi_buffer );
 -    STramMask = ATARIHW_PRESENT(EXTD_DMA) ? 0x00000000 : 0xff000000;
--
+-   
 -    acsi_queue = blk_init_queue(do_acsi_request, &acsi_lock);
 -    if (!acsi_queue) {
 -        err = -ENOMEM;
@@ -1886,3 +1884,7 @@ problems:
 -    set_capacity(disk, aip->size);
 -    return 0;
 -}
+-- 
+1.5.0.4.402.g8035
+
+
