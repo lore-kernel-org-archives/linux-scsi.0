@@ -1,50 +1,89 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid: add sysfs support for driver_version
-Date: Tue, 19 Jun 2007 16:33:40 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22E56@otce2k301.adaptec.com>
-References: <46783C26.7060908@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+From: priyankag@google.com (Priyanka Gupta)
+Subject: [PATCH] scsi subsystem: Removing unused method scsi_device_cancel
+Date: Tue, 19 Jun 2007 14:02:10 -0700 (PDT)
+Message-ID: <20070619210210.CCD411B51C6@localhost>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:35400 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755270AbXFSUdm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 16:33:42 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <46783C26.7060908@linux.vnet.ibm.com>
+Received: from smtp-out.google.com ([216.239.33.17]:20401 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752405AbXFSVCf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 17:02:35 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, priyankag@google.com
 
-Thanks, consider this a NAK for this patch for current tree(s).
+From: Priyanka Gupta <priyankag@google.com>
 
-Will retain for driver submissions for older 2.6 kernels (SLES9 for
-example) that do not have the /sys/module/ tree.
+Removes an obsolete method scsi_device_cancel which isn't being used anywhere in the kernel. Applies to kernel version linux-2.6.21.5 onwards.
 
-Sincerely -- Mark Salyzyn
+Signed-off-by: Priyanka Gupta <priyankag@google.com>
+Acked-by: Grant Grundler <grundler@parisc-linux.org>
+---
 
-> -----Original Message-----
-> From: Brian King [mailto:brking@linux.vnet.ibm.com] 
-> Sent: Tuesday, June 19, 2007 4:27 PM
-> To: Salyzyn, Mark
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH] aacraid: add sysfs support for driver_version
-> 
-> 
-> Salyzyn, Mark wrote:
-> > Adding sysfs support for driver_version.
-> 
-> This is already available in /sys/module/aacraid/version
-> 
-> Is this insufficient?
-> 
-> -Brian
-> 
-> -- 
-> Brian King
-> Linux on Power Virtualization
-> IBM Linux Technology Center
-> 
+diff -uprN -X linux-2.6.21.5-vanilla/Documentation/dontdiff linux-2.6.21.5-vanilla/drivers/scsi/scsi.c /usr/local/work/upstream/linux-2.6.21.5/drivers/scsi/scsi.c
+--- linux-2.6.21.5-vanilla/drivers/scsi/scsi.c	2007-06-11 11:37:06.000000000 -0700
++++ /usr/local/work/upstream/linux-2.6.21.5/drivers/scsi/scsi.c	2007-06-18 14:44:13.000000000 -0700
+@@ -1029,52 +1029,6 @@ struct scsi_device *scsi_device_lookup(s
+ }
+ EXPORT_SYMBOL(scsi_device_lookup);
+ 
+-/**
+- * scsi_device_cancel - cancel outstanding IO to this device
+- * @sdev:	Pointer to struct scsi_device
+- * @recovery:	Boolean instructing function to recover device or not.
+- *
+- **/
+-int scsi_device_cancel(struct scsi_device *sdev, int recovery)
+-{
+-	struct scsi_cmnd *scmd;
+-	LIST_HEAD(active_list);
+-	struct list_head *lh, *lh_sf;
+-	unsigned long flags;
+-
+-	scsi_device_set_state(sdev, SDEV_CANCEL);
+-
+-	spin_lock_irqsave(&sdev->list_lock, flags);
+-	list_for_each_entry(scmd, &sdev->cmd_list, list) {
+-		if (scmd->request) {
+-			/*
+-			 * If we are unable to remove the timer, it means
+-			 * that the command has already timed out or
+-			 * finished.
+-			 */
+-			if (!scsi_delete_timer(scmd))
+-				continue;
+-			list_add_tail(&scmd->eh_entry, &active_list);
+-		}
+-	}
+-	spin_unlock_irqrestore(&sdev->list_lock, flags);
+-
+-	if (!list_empty(&active_list)) {
+-		list_for_each_safe(lh, lh_sf, &active_list) {
+-			scmd = list_entry(lh, struct scsi_cmnd, eh_entry);
+-			list_del_init(lh);
+-			if (recovery &&
+-			    !scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD)) {
+-				scmd->result = (DID_ABORT << 16);
+-				scsi_finish_command(scmd);
+-			}
+-		}
+-	}
+-
+-	return 0;
+-}
+-EXPORT_SYMBOL(scsi_device_cancel);
+-
+ MODULE_DESCRIPTION("SCSI core");
+ MODULE_LICENSE("GPL");
+ 
+diff -uprN -X linux-2.6.21.5-vanilla/Documentation/dontdiff linux-2.6.21.5-vanilla/include/scsi/scsi_device.h /usr/local/work/upstream/linux-2.6.21.5/include/scsi/scsi_device.h
+--- linux-2.6.21.5-vanilla/include/scsi/scsi_device.h	2007-06-11 11:37:06.000000000 -0700
++++ /usr/local/work/upstream/linux-2.6.21.5/include/scsi/scsi_device.h	2007-06-18 14:44:50.000000000 -0700
+@@ -204,7 +204,6 @@ extern struct scsi_device *__scsi_add_de
+ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
+ 			   uint target, uint lun);
+ extern void scsi_remove_device(struct scsi_device *);
+-extern int scsi_device_cancel(struct scsi_device *, int);
+ 
+ extern int scsi_device_get(struct scsi_device *);
+ extern void scsi_device_put(struct scsi_device *);
