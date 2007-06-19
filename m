@@ -1,38 +1,41 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] fix req->cmd == INT cases
-Date: Tue, 19 Jun 2007 19:16:11 +0200
-Message-ID: <20070619171610.GH18863@kernel.dk>
-References: <4677FD50.2090803@panasas.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [patch 4/6] ps3: Disk Storage Driver
+Date: Tue, 19 Jun 2007 19:19:38 +0200
+Message-ID: <20070619171938.GA21935@lst.de>
+References: <20070615113919.142332000@pademelon.sonytel.be> <20070615120848.352093000@pademelon.sonytel.be> <20070619054324.GA18542@lst.de> <Pine.LNX.4.62.0706191450120.4069@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:5728 "EHLO kernel.dk"
+Received: from verein.lst.de ([213.95.11.210]:51016 "EHLO mail.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754878AbXFSRQn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jun 2007 13:16:43 -0400
+	id S1757066AbXFSRUM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jun 2007 13:20:12 -0400
 Content-Disposition: inline
-In-Reply-To: <4677FD50.2090803@panasas.com>
+In-Reply-To: <Pine.LNX.4.62.0706191450120.4069@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Paul Bristow <paul@paulbristow.net>, Dave Gilbert <linux@treblig.org>, Russell King <rmk@arm.linux.org.uk>, Dave Alan Gilbert <gilbertd@cs.man.ac.uk>, Paul Clements <Paul.Clements@steeleye.com>, Pavel Machek <pavel@suse.cz>, Steven Whitehouse <swhiteho@redhat.com>, Eberhard Moenkeberg <emoenke@gwdg.de>, David van Leeuwen <avid@tm.tno.nl>, Oliver Raupach <raupach@nwfs1.rz.fh-hannover.de>, Heiko Schlittermann <heiko@lotte.sax.de>, Leo Spiekman <spiekman@dutette.et.tudelft.nl>, "Vadim V. Model" <model@cecmow.enet.dec.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Christoph Hellwig <hch@lst.de>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Jun 19 2007, Boaz Harrosh wrote:
-> From 6f4641911701cbdbe01516305b682012d8c6982a Mon Sep 17 00:00:00 2001
-> Date: Tue, 19 Jun 2007 18:54:54 +0300
+On Tue, Jun 19, 2007 at 02:51:25PM +0200, Geert Uytterhoeven wrote:
+> On Tue, 19 Jun 2007, Christoph Hellwig wrote:
+> > On Fri, Jun 15, 2007 at 01:39:23PM +0200, Geert Uytterhoeven wrote:
+> > > From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+> > > 
+> > > Add a Disk Storage Driver for the PS3:
+> > >   - Implemented as a block device driver with a dynamic major
+> > >   - Disk names (and partitions) are of the format ps3d%c(%u)
+> > >   - Uses software scatter-gather with a 64 KiB bounce buffer as the hypervisor
+> > >     doesn't support scatter-gather
+> > 
+> > Looks good to me.  Only nitpicks are:
+> > 
+> >  - ps3disk_priv should probably be an inline function instead of a macro
 > 
->  I have unearthed very old bugs in stale drivers that still
->  used request->cmd as a READ|WRITE int.
->  This patch is maybe a proof that these drivers have not been
->  used for a long time. Should they be removed completely?
+> I used a macro because you can do
+> 
+>     ps3disk_pri(dev) = ...;
 
-If you look at most of the code, it's inside ifdef debug statements or
-comments most of them. So I don't think you can base any removal
-suggestion on that.
-
-The patch itself looks fine though, if you send one that isn't mangled
-I'll apply it to the 2.6.23 branch.
-
--- 
-Jens Axboe
+I'm not exactly a fan of macros used as lvalues, but if you really
+want this it can go in.
 
