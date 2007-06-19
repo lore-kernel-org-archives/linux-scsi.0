@@ -1,45 +1,112 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 3/5 v2] firewire: fw-sbp2: use sdev->hostdata
-Date: Mon, 18 Jun 2007 20:37:12 +0200
-Message-ID: <4676D0D8.4040201@s5r6.in-berlin.de>
-References: <tkrat.b43f5b2b920f45c6@s5r6.in-berlin.de>	
-	<tkrat.86a8cf28dc784b39@s5r6.in-berlin.de>	
-	<1182180417.7928.13.camel@hinata.boston.redhat.com>	
-	<4676B3FD.9010604@s5r6.in-berlin.de>	
-	<tkrat.301a907417598815@s5r6.in-berlin.de>	
-	<tkrat.a1e99d6be46bde93@s5r6.in-berlin.de>	
-	<tkrat.c78a7eb1483e40b6@s5r6.in-berlin.de>
-	<59ad55d30706181042q64de5cd1u2d95e32fb36307e@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 2/2] iscsi_iser: convert to use the data buffer
+ accessors
+Date: Tue, 19 Jun 2007 09:23:28 +0900
+Message-ID: <20070619092328V.fujita.tomonori@lab.ntt.co.jp>
+References: <4662C89F.1050002@voltaire.com>
+	<20070618195608N.fujita.tomonori@lab.ntt.co.jp>
+	<4676C9D7.6020003@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <59ad55d30706181042q64de5cd1u2d95e32fb36307e@mail.gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@bitplanet.net>
-Cc: linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:38107 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756112AbXFSAXf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jun 2007 20:23:35 -0400
+In-Reply-To: <4676C9D7.6020003@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu, James.Bottomley@steeleye.com
+Cc: open-iscsi@googlegroups.com, erezz@voltaire.com, linux-scsi@vger.kernel.org, rdreier@cisco.com
 
-Kristian H=F8gsberg wrote:
-> You're doing the multi-LU work?
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 2/2] iscsi_iser: convert to use the data buffer accessors
+Date: Mon, 18 Jun 2007 13:07:19 -0500
 
-I expect to do it at next weekend.
--- =
+> FUJITA Tomonori wrote:
+> > From: Erez Zilber <erezz@voltaire.com>
+> > Subject: Re: [PATCH 2/2] iscsi_iser: convert to use the data buffer accessors
+> > Date: Sun, 03 Jun 2007 16:56:47 +0300
+> > 
+> >> FUJITA Tomonori wrote:
+> >>
+> >>> iscsi_iser: convert to use the data buffer accessors
+> >>>
+> >>> - remove the unnecessary map_single path.
+> >>>
+> >>> - convert to use the new accessors for the sg lists and the
+> >>> parameters.
+> >>>
+> >>> TODO: use scsi_for_each_sg().
+> >>>
+> >>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> >>> ---
+> >>>  drivers/infiniband/ulp/iser/iscsi_iser.c     |    4 ++--
+> >>>  drivers/infiniband/ulp/iser/iser_initiator.c |   14 ++++----------
+> >>>  2 files changed, 6 insertions(+), 12 deletions(-)
+> >>>
+> >>> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>> b/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>> index 1bf173d..effdee2 100644
+> >>> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+> >>> @@ -210,10 +210,10 @@ iscsi_iser_ctask_xmit(struct iscsi_conn *conn,
+> >>>         int error = 0;
+> >>>
+> >>>         if (ctask->sc->sc_data_direction == DMA_TO_DEVICE) {
+> >>> -               BUG_ON(ctask->sc->request_bufflen == 0);
+> >>> +               BUG_ON(scsi_bufflen(ctask->sc) == 0);
+> >>>
+> >>>                 debug_scsi("cmd [itt %x total %d imm %d unsol_data %d\n",
+> >>> -                          ctask->itt, ctask->sc->request_bufflen,
+> >>> +                          ctask->itt, scsi_bufflen(ctask->sc),
+> >>>                            ctask->imm_count, ctask->unsol_count);
+> >>>         }
+> >>>
+> >>> diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c
+> >>> b/drivers/infiniband/ulp/iser/iser_initiator.c
+> >>> index 3651072..9ea5b9a 100644
+> >>> --- a/drivers/infiniband/ulp/iser/iser_initiator.c
+> >>> +++ b/drivers/infiniband/ulp/iser/iser_initiator.c
+> >>> @@ -351,18 +351,12 @@ int iser_send_command(struct iscsi_conn     *conn,
+> >>>         else
+> >>>                 data_buf = &iser_ctask->data[ISER_DIR_OUT];
+> >>>
+> >>> -       if (sc->use_sg) { /* using a scatter list */
+> >>> -               data_buf->buf  = sc->request_buffer;
+> >>> -               data_buf->size = sc->use_sg;
+> >>> -       } else if (sc->request_bufflen) {
+> >>> -               /* using a single buffer - convert it into one entry SG */
+> >>> -               sg_init_one(&data_buf->sg_single,
+> >>> -                           sc->request_buffer, sc->request_bufflen);
+> >>> -               data_buf->buf   = &data_buf->sg_single;
+> >>> -               data_buf->size  = 1;
+> >>> +       if (scsi_sg_count(sc)) { /* using a scatter list */
+> >>> +               data_buf->buf  = scsi_sglist(sc);
+> >>> +               data_buf->size = scsi_sg_count(sc);
+> >>>         }
+> >>>
+> >>> -       data_buf->data_len = sc->request_bufflen;
+> >>> +       data_buf->data_len = scsi_bufflen(sc);
+> >>>
+> >>>         if (hdr->flags & ISCSI_FLAG_CMD_READ) {
+> >>>                 err = iser_prepare_read_cmd(ctask, edtl);
+> >>> --
+> >>> 1.4.4.4
+> >>>
+> >>>
+> >> Looks ok to me. I also ran some sanity tests and it works fine.
+> >>
+> >> Erez
+> > 
+> > Who acks this patch, Mike or Roland?
+> > 
+> 
+> I believe Erez is the iser maintainer. He normally sends patches to
+> Roland like how scsi driver maintainers send patches to James.
 
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D=3D- =3D--=3D-
-http://arcgraph.de/sr/
+Oh, I see. Thanks.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by DB2 Express
-Download DB2 Express C - the FREE version of DB2 express and take
-control of your XML. No limits. Just data. Click to get it now.
-http://sourceforge.net/powerbar/db2/
+I guess that it already got Erez's ACK. Can you put this to scsi-misc,
+James?
