@@ -1,34 +1,42 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] remove the dead CYBERSTORMIII_SCSI option
-Date: Tue, 19 Jun 2007 22:26:42 +0200
-Message-ID: <20070619202642.GF12950@stusta.de>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] aacraid: add sysfs support for driver_version
+Date: Tue, 19 Jun 2007 15:27:18 -0500
+Message-ID: <46783C26.7060908@linux.vnet.ibm.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22E32@otce2k301.adaptec.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:33665 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S934034AbXFSU0Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 16:26:24 -0400
-Content-Disposition: inline
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:36829 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932242AbXFSU1W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jun 2007 16:27:22 -0400
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5JKSRms014579
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 16:28:27 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5JKRJsn465486
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 16:27:19 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5JKRJlu016048
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 16:27:19 -0400
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22E32@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-Not converted to the 2.6 kconfig system and no code in the tree.
+Salyzyn, Mark wrote:
+> Adding sysfs support for driver_version.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+This is already available in /sys/module/aacraid/version
 
----
---- linux-2.6.22-rc4-mm2/drivers/scsi/Kconfig.old	2007-06-18 15:22:55.000000000 +0200
-+++ linux-2.6.22-rc4-mm2/drivers/scsi/Kconfig	2007-06-18 15:23:04.000000000 +0200
-@@ -1774,8 +1774,6 @@
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called esp.
- 
--#      bool 'Cyberstorm Mk III SCSI support (EXPERIMENTAL)' CONFIG_CYBERSTORMIII_SCSI
--
- config ZFCP
- 	tristate "FCP host bus adapter driver for IBM eServer zSeries"
- 	depends on S390 && QDIO && SCSI
+Is this insufficient?
 
+-Brian
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
