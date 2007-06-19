@@ -1,112 +1,42 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] iscsi_iser: convert to use the data buffer
- accessors
-Date: Tue, 19 Jun 2007 09:23:28 +0900
-Message-ID: <20070619092328V.fujita.tomonori@lab.ntt.co.jp>
-References: <4662C89F.1050002@voltaire.com>
-	<20070618195608N.fujita.tomonori@lab.ntt.co.jp>
-	<4676C9D7.6020003@cs.wisc.edu>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [patch 4/6] ps3: Disk Storage Driver
+Date: Tue, 19 Jun 2007 07:43:24 +0200
+Message-ID: <20070619054324.GA18542@lst.de>
+References: <20070615113919.142332000@pademelon.sonytel.be> <20070615120848.352093000@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:38107 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756112AbXFSAXf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 18 Jun 2007 20:23:35 -0400
-In-Reply-To: <4676C9D7.6020003@cs.wisc.edu>
+Received: from verein.lst.de ([213.95.11.210]:36118 "EHLO mail.lst.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753622AbXFSFoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jun 2007 01:44:04 -0400
+Content-Disposition: inline
+In-Reply-To: <20070615120848.352093000@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu, James.Bottomley@steeleye.com
-Cc: open-iscsi@googlegroups.com, erezz@voltaire.com, linux-scsi@vger.kernel.org, rdreier@cisco.com
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/2] iscsi_iser: convert to use the data buffer accessors
-Date: Mon, 18 Jun 2007 13:07:19 -0500
-
-> FUJITA Tomonori wrote:
-> > From: Erez Zilber <erezz@voltaire.com>
-> > Subject: Re: [PATCH 2/2] iscsi_iser: convert to use the data buffer accessors
-> > Date: Sun, 03 Jun 2007 16:56:47 +0300
-> > 
-> >> FUJITA Tomonori wrote:
-> >>
-> >>> iscsi_iser: convert to use the data buffer accessors
-> >>>
-> >>> - remove the unnecessary map_single path.
-> >>>
-> >>> - convert to use the new accessors for the sg lists and the
-> >>> parameters.
-> >>>
-> >>> TODO: use scsi_for_each_sg().
-> >>>
-> >>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >>> ---
-> >>>  drivers/infiniband/ulp/iser/iscsi_iser.c     |    4 ++--
-> >>>  drivers/infiniband/ulp/iser/iser_initiator.c |   14 ++++----------
-> >>>  2 files changed, 6 insertions(+), 12 deletions(-)
-> >>>
-> >>> diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c
-> >>> b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> >>> index 1bf173d..effdee2 100644
-> >>> --- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-> >>> +++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-> >>> @@ -210,10 +210,10 @@ iscsi_iser_ctask_xmit(struct iscsi_conn *conn,
-> >>>         int error = 0;
-> >>>
-> >>>         if (ctask->sc->sc_data_direction == DMA_TO_DEVICE) {
-> >>> -               BUG_ON(ctask->sc->request_bufflen == 0);
-> >>> +               BUG_ON(scsi_bufflen(ctask->sc) == 0);
-> >>>
-> >>>                 debug_scsi("cmd [itt %x total %d imm %d unsol_data %d\n",
-> >>> -                          ctask->itt, ctask->sc->request_bufflen,
-> >>> +                          ctask->itt, scsi_bufflen(ctask->sc),
-> >>>                            ctask->imm_count, ctask->unsol_count);
-> >>>         }
-> >>>
-> >>> diff --git a/drivers/infiniband/ulp/iser/iser_initiator.c
-> >>> b/drivers/infiniband/ulp/iser/iser_initiator.c
-> >>> index 3651072..9ea5b9a 100644
-> >>> --- a/drivers/infiniband/ulp/iser/iser_initiator.c
-> >>> +++ b/drivers/infiniband/ulp/iser/iser_initiator.c
-> >>> @@ -351,18 +351,12 @@ int iser_send_command(struct iscsi_conn     *conn,
-> >>>         else
-> >>>                 data_buf = &iser_ctask->data[ISER_DIR_OUT];
-> >>>
-> >>> -       if (sc->use_sg) { /* using a scatter list */
-> >>> -               data_buf->buf  = sc->request_buffer;
-> >>> -               data_buf->size = sc->use_sg;
-> >>> -       } else if (sc->request_bufflen) {
-> >>> -               /* using a single buffer - convert it into one entry SG */
-> >>> -               sg_init_one(&data_buf->sg_single,
-> >>> -                           sc->request_buffer, sc->request_bufflen);
-> >>> -               data_buf->buf   = &data_buf->sg_single;
-> >>> -               data_buf->size  = 1;
-> >>> +       if (scsi_sg_count(sc)) { /* using a scatter list */
-> >>> +               data_buf->buf  = scsi_sglist(sc);
-> >>> +               data_buf->size = scsi_sg_count(sc);
-> >>>         }
-> >>>
-> >>> -       data_buf->data_len = sc->request_bufflen;
-> >>> +       data_buf->data_len = scsi_bufflen(sc);
-> >>>
-> >>>         if (hdr->flags & ISCSI_FLAG_CMD_READ) {
-> >>>                 err = iser_prepare_read_cmd(ctask, edtl);
-> >>> --
-> >>> 1.4.4.4
-> >>>
-> >>>
-> >> Looks ok to me. I also ran some sanity tests and it works fine.
-> >>
-> >> Erez
-> > 
-> > Who acks this patch, Mike or Roland?
-> > 
+On Fri, Jun 15, 2007 at 01:39:23PM +0200, Geert Uytterhoeven wrote:
+> From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 > 
-> I believe Erez is the iser maintainer. He normally sends patches to
-> Roland like how scsi driver maintainers send patches to James.
+> Add a Disk Storage Driver for the PS3:
+>   - Implemented as a block device driver with a dynamic major
+>   - Disk names (and partitions) are of the format ps3d%c(%u)
+>   - Uses software scatter-gather with a 64 KiB bounce buffer as the hypervisor
+>     doesn't support scatter-gather
 
-Oh, I see. Thanks.
+Looks good to me.  Only nitpicks are:
 
-I guess that it already got Erez's ACK. Can you put this to scsi-misc,
-James?
+ - ps3disk_priv should probably be an inline function instead of a macro
+ - ps3disk_open is not needed at all and should be removed completely.
+ - please remove PS3DISK_MAJOR - and just pass 0 to register_blkdev.
+   Passing 0 to get an unassigned dev_t range is the normal convention
+   and giving it a suprising symbolic names makes reading the code a
+   little harder.  
+ - put_disk in ps3disk_remove should be done after you finished tearing
+   down the device, not before
+ - calling free_irq directly followed by request_irq in ps3disk_probe
+   looks rather dumb.  I'd rather move the request_irq out of
+   ps3stor_setup into the low-level driver.
+
