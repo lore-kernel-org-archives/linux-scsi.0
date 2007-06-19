@@ -1,58 +1,70 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid: change srb status busy return
-Date: Tue, 19 Jun 2007 15:37:20 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22E28@otce2k301.adaptec.com>
-References: <1182274845.3432.31.camel@mulgrave.il.steeleye.com>
+Subject: [PATCH] aacraid: add sysfs support for driver_version
+Date: Tue, 19 Jun 2007 15:49:47 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22E32@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF0189EB31@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C7B2AA.FDCA7AFC"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:34188 "EHLO
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:34423 "EHLO
 	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764726AbXFSThX convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 15:37:23 -0400
+	with ESMTP id S1753430AbXFSTtt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 15:49:49 -0400
+Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 5B8F618AEC3
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 12:49:48 -0700 (PDT)
 Content-class: urn:content-classes:message
-In-Reply-To: <1182274845.3432.31.camel@mulgrave.il.steeleye.com>
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0189EB31@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-James Bottomley <mailto:James.Bottomley@SteelEye.com> sez:
->On Tue, 2007-06-19 at 11:41 -0400, Salyzyn, Mark wrote:
->>It was discovered that if we had a busy status return
->>from the Adapter for the SCSI srb command to a physical
->>component, that we returned DID_NO_CONNECT rather than
->>what one would expect DID_BUS_BUSY.
->Are you sure you want DID_BUS_BUSY? I'm just asking because
->I'm not sure of the firmware ramifications. DID_BUS_BUSY
->will turn the command around for an immediate retry.
->If there's a firmware resource issue, you should return
->something like DID_REQUEUE which will throttle the
->queue and reissue this command when another one returns.
+This is a multi-part message in MIME format.
 
-Thanks for noting this. I believe that this is the behavior we want.
+------_=_NextPart_001_01C7B2AA.FDCA7AFC
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-This is related to a SCSI pass-through to the physical targets. I see no
-dummied-up returns of SRB_STATUS_BUSY from the top all the way down to
-the CHIM. This is a report from the physical bus or end device and thus
-does not represent an Adapter resource limit. Immediate re-queuing is
-indicated.
+Adding sysfs support for driver_version.
 
-I noticed this issue when we were talking internally about mitigating
-the sequential queuing of commands to SATA ATAPI devices at the CHIM
-level. A long command (erase CD for example) issued by an application
-was followed by a test unit ready with a short timeout issued by the
-Linux device class layer for media checking and we ended up timing out
-the test unit ready. I had suggested, in violation of the sat
-specification, to return the test unit ready with SRB_STATUS_BUSY when
-timed out prior to even making it to the physical transport while
-sitting in the sequential queue. Thus I noticed the shortcoming in the
-driver regarding the recent (> 2.6.10) addition of this return value.
-The CHIM folks balked at a spoofed SRB_STATUS_BUSY response. Even though
-the workaround was not accepted, this scenario would still be acceptable
-for immediate re-queuing.
+This attached patch is against current scsi-misc-2.6
 
-Sincerely -- Mark Salyzyn
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patch attachments.
 
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+ drivers/scsi/aacraid/linit.c |   14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+------_=_NextPart_001_01C7B2AA.FDCA7AFC
+Content-Type: application/octet-stream;
+	name="aacraid_sysfs_lld_version.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_sysfs_lld_version.patch
+Content-Disposition: attachment;
+	filename="aacraid_sysfs_lld_version.patch"
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
+Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDctMDYt
+MTkgMTU6NDE6MTMuMjc4NDAwOTAzIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
+bml0LmMJMjAwNy0wNi0xOSAxNTo0NTowNS44OTAxNzI3NzUgLTA0MDAKQEAgLTc3MCw2ICs3NzAs
+MTIgQEAKIAlyZXR1cm4gbGVuOwogfQogCitzdGF0aWMgc3NpemVfdCBhYWNfc2hvd19kcml2ZXJf
+dmVyc2lvbihzdHJ1Y3QgY2xhc3NfZGV2aWNlICpjbGFzc19kZXYsCisJCWNoYXIgKmJ1ZikKK3sK
+KwlyZXR1cm4gc25wcmludGYoYnVmLCBQQUdFX1NJWkUsICIlc1xuIiwgYWFjX2RyaXZlcl92ZXJz
+aW9uKTsKK30KKwogc3NpemVfdCBhYWNfc2hvd19zZXJpYWxfbnVtYmVyKHN0cnVjdCBjbGFzc19k
+ZXZpY2UgKmNsYXNzX2RldiwgY2hhciAqYnVmKQogewogCXN0cnVjdCBhYWNfZGV2ICpkZXYgPSAo
+c3RydWN0IGFhY19kZXYqKWNsYXNzX3RvX3Nob3N0KGNsYXNzX2RldiktPmhvc3RkYXRhOwpAQCAt
+ODYxLDYgKzg2NywxMyBAQAogCX0sCiAJLnNob3cgPSBhYWNfc2hvd19iaW9zX3ZlcnNpb24sCiB9
+Oworc3RhdGljIHN0cnVjdCBjbGFzc19kZXZpY2VfYXR0cmlidXRlIGFhY19sbGRfdmVyc2lvbiA9
+IHsKKwkuYXR0ciA9IHsKKwkJLm5hbWUgPSAiZHJpdmVyX3ZlcnNpb24iLAorCQkubW9kZSA9IFNf
+SVJVR08sCisJfSwKKwkuc2hvdyA9IGFhY19zaG93X2RyaXZlcl92ZXJzaW9uLAorfTsKIHN0YXRp
+YyBzdHJ1Y3QgY2xhc3NfZGV2aWNlX2F0dHJpYnV0ZSBhYWNfc2VyaWFsX251bWJlciA9IHsKIAku
+YXR0ciA9IHsKIAkJLm5hbWUgPSAic2VyaWFsX251bWJlciIsCkBAIC04OTcsNiArOTEwLDcgQEAK
+IAkmYWFjX2tlcm5lbF92ZXJzaW9uLAogCSZhYWNfbW9uaXRvcl92ZXJzaW9uLAogCSZhYWNfYmlv
+c192ZXJzaW9uLAorCSZhYWNfbGxkX3ZlcnNpb24sCiAJJmFhY19zZXJpYWxfbnVtYmVyLAogCSZh
+YWNfbWF4X2NoYW5uZWwsCiAJJmFhY19tYXhfaWQsCg==
+
+------_=_NextPart_001_01C7B2AA.FDCA7AFC--
