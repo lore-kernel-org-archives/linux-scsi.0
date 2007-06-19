@@ -1,41 +1,35 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [patch 4/6] ps3: Disk Storage Driver
-Date: Tue, 19 Jun 2007 19:19:38 +0200
-Message-ID: <20070619171938.GA21935@lst.de>
-References: <20070615113919.142332000@pademelon.sonytel.be> <20070615120848.352093000@pademelon.sonytel.be> <20070619054324.GA18542@lst.de> <Pine.LNX.4.62.0706191450120.4069@pademelon.sonytel.be>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [patch 0/5] m68k 53c700 SCSI
+Date: Tue, 19 Jun 2007 18:22:54 +0100
+Message-ID: <20070619172254.GA461@infradead.org>
+References: <20070617124704.800461751@mail.of.borg>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:51016 "EHLO mail.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757066AbXFSRUM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jun 2007 13:20:12 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:60083 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758397AbXFSRW7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 13:22:59 -0400
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0706191450120.4069@pademelon.sonytel.be>
+In-Reply-To: <20070617124704.800461751@mail.of.borg>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Christoph Hellwig <hch@lst.de>, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>, Christoph Hellwig <hch@infradead.org>, Kars de Jong <jongk@linux-m68k.org>, Richard Hirst <rhirst@levanta.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-m68k@vger.kernel.org
 
-On Tue, Jun 19, 2007 at 02:51:25PM +0200, Geert Uytterhoeven wrote:
-> On Tue, 19 Jun 2007, Christoph Hellwig wrote:
-> > On Fri, Jun 15, 2007 at 01:39:23PM +0200, Geert Uytterhoeven wrote:
-> > > From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-> > > 
-> > > Add a Disk Storage Driver for the PS3:
-> > >   - Implemented as a block device driver with a dynamic major
-> > >   - Disk names (and partitions) are of the format ps3d%c(%u)
-> > >   - Uses software scatter-gather with a 64 KiB bounce buffer as the hypervisor
-> > >     doesn't support scatter-gather
-> > 
-> > Looks good to me.  Only nitpicks are:
-> > 
-> >  - ps3disk_priv should probably be an inline function instead of a macro
+On Sun, Jun 17, 2007 at 02:47:04PM +0200, Geert Uytterhoeven wrote:
+> 	Hi James,
 > 
-> I used a macro because you can do
+> These patches add support for m68k to the 53c700 SCSI core and introduce new
+> drivers for various m68k hardware using this 53c700 SCSI core, to replace the
+> just removed drivers using the old 53c7xx SCSI core.
 > 
->     ps3disk_pri(dev) = ...;
+>   [1] [PATCH] 53c700 scsi: m68k support for the 53c700 SCSI core
+>   [2] [PATCH] 53c700 scsi: m68k BVME6000 NCR53C710 SCSI
+>   [3] [PATCH] 53c700 scsi: m68k MVME16x NCR53C710 SCSI
+>   [4] [PATCH] 53c700 scsi: Amiga 4000T NCR53c710 SCSI
+>   [5] [PATCH] 53c700 scsi: Amiga Zorro NCR53c710 SCSI
+> 
+> Please apply for 2.6.23. Thx!
 
-I'm not exactly a fan of macros used as lvalues, but if you really
-want this it can go in.
-
+The patches all look very nice to me, thanks a lot.
