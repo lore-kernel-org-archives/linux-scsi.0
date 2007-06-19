@@ -1,36 +1,34 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: change srb status busy return
-Date: Tue, 19 Jun 2007 11:41:21 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22D5D@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01AB890D@otce2k301.adaptec.com>
+Subject: [PATCH] aacraid: add support for long serial number information
+Date: Tue, 19 Jun 2007 11:53:13 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22D67@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22D5D@otce2k301.adaptec.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7B288.497CF21C"
+	boundary="----_=_NextPart_001_01C7B289.F1CC0DC2"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:56646 "EHLO
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:56931 "EHLO
 	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755937AbXFSPlY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 11:41:24 -0400
+	with ESMTP id S1756103AbXFSPxP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jun 2007 11:53:15 -0400
 Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 4AB3118AB35
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 08:41:23 -0700 (PDT)
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 2A34118A8A6
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Jun 2007 08:53:14 -0700 (PDT)
 Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01AB890D@otce2k301.adaptec.com>
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22D5D@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C7B288.497CF21C
+------_=_NextPart_001_01C7B289.F1CC0DC2
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-This patch is more like a spelling correction than a fix. It was
-discovered that if we had a busy status return from the Adapter for the
-SCSI srb command to a physical component, that we returned
-DID_NO_CONNECT rather than what one would expect DID_BUS_BUSY.
+Support displaying long serial number information. Reuse sysfs handler
+internally as helper.
 
 This attached patch is against current scsi-misc-2.6
 
@@ -39,24 +37,64 @@ handling of patch attachments.
 
 Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
- drivers/scsi/aacraid/aachba.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)=20
+ drivers/scsi/aacraid/aachba.c  |    9 +++++----
+ drivers/scsi/aacraid/aacraid.h |    4 ++++
+ drivers/scsi/aacraid/linit.c   |   12 +++++++++---
+ 3 files changed, 18 insertions(+), 7 deletions(-)
 
-------_=_NextPart_001_01C7B288.497CF21C
+------_=_NextPart_001_01C7B289.F1CC0DC2
 Content-Type: application/octet-stream;
-	name="aacraid_srb_status_busy.patch"
+	name="aacraid_serial_number.patch"
 Content-Transfer-Encoding: base64
-Content-Description: aacraid_srb_status_busy.patch
+Content-Description: aacraid_serial_number.patch
 Content-Disposition: attachment;
-	filename="aacraid_srb_status_busy.patch"
+	filename="aacraid_serial_number.patch"
 
 ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
 YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDYtMTkgMTE6MzE6NTkuODgxNTk2MzAyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDYtMTkgMTE6MzU6NTMuNDEyMTI2Mzk0IC0wNDAwCkBAIC0yMjY2LDcg
-KzIyNjYsNyBAQAogCQlicmVhazsKIAogCWNhc2UgU1JCX1NUQVRVU19CVVNZOgotCQlzY3NpY21k
-LT5yZXN1bHQgPSBESURfTk9fQ09OTkVDVCA8PCAxNiB8IENPTU1BTkRfQ09NUExFVEUgPDwgODsK
-KwkJc2NzaWNtZC0+cmVzdWx0ID0gRElEX0JVU19CVVNZIDw8IDE2IHwgQ09NTUFORF9DT01QTEVU
-RSA8PCA4OwogCQlicmVhazsKIAogCWNhc2UgU1JCX1NUQVRVU19CVVNfUkVTRVQ6Cg==
+MDYtMTkgMTE6NDE6NTMuOTc1NjE4NzEzIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDctMDYtMTkgMTE6NDc6NDAuNDIzODg1MDM4IC0wNDAwCkBAIC0xMTk5LDEw
+ICsxMTk5LDExIEBACiAJCQlkZXYtPm5hbWUsIGRldi0+aWQsCiAJCQl0bXA+PjI0LCh0bXA+PjE2
+KSYweGZmLHRtcCYweGZmLAogCQkJbGUzMl90b19jcHUoZGV2LT5hZGFwdGVyX2luZm8uYmlvc2J1
+aWxkKSk7Ci0JCWlmIChsZTMyX3RvX2NwdShkZXYtPmFkYXB0ZXJfaW5mby5zZXJpYWxbMF0pICE9
+IDB4QkFEMCkKLQkJCXByaW50ayhLRVJOX0lORk8gIiVzJWQ6IHNlcmlhbCAleFxuIiwKLQkJCQlk
+ZXYtPm5hbWUsIGRldi0+aWQsCi0JCQkJbGUzMl90b19jcHUoZGV2LT5hZGFwdGVyX2luZm8uc2Vy
+aWFsWzBdKSk7CisJCWJ1ZmZlclswXSA9ICdcMCc7CisJCWlmIChhYWNfc2hvd19zZXJpYWxfbnVt
+YmVyKAorCQkgIHNob3N0X3RvX2NsYXNzKGRldi0+c2NzaV9ob3N0X3B0ciksIGJ1ZmZlcikpCisJ
+CQlwcmludGsoS0VSTl9JTkZPICIlcyVkOiBzZXJpYWwgJXMiLAorCQkJICBkZXYtPm5hbWUsIGRl
+di0+aWQsIGJ1ZmZlcik7CiAJCWlmIChkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlZwZElu
+Zm8uVHNpZFswXSkgewogCQkJcHJpbnRrKEtFUk5fSU5GTyAiJXMlZDogVFNJRCAlLipzXG4iLAog
+CQkJICBkZXYtPm5hbWUsIGRldi0+aWQsCmRpZmYgLXJ1IGEvZHJpdmVycy9zY3NpL2FhY3JhaWQv
+YWFjcmFpZC5oIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCi0tLSBhL2RyaXZlcnMv
+c2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA3LTA2LTE5IDExOjQxOjUzLjk3NTYxODcxMyAtMDQw
+MAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgJMjAwNy0wNi0xOSAxMTo0Nzo0
+MC40MjQ4ODQ5MTIgLTA0MDAKQEAgLTE4MjIsNiArMTgyMiwxMCBAQAogaW50IGFhY19nZXRfY29u
+dGFpbmVycyhzdHJ1Y3QgYWFjX2RldiAqZGV2KTsKIGludCBhYWNfc2NzaV9jbWQoc3RydWN0IHNj
+c2lfY21uZCAqY21kKTsKIGludCBhYWNfZGV2X2lvY3RsKHN0cnVjdCBhYWNfZGV2ICpkZXYsIGlu
+dCBjbWQsIHZvaWQgX191c2VyICphcmcpOworI2lmbmRlZiBzaG9zdF90b19jbGFzcworI2RlZmlu
+ZSBzaG9zdF90b19jbGFzcyhzaG9zdCkgJnNob3N0LT5zaG9zdF9jbGFzc2RldgorI2VuZGlmCitz
+c2l6ZV90IGFhY19zaG93X3NlcmlhbF9udW1iZXIoc3RydWN0IGNsYXNzX2RldmljZSAqY2xhc3Nf
+ZGV2LCBjaGFyICpidWYpOwogaW50IGFhY19kb19pb2N0bChzdHJ1Y3QgYWFjX2RldiAqIGRldiwg
+aW50IGNtZCwgdm9pZCBfX3VzZXIgKmFyZyk7CiBpbnQgYWFjX3J4X2luaXQoc3RydWN0IGFhY19k
+ZXYgKmRldik7CiBpbnQgYWFjX3JrdF9pbml0KHN0cnVjdCBhYWNfZGV2ICpkZXYpOwpkaWZmIC1y
+dSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9s
+aW5pdC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMJMjAwNy0wNi0xOSAxMTo0
+MTo1My45Nzc2MTg0NjEgLTA0MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYwky
+MDA3LTA2LTE5IDExOjQ3OjQwLjQyNDg4NDkxMiAtMDQwMApAQCAtNzcwLDE1ICs3NzAsMjEgQEAK
+IAlyZXR1cm4gbGVuOwogfQogCi1zdGF0aWMgc3NpemVfdCBhYWNfc2hvd19zZXJpYWxfbnVtYmVy
+KHN0cnVjdCBjbGFzc19kZXZpY2UgKmNsYXNzX2RldiwKLQkJY2hhciAqYnVmKQorc3NpemVfdCBh
+YWNfc2hvd19zZXJpYWxfbnVtYmVyKHN0cnVjdCBjbGFzc19kZXZpY2UgKmNsYXNzX2RldiwgY2hh
+ciAqYnVmKQogewogCXN0cnVjdCBhYWNfZGV2ICpkZXYgPSAoc3RydWN0IGFhY19kZXYqKWNsYXNz
+X3RvX3Nob3N0KGNsYXNzX2RldiktPmhvc3RkYXRhOwogCWludCBsZW4gPSAwOwogCiAJaWYgKGxl
+MzJfdG9fY3B1KGRldi0+YWRhcHRlcl9pbmZvLnNlcmlhbFswXSkgIT0gMHhCQUQwKQotCQlsZW4g
+PSBzbnByaW50ZihidWYsIFBBR0VfU0laRSwgIiV4XG4iLAorCQlsZW4gPSBzbnByaW50ZihidWYs
+IFBBR0VfU0laRSwgIiUwNlhcbiIsCiAJCSAgbGUzMl90b19jcHUoZGV2LT5hZGFwdGVyX2luZm8u
+c2VyaWFsWzBdKSk7CisJaWYgKGxlbiAmJgorCSAgIW1lbWNtcCgmZGV2LT5zdXBwbGVtZW50X2Fk
+YXB0ZXJfaW5mby5NZmdQY2JhU2VyaWFsTm9bCisJICAgIHNpemVvZihkZXYtPnN1cHBsZW1lbnRf
+YWRhcHRlcl9pbmZvLk1mZ1BjYmFTZXJpYWxObykrMi1sZW5dLAorCSAgYnVmLCBsZW4pKQorCQls
+ZW4gPSBzbnByaW50ZihidWYsIFBBR0VfU0laRSwgIiUuKnNcbiIsCisJCSAgKGludClzaXplb2Yo
+ZGV2LT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5mby5NZmdQY2JhU2VyaWFsTm8pLAorCQkgIGRldi0+
+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uTWZnUGNiYVNlcmlhbE5vKTsKIAlyZXR1cm4gbGVuOwog
+fQogCg==
 
-------_=_NextPart_001_01C7B288.497CF21C--
+------_=_NextPart_001_01C7B289.F1CC0DC2--
