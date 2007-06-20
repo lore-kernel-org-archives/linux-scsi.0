@@ -1,84 +1,56 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Very slow writes with mptsas
-Date: Wed, 20 Jun 2007 13:30:39 -0400
-Message-ID: <4679643F.3010309@torque.net>
-References: <20070605161620.GB6519@bloch.config> <20070612141511.GB4347@bloch.config>
-Reply-To: dougg@torque.net
+From: Rene Herman <rene.herman@gmail.com>
+Subject: Re: [PATCH] fix req->cmd == INT cases
+Date: Wed, 20 Jun 2007 23:16:56 +0200
+Message-ID: <46799948.8000106@gmail.com>
+References: <4677FD50.2090803@panasas.com> <20070619171610.GH18863@kernel.dk> <4679072C.2010604@panasas.com> <20070620122247.GA4443@infradead.org> <20070620122409.GU18863@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:38877 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752931AbXFTRav (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2007 13:30:51 -0400
-In-Reply-To: <20070612141511.GB4347@bloch.config>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754463AbXFTVUk@vger.kernel.org>
+In-Reply-To: <20070620122409.GU18863@kernel.dk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bloch@verdurin.com
-Cc: linux-scsi@vger.kernel.org, linux-precision@dell.com
 
-bloch@verdurin.com wrote:
-> On Tue, 05 Jun 2007, bloch@verdurin.com wrote:
-> 
->> Hello
->>
->> I'm seeing very slow writes on a Dell Precision 690 with the Dell SAS5
->> adapter, serving a RAID1 array of SATA-II disks.
->>
->> It's very similar to the problem in FreeBSD, described here:
->>
->> http://unix.derkeiler.com/Mailing-Lists/FreeBSD/stable/2007-03/msg00756.html
->>
->> I'm running FC6 with the latest kernel.
->>
->> Reads are quite fast, writes terribly slow.
->>
-> 
-> Thanks to all who replied to this query, especially the very detailed
-> response from Eric Moore at LSI.
-> 
-> The first important facet is that we need to operate on the two hidden
-> physical disks, not the RAID device.  lsscsi differentiates them:
-> 
-> # lsscsi
-> [0:0:0:0]    disk    ATA      WDC WD5000KS-75M 2E08  -       
-> [0:0:1:0]    disk    ATA      HDS725050KLA360  AB5A  -       
-> [0:1:0:0]    disk    Dell     VIRTUAL DISK     1028  /dev/sda
-> 
-> sg_map gives the generic device numbers:
+On 06/20/2007 02:24 PM, Jens Axboe wrote:
 
-Using 'lsscsi -g' would also give you the generic device
-numbers.
+> On Wed, Jun 20 2007, Christoph Hellwig wrote:
+>> On Wed, Jun 20, 2007 at 01:53:32PM +0300, Boaz Harrosh wrote:
 
-It is interesting that the above "ATA" disks do not have
-corresponding /dev/sd* device names.
-
-> # sg_map -i -x
-> /dev/sg0  0 0 0 0  0  ATA       WDC WD5000KS-75M  2E08
-> /dev/sg1  0 0 1 0  0  ATA       HDS725050KLA360   AB5A
+>>>  drivers/cdrom/aztcd.c
+>>>  drivers/cdrom/cm206.c
+>>>  drivers/cdrom/gscd.c
+>>>  drivers/cdrom/mcdx.c
+>>>  drivers/cdrom/optcd.c
+>>>  drivers/cdrom/sjcd.c
+>>> 
+>> These are old cdrom drivers that are broken in various ways and
+>> probably should be killed off aswell.
 > 
-> The write cache can then be enabled using sdparm:
-> 
-> sdparm -s WCE=1 -S /dev/sg0
-> 
-> and the result checked with
-> 
-> # sdparm -g WCE /dev/sg1
-> /dev/sg1: ATA       HDS725050KLA360   AB5A
-> WCE         1  [cha: y]
-> 
-> This seems to make the write performance much better.
+> I agree (with both sentiments), would anyone mind if I just killed them
+> off?
 
-Good.
+I wouldn't. As far as I'm concerned everything in drivers/cdrom except 
+viocd.c and cdrom.c itself can go, assuming I'll be allowed to bring back 
+support for the legacy cdrom types I'd still like to have supported -- in 
+the first place mitsumi (mcdx), panasonic (sbpcd) and sony (cdu31a) and 
+perhaps at some point other types if/when I happen across the hardware.
 
-> The question for Dell is why their version of the BIOS doesn't set the
-> write cache in the first place or allow it to be altered by the user.
+The old drivers serve as a source of hardware information but at least mcdx 
+was broken in so many ways that it only did so at the source level. When I 
+wanted to check throughput with the old driver I actually had to go back as 
+far as 2.0.34 to find a working driver (the old mcd.c, already removed since 
+2.6.10). 2.0.34 sources are available from kernel.org, and 2.6.22 sources 
+even from my local machine...
 
-The mechanism for doing this was only formalized recently
-with the SAT standard, so it may take a while for BIOSes
-and other infrastructure to catch up.
+> mitsumi support is being reworked, that can get reintroduced once the
+> driver is in a stable state.
 
-Doug Gilbert
+... which, by the way, is still waiting on comment from anyone with a clue 
+as to why it makes the machine go boom (easily repeatable when using CFQ, 
+not or not easily when using AS):
 
+http://lkml.org/lkml/2007/6/4/50
 
+Rene.
