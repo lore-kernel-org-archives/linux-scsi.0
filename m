@@ -1,271 +1,155 @@
 From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: add cpu cache flush after kmapping and modifying a page
-Date: Wed, 20 Jun 2007 11:04:26 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22F4C@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF019E21E8@otce2k301.adaptec.com>
+Subject: [PATCH] aacraid: add SCSI SYNCHONIZE_CACHE range checking (take 2)
+Date: Wed, 20 Jun 2007 11:30:43 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01B22F75@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55E7E@otce2k301.adaptec.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7B34C.4BB2E2C2"
+	boundary="----_=_NextPart_001_01C7B34F.F75EB084"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:53819 "EHLO
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:54549 "EHLO
 	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753555AbXFTPE3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2007 11:04:29 -0400
+	with ESMTP id S1751596AbXFTPaq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2007 11:30:46 -0400
+Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id A6B4718D170
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Jun 2007 08:30:45 -0700 (PDT)
 Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF019E21E8@otce2k301.adaptec.com>
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01A55E7E@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
 
-------_=_NextPart_001_01C7B34C.4BB2E2C2
+------_=_NextPart_001_01C7B34F.F75EB084
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-Updated patch to address overlap with patches introduced by FUJITA
-Tomonori <fujita.tomonori@lab.ntt.co.jp>. Tejun, please inspect.
+There was some overlap with another patch (?) this one has not shown in
+scsi-pending-2.6. Modernized to apply cleanly and did some extra
+cleanup.
 
-This attached aacraid specific portion of the patch is against current
-scsi-misc-2.6.
+This attached patch is against current scsi-misc-2.6
 
 ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch content.
+handling of patch attachments.
 
 Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
- drivers/scsi/aacraid/aachba.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/aacraid/aachba.c |   63
+++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 55 insertions(+), 8 deletions(-)
 
 Sincerely -- Mark Salyzyn
 
 > -----Original Message-----
 > From: linux-scsi-owner@vger.kernel.org=20
 > [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-> Sent: Tuesday, May 29, 2007 12:54 PM
-> To: James Bottomley; Tejun Heo
-> Cc: linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 4/5] SCSI: add cpu cache flushes after=20
-> kmapping and modifying a page
+> Sent: Thursday, June 07, 2007 1:21 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: [PATCH] aacraid: add SCSI SYNCHONIZE_CACHE range checking.=20
 >=20
 >=20
-> What ever became of the following patch? I have enclosed the=20
-> incremental
-> aacraid version of this patch to permit closure if the following was
-> rejected because of another portion.
+> Customer running an application that issues SYNCHRONIZE_CACHE calls
+> directly noticed the broad stroke of the current implementation in the
+> aacraid driver resulting in multiple applications feeding I/O to the
+> storage causing the issuing application to stall for long periods of
+> time. By only waiting for the current WRITE commands, rather than all
+> commands, to complete; and those that are in range of the
+> SYNCHRONIZE_CACHE call that would associate more tightly with the
+> issuing application before telling the Firmware to flush it's dirty
+> cache, we managed to reduce the stalling. The Firmware itself still
+> flushes all the dirty cache associated with the array ignoring the
+> range, it just does so in a more timely manner.
 >=20
-> This attached aacraid specific portion of the patch is against current
-> scsi-misc-2.6.
+> This attached patch is against current scsi-misc-2.6
 >=20
 > ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-> handling of patch content.
+> handling of patch attachments.
 >=20
 > Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 >=20
 > Sincerely -- Mark Salyzyn
 >=20
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Tejun Heo
-> Sent: Saturday, June 03, 2006 11:41 PM
-> To: Jens Axboe; James Bottomley; Dave Miller; bzolnier@gmail.com;
-> james.steward@dynamicratings.com; jgarzik@pobox.com;
-> mattjreimer@gmail.com; Guennadi Liakhovetski; rmk@arm.linux.org.uk;
-> lkml; linux-ide@vger.kernel.org; linux-scsi@vger.kernel.org;
-> htejun@gmail.com
-> Cc: Tejun Heo
-> Subject: [PATCH 4/5] SCSI: add cpu cache flushes after kmapping and
-> modifying a page
->=20
->=20
-> Add calls to flush_kernel_dcache_page() after CPU has kmapped and
-> modified a page.  This fixes PIO cache coherency bugs on architectures
-> with aliased caches.
->=20
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
->=20
-> ---
->=20
->  drivers/scsi/3w-9xxx.c        |    1 +
->  drivers/scsi/3w-xxxx.c        |    1 +
->  drivers/scsi/aacraid/aachba.c |    4 +++-
->  drivers/scsi/ide-scsi.c       |    1 +
->  drivers/scsi/ips.c            |    2 ++
->  drivers/scsi/iscsi_tcp.c      |    1 +
->  drivers/scsi/megaraid.c       |    2 ++
->  drivers/scsi/qlogicpti.c      |    1 +
->  drivers/scsi/scsi_debug.c     |    1 +
->  drivers/scsi/scsi_lib.c       |    1 +
->  10 files changed, 14 insertions(+), 1 deletions(-)
->=20
-> 9b4bdd1409efb726d4a6561a4f7e2aff878ab4f4
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index caeb6d2..172f16b 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -1948,6 +1948,7 @@ static void twa_scsiop_execute_scsi_comp
->  			local_irq_save(flags);
->  			buf =3D kmap_atomic(sg->page, KM_IRQ0) +
-> sg->offset;
->  			memcpy(buf,
-> tw_dev->generic_buffer_virt[request_id], sg->length);
-> +			flush_kernel_dcache_page(kmap_atomic_to_page(buf
-> - sg->offset));
->  			kunmap_atomic(buf - sg->offset, KM_IRQ0);
->  			local_irq_restore(flags);
->  		}
-> diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-> index e8e41e6..8449551 100644
-> --- a/drivers/scsi/3w-xxxx.c
-> +++ b/drivers/scsi/3w-xxxx.c
-> @@ -1527,6 +1527,7 @@ static void tw_transfer_internal(TW_Devi
->  		struct scatterlist *sg;
-> =20
->  		sg =3D (struct scatterlist *)cmd->request_buffer;
-> +		flush_kernel_dcache_page(kmap_atomic_to_page(buf -
-> sg->offset));
->  		kunmap_atomic(buf - sg->offset, KM_IRQ0);
->  		local_irq_restore(flags);
->  	}
-> diff --git a/drivers/scsi/aacraid/aachba.c
-> b/drivers/scsi/aacraid/aachba.c
-> index 642a3b4..b7c00b8 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -376,8 +376,10 @@ static void aac_internal_transfer(struct
-> =20
->  	memcpy(buf + offset, data, transfer_len - offset);
-> =20
-> -	if (scsicmd->use_sg)=20
-> +	if (scsicmd->use_sg) {
-> +		flush_kernel_dcache_page(kmap_atomic_to_page(buf -
-> sg->offset));
->  		kunmap_atomic(buf - sg->offset, KM_IRQ0);
-> +	}
-> =20
->  }
-> =20
-> diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-> index 39b760a..9c28b95 100644
-> --- a/drivers/scsi/ide-scsi.c
-> +++ b/drivers/scsi/ide-scsi.c
-> @@ -189,6 +189,7 @@ static void idescsi_input_buffers (ide_d
->  					pc->sg->offset;
->  			drive->hwif->atapi_input_bytes(drive,
->  						buf + pc->b_count,
-> count);
-> +			flush_kernel_dcache_page(kmap_atomic_to_page(buf
-> - pc->sg->offset));
->  			kunmap_atomic(buf - pc->sg->offset, KM_IRQ0);
->  			local_irq_restore(flags);
->  		} else {
-> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-> index a4c0b04..29eb3f0 100644
-> --- a/drivers/scsi/ips.c
-> +++ b/drivers/scsi/ips.c
-> @@ -3682,6 +3682,8 @@ ips_scmd_buf_write(Scsi_Cmnd * scmd, voi
->  			local_irq_save(flags);
->  			buffer =3D kmap_atomic(sg[i].page, KM_IRQ0) +
-> sg[i].offset;
->  			memcpy(buffer, &cdata[xfer_cnt], min_cnt);
-> +                        flush_kernel_dcache_page(
-> +                                kmap_atomic_to_page(buffer -
-> sg[i].offset));
->  			kunmap_atomic(buffer - sg[i].offset, KM_IRQ0);
->  			local_irq_restore(flags);
-> =20
-> diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-> index 2068b66..ae9784c 100644
-> --- a/drivers/scsi/iscsi_tcp.c
-> +++ b/drivers/scsi/iscsi_tcp.c
-> @@ -945,6 +945,7 @@ static int iscsi_scsi_data_in(struct isc
->  		dest =3D kmap_atomic(sg[i].page, KM_SOFTIRQ0);
->  		rc =3D iscsi_ctask_copy(conn, ctask, dest + sg[i].offset,
->  				      sg[i].length, offset);
-> +		flush_kernel_dcache_page(kmap_atomic_to_page(dest));
->  		kunmap_atomic(dest, KM_SOFTIRQ0);
->  		if (rc =3D=3D -EAGAIN)
->  			/* continue with the next SKB/PDU */
-> diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-> index de35ffe..7cb7590 100644
-> --- a/drivers/scsi/megaraid.c
-> +++ b/drivers/scsi/megaraid.c
-> @@ -671,6 +671,8 @@ #endif
->  				struct scatterlist *sg;
-> =20
->  				sg =3D (struct scatterlist
-> *)cmd->request_buffer;
-> +				flush_kernel_dcache_page(
-> +					kmap_atomic_to_page(buf -
-> sg->offset));
->  				kunmap_atomic(buf - sg->offset,
-> KM_IRQ0);
->  			}
->  			cmd->result =3D (DID_OK << 16);
-> diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-> index c7e78dc..f8201f2 100644
-> --- a/drivers/scsi/qlogicpti.c
-> +++ b/drivers/scsi/qlogicpti.c
-> @@ -1146,6 +1146,7 @@ static void scsi_rbuf_put(struct scsi_cm
->  		struct scatterlist *sg;
-> =20
->  		sg =3D (struct scatterlist *) cmd->request_buffer;
-> +		flush_kernel_dcache_page(kmap_atomic_to_page(buf -
-> sg->offset));
->  		kunmap_atomic(buf - sg->offset, KM_IRQ0);
->  	}
->  }
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index 5a5d2af..88543db 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -511,6 +511,7 @@ static int fill_from_dev_buffer(struct s
->  				len =3D arr_len - req_len;
->  			}
->  			memcpy(kaddr_off, arr + req_len, len);
-> +
-> flush_kernel_dcache_page(kmap_atomic_to_page(kaddr));
->  			kunmap_atomic(kaddr, KM_USER0);
->  			act_len +=3D len;
->  		}
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 764a8b3..8bb2f6c 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -945,6 +945,7 @@ void scsi_io_completion(struct scsi_cmnd
->  			unsigned long flags;
->  			char *to =3D bio_kmap_irq(req->bio, &flags);
->  			memcpy(to, cmd->buffer, cmd->bufflen);
-> +
-> flush_kernel_dcache_page(kmap_atomic_to_page(to));
->  			bio_kunmap_irq(to, &flags);
->  		}
->  		kfree(cmd->buffer);
-> --=20
-> 1.3.2
->=20
 
-------_=_NextPart_001_01C7B34C.4BB2E2C2
+------_=_NextPart_001_01C7B34F.F75EB084
 Content-Type: application/octet-stream;
-	name="aacraid_flush_dcache2.patch"
+	name="aacraid_synch_range2.patch"
 Content-Transfer-Encoding: base64
-Content-Description: aacraid_flush_dcache2.patch
+Content-Description: aacraid_synch_range2.patch
 Content-Disposition: attachment;
-	filename="aacraid_flush_dcache2.patch"
+	filename="aacraid_synch_range2.patch"
 
 ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
 YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDYtMjAgMTA6NDY6MTQuMzcwMTY2NDI3IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDYtMjAgMTA6NTA6MTIuODgzMDEwNzQwIC0wNDAwCkBAIC0zMSw5ICsz
-MSw5IEBACiAjaW5jbHVkZSA8bGludXgvc2xhYi5oPgogI2luY2x1ZGUgPGxpbnV4L2NvbXBsZXRp
-b24uaD4KICNpbmNsdWRlIDxsaW51eC9ibGtkZXYuaD4KLSNpbmNsdWRlIDxsaW51eC9kbWEtbWFw
-cGluZy5oPgogI2luY2x1ZGUgPGFzbS9zZW1hcGhvcmUuaD4KICNpbmNsdWRlIDxhc20vdWFjY2Vz
-cy5oPgorI2luY2x1ZGUgPGxpbnV4L2hpZ2htZW0uaD4gLyogRm9yIGZsdXNoX2tlcm5lbF9kY2Fj
-aGVfcGFnZSAqLwogCiAjaW5jbHVkZSA8c2NzaS9zY3NpLmg+CiAjaW5jbHVkZSA8c2NzaS9zY3Np
-X2NtbmQuaD4KQEAgLTM2NCw2ICszNjQsNyBAQAogCWlmIChidWYgJiYgdHJhbnNmZXJfbGVuID4g
-MCkKIAkJbWVtY3B5KGJ1ZiArIG9mZnNldCwgZGF0YSwgdHJhbnNmZXJfbGVuKTsKIAorCWZsdXNo
-X2tlcm5lbF9kY2FjaGVfcGFnZShrbWFwX2F0b21pY190b19wYWdlKGJ1ZiAtIHNnLT5vZmZzZXQp
-KTsKIAlrdW5tYXBfYXRvbWljKGJ1ZiAtIHNnLT5vZmZzZXQsIEtNX0lSUTApOwogCiB9Cg==
+MDYtMjAgMTE6MDU6NDcuNjczNjA5MjMzIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDctMDYtMjAgMTE6MjE6MzMuNjU1MDUzMjg1IC0wNDAwCkBAIC0xNTk1LDIz
+ICsxNTk1LDIzIEBACiAJaWYgKCFhYWNfdmFsaWRfY29udGV4dChjbWQsIGZpYnB0cikpCiAJCXJl
+dHVybjsKIAotCWRwcmludGsoKEtFUk5fREVCVUcgInN5bmNocm9uaXplX2NhbGxiYWNrW2NwdSAl
+ZF06IHQgPSAlbGQuXG4iLCAKKwlkcHJpbnRrKChLRVJOX0RFQlVHICJzeW5jaHJvbml6ZV9jYWxs
+YmFja1tjcHUgJWRdOiB0ID0gJWxkLlxuIiwKIAkJCQlzbXBfcHJvY2Vzc29yX2lkKCksIGppZmZp
+ZXMpKTsKIAlCVUdfT04oZmlicHRyID09IE5VTEwpOwogCiAKIAlzeW5jaHJvbml6ZXJlcGx5ID0g
+ZmliX2RhdGEoZmlicHRyKTsKIAlpZiAobGUzMl90b19jcHUoc3luY2hyb25pemVyZXBseS0+c3Rh
+dHVzKSA9PSBDVF9PSykKLQkJY21kLT5yZXN1bHQgPSBESURfT0sgPDwgMTYgfCAKKwkJY21kLT5y
+ZXN1bHQgPSBESURfT0sgPDwgMTYgfAogCQkJQ09NTUFORF9DT01QTEVURSA8PCA4IHwgU0FNX1NU
+QVRfR09PRDsKIAllbHNlIHsKIAkJc3RydWN0IHNjc2lfZGV2aWNlICpzZGV2ID0gY21kLT5kZXZp
+Y2U7CiAJCXN0cnVjdCBhYWNfZGV2ICpkZXYgPSBmaWJwdHItPmRldjsKIAkJdTMyIGNpZCA9IHNk
+ZXZfaWQoc2Rldik7Ci0JCXByaW50ayhLRVJOX1dBUk5JTkcgCisJCXByaW50ayhLRVJOX1dBUk5J
+TkcKIAkJICAgICAic3luY2hyb25pemVfY2FsbGJhY2s6IHN5bmNocm9uaXplIGZhaWxlZCwgc3Rh
+dHVzID0gJWRcbiIsCiAJCSAgICAgbGUzMl90b19jcHUoc3luY2hyb25pemVyZXBseS0+c3RhdHVz
+KSk7Ci0JCWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2IHwgCisJCWNtZC0+cmVzdWx0ID0gRElE
+X09LIDw8IDE2IHwKIAkJCUNPTU1BTkRfQ09NUExFVEUgPDwgOCB8IFNBTV9TVEFUX0NIRUNLX0NP
+TkRJVElPTjsKIAkJc2V0X3NlbnNlKCh1OCAqKSZkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRh
+LAogCQkJCSAgICBIQVJEV0FSRV9FUlJPUiwKQEAgLTE2MTksNyArMTYxOSw3IEBACiAJCQkJICAg
+IEFTRU5DT0RFX0lOVEVSTkFMX1RBUkdFVF9GQUlMVVJFLCAwLCAwLAogCQkJCSAgICAwLCAwKTsK
+IAkJbWVtY3B5KGNtZC0+c2Vuc2VfYnVmZmVyLCAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0
+YSwKLQkJICBtaW4oc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpLCAKKwkJICBt
+aW4oc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpLAogCQkJICBzaXplb2YoY21k
+LT5zZW5zZV9idWZmZXIpKSk7CiAJfQogCkBAIC0xNjM3LDYgKzE2MzcsOSBAQAogCXN0cnVjdCBz
+Y3NpX2RldmljZSAqc2RldiA9IHNjc2ljbWQtPmRldmljZTsKIAlpbnQgYWN0aXZlID0gMDsKIAlz
+dHJ1Y3QgYWFjX2RldiAqYWFjOworCXU2NCBsYmEgPSAoKHU2NClzY3NpY21kLT5jbW5kWzJdIDw8
+IDI0KSB8IChzY3NpY21kLT5jbW5kWzNdIDw8IDE2KSB8CisJCShzY3NpY21kLT5jbW5kWzRdIDw8
+IDgpIHwgc2NzaWNtZC0+Y21uZFs1XTsKKwl1MzIgY291bnQgPSAoc2NzaWNtZC0+Y21uZFs3XSA8
+PCA4KSB8IHNjc2ljbWQtPmNtbmRbOF07CiAJdW5zaWduZWQgbG9uZyBmbGFnczsKIAogCS8qCkBA
+IC0xNjQ1LDcgKzE2NDgsNTEgQEAKIAkgKi8KIAlzcGluX2xvY2tfaXJxc2F2ZSgmc2Rldi0+bGlz
+dF9sb2NrLCBmbGFncyk7CiAJbGlzdF9mb3JfZWFjaF9lbnRyeShjbWQsICZzZGV2LT5jbWRfbGlz
+dCwgbGlzdCkKLQkJaWYgKGNtZCAhPSBzY3NpY21kICYmIGNtZC0+U0NwLnBoYXNlID09IEFBQ19P
+V05FUl9GSVJNV0FSRSkgeworCQlpZiAoY21kLT5TQ3AucGhhc2UgPT0gQUFDX09XTkVSX0ZJUk1X
+QVJFKSB7CisJCQl1NjQgY21uZF9sYmE7CisJCQl1MzIgY21uZF9jb3VudDsKKworCQkJaWYgKGNt
+ZC0+Y21uZFswXSA9PSBXUklURV82KSB7CisJCQkJY21uZF9sYmEgPSAoKGNtZC0+Y21uZFsxXSAm
+IDB4MUYpIDw8IDE2KSB8CisJCQkJCShjbWQtPmNtbmRbMl0gPDwgOCkgfAorCQkJCQljbWQtPmNt
+bmRbM107CisJCQkJY21uZF9jb3VudCA9IGNtZC0+Y21uZFs0XTsKKwkJCQlpZiAoY21uZF9jb3Vu
+dCA9PSAwKQorCQkJCQljbW5kX2NvdW50ID0gMjU2OworCQkJfSBlbHNlIGlmIChjbWQtPmNtbmRb
+MF0gPT0gV1JJVEVfMTYpIHsKKwkJCQljbW5kX2xiYSA9ICgodTY0KWNtZC0+Y21uZFsyXSA8PCA1
+NikgfAorCQkJCQkoKHU2NCljbWQtPmNtbmRbM10gPDwgNDgpIHwKKwkJCQkJKCh1NjQpY21kLT5j
+bW5kWzRdIDw8IDQwKSB8CisJCQkJCSgodTY0KWNtZC0+Y21uZFs1XSA8PCAzMikgfAorCQkJCQko
+KHU2NCljbWQtPmNtbmRbNl0gPDwgMjQpIHwKKwkJCQkJKGNtZC0+Y21uZFs3XSA8PCAxNikgfAor
+CQkJCQkoY21kLT5jbW5kWzhdIDw8IDgpIHwKKwkJCQkJY21kLT5jbW5kWzldOworCQkJCWNtbmRf
+Y291bnQgPSAoY21kLT5jbW5kWzEwXSA8PCAyNCkgfAorCQkJCQkoY21kLT5jbW5kWzExXSA8PCAx
+NikgfAorCQkJCQkoY21kLT5jbW5kWzEyXSA8PCA4KSB8CisJCQkJCWNtZC0+Y21uZFsxM107CisJ
+CQl9IGVsc2UgaWYgKGNtZC0+Y21uZFswXSA9PSBXUklURV8xMikgeworCQkJCWNtbmRfbGJhID0g
+KCh1NjQpY21kLT5jbW5kWzJdIDw8IDI0KSB8CisJCQkJCShjbWQtPmNtbmRbM10gPDwgMTYpIHwK
+KwkJCQkJKGNtZC0+Y21uZFs0XSA8PCA4KSB8CisJCQkJCWNtZC0+Y21uZFs1XTsKKwkJCQljbW5k
+X2NvdW50ID0gKGNtZC0+Y21uZFs2XSA8PCAyNCkgfAorCQkJCQkoY21kLT5jbW5kWzddIDw8IDE2
+KSB8CisJCQkJCShjbWQtPmNtbmRbOF0gPDwgOCkgfAorCQkJCQljbWQtPmNtbmRbOV07CisJCQl9
+IGVsc2UgaWYgKGNtZC0+Y21uZFswXSA9PSBXUklURV8xMCkgeworCQkJCWNtbmRfbGJhID0gKCh1
+NjQpY21kLT5jbW5kWzJdIDw8IDI0KSB8CisJCQkJCShjbWQtPmNtbmRbM10gPDwgMTYpIHwKKwkJ
+CQkJKGNtZC0+Y21uZFs0XSA8PCA4KSB8CisJCQkJCWNtZC0+Y21uZFs1XTsKKwkJCQljbW5kX2Nv
+dW50ID0gKGNtZC0+Y21uZFs3XSA8PCA4KSB8CisJCQkJCWNtZC0+Y21uZFs4XTsKKwkJCX0gZWxz
+ZQorCQkJCWNvbnRpbnVlOworCQkJaWYgKCgoY21uZF9sYmEgKyBjbW5kX2NvdW50KSA8IGxiYSkg
+fHwKKwkJCSAgKGNvdW50ICYmICgobGJhICsgY291bnQpIDwgY21uZF9sYmEpKSkKKwkJCQljb250
+aW51ZTsKIAkJCSsrYWN0aXZlOwogCQkJYnJlYWs7CiAJCX0KQEAgLTE2NzQsNyArMTcyMSw3IEBA
+CiAJc3luY2hyb25pemVjbWQtPmNvbW1hbmQgPSBjcHVfdG9fbGUzMihWTV9Db250YWluZXJDb25m
+aWcpOwogCXN5bmNocm9uaXplY21kLT50eXBlID0gY3B1X3RvX2xlMzIoQ1RfRkxVU0hfQ0FDSEUp
+OwogCXN5bmNocm9uaXplY21kLT5jaWQgPSBjcHVfdG9fbGUzMihzY21kX2lkKHNjc2ljbWQpKTsK
+LQlzeW5jaHJvbml6ZWNtZC0+Y291bnQgPSAKKwlzeW5jaHJvbml6ZWNtZC0+Y291bnQgPQogCSAg
+ICAgY3B1X3RvX2xlMzIoc2l6ZW9mKCgoc3RydWN0IGFhY19zeW5jaHJvbml6ZV9yZXBseSAqKU5V
+TEwpLT5kYXRhKSk7CiAKIAkvKgpAQCAtMTY5Niw3ICsxNzQzLDcgQEAKIAkJcmV0dXJuIDA7CiAJ
+fQogCi0JcHJpbnRrKEtFUk5fV0FSTklORyAKKwlwcmludGsoS0VSTl9XQVJOSU5HCiAJCSJhYWNf
+c3luY2hyb25pemU6IGFhY19maWJfc2VuZCBmYWlsZWQgd2l0aCBzdGF0dXM6ICVkLlxuIiwgc3Rh
+dHVzKTsKIAlhYWNfZmliX2NvbXBsZXRlKGNtZF9maWJjb250ZXh0KTsKIAlhYWNfZmliX2ZyZWUo
+Y21kX2ZpYmNvbnRleHQpOwo=
 
-------_=_NextPart_001_01C7B34C.4BB2E2C2--
+------_=_NextPart_001_01C7B34F.F75EB084--
