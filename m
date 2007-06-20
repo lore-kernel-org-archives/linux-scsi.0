@@ -1,28 +1,31 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] fix req->cmd == INT cases
-Date: Wed, 20 Jun 2007 13:26:56 +0100
-Message-ID: <20070620122656.GA4620@infradead.org>
-References: <4677FD50.2090803@panasas.com> <20070619171610.GH18863@kernel.dk> <4679072C.2010604@panasas.com> <20070620122247.GA4443@infradead.org> <20070620122409.GU18863@kernel.dk>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] bsg: fix the deadlock on discarding done commands
+Date: Wed, 20 Jun 2007 22:43:16 +0900 (JST)
+Message-ID: <20070620223131L.fujita.tomonori@lab.ntt.co.jp>
+References: <20070607112309.GY4735@kernel.dk>
+	<20070608132326B.fujita.tomonori@lab.ntt.co.jp>
+	<20070608152049.GT7341@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:35995 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753055AbXFTM06 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2007 08:26:58 -0400
-Content-Disposition: inline
-In-Reply-To: <20070620122409.GU18863@kernel.dk>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:35916 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750708AbXFTNn6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jun 2007 09:43:58 -0400
+In-Reply-To: <20070608152049.GT7341@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-On Wed, Jun 20, 2007 at 02:24:09PM +0200, Jens Axboe wrote:
-> > These are old cdrom drivers that are broken in various ways and probably
-> > should be killed off aswell.
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] bsg: fix the deadlock on discarding done commands
+Date: Fri, 8 Jun 2007 17:20:49 +0200
+
+> On Sat, Jun 09 2007, FUJITA Tomonori wrote:
+> > I'll submit the bsg bidi patches shortly.
 > 
-> I agree (with both sentiments), would anyone mind if I just killed them
-> off? mitsumi support is being reworked, that can get reintroduced once
-> the driver is in a stable state.
+> Great - I see them, will review and integrate next week.
 
-Yeah - the new mitsumi doesn't share anything with the old one anyway.
+Any progress on this?
