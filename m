@@ -1,76 +1,101 @@
 From: Pete Wyckoff <pw@osc.edu>
-Subject: bidi, varlen, bsg success report
-Date: Sat, 22 Dec 2007 15:15:58 -0500
-Message-ID: <20071222201558.GA25063@osc.edu>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 3/5] bsg: accept varlen commands
+Date: Thu, 21 Jun 2007 14:04:20 -0400
+Message-ID: <20071222201958.94668900CDC@quasar.osc.edu>
+References: <20071222201558.GA25063@osc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:47240 "EHLO quasar.osc.edu"
+Received: from quasar.osc.edu ([192.148.249.15]:53852 "EHLO quasar.osc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752854AbXLVU1F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Dec 2007 15:27:05 -0500
-Content-Disposition: inline
+	id S1753123AbXLVUcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Dec 2007 15:32:05 -0500
+In-Reply-To: <20071222201558.GA25063@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-I spent the last couple of days rebasing my working set of kernel
-patches from 2.6.22-rc5 to 2.6.24-rc6.  I want to use the BSG
-interface from userspace to submit variable-length bidirectional
-SCSI commands to targets via iSCSI TCP.
+Accept variable length SCSI commands through BSG.
 
-Many thanks to all the work with scsi data accessors and iscsi that
-makes this much easier, and to Boaz for continuing to maintain
-patches.  Here's what I needed to do to make it work.
+Signed-off-by: Pete Wyckoff <pw@osc.edu>
+---
+ block/bsg.c |   34 +++++++++++++++++++++++++---------
+ 1 files changed, 25 insertions(+), 9 deletions(-)
 
-Start with linus-2.6.24-rc6.
-Merge scsi-misc.
-Apply the following outstanding patches from Boaz:
+diff --git a/block/bsg.c b/block/bsg.c
+index 8e181ab..0d9364d 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -175,14 +175,29 @@ unlock:
+ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+ 				struct sg_io_v4 *hdr, int has_write_perm)
+ {
+-	memset(rq->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+-
+-	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
+-			   hdr->request_len))
+-		return -EFAULT;
++	void __user *buf = (void __user *)(unsigned long) hdr->request;
++	int len = hdr->request_len;
++	unsigned char *cmd;
++
++	if (len > BLK_MAX_CDB) {
++		rq->cmd_len = 0;
++		rq->varlen_cdb_len = len;
++		rq->varlen_cdb = kmalloc(len, GFP_KERNEL);
++		if (rq->varlen_cdb == NULL)
++			return -ENOMEM;
++		if (copy_from_user(rq->varlen_cdb, buf, len))
++			return -EFAULT;
++		cmd = &rq->varlen_cdb[0];
++	} else {
++		rq->cmd_len = len;
++		memset(rq->cmd, 0, BLK_MAX_CDB);  /* for ATAPI */
++		if (copy_from_user(rq->cmd, buf, len))
++			return -EFAULT;
++		cmd = &rq->cmd[0];
++	}
+ 
+ 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
+-		if (blk_verify_command(rq->cmd, has_write_perm))
++		if (blk_verify_command(cmd, has_write_perm))
+ 			return -EPERM;
+ 	} else if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+@@ -190,7 +205,6 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
+ 	/*
+ 	 * fill in request structure
+ 	 */
+-	rq->cmd_len = hdr->request_len;
+ 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+ 
+ 	rq->timeout = (hdr->timeout * HZ) / 1000;
+@@ -212,8 +226,6 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
+ 
+ 	if (hdr->guard != 'Q')
+ 		return -EINVAL;
+-	if (hdr->request_len > BLK_MAX_CDB)
+-		return -EINVAL;
+ 	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
+ 	    hdr->din_xfer_len > (q->max_sectors << 9))
+ 		return -EIO;
+@@ -302,6 +314,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
+ 	}
+ 	return rq;
+ out:
++	if (rq->varlen_cdb_len)
++		kfree(rq->varlen_cdb);
+ 	blk_put_request(rq);
+ 	if (next_rq) {
+ 		blk_rq_unmap_user(next_rq->bio);
+@@ -446,6 +460,8 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+ 		hdr->dout_resid = rq->data_len;
+ 
+ 	blk_rq_unmap_user(bio);
++	if (rq->varlen_cdb_len)
++		kfree(rq->varlen_cdb);
+ 	blk_put_request(rq);
+ 
+ 	return ret;
+-- 
+1.5.3.6
 
-bidi
-    scsi: scsi_data_buffer
-    http://marc.info/?l=linux-scsi&m=119754650614813&w=2
-
-    scsi: bidi support
-    http://marc.info/?l=linux-scsi&m=119754667915055&w=2
-
-varlen
-    [PATCH 1/3] Let scsi_cmnd->cmnd use request->cmd buffer
-    http://marc.info/?l=linux-scsi&m=119798523823750&w=2
-
-    [PATCH 2/2] block layer varlen-cdb
-    http://marc.info/?l=linux-scsi&m=119798548624218&w=2
-
-    [PATCH 3/3] scsi: varlen extended and vendor-specific cdbs
-    http://marc.info/?l=linux-scsi&m=119798563924476&w=2
-
-Then a few more, two modified from earlier Boaz patches, and three
-new ones by me, mainly to make bsg work.  They follow.
-
-1. iscsi: extended cdb support
-Adapted from Boaz
-http://marc.info/?l=linux-scsi&m=119394074127857&w=2
-
-2. iscsi: bidi support
-Adapted from two old Boaz patches that can be found in this git:
-http://www.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=commitdiff;h=b5a97649eadb9434acbc4170a8aebd962af6d960
-http://www.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=commitdiff;h=cf3d4684a22bde6787f2eccee66d7b0ee9c9182c
-
-3. bsg: accept varlen commands
-
-4. bsg: bidi fix
-
-5. iscsi tcp: bidi capable
-
-Suggestions:  Boaz is probably the best qualified to shepherd his
-outstanding five patches plus the two others I mention above (#1,
-#2).  The first bsg patch (#3) won't apply without the varlen
-patches.  The last two (#4, #5) are harmless and can go in now, but
-won't matter until the bidi patches are in.  Comments on these
-welcome.
-
-Hope this is helpful.  I'm definitely looking forward to seeing
-all this merged into mainline eventually.
-
-		-- Pete
