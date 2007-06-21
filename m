@@ -1,11 +1,10 @@
 From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: [patch 1/6] ps3: Preallocate bootmem memory for the PS3 FLASH ROM
-	storage driver
-Date: Thu, 21 Jun 2007 16:14:20 +0200
-Message-ID: <20070621141515.167502000@pademelon.sonytel.be>
+Subject: [patch 3/6] ps3: Storage device registration routines.
+Date: Thu, 21 Jun 2007 16:14:22 +0200
+Message-ID: <20070621141515.366748000@pademelon.sonytel.be>
 References: <20070621141419.480922000@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1404345469=="
+Content-Type: multipart/mixed; boundary="===============0500992937=="
 Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
 List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
 	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
@@ -20,95 +19,329 @@ To: Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org
 Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 List-Id: linux-scsi@vger.kernel.org
 
---===============1404345469==
-Content-Disposition: inline; filename=ps3-stable/ps3stor_flash_bootmem.diff
+--===============0500992937==
+Content-Disposition: inline; filename=ps3-stable/ps3stor_probe.diff
 
-Preallocate 256 KiB of bootmem memory for the PS3 FLASH ROM storage driver.
-This can be disabled by passing `ps3flash=off' on the kernel command line.
+Add support for storage devices to the device probe code.
 
 Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 Signed-off-by: Geoff Levand <geoffrey.levand@am.sony.com>
 ---
-v3:
-  - Allow to disable ps3flash (and the preallocated 256 KiB buffer) using
-    `ps3flash=off'
+v2:
+  - use msleep() instead of schedule_timeout()
 
- arch/powerpc/platforms/ps3/setup.c |   31 ++++++++++++++++++++++++++++++-
- include/asm-powerpc/ps3.h          |    1 +
- 2 files changed, 31 insertions(+), 1 deletion(-)
+ arch/powerpc/platforms/ps3/device-init.c |  286 +++++++++++++++++++++++++++++++
+ 1 files changed, 286 insertions(+)
 
---- a/arch/powerpc/platforms/ps3/setup.c
-+++ b/arch/powerpc/platforms/ps3/setup.c
-@@ -107,7 +107,8 @@ static void ps3_panic(char *str)
- 	while(1);
+--- a/arch/powerpc/platforms/ps3/device-init.c
++++ b/arch/powerpc/platforms/ps3/device-init.c
+@@ -26,6 +26,7 @@
+ 
+ #include <asm/firmware.h>
+ #include <asm/lv1call.h>
++#include <asm/ps3stor.h>
+ 
+ #include "platform.h"
+ 
+@@ -237,6 +238,262 @@ static int __init ps3_setup_vuart_device
+ 	return result;
  }
  
--#if defined(CONFIG_FB_PS3) || defined(CONFIG_FB_PS3_MODULE)
-+#if defined(CONFIG_FB_PS3) || defined(CONFIG_FB_PS3_MODULE) || \
-+    defined(CONFIG_PS3_FLASH) || defined(CONFIG_PS3_FLASH_MODULE)
- static void prealloc(struct ps3_prealloc *p)
- {
- 	if (!p->size)
-@@ -123,7 +124,9 @@ static void prealloc(struct ps3_prealloc
- 	printk(KERN_INFO "%s: %lu bytes at %p\n", p->name, p->size,
- 	       p->address);
- }
-+#endif
- 
-+#if defined(CONFIG_FB_PS3) || defined(CONFIG_FB_PS3_MODULE)
- struct ps3_prealloc ps3fb_videomemory = {
- 	.name = "ps3fb videomemory",
- 	.size = CONFIG_FB_PS3_DEFAULT_SIZE_M*1024*1024,
-@@ -146,6 +149,30 @@ early_param("ps3fb", early_parse_ps3fb);
- #define prealloc_ps3fb_videomemory()	do { } while (0)
- #endif
- 
-+#if defined(CONFIG_PS3_FLASH) || defined(CONFIG_PS3_FLASH_MODULE)
-+struct ps3_prealloc ps3flash_bounce_buffer = {
-+	.name = "ps3flash bounce buffer",
-+	.size = 256*1024,
-+	.align = 256*1024
-+};
-+EXPORT_SYMBOL_GPL(ps3flash_bounce_buffer);
-+#define prealloc_ps3flash_bounce_buffer()	prealloc(&ps3flash_bounce_buffer)
-+
-+static int __init early_parse_ps3flash(char *p)
++static int ps3stor_wait_for_completion(u64 dev_id, u64 tag,
++				       unsigned int timeout)
 +{
-+	if (!p)
-+		return 1;
++	int result = -1;
++	unsigned int retries = 0;
++	u64 status;
 +
-+	if (!strcmp(p, "off"))
-+		ps3flash_bounce_buffer.size = 0;
++	for (retries = 0; retries < timeout; retries++) {
++		result = lv1_storage_check_async_status(dev_id, tag, &status);
++		if (!result)
++			break;
 +
-+	return 0;
++		msleep(1);
++	}
++
++	if (result)
++		pr_debug("%s:%u: check_async_status: %s, status %lx\n",
++			 __func__, __LINE__, ps3_result(result), status);
++
++	return result;
 +}
-+early_param("ps3flash", early_parse_ps3flash);
-+#else
-+#define prealloc_ps3flash_bounce_buffer()	do { } while (0)
-+#endif
 +
- static int ps3_set_dabr(u64 dabr)
++/**
++ * ps3_storage_wait_for_device - Wait for a storage device to become ready.
++ * @repo: The repository device to wait for.
++ *
++ * Uses the hypervisor's storage device notification mechanism to wait until
++ * a storage device is ready.  The device notification mechanism uses a
++ * psuedo device (id = -1) to asynchronously notify the guest when storage
++ * devices become ready.  The notification device has a block size of 512
++ * bytes.
++ */
++
++static int ps3_storage_wait_for_device(const struct ps3_repository_device *repo)
++{
++	int result;
++	const u64 notification_dev_id = (u64)-1LL;
++	const unsigned int timeout = HZ;
++	u64 lpar;
++	u64 tag;
++	struct {
++		u64 operation_code;	/* must be zero */
++		u64 event_mask;		/* 1 = device ready */
++	} *notify_cmd;
++	struct {
++		u64 event_type;		/* notify_device_ready */
++		u64 bus_id;
++		u64 dev_id;
++		u64 dev_type;
++		u64 dev_port;
++	} *notify_event;
++	enum {
++		notify_device_ready = 1
++	};
++
++	pr_debug(" -> %s:%u: bus_id %u, dev_id %u, dev_type %u\n", __func__,
++		 __LINE__, repo->bus_id, repo->dev_id, repo->dev_type);
++
++	notify_cmd = kzalloc(512, GFP_KERNEL);
++	notify_event = (void *)notify_cmd;
++	if (!notify_cmd)
++		return -ENOMEM;
++
++	lpar = ps3_mm_phys_to_lpar(__pa(notify_cmd));
++
++	result = lv1_open_device(repo->bus_id, notification_dev_id, 0);
++	if (result) {
++		printk(KERN_ERR "%s:%u: lv1_open_device %s\n", __func__,
++		       __LINE__, ps3_result(result));
++		result = -ENODEV;
++		goto fail_free;
++	}
++
++	/* Setup and write the request for device notification. */
++
++	notify_cmd->operation_code = 0;	/* must be zero */
++	notify_cmd->event_mask = 0x01;	/* device ready */
++
++	result = lv1_storage_write(notification_dev_id, 0, 0, 1, 0, lpar,
++				   &tag);
++	if (result) {
++		printk(KERN_ERR "%s:%u: write failed %s\n", __func__, __LINE__,
++		       ps3_result(result));
++		result = -ENODEV;
++		goto fail_close;
++	}
++
++	/* Wait for the write completion */
++
++	result = ps3stor_wait_for_completion(notification_dev_id, tag,
++					     timeout);
++	if (result) {
++		printk(KERN_ERR "%s:%u: write not completed %s\n", __func__,
++		       __LINE__, ps3_result(result));
++		result = -ENODEV;
++		goto fail_close;
++	}
++
++	/* Loop here processing the requested notification events. */
++
++	result = -ENODEV;
++	while (1) {
++		memset(notify_event, 0, sizeof(*notify_event));
++
++		result = lv1_storage_read(notification_dev_id, 0, 0, 1, 0,
++					  lpar, &tag);
++		if (result) {
++			printk(KERN_ERR "%s:%u: write failed %s\n", __func__,
++			       __LINE__, ps3_result(result));
++			break;
++		}
++
++		result = ps3stor_wait_for_completion(notification_dev_id, tag,
++						     timeout);
++		if (result) {
++			printk(KERN_ERR "%s:%u: read not completed %s\n",
++			       __func__, __LINE__, ps3_result(result));
++			break;
++		}
++
++		if (notify_event->event_type != notify_device_ready ||
++		    notify_event->bus_id != repo->bus_id) {
++			pr_debug("%s:%u: bad notify_event: event %lu, "
++				 "dev_id %lu, dev_type %lu\n",
++				 __func__, __LINE__, notify_event->event_type,
++				 notify_event->dev_id, notify_event->dev_type);
++			break;
++		}
++
++		if (notify_event->dev_id == repo->dev_id &&
++		    notify_event->dev_type == repo->dev_type) {
++			pr_debug("%s:%u: device ready: dev_id %u\n", __func__,
++				 __LINE__, repo->dev_id);
++			result = 0;
++			break;
++		}
++
++		if (notify_event->dev_id == repo->dev_id &&
++		    notify_event->dev_type == PS3_DEV_TYPE_NOACCESS) {
++			pr_debug("%s:%u: no access: dev_id %u\n", __func__,
++				 __LINE__, repo->dev_id);
++			break;
++		}
++	}
++
++fail_close:
++	lv1_close_device(repo->bus_id, notification_dev_id);
++fail_free:
++	kfree(notify_cmd);
++	pr_debug(" <- %s:%u\n", __func__, __LINE__);
++	return result;
++}
++
++static int ps3_setup_storage_dev(const struct ps3_repository_device *repo,
++				 enum ps3_match_id match_id)
++{
++	int result;
++	struct ps3_storage_device *p;
++	u64 port, blk_size, num_blocks;
++	unsigned int num_regions, i;
++
++	pr_debug(" -> %s:%u: match_id %u\n", __func__, __LINE__, match_id);
++
++	result = ps3_repository_read_stor_dev_info(repo->bus_index,
++						   repo->dev_index, &port,
++						   &blk_size, &num_blocks,
++						   &num_regions);
++	if (result) {
++		printk(KERN_ERR "%s:%u: _read_stor_dev_info failed %d\n",
++		       __func__, __LINE__, result);
++		return -ENODEV;
++	}
++
++	pr_debug("%s:%u: index %u:%u: port %lu blk_size %lu num_blocks %lu "
++		 "num_regions %u\n", __func__, __LINE__, repo->bus_index,
++		 repo->dev_index, port, blk_size, num_blocks, num_regions);
++
++	p = kzalloc(sizeof(struct ps3_storage_device) +
++		    num_regions * sizeof(struct ps3_storage_region),
++		    GFP_KERNEL);
++	if (!p) {
++		result = -ENOMEM;
++		goto fail_malloc;
++	}
++
++	p->sbd.match_id = match_id;
++	p->sbd.dev_type = PS3_DEVICE_TYPE_SB;
++	p->sbd.bus_id = repo->bus_id;
++	p->sbd.dev_id = repo->dev_id;
++	p->sbd.d_region = &p->dma_region;
++	p->blk_size = blk_size;
++	p->num_regions = num_regions;
++
++	result = ps3_repository_find_interrupt(repo,
++					       PS3_INTERRUPT_TYPE_EVENT_PORT,
++					       &p->sbd.interrupt_id);
++	if (result) {
++		printk(KERN_ERR "%s:%u: find_interrupt failed %d\n", __func__,
++		       __LINE__, result);
++		result = -ENODEV;
++		goto fail_find_interrupt;
++	}
++
++	/* FIXME: Arrange to only do this on a 'cold' boot */
++
++	result = ps3_storage_wait_for_device(repo);
++	if (result) {
++		printk(KERN_ERR "%s:%u: storage_notification failed %d\n",
++		       __func__, __LINE__, result);
++		result = -ENODEV;
++		goto fail_probe_notification;
++	}
++
++	for (i = 0; i < num_regions; i++) {
++		unsigned int id;
++		u64 start, size;
++
++		result = ps3_repository_read_stor_dev_region(repo->bus_index,
++							     repo->dev_index,
++							     i, &id, &start,
++							     &size);
++		if (result) {
++			printk(KERN_ERR
++			       "%s:%u: read_stor_dev_region failed %d\n",
++			       __func__, __LINE__, result);
++			result = -ENODEV;
++			goto fail_read_region;
++		}
++		pr_debug("%s:%u: region %u: id %u start %lu size %lu\n",
++			 __func__, __LINE__, i, id, start, size);
++
++		p->regions[i].id = id;
++		p->regions[i].start = start;
++		p->regions[i].size = size;
++	}
++
++	result = ps3_system_bus_device_register(&p->sbd);
++	if (result) {
++		pr_debug("%s:%u ps3_system_bus_device_register failed\n",
++			 __func__, __LINE__);
++		goto fail_device_register;
++	}
++
++	pr_debug(" <- %s:%u\n", __func__, __LINE__);
++	return 0;
++
++fail_device_register:
++fail_read_region:
++fail_probe_notification:
++fail_find_interrupt:
++	kfree(p);
++fail_malloc:
++	pr_debug(" <- %s:%u: fail.\n", __func__, __LINE__);
++	return result;
++}
++
+ static int __init ps3_register_vuart_devices(void)
  {
- 	enum {DABR_USER = 1, DABR_KERNEL = 2,};
-@@ -175,6 +202,8 @@ static void __init ps3_setup_arch(void)
- #endif
- 
- 	prealloc_ps3fb_videomemory();
-+	prealloc_ps3flash_bounce_buffer();
+ 	int result;
+@@ -356,6 +613,35 @@ static int ps3_register_repository_devic
+ 				__func__, __LINE__);
+ 		}
+ 		break;
++	case PS3_DEV_TYPE_STOR_DISK:
++		result = ps3_setup_storage_dev(repo, PS3_MATCH_ID_STOR_DISK);
 +
- 	ppc_md.power_save = ps3_power_save;
- 
- 	DBG(" <- %s:%d\n", __func__, __LINE__);
---- a/include/asm-powerpc/ps3.h
-+++ b/include/asm-powerpc/ps3.h
-@@ -427,6 +427,7 @@ struct ps3_prealloc {
- };
- 
- extern struct ps3_prealloc ps3fb_videomemory;
-+extern struct ps3_prealloc ps3flash_bounce_buffer;
- 
- 
- #endif
++		/* Some devices are not accessable from the Other OS lpar. */
++		if (result == -ENODEV) {
++			result = 0;
++			pr_debug("%s:%u: not accessable\n", __func__,
++				 __LINE__);
++		}
++
++		if (result)
++			pr_debug("%s:%u ps3_setup_storage_dev failed\n",
++				 __func__, __LINE__);
++		break;
++
++	case PS3_DEV_TYPE_STOR_ROM:
++		result = ps3_setup_storage_dev(repo, PS3_MATCH_ID_STOR_ROM);
++		if (result)
++			pr_debug("%s:%u ps3_setup_storage_dev failed\n",
++				 __func__, __LINE__);
++		break;
++
++	case PS3_DEV_TYPE_STOR_FLASH:
++		result = ps3_setup_storage_dev(repo, PS3_MATCH_ID_STOR_FLASH);
++		if (result)
++			pr_debug("%s:%u ps3_setup_storage_dev failed\n",
++				 __func__, __LINE__);
++		break;
++
+ 	default:
+ 		result = 0;
+ 		pr_debug("%s:%u: unsupported dev_type %u\n", __func__, __LINE__,
 
 -- 
 With kind regards,
@@ -131,7 +364,7 @@ VAT BE 0413.825.160 · RPR Brussels
 Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
 
 
---===============1404345469==
+--===============0500992937==
 Content-Type: text/plain; charset="us-ascii"
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
@@ -141,4 +374,4 @@ _______________________________________________
 Linuxppc-dev mailing list
 Linuxppc-dev@ozlabs.org
 https://ozlabs.org/mailman/listinfo/linuxppc-dev
---===============1404345469==--
+--===============0500992937==--
