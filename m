@@ -1,39 +1,70 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: [PATCH] dtc: Coding police and printk levels
-Date: Fri, 22 Jun 2007 11:00:06 -0700
-Message-ID: <20070622180005.GF7535@tree.beaverton.ibm.com>
-References: <20070622142629.52519e47@the-village.bc.nu>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [patch 3/3] Enable Aggressive Link Power management for AHCI
+	controllers.
+Date: Fri, 22 Jun 2007 21:00:00 +0200
+Message-ID: <20070622190000.GK30033@kernel.dk>
+References: <20070611184146.448266229@intel.com> <20070620142342.404856fe.kristen.c.accardi@intel.com> <20070621130831.GN18863@kernel.dk> <20070622101509.16d0e93d.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:42740 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752933AbXFVR6Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 22 Jun 2007 13:58:25 -0400
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l5MHwO10002961
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2007 13:58:24 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5MHwOPA490360
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2007 13:58:24 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5MHwOC9009716
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2007 13:58:24 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070622142629.52519e47@the-village.bc.nu>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20070622101509.16d0e93d.kristen.c.accardi@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, htejun@gmail.com, arjan@linux.intel.com
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
 
-On Fri, Jun 22, 2007 at 02:26:29PM +0100, Alan Cox wrote:
-> @@ -244,7 +242,7 @@
->  					if (check_signature(base + signatures[sig].offset, signatures[sig].string, strlen(signatures[sig].string))) {
->  						addr = bases[current_base].address;
->  #if (DTCDEBUG & DTCDEBUG_INIT)
-> -						printk("scsi-dtc : detected board.\n");
-> +						printk(KERB_DEBUG "scsi-dtc : detected board.\n");
+On Fri, Jun 22 2007, Kristen Carlson Accardi wrote:
+> On Thu, 21 Jun 2007 15:08:32 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> > On Wed, Jun 20 2007, Kristen Carlson Accardi wrote:
+> > > Enable Aggressive Link Power management for AHCI controllers.
+> > > 
+> > > This patch will set the correct bits to turn on Aggressive
+> > > Link Power Management (ALPM) for the ahci driver.  This
+> > > will cause the controller and disk to negotiate a lower
+> > > power state for the link when there is no activity (see
+> > > the AHCI 1.x spec for details).  This feature is mutually
+> > > exclusive with Hot Plug, so when ALPM is enabled, Hot Plug
+> > > is disabled.  ALPM will be enabled by default, but it is
+> > > settable via the scsi host syfs interface.  Possible 
+> > > settings for this feature are:
+> > > 
+> > > Setting		Effect
+> > > ----------------------------------------------------------
+> > > min_power	ALPM is enabled, and link set to enter 
+> > > 		lowest power state (SLUMBER) when idle
+> > > 		Hot plug not allowed.
+> > > 
+> > > max_performance	ALPM is disabled, Hot Plug is allowed
+> > > 
+> > > medium_power	ALPM is enabled, and link set to enter
+> > > 		second lowest power state (PARTIAL) when
+> > > 		idle.  Hot plug not allowed.
+> > > 
+> > > Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> > 
+> > A suggestion (it comes with a patch!) - default to max_power/almp off,
+> > not min_power. For two reasons:
+> > 
+> > - There's such a big performance difference between the two, you really
+> >   want max_power when booting.
+> > 
+> > - It's a lot better to default to no change, than default to enabling
+> >   something new.
+> 
+> Sounds reasonable to me.  Distros/users can decide if they want to have
+> scripts that enable this after boot to run at min_power. 
 
-I think you meant KERN_DEBUG ?
+Exactly, it needs to be handled by some power management daemon anyway
+and be integrated with power savings in general. You could use io load
+to determine when to enable/disable alpm, for instance.
 
---D
+> Acked-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+
+Will you integrate it into the next posting?
+
+-- 
+Jens Axboe
+
