@@ -1,71 +1,40 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Fri, 22 Jun 2007 13:34:40 +0200
-Message-ID: <20070622113439.GA6015@schmichrtp.de.ibm.com>
-References: <200706191025.30986.swen@vnet.ibm.com> <20070619171217.GA30099@infradead.org> <1182307586.10507.7.camel@mulgrave.il.steeleye.com> <20070621150308.GA29643@schmichrtp.de.ibm.com> <1182459492.3923.35.camel@mulgrave.il.steeleye.com> <20070622044035.GB5560@us.ibm.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: [PATCH] dmx3191d: Coding style police
+Date: Fri, 22 Jun 2007 14:24:56 +0100
+Message-ID: <20070622142456.0dff942f@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate1.de.ibm.com ([195.212.29.150]:5963 "EHLO
-	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752364AbXFVLfz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jun 2007 07:35:55 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate1.de.ibm.com (8.13.8/8.13.8) with ESMTP id l5MBZnYP182888
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2007 11:35:49 GMT
-Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5MBZiqo979058
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2007 13:35:49 +0200
-Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5MBZhRM004975
-	for <linux-scsi@vger.kernel.org>; Fri, 22 Jun 2007 13:35:44 +0200
-Content-Disposition: inline
-In-Reply-To: <20070622044035.GB5560@us.ibm.com>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:34828 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751134AbXFVNTI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jun 2007 09:19:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Anderson <andmike@us.ibm.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com
 
-On Thu, Jun 21, 2007 at 09:40:35PM -0700, Mike Anderson wrote:
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> > A proposal to display the correct form of the LUN would be useful if you
-> > wish to make it? ...  The problem is really that SAM specifies a
-> > possible 4 level structure with 4 possible address methods per level.
-> > 
-> > The well known LUNs should be simple; there are only three: Report Lun,
-> > Access Controls and Target Log Pages.  The rest we really need input on.
-> > For instance, I could see the vendors wishing us to combine a
-> > multi-level flat addressing space into a single logical unit number,
-> > whereas I could see them wanting us to supply some sort of hierarchy for
-> > the peripheral and logical unit methods of addressing.
-> > 
-> > Since you're already using 2 level flat addressing, how do you want to
-> > see that represented?
-> 
-> James, why would we would not want to display the lun per SAM4 4.6.2 as
-> suggested by Stefan in a previous comment.
 
-I would also agree to display the LUN in sysfs as 64 bit hex number as
-advised in SAM4.
+Signed-off-by: Alan Cox <alan@redhat.com>
 
-While the SAM describes different formats and addressing schemes, i
-don't see how this affects the SCSI layer in the kernel. The kernel
-gets the 64 bit LUNs and uses them as unique ids. 4.6.1 in SAM4 says
-in the last sentence, that different values for the 64 bits represent
-different LUNs, so the assumption of the LUNs being unique is
-guaranteed.
-
-My point of view is mainly from the device driver's (zfcp) and user's
-point of view. It is only that the disk systems i deal with use the 2
-level addressing in the LUNs. The user interface of the disk system
-displays something like: Volume F000 is exported as FCP LUN 40F04000.
-When the SCSI midlayer uses and exports this value in sysfs, it should
-be displayed in the same format (hex).
-
-I don't know if the multi level scheme is actually used as hierarchy
-somewhere. If somebody would be interested in using this information,
-i think a userspace tool could grab the value from sysfs and display
-the detailed information according to SAM.
-
---
-Christof Schmitt
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.22-rc4-mm2/drivers/scsi/dmx3191d.c linux-2.6.22-rc4-mm2/drivers/scsi/dmx3191d.c
+--- linux.vanilla-2.6.22-rc4-mm2/drivers/scsi/dmx3191d.c	2007-06-07 14:24:28.000000000 +0100
++++ linux-2.6.22-rc4-mm2/drivers/scsi/dmx3191d.c	2007-06-14 13:48:18.000000000 +0100
+@@ -113,13 +113,13 @@
+ 	scsi_scan_host(shost);
+ 	return 0;
+ 
+- out_free_irq:
++out_free_irq:
+ 	free_irq(shost->irq, shost);
+- out_release_region:
++out_release_region:
+ 	release_region(io, DMX3191D_REGION_LEN);
+- out_disable_device:
++out_disable_device:
+ 	pci_disable_device(pdev);
+- out:
++out:
+ 	return error;
+ }
+ 
