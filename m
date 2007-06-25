@@ -1,68 +1,109 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Mon, 25 Jun 2007 23:55:12 +0200
-Message-ID: <468039C0.4070109@s5r6.in-berlin.de>
-References: <877013.89456.qm@web31802.mail.mud.yahoo.com>
+Date: Tue, 26 Jun 2007 00:27:30 +0200
+Message-ID: <46804152.8050200@s5r6.in-berlin.de>
+References: <200706191025.30986.swen@vnet.ibm.com>	 <20070622044035.GB5560@us.ibm.com>	 <1182521500.3923.49.camel@mulgrave.il.steeleye.com>	 <200706251239.09755.swen@vnet.ibm.com> <467FCB4C.6060907@suse.de>	 <46801010.3050604@s5r6.in-berlin.de> <1182808124.3461.17.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:52397 "EHLO
+Received: from einhorn.in-berlin.de ([192.109.42.8]:52954 "EHLO
 	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753938AbXFYVzl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2007 17:55:41 -0400
-In-Reply-To: <877013.89456.qm@web31802.mail.mud.yahoo.com>
+	with ESMTP id S1752196AbXFYW1l (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2007 18:27:41 -0400
+In-Reply-To: <1182808124.3461.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
-Luben Tuikov wrote:
-> --- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->> I would also like to have the Target Port identifier in there.
+James Bottomley wrote:
+> On Mon, 2007-06-25 at 20:57 +0200, Stefan Richter wrote:
+>> I would also like to have the Target Port identifier in there.  This, in
+>> combination with the LUN alias Logical Unit identifier is useful for all
+>> kinds of persistent device mapping.
+> 
+> Really, no.  Target port is a target, not a LUN property; worse, it's
+> potentially transport defined.  The way target ports are currently shown
+> is by the relevant transport class as per target things (see the FC
+> transport for an example).  There's no real reason the mid-layer has to
+> know about these.
 
-("in there" = in sysfs)
+Do all these transports use the same *name* for the attribute holding
+the target port identifier's?  In other words, is userspace able to find
+the target port identifier without knowing which transport is at work?
+(It's a bit difficult for me to check for myself, not having any other
+SCSI hardware than SBP-2 at hand.)
 
-> Well this is not correct because the TPI's format and representation
-> is transport dependent
+>> The LUN could be the same data format (and display format) for all
+>> transports == 8 bytes.  SBP-3's native format is 2 bytes but we can
+>> transform and print it in the 8 bytes format; shouldn't hurt.
+>>
+>> Actually, the SCSI midlayer integer 'l' can be used as internal
+>> intermediary data format as long as only those LUN variants are in
+>> real-world use which can be losslessly transformed to and from SCSI
+>> midlayer's integer 'l'.
+> 
+> You're sort of confusing what we display as the LUN and what we
+> represent it as internally (admittedly they're the same at the moment).
 
-My thought was that SCSI core's role would only be to create the
-respective sysfs attributes (thus enforcing uniform naming of the
-attributes), but that the transport layer implementations are
-responsible to feed string representations there; in one way or another.
+No, I'm not. :-)
 
-> and because it is a property of the SCSI Target,
-> not the SCSI device (struct scsi device).  And currently SCSI Core
-> has no representation of SCSI Targets.
+(Actually we currently don't display the LUN at all.  There is something
+in the device path name which more or rather less resembles the LUN
+after some rough treatment.  But it's not a LUN; and as I said in
+another post:  We need the LUN in sysfs, but we don't need it as
+component of the device path.)
 
-And because SCSI targets are not represented in sysfs, I'd lazily add
-target-related information to the LU's sysfs representation.
+> The object would be to separate these and the debate is really about
+> what to display.
 
-Of course, if a representation of the target in sysfs is preferred, we
-should add this before tainting the LU's sysfs representation with
-attributes that belong to the target.
-
-So, would people like targets reflected as sysfs devices ( = parent of
-any LU devices)?  We should be able to add or remove parent devices into
-sysfs device paths without breaking userspace, says Kay Sievers at the
-end of http://lkml.org/lkml/2007/6/8/491 .
+Yes. :-)
 
 [...]
-> Ideally SCSI Core is presented with an opaque token (void *, unsigned long (long),
-> etc) which represents a target port, which it uses to send SPC commands
-> to the target to find out how many if any LUs the target has, INQUIRY them,
-> and then create struct scsi_dev for each LU.
+>> The transport identifiers have transport-dependent data sizes, and the
+>> display formats are not standardized.  So that's requiring a little bit
+>> more care than the LUNs but it isn't overly complicated either.
+>>
+>> So,
+>>   - SCSI mid layer should maintain sysfs attributes for each sdev which
+>>     show Logical Unit identifier and Target Port identifier.
 > 
-> When presented with this opaque token*, SCSI Core allocates and
-> initializes a struct scsi_target, whose children are LUs, later
-> to be discovered by SCSI Core.  SCSI Core then uses that opaque token
-> to ask the transport protocol layer to send commands to the I_T_L
-> nexus (WLUN or LUN if it knows it from previous discovery attempt).
+> LUN possibly, TPID no; the transport class does that one.
 
-Won't work with SBP-2/3.  There the LUs are discovered via IEEE 1212
-mechanisms (configuration ROM) rather than SPC.  Plus there is SBP-2/3
-login protocol.
+Regarding the TPID:  The /how/ should be left to the transport layer
+implementation; but the /where/ should be uniform in all transports.
+
+Besides, the transports don't manage the lifetime of the sysfs device
+which represent Logical Units.  Why not let the SCSI core also manage
+the lifetime of sysfs attributes (or to-be-implemented sysfs devices)
+which represent targets?  The concept of target is
+transport-independent; merely some of their properties look different
+from transport to transport.
+
+>>   - Do we pass the LUN through to SCSI midlayer's sysfs code via the
+>>     theoretically lossy scsilun_to_int/ int_to_scsilun transformation?
+> 
+> Absolutely ... otherwise you won't get the correct representation when
+> that gets decided.
+> 
+>>   - Do we pass the target port identifier through as a data member in
+>>     struct scsi_device, or as a hook "int (* print_target_port_id)(..);"
+>>     in struct scsi_transport_template?
+>>
+>>   - Do we also want initiator port identifier, initiator port name,
+>>     target port name, LU name?  If so, create a subdirectory for that
+>>     whole bunch of additional attributes?  (Most of these are just
+>>     optional.  In case of SBP-2/3, the initiator port identifier is
+>>     totally uninteresting to userspace; the initiator port name is of
+>>     mild interest but can be retrieved elsewhere from sysfs by some
+>>     black magic.)
+> 
+> Again, no ... these are transport dependent quantities and belong in the
+> transport class (if they're relevant to the transport).
+
+"Yes, but" on the how and the where as above.
 -- 
 Stefan Richter
--=====-=-=== -==- ==--=
+-=====-=-=== -==- ==-=-
 http://arcgraph.de/sr/
