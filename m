@@ -1,76 +1,112 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Mon, 25 Jun 2007 13:43:43 -0700 (PDT)
-Message-ID: <668935.63901.qm@web31812.mail.mud.yahoo.com>
-References: <27258.1182528999@bebe.enoyolf.org>
+Date: Mon, 25 Jun 2007 14:27:01 -0700 (PDT)
+Message-ID: <877013.89456.qm@web31802.mail.mud.yahoo.com>
+References: <46801010.3050604@s5r6.in-berlin.de>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31812.mail.mud.yahoo.com ([68.142.207.75]:36767 "HELO
-	web31812.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751126AbXFYUnp (ORCPT
+Received: from web31802.mail.mud.yahoo.com ([68.142.207.65]:43378 "HELO
+	web31802.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752217AbXFYV1D (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jun 2007 16:43:45 -0400
-In-Reply-To: <27258.1182528999@bebe.enoyolf.org>
+	Mon, 25 Jun 2007 17:27:03 -0400
+In-Reply-To: <46801010.3050604@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@enoyolf.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>, Hannes Reinecke <hare@suse.de>
+Cc: Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
---- Doug Maxey <dwm@enoyolf.org> wrote:
-> On Fri, 22 Jun 2007 09:11:39 CDT, James Bottomley wrote:
-> > On Thu, 2007-06-21 at 21:40 -0700, Mike Anderson wrote:
-> > > James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> > > > A proposal to display the correct form of the LUN would be useful if you
-> > > > wish to make it? ...  The problem is really that SAM specifies a
-> > > > possible 4 level structure with 4 possible address methods per level.
-> > > > 
-> > > > The well known LUNs should be simple; there are only three: Report Lun,
-> > > > Access Controls and Target Log Pages.  The rest we really need input on.
-> > > > For instance, I could see the vendors wishing us to combine a
-> > > > multi-level flat addressing space into a single logical unit number,
-> > > > whereas I could see them wanting us to supply some sort of hierarchy for
-> > > > the peripheral and logical unit methods of addressing.
-> > > > 
-> > > > Since you're already using 2 level flat addressing, how do you want to
-> > > > see that represented?
-> > > 
-> > > James, why would we would not want to display the lun per SAM4 4.6.2 as
-> > > suggested by Stefan in a previous comment.
-> > 
-> > Because in a two LUN system, what was LUN 1 would then become LUN
-> > 0x1000000000000 which looks a bit unpalatable.
-> > 
+--- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+> Hannes Reinecke wrote:
+> > why don't we stick with the original implementation like zfcp had it?
+> > We can simpley expand the midlayer to add an attribute 'lun'
+> > to each scsi_device. This would be the LUN as returned by eg
+> > REPORT LUNS.
+> > No translation, nothing. Would be easy to implement and would allow
+> > any administrator to map the h:c:i:l value to the 'real' lun.
+
+This would be the best way to go (what Hannes said).
+ 
+> I would also like to have the Target Port identifier in there.  This, in
+
+Well this is not correct because the TPI's format and representation
+is transport dependent and because it is a property of the SCSI Target,
+not the SCSI device (struct scsi device).  And currently SCSI Core
+has no representation of SCSI Targets.
+
+SCSI Core can have a burden if it needs to know about TPIs.
+
+Ideally SCSI Core is presented with an opaque token (void *, unsigned long (long),
+etc) which represents a target port, which it uses to send SPC commands
+to the target to find out how many if any LUs the target has, INQUIRY them,
+and then create struct scsi_dev for each LU.
+
+When presented with this opaque token*, SCSI Core allocates and
+initializes a struct scsi_target, whose children are LUs, later
+to be discovered by SCSI Core.  SCSI Core then uses that opaque token
+to ask the transport protocol layer to send commands to the I_T_L
+nexus (WLUN or LUN if it knows it from previous discovery attempt).
+
+* Note this means that there is no "active" scanning on part
+of the SCSI Core.  This belongs to the transport layer.
+(And thus the "concept" of "async-scanning" recently introduced
+to SCSI Core, becomes moot.)
+
+> combination with the LUN alias Logical Unit identifier is useful for all
+> kinds of persistent device mapping.
+
+The OS distros have wanted this for a long time, but they've
+correctly wanted properties/attribues of the _device_, which can
+be found by the various INQUIRY facilities.
+
+That is, how you get to the device isn't important, what is
+important is the device itself.
+
+Ideally that would be the SCSI Device Name, which is also transport
+dependent, but using memcmp() or strcmp() shouldn't be that bad.
+
+> The LUN could be the same data format (and display format) for all
+> transports == 8 bytes.  SBP-3's native format is 2 bytes but we can
+> transform and print it in the 8 bytes format; shouldn't hurt.
+
+Yes, a LUN is u8[8] and SCSI Core should absolutely never care
+about what it actually is.  It should just pass it around
+unaltered.
+
+> Actually, the SCSI midlayer integer 'l' can be used as internal
+> intermediary data format as long as only those LUN variants are in
+> real-world use which can be losslessly transformed to and from SCSI
+> midlayer's integer 'l'.
 > 
-> Just my $.02.
+> The transport identifiers have transport-dependent data sizes, and the
+> display formats are not standardized.  So that's requiring a little bit
+> more care than the LUNs but it isn't overly complicated either.
 > 
-> If you use a pseries, and have to specifiy the LUN to the OFW on the later 
-> releases, you must train the fingers to type the extra 12 chars.  
+> So,
+>   - SCSI mid layer should maintain sysfs attributes for each sdev which
+>     show Logical Unit identifier and Target Port identifier.
 > 
-> Iy you are watching an iSCSI target with tcpdump, you can observe the 
-> PDU fields with the lun encoded thusly.   It may not be historical, but 
-> is certainly more accurate to use the 0x1000000000000 as 64 bit (or 
-> more correctly 8 bytes) encoded as hex.
+>   - Do we pass the LUN through to SCSI midlayer's sysfs code via the
+>     theoretically lossy scsilun_to_int/ int_to_scsilun transformation?
+> 
+>   - Do we pass the target port identifier through as a data member in
+>     struct scsi_device, or as a hook "int (* print_target_port_id)(..);"
+>     in struct scsi_transport_template?
+> 
+>   - Do we also want initiator port identifier, initiator port name,
+>     target port name, LU name?  If so, create a subdirectory for that
+>     whole bunch of additional attributes?  (Most of these are just
+>     optional.  In case of SBP-2/3, the initiator port identifier is
+>     totally uninteresting to userspace; the initiator port name is of
+>     mild interest but can be retrieved elsewhere from sysfs by some
+>     black magic.)
 
-Indeed it is more accurate to represent LUNs in 64 bit format.
-
-It is even more accurate to represent them as u8 LUN[8], and possibly
-print them as
-  "0x%016llx"   ((unsigned long long) be64_to_cpu(*(__be64 *)(LUN))).
-
-What I haven't been able to figure out is the source of the insistence
-of bottomley et al., that SCSI Core should interpret the LUN structure
-and that it should transform it into an integer entity, such that the
-LUN space is enumerable.
-
-But this discussion isn't new.  This is the 6th year that someone
-brings the SCSU Core's LUN subject up.
-
-I think the professional part of this audience would recognize the
-significance of the intended entity which has interest in the
-LUN structure when designing their storage (protocol) stacks.
+I'd try to _shrink_ SCSI Core and get it out of the game of knowing
+anything about formats/representation/print methods/protocol dependent
+stuff/etc.  The smaller you get SCSI Core, the better off it is.
 
    Luben
 
