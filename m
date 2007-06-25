@@ -1,25 +1,27 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Mon, 25 Jun 2007 14:27:01 -0700 (PDT)
-Message-ID: <877013.89456.qm@web31802.mail.mud.yahoo.com>
-References: <46801010.3050604@s5r6.in-berlin.de>
-Reply-To: ltuikov@yahoo.com
+Date: Mon, 25 Jun 2007 16:48:44 -0500
+Message-ID: <1182808124.3461.17.camel@localhost.localdomain>
+References: <200706191025.30986.swen@vnet.ibm.com>
+	 <20070622044035.GB5560@us.ibm.com>
+	 <1182521500.3923.49.camel@mulgrave.il.steeleye.com>
+	 <200706251239.09755.swen@vnet.ibm.com> <467FCB4C.6060907@suse.de>
+	 <46801010.3050604@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31802.mail.mud.yahoo.com ([68.142.207.65]:43378 "HELO
-	web31802.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752217AbXFYV1D (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jun 2007 17:27:03 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:48201 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753092AbXFYVsr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2007 17:48:47 -0400
 In-Reply-To: <46801010.3050604@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>, Hannes Reinecke <hare@suse.de>
-Cc: Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
---- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+On Mon, 2007-06-25 at 20:57 +0200, Stefan Richter wrote:
 > Hannes Reinecke wrote:
 > > why don't we stick with the original implementation like zfcp had it?
 > > We can simpley expand the midlayer to add an attribute 'lun'
@@ -27,60 +29,33 @@ Cc: Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye
 > > REPORT LUNS.
 > > No translation, nothing. Would be easy to implement and would allow
 > > any administrator to map the h:c:i:l value to the 'real' lun.
-
-This would be the best way to go (what Hannes said).
- 
+> 
 > I would also like to have the Target Port identifier in there.  This, in
-
-Well this is not correct because the TPI's format and representation
-is transport dependent and because it is a property of the SCSI Target,
-not the SCSI device (struct scsi device).  And currently SCSI Core
-has no representation of SCSI Targets.
-
-SCSI Core can have a burden if it needs to know about TPIs.
-
-Ideally SCSI Core is presented with an opaque token (void *, unsigned long (long),
-etc) which represents a target port, which it uses to send SPC commands
-to the target to find out how many if any LUs the target has, INQUIRY them,
-and then create struct scsi_dev for each LU.
-
-When presented with this opaque token*, SCSI Core allocates and
-initializes a struct scsi_target, whose children are LUs, later
-to be discovered by SCSI Core.  SCSI Core then uses that opaque token
-to ask the transport protocol layer to send commands to the I_T_L
-nexus (WLUN or LUN if it knows it from previous discovery attempt).
-
-* Note this means that there is no "active" scanning on part
-of the SCSI Core.  This belongs to the transport layer.
-(And thus the "concept" of "async-scanning" recently introduced
-to SCSI Core, becomes moot.)
-
 > combination with the LUN alias Logical Unit identifier is useful for all
 > kinds of persistent device mapping.
 
-The OS distros have wanted this for a long time, but they've
-correctly wanted properties/attribues of the _device_, which can
-be found by the various INQUIRY facilities.
-
-That is, how you get to the device isn't important, what is
-important is the device itself.
-
-Ideally that would be the SCSI Device Name, which is also transport
-dependent, but using memcmp() or strcmp() shouldn't be that bad.
+Really, no.  Target port is a target, not a LUN property; worse, it's
+potentially transport defined.  The way target ports are currently shown
+is by the relevant transport class as per target things (see the FC
+transport for an example).  There's no real reason the mid-layer has to
+know about these.
 
 > The LUN could be the same data format (and display format) for all
 > transports == 8 bytes.  SBP-3's native format is 2 bytes but we can
 > transform and print it in the 8 bytes format; shouldn't hurt.
-
-Yes, a LUN is u8[8] and SCSI Core should absolutely never care
-about what it actually is.  It should just pass it around
-unaltered.
-
+> 
 > Actually, the SCSI midlayer integer 'l' can be used as internal
 > intermediary data format as long as only those LUN variants are in
 > real-world use which can be losslessly transformed to and from SCSI
 > midlayer's integer 'l'.
-> 
+
+You're sort of confusing what we display as the LUN and what we
+represent it as internally (admittedly they're the same at the moment).
+The object would be to separate these and the debate is really about
+what to display.  I think the number for single level simple peripheral
+addressing bus==0 or flat addressing and the full 64 bit entity
+otherwise seems to be what people are converging on.
+
 > The transport identifiers have transport-dependent data sizes, and the
 > display formats are not standardized.  So that's requiring a little bit
 > more care than the LUNs but it isn't overly complicated either.
@@ -88,10 +63,15 @@ unaltered.
 > So,
 >   - SCSI mid layer should maintain sysfs attributes for each sdev which
 >     show Logical Unit identifier and Target Port identifier.
-> 
+
+LUN possibly, TPID no; the transport class does that one.
+
 >   - Do we pass the LUN through to SCSI midlayer's sysfs code via the
 >     theoretically lossy scsilun_to_int/ int_to_scsilun transformation?
-> 
+
+Absolutely ... otherwise you won't get the correct representation when
+that gets decided.
+
 >   - Do we pass the target port identifier through as a data member in
 >     struct scsi_device, or as a hook "int (* print_target_port_id)(..);"
 >     in struct scsi_transport_template?
@@ -104,9 +84,14 @@ unaltered.
 >     mild interest but can be retrieved elsewhere from sysfs by some
 >     black magic.)
 
-I'd try to _shrink_ SCSI Core and get it out of the game of knowing
-anything about formats/representation/print methods/protocol dependent
-stuff/etc.  The smaller you get SCSI Core, the better off it is.
+Again, no ... these are transport dependent quantities and belong in the
+transport class (if they're relevant to the transport).
 
-   Luben
+> I am slowly working on loosely related stuff in the fw-sbp2
+> transport-layer driver and could produce a respective patch for the
+> midlayer infrastructure along the way, if nobody else does before me.
+> (Next weekend at the earliest.)
+
+James
+
 
