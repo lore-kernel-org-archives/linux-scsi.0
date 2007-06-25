@@ -1,41 +1,51 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] sr: fix error handling in module_init
-Date: Mon, 25 Jun 2007 20:30:05 +0100
-Message-ID: <20070625193005.GA25736@infradead.org>
-References: <20070625153933.GA14464@APFDCB5C>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
+Date: Mon, 25 Jun 2007 13:32:23 -0700 (PDT)
+Message-ID: <624919.2254.qm@web31810.mail.mud.yahoo.com>
+References: <1182521500.3923.49.camel@mulgrave.il.steeleye.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:54053 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752210AbXFYTaI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jun 2007 15:30:08 -0400
-Content-Disposition: inline
-In-Reply-To: <20070625153933.GA14464@APFDCB5C>
+Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:20660 "HELO
+	web31810.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751779AbXFYUjF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jun 2007 16:39:05 -0400
+In-Reply-To: <1182521500.3923.49.camel@mulgrave.il.steeleye.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Akinobu Mita <akinobu.mita@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Mike Anderson <andmike@us.ibm.com>
+Cc: Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
-On Tue, Jun 26, 2007 at 12:39:33AM +0900, Akinobu Mita wrote:
-> Sweep registered blkdev when scsi_register_driver has failed.
-> 
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-> Signed-off-by: Akinobu Mita <akinobu.mita@gmail.com>
-> 
-> Index: 2.6-rc/drivers/scsi/sr.c
-> ===================================================================
-> --- 2.6-rc.orig/drivers/scsi/sr.c
-> +++ 2.6-rc/drivers/scsi/sr.c
-> @@ -885,7 +885,11 @@ static int __init init_sr(void)
->  	rc = register_blkdev(SCSI_CDROM_MAJOR, "sr");
->  	if (rc)
->  		return rc;
-> -	return scsi_register_driver(&sr_template.gendrv);
-> +	rc = scsi_register_driver(&sr_template.gendrv);
-> +	if (rc)
-> +		unregister_blkdev(SCSI_CDROM_MAJOR, "sr");
-> +
-> +	return rc;
+--- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> On Thu, 2007-06-21 at 21:40 -0700, Mike Anderson wrote:
+> > James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> > > A proposal to display the correct form of the LUN would be useful if you
+> > > wish to make it? ...  The problem is really that SAM specifies a
+> > > possible 4 level structure with 4 possible address methods per level.
+> > > 
+> > > The well known LUNs should be simple; there are only three: Report Lun,
+> > > Access Controls and Target Log Pages.  The rest we really need input on.
+> > > For instance, I could see the vendors wishing us to combine a
+> > > multi-level flat addressing space into a single logical unit number,
+> > > whereas I could see them wanting us to supply some sort of hierarchy for
+> > > the peripheral and logical unit methods of addressing.
+> > > 
+> > > Since you're already using 2 level flat addressing, how do you want to
+> > > see that represented?
 
-Looks good.
+Goodness gracious!
+
+> > 
+> > James, why would we would not want to display the lun per SAM4 4.6.2 as
+> > suggested by Stefan in a previous comment.
+> 
+> Because in a two LUN system, what was LUN 1 would then become LUN
+> 0x1000000000000 which looks a bit unpalatable.
+
+To whom?  Who (as in entity) is the audience of the (structure of a) LUN?
+
+    Luben
+
