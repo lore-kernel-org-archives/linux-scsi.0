@@ -1,51 +1,41 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Mon, 25 Jun 2007 18:04:44 -0700 (PDT)
-Message-ID: <319583.29876.qm@web31809.mail.mud.yahoo.com>
-References: <46804152.8050200@s5r6.in-berlin.de>
-Reply-To: ltuikov@yahoo.com
+Date: Tue, 26 Jun 2007 11:38:31 +0200
+Message-ID: <4680DE97.2010207@s5r6.in-berlin.de>
+References: <748779.88428.qm@web31804.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31809.mail.mud.yahoo.com ([68.142.207.72]:40985 "HELO
-	web31809.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751272AbXFZBEr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jun 2007 21:04:47 -0400
-In-Reply-To: <46804152.8050200@s5r6.in-berlin.de>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:46982 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751343AbXFZJii (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jun 2007 05:38:38 -0400
+In-Reply-To: <748779.88428.qm@web31804.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
---- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> Do all these transports use the same *name* for the attribute holding
-> the target port identifier's?
+Luben Tuikov wrote:
+> Display this:
+>  "%016llx", ((unsigned long long) be64_to_cpu(*(__be64 *)(LUN))),
+> where LUN is u8[8].  Notice the ugly, C-centric "0x" prefix
+> is missing.
 
-Sure, it is "tpid".
+I agree.  We don't need 0x prefix nor h suffix nor delimiters like
+spaces, dashes, colons... in the kernel's printouts of LUNs (i.e. in
+sysfs attribute values or sysfs path components or dmesg debug printouts
+or wherever the kernel might hand out LUN represemtations to userspace).
 
-> In other words, is userspace able to find
-> the target port identifier without knowing which transport is at work?
+...
+> This also makes it great to be a directory name, since it is the
+> same width and format,
+...
 
-How can that be?  The target port identifier is by definition
-a transport property?
-
-"Userspace" which you have in mind will be more interested in the
-device name and other ID properties as returned by the INQUIRY
-facilities.  Some are transport specific some are not.
-
-Either way userspace can follow a pointer from the sysfs device
-entry to the transport, just as sg-utils and lsscsi does now for
-the SAS Stack (my version of it at least).
-
-> Regarding the TPID:  The /how/ should be left to the transport layer
-> implementation; but the /where/ should be uniform in all transports.
-
-This maybe hard to do since the structure of the domain is different
-for different protocols.
-
-Of course this can be hacked by using symlinks...
-
-   Luben
-
+Yes, that's quite OK for syfs path components.  But remember that syfs
+path components are considered unstable sysfs ABI elements.
+-- 
+Stefan Richter
+-=====-=-=== -==- ==-=-
+http://arcgraph.de/sr/
