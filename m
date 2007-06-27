@@ -1,105 +1,146 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Wed, 27 Jun 2007 12:27:48 +0200
-Message-ID: <200706271227.48725.swen@vnet.ibm.com>
-References: <200706191025.30986.swen@vnet.ibm.com> <200706251239.09755.swen@vnet.ibm.com> <467FCB4C.6060907@suse.de>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/3] ib_srp: convert to use the srp transport class
+Date: Wed, 27 Jun 2007 16:33:12 +0900
+Message-ID: <20070627163312M.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:27742 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753697AbXF0K1j (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jun 2007 06:27:39 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate7.de.ibm.com (8.13.8/8.13.8) with ESMTP id l5RARcN3377892
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2007 10:27:38 GMT
-Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5RARcxt2084970
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2007 12:27:38 +0200
-Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5RARbxG013322
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2007 12:27:37 +0200
-In-Reply-To: <467FCB4C.6060907@suse.de>
-Content-Disposition: inline
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:50039 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753902AbXF0K5m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jun 2007 06:57:42 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@steeleye.com, rdreier@cisco.com
 
-On Monday 25 June 2007 16:03, Hannes Reinecke wrote:
-> Swen Schillig wrote:
-> > On Friday 22 June 2007 16:11, James Bottomley wrote:
-> >> On Thu, 2007-06-21 at 21:40 -0700, Mike Anderson wrote:
-> >>> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> >>>> A proposal to display the correct form of the LUN would be useful if you
-> >>>> wish to make it? ...  The problem is really that SAM specifies a
-> >>>> possible 4 level structure with 4 possible address methods per level.
-> >>>>
-> >>>> The well known LUNs should be simple; there are only three: Report Lun,
-> >>>> Access Controls and Target Log Pages.  The rest we really need input on.
-> >>>> For instance, I could see the vendors wishing us to combine a
-> >>>> multi-level flat addressing space into a single logical unit number,
-> >>>> whereas I could see them wanting us to supply some sort of hierarchy for
-> >>>> the peripheral and logical unit methods of addressing.
-> >>>>
-> >>>> Since you're already using 2 level flat addressing, how do you want to
-> >>>> see that represented?
-> >>> James, why would we would not want to display the lun per SAM4 4.6.2 as
-> >>> suggested by Stefan in a previous comment.
-> >> Because in a two LUN system, what was LUN 1 would then become LUN
-> >> 0x1000000000000 which looks a bit unpalatable.
-> >>
-> >> James
-> >>
-> >>
-> >> -
-> > 
-> > Despite the issue whether we should display and/or use (sysfs !?)
-> > full blown 64bit values, so with leading zeros, you still have the option to display, 
-> > for the single level addressing, the LUN as a 2 byte value as described in  SAM4 4.6.2. 
-> > So for your example this would be 0x0001 or 0x1, which is exactly what you'd like to see, right ?
-> > Only for 2+ level environment the 64bit representation comes into the play.
-> > 
-> > And, because you were asking how we'd like that to be represented, I personally prefer
-> > a full blown 64bit hex value with leading zeros.
-> > It makes the comparison to internal structures/models easier and gets us a bit closer
-> > to the documented (SAM4) standard.
-> > ...and I think we all can deal with a few extra digits being displayed.
-> > 
-> Well ...
-> why don't we stick with the original implementation like zfcp had it?
-> We can simpley expand the midlayer to add an attribute 'lun'
-> to each scsi_device. This would be the LUN as returned by eg
-> REPORT LUNS.
-> No translation, nothing. Would be easy to implement and would allow
-> any administrator to map the h:c:i:l value to the 'real' lun.
-> 
-> Cheers,
-> 
-> Hannes
+This converts ib_srp to use the srp transport class.
 
-What do you mean with "like we had it" ?
-I thought you were quite happy with the new version making
-the old manual counting thing ("zfcp-ism") obsolete.
+I don't have ib hardware so I've not tested this patch.
 
-What's the benefit of adding another (LUN) attribute to the midlayer, I don't get
-what this is supposed to solve.
-The initial question was, should we not display the long-ish LUN value in 
-hex format making it easier for admins (and us) to actually use it
-as it is.
-I think Luben and Stefan suggested a good way to do that, ok apart from the be64 bits :-)
-So, just use the struct scsi_lun in its full extend, for the sysfs without a leading "0x",
-and forgetting about the scsilun_to_int conversion which isn't good for anything.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/infiniband/ulp/srp/Kconfig  |    1 +
+ drivers/infiniband/ulp/srp/ib_srp.c |   27 +++++++++++++++++++++++++++
+ 2 files changed, 28 insertions(+), 0 deletions(-)
 
-This way we would be conform to SAM4 as well even though I'm getting the impression
-that this isn't the major goal of this discussion.
+diff --git a/drivers/infiniband/ulp/srp/Kconfig b/drivers/infiniband/ulp/srp/Kconfig
+index 8fe3be4..bd7bbbf 100644
+--- a/drivers/infiniband/ulp/srp/Kconfig
++++ b/drivers/infiniband/ulp/srp/Kconfig
+@@ -1,6 +1,7 @@
+ config INFINIBAND_SRP
+ 	tristate "InfiniBand SCSI RDMA Protocol"
+ 	depends on INFINIBAND && SCSI
++	select SCSI_SRP_ATTRS
+ 	---help---
+ 	  Support for the SCSI RDMA Protocol over InfiniBand.  This
+ 	  allows you to access storage devices that speak SRP over
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index f01ca18..d8d056e 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -47,6 +47,7 @@ #include <scsi/scsi.h>
+ #include <scsi/scsi_device.h>
+ #include <scsi/scsi_dbg.h>
+ #include <scsi/srp.h>
++#include <scsi/scsi_transport_srp.h>
+ 
+ #include <rdma/ib_cache.h>
+ 
+@@ -90,6 +91,8 @@ static void srp_remove_one(struct ib_dev
+ static void srp_completion(struct ib_cq *cq, void *target_ptr);
+ static int srp_cm_handler(struct ib_cm_id *cm_id, struct ib_cm_event *event);
+ 
++static struct scsi_transport_template *ib_srp_transport_template;
++
+ static struct ib_client srp_client = {
+ 	.name   = "srp",
+ 	.add    = srp_add_one,
+@@ -405,6 +408,7 @@ static void srp_remove_work(struct work_
+ 	list_del(&target->list);
+ 	spin_unlock(&target->srp_host->target_lock);
+ 
++	srp_remove_host(target->scsi_host);
+ 	scsi_remove_host(target->scsi_host);
+ 	ib_destroy_cm_id(target->cm_id);
+ 	srp_free_target_ib(target);
+@@ -1530,12 +1534,23 @@ static struct scsi_host_template srp_tem
+ 
+ static int srp_add_target(struct srp_host *host, struct srp_target_port *target)
+ {
++	struct srp_rport_identifiers ids;
++	struct srp_rport *rport;
++
+ 	sprintf(target->target_name, "SRP.T10:%016llX",
+ 		 (unsigned long long) be64_to_cpu(target->id_ext));
+ 
+ 	if (scsi_add_host(target->scsi_host, host->dev->dev->dma_device))
+ 		return -ENODEV;
+ 
++	memcpy(ids.port_id, &target->id_ext, 8);
++	memcpy(ids.port_id + 8, &target->ioc_guid, 8);
++	rport = srp_rport_add(target->scsi_host, &ids);
++	if (IS_ERR(rport)) {
++		scsi_remove_host(target->scsi_host);
++		return PTR_ERR(rport);
++	}
++
+ 	spin_lock(&host->target_lock);
+ 	list_add_tail(&target->list, &host->target_list);
+ 	spin_unlock(&host->target_lock);
+@@ -1760,6 +1775,7 @@ static ssize_t srp_create_target(struct
+ 	if (!target_host)
+ 		return -ENOMEM;
+ 
++	target_host->transportt = ib_srp_transport_template;
+ 	target_host->max_lun     = SRP_MAX_LUN;
+ 	target_host->max_cmd_len = sizeof ((struct srp_cmd *) (void *) 0L)->cdb;
+ 
+@@ -2039,10 +2055,18 @@ static void srp_remove_one(struct ib_dev
+ 	kfree(srp_dev);
+ }
+ 
++static struct srp_function_template ib_srp_transport_functions = {
++};
++
+ static int __init srp_init_module(void)
+ {
+ 	int ret;
+ 
++	ib_srp_transport_template =
++		srp_attach_transport(&ib_srp_transport_functions);
++	if (!ib_srp_transport_template)
++		return -ENOMEM;
++
+ 	srp_template.sg_tablesize = srp_sg_tablesize;
+ 	srp_max_iu_len = (sizeof (struct srp_cmd) +
+ 			  sizeof (struct srp_indirect_buf) +
+@@ -2051,6 +2075,7 @@ static int __init srp_init_module(void)
+ 	ret = class_register(&srp_class);
+ 	if (ret) {
+ 		printk(KERN_ERR PFX "couldn't register class infiniband_srp\n");
++		srp_release_transport(ib_srp_transport_template);
+ 		return ret;
+ 	}
+ 
+@@ -2059,6 +2084,7 @@ static int __init srp_init_module(void)
+ 	ret = ib_register_client(&srp_client);
+ 	if (ret) {
+ 		printk(KERN_ERR PFX "couldn't register IB client\n");
++		srp_release_transport(ib_srp_transport_template);
+ 		ib_sa_unregister_client(&srp_sa_client);
+ 		class_unregister(&srp_class);
+ 		return ret;
+@@ -2072,6 +2098,7 @@ static void __exit srp_cleanup_module(vo
+ 	ib_unregister_client(&srp_client);
+ 	ib_sa_unregister_client(&srp_sa_client);
+ 	class_unregister(&srp_class);
++	srp_release_transport(ib_srp_transport_template);
+ }
+ 
+ module_init(srp_init_module);
+-- 
+1.4.3.2
 
-Anyway, before anyone else is suggesting some other magic attribute extension to the LUN value, 
-why not leave it as it is and just have it serving this one purpose of being a unique number ?
-(yeah, yeah I know there's already some meaning behind the 4 levels)
-
-Just my 2 cents !
-
-Cheers Swen
