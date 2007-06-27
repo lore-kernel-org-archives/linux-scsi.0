@@ -1,49 +1,104 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Tue, 26 Jun 2007 15:29:23 -0600
-Message-ID: <20070626212923.GT22063@parisc-linux.org>
-References: <46801010.3050604@s5r6.in-berlin.de> <877013.89456.qm@web31802.mail.mud.yahoo.com>
+Date: Wed, 27 Jun 2007 02:27:52 +0200
+Message-ID: <4681AF08.5070802@s5r6.in-berlin.de>
+References: <319583.29876.qm@web31809.mail.mud.yahoo.com>	 <4680EDFE.4050808@s5r6.in-berlin.de>	 <1182867615.3562.3.camel@localhost.localdomain>	 <4681351F.8000403@s5r6.in-berlin.de> <1182877289.3562.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:58564 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758205AbXFZV3Z (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jun 2007 17:29:25 -0400
-Content-Disposition: inline
-In-Reply-To: <877013.89456.qm@web31802.mail.mud.yahoo.com>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:36746 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752539AbXF0A2b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 26 Jun 2007 20:28:31 -0400
+In-Reply-To: <1182877289.3562.27.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: ltuikov@yahoo.com, Hannes Reinecke <hare@suse.de>, Swen Schillig <swen@vnet.ibm.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
-On Mon, Jun 25, 2007 at 02:27:01PM -0700, Luben Tuikov wrote:
-> Ideally SCSI Core is presented with an opaque token (void *, unsigned long (long),
-> etc) which represents a target port, which it uses to send SPC commands
-> to the target to find out how many if any LUs the target has, INQUIRY them,
-> and then create struct scsi_dev for each LU.
+James Bottomley wrote:
+> On Tue, 2007-06-26 at 17:47 +0200, Stefan Richter wrote:
+>> To fill values into these attributes, transport layer
+>> drivers/classes/whatever supply to SCSI core either strings or functions
+>> which print strings into buffers.  ->  SCSI core controls that these
+>> properties go into host*/target*:*:*/port_{name,id}.  Transports control
+>> how the values of these attributes look.
 > 
-> When presented with this opaque token*, SCSI Core allocates and
-> initializes a struct scsi_target, whose children are LUs, later
-> to be discovered by SCSI Core.  SCSI Core then uses that opaque token
-> to ask the transport protocol layer to send commands to the I_T_L
-> nexus (WLUN or LUN if it knows it from previous discovery attempt).
-> 
-> * Note this means that there is no "active" scanning on part
-> of the SCSI Core.  This belongs to the transport layer.
-> (And thus the "concept" of "async-scanning" recently introduced
-> to SCSI Core, becomes moot.)
+> Really, look at the fc code which already does it ...
 
-Not really.  The async scanning code is there to ensure that scsi
-devices get the same name as they would if the devices were scanned
-one after another.  We can make all this code moot if we determine that
-we're willing to accept a world where 'sda' may refer to any random scsi
-disc.
+Good, I did a kscope session now to get an idea of the "transport
+classes" API and how the "XYZ Transport Attributes" drivers use it.
 
-I'd be quite happy to move the code that does the "active scanning" to
-scsi_transport_spi.c, but right now that would be quite a bit of extra
-code for drivers which haven't been converted to use scsi_transport_spi
-yet.  My nefarious plan is to convert drivers to use it, then move that
-code there.  I do agreee with you that SPI-free systems shouldn't have
-to carry that legacy code around (but actually, it's very little code,
-so this is more of a purity thing than a real concern).
+> to try to provide methods from the mid-layer would make this quite complex.
+
+No, it's mostly trivial.  Mid-layer can add its own attributes to
+starget->dev as well as to sdev->sdev_gendev.  As far as attribute
+values are transport protocol dependent, the show functions of these
+attributes can make use of sprintf-like functions to be supplied for
+example by scsi_transport_template, as I mentioned earlier in the thread
+in http://marc.info/?l=linux-scsi&m=118253907125635 .  I can explain
+this by a demo patch, if I find time at the weekend.
+
+[...]
+>> 	err = device_create_file(target_gendev, &my_port_id_attr);
+[...]
+> Not really ... look at scsi_transport_fc.c line 911 ... the entire
+> transport class is designed to set attributes like this and manage the
+> lifetimes of the underlying objects.
+
+OK, thanks for the pointer into the source.
+
+Of course the mid-layer doesn't have to provide attributes like I
+suggested them --- because the alternative is that all or at least the
+majority of transport drivers provide them on their own but use
+*uniform* attribute names for them.
+
+This is what we have at the moment:
+
+   - The scsi_tranport_fc.c transport driver supplies the Target Port
+     Identifier and Name in attributes of the starget->dev.  The
+     attributes are called "port_id" and "port_name".
+
+   - The scsi_transport_sas.c transport driver supplies an
+     "rphy_sas_address" of which the Target Port Identifier could
+     presumably be obtained.  I am not sure in which sysfs devices this
+     attribute is located and how these devices relate to starget->dev.
+
+   - The scsi_transport_iscsi.c transport driver supplies the
+     attributes "targetname" and "tpgt" of which the Target Port
+     Identifier could be obtained.  I am not sure in which sysfs devices
+     these attributes are located and how these devices relate to
+     starget->dev.
+
+   - I don't know if scsi_transport_spi.c's attributes are suitable to
+     obtain object identifiers or object names.
+
+   - Luben's SAS stack obviously supplies the Target Port Identifier in
+     the grandparent of LUNS devices.  The attribute is called sas_addr.
+     The Logical Unit Identifier is used as the sysfs name of LUNS
+     devices, i.e. as sysfs directory names.
+
+   - The sbp2.c transport driver supplies the concatenation of Target
+     Port Identifier and Logical Unit Identifier in an attribute of the
+     sdev->sdev_gendev.  The attribute is called "ieee1394_id".  sbp2.c
+     needs to be told though by a recently added module parameter to
+     use SAM-4 conforming formats for the identifiers.  It's partly
+     SAM's fault because there is an editorial mistake in SAM regarding
+     what an SBP-3 target port identifier is.
+
+   - The fw-sbp2.c transport driver (candidate to eventually replace
+     sbp2.c) supplies the concatenation of Target Port Identifier and
+     Logical Unit Identifier in an attribute of the sdev->sdev_gendev.
+     The attribute is called "ieee1394_id" and conforms to SAM-4 formats
+     out of the box.
+
+So, only the SBP-2 transport and the out-of-tree SAS transport expose
+Logical Unit Identifiers and Target Port Identifiers.  (sbp2.c has been
+doing so for years.)  Some of the other transports expose only Target
+Port Identifiers.  Object identifiers are  exposed in non-uniform places
+defined by the respective transport implementation.
+-- 
+Stefan Richter
+-=====-=-=== -==- ==-==
+http://arcgraph.de/sr/
