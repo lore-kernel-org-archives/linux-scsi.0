@@ -1,141 +1,105 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 2/3] ibmvscsi: convert to use the srp transport class
-Date: Wed, 27 Jun 2007 16:32:50 +0900
-Message-ID: <20070627163250P.fujita.tomonori@lab.ntt.co.jp>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
+Date: Wed, 27 Jun 2007 12:27:48 +0200
+Message-ID: <200706271227.48725.swen@vnet.ibm.com>
+References: <200706191025.30986.swen@vnet.ibm.com> <200706251239.09755.swen@vnet.ibm.com> <467FCB4C.6060907@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:41318 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754982AbXF0IFw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jun 2007 04:05:52 -0400
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:27742 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753697AbXF0K1j (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 27 Jun 2007 06:27:39 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate7.de.ibm.com (8.13.8/8.13.8) with ESMTP id l5RARcN3377892
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2007 10:27:38 GMT
+Received: from d12av04.megacenter.de.ibm.com (d12av04.megacenter.de.ibm.com [9.149.165.229])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.3) with ESMTP id l5RARcxt2084970
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2007 12:27:38 +0200
+Received: from d12av04.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av04.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l5RARbxG013322
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jun 2007 12:27:37 +0200
+In-Reply-To: <467FCB4C.6060907@suse.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@steeleye.com, santil@us.ibm.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
-This converts ibmvscsi to use the srp transport class.
+On Monday 25 June 2007 16:03, Hannes Reinecke wrote:
+> Swen Schillig wrote:
+> > On Friday 22 June 2007 16:11, James Bottomley wrote:
+> >> On Thu, 2007-06-21 at 21:40 -0700, Mike Anderson wrote:
+> >>> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> >>>> A proposal to display the correct form of the LUN would be useful if you
+> >>>> wish to make it? ...  The problem is really that SAM specifies a
+> >>>> possible 4 level structure with 4 possible address methods per level.
+> >>>>
+> >>>> The well known LUNs should be simple; there are only three: Report Lun,
+> >>>> Access Controls and Target Log Pages.  The rest we really need input on.
+> >>>> For instance, I could see the vendors wishing us to combine a
+> >>>> multi-level flat addressing space into a single logical unit number,
+> >>>> whereas I could see them wanting us to supply some sort of hierarchy for
+> >>>> the peripheral and logical unit methods of addressing.
+> >>>>
+> >>>> Since you're already using 2 level flat addressing, how do you want to
+> >>>> see that represented?
+> >>> James, why would we would not want to display the lun per SAM4 4.6.2 as
+> >>> suggested by Stefan in a previous comment.
+> >> Because in a two LUN system, what was LUN 1 would then become LUN
+> >> 0x1000000000000 which looks a bit unpalatable.
+> >>
+> >> James
+> >>
+> >>
+> >> -
+> > 
+> > Despite the issue whether we should display and/or use (sysfs !?)
+> > full blown 64bit values, so with leading zeros, you still have the option to display, 
+> > for the single level addressing, the LUN as a 2 byte value as described in  SAM4 4.6.2. 
+> > So for your example this would be 0x0001 or 0x1, which is exactly what you'd like to see, right ?
+> > Only for 2+ level environment the 64bit representation comes into the play.
+> > 
+> > And, because you were asking how we'd like that to be represented, I personally prefer
+> > a full blown 64bit hex value with leading zeros.
+> > It makes the comparison to internal structures/models easier and gets us a bit closer
+> > to the documented (SAM4) standard.
+> > ...and I think we all can deal with a few extra digits being displayed.
+> > 
+> Well ...
+> why don't we stick with the original implementation like zfcp had it?
+> We can simpley expand the midlayer to add an attribute 'lun'
+> to each scsi_device. This would be the LUN as returned by eg
+> REPORT LUNS.
+> No translation, nothing. Would be easy to implement and would allow
+> any administrator to map the h:c:i:l value to the 'real' lun.
+> 
+> Cheers,
+> 
+> Hannes
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/Kconfig             |    1 +
- drivers/scsi/ibmvscsi/ibmvscsi.c |   34 ++++++++++++++++++++++++++++++++--
- 2 files changed, 33 insertions(+), 2 deletions(-)
+What do you mean with "like we had it" ?
+I thought you were quite happy with the new version making
+the old manual counting thing ("zfcp-ism") obsolete.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index c261ccb..dfb45e7 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -829,6 +829,7 @@ config SCSI_IPS
- config SCSI_IBMVSCSI
- 	tristate "IBM Virtual SCSI support"
- 	depends on PPC_PSERIES || PPC_ISERIES
-+	select SCSI_SRP_ATTRS
- 	help
- 	  This is the IBM POWER Virtual SCSI Client
- 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index f5da762..620e9e7 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -75,6 +75,7 @@ #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
-+#include <scsi/scsi_transport_srp.h>
- #include "ibmvscsi.h"
- 
- /* The values below are somewhat arbitrary default values, but 
-@@ -87,6 +88,8 @@ static int max_channel = 3;
- static int init_timeout = 5;
- static int max_requests = IBMVSCSI_MAX_REQUESTS_DEFAULT;
- 
-+static struct scsi_transport_template *ibmvscsi_transport_template;
-+
- #define IBMVSCSI_VERSION "1.5.8"
- 
- MODULE_DESCRIPTION("IBM Virtual SCSI");
-@@ -1604,6 +1607,8 @@ static int ibmvscsi_probe(struct vio_dev
- 	struct ibmvscsi_host_data *hostdata;
- 	struct Scsi_Host *host;
- 	struct device *dev = &vdev->dev;
-+	struct srp_rport_identifiers ids;
-+	struct srp_rport *rport;
- 	unsigned long wait_switch = 0;
- 	int rc;
- 
-@@ -1616,6 +1621,7 @@ static int ibmvscsi_probe(struct vio_dev
- 		goto scsi_host_alloc_failed;
- 	}
- 
-+	host->transportt = ibmvscsi_transport_template;
- 	hostdata = (struct ibmvscsi_host_data *)host->hostdata;
- 	memset(hostdata, 0x00, sizeof(*hostdata));
- 	INIT_LIST_HEAD(&hostdata->sent);
-@@ -1641,6 +1647,13 @@ static int ibmvscsi_probe(struct vio_dev
- 	if (scsi_add_host(hostdata->host, hostdata->dev))
- 		goto add_host_failed;
- 
-+	/* we don't have a proper target_port_id so let's use the fake one */
-+	memcpy(ids.port_id, hostdata->madapter_info.partition_name,
-+	       sizeof(ids.port_id));
-+	rport = srp_rport_add(host, &ids);
-+	if (IS_ERR(rport))
-+		goto add_srp_port_failed;
-+
- 	/* Try to send an initialization message.  Note that this is allowed
- 	 * to fail if the other end is not acive.  In that case we don't
- 	 * want to scan
-@@ -1668,6 +1681,8 @@ static int ibmvscsi_probe(struct vio_dev
- 	vdev->dev.driver_data = hostdata;
- 	return 0;
- 
-+      add_srp_port_failed:
-+	scsi_remove_host(hostdata->host);
-       add_host_failed:
- 	release_event_pool(&hostdata->pool, hostdata);
-       init_pool_failed:
-@@ -1684,7 +1699,8 @@ static int ibmvscsi_remove(struct vio_de
- 	release_event_pool(&hostdata->pool, hostdata);
- 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
- 				   max_requests);
--	
-+
-+	srp_remove_host(hostdata->host);
- 	scsi_remove_host(hostdata->host);
- 	scsi_host_put(hostdata->host);
- 
-@@ -1711,14 +1727,28 @@ static struct vio_driver ibmvscsi_driver
- 	}
- };
- 
-+static struct srp_function_template ibmvscsi_transport_functions = {
-+};
-+
- int __init ibmvscsi_module_init(void)
- {
--	return vio_register_driver(&ibmvscsi_driver);
-+	int ret;
-+
-+	ibmvscsi_transport_template =
-+		srp_attach_transport(&ibmvscsi_transport_functions);
-+	if (!ibmvscsi_transport_template)
-+		return -ENOMEM;
-+
-+	ret = vio_register_driver(&ibmvscsi_driver);
-+	if (ret)
-+		srp_release_transport(ibmvscsi_transport_template);
-+	return ret;
- }
- 
- void __exit ibmvscsi_module_exit(void)
- {
- 	vio_unregister_driver(&ibmvscsi_driver);
-+	srp_release_transport(ibmvscsi_transport_template);
- }
- 
- module_init(ibmvscsi_module_init);
--- 
-1.4.3.2
+What's the benefit of adding another (LUN) attribute to the midlayer, I don't get
+what this is supposed to solve.
+The initial question was, should we not display the long-ish LUN value in 
+hex format making it easier for admins (and us) to actually use it
+as it is.
+I think Luben and Stefan suggested a good way to do that, ok apart from the be64 bits :-)
+So, just use the struct scsi_lun in its full extend, for the sysfs without a leading "0x",
+and forgetting about the scsilun_to_int conversion which isn't good for anything.
 
+This way we would be conform to SAM4 as well even though I'm getting the impression
+that this isn't the major goal of this discussion.
+
+Anyway, before anyone else is suggesting some other magic attribute extension to the LUN value, 
+why not leave it as it is and just have it serving this one purpose of being a unique number ?
+(yeah, yeah I know there's already some meaning behind the 4 levels)
+
+Just my 2 cents !
+
+Cheers Swen
