@@ -1,85 +1,36 @@
-From: Matthias Urlichs <matthias@urlichs.de>
-Subject: Low-level reformat with different sector size: ?
-Date: Fri, 29 Jun 2007 15:34:06 +0000 (UTC)
-Message-ID: <f638pe$it6$1@sea.gmane.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Low-level reformat with different sector size: ?
+Date: Fri, 29 Jun 2007 11:50:44 -0400
+Message-ID: <1183132245.3518.28.camel@localhost.localdomain>
+References: <f638pe$it6$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:60801 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757778AbXF2PeS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jun 2007 11:34:18 -0400
-Received: from list by ciao.gmane.org with local (Exim 4.43)
-	id 1I4IUB-0007EI-Mm
-	for linux-scsi@vger.kernel.org; Fri, 29 Jun 2007 17:34:15 +0200
-Received: from smurf.noris.de ([192.109.102.42])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jun 2007 17:34:15 +0200
-Received: from matthias by smurf.noris.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jun 2007 17:34:15 +0200
+Received: from hancock.steeleye.com ([71.30.118.248]:37767 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763220AbXF2Pus (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2007 11:50:48 -0400
+In-Reply-To: <f638pe$it6$1@sea.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthias Urlichs <matthias@urlichs.de>
+Cc: linux-scsi@vger.kernel.org
 
-Hello,
+On Fri, 2007-06-29 at 15:34 +0000, Matthias Urlichs wrote:
+> Yesterday I managed to buy a couple of SCA disks with a sector size of ...
+> *drumroll* ... 524.
+> 
+> What's the easiest way to re-format these to use 512 bytes?
+> Preferably without screwing up anything else on these things?
 
-Yesterday I managed to buy a couple of SCA disks with a sector size of ...
-*drumroll* ... 524.
+We use this program go reformat 520 sector size disks back to 512:
 
-What's the easiest way to re-format these to use 512 bytes?
-Preferably without screwing up anything else on these things?
+http://parisc-linux.org/~jejb/blk512-linux.c
 
-I tried sformat, which reported some rather broken
-data:
+It should work for your device as well.  Beware it requires a complete
+low level format to achieve this, which can take a very long time.
 
-# sformat
-sformat SCSI format/analysis/repair utilities
-Release 3.4, Copyright J. Schilling
+James
 
-scsibus0:
-        0,0,0     0) *
-        0,1,0     1) *
-        0,2,0     2) 'S330L  !' 'C0
-                                  P' '' Disk
-        0,3,0     3) *
-        0,4,0     4) 'S330L  !' 'C0' 'P?' Disk
-        0,5,0     5) 'S330L  !' 'C0`P#  ' '?' Disk
-        0,6,0     6) *
-        0,7,0     7) *
-Select target -1 (2 - 5)/<cr>:2
-scsibus0 target 2:
-        0,2,0     0) 'S330L  !' 'C0
-                                  P' '' Disk
-        0,2,1     1) *
-        0,2,2     2) *
-        0,2,3     3) *
-        0,2,4     4) *
-        0,2,5     5) *
-        0,2,6     6) *
-        0,2,7     7) *
-Select lun -1 (0 - 0)/<cr>:0
-scsibus0 target 2 lun 0
-Device type    : Disk
-Version        : 7
-Response Format: 1
-Vendor_info    : 'S330L  !'
-Identifikation : 'C0
-                   P'
-Revision       : ''
-Device seems to be: Generic CCS Disk.
-sformat: PANIC Sectorsize.
-#
-
-... Oops?
-
-Kernel: 2.6.22 (Ubuntu development)
-
--- 
-Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
-Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
- - -
-I have seen the Great Pretender and he is not what he seems.
 
