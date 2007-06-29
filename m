@@ -1,79 +1,59 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: 2.6.22-rc6-mm1: multiple definition of `check_reset'
-Date: Thu, 28 Jun 2007 13:01:02 -0700
-Message-ID: <20070628130102.ef6e7d12.akpm@linux-foundation.org>
-References: <20070628034321.38c9f12b.akpm@linux-foundation.org>
-	<20070628192950.GT1094@stusta.de>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [RFC] Fix device not ready printk
+Date: Fri, 29 Jun 2007 07:21:26 -0600
+Message-ID: <20070629132126.GA18722@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765327AbXF1UBn@vger.kernel.org>
-In-Reply-To: <20070628192950.GT1094@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: Mark Salyzyn <aacraid@adaptec.com>, James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, kkeil@suse.de, kai.germaschewski@gmx.de, isdn4linux@listserv.isdn4linux.de
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:39609 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761717AbXF2NV2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2007 09:21:28 -0400
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-On Thu, 28 Jun 2007 21:29:50 +0200
-Adrian Bunk <bunk@stusta.de> wrote:
-
->  LD      drivers/built-in.o
-> drivers/isdn/built-in.o: In function `check_reset': (.text+0xab974):
-> multiple definition of `check_reset'
-> drivers/scsi/built-in.o:(.data+0xdba8): first defined here
-> ld: Warning: size of symbol `check_reset' changed from 4 in drivers/scsi/built-in.o to 214 in drivers/isdn/built-in.o
-> ld: Warning: type of symbol `check_reset' changed from 1 to 2 in drivers/isdn/built-in.o
-
-check_reset wasn't a great choice of identifier...
+To: linux-scsi@vger.kernel.org
 
 
-diff -puN drivers/scsi/aacraid/aachba.c~aacraid-rename-check_reset drivers/scsi/aacraid/aachba.c
---- a/drivers/scsi/aacraid/aachba.c~aacraid-rename-check_reset
-+++ a/drivers/scsi/aacraid/aachba.c
-@@ -177,9 +177,9 @@ int check_interval = 24 * 60 * 60;
- module_param(check_interval, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(check_interval, "Interval in seconds between adapter health checks.");
- 
--int check_reset = 1;
--module_param(check_reset, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(check_reset, "If adapter fails health check, reset the adapter.");
-+int aacraid_check_reset = 1;
-+module_param_named(check_reset, aacraid_check_reset, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(aacraid_check_reset, "If adapter fails health check, reset the adapter.");
- 
- int expose_physicals = -1;
- module_param(expose_physicals, int, S_IRUGO|S_IWUSR);
-@@ -1211,7 +1211,7 @@ int aac_get_adapter_info(struct aac_dev*
- 			  (int)sizeof(dev->supplement_adapter_info.VpdInfo.Tsid),
- 			  dev->supplement_adapter_info.VpdInfo.Tsid);
- 		}
--		if (!check_reset ||
-+		if (!aacraid_check_reset ||
- 		  (dev->supplement_adapter_info.SupportedOptions2 &
- 		  le32_to_cpu(AAC_OPTION_IGNORE_RESET))) {
- 			printk(KERN_INFO "%s%d: Reset Adapter Ignored\n",
-diff -puN drivers/scsi/aacraid/aacraid.h~aacraid-rename-check_reset drivers/scsi/aacraid/aacraid.h
---- a/drivers/scsi/aacraid/aacraid.h~aacraid-rename-check_reset
-+++ a/drivers/scsi/aacraid/aacraid.h
-@@ -1857,4 +1857,4 @@ extern int aac_reset_devices;
- extern int aac_commit;
- extern int update_interval;
- extern int check_interval;
--extern int check_reset;
-+extern int aacraid_check_reset;
-diff -puN drivers/scsi/aacraid/commsup.c~aacraid-rename-check_reset drivers/scsi/aacraid/commsup.c
---- a/drivers/scsi/aacraid/commsup.c~aacraid-rename-check_reset
-+++ a/drivers/scsi/aacraid/commsup.c
-@@ -1370,8 +1370,9 @@ int aac_check_health(struct aac_dev * aa
- 
- 	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
- 
--	if (!check_reset || (aac->supplement_adapter_info.SupportedOptions2 &
--	  le32_to_cpu(AAC_OPTION_IGNORE_RESET)))
-+	if (!aacraid_check_reset ||
-+		(aac->supplement_adapter_info.SupportedOptions2 &
-+			le32_to_cpu(AAC_OPTION_IGNORE_RESET)))
- 		goto out;
- 	host = aac->scsi_host_ptr;
- 	if (aac->thread->pid != current->pid)
-_
+scsi_print_sense_hdr prints KERN_INFO, making the output from
+scsi_io_completion ugly:
+
+sd 0:0:0:0: [sdb] Device not ready: <6>: Sense Key : 0x2 [current] 
+: ASC=0x4 ASCQ=0x3
+
+By duplicating some of the code from it, we can get the nicer output:
+
+sd 0:0:0:0: [sdb] Device not ready: Sense Key : Not Ready [current] 
+sd 0:0:0:0: [sdb] Device not ready: Add. Sense: Logical unit not ready, manual intervention required
+
+(the observant will notice that I turned on SCSI_CONSTANTS between the
+two kernels)
+
+I'm in two minds about printing the 'Device not ready' twice.  On the
+one hand, it's redundant information.  On the other hand, it helps the
+harried sysadmin with multiple simultaneous disc failures tie the two
+messages together.
+
+So I'm not signing off on this because I think it warrants further discussion.
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1f5a07b..d0b8608 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -940,7 +940,10 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			if (!(req->cmd_flags & REQ_QUIET)) {
+ 				scmd_printk(KERN_INFO, cmd,
+ 					    "Device not ready: ");
+-				scsi_print_sense_hdr("", &sshdr);
++				scsi_show_sense_hdr(&sshdr);
++				scmd_printk(KERN_INFO, cmd,
++					    "Device not ready: ");
++				scsi_show_extd_sense(sshdr.asc, sshdr.ascq);
+ 			}
+ 			scsi_end_request(cmd, 0, this_count, 1);
+ 			return;
+
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
