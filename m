@@ -1,87 +1,72 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH update scsi-misc] Make scsi_host_template::proc_name const
- char * instead of char *.
-Date: Sat, 30 Jun 2007 10:31:22 +0200 (CEST)
-Message-ID: <tkrat.bcd559ac9087987f@s5r6.in-berlin.de>
+From: Matthias Urlichs <matthias@urlichs.de>
+Subject: Re: Low-level reformat with different sector size: ?
+Date: Sat, 30 Jun 2007 15:30:01 +0000 (UTC)
+Message-ID: <f65stp$gk4$1@sea.gmane.org>
+References: <f638pe$it6$1@sea.gmane.org> <4685B6E5.80204@torque.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:34331 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753526AbXF3Ibj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jun 2007 04:31:39 -0400
-Content-Disposition: INLINE
+Received: from main.gmane.org ([80.91.229.2]:58849 "EHLO ciao.gmane.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753036AbXF3PaO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 30 Jun 2007 11:30:14 -0400
+Received: from list by ciao.gmane.org with local (Exim 4.43)
+	id 1I4etm-00022b-Jb
+	for linux-scsi@vger.kernel.org; Sat, 30 Jun 2007 17:30:10 +0200
+Received: from smurf.noris.de ([192.109.102.42])
+        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 30 Jun 2007 17:30:10 +0200
+Received: from matthias by smurf.noris.de with local (Gmexim 0.1 (Debian))
+        id 1AlnuQ-0007hv-00
+        for <linux-scsi@vger.kernel.org>; Sat, 30 Jun 2007 17:30:10 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org, =?iso-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>
+To: linux-scsi@vger.kernel.org
 
-Date: Wed, 9 May 2007 19:23:12 -0400
-=46rom: Kristian H=F8gsberg <krh@redhat.com>
+On Fri, 29 Jun 2007 21:50:29 -0400, Douglas Gilbert wrote:
 
-Signed-off-by: Kristian H=F8gsberg <krh@redhat.com>
+> Umm, I hope you don't consider losing all the previous data
+> on the disks when a re-format is performed as "screwing up"?
 
-collapsed with fw-sbp2 patch "Drop cast to non-const char * in host
-template initialization." from Kristian H=F8gsberg
+*Giggle* As I just got the disk, have no idea what's on it, and can't read
+it in any case (OK, so I could use /dev/sg*...), that would be rather
+silly.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
- drivers/firewire/fw-sbp2.c |    2 +-
- drivers/scsi/scsi_debug.c  |    2 +-
- include/scsi/scsi_host.h   |    2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+No, I consider "reformat it in such a way that the disk now reports 512
+bytes instead of 70 GBytes, total" or "brick it" to be screw-ups. Anything
+else I can live with. If nothing else, German consumer code happily
+gives me 14-day return rights, so if nothing else works I can send the
+things back.
 
-diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
-index 6830041..e8f5852 100644
---- a/drivers/firewire/fw-sbp2.c
-+++ b/drivers/firewire/fw-sbp2.c
-@@ -1111,7 +1111,7 @@ static int sbp2_scsi_abort(struct scsi_cmnd *cmd)
- static struct scsi_host_template scsi_driver_template =3D {
- 	.module			=3D THIS_MODULE,
- 	.name			=3D "SBP-2 IEEE-1394",
--	.proc_name		=3D (char *)sbp2_driver_name,
-+	.proc_name		=3D sbp2_driver_name,
- 	.queuecommand		=3D sbp2_scsi_queuecommand,
- 	.slave_alloc		=3D sbp2_scsi_slave_alloc,
- 	.slave_configure	=3D sbp2_scsi_slave_configure,
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 4cd9c58..4947dfe 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -2875,7 +2875,7 @@ static int __init scsi_debug_init(void)
-=20
- 	init_all_queued();
-=20
--	sdebug_driver_template.proc_name =3D (char *)sdebug_proc_name;
-+	sdebug_driver_template.proc_name =3D sdebug_proc_name;
-=20
- 	host_to_add =3D scsi_debug_add_host;
-         scsi_debug_add_host =3D 0;
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index ba07cf7..3b8a6a8 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -341,7 +341,7 @@ struct scsi_host_template {
- 	/*
- 	 * Name of proc directory
- 	 */
--	char *proc_name;
-+	const char *proc_name;
-=20
- 	/*
- 	 * Used to store the procfs directory if a driver implements the
---=20
-1.5.1.6
+Right now, though, it looks like there's something else broken.
+*This* does not look normal at all:
 
+# sg_format --format --size=512 --count=-1 --verbose /dev/sg1
+    inquiry cdb: 12 00 00 00 24 00 
+    inquiry: requested 36 bytes but got 18 bytes
+    S330L  !  C0     peripheral_type: disk [0x0]
+      PROTECT=1
+      << supports 'protection information'>>
+    mode sense (10) cdb: 5a 00 01 00 00 00 00 00 fc 00 
+    mode sense (10): requested 252 bytes but got 14 bytes
+Mode sense (block descriptor) data, prior to changes:
+  Number of blocks=2177429504 [0x81c8f000]
+  Block size=2615479 [0x27e8b7]
+Need to perform MODE SELECT (to change number or blocks or block length)
+but (single) block descriptor not found in earlier MODE SENSE
+#
 
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D=3D- =3D=3D=3D=3D-
-http://arcgraph.de/sr/
+This happens on all three disks, so it seems that either the OS or the
+controller are screwing things up royally.  :-/
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
+Matthias Urlichs   |   {M:U} IT Design @ m-u-it.de   |  smurf@smurf.noris.de
+Disclaimer: The quote was selected randomly. Really. | http://smurf.noris.de
+ - -
+Accuracy:
+	Exploded concept. Foolish, Platonic notion that we can get our facts
+	straight.
+		-- Fashionable Dictionary (www.butterfliesandwheels.com)
+
