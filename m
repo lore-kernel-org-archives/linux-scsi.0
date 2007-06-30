@@ -1,36 +1,86 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Douglas Gilbert <dougg@torque.net>
 Subject: Re: Low-level reformat with different sector size: ?
-Date: Fri, 29 Jun 2007 11:50:44 -0400
-Message-ID: <1183132245.3518.28.camel@localhost.localdomain>
+Date: Fri, 29 Jun 2007 21:47:30 -0400
+Message-ID: <4685B632.5030604@torque.net>
 References: <f638pe$it6$1@sea.gmane.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:37767 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763220AbXF2Pus (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2007 11:50:48 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:45534 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751485AbXF3Br5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jun 2007 21:47:57 -0400
 In-Reply-To: <f638pe$it6$1@sea.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Matthias Urlichs <matthias@urlichs.de>
 Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2007-06-29 at 15:34 +0000, Matthias Urlichs wrote:
+Matthias Urlichs wrote:
+> Hello,
+> 
 > Yesterday I managed to buy a couple of SCA disks with a sector size of ...
 > *drumroll* ... 524.
 > 
 > What's the easiest way to re-format these to use 512 bytes?
 > Preferably without screwing up anything else on these things?
+> 
+> I tried sformat, which reported some rather broken
+> data:
+> 
+> # sformat
+> sformat SCSI format/analysis/repair utilities
+> Release 3.4, Copyright J. Schilling
+> 
+> scsibus0:
+>         0,0,0     0) *
+>         0,1,0     1) *
+>         0,2,0     2) 'S330L  !' 'C0
+>                                   P' '' Disk
+>         0,3,0     3) *
+>         0,4,0     4) 'S330L  !' 'C0' 'P?' Disk
+>         0,5,0     5) 'S330L  !' 'C0`P#  ' '?' Disk
+>         0,6,0     6) *
+>         0,7,0     7) *
+> Select target -1 (2 - 5)/<cr>:2
+> scsibus0 target 2:
+>         0,2,0     0) 'S330L  !' 'C0
+>                                   P' '' Disk
+>         0,2,1     1) *
+>         0,2,2     2) *
+>         0,2,3     3) *
+>         0,2,4     4) *
+>         0,2,5     5) *
+>         0,2,6     6) *
+>         0,2,7     7) *
+> Select lun -1 (0 - 0)/<cr>:0
+> scsibus0 target 2 lun 0
+> Device type    : Disk
+> Version        : 7
+> Response Format: 1
+> Vendor_info    : 'S330L  !'
+> Identifikation : 'C0
+>                    P'
+> Revision       : ''
+> Device seems to be: Generic CCS Disk.
+> sformat: PANIC Sectorsize.
+> #
+> 
+> ... Oops?
+> 
+> Kernel: 2.6.22 (Ubuntu development)
 
-We use this program go reformat 520 sector size disks back to 512:
+Matthias,
+Have a look at sg_format in the sg3_utils package.
 
-http://parisc-linux.org/~jejb/blk512-linux.c
+Assuming you want to reformat /dev/sdc to 512 byte sector
+size the you could use:
+    sg_format --format --size=512 /dev/sdc
 
-It should work for your device as well.  Beware it requires a complete
-low level format to achieve this, which can take a very long time.
+See sg_format's man page for more information.
 
-James
+Doug Gilbert
 
 
