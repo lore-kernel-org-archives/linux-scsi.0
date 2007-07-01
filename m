@@ -1,96 +1,90 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Sun, 01 Jul 2007 13:07:18 +0200
-Message-ID: <46878AE6.7040303@s5r6.in-berlin.de>
-References: <725061.42209.qm@web31801.mail.mud.yahoo.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 3/3] Farther clean up of stex.c driver
+Date: Sun, 01 Jul 2007 16:55:59 +0300
+Message-ID: <4687B26F.2050108@panasas.com>
+References: <B70A50D07063384EB9BCE3330D18414F03601207@nonameb.ptu.promise.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:33100 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755553AbXGALHa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jul 2007 07:07:30 -0400
-In-Reply-To: <725061.42209.qm@web31801.mail.mud.yahoo.com>
+Received: from gw-e.panasas.com ([65.194.124.178]:55231 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753243AbXGAN4R (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jul 2007 09:56:17 -0400
+In-Reply-To: <B70A50D07063384EB9BCE3330D18414F03601207@nonameb.ptu.promise.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Swen Schillig <swen@vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
+To: Ed Lin <ed.lin@promise.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
 
-Luben Tuikov wrote:
-> --- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->> Among else:  It should provide a framework which enables userspace to
->> find the unique object identifiers (that are required to uniquely and
->> persistently identify logical units) always in the same place.  (That's
->> just my opinion.  Current userspace tools like e.g. udev scripts are
->> adapted to hunt those identifiers down in various places, and this works
->> too.)
+Ed Lin wrote:
 > 
-> This information can be had by using default SPC commands, issued by
-> specialized userspace tools.  For example the SG tools maintained by Doug.
+>>>>
+>>> The software allocates a big enough buffer(so don't worry about this),
+>>> and it trims the data size based on returned length. So it needs the
+>>> actual data length.
 
-I did a quick test with twelve SBP-2 devices.  Only four of them
-implement the mandatory VPD pages.  But they show only vendor specific
-identifiers which are incidentally world wide unique, but are not
-guaranteed to be.  The results in detail:
+This sounds like a security breach to me. An untrusted user-mode
+with knowledge of such hardware in the machine can gain access to kernel
+through the wrong( cracker-right) sized request.
 
-1.) an MMC device: does not support INQUIRY with EVPD=1  (sg_inq says:
-invalid VPD response; probably a STANDARD INQUIRY response)
+>> What's the software? I mean that who trims the data size based on
+>> returned length?
+>>
+> 
+> The management software provided by Promise.
+> 
 
-2.) an SBC device which I suspect is rather an RBC device: does not
-support EVPD=1 either (returns: Invalid Request)
+I had a deeper look into this, and I am totally confused.
+The code in question at stex.c::stex_ys_commands() is called
+at softirq from stex_mu_intr(). It will than immediately go 
+on to eventually call cmd->scsi_done(cmd);
+Now what is the upper layer that calls this command??!
 
-3.) another SBC device from a different vendor and with a different
-controller, which I too suspect is really an RBC device:  Returns
-corrupt INQUIRY data which look as if (only) VPD page 0x1f was
-implemented; but it isn't. (if any non-zero VPD page code is specified,
-sg_inq says: invalid VPD response; probably a STANDARD INQUIRY response)
+There can be 3 possibilities that I know. From unlikely to likely order:
+1. REQ_TYPE_FS command which is not possible because I don't know
+   of any one that can issue. a ccb->cmd->cmnd[0] == MGT_CMD
+   as an REQ_TYPE_FS. And anyway if bufflen is truncated like that
+   a REQ_TYPE_FS command will retry the command until complete.
 
-4.) an RBC device from the same vendor as device 2 and with a newer
-revision of controller and firmware of that of device 2:  behaves like
-device 3, even though hardware and firmware are very different from device 3
+2. REQ_TYPE_BLOCK_PC through sg, bsg or others at which truncating
+   a command like that will leak BIOs when trying to release the 
+   command, since scsi-ml relies on bufflen in the call to 
+   end_that_request_first.
 
-5.-7.) three RBC devices from the same vendor but with different
-controllers  and quite different years of production:   They all
-implement VPD pages 0x80 = Unit Serial Number and 0x83 = Device
-Identification, which fulfills the minimal requirement according to RBC.
- Alas the Device Identification page merely contains a Vendor Specific
-Identifier which SPC says is not guaranteed to be globally unique.  In
-these two cases it happens to be the same as the upper 64 bits of the
-SBP-3 Target port identifier, the EUI-64.
+3. A special upper layer that overrides the done functions at 
+   scsi_cmnd or request levels and interprets the return info
+   and/or frees buffers. If this is the case, can such a driver
+   use a reserved member of scsi_cmnd like the fields in 
+   struct scsi_pointer or something hanging on host_scribble?
+   Than later return to user-mode what it used to return before
+   but leave bufflen alone?
 
-8.) an MMC device from the same vendor as devices 5-7 bit with yet
-another different controller:  does not support EVPD=1  (returns:
-Invalid Request)
+Setting of bufflen like that in a driver sounds like a highway
+rubbery to me. Please stop that Hack. Now!
 
-9.) yet one more RBC device, a Mac in target disk mode:  does not
-support INQUIRY with EVPD=1  (returns: Invalid Request)
+>>> So this length fix is necessary if software doesn't
+>>> change policy. The whole thing is guaranteed by both software and
+>>> firmware, software will do a check, firmware will do a check, 
+>>> so a check in driver is not necessary.
 
-10.) an RBC device with the same bridge as one of the devices 5-7 but
-from a different vendor:  Behaves like devices 5-7
 
-11.) an MMC device with possibly same controller as device 1 but from a
-different vendor:  behaves like device 1
+As I said. I'm sure we can change upper layer polices to not
+break user-mode but to also not touch a delicate and private member
+of scsi-ml. It limits the scsi-ml ability to change and evolve.
+The most I can do for now is declare this driver broken once 
+scsi_sgtable goes in because I sure am not going to do:
+ccb->cmd->sg_table->length = le32_to_cpu(*(__le32 *)&resp->variable[0]);
+(Do we need an explanation why this is plain broken, leaking code)
 
-12.) a dual LU device with a controller like device 3.  I plugged a HDD
-and a DVD-ROM into it so that LU 00 00 is a SBC device (perhaps more
-like an RBC device) and LU 00 01 is an MMC device.  LU 00 00 behaves
-like device 3.  LU 00 01 behaves like device 1.
+If you point me to the upper layer driver used, I can see if I can change it
+in a way that will not touch bufflen.
 
-For the heck of it I also tried REPORT LUNS on device 12:
-# sg_luns /dev/sdd
-Report Luns command not supported (support mandatory in SPC-3)
-# sg_luns /dev/sr0
-REPORT LUNS command error: SCSI status: Check Condition
- Fixed format, current;  Sense key: Not Ready
- Additional sense: Medium not present
+Another thing I do not understand is where in the SCSI standard
+such an operation is defined. because if it is a standard SCSI
+command or extended or vendor-specific command than, current code
+is not built to cope with such scenario. How would one defined
+it? a "truncated read"?
 
- Raw sense data (in hex):
-        70 00 02 00 00 00 00 0a  00 00 00 00 3a 00 00 00
-        00 00
-plus...: Driver_status=0x08 [DRIVER_SENSE, SUGGEST_OK]
+Boaz Harrosh
 
--- 
-Stefan Richter
--=====-=-=== -=== ----=
-http://arcgraph.de/sr/
