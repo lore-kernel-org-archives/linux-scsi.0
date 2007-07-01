@@ -1,124 +1,96 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] zfcp: Report FCP LUN to SCSI midlayer
-Date: Sat, 30 Jun 2007 23:27:35 -0700 (PDT)
-Message-ID: <725061.42209.qm@web31801.mail.mud.yahoo.com>
-References: <4686CA8D.20504@s5r6.in-berlin.de>
-Reply-To: ltuikov@yahoo.com
+Date: Sun, 01 Jul 2007 13:07:18 +0200
+Message-ID: <46878AE6.7040303@s5r6.in-berlin.de>
+References: <725061.42209.qm@web31801.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31801.mail.mud.yahoo.com ([68.142.207.64]:41520 "HELO
-	web31801.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751761AbXGAG1g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jul 2007 02:27:36 -0400
-In-Reply-To: <4686CA8D.20504@s5r6.in-berlin.de>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:33100 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755553AbXGALHa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jul 2007 07:07:30 -0400
+In-Reply-To: <725061.42209.qm@web31801.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: ltuikov@yahoo.com
 Cc: Swen Schillig <swen@vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, James Bottomley <James.Bottomley@steeleye.com>, Mike Anderson <andmike@us.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org
 
---- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> SAM itself speaks of the LUN as 8 bytes quantity as well as 64 bits
-> quantity (and 2 bytes quantity as well as 16 bits quantity).  Of course
-> whether this dualism should be exposed in an API is another question.
-
-"64 bit quantity", the keyword here is "quantity", _not_ "integer".
-Any "u64" variation means "integer" since it dictates a BE or LE
-interpretation.  A mere "64 bit quantity" does not expose a BE or LE
-bit ordering, and thus does not represent itself as an integer.
-
-It is though one such for human-readability.  Ideally, you'd not want
-to expose this in the representation.
-
-> SAS defines the SAS address as fitting into eight bytes.  It furthermore
-> defines the SAS address as a bitfield consisting of 4, 24, and 36 bits
-> wide parts.  (And it defines the SAM object Target port identifier to be
-> implemented as SAS address.)
+Luben Tuikov wrote:
+> --- Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>> Among else:  It should provide a framework which enables userspace to
+>> find the unique object identifiers (that are required to uniquely and
+>> persistently identify logical units) always in the same place.  (That's
+>> just my opinion.  Current userspace tools like e.g. udev scripts are
+>> adapted to hunt those identifiers down in various places, and this works
+>> too.)
 > 
-> [u8 tpid[MAX_SIZE] or u8 tpid[] or union tpid]
+> This information can be had by using default SPC commands, issued by
+> specialized userspace tools.  For example the SG tools maintained by Doug.
 
-Notice that you've already moved down to a protocol layer, in this
-case SAS and have decomposed the tpid as defined in its protocol.
-Thus, you've moved too "deep" into the internal choice of what
-a SAS tpid is which is only interesting for people generating
-such entities, deep into the details of the _protocol_.
+I did a quick test with twelve SBP-2 devices.  Only four of them
+implement the mandatory VPD pages.  But they show only vendor specific
+identifiers which are incidentally world wide unique, but are not
+guaranteed to be.  The results in detail:
 
-I doubt that your intention is to expose the _composition_ itself
-of the port identifier for _each_ protocol to SCSI Core.
+1.) an MMC device: does not support INQUIRY with EVPD=1  (sg_inq says:
+invalid VPD response; probably a STANDARD INQUIRY response)
 
-> Target Port Identifier is a property of Target Port.  This has nothing
-> to do with transport protocols.
+2.) an SBC device which I suspect is rather an RBC device: does not
+support EVPD=1 either (returns: Invalid Request)
 
-Yes, in OOP(aradigm) this is a "virtual property".
+3.) another SBC device from a different vendor and with a different
+controller, which I too suspect is really an RBC device:  Returns
+corrupt INQUIRY data which look as if (only) VPD page 0x1f was
+implemented; but it isn't. (if any non-zero VPD page code is specified,
+sg_inq says: invalid VPD response; probably a STANDARD INQUIRY response)
 
-> Of course the size, source, deeper meaning, and hence potential
-> human-readable representations of Target Port Identifier are transport
-> protocol dependent.
+4.) an RBC device from the same vendor as device 2 and with a newer
+revision of controller and firmware of that of device 2:  behaves like
+device 3, even though hardware and firmware are very different from device 3
 
-Classic OOP design.
+5.-7.) three RBC devices from the same vendor but with different
+controllers  and quite different years of production:   They all
+implement VPD pages 0x80 = Unit Serial Number and 0x83 = Device
+Identification, which fulfills the minimal requirement according to RBC.
+ Alas the Device Identification page merely contains a Vendor Specific
+Identifier which SPC says is not guaranteed to be globally unique.  In
+these two cases it happens to be the same as the upper 64 bits of the
+SBP-3 Target port identifier, the EUI-64.
 
-> I acknowledge that this is a practical problem
-> which can easily be solved by /not/ storing tpid in midlayer's struct
-> scsi_target, thus also eliminating the need for a tpid datatype in
-> midlayer's API.
+8.) an MMC device from the same vendor as devices 5-7 bit with yet
+another different controller:  does not support EVPD=1  (returns:
+Invalid Request)
 
-> Well, it reproduces it, hence "says" it; but you are of course right in
-> that it does not /define/ it.
-> 
-> [...]
-> > Ask yourself these questions: "What does SCSI Core provide?", "What should
-> > SCSI Core provide?", "What should SCSI Core not provide?", "Why?".
-> > Give good justifications to your answers.
-> 
-> Among else:  It should provide a framework which enables userspace to
-> find the unique object identifiers (that are required to uniquely and
-> persistently identify logical units) always in the same place.  (That's
-> just my opinion.  Current userspace tools like e.g. udev scripts are
-> adapted to hunt those identifiers down in various places, and this works
-> too.)
+9.) yet one more RBC device, a Mac in target disk mode:  does not
+support INQUIRY with EVPD=1  (returns: Invalid Request)
 
-This information can be had by using default SPC commands, issued by
-specialized userspace tools.  For example the SG tools maintained by Doug.
+10.) an RBC device with the same bridge as one of the devices 5-7 but
+from a different vendor:  Behaves like devices 5-7
 
-I'd rather have SCSI Core provide just _service_, i.e. means of getting
-at those properties, but _not_ providing the properties themselves, i.e.
-by trying to find them or figure them out on it's own. (I.e. by itself
-issuing commands and what not.)
+11.) an MMC device with possibly same controller as device 1 but from a
+different vendor:  behaves like device 1
 
-Of course, some of those identifiers and what not can be easily had
-and seen simply by looking at the sysfs tree exported by the
-respective protocol, just like my SAS Stack does. An example
-of a 1-1 sysfs representation of a SAS domain can be seen here:
-http://marc.info/?l=linux-scsi&m=112629509826900&w=2
+12.) a dual LU device with a controller like device 3.  I plugged a HDD
+and a DVD-ROM into it so that LU 00 00 is a SBC device (perhaps more
+like an RBC device) and LU 00 01 is an MMC device.  LU 00 00 behaves
+like device 3.  LU 00 01 behaves like device 1.
 
-But this is the exception.  I'd opt for using the SG tools exclusively.
+For the heck of it I also tried REPORT LUNS on device 12:
+# sg_luns /dev/sdd
+Report Luns command not supported (support mandatory in SPC-3)
+# sg_luns /dev/sr0
+REPORT LUNS command error: SCSI status: Check Condition
+ Fixed format, current;  Sense key: Not Ready
+ Additional sense: Medium not present
 
-> I acknowledge that this can be accomplished by only passing string
-> representations of identifiers through to midlayer.
+ Raw sense data (in hex):
+        70 00 02 00 00 00 00 0a  00 00 00 00 3a 00 00 00
+        00 00
+plus...: Driver_status=0x08 [DRIVER_SENSE, SUGGEST_OK]
 
-Tpid and such should only exist in the respective protocol layers.
-It should NOT be exposed to SCSI Core.  The only thing that should be
-is an opaque token by which the protocol layer identifies which target
-port SCSI Core wants the command sent to, the LUN should be
-identified in the SCSI Command struct!
-
-There is a nice summary of this "opaque token" idea in the commentary to
-sas_slave_alloc()::sas_scsi_host.c, and in
-sas_do_lu_discovery()::sas_discover.c in my SAS stack (out of tree).
-
-Also if you take a look at struct sas_task you'd see where the LUN
-is.
-
-> I also agree that
-> midlayer should contain as little transport-dependent details as
-> possible, and that much of what I wrote in my previous post was contrary
-> to that.  (And now back to driver debugging... :-)
-
-I think that from the beginning you had some great ideas which are
-still current.  It also seems (and has always been the case) that
-you have good understanding of the SCSI Architecture Model which is
-a good thing.
-
-   Luben
-
+-- 
+Stefan Richter
+-=====-=-=== -=== ----=
+http://arcgraph.de/sr/
