@@ -1,103 +1,116 @@
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-Subject: [PATCH 1/5] use mutex instead of semaphore in Megaraid Mailbox driver
-Date: Sun, 1 Jul 2007 18:29:21 +0200
-Message-ID: <20070701162921.GD3940@traven>
-References: <20070701162529.GC3940@traven>
+From: "Lin Yu" <yulin@ustc.edu>
+Subject: RE: [PATCH 3/3] Farther clean up of stex.c driver
+Date: Sun, 1 Jul 2007 17:44:01 -0700
+Message-ID: <002301c7bc42$1af5faa0$9701a8c0@ptu.promise.com>
+References: <4687B26F.2050108@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:37263
-	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1753309AbXGAQ2N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 1 Jul 2007 12:28:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20070701162529.GC3940@traven>
+Received: from smtp2.ustc.edu ([202.141.160.100]:51967 "EHLO ustc.edu"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754822AbXGBAsY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 1 Jul 2007 20:48:24 -0400
+In-Reply-To: <4687B26F.2050108@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: 'Boaz Harrosh' <bharrosh@panasas.com>, 'FUJITA Tomonori' <fujita.tomonori@lab.ntt.co.jp>
+Cc: g.liakhovetski@gmx.de, linux-scsi@vger.kernel.org, 'James Bottomley' <James.Bottomley@SteelEye.com>
 
-The Megaraid Mailbox driver uses a semaphore as mutex. Use the mutex
-API instead of the (binary) semaphore.
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
---
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Boaz Harrosh
+> Sent: Sunday, July 01, 2007 6:56 AM
+> To: Ed Lin; FUJITA Tomonori
+> Cc: g.liakhovetski@gmx.de; linux-scsi@vger.kernel.org; James Bottomley
+> Subject: Re: [PATCH 3/3] Farther clean up of stex.c driver
+> 
+> 
+> Ed Lin wrote:
+> > 
+> >>>>
+> >>> The software allocates a big enough buffer(so don't worry 
+> about this),
+> >>> and it trims the data size based on returned length. So 
+> it needs the
+> >>> actual data length.
+> 
+> This sounds like a security breach to me. An untrusted user-mode
+> with knowledge of such hardware in the machine can gain 
+> access to kernel
+> through the wrong( cracker-right) sized request.
+> 
+> >> What's the software? I mean that who trims the data size based on
+> >> returned length?
+> >>
+> > 
+> > The management software provided by Promise.
+> > 
+> 
+> I had a deeper look into this, and I am totally confused.
+> The code in question at stex.c::stex_ys_commands() is called
+> at softirq from stex_mu_intr(). It will than immediately go 
+> on to eventually call cmd->scsi_done(cmd);
+> Now what is the upper layer that calls this command??!
+> 
+> There can be 3 possibilities that I know. From unlikely to 
+> likely order:
+> 1. REQ_TYPE_FS command which is not possible because I don't know
+>    of any one that can issue. a ccb->cmd->cmnd[0] == MGT_CMD
+>    as an REQ_TYPE_FS. And anyway if bufflen is truncated like that
+>    a REQ_TYPE_FS command will retry the command until complete.
+> 
+> 2. REQ_TYPE_BLOCK_PC through sg, bsg or others at which truncating
+>    a command like that will leak BIOs when trying to release the 
+>    command, since scsi-ml relies on bufflen in the call to 
+>    end_that_request_first.
+> 
+> 3. A special upper layer that overrides the done functions at 
+>    scsi_cmnd or request levels and interprets the return info
+>    and/or frees buffers. If this is the case, can such a driver
+>    use a reserved member of scsi_cmnd like the fields in 
+>    struct scsi_pointer or something hanging on host_scribble?
+>    Than later return to user-mode what it used to return before
+>    but leave bufflen alone?
+> 
+> Setting of bufflen like that in a driver sounds like a highway
+> rubbery to me. Please stop that Hack. Now!
+> 
+> >>> So this length fix is necessary if software doesn't
+> >>> change policy. The whole thing is guaranteed by both software and
+> >>> firmware, software will do a check, firmware will do a check, 
+> >>> so a check in driver is not necessary.
+> 
+> 
+> As I said. I'm sure we can change upper layer polices to not
+> break user-mode but to also not touch a delicate and private member
+> of scsi-ml. It limits the scsi-ml ability to change and evolve.
+> The most I can do for now is declare this driver broken once 
+> scsi_sgtable goes in because I sure am not going to do:
+> ccb->cmd->sg_table->length = le32_to_cpu(*(__le32 
+> *)&resp->variable[0]);
+> (Do we need an explanation why this is plain broken, leaking code)
+> 
+> If you point me to the upper layer driver used, I can see if 
+> I can change it
+> in a way that will not touch bufflen.
+> 
+> Another thing I do not understand is where in the SCSI standard
+> such an operation is defined. because if it is a standard SCSI
+> command or extended or vendor-specific command than, current code
+> is not built to cope with such scenario. How would one defined
+> it? a "truncated read"?
+> 
+> Boaz Harrosh
+> 
 
-diff --git a/drivers/scsi/megaraid/mega_common.h b/drivers/scsi/megaraid/mega_common.h
-index 26e1e6c..fef9ac9 100644
---- a/drivers/scsi/megaraid/mega_common.h
-+++ b/drivers/scsi/megaraid/mega_common.h
-@@ -21,6 +21,7 @@
- #include <linux/types.h>
- #include <linux/pci.h>
- #include <linux/spinlock.h>
-+#include <linux/mutex.h>
- #include <linux/interrupt.h>
- #include <linux/delay.h>
- #include <linux/blkdev.h>
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index 04d0b69..2cecc64 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3957,7 +3957,7 @@ megaraid_sysfs_alloc_resources(adapter_t *adapter)
- 		megaraid_sysfs_free_resources(adapter);
- 	}
- 
--	sema_init(&raid_dev->sysfs_sem, 1);
-+	mutex_init(&raid_dev->sysfs_mtx);
- 
- 	init_waitqueue_head(&raid_dev->sysfs_wait_q);
- 
-@@ -4058,7 +4058,7 @@ megaraid_sysfs_get_ldmap(adapter_t *adapter)
- 	/*
- 	 * Allow only one read at a time to go through the sysfs attributes
- 	 */
--	down(&raid_dev->sysfs_sem);
-+	mutex_lock(&raid_dev->sysfs_mtx);
- 
- 	uioc	= raid_dev->sysfs_uioc;
- 	mbox64	= raid_dev->sysfs_mbox64;
-@@ -4134,7 +4134,7 @@ megaraid_sysfs_get_ldmap(adapter_t *adapter)
- 
- 	del_timer_sync(timerp);
- 
--	up(&raid_dev->sysfs_sem);
-+	mutex_unlock(&raid_dev->sysfs_mtx);
- 
- 	return rval;
- }
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.h b/drivers/scsi/megaraid/megaraid_mbox.h
-index 9de803c..626459d 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.h
-+++ b/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -168,7 +168,7 @@ typedef struct {
-  * @hw_error			: set if FW not responding
-  * @fast_load			: If set, skip physical device scanning
-  * @channel_class		: channel class, RAID or SCSI
-- * @sysfs_sem			: semaphore to serialize access to sysfs res.
-+ * @sysfs_mtx			: mutex to serialize access to sysfs res.
-  * @sysfs_uioc			: management packet to issue FW calls from sysfs
-  * @sysfs_mbox64		: mailbox packet to issue FW calls from sysfs
-  * @sysfs_buffer		: data buffer for FW commands issued from sysfs
-@@ -208,7 +208,7 @@ typedef struct {
- 	int				hw_error;
- 	int				fast_load;
- 	uint8_t				channel_class;
--	struct semaphore		sysfs_sem;
-+	struct mutex			sysfs_mtx;
- 	uioc_t				*sysfs_uioc;
- 	mbox64_t			*sysfs_mbox64;
- 	caddr_t				sysfs_buffer;
+We are investigating it. Please wait a while. We are also trying
+to make this driver better.
+Thanks for your findings and efforts.
 
--- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
+Ed Lin
 
-         An ounce of practice is worth more than tons of preaching
-                            (Mahatma Gandhi)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+
