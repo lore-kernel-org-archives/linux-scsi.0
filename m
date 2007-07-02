@@ -1,77 +1,48 @@
-From: "Prakash, Sathya" <sathya.prakash@lsi.com>
-Subject: [PATCH] mpt fusion: deregister from transport layer if PCI registration failed
-Date: Mon, 2 Jul 2007 17:04:10 +0530
-Message-ID: <20070702113409.GB9231@lsil.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] scsi disk help file is not complete
+Date: Mon, 02 Jul 2007 10:14:13 -0400
+Message-ID: <46890835.2050104@garzik.org>
+References: <466D9440.3080005@kpnplanet.nl> <20070611115934.9097fb04.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:45763 "EHLO mail0.lsil.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:51848 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752880AbXGBLfi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 2 Jul 2007 07:35:38 -0400
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id l62BYTE2023898
-	for <linux-scsi@vger.kernel.org>; Mon, 2 Jul 2007 04:34:29 -0700 (PDT)
-Content-Disposition: inline
+	id S1753370AbXGBOOQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 2 Jul 2007 10:14:16 -0400
+In-Reply-To: <20070611115934.9097fb04.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: eric.moore@lsi.com
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: api <linuxgent@kpnplanet.nl>, linux-kernel@vger.kernel.org, scsi <linux-scsi@vger.kernel.org>, jejb <james.bottomley@steeleye.com>
 
-The mptspi and mptsas drivers are modified to deregister from transport layer
-if registration with PCI driver failed
+Randy Dunlap wrote:
+> On Mon, 11 Jun 2007 20:28:16 +0200 api wrote:
+> 
+>> Good day,
+>> When doing make menuconfig one comes across CONFIG_BLK_DEV_SD.
+>> The help file states that this is for scsi disks.NO MENTION IS MADE THAT
+>> IT IS NEEDE FOR SATA DISKS AS WELL!
+>> Would have saved me a lot of time if the help was up to date.
+>> I hope this can be changed so others can make a kernel for sata systems
+>> quicker.
+> 
+> 
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Add help info for BLK_DEV_SD referring to its use in
+> SATA or PATA driver configurations.
+> 
+> Add help text for "ATA" indicating that it probably needs
+> some SCSI config symbols enabled in order to be useful.
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+> ---
+>  drivers/ata/Kconfig  |    5 +++++
+>  drivers/scsi/Kconfig |    1 +
+>  2 files changed, 6 insertions(+)
 
-Signed-Off-by: Sathya Prakash <sathya.prakash@lsi.com>
+applied
 
-----------------
 
-diff -uarpN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
---- b/drivers/message/fusion/mptsas.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptsas.c	2007-07-02 16:22:23.000000000 +0530
-@@ -3237,6 +3237,8 @@ static struct pci_driver mptsas_driver =
- static int __init
- mptsas_init(void)
- {
-+	int error;
-+
- 	show_mptmod_ver(my_NAME, my_VERSION);
- 
- 	mptsas_transport_template =
-@@ -3259,8 +3261,12 @@ mptsas_init(void)
- 		dprintk((KERN_INFO MYNAM
- 		  ": Registered for IOC reset notifications\n"));
- 	}
-+	
-+	error = pci_register_driver(&mptsas_driver);
-+	if (error)
-+		sas_release_transport(mptsas_transport_template);
- 
--	return pci_register_driver(&mptsas_driver);
-+	return error;
- }
- 
- static void __exit
-diff -uarpN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
---- b/drivers/message/fusion/mptspi.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptspi.c	2007-07-02 16:22:23.000000000 +0530
-@@ -1521,6 +1521,8 @@ static struct pci_driver mptspi_driver =
- static int __init
- mptspi_init(void)
- {
-+	int error;
-+
- 	show_mptmod_ver(my_NAME, my_VERSION);
- 
- 	mptspi_transport_template = spi_attach_transport(&mptspi_transport_functions);
-@@ -1541,7 +1543,11 @@ mptspi_init(void)
- 		  ": Registered for IOC reset notifications\n"));
- 	}
- 
--	return pci_register_driver(&mptspi_driver);
-+	error = pci_register_driver(&mptspi_driver);
-+	if (error)
-+		spi_release_transport(mptspi_transport_template);
-+
-+	return error;
- }
- 
