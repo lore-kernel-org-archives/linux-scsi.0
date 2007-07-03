@@ -1,46 +1,47 @@
-From: maximilian attems <max@stro.at>
-Subject: mpt boot trouble 2.6.21, 2.6.22-rcX regression
-Date: Tue, 3 Jul 2007 17:12:44 +0200
-Message-ID: <20070703151244.GA6981@baikonur.stro.at>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] lpfc: convert to use the data buffer accessors - part 2
+Date: Tue, 03 Jul 2007 18:12:35 +0300
+Message-ID: <468A6763.3020102@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from baikonur.stro.at ([213.239.196.228]:1083 "EHLO baikonur.stro.at"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758462AbXGCPMA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 3 Jul 2007 11:12:00 -0400
-Content-Disposition: inline
+Received: from gw-e.panasas.com ([65.194.124.178]:46700 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757513AbXGCPMu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jul 2007 11:12:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com, linux-scsi@vger.kernel.org
-Cc: Frans Pop <elendil@planet.nl>, Olaf van der Spek <Olaf@xwis.net>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Smart <James.Smart@emulex.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-forwarding latest message to this boot trouble report
-http://bugs.debian.org/425851
 
------ Forwarded message from Frans Pop <elendil@planet.nl> -----
-Subject: Bug#425851: Processed: (no subject)
-From: Frans Pop <elendil@planet.nl>
-To: 425851@bugs.debian.org
-Date: Tue, 3 Jul 2007 16:29:24 +0200
-Cc: Olaf van der Spek <Olaf@xwis.net>
+ This is an addendum to:
+ commit a0b4f78f9a4c869e9b29f254054ad7441cb40bbf
+ Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+    [SCSI] lpfc: convert to use the data buffer accessors
 
-tags 425851 + upstream d-i
-forwarded 425851 http://bugzilla.kernel.org/show_bug.cgi?id=8710
-thanks
+ One place was missed in the merge
 
-On Tuesday 03 July 2007 12:34, Olaf van der Spek wrote:
-> I've installed 2.6.21 on two different VMware Workstation guests
-> running on two different hosts and both fail to boot.
+ Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-I've seen the same issue while installing D-I in vmware.
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 5d2e3de..3d35eae 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -506,7 +506,7 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd,
+ 					"underrun converted to error "
+ 					"Data: x%x x%x x%x\n",
+ 					phba->brd_no, vpi, cmnd->cmnd[0],
+-					cmnd->request_bufflen,
++					scsi_bufflen(cmnd),
+ 					scsi_get_resid(cmnd), cmnd->underflow);
+ 			host_status = DID_ERROR;
+ 		}
+-- 
+1.5.2.2.249.g45fd
 
-I've just run a git bisect and identified the commit that caused the 
-regression. I've also verified that 2.6.22-rc7 has the same issue.
 
-See the upstream BR for details.
-
-Cheers,
-FJP
-
------ End forwarded message -----
