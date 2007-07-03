@@ -1,47 +1,38 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] lpfc: convert to use the data buffer accessors - part 2
-Date: Tue, 03 Jul 2007 18:12:35 +0300
-Message-ID: <468A6763.3020102@panasas.com>
+From: <Patrick_Boyd@Dell.com>
+Subject: RE: [PATCH]mpt fusion: add sysfs attributes to display IOC parameters
+Date: Tue, 3 Jul 2007 12:19:34 -0500
+Message-ID: <CE7B1A4EF22E704CBFFD9A35BA5C822237029B@ausx3mpc110.aus.amer.dell.com>
+References: <20070703130103.GA15841@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:46700 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757513AbXGCPMu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jul 2007 11:12:50 -0400
+Received: from ausc60pc101.us.dell.com ([143.166.85.206]:45831 "EHLO
+	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbXGCRUj convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jul 2007 13:20:39 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20070703130103.GA15841@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Smart <James.Smart@emulex.com>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: sathya.prakash@lsi.com, linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com
 
+>diff -Naurp b/drivers/message/fusion/mptbase.h
+a/drivers/message/fusion/mptbase.h
+>--- b/drivers/message/fusion/mptbase.h	2007-07-02 16:20:46.000000000
++0530
+>+++ a/drivers/message/fusion/mptbase.h	2007-07-03 18:13:28.000000000
++0530
+>@@ -78,6 +78,10 @@
+> #define MPT_LINUX_VERSION_COMMON	"3.04.05"
+> #define MPT_LINUX_PACKAGE_NAME		"@(#)mptlinux-3.04.05"
+> #define WHAT_MAGIC_STRING		"@" "(" "#" ")"
+>+#define MPT_LINUX_MAJOR_VERSION		3
+>+#define MPT_LINUX_MINOR_VERSION		04
+>+#define MPT_LINUX_BUILD_VERSION		05
+>+#define MPT_LINUX_RELEASE_VERSION	00
 
- This is an addendum to:
- commit a0b4f78f9a4c869e9b29f254054ad7441cb40bbf
- Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-    [SCSI] lpfc: convert to use the data buffer accessors
-
- One place was missed in the merge
-
- Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/lpfc/lpfc_scsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 5d2e3de..3d35eae 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -506,7 +506,7 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd,
- 					"underrun converted to error "
- 					"Data: x%x x%x x%x\n",
- 					phba->brd_no, vpi, cmnd->cmnd[0],
--					cmnd->request_bufflen,
-+					scsi_bufflen(cmnd),
- 					scsi_get_resid(cmnd), cmnd->underflow);
- 			host_status = DID_ERROR;
- 		}
--- 
-1.5.2.2.249.g45fd
-
-
+You have the version information listed 3 times. Can't you just build
+MPT_LINUX_VERSION_COMMON and MPT_LINUX_PACKAGE_NAME?
