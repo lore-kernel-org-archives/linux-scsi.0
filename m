@@ -1,54 +1,46 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Is scsi_reset_provider() overdoing it?
-Date: Tue, 03 Jul 2007 17:07:58 +0300
-Message-ID: <468A583E.7030701@panasas.com>
+From: maximilian attems <max@stro.at>
+Subject: mpt boot trouble 2.6.21, 2.6.22-rcX regression
+Date: Tue, 3 Jul 2007 17:12:44 +0200
+Message-ID: <20070703151244.GA6981@baikonur.stro.at>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:44544 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758020AbXGCOIC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jul 2007 10:08:02 -0400
+Received: from baikonur.stro.at ([213.239.196.228]:1083 "EHLO baikonur.stro.at"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758462AbXGCPMA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 3 Jul 2007 11:12:00 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Eric.Moore@lsi.com, linux-scsi@vger.kernel.org
+Cc: Frans Pop <elendil@planet.nl>, Olaf van der Spek <Olaf@xwis.net>
 
+forwarding latest message to this boot trouble report
+http://bugs.debian.org/425851
 
-In scsi_error.c at scsi_reset_provider()
- Why do we need the uninitialized struct request hanging on
- the reset scsi_cmnd? It looks like we are bypassing block
- queues and directly going to llds. It also looks like llds
- understand not to touch any garbage request's fields during
- reset. Would it not be better to Just put a NULL instead?
- And while at it can I just put a DMA_NONE on this No-Data
- command?
+----- Forwarded message from Frans Pop <elendil@planet.nl> -----
+Subject: Bug#425851: Processed: (no subject)
+From: Frans Pop <elendil@planet.nl>
+To: 425851@bugs.debian.org
+Date: Tue, 3 Jul 2007 16:29:24 +0200
+Cc: Olaf van der Spek <Olaf@xwis.net>
 
-Boaz
+tags 425851 + upstream d-i
+forwarded 425851 http://bugzilla.kernel.org/show_bug.cgi?id=8710
+thanks
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 9adb64a..4f6026d 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1662,11 +1662,10 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- {
- 	struct scsi_cmnd *scmd = scsi_get_command(dev, GFP_KERNEL);
- 	struct Scsi_Host *shost = dev->host;
--	struct request req;
- 	unsigned long flags;
- 	int rtn;
- 
--	scmd->request = &req;
-+	scmd->request = NULL;
- 	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
- 
- 	memset(&scmd->cmnd, '\0', sizeof(scmd->cmnd));
-@@ -1678,7 +1677,7 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 
- 	scmd->cmd_len			= 0;
- 
--	scmd->sc_data_direction		= DMA_BIDIRECTIONAL;
-+	scmd->sc_data_direction		= DMA_NONE;
- 
- 	init_timer(&scmd->eh_timeout);
- 
+On Tuesday 03 July 2007 12:34, Olaf van der Spek wrote:
+> I've installed 2.6.21 on two different VMware Workstation guests
+> running on two different hosts and both fail to boot.
+
+I've seen the same issue while installing D-I in vmware.
+
+I've just run a git bisect and identified the commit that caused the 
+regression. I've also verified that 2.6.22-rc7 has the same issue.
+
+See the upstream BR for details.
+
+Cheers,
+FJP
+
+----- End forwarded message -----
