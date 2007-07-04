@@ -1,142 +1,42 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] libata-scsi.c: convert to use the data buffer accessors
-Date: Wed, 04 Jul 2007 21:24:40 +0300
-Message-ID: <468BE5E8.1040506@panasas.com>
+Subject: [PATCH] scsi.c: convert to use the data buffer accessors
+Date: Wed, 04 Jul 2007 21:26:01 +0300
+Message-ID: <468BE639.7040104@panasas.com>
 References: <468BE4CE.80402@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:46982 "EHLO
+Received: from gw-e.panasas.com ([65.194.124.178]:47002 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755106AbXGDSYw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 14:24:52 -0400
+	with ESMTP id S1755140AbXGDS0N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 14:26:13 -0400
 In-Reply-To: <468BE4CE.80402@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
 
- This is a minimal patch needed if we want to use the
- new scsi_sgtable implementation, by using of the new
- data accessors. But it is not a complete clean up of
- the !use_sg path.
- Libata-core still has the qc->flags & ATA_QCFLAG_SG
- and !qc->n_elem code paths. Perhaps an ata maintainer
- would have a go at it.
+ - a couple of prints, they can use the accessors
 
- - use of new data accessors.
- - clean some of the more obvious !use_sg path
- - TODO: farther cleanup of qc->flags & ATA_QCFLAG_SG
-   and !qc->n_elem code paths in libata-core
- - TODO: Use of new scsi_dma_{map,unmap} if applicable.
+ Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/ata/libata-scsi.c |   39 +++++++++++++--------------------------
- 1 files changed, 13 insertions(+), 26 deletions(-)
+ drivers/scsi/scsi.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 13603a0..c0af390 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -450,13 +450,8 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 4c1e313..1d1aba6 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -368,7 +368,7 @@ void scsi_log_send(struct scsi_cmnd *cmd)
+ 			if (level > 3) {
+ 				printk(KERN_INFO "buffer = 0x%p, bufflen = %d,"
+ 				       " done = 0x%p, queuecommand 0x%p\n",
+-					cmd->request_buffer, cmd->request_bufflen,
++					scsi_sglist(cmd), scsi_bufflen(cmd),
+ 					cmd->done,
+ 					cmd->device->host->hostt->queuecommand);
 
--		if (cmd->use_sg) {
--			qc->__sg = (struct scatterlist *) cmd->request_buffer;
--			qc->n_elem = cmd->use_sg;
--		} else if (cmd->request_bufflen) {
--			qc->__sg = &qc->sgent;
--			qc->n_elem = 1;
--		}
-+		qc->__sg = scsi_sglist(cmd);
-+		qc->n_elem = scsi_sg_count(cmd);
- 	} else {
- 		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
- 		done(cmd);
-@@ -1496,17 +1491,13 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	/* data is present; dma-map it */
- 	if (cmd->sc_data_direction == DMA_FROM_DEVICE ||
- 	    cmd->sc_data_direction == DMA_TO_DEVICE) {
--		if (unlikely(cmd->request_bufflen < 1)) {
-+		if (unlikely(scsi_bufflen(cmd) < 1)) {
- 			ata_dev_printk(dev, KERN_WARNING,
- 				       "WARNING: zero len r/w req\n");
- 			goto err_did;
- 		}
-
--		if (cmd->use_sg)
--			ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
--		else
--			ata_sg_init_one(qc, cmd->request_buffer,
--					cmd->request_bufflen);
-+		ata_sg_init(qc, scsi_sglist(cmd), scsi_sg_count(cmd));
-
- 		qc->dma_dir = cmd->sc_data_direction;
- 	}
-@@ -1560,15 +1551,14 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
- 	u8 *buf;
- 	unsigned int buflen;
-
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
-+	struct scatterlist *sg = scsi_sglist(cmd);
-
--		sg = (struct scatterlist *) cmd->request_buffer;
-+	if (sg) {
- 		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
- 		buflen = sg->length;
- 	} else {
--		buf = cmd->request_buffer;
--		buflen = cmd->request_bufflen;
-+		buf = NULL;
-+		buflen = 0;
- 	}
-
- 	*buf_out = buf;
-@@ -1588,12 +1578,9 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
-
- static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
- {
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
--
--		sg = (struct scatterlist *) cmd->request_buffer;
-+	struct scatterlist *sg = scsi_sglist(cmd);
-+	if (sg)
- 		kunmap_atomic(buf - sg->offset, KM_IRQ0);
--	}
- }
-
- /**
-@@ -2420,7 +2407,7 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
- 			qc->tf.feature |= ATAPI_DMADIR;
- 	}
-
--	qc->nbytes = scmd->request_bufflen;
-+	qc->nbytes = scsi_bufflen(scmd);
-
- 	return 0;
- }
-@@ -2633,7 +2620,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	case ATA_CMD_WRITE_LONG_ONCE:
- 		if (tf->protocol != ATA_PROT_PIO || tf->nsect != 1)
- 			goto invalid_fld;
--		qc->sect_size = scmd->request_bufflen;
-+		qc->sect_size = scsi_bufflen(scmd);
- 	}
-
- 	/*
-@@ -2663,7 +2650,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	 * TODO: find out if we need to do more here to
- 	 *       cover scatter/gather case.
- 	 */
--	qc->nbytes = scmd->request_bufflen;
-+	qc->nbytes = scsi_bufflen(scmd);
-
- 	/* request result TF */
- 	qc->flags |= ATA_QCFLAG_RESULT_TF;
 -- 
 1.5.2.2.249.g45fd
 
