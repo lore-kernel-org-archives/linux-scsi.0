@@ -1,215 +1,75 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: NPIV mapping problems (was Re: [PATCH 1/19] add data buffer
- accessors)
-Date: Wed, 04 Jul 2007 06:03:11 -0700 (PDT)
-Message-ID: <20070702215658V.fujita.tomonori@acm.org>
-References: <1178980728.3723.8.camel@mulgrave.il.steeleye.com>
-	<20070629132332.GB2648@plap.qlogic.org>
-	<20070704172536N.fujita.tomonori@lab.ntt.co.jp>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: [patch 0/6] PS3 Storage Drivers for 2.6.23, take 4
+Date: Wed, 04 Jul 2007 15:22:12 +0200
+Message-ID: <20070704132212.726923000@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from qb-out-0506.google.com ([72.14.204.237]:41473 "EHLO
-	qb-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760635AbXGDNDO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 09:03:14 -0400
-Received: by qb-out-0506.google.com with SMTP id e11so3348333qbe
-        for <linux-scsi@vger.kernel.org>; Wed, 04 Jul 2007 06:03:13 -0700 (PDT)
-In-Reply-To: <20070704172536N.fujita.tomonori@lab.ntt.co.jp>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:46148 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1759488AbXGDNYv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 09:24:51 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: andrew.vasquez@qlogic.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, hch@infradead.org, seokmann.ju@qlogic.com, fujita.tomonori@lab.ntt.co.jp
+To: Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@ipvvis.unipv.it>
+Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-I forgot to CC James Smart and send a lpfc patch.
+	Hi,
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: NPIV mapping problems (was Re: [PATCH 1/19] add data buffer accessors)
-Date: Wed, 04 Jul 2007 17:25:36 +0900
+This is the fourth submission of the new PS3 storage drivers:
+  [1] ps3: Preallocate bootmem memory for the PS3 FLASH ROM storage dri=
+ver
+  [2] ps3: Storage Driver Core
+  [3] ps3: Storage device registration routines.
+  [4] ps3: Disk Storage Driver
+  [5] ps3: BD/DVD/CD-ROM Storage Driver
+  [6] ps3: FLASH ROM Storage Driver
 
-> Sorry for the delay...
-> 
-> From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> Subject: NPIV mapping problems (was Re: [PATCH 1/19] add data buffer accessors)
-> Date: Fri, 29 Jun 2007 06:23:32 -0700
-> 
-> > On Sat, 12 May 2007, James Bottomley wrote:
-> > 
-> > > On Sat, 2007-05-12 at 19:05 +0900, FUJITA Tomonori wrote:
-> > > > Add a set of accessors for the scsi data buffer. This is in
-> > > > preparation for chaining sg lists and bidirectional requests (and
-> > > > possibly, the mid-layer dma mapping).
-> > > > 
-> > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > ---
-> > > >  drivers/scsi/scsi_lib.c  |   26 ++++++++++++++++++++++++++
-> > > >  include/scsi/scsi_cmnd.h |   11 +++++++++++
-> > > >  2 files changed, 37 insertions(+), 0 deletions(-)
-> > > > 
-> > > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > > index 1f5a07b..a2ebe61 100644
-> > > > --- a/drivers/scsi/scsi_lib.c
-> > > > +++ b/drivers/scsi/scsi_lib.c
-> > > > @@ -2290,3 +2290,29 @@ void scsi_kunmap_atomic_sg(void *virt)
-> > > >  	kunmap_atomic(virt, KM_BIO_SRC_IRQ);
-> > > >  }
-> > > >  EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
-> > > > +
-> > > > +int scsi_dma_map(struct device *dev, struct scsi_cmnd *cmd)
-> > > 
-> > > Actually, this is redundant.  We make sure the
-> > > shost->shost_gendev.parent is the device which should have been passed
-> > > in to scsi_add_host().
-> > 
-> > Well, there's perhaps an unintended side-effect with this assumption,
-> > NPIV-based 'vports' (and their subsequent 'struct device' members) are
-> > not fully initialized objects.
-> > 
-> > This is what we've run into while working on our NPIV (based) driver
-> > with the 'data buffer' accessors works, while queueing the first
-> > command to an sdev of a freshly created vport:
-> > 
-> > 	[  366.860758] Unable to handle kernel NULL pointer dereference at 0000000000000000 RIP: 
-> > 	[  366.860762]  [<ffffffff8020fdf6>] check_addr+0x10/0x4a
-> > 	[  366.860778] PGD 0 
-> > 	[  366.860782] Oops: 0000 [1] SMP 
-> > 	[  366.860787] CPU 0 
-> > 	[  366.860790] Modules linked in: qla2xxx scsi_transport_fc
-> > 	[  366.860798] Pid: 5757, comm: scsi_wq_2 Not tainted 2.6.22-rc6 #4
-> > 	[  366.860802] RIP: 0010:[<ffffffff8020fdf6>]  [<ffffffff8020fdf6>] check_addr+0x10/0x4a
-> > 	[  366.860812] RSP: 0018:ffff810073979960  EFLAGS: 00010082
-> > 	[  366.860816] RAX: 0000000000000000 RBX: ffff810037cda070 RCX: 0000000000000024
-> > 	[  366.860821] RDX: 000000007cd86188 RSI: ffff81007d800ef8 RDI: ffffffff804c30e1
-> > 	[  366.860824] RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
-> > 	[  366.860828] R10: 00000000ffffffff R11: 0000000000000006 R12: 0000000000000001
-> > 	[  366.860834] R13: ffff81007d800ef8 R14: ffff810075f9fda0 R15: ffff810076d66af8
-> > 	[  366.860839] FS:  0000000000000000(0000) GS:ffffffff80570000(0000) knlGS:0000000000000000
-> > 	[  366.860844] CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> > 	[  366.860847] CR2: 0000000000000000 CR3: 000000007ec6b000 CR4: 00000000000006e0
-> > 	[  366.860853] Process scsi_wq_2 (pid: 5757, threadinfo ffff810073978000, task ffff810037c6ce00)
-> > 	[  366.860856] Stack:  0000000000011220 ffffffff8020fea6 0000000000000246 00000000000000e1
-> > 	[  366.860866]  00000000000000e1 ffff810076908608 ffff810076d66af8 ffffffff803a440c
-> > 	[  366.860876]  ffff810076908608 ffffffff8801cdd2 ffff810076908688 ffff810073979a18
-> > 	[  366.860885] Call Trace:
-> > 	[  366.860891]  [<ffffffff8020fea6>] nommu_map_sg+0x76/0x8f
-> > 	[  366.860900]  [<ffffffff803a440c>] scsi_dma_map+0x45/0x5c
-> > 	[  366.860922]  [<ffffffff8801cdd2>] :qla2xxx:qla24xx_start_scsi+0x118/0x4fb
-> > 	[  366.860928]  [<ffffffff8039fa74>] scsi_done+0x0/0x18
-> > 	[  366.860942]  [<ffffffff880116f0>] :qla2xxx:qla24xx_queuecommand+0x148/0x17a
-> > 	[  366.860948]  [<ffffffff803a01f7>] scsi_dispatch_cmd+0x1f6/0x313
-> > 	[  366.860953]  [<ffffffff803a622b>] scsi_request_fn+0x1d7/0x3b8
-> > 
-> > the failure point is this check (line 16) in check_addr():
-> > 
-> > 	(gdb) l* check_addr+0x10
-> > 	0xffffffff8020fdf6 is in check_addr (arch/x86_64/kernel/pci-nommu.c:16).
-> > 	11      #include <asm/dma.h>
-> > 	12
-> > 	13      static int
-> > 	14      check_addr(char *name, struct device *hwdev, dma_addr_t bus, size_t size)
-> > 	15      {
-> > 	16              if (hwdev && bus + size > *hwdev->dma_mask) {
-> > 	17                      if (*hwdev->dma_mask >= DMA_32BIT_MASK)
-> > 	18                              printk(KERN_ERR
-> > 	19                                  "nommu_%s: overflow %Lx+%zu of device mask %Lx\n",
-> > 	20                                      name, (long long)bus, size,
-> > 
-> > hwdev->dma_mask (an 'u64 *') is NULL, as a corresponding 'set'
-> > function is never getting called via pci_set_dma_mask() and
-> > pci_set_consistent_dma_mask() on a vport.
-> 
-> Yeah, I use lpfc's NPIV but haven't hit this because I use swiotlb...
-> 
-> 
-> > I don't believe we'd want to:
-> > 
-> > 1) have each LLD cache the physical-port's previously determined
-> >    dma-mask, and call pci_set_[consistent_]dma_mask() for each
-> >    instantiated vport.
-> > 
-> >    the problem with this approach is 'knowing' how much data needs to
-> >    be propagated to a vport's underlying 'struct device'.
-> >
-> > 2) pass the physical-port's 'scsi_host' structure during a vport's
-> >    scsi_add_host() call:
-> > 
-> > 	if (scsi_add_host(vha->host, &fc_vport->dev)) {
-> > 
-> >    as that would lead to some device-model ugliness...
-> 
-> Yeah, we shouldn't do this...
-> 
-> 
-> > Abstractions such as these 'data-accessor functions' which don't allow
-> > a LLD the opprotunity to be more selective on the
-> > 'physical-characteristics' of a 'virtual' device are going to lead to
-> > more subtle bugs going forward.
-> > 
-> > One possiblity (the least intrusive) would be to add a
-> > scsi_dma_map_with_device() function which takes the proper (LLD
-> > defined) 'struct device' as a parameter, as was originally proposed,
-> > and have NPIV-aware drivers call that function during the mappings of
-> > physical *and* virtual dma-mappings.
-> 
-> It's ok. But if only NPIV-aware drivers need to handle this, would it
-> be better to just use dma_map_sg instead of scsi_dma_map?
+They are based on:
+  - the current Linux kernel source tree,
+  - plus the PS3 patches already submitted by Geoff Levand on linuxppc-=
+dev,
+  - plus the shost_priv() patch in scsi-misc (commit
+    bcd92c9fbcc679ee95003083056f0441a1f474fa).
 
----
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+All issues raised during the previous review rounds should be fixed.
+There were no more comments after the third submission.
 
-This patch uses dma_map_sg with phba->pcidev->dev instead of
-scsi_dma_map.
+Paul already integrated Geoff Levand's PS3 patches and the first 3 patc=
+hes
+in this series in the for-2.6.23 branch in powerpc.git.
 
-scsi_dma_map doesn't work for NPIV since fc_vport->dev isn't fully
-initialized. check_addr() in arch/x86_64/kernel/pci-nommu.c leads to
-the crash since dev->dma_mask is NULL.
+Maintainers of block/SCSI/misc, can you please ack the last 3 patches s=
+o Paul
+can take them, too?
 
-For more details:
+Thanks in advance!
 
-http://marc.info/?l=linux-scsi&m=118312448030633&w=2
+With kind regards,
+=20
+Geert Uytterhoeven
+Software Architect
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/lpfc/lpfc_scsi.c |   11 +++++++----
- 1 files changed, 7 insertions(+), 4 deletions(-)
+Sony Network and Software Technology Center Europe
+The Corporate Village =C2=B7 Da Vincilaan 7-D1 =C2=B7 B-1935 Zaventem =C2=
+=B7 Belgium
+=20
+Phone:    +32 (0)2 700 8453=09
+=46ax:      +32 (0)2 700 8622=09
+E-mail:   Geert.Uytterhoeven@sonycom.com=09
+Internet: http://www.sony-europe.com/
+ =09
+Sony Network and Software Technology Center Europe=09
+A division of Sony Service Centre (Europe) N.V.=09
+Registered office: Technologielaan 7 =C2=B7 B-1840 Londerzeel =C2=B7 Be=
+lgium=09
+VAT BE 0413.825.160 =C2=B7 RPR Brussels=09
+=46ortis Bank Zaventem =C2=B7 Swift GEBABEBB08A =C2=B7 IBAN BE390013823=
+58619
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 5d2e3de..94c5f0c 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -332,8 +332,7 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 	 * data bde entry.
- 	 */
- 	bpl += 2;
--	nseg = scsi_dma_map(scsi_cmnd);
--	if (nseg > 0) {
-+	if (scsi_sg_count(scsi_cmnd)) {
- 		/*
- 		 * The driver stores the segment count returned from pci_map_sg
- 		 * because this a count of dma-mappings used to map the use_sg
-@@ -341,6 +340,11 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 		 * architectures that implement an IOMMU.
- 		 */
- 
-+		nseg = dma_map_sg(&phba->pcidev->dev, scsi_sglist(scsi_cmnd),
-+				  scsi_sg_count(scsi_cmnd), datadir);
-+		if (unlikely(!nseg))
-+			return 1;
-+
- 		lpfc_cmd->seg_cnt = nseg;
- 		if (lpfc_cmd->seg_cnt > phba->cfg_sg_seg_cnt) {
- 			printk(KERN_ERR "%s: Too many sg segments from "
-@@ -370,8 +374,7 @@ lpfc_scsi_prep_dma_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 			bpl++;
- 			num_bde++;
- 		}
--	} else if (nseg < 0)
--		return 1;
-+	}
- 
- 	/*
- 	 * Finish initializing those IOCB fields that are dependent on the
--- 
-1.4.4.4
-
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
