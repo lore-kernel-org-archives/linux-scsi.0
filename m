@@ -1,32 +1,32 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Data accessors more patches
-Date: Wed, 04 Jul 2007 21:19:58 +0300
-Message-ID: <468BE4CE.80402@panasas.com>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: [PATCH 1/4] scsi: megaraid_sas -- add hibernation support
+Date: Wed, 4 Jul 2007 20:21:36 +0200
+Message-ID: <20070704182136.GA2731@elf.ucw.cz>
+References: <1183307483.4723.2.camel@dhcp-75-197.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-e.panasas.com ([65.194.124.178]:46922 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755048AbXGDSUH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 14:20:07 -0400
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:59578 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1755140AbXGDSVk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 4 Jul 2007 14:21:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1183307483.4723.2.camel@dhcp-75-197.se.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
+To: bo yang <bo.yang@lsi.com>
+Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, neela.kolli@lsi.com, sumant.patro@lsi.com
 
-As a reply to this email I will send some more files
-converted to new data accessors, and attempts of cleanups
-of: !use_sg code path's, use of scsi_for_each_sg and use
-of scsi_{,un}map_dma().
+Hi!
 
-some of these files are in scsi-ml core but they can be converted
-now, and are not at all dependent on implementation.
+> The megaraid_sas driver doesn't support the hibernation, the
+> suspend/resume routine implemented to support the hibernation.
+> 
+> Signed-off-by: Bo Yang <bo.yang@lsi.com>
 
-libata-scsi.c	- code will now work with scsi_sgtable but farther cleanup is needed.
-scsi.c 		- some prints might as well use accessors now.
-scsi_debug.c	- This is actually a scsi LLD. Normal conversion.
-
-The rest of the converted files I will send in the following days
-
-Boaz
-
+I'm glad to see first scsi driver to have hibernation support
+:-). Appart for whitespace, patch looks ok to me.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
