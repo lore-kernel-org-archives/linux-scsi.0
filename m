@@ -1,33 +1,52 @@
-From: Michael Tokarev <mjt@tls.msk.ru>
-Subject: Re: Some NCQ numbers...
-Date: Wed, 04 Jul 2007 20:17:35 +0400
-Message-ID: <468BC81F.7090102@msgid.tls.msk.ru>
-References: <468392CE.6010206@msgid.tls.msk.ru> <20070704154405.GA27166@localdomain>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: [SCSI] SD driver question
+Date: Wed, 04 Jul 2007 18:44:12 +0200
+Message-ID: <468BCE5C.6000707@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070704154405.GA27166@localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: Dan Aloni <da-x@monatomic.org>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:32170 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753610AbXGDQoQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 12:44:16 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so325164ugf
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Jul 2007 09:44:15 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Dan Aloni wrote:
-> On Thu, Jun 28, 2007 at 02:51:58PM +0400, Michael Tokarev wrote:
->> [..]
->> Test machine was using MPTSAS driver for the following card:
->>   SCSI storage controller: LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 02)
->>
->> Pretty similar results were obtained on an AHCI controller:
->>   SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) Serial ATA Storage Controller AHCI (rev 01)
->> on another machines.
-> 
-> Are you sure that NCQ was enabled between the controller and drive? 
-> Did you verify this? I know about some versions that disable NCQ 
-> support internally in their firmware (something to do with bugs in
-> error handling).
+Hello,
 
-The next obvious question is: how to check/verify this?
+Is there any reason why sd is printing the driver informations for each 
+disk twice in dmesg ?
 
-/mjt
+...
+
+sd 0:0:0:0: [sda] 35843670 512-byte hardware sectors (18352 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 9f 00 10 08
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports 
+DPO and FUA
+sd 0:0:0:0: [sda] 35843670 512-byte hardware sectors (18352 MB)
+sd 0:0:0:0: [sda] Write Protect is off
+sd 0:0:0:0: [sda] Mode Sense: 9f 00 10 08
+sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports 
+DPO and FUA
+sda: sda1
+sd 0:0:0:0: [sda] Attached SCSI disk
+sd 0:0:0:0: Attached scsi generic sg0 type 0
+
+etc
+...
+
+
+Is a bit annoying and floodish ;) on boxes with a lot SCSI , *ATA disks.
+
+
+Regards,
+
+Gabriel C
+
+
