@@ -1,17 +1,17 @@
 From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: [patch 4/6] ps3: Disk Storage Driver
-Date: Wed, 04 Jul 2007 15:22:16 +0200
-Message-ID: <20070704132346.489730000@pademelon.sonytel.be>
+Subject: [patch 6/6] ps3: FLASH ROM Storage Driver
+Date: Wed, 04 Jul 2007 15:22:18 +0200
+Message-ID: <20070704132346.727987000@pademelon.sonytel.be>
 References: <20070704132212.726923000@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:46193 "EHLO
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:46209 "EHLO
 	vervifontaine.sonycom.com" rhost-flags-OK-FAIL-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1759749AbXGDNYx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 09:24:53 -0400
-Content-Disposition: inline; filename=ps3-stable/ps3stor_disk.diff
+	by vger.kernel.org with ESMTP id S1759764AbXGDNYy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 09:24:54 -0400
+Content-Disposition: inline; filename=ps3-stable/ps3stor_flash.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@ipvvis.unipv.it>
@@ -19,78 +19,79 @@ Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kerne
 
 =46rom: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-Add a Disk Storage Driver for the PS3:
-  - Implemented as a block device driver with a dynamic major
-  - Disk names (and partitions) are of the format ps3d%c(%u)
-  - Uses software scatter-gather with a 64 KiB bounce buffer as the hyp=
-ervisor
-    doesn't support scatter-gather
+Add a FLASH ROM Storage Driver for the PS3:
+  - Implemented as a misc character device driver
+  - Uses a fixed 256 KiB buffer allocated from boot memory as the hyper=
+visor
+    requires the writing of aligned 256 KiB blocks
 
 CC: Geoff Levand <geoffrey.levand@am.sony.com>
 Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 ---
 v3:
   - Cleanup #includes
-  - Kill PS3DISK_MAJOR, always use zero to obtain a dynamic major
-  - Group LV1 API related stuff
-  - Kill empty ps3disk_open
-  - Reset ps3disk_priv(dev) to NULL during cleanup
-  - Move call to put_disk() down
-  - Pass the interrupt handler to ps3stor_setup(), so it doesn't have t=
-o be
-    overridden later
-  - Fold ps3disk_read_write_sectors() into ps3disk_submit_request_sg()
-  - Identify the hard drive capacity and model name during probing
+  - Allow to disable ps3flash (and the preallocated 256 KiB buffer) usi=
+ng
+    `ps3flash=3Doff'
+  - Move selection of write/read strings to error path
+  - Rename and move ps3stor_interrupt() to ps3flash_interrupt()
+  - Pass the interrupt handler to ps3stor_setup()
+  - Reset ps3flash_priv(dev) to NULL during cleanup
 
 v2:
   - Don't use `default y' in Kconfig
-  - Remove the thread for handling requests
-  - Set up sysfs links between block device and PS3 system device:
-      o /sys/block/ps3da/device -> ../../devices/ps3_system/sb_02
-      o /sys/devices/ps3_system/sb_02/block:ps3da -> ../../../block/ps3=
-da
-  - Fix all FIXMEs
-  - Implement proper barrier support
-  - Call add_disk_randomness()
-  - Add a test to verify we are running on a PS3
-  - Fix error path in ps3disk_init()
-  - Fix cleanup order in ps3disk_exit()
+  - #include <linux/uaccess.h> instead of <asm/uaccess.h>
+  - Set up sysfs links between misc character device and PS3 system dev=
+ice:
+      o /sys/class/misc/ps3flash/device -> ../../../devices/ps3_system/=
+sb_01
+      o /sys/devices/ps3_system/sb_01/misc:ps3flash -> ../../../class/m=
+isc/ps3flash
 
- arch/powerpc/platforms/ps3/Kconfig |   10=20
- drivers/block/Makefile             |    1=20
- drivers/block/ps3disk.c            |  623 ++++++++++++++++++++++++++++=
+ arch/powerpc/platforms/ps3/Kconfig |   15 +
+ drivers/char/Makefile              |    2=20
+ drivers/char/ps3flash.c            |  429 ++++++++++++++++++++++++++++=
 +++++++++
- 3 files changed, 634 insertions(+)
+ 3 files changed, 446 insertions(+)
 
 --- a/arch/powerpc/platforms/ps3/Kconfig
 +++ b/arch/powerpc/platforms/ps3/Kconfig
-@@ -102,4 +102,14 @@ config PS3_STORAGE
- 	depends on PPC_PS3
- 	tristate
+@@ -123,4 +123,19 @@ config PS3_ROM
+ 	  In general, all users will say Y or M.
+ 	  Also make sure to say Y or M to "SCSI CDROM support" later.
 =20
-+config PS3_DISK
-+	tristate "PS3 Disk Storage Driver"
-+	depends on PPC_PS3 && BLOCK
++config PS3_FLASH
++	tristate "PS3 FLASH ROM Storage Driver"
++	depends on PPC_PS3
 +	select PS3_STORAGE
 +	help
-+	  Include support for the PS3 Disk Storage.
++	  Include support for the PS3 FLASH ROM Storage.
 +
-+	  This support is required to access the PS3 hard disk.
++	  This support is required to access the PS3 FLASH ROM, which
++	  contains the boot loader and some boot options.
 +	  In general, all users will say Y or M.
 +
++	  As this driver needs a fixed buffer of 256 KiB of memory, it can
++	  be disabled on the kernel command line using "ps3flash=3Doff", to
++	  not allocate this fixed buffer.
++
  endmenu
---- a/drivers/block/Makefile
-+++ b/drivers/block/Makefile
-@@ -29,3 +29,4 @@ obj-$(CONFIG_VIODASD)		+=3D viodasd.o
- obj-$(CONFIG_BLK_DEV_SX8)	+=3D sx8.o
- obj-$(CONFIG_BLK_DEV_UB)	+=3D ub.o
+--- a/drivers/char/Makefile
++++ b/drivers/char/Makefile
+@@ -104,6 +104,8 @@ obj-$(CONFIG_IPMI_HANDLER)	+=3D ipmi/
+ obj-$(CONFIG_HANGCHECK_TIMER)	+=3D hangcheck-timer.o
+ obj-$(CONFIG_TCG_TPM)		+=3D tpm/
 =20
-+obj-$(CONFIG_PS3_DISK)		+=3D ps3disk.o
++obj-$(CONFIG_PS3_FLASH)		+=3D ps3flash.o
++
+ # Files generated that shall be removed upon make clean
+ clean-files :=3D consolemap_deftbl.c defkeymap.c
+=20
 --- /dev/null
-+++ b/drivers/block/ps3disk.c
-@@ -0,0 +1,623 @@
++++ b/drivers/char/ps3flash.c
+@@ -0,0 +1,429 @@
 +/*
-+ * PS3 Disk Storage Driver
++ * PS3 FLASH ROM Storage Driver
 + *
 + * Copyright (C) 2007 Sony Computer Entertainment Inc.
 + * Copyright 2007 Sony Corp.
@@ -112,225 +113,279 @@ nc.,
 + * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 + */
 +
-+#include <linux/ata.h>
-+#include <linux/blkdev.h>
++#include <linux/fs.h>
++#include <linux/miscdevice.h>
++#include <linux/uaccess.h>
 +
 +#include <asm/lv1call.h>
 +#include <asm/ps3stor.h>
-+#include <asm/firmware.h>
 +
 +
-+#define DEVICE_NAME		"ps3disk"
++#define DEVICE_NAME		"ps3flash"
 +
-+#define BOUNCE_SIZE		(64*1024)
-+
-+#define PS3DISK_MAX_DISKS	16
-+#define PS3DISK_MINORS		16
-+
-+#define KERNEL_SECTOR_SIZE	512
++#define FLASH_BLOCK_SIZE	(256*1024)
 +
 +
-+#define PS3DISK_NAME		"ps3d%c"
-+
-+
-+struct ps3disk_private {
-+	spinlock_t lock;		/* Request queue spinlock */
-+	struct request_queue *queue;
-+	struct gendisk *gendisk;
-+	unsigned int blocking_factor;
-+	struct request *req;
-+	u64 raw_capacity;
-+	unsigned char model[ATA_ID_PROD_LEN+1];
++struct ps3flash_private {
++	struct mutex mutex;	/* Bounce buffer mutex */
 +};
-+#define ps3disk_priv(dev)	((dev)->sbd.core.driver_data)
++#define ps3flash_priv(dev)	((dev)->sbd.core.driver_data)
 +
++static struct ps3_storage_device *ps3flash_dev;
 +
-+#define LV1_STORAGE_SEND_ATA_COMMAND	(2)
-+#define LV1_STORAGE_ATA_HDDOUT		(0x23)
-+
-+struct lv1_ata_cmnd_block {
-+	u16	features;
-+	u16	sector_count;
-+	u16	LBA_low;
-+	u16	LBA_mid;
-+	u16	LBA_high;
-+	u8	device;
-+	u8	command;
-+	u32	is_ext;
-+	u32	proto;
-+	u32	in_out;
-+	u32	size;
-+	u64	buffer;
-+	u32	arglen;
-+};
-+
-+enum lv1_ata_proto {
-+	NON_DATA_PROTO     =3D 0,
-+	PIO_DATA_IN_PROTO  =3D 1,
-+	PIO_DATA_OUT_PROTO =3D 2,
-+	DMA_PROTO =3D 3
-+};
-+
-+enum lv1_ata_in_out {
-+	DIR_WRITE =3D 0,			/* memory -> device */
-+	DIR_READ =3D 1			/* device -> memory */
-+};
-+
-+static int ps3disk_major;
-+
-+
-+static struct block_device_operations ps3disk_fops =3D {
-+	.owner		=3D THIS_MODULE,
-+};
-+
-+
-+static void ps3disk_scatter_gather(struct ps3_storage_device *dev,
-+				   struct request *req, int gather)
++static ssize_t ps3flash_read_write_sectors(struct ps3_storage_device *=
+dev,
++					   u64 lpar, u64 start_sector,
++					   u64 sectors, int write)
 +{
-+	unsigned int sectors =3D 0, offset =3D 0;
-+	struct bio *bio;
-+	sector_t sector;
-+	struct bio_vec *bvec;
-+	unsigned int i =3D 0, j;
-+	size_t size;
-+	void *buf;
-+
-+	rq_for_each_bio(bio, req) {
-+		sector =3D bio->bi_sector;
-+		dev_dbg(&dev->sbd.core,
-+			"%s:%u: bio %u: %u segs %u sectors from %lu\n",
-+			__func__, __LINE__, i, bio_segments(bio),
-+			bio_sectors(bio), sector);
-+		bio_for_each_segment(bvec, bio, j) {
-+			size =3D bio_cur_sectors(bio)*KERNEL_SECTOR_SIZE;
-+			buf =3D __bio_kmap_atomic(bio, j, KM_USER0);
-+			if (gather)
-+				memcpy(dev->bounce_buf+offset, buf, size);
-+			else
-+				memcpy(buf, dev->bounce_buf+offset, size);
-+			offset +=3D size;
-+			__bio_kunmap_atomic(bio, KM_USER0);
-+		}
-+		sectors +=3D bio_sectors(bio);
-+		i++;
++	u64 res =3D ps3stor_read_write_sectors(dev, lpar, start_sector, secto=
+rs,
++					     write);
++	if (res) {
++		dev_err(&dev->sbd.core, "%s:%u: %s failed 0x%lx\n", __func__,
++			__LINE__, write ? "write" : "read", res);
++		return -EIO;
 +	}
++	return sectors;
 +}
 +
-+static int ps3disk_submit_request_sg(struct ps3_storage_device *dev,
-+				     struct request *req)
++static ssize_t ps3flash_read_sectors(struct ps3_storage_device *dev,
++				     u64 start_sector, u64 sectors,
++				     unsigned int sector_offset)
 +{
-+	struct ps3disk_private *priv =3D ps3disk_priv(dev);
-+	int write =3D rq_data_dir(req), res;
-+	const char *op =3D write ? "write" : "read";
-+	u64 start_sector, sectors;
-+	unsigned int region_id =3D dev->regions[dev->region_idx].id;
++	u64 max_sectors, lpar;
 +
-+#ifdef DEBUG
-+	unsigned int n =3D 0;
-+	struct bio *bio;
-+	rq_for_each_bio(bio, req)
-+		n++;
++	max_sectors =3D dev->bounce_size / dev->blk_size;
++	if (sectors > max_sectors) {
++		dev_dbg(&dev->sbd.core, "%s:%u Limiting sectors to %lu\n",
++			__func__, __LINE__, max_sectors);
++		sectors =3D max_sectors;
++	}
++
++	lpar =3D dev->bounce_lpar + sector_offset * dev->blk_size;
++	return ps3flash_read_write_sectors(dev, lpar, start_sector, sectors,
++					   0);
++}
++
++static ssize_t ps3flash_write_chunk(struct ps3_storage_device *dev,
++				    u64 start_sector)
++{
++       u64 sectors =3D dev->bounce_size / dev->blk_size;
++       return ps3flash_read_write_sectors(dev, dev->bounce_lpar, start=
+_sector,
++					  sectors, 1);
++}
++
++static loff_t ps3flash_llseek(struct file *file, loff_t offset, int or=
+igin)
++{
++	struct ps3_storage_device *dev =3D ps3flash_dev;
++	u64 size =3D dev->regions[dev->region_idx].size*dev->blk_size;
++
++	switch (origin) {
++	case 1:
++		offset +=3D file->f_pos;
++		break;
++	case 2:
++		offset +=3D size;
++		break;
++	}
++	if (offset < 0)
++		return -EINVAL;
++
++	file->f_pos =3D offset;
++	return file->f_pos;
++}
++
++static ssize_t ps3flash_read(struct file *file, char __user *buf, size=
+_t count,
++			     loff_t *pos)
++{
++	struct ps3_storage_device *dev =3D ps3flash_dev;
++	struct ps3flash_private *priv =3D ps3flash_priv(dev);
++	u64 size, start_sector, end_sector, offset;
++	ssize_t sectors_read;
++	size_t remaining, n;
++
 +	dev_dbg(&dev->sbd.core,
-+		"%s:%u: %s req has %u bios for %lu sectors %lu hard sectors\n",
-+		__func__, __LINE__, op, n, req->nr_sectors,
-+		req->hard_nr_sectors);
-+#endif
++		"%s:%u: Reading %zu bytes at position %lld to user 0x%p\n",
++		__func__, __LINE__, count, *pos, buf);
 +
-+	start_sector =3D req->sector*priv->blocking_factor;
-+	sectors =3D req->nr_sectors*priv->blocking_factor;
-+	dev_dbg(&dev->sbd.core, "%s:%u: %s %lu sectors starting at %lu\n",
-+		__func__, __LINE__, op, sectors, start_sector);
-+
-+	if (write) {
-+		ps3disk_scatter_gather(dev, req, 1);
-+
-+		res =3D lv1_storage_write(dev->sbd.dev_id, region_id,
-+					start_sector, sectors, 0,
-+					dev->bounce_lpar, &dev->tag);
-+	} else {
-+		res =3D lv1_storage_read(dev->sbd.dev_id, region_id,
-+				       start_sector, sectors, 0,
-+				       dev->bounce_lpar, &dev->tag);
-+	}
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: %s failed %d\n", __func__,
-+			__LINE__, op, res);
-+		end_request(req, 0);
++	size =3D dev->regions[dev->region_idx].size*dev->blk_size;
++	if (*pos >=3D size || !count)
 +		return 0;
++
++	if (*pos+count > size) {
++		dev_dbg(&dev->sbd.core,
++			"%s:%u Truncating count from %zu to %llu\n", __func__,
++			__LINE__, count, size - *pos);
++		count =3D size - *pos;
 +	}
 +
-+	priv->req =3D req;
-+	return 1;
-+}
++	start_sector =3D do_div_llr(*pos, dev->blk_size, &offset);
++	end_sector =3D DIV_ROUND_UP(*pos+count, dev->blk_size);
 +
-+static int ps3disk_submit_flush_request(struct ps3_storage_device *dev=
-,
-+					struct request *req)
-+{
-+	struct ps3disk_private *priv =3D ps3disk_priv(dev);
-+	u64 res;
++	remaining =3D count;
++	do {
++		mutex_lock(&priv->mutex);
 +
-+	dev_dbg(&dev->sbd.core, "%s:%u: flush request\n", __func__, __LINE__)=
-;
-+
-+	res =3D lv1_storage_send_device_command(dev->sbd.dev_id,
-+					      LV1_STORAGE_ATA_HDDOUT, 0, 0, 0,
-+					      0, &dev->tag);
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: sync cache failed 0x%lx\n",
-+			__func__, __LINE__, res);
-+		end_request(req, 0);
-+		return 0;
-+	}
-+
-+	priv->req =3D req;
-+	return 1;
-+}
-+
-+static void ps3disk_do_request(struct ps3_storage_device *dev,
-+			       request_queue_t *q)
-+{
-+	struct request *req;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
-+
-+	while ((req =3D elv_next_request(q))) {
-+		if (blk_fs_request(req)) {
-+			if (ps3disk_submit_request_sg(dev, req))
-+				break;
-+		} else if (req->cmd_type =3D=3D REQ_TYPE_FLUSH) {
-+			if (ps3disk_submit_flush_request(dev, req))
-+				break;
-+		} else {
-+			blk_dump_rq_flags(req, DEVICE_NAME " bad request");
-+			end_request(req, 0);
-+			continue;
++		sectors_read =3D ps3flash_read_sectors(dev, start_sector,
++						     end_sector-start_sector,
++						     0);
++		if (sectors_read < 0) {
++			mutex_unlock(&priv->mutex);
++			return sectors_read;
 +		}
-+	}
++
++		n =3D min(remaining, sectors_read*dev->blk_size-offset);
++		dev_dbg(&dev->sbd.core,
++			"%s:%u: copy %lu bytes from 0x%p to user 0x%p\n",
++			__func__, __LINE__, n, dev->bounce_buf+offset, buf);
++		if (copy_to_user(buf, dev->bounce_buf+offset, n)) {
++			mutex_unlock(&priv->mutex);
++			return -EFAULT;
++		}
++
++		mutex_unlock(&priv->mutex);
++
++		*pos +=3D n;
++		buf +=3D n;
++		remaining -=3D n;
++		start_sector +=3D sectors_read;
++		offset =3D 0;
++	} while (remaining > 0);
++
++	return count;
 +}
 +
-+static void ps3disk_request(request_queue_t *q)
++static ssize_t ps3flash_write(struct file *file, const char __user *bu=
+f,
++			      size_t count, loff_t *pos)
 +{
-+	struct ps3_storage_device *dev =3D q->queuedata;
-+	struct ps3disk_private *priv =3D ps3disk_priv(dev);
++	struct ps3_storage_device *dev =3D ps3flash_dev;
++	struct ps3flash_private *priv =3D ps3flash_priv(dev);
++	u64 size, chunk_sectors, start_write_sector, end_write_sector,
++	    end_read_sector, start_read_sector, head, tail, offset;
++	ssize_t res;
++	size_t remaining, n;
++	unsigned int sec_off;
 +
-+	if (priv->req) {
-+		dev_dbg(&dev->sbd.core, "%s:%u busy\n", __func__, __LINE__);
-+		return;
++	dev_dbg(&dev->sbd.core,
++		"%s:%u: Writing %zu bytes at position %lld from user 0x%p\n",
++		__func__, __LINE__, count, *pos, buf);
++
++	size =3D dev->regions[dev->region_idx].size*dev->blk_size;
++	if (*pos >=3D size || !count)
++		return 0;
++
++	if (*pos+count > size) {
++		dev_dbg(&dev->sbd.core,
++			"%s:%u Truncating count from %zu to %llu\n", __func__,
++			__LINE__, count, size - *pos);
++		count =3D size - *pos;
 +	}
 +
-+	ps3disk_do_request(dev, q);
++	chunk_sectors =3D dev->bounce_size / dev->blk_size;
++
++	start_write_sector =3D do_div_llr(*pos, dev->bounce_size, &offset) *
++			     chunk_sectors;
++	end_write_sector =3D DIV_ROUND_UP(*pos+count, dev->bounce_size) *
++			   chunk_sectors;
++
++	end_read_sector =3D DIV_ROUND_UP(*pos, dev->blk_size);
++	start_read_sector =3D (*pos+count) / dev->blk_size;
++
++	/*
++	 * As we have to write in 256 KiB chunks, while we can read in blk_si=
+ze
++	 * (usually 512 bytes) chunks, we perform the following steps:
++	 *   1. Read from start_write_sector to end_read_sector ("head")
++	 *   2. Read from start_read_sector to end_write_sector ("tail")
++	 *   3. Copy data to buffer
++	 *   4. Write from start_write_sector to end_write_sector
++	 * All of this is complicated by using only one 256 KiB bounce buffer=
+=2E
++	 */
++
++	head =3D end_read_sector-start_write_sector;
++	tail =3D end_write_sector-start_read_sector;
++
++	remaining =3D count;
++	do {
++		mutex_lock(&priv->mutex);
++
++		if (end_read_sector >=3D start_read_sector) {
++			/* Merge head and tail */
++			dev_dbg(&dev->sbd.core,
++				"Merged head and tail: %lu sectors at %lu\n",
++				chunk_sectors, start_write_sector);
++			res =3D ps3flash_read_sectors(dev, start_write_sector,
++						    chunk_sectors, 0);
++			if (res < 0)
++				goto fail;
++		} else {
++			if (head) {
++				/* Read head */
++				dev_dbg(&dev->sbd.core,
++					"head: %lu sectors at %lu\n", head,
++					start_write_sector);
++				res =3D ps3flash_read_sectors(dev,
++							    start_write_sector,
++							    head, 0);
++				if (res < 0)
++					goto fail;
++			}
++			if (start_read_sector <
++			    start_write_sector+chunk_sectors) {
++				/* Read tail */
++				dev_dbg(&dev->sbd.core,
++					"tail: %lu sectors at %lu\n", tail,
++					start_read_sector);
++				sec_off =3D start_read_sector-start_write_sector;
++				res =3D ps3flash_read_sectors(dev,
++							    start_read_sector,
++							    tail, sec_off);
++				if (res < 0)
++					goto fail;
++			}
++		}
++
++		n =3D min(remaining, dev->bounce_size-offset);
++		dev_dbg(&dev->sbd.core,
++			"%s:%u: copy %lu bytes from user 0x%p to 0x%p\n",
++			__func__, __LINE__, n, buf, dev->bounce_buf+offset);
++		if (copy_from_user(dev->bounce_buf+offset, buf, n)) {
++			res =3D -EFAULT;
++			goto fail;
++		}
++
++		res =3D ps3flash_write_chunk(dev, start_write_sector);
++		if (res < 0)
++			goto fail;
++
++		mutex_unlock(&priv->mutex);
++
++		*pos +=3D n;
++		buf +=3D n;
++		remaining -=3D n;
++		start_write_sector +=3D chunk_sectors;
++		head =3D 0;
++		offset =3D 0;
++	} while (remaining > 0);
++
++	return count;
++
++fail:
++	mutex_unlock(&priv->mutex);
++	return res;
 +}
 +
-+static irqreturn_t ps3disk_interrupt(int irq, void *data)
++
++static irqreturn_t ps3flash_interrupt(int irq, void *data)
 +{
 +	struct ps3_storage_device *dev =3D data;
-+	struct ps3disk_private *priv;
-+	struct request *req;
-+	int res, read, uptodate;
++	int res;
 +	u64 tag, status;
-+	unsigned long num_sectors;
-+	const char *op;
 +
 +	res =3D lv1_storage_get_async_status(dev->sbd.dev_id, &tag, &status);
 +
@@ -342,229 +397,62 @@ nc.,
 +	if (res) {
 +		dev_err(&dev->sbd.core, "%s:%u: res=3D%d status=3D0x%lx\n",
 +			__func__, __LINE__, res, status);
-+		return IRQ_HANDLED;
-+	}
-+
-+	priv =3D ps3disk_priv(dev);
-+	req =3D priv->req;
-+	if (!req) {
-+		dev_dbg(&dev->sbd.core,
-+			"%s:%u non-block layer request completed\n", __func__,
-+			__LINE__);
++	} else {
 +		dev->lv1_status =3D status;
 +		complete(&dev->done);
-+		return IRQ_HANDLED;
 +	}
-+
-+	if (req->cmd_type =3D=3D REQ_TYPE_FLUSH) {
-+		read =3D 0;
-+		num_sectors =3D req->hard_cur_sectors;
-+		op =3D "flush";
-+	} else {
-+		read =3D !rq_data_dir(req);
-+		num_sectors =3D req->nr_sectors;
-+		op =3D read ? "read" : "write";
-+	}
-+	if (status) {
-+		dev_dbg(&dev->sbd.core, "%s:%u: %s failed 0x%lx\n", __func__,
-+			__LINE__, op, status);
-+		uptodate =3D 0;
-+	} else {
-+		dev_dbg(&dev->sbd.core, "%s:%u: %s completed\n", __func__,
-+			__LINE__, op);
-+		uptodate =3D 1;
-+		if (read)
-+			ps3disk_scatter_gather(dev, req, 0);
-+	}
-+
-+	spin_lock(&priv->lock);
-+	if (!end_that_request_first(req, uptodate, num_sectors)) {
-+		add_disk_randomness(req->rq_disk);
-+		blkdev_dequeue_request(req);
-+		end_that_request_last(req, uptodate);
-+	}
-+	priv->req =3D NULL;
-+	ps3disk_do_request(dev, priv->queue);
-+	spin_unlock(&priv->lock);
-+
 +	return IRQ_HANDLED;
 +}
 +
-+static int ps3disk_sync_cache(struct ps3_storage_device *dev)
-+{
-+	u64 res;
 +
-+	dev_dbg(&dev->sbd.core, "%s:%u: sync cache\n", __func__, __LINE__);
++static const struct file_operations ps3flash_fops =3D {
++	.owner	=3D THIS_MODULE,
++	.llseek	=3D ps3flash_llseek,
++	.read	=3D ps3flash_read,
++	.write	=3D ps3flash_write,
++};
 +
-+	res =3D ps3stor_send_command(dev, LV1_STORAGE_ATA_HDDOUT, 0, 0, 0, 0)=
-;
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: sync cache failed 0x%lx\n",
-+			__func__, __LINE__, res);
-+		return -EIO;
-+	}
-+	return 0;
-+}
++static struct miscdevice ps3flash_misc =3D {
++	.minor	=3D MISC_DYNAMIC_MINOR,
++	.name	=3D DEVICE_NAME,
++	.fops	=3D &ps3flash_fops,
++};
 +
-+
-+/* ATA helpers copied from drivers/ata/libata-core.c */
-+
-+static void swap_buf_le16(u16 *buf, unsigned int buf_words)
-+{
-+#ifdef __BIG_ENDIAN
-+	unsigned int i;
-+
-+	for (i =3D 0; i < buf_words; i++)
-+		buf[i] =3D le16_to_cpu(buf[i]);
-+#endif /* __BIG_ENDIAN */
-+}
-+
-+static u64 ata_id_n_sectors(const u16 *id)
-+{
-+	if (ata_id_has_lba(id)) {
-+		if (ata_id_has_lba48(id))
-+			return ata_id_u64(id, 100);
-+		else
-+			return ata_id_u32(id, 60);
-+	} else {
-+		if (ata_id_current_chs_valid(id))
-+			return ata_id_u32(id, 57);
-+		else
-+			return id[1] * id[3] * id[6];
-+	}
-+}
-+
-+static void ata_id_string(const u16 *id, unsigned char *s, unsigned in=
-t ofs,
-+			  unsigned int len)
-+{
-+	unsigned int c;
-+
-+	while (len > 0) {
-+		c =3D id[ofs] >> 8;
-+		*s =3D c;
-+		s++;
-+
-+		c =3D id[ofs] & 0xff;
-+		*s =3D c;
-+		s++;
-+
-+		ofs++;
-+		len -=3D 2;
-+	}
-+}
-+
-+static void ata_id_c_string(const u16 *id, unsigned char *s, unsigned =
-int ofs,
-+			    unsigned int len)
-+{
-+	unsigned char *p;
-+
-+	WARN_ON(!(len & 1));
-+
-+	ata_id_string(id, s, ofs, len - 1);
-+
-+	p =3D s + strnlen(s, len - 1);
-+	while (p > s && p[-1] =3D=3D ' ')
-+		p--;
-+	*p =3D '\0';
-+}
-+
-+static int ps3disk_identify(struct ps3_storage_device *dev)
-+{
-+	struct ps3disk_private *priv =3D ps3disk_priv(dev);
-+	struct lv1_ata_cmnd_block ata_cmnd;
-+	u16 *id =3D dev->bounce_buf;
-+	u64 res;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u: identify disk\n", __func__, __LINE__)=
-;
-+
-+	memset(&ata_cmnd, 0, sizeof(struct lv1_ata_cmnd_block));
-+	ata_cmnd.command =3D ATA_CMD_ID_ATA;
-+	ata_cmnd.sector_count =3D 1;
-+	ata_cmnd.size =3D ata_cmnd.arglen =3D ATA_ID_WORDS * 2;
-+	ata_cmnd.buffer =3D dev->bounce_lpar;
-+	ata_cmnd.proto =3D PIO_DATA_IN_PROTO;
-+	ata_cmnd.in_out =3D DIR_READ;
-+
-+	res =3D ps3stor_send_command(dev, LV1_STORAGE_SEND_ATA_COMMAND,
-+				   ps3_mm_phys_to_lpar(__pa(&ata_cmnd)),
-+				   sizeof(ata_cmnd), ata_cmnd.buffer,
-+				   ata_cmnd.arglen);
-+	if (res) {
-+		dev_err(&dev->sbd.core, "%s:%u: identify disk failed 0x%lx\n",
-+			__func__, __LINE__, res);
-+		return -EIO;
-+	}
-+
-+	swap_buf_le16(id, ATA_ID_WORDS);
-+
-+	/* All we're interested in are raw capacity and model name */
-+	priv->raw_capacity =3D ata_id_n_sectors(id);
-+	ata_id_c_string(id, priv->model, ATA_ID_PROD, sizeof(priv->model));
-+	return 0;
-+}
-+
-+static void ps3disk_prepare_flush(request_queue_t *q, struct request *=
-req)
-+{
-+	struct ps3_storage_device *dev =3D q->queuedata;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
-+
-+	memset(req->cmd, 0, sizeof(req->cmd));
-+	req->cmd_type =3D REQ_TYPE_FLUSH;
-+}
-+
-+static int ps3disk_issue_flush(request_queue_t *q, struct gendisk *gen=
-disk,
-+			       sector_t *sector)
-+{
-+	struct ps3_storage_device *dev =3D q->queuedata;
-+	struct request *req;
-+	int res;
-+
-+	dev_dbg(&dev->sbd.core, "%s:%u\n", __func__, __LINE__);
-+
-+	req =3D blk_get_request(q, WRITE, __GFP_WAIT);
-+	ps3disk_prepare_flush(q, req);
-+	res =3D blk_execute_rq(q, gendisk, req, 0);
-+	if (res)
-+		dev_err(&dev->sbd.core, "%s:%u: flush request failed %d\n",
-+			__func__, __LINE__, res);
-+	blk_put_request(req);
-+	return res;
-+}
-+
-+
-+static unsigned long ps3disk_mask;
-+
-+static int __devinit ps3disk_probe(struct ps3_system_bus_device *_dev)
++static int __devinit ps3flash_probe(struct ps3_system_bus_device *_dev=
+)
 +{
 +	struct ps3_storage_device *dev =3D to_ps3_storage_device(&_dev->core)=
 ;
-+	struct ps3disk_private *priv;
++	struct ps3flash_private *priv;
 +	int error;
-+	unsigned int devidx;
-+	struct request_queue *queue;
-+	struct gendisk *gendisk;
++	unsigned long tmp;
 +
-+	if (dev->blk_size < KERNEL_SECTOR_SIZE) {
++	tmp =3D dev->regions[dev->region_idx].start*dev->blk_size;
++	if (tmp % FLASH_BLOCK_SIZE) {
 +		dev_err(&dev->sbd.core,
-+			"%s:%u: cannot handle block size %lu\n", __func__,
-+			__LINE__, dev->blk_size);
++			"%s:%u region start %lu is not aligned\n", __func__,
++			__LINE__, tmp);
++		return -EINVAL;
++	}
++	tmp =3D dev->regions[dev->region_idx].size*dev->blk_size;
++	if (tmp % FLASH_BLOCK_SIZE) {
++		dev_err(&dev->sbd.core,
++			"%s:%u region size %lu is not aligned\n", __func__,
++			__LINE__, tmp);
 +		return -EINVAL;
 +	}
 +
-+	BUILD_BUG_ON(PS3DISK_MAX_DISKS > BITS_PER_LONG);
-+	devidx =3D find_first_zero_bit(&ps3disk_mask, PS3DISK_MAX_DISKS);
-+	if (devidx >=3D PS3DISK_MAX_DISKS) {
-+		dev_err(&dev->sbd.core, "%s:%u: Too many disks\n", __func__,
-+			__LINE__);
-+		return -ENOSPC;
++	/* use static buffer, kmalloc cannot allocate 256 KiB */
++	if (!ps3flash_bounce_buffer.address)
++		return -ENODEV;
++
++	if (ps3flash_dev) {
++		dev_err(&dev->sbd.core,
++			"Only one FLASH device is supported\n");
++		return -EBUSY;
 +	}
-+	__set_bit(devidx, &ps3disk_mask);
++
++	ps3flash_dev =3D dev;
 +
 +	priv =3D kzalloc(sizeof(*priv), GFP_KERNEL);
 +	if (!priv) {
@@ -572,160 +460,79 @@ disk,
 +		goto fail;
 +	}
 +
-+	ps3disk_priv(dev) =3D priv;
-+	spin_lock_init(&priv->lock);
++	ps3flash_priv(dev) =3D priv;
++	mutex_init(&priv->mutex);
 +
-+	dev->bounce_size =3D BOUNCE_SIZE;
-+	dev->bounce_buf =3D kmalloc(BOUNCE_SIZE, GFP_DMA);
-+	if (!dev->bounce_buf) {
-+		error =3D -ENOMEM;
-+		goto fail_free_priv;
-+	}
++	dev->bounce_size =3D ps3flash_bounce_buffer.size;
++	dev->bounce_buf =3D ps3flash_bounce_buffer.address;
 +
-+	error =3D ps3stor_setup(dev, ps3disk_interrupt);
++	error =3D ps3stor_setup(dev, ps3flash_interrupt);
 +	if (error)
-+		goto fail_free_bounce;
++		goto fail_free_priv;
 +
-+	ps3disk_identify(dev);
-+
-+	queue =3D blk_init_queue(ps3disk_request, &priv->lock);
-+	if (!queue) {
-+		dev_err(&dev->sbd.core, "%s:%u: blk_init_queue failed\n",
-+			__func__, __LINE__);
-+		error =3D -ENOMEM;
++	ps3flash_misc.parent =3D &dev->sbd.core;
++	error =3D misc_register(&ps3flash_misc);
++	if (error) {
++		dev_err(&dev->sbd.core, "%s:%u: misc_register failed %d\n",
++			__func__, __LINE__, error);
 +		goto fail_teardown;
 +	}
 +
-+	priv->queue =3D queue;
-+	queue->queuedata =3D dev;
-+
-+	blk_queue_bounce_limit(queue, BLK_BOUNCE_HIGH);
-+
-+	blk_queue_max_sectors(queue, dev->bounce_size/KERNEL_SECTOR_SIZE);
-+	blk_queue_segment_boundary(queue, -1UL);
-+	blk_queue_dma_alignment(queue, dev->blk_size-1);
-+	blk_queue_hardsect_size(queue, dev->blk_size);
-+
-+	blk_queue_issue_flush_fn(queue, ps3disk_issue_flush);
-+	blk_queue_ordered(queue, QUEUE_ORDERED_DRAIN_FLUSH,
-+			  ps3disk_prepare_flush);
-+
-+	blk_queue_max_phys_segments(queue, -1);
-+	blk_queue_max_hw_segments(queue, -1);
-+	blk_queue_max_segment_size(queue, dev->bounce_size);
-+
-+	gendisk =3D alloc_disk(PS3DISK_MINORS);
-+	if (!gendisk) {
-+		dev_err(&dev->sbd.core, "%s:%u: alloc_disk failed\n", __func__,
-+			__LINE__);
-+		error =3D -ENOMEM;
-+		goto fail_cleanup_queue;
-+	}
-+
-+	priv->gendisk =3D gendisk;
-+	gendisk->major =3D ps3disk_major;
-+	gendisk->first_minor =3D devidx * PS3DISK_MINORS;
-+	gendisk->fops =3D &ps3disk_fops;
-+	gendisk->queue =3D queue;
-+	gendisk->private_data =3D dev;
-+	gendisk->driverfs_dev =3D &dev->sbd.core;
-+	snprintf(gendisk->disk_name, sizeof(gendisk->disk_name), PS3DISK_NAME=
-,
-+		 devidx+'a');
-+	priv->blocking_factor =3D dev->blk_size/KERNEL_SECTOR_SIZE;
-+	set_capacity(gendisk,
-+		     dev->regions[dev->region_idx].size*priv->blocking_factor);
-+
-+	dev_info(&dev->sbd.core,
-+		 "%s is a %s (%lu MiB total, %lu MiB for OtherOS)\n",
-+		 gendisk->disk_name, priv->model, priv->raw_capacity >> 11,
-+		 get_capacity(gendisk) >> 11);
-+
-+	add_disk(gendisk);
++	dev_info(&dev->sbd.core, "%s:%u: registered misc device %d\n",
++		 __func__, __LINE__, ps3flash_misc.minor);
 +	return 0;
 +
-+fail_cleanup_queue:
-+	blk_cleanup_queue(queue);
 +fail_teardown:
 +	ps3stor_teardown(dev);
-+fail_free_bounce:
-+	kfree(dev->bounce_buf);
 +fail_free_priv:
 +	kfree(priv);
-+	ps3disk_priv(dev) =3D NULL;
++	ps3flash_priv(dev) =3D NULL;
 +fail:
-+	__clear_bit(devidx, &ps3disk_mask);
++	ps3flash_dev =3D NULL;
 +	return error;
 +}
 +
-+static int ps3disk_remove(struct ps3_system_bus_device *_dev)
++static int ps3flash_remove(struct ps3_system_bus_device *_dev)
 +{
 +	struct ps3_storage_device *dev =3D to_ps3_storage_device(&_dev->core)=
 ;
-+	struct ps3disk_private *priv =3D ps3disk_priv(dev);
 +
-+	__clear_bit(priv->gendisk->first_minor / PS3DISK_MINORS,
-+		    &ps3disk_mask);
-+	del_gendisk(priv->gendisk);
-+	blk_cleanup_queue(priv->queue);
-+	put_disk(priv->gendisk);
-+	dev_notice(&dev->sbd.core, "Synchronizing disk cache\n");
-+	ps3disk_sync_cache(dev);
++	misc_deregister(&ps3flash_misc);
 +	ps3stor_teardown(dev);
-+	kfree(dev->bounce_buf);
-+	kfree(priv);
-+	ps3disk_priv(dev) =3D NULL;
++	kfree(ps3flash_priv(dev));
++	ps3flash_priv(dev) =3D NULL;
++	ps3flash_dev =3D NULL;
 +	return 0;
 +}
 +
-+static struct ps3_system_bus_driver ps3disk =3D {
-+	.match_id	=3D PS3_MATCH_ID_STOR_DISK,
++
++static struct ps3_system_bus_driver ps3flash =3D {
++	.match_id	=3D PS3_MATCH_ID_STOR_FLASH,
 +	.core.name	=3D DEVICE_NAME,
 +	.core.owner	=3D THIS_MODULE,
-+	.probe		=3D ps3disk_probe,
-+	.remove		=3D ps3disk_remove,
-+	.shutdown	=3D ps3disk_remove,
++	.probe		=3D ps3flash_probe,
++	.remove		=3D ps3flash_remove,
++	.shutdown	=3D ps3flash_remove,
 +};
 +
 +
-+static int __init ps3disk_init(void)
++static int __init ps3flash_init(void)
 +{
-+	int error;
-+
-+	if (!firmware_has_feature(FW_FEATURE_PS3_LV1))
-+		return -ENODEV;
-+
-+	error =3D register_blkdev(0, DEVICE_NAME);
-+	if (error <=3D 0) {
-+		printk(KERN_ERR "%s:%u: register_blkdev failed %d\n", __func__,
-+		       __LINE__, error);
-+		return error;
-+	}
-+	ps3disk_major =3D error;
-+
-+	pr_info("%s:%u: registered block device major %d\n", __func__,
-+		__LINE__, ps3disk_major);
-+
-+	error =3D ps3_system_bus_driver_register(&ps3disk);
-+	if (error)
-+		unregister_blkdev(ps3disk_major, DEVICE_NAME);
-+
-+	return error;
++	return ps3_system_bus_driver_register(&ps3flash);
 +}
 +
-+static void __exit ps3disk_exit(void)
++static void __exit ps3flash_exit(void)
 +{
-+	ps3_system_bus_driver_unregister(&ps3disk);
-+	unregister_blkdev(ps3disk_major, DEVICE_NAME);
++	ps3_system_bus_driver_unregister(&ps3flash);
 +}
 +
-+module_init(ps3disk_init);
-+module_exit(ps3disk_exit);
++module_init(ps3flash_init);
++module_exit(ps3flash_exit);
 +
 +MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("PS3 Disk Storage Driver");
++MODULE_DESCRIPTION("PS3 FLASH ROM Storage Driver");
 +MODULE_AUTHOR("Sony Corporation");
-+MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_DISK);
++MODULE_ALIAS(PS3_MODULE_ALIAS_STOR_FLASH);
 
 --=20
 With kind regards,
