@@ -1,51 +1,51 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Some NCQ numbers...
-Date: Wed, 04 Jul 2007 10:19:55 +0900
-Message-ID: <468AF5BB.10005@gmail.com>
-References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com> <468AB1A7.9010201@msgid.tls.msk.ru>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH] lpfc: convert to use the data buffer accessors - part
+ 2
+Date: Tue, 03 Jul 2007 22:17:23 -0400
+Message-ID: <468B0333.6080000@emulex.com>
+References: <468A6763.3020102@panasas.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <468AB1A7.9010201@msgid.tls.msk.ru>
-Sender: linux-ide-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:44779 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751005AbXGDCR5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jul 2007 22:17:57 -0400
+In-Reply-To: <468A6763.3020102@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Hello,
+ACK - missed in our merge. Thank You...
 
-Michael Tokarev wrote:
-> Well.  It looks like the results does not depend on the
-> elevator.  Originally I tried with deadline, and just
-> re-ran the test with noop (hence the long delay with
-> the answer) - changing linux elevator changes almost
-> nothing in the results - modulo some random "fluctuations".
+-- james s
 
-I see.  Thanks for testing.
-
-> In any case, NCQ - at least in this drive - just does
-> not work.  Linux with its I/O elevator may help to
-> speed things up a bit, but the disk does nothing in
-> this area.  NCQ doesn't slow things down either - it
-> just does not work.
+Boaz Harrosh wrote:
+>  This is an addendum to:
+>  commit a0b4f78f9a4c869e9b29f254054ad7441cb40bbf
+>  Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>     [SCSI] lpfc: convert to use the data buffer accessors
 > 
-> The same's for ST3250620NS "enterprise" drives.
+>  One place was missed in the merge
 > 
-> By the way, Seagate announced Barracuda ES 2 series
-> (in range 500..1200Gb if memory serves) - maybe with
-> those, NCQ will work better?
-
-No one would know without testing.
-
-> Or maybe it's libata which does not implement NCQ
-> "properly"?  (As I shown before, with almost all
-> ol'good SCSI drives TCQ helps alot - up to 2x the
-> difference and more - with multiple I/O threads)
-
-Well, what the driver does is minimal.  It just passes through all the
-commands to the harddrive.  After all, NCQ/TCQ gives the harddrive more
-responsibility regarding request scheduling.
-
--- 
-tejun
+>  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_scsi.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index 5d2e3de..3d35eae 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -506,7 +506,7 @@ lpfc_handle_fcp_err(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd,
+>  					"underrun converted to error "
+>  					"Data: x%x x%x x%x\n",
+>  					phba->brd_no, vpi, cmnd->cmnd[0],
+> -					cmnd->request_bufflen,
+> +					scsi_bufflen(cmnd),
+>  					scsi_get_resid(cmnd), cmnd->underflow);
+>  			host_status = DID_ERROR;
+>  		}
