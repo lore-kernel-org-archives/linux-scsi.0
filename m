@@ -1,43 +1,76 @@
-From: Dan Aloni <da-x@monatomic.org>
-Subject: Re: Some NCQ numbers...
-Date: Wed, 4 Jul 2007 19:44:26 +0300
-Message-ID: <20070704164426.GA8061@localdomain>
-References: <468392CE.6010206@msgid.tls.msk.ru> <20070704154405.GA27166@localdomain> <468BC81F.7090102@msgid.tls.msk.ru>
+From: Uwe Kiewel <mailing-list@kiewel-online.de>
+Subject: Re: [SCSI] SD driver question
+Date: Wed, 04 Jul 2007 18:56:37 +0200
+Message-ID: <468BD145.5040100@kiewel-online.de>
+References: <468BCE5C.6000707@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <468BC81F.7090102@msgid.tls.msk.ru>
-Sender: linux-ide-owner@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from post.kiewel-online.de ([85.214.49.162]:33059 "EHLO
+	post.kiewel-online.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754328AbXGDRIb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jul 2007 13:08:31 -0400
+In-Reply-To: <468BCE5C.6000707@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gabriel C <nix.or.die@googlemail.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Wed, Jul 04, 2007 at 08:17:35PM +0400, Michael Tokarev wrote:
-> Dan Aloni wrote:
-> > On Thu, Jun 28, 2007 at 02:51:58PM +0400, Michael Tokarev wrote:
-> >> [..]
-> >> Test machine was using MPTSAS driver for the following card:
-> >>   SCSI storage controller: LSI Logic / Symbios Logic SAS1064E PCI-Express Fusion-MPT SAS (rev 02)
-> >>
-> >> Pretty similar results were obtained on an AHCI controller:
-> >>   SATA controller: Intel Corporation 82801GR/GH (ICH7 Family) Serial ATA Storage Controller AHCI (rev 01)
-> >> on another machines.
-> > 
-> > Are you sure that NCQ was enabled between the controller and drive? 
-> > Did you verify this? I know about some versions that disable NCQ 
-> > support internally in their firmware (something to do with bugs in
-> > error handling).
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA1
+
+Gabriel C schrieb:
+> Hello,
 > 
-> The next obvious question is: how to check/verify this?
+> Is there any reason why sd is printing the driver informations for each
+> disk twice in dmesg ?
+> 
+> ...
+> 
+> sd 0:0:0:0: [sda] 35843670 512-byte hardware sectors (18352 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 9f 00 10 08
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports
+> DPO and FUA
+> sd 0:0:0:0: [sda] 35843670 512-byte hardware sectors (18352 MB)
+> sd 0:0:0:0: [sda] Write Protect is off
+> sd 0:0:0:0: [sda] Mode Sense: 9f 00 10 08
+> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, supports
+> DPO and FUA
+> sda: sda1
+> sd 0:0:0:0: [sda] Attached SCSI disk
+> sd 0:0:0:0: Attached scsi generic sg0 type 0
 
-On the lowest level, it's possible using a protocol analyzer. If you 
-don't have one, you need to be familiar with the controller's driver 
-or its firmware. If the driver is based on libata, I think it's 
-possible to get this information easier. Otherwise, such as in the 
-case of mptsas, it can be completely hidden by the firmware.
+the samne here.
+...
+scsi 0:0:0:0: Direct-Access     ATA      SAMSUNG HM080HC  AM10 PQ: 0 ANSI: 5
+SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+SCSI device sda: 156301488 512-byte hdwr sectors (80026 MB)
+sda: Write Protect is off
+sda: Mode Sense: 00 3a 00 00
+SCSI device sda: write cache: enabled, read cache: enabled, doesn't
+support DPO or FUA
+...
 
--- 
-Dan Aloni
-XIV LTD, http://www.xivstorage.com
-da-x (at) monatomic.org, dan (at) xiv.co.il
+Please, can you tell the version of the kernel you use? I use:
+[abkie@config-lappi ~]$ uname -r
+2.6.21-1.3228.fc7
+It is the current Fedora 7 kernel.
+
+
+Regards,
+Uwe
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+Comment: Using GnuPG with Fedora - http://enigmail.mozdev.org
+
+iD8DBQFGi9FFr6SFaBB7DLURAtb0AJ0YWiuBsEcOLChPvQcx6dOwvmPOxACfUsGT
+3glIHhUVpqBOcizMaTcqU5M=
+=xTfs
+-----END PGP SIGNATURE-----
