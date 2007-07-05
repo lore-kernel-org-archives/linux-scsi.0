@@ -1,79 +1,68 @@
 From: Bill Davidsen <davidsen@tmr.com>
 Subject: Re: Some NCQ numbers...
-Date: Thu, 05 Jul 2007 15:22:29 -0400
-Message-ID: <468D44F5.4070906@tmr.com>
-References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com> <468AB1A7.9010201@msgid.tls.msk.ru> <468AF5BB.10005@gmail.com> <468B6BD7.9010108@msgid.tls.msk.ru>
+Date: Thu, 05 Jul 2007 15:00:38 -0400
+Message-ID: <468D3FD6.7060607@tmr.com>
+References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com> <468AB1A7.9010201@msgid.tls.msk.ru> <468AF5BB.10005@gmail.com> <468B6BD7.9010108@msgid.tls.msk.ru> <Pine.LNX.4.64.0707040621170.32656@p34.internal.lan> <Pine.LNX.4.64.0707040631370.32656@p34.internal.lan>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tmr.com ([64.65.253.246]:34742 "EHLO gaimboi.tmr.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755591AbXGILSu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jul 2007 07:18:50 -0400
-In-Reply-To: <468B6BD7.9010108@msgid.tls.msk.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0707040631370.32656@p34.internal.lan>
+Sender: linux-ide-owner@vger.kernel.org
+To: Justin Piszcz <jpiszcz@lucidpixels.com>
+Cc: Michael Tokarev <mjt@tls.msk.ru>, Tejun Heo <htejun@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Tokarev <mjt@tls.msk.ru>
-Cc: Tejun Heo <htejun@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Michael Tokarev wrote:
-> Tejun Heo wrote:
->> Hello,
+Justin Piszcz wrote:
+> 
+> 
+> On Wed, 4 Jul 2007, Justin Piszcz wrote:
+> 
+>> On Wed, 4 Jul 2007, Michael Tokarev wrote:
 >>
->> Michael Tokarev wrote:
->>> Well.  It looks like the results does not depend on the
->>> elevator.  Originally I tried with deadline, and just
->>> re-ran the test with noop (hence the long delay with
->>> the answer) - changing linux elevator changes almost
->>> nothing in the results - modulo some random "fluctuations".
->> I see.  Thanks for testing.
+>> > Tejun Heo wrote:
+>> >> Hello,
+>> >>
+>> >> Michael Tokarev wrote:
+>> >>> Well.  It looks like the results does not depend on the
+>> >>> elevator.  Originally I tried with deadline, and just
+>> >>> re-ran the test with noop (hence the long delay with
+>> >>> the answer) - changing linux elevator changes almost
+>> >>> nothing in the results - modulo some random "fluctuations".
+>> >>
+>> >> I see.  Thanks for testing.
+>> >
+>> > Here are actual results - the tests were still running when
+>> > I replied yesterday.
+>> >
+>> > Again, this is Seagate ST3250620AS "desktop" drive, 7200RPM,
+>> > 16Mb cache, 250Gb capacity.  The tests were performed with
+>> > queue depth = 64 (on mptsas), drive write cache is turned
+>> > off.
+>>
+>> I found AS scheduler to be the premium and best for single-user 
+>> performance.
+>>
+>> You want speed? Use AS.
+>>
+>> http://home.comcast.net/~jpiszcz/sched/cfq_vs_as_vs_deadline_vs_noop.html
+>>
+>>
 > 
-> Here are actual results - the tests were still running when
-> I replied yesterday.
+> Does not include noop-- tested the main three though, renamed :)
 > 
-> Again, this is Seagate ST3250620AS "desktop" drive, 7200RPM,
-> 16Mb cache, 250Gb capacity.  The tests were performed with
-> queue depth = 64 (on mptsas), drive write cache is turned
-> off.
+> http://home.comcast.net/~jpiszcz/sched/cfq_vs_as_vs_deadline.html
 > 
-But... with write cache off you don't let the drive do some things which 
-might show a lot of improvement with one scheduler or another. So your 
-data are only part of the story, aren't they?
-
-[snip]
-
->>> By the way, Seagate announced Barracuda ES 2 series
->>> (in range 500..1200Gb if memory serves) - maybe with
->>> those, NCQ will work better?
->> No one would know without testing.
+> And for the archives:
 > 
-> Sure thing.  I guess I'll set up a web page with all
-> the results so far, in a hope someday it will be more
-> complete (we don't have many different drives to test,
-> but others do).
+> p34-cfq,15696M,77114.3,99,311683,55.3333,184947,38.6667,79842.7,99,524065,41.3333,634.033,0.333333,16:100000:16/64,1043.33,8.33333,4419.33,11.6667,2942,17.3333,1178,10.3333,4192.67,12.3333,2619.33,19 
 > 
-> By the way.  Both SATA drives we have are single-platter
-> ones (with 500Gb models they've 2 platters, and 750Gb
-> ones are with 3 platters), while all SCSI drives I
-> tested have more than one platters.  Maybe this is
-> yet another reason for NCQ failing.
+> p34-as,15696M,76202.3,99,443103,85,189716,34.6667,79552,99,507271,39.6667,607.067,0,16:100000:16/64,1153,10,13434,36,2769.67,16.3333,1201.67,10.6667,3951.33,12,2665.67,19 
 > 
-> And another note.  I heard somewhere that Seagate for
-> one prohibits publishing of tests like this, however
-> I haven't signed any NDAs and somesuch when purchased
-> their drives in a nearest computer store... ;)
+> p34-deadline,15696M,76933.3,98.6667,386852,72,183016,29.6667,79530.7,99,512082,39.6667,678.567,0,16:100000:16/64,1230.33,10.3333,12349,32.3333,2945,17.3333,1258,11,8183,22.3333,2867,20.3333 
 > 
->>> Or maybe it's libata which does not implement NCQ
->>> "properly"?  (As I shown before, with almost all
->>> ol'good SCSI drives TCQ helps alot - up to 2x the
->>> difference and more - with multiple I/O threads)
->> Well, what the driver does is minimal.  It just passes through all the
->> commands to the harddrive.  After all, NCQ/TCQ gives the harddrive more
->> responsibility regarding request scheduling.
-> 
-> Oh well, I see.... :(
-> 
+I looked at these before, did you really run with a chunk size of just 
+under 16GB, or does "15696M" have some inobvious meaning?
 
 -- 
 Bill Davidsen <davidsen@tmr.com>
