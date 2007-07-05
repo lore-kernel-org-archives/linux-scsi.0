@@ -1,40 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 0/3] clean gendisk out of scsi ULD structs
-Date: Thu, 05 Jul 2007 18:14:06 -0500
-Message-ID: <1183677246.3448.71.camel@localhost.localdomain>
-References: <20070705140636.6dbabd6f.kristen.c.accardi@intel.com>
-	 <20070705230251.GS21478@ftp.linux.org.uk>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] Is it time to kill ide-scsi.c?
+Date: Thu, 05 Jul 2007 19:50:00 -0400
+Message-ID: <468D83A8.2060804@garzik.org>
+References: <468BBCC0.3010007@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:35447 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760182AbXGEXOI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 19:14:08 -0400
-In-Reply-To: <20070705230251.GS21478@ftp.linux.org.uk>
+Received: from srv5.dvmed.net ([207.36.208.214]:51978 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758028AbXGEXuI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jul 2007 19:50:08 -0400
+In-Reply-To: <468BBCC0.3010007@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Al Viro <viro@ftp.linux.org.uk>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, akpm@linux-foundation.org, jeff@garzik.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Fri, 2007-07-06 at 00:02 +0100, Al Viro wrote:
-> On Thu, Jul 05, 2007 at 02:06:36PM -0700, Kristen Carlson Accardi wrote:
-> > Since gendisk will now become part of struct scsi_device, we don't need
-> > to store this value in any private data structs where they already store
-> > scsi_device.  This series cleans up a few drivers which did this.
+Boaz Harrosh wrote:
+>  I have attempted (below) to convert ide-scsi to the new data
+>  accessors and cleanup the !use_sg code paths. Inspecting
+>  the code I can see places that still assume scsi_cmnd->request_buffer
+>  is a linear char pointer. Though I admit this assumption is hidden
+>  behind a flag "test_bit(PC_TRANSFORM, &pc->flags)". Is this an indication
+>  that this drivers no longer works? What is needed in order to kill this
+>  driver? If no killing is done than please accepted below patch.
 > 
-> What the hell?  gendisks are *NOT* supposed to be embedded into other
-> data structures, you'll screw up the lifetime rules for them.
+>  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/ide-scsi.c |   48 ++++++++++++++++++++++++++++------------------
+>  1 files changed, 29 insertions(+), 19 deletions(-)
 
-Don't panic .. they're not ... we have a pointer to the gendisk in our
-SCSI structures (properly refcounted).  The reason is historical and
-actually goes back to 2002 when we first got rid of the static arrays of
-structures we used to keep around.
+This is a very popular driver for some configurations.  I know many 
+people that used this for their ATAPI driver, rather than 
+ide-{cdrom,floppy,...}
 
-Doug ... don't think 'disk' when you see 'gendisk' just think of it as a
-useful infrastructure library.
+	Jeff
 
-James
 
 
