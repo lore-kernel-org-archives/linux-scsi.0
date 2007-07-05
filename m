@@ -1,80 +1,74 @@
-From: Guennadi Liakhovetski <g.liakhovetski@gmx.de>
-Subject: Re: [PATCH] Further clean-up of tmscsim driver
-Date: Thu, 5 Jul 2007 00:54:17 +0200 (CEST)
-Message-ID: <Pine.LNX.4.60.0707050048250.5952@poirot.grange>
-References: <468BE48F.7070106@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [RFC 0/7] scsi_sgtable implementation
+Date: Thu, 05 Jul 2007 14:51:24 +0300
+Message-ID: <468CDB3C.4060500@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:40766 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753503AbXGDWyW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 4 Jul 2007 18:54:22 -0400
-In-Reply-To: <468BE48F.7070106@panasas.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:10463 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754191AbXGEMGq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 08:06:46 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 4 Jul 2007, Boaz Harrosh wrote:
+ This is a proposed implementation of the scsi sg tables
+ solution to scsi-ml in preparations for support of
+ bidirectional scsi commands.
 
-> 
->  - The saved sg_count was a leftover from the time the driver was doing
->    dma mapping by himself. But now that scsi-ml is called for the mapping
->    it is not the drivers responsibility.
-> 
->  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+ A complete bidirectional solution on top of these patches
+ can be found in the usual place:
+ http://www.bhalevy.com/open-osd/download/sgtable_bidi_varlen
 
-Signed-off-by: G. Liakhovetski <g.liakhovetski@gmx.de>
+ It would be best if these patches can be accepted into Morton's
+ tree as soon as the open window for 2.6.23. So it can be tested
+ as much as possible before actually getting accepted into
+ scsi-misc and eventually into the kernel. The reason I say
+ that is because there is a small but scary difference between
+ scsi-ml with accessors over old code and accessors over new
+ sg-tables code. And that is the absence of the IO members in
+ the case of a DMA_NONE transfer. An un-careful coding can trip
+ on it. OK I admit the chances are slim but exist.
 
-> ---
->  drivers/scsi/tmscsim.c |    3 ---
->  drivers/scsi/tmscsim.h |    1 -
->  2 files changed, 0 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/tmscsim.c b/drivers/scsi/tmscsim.c
-> index e8260f2..14cba1c 100644
-> --- a/drivers/scsi/tmscsim.c
-> +++ b/drivers/scsi/tmscsim.c
-> @@ -1681,7 +1681,6 @@ dc390_RequestSense(struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_
->  			      pcmd->cmnd[0], pDCB->TargetID, pDCB->TargetLUN));
-> 
->  	pSRB->SRBFlag |= AUTO_REQSENSE;
-> -	pSRB->SavedSGCount = scsi_sg_count(pcmd);
->  	pSRB->SavedTotXLen = pSRB->TotalXferredLen;
->  	pSRB->AdaptStatus = 0;
->  	pSRB->TargetStatus = 0; /* CHECK_CONDITION<<1; */
-> @@ -1729,7 +1728,6 @@ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb*
->  		       (u32) pcmd->result, (u32) pSRB->TotalXferredLen));
->  	    } else {
->  		SET_RES_DRV(pcmd->result, DRIVER_SENSE);
-> -		scsi_sg_count(pcmd) = pSRB->SavedSGCount;
->  		//pSRB->ScsiCmdLen	 = (u8) (pSRB->Segment1[0] >> 8);
->  		DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
->  		pSRB->TotalXferredLen = 0;
-> @@ -1751,7 +1749,6 @@ dc390_SRBdone( struct dc390_acb* pACB, struct dc390_dcb* pDCB, struct dc390_srb*
->  	else if (status == SAM_STAT_TASK_SET_FULL)
->  	{
->  	    scsi_track_queue_full(pcmd->device, pDCB->GoingSRBCnt - 1);
-> -	    scsi_sg_count(pcmd) = pSRB->SavedSGCount;
->  	    DEBUG0 (printk ("DC390: RETRY pid %li (%02x), target %02i-%02i\n", pcmd->pid, pcmd->cmnd[0], pcmd->device->id, pcmd->device->lun));
->  	    pSRB->TotalXferredLen = 0;
->  	    SET_RES_DID(pcmd->result, DID_SOFT_ERROR);
-> diff --git a/drivers/scsi/tmscsim.h b/drivers/scsi/tmscsim.h
-> index c74c72a..77adc54 100644
-> --- a/drivers/scsi/tmscsim.h
-> +++ b/drivers/scsi/tmscsim.h
-> @@ -57,7 +57,6 @@ u8		SGcount;
-> 
->  u8		MsgCnt;
->  u8		EndMessage;
-> -u8		SavedSGCount;			
-> 
->  u8		MsgInBuf[6];
->  u8		MsgOutBuf[6];
-> -- 
-> 1.5.2.2.249.g45fd
-> 
+ The code is kept backward compatible with unconverted drivers
+ all the way up to the last patch. So it can be run and tested
+ with some drivers unconverted. Applying the last patch will
+ remove compatibility.
 
----
-Guennadi Liakhovetski
+ [patch 1/8] stex driver BROKEN
+   Once patch 2/8 is applied this driver will no longer compile.
+   So here I comment out some code. The maintainer of this driver
+   said that driver will be fixed soon enough in the proper manner.
+
+ [patch 2/8] Restrict scsi accessors access to read-only
+   This patch should be accepted now. Even into 2.6.23.
+   The rest of the patches are dependent on it.
+
+ [patch 3/8] libata-scsi don't set max_phys_segments higher than scsi-ml
+   Also this one is relevant now. But once scsi_sgtable is used sata
+   will stop working without this one.
+
+ [patch 4/8] RFC scsi-ml: scsi_sgtable implementation
+   This is the actual patch for review. Please see comments
+   inside and than fire away ...
+   (With old code so not to let diff make a mess)
+
+ [patch 5/8] Remove old code from scsi_lib.c
+   For easier viewing old code is removed in second patch
+
+ [patch 6/8] RFC scsi_error.c move to sg_table implementation
+   Logically belongs to 4/8. Kept separate for easier review.
+
+ [patch 7/8] sd.c and sr.c move to scsi_sgtable implementaion
+   And these too.
+
+ [patch 8/8] Remove compatibility with unconverted drivers
+   Once this patch is applied any unconverted files will not
+   compile.
+
+
+Free Life
+Boaz
+
