@@ -1,35 +1,39 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Thu, 5 Jul 2007 12:54:06 -0600
-Message-ID: <20070705185406.GA3527@parisc-linux.org>
-References: <20070702183917.GJ4501@austin.ibm.com> <20070705112838.2d8c959b.akpm@linux-foundation.org>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: [PATCH] stex: use resid for xfer len information
+Date: Thu, 5 Jul 2007 12:09:06 -0700
+Message-ID: <NONAMEBYIqAFoXu4S910000013c@nonameb.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47944 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759842AbXGESyI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 14:54:08 -0400
-Content-Disposition: inline
-In-Reply-To: <20070705112838.2d8c959b.akpm@linux-foundation.org>
+Received: from 67.111.72.3.ptr.us.xo.net ([67.111.72.3]:43084 "EHLO
+	nonameb.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758028AbXGETG3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 15:06:29 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Linas Vepstas <linas@austin.ibm.com>, James.Bottomley@steeleye.com, willy@debian.org, linux-scsi@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: "james.Bottomley" <james.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jul 05, 2007 at 11:28:38AM -0700, Andrew Morton wrote:
-> Well you've sent it a couple of times, and I've sent it in five more times
-> over the past year.  Once we were told "awaiting maintainer ack".
-> 
-> This situation is fairly stupid.  How about we make you the maintainer?
 
-Last time I looked at it, I still wasn't comfortable with it.  I'm going
-to look at it again.
+The original implementation in stex_ys_commands() is inappropriate.
+For xfer len information, we should use resid instead.
 
-I'm fairly sure Linas doesn't want to be the sym2 maintainer.  It's
-still an ugly pile of junk that needs cleaning up.
+Signed-off-by: Ed Lin <ed.lin@promise.com>
+---
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index adda296..72f6d80 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -719,8 +719,8 @@ static void stex_ys_commands(struct st_h
+ 
+ 	if (ccb->cmd->cmnd[0] == MGT_CMD &&
+ 		resp->scsi_status != SAM_STAT_CHECK_CONDITION) {
+-		scsi_bufflen(ccb->cmd) =
+-			le32_to_cpu(*(__le32 *)&resp->variable[0]);
++		scsi_set_resid(ccb->cmd, scsi_bufflen(ccb->cmd) -
++			le32_to_cpu(*(__le32 *)&resp->variable[0]));
+ 		return;
+ 	}
+ 
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
