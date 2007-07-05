@@ -1,16 +1,16 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [patch 1/3] SCSI: osst: remove gendisk from private data struct
-Date: Thu, 5 Jul 2007 14:06:48 -0700
-Message-ID: <20070705140648.2c55c67e.kristen.c.accardi@intel.com>
+Subject: [patch 2/3] SCSI: sr: remove gendisk from private data struct
+Date: Thu, 5 Jul 2007 14:07:03 -0700
+Message-ID: <20070705140703.a77d9f54.kristen.c.accardi@intel.com>
 References: <20070705205548.731821111@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:9974 "EHLO mga02.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:43767 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762890AbXGEVKG convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 17:10:06 -0400
+	id S1762948AbXGEVKV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jul 2007 17:10:21 -0400
 In-Reply-To: <20070705205548.731821111@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,66 +21,95 @@ Since gendisk is now part of scsi_device, don't store this struct
 in private data struct
 
 Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Index: 2.6-git/drivers/scsi/osst.c
-===================================================================
---- 2.6-git.orig/drivers/scsi/osst.c
-+++ 2.6-git/drivers/scsi/osst.c
-@@ -191,7 +191,7 @@ static int osst_write_error_recovery(str
- 
- static inline char *tape_name(struct osst_tape *tape)
- {
--	return tape->drive->disk_name;
-+	return tape->device->disk->disk_name;
- }
- 
 
- /* Routines that handle the interaction with mid-layer SCSI routines */
-@@ -5803,7 +5803,6 @@ static int osst_probe(struct device *dev
- 	drive->private_data = &tpnt->driver;
- 	sprintf(drive->disk_name, "osst%d", dev_num);
- 	tpnt->driver = &osst_template;
--	tpnt->drive = drive;
- 	tpnt->in_use = 0;
- 	tpnt->capacity = 0xfffff;
- 	tpnt->dirty = 0;
-@@ -5885,6 +5884,8 @@ static int osst_probe(struct device *dev
- 			goto out_free_sysfs1;
+Index: 2.6-git/drivers/scsi/sr.c
+===================================================================
+--- 2.6-git.orig/drivers/scsi/sr.c
++++ 2.6-git/drivers/scsi/sr.c
+@@ -265,9 +265,9 @@ static void rw_intr(struct scsi_cmnd * S
+ 			 * last 75 2K sectors, we decrease the saved size
+ 			 * value.
+ 			 */
+-			if (error_sector < get_capacity(cd->disk) &&
++			if (error_sector < get_capacity(cd->device->disk) &&
+ 			    cd->capacity - error_sector < 4 * 75)
+-				set_capacity(cd->disk, error_sector);
++				set_capacity(cd->device->disk, error_sector);
+ 			break;
+ 
+ 		case RECOVERED_ERROR:
+@@ -302,7 +302,7 @@ static int sr_init_command(struct scsi_c
+ 	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
+ 
+ 	SCSI_LOG_HLQUEUE(1, printk("Doing sr request, dev = %s, block = %d\n",
+-				cd->disk->disk_name, block));
++				cd->device->disk->disk_name, block));
+ 
+ 	if (!cd->device || !scsi_device_online(cd->device)) {
+ 		SCSI_LOG_HLQUEUE(2, printk("Finishing %ld sectors\n",
+@@ -571,9 +571,7 @@ static int sr_probe(struct device *dev)
+ 	disk->flags = GENHD_FL_CD;
+ 
+ 	cd->device = sdev;
+-	cd->disk = disk;
+ 	cd->driver = &sr_template;
+-	cd->disk = disk;
+ 	cd->capacity = 0x1fffff;
+ 	cd->device->changed = 1;	/* force recheck CD type */
+ 	cd->use = 1;
+@@ -603,7 +601,10 @@ static int sr_probe(struct device *dev)
+ 
+ 	dev_set_drvdata(dev, cd);
+ 	disk->flags |= GENHD_FL_REMOVABLE;
++	if (sdev->media_change_notify)
++		disk->flags |= GENHD_FL_MEDIA_CHANGE_NOTIFY;
+ 	add_disk(disk);
++	sdev->disk = disk;
+ 
+ 	sdev_printk(KERN_DEBUG, sdev,
+ 		    "Attached scsi CD-ROM %s\n", cd->cdi.name);
+@@ -688,7 +689,7 @@ static void get_sectorsize(struct scsi_c
+ 		 * Add this so that we have the ability to correctly gauge
+ 		 * what the device is capable of.
+ 		 */
+-		set_capacity(cd->disk, cd->capacity);
++		set_capacity(cd->device->disk, cd->capacity);
  	}
  
-+	SDp->disk = drive;
-+
- 	sdev_printk(KERN_INFO, SDp,
- 		"osst :I: Attached OnStream %.5s tape as %s\n",
- 		SDp->model, tape_name(tpnt));
-@@ -5915,7 +5916,7 @@ static int osst_remove(struct device *de
- 			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i));
- 			osst_sysfs_destroy(MKDEV(OSST_MAJOR, i+128));
- 			tpnt->device = NULL;
--			put_disk(tpnt->drive);
-+			put_disk(tpnt->device->disk);
- 			os_scsi_tapes[i] = NULL;
- 			osst_nr_dev--;
- 			write_unlock(&os_scsi_tapes_lock);
-@@ -5988,7 +5989,7 @@ static void __exit exit_osst (void)
- 				normalize_buffer(STp->buffer);
- 				kfree(STp->buffer);
- 			}
--			put_disk(STp->drive);
-+			put_disk(STp->device->disk);
- 			kfree(STp);
- 		}
- 		kfree(os_scsi_tapes);
-Index: 2.6-git/drivers/scsi/osst.h
-===================================================================
---- 2.6-git.orig/drivers/scsi/osst.h
-+++ 2.6-git/drivers/scsi/osst.h
-@@ -623,7 +623,6 @@ struct osst_tape {
-   unsigned char last_cmnd[6];
-   unsigned char last_sense[16];
- #endif
--  struct gendisk *drive;
- } ;
+ 	queue = cd->device->request_queue;
+@@ -850,7 +851,7 @@ static int sr_packet(struct cdrom_device
+ static void sr_kref_release(struct kref *kref)
+ {
+ 	struct scsi_cd *cd = container_of(kref, struct scsi_cd, kref);
+-	struct gendisk *disk = cd->disk;
++	struct gendisk *disk = cd->device->disk;
  
- /* scsi tape command */
+ 	spin_lock(&sr_index_lock);
+ 	clear_bit(disk->first_minor, sr_index_bits);
+@@ -869,7 +870,7 @@ static int sr_remove(struct device *dev)
+ {
+ 	struct scsi_cd *cd = dev_get_drvdata(dev);
+ 
+-	del_gendisk(cd->disk);
++	del_gendisk(cd->device->disk);
+ 
+ 	mutex_lock(&sr_ref_mutex);
+ 	kref_put(&cd->kref, sr_kref_release);
+Index: 2.6-git/drivers/scsi/sr.h
+===================================================================
+--- 2.6-git.orig/drivers/scsi/sr.h
++++ 2.6-git/drivers/scsi/sr.h
+@@ -38,10 +38,9 @@ typedef struct scsi_cd {
+ 	unsigned readcd_known:1;	/* drive supports READ_CD (0xbe) */
+ 	unsigned readcd_cdda:1;	/* reading audio data using READ_CD */
+ 	struct cdrom_device_info cdi;
+-	/* We hold gendisk and scsi_device references on probe and use
++	/* We hold scsi_device references on probe and use
+ 	 * the refs on this kref to decide when to release them */
+ 	struct kref kref;
+-	struct gendisk *disk;
+ } Scsi_CD;
+ 
+ int sr_do_ioctl(Scsi_CD *, struct packet_command *);
 
 -- 
