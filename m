@@ -1,38 +1,53 @@
-From: "Seokmann Ju" <seokmann.ju@qlogic.com>
-Subject: RE: NPIV mapping problems (was Re: [PATCH 1/19] add data buffer accessors)
-Date: Thu, 5 Jul 2007 10:43:14 -0700
-Message-ID: <A6970E9A290F3F4682E1EAD0EA14F32B01293066@AVEXCH2.qlogic.org>
-References: <20070512182805L.fujita.tomonori@lab.ntt.co.jp><1178980728.3723.8.camel@mulgrave.il.steeleye.com><20070629132332.GB2648@plap.qlogic.org> <20070704172536N.fujita.tomonori@lab.ntt.co.jp>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
+Date: Thu, 5 Jul 2007 11:28:38 -0700
+Message-ID: <20070705112838.2d8c959b.akpm@linux-foundation.org>
+References: <20070702183917.GJ4501@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:49143 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757185AbXGERon convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 13:44:43 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070704172536N.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <20070702183917.GJ4501@austin.ibm.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, matthew@wil.cx, willy@debian.org, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, Paul Mackerras <paulus@samba.org>, linux-pci@atrey.karlin.mff.cuni.cz
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, hch@infradead.org, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
-On Wed, 2007-07-04 at 1:26 +0900, FUJITA Tomonori wrote:
-> On Fri, 29 Jun 2007 06:23:32 -0700 Andrew Vasquez wrote:
-> > One possiblity (the least intrusive) would be to add a
-> > scsi_dma_map_with_device() function which takes the proper (LLD
-> > defined) 'struct device' as a parameter, as was originally 
-> proposed, 
-> > and have NPIV-aware drivers call that function during the 
-> mappings of 
-> > physical *and* virtual dma-mappings.
+On Mon, 2 Jul 2007 13:39:17 -0500
+linas@austin.ibm.com (Linas Vepstas) wrote:
+
 > 
-> It's ok. But if only NPIV-aware drivers need to handle this, 
-> would it be better to just use dma_map_sg instead of scsi_dma_map?
-I agree with you on the suggestion.
-A patch for NPIV support on qla2xxx module that includes this change
-will be followed.
+> Various PCI bus errors can be signaled by newer PCI controllers.  
+> This patch adds the PCI error recovery callbacks to the Symbios 
+> SCSI device driver.  The patch has been tested, and appears to 
+> work well.
+> 
 
-Seokmann
+yup, this is identical to -mm's
+pci-error-recovery-symbios-scsi-base-support.patch
+
+What is the status of
+ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.22-rc6/2.6.22-rc6-mm1/broken-out/pci-error-recovery-symbios-scsi-first-failure.patch?
+
+> 
+> ----
+> 
+> Hi,
+> 
+> This patch has been bouncing around for a long time, and has made
+> appearences in various -mm trees since 2.6.something-teen. However,
+> it has never made it into mainline, and I'm starting to get concerned
+> that it will miss 2.6.23 as well. 
+
+Well you've sent it a couple of times, and I've sent it in five more times
+over the past year.  Once we were told "awaiting maintainer ack".
+
+This situation is fairly stupid.  How about we make you the maintainer?
