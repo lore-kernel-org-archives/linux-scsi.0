@@ -1,43 +1,56 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC 1/8] stex driver BROKEN
-Date: Thu, 05 Jul 2007 16:43:24 +0300
-Message-ID: <468CF57C.60002@panasas.com>
+Subject: [RFC 2/8] Restrict scsi accessors access to read-only
+Date: Thu, 05 Jul 2007 16:43:29 +0300
+Message-ID: <468CF581.5050106@panasas.com>
 References: <468CDB3C.4060500@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27064 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27059 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756609AbXGENnq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 09:43:46 -0400
+	with ESMTP id S1757501AbXGENnt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 09:43:49 -0400
 In-Reply-To: <468CDB3C.4060500@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
-  I just comment out the code, but now user-mode is broken
-  what to do ??
+- Users of scsi_cmnd might not change sg_count bufflen or sglist.
+  So reflect that in code.
 ---
- drivers/scsi/stex.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ include/scsi/scsi_cmnd.h |   17 ++++++++++++++---
+ 1 files changed, 14 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index adda296..935e2a6 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -719,8 +719,8 @@ static void stex_ys_commands(struct st_hba *hba,
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 53e1705..aaf8282 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -138,9 +138,20 @@ extern void scsi_free_sgtable(struct scatterlist *, int);
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
  
- 	if (ccb->cmd->cmnd[0] == MGT_CMD &&
- 		resp->scsi_status != SAM_STAT_CHECK_CONDITION) {
--		scsi_bufflen(ccb->cmd) =
--			le32_to_cpu(*(__le32 *)&resp->variable[0]);
-+/*		scsi_bufflen(ccb->cmd) =
-+			le32_to_cpu(*(__le32 *)&resp->variable[0]);*/
- 		return;
- 	}
+-#define scsi_sg_count(cmd) ((cmd)->use_sg)
+-#define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
+-#define scsi_bufflen(cmd) ((cmd)->request_bufflen)
++static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
++{
++	return cmd->use_sg;
++}
++
++static inline struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
++{
++	return (struct scatterlist *)cmd->request_buffer;
++}
++
++static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
++{
++	return cmd->request_bufflen;
++}
  
+ static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
+ {
 -- 
 1.5.2.2.249.g45fd
 
