@@ -1,105 +1,59 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [RFC 8/8] Remove compatibility with unconverted drivers
-Date: Thu, 05 Jul 2007 16:44:11 +0300
-Message-ID: <468CF5AB.5090200@panasas.com>
-References: <468CDB3C.4060500@panasas.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Add Brownie 1200U3P to blacklist
+Date: Thu, 5 Jul 2007 08:57:50 -0600
+Message-ID: <20070705145750.GA20828@parisc-linux.org>
+References: <468D0281.2080300@unicaen.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27118 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758018AbXGENoc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 09:44:32 -0400
-In-Reply-To: <468CDB3C.4060500@panasas.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:52749 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756948AbXGEO5w (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jul 2007 10:57:52 -0400
+Content-Disposition: inline
+In-Reply-To: <468D0281.2080300@unicaen.fr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Adrien Corbi?re <adrien.corbiere@unicaen.fr>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org
 
+On Thu, Jul 05, 2007 at 04:38:57PM +0200, Adrien Corbi?re wrote:
+> You've helped me last year with a bogus scsi device
+> (http://www.spinics.net/lists/linux-scsi/msg08048.html). I'm going to
+> work on another campus of my university, and i get the same problem with
+> a different model. I've added the line:
+> 
+>         {"BROWNIE", "1200U3P", NULL, BLIST_NOREPORTLUN},
+> 
+> in the file linux-2.6.18/drivers/scsi/scsi_devinfo.c, and the device is
+> now working well too. Could you add this in the next kernel relaese
+> please ? Thanks in advance.
 
-   Old IO members are removed from struct scsi_cmnd
+Hi Adrien,
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Seems like a reasonable request.  James, could you apply this patch?
+
 ---
- drivers/scsi/scsi_error.c |   10 ----------
- drivers/scsi/scsi_lib.c   |   11 -----------
- include/scsi/scsi_cmnd.h  |    5 -----
- 3 files changed, 0 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 1105011..936dfd1 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -654,11 +654,6 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 		scmd->sgtable = NULL;
- 	}
- 
--	/*FIXME: make code backward compatible with old system */
--	cmd->request_buffer = scsi_sglist(scmd);
--	cmd->request_bufflen = scsi_bufflen(scmd);
--	cmd->use_sg = scsi_sg_count(scmd);
--
- 	scmd->underflow = 0;
- 	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
- 
-@@ -725,11 +720,6 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 	scmd->cmd_len = old_cmd_len;
- 	scmd->result = old_result;
- 
--	/*FIXME: make code backward compatible with old system */
--	cmd->request_buffer = scsi_sglist(scmd);
--	cmd->request_bufflen = scsi_bufflen(scmd);
--	cmd->use_sg = scsi_sg_count(scmd);
--
- 	return rtn;
- }
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 56829bf..dcd8826 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -756,11 +756,6 @@ static void scsi_release_buffers(struct scsi_cmnd *cmd)
- 		_scsi_free_sgtable(cmd->sgtable);
- 
- 	cmd->sgtable = NULL;
--
--	/*FIXME: make code backward compatible with old system */
--	cmd->request_buffer = NULL;
--	cmd->request_bufflen = 0;
--	cmd->use_sg = 0;
- }
- 
- /*
-@@ -994,12 +989,6 @@ static int scsi_init_io(struct scsi_cmnd *cmd)
- 	count = blk_rq_map_sg(req->q, req, sgt->sglist);
- 	if (likely(count <= sgt->sg_count)) {
- 		sgt->sg_count = count;
--		
--		/*FIXME: make code backward compatible with old system */
--		cmd->request_buffer = sgt->sglist;
--		cmd->request_bufflen = sgt->length;
--		cmd->use_sg = sgt->sg_count;
--
- 		return BLKPREP_OK;
- 	}
- 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 4b87c0f..c13d47f 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -119,11 +119,6 @@ struct scsi_cmnd {
- 
- 	unsigned char tag;	/* SCSI-II queued command tag */
- 	unsigned long pid;	/* Process ID, starts at 0. Unique per host. */
--
--	unsigned short __deprecated use_sg;
--	unsigned __deprecated request_bufflen;
--	void __deprecated *request_buffer;
--	int __deprecated resid;
- };
- 
- extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
+The Brownie 1200U3P has the same problem with REPORT LUNS as the
+1600U3P.  Add it to the blacklist.
+
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 18dd5cc..19c44f0 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -128,6 +128,7 @@ static struct {
+ 	{"ADAPTEC", "Adaptec 5400S", NULL, BLIST_FORCELUN},
+ 	{"AFT PRO", "-IX CF", "0.0>", BLIST_FORCELUN},
+ 	{"BELKIN", "USB 2 HS-CF", "1.95",  BLIST_FORCELUN | BLIST_INQUIRY_36},
++	{"BROWNIE", "1200U3P", NULL, BLIST_NOREPORTLUN},
+ 	{"BROWNIE", "1600U3P", NULL, BLIST_NOREPORTLUN},
+ 	{"CANON", "IPUBJD", NULL, BLIST_SPARSELUN},
+ 	{"CBOX3", "USB Storage-SMC", "300A", BLIST_FORCELUN | BLIST_INQUIRY_36},
+
 -- 
-1.5.2.2.249.g45fd
-
-
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
