@@ -1,39 +1,33 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Is it time to kill ide-scsi.c?
-Date: Thu, 05 Jul 2007 19:50:00 -0400
-Message-ID: <468D83A8.2060804@garzik.org>
-References: <468BBCC0.3010007@panasas.com>
+Subject: Re: [patch 3/4] Enable link power management for ata drivers
+Date: Thu, 05 Jul 2007 20:00:47 -0400
+Message-ID: <468D862F.2030604@garzik.org>
+References: <20070705194909.337398431@intel.com>	<20070705130530.5873afeb.kristen.c.accardi@intel.com> <20070705153334.08402809.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51978 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:52108 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758028AbXGEXuI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 5 Jul 2007 19:50:08 -0400
-In-Reply-To: <468BBCC0.3010007@panasas.com>
+	id S1752567AbXGFAAw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 5 Jul 2007 20:00:52 -0400
+In-Reply-To: <20070705153334.08402809.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
 
-Boaz Harrosh wrote:
->  I have attempted (below) to convert ide-scsi to the new data
->  accessors and cleanup the !use_sg code paths. Inspecting
->  the code I can see places that still assume scsi_cmnd->request_buffer
->  is a linear char pointer. Though I admit this assumption is hidden
->  behind a flag "test_bit(PC_TRANSFORM, &pc->flags)". Is this an indication
->  that this drivers no longer works? What is needed in order to kill this
->  driver? If no killing is done than please accepted below patch.
+Andrew Morton wrote:
+> On Thu, 5 Jul 2007 13:05:30 -0700
+> Kristen Carlson Accardi <kristen.c.accardi@intel.com> wrote:
 > 
->  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/ide-scsi.c |   48 ++++++++++++++++++++++++++++------------------
->  1 files changed, 29 insertions(+), 19 deletions(-)
+>> +	ATA_DFLAG_IPM		= (1 << 6), /* device supports interface PM */
+>>  	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+> 
+> I had to bump this to (1<<7), so we've run out.
 
-This is a very popular driver for some configurations.  I know many 
-people that used this for their ATAPI driver, rather than 
-ide-{cdrom,floppy,...}
+You can shuffle the numbers a bit, as long as the masks (*_MASK) stay 
+correct for their purpose
 
 	Jeff
 
