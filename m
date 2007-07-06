@@ -1,31 +1,40 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 3/4] Enable link power management for ata drivers
-Date: Thu, 5 Jul 2007 17:17:35 -0700
-Message-ID: <20070705171735.134fe77f.akpm@linux-foundation.org>
-References: <20070705194909.337398431@intel.com>
-	<20070705130530.5873afeb.kristen.c.accardi@intel.com>
-	<20070705153334.08402809.akpm@linux-foundation.org>
-	<20070705153718.3aaf8ea5.akpm@linux-foundation.org>
-	<468D8680.1090005@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 0/3] clean gendisk out of scsi ULD structs
+Date: Fri, 06 Jul 2007 15:02:49 -0500
+Message-ID: <1183752169.3448.93.camel@localhost.localdomain>
+References: <20070705140636.6dbabd6f.kristen.c.accardi@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <468D8680.1090005@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:55517 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760277AbXGFUCw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jul 2007 16:02:52 -0400
+In-Reply-To: <20070705140636.6dbabd6f.kristen.c.accardi@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: akpm@linux-foundation.org, jeff@garzik.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, 05 Jul 2007 20:02:08 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+On Thu, 2007-07-05 at 14:06 -0700, Kristen Carlson Accardi wrote:
+> Since gendisk will now become part of struct scsi_device, we don't need
+> to store this value in any private data structs where they already store
+> scsi_device.  This series cleans up a few drivers which did this.
 
-> May I assume that I may delete the patches from Kristen, and assume that 
-> you will resend an updated version of her AN and ALPM patches to me?
-> 
+Actually, as Al pointed out, we do have lifetime rules issues with doing
+this.  The problem is that gendisk itself always has a shorter lifetime
+than scsi_device (not much shorter, usually, but if you execute a legal
+ULD unbind manoeuvre you'll end up with a dangling gendisk pointer).
 
-Sure.  But I have a sneaking feeling that Kristen sneaks sneaky fixes into
-her patches without telling me, so I won't be 100% confident about their
-uptodateness (hint).
+The other problem with taking gendisk out of the ULD structure and
+putting it into the scsi_device is that for the sg driver, we have two
+of them (one for the attached ULD and one for the sg driver).
+
+The fundamental issue seems to be that the gendisk is the holder of all
+the other info (queue, ULD etc) not vice versa ... and this patch is
+trying to reverse that relationship.
+
+James
 
 
