@@ -1,73 +1,52 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: cdparanoia not setting count and/or reply_len properly
-Date: Sun, 08 Jul 2007 14:35:39 +0200
-Message-ID: <4690DA1B.3010901@s5r6.in-berlin.de>
-References: <20070708103928.GA20349@DervishD>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] Is it time to kill ide-scsi.c?
+Date: Sun, 08 Jul 2007 15:39:02 +0300
+Message-ID: <4690DAE6.8040404@panasas.com>
+References: <468BBCC0.3010007@panasas.com> <468D83A8.2060804@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:37564 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750728AbXGHMfn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jul 2007 08:35:43 -0400
-In-Reply-To: <20070708103928.GA20349@DervishD>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:4651 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751022AbXGHMj1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jul 2007 08:39:27 -0400
+In-Reply-To: <468D83A8.2060804@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: DervishD <lkml@dervishd.net>
-Cc: Linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-DervishD wrote at lkml:
->     Hi all :)
->=20
->     I know, this has been treated on the list before (year 2005) but
-> without any real solution I'm aware of.
->=20
->     I'm running kernel 2.6.20.14, and I have an ATAPI DVD writer that=
- I
-> use with an IDE-to-USB adapter, so it appears as an SCSI drive to the
-> kernel.
->=20
->     Anytime I rip anything with it, the log fills with the same messa=
-ge:
-> some numbers about a certain number of bytes and the old friend messa=
-ge
-> that I've put in the subject.
->=20
->     I assume that the warning makes sense, but the fact is that my lo=
-g
-> is full with the same message, the ripping is correct (so cdparanoia =
-is
-> working OK WRT ripping) and if weren't for the printk_ratelimit, the
-> system will freeze.
->=20
->     I don't know if cdparanoia should be fixed, but certainly the
-> warning could be issued only if CONFIG_SCSI_VERBOSE is set. This way =
-you
-> will have the message if something goes wrong and you want more info,
-> but in cases where the warning is harmless your log will be clean...
->=20
->     Anyway, this message is not for make suggestions, but for asking =
-for
-> information: why is this warning happening? naugthy cdparanoia? naugh=
-ty
-> kernel? I'm a bit confused and I want to use my external DVD drive fo=
-r
-> ripping from time to time, to "exercise" it...
->=20
->     Thanks a lot in advance :)
->=20
->     Ra=FAl N=FA=F1ez de Arenas Coronado
->=20
+Jeff Garzik wrote:
+> Boaz Harrosh wrote:
+>>  I have attempted (below) to convert ide-scsi to the new data
+>>  accessors and cleanup the !use_sg code paths. Inspecting
+>>  the code I can see places that still assume scsi_cmnd->request_buffer
+>>  is a linear char pointer. Though I admit this assumption is hidden
+>>  behind a flag "test_bit(PC_TRANSFORM, &pc->flags)". Is this an indication
+>>  that this drivers no longer works? What is needed in order to kill this
+>>  driver? If no killing is done than please accepted below patch.
+>>
+>>  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>> ---
+>>  drivers/scsi/ide-scsi.c |   48 ++++++++++++++++++++++++++++------------------
+>>  1 files changed, 29 insertions(+), 19 deletions(-)
+> 
+> This is a very popular driver for some configurations.  I know many 
+> people that used this for their ATAPI driver, rather than 
+> ide-{cdrom,floppy,...}
+> 
+> 	Jeff
+> 
+> 
+> 
+Two questions than
+1. All these users, don't they have a new solution with PATA drivers
+or that is only for new HW/chipsets?
 
-This question is better asked at lsml.  (Therefore I'm quoting in full.=
-)
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D=3D=3D -=3D---
-http://arcgraph.de/sr/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2. Do you know who is the maintainer of this driver? Because if it is
+still needed, than my patch must be accepted. And I think my added BUG()
+only does it good.
+
+Thanks
+Boaz
