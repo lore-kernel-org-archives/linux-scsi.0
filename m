@@ -1,131 +1,131 @@
-From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [patch 17/17] use mutex instead of semaphore in Megaraid Mailbox driver
-Date: Mon, 9 Jul 2007 13:26:15 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229B88DDC@NAMAIL2.ad.lsil.com>
-References: <200707091900.l69J0CLM002562@imap1.linux-foundation.org>
+From: David C Somayajulu <david.somayajulu@qlogic.com>
+Subject: Re: [PATCH] qla4xxx: Fix underrun/overrun conditions
+Date: Mon, 09 Jul 2007 12:44:36 -0700
+Message-ID: <1184010276.18914.4.camel@q-iscsi-upstream.site>
+References: <1181156124.5728.4.camel@q-iscsi-upstream.site>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:34245 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755109AbXGIT07 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2007 15:26:59 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <200707091900.l69J0CLM002562@imap1.linux-foundation.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:27788 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753964AbXGITom (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2007 15:44:42 -0400
+In-Reply-To: <1181156124.5728.4.camel@q-iscsi-upstream.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, matthias.kaehlcke@gmail.com
+To: linux-scsi@vger.kernel.org
+Cc: David Wagner <david.wagner@qlogic.com>, Mike Christie <michaelc@cs.wisc.edu>
 
-Ack.
+On Wed, 2007-06-06 at 11:55 -0700, David C Somayajulu wrote:
+> This patch fixes the code handling underrun and overrun conditions.
+Fix coding style as per Mike Christie's advice.
 
---Sumant
+Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
 
------Original Message-----
-From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
-Sent: Monday, July 09, 2007 12:00 PM
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org;
-matthias.kaehlcke@gmail.com; Patro, Sumant
-Subject: [patch 17/17] use mutex instead of semaphore in Megaraid
-Mailbox driver
+ drivers/scsi/qla4xxx/ql4_isr.c     |   57 ++++++++++++++++++++----------------
+ drivers/scsi/qla4xxx/ql4_version.h |    2 +-
+ 2 files changed, 33 insertions(+), 26 deletions(-)
 
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-
-The Megaraid Mailbox driver uses a semaphore as mutex.  Use the mutex
-API
-instead of the (binary) semaphore.
-
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/megaraid/mega_common.h   |    1 +
- drivers/scsi/megaraid/megaraid_mbox.c |    6 +++---
- drivers/scsi/megaraid/megaraid_mbox.h |    4 ++--
- 3 files changed, 6 insertions(+), 5 deletions(-)
-
-diff -puN
-drivers/scsi/megaraid/mega_common.h~use-mutex-instead-of-semaphore-in-me
-garaid-mailbox-driver drivers/scsi/megaraid/mega_common.h
----
-a/drivers/scsi/megaraid/mega_common.h~use-mutex-instead-of-semaphore-in-
-megaraid-mailbox-driver
-+++ a/drivers/scsi/megaraid/mega_common.h
-@@ -21,6 +21,7 @@
- #include <linux/types.h>
- #include <linux/pci.h>
- #include <linux/spinlock.h>
-+#include <linux/mutex.h>
- #include <linux/interrupt.h>
- #include <linux/delay.h>
- #include <linux/blkdev.h>
-diff -puN
-drivers/scsi/megaraid/megaraid_mbox.c~use-mutex-instead-of-semaphore-in-
-megaraid-mailbox-driver drivers/scsi/megaraid/megaraid_mbox.c
----
-a/drivers/scsi/megaraid/megaraid_mbox.c~use-mutex-instead-of-semaphore-i
-n-megaraid-mailbox-driver
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3880,7 +3880,7 @@ megaraid_sysfs_alloc_resources(adapter_t
- 		megaraid_sysfs_free_resources(adapter);
- 	}
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index b47bd85..fa8a477 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -93,9 +93,29 @@ static void qla4xxx_status_entry(struct
+ 			break;
+ 		}
  
--	sema_init(&raid_dev->sysfs_sem, 1);
-+	mutex_init(&raid_dev->sysfs_mtx);
+-		if (sts_entry->iscsiFlags &
+-		    (ISCSI_FLAG_RESIDUAL_OVER|ISCSI_FLAG_RESIDUAL_UNDER))
++		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
++			cmd->result = DID_ERROR << 16;
++			break;
++		}
++
++		if (sts_entry->iscsiFlags &ISCSI_FLAG_RESIDUAL_UNDER) {
+ 			scsi_set_resid(cmd, residual);
++			if (!scsi_status && ((scsi_bufflen(cmd) - residual) <
++				cmd->underflow)) {
++
++				cmd->result = DID_ERROR << 16;
++
++				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
++					"Mid-layer Data underrun0, "
++					"xferlen = 0x%x, "
++					"residual = 0x%x\n", ha->host_no,
++					cmd->device->channel,
++					cmd->device->id,
++					cmd->device->lun, __func__,
++					scsi_bufflen(cmd), residual));
++				break;
++			}
++		}
  
- 	init_waitqueue_head(&raid_dev->sysfs_wait_q);
+ 		cmd->result = DID_OK << 16 | scsi_status;
  
-@@ -3981,7 +3981,7 @@ megaraid_sysfs_get_ldmap(adapter_t *adap
- 	/*
- 	 * Allow only one read at a time to go through the sysfs
-attributes
- 	 */
--	down(&raid_dev->sysfs_sem);
-+	mutex_lock(&raid_dev->sysfs_mtx);
+@@ -164,7 +184,8 @@ static void qla4xxx_status_entry(struct
  
- 	uioc	= raid_dev->sysfs_uioc;
- 	mbox64	= raid_dev->sysfs_mbox64;
-@@ -4057,7 +4057,7 @@ megaraid_sysfs_get_ldmap(adapter_t *adap
+ 	case SCS_DATA_UNDERRUN:
+ 	case SCS_DATA_OVERRUN:
+-		if (sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) {
++		if ((sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_OVER) ||
++			(sts_entry->completionStatus == SCS_DATA_OVERRUN)) {
+ 			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: " "Data overrun, "
+ 				      "residual = 0x%x\n", ha->host_no,
+ 				      cmd->device->channel, cmd->device->id,
+@@ -174,21 +195,7 @@ static void qla4xxx_status_entry(struct
+ 			break;
+ 		}
  
- 	del_timer_sync(timerp);
+-		if ((sts_entry->iscsiFlags & ISCSI_FLAG_RESIDUAL_UNDER) == 0) {
+-			/*
+-			 * Firmware detected a SCSI transport underrun
+-			 * condition
+-			 */
+-			scsi_set_resid(cmd, residual);
+-			DEBUG2(printk("scsi%ld:%d:%d:%d: %s: UNDERRUN status "
+-				      "detected, xferlen = 0x%x, residual = "
+-				      "0x%x\n",
+-				      ha->host_no, cmd->device->channel,
+-				      cmd->device->id,
+-				      cmd->device->lun, __func__,
+-				      scsi_bufflen(cmd),
+-				      residual));
+-		}
++		scsi_set_resid(cmd, residual);
  
--	up(&raid_dev->sysfs_sem);
-+	mutex_unlock(&raid_dev->sysfs_mtx);
+ 		/*
+ 		 * If there is scsi_status, it takes precedense over
+@@ -245,13 +252,13 @@ static void qla4xxx_status_entry(struct
+ 				 * will return DID_ERROR.
+ 				 */
+ 				DEBUG2(printk("scsi%ld:%d:%d:%d: %s: "
+-					      "Mid-layer Data underrun, "
+-					      "xferlen = 0x%x, "
+-					      "residual = 0x%x\n", ha->host_no,
+-					      cmd->device->channel,
+-					      cmd->device->id,
+-					      cmd->device->lun, __func__,
+-					      scsi_bufflen(cmd), residual));
++					"Mid-layer Data underrun1, "
++					"xferlen = 0x%x, "
++					"residual = 0x%x\n", ha->host_no,
++					cmd->device->channel,
++					cmd->device->id,
++					cmd->device->lun, __func__,
++					scsi_bufflen(cmd), residual));
  
- 	return rval;
- }
-diff -puN
-drivers/scsi/megaraid/megaraid_mbox.h~use-mutex-instead-of-semaphore-in-
-megaraid-mailbox-driver drivers/scsi/megaraid/megaraid_mbox.h
----
-a/drivers/scsi/megaraid/megaraid_mbox.h~use-mutex-instead-of-semaphore-i
-n-megaraid-mailbox-driver
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -168,7 +168,7 @@ typedef struct {
-  * @hw_error			: set if FW not responding
-  * @fast_load			: If set, skip physical device scanning
-  * @channel_class		: channel class, RAID or SCSI
-- * @sysfs_sem			: semaphore to serialize access to sysfs
-res.
-+ * @sysfs_mtx			: mutex to serialize access to sysfs
-res.
-  * @sysfs_uioc			: management packet to issue FW calls
-from sysfs
-  * @sysfs_mbox64		: mailbox packet to issue FW calls from
-sysfs
-  * @sysfs_buffer		: data buffer for FW commands issued
-from sysfs
-@@ -208,7 +208,7 @@ typedef struct {
- 	int				hw_error;
- 	int				fast_load;
- 	uint8_t				channel_class;
--	struct semaphore		sysfs_sem;
-+	struct mutex			sysfs_mtx;
- 	uioc_t				*sysfs_uioc;
- 	mbox64_t			*sysfs_mbox64;
- 	caddr_t				sysfs_buffer;
-_
+ 				cmd->result = DID_ERROR << 16;
+ 			} else {
+diff --git a/drivers/scsi/qla4xxx/ql4_version.h b/drivers/scsi/qla4xxx/ql4_version.h
+index 2149069..ab984cb 100644
+--- a/drivers/scsi/qla4xxx/ql4_version.h
++++ b/drivers/scsi/qla4xxx/ql4_version.h
+@@ -5,5 +5,5 @@
+  * See LICENSE.qla4xxx for copyright and licensing details.
+  */
+ 
+-#define QLA4XXX_DRIVER_VERSION	"5.01.00-k7"
++#define QLA4XXX_DRIVER_VERSION	"5.01.00-k8"
+ 
+
