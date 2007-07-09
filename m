@@ -1,70 +1,46 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: Some NCQ numbers...
-Date: Thu, 05 Jul 2007 15:00:38 -0400
-Message-ID: <468D3FD6.7060607@tmr.com>
-References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com> <468AB1A7.9010201@msgid.tls.msk.ru> <468AF5BB.10005@gmail.com> <468B6BD7.9010108@msgid.tls.msk.ru> <Pine.LNX.4.64.0707040621170.32656@p34.internal.lan> <Pine.LNX.4.64.0707040631370.32656@p34.internal.lan>
+From: DervishD <lkml@dervishd.net>
+Subject: Re: cdparanoia not setting count and/or reply_len properly
+Date: Mon, 9 Jul 2007 13:25:36 +0200
+Message-ID: <20070709112536.GA3015@DervishD>
+References: <20070708103928.GA20349@DervishD> <4690DA1B.3010901@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.64.0707040631370.32656@p34.internal.lan>
-Sender: linux-ide-owner@vger.kernel.org
-To: Justin Piszcz <jpiszcz@lucidpixels.com>
-Cc: Michael Tokarev <mjt@tls.msk.ru>, Tejun Heo <htejun@gmail.com>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757143AbXGILZz@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4690DA1B.3010901@s5r6.in-berlin.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Justin Piszcz wrote:
-> 
-> 
-> On Wed, 4 Jul 2007, Justin Piszcz wrote:
-> 
->> On Wed, 4 Jul 2007, Michael Tokarev wrote:
->>
->> > Tejun Heo wrote:
->> >> Hello,
->> >>
->> >> Michael Tokarev wrote:
->> >>> Well.  It looks like the results does not depend on the
->> >>> elevator.  Originally I tried with deadline, and just
->> >>> re-ran the test with noop (hence the long delay with
->> >>> the answer) - changing linux elevator changes almost
->> >>> nothing in the results - modulo some random "fluctuations".
->> >>
->> >> I see.  Thanks for testing.
->> >
->> > Here are actual results - the tests were still running when
->> > I replied yesterday.
->> >
->> > Again, this is Seagate ST3250620AS "desktop" drive, 7200RPM,
->> > 16Mb cache, 250Gb capacity.  The tests were performed with
->> > queue depth = 64 (on mptsas), drive write cache is turned
->> > off.
->>
->> I found AS scheduler to be the premium and best for single-user 
->> performance.
->>
->> You want speed? Use AS.
->>
->> http://home.comcast.net/~jpiszcz/sched/cfq_vs_as_vs_deadline_vs_noop.html
->>
->>
-> 
-> Does not include noop-- tested the main three though, renamed :)
-> 
-> http://home.comcast.net/~jpiszcz/sched/cfq_vs_as_vs_deadline.html
-> 
-> And for the archives:
-> 
-> p34-cfq,15696M,77114.3,99,311683,55.3333,184947,38.6667,79842.7,99,524065,41.3333,634.033,0.333333,16:100000:16/64,1043.33,8.33333,4419.33,11.6667,2942,17.3333,1178,10.3333,4192.67,12.3333,2619.33,19 
-> 
-> p34-as,15696M,76202.3,99,443103,85,189716,34.6667,79552,99,507271,39.6667,607.067,0,16:100000:16/64,1153,10,13434,36,2769.67,16.3333,1201.67,10.6667,3951.33,12,2665.67,19 
-> 
-> p34-deadline,15696M,76933.3,98.6667,386852,72,183016,29.6667,79530.7,99,512082,39.6667,678.567,0,16:100000:16/64,1230.33,10.3333,12349,32.3333,2945,17.3333,1258,11,8183,22.3333,2867,20.3333 
-> 
-I looked at these before, did you really run with a chunk size of just 
-under 16GB, or does "15696M" have some inobvious meaning?
+    Hi Stefan :)
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+ * Stefan Richter <stefanr@s5r6.in-berlin.de> dixit:
+> >     I don't know if cdparanoia should be fixed, but certainly the
+> > warning could be issued only if CONFIG_SCSI_VERBOSE is set. This wa=
+y you
+> > will have the message if something goes wrong and you want more inf=
+o,
+> > but in cases where the warning is harmless your log will be clean..=
+=2E
+> >=20
+> >     Anyway, this message is not for make suggestions, but for askin=
+g for
+> > information: why is this warning happening? naugthy cdparanoia? nau=
+ghty
+> > kernel? I'm a bit confused and I want to use my external DVD drive =
+for
+> > ripping from time to time, to "exercise" it...
+>=20
+> This question is better asked at lsml.  (Therefore I'm quoting in ful=
+l.)
+
+    First time I hear about that list, sorry O:))) Thanks a lot for
+forwarding, Stefan :)
+
+    Ra=FAl N=FA=F1ez de Arenas Coronado
+
+--=20
+Linux Registered User 88736 | http://www.dervishd.net
+It's my PC and I'll cry if I want to... RAmen!
