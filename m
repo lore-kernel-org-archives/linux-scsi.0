@@ -1,116 +1,165 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: cdparanoia not setting count and/or reply_len properly
-Date: Sun, 08 Jul 2007 23:35:06 -0400
-Message-ID: <4691ACEA.8000607@torque.net>
-References: <20070708103928.GA20349@DervishD> <4690DA1B.3010901@s5r6.in-berlin.de>
-Reply-To: dougg@torque.net
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Mon, 09 Jul 2007 12:52:11 +0900
+Message-ID: <20070709125211U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759459AbXGIDfy@vger.kernel.org>
-In-Reply-To: <4690DA1B.3010901@s5r6.in-berlin.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: DervishD <lkml@dervishd.net>, Linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:60500 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758631AbXGIDwo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 8 Jul 2007 23:52:44 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, dougg@torque.net, Eric.Moore@lsi.com, jens.axboe@oracle.com
 
-Stefan Richter wrote:
-> DervishD wrote at lkml:
->>     Hi all :)
->>
->>     I know, this has been treated on the list before (year 2005) but
->> without any real solution I'm aware of.
->>
->>     I'm running kernel 2.6.20.14, and I have an ATAPI DVD writer tha=
-t I
->> use with an IDE-to-USB adapter, so it appears as an SCSI drive to th=
-e
->> kernel.
->>
->>     Anytime I rip anything with it, the log fills with the same mess=
-age:
->> some numbers about a certain number of bytes and the old friend mess=
-age
->> that I've put in the subject.
->>
->>     I assume that the warning makes sense, but the fact is that my l=
-og
->> is full with the same message, the ripping is correct (so cdparanoia=
- is
->> working OK WRT ripping) and if weren't for the printk_ratelimit, the
->> system will freeze.
->>
->>     I don't know if cdparanoia should be fixed, but certainly the
->> warning could be issued only if CONFIG_SCSI_VERBOSE is set. This way=
- you
->> will have the message if something goes wrong and you want more info=
-,
->> but in cases where the warning is harmless your log will be clean...
->>
->>     Anyway, this message is not for make suggestions, but for asking=
- for
->> information: why is this warning happening? naugthy cdparanoia? naug=
-hty
->> kernel? I'm a bit confused and I want to use my external DVD drive f=
-or
->> ripping from time to time, to "exercise" it...
->>
->>     Thanks a lot in advance :)
->>
->>     Ra=FAl N=FA=F1ez de Arenas Coronado
->>
->=20
-> This question is better asked at lsml.  (Therefore I'm quoting in ful=
-l.)
+This patch adds support for SAS Management Protocol (SMP) passthrough
+support via bsg.
 
-In Fedora 7 I see this:
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/message/fusion/mptsas.c |  121 +++++++++++++++++++++++++++++++++++++++
+ 1 files changed, 121 insertions(+), 0 deletions(-)
 
-# cdparanoia --version
-cdparanoia III release 9.8 (March 23, 2001)
-(C) 2001 Monty <monty@xiph.org> and Xiphophorus
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index 1d2d03f..e5645ad 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1327,11 +1327,132 @@ mptsas_get_bay_identifier(struct sas_rphy *rphy)
+ 	return rc;
+ }
+ 
++static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
++			      struct request *req)
++{
++	MPT_ADAPTER *ioc = ((MPT_SCSI_HOST *) shost->hostdata)->ioc;
++	MPT_FRAME_HDR *mf;
++	SmpPassthroughRequest_t *smpreq;
++	SmpPassthroughReply_t *smprep;
++	struct request *rsp = req->next_rq;
++	int ret, flagsLength;
++	unsigned long timeleft;
++	char *psge;
++	dma_addr_t dma_addr_in, dma_addr_out;
++
++	if (!rsp) {
++		printk("%s: the smp response space is missing\n", __FUNCTION__);
++		return -EINVAL;
++	}
++
++	/* do we need to support multiple segments? */
++	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
++		printk("%s: multiple segments req %u %u, rsp %u %u\n",
++		       __FUNCTION__, req->bio->bi_vcnt, req->data_len,
++		       rsp->bio->bi_vcnt, rsp->data_len);
++		return -EINVAL;
++	}
++
++	/* can we use this? */
++	ret = mutex_lock_interruptible(&ioc->sas_mgmt.mutex);
++	if (ret)
++		goto out;
++
++	mf = mpt_get_msg_frame(mptsasMgmtCtx, ioc);
++	if (!mf) {
++		ret = -ENOMEM;
++		goto out_unlock;
++	}
++
++	smpreq = (SmpPassthroughRequest_t *)mf;
++	memset(smpreq, 0, sizeof(*smpreq));
++
++        smpreq->RequestDataLength = req->data_len - 4;
++        smpreq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
++
++	if (rphy)
++		memcpy(&smpreq->SASAddress, &rphy->identify.sas_address,
++		       sizeof(smpreq->SASAddress));
++	else {
++		struct mptsas_portinfo *port_info;
++
++		mutex_lock(&ioc->sas_topology_mutex);
++		port_info = mptsas_find_portinfo_by_handle(ioc, ioc->handle);
++		if (port_info && port_info->phy_info)
++			memcpy(&smpreq->SASAddress,
++			       &(port_info->phy_info[0].phy->identify.sas_address),
++			       sizeof(smpreq->SASAddress));
++		mutex_unlock(&ioc->sas_topology_mutex);
++	}
++
++	dma_addr_in = dma_addr_out = 0;
++
++	psge = (char *)(((int *) mf) + (offsetof(SmpPassthroughRequest_t, SGL) / 4));
++
++	/* request */
++	flagsLength = (MPI_SGE_FLAGS_SIMPLE_ELEMENT |
++		       MPI_SGE_FLAGS_END_OF_BUFFER |
++		       MPI_SGE_FLAGS_DIRECTION |
++		       mpt_addr_size()) << MPI_SGE_FLAGS_SHIFT;
++	flagsLength |= (rsp->data_len - 4);
++
++	dma_addr_out = pci_map_single(ioc->pcidev, bio_data(req->bio),
++				      req->data_len, PCI_DMA_BIDIRECTIONAL);
++	if (!dma_addr_out)
++		goto put_mf;
++	mpt_add_sge(psge, flagsLength, dma_addr_out);
++	psge += (sizeof(u32) + sizeof(dma_addr_t));
++
++	/* response */
++	flagsLength = MPT_SGE_FLAGS_SSIMPLE_READ;
++	flagsLength |= rsp->data_len + 4;
++	dma_addr_in =  pci_map_single(ioc->pcidev, bio_data(rsp->bio),
++				      rsp->data_len, PCI_DMA_BIDIRECTIONAL);
++	if (!dma_addr_in)
++		goto unmap;
++	mpt_add_sge(psge, flagsLength, dma_addr_in);
++
++	mpt_put_msg_frame(mptsasMgmtCtx, ioc, mf);
++
++	timeleft = wait_for_completion_timeout(&ioc->sas_mgmt.done, 10 * HZ);
++	if (!timeleft) {
++		printk("%s: smp timeout!\n", __FUNCTION__);
++		/* On timeout reset the board */
++		mpt_HardResetHandler(ioc, CAN_SLEEP);
++		ret = -ETIMEDOUT;
++		goto unmap;
++	}
++	mf = NULL;
++
++	/* a reply frame is expected */
++	if (!(ioc->sas_mgmt.status & MPT_IOCTL_STATUS_RF_VALID)) {
++		printk("%s: the smp response invalid!\n", __FUNCTION__);
++		ret = -ENXIO;
++	}
++
++	smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
++unmap:
++	if (dma_addr_out)
++		pci_unmap_single(ioc->pcidev, dma_addr_out, req->data_len,
++				 PCI_DMA_BIDIRECTIONAL);
++	if (dma_addr_in)
++		pci_unmap_single(ioc->pcidev, dma_addr_in, rsp->data_len,
++				 PCI_DMA_BIDIRECTIONAL);
++put_mf:
++	if (mf)
++		mpt_free_msg_frame(ioc, mf);
++out_unlock:
++	mutex_unlock(&ioc->sas_mgmt.mutex);
++out:
++	return ret;
++}
++
+ static struct sas_function_template mptsas_transport_functions = {
+ 	.get_linkerrors		= mptsas_get_linkerrors,
+ 	.get_enclosure_identifier = mptsas_get_enclosure_identifier,
+ 	.get_bay_identifier	= mptsas_get_bay_identifier,
+ 	.phy_reset		= mptsas_phy_reset,
++	.smp_handler		= mptsas_smp_handler,
+ };
+ 
+ static struct scsi_transport_template *mptsas_transport_template;
+-- 
+1.4.4.4
 
-Report bugs to paranoia@xiph.org
-http://www.xiph.org/paranoia/
-
-
-So, given that date, lk 2.4.2 was out but it was probably
-a bit early to start using the sg version 3 interface
-which first appeared in lk 2.4.1 . So that "lets annoy
-the user" message was added by someone who got burnt by
-the old sg version 2 interface and decided people needed
-to be warned. The warning comes from this code is sg.c :
-
-        /*
-         * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFER_=
-=46ROM_DEV,
-         * but is is possible that the app intended SG_DXFER_TO_DEV, be=
-cause the
-re
-         * is a non-zero input_size, so emit a warning.
-         */
-        if (hp->dxfer_direction =3D=3D SG_DXFER_TO_FROM_DEV)
-                if (printk_ratelimit())
-                        printk(KERN_WARNING
-                               "sg_write: data in/out %d/%d bytes for S=
-CSI comma
-nd 0x%x--"
-                               "guessing data in;\n" KERN_WARNING "   "
-                               "program %s not setting count and/or rep=
-ly_len pr
-operly\n",
-                               old_hdr.reply_len - (int)SZ_SG_HEADER,
-                               input_size, (unsigned int) cmnd[0],
-                               current->comm);
-
-That code wasn't written be me and I would gladly remove it.
-=46or anyone who has read the sg driver documentation,
-SG_DXFER_TO_FROM_DEV implies a _read_ from the device. The
-reason SG_DXFER_TO_FROM_DEV exists is for backward
-compatibility to the sg version 1 interface. It was a hack to
-get around the fact that the SCSI subsystem didn't report short
-reads (what folks should use 'resid' for) back in those days.
-
-
-It is probably about time that cdparanoia was updated ...
-
-Doug Gilbert
