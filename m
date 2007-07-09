@@ -1,42 +1,77 @@
-From: Bill Davidsen <davidsen@tmr.com>
-Subject: Re: [patch 0/4] SATA power savings patches (ALPM)
-Date: Mon, 09 Jul 2007 14:00:51 -0400
-Message-ID: <469277D3.2020403@tmr.com>
-References: <20070705130357.1c172b80.kristen.c.accardi@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070705130357.1c172b80.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Cc: jeff@garzik.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+From: akpm@linux-foundation.org
+Subject: [patch 01/17] aacraid: rename check_reset
+Date: Mon, 09 Jul 2007 11:59:58 -0700
+Message-ID: <200707091859.l69Ixwlk002482@imap1.linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38047 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754578AbXGITAj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2007 15:00:39 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, James.Bottomley@steeleye.com, aacraid@adaptec.com
 
-Kristen Carlson Accardi wrote:
-> Hi Jeff,
-> Here's the most recent patches for ALPM.  These are also located at:
-> http://www.kernel.org/pub/linux/kernel/people/kristen/patches/SATA/alpm
-> 
-> These patches implement Aggressive Link Power management for AHCI 
-> controllers.  This feature is described in detail in the AHCI 1.x spec.
-> It provides power savings of anywhere from .5-1.5 Watts depending on
-> the system when it is enabled.  (a graph demonstrating power savings
-> of this patch along with other power patches is located at 
-> http://www.linuxpowertop.org/results.php for your enjoyment).
-> 
-> This patch is changed from the previous version in that it incorporates all
-> the feedback I've gotten on the patches to date.  It changes the default
-> of the ahci driver to be max_performance rather than min_power, so userspace
-> will need to explicitly enable alpm via the sysfs interface when it deems
-> it an appropriate time to do this.  In addition, the patch was changed to
-> allow either HIPM or DIPM as a prerequisite for enabling ALPM, rather than 
-> just using HIPM.
-> 
-I suspect these changes would be useful for servers as well, extending 
-run time when a failover to UPS is detected.
+From: Andrew Morton <akpm@linux-foundation.org>
 
--- 
-Bill Davidsen <davidsen@tmr.com>
-   "We have more to fear from the bungling of the incompetent than from
-the machinations of the wicked."  - from Slashdot
+Too generic, clashes with ISDN.
+
+Cc: Mark Salyzyn <aacraid@adaptec.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/aacraid/aachba.c  |    8 ++++----
+ drivers/scsi/aacraid/aacraid.h |    2 +-
+ drivers/scsi/aacraid/commsup.c |    5 +++--
+ 3 files changed, 8 insertions(+), 7 deletions(-)
+
+diff -puN drivers/scsi/aacraid/aachba.c~aacraid-rename-check_reset drivers/scsi/aacraid/aachba.c
+--- a/drivers/scsi/aacraid/aachba.c~aacraid-rename-check_reset
++++ a/drivers/scsi/aacraid/aachba.c
+@@ -177,9 +177,9 @@ int check_interval = 24 * 60 * 60;
+ module_param(check_interval, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(check_interval, "Interval in seconds between adapter health checks.");
+ 
+-int check_reset = 1;
+-module_param(check_reset, int, S_IRUGO|S_IWUSR);
+-MODULE_PARM_DESC(check_reset, "If adapter fails health check, reset the adapter.");
++int aacraid_check_reset = 1;
++module_param_named(check_reset, aacraid_check_reset, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(aacraid_check_reset, "If adapter fails health check, reset the adapter.");
+ 
+ int expose_physicals = -1;
+ module_param(expose_physicals, int, S_IRUGO|S_IWUSR);
+@@ -1211,7 +1211,7 @@ int aac_get_adapter_info(struct aac_dev*
+ 			  (int)sizeof(dev->supplement_adapter_info.VpdInfo.Tsid),
+ 			  dev->supplement_adapter_info.VpdInfo.Tsid);
+ 		}
+-		if (!check_reset ||
++		if (!aacraid_check_reset ||
+ 		  (dev->supplement_adapter_info.SupportedOptions2 &
+ 		  le32_to_cpu(AAC_OPTION_IGNORE_RESET))) {
+ 			printk(KERN_INFO "%s%d: Reset Adapter Ignored\n",
+diff -puN drivers/scsi/aacraid/aacraid.h~aacraid-rename-check_reset drivers/scsi/aacraid/aacraid.h
+--- a/drivers/scsi/aacraid/aacraid.h~aacraid-rename-check_reset
++++ a/drivers/scsi/aacraid/aacraid.h
+@@ -1857,4 +1857,4 @@ extern int aac_reset_devices;
+ extern int aac_commit;
+ extern int update_interval;
+ extern int check_interval;
+-extern int check_reset;
++extern int aacraid_check_reset;
+diff -puN drivers/scsi/aacraid/commsup.c~aacraid-rename-check_reset drivers/scsi/aacraid/commsup.c
+--- a/drivers/scsi/aacraid/commsup.c~aacraid-rename-check_reset
++++ a/drivers/scsi/aacraid/commsup.c
+@@ -1370,8 +1370,9 @@ int aac_check_health(struct aac_dev * aa
+ 
+ 	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
+ 
+-	if (!check_reset || (aac->supplement_adapter_info.SupportedOptions2 &
+-	  le32_to_cpu(AAC_OPTION_IGNORE_RESET)))
++	if (!aacraid_check_reset ||
++		(aac->supplement_adapter_info.SupportedOptions2 &
++			le32_to_cpu(AAC_OPTION_IGNORE_RESET)))
+ 		goto out;
+ 	host = aac->scsi_host_ptr;
+ 	if (aac->thread->pid != current->pid)
+_
