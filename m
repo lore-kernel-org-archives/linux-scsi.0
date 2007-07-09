@@ -1,36 +1,103 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] bsg: fix the deadlock on discarding done commands
-Date: Mon, 9 Jul 2007 14:26:44 +0200
-Message-ID: <20070709122643.GT5267@kernel.dk>
-References: <20070607112309.GY4735@kernel.dk> <20070608132326B.fujita.tomonori@lab.ntt.co.jp> <20070608152049.GT7341@kernel.dk> <20070620223131L.fujita.tomonori@lab.ntt.co.jp>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH 3/4] bsg: add SCSI transport-level request support
+Date: Mon, 9 Jul 2007 22:02:56 +0900
+Message-ID: <20070708152711L.fujita.tomonori@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:18707 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753912AbXGIM0g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jul 2007 08:26:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20070620223131L.fujita.tomonori@lab.ntt.co.jp>
+Received: from mfo10.iij4u.or.jp ([210.138.174.80]:38771 "EHLO
+	mfo10.iij4u.or.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752633AbXGINRZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2007 09:17:25 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Wed, Jun 20 2007, FUJITA Tomonori wrote:
-> From: Jens Axboe <jens.axboe@oracle.com>
-> Subject: Re: [PATCH] bsg: fix the deadlock on discarding done commands
-> Date: Fri, 8 Jun 2007 17:20:49 +0200
-> 
-> > On Sat, Jun 09 2007, FUJITA Tomonori wrote:
-> > > I'll submit the bsg bidi patches shortly.
-> > 
-> > Great - I see them, will review and integrate next week.
-> 
-> Any progress on this?
+This enables bsg to handle SCSI transport-level request like SAS
+management protocol (SMP).
 
-Please resend the bsg bidi patches so I can integrate them, thanks.
+- add BSG_SUB_PROTOCOL_{SCSI_CMD, SCSI_TMF, SCSI_TRANSPORT} definitions.
+- SCSI transport-level requests skip blk_verify_command().
 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/bsg.c         |   27 +++++++++++++++++++++------
+ include/linux/bsg.h |    6 ++++++
+ 2 files changed, 27 insertions(+), 6 deletions(-)
+
+diff --git a/block/bsg.c b/block/bsg.c
+index 13ecc95..461c9f5 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -208,7 +208,11 @@ static int blk_fill_sgv4_hdr_rq(request_queue_t *q, struct request *rq,
+ 	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
+ 			   hdr->request_len))
+ 		return -EFAULT;
+-	if (blk_verify_command(rq->cmd, has_write_perm))
++
++	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
++		if (blk_verify_command(rq->cmd, has_write_perm))
++			return -EPERM;
++	} else if (!capable(CAP_SYS_RAWIO))
+ 		return -EPERM;
+ 
+ 	/*
+@@ -232,6 +236,8 @@ static int blk_fill_sgv4_hdr_rq(request_queue_t *q, struct request *rq,
+ static int
+ bsg_validate_sgv4_hdr(request_queue_t *q, struct sg_io_v4 *hdr, int *rw)
+ {
++	int ret = 0;
++
+ 	if (hdr->guard != 'Q')
+ 		return -EINVAL;
+ 	if (hdr->request_len > BLK_MAX_CDB)
+@@ -240,13 +246,22 @@ bsg_validate_sgv4_hdr(request_queue_t *q, struct sg_io_v4 *hdr, int *rw)
+ 	    hdr->din_xfer_len > (q->max_sectors << 9))
+ 		return -EIO;
+ 
+-	/* not supported currently */
+-	if (hdr->protocol || hdr->subprotocol)
+-		return -EINVAL;
++	switch (hdr->protocol) {
++	case BSG_PROTOCOL_SCSI:
++		switch (hdr->subprotocol) {
++		case BSG_SUB_PROTOCOL_SCSI_CMD:
++		case BSG_SUB_PROTOCOL_SCSI_TRANSPORT:
++			break;
++		default:
++			ret = -EINVAL;
++		}
++		break;
++	default:
++		ret = -EINVAL;
++	}
+ 
+ 	*rw = hdr->dout_xfer_len ? WRITE : READ;
+-
+-	return 0;
++	return ret;
+ }
+ 
+ /*
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index 0dd01f9..bd998ca 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -1,6 +1,12 @@
+ #ifndef BSG_H
+ #define BSG_H
+ 
++#define BSG_PROTOCOL_SCSI		0
++
++#define BSG_SUB_PROTOCOL_SCSI_CMD	0
++#define BSG_SUB_PROTOCOL_SCSI_TMF	1
++#define BSG_SUB_PROTOCOL_SCSI_TRANSPORT	2
++
+ struct sg_io_v4 {
+ 	__s32 guard;		/* [i] 'Q' to differentiate from v3 */
+ 	__u32 protocol;		/* [i] 0 -> SCSI , .... */
 -- 
-Jens Axboe
+1.4.4.4
 
