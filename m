@@ -1,96 +1,83 @@
-From: DervishD <lkml@dervishd.net>
-Subject: Re: cdparanoia not setting count and/or reply_len properly
-Date: Mon, 9 Jul 2007 13:30:25 +0200
-Message-ID: <20070709113025.GB3015@DervishD>
-References: <20070708103928.GA20349@DervishD> <4690DA1B.3010901@s5r6.in-berlin.de> <4691ACEA.8000607@torque.net>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: Some NCQ numbers...
+Date: Mon, 9 Jul 2007 14:26:28 +0200
+Message-ID: <20070709122627.GQ5267@kernel.dk>
+References: <468392CE.6010206@msgid.tls.msk.ru> <468A06A0.1020802@gmail.com> <468AB1A7.9010201@msgid.tls.msk.ru> <468AF5BB.10005@gmail.com> <1183560034.3418.15.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757509AbXGILan@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([80.160.20.94]:18697 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751578AbXGIM0U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 9 Jul 2007 08:26:20 -0400
 Content-Disposition: inline
-In-Reply-To: <4691ACEA.8000607@torque.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+In-Reply-To: <1183560034.3418.15.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Tejun Heo <htejun@gmail.com>, Michael Tokarev <mjt@tls.msk.ru>, Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-    Hi Douglas :)
+On Wed, Jul 04 2007, James Bottomley wrote:
+> On Wed, 2007-07-04 at 10:19 +0900, Tejun Heo wrote:
+> > Michael Tokarev wrote:
+> > > Well.  It looks like the results does not depend on the
+> > > elevator.  Originally I tried with deadline, and just
+> > > re-ran the test with noop (hence the long delay with
+> > > the answer) - changing linux elevator changes almost
+> > > nothing in the results - modulo some random "fluctuations".
+> > 
+> > I see.  Thanks for testing.
+> > 
+> > > In any case, NCQ - at least in this drive - just does
+> > > not work.  Linux with its I/O elevator may help to
+> > > speed things up a bit, but the disk does nothing in
+> > > this area.  NCQ doesn't slow things down either - it
+> > > just does not work.
+> > > 
+> > > The same's for ST3250620NS "enterprise" drives.
+> > > 
+> > > By the way, Seagate announced Barracuda ES 2 series
+> > > (in range 500..1200Gb if memory serves) - maybe with
+> > > those, NCQ will work better?
+> > 
+> > No one would know without testing.
+> > 
+> > > Or maybe it's libata which does not implement NCQ
+> > > "properly"?  (As I shown before, with almost all
+> > > ol'good SCSI drives TCQ helps alot - up to 2x the
+> > > difference and more - with multiple I/O threads)
+> > 
+> > Well, what the driver does is minimal.  It just passes through all the
+> > commands to the harddrive.  After all, NCQ/TCQ gives the harddrive more
+> > responsibility regarding request scheduling.
+> 
+> Actually, in many ways the result support a theory of SCSI TCQ Jens used
+> when designing the block layer.  The original TCQ theory held that the
+> drive could make much better head scheduling decisions than the
+> Operating System, so you just used TCQ to pass all the outstanding I/O
+> unfiltered down to the drive to let it schedule.  However, the I/O
+> results always seemed to indicate that the effect of TCQ was negligible
+> at around 4 outstanding commands, leading to the second theory that all
+> TCQ was good for was saturating the transport, and making scheduling
+> decisions was, indeed, better left to the OS (hence all our I/O
+> schedulers).
 
- * Douglas Gilbert <dougg@torque.net> dixit:
-> >>     I don't know if cdparanoia should be fixed, but certainly the
-> >> warning could be issued only if CONFIG_SCSI_VERBOSE is set. This w=
-ay you
-> >> will have the message if something goes wrong and you want more in=
-fo,
-> >> but in cases where the warning is harmless your log will be clean.=
-=2E.
-> >>
-> >>     Anyway, this message is not for make suggestions, but for aski=
-ng for
-> >> information: why is this warning happening? naugthy cdparanoia? na=
-ughty
-> >> kernel? I'm a bit confused and I want to use my external DVD drive=
- for
-> >> ripping from time to time, to "exercise" it...
->=20
-> In Fedora 7 I see this:
->=20
-> # cdparanoia --version
-> cdparanoia III release 9.8 (March 23, 2001)
-> (C) 2001 Monty <monty@xiph.org> and Xiphophorus
+Indeed, the above I still find to be true. The only real case where
+larger depths make a real difference, is a pure random reads (or writes,
+with write caching off) workload. And those situations are largely
+synthetic, hence benchmarks tend to show NCQ being a lot more beneficial
+since they construct workloads that consist 100% of random IO. Real life
+is rarely so black and white.
 
-    Same version here.
+Additionally, there are cases where drive queue depths hurt a lot. The
+drive has no knowledge of fairness, or process-to-io mappings. So AS/CFQ
+has to artificially limit queue depths competing IO processes doing
+semi (or fully) sequential workloads, or throughput plummets.
 
-> So, given that date, lk 2.4.2 was out but it was probably
-> a bit early to start using the sg version 3 interface
-> which first appeared in lk 2.4.1 . So that "lets annoy
-> the user" message was added by someone who got burnt by
-> the old sg version 2 interface and decided people needed
-> to be warned. The warning comes from this code is sg.c :
+So while NCQ has some benefits, I typically tend to prefer managing the
+IO queue largely in software instead of punting to (often) buggy
+firmware.
 
-    OK, grand. So it's cdparanoia's fault.
+-- 
+Jens Axboe
 
->         /*
->          * SG_DXFER_TO_FROM_DEV is functionally equivalent to SG_DXFE=
-R_FROM_DEV,
->          * but is is possible that the app intended SG_DXFER_TO_DEV, =
-because the
-> re
->          * is a non-zero input_size, so emit a warning.
->          */
->         if (hp->dxfer_direction =3D=3D SG_DXFER_TO_FROM_DEV)
->                 if (printk_ratelimit())
->                         printk(KERN_WARNING
->                                "sg_write: data in/out %d/%d bytes for=
- SCSI comma
-> nd 0x%x--"
->                                "guessing data in;\n" KERN_WARNING "  =
- "
->                                "program %s not setting count and/or r=
-eply_len pr
-> operly\n",
->                                old_hdr.reply_len - (int)SZ_SG_HEADER,
->                                input_size, (unsigned int) cmnd[0],
->                                current->comm);
-
-    Yes, I did read the code, and I didn't find any reason for it to
-exist, but I didn't understand the purpose of SG_DXFER_TO_FROM_DEV.
-Thanks for explaining this :))
-
-> It is probably about time that cdparanoia was updated ...
-
-    I think the same, but given that it works, Monty probably doesn't
-have much motivation to update it. I don't know if the problem resides
-in the cdparanoia program itself (so using the DAE problem from cdrkit
-will fix the issue) or in the paranoia library. In this case, the
-problem will affect any program using the library.
-
-    Anyway, if you need any testing, just tell :)
-
-    Thanks a lot!
-
-    Ra=FAl N=FA=F1ez de Arenas Coronado
-
---=20
-Linux Registered User 88736 | http://www.dervishd.net
-It's my PC and I'll cry if I want to... RAmen!
