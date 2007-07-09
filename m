@@ -1,44 +1,56 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 2/2] blk request timeout handler:
-Date: Mon, 09 Jul 2007 10:56:48 -0500
-Message-ID: <46925AC0.4020102@cs.wisc.edu>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01B8E0CC@otce2k301.adaptec.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 8728] New: SCSI CDROM support cause hardlock
+ on bootup
+Date: Mon, 9 Jul 2007 09:53:23 -0700
+Message-ID: <20070709095323.5f3d7b43.akpm@linux-foundation.org>
+References: <bug-8728-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:33632 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754077AbXGIP5D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 9 Jul 2007 11:57:03 -0400
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01B8E0CC@otce2k301.adaptec.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:56257 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754160AbXGIQx7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jul 2007 12:53:59 -0400
+In-Reply-To: <bug-8728-10286@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: linux-scsi@vger.kernel.org
+Cc: k-r.ernst@my-mail.ch, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@kernel-bugs.osdl.org>
 
-I dropped Jen's old suse address and added his oracle one.
+On Mon,  9 Jul 2007 09:30:57 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
 
-Salyzyn, Mark wrote:
-> What ever happened to the following (admittedly snipped up) patch from a
-> year ago, was there a reason this initiative was dropped? If so, please
-> state what I missed?
+> http://bugzilla.kernel.org/show_bug.cgi?id=8728
 > 
-
-I have not worked on it because I got busy with iscsi again. I was 
-trying to rework the patches, so that the scsi-ml would not have to do 
-so much digging in the timers.
-
-In the end I wanted it so the block layer started the timer when the 
-command either was queued up or when it was sent to the LLD (I was not 
-sure which was better), and the timer was stopped when the command was 
-completed or when the LLD requeued it. The starting of the timer is 
-easy, but with the stopping of it, scsi-ml needed to do some things like 
-stop the timer manually then call a block layer requeue function and I 
-wanted the block layer requeue function to stop the timer for scsi-ml so 
-the LLD would not have to worry about it at all.
-
-I also got stuck working out the details for situations like when we get 
-into aborts and error handling and support for subsystems like DM or MD 
-doing timers and stacking them on top of SCSI timers or having MD/DM 
-timers calling into the SCSI timeout handlers.
+>            Summary: SCSI CDROM support cause hardlock on bootup
+>            Product: SCSI Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.22
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>         ReportedBy: k-r.ernst@my-mail.ch
+> 
+> 
+> Most recent kernel where this bug did not occur: don't know, but it occured in
+> 2.6.21 too
+> Distribution: Gentoo
+> Hardware Environment:
+> TSSTcorp DVD-ROM SH-D162C
+> connected to: Integrated Technology Express, Inc. ITE 8211F Single Channel UDMA
+> 133 (rev 11)
+> Problem Description:
+> scsi cdrom support deactivated:
+> normal booting, dvd-drive doesn't work
+> scsi cdrom support enabled:
+> (lots of output)
+> (lots of output)
+> scsi 5:0:0:0: CD-ROM            TSSTcorp DVD-ROM SH-D162C TS02 PQ: 0 ANSI: 5
+> ... (hardlock)
+> (see dmesg)
+> 
