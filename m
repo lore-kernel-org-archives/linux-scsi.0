@@ -1,35 +1,26 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: Linux 2.6.22 released
-Date: Tue, 10 Jul 2007 14:41:50 -0400
-Message-ID: <4693D2EE.3020401@redhat.com>
-References: <alpine.LFD.0.999.0707081639370.31544@woody.linux-foundation.org> <20070709111431.2fd3fba9@the-village.bc.nu>
+From: Jeremy Linton <jli@greshamstorage.com>
+Subject: REQ_SPECIAL from scsi_execute_async()?
+Date: Tue, 10 Jul 2007 14:21:26 -0500
+Message-ID: <4693DC36.2010905@greshamstorage.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763535AbXGJSmp@vger.kernel.org>
-In-Reply-To: <20070709111431.2fd3fba9@the-village.bc.nu>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gatekeeper.greshamstorage.com ([216.143.252.225]:11880 "EHLO
+	AUSEXCH1.greshamstorage.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758501AbXGJTky (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 10 Jul 2007 15:40:54 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux Scsi <linux-scsi@vger.kernel.org>
 
-On 07/09/2007 06:14 AM, Alan Cox wrote:
-> Are the shortlogs useful - yes .. they catch what appear to be mistakes
-> 
-> Specifically: What happened to the aacraid ioctl security fix ? Did someone decide it
-> wasn't needed or did it get lost somewhere on the way ?
-> 
-> While this looks scary the only obvious exploit cases are where the user can
-> open a device level file on an AACraid. Very few people put scanners or CD
-> devices on one so the actual impact is probably minimal.
+I was just looking at the REQ_SPECIAL handling and I was curious why 
+REQ_SPECIAL isn't being set for commands being queued by 
+scsi_execute_aysnc()? It is set for scsi_execute() commands.
 
-I can't find that patch in any SCSI git tree.
+Did someone overlook setting the flag or is this behavior intentional?
 
-> --- drivers/scsi/aacraid/linit.c~	2007-07-09 10:51:55.653223304 +0100
-> +++ drivers/scsi/aacraid/linit.c	2007-07-09 10:51:55.653223304 +0100
-> @@ -453,6 +453,8 @@
->  static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
->  {
->  	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
-> +	if (!capable(CAP_SYS_RAWIO))
-> +		return -EPERM;
+
+
+
