@@ -1,36 +1,35 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [patch 0/6] PS3 Storage Drivers for 2.6.23, take 4
-Date: Tue, 10 Jul 2007 10:32:41 +0200
-Message-ID: <20070710083241.GV13902@kernel.dk>
-References: <20070704132212.726923000@pademelon.sonytel.be> <Pine.LNX.4.62.0707100944470.22782@pademelon.sonytel.be> <20070710075506.GS13902@kernel.dk> <18067.15564.241168.217875@cargo.ozlabs.ibm.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Linux 2.6.22 released
+Date: Tue, 10 Jul 2007 14:41:50 -0400
+Message-ID: <4693D2EE.3020401@redhat.com>
+References: <alpine.LFD.0.999.0707081639370.31544@woody.linux-foundation.org> <20070709111431.2fd3fba9@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:4839 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761047AbXGJIc1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 10 Jul 2007 04:32:27 -0400
-Content-Disposition: inline
-In-Reply-To: <18067.15564.241168.217875@cargo.ozlabs.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763535AbXGJSmp@vger.kernel.org>
+In-Reply-To: <20070709111431.2fd3fba9@the-village.bc.nu>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Mackerras <paulus@samba.org>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@vision.unipv.it>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jul 10 2007, Paul Mackerras wrote:
-> Jens Axboe writes:
+On 07/09/2007 06:14 AM, Alan Cox wrote:
+> Are the shortlogs useful - yes .. they catch what appear to be mistakes
 > 
-> > I have no objections to the block bits, however I feel uneasy merging
-> > the full patchset unless patch #1 has been acked by the platform person.
+> Specifically: What happened to the aacraid ioctl security fix ? Did someone decide it
+> wasn't needed or did it get lost somewhere on the way ?
 > 
-> I have the first 3 patches in my queue, so yes I've acked it.  It's
-> probably easiest if the remaining 3 go through my queue once they've
-> been acked - or if you prefer, you can push #4 via your tree once I've
-> got Linus to pull my tree.  Let me know either way.
+> While this looks scary the only obvious exploit cases are where the user can
+> open a device level file on an AACraid. Very few people put scanners or CD
+> devices on one so the actual impact is probably minimal.
 
-If you already have the 3 first patches, just slurp up the rest as well.
-No point in making it more complicated than we have to.
+I can't find that patch in any SCSI git tree.
 
--- 
-Jens Axboe
-
+> --- drivers/scsi/aacraid/linit.c~	2007-07-09 10:51:55.653223304 +0100
+> +++ drivers/scsi/aacraid/linit.c	2007-07-09 10:51:55.653223304 +0100
+> @@ -453,6 +453,8 @@
+>  static int aac_ioctl(struct scsi_device *sdev, int cmd, void __user * arg)
+>  {
+>  	struct aac_dev *dev = (struct aac_dev *)sdev->host->hostdata;
+> +	if (!capable(CAP_SYS_RAWIO))
+> +		return -EPERM;
