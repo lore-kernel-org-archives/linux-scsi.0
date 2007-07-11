@@ -1,57 +1,43 @@
-From: MikeW <mw_phil@yahoo.co.uk>
-Subject: Re: [PATCH] dtc: Coding police and printk levels
-Date: Wed, 11 Jul 2007 08:08:02 +0000 (UTC)
-Message-ID: <loom.20070711T100510-576@post.gmane.org>
-References: <20070622142629.52519e47@the-village.bc.nu> <20070622180005.GF7535@tree.beaverton.ibm.com> <20070622202802.16118c92@the-village.bc.nu>
+From: Christoph Hellwig <hch@lst.de>
+Subject: scsi, was Re: -mm merge plans for 2.6.23
+Date: Wed, 11 Jul 2007 13:37:18 +0200
+Message-ID: <20070711113718.GB18665@lst.de>
+References: <20070710013152.ef2cd200.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:38283 "EHLO ciao.gmane.org"
+Received: from verein.lst.de ([213.95.11.210]:53941 "EHLO mail.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754961AbXGKIKG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 11 Jul 2007 04:10:06 -0400
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1I8XGr-0006v7-V6
-	for linux-scsi@vger.kernel.org; Wed, 11 Jul 2007 10:10:01 +0200
-Received: from 57.66.65.38 ([57.66.65.38])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jul 2007 10:10:01 +0200
-Received: from mw_phil by 57.66.65.38 with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jul 2007 10:10:01 +0200
+	id S1759605AbXGKLhb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 11 Jul 2007 07:37:31 -0400
+Content-Disposition: inline
+In-Reply-To: <20070710013152.ef2cd200.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Alan Cox <alan <at> lxorguk.ukuu.org.uk> writes:
-
+> restore-acpi-change-for-scsi.patch
+> git-scsi-misc-vs-greg-sysfs-stuff.patch
+> aacraid-rename-check_reset.patch
+> scsi-dont-build-scsi_dma_mapunmap-for-has_dma.patch
+> drivers-scsi-small-cleanups.patch
+> sym53c8xx_2-claims-cpqarray-device.patch
+> drivers-scsi-wd33c93c-cleanups.patch
+> make-seagate_st0x_detect-static.patch
+> pci-error-recovery-symbios-scsi-base-support.patch
+> pci-error-recovery-symbios-scsi-first-failure.patch
+> drivers-scsi-pcmcia-nsp_csc-remove-kernel-24-code.patch
+> drivers-message-i2o-devicec-remove-redundant-gfp_atomic-from-kmalloc.patch
+> drivers-scsi-aic7xxx_oldc-remove-redundant-gfp_atomic-from-kmalloc.patch
+> use-menuconfig-objects-ii-scsi.patch
+> remove-dead-references-to-module_parm-macro.patch
+> ppa-coding-police-and-printk-levels.patch
+> remove-the-dead-cyberstormiii_scsi-option.patch
+> config_scsi_fd_8xx-no-longer-exists.patch
+> use-mutex-instead-of-semaphore-in-megaraid-mailbox-driver.patch
 > 
-> On Fri, 22 Jun 2007 11:00:06 -0700
-> "Darrick J. Wong" <djwong <at> us.ibm.com> wrote:
-> 
-> > On Fri, Jun 22, 2007 at 02:26:29PM +0100, Alan Cox wrote:
-> > >  <at>  <at>  -244,7 +242,7  <at>  <at> 
-> > >  					if (check_signature(base + signatures[sig].offset,
-signatures[sig].string,
-> strlen(signatures[sig].string))) {
-> > >  						addr = bases[current_base].address;
-> > >  #if (DTCDEBUG & DTCDEBUG_INIT)
-> > > -						printk("scsi-dtc : detected board.\n");
-> > > +						printk(KERB_DEBUG "scsi-dtc : detected board.\n");
-> > 
-> > I think you meant KERN_DEBUG ?
-> 
-> Thanks - thats a path thats not compiled and I missed that. Will fix it.
-> -
+>  Sent to James.
 
-I guess we should always test-compile all edited build paths to ensure
-we have not broken someone else's build. That's going into my checklist !
-
-Thanks,
-MikeW
-
-
-
+Care to drop the patches James NACKed every single time?
 
