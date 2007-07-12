@@ -1,53 +1,108 @@
-From: Andi Kleen <ak@suse.de>
-Subject: [PATCH] Mark initio.c driver as x86-32 only
-Date: Thu, 12 Jul 2007 12:52:17 +0200
-Message-ID: <200707121252.17201.ak@suse.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] microtek.c - use data accessors and !use_sg cleanup
+Date: Thu, 12 Jul 2007 16:11:24 +0300
+Message-ID: <4696287C.8060501@panasas.com>
+References: <468BE4CE.80402@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:42405 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760341AbXGLKwW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jul 2007 06:52:22 -0400
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:32467 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760860AbXGLNLd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 09:11:33 -0400
+In-Reply-To: <468BE4CE.80402@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@steeleye.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
 
-initio.h contains this structure that is passed to the hardware:
+  - use scsi_cmnd data accessors
+  - Clean the !use_sg code paths
 
-typedef struct Scsi_Ctrl_Blk {
-	struct Scsi_Ctrl_Blk *SCB_NxtScb;
-	UBYTE SCB_Status;	/*4 */
-	UBYTE SCB_NxtStat;	/*5 */
-	UBYTE SCB_Mode;		/*6 */
-	UBYTE SCB_Msgin;	/*7 SCB_Res0 */
-        ...
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/usb/image/microtek.c |   32 ++++++++++++++------------------
+ 1 files changed, 14 insertions(+), 18 deletions(-)
 
-
-Which is obviously not 64bit safe. It also doesn't seem to dma map this 
-structure at all.
-
-Mark the driver as X86_32 only in Kconfig.
-
-Signed-off-by: Andi Kleen <ak@suse.de>
-
-diff -u linux-2.6.22-dma/drivers/scsi/Kconfig-o linux-2.6.22-dma/drivers/scsi/Kconfig
---- linux-2.6.22-dma/drivers/scsi/Kconfig-o	2007-07-11 14:24:21.000000000 +0200
-+++ linux-2.6.22-dma/drivers/scsi/Kconfig	2007-07-12 12:49:19.000000000 +0200
-@@ -845,7 +845,8 @@
+diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
+index 51bd80d..0a5c6e8 100644
+--- a/drivers/usb/image/microtek.c
++++ b/drivers/usb/image/microtek.c
+@@ -447,7 +447,8 @@ static void mts_data_done( struct urb* transfer )
+ 	MTS_INT_INIT();
  
- config SCSI_INITIO
- 	tristate "Initio 9100U(W) support"
--	depends on PCI && SCSI
-+	# driver not 64bit safe and doesn't use pci dma API consistently
-+	depends on PCI && SCSI && X86_32
- 	help
- 	  This is support for the Initio 91XXU(W) SCSI host adapter.  Please
- 	  read the SCSI-HOWTO, available from
+ 	if ( context->data_length != transfer->actual_length ) {
+-		context->srb->resid = context->data_length - transfer->actual_length;
++		scsi_set_resid(context->srb, context->data_length -
++		                                     transfer->actual_length);
+ 	} else if ( unlikely(transfer->status) ) {
+ 		context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
+ 	}
+@@ -490,7 +491,8 @@ static void mts_command_done( struct urb *transfer )
+ 					   context->data_pipe,
+ 					   context->data,
+ 					   context->data_length,
+-					   context->srb->use_sg > 1 ? mts_do_sg : mts_data_done);
++					   scsi_sg_count(context->srb) > 1 ?
++					           mts_do_sg : mts_data_done);
+ 		} else {
+ 			mts_get_status(transfer);
+ 		}
+@@ -504,21 +506,23 @@ static void mts_do_sg (struct urb* transfer)
+ 	struct scatterlist * sg;
+ 	MTS_INT_INIT();
+ 
+-	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,context->srb->use_sg);
++	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,
++	                                          scsi_sg_count(context->srb));
+ 
+ 	if (unlikely(transfer->status)) {
+                 context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
+ 		mts_transfer_cleanup(transfer);
+         }
+ 
+-	sg = context->srb->request_buffer;
++	sg = scsi_sglist(context->srb);
+ 	context->fragment++;
+ 	mts_int_submit_urb(transfer,
+ 			   context->data_pipe,
+ 			   page_address(sg[context->fragment].page) +
+ 			   sg[context->fragment].offset,
+ 			   sg[context->fragment].length,
+-			   context->fragment + 1 == context->srb->use_sg ? mts_data_done : mts_do_sg);
++			   context->fragment + 1 == scsi_sg_count(context->srb) ?
++			   mts_data_done : mts_do_sg);
+ 	return;
+ }
+ 
+@@ -546,20 +550,12 @@ mts_build_transfer_context(struct scsi_cmnd *srb, struct mts_desc* desc)
+ 	desc->context.srb = srb;
+ 	desc->context.fragment = 0;
+ 
+-	if (!srb->use_sg) {
+-		if ( !srb->request_bufflen ){
+-			desc->context.data = NULL;
+-			desc->context.data_length = 0;
+-			return;
+-		} else {
+-			desc->context.data = srb->request_buffer;
+-			desc->context.data_length = srb->request_bufflen;
+-			MTS_DEBUG("length = %d or %d\n",
+-				  srb->request_bufflen, srb->bufflen);
+-		}
++	if (!scsi_bufflen(srb)) {
++		desc->context.data = NULL;
++		desc->context.data_length = 0;
++		return;
+ 	} else {
+-		MTS_DEBUG("Using scatter/gather\n");
+-		sg = srb->request_buffer;
++		sg = scsi_sglist(srb);
+ 		desc->context.data = page_address(sg[0].page) + sg[0].offset;
+ 		desc->context.data_length = sg[0].length;
+ 	}
+-- 
+1.5.2.2.249.g45fd
 
 
