@@ -1,32 +1,44 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] qla4xxx: Fix underrun/overrun conditions
-Date: Thu, 12 Jul 2007 13:47:43 -0500
-Message-ID: <4696774F.7090407@cs.wisc.edu>
-References: <1181156124.5728.4.camel@q-iscsi-upstream.site> <1184010276.18914.4.camel@q-iscsi-upstream.site>
+Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
+Date: Thu, 12 Jul 2007 14:09:44 -0500
+Message-ID: <46967C78.3070100@cs.wisc.edu>
+References: <468CDB3C.4060500@panasas.com> <468CF58E.1020901@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:38060 "EHLO sabe.cs.wisc.edu"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:38091 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756925AbXGLSr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 12 Jul 2007 14:47:56 -0400
-In-Reply-To: <1184010276.18914.4.camel@q-iscsi-upstream.site>
+	id S1755318AbXGLTMt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jul 2007 15:12:49 -0400
+In-Reply-To: <468CF58E.1020901@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David C Somayajulu <david.somayajulu@qlogic.com>
-Cc: linux-scsi@vger.kernel.org, David Wagner <david.wagner@qlogic.com>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-David C Somayajulu wrote:
-> On Wed, 2007-06-06 at 11:55 -0700, David C Somayajulu wrote:
->> This patch fixes the code handling underrun and overrun conditions.
-> Fix coding style as per Mike Christie's advice.
-> 
-> Signed-off-by: David Somayajulu <david.somayajulu@qlogic.com>
-> 
+Boaz Harrosh wrote:
+> +/*
+> + * Should fit within a single page.
+> + */
+> +enum { SCSI_MAX_SG_SEGMENTS =
+> +	((PAGE_SIZE - sizeof(struct scsi_sgtable)) /
+> +	sizeof(struct scatterlist)) };
+> +
+> +enum { SG_MEMPOOL_NR =
+> +	(SCSI_MAX_SG_SEGMENTS >= 7) +
+> +	(SCSI_MAX_SG_SEGMENTS >= 15) +
+> +	(SCSI_MAX_SG_SEGMENTS >= 31) +
+> +	(SCSI_MAX_SG_SEGMENTS >= 63) +
+> +	(SCSI_MAX_SG_SEGMENTS >= 127) +
+> +	(SCSI_MAX_SG_SEGMENTS >= 255) +
+> +	(SCSI_MAX_SG_SEGMENTS >= 511)
+> +};
+>  
 
-You missed a space, but I do not think people care much about that. The 
-patch looks ok from a technical standpoint compared to what other 
-drivers are doing.
+What does SCSI_MAX_SG_SEGMENTS end up being on x86 now? On x86_64 or 
+some other arch, we were going over a page when doing 
+SCSI_MAX_PHYS_SEGMENTS of 256 right?
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+What happened to Jens's scatter list chaining and how does this relate 
+to it then?
