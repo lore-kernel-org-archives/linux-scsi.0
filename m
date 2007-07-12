@@ -1,45 +1,32 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
-Date: Thu, 12 Jul 2007 17:43:42 +0300
-Message-ID: <46963E1E.9050601@panasas.com>
-References: <468CDB3C.4060500@panasas.com> <468CF58E.1020901@panasas.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH] mpt fusion: add sysfs attributes to display IOC parameters
+Date: Thu, 12 Jul 2007 10:30:51 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70850E7F@NAMAIL4.ad.lsil.com>
+References: <469636CD.8000902@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:24933 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933265AbXGLOnv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 10:43:51 -0400
-In-Reply-To: <468CF58E.1020901@panasas.com>
+Received: from mail0.lsil.com ([147.145.40.20]:52218 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758933AbXGLQcp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 12:32:45 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <469636CD.8000902@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
+To: brking@linux.vnet.ibm.com, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-Boaz Harrosh wrote:
->   - The old scsi_{alloc,free}_sgtable() is no longer exported. This will break scsi_sgt
->     which will need to be converted to new implementation.
+On Thursday, July 12, 2007 8:12 AM,  Brian King wrote:
+> This should be removed from the patch. This information is already
+> available in sysfs: /sys/module/mptscsih/version
+> 
 
-Hi Tomo.
+He is correct, the version is there in /sys/module/mptsas/version as
+well.   Please repost the patch with this removed.
 
-Just for completion of the RFC I would like to have A quick draft patch
-that converts stgt to the proposed scsi_sgtable implementation. If you
-are busy, I have looked, it should not be too difficult for me to do it.
-Do you want that I try? or maybe you could do something quick?
+Thanks,
+Eric
 
-I think a start would be
-
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index f5a1dda..eecfe70 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -157,6 +157,9 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- 				 size_t *offset, size_t *len);
- extern void scsi_kunmap_atomic_sg(void *virt);
- 
-+extern struct scsi_sgtable *scsi_alloc_sgtable(int sg_count, gfp_t gfp_mask);
-+extern void scsi_free_sgtable(struct scsi_sgtable *sgt);
-+
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
- 
