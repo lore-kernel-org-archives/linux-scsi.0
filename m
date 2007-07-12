@@ -1,32 +1,122 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH] mpt fusion: add sysfs attributes to display IOC parameters
-Date: Thu, 12 Jul 2007 10:30:51 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70850E7F@NAMAIL4.ad.lsil.com>
-References: <469636CD.8000902@linux.vnet.ibm.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH] microtek.c - use data accessors and !use_sg cleanup
+Date: Thu, 12 Jul 2007 09:58:05 -0700
+Message-ID: <20070712165805.GB19998@suse.de>
+References: <468BE4CE.80402@panasas.com> <4696287C.8060501@panasas.com> <46962B74.9040909@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:52218 "EHLO mail0.lsil.com"
+Received: from cantor2.suse.de ([195.135.220.15]:57597 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758933AbXGLQcp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 12:32:45 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <469636CD.8000902@linux.vnet.ibm.com>
+	id S1752808AbXGLQ7f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 12 Jul 2007 12:59:35 -0400
+Content-Disposition: inline
+In-Reply-To: <46962B74.9040909@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Oliver Neukum <oliver@neukum.name>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thursday, July 12, 2007 8:12 AM,  Brian King wrote:
-> This should be removed from the patch. This information is already
-> available in sysfs: /sys/module/mptscsih/version
+On Thu, Jul 12, 2007 at 04:24:04PM +0300, Boaz Harrosh wrote:
+> Boaz Harrosh wrote:
+> >   - use scsi_cmnd data accessors
+> >   - Clean the !use_sg code paths
+> > 
+> > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> > ---
+> >  drivers/usb/image/microtek.c |   32 ++++++++++++++------------------
+> >  1 files changed, 14 insertions(+), 18 deletions(-)
+> > 
+> > diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
+> > index 51bd80d..0a5c6e8 100644
+> > --- a/drivers/usb/image/microtek.c
+> > +++ b/drivers/usb/image/microtek.c
+> > @@ -447,7 +447,8 @@ static void mts_data_done( struct urb* transfer )
+> >  	MTS_INT_INIT();
+> >  
+> >  	if ( context->data_length != transfer->actual_length ) {
+> > -		context->srb->resid = context->data_length - transfer->actual_length;
+> > +		scsi_set_resid(context->srb, context->data_length -
+> > +		                                     transfer->actual_length);
+> >  	} else if ( unlikely(transfer->status) ) {
+> >  		context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
+> >  	}
+> > @@ -490,7 +491,8 @@ static void mts_command_done( struct urb *transfer )
+> >  					   context->data_pipe,
+> >  					   context->data,
+> >  					   context->data_length,
+> > -					   context->srb->use_sg > 1 ? mts_do_sg : mts_data_done);
+> > +					   scsi_sg_count(context->srb) > 1 ?
+> > +					           mts_do_sg : mts_data_done);
+> >  		} else {
+> >  			mts_get_status(transfer);
+> >  		}
+> > @@ -504,21 +506,23 @@ static void mts_do_sg (struct urb* transfer)
+> >  	struct scatterlist * sg;
+> >  	MTS_INT_INIT();
+> >  
+> > -	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,context->srb->use_sg);
+> > +	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,
+> > +	                                          scsi_sg_count(context->srb));
+> >  
+> >  	if (unlikely(transfer->status)) {
+> >                  context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
+> >  		mts_transfer_cleanup(transfer);
+> >          }
+> >  
+> > -	sg = context->srb->request_buffer;
+> > +	sg = scsi_sglist(context->srb);
+> >  	context->fragment++;
+> >  	mts_int_submit_urb(transfer,
+> >  			   context->data_pipe,
+> >  			   page_address(sg[context->fragment].page) +
+> >  			   sg[context->fragment].offset,
+> >  			   sg[context->fragment].length,
+> > -			   context->fragment + 1 == context->srb->use_sg ? mts_data_done : mts_do_sg);
+> > +			   context->fragment + 1 == scsi_sg_count(context->srb) ?
+> > +			   mts_data_done : mts_do_sg);
+> >  	return;
+> >  }
+> >  
+> > @@ -546,20 +550,12 @@ mts_build_transfer_context(struct scsi_cmnd *srb, struct mts_desc* desc)
+> >  	desc->context.srb = srb;
+> >  	desc->context.fragment = 0;
+> >  
+> > -	if (!srb->use_sg) {
+> > -		if ( !srb->request_bufflen ){
+> > -			desc->context.data = NULL;
+> > -			desc->context.data_length = 0;
+> > -			return;
+> > -		} else {
+> > -			desc->context.data = srb->request_buffer;
+> > -			desc->context.data_length = srb->request_bufflen;
+> > -			MTS_DEBUG("length = %d or %d\n",
+> > -				  srb->request_bufflen, srb->bufflen);
+> > -		}
+> > +	if (!scsi_bufflen(srb)) {
+> > +		desc->context.data = NULL;
+> > +		desc->context.data_length = 0;
+> > +		return;
+> >  	} else {
+> > -		MTS_DEBUG("Using scatter/gather\n");
+> > -		sg = srb->request_buffer;
+> > +		sg = scsi_sglist(srb);
+> >  		desc->context.data = page_address(sg[0].page) + sg[0].offset;
+> >  		desc->context.data_length = sg[0].length;
+> >  	}
 > 
+> I forgot TO: of maintainers
+> 
+> Oliver Neukum <oliver@neukum.name>
+> Greg Kroah-Hartman <gregkh@suse.de>
+> 
+> You seem to have signed some of the last patches
+> on this driver. Please review
 
-He is correct, the version is there in /sys/module/mptsas/version as
-well.   Please repost the patch with this removed.
+No objetion from me.  Care to resend it to me, and CC: the
+linux-usb-devel list also so that it is in a format that I can apply to
+the tree?
 
-Thanks,
-Eric
+thanks,
 
+greg k-h
