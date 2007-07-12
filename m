@@ -1,118 +1,65 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Oliver Neukum <oliver@neukum.org>
 Subject: Re: [PATCH] microtek.c - use data accessors and !use_sg cleanup
-Date: Thu, 12 Jul 2007 16:24:04 +0300
-Message-ID: <46962B74.9040909@panasas.com>
+Date: Thu, 12 Jul 2007 15:29:34 +0200
+Message-ID: <200707121529.35512.oliver@neukum.org>
 References: <468BE4CE.80402@panasas.com> <4696287C.8060501@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31687 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760726AbXGLNYU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 09:24:20 -0400
+Received: from smtp-out001.kontent.com ([81.88.40.215]:57571 "EHLO
+	smtp-out.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762866AbXGLNkE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 09:40:04 -0400
 In-Reply-To: <4696287C.8060501@panasas.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.name>, Greg Kroah-Hartman <gregkh@suse.de>
+To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Boaz Harrosh wrote:
+Am Donnerstag, 12. Juli 2007 schrieb Boaz Harrosh:
+>=20
 >   - use scsi_cmnd data accessors
 >   - Clean the !use_sg code paths
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/usb/image/microtek.c |   32 ++++++++++++++------------------
->  1 files changed, 14 insertions(+), 18 deletions(-)
-> 
-> diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
-> index 51bd80d..0a5c6e8 100644
-> --- a/drivers/usb/image/microtek.c
-> +++ b/drivers/usb/image/microtek.c
-> @@ -447,7 +447,8 @@ static void mts_data_done( struct urb* transfer )
->  	MTS_INT_INIT();
->  
->  	if ( context->data_length != transfer->actual_length ) {
-> -		context->srb->resid = context->data_length - transfer->actual_length;
-> +		scsi_set_resid(context->srb, context->data_length -
-> +		                                     transfer->actual_length);
->  	} else if ( unlikely(transfer->status) ) {
->  		context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
->  	}
-> @@ -490,7 +491,8 @@ static void mts_command_done( struct urb *transfer )
->  					   context->data_pipe,
->  					   context->data,
->  					   context->data_length,
-> -					   context->srb->use_sg > 1 ? mts_do_sg : mts_data_done);
-> +					   scsi_sg_count(context->srb) > 1 ?
-> +					           mts_do_sg : mts_data_done);
->  		} else {
->  			mts_get_status(transfer);
->  		}
-> @@ -504,21 +506,23 @@ static void mts_do_sg (struct urb* transfer)
->  	struct scatterlist * sg;
->  	MTS_INT_INIT();
->  
-> -	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,context->srb->use_sg);
-> +	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,
-> +	                                          scsi_sg_count(context->srb));
->  
->  	if (unlikely(transfer->status)) {
->                  context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
->  		mts_transfer_cleanup(transfer);
->          }
->  
-> -	sg = context->srb->request_buffer;
-> +	sg = scsi_sglist(context->srb);
->  	context->fragment++;
->  	mts_int_submit_urb(transfer,
->  			   context->data_pipe,
->  			   page_address(sg[context->fragment].page) +
->  			   sg[context->fragment].offset,
->  			   sg[context->fragment].length,
-> -			   context->fragment + 1 == context->srb->use_sg ? mts_data_done : mts_do_sg);
-> +			   context->fragment + 1 == scsi_sg_count(context->srb) ?
-> +			   mts_data_done : mts_do_sg);
->  	return;
->  }
->  
-> @@ -546,20 +550,12 @@ mts_build_transfer_context(struct scsi_cmnd *srb, struct mts_desc* desc)
->  	desc->context.srb = srb;
->  	desc->context.fragment = 0;
->  
-> -	if (!srb->use_sg) {
-> -		if ( !srb->request_bufflen ){
-> -			desc->context.data = NULL;
-> -			desc->context.data_length = 0;
-> -			return;
-> -		} else {
-> -			desc->context.data = srb->request_buffer;
-> -			desc->context.data_length = srb->request_bufflen;
-> -			MTS_DEBUG("length = %d or %d\n",
-> -				  srb->request_bufflen, srb->bufflen);
-> -		}
-> +	if (!scsi_bufflen(srb)) {
-> +		desc->context.data = NULL;
-> +		desc->context.data_length = 0;
-> +		return;
->  	} else {
-> -		MTS_DEBUG("Using scatter/gather\n");
-> -		sg = srb->request_buffer;
-> +		sg = scsi_sglist(srb);
->  		desc->context.data = page_address(sg[0].page) + sg[0].offset;
->  		desc->context.data_length = sg[0].length;
->  	}
 
-I forgot TO: of maintainers
+This doesn't compile, at least on x86_64, so NAK.
 
-Oliver Neukum <oliver@neukum.name>
-Greg Kroah-Hartman <gregkh@suse.de>
+	Regards
+		Oliver
 
-You seem to have signed some of the last patches
-on this driver. Please review
-
-Thanks
-Boaz Harrosh
-
-
+  CC [M]  drivers/usb/image/microtek.o
+drivers/usb/image/microtek.c: In function =E2=80=98mts_data_done=E2=80=99=
+:
+drivers/usb/image/microtek.c:450: warning: implicit declaration of func=
+tion =E2=80=98scsi_set_resid=E2=80=99
+drivers/usb/image/microtek.c: In function =E2=80=98mts_command_done=E2=80=
+=99:
+drivers/usb/image/microtek.c:494: warning: implicit declaration of func=
+tion =E2=80=98scsi_sg_count=E2=80=99
+drivers/usb/image/microtek.c: In function =E2=80=98mts_do_sg=E2=80=99:
+drivers/usb/image/microtek.c:517: warning: implicit declaration of func=
+tion =E2=80=98scsi_sglist=E2=80=99
+drivers/usb/image/microtek.c:517: warning: assignment makes pointer fro=
+m integer without a cast
+drivers/usb/image/microtek.c: In function =E2=80=98mts_build_transfer_c=
+ontext=E2=80=99:
+drivers/usb/image/microtek.c:553: warning: implicit declaration of func=
+tion =E2=80=98scsi_bufflen=E2=80=99
+drivers/usb/image/microtek.c:558: warning: assignment makes pointer fro=
+m integer without a cast
+  MODPOST vmlinux
+Kernel: arch/x86_64/boot/bzImage is ready  (#4)
+  Building modules, stage 2.
+  MODPOST 1705 modules
+ERROR: "scsi_set_resid" [drivers/usb/image/microtek.ko] undefined!
+ERROR: "scsi_sg_count" [drivers/usb/image/microtek.ko] undefined!
+ERROR: "scsi_sglist" [drivers/usb/image/microtek.ko] undefined!
+ERROR: "scsi_bufflen" [drivers/usb/image/microtek.ko] undefined!
+make[1]: *** [__modpost] Fehler 1
+make: *** [modules] Fehler 2
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
