@@ -1,64 +1,118 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and auditing
-Date: Thu, 12 Jul 2007 16:17:58 +0300
-Message-ID: <46962A06.3060500@panasas.com>
-References: <4695F76F.5000305@panasas.com>
+Subject: Re: [PATCH] microtek.c - use data accessors and !use_sg cleanup
+Date: Thu, 12 Jul 2007 16:24:04 +0300
+Message-ID: <46962B74.9040909@panasas.com>
+References: <468BE4CE.80402@panasas.com> <4696287C.8060501@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31709 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31687 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763883AbXGLNST (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 09:18:19 -0400
-In-Reply-To: <4695F76F.5000305@panasas.com>
+	with ESMTP id S1760726AbXGLNYU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jul 2007 09:24:20 -0400
+In-Reply-To: <4696287C.8060501@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, =?ISO-8859-1?Q?=22J=FCrgen_E=2E_Fischer=22?= <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Oliver Neukum <oliver@neukum.name>, Greg Kroah-Hartman <gregkh@suse.de>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
 Boaz Harrosh wrote:
-> In motivation for the !use_sg cleanup and use of accessors
-> I needed to do some restructuring of the aha152x.c driver.
+>   - use scsi_cmnd data accessors
+>   - Clean the !use_sg code paths
 > 
-> I have tried to be as careful as I could, but with out
-> the hardware for testing, it is hard. Christoph and James
-> You are signed on a couple of the last patches to this driver
-> So you are probably somewhat familiar with the code. Could
-> you please review the patchset to see that nothing is broken.
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/usb/image/microtek.c |   32 ++++++++++++++------------------
+>  1 files changed, 14 insertions(+), 18 deletions(-)
 > 
-> If any one has an Hardware that uses aha152x.c, please help me
-> with testing this patchset. If it does not work could you please
-> do a short bisect of which patch breaks out of the 4.
-> 
-> The problematic parts were that the driver writes all over the
-> scsi_cmnd members in couple of places. To untangle that I divided
-> the work to stages for easier review and testing. I was very 
-> verbose at each patch explanation, mainly for myself to try and
-> prove that the changes are sound. 
-> 
-> [patch 1/4] aha152x.c - Preliminary fixes and comments
->  Some weird typos and some hard coded numbers made the code
->  very hard to understand.
-> 
-> [patch 2/4]  aha152x.c - Clean Reset path
->  On the Reset code path the driver would save, write, than 
->  restore scsi_cmnd members. Here I propose a solution that
->  does not need to do that.
-> 
-> [patch 3/4] aha152x.c - Fix check_condition code-path
->   In case of a Status return from a target. The driver
->   would re-queue the command with a REQUEST_SENSE read.
->   Again save, write, restore. I cleaned that up to a stage
->   I can be happy with. Also while at it I fixed a BUG with
->   "resid".
-> 
-> [patch 4/4] aha152x.c - use data accessors and !use_sg cleanup
->   And now everything is ready for this one.
-> 
-> Thanks for any help
-> Boaz
+> diff --git a/drivers/usb/image/microtek.c b/drivers/usb/image/microtek.c
+> index 51bd80d..0a5c6e8 100644
+> --- a/drivers/usb/image/microtek.c
+> +++ b/drivers/usb/image/microtek.c
+> @@ -447,7 +447,8 @@ static void mts_data_done( struct urb* transfer )
+>  	MTS_INT_INIT();
+>  
+>  	if ( context->data_length != transfer->actual_length ) {
+> -		context->srb->resid = context->data_length - transfer->actual_length;
+> +		scsi_set_resid(context->srb, context->data_length -
+> +		                                     transfer->actual_length);
+>  	} else if ( unlikely(transfer->status) ) {
+>  		context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
+>  	}
+> @@ -490,7 +491,8 @@ static void mts_command_done( struct urb *transfer )
+>  					   context->data_pipe,
+>  					   context->data,
+>  					   context->data_length,
+> -					   context->srb->use_sg > 1 ? mts_do_sg : mts_data_done);
+> +					   scsi_sg_count(context->srb) > 1 ?
+> +					           mts_do_sg : mts_data_done);
+>  		} else {
+>  			mts_get_status(transfer);
+>  		}
+> @@ -504,21 +506,23 @@ static void mts_do_sg (struct urb* transfer)
+>  	struct scatterlist * sg;
+>  	MTS_INT_INIT();
+>  
+> -	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,context->srb->use_sg);
+> +	MTS_DEBUG("Processing fragment %d of %d\n", context->fragment,
+> +	                                          scsi_sg_count(context->srb));
+>  
+>  	if (unlikely(transfer->status)) {
+>                  context->srb->result = (transfer->status == -ENOENT ? DID_ABORT : DID_ERROR)<<16;
+>  		mts_transfer_cleanup(transfer);
+>          }
+>  
+> -	sg = context->srb->request_buffer;
+> +	sg = scsi_sglist(context->srb);
+>  	context->fragment++;
+>  	mts_int_submit_urb(transfer,
+>  			   context->data_pipe,
+>  			   page_address(sg[context->fragment].page) +
+>  			   sg[context->fragment].offset,
+>  			   sg[context->fragment].length,
+> -			   context->fragment + 1 == context->srb->use_sg ? mts_data_done : mts_do_sg);
+> +			   context->fragment + 1 == scsi_sg_count(context->srb) ?
+> +			   mts_data_done : mts_do_sg);
+>  	return;
+>  }
+>  
+> @@ -546,20 +550,12 @@ mts_build_transfer_context(struct scsi_cmnd *srb, struct mts_desc* desc)
+>  	desc->context.srb = srb;
+>  	desc->context.fragment = 0;
+>  
+> -	if (!srb->use_sg) {
+> -		if ( !srb->request_bufflen ){
+> -			desc->context.data = NULL;
+> -			desc->context.data_length = 0;
+> -			return;
+> -		} else {
+> -			desc->context.data = srb->request_buffer;
+> -			desc->context.data_length = srb->request_bufflen;
+> -			MTS_DEBUG("length = %d or %d\n",
+> -				  srb->request_bufflen, srb->bufflen);
+> -		}
+> +	if (!scsi_bufflen(srb)) {
+> +		desc->context.data = NULL;
+> +		desc->context.data_length = 0;
+> +		return;
+>  	} else {
+> -		MTS_DEBUG("Using scatter/gather\n");
+> -		sg = srb->request_buffer;
+> +		sg = scsi_sglist(srb);
+>  		desc->context.data = page_address(sg[0].page) + sg[0].offset;
+>  		desc->context.data_length = sg[0].length;
+>  	}
 
-Ooff I forgot to:
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-all of these patches. 
+I forgot TO: of maintainers
+
+Oliver Neukum <oliver@neukum.name>
+Greg Kroah-Hartman <gregkh@suse.de>
+
+You seem to have signed some of the last patches
+on this driver. Please review
+
+Thanks
+Boaz Harrosh
+
 
