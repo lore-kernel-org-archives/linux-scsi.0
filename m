@@ -1,28 +1,50 @@
-From: Olaf Hering <olaf@aepfle.de>
-Subject: PS3 Storage Driver O_DIRECT issue
-Date: Fri, 13 Jul 2007 14:27:52 +0200
-Message-ID: <20070713122752.GA854@aepfle.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
+Date: Fri, 13 Jul 2007 09:02:21 -0400
+Message-ID: <1184331741.3402.13.camel@localhost.localdomain>
 References: <20070704132212.726923000@pademelon.sonytel.be>
+	 <20070704132346.591348000@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759303AbXGMM1v@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20070704132212.726923000@pademelon.sonytel.be>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@ipvvis.unipv.it>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:56561 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758003AbXGMNCX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jul 2007 09:02:23 -0400
+In-Reply-To: <20070704132346.591348000@pademelon.sonytel.be>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, Alessandro Rubini <rubini@vision.unipv.it>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Geoff Levand <geoffrey.levand@am.sony.com>
+
+On Wed, 2007-07-04 at 15:22 +0200, Geert Uytterhoeven wrote:
+> +                       kaddr = kmap_atomic(sgpnt->page, KM_USER0);
+> +                       if (!kaddr)
+> +                               return -1;
+> +                       len = sgpnt->length;
+> +                       if ((req_len + len) > buflen) {
+> +                               active = 0;
+> +                               len = buflen - req_len;
+> +                       }
+> +                       memcpy(kaddr + sgpnt->offset, buf + req_len,
+> len);
+> +                       kunmap_atomic(kaddr, KM_USER0);
+
+This isn't a SCSI objection, but this sequence appears several times in
+this driver.  It's wrong for a non-PIPT architecture (and I believe the
+PS3 is VIPT) because you copy into the kernel alias for the page, which
+dirties the line in the cache of that alias (the user alias cache line
+was already invalidated).  However, unless you flush the kernel alias to
+main memory, the user could read stale data.  The way this is supposed
+to be done is to do a 
+
+flush_kernel_dcache_page(kaddr)
+
+before doing the kunmap.
+
+Otherwise it looks OK from the SCSI point of view.
+
+James
 
 
-This driver (or the generic PS3 code) has appearently problems with
-O_DIRECT. 
-glibc aborts parted because the malloc metadata get corrupted. While it
-is reproducible, the place where it crashes changes with every version
-of the debug attempt.
-I dont have a handle right now, all I know is that the metadata after a
-malloc area get overwritten with zeros.
-
-
-Can you have a look at this? 
-parted /dev/ps3da
-print (a few times)
