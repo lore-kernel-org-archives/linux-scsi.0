@@ -1,41 +1,56 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
-Date: Fri, 13 Jul 2007 18:35:28 +0200
-Message-ID: <20070713163528.GU5328@kernel.dk>
-References: <20070704132212.726923000@pademelon.sonytel.be> <Pine.LNX.4.62.0707131541150.18802@pademelon.sonytel.be> <1184335333.3402.20.camel@localhost.localdomain> <200707131619.54898.arnd@arndb.de> <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be>
+From: "Gwendal Grignou" <ggrignou@Brocade.COM>
+Subject: RE: [PATCH] add PCI_VENDOR_ID macro for Brocade in pci_ids.h
+Date: Fri, 13 Jul 2007 09:37:17 -0700
+Message-ID: <4C94DE2070B172459E4F1EE14BD2364E260915@HQ-EXCH-5.corp.brocade.com>
+References: <20070713091330.GA5564@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:21738 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754488AbXGMQfp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 13 Jul 2007 12:35:45 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be>
+Received: from mail.brocade.com ([66.243.153.242]:18954 "EHLO mx10.brocade.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1762965AbXGMQq6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jul 2007 12:46:58 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20070713091330.GA5564@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@ozlabs.org, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alessandro Rubini <rubini@vision.unipv.it>, Paul Mackerras <paulus@samba.org>
+To: "Prakash, Sathya" <sathya.prakash@lsi.com>, linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com, roger.hickerson@lsi.com
 
-On Fri, Jul 13 2007, Geert Uytterhoeven wrote:
-> > It's probably a good idea to have the flush_kernel_dcache_page() in there
-> > anyway, if only to serve as an example for people that copy it into
-> > architecture-independent drivers, same as what we do for the
-> > k{,un}map_atomic() that is also not required on ppc64.
+Sathya,
+
+Sorry for the previous comment about pci_ids.h, I did not see you sent 2
+patches.
+
+Gwendal.
+
+> -----Original Message-----
+> From: Prakash, Sathya [mailto:sathya.prakash@lsi.com]
+> Sent: Friday, July 13, 2007 2:14 AM
+> To: linux-scsi@vger.kernel.org
+> Cc: eric.moore@lsi.com; roger.hickerson@lsi.com; Gwendal Grignou
+> Subject: [PATCH] add PCI_VENDOR_ID macro for Brocade in pci_ids.h
 > 
-> Now my next question: why should I add it, if currently no single driver in
-> mainline calls flush_kernel_dcache_page()? 
+> Adds PCI_VENDOR_ID_BROCADE macro in include/linux/pci_ids.h file. This
+> macro
+> is used in MPT Fusion FC drivers to support Brocade branded FC
+controllers
 > 
-> `git grep' finds it in the following files only:
->     Documentation/cachetlb.txt
->     arch/parisc/kernel/cache.c
->     arch/parisc/kernel/pacache.S
->     include/asm-parisc/cacheflush.h
->     include/linux/highmem.h
-
-Not many drivers fiddle around with stuff like this, it's usually hidden
-behind the dma api or in helpers.
-
--- 
-Jens Axboe
-
+> signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
+> 
+> ---
+> 
+> diff -Naurp b/include/linux/pci_ids.h a/include/linux/pci_ids.h
+> --- b/include/linux/pci_ids.h	2007-07-02 16:20:47.000000000 +0530
+> +++ a/include/linux/pci_ids.h	2007-07-13 11:34:32.000000000 +0530
+> @@ -2043,6 +2043,8 @@
+> 
+>  #define PCI_VENDOR_ID_ARIMA		0x161f
+> 
+> +#define PCI_VENDOR_ID_BROCADE		0x1657
+> +
+>  #define PCI_VENDOR_ID_SIBYTE		0x166d
+>  #define PCI_DEVICE_ID_BCM1250_PCI	0x0001
+>  #define PCI_DEVICE_ID_BCM1250_HT	0x0002
