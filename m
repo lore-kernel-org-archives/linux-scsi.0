@@ -1,72 +1,138 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
-Date: Fri, 13 Jul 2007 11:28:47 -0400
-Message-ID: <1184340528.3402.32.camel@localhost.localdomain>
-References: <20070704132212.726923000@pademelon.sonytel.be>
-	 <Pine.LNX.4.62.0707131541150.18802@pademelon.sonytel.be>
-	 <1184335333.3402.20.camel@localhost.localdomain>
-	 <200707131619.54898.arnd@arndb.de>
-	 <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [dm-devel] dm-mpath-rdac.patch problem
+Date: Fri, 13 Jul 2007 09:12:53 -0700
+Message-ID: <20070713161253.GA20901@plap.qlogic.org>
+References: <4696D6CB.6050504@csupomona.edu> <1184292400.5146.45.camel@linuxchandra> <20070713023743.GA5350@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:40949 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932356AbXGMP2t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jul 2007 11:28:49 -0400
-In-Reply-To: <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be>
+Received: from avexch1.qlogic.com ([198.70.193.115]:13681 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754674AbXGMQN5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jul 2007 12:13:57 -0400
+Content-Disposition: inline
+In-Reply-To: <20070713023743.GA5350@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, linuxppc-dev@ozlabs.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alessandro Rubini <rubini@vision.unipv.it>, Paul Mackerras <paulus@samba.org>, Jens Axboe <jens.axboe@oracle.com>
+To: sekharan@us.ibm.com
+Cc: linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, Mike Anderson <andmike@us.ibm.com>
 
-On Fri, 2007-07-13 at 17:10 +0200, Geert Uytterhoeven wrote:
-> On Fri, 13 Jul 2007, Arnd Bergmann wrote:
-> > On Friday 13 July 2007, James Bottomley wrote:
-> > > > IC.
-> > > > 
-> > > >  - flush_kernel_dcache_page() is a no-op on ppc64
-> > > >   (ARCH_HAS_FLUSH_KERNEL_DCACHE_PAGE is defined on parisc only).
-> > > > 
-> > > >  - For reference, drivers/scsi/ipr.c (another ppc64 driver) just uses a plain
-> > > >   kmap/memcpy/kunmap sequence
-> > > > 
-> > > > So what should I do?
+On Thu, 12 Jul 2007, Mike Anderson wrote:
+
+> Copying this mail to linux-scsi and Ccing Andrew Vasquez to possibly
+> provide input on the Qlogic behavior.
+> 
+> Chandra Seetharaman <sekharan@us.ibm.com> wrote:
+> > On Thu, 2007-07-12 at 18:35 -0700, Brian De Wolf wrote:
+> > > Hello All,
 > > > 
-> > > Ask someone who knows the architecture ... Anton, Paulus or Benh ... I'm
-> > > fairly certain PPC is VIPT and will need some kind of alias
-> > > resolution ... perhaps its associative enough not to let the aliases be
-> > > a problem.
+> > > I'm not sure if this is the right place for this, but it seems to be the only
+> > > mailing list related to dm, multipath, and rdac, as far as I can tell.  I've
+> > > been trying out the dm-mpath-rdac patch (both yesterday's and previous) with
+> > > gentoo's unstable 2.6.22 kernel, on a Sun x4100 through a QLA2422 HBA (firmware
+> > > ql2400_fw.bin.4.00.27) to an IBM DS4000.  I am using a version of
+> > > multipath-tools that I got with git a few days ago.
+> > > 
+> > > I've got multipath working, it reports the hwhandler correctly ([hwhandler=1
+> > > rdac]), and the volume is mountable, etc.  It also shows one link as active, the
+> > > other as ghost.  However, once the active link dies, the volume becomes read
+> > > only, and both connections are listed as failed.  Most importantly, something
+> > > like this shows up in the logs:
+> > > 
+> > > Jul 12 17:11:15 jimbo kernel: device-mapper: multipath rdac: queueing
+> > > MODE_SELECT command on 8:32
 > > 
-> > I'm pretty sure that no ppc64 machine needs alias resolution in the kernel,
-> > although some are VIPT. Last time we discussed this, Segher explained it
-> > to me, but I don't remember which way Cell does it. IIRC, it automatically
-> > flushes cache lines that are accessed through aliases.
-> 
-> Thanks for confirming!
-> 
-> > It's probably a good idea to have the flush_kernel_dcache_page() in there
-> > anyway, if only to serve as an example for people that copy it into
-> > architecture-independent drivers, same as what we do for the
-> > k{,un}map_atomic() that is also not required on ppc64.
-> 
-> Now my next question: why should I add it, if currently no single driver in
-> mainline calls flush_kernel_dcache_page()? 
-> 
-> `git grep' finds it in the following files only:
->     Documentation/cachetlb.txt
->     arch/parisc/kernel/cache.c
->     arch/parisc/kernel/pacache.S
->     include/asm-parisc/cacheflush.h
->     include/linux/highmem.h
+> > It does look like the rdac hardware handler is doing the right thing and
+> > the qlogic is dying for some reason.
+> > 
+> > I have tested this code in both RHEL5 and SLES10 environments (qla23xx)
+> > and they work fine. Can you try in one of those and see if it is any
+> > different.
+> > 
+> > Just an FYI w.r.t multipath tools: please remove the patch
+> > http://git.kernel.org/?p=linux/storage/multipath-
+> > tools/.git;a=commit;h=e1e1a1bfb2cf76bfd1a49335e3deec5360fb09db from your
+> > tree for the tools to calculate the path priorities properly.
+> > 
+> > 
+> > > Jul 12 17:11:15 jimbo kernel: qla2xxx 0000:02:01.1: ISP System Error - mbx1=0h
+> > > mbx2=8012h mbx3=8002h.
+> > > Jul 12 17:11:15 jimbo kernel: qla2xxx 0000:02:01.1: Firmware has been previously
+> > > dumped (ffffc2000171d000) -- ignoring request...
+> > > Jul 12 17:11:16 jimbo kernel: qla2xxx 0000:02:01.1: Performing ISP error
+> > > recovery - ha= ffff81007e85c530.
 
-It's a recent addition to the API ... the previous way of doing it was
-flush_dcache_page() but that's expensive and flushes all the user
-aliases.  Since you know in this case there are no current user aliases
-and you only need to flush the kernel alias, flush_kernel_dcache_page()
-was introduced as the cheaper alternative.
+Hmm yes, there's some real problems going on within the firmware which
+we need to triage.  From the snippet above, the driver was able to
+capture a firmware-dump of a failure (not sure of the timing and how
+it relates to the window in which you recognized a 'problem'), but
+I'll need to to 'capture' the firmware trace and forward it along to
+us to inspect.
 
-James
+1) download the following shell script:
+
+	ftp://ftp.qlogic.com/outgoing/linux/beta/8.x/test/qla_dmp.sh
+
+2) copy the script to the host (/tmp) which is experiencing the
+   problems.
+
+3) reboot and load the driver with the ql2xextended_error_logging
+   module parameter set to 1. e.g.:
+
+	$ insmod qla2xxx.ko ql2xextended_error_logging=1
+
+4) rerun your test and monitor the kernel-messages file for a message
+   similar to:
+
+        Firmware dump saved to temp buffer (1/adcdabcd)
+
+5) To retrieve the dump, go to a console and type the following:
+
+        # cd /tmp/
+        # ./qla_dmp.sh 1
+
+   The value passed to qla_dmp.sh should be the same as the first integer
+   in the 'saved to temp buffer' string (in this example, 1).  If the
+   operation was successful, a message like to following should be
+   displayed:
+
+        Firmware dumped to file fw_dump_1_20041217_023222.txt.gz
+
+   Formward the 
+   forward over the file.
+
+6) forward over the /var/log/messages file of the driver load and
+   failure snippet.
 
 
+Not sure which firmware version you are running, but an additional
+datapoint which may be useful after you send the firmware-dump is to
+download the latest 24xx firmware file from QLogic.com:
+
+	ftp://ftp.qlogic.com/outgoing/linux/firmware/ql2400_fw.bin
+
+and retry the test.  If you still see problems, and see a similar
+'Firmware dump saved...' messages.  Follow the steps above again and
+forward the same datapoints.
+
+> > > While this may be something for the maintainer of the qla2xxx module (I can't
+> > > figure out where I'd send it, in that case...) I think it may be of interest
+> > > that the dm_rdac module tries to push something over the HBA that causes it to
+> > > bail completely and start from scratch (it starts init processes and loading
+> > > firmware again).
+> > > 
+> > > Not to say that I'm not interested in any help getting this working, that is.
+> > > If you have any suggestions on how to get this working, I'd love to hear them.
+> > > I'm also willing to guinea pig some testing if you need it (This box still has a
+> > > bit before it will have to be put in use).  I may use redhat to ensure that it's
+> > > not just a broken HBA, but for the long run we would like it to join our gentoo
+> > > environment.
+> > > 
+> > > Thanks!
+> > > Brian De Wolf
+> > > 
+> > > PS- If the subject mislead you because you feel that this is just a qla2xxx
+> > > problem, I'm sorry for wasting your time.
+
+Regards,
+Andrew Vasquez
