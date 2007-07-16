@@ -1,110 +1,158 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 04/33] scsi: convert to using sg helpers
-Date: Mon, 16 Jul 2007 11:47:18 +0200
-Message-ID: <11845792672912-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 25/33] gdth: sg chaining support
+Date: Mon, 16 Jul 2007 11:47:39 +0200
+Message-ID: <11845792684097-git-send-email-jens.axboe@oracle.com>
 References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9305 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:9352 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759454AbXGPJsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 05:48:36 -0400
+	id S1760032AbXGPJsm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 05:48:42 -0400
 In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com
+Cc: Jens Axboe <jens.axboe@oracle.com>, achim_leubner@adaptec.com
 
-This converts the SCSI mid layer to using the sg helpers for looking up
-sg elements, instead of doing it manually.
-
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@SteelEye.com
+Cc: achim_leubner@adaptec.com
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/scsi/scsi_lib.c  |   21 ++++++++++++---------
- include/scsi/scsi_cmnd.h |    2 +-
- 2 files changed, 13 insertions(+), 10 deletions(-)
+ drivers/scsi/gdth.c |   45 +++++++++++++++++++++++----------------------
+ 1 files changed, 23 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 1f5a07b..9fe66f8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -17,6 +17,7 @@
- #include <linux/pci.h>
- #include <linux/delay.h>
- #include <linux/hardirq.h>
-+#include <linux/scatterlist.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -302,14 +303,15 @@ static int scsi_req_map_sg(struct request *rq, struct scatterlist *sgl,
- 	struct request_queue *q = rq->q;
- 	int nr_pages = (bufflen + sgl[0].offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
- 	unsigned int data_len = 0, len, bytes, off;
-+	struct scatterlist *sg;
- 	struct page *page;
- 	struct bio *bio = NULL;
- 	int i, err, nr_vecs = 0;
- 
--	for (i = 0; i < nsegs; i++) {
--		page = sgl[i].page;
--		off = sgl[i].offset;
--		len = sgl[i].length;
-+	for_each_sg(sgl, sg, nsegs, i) {
-+		page = sg->page;
-+		off = sg->offset;
-+		len = sg->length;
- 		data_len += len;
- 
- 		while (len > 0) {
-@@ -2240,18 +2242,19 @@ EXPORT_SYMBOL_GPL(scsi_target_unblock);
-  *
-  * Returns virtual address of the start of the mapped page
-  */
--void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
-+void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
- 			  size_t *offset, size_t *len)
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index d0b95ce..7225c95 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -2656,7 +2656,7 @@ static void gdth_copy_internal_data(int hanum,Scsi_Cmnd *scp,
  {
- 	int i;
- 	size_t sg_len = 0, len_complete = 0;
-+	struct scatterlist *sg;
- 	struct page *page;
+     ushort cpcount,i;
+     ushort cpsum,cpnow;
+-    struct scatterlist *sl;
++    struct scatterlist *sl, *sg;
+     gdth_ha_str *ha;
+     char *address;
  
- 	WARN_ON(!irqs_disabled());
+@@ -2665,29 +2665,30 @@ static void gdth_copy_internal_data(int hanum,Scsi_Cmnd *scp,
  
--	for (i = 0; i < sg_count; i++) {
-+	for_each_sg(sgl, sg, sg_count, i) {
- 		len_complete = sg_len; /* Complete sg-entries */
--		sg_len += sg[i].length;
-+		sg_len += sg->length;
- 		if (sg_len > *offset)
- 			break;
- 	}
-@@ -2265,10 +2268,10 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- 	}
+     if (scp->use_sg) {
+         sl = (struct scatterlist *)scp->request_buffer;
+-        for (i=0,cpsum=0; i<scp->use_sg; ++i,++sl) {
++	cpsum = 0;
++	for_each_sg(sl, sg, scp->use_sg, i) {
+             unsigned long flags;
+-            cpnow = (ushort)sl->length;
++            cpnow = (ushort)sg->length;
+             TRACE(("copy_internal() now %d sum %d count %d %d\n",
+                           cpnow,cpsum,cpcount,(ushort)scp->bufflen));
+             if (cpsum+cpnow > cpcount) 
+                 cpnow = cpcount - cpsum;
+             cpsum += cpnow;
+-            if (!sl->page) {
++            if (!sg->page) {
+                 printk("GDT-HA %d: invalid sc/gt element in gdth_copy_internal_data()\n",
+                        hanum);
+                 return;
+             }
+             local_irq_save(flags);
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
+-            address = kmap_atomic(sl->page, KM_BIO_SRC_IRQ) + sl->offset;
++            address = kmap_atomic(sg->page, KM_BIO_SRC_IRQ) + sg->offset;
+             memcpy(address,buffer,cpnow);
+-            flush_dcache_page(sl->page);
++            flush_dcache_page(sg->page);
+             kunmap_atomic(address, KM_BIO_SRC_IRQ);
+ #else
+-            address = kmap_atomic(sl->page, KM_BH_IRQ) + sl->offset;
++            address = kmap_atomic(sg->page, KM_BH_IRQ) + sg->offset;
+             memcpy(address,buffer,cpnow);
+-            flush_dcache_page(sl->page);
++            flush_dcache_page(sg->page);
+             kunmap_atomic(address, KM_BH_IRQ);
+ #endif
+             local_irq_restore(flags);
+@@ -2807,7 +2808,7 @@ static int gdth_fill_cache_cmd(int hanum,Scsi_Cmnd *scp,ushort hdrive)
+ {
+     register gdth_ha_str *ha;
+     register gdth_cmd_str *cmdp;
+-    struct scatterlist *sl;
++    struct scatterlist *sl, *sg;
+     ulong32 cnt, blockcnt;
+     ulong64 no, blockno;
+     dma_addr_t phys_addr;
+@@ -2913,25 +2914,25 @@ static int gdth_fill_cache_cmd(int hanum,Scsi_Cmnd *scp,ushort hdrive)
+             if (mode64) {
+                 cmdp->u.cache64.DestAddr= (ulong64)-1;
+                 cmdp->u.cache64.sg_canz = sgcnt;
+-                for (i=0; i<sgcnt; ++i,++sl) {
+-                    cmdp->u.cache64.sg_lst[i].sg_ptr = sg_dma_address(sl);
++		for_each_sg(sl, sg, sgcnt, i) {
++                    cmdp->u.cache64.sg_lst[i].sg_ptr = sg_dma_address(sg);
+ #ifdef GDTH_DMA_STATISTICS
+                     if (cmdp->u.cache64.sg_lst[i].sg_ptr > (ulong64)0xffffffff)
+                         ha->dma64_cnt++;
+                     else
+                         ha->dma32_cnt++;
+ #endif
+-                    cmdp->u.cache64.sg_lst[i].sg_len = sg_dma_len(sl);
++                    cmdp->u.cache64.sg_lst[i].sg_len = sg_dma_len(sg);
+                 }
+             } else {
+                 cmdp->u.cache.DestAddr= 0xffffffff;
+                 cmdp->u.cache.sg_canz = sgcnt;
+-                for (i=0; i<sgcnt; ++i,++sl) {
+-                    cmdp->u.cache.sg_lst[i].sg_ptr = sg_dma_address(sl);
++		for_each_sg(sl, sg, sgcnt, i) {
++                    cmdp->u.cache.sg_lst[i].sg_ptr = sg_dma_address(sg);
+ #ifdef GDTH_DMA_STATISTICS
+                     ha->dma32_cnt++;
+ #endif
+-                    cmdp->u.cache.sg_lst[i].sg_len = sg_dma_len(sl);
++                    cmdp->u.cache.sg_lst[i].sg_len = sg_dma_len(sg);
+                 }
+             }
  
- 	/* Offset starting from the beginning of first page in this sg-entry */
--	*offset = *offset - len_complete + sg[i].offset;
-+	*offset = *offset - len_complete + sg->offset;
+@@ -3017,7 +3018,7 @@ static int gdth_fill_raw_cmd(int hanum,Scsi_Cmnd *scp,unchar b)
+ {
+     register gdth_ha_str *ha;
+     register gdth_cmd_str *cmdp;
+-    struct scatterlist *sl;
++    struct scatterlist *sl, *sg;
+     ushort i;
+     dma_addr_t phys_addr, sense_paddr;
+     int cmd_index, sgcnt, mode64;
+@@ -3120,25 +3121,25 @@ static int gdth_fill_raw_cmd(int hanum,Scsi_Cmnd *scp,unchar b)
+             if (mode64) {
+                 cmdp->u.raw64.sdata = (ulong64)-1;
+                 cmdp->u.raw64.sg_ranz = sgcnt;
+-                for (i=0; i<sgcnt; ++i,++sl) {
+-                    cmdp->u.raw64.sg_lst[i].sg_ptr = sg_dma_address(sl);
++		for_each_sg(sl, sg, sgcnt, i) {
++                    cmdp->u.raw64.sg_lst[i].sg_ptr = sg_dma_address(sg);
+ #ifdef GDTH_DMA_STATISTICS
+                     if (cmdp->u.raw64.sg_lst[i].sg_ptr > (ulong64)0xffffffff)
+                         ha->dma64_cnt++;
+                     else
+                         ha->dma32_cnt++;
+ #endif
+-                    cmdp->u.raw64.sg_lst[i].sg_len = sg_dma_len(sl);
++                    cmdp->u.raw64.sg_lst[i].sg_len = sg_dma_len(sg);
+                 }
+             } else {
+                 cmdp->u.raw.sdata = 0xffffffff;
+                 cmdp->u.raw.sg_ranz = sgcnt;
+-                for (i=0; i<sgcnt; ++i,++sl) {
+-                    cmdp->u.raw.sg_lst[i].sg_ptr = sg_dma_address(sl);
++		for_each_sg(sl, sg, sgcnt, i) {
++                    cmdp->u.raw.sg_lst[i].sg_ptr = sg_dma_address(sg);
+ #ifdef GDTH_DMA_STATISTICS
+                     ha->dma32_cnt++;
+ #endif
+-                    cmdp->u.raw.sg_lst[i].sg_len = sg_dma_len(sl);
++                    cmdp->u.raw.sg_lst[i].sg_len = sg_dma_len(sg);
+                 }
+             }
  
- 	/* Assumption: contiguous pages can be accessed as "page + i" */
--	page = nth_page(sg[i].page, (*offset >> PAGE_SHIFT));
-+	page = nth_page(sg->page, (*offset >> PAGE_SHIFT));
- 	*offset &= ~PAGE_MASK;
- 
- 	/* Bytes in this sg-entry from *offset to the end of the page */
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 53e1705..a059f1b 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -153,6 +153,6 @@ static inline int scsi_get_resid(struct scsi_cmnd *cmd)
- }
- 
- #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
--	for (__i = 0, sg = scsi_sglist(cmd); __i < (nseg); __i++, (sg)++)
-+	for_each_sg(scsi_sglist(cmd), sg, nseg, __i)
- 
- #endif /* _SCSI_SCSI_CMND_H */
 -- 
 1.5.3.rc0.90.gbaa79
 
