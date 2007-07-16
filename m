@@ -1,64 +1,56 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 29/33] infiniband: sg chaining support
-Date: Mon, 16 Jul 2007 15:26:28 +0200
-Message-ID: <20070716132627.GT5195@kernel.dk>
-References: <11845792671245-git-send-email-jens.axboe@oracle.com> <11845792693361-git-send-email-jens.axboe@oracle.com> <200707161321.l6GDLxfA028923@mbox.iij4u.or.jp>
+Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
+Date: Mon, 16 Jul 2007 15:33:17 +0200
+Message-ID: <20070716133316.GU5195@kernel.dk>
+References: <Pine.LNX.4.62.0707131541150.18802@pademelon.sonytel.be> <1184335333.3402.20.camel@localhost.localdomain> <200707131619.54898.arnd@arndb.de> <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be> <1184340528.3402.32.camel@localhost.localdomain> <Pine.LNX.4.62.0707132212520.23000@chinchilla.sonytel.be> <Pine.LNX.4.62.0707161338230.1072@pademelon.sonytel.be> <20070716121649.GI5195@kernel.dk> <Pine.LNX.4.62.0707161459010.1072@pademelon.sonytel.be> <Pine.LNX.4.62.0707161515460.1072@pademelon.sonytel.be>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:27561 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:26705 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755032AbXGPN1K (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 09:27:10 -0400
+	id S1765348AbXGPNd7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 09:33:59 -0400
 Content-Disposition: inline
-In-Reply-To: <200707161321.l6GDLxfA028923@mbox.iij4u.or.jp>
+In-Reply-To: <Pine.LNX.4.62.0707161515460.1072@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rolandd@cisco.com, fujita.tomonori@lab.ntt.co.jp
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Alessandro Rubini <rubini@vision.unipv.it>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Paul Mackerras <paulus@samba.org>
 
-On Mon, Jul 16 2007, FUJITA Tomonori wrote:
-> From: Jens Axboe <jens.axboe@oracle.com>
-> Subject: [PATCH 29/33] infiniband: sg chaining support
-> Date: Mon, 16 Jul 2007 11:47:43 +0200
+On Mon, Jul 16 2007, Geert Uytterhoeven wrote:
+> On Mon, 16 Jul 2007, Geert Uytterhoeven wrote:
+> > On Mon, 16 Jul 2007, Jens Axboe wrote:
+> > > On Mon, Jul 16 2007, Geert Uytterhoeven wrote:
+> > > > On Fri, 13 Jul 2007, Geert Uytterhoeven wrote:
+> > > > > Ah, that explains it. flush_dcache_page() is used in some drivers.
+> > > > > I'll update my patches. Thanks for the comments!
+> > > > 
+> > > > Does this look OK?
+> > > >   - Replaced KM_USER0 by KM_IRQ0 (all routines are either called from an
+> > > >     interrupt handler, from .request_fn (ps3disk), or from .queuecommand
+> > > >     (ps3rom))
+> > > 
+> > > That looks good.
+> > > 
+> > > >   - Add a call to flush_kernel_dcache_page() in routines that write to buffers
+> > > 
+> > > Hmm, I would have thought a flush_dcache_page() would be more
+> > > appropriate, the backing could be page cache pages.
+> > 
+> > OK, I'll change it to flush_dcache_page().
 > 
-> > @@ -226,7 +228,8 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
-> >  			       struct iser_page_vec *page_vec,
-> >  			       struct ib_device *ibdev)
-> >  {
-> > -	struct scatterlist *sg = (struct scatterlist *)data->buf;
-> > +	struct scatterlist *sgl = (struct scatterlist *)data->buf;
-> > +	struct scatterlist *sg;
-> >  	u64 first_addr, last_addr, page;
-> >  	int end_aligned;
-> >  	unsigned int cur_page = 0;
-> > @@ -234,14 +237,14 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
-> >  	int i;
-> >  
-> >  	/* compute the offset of first element */
-> > -	page_vec->offset = (u64) sg[0].offset & ~MASK_4K;
-> > +	page_vec->offset = (u64) sgl[0].offset & ~MASK_4K;
-> >  
-> > -	for (i = 0; i < data->dma_nents; i++) {
-> > -		unsigned int dma_len = ib_sg_dma_len(ibdev, &sg[i]);
-> > +	for_each_sg(sgl, sg, data->dma_nents, i) {
-> > +		unsigned int dma_len = ib_sg_dma_len(ibdev, sg);
-> >  
-> >  		total_sz += dma_len;
-> >  
-> > -		first_addr = ib_sg_dma_address(ibdev, &sg[i]);
-> > +		first_addr = ib_sg_dma_address(ibdev, sg);
-> >  		last_addr  = first_addr + dma_len;
-> >  
-> >  		end_aligned   = !(last_addr  & ~MASK_4K);
-> > @@ -249,9 +252,9 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
-> >  		/* continue to collect page fragments till aligned or SG ends */
-> >  		while (!end_aligned && (i + 1 < data->dma_nents)) {
-> >  			i++;
+> Upon closer look, while flush_kernel_dcache_page() is a no-op on ppc64,
+> flush_dcache_page() isn't. So I'd prefer to not call it if not really needed.
 > 
-> Do we need to replace i++ with sg = sg_next(sg) here?
+> And according to James, flush_kernel_dcache_page() should be sufficient...
+> 
+> So I'm getting puzzled again...
 
-We do, updating the patch. Thanks for your review!
+I'll let James expand on why he thinks flush_kernel_dcache_page() should
+be sufficient. If the backing is always user memory from
+get_user_pages(), then the flush_kernel_dcache_page() looks sufficient.
+For the normal IO paths, it could be that or page cache pages too for
+instance.
 
 -- 
 Jens Axboe
