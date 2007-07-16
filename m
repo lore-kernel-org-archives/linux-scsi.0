@@ -1,45 +1,118 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 00/33] SG table chaining support
-Date: Mon, 16 Jul 2007 18:43:10 +0200
-Message-ID: <20070716164309.GA5195@kernel.dk>
-References: <11845792671245-git-send-email-jens.axboe@oracle.com> <18075.31515.974905.507754@stoffel.org> <yq1d4ysv35d.fsf@sermon.lab.mkp.net> <Pine.LNX.4.64.0707161852380.5065@kai.makisara.local>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] libsas: fix lockdep issue with ATA
+Date: Mon, 16 Jul 2007 13:15:51 -0500
+Message-ID: <1184609751.3447.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:12070 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760284AbXGPQnu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 12:43:50 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0707161852380.5065@kai.makisara.local>
+Received: from hancock.steeleye.com ([71.30.118.248]:56281 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752233AbXGPSPx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 14:15:53 -0400
+Received: from [172.17.6.40] (midgard.sc.steeleye.com [172.17.6.40])
+	by hancock.sc.steeleye.com (Postfix) with ESMTP id B12B09ED8003
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2007 14:15:51 -0400 (EDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, John Stoffel <john@stoffel.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 16 2007, Kai Makisara wrote:
-> On Mon, 16 Jul 2007, Martin K. Petersen wrote:
-> 
-> > >>>>> "John" == John Stoffel <john@stoffel.org> writes:
-> > 
-> > John> Will this help out tape drive performance at all?  I looked
-> > John> through the patches quickly, esp the AIC7xxx stuff since that's
-> > John> what I use, but nothing jumped out at me...
-> > 
-> > Yes.  Most modern tape drives want a block size of 1MB or higher.
-> > With the old stack we'd be stuck at 512KB because the sg limitations
-> > caused us to come just short of 1MB...
-> > 
-> Tape block sizes up to 16 MB have been possible for a very long time but 
-> this has required tuning of the block/scsi parameters. Very few people 
-> seem to have done this and the common (mis)belief seems to be that the 
-> tape block size limit has been 512 kB. It is good if this tuning is not
-> needed in future.
+lockdep noticed that with ATA support the port->dev_list_lock was
+entangled at irq context, so it now needs to become IRQ safe
 
-The main difference is now you get to do it without hacks and in a clean
-way, so it works through the normal IO path and not some on-the-side
-thing (or st only).
+---
+This applies against the aic94xx-sas-2.6 tree
 
--- 
-Jens Axboe
+James
+
+diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+index a18c0f6..ce3385c 100644
+--- a/drivers/scsi/libsas/sas_discover.c
++++ b/drivers/scsi/libsas/sas_discover.c
+@@ -292,9 +292,9 @@ static int sas_get_port_device(struct asd_sas_port *port)
+ 	port->disc.max_level = 0;
+ 
+ 	dev->rphy = rphy;
+-	spin_lock(&port->dev_list_lock);
++	spin_lock_irqsave(&port->dev_list_lock, flags);
+ 	list_add_tail(&dev->dev_list_node, &port->dev_list);
+-	spin_unlock(&port->dev_list_lock);
++	spin_unlock_irqrestore(&port->dev_list_lock, flags);
+ 
+ 	return 0;
+ }
+@@ -688,12 +688,14 @@ static void sas_discover_domain(struct work_struct *work)
+ 	}
+ 
+ 	if (error) {
++		unsigned long flags;
++
+ 		sas_rphy_free(dev->rphy);
+ 		dev->rphy = NULL;
+ 
+-		spin_lock(&port->dev_list_lock);
++		spin_lock_irqsave(&port->dev_list_lock, flags);
+ 		list_del_init(&dev->dev_list_node);
+-		spin_unlock(&port->dev_list_lock);
++		spin_unlock_irqrestore(&port->dev_list_lock, flags);
+ 
+ 		kfree(dev); /* not kobject_register-ed yet */
+ 		port->port_dev = NULL;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index d05fc23..1c15f37 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -628,6 +628,7 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 	struct domain_device *child = NULL;
+ 	struct sas_rphy *rphy;
+ 	int res;
++	unsigned long flags;
+ 
+ 	if (phy->attached_sata_host || phy->attached_sata_ps)
+ 		return NULL;
+@@ -677,9 +678,9 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 
+ 		child->rphy = rphy;
+ 
+-		spin_lock(&parent->port->dev_list_lock);
++		spin_lock_irqsave(&parent->port->dev_list_lock, flags);
+ 		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
+-		spin_unlock(&parent->port->dev_list_lock);
++		spin_unlock_irqrestore(&parent->port->dev_list_lock, flags);
+ 
+ 		res = sas_discover_sata(child);
+ 		if (res) {
+@@ -701,9 +702,9 @@ static struct domain_device *sas_ex_discover_end_dev(
+ 		child->rphy = rphy;
+ 		sas_fill_in_rphy(child, rphy);
+ 
+-		spin_lock(&parent->port->dev_list_lock);
++		spin_lock_irqsave(&parent->port->dev_list_lock, flags);
+ 		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
+-		spin_unlock(&parent->port->dev_list_lock);
++		spin_unlock_irqrestore(&parent->port->dev_list_lock, flags);
+ 
+ 		res = sas_discover_end_dev(child);
+ 		if (res) {
+@@ -767,6 +768,7 @@ static struct domain_device *sas_ex_discover_expander(
+ 	struct sas_expander_device *edev;
+ 	struct asd_sas_port *port;
+ 	int res;
++	unsigned long flags;
+ 
+ 	if (phy->routing_attr == DIRECT_ROUTING) {
+ 		SAS_DPRINTK("ex %016llx:0x%x:D <--> ex %016llx:0x%x is not "
+@@ -816,9 +818,9 @@ static struct domain_device *sas_ex_discover_expander(
+ 	sas_fill_in_rphy(child, rphy);
+ 	sas_rphy_add(rphy);
+ 
+-	spin_lock(&parent->port->dev_list_lock);
++	spin_lock_irqsave(&parent->port->dev_list_lock, flags);
+ 	list_add_tail(&child->dev_list_node, &parent->port->dev_list);
+-	spin_unlock(&parent->port->dev_list_lock);
++	spin_unlock_irqrestore(&parent->port->dev_list_lock, flags);
+ 
+ 	res = sas_discover_expander(child);
+ 	if (res) {
+
 
