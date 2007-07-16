@@ -1,106 +1,110 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 08/33] swiotlb: sg chaining support
-Date: Mon, 16 Jul 2007 11:47:22 +0200
-Message-ID: <11845792683072-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 04/33] scsi: convert to using sg helpers
+Date: Mon, 16 Jul 2007 11:47:18 +0200
+Message-ID: <11845792672912-git-send-email-jens.axboe@oracle.com>
 References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9298 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:9305 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759402AbXGPJsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1759454AbXGPJsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 16 Jul 2007 05:48:36 -0400
 In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jens.axboe@oracle.com>, ak@suse.de
+Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@SteelEye.com
 
-Cc: ak@suse.de
+This converts the SCSI mid layer to using the sg helpers for looking up
+sg elements, instead of doing it manually.
+
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@SteelEye.com
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- lib/swiotlb.c |   19 ++++++++++++-------
- 1 files changed, 12 insertions(+), 7 deletions(-)
+ drivers/scsi/scsi_lib.c  |   21 ++++++++++++---------
+ include/scsi/scsi_cmnd.h |    2 +-
+ 2 files changed, 13 insertions(+), 10 deletions(-)
 
-diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-index 10c13ad..1f658e4 100644
---- a/lib/swiotlb.c
-+++ b/lib/swiotlb.c
-@@ -673,16 +673,17 @@ swiotlb_sync_single_range_for_device(struct device *hwdev, dma_addr_t dev_addr,
-  * same here.
-  */
- int
--swiotlb_map_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
-+swiotlb_map_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
- 	       int dir)
- {
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 1f5a07b..9fe66f8 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -17,6 +17,7 @@
+ #include <linux/pci.h>
+ #include <linux/delay.h>
+ #include <linux/hardirq.h>
++#include <linux/scatterlist.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -302,14 +303,15 @@ static int scsi_req_map_sg(struct request *rq, struct scatterlist *sgl,
+ 	struct request_queue *q = rq->q;
+ 	int nr_pages = (bufflen + sgl[0].offset + PAGE_SIZE - 1) >> PAGE_SHIFT;
+ 	unsigned int data_len = 0, len, bytes, off;
 +	struct scatterlist *sg;
- 	void *addr;
- 	dma_addr_t dev_addr;
- 	int i;
+ 	struct page *page;
+ 	struct bio *bio = NULL;
+ 	int i, err, nr_vecs = 0;
  
- 	BUG_ON(dir == DMA_NONE);
+-	for (i = 0; i < nsegs; i++) {
+-		page = sgl[i].page;
+-		off = sgl[i].offset;
+-		len = sgl[i].length;
++	for_each_sg(sgl, sg, nsegs, i) {
++		page = sg->page;
++		off = sg->offset;
++		len = sg->length;
+ 		data_len += len;
  
--	for (i = 0; i < nelems; i++, sg++) {
-+	for_each_sg(sgl, sg, nelems, i) {
- 		addr = SG_ENT_VIRT_ADDRESS(sg);
- 		dev_addr = virt_to_bus(addr);
- 		if (swiotlb_force || address_needs_mapping(hwdev, dev_addr)) {
-@@ -692,7 +693,7 @@ swiotlb_map_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
- 				   to do proper error handling. */
- 				swiotlb_full(hwdev, sg->length, dir, 0);
- 				swiotlb_unmap_sg(hwdev, sg - i, i, dir);
--				sg[0].dma_length = 0;
-+				sgl[0].dma_length = 0;
- 				return 0;
- 			}
- 			sg->dma_address = virt_to_bus(map);
-@@ -708,19 +709,21 @@ swiotlb_map_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
-  * concerning calls here are the same as for swiotlb_unmap_single() above.
+ 		while (len > 0) {
+@@ -2240,18 +2242,19 @@ EXPORT_SYMBOL_GPL(scsi_target_unblock);
+  *
+  * Returns virtual address of the start of the mapped page
   */
- void
--swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
-+swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
- 		 int dir)
+-void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
++void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
+ 			  size_t *offset, size_t *len)
  {
-+	struct scatterlist *sg;
  	int i;
+ 	size_t sg_len = 0, len_complete = 0;
++	struct scatterlist *sg;
+ 	struct page *page;
  
- 	BUG_ON(dir == DMA_NONE);
+ 	WARN_ON(!irqs_disabled());
  
--	for (i = 0; i < nelems; i++, sg++)
-+	for_each_sg(sgl, sg, nelems, i) {
- 		if (sg->dma_address != SG_ENT_PHYS_ADDRESS(sg))
- 			unmap_single(hwdev, bus_to_virt(sg->dma_address),
- 				     sg->dma_length, dir);
- 		else if (dir == DMA_FROM_DEVICE)
- 			dma_mark_clean(SG_ENT_VIRT_ADDRESS(sg), sg->dma_length);
-+	}
+-	for (i = 0; i < sg_count; i++) {
++	for_each_sg(sgl, sg, sg_count, i) {
+ 		len_complete = sg_len; /* Complete sg-entries */
+-		sg_len += sg[i].length;
++		sg_len += sg->length;
+ 		if (sg_len > *offset)
+ 			break;
+ 	}
+@@ -2265,10 +2268,10 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+ 	}
+ 
+ 	/* Offset starting from the beginning of first page in this sg-entry */
+-	*offset = *offset - len_complete + sg[i].offset;
++	*offset = *offset - len_complete + sg->offset;
+ 
+ 	/* Assumption: contiguous pages can be accessed as "page + i" */
+-	page = nth_page(sg[i].page, (*offset >> PAGE_SHIFT));
++	page = nth_page(sg->page, (*offset >> PAGE_SHIFT));
+ 	*offset &= ~PAGE_MASK;
+ 
+ 	/* Bytes in this sg-entry from *offset to the end of the page */
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 53e1705..a059f1b 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -153,6 +153,6 @@ static inline int scsi_get_resid(struct scsi_cmnd *cmd)
  }
  
- /*
-@@ -731,19 +734,21 @@ swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
-  * and usage.
-  */
- static void
--swiotlb_sync_sg(struct device *hwdev, struct scatterlist *sg,
-+swiotlb_sync_sg(struct device *hwdev, struct scatterlist *sgl,
- 		int nelems, int dir, int target)
- {
-+	struct scatterlist *sg;
- 	int i;
+ #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
+-	for (__i = 0, sg = scsi_sglist(cmd); __i < (nseg); __i++, (sg)++)
++	for_each_sg(scsi_sglist(cmd), sg, nseg, __i)
  
- 	BUG_ON(dir == DMA_NONE);
- 
--	for (i = 0; i < nelems; i++, sg++)
-+	for_each_sg(sgl, sg, nelems, i) {
- 		if (sg->dma_address != SG_ENT_PHYS_ADDRESS(sg))
- 			sync_single(hwdev, bus_to_virt(sg->dma_address),
- 				    sg->dma_length, dir, target);
- 		else if (dir == DMA_FROM_DEVICE)
- 			dma_mark_clean(SG_ENT_VIRT_ADDRESS(sg), sg->dma_length);
-+	}
- }
- 
- void
+ #endif /* _SCSI_SCSI_CMND_H */
 -- 
 1.5.3.rc0.90.gbaa79
 
