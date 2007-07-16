@@ -1,188 +1,468 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 33/33] IDE: sg chaining support
-Date: Mon, 16 Jul 2007 11:47:47 +0200
-Message-ID: <11845792694102-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 30/33] USB storage: sg chaining support
+Date: Mon, 16 Jul 2007 11:47:44 +0200
+Message-ID: <11845792692184-git-send-email-jens.axboe@oracle.com>
 References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9343 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:9301 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761580AbXGPJsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1760967AbXGPJsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 16 Jul 2007 05:48:39 -0400
 In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jens.axboe@oracle.com>, bzolnier@gmail.com
+Cc: Jens Axboe <jens.axboe@oracle.com>, greg@kroah.com
 
-Cc: bzolnier@gmail.com
+[PATCH] USB storage: sg chaining support
+
+Modify usb_stor_access_xfer_buf() to take a pointer to an sg
+entry pointer, so we can keep track of that instead of passing
+around an integer index (which we can't use when dealing with
+multiple scatterlist arrays).
+
+Cc: greg@kroah.com
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/ide/cris/ide-cris.c   |    3 ++-
- drivers/ide/ide-dma.c         |    2 +-
- drivers/ide/ide-io.c          |    3 ++-
- drivers/ide/ide-probe.c       |    2 +-
- drivers/ide/ide-taskfile.c    |   17 +++++++++++++----
- drivers/ide/mips/au1xxx-ide.c |    2 +-
- drivers/ide/pci/sgiioc4.c     |    2 +-
- drivers/ide/ppc/pmac.c        |    2 +-
- include/linux/ide.h           |    2 +-
- 9 files changed, 23 insertions(+), 12 deletions(-)
+ drivers/usb/storage/alauda.c        |   16 ++++++++++------
+ drivers/usb/storage/datafab.c       |   10 ++++++----
+ drivers/usb/storage/jumpshot.c      |   10 ++++++----
+ drivers/usb/storage/protocol.c      |   20 +++++++++++---------
+ drivers/usb/storage/protocol.h      |    2 +-
+ drivers/usb/storage/sddr09.c        |   16 ++++++++++------
+ drivers/usb/storage/sddr55.c        |   16 ++++++++++------
+ drivers/usb/storage/shuttle_usbat.c |   17 ++++++++---------
+ 8 files changed, 62 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/ide/cris/ide-cris.c b/drivers/ide/cris/ide-cris.c
-index 886091b..e1b2d01 100644
---- a/drivers/ide/cris/ide-cris.c
-+++ b/drivers/ide/cris/ide-cris.c
-@@ -951,7 +951,8 @@ static int cris_ide_build_dmatable (ide_drive_t *drive)
- 		/* group sequential buffers into one large buffer */
- 		addr = page_to_phys(sg->page) + sg->offset;
- 		size = sg_dma_len(sg);
--		while (sg++, --i) {
-+		while (--i) {
-+			sg = sg_next(sg);
- 			if ((addr + size) != page_to_phys(sg->page) + sg->offset)
- 				break;
- 			size += sg_dma_len(sg);
-diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
-index 5fe1d72..a9a18a1 100644
---- a/drivers/ide/ide-dma.c
-+++ b/drivers/ide/ide-dma.c
-@@ -294,7 +294,7 @@ int ide_build_dmatable (ide_drive_t *drive, struct request *rq)
+diff --git a/drivers/usb/storage/alauda.c b/drivers/usb/storage/alauda.c
+index 4d3cbb1..8d3711a 100644
+--- a/drivers/usb/storage/alauda.c
++++ b/drivers/usb/storage/alauda.c
+@@ -798,12 +798,13 @@ static int alauda_read_data(struct us_data *us, unsigned long address,
+ {
+ 	unsigned char *buffer;
+ 	u16 lba, max_lba;
+-	unsigned int page, len, index, offset;
++	unsigned int page, len, offset;
+ 	unsigned int blockshift = MEDIA_INFO(us).blockshift;
+ 	unsigned int pageshift = MEDIA_INFO(us).pageshift;
+ 	unsigned int blocksize = MEDIA_INFO(us).blocksize;
+ 	unsigned int pagesize = MEDIA_INFO(us).pagesize;
+ 	unsigned int uzonesize = MEDIA_INFO(us).uzonesize;
++	struct scatterlist *sg;
+ 	int result;
+ 
+ 	/*
+@@ -827,7 +828,8 @@ static int alauda_read_data(struct us_data *us, unsigned long address,
+ 	max_lba = MEDIA_INFO(us).capacity >> (blockshift + pageshift);
+ 
+ 	result = USB_STOR_TRANSPORT_GOOD;
+-	index = offset = 0;
++	offset = 0;
++	sg = NULL;
+ 
+ 	while (sectors > 0) {
+ 		unsigned int zone = lba / uzonesize; /* integer division */
+@@ -873,7 +875,7 @@ static int alauda_read_data(struct us_data *us, unsigned long address,
+ 
+ 		/* Store the data in the transfer buffer */
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&index, &offset, TO_XFER_BUF);
++				&sg, &offset, TO_XFER_BUF);
+ 
+ 		page = 0;
+ 		lba++;
+@@ -891,11 +893,12 @@ static int alauda_write_data(struct us_data *us, unsigned long address,
+ 		unsigned int sectors)
+ {
+ 	unsigned char *buffer, *blockbuffer;
+-	unsigned int page, len, index, offset;
++	unsigned int page, len, offset;
+ 	unsigned int blockshift = MEDIA_INFO(us).blockshift;
+ 	unsigned int pageshift = MEDIA_INFO(us).pageshift;
+ 	unsigned int blocksize = MEDIA_INFO(us).blocksize;
+ 	unsigned int pagesize = MEDIA_INFO(us).pagesize;
++	struct scatterlist *sg;
+ 	u16 lba, max_lba;
+ 	int result;
+ 
+@@ -929,7 +932,8 @@ static int alauda_write_data(struct us_data *us, unsigned long address,
+ 	max_lba = MEDIA_INFO(us).capacity >> (pageshift + blockshift);
+ 
+ 	result = USB_STOR_TRANSPORT_GOOD;
+-	index = offset = 0;
++	offset = 0;
++	sg = NULL;
+ 
+ 	while (sectors > 0) {
+ 		/* Write as many sectors as possible in this block */
+@@ -946,7 +950,7 @@ static int alauda_write_data(struct us_data *us, unsigned long address,
+ 
+ 		/* Get the data from the transfer buffer */
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&index, &offset, FROM_XFER_BUF);
++				&sg, &offset, FROM_XFER_BUF);
+ 
+ 		result = alauda_write_lba(us, lba, page, pages, buffer,
+ 			blockbuffer);
+diff --git a/drivers/usb/storage/datafab.c b/drivers/usb/storage/datafab.c
+index c87ad1b..579e9f5 100644
+--- a/drivers/usb/storage/datafab.c
++++ b/drivers/usb/storage/datafab.c
+@@ -98,7 +98,8 @@ static int datafab_read_data(struct us_data *us,
+ 	unsigned char  thistime;
+ 	unsigned int totallen, alloclen;
+ 	int len, result;
+-	unsigned int sg_idx = 0, sg_offset = 0;
++	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	// we're working in LBA mode.  according to the ATA spec, 
+ 	// we can support up to 28-bit addressing.  I don't know if Datafab
+@@ -155,7 +156,7 @@ static int datafab_read_data(struct us_data *us,
+ 
+ 		// Store the data in the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				 &sg_idx, &sg_offset, TO_XFER_BUF);
++				 &sg, &sg_offset, TO_XFER_BUF);
+ 
+ 		sector += thistime;
+ 		totallen -= len;
+@@ -181,7 +182,8 @@ static int datafab_write_data(struct us_data *us,
+ 	unsigned char thistime;
+ 	unsigned int totallen, alloclen;
+ 	int len, result;
+-	unsigned int sg_idx = 0, sg_offset = 0;
++	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	// we're working in LBA mode.  according to the ATA spec, 
+ 	// we can support up to 28-bit addressing.  I don't know if Datafab
+@@ -217,7 +219,7 @@ static int datafab_write_data(struct us_data *us,
+ 
+ 		// Get the data from the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&sg_idx, &sg_offset, FROM_XFER_BUF);
++				&sg, &sg_offset, FROM_XFER_BUF);
+ 
+ 		command[0] = 0;
+ 		command[1] = thistime;
+diff --git a/drivers/usb/storage/jumpshot.c b/drivers/usb/storage/jumpshot.c
+index 003fcf5..61097cb 100644
+--- a/drivers/usb/storage/jumpshot.c
++++ b/drivers/usb/storage/jumpshot.c
+@@ -119,7 +119,8 @@ static int jumpshot_read_data(struct us_data *us,
+ 	unsigned char  thistime;
+ 	unsigned int totallen, alloclen;
+ 	int len, result;
+-	unsigned int sg_idx = 0, sg_offset = 0;
++	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	// we're working in LBA mode.  according to the ATA spec, 
+ 	// we can support up to 28-bit addressing.  I don't know if Jumpshot
+@@ -170,7 +171,7 @@ static int jumpshot_read_data(struct us_data *us,
+ 
+ 		// Store the data in the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				 &sg_idx, &sg_offset, TO_XFER_BUF);
++				 &sg, &sg_offset, TO_XFER_BUF);
+ 
+ 		sector += thistime;
+ 		totallen -= len;
+@@ -195,7 +196,8 @@ static int jumpshot_write_data(struct us_data *us,
+ 	unsigned char  thistime;
+ 	unsigned int totallen, alloclen;
+ 	int len, result, waitcount;
+-	unsigned int sg_idx = 0, sg_offset = 0;
++	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	// we're working in LBA mode.  according to the ATA spec, 
+ 	// we can support up to 28-bit addressing.  I don't know if Jumpshot
+@@ -225,7 +227,7 @@ static int jumpshot_write_data(struct us_data *us,
+ 
+ 		// Get the data from the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&sg_idx, &sg_offset, FROM_XFER_BUF);
++				&sg, &sg_offset, FROM_XFER_BUF);
+ 
+ 		command[0] = 0;
+ 		command[1] = thistime;
+diff --git a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protocol.c
+index 9ad3042..cc8f7c5 100644
+--- a/drivers/usb/storage/protocol.c
++++ b/drivers/usb/storage/protocol.c
+@@ -157,7 +157,7 @@ void usb_stor_transparent_scsi_command(struct scsi_cmnd *srb,
+  * pick up from where this one left off. */
+ 
+ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+-	unsigned int buflen, struct scsi_cmnd *srb, unsigned int *index,
++	unsigned int buflen, struct scsi_cmnd *srb, struct scatterlist **sgptr,
+ 	unsigned int *offset, enum xfer_buf_dir dir)
+ {
+ 	unsigned int cnt;
+@@ -184,16 +184,17 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+ 	 * located in high memory -- then kmap() will map it to a temporary
+ 	 * position in the kernel's virtual address space. */
+ 	} else {
+-		struct scatterlist *sg =
+-				(struct scatterlist *) srb->request_buffer
+-				+ *index;
++		struct scatterlist *sg = *sgptr;
++
++		if (!sg)
++			sg = (struct scatterlist *) srb->request_buffer;
+ 
+ 		/* This loop handles a single s-g list entry, which may
+ 		 * include multiple pages.  Find the initial page structure
+ 		 * and the starting offset within the page, and update
+ 		 * the *offset and *index values for the next loop. */
+ 		cnt = 0;
+-		while (cnt < buflen && *index < srb->use_sg) {
++		while (cnt < buflen) {
+ 			struct page *page = sg->page +
+ 					((sg->offset + *offset) >> PAGE_SHIFT);
+ 			unsigned int poff =
+@@ -209,8 +210,7 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+ 
+ 				/* Transfer continues to next s-g entry */
+ 				*offset = 0;
+-				++*index;
+-				++sg;
++				sg = sg_next(sg);
+ 			}
+ 
+ 			/* Transfer the data for all the pages in this
+@@ -234,6 +234,7 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+ 				sglen -= plen;
  			}
  		}
- 
--		sg++;
-+		sg = sg_next(sg);
- 		i--;
++		*sgptr = sg;
  	}
  
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index c5b5011..2465c24 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -836,7 +836,8 @@ void ide_init_sg_cmd(ide_drive_t *drive, struct request *rq)
- 	ide_hwif_t *hwif = drive->hwif;
- 
- 	hwif->nsect = hwif->nleft = rq->nr_sectors;
--	hwif->cursg = hwif->cursg_ofs = 0;
-+	hwif->cursg_ofs = 0;
-+	hwif->cursg = NULL;
- }
- 
- EXPORT_SYMBOL_GPL(ide_init_sg_cmd);
-diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
-index cc58013..111ec02 100644
---- a/drivers/ide/ide-probe.c
-+++ b/drivers/ide/ide-probe.c
-@@ -1352,7 +1352,7 @@ static int hwif_init(ide_hwif_t *hwif)
- 	if (!hwif->sg_max_nents)
- 		hwif->sg_max_nents = PRD_ENTRIES;
- 
--	hwif->sg_table = kmalloc(sizeof(struct scatterlist)*hwif->sg_max_nents,
-+	hwif->sg_table = kzalloc(sizeof(struct scatterlist)*hwif->sg_max_nents,
- 				 GFP_KERNEL);
- 	if (!hwif->sg_table) {
- 		printk(KERN_ERR "%s: unable to allocate SG table.\n", hwif->name);
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index aa06daf..3c92790 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -263,6 +263,7 @@ static void ide_pio_sector(ide_drive_t *drive, unsigned int write)
+ 	/* Return the amount actually transferred */
+@@ -245,9 +246,10 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+ void usb_stor_set_xfer_buf(unsigned char *buffer,
+ 	unsigned int buflen, struct scsi_cmnd *srb)
  {
- 	ide_hwif_t *hwif = drive->hwif;
- 	struct scatterlist *sg = hwif->sg_table;
-+	struct scatterlist *cursg = hwif->cursg;
- 	struct page *page;
- #ifdef CONFIG_HIGHMEM
- 	unsigned long flags;
-@@ -270,8 +271,14 @@ static void ide_pio_sector(ide_drive_t *drive, unsigned int write)
- 	unsigned int offset;
- 	u8 *buf;
+-	unsigned int index = 0, offset = 0;
++	unsigned int offset = 0;
++	struct scatterlist *sg = NULL;
  
--	page = sg[hwif->cursg].page;
--	offset = sg[hwif->cursg].offset + hwif->cursg_ofs * SECTOR_SIZE;
-+	cursg = hwif->cursg;
-+	if (!cursg) {
-+		cursg = sg;
-+		hwif->cursg = sg;
-+	}
-+
-+	page = cursg->page;
-+	offset = cursg->offset + hwif->cursg_ofs * SECTOR_SIZE;
+-	usb_stor_access_xfer_buf(buffer, buflen, srb, &index, &offset,
++	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
+ 			TO_XFER_BUF);
+ 	if (buflen < srb->request_bufflen)
+ 		srb->resid = srb->request_bufflen - buflen;
+diff --git a/drivers/usb/storage/protocol.h b/drivers/usb/storage/protocol.h
+index 845bed4..8737a36 100644
+--- a/drivers/usb/storage/protocol.h
++++ b/drivers/usb/storage/protocol.h
+@@ -52,7 +52,7 @@ extern void usb_stor_transparent_scsi_command(struct scsi_cmnd*,
+ enum xfer_buf_dir	{TO_XFER_BUF, FROM_XFER_BUF};
  
- 	/* get the current page and offset */
- 	page = nth_page(page, (offset >> PAGE_SHIFT));
-@@ -285,8 +292,8 @@ static void ide_pio_sector(ide_drive_t *drive, unsigned int write)
- 	hwif->nleft--;
- 	hwif->cursg_ofs++;
+ extern unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+-	unsigned int buflen, struct scsi_cmnd *srb, unsigned int *index,
++	unsigned int buflen, struct scsi_cmnd *srb, struct scatterlist **,
+ 	unsigned int *offset, enum xfer_buf_dir dir);
  
--	if ((hwif->cursg_ofs * SECTOR_SIZE) == sg[hwif->cursg].length) {
--		hwif->cursg++;
-+	if ((hwif->cursg_ofs * SECTOR_SIZE) == cursg->length) {
-+		hwif->cursg = sg_next(hwif->cursg);
- 		hwif->cursg_ofs = 0;
+ extern void usb_stor_set_xfer_buf(unsigned char *buffer,
+diff --git a/drivers/usb/storage/sddr09.c b/drivers/usb/storage/sddr09.c
+index b2ed2a3..b12202c 100644
+--- a/drivers/usb/storage/sddr09.c
++++ b/drivers/usb/storage/sddr09.c
+@@ -705,7 +705,8 @@ sddr09_read_data(struct us_data *us,
+ 	unsigned char *buffer;
+ 	unsigned int lba, maxlba, pba;
+ 	unsigned int page, pages;
+-	unsigned int len, index, offset;
++	unsigned int len, offset;
++	struct scatterlist *sg;
+ 	int result;
+ 
+ 	// Figure out the initial LBA and page
+@@ -730,7 +731,8 @@ sddr09_read_data(struct us_data *us,
+ 	// contiguous LBA's. Another exercise left to the student.
+ 
+ 	result = 0;
+-	index = offset = 0;
++	offset = 0;
++	sg = NULL;
+ 
+ 	while (sectors > 0) {
+ 
+@@ -777,7 +779,7 @@ sddr09_read_data(struct us_data *us,
+ 
+ 		// Store the data in the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&index, &offset, TO_XFER_BUF);
++				&sg, &offset, TO_XFER_BUF);
+ 
+ 		page = 0;
+ 		lba++;
+@@ -931,7 +933,8 @@ sddr09_write_data(struct us_data *us,
+ 	unsigned int pagelen, blocklen;
+ 	unsigned char *blockbuffer;
+ 	unsigned char *buffer;
+-	unsigned int len, index, offset;
++	unsigned int len, offset;
++	struct scatterlist *sg;
+ 	int result;
+ 
+ 	// Figure out the initial LBA and page
+@@ -968,7 +971,8 @@ sddr09_write_data(struct us_data *us,
  	}
  
-@@ -367,6 +374,8 @@ static ide_startstop_t task_error(ide_drive_t *drive, struct request *rq,
+ 	result = 0;
+-	index = offset = 0;
++	offset = 0;
++	sg = NULL;
  
- static void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
- {
-+	HWIF(drive)->cursg = NULL;
-+
- 	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
- 		ide_task_t *task = rq->special;
+ 	while (sectors > 0) {
  
-diff --git a/drivers/ide/mips/au1xxx-ide.c b/drivers/ide/mips/au1xxx-ide.c
-index 2e7013a..48cfb62 100644
---- a/drivers/ide/mips/au1xxx-ide.c
-+++ b/drivers/ide/mips/au1xxx-ide.c
-@@ -324,7 +324,7 @@ static int auide_build_dmatable(ide_drive_t *drive)
- 			cur_addr += tc;
- 			cur_len -= tc;
- 		}
--		sg++;
-+		sg = sg_next(sg);
- 		i--;
- 	}
+@@ -987,7 +991,7 @@ sddr09_write_data(struct us_data *us,
  
-diff --git a/drivers/ide/pci/sgiioc4.c b/drivers/ide/pci/sgiioc4.c
-index d396b29..9e36b29 100644
---- a/drivers/ide/pci/sgiioc4.c
-+++ b/drivers/ide/pci/sgiioc4.c
-@@ -531,7 +531,7 @@ sgiioc4_build_dma_table(ide_drive_t * drive, struct request *rq, int ddir)
- 			}
- 		}
+ 		// Get the data from the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&index, &offset, FROM_XFER_BUF);
++				&sg, &offset, FROM_XFER_BUF);
  
--		sg++;
-+		sg = sg_next(sg);
- 		i--;
- 	}
+ 		result = sddr09_write_lba(us, lba, page, pages,
+ 				buffer, blockbuffer);
+diff --git a/drivers/usb/storage/sddr55.c b/drivers/usb/storage/sddr55.c
+index 0b1b5b5..d43a341 100644
+--- a/drivers/usb/storage/sddr55.c
++++ b/drivers/usb/storage/sddr55.c
+@@ -167,7 +167,8 @@ static int sddr55_read_data(struct us_data *us,
+ 	unsigned long address;
  
-diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
-index e46f472..9f78c6a 100644
---- a/drivers/ide/ppc/pmac.c
-+++ b/drivers/ide/ppc/pmac.c
-@@ -1648,7 +1648,7 @@ pmac_ide_build_dmatable(ide_drive_t *drive, struct request *rq)
- 			cur_len -= tc;
- 			++table;
- 		}
--		sg++;
-+		sg = sg_next(sg);
- 		i--;
- 	}
+ 	unsigned short pages;
+-	unsigned int len, index, offset;
++	unsigned int len, offset;
++	struct scatterlist *sg;
  
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 19ab258..1e6639e 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -767,7 +767,7 @@ typedef struct hwif_s {
+ 	// Since we only read in one block at a time, we have to create
+ 	// a bounce buffer and move the data a piece at a time between the
+@@ -178,7 +179,8 @@ static int sddr55_read_data(struct us_data *us,
+ 	buffer = kmalloc(len, GFP_NOIO);
+ 	if (buffer == NULL)
+ 		return USB_STOR_TRANSPORT_ERROR; /* out of memory */
+-	index = offset = 0;
++	offset = 0;
++	sg = NULL;
  
- 	unsigned int nsect;
- 	unsigned int nleft;
--	unsigned int cursg;
-+	struct scatterlist *cursg;
- 	unsigned int cursg_ofs;
+ 	while (sectors>0) {
  
- 	int		rqsize;		/* max sectors per request */
+@@ -255,7 +257,7 @@ static int sddr55_read_data(struct us_data *us,
+ 
+ 		// Store the data in the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&index, &offset, TO_XFER_BUF);
++				&sg, &offset, TO_XFER_BUF);
+ 
+ 		page = 0;
+ 		lba++;
+@@ -287,7 +289,8 @@ static int sddr55_write_data(struct us_data *us,
+ 
+ 	unsigned short pages;
+ 	int i;
+-	unsigned int len, index, offset;
++	unsigned int len, offset;
++	struct scatterlist *sg;
+ 
+ 	/* check if we are allowed to write */
+ 	if (info->read_only || info->force_read_only) {
+@@ -304,7 +307,8 @@ static int sddr55_write_data(struct us_data *us,
+ 	buffer = kmalloc(len, GFP_NOIO);
+ 	if (buffer == NULL)
+ 		return USB_STOR_TRANSPORT_ERROR;
+-	index = offset = 0;
++	offset = 0;
++	sg = NULL;
+ 
+ 	while (sectors > 0) {
+ 
+@@ -322,7 +326,7 @@ static int sddr55_write_data(struct us_data *us,
+ 
+ 		// Get the data from the transfer buffer
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-				&index, &offset, FROM_XFER_BUF);
++				&sg, &offset, FROM_XFER_BUF);
+ 
+ 		US_DEBUGP("Write %02X pages, to PBA %04X"
+ 			" (LBA %04X) page %02X\n",
+diff --git a/drivers/usb/storage/shuttle_usbat.c b/drivers/usb/storage/shuttle_usbat.c
+index 5e27297..a0ff394 100644
+--- a/drivers/usb/storage/shuttle_usbat.c
++++ b/drivers/usb/storage/shuttle_usbat.c
+@@ -996,7 +996,8 @@ static int usbat_flash_read_data(struct us_data *us,
+ 	unsigned char  thistime;
+ 	unsigned int totallen, alloclen;
+ 	int len, result;
+-	unsigned int sg_idx = 0, sg_offset = 0;
++	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	result = usbat_flash_check_media(us, info);
+ 	if (result != USB_STOR_TRANSPORT_GOOD)
+@@ -1050,7 +1051,7 @@ static int usbat_flash_read_data(struct us_data *us,
+ 	
+ 		/* Store the data in the transfer buffer */
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-					 &sg_idx, &sg_offset, TO_XFER_BUF);
++					 &sg, &sg_offset, TO_XFER_BUF);
+ 
+ 		sector += thistime;
+ 		totallen -= len;
+@@ -1086,7 +1087,8 @@ static int usbat_flash_write_data(struct us_data *us,
+ 	unsigned char  thistime;
+ 	unsigned int totallen, alloclen;
+ 	int len, result;
+-	unsigned int sg_idx = 0, sg_offset = 0;
++	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	result = usbat_flash_check_media(us, info);
+ 	if (result != USB_STOR_TRANSPORT_GOOD)
+@@ -1125,7 +1127,7 @@ static int usbat_flash_write_data(struct us_data *us,
+ 
+ 		/* Get the data from the transfer buffer */
+ 		usb_stor_access_xfer_buf(buffer, len, us->srb,
+-					 &sg_idx, &sg_offset, FROM_XFER_BUF);
++					 &sg, &sg_offset, FROM_XFER_BUF);
+ 
+ 		/* ATA command 0x30 (WRITE SECTORS) */
+ 		usbat_pack_ata_sector_cmd(command, thistime, sector, 0x30);
+@@ -1165,8 +1167,8 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 	unsigned char *buffer;
+ 	unsigned int len;
+ 	unsigned int sector;
+-	unsigned int sg_segment = 0;
+ 	unsigned int sg_offset = 0;
++	struct scatterlist *sg = NULL;
+ 
+ 	US_DEBUGP("handle_read10: transfersize %d\n",
+ 		srb->transfersize);
+@@ -1223,9 +1225,6 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 	sector |= short_pack(data[7+5], data[7+4]);
+ 	transferred = 0;
+ 
+-	sg_segment = 0; /* for keeping track of where we are in */
+-	sg_offset = 0;  /* the scatter/gather list */
+-
+ 	while (transferred != srb->request_bufflen) {
+ 
+ 		if (len > srb->request_bufflen - transferred)
+@@ -1258,7 +1257,7 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 
+ 		/* Store the data in the transfer buffer */
+ 		usb_stor_access_xfer_buf(buffer, len, srb,
+-				 &sg_segment, &sg_offset, TO_XFER_BUF);
++				 &sg, &sg_offset, TO_XFER_BUF);
+ 
+ 		/* Update the amount transferred and the sector number */
+ 
 -- 
 1.5.3.rc0.90.gbaa79
 
