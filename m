@@ -1,108 +1,100 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] libsas, aic94xx: fix dma mapping cockups with ATA
-Date: Mon, 16 Jul 2007 13:41:04 -0500
-Message-ID: <1184611264.3447.28.camel@localhost.localdomain>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 03/33] block: convert to using sg helpers
+Date: Mon, 16 Jul 2007 21:21:32 +0200
+Message-ID: <200707162121.32936.bzolnier@gmail.com>
+References: <11845792671245-git-send-email-jens.axboe@oracle.com> <11845792672399-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39405 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751187AbXGPSlG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 14:41:06 -0400
-Received: from [172.17.6.40] (midgard.sc.steeleye.com [172.17.6.40])
-	by hancock.sc.steeleye.com (Postfix) with ESMTP id 21D80AAA81CF
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2007 14:41:05 -0400 (EDT)
+Received: from ug-out-1314.google.com ([66.249.92.171]:57192 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757769AbXGPTED (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 15:04:03 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so1043767ugf
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2007 12:04:02 -0700 (PDT)
+In-Reply-To: <11845792672399-git-send-email-jens.axboe@oracle.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-
-This one was noticed by Gilbert Wu of Adaptec:
-
-The libata core actually does the DMA mapping for you, so there has to
-be an exception in the device drivers that *don't* do dma mapping for
-ATA commands.  However, since we've already done this, libsas must now
-dma map any ATA commands that it wishes to issue ... and yes, this is a
-horrible mess.
-
-Additionally, the test in aic94xx for ATA protocols isn't quite right.
-
----
-
-James
-
-Index: BUILD-2.6/drivers/scsi/libsas/sas_discover.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/libsas/sas_discover.c	2007-07-16 13:01:19.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/libsas/sas_discover.c	2007-07-16 13:39:57.000000000 -0500
-@@ -110,6 +110,13 @@ static int sas_execute_task(struct sas_t
- 	task->total_xfer_len = size;
- 	task->data_dir = pci_dma_dir;
- 	task->task_done = sas_disc_task_done;
-+	if (pci_dma_dir != PCI_DMA_NONE &&
-+	    sas_protocol_ata(task->task_proto)) {
-+		task->num_scatter = pci_map_sg(task->dev->port->ha->pcidev,
-+					       task->scatter,
-+					       task->num_scatter,
-+					       task->data_dir);
-+	}
- 
- 	for (retries = 0; retries < 5; retries++) {
- 		task->task_state_flags = SAS_TASK_STATE_PENDING;
-@@ -192,8 +199,13 @@ static int sas_execute_task(struct sas_t
- 		}
- 	}
- ex_err:
--	if (pci_dma_dir != PCI_DMA_NONE)
-+	if (pci_dma_dir != PCI_DMA_NONE) {
-+		if (sas_protocol_ata(task->task_proto))
-+			pci_unmap_sg(task->dev->port->ha->pcidev,
-+				     task->scatter, task->num_scatter,
-+				     task->data_dir);
- 		kfree(scatter);
-+	}
- out:
- 	return res;
- }
-Index: BUILD-2.6/drivers/scsi/aic94xx/aic94xx_task.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/aic94xx/aic94xx_task.c	2007-07-16 13:37:59.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/aic94xx/aic94xx_task.c	2007-07-16 13:38:46.000000000 -0500
-@@ -76,7 +76,7 @@ static inline int asd_map_scatterlist(st
- 
- 	/* STP tasks come from libata which has already mapped
- 	 * the SG list */
--	if (task->task_proto == SAS_PROTOCOL_STP)
-+	if (sas_protocol_ata(task->task_proto))
- 		num_sg = task->num_scatter;
- 	else
- 		num_sg = pci_map_sg(asd_ha->pcidev, task->scatter,
-@@ -125,7 +125,7 @@ static inline int asd_map_scatterlist(st
- 
- 	return 0;
- err_unmap:
--	if (task->task_proto != SAS_PROTOCOL_STP)
-+	if (sas_protocol_ata(task->task_proto))
- 		pci_unmap_sg(asd_ha->pcidev, task->scatter, task->num_scatter,
- 			     task->data_dir);
- 	return res;
-Index: BUILD-2.6/include/scsi/scsi_transport_sas.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/scsi_transport_sas.h	2007-07-16 13:34:05.000000000 -0500
-+++ BUILD-2.6/include/scsi/scsi_transport_sas.h	2007-07-16 13:35:58.000000000 -0500
-@@ -23,6 +23,12 @@ enum sas_protocol {
- 	SAS_PROTOCOL_SSP		= 0x08,
- };
- 
-+static inline int sas_protocol_ata(enum sas_protocol proto)
-+{
-+	return ((proto & SAS_PROTOCOL_SATA) ||
-+		(proto & SAS_PROTOCOL_STP))? 1 : 0;
-+}
-+
- enum sas_linkrate {
- 	/* These Values are defined in the SAS standard */
- 	SAS_LINK_RATE_UNKNOWN = 0,
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
+Hi,
 
+On Monday 16 July 2007, Jens Axboe wrote:
+> Convert the main rq mapper (blk_rq_map_sg()) to the sg helper setup.
+> 
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> ---
+>  block/ll_rw_blk.c |   19 ++++++++++++-------
+>  1 files changed, 12 insertions(+), 7 deletions(-)
+> 
+> diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+> index ef42bb2..ab71087 100644
+> --- a/block/ll_rw_blk.c
+> +++ b/block/ll_rw_blk.c
+> @@ -30,6 +30,7 @@
+>  #include <linux/cpu.h>
+>  #include <linux/blktrace_api.h>
+>  #include <linux/fault-inject.h>
+> +#include <linux/scatterlist.h>
+>  
+>  /*
+>   * for max sense size
+> @@ -1307,9 +1308,11 @@ static int blk_hw_contig_segment(request_queue_t *q, struct bio *bio,
+>   * map a request to scatterlist, return number of sg entries setup. Caller
+>   * must make sure sg can hold rq->nr_phys_segments entries
+>   */
+> -int blk_rq_map_sg(request_queue_t *q, struct request *rq, struct scatterlist *sg)
+> +int blk_rq_map_sg(request_queue_t *q, struct request *rq,
+> +		  struct scatterlist *sglist)
+>  {
+>  	struct bio_vec *bvec, *bvprv;
+> +	struct scatterlist *next_sg, *sg;
+>  	struct bio *bio;
+>  	int nsegs, i, cluster;
+>  
+> @@ -1320,6 +1323,7 @@ int blk_rq_map_sg(request_queue_t *q, struct request *rq, struct scatterlist *sg
+>  	 * for each bio in rq
+>  	 */
+>  	bvprv = NULL;
+> +	sg = next_sg = &sglist[0];
+>  	rq_for_each_bio(bio, rq) {
+>  		/*
+>  		 * for each segment in bio
+> @@ -1328,7 +1332,7 @@ int blk_rq_map_sg(request_queue_t *q, struct request *rq, struct scatterlist *sg
+>  			int nbytes = bvec->bv_len;
+>  
+>  			if (bvprv && cluster) {
+> -				if (sg[nsegs - 1].length + nbytes > q->max_segment_size)
+> +				if (sg->length + nbytes > q->max_segment_size)
+>  					goto new_segment;
+>  
+>  				if (!BIOVEC_PHYS_MERGEABLE(bvprv, bvec))
+> @@ -1336,14 +1340,15 @@ int blk_rq_map_sg(request_queue_t *q, struct request *rq, struct scatterlist *sg
+>  				if (!BIOVEC_SEG_BOUNDARY(q, bvprv, bvec))
+>  					goto new_segment;
+>  
+> -				sg[nsegs - 1].length += nbytes;
+> +				sg->length += nbytes;
+>  			} else {
+>  new_segment:
+> -				memset(&sg[nsegs],0,sizeof(struct scatterlist));
+
+Is this intended?  If so why this is no longer needed?
+
+> -				sg[nsegs].page = bvec->bv_page;
+> -				sg[nsegs].length = nbytes;
+> -				sg[nsegs].offset = bvec->bv_offset;
+> +				sg = next_sg;
+> +				next_sg = sg_next(sg);
+>  
+> +				sg->page = bvec->bv_page;
+> +				sg->length = nbytes;
+> +				sg->offset = bvec->bv_offset;
+>  				nsegs++;
+>  			}
+>  			bvprv = bvec;
