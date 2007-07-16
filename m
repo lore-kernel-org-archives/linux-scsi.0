@@ -1,40 +1,85 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
-Date: Mon, 16 Jul 2007 15:04:47 +0200
-Message-ID: <20070716130447.GO5195@kernel.dk>
-References: <20070704132212.726923000@pademelon.sonytel.be> <Pine.LNX.4.62.0707131541150.18802@pademelon.sonytel.be> <1184335333.3402.20.camel@localhost.localdomain> <200707131619.54898.arnd@arndb.de> <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be> <1184340528.3402.32.camel@localhost.localdomain> <Pine.LNX.4.62.0707132212520.23000@chinchilla.sonytel.be> <Pine.LNX.4.62.0707161338230.1072@pademelon.sonytel.be> <20070716121649.GI5195@kernel.dk> <Pine.LNX.4.62.0707161459010.1072@pademelon.sonytel.be>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 00/33] SG table chaining support
+Date: Mon, 16 Jul 2007 22:19:38 +0900
+Message-ID: <200707161319.l6GDJd07027464@mbox.iij4u.or.jp>
+References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764820AbXGPNFm@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0707161459010.1072@pademelon.sonytel.be>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Alessandro Rubini <rubini@vision.unipv.it>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Paul Mackerras <paulus@samba.org>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:41536 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756935AbXGPNT5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 09:19:57 -0400
+In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: mark_salyzyn@adaptec.com, jens.axboe@oracle.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Mon, Jul 16 2007, Geert Uytterhoeven wrote:
-> On Mon, 16 Jul 2007, Jens Axboe wrote:
-> > On Mon, Jul 16 2007, Geert Uytterhoeven wrote:
-> > > On Fri, 13 Jul 2007, Geert Uytterhoeven wrote:
-> > > > Ah, that explains it. flush_dcache_page() is used in some drivers.
-> > > > I'll update my patches. Thanks for the comments!
-> > > 
-> > > Does this look OK?
-> > >   - Replaced KM_USER0 by KM_IRQ0 (all routines are either called from an
-> > >     interrupt handler, from .request_fn (ps3disk), or from .queuecommand
-> > >     (ps3rom))
-> > 
-> > That looks good.
-> > 
-> > >   - Add a call to flush_kernel_dcache_page() in routines that write to buffers
-> > 
-> > Hmm, I would have thought a flush_dcache_page() would be more
-> > appropriate, the backing could be page cache pages.
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: [PATCH 00/33] SG table chaining support
+Date: Mon, 16 Jul 2007 11:47:14 +0200
+
+> Changes since last post:
 > 
-> OK, I'll change it to flush_dcache_page().
+> - Rebase to current -git. Lots of SCSI drivers have been converted
+>   to use the sg accessor helpers, which nicely shrinks this patchset
+>   from 70 to 33 patches. Great!
 
-Then you may add my acked-by as well, if you want.
+---
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] ips: sg chaining support
 
+ips properly uses scsi_for_each_sg for the normal I/O path, however,
+the breakup path doesn't.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/ips.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 9f8ed6b..cc5ac4f 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -3251,7 +3251,7 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
+ 		 */
+ 		if ((scb->breakup) || (scb->sg_break)) {
+                         struct scatterlist *sg;
+-                        int sg_dma_index, ips_sg_index = 0;
++                        int i, sg_dma_index, ips_sg_index = 0;
+ 
+ 			/* we had a data breakup */
+ 			scb->data_len = 0;
+@@ -3260,20 +3260,22 @@ ips_done(ips_ha_t * ha, ips_scb_t * scb)
+ 
+                         /* Spin forward to last dma chunk */
+                         sg_dma_index = scb->breakup;
++                        for (i = 0; i < scb->breakup; i++)
++                                sg = sg_next(sg);
+ 
+ 			/* Take care of possible partial on last chunk */
+                         ips_fill_scb_sg_single(ha,
+-                                               sg_dma_address(&sg[sg_dma_index]),
++                                               sg_dma_address(sg),
+                                                scb, ips_sg_index++,
+-                                               sg_dma_len(&sg[sg_dma_index]));
++                                               sg_dma_len(sg));
+ 
+                         for (; sg_dma_index < scsi_sg_count(scb->scsi_cmd);
+-                             sg_dma_index++) {
++                             sg_dma_index++, sg = sg_next(sg)) {
+                                 if (ips_fill_scb_sg_single
+                                     (ha,
+-                                     sg_dma_address(&sg[sg_dma_index]),
++                                     sg_dma_address(sg),
+                                      scb, ips_sg_index++,
+-                                     sg_dma_len(&sg[sg_dma_index])) < 0)
++                                     sg_dma_len(sg)) < 0)
+                                         break;
+                         }
+ 
 -- 
-Jens Axboe
+1.4.3.2
+
