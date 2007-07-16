@@ -1,35 +1,71 @@
-From: Kai Makisara <Kai.Makisara@kolumbus.fi>
-Subject: Re: [PATCH 00/33] SG table chaining support
-Date: Mon, 16 Jul 2007 19:02:09 +0300 (EEST)
-Message-ID: <Pine.LNX.4.64.0707161852380.5065@kai.makisara.local>
-References: <11845792671245-git-send-email-jens.axboe@oracle.com>
- <18075.31515.974905.507754@stoffel.org> <yq1d4ysv35d.fsf@sermon.lab.mkp.net>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: [patch 0/3] PS3 Storage Drivers for 2.6.23, take 5
+Date: Mon, 16 Jul 2007 18:15:39 +0200
+Message-ID: <20070716161539.075822000@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765208AbXGPQCZ@vger.kernel.org>
-In-Reply-To: <yq1d4ysv35d.fsf@sermon.lab.mkp.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: John Stoffel <john@stoffel.org>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:43535 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755422AbXGPQW4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 12:22:56 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@ipvvis.unipv.it>
+Cc: linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 16 Jul 2007, Martin K. Petersen wrote:
+	Hi,
 
-> >>>>> "John" == John Stoffel <john@stoffel.org> writes:
-> 
-> John> Will this help out tape drive performance at all?  I looked
-> John> through the patches quickly, esp the AIC7xxx stuff since that's
-> John> what I use, but nothing jumped out at me...
-> 
-> Yes.  Most modern tape drives want a block size of 1MB or higher.
-> With the old stack we'd be stuck at 512KB because the sg limitations
-> caused us to come just short of 1MB...
-> 
-Tape block sizes up to 16 MB have been possible for a very long time but 
-this has required tuning of the block/scsi parameters. Very few people 
-seem to have done this and the common (mis)belief seems to be that the 
-tape block size limit has been 512 kB. It is good if this tuning is not
-needed in future.
+These are the remaining patches of the new PS3 storage drivers series:
+  [1] ps3: Disk Storage Driver
+  [2] ps3: BD/DVD/CD-ROM Storage Driver
+  [3] ps3: FLASH ROM Storage Driver
 
--- 
-Kai
+They are based on:
+  - the current Linux kernel source tree,
+  - plus the PS3 patches already submitted by Geoff Levand on linuxppc-=
+dev,
+    which are in the for-2.6.23 branch of Paulus' tree,
+  - plus the first 3 patches from the PS3 storage drivers series I subm=
+itted
+    before, which are also in the for-2.6.23 branch of Paulus' tree.
+
+The only changes compared to the previous submission are the kmap updat=
+es, as
+requested by Jens Axboe and James E.J. Bottomley.
+
+I didn't hear anything from the misc device maintainer (for the FLASH R=
+OM
+Storage Driver).
+
+Paulus, please apply.  Thanks in advance!
+
+With kind regards,
+=20
+Geert Uytterhoeven
+Software Architect
+
+Sony Network and Software Technology Center Europe
+The Corporate Village =C2=B7 Da Vincilaan 7-D1 =C2=B7 B-1935 Zaventem =C2=
+=B7 Belgium
+=20
+Phone:    +32 (0)2 700 8453=09
+=46ax:      +32 (0)2 700 8622=09
+E-mail:   Geert.Uytterhoeven@sonycom.com=09
+Internet: http://www.sony-europe.com/
+ =09
+Sony Network and Software Technology Center Europe=09
+A division of Sony Service Centre (Europe) N.V.=09
+Registered office: Technologielaan 7 =C2=B7 B-1840 Londerzeel =C2=B7 Be=
+lgium=09
+VAT BE 0413.825.160 =C2=B7 RPR Brussels=09
+=46ortis Bank Zaventem =C2=B7 Swift GEBABEBB08A =C2=B7 IBAN BE390013823=
+58619
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
