@@ -1,47 +1,106 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 00/33] SG table chaining support
-Date: Mon, 16 Jul 2007 11:47:14 +0200
-Message-ID: <11845792671245-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 08/33] swiotlb: sg chaining support
+Date: Mon, 16 Jul 2007 11:47:22 +0200
+Message-ID: <11845792683072-git-send-email-jens.axboe@oracle.com>
+References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9284 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:9298 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758083AbXGPJsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 05:48:31 -0400
+	id S1759402AbXGPJsg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 05:48:36 -0400
+In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jens Axboe <jens.axboe@oracle.com>, ak@suse.de
 
-Hi,
+Cc: ak@suse.de
+Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+---
+ lib/swiotlb.c |   19 ++++++++++++-------
+ 1 files changed, 12 insertions(+), 7 deletions(-)
 
-A repost of this patchset, which adds support forchaining of sg tables.
-This enables much larger IO commands, since we don't have to allocate
-large consecutive pieces of memory to represent the sgtable of a
-huge command. Right now Linux is limited to somewhere between 128 and 256
-segments, depending on the architecture. This translates into at most
-512k-1mb request sizes. With this patchset, I've successfully pushed
-10MiB commands through the IO stack.
-
-This will potentially increase performance a lot on hardware that
-requires larger IO commands to perform at their maximum.
-
-Also see http://marc.info/?l=linux-kernel&m=117869783524152
-
-To enable large IO commands for device sda, you would do:
-
-# cd /sys/block/sda/queue
-# echo 4096 > max_segments
-# cat max_hw_sectors_kb  > max_sectors_kb
-
-cat max_hw_sectors_kb to see what your largest IO size would now be.
-
-Changes since last post:
-
-- Rebase to current -git. Lots of SCSI drivers have been converted
-  to use the sg accessor helpers, which nicely shrinks this patchset
-  from 70 to 33 patches. Great!
-
+diff --git a/lib/swiotlb.c b/lib/swiotlb.c
+index 10c13ad..1f658e4 100644
+--- a/lib/swiotlb.c
++++ b/lib/swiotlb.c
+@@ -673,16 +673,17 @@ swiotlb_sync_single_range_for_device(struct device *hwdev, dma_addr_t dev_addr,
+  * same here.
+  */
+ int
+-swiotlb_map_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
++swiotlb_map_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
+ 	       int dir)
+ {
++	struct scatterlist *sg;
+ 	void *addr;
+ 	dma_addr_t dev_addr;
+ 	int i;
+ 
+ 	BUG_ON(dir == DMA_NONE);
+ 
+-	for (i = 0; i < nelems; i++, sg++) {
++	for_each_sg(sgl, sg, nelems, i) {
+ 		addr = SG_ENT_VIRT_ADDRESS(sg);
+ 		dev_addr = virt_to_bus(addr);
+ 		if (swiotlb_force || address_needs_mapping(hwdev, dev_addr)) {
+@@ -692,7 +693,7 @@ swiotlb_map_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
+ 				   to do proper error handling. */
+ 				swiotlb_full(hwdev, sg->length, dir, 0);
+ 				swiotlb_unmap_sg(hwdev, sg - i, i, dir);
+-				sg[0].dma_length = 0;
++				sgl[0].dma_length = 0;
+ 				return 0;
+ 			}
+ 			sg->dma_address = virt_to_bus(map);
+@@ -708,19 +709,21 @@ swiotlb_map_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
+  * concerning calls here are the same as for swiotlb_unmap_single() above.
+  */
+ void
+-swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
++swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
+ 		 int dir)
+ {
++	struct scatterlist *sg;
+ 	int i;
+ 
+ 	BUG_ON(dir == DMA_NONE);
+ 
+-	for (i = 0; i < nelems; i++, sg++)
++	for_each_sg(sgl, sg, nelems, i) {
+ 		if (sg->dma_address != SG_ENT_PHYS_ADDRESS(sg))
+ 			unmap_single(hwdev, bus_to_virt(sg->dma_address),
+ 				     sg->dma_length, dir);
+ 		else if (dir == DMA_FROM_DEVICE)
+ 			dma_mark_clean(SG_ENT_VIRT_ADDRESS(sg), sg->dma_length);
++	}
+ }
+ 
+ /*
+@@ -731,19 +734,21 @@ swiotlb_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nelems,
+  * and usage.
+  */
+ static void
+-swiotlb_sync_sg(struct device *hwdev, struct scatterlist *sg,
++swiotlb_sync_sg(struct device *hwdev, struct scatterlist *sgl,
+ 		int nelems, int dir, int target)
+ {
++	struct scatterlist *sg;
+ 	int i;
+ 
+ 	BUG_ON(dir == DMA_NONE);
+ 
+-	for (i = 0; i < nelems; i++, sg++)
++	for_each_sg(sgl, sg, nelems, i) {
+ 		if (sg->dma_address != SG_ENT_PHYS_ADDRESS(sg))
+ 			sync_single(hwdev, bus_to_virt(sg->dma_address),
+ 				    sg->dma_length, dir, target);
+ 		else if (dir == DMA_FROM_DEVICE)
+ 			dma_mark_clean(SG_ENT_VIRT_ADDRESS(sg), sg->dma_length);
++	}
+ }
+ 
+ void
 -- 
-Jens Axboe
-
-
+1.5.3.rc0.90.gbaa79
 
