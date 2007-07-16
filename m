@@ -1,74 +1,161 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH 09/33] x86-64: update iommu/dma mapping functions to sg
- helpers
-Date: Mon, 16 Jul 2007 13:34:27 -0700
-Message-ID: <20070716133427.e212b753.akpm@linux-foundation.org>
-References: <11845792671245-git-send-email-jens.axboe@oracle.com>
-	<11845792681830-git-send-email-jens.axboe@oracle.com>
-	<20070716130608.4d096e29.akpm@linux-foundation.org>
-	<20070716201002.GQ5195@kernel.dk>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: [PATCH] aacraid: add vpd to inquiry
+Date: Mon, 16 Jul 2007 17:08:05 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF0189EBAA@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C7C7ED.676DFCA2"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38023 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756683AbXGPUjt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 16:39:49 -0400
-In-Reply-To: <20070716201002.GQ5195@kernel.dk>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:33150 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755416AbXGPVIH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 17:08:07 -0400
+Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 6617A1D8D7B
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2007 14:08:06 -0700 (PDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF0189EBAA@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ak@suse.de
+To: linux-scsi@vger.kernel.org
 
-On Mon, 16 Jul 2007 22:10:03 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+This is a multi-part message in MIME format.
 
-> On Mon, Jul 16 2007, Andrew Morton wrote:
-> > On Mon, 16 Jul 2007 11:47:23 +0200
-> > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > 
-> > > This prepares x86-64 for sg chaining support.
-> > > 
-> > > Additional improvements/fixups for pci-gart from
-> > > Benny Halevy <bhalevy@panasas.com>
-> > > 
-> > > Cc: ak@suse.de
-> > > Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> > > ---
-> > >  arch/x86_64/kernel/pci-calgary.c |   25 ++++++++------
-> > >  arch/x86_64/kernel/pci-gart.c    |   63 ++++++++++++++++++++-----------------
-> > >  arch/x86_64/kernel/pci-nommu.c   |    5 ++-
-> > >  3 files changed, 51 insertions(+), 42 deletions(-)
-> > 
-> > This causes fairly extensive destruction of 2.6.23 changes which are
-> > pending in Andi's tree.
-> > 
-> > I shall drop the block tree until a) Andi has merged the pending Calgary
-> > changes and b) the block tree has been fixed up to account for those (and
-> > other) changes.
-> > 
-> > Really, this was the perfectly worst time possible to go tromping all over
-> > everyone else's trees.
-> 
-> Well, that's a bit hard for me to know, all I can do is push my stuff to
-> for-akpm so that it gets -mm exposure. If I don't, then you are yelling
-> at me as well :-)
+------_=_NextPart_001_01C7C7ED.676DFCA2
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-It is to be expected that there will be conflicts when making large-scale
-changes like this while there is 25MB of unmerged diff sitting out in 50
-different trees.  Doing it around the -rc1 time would be better.
+Report VPD inquiry page 0x80 with an unique array creation serial number
+(CUID). When an array is created, the metadata stored on the physical
+drives gets an unique serial number. This serial number remains constant
+through array morphing or migration to other controllers. This patch is
+a forward port and modification to survive morphing and migration
+operations, of a similar piece of (un-attributed author) code added to
+the SLES10 SP1 aacraid driver.
 
-Even better would be not doing it at all: add the necessary stuff into the
-block core and then send the followup work to the relevant maintainers. ie:
-standard practice.
+To test the results of the patch, observe that /dev/disk/by-id/ entries
+will show up for the arrays resulting from the udev rules. Also, as per
+the udev rules, 'scsi_id -g -x -a -s /block/sd? -d /dev/sd?' will report
+the ID_SERIAL as constructed from the inquiry data.
 
-> I'll keep rebasing sglist and the other branches I pull into for-akpm,
-> so you can just re-enable the for-akpm pull when the a) is true.
+This attached patch is against current scsi-misc-2.6
 
-Andi's tree is very out of date and is about to be damaged (to what extent
-I don't yet know) by a xen merge.  I don't know if a) is going to happen.
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patch attachments.
 
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
-Things are more than usually messy this time around.
+ drivers/scsi/aacraid/aachba.c  |  136
++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/aacraid/aacraid.h |   14 ++++
+ 2 files changed, 150 insertions(+)
+=20
+Sincerely -- Mark Salyzyn
+
+------_=_NextPart_001_01C7C7ED.676DFCA2
+Content-Type: application/octet-stream;
+	name="aacraid_vpd.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_vpd.patch
+Content-Disposition: attachment;
+	filename="aacraid_vpd.patch"
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
+MDctMTYgMTY6NDY6NDUuOTIxNDk3NjU5IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDctMDctMTYgMTY6NTM6MjEuMDY5MjQ5OTU0IC0wNDAwCkBAIC03NTEsNiAr
+NzUxLDk5IEBACiAJaW5xc3RyY3B5ICgiVjEuMCIsIHN0ci0+cHJsKTsKIH0KIAorc3RhdGljIHZv
+aWQgZ2V0X2NvbnRhaW5lcl9zZXJpYWxfY2FsbGJhY2sodm9pZCAqY29udGV4dCwgc3RydWN0IGZp
+YiAqIGZpYnB0cikKK3sKKwlzdHJ1Y3QgYWFjX2dldF9zZXJpYWxfcmVzcCAqIGdldF9zZXJpYWxf
+cmVwbHk7CisJc3RydWN0IHNjc2lfY21uZCAqIHNjc2ljbWQ7CisKKwlCVUdfT04oZmlicHRyID09
+IE5VTEwpOworCisJc2NzaWNtZCA9IChzdHJ1Y3Qgc2NzaV9jbW5kICopIGNvbnRleHQ7CisJaWYg
+KCFhYWNfdmFsaWRfY29udGV4dChzY3NpY21kLCBmaWJwdHIpKQorCQlyZXR1cm47CisKKwlnZXRf
+c2VyaWFsX3JlcGx5ID0gKHN0cnVjdCBhYWNfZ2V0X3NlcmlhbF9yZXNwICopIGZpYl9kYXRhKGZp
+YnB0cik7CisJLyogRmFpbHVyZSBpcyBpcnJlbGV2YW50LCB1c2luZyBkZWZhdWx0IHZhbHVlIGlu
+c3RlYWQgKi8KKwlpZiAobGUzMl90b19jcHUoZ2V0X3NlcmlhbF9yZXBseS0+c3RhdHVzKSA9PSBD
+VF9PSykgeworCQljaGFyIHNwWzE3XTsKKwkJLyogRVZQRCBiaXQgc2V0ICovCisJCXNwWzBdID0g
+SU5RRF9QRFRfREE7CisJCXNwWzFdID0gc2NzaWNtZC0+Y21uZFsyXTsKKwkJc3BbMl0gPSAwOwor
+CQlzcFszXSA9IHNucHJpbnRmKHNwKzQsIHNpemVvZihzcCktNCwgIkFEUFQlMDhYIiwKKwkJICBs
+ZTMyX3RvX2NwdShnZXRfc2VyaWFsX3JlcGx5LT51aWQpKTsKKwkJYWFjX2ludGVybmFsX3RyYW5z
+ZmVyKHNjc2ljbWQsIHNwLCAwLCBzaXplb2Yoc3ApKTsKKwl9CisKKwlzY3NpY21kLT5yZXN1bHQg
+PSBESURfT0sgPDwgMTYgfCBDT01NQU5EX0NPTVBMRVRFIDw8IDggfCBTQU1fU1RBVF9HT09EOwor
+CisJYWFjX2ZpYl9jb21wbGV0ZShmaWJwdHIpOworCWFhY19maWJfZnJlZShmaWJwdHIpOworCXNj
+c2ljbWQtPnNjc2lfZG9uZShzY3NpY21kKTsKK30KKworLyoqCisgKglhYWNfZ2V0X2NvbnRhaW5l
+cl9zZXJpYWwgLSBnZXQgY29udGFpbmVyIHNlcmlhbCwgbm9uZSBibG9ja2luZy4KKyAqLworc3Rh
+dGljIGludCBhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWwoc3RydWN0IHNjc2lfY21uZCAqIHNjc2lj
+bWQpCit7CisJaW50IHN0YXR1czsKKwlzdHJ1Y3QgYWFjX2dldF9zZXJpYWwgKmRpbmZvOworCXN0
+cnVjdCBmaWIgKiBjbWRfZmliY29udGV4dDsKKwlzdHJ1Y3QgYWFjX2RldiAqIGRldjsKKworCWRl
+diA9IChzdHJ1Y3QgYWFjX2RldiAqKXNjc2ljbWQtPmRldmljZS0+aG9zdC0+aG9zdGRhdGE7CisK
+KwlpZiAoIShjbWRfZmliY29udGV4dCA9IGFhY19maWJfYWxsb2MoZGV2KSkpCisJCXJldHVybiAt
+RU5PTUVNOworCisJYWFjX2ZpYl9pbml0KGNtZF9maWJjb250ZXh0KTsKKwlkaW5mbyA9IChzdHJ1
+Y3QgYWFjX2dldF9zZXJpYWwgKikgZmliX2RhdGEoY21kX2ZpYmNvbnRleHQpOworCisJZGluZm8t
+PmNvbW1hbmQgPSBjcHVfdG9fbGUzMihWTV9Db250YWluZXJDb25maWcpOworCWRpbmZvLT50eXBl
+ID0gY3B1X3RvX2xlMzIoQ1RfQ0lEX1RPXzMyQklUU19VSUQpOworCWRpbmZvLT5jaWQgPSBjcHVf
+dG9fbGUzMihzY21kX2lkKHNjc2ljbWQpKTsKKworCXN0YXR1cyA9IGFhY19maWJfc2VuZChDb250
+YWluZXJDb21tYW5kLAorCQkgIGNtZF9maWJjb250ZXh0LCAKKwkJICBzaXplb2YgKHN0cnVjdCBh
+YWNfZ2V0X3NlcmlhbCksCisJCSAgRnNhTm9ybWFsLCAKKwkJICAwLCAxLCAKKwkJICAoZmliX2Nh
+bGxiYWNrKSBnZXRfY29udGFpbmVyX3NlcmlhbF9jYWxsYmFjaywgCisJCSAgKHZvaWQgKikgc2Nz
+aWNtZCk7CisJCisJLyoKKwkgKglDaGVjayB0aGF0IHRoZSBjb21tYW5kIHF1ZXVlZCB0byB0aGUg
+Y29udHJvbGxlcgorCSAqLworCWlmIChzdGF0dXMgPT0gLUVJTlBST0dSRVNTKSB7CisJCXNjc2lj
+bWQtPlNDcC5waGFzZSA9IEFBQ19PV05FUl9GSVJNV0FSRTsKKwkJcmV0dXJuIDA7CisJfQorCQkK
+KwlwcmludGsoS0VSTl9XQVJOSU5HICJhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWw6IGFhY19maWJf
+c2VuZCBmYWlsZWQgd2l0aCBzdGF0dXM6ICVkLlxuIiwgc3RhdHVzKTsKKwlhYWNfZmliX2NvbXBs
+ZXRlKGNtZF9maWJjb250ZXh0KTsKKwlhYWNfZmliX2ZyZWUoY21kX2ZpYmNvbnRleHQpOworCXJl
+dHVybiAtMTsKK30KKworLyogRnVuY3Rpb246IHNldGlucXNlcmlhbAorICoKKyAqIEFyZ3VtZW50
+czogWzFdIHBvaW50ZXIgdG8gdm9pZCBbMV0gaW50CisgKgorICogUHVycG9zZTogU2V0cyBTQ1NJ
+IFVuaXQgU2VyaWFsIG51bWJlci4KKyAqICAgICAgICAgIFRoaXMgaXMgYSBmYWtlLiBXZSBzaG91
+bGQgcmVhZCBhIHByb3BlcgorICogICAgICAgICAgc2VyaWFsIG51bWJlciBmcm9tIHRoZSBjb250
+YWluZXIuCisgKi8KKworc3RhdGljIGludCBzZXRpbnFzZXJpYWwoc3RydWN0IGFhY19kZXYgKmRl
+diwgdm9pZCAqZGF0YSwgaW50IGNpZCkKK3sKKwkvKgorCSAqCVRoaXMgYnJlYWtzIGFycmF5IG1p
+Z3JhdGlvbi4KKwkgKi8KKwlyZXR1cm4gc25wcmludGYoKGNoYXIgKikoZGF0YSksIHNpemVvZihz
+dHJ1Y3Qgc2NzaV9pbnEpIC0gNCwgIiUwOFglMDJYIiwKKwkJCWxlMzJfdG9fY3B1KGRldi0+YWRh
+cHRlcl9pbmZvLnNlcmlhbFswXSksIGNpZCk7Cit9CisKIHN0YXRpYyB2b2lkIHNldF9zZW5zZSh1
+OCAqc2Vuc2VfYnVmLCB1OCBzZW5zZV9rZXksIHU4IHNlbnNlX2NvZGUsCiAJCSAgICAgIHU4IGFf
+c2Vuc2VfY29kZSwgdTggaW5jb3JyZWN0X2xlbmd0aCwKIAkJICAgICAgdTggYml0X3BvaW50ZXIs
+IHUxNiBmaWVsZF9wb2ludGVyLApAQCAtMTc5OCw2ICsxODkxLDQ5IEBACiAJCWRwcmludGsoKEtF
+Uk5fREVCVUcgIklOUVVJUlkgY29tbWFuZCwgSUQ6ICVkLlxuIiwgY2lkKSk7CiAJCW1lbXNldCgm
+aW5xX2RhdGEsIDAsIHNpemVvZiAoc3RydWN0IGlucXVpcnlfZGF0YSkpOwogCisJCWlmIChzY3Np
+Y21kLT5jbW5kWzFdICYgMHgxICkgeworCQkJY2hhciAqYXJyID0gKGNoYXIgKikmaW5xX2RhdGE7
+CisKKwkJCS8qIEVWUEQgYml0IHNldCAqLworCQkJYXJyWzBdID0gKHNjbWRfaWQoc2NzaWNtZCkg
+PT0gaG9zdC0+dGhpc19pZCkgPworCQkJICBJTlFEX1BEVF9QUk9DIDogSU5RRF9QRFRfREE7CisJ
+CQlpZiAoc2NzaWNtZC0+Y21uZFsyXSA9PSAwKSB7CisJCQkJLyogc3VwcG9ydGVkIHZpdGFsIHBy
+b2R1Y3QgZGF0YSBwYWdlcyAqLworCQkJCWFyclszXSA9IDI7CisJCQkJYXJyWzRdID0gMHgwOwor
+CQkJCWFycls1XSA9IDB4ODA7CisJCQkJYXJyWzFdID0gc2NzaWNtZC0+Y21uZFsyXTsKKwkJCQlh
+YWNfaW50ZXJuYWxfdHJhbnNmZXIoc2NzaWNtZCwgJmlucV9kYXRhLCAwLAorCQkJCSAgc2l6ZW9m
+KGlucV9kYXRhKSk7CisJCQkJc2NzaWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2IHwKKwkJCQkg
+IENPTU1BTkRfQ09NUExFVEUgPDwgOCB8IFNBTV9TVEFUX0dPT0Q7CisJCQl9IGVsc2UgaWYgKHNj
+c2ljbWQtPmNtbmRbMl0gPT0gMHg4MCkgeworCQkJCS8qIHVuaXQgc2VyaWFsIG51bWJlciBwYWdl
+ICovCisJCQkJYXJyWzNdID0gc2V0aW5xc2VyaWFsKGRldiwgJmFycls0XSwKKwkJCQkgIHNjbWRf
+aWQoc2NzaWNtZCkpOworCQkJCWFyclsxXSA9IHNjc2ljbWQtPmNtbmRbMl07CisJCQkJYWFjX2lu
+dGVybmFsX3RyYW5zZmVyKHNjc2ljbWQsICZpbnFfZGF0YSwgMCwKKwkJCQkgIHNpemVvZihpbnFf
+ZGF0YSkpOworCQkJCXJldHVybiBhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWwoc2NzaWNtZCk7CisJ
+CQl9IGVsc2UgeworCQkJCS8qIHZwZCBwYWdlIG5vdCBpbXBsZW1lbnRlZCAqLworCQkJCXNjc2lj
+bWQtPnJlc3VsdCA9IERJRF9PSyA8PCAxNiB8CisJCQkJICBDT01NQU5EX0NPTVBMRVRFIDw8IDgg
+fAorCQkJCSAgU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OOworCQkJCXNldF9zZW5zZSgodTggKikg
+JmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCisJCQkJICBJTExFR0FMX1JFUVVFU1QsCisJ
+CQkJICBTRU5DT0RFX0lOVkFMSURfQ0RCX0ZJRUxELAorCQkJCSAgQVNFTkNPREVfTk9fU0VOU0Us
+IDAsIDcsIDIsIDApOworCQkJCW1lbWNweShzY3NpY21kLT5zZW5zZV9idWZmZXIsCisJCQkJICAm
+ZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKKwkJCQkgIChzaXplb2YoZGV2LT5mc2FfZGV2
+W2NpZF0uc2Vuc2VfZGF0YSkgPgorCQkJCSAgICBzaXplb2Yoc2NzaWNtZC0+c2Vuc2VfYnVmZmVy
+KSkKKwkJCQkgICAgICAgPyBzaXplb2Yoc2NzaWNtZC0+c2Vuc2VfYnVmZmVyKQorCQkJCSAgICAg
+ICA6IHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSk7CisJCQl9CisJCQlzY3Np
+Y21kLT5zY3NpX2RvbmUoc2NzaWNtZCk7CisJCQlyZXR1cm4gMDsKKwkJfQogCQlpbnFfZGF0YS5p
+bnFkX3ZlciA9IDI7CS8qIGNsYWltIGNvbXBsaWFuY2UgdG8gU0NTSS0yICovCiAJCWlucV9kYXRh
+LmlucWRfcmRmID0gMjsJLyogQSByZXNwb25zZSBkYXRhIGZvcm1hdCB2YWx1ZSBvZiB0d28gaW5k
+aWNhdGVzIHRoYXQgdGhlIGRhdGEgc2hhbGwgYmUgaW4gdGhlIGZvcm1hdCBzcGVjaWZpZWQgaW4g
+U0NTSS0yICovCiAJCWlucV9kYXRhLmlucWRfbGVuID0gMzE7CmRpZmYgLXJ1IGEvZHJpdmVycy9z
+Y3NpL2FhY3JhaWQvYWFjcmFpZC5oIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCi0t
+LSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA3LTA3LTE2IDE2OjQ2OjQ1Ljky
+MjQ5NzUzNSAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgJMjAwNy0w
+Ny0xNiAxNjo1MzoyMS4wNzEyNDk3MDUgLTA0MDAKQEAgLTE1NjcsNiArMTU2NywyMCBAQAogCXU4
+CQlkYXRhWzE2XTsKIH07CiAKKyNkZWZpbmUgQ1RfQ0lEX1RPXzMyQklUU19VSUQgMTY1CitzdHJ1
+Y3QgYWFjX2dldF9zZXJpYWwgeworCV9fbGUzMgkJY29tbWFuZDsJLyogVk1fQ29udGFpbmVyQ29u
+ZmlnICovCisJX19sZTMyCQl0eXBlOwkJLyogQ1RfQ0lEX1RPXzMyQklUU19VSUQgKi8KKwlfX2xl
+MzIJCWNpZDsKK307CisKK3N0cnVjdCBhYWNfZ2V0X3NlcmlhbF9yZXNwIHsKKwlfX2xlMzIJCWR1
+bW15MDsKKwlfX2xlMzIJCWR1bW15MTsKKwlfX2xlMzIJCXN0YXR1czsJLyogQ1RfT0sgKi8KKwlf
+X2xlMzIJCXVpZDsKK307CisKIC8qCiAgKiBUaGUgZm9sbG93aW5nIGNvbW1hbmQgaXMgc2VudCB0
+byBzaHV0IGRvd24gZWFjaCBjb250YWluZXIuCiAgKi8K
+
+------_=_NextPart_001_01C7C7ED.676DFCA2--
