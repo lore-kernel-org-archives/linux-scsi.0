@@ -1,386 +1,221 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 14/33] SPARC64: sg chaining support
-Date: Mon, 16 Jul 2007 11:47:28 +0200
-Message-ID: <11845792682658-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 18/33] libata: convert to using sg helpers
+Date: Mon, 16 Jul 2007 11:47:32 +0200
+Message-ID: <1184579268910-git-send-email-jens.axboe@oracle.com>
 References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9289 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:9305 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759824AbXGPJsi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1760556AbXGPJsi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Mon, 16 Jul 2007 05:48:38 -0400
 In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jens.axboe@oracle.com>, davem@davemloft.net
+Cc: Jens Axboe <jens.axboe@oracle.com>, jgarzik@pobox.com, htejun@gmail.com
 
-This updates the sparc64 iommu/pci dma mappers to sg chaining.
+This converts libata to using the sg helpers for looking up sg
+elements, instead of doing it manually.
 
-Cc: davem@davemloft.net
+Cc: jgarzik@pobox.com
+Cc: htejun@gmail.com
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- arch/sparc64/kernel/pci_iommu.c   |   39 +++++++++++++++++++++-----------
- arch/sparc64/kernel/pci_sun4v.c   |   32 ++++++++++++++++-----------
- arch/sparc64/kernel/sbus.c        |   44 ++++++++++++++++++++++--------------
- include/asm-sparc64/scatterlist.h |    2 +
- 4 files changed, 73 insertions(+), 44 deletions(-)
+ drivers/ata/libata-core.c |   30 ++++++++++++++++--------------
+ include/linux/libata.h    |   16 ++++++++++------
+ 2 files changed, 26 insertions(+), 20 deletions(-)
 
-diff --git a/arch/sparc64/kernel/pci_iommu.c b/arch/sparc64/kernel/pci_iommu.c
-index 70d2364..2118a4d 100644
---- a/arch/sparc64/kernel/pci_iommu.c
-+++ b/arch/sparc64/kernel/pci_iommu.c
-@@ -9,6 +9,7 @@
- #include <linux/mm.h>
- #include <linux/delay.h>
- #include <linux/pci.h>
-+#include <linux/scatterlist.h>
- 
- #include <asm/oplib.h>
- 
-@@ -470,7 +471,7 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 			   int nused, int nelems, unsigned long iopte_protection)
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 88e2dd0..788dc7b 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -1341,7 +1341,7 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
+  */
+ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 			      struct ata_taskfile *tf, const u8 *cdb,
+-			      int dma_dir, struct scatterlist *sg,
++			      int dma_dir, struct scatterlist *sgl,
+ 			      unsigned int n_elem)
  {
- 	struct scatterlist *dma_sg = sg;
--	struct scatterlist *sg_end = sg + nelems;
-+	struct scatterlist *sg_end = sg_last(sg, nelems);
- 	int i;
+ 	struct ata_port *ap = dev->ap;
+@@ -1399,11 +1399,12 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
+ 	qc->dma_dir = dma_dir;
+ 	if (dma_dir != DMA_NONE) {
+ 		unsigned int i, buflen = 0;
++		struct scatterlist *sg;
  
- 	for (i = 0; i < nused; i++) {
-@@ -505,7 +506,7 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 					len -= (IO_PAGE_SIZE - (tmp & (IO_PAGE_SIZE - 1UL)));
- 					break;
- 				}
--				sg++;
-+				sg = sg_next(sg);
- 			}
+-		for (i = 0; i < n_elem; i++)
+-			buflen += sg[i].length;
++		for_each_sg(sgl, sg, n_elem, i)
++			buflen += sg->length;
  
- 			pteval = iopte_protection | (pteval & IOPTE_PAGE);
-@@ -518,7 +519,7 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 			}
- 
- 			pteval = (pteval & IOPTE_PAGE) + len;
--			sg++;
-+			sg = sg_next(sg);
- 
- 			/* Skip over any tail mappings we've fully mapped,
- 			 * adjusting pteval along the way.  Stop when we
-@@ -530,12 +531,12 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 			       ((pteval ^
- 				 (SG_ENT_PHYS_ADDRESS(sg) + sg->length - 1UL)) >> IO_PAGE_SHIFT) == 0UL) {
- 				pteval += sg->length;
--				sg++;
-+				sg = sg_next(sg);
- 			}
- 			if ((pteval << (64 - IO_PAGE_SHIFT)) == 0UL)
- 				pteval = ~0UL;
- 		} while (dma_npages != 0);
--		dma_sg++;
-+		dma_sg = sg_next(dma_sg);
+-		ata_sg_init(qc, sg, n_elem);
++		ata_sg_init(qc, sgl, n_elem);
+ 		qc->nbytes = buflen;
  	}
+ 
+@@ -4000,7 +4001,7 @@ void ata_sg_clean(struct ata_queued_cmd *qc)
+ 		if (qc->n_elem)
+ 			dma_unmap_sg(ap->dev, sg, qc->n_elem, dir);
+ 		/* restore last sg */
+-		sg[qc->orig_n_elem - 1].length += qc->pad_len;
++		sg_last(sg, qc->orig_n_elem)->length += qc->pad_len;
+ 		if (pad_buf) {
+ 			struct scatterlist *psg = &qc->pad_sgent;
+ 			void *addr = kmap_atomic(psg->page, KM_IRQ0);
+@@ -4225,6 +4226,7 @@ void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf, unsigned int buflen)
+ 	qc->orig_n_elem = 1;
+ 	qc->buf_virt = buf;
+ 	qc->nbytes = buflen;
++	qc->cursg = qc->__sg;
+ 
+ 	sg_init_one(&qc->sgent, buf, buflen);
+ }
+@@ -4250,6 +4252,7 @@ void ata_sg_init(struct ata_queued_cmd *qc, struct scatterlist *sg,
+ 	qc->__sg = sg;
+ 	qc->n_elem = n_elem;
+ 	qc->orig_n_elem = n_elem;
++	qc->cursg = qc->__sg;
  }
  
-@@ -599,7 +600,7 @@ static int pci_4u_map_sg(struct pci_dev *pdev, struct scatterlist *sglist, int n
- 	sgtmp = sglist;
- 	while (used && sgtmp->dma_length) {
- 		sgtmp->dma_address += dma_base;
--		sgtmp++;
-+		sgtmp = sg_next(sgtmp);
- 		used--;
- 	}
- 	used = nelems - used;
-@@ -635,6 +636,7 @@ static void pci_4u_unmap_sg(struct pci_dev *pdev, struct scatterlist *sglist, in
- 	struct strbuf *strbuf;
- 	iopte_t *base;
- 	unsigned long flags, ctx, i, npages;
-+	struct scatterlist *sg, *sgprv;
- 	u32 bus_addr;
- 
- 	if (unlikely(direction == PCI_DMA_NONE)) {
-@@ -647,11 +649,15 @@ static void pci_4u_unmap_sg(struct pci_dev *pdev, struct scatterlist *sglist, in
- 	
- 	bus_addr = sglist->dma_address & IO_PAGE_MASK;
- 
--	for (i = 1; i < nelems; i++)
--		if (sglist[i].dma_length == 0)
-+	sgprv = NULL;
-+	for_each_sg(sglist, sg, nelems, i) {
-+		if (sg->dma_length == 0)
- 			break;
--	i--;
--	npages = (IO_PAGE_ALIGN(sglist[i].dma_address + sglist[i].dma_length) -
-+
-+		sgprv = sg;
-+	}
-+
-+	npages = (IO_PAGE_ALIGN(sgprv->dma_address + sgprv->dma_length) -
- 		  bus_addr) >> IO_PAGE_SHIFT;
- 
- 	base = iommu->page_table +
-@@ -730,6 +736,7 @@ static void pci_4u_dma_sync_sg_for_cpu(struct pci_dev *pdev, struct scatterlist
- 	struct iommu *iommu;
- 	struct strbuf *strbuf;
- 	unsigned long flags, ctx, npages, i;
-+	struct scatterlist *sg, *sgprv;
- 	u32 bus_addr;
- 
- 	iommu = pdev->dev.archdata.iommu;
-@@ -753,11 +760,15 @@ static void pci_4u_dma_sync_sg_for_cpu(struct pci_dev *pdev, struct scatterlist
- 
- 	/* Step 2: Kick data out of streaming buffers. */
- 	bus_addr = sglist[0].dma_address & IO_PAGE_MASK;
--	for(i = 1; i < nelems; i++)
--		if (!sglist[i].dma_length)
-+	sgprv = NULL;
-+	for_each_sg(sglist, sg, nelems, i) {
-+		if (sg->dma_length == 0)
- 			break;
--	i--;
--	npages = (IO_PAGE_ALIGN(sglist[i].dma_address + sglist[i].dma_length)
-+
-+		sgprv = sg;
-+	}
-+
-+	npages = (IO_PAGE_ALIGN(sgprv->dma_address + sgprv->dma_length)
- 		  - bus_addr) >> IO_PAGE_SHIFT;
- 	pci_strbuf_flush(strbuf, iommu, bus_addr, ctx, npages, direction);
- 
-diff --git a/arch/sparc64/kernel/pci_sun4v.c b/arch/sparc64/kernel/pci_sun4v.c
-index 6b3fe2c..ebbc567 100644
---- a/arch/sparc64/kernel/pci_sun4v.c
-+++ b/arch/sparc64/kernel/pci_sun4v.c
-@@ -13,6 +13,7 @@
- #include <linux/irq.h>
- #include <linux/msi.h>
- #include <linux/log2.h>
-+#include <linux/scatterlist.h>
- 
- #include <asm/iommu.h>
- #include <asm/irq.h>
-@@ -368,7 +369,7 @@ static inline long fill_sg(long entry, struct pci_dev *pdev,
- 			   int nused, int nelems, unsigned long prot)
+ /**
+@@ -4339,7 +4342,7 @@ static int ata_sg_setup(struct ata_queued_cmd *qc)
  {
- 	struct scatterlist *dma_sg = sg;
--	struct scatterlist *sg_end = sg + nelems;
-+	struct scatterlist *sg_end = sg_last(sg, nelems);
- 	unsigned long flags;
- 	int i;
+ 	struct ata_port *ap = qc->ap;
+ 	struct scatterlist *sg = qc->__sg;
+-	struct scatterlist *lsg = &sg[qc->n_elem - 1];
++	struct scatterlist *lsg = sg_last(qc->__sg, qc->n_elem);
+ 	int n_elem, pre_n_elem, dir, trim_sg = 0;
  
-@@ -408,7 +409,7 @@ static inline long fill_sg(long entry, struct pci_dev *pdev,
- 					len -= (IO_PAGE_SIZE - (tmp & (IO_PAGE_SIZE - 1UL)));
- 					break;
- 				}
--				sg++;
-+				sg = sg_next(sg);
- 			}
+ 	VPRINTK("ENTER, ata%u\n", ap->print_id);
+@@ -4503,7 +4506,6 @@ void ata_data_xfer_noirq(struct ata_device *adev, unsigned char *buf,
+ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ {
+ 	int do_write = (qc->tf.flags & ATA_TFLAG_WRITE);
+-	struct scatterlist *sg = qc->__sg;
+ 	struct ata_port *ap = qc->ap;
+ 	struct page *page;
+ 	unsigned int offset;
+@@ -4512,8 +4514,8 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 	if (qc->curbytes == qc->nbytes - qc->sect_size)
+ 		ap->hsm_task_state = HSM_ST_LAST;
  
- 			pteval = (pteval & IOPTE_PAGE);
-@@ -426,24 +427,25 @@ static inline long fill_sg(long entry, struct pci_dev *pdev,
- 			}
+-	page = sg[qc->cursg].page;
+-	offset = sg[qc->cursg].offset + qc->cursg_ofs;
++	page = qc->cursg->page;
++	offset = qc->cursg->offset + qc->cursg_ofs;
  
- 			pteval = (pteval & IOPTE_PAGE) + len;
--			sg++;
-+			sg = sg_next(sg);
+ 	/* get the current page and offset */
+ 	page = nth_page(page, (offset >> PAGE_SHIFT));
+@@ -4541,8 +4543,8 @@ static void ata_pio_sector(struct ata_queued_cmd *qc)
+ 	qc->curbytes += qc->sect_size;
+ 	qc->cursg_ofs += qc->sect_size;
  
- 			/* Skip over any tail mappings we've fully mapped,
- 			 * adjusting pteval along the way.  Stop when we
- 			 * detect a page crossing event.
- 			 */
--			while (sg < sg_end &&
--			       (pteval << (64 - IO_PAGE_SHIFT)) != 0UL &&
-+			while ((pteval << (64 - IO_PAGE_SHIFT)) != 0UL &&
- 			       (pteval == SG_ENT_PHYS_ADDRESS(sg)) &&
- 			       ((pteval ^
- 				 (SG_ENT_PHYS_ADDRESS(sg) + sg->length - 1UL)) >> IO_PAGE_SHIFT) == 0UL) {
- 				pteval += sg->length;
--				sg++;
-+				if (sg == sg_end)
-+					break;
-+				sg = sg_next(sg);
- 			}
- 			if ((pteval << (64 - IO_PAGE_SHIFT)) == 0UL)
- 				pteval = ~0UL;
- 		} while (dma_npages != 0);
--		dma_sg++;
-+		dma_sg = sg_next(dma_sg);
+-	if (qc->cursg_ofs == (&sg[qc->cursg])->length) {
+-		qc->cursg++;
++	if (qc->cursg_ofs == qc->cursg->length) {
++		qc->cursg = sg_next(qc->cursg);
+ 		qc->cursg_ofs = 0;
+ 	}
+ }
+@@ -4635,7 +4637,7 @@ static void __atapi_pio_bytes(struct ata_queued_cmd *qc, unsigned int bytes)
+ 		ap->hsm_task_state = HSM_ST_LAST;
+ 
+ next_sg:
+-	if (unlikely(qc->cursg >= qc->n_elem)) {
++	if (unlikely(qc->cursg == sg_last(qc->__sg, qc->n_elem))) {
+ 		/*
+ 		 * The end of qc->sg is reached and the device expects
+ 		 * more data to transfer. In order not to overrun qc->sg
+@@ -4658,7 +4660,7 @@ next_sg:
+ 		return;
  	}
  
- 	if (unlikely(pci_iommu_batch_end() < 0L))
-@@ -503,7 +505,7 @@ static int pci_4v_map_sg(struct pci_dev *pdev, struct scatterlist *sglist, int n
- 	sgtmp = sglist;
- 	while (used && sgtmp->dma_length) {
- 		sgtmp->dma_address += dma_base;
--		sgtmp++;
-+		sgtmp = sg_next(sgtmp);
- 		used--;
+-	sg = &qc->__sg[qc->cursg];
++	sg = qc->cursg;
+ 
+ 	page = sg->page;
+ 	offset = sg->offset + qc->cursg_ofs;
+@@ -4697,7 +4699,7 @@ next_sg:
+ 	qc->cursg_ofs += count;
+ 
+ 	if (qc->cursg_ofs == sg->length) {
+-		qc->cursg++;
++		qc->cursg = sg_next(qc->cursg);
+ 		qc->cursg_ofs = 0;
  	}
- 	used = nelems - used;
-@@ -537,6 +539,7 @@ static void pci_4v_unmap_sg(struct pci_dev *pdev, struct scatterlist *sglist, in
- 	struct pci_pbm_info *pbm;
- 	struct iommu *iommu;
- 	unsigned long flags, i, npages;
-+	struct scatterlist *sg, *sgprv;
- 	long entry;
- 	u32 devhandle, bus_addr;
  
-@@ -550,12 +553,15 @@ static void pci_4v_unmap_sg(struct pci_dev *pdev, struct scatterlist *sglist, in
- 	devhandle = pbm->devhandle;
- 	
- 	bus_addr = sglist->dma_address & IO_PAGE_MASK;
--
--	for (i = 1; i < nelems; i++)
--		if (sglist[i].dma_length == 0)
-+	sgprv = NULL;
-+	for_each_sg(sglist, sg, nelems, i) {
-+		if (sg->dma_length == 0)
- 			break;
--	i--;
--	npages = (IO_PAGE_ALIGN(sglist[i].dma_address + sglist[i].dma_length) -
-+
-+		sgprv = sg;
-+	}
-+
-+	npages = (IO_PAGE_ALIGN(sgprv->dma_address + sgprv->dma_length) -
- 		  bus_addr) >> IO_PAGE_SHIFT;
- 
- 	entry = ((bus_addr - iommu->page_table_map_base) >> IO_PAGE_SHIFT);
-diff --git a/arch/sparc64/kernel/sbus.c b/arch/sparc64/kernel/sbus.c
-index a1fd9bc..4479f91 100644
---- a/arch/sparc64/kernel/sbus.c
-+++ b/arch/sparc64/kernel/sbus.c
-@@ -11,6 +11,7 @@
- #include <linux/slab.h>
- #include <linux/init.h>
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index 47cd2a1..005b159 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -30,7 +30,7 @@
  #include <linux/interrupt.h>
+ #include <linux/pci.h>
+ #include <linux/dma-mapping.h>
+-#include <asm/scatterlist.h>
 +#include <linux/scatterlist.h>
+ #include <linux/io.h>
+ #include <linux/ata.h>
+ #include <linux/workqueue.h>
+@@ -386,6 +386,7 @@ struct ata_queued_cmd {
+ 	unsigned long		flags;		/* ATA_QCFLAG_xxx */
+ 	unsigned int		tag;
+ 	unsigned int		n_elem;
++	unsigned int		n_iter;
+ 	unsigned int		orig_n_elem;
  
- #include <asm/page.h>
- #include <asm/sbus.h>
-@@ -348,7 +349,7 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 			   int nused, int nelems, unsigned long iopte_protection)
- {
- 	struct scatterlist *dma_sg = sg;
--	struct scatterlist *sg_end = sg + nelems;
-+	struct scatterlist *sg_end = sg_last(sg, nelems);
- 	int i;
+ 	int			dma_dir;
+@@ -396,7 +397,7 @@ struct ata_queued_cmd {
+ 	unsigned int		nbytes;
+ 	unsigned int		curbytes;
  
- 	for (i = 0; i < nused; i++) {
-@@ -383,7 +384,7 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 					len -= (IO_PAGE_SIZE - (tmp & (IO_PAGE_SIZE - 1UL)));
- 					break;
- 				}
--				sg++;
-+				sg = sg_next(sg);
- 			}
+-	unsigned int		cursg;
++	struct scatterlist	*cursg;
+ 	unsigned int		cursg_ofs;
  
- 			pteval = iopte_protection | (pteval & IOPTE_PAGE);
-@@ -396,24 +397,25 @@ static inline void fill_sg(iopte_t *iopte, struct scatterlist *sg,
- 			}
- 
- 			pteval = (pteval & IOPTE_PAGE) + len;
--			sg++;
-+			sg = sg_next(sg);
- 
- 			/* Skip over any tail mappings we've fully mapped,
- 			 * adjusting pteval along the way.  Stop when we
- 			 * detect a page crossing event.
- 			 */
--			while (sg < sg_end &&
--			       (pteval << (64 - IO_PAGE_SHIFT)) != 0UL &&
-+			while ((pteval << (64 - IO_PAGE_SHIFT)) != 0UL &&
- 			       (pteval == SG_ENT_PHYS_ADDRESS(sg)) &&
- 			       ((pteval ^
- 				 (SG_ENT_PHYS_ADDRESS(sg) + sg->length - 1UL)) >> IO_PAGE_SHIFT) == 0UL) {
- 				pteval += sg->length;
--				sg++;
-+				if (sg == sg_end)
-+					break;
-+				sg = sg_next(sg);
- 			}
- 			if ((pteval << (64 - IO_PAGE_SHIFT)) == 0UL)
- 				pteval = ~0UL;
- 		} while (dma_npages != 0);
--		dma_sg++;
-+		dma_sg = sg_next(dma_sg);
- 	}
+ 	struct scatterlist	sgent;
+@@ -943,7 +944,7 @@ ata_sg_is_last(struct scatterlist *sg, struct ata_queued_cmd *qc)
+ 		return 1;
+ 	if (qc->pad_len)
+ 		return 0;
+-	if (((sg - qc->__sg) + 1) == qc->n_elem)
++	if (qc->n_iter == qc->n_elem)
+ 		return 1;
+ 	return 0;
  }
- 
-@@ -461,7 +463,7 @@ int sbus_map_sg(struct sbus_dev *sdev, struct scatterlist *sglist, int nelems, i
- 	sgtmp = sglist;
- 	while (used && sgtmp->dma_length) {
- 		sgtmp->dma_address += dma_base;
--		sgtmp++;
-+		sgtmp = sg_next(sgtmp);
- 		used--;
- 	}
- 	used = nelems - used;
-@@ -486,6 +488,7 @@ void sbus_unmap_sg(struct sbus_dev *sdev, struct scatterlist *sglist, int nelems
- 	struct strbuf *strbuf;
- 	iopte_t *base;
- 	unsigned long flags, i, npages;
-+	struct scatterlist *sg, *sgprv;
- 	u32 bus_addr;
- 
- 	if (unlikely(direction == SBUS_DMA_NONE))
-@@ -496,12 +499,15 @@ void sbus_unmap_sg(struct sbus_dev *sdev, struct scatterlist *sglist, int nelems
- 	strbuf = &info->strbuf;
- 
- 	bus_addr = sglist->dma_address & IO_PAGE_MASK;
--
--	for (i = 1; i < nelems; i++)
--		if (sglist[i].dma_length == 0)
-+	sgprv = NULL;
-+	for_each_sg(sglist, sg, nelems, i) {
-+		if (sg->dma_length == 0)
- 			break;
--	i--;
--	npages = (IO_PAGE_ALIGN(sglist[i].dma_address + sglist[i].dma_length) -
-+
-+		sgprv = sg;
-+	}
-+
-+	npages = (IO_PAGE_ALIGN(sgprv->dma_address + sgprv->dma_length) -
- 		  bus_addr) >> IO_PAGE_SHIFT;
- 
- 	base = iommu->page_table +
-@@ -545,6 +551,7 @@ void sbus_dma_sync_sg_for_cpu(struct sbus_dev *sdev, struct scatterlist *sglist,
- 	struct iommu *iommu;
- 	struct strbuf *strbuf;
- 	unsigned long flags, npages, i;
-+	struct scatterlist *sg, *sgprv;
- 	u32 bus_addr;
- 
- 	info = sdev->bus->iommu;
-@@ -552,12 +559,15 @@ void sbus_dma_sync_sg_for_cpu(struct sbus_dev *sdev, struct scatterlist *sglist,
- 	strbuf = &info->strbuf;
- 
- 	bus_addr = sglist[0].dma_address & IO_PAGE_MASK;
--	for (i = 0; i < nelems; i++) {
--		if (!sglist[i].dma_length)
-+	sgprv = NULL;
-+	for_each_sg(sglist, sg, nelems, i) {
-+		if (sg->dma_length == 0)
- 			break;
-+
-+		sgprv = sg;
- 	}
--	i--;
--	npages = (IO_PAGE_ALIGN(sglist[i].dma_address + sglist[i].dma_length)
-+
-+	npages = (IO_PAGE_ALIGN(sgprv->dma_address + sgprv->dma_length)
- 		  - bus_addr) >> IO_PAGE_SHIFT;
- 
- 	spin_lock_irqsave(&iommu->lock, flags);
-diff --git a/include/asm-sparc64/scatterlist.h b/include/asm-sparc64/scatterlist.h
-index 048fdb4..703c5bb 100644
---- a/include/asm-sparc64/scatterlist.h
-+++ b/include/asm-sparc64/scatterlist.h
-@@ -20,4 +20,6 @@ struct scatterlist {
- 
- #define ISA_DMA_THRESHOLD	(~0UL)
- 
-+#define ARCH_HAS_SG_CHAIN
-+
- #endif /* !(_SPARC64_SCATTERLIST_H) */
+@@ -951,6 +952,7 @@ ata_sg_is_last(struct scatterlist *sg, struct ata_queued_cmd *qc)
+ static inline struct scatterlist *
+ ata_qc_first_sg(struct ata_queued_cmd *qc)
+ {
++	qc->n_iter = 0;
+ 	if (qc->n_elem)
+ 		return qc->__sg;
+ 	if (qc->pad_len)
+@@ -963,8 +965,8 @@ ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
+ {
+ 	if (sg == &qc->pad_sgent)
+ 		return NULL;
+-	if (++sg - qc->__sg < qc->n_elem)
+-		return sg;
++	if (++qc->n_iter < qc->n_elem)
++		return sg_next(sg);
+ 	if (qc->pad_len)
+ 		return &qc->pad_sgent;
+ 	return NULL;
+@@ -1158,9 +1160,11 @@ static inline void ata_qc_reinit(struct ata_queued_cmd *qc)
+ 	qc->dma_dir = DMA_NONE;
+ 	qc->__sg = NULL;
+ 	qc->flags = 0;
+-	qc->cursg = qc->cursg_ofs = 0;
++	qc->cursg = NULL;
++	qc->cursg_ofs = 0;
+ 	qc->nbytes = qc->curbytes = 0;
+ 	qc->n_elem = 0;
++	qc->n_iter = 0;
+ 	qc->err_mask = 0;
+ 	qc->pad_len = 0;
+ 	qc->sect_size = ATA_SECT_SIZE;
 -- 
 1.5.3.rc0.90.gbaa79
 
