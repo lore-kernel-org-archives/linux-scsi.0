@@ -1,54 +1,141 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
-Date: Tue, 17 Jul 2007 08:12:39 +1000
-Message-ID: <1184623959.25235.100.camel@localhost.localdomain>
-References: <20070704132212.726923000@pademelon.sonytel.be>
-	 <Pine.LNX.4.62.0707131541150.18802@pademelon.sonytel.be>
-	 <1184335333.3402.20.camel@localhost.localdomain>
-	 <200707131619.54898.arnd@arndb.de>
-	 <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be>
-	 <1184340528.3402.32.camel@localhost.localdomain>
-	 <Pine.LNX.4.62.0707132212520.23000@chinchilla.sonytel.be>
-	 <Pine.LNX.4.62.0707161338230.1072@pademelon.sonytel.be>
-	 <20070716121649.GI5195@kernel.dk>
-	 <1184593643.3447.9.camel@localhost.localdomain>
-	 <1184622555.25235.91.camel@localhost.localdomain>
-	 <1184623415.3447.48.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH 2/4] advansys: Clean up proc_info implementation
+Date: Mon, 16 Jul 2007 16:41:50 -0600
+Message-ID: <11846257131961-git-send-email-matthew@wil.cx>
+References: <1184625712490-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:42958 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752568AbXGPWOo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 18:14:44 -0400
-In-Reply-To: <1184623415.3447.48.camel@localhost.localdomain>
+Received: from mail.tor.primus.ca ([216.254.136.21]:48921 "EHLO
+	smtp-04.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753412AbXGPXJ1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 19:09:27 -0400
+In-Reply-To: <1184625712490-git-send-email-matthew@wil.cx>
+In-Reply-To: <20070716202815.GQ13826@parisc-linux.org>
+References: <20070716202815.GQ13826@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Alessandro Rubini <rubini@vision.unipv.it>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Paul Mackerras <paulus@samba.org>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+To: linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-On Mon, 2007-07-16 at 17:03 -0500, James Bottomley wrote:
-> On Tue, 2007-07-17 at 07:49 +1000, Benjamin Herrenschmidt wrote:
-> > > No ... that was the point of flush_kernel_dcache_page().  The page in
-> > > question is page cache backed and contains user mappings.  However, the
-> > > block layer has already done a flush_dcache_page() in get_user_pages()
-> > > and the user shouldn't be touching memory under I/O (unless they want
-> > > self induced aliasing problems) so we're free to assume all the user
-> > > cachelines are purged, hence all we have to do is flush the kernel alias
-> > > to bring the page up to date and make the users see it correctly.
-> > 
-> > The block layer will have done that even in the swap-out path ? (Just
-> > asking... I'm not very familiar with the block layer)
-> 
-> Er ... not really, this is the I/O path for user initiated I/O.  The
-> page out path, by definition, can't have any extant user mappings.  For
-> page out, the relevant page is flushed before its mapping is detached,
-> and then it can be paged to the backing store (or for anonymous pages to
-> the swap device) when no mappings remain.
+Just use the Scsi_Host passed in, rather than looking through the driver's
+own array of boards for one that matches it.
 
-Ok, thanks.
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+---
+ drivers/scsi/advansys.c |   35 +++++++++++------------------------
+ 1 files changed, 11 insertions(+), 24 deletions(-)
 
-Ben.
-
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 2b6cf30..83fd9c7 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -4072,9 +4072,7 @@ static int
+ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 		off_t offset, int length, int inout)
+ {
+-    struct Scsi_Host    *shp;
+     asc_board_t         *boardp;
+-    int                 i;
+     char                *cp;
+     int			cplen;
+     int                 cnt;
+@@ -4099,18 +4097,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      * User read of /proc/scsi/advansys/[0...] file.
+      */
+ 
+-    /* Find the specified board. */
+-    for (i = 0; i < asc_board_count; i++) {
+-        if (asc_host[i]->host_no == shost->host_no) {
+-            break;
+-        }
+-    }
+-    if (i == asc_board_count) {
+-        return(-ENOENT);
+-    }
+-
+-    shp = asc_host[i];
+-    boardp = ASC_BOARDP(shp);
++    boardp = ASC_BOARDP(shost);
+ 
+     /* Copy read data starting at the beginning of the buffer. */
+     *start = buffer;
+@@ -4124,7 +4111,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      *
+      * advansys_info() returns the board string from its own static buffer.
+      */
+-    cp = (char *) advansys_info(shp);
++    cp = (char *) advansys_info(shost);
+     strcat(cp, "\n");
+     cplen = strlen(cp);
+     /* Copy board information. */
+@@ -4143,7 +4130,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      */
+     if (ASC_WIDE_BOARD(boardp)) {
+         cp = boardp->prtbuf;
+-        cplen = asc_prt_adv_bios(shp, cp, ASC_PRTBUF_SIZE);
++        cplen = asc_prt_adv_bios(shost, cp, ASC_PRTBUF_SIZE);
+         ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+         cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+         totcnt += cnt;
+@@ -4160,7 +4147,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      * Display driver information for each device attached to the board.
+      */
+     cp = boardp->prtbuf;
+-    cplen = asc_prt_board_devices(shp, cp, ASC_PRTBUF_SIZE);
++    cplen = asc_prt_board_devices(shost, cp, ASC_PRTBUF_SIZE);
+     ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+     cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+     totcnt += cnt;
+@@ -4177,9 +4164,9 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      */
+     cp = boardp->prtbuf;
+     if (ASC_NARROW_BOARD(boardp)) {
+-        cplen = asc_prt_asc_board_eeprom(shp, cp, ASC_PRTBUF_SIZE);
++        cplen = asc_prt_asc_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
+     } else {
+-        cplen = asc_prt_adv_board_eeprom(shp, cp, ASC_PRTBUF_SIZE);
++        cplen = asc_prt_adv_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
+     }
+     ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+     cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+@@ -4196,7 +4183,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      * Display driver configuration and information for the board.
+      */
+     cp = boardp->prtbuf;
+-    cplen = asc_prt_driver_conf(shp, cp, ASC_PRTBUF_SIZE);
++    cplen = asc_prt_driver_conf(shost, cp, ASC_PRTBUF_SIZE);
+     ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+     cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+     totcnt += cnt;
+@@ -4213,7 +4200,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      * Display driver statistics for the board.
+      */
+     cp = boardp->prtbuf;
+-    cplen = asc_prt_board_stats(shp, cp, ASC_PRTBUF_SIZE);
++    cplen = asc_prt_board_stats(shost, cp, ASC_PRTBUF_SIZE);
+     ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
+     cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+     totcnt += cnt;
+@@ -4230,7 +4217,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      */
+     for (tgt_id = 0; tgt_id <= ADV_MAX_TID; tgt_id++) {
+       cp = boardp->prtbuf;
+-      cplen = asc_prt_target_stats(shp, tgt_id, cp, ASC_PRTBUF_SIZE);
++      cplen = asc_prt_target_stats(shost, tgt_id, cp, ASC_PRTBUF_SIZE);
+       ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
+       cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+       totcnt += cnt;
+@@ -4250,9 +4237,9 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+      */
+     cp = boardp->prtbuf;
+     if (ASC_NARROW_BOARD(boardp)) {
+-        cplen = asc_prt_asc_board_info(shp, cp, ASC_PRTBUF_SIZE);
++        cplen = asc_prt_asc_board_info(shost, cp, ASC_PRTBUF_SIZE);
+     } else {
+-        cplen = asc_prt_adv_board_info(shp, cp, ASC_PRTBUF_SIZE);
++        cplen = asc_prt_adv_board_info(shost, cp, ASC_PRTBUF_SIZE);
+     }
+     ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+     cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+-- 
+1.4.4.4
 
