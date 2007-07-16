@@ -1,223 +1,188 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH 29/33] infiniband: sg chaining support
-Date: Mon, 16 Jul 2007 11:47:43 +0200
-Message-ID: <11845792693361-git-send-email-jens.axboe@oracle.com>
+Subject: [PATCH 33/33] IDE: sg chaining support
+Date: Mon, 16 Jul 2007 11:47:47 +0200
+Message-ID: <11845792694102-git-send-email-jens.axboe@oracle.com>
 References: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9332 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([80.160.20.94]:9343 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759454AbXGPJsn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 05:48:43 -0400
+	id S1761580AbXGPJsj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 05:48:39 -0400
 In-Reply-To: <11845792671245-git-send-email-jens.axboe@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: Jens Axboe <jens.axboe@oracle.com>, rolandd@cisco.com
+Cc: Jens Axboe <jens.axboe@oracle.com>, bzolnier@gmail.com
 
-Cc: rolandd@cisco.com
+Cc: bzolnier@gmail.com
 Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 ---
- drivers/infiniband/hw/ipath/ipath_dma.c   |    9 ++--
- drivers/infiniband/ulp/iser/iser_memory.c |   75 +++++++++++++++-------------
- 2 files changed, 45 insertions(+), 39 deletions(-)
+ drivers/ide/cris/ide-cris.c   |    3 ++-
+ drivers/ide/ide-dma.c         |    2 +-
+ drivers/ide/ide-io.c          |    3 ++-
+ drivers/ide/ide-probe.c       |    2 +-
+ drivers/ide/ide-taskfile.c    |   17 +++++++++++++----
+ drivers/ide/mips/au1xxx-ide.c |    2 +-
+ drivers/ide/pci/sgiioc4.c     |    2 +-
+ drivers/ide/ppc/pmac.c        |    2 +-
+ include/linux/ide.h           |    2 +-
+ 9 files changed, 23 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/infiniband/hw/ipath/ipath_dma.c b/drivers/infiniband/hw/ipath/ipath_dma.c
-index f87f003..62c87e6 100644
---- a/drivers/infiniband/hw/ipath/ipath_dma.c
-+++ b/drivers/infiniband/hw/ipath/ipath_dma.c
-@@ -96,17 +96,18 @@ static void ipath_dma_unmap_page(struct ib_device *dev,
- 	BUG_ON(!valid_dma_direction(direction));
- }
- 
--static int ipath_map_sg(struct ib_device *dev, struct scatterlist *sg, int nents,
--			enum dma_data_direction direction)
-+static int ipath_map_sg(struct ib_device *dev, struct scatterlist *sgl,
-+			int nents, enum dma_data_direction direction)
- {
-+	struct scatterlist *sg;
- 	u64 addr;
- 	int i;
- 	int ret = nents;
- 
- 	BUG_ON(!valid_dma_direction(direction));
- 
--	for (i = 0; i < nents; i++) {
--		addr = (u64) page_address(sg[i].page);
-+	for_each_sg(sgl, sg, nents, i) {
-+		addr = (u64) page_address(sg->page);
- 		/* TODO: handle highmem pages */
- 		if (!addr) {
- 			ret = 0;
-diff --git a/drivers/infiniband/ulp/iser/iser_memory.c b/drivers/infiniband/ulp/iser/iser_memory.c
-index fc9f1fd..ff0c701 100644
---- a/drivers/infiniband/ulp/iser/iser_memory.c
-+++ b/drivers/infiniband/ulp/iser/iser_memory.c
-@@ -37,7 +37,6 @@
- #include <linux/mm.h>
- #include <linux/highmem.h>
- #include <asm/io.h>
--#include <asm/scatterlist.h>
- #include <linux/scatterlist.h>
- 
- #include "iscsi_iser.h"
-@@ -126,17 +125,19 @@ int iser_start_rdma_unaligned_sg(struct iscsi_iser_cmd_task  *iser_ctask,
- 
- 	if (cmd_dir == ISER_DIR_OUT) {
- 		/* copy the unaligned sg the buffer which is used for RDMA */
--		struct scatterlist *sg = (struct scatterlist *)data->buf;
-+		struct scatterlist *sgl = (struct scatterlist *)data->buf;
-+		struct scatterlist *sg;
- 		int i;
- 		char *p, *from;
- 
--		for (p = mem, i = 0; i < data->size; i++) {
--			from = kmap_atomic(sg[i].page, KM_USER0);
-+		p = mem;
-+		for_each_sg(sgl, sg, data->size, i) {
-+			from = kmap_atomic(sg->page, KM_USER0);
- 			memcpy(p,
--			       from + sg[i].offset,
--			       sg[i].length);
-+			       from + sg->offset,
-+			       sg->length);
- 			kunmap_atomic(from, KM_USER0);
--			p += sg[i].length;
-+			p += sg->length;
+diff --git a/drivers/ide/cris/ide-cris.c b/drivers/ide/cris/ide-cris.c
+index 886091b..e1b2d01 100644
+--- a/drivers/ide/cris/ide-cris.c
++++ b/drivers/ide/cris/ide-cris.c
+@@ -951,7 +951,8 @@ static int cris_ide_build_dmatable (ide_drive_t *drive)
+ 		/* group sequential buffers into one large buffer */
+ 		addr = page_to_phys(sg->page) + sg->offset;
+ 		size = sg_dma_len(sg);
+-		while (sg++, --i) {
++		while (--i) {
++			sg = sg_next(sg);
+ 			if ((addr + size) != page_to_phys(sg->page) + sg->offset)
+ 				break;
+ 			size += sg_dma_len(sg);
+diff --git a/drivers/ide/ide-dma.c b/drivers/ide/ide-dma.c
+index 5fe1d72..a9a18a1 100644
+--- a/drivers/ide/ide-dma.c
++++ b/drivers/ide/ide-dma.c
+@@ -294,7 +294,7 @@ int ide_build_dmatable (ide_drive_t *drive, struct request *rq)
+ 			}
  		}
+ 
+-		sg++;
++		sg = sg_next(sg);
+ 		i--;
  	}
  
-@@ -178,7 +179,7 @@ void iser_finalize_rdma_unaligned_sg(struct iscsi_iser_cmd_task *iser_ctask,
+diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
+index c5b5011..2465c24 100644
+--- a/drivers/ide/ide-io.c
++++ b/drivers/ide/ide-io.c
+@@ -836,7 +836,8 @@ void ide_init_sg_cmd(ide_drive_t *drive, struct request *rq)
+ 	ide_hwif_t *hwif = drive->hwif;
  
- 	if (cmd_dir == ISER_DIR_IN) {
- 		char *mem;
--		struct scatterlist *sg;
-+		struct scatterlist *sgl, *sg;
- 		unsigned char *p, *to;
- 		unsigned int sg_size;
- 		int i;
-@@ -186,16 +187,17 @@ void iser_finalize_rdma_unaligned_sg(struct iscsi_iser_cmd_task *iser_ctask,
- 		/* copy back read RDMA to unaligned sg */
- 		mem	= mem_copy->copy_buf;
- 
--		sg	= (struct scatterlist *)iser_ctask->data[ISER_DIR_IN].buf;
-+		sgl	= (struct scatterlist *)iser_ctask->data[ISER_DIR_IN].buf;
- 		sg_size = iser_ctask->data[ISER_DIR_IN].size;
- 
--		for (p = mem, i = 0; i < sg_size; i++){
--			to = kmap_atomic(sg[i].page, KM_SOFTIRQ0);
--			memcpy(to + sg[i].offset,
-+		p = mem;
-+		for_each_sg(sgl, sg, sg_size, i) {
-+			to = kmap_atomic(sg->page, KM_SOFTIRQ0);
-+			memcpy(to + sg->offset,
- 			       p,
--			       sg[i].length);
-+			       sg->length);
- 			kunmap_atomic(to, KM_SOFTIRQ0);
--			p += sg[i].length;
-+			p += sg->length;
- 		}
- 	}
- 
-@@ -226,7 +228,8 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
- 			       struct iser_page_vec *page_vec,
- 			       struct ib_device *ibdev)
- {
--	struct scatterlist *sg = (struct scatterlist *)data->buf;
-+	struct scatterlist *sgl = (struct scatterlist *)data->buf;
-+	struct scatterlist *sg;
- 	u64 first_addr, last_addr, page;
- 	int end_aligned;
- 	unsigned int cur_page = 0;
-@@ -234,14 +237,14 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
- 	int i;
- 
- 	/* compute the offset of first element */
--	page_vec->offset = (u64) sg[0].offset & ~MASK_4K;
-+	page_vec->offset = (u64) sgl[0].offset & ~MASK_4K;
- 
--	for (i = 0; i < data->dma_nents; i++) {
--		unsigned int dma_len = ib_sg_dma_len(ibdev, &sg[i]);
-+	for_each_sg(sgl, sg, data->dma_nents, i) {
-+		unsigned int dma_len = ib_sg_dma_len(ibdev, sg);
- 
- 		total_sz += dma_len;
- 
--		first_addr = ib_sg_dma_address(ibdev, &sg[i]);
-+		first_addr = ib_sg_dma_address(ibdev, sg);
- 		last_addr  = first_addr + dma_len;
- 
- 		end_aligned   = !(last_addr  & ~MASK_4K);
-@@ -249,9 +252,9 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
- 		/* continue to collect page fragments till aligned or SG ends */
- 		while (!end_aligned && (i + 1 < data->dma_nents)) {
- 			i++;
--			dma_len = ib_sg_dma_len(ibdev, &sg[i]);
-+			dma_len = ib_sg_dma_len(ibdev, sg);
- 			total_sz += dma_len;
--			last_addr = ib_sg_dma_address(ibdev, &sg[i]) + dma_len;
-+			last_addr = ib_sg_dma_address(ibdev, sg) + dma_len;
- 			end_aligned = !(last_addr  & ~MASK_4K);
- 		}
- 
-@@ -286,25 +289,26 @@ static int iser_sg_to_page_vec(struct iser_data_buf *data,
- static unsigned int iser_data_buf_aligned_len(struct iser_data_buf *data,
- 					      struct ib_device *ibdev)
- {
--	struct scatterlist *sg;
-+	struct scatterlist *sgl, *sg;
- 	u64 end_addr, next_addr;
- 	int i, cnt;
- 	unsigned int ret_len = 0;
- 
--	sg = (struct scatterlist *)data->buf;
-+	sgl = (struct scatterlist *)data->buf;
- 
--	for (cnt = 0, i = 0; i < data->dma_nents; i++, cnt++) {
-+	cnt = 0;
-+	for_each_sg(sgl, sg, data->dma_nents, i) {
- 		/* iser_dbg("Checking sg iobuf [%d]: phys=0x%08lX "
- 		   "offset: %ld sz: %ld\n", i,
--		   (unsigned long)page_to_phys(sg[i].page),
--		   (unsigned long)sg[i].offset,
--		   (unsigned long)sg[i].length); */
--		end_addr = ib_sg_dma_address(ibdev, &sg[i]) +
--			   ib_sg_dma_len(ibdev, &sg[i]);
-+		   (unsigned long)page_to_phys(sg->page),
-+		   (unsigned long)sg->offset,
-+		   (unsigned long)sg->length); */
-+		end_addr = ib_sg_dma_address(ibdev, sg) +
-+			   ib_sg_dma_len(ibdev, sg);
- 		/* iser_dbg("Checking sg iobuf end address "
- 		       "0x%08lX\n", end_addr); */
- 		if (i + 1 < data->dma_nents) {
--			next_addr = ib_sg_dma_address(ibdev, &sg[i+1]);
-+			next_addr = ib_sg_dma_address(ibdev, sg_next(sg));
- 			/* are i, i+1 fragments of the same page? */
- 			if (end_addr == next_addr)
- 				continue;
-@@ -324,15 +328,16 @@ static unsigned int iser_data_buf_aligned_len(struct iser_data_buf *data,
- static void iser_data_buf_dump(struct iser_data_buf *data,
- 			       struct ib_device *ibdev)
- {
--	struct scatterlist *sg = (struct scatterlist *)data->buf;
-+	struct scatterlist *sgl = (struct scatterlist *)data->buf;
-+	struct scatterlist *sg;
- 	int i;
- 
--	for (i = 0; i < data->dma_nents; i++)
-+	for_each_sg(sgl, sg, data->dma_nents, i)
- 		iser_err("sg[%d] dma_addr:0x%lX page:0x%p "
- 			 "off:0x%x sz:0x%x dma_len:0x%x\n",
--			 i, (unsigned long)ib_sg_dma_address(ibdev, &sg[i]),
--			 sg[i].page, sg[i].offset,
--			 sg[i].length, ib_sg_dma_len(ibdev, &sg[i]));
-+			 i, (unsigned long)ib_sg_dma_address(ibdev, sg),
-+			 sg->page, sg->offset,
-+			 sg->length, ib_sg_dma_len(ibdev, sg));
+ 	hwif->nsect = hwif->nleft = rq->nr_sectors;
+-	hwif->cursg = hwif->cursg_ofs = 0;
++	hwif->cursg_ofs = 0;
++	hwif->cursg = NULL;
  }
  
- static void iser_dump_page_vec(struct iser_page_vec *page_vec)
+ EXPORT_SYMBOL_GPL(ide_init_sg_cmd);
+diff --git a/drivers/ide/ide-probe.c b/drivers/ide/ide-probe.c
+index cc58013..111ec02 100644
+--- a/drivers/ide/ide-probe.c
++++ b/drivers/ide/ide-probe.c
+@@ -1352,7 +1352,7 @@ static int hwif_init(ide_hwif_t *hwif)
+ 	if (!hwif->sg_max_nents)
+ 		hwif->sg_max_nents = PRD_ENTRIES;
+ 
+-	hwif->sg_table = kmalloc(sizeof(struct scatterlist)*hwif->sg_max_nents,
++	hwif->sg_table = kzalloc(sizeof(struct scatterlist)*hwif->sg_max_nents,
+ 				 GFP_KERNEL);
+ 	if (!hwif->sg_table) {
+ 		printk(KERN_ERR "%s: unable to allocate SG table.\n", hwif->name);
+diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
+index aa06daf..3c92790 100644
+--- a/drivers/ide/ide-taskfile.c
++++ b/drivers/ide/ide-taskfile.c
+@@ -263,6 +263,7 @@ static void ide_pio_sector(ide_drive_t *drive, unsigned int write)
+ {
+ 	ide_hwif_t *hwif = drive->hwif;
+ 	struct scatterlist *sg = hwif->sg_table;
++	struct scatterlist *cursg = hwif->cursg;
+ 	struct page *page;
+ #ifdef CONFIG_HIGHMEM
+ 	unsigned long flags;
+@@ -270,8 +271,14 @@ static void ide_pio_sector(ide_drive_t *drive, unsigned int write)
+ 	unsigned int offset;
+ 	u8 *buf;
+ 
+-	page = sg[hwif->cursg].page;
+-	offset = sg[hwif->cursg].offset + hwif->cursg_ofs * SECTOR_SIZE;
++	cursg = hwif->cursg;
++	if (!cursg) {
++		cursg = sg;
++		hwif->cursg = sg;
++	}
++
++	page = cursg->page;
++	offset = cursg->offset + hwif->cursg_ofs * SECTOR_SIZE;
+ 
+ 	/* get the current page and offset */
+ 	page = nth_page(page, (offset >> PAGE_SHIFT));
+@@ -285,8 +292,8 @@ static void ide_pio_sector(ide_drive_t *drive, unsigned int write)
+ 	hwif->nleft--;
+ 	hwif->cursg_ofs++;
+ 
+-	if ((hwif->cursg_ofs * SECTOR_SIZE) == sg[hwif->cursg].length) {
+-		hwif->cursg++;
++	if ((hwif->cursg_ofs * SECTOR_SIZE) == cursg->length) {
++		hwif->cursg = sg_next(hwif->cursg);
+ 		hwif->cursg_ofs = 0;
+ 	}
+ 
+@@ -367,6 +374,8 @@ static ide_startstop_t task_error(ide_drive_t *drive, struct request *rq,
+ 
+ static void task_end_request(ide_drive_t *drive, struct request *rq, u8 stat)
+ {
++	HWIF(drive)->cursg = NULL;
++
+ 	if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
+ 		ide_task_t *task = rq->special;
+ 
+diff --git a/drivers/ide/mips/au1xxx-ide.c b/drivers/ide/mips/au1xxx-ide.c
+index 2e7013a..48cfb62 100644
+--- a/drivers/ide/mips/au1xxx-ide.c
++++ b/drivers/ide/mips/au1xxx-ide.c
+@@ -324,7 +324,7 @@ static int auide_build_dmatable(ide_drive_t *drive)
+ 			cur_addr += tc;
+ 			cur_len -= tc;
+ 		}
+-		sg++;
++		sg = sg_next(sg);
+ 		i--;
+ 	}
+ 
+diff --git a/drivers/ide/pci/sgiioc4.c b/drivers/ide/pci/sgiioc4.c
+index d396b29..9e36b29 100644
+--- a/drivers/ide/pci/sgiioc4.c
++++ b/drivers/ide/pci/sgiioc4.c
+@@ -531,7 +531,7 @@ sgiioc4_build_dma_table(ide_drive_t * drive, struct request *rq, int ddir)
+ 			}
+ 		}
+ 
+-		sg++;
++		sg = sg_next(sg);
+ 		i--;
+ 	}
+ 
+diff --git a/drivers/ide/ppc/pmac.c b/drivers/ide/ppc/pmac.c
+index e46f472..9f78c6a 100644
+--- a/drivers/ide/ppc/pmac.c
++++ b/drivers/ide/ppc/pmac.c
+@@ -1648,7 +1648,7 @@ pmac_ide_build_dmatable(ide_drive_t *drive, struct request *rq)
+ 			cur_len -= tc;
+ 			++table;
+ 		}
+-		sg++;
++		sg = sg_next(sg);
+ 		i--;
+ 	}
+ 
+diff --git a/include/linux/ide.h b/include/linux/ide.h
+index 19ab258..1e6639e 100644
+--- a/include/linux/ide.h
++++ b/include/linux/ide.h
+@@ -767,7 +767,7 @@ typedef struct hwif_s {
+ 
+ 	unsigned int nsect;
+ 	unsigned int nleft;
+-	unsigned int cursg;
++	struct scatterlist *cursg;
+ 	unsigned int cursg_ofs;
+ 
+ 	int		rqsize;		/* max sectors per request */
 -- 
 1.5.3.rc0.90.gbaa79
 
