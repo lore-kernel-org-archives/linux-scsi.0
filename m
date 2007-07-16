@@ -1,47 +1,50 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [patch 5/6] ps3: BD/DVD/CD-ROM Storage Driver
-Date: Tue, 17 Jul 2007 07:40:19 +1000
-Message-ID: <1184622019.25235.81.camel@localhost.localdomain>
-References: <20070704132212.726923000@pademelon.sonytel.be>
-	 <Pine.LNX.4.62.0707131541150.18802@pademelon.sonytel.be>
-	 <1184335333.3402.20.camel@localhost.localdomain>
-	 <200707131619.54898.arnd@arndb.de>
-	 <Pine.LNX.4.62.0707131707290.18802@pademelon.sonytel.be>
-	 <1184340528.3402.32.camel@localhost.localdomain>
-	 <Pine.LNX.4.62.0707132212520.23000@chinchilla.sonytel.be>
-	 <Pine.LNX.4.62.0707161338230.1072@pademelon.sonytel.be>
-	 <20070716121649.GI5195@kernel.dk>
-	 <1184593643.3447.9.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libsas, aic94xx: fix dma mapping cockups with ATA
+Date: Mon, 16 Jul 2007 17:42:06 -0400
+Message-ID: <469BE62E.90302@garzik.org>
+References: <1184611264.3447.28.camel@localhost.localdomain>	 <469BD2C2.4040002@garzik.org> <1184617317.3447.33.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:56380 "EHLO gate.crashing.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:36836 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759514AbXGPVk5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 16 Jul 2007 17:40:57 -0400
-In-Reply-To: <1184593643.3447.9.camel@localhost.localdomain>
+	id S1756730AbXGPVmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 17:42:08 -0400
+In-Reply-To: <1184617317.3447.33.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Linux Kernel Development <linux-kernel@vger.kernel.org>, Alessandro Rubini <rubini@vision.unipv.it>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Paul Mackerras <paulus@samba.org>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, 2007-07-16 at 08:47 -0500, James Bottomley wrote:
+James Bottomley wrote:
+> On Mon, 2007-07-16 at 16:19 -0400, Jeff Garzik wrote:
+>> James Bottomley wrote:
+>>> This one was noticed by Gilbert Wu of Adaptec:
+>>>
+>>> The libata core actually does the DMA mapping for you, so there has to
+>>> be an exception in the device drivers that *don't* do dma mapping for
+>>> ATA commands.  However, since we've already done this, libsas must now
+>>> dma map any ATA commands that it wishes to issue ... and yes, this is a
+>>> horrible mess.
+>> Can you help me understand this logic?
+>>
+>> libsas must DMA map an ATA command... because libata also DMA maps an 
+>> ATA command?  That does not make sense to me.
 > 
-> No ... that was the point of flush_kernel_dcache_page().  The page in
-> question is page cache backed and contains user mappings.  However,
-> the
-> block layer has already done a flush_dcache_page() in get_user_pages()
-> and the user shouldn't be touching memory under I/O (unless they want
-> self induced aliasing problems) so we're free to assume all the user
-> cachelines are purged, hence all we have to do is flush the kernel
-> alias
-> to bring the page up to date and make the users see it correctly. 
+> Why not? ... since the driver must *not* map an ATA command (to prevent
+> double mapping from libata), it can't tell if the command comes from
+> libsas or libata ... so libsas has to map any internal ATA commands it
+> uses.
+> 
+> I think you're perhaps thinking libsas must map an ATA command libata
+> has already mapped?  If so, no, libsas must only map the commands it is
+> using internally independent of libata.
 
-Ok. In our case the problem is not aliases though, it's the coherency
-between instruction and data caches for pages that may be executed from
-(such as swapped out text pages).
+I was merely noting the patch description did not make sense to me, 
+nothing more.  With this additional background, it does make sense :)
 
-Ben.
+	Jeff
+
 
 
