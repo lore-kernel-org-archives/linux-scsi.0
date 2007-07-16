@@ -1,761 +1,907 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 1/4] advansys: Create advansys_board_found()
-Date: Mon, 16 Jul 2007 16:41:49 -0600
-Message-ID: <1184625712490-git-send-email-matthew@wil.cx>
-References: <20070716202815.GQ13826@parisc-linux.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: block/bsg.c
+Date: Mon, 16 Jul 2007 16:57:06 -0700
+Message-ID: <20070716165706.348f6bbf.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:35523 "EHLO
-	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762168AbXGPX1h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 19:27:37 -0400
-In-Reply-To: <20070716202815.GQ13826@parisc-linux.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:39991 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756411AbXGPX5z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 19:57:55 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <matthew@wil.cx>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Split advansys_board_found() out of advansys_detect() in preparation
-for updating the driver to modern probing methods.
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
----
- drivers/scsi/advansys.c |  577 +++++++++++++++++++++++------------------------
- 1 files changed, 285 insertions(+), 292 deletions(-)
+A belated review (I've never seen this before and there it is in mainline)
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 2b66897..2b6cf30 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -771,6 +771,7 @@
- #include <linux/proc_fs.h>
- #include <linux/init.h>
- #include <linux/blkdev.h>
-+#include <linux/pci.h>
- #include <linux/stat.h>
- #include <linux/spinlock.h>
- #include <linux/dma-mapping.h>
-@@ -798,10 +799,6 @@
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
--#ifdef CONFIG_PCI
--#include <linux/pci.h>
--#endif /* CONFIG_PCI */
--
- 
- /*
-  * --- Driver Options
-@@ -4274,268 +4271,29 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- }
- #endif /* CONFIG_PROC_FS */
- 
--/*
-- * advansys_detect()
-- *
-- * Detect function for AdvanSys adapters.
-- *
-- * Argument is a pointer to the host driver's scsi_hosts entry.
-- *
-- * Return number of adapters found.
-- *
-- * Note: Because this function is called during system initialization
-- * it must not call SCSI mid-level functions including scsi_malloc()
-- * and scsi_free().
-- */
--static int __init
--advansys_detect(struct scsi_host_template *tpnt)
-+static int advansys_board_found(struct scsi_host_template *tpnt, int iop,
-+				struct pci_dev *pdev, int bus_type)
- {
--    static int          detect_called = ASC_FALSE;
--    int                 iop;
--    int                 bus;
-     struct Scsi_Host    *shp = NULL;
-     asc_board_t         *boardp = NULL;
-     ASC_DVC_VAR         *asc_dvc_varp = NULL;
-     ADV_DVC_VAR         *adv_dvc_varp = NULL;
-     adv_sgblk_t         *sgp = NULL;
--    int                 ioport = 0;
-     int                 share_irq = FALSE;
-     int                 iolen = 0;
--    struct device	*dev = NULL;
--#ifdef CONFIG_PCI
--    int                 pci_init_search = 0;
--    struct pci_dev      *pci_devicep[ASC_NUM_BOARD_SUPPORTED];
--    int                 pci_card_cnt_max = 0;
--    int                 pci_card_cnt = 0;
--    struct pci_dev      *pci_devp = NULL;
--    int                 pci_device_id_cnt = 0;
--    unsigned int        pci_device_id[ASC_PCI_DEVICE_ID_CNT] = {
--                                    PCI_DEVICE_ID_ASP_1200A,
--                                    PCI_DEVICE_ID_ASP_ABP940,
--                                    PCI_DEVICE_ID_ASP_ABP940U,
--                                    PCI_DEVICE_ID_ASP_ABP940UW,
--                                    PCI_DEVICE_ID_38C0800_REV1,
--                                    PCI_DEVICE_ID_38C1600_REV1
--                        };
-     ADV_PADDR           pci_memory_address;
--#endif /* CONFIG_PCI */
-     int                 warn_code, err_code;
-     int                 ret;
- 
--    if (detect_called == ASC_FALSE) {
--        detect_called = ASC_TRUE;
--    } else {
--        printk("AdvanSys SCSI: advansys_detect() multiple calls ignored\n");
--        return 0;
--    }
--
--    ASC_DBG(1, "advansys_detect: begin\n");
--
--    asc_board_count = 0;
--
--    /*
--     * If I/O port probing has been modified, then verify and
--     * clean-up the 'asc_ioport' list.
--     */
--    if (asc_iopflag == ASC_TRUE) {
--        for (ioport = 0; ioport < ASC_NUM_IOPORT_PROBE; ioport++) {
--            ASC_DBG2(1, "advansys_detect: asc_ioport[%d] 0x%x\n",
--                ioport, asc_ioport[ioport]);
--            if (asc_ioport[ioport] != 0) {
--                for (iop = 0; iop < ASC_IOADR_TABLE_MAX_IX; iop++) {
--                    if (_asc_def_iop_base[iop] == asc_ioport[ioport]) {
--                        break;
--                    }
--                }
--                if (iop == ASC_IOADR_TABLE_MAX_IX) {
--                    printk(
--"AdvanSys SCSI: specified I/O Port 0x%X is invalid\n",
--                        asc_ioport[ioport]);
--                    asc_ioport[ioport] = 0;
--                }
--            }
--        }
--        ioport = 0;
--    }
--
--    for (bus = 0; bus < ASC_NUM_BUS; bus++) {
--
--        ASC_DBG2(1, "advansys_detect: bus search type %d (%s)\n",
--            bus, asc_bus_name[bus]);
--        iop = 0;
--
--        while (asc_board_count < ASC_NUM_BOARD_SUPPORTED) {
--
--            ASC_DBG1(2, "advansys_detect: asc_board_count %d\n",
--                asc_board_count);
--
--            switch (asc_bus[bus]) {
--            case ASC_IS_ISA:
--            case ASC_IS_VL:
--#ifdef CONFIG_ISA
--                if (asc_iopflag == ASC_FALSE) {
--                    iop = AscSearchIOPortAddr(iop, asc_bus[bus]);
--                } else {
--                    /*
--                     * ISA and VL I/O port scanning has either been
--                     * eliminated or limited to selected ports on
--                     * the LILO command line, /etc/lilo.conf, or
--                     * by setting variables when the module was loaded.
--                     */
--                    ASC_DBG(1, "advansys_detect: I/O port scanning modified\n");
--                ioport_try_again:
--                    iop = 0;
--                    for (; ioport < ASC_NUM_IOPORT_PROBE; ioport++) {
--                        if ((iop = asc_ioport[ioport]) != 0) {
--                            break;
--                        }
--                    }
--                    if (iop) {
--                        ASC_DBG1(1,
--                                "advansys_detect: probing I/O port 0x%x...\n",
--                            iop);
--			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
--                            printk(
--"AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
--                            /* Don't try this I/O port twice. */
--                            asc_ioport[ioport] = 0;
--                            goto ioport_try_again;
--                        } else if (AscFindSignature(iop) == ASC_FALSE) {
--                            printk(
--"AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
--                            /* Don't try this I/O port twice. */
--			    release_region(iop, ASC_IOADR_GAP);
--                            asc_ioport[ioport] = 0;
--                            goto ioport_try_again;
--                        } else {
--                            /*
--                             * If this isn't an ISA board, then it must be
--                             * a VL board. If currently looking an ISA
--                             * board is being looked for then try for
--                             * another ISA board in 'asc_ioport'.
--                             */
--                            if (asc_bus[bus] == ASC_IS_ISA &&
--                                (AscGetChipVersion(iop, ASC_IS_ISA) &
--                                 ASC_CHIP_VER_ISA_BIT) == 0) {
--                                 /*
--                                  * Don't clear 'asc_ioport[ioport]'. Try
--                                  * this board again for VL. Increment
--                                  * 'ioport' past this board.
--                                  */
--                                 ioport++;
--				 release_region(iop, ASC_IOADR_GAP);
--                                 goto ioport_try_again;
--                            }
--                        }
--                        /*
--                         * This board appears good, don't try the I/O port
--                         * again by clearing its value. Increment 'ioport'
--                         * for the next iteration.
--                         */
--                        asc_ioport[ioport++] = 0;
--                    }
--                }
--#endif /* CONFIG_ISA */
--                break;
--
--            case ASC_IS_EISA:
--#ifdef CONFIG_ISA
--                iop = AscSearchIOPortAddr(iop, asc_bus[bus]);
--#endif /* CONFIG_ISA */
--                break;
--
--            case ASC_IS_PCI:
--#ifdef CONFIG_PCI
--                if (pci_init_search == 0) {
--                    int i, j;
--
--                    pci_init_search = 1;
--
--                    /* Find all PCI cards. */
--                    while (pci_device_id_cnt < ASC_PCI_DEVICE_ID_CNT) {
--                        if ((pci_devp = pci_find_device(PCI_VENDOR_ID_ASP,
--                            pci_device_id[pci_device_id_cnt], pci_devp)) ==
--                            NULL) {
--                            pci_device_id_cnt++;
--                        } else {
--                            if (pci_enable_device(pci_devp) == 0) {
--                                pci_devicep[pci_card_cnt_max++] = pci_devp;
--                            }
--                        }
--                    }
--
--                    /*
--                     * Sort PCI cards in ascending order by PCI Bus, Slot,
--                     * and Device Number.
--                     */
--                    for (i = 0; i < pci_card_cnt_max - 1; i++)
--                    {
--                        for (j = i + 1; j < pci_card_cnt_max; j++) {
--                            if ((pci_devicep[j]->bus->number <
--                                 pci_devicep[i]->bus->number) ||
--                                ((pci_devicep[j]->bus->number ==
--                                  pci_devicep[i]->bus->number) &&
--                                  (pci_devicep[j]->devfn <
--                                   pci_devicep[i]->devfn))) {
--                                pci_devp = pci_devicep[i];
--                                pci_devicep[i] = pci_devicep[j];
--                                pci_devicep[j] = pci_devp;
--                            }
--                        }
--                    }
--
--                    pci_card_cnt = 0;
--                } else {
--                    pci_card_cnt++;
--                }
--
--                if (pci_card_cnt == pci_card_cnt_max) {
--                    iop = 0;
--                } else {
--                    pci_devp = pci_devicep[pci_card_cnt];
--
--                    ASC_DBG2(2,
--                        "advansys_detect: devfn %d, bus number %d\n",
--                        pci_devp->devfn, pci_devp->bus->number);
--                    iop = pci_resource_start(pci_devp, 0);
--                    ASC_DBG2(1,
--                        "advansys_detect: vendorID %X, deviceID %X\n",
--                        pci_devp->vendor, pci_devp->device);
--                    ASC_DBG2(2, "advansys_detect: iop %X, irqLine %d\n",
--                        iop, pci_devp->irq);
--                }
--		if(pci_devp)
--		    dev = &pci_devp->dev;
--
--#endif /* CONFIG_PCI */
--                break;
--
--            default:
--                ASC_PRINT1("advansys_detect: unknown bus type: %d\n",
--                    asc_bus[bus]);
--                break;
--            }
--            ASC_DBG1(1, "advansys_detect: iop 0x%x\n", iop);
--
-             /*
--             * Adapter not found, try next bus type.
--             */
--            if (iop == 0) {
--                break;
--            }
--
--            /*
--             * Adapter found.
--             *
-              * Register the adapter, get its configuration, and
-              * initialize it.
-              */
--            ASC_DBG(2, "advansys_detect: scsi_register()\n");
--            shp = scsi_register(tpnt, sizeof(asc_board_t));
-+            ASC_DBG(2, "advansys_board_found: scsi_register()\n");
- 
--            if (shp == NULL) {
--                continue;
--            }
-+            shp = scsi_register(tpnt, sizeof(asc_board_t));
-+            if (!shp)
-+		return -ENOMEM;
- 
-             /* Save a pointer to the Scsi_Host of each board found. */
-             asc_host[asc_board_count++] = shp;
-@@ -4544,8 +4302,6 @@ advansys_detect(struct scsi_host_template *tpnt)
-             boardp = ASC_BOARDP(shp);
-             memset(boardp, 0, sizeof(asc_board_t));
-             boardp->id = asc_board_count - 1;
--
--            /* Initialize spinlock. */
-             spin_lock_init(&boardp->lock);
- 
-             /*
-@@ -4556,19 +4312,18 @@ advansys_detect(struct scsi_host_template *tpnt)
-              * the board type.
-              */
- #ifdef CONFIG_PCI
--            if (asc_bus[bus] == ASC_IS_PCI &&
--                (pci_devp->device == PCI_DEVICE_ID_ASP_ABP940UW ||
--                 pci_devp->device == PCI_DEVICE_ID_38C0800_REV1 ||
--                 pci_devp->device == PCI_DEVICE_ID_38C1600_REV1))
--            {
--                boardp->flags |= ASC_IS_WIDE_BOARD;
--            }
-+	if (bus_type == ASC_IS_PCI &&
-+	    (pdev->device == PCI_DEVICE_ID_ASP_ABP940UW ||
-+	     pdev->device == PCI_DEVICE_ID_38C0800_REV1 ||
-+	     pdev->device == PCI_DEVICE_ID_38C1600_REV1)) {
-+		boardp->flags |= ASC_IS_WIDE_BOARD;
-+	}
- #endif /* CONFIG_PCI */
- 
-             if (ASC_NARROW_BOARD(boardp)) {
-                 ASC_DBG(1, "advansys_detect: narrow board\n");
-                 asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
--                asc_dvc_varp->bus_type = asc_bus[bus];
-+                asc_dvc_varp->bus_type = bus_type;
-                 asc_dvc_varp->drv_ptr = boardp;
-                 asc_dvc_varp->cfg = &boardp->dvc_cfg.asc_dvc_cfg;
-                 asc_dvc_varp->cfg->overrun_buf = &overrun_buf[0];
-@@ -4582,19 +4337,16 @@ advansys_detect(struct scsi_host_template *tpnt)
-                 adv_dvc_varp->isr_callback = adv_isr_callback;
-                 adv_dvc_varp->async_callback = adv_async_callback;
- #ifdef CONFIG_PCI
--                if (pci_devp->device == PCI_DEVICE_ID_ASP_ABP940UW)
--                {
--                    ASC_DBG(1, "advansys_detect: ASC-3550\n");
--                    adv_dvc_varp->chip_type = ADV_CHIP_ASC3550;
--                } else if (pci_devp->device == PCI_DEVICE_ID_38C0800_REV1)
--                {
--                    ASC_DBG(1, "advansys_detect: ASC-38C0800\n");
--                    adv_dvc_varp->chip_type = ADV_CHIP_ASC38C0800;
--                } else
--                {
--                    ASC_DBG(1, "advansys_detect: ASC-38C1600\n");
--                    adv_dvc_varp->chip_type = ADV_CHIP_ASC38C1600;
--                }
-+		if (pdev->device == PCI_DEVICE_ID_ASP_ABP940UW) {
-+			ASC_DBG(1, "advansys_detect: ASC-3550\n");
-+			adv_dvc_varp->chip_type = ADV_CHIP_ASC3550;
-+                } else if (pdev->device == PCI_DEVICE_ID_38C0800_REV1) {
-+			ASC_DBG(1, "advansys_detect: ASC-38C0800\n");
-+			adv_dvc_varp->chip_type = ADV_CHIP_ASC38C0800;
-+		} else {
-+			ASC_DBG(1, "advansys_detect: ASC-38C1600\n");
-+			adv_dvc_varp->chip_type = ADV_CHIP_ASC38C1600;
-+		}
- #endif /* CONFIG_PCI */
- 
-                 /*
-@@ -4619,7 +4371,7 @@ advansys_detect(struct scsi_host_template *tpnt)
-                     iolen = ADV_38C1600_IOLEN;
-                 }
- #ifdef CONFIG_PCI
--                pci_memory_address = pci_resource_start(pci_devp, 1);
-+                pci_memory_address = pci_resource_start(pdev, 1);
-                 ASC_DBG1(1, "advansys_detect: pci_memory_address: 0x%lx\n",
-                     (ulong) pci_memory_address);
-                 if ((boardp->ioremap_addr =
-@@ -4630,7 +4382,7 @@ advansys_detect(struct scsi_host_template *tpnt)
-                        boardp->id, pci_memory_address, iolen);
-                    scsi_unregister(shp);
-                    asc_board_count--;
--                   continue;
-+                   return -ENOMEM;
-                 }
-                 ASC_DBG1(1, "advansys_detect: ioremap_addr: 0x%lx\n",
-                     (ulong) boardp->ioremap_addr);
-@@ -4665,12 +4417,12 @@ advansys_detect(struct scsi_host_template *tpnt)
-                     boardp->id, ASC_PRTBUF_SIZE, GFP_ATOMIC);
-                 scsi_unregister(shp);
-                 asc_board_count--;
--                continue;
-+                return -ENOMEM;
-             }
- #endif /* CONFIG_PROC_FS */
- 
-             if (ASC_NARROW_BOARD(boardp)) {
--		asc_dvc_varp->cfg->dev = dev;
-+		asc_dvc_varp->cfg->dev = NULL;
- 		/*
-                  * Set the board bus type and PCI IRQ before
-                  * calling AscInitGetConfig().
-@@ -4692,11 +4444,12 @@ advansys_detect(struct scsi_host_template *tpnt)
- #endif /* CONFIG_ISA */
- #ifdef CONFIG_PCI
-                 case ASC_IS_PCI:
--                    shp->irq = asc_dvc_varp->irq_no = pci_devp->irq;
-+                    shp->irq = asc_dvc_varp->irq_no = pdev->irq;
-+        	    asc_dvc_varp->cfg->dev = &pdev->dev;
-                     asc_dvc_varp->cfg->pci_slot_info =
--                        ASC_PCI_MKID(pci_devp->bus->number,
--                            PCI_SLOT(pci_devp->devfn),
--                            PCI_FUNC(pci_devp->devfn));
-+                        ASC_PCI_MKID(pdev->bus->number,
-+                            PCI_SLOT(pdev->devfn),
-+                            PCI_FUNC(pdev->devfn));
-                     shp->unchecked_isa_dma = FALSE;
-                     share_irq = TRUE;
-                     break;
-@@ -4710,17 +4463,17 @@ advansys_detect(struct scsi_host_template *tpnt)
-                     break;
-                 }
-             } else {
--                adv_dvc_varp->cfg->dev = dev;
-                 /*
-                  * For Wide boards set PCI information before calling
-                  * AdvInitGetConfig().
-                  */
- #ifdef CONFIG_PCI
--                shp->irq = adv_dvc_varp->irq_no = pci_devp->irq;
-+                shp->irq = adv_dvc_varp->irq_no = pdev->irq;
-+                adv_dvc_varp->cfg->dev = &pdev->dev;
-                 adv_dvc_varp->cfg->pci_slot_info =
--                    ASC_PCI_MKID(pci_devp->bus->number,
--                        PCI_SLOT(pci_devp->devfn),
--                        PCI_FUNC(pci_devp->devfn));
-+                    ASC_PCI_MKID(pdev->bus->number,
-+                        PCI_SLOT(pdev->devfn),
-+                        PCI_FUNC(pdev->devfn));
-                 shp->unchecked_isa_dma = FALSE;
-                 share_irq = TRUE;
- #endif /* CONFIG_PCI */
-@@ -4796,7 +4549,7 @@ advansys_detect(struct scsi_host_template *tpnt)
- #endif /* CONFIG_PROC_FS */
-                 scsi_unregister(shp);
-                 asc_board_count--;
--                continue;
-+                return err_code;
-             }
- 
-             /*
-@@ -4884,7 +4637,7 @@ advansys_detect(struct scsi_host_template *tpnt)
- #endif /* CONFIG_PROC_FS */
-                     scsi_unregister(shp);
-                     asc_board_count--;
--                    continue;
-+                    return asc_dvc_varp->err_code;
-                 }
- 
-                 /*
-@@ -5153,7 +4906,7 @@ advansys_detect(struct scsi_host_template *tpnt)
- #endif /* CONFIG_PROC_FS */
-                 scsi_unregister(shp);
-                 asc_board_count--;
--                continue;
-+                return -EBUSY;
-             }
- 
-             /* Register DMA Channel for Narrow boards. */
-@@ -5174,7 +4927,7 @@ advansys_detect(struct scsi_host_template *tpnt)
- #endif /* CONFIG_PROC_FS */
-                         scsi_unregister(shp);
-                         asc_board_count--;
--                        continue;
-+                        return ret;
-                     }
-                     AscEnableIsaDma(shp->dma_channel);
-                 }
-@@ -5222,7 +4975,7 @@ advansys_detect(struct scsi_host_template *tpnt)
- #endif /* CONFIG_PROC_FS */
-                 scsi_unregister(shp);
-                 asc_board_count--;
--                continue;
-+                return ret;
-             }
- 
-             /*
-@@ -5404,9 +5157,249 @@ advansys_detect(struct scsi_host_template *tpnt)
-                 free_irq(shp->irq, boardp);
-                 scsi_unregister(shp);
-                 asc_board_count--;
--                continue;
-+                return err_code;
-+	}
-+	ASC_DBG_PRT_SCSI_HOST(2, shp);
-+
-+	return 0;
-+}
-+
-+/*
-+ * advansys_detect()
-+ *
-+ * Detect function for AdvanSys adapters.
-+ *
-+ * Argument is a pointer to the host driver's scsi_hosts entry.
-+ *
-+ * Return number of adapters found.
-+ *
-+ * Note: Because this function is called during system initialization
-+ * it must not call SCSI mid-level functions including scsi_malloc()
-+ * and scsi_free().
-+ */
-+static int __init
-+advansys_detect(struct scsi_host_template *tpnt)
-+{
-+    static int          detect_called = ASC_FALSE;
-+    int                 iop;
-+    int                 bus;
-+    int                 ioport = 0;
-+#ifdef CONFIG_PCI
-+    int                 pci_init_search = 0;
-+    struct pci_dev      *pci_devicep[ASC_NUM_BOARD_SUPPORTED];
-+    int                 pci_card_cnt_max = 0;
-+    int                 pci_card_cnt = 0;
-+    struct pci_dev      *pci_devp = NULL;
-+    int                 pci_device_id_cnt = 0;
-+    unsigned int        pci_device_id[ASC_PCI_DEVICE_ID_CNT] = {
-+                                    PCI_DEVICE_ID_ASP_1200A,
-+                                    PCI_DEVICE_ID_ASP_ABP940,
-+                                    PCI_DEVICE_ID_ASP_ABP940U,
-+                                    PCI_DEVICE_ID_ASP_ABP940UW,
-+                                    PCI_DEVICE_ID_38C0800_REV1,
-+                                    PCI_DEVICE_ID_38C1600_REV1
-+                        };
-+#else
-+#define pci_devp NULL
-+#endif /* CONFIG_PCI */
-+
-+    if (detect_called == ASC_FALSE) {
-+        detect_called = ASC_TRUE;
-+    } else {
-+        printk("AdvanSys SCSI: advansys_detect() multiple calls ignored\n");
-+        return 0;
-+    }
-+
-+    ASC_DBG(1, "advansys_detect: begin\n");
-+
-+    asc_board_count = 0;
-+
-+    /*
-+     * If I/O port probing has been modified, then verify and
-+     * clean-up the 'asc_ioport' list.
-+     */
-+    if (asc_iopflag == ASC_TRUE) {
-+        for (ioport = 0; ioport < ASC_NUM_IOPORT_PROBE; ioport++) {
-+            ASC_DBG2(1, "advansys_detect: asc_ioport[%d] 0x%x\n",
-+                ioport, asc_ioport[ioport]);
-+            if (asc_ioport[ioport] != 0) {
-+                for (iop = 0; iop < ASC_IOADR_TABLE_MAX_IX; iop++) {
-+                    if (_asc_def_iop_base[iop] == asc_ioport[ioport]) {
-+                        break;
-+                    }
-+                }
-+                if (iop == ASC_IOADR_TABLE_MAX_IX) {
-+                    printk(
-+"AdvanSys SCSI: specified I/O Port 0x%X is invalid\n",
-+                        asc_ioport[ioport]);
-+                    asc_ioport[ioport] = 0;
-+                }
-+            }
-+        }
-+        ioport = 0;
-+    }
-+
-+    for (bus = 0; bus < ASC_NUM_BUS; bus++) {
-+
-+        ASC_DBG2(1, "advansys_detect: bus search type %d (%s)\n",
-+            bus, asc_bus_name[bus]);
-+        iop = 0;
-+
-+        while (asc_board_count < ASC_NUM_BOARD_SUPPORTED) {
-+
-+            ASC_DBG1(2, "advansys_detect: asc_board_count %d\n",
-+                asc_board_count);
-+
-+            switch (asc_bus[bus]) {
-+            case ASC_IS_ISA:
-+            case ASC_IS_VL:
-+#ifdef CONFIG_ISA
-+                if (asc_iopflag == ASC_FALSE) {
-+                    iop = AscSearchIOPortAddr(iop, asc_bus[bus]);
-+                } else {
-+                    /*
-+                     * ISA and VL I/O port scanning has either been
-+                     * eliminated or limited to selected ports on
-+                     * the LILO command line, /etc/lilo.conf, or
-+                     * by setting variables when the module was loaded.
-+                     */
-+                    ASC_DBG(1, "advansys_detect: I/O port scanning modified\n");
-+                ioport_try_again:
-+                    iop = 0;
-+                    for (; ioport < ASC_NUM_IOPORT_PROBE; ioport++) {
-+                        if ((iop = asc_ioport[ioport]) != 0) {
-+                            break;
-+                        }
-+                    }
-+                    if (iop) {
-+                        ASC_DBG1(1,
-+                                "advansys_detect: probing I/O port 0x%x...\n",
-+                            iop);
-+			if (!request_region(iop, ASC_IOADR_GAP, "advansys")){
-+                            printk(
-+"AdvanSys SCSI: specified I/O Port 0x%X is busy\n", iop);
-+                            /* Don't try this I/O port twice. */
-+                            asc_ioport[ioport] = 0;
-+                            goto ioport_try_again;
-+                        } else if (AscFindSignature(iop) == ASC_FALSE) {
-+                            printk(
-+"AdvanSys SCSI: specified I/O Port 0x%X has no adapter\n", iop);
-+                            /* Don't try this I/O port twice. */
-+			    release_region(iop, ASC_IOADR_GAP);
-+                            asc_ioport[ioport] = 0;
-+                            goto ioport_try_again;
-+                        } else {
-+                            /*
-+                             * If this isn't an ISA board, then it must be
-+                             * a VL board. If currently looking an ISA
-+                             * board is being looked for then try for
-+                             * another ISA board in 'asc_ioport'.
-+                             */
-+                            if (asc_bus[bus] == ASC_IS_ISA &&
-+                                (AscGetChipVersion(iop, ASC_IS_ISA) &
-+                                 ASC_CHIP_VER_ISA_BIT) == 0) {
-+                                 /*
-+                                  * Don't clear 'asc_ioport[ioport]'. Try
-+                                  * this board again for VL. Increment
-+                                  * 'ioport' past this board.
-+                                  */
-+                                 ioport++;
-+				 release_region(iop, ASC_IOADR_GAP);
-+                                 goto ioport_try_again;
-+                            }
-+                        }
-+                        /*
-+                         * This board appears good, don't try the I/O port
-+                         * again by clearing its value. Increment 'ioport'
-+                         * for the next iteration.
-+                         */
-+                        asc_ioport[ioport++] = 0;
-+                    }
-+                }
-+#endif /* CONFIG_ISA */
-+                break;
-+
-+            case ASC_IS_EISA:
-+#ifdef CONFIG_ISA
-+                iop = AscSearchIOPortAddr(iop, asc_bus[bus]);
-+#endif /* CONFIG_ISA */
-+                break;
-+
-+            case ASC_IS_PCI:
-+#ifdef CONFIG_PCI
-+                if (pci_init_search == 0) {
-+                    int i, j;
-+
-+                    pci_init_search = 1;
-+
-+                    /* Find all PCI cards. */
-+                    while (pci_device_id_cnt < ASC_PCI_DEVICE_ID_CNT) {
-+                        if ((pci_devp = pci_find_device(PCI_VENDOR_ID_ASP,
-+                            pci_device_id[pci_device_id_cnt], pci_devp)) ==
-+                            NULL) {
-+                            pci_device_id_cnt++;
-+                        } else {
-+                            if (pci_enable_device(pci_devp) == 0) {
-+                                pci_devicep[pci_card_cnt_max++] = pci_devp;
-+                            }
-+                        }
-+                    }
-+
-+                    /*
-+                     * Sort PCI cards in ascending order by PCI Bus, Slot,
-+                     * and Device Number.
-+                     */
-+                    for (i = 0; i < pci_card_cnt_max - 1; i++)
-+                    {
-+                        for (j = i + 1; j < pci_card_cnt_max; j++) {
-+                            if ((pci_devicep[j]->bus->number <
-+                                 pci_devicep[i]->bus->number) ||
-+                                ((pci_devicep[j]->bus->number ==
-+                                  pci_devicep[i]->bus->number) &&
-+                                  (pci_devicep[j]->devfn <
-+                                   pci_devicep[i]->devfn))) {
-+                                pci_devp = pci_devicep[i];
-+                                pci_devicep[i] = pci_devicep[j];
-+                                pci_devicep[j] = pci_devp;
-+                            }
-+                        }
-+                    }
-+
-+                    pci_card_cnt = 0;
-+                } else {
-+                    pci_card_cnt++;
-+                }
-+
-+                if (pci_card_cnt == pci_card_cnt_max) {
-+                    iop = 0;
-+                } else {
-+                    pci_devp = pci_devicep[pci_card_cnt];
-+
-+                    ASC_DBG2(2,
-+                        "advansys_detect: devfn %d, bus number %d\n",
-+                        pci_devp->devfn, pci_devp->bus->number);
-+                    iop = pci_resource_start(pci_devp, 0);
-+                    ASC_DBG2(1,
-+                        "advansys_detect: vendorID %X, deviceID %X\n",
-+                        pci_devp->vendor, pci_devp->device);
-+                    ASC_DBG2(2, "advansys_detect: iop %X, irqLine %d\n",
-+                        iop, pci_devp->irq);
-+                }
-+
-+#endif /* CONFIG_PCI */
-+                break;
-+
-+            default:
-+                ASC_PRINT1("advansys_detect: unknown bus type: %d\n",
-+                    asc_bus[bus]);
-+                break;
-             }
--            ASC_DBG_PRT_SCSI_HOST(2, shp);
-+            ASC_DBG1(1, "advansys_detect: iop 0x%x\n", iop);
-+
-+            if (iop == 0)
-+		break;
-+
-+	    advansys_board_found(tpnt, iop, pci_devp, asc_bus[bus]);
-         }
-     }
- 
--- 
-1.4.4.4
+> static char bsg_version[] = "block layer sg (bsg) 0.4";
+
+`const' would be better.  That moves it into a write-protected memory section.
+
+> struct bsg_device {
+> 	request_queue_t *queue;
+> 	spinlock_t lock;
+> 	struct list_head busy_list;
+> 	struct list_head done_list;
+> 	struct hlist_node dev_list;
+> 	atomic_t ref_count;
+> 	int minor;
+> 	int queued_cmds;
+> 	int done_cmds;
+> 	wait_queue_head_t wq_done;
+> 	wait_queue_head_t wq_free;
+> 	char name[BUS_ID_SIZE];
+> 	int max_queue;
+> 	unsigned long flags;
+> };
+
+Please try to comment your data structures.  This is key to allowing others
+to understand your code.
+
+> #undef BSG_DEBUG
+> 
+> #ifdef BSG_DEBUG
+> #define dprintk(fmt, args...) printk(KERN_ERR "%s: " fmt, __FUNCTION__, ##args)
+> #else
+> #define dprintk(fmt, args...)
+> #endif
+
+hm, that seems to be out 187th implementation of dprintk().
+
+> #define list_entry_bc(entry)	list_entry((entry), struct bsg_command, list)
+
+This makes the code easier to write but harder to read.  We should optimise
+for readers.  Please open-code this at callsites.
+
+Or at least convert it into a (commented) (possibly inlined) C function.
+
+> /*
+>  * just for testing
+>  */
+> #define BSG_MAJOR	(240)
+
+What's this doing in mainline?  240 is a "reserved for local use" major. 
+This will cause collisions.  This code should be using dynamic major
+assignment.
+
+> static DEFINE_MUTEX(bsg_mutex);
+> static int bsg_device_nr, bsg_minor_idx;
+> 
+> #define BSG_LIST_SIZE	(8)
+
+afacit this isn't really the size of a list.  It has something to do with
+the number of minors which are attached to that illegitimate major?  A
+comment here would help.  Perhaps this name is poorly chosen.
+
+> #define bsg_list_idx(minor)	((minor) & (BSG_LIST_SIZE - 1))
+
+Please prefer to write code in C, not in cpp.
+
+> static struct hlist_head bsg_device_list[BSG_LIST_SIZE];
+
+That is an array, not a list.
+
+> static struct class *bsg_class;
+> static LIST_HEAD(bsg_class_list);
+> 
+> static struct kmem_cache *bsg_cmd_cachep;
+
+How many of these items do we expect to be simultaneously allocated?  If
+that number is small then a custom kmem_cache is probably not warranted.
+
+> /*
+>  * our internal command type
+>  */
+> struct bsg_command {
+> 	struct bsg_device *bd;
+> 	struct list_head list;
+> 	struct request *rq;
+> 	struct bio *bio;
+> 	struct bio *bidi_bio;
+> 	int err;
+> 	struct sg_io_v4 hdr;
+> 	struct sg_io_v4 __user *uhdr;
+> 	char sense[SCSI_SENSE_BUFFERSIZE];
+> };
+
+Comments here, please.
+
+> static void bsg_free_command(struct bsg_command *bc)
+> {
+> 	struct bsg_device *bd = bc->bd;
+> 	unsigned long flags;
+> 
+> 	kmem_cache_free(bsg_cmd_cachep, bc);
+> 
+> 	spin_lock_irqsave(&bd->lock, flags);
+> 	bd->queued_cmds--;
+> 	spin_unlock_irqrestore(&bd->lock, flags);
+> 
+> 	wake_up(&bd->wq_free);
+> }
+> 
+> static struct bsg_command *bsg_alloc_command(struct bsg_device *bd)
+> {
+> 	struct bsg_command *bc = ERR_PTR(-EINVAL);
+> 
+> 	spin_lock_irq(&bd->lock);
+> 
+> 	if (bd->queued_cmds >= bd->max_queue)
+> 		goto out;
+> 
+> 	bd->queued_cmds++;
+> 	spin_unlock_irq(&bd->lock);
+> 
+> 	bc = kmem_cache_alloc(bsg_cmd_cachep, GFP_USER);
+
+This should be GFP_KERNEL.
+
+> 	if (unlikely(!bc)) {
+> 		spin_lock_irq(&bd->lock);
+> 		bd->queued_cmds--;
+> 		bc = ERR_PTR(-ENOMEM);
+> 		goto out;
+> 	}
+> 
+> 	memset(bc, 0, sizeof(*bc));
+
+Use kmem_cache_zalloc() above, remove this.
+
+> 	bc->bd = bd;
+> 	INIT_LIST_HEAD(&bc->list);
+> 	dprintk("%s: returning free cmd %p\n", bd->name, bc);
+> 	return bc;
+> out:
+> 	spin_unlock_irq(&bd->lock);
+> 	return bc;
+> }
+> 
+> static inline void
+> bsg_del_done_cmd(struct bsg_device *bd, struct bsg_command *bc)
+> {
+> 	bd->done_cmds--;
+> 	list_del(&bc->list);
+> }
+
+This only has a single caller.  It would be clearer to move this code into
+that caller.
+
+> static inline void
+> bsg_add_done_cmd(struct bsg_device *bd, struct bsg_command *bc)
+> {
+> 	bd->done_cmds++;
+> 	list_add_tail(&bc->list, &bd->done_list);
+> 	wake_up(&bd->wq_done);
+> }
+
+Ditto.  Once this has been moved into the caller, that caller can then use
+the neater list_move().
+
+> static inline int bsg_io_schedule(struct bsg_device *bd, int state)
+
+This is too large to inline.
+
+> {
+> 	DEFINE_WAIT(wait);
+> 	int ret = 0;
+> 
+> 	spin_lock_irq(&bd->lock);
+> 
+> 	BUG_ON(bd->done_cmds > bd->queued_cmds);
+> 
+> 	/*
+> 	 * -ENOSPC or -ENODATA?  I'm going for -ENODATA, meaning "I have no
+> 	 * work to do", even though we return -ENOSPC after this same test
+> 	 * during bsg_write() -- there, it means our buffer can't have more
+> 	 * bsg_commands added to it, thus has no space left.
+> 	 */
+> 	if (bd->done_cmds == bd->queued_cmds) {
+> 		ret = -ENODATA;
+> 		goto unlock;
+> 	}
+> 
+> 	if (!test_bit(BSG_F_BLOCK, &bd->flags)) {
+> 		ret = -EAGAIN;
+> 		goto unlock;
+> 	}
+> 
+> 	prepare_to_wait(&bd->wq_done, &wait, state);
+> 	spin_unlock_irq(&bd->lock);
+> 	io_schedule();
+> 	finish_wait(&bd->wq_done, &wait);
+
+No, io_schedule() _must_ be called in state TASK_UNINTERRUPTIBLE.  If it
+gets called in state TASK_INTERRUPTIBLE then all the accounting which it
+does becomes wrong.
+
+Fortunately the sole caller of this function _does_ use
+TASK_UNINTERRUPTIBLE.  The `state' arg to this function should be removed.
+
+> 	if ((state == TASK_INTERRUPTIBLE) && signal_pending(current))
+> 		ret = -ERESTARTSYS;
+
+And this code should be deleted.
+
+> 	return ret;
+> unlock:
+> 	spin_unlock_irq(&bd->lock);
+> 	return ret;
+> }
+> 
+> static int blk_fill_sgv4_hdr_rq(request_queue_t *q, struct request *rq,
+> 				struct sg_io_v4 *hdr, int has_write_perm)
+> {
+> 	memset(rq->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
+> 
+> 	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
+> 			   hdr->request_len))
+> 		return -EFAULT;
+> 
+> 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
+> 		if (blk_verify_command(rq->cmd, has_write_perm))
+> 			return -EPERM;
+> 	} else if (!capable(CAP_SYS_RAWIO))
+> 		return -EPERM;
+
+As a reader of this code I'm wondering "hm, why is
+BSG_SUB_PROTOCOL_SCSI_CMD unprivileged, while other modes require
+CAP_SYS_RAWIO"?.
+
+This design/policy decision maybe was discussed on a mailing list
+somewhere, or even perhaps in a changelog (although I can't find it).  But
+it is so important, and is so unobvious from a reading of the code that I'd
+suggest that it is worth some discussion right here, in a code comment.
+
+> 	/*
+> 	 * fill in request structure
+> 	 */
+> 	rq->cmd_len = hdr->request_len;
+> 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+> 
+> 	rq->timeout = (hdr->timeout * HZ) / 1000;
+> 	if (!rq->timeout)
+> 		rq->timeout = q->sg_timeout;
+> 	if (!rq->timeout)
+> 		rq->timeout = BLK_DEFAULT_SG_TIMEOUT;
+> 
+> 	return 0;
+> }
+> 
+> /*
+>  * Check if sg_io_v4 from user is allowed and valid
+>  */
+> static int
+> bsg_validate_sgv4_hdr(request_queue_t *q, struct sg_io_v4 *hdr, int *rw)
+> {
+> 	int ret = 0;
+> 
+> 	if (hdr->guard != 'Q')
+> 		return -EINVAL;
+
+hm, "Q".  What is the user interface to this new stuff?
+
+What does the code in bsg.c _do_, anyway??  Ho hum.
+
+> 	if (hdr->request_len > BLK_MAX_CDB)
+> 		return -EINVAL;
+> 	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
+> 	    hdr->din_xfer_len > (q->max_sectors << 9))
+
+Are we sure that nothing here can exceed 4GB now and in the future?
+
+> 		return -EIO;
+> 
+> 	switch (hdr->protocol) {
+> 	case BSG_PROTOCOL_SCSI:
+> 		switch (hdr->subprotocol) {
+> 		case BSG_SUB_PROTOCOL_SCSI_CMD:
+> 		case BSG_SUB_PROTOCOL_SCSI_TRANSPORT:
+> 			break;
+> 		default:
+> 			ret = -EINVAL;
+> 		}
+> 		break;
+> 	default:
+> 		ret = -EINVAL;
+> 	}
+> 
+> 	*rw = hdr->dout_xfer_len ? WRITE : READ;
+> 	return ret;
+> }
+> 
+> /*
+>  * map sg_io_v4 to a request.
+>  */
+> static struct request *
+> bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
+> {
+> 	request_queue_t *q = bd->queue;
+> 	struct request *rq, *next_rq = NULL;
+> 	int ret, rw = 0; /* shut up gcc */
+
+The modern way of shutting up gcc is uninitialized_var().
+
+> 	unsigned int dxfer_len;
+> 	void *dxferp = NULL;
+> 
+> 	dprintk("map hdr %llx/%u %llx/%u\n", (unsigned long long) hdr->dout_xferp,
+> 		hdr->dout_xfer_len, (unsigned long long) hdr->din_xferp,
+> 		hdr->din_xfer_len);
+> 
+> 	ret = bsg_validate_sgv4_hdr(q, hdr, &rw);
+> 	if (ret)
+> 		return ERR_PTR(ret);
+> 
+> 	/*
+> 	 * map scatter-gather elements seperately and string them to request
+> 	 */
+> 	rq = blk_get_request(q, rw, GFP_KERNEL);
+> 	if (!rq)
+> 		return ERR_PTR(-ENOMEM);
+> 	ret = blk_fill_sgv4_hdr_rq(q, rq, hdr, test_bit(BSG_F_WRITE_PERM,
+> 						       &bd->flags));
+> 	if (ret)
+> 		goto out;
+> 
+> 	if (rw == WRITE && hdr->din_xfer_len) {
+> 		if (!test_bit(QUEUE_FLAG_BIDI, &q->queue_flags)) {
+> 			ret = -EOPNOTSUPP;
+> 			goto out;
+> 		}
+> 
+> 		next_rq = blk_get_request(q, READ, GFP_KERNEL);
+> 		if (!next_rq) {
+> 			ret = -ENOMEM;
+> 			goto out;
+> 		}
+> 		rq->next_rq = next_rq;
+> 
+> 		dxferp = (void*)(unsigned long)hdr->din_xferp;
+
+So... sg_io_v4.din_xferp is a user virtual address?
+
+And `struct sg_io_v4' has just become part of the kernel ABI?  Beware that
+there is a move afoot to require test code, manpages and even LTP testcases
+for new ABI extensions.  Is this interface documented anywhere?
+
+> 		ret =  blk_rq_map_user(q, next_rq, dxferp, hdr->din_xfer_len);
+> 		if (ret)
+> 			goto out;
+> 	}
+> 
+> 	if (hdr->dout_xfer_len) {
+> 		dxfer_len = hdr->dout_xfer_len;
+> 		dxferp = (void*)(unsigned long)hdr->dout_xferp;
+> 	} else if (hdr->din_xfer_len) {
+> 		dxfer_len = hdr->din_xfer_len;
+> 		dxferp = (void*)(unsigned long)hdr->din_xferp;
+> 	} else
+> 		dxfer_len = 0;
+> 
+> 	if (dxfer_len) {
+> 		ret = blk_rq_map_user(q, rq, dxferp, dxfer_len);
+> 		if (ret)
+> 			goto out;
+> 	}
+> 	return rq;
+> out:
+> 	blk_put_request(rq);
+> 	if (next_rq) {
+> 		blk_rq_unmap_user(next_rq->bio);
+> 		blk_put_request(next_rq);
+> 	}
+> 	return ERR_PTR(ret);
+> }
+> 
+> ...
+> 
+> static inline struct bsg_command *bsg_next_done_cmd(struct bsg_device *bd)
+> {
+> 	struct bsg_command *bc = NULL;
+> 
+> 	spin_lock_irq(&bd->lock);
+> 	if (bd->done_cmds) {
+> 		bc = list_entry_bc(bd->done_list.next);
+> 		bsg_del_done_cmd(bd, bc);
+> 	}
+> 	spin_unlock_irq(&bd->lock);
+> 
+> 	return bc;
+> }
+
+This is too large to inline.
+
+> static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
+> 				    struct bio *bio, struct bio *bidi_bio)
+> {
+> 	int ret = 0;
+> 
+> 	dprintk("rq %p bio %p %u\n", rq, bio, rq->errors);
+> 	/*
+> 	 * fill in all the output members
+> 	 */
+> 	hdr->device_status = status_byte(rq->errors);
+> 	hdr->transport_status = host_byte(rq->errors);
+> 	hdr->driver_status = driver_byte(rq->errors);
+> 	hdr->info = 0;
+> 	if (hdr->device_status || hdr->transport_status || hdr->driver_status)
+> 		hdr->info |= SG_INFO_CHECK;
+> 	hdr->din_resid = rq->data_len;
+> 	hdr->response_len = 0;
+> 
+> 	if (rq->sense_len && hdr->response) {
+> 		int len = min((unsigned int) hdr->max_response_len,
+> 			      rq->sense_len);
+
+Use min_t here
+
+> 		ret = copy_to_user((void*)(unsigned long)hdr->response,
+> 				   rq->sense, len);
+> 		if (!ret)
+> 			hdr->response_len = len;
+> 		else
+> 			ret = -EFAULT;
+> 	}
+> 
+> 	if (rq->next_rq) {
+> 		blk_rq_unmap_user(bidi_bio);
+> 		blk_put_request(rq->next_rq);
+> 	}
+> 
+> 	blk_rq_unmap_user(bio);
+> 	blk_put_request(rq);
+> 
+> 	return ret;
+> }
+> 
+> ...
+>
+> static ssize_t
+> __bsg_read(char __user *buf, size_t count, struct bsg_device *bd,
+> 	   const struct iovec *iov, ssize_t *bytes_read)
+> {
+> 	struct bsg_command *bc;
+> 	int nr_commands, ret;
+> 
+> 	if (count % sizeof(struct sg_io_v4))
+> 		return -EINVAL;
+> 
+> 	ret = 0;
+> 	nr_commands = count / sizeof(struct sg_io_v4);
+> 	while (nr_commands) {
+> 		bc = bsg_get_done_cmd(bd);
+> 		if (IS_ERR(bc)) {
+> 			ret = PTR_ERR(bc);
+> 			break;
+> 		}
+> 
+> 		/*
+> 		 * this is the only case where we need to copy data back
+> 		 * after completing the request. so do that here,
+> 		 * bsg_complete_work() cannot do that for us
+> 		 */
+> 		ret = blk_complete_sgv4_hdr_rq(bc->rq, &bc->hdr, bc->bio,
+> 					       bc->bidi_bio);
+> 
+> 		if (copy_to_user(buf, (char *) &bc->hdr, sizeof(bc->hdr)))
+> 			ret = -EFAULT;
+
+Unneeded cast.
+
+> 		bsg_free_command(bc);
+> 
+> 		if (ret)
+> 			break;
+> 
+> 		buf += sizeof(struct sg_io_v4);
+> 		*bytes_read += sizeof(struct sg_io_v4);
+> 		nr_commands--;
+> 	}
+> 
+> 	return ret;
+> }
+
+This function returns zero or a negative errno (as should have been
+explainined in its covering comment).  Hence its return type of ssize_t is
+misleading.  It should return `int'.  Which is in fact the type of the
+local variable which it returns.
+
+> static inline void bsg_set_block(struct bsg_device *bd, struct file *file)
+> {
+> 	if (file->f_flags & O_NONBLOCK)
+> 		clear_bit(BSG_F_BLOCK, &bd->flags);
+> 	else
+> 		set_bit(BSG_F_BLOCK, &bd->flags);
+> }
+> 
+> static inline void bsg_set_write_perm(struct bsg_device *bd, struct file *file)
+> {
+> 	if (file->f_mode & FMODE_WRITE)
+> 		set_bit(BSG_F_WRITE_PERM, &bd->flags);
+> 	else
+> 		clear_bit(BSG_F_WRITE_PERM, &bd->flags);
+> }
+
+Still wondering what all this code does.  It _appears_ that the chosen user
+interface is via some device-special file?  And that an O_NONBLOCK open of
+that file has some special (undocumented?) significance?
+
+> static inline int err_block_err(int ret)
+> {
+> 	if (ret && ret != -ENOSPC && ret != -ENODATA && ret != -EAGAIN)
+> 		return 1;
+> 
+> 	return 0;
+> }
+
+What a strange function.  The name is fairly meaningless.  A little comment
+would help decrease the mystery.
+
+> static ssize_t
+> bsg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
+> {
+> 	struct bsg_device *bd = file->private_data;
+> 	int ret;
+> 	ssize_t bytes_read;
+> 
+> 	dprintk("%s: read %Zd bytes\n", bd->name, count);
+> 
+> 	bsg_set_block(bd, file);
+> 	bytes_read = 0;
+> 	ret = __bsg_read(buf, count, bd, NULL, &bytes_read);
+> 	*ppos = bytes_read;
+> 
+> 	if (!bytes_read || (bytes_read && err_block_err(ret)))
+> 		bytes_read = ret;
+> 	return bytes_read;
+> }
+>
+> static ssize_t __bsg_write(struct bsg_device *bd, const char __user *buf,
+> 			   size_t count, ssize_t *bytes_read)
+> {
+> 	struct bsg_command *bc;
+> 	struct request *rq;
+> 	int ret, nr_commands;
+> 
+> 	if (count % sizeof(struct sg_io_v4))
+> 		return -EINVAL;
+> 
+> 	nr_commands = count / sizeof(struct sg_io_v4);
+> 	rq = NULL;
+> 	bc = NULL;
+> 	ret = 0;
+> 	while (nr_commands) {
+> 		request_queue_t *q = bd->queue;
+> 
+> 		bc = bsg_alloc_command(bd);
+> 		if (IS_ERR(bc)) {
+> 			ret = PTR_ERR(bc);
+> 			bc = NULL;
+> 			break;
+> 		}
+> 
+> 		bc->uhdr = (struct sg_io_v4 __user *) buf;
+> 		if (copy_from_user(&bc->hdr, buf, sizeof(bc->hdr))) {
+> 			ret = -EFAULT;
+> 			break;
+> 		}
+> 
+> 		/*
+> 		 * get a request, fill in the blanks, and add to request queue
+> 		 */
+> 		rq = bsg_map_hdr(bd, &bc->hdr);
+> 		if (IS_ERR(rq)) {
+> 			ret = PTR_ERR(rq);
+> 			rq = NULL;
+> 			break;
+> 		}
+> 
+> 		bsg_add_command(bd, q, bc, rq);
+> 		bc = NULL;
+> 		rq = NULL;
+> 		nr_commands--;
+> 		buf += sizeof(struct sg_io_v4);
+> 		*bytes_read += sizeof(struct sg_io_v4);
+> 	}
+> 
+> 	if (bc)
+> 		bsg_free_command(bc);
+> 
+> 	return ret;
+> }
+
+Return type should be `int'.
+
+> static ssize_t
+> bsg_write(struct file *file, const char __user *buf, size_t count, loff_t *ppos)
+> {
+> 	struct bsg_device *bd = file->private_data;
+> 	ssize_t bytes_read;
+
+This variable should be called bytes_written.
+
+> 	int ret;
+> 
+> 	dprintk("%s: write %Zd bytes\n", bd->name, count);
+> 
+> 	bsg_set_block(bd, file);
+> 	bsg_set_write_perm(bd, file);
+> 
+> 	bytes_read = 0;
+> 	ret = __bsg_write(bd, buf, count, &bytes_read);
+> 	*ppos = bytes_read;
+> 
+> 	/*
+> 	 * return bytes written on non-fatal errors
+> 	 */
+> 	if (!bytes_read || (bytes_read && err_block_err(ret)))
+> 		bytes_read = ret;
+> 	dprintk("%s: returning %Zd\n", bd->name, bytes_read);
+> 	return bytes_read;
+> }
+> 
+> ...
+
+> 
+> static struct bsg_device *bsg_add_device(struct inode *inode,
+> 					 struct request_queue *rq,
+> 					 struct file *file)
+> {
+> 	struct bsg_device *bd = NULL;
+
+Unneeded initialisation.
+
+> #ifdef BSG_DEBUG
+> 	unsigned char buf[32];
+> #endif
+> 
+> 	bd = bsg_alloc_device();
+> 	if (!bd)
+> 		return ERR_PTR(-ENOMEM);
+> 
+> 	bd->queue = rq;
+> 	kobject_get(&rq->kobj);
+> 	bsg_set_block(bd, file);
+> 
+> 	atomic_set(&bd->ref_count, 1);
+> 	bd->minor = iminor(inode);
+> 	mutex_lock(&bsg_mutex);
+> 	hlist_add_head(&bd->dev_list, &bsg_device_list[bsg_list_idx(bd->minor)]);
+> 
+> 	strncpy(bd->name, rq->bsg_dev.class_dev->class_id, sizeof(bd->name) - 1);
+> 	dprintk("bound to <%s>, max queue %d\n",
+> 		format_dev_t(buf, inode->i_rdev), bd->max_queue);
+> 
+> 	mutex_unlock(&bsg_mutex);
+> 	return bd;
+> }
+> 
+> ...
+>
+> static int
+> bsg_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
+> 	  unsigned long arg)
+
+This is an file_operations.ioctl() method.  It should instead have been
+implemented as an unlocked_ioctl handler.
+
+
+> {
+> 	struct bsg_device *bd = file->private_data;
+> 	int __user *uarg = (int __user *) arg;
+> 
+> 	if (!bd)
+> 		return -ENXIO;
+
+This cannot happen, surely?
+
+> 	switch (cmd) {
+> 		/*
+> 		 * our own ioctls
+> 		 */
+> 	case SG_GET_COMMAND_Q:
+> 		return put_user(bd->max_queue, uarg);
+> 	case SG_SET_COMMAND_Q: {
+> 		int queue;
+> 
+> 		if (get_user(queue, uarg))
+> 			return -EFAULT;
+> 		if (queue < 1)
+> 			return -EINVAL;
+> 
+> 		spin_lock_irq(&bd->lock);
+> 		bd->max_queue = queue;
+> 		spin_unlock_irq(&bd->lock);
+> 		return 0;
+> 	}
+> 
+> 	/*
+> 	 * SCSI/sg ioctls
+> 	 */
+> 	case SG_GET_VERSION_NUM:
+> 	case SCSI_IOCTL_GET_IDLUN:
+> 	case SCSI_IOCTL_GET_BUS_NUMBER:
+> 	case SG_SET_TIMEOUT:
+> 	case SG_GET_TIMEOUT:
+> 	case SG_GET_RESERVED_SIZE:
+> 	case SG_SET_RESERVED_SIZE:
+> 	case SG_EMULATED_HOST:
+> 	case SCSI_IOCTL_SEND_COMMAND: {
+> 		void __user *uarg = (void __user *) arg;
+> 		return scsi_cmd_ioctl(file, bd->queue, NULL, cmd, uarg);
+> 	}
+> 	case SG_IO: {
+> 		struct request *rq;
+> 		struct bio *bio, *bidi_bio = NULL;
+> 		struct sg_io_v4 hdr;
+> 
+> 		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
+> 			return -EFAULT;
+> 
+> 		rq = bsg_map_hdr(bd, &hdr);
+> 		if (IS_ERR(rq))
+> 			return PTR_ERR(rq);
+> 
+> 		bio = rq->bio;
+> 		if (rq->next_rq)
+> 			bidi_bio = rq->next_rq->bio;
+> 		blk_execute_rq(bd->queue, NULL, rq, 0);
+> 		blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio);
+> 
+> 		if (copy_to_user(uarg, &hdr, sizeof(hdr)))
+> 			return -EFAULT;
+> 
+> 		return 0;
+> 	}
+> 	/*
+> 	 * block device ioctls
+> 	 */
+> 	default:
+> #if 0
+> 		return ioctl_by_bdev(bd->bdev, cmd, arg);
+> #else
+> 		return -ENOTTY;
+> #endif
+> 	}
+> }
+
+So we perform IO operations on this "device" by opening it and running
+ioctls, the args to which point to fairly complex data structures which lie
+in userspace and which contain addresses and lengths of userspace IO
+buffers?
+
+What did Christoph think of this? :)
+
+> static struct file_operations bsg_fops = {
+> 	.read		=	bsg_read,
+> 	.write		=	bsg_write,
+> 	.poll		=	bsg_poll,
+> 	.open		=	bsg_open,
+> 	.release	=	bsg_release,
+> 	.ioctl		=	bsg_ioctl,
+
+unlocked_ioctl, please.
+
+> 	.owner		=	THIS_MODULE,
+> };
+> 
+> void bsg_unregister_queue(struct request_queue *q)
+> {
+> 	struct bsg_class_device *bcd = &q->bsg_dev;
+> 
+> 	if (!bcd->class_dev)
+> 		return;
+
+Can this happen?
+
+> 	mutex_lock(&bsg_mutex);
+> 	sysfs_remove_link(&q->kobj, "bsg");
+> 	class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
+> 	bcd->class_dev = NULL;
+> 	list_del_init(&bcd->list);
+> 	bsg_device_nr--;
+> 	mutex_unlock(&bsg_mutex);
+> }
+> EXPORT_SYMBOL_GPL(bsg_unregister_queue);
+
+<still wondering what all this code does>
+
+Would I be correct in assuming that it offers services to device drivers,
+which have yet to be hooked up?
+
+> int bsg_register_queue(struct request_queue *q, const char *name)
+> {
+> 	struct bsg_class_device *bcd, *__bcd;
+> 	dev_t dev;
+> 	int ret = -EMFILE;
+> 	struct class_device *class_dev = NULL;
+> 
+> 	/*
+> 	 * we need a proper transport to send commands, not a stacked device
+> 	 */
+> 	if (!q->request_fn)
+> 		return 0;
+> 
+> 	bcd = &q->bsg_dev;
+> 	memset(bcd, 0, sizeof(*bcd));
+> 	INIT_LIST_HEAD(&bcd->list);
+> 
+> 	mutex_lock(&bsg_mutex);
+> 	if (bsg_device_nr == BSG_MAX_DEVS) {
+> 		printk(KERN_ERR "bsg: too many bsg devices\n");
+
+32768 is a lot of devices.  Why is there any limit at all?
+
+> 		goto err;
+> 	}
+> 
+> retry:
+> 	list_for_each_entry(__bcd, &bsg_class_list, list) {
+> 		if (__bcd->minor == bsg_minor_idx) {
+> 			bsg_minor_idx++;
+> 			if (bsg_minor_idx == BSG_MAX_DEVS)
+> 				bsg_minor_idx = 0;
+> 			goto retry;
+> 		}
+> 	}
+> 
+> 	bcd->minor = bsg_minor_idx++;
+> 	if (bsg_minor_idx == BSG_MAX_DEVS)
+> 		bsg_minor_idx = 0;
+
+So what's happening here?  We're doing a linear, potentially O(n^2) search
+for a unique minor number?
+
+I expect that you'll find that lib/idr.c provides a more elegant solution. 
+The tty code uses this, and there are other examples around the place.
+
+
+> 	bcd->queue = q;
+> 	dev = MKDEV(BSG_MAJOR, bcd->minor);
+> 	class_dev = class_device_create(bsg_class, NULL, dev, bcd->dev, "%s", name);
+> 	if (IS_ERR(class_dev)) {
+> 		ret = PTR_ERR(class_dev);
+> 		goto err;
+> 	}
+> 	bcd->class_dev = class_dev;
+> 
+> 	if (q->kobj.sd) {
+> 		ret = sysfs_create_link(&q->kobj, &bcd->class_dev->kobj, "bsg");
+> 		if (ret)
+> 			goto err;
+> 	}
+> 
+> 	list_add_tail(&bcd->list, &bsg_class_list);
+> 	bsg_device_nr++;
+> 
+> 	mutex_unlock(&bsg_mutex);
+> 	return 0;
+> err:
+> 	if (class_dev)
+> 		class_device_destroy(bsg_class, MKDEV(BSG_MAJOR, bcd->minor));
+> 	mutex_unlock(&bsg_mutex);
+> 	return ret;
+> }
+> EXPORT_SYMBOL_GPL(bsg_register_queue);
+> 
+> ...
+>
+
+
+In terms of presentation: this code hit the tree as base patch plus what
+appear to be 20 bugfixes, none of which are really interesting or relevant
+to mainline.  Personally I think it would be nicer if all that out-of-tree
+development work was cleaned up and the new code goes in as a single hit.
+
+This makes it a lot easier to find out "wtf does this code all do".  One
+finds the first commit and reads the changlog.  But this algorithm yields:
+
+    bsg: support for full generic block layer SG v3
+
+which is not helpful.
 
