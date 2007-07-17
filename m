@@ -1,44 +1,37 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 01:19:34 +0200
-Message-ID: <200707180119.34984.bzolnier@gmail.com>
-References: <20070717065940.GZ5195@kernel.dk> <200707172252.25729.bzolnier@gmail.com> <20070717143434.48836fb8.akpm@linux-foundation.org>
+Date: Tue, 17 Jul 2007 19:37:53 -0400
+Message-ID: <469D52D1.1000803@garzik.org>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org>	 <20070717063810.GY5195@kernel.dk>	 <20070717121821.3212cd60.akpm@linux-foundation.org>	 <20070717132233.ed11362c.akpm@linux-foundation.org> <1184710755.3378.30.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070717143434.48836fb8.akpm@linux-foundation.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S936432AbXGQXiL@vger.kernel.org>
+In-Reply-To: <1184710755.3378.30.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tuesday 17 July 2007, Andrew Morton wrote:
-> On Tue, 17 Jul 2007 22:52:25 +0200
-> Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > ide-{disk,scsi,tape} don't support REQ_TYPE_BLOCK_PC requests et all
-> > (so attempts to use SG_IO, CDROM_SEND_PACKET and SCSI_IOCTL_SEND_COMMAND
-> > will result in requests being failed and error messages in the kernel logs).
-> 
-> In my case it results in a completely tits-up machine.  CPU stuck somewhere
-> spinning with local interrutps disabled.
-> 
-> If you see the log output I sent, I'm suspecting this might be because
+James Bottomley wrote:
+> @@ -1052,9 +1054,10 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
+>  	int err, (*setfunc)(ide_drive_t *, int);
+>  	u8 *val;
+>  
+> -	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> -	if (err != -ENOTTY)
+> -		return err;
+> +	switch (cmd) {
+> +	case SG_IO:
+> +		return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> +	}
+>  
+>  	switch (cmd) {
+>  	case HDIO_GET_32BIT:	    val = &drive->io_32bit;	 goto read_val;
 
-I don't. :(
 
-> this BSG brainfart has exposed underlying bugs in IDE or SCSI.
+At that point you might as well use an 'if'.
 
-Possible but ATM I have an (overdue) IDE update to push, people waiting for
-(overdue) patches to try and some (overdue) patches to finish and post...
+But overall -- agreed.  ACK.
 
-Would be great if somebody beats me to investigate this issue.
-
-Hint: this would be a great way to redempt pushing buggy commit behind
-my back. ;-)
-
-Thanks,
-Bart
+	Jeff
