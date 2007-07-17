@@ -1,64 +1,32 @@
-From: Gabriel C <nix.or.die@googlemail.com>
-Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
-Date: Tue, 17 Jul 2007 02:44:38 +0200
-Message-ID: <469C10F6.3050008@googlemail.com>
-References: <469BD9C8.4000808@googlemail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: block/bsg.c
+Date: Mon, 16 Jul 2007 20:47:45 -0400
+Message-ID: <469C11B1.8000302@garzik.org>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:59792 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756203AbXGQApZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 20:45:25 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so45934ugf
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2007 17:45:24 -0700 (PDT)
-In-Reply-To: <469BD9C8.4000808@googlemail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:38213 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755443AbXGQAr5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 20:47:57 -0400
+In-Reply-To: <20070716165706.348f6bbf.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Gabriel C wrote:
-> Hello,
->
-> sdparm and hdparm are broken for me on git (
-> abce891a10559343d8ac9f79b46d78afdba63a40 )
->
->
-> ~$ sudo hdparm  /dev/sdc
->
-> /dev/sdc:
->  BLKROGET failed: Inappropriate ioctl for device
->  BLKRAGET failed: Inappropriate ioctl for device
->  BLKGETSIZE failed: Inappropriate ioctl for device
->
->
-> ~$ sudo sdparm  --all /dev/sdc
-> unable to access /dev/sdc, ATA disk?
->
->   
-
-Well it is bsg , setting BLK_DEV_BSG=n fixed all this errors.
-
-Maybe a bit off topic but it depends on EXPERIMENTAL so why the the menu
-is not telling this ? and why the default is 'y' for it ?
-
-IMO everything depends on EXPERIMENTAL should
-
-1) Tell it is EXPERIMENTAL ( visible to the user in menu ) " Foo New
-stuff ( EXPERIMENTAL ) "
-2) Should not default to 'y' , is up to the users/admins to set
-EXPERIMENTAL things to Y/M , isn't it ?
+Andrew Morton wrote:
+> The modern way of shutting up gcc is uninitialized_var().
 
 
-( PS: there are even defconfigs with EXPERIMENTAL things set to y but
-this is really off topic )
+Should I convert my misc-2.6.git#gccbug repository over to this, and 
+push upstream?
 
+#gccbug branch is a set of places where I have verified that the 
+variable is indeed initialized, even though gcc complains it may not be.
 
-Regards,
-
-Gabriel C
-
+	Jeff
 
 
