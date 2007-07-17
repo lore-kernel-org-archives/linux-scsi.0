@@ -1,407 +1,231 @@
-From: "Prakash, Sathya" <sathya.prakash@lsi.com>
-Subject: Re: [PATCH] mpt fusion: add sysfs attributes to display IOC parameters
-Date: Tue, 17 Jul 2007 14:39:14 +0530
-Message-ID: <20070717090913.GA8157@lsil.com>
-References: <20070713041041.GA5149@lsil.com> <664A4EBB07F29743873A87CF62C26D7085119D@NAMAIL4.ad.lsil.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] gdth: remove redundant PCI stuff
+Date: Tue, 17 Jul 2007 05:25:17 -0400
+Message-ID: <20070717092517.GA28201@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:62377 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751957AbXGQJL2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2007 05:11:28 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758921AbXGQJZb@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D7085119D@NAMAIL4.ad.lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, brking@linux.vnet.ibm.com
 
-Reposting as this patch is not visible in the list yet.
+This patch
 
-Resubmitting with the following change suggested by Brian King:
-The driver version from scsi_host attribute is redundant as it is already 
-available in sysfs: /sys/module/mptscsih/version. 
-So it is removed from the patch
+* removes struct members that duplicate pci_dev members
+* replaces ha->stype usage with ha->pdev->device usage where feasible
+* removes PCI IDs that are already in include/linux/pci_ids.h
 
----
-New sysfs scsi_host attributes are added to provide information about Firmware 
-version, BIOS version, MPI version and other product related information.
+I did this because I was bored.  If this interferes with Christoph's
+stuff in any way, feel free to ignore.  I thought it would be a good
+preparation for PCI hotplug API.  (or at the very least, proper pci_dev
+refcounting)
 
-signed-off-by: Sathya Praksh <sathya.prakash@lsi.com>
----
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
-diff -Naurp b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
---- b/drivers/message/fusion/mptbase.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptbase.c	2007-07-13 09:12:46.000000000 +0530
-@@ -161,6 +161,7 @@ static int	mpt_readScsiDevicePageHeaders
- static void 	mpt_read_ioc_pg_1(MPT_ADAPTER *ioc);
- static void 	mpt_read_ioc_pg_4(MPT_ADAPTER *ioc);
- static void	mpt_timer_expired(unsigned long data);
-+static void	mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc);
- static int	SendEventNotification(MPT_ADAPTER *ioc, u8 EvSwitch);
- static int	SendEventAck(MPT_ADAPTER *ioc, EventNotificationReply_t *evnp);
- static int	mpt_host_page_access_control(MPT_ADAPTER *ioc, u8 access_control_value, int sleepFlag);
-@@ -1880,6 +1881,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u3
- 		}
+ drivers/scsi/gdth.c |   48 ++++++++++++++++++++++--------------------------
+ drivers/scsi/gdth.h |   45 +--------------------------------------------
+ 2 files changed, 23 insertions(+), 70 deletions(-)
+
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index d0b95ce..b0f5687 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -902,11 +902,6 @@ static void __init gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt,
+             return;
+         /* GDT PCI controller found, resources are already in pdev */
+         pcistr[*cnt].pdev = pdev;
+-        pcistr[*cnt].vendor_id = vendor;
+-        pcistr[*cnt].device_id = device;
+-        pcistr[*cnt].subdevice_id = pdev->subsystem_device;
+-        pcistr[*cnt].bus = pdev->bus->number;
+-        pcistr[*cnt].device_fn = pdev->devfn;
+         pcistr[*cnt].irq = pdev->irq;
+         base0 = pci_resource_flags(pdev, 0);
+         base1 = pci_resource_flags(pdev, 1);
+@@ -926,7 +921,8 @@ static void __init gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt,
+             pcistr[*cnt].io    = pci_resource_start(pdev, 1);
+         }
+         TRACE2(("Controller found at %d/%d, irq %d, dpmem 0x%lx\n",
+-                pcistr[*cnt].bus, PCI_SLOT(pcistr[*cnt].device_fn), 
++                pcistr[*cnt].pdev->bus->number,
++		PCI_SLOT(pcistr[*cnt].pdev->devfn), 
+                 pcistr[*cnt].irq, pcistr[*cnt].dpmem));
+         (*cnt)++;
+     }       
+@@ -946,20 +942,20 @@ static void __init gdth_sort_pci(gdth_pci_str *pcistr, int cnt)
+         changed = FALSE;
+         for (i = 0; i < cnt-1; ++i) {
+             if (!reverse_scan) {
+-                if ((pcistr[i].bus > pcistr[i+1].bus) ||
+-                    (pcistr[i].bus == pcistr[i+1].bus &&
+-                     PCI_SLOT(pcistr[i].device_fn) > 
+-                     PCI_SLOT(pcistr[i+1].device_fn))) {
++                if ((pcistr[i].pdev->bus->number > pcistr[i+1].pdev->bus->number) ||
++                    (pcistr[i].pdev->bus->number == pcistr[i+1].pdev->bus->number &&
++                     PCI_SLOT(pcistr[i].pdev->devfn) > 
++                     PCI_SLOT(pcistr[i+1].pdev->devfn))) {
+                     temp = pcistr[i];
+                     pcistr[i] = pcistr[i+1];
+                     pcistr[i+1] = temp;
+                     changed = TRUE;
+                 }
+             } else {
+-                if ((pcistr[i].bus < pcistr[i+1].bus) ||
+-                    (pcistr[i].bus == pcistr[i+1].bus &&
+-                     PCI_SLOT(pcistr[i].device_fn) < 
+-                     PCI_SLOT(pcistr[i+1].device_fn))) {
++                if ((pcistr[i].pdev->bus->number < pcistr[i+1].pdev->bus->number) ||
++                    (pcistr[i].pdev->bus->number == pcistr[i+1].pdev->bus->number &&
++                     PCI_SLOT(pcistr[i].pdev->devfn) < 
++                     PCI_SLOT(pcistr[i+1].pdev->devfn))) {
+                     temp = pcistr[i];
+                     pcistr[i] = pcistr[i+1];
+                     pcistr[i+1] = temp;
+@@ -1176,17 +1172,16 @@ static int __init gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha)
  
- 		GetIoUnitPage2(ioc);
-+		mpt_get_manufacturing_pg_0(ioc);
- 	}
+     TRACE(("gdth_init_pci()\n"));
  
- 	/*
-@@ -5190,6 +5192,49 @@ mpt_read_ioc_pg_1(MPT_ADAPTER *ioc)
- 	return;
- }
+-    if (pcistr->vendor_id == PCI_VENDOR_ID_INTEL)
++    if (pcistr->pdev->vendor == PCI_VENDOR_ID_INTEL)
+         ha->oem_id = OEM_ID_INTEL;
+     else
+         ha->oem_id = OEM_ID_ICP;
+-    ha->brd_phys = (pcistr->bus << 8) | (pcistr->device_fn & 0xf8);
+-    ha->stype = (ulong32)pcistr->device_id;
+-    ha->subdevice_id = pcistr->subdevice_id;
++    ha->brd_phys = (pcistr->pdev->bus->number << 8) | (pcistr->pdev->devfn & 0xf8);
++    ha->stype = (ulong32)pcistr->pdev->device;
+     ha->irq = pcistr->irq;
+     ha->pdev = pcistr->pdev;
+     
+-    if (ha->stype <= PCI_DEVICE_ID_VORTEX_GDT6000B) {  /* GDT6000/B */
++    if (ha->pdev->device <= PCI_DEVICE_ID_VORTEX_GDT6000B) {  /* GDT6000/B */
+         TRACE2(("init_pci() dpmem %lx irq %d\n",pcistr->dpmem,ha->irq));
+         ha->brd = ioremap(pcistr->dpmem, sizeof(gdt6_dpram_str));
+         if (ha->brd == NULL) {
+@@ -1293,7 +1288,7 @@ static int __init gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha)
  
-+static void
-+mpt_get_manufacturing_pg_0(MPT_ADAPTER *ioc)
-+{
-+	CONFIGPARMS		cfg;
-+	ConfigPageHeader_t	hdr;
-+	dma_addr_t		buf_dma;
-+	ManufacturingPage0_t	*pbuf = NULL;
-+
-+	memset(&cfg, 0 , sizeof(CONFIGPARMS));
-+	memset(&hdr, 0 , sizeof(ConfigPageHeader_t));
-+
-+	hdr.PageType = MPI_CONFIG_PAGETYPE_MANUFACTURING;
-+	cfg.cfghdr.hdr = &hdr;
-+	cfg.physAddr = -1;
-+	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
-+	cfg.timeout = 10;
-+
-+	if (mpt_config(ioc, &cfg) != 0)
-+		goto out;
-+
-+	if (!cfg.cfghdr.hdr->PageLength)
-+		goto out;
-+
-+	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
-+	pbuf = pci_alloc_consistent(ioc->pcidev, hdr.PageLength * 4, &buf_dma);
-+	if (!pbuf)
-+		goto out;
-+
-+	cfg.physAddr = buf_dma;
-+
-+	if (mpt_config(ioc, &cfg) != 0)
-+		goto out;
-+
-+	memcpy(ioc->board_name, pbuf->BoardName, sizeof(ioc->board_name));
-+	memcpy(ioc->board_assembly, pbuf->BoardAssembly, sizeof(ioc->board_assembly));
-+	memcpy(ioc->board_tracer, pbuf->BoardTracerNumber, sizeof(ioc->board_tracer));
-+
-+	out:
-+
-+	if (pbuf)
-+		pci_free_consistent(ioc->pcidev, hdr.PageLength * 4, pbuf, buf_dma);
-+}
-+
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- /**
-  *	SendEventNotification - Send EventNotification (on or off) request to adapter
-diff -Naurp b/drivers/message/fusion/mptbase.h a/drivers/message/fusion/mptbase.h
---- b/drivers/message/fusion/mptbase.h	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptbase.h	2007-07-13 09:12:46.000000000 +0530
-@@ -538,6 +538,13 @@ typedef struct _MPT_ADAPTER
- 	int			 pci_irq;	/* This irq           */
- 	char			 name[MPT_NAME_LENGTH];	/* "iocN"             */
- 	char			*prod_name;	/* "LSIFC9x9"         */
-+	char			 board_name[16];
-+	char			 board_assembly[16];
-+	char			 board_tracer[16];
-+	u16			 nvdata_version_persistent;
-+	u16			 nvdata_version_default;
-+	u8			 io_missing_delay;
-+	u8			 device_missing_delay;
- 	SYSIF_REGS __iomem	*chip;		/* == c8817000 (mmap) */
- 	SYSIF_REGS __iomem	*pio_chip;	/* Programmed IO (downloadboot) */
- 	u8			 bus_type;
-diff -Naurp b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
---- b/drivers/message/fusion/mptfc.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptfc.c	2007-07-13 09:12:46.000000000 +0530
-@@ -130,6 +130,7 @@ static struct scsi_host_template mptfc_d
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
- 	.use_clustering			= ENABLE_CLUSTERING,
-+	.shost_attrs			= mptscsih_host_attrs,
- };
+         ha->dma64_support = 0;
  
- /****************************************************************************
-diff -Naurp b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
---- b/drivers/message/fusion/mptsas.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptsas.c	2007-07-13 09:12:46.000000000 +0530
-@@ -1119,6 +1119,7 @@ static struct scsi_host_template mptsas_
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
- 	.use_clustering			= ENABLE_CLUSTERING,
-+	.shost_attrs			= mptscsih_host_attrs,
- };
+-    } else if (ha->stype <= PCI_DEVICE_ID_VORTEX_GDT6555) { /* GDT6110, ... */
++    } else if (ha->pdev->device <= PCI_DEVICE_ID_VORTEX_GDT6555) { /* GDT6110, ... */
+         ha->plx = (gdt6c_plx_regs *)pcistr->io;
+         TRACE2(("init_pci_new() dpmem %lx irq %d\n",
+             pcistr->dpmem,ha->irq));
+@@ -4601,7 +4596,8 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
+         }
+         /* controller found and initialized */
+         printk("Configuring GDT-PCI HA at %d/%d IRQ %u\n",
+-               pcistr[ctr].bus,PCI_SLOT(pcistr[ctr].device_fn),ha->irq);
++               pcistr[ctr].pdev->bus->number,
++	       PCI_SLOT(pcistr[ctr].pdev->devfn), ha->irq);
  
- static int mptsas_get_linkerrors(struct sas_phy *phy)
-@@ -1389,6 +1390,11 @@ mptsas_sas_io_unit_pg0(MPT_ADAPTER *ioc,
- 		error = -ENOMEM;
- 		goto out_free_consistent;
- 	}
-+	
-+	ioc->nvdata_version_persistent =
-+	    le16_to_cpu(buffer->NvdataVersionPersistent);
-+	ioc->nvdata_version_default =
-+	    le16_to_cpu(buffer->NvdataVersionDefault);
+         if (request_irq(ha->irq, gdth_interrupt,
+                         IRQF_DISABLED|IRQF_SHARED, "gdth", ha))
+@@ -4637,7 +4633,7 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
+ #endif
+         ha->scratch_busy = FALSE;
+         ha->req_first = NULL;
+-        ha->tid_cnt = pcistr[ctr].device_id >= 0x200 ? MAXID : MAX_HDRIVES;
++        ha->tid_cnt = pcistr[ctr].pdev->device >= 0x200 ? MAXID : MAX_HDRIVES;
+         if (max_ids > 0 && max_ids < ha->tid_cnt)
+             ha->tid_cnt = max_ids;
+         for (i=0; i<GDTH_MAXCMDS; ++i)
+@@ -4810,7 +4806,7 @@ static const char *gdth_ctr_name(int hanum)
+     } else if (ha->type == GDT_ISA) {
+         return("GDT2000/2020");
+     } else if (ha->type == GDT_PCI) {
+-        switch (ha->stype) {
++        switch (ha->pdev->device) {
+           case PCI_DEVICE_ID_VORTEX_GDT60x0:
+             return("GDT6000/6020/6050");
+           case PCI_DEVICE_ID_VORTEX_GDT6000B:
+@@ -5448,12 +5444,12 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
+                 ctrt.type = 
+                     (ha->oem_id == OEM_ID_INTEL ? 0xfd : 0xfe);
+                 if (ha->stype >= 0x300)
+-                    ctrt.ext_type = 0x6000 | ha->subdevice_id;
++                    ctrt.ext_type = 0x6000 | ha->pdev->subsystem_device;
+                 else 
+                     ctrt.ext_type = 0x6000 | ha->stype;
+             }
+-            ctrt.device_id = ha->stype;
+-            ctrt.sub_device_id = ha->subdevice_id;
++            ctrt.device_id = ha->pdev->device;
++            ctrt.sub_device_id = ha->pdev->subsystem_device;
+         }
+         ctrt.info = ha->brd_phys;
+         ctrt.oem_id = ha->oem_id;
+diff --git a/drivers/scsi/gdth.h b/drivers/scsi/gdth.h
+index 8c29eaf..068017c 100644
+--- a/drivers/scsi/gdth.h
++++ b/drivers/scsi/gdth.h
+@@ -51,45 +51,8 @@
+ #define GDT2_ID         0x0120941c              /* GDT2000/2020 */
  
- 	for (i = 0; i < port_info->num_phys; i++) {
- 		mptsas_print_phy_data(&buffer->PhyData[i]);
-@@ -1410,6 +1416,63 @@ mptsas_sas_io_unit_pg0(MPT_ADAPTER *ioc,
- }
+ /* vendor ID, device IDs (PCI) */
+-/* these defines should already exist in <linux/pci.h> */
+-#ifndef PCI_VENDOR_ID_VORTEX
+-#define PCI_VENDOR_ID_VORTEX            0x1119  /* PCI controller vendor ID */
+-#endif
+-#ifndef PCI_VENDOR_ID_INTEL
+-#define PCI_VENDOR_ID_INTEL             0x8086  
+-#endif
++/* these defines should be moved to <linux/pci.h> */
  
- static int
-+mptsas_sas_io_unit_pg1(MPT_ADAPTER *ioc)
-+{
-+	ConfigExtendedPageHeader_t hdr;
-+	CONFIGPARMS cfg;
-+	SasIOUnitPage1_t *buffer;
-+	dma_addr_t dma_handle;
-+	int error;
-+	u16 device_missing_delay;
-+
-+	memset(&hdr, 0, sizeof(ConfigExtendedPageHeader_t));
-+	memset(&cfg, 0, sizeof(CONFIGPARMS));
-+
-+	cfg.cfghdr.ehdr = &hdr;
-+	cfg.action = MPI_CONFIG_ACTION_PAGE_HEADER;
-+	cfg.timeout = 10;
-+	cfg.cfghdr.ehdr->PageType = MPI_CONFIG_PAGETYPE_EXTENDED;
-+	cfg.cfghdr.ehdr->ExtPageType = MPI_CONFIG_EXTPAGETYPE_SAS_IO_UNIT;
-+	cfg.cfghdr.ehdr->PageVersion = MPI_SASIOUNITPAGE1_PAGEVERSION;
-+	cfg.cfghdr.ehdr->PageNumber = 1;
-+
-+	error = mpt_config(ioc, &cfg);
-+	if (error)
-+		goto out;
-+	if (!hdr.ExtPageLength) {
-+		error = -ENXIO;
-+		goto out;
-+	}
-+
-+	buffer = pci_alloc_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
-+					    &dma_handle);
-+	if (!buffer) {
-+		error = -ENOMEM;
-+		goto out;
-+	}
-+
-+	cfg.physAddr = dma_handle;
-+	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
-+
-+	error = mpt_config(ioc, &cfg);
-+	if (error)
-+		goto out_free_consistent;
-+
-+	ioc->io_missing_delay  =
-+	    le16_to_cpu(buffer->IODeviceMissingDelay);
-+	device_missing_delay = le16_to_cpu(buffer->ReportDeviceMissingDelay);
-+	ioc->device_missing_delay = (device_missing_delay & MPI_SAS_IOUNIT1_REPORT_MISSING_UNIT_16) ?
-+	    (device_missing_delay & MPI_SAS_IOUNIT1_REPORT_MISSING_TIMEOUT_MASK) * 16 :
-+	    device_missing_delay & MPI_SAS_IOUNIT1_REPORT_MISSING_TIMEOUT_MASK;
-+
-+ out_free_consistent:
-+	pci_free_consistent(ioc->pcidev, hdr.ExtPageLength * 4,
-+			    buffer, dma_handle);
-+ out:
-+	return error;
-+}
-+
-+static int
- mptsas_sas_phy_pg0(MPT_ADAPTER *ioc, struct mptsas_phyinfo *phy_info,
- 		u32 form, u32 form_specific)
- {
-@@ -1990,6 +2053,7 @@ mptsas_probe_hba_phys(MPT_ADAPTER *ioc)
- 	if (error)
- 		goto out_free_port_info;
- 
-+	mptsas_sas_io_unit_pg1(ioc);
- 	mutex_lock(&ioc->sas_topology_mutex);
- 	ioc->handle = hba->phy_info[0].handle;
- 	port_info = mptsas_find_portinfo_by_handle(ioc, ioc->handle);
-diff -Naurp b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptscsih.c	2007-07-13 09:14:27.000000000 +0530
-@@ -3187,6 +3187,159 @@ mptscsih_synchronize_cache(MPT_SCSI_HOST
- 	mptscsih_do_cmd(hd, &iocmd);
- }
- 
-+static ssize_t
-+mptscsih_version_fw_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
-+	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
-+	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
-+	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
-+	    ioc->facts.FWVersion.Word & 0x000000FF);
-+}
-+static CLASS_DEVICE_ATTR(version_fw, S_IRUGO, mptscsih_version_fw_show, NULL);
-+
-+static ssize_t
-+mptscsih_version_bios_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
-+	    (ioc->biosVersion & 0xFF000000) >> 24,
-+	    (ioc->biosVersion & 0x00FF0000) >> 16,
-+	    (ioc->biosVersion & 0x0000FF00) >> 8,
-+	    ioc->biosVersion & 0x000000FF);
-+}
-+static CLASS_DEVICE_ATTR(version_bios, S_IRUGO, mptscsih_version_bios_show, NULL);
-+
-+static ssize_t
-+mptscsih_version_mpi_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%03x\n", ioc->facts.MsgVersion);
-+}
-+static CLASS_DEVICE_ATTR(version_mpi, S_IRUGO, mptscsih_version_mpi_show, NULL);
-+
-+static ssize_t
-+mptscsih_version_product_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->prod_name);
-+}
-+static CLASS_DEVICE_ATTR(version_product, S_IRUGO,
-+    mptscsih_version_product_show, NULL);
-+
-+static ssize_t
-+mptscsih_version_nvdata_persistent_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%02xh\n", 
-+	    ioc->nvdata_version_persistent);
-+}
-+static CLASS_DEVICE_ATTR(version_nvdata_persistent, S_IRUGO,
-+    mptscsih_version_nvdata_persistent_show, NULL);
-+
-+static ssize_t
-+mptscsih_version_nvdata_default_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%02xh\n",ioc->nvdata_version_default);
-+}
-+static CLASS_DEVICE_ATTR(version_nvdata_default, S_IRUGO,
-+    mptscsih_version_nvdata_default_show, NULL);
-+
-+static ssize_t
-+mptscsih_board_name_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_name);
-+}
-+static CLASS_DEVICE_ATTR(board_name, S_IRUGO, mptscsih_board_name_show, NULL);
-+
-+static ssize_t
-+mptscsih_board_assembly_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_assembly);
-+}
-+static CLASS_DEVICE_ATTR(board_assembly, S_IRUGO,
-+    mptscsih_board_assembly_show, NULL);
-+
-+static ssize_t
-+mptscsih_board_tracer_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_tracer);
-+}
-+static CLASS_DEVICE_ATTR(board_tracer, S_IRUGO,
-+    mptscsih_board_tracer_show, NULL);
-+
-+static ssize_t
-+mptscsih_io_delay_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
-+}
-+static CLASS_DEVICE_ATTR(io_delay, S_IRUGO,
-+    mptscsih_io_delay_show, NULL);
-+
-+static ssize_t
-+mptscsih_device_delay_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *host = class_to_shost(cdev);
-+	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_ADAPTER *ioc = hd->ioc;
-+
-+	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
-+}
-+static CLASS_DEVICE_ATTR(device_delay, S_IRUGO,
-+    mptscsih_device_delay_show, NULL);
-+
-+struct class_device_attribute *mptscsih_host_attrs[] = {
-+	&class_device_attr_version_fw,
-+	&class_device_attr_version_bios,
-+	&class_device_attr_version_mpi,
-+	&class_device_attr_version_product,
-+	&class_device_attr_version_nvdata_persistent,
-+	&class_device_attr_version_nvdata_default,
-+	&class_device_attr_board_name,
-+	&class_device_attr_board_assembly,
-+	&class_device_attr_board_tracer,
-+	&class_device_attr_io_delay,
-+	&class_device_attr_device_delay,
-+	NULL,
-+};
-+EXPORT_SYMBOL(mptscsih_host_attrs);
-+
- EXPORT_SYMBOL(mptscsih_remove);
- EXPORT_SYMBOL(mptscsih_shutdown);
- #ifdef CONFIG_PM
-diff -Naurp b/drivers/message/fusion/mptscsih.h a/drivers/message/fusion/mptscsih.h
---- b/drivers/message/fusion/mptscsih.h	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptscsih.h	2007-07-13 09:12:46.000000000 +0530
-@@ -129,3 +129,4 @@ extern void mptscsih_timer_expired(unsig
- extern int mptscsih_TMHandler(MPT_SCSI_HOST *hd, u8 type, u8 channel, u8 id, int lun, int ctx2abort, ulong timeout);
- extern u8 mptscsih_raid_id_to_num(MPT_ADAPTER *ioc, u8 channel, u8 id);
- extern int mptscsih_is_phys_disk(MPT_ADAPTER *ioc, u8 channel, u8 id);
-+extern struct class_device_attribute *mptscsih_host_attrs[];
-diff -Naurp b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
---- b/drivers/message/fusion/mptspi.c	2007-07-02 16:20:46.000000000 +0530
-+++ a/drivers/message/fusion/mptspi.c	2007-07-13 09:12:46.000000000 +0530
-@@ -819,6 +819,7 @@ static struct scsi_host_template mptspi_
- 	.max_sectors			= 8192,
- 	.cmd_per_lun			= 7,
- 	.use_clustering			= ENABLE_CLUSTERING,
-+	.shost_attrs			= mptscsih_host_attrs,
- };
- 
- static int mptspi_write_spi_device_pg1(struct scsi_target *starget,
+-#ifndef PCI_DEVICE_ID_VORTEX_GDT60x0
+-/* GDT_PCI */
+-#define PCI_DEVICE_ID_VORTEX_GDT60x0    0       /* GDT6000/6020/6050 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6000B   1       /* GDT6000B/6010 */
+-/* GDT_PCINEW */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x10    2       /* GDT6110/6510 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x20    3       /* GDT6120/6520 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6530    4       /* GDT6530 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6550    5       /* GDT6550 */
+-/* GDT_PCINEW, wide/ultra SCSI controllers */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x17    6       /* GDT6117/6517 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x27    7       /* GDT6127/6527 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6537    8       /* GDT6537 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6557    9       /* GDT6557/6557-ECC */
+-/* GDT_PCINEW, wide SCSI controllers */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x15    10      /* GDT6115/6515 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x25    11      /* GDT6125/6525 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6535    12      /* GDT6535 */
+-#define PCI_DEVICE_ID_VORTEX_GDT6555    13      /* GDT6555/6555-ECC */
+-#endif
+-
+-#ifndef PCI_DEVICE_ID_VORTEX_GDT6x17RP
+-/* GDT_MPR, RP series, wide/ultra SCSI */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x17RP  0x100   /* GDT6117RP/GDT6517RP */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x27RP  0x101   /* GDT6127RP/GDT6527RP */
+-#define PCI_DEVICE_ID_VORTEX_GDT6537RP  0x102   /* GDT6537RP */
+-#define PCI_DEVICE_ID_VORTEX_GDT6557RP  0x103   /* GDT6557RP */
+-/* GDT_MPR, RP series, narrow/ultra SCSI */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x11RP  0x104   /* GDT6111RP/GDT6511RP */
+-#define PCI_DEVICE_ID_VORTEX_GDT6x21RP  0x105   /* GDT6121RP/GDT6521RP */
+-#endif
+ #ifndef PCI_DEVICE_ID_VORTEX_GDT6x17RD
+ /* GDT_MPR, RD series, wide/ultra SCSI */
+ #define PCI_DEVICE_ID_VORTEX_GDT6x17RD  0x110   /* GDT6117RD/GDT6517RD */
+@@ -845,11 +808,6 @@ typedef struct {
+ /* PCI resources */
+ typedef struct {
+     struct pci_dev      *pdev;
+-    ushort              vendor_id;              /* vendor (ICP, Intel, ..) */
+-    ushort              device_id;              /* device ID (0,..,9) */
+-    ushort              subdevice_id;           /* sub device ID */
+-    unchar              bus;                    /* PCI bus */
+-    unchar              device_fn;              /* PCI device/function no. */
+     ulong               dpmem;                  /* DPRAM address */
+     ulong               io;                     /* IO address */
+     ulong               io_mm;                  /* IO address mem. mapped */
+@@ -862,7 +820,6 @@ typedef struct {
+     ushort              oem_id;                 /* OEM */
+     ushort              type;                   /* controller class */
+     ulong32             stype;                  /* subtype (PCI: device ID) */
+-    ushort              subdevice_id;           /* sub device ID (PCI) */
+     ushort              fw_vers;                /* firmware version */
+     ushort              cache_feat;             /* feat. cache serv. (s/g,..)*/
+     ushort              raw_feat;               /* feat. raw service (s/g,..)*/
