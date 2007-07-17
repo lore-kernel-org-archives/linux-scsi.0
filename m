@@ -1,65 +1,77 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: advansys cleanup
-Date: Tue, 17 Jul 2007 10:37:54 -0600
-Message-ID: <20070717163754.GD14791@parisc-linux.org>
-References: <20070716202815.GQ13826@parisc-linux.org> <20070717142455.GB14791@parisc-linux.org> <Pine.LNX.4.64.0707171103500.20043@death.krwtech.com>
+From: Geoff Levand <geoffrey.levand@am.sony.com>
+Subject: Re: PS3 Storage Driver O_DIRECT issue
+Date: Tue, 17 Jul 2007 09:40:12 -0700
+Message-ID: <469CF0EC.9070002@am.sony.com>
+References: <20070704132212.726923000@pademelon.sonytel.be>	<20070713122752.GA854@aepfle.de> <Pine.LNX.4.62.0707131532350.18802@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:39376 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756593AbXGQQh4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 12:37:56 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0707171103500.20043@death.krwtech.com>
+Received: from outbound-cpk.frontbridge.com ([207.46.163.16]:16029 "EHLO
+	outbound5-cpk-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760392AbXGQQkS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2007 12:40:18 -0400
+In-Reply-To: <Pine.LNX.4.62.0707131532350.18802@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ken Witherow <ken@krwtech.com>
-Cc: linux-scsi@vger.kernel.org, jeffreyfreeman@syncleus.com, Christoph Hellwig <hch@infradead.org>
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: Olaf Hering <olaf@aepfle.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Alessandro Rubini <rubini@ipvvis.unipv.it>, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, Paul Mackerras <paulus@samba.org>
 
-On Tue, Jul 17, 2007 at 11:36:11AM -0400, Ken Witherow wrote:
-> Instead, I pulled the raw advansys.c from the tree provided and dropped 
-> that in place.
-
-Hm, sorry about that.  I suspect that advansys.c has changed since
-2.6.22.
-
->   CC      drivers/scsi/advansys.o
-> drivers/scsi/advansys.c:795:2: warning: #warning this driver is still not 
-> properly converted to the DMA API
-
-Yeah, I'm not planning on getting rid of that warning.  Yet, anyway.
-
->   MODPOST vmlinux
-> WARNING: drivers/built-in.o(.text+0x99045): Section mismatch: reference to 
-> .init.text: (between 'advansys_board_found' and 'advansys_pci_probe')
-
-Oops.  Probably simple to fix, I'll look into that.
-
+Geert Uytterhoeven wrote:
+> On Fri, 13 Jul 2007, Olaf Hering wrote:
+>> This driver (or the generic PS3 code) has appearently problems with
+>> O_DIRECT. 
+>> glibc aborts parted because the malloc metadata get corrupted. While it
+>> is reproducible, the place where it crashes changes with every version
+>> of the debug attempt.
+>> I dont have a handle right now, all I know is that the metadata after a
+>> malloc area get overwritten with zeros.
+>> 
+>> 
+>> Can you have a look at this? 
+>> parted /dev/ps3da
+>> print (a few times)
 > 
-> I've attached my regular dmesg as well as my dmesg with the failure of the 
-> updated advansys driver.
+> I can't seem to reproduce this with parted 1.7.1-5.1 (from Debian
+> etch/lenny/sid) and kernel 2.6.22-g77320894.
 
-The important bit is this one:
+Hi.
 
--ACPI: PCI Interrupt 0000:00:09.0[A] -> GSI 17 (level, low) -> IRQ 16
--scsi0 : AdvanSys SCSI 3.3K: PCI Ultra: IO 0x1800-0x180F, IRQ 0x10
-+scsi0 : AdvanSys SCSI 3.3K: PCI Ultra: IO 0x1800-0x180F, IRQ 0x5
-+advansys: advansys_detect: unknown bus type: 4
+I found this happens on Fedora 7:
 
-Somehow I've messed up the IRQ.
+[root@ps3-nfs ~]# uname -a
+Linux ps3-nfs 2.6.22-ps3-linux-dev-g4d898766-dirty #1 SMP Wed Jul 11 13:29:46 PDT 2007 ppc64 ppc64 ppc64 GNU/Linux
+[root@ps3-nfs ~]# parted --version
+parted (GNU parted) 1.8.6
 
-The unknown bus type is just a minor oversight -- i ripped out the
-handling of PCI bus types from advansys_detect, but let it try to probe
-for them anyway, which it no longer knows how to handle.
+Here is the error message from parted:
 
-> I'd be glad to attempt the patches again. It would be easier for me if you 
-> sent me the raw patches, if possible.
+Command History:
+print
 
-How about I send you a patch on top of the advansys.c you got from that
-git tree?
+Error: SEGV_MAPERR (Address not mapped to object)
+Backtrace has 20 calls on stack:
+  20: /usr/lib/libparted-1.8.so.6(ped_assert+0xb0) [0xfb7ea50]
+  19: parted [0x1000c6dc]
+  18: [0x100350]
+  17: [(nil)]
+  16: /lib/libc.so.6 [0xfdcfe64]
+  15: /lib/libc.so.6 [0xfdd0b34]
+  14: /lib/libc.so.6(__libc_memalign+0xec) [0xfdd1e1c]
+  13: /lib/libc.so.6(posix_memalign+0xbc) [0xfdd207c]
+  12: /usr/lib/libparted-1.8.so.6 [0xfb8f42c]
+  11: /usr/lib/libparted-1.8.so.6(ped_device_read+0x164) [0xfb7f5f4]
+  10: /usr/lib/libparted-1.8.so.6(ped_geometry_read+0x16c) [0xfb89a5c]
+  9: /usr/lib/libparted-1.8.so.6 [0xfba739c]
+  8: /usr/lib/libparted-1.8.so.6(ped_file_system_probe_specific+0x104) [0xfb80d04]
+  7: /usr/lib/libparted-1.8.so.6(ped_file_system_probe+0xec) [0xfb8134c]
+  6: /usr/lib/libparted-1.8.so.6 [0xfbbcc38]
+  5: /usr/lib/libparted-1.8.so.6 [0xfbbcfb4]
+  4: /usr/lib/libparted-1.8.so.6(ped_disk_new+0xc0) [0xfb88bf0]
+  3: parted [0x10006e00]
+  2: parted(command_run+0x1c) [0x10004d8c]
+  1: parted(interactive_mode+0x134) [0x1000e4b4]
+Aborted
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
