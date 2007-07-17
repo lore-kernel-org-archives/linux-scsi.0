@@ -1,65 +1,39 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
-Date: Tue, 17 Jul 2007 10:09:21 +0900
-Message-ID: <20070717100921W.fujita.tomonori@lab.ntt.co.jp>
-References: <469BD9C8.4000808@googlemail.com>
-	<469C10F6.3050008@googlemail.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: block/bsg.c
+Date: Mon, 16 Jul 2007 21:12:26 -0400
+Message-ID: <469C177A.3080002@garzik.org>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org>	<469C11B1.8000302@garzik.org>	<20070716175347.bea345dd.akpm@linux-foundation.org>	<469C1423.3090908@garzik.org> <20070716180908.e15325bd.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:40328 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932621AbXGQBJi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 21:09:38 -0400
-In-Reply-To: <469C10F6.3050008@googlemail.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:38780 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752928AbXGQBMd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 21:12:33 -0400
+In-Reply-To: <20070716180908.e15325bd.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nix.or.die@googlemail.com
-Cc: linux-kernel@vger.kernel.org, jens.axboe@oracle.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-From: Gabriel C <nix.or.die@googlemail.com>
-Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
-Date: Tue, 17 Jul 2007 02:44:38 +0200
+Andrew Morton wrote:
+> Yup, but the concern (from Al, iirc) was that someone could change the code
+> later on, add a new bug and have that bug hidden by the unneeded
+> initialisation.
 
-> Gabriel C wrote:
-> > Hello,
-> >
-> > sdparm and hdparm are broken for me on git (
-> > abce891a10559343d8ac9f79b46d78afdba63a40 )
-> >
-> >
-> > ~$ sudo hdparm  /dev/sdc
-> >
-> > /dev/sdc:
-> >  BLKROGET failed: Inappropriate ioctl for device
-> >  BLKRAGET failed: Inappropriate ioctl for device
-> >  BLKGETSIZE failed: Inappropriate ioctl for device
-> >
-> >
-> > ~$ sudo sdparm  --all /dev/sdc
-> > unable to access /dev/sdc, ATA disk?
-> >
-> >   
-> 
-> Well it is bsg , setting BLK_DEV_BSG=n fixed all this errors.
+True.
 
-Can you check the major number of your /dev/sdc? I've seen that
-/dev/sd* is linked to bsg devices somehow.
+That's why #gccbug went the safe route, took the cost of extra 
+instructions, and initialized it to zero.
 
 
-> Maybe a bit off topic but it depends on EXPERIMENTAL so why the the menu
-> is not telling this ? and why the default is 'y' for it ?
-> 
-> IMO everything depends on EXPERIMENTAL should
-> 
-> 1) Tell it is EXPERIMENTAL ( visible to the user in menu ) " Foo New
-> stuff ( EXPERIMENTAL ) "
-> 2) Should not default to 'y' , is up to the users/admins to set
-> EXPERIMENTAL things to Y/M , isn't it ?
-> 
-> 
-> ( PS: there are even defconfigs with EXPERIMENTAL things set to y but
-> this is really off topic )
+> uninitialized_var() has the advantage that it generates no code, whereas "=
+> 0" often adds instructions.  Plus of course it is self-documenting, greppable-for
+> and centrally alterable.
 
-I'll fix it, thanks.
+Agreed.
+
+	Jeff
+
+
