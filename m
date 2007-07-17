@@ -1,446 +1,182 @@
-From: Frank Hempel <lists@frankoni.net>
-Subject: aic7xxx: tape always rewinds since linux-2.6.15
-Date: Tue, 17 Jul 2007 19:32:38 +0200
-Message-ID: <469CFD36.4090306@frankoni.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid: add vpd to inquiry (take 2)
+Date: Tue, 17 Jul 2007 14:01:28 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5DF6@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070902020505070806080405"
+	boundary="----_=_NextPart_001_01C7C89C.8009BDA1"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rom173.server4you.de ([62.75.222.246]:42650 "EHLO
-	ursus.sytes.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753742AbXGQRjY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 13:39:24 -0400
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:55217 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757957AbXGQSBb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 14:01:31 -0400
+Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id E91A81D98D5
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2007 11:01:29 -0700 (PDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 This is a multi-part message in MIME format.
---------------070902020505070806080405
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
-Content-Transfer-Encoding: 7bit
 
-Hello,
-
-I have expierenced a problem with the aic7xxx driver or the scsi tape 
-support in the linux kernel.
-
-[Problem Description]
-Under linux kernels since 2.6.15 every "action" I issue to the tape 
-drive (I mainly do this via <mt> from the cpio package) is done but 
-additionaly to every mt call a tape rewind is done too. So for example 
-positioning the tape at some particular position is impossible because 
-after the positioning itself it is rewinded automagically.
-Under kernels before and including 2.6.14.7 this problem did not occur.
-
-[My Hardware Setup]
-*i686 pc style hardware
-*Adaptec 2940 Ultra SCSI adapter (aic7880)
-*attached tape drive: HP SureStore DAT40 (C5683A)
-
-[Kernel Config]
-see attachments for relevant switches
-
-[What I Have Done Until Now]
-*I testet kernel 2.6.22.1 to verify the problem still exists in latest 
-kernel
-*I compiled and used mt from latest unpatched cpio-2.9 (to make sure it 
-is not related to the heavily patched debian version)
-*I compiled debug code for aic7xxx in the kernels (unfortunatly the 
-debug output don't show any inregularities (see attachments))
-*I verified that mt is not just telling me wrong file numbers or block 
-positions: with reading a file from tape with dd it turns out that the 
-tape position must have been the tape start (using kernel 2.6.15+)
-*I reverted the two patches I found stated in changelog of 2.6.15 
-relating the aic7xxx module. This is "aci7xxx: reset handler selects a 
-wrong command" and "aic7xxx: remove scsi_assign_lock usage". It did not 
-solve the problem, even taking the complete aic7xxx_osm.c from 2.6.14.7 
-to the 2.6.15 source tree did not change the situation. So the problem 
-may be somewhere else in the aic7xxx-module.
-
-[Attachments]
-kernel-config                 ... the relevant scsi-switches for all the 
-kernels I used
-14.7.dmesg                    ... the (hopefully) relevant dmesg output 
-from 2.6.14.7 kernel
-14.7.mt-status-after-boot     ... the output of "mt status" after boot 
-(tape was at block 0)
-14.7.mt-fsf-2.kern.log        ... the kernel output during "mt fsf 2"
-14.7.mt-status-after-mt-fsf-2 ... the output of "mt status" after "mt 
-fsf 2" (file number is now *2*)
-15.dmesg                      ... the (hopefully) relevant dmesg output 
-from 2.15 kernel
-15.mt-status-after-boot       ... the output of "mt -f /dev/st0 status" 
-after boot (tape was at block 0)
-15.mt-fsf-2.kern.log          ... the kernel output during "mt -f 
-/dev/st0 fsf 2"
-15.mt-status-after-mt-fsf-2   ... the output of "mt status" after "mt -f 
-/dev/st0 fsf 2" (file number is now *0*)
-
-
-If this might really be a problem in the aic7xxx module I hope I could 
-and can help pointing it out. So if I should do something else to give 
-you more or more precise information please let me know...
-
-Thank you very much...
-Frank
-
-
---------------070902020505070806080405
+------_=_NextPart_001_01C7C89C.8009BDA1
 Content-Type: text/plain;
- name="kernel-config"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="kernel-config"
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-#
-# SCSI device support
-#
-# CONFIG_RAID_ATTRS is not set
-CONFIG_SCSI=y
-CONFIG_SCSI_PROC_FS=y
+It was reported to me that the 'ADPT' leading the serial number was bad
+form, that the inquiry vendor field was enough to differentiate the
+storage uniquely. Subsequent search found that another Adaptec AAC based
+driver reported the 8 hex serial number only without such adornments, so
+dropped ADPT to match. Resubmitting the patch with this alteration.
 
-#
-# SCSI support type (disk, tape, CD-ROM)
-#
-# CONFIG_BLK_DEV_SD is not set
-CONFIG_CHR_DEV_ST=y
-# CONFIG_CHR_DEV_OSST is not set
-# CONFIG_BLK_DEV_SR is not set
-# CONFIG_CHR_DEV_SG is not set
-# CONFIG_CHR_DEV_SCH is not set
+This attached patch is against current scsi-misc-2.6
 
-#
-# Some SCSI devices (e.g. CD jukebox) support multiple LUNs
-#
-# CONFIG_SCSI_MULTI_LUN is not set
-CONFIG_SCSI_CONSTANTS=y
-CONFIG_SCSI_LOGGING=y
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patch attachments.
 
-#
-# SCSI Transport Attributes
-#
-CONFIG_SCSI_SPI_ATTRS=y
-# CONFIG_SCSI_FC_ATTRS is not set
-# CONFIG_SCSI_ISCSI_ATTRS is not set
-# CONFIG_SCSI_SAS_ATTRS is not set
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
-#
-# SCSI low-level drivers
-#
-# CONFIG_BLK_DEV_3W_XXXX_RAID is not set
-# CONFIG_SCSI_3W_9XXX is not set
-# CONFIG_SCSI_ACARD is not set
-# CONFIG_SCSI_AACRAID is not set
-CONFIG_SCSI_AIC7XXX=y
-CONFIG_AIC7XXX_CMDS_PER_DEVICE=32
-CONFIG_AIC7XXX_RESET_DELAY_MS=15000
-CONFIG_AIC7XXX_DEBUG_ENABLE=y
-CONFIG_AIC7XXX_DEBUG_MASK=2047
-CONFIG_AIC7XXX_REG_PRETTY_PRINT=y
-# CONFIG_SCSI_AIC7XXX_OLD is not set
-# CONFIG_SCSI_AIC79XX is not set
-# CONFIG_SCSI_DPT_I2O is not set
-# CONFIG_MEGARAID_NEWGEN is not set
-# CONFIG_MEGARAID_LEGACY is not set
-# CONFIG_MEGARAID_SAS is not set
-# CONFIG_SCSI_SATA is not set
-# CONFIG_SCSI_BUSLOGIC is not set
-# CONFIG_SCSI_DMX3191D is not set
-# CONFIG_SCSI_EATA is not set
-# CONFIG_SCSI_FUTURE_DOMAIN is not set
-# CONFIG_SCSI_GDTH is not set
-# CONFIG_SCSI_IPS is not set
-# CONFIG_SCSI_INITIO is not set
-# CONFIG_SCSI_INIA100 is not set
-# CONFIG_SCSI_PPA is not set
-# CONFIG_SCSI_IMM is not set
-# CONFIG_SCSI_SYM53C8XX_2 is not set
-# CONFIG_SCSI_IPR is not set
-# CONFIG_SCSI_QLOGIC_FC is not set
-# CONFIG_SCSI_QLOGIC_1280 is not set
-CONFIG_SCSI_QLA2XXX=y
-# CONFIG_SCSI_QLA21XX is not set
-# CONFIG_SCSI_QLA22XX is not set
-# CONFIG_SCSI_QLA2300 is not set
-# CONFIG_SCSI_QLA2322 is not set
-# CONFIG_SCSI_QLA6312 is not set
-# CONFIG_SCSI_QLA24XX is not set
-# CONFIG_SCSI_LPFC is not set
-# CONFIG_SCSI_DC395x is not set
-# CONFIG_SCSI_DC390T is not set
-# CONFIG_SCSI_NSP32 is not set
-# CONFIG_SCSI_DEBUG is not set
+ drivers/scsi/aacraid/aachba.c  |  138
++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/aacraid/aacraid.h |   14 ++++
+ 2 files changed, 152 insertions(+)
 
---------------070902020505070806080405
-Content-Type: text/plain;
- name="14.7.dmesg.relevant"
+Sincerely -- Mark Salyzyn
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org=20
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
+> Sent: Monday, July 16, 2007 5:08 PM
+> To: linux-scsi@vger.kernel.org
+> Subject: [PATCH] aacraid: add vpd to inquiry
+>=20
+> Report VPD inquiry page 0x80 with an unique array creation=20
+> serial number
+> (CUID). When an array is created, the metadata stored on the physical
+> drives gets an unique serial number. This serial number=20
+> remains constant
+> through array morphing or migration to other controllers.=20
+> This patch is
+> a forward port and modification to survive morphing and migration
+> operations, of a similar piece of (un-attributed author) code added to
+> the SLES10 SP1 aacraid driver.
+>=20
+> To test the results of the patch, observe that=20
+> /dev/disk/by-id/ entries
+> will show up for the arrays resulting from the udev rules.=20
+> Also, as per
+> the udev rules, 'scsi_id -g -x -a -s /block/sd? -d /dev/sd?'=20
+> will report
+> the ID_SERIAL as constructed from the inquiry data.
+
+------_=_NextPart_001_01C7C89C.8009BDA1
+Content-Type: application/octet-stream;
+	name="aacraid_vpd2.patch"
 Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="14.7.dmesg.relevant"
+Content-Description: aacraid_vpd2.patch
+Content-Disposition: attachment;
+	filename="aacraid_vpd2.patch"
 
-TGludXggdmVyc2lvbiAyLjYuMTQuNy12YW5pbGxhIChyb290QHN0cnVwcGkpIChnY2MgdmVy
-c2lvbiA0LjEuMiAyMDA2MTExNSAocHJlcmVsZWFzZSkgKERlYmlhbiA0LjEuMS0yMSkpICMx
-IFR1ZSBKdWwgMTcgMDM6MjI6MzggQ0VTVCAyMDA3ClsuLi5dClNDU0kgc3Vic3lzdGVtIGlu
-aXRpYWxpemVkClsuLi5dCkFDUEk6IFBDSSBJbnRlcnJ1cHQgMDAwMDowMDowYS4wW0FdIC0+
-IEdTSSAxOCAobGV2ZWwsIGxvdykgLT4gSVJRIDE3CmFoY19wY2k6MDoxMDowOiBoYXJkd2Fy
-ZSBzY2IgNjQgYnl0ZXM7IGtlcm5lbCBzY2IgNTIgYnl0ZXM7IGFoY19kbWEgOCBieXRlcwpz
-Y3NpMCA6IEFkYXB0ZWMgQUlDN1hYWCBFSVNBL1ZMQi9QQ0kgU0NTSSBIQkEgRFJJVkVSLCBS
-ZXYgNy4wCiAgICAgICAgPEFkYXB0ZWMgMjk0MCBVbHRyYSBTQ1NJIGFkYXB0ZXI+CiAgICAg
-ICAgYWljNzg4MDogVWx0cmEgV2lkZSBDaGFubmVsIEEsIFNDU0kgSWQ9NywgMTYvMjUzIFND
-QnMKCiAgVmVuZG9yOiBIUCAgICAgICAgTW9kZWw6IEM1NjgzQSAgICAgICAgICAgIFJldjog
-QzkwOAogIFR5cGU6ICAgU2VxdWVudGlhbC1BY2Nlc3MgICAgICAgICAgICAgICAgICBBTlNJ
-IFNDU0kgcmV2aXNpb246IDAyCiB0YXJnZXQwOjA6MDogQmVnaW5uaW5nIERvbWFpbiBWYWxp
-ZGF0aW9uCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4YzAKc2NzaTA6
-QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUgMHgxCnNjc2kwOkE6MDowOiBJTklUSUFU
-T1JfTVNHX09VVCBieXRlIDB4MgpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQgYnl0
-ZSAweDMKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUgMHgxCnNjc2kwOkE6
-MDowOiBJTklUSUFUT1JfTVNHX09VVCBQSEFTRU1JUyBpbiBNZXNzYWdlLWluIHBoYXNlCnNj
-c2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX0lOIGJ5dGUgMHgxCnNjc2kwOkE6MDowOiBJTklU
-SUFUT1JfTVNHX0lOIGJ5dGUgMHgyCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX0lOIGJ5
-dGUgMHgzCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX0lOIGJ5dGUgMHgxCnNjc2kwOkE6
-MDowOiBBc3NlcnRpbmcgQVROIGZvciByZXNwb25zZQpzY3NpMDpBOjA6MDogSU5JVElBVE9S
-X01TR19JTiBQSEFTRU1JUyBpbiBNZXNzYWdlLW91dCBwaGFzZQpzY3NpMDpBOjA6MDogSU5J
-VElBVE9SX01TR19PVVQgYnl0ZSAweDEKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfT1VU
-IGJ5dGUgMHgzCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4MQpzY3Np
-MDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQgYnl0ZSAweDQ1CnNjc2kwOkE6MDowOiBJTklU
-SUFUT1JfTVNHX09VVCBieXRlIDB4MApzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQg
-UEhBU0VNSVMgaW4gTWVzc2FnZS1pbiBwaGFzZQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01T
-R19JTiBieXRlIDB4MQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRlIDB4Mwpz
-Y3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRlIDB4MQpzY3NpMDpBOjA6MDogSU5J
-VElBVE9SX01TR19JTiBieXRlIDB4NDUKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfSU4g
-Ynl0ZSAweDAKIHRhcmdldDA6MDowOiB3aWRlIGFzeW5jaHJvbm91cy4Kc2NzaTA6QTowOjA6
-IElOSVRJQVRPUl9NU0dfSU4gUEhBU0VNSVMgaW4gQ29tbWFuZCBwaGFzZQogdGFyZ2V0MDow
-OjA6IERvbWFpbiBWYWxpZGF0aW9uIHNraXBwaW5nIHdyaXRlIHRlc3RzCnNjc2kwOkE6MDow
-OiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4YzAKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9N
-U0dfT1VUIGJ5dGUgMHgxCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4
-MwpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQgYnl0ZSAweDEKc2NzaTA6QTowOjA6
-IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUgMHgxOQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01T
-R19PVVQgYnl0ZSAweDgKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIFBIQVNFTUlT
-IGluIE1lc3NhZ2UtaW4gcGhhc2UKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfSU4gYnl0
-ZSAweDEKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfSU4gYnl0ZSAweDMKc2NzaTA6QTow
-OjA6IElOSVRJQVRPUl9NU0dfSU4gYnl0ZSAweDEKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9N
-U0dfSU4gYnl0ZSAweDE5CnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX0lOIGJ5dGUgMHg4
-CiB0YXJnZXQwOjA6MDogRkFTVC0xMCBXSURFIFNDU0kgMjAuMCBNQi9zIFNUICgxMDAgbnMs
-IG9mZnNldCA4KQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBQSEFTRU1JUyBpbiBD
-b21tYW5kIHBoYXNlCiB0YXJnZXQwOjA6MDogRW5kaW5nIERvbWFpbiBWYWxpZGF0aW9uCihz
-Y3NpMDpBOjE6MCk6IFNhdyBTZWxlY3Rpb24gVGltZW91dCBmb3IgU0NCIDB4Mgooc2NzaTA6
-QToyOjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDMKKHNjc2kwOkE6Mzow
-KTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZvciBTQ0IgMHgyCihzY3NpMDpBOjQ6MCk6IFNh
-dyBTZWxlY3Rpb24gVGltZW91dCBmb3IgU0NCIDB4Mwooc2NzaTA6QTo1OjApOiBTYXcgU2Vs
-ZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDIKKHNjc2kwOkE6NjowKTogU2F3IFNlbGVjdGlv
-biBUaW1lb3V0IGZvciBTQ0IgMHgzCihzY3NpMDpBOjg6MCk6IFNhdyBTZWxlY3Rpb24gVGlt
-ZW91dCBmb3IgU0NCIDB4Mgooc2NzaTA6QTo5OjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQg
-Zm9yIFNDQiAweDMKKHNjc2kwOkE6MTA6MCk6IFNhdyBTZWxlY3Rpb24gVGltZW91dCBmb3Ig
-U0NCIDB4Mgooc2NzaTA6QToxMTowKTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZvciBTQ0Ig
-MHgzCihzY3NpMDpBOjEyOjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDIK
-KHNjc2kwOkE6MTM6MCk6IFNhdyBTZWxlY3Rpb24gVGltZW91dCBmb3IgU0NCIDB4Mwooc2Nz
-aTA6QToxNDowKTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZvciBTQ0IgMHgyCihzY3NpMDpB
-OjE1OjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDMKc3Q6IFZlcnNpb24g
-MjAwNTA4MzAsIGZpeGVkIGJ1ZnNpemUgMzI3NjgsIHMvZyBzZWdzIDI1NgpBdHRhY2hlZCBz
-Y3NpIHRhcGUgc3QwIGF0IHNjc2kwLCBjaGFubmVsIDAsIGlkIDAsIGx1biAwCnN0MDogdHJ5
-IGRpcmVjdCBpL286IHllcyAoYWxpZ25tZW50IDUxMiBCKSwgbWF4IHBhZ2UgcmVhY2hhYmxl
-IGJ5IEhCQSAxMDQ4NTc1ClsuLi5d
---------------070902020505070806080405
-Content-Type: text/plain;
- name="14.7.mt-status-after-boot.out"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="14.7.mt-status-after-boot.out"
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
+MDctMTcgMTM6NTI6MzMuMTYyODgwMTA3IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDctMDctMTcgMTM6NTU6MTUuNTAzNTAzODI1IC0wNDAwCkBAIC03NTEsNiAr
+NzUxLDEwMSBAQAogCWlucXN0cmNweSAoIlYxLjAiLCBzdHItPnBybCk7CiB9CiAKK3N0YXRpYyB2
+b2lkIGdldF9jb250YWluZXJfc2VyaWFsX2NhbGxiYWNrKHZvaWQgKmNvbnRleHQsIHN0cnVjdCBm
+aWIgKiBmaWJwdHIpCit7CisJc3RydWN0IGFhY19nZXRfc2VyaWFsX3Jlc3AgKiBnZXRfc2VyaWFs
+X3JlcGx5OworCXN0cnVjdCBzY3NpX2NtbmQgKiBzY3NpY21kOworCisJQlVHX09OKGZpYnB0ciA9
+PSBOVUxMKTsKKworCXNjc2ljbWQgPSAoc3RydWN0IHNjc2lfY21uZCAqKSBjb250ZXh0OworCWlm
+ICghYWFjX3ZhbGlkX2NvbnRleHQoc2NzaWNtZCwgZmlicHRyKSkKKwkJcmV0dXJuOworCisJZ2V0
+X3NlcmlhbF9yZXBseSA9IChzdHJ1Y3QgYWFjX2dldF9zZXJpYWxfcmVzcCAqKSBmaWJfZGF0YShm
+aWJwdHIpOworCS8qIEZhaWx1cmUgaXMgaXJyZWxldmFudCwgdXNpbmcgZGVmYXVsdCB2YWx1ZSBp
+bnN0ZWFkICovCisJaWYgKGxlMzJfdG9fY3B1KGdldF9zZXJpYWxfcmVwbHktPnN0YXR1cykgPT0g
+Q1RfT0spIHsKKwkJY2hhciBzcFsxM107CisJCS8qIEVWUEQgYml0IHNldCAqLworCQlzcFswXSA9
+IElOUURfUERUX0RBOworCQlzcFsxXSA9IHNjc2ljbWQtPmNtbmRbMl07CisJCXNwWzJdID0gMDsK
+KwkJc3BbM10gPSBzbnByaW50ZihzcCs0LCBzaXplb2Yoc3ApLTQsICIlMDhYIiwKKwkJICBsZTMy
+X3RvX2NwdShnZXRfc2VyaWFsX3JlcGx5LT51aWQpKTsKKwkJYWFjX2ludGVybmFsX3RyYW5zZmVy
+KHNjc2ljbWQsIHNwLCAwLCBzaXplb2Yoc3ApKTsKKwl9CisKKwlzY3NpY21kLT5yZXN1bHQgPSBE
+SURfT0sgPDwgMTYgfCBDT01NQU5EX0NPTVBMRVRFIDw8IDggfCBTQU1fU1RBVF9HT09EOworCisJ
+YWFjX2ZpYl9jb21wbGV0ZShmaWJwdHIpOworCWFhY19maWJfZnJlZShmaWJwdHIpOworCXNjc2lj
+bWQtPnNjc2lfZG9uZShzY3NpY21kKTsKK30KKworLyoqCisgKglhYWNfZ2V0X2NvbnRhaW5lcl9z
+ZXJpYWwgLSBnZXQgY29udGFpbmVyIHNlcmlhbCwgbm9uZSBibG9ja2luZy4KKyAqLworc3RhdGlj
+IGludCBhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWwoc3RydWN0IHNjc2lfY21uZCAqIHNjc2ljbWQp
+Cit7CisJaW50IHN0YXR1czsKKwlzdHJ1Y3QgYWFjX2dldF9zZXJpYWwgKmRpbmZvOworCXN0cnVj
+dCBmaWIgKiBjbWRfZmliY29udGV4dDsKKwlzdHJ1Y3QgYWFjX2RldiAqIGRldjsKKworCWRldiA9
+IChzdHJ1Y3QgYWFjX2RldiAqKXNjc2ljbWQtPmRldmljZS0+aG9zdC0+aG9zdGRhdGE7CisKKwlp
+ZiAoIShjbWRfZmliY29udGV4dCA9IGFhY19maWJfYWxsb2MoZGV2KSkpCisJCXJldHVybiAtRU5P
+TUVNOworCisJYWFjX2ZpYl9pbml0KGNtZF9maWJjb250ZXh0KTsKKwlkaW5mbyA9IChzdHJ1Y3Qg
+YWFjX2dldF9zZXJpYWwgKikgZmliX2RhdGEoY21kX2ZpYmNvbnRleHQpOworCisJZGluZm8tPmNv
+bW1hbmQgPSBjcHVfdG9fbGUzMihWTV9Db250YWluZXJDb25maWcpOworCWRpbmZvLT50eXBlID0g
+Y3B1X3RvX2xlMzIoQ1RfQ0lEX1RPXzMyQklUU19VSUQpOworCWRpbmZvLT5jaWQgPSBjcHVfdG9f
+bGUzMihzY21kX2lkKHNjc2ljbWQpKTsKKworCXN0YXR1cyA9IGFhY19maWJfc2VuZChDb250YWlu
+ZXJDb21tYW5kLAorCQkgIGNtZF9maWJjb250ZXh0LCAKKwkJICBzaXplb2YgKHN0cnVjdCBhYWNf
+Z2V0X3NlcmlhbCksCisJCSAgRnNhTm9ybWFsLCAKKwkJICAwLCAxLCAKKwkJICAoZmliX2NhbGxi
+YWNrKSBnZXRfY29udGFpbmVyX3NlcmlhbF9jYWxsYmFjaywgCisJCSAgKHZvaWQgKikgc2NzaWNt
+ZCk7CisJCisJLyoKKwkgKglDaGVjayB0aGF0IHRoZSBjb21tYW5kIHF1ZXVlZCB0byB0aGUgY29u
+dHJvbGxlcgorCSAqLworCWlmIChzdGF0dXMgPT0gLUVJTlBST0dSRVNTKSB7CisJCXNjc2ljbWQt
+PlNDcC5waGFzZSA9IEFBQ19PV05FUl9GSVJNV0FSRTsKKwkJcmV0dXJuIDA7CisJfQorCQkKKwlw
+cmludGsoS0VSTl9XQVJOSU5HICJhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWw6IGFhY19maWJfc2Vu
+ZCBmYWlsZWQgd2l0aCBzdGF0dXM6ICVkLlxuIiwgc3RhdHVzKTsKKwlhYWNfZmliX2NvbXBsZXRl
+KGNtZF9maWJjb250ZXh0KTsKKwlhYWNfZmliX2ZyZWUoY21kX2ZpYmNvbnRleHQpOworCXJldHVy
+biAtMTsKK30KKworLyogRnVuY3Rpb246IHNldGlucXNlcmlhbAorICoKKyAqIEFyZ3VtZW50czog
+WzFdIHBvaW50ZXIgdG8gdm9pZCBbMV0gaW50CisgKgorICogUHVycG9zZTogU2V0cyBTQ1NJIFVu
+aXQgU2VyaWFsIG51bWJlci4KKyAqICAgICAgICAgIFRoaXMgaXMgYSBmYWtlLiBXZSBzaG91bGQg
+cmVhZCBhIHByb3BlcgorICogICAgICAgICAgc2VyaWFsIG51bWJlciBmcm9tIHRoZSBjb250YWlu
+ZXIuIDxTdVNFPkJ1dAorICogICAgICAgICAgd2l0aG91dCBkb2NzIGl0J3MgcXVpdGUgaGFyZCB0
+byBkbyBpdCA6LSkKKyAqICAgICAgICAgIFNvIHRoaXMgd2lsbCBoYXZlIHRvIGRvIGluIHRoZSBt
+ZWFudGltZS48L1N1U0U+CisgKi8KKworc3RhdGljIGludCBzZXRpbnFzZXJpYWwoc3RydWN0IGFh
+Y19kZXYgKmRldiwgdm9pZCAqZGF0YSwgaW50IGNpZCkKK3sKKwkvKgorCSAqCVRoaXMgYnJlYWtz
+IGFycmF5IG1pZ3JhdGlvbi4KKwkgKi8KKwlyZXR1cm4gc25wcmludGYoKGNoYXIgKikoZGF0YSks
+IHNpemVvZihzdHJ1Y3Qgc2NzaV9pbnEpIC0gNCwgIiUwOFglMDJYIiwKKwkJCWxlMzJfdG9fY3B1
+KGRldi0+YWRhcHRlcl9pbmZvLnNlcmlhbFswXSksIGNpZCk7Cit9CisKIHN0YXRpYyB2b2lkIHNl
+dF9zZW5zZSh1OCAqc2Vuc2VfYnVmLCB1OCBzZW5zZV9rZXksIHU4IHNlbnNlX2NvZGUsCiAJCSAg
+ICAgIHU4IGFfc2Vuc2VfY29kZSwgdTggaW5jb3JyZWN0X2xlbmd0aCwKIAkJICAgICAgdTggYml0
+X3BvaW50ZXIsIHUxNiBmaWVsZF9wb2ludGVyLApAQCAtMTc5OCw2ICsxODkzLDQ5IEBACiAJCWRw
+cmludGsoKEtFUk5fREVCVUcgIklOUVVJUlkgY29tbWFuZCwgSUQ6ICVkLlxuIiwgY2lkKSk7CiAJ
+CW1lbXNldCgmaW5xX2RhdGEsIDAsIHNpemVvZiAoc3RydWN0IGlucXVpcnlfZGF0YSkpOwogCisJ
+CWlmIChzY3NpY21kLT5jbW5kWzFdICYgMHgxICkgeworCQkJY2hhciAqYXJyID0gKGNoYXIgKikm
+aW5xX2RhdGE7CisKKwkJCS8qIEVWUEQgYml0IHNldCAqLworCQkJYXJyWzBdID0gKHNjbWRfaWQo
+c2NzaWNtZCkgPT0gaG9zdC0+dGhpc19pZCkgPworCQkJICBJTlFEX1BEVF9QUk9DIDogSU5RRF9Q
+RFRfREE7CisJCQlpZiAoc2NzaWNtZC0+Y21uZFsyXSA9PSAwKSB7CisJCQkJLyogc3VwcG9ydGVk
+IHZpdGFsIHByb2R1Y3QgZGF0YSBwYWdlcyAqLworCQkJCWFyclszXSA9IDI7CisJCQkJYXJyWzRd
+ID0gMHgwOworCQkJCWFycls1XSA9IDB4ODA7CisJCQkJYXJyWzFdID0gc2NzaWNtZC0+Y21uZFsy
+XTsKKwkJCQlhYWNfaW50ZXJuYWxfdHJhbnNmZXIoc2NzaWNtZCwgJmlucV9kYXRhLCAwLAorCQkJ
+CSAgc2l6ZW9mKGlucV9kYXRhKSk7CisJCQkJc2NzaWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2
+IHwKKwkJCQkgIENPTU1BTkRfQ09NUExFVEUgPDwgOCB8IFNBTV9TVEFUX0dPT0Q7CisJCQl9IGVs
+c2UgaWYgKHNjc2ljbWQtPmNtbmRbMl0gPT0gMHg4MCkgeworCQkJCS8qIHVuaXQgc2VyaWFsIG51
+bWJlciBwYWdlICovCisJCQkJYXJyWzNdID0gc2V0aW5xc2VyaWFsKGRldiwgJmFycls0XSwKKwkJ
+CQkgIHNjbWRfaWQoc2NzaWNtZCkpOworCQkJCWFyclsxXSA9IHNjc2ljbWQtPmNtbmRbMl07CisJ
+CQkJYWFjX2ludGVybmFsX3RyYW5zZmVyKHNjc2ljbWQsICZpbnFfZGF0YSwgMCwKKwkJCQkgIHNp
+emVvZihpbnFfZGF0YSkpOworCQkJCXJldHVybiBhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWwoc2Nz
+aWNtZCk7CisJCQl9IGVsc2UgeworCQkJCS8qIHZwZCBwYWdlIG5vdCBpbXBsZW1lbnRlZCAqLwor
+CQkJCXNjc2ljbWQtPnJlc3VsdCA9IERJRF9PSyA8PCAxNiB8CisJCQkJICBDT01NQU5EX0NPTVBM
+RVRFIDw8IDggfAorCQkJCSAgU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OOworCQkJCXNldF9zZW5z
+ZSgodTggKikgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCisJCQkJICBJTExFR0FMX1JF
+UVVFU1QsCisJCQkJICBTRU5DT0RFX0lOVkFMSURfQ0RCX0ZJRUxELAorCQkJCSAgQVNFTkNPREVf
+Tk9fU0VOU0UsIDAsIDcsIDIsIDApOworCQkJCW1lbWNweShzY3NpY21kLT5zZW5zZV9idWZmZXIs
+CisJCQkJICAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKKwkJCQkgIChzaXplb2YoZGV2
+LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSkgPgorCQkJCSAgICBzaXplb2Yoc2NzaWNtZC0+c2Vu
+c2VfYnVmZmVyKSkKKwkJCQkgICAgICAgPyBzaXplb2Yoc2NzaWNtZC0+c2Vuc2VfYnVmZmVyKQor
+CQkJCSAgICAgICA6IHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSk7CisJCQl9
+CisJCQlzY3NpY21kLT5zY3NpX2RvbmUoc2NzaWNtZCk7CisJCQlyZXR1cm4gMDsKKwkJfQogCQlp
+bnFfZGF0YS5pbnFkX3ZlciA9IDI7CS8qIGNsYWltIGNvbXBsaWFuY2UgdG8gU0NTSS0yICovCiAJ
+CWlucV9kYXRhLmlucWRfcmRmID0gMjsJLyogQSByZXNwb25zZSBkYXRhIGZvcm1hdCB2YWx1ZSBv
+ZiB0d28gaW5kaWNhdGVzIHRoYXQgdGhlIGRhdGEgc2hhbGwgYmUgaW4gdGhlIGZvcm1hdCBzcGVj
+aWZpZWQgaW4gU0NTSS0yICovCiAJCWlucV9kYXRhLmlucWRfbGVuID0gMzE7CmRpZmYgLXJ1IGEv
+ZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFj
+cmFpZC5oCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA3LTA3LTE3IDEz
+OjUyOjMzLjE2Mjg4MDEwNyAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlk
+LmgJMjAwNy0wNy0xNyAxMzo1NToxNS41MDQ1MDM3MDAgLTA0MDAKQEAgLTE1NjcsNiArMTU2Nywy
+MCBAQAogCXU4CQlkYXRhWzE2XTsKIH07CiAKKyNkZWZpbmUgQ1RfQ0lEX1RPXzMyQklUU19VSUQg
+MTY1CitzdHJ1Y3QgYWFjX2dldF9zZXJpYWwgeworCV9fbGUzMgkJY29tbWFuZDsJLyogVk1fQ29u
+dGFpbmVyQ29uZmlnICovCisJX19sZTMyCQl0eXBlOwkJLyogQ1RfQ0lEX1RPXzMyQklUU19VSUQg
+Ki8KKwlfX2xlMzIJCWNpZDsKK307CisKK3N0cnVjdCBhYWNfZ2V0X3NlcmlhbF9yZXNwIHsKKwlf
+X2xlMzIJCWR1bW15MDsKKwlfX2xlMzIJCWR1bW15MTsKKwlfX2xlMzIJCXN0YXR1czsJLyogQ1Rf
+T0sgKi8KKwlfX2xlMzIJCXVpZDsKK307CisKIC8qCiAgKiBUaGUgZm9sbG93aW5nIGNvbW1hbmQg
+aXMgc2VudCB0byBzaHV0IGRvd24gZWFjaCBjb250YWluZXIuCiAgKi8K
 
-drive type = 114
-drive status = 637534208
-sense key error = 0
-residue count = 0
-file number = 0
-block number = 0
-
---------------070902020505070806080405
-Content-Type: text/plain;
- name="14.7.mt-fsf-2.kern.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="14.7.mt-fsf-2.kern.log"
-
-Jul 17 17:10:07 struppi kernel: (scsi0:A:0:0): SCB 2: requests Check Status
-Jul 17 17:10:07 struppi kernel: (scsi0:A:0:0): Sending Sense
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x80
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x2
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x3
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT PHASEMIS in Message-in phase
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x2
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x3
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: Asserting ATN for response
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN PHASEMIS in Message-out phase
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x3
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x19
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x8
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT PHASEMIS in Message-in phase
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x3
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x19
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x8
-Jul 17 17:10:07 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN PHASEMIS in Command phase
-Jul 17 17:10:07 struppi kernel: (scsi0:A:0:0): Handled Sense Residual of 10 bytes
-Jul 17 17:10:07 struppi kernel: Copied 22 bytes of sense data:
-Jul 17 17:10:07 struppi kernel: 0x70 0x0 0x6 0x0 0x0 0x0 0x0 0xe 0x0 0x0 0x0 0x0 0x29 0x0 0x0 0x0 
-Jul 17 17:10:07 struppi kernel: 0x0 0x0 0x0 0x0 0x0 0x0 
-Jul 17 17:10:07 struppi kernel: st0: Block limits 1 - 16777215 bytes.
-
---------------070902020505070806080405
-Content-Type: text/plain;
- name="14.7.mt-status-after-mt-fsf-2.out"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="14.7.mt-status-after-mt-fsf-2.out"
-
-drive type = 114
-drive status = 637534208
-sense key error = 0
-residue count = 0
-file number = 2
-block number = 0
-
---------------070902020505070806080405
-Content-Type: text/plain;
- name="15.dmesg.relevant"
-Content-Transfer-Encoding: base64
-Content-Disposition: inline;
- filename="15.dmesg.relevant"
-
-TGludXggdmVyc2lvbiAyLjYuMTUtdmFuaWxsYSAocm9vdEBzdHJ1cHBpKSAoZ2NjIHZlcnNp
-b24gNC4xLjIgMjAwNjExMTUgKHByZXJlbGVhc2UpIChEZWJpYW4gNC4xLjEtMjEpKSAjNSBU
-dWUgSnVsIDE3IDE0OjU3OjE0IENFU1QgMjAwNwpbLi4uXQpTQ1NJIHN1YnN5c3RlbSBpbml0
-aWFsaXplZApbLi4uXQpBQ1BJOiBQQ0kgSW50ZXJydXB0IDAwMDA6MDA6MGEuMFtBXSAtPiBH
-U0kgMTggKGxldmVsLCBsb3cpIC0+IElSUSAxNwphaGNfcGNpOjA6MTA6MDogaGFyZHdhcmUg
-c2NiIDY0IGJ5dGVzOyBrZXJuZWwgc2NiIDUyIGJ5dGVzOyBhaGNfZG1hIDggYnl0ZXMKc2Nz
-aTAgOiBBZGFwdGVjIEFJQzdYWFggRUlTQS9WTEIvUENJIFNDU0kgSEJBIERSSVZFUiwgUmV2
-IDcuMAogICAgICAgIDxBZGFwdGVjIDI5NDAgVWx0cmEgU0NTSSBhZGFwdGVyPgogICAgICAg
-IGFpYzc4ODA6IFVsdHJhIFdpZGUgQ2hhbm5lbCBBLCBTQ1NJIElkPTcsIDE2LzI1MyBTQ0Jz
-CgogIFZlbmRvcjogSFAgICAgICAgIE1vZGVsOiBDNTY4M0EgICAgICAgICAgICBSZXY6IEM5
-MDgKICBUeXBlOiAgIFNlcXVlbnRpYWwtQWNjZXNzICAgICAgICAgICAgICAgICAgQU5TSSBT
-Q1NJIHJldmlzaW9uOiAwMgogdGFyZ2V0MDowOjA6IEJlZ2lubmluZyBEb21haW4gVmFsaWRh
-dGlvbgpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQgYnl0ZSAweGMwCnNjc2kwOkE6
-MDowOiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4MQpzY3NpMDpBOjA6MDogSU5JVElBVE9S
-X01TR19PVVQgYnl0ZSAweDIKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUg
-MHgzCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4MQpzY3NpMDpBOjA6
-MDogSU5JVElBVE9SX01TR19PVVQgUEhBU0VNSVMgaW4gTWVzc2FnZS1pbiBwaGFzZQpzY3Np
-MDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRlIDB4MQpzY3NpMDpBOjA6MDogSU5JVElB
-VE9SX01TR19JTiBieXRlIDB4MgpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRl
-IDB4MwpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRlIDB4MQpzY3NpMDpBOjA6
-MDogQXNzZXJ0aW5nIEFUTiBmb3IgcmVzcG9uc2UKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9N
-U0dfSU4gUEhBU0VNSVMgaW4gTWVzc2FnZS1vdXQgcGhhc2UKc2NzaTA6QTowOjA6IElOSVRJ
-QVRPUl9NU0dfT1VUIGJ5dGUgMHgxCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX09VVCBi
-eXRlIDB4MwpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQgYnl0ZSAweDEKc2NzaTA6
-QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUgMHg0NQpzY3NpMDpBOjA6MDogSU5JVElB
-VE9SX01TR19PVVQgYnl0ZSAweDAKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIFBI
-QVNFTUlTIGluIE1lc3NhZ2UtaW4gcGhhc2UKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0df
-SU4gYnl0ZSAweDEKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfSU4gYnl0ZSAweDMKc2Nz
-aTA6QTowOjA6IElOSVRJQVRPUl9NU0dfSU4gYnl0ZSAweDEKc2NzaTA6QTowOjA6IElOSVRJ
-QVRPUl9NU0dfSU4gYnl0ZSAweDQ1CnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX0lOIGJ5
-dGUgMHgwCiB0YXJnZXQwOjA6MDogd2lkZSBhc3luY2hyb25vdXMuCnNjc2kwOkE6MDowOiBJ
-TklUSUFUT1JfTVNHX0lOIFBIQVNFTUlTIGluIENvbW1hbmQgcGhhc2UKc2NzaTA6QTowOjA6
-IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUgMHhjMApzY3NpMDpBOjA6MDogSU5JVElBVE9SX01T
-R19PVVQgYnl0ZSAweDEKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfT1VUIGJ5dGUgMHgz
-CnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX09VVCBieXRlIDB4MQpzY3NpMDpBOjA6MDog
-SU5JVElBVE9SX01TR19PVVQgYnl0ZSAweDE5CnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNH
-X09VVCBieXRlIDB4OApzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19PVVQgUEhBU0VNSVMg
-aW4gTWVzc2FnZS1pbiBwaGFzZQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRl
-IDB4MQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01TR19JTiBieXRlIDB4MwpzY3NpMDpBOjA6
-MDogSU5JVElBVE9SX01TR19JTiBieXRlIDB4MQpzY3NpMDpBOjA6MDogSU5JVElBVE9SX01T
-R19JTiBieXRlIDB4MTkKc2NzaTA6QTowOjA6IElOSVRJQVRPUl9NU0dfSU4gYnl0ZSAweDgK
-IHRhcmdldDA6MDowOiBGQVNULTEwIFdJREUgU0NTSSAyMC4wIE1CL3MgU1QgKDEwMCBucywg
-b2Zmc2V0IDgpCnNjc2kwOkE6MDowOiBJTklUSUFUT1JfTVNHX0lOIFBIQVNFTUlTIGluIENv
-bW1hbmQgcGhhc2UKIHRhcmdldDA6MDowOiBEb21haW4gVmFsaWRhdGlvbiBza2lwcGluZyB3
-cml0ZSB0ZXN0cwogdGFyZ2V0MDowOjA6IEVuZGluZyBEb21haW4gVmFsaWRhdGlvbgooc2Nz
-aTA6QToxOjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDMKKHNjc2kwOkE6
-MjowKTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZvciBTQ0IgMHgyCihzY3NpMDpBOjM6MCk6
-IFNhdyBTZWxlY3Rpb24gVGltZW91dCBmb3IgU0NCIDB4Mwooc2NzaTA6QTo0OjApOiBTYXcg
-U2VsZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDIKKHNjc2kwOkE6NTowKTogU2F3IFNlbGVj
-dGlvbiBUaW1lb3V0IGZvciBTQ0IgMHgzCihzY3NpMDpBOjY6MCk6IFNhdyBTZWxlY3Rpb24g
-VGltZW91dCBmb3IgU0NCIDB4Mgooc2NzaTA6QTo4OjApOiBTYXcgU2VsZWN0aW9uIFRpbWVv
-dXQgZm9yIFNDQiAweDMKKHNjc2kwOkE6OTowKTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZv
-ciBTQ0IgMHgyCihzY3NpMDpBOjEwOjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQgZm9yIFND
-QiAweDMKKHNjc2kwOkE6MTE6MCk6IFNhdyBTZWxlY3Rpb24gVGltZW91dCBmb3IgU0NCIDB4
-Mgooc2NzaTA6QToxMjowKTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZvciBTQ0IgMHgzCihz
-Y3NpMDpBOjEzOjApOiBTYXcgU2VsZWN0aW9uIFRpbWVvdXQgZm9yIFNDQiAweDIKKHNjc2kw
-OkE6MTQ6MCk6IFNhdyBTZWxlY3Rpb24gVGltZW91dCBmb3IgU0NCIDB4Mwooc2NzaTA6QTox
-NTowKTogU2F3IFNlbGVjdGlvbiBUaW1lb3V0IGZvciBTQ0IgMHgyCnN0OiBWZXJzaW9uIDIw
-MDUwODMwLCBmaXhlZCBidWZzaXplIDMyNzY4LCBzL2cgc2VncyAyNTYKc3QgMDowOjA6MDog
-QXR0YWNoZWQgc2NzaSB0YXBlIHN0MDw0PnN0MDogdHJ5IGRpcmVjdCBpL286IHllcyAoYWxp
-Z25tZW50IDUxMiBCKSwgbWF4IHBhZ2UgcmVhY2hhYmxlIGJ5IEhCQSAxMDQ4NTc1ClsuLi5d
-
---------------070902020505070806080405
-Content-Type: text/plain;
- name="15.mt-status-after-boot.out"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="15.mt-status-after-boot.out"
-
-drive type = 114
-drive status = 637534208
-sense key error = 0
-residue count = 0
-file number = 0
-block number = 0
-
---------------070902020505070806080405
-Content-Type: text/plain;
- name="15.mt-fsf-2.kern.log"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="15.mt-fsf-2.kern.log"
-
-Jul 17 17:31:58 struppi kernel: (scsi0:A:0:0): SCB 3: requests Check Status
-Jul 17 17:31:58 struppi kernel: (scsi0:A:0:0): Sending Sense
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x80
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x2
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x3
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT PHASEMIS in Message-in phase
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x2
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x3
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: Asserting ATN for response
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN PHASEMIS in Message-out phase
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x3
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x19
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT byte 0x8
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_OUT PHASEMIS in Message-in phase
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x3
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x1
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x19
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN byte 0x8
-Jul 17 17:31:58 struppi kernel: scsi0:A:0:0: INITIATOR_MSG_IN PHASEMIS in Command phase
-Jul 17 17:31:58 struppi kernel: (scsi0:A:0:0): Handled Sense Residual of 10 bytes
-Jul 17 17:31:58 struppi kernel: Copied 22 bytes of sense data:
-Jul 17 17:31:58 struppi kernel: 0x70 0x0 0x6 0x0 0x0 0x0 0x0 0xe 0x0 0x0 0x0 0x0 0x29 0x0 0x0 0x0 
-Jul 17 17:31:58 struppi kernel: 0x0 0x0 0x0 0x0 0x0 0x0 
-Jul 17 17:31:58 struppi kernel: st0: Block limits 1 - 16777215 bytes.
-
---------------070902020505070806080405
-Content-Type: text/plain;
- name="15.mt-status-after-mt-fsf-2.out"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="15.mt-status-after-mt-fsf-2.out"
-
-drive type = 114
-drive status = 637534208
-sense key error = 0
-residue count = 0
-file number = 0
-block number = 0
-
---------------070902020505070806080405--
+------_=_NextPart_001_01C7C89C.8009BDA1--
