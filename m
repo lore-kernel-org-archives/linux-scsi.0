@@ -1,35 +1,45 @@
-From: "Satyam Sharma" <satyam.sharma@gmail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: block/bsg.c
-Date: Tue, 17 Jul 2007 06:22:25 +0530
-Message-ID: <a781481a0707161752v3dcb794cvc9b9c2f8812def57@mail.gmail.com>
+Date: Mon, 16 Jul 2007 17:53:47 -0700
+Message-ID: <20070716175347.bea345dd.akpm@linux-foundation.org>
 References: <20070716165706.348f6bbf.akpm@linux-foundation.org>
+	<469C11B1.8000302@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ik-out-1112.google.com ([66.249.90.181]:25792 "EHLO
-	ik-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756554AbXGQAw2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jul 2007 20:52:28 -0400
-Received: by ik-out-1112.google.com with SMTP id b32so758926ika
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Jul 2007 17:52:26 -0700 (PDT)
-In-Reply-To: <20070716165706.348f6bbf.akpm@linux-foundation.org>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42038 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755426AbXGQAyY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 16 Jul 2007 20:54:24 -0400
+In-Reply-To: <469C11B1.8000302@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
+To: Jeff Garzik <jeff@garzik.org>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 7/17/07, Andrew Morton <akpm@linux-foundation.org> wrote:
->
+On Mon, 16 Jul 2007 20:47:45 -0400 Jeff Garzik <jeff@garzik.org> wrote:
 
-CONFIG_BLK_DEV_BSG=y
-CONFIG_SCSI=m
+> Andrew Morton wrote:
+> > The modern way of shutting up gcc is uninitialized_var().
+> 
+> 
+> Should I convert my misc-2.6.git#gccbug repository over to this, and 
+> push upstream?
 
-block/built-in.o: In function `bsg_init':
-block/bsg.c:1097: undefined reference to `scsi_register_interface'
-make: *** [.tmp_vmlinux1] Error 1
+Opinions differ (a bit) but personally I think the benefit of fixing the
+warnings outweighs the risk that these suppressions will later hide a real
+bug.
 
-on latest -git.
+Certainly, using uninitialized_var() is better than open-coding "= 0" all
+over the place.
 
-Satyam
+Purists can add a config variable to centrally disable uninitialized_var()
+if they want to check on the warnings.
+
+> #gccbug branch is a set of places where I have verified that the 
+> variable is indeed initialized, even though gcc complains it may not be.
+> 
+
+Do it!
