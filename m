@@ -1,67 +1,78 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 19/33] scsi_debug: support sg chaining
-Date: Tue, 17 Jul 2007 16:11:33 +0200
-Message-ID: <20070717141133.GD5625@kernel.dk>
-References: <469CC6E8.7060702@panasas.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] libsas: fix lockdep issue with ATA
+Date: Tue, 17 Jul 2007 09:12:50 -0500
+Message-ID: <1184681570.3378.5.camel@localhost.localdomain>
+References: <1184609751.3447.22.camel@localhost.localdomain>
+	 <20070717112955.GR5195@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:15993 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933250AbXGQOMI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2007 10:12:08 -0400
-Content-Disposition: inline
-In-Reply-To: <469CC6E8.7060702@panasas.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:52155 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933552AbXGQOMw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 10:12:52 -0400
+In-Reply-To: <20070717112955.GR5195@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, dgilbert@interlog.com
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Jul 17 2007, Boaz Harrosh wrote:
-> Jens Axboe wrote ...
-> > Cc: dgilbert@interlog.com
-> > Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> > ---
-> >  drivers/scsi/scsi_debug.c |   30 ++++++++++++++++--------------
-> >  1 files changed, 16 insertions(+), 14 deletions(-)
+On Tue, 2007-07-17 at 13:29 +0200, Jens Axboe wrote:
+> On Mon, Jul 16 2007, James Bottomley wrote:
+> > lockdep noticed that with ATA support the port->dev_list_lock was
+> > entangled at irq context, so it now needs to become IRQ safe
 > > 
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index 4cd9c58..46a3e07 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
+> > ---
+> > This applies against the aic94xx-sas-2.6 tree
+> > 
+> > James
+> > 
+> > diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
+> > index a18c0f6..ce3385c 100644
+> > --- a/drivers/scsi/libsas/sas_discover.c
+> > +++ b/drivers/scsi/libsas/sas_discover.c
+> > @@ -292,9 +292,9 @@ static int sas_get_port_device(struct asd_sas_port *port)
+> >  	port->disc.max_level = 0;
+> >  
+> >  	dev->rphy = rphy;
+> > -	spin_lock(&port->dev_list_lock);
+> > +	spin_lock_irqsave(&port->dev_list_lock, flags);
+> >  	list_add_tail(&dev->dev_list_node, &port->dev_list);
+> > -	spin_unlock(&port->dev_list_lock);
+> > +	spin_unlock_irqrestore(&port->dev_list_lock, flags);
+> >  
+> >  	return 0;
+> >  }
 > 
-> (Majordumo has unsubscribed me from list since yesterday)
-> (Don't know why. So this will appear out of order       )
+> already uses GFP_KERNEL, so spin_lock_irq() suffices.
 > 
-> Jens Hi!
+> > @@ -688,12 +688,14 @@ static void sas_discover_domain(struct work_struct *work)
+> >  	}
+> >  
+> >  	if (error) {
+> > +		unsigned long flags;
+> > +
+> >  		sas_rphy_free(dev->rphy);
+> >  		dev->rphy = NULL;
+> >  
+> > -		spin_lock(&port->dev_list_lock);
+> > +		spin_lock_irqsave(&port->dev_list_lock, flags);
+> >  		list_del_init(&dev->dev_list_node);
+> > -		spin_unlock(&port->dev_list_lock);
+> > +		spin_unlock_irqrestore(&port->dev_list_lock, flags);
+> >  
+> >  		kfree(dev); /* not kobject_register-ed yet */
+> >  		port->port_dev = NULL;
 > 
-> I have queued for submission a: 
-> "convert to use the data buffer accessors and !use_sg cleanup"
-> for this driver Just the other day. Should we not push the 
-> cleanups first before this. That is what we did with other
-> drivers.
-> 
-> I have also sent patches for ide-scsi
-> 
-> I Have in my Q cleanup patches for:
-> drivers/scsi/qla1280.c
-> drivers/scsi/qlogicpti.c
-> drivers/scsi/aha1542.c
-> drivers/scsi/advansys.c
-> And more ...
-> 
-> And also for this one
-> drivers/scsi/gdth.c
-> But that one has a patch in Q and I should rebase.
-> 
-> If you want I can rebase all your driver patches above
-> to my patches. Than send cleanup patches to the list and
-> rebasing of sg-chaining if needed to you. I can send all
-> cleanup patches tonight, and your rebases tomorrow.
+> process context, no need to save flags here either.
 
-Go ahead and submit whatever driver cleanups, I'll just rebase and drop
-patches from my branch as necessary! Less work for me :-)
+OK, you caught me ... I was just doing the fastest thing I could to get
+lockdep to shut up.  By the way, it dumps about 120KB of logs so it's
+fun to get an actual trace of this...
 
--- 
-Jens Axboe
+I'll make the fixes and resubmit
+
+James
+
 
