@@ -1,85 +1,80 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: block/bsg.c
-Date: Tue, 17 Jul 2007 19:07:05 +0900
-Message-ID: <20070717190705T.fujita.tomonori@lab.ntt.co.jp>
-References: <20070717065940.GZ5195@kernel.dk>
-	<20070717160816K.fujita.tomonori@lab.ntt.co.jp>
-	<20070717071045.GD5195@kernel.dk>
+Subject: [PATCH 2/4] bsg: device hash table cleanup
+Date: Tue, 17 Jul 2007 19:08:47 +0900
+Message-ID: <32592fb9ca102dcd2a867999b577fad63d61a0f1.1184666104.git.fujita.tomonori@lab.ntt.co.jp>
+References: <40eb9fb0d327856034312127350a427a50eb4222.1184666104.git.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:59082 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754012AbXGQKI2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 06:08:28 -0400
-In-Reply-To: <20070717071045.GD5195@kernel.dk>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:34318 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753020AbXGQKJU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 06:09:20 -0400
+In-Reply-To: <40eb9fb0d327856034312127350a427a50eb4222.1184666104.git.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, tomof@acm.org
 
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: block/bsg.c
-Date: Tue, 17 Jul 2007 09:10:45 +0200
+- kill unused bsg_list_idx macro.
+- add bsg_dev_idx_hash() that returns an appropriate hlist_head.
 
-> On Tue, Jul 17 2007, FUJITA Tomonori wrote:
-> > From: Jens Axboe <jens.axboe@oracle.com>
-> > Subject: Re: block/bsg.c
-> > Date: Tue, 17 Jul 2007 08:59:40 +0200
-> > 
-> > > On Tue, Jul 17 2007, FUJITA Tomonori wrote:
-> > > > From: Jens Axboe <jens.axboe@oracle.com>
-> > > > Subject: Re: block/bsg.c
-> > > > Date: Tue, 17 Jul 2007 08:38:11 +0200
-> > > > 
-> > > > > On Mon, Jul 16 2007, Andrew Morton wrote:
-> > > > > > 
-> > > > > > A belated review (I've never seen this before and there it is in mainline)
-> > > > > > 
-> > > > > > > static char bsg_version[] = "block layer sg (bsg) 0.4";
-> > > > > > 
-> > > > > > `const' would be better.  That moves it into a write-protected memory section.
-> > > > > 
-> > > > > Agree
-> > > > > 
-> > > > > > > #define list_entry_bc(entry)	list_entry((entry), struct bsg_command, list)
-> > > > > > 
-> > > > > > This makes the code easier to write but harder to read.  We should optimise
-> > > > > > for readers.  Please open-code this at callsites.
-> > > > > > 
-> > > > > > Or at least convert it into a (commented) (possibly inlined) C function.
-> > > > > 
-> > > > > list_entry_to_bc(), then? The main objective is to save on typing, and
-> > > > > (just as important) make sure we don't bump over the 80 chars per line.
-> > > > > 
-> > > > > > > /*
-> > > > > > >  * just for testing
-> > > > > > >  */
-> > > > > > > #define BSG_MAJOR	(240)
-> > > > > > 
-> > > > > > What's this doing in mainline?  240 is a "reserved for local use" major. 
-> > > > > > This will cause collisions.  This code should be using dynamic major
-> > > > > > assignment.
-> > > > > 
-> > > > > Yeah, that's a big error on my part. Will get that fixed up right away.
-> > > > 
-> > > > I've been testing the patchset to fix the issues that Andrew pointed
-> > > > out. I can send it soon.
-> > > > 
-> > > > Jens, have you already fixed some?
-> > > 
-> > > I already pushed some of the changes locally, just the idr change is
-> > > missing. See the #bsg branch:
-> > > 
-> > > http://git.kernel.dk/?p=linux-2.6-block.git;a=shortlog;h=bsg
-> > 
-> > I see.
-> 
-> Since Linus is happily snoring by now, could you test and see if the
-> tree works for you?
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ block/bsg.c |   12 ++++--------
+ 1 files changed, 4 insertions(+), 8 deletions(-)
 
-It works for me. I'll submit some minor patches against your bsg
-branch to scsi-ml. Can you push them together?
+diff --git a/block/bsg.c b/block/bsg.c
+index b253784..55a4303 100644
+--- a/block/bsg.c
++++ b/block/bsg.c
+@@ -72,7 +72,6 @@ static DEFINE_MUTEX(bsg_mutex);
+ static int bsg_device_nr, bsg_minor_idx;
+ 
+ #define BSG_LIST_ARRAY_SIZE	8
+-#define bsg_list_idx(minor)	((minor) & (BSG_LIST_ARRAY_SIZE - 1))
+ static struct hlist_head bsg_device_list[BSG_LIST_ARRAY_SIZE];
+ 
+ static struct class *bsg_class;
+@@ -139,9 +138,9 @@ out:
+ 	return bc;
+ }
+ 
+-static inline void
+-bsg_add_done_cmd(struct bsg_device *bd, struct bsg_command *bc)
++static inline struct hlist_head *bsg_dev_idx_hash(int index)
+ {
++	return &bsg_device_list[index & (BSG_LIST_ARRAY_SIZE - 1)];
+ }
+ 
+ static int bsg_io_schedule(struct bsg_device *bd)
+@@ -748,8 +747,7 @@ #endif
+ 	atomic_set(&bd->ref_count, 1);
+ 	bd->minor = iminor(inode);
+ 	mutex_lock(&bsg_mutex);
+-	hlist_add_head(&bd->dev_list,
+-		&bsg_device_list[bd->minor & (BSG_LIST_ARRAY_SIZE - 1)]);
++	hlist_add_head(&bd->dev_list, bsg_dev_idx_hash(bd->minor));
+ 
+ 	strncpy(bd->name, rq->bsg_dev.class_dev->class_id, sizeof(bd->name) - 1);
+ 	dprintk("bound to <%s>, max queue %d\n",
+@@ -761,14 +759,12 @@ #endif
+ 
+ static struct bsg_device *__bsg_get_device(int minor)
+ {
+-	struct hlist_head *list;
+ 	struct bsg_device *bd = NULL;
+ 	struct hlist_node *entry;
+ 
+ 	mutex_lock(&bsg_mutex);
+ 
+-	list = &bsg_device_list[minor & (BSG_LIST_ARRAY_SIZE - 1)];
+-	hlist_for_each(entry, list) {
++	hlist_for_each(entry, bsg_dev_idx_hash(minor)) {
+ 		bd = hlist_entry(entry, struct bsg_device, dev_list);
+ 		if (bd->minor == minor) {
+ 			atomic_inc(&bd->ref_count);
+-- 
+1.4.3.2
 
-Thanks,
