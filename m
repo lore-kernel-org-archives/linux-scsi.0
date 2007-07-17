@@ -1,114 +1,34 @@
-From: Geoff Levand <geoffrey.levand@am.sony.com>
-Subject: PS3: sg chaining support
-Date: Tue, 17 Jul 2007 14:18:28 -0700
-Message-ID: <469D3224.50608@am.sony.com>
-References: <Pine.LNX.4.62.0707171806100.29326@pademelon.sonytel.be>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: block/bsg.c
+Date: Tue, 17 Jul 2007 14:34:34 -0700
+Message-ID: <20070717143434.48836fb8.akpm@linux-foundation.org>
+References: <20070717065940.GZ5195@kernel.dk>
+	<20070717190705T.fujita.tomonori@lab.ntt.co.jp>
+	<20070717101928.GK5195@kernel.dk>
+	<200707172252.25729.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outbound-dub.frontbridge.com ([213.199.154.16]:7184 "EHLO
-	outbound4-dub-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754745AbXGQVSj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2007 17:18:39 -0400
-In-Reply-To: <Pine.LNX.4.62.0707171806100.29326@pademelon.sonytel.be>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200707172252.25729.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, linux-scsi@vger.kernel.org
 
-Hi Jens.
+On Tue, 17 Jul 2007 22:52:25 +0200
+Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 
-Geert Uytterhoeven wrote:
-> ---------- Forwarded message ----------
-> Date: Mon, 16 Jul 2007 11:47:26 +0200
-> From: Jens Axboe <jens.axboe@oracle.com>
-> To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-> Cc: Jens Axboe <jens.axboe@oracle.com>, paulus@samba.org
-> Subject: [PATCH 12/33] PPC: sg chaining support
-> 
-> This updates the ppc iommu/pci dma mappers to sg chaining.
-> 
-> Cc: paulus@samba.org
-> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> ---
->  arch/powerpc/kernel/dma_64.c            |    5 +++--
->  arch/powerpc/kernel/ibmebus.c           |   11 ++++++-----
->  arch/powerpc/kernel/iommu.c             |   18 +++++++++++-------
->  arch/powerpc/platforms/ps3/system-bus.c |    5 +++--
->  include/asm-powerpc/dma-mapping.h       |    2 +-
->  include/asm-powerpc/scatterlist.h       |    2 ++
->  6 files changed, 26 insertions(+), 17 deletions(-)
+> ide-{disk,scsi,tape} don't support REQ_TYPE_BLOCK_PC requests et all
+> (so attempts to use SG_IO, CDROM_SEND_PACKET and SCSI_IOCTL_SEND_COMMAND
+> will result in requests being failed and error messages in the kernel logs).
 
-I'm wondering what the status of this work is.  The patch I've
-seen no longer applies to ps3/system-bus.c.  A rebase to
-linux-2.6.git a5fcaa210626a79465321e344c91a6a7dc3881fa is below,
-but untested, as I don't have the other patches to do the build.
+In my case it results in a completely tits-up machine.  CPU stuck somewhere
+spinning with local interrutps disabled.
 
--Geoff
+If you see the log output I sent, I'm suspecting this might be because
+this BSG brainfart has exposed underlying bugs in IDE or SCSI.
 
-
-Subject: PS3: sg chaining support
-
-This updates the ps3 system bus dma mappers to sg chaining.
-
-CC: Jens Axboe <jens.axboe@oracle.com>
-From: Geoff Levand <geoffrey.levand@am.sony.com>
-
----
- arch/powerpc/platforms/ps3/system-bus.c |   13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
-
---- a/arch/powerpc/platforms/ps3/system-bus.c
-+++ b/arch/powerpc/platforms/ps3/system-bus.c
-@@ -622,17 +622,18 @@ static void ps3_unmap_single(struct devi
- 	}
- }
- 
--static int ps3_sb_map_sg(struct device *_dev, struct scatterlist *sg, int nents,
--	enum dma_data_direction direction)
-+static int ps3_sb_map_sg(struct device *_dev, struct scatterlist *sgl,
-+	int nents, enum dma_data_direction direction)
- {
- #if defined(CONFIG_PS3_DYNAMIC_DMA)
- 	BUG_ON("do");
- 	return -EPERM;
- #else
- 	struct ps3_system_bus_device *dev = ps3_dev_to_system_bus_dev(_dev);
-+	struct scatterlist *sg;
- 	int i;
- 
--	for (i = 0; i < nents; i++, sg++) {
-+	for_each_sg(sgl, sg, nents, i) {
- 		int result = ps3_dma_map(dev->d_region,
- 			page_to_phys(sg->page) + sg->offset, sg->length,
- 					 &sg->dma_address, 0);
-@@ -650,7 +651,7 @@ static int ps3_sb_map_sg(struct device *
- #endif
- }
- 
--static int ps3_ioc0_map_sg(struct device *_dev, struct scatterlist *sg,
-+static int ps3_ioc0_map_sg(struct device *_dev, struct scatterlist *sgl,
- 			   int nents,
- 			   enum dma_data_direction direction)
- {
-@@ -658,7 +659,7 @@ static int ps3_ioc0_map_sg(struct device
- 	return 0;
- }
- 
--static void ps3_sb_unmap_sg(struct device *_dev, struct scatterlist *sg,
-+static void ps3_sb_unmap_sg(struct device *_dev, struct scatterlist *sgl,
- 	int nents, enum dma_data_direction direction)
- {
- #if defined(CONFIG_PS3_DYNAMIC_DMA)
-@@ -666,7 +667,7 @@ static void ps3_sb_unmap_sg(struct devic
- #endif
- }
- 
--static void ps3_ioc0_unmap_sg(struct device *_dev, struct scatterlist *sg,
-+static void ps3_ioc0_unmap_sg(struct device *_dev, struct scatterlist *sgl,
- 			    int nents, enum dma_data_direction direction)
- {
- 	BUG();
+Note that I saw literally 20,000 lines of output in the bit which I snipped,
+so something has gone pretty wild in the handling of these bogus commands.
 
