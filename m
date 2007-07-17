@@ -1,36 +1,59 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] Don't define empty struct bsg_class_device if
-	!CONFIG_BLK_DEV_BSG  (was: Re: block/bsg.c)
-Date: Tue, 17 Jul 2007 14:10:17 +0200
-Message-ID: <20070717121017.GS5195@kernel.dk>
-References: <20070716165706.348f6bbf.akpm@linux-foundation.org> <Pine.LNX.4.62.0707171359110.29326@pademelon.sonytel.be>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 19/33] scsi_debug: support sg chaining
+Date: Tue, 17 Jul 2007 16:40:56 +0300
+Message-ID: <469CC6E8.7060702@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:1142 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751089AbXGQMKw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2007 08:10:52 -0400
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.62.0707171359110.29326@pademelon.sonytel.be>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:15113 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751622AbXGQNlM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 09:41:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, dgilbert@interlog.com
 
-On Tue, Jul 17 2007, Geert Uytterhoeven wrote:
-> Don't define an empty struct bsg_class_device if !CONFIG_BLK_DEV_BSG.
+Jens Axboe wrote ...
+> Cc: dgilbert@interlog.com
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> ---
+>  drivers/scsi/scsi_debug.c |   30 ++++++++++++++++--------------
+>  1 files changed, 16 insertions(+), 14 deletions(-)
 > 
-> It's embedded in struct request_queue, but there we have
-> 
-> #if defined(CONFIG_BLK_DEV_BSG)
-> 	struct bsg_class_device bsg_dev;
-> #endif
-> 
-> anyway.
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 4cd9c58..46a3e07 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
 
-Thanks, applied.
+(Majordumo has unsubscribed me from list since yesterday)
+(Don't know why. So this will appear out of order       )
 
--- 
-Jens Axboe
+Jens Hi!
+
+I have queued for submission a: 
+"convert to use the data buffer accessors and !use_sg cleanup"
+for this driver Just the other day. Should we not push the 
+cleanups first before this. That is what we did with other
+drivers.
+
+I have also sent patches for ide-scsi
+
+I Have in my Q cleanup patches for:
+drivers/scsi/qla1280.c
+drivers/scsi/qlogicpti.c
+drivers/scsi/aha1542.c
+drivers/scsi/advansys.c
+And more ...
+
+And also for this one
+drivers/scsi/gdth.c
+But that one has a patch in Q and I should rebase.
+
+If you want I can rebase all your driver patches above
+to my patches. Than send cleanup patches to the list and
+rebasing of sg-chaining if needed to you. I can send all
+cleanup patches tonight, and your rebases tomorrow.
+
+Boaz
 
