@@ -1,182 +1,54 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] aacraid: add vpd to inquiry (take 2)
-Date: Tue, 17 Jul 2007 14:01:28 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5DF6@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: sim710_device_remove seems buggy
+Date: Tue, 17 Jul 2007 12:52:16 -0600
+Message-ID: <20070717185216.GF14791@parisc-linux.org>
+References: <20070717165521.GE14791@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7C89C.8009BDA1"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:55217 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757957AbXGQSBb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 14:01:31 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id E91A81D98D5
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2007 11:01:29 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:34540 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756003AbXGQSwR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 14:52:17 -0400
+Content-Disposition: inline
+In-Reply-To: <20070717165521.GE14791@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Richard Hirst <rhirst@levanta.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Tue, Jul 17, 2007 at 10:55:21AM -0600, Matthew Wilcox wrote:
+> Unfortunately, I don't have a good idea about how to solve this.  The
+> least lame perhaps is to have separate routines for EISA and MCA
+> devices, each of which passes the shost to this routine.
 
-------_=_NextPart_001_01C7C89C.8009BDA1
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+I had an idea.  How does this look?  It's what I'm doing in advansys.
+Note that I've not tested it more than compilation ... need to get the
+EISA configurator running on parisc-linux in order to test it.
 
-It was reported to me that the 'ADPT' leading the serial number was bad
-form, that the inquiry vendor field was enough to differentiate the
-storage uniquely. Subsequent search found that another Adaptec AAC based
-driver reported the 8 hex serial number only without such adornments, so
-dropped ADPT to match. Resubmitting the patch with this alteration.
+diff --git a/drivers/scsi/sim710.c b/drivers/scsi/sim710.c
+index 018c65f..6ab11b4 100644
+--- a/drivers/scsi/sim710.c
++++ b/drivers/scsi/sim710.c
+@@ -139,6 +139,7 @@ sim710_probe_common(struct device *dev, unsigned long base_addr,
+ 		goto out_put_host;
+ 	}
+ 
++	dev_set_drvdata(dev, host);
+ 	scsi_scan_host(host);
+ 
+ 	return 0;
+@@ -156,7 +157,7 @@ sim710_probe_common(struct device *dev, unsigned long base_addr,
+ static __devexit int
+ sim710_device_remove(struct device *dev)
+ {
+-	struct Scsi_Host *host = dev_to_shost(dev);
++	struct Scsi_Host *host = dev_get_drvdata(dev);
+ 	struct NCR_700_Host_Parameters *hostdata =
+ 		(struct NCR_700_Host_Parameters *)host->hostdata[0];
+ 
 
-This attached patch is against current scsi-misc-2.6
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c  |  138
-+++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/aacraid/aacraid.h |   14 ++++
- 2 files changed, 152 insertions(+)
-
-Sincerely -- Mark Salyzyn
-
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org=20
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-> Sent: Monday, July 16, 2007 5:08 PM
-> To: linux-scsi@vger.kernel.org
-> Subject: [PATCH] aacraid: add vpd to inquiry
->=20
-> Report VPD inquiry page 0x80 with an unique array creation=20
-> serial number
-> (CUID). When an array is created, the metadata stored on the physical
-> drives gets an unique serial number. This serial number=20
-> remains constant
-> through array morphing or migration to other controllers.=20
-> This patch is
-> a forward port and modification to survive morphing and migration
-> operations, of a similar piece of (un-attributed author) code added to
-> the SLES10 SP1 aacraid driver.
->=20
-> To test the results of the patch, observe that=20
-> /dev/disk/by-id/ entries
-> will show up for the arrays resulting from the udev rules.=20
-> Also, as per
-> the udev rules, 'scsi_id -g -x -a -s /block/sd? -d /dev/sd?'=20
-> will report
-> the ID_SERIAL as constructed from the inquiry data.
-
-------_=_NextPart_001_01C7C89C.8009BDA1
-Content-Type: application/octet-stream;
-	name="aacraid_vpd2.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_vpd2.patch
-Content-Disposition: attachment;
-	filename="aacraid_vpd2.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDctMTcgMTM6NTI6MzMuMTYyODgwMTA3IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDctMTcgMTM6NTU6MTUuNTAzNTAzODI1IC0wNDAwCkBAIC03NTEsNiAr
-NzUxLDEwMSBAQAogCWlucXN0cmNweSAoIlYxLjAiLCBzdHItPnBybCk7CiB9CiAKK3N0YXRpYyB2
-b2lkIGdldF9jb250YWluZXJfc2VyaWFsX2NhbGxiYWNrKHZvaWQgKmNvbnRleHQsIHN0cnVjdCBm
-aWIgKiBmaWJwdHIpCit7CisJc3RydWN0IGFhY19nZXRfc2VyaWFsX3Jlc3AgKiBnZXRfc2VyaWFs
-X3JlcGx5OworCXN0cnVjdCBzY3NpX2NtbmQgKiBzY3NpY21kOworCisJQlVHX09OKGZpYnB0ciA9
-PSBOVUxMKTsKKworCXNjc2ljbWQgPSAoc3RydWN0IHNjc2lfY21uZCAqKSBjb250ZXh0OworCWlm
-ICghYWFjX3ZhbGlkX2NvbnRleHQoc2NzaWNtZCwgZmlicHRyKSkKKwkJcmV0dXJuOworCisJZ2V0
-X3NlcmlhbF9yZXBseSA9IChzdHJ1Y3QgYWFjX2dldF9zZXJpYWxfcmVzcCAqKSBmaWJfZGF0YShm
-aWJwdHIpOworCS8qIEZhaWx1cmUgaXMgaXJyZWxldmFudCwgdXNpbmcgZGVmYXVsdCB2YWx1ZSBp
-bnN0ZWFkICovCisJaWYgKGxlMzJfdG9fY3B1KGdldF9zZXJpYWxfcmVwbHktPnN0YXR1cykgPT0g
-Q1RfT0spIHsKKwkJY2hhciBzcFsxM107CisJCS8qIEVWUEQgYml0IHNldCAqLworCQlzcFswXSA9
-IElOUURfUERUX0RBOworCQlzcFsxXSA9IHNjc2ljbWQtPmNtbmRbMl07CisJCXNwWzJdID0gMDsK
-KwkJc3BbM10gPSBzbnByaW50ZihzcCs0LCBzaXplb2Yoc3ApLTQsICIlMDhYIiwKKwkJICBsZTMy
-X3RvX2NwdShnZXRfc2VyaWFsX3JlcGx5LT51aWQpKTsKKwkJYWFjX2ludGVybmFsX3RyYW5zZmVy
-KHNjc2ljbWQsIHNwLCAwLCBzaXplb2Yoc3ApKTsKKwl9CisKKwlzY3NpY21kLT5yZXN1bHQgPSBE
-SURfT0sgPDwgMTYgfCBDT01NQU5EX0NPTVBMRVRFIDw8IDggfCBTQU1fU1RBVF9HT09EOworCisJ
-YWFjX2ZpYl9jb21wbGV0ZShmaWJwdHIpOworCWFhY19maWJfZnJlZShmaWJwdHIpOworCXNjc2lj
-bWQtPnNjc2lfZG9uZShzY3NpY21kKTsKK30KKworLyoqCisgKglhYWNfZ2V0X2NvbnRhaW5lcl9z
-ZXJpYWwgLSBnZXQgY29udGFpbmVyIHNlcmlhbCwgbm9uZSBibG9ja2luZy4KKyAqLworc3RhdGlj
-IGludCBhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWwoc3RydWN0IHNjc2lfY21uZCAqIHNjc2ljbWQp
-Cit7CisJaW50IHN0YXR1czsKKwlzdHJ1Y3QgYWFjX2dldF9zZXJpYWwgKmRpbmZvOworCXN0cnVj
-dCBmaWIgKiBjbWRfZmliY29udGV4dDsKKwlzdHJ1Y3QgYWFjX2RldiAqIGRldjsKKworCWRldiA9
-IChzdHJ1Y3QgYWFjX2RldiAqKXNjc2ljbWQtPmRldmljZS0+aG9zdC0+aG9zdGRhdGE7CisKKwlp
-ZiAoIShjbWRfZmliY29udGV4dCA9IGFhY19maWJfYWxsb2MoZGV2KSkpCisJCXJldHVybiAtRU5P
-TUVNOworCisJYWFjX2ZpYl9pbml0KGNtZF9maWJjb250ZXh0KTsKKwlkaW5mbyA9IChzdHJ1Y3Qg
-YWFjX2dldF9zZXJpYWwgKikgZmliX2RhdGEoY21kX2ZpYmNvbnRleHQpOworCisJZGluZm8tPmNv
-bW1hbmQgPSBjcHVfdG9fbGUzMihWTV9Db250YWluZXJDb25maWcpOworCWRpbmZvLT50eXBlID0g
-Y3B1X3RvX2xlMzIoQ1RfQ0lEX1RPXzMyQklUU19VSUQpOworCWRpbmZvLT5jaWQgPSBjcHVfdG9f
-bGUzMihzY21kX2lkKHNjc2ljbWQpKTsKKworCXN0YXR1cyA9IGFhY19maWJfc2VuZChDb250YWlu
-ZXJDb21tYW5kLAorCQkgIGNtZF9maWJjb250ZXh0LCAKKwkJICBzaXplb2YgKHN0cnVjdCBhYWNf
-Z2V0X3NlcmlhbCksCisJCSAgRnNhTm9ybWFsLCAKKwkJICAwLCAxLCAKKwkJICAoZmliX2NhbGxi
-YWNrKSBnZXRfY29udGFpbmVyX3NlcmlhbF9jYWxsYmFjaywgCisJCSAgKHZvaWQgKikgc2NzaWNt
-ZCk7CisJCisJLyoKKwkgKglDaGVjayB0aGF0IHRoZSBjb21tYW5kIHF1ZXVlZCB0byB0aGUgY29u
-dHJvbGxlcgorCSAqLworCWlmIChzdGF0dXMgPT0gLUVJTlBST0dSRVNTKSB7CisJCXNjc2ljbWQt
-PlNDcC5waGFzZSA9IEFBQ19PV05FUl9GSVJNV0FSRTsKKwkJcmV0dXJuIDA7CisJfQorCQkKKwlw
-cmludGsoS0VSTl9XQVJOSU5HICJhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWw6IGFhY19maWJfc2Vu
-ZCBmYWlsZWQgd2l0aCBzdGF0dXM6ICVkLlxuIiwgc3RhdHVzKTsKKwlhYWNfZmliX2NvbXBsZXRl
-KGNtZF9maWJjb250ZXh0KTsKKwlhYWNfZmliX2ZyZWUoY21kX2ZpYmNvbnRleHQpOworCXJldHVy
-biAtMTsKK30KKworLyogRnVuY3Rpb246IHNldGlucXNlcmlhbAorICoKKyAqIEFyZ3VtZW50czog
-WzFdIHBvaW50ZXIgdG8gdm9pZCBbMV0gaW50CisgKgorICogUHVycG9zZTogU2V0cyBTQ1NJIFVu
-aXQgU2VyaWFsIG51bWJlci4KKyAqICAgICAgICAgIFRoaXMgaXMgYSBmYWtlLiBXZSBzaG91bGQg
-cmVhZCBhIHByb3BlcgorICogICAgICAgICAgc2VyaWFsIG51bWJlciBmcm9tIHRoZSBjb250YWlu
-ZXIuIDxTdVNFPkJ1dAorICogICAgICAgICAgd2l0aG91dCBkb2NzIGl0J3MgcXVpdGUgaGFyZCB0
-byBkbyBpdCA6LSkKKyAqICAgICAgICAgIFNvIHRoaXMgd2lsbCBoYXZlIHRvIGRvIGluIHRoZSBt
-ZWFudGltZS48L1N1U0U+CisgKi8KKworc3RhdGljIGludCBzZXRpbnFzZXJpYWwoc3RydWN0IGFh
-Y19kZXYgKmRldiwgdm9pZCAqZGF0YSwgaW50IGNpZCkKK3sKKwkvKgorCSAqCVRoaXMgYnJlYWtz
-IGFycmF5IG1pZ3JhdGlvbi4KKwkgKi8KKwlyZXR1cm4gc25wcmludGYoKGNoYXIgKikoZGF0YSks
-IHNpemVvZihzdHJ1Y3Qgc2NzaV9pbnEpIC0gNCwgIiUwOFglMDJYIiwKKwkJCWxlMzJfdG9fY3B1
-KGRldi0+YWRhcHRlcl9pbmZvLnNlcmlhbFswXSksIGNpZCk7Cit9CisKIHN0YXRpYyB2b2lkIHNl
-dF9zZW5zZSh1OCAqc2Vuc2VfYnVmLCB1OCBzZW5zZV9rZXksIHU4IHNlbnNlX2NvZGUsCiAJCSAg
-ICAgIHU4IGFfc2Vuc2VfY29kZSwgdTggaW5jb3JyZWN0X2xlbmd0aCwKIAkJICAgICAgdTggYml0
-X3BvaW50ZXIsIHUxNiBmaWVsZF9wb2ludGVyLApAQCAtMTc5OCw2ICsxODkzLDQ5IEBACiAJCWRw
-cmludGsoKEtFUk5fREVCVUcgIklOUVVJUlkgY29tbWFuZCwgSUQ6ICVkLlxuIiwgY2lkKSk7CiAJ
-CW1lbXNldCgmaW5xX2RhdGEsIDAsIHNpemVvZiAoc3RydWN0IGlucXVpcnlfZGF0YSkpOwogCisJ
-CWlmIChzY3NpY21kLT5jbW5kWzFdICYgMHgxICkgeworCQkJY2hhciAqYXJyID0gKGNoYXIgKikm
-aW5xX2RhdGE7CisKKwkJCS8qIEVWUEQgYml0IHNldCAqLworCQkJYXJyWzBdID0gKHNjbWRfaWQo
-c2NzaWNtZCkgPT0gaG9zdC0+dGhpc19pZCkgPworCQkJICBJTlFEX1BEVF9QUk9DIDogSU5RRF9Q
-RFRfREE7CisJCQlpZiAoc2NzaWNtZC0+Y21uZFsyXSA9PSAwKSB7CisJCQkJLyogc3VwcG9ydGVk
-IHZpdGFsIHByb2R1Y3QgZGF0YSBwYWdlcyAqLworCQkJCWFyclszXSA9IDI7CisJCQkJYXJyWzRd
-ID0gMHgwOworCQkJCWFycls1XSA9IDB4ODA7CisJCQkJYXJyWzFdID0gc2NzaWNtZC0+Y21uZFsy
-XTsKKwkJCQlhYWNfaW50ZXJuYWxfdHJhbnNmZXIoc2NzaWNtZCwgJmlucV9kYXRhLCAwLAorCQkJ
-CSAgc2l6ZW9mKGlucV9kYXRhKSk7CisJCQkJc2NzaWNtZC0+cmVzdWx0ID0gRElEX09LIDw8IDE2
-IHwKKwkJCQkgIENPTU1BTkRfQ09NUExFVEUgPDwgOCB8IFNBTV9TVEFUX0dPT0Q7CisJCQl9IGVs
-c2UgaWYgKHNjc2ljbWQtPmNtbmRbMl0gPT0gMHg4MCkgeworCQkJCS8qIHVuaXQgc2VyaWFsIG51
-bWJlciBwYWdlICovCisJCQkJYXJyWzNdID0gc2V0aW5xc2VyaWFsKGRldiwgJmFycls0XSwKKwkJ
-CQkgIHNjbWRfaWQoc2NzaWNtZCkpOworCQkJCWFyclsxXSA9IHNjc2ljbWQtPmNtbmRbMl07CisJ
-CQkJYWFjX2ludGVybmFsX3RyYW5zZmVyKHNjc2ljbWQsICZpbnFfZGF0YSwgMCwKKwkJCQkgIHNp
-emVvZihpbnFfZGF0YSkpOworCQkJCXJldHVybiBhYWNfZ2V0X2NvbnRhaW5lcl9zZXJpYWwoc2Nz
-aWNtZCk7CisJCQl9IGVsc2UgeworCQkJCS8qIHZwZCBwYWdlIG5vdCBpbXBsZW1lbnRlZCAqLwor
-CQkJCXNjc2ljbWQtPnJlc3VsdCA9IERJRF9PSyA8PCAxNiB8CisJCQkJICBDT01NQU5EX0NPTVBM
-RVRFIDw8IDggfAorCQkJCSAgU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OOworCQkJCXNldF9zZW5z
-ZSgodTggKikgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCisJCQkJICBJTExFR0FMX1JF
-UVVFU1QsCisJCQkJICBTRU5DT0RFX0lOVkFMSURfQ0RCX0ZJRUxELAorCQkJCSAgQVNFTkNPREVf
-Tk9fU0VOU0UsIDAsIDcsIDIsIDApOworCQkJCW1lbWNweShzY3NpY21kLT5zZW5zZV9idWZmZXIs
-CisJCQkJICAmZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSwKKwkJCQkgIChzaXplb2YoZGV2
-LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSkgPgorCQkJCSAgICBzaXplb2Yoc2NzaWNtZC0+c2Vu
-c2VfYnVmZmVyKSkKKwkJCQkgICAgICAgPyBzaXplb2Yoc2NzaWNtZC0+c2Vuc2VfYnVmZmVyKQor
-CQkJCSAgICAgICA6IHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSk7CisJCQl9
-CisJCQlzY3NpY21kLT5zY3NpX2RvbmUoc2NzaWNtZCk7CisJCQlyZXR1cm4gMDsKKwkJfQogCQlp
-bnFfZGF0YS5pbnFkX3ZlciA9IDI7CS8qIGNsYWltIGNvbXBsaWFuY2UgdG8gU0NTSS0yICovCiAJ
-CWlucV9kYXRhLmlucWRfcmRmID0gMjsJLyogQSByZXNwb25zZSBkYXRhIGZvcm1hdCB2YWx1ZSBv
-ZiB0d28gaW5kaWNhdGVzIHRoYXQgdGhlIGRhdGEgc2hhbGwgYmUgaW4gdGhlIGZvcm1hdCBzcGVj
-aWZpZWQgaW4gU0NTSS0yICovCiAJCWlucV9kYXRhLmlucWRfbGVuID0gMzE7CmRpZmYgLXJ1IGEv
-ZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFj
-cmFpZC5oCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA3LTA3LTE3IDEz
-OjUyOjMzLjE2Mjg4MDEwNyAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlk
-LmgJMjAwNy0wNy0xNyAxMzo1NToxNS41MDQ1MDM3MDAgLTA0MDAKQEAgLTE1NjcsNiArMTU2Nywy
-MCBAQAogCXU4CQlkYXRhWzE2XTsKIH07CiAKKyNkZWZpbmUgQ1RfQ0lEX1RPXzMyQklUU19VSUQg
-MTY1CitzdHJ1Y3QgYWFjX2dldF9zZXJpYWwgeworCV9fbGUzMgkJY29tbWFuZDsJLyogVk1fQ29u
-dGFpbmVyQ29uZmlnICovCisJX19sZTMyCQl0eXBlOwkJLyogQ1RfQ0lEX1RPXzMyQklUU19VSUQg
-Ki8KKwlfX2xlMzIJCWNpZDsKK307CisKK3N0cnVjdCBhYWNfZ2V0X3NlcmlhbF9yZXNwIHsKKwlf
-X2xlMzIJCWR1bW15MDsKKwlfX2xlMzIJCWR1bW15MTsKKwlfX2xlMzIJCXN0YXR1czsJLyogQ1Rf
-T0sgKi8KKwlfX2xlMzIJCXVpZDsKK307CisKIC8qCiAgKiBUaGUgZm9sbG93aW5nIGNvbW1hbmQg
-aXMgc2VudCB0byBzaHV0IGRvd24gZWFjaCBjb250YWluZXIuCiAgKi8K
-
-------_=_NextPart_001_01C7C89C.8009BDA1--
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
