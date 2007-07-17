@@ -1,135 +1,70 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] libsas: fix lockdep issue with ATA
-Date: Tue, 17 Jul 2007 13:29:56 +0200
-Message-ID: <20070717112955.GR5195@kernel.dk>
-References: <1184609751.3447.22.camel@localhost.localdomain>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: [PATCH] Don't define empty struct bsg_class_device if !CONFIG_BLK_DEV_BSG
+ (was: Re: block/bsg.c)
+Date: Tue, 17 Jul 2007 14:04:54 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0707171359110.29326@pademelon.sonytel.be>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:7092 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755181AbXGQLab (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2007 07:30:31 -0400
-Content-Disposition: inline
-In-Reply-To: <1184609751.3447.22.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584337861-52744245-1184673894=:29326"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752169AbXGQMFZ@vger.kernel.org>
+In-Reply-To: <20070716165706.348f6bbf.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 16 2007, James Bottomley wrote:
-> lockdep noticed that with ATA support the port->dev_list_lock was
-> entangled at irq context, so it now needs to become IRQ safe
-> 
-> ---
-> This applies against the aic94xx-sas-2.6 tree
-> 
-> James
-> 
-> diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> index a18c0f6..ce3385c 100644
-> --- a/drivers/scsi/libsas/sas_discover.c
-> +++ b/drivers/scsi/libsas/sas_discover.c
-> @@ -292,9 +292,9 @@ static int sas_get_port_device(struct asd_sas_port *port)
->  	port->disc.max_level = 0;
->  
->  	dev->rphy = rphy;
-> -	spin_lock(&port->dev_list_lock);
-> +	spin_lock_irqsave(&port->dev_list_lock, flags);
->  	list_add_tail(&dev->dev_list_node, &port->dev_list);
-> -	spin_unlock(&port->dev_list_lock);
-> +	spin_unlock_irqrestore(&port->dev_list_lock, flags);
->  
->  	return 0;
->  }
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-already uses GFP_KERNEL, so spin_lock_irq() suffices.
+---584337861-52744245-1184673894=:29326
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
-> @@ -688,12 +688,14 @@ static void sas_discover_domain(struct work_struct *work)
->  	}
->  
->  	if (error) {
-> +		unsigned long flags;
-> +
->  		sas_rphy_free(dev->rphy);
->  		dev->rphy = NULL;
->  
-> -		spin_lock(&port->dev_list_lock);
-> +		spin_lock_irqsave(&port->dev_list_lock, flags);
->  		list_del_init(&dev->dev_list_node);
-> -		spin_unlock(&port->dev_list_lock);
-> +		spin_unlock_irqrestore(&port->dev_list_lock, flags);
->  
->  		kfree(dev); /* not kobject_register-ed yet */
->  		port->port_dev = NULL;
+Don't define an empty struct bsg_class_device if !CONFIG_BLK_DEV_BSG.
 
-process context, no need to save flags here either.
+It's embedded in struct request_queue, but there we have
 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index d05fc23..1c15f37 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -628,6 +628,7 @@ static struct domain_device *sas_ex_discover_end_dev(
->  	struct domain_device *child = NULL;
->  	struct sas_rphy *rphy;
->  	int res;
-> +	unsigned long flags;
->  
->  	if (phy->attached_sata_host || phy->attached_sata_ps)
->  		return NULL;
-> @@ -677,9 +678,9 @@ static struct domain_device *sas_ex_discover_end_dev(
->  
->  		child->rphy = rphy;
->  
-> -		spin_lock(&parent->port->dev_list_lock);
-> +		spin_lock_irqsave(&parent->port->dev_list_lock, flags);
->  		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
-> -		spin_unlock(&parent->port->dev_list_lock);
-> +		spin_unlock_irqrestore(&parent->port->dev_list_lock, flags);
->  
->  		res = sas_discover_sata(child);
->  		if (res) {
+#if defined(CONFIG_BLK_DEV_BSG)
+	struct bsg_class_device bsg_dev;
+#endif
 
-ditto
+anyway.
 
-> @@ -701,9 +702,9 @@ static struct domain_device *sas_ex_discover_end_dev(
->  		child->rphy = rphy;
->  		sas_fill_in_rphy(child, rphy);
->  
-> -		spin_lock(&parent->port->dev_list_lock);
-> +		spin_lock_irqsave(&parent->port->dev_list_lock, flags);
->  		list_add_tail(&child->dev_list_node, &parent->port->dev_list);
-> -		spin_unlock(&parent->port->dev_list_lock);
-> +		spin_unlock_irqrestore(&parent->port->dev_list_lock, flags);
->  
->  		res = sas_discover_end_dev(child);
->  		if (res) {
+Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+---
+At first I considered dropping the #ifdef around request_queue.bsg_dev, but
+that would make the code more error-prone.
 
-ditto
+ include/linux/bsg.h |    1 -
+ 1 files changed, 1 deletion(-)
 
-> @@ -767,6 +768,7 @@ static struct domain_device *sas_ex_discover_expander(
->  	struct sas_expander_device *edev;
->  	struct asd_sas_port *port;
->  	int res;
-> +	unsigned long flags;
->  
->  	if (phy->routing_attr == DIRECT_ROUTING) {
->  		SAS_DPRINTK("ex %016llx:0x%x:D <--> ex %016llx:0x%x is not "
-> @@ -816,9 +818,9 @@ static struct domain_device *sas_ex_discover_expander(
->  	sas_fill_in_rphy(child, rphy);
->  	sas_rphy_add(rphy);
->  
-> -	spin_lock(&parent->port->dev_list_lock);
-> +	spin_lock_irqsave(&parent->port->dev_list_lock, flags);
->  	list_add_tail(&child->dev_list_node, &parent->port->dev_list);
-> -	spin_unlock(&parent->port->dev_list_lock);
-> +	spin_unlock_irqrestore(&parent->port->dev_list_lock, flags);
->  
->  	res = sas_discover_expander(child);
->  	if (res) {
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -60,7 +60,6 @@ struct bsg_class_device {
+ extern int bsg_register_queue(struct request_queue *, const char *);
+ extern void bsg_unregister_queue(struct request_queue *);
+ #else
+-struct bsg_class_device { };
+ #define bsg_register_queue(disk, name)		(0)
+ #define bsg_unregister_queue(disk)	do { } while (0)
+ #endif
 
-ditto :-)
+With kind regards,
+ 
+Geert Uytterhoeven
+Software Architect
 
--- 
-Jens Axboe
-
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+ 
+Phone:    +32 (0)2 700 8453	
+Fax:      +32 (0)2 700 8622	
+E-mail:   Geert.Uytterhoeven@sonycom.com	
+Internet: http://www.sony-europe.com/
+ 	
+Sony Network and Software Technology Center Europe	
+A division of Sony Service Centre (Europe) N.V.	
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium	
+VAT BE 0413.825.160 · RPR Brussels	
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584337861-52744245-1184673894=:29326--
