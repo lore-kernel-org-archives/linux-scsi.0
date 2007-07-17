@@ -1,78 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] libsas: fix lockdep issue with ATA
-Date: Tue, 17 Jul 2007 09:12:50 -0500
-Message-ID: <1184681570.3378.5.camel@localhost.localdomain>
-References: <1184609751.3447.22.camel@localhost.localdomain>
-	 <20070717112955.GR5195@kernel.dk>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: advansys cleanup
+Date: Tue, 17 Jul 2007 08:24:55 -0600
+Message-ID: <20070717142455.GB14791@parisc-linux.org>
+References: <20070716202815.GQ13826@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52155 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S933552AbXGQOMw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 10:12:52 -0400
-In-Reply-To: <20070717112955.GR5195@kernel.dk>
+Received: from palinux.external.hp.com ([192.25.206.14]:42959 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756857AbXGQOY5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 10:24:57 -0400
+Content-Disposition: inline
+In-Reply-To: <20070716202815.GQ13826@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: jeffreyfreeman@syncleus.com, ken@krwtech.com, Christoph Hellwig <hch@infradead.org>
 
-On Tue, 2007-07-17 at 13:29 +0200, Jens Axboe wrote:
-> On Mon, Jul 16 2007, James Bottomley wrote:
-> > lockdep noticed that with ATA support the port->dev_list_lock was
-> > entangled at irq context, so it now needs to become IRQ safe
-> > 
-> > ---
-> > This applies against the aic94xx-sas-2.6 tree
-> > 
-> > James
-> > 
-> > diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-> > index a18c0f6..ce3385c 100644
-> > --- a/drivers/scsi/libsas/sas_discover.c
-> > +++ b/drivers/scsi/libsas/sas_discover.c
-> > @@ -292,9 +292,9 @@ static int sas_get_port_device(struct asd_sas_port *port)
-> >  	port->disc.max_level = 0;
-> >  
-> >  	dev->rphy = rphy;
-> > -	spin_lock(&port->dev_list_lock);
-> > +	spin_lock_irqsave(&port->dev_list_lock, flags);
-> >  	list_add_tail(&dev->dev_list_node, &port->dev_list);
-> > -	spin_unlock(&port->dev_list_lock);
-> > +	spin_unlock_irqrestore(&port->dev_list_lock, flags);
-> >  
-> >  	return 0;
-> >  }
+On Mon, Jul 16, 2007 at 02:28:15PM -0600, Matthew Wilcox wrote:
+> I have to run, but here's what I've benn working on today if anyone
+> wants to test:
 > 
-> already uses GFP_KERNEL, so spin_lock_irq() suffices.
-> 
-> > @@ -688,12 +688,14 @@ static void sas_discover_domain(struct work_struct *work)
-> >  	}
-> >  
-> >  	if (error) {
-> > +		unsigned long flags;
-> > +
-> >  		sas_rphy_free(dev->rphy);
-> >  		dev->rphy = NULL;
-> >  
-> > -		spin_lock(&port->dev_list_lock);
-> > +		spin_lock_irqsave(&port->dev_list_lock, flags);
-> >  		list_del_init(&dev->dev_list_node);
-> > -		spin_unlock(&port->dev_list_lock);
-> > +		spin_unlock_irqrestore(&port->dev_list_lock, flags);
-> >  
-> >  		kfree(dev); /* not kobject_register-ed yet */
-> >  		port->port_dev = NULL;
-> 
-> process context, no need to save flags here either.
+> http://git.kernel.org/pub/scm/linux/kernel/git/willy/advansys-2.6.git
 
-OK, you caught me ... I was just doing the fastest thing I could to get
-lockdep to shut up.  By the way, it dumps about 120KB of logs so it's
-fun to get an actual trace of this...
+I was in so much of a hurry that I got the URL wrong.  It is:
 
-I'll make the fixes and resubmit
+http://git.kernel.org/?p=linux/kernel/git/willy/advansys.git;a=summary
 
-James
+I've posted the four patches that this git contains.
 
+I don't have an advansys card of my own, so I'm looking for testers.
+It compiles cleanly, but that's about the best I can say about it.
+I'm looking to do some more work on it today, including fixing the
+dreadful job somebody did of removing the check_region calls.  It'd be
+helpful to know that this much works (and if it doesn't, at which point
+in the patch series it stops working).
 
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
