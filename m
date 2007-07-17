@@ -1,42 +1,63 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: advansys cleanup
-Date: Tue, 17 Jul 2007 08:24:55 -0600
-Message-ID: <20070717142455.GB14791@parisc-linux.org>
-References: <20070716202815.GQ13826@parisc-linux.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: [PATCH] aacraid: correct valid container response in management ioctl
+Date: Tue, 17 Jul 2007 10:59:19 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5D2E@otce2k301.adaptec.com>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C7C883.0DA6D020"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42959 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756857AbXGQOY5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 10:24:57 -0400
-Content-Disposition: inline
-In-Reply-To: <20070716202815.GQ13826@parisc-linux.org>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:50960 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751646AbXGQO7V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 10:59:21 -0400
+Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 5791D191FBF
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jul 2007 07:59:20 -0700 (PDT)
+Content-class: urn:content-classes:message
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: jeffreyfreeman@syncleus.com, ken@krwtech.com, Christoph Hellwig <hch@infradead.org>
 
-On Mon, Jul 16, 2007 at 02:28:15PM -0600, Matthew Wilcox wrote:
-> I have to run, but here's what I've benn working on today if anyone
-> wants to test:
-> 
-> http://git.kernel.org/pub/scm/linux/kernel/git/willy/advansys-2.6.git
+This is a multi-part message in MIME format.
 
-I was in so much of a hurry that I got the URL wrong.  It is:
+------_=_NextPart_001_01C7C883.0DA6D020
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-http://git.kernel.org/?p=linux/kernel/git/willy/advansys.git;a=summary
+During an Adapter Initiated scan request, the query disk ioctl reports a
+value of 2 rather than 1 for the valid field. This presents a problem
+for some legacy management applications.
 
-I've posted the four patches that this git contains.
+This attached patch is against current scsi-misc-2.6
 
-I don't have an advansys card of my own, so I'm looking for testers.
-It compiles cleanly, but that's about the best I can say about it.
-I'm looking to do some more work on it today, including fixing the
-dreadful job somebody did of removing the check_region calls.  It'd be
-helpful to know that this much works (and if it doesn't, at which point
-in the patch series it stops working).
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patch attachments.
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+ drivers/scsi/aacraid/aachba.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+=20
+Sincerely -- Mark Salyzyn
+
+------_=_NextPart_001_01C7C883.0DA6D020
+Content-Type: application/octet-stream;
+	name="aacraid_valid_check.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_valid_check.patch
+Content-Disposition: attachment;
+	filename="aacraid_valid_check.patch"
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
+MDctMTcgMTA6NTI6NTAuNDA1MjI5Njc2IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDctMDctMTcgMTA6NTM6MjMuMjM1MDkwNjg2IC0wNDAwCkBAIC0yMDcwLDcg
+KzIwNzAsNyBAQAogCX0KIAllbHNlIHJldHVybiAtRUlOVkFMOwogCi0JcWQudmFsaWQgPSBmc2Ff
+ZGV2X3B0cltxZC5jbnVtXS52YWxpZDsKKwlxZC52YWxpZCA9IGZzYV9kZXZfcHRyW3FkLmNudW1d
+LnZhbGlkICE9IDA7CiAJcWQubG9ja2VkID0gZnNhX2Rldl9wdHJbcWQuY251bV0ubG9ja2VkOwog
+CXFkLmRlbGV0ZWQgPSBmc2FfZGV2X3B0cltxZC5jbnVtXS5kZWxldGVkOwogCg==
+
+------_=_NextPart_001_01C7C883.0DA6D020--
