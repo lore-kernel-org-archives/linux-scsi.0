@@ -1,56 +1,114 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH] dm-mpath-rdac: don't stomp on a request's transfer bit.
-Date: Tue, 17 Jul 2007 14:07:06 -0700
-Message-ID: <20070717210706.GA2277@plap.qlogic.org>
-References: <4696D6CB.6050504@csupomona.edu> <1184292400.5146.45.camel@linuxchandra> <20070713023743.GA5350@us.ibm.com>
+From: Geoff Levand <geoffrey.levand@am.sony.com>
+Subject: PS3: sg chaining support
+Date: Tue, 17 Jul 2007 14:18:28 -0700
+Message-ID: <469D3224.50608@am.sony.com>
+References: <Pine.LNX.4.62.0707171806100.29326@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:25600 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761568AbXGQVHK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jul 2007 17:07:10 -0400
-Content-Disposition: inline
-In-Reply-To: <20070713023743.GA5350@us.ibm.com>
+Received: from outbound-dub.frontbridge.com ([213.199.154.16]:7184 "EHLO
+	outbound4-dub-R.bigfish.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754745AbXGQVSj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2007 17:18:39 -0400
+In-Reply-To: <Pine.LNX.4.62.0707171806100.29326@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian De Wolf <bldewolf@csupomona.edu>
-Cc: linux-scsi@vger.kernel.org, device-mapper development <dm-devel@redhat.com>, sekharan@us.ibm.com, Mike Anderson <andmike@us.ibm.com>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Hi Jens.
+
+Geert Uytterhoeven wrote:
+> ---------- Forwarded message ----------
+> Date: Mon, 16 Jul 2007 11:47:26 +0200
+> From: Jens Axboe <jens.axboe@oracle.com>
+> To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+> Cc: Jens Axboe <jens.axboe@oracle.com>, paulus@samba.org
+> Subject: [PATCH 12/33] PPC: sg chaining support
+> 
+> This updates the ppc iommu/pci dma mappers to sg chaining.
+> 
+> Cc: paulus@samba.org
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> ---
+>  arch/powerpc/kernel/dma_64.c            |    5 +++--
+>  arch/powerpc/kernel/ibmebus.c           |   11 ++++++-----
+>  arch/powerpc/kernel/iommu.c             |   18 +++++++++++-------
+>  arch/powerpc/platforms/ps3/system-bus.c |    5 +++--
+>  include/asm-powerpc/dma-mapping.h       |    2 +-
+>  include/asm-powerpc/scatterlist.h       |    2 ++
+>  6 files changed, 26 insertions(+), 17 deletions(-)
+
+I'm wondering what the status of this work is.  The patch I've
+seen no longer applies to ps3/system-bus.c.  A rebase to
+linux-2.6.git a5fcaa210626a79465321e344c91a6a7dc3881fa is below,
+but untested, as I don't have the other patches to do the build.
+
+-Geoff
+
+
+Subject: PS3: sg chaining support
+
+This updates the ps3 system bus dma mappers to sg chaining.
+
+CC: Jens Axboe <jens.axboe@oracle.com>
+From: Geoff Levand <geoffrey.levand@am.sony.com>
+
 ---
+ arch/powerpc/platforms/ps3/system-bus.c |   13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-	On Thu, 12 Jul 2007, Mike Anderson wrote:
-
-	> Copying this mail to linux-scsi and Ccing Andrew Vasquez to possibly
-	> provide input on the Qlogic behavior.
-	...
-
-	> > > Jul 12 17:11:15 jimbo kernel: qla2xxx 0000:02:01.1: ISP System Error - mbx1=0h
-	> > > mbx2=8012h mbx3=8002h.
-	> > > Jul 12 17:11:15 jimbo kernel: qla2xxx 0000:02:01.1: Firmware has been previously
-	> > > dumped (ffffc2000171d000) -- ignoring request...
-	> > > Jul 12 17:11:16 jimbo kernel: qla2xxx 0000:02:01.1: Performing ISP error
-	> > > recovery - ha= ffff81007e85c530.
-
-	So what's happening here is the firmware is detecting a Xfer-ready
-	from the storage when in fact the data-direction for a mode-select
-	should be a write (DATA_OUT).
-
-	The following patch fixes the problem (typo).  Verified by Brian, as
-	well.
-
-diff --git a/drivers/md/dm-mpath-rdac.c b/drivers/md/dm-mpath-rdac.c
-index 8b776b8..16b1613 100644
---- a/drivers/md/dm-mpath-rdac.c
-+++ b/drivers/md/dm-mpath-rdac.c
-@@ -292,7 +292,7 @@ static struct request *get_rdac_req(struct rdac_handler *h,
- 	rq->end_io_data = h;
- 	rq->timeout = h->timeout;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
--	rq->cmd_flags = REQ_FAILFAST | REQ_NOMERGE;
-+	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
- 	return rq;
+--- a/arch/powerpc/platforms/ps3/system-bus.c
++++ b/arch/powerpc/platforms/ps3/system-bus.c
+@@ -622,17 +622,18 @@ static void ps3_unmap_single(struct devi
+ 	}
  }
  
+-static int ps3_sb_map_sg(struct device *_dev, struct scatterlist *sg, int nents,
+-	enum dma_data_direction direction)
++static int ps3_sb_map_sg(struct device *_dev, struct scatterlist *sgl,
++	int nents, enum dma_data_direction direction)
+ {
+ #if defined(CONFIG_PS3_DYNAMIC_DMA)
+ 	BUG_ON("do");
+ 	return -EPERM;
+ #else
+ 	struct ps3_system_bus_device *dev = ps3_dev_to_system_bus_dev(_dev);
++	struct scatterlist *sg;
+ 	int i;
+ 
+-	for (i = 0; i < nents; i++, sg++) {
++	for_each_sg(sgl, sg, nents, i) {
+ 		int result = ps3_dma_map(dev->d_region,
+ 			page_to_phys(sg->page) + sg->offset, sg->length,
+ 					 &sg->dma_address, 0);
+@@ -650,7 +651,7 @@ static int ps3_sb_map_sg(struct device *
+ #endif
+ }
+ 
+-static int ps3_ioc0_map_sg(struct device *_dev, struct scatterlist *sg,
++static int ps3_ioc0_map_sg(struct device *_dev, struct scatterlist *sgl,
+ 			   int nents,
+ 			   enum dma_data_direction direction)
+ {
+@@ -658,7 +659,7 @@ static int ps3_ioc0_map_sg(struct device
+ 	return 0;
+ }
+ 
+-static void ps3_sb_unmap_sg(struct device *_dev, struct scatterlist *sg,
++static void ps3_sb_unmap_sg(struct device *_dev, struct scatterlist *sgl,
+ 	int nents, enum dma_data_direction direction)
+ {
+ #if defined(CONFIG_PS3_DYNAMIC_DMA)
+@@ -666,7 +667,7 @@ static void ps3_sb_unmap_sg(struct devic
+ #endif
+ }
+ 
+-static void ps3_ioc0_unmap_sg(struct device *_dev, struct scatterlist *sg,
++static void ps3_ioc0_unmap_sg(struct device *_dev, struct scatterlist *sgl,
+ 			    int nents, enum dma_data_direction direction)
+ {
+ 	BUG();
 
