@@ -1,80 +1,42 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH 09/33] x86-64: update iommu/dma mapping functions to sg
-	helpers
-Date: Tue, 17 Jul 2007 09:56:37 +0200
-Message-ID: <20070717075637.GH5195@kernel.dk>
-References: <11845792671245-git-send-email-jens.axboe@oracle.com> <11845792681830-git-send-email-jens.axboe@oracle.com> <20070716130608.4d096e29.akpm@linux-foundation.org> <20070716201002.GQ5195@kernel.dk> <20070716133427.e212b753.akpm@linux-foundation.org> <20070717070217.GB5195@kernel.dk>
+From: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Subject: [PATCH] add PCI_VENDOR_ID macro for Brocade in pci_ids.h
+Date: Tue, 17 Jul 2007 13:40:10 +0530
+Message-ID: <20070717081010.GA8068@lsil.com>
+References: <20070713091330.GA5564@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:21155 "EHLO kernel.dk"
+Received: from mail0.lsil.com ([147.145.40.20]:58809 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754339AbXGQH5N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 17 Jul 2007 03:57:13 -0400
+	id S1755857AbXGQIMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 17 Jul 2007 04:12:18 -0400
 Content-Disposition: inline
-In-Reply-To: <20070717070217.GB5195@kernel.dk>
+In-Reply-To: <20070713091330.GA5564@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, ak@suse.de
+To: linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com, roger.hickerson@lsi.com, ggrignou@brocade.com
 
-On Tue, Jul 17 2007, Jens Axboe wrote:
-> On Mon, Jul 16 2007, Andrew Morton wrote:
-> > On Mon, 16 Jul 2007 22:10:03 +0200
-> > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > 
-> > > On Mon, Jul 16 2007, Andrew Morton wrote:
-> > > > On Mon, 16 Jul 2007 11:47:23 +0200
-> > > > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > > > 
-> > > > > This prepares x86-64 for sg chaining support.
-> > > > > 
-> > > > > Additional improvements/fixups for pci-gart from
-> > > > > Benny Halevy <bhalevy@panasas.com>
-> > > > > 
-> > > > > Cc: ak@suse.de
-> > > > > Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-> > > > > ---
-> > > > >  arch/x86_64/kernel/pci-calgary.c |   25 ++++++++------
-> > > > >  arch/x86_64/kernel/pci-gart.c    |   63 ++++++++++++++++++++-----------------
-> > > > >  arch/x86_64/kernel/pci-nommu.c   |    5 ++-
-> > > > >  3 files changed, 51 insertions(+), 42 deletions(-)
-> > > > 
-> > > > This causes fairly extensive destruction of 2.6.23 changes which are
-> > > > pending in Andi's tree.
-> > > > 
-> > > > I shall drop the block tree until a) Andi has merged the pending Calgary
-> > > > changes and b) the block tree has been fixed up to account for those (and
-> > > > other) changes.
-> > > > 
-> > > > Really, this was the perfectly worst time possible to go tromping all over
-> > > > everyone else's trees.
-> > > 
-> > > Well, that's a bit hard for me to know, all I can do is push my stuff to
-> > > for-akpm so that it gets -mm exposure. If I don't, then you are yelling
-> > > at me as well :-)
-> > 
-> > It is to be expected that there will be conflicts when making large-scale
-> > changes like this while there is 25MB of unmerged diff sitting out in 50
-> > different trees.  Doing it around the -rc1 time would be better.
-> > 
-> > Even better would be not doing it at all: add the necessary stuff into the
-> > block core and then send the followup work to the relevant maintainers. ie:
-> > standard practice.
-> 
-> I'll do that. Most of the stuff is trivial, but the x86-64 iommu changes
-> are probably the most tricky and invasive of them all.
+Reposting as it is not reached the list.
 
-OK, this is what I did:
+On Fri, Jul 13, 2007 at 02:43:30PM +0530, Prakash, Sathya wrote:
+Adds PCI_VENDOR_ID_BROCADE macro in include/linux/pci_ids.h file. This macro 
+is used in MPT Fusion FC drivers to support Brocade branded FC controllers
 
-Split the set into 3, in the following order:
+signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
 
-CORE -> DRIVERS -> ARCH
+---
 
-So that's 3 branches, core is based off master, drivers off core, and
-arch off drivers. I'll push core+drivers into #for-akpm for testing,
-then the arch bits will stay undisturbed until acked by maintainers.
-
--- 
-Jens Axboe
+diff -Naurp b/include/linux/pci_ids.h a/include/linux/pci_ids.h
+--- b/include/linux/pci_ids.h	2007-07-02 16:20:47.000000000 +0530
++++ a/include/linux/pci_ids.h	2007-07-13 11:34:32.000000000 +0530
+@@ -2043,6 +2043,8 @@
+ 
+ #define PCI_VENDOR_ID_ARIMA		0x161f
+ 
++#define PCI_VENDOR_ID_BROCADE		0x1657
++
+ #define PCI_VENDOR_ID_SIBYTE		0x166d
+ #define PCI_DEVICE_ID_BCM1250_PCI	0x0001
+ #define PCI_DEVICE_ID_BCM1250_HT	0x0002
 
