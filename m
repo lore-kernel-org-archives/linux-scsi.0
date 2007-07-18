@@ -1,66 +1,86 @@
-From: Christian Hesse <mail@earthworm.de>
-Subject: typo in linux/Documentation/scsi/aic7xxx.txt
-Date: Wed, 18 Jul 2007 17:29:48 +0200
-Message-ID: <200707181729.54710.mail@earthworm.de>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: PS3 Storage Driver O_DIRECT issue
+Date: Wed, 18 Jul 2007 18:12:34 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0707181808030.15632@pademelon.sonytel.be>
+References: <20070704132212.726923000@pademelon.sonytel.be>
+ <20070713122752.GA854@aepfle.de>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_yHjnGGHbovyED7M"
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584337861-1037303210-1184774900=:15632"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kolab.mylinuxtime.de ([212.112.242.22]:40360 "EHLO
-	kolab.mylinuxtime.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759841AbXGRP70 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 11:59:26 -0400
-Received: from localhost (ip2 [127.0.0.1])
-	by kolab.mylinuxtime.de (Postfix) with ESMTP id EA1AF7C0CA3
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 17:25:08 +0200 (CEST)
-Received: from kolab.mylinuxtime.de ([127.0.0.1])
- by localhost (kolab.mylinuxtime.de [127.0.0.1]) (amavisd-new, port 10024)
- with ESMTP id 19787-08 for <linux-scsi@vger.kernel.org>;
- Wed, 18 Jul 2007 17:25:08 +0200 (CEST)
-Received: from localhost (ip2 [127.0.0.1])
-	by kolab.mylinuxtime.de (Postfix) with ESMTP id C3B9D7C0D81
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 17:25:08 +0200 (CEST)
-Received: from localhost (unknown [10.5.1.205])
-	by kolab.mylinuxtime.de (Postfix) with ESMTP id B0EE77C0CA3
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 17:25:08 +0200 (CEST)
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:33803 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758282AbXGRQMg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 18 Jul 2007 12:12:36 -0400
+In-Reply-To: <20070713122752.GA854@aepfle.de>
+Content-ID: <Pine.LNX.4.62.0707181808410.15632@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Olaf Hering <olaf@aepfle.de>
+Cc: Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@ipvvis.unipv.it>, Geoff Levand <geoffrey.levand@am.sony.com>, Linux/PPC Development <linuxppc-dev@ozlabs.org>, Linux Kernel Development <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
---Boundary-00=_yHjnGGHbovyED7M
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Hello everybody,
+---584337861-1037303210-1184774900=:15632
+Content-Type: TEXT/PLAIN; CHARSET=UTF-8
+Content-Transfer-Encoding: 8BIT
+Content-ID: <Pine.LNX.4.62.0707181808411.15632@pademelon.sonytel.be>
 
-I think I found a typo in linux/Documentation/scsi/aic7xxx.txt. Patch is 
-attached.
+On Fri, 13 Jul 2007, Olaf Hering wrote:
+> This driver (or the generic PS3 code) has appearently problems with
+> O_DIRECT. 
+> glibc aborts parted because the malloc metadata get corrupted. While it
+> is reproducible, the place where it crashes changes with every version
+> of the debug attempt.
+> I dont have a handle right now, all I know is that the metadata after a
+> malloc area get overwritten with zeros.
+> 
+> 
+> Can you have a look at this? 
+> parted /dev/ps3da
+> print (a few times)
 
-Signed-off-by: Christian Hesse <mail@earthworm.de>
--- 
-Regards,
-Chris
+I could reproduce it with parted 1.8.0 and later.
 
---Boundary-00=_yHjnGGHbovyED7M
-Content-Type: text/x-diff;
-  charset="utf-8";
-  name="typo.diff"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="typo.diff"
+The patch below fixes it (tested with 1.8.0, 1.8.2 (FC6), 1.9.0 (git)).
 
---- linux/Documentation/scsi/aic7xxx.txt	2007-07-09 10:54:39.000000000 +0200
-+++ linux/Documentation/scsi/aic7xxx.txt	2007-07-18 17:22:37.425400931 +0200
-@@ -256,7 +256,7 @@ The following information is available i
-               Option: global_tag_depth:[value]
-           Definition: Global tag depth for all targets on all busses.
-                       This option sets the default tag depth which
--                      may be selectively overridden vi the tag_info
-+                      may be selectively overridden via the tag_info
-                       option.
-      Possible Values: 1 - 253
-        Default Value: 32
+Apparently sometimes bio_cur_sectors(bio)*KERNEL_SECTOR_SIZE != bvec->bv_len
+when using O_DIRECT. Is that true (or a bug?)?
 
---Boundary-00=_yHjnGGHbovyED7M--
+If it's OK, I'll fold this patch into the main ps3disk patch.
+---
+ drivers/block/ps3disk.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/block/ps3disk.c
++++ b/drivers/block/ps3disk.c
+@@ -108,7 +108,7 @@ static void ps3disk_scatter_gather(struc
+ 			__func__, __LINE__, i, bio_segments(bio),
+ 			bio_sectors(bio), sector);
+ 		bio_for_each_segment(bvec, bio, j) {
+-			size = bio_cur_sectors(bio)*KERNEL_SECTOR_SIZE;
++			size = bvec->bv_len;
+ 			buf = __bio_kmap_atomic(bio, j, KM_IRQ0);
+ 			if (gather)
+ 				memcpy(dev->bounce_buf+offset, buf, size);
+
+With kind regards,
+ 
+Geert Uytterhoeven
+Software Architect
+
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+ 
+Phone:    +32 (0)2 700 8453	
+Fax:      +32 (0)2 700 8622	
+E-mail:   Geert.Uytterhoeven@sonycom.com	
+Internet: http://www.sony-europe.com/
+ 	
+Sony Network and Software Technology Center Europe	
+A division of Sony Service Centre (Europe) N.V.	
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium	
+VAT BE 0413.825.160 · RPR Brussels	
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584337861-1037303210-1184774900=:15632--
