@@ -1,93 +1,92 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 08:54:14 -0500
-Message-ID: <1184766854.3464.4.camel@localhost.localdomain>
-References: <20070717190705T.fujita.tomonori@lab.ntt.co.jp>
-	 <20070717101928.GK5195@kernel.dk>
-	 <1184698434.3378.15.camel@localhost.localdomain>
-	 <20070718092130V.tomof@acm.org>
+Date: Wed, 18 Jul 2007 09:11:57 -0500
+Message-ID: <1184767917.3464.13.camel@localhost.localdomain>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org>
+	 <1184710755.3378.30.camel@localhost.localdomain>
+	 <469D52D1.1000803@garzik.org>  <200707180243.13368.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:53097 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:37655 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754808AbXGRNyR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 09:54:17 -0400
-In-Reply-To: <20070718092130V.tomof@acm.org>
+	with ESMTP id S1753708AbXGROMA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 10:12:00 -0400
+In-Reply-To: <200707180243.13368.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2007-07-18 at 09:20 +0900, FUJITA Tomonori wrote:
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> Subject: Re: block/bsg.c
-> Date: Tue, 17 Jul 2007 13:53:54 -0500
-> 
-> > On Tue, 2007-07-17 at 12:19 +0200, Jens Axboe wrote:
-> > > > > Since Linus is happily snoring by now, could you test and see if the
-> > > > > tree works for you?
-> > > > 
-> > > > It works for me. I'll submit some minor patches against your bsg
-> > > > branch to scsi-ml. Can you push them together?
-> > > 
-> > > Certainly, I'll pull them into the bsg branch.
+On Wed, 2007-07-18 at 02:43 +0200, Bartlomiej Zolnierkiewicz wrote:
+> [ James, please remeber to cc: linux-ide on IDE patches, thanks. ]
+
+Blame Andrew ... I assumed he'd be reporting the problem to the relevant
+lists, so I just did a reply all ...
+
+> On Wednesday 18 July 2007, Jeff Garzik wrote:
+> > James Bottomley wrote:
+> > > @@ -1052,9 +1054,10 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
+> > >  	int err, (*setfunc)(ide_drive_t *, int);
+> > >  	u8 *val;
+> > >  
+> > > -	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> > > -	if (err != -ENOTTY)
+> > > -		return err;
+> > > +	switch (cmd) {
+> > > +	case SG_IO:
+> > > +		return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> > > +	}
+> > >  
+> > >  	switch (cmd) {
+> > >  	case HDIO_GET_32BIT:	    val = &drive->io_32bit;	 goto read_val;
 > > 
-> > While you're at it, here's a patch to separate BSG and SCSI again (so
-> > SCSI can be built modular).  The way I did it was simply to move the
-> > SCSI specific logic into SCSI.  When you come up with a generic way to
-> > register the bsg requiring drivers, then we can move it out again.
+> > 
+> > At that point you might as well use an 'if'.
+> > 
+> > But overall -- agreed.  ACK.
 > 
-> Thanks, looks nice.
-
-You're welcome ... although there's still a problem for modular builds.
-This is what my /sys/class/bsg looks like:
-
-So you see the if (rq->kobj.parent) is causing confusing naming.  The
-reason the first one shows up as 0:0:0:0 is because in an initrd
-scsi_mod is loaded first (which is when bsg binds) followed by sd_mod
-(which is what gives the device the ULD binding and hence the name).  I
-don't see any way around this, so I'd advocate simply using the sdev
-name rather than the block device name and dumping the if.
-
-> > --- a/drivers/scsi/scsi_sysfs.c
-> > +++ b/drivers/scsi/scsi_sysfs.c
-> > @@ -714,6 +714,7 @@ static int attr_add(struct device *dev, struct device_attribute *attr)
-> >  int scsi_sysfs_add_sdev(struct scsi_device *sdev)
-> >  {
-> >  	int error, i;
-> > +	struct request_queue *rq = sdev->request_queue;
-> >  
-> >  	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
-> >  		return error;
-> > @@ -733,6 +734,16 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
-> >  	/* take a reference for the sdev_classdev; this is
-> >  	 * released by the sdev_class .release */
-> >  	get_device(&sdev->sdev_gendev);
-> > +
-> > +	if (rq->kobj.parent)
-> > +		error = bsg_register_queue(rq, kobject_name(rq->kobj.parent));
-> > +	else
-> > +		error = bsg_register_queue(rq, kobject_name(&sdev->sdev_gendev.kobj));
-> > +	if (error) {
-> > +		sdev_printk(KERN_INFO, sdev, "Failed to register bsg queue\n");
-> > +		goto out;
+> James/Jeff thanks for following the issue but NAK. ;)
 > 
-> Needs more cleanup here?
+> Causes regression wrt ide-floppy CDROMEJECT/CDROMCLOSETRAY support when
+> compared to 2.6.22 and SG_IO is not supported by ide-{disk,scsi,tape}.
 
-No ... this bit's magic and clever.  Once you've set up the devices and
-done a get_device, cleanup is simply doing a put_device because it's all
-done in the release routine.
+Well ... that was why I put the case statement in ... I was sure there
+would be other ioctls I missed.
 
-> We might just ignore the error here since it's not fatal not to create
-> a bsg device, I guess.
-> 
-> I updated the patch against the latest code (which has just be merged
-> to Linus's tree).
+> Luckily Linus has already fixed the issue properly.
 
-Thanks,
+Actually, no, that's just a reversion.  I think we need the attached to
+complete all of this.
+
+> BTW cmd == 1 IOCTL is not defined/used by IDE driver.
+
+Andrew's trace clearly shows that something is sending cmd == 1 down, so
+I'm nearly positive at one time this was a legitimate ioctl for IDE.
+Anyway it's probably time to kill this deprecated ioctl in SCSI.
 
 James
+
+diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
+index 077fb67..fe65473 100644
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -156,6 +156,7 @@
+ #include <asm/uaccess.h>
+ #include <asm/io.h>
+ 
++#include <scsi/sg.h>
+ 
+ /* default maximum number of failures */
+ #define IDE_DEFAULT_MAX_FAILURES 	1
+@@ -1173,6 +1174,7 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
+ 
+ 		case CDROMEJECT:
+ 		case CDROMCLOSETRAY:
++		case SG_IO:
+ 			return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+ 
+ 		case HDIO_GET_BUSSTATE:
 
 
