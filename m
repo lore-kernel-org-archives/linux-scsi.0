@@ -1,92 +1,91 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 09:11:57 -0500
-Message-ID: <1184767917.3464.13.camel@localhost.localdomain>
-References: <20070716165706.348f6bbf.akpm@linux-foundation.org>
-	 <1184710755.3378.30.camel@localhost.localdomain>
-	 <469D52D1.1000803@garzik.org>  <200707180243.13368.bzolnier@gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
+Date: Wed, 18 Jul 2007 17:13:02 +0300
+Message-ID: <469E1FEE.9060106@panasas.com>
+References: <468CDB3C.4060500@panasas.com>	<468CF58E.1020901@panasas.com>	<46967C78.3070100@cs.wisc.edu> <20070712154739K.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:37655 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753708AbXGROMA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 10:12:00 -0400
-In-Reply-To: <200707180243.13368.bzolnier@gmail.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:24998 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755543AbXGRONy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 10:13:54 -0400
+In-Reply-To: <20070712154739K.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>, michaelc@cs.wisc.edu
+Cc: James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Wed, 2007-07-18 at 02:43 +0200, Bartlomiej Zolnierkiewicz wrote:
-> [ James, please remeber to cc: linux-ide on IDE patches, thanks. ]
-
-Blame Andrew ... I assumed he'd be reporting the problem to the relevant
-lists, so I just did a reply all ...
-
-> On Wednesday 18 July 2007, Jeff Garzik wrote:
-> > James Bottomley wrote:
-> > > @@ -1052,9 +1054,10 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
-> > >  	int err, (*setfunc)(ide_drive_t *, int);
-> > >  	u8 *val;
-> > >  
-> > > -	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
-> > > -	if (err != -ENOTTY)
-> > > -		return err;
-> > > +	switch (cmd) {
-> > > +	case SG_IO:
-> > > +		return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
-> > > +	}
-> > >  
-> > >  	switch (cmd) {
-> > >  	case HDIO_GET_32BIT:	    val = &drive->io_32bit;	 goto read_val;
-> > 
-> > 
-> > At that point you might as well use an 'if'.
-> > 
-> > But overall -- agreed.  ACK.
+FUJITA Tomonori wrote:
+> From: Mike Christie <michaelc@cs.wisc.edu>
+> Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
+> Date: Thu, 12 Jul 2007 14:09:44 -0500
 > 
-> James/Jeff thanks for following the issue but NAK. ;)
+>> Boaz Harrosh wrote:
+>>> +/*
+>>> + * Should fit within a single page.
+>>> + */
+>>> +enum { SCSI_MAX_SG_SEGMENTS =
+>>> +	((PAGE_SIZE - sizeof(struct scsi_sgtable)) /
+>>> +	sizeof(struct scatterlist)) };
+>>> +
+>>> +enum { SG_MEMPOOL_NR =
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 7) +
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 15) +
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 31) +
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 63) +
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 127) +
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 255) +
+>>> +	(SCSI_MAX_SG_SEGMENTS >= 511)
+>>> +};
+>>>  
+>> What does SCSI_MAX_SG_SEGMENTS end up being on x86 now? On x86_64 or 
+>> some other arch, we were going over a page when doing 
+>> SCSI_MAX_PHYS_SEGMENTS of 256 right?
 > 
-> Causes regression wrt ide-floppy CDROMEJECT/CDROMCLOSETRAY support when
-> compared to 2.6.22 and SG_IO is not supported by ide-{disk,scsi,tape}.
+> Seems that 170 with x86 and 127 with x86_64.
+> 
 
-Well ... that was why I put the case statement in ... I was sure there
-would be other ioctls I missed.
+with scsi_sgtable we get one less than now
 
-> Luckily Linus has already fixed the issue properly.
+Arch                      | SCSI_MAX_SG_SEGMENTS =  | sizeof(struct scatterlist)
+--------------------------|-------------------------|---------------------------
+x86_64                    | 127                     |32
+i386 CONFIG_HIGHMEM64G=y  | 204                     |20
+i386 other                | 255                     |16
 
-Actually, no, that's just a reversion.  I think we need the attached to
-complete all of this.
+What's nice about this code is that now finally it is
+automatically calculated in compile time. Arch people
+don't have the headache "did I break SCSI-ml?". 
+For example observe the current bug with i386 
+CONFIG_HIGHMEM64G=y.
 
-> BTW cmd == 1 IOCTL is not defined/used by IDE driver.
+The same should be done with BIO's. Than ARCHs with big
+pages can gain even more.
 
-Andrew's trace clearly shows that something is sending cmd == 1 down, so
-I'm nearly positive at one time this was a legitimate ioctl for IDE.
-Anyway it's probably time to kill this deprecated ioctl in SCSI.
+> 
+>> What happened to Jens's scatter list chaining and how does this relate 
+>> to it then?
+> 
+> With Jens' sglist, we can set SCSI_MAX_SG_SEGMENTS to whatever we
+> want. We can remove the above code.
+> 
+> We need to push this and Jens' sglist together in one merge window, I
+> think.
 
-James
+No Tomo the above does not go away. What goes away is maybe:
 
-diff --git a/drivers/ide/ide.c b/drivers/ide/ide.c
-index 077fb67..fe65473 100644
---- a/drivers/ide/ide.c
-+++ b/drivers/ide/ide.c
-@@ -156,6 +156,7 @@
- #include <asm/uaccess.h>
- #include <asm/io.h>
- 
-+#include <scsi/sg.h>
- 
- /* default maximum number of failures */
- #define IDE_DEFAULT_MAX_FAILURES 	1
-@@ -1173,6 +1174,7 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
- 
- 		case CDROMEJECT:
- 		case CDROMCLOSETRAY:
-+		case SG_IO:
- 			return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
- 
- 		case HDIO_GET_BUSSTATE:
+ 	blk_queue_max_hw_segments(q, shost->sg_tablesize);
+-	blk_queue_max_phys_segments(q, SCSI_MAX_SG_SEGMENTS);
+ 	blk_queue_max_sectors(q, shost->max_sectors);
 
+I'm working on a convergence patches that will do scsi_sg_pools cleanup
+which is common to both our patches, than scsi_sgtable, and than 
+sg-chaining on top of that. I hope it gets accepted. 
+The sg-chaining is much much simpler over scsi_sgtables.
 
+If both sg_chaining and scsi_sgtables gets into the same merge window
+it could be grate. It will need some testing period.
+
+Boaz
