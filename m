@@ -1,99 +1,176 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
-Date: Wed, 18 Jul 2007 22:17:10 +0200
-Message-ID: <20070718201709.GM11657@kernel.dk>
-References: <468CDB3C.4060500@panasas.com> <468CF58E.1020901@panasas.com> <46967C78.3070100@cs.wisc.edu> <20070712154739K.tomof@acm.org> <469E1FEE.9060106@panasas.com> <20070718141903.GB11657@kernel.dk> <469E2B17.3050603@panasas.com> <20070718180350.GD11657@kernel.dk> <469E6838.8070405@panasas.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: block/bsg.c
+Date: Wed, 18 Jul 2007 22:32:58 +0200
+Message-ID: <200707182232.58961.bzolnier@gmail.com>
+References: <20070716165706.348f6bbf.akpm@linux-foundation.org> <200707180243.13368.bzolnier@gmail.com> <1184767917.3464.13.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:25203 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752640AbXGRURe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jul 2007 16:17:34 -0400
+Received: from ug-out-1314.google.com ([66.249.92.168]:48969 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751911AbXGRVHK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 17:07:10 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so325086ugf
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 14:07:09 -0700 (PDT)
+In-Reply-To: <1184767917.3464.13.camel@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <469E6838.8070405@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benny Halevy <bhalevy@panasas.com>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <tomof@acm.org>, michaelc@cs.wisc.edu, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Andrew Morton <akpm@linux-foundation.org>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 
-On Wed, Jul 18 2007, Benny Halevy wrote:
-> Jens Axboe wrote:
-> > On Wed, Jul 18 2007, Boaz Harrosh wrote:
-> >> Jens Axboe wrote:
-> >>> On Wed, Jul 18 2007, Boaz Harrosh wrote:
-> >>>> FUJITA Tomonori wrote:
-> >>>>> From: Mike Christie <michaelc@cs.wisc.edu>
-> >>>>> Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
-> >>>>> Date: Thu, 12 Jul 2007 14:09:44 -0500
-> >>>>>
-> >>>>>> Boaz Harrosh wrote:
-> >>>>>>> +/*
-> >>>>>>> + * Should fit within a single page.
-> >>>>>>> + */
-> >>>>>>> +enum { SCSI_MAX_SG_SEGMENTS =
-> >>>>>>> +	((PAGE_SIZE - sizeof(struct scsi_sgtable)) /
-> >>>>>>> +	sizeof(struct scatterlist)) };
-> >>>>>>> +
-> >>>>>>> +enum { SG_MEMPOOL_NR =
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 7) +
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 15) +
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 31) +
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 63) +
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 127) +
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 255) +
-> >>>>>>> +	(SCSI_MAX_SG_SEGMENTS >= 511)
-> >>>>>>> +};
-> >>>>>>>  
-> >>>>>> What does SCSI_MAX_SG_SEGMENTS end up being on x86 now? On x86_64 or 
-> >>>>>> some other arch, we were going over a page when doing 
-> >>>>>> SCSI_MAX_PHYS_SEGMENTS of 256 right?
-> >>>>> Seems that 170 with x86 and 127 with x86_64.
-> >>>>>
-> >>>> with scsi_sgtable we get one less than now
-> >>>>
-> >>>> Arch                      | SCSI_MAX_SG_SEGMENTS =  | sizeof(struct scatterlist)
-> >>>> --------------------------|-------------------------|---------------------------
-> >>>> x86_64                    | 127                     |32
-> >>>> i386 CONFIG_HIGHMEM64G=y  | 204                     |20
-> >>>> i386 other                | 255                     |16
-> >>>>
-> >>>> What's nice about this code is that now finally it is
-> >>>> automatically calculated in compile time. Arch people
-> >>>> don't have the headache "did I break SCSI-ml?". 
-> >>>> For example observe the current bug with i386 
-> >>>> CONFIG_HIGHMEM64G=y.
-> >>>>
-> >>>> The same should be done with BIO's. Than ARCHs with big
-> >>>> pages can gain even more.
-> >>>>
-> >>>>>> What happened to Jens's scatter list chaining and how does this relate 
-> >>>>>> to it then?
-> >>>>> With Jens' sglist, we can set SCSI_MAX_SG_SEGMENTS to whatever we
-> >>>>> want. We can remove the above code.
-> >>>>>
-> >>>>> We need to push this and Jens' sglist together in one merge window, I
-> >>>>> think.
-> >>>> No Tomo the above does not go away. What goes away is maybe:
-> >>> It does go away, since we can just set it to some safe value and use
-> >>> chaining to get us where we want.
-> >> In my patches SCSI_MAX_PHYS_SEGMENTS has went away it does not exist
-> >> anymore.
-> > 
-> > Sure, I could just kill it as well. The point is that it's a parallel
-> > development, there's nothing in your patch that helps the sg chaining
-> > whatsoever. The only "complex" thing in the SCSI layer for sg chaining,
-> > is chaining when allocating and walking that chain on freeing. That's
-> > it!
+
+Hi,
+
+On Wednesday 18 July 2007, James Bottomley wrote:
+> On Wed, 2007-07-18 at 02:43 +0200, Bartlomiej Zolnierkiewicz wrote:
+> > [ James, please remeber to cc: linux-ide on IDE patches, thanks. ]
 > 
-> It seems like having the pool index in the sgtable structure simplifies
-> the implementation a bit for allocation and freeing of linked sgtables.
-> Boaz will send an example tomorrow (hopefully) showing how the merged
-> code looks like.
+> Blame Andrew ... I assumed he'd be reporting the problem to the relevant
+> lists, so I just did a reply all ...
 
-The index stuff isn't complex, so I don't think you can call that a real
-simplification. It's not for free either, there's a size cost to pay.
+No need to blame anybody, especially since it seems that one more person
+forgot about adding linux-ide ML.  ;)
 
--- 
-Jens Axboe
+> > On Wednesday 18 July 2007, Jeff Garzik wrote:
+> > > James Bottomley wrote:
+> > > > @@ -1052,9 +1054,10 @@ int generic_ide_ioctl(ide_drive_t *drive, struct file *file, struct block_device
+> > > >  	int err, (*setfunc)(ide_drive_t *, int);
+> > > >  	u8 *val;
+> > > >  
+> > > > -	err = scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> > > > -	if (err != -ENOTTY)
+> > > > -		return err;
+> > > > +	switch (cmd) {
+> > > > +	case SG_IO:
+> > > > +		return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+> > > > +	}
+> > > >  
+> > > >  	switch (cmd) {
+> > > >  	case HDIO_GET_32BIT:	    val = &drive->io_32bit;	 goto read_val;
+> > > 
+> > > 
+> > > At that point you might as well use an 'if'.
+> > > 
+> > > But overall -- agreed.  ACK.
+> > 
+> > James/Jeff thanks for following the issue but NAK. ;)
+> > 
+> > Causes regression wrt ide-floppy CDROMEJECT/CDROMCLOSETRAY support when
+> > compared to 2.6.22 and SG_IO is not supported by ide-{disk,scsi,tape}.
+> 
+> Well ... that was why I put the case statement in ... I was sure there
+> would be other ioctls I missed.
 
+The thing is that ide-{disk,scsi,tape} really don't support
+REQ_TYPE_BLOCK_PC type requests so ide.c::generic_ide_ioctl()
+is not the best place to add handling of SG_IO.
+
+Patch attached.
+
+> > Luckily Linus has already fixed the issue properly.
+> 
+> Actually, no, that's just a reversion.  I think we need the attached to
+> complete all of this.
+> 
+> > BTW cmd == 1 IOCTL is not defined/used by IDE driver.
+> 
+> Andrew's trace clearly shows that something is sending cmd == 1 down, so
+
+I still haven't got the trace.  Andrew, please (re)send it in PM, thanks.
+
+> I'm nearly positive at one time this was a legitimate ioctl for IDE.
+
+Could be...
+
+> Anyway it's probably time to kill this deprecated ioctl in SCSI.
+
+Fully agreed.
+
+Thanks,
+Bart
+
+
+[PATCH] ide: add support for SCSI ioctls to ide-floppy
+
+Now that ide-floppy supports SG_IO we can add support for SCSI ioctls
+(except deprecated SCSI_IOCTL_SEND_COMMAND and legacy CDROM_SEND_PACKET
+ones - we can add them later iff really needed).
+
+While at it remove handling of CDROMEJECT and CDROMCLOSETRAY ioctls from
+generic_ide_ioctl():
+
+- This prevents ide-{disk,tape,scsi} device drivers from obtaining
+  REQ_TYPE_BLOCK_PC type requests which are currently unsupported by
+  these drivers and which are potentially harmful (as reported by Andrew).
+
+- There is no functionality loss since aforementioned ioctls will now be
+  handled by idefloppy_ioctl()->scsi_cmd_ioctl() (for devices using
+  ide-floppy driver) and by idecd_ioctl->cdrom_ioctl()->scsi_cmd_ioctl()
+  (for devices using ide-cd driver).
+
+Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/ide/ide-floppy.c |   18 +++++++++++++++++-
+ drivers/ide/ide.c        |    4 ----
+ 2 files changed, 17 insertions(+), 5 deletions(-)
+
+Index: b/drivers/ide/ide-floppy.c
+===================================================================
+--- a/drivers/ide/ide-floppy.c
++++ b/drivers/ide/ide-floppy.c
+@@ -99,6 +99,8 @@
+ #include <linux/bitops.h>
+ #include <linux/mutex.h>
+ 
++#include <scsi/scsi_ioctl.h>
++
+ #include <asm/byteorder.h>
+ #include <asm/irq.h>
+ #include <asm/uaccess.h>
+@@ -2099,7 +2101,21 @@ static int idefloppy_ioctl(struct inode 
+ 	case IDEFLOPPY_IOCTL_FORMAT_GET_PROGRESS:
+ 		return idefloppy_get_format_progress(drive, argp);
+ 	}
+-	return generic_ide_ioctl(drive, file, bdev, cmd, arg);
++
++	/*
++	 * skip SCSI_IOCTL_SEND_COMMAND (deprecated)
++	 * and CDROM_SEND_PACKET (legacy) ioctls
++	 */
++	if (cmd != CDROM_SEND_PACKET && cmd != SCSI_IOCTL_SEND_COMMAND)
++		err = scsi_cmd_ioctl(file, bdev->bd_disk->queue,
++					bdev->bd_disk, cmd, argp);
++	else
++		err = -ENOTTY;
++
++	if (err == -ENOTTY)
++		err = generic_ide_ioctl(drive, file, bdev, cmd, arg);
++
++	return err;
+ }
+ 
+ static int idefloppy_media_changed(struct gendisk *disk)
+Index: b/drivers/ide/ide.c
+===================================================================
+--- a/drivers/ide/ide.c
++++ b/drivers/ide/ide.c
+@@ -1171,10 +1171,6 @@ int generic_ide_ioctl(ide_drive_t *drive
+ 			return 0;
+ 		}
+ 
+-		case CDROMEJECT:
+-		case CDROMCLOSETRAY:
+-			return scsi_cmd_ioctl(file, bdev->bd_disk->queue, bdev->bd_disk, cmd, p);
+-
+ 		case HDIO_GET_BUSSTATE:
+ 			if (!capable(CAP_SYS_ADMIN))
+ 				return -EACCES;
