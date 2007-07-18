@@ -1,76 +1,61 @@
 From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH 2/3] zfcp: NULL vs 0 usage
-Date: Wed, 18 Jul 2007 10:55:10 +0200
-Message-ID: <200707181055.10235.swen@vnet.ibm.com>
+Subject: [PATCH 1/3] zfcp: Replace kmalloc/memset with kzalloc
+Date: Wed, 18 Jul 2007 10:55:08 +0200
+Message-ID: <200707181055.08526.swen@vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.uk.ibm.com ([195.212.29.140]:60909 "EHLO
-	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754611AbXGRIyV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 04:54:21 -0400
+Received: from mtagate4.uk.ibm.com ([195.212.29.137]:44143 "EHLO
+	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754995AbXGRIyY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 04:54:24 -0400
 Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate7.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l6I8sKd8028996
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 08:54:20 GMT
+	by mtagate4.uk.ibm.com (8.13.8/8.13.8) with ESMTP id l6I8sNd6049342
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 08:54:23 GMT
 Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6I8sKmt2359510
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 09:54:20 +0100
+	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6I8sM6O2785424
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 09:54:22 +0100
 Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6I8sGCj024257
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 09:54:17 +0100
+	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6I8sG9S024251
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 09:54:16 +0100
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, heiko.carstens@de.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-Subject: [PATCH] zfcp: NULL vs 0 usage
+Subject: [PATCH] zfcp: Replace kmalloc/memset with kzalloc
 
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
+From: Swen Schillig <swen@vnet.ibm.com>
 
-Get rid of two 'warning: Using plain integer as NULL pointer'.
+Memory allocated with kmalloc is always initialzed to 0 with memset.
+Replace the two calls with kzalloc, that already does both steps.
 
-Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
 Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_aux.c |    9 +++------
- drivers/s390/scsi/zfcp_fsf.c |    2 +-
- 2 files changed, 4 insertions(+), 7 deletions(-)
+ drivers/s390/scsi/zfcp_erp.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c
---- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2007-07-18 10:27:48.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2007-07-18 10:28:25.000000000 +0200
-@@ -1526,15 +1526,12 @@ zfcp_gid_pn_buffers_alloc(struct zfcp_gi
-  * zfcp_gid_pn_buffers_free - free buffers for GID_PN nameserver request
-  * @gid_pn: pointer to struct zfcp_gid_pn_data which has to be freed
-  */
--static void
--zfcp_gid_pn_buffers_free(struct zfcp_gid_pn_data *gid_pn)
-+static void zfcp_gid_pn_buffers_free(struct zfcp_gid_pn_data *gid_pn)
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_erp.c linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c
+--- linux-2.6/drivers/s390/scsi/zfcp_erp.c	2007-07-18 10:27:48.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_erp.c	2007-07-18 10:28:23.000000000 +0200
+@@ -1626,7 +1626,7 @@ zfcp_erp_schedule_work(struct zfcp_unit 
  {
--        if ((gid_pn->ct.pool != 0))
-+	if (gid_pn->ct.pool)
- 		mempool_free(gid_pn, gid_pn->ct.pool);
- 	else
--                kfree(gid_pn);
--
--	return;
-+		kfree(gid_pn);
- }
+ 	struct zfcp_erp_add_work *p;
  
- /**
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_fsf.c linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c
---- linux-2.6/drivers/s390/scsi/zfcp_fsf.c	2007-07-09 01:32:17.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_fsf.c	2007-07-18 10:28:25.000000000 +0200
-@@ -1930,7 +1930,7 @@ static int zfcp_fsf_send_els_handler(str
- skip_fsfstatus:
- 	send_els->status = retval;
+-	p = kmalloc(sizeof(*p), GFP_KERNEL);
++	p = kzalloc(sizeof(*p), GFP_KERNEL);
+ 	if (!p) {
+ 		ZFCP_LOG_NORMAL("error: Out of resources. Could not register "
+ 				"the FCP-LUN 0x%Lx connected to "
+@@ -1639,7 +1639,6 @@ zfcp_erp_schedule_work(struct zfcp_unit 
+ 	}
  
--	if (send_els->handler != 0)
-+	if (send_els->handler)
- 		send_els->handler(send_els->handler_data);
- 
- 	return retval;
+ 	zfcp_unit_get(unit);
+-	memset(p, 0, sizeof(*p));
+ 	atomic_set_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING, &unit->status);
+ 	INIT_WORK(&p->work, zfcp_erp_scsi_scan);
+ 	p->unit = unit;
