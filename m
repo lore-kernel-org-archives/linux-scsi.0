@@ -1,30 +1,28 @@
 From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 22:39:38 +0200
-Message-ID: <200707182239.38293.bzolnier@gmail.com>
-References: <20070717190705T.fujita.tomonori@lab.ntt.co.jp> <200707172252.25729.bzolnier@gmail.com> <20070718072644F.tomof@acm.org>
+Subject: Re: [PATCH 24/33] ide-scsi: sg chaining support
+Date: Wed, 18 Jul 2007 23:03:50 +0200
+Message-ID: <200707182303.50396.bzolnier@gmail.com>
+References: <11845792671245-git-send-email-jens.axboe@oracle.com> <11845792681555-git-send-email-jens.axboe@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="iso-8859-1"
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070718072644F.tomof@acm.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.169]:49140 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756046AbXGRVHN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 17:07:13 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so325087ugf
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 14:07:12 -0700 (PDT)
+In-Reply-To: <11845792681555-git-send-email-jens.axboe@oracle.com>
 Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+On Monday 16 July 2007, Jens Axboe wrote:
+> Cc: bzolnier@gmail.com
+> Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
 
-On Wednesday 18 July 2007, FUJITA Tomonori wrote:
-
-> They were fixed. Please check the latest code:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git bsg
-> 
-> We wait for Linus to pull from it.
-
-It has been merged.  Thanks for fixing the mentioned issues.
-
-Thanks,
-Bart
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
