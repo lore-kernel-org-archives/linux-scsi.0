@@ -1,116 +1,93 @@
-From: "Boaz Harrosh" <openosd@gmail.com>
-Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and auditing
-Date: Wed, 18 Jul 2007 15:39:43 +0300
-Message-ID: <ec7f7ee70707180539u36b38b78t6c344a9e8a0a1069@mail.gmail.com>
-References: <4695F76F.5000305@panasas.com>
-	 <20070712135750.2a4a4a54.rdunlap@xenotime.net>
-	 <469B38CC.50501@panasas.com>
-	 <20070717171607.ffc278eb.rdunlap@xenotime.net>
-	 <469DDD74.2060208@panasas.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: block/bsg.c
+Date: Wed, 18 Jul 2007 08:54:14 -0500
+Message-ID: <1184766854.3464.4.camel@localhost.localdomain>
+References: <20070717190705T.fujita.tomonori@lab.ntt.co.jp>
+	 <20070717101928.GK5195@kernel.dk>
+	 <1184698434.3378.15.camel@localhost.localdomain>
+	 <20070718092130V.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.244]:48440 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752056AbXGRMjp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 08:39:45 -0400
-Received: by an-out-0708.google.com with SMTP id d31so34228and
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 05:39:43 -0700 (PDT)
-In-Reply-To: <469DDD74.2060208@panasas.com>
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:53097 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754808AbXGRNyR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 09:54:17 -0400
+In-Reply-To: <20070718092130V.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, James Bottomley <James.Bottomley@steeleye.com>, Christoph Hellwig <hch@lst.de>, "=?ISO-8859-1?Q?\"J=FCrgen_E._Fischer\"?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 7/18/07, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> Randy Dunlap wrote:
-> > On Mon, 16 Jul 2007 12:22:20 +0300 Boaz Harrosh wrote:
-> >
-> >> If you could do some testing it is grate. The first 3 patches do not
-> >> need scsi-misc specifically. Any post 2.6.20 tree will do. The last patch
-> >> could be done together with attached patch on any 2.6.22 tree.
-> >> (Apply attached patch anywhere before the last patch (4/4) of the patchset)
-> >> Though I do recommend scsi-misc tree.
-> >
-> > I took 2.6.22, backed out Christoph's aha152x.c patch (using
-> > completion for timeouts), added your 5 patches, and then tested.
-> > Does that sound OK?
-> >
-> Yes what you did is perfect
-> I was not aware of "Christoph's aha152x.c patch" is that in scsi-misc?
-> I'm almost positive I did a git-pull before I sent the patches.
-> Sorry about that.
->
-> >> Testing:
-> >
-> > I booted/tested 4 times.  2 Oopsen and 2 of
-> > could-never-mount-the-device-due-to-reset-problems.
-> > Log is attached.
-> >
-> >
-> > ---
-> > ~Randy
-> > *** Remember to use Documentation/SubmitChecklist when testing your code ***
->
-> Thank you for testing and helping me with this.
->
-> I found one thing that should definitely trash the Reset
-> and do funny things. But I'm not sure it is it at all.
-> If below does not work, could you pleas do a small bisect
-> of my patches.
->
-> first patch first, than 2nd, 3rd ,accessors thing, and 4th
->
-> git-diff
-> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-> index f2f0619..6762cc8 100644
-> --- a/drivers/scsi/aha152x.c
-> +++ b/drivers/scsi/aha152x.c
-> @@ -1151,6 +1151,7 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
->         struct Scsi_Host *shpnt = SCpnt->device->host;
->         DECLARE_COMPLETION(done);
->         int ret, issued, disconnected;
-> +       unsigned short old_cmd_len = SCpnt->cmd_len;
->         unsigned long flags;
->         unsigned long timeleft;
->
-> @@ -1171,6 +1172,8 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
->         disconnected = issued && remove_SC(&DISCONNECTED_SC, SCpnt);
->         DO_UNLOCK(flags);
->
-> +       SCpnt->cmd_len         = 0;
-> +
->         aha152x_internal_queue(SCpnt, &done, resetting, reset_done);
->
->         timeleft = wait_for_completion_timeout(&done, 100*HZ);
-> @@ -1181,6 +1184,8 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
->                 DO_UNLOCK(flags);
->         }
->
-> +       SCpnt->cmd_len         = old_cmd_len;
-> +
->         DO_LOCK(flags);
->
->         if(SCpnt->SCp.phase & resetted) {
->
-> -
+On Wed, 2007-07-18 at 09:20 +0900, FUJITA Tomonori wrote:
+> From: James Bottomley <James.Bottomley@SteelEye.com>
+> Subject: Re: block/bsg.c
+> Date: Tue, 17 Jul 2007 13:53:54 -0500
+> 
+> > On Tue, 2007-07-17 at 12:19 +0200, Jens Axboe wrote:
+> > > > > Since Linus is happily snoring by now, could you test and see if the
+> > > > > tree works for you?
+> > > > 
+> > > > It works for me. I'll submit some minor patches against your bsg
+> > > > branch to scsi-ml. Can you push them together?
+> > > 
+> > > Certainly, I'll pull them into the bsg branch.
+> > 
+> > While you're at it, here's a patch to separate BSG and SCSI again (so
+> > SCSI can be built modular).  The way I did it was simply to move the
+> > SCSI specific logic into SCSI.  When you come up with a generic way to
+> > register the bsg requiring drivers, then we can move it out again.
+> 
+> Thanks, looks nice.
 
-I forgot. If it fails could you also do below on the failing patch.
-Get some extra prints ...
-Thanks
-Boaz
+You're welcome ... although there's still a problem for modular builds.
+This is what my /sys/class/bsg looks like:
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index f2f0619..ca6f8fc 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -278,6 +278,8 @@ static LIST_HEAD(aha152x_host_list);
- #error define AUTOCONF or SETUP0
- #endif
+So you see the if (rq->kobj.parent) is causing confusing naming.  The
+reason the first one shows up as 0:0:0:0 is because in an initrd
+scsi_mod is loaded first (which is when bsg binds) followed by sd_mod
+(which is what gives the device the ULD binding and hence the name).  I
+don't see any way around this, so I'd advocate simply using the sdev
+name rather than the block device name and dumping the if.
 
-+#define AHA152X_DEBUG
-+
- #if defined(AHA152X_DEBUG)
- #define DEBUG_DEFAULT debug_eh
+> > --- a/drivers/scsi/scsi_sysfs.c
+> > +++ b/drivers/scsi/scsi_sysfs.c
+> > @@ -714,6 +714,7 @@ static int attr_add(struct device *dev, struct device_attribute *attr)
+> >  int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> >  {
+> >  	int error, i;
+> > +	struct request_queue *rq = sdev->request_queue;
+> >  
+> >  	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
+> >  		return error;
+> > @@ -733,6 +734,16 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> >  	/* take a reference for the sdev_classdev; this is
+> >  	 * released by the sdev_class .release */
+> >  	get_device(&sdev->sdev_gendev);
+> > +
+> > +	if (rq->kobj.parent)
+> > +		error = bsg_register_queue(rq, kobject_name(rq->kobj.parent));
+> > +	else
+> > +		error = bsg_register_queue(rq, kobject_name(&sdev->sdev_gendev.kobj));
+> > +	if (error) {
+> > +		sdev_printk(KERN_INFO, sdev, "Failed to register bsg queue\n");
+> > +		goto out;
+> 
+> Needs more cleanup here?
+
+No ... this bit's magic and clever.  Once you've set up the devices and
+done a get_device, cleanup is simply doing a put_device because it's all
+done in the release routine.
+
+> We might just ignore the error here since it's not fatal not to create
+> a bsg device, I guess.
+> 
+> I updated the patch against the latest code (which has just be merged
+> to Linus's tree).
+
+Thanks,
+
+James
+
+
