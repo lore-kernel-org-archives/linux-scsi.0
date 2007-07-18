@@ -1,204 +1,89 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH 3/3] zfcp: code cleanup
-Date: Wed, 18 Jul 2007 10:55:13 +0200
-Message-ID: <200707181055.13242.swen@vnet.ibm.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and auditing
+Date: Wed, 18 Jul 2007 12:29:24 +0300
+Message-ID: <469DDD74.2060208@panasas.com>
+References: <4695F76F.5000305@panasas.com>	<20070712135750.2a4a4a54.rdunlap@xenotime.net>	<469B38CC.50501@panasas.com> <20070717171607.ffc278eb.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:19907 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753444AbXGRIzX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 04:55:23 -0400
-Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate7.de.ibm.com (8.13.8/8.13.8) with ESMTP id l6I8tMRA302936
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 08:55:22 GMT
-Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6I8tMgq2019400
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 10:55:22 +0200
-Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6I8tDk1018346
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jul 2007 10:55:13 +0200
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13133 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750802AbXGRJaG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 05:30:06 -0400
+In-Reply-To: <20070717171607.ffc278eb.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, =?ISO-8859-1?Q?=22J=FCrgen_E=2E_Fischer=22?= <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Subject: [PATCH] zfcp: code cleanup
+Randy Dunlap wrote:
+> On Mon, 16 Jul 2007 12:22:20 +0300 Boaz Harrosh wrote:
+> 
+>> If you could do some testing it is grate. The first 3 patches do not
+>> need scsi-misc specifically. Any post 2.6.20 tree will do. The last patch
+>> could be done together with attached patch on any 2.6.22 tree.
+>> (Apply attached patch anywhere before the last patch (4/4) of the patchset)
+>> Though I do recommend scsi-misc tree.
+> 
+> I took 2.6.22, backed out Christoph's aha152x.c patch (using
+> completion for timeouts), added your 5 patches, and then tested.
+> Does that sound OK?
+> 
+Yes what you did is perfect
+I was not aware of "Christoph's aha152x.c patch" is that in scsi-misc?
+I'm almost positive I did a git-pull before I sent the patches.
+Sorry about that.
 
-From: Swen Schillig <swen@vnet.ibm.com>
+>> Testing:
+> 
+> I booted/tested 4 times.  2 Oopsen and 2 of
+> could-never-mount-the-device-due-to-reset-problems.
+> Log is attached.
+> 
+> 
+> ---
+> ~Randy
+> *** Remember to use Documentation/SubmitChecklist when testing your code ***
 
-improve code for buffer enqueue. easy readability and maintainability.
+Thank you for testing and helping me with this.
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
----
+I found one thing that should definitely trash the Reset
+and do funny things. But I'm not sure it is it at all.
+If below does not work, could you pleas do a small bisect
+of my patches.
 
- drivers/s390/scsi/zfcp_def.h  |    1 
- drivers/s390/scsi/zfcp_qdio.c |  113 +++++++++++-------------------------------
- 2 files changed, 33 insertions(+), 81 deletions(-)
+first patch first, than 2nd, 3rd ,accessors thing, and 4th 
 
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_def.h linux-2.6-patched/drivers/s390/scsi/zfcp_def.h
---- linux-2.6/drivers/s390/scsi/zfcp_def.h	2007-07-09 01:32:17.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_def.h	2007-07-18 10:28:26.000000000 +0200
-@@ -126,6 +126,7 @@ zfcp_address_to_sg(void *address, struct
- #define ZFCP_MIN_OUTPUT_THRESHOLD 	1	/* ignored by QDIO layer */
+git-diff
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index f2f0619..6762cc8 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1151,6 +1151,7 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 	struct Scsi_Host *shpnt = SCpnt->device->host;
+ 	DECLARE_COMPLETION(done);
+ 	int ret, issued, disconnected;
++	unsigned short old_cmd_len = SCpnt->cmd_len;
+ 	unsigned long flags;
+ 	unsigned long timeleft;
  
- #define QDIO_SCSI_QFMT			1	/* 1 for FSF */
-+#define QBUFF_PER_PAGE			(PAGE_SIZE / sizeof(struct qdio_buffer))
+@@ -1171,6 +1172,8 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 	disconnected = issued && remove_SC(&DISCONNECTED_SC, SCpnt);
+ 	DO_UNLOCK(flags);
  
- /********************* FSF SPECIFIC DEFINES *********************************/
++	SCpnt->cmd_len         = 0;
++
+ 	aha152x_internal_queue(SCpnt, &done, resetting, reset_done);
  
-diff -urpN linux-2.6/drivers/s390/scsi/zfcp_qdio.c linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c
---- linux-2.6/drivers/s390/scsi/zfcp_qdio.c	2007-07-09 01:32:17.000000000 +0200
-+++ linux-2.6-patched/drivers/s390/scsi/zfcp_qdio.c	2007-07-18 10:28:26.000000000 +0200
-@@ -47,103 +47,56 @@ static int zfcp_qdio_handler_error_check
- #define ZFCP_LOG_AREA                   ZFCP_LOG_AREA_QDIO
+ 	timeleft = wait_for_completion_timeout(&done, 100*HZ);
+@@ -1181,6 +1184,8 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 		DO_UNLOCK(flags);
+ 	}
  
- /*
-- * Allocates BUFFER memory to each of the pointers of the qdio_buffer_t 
-- * array in the adapter struct.
-- * Cur_buf is the pointer array and count can be any number of required 
-- * buffers, the page-fitting arithmetic is done entirely within this funciton.
-+ * Frees BUFFER memory for each of the pointers of the struct qdio_buffer array
-+ * in the adapter struct sbuf is the pointer array.
-  *
-- * returns:	number of buffers allocated
-  * locks:       must only be called with zfcp_data.config_sema taken
-  */
--static int
--zfcp_qdio_buffers_enqueue(struct qdio_buffer **cur_buf, int count)
-+static void
-+zfcp_qdio_buffers_dequeue(struct qdio_buffer **sbuf)
- {
--	int buf_pos;
--	int qdio_buffers_per_page;
--	int page_pos = 0;
--	struct qdio_buffer *first_in_page = NULL;
--
--	qdio_buffers_per_page = PAGE_SIZE / sizeof (struct qdio_buffer);
--	ZFCP_LOG_TRACE("buffers_per_page=%d\n", qdio_buffers_per_page);
--
--	for (buf_pos = 0; buf_pos < count; buf_pos++) {
--		if (page_pos == 0) {
--			cur_buf[buf_pos] = (struct qdio_buffer *)
--			    get_zeroed_page(GFP_KERNEL);
--			if (cur_buf[buf_pos] == NULL) {
--				ZFCP_LOG_INFO("error: allocation of "
--					      "QDIO buffer failed \n");
--				goto out;
--			}
--			first_in_page = cur_buf[buf_pos];
--		} else {
--			cur_buf[buf_pos] = first_in_page + page_pos;
-+	int pos;
++	SCpnt->cmd_len         = old_cmd_len;
++
+ 	DO_LOCK(flags);
  
--		}
--		/* was initialised to zero */
--		page_pos++;
--		page_pos %= qdio_buffers_per_page;
--	}
-- out:
--	return buf_pos;
-+	for (pos = 0; pos < QDIO_MAX_BUFFERS_PER_Q; pos += QBUFF_PER_PAGE)
-+		free_page((unsigned long) sbuf[pos]);
- }
- 
- /*
-- * Frees BUFFER memory for each of the pointers of the struct qdio_buffer array
-- * in the adapter struct cur_buf is the pointer array and count can be any
-- * number of buffers in the array that should be freed starting from buffer 0
-+ * Allocates BUFFER memory to each of the pointers of the qdio_buffer_t
-+ * array in the adapter struct.
-+ * Cur_buf is the pointer array
-  *
-+ * returns:	zero on success else -ENOMEM
-  * locks:       must only be called with zfcp_data.config_sema taken
-  */
--static void
--zfcp_qdio_buffers_dequeue(struct qdio_buffer **cur_buf, int count)
-+static int
-+zfcp_qdio_buffers_enqueue(struct qdio_buffer **sbuf)
- {
--	int buf_pos;
--	int qdio_buffers_per_page;
--
--	qdio_buffers_per_page = PAGE_SIZE / sizeof (struct qdio_buffer);
--	ZFCP_LOG_TRACE("buffers_per_page=%d\n", qdio_buffers_per_page);
-+	int pos;
- 
--	for (buf_pos = 0; buf_pos < count; buf_pos += qdio_buffers_per_page)
--		free_page((unsigned long) cur_buf[buf_pos]);
--	return;
-+	for (pos = 0; pos < QDIO_MAX_BUFFERS_PER_Q; pos += QBUFF_PER_PAGE) {
-+		sbuf[pos] = (struct qdio_buffer *) get_zeroed_page(GFP_KERNEL);
-+		if (!sbuf[pos]) {
-+			zfcp_qdio_buffers_dequeue(sbuf);
-+			return -ENOMEM;
-+		}
-+	}
-+	for (pos = 0; pos < QDIO_MAX_BUFFERS_PER_Q; pos++)
-+		if (pos % QBUFF_PER_PAGE)
-+			sbuf[pos] = sbuf[pos - 1] + 1;
-+	return 0;
- }
- 
- /* locks:       must only be called with zfcp_data.config_sema taken */
- int
- zfcp_qdio_allocate_queues(struct zfcp_adapter *adapter)
- {
--	int buffer_count;
--	int retval = 0;
-+	int ret;
- 
--	buffer_count =
--	    zfcp_qdio_buffers_enqueue(&(adapter->request_queue.buffer[0]),
--				      QDIO_MAX_BUFFERS_PER_Q);
--	if (buffer_count < QDIO_MAX_BUFFERS_PER_Q) {
--		ZFCP_LOG_DEBUG("only %d QDIO buffers allocated for request "
--			       "queue\n", buffer_count);
--		zfcp_qdio_buffers_dequeue(&(adapter->request_queue.buffer[0]),
--					  buffer_count);
--		retval = -ENOMEM;
--		goto out;
--	}
--
--	buffer_count =
--	    zfcp_qdio_buffers_enqueue(&(adapter->response_queue.buffer[0]),
--				      QDIO_MAX_BUFFERS_PER_Q);
--	if (buffer_count < QDIO_MAX_BUFFERS_PER_Q) {
--		ZFCP_LOG_DEBUG("only %d QDIO buffers allocated for response "
--			       "queue", buffer_count);
--		zfcp_qdio_buffers_dequeue(&(adapter->response_queue.buffer[0]),
--					  buffer_count);
--		ZFCP_LOG_TRACE("freeing request_queue buffers\n");
--		zfcp_qdio_buffers_dequeue(&(adapter->request_queue.buffer[0]),
--					  QDIO_MAX_BUFFERS_PER_Q);
--		retval = -ENOMEM;
--		goto out;
--	}
-- out:
--	return retval;
-+	ret = zfcp_qdio_buffers_enqueue(adapter->request_queue.buffer);
-+	if (ret)
-+		return ret;
-+	return zfcp_qdio_buffers_enqueue(adapter->response_queue.buffer);
- }
- 
- /* locks:       must only be called with zfcp_data.config_sema taken */
-@@ -151,12 +104,10 @@ void
- zfcp_qdio_free_queues(struct zfcp_adapter *adapter)
- {
- 	ZFCP_LOG_TRACE("freeing request_queue buffers\n");
--	zfcp_qdio_buffers_dequeue(&(adapter->request_queue.buffer[0]),
--				  QDIO_MAX_BUFFERS_PER_Q);
-+	zfcp_qdio_buffers_dequeue(adapter->request_queue.buffer);
- 
- 	ZFCP_LOG_TRACE("freeing response_queue buffers\n");
--	zfcp_qdio_buffers_dequeue(&(adapter->response_queue.buffer[0]),
--				  QDIO_MAX_BUFFERS_PER_Q);
-+	zfcp_qdio_buffers_dequeue(adapter->response_queue.buffer);
- }
- 
- int
+ 	if(SCpnt->SCp.phase & resetted) {
+
