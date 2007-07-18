@@ -1,223 +1,374 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] Re: + gdth-remove-redundant-pci-stuff.patch added to -mm
- tree
-Date: Wed, 18 Jul 2007 19:51:01 -0400
-Message-ID: <469EA765.3020707@garzik.org>
-References: <200707182249.l6IMnF6M000557@imap1.linux-foundation.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 3/3] ps3: FLASH ROM Storage Driver
+Date: Wed, 18 Jul 2007 16:52:22 -0700
+Message-ID: <20070718165222.e504d92e.akpm@linux-foundation.org>
+References: <20070716161539.075822000@pademelon.sonytel.be>
+	<20070716162206.723142000@pademelon.sonytel.be>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------080209010106070104090105"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33799 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759992AbXGRXvG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jul 2007 19:51:06 -0400
-In-Reply-To: <200707182249.l6IMnF6M000557@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <20070716162206.723142000@pademelon.sonytel.be>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Andy Whitcroft <apw@shadowen.org>
+Cc: Jens Axboe <axboe@kernel.dk>, "James
+	E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alessandro Rubini <rubini@vision.unipv.it>, linuxppc-dev@ozlabs.org, Paul Mackerras <paulus@samba.org>
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, hch@lst.de, achim_leubner@adaptec.com
 
-This is a multi-part message in MIME format.
---------------080209010106070104090105
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+On Mon, 16 Jul 2007 18:15:42 +0200
+Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com> wrote:
 
-akpm@linux-foundation.org wrote:
-> The patch titled
->      gdth: remove redundant PCI stuff
-> has been added to the -mm tree.  Its filename is
->      gdth-remove-redundant-pci-stuff.patch
+> From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 > 
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
+> Add a FLASH ROM Storage Driver for the PS3:
+>   - Implemented as a misc character device driver
+>   - Uses a fixed 256 KiB buffer allocated from boot memory as the hypervisor
+>     requires the writing of aligned 256 KiB blocks
 > 
-> See http://www.zip.com.au/~akpm/linux/patches/stuff/added-to-mm.txt to find
-> out what to do about this
-> 
-> ------------------------------------------------------
-> Subject: gdth: remove redundant PCI stuff
-> From: Jeff Garzik <jeff@garzik.org>
-> 
-> This patch
-> 
-> * removes struct members that duplicate pci_dev members
-> * replaces ha->stype usage with ha->pdev->device usage where feasible
-> * removes PCI IDs that are already in include/linux/pci_ids.h
-> 
-> I thought it would be a good preparation for PCI hotplug API.  (or at the very
-> least, proper pci_dev refcounting)
-> 
-> Signed-off-by: Jeff Garzik <jeff@garzik.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> --- /dev/null
+> +++ b/drivers/char/ps3flash.c
+> @@ -0,0 +1,429 @@
+> +/*
+> + * PS3 FLASH ROM Storage Driver
+> + *
+> + * Copyright (C) 2007 Sony Computer Entertainment Inc.
+> + * Copyright 2007 Sony Corp.
+> + *
+> + * This program is free software; you can redistribute it and/or modify it
+> + * under the terms of the GNU General Public License as published
+> + * by the Free Software Foundation; version 2 of the License.
+> + *
+> + * This program is distributed in the hope that it will be useful, but
+> + * WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+> + * General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License along
+> + * with this program; if not, write to the Free Software Foundation, Inc.,
+> + * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+> + */
+> +
+> +#include <linux/fs.h>
+> +#include <linux/miscdevice.h>
+> +#include <linux/uaccess.h>
+> +
+> +#include <asm/lv1call.h>
+> +#include <asm/ps3stor.h>
+> +
+> +
+> +#define DEVICE_NAME		"ps3flash"
+> +
+> +#define FLASH_BLOCK_SIZE	(256*1024)
+> +
+> +
+> +struct ps3flash_private {
+> +	struct mutex mutex;	/* Bounce buffer mutex */
+> +};
+> +#define ps3flash_priv(dev)	((dev)->sbd.core.driver_data)
 
-Attached is the version updated with Christoph's "don't lose info 
-contained in PCI_DEVICE_ID constants" request.
+bzzzt!
 
-	Jeff
+> +static loff_t ps3flash_llseek(struct file *file, loff_t offset, int origin)
+> +{
+> +	struct ps3_storage_device *dev = ps3flash_dev;
+> +	u64 size = dev->regions[dev->region_idx].size*dev->blk_size;
+> +
+> +	switch (origin) {
+> +	case 1:
+> +		offset += file->f_pos;
+> +		break;
+> +	case 2:
+> +		offset += size;
+> +		break;
+> +	}
+> +	if (offset < 0)
+> +		return -EINVAL;
+> +
+> +	file->f_pos = offset;
+> +	return file->f_pos;
+> +}
 
+lseek implementations usually need locking.  file->f_mapping->host->i_mutex
+would be typical.
 
+That locking mostly protects 64-bit f_pos on 32-bit architectures so you
+can perahps kinda get away with it here.  However the code is a bit racy
+even on 64-bit, for silly userspace.
 
---------------080209010106070104090105
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+That being said, I'd have thought that you could use one of our many
+generic lseek library fucntions here, or even an newly-exported
+block_llseek().  That assumes that i_size is correct, which I trust is the
+case.
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index d0b95ce..b0f5687 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -902,11 +902,6 @@ static void __init gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt,
-             return;
-         /* GDT PCI controller found, resources are already in pdev */
-         pcistr[*cnt].pdev = pdev;
--        pcistr[*cnt].vendor_id = vendor;
--        pcistr[*cnt].device_id = device;
--        pcistr[*cnt].subdevice_id = pdev->subsystem_device;
--        pcistr[*cnt].bus = pdev->bus->number;
--        pcistr[*cnt].device_fn = pdev->devfn;
-         pcistr[*cnt].irq = pdev->irq;
-         base0 = pci_resource_flags(pdev, 0);
-         base1 = pci_resource_flags(pdev, 1);
-@@ -926,7 +921,8 @@ static void __init gdth_search_dev(gdth_pci_str *pcistr, ushort *cnt,
-             pcistr[*cnt].io    = pci_resource_start(pdev, 1);
-         }
-         TRACE2(("Controller found at %d/%d, irq %d, dpmem 0x%lx\n",
--                pcistr[*cnt].bus, PCI_SLOT(pcistr[*cnt].device_fn), 
-+                pcistr[*cnt].pdev->bus->number,
-+		PCI_SLOT(pcistr[*cnt].pdev->devfn), 
-                 pcistr[*cnt].irq, pcistr[*cnt].dpmem));
-         (*cnt)++;
-     }       
-@@ -946,20 +942,20 @@ static void __init gdth_sort_pci(gdth_pci_str *pcistr, int cnt)
-         changed = FALSE;
-         for (i = 0; i < cnt-1; ++i) {
-             if (!reverse_scan) {
--                if ((pcistr[i].bus > pcistr[i+1].bus) ||
--                    (pcistr[i].bus == pcistr[i+1].bus &&
--                     PCI_SLOT(pcistr[i].device_fn) > 
--                     PCI_SLOT(pcistr[i+1].device_fn))) {
-+                if ((pcistr[i].pdev->bus->number > pcistr[i+1].pdev->bus->number) ||
-+                    (pcistr[i].pdev->bus->number == pcistr[i+1].pdev->bus->number &&
-+                     PCI_SLOT(pcistr[i].pdev->devfn) > 
-+                     PCI_SLOT(pcistr[i+1].pdev->devfn))) {
-                     temp = pcistr[i];
-                     pcistr[i] = pcistr[i+1];
-                     pcistr[i+1] = temp;
-                     changed = TRUE;
-                 }
-             } else {
--                if ((pcistr[i].bus < pcistr[i+1].bus) ||
--                    (pcistr[i].bus == pcistr[i+1].bus &&
--                     PCI_SLOT(pcistr[i].device_fn) < 
--                     PCI_SLOT(pcistr[i+1].device_fn))) {
-+                if ((pcistr[i].pdev->bus->number < pcistr[i+1].pdev->bus->number) ||
-+                    (pcistr[i].pdev->bus->number == pcistr[i+1].pdev->bus->number &&
-+                     PCI_SLOT(pcistr[i].pdev->devfn) < 
-+                     PCI_SLOT(pcistr[i+1].pdev->devfn))) {
-                     temp = pcistr[i];
-                     pcistr[i] = pcistr[i+1];
-                     pcistr[i+1] = temp;
-@@ -1176,17 +1172,16 @@ static int __init gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha)
- 
-     TRACE(("gdth_init_pci()\n"));
- 
--    if (pcistr->vendor_id == PCI_VENDOR_ID_INTEL)
-+    if (pcistr->pdev->vendor == PCI_VENDOR_ID_INTEL)
-         ha->oem_id = OEM_ID_INTEL;
-     else
-         ha->oem_id = OEM_ID_ICP;
--    ha->brd_phys = (pcistr->bus << 8) | (pcistr->device_fn & 0xf8);
--    ha->stype = (ulong32)pcistr->device_id;
--    ha->subdevice_id = pcistr->subdevice_id;
-+    ha->brd_phys = (pcistr->pdev->bus->number << 8) | (pcistr->pdev->devfn & 0xf8);
-+    ha->stype = (ulong32)pcistr->pdev->device;
-     ha->irq = pcistr->irq;
-     ha->pdev = pcistr->pdev;
-     
--    if (ha->stype <= PCI_DEVICE_ID_VORTEX_GDT6000B) {  /* GDT6000/B */
-+    if (ha->pdev->device <= PCI_DEVICE_ID_VORTEX_GDT6000B) {  /* GDT6000/B */
-         TRACE2(("init_pci() dpmem %lx irq %d\n",pcistr->dpmem,ha->irq));
-         ha->brd = ioremap(pcistr->dpmem, sizeof(gdt6_dpram_str));
-         if (ha->brd == NULL) {
-@@ -1293,7 +1288,7 @@ static int __init gdth_init_pci(gdth_pci_str *pcistr,gdth_ha_str *ha)
- 
-         ha->dma64_support = 0;
- 
--    } else if (ha->stype <= PCI_DEVICE_ID_VORTEX_GDT6555) { /* GDT6110, ... */
-+    } else if (ha->pdev->device <= PCI_DEVICE_ID_VORTEX_GDT6555) { /* GDT6110, ... */
-         ha->plx = (gdt6c_plx_regs *)pcistr->io;
-         TRACE2(("init_pci_new() dpmem %lx irq %d\n",
-             pcistr->dpmem,ha->irq));
-@@ -4601,7 +4596,8 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
-         }
-         /* controller found and initialized */
-         printk("Configuring GDT-PCI HA at %d/%d IRQ %u\n",
--               pcistr[ctr].bus,PCI_SLOT(pcistr[ctr].device_fn),ha->irq);
-+               pcistr[ctr].pdev->bus->number,
-+	       PCI_SLOT(pcistr[ctr].pdev->devfn), ha->irq);
- 
-         if (request_irq(ha->irq, gdth_interrupt,
-                         IRQF_DISABLED|IRQF_SHARED, "gdth", ha))
-@@ -4637,7 +4633,7 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
- #endif
-         ha->scratch_busy = FALSE;
-         ha->req_first = NULL;
--        ha->tid_cnt = pcistr[ctr].device_id >= 0x200 ? MAXID : MAX_HDRIVES;
-+        ha->tid_cnt = pcistr[ctr].pdev->device >= 0x200 ? MAXID : MAX_HDRIVES;
-         if (max_ids > 0 && max_ids < ha->tid_cnt)
-             ha->tid_cnt = max_ids;
-         for (i=0; i<GDTH_MAXCMDS; ++i)
-@@ -4810,7 +4806,7 @@ static const char *gdth_ctr_name(int hanum)
-     } else if (ha->type == GDT_ISA) {
-         return("GDT2000/2020");
-     } else if (ha->type == GDT_PCI) {
--        switch (ha->stype) {
-+        switch (ha->pdev->device) {
-           case PCI_DEVICE_ID_VORTEX_GDT60x0:
-             return("GDT6000/6020/6050");
-           case PCI_DEVICE_ID_VORTEX_GDT6000B:
-@@ -5448,12 +5444,12 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
-                 ctrt.type = 
-                     (ha->oem_id == OEM_ID_INTEL ? 0xfd : 0xfe);
-                 if (ha->stype >= 0x300)
--                    ctrt.ext_type = 0x6000 | ha->subdevice_id;
-+                    ctrt.ext_type = 0x6000 | ha->pdev->subsystem_device;
-                 else 
-                     ctrt.ext_type = 0x6000 | ha->stype;
-             }
--            ctrt.device_id = ha->stype;
--            ctrt.sub_device_id = ha->subdevice_id;
-+            ctrt.device_id = ha->pdev->device;
-+            ctrt.sub_device_id = ha->pdev->subsystem_device;
-         }
-         ctrt.info = ha->brd_phys;
-         ctrt.oem_id = ha->oem_id;
-diff --git a/drivers/scsi/gdth.h b/drivers/scsi/gdth.h
-index 8c29eaf..3742330 100644
---- a/drivers/scsi/gdth.h
-+++ b/drivers/scsi/gdth.h
-@@ -845,11 +845,6 @@ typedef struct {
- /* PCI resources */
- typedef struct {
-     struct pci_dev      *pdev;
--    ushort              vendor_id;              /* vendor (ICP, Intel, ..) */
--    ushort              device_id;              /* device ID (0,..,9) */
--    ushort              subdevice_id;           /* sub device ID */
--    unchar              bus;                    /* PCI bus */
--    unchar              device_fn;              /* PCI device/function no. */
-     ulong               dpmem;                  /* DPRAM address */
-     ulong               io;                     /* IO address */
-     ulong               io_mm;                  /* IO address mem. mapped */
-@@ -862,7 +857,6 @@ typedef struct {
-     ushort              oem_id;                 /* OEM */
-     ushort              type;                   /* controller class */
-     ulong32             stype;                  /* subtype (PCI: device ID) */
--    ushort              subdevice_id;           /* sub device ID (PCI) */
-     ushort              fw_vers;                /* firmware version */
-     ushort              cache_feat;             /* feat. cache serv. (s/g,..)*/
-     ushort              raw_feat;               /* feat. raw service (s/g,..)*/
+> +static ssize_t ps3flash_read(struct file *file, char __user *buf, size_t count,
+> +			     loff_t *pos)
+> +{
+> +	struct ps3_storage_device *dev = ps3flash_dev;
+> +	struct ps3flash_private *priv = ps3flash_priv(dev);
+> +	u64 size, start_sector, end_sector, offset;
+> +	ssize_t sectors_read;
+> +	size_t remaining, n;
+> +
+> +	dev_dbg(&dev->sbd.core,
+> +		"%s:%u: Reading %zu bytes at position %lld to user 0x%p\n",
+> +		__func__, __LINE__, count, *pos, buf);
+> +
+> +	size = dev->regions[dev->region_idx].size*dev->blk_size;
+> +	if (*pos >= size || !count)
+> +		return 0;
+> +
+> +	if (*pos+count > size) {
+> +		dev_dbg(&dev->sbd.core,
+> +			"%s:%u Truncating count from %zu to %llu\n", __func__,
+> +			__LINE__, count, size - *pos);
+> +		count = size - *pos;
+> +	}
+> +
+> +	start_sector = do_div_llr(*pos, dev->blk_size, &offset);
+> +	end_sector = DIV_ROUND_UP(*pos+count, dev->blk_size);
+> +
+> +	remaining = count;
+> +	do {
+> +		mutex_lock(&priv->mutex);
+> +
+> +		sectors_read = ps3flash_read_sectors(dev, start_sector,
+> +						     end_sector-start_sector,
+> +						     0);
+> +		if (sectors_read < 0) {
+> +			mutex_unlock(&priv->mutex);
+> +			return sectors_read;
+> +		}
+> +
+> +		n = min(remaining, sectors_read*dev->blk_size-offset);
+> +		dev_dbg(&dev->sbd.core,
+> +			"%s:%u: copy %lu bytes from 0x%p to user 0x%p\n",
+> +			__func__, __LINE__, n, dev->bounce_buf+offset, buf);
+> +		if (copy_to_user(buf, dev->bounce_buf+offset, n)) {
+> +			mutex_unlock(&priv->mutex);
+> +			return -EFAULT;
+> +		}
+> +
+> +		mutex_unlock(&priv->mutex);
+> +
+> +		*pos += n;
+> +		buf += n;
+> +		remaining -= n;
+> +		start_sector += sectors_read;
+> +		offset = 0;
+> +	} while (remaining > 0);
+> +
+> +	return count;
+> +}
 
---------------080209010106070104090105--
+There are several nasty deeply-embedded return points in this function.
+
+> +static ssize_t ps3flash_write(struct file *file, const char __user *buf,
+> +			      size_t count, loff_t *pos)
+> +{
+> +	struct ps3_storage_device *dev = ps3flash_dev;
+> +	struct ps3flash_private *priv = ps3flash_priv(dev);
+> +	u64 size, chunk_sectors, start_write_sector, end_write_sector,
+> +	    end_read_sector, start_read_sector, head, tail, offset;
+> +	ssize_t res;
+> +	size_t remaining, n;
+> +	unsigned int sec_off;
+> +
+> +	dev_dbg(&dev->sbd.core,
+> +		"%s:%u: Writing %zu bytes at position %lld from user 0x%p\n",
+> +		__func__, __LINE__, count, *pos, buf);
+> +
+> +	size = dev->regions[dev->region_idx].size*dev->blk_size;
+> +	if (*pos >= size || !count)
+> +		return 0;
+> +
+> +	if (*pos+count > size) {
+
+checkpatch missed stuff here.
+
+> +		dev_dbg(&dev->sbd.core,
+> +			"%s:%u Truncating count from %zu to %llu\n", __func__,
+> +			__LINE__, count, size - *pos);
+> +		count = size - *pos;
+> +	}
+> +
+> +	chunk_sectors = dev->bounce_size / dev->blk_size;
+> +
+> +	start_write_sector = do_div_llr(*pos, dev->bounce_size, &offset) *
+> +			     chunk_sectors;
+
+It's strange to see a do_div_llr() in the middle of all this 64-bit-only
+code.  Could use / and %?
+
+> +	end_write_sector = DIV_ROUND_UP(*pos+count, dev->bounce_size) *
+> +			   chunk_sectors;
+> +
+> +	end_read_sector = DIV_ROUND_UP(*pos, dev->blk_size);
+> +	start_read_sector = (*pos+count) / dev->blk_size;
+> +
+> +	/*
+> +	 * As we have to write in 256 KiB chunks, while we can read in blk_size
+> +	 * (usually 512 bytes) chunks, we perform the following steps:
+> +	 *   1. Read from start_write_sector to end_read_sector ("head")
+> +	 *   2. Read from start_read_sector to end_write_sector ("tail")
+> +	 *   3. Copy data to buffer
+> +	 *   4. Write from start_write_sector to end_write_sector
+> +	 * All of this is complicated by using only one 256 KiB bounce buffer.
+> +	 */
+> +
+> +	head = end_read_sector-start_write_sector;
+> +	tail = end_write_sector-start_read_sector;
+
+checkpatch missed this too.
+
+> +	remaining = count;
+> +	do {
+> +		mutex_lock(&priv->mutex);
+> +
+> +		if (end_read_sector >= start_read_sector) {
+> +			/* Merge head and tail */
+> +			dev_dbg(&dev->sbd.core,
+> +				"Merged head and tail: %lu sectors at %lu\n",
+> +				chunk_sectors, start_write_sector);
+> +			res = ps3flash_read_sectors(dev, start_write_sector,
+> +						    chunk_sectors, 0);
+> +			if (res < 0)
+> +				goto fail;
+> +		} else {
+> +			if (head) {
+> +				/* Read head */
+> +				dev_dbg(&dev->sbd.core,
+> +					"head: %lu sectors at %lu\n", head,
+> +					start_write_sector);
+> +				res = ps3flash_read_sectors(dev,
+> +							    start_write_sector,
+> +							    head, 0);
+> +				if (res < 0)
+> +					goto fail;
+> +			}
+> +			if (start_read_sector <
+> +			    start_write_sector+chunk_sectors) {
+> +				/* Read tail */
+> +				dev_dbg(&dev->sbd.core,
+> +					"tail: %lu sectors at %lu\n", tail,
+> +					start_read_sector);
+> +				sec_off = start_read_sector-start_write_sector;
+> +				res = ps3flash_read_sectors(dev,
+> +							    start_read_sector,
+> +							    tail, sec_off);
+> +				if (res < 0)
+> +					goto fail;
+> +			}
+> +		}
+> +
+> +		n = min(remaining, dev->bounce_size-offset);
+> +		dev_dbg(&dev->sbd.core,
+> +			"%s:%u: copy %lu bytes from user 0x%p to 0x%p\n",
+> +			__func__, __LINE__, n, buf, dev->bounce_buf+offset);
+> +		if (copy_from_user(dev->bounce_buf+offset, buf, n)) {
+> +			res = -EFAULT;
+> +			goto fail;
+> +		}
+> +
+> +		res = ps3flash_write_chunk(dev, start_write_sector);
+> +		if (res < 0)
+> +			goto fail;
+> +
+> +		mutex_unlock(&priv->mutex);
+> +
+> +		*pos += n;
+> +		buf += n;
+> +		remaining -= n;
+> +		start_write_sector += chunk_sectors;
+> +		head = 0;
+> +		offset = 0;
+> +	} while (remaining > 0);
+> +
+> +	return count;
+> +
+> +fail:
+> +	mutex_unlock(&priv->mutex);
+> +	return res;
+> +}
+>
+> ...
+>
+> +static int __devinit ps3flash_probe(struct ps3_system_bus_device *_dev)
+> +{
+> +	struct ps3_storage_device *dev = to_ps3_storage_device(&_dev->core);
+> +	struct ps3flash_private *priv;
+> +	int error;
+> +	unsigned long tmp;
+> +
+> +	tmp = dev->regions[dev->region_idx].start*dev->blk_size;
+> +	if (tmp % FLASH_BLOCK_SIZE) {
+> +		dev_err(&dev->sbd.core,
+> +			"%s:%u region start %lu is not aligned\n", __func__,
+> +			__LINE__, tmp);
+> +		return -EINVAL;
+> +	}
+> +	tmp = dev->regions[dev->region_idx].size*dev->blk_size;
+> +	if (tmp % FLASH_BLOCK_SIZE) {
+> +		dev_err(&dev->sbd.core,
+> +			"%s:%u region size %lu is not aligned\n", __func__,
+> +			__LINE__, tmp);
+> +		return -EINVAL;
+> +	}
+> +
+> +	/* use static buffer, kmalloc cannot allocate 256 KiB */
+> +	if (!ps3flash_bounce_buffer.address)
+> +		return -ENODEV;
+> +
+> +	if (ps3flash_dev) {
+> +		dev_err(&dev->sbd.core,
+> +			"Only one FLASH device is supported\n");
+> +		return -EBUSY;
+> +	}
+> +
+> +	ps3flash_dev = dev;
+> +
+> +	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+> +	if (!priv) {
+> +		error = -ENOMEM;
+> +		goto fail;
+> +	}
+> +
+> +	ps3flash_priv(dev) = priv;
+> +	mutex_init(&priv->mutex);
+> +
+> +	dev->bounce_size = ps3flash_bounce_buffer.size;
+> +	dev->bounce_buf = ps3flash_bounce_buffer.address;
+> +
+> +	error = ps3stor_setup(dev, ps3flash_interrupt);
+> +	if (error)
+> +		goto fail_free_priv;
+> +
+> +	ps3flash_misc.parent = &dev->sbd.core;
+> +	error = misc_register(&ps3flash_misc);
+> +	if (error) {
+> +		dev_err(&dev->sbd.core, "%s:%u: misc_register failed %d\n",
+> +			__func__, __LINE__, error);
+> +		goto fail_teardown;
+> +	}
+> +
+> +	dev_info(&dev->sbd.core, "%s:%u: registered misc device %d\n",
+> +		 __func__, __LINE__, ps3flash_misc.minor);
+> +	return 0;
+> +
+> +fail_teardown:
+> +	ps3stor_teardown(dev);
+> +fail_free_priv:
+> +	kfree(priv);
+> +	ps3flash_priv(dev) = NULL;
+> +fail:
+> +	ps3flash_dev = NULL;
+> +	return error;
+> +}
+> +
