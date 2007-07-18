@@ -1,37 +1,57 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: block/bsg.c
-Date: Thu, 19 Jul 2007 08:18:21 +0900
-Message-ID: <20070719081821U.fujita.tomonori@lab.ntt.co.jp>
-References: <20070718092130V.tomof@acm.org>
-	<1184766854.3464.4.camel@localhost.localdomain>
-	<1184768624.3464.15.camel@localhost.localdomain>
+Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+Date: Thu, 19 Jul 2007 08:25:16 +0900
+Message-ID: <20070719082516W.fujita.tomonori@lab.ntt.co.jp>
+References: <469C10F6.3050008@googlemail.com>
+	<20070717100921W.fujita.tomonori@lab.ntt.co.jp>
+	<469C1E2A.8010508@googlemail.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:42559 "EHLO
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:44816 "EHLO
 	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbXGRXSn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 19:18:43 -0400
-In-Reply-To: <1184768624.3464.15.camel@localhost.localdomain>
+	with ESMTP id S1762406AbXGRXZx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 19:25:53 -0400
+In-Reply-To: <469C1E2A.8010508@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: tomof@acm.org, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: nix.or.die@googlemail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: block/bsg.c
-Date: Wed, 18 Jul 2007 09:23:44 -0500
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+Date: Tue, 17 Jul 2007 03:40:58 +0200
 
-> On Wed, 2007-07-18 at 08:54 -0500, James Bottomley wrote:
-> > You're welcome ... although there's still a problem for modular builds.
-> > This is what my /sys/class/bsg looks like:
-> 
-> Sorry, lets see if I can get the paste to work this time:
-> 
-> jejb@hobholes> ls /sys/class/bsg/
-> 0:0:1:0/  sdb/
+> FUJITA Tomonori wrote:
+> > From: Gabriel C <nix.or.die@googlemail.com>
+> > Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+> > Date: Tue, 17 Jul 2007 02:44:38 +0200
+> >
+> >   
+> >> Gabriel C wrote:
+> >>     
+> >>> Hello,
+> >>>
+> >>> sdparm and hdparm are broken for me on git (
+> >>> abce891a10559343d8ac9f79b46d78afdba63a40 )
+> >>>
+> >>>
+> >>> ~$ sudo hdparm  /dev/sdc
+> >>>
+> >>> /dev/sdc:
+> >>>  BLKROGET failed: Inappropriate ioctl for device
+> >>>  BLKRAGET failed: Inappropriate ioctl for device
+> >>>  BLKGETSIZE failed: Inappropriate ioctl for device
+> >>>
+> >>>
+> >>> ~$ sudo sdparm  --all /dev/sdc
+> >>> unable to access /dev/sdc, ATA disk?
+> >>>
+> >>>   
+> >>>       
+> >> Well it is bsg , setting BLK_DEV_BSG=n fixed all this errors.
 
-Surely, confusing. Let's dump the if and use the sdev name for now.
-
-Thanks,
+I've not tested this yet (need to find sata drives in my workplace),
+but James Bottomley told me that both works for him with bsg enabled.
+It might worth trying the latest git tree.
