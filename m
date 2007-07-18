@@ -1,101 +1,84 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
-Date: Wed, 18 Jul 2007 16:19:03 +0200
-Message-ID: <20070718141903.GB11657@kernel.dk>
-References: <468CDB3C.4060500@panasas.com> <468CF58E.1020901@panasas.com> <46967C78.3070100@cs.wisc.edu> <20070712154739K.tomof@acm.org> <469E1FEE.9060106@panasas.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: block/bsg.c
+Date: Wed, 18 Jul 2007 09:23:44 -0500
+Message-ID: <1184768624.3464.15.camel@localhost.localdomain>
+References: <20070717190705T.fujita.tomonori@lab.ntt.co.jp>
+	 <20070717101928.GK5195@kernel.dk>
+	 <1184698434.3378.15.camel@localhost.localdomain>
+	 <20070718092130V.tomof@acm.org>
+	 <1184766854.3464.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:11554 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756411AbXGROT3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 18 Jul 2007 10:19:29 -0400
-Content-Disposition: inline
-In-Reply-To: <469E1FEE.9060106@panasas.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:52471 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753863AbXGROXq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 10:23:46 -0400
+In-Reply-To: <1184766854.3464.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <tomof@acm.org>, michaelc@cs.wisc.edu, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Jul 18 2007, Boaz Harrosh wrote:
-> FUJITA Tomonori wrote:
-> > From: Mike Christie <michaelc@cs.wisc.edu>
-> > Subject: Re: [RFC 4/8] scsi-ml: scsi_sgtable implementation
-> > Date: Thu, 12 Jul 2007 14:09:44 -0500
-> > 
-> >> Boaz Harrosh wrote:
-> >>> +/*
-> >>> + * Should fit within a single page.
-> >>> + */
-> >>> +enum { SCSI_MAX_SG_SEGMENTS =
-> >>> +	((PAGE_SIZE - sizeof(struct scsi_sgtable)) /
-> >>> +	sizeof(struct scatterlist)) };
-> >>> +
-> >>> +enum { SG_MEMPOOL_NR =
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 7) +
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 15) +
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 31) +
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 63) +
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 127) +
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 255) +
-> >>> +	(SCSI_MAX_SG_SEGMENTS >= 511)
-> >>> +};
-> >>>  
-> >> What does SCSI_MAX_SG_SEGMENTS end up being on x86 now? On x86_64 or 
-> >> some other arch, we were going over a page when doing 
-> >> SCSI_MAX_PHYS_SEGMENTS of 256 right?
-> > 
-> > Seems that 170 with x86 and 127 with x86_64.
-> > 
-> 
-> with scsi_sgtable we get one less than now
-> 
-> Arch                      | SCSI_MAX_SG_SEGMENTS =  | sizeof(struct scatterlist)
-> --------------------------|-------------------------|---------------------------
-> x86_64                    | 127                     |32
-> i386 CONFIG_HIGHMEM64G=y  | 204                     |20
-> i386 other                | 255                     |16
-> 
-> What's nice about this code is that now finally it is
-> automatically calculated in compile time. Arch people
-> don't have the headache "did I break SCSI-ml?". 
-> For example observe the current bug with i386 
-> CONFIG_HIGHMEM64G=y.
-> 
-> The same should be done with BIO's. Than ARCHs with big
-> pages can gain even more.
-> 
-> > 
-> >> What happened to Jens's scatter list chaining and how does this relate 
-> >> to it then?
-> > 
-> > With Jens' sglist, we can set SCSI_MAX_SG_SEGMENTS to whatever we
-> > want. We can remove the above code.
-> > 
-> > We need to push this and Jens' sglist together in one merge window, I
-> > think.
-> 
-> No Tomo the above does not go away. What goes away is maybe:
+On Wed, 2007-07-18 at 08:54 -0500, James Bottomley wrote:
+> You're welcome ... although there's still a problem for modular builds.
+> This is what my /sys/class/bsg looks like:
 
-It does go away, since we can just set it to some safe value and use
-chaining to get us where we want.
+Sorry, lets see if I can get the paste to work this time:
 
->  	blk_queue_max_hw_segments(q, shost->sg_tablesize);
-> -	blk_queue_max_phys_segments(q, SCSI_MAX_SG_SEGMENTS);
->  	blk_queue_max_sectors(q, shost->max_sectors);
+jejb@hobholes> ls /sys/class/bsg/
+0:0:1:0/  sdb/
+
+> So you see the if (rq->kobj.parent) is causing confusing naming.  The
+> reason the first one shows up as 0:0:0:0 is because in an initrd
+> scsi_mod is loaded first (which is when bsg binds) followed by sd_mod
+> (which is what gives the device the ULD binding and hence the name).  I
+> don't see any way around this, so I'd advocate simply using the sdev
+> name rather than the block device name and dumping the if.
 > 
-> I'm working on a convergence patches that will do scsi_sg_pools cleanup
-> which is common to both our patches, than scsi_sgtable, and than 
-> sg-chaining on top of that. I hope it gets accepted. 
-> The sg-chaining is much much simpler over scsi_sgtables.
-
-Sorry, I don't follow this paragraph at all. What is the scsi_sgtables
-change you are referring to? And how does it make sg chaining so much
-simpler?
-
-I guess my problem is that I don't know what problem this scsi_sgtables
-you refer to is fixing?
-
--- 
-Jens Axboe
+> > > --- a/drivers/scsi/scsi_sysfs.c
+> > > +++ b/drivers/scsi/scsi_sysfs.c
+> > > @@ -714,6 +714,7 @@ static int attr_add(struct device *dev, struct device_attribute *attr)
+> > >  int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> > >  {
+> > >  	int error, i;
+> > > +	struct request_queue *rq = sdev->request_queue;
+> > >  
+> > >  	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
+> > >  		return error;
+> > > @@ -733,6 +734,16 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+> > >  	/* take a reference for the sdev_classdev; this is
+> > >  	 * released by the sdev_class .release */
+> > >  	get_device(&sdev->sdev_gendev);
+> > > +
+> > > +	if (rq->kobj.parent)
+> > > +		error = bsg_register_queue(rq, kobject_name(rq->kobj.parent));
+> > > +	else
+> > > +		error = bsg_register_queue(rq, kobject_name(&sdev->sdev_gendev.kobj));
+> > > +	if (error) {
+> > > +		sdev_printk(KERN_INFO, sdev, "Failed to register bsg queue\n");
+> > > +		goto out;
+> > 
+> > Needs more cleanup here?
+> 
+> No ... this bit's magic and clever.  Once you've set up the devices and
+> done a get_device, cleanup is simply doing a put_device because it's all
+> done in the release routine.
+> 
+> > We might just ignore the error here since it's not fatal not to create
+> > a bsg device, I guess.
+> > 
+> > I updated the patch against the latest code (which has just be merged
+> > to Linus's tree).
+> 
+> Thanks,
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
