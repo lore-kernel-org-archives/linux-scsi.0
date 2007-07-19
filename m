@@ -1,27 +1,43 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] bsg: separate bsg and SCSI (so SCSI can be modular)
-Date: Thu, 19 Jul 2007 10:15:10 -0500
-Message-ID: <1184858110.3464.92.camel@localhost.localdomain>
+Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+Date: Thu, 19 Jul 2007 10:19:16 -0500
+Message-ID: <1184858356.3464.96.camel@localhost.localdomain>
+References: <469C10F6.3050008@googlemail.com>
+	 <20070717100921W.fujita.tomonori@lab.ntt.co.jp>
+	 <469C1E2A.8010508@googlemail.com>
+	 <20070719082516W.fujita.tomonori@lab.ntt.co.jp>
+	 <1184853770.3464.85.camel@localhost.localdomain>
+	 <469F75A4.8050301@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39649 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:57793 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756800AbXGSPPL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 11:15:11 -0400
+	with ESMTP id S939053AbXGSPTS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 11:19:18 -0400
+In-Reply-To: <469F75A4.8050301@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Gabriel C <nix.or.die@googlemail.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org
 
-This patch moves the bsg registration into SCSI so that bsg no longer
-has a dependency on the scsi_interface_register API.
+On Thu, 2007-07-19 at 16:31 +0200, Gabriel C wrote:
+> No is not an SATA controller.
+> 
+> sda and sdb are SCSI disks connected to an Adaptec AIC-7892P U160/m
+> controller using the aic7xxx driver.
 
-This can be viewed as a temporary expedient until we can get universal
-bsg binding sorted out properly.
+OK, this definitely works for me, that's what my root disk is on.  I
+think this isn't a kernel problem ... I think it's a udev name clash
+problem.  Try the attached patch, which corrects the names:
+
+> sdc is an ATA-7 disk connected to an IDE controller ( 82801BA IDE U100
+> )  using libata and the ata_piix driver.
+
 
 James
+
 ---
 
 Index: BUILD-2.6/block/Kconfig
@@ -126,5 +142,6 @@ Index: BUILD-2.6/drivers/scsi/scsi_sysfs.c
  	class_device_unregister(&sdev->sdev_classdev);
  	transport_remove_device(dev);
  	device_del(dev);
+
 
 
