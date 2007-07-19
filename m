@@ -1,30 +1,56 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH] update mpt Kconfig help
-Date: Thu, 19 Jul 2007 14:53:26 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70884C5D@NAMAIL4.ad.lsil.com>
-References: <4C94DE2070B172459E4F1EE14BD2364E33DEB6@HQ-EXCH-5.corp.brocade.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/9] qla2xxx: updates for 2.6.23 [8.02.00-k2].
+Date: Thu, 19 Jul 2007 15:04:56 -0700
+Message-ID: <20070719220456.GK4015@plap.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:52561 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754190AbXGSUxh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 16:53:37 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E33DEB6@HQ-EXCH-5.corp.brocade.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:26947 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763307AbXGSWGE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 18:06:04 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gwendal Grignou <ggrignou@Brocade.COM>, linux-scsi@vger.kernel.org
+To: James Bottomley <james.bottomley@steeleye.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Thursday, July 19, 2007 1:27 PM,  Gwendal Grignou wrote:
-> Update help in Kconfig for mptfc driver to indicate the 
-> driver supports 
-> Brocade FC 4G HBA.
-> 
-> signed-off-by: Gwendal Grignou <ggrignou@brocade.com>
+This patchset updates the qla2xxx driver to 8.02.00-k2.
+
+ drivers/scsi/qla2xxx/qla_attr.c    |   33 +-
+ drivers/scsi/qla2xxx/qla_dbg.c     |  919 ++++++++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_dbg.h     |   38 ++
+ drivers/scsi/qla2xxx/qla_def.h     |   22 +-
+ drivers/scsi/qla2xxx/qla_fw.h      |   28 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |    6 +
+ drivers/scsi/qla2xxx/qla_gs.c      |   82 ++--
+ drivers/scsi/qla2xxx/qla_init.c    |  136 +++---
+ drivers/scsi/qla2xxx/qla_inline.h  |    4 +-
+ drivers/scsi/qla2xxx/qla_iocb.c    |   10 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |   55 ++-
+ drivers/scsi/qla2xxx/qla_mbx.c     |   58 ++--
+ drivers/scsi/qla2xxx/qla_os.c      |  380 ++++++++++------
+ drivers/scsi/qla2xxx/qla_sup.c     |   35 ++-
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 15 files changed, 1416 insertions(+), 392 deletions(-)
+
+The bulk of the updates are infrastructure changes to support new ISP
+parts (namely ISP25xx, our 8Gb product).  Actual ISP25xx additions are
+relatively minor.
+
+here's the commits:
+
+- Generalize FW-Interface-2 support.
+- Generalize iIDMA support.
+- Correct setting of 'current' and 'supported' speeds during FDMI registration.
+- Validate mid-layer 'underflow' during check-condition handling.
+- Re-factor isp_operations to static structures.
+- Use PCI-X/PCI-Express read control interfaces.
+- Use pci_try_set_mwi().
+- Add ISP25XX support.
+- Update version number to 8.02.00-k2.
 
 
-ACK
-Eric Moore
+Regards,
+Andrew Vasquez
+QLogic Corporation
