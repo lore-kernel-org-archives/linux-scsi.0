@@ -1,147 +1,95 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
-Date: Thu, 19 Jul 2007 10:19:16 -0500
-Message-ID: <1184858356.3464.96.camel@localhost.localdomain>
-References: <469C10F6.3050008@googlemail.com>
-	 <20070717100921W.fujita.tomonori@lab.ntt.co.jp>
-	 <469C1E2A.8010508@googlemail.com>
-	 <20070719082516W.fujita.tomonori@lab.ntt.co.jp>
-	 <1184853770.3464.85.camel@localhost.localdomain>
-	 <469F75A4.8050301@googlemail.com>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and
+ auditing
+Date: Thu, 19 Jul 2007 08:37:19 -0700
+Message-ID: <20070719083719.33d8994c.rdunlap@xenotime.net>
+References: <4695F76F.5000305@panasas.com>
+	<20070712135750.2a4a4a54.rdunlap@xenotime.net>
+	<469B38CC.50501@panasas.com>
+	<20070717171607.ffc278eb.rdunlap@xenotime.net>
+	<469DDD74.2060208@panasas.com>
+	<20070718103320.4b6ad7b3.rdunlap@xenotime.net>
+	<20070718145818.8eebbd66.rdunlap@xenotime.net>
+	<20070718194335.e21a01e5.rdunlap@xenotime.net>
+	<20070718200315.3adcd194.rdunlap@xenotime.net>
+	<469F616D.1000909@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:57793 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S939053AbXGSPTS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 11:19:18 -0400
-In-Reply-To: <469F75A4.8050301@googlemail.com>
+Received: from xenotime.net ([66.160.160.81]:53394 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S939409AbXGSPcx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jul 2007 11:32:53 -0400
+Received: from midway.site ([71.117.236.25]) by xenotime.net for <linux-scsi@vger.kernel.org>; Thu, 19 Jul 2007 08:32:52 -0700
+In-Reply-To: <469F616D.1000909@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gabriel C <nix.or.die@googlemail.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dougg@torque.net>, scsi <linux-scsi@vger.kernel.org>, "=?ISO-8859-1?Q? J=FCrgen_E._Fischer ?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Thu, 2007-07-19 at 16:31 +0200, Gabriel C wrote:
-> No is not an SATA controller.
+On Thu, 19 Jul 2007 16:04:45 +0300 Boaz Harrosh wrote:
+
+> Randy Dunlap wrote:
+> > On Wed, 18 Jul 2007 19:43:35 -0700 Randy Dunlap wrote:
+> > 
+> >> On Wed, 18 Jul 2007 14:58:18 -0700 Randy Dunlap wrote:
+> >>
+> >>> On Wed, 18 Jul 2007 10:33:20 -0700 Randy Dunlap wrote:
+> >>>
+> >>>> Hi,
+> >>>>
+> >>>> I don't see the reset problem after applying this patch, but I'm
+> >>>> still seeing an Oops in datao_run.  Log is attached.
+> OK 1 bug down.
 > 
-> sda and sdb are SCSI disks connected to an Adaptec AIC-7892P U160/m
-> controller using the aic7xxx driver.
+> >> Looks to me like this driver doesn't handle highmem virtual addresses
+> >> very well.  I expect that it would work OK if CONFIG_HIGHMEM=n or
+> >> it had a slave_alloc function to limit the memory addresses that it
+> >> sees (like ppa & imm do).  As it is on a machine with HIGHMEM=y,
+> >> it gets sglist virtual addresses of 0, e.g.:
+> > 
+> > Confirmed that limiting the blk queue bounce limit to
+> > BLK_BOUNCE_HIGH runs as expected (copy files, compare them successfully).
+> > 
+> This is grate! Thanks for checking and debugging this.
+> Am I right in assuming that the remaining bug has been there
+> before my patchset? Has my patchset made it any worse?
 
-OK, this definitely works for me, that's what my root disk is on.  I
-think this isn't a kernel problem ... I think it's a udev name clash
-problem.  Try the attached patch, which corrects the names:
+Yes, this problem has been around forever AFAIK.  You didn't add
+to it.
 
-> sdc is an ATA-7 disk connected to an IDE controller ( 82801BA IDE U100
-> )  using libata and the ata_piix driver.
+> > include/asm-i386/scatterlist.h talks about using pci_map_sg()
+> > to get bus addresses from the scatterlist table.  However, this driver
+> > knows nothing about PCI.  Should it use dma sg mapping instead?
+> > or what is the desired fix here?
+> 
+> I'm afraid this is out of my league. James, Christoph, anybody?
+> What would be the right thing to do here?
+> 
+> > 
+> > Thanks.
+> > ---
+> 
+> Thank you. Please forgive me with the debug thing. One thing I learned in
+> my 17 years of programing is never send code you have not compiled & tested.
+> I mean what can go wrong with turning debugging on, right?;)
+> 
+> I will wait out the solution to above remaining problem and send another
+> round of patches.
+> 
+> One more thing if I may? Do you have at hand an old Zip cartridge that 
+> has bad sectors or other errors on it. My motivation is to exercise the
+> Sense return code-path. I would like to make sure that its doing the 
+> expected. It is the part that changed the most.
+> I will try to look if there is a way to send a scsi_read using sg3_utils that 
+> will read passed the media capacity, and will trigger a short read. I guess
+> on an unmounted device. Douglas?
 
-
-James
+No, I don't have any bad media that I know of.
+I suggest that you look into the "Fault-injection framework"
+(CONFIG_FAULT_INJECTION) to see if it can inject some errors for you.
 
 ---
-
-Index: BUILD-2.6/block/Kconfig
-===================================================================
---- BUILD-2.6.orig/block/Kconfig	2007-07-18 11:34:20.000000000 -0500
-+++ BUILD-2.6/block/Kconfig	2007-07-18 11:36:24.000000000 -0500
-@@ -53,7 +53,7 @@ endif # BLOCK
- 
- config BLK_DEV_BSG
- 	bool "Block layer SG support v4 (EXPERIMENTAL)"
--	depends on (SCSI=y) && EXPERIMENTAL
-+ 	depends on EXPERIMENTAL
- 	---help---
- 	Saying Y here will enable generic SG (SCSI generic) v4 support
- 	for any block device.
-Index: BUILD-2.6/block/bsg.c
-===================================================================
---- BUILD-2.6.orig/block/bsg.c	2007-07-18 11:34:20.000000000 -0500
-+++ BUILD-2.6/block/bsg.c	2007-07-18 11:36:24.000000000 -0500
-@@ -1009,29 +1009,6 @@ err:
- }
- EXPORT_SYMBOL_GPL(bsg_register_queue);
- 
--static int bsg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
--{
--	int ret;
--	struct scsi_device *sdp = to_scsi_device(cl_dev->dev);
--	struct request_queue *rq = sdp->request_queue;
--
--	if (rq->kobj.parent)
--		ret = bsg_register_queue(rq, kobject_name(rq->kobj.parent));
--	else
--		ret = bsg_register_queue(rq, kobject_name(&sdp->sdev_gendev.kobj));
--	return ret;
--}
--
--static void bsg_remove(struct class_device *cl_dev, struct class_interface *cl_intf)
--{
--	bsg_unregister_queue(to_scsi_device(cl_dev->dev)->request_queue);
--}
--
--static struct class_interface bsg_intf = {
--	.add	= bsg_add,
--	.remove	= bsg_remove,
--};
--
- static struct cdev bsg_cdev = {
- 	.kobj   = {.name = "bsg", },
- 	.owner  = THIS_MODULE,
-@@ -1069,16 +1046,9 @@ static int __init bsg_init(void)
- 	if (ret)
- 		goto unregister_chrdev;
- 
--	ret = scsi_register_interface(&bsg_intf);
--	if (ret)
--		goto remove_cdev;
--
- 	printk(KERN_INFO BSG_DESCRIPTION " version " BSG_VERSION
- 	       " loaded (major %d)\n", bsg_major);
- 	return 0;
--remove_cdev:
--	printk(KERN_ERR "bsg: failed register scsi interface %d\n", ret);
--	cdev_del(&bsg_cdev);
- unregister_chrdev:
- 	unregister_chrdev_region(MKDEV(bsg_major, 0), BSG_MAX_DEVS);
- destroy_bsg_class:
-Index: BUILD-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_sysfs.c	2007-07-18 11:36:02.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/scsi_sysfs.c	2007-07-19 10:10:50.000000000 -0500
-@@ -715,6 +715,7 @@ static int attr_add(struct device *dev, 
- int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- {
- 	int error, i;
-+	struct request_queue *rq = sdev->request_queue;
- 
- 	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
- 		return error;
-@@ -734,6 +735,17 @@ int scsi_sysfs_add_sdev(struct scsi_devi
- 	/* take a reference for the sdev_classdev; this is
- 	 * released by the sdev_class .release */
- 	get_device(&sdev->sdev_gendev);
-+
-+	error = bsg_register_queue(rq, sdev->sdev_gendev.bus_id);
-+
-+	if (error)
-+		sdev_printk(KERN_INFO, sdev,
-+			    "Failed to register bsg queue, errno=%d\n", error);
-+
-+	/* we're treating error on bsg register as non-fatal, so pretend
-+	 * nothing went wrong */
-+	error = 0;
-+
- 	if (sdev->host->hostt->sdev_attrs) {
- 		for (i = 0; sdev->host->hostt->sdev_attrs[i]; i++) {
- 			error = attr_add(&sdev->sdev_gendev,
-@@ -780,6 +792,7 @@ void __scsi_remove_device(struct scsi_de
- 	if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
- 		return;
- 
-+	bsg_unregister_queue(sdev->request_queue);
- 	class_device_unregister(&sdev->sdev_classdev);
- 	transport_remove_device(dev);
- 	device_del(dev);
-
-
-
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
