@@ -1,28 +1,38 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] update mpt Kconfig help
-Date: Thu, 19 Jul 2007 17:23:30 -0500
-Message-ID: <1184883810.3464.107.camel@localhost.localdomain>
-References: <4C94DE2070B172459E4F1EE14BD2364E33DEB6@HQ-EXCH-5.corp.brocade.com>
+Subject: Re: [PATCH 8/9] qla2xxx: Add ISP25XX support.
+Date: Thu, 19 Jul 2007 17:53:53 -0500
+Message-ID: <1184885633.3464.114.camel@localhost.localdomain>
+References: <20070719220456.GK4015@plap.qlogic.org>
+	 <11848827643315-git-send-email-andrew.vasquez@qlogic.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:59673 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:60582 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755172AbXGSWXc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 18:23:32 -0400
-In-Reply-To: <4C94DE2070B172459E4F1EE14BD2364E33DEB6@HQ-EXCH-5.corp.brocade.com>
+	with ESMTP id S1753609AbXGSWx4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 18:53:56 -0400
+In-Reply-To: <11848827643315-git-send-email-andrew.vasquez@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gwendal Grignou <ggrignou@Brocade.COM>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Thu, 2007-07-19 at 12:26 -0700, Gwendal Grignou wrote:
-> Update help in Kconfig for mptfc driver to indicate the driver supports 
-> Brocade FC 4G HBA.
+On Thu, 2007-07-19 at 15:06 -0700, Andrew Vasquez wrote:
+> +		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
+> +		WRT_REG_DWORD(dmp_reg, 0xB0100000);
+> +		dmp_reg = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
+> +		fw->shadow_reg[1] = htonl(RD_REG_DWORD(dmp_reg));
 
-This patch won't apply because of whitespace problems ... it looks like
-your mailer has converted all the tabs to spaces.
+Repeating this horrible cast over and over again is really eye watering.
+
+If you can't simply extend the struct device_reg_24xx as device_reg_25xx
+or something which seems more logical, what about 
+
+uint32_t __iomem *mailbox_reg_select = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xF0);
+uint32_t __iomem *mailbox_reg_value = (uint32_t __iomem *)((uint8_t __iomem *)reg + 0xFC);
+
+?
 
 James
 
