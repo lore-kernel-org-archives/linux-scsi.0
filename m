@@ -1,77 +1,52 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and auditing
-Date: Thu, 19 Jul 2007 16:04:45 +0300
-Message-ID: <469F616D.1000909@panasas.com>
-References: <4695F76F.5000305@panasas.com>	<20070712135750.2a4a4a54.rdunlap@xenotime.net>	<469B38CC.50501@panasas.com>	<20070717171607.ffc278eb.rdunlap@xenotime.net>	<469DDD74.2060208@panasas.com>	<20070718103320.4b6ad7b3.rdunlap@xenotime.net>	<20070718145818.8eebbd66.rdunlap@xenotime.net>	<20070718194335.e21a01e5.rdunlap@xenotime.net> <20070718200315.3adcd194.rdunlap@xenotime.net>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] aacraid: add vpd to inquiry
+Date: Thu, 19 Jul 2007 15:07:09 +0200
+Message-ID: <20070719130709.GH21899@pentland.suse.de>
+References: <AE4F746F2AECFC4DA4AADD66A1DFEF0189EBAA@otce2k301.adaptec.com> <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13054 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754879AbXGSNFO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jul 2007 09:05:14 -0400
-In-Reply-To: <20070718200315.3adcd194.rdunlap@xenotime.net>
+Received: from cantor2.suse.de ([195.135.220.15]:46417 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755076AbXGSNHK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 19 Jul 2007 09:07:10 -0400
+Content-Disposition: inline
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01BF5C40@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dougg@torque.net>
-Cc: scsi <linux-scsi@vger.kernel.org>, =?ISO-8859-1?Q?=22J=FCrgen_E=2E_?= =?ISO-8859-1?Q?Fischer=22?= <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-Randy Dunlap wrote:
-> On Wed, 18 Jul 2007 19:43:35 -0700 Randy Dunlap wrote:
-> 
->> On Wed, 18 Jul 2007 14:58:18 -0700 Randy Dunlap wrote:
->>
->>> On Wed, 18 Jul 2007 10:33:20 -0700 Randy Dunlap wrote:
->>>
->>>> Hi,
->>>>
->>>> I don't see the reset problem after applying this patch, but I'm
->>>> still seeing an Oops in datao_run.  Log is attached.
-OK 1 bug down.
+On Mon, Jul 16, 2007 at 05:08:05PM -0400, Salyzyn, Mark wrote:
+> Report VPD inquiry page 0x80 with an unique array creation serial num=
+ber
+> (CUID). When an array is created, the metadata stored on the physical
+> drives gets an unique serial number. This serial number remains const=
+ant
+> through array morphing or migration to other controllers. This patch =
+is
+> a forward port and modification to survive morphing and migration
+> operations, of a similar piece of (un-attributed author) code added t=
+o
+> the SLES10 SP1 aacraid driver.
+>=20
+Hmph. I seem to remember I've sent a similar patch to you, so I'd assum=
+e
+that the (un-attributed author) was in fact me.
 
->> Looks to me like this driver doesn't handle highmem virtual addresses
->> very well.  I expect that it would work OK if CONFIG_HIGHMEM=n or
->> it had a slave_alloc function to limit the memory addresses that it
->> sees (like ppa & imm do).  As it is on a machine with HIGHMEM=y,
->> it gets sglist virtual addresses of 0, e.g.:
-> 
-> Confirmed that limiting the blk queue bounce limit to
-> BLK_BOUNCE_HIGH runs as expected (copy files, compare them successfully).
-> 
-This is grate! Thanks for checking and debugging this.
-Am I right in assuming that the remaining bug has been there
-before my patchset? Has my patchset made it any worse?
+But glad that we've finally got VPD pages for aacraid, too.
 
-> include/asm-i386/scatterlist.h talks about using pci_map_sg()
-> to get bus addresses from the scatterlist table.  However, this driver
-> knows nothing about PCI.  Should it use dma sg mapping instead?
-> or what is the desired fix here?
+Cheers,
 
-I'm afraid this is out of my league. James, Christoph, anybody?
-What would be the right thing to do here?
-
-> 
-> Thanks.
-> ---
-> ~Randy
-> *** Remember to use Documentation/SubmitChecklist when testing your code ***
-
-Thank you. Please forgive me with the debug thing. One thing I learned in
-my 17 years of programing is never send code you have not compiled & tested.
-I mean what can go wrong with turning debugging on, right?;)
-
-I will wait out the solution to above remaining problem and send another
-round of patches.
-
-One more thing if I may? Do you have at hand an old Zip cartridge that 
-has bad sectors or other errors on it. My motivation is to exercise the
-Sense return code-path. I would like to make sure that its doing the 
-expected. It is the part that changed the most.
-I will try to look if there is a way to send a scsi_read using sg3_utils that 
-will read passed the media capacity, and will trigger a short read. I guess
-on an unmounted device. Douglas?
-
-Thanks again
-Boaz
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=EF=BF=BDrnberg
+GF: Markus Rex, HRB 16746 (AG N=EF=BF=BDrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
