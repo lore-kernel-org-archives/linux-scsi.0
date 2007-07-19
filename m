@@ -1,374 +1,205 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 3/3] ps3: FLASH ROM Storage Driver
-Date: Wed, 18 Jul 2007 16:52:22 -0700
-Message-ID: <20070718165222.e504d92e.akpm@linux-foundation.org>
-References: <20070716161539.075822000@pademelon.sonytel.be>
-	<20070716162206.723142000@pademelon.sonytel.be>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+Date: Thu, 19 Jul 2007 02:48:30 +0200
+Message-ID: <469EB4DE.7050602@googlemail.com>
+References: <469C10F6.3050008@googlemail.com>	<20070717100921W.fujita.tomonori@lab.ntt.co.jp>	<469C1E2A.8010508@googlemail.com> <20070719082516W.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
-In-Reply-To: <20070716162206.723142000@pademelon.sonytel.be>
-List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
-List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
-List-Post: <mailto:linuxppc-dev@ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
-List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
-	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
-Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Andy Whitcroft <apw@shadowen.org>
-Cc: Jens Axboe <axboe@kernel.dk>, "James
-	E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alessandro Rubini <rubini@vision.unipv.it>, linuxppc-dev@ozlabs.org, Paul Mackerras <paulus@samba.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from fonzie.hosting9000.com ([85.214.50.12]:49750 "EHLO
+	fonzie.hosting9000.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756473AbXGSA5H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jul 2007 20:57:07 -0400
+In-Reply-To: <20070719082516W.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-kernel@vger.kernel.org, jens.axboe@oracle.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Mon, 16 Jul 2007 18:15:42 +0200
-Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com> wrote:
-
-> From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-> 
-> Add a FLASH ROM Storage Driver for the PS3:
->   - Implemented as a misc character device driver
->   - Uses a fixed 256 KiB buffer allocated from boot memory as the hypervisor
->     requires the writing of aligned 256 KiB blocks
-> 
-> --- /dev/null
-> +++ b/drivers/char/ps3flash.c
-> @@ -0,0 +1,429 @@
-> +/*
-> + * PS3 FLASH ROM Storage Driver
-> + *
-> + * Copyright (C) 2007 Sony Computer Entertainment Inc.
-> + * Copyright 2007 Sony Corp.
-> + *
-> + * This program is free software; you can redistribute it and/or modify it
-> + * under the terms of the GNU General Public License as published
-> + * by the Free Software Foundation; version 2 of the License.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License along
-> + * with this program; if not, write to the Free Software Foundation, Inc.,
-> + * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-> + */
-> +
-> +#include <linux/fs.h>
-> +#include <linux/miscdevice.h>
-> +#include <linux/uaccess.h>
-> +
-> +#include <asm/lv1call.h>
-> +#include <asm/ps3stor.h>
-> +
-> +
-> +#define DEVICE_NAME		"ps3flash"
-> +
-> +#define FLASH_BLOCK_SIZE	(256*1024)
-> +
-> +
-> +struct ps3flash_private {
-> +	struct mutex mutex;	/* Bounce buffer mutex */
-> +};
-> +#define ps3flash_priv(dev)	((dev)->sbd.core.driver_data)
-
-bzzzt!
-
-> +static loff_t ps3flash_llseek(struct file *file, loff_t offset, int origin)
-> +{
-> +	struct ps3_storage_device *dev = ps3flash_dev;
-> +	u64 size = dev->regions[dev->region_idx].size*dev->blk_size;
-> +
-> +	switch (origin) {
-> +	case 1:
-> +		offset += file->f_pos;
-> +		break;
-> +	case 2:
-> +		offset += size;
-> +		break;
-> +	}
-> +	if (offset < 0)
-> +		return -EINVAL;
-> +
-> +	file->f_pos = offset;
-> +	return file->f_pos;
-> +}
-
-lseek implementations usually need locking.  file->f_mapping->host->i_mutex
-would be typical.
-
-That locking mostly protects 64-bit f_pos on 32-bit architectures so you
-can perahps kinda get away with it here.  However the code is a bit racy
-even on 64-bit, for silly userspace.
-
-That being said, I'd have thought that you could use one of our many
-generic lseek library fucntions here, or even an newly-exported
-block_llseek().  That assumes that i_size is correct, which I trust is the
-case.
-
-> +static ssize_t ps3flash_read(struct file *file, char __user *buf, size_t count,
-> +			     loff_t *pos)
-> +{
-> +	struct ps3_storage_device *dev = ps3flash_dev;
-> +	struct ps3flash_private *priv = ps3flash_priv(dev);
-> +	u64 size, start_sector, end_sector, offset;
-> +	ssize_t sectors_read;
-> +	size_t remaining, n;
-> +
-> +	dev_dbg(&dev->sbd.core,
-> +		"%s:%u: Reading %zu bytes at position %lld to user 0x%p\n",
-> +		__func__, __LINE__, count, *pos, buf);
-> +
-> +	size = dev->regions[dev->region_idx].size*dev->blk_size;
-> +	if (*pos >= size || !count)
-> +		return 0;
-> +
-> +	if (*pos+count > size) {
-> +		dev_dbg(&dev->sbd.core,
-> +			"%s:%u Truncating count from %zu to %llu\n", __func__,
-> +			__LINE__, count, size - *pos);
-> +		count = size - *pos;
-> +	}
-> +
-> +	start_sector = do_div_llr(*pos, dev->blk_size, &offset);
-> +	end_sector = DIV_ROUND_UP(*pos+count, dev->blk_size);
-> +
-> +	remaining = count;
-> +	do {
-> +		mutex_lock(&priv->mutex);
-> +
-> +		sectors_read = ps3flash_read_sectors(dev, start_sector,
-> +						     end_sector-start_sector,
-> +						     0);
-> +		if (sectors_read < 0) {
-> +			mutex_unlock(&priv->mutex);
-> +			return sectors_read;
-> +		}
-> +
-> +		n = min(remaining, sectors_read*dev->blk_size-offset);
-> +		dev_dbg(&dev->sbd.core,
-> +			"%s:%u: copy %lu bytes from 0x%p to user 0x%p\n",
-> +			__func__, __LINE__, n, dev->bounce_buf+offset, buf);
-> +		if (copy_to_user(buf, dev->bounce_buf+offset, n)) {
-> +			mutex_unlock(&priv->mutex);
-> +			return -EFAULT;
-> +		}
-> +
-> +		mutex_unlock(&priv->mutex);
-> +
-> +		*pos += n;
-> +		buf += n;
-> +		remaining -= n;
-> +		start_sector += sectors_read;
-> +		offset = 0;
-> +	} while (remaining > 0);
-> +
-> +	return count;
-> +}
-
-There are several nasty deeply-embedded return points in this function.
-
-> +static ssize_t ps3flash_write(struct file *file, const char __user *buf,
-> +			      size_t count, loff_t *pos)
-> +{
-> +	struct ps3_storage_device *dev = ps3flash_dev;
-> +	struct ps3flash_private *priv = ps3flash_priv(dev);
-> +	u64 size, chunk_sectors, start_write_sector, end_write_sector,
-> +	    end_read_sector, start_read_sector, head, tail, offset;
-> +	ssize_t res;
-> +	size_t remaining, n;
-> +	unsigned int sec_off;
-> +
-> +	dev_dbg(&dev->sbd.core,
-> +		"%s:%u: Writing %zu bytes at position %lld from user 0x%p\n",
-> +		__func__, __LINE__, count, *pos, buf);
-> +
-> +	size = dev->regions[dev->region_idx].size*dev->blk_size;
-> +	if (*pos >= size || !count)
-> +		return 0;
-> +
-> +	if (*pos+count > size) {
-
-checkpatch missed stuff here.
-
-> +		dev_dbg(&dev->sbd.core,
-> +			"%s:%u Truncating count from %zu to %llu\n", __func__,
-> +			__LINE__, count, size - *pos);
-> +		count = size - *pos;
-> +	}
-> +
-> +	chunk_sectors = dev->bounce_size / dev->blk_size;
-> +
-> +	start_write_sector = do_div_llr(*pos, dev->bounce_size, &offset) *
-> +			     chunk_sectors;
-
-It's strange to see a do_div_llr() in the middle of all this 64-bit-only
-code.  Could use / and %?
-
-> +	end_write_sector = DIV_ROUND_UP(*pos+count, dev->bounce_size) *
-> +			   chunk_sectors;
-> +
-> +	end_read_sector = DIV_ROUND_UP(*pos, dev->blk_size);
-> +	start_read_sector = (*pos+count) / dev->blk_size;
-> +
-> +	/*
-> +	 * As we have to write in 256 KiB chunks, while we can read in blk_size
-> +	 * (usually 512 bytes) chunks, we perform the following steps:
-> +	 *   1. Read from start_write_sector to end_read_sector ("head")
-> +	 *   2. Read from start_read_sector to end_write_sector ("tail")
-> +	 *   3. Copy data to buffer
-> +	 *   4. Write from start_write_sector to end_write_sector
-> +	 * All of this is complicated by using only one 256 KiB bounce buffer.
-> +	 */
-> +
-> +	head = end_read_sector-start_write_sector;
-> +	tail = end_write_sector-start_read_sector;
-
-checkpatch missed this too.
-
-> +	remaining = count;
-> +	do {
-> +		mutex_lock(&priv->mutex);
-> +
-> +		if (end_read_sector >= start_read_sector) {
-> +			/* Merge head and tail */
-> +			dev_dbg(&dev->sbd.core,
-> +				"Merged head and tail: %lu sectors at %lu\n",
-> +				chunk_sectors, start_write_sector);
-> +			res = ps3flash_read_sectors(dev, start_write_sector,
-> +						    chunk_sectors, 0);
-> +			if (res < 0)
-> +				goto fail;
-> +		} else {
-> +			if (head) {
-> +				/* Read head */
-> +				dev_dbg(&dev->sbd.core,
-> +					"head: %lu sectors at %lu\n", head,
-> +					start_write_sector);
-> +				res = ps3flash_read_sectors(dev,
-> +							    start_write_sector,
-> +							    head, 0);
-> +				if (res < 0)
-> +					goto fail;
-> +			}
-> +			if (start_read_sector <
-> +			    start_write_sector+chunk_sectors) {
-> +				/* Read tail */
-> +				dev_dbg(&dev->sbd.core,
-> +					"tail: %lu sectors at %lu\n", tail,
-> +					start_read_sector);
-> +				sec_off = start_read_sector-start_write_sector;
-> +				res = ps3flash_read_sectors(dev,
-> +							    start_read_sector,
-> +							    tail, sec_off);
-> +				if (res < 0)
-> +					goto fail;
-> +			}
-> +		}
-> +
-> +		n = min(remaining, dev->bounce_size-offset);
-> +		dev_dbg(&dev->sbd.core,
-> +			"%s:%u: copy %lu bytes from user 0x%p to 0x%p\n",
-> +			__func__, __LINE__, n, buf, dev->bounce_buf+offset);
-> +		if (copy_from_user(dev->bounce_buf+offset, buf, n)) {
-> +			res = -EFAULT;
-> +			goto fail;
-> +		}
-> +
-> +		res = ps3flash_write_chunk(dev, start_write_sector);
-> +		if (res < 0)
-> +			goto fail;
-> +
-> +		mutex_unlock(&priv->mutex);
-> +
-> +		*pos += n;
-> +		buf += n;
-> +		remaining -= n;
-> +		start_write_sector += chunk_sectors;
-> +		head = 0;
-> +		offset = 0;
-> +	} while (remaining > 0);
-> +
-> +	return count;
-> +
-> +fail:
-> +	mutex_unlock(&priv->mutex);
-> +	return res;
-> +}
+FUJITA Tomonori wrote:
+> From: Gabriel C <nix.or.die@googlemail.com>
+> Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+> Date: Tue, 17 Jul 2007 03:40:58 +0200
 >
-> ...
+>   
+>> FUJITA Tomonori wrote:
+>>     
+>>> From: Gabriel C <nix.or.die@googlemail.com>
+>>> Subject: Re: Someone ( bsg merge ? ) broke {sd,hd}parm on current git
+>>> Date: Tue, 17 Jul 2007 02:44:38 +0200
+>>>
+>>>   
+>>>       
+>>>> Gabriel C wrote:
+>>>>     
+>>>>         
+>>>>> Hello,
+>>>>>
+>>>>> sdparm and hdparm are broken for me on git (
+>>>>> abce891a10559343d8ac9f79b46d78afdba63a40 )
+>>>>>
+>>>>>
+>>>>> ~$ sudo hdparm  /dev/sdc
+>>>>>
+>>>>> /dev/sdc:
+>>>>>  BLKROGET failed: Inappropriate ioctl for device
+>>>>>  BLKRAGET failed: Inappropriate ioctl for device
+>>>>>  BLKGETSIZE failed: Inappropriate ioctl for device
+>>>>>
+>>>>>
+>>>>> ~$ sudo sdparm  --all /dev/sdc
+>>>>> unable to access /dev/sdc, ATA disk?
+>>>>>
+>>>>>   
+>>>>>       
+>>>>>           
+>>>> Well it is bsg , setting BLK_DEV_BSG=n fixed all this errors.
+>>>>         
 >
-> +static int __devinit ps3flash_probe(struct ps3_system_bus_device *_dev)
-> +{
-> +	struct ps3_storage_device *dev = to_ps3_storage_device(&_dev->core);
-> +	struct ps3flash_private *priv;
-> +	int error;
-> +	unsigned long tmp;
-> +
-> +	tmp = dev->regions[dev->region_idx].start*dev->blk_size;
-> +	if (tmp % FLASH_BLOCK_SIZE) {
-> +		dev_err(&dev->sbd.core,
-> +			"%s:%u region start %lu is not aligned\n", __func__,
-> +			__LINE__, tmp);
-> +		return -EINVAL;
-> +	}
-> +	tmp = dev->regions[dev->region_idx].size*dev->blk_size;
-> +	if (tmp % FLASH_BLOCK_SIZE) {
-> +		dev_err(&dev->sbd.core,
-> +			"%s:%u region size %lu is not aligned\n", __func__,
-> +			__LINE__, tmp);
-> +		return -EINVAL;
-> +	}
-> +
-> +	/* use static buffer, kmalloc cannot allocate 256 KiB */
-> +	if (!ps3flash_bounce_buffer.address)
-> +		return -ENODEV;
-> +
-> +	if (ps3flash_dev) {
-> +		dev_err(&dev->sbd.core,
-> +			"Only one FLASH device is supported\n");
-> +		return -EBUSY;
-> +	}
-> +
-> +	ps3flash_dev = dev;
-> +
-> +	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-> +	if (!priv) {
-> +		error = -ENOMEM;
-> +		goto fail;
-> +	}
-> +
-> +	ps3flash_priv(dev) = priv;
-> +	mutex_init(&priv->mutex);
-> +
-> +	dev->bounce_size = ps3flash_bounce_buffer.size;
-> +	dev->bounce_buf = ps3flash_bounce_buffer.address;
-> +
-> +	error = ps3stor_setup(dev, ps3flash_interrupt);
-> +	if (error)
-> +		goto fail_free_priv;
-> +
-> +	ps3flash_misc.parent = &dev->sbd.core;
-> +	error = misc_register(&ps3flash_misc);
-> +	if (error) {
-> +		dev_err(&dev->sbd.core, "%s:%u: misc_register failed %d\n",
-> +			__func__, __LINE__, error);
-> +		goto fail_teardown;
-> +	}
-> +
-> +	dev_info(&dev->sbd.core, "%s:%u: registered misc device %d\n",
-> +		 __func__, __LINE__, ps3flash_misc.minor);
-> +	return 0;
-> +
-> +fail_teardown:
-> +	ps3stor_teardown(dev);
-> +fail_free_priv:
-> +	kfree(priv);
-> +	ps3flash_priv(dev) = NULL;
-> +fail:
-> +	ps3flash_dev = NULL;
-> +	return error;
-> +}
-> +
+> I've not tested this yet (need to find sata drives in my workplace),
+> but James Bottomley told me that both works for him with bsg enabled.
+> It might worth trying the latest git tree.
+>
+>   
+
+Hi ,
+
+I'm running current git head and this problem still exists.
+
+crazy@lara:/work/crazy/linux-git/linux2.6$ git rev-parse --verify HEAD
+5bae7ac9feba925fd0099057f6b23d7be80b7b41
+
+
+With BLK_DEV_BSG=n
+
+
+crazy@lara:/work/crazy/linux-git/linux2.6$ sudo sdparm /dev/sda
+/dev/sda: SEAGATE ST318406LW 0109
+Read write error recovery mode page:
+AWRE 1 [cha: y, def: 1, sav: 1]
+ARRE 1 [cha: y, def: 1, sav: 1]
+PER 0 [cha: y, def: 0, sav: 0]
+Caching (SBC) mode page:
+WCE 1 [cha: y, def: 1, sav: 1]
+RCD 0 [cha: y, def: 0, sav: 0]
+Control mode page:
+SWP 0 [cha: n, def: 0, sav: 0]
+Informational exceptions control mode page:
+EWASC 0 [cha: n, def: 0, sav: 0]
+DEXCPT 0 [cha: y, def: 0, sav: 0]
+MRIE 0 [cha: y, def: 0, sav: 0]
+crazy@lara:/work/crazy/linux-git/linux2.6$ sudo sdparm /dev/sdb
+/dev/sdb: FUJITSU MAH3182MP 0114
+Read write error recovery mode page:
+AWRE 0 [cha: y, def: 0, sav: 0]
+ARRE 1 [cha: y, def: 1, sav: 1]
+PER 0 [cha: y, def: 0, sav: 0]
+Caching (SBC) mode page:
+WCE 1 [cha: y, def: 1, sav: 1]
+RCD 0 [cha: y, def: 0, sav: 0]
+Control mode page:
+SWP 0 [cha: n, def: 0, sav: 0]
+Informational exceptions control mode page:
+EWASC 1 [cha: y, def: 0, sav: 1]
+DEXCPT 0 [cha: y, def: 1, sav: 0]
+MRIE 6 [cha: y, def: 0, sav: 6]
+crazy@lara:/work/crazy/linux-git/linux2.6$ sudo sdparm /dev/sdc
+/dev/sdc: ATA SAMSUNG SP1203N TL10
+Read write error recovery mode page:
+AWRE 1
+ARRE 1
+PER 0
+Caching (SBC) mode page:
+WCE 1
+RCD 0
+Control mode page:
+SWP 0
+
+
+crazy@lara:/work/crazy/linux-git/linux2.6$ sudo hdparm /dev/sda
+
+/dev/sda:
+readonly = 0 (off)
+readahead = 256 (on)
+geometry = 2231/255/63, sectors = 35843670, start = 0
+crazy@lara:/work/crazy/linux-git/linux2.6$ sudo hdparm /dev/sdb
+
+/dev/sdb:
+readonly = 0 (off)
+readahead = 256 (on)
+geometry = 2222/255/63, sectors = 35701260, start = 0
+crazy@lara:/work/crazy/linux-git/linux2.6$ sudo hdparm /dev/sdc
+
+/dev/sdc:
+IO_support = 0 (default 16-bit)
+readonly = 0 (off)
+readahead = 256 (on)
+geometry = 14596/255/63, sectors = 234493056, start = 0
+
+
+
+And this when set to y
+
+
+crazy@lara:~$ sudo hdparm /dev/sda
+
+/dev/sda:
+BLKROGET failed: Inappropriate ioctl for device
+BLKRAGET failed: Inappropriate ioctl for device
+BLKGETSIZE failed: Inappropriate ioctl for device
+crazy@lara:~$ sudo hdparm /dev/sdb
+
+/dev/sdb:
+BLKROGET failed: Inappropriate ioctl for device
+BLKRAGET failed: Inappropriate ioctl for device
+BLKGETSIZE failed: Inappropriate ioctl for device
+crazy@lara:~$ sudo hdparm /dev/sdc
+
+/dev/sdc:
+BLKROGET failed: Inappropriate ioctl for device
+BLKRAGET failed: Inappropriate ioctl for device
+BLKGETSIZE failed: Inappropriate ioctl for device
+crazy@lara:~$ sudo sdparm /dev/sdc
+unable to access /dev/sdc, ATA disk?
+crazy@lara:~$ sudo sdparm /dev/sdb
+unable to access /dev/sdb, ATA disk?
+crazy@lara:~$ sudo sdparm /dev/sda
+unable to access /dev/sda, ATA disk?
+crazy@lara:~$ dmesg|grep bsg
+[ 41.411171] Block layer SCSI generic (bsg) driver version 0.4 loaded
+(major 253)
+
+
+
+Smartd now spams the dmesg too with :
+
+snip
+
+....
+[ 75.329927] program smartd is using a deprecated SCSI ioctl, please
+convert it to SG_IO
+[ 75.334267] program smartd is using a deprecated SCSI ioctl, please
+convert it to SG_IO
+[ 75.334396] program smartd is using a deprecated SCSI ioctl, please
+convert it to SG_IO
+[ 75.388284] program smartd is using a deprecated SCSI ioctl, please
+convert it to SG_IO
+[ 75.438146] program smartd is using a deprecated SCSI ioctl, please
+convert it to SG_IO
+....
+
+dmesg|grep 'program smartd is using'|wc -l
+42
+
+
+Just stopped it for now :)
+
+You can find the used config and dmesg there :
+
+http://194.231.229.228/2.6.22-g5bae7ac9/
+
+
+Gabriel
+
+
