@@ -1,99 +1,43 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] fix remaining scr_read/write users and the documentation
-Date: Fri, 20 Jul 2007 13:11:44 -0500
-Message-ID: <1184955104.3455.57.camel@localhost.localdomain>
+From: "Gwendal Grignou" <ggrignou@Brocade.COM>
+Subject: [PATCH] update mpt Kconfig help - with [TAB]
+Date: Fri, 20 Jul 2007 12:38:36 -0700
+Message-ID: <4C94DE2070B172459E4F1EE14BD2364E33E166@HQ-EXCH-5.corp.brocade.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.brocade.com ([66.243.153.242]:33758 "EHLO mx10.brocade.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1751552AbXGTTii convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2007 15:38:38 -0400
+Received: from HQ-EXCHFE-2.corp.brocade.com (hq-vipexchfe-2.brocade.com [192.168.126.214])
+	by discus.brocade.com (Postfix) with ESMTP id 0502923836F
+	for <linux-scsi@vger.kernel.org>; Fri, 20 Jul 2007 12:18:49 -0700 (PDT)
+Content-class: urn:content-classes:message
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This fixes up the usage in libsas (which are easy to miss, since they're
-only in the scsi-misc tree) ... and also corrects the documentation on
-the point of what these two function pointers actually return.
+Update help in Kconfig for mptfc driver to indicate the driver supports
+Brocade FC 4G HBA.
 
-James
+signed-off-by: Gwendal Grignou <ggrignou@brocade.com>
+---
 
-diff --git a/Documentation/DocBook/libata.tmpl b/Documentation/DocBook/libata.tmpl
-index e2e24b4..ba99757 100644
---- a/Documentation/DocBook/libata.tmpl
-+++ b/Documentation/DocBook/libata.tmpl
-@@ -456,8 +456,9 @@ void (*irq_clear) (struct ata_port *);
- 
- 	<sect2><title>SATA phy read/write</title>
- 	<programlisting>
--u32 (*scr_read) (struct ata_port *ap, unsigned int sc_reg);
--void (*scr_write) (struct ata_port *ap, unsigned int sc_reg,
-+int (*scr_read) (struct ata_port *ap, unsigned int sc_reg,
-+		 u32 *val);
-+int (*scr_write) (struct ata_port *ap, unsigned int sc_reg,
-                    u32 val);
- 	</programlisting>
- 
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 2db2589..359391f 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -172,7 +172,7 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
- 		qc->tf.nsect = 0;
- 	}
- 
--	ata_tf_to_fis(&qc->tf, (u8*)&task->ata_task.fis, 0);
-+	ata_tf_to_fis(&qc->tf, 1, 0, (u8*)&task->ata_task.fis);
- 	task->uldd_task = qc;
- 	if (is_atapi_taskfile(&qc->tf)) {
- 		memcpy(task->ata_task.atapi_packet, qc->cdb, qc->dev->cdb_len);
-@@ -298,7 +298,7 @@ static void sas_ata_tf_read(struct ata_port *ap, struct ata_taskfile *tf)
- 	memcpy(tf, &dev->sata_dev.tf, sizeof (*tf));
- }
- 
--static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
-+static int sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
- 			      u32 val)
- {
- 	struct domain_device *dev = ap->private_data;
-@@ -317,25 +317,33 @@ static void sas_ata_scr_write(struct ata_port *ap, unsigned int sc_reg_in,
- 		case SCR_ACTIVE:
- 			dev->sata_dev.ap->sactive = val;
- 			break;
-+		default:
-+			return -EINVAL;
- 	}
-+	return 0;
- }
- 
--static u32 sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in)
-+static int sas_ata_scr_read(struct ata_port *ap, unsigned int sc_reg_in,
-+			    u32 *val)
- {
- 	struct domain_device *dev = ap->private_data;
- 
- 	SAS_DPRINTK("STUB %s\n", __FUNCTION__);
- 	switch (sc_reg_in) {
- 		case SCR_STATUS:
--			return dev->sata_dev.sstatus;
-+			*val = dev->sata_dev.sstatus;
-+			return 0;
- 		case SCR_CONTROL:
--			return dev->sata_dev.scontrol;
-+			*val = dev->sata_dev.scontrol;
-+			return 0;
- 		case SCR_ERROR:
--			return dev->sata_dev.serror;
-+			*val = dev->sata_dev.serror;
-+			return 0;
- 		case SCR_ACTIVE:
--			return dev->sata_dev.ap->sactive;
-+			*val = dev->sata_dev.ap->sactive;
-+			return 0;
- 		default:
--			return 0xffffffffU;
-+			return -EINVAL;
- 	}
- }
- 
+drivers/message/fusion/Kconfig |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-
+diff --git a/drivers/message/fusion/Kconfig
+b/drivers/message/fusion/Kconfig
+index c88cc75..4494e0f 100644
+--- a/drivers/message/fusion/Kconfig
++++ b/drivers/message/fusion/Kconfig
+@@ -37,6 +37,7 @@ config FUSION_FC
+ 	  LSIFC929
+ 	  LSIFC929X
+ 	  LSIFC929XL
++	  Brocade FC 410/420
+ 
+ config FUSION_SAS
+ 	tristate "Fusion MPT ScsiHost drivers for SAS"
