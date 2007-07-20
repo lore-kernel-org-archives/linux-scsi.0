@@ -1,42 +1,46 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: ESP SCSI and QLGC,ISP SCSI drivers not finding attached devices
-Date: Fri, 20 Jul 2007 11:57:26 -0500
-Message-ID: <1184950646.3455.45.camel@localhost.localdomain>
-References: <Pine.LNX.4.61.0707201404250.7470@mtfhpc.demon.co.uk>
-	 <1184941136.3455.8.camel@localhost.localdomain>
-	 <Pine.LNX.4.61.0707201602080.7721@mtfhpc.demon.co.uk>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [patch 3/3] scsi: wd33c93 needs <asm/irq.h>
+Date: Fri, 20 Jul 2007 19:05:49 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0707201905340.18493@anakin>
+References: <20070720164043.523003359@mail.of.borg> <20070720164324.097994947@mail.of.borg>
+ <1184950138.3455.42.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:33786 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S935974AbXGTQ52 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2007 12:57:28 -0400
-In-Reply-To: <Pine.LNX.4.61.0707201602080.7721@mtfhpc.demon.co.uk>
+Received: from agave.telenet-ops.be ([195.130.137.77]:38238 "EHLO
+	agave.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765851AbXGTRFw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2007 13:05:52 -0400
+In-Reply-To: <1184950138.3455.42.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Fortescue <mark@mtfhpc.demon.co.uk>
-Cc: davem@davemloft.net, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mips@linux-mips.org
 
-On Fri, 2007-07-20 at 16:22 +0100, Mark Fortescue wrote:
-> Thansk for the info. I will try some experiments and see if I can work 
-> out where the scsi commands/responses are getting lost.
+On Fri, 20 Jul 2007, James Bottomley wrote:
+> On Fri, 2007-07-20 at 18:40 +0200, Geert Uytterhoeven wrote:
+> > plain text document attachment (m68k-wd33c93-needs-asm-irq.diff)
+> > wd33c93 SCSI needs <asm/irq.h> on m68k
+> > 
+> > drivers/scsi/wd33c93.c: In function 'wd33c93_host_reset':
+> > drivers/scsi/wd33c93.c:1582: error: implicit declaration of function 'disable_irq'
+> > drivers/scsi/wd33c93.c:1603: error: implicit declaration of function 'enable_irq'
+> > 
+> > The driver still compiles on MIPS (CONFIG_SGIWD93_SCSI=y)
+> 
+> That's fixed here, isn't it:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=078dda95c521b1c78d1b5da69ac90d581abc9951
 
-Actually, for ESP it looks like you can alter the timeout ... it's the
-parameter ESP_BUS_TIMEOUT in drivers/scsi/esp_scsi.h
+Indeed, thx!
 
-It could be that the register calculation is off here ... but someone
-who knows the device would have to look at it (or you could time it, I
-suppose).
+Gr{oetje,eeting}s,
 
-> I do not beleave the issue with the ESP is a hardware problem. The PROM 
-> and SunOS-4.1.1 have no problem finding/accessing the disk on the ESP and 
-> I did not observe any issues prior to testing Linux v2.6.22. The V1 ESP 
-> SCSI driver never failed to find the ESP disk (on kernels that got that 
-> far) but I have not done as much testing with the V2 ESP driver as memory 
-> problems post v2.6.21 needed to be fixed to get things up and running.
+						Geert
 
-James
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+							    -- Linus Torvalds
