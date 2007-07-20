@@ -1,34 +1,30 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 3/3] scsi: wd33c93 needs <asm/irq.h>
-Date: Fri, 20 Jul 2007 11:48:57 -0500
-Message-ID: <1184950138.3455.42.camel@localhost.localdomain>
-References: <20070720164043.523003359@mail.of.borg>
-	 <20070720164324.097994947@mail.of.borg>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH] scsi_transport_sas: add destructor for bsg
+Date: Sat, 21 Jul 2007 01:51:35 +0900
+Message-ID: <20070721013005K.tomof@acm.org>
+References: <1184947805.3455.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <20070720164324.097994947@mail.of.borg>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-To: Geert Uytterhoeven <geert@linux-m68k.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mips@linux-mips.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:34796 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S936581AbXGTQvs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 20 Jul 2007 12:51:48 -0400
+In-Reply-To: <1184947805.3455.21.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@SteelEye.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
 
-On Fri, 2007-07-20 at 18:40 +0200, Geert Uytterhoeven wrote:
-> plain text document attachment (m68k-wd33c93-needs-asm-irq.diff)
-> wd33c93 SCSI needs <asm/irq.h> on m68k
-> 
-> drivers/scsi/wd33c93.c: In function 'wd33c93_host_reset':
-> drivers/scsi/wd33c93.c:1582: error: implicit declaration of function 'disable_irq'
-> drivers/scsi/wd33c93.c:1603: error: implicit declaration of function 'enable_irq'
-> 
-> The driver still compiles on MIPS (CONFIG_SGIWD93_SCSI=y)
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] scsi_transport_sas: add destructor for bsg
+Date: Fri, 20 Jul 2007 11:10:05 -0500
 
-That's fixed here, isn't it:
+> There's currently no destructor for the bsg components.  If you insert
+> and remove the module, you see the bsg devices building up and up.  This
+> patch adds the destructor in the correct place in the transport class so
+> that the bsg and request queue are removed just before the device
+> destruction.
 
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=078dda95c521b1c78d1b5da69ac90d581abc9951
-
-(sorry about the lack of descriptive subject line)
-
-James
+Thanks. Sorry about the silly bug.
