@@ -1,72 +1,120 @@
-From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
-Subject: Re: ESP SCSI and QLGC,ISP SCSI drivers not finding attached devices
-Date: Fri, 20 Jul 2007 16:22:37 +0100 (BST)
-Message-ID: <Pine.LNX.4.61.0707201602080.7721@mtfhpc.demon.co.uk>
-References: <Pine.LNX.4.61.0707201404250.7470@mtfhpc.demon.co.uk>
- <1184941136.3455.8.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] scsi_transport_sas: add destructor for bsg
+Date: Fri, 20 Jul 2007 11:10:05 -0500
+Message-ID: <1184947805.3455.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1184941136.3455.8.camel@localhost.localdomain>
-Sender: sparclinux-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: davem@davemloft.net, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:40384 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S940879AbXGTQKH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jul 2007 12:10:07 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Hi James,
+There's currently no destructor for the bsg components.  If you insert
+and remove the module, you see the bsg devices building up and up.  This
+patch adds the destructor in the correct place in the transport class so
+that the bsg and request queue are removed just before the device
+destruction.
 
-Thansk for the info. I will try some experiments and see if I can work 
-out where the scsi commands/responses are getting lost.
+James
 
-I do not beleave the issue with the ESP is a hardware problem. The PROM 
-and SunOS-4.1.1 have no problem finding/accessing the disk on the ESP and 
-I did not observe any issues prior to testing Linux v2.6.22. The V1 ESP 
-SCSI driver never failed to find the ESP disk (on kernels that got that 
-far) but I have not done as much testing with the V2 ESP driver as memory 
-problems post v2.6.21 needed to be fixed to get things up and running.
+Index: BUILD-2.6/drivers/scsi/scsi_transport_sas.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/scsi_transport_sas.c	2007-07-20 10:37:01.000000000 -0500
++++ BUILD-2.6/drivers/scsi/scsi_transport_sas.c	2007-07-20 11:01:07.000000000 -0500
+@@ -42,6 +42,7 @@
+ struct sas_host_attrs {
+ 	struct list_head rphy_list;
+ 	struct mutex lock;
++	struct request_queue *q;
+ 	u32 next_target_id;
+ 	u32 next_expander_id;
+ 	int next_port_id;
+@@ -215,6 +216,11 @@ static int sas_bsg_initialize(struct Scs
+ 	}
+ 
+ 	if (rphy)
++		rphy->q = q;
++	else
++		to_sas_host_attrs(shost)->q = q;
++
++	if (rphy)
+ 		q->queuedata = rphy;
+ 	else
+ 		q->queuedata = shost;
+@@ -224,6 +230,22 @@ static int sas_bsg_initialize(struct Scs
+ 	return 0;
+ }
+ 
++static void sas_bsg_remove(struct Scsi_Host *shost, struct sas_rphy *rphy)
++{
++	struct request_queue *q;
++
++	if (rphy)
++		q = rphy->q;
++	else
++		q = to_sas_host_attrs(shost)->q;
++
++	if (!q)
++		return;
++
++	bsg_unregister_queue(q);
++	blk_cleanup_queue(q);
++}
++
+ /*
+  * SAS host attributes
+  */
+@@ -249,8 +271,18 @@ static int sas_host_setup(struct transpo
+ 	return 0;
+ }
+ 
++static int sas_host_remove(struct transport_container *tc, struct device *dev,
++			   struct class_device *cdev)
++{
++	struct Scsi_Host *shost = dev_to_shost(dev);
++
++	sas_bsg_remove(shost, NULL);
++
++	return 0;
++}
++
+ static DECLARE_TRANSPORT_CLASS(sas_host_class,
+-		"sas_host", sas_host_setup, NULL, NULL);
++		"sas_host", sas_host_setup, sas_host_remove, NULL);
+ 
+ static int sas_host_match(struct attribute_container *cont,
+ 			    struct device *dev)
+@@ -1414,6 +1446,8 @@ void sas_rphy_free(struct sas_rphy *rphy
+ 	list_del(&rphy->list);
+ 	mutex_unlock(&sas_host->lock);
+ 
++	sas_bsg_remove(shost, rphy);
++
+ 	transport_destroy_device(dev);
+ 
+ 	put_device(dev);
+Index: BUILD-2.6/include/scsi/scsi_transport_sas.h
+===================================================================
+--- BUILD-2.6.orig/include/scsi/scsi_transport_sas.h	2007-07-20 10:42:26.000000000 -0500
++++ BUILD-2.6/include/scsi/scsi_transport_sas.h	2007-07-20 10:42:57.000000000 -0500
+@@ -91,10 +91,12 @@ struct sas_phy {
+ #define phy_to_shost(phy) \
+ 	dev_to_shost((phy)->dev.parent)
+ 
++struct request_queue;
+ struct sas_rphy {
+ 	struct device		dev;
+ 	struct sas_identify	identify;
+ 	struct list_head	list;
++	struct request_queue	*q;
+ 	u32			scsi_target_id;
+ };
+ 
 
-Regards
- 	Mark Fortescue.
 
-On Fri, 20 Jul 2007, James Bottomley wrote:
-
-> On Fri, 2007-07-20 at 14:26 +0100, Mark Fortescue wrote:
->> I have been having intermittant issues with the QLGC,isp driver
->> (qlogicpti.c) not finding any attached devices on my sun4c. Having now
->> moved on to Linux-2.6.22 this problem is now also affecting the ESP SCSI
->> driver and is nolonger intermittant.
->>
->> My test setup uses an NFS root so it is currently independent of the SCSI
->> drivers/subsystem. I am hoping to change this in the near future so that
->> my sun4c boots into linux by default.
->>
->> What kernel options can I use to try to work out why the drivers are
->> ignoring disks (there are no other types of attached device at present).
->> Are any special options needed to force the scsi subsystem to spin the
->> disk up and wait untill they become ready (The disk [target 0:0:3] on the
->> ESP auto-spins down if it is idle for too long and now that booting takes
->> longer ...) ?
->
-> nothing in the driver ... that's a firmware issue.  What all SPI drivers
-> do is address the device and wait 250ms for a response (as per the
-> standard).  If nothing comes back, they assume there's nothing on the
-> bus.  You might be able to increase the no connect timeout, but it looks
-> to be a firmware property of both qlogicpti and esp (and if you do this,
-> scanning will take longer).  250ms is a huge amount of time in SPI, so
-> I'd suspect there was some type of bus or device problem.
->
->> Is there a way to get a NON-moduler scsi driver to re-scan its SCSI bus
->> from shell prompt (writing to a sysfs/procfs file)?
->
-> /sys/class/scsi_host/host<n>/scan
->
->>> From my point of view, it looks like the command timeout is very much too
->> short. Is there a simple way of testing this theory on the ESP driver?
->
-> See above, but really 250ms should be more than adequate.
->
-> James
->
->
->
->
