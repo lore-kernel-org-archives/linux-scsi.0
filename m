@@ -1,442 +1,500 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/7] gdth: kill virt_ctr option
-Date: Sat, 21 Jul 2007 19:02:03 +0200
-Message-ID: <20070721170203.GF4150@lst.de>
+Subject: [PATCH 7/7] gdth: switch to modern scsi host registration
+Date: Sat, 21 Jul 2007 19:02:16 +0200
+Message-ID: <20070721170216.GH4150@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.210]:58101 "EHLO mail.lst.de"
+Received: from verein.lst.de ([213.95.11.210]:58114 "EHLO mail.lst.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752828AbXGURCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Jul 2007 13:02:12 -0400
+	id S1752581AbXGURCY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Jul 2007 13:02:24 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: leubner@adaptec.com, jeff@garzik.org, linux-scsi@vger.kernel.org
 
-The virt_ctr option allows to register a new scsi_host for each bus
-on the raid controller.  This non-default option makes no sense with
-the current scsi code and prevents cleaning up the host registration,
-so remove it.
+Use scsi_add_host and friends and track instances ourselves.  This is
+the second to last step tovards proper PCI API useage.
 
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 
 Index: linux-2.6/drivers/scsi/gdth.c
 ===================================================================
---- linux-2.6.orig/drivers/scsi/gdth.c	2007-07-21 12:31:55.000000000 +0200
-+++ linux-2.6/drivers/scsi/gdth.c	2007-07-21 12:41:00.000000000 +0200
-@@ -56,8 +56,6 @@
-  * max_ids:x                    x - target ID count per channel (1..MAXID)
-  * rescan:Y                     rescan all channels/IDs 
-  * rescan:N                     use all devices found until now
-- * virt_ctr:Y                   map every channel to a virtual controller 
-- * virt_ctr:N                   use multi channel support 
-  * hdr_channel:x                x - number of virtual bus for host drives
-  * shared_access:Y              disable driver reserve/release protocol to 
-  *                              access a shared resource from several nodes, 
-@@ -69,7 +67,7 @@
-  * force_dma32:N                use 64 bit DMA mode, if supported
-  *
-  * The default values are: "gdth=disable:N,reserve_mode:1,reverse_scan:N,
-- *                          max_ids:127,rescan:N,virt_ctr:N,hdr_channel:0,
-+ *                          max_ids:127,rescan:N,hdr_channel:0,
-  *                          shared_access:Y,probe_eisa_isa:N,force_dma32:N".
-  * Here is another example: "gdth=reserve_list:0,1,2,0,0,1,3,0,rescan:Y".
-  * 
-@@ -80,7 +78,7 @@
-  * '1' in place of 'Y' and '0' in place of 'N'.
-  * 
-  * Default: "modprobe gdth disable=0 reserve_mode=1 reverse_scan=0
-- *           max_ids=127 rescan=0 virt_ctr=0 hdr_channel=0 shared_access=0 
-+ *           max_ids=127 rescan=0 hdr_channel=0 shared_access=0
-  *           probe_eisa_isa=0 force_dma32=0"
-  * The other example: "modprobe gdth reserve_list=0,1,2,0,0,1,3,0 rescan=1".
-  */
-@@ -316,10 +314,8 @@ static unchar   gdth_polling;           
+--- linux-2.6.orig/drivers/scsi/gdth.c	2007-07-21 13:08:15.000000000 +0200
++++ linux-2.6/drivers/scsi/gdth.c	2007-07-21 13:21:57.000000000 +0200
+@@ -119,6 +119,7 @@
+ #include <linux/time.h>
+ #include <linux/timer.h>
+ #include <linux/dma-mapping.h>
++#include <linux/list.h>
+ 
+ #ifdef GDTH_RTC
+ #include <linux/mc146818rtc.h>
+@@ -191,15 +192,6 @@ static void gdth_flush(int hanum);
+ static int gdth_halt(struct notifier_block *nb, ulong event, void *buf);
+ static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *));
+ static void gdth_scsi_done(struct scsi_cmnd *scp);
+-#ifdef CONFIG_ISA
+-static int gdth_isa_probe_one(struct scsi_host_template *, ulong32);
+-#endif
+-#ifdef CONFIG_EISA
+-static int gdth_eisa_probe_one(struct scsi_host_template *, ushort);
+-#endif
+-#ifdef CONFIG_PCI
+-static int gdth_pci_probe_one(struct scsi_host_template *, gdth_pci_str *, int);
+-#endif
+ 
+ #ifdef DEBUG_GDTH
+ static unchar   DebugState = DEBUG_GDTH;
+@@ -310,8 +302,8 @@ static unchar   gdth_polling;           
  static unchar   gdth_from_wait  = FALSE;                /* gdth_wait() */
  static int      wait_index,wait_hanum;                  /* gdth_wait() */
  static int      gdth_ctr_count  = 0;                    /* controller count */
--static int      gdth_ctr_vcount = 0;                    /* virt. ctr. count */
- static int      gdth_ctr_released = 0;                  /* gdth_release() */
+-static int      gdth_ctr_released = 0;                  /* gdth_release() */
  static struct Scsi_Host *gdth_ctr_tab[MAXHA];           /* controller table */
--static struct Scsi_Host *gdth_ctr_vtab[MAXHA*MAXBUS];   /* virt. ctr. table */
++static LIST_HEAD(gdth_instances);
  static unchar   gdth_write_through = FALSE;             /* write through */
  static gdth_evt_str ebuffer[MAX_EVENTS];                /* event buffer */
  static int elastidx;
-@@ -371,8 +367,6 @@ static int hdr_channel = 0;
- static int max_ids = MAXID;
- /* rescan all IDs */
- static int rescan = 0;
--/* map channels to virtual controllers */
--static int virt_ctr = 0;
- /* shared access */
- static int shared_access = 1;
- /* enable support for EISA and ISA controllers */
-@@ -389,7 +383,6 @@ module_param(reverse_scan, int, 0);
- module_param(hdr_channel, int, 0);
- module_param(max_ids, int, 0);
- module_param(rescan, int, 0);
--module_param(virt_ctr, int, 0);
- module_param(shared_access, int, 0);
- module_param(probe_eisa_isa, int, 0);
- module_param(force_dma32, int, 0);
-@@ -2019,7 +2012,7 @@ static void gdth_putq(int hanum,Scsi_Cmn
- 
-     if (scp->done != gdth_scsi_done) {
-         scp->SCp.this_residual = (int)priority;
--        b = virt_ctr ? NUMDATA(scp->device->host)->busnum:scp->device->channel;
-+        b = scp->device->channel;
-         t = scp->device->id;
-         if (priority >= DEFAULT_PRI) {
-             if ((b != ha->virt_bus && ha->raw[BUS_L2P(ha,b)].lock) ||
-@@ -2081,8 +2074,7 @@ static void gdth_next(int hanum)
-         if (nscp != pscp && nscp != (Scsi_Cmnd *)pscp->SCp.ptr)
-             pscp = (Scsi_Cmnd *)pscp->SCp.ptr;
-         if (nscp->done != gdth_scsi_done) {
--            b = virt_ctr ?
--                NUMDATA(nscp->device->host)->busnum : nscp->device->channel;
-+            b = nscp->device->channel;
-             t = nscp->device->id;
-             l = nscp->device->lun;
-             if (nscp->SCp.this_residual >= DEFAULT_PRI) {
-@@ -3398,7 +3390,7 @@ static int gdth_sync_event(int hanum,int
-         printk("\n");
- 
-     } else {
--        b = virt_ctr ? NUMDATA(scp->device->host)->busnum : scp->device->channel;
-+        b = scp->device->channel;
-         t = scp->device->id;
-         if (scp->SCp.sent_command == -1 && b != ha->virt_bus) {
-             ha->raw[BUS_L2P(ha,b)].io_cnt[t]--;
-@@ -3884,8 +3876,6 @@ static void __init internal_setup(char *
-             max_ids = val;
-         else if (!strncmp(argv, "rescan:", 7))
-             rescan = val;
--        else if (!strncmp(argv, "virt_ctr:", 9))
--            virt_ctr = val;
-         else if (!strncmp(argv, "shared_access:", 14))
-             shared_access = val;
-         else if (!strncmp(argv, "probe_eisa_isa:", 15))
-@@ -4017,7 +4007,7 @@ static int __init gdth_detect(struct scs
-         register_reboot_notifier(&gdth_notifier);
-     }
-     gdth_polling = FALSE;
--    return gdth_ctr_vcount;
-+    return gdth_ctr_count;
+@@ -3918,145 +3910,6 @@ int __init option_setup(char *str)
+     return 1;
  }
  
- static int gdth_release(struct Scsi_Host *shp)
-@@ -4026,7 +4016,6 @@ static int gdth_release(struct Scsi_Host
-     gdth_ha_str *ha;
- 
-     TRACE2(("gdth_release()\n"));
--    if (NUMDATA(shp)->busnum == 0) {
-         hanum = NUMDATA(shp)->hanum;
-         ha    = HADATA(gdth_ctr_tab[hanum]);
-         if (ha->sdev) {
-@@ -4068,7 +4057,6 @@ static int gdth_release(struct Scsi_Host
-             unregister_chrdev(major,"gdth");
-             unregister_reboot_notifier(&gdth_notifier);
-         }
+-
+-static int __init gdth_detect(struct scsi_host_template *shtp)
+-{
+-    gdth_pci_str pcistr[MAXHA];
+-    ulong32 isa_bios;
+-    ushort eisa_slot;
+-    int cnt,ctr;
+-    unchar b;
+-    
+- 
+-#ifdef DEBUG_GDTH
+-    printk("GDT: This driver contains debugging information !! Trace level = %d\n",
+-        DebugState);
+-    printk("     Destination of debugging information: ");
+-#ifdef __SERIAL__
+-#ifdef __COM2__
+-    printk("Serial port COM2\n");
+-#else
+-    printk("Serial port COM1\n");
+-#endif
+-#else
+-    printk("Console\n");
+-#endif
+-    gdth_delay(3000);
+-#endif
+-
+-    TRACE(("gdth_detect()\n"));
+-
+-    if (disable) {
+-        printk("GDT-HA: Controller driver disabled from command line !\n");
+-        return 0;
 -    }
- 
-     scsi_unregister(shp);
+-
+-    printk("GDT-HA: Storage RAID Controller Driver. Version: %s\n",GDTH_VERSION_STR);
+-    /* initializations */
+-    gdth_polling = TRUE; b = 0;
+-    gdth_clear_events();
+-
+-    /* As default we do not probe for EISA or ISA controllers */
+-    if (probe_eisa_isa) {    
+-        /* scanning for controllers, at first: ISA controller */
+-#ifdef CONFIG_ISA
+-        for (isa_bios = 0xc8000UL; isa_bios <= 0xd8000UL;
+-	     isa_bios += 0x8000UL) {
+-		if (gdth_ctr_count >= MAXHA)
+-                	break;
+-		gdth_isa_probe_one(shtp, isa_bios);
+-	}
+-#endif
+-#ifdef CONFIG_EISA
+-	for (eisa_slot = 0x1000; eisa_slot <= 0x8000; eisa_slot += 0x1000) {
+-		if (gdth_ctr_count >= MAXHA)
+-			break;
+-		gdth_eisa_probe_one(shtp, eisa_slot);
+-	}
+-    }
+-#endif
+-
+-#ifdef CONFIG_PCI
+-    /* scanning for PCI controllers */
+-    cnt = gdth_search_pci(pcistr);
+-    printk("GDT-HA: Found %d PCI Storage RAID Controllers\n",cnt);
+-    gdth_sort_pci(pcistr,cnt);
+-    for (ctr = 0; ctr < cnt; ++ctr) {
+-          if (gdth_ctr_count >= MAXHA)
+-              break;
+-	  gdth_pci_probe_one(shtp, pcistr, ctr);
+-    }
+-#endif
+-    
+-    TRACE2(("gdth_detect() %d controller detected\n",gdth_ctr_count));
+-    if (gdth_ctr_count > 0) {
+-#ifdef GDTH_STATISTICS
+-        TRACE2(("gdth_detect(): Initializing timer !\n"));
+-        init_timer(&gdth_timer);
+-        gdth_timer.expires = jiffies + HZ;
+-        gdth_timer.data = 0L;
+-        gdth_timer.function = gdth_timeout;
+-        add_timer(&gdth_timer);
+-#endif
+-        major = register_chrdev(0,"gdth",&gdth_fops);
+-        notifier_disabled = 0;
+-        register_reboot_notifier(&gdth_notifier);
+-    }
+-    gdth_polling = FALSE;
+-    return gdth_ctr_count;
+-}
+-
+-static int gdth_release(struct Scsi_Host *shp)
+-{
+-    gdth_ha_str *ha = shost_priv(shp);
+-    int hanum = ha->hanum;
+-
+-    TRACE2(("gdth_release()\n"));
+-        if (ha->sdev) {
+-            scsi_free_host_dev(ha->sdev);
+-            ha->sdev = NULL;
+-        }
+-        gdth_flush(hanum);
+-
+-        if (shp->irq) {
+-            free_irq(shp->irq,ha);
+-        }
+-#ifdef CONFIG_ISA
+-        if (shp->dma_channel != 0xff) {
+-            free_dma(shp->dma_channel);
+-        }
+-#endif
+-#ifdef INT_COAL
+-        if (ha->coal_stat)
+-            pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
+-                                MAXOFFSETS, ha->coal_stat, ha->coal_stat_phys);
+-#endif
+-        if (ha->pscratch)
+-            pci_free_consistent(ha->pdev, GDTH_SCRATCH, 
+-                                ha->pscratch, ha->scratch_phys);
+-        if (ha->pmsg)
+-            pci_free_consistent(ha->pdev, sizeof(gdth_msg_str), 
+-                                ha->pmsg, ha->msg_phys);
+-        if (ha->ccb_phys)
+-            pci_unmap_single(ha->pdev,ha->ccb_phys,
+-                             sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
+-        gdth_ctr_released++;
+-        TRACE2(("gdth_release(): HA %d of %d\n", 
+-                gdth_ctr_released, gdth_ctr_count));
+-
+-        if (gdth_ctr_released == gdth_ctr_count) {
+-#ifdef GDTH_STATISTICS
+-            del_timer(&gdth_timer);
+-#endif
+-            unregister_chrdev(major,"gdth");
+-            unregister_reboot_notifier(&gdth_notifier);
+-        }
+-
+-    scsi_unregister(shp);
+-    return 0;
+-}
+-            
+-
+ static const char *gdth_ctr_name(int hanum)
+ {
+     gdth_ha_str *ha;
+@@ -4880,12 +4733,10 @@ static int gdth_slave_configure(struct s
      return 0;
-@@ -4130,7 +4118,7 @@ static int gdth_eh_bus_reset(Scsi_Cmnd *
-     TRACE2(("gdth_eh_bus_reset()\n"));
+ }
  
-     hanum = NUMDATA(scp->device->host)->hanum;
--    b = virt_ctr ? NUMDATA(scp->device->host)->busnum : scp->device->channel;
-+    b = scp->device->channel;
-     ha    = HADATA(gdth_ctr_tab[hanum]);
+-static struct scsi_host_template driver_template = {
++static struct scsi_host_template gdth_template = {
+         .proc_name              = "gdth", 
+         .proc_info              = gdth_proc_info,
+         .name                   = "GDT SCSI Disk Array Controller",
+-        .detect                 = gdth_detect, 
+-        .release                = gdth_release,
+         .info                   = gdth_info, 
+         .queuecommand           = gdth_queuecommand,
+         .eh_bus_reset_handler   = gdth_eh_bus_reset,
+@@ -4900,7 +4751,7 @@ static struct scsi_host_template driver_
+ };
  
-     /* clear command tab */
-@@ -4184,7 +4172,7 @@ static int gdth_bios_param(struct scsi_d
-     sd = sdev;
-     capacity = cap;
-     hanum = NUMDATA(sd->host)->hanum;
--    b = virt_ctr ? NUMDATA(sd->host)->busnum : sd->channel;
-+    b = sd->channel;
-     t = sd->id;
-     TRACE2(("gdth_bios_param() ha %d bus %d target %d\n", hanum, b, t)); 
-     ha = HADATA(gdth_ctr_tab[hanum]);
-@@ -4804,7 +4792,7 @@ static int gdth_ioctl(struct inode *inod
-         scp->device = ha->sdev;
-         scp->cmd_len = 12;
-         scp->use_sg = 0;
--        scp->device->channel = virt_ctr ? 0 : res.number;
-+        scp->device->channel = res.number;
-         rval = gdth_eh_bus_reset(scp);
-         res.status = (rval == SUCCESS ? S_OK : S_GENERR);
-         kfree(scp);
-@@ -4931,7 +4919,6 @@ static int gdth_isa_probe_one(struct scs
+ #ifdef CONFIG_ISA
+-static int gdth_isa_probe_one(struct scsi_host_template *shtp, ulong32 isa_bios)
++static int gdth_isa_probe_one(ulong32 isa_bios)
+ {
+ 	struct Scsi_Host *shp;
  	gdth_ha_str *ha;
- 	dma_addr_t scratch_dma_handle = 0;
- 	int error, hanum, i;
--	u8 b;
- 
+@@ -4910,7 +4761,7 @@ static int gdth_isa_probe_one(struct scs
  	if (!gdth_search_isa(isa_bios))
  		return -ENXIO;
-@@ -4968,10 +4955,8 @@ static int gdth_isa_probe_one(struct scs
- 	shp->dma_channel = ha->drq;
- 	hanum = gdth_ctr_count;
+ 
+-	shp = scsi_register(shtp, sizeof(gdth_ha_str));
++	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
+ 	if (!shp)
+ 		return -ENOMEM;
+ 	ha = shost_priv(shp);
+@@ -4944,6 +4795,7 @@ static int gdth_isa_probe_one(struct scs
  	gdth_ctr_tab[gdth_ctr_count++] = shp;
--	gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
  
- 	NUMDATA(shp)->hanum = (ushort)hanum;
--	NUMDATA(shp)->busnum= 0;
+ 	ha->hanum = (ushort)hanum;
++	ha->shost = shp;
  
- 	ha->pccb = CMDDATA(shp);
+ 	ha->pccb = &ha->cmdext;
  	ha->ccb_phys = 0L;
-@@ -5024,20 +5009,7 @@ static int gdth_isa_probe_one(struct scs
- 
- 	shp->max_id      = ha->tid_cnt;
- 	shp->max_lun     = MAXLUN;
--	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
--	if (virt_ctr) {
--		virt_ctr = 1;
--		/* register addit. SCSI channels as virtual controllers */
--		for (b = 1; b < ha->bus_cnt + 1; ++b) {
--			shp = scsi_register(shtp,sizeof(gdth_num_str));
--			shp->unchecked_isa_dma = 1;
--			shp->irq = ha->irq;
--			shp->dma_channel = ha->drq;
--			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
--			NUMDATA(shp)->hanum = (ushort)hanum;
--			NUMDATA(shp)->busnum = b;
--		}
--	}
-+	shp->max_channel = ha->bus_cnt;
- 
+@@ -5001,6 +4853,10 @@ static int gdth_isa_probe_one(struct scs
  	spin_lock_init(&ha->smp_lock);
  	gdth_enable_int(hanum);
-@@ -5057,7 +5029,6 @@ static int gdth_isa_probe_one(struct scs
- 				ha->pscratch, ha->scratch_phys);
-  out_dec_counters:
- 	gdth_ctr_count--;
--	gdth_ctr_vcount--;
+ 
++	error = scsi_add_host(shp, NULL);
++	if (error)
++		goto out_free_coal_stat;
++	list_add_tail(&ha->list, &gdth_instances);
+ 	return 0;
+ 
+  out_free_coal_stat:
+@@ -5019,14 +4875,13 @@ static int gdth_isa_probe_one(struct scs
   out_free_irq:
  	free_irq(ha->irq, ha);
   out_host_put:
-@@ -5074,7 +5045,6 @@ static int gdth_eisa_probe_one(struct sc
- 	gdth_ha_str *ha;
- 	dma_addr_t scratch_dma_handle = 0;
- 	int error, hanum, i;
--	u8 b;
+-	scsi_unregister(shp);
++	scsi_host_put(shp);
+ 	return error;
+ }
+ #endif /* CONFIG_ISA */
  
+ #ifdef CONFIG_EISA
+-static int gdth_eisa_probe_one(struct scsi_host_template *shtp,
+-		ushort eisa_slot)
++static int gdth_eisa_probe_one(ushort eisa_slot)
+ {
+ 	struct Scsi_Host *shp;
+ 	gdth_ha_str *ha;
+@@ -5036,7 +4891,7 @@ static int gdth_eisa_probe_one(struct sc
  	if (!gdth_search_eisa(eisa_slot))
  		return -ENXIO;
-@@ -5103,10 +5073,8 @@ static int gdth_eisa_probe_one(struct sc
- 	shp->dma_channel = 0xff;
- 	hanum = gdth_ctr_count;
+ 
+-	shp = scsi_register(shtp, sizeof(gdth_ha_str));
++	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
+ 	if (!shp)
+ 		return -ENOMEM;
+ 	ha = shost_priv(shp);
+@@ -5062,6 +4917,7 @@ static int gdth_eisa_probe_one(struct sc
  	gdth_ctr_tab[gdth_ctr_count++] = shp;
--	gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
  
- 	NUMDATA(shp)->hanum = (ushort)hanum;
--	NUMDATA(shp)->busnum= 0;
- 	TRACE2(("EISA detect Bus 0: hanum %d\n",
- 		NUMDATA(shp)->hanum));
+ 	ha->hanum = (ushort)hanum;
++	ha->shost = shp;
+ 	TRACE2(("EISA detect Bus 0: hanum %d\n", hanum));
  
-@@ -5166,20 +5134,7 @@ static int gdth_eisa_probe_one(struct sc
- 
- 	shp->max_id      = ha->tid_cnt;
- 	shp->max_lun     = MAXLUN;
--	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
--	if (virt_ctr) {
--		virt_ctr = 1;
--		/* register addit. SCSI channels as virtual controllers */
--		for (b = 1; b < ha->bus_cnt + 1; ++b) {
--			shp = scsi_register(shtp,sizeof(gdth_num_str));
--			shp->unchecked_isa_dma = 0;
--			shp->irq = ha->irq;
--			shp->dma_channel = 0xff;
--			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
--			NUMDATA(shp)->hanum = (ushort)hanum;
--			NUMDATA(shp)->busnum = b;
--		}
--	}
-+	shp->max_channel = ha->bus_cnt;
+ 	ha->pccb = &ha->cmdext;
+@@ -5124,6 +4980,11 @@ static int gdth_eisa_probe_one(struct sc
  
  	spin_lock_init(&ha->smp_lock);
  	gdth_enable_int(hanum);
-@@ -5202,7 +5157,6 @@ static int gdth_eisa_probe_one(struct sc
-  out_free_irq:
++
++	error = scsi_add_host(shp, NULL);
++	if (error)
++		goto out_free_coal_stat;
++	list_add_tail(&ha->list, &gdth_instances);
+ 	return 0;
+ 
+  out_free_ccb_phys:
+@@ -5144,21 +5005,20 @@ static int gdth_eisa_probe_one(struct sc
  	free_irq(ha->irq, ha);
  	gdth_ctr_count--;
--	gdth_ctr_vcount--;
   out_host_put:
- 	scsi_unregister(shp);
+-	scsi_unregister(shp);
++	scsi_host_put(shp);
  	return error;
-@@ -5217,7 +5171,6 @@ static int gdth_pci_probe_one(struct scs
+ }
+ #endif /* CONFIG_EISA */
+ 
+ #ifdef CONFIG_PCI
+-static int gdth_pci_probe_one(struct scsi_host_template *shtp,
+-    		gdth_pci_str *pcistr, int ctr)
++static int gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
+ {
+ 	struct Scsi_Host *shp;
  	gdth_ha_str *ha;
  	dma_addr_t scratch_dma_handle = 0;
  	int error, hanum, i;
--	u8 b;
  
- 	shp = scsi_register(shtp,sizeof(gdth_ext_str));
+-	shp = scsi_register(shtp, sizeof(gdth_ha_str));
++	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
  	if (!shp)
-@@ -5246,10 +5199,8 @@ static int gdth_pci_probe_one(struct scs
- 	shp->dma_channel = 0xff;
- 	hanum = gdth_ctr_count;
+ 		return -ENOMEM;
+         ha = shost_priv(shp);
+@@ -5187,6 +5047,7 @@ static int gdth_pci_probe_one(struct scs
  	gdth_ctr_tab[gdth_ctr_count++] = shp;
--	gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
  
- 	NUMDATA(shp)->hanum = (ushort)hanum;
--	NUMDATA(shp)->busnum= 0;
+ 	ha->hanum = (ushort)hanum;
++	ha->shost = shp;
  
- 	ha->pccb = CMDDATA(shp);
+ 	ha->pccb = &ha->cmdext;
  	ha->ccb_phys = 0L;
-@@ -5317,20 +5268,7 @@ static int gdth_pci_probe_one(struct scs
- 
- 	shp->max_id      = ha->tid_cnt;
- 	shp->max_lun     = MAXLUN;
--	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
--	if (virt_ctr) {
--		virt_ctr = 1;
--		/* register addit. SCSI channels as virtual controllers */
--		for (b = 1; b < ha->bus_cnt + 1; ++b) {
--			shp = scsi_register(shtp,sizeof(gdth_num_str));
--			shp->unchecked_isa_dma = 0;
--			shp->irq = ha->irq;
--			shp->dma_channel = 0xff;
--			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
--			NUMDATA(shp)->hanum = (ushort)hanum;
--			NUMDATA(shp)->busnum = b;
--		}
--	}
-+	shp->max_channel = ha->bus_cnt;
+@@ -5258,6 +5119,11 @@ static int gdth_pci_probe_one(struct scs
  
          spin_lock_init(&ha->smp_lock);
          gdth_enable_int(hanum);
-@@ -5350,7 +5288,6 @@ static int gdth_pci_probe_one(struct scs
-  out_free_irq:
++
++	error = scsi_add_host(shp, &pcistr[ctr].pdev->dev);
++	if (error)
++		goto out_free_coal_stat;
++	list_add_tail(&ha->list, &gdth_instances);
+ 	return 0;
+ 
+  out_free_coal_stat:
+@@ -5275,12 +5141,137 @@ static int gdth_pci_probe_one(struct scs
  	free_irq(ha->irq, ha);
  	gdth_ctr_count--;
--	gdth_ctr_vcount--;
   out_host_put:
- 	scsi_unregister(shp);
+-	scsi_unregister(shp);
++	scsi_host_put(shp);
  	return error;
-Index: linux-2.6/drivers/scsi/gdth_proc.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/gdth_proc.c	2007-07-21 12:32:25.000000000 +0200
-+++ linux-2.6/drivers/scsi/gdth_proc.c	2007-07-21 12:40:41.000000000 +0200
-@@ -7,26 +7,25 @@
- int gdth_proc_info(struct Scsi_Host *host, char *buffer,char **start,off_t offset,int length,   
-                    int inout)
- {
--    int hanum,busnum;
-+    int hanum;
- 
-     TRACE2(("gdth_proc_info() length %d offs %d inout %d\n",
-             length,(int)offset,inout));
- 
-     hanum = NUMDATA(host)->hanum;
--    busnum= NUMDATA(host)->busnum;
- 
-     if (inout)
--        return(gdth_set_info(buffer,length,host,hanum,busnum));
-+        return(gdth_set_info(buffer,length,host,hanum));
-     else
--        return(gdth_get_info(buffer,start,offset,length,host,hanum,busnum));
-+        return(gdth_get_info(buffer,start,offset,length,host,hanum));
  }
+ #endif /* CONFIG_PCI */
  
- static int gdth_set_info(char *buffer,int length,struct Scsi_Host *host,
--                         int hanum,int busnum)
-+                         int hanum)
- {
-     int ret_val = -EINVAL;
- 
--    TRACE2(("gdth_set_info() ha %d bus %d\n",hanum,busnum));
-+    TRACE2(("gdth_set_info() ha %d\n",hanum,));
- 
-     if (length >= 4) {
-         if (strncmp(buffer,"gdth",4) == 0) {
-@@ -154,7 +153,7 @@ static int gdth_set_asc_info(struct Scsi
- }
- 
- static int gdth_get_info(char *buffer,char **start,off_t offset,int length,
--                         struct Scsi_Host *host,int hanum,int busnum)
-+                         struct Scsi_Host *host,int hanum)
- {
-     int size = 0,len = 0;
-     off_t begin = 0,pos = 0;
-@@ -187,7 +186,7 @@ static int gdth_get_info(char *buffer,ch
-     memset(cmnd, 0xff, 12);
-     memset(gdtcmd, 0, sizeof(gdth_cmd_str));
- 
--    TRACE2(("gdth_get_info() ha %d bus %d\n",hanum,busnum));
-+    TRACE2(("gdth_get_info() ha %d\n",hanum));
-     ha = HADATA(gdth_ctr_tab[hanum]);
- 
-     
-@@ -218,10 +217,7 @@ static int gdth_get_info(char *buffer,ch
-     /* controller information */
-     size = sprintf(buffer+len,"\nDisk Array Controller Information:\n");
-     len += size;  pos = begin + len;
--    if (virt_ctr)
--        sprintf(hrec, "%s (Bus %d)", ha->binfo.type_string, busnum);
--    else
--        strcpy(hrec, ha->binfo.type_string);
-+    strcpy(hrec, ha->binfo.type_string);
-     size = sprintf(buffer+len,
-                    " Number:       \t%d         \tName:          \t%s\n",
-                    hanum, hrec);
-@@ -753,7 +749,7 @@ static void gdth_wait_completion(int han
-     for (i = 0; i < GDTH_MAXCMDS; ++i) {
-         scp = ha->cmd_tab[i].cmnd;
- 
--        b = virt_ctr ? NUMDATA(scp->device->host)->busnum : scp->device->channel;
-+        b = scp->device->channel;
-         t = scp->device->id;
-         if (!SPECIAL_SCP(scp) && t == (unchar)id && 
-             b == (unchar)busnum) {
-@@ -779,8 +775,7 @@ static void gdth_stop_timeout(int hanum,
- 
-     for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
-         if (scp->done != gdth_scsi_done) {
--            b = virt_ctr ?
--                NUMDATA(scp->device->host)->busnum : scp->device->channel;
-+            b = scp->device->channel;
-             t = scp->device->id;
-             if (t == (unchar)id && b == (unchar)busnum) {
-                 TRACE2(("gdth_stop_timeout(): update_timeout()\n"));
-@@ -803,8 +798,7 @@ static void gdth_start_timeout(int hanum
- 
-     for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
-         if (scp->done != gdth_scsi_done) {
--            b = virt_ctr ?
--                NUMDATA(scp->device->host)->busnum : scp->device->channel;
-+            b = scp->device->channel;
-             t = scp->device->id;
-             if (t == (unchar)id && b == (unchar)busnum) {
-                 TRACE2(("gdth_start_timeout(): update_timeout()\n"));
-Index: linux-2.6/drivers/scsi/gdth_proc.h
-===================================================================
---- linux-2.6.orig/drivers/scsi/gdth_proc.h	2007-07-21 12:34:53.000000000 +0200
-+++ linux-2.6/drivers/scsi/gdth_proc.h	2007-07-21 12:35:01.000000000 +0200
-@@ -9,9 +9,9 @@ int gdth_execute(struct Scsi_Host *shost
-                  int timeout, u32 *info);
- 
- static int gdth_set_info(char *buffer,int length,struct Scsi_Host *host,
--                         int hanum,int busnum);
-+                         int hanum);
- static int gdth_get_info(char *buffer,char **start,off_t offset,int length,
--                         struct Scsi_Host *host,int hanum,int busnum);
-+                         struct Scsi_Host *host,int hanum);
- 
- static int gdth_set_asc_info(struct Scsi_Host *host, char *buffer,
-                              int length, int hanum);
+-#include "scsi_module.c"
++static void gdth_remove_one(gdth_ha_str *ha)
++{
++	struct Scsi_Host *shp = ha->shost;
++
++	TRACE2(("gdth_remove_one()\n"));
++
++	scsi_remove_host(shp);
++
++	if (ha->sdev) {
++		scsi_free_host_dev(ha->sdev);
++		ha->sdev = NULL;
++	}
++
++	gdth_flush(ha->hanum);
++
++	if (shp->irq)
++		free_irq(shp->irq,ha);
++
++#ifdef CONFIG_ISA
++	if (shp->dma_channel != 0xff)
++		free_dma(shp->dma_channel);
++#endif
++#ifdef INT_COAL
++	if (ha->coal_stat)
++		pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
++			MAXOFFSETS, ha->coal_stat, ha->coal_stat_phys);
++#endif
++        if (ha->pscratch)
++		pci_free_consistent(ha->pdev, GDTH_SCRATCH,
++			ha->pscratch, ha->scratch_phys);
++	if (ha->pmsg)
++		pci_free_consistent(ha->pdev, sizeof(gdth_msg_str),
++			ha->pmsg, ha->msg_phys);
++	if (ha->ccb_phys)
++		pci_unmap_single(ha->pdev,ha->ccb_phys,
++			sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
++
++	scsi_host_put(shp);
++}
++
++static int __init gdth_init(void)
++{
++	gdth_pci_str pcistr[MAXHA];
++	ulong32 isa_bios;
++	ushort eisa_slot;
++	int cnt, ctr;
++
++	if (disable) {
++		printk("GDT-HA: Controller driver disabled from"
++			" command line !\n");
++		return 0;
++	}
++
++	printk("GDT-HA: Storage RAID Controller Driver. Version: %s\n",
++		GDTH_VERSION_STR);
++
++	/* initializations */
++	gdth_polling = TRUE;
++	gdth_clear_events();
++
++	/* As default we do not probe for EISA or ISA controllers */
++	if (probe_eisa_isa) {
++		/* scanning for controllers, at first: ISA controller */
++#ifdef CONFIG_ISA
++		for (isa_bios = 0xc8000UL; isa_bios <= 0xd8000UL;
++			     isa_bios += 0x8000UL) {
++			if (gdth_ctr_count >= MAXHA)
++                		break;
++			gdth_isa_probe_one(isa_bios);
++		}
++#endif
++#ifdef CONFIG_EISA
++		for (eisa_slot = 0x1000; eisa_slot <= 0x8000; eisa_slot += 0x1000) {
++			if (gdth_ctr_count >= MAXHA)
++				break;
++			gdth_eisa_probe_one(eisa_slot);
++		}
++	}
++#endif
++#ifdef CONFIG_PCI
++	/* scanning for PCI controllers */
++	cnt = gdth_search_pci(pcistr);
++	printk("GDT-HA: Found %d PCI Storage RAID Controllers\n",cnt);
++	gdth_sort_pci(pcistr,cnt);
++	for (ctr = 0; ctr < cnt; ++ctr) {
++		if (gdth_ctr_count >= MAXHA)
++			break;
++		gdth_pci_probe_one(pcistr, ctr);
++	}
++#endif
++
++	TRACE2(("gdth_detect() %d controller detected\n",gdth_ctr_count));
++#ifdef GDTH_STATISTICS
++	TRACE2(("gdth_detect(): Initializing timer !\n"));
++	init_timer(&gdth_timer);
++	gdth_timer.expires = jiffies + HZ;
++	gdth_timer.data = 0L;
++	gdth_timer.function = gdth_timeout;
++	add_timer(&gdth_timer);
++#endif
++	major = register_chrdev(0,"gdth",&gdth_fops);
++	notifier_disabled = 0;
++	register_reboot_notifier(&gdth_notifier);
++
++
++	gdth_polling = FALSE;
++	return 0;
++}
++
++static void __exit gdth_exit(void)
++{
++	gdth_ha_str *ha;
++
++	list_for_each_entry(ha, &gdth_instances, list)
++		gdth_remove_one(ha);
++
++#ifdef GDTH_STATISTICS
++	del_timer(&gdth_timer);
++#endif
++	unregister_chrdev(major,"gdth");
++	unregister_reboot_notifier(&gdth_notifier);
++}
++
++module_init(gdth_init);
++module_exit(gdth_exit);
++
+ #ifndef MODULE
+ __setup("gdth=", option_setup);
+ #endif
 Index: linux-2.6/drivers/scsi/gdth.h
 ===================================================================
---- linux-2.6.orig/drivers/scsi/gdth.h	2007-07-21 12:37:06.000000000 +0200
-+++ linux-2.6/drivers/scsi/gdth.h	2007-07-21 12:40:41.000000000 +0200
-@@ -940,7 +940,6 @@ typedef struct {
- /* structure for scsi_register(), SCSI bus != 0 */
+--- linux-2.6.orig/drivers/scsi/gdth.h	2007-07-21 13:11:29.000000000 +0200
++++ linux-2.6/drivers/scsi/gdth.h	2007-07-21 13:11:58.000000000 +0200
+@@ -854,6 +854,7 @@ typedef struct {
+ /* controller information structure */
  typedef struct {
-     ushort      hanum;
--    ushort      busnum;
- } gdth_num_str;
- 
- /* structure for scsi_register() */
+     struct Scsi_Host    *shost;
++    struct list_head    list;
+     ushort      	hanum;
+     ushort              oem_id;                 /* OEM */
+     ushort              type;                   /* controller class */
