@@ -1,66 +1,30 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 7/7] gdth: switch to modern scsi host registration
-Date: Sat, 21 Jul 2007 16:23:25 -0400
-Message-ID: <46A26B3D.5070508@garzik.org>
-References: <20070721170216.GH4150@lst.de>
+Subject: [PATCH 0/4] more gdth patches for your amusement
+Date: Sat, 21 Jul 2007 16:34:10 -0400
+Message-ID: <20070721203410.GA1004@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34082 "EHLO mail.dvmed.net"
+Received: from havoc.gtf.org ([69.61.125.42]:54053 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761983AbXGUUX1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 21 Jul 2007 16:23:27 -0400
-In-Reply-To: <20070721170216.GH4150@lst.de>
+	id S1760707AbXGUUeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 21 Jul 2007 16:34:11 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: leubner@adaptec.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Christoph Hellwig <hch@infradead.org>, achim_leubner@adaptec.com, Andrew Morton <akpm@linux-foundation.org>
 
 
-in general, is sane.  three problems...
+This is the rest of the stuff checked into the 'gdth' branch of
+git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
 
+As noted before, I'm fine with Christoph's gdth work superceding mine,
+or whatever.  This was just me poking around.  Hopefully the patches
+are useful for illustration, if nothing else.
 
-Christoph Hellwig wrote:
-> +	/* As default we do not probe for EISA or ISA controllers */
-> +	if (probe_eisa_isa) {
-> +		/* scanning for controllers, at first: ISA controller */
-> +#ifdef CONFIG_ISA
-> +		for (isa_bios = 0xc8000UL; isa_bios <= 0xd8000UL;
-> +			     isa_bios += 0x8000UL) {
-> +			if (gdth_ctr_count >= MAXHA)
-> +                		break;
-> +			gdth_isa_probe_one(isa_bios);
-> +		}
-> +#endif
-> +#ifdef CONFIG_EISA
-> +		for (eisa_slot = 0x1000; eisa_slot <= 0x8000; eisa_slot += 0x1000) {
-> +			if (gdth_ctr_count >= MAXHA)
-> +				break;
-> +			gdth_eisa_probe_one(eisa_slot);
-> +		}
-> +	}
-> +#endif
-
-1) endif should be above the brace
-
-
-> +static void __exit gdth_exit(void)
-> +{
-> +	gdth_ha_str *ha;
-> +
-> +	list_for_each_entry(ha, &gdth_instances, list)
-> +		gdth_remove_one(ha);
-
-2) I think it's nicer to have two loops:  scsi_remove_host() for all 
-ha-attached devices, and then the cleanup.  More pragmatic:  gives 
-hardware more time to "settle" before turning off DMA engines.  A safer 
-approach, and one that scsi_module.c follows.
-
-3) This introduces a modicum of confusion between the gdth_ctr_tab[] 
-stuff and the gdth_instances list.  While not strictly broken, this 
-separation creates a foundation where the two can easily get out of sync.
-
-	Jeff
-
+1) [SCSI] gdth: kill gdth_{read,write}[bwl] wrappers
+2) [SCSI] gdth: Move probe-time error handling code to end of each function
+3) [SCSI] gdth: make some virt ctrlr code common; shuffle SHT members
+4) [SCSI] gdth: convert to modern SCSI host alloc/scan
 
