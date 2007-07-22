@@ -1,79 +1,47 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 4/9] qla2xxx: Validate mid-layer 'underflow' during	check-condition
- handling.
-Date: Sun, 22 Jul 2007 17:28:55 +0300
-Message-ID: <46A369A7.2000401@panasas.com>
-References: <20070719220456.GK4015@plap.qlogic.org>	 <11848827641168-git-send-email-andrew.vasquez@qlogic.com>	 <46A3366D.9070807@panasas.com> <1185111751.3431.3.camel@localhost.localdomain>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: [PATCH] drivers/scsi/g_NCR5380.c - "NCR53C400_PSEUDO_DMA" is not
+ defined
+Date: Sun, 22 Jul 2007 17:19:49 +0200
+Message-ID: <46A37595.2010305@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:26995 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753330AbXGVO3J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 10:29:09 -0400
-In-Reply-To: <1185111751.3431.3.camel@localhost.localdomain>
+Received: from ug-out-1314.google.com ([66.249.92.173]:6409 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752825AbXGVPWI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 11:22:08 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so974366ugf
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Jul 2007 08:22:04 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> On Sun, 2007-07-22 at 13:50 +0300, Boaz Harrosh wrote:
->> NACK. Breaks data buffers accessors patch. (385d70b4e2659ae525a00e46a9f97146949cfc14)
->> should be:
-> 
-> This isn't bad enough to eject the entire qla enhancement from the tree
-> on the day the merge window closes to force a rewrite.
-> 
-Sorry I did not realize this was for the 2.6.23 merge window
-I assumed it is already for the next kernel. You are absolutely
-right I'm just nit picking here.
+Hi,
 
-> 
-> Could you respin an update against scsi-misc for -rc1?
-> 
-> Thanks,
-> 
-> James
-> 
-> 
+got this warning with current git :
 
-You bet:
+...
 
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Sun, 22 Jul 2007 17:24:18 +0300
-Subject: [PATCH] qla2xxx: Data accessors Cleanup of last merge
+In file included from drivers/scsi/g_NCR5380_mmio.c:9:
+drivers/scsi/g_NCR5380.c:559:5: warning: "NCR53C400_PSEUDO_DMA" is not defined
 
-    - Left overs from last code merges of qla2xxx
+...
 
-Sign-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index b8f226a..50539da 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1068,7 +1068,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
- 			 * values.
- 			 */
- 			if (resid &&
--			    ((unsigned)(cp->request_bufflen - resid) <
-+			    ((unsigned)(scsi_bufflen(cp) - resid) <
- 			     cp->underflow)) {
- 				DEBUG2(qla_printk(KERN_INFO, ha,
- 				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
-@@ -1076,7 +1076,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
- 				    "error status.\n", ha->host_no,
- 				    cp->device->channel, cp->device->id,
- 				    cp->device->lun, resid,
--				    cp->request_bufflen));
-+				    scsi_bufflen(cp)));
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 880f70d..607336f 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -556,7 +556,7 @@ generic_NCR5380_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ }
+ #endif
  
- 				cp->result = DID_ERROR << 16 | lscsi_status;
- 			}
--- 
-1.5.2.2.249.g45fd
-
+-#if NCR53C400_PSEUDO_DMA
++#ifdef NCR53C400_PSEUDO_DMA
+ 
+ /**
+  *	NCR5380_pread		-	pseudo DMA read
