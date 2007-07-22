@@ -1,67 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 4/9] qla2xxx: Validate mid-layer 'underflow' during
-	check-condition handling.
-Date: Sun, 22 Jul 2007 08:42:31 -0500
-Message-ID: <1185111751.3431.3.camel@localhost.localdomain>
-References: <20070719220456.GK4015@plap.qlogic.org>
-	 <11848827641168-git-send-email-andrew.vasquez@qlogic.com>
-	 <46A3366D.9070807@panasas.com>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: drivers/scsi/sym53c416.c - address of 'sym53c416*' will always evaluate
+ as 'true' , warnings
+Date: Sun, 22 Jul 2007 15:52:21 +0200
+Message-ID: <46A36115.3070600@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-15
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:58662 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750816AbXGVNmd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 09:42:33 -0400
-In-Reply-To: <46A3366D.9070807@panasas.com>
+Received: from nf-out-0910.google.com ([64.233.182.191]:29962 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751533AbXGVNyh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 09:54:37 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so95213nfb
+        for <linux-scsi@vger.kernel.org>; Sun, 22 Jul 2007 06:54:35 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: Lieven Willems <lw_linux@hotmail.com>, Alan Cox <alan@redhat.com>, linux-scsi@vger.kernel.org
 
-On Sun, 2007-07-22 at 13:50 +0300, Boaz Harrosh wrote:
-> NACK. Breaks data buffers accessors patch. (385d70b4e2659ae525a00e46a9f97146949cfc14)
-> should be:
+Hi,
 
-This isn't bad enough to eject the entire qla enhancement from the tree
-on the day the merge window closes to force a rewrite.
-
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index fa21cd8..4a50b93 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -1062,6 +1062,25 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
->  			    cp->device->id, cp->device->lun, cp,
->  			    cp->serial_number));
->  
-> +			/*
-> +			 * In case of a Underrun condition, set both the lscsi
-> +			 * status and the completion status to appropriate
-> +			 * values.
-> +			 */
-> +			if (resid &&
-> +			    ((unsigned)(scsi_bufflen(cp) - resid) <
-> +			     cp->underflow)) {
-> +				DEBUG2(qla_printk(KERN_INFO, ha,
-> +				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
-> +				    "detected (%x of %x bytes)...returning "
-> +				    "error status.\n", ha->host_no,
-> +				    cp->device->channel, cp->device->id,
-> +				    cp->device->lun, resid,
-> +				    scsi_bufflen(cp)));
-> +
-> +				cp->result = DID_ERROR << 16 | lscsi_status;
-> +			}
-> +
->  			if (sense_len)
->  				DEBUG5(qla2x00_dump_buffer(cp->sense_buffer,
->  				    CMD_ACTUAL_SNSLEN(cp)));
-
-Could you respin an update against scsi-misc for -rc1?
-
-Thanks,
-
-James
+I got this warnings on current git with gcc 4.2.1 :
 
 
+...
+
+drivers/scsi/sym53c416.c: In function 'sym53c416_detect':
+drivers/scsi/sym53c416.c:638: warning: the address of 'sym53c416' will always evaluate as 'true'
+drivers/scsi/sym53c416.c:644: warning: the address of 'sym53c416_1' will always evaluate as 'true'
+drivers/scsi/sym53c416.c:650: warning: the address of 'sym53c416_2' will always evaluate as 'true'
+drivers/scsi/sym53c416.c:656: warning: the address of 'sym53c416_3' will always evaluate as 'true'
+
+...
+
+
+Regards,
+
+Gabriel C
