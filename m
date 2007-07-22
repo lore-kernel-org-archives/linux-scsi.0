@@ -1,39 +1,79 @@
-From: Gabriel C <nix.or.die@googlemail.com>
-Subject: drivers/scsi/sym53c416.c - address of 'sym53c416*' will always evaluate
- as 'true' , warnings
-Date: Sun, 22 Jul 2007 15:52:21 +0200
-Message-ID: <46A36115.3070600@googlemail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 4/9] qla2xxx: Validate mid-layer 'underflow' during	check-condition
+ handling.
+Date: Sun, 22 Jul 2007 17:28:55 +0300
+Message-ID: <46A369A7.2000401@panasas.com>
+References: <20070719220456.GK4015@plap.qlogic.org>	 <11848827641168-git-send-email-andrew.vasquez@qlogic.com>	 <46A3366D.9070807@panasas.com> <1185111751.3431.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.191]:29962 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751533AbXGVNyh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 09:54:37 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so95213nfb
-        for <linux-scsi@vger.kernel.org>; Sun, 22 Jul 2007 06:54:35 -0700 (PDT)
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:26995 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753330AbXGVO3J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 10:29:09 -0400
+In-Reply-To: <1185111751.3431.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: Lieven Willems <lw_linux@hotmail.com>, Alan Cox <alan@redhat.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-Hi,
+James Bottomley wrote:
+> On Sun, 2007-07-22 at 13:50 +0300, Boaz Harrosh wrote:
+>> NACK. Breaks data buffers accessors patch. (385d70b4e2659ae525a00e46a9f97146949cfc14)
+>> should be:
+> 
+> This isn't bad enough to eject the entire qla enhancement from the tree
+> on the day the merge window closes to force a rewrite.
+> 
+Sorry I did not realize this was for the 2.6.23 merge window
+I assumed it is already for the next kernel. You are absolutely
+right I'm just nit picking here.
 
-I got this warnings on current git with gcc 4.2.1 :
+> 
+> Could you respin an update against scsi-misc for -rc1?
+> 
+> Thanks,
+> 
+> James
+> 
+> 
 
+You bet:
 
-...
+From: Boaz Harrosh <bharrosh@panasas.com>
+Date: Sun, 22 Jul 2007 17:24:18 +0300
+Subject: [PATCH] qla2xxx: Data accessors Cleanup of last merge
 
-drivers/scsi/sym53c416.c: In function 'sym53c416_detect':
-drivers/scsi/sym53c416.c:638: warning: the address of 'sym53c416' will always evaluate as 'true'
-drivers/scsi/sym53c416.c:644: warning: the address of 'sym53c416_1' will always evaluate as 'true'
-drivers/scsi/sym53c416.c:650: warning: the address of 'sym53c416_2' will always evaluate as 'true'
-drivers/scsi/sym53c416.c:656: warning: the address of 'sym53c416_3' will always evaluate as 'true'
+    - Left overs from last code merges of qla2xxx
 
-...
+Sign-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/qla2xxx/qla_isr.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index b8f226a..50539da 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1068,7 +1068,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
+ 			 * values.
+ 			 */
+ 			if (resid &&
+-			    ((unsigned)(cp->request_bufflen - resid) <
++			    ((unsigned)(scsi_bufflen(cp) - resid) <
+ 			     cp->underflow)) {
+ 				DEBUG2(qla_printk(KERN_INFO, ha,
+ 				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
+@@ -1076,7 +1076,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
+ 				    "error status.\n", ha->host_no,
+ 				    cp->device->channel, cp->device->id,
+ 				    cp->device->lun, resid,
+-				    cp->request_bufflen));
++				    scsi_bufflen(cp)));
+ 
+ 				cp->result = DID_ERROR << 16 | lscsi_status;
+ 			}
+-- 
+1.5.2.2.249.g45fd
 
-Regards,
-
-Gabriel C
