@@ -1,61 +1,140 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 4/9] qla2xxx: Validate mid-layer 'underflow' during	check-condition handling.
-Date: Sun, 22 Jul 2007 17:27:38 -0700
-Message-ID: <20070723002738.GA5859@plap.qlogic.org>
-References: <20070719220456.GK4015@plap.qlogic.org> <11848827641168-git-send-email-andrew.vasquez@qlogic.com> <46A3366D.9070807@panasas.com> <1185111751.3431.3.camel@localhost.localdomain> <46A369A7.2000401@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 2/2] ibmvscsi: use shost_priv
+Date: Mon, 23 Jul 2007 09:28:40 +0900
+Message-ID: <20070723092840W.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:33400 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765582AbXGWA1q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 20:27:46 -0400
-Content-Disposition: inline
-In-Reply-To: <46A369A7.2000401@panasas.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:59821 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755835AbXGWA2x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 20:28:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com, santil@us.ibm.com
 
-On Sun, 22 Jul 2007, Boaz Harrosh wrote:
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c |   34 +++++++++++-----------------------
+ 1 files changed, 11 insertions(+), 23 deletions(-)
 
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Sun, 22 Jul 2007 17:24:18 +0300
-> Subject: [PATCH] qla2xxx: Data accessors Cleanup of last merge
-> 
->     - Left overs from last code merges of qla2xxx
-> 
-> Sign-off-by: Boaz Harrosh <bharrosh@panasas.com>
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 6735260..65f7fc1 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -702,8 +702,7 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
+ 	struct srp_cmd *srp_cmd;
+ 	struct srp_event_struct *evt_struct;
+ 	struct srp_indirect_buf *indirect;
+-	struct ibmvscsi_host_data *hostdata =
+-		(struct ibmvscsi_host_data *)&cmnd->device->host->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(cmnd->device->host);
+ 	u16 lun = lun_from_dev(cmnd->device);
+ 	u8 out_fmt, in_fmt;
+ 
+@@ -954,8 +953,7 @@ static void sync_completion(struct srp_event_struct *evt_struct)
+  */
+ static int ibmvscsi_eh_abort_handler(struct scsi_cmnd *cmd)
+ {
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)cmd->device->host->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(cmd->device->host);
+ 	struct srp_tsk_mgmt *tsk_mgmt;
+ 	struct srp_event_struct *evt;
+ 	struct srp_event_struct *tmp_evt, *found_evt;
+@@ -1078,9 +1076,7 @@ static int ibmvscsi_eh_abort_handler(struct scsi_cmnd *cmd)
+  */
+ static int ibmvscsi_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ {
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)cmd->device->host->hostdata;
+-
++	struct ibmvscsi_host_data *hostdata = shost_priv(cmd->device->host);
+ 	struct srp_tsk_mgmt *tsk_mgmt;
+ 	struct srp_event_struct *evt;
+ 	struct srp_event_struct *tmp_evt, *pos;
+@@ -1177,8 +1173,7 @@ static int ibmvscsi_eh_device_reset_handler(struct scsi_cmnd *cmd)
+ static int ibmvscsi_eh_host_reset_handler(struct scsi_cmnd *cmd)
+ {
+ 	unsigned long wait_switch = 0;
+-	struct ibmvscsi_host_data *hostdata =
+-		(struct ibmvscsi_host_data *)cmd->device->host->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(cmd->device->host);
+ 
+ 	dev_err(hostdata->dev, "Resetting connection due to error recovery\n");
+ 
+@@ -1406,8 +1401,7 @@ static int ibmvscsi_change_queue_depth(struct scsi_device *sdev, int qdepth)
+ static ssize_t show_host_srp_version(struct class_device *class_dev, char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(class_dev);
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)shost->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+ 	len = snprintf(buf, PAGE_SIZE, "%s\n",
+@@ -1427,8 +1421,7 @@ static ssize_t show_host_partition_name(struct class_device *class_dev,
+ 					char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(class_dev);
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)shost->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+ 	len = snprintf(buf, PAGE_SIZE, "%s\n",
+@@ -1448,8 +1441,7 @@ static ssize_t show_host_partition_number(struct class_device *class_dev,
+ 					  char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(class_dev);
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)shost->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+ 	len = snprintf(buf, PAGE_SIZE, "%d\n",
+@@ -1468,8 +1460,7 @@ static struct class_device_attribute ibmvscsi_host_partition_number = {
+ static ssize_t show_host_mad_version(struct class_device *class_dev, char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(class_dev);
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)shost->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+ 	len = snprintf(buf, PAGE_SIZE, "%d\n",
+@@ -1488,8 +1479,7 @@ static struct class_device_attribute ibmvscsi_host_mad_version = {
+ static ssize_t show_host_os_type(struct class_device *class_dev, char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(class_dev);
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)shost->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 	int len;
+ 
+ 	len = snprintf(buf, PAGE_SIZE, "%d\n", hostdata->madapter_info.os_type);
+@@ -1507,8 +1497,7 @@ static struct class_device_attribute ibmvscsi_host_os_type = {
+ static ssize_t show_host_config(struct class_device *class_dev, char *buf)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(class_dev);
+-	struct ibmvscsi_host_data *hostdata =
+-	    (struct ibmvscsi_host_data *)shost->hostdata;
++	struct ibmvscsi_host_data *hostdata = shost_priv(shost);
+ 
+ 	/* returns null-terminated host config data */
+ 	if (ibmvscsi_do_host_config(hostdata, buf, PAGE_SIZE) == 0)
+@@ -1576,8 +1565,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 		goto scsi_host_alloc_failed;
+ 	}
+ 
+-	hostdata = (struct ibmvscsi_host_data *)host->hostdata;
+-	memset(hostdata, 0x00, sizeof(*hostdata));
++	hostdata = shost_priv(host);
+ 	INIT_LIST_HEAD(&hostdata->sent);
+ 	hostdata->host = host;
+ 	hostdata->dev = dev;
+-- 
+1.5.2.4
 
-Thanks for catching that.  If need be:
-
-Acked-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
-
-> ---
->  drivers/scsi/qla2xxx/qla_isr.c |    4 ++--
->  1 files changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index b8f226a..50539da 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -1068,7 +1068,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
->  			 * values.
->  			 */
->  			if (resid &&
-> -			    ((unsigned)(cp->request_bufflen - resid) <
-> +			    ((unsigned)(scsi_bufflen(cp) - resid) <
->  			     cp->underflow)) {
->  				DEBUG2(qla_printk(KERN_INFO, ha,
->  				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
-> @@ -1076,7 +1076,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
->  				    "error status.\n", ha->host_no,
->  				    cp->device->channel, cp->device->id,
->  				    cp->device->lun, resid,
-> -				    cp->request_bufflen));
-> +				    scsi_bufflen(cp)));
->  
->  				cp->result = DID_ERROR << 16 | lscsi_status;
->  			}
-> -- 
-> 1.5.2.2.249.g45fd
