@@ -1,62 +1,60 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH] aacraid: sysfs adapter reset/status format change.
-Date: Mon, 23 Jul 2007 10:13:48 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01C5A9E1@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01B8E0AF@otce2k301.adaptec.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch] drivers/scsi/scsi_sysfs.c:718: warning: unused
+	variable `rq'
+Date: Mon, 23 Jul 2007 09:53:51 -0500
+Message-ID: <1185202432.3417.7.camel@localhost.localdomain>
+References: <20070723143637.GB23448@slug>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7CD33.B0AD74F7"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:57186 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751345AbXGWONu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2007 10:13:50 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 0645D1C984E
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Jul 2007 07:13:49 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01B8E0AF@otce2k301.adaptec.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:52620 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755291AbXGWOx4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2007 10:53:56 -0400
+In-Reply-To: <20070723143637.GB23448@slug>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Frederik Deweerdt <deweerdt@free.fr>
+Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
+On Mon, 2007-07-23 at 16:36 +0200, Frederik Deweerdt wrote:
+> -	struct request_queue *rq = sdev->request_queue;
+>  
+>  	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
+>  		return error;
+> @@ -736,7 +735,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+>  	 * released by the sdev_class .release */
+>  	get_device(&sdev->sdev_gendev);
+>  
+> -	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL);
+> +	error = bsg_register_queue(sdev->request_queue,
+> +				   &sdev->sdev_gendev, NULL);
 
-------_=_NextPart_001_01C7CD33.B0AD74F7
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Actually, that's not really a good fix because the same problem will
+reoccur elsewhere.  This is a more correct fix:
 
-We need to newline terminate responses from nodes within the sysfs tree,
-the Adapter status value reported by the reset adapter node is adjusted.
+James
 
-This attached patch is against current scsi-misc-2.6
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index f415f89..2344dab 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -60,8 +60,13 @@ struct bsg_class_device {
+ extern int bsg_register_queue(struct request_queue *, struct device *, const char *);
+ extern void bsg_unregister_queue(struct request_queue *);
+ #else
+-#define bsg_register_queue(disk, dev, name)		(0)
+-#define bsg_unregister_queue(disk)	do { } while (0)
++static inline int bsg_register_queue(struct request_queue * rq, struct device *dev, const char *name)
++{
++	return 0;
++}
++static inline void bsg_unregister_queue(struct request_queue *rq)
++{
++}
+ #endif
+ 
+ #endif /* __KERNEL__ */
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/linit.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C7CD33.B0AD74F7
-Content-Type: application/octet-stream;
-	name="aacraid_adapter_status_format_change.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_adapter_status_format_change.patch
-Content-Disposition: attachment;
-	filename="aacraid_adapter_status_format_change.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDctMDct
-MjMgMDk6NTM6MDYuODUyOTI5MjM5IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
-bml0LmMJMjAwNy0wNy0yMyAxMDowODoxMC4zNDczOTA5MzkgLTA0MDAKQEAgLTgyMiw3ICs4MjIs
-NyBAQAogCXRtcCA9IGFhY19hZGFwdGVyX2NoZWNrX2hlYWx0aChkZXYpOwogCWlmICgodG1wID09
-IDApICYmIGRldi0+aW5fcmVzZXQpCiAJCXRtcCA9IC1FQlVTWTsKLQlsZW4gPSBzbnByaW50Zihi
-dWYsIFBBR0VfU0laRSwgIjB4JXgiLCB0bXApOworCWxlbiA9IHNucHJpbnRmKGJ1ZiwgUEFHRV9T
-SVpFLCAiMHgleFxuIiwgdG1wKTsKIAlyZXR1cm4gbGVuOwogfQogCg==
-
-------_=_NextPart_001_01C7CD33.B0AD74F7--
