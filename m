@@ -1,49 +1,62 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH 1/2] ibmvscsi: remove unnecessary map_sg check
-Date: Mon, 23 Jul 2007 09:28:39 +0900
-Message-ID: <20070723092839D.fujita.tomonori@lab.ntt.co.jp>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.23 regression: lpfc_sli.c: off-by-10
+Date: Mon, 23 Jul 2007 02:32:15 +0200
+Message-ID: <20070723003215.GQ26212@stusta.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:59823 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756047AbXGWA2x (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 20:28:53 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:41502 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762882AbXGWAcu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 20:32:50 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, brking@us.ibm.com, santil@us.ibm.com
+To: James Smart <James.Smart@Emulex.Com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-No need to check use_sg since sg_tablesize is set appropriately in the
-scsi host template.
+The Coverity checker spotted the following off-by-10
+in drivers/scsi/lpfc/lpfc_sli.c:
 
-Brian King's patch (2a7309372fe56ae46c499b772d811ad31c501dd9) did this
-cleanup but the data buffer accessors patch (written before the patch
-and merged after it) restored the check.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/ibmvscsi/ibmvscsi.c |    6 ------
- 1 files changed, 0 insertions(+), 6 deletions(-)
+<--  snip  -->
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 5870866..6735260 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -393,12 +393,6 @@ static int map_sg_data(struct scsi_cmnd *cmd,
- 		return 1;
- 	else if (sg_mapped < 0)
- 		return 0;
--	else if (sg_mapped > SG_ALL) {
--		printk(KERN_ERR
--		       "ibmvscsi: More than %d mapped sg entries, got %d\n",
--		       SG_ALL, sg_mapped);
--		return 0;
--	}
- 
- 	set_srp_direction(cmd, srp_cmd, sg_mapped);
- 
+...
+static int
+lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+                            struct lpfc_iocbq *saveq)
+{
+...
+                        saveq->context3 = lpfc_sli_replace_hbqbuff(phba,
+                                                irsp->un.ulpWord[15]);
+...
+
+<--  snip  -->
+
+
+due to the following code in drivers/scsi/lpfc/lpfc_hw.h:
+
+
+<--  snip  -->
+
+...
+#define IOCB_WORD_SZ    8
+...
+typedef struct _IOCB {  /* IOCB structure */
+...
+                uint32_t ulpWord[IOCB_WORD_SZ - 2];     /* generic 6 'words' */
+...
+
+<--  snip  -->
+
+
+cu
+Adrian
+
 -- 
-1.5.2.4
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
