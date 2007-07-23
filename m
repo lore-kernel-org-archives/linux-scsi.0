@@ -1,52 +1,61 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: [patch 3/3] scsi: wd33c93 needs <asm/irq.h>
-Date: Mon, 23 Jul 2007 00:34:03 +0100
-Message-ID: <20070722233403.GD21668@ftp.linux.org.uk>
-References: <20070720164043.523003359@mail.of.borg> <20070720164324.097994947@mail.of.borg> <20070720173132.GB19424@linux-mips.org> <20070720173359.GA22423@infradead.org> <46A0F453.60005@ru.mvista.com> <20070720175050.GI14791@parisc-linux.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 4/9] qla2xxx: Validate mid-layer 'underflow' during	check-condition handling.
+Date: Sun, 22 Jul 2007 17:27:38 -0700
+Message-ID: <20070723002738.GA5859@plap.qlogic.org>
+References: <20070719220456.GK4015@plap.qlogic.org> <11848827641168-git-send-email-andrew.vasquez@qlogic.com> <46A3366D.9070807@panasas.com> <1185111751.3431.3.camel@localhost.localdomain> <46A369A7.2000401@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zeniv.linux.org.uk ([195.92.253.2]:57552 "EHLO
-	ZenIV.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932933AbXGVXed (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 19:34:33 -0400
+Received: from avexch1.qlogic.com ([198.70.193.115]:33400 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1765582AbXGWA1q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 22 Jul 2007 20:27:46 -0400
 Content-Disposition: inline
-In-Reply-To: <20070720175050.GI14791@parisc-linux.org>
+In-Reply-To: <46A369A7.2000401@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Sergei Shtylyov <sshtylyov@ru.mvista.com>, Christoph Hellwig <hch@infradead.org>, Ralf Baechle <ralf@linux-mips.org>, Geert Uytterhoeven <geert@linux-m68k.org>, Andrew Morton <akpm@linux-foundation.org>, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-mips@linux-mips.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-On Fri, Jul 20, 2007 at 11:50:50AM -0600, Matthew Wilcox wrote:
-> On Fri, Jul 20, 2007 at 09:43:47PM +0400, Sergei Shtylyov wrote:
-> > Hello Christoph:
-> > 
-> > >>>+#include <asm/irq.h>
-> > 
-> > >>These days that should probably be <linux/irq.h>.
-> > 
-> > >Not at all, linux/irq.h is something entirely different.
-> > 
-> >    Actually, <linux/interrupt.h>
+On Sun, 22 Jul 2007, Boaz Harrosh wrote:
+
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> Date: Sun, 22 Jul 2007 17:24:18 +0300
+> Subject: [PATCH] qla2xxx: Data accessors Cleanup of last merge
 > 
-> Not for enable/disable_irq.  For request_irq, yes.
+>     - Left overs from last code merges of qla2xxx
 > 
-> This is something that should be fixed.
+> Sign-off-by: Boaz Harrosh <bharrosh@panasas.com>
 
-Now it is...  FWIW, I suspect that absolute majority of asm/irq.h
-uses can be removed now.
+Thanks for catching that.  If need be:
 
-Next steps in irq.h/interrupt.h cleanups:
-	* scouring asm/irq.h like it had been done for sparc32;
-the parts that are only used by relevant arch/ code should be
-taken there and includes _in_ asm/irq.h trimmed to minimum
-	* separating tasklet.h, with interrupt.h still including it.
-Using it where needed.
-	* asm/softirq.h (with stuff mostly taken there from asm/hardirq.h)
-and linux/softirq.h; again interrupt.h still should include it.
-	* mechanical adding include of linux/interrupt.h to files that use
-request_irq/free_irq/enable_irq/disable_irq/irqreturn_t/IRQF_...
----> in the next merge window:
-	* replace include of linux/interrupt.h in netdevice.h with
-that of linux/softirq.h.
-	* trim uses of linux/interrupt.h that are not needed anymore.
+Acked-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+
+> ---
+>  drivers/scsi/qla2xxx/qla_isr.c |    4 ++--
+>  1 files changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> index b8f226a..50539da 100644
+> --- a/drivers/scsi/qla2xxx/qla_isr.c
+> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> @@ -1068,7 +1068,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
+>  			 * values.
+>  			 */
+>  			if (resid &&
+> -			    ((unsigned)(cp->request_bufflen - resid) <
+> +			    ((unsigned)(scsi_bufflen(cp) - resid) <
+>  			     cp->underflow)) {
+>  				DEBUG2(qla_printk(KERN_INFO, ha,
+>  				    "scsi(%ld:%d:%d:%d): Mid-layer underflow "
+> @@ -1076,7 +1076,7 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
+>  				    "error status.\n", ha->host_no,
+>  				    cp->device->channel, cp->device->id,
+>  				    cp->device->lun, resid,
+> -				    cp->request_bufflen));
+> +				    scsi_bufflen(cp)));
+>  
+>  				cp->result = DID_ERROR << 16 | lscsi_status;
+>  			}
+> -- 
+> 1.5.2.2.249.g45fd
