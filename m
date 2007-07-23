@@ -1,31 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] Enable 16-bit CDBs for aic7xxx/aic79xxx
-Date: Mon, 23 Jul 2007 10:47:23 +0200
-Message-ID: <46A46B1B.4010306@suse.de>
+Subject: Re: [PATCH] Enable 16-bit CDBs for aic7xxx/aic79xxx
+Date: Mon, 23 Jul 2007 10:53:26 +0200
+Message-ID: <46A46C86.3000407@suse.de>
+References: <46A46B1B.4010306@suse.de>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
- boundary="------------070202000902010603020800"
+ boundary="------------020305020408050001090803"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:39671 "EHLO mx1.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35269 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756296AbXGWIrZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 23 Jul 2007 04:47:25 -0400
+	id S1753994AbXGWIx2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 23 Jul 2007 04:53:28 -0400
+In-Reply-To: <46A46B1B.4010306@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
 This is a multi-part message in MIME format.
---------------070202000902010603020800
+--------------020305020408050001090803
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 8bit
 
-Hi James,
+Hannes Reinecke wrote:
+> Hi James,
+> 
+> this patch enables 16-bit CDBs for aic7xxx and aic79xx. aic7xxx actuallys
+> supports up to 32-bit CDBs, so it might be that aic79xx does that, too.
+> But this would include some more hacking, so this is way easier.
+> 
+Yeah, grand. That should read '16-byte CDBs', of course.
 
-this patch enables 16-bit CDBs for aic7xxx and aic79xx. aic7xxx actuallys
-supports up to 32-bit CDBs, so it might be that aic79xx does that, too.
-But this would include some more hacking, so this is way easier.
-
-Please apply.
+But at least I've been consistent :-)
+New patch attached.
 
 Cheers,
 
@@ -36,17 +43,17 @@ hare@suse.de			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: Markus Rex, HRB 16746 (AG Nürnberg)
 
---------------070202000902010603020800
+--------------020305020408050001090803
 Content-Type: text/plain;
  name="aic7xxx-enable-16byte-cdbs"
 Content-Transfer-Encoding: 7bit
 Content-Disposition: inline;
  filename="aic7xxx-enable-16byte-cdbs"
 
-Enable 16-bit CDBs for aic7xxx/aix79xx
+Enable 16-byte CDBs for aic7xxx/aix79xx
 
-The patch enables support for 16-bit CDBs in aic7xxx and aic79xx.
-aic7xxx can actually support up to 32-bit CDBs, should they ever see
+The patch enables support for 16-byte CDBs in aic7xxx and aic79xx.
+aic7xxx can actually support up to 32-byte CDBs, should they ever see
 the light of day.
 
 Signed-off-by: Hannes Reinecke <hare@suse.de>
@@ -76,4 +83,4 @@ index 1803ab6..a6b3071 100644
  	ahc_lock(ahc, &s);
  	ahc_set_unit(ahc, ahc_linux_unit++);
 
---------------070202000902010603020800--
+--------------020305020408050001090803--
