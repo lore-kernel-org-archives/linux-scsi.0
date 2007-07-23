@@ -1,14 +1,14 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 Subject: Re: [2/2] 2.6.23-rc1: known regressions
 Date: Mon, 23 Jul 2007 11:47:34 +0200
-Message-ID: <46A47936.1090606__14813.2093287588$1185184205$gmane$org@googlemail.com>
+Message-ID: <46A47936.1090606__22808.2321853892$1185184272$gmane$org@googlemail.com>
 References: <46A477AF.4000309@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ia64-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760901AbXGWJul@vger.kernel.org>
 In-Reply-To: <46A477AF.4000309@googlemail.com>
-Sender: linux-ia64-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
 Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, James Smart <James.Smart@emulex.com>, Adrian Bunk <bunk@stusta.de>, Jeremy Fitzhardinge <jeremy@goop.org>, Tilman Schmidt <tilman@imap.cc>, linux-ia64@vger.kernel.org, Tony Luck <tony.luck@intel.com>, Horms <horms@verge.net.au>, sparclinux@vger.kernel.org, David Miller <davem@davemloft.net>, Roland McGrath <roland@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
