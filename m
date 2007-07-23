@@ -1,60 +1,79 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch] drivers/scsi/scsi_sysfs.c:718: warning: unused
-	variable `rq'
-Date: Mon, 23 Jul 2007 09:53:51 -0500
-Message-ID: <1185202432.3417.7.camel@localhost.localdomain>
-References: <20070723143637.GB23448@slug>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: [RFC: 2.6 patch] nsp32_restart_autoscsi(): remove error check
+Date: Mon, 23 Jul 2007 21:33:34 +0200
+Message-ID: <20070723193334.GP26212@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52620 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755291AbXGWOx4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2007 10:53:56 -0400
-In-Reply-To: <20070723143637.GB23448@slug>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:42543 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S934378AbXGWTeJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2007 15:34:09 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frederik Deweerdt <deweerdt@free.fr>
-Cc: jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: yokota@netlab.is.tsukuba.ac.jp, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, 2007-07-23 at 16:36 +0200, Frederik Deweerdt wrote:
-> -	struct request_queue *rq = sdev->request_queue;
->  
->  	if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
->  		return error;
-> @@ -736,7 +735,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
->  	 * released by the sdev_class .release */
->  	get_device(&sdev->sdev_gendev);
->  
-> -	error = bsg_register_queue(rq, &sdev->sdev_gendev, NULL);
-> +	error = bsg_register_queue(sdev->request_queue,
-> +				   &sdev->sdev_gendev, NULL);
+The Coverity checker noted that we'll anyway Oops later when we ran into 
+this condition - and the error check didn't prevent that.
 
-Actually, that's not really a good fix because the same problem will
-reoccur elsewhere.  This is a more correct fix:
+Considering that the error condition shouldn't be possible, and we are 
+not able to handle it easily, this patch simply removes the pointless 
+error check.
 
-James
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index f415f89..2344dab 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -60,8 +60,13 @@ struct bsg_class_device {
- extern int bsg_register_queue(struct request_queue *, struct device *, const char *);
- extern void bsg_unregister_queue(struct request_queue *);
- #else
--#define bsg_register_queue(disk, dev, name)		(0)
--#define bsg_unregister_queue(disk)	do { } while (0)
-+static inline int bsg_register_queue(struct request_queue * rq, struct device *dev, const char *name)
-+{
-+	return 0;
-+}
-+static inline void bsg_unregister_queue(struct request_queue *rq)
-+{
-+}
- #endif
+---
+
+ drivers/scsi/nsp32.c |    4 ----
+ 1 file changed, 4 deletions(-)
+
+--- linux-2.6.22-rc6-mm1/drivers/scsi/nsp32.c.old	2007-07-23 19:38:58.000000000 +0200
++++ linux-2.6.22-rc6-mm1/drivers/scsi/nsp32.c	2007-07-23 20:17:14.000000000 +0200
+@@ -1888,44 +1888,40 @@ static void nsp32_msgout_occur(struct sc
  
- #endif /* __KERNEL__ */
-
+ 	data->msgout_len = 0;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_MSGOUTOCCUR, "exit");
+ }
+ 
+ /*
+  * Restart AutoSCSI
+  *
+  * Note: Restarting AutoSCSI needs set:
+  *		SYNC_REG, ACK_WIDTH, SGT_ADR, TRANSFER_CONTROL
+  */
+ static void nsp32_restart_autoscsi(struct scsi_cmnd *SCpnt, unsigned short command)
+ {
+ 	nsp32_hw_data *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
+ 	unsigned int   base = data->BaseAddress;
+ 	unsigned short transfer = 0;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_RESTART, "enter");
+ 
+-	if (data->cur_target == NULL || data->cur_lunt == NULL) {
+-		nsp32_msg(KERN_ERR, "Target or Lun is invalid");
+-	}
+-
+ 	/*
+ 	 * set SYNC_REG
+ 	 * Don't set BM_START_ADR before setting this register.
+ 	 */
+ 	nsp32_write1(base, SYNC_REG, data->cur_target->syncreg);
+ 
+ 	/*
+ 	 * set ACKWIDTH
+ 	 */
+ 	nsp32_write1(base, ACK_WIDTH, data->cur_target->ackwidth);
+ 
+ 	/*
+ 	 * set SREQ hazard killer sampling rate
+ 	 */
+ 	nsp32_write1(base, SREQ_SMPL_RATE, data->cur_target->sample_reg);
+ 
+ 	/*
+ 	 * set SGT ADDR (physical address)
+ 	 */
+ 	nsp32_write4(base, SGT_ADR, data->cur_lunt->sglun_paddr);
 
