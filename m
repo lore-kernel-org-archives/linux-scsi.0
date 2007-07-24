@@ -1,36 +1,50 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: SCSI support broken in latest 2.4 kernel
-Date: Tue, 24 Jul 2007 05:26:06 -0600
-Message-ID: <20070724112605.GG26883@parisc-linux.org>
-References: <1185266014.28815.14.camel@localhost.localdomain>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] unexport sg v3 helper functions
+Date: Tue, 24 Jul 2007 13:34:33 +0200
+Message-ID: <20070724113433.GR3287@kernel.dk>
+References: <20070722033008L.tomof@acm.org> <20070723120222.GI11657@kernel.dk> <46A57410.1090605@torque.net> <20070724064954.GD3287@kernel.dk> <46A5E12E.2060804@torque.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41025 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762039AbXGXL0H (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 07:26:07 -0400
+Received: from brick.kernel.dk ([80.160.20.94]:26375 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765572AbXGXLeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jul 2007 07:34:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1185266014.28815.14.camel@localhost.localdomain>
+In-Reply-To: <46A5E12E.2060804@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Abdelrahman <estr4ng3d@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Tue, Jul 24, 2007 at 11:33:33AM +0300, Abdelrahman wrote:
-> It seems impossible to compile the latest 2.4.35.6 kernel with the
-> scsi_mod module and produce a usable system. I have used the attached
-> config file and the normal compile procedure (make dep; make bzImage;
-> make modules) and ended up with unloadable modules (unresolved symbols).
-> I have tried both gcc 3.3 and 4.1. The same issue exists in at least
-> 2.4.27 as well.
+On Tue, Jul 24 2007, Douglas Gilbert wrote:
+> Jens Axboe wrote:
+> > On Mon, Jul 23 2007, Douglas Gilbert wrote:
+> >> Jens Axboe wrote:
+> >>> On Sun, Jul 22 2007, FUJITA Tomonori wrote:
+> >>>> blk_fill_sghdr_rq, blk_unmap_sghdr_rq, and blk_complete_sghdr_rq were
+> >>>> exported for bsg, however bsg was changed to support only sg v4.
+> >>>>
+> >>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> >>> Acked-by: Jens Axboe <jens.axboe@oracle.com>
+> >> Why?
+> > 
+> > The reasoning is right there, a few lines up - bsg doesn't support sg v3
+> > commands.
 > 
-> Please advise if I can provide any further information which would aid
-> in resolution.
+> I can read.
 
-Which symbols?
+Then write better questions "Why?" isn't very useful.
+
+> Why doesn't bsg support sg v3 commands?
+
+You should know, the discussion on that happened at the storage summit
+and on linux-scsi. It was decided to drop sg v3 support from bsg, and
+only focus on making bsg the driver for sg v4 commands.
+
+As you know, we already have dual paths for sg v3. For sg v4 we can get
+rid of that pain, and just have a single driver for handling that.
 
 -- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Jens Axboe
+
