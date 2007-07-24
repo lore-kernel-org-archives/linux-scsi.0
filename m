@@ -1,94 +1,120 @@
-From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+From: David Miller <davem@davemloft.net>
 Subject: Re: QLGC,ISP SCSI driver not finding attached devices
-Date: Tue, 24 Jul 2007 18:46:06 +0100 (BST)
-Message-ID: <Pine.LNX.4.61.0707241758020.17959@mtfhpc.demon.co.uk>
-References: <Pine.LNX.4.61.0707201404250.7470@mtfhpc.demon.co.uk>
- <1184941136.3455.8.camel@localhost.localdomain>
- <Pine.LNX.4.61.0707201602080.7721@mtfhpc.demon.co.uk>
- <1184950646.3455.45.camel@localhost.localdomain>
- <Pine.LNX.4.61.0707201822250.8013@mtfhpc.demon.co.uk>
- <Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
- <1185238223.3417.42.camel@localhost.localdomain>
+Date: Tue, 24 Jul 2007 12:43:04 -0700 (PDT)
+Message-ID: <20070724.124304.51855385.davem@davemloft.net>
+References: <Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
+	<1185238223.3417.42.camel@localhost.localdomain>
+	<Pine.LNX.4.61.0707241758020.17959@mtfhpc.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from anchor-post-36.mail.demon.net ([194.217.242.86]:3395 "EHLO
-	anchor-post-36.mail.demon.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753999AbXGXRqN (ORCPT
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:45796
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1759610AbXGXTnF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jul 2007 13:46:13 -0400
-In-Reply-To: <1185238223.3417.42.camel@localhost.localdomain>
+	Tue, 24 Jul 2007 15:43:05 -0400
+In-Reply-To: <Pine.LNX.4.61.0707241758020.17959@mtfhpc.demon.co.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: davem@davemloft.net, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: mark@mtfhpc.demon.co.uk
+Cc: James.Bottomley@SteelEye.com, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi all,
+From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Date: Tue, 24 Jul 2007 18:46:06 +0100 (BST)
 
-Timing does not apear to be an issue. I have checked all the udelay/msleep 
-calls I could find and thoes that get called are delaying by the correct 
-delay (4 to 7us > specified value).
+> Looking into the issue a bit further, it turns out the the Sparc32 memset 
+> is broaken - it does not always set the last byte. As a result, the 
+> Control Field is set to random value (0xE0 in this case). This explains 
+> all sorts of odd issues. Next step is to fix memset. I will try again once 
+> I am sure memset is working.
 
-I have added some more debugging info and it looks like somthing is 
-getting corrupted in the INQUIRY command as it is returning:
+There was a memset() fix posted recently which I am merging soon.
 
-   Sense Key : Illegal Request [current]
-   Add. Sense: Invalid field in cdb
+--------------------
 
-According a of the SCSI2 Std that I have, this equates to one of the 
-following:
+Subject: [PATCH 2.4.25] sparc32: fix bug in sparc optimized memset
+From:	"root" <root@task.sun.mcst.ru>
+To:	wli@holomorphy.com
+Cc:	sparclinux@vger.kernel.org
+Date:	Thu, 19 Jul 2007 20:07:22 +0400
+Sender:	"David S. Miller" <davem@vger.kernel.org>
+User-Agent: Mutt/1.5.15 (2007-04-06)
+Fake-Sender:	sparclinux-owner@vger.kernel.org
 
- 	EVPD set and Vital Product Data not supported
- 	EVPD clear and Page Code non-zero
- 	Control Field Flag set and Link not set
+Sparc optimized memset (arch/sparc/lib/memset.S) does not fill last byte of the memory area,
+if area size is less than 8 bytes and start address is not word (4-bytes) aligned,
+Recent Linux kernels have same memset.S and affected by this bug too.
 
-Looking into the issue a bit further, it turns out the the Sparc32 memset 
-is broaken - it does not always set the last byte. As a result, the 
-Control Field is set to random value (0xE0 in this case). This explains 
-all sorts of odd issues. Next step is to fix memset. I will try again once 
-I am sure memset is working.
+Here is code chunk where bug located:
+/* %o0 - memory address, %o1 - size, %g3 - value */
+8:
+     add    %o0, 1, %o0
+    subcc    %o1, 1, %o1
+    bne,a    8b
+     stb %g3, [%o0 - 1]
 
-Regards
- 	Mark Fortescue.
+This code should write byte every loop iteration, but last time delay instruction stb is not 
+executed because branch instruction sets "annul" bit.
 
-On Mon, 23 Jul 2007, James Bottomley wrote:
+Patch replaces bne,a by bne instruction.
 
-> On Mon, 2007-07-23 at 23:41 +0100, Mark Fortescue wrote:
->> Hi James,
->>
->> Can you point me in the direction of any documentation to aid me in
->> identifing what debugging I need to work out what is going on?
->
-> they're all in include/scsi/scsi.h
->
-> The code is divided into four bytes (from LSB): status, message, host
-> and driver.  The status is what the SCSI command actually returned (if
-> anything) the message is what the transport said (least used of the
-> status codes).  The host byte signals an error condition with the card
-> and the driver byte with the driver (plus an optional suggestion of what
-> to do about it).
->
->> For targets without any connected disk, I get scan responses of:
->>      scsi scan: INQUIRY failed with code 0x40000
->> after app 417ms.
->
-> That's host byte 0x04 which is DID_BAD_TARGET.
->
->> For targets with a disk connected, I get scan responses of:
->>      scsi scan: INQUIRY failed with code 0x8000002
->> after app 170ms.
->
-> Thats SCSI status 0x02 (which is CHECK_CONDITION) and driver byte of
-> 0x08, which is DRIVER_SENSE (as in the device returned a sense code).
-> This is really strange, because the INQUIRY command isn't supposed to be
-> allowed to return a sense code for precisely this initial scan reason.
-> This tends to point to a device failure.
->
-> James
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe sparclinux" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+
+
+
+
+Error can be reproduced by simple kernel module:
+
+#include <linux/module.h>
+#include <linux/config.h>
+#include <linux/kernel.h>
+#include <linux/errno.h>
+#include <string.h>
+
+static void do_memset(void **p, int size)
+{
+        memset(p, 0x00, size);
+}
+
+static int __init memset_test_init(void)
+{
+    char fooc[8];
+    int *fooi;
+    memset(fooc, 0xba, sizeof(fooc));
+
+    do_memset((void**)(fooc + 3), 1);
+
+    fooi = (int*) fooc;
+    printk("%08X %08X\n", fooi[0], fooi[1]);
+
+    return -1;
+}
+
+static void __exit memset_test_cleanup(void)
+{
+    return;
+}
+
+module_init(memset_test_init);
+module_exit(memset_test_cleanup);
+
+MODULE_LICENSE("GPL");
+EXPORT_NO_SYMBOLS;
+
+
+	
+
+
+Signed-off-by: Alexander Shmelev <ashmelev@task.sun.mcst.ru>
+---
+--- linux-2.4.25-orig/arch/sparc/lib/memset.S	2003-11-28 21:26:19.000000000 +0300
++++ linux-2.4.25/arch/sparc/lib/memset.S	2007-07-19 18:56:05.000000000 +0400
+@@ -163,7 +163,7 @@
+ 8:
+ 	 add	%o0, 1, %o0
+ 	subcc	%o1, 1, %o1
+-	bne,a	8b
++	bne	8b
+ 	 EX(stb	%g3, [%o0 - 1], add %o1, 1)
+ 0:
+ 	retl
