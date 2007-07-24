@@ -1,166 +1,134 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: [PATCH RFC] qla2xxx: fix ignored size and offset parameters in
- qla2x00_sysfs_read_[nvram vpd]
-Date: Tue, 24 Jul 2007 13:33:26 -0700
-Message-ID: <46A66216.3040506@qlogic.com>
-References: <1185283210.28503.15.camel@anacortes.austin.ibm.com>
+From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Subject: Re: QLGC,ISP SCSI driver not finding attached devices
+Date: Tue, 24 Jul 2007 22:28:42 +0100 (BST)
+Message-ID: <Pine.LNX.4.61.0707242116370.17959@mtfhpc.demon.co.uk>
+References: <Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
+ <1185238223.3417.42.camel@localhost.localdomain>
+ <Pine.LNX.4.61.0707241758020.17959@mtfhpc.demon.co.uk>
+ <20070724.124304.51855385.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:36550 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751132AbXGXUeU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 16:34:20 -0400
-In-Reply-To: <1185283210.28503.15.camel@anacortes.austin.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20070724.124304.51855385.davem@davemloft.net>
+Sender: sparclinux-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>, James.Bottomley@SteelEye.com
+Cc: sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rlary@austin.ibm.com
-Cc: linux-scsi@vger.kernel.org
 
-Richard A Lary wrote:
-> From: Richard Lary <rlary@us.ibm.com>
-> 
-> This patch fixes Segmemtation fault which occurs when executing:
-> #udevinfo -a -p /sys/class/scsi_host/{qla2xxx_host}
-> 
-> The qla2xxx driver ignores the size and offset parameters when
-> reading nvram and vpd attributes.
-Thank you for finding the problem.
-Please find comments below.
-Updated patch will be followed, soon.
+Hi David and James,
 
-Thank you,
-Seokmann
+Thank you for your help in investigating the issues I have been having.
 
-> Signed-off-by: Richard Lary <rlary@us.ibm.com>
+I thought I rememberd seeing somthing about memset.
+
+Having changed the memset code, I have found that the ESP scsi BUS 
+Timeout can be reverted back to 250ms. Both SCSI drivers are now working 
+properly both built in and as modules.
+
+Tomorows task is to see if I can get my floppy disk changes to work (my 
+SS1 has an 82077, not an 82072 and it is not sun4m compatible).
+
+Regards
+ 	Mark Fortescue.
+
+On Tue, 24 Jul 2007, David Miller wrote:
+
+> From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+> Date: Tue, 24 Jul 2007 18:46:06 +0100 (BST)
+>
+>> Looking into the issue a bit further, it turns out the the Sparc32 memset
+>> is broaken - it does not always set the last byte. As a result, the
+>> Control Field is set to random value (0xE0 in this case). This explains
+>> all sorts of odd issues. Next step is to fix memset. I will try again once
+>> I am sure memset is working.
+>
+> There was a memset() fix posted recently which I am merging soon.
+>
+> --------------------
+>
+> Subject: [PATCH 2.4.25] sparc32: fix bug in sparc optimized memset
+> From:	"root" <root@task.sun.mcst.ru>
+> To:	wli@holomorphy.com
+> Cc:	sparclinux@vger.kernel.org
+> Date:	Thu, 19 Jul 2007 20:07:22 +0400
+> Sender:	"David S. Miller" <davem@vger.kernel.org>
+> User-Agent: Mutt/1.5.15 (2007-04-06)
+> Fake-Sender:	sparclinux-owner@vger.kernel.org
+>
+> Sparc optimized memset (arch/sparc/lib/memset.S) does not fill last byte of the memory area,
+> if area size is less than 8 bytes and start address is not word (4-bytes) aligned,
+> Recent Linux kernels have same memset.S and affected by this bug too.
+>
+> Here is code chunk where bug located:
+> /* %o0 - memory address, %o1 - size, %g3 - value */
+> 8:
+>     add    %o0, 1, %o0
+>    subcc    %o1, 1, %o1
+>    bne,a    8b
+>     stb %g3, [%o0 - 1]
+>
+> This code should write byte every loop iteration, but last time delay instruction stb is not
+> executed because branch instruction sets "annul" bit.
+>
+> Patch replaces bne,a by bne instruction.
+>
+>
+>
+>
+>
+> Error can be reproduced by simple kernel module:
+>
+> #include <linux/module.h>
+> #include <linux/config.h>
+> #include <linux/kernel.h>
+> #include <linux/errno.h>
+> #include <string.h>
+>
+> static void do_memset(void **p, int size)
+> {
+>        memset(p, 0x00, size);
+> }
+>
+> static int __init memset_test_init(void)
+> {
+>    char fooc[8];
+>    int *fooi;
+>    memset(fooc, 0xba, sizeof(fooc));
+>
+>    do_memset((void**)(fooc + 3), 1);
+>
+>    fooi = (int*) fooc;
+>    printk("%08X %08X\n", fooi[0], fooi[1]);
+>
+>    return -1;
+> }
+>
+> static void __exit memset_test_cleanup(void)
+> {
+>    return;
+> }
+>
+> module_init(memset_test_init);
+> module_exit(memset_test_cleanup);
+>
+> MODULE_LICENSE("GPL");
+> EXPORT_NO_SYMBOLS;
+>
+>
+>
+>
+>
+> Signed-off-by: Alexander Shmelev <ashmelev@task.sun.mcst.ru>
 > ---
-> 
-> Example: 
-> 
->   looking at device '/class/scsi_host/host5':
->     KERNEL=="host5"
->     SUBSYSTEM=="scsi_host"
->     SYSFS{proc_name}=="_NULL_"
->     SYSFS{unchecked_isa_dma}=="0"
->     SYSFS{sg_tablesize}=="255"
->     SYSFS{cmd_per_lun}=="3"
->     SYSFS{host_busy}=="0"
->     SYSFS{unique_id}=="0"
->     SYSFS{beacon}=="Disabled"
->     SYSFS{zio_timer}=="200 us"
->     SYSFS{zio}=="Disabled"
->     SYSFS{state}=="Link Up - F_Port"
->     SYSFS{pci_info}=="PCI-X Mode 1 _100 MHz_"
->     SYSFS{model_desc}=="IBM eServer BC 4Gb FC Expansion Card SFF"
->     SYSFS{model_name}=="QMC2462S"
->     SYSFS{isp_id}=="0000 0000 0000 0000"
->     SYSFS{isp_name}=="ISP2422"
->     SYSFS{serial_num}=="N83786"
->     SYSFS{fw_version}=="4.00.26 _IP_ "
->     SYSFS{driver_version}=="8.01.07-k3-rl"
-> 
->   looking at device '/devices/pci0000:00/0000:00:01.0/0000:01:02.0/host5':
->     ID=="host5"
->     BUS==""
->     DRIVER==""
->     SYSFS{sfp}==""
-> Segmentation fault
-> 
-> Applies to: scsi-misc-2.6.git
-> 
-> Index: b/drivers/scsi/qla2xxx/qla_attr.c
-> ===================================================================
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -87,17 +87,35 @@ qla2x00_sysfs_read_nvram(struct kobject 
->  	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
->  	    struct device, kobj)));
->  	unsigned long	flags;
-> +	int size = ha->nvram_size;
-> +	char *nvram_buf;
->  
-> -	if (!capable(CAP_SYS_ADMIN) || off != 0)
-> +	if (!capable(CAP_SYS_ADMIN) || off > size)
->  		return 0;
->  
-> +	nvram_buf = (char *)vmalloc(size);
-> +	if (nvram_buf == NULL) {
-> +		qla_printk(KERN_WARNING, ha,
-> +		    "Unable to allocate memory for nvram retrieval "
-> +		    "(%x).\n", size);
-> +
-> +		return 0;
-> +	}
-IMO, as given buf is valid address which can be accessed by the driver, extra vmalloc() is not necessary.
-> +
-> +	if (off + count > size) {
-> +		size -= off;
-> +		count = size;
-> +	}
-Before this check, it would be good to check 'if count == 0' and return 0.
-> +
->  	/* Read NVRAM. */
->  	spin_lock_irqsave(&ha->hardware_lock, flags);
-> -	ha->isp_ops.read_nvram(ha, (uint8_t *)buf, ha->nvram_base,
-> -	    ha->nvram_size);
-> +	ha->isp_ops.read_nvram(ha, (uint8_t *)nvram_buf, ha->nvram_base, size);
->  	spin_unlock_irqrestore(&ha->hardware_lock, flags);
->  
-> -	return ha->nvram_size;
-> +	memcpy(buf, &nvram_buf[off], count);
-> +
-> +	vfree(nvram_buf);
-As vmalloc(), memcpy() and vfree() also are not necessary.
-> +	return count;
->  }
->  
->  static ssize_t
-> @@ -292,16 +310,35 @@ qla2x00_sysfs_read_vpd(struct kobject *k
->  	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
->  	    struct device, kobj)));
->  	unsigned long flags;
-> +	int size = ha->vpd_size;
-> +	char *vpd_buf;
->  
-> -	if (!capable(CAP_SYS_ADMIN) || off != 0)
-> +	if (!capable(CAP_SYS_ADMIN) || off > size)
->  		return 0;
-Also, check if count == 0 and return 0 if so.
-
-> +	vpd_buf = (char *)vmalloc(size);
-> +	if (vpd_buf == NULL) {
-> +		qla_printk(KERN_WARNING, ha,
-> +		    "Unable to allocate memory for vpd retrieval "
-> +		    "(%x).\n", size);
-> +
-> +		return 0;
-> +	}
-Same here, extra memory allocation is not required.
-> +	if (off + count > size) {
-> +		size -= off;
-> +		count = size;
-> +	}
->  
->  	/* Read NVRAM. */
->  	spin_lock_irqsave(&ha->hardware_lock, flags);
-> -	ha->isp_ops.read_nvram(ha, (uint8_t *)buf, ha->vpd_base, ha->vpd_size);
-> +	ha->isp_ops.read_nvram(ha, (uint8_t *)vpd_buf, ha->vpd_base, size);
->  	spin_unlock_irqrestore(&ha->hardware_lock, flags);
->  
-> -	return ha->vpd_size;
-> +	memcpy(buf, &vpd_buf[off], count);
-> +
-> +	vfree(vpd_buf);
-Same here, as vmalloc(), memcpy() and vfree() are not necessary.
-> +	return count;
->  }
->  
->  static ssize_t
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+> --- linux-2.4.25-orig/arch/sparc/lib/memset.S	2003-11-28 21:26:19.000000000 +0300
+> +++ linux-2.4.25/arch/sparc/lib/memset.S	2007-07-19 18:56:05.000000000 +0400
+> @@ -163,7 +163,7 @@
+> 8:
+> 	 add	%o0, 1, %o0
+> 	subcc	%o1, 1, %o1
+> -	bne,a	8b
+> +	bne	8b
+> 	 EX(stb	%g3, [%o0 - 1], add %o1, 1)
+> 0:
+> 	retl
+>
