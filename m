@@ -1,96 +1,40 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
-Date: Mon, 23 Jul 2007 18:11:34 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7088519D@NAMAIL4.ad.lsil.com>
-References: <20070709125211U.fujita.tomonori@lab.ntt.co.jp>
+From: David Miller <davem@davemloft.net>
+Subject: Re: QLGC,ISP SCSI driver not finding attached devices
+Date: Mon, 23 Jul 2007 17:36:14 -0700 (PDT)
+Message-ID: <20070723.173614.74744738.davem@davemloft.net>
+References: <1184950646.3455.45.camel@localhost.localdomain>
+	<Pine.LNX.4.61.0707201822250.8013@mtfhpc.demon.co.uk>
+	<Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:56231 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752563AbXGXAMB convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2007 20:12:01 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070709125211U.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
+Sender: sparclinux-owner@vger.kernel.org
+To: mark@mtfhpc.demon.co.uk
+Cc: James.Bottomley@SteelEye.com, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net, jens.axboe@oracle.com
 
-Tomo - do you have any documentation on how to specify a bsg device?  I
-was trying to run the smp_rep_manufacture from sgv4_tools, and I got
-that error.  Due to that, I have not able to test this patch.  However,
-here are some feedback with regards to the patch:
+From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Date: Mon, 23 Jul 2007 23:41:34 +0100 (BST)
 
+> I can also get the ESP driver to fail to find disks with the same error 
+> codes if I build it as a module driver however if I build the ESP driver 
+> into the kernel, it does not fail (ESP BUS_TIMEOUT=275).
 
-On Sunday, July 08, 2007 9:52 PM, FUJITA Tomonori wrote: 
+That's truly strange.
 
-> +
-> +        smpreq->RequestDataLength = req->data_len - 4;
+For the qlogicpti.c driver case, try increasing
+qpti->host_param.bus_reset_delay.
 
-Our firmware formats the data in little endian, so you'll need to
-convert this inorder for it work under other endian formats, like sparc
-and ppc.  So this code should be:
+For the ESP failure as a module case, record and report the
+time that passes around the msleep() calls.  If it's less
+than it's trying to delay, that's the bug.
 
-smpreq->RequestDataLength = cpu_to_le16(req->data_len - 4);
+Your identify results are what I've seen when a device has recently
+reset and is not fully ready yet, indicating that the post-reset delay
+is not sufficient.
 
-
-> +        smpreq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
-> +
-> +	if (rphy)
-> +		memcpy(&smpreq->SASAddress, &rphy->identify.sas_address,
-> +		       sizeof(smpreq->SASAddress));
-
-should be using cpu_to_le64 before the data is put into
-smpreq->SASAddress
-
-> +	else {
-> +		struct mptsas_portinfo *port_info;
-> +
-> +		mutex_lock(&ioc->sas_topology_mutex);
-> +		port_info = mptsas_find_portinfo_by_handle(ioc, 
-> ioc->handle);
-> +		if (port_info && port_info->phy_info)
-> +			memcpy(&smpreq->SASAddress,
-> +			       
-> &(port_info->phy_info[0].phy->identify.sas_address),
-> +			       sizeof(smpreq->SASAddress));
-> +		mutex_unlock(&ioc->sas_topology_mutex);
-> +	}
-
-I'm not sure what the intent of this else case.  I think it should be
-deleted, and replaced with a return of ENXIO.    The sas_topology is a
-flat model, with the first object the intiatiator, and the other objects
-in the list are expanders.    What your your attempting to obtain is the
-first port object connected to the initiator, which could be anything,
-for instance it could be an end device, instead of expander.    So I
-think if your rphy object is not returning a valid sas_address, then
-return instead of attempting to find something from the sas_topology.
-I hope the API is making sure this is an expander before mptsas is even
-called, is that handled?
-
-> +	/* a reply frame is expected */
-> +	if (!(ioc->sas_mgmt.status & MPT_IOCTL_STATUS_RF_VALID)) {
-> +		printk("%s: the smp response invalid!\n", __FUNCTION__);
-> +		ret = -ENXIO;
-> +	}
-> +
-
-I think in addition to having a valid reply, I think you should look at
-the iocstatus to insure the reply itself was successfull, and that there
-were no data underruns.
-
-ioc_status = le16_to_cpu(smpReply->IOCStatus) & MPI_IOCSTATUS_MASK;
-if ((ioc_status != MPI_IOCSTATUS_SUCCESS) &&
-    (ioc_status != MPI_IOCSTATUS_SCSI_DATA_UNDERRUN)) {
-	return -ENXIO;
-}
-
-
-
-
-
-
-
+I'm %99 sure it's yet another sparc32 specific kernel bug of some sort
+in both of these cases, especially since the qlogicpti.c driver hasn't
+changed substantially in many many years.
