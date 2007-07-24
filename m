@@ -1,40 +1,54 @@
-From: David Miller <davem@davemloft.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: QLGC,ISP SCSI driver not finding attached devices
-Date: Mon, 23 Jul 2007 17:36:14 -0700 (PDT)
-Message-ID: <20070723.173614.74744738.davem@davemloft.net>
-References: <1184950646.3455.45.camel@localhost.localdomain>
-	<Pine.LNX.4.61.0707201822250.8013@mtfhpc.demon.co.uk>
-	<Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
+Date: Mon, 23 Jul 2007 19:50:23 -0500
+Message-ID: <1185238223.3417.42.camel@localhost.localdomain>
+References: <Pine.LNX.4.61.0707201404250.7470@mtfhpc.demon.co.uk>
+	 <1184941136.3455.8.camel@localhost.localdomain>
+	 <Pine.LNX.4.61.0707201602080.7721@mtfhpc.demon.co.uk>
+	 <1184950646.3455.45.camel@localhost.localdomain>
+	 <Pine.LNX.4.61.0707201822250.8013@mtfhpc.demon.co.uk>
+	 <Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <sparclinux-owner@vger.kernel.org>
 In-Reply-To: <Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
 Sender: sparclinux-owner@vger.kernel.org
-To: mark@mtfhpc.demon.co.uk
-Cc: James.Bottomley@SteelEye.com, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Mark Fortescue <mark@mtfhpc.demon.co.uk>
+Cc: davem@davemloft.net, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
-Date: Mon, 23 Jul 2007 23:41:34 +0100 (BST)
+On Mon, 2007-07-23 at 23:41 +0100, Mark Fortescue wrote:
+> Hi James,
+> 
+> Can you point me in the direction of any documentation to aid me in 
+> identifing what debugging I need to work out what is going on?
 
-> I can also get the ESP driver to fail to find disks with the same error 
-> codes if I build it as a module driver however if I build the ESP driver 
-> into the kernel, it does not fail (ESP BUS_TIMEOUT=275).
+they're all in include/scsi/scsi.h
 
-That's truly strange.
+The code is divided into four bytes (from LSB): status, message, host
+and driver.  The status is what the SCSI command actually returned (if
+anything) the message is what the transport said (least used of the
+status codes).  The host byte signals an error condition with the card
+and the driver byte with the driver (plus an optional suggestion of what
+to do about it).
 
-For the qlogicpti.c driver case, try increasing
-qpti->host_param.bus_reset_delay.
+> For targets without any connected disk, I get scan responses of:
+>      scsi scan: INQUIRY failed with code 0x40000
+> after app 417ms.
 
-For the ESP failure as a module case, record and report the
-time that passes around the msleep() calls.  If it's less
-than it's trying to delay, that's the bug.
+That's host byte 0x04 which is DID_BAD_TARGET.
 
-Your identify results are what I've seen when a device has recently
-reset and is not fully ready yet, indicating that the post-reset delay
-is not sufficient.
+> For targets with a disk connected, I get scan responses of:
+>      scsi scan: INQUIRY failed with code 0x8000002
+> after app 170ms.
 
-I'm %99 sure it's yet another sparc32 specific kernel bug of some sort
-in both of these cases, especially since the qlogicpti.c driver hasn't
-changed substantially in many many years.
+Thats SCSI status 0x02 (which is CHECK_CONDITION) and driver byte of
+0x08, which is DRIVER_SENSE (as in the device returned a sense code).
+This is really strange, because the INQUIRY command isn't supposed to be
+allowed to return a sense code for precisely this initial scan reason.
+This tends to point to a device failure.
+
+James
+
+
