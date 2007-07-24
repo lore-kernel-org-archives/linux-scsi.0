@@ -1,35 +1,45 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: QLGC,ISP SCSI driver not finding attached devices
-Date: Tue, 24 Jul 2007 14:48:44 -0700 (PDT)
-Message-ID: <20070724.144844.74557601.davem@davemloft.net>
-References: <Pine.LNX.4.61.0707241758020.17959@mtfhpc.demon.co.uk>
-	<20070724.124304.51855385.davem@davemloft.net>
-	<Pine.LNX.4.61.0707242116370.17959@mtfhpc.demon.co.uk>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 3/5] mpt fusion: Changes in mptscsih.c for logging support
+Date: Tue, 24 Jul 2007 17:07:28 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70885411@NAMAIL4.ad.lsil.com>
+References: <46A5D4D5.1090402@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49830
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1755540AbXGXVso (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jul 2007 17:48:44 -0400
-In-Reply-To: <Pine.LNX.4.61.0707242116370.17959@mtfhpc.demon.co.uk>
+Received: from mail0.lsil.com ([147.145.40.20]:42252 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752467AbXGXXIm convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 19:08:42 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <46A5D4D5.1090402@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mark@mtfhpc.demon.co.uk
-Cc: James.Bottomley@SteelEye.com, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: Mark Fortescue <mark@mtfhpc.demon.co.uk>
-Date: Tue, 24 Jul 2007 22:28:42 +0100 (BST)
-
-> I thought I rememberd seeing somthing about memset.
+On Tuesday, July 24, 2007 4:31 AM, Boaz Harrosh wrote:
 > 
-> Having changed the memset code, I have found that the ESP scsi BUS 
-> Timeout can be reverted back to 250ms. Both SCSI drivers are now working 
-> properly both built in and as modules.
+> NACK
+> This driver was already converted to accessors please
+> don't use old (going a way soon) scsi_cmnd members
+> directly
+> 
 
-Thanks Mark.
 
-What I'll do is merge in the sparc32 memset() fix then, once that is
-in, send James a patch to revert the ESP bus timeout back down to 250.
+Sathya - a little background on this.  I believe this all started with
+the "Proposals to change the way all drivers work with SCSI commands"
+email from James Bottomley back on May 11th.
+here:  http://marc.info/?t=117890864300003&r=1&w=2.      The fusion
+driver was ported by FUJITA Tomonori in this patch
+http://marc.info/?l=linux-scsi&m=117896437623559&w=2.  So the
+bottomline, is anywere we access the scsi_cmnd pointer in the debug
+prints, needs to be ported using the new wrappers (in scsi_cmnd.h).
+Can you please review and repost?
+
+Thanks,
+Eric
+
+
+
