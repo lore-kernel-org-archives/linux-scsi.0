@@ -1,75 +1,43 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
- IO sg-chaining
-Date: Tue, 24 Jul 2007 22:41:14 +0900
-Message-ID: <20070724110138P.tomof@acm.org>
-References: <20070724181635G.fujita.tomonori@lab.ntt.co.jp>
-	<46A5CDFE.3020801@panasas.com>
-	<20070724201247A.fujita.tomonori@lab.ntt.co.jp>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 1/3] ps3: Disk Storage Driver
+Date: Tue, 24 Jul 2007 09:44:21 -0400
+Message-ID: <46A60235.10107@garzik.org>
+References: <20070716161539.075822000@pademelon.sonytel.be>	<20070716162206.392129000@pademelon.sonytel.be>	<20070718163637.3f0e0164.akpm@linux-foundation.org>	<46A5E610.7000508@shadowen.org> <46A5F275.7060905@garzik.org> <je3aze6k1b.fsf@sykes.suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:58931 "EHLO mo10.iij4u.or.jp"
+Received: from srv5.dvmed.net ([207.36.208.214]:55996 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752480AbXGXNmJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jul 2007 09:42:09 -0400
-In-Reply-To: <20070724201247A.fujita.tomonori@lab.ntt.co.jp>
+	id S1752653AbXGXNo3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jul 2007 09:44:29 -0400
+In-Reply-To: <je3aze6k1b.fsf@sykes.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: fujita.tomonori@lab.ntt.co.jp
-Cc: bharrosh@panasas.com, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+To: Andreas Schwab <schwab@suse.de>
+Cc: Andy Whitcroft <apw@shadowen.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Alessandro Rubini <rubini@vision.unipv.it>, linuxppc-dev@ozlabs.org, Paul Mackerras <paulus@samba.org>, Jens Axboe <jens.axboe@oracle.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Andrew Morton <akpm@linux-foundation.org>
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
-Date: Tue, 24 Jul 2007 20:12:47 +0900
-
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
-> Date: Tue, 24 Jul 2007 13:01:34 +0300
+Andreas Schwab wrote:
+> Jeff Garzik <jeff@garzik.org> writes:
 > 
-> > FUJITA Tomonori wrote:
-> > > From: Boaz Harrosh <bharrosh@panasas.com>
-> > > Subject: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
-> > > Date: Tue, 24 Jul 2007 11:47:50 +0300
-> > > 
-> > >> As Jens said, there is nothing common to scsi_sgtable and 
-> > >> sglists. Save the fact that it is a massive conflict at 
-> > >> scsi-ml. They touch all the same places.
-> > >>
-> > >> Proposed is a simple way out. Two patchsets That produce the
-> > >> same output at the end.
-> > >>
-> > >> One: scsi_sgtable_than_sg-chaining
-> > >> Two: sg-chaining_than_scsi_sgtable
-> > > 
-> > > Hmm, I thought that I've already posted a scsi_sgtable patch working
-> > > with sg-chaining together.
-> > > 
-> > > http://marc.info/?l=linux-scsi&m=118519987632758&w=2
-> > > 
-> > > I quoted from my mail:
-> > > 
-> > > ---
-> > > I think that the main issue of integrating sgtable and sglist is how
-> > > to put scatterlist to scsi_sgtable structure.
-> > > 
-> > > If we allocate a scsi_sgtable structure and sglists separately, the
-> > > code is pretty simple. But probably it's not the best way from the
-> > > perspective of performance.
-> > > 
-> > I was just answering your other mail when this came in so I'll answer
-> > here. 
-> > This Approach is exactly the scsi_data_buffer approach we both
-> > had solutions for. At the time I was all for that approach because it
-> > is safer and could be kept compatible to old drivers. (Less work for
-> > me) But it was decided against it. So suggesting it again is plain
-> > going back.
-> 
-> Well, the approach to shuffle the entire request setup around was
-> rejected. But was the approach to use two data buffers for bidi
-> completely rejected?
+>> Andy Whitcroft wrote:
+>>> Andrew Morton wrote:
+>>>
+>>>>> +	start_sector = req->sector*priv->blocking_factor;
+>>>>> +	sectors = req->nr_sectors*priv->blocking_factor;
+>>>> s/*/ * /.  checkpatch missed this.
+>>> Ok, this is something we need to decide on.  Currently we only ask for
+>>> consistent spacing on all the mathematic operators.  This is mostly as
+>>> we do see a large number of non-spaced uses in defines and the like.
+>>>
+>>> I am happy to expand these tests so they are always spaced on both sides
+>>> style if that is the preference.
+>> That is most definitely the preference:  spaces surround operators.
+>                                                           ^binary
 
-I should have said that, was the approach to use separate buffer for
-sglists instead of putting the sglists and the parameters in one
-buffer completely rejected?
+Yes.  :)
+
+	Jeff
+
+
+
