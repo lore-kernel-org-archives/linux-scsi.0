@@ -1,50 +1,34 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] unexport sg v3 helper functions
-Date: Tue, 24 Jul 2007 13:34:33 +0200
-Message-ID: <20070724113433.GR3287@kernel.dk>
-References: <20070722033008L.tomof@acm.org> <20070723120222.GI11657@kernel.dk> <46A57410.1090605@torque.net> <20070724064954.GD3287@kernel.dk> <46A5E12E.2060804@torque.net>
+From: Andy Whitcroft <apw@shadowen.org>
+Subject: Re: [patch 1/3] ps3: Disk Storage Driver
+Date: Tue, 24 Jul 2007 12:44:16 +0100
+Message-ID: <46A5E610.7000508@shadowen.org>
+References: <20070716161539.075822000@pademelon.sonytel.be>	<20070716162206.392129000@pademelon.sonytel.be> <20070718163637.3f0e0164.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:26375 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765572AbXGXLeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jul 2007 07:34:11 -0400
-Content-Disposition: inline
-In-Reply-To: <46A5E12E.2060804@torque.net>
+Received: from hellhawk.shadowen.org ([80.68.90.175]:3799 "EHLO
+	hellhawk.shadowen.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752058AbXGXLof (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 07:44:35 -0400
+In-Reply-To: <20070718163637.3f0e0164.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Paul Mackerras <paulus@samba.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, Alessandro Rubini <rubini@vision.unipv.it>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Geoff Levand <geoffrey.levand@am.sony.com>, Jens Axboe <jens.axboe@oracle.com>
 
-On Tue, Jul 24 2007, Douglas Gilbert wrote:
-> Jens Axboe wrote:
-> > On Mon, Jul 23 2007, Douglas Gilbert wrote:
-> >> Jens Axboe wrote:
-> >>> On Sun, Jul 22 2007, FUJITA Tomonori wrote:
-> >>>> blk_fill_sghdr_rq, blk_unmap_sghdr_rq, and blk_complete_sghdr_rq were
-> >>>> exported for bsg, however bsg was changed to support only sg v4.
-> >>>>
-> >>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >>> Acked-by: Jens Axboe <jens.axboe@oracle.com>
-> >> Why?
-> > 
-> > The reasoning is right there, a few lines up - bsg doesn't support sg v3
-> > commands.
+Andrew Morton wrote:
+
+>> +	start_sector = req->sector*priv->blocking_factor;
+>> +	sectors = req->nr_sectors*priv->blocking_factor;
 > 
-> I can read.
+> s/*/ * /.  checkpatch missed this.
 
-Then write better questions "Why?" isn't very useful.
+Ok, this is something we need to decide on.  Currently we only ask for
+consistent spacing on all the mathematic operators.  This is mostly as
+we do see a large number of non-spaced uses in defines and the like.
 
-> Why doesn't bsg support sg v3 commands?
+I am happy to expand these tests so they are always spaced on both sides
+style if that is the preference.
 
-You should know, the discussion on that happened at the storage summit
-and on linux-scsi. It was decided to drop sg v3 support from bsg, and
-only focus on making bsg the driver for sg v4 commands.
-
-As you know, we already have dual paths for sg v3. For sg v4 we can get
-rid of that pain, and just have a single driver for handling that.
-
--- 
-Jens Axboe
-
+-apw
