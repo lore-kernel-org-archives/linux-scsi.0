@@ -1,75 +1,75 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: 2.6.23 regression: lpfc_sli.c: off-by-10
-Date: Tue, 24 Jul 2007 09:24:12 -0400
-Message-ID: <46A5FD7C.6050104@emulex.com>
-References: <20070723003215.GQ26212@stusta.de>
-Reply-To: James.Smart@Emulex.Com
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
+ IO sg-chaining
+Date: Tue, 24 Jul 2007 22:41:14 +0900
+Message-ID: <20070724110138P.tomof@acm.org>
+References: <20070724181635G.fujita.tomonori@lab.ntt.co.jp>
+	<46A5CDFE.3020801@panasas.com>
+	<20070724201247A.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:55209 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754208AbXGXNb4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 09:31:56 -0400
-In-Reply-To: <20070723003215.GQ26212@stusta.de>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:58931 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752480AbXGXNmJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 24 Jul 2007 09:42:09 -0400
+In-Reply-To: <20070724201247A.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@stusta.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+To: fujita.tomonori@lab.ntt.co.jp
+Cc: bharrosh@panasas.com, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
-Adrian,
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
+Date: Tue, 24 Jul 2007 20:12:47 +0900
 
-Thanks.
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
+> Date: Tue, 24 Jul 2007 13:01:34 +0300
+> 
+> > FUJITA Tomonori wrote:
+> > > From: Boaz Harrosh <bharrosh@panasas.com>
+> > > Subject: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
+> > > Date: Tue, 24 Jul 2007 11:47:50 +0300
+> > > 
+> > >> As Jens said, there is nothing common to scsi_sgtable and 
+> > >> sglists. Save the fact that it is a massive conflict at 
+> > >> scsi-ml. They touch all the same places.
+> > >>
+> > >> Proposed is a simple way out. Two patchsets That produce the
+> > >> same output at the end.
+> > >>
+> > >> One: scsi_sgtable_than_sg-chaining
+> > >> Two: sg-chaining_than_scsi_sgtable
+> > > 
+> > > Hmm, I thought that I've already posted a scsi_sgtable patch working
+> > > with sg-chaining together.
+> > > 
+> > > http://marc.info/?l=linux-scsi&m=118519987632758&w=2
+> > > 
+> > > I quoted from my mail:
+> > > 
+> > > ---
+> > > I think that the main issue of integrating sgtable and sglist is how
+> > > to put scatterlist to scsi_sgtable structure.
+> > > 
+> > > If we allocate a scsi_sgtable structure and sglists separately, the
+> > > code is pretty simple. But probably it's not the best way from the
+> > > perspective of performance.
+> > > 
+> > I was just answering your other mail when this came in so I'll answer
+> > here. 
+> > This Approach is exactly the scsi_data_buffer approach we both
+> > had solutions for. At the time I was all for that approach because it
+> > is safer and could be kept compatible to old drivers. (Less work for
+> > me) But it was decided against it. So suggesting it again is plain
+> > going back.
+> 
+> Well, the approach to shuffle the entire request setup around was
+> rejected. But was the approach to use two data buffers for bidi
+> completely rejected?
 
-Syntax-wise, it is incorrect. However there's no risk.  The datastructure
-its indexing into is a union, and its size is sufficient for the index.
-The union supports old and new firmware interfaces. We mistakenly used the
-array for the old interface and should have used the (larger) array for
-the newer interface.
-
-We're posting a set of fixes later this week and will include the fix for
-this.
-
--- james s
-
-
-Adrian Bunk wrote:
-> The Coverity checker spotted the following off-by-10
-> in drivers/scsi/lpfc/lpfc_sli.c:
-> 
-> 
-> <--  snip  -->
-> 
-> ...
-> static int
-> lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
->                             struct lpfc_iocbq *saveq)
-> {
-> ...
->                         saveq->context3 = lpfc_sli_replace_hbqbuff(phba,
->                                                 irsp->un.ulpWord[15]);
-> ...
-> 
-> <--  snip  -->
-> 
-> 
-> due to the following code in drivers/scsi/lpfc/lpfc_hw.h:
-> 
-> 
-> <--  snip  -->
-> 
-> ...
-> #define IOCB_WORD_SZ    8
-> ...
-> typedef struct _IOCB {  /* IOCB structure */
-> ...
->                 uint32_t ulpWord[IOCB_WORD_SZ - 2];     /* generic 6 'words' */
-> ...
-> 
-> <--  snip  -->
-> 
-> 
-> cu
-> Adrian
-> 
+I should have said that, was the approach to use separate buffer for
+sglists instead of putting the sglists and the parameters in one
+buffer completely rejected?
