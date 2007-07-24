@@ -1,60 +1,32 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: QLGC,ISP SCSI driver not finding attached devices
-Date: Mon, 23 Jul 2007 19:49:27 -0700 (PDT)
-Message-ID: <20070723.194927.41635520.davem@davemloft.net>
-References: <Pine.LNX.4.61.0707201822250.8013@mtfhpc.demon.co.uk>
-	<Pine.LNX.4.61.0707232315510.16213@mtfhpc.demon.co.uk>
-	<1185238223.3417.42.camel@localhost.localdomain>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] unexport sg v3 helper functions
+Date: Mon, 23 Jul 2007 23:37:52 -0400
+Message-ID: <46A57410.1090605@torque.net>
+References: <20070722033008L.tomof@acm.org> <20070723120222.GI11657@kernel.dk>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1185238223.3417.42.camel@localhost.localdomain>
-Sender: sparclinux-owner@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: mark@mtfhpc.demon.co.uk, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53531 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753313AbXGXDit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jul 2007 23:38:49 -0400
+In-Reply-To: <20070723120222.GI11657@kernel.dk>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Date: Mon, 23 Jul 2007 19:50:23 -0500
-
-> On Mon, 2007-07-23 at 23:41 +0100, Mark Fortescue wrote:
-> > For targets with a disk connected, I get scan responses of:
-> >      scsi scan: INQUIRY failed with code 0x8000002
-> > after app 170ms.
+Jens Axboe wrote:
+> On Sun, Jul 22 2007, FUJITA Tomonori wrote:
+>> blk_fill_sghdr_rq, blk_unmap_sghdr_rq, and blk_complete_sghdr_rq were
+>> exported for bsg, however bsg was changed to support only sg v4.
+>>
+>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 > 
-> Thats SCSI status 0x02 (which is CHECK_CONDITION) and driver byte of
-> 0x08, which is DRIVER_SENSE (as in the device returned a sense code).
-> This is really strange, because the INQUIRY command isn't supposed to be
-> allowed to return a sense code for precisely this initial scan reason.
-> This tends to point to a device failure.
+> Acked-by: Jens Axboe <jens.axboe@oracle.com>
 
-Devices return CHECK_CONDITION and give SENSE (usually a
-UNIT_ATTENTION) when they are given an INQUIRY command too soon after
-a scsi bus reset, I saw it all the time when bringing up the new ESP
-driver.
+Why?
 
-There is even special case code in the SCSI bus scan that accepts
-certain special cases of UNIT_ATTENTION check conditions as valid:
 
-		if (result) {
-			/*
-			 * not-ready to ready transition [asc/ascq=0x28/0x0]
-			 * or power-on, reset [asc/ascq=0x29/0x0], continue.
-			 * INQUIRY should not yield UNIT_ATTENTION
-			 * but many buggy devices do so anyway. 
-			 */
-			if ((driver_byte(result) & DRIVER_SENSE) &&
-			    scsi_sense_valid(&sshdr)) {
-				if ((sshdr.sense_key == UNIT_ATTENTION) &&
-				    ((sshdr.asc == 0x28) ||
-				     (sshdr.asc == 0x29)) &&
-				    (sshdr.ascq == 0))
-					continue;
-			}
-		}
-
-asc/ascq values that do not pass this test are what Mark is seeing.
-
-And again this is almost always because the device is being sent
-the INQUIRY too soon after a scsi bus reset.
