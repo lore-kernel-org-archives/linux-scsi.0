@@ -1,37 +1,32 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] unexport sg v3 helper functions
-Date: Tue, 24 Jul 2007 08:49:55 +0200
-Message-ID: <20070724064954.GD3287@kernel.dk>
-References: <20070722033008L.tomof@acm.org> <20070723120222.GI11657@kernel.dk> <46A57410.1090605@torque.net>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: unexpected scsi timeout
+Date: Tue, 24 Jul 2007 17:20:02 +0900
+Message-ID: <46A5B632.8040201@gmail.com>
+References: <46A0A462.2090407@sw.ru>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([80.160.20.94]:9116 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755085AbXGXGte (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 24 Jul 2007 02:49:34 -0400
-Content-Disposition: inline
-In-Reply-To: <46A57410.1090605@torque.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <46A0A462.2090407@sw.ru>
+Sender: linux-ide-owner@vger.kernel.org
+To: Vasily Averin <vvs@sw.ru>
+Cc: Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devel@openvz.org, Albert Lee <albertcc@tw.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Douglas Gilbert <dougg@torque.net>
-Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Mon, Jul 23 2007, Douglas Gilbert wrote:
-> Jens Axboe wrote:
-> > On Sun, Jul 22 2007, FUJITA Tomonori wrote:
-> >> blk_fill_sghdr_rq, blk_unmap_sghdr_rq, and blk_complete_sghdr_rq were
-> >> exported for bsg, however bsg was changed to support only sg v4.
-> >>
-> >> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > 
-> > Acked-by: Jens Axboe <jens.axboe@oracle.com>
+[cc'ing Albert]
+
+Vasily Averin wrote:
+> Tejun, Jeff
 > 
-> Why?
+> I've noticed that some scsi commands for DVD-drive attached to pata_via
+> successfully finishes without any delays but reports about TIMEOUT condition. It
+> happens because of ATA_ERR bit is set in status register. As result for each
+> command  Error Handler thread awakened, requests sense buffer and go to sleep again.
 
-The reasoning is right there, a few lines up - bsg doesn't support sg v3
-commands.
+Need more info.  Please post boot dmesg and the result of 'lspci -nn'
+and 'hdparm -I /dev/srX' and when such errors occur.
+
+Thanks.
 
 -- 
-Jens Axboe
-
+tejun
