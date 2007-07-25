@@ -1,22 +1,22 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
  IO sg-chaining
-Date: Wed, 25 Jul 2007 22:22:20 +0300
-Message-ID: <46A7A2EC.6040400@panasas.com>
+Date: Wed, 25 Jul 2007 22:50:47 +0300
+Message-ID: <46A7A997.4000709@panasas.com>
 References: <46A60633.2020904@panasas.com>	<1185293406.3488.5.camel@localhost.localdomain>	<46A70944.6030005@panasas.com> <20070725174258T.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:8178 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:16984 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764208AbXGYTXM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 15:23:12 -0400
+	with ESMTP id S1752570AbXGYTv3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 15:51:29 -0400
 In-Reply-To: <20070725174258T.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bhalevy@panasas.com, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bhalevy@panasas.com, James.Bottomley@SteelEye.com
+Cc: tomof@acm.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
 
 FUJITA Tomonori wrote:
 > From: Benny Halevy <bhalevy@panasas.com>
@@ -52,7 +52,6 @@ Here is just scsi_sgtable, no chaining, over scsi-misc + more
 drivers:
 http://www.bhalevy.com/open-osd/download/scsi_sgtable/scsi-misc
 
-
 Next week I will try to mount lots of scsi_debug devices and
 use large parallel IO to try and find a difference. I will
 test Jens's sglist-arch tree against above sglist-arch+scsi_sgtable
@@ -81,9 +80,7 @@ But is totally untested.
 I will add this branch to the above tests, but I suspect that
 they are identical in every way to current code.
 
-
 For review here is the main scsi_data_buff patch:
-
 ------
 From: Boaz Harrosh <bharrosh@panasas.com>
 Date: Wed, 25 Jul 2007 20:19:14 +0300
