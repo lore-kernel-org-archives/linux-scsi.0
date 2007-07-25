@@ -1,37 +1,40 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: unexpected scsi timeout
-Date: Wed, 25 Jul 2007 16:42:37 +0900
-Message-ID: <46A6FEED.2050403@gmail.com>
-References: <46A0A462.2090407@sw.ru> <46A5B632.8040201@gmail.com> <46A5CF7B.40102@sw.ru> <46A6E4A4.6080608@tw.ibm.com> <46A6FD8E.7090803@sw.ru>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH AB1/5] SCSI: SG pools allocation cleanup.
+Date: Wed, 25 Jul 2007 11:08:22 +0300
+Message-ID: <46A704F6.2040500@panasas.com>
+References: <46A5BCB6.9050102@panasas.com> <46A5BDEB.3040506@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <46A6FD8E.7090803@sw.ru>
-Sender: linux-ide-owner@vger.kernel.org
-To: Vasily Averin <vvs@sw.ru>
-Cc: albertl@mail.com, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devel@openvz.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31326 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763850AbXGYIJb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 04:09:31 -0400
+In-Reply-To: <46A5BDEB.3040506@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Vasily Averin wrote:
-> Albert Lee wrote:
->>>> Vasily Averin wrote:
->>>>> I've noticed that some scsi commands for DVD-drive attached to pata_via
->>>>> successfully finishes without any delays but reports about TIMEOUT condition. It
->>>>> happens because of ATA_ERR bit is set in status register. As result for each
->>>>> command  Error Handler thread awakened, requests sense buffer and go to sleep again.
->>>> Need more info.  Please post boot dmesg and the result of 'lspci -nn'
->>>> and 'hdparm -I /dev/srX' and when such errors occur.
->> Your log looks ok. It's normal for TEST_UNIT_READY to return ATA_ERR when no disc
->> inside and libata EH triggered to request sense.
-> 
-> It's a bit strange for me, IMHO other scsi drivers requests sense buffer without
-> EH thread assistance.
-> Currently we know that ATA_ERR can be returned; it is not error, but one of
-> expected responses. Why we cannot request sense without EH? I would like to
-> understand is it implementation drawback or I missed something probably?
+I have a very serious and stupid bug in this patch
+which did not show in my tests. Please forgive me.
+Below is a diff of the bug. As an answer to this mail 
+I will resend 2 revised patches AB1, and A2 is also affected.
 
-That was a design choice.  It's easier to implement that way.
+Sorry
+Boaz
 
--- 
-tejun
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c065de5..29adcc6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1649,7 +1649,7 @@ int __init scsi_init_queue(void)
+ 
+ 	for (i = 0, size = 8; i < SG_MEMPOOL_NR; i++, size <<= 1) {
+ 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
+-		sgp->size = size;
++		sgp->size = (i != SG_MEMPOOL_NR-1) ? size : SCSI_MAX_SG_SEGMENTS;
+ 		sgp->slab = kmem_cache_create(sg_names[i],
+ 				sgp->size*sizeof(struct scatterlist),
+ 				0, 0, NULL);
+
