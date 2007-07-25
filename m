@@ -1,419 +1,414 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
- IO sg-chaining
-Date: Wed, 25 Jul 2007 22:50:47 +0300
-Message-ID: <46A7A997.4000709@panasas.com>
-References: <46A60633.2020904@panasas.com>	<1185293406.3488.5.camel@localhost.localdomain>	<46A70944.6030005@panasas.com> <20070725174258T.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] sgtable over sglist (Re: [RFC 4/8] scsi-ml: scsi_sgtable
+ implementation)
+Date: Wed, 25 Jul 2007 22:53:50 +0300
+Message-ID: <46A7AA4E.6020200@panasas.com>
+References: <20070718180350.GD11657@kernel.dk>	<469E6838.8070405@panasas.com>	<20070718201709.GM11657@kernel.dk> <20070723225016C.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:16984 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18736 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752570AbXGYTv3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 15:51:29 -0400
-In-Reply-To: <20070725174258T.fujita.tomonori@lab.ntt.co.jp>
+	with ESMTP id S1750798AbXGYTzY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 15:55:24 -0400
+In-Reply-To: <20070723225016C.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bhalevy@panasas.com, James.Bottomley@SteelEye.com
-Cc: tomof@acm.org, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, bhalevy@panasas.com, michaelc@cs.wisc.edu, James.Bottomley@SteelEye.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+
+Comments about this patch embedded inside
 
 FUJITA Tomonori wrote:
-> From: Benny Halevy <bhalevy@panasas.com>
-> Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
-> Date: Wed, 25 Jul 2007 11:26:44 +0300
 > 
->>> However, I'm perfectly happy to go with whatever the empirical evidence
->>> says is best .. and hopefully, now we don't have to pick this once and
->>> for all time ... we can alter it if whatever is chosen proves to be
->>> suboptimal.
->> I agree.  This isn't a catholic marriage :)
->> We'll run some performance experiments comparing the sgtable chaining
->> implementation vs. a scsi_data_buff implementation pointing
->> at a possibly chained sglist and let's see if we can measure
->> any difference.  We'll send results as soon as we have them.
+> I've attached the sgtable patch for review. It's against the
+> sglist-arch branch in Jens' tree.
 > 
-> I did some tests with your sgtable patchset and the approach to use
-> separate buffer for sglists. As expected, there was no performance
-> difference with small I/Os. I've not tried very large I/Os, which
-> might give some difference.
+> ---
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] move all the I/O descriptors to a new scsi_sgtable structure
 > 
-> The patchset to use separate buffer for sglists is available:
+> based on Boaz Harrosh <bharrosh@panasas.com> scsi_sgtable patch.
 > 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-bidi.git simple-sgtable
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/scsi/scsi_lib.c  |   92 +++++++++++++++++++++++++++------------------
+>  include/scsi/scsi_cmnd.h |   39 +++++++++++++------
+>  2 files changed, 82 insertions(+), 49 deletions(-)
 > 
-> 
-> Can you clean up your patchset and upload somewhere?
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 5fb1048..2fa1852 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -52,6 +52,8 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
+>  };
+>  #undef SP
+>  
+> +static struct kmem_cache *scsi_sgtable_cache;
+> +
+One more slab pool to do regular IO
 
-Sorry sure. Here is scsi_sgtable complete work over linux-block:
-http://www.bhalevy.com/open-osd/download/scsi_sgtable/linux-block
- 
-Here is just scsi_sgtable, no chaining, over scsi-misc + more
-drivers:
-http://www.bhalevy.com/open-osd/download/scsi_sgtable/scsi-misc
+>  static void scsi_run_queue(struct request_queue *q);
+>  
+>  /*
+> @@ -731,16 +733,27 @@ static inline unsigned int scsi_sgtable_index(unsigned short nents)
+>  	return index;
+>  }
+>  
+> -struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+> +struct scsi_sgtable *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask,
+> +					int sg_count)
+>  {
+>  	struct scsi_host_sg_pool *sgp;
+>  	struct scatterlist *sgl, *prev, *ret;
+> +	struct scsi_sgtable *sgt;
+>  	unsigned int index;
+>  	int this, left;
+>  
+> -	BUG_ON(!cmd->use_sg);
+> +	sgt = kmem_cache_zalloc(scsi_sgtable_cache, gfp_mask);
+> +	if (!sgt)
+> +		return NULL;
+One more allocation that can fail for every io. Even if we have
+a scsi_cmnd.
 
-Next week I will try to mount lots of scsi_debug devices and
-use large parallel IO to try and find a difference. I will
-test Jens's sglist-arch tree against above sglist-arch+scsi_sgtable
+> +
+> +	/*
+> +	 * don't allow subsequent mempool allocs to sleep, it would
+> +	 * violate the mempool principle.
+> +	 */
+> +	gfp_mask &= ~__GFP_WAIT;
+> +	gfp_mask |= __GFP_HIGH;
+We used to sometime wait for that Large 128 scatterlist full page.
+But now this small allocation is probably good. but we no longer
+wait for the big allocation below.
 
-I have lots of reservations about Tomo's last patches. For me
-they are a regression. They use 3 allocations per command instead
-of 2. They use an extra pointer and an extra global slab_pool. And
-for what, for grouping some scsi_cmnd members in a substructure.
-If we want to go the "pointing" way, keeping our extra scatterlist
-and our base_2 count on most ARCHs. Than we can just use the 
-scsi_data_buff embedded inside scsi_cmnd. 
+>  
+> -	left = cmd->use_sg;
+> +	left = sg_count;
+>  	ret = prev = NULL;
+>  	do {
+>  		this = left;
+> @@ -764,7 +777,7 @@ struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+>  		 * first loop through, set initial index and return value
+>  		 */
+>  		if (!ret) {
+> -			cmd->sglist_len = index;
+> +			sgt->sglist_len = index;
+>  			ret = sgl;
+>  		}
+>  
+> @@ -776,21 +789,18 @@ struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+>  		if (prev)
+>  			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
+>  
+> -		/*
+> -		 * don't allow subsequent mempool allocs to sleep, it would
+> -		 * violate the mempool principle.
+> -		 */
+> -		gfp_mask &= ~__GFP_WAIT;
+> -		gfp_mask |= __GFP_HIGH;
+>  		prev = sgl;
+>  	} while (left);
+>  
+>  	/*
+> -	 * ->use_sg may get modified after dma mapping has potentially
+> +	 * ->sg_count may get modified after dma mapping has potentially
+>  	 * shrunk the number of segments, so keep a copy of it for free.
+>  	 */
+> -	cmd->__use_sg = cmd->use_sg;
+> -	return ret;
+> +	sgt->sg_count = sg_count;
+> +	sgt->__sg_count = sg_count;
+> +	sgt->sglist = ret;
+> +	cmd->sgtable = sgt;
+We used to set that in scsi_init_io. So this scsi_alloc_sgtable()
+can be called twice for bidi. Now we can not. Also the API change
+is not friendly for bidi and will have to change. (It used to be good)
+If you set it here why do you return it.
 
-The second scsi_data_buff for bidi can come either from an extra 
-slab_pool like in Tomo's patch - bidi can pay - or in scsi.c at 
-scsi_setup_command_freelist() the code can inspect Tomo's flag 
-to the request_queue QUEUE_FLAG_BIDI and will than allocate a 
-bigger scsi_cmnd in the free list.
+> +	return sgt;
+>  enomem:
+>  	if (ret) {
+>  		/*
+> @@ -809,6 +819,8 @@ enomem:
+>  
+>  		mempool_free(prev, sgp->pool);
+>  	}
+> +	kmem_cache_free(scsi_sgtable_cache, sgt);
+> +
+>  	return NULL;
+>  }
+>  
+> @@ -816,21 +828,22 @@ EXPORT_SYMBOL(scsi_alloc_sgtable);
+>  
+>  void scsi_free_sgtable(struct scsi_cmnd *cmd)
+>  {
+> -	struct scatterlist *sgl = cmd->request_buffer;
+> +	struct scsi_sgtable *sgt = cmd->sgtable;
+> +	struct scatterlist *sgl = sgt->sglist;
+>  	struct scsi_host_sg_pool *sgp;
+>  
+> -	BUG_ON(cmd->sglist_len >= SG_MEMPOOL_NR);
+> +	BUG_ON(sgt->sglist_len >= SG_MEMPOOL_NR);
+>  
+>  	/*
+>  	 * if this is the biggest size sglist, check if we have
+>  	 * chained parts we need to free
+>  	 */
+> -	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
+> +	if (sgt->__sg_count > SCSI_MAX_SG_SEGMENTS) {
+>  		unsigned short this, left;
+>  		struct scatterlist *next;
+>  		unsigned int index;
+>  
+> -		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
+> +		left = sgt->__sg_count - (SCSI_MAX_SG_SEGMENTS - 1);
+>  		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
+>  		while (left && next) {
+>  			sgl = next;
+> @@ -854,11 +867,12 @@ void scsi_free_sgtable(struct scsi_cmnd *cmd)
+>  		/*
+>  		 * Restore original, will be freed below
+>  		 */
+> -		sgl = cmd->request_buffer;
+> +		sgl = sgt->sglist;
+>  	}
+>  
+> -	sgp = scsi_sg_pools + cmd->sglist_len;
+> +	sgp = scsi_sg_pools + sgt->sglist_len;
+>  	mempool_free(sgl, sgp->pool);
+> +	kmem_cache_free(scsi_sgtable_cache, sgt);
+>  }
+>  
+>  EXPORT_SYMBOL(scsi_free_sgtable);
+> @@ -882,15 +896,14 @@ EXPORT_SYMBOL(scsi_free_sgtable);
+>   */
+>  static void scsi_release_buffers(struct scsi_cmnd *cmd)
+>  {
+> -	if (cmd->use_sg)
+> +	if (cmd->sgtable)
+>  		scsi_free_sgtable(cmd);
+>  
+>  	/*
+>  	 * Zero these out.  They now point to freed memory, and it is
+>  	 * dangerous to hang onto the pointers.
+>  	 */
+> -	cmd->request_buffer = NULL;
+> -	cmd->request_bufflen = 0;
+> +	cmd->sgtable = NULL;
+>  }
+>  
+>  /*
+> @@ -924,13 +937,14 @@ static void scsi_release_buffers(struct scsi_cmnd *cmd)
+>  void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  {
+>  	int result = cmd->result;
+> -	int this_count = cmd->request_bufflen;
+> +	int this_count = scsi_bufflen(cmd);
+>  	request_queue_t *q = cmd->device->request_queue;
+>  	struct request *req = cmd->request;
+>  	int clear_errors = 1;
+>  	struct scsi_sense_hdr sshdr;
+>  	int sense_valid = 0;
+>  	int sense_deferred = 0;
+> +	int resid = scsi_get_resid(cmd);
+>  
+>  	scsi_release_buffers(cmd);
+>  
+> @@ -956,7 +970,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+>  				req->sense_len = len;
+>  			}
+>  		}
+> -		req->data_len = cmd->resid;
+> +		req->data_len = resid;
+>  	}
+>  
+>  	/*
+> @@ -1098,6 +1112,7 @@ EXPORT_SYMBOL(scsi_io_completion);
+>  static int scsi_init_io(struct scsi_cmnd *cmd)
+>  {
+>  	struct request     *req = cmd->request;
+> +	struct scsi_sgtable *sgt;
+>  	int		   count;
+>  
+>  	/*
+> @@ -1105,35 +1120,36 @@ static int scsi_init_io(struct scsi_cmnd *cmd)
+>  	 * but now we do (it makes highmem I/O easier to support without
+>  	 * kmapping pages)
+>  	 */
+> -	cmd->use_sg = req->nr_phys_segments;
+> +	sgt = scsi_alloc_sgtable(cmd, GFP_ATOMIC, req->nr_phys_segments);
+>  
+>  	/*
+>  	 * If sg table allocation fails, requeue request later.
+>  	 */
+> -	cmd->request_buffer = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
+> -	if (unlikely(!cmd->request_buffer)) {
+> +	if (unlikely(!sgt)) {
+>  		scsi_unprep_request(req);
+>  		return BLKPREP_DEFER;
+>  	}
+>  
+> +	cmd->sgtable = sgt;
+> +
+Set second time
 
-I have coded that approach and it is very simple:
-http://www.bhalevy.com/open-osd/download/scsi_data_buff
+>  	req->buffer = NULL;
+>  	if (blk_pc_request(req))
+> -		cmd->request_bufflen = req->data_len;
+> +		sgt->length = req->data_len;
+>  	else
+> -		cmd->request_bufflen = req->nr_sectors << 9;
+> +		sgt->length = req->nr_sectors << 9;
+>  
+>  	/* 
+>  	 * Next, walk the list, and fill in the addresses and sizes of
+>  	 * each segment.
+>  	 */
+> -	count = blk_rq_map_sg(req->q, req, cmd->request_buffer);
+> -	if (likely(count <= cmd->use_sg)) {
+> -		cmd->use_sg = count;
+> +	count = blk_rq_map_sg(req->q, req, cmd->sgtable->sglist);
+> +	if (likely(count <= sgt->sg_count)) {
+> +		sgt->sg_count = count;
+>  		return BLKPREP_OK;
+>  	}
+>  
+>  	printk(KERN_ERR "Incorrect number of segments after building list\n");
+> -	printk(KERN_ERR "counted %d, received %d\n", count, cmd->use_sg);
+> +	printk(KERN_ERR "counted %d, received %d\n", count, sgt->sg_count);
+>  	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
+>  			req->current_nr_sectors);
+>  
+> @@ -1189,7 +1205,7 @@ static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
+>  	 * successfully. Since this is a REQ_BLOCK_PC command the
+>  	 * caller should check the request's errors value
+>  	 */
+> -	scsi_io_completion(cmd, cmd->request_bufflen);
+> +	scsi_io_completion(cmd, scsi_bufflen(cmd));
+>  }
+>  
+>  static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+> @@ -1218,9 +1234,7 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+>  		BUG_ON(req->data_len);
+>  		BUG_ON(req->data);
+>  
+> -		cmd->request_bufflen = 0;
+> -		cmd->request_buffer = NULL;
+> -		cmd->use_sg = 0;
+> +		cmd->sgtable = NULL;
+>  		req->buffer = NULL;
+>  	}
+>  
+> @@ -1786,6 +1800,10 @@ int __init scsi_init_queue(void)
+>  		return -ENOMEM;
+>  	}
+>  
+> +	scsi_sgtable_cache = kmem_cache_create("scsi_sgtable",
+> +					       sizeof(struct scsi_sgtable),
+> +					       0, 0, NULL);
+> +
+Extra pool allocation
 
-They are over Jens's sglist-arch branch
-I have revised all scsi-ml places and it all compiles
-But is totally untested.
+>  	for (i = 0; i < SG_MEMPOOL_NR; i++) {
+>  		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
+>  		int size = sgp->size * sizeof(struct scatterlist);
+> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+> index 937b3c4..9ead940 100644
+> --- a/include/scsi/scsi_cmnd.h
+> +++ b/include/scsi/scsi_cmnd.h
+> @@ -11,6 +11,14 @@ struct scatterlist;
+>  struct Scsi_Host;
+>  struct scsi_device;
+>  
+> +struct scsi_sgtable {
+> +	unsigned length;
+> +	int resid;
+> +	short sg_count;
+> +	short __sg_count;
+> +	short sglist_len;
+> +	struct scatterlist *sglist;
+> +};
+This is not a table it is Just that plain old scsi_data_buff.
+sgtable is meant to say an header immediately followed by an
+sg-array. What makes it a table is the: 
+"struct scatterlist sglist[0];" At the end
 
-I will add this branch to the above tests, but I suspect that
-they are identical in every way to current code.
+>  
+>  /* embedded in scsi_cmnd */
+>  struct scsi_pointer {
+> @@ -64,10 +72,9 @@ struct scsi_cmnd {
+>  	/* These elements define the operation we are about to perform */
+>  #define MAX_COMMAND_SIZE	16
+>  	unsigned char cmnd[MAX_COMMAND_SIZE];
+> -	unsigned request_bufflen;	/* Actual request size */
+>  
+>  	struct timer_list eh_timeout;	/* Used to time out the command. */
+> -	void *request_buffer;		/* Actual requested buffer */
+> +	struct scsi_sgtable *sgtable;
+>  
+>  	/* These elements define the operation we ultimately want to perform */
+>  	unsigned short use_sg;	/* Number of pieces of scatter-gather */
+> @@ -83,10 +90,6 @@ struct scsi_cmnd {
+>  				   reconnects.   Probably == sector
+>  				   size */
+>  
+> -	int resid;		/* Number of bytes requested to be
+> -				   transferred less actual number
+> -				   transferred (0 if not supported) */
+> -
+>  	struct request *request;	/* The command we are
+>  				   	   working on */
+>  
+You only removed 3 members but scsi_sgtable as 6
 
-For review here is the main scsi_data_buff patch:
-------
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Wed, 25 Jul 2007 20:19:14 +0300
-Subject: [PATCH] SCSI: scsi_data_buff
+> @@ -133,24 +136,36 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+>  				 size_t *offset, size_t *len);
+>  extern void scsi_kunmap_atomic_sg(void *virt);
+>  
+> -extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
+> +extern struct scsi_sgtable *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t, int);
+>  extern void scsi_free_sgtable(struct scsi_cmnd *);
+>  
+>  extern int scsi_dma_map(struct scsi_cmnd *cmd);
+>  extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+>  
+> -#define scsi_sg_count(cmd) ((cmd)->use_sg)
+> -#define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
+> -#define scsi_bufflen(cmd) ((cmd)->request_bufflen)
+> +static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
+> +{
+> +	return cmd->sgtable ? cmd->sgtable->sg_count : 0;
+> +}
+> +
+> +static inline struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
+> +{
+> +	return cmd->sgtable ? cmd->sgtable->sglist : 0;
+> +}
+> +
+> +static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
+> +{
+> +	return cmd->sgtable ? cmd->sgtable->length : 0;
+> +}
+>  
+>  static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
+>  {
+> -	cmd->resid = resid;
+> +	if (cmd->sgtable)
+> +		cmd->sgtable->resid = resid;
+>  }
+>  
+>  static inline int scsi_get_resid(struct scsi_cmnd *cmd)
+>  {
+> -	return cmd->resid;
+> +	return cmd->sgtable ? cmd->sgtable->resid : 0;
+>  }
+>  
+>  #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
 
-  In preparation for bidi we abstract all IO members of scsi_cmnd
-  that will need to duplicate into a substructure.
-  - Group all IO members of scsi_cmnd into a scsi_data_buff
-    structure.
-  - Adjust accessors to new members.
-  - scsi_{alloc,free}_sgtable receive a scsi_data_buff instead of
-    scsi_cmnd. And work on it. (Supporting chaining like before)
-  - Adjust scsi_init_io() and  scsi_release_buffers() for above
-    change.
-  - Fix other parts of scsi_lib to members migration. Use accessors
-    where appropriate.
+Please see my scsi_data_buff patches in that other
+thread they solve all thses problems.
 
- Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/scsi_lib.c  |   68 +++++++++++++++++++--------------------------
- include/scsi/scsi_cmnd.h |   34 +++++++++++-----------
- 2 files changed, 46 insertions(+), 56 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d62b184..2b8a865 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -714,16 +714,14 @@ static unsigned scsi_sgtable_index(unsigned nents)
- 	return -1;
- }
- 
--struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+struct scatterlist *scsi_alloc_sgtable(struct scsi_data_buff *sdb, gfp_t gfp_mask)
- {
- 	struct scsi_host_sg_pool *sgp;
- 	struct scatterlist *sgl, *prev, *ret;
- 	unsigned int index;
- 	int this, left;
- 
--	BUG_ON(!cmd->use_sg);
--
--	left = cmd->use_sg;
-+	left = sdb->sg_count;
- 	ret = prev = NULL;
- 	do {
- 		this = left;
-@@ -747,7 +745,7 @@ struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 		 * first loop through, set initial index and return value
- 		 */
- 		if (!ret) {
--			cmd->sg_pool = index;
-+			sdb->sg_pool = index;
- 			ret = sgl;
- 		}
- 
-@@ -769,10 +767,10 @@ struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 	} while (left);
- 
- 	/*
--	 * ->use_sg may get modified after dma mapping has potentially
-+	 * sdb->sg_count may get modified after blk_rq_map_sg() potentially
- 	 * shrunk the number of segments, so keep a copy of it for free.
- 	 */
--	cmd->__use_sg = cmd->use_sg;
-+	sdb->sgs_allocated = sdb->sg_count;
- 	return ret;
- enomem:
- 	if (ret) {
-@@ -797,21 +795,21 @@ enomem:
- 
- EXPORT_SYMBOL(scsi_alloc_sgtable);
- 
--void scsi_free_sgtable(struct scsi_cmnd *cmd)
-+void scsi_free_sgtable(struct scsi_data_buff *sdb)
- {
--	struct scatterlist *sgl = cmd->request_buffer;
-+	struct scatterlist *sgl = sdb->sglist;
- 	struct scsi_host_sg_pool *sgp;
- 
- 	/*
- 	 * if this is the biggest size sglist, check if we have
- 	 * chained parts we need to free
- 	 */
--	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
-+	if (sdb->sgs_allocated > SCSI_MAX_SG_SEGMENTS) {
- 		unsigned short this, left;
- 		struct scatterlist *next;
- 		unsigned int index;
- 
--		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
-+		left = sdb->sgs_allocated - (SCSI_MAX_SG_SEGMENTS - 1);
- 		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
- 		while (left && next) {
- 			sgl = next;
-@@ -833,7 +831,7 @@ void scsi_free_sgtable(struct scsi_cmnd *cmd)
- 		}
- 	}
- 
--	mempool_free(cmd->request_buffer, scsi_sg_pools[cmd->sg_pool].pool);
-+	mempool_free(sdb->sglist, scsi_sg_pools[sdb->sg_pool].pool);
- }
- 
- EXPORT_SYMBOL(scsi_free_sgtable);
-@@ -857,16 +855,10 @@ EXPORT_SYMBOL(scsi_free_sgtable);
-  */
- static void scsi_release_buffers(struct scsi_cmnd *cmd)
- {
--	if (cmd->use_sg)
--		scsi_free_sgtable(cmd);
-+	if (cmd->sdb.sglist)
-+		scsi_free_sgtable(&cmd->sdb);
- 
--	/*
--	 * Zero these out.  They now point to freed memory, and it is
--	 * dangerous to hang onto the pointers.
--	 */
--	cmd->request_buffer = NULL;
--	cmd->request_bufflen = 0;
--	cmd->use_sg = 0;
-+	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
- }
- 
- /*
-@@ -900,7 +892,7 @@ static void scsi_release_buffers(struct scsi_cmnd *cmd)
- void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- {
- 	int result = cmd->result;
--	int this_count = cmd->request_bufflen;
-+	int this_count = scsi_bufflen(cmd);
- 	request_queue_t *q = cmd->device->request_queue;
- 	struct request *req = cmd->request;
- 	int clear_errors = 1;
-@@ -908,8 +900,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	int sense_valid = 0;
- 	int sense_deferred = 0;
- 
--	scsi_release_buffers(cmd);
--
- 	if (result) {
- 		sense_valid = scsi_command_normalize_sense(cmd, &sshdr);
- 		if (sense_valid)
-@@ -932,9 +922,11 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 				req->sense_len = len;
- 			}
- 		}
--		req->data_len = cmd->resid;
-+		req->data_len = scsi_get_resid(cmd);
- 	}
- 
-+	scsi_release_buffers(cmd);
-+
- 	/*
- 	 * Next deal with any sectors which we were able to correctly
- 	 * handle.
-@@ -942,7 +934,6 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, "
- 				      "%d bytes done.\n",
- 				      req->nr_sectors, good_bytes));
--	SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
- 
- 	if (clear_errors)
- 		req->errors = 0;
-@@ -1075,41 +1066,42 @@ static int scsi_init_io(struct scsi_cmnd *cmd)
- {
- 	struct request     *req = cmd->request;
- 	int		   count;
-+	struct scsi_data_buff* sdb = &cmd->sdb;
- 
- 	/*
- 	 * We used to not use scatter-gather for single segment request,
- 	 * but now we do (it makes highmem I/O easier to support without
- 	 * kmapping pages)
- 	 */
--	cmd->use_sg = req->nr_phys_segments;
-+	sdb->sg_count = req->nr_phys_segments;
- 
- 	/*
- 	 * If sg table allocation fails, requeue request later.
- 	 */
--	cmd->request_buffer = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
--	if (unlikely(!cmd->request_buffer)) {
-+	sdb->sglist = scsi_alloc_sgtable(sdb, GFP_ATOMIC);
-+	if (unlikely(!sdb->sglist)) {
- 		scsi_unprep_request(req);
- 		return BLKPREP_DEFER;
- 	}
- 
- 	req->buffer = NULL;
- 	if (blk_pc_request(req))
--		cmd->request_bufflen = req->data_len;
-+		sdb->length = req->data_len;
- 	else
--		cmd->request_bufflen = req->nr_sectors << 9;
-+		sdb->length = req->nr_sectors << 9;
- 
- 	/* 
- 	 * Next, walk the list, and fill in the addresses and sizes of
- 	 * each segment.
- 	 */
--	count = blk_rq_map_sg(req->q, req, cmd->request_buffer);
--	if (likely(count <= cmd->use_sg)) {
--		cmd->use_sg = count;
-+	count = blk_rq_map_sg(req->q, req, sdb->sglist);
-+	if (likely(count <= sdb->sg_count)) {
-+		sdb->sg_count = count;
- 		return BLKPREP_OK;
- 	}
- 
- 	printk(KERN_ERR "Incorrect number of segments after building list\n");
--	printk(KERN_ERR "counted %d, received %d\n", count, cmd->use_sg);
-+	printk(KERN_ERR "counted %d, received %d\n", count, sdb->sg_count);
- 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
- 			req->current_nr_sectors);
- 
-@@ -1165,7 +1157,7 @@ static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
- 	 * successfully. Since this is a REQ_BLOCK_PC command the
- 	 * caller should check the request's errors value
- 	 */
--	scsi_io_completion(cmd, cmd->request_bufflen);
-+	scsi_io_completion(cmd, scsi_bufflen(cmd));
- }
- 
- static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
-@@ -1194,9 +1186,7 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- 		BUG_ON(req->data_len);
- 		BUG_ON(req->data);
- 
--		cmd->request_bufflen = 0;
--		cmd->request_buffer = NULL;
--		cmd->use_sg = 0;
-+		memset(&cmd->sdb, 0, sizeof(cmd->sdb));
- 		req->buffer = NULL;
- 	}
- 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index c7bfc60..89187dc 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -11,6 +11,14 @@ struct scatterlist;
- struct Scsi_Host;
- struct scsi_device;
- 
-+struct scsi_data_buff {
-+	unsigned length;
-+	int resid;
-+	short sg_count;
-+	short sgs_allocated;
-+	short sg_pool;
-+	struct scatterlist* sglist;
-+};
- 
- /* embedded in scsi_cmnd */
- struct scsi_pointer {
-@@ -64,16 +72,10 @@ struct scsi_cmnd {
- 	/* These elements define the operation we are about to perform */
- #define MAX_COMMAND_SIZE	16
- 	unsigned char cmnd[MAX_COMMAND_SIZE];
--	unsigned request_bufflen;	/* Actual request size */
- 
- 	struct timer_list eh_timeout;	/* Used to time out the command. */
--	void *request_buffer;		/* Actual requested buffer */
- 
- 	/* These elements define the operation we ultimately want to perform */
--	unsigned short use_sg;	/* Number of pieces of scatter-gather */
--	unsigned short sg_pool;	/* pool index of allocated sg array */
--	unsigned short __use_sg;
--
- 	unsigned underflow;	/* Return error if less than
- 				   this amount is transferred */
- 
-@@ -83,10 +85,6 @@ struct scsi_cmnd {
- 				   reconnects.   Probably == sector
- 				   size */
- 
--	int resid;		/* Number of bytes requested to be
--				   transferred less actual number
--				   transferred (0 if not supported) */
--
- 	struct request *request;	/* The command we are
- 				   	   working on */
- 
-@@ -118,6 +116,8 @@ struct scsi_cmnd {
- 
- 	unsigned char tag;	/* SCSI-II queued command tag */
- 	unsigned long pid;	/* Process ID, starts at 0. Unique per host. */
-+
-+	struct scsi_data_buff sdb;
- };
- 
- extern struct scsi_cmnd *scsi_get_command(struct scsi_device *, gfp_t);
-@@ -133,35 +133,35 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- 				 size_t *offset, size_t *len);
- extern void scsi_kunmap_atomic_sg(void *virt);
- 
--extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
--extern void scsi_free_sgtable(struct scsi_cmnd *);
-+extern struct scatterlist *scsi_alloc_sgtable(struct scsi_data_buff *, gfp_t);
-+extern void scsi_free_sgtable(struct scsi_data_buff *);
- 
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
- 
- static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
- {
--	return cmd->use_sg;
-+	return cmd->sdb.sg_count;
- }
- 
- static inline struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
- {
--	return ((struct scatterlist *)cmd->request_buffer);
-+	return cmd->sdb.sglist;
- }
- 
- static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
- {
--	return cmd->request_bufflen;
-+	return cmd->sdb.length;
- }
- 
- static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
- {
--	cmd->resid = resid;
-+	cmd->sdb.resid = resid;
- }
- 
- static inline int scsi_get_resid(struct scsi_cmnd *cmd)
- {
--	return cmd->resid;
-+	return cmd->sdb.resid;
- }
- 
- #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
--- 
-1.5.2.2.249.g45fd
-
+Boaz
