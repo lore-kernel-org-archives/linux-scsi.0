@@ -1,414 +1,391 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] sgtable over sglist (Re: [RFC 4/8] scsi-ml: scsi_sgtable
- implementation)
-Date: Wed, 25 Jul 2007 22:53:50 +0300
-Message-ID: <46A7AA4E.6020200@panasas.com>
-References: <20070718180350.GD11657@kernel.dk>	<469E6838.8070405@panasas.com>	<20070718201709.GM11657@kernel.dk> <20070723225016C.tomof@acm.org>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: (resend) scsi0: Unexpected busfree while idle - Adaptec 29160N Ultra160 SCSI adapter
+Date: Thu, 26 Jul 2007 00:05:46 +0200
+Message-ID: <200707260005.46772.jesper.juhl@gmail.com>
+References: <200707090040.32726.jesper.juhl@gmail.com> <9a8748490707141904w5ddc6e03r97c7f0909067d50@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18736 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750798AbXGYTzY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 15:55:24 -0400
-In-Reply-To: <20070723225016C.tomof@acm.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:8006 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755923AbXGYWGv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 18:06:51 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so430438ugf
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jul 2007 15:06:50 -0700 (PDT)
+In-Reply-To: <9a8748490707141904w5ddc6e03r97c7f0909067d50@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, bhalevy@panasas.com, michaelc@cs.wisc.edu, James.Bottomley@SteelEye.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>, "James E. J. Bottomley" <James.Bottomley@steeleye.com>, Andrew Morton <akpm@linux-foundation.org>, James Smart <james.smart@emulex.com>, James.Bottomley@hansenpartnership.com, Jesper Juhl <jesper.juhl@gmail.com>
 
-Comments about this patch embedded inside
 
-FUJITA Tomonori wrote:
+Resending this since all I'm getting is silence and it's quite a problem for 
+this box. I did a few google searches and aparently I'm not the only 
+one having this problem - I see reports going back for years, but no 
+solutions.
+
+I've got heaps of dmesg output if wanted/needed, I'll test patches, 
+suggestions etc. 
+
+Any ideas people?
+
+
+On Sunday 15 July 2007 04:04:50 Jesper Juhl wrote:
+> On 09/07/07, Jesper Juhl <jesper.juhl@gmail.com> wrote:
+> > I just experienced a long hang and a lot of unpleasant messages in dmesg
+> > while building randconfig kernels in a loop.
+> >
 > 
-> I've attached the sgtable patch for review. It's against the
-> sglist-arch branch in Jens' tree.
+> It just happened again without me doing anything special, just normal
+> desktop use, surfing the net, reading email etc. This time the kernel
+> version was 2.6.22-g1db6178c
 > 
-> ---
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] move all the I/O descriptors to a new scsi_sgtable structure
+> This time the start of the messages look like this (slightly different
+> from last time - quoted below):
 > 
-> based on Boaz Harrosh <bharrosh@panasas.com> scsi_sgtable patch.
+> [ 8039.510026] scsi0: Unexpected busfree while idle
+> [ 8039.510036] SEQADDR == 0x18
+> [ 8069.492318] sr 0:0:4:0: Attempting to queue an ABORT message
+> [ 8069.492324] CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+> [ 8069.492342] scsi0: At time of recovery, card was not paused
+> [ 8069.492353] >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+> [ 8069.492357] scsi0: Dumping Card State while idle, at SEQADDR 0x18
+> [ 8069.492362] Card was paused
+> [ 8069.492371] ACCUM = 0xa, SINDEX = 0x48, DINDEX = 0xe4, ARG_2 = 0x2
+> [ 8069.492378] HCNT = 0x0 SCBPTR = 0xb
+> [ 8069.492384] SCSIPHASE[0x0] SCSISIGI[0x0] ERROR[0x0]
+> [ 8069.492406] SCSIBUSL[0x0] LASTPHASE[0x1] SCSISEQ[0x1a]
+> [ 8069.492426] SBLKCTL[0xa] SCSIRATE[0x0] SEQCTL[0x10]
+> [ 8069.492447] SEQ_FLAGS[0xc0] SSTAT0[0x0] SSTAT1[0x0]
+> [ 8069.492467] SSTAT2[0x0] SSTAT3[0x0] SIMODE0[0x8]
+> [ 8069.492487] SIMODE1[0xa4] SXFRCTL0[0x80] DFCNTRL[0x0]
+> [ 8069.492507] DFSTATUS[0x89]
+> [ 8069.492515] STACK: 0x0 0x164 0x179 0x17
+> [ 8069.492536] SCB count = 24
+> [ 8069.492540] Kernel NEXTQSCB = 12
+> [ 8069.492545] Card NEXTQSCB = 17
+> [ 8069.492549] QINFIFO entries: 17 18
+> [ 8069.492561] Waiting Queue entries: 11:10
+> [ 8069.492573] Disconnected Queue entries:
+> [ 8069.492581] QOUTFIFO entries:
+> [ 8069.492587] Sequencer Free SCB List: 3 1 13 14 5 6 0 17 10 19 4 8 7
+> 2 16 20 18 12 15 9 21 22 23 24 25
+>  26 27 28 29 30 31
+> [ 8069.492694] Sequencer SCB Info:
+> [ 8069.492698]   0 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492723] SCB_TAG[0xff]
+> [ 8069.492729]   1 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492753] SCB_TAG[0xff]
+> [ 8069.492759]   2 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492784] SCB_TAG[0xff]
+> [ 8069.492791]   3 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492816] SCB_TAG[0xff]
+> [ 8069.492822]   4 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492845] SCB_TAG[0xff]
+> [ 8069.492851]   5 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492875] SCB_TAG[0xff]
+> [ 8069.492880]   6 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492904] SCB_TAG[0xff]
+> [ 8069.492910]   7 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492934] SCB_TAG[0xff]
+> [ 8069.492940]   8 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492964] SCB_TAG[0xff]
+> [ 8069.492969]   9 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.492994] SCB_TAG[0xff]
+> [ 8069.493000]  10 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493024] SCB_TAG[0xff]
+> [ 8069.493030]  11 SCB_CONTROL[0x40] SCB_SCSIID[0x47] SCB_LUN[0x0]
+> [ 8069.493054] SCB_TAG[0xa]
+> [ 8069.493060]  12 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493085] SCB_TAG[0xff]
+> [ 8069.493090]  13 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493114] SCB_TAG[0xff]
+> [ 8069.493120]  14 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493145] SCB_TAG[0xff]
+> [ 8069.493150]  15 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493175] SCB_TAG[0xff]
+> [ 8069.493181]  16 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493206] SCB_TAG[0xff]
+> [ 8069.493212]  17 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493235] SCB_TAG[0xff]
+> [ 8069.493241]  18 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493266] SCB_TAG[0xff]
+> [ 8069.493272]  19 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493296] SCB_TAG[0xff]
+> [ 8069.493302]  20 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493316] SCB_TAG[0xff]
+> [ 8069.493323]  21 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493348] SCB_TAG[0xff]
+> [ 8069.493354]  22 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493378] SCB_TAG[0xff]
+> [ 8069.493383]  23 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493407] SCB_TAG[0xff]
+> [ 8069.493413]  24 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493437] SCB_TAG[0xff]
+> [ 8069.493443]  25 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493469] SCB_TAG[0xff]
+> [ 8069.493475]  26 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493501] SCB_TAG[0xff]
+> [ 8069.493507]  27 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493531] SCB_TAG[0xff]
+> [ 8069.493537]  28 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493562] SCB_TAG[0xff]
+> [ 8069.493568]  29 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493593] SCB_TAG[0xff]
+> [ 8069.493599]  30 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493625] SCB_TAG[0xff]
+> [ 8069.493631]  31 SCB_CONTROL[0x0] SCB_SCSIID[0xff] SCB_LUN[0xff]
+> [ 8069.493656] SCB_TAG[0xff]
+> [ 8069.493664] Pending list:
+> [ 8069.493669]  18 SCB_CONTROL[0x40] SCB_SCSIID[0x57] SCB_LUN[0x0]
+> [ 8069.493687]  17 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> [ 8069.493706]  10 SCB_CONTROL[0x40] SCB_SCSIID[0x47] SCB_LUN[0x0]
+> [ 8069.493727] Kernel Free SCB list: 23 22 3 13 16 1 11 14 2 9 8 5 21
+> 15 19 0 4 7 6 20
+> [ 8069.493780] Untagged Q(4): 10
+> [ 8069.493788] Untagged Q(5): 18
+> [ 8069.493796]
+> [ 8069.493797] <<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+> [ 8069.493819] scsi0:0:4:0: Cmd aborted from QINFIFO
+> [ 8069.493892] aic7xxx_abort returns 0x2002
+> [ 8079.485432] sr 0:0:4:0: Attempting to queue an ABORT message
+> [ 8079.485438] CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+> [ 8079.485455] scsi0: At time of recovery, card was not paused
+> ...
 > 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/scsi_lib.c  |   92 +++++++++++++++++++++++++++------------------
->  include/scsi/scsi_cmnd.h |   39 +++++++++++++------
->  2 files changed, 82 insertions(+), 49 deletions(-)
+> The complete dmesg log is attached in gzip'ed form.
 > 
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 5fb1048..2fa1852 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -52,6 +52,8 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
->  };
->  #undef SP
->  
-> +static struct kmem_cache *scsi_sgtable_cache;
-> +
-One more slab pool to do regular IO
+> 
+> 
+> > Here's the beginning of the messages (full dmesg output attached)
+> >
+> > ...
+> > [ 9997.057000] scsi0: Unexpected busfree while idle
+> > [ 9997.057000] SEQADDR == 0x18
+> > [10030.588000] sr 0:0:5:0: Attempting to queue an ABORT message
+> > [10030.588000] CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+> > [10030.588000] scsi0: At time of recovery, card was not paused
+> > [10030.588000] >>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+> > [10030.588000] scsi0: Dumping Card State while idle, at SEQADDR 0x18
+> > [10030.588000] Card was paused
+> > [10030.588000] ACCUM = 0x4, SINDEX = 0x48, DINDEX = 0xe4, ARG_2 = 0x1
+> > [10030.588000] HCNT = 0x0 SCBPTR = 0xf
+> > [10030.588000] SCSIPHASE[0x0] SCSISIGI[0x0] ERROR[0x0]
+> > [10030.588000] SCSIBUSL[0x0] LASTPHASE[0x1] SCSISEQ[0x1a]
+> > [10030.588000] SBLKCTL[0xa] SCSIRATE[0x0] SEQCTL[0x10]
+> > [10030.588000] SEQ_FLAGS[0xc0] SSTAT0[0x0] SSTAT1[0x0]
+> > [10030.588000] SSTAT2[0x0] SSTAT3[0x0] SIMODE0[0x8]
+> > [10030.588000] SIMODE1[0xa4] SXFRCTL0[0x80] DFCNTRL[0x0]
+> > [10030.588000] DFSTATUS[0x89]
+> > [10030.588000] STACK: 0x0 0x164 0x179 0x17
+> > [10030.588000] SCB count = 40
+> > [10030.588000] Kernel NEXTQSCB = 31
+> > [10030.588000] Card NEXTQSCB = 0
+> > [10030.588000] QINFIFO entries: 0 9 28 30 13 19 2 21 25 20 16 17 18 32 34 11 22 7
+> > [10030.588000] Waiting Queue entries: 15:4
+> > [10030.588000] Disconnected Queue entries:
+> > [10030.588000] QOUTFIFO entries:
+> > [10030.588000] Sequencer Free SCB List: 3 30 19 23 11 16 25 17 18 10 4 6 26 24 7 28 20 27 12 0 2 8 21 14 22 5 1 31 13 29 9
+> > [10030.588000] Sequencer SCB Info:
+> > [10030.588000]   0 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   1 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   2 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   3 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   4 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   5 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   6 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   7 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   8 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]   9 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  10 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  11 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  12 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  13 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  14 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  15 SCB_CONTROL[0x40] SCB_SCSIID[0x57] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0x4]
+> > [10030.588000]  16 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  17 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  18 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  19 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  20 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  21 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  22 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  23 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  24 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  25 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  26 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  27 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  28 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  29 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  30 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000]  31 SCB_CONTROL[0xe0] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000] SCB_TAG[0xff]
+> > [10030.588000] Pending list:
+> > [10030.588000]   7 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  22 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  11 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  34 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  32 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  18 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  17 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  16 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  20 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  25 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  21 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]   2 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  19 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  13 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  30 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]  28 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]   9 SCB_CONTROL[0x60] SCB_SCSIID[0x67] SCB_LUN[0x0]
+> > [10030.588000]   0 SCB_CONTROL[0x40] SCB_SCSIID[0x47] SCB_LUN[0x0]
+> > [10030.588000]   4 SCB_CONTROL[0x40] SCB_SCSIID[0x57] SCB_LUN[0x0]
+> > [10030.588000] Kernel Free SCB list: 24 10 23 5 3 14 33 1 26 15 35 6 29 12 39 27 8 38 37 36
+> > [10030.588000] Untagged Q(4): 0
+> > [10030.588000] Untagged Q(5): 4
+> > [10030.588000]
+> > [10030.588000] <<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+> > [10030.588000] scsi0:0:5:0: Cmd aborted from QINFIFO
+> > [10030.588000] aic7xxx_abort returns 0x2002
+> > [10040.588000] sr 0:0:5:0: Attempting to queue an ABORT message
+> > [10040.588000] CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+> > [10040.588000] scsi0: At time of recovery, card was not paused
+> > ...
+> > (see attached file for remaining (long) output)
+> >
+> >
+> > Here's output from scripts/ver_linux :
+> >
+> > juhl@dragon:~/kernel/linux-2.6$ scripts/ver_linux
+> > If some fields are empty or look unusual you may have an old version.
+> > Compare to the current minimal requirements in Documentation/Changes.
+> >
+> > Linux dragon 2.6.22-rc7-g4e99325b #1 SMP PREEMPT Sun Jul 8 21:24:48 CEST 2007 i686 AMD Athlon(tm) 64 X2 Dual Core Processor 4400+ AuthenticAMD GNU/Linux
+> >
+> > Gnu C                  4.1.2
+> > Gnu make               3.81
+> > binutils               Binutils
+> > util-linux             2.12r
+> > mount                  2.12r
+> > module-init-tools      3.2.2
+> > e2fsprogs              1.39
+> > jfsutils               1.1.11
+> > reiserfsprogs          3.6.19
+> > xfsprogs               2.8.16
+> > pcmciautils            014
+> > quota-tools            3.13.
+> > PPP                    2.4.4
+> > Linux C Library        > libc.2.5
+> > Dynamic linker (ldd)   2.5
+> > Linux C++ Library      6.0.8
+> > Procps                 3.2.7
+> > Net-tools              1.60
+> > Kbd                    1.12
+> > oprofile               0.9.2
+> > Sh-utils               6.9
+> > udev                   111
+> > Modules Loaded         dm_mod snd_seq_oss snd_seq_midi_event snd_seq snd_pcm_oss snd_mixer_oss agpgart lp snd_emu10k1 snd_rawmidi firmware_class snd_ac97_codec ac97_bus snd_pcm snd_seq_device snd_timer snd_page_alloc snd_util_mem via_rhine snd_hwdep ehci_hcd sg evdev k8temp
+> >
+> 
+> except for the slightly newer kernel, the above userspace info is still valid.
+> 
+> >
+> > and here's /proc/scsi/scsi :
+> >
+> > juhl@dragon:~/kernel/linux-2.6$ cat /proc/scsi/scsi
+> > Attached devices:
+> > Host: scsi0 Channel: 00 Id: 04 Lun: 00
+> >   Vendor: PIONEER  Model: DVD-ROM DVD-305  Rev: 1.03
+> >   Type:   CD-ROM                           ANSI  SCSI revision: 02
+> > Host: scsi0 Channel: 00 Id: 05 Lun: 00
+> >   Vendor: PLEXTOR  Model: CD-R   PX-W1210S Rev: 1.01
+> >   Type:   CD-ROM                           ANSI  SCSI revision: 02
+> > Host: scsi0 Channel: 00 Id: 06 Lun: 00
+> >   Vendor: IBM      Model: DDYS-T36950N     Rev: S96H
+> >   Type:   Direct-Access                    ANSI  SCSI revision: 03
+> >
+> 
+> This scsi info is still valid.
+> 
+> >
+> > uname -a is :
+> >
+> > juhl@dragon:~/kernel/linux-2.6$ uname -a
+> > Linux dragon 2.6.22-rc7-g4e99325b #1 SMP PREEMPT Sun Jul 8 21:24:48 CEST 2007 i686 AMD Athlon(tm) 64 X2 Dual Core Processor 4400+ AuthenticAMD GNU/Linux
+> >
+> 
+> This is now :
+> 
+> Linux dragon 2.6.22-g1db6178c #1 SMP PREEMPT Sat Jul 14 04:10:50 CEST
+> 2007 i686 AMD Athlon(tm) 64 X2 Dual Core Processor 4400+ AuthenticAMD
+> GNU/Linux
+> 
+> >
+> > I have a feeling this may be related to my old problem with machine hangs when
+> > building kernels in a loop that I reported back in 2.6.17-2.6.19 times :
+> > http://www.webservertalk.com/archive242-2006-11-1692290.html
+> >
+> > The problem mentioned in the thread above I can still reliably reproduce. All
+> > I need to do is use my script to build kernels in a loop and I'll usually get a
+> > hang within 10 kernels (with recent versions) or 100 kernels (with pre-2.6.20
+> > kernels).
+> > One difference between the hangs I've seen previously and this one is that
+> > previously I've always use "nice make -j 3" when building the kernels, but
+> > this time I edited my script to use just "nice make", thus only using a single
+> > core. I suspect this is why my box stayed resonably alive this time - enough
+> > for me to be able to capture some dmesg output - instead of just hanging
+> > completely like it usually does.
+> >
+> > If any further information is required, just let me know and I'll be happy to
+> > provide it.
+> > Any patches you want me to test, just send them my way :-)
+> >
+> > Getting this finally resolved would be *very* nice :-)
+> >
+> >
+> > (please note that I'm not subscribed to linux-scsi, so please keep me on Cc)
+> >
+> 
+> It seems that since 2.6.22-rc<mid/late-ish> this is getting more
+> frequent, but that's just a subjective feeling, quite vague...
+> 
 
->  static void scsi_run_queue(struct request_queue *q);
->  
->  /*
-> @@ -731,16 +733,27 @@ static inline unsigned int scsi_sgtable_index(unsigned short nents)
->  	return index;
->  }
->  
-> -struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-> +struct scsi_sgtable *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask,
-> +					int sg_count)
->  {
->  	struct scsi_host_sg_pool *sgp;
->  	struct scatterlist *sgl, *prev, *ret;
-> +	struct scsi_sgtable *sgt;
->  	unsigned int index;
->  	int this, left;
->  
-> -	BUG_ON(!cmd->use_sg);
-> +	sgt = kmem_cache_zalloc(scsi_sgtable_cache, gfp_mask);
-> +	if (!sgt)
-> +		return NULL;
-One more allocation that can fail for every io. Even if we have
-a scsi_cmnd.
+Kind regards,
+  Jesper Juhl <jesper.juhl@gmail.com>
 
-> +
-> +	/*
-> +	 * don't allow subsequent mempool allocs to sleep, it would
-> +	 * violate the mempool principle.
-> +	 */
-> +	gfp_mask &= ~__GFP_WAIT;
-> +	gfp_mask |= __GFP_HIGH;
-We used to sometime wait for that Large 128 scatterlist full page.
-But now this small allocation is probably good. but we no longer
-wait for the big allocation below.
 
->  
-> -	left = cmd->use_sg;
-> +	left = sg_count;
->  	ret = prev = NULL;
->  	do {
->  		this = left;
-> @@ -764,7 +777,7 @@ struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
->  		 * first loop through, set initial index and return value
->  		 */
->  		if (!ret) {
-> -			cmd->sglist_len = index;
-> +			sgt->sglist_len = index;
->  			ret = sgl;
->  		}
->  
-> @@ -776,21 +789,18 @@ struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
->  		if (prev)
->  			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
->  
-> -		/*
-> -		 * don't allow subsequent mempool allocs to sleep, it would
-> -		 * violate the mempool principle.
-> -		 */
-> -		gfp_mask &= ~__GFP_WAIT;
-> -		gfp_mask |= __GFP_HIGH;
->  		prev = sgl;
->  	} while (left);
->  
->  	/*
-> -	 * ->use_sg may get modified after dma mapping has potentially
-> +	 * ->sg_count may get modified after dma mapping has potentially
->  	 * shrunk the number of segments, so keep a copy of it for free.
->  	 */
-> -	cmd->__use_sg = cmd->use_sg;
-> -	return ret;
-> +	sgt->sg_count = sg_count;
-> +	sgt->__sg_count = sg_count;
-> +	sgt->sglist = ret;
-> +	cmd->sgtable = sgt;
-We used to set that in scsi_init_io. So this scsi_alloc_sgtable()
-can be called twice for bidi. Now we can not. Also the API change
-is not friendly for bidi and will have to change. (It used to be good)
-If you set it here why do you return it.
 
-> +	return sgt;
->  enomem:
->  	if (ret) {
->  		/*
-> @@ -809,6 +819,8 @@ enomem:
->  
->  		mempool_free(prev, sgp->pool);
->  	}
-> +	kmem_cache_free(scsi_sgtable_cache, sgt);
-> +
->  	return NULL;
->  }
->  
-> @@ -816,21 +828,22 @@ EXPORT_SYMBOL(scsi_alloc_sgtable);
->  
->  void scsi_free_sgtable(struct scsi_cmnd *cmd)
->  {
-> -	struct scatterlist *sgl = cmd->request_buffer;
-> +	struct scsi_sgtable *sgt = cmd->sgtable;
-> +	struct scatterlist *sgl = sgt->sglist;
->  	struct scsi_host_sg_pool *sgp;
->  
-> -	BUG_ON(cmd->sglist_len >= SG_MEMPOOL_NR);
-> +	BUG_ON(sgt->sglist_len >= SG_MEMPOOL_NR);
->  
->  	/*
->  	 * if this is the biggest size sglist, check if we have
->  	 * chained parts we need to free
->  	 */
-> -	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
-> +	if (sgt->__sg_count > SCSI_MAX_SG_SEGMENTS) {
->  		unsigned short this, left;
->  		struct scatterlist *next;
->  		unsigned int index;
->  
-> -		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
-> +		left = sgt->__sg_count - (SCSI_MAX_SG_SEGMENTS - 1);
->  		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
->  		while (left && next) {
->  			sgl = next;
-> @@ -854,11 +867,12 @@ void scsi_free_sgtable(struct scsi_cmnd *cmd)
->  		/*
->  		 * Restore original, will be freed below
->  		 */
-> -		sgl = cmd->request_buffer;
-> +		sgl = sgt->sglist;
->  	}
->  
-> -	sgp = scsi_sg_pools + cmd->sglist_len;
-> +	sgp = scsi_sg_pools + sgt->sglist_len;
->  	mempool_free(sgl, sgp->pool);
-> +	kmem_cache_free(scsi_sgtable_cache, sgt);
->  }
->  
->  EXPORT_SYMBOL(scsi_free_sgtable);
-> @@ -882,15 +896,14 @@ EXPORT_SYMBOL(scsi_free_sgtable);
->   */
->  static void scsi_release_buffers(struct scsi_cmnd *cmd)
->  {
-> -	if (cmd->use_sg)
-> +	if (cmd->sgtable)
->  		scsi_free_sgtable(cmd);
->  
->  	/*
->  	 * Zero these out.  They now point to freed memory, and it is
->  	 * dangerous to hang onto the pointers.
->  	 */
-> -	cmd->request_buffer = NULL;
-> -	cmd->request_bufflen = 0;
-> +	cmd->sgtable = NULL;
->  }
->  
->  /*
-> @@ -924,13 +937,14 @@ static void scsi_release_buffers(struct scsi_cmnd *cmd)
->  void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  {
->  	int result = cmd->result;
-> -	int this_count = cmd->request_bufflen;
-> +	int this_count = scsi_bufflen(cmd);
->  	request_queue_t *q = cmd->device->request_queue;
->  	struct request *req = cmd->request;
->  	int clear_errors = 1;
->  	struct scsi_sense_hdr sshdr;
->  	int sense_valid = 0;
->  	int sense_deferred = 0;
-> +	int resid = scsi_get_resid(cmd);
->  
->  	scsi_release_buffers(cmd);
->  
-> @@ -956,7 +970,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
->  				req->sense_len = len;
->  			}
->  		}
-> -		req->data_len = cmd->resid;
-> +		req->data_len = resid;
->  	}
->  
->  	/*
-> @@ -1098,6 +1112,7 @@ EXPORT_SYMBOL(scsi_io_completion);
->  static int scsi_init_io(struct scsi_cmnd *cmd)
->  {
->  	struct request     *req = cmd->request;
-> +	struct scsi_sgtable *sgt;
->  	int		   count;
->  
->  	/*
-> @@ -1105,35 +1120,36 @@ static int scsi_init_io(struct scsi_cmnd *cmd)
->  	 * but now we do (it makes highmem I/O easier to support without
->  	 * kmapping pages)
->  	 */
-> -	cmd->use_sg = req->nr_phys_segments;
-> +	sgt = scsi_alloc_sgtable(cmd, GFP_ATOMIC, req->nr_phys_segments);
->  
->  	/*
->  	 * If sg table allocation fails, requeue request later.
->  	 */
-> -	cmd->request_buffer = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
-> -	if (unlikely(!cmd->request_buffer)) {
-> +	if (unlikely(!sgt)) {
->  		scsi_unprep_request(req);
->  		return BLKPREP_DEFER;
->  	}
->  
-> +	cmd->sgtable = sgt;
-> +
-Set second time
-
->  	req->buffer = NULL;
->  	if (blk_pc_request(req))
-> -		cmd->request_bufflen = req->data_len;
-> +		sgt->length = req->data_len;
->  	else
-> -		cmd->request_bufflen = req->nr_sectors << 9;
-> +		sgt->length = req->nr_sectors << 9;
->  
->  	/* 
->  	 * Next, walk the list, and fill in the addresses and sizes of
->  	 * each segment.
->  	 */
-> -	count = blk_rq_map_sg(req->q, req, cmd->request_buffer);
-> -	if (likely(count <= cmd->use_sg)) {
-> -		cmd->use_sg = count;
-> +	count = blk_rq_map_sg(req->q, req, cmd->sgtable->sglist);
-> +	if (likely(count <= sgt->sg_count)) {
-> +		sgt->sg_count = count;
->  		return BLKPREP_OK;
->  	}
->  
->  	printk(KERN_ERR "Incorrect number of segments after building list\n");
-> -	printk(KERN_ERR "counted %d, received %d\n", count, cmd->use_sg);
-> +	printk(KERN_ERR "counted %d, received %d\n", count, sgt->sg_count);
->  	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
->  			req->current_nr_sectors);
->  
-> @@ -1189,7 +1205,7 @@ static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
->  	 * successfully. Since this is a REQ_BLOCK_PC command the
->  	 * caller should check the request's errors value
->  	 */
-> -	scsi_io_completion(cmd, cmd->request_bufflen);
-> +	scsi_io_completion(cmd, scsi_bufflen(cmd));
->  }
->  
->  static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
-> @@ -1218,9 +1234,7 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
->  		BUG_ON(req->data_len);
->  		BUG_ON(req->data);
->  
-> -		cmd->request_bufflen = 0;
-> -		cmd->request_buffer = NULL;
-> -		cmd->use_sg = 0;
-> +		cmd->sgtable = NULL;
->  		req->buffer = NULL;
->  	}
->  
-> @@ -1786,6 +1800,10 @@ int __init scsi_init_queue(void)
->  		return -ENOMEM;
->  	}
->  
-> +	scsi_sgtable_cache = kmem_cache_create("scsi_sgtable",
-> +					       sizeof(struct scsi_sgtable),
-> +					       0, 0, NULL);
-> +
-Extra pool allocation
-
->  	for (i = 0; i < SG_MEMPOOL_NR; i++) {
->  		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
->  		int size = sgp->size * sizeof(struct scatterlist);
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index 937b3c4..9ead940 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -11,6 +11,14 @@ struct scatterlist;
->  struct Scsi_Host;
->  struct scsi_device;
->  
-> +struct scsi_sgtable {
-> +	unsigned length;
-> +	int resid;
-> +	short sg_count;
-> +	short __sg_count;
-> +	short sglist_len;
-> +	struct scatterlist *sglist;
-> +};
-This is not a table it is Just that plain old scsi_data_buff.
-sgtable is meant to say an header immediately followed by an
-sg-array. What makes it a table is the: 
-"struct scatterlist sglist[0];" At the end
-
->  
->  /* embedded in scsi_cmnd */
->  struct scsi_pointer {
-> @@ -64,10 +72,9 @@ struct scsi_cmnd {
->  	/* These elements define the operation we are about to perform */
->  #define MAX_COMMAND_SIZE	16
->  	unsigned char cmnd[MAX_COMMAND_SIZE];
-> -	unsigned request_bufflen;	/* Actual request size */
->  
->  	struct timer_list eh_timeout;	/* Used to time out the command. */
-> -	void *request_buffer;		/* Actual requested buffer */
-> +	struct scsi_sgtable *sgtable;
->  
->  	/* These elements define the operation we ultimately want to perform */
->  	unsigned short use_sg;	/* Number of pieces of scatter-gather */
-> @@ -83,10 +90,6 @@ struct scsi_cmnd {
->  				   reconnects.   Probably == sector
->  				   size */
->  
-> -	int resid;		/* Number of bytes requested to be
-> -				   transferred less actual number
-> -				   transferred (0 if not supported) */
-> -
->  	struct request *request;	/* The command we are
->  				   	   working on */
->  
-You only removed 3 members but scsi_sgtable as 6
-
-> @@ -133,24 +136,36 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
->  				 size_t *offset, size_t *len);
->  extern void scsi_kunmap_atomic_sg(void *virt);
->  
-> -extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
-> +extern struct scsi_sgtable *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t, int);
->  extern void scsi_free_sgtable(struct scsi_cmnd *);
->  
->  extern int scsi_dma_map(struct scsi_cmnd *cmd);
->  extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
->  
-> -#define scsi_sg_count(cmd) ((cmd)->use_sg)
-> -#define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
-> -#define scsi_bufflen(cmd) ((cmd)->request_bufflen)
-> +static inline unsigned scsi_sg_count(struct scsi_cmnd *cmd)
-> +{
-> +	return cmd->sgtable ? cmd->sgtable->sg_count : 0;
-> +}
-> +
-> +static inline struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
-> +{
-> +	return cmd->sgtable ? cmd->sgtable->sglist : 0;
-> +}
-> +
-> +static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
-> +{
-> +	return cmd->sgtable ? cmd->sgtable->length : 0;
-> +}
->  
->  static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
->  {
-> -	cmd->resid = resid;
-> +	if (cmd->sgtable)
-> +		cmd->sgtable->resid = resid;
->  }
->  
->  static inline int scsi_get_resid(struct scsi_cmnd *cmd)
->  {
-> -	return cmd->resid;
-> +	return cmd->sgtable ? cmd->sgtable->resid : 0;
->  }
->  
->  #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
-
-Please see my scsi_data_buff patches in that other
-thread they solve all thses problems.
-
-Boaz
