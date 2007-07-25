@@ -1,44 +1,42 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [Bug 8366] aic79xx and aic7xxx driver issues
-Date: Tue, 24 Jul 2007 22:14:43 -0400
-Message-ID: <1185329683.3488.46.camel@localhost.localdomain>
-References: <20070725010525.614621080E4@picon.linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Wed, 25 Jul 2007 13:33:25 +0900
+Message-ID: <20070725133325B.fujita.tomonori@lab.ntt.co.jp>
+References: <20070724142757F.fujita.tomonori@lab.ntt.co.jp>
+	<664A4EBB07F29743873A87CF62C26D70885438@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:57529 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758136AbXGYCOp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 22:14:45 -0400
-In-Reply-To: <20070725010525.614621080E4@picon.linux-foundation.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:63429 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751115AbXGYEd5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 00:33:57 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70885438@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org, freelsjd@ornl.gov
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: Eric.Moore@lsi.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, dougg@torque.net, jens.axboe@oracle.com
 
-On Tue, 2007-07-24 at 18:05 -0700, bugme-daemon@bugzilla.kernel.org
-wrote:
->  --> (http://bugzilla.kernel.org/attachment.cgi?id=12126&action=view)
-> failed driver dmesg
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Tue, 24 Jul 2007 18:22:08 -0600
+
+> > > I'm not sure what the intent of this else case.
+> > 
+> > This code is for an "invisible" SMP target in LSI SAS HBAs. There are
+> > better ways to get the target's address, I think. Any suggestions?
+> > 
 > 
-> This driver fails at time of boot up.  there are many scsi errors shown in the
-> output.  It is the "new" aic7xxx driver.
+> I've never heard that we(as in LSI) are attaching invisable SMP targets
+> to HBA's.  I've seen the Virtual SMP Port, but those are not hidden, the
+> driver would report them to the transport layer, therefore rphy should
+> be non-zero.   For instance a 12 phy expander would have 13 phys(with
+> the last being the virtual phy).   I doubt we need to have this else
+> case in the code, as it will be returning the sas_address to the first
+> attached device(which may not always be an expander).    Are you
+> executing the else path?
 
-This is about the most significant line
-
-> (scsi0:A:3:0): parity error detected in Data-in phase. SEQADDR(0x84) SCSIRATE(0x80)
-
-The SCSIRATE indicates wide.  I'd bet this is a narrow device; in which case, does 
-
-echo 0 > /sys/class/spi_transport/target0:0:3/max_wide
-
-and then triggering a revalidate with
-
-echo 1 > /sys/class/spi_transport/target0:0:3/revalidate
-
-produce anything different?
-
-James
-
-
+In the else path, I try to get the virtual phy's address. That is, I
+try to do what sas_low_phy_scandir_select() in Doug's lsscsi tool
+does.
