@@ -1,56 +1,62 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: unexpected scsi timeout
-Date: Wed, 25 Jul 2007 09:06:41 -0400
-Message-ID: <1185368801.3501.5.camel@localhost.localdomain>
-References: <46A0A462.2090407@sw.ru> <46A5B632.8040201@gmail.com>
-	 <46A5CF7B.40102@sw.ru> <46A6E4A4.6080608@tw.ibm.com>
-	 <46A6FD8E.7090803@sw.ru>  <46A6FEED.2050403@gmail.com>
+From: Adrian Bunk <bunk@stusta.de>
+Subject: 2.6.23-rc1-mm1: SCSI_SRP_ATTRS compile error
+Date: Wed, 25 Jul 2007 20:06:18 +0200
+Message-ID: <20070725180618.GE3572@stusta.de>
+References: <20070725040304.111550f4.akpm@linux-foundation.org> <46A77C28.1050807@shadowen.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <46A6FEED.2050403@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Vasily Averin <vvs@sw.ru>, albertl@mail.com, Jeff Garzik <jgarzik@pobox.com>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, devel@openvz.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:44178 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755529AbXGYSGp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jul 2007 14:06:45 -0400
+Content-Disposition: inline
+In-Reply-To: <46A77C28.1050807@shadowen.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Whitcroft <apw@shadowen.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, James.Bottomley@SteelEye.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Steve Fox <drfickle@us.ibm.com>, Mel Gorman <mel@csn.ul.ie>, linux-scsi@vger.kernel.org
 
-On Wed, 2007-07-25 at 16:42 +0900, Tejun Heo wrote:
-> Vasily Averin wrote:
-> > Albert Lee wrote:
-> >>>> Vasily Averin wrote:
-> >>>>> I've noticed that some scsi commands for DVD-drive attached to pata_via
-> >>>>> successfully finishes without any delays but reports about TIMEOUT condition. It
-> >>>>> happens because of ATA_ERR bit is set in status register. As result for each
-> >>>>> command  Error Handler thread awakened, requests sense buffer and go to sleep again.
-> >>>> Need more info.  Please post boot dmesg and the result of 'lspci -nn'
-> >>>> and 'hdparm -I /dev/srX' and when such errors occur.
-> >> Your log looks ok. It's normal for TEST_UNIT_READY to return ATA_ERR when no disc
-> >> inside and libata EH triggered to request sense.
-> > 
-> > It's a bit strange for me, IMHO other scsi drivers requests sense buffer without
-> > EH thread assistance.
-> > Currently we know that ATA_ERR can be returned; it is not error, but one of
-> > expected responses. Why we cannot request sense without EH? I would like to
-> > understand is it implementation drawback or I missed something probably?
+On Wed, Jul 25, 2007 at 05:36:56PM +0100, Andy Whitcroft wrote:
+> Of the machines we test releases on automatically this only compiles on
+> NUMA-Q and does not boot there (some PCI issue).
 > 
-> That was a design choice.  It's easier to implement that way.
+> 
+> ppc64 (beavis):
+> 
+> drivers/built-in.o(.text+0xd2784): In function `.srp_rport_add':
+> : undefined reference to `.scsi_tgt_it_nexus_create'
+> drivers/built-in.o(.text+0xd2884): In function `.srp_rport_del':
+> : undefined reference to `.scsi_tgt_it_nexus_destroy'
+> make: *** [.tmp_vmlinux1] Error 1
+> 
+> 
+> x86_64 (bl6-13):
+> 
+> ERROR: "scsi_tgt_it_nexus_destroy" [drivers/scsi/scsi_transport_srp.ko]
+> undefined!
+> ERROR: "scsi_tgt_it_nexus_create" [drivers/scsi/scsi_transport_srp.ko]
+> undefined!
+> make[1]: *** [__modpost] Error 1
+>...
 
-And just so we're clear what SCSI allows:
+Caused-By  : git-scsi-target.patch
+Workaround : enable CONFIG_SCSI_TGT
 
-On ordinary SCSI devices, when the device goes into a check condition
-state, it won't accept any more commands until it sees a request sense.
-For SCSI devices this can be a problem (because there are several
-thousand sense conditions, some of which correspond to everything's
-alright), so a large number of SCSI drivers implement auto request sense
-emulation, which means that in the driver, as soon as they see the check
-condition, they immediately send a REQUEST SENSE command to pick up the
-sense code (minimising the time the device is blocked).
+Is there any good reason why all the SCSI transport attributes options 
+are user visible?
 
-For drivers that don't want to implement this (and we have a few in
-SCSI) the alternative mechanism is to have the eh thread collect the
-sense data.  This is the route libata has chosen.
+With an answer to this question I can fix this bug.
 
-James
+> -apw
 
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
