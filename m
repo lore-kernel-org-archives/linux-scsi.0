@@ -1,45 +1,39 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 3/5] mpt fusion: Changes in mptscsih.c for logging support
-Date: Tue, 24 Jul 2007 17:07:28 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70885411@NAMAIL4.ad.lsil.com>
-References: <46A5D4D5.1090402@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] qla4xxx: use mempool_create_slab_pool
+Date: Wed, 25 Jul 2007 09:01:41 +0900
+Message-ID: <20070725090141E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:42252 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752467AbXGXXIm convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 19:08:42 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <46A5D4D5.1090402@panasas.com>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:49772 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757070AbXGYABy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jul 2007 20:01:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
-Cc: linux-scsi@vger.kernel.org
+To: david.somayajulu@qlogic.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Tuesday, July 24, 2007 4:31 AM, Boaz Harrosh wrote:
-> 
-> NACK
-> This driver was already converted to accessors please
-> don't use old (going a way soon) scsi_cmnd members
-> directly
-> 
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/qla4xxx/ql4_os.c |    3 +--
+ 1 files changed, 1 insertions(+), 2 deletions(-)
 
-
-Sathya - a little background on this.  I believe this all started with
-the "Proposals to change the way all drivers work with SCSI commands"
-email from James Bottomley back on May 11th.
-here:  http://marc.info/?t=117890864300003&r=1&w=2.      The fusion
-driver was ported by FUJITA Tomonori in this patch
-http://marc.info/?l=linux-scsi&m=117896437623559&w=2.  So the
-bottomline, is anywere we access the scsi_cmnd pointer in the debug
-prints, needs to be ported using the new wrappers (in scsi_cmnd.h).
-Can you please review and repost?
-
-Thanks,
-Eric
-
-
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index e69160a..15ff730 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -576,8 +576,7 @@ static int qla4xxx_mem_alloc(struct scsi_qla_host *ha)
+ 						   QUEUE_SIZE));
+ 
+ 	/* Allocate memory for srb pool. */
+-	ha->srb_mempool = mempool_create(SRB_MIN_REQ, mempool_alloc_slab,
+-					 mempool_free_slab, srb_cachep);
++	ha->srb_mempool = mempool_create_slab_pool(SRB_MIN_REQ, srb_cachep);
+ 	if (ha->srb_mempool == NULL) {
+ 		dev_warn(&ha->pdev->dev,
+ 			"Memory Allocation failed - SRB Pool.\n");
+-- 
+1.5.2.4
 
