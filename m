@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 9/21] advansys: More PCI cleanups
-Date: Thu, 26 Jul 2007 13:22:45 -0400
-Message-ID: <11854705772242-git-send-email-matthew@wil.cx>
+Subject: [PATCH 6/21] advansys: Move to scsi hotplug initialisation model
+Date: Thu, 26 Jul 2007 13:22:42 -0400
+Message-ID: <11854705779-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:56756 "EHLO
-	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933995AbXGZRyV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 13:54:21 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:55151 "EHLO
+	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933557AbXGZR4G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 13:56:06 -0400
 In-Reply-To: 20070726171141.GE19275@parisc-linux.org
 References: 20070726171141.GE19275@parisc-linux.org
 In-Reply-To: <20070726171141.GE19275@parisc-linux.org>
@@ -16,403 +16,195 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
- - Remove wrappers around the PCI configuration space accessors
- - Call pci_set_master() instead of poking at config space directly
- - Move the latency setting into one function called for both narrow and
-   wide boards.
- - Tidy up AdvInitGetConfig() a little.
- - Delete a few unused prototypes and definitions.
+ - Switch from scsi_register/scsi_unregister to scsi_host_alloc,
+   scsi_add_host, scsi_scan_host and scsi_host_put.
+ - Rename the scsi_host_template to advansys_template
+ - Move the memory freeing on error from advansys_wide_init_chip()
+   back into advansys_board_found() as we need to free it if
+   scsi_add_host() returns an error.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  254 +++++++----------------------------------------
- 1 files changed, 34 insertions(+), 220 deletions(-)
+ drivers/scsi/advansys.c |   71 +++++++++++++++++++++-------------------------
+ 1 files changed, 32 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index a4d3372..70f6d3a 100644
+index a663d14..b56f6c5 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -853,15 +853,6 @@ typedef unsigned char uchar;
- #define ERR      (-1)
- #define UW_ERR   (uint)(0xFFFF)
- #define isodd_word(val)   ((((uint)val) & (uint)0x0001) != 0)
--#define AscPCIConfigVendorIDRegister      0x0000
--#define AscPCIConfigDeviceIDRegister      0x0002
--#define AscPCIConfigCommandRegister       0x0004
--#define AscPCIConfigStatusRegister        0x0006
--#define AscPCIConfigRevisionIDRegister    0x0008
--#define AscPCIConfigCacheSize             0x000C
--#define AscPCIConfigLatencyTimer          0x000D
--#define AscPCIIOBaseRegister              0x0010
--#define AscPCICmdRegBits_IOMemBusMaster   0x0007
- #define ASC_PCI_ID2FUNC(id)   (((id) >> 8) & 0x7)
- #define ASC_PCI_MKID(bus, dev, func) ((((dev) & 0x1F) << 11) | (((func) & 0x7) << 8) | ((bus) & 0xFF))
- 
-@@ -1949,17 +1940,11 @@ static uchar AscSetChipIRQ(PortAddr, uchar, ushort);
- static ushort AscGetChipBiosAddress(PortAddr, ushort);
- static inline ulong DvcEnterCritical(void);
- static inline void DvcLeaveCritical(ulong);
--#ifdef CONFIG_PCI
--static uchar DvcReadPCIConfigByte(ASC_DVC_VAR *, ushort);
--static void DvcWritePCIConfigByte(ASC_DVC_VAR *, ushort, uchar);
--#endif /* CONFIG_PCI */
- static ushort AscGetChipBiosAddress(PortAddr, ushort);
- static void DvcSleepMilliSecond(ASC_DCNT);
- static void DvcDelayNanoSecond(ASC_DVC_VAR *, ASC_DCNT);
- static void DvcPutScsiQ(PortAddr, ushort, uchar *, int);
- static void DvcGetQinfo(PortAddr, ushort, uchar *, int);
--static ushort AscInitGetConfig(ASC_DVC_VAR *);
--static ushort AscInitSetConfig(ASC_DVC_VAR *);
- static ushort AscInitAsc1000Driver(ASC_DVC_VAR *);
- static void AscAsyncFix(ASC_DVC_VAR *, uchar, ASC_SCSI_INQUIRY *);
- static int AscTagQueuingSafe(ASC_SCSI_INQUIRY *);
-@@ -3090,8 +3075,6 @@ typedef struct adv_scsi_req_q {
- static inline ulong DvcEnterCritical(void);
- static inline void DvcLeaveCritical(ulong);
- static void DvcSleepMilliSecond(ADV_DCNT);
--static uchar DvcAdvReadPCIConfigByte(ADV_DVC_VAR *, ushort);
--static void DvcAdvWritePCIConfigByte(ADV_DVC_VAR *, ushort, uchar);
- static ADV_PADDR DvcGetPhyAddr(ADV_DVC_VAR *, ADV_SCSI_REQ_Q *,
- 			       uchar *, ASC_SDCNT *, int);
- static void DvcDelayMicroSecond(ADV_DVC_VAR *, ushort);
-@@ -3125,12 +3108,6 @@ static void AdvSet38C1600EEPConfig(AdvPortAddr, ADVEEP_38C1600_CONFIG *);
- static void AdvWaitEEPCmd(AdvPortAddr);
- static ushort AdvReadEEPWord(AdvPortAddr, int);
- 
--/*
-- * PCI Bus Definitions
-- */
--#define AscPCICmdRegBits_BusMastering     0x0007
--#define AscPCICmdRegBits_ParErrRespCtrl   0x0040
--
- /* Read byte from a register. */
- #define AdvReadByteRegister(iop_base, reg_off) \
-      (ADV_MEM_READB((iop_base) + (reg_off)))
-@@ -7424,31 +7401,6 @@ DvcGetQinfo(PortAddr iop_base, ushort s_addr, uchar *inbuf, int words)
- }
- 
+@@ -3784,7 +3784,7 @@ typedef struct adv_req {
  /*
-- * Read a PCI configuration byte.
-- */
--static uchar __devinit DvcReadPCIConfigByte(ASC_DVC_VAR *asc_dvc, ushort offset)
--{
--#ifdef CONFIG_PCI
--	uchar byte_data;
--	pci_read_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, &byte_data);
--	return byte_data;
--#else /* !defined(CONFIG_PCI) */
--	return 0;
--#endif /* !defined(CONFIG_PCI) */
--}
--
--/*
-- * Write a PCI configuration byte.
-- */
--static void __devinit
--DvcWritePCIConfigByte(ASC_DVC_VAR *asc_dvc, ushort offset, uchar byte_data)
--{
--#ifdef CONFIG_PCI
--	pci_write_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, byte_data);
--#endif /* CONFIG_PCI */
--}
--
--/*
-  * Return the BIOS address of the adapter at the specified
-  * I/O port and with the specified bus type.
+  * Structure allocated for each board.
+  *
+- * This structure is allocated by scsi_register() at the end
++ * This structure is allocated by scsi_host_alloc() at the end
+  * of the 'Scsi_Host' structure starting at the 'hostdata'
+  * field. It is guaranteed to be allocated from DMA-able memory.
   */
-@@ -7521,33 +7473,6 @@ DvcGetPhyAddr(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq,
+@@ -4578,7 +4578,7 @@ advansys_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+ 	return 0;
  }
  
- /*
-- * Read a PCI configuration byte.
-- */
--static uchar __devinit DvcAdvReadPCIConfigByte(ADV_DVC_VAR *asc_dvc, ushort offset)
--{
--#ifdef CONFIG_PCI
--	uchar byte_data;
--	pci_read_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, &byte_data);
--	return byte_data;
--#else /* CONFIG_PCI */
--	return 0;
--#endif /* CONFIG_PCI */
--}
--
--/*
-- * Write a PCI configuration byte.
-- */
--static void __devinit
--DvcAdvWritePCIConfigByte(ADV_DVC_VAR *asc_dvc, ushort offset, uchar byte_data)
--{
--#ifdef CONFIG_PCI
--	pci_write_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, byte_data);
--#else /* CONFIG_PCI */
--	return;
--#endif /* CONFIG_PCI */
--}
--
--/*
-  * --- Tracing and Debugging Functions
-  */
- 
-@@ -10481,89 +10406,15 @@ static uchar __devinit AscGetIsaDmaSpeed(PortAddr iop_base)
- }
- #endif /* CONFIG_ISA */
- 
--static ushort __devinit
--AscReadPCIConfigWord(ASC_DVC_VAR *asc_dvc, ushort pci_config_offset)
--{
--	uchar lsb, msb;
--
--	lsb = DvcReadPCIConfigByte(asc_dvc, pci_config_offset);
--	msb = DvcReadPCIConfigByte(asc_dvc, pci_config_offset + 1);
--	return ((ushort)((msb << 8) | lsb));
--}
--
- static ushort __devinit AscInitGetConfig(ASC_DVC_VAR *asc_dvc)
+-static struct scsi_host_template driver_template = {
++static struct scsi_host_template advansys_template = {
+ 	.proc_name = "advansys",
+ #ifdef CONFIG_PROC_FS
+ 	.proc_info = advansys_proc_info,
+@@ -17696,7 +17696,6 @@ static void AdvInquiryHandling(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ static int __devinit
+ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
  {
--	ushort warn_code;
--	PortAddr iop_base;
--	ushort PCIDeviceID;
--	ushort PCIVendorID;
--	uchar PCIRevisionID;
--	uchar prevCmdRegBits;
-+	unsigned short warn_code = 0;
+-	ADV_CARR_T *carrp;
+ 	int req_cnt = 0;
+ 	adv_req_t *reqp = NULL;
+ 	int sg_cnt = 0;
+@@ -17707,10 +17706,11 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
+ 	 * Allocate buffer carrier structures. The total size
+ 	 * is about 4 KB, so allocate all at once.
+ 	 */
+-	carrp = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
+-	ASC_DBG1(1, "advansys_wide_init_chip: carrp 0x%lx\n", (ulong) carrp);
++	boardp->orig_carrp = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
++	ASC_DBG1(1, "advansys_wide_init_chip: carrp 0x%p\n",
++							boardp->orig_carrp);
  
--	warn_code = 0;
--	iop_base = asc_dvc->iop_base;
- 	asc_dvc->init_state = ASC_INIT_STATE_BEG_GET_CFG;
--	if (asc_dvc->err_code != 0) {
-+	if (asc_dvc->err_code != 0)
- 		return (UW_ERR);
--	}
--	if (asc_dvc->bus_type == ASC_IS_PCI) {
--		PCIVendorID = AscReadPCIConfigWord(asc_dvc,
--						   AscPCIConfigVendorIDRegister);
- 
--		PCIDeviceID = AscReadPCIConfigWord(asc_dvc,
--						   AscPCIConfigDeviceIDRegister);
--
--		PCIRevisionID = DvcReadPCIConfigByte(asc_dvc,
--						     AscPCIConfigRevisionIDRegister);
--
--		if (PCIVendorID != PCI_VENDOR_ID_ASP) {
--			warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--		}
--		prevCmdRegBits = DvcReadPCIConfigByte(asc_dvc,
--						      AscPCIConfigCommandRegister);
--
--		if ((prevCmdRegBits & AscPCICmdRegBits_IOMemBusMaster) !=
--		    AscPCICmdRegBits_IOMemBusMaster) {
--			DvcWritePCIConfigByte(asc_dvc,
--					      AscPCIConfigCommandRegister,
--					      (prevCmdRegBits |
--					       AscPCICmdRegBits_IOMemBusMaster));
--
--			if ((DvcReadPCIConfigByte(asc_dvc,
--						  AscPCIConfigCommandRegister)
--			     & AscPCICmdRegBits_IOMemBusMaster)
--			    != AscPCICmdRegBits_IOMemBusMaster) {
--				warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--			}
--		}
--		if ((PCIDeviceID == PCI_DEVICE_ID_ASP_1200A) ||
--		    (PCIDeviceID == PCI_DEVICE_ID_ASP_ABP940)) {
--			DvcWritePCIConfigByte(asc_dvc,
--					      AscPCIConfigLatencyTimer, 0x00);
--			if (DvcReadPCIConfigByte
--			    (asc_dvc, AscPCIConfigLatencyTimer)
--			    != 0x00) {
--				warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--			}
--		} else if (PCIDeviceID == PCI_DEVICE_ID_ASP_ABP940U) {
--			if (DvcReadPCIConfigByte(asc_dvc,
--						 AscPCIConfigLatencyTimer) <
--			    0x20) {
--				DvcWritePCIConfigByte(asc_dvc,
--						      AscPCIConfigLatencyTimer,
--						      0x20);
--
--				if (DvcReadPCIConfigByte(asc_dvc,
--							 AscPCIConfigLatencyTimer)
--				    < 0x20) {
--					warn_code |=
--					    ASC_WARN_SET_PCI_CONFIG_SPACE;
--				}
--			}
--		}
--	}
--
--	if (AscFindSignature(iop_base)) {
-+	if (AscFindSignature(asc_dvc->iop_base)) {
- 		warn_code |= AscInitAscDvcVar(asc_dvc);
- 		warn_code |= AscInitFromEEP(asc_dvc);
- 		asc_dvc->init_state |= ASC_INIT_STATE_END_GET_CFG;
-@@ -10597,13 +10448,8 @@ static ushort __devinit AscInitFromAscDvcVar(ASC_DVC_VAR *asc_dvc)
- 	PortAddr iop_base;
- 	ushort cfg_msw;
- 	ushort warn_code;
--	ushort pci_device_id = 0;
- 
- 	iop_base = asc_dvc->iop_base;
--#ifdef CONFIG_PCI
--	if (asc_dvc->cfg->dev)
--		pci_device_id = to_pci_dev(asc_dvc->cfg->dev)->device;
--#endif
- 	warn_code = 0;
- 	cfg_msw = AscGetChipCfgMsw(iop_base);
- 	if ((cfg_msw & ASC_CFG_MSW_CLR_MASK) != 0) {
-@@ -10625,19 +10471,23 @@ static ushort __devinit AscInitFromAscDvcVar(ASC_DVC_VAR *asc_dvc)
- 			asc_dvc->err_code |= ASC_IERR_SET_IRQ_NO;
- 		}
- 	}
-+#ifdef CONFIG_PCI
- 	if (asc_dvc->bus_type & ASC_IS_PCI) {
-+		struct pci_dev *pdev = to_pci_dev(asc_dvc->cfg->dev);
- 		cfg_msw &= 0xFFC0;
- 		AscSetChipCfgMsw(iop_base, cfg_msw);
- 		if ((asc_dvc->bus_type & ASC_IS_PCI_ULTRA) == ASC_IS_PCI_ULTRA) {
- 		} else {
--			if ((pci_device_id == PCI_DEVICE_ID_ASP_1200A) ||
--			    (pci_device_id == PCI_DEVICE_ID_ASP_ABP940)) {
-+			if ((pdev->device == PCI_DEVICE_ID_ASP_1200A) ||
-+			    (pdev->device == PCI_DEVICE_ID_ASP_ABP940)) {
- 				asc_dvc->bug_fix_cntl |= ASC_BUG_FIX_IF_NOT_DWB;
- 				asc_dvc->bug_fix_cntl |=
- 				    ASC_BUG_FIX_ASYN_USE_SYN;
- 			}
- 		}
--	} else if (asc_dvc->bus_type == ASC_IS_ISAPNP) {
-+	} else
-+#endif /* CONFIG_PCI */
-+	if (asc_dvc->bus_type == ASC_IS_ISAPNP) {
- 		if (AscGetChipVersion(iop_base, asc_dvc->bus_type)
- 		    == ASC_CHIP_VER_ASYN_BUG) {
- 			asc_dvc->bug_fix_cntl |= ASC_BUG_FIX_ASYN_USE_SYN;
-@@ -14035,55 +13885,13 @@ static ADVEEP_38C1600_CONFIG ADVEEP_38C1600_Config_Field_IsChar __devinitdata =
-  */
- static int __devinit AdvInitGetConfig(ADV_DVC_VAR *asc_dvc)
- {
--	ushort warn_code;
--	AdvPortAddr iop_base;
--	uchar pci_cmd_reg;
-+	unsigned short warn_code = 0;
-+	AdvPortAddr iop_base = asc_dvc->iop_base;
-+	struct pci_dev *pdev = to_pci_dev(asc_dvc->cfg->dev);
-+	u16 cmd;
- 	int status;
- 
--	warn_code = 0;
- 	asc_dvc->err_code = 0;
--	iop_base = asc_dvc->iop_base;
--
--	/*
--	 * PCI Command Register
--	 *
--	 * Note: AscPCICmdRegBits_BusMastering definition (0x0007) includes
--	 * I/O Space Control, Memory Space Control and Bus Master Control bits.
--	 */
--
--	if (((pci_cmd_reg = DvcAdvReadPCIConfigByte(asc_dvc,
--						    AscPCIConfigCommandRegister))
--	     & AscPCICmdRegBits_BusMastering)
--	    != AscPCICmdRegBits_BusMastering) {
--		pci_cmd_reg |= AscPCICmdRegBits_BusMastering;
--
--		DvcAdvWritePCIConfigByte(asc_dvc,
--					 AscPCIConfigCommandRegister,
--					 pci_cmd_reg);
--
--		if (((DvcAdvReadPCIConfigByte
--		      (asc_dvc, AscPCIConfigCommandRegister))
--		     & AscPCICmdRegBits_BusMastering)
--		    != AscPCICmdRegBits_BusMastering) {
--			warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--		}
--	}
--
--	/*
--	 * PCI Latency Timer
--	 *
--	 * If the "latency timer" register is 0x20 or above, then we don't need
--	 * to change it.  Otherwise, set it to 0x20 (i.e. set it to 0x20 if it
--	 * comes up less than 0x20).
--	 */
--	if (DvcAdvReadPCIConfigByte(asc_dvc, AscPCIConfigLatencyTimer) < 0x20) {
--		DvcAdvWritePCIConfigByte(asc_dvc, AscPCIConfigLatencyTimer,
--					 0x20);
--		if (DvcAdvReadPCIConfigByte(asc_dvc, AscPCIConfigLatencyTimer) <
--		    0x20) {
--			warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--		}
--	}
+-	if (!carrp)
++	if (!boardp->orig_carrp)
+ 		goto kmalloc_failed;
  
  	/*
- 	 * Save the state of the PCI Configuration Command Register
-@@ -14092,10 +13900,9 @@ static int __devinit AdvInitGetConfig(ADV_DVC_VAR *asc_dvc)
- 	 * DMA parity errors.
- 	 */
- 	asc_dvc->cfg->control_flag = 0;
--	if (((DvcAdvReadPCIConfigByte(asc_dvc, AscPCIConfigCommandRegister)
--	      & AscPCICmdRegBits_ParErrRespCtrl)) == 0) {
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	if ((cmd & PCI_COMMAND_PARITY) == 0)
- 		asc_dvc->cfg->control_flag |= CONTROL_FLAG_IGNORE_PERR;
--	}
+@@ -17732,6 +17732,8 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
+ 	if (!reqp)
+ 		goto kmalloc_failed;
  
- 	asc_dvc->cfg->lib_version = (ADV_LIB_VERSION_MAJOR << 8) |
- 	    ADV_LIB_VERSION_MINOR;
-@@ -14137,19 +13944,11 @@ static int __devinit AdvInitGetConfig(ADV_DVC_VAR *asc_dvc)
- 				     ADV_CTRL_REG_CMD_WR_IO_REG);
- 
- 		if (asc_dvc->chip_type == ADV_CHIP_ASC38C1600) {
--			if ((status =
--			     AdvInitFrom38C1600EEP(asc_dvc)) == ADV_ERROR) {
--				return ADV_ERROR;
--			}
-+			status = AdvInitFrom38C1600EEP(asc_dvc);
- 		} else if (asc_dvc->chip_type == ADV_CHIP_ASC38C0800) {
--			if ((status =
--			     AdvInitFrom38C0800EEP(asc_dvc)) == ADV_ERROR) {
--				return ADV_ERROR;
--			}
-+			status = AdvInitFrom38C0800EEP(asc_dvc);
- 		} else {
--			if ((status = AdvInitFrom3550EEP(asc_dvc)) == ADV_ERROR) {
--				return ADV_ERROR;
--			}
-+			status = AdvInitFrom3550EEP(asc_dvc);
- 		}
- 		warn_code |= status;
- 	}
-@@ -18759,6 +18558,19 @@ static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
- 
- MODULE_DEVICE_TABLE(pci, advansys_pci_tbl);
- 
-+static void __devinit advansys_set_latency(struct pci_dev *pdev)
-+{
-+	if ((pdev->device == PCI_DEVICE_ID_ASP_1200A) ||
-+	    (pdev->device == PCI_DEVICE_ID_ASP_ABP940)) {
-+		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0);
-+	} else {
-+		u8 latency;
-+		pci_read_config_byte(pdev, PCI_LATENCY_TIMER, &latency);
-+		if (latency < 0x20)
-+			pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x20);
-+	}
-+}
++	boardp->orig_reqp = reqp;
 +
- static int __devinit
- advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
-@@ -18769,6 +18581,8 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 		goto fail;
- 	if (pci_enable_device(pdev))
- 		goto release_regions;
-+	pci_set_master(pdev);
-+	advansys_set_latency(pdev);
+ 	/*
+ 	 * Allocate up to ADV_TOT_SG_BLOCK request structures for
+ 	 * the Wide board. Each structure is about 136 bytes.
+@@ -17755,16 +17757,7 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
+ 	if (!boardp->adv_sgblkp)
+ 		goto kmalloc_failed;
  
- 	ioport = pci_resource_start(pdev, 0);
- 	shost = advansys_board_found(ioport, &pdev->dev, ASC_IS_PCI);
+-	/* Save carrier buffer pointer. */
+-	boardp->orig_carrp = carrp;
+-
+-	/*
+-	 * Save original pointer for kfree() in case the
+-	 * driver is built as a module and can be unloaded.
+-	 */
+-	boardp->orig_reqp = reqp;
+-
+-	adv_dvc_varp->carrier_buf = carrp;
++	adv_dvc_varp->carrier_buf = boardp->orig_carrp;
+ 
+ 	/*
+ 	 * Point 'adv_reqp' to the request structures and
+@@ -17796,24 +17789,14 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
+ 			   " error 0x%x\n", boardp->id, warn_code, err_code);
+ 	}
+ 
+-	if (err_code == 0)
+-		return 0;
+-
+-	while ((sgp = boardp->adv_sgblkp) != NULL) {
+-		boardp->adv_sgblkp = sgp->next_sgblkp;
+-		kfree(sgp);
+-	}
+-
+- failed:
+-	kfree(reqp);
+-	kfree(carrp);
+-	return err_code;
++	goto exit;
+ 
+  kmalloc_failed:
+ 	ASC_PRINT1("advansys_wide_init_chip: board %d error: kmalloc() "
+ 		   "failed\n", boardp->id);
+ 	err_code = ADV_ERROR;
+-	goto failed;
++ exit:
++	return err_code;
+ }
+ 
+ static struct Scsi_Host *__devinit
+@@ -17824,6 +17807,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	asc_board_t *boardp;
+ 	ASC_DVC_VAR *asc_dvc_varp = NULL;
+ 	ADV_DVC_VAR *adv_dvc_varp = NULL;
++	adv_sgblk_t *sgp;
+ 	int share_irq = FALSE;
+ 	int iolen = 0;
+ 	ADV_PADDR pci_memory_address;
+@@ -17836,8 +17820,8 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	 * Register the adapter, get its configuration, and
+ 	 * initialize it.
+ 	 */
+-	ASC_DBG(2, "advansys_board_found: scsi_register()\n");
+-	shost = scsi_register(&driver_template, sizeof(asc_board_t));
++	ASC_DBG(2, "advansys_board_found: scsi_host_alloc()\n");
++	shost = scsi_host_alloc(&advansys_template, sizeof(asc_board_t));
+ 
+ 	if (!shost)
+ 		return NULL;
+@@ -18373,10 +18357,8 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 
+ 	/* BIOS start address. */
+ 	if (ASC_NARROW_BOARD(boardp)) {
+-		shost->base = ((ulong)
+-			     AscGetChipBiosAddress(asc_dvc_varp->
+-						   iop_base,
+-						   asc_dvc_varp->bus_type));
++		shost->base = AscGetChipBiosAddress(asc_dvc_varp->iop_base,
++						   asc_dvc_varp->bus_type);
+ 	} else {
+ 		/*
+ 		 * Fill-in BIOS board variables. The Wide BIOS saves
+@@ -18511,13 +18493,24 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	}
+ 
+ 	if (err_code != 0)
+-		goto err_free_irq;
++		goto err_free_wide_mem;
+ 
+ 	ASC_DBG_PRT_SCSI_HOST(2, shost);
+ 
++	ret = scsi_add_host(shost, dev);
++	if (ret)
++		goto err_free_wide_mem;
++
++	scsi_scan_host(shost);
+ 	return shost;
+ 
+- err_free_irq:
++ err_free_wide_mem:
++	kfree(boardp->orig_carrp);
++	kfree(boardp->orig_reqp);
++	while ((sgp = boardp->adv_sgblkp) != NULL) {
++		boardp->adv_sgblkp = sgp->next_sgblkp;
++		kfree(sgp);
++	}
+ 	free_irq(shost->irq, boardp);
+  err_free_dma:
+ 	if (shost->dma_channel != NO_ISA_DMA)
+@@ -18530,7 +18523,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	if (boardp->ioremap_addr)
+ 		iounmap(boardp->ioremap_addr);
+  err_shost:
+-	scsi_unregister(shost);
++	scsi_host_put(shost);
+ 	asc_board_count--;
+ 	return NULL;
+ }
+@@ -18758,7 +18751,7 @@ static int advansys_release(struct Scsi_Host *shost)
+ 	ASC_ASSERT(boardp->prtbuf != NULL);
+ 	kfree(boardp->prtbuf);
+ #endif /* CONFIG_PROC_FS */
+-	scsi_unregister(shost);
++	scsi_host_put(shost);
+ 	ASC_DBG(1, "advansys_release: end\n");
+ 	return 0;
+ }
 -- 
 1.4.4.4
 
