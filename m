@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 16/21] advansys: Stop using n_io_port in Scsi_Host structure
-Date: Thu, 26 Jul 2007 13:22:52 -0400
-Message-ID: <11854705772650-git-send-email-matthew@wil.cx>
+Subject: [PATCH 2/21] advansys: version, copyright, etc
+Date: Thu, 26 Jul 2007 13:22:38 -0400
+Message-ID: <11854705771114-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:52405 "EHLO
-	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763243AbXGZSbQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 14:31:16 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:37521 "EHLO
+	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933874AbXGZSbV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 14:31:21 -0400
 In-Reply-To: 20070726171141.GE19275@parisc-linux.org
 References: 20070726171141.GE19275@parisc-linux.org
 In-Reply-To: <20070726171141.GE19275@parisc-linux.org>
@@ -16,139 +16,135 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-n_io_port isn't suitable for advansys because some of the boards have
-more than 255 bytes of io port space.  There's already a driver-private
-replacement, asc_n_io_port, but for some reason the driver was still
-setting and occasionally reporting n_io_port.
-
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Update the version to 3.4
+Add my copyright
+Add myself to MAINTAINERS
+Exercise my right to change the license from dual BSD/GPL to GPL
+Don't force the definition of CONFIG_ISA on x86
+Always include pci.h
+Stop including stat.h
 ---
- drivers/scsi/advansys.c |   38 ++++++++------------------------------
- 1 files changed, 8 insertions(+), 30 deletions(-)
+ MAINTAINERS             |    6 ++++++
+ drivers/scsi/advansys.c |   43 +++++++++++++++++++------------------------
+ 2 files changed, 25 insertions(+), 24 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 01f222e..11003c8 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -282,6 +282,12 @@ P:	Colin Leroy
+ M:	colin@colino.net
+ S:	Maintained
+ 
++ADVANSYS SCSI DRIVER
++P:	Matthew Wilcox
++M:	matthew@wil.cx
++L:	linux-scsi@vger.kernel.org
++S:	Maintained
++
+ AEDSP16 DRIVER
+ P:	Riccardo Facchetti
+ M:	fizban@tin.it
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index acd4055..1be68c5 100644
+index bfa1ffc..a0bad3b 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -2302,10 +2302,8 @@ typedef struct adveep_38C1600_config {
- #define BIOS_CTRL_AIPP_DIS           0x2000
- 
- #define ADV_3550_MEMSIZE   0x2000	/* 8 KB Internal Memory */
--#define ADV_3550_IOLEN     0x40	/* I/O Port Range in bytes */
- 
- #define ADV_38C0800_MEMSIZE  0x4000	/* 16 KB Internal Memory */
--#define ADV_38C0800_IOLEN    0x100	/* I/O Port Range in bytes */
+@@ -1,20 +1,23 @@
+-#define ASC_VERSION "3.3K"	/* AdvanSys Driver Version */
++#define ASC_VERSION "3.4"	/* AdvanSys Driver Version */
  
  /*
-  * XXX - Since ASC38C1600 Rev.3 has a local RAM failure issue, there is
-@@ -2315,8 +2313,6 @@ typedef struct adveep_38C1600_config {
-  * #define ADV_38C1600_MEMSIZE  0x8000L   * 32 KB Internal Memory *
+  * advansys.c - Linux Host Driver for AdvanSys SCSI Adapters
+  *
+  * Copyright (c) 1995-2000 Advanced System Products, Inc.
+  * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
++ * Copyright (c) 2007 Matthew Wilcox <matthew@wil.cx>
+  * All Rights Reserved.
+  *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that redistributions of source
+- * code retain the above copyright notice and this comment without
+- * modification.
+- *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++/*
+  * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+  * changed its name to ConnectCom Solutions, Inc.
+- *
++ * On June 18, 2001 Initio Corp. acquired ConnectCom's SCSI assets
   */
- #define ADV_38C1600_MEMSIZE  0x4000	/* 16 KB Internal Memory */
--#define ADV_38C1600_IOLEN    0x100	/* I/O Port Range 256 bytes */
--#define ADV_38C1600_MEMLEN   0x1000	/* Memory Range 4KB bytes */
  
  /*
-  * Byte I/O register address from base of 'iop_base'.
-@@ -3996,7 +3992,6 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 	ASC_DVC_VAR *asc_dvc_varp;
- 	ADV_DVC_VAR *adv_dvc_varp;
- 	char *busname;
--	int iolen;
- 	char *widename = NULL;
+@@ -755,11 +758,6 @@
+  */
  
- 	boardp = ASC_BOARDP(shost);
-@@ -4010,13 +4005,12 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 			} else {
- 				busname = "ISA";
- 			}
--			/* Don't reference 'shost->n_io_port'; It may be truncated. */
- 			sprintf(info,
- 				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X, DMA 0x%X",
- 				ASC_VERSION, busname,
- 				(ulong)shost->io_port,
--				(ulong)shost->io_port + boardp->asc_n_io_port -
--				1, shost->irq, shost->dma_channel);
-+				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
-+				shost->irq, shost->dma_channel);
- 		} else {
- 			if (asc_dvc_varp->bus_type & ASC_IS_VL) {
- 				busname = "VL";
-@@ -4035,12 +4029,11 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 					   "bus type %d\n", boardp->id,
- 					   asc_dvc_varp->bus_type);
- 			}
--			/* Don't reference 'shost->n_io_port'; It may be truncated. */
- 			sprintf(info,
- 				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X",
- 				ASC_VERSION, busname, (ulong)shost->io_port,
--				(ulong)shost->io_port + boardp->asc_n_io_port -
--				1, shost->irq);
-+				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
-+				shost->irq);
- 		}
- 	} else {
- 		/*
-@@ -4052,19 +4045,16 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 		 */
- 		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
- 		if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
--			iolen = ADV_3550_IOLEN;
- 			widename = "Ultra-Wide";
- 		} else if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800) {
--			iolen = ADV_38C0800_IOLEN;
- 			widename = "Ultra2-Wide";
- 		} else {
--			iolen = ADV_38C1600_IOLEN;
- 			widename = "Ultra3-Wide";
- 		}
- 		sprintf(info,
- 			"AdvanSys SCSI %s: PCI %s: PCIMEM 0x%lX-0x%lX, IRQ 0x%X",
- 			ASC_VERSION, widename, (ulong)adv_dvc_varp->iop_base,
--			(ulong)adv_dvc_varp->iop_base + iolen - 1, shost->irq);
-+			(ulong)adv_dvc_varp->iop_base + boardp->asc_n_io_port - 1, shost->irq);
- 	}
- 	ASC_ASSERT(strlen(info) < ASC_INFO_SIZE);
- 	ASC_DBG(1, "advansys_info: end\n");
-@@ -6795,10 +6785,7 @@ static int asc_prt_driver_conf(struct Scsi_Host *shost, char *cp, int cplen)
- 			   boardp->asc_n_io_port);
- 	ASC_PRT_NEXT();
- 
--	/* 'shost->n_io_port' may be truncated because it is only one byte. */
--	len = asc_prt_line(cp, leftlen,
--			   " io_port 0x%x, n_io_port 0x%x\n",
--			   shost->io_port, shost->n_io_port);
-+	len = asc_prt_line(cp, leftlen, " io_port 0x%x\n", shost->io_port);
- 	ASC_PRT_NEXT();
- 
- 	if (ASC_NARROW_BOARD(boardp)) {
-@@ -7690,8 +7677,8 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
- 	printk(" host_busy %u, host_no %d, last_reset %d,\n",
- 	       s->host_busy, s->host_no, (unsigned)s->last_reset);
- 
--	printk(" base 0x%lx, io_port 0x%lx, n_io_port %u, irq 0x%x,\n",
--	       (ulong)s->base, (ulong)s->io_port, s->n_io_port, s->irq);
-+	printk(" base 0x%lx, io_port 0x%lx, irq 0x%x,\n",
-+	       (ulong)s->base, (ulong)s->io_port, s->irq);
- 
- 	printk(" dma_channel %d, this_id %d, can_queue %d,\n",
- 	       s->dma_channel, s->this_id, s->can_queue);
-@@ -17687,15 +17674,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	}
- 
- 	/*
--	 * 'n_io_port' currently is one byte.
--	 *
--	 * Set a value to 'n_io_port', but never referenced it because
--	 * it may be truncated.
--	 */
--	shost->n_io_port = boardp->asc_n_io_port <= 255 ?
--	    boardp->asc_n_io_port : 255;
+ #include <linux/module.h>
 -
--	/*
- 	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
- 	 * and should be set to zero.
- 	 *
+-#if defined(CONFIG_X86) && !defined(CONFIG_ISA)
+-#define CONFIG_ISA
+-#endif /* CONFIG_X86 && !CONFIG_ISA */
+-
+ #include <linux/string.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+@@ -771,7 +769,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
+-#include <linux/stat.h>
++#include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/dma-mapping.h>
+ 
+@@ -779,6 +777,12 @@
+ #include <asm/system.h>
+ #include <asm/dma.h>
+ 
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_host.h>
++
+ /* FIXME: (by jejb@steeleye.com) This warning is present for two
+  * reasons:
+  *
+@@ -793,15 +797,6 @@
+  */
+ #warning this driver is still not properly converted to the DMA API
+ 
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_tcq.h>
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_host.h>
+-#ifdef CONFIG_PCI
+-#include <linux/pci.h>
+-#endif /* CONFIG_PCI */
+-
+ /*
+  * --- Driver Options
+  */
+@@ -17760,8 +17755,6 @@ static void AdvInquiryHandling(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 	}
+ }
+ 
+-MODULE_LICENSE("Dual BSD/GPL");
+-
+ static struct Scsi_Host *__devinit
+ advansys_board_found(int iop, struct device *dev, int bus_type)
+ {
+@@ -19017,3 +19010,5 @@ static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
+ 
+ MODULE_DEVICE_TABLE(pci, advansys_pci_tbl);
+ #endif /* CONFIG_PCI */
++
++MODULE_LICENSE("GPL");
 -- 
 1.4.4.4
 
