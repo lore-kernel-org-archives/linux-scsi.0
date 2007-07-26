@@ -1,75 +1,26 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/21] advansys: Convert to pci_register_driver interface
-Date: Thu, 26 Jul 2007 15:31:21 -0400
-Message-ID: <46A8F689.108@garzik.org>
-References: 20070726171141.GE19275@parisc-linux.org <11854705774041-git-send-email-matthew@wil.cx>
+Subject: Re: [PATCH 7/21] advansys: Convert to EISA driver model
+Date: Thu, 26 Jul 2007 15:38:56 -0400
+Message-ID: <46A8F850.3070102@garzik.org>
+References: 20070726171141.GE19275@parisc-linux.org <11854705772-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:50875 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:50937 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753693AbXGZTbY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jul 2007 15:31:24 -0400
-In-Reply-To: <11854705774041-git-send-email-matthew@wil.cx>
+	id S1762832AbXGZTi6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jul 2007 15:38:58 -0400
+In-Reply-To: <11854705772-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
 Matthew Wilcox wrote:
-> +static int __devinit
-> +advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
-> +{
-> +	int ioport;
-> +	struct Scsi_Host *shost;
-> +
-> +	if (pci_enable_device(pdev))
-> +		goto fail;
-> +
-> +	ioport = pci_resource_start(pdev, 0);
-> +	shost = advansys_board_found(ioport, &pdev->dev, ASC_IS_PCI);
-> +
-> +	if (shost) {
-> +		pci_set_drvdata(pdev, shost);
-> +		return 0;
-> +	}
-> +
-> +	pci_disable_device(pdev);
-> + fail:
-> +	return -ENODEV;
-> +}
-
-1) you should propagate pci_enable_device return value to caller on error
-
-1.1) in general, following my comment #1 will make this function look 
-more like other normal Linux code, i.e.
-
-	rc = foo
-	if (rc)
-		goto err_out
-
-	return 0;
-
-      err_out:
-	return rc;
-
-2) you dropped the check for pci_resource_start() returning zero (look 
-for 'iop == 0' in original code)
-
-3) what happened to PCI BAR #1 ?  shouldn't you move that call here too? 
-  it gets ioremapped (look at 'pci_memory_address' in old code, right 
-next to pci_resource_start call)
-
-4) it is often wise to add sanity checks that ensure that PCI BAR #0 == 
-IORESOURCE_IO and PCI BAR #1 == IORESOURCE_MEM
-
-
-
-> +static void __devexit advansys_pci_remove(struct pci_dev *pdev)
+> +static void __devexit advansys_remove(struct Scsi_Host *shost)
 > +{
 > +	int i;
-> +	struct Scsi_Host *shost = pci_get_drvdata(pdev);
 > +	scsi_remove_host(shost);
 > +	advansys_release(shost);
 > +
@@ -79,55 +30,80 @@ IORESOURCE_IO and PCI BAR #1 == IORESOURCE_MEM
 > +			break;
 > +		}
 > +	}
-> +
-> +	pci_disable_device(pdev);
+> +}
 
-5) call pci_set_drvdata(pdev, NULL) as with other PCI drivers
-
-
-> +static struct pci_driver advansys_pci_driver = {
-> +	.name = "advansys",
-> +	.id_table = advansys_pci_tbl,
-> +	.probe = advansys_pci_probe,
-> +	.remove = __devexit_p(advansys_pci_remove),
-> +};
-
-6) suggestions:  tab alignment for struct member values; makes it far 
-easier to read.
+1) IMO this should be in the PCI patch
 
 
-> +static int __init advansys_init(void)
+> +static int __devinit advansys_eisa_probe(struct device *dev)
 > +{
-> +	int count, error;
-> +	count = advansys_detect();
-> +	error = pci_register_driver(&advansys_pci_driver);
+> +	int i, ioport;
+> +	int err = -ENODEV;
+> +	struct eisa_device *edev = to_eisa_device(dev);
 > +
-> +	/*
-> +	 * If we found some ISA, EISA or VLB devices, we must not fail.
-> +	 * We may not drive any PCI devices, but it's better to drive
-> +	 * the cards that we successfully discovered than none at all.
-> +	 */
-> +	if (count > 0)
-> +		error = 0;
-> +	return error;
+> +	struct eisa_scsi_data *data = kzalloc(sizeof(*data), GFP_KERNEL);
+
+nits:
+
+2) check for NULL
+
+3) maybe it's just me, but the mixing initializers and allocation code 
+is way too close to C99/C++ code/decl mixing.  I would declare 'data', 
+then initialize it on an separate line.  But again, maybe that's just me.
+
+
+> +	ioport = edev->base_addr + 0xc30;
+> +
+> +	for (i = 0; i < 2; i++, ioport += 0x20) {
+> +		if (!AscFindSignature(ioport))
+> +			continue;
+> +		inw(ioport + 4);
+
+4) would be nice to have a comment noting what this inw() does.
+
+5) I would suggest putting a "remove inpw/outpw pointless wrappers" 
+cleanup patch before patches #2 .. #N.
+
+
+> +		data->host[i] = advansys_board_found(ioport, dev, ASC_IS_EISA);
+> +		if (data->host[i])
+> +			err = 0;
+> +	}
+> +
+> +	if (err) {
+> +		kfree(data);
+> +	} else {
+> +		dev_set_drvdata(dev, data);
+> +	}
+> +
+> +	return err;
 > +}
 > +
-> +static void __exit advansys_exit(void)
+> +static __devexit int advansys_eisa_remove(struct device *dev)
 > +{
-> +	int i;
+> +	int i, ioport;
+> +	struct eisa_scsi_data *data = dev_get_drvdata(dev);
 > +
-> +	pci_unregister_driver(&advansys_pci_driver);
-
-7) bug: don't unregister, if pci_register_driver() failed during init
-
-
-> +	for (i = 0; i < asc_board_count; i++) {
-> +		struct Scsi_Host *host = asc_host[i];
-> +		if (!host)
+> +	for (i = 0; i < 2; i++) {
+> +		struct Scsi_Host *shost = data->host[i];
+> +		if (!shost)
 > +			continue;
-> +		scsi_remove_host(host);
-> +		advansys_release(host);
-> +		asc_host[i] = NULL;
+> +		ioport = shost->io_port;
+> +		advansys_remove(data->host[i]);
+> +	}
+> +
+> +	return 0;
 
-this last line of code is rather pointless, isn't it?
+6) set drvdata to NULL
+
+
+> +static struct eisa_driver advansys_eisa_driver = {
+> +	.id_table = advansys_eisa_table,
+> +	.driver = {
+> +		.name = "advansys",
+> +		.probe = advansys_eisa_probe,
+> +		.remove = __devexit_p(advansys_eisa_remove),
+> +	}
+
+7) values much more readable when tab-aligned
 
