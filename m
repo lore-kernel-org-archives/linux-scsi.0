@@ -1,49 +1,46 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/21] advansys: Convert to pci_register_driver interface
-Date: Thu, 26 Jul 2007 17:21:15 -0400
-Message-ID: <46A9104B.60706@garzik.org>
-References: <11854705774041-git-send-email-matthew@wil.cx> <46A8F689.108@garzik.org> <20070726204915.GS19275@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [Bug 8366] aic79xx and aic7xxx driver issues
+Date: Thu, 26 Jul 2007 17:29:18 -0400
+Message-ID: <1185485358.3501.94.camel@localhost.localdomain>
+References: <20070725010525.614621080E4@picon.linux-foundation.org>
+	 <1185329683.3488.46.camel@localhost.localdomain>
+	 <1185461780.14419.17.camel@fea.ornl.gov>
+	 <1185462341.3501.62.camel@localhost.localdomain>
+	 <1185480022.14419.58.camel@fea.ornl.gov>
+	 <1185482804.3501.87.camel@localhost.localdomain>
+	 <1185484390.3501.93.camel@localhost.localdomain>
+	 <1185484597.14419.65.camel@fea.ornl.gov>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:52002 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759638AbXGZVVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jul 2007 17:21:18 -0400
-In-Reply-To: <20070726204915.GS19275@parisc-linux.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:39553 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1761429AbXGZV3U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 17:29:20 -0400
+In-Reply-To: <1185484597.14419.65.camel@fea.ornl.gov>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: freelsjd@ornl.gov
+Cc: bugme-daemon@bugzilla.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Thu, 2007-07-26 at 17:16 -0400, Freels, James D. wrote:
+> James, I would be glad to try the fix.  I can grab the changes below,
+> but can you give me the patch command ?  I know how to patch the
+> normal kernel sources.  Is this a patch for 2.6.22.1 ?
 
-I'll respond to the other stuff soon, but I wanted to add:
+It was created against current git, but there should be little
+difference in the aic driver between that and 2.6.22.1, so it should
+apply there as well.
 
->>> +	for (i = 0; i < asc_board_count; i++) {
->>> +		struct Scsi_Host *host = asc_host[i];
->>> +		if (!host)
->>> +			continue;
->>> +		scsi_remove_host(host);
->>> +		advansys_release(host);
->>> +		asc_host[i] = NULL;
+> cd /usr/src/linux-2.6.22.1
+> 
+> patch -p1 <../your_new_patch
+> 
+> where your_new_patch is in /usr/src  
 
+Yes, that should do it.
 
-It is wise to have two loops in module exit:
-
-1) For each host, call scsi_remove_host()
-
-2) For each host, {do the rest of the cleanup}
-
-scsi_module.c behaves in this way.
-
-There is no strict requirement to do this, but IMO it is wise because 
-you don't have to worry about the SCSI midlayer passing new traffic to 
-asc_host[x+1] while you are deactivating and freeing asc_host[x].
-
-Obviously this goes away for the new-style PCI/EISA/ISA probe APIs, once 
-asc_host[] goes away.
-
-	Jeff
+James
 
 
