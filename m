@@ -1,52 +1,52 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Advansys driver
-Date: Thu, 26 Jul 2007 11:11:41 -0600
-Message-ID: <20070726171141.GE19275@parisc-linux.org>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Fri, 27 Jul 2007 02:28:12 +0900
+Message-ID: <20070726022605N.tomof@acm.org>
+References: <20070726190913A.fujita.tomonori@lab.ntt.co.jp>
+	<664A4EBB07F29743873A87CF62C26D708B3A65@NAMAIL4.ad.lsil.com>
+	<20070726020657P.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47329 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761664AbXGZRLm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 13:11:42 -0400
-Content-Disposition: inline
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:52825 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S933365AbXGZR2t (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jul 2007 13:28:49 -0400
+In-Reply-To: <20070726020657P.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, dougg@torque.net, jens.axboe@oracle.com
 
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Fri, 27 Jul 2007 02:09:05 +0900
 
-Since the AdvanSys driver hasn't had a maintainer in 6 years, I don't
-think anybody's going to seriously object to me taking this on.
+> Use-space applications can put four memory addresses in the bsg (sg
+> v4) interface: request, response, dout_xferp, and din_xferp.
+> 
+> For scsi commands, we use:
+> 
+> request -> pointer to a scsi command (cmdp in sgv3)
+> response -> pointer to a sense buffer (sbp in sgv3)
+> dout_xferp -> pointer to out data
+> din_xferp -> pointer to in data
+> 
+> For smp request/response, we use:
+> 
+> request -> not used
+> response -> not used
+> dout_xferp -> pointer to a smp request frame
+> din_xferp -> pointer to a smp response frame
+> 
+> 
+> So we could use response field to send vendor's unique response to
+> user space.
+> 
+> bsg wrongly assues the response field is used for sense buffer so the
+> maxium length is SCSI_SENSE_BUFFERSIZE, 96 bytes. I think that it's a
+> bit small for mpt's unique response. But, I'll fix the length
+> limitation bug soon.
 
-I present a git tree of patches:
-http://git.kernel.org/?p=linux/kernel/git/willy/advansys.git;a=summary
-
-and the broken-out version of those patches:
-http://www.kernel.org/pub/linux/kernel/people/willy/advansys-2007-07-26/
-
-There's no way I'm going to send the Lindenting of that driver to the
-list; it's 1.1MB.  Here's the git-log entry for it:
-
-    advansys: Large, uninteresting changes
-    
-     - Run Lindent
-     - Move advansys_detect and advansys_release to the end of the file
-     - Split advansys_board_found out of advansys_detect
-     - Rename a few variables, such as shp to shost and pci_devp to pdev
-     - Turn STATIC into static
-
-I'll send the other 21 patches as a reply to this mail.
-
-I'd like to particularly thank Ken Witherow for testing many different
-versions of these patches.  He was indefatigable in the presence of
-the daft changes I was making when I didn't have a card to test it on.
-I would thank Dave Jones for sending me his card, but I think he did it
-to get revenge on me for something :-)
-
-If anyone has an EISA version of this card they want to donate to me,
-I can give it a good home in an Alpha.
-
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Oops, 96 bytes is large enough for mpt's unique response. Right?
