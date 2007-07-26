@@ -1,51 +1,66 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/21] advansys: version, copyright, etc
-Date: Thu, 26 Jul 2007 13:16:46 -0600
-Message-ID: <20070726191646.GN19275@parisc-linux.org>
-References: <11854705771114-git-send-email-matthew@wil.cx> <46A8EE61.5070307@garzik.org> <20070726190349.GL19275@parisc-linux.org> <46A8F137.1020006@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 6/21] advansys: Move to scsi hotplug initialisation model
+Date: Thu, 26 Jul 2007 15:19:31 -0400
+Message-ID: <46A8F3C3.9030500@garzik.org>
+References: 20070726171141.GE19275@parisc-linux.org <11854705779-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47742 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761989AbXGZTQr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 15:16:47 -0400
-Content-Disposition: inline
-In-Reply-To: <46A8F137.1020006@garzik.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:50815 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932163AbXGZTTd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jul 2007 15:19:33 -0400
+In-Reply-To: <11854705779-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Jul 26, 2007 at 03:08:39PM -0400, Jeff Garzik wrote:
-> Matthew Wilcox wrote:
-> >On Thu, Jul 26, 2007 at 02:56:33PM -0400, Jeff Garzik wrote:
-> >>Matthew Wilcox wrote:
-> >>>Exercise my right to change the license from dual BSD/GPL to GPL
-> >>What do the other copyright holders think about this?
-> >
-> >They're not contactable.
-> 	      ^^ easily
-> 
-> AFAIK that does not eliminate your legal obligation...
+Matthew Wilcox wrote:
+> @@ -18511,13 +18493,24 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+>  	}
+>  
+>  	if (err_code != 0)
+> -		goto err_free_irq;
+> +		goto err_free_wide_mem;
+>  
+>  	ASC_DBG_PRT_SCSI_HOST(2, shost);
+>  
+> +	ret = scsi_add_host(shost, dev);
+> +	if (ret)
+> +		goto err_free_wide_mem;
+> +
+> +	scsi_scan_host(shost);
+>  	return shost;
+>  
+> - err_free_irq:
+> + err_free_wide_mem:
+> +	kfree(boardp->orig_carrp);
+> +	kfree(boardp->orig_reqp);
+> +	while ((sgp = boardp->adv_sgblkp) != NULL) {
+> +		boardp->adv_sgblkp = sgp->next_sgblkp;
+> +		kfree(sgp);
+> +	}
+>  	free_irq(shost->irq, boardp);
+>   err_free_dma:
+>  	if (shost->dma_channel != NO_ISA_DMA)
 
-No, really.  They don't exist any more.  Advanced System Products (first
-listed copyright holder) changed their name to ConnectCom Solutions
-(second copyright holder) and were then acquired (in part) by Initio.
+When this patch is considered in context of replies to patch #3, it's 
+OK...  it un-breaks driver which was broken in patch #3.
 
-In any case, this is not a legal question it's an ethical question.
-Depending on whether you believe the copyright statment or the
-MODULE_LICENSE() statement, it's either licensed under the BSD license,
-or a disjunction of the GPL and BSD licenses.  In either case, I am
-entitled to take the work and redistribute it under the terms of the GPL.
+But like I noted, this should be done -before- PCI hotplug conversion, 
+for the obvious reasons.
 
-We don't generally do it if the copyright holders are around to object,
-because we're nice people.  But when they're gone, there's no ethical,
-moral, or legal reason not to.
+Generally the process involves:
 
-IANAL.
+* call foo_detect from module init
+* for each scsi host, call foo_release from module exit
+* do the scsi conversion as you've presented it here
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+and then in later patches, rip out the PCI code from foo_detect and 
+foo_release, etc.
+
+	Jeff
+
+
