@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 6/21] advansys: Move to scsi hotplug initialisation model
-Date: Thu, 26 Jul 2007 13:22:42 -0400
-Message-ID: <11854705779-git-send-email-matthew@wil.cx>
+Subject: [PATCH 4/21] advansys: restructure error handling in advansys_board_found
+Date: Thu, 26 Jul 2007 13:22:40 -0400
+Message-ID: <11854705771175-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:55151 "EHLO
-	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933557AbXGZR4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 13:56:06 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:47341 "EHLO
+	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762801AbXGZR6D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 13:58:03 -0400
 In-Reply-To: 20070726171141.GE19275@parisc-linux.org
 References: 20070726171141.GE19275@parisc-linux.org
 In-Reply-To: <20070726171141.GE19275@parisc-linux.org>
@@ -16,195 +16,202 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
- - Switch from scsi_register/scsi_unregister to scsi_host_alloc,
-   scsi_add_host, scsi_scan_host and scsi_host_put.
- - Rename the scsi_host_template to advansys_template
- - Move the memory freeing on error from advansys_wide_init_chip()
-   back into advansys_board_found() as we need to free it if
-   scsi_add_host() returns an error.
+Put all the error cleanup at the end of the function and goto the
+correct spot.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |   71 +++++++++++++++++++++-------------------------
- 1 files changed, 32 insertions(+), 39 deletions(-)
+ drivers/scsi/advansys.c |  106 ++++++++++++++++------------------------------
+ 1 files changed, 37 insertions(+), 69 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index a663d14..b56f6c5 100644
+index d1ab0dc..3620322 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -3784,7 +3784,7 @@ typedef struct adv_req {
- /*
-  * Structure allocated for each board.
-  *
-- * This structure is allocated by scsi_register() at the end
-+ * This structure is allocated by scsi_host_alloc() at the end
-  * of the 'Scsi_Host' structure starting at the 'hostdata'
-  * field. It is guaranteed to be allocated from DMA-able memory.
-  */
-@@ -4578,7 +4578,7 @@ advansys_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- 	return 0;
- }
+@@ -17804,9 +17804,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 			ASC_PRINT3
+ 			    ("advansys_board_found: board %d: ioremap(%x, %d) returned NULL\n",
+ 			     boardp->id, pci_memory_address, iolen);
+-			scsi_unregister(shost);
+-			asc_board_count--;
+-			return NULL;
++			goto err_shost;
+ 		}
+ 		ASC_DBG1(1,
+ 			 "advansys_board_found: ioremap_addr: 0x%lx\n",
+@@ -17840,9 +17838,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		ASC_PRINT3
+ 		    ("advansys_board_found: board %d: kmalloc(%d, %d) returned NULL\n",
+ 		     boardp->id, ASC_PRTBUF_SIZE, GFP_ATOMIC);
+-		scsi_unregister(shost);
+-		asc_board_count--;
+-		return NULL;
++		goto err_unmap;
+ 	}
+ #endif /* CONFIG_PROC_FS */
  
--static struct scsi_host_template driver_template = {
-+static struct scsi_host_template advansys_template = {
- 	.proc_name = "advansys",
- #ifdef CONFIG_PROC_FS
- 	.proc_info = advansys_proc_info,
-@@ -17696,7 +17696,6 @@ static void AdvInquiryHandling(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
- static int __devinit
- advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
- {
--	ADV_CARR_T *carrp;
- 	int req_cnt = 0;
- 	adv_req_t *reqp = NULL;
- 	int sg_cnt = 0;
-@@ -17707,10 +17706,11 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
- 	 * Allocate buffer carrier structures. The total size
- 	 * is about 4 KB, so allocate all at once.
- 	 */
--	carrp = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
--	ASC_DBG1(1, "advansys_wide_init_chip: carrp 0x%lx\n", (ulong) carrp);
-+	boardp->orig_carrp = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
-+	ASC_DBG1(1, "advansys_wide_init_chip: carrp 0x%p\n",
-+							boardp->orig_carrp);
- 
--	if (!carrp)
-+	if (!boardp->orig_carrp)
- 		goto kmalloc_failed;
- 
- 	/*
-@@ -17732,6 +17732,8 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
- 	if (!reqp)
- 		goto kmalloc_failed;
- 
-+	boardp->orig_reqp = reqp;
-+
- 	/*
- 	 * Allocate up to ADV_TOT_SG_BLOCK request structures for
- 	 * the Wide board. Each structure is about 136 bytes.
-@@ -17755,16 +17757,7 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
- 	if (!boardp->adv_sgblkp)
- 		goto kmalloc_failed;
- 
--	/* Save carrier buffer pointer. */
--	boardp->orig_carrp = carrp;
--
--	/*
--	 * Save original pointer for kfree() in case the
--	 * driver is built as a module and can be unloaded.
--	 */
--	boardp->orig_reqp = reqp;
--
--	adv_dvc_varp->carrier_buf = carrp;
-+	adv_dvc_varp->carrier_buf = boardp->orig_carrp;
- 
- 	/*
- 	 * Point 'adv_reqp' to the request structures and
-@@ -17796,24 +17789,14 @@ advansys_wide_init_chip(asc_board_t *boardp, ADV_DVC_VAR *adv_dvc_varp)
- 			   " error 0x%x\n", boardp->id, warn_code, err_code);
+@@ -17968,14 +17964,8 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		}
  	}
  
--	if (err_code == 0)
--		return 0;
--
--	while ((sgp = boardp->adv_sgblkp) != NULL) {
--		boardp->adv_sgblkp = sgp->next_sgblkp;
--		kfree(sgp);
+-	if (err_code != 0) {
+-#ifdef CONFIG_PROC_FS
+-		kfree(boardp->prtbuf);
+-#endif /* CONFIG_PROC_FS */
+-		scsi_unregister(shost);
+-		asc_board_count--;
+-		return NULL;
 -	}
--
-- failed:
--	kfree(reqp);
--	kfree(carrp);
--	return err_code;
-+	goto exit;
++	if (err_code != 0)
++		goto err_free_proc;
  
-  kmalloc_failed:
- 	ASC_PRINT1("advansys_wide_init_chip: board %d error: kmalloc() "
- 		   "failed\n", boardp->id);
- 	err_code = ADV_ERROR;
--	goto failed;
-+ exit:
-+	return err_code;
- }
+ 	/*
+ 	 * Save the EEPROM configuration so that it can be displayed
+@@ -18057,12 +18047,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 			    ("AscInitSetConfig: board %d error: init_state 0x%x, err_code 0x%x\n",
+ 			     boardp->id,
+ 			     asc_dvc_varp->init_state, asc_dvc_varp->err_code);
+-#ifdef CONFIG_PROC_FS
+-			kfree(boardp->prtbuf);
+-#endif /* CONFIG_PROC_FS */
+-			scsi_unregister(shost);
+-			asc_board_count--;
+-			return NULL;
++			goto err_free_proc;
+ 		}
  
- static struct Scsi_Host *__devinit
-@@ -17824,6 +17807,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	asc_board_t *boardp;
- 	ASC_DVC_VAR *asc_dvc_varp = NULL;
- 	ADV_DVC_VAR *adv_dvc_varp = NULL;
-+	adv_sgblk_t *sgp;
- 	int share_irq = FALSE;
- 	int iolen = 0;
- 	ADV_PADDR pci_memory_address;
-@@ -17836,8 +17820,8 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	 * Register the adapter, get its configuration, and
- 	 * initialize it.
- 	 */
--	ASC_DBG(2, "advansys_board_found: scsi_register()\n");
--	shost = scsi_register(&driver_template, sizeof(asc_board_t));
-+	ASC_DBG(2, "advansys_board_found: scsi_host_alloc()\n");
-+	shost = scsi_host_alloc(&advansys_template, sizeof(asc_board_t));
- 
- 	if (!shost)
- 		return NULL;
-@@ -18373,10 +18357,8 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 
- 	/* BIOS start address. */
- 	if (ASC_NARROW_BOARD(boardp)) {
--		shost->base = ((ulong)
--			     AscGetChipBiosAddress(asc_dvc_varp->
--						   iop_base,
--						   asc_dvc_varp->bus_type));
-+		shost->base = AscGetChipBiosAddress(asc_dvc_varp->iop_base,
-+						   asc_dvc_varp->bus_type);
- 	} else {
  		/*
- 		 * Fill-in BIOS board variables. The Wide BIOS saves
-@@ -18511,13 +18493,24 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+@@ -18327,12 +18312,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		ASC_PRINT3
+ 		    ("advansys_board_found: board %d: request_region() failed, port 0x%lx, len 0x%x\n",
+ 		     boardp->id, (ulong)shost->io_port, boardp->asc_n_io_port);
+-#ifdef CONFIG_PROC_FS
+-		kfree(boardp->prtbuf);
+-#endif /* CONFIG_PROC_FS */
+-		scsi_unregister(shost);
+-		asc_board_count--;
+-		return NULL;
++		goto err_free_proc;
  	}
  
- 	if (err_code != 0)
--		goto err_free_irq;
-+		goto err_free_wide_mem;
+ 	/* Register DMA Channel for Narrow boards. */
+@@ -18342,19 +18322,12 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		/* Register DMA channel for ISA bus. */
+ 		if (asc_dvc_varp->bus_type & ASC_IS_ISA) {
+ 			shost->dma_channel = asc_dvc_varp->cfg->isa_dma_channel;
+-			if ((ret =
+-			     request_dma(shost->dma_channel, "advansys")) != 0) {
++			ret = request_dma(shost->dma_channel, "advansys");
++			if (ret) {
+ 				ASC_PRINT3
+ 				    ("advansys_board_found: board %d: request_dma() %d failed %d\n",
+ 				     boardp->id, shost->dma_channel, ret);
+-				release_region(shost->io_port,
+-					       boardp->asc_n_io_port);
+-#ifdef CONFIG_PROC_FS
+-				kfree(boardp->prtbuf);
+-#endif /* CONFIG_PROC_FS */
+-				scsi_unregister(shost);
+-				asc_board_count--;
+-				return NULL;
++				goto err_free_region;
+ 			}
+ 			AscEnableIsaDma(shost->dma_channel);
+ 		}
+@@ -18372,16 +18345,15 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	 * If IRQF_DISABLED is not set, then interrupts are enabled
+ 	 * before the driver interrupt function is called.
+ 	 */
+-	if (((ret = request_irq(shost->irq, advansys_interrupt,
+-				IRQF_DISABLED | (share_irq ==
+-						 TRUE ?
+-						 IRQF_SHARED :
+-						 0), "advansys", boardp)) != 0)
+-	    &&
+-	    ((ret =
+-	      request_irq(shost->irq, advansys_interrupt,
+-			  (share_irq == TRUE ? IRQF_SHARED : 0),
+-			  "advansys", boardp)) != 0)) {
++	ret = request_irq(shost->irq, advansys_interrupt, IRQF_DISABLED |
++			   (share_irq == TRUE ?  IRQF_SHARED : 0), "advansys",
++			  boardp);
++	if (ret)
++		ret = request_irq(shost->irq, advansys_interrupt,
++				  (share_irq == TRUE ? IRQF_SHARED : 0),
++				  "advansys", boardp);
++
++	if (ret) {
+ 		if (ret == -EBUSY) {
+ 			ASC_PRINT2
+ 			    ("advansys_board_found: board %d: request_irq(): IRQ 0x%x already in use.\n",
+@@ -18395,17 +18367,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 			    ("advansys_board_found: board %d: request_irq(): IRQ 0x%x failed with %d\n",
+ 			     boardp->id, shost->irq, ret);
+ 		}
+-		release_region(shost->io_port, boardp->asc_n_io_port);
+-		iounmap(boardp->ioremap_addr);
+-		if (shost->dma_channel != NO_ISA_DMA) {
+-			free_dma(shost->dma_channel);
+-		}
+-#ifdef CONFIG_PROC_FS
+-		kfree(boardp->prtbuf);
+-#endif /* CONFIG_PROC_FS */
+-		scsi_unregister(shost);
+-		asc_board_count--;
+-		return NULL;
++		goto err_free_dma;
+ 	}
  
+ 	/*
+@@ -18562,9 +18524,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	}
+ 
+ 	if (err_code != 0) {
+-		release_region(shost->io_port, boardp->asc_n_io_port);
+ 		if (ASC_WIDE_BOARD(boardp)) {
+-			iounmap(boardp->ioremap_addr);
+ 			kfree(boardp->orig_carrp);
+ 			boardp->orig_carrp = NULL;
+ 			if (boardp->orig_reqp) {
+@@ -18576,20 +18536,28 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 				kfree(sgp);
+ 			}
+ 		}
+-		if (shost->dma_channel != NO_ISA_DMA) {
+-			free_dma(shost->dma_channel);
+-		}
+-#ifdef CONFIG_PROC_FS
+-		kfree(boardp->prtbuf);
+-#endif /* CONFIG_PROC_FS */
+-		free_irq(shost->irq, boardp);
+-		scsi_unregister(shost);
+-		asc_board_count--;
+-		return NULL;
++		goto err_free_irq;
+ 	}
  	ASC_DBG_PRT_SCSI_HOST(2, shost);
  
-+	ret = scsi_add_host(shost, dev);
-+	if (ret)
-+		goto err_free_wide_mem;
-+
-+	scsi_scan_host(shost);
  	return shost;
++
++ err_free_irq:
++	free_irq(shost->irq, boardp);
++ err_free_dma:
++	if (shost->dma_channel != NO_ISA_DMA)
++		free_dma(shost->dma_channel);
++ err_free_region:
++	release_region(shost->io_port, boardp->asc_n_io_port);
++ err_free_proc:
++	kfree(boardp->prtbuf);
++ err_unmap:
++	if (boardp->ioremap_addr)
++		iounmap(boardp->ioremap_addr);
++ err_shost:
++	scsi_unregister(shost);
++	asc_board_count--;
++	return NULL;
+ }
  
-- err_free_irq:
-+ err_free_wide_mem:
-+	kfree(boardp->orig_carrp);
-+	kfree(boardp->orig_reqp);
-+	while ((sgp = boardp->adv_sgblkp) != NULL) {
-+		boardp->adv_sgblkp = sgp->next_sgblkp;
-+		kfree(sgp);
-+	}
- 	free_irq(shost->irq, boardp);
-  err_free_dma:
- 	if (shost->dma_channel != NO_ISA_DMA)
-@@ -18530,7 +18523,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	if (boardp->ioremap_addr)
- 		iounmap(boardp->ioremap_addr);
-  err_shost:
--	scsi_unregister(shost);
-+	scsi_host_put(shost);
- 	asc_board_count--;
- 	return NULL;
- }
-@@ -18758,7 +18751,7 @@ static int advansys_release(struct Scsi_Host *shost)
- 	ASC_ASSERT(boardp->prtbuf != NULL);
- 	kfree(boardp->prtbuf);
- #endif /* CONFIG_PROC_FS */
--	scsi_unregister(shost);
-+	scsi_host_put(shost);
- 	ASC_DBG(1, "advansys_release: end\n");
- 	return 0;
- }
+ /*
 -- 
 1.4.4.4
 
