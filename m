@@ -1,46 +1,50 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 9/21] advansys: More PCI cleanups
-Date: Thu, 26 Jul 2007 15:55:08 -0400
-Message-ID: <46A8FC1C.6050206@garzik.org>
-References: <11854705772242-git-send-email-matthew@wil.cx> <46A8F96B.9080002@garzik.org> <20070726195020.GO19275@parisc-linux.org>
+From: Christer Weinigel <christer@weinigel.se>
+Subject: Re: [PATCH 2/21] advansys: version, copyright, etc
+Date: Thu, 26 Jul 2007 21:25:17 +0200
+Message-ID: <20070726212517.55b4617a@localhost.localdomain>
+References: <11854705771114-git-send-email-matthew@wil.cx>
+	<46A8EE61.5070307@garzik.org>
+	<20070726190349.GL19275@parisc-linux.org>
+	<46A8F137.1020006@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:51059 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753487AbXGZTzJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jul 2007 15:55:09 -0400
-In-Reply-To: <20070726195020.GO19275@parisc-linux.org>
+Received: from 2-1-3-15a.ens.sth.bostream.se ([82.182.31.214]:56446 "EHLO
+	zoo.weinigel.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932950AbXGZT7O (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 15:59:14 -0400
+In-Reply-To: <46A8F137.1020006@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Thu, Jul 26, 2007 at 03:43:39PM -0400, Jeff Garzik wrote:
->>> +static void __devinit advansys_set_latency(struct pci_dev *pdev)
->>> +{
->>> +	if ((pdev->device == PCI_DEVICE_ID_ASP_1200A) ||
->>> +	    (pdev->device == PCI_DEVICE_ID_ASP_ABP940)) {
->>> +		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0);
->>> +	} else {
->>> +		u8 latency;
->>> +		pci_read_config_byte(pdev, PCI_LATENCY_TIMER, &latency);
->>> +		if (latency < 0x20)
->>> +			pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x20);
->>> +	}
->> the latter branch is useless -- pci_set_master() ensures 
->> PCI_LATENCY_TIMER is adequate
-> 
-> i386 certainly has a workaround for broken BIOSes, but this looks to
-> me like it's working around an issue the card has with a latency timer
-> below 32.  Note that i386's implementation of pcibios_set_master()
-> only ensures that the latency timer is 16 or higher.
+On Thu, 26 Jul 2007 15:08:39 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
 
-Ah, indeed.
+> Matthew Wilcox wrote:
+> > On Thu, Jul 26, 2007 at 02:56:33PM -0400, Jeff Garzik wrote:
+> >> Matthew Wilcox wrote:
+> >>> Exercise my right to change the license from dual BSD/GPL to GPL
+> >> What do the other copyright holders think about this?
+> > They're not contactable.
+> AFAIK that does not eliminate your legal obligation...
 
-	Jeff
+Isn't the whole point of dual BSD/GPL that it makes it possible to make
+the driver BSD only/GPL only later on?  Pure BSD code (w/o advertising
+clause) can have additional restrictions (GPL or some proprietary
+licensing terms) added later on by a vendor, so why can't BSD/GPL code
+be relicensed the same way?
 
+If it's polite to relicense the code is a completely different
+question.  On the other hand, if Matthew makes major changes and wants
+those to become GPL, that's up to him.
 
+  /Christer
+
+Off topic: I've been told that some Irish radio station has had a
+competition where you were supposed to send in photos of people holding
+an egg.  Can somebody tell me what radio station is that and where I can
+find the pictures?
 
