@@ -1,118 +1,38 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: draw line in sand, sundry cleanup and version update
-Date: Thu, 26 Jul 2007 14:20:02 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01C5B28D@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01C5A9E1@otce2k301.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 6/21] advansys: Move to scsi hotplug initialisation model
+Date: Thu, 26 Jul 2007 12:29:34 -0600
+Message-ID: <20070726182933.GK19275@parisc-linux.org>
+References: <20070726171141.GE19275@parisc-linux.org> <11854705779-git-send-email-matthew@wil.cx> <20070726180112.GA3392@infradead.org> <20070726180446.GI19275@parisc-linux.org> <20070726180617.GJ19275@parisc-linux.org> <46A8E4FB.8040908@garzik.org>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7CFB1.95B0BCEE"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:60713 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936205AbXGZSUJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 14:20:09 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id A43201DDB33
-	for <linux-scsi@vger.kernel.org>; Thu, 26 Jul 2007 11:20:04 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01C5A9E1@otce2k301.adaptec.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:47760 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751495AbXGZS3f (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 14:29:35 -0400
+Content-Disposition: inline
+In-Reply-To: <46A8E4FB.8040908@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+On Thu, Jul 26, 2007 at 02:16:27PM -0400, Jeff Garzik wrote:
+> In that case, reverse what I said:  the above pci_register_driver commit 
+> breaks non-PCI probing.
 
-------_=_NextPart_001_01C7CFB1.95B0BCEE
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Ah yes.  Fair point.
 
-Minor unimportant cuttings from the floor bundled in with a version
-stamp update. Only controversial change is the dropping of Alan Cox
-copyright on the nark.c module since that file has no code written by
-him in it.
+> advansys_detect/release populate legacy list, but nothing ever happens 
+> from there...  your "Move to scsi hotplug initialisation model" patch 
+> fixes this bug, I presume.
 
-This attached patch is against current scsi-misc-2.6
+Looks like it.  I don't know of any testers with non-PCI cards though.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
+Anyone out there with a non-PCI advansys card want to do some testing
+for me?
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c  |    3 +--
- drivers/scsi/aacraid/aacraid.h |    6 +++---
- drivers/scsi/aacraid/linit.c   |    3 +--
- drivers/scsi/aacraid/nark.c    |    3 +--
- drivers/scsi/aacraid/rkt.c     |    2 +-
- 5 files changed, 7 insertions(+), 10 deletions(-)
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C7CFB1.95B0BCEE
-Content-Type: application/octet-stream;
-	name="aacraid_cleanup_2449.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_cleanup_2449.patch
-Content-Disposition: attachment;
-	filename="aacraid_cleanup_2449.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MDctMjYgMTM6Mjg6MzIuMTc5Mjc5MjIwIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMDctMjYgMTQ6MTE6MzEuNzYyOTE2MzkwIC0wNDAwCkBAIC0xOTQsOCAr
-MTk0LDcgQEAKIAlzdHJ1Y3Qgc2NzaV9kZXZpY2UgKmRldmljZTsKIAogCWlmICh1bmxpa2VseSgh
-c2NzaWNtZCB8fCAhc2NzaWNtZC0+c2NzaV9kb25lICkpIHsKLQkJZHByaW50aygoS0VSTl9XQVJO
-SU5HICJhYWNfdmFsaWRfY29udGV4dDogc2NzaSBjb21tYW5kIGNvcnJ1cHRcbiIpKQotOworCQlk
-cHJpbnRrKChLRVJOX1dBUk5JTkcgImFhY192YWxpZF9jb250ZXh0OiBzY3NpIGNvbW1hbmQgY29y
-cnVwdFxuIikpOwogICAgICAgICAgICAgICAgIGFhY19maWJfY29tcGxldGUoZmlicHRyKTsKICAg
-ICAgICAgICAgICAgICBhYWNfZmliX2ZyZWUoZmlicHRyKTsKICAgICAgICAgICAgICAgICByZXR1
-cm4gMDsKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmggYi9kcml2ZXJz
-L3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFp
-ZC5oCTIwMDctMDctMjYgMTM6Mjg6MzIuMTgwMjc5MDk0IC0wNDAwCisrKyBiL2RyaXZlcnMvc2Nz
-aS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA3LTA3LTI2IDE0OjExOjMxLjc3MDkxNTM4MyAtMDQwMApA
-QCAtMTIsNyArMTIsNyBAQAogICotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKi8KIAogI2lmbmRlZiBBQUNf
-RFJJVkVSX0JVSUxECi0jIGRlZmluZSBBQUNfRFJJVkVSX0JVSUxEIDI0NDcKKyMgZGVmaW5lIEFB
-Q19EUklWRVJfQlVJTEQgMjQ0OQogIyBkZWZpbmUgQUFDX0RSSVZFUl9CUkFOQ0ggIi1tcyIKICNl
-bmRpZgogI2RlZmluZSBNQVhJTVVNX05VTV9DT05UQUlORVJTCTMyCkBAIC0xODA3LDEwICsxODA3
-LDEwIEBACiAgKiAgCWFjY291bnRpbmcgZm9yIHRoZSBmYWN0IGNhcGFjaXR5IGNvdWxkIGJlIGEg
-NjQgYml0IHZhbHVlCiAgKgogICovCi1zdGF0aWMgaW5saW5lIHUzMiBjYXBfdG9fY3lscyhzZWN0
-b3JfdCBjYXBhY2l0eSwgdTMyIGRpdmlzb3IpCitzdGF0aWMgaW5saW5lIHVuc2lnbmVkIGludCBj
-YXBfdG9fY3lscyhzZWN0b3JfdCBjYXBhY2l0eSwgdW5zaWduZWQgZGl2aXNvcikKIHsKIAlzZWN0
-b3JfZGl2KGNhcGFjaXR5LCBkaXZpc29yKTsKLQlyZXR1cm4gKHUzMiljYXBhY2l0eTsKKwlyZXR1
-cm4gY2FwYWNpdHk7CiB9CiAKIC8qIFNDcC5waGFzZSB2YWx1ZXMgKi8KZGlmZiAtcnUgYS9kcml2
-ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYwot
-LS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDctMDctMjYgMTM6Mjg6MzIuMTgz
-Mjc4NzE1IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMJMjAwNy0wNy0y
-NiAxNDoxMTozMS43NzI5MTUxMzIgLTA0MDAKQEAgLTExMjIsOSArMTEyMiw4IEBACiBzdGF0aWMg
-dm9pZCBhYWNfc2h1dGRvd24oc3RydWN0IHBjaV9kZXYgKmRldikKIHsKIAlzdHJ1Y3QgU2NzaV9I
-b3N0ICpzaG9zdCA9IHBjaV9nZXRfZHJ2ZGF0YShkZXYpOwotCXN0cnVjdCBhYWNfZGV2ICphYWMg
-PSAoc3RydWN0IGFhY19kZXYgKilzaG9zdC0+aG9zdGRhdGE7CiAJc2NzaV9ibG9ja19yZXF1ZXN0
-cyhzaG9zdCk7Ci0JX19hYWNfc2h1dGRvd24oYWFjKTsKKwlfX2FhY19zaHV0ZG93bigoc3RydWN0
-IGFhY19kZXYgKilzaG9zdC0+aG9zdGRhdGEpOwogfQogCiBzdGF0aWMgdm9pZCBfX2RldmV4aXQg
-YWFjX3JlbW92ZV9vbmUoc3RydWN0IHBjaV9kZXYgKnBkZXYpCmRpZmYgLXJ1IGEvZHJpdmVycy9z
-Y3NpL2FhY3JhaWQvbmFyay5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbmFyay5jCi0tLSBhL2Ry
-aXZlcnMvc2NzaS9hYWNyYWlkL25hcmsuYwkyMDA3LTA3LTI2IDEzOjI4OjMyLjE4NDI3ODU4OSAt
-MDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9uYXJrLmMJMjAwNy0wNy0yNiAxNDoxMToz
-MS43NzI5MTUxMzIgLTA0MDAKQEAgLTEsMTEgKzEsMTAgQEAKIC8qCiAgKglBZGFwdGVjIEFBQyBz
-ZXJpZXMgUkFJRCBjb250cm9sbGVyIGRyaXZlcgotICoJKGMpIENvcHlyaWdodCAyMDAxIFJlZCBI
-YXQgSW5jLgk8YWxhbkByZWRoYXQuY29tPgogICoKICAqIGJhc2VkIG9uIHRoZSBvbGQgYWFjcmFp
-ZCBkcml2ZXIgdGhhdCBpcy4uCiAgKiBBZGFwdGVjIGFhY3JhaWQgZGV2aWNlIGRyaXZlciBmb3Ig
-TGludXguCiAgKgotICogQ29weXJpZ2h0IChjKSAyMDAwIEFkYXB0ZWMsIEluYy4gKGFhY3JhaWRA
-YWRhcHRlYy5jb20pCisgKiBDb3B5cmlnaHQgKGMpIDIwMDYtMjAwNyBBZGFwdGVjLCBJbmMuIChh
-YWNyYWlkQGFkYXB0ZWMuY29tKQogICoKICAqIFRoaXMgcHJvZ3JhbSBpcyBmcmVlIHNvZnR3YXJl
-OyB5b3UgY2FuIHJlZGlzdHJpYnV0ZSBpdCBhbmQvb3IgbW9kaWZ5CiAgKiBpdCB1bmRlciB0aGUg
-dGVybXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlIGFzIHB1Ymxpc2hlZCBieQpk
-aWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3JrdC5jIGIvZHJpdmVycy9zY3NpL2FhY3Jh
-aWQvcmt0LmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvcmt0LmMJMjAwNy0wNy0yNiAxMzoy
-ODozMi4xODQyNzg1ODkgLTA0MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvcmt0LmMJMjAw
-Ny0wNy0yNiAxNDoxMTozMS43ODA5MTQxMjUgLTA0MDAKQEAgLTUsNyArNSw3IEBACiAgKiBiYXNl
-ZCBvbiB0aGUgb2xkIGFhY3JhaWQgZHJpdmVyIHRoYXQgaXMuLgogICogQWRhcHRlYyBhYWNyYWlk
-IGRldmljZSBkcml2ZXIgZm9yIExpbnV4LgogICoKLSAqIENvcHlyaWdodCAoYykgMjAwMCBBZGFw
-dGVjLCBJbmMuIChhYWNyYWlkQGFkYXB0ZWMuY29tKQorICogQ29weXJpZ2h0IChjKSAyMDAwLTIw
-MDcgQWRhcHRlYywgSW5jLiAoYWFjcmFpZEBhZGFwdGVjLmNvbSkKICAqCiAgKiBUaGlzIHByb2dy
-YW0gaXMgZnJlZSBzb2Z0d2FyZTsgeW91IGNhbiByZWRpc3RyaWJ1dGUgaXQgYW5kL29yIG1vZGlm
-eQogICogaXQgdW5kZXIgdGhlIHRlcm1zIG9mIHRoZSBHTlUgR2VuZXJhbCBQdWJsaWMgTGljZW5z
-ZSBhcyBwdWJsaXNoZWQgYnkK
-
-------_=_NextPart_001_01C7CFB1.95B0BCEE--
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
