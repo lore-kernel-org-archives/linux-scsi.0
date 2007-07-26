@@ -1,227 +1,287 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] Remove libsas PCI dependencies
-Date: Thu, 26 Jul 2007 05:21:47 -0400
-Message-ID: <46A867AB.7050007@garzik.org>
-References: <Pine.SOC.4.64.0707261129220.17385@math.ut.ee>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Thu, 26 Jul 2007 19:09:13 +0900
+Message-ID: <20070726190913A.fujita.tomonori@lab.ntt.co.jp>
+References: <20070725094740H.fujita.tomonori@lab.ntt.co.jp>
+	<664A4EBB07F29743873A87CF62C26D708B399D@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------030701010902090307020709"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45968 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751680AbXGZJVw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jul 2007 05:21:52 -0400
-In-Reply-To: <Pine.SOC.4.64.0707261129220.17385@math.ut.ee>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:48177 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760355AbXGZKO2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 06:14:28 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D708B399D@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Meelis Roos <mroos@linux.ee>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Linux Kernel list <linux-kernel@vger.kernel.org>, "Darrick J. Wong" <djwong@us.ibm.com>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>
+To: Eric.Moore@lsi.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, dougg@torque.net, jens.axboe@oracle.com
 
-This is a multi-part message in MIME format.
---------------030701010902090307020709
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 3/3] mptsas: add SMP passthrough support via bsg
+Date: Wed, 25 Jul 2007 18:21:38 -0600
 
-Meelis Roos wrote:
-> Tried to compile everythin SCSI on my SBus-only sparc64, including SAS 
-> supoort. Seems that libsas seems to depend on PCI - does it need to?
+> > > > # ./sgv4-tools/smp_rep_manufacturer /sys/class/bsg/expander-0:1
+> > > > 
+> > > > 
+> > > > I think that James tested this with aic94xx, however, I guess that
+> > > > nobody has tested this with mptsas.
+> > > > 
+> > > 
+> > > I got garbage (I'm using the 2.6.23-git11 patch from last 
+> > week, before
+> > > rc1):
+> > > 
+> > > # ./smp_rep_manufacturer /sys/class/bsg/expander-2:0
+> > >   SAS-1.1 format: 1
+> > >   vendor identification: _BUS_ADD
+> > >   product identification: RESS=unix:abstra
+> > >   product revision level: ct=/
+> > >   component vendor identification: tmp/dbus
+> > >   component id: 11609
+> > >   component revision level: 69
+> > > 
+> > > With Doug Gilberts tools it works:
+> > > 
+> > > # smp_rep_manufacturer --sa=0x500605b0000016b0 /dev/mptctl
+> > > Report manufacturer response:
+> > >   SAS-1.1 format: 0
+> > >   vendor identification: LSILOGIC
+> > >   product identification: SASx12 A.0
+> > >   product revision level:
+> > > 
+> > > 
+> > > Also, unloading and reloading the driver resulted in two expander
+> > > entryies in /sys/class/bsg.    The old entry was not deleted when I
+> > > unloaded the driver.  When I tryied to run 
+> > smp_rep_manufacture on the
+> > > old expander instance, it panicked.
 > 
->   MODPOST 446 modules
-> ERROR: "pci_iommu_ops" [drivers/scsi/libsas/libsas.ko] undefined!
+> With a sas analyzer, I figured out today why the bsg version of
+> smp_rep_manufacture is not working.    There is a bug in
+> mptsas_smp_handler. The calculation of the first scatter gather element
+> size for the outbound data is incorrect.   Its being set to the resonse
+> data length, when instead it should be the request data legth.
+> 
+> This is incorrect:
+> 
+> +	flagsLength |= (rsp->data_len - 4);
+> 
+> It should be 
+> 
+> +	flagsLength |= (smpreq->RequestDataLength);
+
+Sorry for the bug.
+
+Do we need to use (req->data_len - 4)? As you said, we set
+smpreq->RequestDataLength with cpu_to_le16.
 
 
-Does the attached patch fix things?  2.6.23-rc1 material, methinks.
+> > But probably, the tool still don't work against an expander. Does it
+> > work against the Virtual SMP Port?
+> > 
+> 
+> I tried out this by passing /sys/class/bsg/sas_host0, and I saw it
+> return Virtual SMP.  I guess this can be left in.
 
-libsas should -not- require PCI, even though aic94xx does.
+Nice. With that fix, bsg's smp_rep_manufacturer works against an
+expander too?
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
+
+> > Oh, I thought that LSI wants to send the smp_reply back to user space
+> > since Doug's smp-utils does. But If you don't want, I'll just put the
+> > response check code that you suggested in the previous mail.
+> > 
+> 
+> On second thought, It would be nice to have iocstatus, iocloginfo, and
+> sasstatus available in user space, that way the appliacation will have a
+> better understanding of what error occurred.
+
+Yeah.
 
 
---------------030701010902090307020709
-Content-Type: text/plain;
- name="patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="patch"
+> Without that info, how will you it know if the response data you
+> receive is valid data?  For instance, before I identified the bug in
+> the sgel size, you were displaying garbage.
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
-index ab00aec..63bcde2 100644
---- a/drivers/scsi/aic94xx/aic94xx_init.c
-+++ b/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -586,7 +586,7 @@ static int __devinit asd_pci_probe(struct pci_dev *dev,
- 		goto Err;
- 	}
- 	asd_ha->pcidev = dev;
--	asd_ha->sas_ha.pcidev = asd_ha->pcidev;
-+	asd_ha->sas_ha.dev = &asd_ha->pcidev->dev;
- 	asd_ha->sas_ha.lldd_ha = asd_ha;
- 
- 	asd_ha->name = asd_dev->name;
-@@ -605,8 +605,6 @@ static int __devinit asd_pci_probe(struct pci_dev *dev,
- 		goto Err_free;
- 	}
- 
--
--
- 	err = asd_dev->setup(asd_ha);
- 	if (err)
- 		goto Err_free;
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index ced2de3..77c4668 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -382,7 +382,7 @@ int sas_ata_init_host_and_port(struct domain_device *found_dev,
- 	struct ata_port *ap;
- 
- 	ata_host_init(&found_dev->sata_dev.ata_host,
--		      &ha->pcidev->dev,
-+		      ha->dev,
- 		      sata_port_info.flags,
- 		      &sas_sata_ops);
- 	ap = ata_sas_port_alloc(&found_dev->sata_dev.ata_host,
-@@ -448,10 +448,10 @@ static void sas_disc_task_done(struct sas_task *task)
-  * @task: the task to be executed
-  * @buffer: pointer to buffer to do I/O
-  * @size: size of @buffer
-- * @pci_dma_dir: PCI_DMA_...
-+ * @dma_dir: DMA direction.  DMA_xxx
-  */
- static int sas_execute_task(struct sas_task *task, void *buffer, int size,
--			    int pci_dma_dir)
-+			    int dma_dir)
- {
- 	int res = 0;
- 	struct scatterlist *scatter = NULL;
-@@ -461,7 +461,7 @@ static int sas_execute_task(struct sas_task *task, void *buffer, int size,
- 	struct sas_internal *i =
- 		to_sas_internal(task->dev->port->ha->core.shost->transportt);
- 
--	if (pci_dma_dir != PCI_DMA_NONE) {
-+	if (dma_dir != DMA_NONE) {
- 		scatter = kzalloc(sizeof(*scatter), GFP_KERNEL);
- 		if (!scatter)
- 			goto out;
-@@ -474,11 +474,11 @@ static int sas_execute_task(struct sas_task *task, void *buffer, int size,
- 	task->scatter = scatter;
- 	task->num_scatter = num_scatter;
- 	task->total_xfer_len = size;
--	task->data_dir = pci_dma_dir;
-+	task->data_dir = dma_dir;
- 	task->task_done = sas_disc_task_done;
--	if (pci_dma_dir != PCI_DMA_NONE &&
-+	if (dma_dir != DMA_NONE &&
- 	    sas_protocol_ata(task->task_proto)) {
--		task->num_scatter = pci_map_sg(task->dev->port->ha->pcidev,
-+		task->num_scatter = dma_map_sg(task->dev->port->ha->dev,
- 					       task->scatter,
- 					       task->num_scatter,
- 					       task->data_dir);
-@@ -565,9 +565,9 @@ static int sas_execute_task(struct sas_task *task, void *buffer, int size,
- 		}
- 	}
- ex_err:
--	if (pci_dma_dir != PCI_DMA_NONE) {
-+	if (dma_dir != DMA_NONE) {
- 		if (sas_protocol_ata(task->task_proto))
--			pci_unmap_sg(task->dev->port->ha->pcidev,
-+			dma_unmap_sg(task->dev->port->ha->dev,
- 				     task->scatter, task->num_scatter,
- 				     task->data_dir);
- 		kfree(scatter);
-@@ -628,11 +628,11 @@ static void sas_get_ata_command_set(struct domain_device *dev)
-  * @features: the features register
-  * @buffer: pointer to buffer to do I/O
-  * @size: size of @buffer
-- * @pci_dma_dir: PCI_DMA_...
-+ * @dma_dir: DMA direction.  DMA_xxx
-  */
- static int sas_issue_ata_cmd(struct domain_device *dev, u8 command,
- 			     u8 features, void *buffer, int size,
--			     int pci_dma_dir)
-+			     int dma_dir)
- {
- 	int res = 0;
- 	struct sas_task *task;
-@@ -652,7 +652,7 @@ static int sas_issue_ata_cmd(struct domain_device *dev, u8 command,
- 	task->ata_task.fis.device = d2h_fis->device;
- 	task->ata_task.retry_count = 1;
- 
--	res = sas_execute_task(task, buffer, size, pci_dma_dir);
-+	res = sas_execute_task(task, buffer, size, dma_dir);
- 
- 	sas_free_task(task);
- out:
-@@ -707,7 +707,7 @@ static int sas_discover_sata_dev(struct domain_device *dev)
- 	}
- 
- 	res = sas_issue_ata_cmd(dev, command, 0, identify_x, 512,
--				PCI_DMA_FROMDEVICE);
-+				DMA_FROM_DEVICE);
- 	if (res)
- 		goto out_err;
- 
-@@ -720,13 +720,13 @@ static int sas_discover_sata_dev(struct domain_device *dev)
- 			goto cont1;
- 		res = sas_issue_ata_cmd(dev, ATA_SET_FEATURES,
- 					ATA_FEATURE_PUP_STBY_SPIN_UP,
--					NULL, 0, PCI_DMA_NONE);
-+					NULL, 0, DMA_NONE);
- 		if (res)
- 			goto cont1;
- 
- 		schedule_timeout_interruptible(5*HZ); /* More time? */
- 		res = sas_issue_ata_cmd(dev, command, 0, identify_x, 512,
--					PCI_DMA_FROMDEVICE);
-+					DMA_FROM_DEVICE);
- 		if (res)
- 			goto out_err;
- 	}
-diff --git a/drivers/scsi/libsas/sas_discover.c b/drivers/scsi/libsas/sas_discover.c
-index 6ac9f61..7ef0afc 100644
---- a/drivers/scsi/libsas/sas_discover.c
-+++ b/drivers/scsi/libsas/sas_discover.c
-@@ -22,7 +22,6 @@
-  *
-  */
- 
--#include <linux/pci.h>
- #include <linux/scatterlist.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_eh.h>
-@@ -170,7 +169,7 @@ int sas_notify_lldd_dev_found(struct domain_device *dev)
- 		if (res) {
- 			printk("sas: driver on pcidev %s cannot handle "
- 			       "device %llx, error:%d\n",
--			       pci_name(sas_ha->pcidev),
-+			       sas_ha->dev->bus_id,
- 			       SAS_ADDR(dev->sas_addr), res);
- 		}
- 	}
-diff --git a/drivers/scsi/libsas/sas_dump.c b/drivers/scsi/libsas/sas_dump.c
-index f1246d2..bf34a23 100644
---- a/drivers/scsi/libsas/sas_dump.c
-+++ b/drivers/scsi/libsas/sas_dump.c
-@@ -56,7 +56,7 @@ void sas_dprint_phye(int phyid, enum phy_event pe)
- 
- void sas_dprint_hae(struct sas_ha_struct *sas_ha, enum ha_event he)
- {
--	SAS_DPRINTK("ha %s: %s event\n", pci_name(sas_ha->pcidev),
-+	SAS_DPRINTK("ha %s: %s event\n", sas_ha->dev->bus_id,
- 		    sas_hae_str[he]);
+The SMP response's function result wasn't set correctly? bsg's
+smp_rep_manufacturer didn't check the result so it showed garbase, I
+guess.
+
+BTW, I took the code to check the result from Doug's smp_utils and put
+bsg's smp_rep_manufacturer:
+
+http://www.kernel.org/pub/linux/kernel/people/tomo/smp/
+
+or
+
+git://git.kernel.org/pub/scm/linux/kernel/git/tomo/sgv4-tools.git
+
+
+> The driver could have prevented that by returning -ENXIO I guess,
+> instead how about pushing up that info to user space.
+
+Agree.
+
+> what do you think?    maybe there should be some translation to common
+> error returns code between the varous sas vendors supporting this
+> portal.
+
+aic94xx gives only the smp response. It doesn't have its unique
+reply. I like the idea that user-space tools can simply put a smp
+reqeust frame to out-buffer and get a smp response frame from
+in-buffer. I'm not sure about inventing our smp response header and
+putting it with a smp response frame to in-buffer.
+
+That's the reason why I said before, sense buffer is not used for smp
+and using sense buffer would be the easiest way to push up the mpt
+unique response to userspace.
+
+Here's an updated patch.
+
+
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index d506646..f2965e7 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -1328,11 +1328,139 @@ mptsas_get_bay_identifier(struct sas_rphy *rphy)
+ 	return rc;
  }
  
-diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
-index df36461..8dda2d6 100644
---- a/include/scsi/libsas.h
-+++ b/include/scsi/libsas.h
-@@ -348,7 +348,7 @@ struct sas_ha_struct {
++static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
++			      struct request *req)
++{
++	MPT_ADAPTER *ioc = ((MPT_SCSI_HOST *) shost->hostdata)->ioc;
++	MPT_FRAME_HDR *mf;
++	SmpPassthroughRequest_t *smpreq;
++	SmpPassthroughReply_t *smprep;
++	struct request *rsp = req->next_rq;
++	int ret;
++	int flagsLength;
++	unsigned long timeleft;
++	char *psge;
++	dma_addr_t dma_addr_in = 0;
++	dma_addr_t dma_addr_out = 0;
++	u16 ioc_status;
++	u64 sas_address = 0;
++
++	if (!rsp) {
++		printk(KERN_ERR "%s: the smp response space is missing\n",
++		       __FUNCTION__);
++		return -EINVAL;
++	}
++
++	/* do we need to support multiple segments? */
++	if (req->bio->bi_vcnt > 1 || rsp->bio->bi_vcnt > 1) {
++		printk(KERN_ERR "%s: multiple segments req %u %u, rsp %u %u\n",
++		       __FUNCTION__, req->bio->bi_vcnt, req->data_len,
++		       rsp->bio->bi_vcnt, rsp->data_len);
++		return -EINVAL;
++	}
++
++	ret = mutex_lock_interruptible(&ioc->sas_mgmt.mutex);
++	if (ret)
++		goto out;
++
++	mf = mpt_get_msg_frame(mptsasMgmtCtx, ioc);
++	if (!mf) {
++		ret = -ENOMEM;
++		goto out_unlock;
++	}
++
++	smpreq = (SmpPassthroughRequest_t *)mf;
++	memset(smpreq, 0, sizeof(*smpreq));
++
++	smpreq->RequestDataLength = cpu_to_le16(req->data_len - 4);
++	smpreq->Function = MPI_FUNCTION_SMP_PASSTHROUGH;
++
++	if (rphy)
++		sas_address = rphy->identify.sas_address;
++	else {
++		struct mptsas_portinfo *port_info;
++
++		mutex_lock(&ioc->sas_topology_mutex);
++		port_info = mptsas_find_portinfo_by_handle(ioc, ioc->handle);
++		if (port_info && port_info->phy_info)
++			sas_address =
++				port_info->phy_info[0].phy->identify.sas_address;
++		mutex_unlock(&ioc->sas_topology_mutex);
++	}
++
++	*((u64 *)&smpreq->SASAddress) = cpu_to_le64(sas_address);
++
++	psge = (char *)
++		(((int *) mf) + (offsetof(SmpPassthroughRequest_t, SGL) / 4));
++
++	/* request */
++	flagsLength = (MPI_SGE_FLAGS_SIMPLE_ELEMENT |
++		       MPI_SGE_FLAGS_END_OF_BUFFER |
++		       MPI_SGE_FLAGS_DIRECTION |
++		       mpt_addr_size()) << MPI_SGE_FLAGS_SHIFT;
++	flagsLength |= (req->data_len - 4);
++
++	dma_addr_out = pci_map_single(ioc->pcidev, bio_data(req->bio),
++				      req->data_len, PCI_DMA_BIDIRECTIONAL);
++	if (!dma_addr_out)
++		goto put_mf;
++	mpt_add_sge(psge, flagsLength, dma_addr_out);
++	psge += (sizeof(u32) + sizeof(dma_addr_t));
++
++	/* response */
++	flagsLength = MPT_SGE_FLAGS_SSIMPLE_READ;
++	flagsLength |= rsp->data_len + 4;
++	dma_addr_in =  pci_map_single(ioc->pcidev, bio_data(rsp->bio),
++				      rsp->data_len, PCI_DMA_BIDIRECTIONAL);
++	if (!dma_addr_in)
++		goto unmap;
++	mpt_add_sge(psge, flagsLength, dma_addr_in);
++
++	mpt_put_msg_frame(mptsasMgmtCtx, ioc, mf);
++
++	timeleft = wait_for_completion_timeout(&ioc->sas_mgmt.done, 10 * HZ);
++	if (!timeleft) {
++		printk(KERN_ERR "%s: smp timeout!\n", __FUNCTION__);
++		/* On timeout reset the board */
++		mpt_HardResetHandler(ioc, CAN_SLEEP);
++		ret = -ETIMEDOUT;
++		goto unmap;
++	}
++	mf = NULL;
++
++	/* a reply frame is expected */
++	if (!(ioc->sas_mgmt.status & MPT_IOCTL_STATUS_RF_VALID)) {
++		printk(KERN_ERR "%s: smp response invalid!\n", __FUNCTION__);
++		ret = -ENXIO;
++	}
++
++	smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
++	ioc_status = le16_to_cpu(smprep->IOCStatus) & MPI_IOCSTATUS_MASK;
++	if ((ioc_status != MPI_IOCSTATUS_SUCCESS) &&
++	    (ioc_status != MPI_IOCSTATUS_SCSI_DATA_UNDERRUN))
++		return -ENXIO;
++unmap:
++	if (dma_addr_out)
++		pci_unmap_single(ioc->pcidev, dma_addr_out, req->data_len,
++				 PCI_DMA_BIDIRECTIONAL);
++	if (dma_addr_in)
++		pci_unmap_single(ioc->pcidev, dma_addr_in, rsp->data_len,
++				 PCI_DMA_BIDIRECTIONAL);
++put_mf:
++	if (mf)
++		mpt_free_msg_frame(ioc, mf);
++out_unlock:
++	mutex_unlock(&ioc->sas_mgmt.mutex);
++out:
++	return ret;
++}
++
+ static struct sas_function_template mptsas_transport_functions = {
+ 	.get_linkerrors		= mptsas_get_linkerrors,
+ 	.get_enclosure_identifier = mptsas_get_enclosure_identifier,
+ 	.get_bay_identifier	= mptsas_get_bay_identifier,
+ 	.phy_reset		= mptsas_phy_reset,
++	.smp_handler		= mptsas_smp_handler,
+ };
  
- /* public: */
- 	char *sas_ha_name;
--	struct pci_dev *pcidev;	  /* should be set */
-+	struct device *dev;	  /* should be set */
- 	struct module *lldd_module; /* should be set */
- 
- 	u8 *sas_addr;		  /* must be set */
-
---------------030701010902090307020709--
+ static struct scsi_transport_template *mptsas_transport_template;
