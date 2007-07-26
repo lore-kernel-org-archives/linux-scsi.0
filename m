@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 21/21] advansys: use memcpy instead of open-coded loop
-Date: Thu, 26 Jul 2007 13:22:57 -0400
-Message-ID: <11854705773144-git-send-email-matthew@wil.cx>
+Subject: [PATCH 10/21] advansys: remove AscCompareString()
+Date: Thu, 26 Jul 2007 13:22:46 -0400
+Message-ID: <11854705771722-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:37200 "EHLO
-	mail-01.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933682AbXGZSAU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 14:00:20 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:49776 "EHLO
+	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S935611AbXGZSAj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 14:00:39 -0400
 In-Reply-To: 20070726171141.GE19275@parisc-linux.org
 References: 20070726171141.GE19275@parisc-linux.org
 In-Reply-To: <20070726171141.GE19275@parisc-linux.org>
@@ -16,210 +16,68 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-Use memcpy to initialise eep_config instead of a loop.  For
-AdvInitFrom38C1600EEP where we need to modify the default EEPROM
-configuration, do it after the loop, and do it using the structure
-definition, not by finding the right byte.  I think it was wrong for
-big-endian machines.
-
-Also delete some non-useful comments and prototypes.
+AscCompareString() is just another name for strncmp
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  119 ++++++++++++++++-------------------------------
- 1 files changed, 40 insertions(+), 79 deletions(-)
+ drivers/scsi/advansys.c |   23 +++--------------------
+ 1 files changed, 3 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 1704427..3bb1963 100644
+index 70f6d3a..42e33ed 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -3181,13 +3181,6 @@ do { \
- #define QHSTA_M_SGBACKUP_ERROR      0x47	/* Scatter-Gather backup error */
- 
- /*
-- * Default EEPROM Configuration structure defined in a_init.c.
-- */
--static ADVEEP_3550_CONFIG Default_3550_EEPROM_Config;
--static ADVEEP_38C0800_CONFIG Default_38C0800_EEPROM_Config;
--static ADVEEP_38C1600_CONFIG Default_38C1600_EEPROM_Config;
--
--/*
-  * DvcGetPhyAddr() flag arguments
-  */
- #define ADV_IS_SCSIQ_FLAG       0x01	/* 'addr' is ASC_SCSI_REQ_Q pointer */
-@@ -13341,7 +13334,6 @@ static unsigned char _adv_asc38C1600_buf[] = {
- static unsigned short _adv_asc38C1600_size = sizeof(_adv_asc38C1600_buf);	/* 0x1673 */
- static ADV_DCNT _adv_asc38C1600_chksum = 0x0604EF77UL;	/* Expanded little-endian checksum. */
- 
--/* a_init.c */
- /*
-  * EEPROM Configuration.
-  *
-@@ -15601,7 +15593,6 @@ static int __devinit AdvInitFrom3550EEP(ADV_DVC_VAR *asc_dvc)
- 	AdvPortAddr iop_base;
- 	ushort warn_code;
- 	ADVEEP_3550_CONFIG eep_config;
--	int i;
- 
- 	iop_base = asc_dvc->iop_base;
- 
-@@ -15618,15 +15609,12 @@ static int __devinit AdvInitFrom3550EEP(ADV_DVC_VAR *asc_dvc)
- 		/*
- 		 * Set EEPROM default values.
- 		 */
--		for (i = 0; i < sizeof(ADVEEP_3550_CONFIG); i++) {
--			*((uchar *)&eep_config + i) =
--			    *((uchar *)&Default_3550_EEPROM_Config + i);
--		}
-+		memcpy(&eep_config, &Default_3550_EEPROM_Config,
-+			sizeof(ADVEEP_3550_CONFIG));
- 
- 		/*
--		 * Assume the 6 byte board serial number that was read
--		 * from EEPROM is correct even if the EEPROM checksum
--		 * failed.
-+		 * Assume the 6 byte board serial number that was read from
-+		 * EEPROM is correct even if the EEPROM checksum failed.
- 		 */
- 		eep_config.serial_number_word3 =
- 		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
-@@ -15755,7 +15743,6 @@ static int __devinit AdvInitFrom38C0800EEP(ADV_DVC_VAR *asc_dvc)
- 	AdvPortAddr iop_base;
- 	ushort warn_code;
- 	ADVEEP_38C0800_CONFIG eep_config;
--	int i;
- 	uchar tid, termination;
- 	ushort sdtr_speed = 0;
- 
-@@ -15775,15 +15762,12 @@ static int __devinit AdvInitFrom38C0800EEP(ADV_DVC_VAR *asc_dvc)
- 		/*
- 		 * Set EEPROM default values.
- 		 */
--		for (i = 0; i < sizeof(ADVEEP_38C0800_CONFIG); i++) {
--			*((uchar *)&eep_config + i) =
--			    *((uchar *)&Default_38C0800_EEPROM_Config + i);
--		}
-+		memcpy(&eep_config, &Default_38C0800_EEPROM_Config,
-+			sizeof(ADVEEP_38C0800_CONFIG));
- 
- 		/*
--		 * Assume the 6 byte board serial number that was read
--		 * from EEPROM is correct even if the EEPROM checksum
--		 * failed.
-+		 * Assume the 6 byte board serial number that was read from
-+		 * EEPROM is correct even if the EEPROM checksum failed.
- 		 */
- 		eep_config.serial_number_word3 =
- 		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
-@@ -15958,7 +15942,6 @@ static int __devinit AdvInitFrom38C1600EEP(ADV_DVC_VAR *asc_dvc)
- 	AdvPortAddr iop_base;
- 	ushort warn_code;
- 	ADVEEP_38C1600_CONFIG eep_config;
--	int i;
- 	uchar tid, termination;
- 	ushort sdtr_speed = 0;
- 
-@@ -15979,68 +15962,46 @@ static int __devinit AdvInitFrom38C1600EEP(ADV_DVC_VAR *asc_dvc)
- 		/*
- 		 * Set EEPROM default values.
- 		 */
--		for (i = 0; i < sizeof(ADVEEP_38C1600_CONFIG); i++) {
--			if (i == 1 && PCI_FUNC(pdev->devfn) != 0) {
--				/*
--				 * Set Function 1 EEPROM Word 0 MSB
--				 *
--				 * Clear the BIOS_ENABLE (bit 14) and INTAB (bit 11)
--				 * EEPROM bits.
--				 *
--				 * Disable Bit 14 (BIOS_ENABLE) to fix SPARC Ultra 60 and
--				 * old Mac system booting problem. The Expansion ROM must
--				 * be disabled in Function 1 for these systems.
--				 *
--				 */
--				*((uchar *)&eep_config + i) =
--				    ((*
--				      ((uchar *)&Default_38C1600_EEPROM_Config
--				       +
--				       i)) &
--				     (~
--				      (((ADV_EEPROM_BIOS_ENABLE |
--					 ADV_EEPROM_INTAB) >> 8) & 0xFF)));
-+		memcpy(&eep_config, &Default_38C1600_EEPROM_Config,
-+			sizeof(ADVEEP_38C1600_CONFIG));
- 
--				/*
--				 * Set the INTAB (bit 11) if the GPIO 0 input indicates
--				 * the Function 1 interrupt line is wired to INTA.
--				 *
--				 * Set/Clear Bit 11 (INTAB) from the GPIO bit 0 input:
--				 *   1 - Function 1 interrupt line wired to INT A.
--				 *   0 - Function 1 interrupt line wired to INT B.
--				 *
--				 * Note: Adapter boards always have Function 0 wired to INTA.
--				 * Put all 5 GPIO bits in input mode and then read
--				 * their input values.
--				 */
--				AdvWriteByteRegister(iop_base, IOPB_GPIO_CNTL,
--						     0);
--				if (AdvReadByteRegister
--				    (iop_base, IOPB_GPIO_DATA) & 0x01) {
--					/* Function 1 interrupt wired to INTA; Set EEPROM bit. */
--					*((uchar *)&eep_config + i) |=
--					    ((ADV_EEPROM_INTAB >> 8) & 0xFF);
--				}
--			} else {
--				*((uchar *)&eep_config + i) =
--				    *((uchar *)&Default_38C1600_EEPROM_Config
--				      + i);
--			}
-+		if (PCI_FUNC(pdev->devfn) != 0) {
-+			u8 ints;
-+			/*
-+			 * Disable Bit 14 (BIOS_ENABLE) to fix SPARC Ultra 60
-+			 * and old Mac system booting problem. The Expansion
-+			 * ROM must be disabled in Function 1 for these systems
-+			 */
-+			eep_config.cfg_lsw &= ~ADV_EEPROM_BIOS_ENABLE;
-+			/*
-+			 * Clear the INTAB (bit 11) if the GPIO 0 input
-+			 * indicates the Function 1 interrupt line is wired
-+			 * to INTB.
-+			 *
-+			 * Set/Clear Bit 11 (INTAB) from the GPIO bit 0 input:
-+			 *   1 - Function 1 interrupt line wired to INT A.
-+			 *   0 - Function 1 interrupt line wired to INT B.
-+			 *
-+			 * Note: Function 0 is always wired to INTA.
-+			 * Put all 5 GPIO bits in input mode and then read
-+			 * their input values.
-+			 */
-+			AdvWriteByteRegister(iop_base, IOPB_GPIO_CNTL, 0);
-+			ints = AdvReadByteRegister(iop_base, IOPB_GPIO_DATA);
-+			if ((ints & 0x01) == 0)
-+				eep_config.cfg_lsw &= ~ADV_EEPROM_INTAB;
- 		}
- 
- 		/*
--		 * Assume the 6 byte board serial number that was read
--		 * from EEPROM is correct even if the EEPROM checksum
--		 * failed.
-+		 * Assume the 6 byte board serial number that was read from
-+		 * EEPROM is correct even if the EEPROM checksum failed.
- 		 */
- 		eep_config.serial_number_word3 =
--		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
--
-+			AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
- 		eep_config.serial_number_word2 =
--		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 2);
--
-+			AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 2);
- 		eep_config.serial_number_word1 =
--		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 3);
-+			AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 3);
- 
- 		AdvSet38C1600EEPConfig(iop_base, &eep_config);
+@@ -1922,7 +1922,6 @@ static int AscIsrChipHalted(ASC_DVC_VAR *);
+ static uchar _AscCopyLramScsiDoneQ(PortAddr, ushort,
+ 				   ASC_QDONE_INFO *, ASC_DCNT);
+ static int AscIsrQDone(ASC_DVC_VAR *);
+-static int AscCompareString(uchar *, uchar *, int);
+ #ifdef CONFIG_ISA
+ static ushort AscGetEisaChipCfg(PortAddr);
+ static PortAddr AscSearchIOPortAddr11(PortAddr);
+@@ -11158,8 +11157,7 @@ AscAsyncFix(ASC_DVC_VAR *asc_dvc, uchar tid_no, ASC_SCSI_INQUIRY *inq)
+ 	if (asc_dvc->bug_fix_cntl & ASC_BUG_FIX_ASYN_USE_SYN) {
+ 		if (!(asc_dvc->init_sdtr & tid_bits)) {
+ 			if ((dvc_type == TYPE_ROM) &&
+-			    (AscCompareString((uchar *)inq->vendor_id,
+-					      (uchar *)"HP ", 3) == 0)) {
++			    (strncmp(inq->vendor_id, "HP ", 3) == 0)) {
+ 				asc_dvc->pci_fix_asyn_xfer_always |= tid_bits;
+ 			}
+ 			asc_dvc->pci_fix_asyn_xfer |= tid_bits;
+@@ -11182,10 +11180,8 @@ AscAsyncFix(ASC_DVC_VAR *asc_dvc, uchar tid_no, ASC_SCSI_INQUIRY *inq)
+ static int AscTagQueuingSafe(ASC_SCSI_INQUIRY *inq)
+ {
+ 	if ((inq->add_len >= 32) &&
+-	    (AscCompareString((uchar *)inq->vendor_id,
+-			      (uchar *)"QUANTUM XP34301", 15) == 0) &&
+-	    (AscCompareString((uchar *)inq->product_rev_level,
+-			      (uchar *)"1071", 4) == 0)) {
++	    (strncmp(inq->vendor_id, "QUANTUM XP34301", 15) == 0) &&
++	    (strncmp(inq->product_rev_level, "1071", 4) == 0)) {
+ 		return 0;
  	}
+ 	return 1;
+@@ -11236,19 +11232,6 @@ AscInquiryHandling(ASC_DVC_VAR *asc_dvc, uchar tid_no, ASC_SCSI_INQUIRY *inq)
+ 	return;
+ }
+ 
+-static int AscCompareString(uchar *str1, uchar *str2, int len)
+-{
+-	int i;
+-	int diff;
+-
+-	for (i = 0; i < len; i++) {
+-		diff = (int)(str1[i] - str2[i]);
+-		if (diff != 0)
+-			return (diff);
+-	}
+-	return (0);
+-}
+-
+ static uchar AscReadLramByte(PortAddr iop_base, ushort addr)
+ {
+ 	uchar byte_data;
 -- 
 1.4.4.4
 
