@@ -1,16 +1,14 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 3/4] Turn off bounce buffers for iscsi_tcp
-Date: Thu, 26 Jul 2007 12:46:47 -0500
-Message-ID: <1185472013785-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 1/4] libiscsi: make sure session is not blocked when removing host
+Date: Thu, 26 Jul 2007 12:46:45 -0500
+Message-ID: <1185472010604-git-send-email-michaelc@cs.wisc.edu>
 References: <11854720083011-git-send-email-michaelc@cs.wisc.edu>
- <1185472010604-git-send-email-michaelc@cs.wisc.edu>
- <11854720113567-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:36401 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:36462 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932360AbXGZRrE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 26 Jul 2007 13:47:04 -0400
-In-Reply-To: <11854720113567-git-send-email-michaelc@cs.wisc.edu>
+	id S933452AbXGZRrH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 26 Jul 2007 13:47:07 -0400
+In-Reply-To: <11854720083011-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -18,31 +16,27 @@ Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-It was found by LSI that on setups with large amounts of memory
-we were bouncing buffers when we did not need to. If the iscsi tcp
-code touches the data buffer (or a helper does),
-it will kmap the buffer. iscsi_tcp also does not interact with hardware,
-so it does not have any hw dma restrictions. This patch sets the bounce
-buffer settings for our device queue so buffers should not be bounced
-because of a driver limit.
-
+When we logout we block the session since we are not taking any more
+commands, but when we call remove host we want to make sure any
+IO that got queued up and blocked gets failed upwards quickly, so
+we unblock the session and fail it.
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/iscsi_tcp.c |    1 +
+ drivers/scsi/libiscsi.c |    1 +
  1 files changed, 1 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 93034b4..a21455d 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -2216,6 +2216,7 @@ static void iscsi_tcp_session_destroy(struct iscsi_cls_session *cls_session)
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 4d85ce1..271a2d6 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1473,6 +1473,7 @@ void iscsi_session_teardown(struct iscsi_cls_session *cls_session)
+ 	struct iscsi_session *session = iscsi_hostdata(shost->hostdata);
+ 	struct module *owner = cls_session->transport->owner;
  
- static int iscsi_tcp_slave_configure(struct scsi_device *sdev)
- {
-+	blk_queue_bounce_limit(sdev->request_queue, BLK_BOUNCE_ANY);
- 	blk_queue_dma_alignment(sdev->request_queue, 0);
- 	return 0;
- }
++	iscsi_unblock_session(cls_session);
+ 	scsi_remove_host(shost);
+ 
+ 	iscsi_pool_free(&session->mgmtpool, (void**)session->mgmt_cmds);
 -- 
 1.5.1.2
 
