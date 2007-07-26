@@ -1,99 +1,105 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
- IO sg-chaining
-Date: Thu, 26 Jul 2007 20:33:44 +0900
-Message-ID: <20070726203344X.fujita.tomonori@lab.ntt.co.jp>
-References: <46A70944.6030005@panasas.com>
-	<20070725174258T.fujita.tomonori@lab.ntt.co.jp>
-	<46A7A2EC.6040400@panasas.com>
+Subject: Re: [RFC 7/8] sd.c and sr.c move to scsi_sgtable implementation
+Date: Thu, 26 Jul 2007 21:21:35 +0900
+Message-ID: <20070726212135X.fujita.tomonori@lab.ntt.co.jp>
+References: <468CDB3C.4060500@panasas.com>
+	<468CF5A4.5040303@panasas.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:46469 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750728AbXGZLjJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 07:39:09 -0400
-In-Reply-To: <46A7A2EC.6040400@panasas.com>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:34288 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754885AbXGZMWC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jul 2007 08:22:02 -0400
+In-Reply-To: <468CF5A4.5040303@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, bhalevy@panasas.com, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
-Date: Wed, 25 Jul 2007 22:22:20 +0300
+Subject: [RFC 7/8] sd.c and sr.c move to scsi_sgtable implementation
+Date: Thu, 05 Jul 2007 16:44:04 +0300
 
-> FUJITA Tomonori wrote:
-> > From: Benny Halevy <bhalevy@panasas.com>
-> > Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large IO sg-chaining
-> > Date: Wed, 25 Jul 2007 11:26:44 +0300
-> > 
-> >>> However, I'm perfectly happy to go with whatever the empirical evidence
-> >>> says is best .. and hopefully, now we don't have to pick this once and
-> >>> for all time ... we can alter it if whatever is chosen proves to be
-> >>> suboptimal.
-> >> I agree.  This isn't a catholic marriage :)
-> >> We'll run some performance experiments comparing the sgtable chaining
-> >> implementation vs. a scsi_data_buff implementation pointing
-> >> at a possibly chained sglist and let's see if we can measure
-> >> any difference.  We'll send results as soon as we have them.
-> > 
-> > I did some tests with your sgtable patchset and the approach to use
-> > separate buffer for sglists. As expected, there was no performance
-> > difference with small I/Os. I've not tried very large I/Os, which
-> > might give some difference.
-> > 
-> > The patchset to use separate buffer for sglists is available:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-bidi.git simple-sgtable
-> > 
-> > 
-> > Can you clean up your patchset and upload somewhere?
 > 
-> Sorry sure. Here is scsi_sgtable complete work over linux-block:
-> http://www.bhalevy.com/open-osd/download/scsi_sgtable/linux-block
+>   - sd and sr would adjust IO size to align on device's block
+>     size. So code needs to change once we move to scsi_sgtable
+>     implementation. (Not compatible with un-converted drivers)
+>   - Convert code to use scsi_for_each_sg
+>   - Use Data accessors wherever is appropriate.
+> 
+>  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/sd.c |   10 ++++------
+>  drivers/scsi/sr.c |   27 ++++++++++++---------------
+>  2 files changed, 16 insertions(+), 21 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 448d316..459fd23 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -338,7 +338,7 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
+>  	struct request *rq = SCpnt->request;
+>  	struct gendisk *disk = rq->rq_disk;
+>  	sector_t block = rq->sector;
+> -	unsigned int this_count = SCpnt->request_bufflen >> 9;
+> +	unsigned int this_count = scsi_bufflen(SCpnt) >> 9;
+>  	unsigned int timeout = sdp->timeout;
 >  
-> Here is just scsi_sgtable, no chaining, over scsi-misc + more
-> drivers:
-> http://www.bhalevy.com/open-osd/download/scsi_sgtable/scsi-misc
-> 
-> 
-> Next week I will try to mount lots of scsi_debug devices and
-> use large parallel IO to try and find a difference. I will
-> test Jens's sglist-arch tree against above sglist-arch+scsi_sgtable
-> 
-> I have lots of reservations about Tomo's last patches. For me
-> they are a regression. They use 3 allocations per command instead
-> of 2. They use an extra pointer and an extra global slab_pool. And
-> for what, for grouping some scsi_cmnd members in a substructure.
-> If we want to go the "pointing" way, keeping our extra scatterlist
-> and our base_2 count on most ARCHs. Than we can just use the 
-> scsi_data_buff embedded inside scsi_cmnd. 
+>  	SCSI_LOG_HLQUEUE(1, scmd_printk(KERN_INFO, SCpnt,
+> @@ -418,9 +418,6 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
+>  	} else if (rq_data_dir(rq) == READ) {
+>  		SCpnt->cmnd[0] = READ_6;
+>  		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+> -	} else {
+> -		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
+> -		return 0;
+>  	}
 
-Yeah, I changed and tested the patch to embed one sgtable header
-structure in struct scsi_cmnd for uni-directional transfers.
-
-Somehow, I uploaded the old patchset to my bidi tree yesterday.
+Why?
 
 
-> The second scsi_data_buff for bidi can come either from an extra 
-> slab_pool like in Tomo's patch - bidi can pay - or in scsi.c at 
-> scsi_setup_command_freelist() the code can inspect Tomo's flag 
-> to the request_queue QUEUE_FLAG_BIDI and will than allocate a 
-> bigger scsi_cmnd in the free list.
-> 
-> I have coded that approach and it is very simple:
-> http://www.bhalevy.com/open-osd/download/scsi_data_buff
-> 
-> They are over Jens's sglist-arch branch
-> I have revised all scsi-ml places and it all compiles
-> But is totally untested.
+>  	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
+> @@ -480,7 +477,8 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
+>  		SCpnt->cmnd[4] = (unsigned char) this_count;
+>  		SCpnt->cmnd[5] = 0;
+>  	}
+> -	SCpnt->request_bufflen = this_count * sdp->sector_size;
+> +	BUG_ON(!SCpnt->sgtable);
+> +	SCpnt->sgtable->length = this_count * sdp->sector_size;
+>  
+>  	/*
+>  	 * We shouldn't disconnect in the middle of a sector, so with a dumb
+> @@ -892,7 +890,7 @@ static struct block_device_operations sd_fops = {
+>  static void sd_rw_intr(struct scsi_cmnd * SCpnt)
+>  {
+>  	int result = SCpnt->result;
+> - 	unsigned int xfer_size = SCpnt->request_bufflen;
+> + 	unsigned int xfer_size = scsi_bufflen(SCpnt);
+>   	unsigned int good_bytes = result ? 0 : xfer_size;
+>   	u64 start_lba = SCpnt->request->sector;
+>   	u64 bad_lba;
+> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+> index f9a52af..ed61ca9 100644
+> --- a/drivers/scsi/sr.c
+> +++ b/drivers/scsi/sr.c
+> @@ -218,7 +218,7 @@ int sr_media_change(struct cdrom_device_info *cdi, int slot)
+>  static void rw_intr(struct scsi_cmnd * SCpnt)
+>  {
+>  	int result = SCpnt->result;
+> -	int this_count = SCpnt->request_bufflen;
+> +	int this_count = scsi_bufflen(SCpnt);
+>  	int good_bytes = (result == 0 ? this_count : 0);
+>  	int block_sectors = 0;
+>  	long error_sector;
+> @@ -345,23 +345,20 @@ static int sr_init_command(struct scsi_cmnd * SCpnt)
+>  	} else if (rq_data_dir(SCpnt->request) == READ) {
+>  		SCpnt->cmnd[0] = READ_10;
+>  		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+> -	} else {
+> -		blk_dump_rq_flags(SCpnt->request, "Unknown sr command");
+> -		return 0;
+>  	}
 
-This is similar to the patch that I tested.
-
-
-> I will add this branch to the above tests, but I suspect that
-> they are identical in every way to current code.
-
-With the large I/Os, there might be some difference.
+ditto.
