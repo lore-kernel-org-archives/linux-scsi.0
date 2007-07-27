@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 24/24] advansys: Remove array of all known hosts
-Date: Fri, 27 Jul 2007 07:42:33 -0600
-Message-ID: <11855437541196-git-send-email-matthew@wil.cx>
+Subject: [PATCH 22/24] advansys: Move documentation to Documentation/scsi
+Date: Fri, 27 Jul 2007 07:42:31 -0600
+Message-ID: <1185543753154-git-send-email-matthew@wil.cx>
 References: <20070727134038.GC21219@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:38912 "EHLO
-	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933515AbXG0Nmi (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:42003 "EHLO
+	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933738AbXG0Nmi (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 09:42:38 -0400
 In-Reply-To: <20070727134038.GC21219@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,288 +14,1057 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
- - Remove some pointless checking the driver was performing on the midlayer
- - Keep an array of legacy (ISA and VLB) hosts
- - Move scsi_remove_host() call to advansys_release() and kill off
-   advansys_remove
----
- drivers/scsi/advansys.c |  121 ++++++++++------------------------------------
- 1 files changed, 27 insertions(+), 94 deletions(-)
+The 700+-line comment at the top of the advansys driver fits more comfortably
+in Documentation/scsi.
 
+Delete the sections on:
+ - kernels supported
+ - other files modified (obsolete)
+ - source comments (obsolete)
+ - tests to run
+ - release history (that's what a VCS is for)
+ - contacting connectcom (the domain has expired and the phone number is
+   now in use by another organisation)
+
+Known problems/fix list is moved down to the section where jejb put his FIXME.
+
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+---
+ Documentation/scsi/advansys.txt |  243 +++++++++++++
+ drivers/scsi/advansys.c         |  760 +--------------------------------------
+ 2 files changed, 256 insertions(+), 747 deletions(-)
+
+diff --git a/Documentation/scsi/advansys.txt b/Documentation/scsi/advansys.txt
+new file mode 100644
+index 0000000..6c40da3
+--- /dev/null
++++ b/Documentation/scsi/advansys.txt
+@@ -0,0 +1,243 @@
++AdvanSys (Advanced System Products, Inc.) manufactures the following
++RISC-based, Bus-Mastering, Fast (10 Mhz) and Ultra (20 Mhz) Narrow
++(8-bit transfer) SCSI Host Adapters for the ISA, EISA, VL, and PCI
++buses and RISC-based, Bus-Mastering, Ultra (20 Mhz) Wide (16-bit
++transfer) SCSI Host Adapters for the PCI bus.
++
++The CDB counts below indicate the number of SCSI CDB (Command
++Descriptor Block) requests that can be stored in the RISC chip
++cache and board LRAM. A CDB is a single SCSI command. The driver
++detect routine will display the number of CDBs available for each
++adapter detected. The number of CDBs used by the driver can be
++lowered in the BIOS by changing the 'Host Queue Size' adapter setting.
++
++Laptop Products:
++   ABP-480 - Bus-Master CardBus (16 CDB)
++
++Connectivity Products:
++   ABP510/5150 - Bus-Master ISA (240 CDB)
++   ABP5140 - Bus-Master ISA PnP (16 CDB)
++   ABP5142 - Bus-Master ISA PnP with floppy (16 CDB)
++   ABP902/3902 - Bus-Master PCI (16 CDB)
++   ABP3905 - Bus-Master PCI (16 CDB)
++   ABP915 - Bus-Master PCI (16 CDB)
++   ABP920 - Bus-Master PCI (16 CDB)
++   ABP3922 - Bus-Master PCI (16 CDB)
++   ABP3925 - Bus-Master PCI (16 CDB)
++   ABP930 - Bus-Master PCI (16 CDB)
++   ABP930U - Bus-Master PCI Ultra (16 CDB)
++   ABP930UA - Bus-Master PCI Ultra (16 CDB)
++   ABP960 - Bus-Master PCI MAC/PC (16 CDB)
++   ABP960U - Bus-Master PCI MAC/PC Ultra (16 CDB)
++
++Single Channel Products:
++   ABP542 - Bus-Master ISA with floppy (240 CDB)
++   ABP742 - Bus-Master EISA (240 CDB)
++   ABP842 - Bus-Master VL (240 CDB)
++   ABP940 - Bus-Master PCI (240 CDB)
++   ABP940U - Bus-Master PCI Ultra (240 CDB)
++   ABP940UA/3940UA - Bus-Master PCI Ultra (240 CDB)
++   ABP970 - Bus-Master PCI MAC/PC (240 CDB)
++   ABP970U - Bus-Master PCI MAC/PC Ultra (240 CDB)
++   ABP3960UA - Bus-Master PCI MAC/PC Ultra (240 CDB)
++   ABP940UW/3940UW - Bus-Master PCI Ultra-Wide (253 CDB)
++   ABP970UW - Bus-Master PCI MAC/PC Ultra-Wide (253 CDB)
++   ABP3940U2W - Bus-Master PCI LVD/Ultra2-Wide (253 CDB)
++
++Multi-Channel Products:
++   ABP752 - Dual Channel Bus-Master EISA (240 CDB Per Channel)
++   ABP852 - Dual Channel Bus-Master VL (240 CDB Per Channel)
++   ABP950 - Dual Channel Bus-Master PCI (240 CDB Per Channel)
++   ABP950UW - Dual Channel Bus-Master PCI Ultra-Wide (253 CDB Per Channel)
++   ABP980 - Four Channel Bus-Master PCI (240 CDB Per Channel)
++   ABP980U - Four Channel Bus-Master PCI Ultra (240 CDB Per Channel)
++   ABP980UA/3980UA - Four Channel Bus-Master PCI Ultra (16 CDB Per Chan.)
++   ABP3950U2W - Bus-Master PCI LVD/Ultra2-Wide and Ultra-Wide (253 CDB)
++   ABP3950U3W - Bus-Master PCI Dual LVD2/Ultra3-Wide (253 CDB)
++
++Driver Compile Time Options and Debugging
++
++The following constants can be defined in the source file.
++
++1. ADVANSYS_ASSERT - Enable driver assertions (Def: Enabled)
++
++   Enabling this option adds assertion logic statements to the
++   driver. If an assertion fails a message will be displayed to
++   the console, but the system will continue to operate. Any
++   assertions encountered should be reported to the person
++   responsible for the driver. Assertion statements may proactively
++   detect problems with the driver and facilitate fixing these
++   problems. Enabling assertions will add a small overhead to the
++   execution of the driver.
++
++2. ADVANSYS_DEBUG - Enable driver debugging (Def: Disabled)
++
++   Enabling this option adds tracing functions to the driver and the
++   ability to set a driver tracing level at boot time.  This option is
++   very useful for debugging the driver, but it will add to the size
++   of the driver execution image and add overhead to the execution of
++   the driver.
++
++   The amount of debugging output can be controlled with the global
++   variable 'asc_dbglvl'. The higher the number the more output. By
++   default the debug level is 0.
++
++   If the driver is loaded at boot time and the LILO Driver Option
++   is included in the system, the debug level can be changed by
++   specifying a 5th (ASC_NUM_IOPORT_PROBE + 1) I/O Port. The
++   first three hex digits of the pseudo I/O Port must be set to
++   'deb' and the fourth hex digit specifies the debug level: 0 - F.
++   The following command line will look for an adapter at 0x330
++   and set the debug level to 2.
++
++      linux advansys=0x330,0,0,0,0xdeb2
++
++   If the driver is built as a loadable module this variable can be
++   defined when the driver is loaded. The following insmod command
++   will set the debug level to one.
++
++      insmod advansys.o asc_dbglvl=1
++
++   Debugging Message Levels:
++      0: Errors Only
++      1: High-Level Tracing
++      2-N: Verbose Tracing
++
++   To enable debug output to console, please make sure that:
++
++   a. System and kernel logging is enabled (syslogd, klogd running).
++   b. Kernel messages are routed to console output. Check
++      /etc/syslog.conf for an entry similar to this:
++
++           kern.*                  /dev/console
++
++   c. klogd is started with the appropriate -c parameter
++      (e.g. klogd -c 8)
++
++   This will cause printk() messages to be be displayed on the
++   current console. Refer to the klogd(8) and syslogd(8) man pages
++   for details.
++
++   Alternatively you can enable printk() to console with this
++   program. However, this is not the 'official' way to do this.
++   Debug output is logged in /var/log/messages.
++
++     main()
++     {
++             syscall(103, 7, 0, 0);
++     }
++
++   Increasing LOG_BUF_LEN in kernel/printk.c to something like
++   40960 allows more debug messages to be buffered in the kernel
++   and written to the console or log file.
++
++3. ADVANSYS_STATS - Enable statistics (Def: Enabled)
++
++   Enabling this option adds statistics collection and display
++   through /proc to the driver. The information is useful for
++   monitoring driver and device performance. It will add to the
++   size of the driver execution image and add minor overhead to
++   the execution of the driver.
++
++   Statistics are maintained on a per adapter basis. Driver entry
++   point call counts and transfer size counts are maintained.
++   Statistics are only available for kernels greater than or equal
++   to v1.3.0 with the CONFIG_PROC_FS (/proc) file system configured.
++
++   AdvanSys SCSI adapter files have the following path name format:
++
++      /proc/scsi/advansys/[0-(ASC_NUM_BOARD_SUPPORTED-1)]
++
++   This information can be displayed with cat. For example:
++
++      cat /proc/scsi/advansys/0
++
++   When ADVANSYS_STATS is not defined the AdvanSys /proc files only
++   contain adapter and device configuration information.
++
++Driver LILO Option
++
++If init/main.c is modified as described in the 'Directions for Adding
++the AdvanSys Driver to Linux' section (B.4.) above, the driver will
++recognize the 'advansys' LILO command line and /etc/lilo.conf option.
++This option can be used to either disable I/O port scanning or to limit
++scanning to 1 - 4 I/O ports. Regardless of the option setting EISA and
++PCI boards will still be searched for and detected. This option only
++affects searching for ISA and VL boards.
++
++Examples:
++  1. Eliminate I/O port scanning:
++       boot: linux advansys=
++         or
++       boot: linux advansys=0x0
++  2. Limit I/O port scanning to one I/O port:
++       boot: linux advansys=0x110
++  3. Limit I/O port scanning to four I/O ports:
++       boot: linux advansys=0x110,0x210,0x230,0x330
++
++For a loadable module the same effect can be achieved by setting
++the 'asc_iopflag' variable and 'asc_ioport' array when loading
++the driver, e.g.
++
++      insmod advansys.o asc_iopflag=1 asc_ioport=0x110,0x330
++
++If ADVANSYS_DEBUG is defined a 5th (ASC_NUM_IOPORT_PROBE + 1)
++I/O Port may be added to specify the driver debug level. Refer to
++the 'Driver Compile Time Options and Debugging' section above for
++more information.
++
++Credits (Chronological Order)
++
++Bob Frey <bfrey@turbolinux.com.cn> wrote the AdvanSys SCSI driver
++and maintained it up to 3.3F. He continues to answer questions
++and help maintain the driver.
++
++Nathan Hartwell <mage@cdc3.cdc.net> provided the directions and
++basis for the Linux v1.3.X changes which were included in the
++1.2 release.
++
++Thomas E Zerucha <zerucha@shell.portal.com> pointed out a bug
++in advansys_biosparam() which was fixed in the 1.3 release.
++
++Erik Ratcliffe <erik@caldera.com> has done testing of the
++AdvanSys driver in the Caldera releases.
++
++Rik van Riel <H.H.vanRiel@fys.ruu.nl> provided a patch to
++AscWaitTixISRDone() which he found necessary to make the
++driver work with a SCSI-1 disk.
++
++Mark Moran <mmoran@mmoran.com> has helped test Ultra-Wide
++support in the 3.1A driver.
++
++Doug Gilbert <dgilbert@interlog.com> has made changes and
++suggestions to improve the driver and done a lot of testing.
++
++Ken Mort <ken@mort.net> reported a DEBUG compile bug fixed
++in 3.2K.
++
++Tom Rini <trini@kernel.crashing.org> provided the CONFIG_ISA
++patch and helped with PowerPC wide and narrow board support.
++
++Philip Blundell <philb@gnu.org> provided an
++advansys_interrupts_enabled patch.
++
++Dave Jones <dave@denial.force9.co.uk> reported the compiler
++warnings generated when CONFIG_PROC_FS was not defined in
++the 3.2M driver.
++
++Jerry Quinn <jlquinn@us.ibm.com> fixed PowerPC support (endian
++problems) for wide cards.
++
++Bryan Henderson <bryanh@giraffe-data.com> helped debug narrow
++card error handling.
++
++Manuel Veloso <veloso@pobox.com> worked hard on PowerPC narrow
++board support and fixed a bug in AscGetEEPConfig().
++
++Arnaldo Carvalho de Melo <acme@conectiva.com.br> made
++save_flags/restore_flags changes.
++
++Andy Kellner <AKellner@connectcom.net> continued the Advansys SCSI
++driver development for ConnectCom (Version > 3.3F).
++
++Ken Witherow for extensive testing during the development of version 3.4.
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 548ffcd..641bcb7 100644
+index 02188ee..e5fb694 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -65,6 +65,7 @@
-  * 6. Remove internal queueing
-  * 7. Use scsi_transport_spi
-  * 8. advansys_info is not safe against multiple simultaneous callers
-+ * 9. Kill boardp->id
+@@ -20,743 +20,6 @@
+  * On June 18, 2001 Initio Corp. acquired ConnectCom's SCSI assets
+  */
+ 
+-/*
+-
+-  Documentation for the AdvanSys Driver
+-
+-  A. Linux Kernels Supported by this Driver
+-  B. Adapters Supported by this Driver
+-  C. Linux source files modified by AdvanSys Driver
+-  D. Source Comments
+-  E. Driver Compile Time Options and Debugging
+-  F. Driver LILO Option
+-  G. Tests to run before releasing new driver
+-  H. Release History
+-  I. Known Problems/Fix List
+-  J. Credits (Chronological Order)
+-
+-  A. Linux Kernels Supported by this Driver
+-
+-     This driver has been tested in the following Linux kernels: v2.2.18
+-     v2.4.0. The driver is supported on v2.2 and v2.4 kernels and on x86,
+-     alpha, and PowerPC platforms.
+-
+-  B. Adapters Supported by this Driver
+-
+-     AdvanSys (Advanced System Products, Inc.) manufactures the following
+-     RISC-based, Bus-Mastering, Fast (10 Mhz) and Ultra (20 Mhz) Narrow
+-     (8-bit transfer) SCSI Host Adapters for the ISA, EISA, VL, and PCI
+-     buses and RISC-based, Bus-Mastering, Ultra (20 Mhz) Wide (16-bit
+-     transfer) SCSI Host Adapters for the PCI bus.
+-
+-     The CDB counts below indicate the number of SCSI CDB (Command
+-     Descriptor Block) requests that can be stored in the RISC chip
+-     cache and board LRAM. A CDB is a single SCSI command. The driver
+-     detect routine will display the number of CDBs available for each
+-     adapter detected. The number of CDBs used by the driver can be
+-     lowered in the BIOS by changing the 'Host Queue Size' adapter setting.
+-
+-     Laptop Products:
+-        ABP-480 - Bus-Master CardBus (16 CDB) (2.4 kernel and greater)
+-
+-     Connectivity Products:
+-        ABP510/5150 - Bus-Master ISA (240 CDB)
+-        ABP5140 - Bus-Master ISA PnP (16 CDB)
+-        ABP5142 - Bus-Master ISA PnP with floppy (16 CDB)
+-        ABP902/3902 - Bus-Master PCI (16 CDB)
+-        ABP3905 - Bus-Master PCI (16 CDB)
+-        ABP915 - Bus-Master PCI (16 CDB)
+-        ABP920 - Bus-Master PCI (16 CDB)
+-        ABP3922 - Bus-Master PCI (16 CDB)
+-        ABP3925 - Bus-Master PCI (16 CDB)
+-        ABP930 - Bus-Master PCI (16 CDB)
+-        ABP930U - Bus-Master PCI Ultra (16 CDB)
+-        ABP930UA - Bus-Master PCI Ultra (16 CDB)
+-        ABP960 - Bus-Master PCI MAC/PC (16 CDB)
+-        ABP960U - Bus-Master PCI MAC/PC Ultra (16 CDB)
+-
+-     Single Channel Products:
+-        ABP542 - Bus-Master ISA with floppy (240 CDB)
+-        ABP742 - Bus-Master EISA (240 CDB)
+-        ABP842 - Bus-Master VL (240 CDB)
+-        ABP940 - Bus-Master PCI (240 CDB)
+-        ABP940U - Bus-Master PCI Ultra (240 CDB)
+-        ABP940UA/3940UA - Bus-Master PCI Ultra (240 CDB)
+-        ABP970 - Bus-Master PCI MAC/PC (240 CDB)
+-        ABP970U - Bus-Master PCI MAC/PC Ultra (240 CDB)
+-        ABP3960UA - Bus-Master PCI MAC/PC Ultra (240 CDB)
+-        ABP940UW/3940UW - Bus-Master PCI Ultra-Wide (253 CDB)
+-        ABP970UW - Bus-Master PCI MAC/PC Ultra-Wide (253 CDB)
+-        ABP3940U2W - Bus-Master PCI LVD/Ultra2-Wide (253 CDB)
+-
+-     Multi-Channel Products:
+-        ABP752 - Dual Channel Bus-Master EISA (240 CDB Per Channel)
+-        ABP852 - Dual Channel Bus-Master VL (240 CDB Per Channel)
+-        ABP950 - Dual Channel Bus-Master PCI (240 CDB Per Channel)
+-        ABP950UW - Dual Channel Bus-Master PCI Ultra-Wide (253 CDB Per Channel)
+-        ABP980 - Four Channel Bus-Master PCI (240 CDB Per Channel)
+-        ABP980U - Four Channel Bus-Master PCI Ultra (240 CDB Per Channel)
+-        ABP980UA/3980UA - Four Channel Bus-Master PCI Ultra (16 CDB Per Chan.)
+-        ABP3950U2W - Bus-Master PCI LVD/Ultra2-Wide and Ultra-Wide (253 CDB)
+-        ABP3950U3W - Bus-Master PCI Dual LVD2/Ultra3-Wide (253 CDB)
+-
+-  C. Linux source files modified by AdvanSys Driver
+-
+-     This section for historical purposes documents the changes
+-     originally made to the Linux kernel source to add the advansys
+-     driver. As Linux has changed some of these files have also
+-     been modified.
+-
+-     1. linux/arch/i386/config.in:
+-
+-          bool 'AdvanSys SCSI support' CONFIG_SCSI_ADVANSYS y
+-
+-     2. linux/drivers/scsi/hosts.c:
+-
+-          #ifdef CONFIG_SCSI_ADVANSYS
+-          #include "advansys.h"
+-          #endif
+-
+-        and after "static struct scsi_host_template builtin_scsi_hosts[] =":
+-
+-          #ifdef CONFIG_SCSI_ADVANSYS
+-          ADVANSYS,
+-          #endif
+-
+-     3. linux/drivers/scsi/Makefile:
+-
+-          ifdef CONFIG_SCSI_ADVANSYS
+-          SCSI_SRCS := $(SCSI_SRCS) advansys.c
+-          SCSI_OBJS := $(SCSI_OBJS) advansys.o
+-          else
+-          SCSI_MODULE_OBJS := $(SCSI_MODULE_OBJS) advansys.o
+-          endif
+-
+-     4. linux/init/main.c:
+-
+-          extern void advansys_setup(char *str, int *ints);
+-
+-        and add the following lines to the bootsetups[] array.
+-
+-          #ifdef CONFIG_SCSI_ADVANSYS
+-             { "advansys=", advansys_setup },
+-          #endif
+-
+-  D. Source Comments
+-
+-     1. Use tab stops set to 4 for the source files. For vi use 'se tabstops=4'.
+-
+-     2. This driver should be maintained in multiple files. But to make
+-        it easier to include with Linux and to follow Linux conventions,
+-        the whole driver is maintained in the source files advansys.h and
+-        advansys.c. In this file logical sections of the driver begin with
+-        a comment that contains '---'. The following are the logical sections
+-        of the driver below.
+-
+-           --- Linux Version
+-           --- Linux Include File
+-           --- Driver Options
+-           --- Debugging Header
+-           --- Asc Library Constants and Macros
+-           --- Adv Library Constants and Macros
+-           --- Driver Constants and Macros
+-           --- Driver Structures
+-           --- Driver Data
+-           --- Driver Function Prototypes
+-           --- Linux 'struct scsi_host_template' and advansys_setup() Functions
+-           --- Loadable Driver Support
+-           --- Miscellaneous Driver Functions
+-           --- Functions Required by the Asc Library
+-           --- Functions Required by the Adv Library
+-           --- Tracing and Debugging Functions
+-           --- Asc Library Functions
+-           --- Adv Library Functions
+-
+-     3. The string 'XXX' is used to flag code that needs to be re-written
+-        or that contains a problem that needs to be addressed.
+-
+-     4. I have stripped comments from and reformatted the source for the
+-        Asc Library and Adv Library to reduce the size of this file. This
+-        source can be found under the following headings. The Asc Library
+-        is used to support Narrow Boards. The Adv Library is used to
+-        support Wide Boards.
+-
+-           --- Asc Library Constants and Macros
+-           --- Adv Library Constants and Macros
+-           --- Asc Library Functions
+-           --- Adv Library Functions
+-
+-  E. Driver Compile Time Options and Debugging
+-
+-     In this source file the following constants can be defined. They are
+-     defined in the source below. Both of these options are enabled by
+-     default.
+-
+-     1. ADVANSYS_ASSERT - Enable driver assertions (Def: Enabled)
+-
+-        Enabling this option adds assertion logic statements to the
+-        driver. If an assertion fails a message will be displayed to
+-        the console, but the system will continue to operate. Any
+-        assertions encountered should be reported to the person
+-        responsible for the driver. Assertion statements may proactively
+-        detect problems with the driver and facilitate fixing these
+-        problems. Enabling assertions will add a small overhead to the
+-        execution of the driver.
+-
+-     2. ADVANSYS_DEBUG - Enable driver debugging (Def: Disabled)
+-
+-        Enabling this option adds tracing functions to the driver and
+-        the ability to set a driver tracing level at boot time. This
+-        option will also export symbols not required outside the driver to
+-        the kernel name space. This option is very useful for debugging
+-        the driver, but it will add to the size of the driver execution
+-        image and add overhead to the execution of the driver.
+-
+-        The amount of debugging output can be controlled with the global
+-        variable 'asc_dbglvl'. The higher the number the more output. By
+-        default the debug level is 0.
+-
+-        If the driver is loaded at boot time and the LILO Driver Option
+-        is included in the system, the debug level can be changed by
+-        specifying a 5th (ASC_NUM_IOPORT_PROBE + 1) I/O Port. The
+-        first three hex digits of the pseudo I/O Port must be set to
+-        'deb' and the fourth hex digit specifies the debug level: 0 - F.
+-        The following command line will look for an adapter at 0x330
+-        and set the debug level to 2.
+-
+-           linux advansys=0x330,0,0,0,0xdeb2
+-
+-        If the driver is built as a loadable module this variable can be
+-        defined when the driver is loaded. The following insmod command
+-        will set the debug level to one.
+-
+-           insmod advansys.o asc_dbglvl=1
+-
+-        Debugging Message Levels:
+-           0: Errors Only
+-           1: High-Level Tracing
+-           2-N: Verbose Tracing
+-
+-        To enable debug output to console, please make sure that:
+-
+-        a. System and kernel logging is enabled (syslogd, klogd running).
+-        b. Kernel messages are routed to console output. Check
+-           /etc/syslog.conf for an entry similar to this:
+-
+-                kern.*                  /dev/console
+-
+-        c. klogd is started with the appropriate -c parameter
+-           (e.g. klogd -c 8)
+-
+-        This will cause printk() messages to be be displayed on the
+-        current console. Refer to the klogd(8) and syslogd(8) man pages
+-        for details.
+-
+-        Alternatively you can enable printk() to console with this
+-        program. However, this is not the 'official' way to do this.
+-        Debug output is logged in /var/log/messages.
+-
+-          main()
+-          {
+-                  syscall(103, 7, 0, 0);
+-          }
+-
+-        Increasing LOG_BUF_LEN in kernel/printk.c to something like
+-        40960 allows more debug messages to be buffered in the kernel
+-        and written to the console or log file.
+-
+-     3. ADVANSYS_STATS - Enable statistics (Def: Enabled >= v1.3.0)
+-
+-        Enabling this option adds statistics collection and display
+-        through /proc to the driver. The information is useful for
+-        monitoring driver and device performance. It will add to the
+-        size of the driver execution image and add minor overhead to
+-        the execution of the driver.
+-
+-        Statistics are maintained on a per adapter basis. Driver entry
+-        point call counts and transfer size counts are maintained.
+-        Statistics are only available for kernels greater than or equal
+-        to v1.3.0 with the CONFIG_PROC_FS (/proc) file system configured.
+-
+-        AdvanSys SCSI adapter files have the following path name format:
+-
+-           /proc/scsi/advansys/[0-(ASC_NUM_BOARD_SUPPORTED-1)]
+-
+-        This information can be displayed with cat. For example:
+-
+-           cat /proc/scsi/advansys/0
+-
+-        When ADVANSYS_STATS is not defined the AdvanSys /proc files only
+-        contain adapter and device configuration information.
+-
+-  F. Driver LILO Option
+-
+-     If init/main.c is modified as described in the 'Directions for Adding
+-     the AdvanSys Driver to Linux' section (B.4.) above, the driver will
+-     recognize the 'advansys' LILO command line and /etc/lilo.conf option.
+-     This option can be used to either disable I/O port scanning or to limit
+-     scanning to 1 - 4 I/O ports. Regardless of the option setting EISA and
+-     PCI boards will still be searched for and detected. This option only
+-     affects searching for ISA and VL boards.
+-
+-     Examples:
+-       1. Eliminate I/O port scanning:
+-            boot: linux advansys=
+-              or
+-            boot: linux advansys=0x0
+-       2. Limit I/O port scanning to one I/O port:
+-            boot: linux advansys=0x110
+-       3. Limit I/O port scanning to four I/O ports:
+-            boot: linux advansys=0x110,0x210,0x230,0x330
+-
+-     For a loadable module the same effect can be achieved by setting
+-     the 'asc_iopflag' variable and 'asc_ioport' array when loading
+-     the driver, e.g.
+-
+-           insmod advansys.o asc_iopflag=1 asc_ioport=0x110,0x330
+-
+-     If ADVANSYS_DEBUG is defined a 5th (ASC_NUM_IOPORT_PROBE + 1)
+-     I/O Port may be added to specify the driver debug level. Refer to
+-     the 'Driver Compile Time Options and Debugging' section above for
+-     more information.
+-
+-  G. Tests to run before releasing new driver
+-
+-     1. In the supported kernels verify there are no warning or compile
+-        errors when the kernel is built as both a driver and as a module
+-        and with the following options:
+-
+-        ADVANSYS_DEBUG - enabled and disabled
+-        CONFIG_SMP - enabled and disabled
+-        CONFIG_PROC_FS - enabled and disabled
+-
+-     2. Run tests on an x86, alpha, and PowerPC with at least one narrow
+-        card and one wide card attached to a hard disk and CD-ROM drive:
+-        fdisk, mkfs, fsck, bonnie, copy/compare test from the
+-        CD-ROM to the hard drive.
+-
+-  H. Release History
+-
+-     BETA-1.0 (12/23/95):
+-         First Release
+-
+-     BETA-1.1 (12/28/95):
+-         1. Prevent advansys_detect() from being called twice.
+-         2. Add LILO 0xdeb[0-f] option to set 'asc_dbglvl'.
+-
+-     1.2 (1/12/96):
+-         1. Prevent re-entrancy in the interrupt handler which
+-            resulted in the driver hanging Linux.
+-         2. Fix problem that prevented ABP-940 cards from being
+-            recognized on some PCI motherboards.
+-         3. Add support for the ABP-5140 PnP ISA card.
+-         4. Fix check condition return status.
+-         5. Add conditionally compiled code for Linux v1.3.X.
+-
+-     1.3 (2/23/96):
+-         1. Fix problem in advansys_biosparam() that resulted in the
+-            wrong drive geometry being returned for drives > 1GB with
+-            extended translation enabled.
+-         2. Add additional tracing during device initialization.
+-         3. Change code that only applies to ISA PnP adapter.
+-         4. Eliminate 'make dep' warning.
+-         5. Try to fix problem with handling resets by increasing their
+-            timeout value.
+-
+-     1.4 (5/8/96):
+-         1. Change definitions to eliminate conflicts with other subsystems.
+-         2. Add versioning code for the shared interrupt changes.
+-         3. Eliminate problem in asc_rmqueue() with iterating after removing
+-            a request.
+-         4. Remove reset request loop problem from the "Known Problems or
+-            Issues" section. This problem was isolated and fixed in the
+-            mid-level SCSI driver.
+-
+-     1.5 (8/8/96):
+-         1. Add support for ABP-940U (PCI Ultra) adapter.
+-         2. Add support for IRQ sharing by setting the IRQF_SHARED flag for
+-            request_irq and supplying a dev_id pointer to both request_irq()
+-            and free_irq().
+-         3. In AscSearchIOPortAddr11() restore a call to check_region() which
+-            should be used before I/O port probing.
+-         4. Fix bug in asc_prt_hex() which resulted in the displaying
+-            the wrong data.
+-         5. Incorporate miscellaneous Asc Library bug fixes and new microcode.
+-         6. Change driver versioning to be specific to each Linux sub-level.
+-         7. Change statistics gathering to be per adapter instead of global
+-            to the driver.
+-         8. Add more information and statistics to the adapter /proc file:
+-            /proc/scsi/advansys[0...].
+-         9. Remove 'cmd_per_lun' from the "Known Problems or Issues" list.
+-            This problem has been addressed with the SCSI mid-level changes
+-            made in v1.3.89. The advansys_select_queue_depths() function
+-            was added for the v1.3.89 changes.
+-
+-     1.6 (9/10/96):
+-         1. Incorporate miscellaneous Asc Library bug fixes and new microcode.
+-
+-     1.7 (9/25/96):
+-         1. Enable clustering and optimize the setting of the maximum number
+-            of scatter gather elements for any particular board. Clustering
+-            increases CPU utilization, but results in a relatively larger
+-            increase in I/O throughput.
+-         2. Improve the performance of the request queuing functions by
+-            adding a last pointer to the queue structure.
+-         3. Correct problems with reset and abort request handling that
+-            could have hung or crashed Linux.
+-         4. Add more information to the adapter /proc file:
+-            /proc/scsi/advansys[0...].
+-         5. Remove the request timeout issue form the driver issues list.
+-         6. Miscellaneous documentation additions and changes.
+-
+-     1.8 (10/4/96):
+-         1. Make changes to handle the new v2.1.0 kernel memory mapping
+-            in which a kernel virtual address may not be equivalent to its
+-            bus or DMA memory address.
+-         2. Change abort and reset request handling to make it yet even
+-            more robust.
+-         3. Try to mitigate request starvation by sending ordered requests
+-            to heavily loaded, tag queuing enabled devices.
+-         4. Maintain statistics on request response time.
+-         5. Add request response time statistics and other information to
+-            the adapter /proc file: /proc/scsi/advansys[0...].
+-
+-     1.9 (10/21/96):
+-         1. Add conditionally compiled code (ASC_QUEUE_FLOW_CONTROL) to
+-            make use of mid-level SCSI driver device queue depth flow
+-            control mechanism. This will eliminate aborts caused by a
+-            device being unable to keep up with requests and eliminate
+-            repeat busy or QUEUE FULL status returned by a device.
+-         2. Incorporate miscellaneous Asc Library bug fixes.
+-         3. To allow the driver to work in kernels with broken module
+-            support set 'cmd_per_lun' if the driver is compiled as a
+-            module. This change affects kernels v1.3.89 to present.
+-         4. Remove PCI BIOS address from the driver banner. The PCI BIOS
+-            is relocated by the motherboard BIOS and its new address can
+-            not be determined by the driver.
+-         5. Add mid-level SCSI queue depth information to the adapter
+-            /proc file: /proc/scsi/advansys[0...].
+-
+-     2.0 (11/14/96):
+-         1. Change allocation of global structures used for device
+-            initialization to guarantee they are in DMA-able memory.
+-            Previously when the driver was loaded as a module these
+-            structures might not have been in DMA-able memory, causing
+-            device initialization to fail.
+-
+-     2.1 (12/30/96):
+-         1. In advansys_reset(), if the request is a synchronous reset
+-            request, even if the request serial number has changed, then
+-            complete the request.
+-         2. Add Asc Library bug fixes including new microcode.
+-         3. Clear inquiry buffer before using it.
+-         4. Correct ifdef typo.
+-
+-     2.2 (1/15/97):
+-         1. Add Asc Library bug fixes including new microcode.
+-         2. Add synchronous data transfer rate information to the
+-            adapter /proc file: /proc/scsi/advansys[0...].
+-         3. Change ADVANSYS_DEBUG to be disabled by default. This
+-            will reduce the size of the driver image, eliminate execution
+-            overhead, and remove unneeded symbols from the kernel symbol
+-            space that were previously added by the driver.
+-         4. Add new compile-time option ADVANSYS_ASSERT for assertion
+-            code that used to be defined within ADVANSYS_DEBUG. This
+-            option is enabled by default.
+-
+-     2.8 (5/26/97):
+-         1. Change version number to 2.8 to synchronize the Linux driver
+-            version numbering with other AdvanSys drivers.
+-         2. Reformat source files without tabs to present the same view
+-            of the file to everyone regardless of the editor tab setting
+-            being used.
+-         3. Add Asc Library bug fixes.
+-
+-     3.1A (1/8/98):
+-         1. Change version number to 3.1 to indicate that support for
+-            Ultra-Wide adapters (ABP-940UW) is included in this release.
+-         2. Add Asc Library (Narrow Board) bug fixes.
+-         3. Report an underrun condition with the host status byte set
+-            to DID_UNDERRUN. Currently DID_UNDERRUN is defined to 0 which
+-            causes the underrun condition to be ignored. When Linux defines
+-            its own DID_UNDERRUN the constant defined in this file can be
+-            removed.
+-         4. Add patch to AscWaitTixISRDone().
+-         5. Add support for up to 16 different AdvanSys host adapter SCSI
+-            channels in one system. This allows four cards with four channels
+-            to be used in one system.
+-
+-     3.1B (1/9/98):
+-         1. Handle that PCI register base addresses are not always page
+-            aligned even though ioremap() requires that the address argument
+-            be page aligned.
+-
+-     3.1C (1/10/98):
+-         1. Update latest BIOS version checked for from the /proc file.
+-         2. Don't set microcode SDTR variable at initialization. Instead
+-            wait until device capabilities have been detected from an Inquiry
+-            command.
+-
+-     3.1D (1/21/98):
+-         1. Improve performance when the driver is compiled as module by
+-            allowing up to 64 scatter-gather elements instead of 8.
+-
+-     3.1E (5/1/98):
+-         1. Set time delay in AscWaitTixISRDone() to 1000 ms.
+-         2. Include SMP locking changes.
+-         3. For v2.1.93 and newer kernels use CONFIG_PCI and new PCI BIOS
+-            access functions.
+-         4. Update board serial number printing.
+-         5. Try allocating an IRQ both with and without the IRQF_DISABLED
+-            flag set to allow IRQ sharing with drivers that do not set
+-            the IRQF_DISABLED flag. Also display a more descriptive error
+-            message if request_irq() fails.
+-         6. Update to latest Asc and Adv Libraries.
+-
+-     3.2A (7/22/99):
+-         1. Update Adv Library to 4.16 which includes support for
+-            the ASC38C0800 (Ultra2/LVD) IC.
+-
+-     3.2B (8/23/99):
+-         1. Correct PCI compile time option for v2.1.93 and greater
+-            kernels, advansys_info() string, and debug compile time
+-            option.
+-         2. Correct DvcSleepMilliSecond() for v2.1.0 and greater
+-            kernels. This caused an LVD detection/BIST problem problem
+-            among other things.
+-         3. Sort PCI cards by PCI Bus, Slot, Function ascending order
+-            to be consistent with the BIOS.
+-         4. Update to Asc Library S121 and Adv Library 5.2.
+-
+-     3.2C (8/24/99):
+-         1. Correct PCI card detection bug introduced in 3.2B that
+-            prevented PCI cards from being detected in kernels older
+-            than v2.1.93.
+-
+-     3.2D (8/26/99):
+-         1. Correct /proc device synchronous speed information display.
+-            Also when re-negotiation is pending for a target device
+-            note this condition with an * and footnote.
+-         2. Correct initialization problem with Ultra-Wide cards that
+-            have a pre-3.2 BIOS. A microcode variable changed locations
+-            in 3.2 and greater BIOSes which caused WDTR to be attempted
+-            erroneously with drives that don't support WDTR.
+-
+-     3.2E (8/30/99):
+-         1. Fix compile error caused by v2.3.13 PCI structure change.
+-         2. Remove field from ASCEEP_CONFIG that resulted in an EEPROM
+-            checksum error for ISA cards.
+-         3. Remove ASC_QUEUE_FLOW_CONTROL conditional code. The mid-level
+-            SCSI changes that it depended on were never included in Linux.
+-
+-     3.2F (9/3/99):
+-         1. Handle new initial function code added in v2.3.16 for all
+-            driver versions.
+-
+-     3.2G (9/8/99):
+-         1. Fix PCI board detection in v2.3.13 and greater kernels.
+-         2. Fix comiple errors in v2.3.X with debugging enabled.
+-
+-     3.2H (9/13/99):
+-         1. Add 64-bit address, long support for Alpha and UltraSPARC.
+-            The driver has been verified to work on an Alpha system.
+-         2. Add partial byte order handling support for Power PC and
+-            other big-endian platforms. This support has not yet been
+-            completed or verified.
+-         3. For wide boards replace block zeroing of request and
+-            scatter-gather structures with individual field initialization
+-            to improve performance.
+-         4. Correct and clarify ROM BIOS version detection.
+-
+-     3.2I (10/8/99):
+-         1. Update to Adv Library 5.4.
+-         2. Add v2.3.19 underrun reporting to asc_isr_callback() and
+-            adv_isr_callback().  Remove DID_UNDERRUN constant and other
+-            no longer needed code that previously documented the lack
+-            of underrun handling.
+-
+-     3.2J (10/14/99):
+-         1. Eliminate compile errors for v2.0 and earlier kernels.
+-
+-     3.2K (11/15/99):
+-         1. Correct debug compile error in asc_prt_adv_scsi_req_q().
+-         2. Update Adv Library to 5.5.
+-         3. Add ifdef handling for /proc changes added in v2.3.28.
+-         4. Increase Wide board scatter-gather list maximum length to
+-            255 when the driver is compiled into the kernel.
+-
+-     3.2L (11/18/99):
+-         1. Fix bug in adv_get_sglist() that caused an assertion failure
+-            at line 7475. The reqp->sgblkp pointer must be initialized
+-            to NULL in adv_get_sglist().
+-
+-     3.2M (11/29/99):
+-         1. Really fix bug in adv_get_sglist().
+-         2. Incorporate v2.3.29 changes into driver.
+-
+-     3.2N (4/1/00):
+-         1. Add CONFIG_ISA ifdef code.
+-         2. Include advansys_interrupts_enabled name change patch.
+-         3. For >= v2.3.28 use new SCSI error handling with new function
+-            advansys_eh_bus_reset(). Don't include an abort function
+-            because of base library limitations.
+-         4. For >= v2.3.28 use per board lock instead of io_request_lock.
+-         5. For >= v2.3.28 eliminate advansys_command() and
+-            advansys_command_done().
+-         6. Add some changes for PowerPC (Big Endian) support, but it isn't
+-            working yet.
+-         7. Fix "nonexistent resource free" problem that occurred on a module
+-            unload for boards with an I/O space >= 255. The 'n_io_port' field
+-            is only one byte and can not be used to hold an ioport length more
+-            than 255.
+-
+-     3.3A (4/4/00):
+-         1. Update to Adv Library 5.8.
+-         2. For wide cards add support for CDBs up to 16 bytes.
+-         3. Eliminate warnings when CONFIG_PROC_FS is not defined.
+-
+-     3.3B (5/1/00):
+-         1. Support for PowerPC (Big Endian) wide cards. Narrow cards
+-            still need work.
+-         2. Change bitfields to shift and mask access for endian
+-            portability.
+-
+-     3.3C (10/13/00):
+-         1. Update for latest 2.4 kernel.
+-         2. Test ABP-480 CardBus support in 2.4 kernel - works!
+-         3. Update to Asc Library S123.
+-         4. Update to Adv Library 5.12.
+-
+-     3.3D (11/22/00):
+-         1. Update for latest 2.4 kernel.
+-         2. Create patches for 2.2 and 2.4 kernels.
+-
+-     3.3E (1/9/01):
+-         1. Now that 2.4 is released remove ifdef code for kernel versions
+-            less than 2.2. The driver is now only supported in kernels 2.2,
+-            2.4, and greater.
+-         2. Add code to release and acquire the io_request_lock in
+-            the driver entrypoint functions: advansys_detect and
+-            advansys_queuecommand. In kernel 2.4 the SCSI mid-level driver
+-            still holds the io_request_lock on entry to SCSI low-level drivers.
+-            This was supposed to be removed before 2.4 was released but never
+-            happened. When the mid-level SCSI driver is changed all references
+-            to the io_request_lock should be removed from the driver.
+-         3. Simplify error handling by removing advansys_abort(),
+-            AscAbortSRB(), AscResetDevice(). SCSI bus reset requests are
+-            now handled by resetting the SCSI bus and fully re-initializing
+-            the chip. This simple method of error recovery has proven to work
+-            most reliably after attempts at different methods. Also now only
+-            support the "new" error handling method and remove the obsolete
+-            error handling interface.
+-         4. Fix debug build errors.
+-
+-     3.3F (1/24/01):
+-         1. Merge with ConnectCom version from Andy Kellner which
+-            updates Adv Library to 5.14.
+-         2. Make PowerPC (Big Endian) work for narrow cards and
+-            fix problems writing EEPROM for wide cards.
+-         3. Remove interrupts_enabled assertion function.
+-
+-     3.3G (2/16/01):
+-         1. Return an error from narrow boards if passed a 16 byte
+-            CDB. The wide board can already handle 16 byte CDBs.
+-
+-     3.3GJ (4/15/02):
+-	 1. hacks for lk 2.5 series (D. Gilbert)
+-
+-     3.3GJD (10/14/02):
+-         1. change select_queue_depths to slave_configure
+-	 2. make cmd_per_lun be sane again
+-
+-     3.3K [2004/06/24]:
+-         1. continuing cleanup for lk 2.6 series
+-         2. Fix problem in lk 2.6.7-bk2 that broke PCI wide cards
+-         3. Fix problem that oopsed ISA cards
+-
+-  I. Known Problems/Fix List (XXX)
+-
+-     1. Need to add memory mapping workaround. Test the memory mapping.
+-        If it doesn't work revert to I/O port access. Can a test be done
+-        safely?
+-     2. Handle an interrupt not working. Keep an interrupt counter in
+-        the interrupt handler. In the timeout function if the interrupt
+-        has not occurred then print a message and run in polled mode.
+-     3. Allow bus type scanning order to be changed.
+-     4. Need to add support for target mode commands, cf. CAM XPT.
+-
+-  J. Credits (Chronological Order)
+-
+-     Bob Frey <bfrey@turbolinux.com.cn> wrote the AdvanSys SCSI driver
+-     and maintained it up to 3.3F. He continues to answer questions
+-     and help maintain the driver.
+-
+-     Nathan Hartwell <mage@cdc3.cdc.net> provided the directions and
+-     basis for the Linux v1.3.X changes which were included in the
+-     1.2 release.
+-
+-     Thomas E Zerucha <zerucha@shell.portal.com> pointed out a bug
+-     in advansys_biosparam() which was fixed in the 1.3 release.
+-
+-     Erik Ratcliffe <erik@caldera.com> has done testing of the
+-     AdvanSys driver in the Caldera releases.
+-
+-     Rik van Riel <H.H.vanRiel@fys.ruu.nl> provided a patch to
+-     AscWaitTixISRDone() which he found necessary to make the
+-     driver work with a SCSI-1 disk.
+-
+-     Mark Moran <mmoran@mmoran.com> has helped test Ultra-Wide
+-     support in the 3.1A driver.
+-
+-     Doug Gilbert <dgilbert@interlog.com> has made changes and
+-     suggestions to improve the driver and done a lot of testing.
+-
+-     Ken Mort <ken@mort.net> reported a DEBUG compile bug fixed
+-     in 3.2K.
+-
+-     Tom Rini <trini@kernel.crashing.org> provided the CONFIG_ISA
+-     patch and helped with PowerPC wide and narrow board support.
+-
+-     Philip Blundell <philb@gnu.org> provided an
+-     advansys_interrupts_enabled patch.
+-
+-     Dave Jones <dave@denial.force9.co.uk> reported the compiler
+-     warnings generated when CONFIG_PROC_FS was not defined in
+-     the 3.2M driver.
+-
+-     Jerry Quinn <jlquinn@us.ibm.com> fixed PowerPC support (endian
+-     problems) for wide cards.
+-
+-     Bryan Henderson <bryanh@giraffe-data.com> helped debug narrow
+-     card error handling.
+-
+-     Manuel Veloso <veloso@pobox.com> worked hard on PowerPC narrow
+-     board support and fixed a bug in AscGetEEPConfig().
+-
+-     Arnaldo Carvalho de Melo <acme@conectiva.com.br> made
+-     save_flags/restore_flags changes.
+-
+-     Andy Kellner <AKellner@connectcom.net> continues the Advansys SCSI
+-     driver development for ConnectCom (Version > 3.3F).
+-
+-  K. ConnectCom (AdvanSys) Contact Information
+-
+-     Mail:                   ConnectCom Solutions, Inc.
+-                             1150 Ringwood Court
+-                             San Jose, CA 95131
+-     Operator/Sales:         1-408-383-9400
+-     FAX:                    1-408-383-9612
+-     Tech Support:           1-408-467-2930
+-     Tech Support E-Mail:    linux@connectcom.net
+-     FTP Site:               ftp.connectcom.net (login: anonymous)
+-     Web Site:               http://www.connectcom.net
+-
+-*/
+-
+-/*
+- * --- Linux Include Files
+- */
+-
+ #include <linux/module.h>
+ #include <linux/string.h>
+ #include <linux/kernel.h>
+@@ -784,20 +47,23 @@
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ 
+-/* FIXME: (by jejb@steeleye.com)
++/* FIXME:
+  *
+- * Although all of the necessary command mapping places have the
+- * appropriate dma_map.. APIs, the driver still processes its internal
+- * queue using bus_to_virt() and virt_to_bus() which are illegal under
+- * the API.  The entire queue processing structure will need to be
+- * altered to fix this.
++ * 1. Although all of the necessary command mapping places have the
++ *    appropriate dma_map.. APIs, the driver still processes its internal
++ *    queue using bus_to_virt() and virt_to_bus() which are illegal under
++ *    the API.  The entire queue processing structure will need to be
++ *    altered to fix this.
++ * 2. Need to add memory mapping workaround. Test the memory mapping.
++ *    If it doesn't work revert to I/O port access. Can a test be done
++ *    safely?
++ * 3. Handle an interrupt not working. Keep an interrupt counter in
++ *    the interrupt handler. In the timeout function if the interrupt
++ *    has not occurred then print a message and run in polled mode.
++ * 4. Need to add support for target mode commands, cf. CAM XPT.
   */
  #warning this driver is still not properly converted to the DMA API
  
-@@ -2469,7 +2470,7 @@ do { \
-  * --- Driver Constants and Macros
-  */
- 
--#define ASC_NUM_BOARD_SUPPORTED 16
-+#define ASC_LEGACY_BOARD_SUPPORTED 8
- #define ASC_NUM_IOPORT_PROBE    4
- #define ASC_NUM_BUS             2
- 
-@@ -2900,15 +2901,12 @@ typedef struct asc_board {
- 							dvc_var.adv_dvc_var)
- #define adv_dvc_to_pdev(adv_dvc) to_pci_dev(adv_dvc_to_board(adv_dvc)->dev)
- 
 -/*
-- * --- Driver Data
+- * --- Driver Options
 - */
 -
--/* Note: All driver global data should be initialized. */
-+/* Number of ISA/VLB boards detected in system. */
-+static int asc_legacy_count;
-+static struct Scsi_Host *asc_legacy_hosts[ASC_LEGACY_BOARD_SUPPORTED];
+ /* Enable driver assertions. */
+ #define ADVANSYS_ASSERT
  
--/* Number of boards detected in system. */
-+/* board number.  Used to initialise boardp->id */
- static int asc_board_count = 0;
--static struct Scsi_Host *asc_host[ASC_NUM_BOARD_SUPPORTED] = { NULL };
- 
- /* Overrun buffer used by all narrow boards. */
- static uchar overrun_buf[ASC_OVERRUN_BSIZE] = { 0 };
-@@ -2993,7 +2991,7 @@ static void asc_prt_hex(char *f, uchar *, int);
- 
- #ifdef CONFIG_PROC_FS
- /*
-- * advansys_proc_info() - /proc/scsi/advansys/[0-(ASC_NUM_BOARD_SUPPORTED-1)]
-+ * advansys_proc_info() - /proc/scsi/advansys/
-  *
-  * *buffer: I/O buffer
-  * **start: if inout == FALSE pointer into buffer where user read should start
-@@ -4625,7 +4623,6 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
- 	asc_board_t *boardp;
- 	struct scsi_cmnd *scp;
- 	struct Scsi_Host *shost;
--	int i;
- 
- 	ASC_DBG2(1, "asc_isr_callback: asc_dvc_varp 0x%lx, qdonep 0x%lx\n",
- 		 (ulong)asc_dvc_varp, (ulong)qdonep);
-@@ -4644,23 +4641,7 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
- 	}
- 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
- 
--	/*
--	 * If the request's host pointer is not valid, display a
--	 * message and return.
--	 */
- 	shost = scp->device->host;
--	for (i = 0; i < asc_board_count; i++) {
--		if (asc_host[i] == shost) {
--			break;
--		}
--	}
--	if (i == asc_board_count) {
--		ASC_PRINT2
--		    ("asc_isr_callback: scp 0x%lx has bad host pointer, host 0x%lx\n",
--		     (ulong)scp, (ulong)shost);
--		return;
--	}
--
- 	ASC_STATS(shost, callback);
- 	ASC_DBG1(1, "asc_isr_callback: shost 0x%lx\n", (ulong)shost);
- 
-@@ -4788,7 +4769,6 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	adv_sgblk_t *sgblkp;
- 	struct scsi_cmnd *scp;
- 	struct Scsi_Host *shost;
--	int i;
- 	ADV_DCNT resid_cnt;
- 
- 	ASC_DBG2(1, "adv_isr_callback: adv_dvc_varp 0x%lx, scsiqp 0x%lx\n",
-@@ -4824,27 +4804,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
- 	}
- 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
- 
--	/*
--	 * If the request's host pointer is not valid, display a message
--	 * and return.
--	 */
- 	shost = scp->device->host;
--	for (i = 0; i < asc_board_count; i++) {
--		if (asc_host[i] == shost) {
--			break;
--		}
--	}
--	/*
--	 * Note: If the host structure is not found, the adv_req_t request
--	 * structure and adv_sgblk_t structure, if any, is dropped.
--	 */
--	if (i == asc_board_count) {
--		ASC_PRINT2
--		    ("adv_isr_callback: scp 0x%lx has bad host pointer, host 0x%lx\n",
--		     (ulong)scp, (ulong)shost);
--		return;
--	}
--
- 	ASC_STATS(shost, callback);
- 	ASC_DBG1(1, "adv_isr_callback: shost 0x%lx\n", (ulong)shost);
- 
-@@ -16383,13 +16343,10 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	if (!shost)
- 		return NULL;
- 
--	/* Save a pointer to the Scsi_Host of each board found. */
--	asc_host[asc_board_count++] = shost;
--
- 	/* Initialize private per board data */
- 	boardp = ASC_BOARDP(shost);
- 	memset(boardp, 0, sizeof(asc_board_t));
--	boardp->id = asc_board_count - 1;
-+	boardp->id = asc_board_count++;
- 	spin_lock_init(&boardp->lock);
- 	boardp->dev = dev;
- 
-@@ -16993,7 +16950,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 		iounmap(boardp->ioremap_addr);
-  err_shost:
- 	scsi_host_put(shost);
--	asc_board_count--;
- 	return NULL;
- }
- 
-@@ -17017,7 +16973,7 @@ static int __init advansys_detect(void)
- 
- 	ASC_DBG(1, "advansys_detect: begin\n");
- 
--	asc_board_count = 0;
-+	asc_legacy_count = 0;
- 
- 	/*
- 	 * If I/O port probing has been modified, then verify and
-@@ -17052,10 +17008,10 @@ static int __init advansys_detect(void)
- 			 bus, asc_bus_name[bus]);
- 		iop = 0;
- 
--		while (asc_board_count < ASC_NUM_BOARD_SUPPORTED) {
-+		while (asc_legacy_count < ASC_LEGACY_BOARD_SUPPORTED) {
- 
--			ASC_DBG1(2, "advansys_detect: asc_board_count %d\n",
--				 asc_board_count);
-+			ASC_DBG1(2, "advansys_detect: asc_legacy_count %d\n",
-+				 asc_legacy_count);
- 
- 			switch (asc_bus[bus]) {
- 			case ASC_IS_ISA:
-@@ -17151,22 +17107,22 @@ static int __init advansys_detect(void)
- 			}
- 			ASC_DBG1(1, "advansys_detect: iop 0x%x\n", iop);
- 
--			/*
--			 * Adapter not found, try next bus type.
--			 */
--			if (iop == 0) {
-+			/* Adapter not found, try next bus type. */
-+			if (iop == 0)
- 				break;
--			}
- 
- 			shost = advansys_board_found(iop, NULL, asc_bus[bus]);
--			if (!shost)
-+			if (shost) {
-+				asc_legacy_hosts[asc_legacy_count++] = shost;
-+			} else {
- 				release_region(iop, ASC_IOADR_GAP);
-+			}
- 		}
- 	}
- 
--	ASC_DBG1(1, "advansys_detect: done: asc_board_count %d\n",
--		 asc_board_count);
--	return asc_board_count;
-+	ASC_DBG1(1, "advansys_detect: done: asc_legacy_count %d\n",
-+		 asc_legacy_count);
-+	return asc_legacy_count;
- }
- 
- /*
-@@ -17176,10 +17132,10 @@ static int __init advansys_detect(void)
-  */
- static int advansys_release(struct Scsi_Host *shost)
- {
--	asc_board_t *boardp;
-+	asc_board_t *boardp = ASC_BOARDP(shost);
- 
- 	ASC_DBG(1, "advansys_release: begin\n");
--	boardp = ASC_BOARDP(shost);
-+	scsi_remove_host(shost);
- 	free_irq(shost->irq, shost);
- 	if (shost->dma_channel != NO_ISA_DMA) {
- 		ASC_DBG(1, "advansys_release: free_dma()\n");
-@@ -17200,29 +17156,12 @@ static int advansys_release(struct Scsi_Host *shost)
- 			kfree(sgp);
- 		}
- 	}
--#ifdef CONFIG_PROC_FS
--	ASC_ASSERT(boardp->prtbuf != NULL);
- 	kfree(boardp->prtbuf);
--#endif /* CONFIG_PROC_FS */
- 	scsi_host_put(shost);
- 	ASC_DBG(1, "advansys_release: end\n");
- 	return 0;
- }
- 
--static void __devexit advansys_remove(struct Scsi_Host *shost)
--{
--	int i;
--	scsi_remove_host(shost);
--	advansys_release(shost);
--
--	for (i = 0; i < asc_board_count; i++) {
--		if (asc_host[i] == shost) {
--			asc_host[i] = NULL;
--			break;
--		}
--	}
--}
--
- static struct eisa_device_id advansys_eisa_table[] __devinitdata = {
- 	{ "ABP7401" },
- 	{ "ABP7501" },
-@@ -17292,7 +17231,7 @@ static __devexit int advansys_eisa_remove(struct device *dev)
- 		if (!shost)
- 			continue;
- 		ioport = shost->io_port;
--		advansys_remove(data->host[i]);
-+		advansys_release(data->host[i]);
- 		release_region(ioport, ASC_IOADR_GAP);
- 	}
- 
-@@ -17374,7 +17313,7 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- static void __devexit advansys_pci_remove(struct pci_dev *pdev)
- {
--	advansys_remove(pci_get_drvdata(pdev));
-+	advansys_release(pci_get_drvdata(pdev));
- 	pci_release_regions(pdev);
- 	pci_disable_device(pdev);
- }
-@@ -17411,14 +17350,8 @@ static void __exit advansys_exit(void)
- 	pci_unregister_driver(&advansys_pci_driver);
- 	eisa_driver_unregister(&advansys_eisa_driver);
- 
--	for (i = 0; i < asc_board_count; i++) {
--		struct Scsi_Host *host = asc_host[i];
--		if (!host)
--			continue;
--		scsi_remove_host(host);
--		advansys_release(host);
--		asc_host[i] = NULL;
--	}
-+	for (i = 0; i < asc_legacy_count; i++)
-+		advansys_release(asc_legacy_hosts[i]);
- }
- 
- module_init(advansys_init);
 -- 
 1.4.4.4
 
