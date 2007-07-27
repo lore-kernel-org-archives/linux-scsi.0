@@ -1,32 +1,44 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 21/21] advansys: use memcpy instead of open-coded loop
-Date: Thu, 26 Jul 2007 22:58:18 -0600
-Message-ID: <20070727045817.GA21219@parisc-linux.org>
-References: <11854705773144-git-send-email-matthew@wil.cx> <46A8FB15.5070103@garzik.org>
+From: Bjarne Thomsen <bjarne.b.thomsen@gmail.com>
+Subject: AIC79XX PCI-X SCSI mystery
+Date: Fri, 27 Jul 2007 09:57:10 +0200
+Message-ID: <1185523030.7330.24.camel@tycho.astronomy.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33716 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752306AbXG0E6T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 00:58:19 -0400
-Content-Disposition: inline
-In-Reply-To: <46A8FB15.5070103@garzik.org>
+Received: from ug-out-1314.google.com ([66.249.92.173]:42387 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763207AbXG0H6C (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 03:58:02 -0400
+Received: by ug-out-1314.google.com with SMTP id j3so669526ugf
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Jul 2007 00:58:01 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jul 26, 2007 at 03:50:45PM -0400, Jeff Garzik wrote:
-> Done with my review.  Any patches I did not comment on can be considered 
-> sane...
+I have a dual Opteron Tyan MB (S2885) with 4 PCI-X slots.
+The 2 first slots can work up to 100 MHz, the last 2 up to 66 MHz.
 
-Thanks, Jeff, that was a Herculean effort.  I've gone through and
-made most of your suggested changes.  I'm making too many mistakes now,
-so it's time to go to bed, but I'll post another round of patches early
-tomorrow.
+I have 2 PCI-X Adaptec SCSI controllers: 29160 and 39320A.
+A SCSI disk is connected to port A on the 39320A.
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+When I mount the 39320A in any of the 4 slots the system hangs
+after a few seconds (with no error messages in syslog) when I
+copy a directory with many files to the SCIS disk.
+
+However, when I mount both controllers in either slots 1 and 2
+or slots 3 and 4 I can copy 25GB of files without any hang-up.
+
+I need some help to figure this out. It is a mystery to me.
+
+2.6.22-2mdv #1 SMP Mon Jul 23 17:24:30 CEST 2007 x86_64 AMD Opteron(tm)
+Processor 244 GNU/Linux
+
+I do not wish to clutter this mail with random listings,
+but I can supply output if somebody can tell me what is needed.
+
+Bjarne Thomsen
+
+
+
+
