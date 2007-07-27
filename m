@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 2/24] advansys: Clean up proc_info implementation
-Date: Fri, 27 Jul 2007 07:42:11 -0600
-Message-ID: <11855437533288-git-send-email-matthew@wil.cx>
+Subject: [PATCH 3/24] advansys: version, copyright, etc
+Date: Fri, 27 Jul 2007 07:42:12 -0600
+Message-ID: <11855437532154-git-send-email-matthew@wil.cx>
 References: <20070727134038.GC21219@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:38888 "EHLO
-	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760043AbXG0Nmf (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:50327 "EHLO
+	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759357AbXG0Nmf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 09:42:35 -0400
 In-Reply-To: <20070727134038.GC21219@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,127 +14,135 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-Just use the Scsi_Host passed in, rather than looking through the driver's
-own array of boards for one that matches it.
-
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+Update the version to 3.4
+Add my copyright
+Add myself to MAINTAINERS
+Exercise my right to change the license from dual BSD/GPL to GPL
+Don't force the definition of CONFIG_ISA on x86
+Always include pci.h
+Stop including stat.h
 ---
- drivers/scsi/advansys.c |   36 ++++++++++++------------------------
- 1 files changed, 12 insertions(+), 24 deletions(-)
+ MAINTAINERS             |    6 ++++++
+ drivers/scsi/advansys.c |   43 +++++++++++++++++++------------------------
+ 2 files changed, 25 insertions(+), 24 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index babd00b..f10c9ae 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -282,6 +282,12 @@ P:	Colin Leroy
+ M:	colin@colino.net
+ S:	Maintained
+ 
++ADVANSYS SCSI DRIVER
++P:	Matthew Wilcox
++M:	matthew@wil.cx
++L:	linux-scsi@vger.kernel.org
++S:	Maintained
++
+ AEDSP16 DRIVER
+ P:	Riccardo Facchetti
+ M:	fizban@tin.it
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index eced264..bfa1ffc 100644
+index bfa1ffc..a0bad3b 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -4036,9 +4036,7 @@ static int
- advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 		   off_t offset, int length, int inout)
- {
--	struct Scsi_Host *shp;
- 	asc_board_t *boardp;
--	int i;
- 	char *cp;
- 	int cplen;
- 	int cnt;
-@@ -4063,18 +4061,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 * User read of /proc/scsi/advansys/[0...] file.
- 	 */
+@@ -1,20 +1,23 @@
+-#define ASC_VERSION "3.3K"	/* AdvanSys Driver Version */
++#define ASC_VERSION "3.4"	/* AdvanSys Driver Version */
  
--	/* Find the specified board. */
--	for (i = 0; i < asc_board_count; i++) {
--		if (asc_host[i]->host_no == shost->host_no) {
--			break;
--		}
--	}
--	if (i == asc_board_count) {
--		return (-ENOENT);
--	}
+ /*
+  * advansys.c - Linux Host Driver for AdvanSys SCSI Adapters
+  *
+  * Copyright (c) 1995-2000 Advanced System Products, Inc.
+  * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
++ * Copyright (c) 2007 Matthew Wilcox <matthew@wil.cx>
+  * All Rights Reserved.
+  *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that redistributions of source
+- * code retain the above copyright notice and this comment without
+- * modification.
+- *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++/*
+  * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+  * changed its name to ConnectCom Solutions, Inc.
+- *
++ * On June 18, 2001 Initio Corp. acquired ConnectCom's SCSI assets
+  */
+ 
+ /*
+@@ -755,11 +758,6 @@
+  */
+ 
+ #include <linux/module.h>
 -
--	shp = asc_host[i];
--	boardp = ASC_BOARDP(shp);
-+	boardp = ASC_BOARDP(shost);
+-#if defined(CONFIG_X86) && !defined(CONFIG_ISA)
+-#define CONFIG_ISA
+-#endif /* CONFIG_X86 && !CONFIG_ISA */
+-
+ #include <linux/string.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+@@ -771,7 +769,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
+-#include <linux/stat.h>
++#include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/dma-mapping.h>
  
- 	/* Copy read data starting at the beginning of the buffer. */
- 	*start = buffer;
-@@ -4088,7 +4075,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 *
- 	 * advansys_info() returns the board string from its own static buffer.
- 	 */
--	cp = (char *)advansys_info(shp);
-+	cp = (char *)advansys_info(shost);
- 	strcat(cp, "\n");
- 	cplen = strlen(cp);
- 	/* Copy board information. */
-@@ -4107,7 +4094,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 */
- 	if (ASC_WIDE_BOARD(boardp)) {
- 		cp = boardp->prtbuf;
--		cplen = asc_prt_adv_bios(shp, cp, ASC_PRTBUF_SIZE);
-+		cplen = asc_prt_adv_bios(shost, cp, ASC_PRTBUF_SIZE);
- 		ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
- 		cnt =
- 		    asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
-@@ -4126,7 +4113,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 * Display driver information for each device attached to the board.
- 	 */
- 	cp = boardp->prtbuf;
--	cplen = asc_prt_board_devices(shp, cp, ASC_PRTBUF_SIZE);
-+	cplen = asc_prt_board_devices(shost, cp, ASC_PRTBUF_SIZE);
- 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
- 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
- 	totcnt += cnt;
-@@ -4143,9 +4130,9 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 */
- 	cp = boardp->prtbuf;
- 	if (ASC_NARROW_BOARD(boardp)) {
--		cplen = asc_prt_asc_board_eeprom(shp, cp, ASC_PRTBUF_SIZE);
-+		cplen = asc_prt_asc_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
- 	} else {
--		cplen = asc_prt_adv_board_eeprom(shp, cp, ASC_PRTBUF_SIZE);
-+		cplen = asc_prt_adv_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
+@@ -779,6 +777,12 @@
+ #include <asm/system.h>
+ #include <asm/dma.h>
+ 
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_host.h>
++
+ /* FIXME: (by jejb@steeleye.com) This warning is present for two
+  * reasons:
+  *
+@@ -793,15 +797,6 @@
+  */
+ #warning this driver is still not properly converted to the DMA API
+ 
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_tcq.h>
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_host.h>
+-#ifdef CONFIG_PCI
+-#include <linux/pci.h>
+-#endif /* CONFIG_PCI */
+-
+ /*
+  * --- Driver Options
+  */
+@@ -17760,8 +17755,6 @@ static void AdvInquiryHandling(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
  	}
- 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
- 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
-@@ -4162,7 +4149,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 * Display driver configuration and information for the board.
- 	 */
- 	cp = boardp->prtbuf;
--	cplen = asc_prt_driver_conf(shp, cp, ASC_PRTBUF_SIZE);
-+	cplen = asc_prt_driver_conf(shost, cp, ASC_PRTBUF_SIZE);
- 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
- 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
- 	totcnt += cnt;
-@@ -4179,7 +4166,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 * Display driver statistics for the board.
- 	 */
- 	cp = boardp->prtbuf;
--	cplen = asc_prt_board_stats(shp, cp, ASC_PRTBUF_SIZE);
-+	cplen = asc_prt_board_stats(shost, cp, ASC_PRTBUF_SIZE);
- 	ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
- 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
- 	totcnt += cnt;
-@@ -4196,7 +4183,8 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 */
- 	for (tgt_id = 0; tgt_id <= ADV_MAX_TID; tgt_id++) {
- 		cp = boardp->prtbuf;
--		cplen = asc_prt_target_stats(shp, tgt_id, cp, ASC_PRTBUF_SIZE);
-+		cplen = asc_prt_target_stats(shost, tgt_id, cp,
-+							ASC_PRTBUF_SIZE);
- 		ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
- 		cnt =
- 		    asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
-@@ -4218,9 +4206,9 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
- 	 */
- 	cp = boardp->prtbuf;
- 	if (ASC_NARROW_BOARD(boardp)) {
--		cplen = asc_prt_asc_board_info(shp, cp, ASC_PRTBUF_SIZE);
-+		cplen = asc_prt_asc_board_info(shost, cp, ASC_PRTBUF_SIZE);
- 	} else {
--		cplen = asc_prt_adv_board_info(shp, cp, ASC_PRTBUF_SIZE);
-+		cplen = asc_prt_adv_board_info(shost, cp, ASC_PRTBUF_SIZE);
- 	}
- 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
- 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ }
+ 
+-MODULE_LICENSE("Dual BSD/GPL");
+-
+ static struct Scsi_Host *__devinit
+ advansys_board_found(int iop, struct device *dev, int bus_type)
+ {
+@@ -19017,3 +19010,5 @@ static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
+ 
+ MODULE_DEVICE_TABLE(pci, advansys_pci_tbl);
+ #endif /* CONFIG_PCI */
++
++MODULE_LICENSE("GPL");
 -- 
 1.4.4.4
 
