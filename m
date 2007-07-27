@@ -1,78 +1,88 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 1/2] arcmsr: Fix hardware wait loops
-Date: Fri, 27 Jul 2007 13:00:48 -0400
-Message-ID: <20070727170048.GA27353@havoc.gtf.org>
+Subject: [PATCH 2/2] arcmsr: irq handler fixes, cleanups, micro-opts
+Date: Fri, 27 Jul 2007 13:01:15 -0400
+Message-ID: <20070727170114.GA27441@havoc.gtf.org>
+References: <20070727170048.GA27353@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:39658 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755288AbXG0RAt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jul 2007 13:00:49 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S937293AbXG0RBa@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <20070727170048.GA27353@havoc.gtf.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, erich@areca.com.tw
 Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+List-Id: linux-scsi@vger.kernel.org
 
 
-IMO this belongs in 2.6.23-rc.
-
-Committed to 'arcmsr' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
-
-
-commit f9f7b1384995626e1a80322faef3f7cca97aa7ae
+commit 97618f90f021d457c5078ab85f0f443553f93d51
 Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Jul 27 12:57:38 2007 -0400
+Date:   Fri Jul 27 12:58:00 2007 -0400
 
-    [SCSI] arcmsr: Fix hardware wait loops
+    [SCSI] arcmsr: interrupt handling fixes, cleanups, micro-opts
     
-    Remove _interruptible, since receiving a signal while waiting on a
-    hardware condition will simply cause the driver to busy-wait.
+    * Remove IRQF_DISABLED, it is clearly wrong for this driver.
     
-    Using msleep_interruptible() is rarely the right thing to do, when
-    waiting on a hardware condition to change.
-
-    Also, replace msleep with ssleep while doing this, where appropriate.
+    * Remove wasteful spin_lock_irqsave() in interrupt handler.
+      The lighter-weight spin_lock() is all that's needed.
+    
+    * Annotate with FIXME where arcmsr_interrupt() is called
+      without any spinlock being acquired.
+    
+    * Eliminate pointless cast from void pointer in arcmsr_do_interrupt()
     
     Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
- drivers/scsi/arcmsr/arcmsr_hba.c |    8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/scsi/arcmsr/arcmsr_hba.c |   16 +++++++---------
+ 1 file changed, 7 insertions(+), 9 deletions(-)
 
-f9f7b1384995626e1a80322faef3f7cca97aa7ae
+97618f90f021d457c5078ab85f0f443553f93d51
 diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 0ddfc21..ae26ed4 100644
+index ae26ed4..d9fadb4 100644
 --- a/drivers/scsi/arcmsr/arcmsr_hba.c
 +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -540,7 +540,7 @@ static uint8_t arcmsr_wait_msgint_ready(struct AdapterControlBlock *acb)
- 					, &reg->outbound_intstatus);
- 				return 0x00;
- 			}
--			msleep_interruptible(10);
-+			msleep(10);
- 		}/*max 1 seconds*/
- 	} while (Retries++ < 20);/*max 20 sec*/
- 	return 0xff;
-@@ -1421,8 +1421,10 @@ static void arcmsr_iop_reset(struct AdapterControlBlock *acb)
- 	if (atomic_read(&acb->ccboutstandingcount) != 0) {
- 		/* talk to iop 331 outstanding command aborted */
- 		arcmsr_abort_allcmd(acb);
-+
- 		/* wait for 3 sec for all command aborted*/
--		msleep_interruptible(3000);
-+		ssleep(3);
-+
- 		/* disable all outbound interrupt */
- 		intmask_org = arcmsr_disable_outbound_ints(acb);
- 		/* clear all outbound posted Q */
-@@ -1468,7 +1470,7 @@ static void arcmsr_abort_one_cmd(struct AdapterControlBlock *acb,
- 	/*
- 	** Wait for 3 sec for all command done.
- 	*/
--	msleep_interruptible(3000);
-+	ssleep(3);
+@@ -159,14 +159,12 @@ static struct pci_driver arcmsr_pci_driver = {
+ static irqreturn_t arcmsr_do_interrupt(int irq, void *dev_id)
+ {
+ 	irqreturn_t handle_state;
+-	struct AdapterControlBlock *acb;
+-	unsigned long flags;
+-
+-	acb = (struct AdapterControlBlock *)dev_id;
++	struct AdapterControlBlock *acb = dev_id;
  
- 	intmask = arcmsr_disable_outbound_ints(acb);
- 	arcmsr_polling_ccbdone(acb, ccb);
+-	spin_lock_irqsave(acb->host->host_lock, flags);
++	spin_lock(acb->host->host_lock);
+ 	handle_state = arcmsr_interrupt(acb);
+-	spin_unlock_irqrestore(acb->host->host_lock, flags);
++	spin_unlock(acb->host->host_lock);
++
+ 	return handle_state;
+ }
+ 
+@@ -331,7 +329,7 @@ static int arcmsr_probe(struct pci_dev *pdev,
+ 		goto out_iounmap;
+ 
+ 	error = request_irq(pdev->irq, arcmsr_do_interrupt,
+-			IRQF_DISABLED | IRQF_SHARED, "arcmsr", acb);
++			    IRQF_SHARED, "arcmsr", acb);
+ 	if (error)
+ 		goto out_free_ccb_pool;
+ 
+@@ -421,7 +419,7 @@ static void arcmsr_remove(struct pci_dev *pdev)
+ 	for (poll_count = 0; poll_count < 256; poll_count++) {
+ 		if (!atomic_read(&acb->ccboutstandingcount))
+ 			break;
+-		arcmsr_interrupt(acb);
++		arcmsr_interrupt(acb);	/* FIXME: need spinlock */
+ 		msleep(25);
+ 	}
+ 
+@@ -1452,7 +1450,7 @@ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
+ 	for (i = 0; i < 400; i++) {
+ 		if (!atomic_read(&acb->ccboutstandingcount))
+ 			break;
+-		arcmsr_interrupt(acb);
++		arcmsr_interrupt(acb);	/* FIXME: need spinlock */
+ 		msleep(25);
+ 	}
+ 	arcmsr_iop_reset(acb);
