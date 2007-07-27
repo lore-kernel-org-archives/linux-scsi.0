@@ -1,60 +1,32 @@
-From: "Ashish Sood" <ashishsood@gmail.com>
-Subject: questions on scsi_level & Read command?
-Date: Fri, 27 Jul 2007 09:46:09 +0530
-Message-ID: <87a7e2a0707262116q24f0f0edoefeddbff71df4605@mail.gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 21/21] advansys: use memcpy instead of open-coded loop
+Date: Thu, 26 Jul 2007 22:58:18 -0600
+Message-ID: <20070727045817.GA21219@parisc-linux.org>
+References: <11854705773144-git-send-email-matthew@wil.cx> <46A8FB15.5070103@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.168]:20443 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751031AbXG0EQK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 00:16:10 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so645773ugf
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jul 2007 21:16:09 -0700 (PDT)
+Received: from palinux.external.hp.com ([192.25.206.14]:33716 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752306AbXG0E6T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 00:58:19 -0400
 Content-Disposition: inline
+In-Reply-To: <46A8FB15.5070103@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org
 
-Hi all,
+On Thu, Jul 26, 2007 at 03:50:45PM -0400, Jeff Garzik wrote:
+> Done with my review.  Any patches I did not comment on can be considered 
+> sane...
 
- I am newbie on SCSI.
+Thanks, Jeff, that was a Herculean effort.  I've gone through and
+made most of your suggested changes.  I'm making too many mistakes now,
+so it's time to go to bed, but I'll post another round of patches early
+tomorrow.
 
-Seems like scsi_level comes in response to the inquiry command.
-
-/*
- *  struct scsi_device::scsi_level values. For SCSI devices other than those
- *  prior to SCSI-2 (i.e. over 12 years old) this value is (resp[2] + 1)
- *  where "resp" is a byte array of the response to an INQUIRY. The scsi_level
- *  variable is visible to the user via sysfs.
- */
-
-#define SCSI_UNKNOWN    0
-#define SCSI_1          1
-#define SCSI_1_CCS      2
-#define SCSI_2          3
-#define SCSI_3          4        /* SPC */
-#define SCSI_SPC_2      5
-#define SCSI_SPC_3      6
-
-I am curious to know as to how this information will be used
-by scsi initiator?
-
-Also, looks there are six different read commands
-
-
-# 1 Read (6)
-# 2 Read (10)
-# 3 Read (12)
-# 4 Read (16)
-# 5 Read (32)
-# 6 Read Long
-
-How does scsi initiator know which command to use? Is it based on some
-field which comes in response to the INQUIRY command.
-
-Really appreciate if some one can throw some light.
-
-Thanks,
-Ashish
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
