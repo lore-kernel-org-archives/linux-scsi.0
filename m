@@ -1,70 +1,39 @@
-From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH][sas] Fix potential NULL pointer dereference bug in sas_smp_handler()
-Date: Fri, 27 Jul 2007 21:58:41 +0200
-Message-ID: <200707272158.41374.jesper.juhl@gmail.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 23/24] advansys: Improve interrupt handler
+Date: Fri, 27 Jul 2007 14:24:41 -0600
+Message-ID: <20070727202441.GS21219@parisc-linux.org>
+References: <20070727150420.GL21219@parisc-linux.org> <46AA0B70.9060108@garzik.org> <20070727152520.GM21219@parisc-linux.org> <46AA150A.5090804@garzik.org> <20070727173613.GN21219@parisc-linux.org> <46AA2DB7.4010707@garzik.org> <20070727180447.GP21219@parisc-linux.org> <46AA4951.3040102@garzik.org> <20070727194652.GR21219@parisc-linux.org> <46AA4EAB.4000203@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:30366 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765470AbXG0T75 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 15:59:57 -0400
-Received: by ug-out-1314.google.com with SMTP id j3so764601ugf
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jul 2007 12:59:56 -0700 (PDT)
+Received: from palinux.external.hp.com ([192.25.206.14]:40858 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933284AbXG0UYm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 16:24:42 -0400
 Content-Disposition: inline
+In-Reply-To: <46AA4EAB.4000203@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Luben Tuikov <luben_tuikov@adaptec.com>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Jesper Juhl <jesper.juhl@gmail.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org
 
+On Fri, Jul 27, 2007 at 03:59:39PM -0400, Jeff Garzik wrote:
+> EISA can do shared interrupts and VLB cannot, according to some quick 
+> Googling.
 
-Hi,
+Fascinating!  I didn't know that.
 
-The Coverity checker found a problem in 
-drivers/scsi/libsas/sas_expander.c::sas_smp_handler().
-We dereference a pointer before testing if it is NULL. Easily fixed 
-in this case by simply moving an assignment down a bit.
+> Are you certain you're not confusing adapters with channels?  I don't 
+> see where the same I/O port is registered multiple times.  Or does EISA 
+> present multiple channels via multiple I/O ports (multiple 
+> advansys_board_found calls)?
 
-Please consider for inclusion.
+Multiple calls to advansys_board_found.  The old code alternated between
+adding 0x20 and 0xfd0 to the iobase that it was testing.  My new code
+probes base+0xc30 and base+0xc50, but calls advansys_board_found() for
+each of them.
 
-Patch has been compile tested only.
-
-
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
----
-
- drivers/scsi/libsas/sas_expander.c |    4 +++-
- 1 files changed, 3 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-index b500f0c..7871406 100644
---- a/drivers/scsi/libsas/sas_expander.c
-+++ b/drivers/scsi/libsas/sas_expander.c
-@@ -1879,7 +1879,7 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		    struct request *req)
- {
- 	struct domain_device *dev;
--	int ret, type = rphy->identify.device_type;
-+	int ret, type;
- 	struct request *rsp = req->next_rq;
- 
- 	if (!rsp) {
-@@ -1895,6 +1895,8 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		return -EINVAL;
- 	}
- 
-+	type = rphy->identify.device_type;
-+
- 	if (type != SAS_EDGE_EXPANDER_DEVICE &&
- 	    type != SAS_FANOUT_EXPANDER_DEVICE) {
- 		printk("%s: can we send a smp request to a device?\n",
-
-
-
-
-
-  PS. Please keep me on Cc when replying.
-
-
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
