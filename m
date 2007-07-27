@@ -1,83 +1,152 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 14/24] advansys: delete AscGetChipBusType
-Date: Fri, 27 Jul 2007 07:42:23 -0600
-Message-ID: <11855437532387-git-send-email-matthew@wil.cx>
+Subject: [PATCH 16/24] advansys: Stop using n_io_port in Scsi_Host structure
+Date: Fri, 27 Jul 2007 07:42:25 -0600
+Message-ID: <11855437532792-git-send-email-matthew@wil.cx>
 References: <20070727134038.GC21219@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:41975 "EHLO
-	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760924AbXG0Nmf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 09:42:35 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:50064 "EHLO
+	smtp-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932627AbXG0Nmg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 09:42:36 -0400
 In-Reply-To: <20070727134038.GC21219@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-By moving a test from AscGetChipBusType into its only caller, we can delete
-the whole function
+n_io_port isn't suitable for advansys because some of the boards have
+more than 255 bytes of io port space.  There's already a driver-private
+replacement, asc_n_io_port, but for some reason the driver was still
+setting and occasionally reporting n_io_port.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |   36 ++++--------------------------------
- 1 files changed, 4 insertions(+), 32 deletions(-)
+ drivers/scsi/advansys.c |   38 ++++++++------------------------------
+ 1 files changed, 8 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 9974c01..2bd7bc5 100644
+index fec2281..b986bd6 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -8096,34 +8096,6 @@ AscGetChipVersion(PortAddr iop_base, unsigned short bus_type)
- 	return AscGetChipVerNo(iop_base);
- }
+@@ -2302,10 +2302,8 @@ typedef struct adveep_38C1600_config {
+ #define BIOS_CTRL_AIPP_DIS           0x2000
  
--static ushort __devinit AscGetChipBusType(PortAddr iop_base)
--{
--	ushort chip_ver;
--
--	chip_ver = AscGetChipVerNo(iop_base);
--	if ((chip_ver >= ASC_CHIP_MIN_VER_VL)
--	    && (chip_ver <= ASC_CHIP_MAX_VER_VL)
--	    ) {
--		if (((iop_base & 0x0C30) == 0x0C30)
--		    || ((iop_base & 0x0C50) == 0x0C50)
--		    ) {
--			return (ASC_IS_EISA);
--		}
--		return (ASC_IS_VL);
--	}
--	if ((chip_ver >= ASC_CHIP_MIN_VER_ISA) &&
--	    (chip_ver <= ASC_CHIP_MAX_VER_ISA)) {
--		if (chip_ver >= ASC_CHIP_MIN_VER_ISA_PNP) {
--			return (ASC_IS_ISAPNP);
--		}
--		return (ASC_IS_ISA);
--	} else if ((chip_ver >= ASC_CHIP_MIN_VER_PCI) &&
--		   (chip_ver <= ASC_CHIP_MAX_VER_PCI)) {
--		return (ASC_IS_PCI);
--	}
--	return (0);
--}
--
- static ASC_DCNT
- AscLoadMicroCode(PortAddr iop_base,
- 		 ushort s_addr, uchar *mcode_buf, ushort mcode_size)
-@@ -10626,12 +10598,12 @@ static ushort __devinit AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ #define ADV_3550_MEMSIZE   0x2000	/* 8 KB Internal Memory */
+-#define ADV_3550_IOLEN     0x40	/* I/O Port Range in bytes */
+ 
+ #define ADV_38C0800_MEMSIZE  0x4000	/* 16 KB Internal Memory */
+-#define ADV_38C0800_IOLEN    0x100	/* I/O Port Range in bytes */
+ 
+ /*
+  * XXX - Since ASC38C1600 Rev.3 has a local RAM failure issue, there is
+@@ -2315,8 +2313,6 @@ typedef struct adveep_38C1600_config {
+  * #define ADV_38C1600_MEMSIZE  0x8000L   * 32 KB Internal Memory *
+  */
+ #define ADV_38C1600_MEMSIZE  0x4000	/* 16 KB Internal Memory */
+-#define ADV_38C1600_IOLEN    0x100	/* I/O Port Range 256 bytes */
+-#define ADV_38C1600_MEMLEN   0x1000	/* Memory Range 4KB bytes */
+ 
+ /*
+  * Byte I/O register address from base of 'iop_base'.
+@@ -3996,7 +3992,6 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 	ASC_DVC_VAR *asc_dvc_varp;
+ 	ADV_DVC_VAR *adv_dvc_varp;
+ 	char *busname;
+-	int iolen;
+ 	char *widename = NULL;
+ 
+ 	boardp = ASC_BOARDP(shost);
+@@ -4010,13 +4005,12 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 			} else {
+ 				busname = "ISA";
+ 			}
+-			/* Don't reference 'shost->n_io_port'; It may be truncated. */
+ 			sprintf(info,
+ 				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X, DMA 0x%X",
+ 				ASC_VERSION, busname,
+ 				(ulong)shost->io_port,
+-				(ulong)shost->io_port + boardp->asc_n_io_port -
+-				1, shost->irq, shost->dma_channel);
++				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
++				shost->irq, shost->dma_channel);
+ 		} else {
+ 			if (asc_dvc_varp->bus_type & ASC_IS_VL) {
+ 				busname = "VL";
+@@ -4035,12 +4029,11 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 					   "bus type %d\n", boardp->id,
+ 					   asc_dvc_varp->bus_type);
+ 			}
+-			/* Don't reference 'shost->n_io_port'; It may be truncated. */
+ 			sprintf(info,
+ 				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X",
+ 				ASC_VERSION, busname, (ulong)shost->io_port,
+-				(ulong)shost->io_port + boardp->asc_n_io_port -
+-				1, shost->irq);
++				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
++				shost->irq);
+ 		}
+ 	} else {
+ 		/*
+@@ -4052,19 +4045,16 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 		 */
+ 		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
+ 		if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
+-			iolen = ADV_3550_IOLEN;
+ 			widename = "Ultra-Wide";
+ 		} else if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800) {
+-			iolen = ADV_38C0800_IOLEN;
+ 			widename = "Ultra2-Wide";
+ 		} else {
+-			iolen = ADV_38C1600_IOLEN;
+ 			widename = "Ultra3-Wide";
+ 		}
+ 		sprintf(info,
+ 			"AdvanSys SCSI %s: PCI %s: PCIMEM 0x%lX-0x%lX, IRQ 0x%X",
+ 			ASC_VERSION, widename, (ulong)adv_dvc_varp->iop_base,
+-			(ulong)adv_dvc_varp->iop_base + iolen - 1, shost->irq);
++			(ulong)adv_dvc_varp->iop_base + boardp->asc_n_io_port - 1, shost->irq);
+ 	}
+ 	ASC_ASSERT(strlen(info) < ASC_INFO_SIZE);
+ 	ASC_DBG(1, "advansys_info: end\n");
+@@ -6795,10 +6785,7 @@ static int asc_prt_driver_conf(struct Scsi_Host *shost, char *cp, int cplen)
+ 			   boardp->asc_n_io_port);
+ 	ASC_PRT_NEXT();
+ 
+-	/* 'shost->n_io_port' may be truncated because it is only one byte. */
+-	len = asc_prt_line(cp, leftlen,
+-			   " io_port 0x%x, n_io_port 0x%x\n",
+-			   shost->io_port, shost->n_io_port);
++	len = asc_prt_line(cp, leftlen, " io_port 0x%x\n", shost->io_port);
+ 	ASC_PRT_NEXT();
+ 
+ 	if (ASC_NARROW_BOARD(boardp)) {
+@@ -7690,8 +7677,8 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
+ 	printk(" host_busy %u, host_no %d, last_reset %d,\n",
+ 	       s->host_busy, s->host_no, (unsigned)s->last_reset);
+ 
+-	printk(" base 0x%lx, io_port 0x%lx, n_io_port %u, irq 0x%x,\n",
+-	       (ulong)s->base, (ulong)s->io_port, s->n_io_port, s->irq);
++	printk(" base 0x%lx, io_port 0x%lx, irq 0x%x,\n",
++	       (ulong)s->base, (ulong)s->io_port, s->irq);
+ 
+ 	printk(" dma_channel %d, this_id %d, can_queue %d,\n",
+ 	       s->dma_channel, s->this_id, s->can_queue);
+@@ -17686,15 +17673,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
  	}
  
- 	asc_dvc->cfg->isa_dma_speed = ASC_DEF_ISA_DMA_SPEED;
--	if (AscGetChipBusType(iop_base) == ASC_IS_ISAPNP) {
--		AscSetChipIFC(iop_base, IFC_INIT_DEFAULT);
--		asc_dvc->bus_type = ASC_IS_ISAPNP;
--	}
- #ifdef CONFIG_ISA
- 	if ((asc_dvc->bus_type & ASC_IS_ISA) != 0) {
-+		if (chip_version >= ASC_CHIP_MIN_VER_ISA_PNP) {
-+			AscSetChipIFC(iop_base, IFC_INIT_DEFAULT);
-+			asc_dvc->bus_type = ASC_IS_ISAPNP;
-+		}
- 		asc_dvc->cfg->isa_dma_channel =
- 		    (uchar)AscGetIsaDmaChannel(iop_base);
- 	}
+ 	/*
+-	 * 'n_io_port' currently is one byte.
+-	 *
+-	 * Set a value to 'n_io_port', but never referenced it because
+-	 * it may be truncated.
+-	 */
+-	shost->n_io_port = boardp->asc_n_io_port <= 255 ?
+-	    boardp->asc_n_io_port : 255;
+-
+-	/*
+ 	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
+ 	 * and should be set to zero.
+ 	 *
 -- 
 1.4.4.4
 
