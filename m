@@ -1,68 +1,57 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 7/24] advansys: Convert to EISA driver model
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: questions on scsi_level & Read command?
 Date: Fri, 27 Jul 2007 10:17:39 -0400
-Message-ID: <46A9FE83.4000403@garzik.org>
-References: <20070727134038.GC21219@parisc-linux.org> <11855437533612-git-send-email-matthew@wil.cx>
+Message-ID: <yq1d4yend6k.fsf@sermon.lab.mkp.net>
+References: <87a7e2a0707262116q24f0f0edoefeddbff71df4605@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58072 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759460AbXG0ORx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jul 2007 10:17:53 -0400
-In-Reply-To: <11855437533612-git-send-email-matthew@wil.cx>
+Received: from agminet01.oracle.com ([141.146.126.228]:38145 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760896AbXG0OSV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 10:18:21 -0400
+In-Reply-To: <87a7e2a0707262116q24f0f0edoefeddbff71df4605@mail.gmail.com> (Ashish Sood's message of "Fri, 27 Jul 2007 09:46:09 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: Ashish Sood <ashishsood@gmail.com>
 Cc: linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> +static int __devinit advansys_eisa_probe(struct device *dev)
-> +{
-> +	int i, ioport;
-> +	int err;
-> +	struct eisa_device *edev = to_eisa_device(dev);
-> +	struct eisa_scsi_data *data;
-> +
-> +	err = -ENOMEM;
-> +	data = kzalloc(sizeof(*data), GFP_KERNEL);
-> +	if (!data)
-> +		goto fail;
-> +	ioport = edev->base_addr + 0xc30;
-> +
-> +	err = -ENODEV;
-> +	for (i = 0; i < 2; i++, ioport += 0x20) {
-> +		if (!AscFindSignature(ioport))
-> +			continue;
-> +		inw(ioport + 4);
-> +		data->host[i] = advansys_board_found(ioport, dev, ASC_IS_EISA);
-> +		if (data->host[i])
-> +			err = 0;
-> +	}
-> +
-> +	if (err) {
-> +		kfree(data);
-> +	} else {
-> +		dev_set_drvdata(dev, data);
-> +	}
+>>>>> "Ashish" == Ashish Sood <ashishsood@gmail.com> writes:
 
-Same nit as with PCI:  recommend keeping the non-error path at the 
-lowest indentation level for future-proof-ness and easy review.
+Ashish> Seems like scsi_level comes in response to the inquiry
+Ashish> command.
+
+Ashish> I am curious to know as to how this information will be used
+Ashish> by scsi initiator?
+
+Most things that depend on the SCSI level aren't used directly by the
+initiator.  They're used by the SCSI layer when preparing commands to
+send to the target.  Take a look at scsi_add_lun() in scsi_scan.c.
+
+There are a couple of knobs that initiator drivers tend to access.
+Whether a device supports wide and synchronous transfers, for
+instance, is parallel SCSI specific and sits there for legacy reasons.
+HBA drivers also want to know if a target supports tagged command
+queuing.
 
 
-> +static __devexit int advansys_eisa_remove(struct device *dev)
-> +{
-> +	int i, ioport;
-> +	struct eisa_scsi_data *data = dev_get_drvdata(dev);
-> +
-> +	for (i = 0; i < 2; i++) {
-> +		struct Scsi_Host *shost = data->host[i];
-> +		if (!shost)
-> +			continue;
-> +		ioport = shost->io_port;
-> +		advansys_remove(data->host[i]);
+Ashish> Also, looks there are six different read commands
 
-what is the point of assigning ioport a never-used value?
+Ashish> How does scsi initiator know which command to use? Is it based
+Ashish> on some field which comes in response to the INQUIRY command.
 
+There is a limit to how big a logical block address you can reach with
+each of the READ/WRITE commands.  Over the years disks have grown
+bigger and as a result new commands have been introduced to be able to
+address the data them.
+
+If you look in sd.c (the SCSI disk driver) you'll see that we'll use
+READ(10) for LBAs below 2TB and READ(16) for LBAs above (assuming 512
+byte sectors).
+
+READ(32) / WRITE(32) are slightly different and are there to support
+devices formatted with DIF Type 2 protection.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
 
