@@ -1,88 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/2] arcmsr: irq handler fixes, cleanups, micro-opts
-Date: Fri, 27 Jul 2007 13:01:15 -0400
-Message-ID: <20070727170114.GA27441@havoc.gtf.org>
-References: <20070727170048.GA27353@havoc.gtf.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 23/24] advansys: Improve interrupt handler
+Date: Fri, 27 Jul 2007 11:36:13 -0600
+Message-ID: <20070727173613.GN21219@parisc-linux.org>
+References: <20070727134038.GC21219@parisc-linux.org> <11855437542538-git-send-email-matthew@wil.cx> <46AA05ED.2060208@garzik.org> <20070727145336.GK21219@parisc-linux.org> <46AA07CC.9090004@garzik.org> <20070727150420.GL21219@parisc-linux.org> <46AA0B70.9060108@garzik.org> <20070727152520.GM21219@parisc-linux.org> <46AA150A.5090804@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S937293AbXG0RBa@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:56999 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932679AbXG0RgP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 13:36:15 -0400
 Content-Disposition: inline
-In-Reply-To: <20070727170048.GA27353@havoc.gtf.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, erich@areca.com.tw
-Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+In-Reply-To: <46AA150A.5090804@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org
 
+On Fri, Jul 27, 2007 at 11:53:46AM -0400, Jeff Garzik wrote:
+> Matthew Wilcox wrote:
+> >I still say it's an improvement over scanning the list of scsi hosts
+> >looking for any that have work pending whenever any interrupt comes in.
+> 
+> Having the kernel interrupt subsystem implement a loop for you is 
+> completely utterly unusual, slow, silly, and likely to get broken when 
+> people futz with the interrupt system core.  It probably has edge cases 
+> too, like screwing with the screaming interrupt detection code.
+> 
+> The kernel interrupt subsystem is not meant to be abused in that way.
 
-commit 97618f90f021d457c5078ab85f0f443553f93d51
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Jul 27 12:58:00 2007 -0400
+I think what you're missing is: This isn't new.  The advansys driver
+was *already* requesting the same interrupt twice for EISA boards.
+It's just that before, when an interrupt happened on the EISA board,
+it would scan all Scsi_Hosts twice, and now it scans this pair of boards
+once each.
 
-    [SCSI] arcmsr: interrupt handling fixes, cleanups, micro-opts
-    
-    * Remove IRQF_DISABLED, it is clearly wrong for this driver.
-    
-    * Remove wasteful spin_lock_irqsave() in interrupt handler.
-      The lighter-weight spin_lock() is all that's needed.
-    
-    * Annotate with FIXME where arcmsr_interrupt() is called
-      without any spinlock being acquired.
-    
-    * Eliminate pointless cast from void pointer in arcmsr_do_interrupt()
-    
-    Signed-off-by: Jeff Garzik <jeff@garzik.org>
+It may not be elegant, it may not be the best way, but it *is* a
+monotonic improvement.  So please, calm down.
 
- drivers/scsi/arcmsr/arcmsr_hba.c |   16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
-
-97618f90f021d457c5078ab85f0f443553f93d51
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index ae26ed4..d9fadb4 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -159,14 +159,12 @@ static struct pci_driver arcmsr_pci_driver = {
- static irqreturn_t arcmsr_do_interrupt(int irq, void *dev_id)
- {
- 	irqreturn_t handle_state;
--	struct AdapterControlBlock *acb;
--	unsigned long flags;
--
--	acb = (struct AdapterControlBlock *)dev_id;
-+	struct AdapterControlBlock *acb = dev_id;
- 
--	spin_lock_irqsave(acb->host->host_lock, flags);
-+	spin_lock(acb->host->host_lock);
- 	handle_state = arcmsr_interrupt(acb);
--	spin_unlock_irqrestore(acb->host->host_lock, flags);
-+	spin_unlock(acb->host->host_lock);
-+
- 	return handle_state;
- }
- 
-@@ -331,7 +329,7 @@ static int arcmsr_probe(struct pci_dev *pdev,
- 		goto out_iounmap;
- 
- 	error = request_irq(pdev->irq, arcmsr_do_interrupt,
--			IRQF_DISABLED | IRQF_SHARED, "arcmsr", acb);
-+			    IRQF_SHARED, "arcmsr", acb);
- 	if (error)
- 		goto out_free_ccb_pool;
- 
-@@ -421,7 +419,7 @@ static void arcmsr_remove(struct pci_dev *pdev)
- 	for (poll_count = 0; poll_count < 256; poll_count++) {
- 		if (!atomic_read(&acb->ccboutstandingcount))
- 			break;
--		arcmsr_interrupt(acb);
-+		arcmsr_interrupt(acb);	/* FIXME: need spinlock */
- 		msleep(25);
- 	}
- 
-@@ -1452,7 +1450,7 @@ static int arcmsr_bus_reset(struct scsi_cmnd *cmd)
- 	for (i = 0; i < 400; i++) {
- 		if (!atomic_read(&acb->ccboutstandingcount))
- 			break;
--		arcmsr_interrupt(acb);
-+		arcmsr_interrupt(acb);	/* FIXME: need spinlock */
- 		msleep(25);
- 	}
- 	arcmsr_iop_reset(acb);
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
