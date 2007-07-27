@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 9/24] advansys: More PCI cleanups
-Date: Fri, 27 Jul 2007 07:42:18 -0600
-Message-ID: <11855437533801-git-send-email-matthew@wil.cx>
+Subject: [PATCH 23/24] advansys: Improve interrupt handler
+Date: Fri, 27 Jul 2007 07:42:32 -0600
+Message-ID: <11855437542538-git-send-email-matthew@wil.cx>
 References: <20070727134038.GC21219@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:56241 "EHLO
-	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933252AbXG0Nmh (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:50070 "EHLO
+	smtp-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S933450AbXG0Nmh (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 09:42:37 -0400
 In-Reply-To: <20070727134038.GC21219@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,403 +14,238 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
- - Remove wrappers around the PCI configuration space accessors
- - Call pci_set_master() instead of poking at config space directly
- - Move the latency setting into one function called for both narrow and
-   wide boards.
- - Tidy up AdvInitGetConfig() a little.
- - Delete a few unused prototypes and definitions.
+Pass the Scsi_Host to the interrupt handler, rather than polling all
+hosts for each interrupt.
+Return IRQ_NONE if we didn't handle this interrupt
+Don't set the IRQF_DISABLED flag; this is not a fast-executing interrupt
+handler.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  254 +++++++----------------------------------------
- 1 files changed, 34 insertions(+), 220 deletions(-)
+ drivers/scsi/advansys.c |  155 ++++++++++++++++++++--------------------------
+ 1 files changed, 67 insertions(+), 88 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 7dee55b..fbd6580 100644
+index e5fb694..548ffcd 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -853,15 +853,6 @@ typedef unsigned char uchar;
- #define ERR      (-1)
- #define UW_ERR   (uint)(0xFFFF)
- #define isodd_word(val)   ((((uint)val) & (uint)0x0001) != 0)
--#define AscPCIConfigVendorIDRegister      0x0000
--#define AscPCIConfigDeviceIDRegister      0x0002
--#define AscPCIConfigCommandRegister       0x0004
--#define AscPCIConfigStatusRegister        0x0006
--#define AscPCIConfigRevisionIDRegister    0x0008
--#define AscPCIConfigCacheSize             0x000C
--#define AscPCIConfigLatencyTimer          0x000D
--#define AscPCIIOBaseRegister              0x0010
--#define AscPCICmdRegBits_IOMemBusMaster   0x0007
- #define ASC_PCI_ID2FUNC(id)   (((id) >> 8) & 0x7)
- #define ASC_PCI_MKID(bus, dev, func) ((((dev) & 0x1F) << 11) | (((func) & 0x7) << 8) | ((bus) & 0xFF))
- 
-@@ -1949,17 +1940,11 @@ static uchar AscSetChipIRQ(PortAddr, uchar, ushort);
- static ushort AscGetChipBiosAddress(PortAddr, ushort);
- static inline ulong DvcEnterCritical(void);
- static inline void DvcLeaveCritical(ulong);
--#ifdef CONFIG_PCI
--static uchar DvcReadPCIConfigByte(ASC_DVC_VAR *, ushort);
--static void DvcWritePCIConfigByte(ASC_DVC_VAR *, ushort, uchar);
--#endif /* CONFIG_PCI */
- static ushort AscGetChipBiosAddress(PortAddr, ushort);
- static void DvcSleepMilliSecond(ASC_DCNT);
- static void DvcDelayNanoSecond(ASC_DVC_VAR *, ASC_DCNT);
- static void DvcPutScsiQ(PortAddr, ushort, uchar *, int);
- static void DvcGetQinfo(PortAddr, ushort, uchar *, int);
--static ushort AscInitGetConfig(ASC_DVC_VAR *);
--static ushort AscInitSetConfig(ASC_DVC_VAR *);
- static ushort AscInitAsc1000Driver(ASC_DVC_VAR *);
- static void AscAsyncFix(ASC_DVC_VAR *, uchar, ASC_SCSI_INQUIRY *);
- static int AscTagQueuingSafe(ASC_SCSI_INQUIRY *);
-@@ -3090,8 +3075,6 @@ typedef struct adv_scsi_req_q {
- static inline ulong DvcEnterCritical(void);
- static inline void DvcLeaveCritical(ulong);
- static void DvcSleepMilliSecond(ADV_DCNT);
--static uchar DvcAdvReadPCIConfigByte(ADV_DVC_VAR *, ushort);
--static void DvcAdvWritePCIConfigByte(ADV_DVC_VAR *, ushort, uchar);
- static ADV_PADDR DvcGetPhyAddr(ADV_DVC_VAR *, ADV_SCSI_REQ_Q *,
- 			       uchar *, ASC_SDCNT *, int);
- static void DvcDelayMicroSecond(ADV_DVC_VAR *, ushort);
-@@ -3125,12 +3108,6 @@ static void AdvSet38C1600EEPConfig(AdvPortAddr, ADVEEP_38C1600_CONFIG *);
- static void AdvWaitEEPCmd(AdvPortAddr);
- static ushort AdvReadEEPWord(AdvPortAddr, int);
- 
--/*
-- * PCI Bus Definitions
-- */
--#define AscPCICmdRegBits_BusMastering     0x0007
--#define AscPCICmdRegBits_ParErrRespCtrl   0x0040
--
- /* Read byte from a register. */
- #define AdvReadByteRegister(iop_base, reg_off) \
-      (ADV_MEM_READB((iop_base) + (reg_off)))
-@@ -7424,31 +7401,6 @@ DvcGetQinfo(PortAddr iop_base, ushort s_addr, uchar *inbuf, int words)
- }
- 
- /*
-- * Read a PCI configuration byte.
-- */
--static uchar __devinit DvcReadPCIConfigByte(ASC_DVC_VAR *asc_dvc, ushort offset)
--{
--#ifdef CONFIG_PCI
--	uchar byte_data;
--	pci_read_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, &byte_data);
--	return byte_data;
--#else /* !defined(CONFIG_PCI) */
--	return 0;
--#endif /* !defined(CONFIG_PCI) */
--}
--
--/*
-- * Write a PCI configuration byte.
-- */
--static void __devinit
--DvcWritePCIConfigByte(ASC_DVC_VAR *asc_dvc, ushort offset, uchar byte_data)
--{
--#ifdef CONFIG_PCI
--	pci_write_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, byte_data);
--#endif /* CONFIG_PCI */
--}
--
--/*
-  * Return the BIOS address of the adapter at the specified
-  * I/O port and with the specified bus type.
+@@ -61,6 +61,10 @@
+  *    the interrupt handler. In the timeout function if the interrupt
+  *    has not occurred then print a message and run in polled mode.
+  * 4. Need to add support for target mode commands, cf. CAM XPT.
++ * 5. check DMA mapping functions for failure
++ * 6. Remove internal queueing
++ * 7. Use scsi_transport_spi
++ * 8. advansys_info is not safe against multiple simultaneous callers
   */
-@@ -7521,33 +7473,6 @@ DvcGetPhyAddr(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq,
- }
+ #warning this driver is still not properly converted to the DMA API
  
- /*
-- * Read a PCI configuration byte.
-- */
--static uchar __devinit DvcAdvReadPCIConfigByte(ADV_DVC_VAR *asc_dvc, ushort offset)
--{
--#ifdef CONFIG_PCI
--	uchar byte_data;
--	pci_read_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, &byte_data);
--	return byte_data;
--#else /* CONFIG_PCI */
--	return 0;
--#endif /* CONFIG_PCI */
--}
--
--/*
-- * Write a PCI configuration byte.
-- */
--static void __devinit
--DvcAdvWritePCIConfigByte(ADV_DVC_VAR *asc_dvc, ushort offset, uchar byte_data)
--{
--#ifdef CONFIG_PCI
--	pci_write_config_byte(to_pci_dev(asc_dvc->cfg->dev), offset, byte_data);
--#else /* CONFIG_PCI */
--	return;
--#endif /* CONFIG_PCI */
--}
--
--/*
-  * --- Tracing and Debugging Functions
+@@ -2940,7 +2944,6 @@ static PortAddr _asc_def_iop_base[];
+  * --- Driver Function Prototypes
   */
  
-@@ -10481,89 +10406,15 @@ static uchar __devinit AscGetIsaDmaSpeed(PortAddr iop_base)
- }
- #endif /* CONFIG_ISA */
- 
--static ushort __devinit
--AscReadPCIConfigWord(ASC_DVC_VAR *asc_dvc, ushort pci_config_offset)
--{
--	uchar lsb, msb;
--
--	lsb = DvcReadPCIConfigByte(asc_dvc, pci_config_offset);
--	msb = DvcReadPCIConfigByte(asc_dvc, pci_config_offset + 1);
--	return ((ushort)((msb << 8) | lsb));
--}
--
- static ushort __devinit AscInitGetConfig(ASC_DVC_VAR *asc_dvc)
+-static irqreturn_t advansys_interrupt(int, void *);
+ static int advansys_slave_configure(struct scsi_device *);
+ static void asc_scsi_done_list(struct scsi_cmnd *);
+ static int asc_execute_scsi_cmnd(struct scsi_cmnd *);
+@@ -3645,89 +3648,76 @@ static struct scsi_host_template advansys_template = {
+  */
+ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
  {
--	ushort warn_code;
--	PortAddr iop_base;
--	ushort PCIDeviceID;
--	ushort PCIVendorID;
--	uchar PCIRevisionID;
--	uchar prevCmdRegBits;
-+	unsigned short warn_code = 0;
+-	ulong flags;
+-	int i;
+-	asc_board_t *boardp;
++	unsigned long flags;
+ 	struct scsi_cmnd *done_scp = NULL, *last_scp = NULL;
+ 	struct scsi_cmnd *new_last_scp;
+-	struct Scsi_Host *shost;
++	struct Scsi_Host *shost = dev_id;
++	asc_board_t *boardp = ASC_BOARDP(shost);
++	irqreturn_t result = IRQ_NONE;
  
--	warn_code = 0;
--	iop_base = asc_dvc->iop_base;
- 	asc_dvc->init_state = ASC_INIT_STATE_BEG_GET_CFG;
--	if (asc_dvc->err_code != 0) {
-+	if (asc_dvc->err_code != 0)
- 		return (UW_ERR);
--	}
--	if (asc_dvc->bus_type == ASC_IS_PCI) {
--		PCIVendorID = AscReadPCIConfigWord(asc_dvc,
--						   AscPCIConfigVendorIDRegister);
- 
--		PCIDeviceID = AscReadPCIConfigWord(asc_dvc,
--						   AscPCIConfigDeviceIDRegister);
--
--		PCIRevisionID = DvcReadPCIConfigByte(asc_dvc,
--						     AscPCIConfigRevisionIDRegister);
--
--		if (PCIVendorID != PCI_VENDOR_ID_ASP) {
--			warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--		}
--		prevCmdRegBits = DvcReadPCIConfigByte(asc_dvc,
--						      AscPCIConfigCommandRegister);
--
--		if ((prevCmdRegBits & AscPCICmdRegBits_IOMemBusMaster) !=
--		    AscPCICmdRegBits_IOMemBusMaster) {
--			DvcWritePCIConfigByte(asc_dvc,
--					      AscPCIConfigCommandRegister,
--					      (prevCmdRegBits |
--					       AscPCICmdRegBits_IOMemBusMaster));
--
--			if ((DvcReadPCIConfigByte(asc_dvc,
--						  AscPCIConfigCommandRegister)
--			     & AscPCICmdRegBits_IOMemBusMaster)
--			    != AscPCICmdRegBits_IOMemBusMaster) {
--				warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--			}
--		}
--		if ((PCIDeviceID == PCI_DEVICE_ID_ASP_1200A) ||
--		    (PCIDeviceID == PCI_DEVICE_ID_ASP_ABP940)) {
--			DvcWritePCIConfigByte(asc_dvc,
--					      AscPCIConfigLatencyTimer, 0x00);
--			if (DvcReadPCIConfigByte
--			    (asc_dvc, AscPCIConfigLatencyTimer)
--			    != 0x00) {
--				warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--			}
--		} else if (PCIDeviceID == PCI_DEVICE_ID_ASP_ABP940U) {
--			if (DvcReadPCIConfigByte(asc_dvc,
--						 AscPCIConfigLatencyTimer) <
--			    0x20) {
--				DvcWritePCIConfigByte(asc_dvc,
--						      AscPCIConfigLatencyTimer,
--						      0x20);
--
--				if (DvcReadPCIConfigByte(asc_dvc,
--							 AscPCIConfigLatencyTimer)
--				    < 0x20) {
--					warn_code |=
--					    ASC_WARN_SET_PCI_CONFIG_SPACE;
--				}
--			}
--		}
--	}
--
--	if (AscFindSignature(iop_base)) {
-+	if (AscFindSignature(asc_dvc->iop_base)) {
- 		warn_code |= AscInitAscDvcVar(asc_dvc);
- 		warn_code |= AscInitFromEEP(asc_dvc);
- 		asc_dvc->init_state |= ASC_INIT_STATE_END_GET_CFG;
-@@ -10597,13 +10448,8 @@ static ushort __devinit AscInitFromAscDvcVar(ASC_DVC_VAR *asc_dvc)
- 	PortAddr iop_base;
- 	ushort cfg_msw;
- 	ushort warn_code;
--	ushort pci_device_id = 0;
- 
- 	iop_base = asc_dvc->iop_base;
--#ifdef CONFIG_PCI
--	if (asc_dvc->cfg->dev)
--		pci_device_id = to_pci_dev(asc_dvc->cfg->dev)->device;
--#endif
- 	warn_code = 0;
- 	cfg_msw = AscGetChipCfgMsw(iop_base);
- 	if ((cfg_msw & ASC_CFG_MSW_CLR_MASK) != 0) {
-@@ -10625,19 +10471,23 @@ static ushort __devinit AscInitFromAscDvcVar(ASC_DVC_VAR *asc_dvc)
- 			asc_dvc->err_code |= ASC_IERR_SET_IRQ_NO;
- 		}
- 	}
-+#ifdef CONFIG_PCI
- 	if (asc_dvc->bus_type & ASC_IS_PCI) {
-+		struct pci_dev *pdev = to_pci_dev(asc_dvc->cfg->dev);
- 		cfg_msw &= 0xFFC0;
- 		AscSetChipCfgMsw(iop_base, cfg_msw);
- 		if ((asc_dvc->bus_type & ASC_IS_PCI_ULTRA) == ASC_IS_PCI_ULTRA) {
- 		} else {
--			if ((pci_device_id == PCI_DEVICE_ID_ASP_1200A) ||
--			    (pci_device_id == PCI_DEVICE_ID_ASP_ABP940)) {
-+			if ((pdev->device == PCI_DEVICE_ID_ASP_1200A) ||
-+			    (pdev->device == PCI_DEVICE_ID_ASP_ABP940)) {
- 				asc_dvc->bug_fix_cntl |= ASC_BUG_FIX_IF_NOT_DWB;
- 				asc_dvc->bug_fix_cntl |=
- 				    ASC_BUG_FIX_ASYN_USE_SYN;
- 			}
- 		}
--	} else if (asc_dvc->bus_type == ASC_IS_ISAPNP) {
-+	} else
-+#endif /* CONFIG_PCI */
-+	if (asc_dvc->bus_type == ASC_IS_ISAPNP) {
- 		if (AscGetChipVersion(iop_base, asc_dvc->bus_type)
- 		    == ASC_CHIP_VER_ASYN_BUG) {
- 			asc_dvc->bug_fix_cntl |= ASC_BUG_FIX_ASYN_USE_SYN;
-@@ -14035,55 +13885,13 @@ static ADVEEP_38C1600_CONFIG ADVEEP_38C1600_Config_Field_IsChar __devinitdata =
-  */
- static int __devinit AdvInitGetConfig(ADV_DVC_VAR *asc_dvc)
- {
--	ushort warn_code;
--	AdvPortAddr iop_base;
--	uchar pci_cmd_reg;
-+	unsigned short warn_code = 0;
-+	AdvPortAddr iop_base = asc_dvc->iop_base;
-+	struct pci_dev *pdev = to_pci_dev(asc_dvc->cfg->dev);
-+	u16 cmd;
- 	int status;
- 
--	warn_code = 0;
- 	asc_dvc->err_code = 0;
--	iop_base = asc_dvc->iop_base;
--
--	/*
--	 * PCI Command Register
--	 *
--	 * Note: AscPCICmdRegBits_BusMastering definition (0x0007) includes
--	 * I/O Space Control, Memory Space Control and Bus Master Control bits.
--	 */
--
--	if (((pci_cmd_reg = DvcAdvReadPCIConfigByte(asc_dvc,
--						    AscPCIConfigCommandRegister))
--	     & AscPCICmdRegBits_BusMastering)
--	    != AscPCICmdRegBits_BusMastering) {
--		pci_cmd_reg |= AscPCICmdRegBits_BusMastering;
--
--		DvcAdvWritePCIConfigByte(asc_dvc,
--					 AscPCIConfigCommandRegister,
--					 pci_cmd_reg);
--
--		if (((DvcAdvReadPCIConfigByte
--		      (asc_dvc, AscPCIConfigCommandRegister))
--		     & AscPCICmdRegBits_BusMastering)
--		    != AscPCICmdRegBits_BusMastering) {
--			warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--		}
--	}
--
--	/*
--	 * PCI Latency Timer
--	 *
--	 * If the "latency timer" register is 0x20 or above, then we don't need
--	 * to change it.  Otherwise, set it to 0x20 (i.e. set it to 0x20 if it
--	 * comes up less than 0x20).
--	 */
--	if (DvcAdvReadPCIConfigByte(asc_dvc, AscPCIConfigLatencyTimer) < 0x20) {
--		DvcAdvWritePCIConfigByte(asc_dvc, AscPCIConfigLatencyTimer,
--					 0x20);
--		if (DvcAdvReadPCIConfigByte(asc_dvc, AscPCIConfigLatencyTimer) <
--		    0x20) {
--			warn_code |= ASC_WARN_SET_PCI_CONFIG_SPACE;
--		}
--	}
+-	ASC_DBG(1, "advansys_interrupt: begin\n");
++	ASC_DBG1(2, "advansys_interrupt: boardp 0x%p\n", boardp);
++	spin_lock_irqsave(&boardp->lock, flags);
++	if (ASC_NARROW_BOARD(boardp)) {
++		/*
++		 * Narrow Board
++		 */
++		if (AscIsIntPending(shost->io_port)) {
++			result = IRQ_HANDLED;
++			ASC_STATS(shost, interrupt);
++			ASC_DBG(1, "advansys_interrupt: before AscISR()\n");
++			AscISR(&boardp->dvc_var.asc_dvc_var);
++		}
++	} else {
++		/*
++		 * Wide Board
++		 */
++		ASC_DBG(1, "advansys_interrupt: before AdvISR()\n");
++		if (AdvISR(&boardp->dvc_var.adv_dvc_var)) {
++			result = IRQ_HANDLED;
++			ASC_STATS(shost, interrupt);
++		}
++	}
  
  	/*
- 	 * Save the state of the PCI Configuration Command Register
-@@ -14092,10 +13900,9 @@ static int __devinit AdvInitGetConfig(ADV_DVC_VAR *asc_dvc)
- 	 * DMA parity errors.
- 	 */
- 	asc_dvc->cfg->control_flag = 0;
--	if (((DvcAdvReadPCIConfigByte(asc_dvc, AscPCIConfigCommandRegister)
--	      & AscPCICmdRegBits_ParErrRespCtrl)) == 0) {
-+	pci_read_config_word(pdev, PCI_COMMAND, &cmd);
-+	if ((cmd & PCI_COMMAND_PARITY) == 0)
- 		asc_dvc->cfg->control_flag |= CONTROL_FLAG_IGNORE_PERR;
--	}
- 
- 	asc_dvc->cfg->lib_version = (ADV_LIB_VERSION_MAJOR << 8) |
- 	    ADV_LIB_VERSION_MINOR;
-@@ -14137,19 +13944,11 @@ static int __devinit AdvInitGetConfig(ADV_DVC_VAR *asc_dvc)
- 				     ADV_CTRL_REG_CMD_WR_IO_REG);
- 
- 		if (asc_dvc->chip_type == ADV_CHIP_ASC38C1600) {
--			if ((status =
--			     AdvInitFrom38C1600EEP(asc_dvc)) == ADV_ERROR) {
--				return ADV_ERROR;
+-	 * Check for interrupts on all boards.
+-	 * AscISR() will call asc_isr_callback().
+-	 */
+-	for (i = 0; i < asc_board_count; i++) {
+-		shost = asc_host[i];
+-		if (!shost)
+-			continue;
+-		boardp = ASC_BOARDP(shost);
+-		ASC_DBG2(2, "advansys_interrupt: i %d, boardp 0x%lx\n",
+-			 i, (ulong)boardp);
+-		spin_lock_irqsave(&boardp->lock, flags);
+-		if (ASC_NARROW_BOARD(boardp)) {
+-			/*
+-			 * Narrow Board
+-			 */
+-			if (AscIsIntPending(shost->io_port)) {
+-				ASC_STATS(shost, interrupt);
+-				ASC_DBG(1,
+-					"advansys_interrupt: before AscISR()\n");
+-				AscISR(&boardp->dvc_var.asc_dvc_var);
 -			}
-+			status = AdvInitFrom38C1600EEP(asc_dvc);
- 		} else if (asc_dvc->chip_type == ADV_CHIP_ASC38C0800) {
--			if ((status =
--			     AdvInitFrom38C0800EEP(asc_dvc)) == ADV_ERROR) {
--				return ADV_ERROR;
+-		} else {
+-			/*
+-			 * Wide Board
+-			 */
+-			ASC_DBG(1, "advansys_interrupt: before AdvISR()\n");
+-			if (AdvISR(&boardp->dvc_var.adv_dvc_var)) {
+-				ASC_STATS(shost, interrupt);
 -			}
-+			status = AdvInitFrom38C0800EEP(asc_dvc);
- 		} else {
--			if ((status = AdvInitFrom3550EEP(asc_dvc)) == ADV_ERROR) {
--				return ADV_ERROR;
--			}
-+			status = AdvInitFrom3550EEP(asc_dvc);
- 		}
- 		warn_code |= status;
- 	}
-@@ -18754,6 +18553,19 @@ static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
- 
- MODULE_DEVICE_TABLE(pci, advansys_pci_tbl);
- 
-+static void __devinit advansys_set_latency(struct pci_dev *pdev)
-+{
-+	if ((pdev->device == PCI_DEVICE_ID_ASP_1200A) ||
-+	    (pdev->device == PCI_DEVICE_ID_ASP_ABP940)) {
-+		pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0);
-+	} else {
-+		u8 latency;
-+		pci_read_config_byte(pdev, PCI_LATENCY_TIMER, &latency);
-+		if (latency < 0x20)
-+			pci_write_config_byte(pdev, PCI_LATENCY_TIMER, 0x20);
-+	}
-+}
++	 * Start waiting requests and create a list of completed requests.
++	 *
++	 * If a reset request is being performed for the board, the reset
++	 * handler will complete pending requests after it has completed.
++	 */
++	if ((boardp->flags & ASC_HOST_IN_RESET) == 0) {
++		ASC_DBG2(1, "advansys_interrupt: done_scp 0x%p, "
++			 "last_scp 0x%p\n", done_scp, last_scp);
 +
- static int __devinit
- advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- {
-@@ -18766,6 +18578,8 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 	err = pci_request_regions(pdev, "advansys");
- 	if (err)
- 		goto disable_device;
-+	pci_set_master(pdev);
-+	advansys_set_latency(pdev);
++		/* Start any waiting commands for the board. */
++		if (!ASC_QUEUE_EMPTY(&boardp->waiting)) {
++			ASC_DBG(1, "advansys_interrupt: before "
++				"asc_execute_queue()\n");
++			asc_execute_queue(&boardp->waiting);
+ 		}
  
- 	ioport = pci_resource_start(pdev, 0);
- 	shost = advansys_board_found(ioport, &pdev->dev, ASC_IS_PCI);
+ 		/*
+-		 * Start waiting requests and create a list of completed requests.
++		 * Add to the list of requests that must be completed.
+ 		 *
+-		 * If a reset request is being performed for the board, the reset
+-		 * handler will complete pending requests after it has completed.
++		 * 'done_scp' will always be NULL on the first iteration of
++		 * this loop. 'last_scp' is set at the same time as 'done_scp'.
+ 		 */
+-		if ((boardp->flags & ASC_HOST_IN_RESET) == 0) {
+-			ASC_DBG2(1, "advansys_interrupt: done_scp 0x%p, "
+-				 "last_scp 0x%p\n", done_scp, last_scp);
+-
+-			/* Start any waiting commands for the board. */
+-			if (!ASC_QUEUE_EMPTY(&boardp->waiting)) {
+-				ASC_DBG(1, "advansys_interrupt: before "
+-					"asc_execute_queue()\n");
+-				asc_execute_queue(&boardp->waiting);
+-			}
+-
+-			/*
+-			 * Add to the list of requests that must be completed.
+-			 *
+-			 * 'done_scp' will always be NULL on the first iteration
+-			 * of this loop. 'last_scp' is set at the same time as
+-			 * 'done_scp'.
+-			 */
+-			if (done_scp == NULL) {
+-				done_scp = asc_dequeue_list(&boardp->done,
+-							&last_scp, ASC_TID_ALL);
+-			} else {
+-				ASC_ASSERT(last_scp != NULL);
+-				last_scp->host_scribble =
+-				    (unsigned char *)asc_dequeue_list(&boardp->
+-								      done,
+-								      &new_last_scp,
+-								      ASC_TID_ALL);
+-				if (new_last_scp != NULL) {
+-					ASC_ASSERT(REQPNEXT(last_scp) != NULL);
+-					last_scp = new_last_scp;
+-				}
++		if (done_scp == NULL) {
++			done_scp = asc_dequeue_list(&boardp->done,
++						&last_scp, ASC_TID_ALL);
++		} else {
++			ASC_ASSERT(last_scp != NULL);
++			last_scp->host_scribble =
++			    (unsigned char *)asc_dequeue_list(&boardp->
++							      done,
++							      &new_last_scp,
++							      ASC_TID_ALL);
++			if (new_last_scp != NULL) {
++				ASC_ASSERT(REQPNEXT(last_scp) != NULL);
++				last_scp = new_last_scp;
+ 			}
+ 		}
+-		spin_unlock_irqrestore(&boardp->lock, flags);
+ 	}
++	spin_unlock_irqrestore(&boardp->lock, flags);
+ 
+ 	/*
+ 	 * If interrupts were enabled on entry, then they
+@@ -3739,7 +3729,7 @@ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
+ 	asc_scsi_done_list(done_scp);
+ 
+ 	ASC_DBG(1, "advansys_interrupt: end\n");
+-	return IRQ_HANDLED;
++	return result;
+ }
+ 
+ static void
+@@ -16934,20 +16924,9 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 
+ 	/* Register IRQ Number. */
+ 	ASC_DBG1(2, "advansys_board_found: request_irq() %d\n", shost->irq);
+-	/*
+-	 * If request_irq() fails with the IRQF_DISABLED flag set,
+-	 * then try again without the IRQF_DISABLED flag set. This
+-	 * allows IRQ sharing to work even with other drivers that
+-	 * do not set the IRQF_DISABLED flag.
+-	 *
+-	 * If IRQF_DISABLED is not set, then interrupts are enabled
+-	 * before the driver interrupt function is called.
+-	 */
+-	ret = request_irq(shost->irq, advansys_interrupt,
+-			  share_irq | IRQF_DISABLED, "advansys", boardp);
+-	if (ret)
+-		ret = request_irq(shost->irq, advansys_interrupt,
+-				  share_irq, "advansys", boardp);
++
++	ret = request_irq(shost->irq, advansys_interrupt, share_irq,
++			  "advansys", shost);
+ 
+ 	if (ret) {
+ 		if (ret == -EBUSY) {
+@@ -17003,7 +16982,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		boardp->adv_sgblkp = sgp->next_sgblkp;
+ 		kfree(sgp);
+ 	}
+-	free_irq(shost->irq, boardp);
++	free_irq(shost->irq, shost);
+  err_free_dma:
+ 	if (shost->dma_channel != NO_ISA_DMA)
+ 		free_dma(shost->dma_channel);
+@@ -17201,7 +17180,7 @@ static int advansys_release(struct Scsi_Host *shost)
+ 
+ 	ASC_DBG(1, "advansys_release: begin\n");
+ 	boardp = ASC_BOARDP(shost);
+-	free_irq(shost->irq, boardp);
++	free_irq(shost->irq, shost);
+ 	if (shost->dma_channel != NO_ISA_DMA) {
+ 		ASC_DBG(1, "advansys_release: free_dma()\n");
+ 		free_dma(shost->dma_channel);
 -- 
 1.4.4.4
 
