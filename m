@@ -1,53 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 23/24] advansys: Improve interrupt handler
-Date: Fri, 27 Jul 2007 11:53:46 -0400
-Message-ID: <46AA150A.5090804@garzik.org>
-References: <20070727134038.GC21219@parisc-linux.org> <11855437542538-git-send-email-matthew@wil.cx> <46AA05ED.2060208@garzik.org> <20070727145336.GK21219@parisc-linux.org> <46AA07CC.9090004@garzik.org> <20070727150420.GL21219@parisc-linux.org> <46AA0B70.9060108@garzik.org> <20070727152520.GM21219@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 0/5] mpt fusion: Add logging support
+Date: Fri, 27 Jul 2007 12:21:12 -0400
+Message-ID: <1185553272.3655.22.camel@localhost.localdomain>
+References: <20070724100659.GA1831@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58901 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762296AbXG0Pxs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 27 Jul 2007 11:53:48 -0400
-In-Reply-To: <20070727152520.GM21219@parisc-linux.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:43124 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762352AbXG0QVN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jul 2007 12:21:13 -0400
+In-Reply-To: <20070724100659.GA1831@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org, eric.moore@lsi.com
 
-Matthew Wilcox wrote:
-> I still say it's an improvement over scanning the list of scsi hosts
-> looking for any that have work pending whenever any interrupt comes in.
+On Tue, 2007-07-24 at 15:36 +0530, Prakash, Sathya wrote:
+> The patches in this patch set adds support for logging facility that can be used
+> to debug a number of Fusion MPT related problems.
+> 
+> The logging support can be enabled or disabled changing the kernel
+> configuration flag CONFIF_FUSION_LOGGING
+> 
+> The debug level can be programmed on the fly via SysFS (hex values)
+> 	echo [level] > /sys/class/scsi_host/host#/debug_level
+> and also can be passed as module parameter mpt_debug_level for mptbase.ko
 
-No, it's not.  It's just silly:
+The way your module parameter works is slightly counter intuitive.  On
+all our other drivers, you can write a value into 
 
-You have replaced an in-driver loop with a slower, higher-overhead, 
-highly unusual loop that no one but advansys does.
+/sys/module/<module>/parameters/<debug parameter>
 
-Your interrupt handler should do something like
+And have it acted on immediately.  In yours, it seems only to work
+before the host is probed (because after that, the value in the ioc
+structure is what's used).
 
-	board_info = dev_id;
-	for (i = 0; i < board_info->n_ports; i++)
-		advansys_port_intr(board_info, &board_info->port[i]);
+The other question is are you really sure you actually want per host
+debugging?  is the added flexibility in being able to turn it on and off
+per host worth the problems of explaining to the users where to find the
+parameter?  I've got to bet that 95% of the installations only have a
+single fusion card anyway.  would it not be simpler just to have a
+global module parameter that can be set and acted on from /sys/modules?
 
-or if your hardware can tell you which ports have work pending,
-
-	board_info = dev_id;
-	port_status = readl(hw reg);
-	for (i = 0; i < board_info->n_ports; i++)
-		if (port_status & (1 << i))
-			advansys_port_intr(board_info,
-					&board_info->port[i]);
-
-Having the kernel interrupt subsystem implement a loop for you is 
-completely utterly unusual, slow, silly, and likely to get broken when 
-people futz with the interrupt system core.  It probably has edge cases 
-too, like screwing with the screaming interrupt detection code.
-
-The kernel interrupt subsystem is not meant to be abused in that way.
-
-	Jeff
+James
 
 
