@@ -1,260 +1,136 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 6/6] aha152x.c - use data accessors and !use_sg cleanup
-Date: Sun, 29 Jul 2007 22:29:02 +0300
-Message-ID: <46ACEA7E.8020108@panasas.com>
-References: <46ACE62F.4070108@panasas.com>
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Subject: [PATCH 2/5] Use mutex instead of semaphore in the OnStream SCSI Tape driver
+Date: Sun, 29 Jul 2007 23:36:33 +0200
+Message-ID: <20070729213633.GE3432@traven>
+References: <20070729212909.GC3432@traven>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7802 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764094AbXG2T3N (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 15:29:13 -0400
-In-Reply-To: <46ACE62F.4070108@panasas.com>
+Received: from static-141-230-6-89.ipcom.comunitel.net ([89.6.230.141]:33546
+	"EHLO traven.no-ip.org" rhost-flags-OK-FAIL-OK-FAIL)
+	by vger.kernel.org with ESMTP id S936199AbXG2Vgv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 29 Jul 2007 17:36:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20070729212909.GC3432@traven>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, =?ISO-8859-1?Q?=22J=FC?= =?ISO-8859-1?Q?rgen_E=2E_Fischer=22?= <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>
+To: osst@riede.org, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
+The OnStream SCSI Tape driver uses a semaphore as mutex. Use the mutex
+API instead of the (binary) semaphore.
 
-  And finally this is the regular !use_sg cleanup
-  and use of data accessors.
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+--
 
----
- drivers/scsi/aha152x.c |   91 +++++++++++++++++++++++++-----------------------
- 1 files changed, 47 insertions(+), 44 deletions(-)
-
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index cf49ed5..d30a307 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -322,6 +322,12 @@ static LIST_HEAD(aha152x_host_list);
-                         (cmd) ? ((cmd)->device->id & 0x0f) : -1, \
- 			(cmd) ? ((cmd)->device->lun & 0x07) : -1
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 08060fb..0e2452c 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -3298,7 +3298,7 @@ static ssize_t osst_write(struct file * filp, const char __user * buf, size_t co
+ 	char		    * name = tape_name(STp);
  
-+static inline void
-+CMD_INC_RESID(struct scsi_cmnd *cmd, int inc)
-+{
-+	scsi_set_resid(cmd, scsi_get_resid(cmd) + inc);
-+}
-+
- #define DELAY_DEFAULT 1000
  
- #if defined(PCMCIA)
-@@ -975,13 +981,13 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
- #if defined(AHA152X_DEBUG)
- 	if (HOSTDATA(shpnt)->debug & debug_queue) {
- 		printk(INFO_LEAD "queue: %p; cmd_len=%d pieces=%d size=%u cmnd=",
--		       CMDINFO(SCpnt), SCpnt, SCpnt->cmd_len, SCpnt->use_sg, SCpnt->request_bufflen);
-+		       CMDINFO(SCpnt), SCpnt, SCpnt->cmd_len,
-+		       scsi_sg_count(SCpnt), scsi_bufflen(SCpnt));
- 		__scsi_print_command(SCpnt->cmnd);
- 	}
- #endif
+-	if (down_interruptible(&STp->lock))
++	if (mutex_lock_interruptible(&STp->lock))
+ 		return (-ERESTARTSYS);
  
- 	SCpnt->scsi_done	= done;
--	SCpnt->resid 		= SCpnt->request_bufflen;
- 	SCpnt->SCp.phase	= not_issued | phase;
- 	SCpnt->SCp.Status	= 0x1; /* Ilegal status by SCSI standard */
- 	SCpnt->SCp.Message	= 0;
-@@ -1011,30 +1017,24 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
- 	   SCp.buffers_residual : left buffers in list
- 	   SCp.phase            : current state of the command */
+ 	/*
+@@ -3600,7 +3600,7 @@ if (SRpnt) printk(KERN_ERR "%s:A: Not supposed to have SRpnt at line %d\n", name
+ out:
+ 	if (SRpnt != NULL) osst_release_request(SRpnt);
  
--	if (phase & (check_condition|resetting)) {
-+	if ((phase & (check_condition|resetting)) || !scsi_sglist(SCpnt)) {
- 		if (phase & check_condition) {
- 			SCpnt->SCp.ptr           = SCpnt->sense_buffer;
- 			SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
--			SCpnt->resid             = sizeof(SCpnt->sense_buffer);
-+			scsi_set_resid(SCpnt, sizeof(SCpnt->sense_buffer));
- 		} else {
- 			SCpnt->SCp.ptr           = NULL;
- 			SCpnt->SCp.this_residual = 0;
--			SCpnt->resid             = 0;
-+			scsi_set_resid(SCpnt, 0);
- 		}
- 		SCpnt->SCp.buffer           = NULL;
- 		SCpnt->SCp.buffers_residual = 0;
- 	} else {
--	if (SCpnt->use_sg) {
--		SCpnt->SCp.buffer           = (struct scatterlist *) SCpnt->request_buffer;
-+		scsi_set_resid(SCpnt, scsi_bufflen(SCpnt));
-+		SCpnt->SCp.buffer           = scsi_sglist(SCpnt);
- 		SCpnt->SCp.ptr              = SG_ADDRESS(SCpnt->SCp.buffer);
- 		SCpnt->SCp.this_residual    = SCpnt->SCp.buffer->length;
--		SCpnt->SCp.buffers_residual = SCpnt->use_sg - 1;
--	} else {
--		SCpnt->SCp.ptr              = (char *) SCpnt->request_buffer;
--		SCpnt->SCp.this_residual    = SCpnt->request_bufflen;
--		SCpnt->SCp.buffer           = NULL;
--		SCpnt->SCp.buffers_residual = 0;
--	}
-+		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
- 	}
+-	up(&STp->lock);
++	mutex_unlock(&STp->lock);
  
- 	DO_LOCK(flags);
-@@ -1525,8 +1525,8 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 			/* target sent DISCONNECT */
- 			DPRINTK(debug_selection, DEBUG_LEAD "target disconnected at %d/%d\n",
- 				CMDINFO(CURRENT_SC),
--				CURRENT_SC->resid,
--				CURRENT_SC->request_bufflen);
-+				scsi_get_resid(CURRENT_SC),
-+				scsi_bufflen(CURRENT_SC));
- #if defined(AHA152X_STAT)
- 			HOSTDATA(shpnt)->disconnections++;
- #endif
-@@ -1564,7 +1564,7 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 			/* restore old command */
- 			memcpy(cmd->cmnd, sc->aha_orig_cmnd, sizeof(cmd->cmnd));
- 			cmd->cmd_len = sc->aha_orig_cmd_len;
--			cmd->resid = sc->aha_orig_resid;
-+			scsi_set_resid(cmd, sc->aha_orig_resid);
- 
- 			cmd->SCp.Status = SAM_STAT_CHECK_CONDITION;
- 
-@@ -1594,7 +1594,7 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 				memcpy(sc->aha_orig_cmnd, ptr->cmnd,
- 				                            sizeof(ptr->cmnd));
- 				sc->aha_orig_cmd_len = ptr->cmd_len;
--				sc->aha_orig_resid = ptr->resid;
-+				sc->aha_orig_resid = scsi_get_resid(ptr);
- 
- 				ptr->cmnd[0]         = REQUEST_SENSE;
- 				ptr->cmnd[1]         = 0;
-@@ -2179,7 +2179,8 @@ static void datai_init(struct Scsi_Host *shpnt)
- 	DATA_LEN=0;
- 	DPRINTK(debug_datai,
- 		DEBUG_LEAD "datai_init: request_bufflen=%d resid=%d\n",
--		CMDINFO(CURRENT_SC), CURRENT_SC->request_bufflen, CURRENT_SC->resid);
-+		CMDINFO(CURRENT_SC), scsi_bufflen(CURRENT_SC),
-+		scsi_get_resid(CURRENT_SC));
+ 	return retval;
  }
+@@ -3619,7 +3619,7 @@ static ssize_t osst_read(struct file * filp, char __user * buf, size_t count, lo
+ 	char		    * name  = tape_name(STp);
  
- static void datai_run(struct Scsi_Host *shpnt)
-@@ -2292,11 +2293,12 @@ static void datai_run(struct Scsi_Host *shpnt)
  
- static void datai_end(struct Scsi_Host *shpnt)
- {
--	CURRENT_SC->resid -= GETSTCNT();
-+	CMD_INC_RESID(CURRENT_SC, -GETSTCNT());
+-	if (down_interruptible(&STp->lock))
++	if (mutex_lock_interruptible(&STp->lock))
+ 		return (-ERESTARTSYS);
  
- 	DPRINTK(debug_datai,
- 		DEBUG_LEAD "datai_end: request_bufflen=%d resid=%d stcnt=%d\n",
--		CMDINFO(CURRENT_SC), CURRENT_SC->request_bufflen, CURRENT_SC->resid, GETSTCNT());
-+		CMDINFO(CURRENT_SC), scsi_bufflen(CURRENT_SC),
-+		scsi_get_resid(CURRENT_SC), GETSTCNT());
+ 	/*
+@@ -3785,7 +3785,7 @@ static ssize_t osst_read(struct file * filp, char __user * buf, size_t count, lo
+ out:
+ 	if (SRpnt != NULL) osst_release_request(SRpnt);
  
- 	SETPORT(SXFRCTL0, CH1|CLRSTCNT);
- 	SETPORT(DMACNTRL0, 0);
-@@ -2317,11 +2319,12 @@ static void datao_init(struct Scsi_Host *shpnt)
- 	SETPORT(SIMODE0, 0);
- 	SETPORT(SIMODE1, ENSCSIPERR | ENSCSIRST | ENPHASEMIS | ENBUSFREE );
+-	up(&STp->lock);
++	mutex_unlock(&STp->lock);
  
--	DATA_LEN = CURRENT_SC->resid;
-+	DATA_LEN = scsi_get_resid(CURRENT_SC);
- 
- 	DPRINTK(debug_datao,
- 		DEBUG_LEAD "datao_init: request_bufflen=%d; resid=%d\n",
--		CMDINFO(CURRENT_SC), CURRENT_SC->request_bufflen, CURRENT_SC->resid);
-+		CMDINFO(CURRENT_SC), scsi_bufflen(CURRENT_SC),
-+		scsi_get_resid(CURRENT_SC));
+ 	return retval;
  }
+@@ -4852,7 +4852,7 @@ static int osst_ioctl(struct inode * inode,struct file * file,
+ 	char		    * name  = tape_name(STp);
+ 	void	    __user  * p     = (void __user *)arg;
  
- static void datao_run(struct Scsi_Host *shpnt)
-@@ -2345,7 +2348,7 @@ static void datao_run(struct Scsi_Host *shpnt)
- 			SETPORT(DMACNTRL0,WRITE_READ|ENDMA|_8BIT);
- 			SETPORT(DATAPORT, *CURRENT_SC->SCp.ptr++);
- 			CURRENT_SC->SCp.this_residual--;
--			CURRENT_SC->resid--;
-+			CMD_INC_RESID(CURRENT_SC, -1);
- 			SETPORT(DMACNTRL0,WRITE_READ|ENDMA);
- 		}
+-	if (down_interruptible(&STp->lock))
++	if (mutex_lock_interruptible(&STp->lock))
+ 		return -ERESTARTSYS;
  
-@@ -2354,7 +2357,7 @@ static void datao_run(struct Scsi_Host *shpnt)
- 			outsw(DATAPORT, CURRENT_SC->SCp.ptr, data_count);
- 			CURRENT_SC->SCp.ptr           += 2 * data_count;
- 			CURRENT_SC->SCp.this_residual -= 2 * data_count;
--			CURRENT_SC->resid             -= 2 * data_count;
-+			CMD_INC_RESID(CURRENT_SC, -2 * data_count);
- 	  	}
- 
- 		if(CURRENT_SC->SCp.this_residual==0 && CURRENT_SC->SCp.buffers_residual>0) {
-@@ -2380,35 +2383,34 @@ static void datao_run(struct Scsi_Host *shpnt)
- static void datao_end(struct Scsi_Host *shpnt)
- {
- 	if(TESTLO(DMASTAT, DFIFOEMP)) {
--		int data_count = (DATA_LEN - CURRENT_SC->resid) - GETSTCNT();
-+		int data_count = (DATA_LEN - scsi_get_resid(CURRENT_SC)) -
-+		                                                    GETSTCNT();
- 
- 		DPRINTK(debug_datao, DEBUG_LEAD "datao: %d bytes to resend (%d written, %d transferred)\n",
- 			CMDINFO(CURRENT_SC),
- 			data_count,
--			DATA_LEN-CURRENT_SC->resid,
-+			DATA_LEN - scsi_get_resid(CURRENT_SC),
- 			GETSTCNT());
- 
--		CURRENT_SC->resid += data_count;
-+		CMD_INC_RESID(CURRENT_SC, data_count);
- 
--		if(CURRENT_SC->use_sg) {
--			data_count -= CURRENT_SC->SCp.ptr - SG_ADDRESS(CURRENT_SC->SCp.buffer);
--			while(data_count>0) {
--				CURRENT_SC->SCp.buffer--;
--				CURRENT_SC->SCp.buffers_residual++;
--				data_count -= CURRENT_SC->SCp.buffer->length;
--			}
--			CURRENT_SC->SCp.ptr           = SG_ADDRESS(CURRENT_SC->SCp.buffer) - data_count;
--			CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length + data_count;
--		} else {
--			CURRENT_SC->SCp.ptr           -= data_count;
--			CURRENT_SC->SCp.this_residual += data_count;
-+		data_count -= CURRENT_SC->SCp.ptr -
-+		                             SG_ADDRESS(CURRENT_SC->SCp.buffer);
-+		while(data_count>0) {
-+			CURRENT_SC->SCp.buffer--;
-+			CURRENT_SC->SCp.buffers_residual++;
-+			data_count -= CURRENT_SC->SCp.buffer->length;
- 		}
-+		CURRENT_SC->SCp.ptr = SG_ADDRESS(CURRENT_SC->SCp.buffer) -
-+		                                                     data_count;
-+		CURRENT_SC->SCp.this_residual = CURRENT_SC->SCp.buffer->length +
-+		                                                     data_count;
+ #if DEBUG
+@@ -5163,14 +5163,14 @@ static int osst_ioctl(struct inode * inode,struct file * file,
  	}
+ 	if (SRpnt) osst_release_request(SRpnt);
  
- 	DPRINTK(debug_datao, DEBUG_LEAD "datao_end: request_bufflen=%d; resid=%d; stcnt=%d\n",
- 		CMDINFO(CURRENT_SC),
--		CURRENT_SC->request_bufflen,
--		CURRENT_SC->resid,
-+		scsi_bufflen(CURRENT_SC),
-+		scsi_get_resid(CURRENT_SC),
- 		GETSTCNT());
+-	up(&STp->lock);
++	mutex_unlock(&STp->lock);
  
- 	SETPORT(SXFRCTL0, CH1|CLRCH1|CLRSTCNT);
-@@ -2935,7 +2937,7 @@ static void show_command(Scsi_Cmnd *ptr)
- 	__scsi_print_command(ptr->cmnd);
+ 	return scsi_ioctl(STp->device, cmd_in, p);
  
- 	printk(KERN_DEBUG "); request_bufflen=%d; resid=%d; phase |",
--	       ptr->request_bufflen, ptr->resid);
-+	       scsi_bufflen(ptr), scsi_get_resid(ptr));
+ out:
+ 	if (SRpnt) osst_release_request(SRpnt);
  
- 	if (ptr->SCp.phase & not_issued)
- 		printk("not issued|");
-@@ -3005,7 +3007,8 @@ static int get_command(char *pos, Scsi_Cmnd * ptr)
- 		SPRINTF("0x%02x ", ptr->cmnd[i]);
+-	up(&STp->lock);
++	mutex_unlock(&STp->lock);
  
- 	SPRINTF("); resid=%d; residual=%d; buffers=%d; phase |",
--		ptr->resid, ptr->SCp.this_residual, ptr->SCp.buffers_residual);
-+		scsi_get_resid(ptr), ptr->SCp.this_residual,
-+		ptr->SCp.buffers_residual);
+ 	return retval;
+ }
+@@ -5866,7 +5866,7 @@ static int osst_probe(struct device *dev)
+ 	tpnt->modes[2].defined = 1;
+ 	tpnt->density_changed = tpnt->compression_changed = tpnt->blksize_changed = 0;
  
- 	if (ptr->SCp.phase & not_issued)
- 		SPRINTF("not issued|");
+-	init_MUTEX(&tpnt->lock);
++	mutex_init(&tpnt->lock);
+ 	osst_nr_dev++;
+ 	write_unlock(&os_scsi_tapes_lock);
+ 
+diff --git a/drivers/scsi/osst.h b/drivers/scsi/osst.h
+index 2cc7b5a..5aa2274 100644
+--- a/drivers/scsi/osst.h
++++ b/drivers/scsi/osst.h
+@@ -4,6 +4,7 @@
+ 
+ #include <asm/byteorder.h>
+ #include <linux/completion.h>
++#include <linux/mutex.h>
+ 
+ /*	FIXME - rename and use the following two types or delete them!
+  *              and the types really should go to st.h anyway...
+@@ -532,7 +533,7 @@ struct osst_tape {
+   struct scsi_driver *driver;
+   unsigned capacity;
+   struct scsi_device *device;
+-  struct semaphore lock;       /* for serialization */
++  struct mutex lock;           /* for serialization */
+   struct completion wait;      /* for SCSI commands */
+   struct osst_buffer * buffer; 
+
 -- 
-1.5.2.2.249.g45fd
+Matthias Kaehlcke
+Linux Application Developer
+Barcelona
 
-
+                Don't walk behind me, I may not lead
+             Don't walk in front of me, I may not follow
+                Just walk beside me and be my friend
+                          (Albert Camus)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
