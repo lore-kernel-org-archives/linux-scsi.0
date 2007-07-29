@@ -1,120 +1,117 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] zfcp: convert to use the data buffer accessors
-Date: Sun, 29 Jul 2007 16:46:28 +0900
-Message-ID: <20070729164628S.fujita.tomonori@lab.ntt.co.jp>
+From: Benny Halevy <bhalevy@panasas.com>
+Subject: Re: [RFC 7/8] sd.c and sr.c move to scsi_sgtable implementation
+Date: Sun, 29 Jul 2007 11:21:56 +0300
+Message-ID: <46AC4E24.7040803@panasas.com>
+References: <468CDB3C.4060500@panasas.com>	<468CF5A4.5040303@panasas.com> <20070726212135X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:44185 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758030AbXG2Hq0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 03:46:26 -0400
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13978 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760258AbXG2IWW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 04:22:22 -0400
+In-Reply-To: <20070726212135X.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: swen@vnet.ibm.com
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, bharrosh@panasas.com
+Cc: James.Bottomley@SteelEye.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
-The patch is only compile tested.
+FUJITA Tomonori wrote:
+> From: Boaz Harrosh <bharrosh@panasas.com>
+> Subject: [RFC 7/8] sd.c and sr.c move to scsi_sgtable implementation
+> Date: Thu, 05 Jul 2007 16:44:04 +0300
+> 
+>>   - sd and sr would adjust IO size to align on device's block
+>>     size. So code needs to change once we move to scsi_sgtable
+>>     implementation. (Not compatible with un-converted drivers)
+>>   - Convert code to use scsi_for_each_sg
+>>   - Use Data accessors wherever is appropriate.
+>>
+>>  Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+>> ---
+>>  drivers/scsi/sd.c |   10 ++++------
+>>  drivers/scsi/sr.c |   27 ++++++++++++---------------
+>>  2 files changed, 16 insertions(+), 21 deletions(-)
+>>
+>> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+>> index 448d316..459fd23 100644
+>> --- a/drivers/scsi/sd.c
+>> +++ b/drivers/scsi/sd.c
+>> @@ -338,7 +338,7 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
+>>  	struct request *rq = SCpnt->request;
+>>  	struct gendisk *disk = rq->rq_disk;
+>>  	sector_t block = rq->sector;
+>> -	unsigned int this_count = SCpnt->request_bufflen >> 9;
+>> +	unsigned int this_count = scsi_bufflen(SCpnt) >> 9;
+>>  	unsigned int timeout = sdp->timeout;
+>>  
+>>  	SCSI_LOG_HLQUEUE(1, scmd_printk(KERN_INFO, SCpnt,
+>> @@ -418,9 +418,6 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
+>>  	} else if (rq_data_dir(rq) == READ) {
+>>  		SCpnt->cmnd[0] = READ_6;
+>>  		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+>> -	} else {
+>> -		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
+>> -		return 0;
+>>  	}
+> 
+> Why?
 
----
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] zfcp: convert to use the data buffer accessors
+This seems to be dead code as rq_data_dir can only be either READ or WRITE.
+The else case could be a BUG() but I don't see why it should be handled
+gracefully.
 
-- remove the unnecessary map_single path.
+> 
+> 
+>>  	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
+>> @@ -480,7 +477,8 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
+>>  		SCpnt->cmnd[4] = (unsigned char) this_count;
+>>  		SCpnt->cmnd[5] = 0;
+>>  	}
+>> -	SCpnt->request_bufflen = this_count * sdp->sector_size;
+>> +	BUG_ON(!SCpnt->sgtable);
+>> +	SCpnt->sgtable->length = this_count * sdp->sector_size;
+>>  
+>>  	/*
+>>  	 * We shouldn't disconnect in the middle of a sector, so with a dumb
+>> @@ -892,7 +890,7 @@ static struct block_device_operations sd_fops = {
+>>  static void sd_rw_intr(struct scsi_cmnd * SCpnt)
+>>  {
+>>  	int result = SCpnt->result;
+>> - 	unsigned int xfer_size = SCpnt->request_bufflen;
+>> + 	unsigned int xfer_size = scsi_bufflen(SCpnt);
+>>   	unsigned int good_bytes = result ? 0 : xfer_size;
+>>   	u64 start_lba = SCpnt->request->sector;
+>>   	u64 bad_lba;
+>> diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+>> index f9a52af..ed61ca9 100644
+>> --- a/drivers/scsi/sr.c
+>> +++ b/drivers/scsi/sr.c
+>> @@ -218,7 +218,7 @@ int sr_media_change(struct cdrom_device_info *cdi, int slot)
+>>  static void rw_intr(struct scsi_cmnd * SCpnt)
+>>  {
+>>  	int result = SCpnt->result;
+>> -	int this_count = SCpnt->request_bufflen;
+>> +	int this_count = scsi_bufflen(SCpnt);
+>>  	int good_bytes = (result == 0 ? this_count : 0);
+>>  	int block_sectors = 0;
+>>  	long error_sector;
+>> @@ -345,23 +345,20 @@ static int sr_init_command(struct scsi_cmnd * SCpnt)
+>>  	} else if (rq_data_dir(SCpnt->request) == READ) {
+>>  		SCpnt->cmnd[0] = READ_10;
+>>  		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+>> -	} else {
+>> -		blk_dump_rq_flags(SCpnt->request, "Unknown sr command");
+>> -		return 0;
+>>  	}
+> 
+> ditto.
 
-- convert to use the new accessors for the sg lists and the
-parameters.
+ditto :)
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/s390/scsi/zfcp_fsf.c  |    5 +++--
- drivers/s390/scsi/zfcp_qdio.c |   41 ++++++-----------------------------------
- 2 files changed, 9 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index b240800..9929997 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -4154,8 +4154,9 @@ zfcp_fsf_send_fcp_command_task_handler(struct zfcp_fsf_req *fsf_req)
- 			      fcp_rsp_iu->fcp_resid,
- 			      (int) zfcp_get_fcp_dl(fcp_cmnd_iu));
- 
--		scpnt->resid = fcp_rsp_iu->fcp_resid;
--		if (scpnt->request_bufflen - scpnt->resid < scpnt->underflow)
-+		scsi_set_resid(scpnt, fcp_rsp_iu->fcp_resid);
-+		if (scsi_bufflen(scpnt) - scsi_get_resid(scpnt) <
-+		    scpnt->underflow)
- 			set_host_byte(&scpnt->result, DID_ERROR);
- 	}
- 
-diff --git a/drivers/s390/scsi/zfcp_qdio.c b/drivers/s390/scsi/zfcp_qdio.c
-index c408bad..81daa82 100644
---- a/drivers/s390/scsi/zfcp_qdio.c
-+++ b/drivers/s390/scsi/zfcp_qdio.c
-@@ -36,8 +36,6 @@ static void zfcp_qdio_sbale_fill
- 	(struct zfcp_fsf_req *, unsigned long, void *, int);
- static int zfcp_qdio_sbals_from_segment
- 	(struct zfcp_fsf_req *, unsigned long, void *, unsigned long);
--static int zfcp_qdio_sbals_from_buffer
--	(struct zfcp_fsf_req *, unsigned long, void *, unsigned long, int);
- 
- static qdio_handler_t zfcp_qdio_request_handler;
- static qdio_handler_t zfcp_qdio_response_handler;
-@@ -632,28 +630,6 @@ out:
- 
- 
- /**
-- * zfcp_qdio_sbals_from_buffer - fill SBALs from buffer
-- * @fsf_req: request to be processed
-- * @sbtype: SBALE flags
-- * @buffer: data buffer
-- * @length: length of buffer
-- * @max_sbals: upper bound for number of SBALs to be used
-- */
--static int
--zfcp_qdio_sbals_from_buffer(struct zfcp_fsf_req *fsf_req, unsigned long sbtype,
--			    void *buffer, unsigned long length, int max_sbals)
--{
--	struct scatterlist sg_segment;
--
--	zfcp_address_to_sg(buffer, &sg_segment);
--	sg_segment.length = length;
--
--	return zfcp_qdio_sbals_from_sg(fsf_req, sbtype, &sg_segment, 1,
--                                       max_sbals);
--}
--
--
--/**
-  * zfcp_qdio_sbals_from_scsicmnd - fill SBALs from scsi command
-  * @fsf_req: request to be processed
-  * @sbtype: SBALE flags
-@@ -664,18 +640,13 @@ int
- zfcp_qdio_sbals_from_scsicmnd(struct zfcp_fsf_req *fsf_req,
- 			      unsigned long sbtype, struct scsi_cmnd *scsi_cmnd)
- {
--	if (scsi_cmnd->use_sg) {
-+	if (scsi_sg_count(scsi_cmnd))
- 		return zfcp_qdio_sbals_from_sg(fsf_req,	sbtype,
--                                               (struct scatterlist *)
--                                               scsi_cmnd->request_buffer,
--                                               scsi_cmnd->use_sg,
--                                               ZFCP_MAX_SBALS_PER_REQ);
--	} else {
--                return zfcp_qdio_sbals_from_buffer(fsf_req, sbtype,
--                                                   scsi_cmnd->request_buffer,
--                                                   scsi_cmnd->request_bufflen,
--                                                   ZFCP_MAX_SBALS_PER_REQ);
--	}
-+					       scsi_sglist(scsi_cmnd),
-+					       scsi_sg_count(scsi_cmnd),
-+					       ZFCP_MAX_SBALS_PER_REQ);
-+	else
-+		return 0;
- }
- 
- /**
--- 
-1.5.2.4
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
