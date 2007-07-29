@@ -1,50 +1,35 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: [2.6 patch] drivers/scsi/constants.c: make 2 functions static
-Date: Sun, 29 Jul 2007 17:02:12 +0200
-Message-ID: <20070729150212.GT16817@stusta.de>
+From: Russell King <rmk+lkml@arm.linux.org.uk>
+Subject: Re: [RFC: 2.6 patch] remove the broken SCSI_ACORNSCSI_3 driver
+Date: Sun, 29 Jul 2007 16:22:48 +0100
+Message-ID: <20070729152248.GB25431@flint.arm.linux.org.uk>
+References: <20070729145915.GF16817@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:47916 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1765066AbXG2PCf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 11:02:35 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764850AbXG2Pgs@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20070729145915.GF16817@stusta.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@stusta.de>
+Cc: Andrew Morton <akpm@osdl.org>, spyro@f2s.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This patch makes two needlessly global functions static.
+On Sun, Jul 29, 2007 at 04:59:15PM +0200, Adrian Bunk wrote:
+> The SCSI_ACORNSCSI_3 driver:
+> - has been marked as BROKEN for more than one year and
+> - is still marked as BROKEN.
+> 
+> Drivers that had been marked as BROKEN for such a long time seem to be
+> unlikely to be revived in the forseeable future.
+> 
+> But if anyone wants to ever revive this driver, the code is still
+> present in the older kernel releases.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
+NAK.  I've had a patch to resurect it for some time.  Notice that this
+merge window I applied some patches to the other acorn scsi drivers -
+once I get enough time to separate out the changes I'll be applying
+those patches.  It's relatively low priority for me though.
 
----
-
-This patch has been sent on:
-- 24 Mar 2007
-
- drivers/scsi/constants.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
---- linux-2.6.21-rc4-mm1/drivers/scsi/constants.c.old	2007-03-23 23:26:39.000000000 +0100
-+++ linux-2.6.21-rc4-mm1/drivers/scsi/constants.c	2007-03-23 23:26:55.000000000 +0100
-@@ -1235,7 +1235,7 @@
- }
- EXPORT_SYMBOL(scsi_print_sense_hdr);
- 
--void
-+static void
- scsi_decode_sense_buffer(const unsigned char *sense_buffer, int sense_len,
- 		       struct scsi_sense_hdr *sshdr)
- {
-@@ -1258,7 +1258,7 @@
- 	}
- }
- 
--void
-+static void
- scsi_decode_sense_extras(const unsigned char *sense_buffer, int sense_len,
- 			 struct scsi_sense_hdr *sshdr)
- {
-
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
