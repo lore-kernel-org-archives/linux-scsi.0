@@ -1,101 +1,94 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 3/6] aha152x.c - Preliminary fixes and some comments
-Date: Sun, 29 Jul 2007 22:22:04 +0300
-Message-ID: <46ACE8DC.1020907@panasas.com>
+Subject: [PATCH 4/6] aha152x.c - Clean Reset path
+Date: Sun, 29 Jul 2007 22:24:09 +0300
+Message-ID: <46ACE959.4080102@panasas.com>
 References: <46ACE62F.4070108@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:9465 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:4633 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754083AbXG2TWP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 15:22:15 -0400
+	with ESMTP id S1764400AbXG2TYU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 15:24:20 -0400
 In-Reply-To: <46ACE62F.4070108@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, =?ISO-8859-1?Q?=22J=FC?= =?ISO-8859-1?Q?rgen_E=2E_Fischer=22?= <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>
 
 
-  hunk by hunk:
-  - CHECK_CONDITION is what happens to cmnd->status >> 1
-    or after status_byte() macro. But here it is used
-    directly on status which means 0x1 which is an undefined
-    bit in the standard. And is a status that will never
-    return from a target.
+  What Reset code was doing:  Save command's important/dangerous
+  Info on stack. NULL those members from scsi_cmnd.
+  Issue a Reset. wait for it to finish than restore members
+  and return.
 
-  - in busfree_run at the DONE_SC phase we have 3 distinct
-    operation:
-	1-if(DONE_SC->SCp.phase & check_condition)
-          The REQUEST_SENSE command return.
-          - Restore original command
-	  - Than continue to operation 3.
-	2-if(DONE_SC->SCp.Status==SAM_STAT_CHECK_CONDITION)
-          A regular command returned with a status.
-	  - Internally re-Q a REQUEST_SENSE.
-	  - Do not do operation 3.
-	3-
-	  - Complete the command and return it to scsi-ml
-     So the 0x2 in both these operations (1,2) means the scsi
-     check-condition status, hence SAM_STAT_CHECK_CONDITION
+  What I do is save or NULL nothing. But use the "resetting"
+  hint in aha152x_internal_queue() to NULL out working members
+  and leave struct scsi_cmnd alone.
 
-  - Here the code asks about !(DONE_SC->SCp.Status & not_issued)
-    but "not_issued" is an enum belonging to the "phase" member
-    and not to the Status returned from target. The reason this
-    works is because not_issued==1 and Also CHECK_CONDITION==1
-    (remember from hunk 1). So actually the code was asking
-    !(DONE_SC->SCp.Status & CHECK_CONDITION). Which means
-    "Has the status been read from target yet?"
-    Staus is read at status_run(). "not_issued" is
-    cleared in seldo_run() which is usually earlier than
-    status_run().
-
-  So this patch does nothing as far as assembly is concerned
-  but it does let the reader understand what is going on.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-
+  The indent here looks funny but it will change/drop in last
+  patch and it is clear this way what changed.
 ---
- drivers/scsi/aha152x.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/aha152x.c |   18 +++++++++---------
+ 1 files changed, 9 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index c841f11..dc7d84b 100644
+index dc7d84b..d7ca86f 100644
 --- a/drivers/scsi/aha152x.c
 +++ b/drivers/scsi/aha152x.c
-@@ -986,7 +986,7 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
- 	SCpnt->scsi_done	= done;
- 	SCpnt->resid 		= SCpnt->request_bufflen;
- 	SCpnt->SCp.phase	= not_issued | phase;
--	SCpnt->SCp.Status	= CHECK_CONDITION;
-+	SCpnt->SCp.Status	= 0x1; /* Ilegal status by SCSI standard */
- 	SCpnt->SCp.Message	= 0;
- 	SCpnt->SCp.have_data_in	= 0;
- 	SCpnt->SCp.sent_command	= 0;
-@@ -1574,12 +1574,12 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 			cmd->use_sg          = sc->use_sg;
- 			cmd->cmd_len         = sc->cmd_len;
+@@ -1022,6 +1022,14 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
+ 	   SCp.buffer           : next buffer
+ 	   SCp.buffers_residual : left buffers in list
+ 	   SCp.phase            : current state of the command */
++
++	if(phase & resetting) {
++		SCpnt->SCp.ptr           = NULL;
++		SCpnt->SCp.this_residual = 0;
++		SCpnt->resid             = 0;
++		SCpnt->SCp.buffer           = NULL;
++		SCpnt->SCp.buffers_residual = 0;
++	} else {
+ 	if (SCpnt->use_sg) {
+ 		SCpnt->SCp.buffer           = (struct scatterlist *) SCpnt->request_buffer;
+ 		SCpnt->SCp.ptr              = SG_ADDRESS(SCpnt->SCp.buffer);
+@@ -1033,6 +1041,7 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
+ 		SCpnt->SCp.buffer           = NULL;
+ 		SCpnt->SCp.buffers_residual = 0;
+ 	}
++	}
  
--			cmd->SCp.Status = 0x02;
-+			cmd->SCp.Status = SAM_STAT_CHECK_CONDITION;
+ 	DO_LOCK(flags);
  
- 			HOSTDATA(shpnt)->commands--;
- 			if (!HOSTDATA(shpnt)->commands)
- 				SETPORT(PORTA, 0);	/* turn led off */
--		} else if(DONE_SC->SCp.Status==0x02) {
-+		} else if(DONE_SC->SCp.Status==SAM_STAT_CHECK_CONDITION) {
- #if defined(AHA152X_STAT)
- 			HOSTDATA(shpnt)->busfree_with_check_condition++;
- #endif
-@@ -1587,7 +1587,7 @@ static void busfree_run(struct Scsi_Host *shpnt)
- 			DPRINTK(debug_eh, ERR_LEAD "CHECK CONDITION found\n", CMDINFO(DONE_SC));
- #endif
+@@ -1150,9 +1159,6 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 	DECLARE_COMPLETION(done);
+ 	int ret, issued, disconnected;
+ 	unsigned char old_cmd_len = SCpnt->cmd_len;
+-	unsigned short old_use_sg = SCpnt->use_sg;
+-	void *old_buffer = SCpnt->request_buffer;
+-	unsigned old_bufflen = SCpnt->request_bufflen;
+ 	unsigned long flags;
+ 	unsigned long timeleft;
  
--			if(!(DONE_SC->SCp.Status & not_issued)) {
-+			if(!(DONE_SC->SCp.phase & not_issued)) {
- 				Scsi_Cmnd *ptr = DONE_SC;
- 				DONE_SC=NULL;
- #if 0
+@@ -1174,9 +1180,6 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 	DO_UNLOCK(flags);
+ 
+ 	SCpnt->cmd_len         = 0;
+-	SCpnt->use_sg          = 0;
+-	SCpnt->request_buffer  = NULL;
+-	SCpnt->request_bufflen = 0;
+ 
+ 	aha152x_internal_queue(SCpnt, &done, resetting, reset_done);
+ 
+@@ -1189,9 +1192,6 @@ static int aha152x_device_reset(Scsi_Cmnd * SCpnt)
+ 	}
+ 
+ 	SCpnt->cmd_len         = old_cmd_len;
+-	SCpnt->use_sg          = old_use_sg;
+-  	SCpnt->request_buffer  = old_buffer;
+-       	SCpnt->request_bufflen = old_bufflen;
+ 
+ 	DO_LOCK(flags);
+ 
 -- 
 1.5.2.2.249.g45fd
 
