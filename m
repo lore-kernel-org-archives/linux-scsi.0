@@ -1,110 +1,134 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH] bsg: update sg_io_v4 structure
-Date: Sun, 29 Jul 2007 23:00:46 +0900
-Message-ID: <200707291401.l6TE1Jhx026386@mbox.iij4u.or.jp>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [GIT PATCH] SCSI bug fixes for 2.6.23-rc1
+Date: Sun, 29 Jul 2007 09:49:52 -0500
+Message-ID: <1185720592.3434.7.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:47342 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1763514AbXG2OEq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jul 2007 10:04:46 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:58695 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1762878AbXG2Oty (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 10:49:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: jens.axboe@oracle.com, dougg@torque.net, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This updates sg_io_v4 structure (based on Doug's RFC, release 1.3).
+This is basically a set of bug fixes with a few minor cleanups thrown
+in.  There are also a few bsg fixes we're taking through this tree
+because SCSI is the current sole consumer. The reason for the huge size
+is the lindent of the advansys driver along with a few cleanups.
 
-The major changes are:
+The patch is available here:
 
-- add dout_resid field
-- increase tag size to 64 bits to comply with SAM-4 and SRP
-- add dout_iovec_count and din_iovec_count
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
 
-dout_iovec_count and din_iovec_count aren't supported now. I'm not
-sure whether they will be supported or not but they were added for the
-possible future changes.
+The short changelog is:
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c         |   10 +++++++---
- include/linux/bsg.h |   13 +++++++++----
- 2 files changed, 16 insertions(+), 7 deletions(-)
+Alan Cox (1):
+      aacraid: Fix security hole
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 12c287b..ccfa5f8 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -1,5 +1,5 @@
- /*
-- * bsg.c - block layer implementation of the sg v3 interface
-+ * bsg.c - block layer implementation of the sg v4 interface
-  *
-  * Copyright (C) 2004 Jens Axboe <axboe@suse.de> SUSE Labs
-  * Copyright (C) 2004 Peter M. Jones <pjones@redhat.com>
-@@ -421,7 +421,6 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 	hdr->info = 0;
- 	if (hdr->device_status || hdr->transport_status || hdr->driver_status)
- 		hdr->info |= SG_INFO_CHECK;
--	hdr->din_resid = rq->data_len;
- 	hdr->response_len = 0;
- 
- 	if (rq->sense_len && hdr->response) {
-@@ -437,9 +436,14 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 	}
- 
- 	if (rq->next_rq) {
-+		hdr->dout_resid = rq->data_len;
-+		hdr->din_resid = rq->next_rq->data_len;
- 		blk_rq_unmap_user(bidi_bio);
- 		blk_put_request(rq->next_rq);
--	}
-+	} else if (rq_data_dir(rq) == READ)
-+		hdr->din_resid = rq->data_len;
-+	else
-+		hdr->dout_resid = rq->data_len;
- 
- 	blk_rq_unmap_user(bio);
- 	blk_put_request(rq);
-diff --git a/include/linux/bsg.h b/include/linux/bsg.h
-index 102dc09..60e377b 100644
---- a/include/linux/bsg.h
-+++ b/include/linux/bsg.h
-@@ -15,14 +15,18 @@ struct sg_io_v4 {
- 
- 	__u32 request_len;	/* [i] in bytes */
- 	__u64 request;		/* [i], [*i] {SCSI: cdb} */
-+	__u64 request_tag;	/* [i] {SCSI: task tag (only if flagged)} */
- 	__u32 request_attr;	/* [i] {SCSI: task attribute} */
--	__u32 request_tag;	/* [i] {SCSI: task tag (only if flagged)} */
- 	__u32 request_priority;	/* [i] {SCSI: task priority} */
-+	__u32 request_extra;	/* [i] {spare, for padding} */
- 	__u32 max_response_len;	/* [i] in bytes */
- 	__u64 response;		/* [i], [*o] {SCSI: (auto)sense data} */
- 
--	/* "din_" for data in (from device); "dout_" for data out (to device) */
-+        /* "dout_": data out (to device); "din_": data in (from device) */
-+	__u32 dout_iovec_count;	/* [i] 0 -> "flat" dout transfer else
-+				   dout_xfer points to array of iovec */
- 	__u32 dout_xfer_len;	/* [i] bytes to be transferred to device */
-+	__u32 din_iovec_count;	/* [i] 0 -> "flat" din transfer */
- 	__u32 din_xfer_len;	/* [i] bytes to be transferred from device */
- 	__u64 dout_xferp;	/* [i], [*i] */
- 	__u64 din_xferp;	/* [i], [*o] */
-@@ -39,8 +43,9 @@ struct sg_io_v4 {
- 	__u32 info;		/* [o] additional information */
- 	__u32 duration;		/* [o] time to complete, in milliseconds */
- 	__u32 response_len;	/* [o] bytes of response actually written */
--	__s32 din_resid;	/* [o] actual_din_xfer_len - din_xfer_len */
--	__u32 generated_tag;	/* [o] {SCSI: task tag that transport chose} */
-+	__s32 din_resid;	/* [o] din_xfer_len - actual_din_xfer_len */
-+	__s32 dout_resid;	/* [o] dout_xfer_len - actual_dout_xfer_len */
-+	__u64 generated_tag;	/* [o] {SCSI: transport generated task tag} */
- 	__u32 spare_out;	/* [o] */
- 
- 	__u32 padding;
--- 
-1.5.2.4
+Boaz Harrosh (1):
+      qla2xxx: Data accessors Cleanup of last merge
+
+Chip Coldwell (1):
+      sym53c8xx: don't claim cpqarray device
+
+Darrick J. Wong (1):
+      libsas: SMP request handler shouldn't crash when rphy is NULL
+
+FUJITA Tomonori (3):
+      simscsi: convert to use the data buffer accessors
+      bsg: remove unnecessary code and comments
+      bsg: use lib/idr.c to find a unique minor number
+
+James Bottomley (2):
+      aic79xx, aic7xxx: Fix incorrect width setting
+      bsg: fix unused variable warnings for BLK_DEV_BSG=n
+
+Jeff Garzik (1):
+      libsas: Remove PCI dependencies
+
+Jesper Juhl (1):
+      libsas: Fix potential NULL dereference in sas_smp_get_phy_events()
+
+Matthew Wilcox (1):
+      advansys: lindent and other large, uninteresting changes
+
+Mike Christie (4):
+      iscsi_tcp: Turn off bounce buffers
+      libiscsi: fix cmd seqeunce number checking
+      iscsi_tcp, ib_iser Enable module refcounting for iscsi host template
+      libiscsi: make sure session is not blocked when removing host
+
+Paul Mundt (1):
+      bsg: Fix build for CONFIG_BLOCK=n
+
+Prakash, Sathya (5):
+      mpt fusion: Changes in mptctl.c for logging support
+      mpt fusion: Changes in mptfc.c mptlan.c mptsas.c and mptspi.c for logging support
+      mpt fusion: Changes in mptscsih.c for logging support
+      mpt fusion: Changes in mptbase.c for logging support
+      mpt fusion: logging support in Kconfig, Makefile, mptbase.h and addition of mptdebug.h
+
+Salyzyn, Mark (4):
+      aacraid: fix Sunrise Lake reset handling
+      aacraid: add SCSI SYNCHONIZE_CACHE range checking
+      aacraid: draw line in sand, sundry cleanup and version update
+      aacraid: sysfs adapter reset/status format change.
+
+Seokmann Ju (1):
+      qla2xxx: fix to honor ignored parameters in sysfs attributes
+
+akpm@linux-foundation.org (1):
+      add easyRAID to the no report luns blacklist
+
+
+And the diffstat:
+
+ arch/ia64/hp/sim/simscsi.c               |   66 
+ block/Kconfig                            |    4 
+ block/bsg.c                              |   78 
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    1 
+ drivers/message/fusion/Kconfig           |   14 
+ drivers/message/fusion/Makefile          |   37 
+ drivers/message/fusion/mptbase.c         |  467 
+ drivers/message/fusion/mptbase.h         |  198 
+ drivers/message/fusion/mptctl.c          |  266 
+ drivers/message/fusion/mptdebug.h        |  288 
+ drivers/message/fusion/mptfc.c           |  108 
+ drivers/message/fusion/mptlan.c          |    3 
+ drivers/message/fusion/mptsas.c          |  276 
+ drivers/message/fusion/mptscsih.c        |  446 
+ drivers/message/fusion/mptspi.c          |   53 
+ drivers/scsi/aacraid/aachba.c            |   66 
+ drivers/scsi/aacraid/aacraid.h           |    6 
+ drivers/scsi/aacraid/linit.c             |    9 
+ drivers/scsi/aacraid/nark.c              |    3 
+ drivers/scsi/aacraid/rkt.c               |    2 
+ drivers/scsi/aacraid/rx.c                |    2 
+ drivers/scsi/advansys.c                  |28261 +++++++++++++++----------------
+ drivers/scsi/aic7xxx/aic79xx_osm.c       |   23 
+ drivers/scsi/aic7xxx/aic7xxx_osm.c       |   11 
+ drivers/scsi/aic94xx/aic94xx_init.c      |    4 
+ drivers/scsi/iscsi_tcp.c                 |    2 
+ drivers/scsi/libiscsi.c                  |   47 
+ drivers/scsi/libsas/sas_ata.c            |   30 
+ drivers/scsi/libsas/sas_discover.c       |    3 
+ drivers/scsi/libsas/sas_dump.c           |    2 
+ drivers/scsi/libsas/sas_expander.c       |   18 
+ drivers/scsi/qla2xxx/qla_attr.c          |   39 
+ drivers/scsi/qla2xxx/qla_def.h           |    4 
+ drivers/scsi/qla2xxx/qla_init.c          |   19 
+ drivers/scsi/qla2xxx/qla_isr.c           |    4 
+ drivers/scsi/scsi_devinfo.c              |    3 
+ drivers/scsi/sym53c8xx_2/sym_glue.c      |    2 
+ include/linux/bsg.h                      |   10 
+ include/scsi/libiscsi.h                  |    3 
+ include/scsi/libsas.h                    |    2 
+ 40 files changed, 15957 insertions(+), 14923 deletions(-)
+
+James
+
 
