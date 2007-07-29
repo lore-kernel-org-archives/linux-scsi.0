@@ -1,348 +1,66 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH one more update] firewire: fw-sbp2: add support for multiple
-	logical units per target
-Date: Sun, 29 Jul 2007 19:40:07 +0200 (CEST)
-Message-ID: <tkrat.d56f9f36e0ddbdd3@s5r6.in-berlin.de>
-References: <tkrat.b8bfd55a441e870f@s5r6.in-berlin.de>
-	<tkrat.1c43b4e95fa76945@s5r6.in-berlin.de>
-	<tkrat.79f0390686f53591@s5r6.in-berlin.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [patch 0/6] aha152x.c - Cleanup, bugfixes, convert to accessors
+Date: Sun, 29 Jul 2007 22:10:39 +0300
+Message-ID: <46ACE62F.4070108@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.79f0390686f53591@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: =?iso-8859-1?Q?Kristian_H=F8gsberg?= <krh@redhat.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7993 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759679AbXG2TKz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jul 2007 15:10:55 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, =?ISO-8859-1?Q?=22J=FC?= =?ISO-8859-1?Q?rgen_E=2E_Fischer=22?= <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Randy Dunlap <rdunlap@xenotime.net>
 
-This makes multiple logical units on a single target accessible to
-fw-sbp2.  Successfully tested with the IOI FWB-IDE01AB dual LU bridge.
+In motivation for the !use_sg cleanup and use of accessors
+I needed to do some restructuring of the aha152x.c driver.
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
-update 2:
-   - rectify and refactor sbp2_probe
+The patchset has been tested by Randy Dunlap on a PCMCIA
+hardware based on aha152x.c. And some bugs where fixed
+in the process by Randy.
 
- drivers/firewire/fw-sbp2.c |  207 ++++++++++++++++++++++++-------------
- 1 file changed, 135 insertions(+), 72 deletions(-)
+The problematic parts were that the driver writes all over the
+scsi_cmnd members in couple of places. To untangle that I divided
+the work to stages for easier review and testing. I was very=20
+verbose at each patch explanation, mainly for myself to try and
+prove that the changes are sound.=20
 
-Index: linux/drivers/firewire/fw-sbp2.c
-===================================================================
---- linux.orig/drivers/firewire/fw-sbp2.c
-+++ linux/drivers/firewire/fw-sbp2.c
-@@ -71,6 +71,7 @@ static const char sbp2_driver_name[] = "
- 
- struct sbp2_logical_unit {
- 	struct sbp2_target *tgt;
-+	struct list_head tgt_list;
- 	struct scsi_device *sdev;
- 	struct fw_address_handler address_handler;
- 	struct list_head orb_list;
-@@ -100,7 +101,7 @@ struct sbp2_target {
- 
- 	unsigned workarounds;
- 	int starget_id;
--	struct sbp2_logical_unit lu[1];
-+	struct list_head lu_list;
- };
- 
- #define SBP2_MAX_SG_ELEMENT_LENGTH	0xf000
-@@ -113,7 +114,9 @@ struct sbp2_target {
- #define SBP2_DIRECTION_FROM_MEDIA	0x1
- 
- /* Unit directory keys */
--#define SBP2_FIRMWARE_REVISION		0x3c
-+#define SBP2_CSR_FIRMWARE_REVISION	0x3c
-+#define SBP2_CSR_LOGICAL_UNIT_NUMBER	0x14
-+#define SBP2_CSR_LOGICAL_UNIT_DIRECTORY	0xd4
- 
- /* Flags for detected oddities and brokeness */
- #define SBP2_WORKAROUND_128K_MAX_TRANS	0x1
-@@ -531,18 +534,21 @@ static int sbp2_agent_reset(struct sbp2_
- 	return 0;
- }
- 
--/*  FIXME: Loop over logical units */
- static void release_sbp2_device(struct kref *kref)
- {
- 	struct sbp2_target *tgt = container_of(kref, struct sbp2_target, kref);
--	struct sbp2_logical_unit *lu = tgt->lu;
-+	struct sbp2_logical_unit *lu, *next;
- 
--	if (lu->sdev)
--		scsi_remove_device(lu->sdev);
-+	list_for_each_entry_safe(lu, next, &tgt->lu_list, tgt_list) {
-+		if (lu->sdev)
-+			scsi_remove_device(lu->sdev);
- 
--	sbp2_send_management_orb(lu, tgt->node_id, lu->generation,
--				 SBP2_LOGOUT_REQUEST, lu->login_id, NULL);
--	fw_core_remove_address_handler(&lu->address_handler);
-+		sbp2_send_management_orb(lu, tgt->node_id, lu->generation,
-+				SBP2_LOGOUT_REQUEST, lu->login_id, NULL);
-+		fw_core_remove_address_handler(&lu->address_handler);
-+		list_del(&lu->tgt_list);
-+		kfree(lu);
-+	}
- 	fw_notify("removed sbp2 unit %s\n", tgt->unit->device.bus_id);
- 	put_device(&tgt->unit->device);
- 	kfree(tgt);
-@@ -623,70 +629,97 @@ static void sbp2_login(struct work_struc
- 	kref_put(&lu->tgt->kref, release_sbp2_device);
- }
- 
--static atomic_t sbp2_starget_id = ATOMIC_INIT(-1);
+[patch 1/6] aha152x in debug mode
+ Enabling debug prints would not compile...
+
+[patch 2/6] aha152x.c - use bounce buffer
+ Override .slave_alloc() to force use of a bounce buffer
+ This fixes a kernel crash with HIGHMEM=3Dy configs.
+
+[patch 3/6] aha152x.c - Preliminary fixes and comments
+ Some weird typos and some hard coded numbers made the code
+ very hard to understand.
+
+[patch 4/6]  aha152x.c - Clean Reset path
+ On the Reset code path the driver would save, write, than=20
+ restore scsi_cmnd members. Here I propose a solution that
+ does not need to do that.
+
+[patch 5/6] aha152x.c - Fix check_condition code-path
+  In case of a Status return from a target. The driver
+  would re-queue the command with a REQUEST_SENSE read.
+  Again save, write, restore. I cleaned that up to a stage
+  I can be happy with. Also while at it I fixed a BUG with
+  "resid".
+
+[patch 6/6] aha152x.c - use data accessors and !use_sg cleanup
+  And now everything is ready for this one.
+
+Jams I am not getting any response from J=FCrgen E. Fischer which
+is to my understanding the maintainer of this driver. With Randy's
+testing review, could we accept these changes?
+
+Boaz
+
 -
--/* FIXME: Loop over luns here. */
--static int sbp2_probe(struct device *dev)
-+static int sbp2_add_logical_unit(struct sbp2_target *tgt, int lun_entry)
- {
--	struct fw_unit *unit = fw_unit(dev);
--	struct fw_device *device = fw_device(unit->device.parent);
--	struct sbp2_target *tgt;
- 	struct sbp2_logical_unit *lu;
--	struct fw_csr_iterator ci;
--	int i, key, value, error;
--	u32 model, firmware_revision;
- 
--	error = -ENOMEM;
--	tgt = kzalloc(sizeof(*tgt), GFP_KERNEL);
--	if (!tgt)
--		goto out_error;
-+	lu = kmalloc(sizeof(*lu), GFP_KERNEL);
-+	if (!lu)
-+		return -ENOMEM;
- 
--	unit->device.driver_data = tgt;
--	tgt->unit = unit;
--	kref_init(&tgt->kref);
--	tgt->starget_id = atomic_inc_return(&sbp2_starget_id);
-+	lu->address_handler.length           = 0x100;
-+	lu->address_handler.address_callback = sbp2_status_write;
-+	lu->address_handler.callback_data    = lu;
- 
--	lu = tgt->lu;
--	lu->tgt = tgt;
--	lu->lun = 0;
-+	if (fw_core_add_address_handler(&lu->address_handler,
-+					&fw_high_memory_region) < 0) {
-+		kfree(lu);
-+		return -ENOMEM;
-+	}
-+
-+	lu->tgt  = tgt;
-+	lu->sdev = NULL;
-+	lu->lun  = lun_entry & 0xffff;
-+	lu->retries = 0;
- 	INIT_LIST_HEAD(&lu->orb_list);
-+	INIT_DELAYED_WORK(&lu->work, sbp2_login);
- 
--	lu->address_handler.length = 0x100;
--	lu->address_handler.address_callback = sbp2_status_write;
--	lu->address_handler.callback_data = lu;
-+	list_add_tail(&lu->tgt_list, &tgt->lu_list);
-+	return 0;
-+}
- 
--	error = fw_core_add_address_handler(&lu->address_handler,
--					    &fw_high_memory_region);
--	if (error < 0)
--		goto out_free;
--
--	error = fw_device_enable_phys_dma(device);
--	if (error < 0)
--		goto out_remove_address_handler;
-+static int sbp2_scan_logical_unit_dir(struct sbp2_target *tgt, u32 *directory)
-+{
-+	struct fw_csr_iterator ci;
-+	int key, value;
- 
--	/*
--	 * Scan unit directory to get management agent address,
--	 * firmware revison and model.  Initialize firmware_revision
--	 * and model to values that wont match anything in our table.
--	 */
--	firmware_revision = 0xff000000;
--	model = 0xff000000;
--	fw_csr_iterator_init(&ci, unit->directory);
-+	fw_csr_iterator_init(&ci, directory);
-+	while (fw_csr_iterator_next(&ci, &key, &value))
-+		if (key == SBP2_CSR_LOGICAL_UNIT_NUMBER &&
-+		    sbp2_add_logical_unit(tgt, value) < 0)
-+			return -ENOMEM;
-+	return 0;
-+}
-+
-+static int sbp2_scan_unit_dir(struct sbp2_target *tgt, u32 *directory,
-+			      u32 *model, u32 *firmware_revision)
-+{
-+	struct fw_device *dev = fw_device(tgt->unit->device.parent);
-+	struct fw_csr_iterator ci;
-+	int key, value;
-+	u32 *subdir;
-+
-+	fw_csr_iterator_init(&ci, directory);
- 	while (fw_csr_iterator_next(&ci, &key, &value)) {
- 		switch (key) {
-+
- 		case CSR_DEPENDENT_INFO | CSR_OFFSET:
--			tgt->management_agent_address =
--				0xfffff0000000ULL + 4 * value;
--			break;
--		case SBP2_FIRMWARE_REVISION:
--			firmware_revision = value;
-+			tgt->management_agent_address
-+					= 0xfffff0000000ULL + 4 * value;
- 			break;
-+
- 		case CSR_MODEL:
--			model = value;
-+			*model = value;
-+			break;
-+
-+		case SBP2_CSR_FIRMWARE_REVISION:
-+			*firmware_revision = value;
-+			break;
-+
-+		case SBP2_CSR_LOGICAL_UNIT_NUMBER:
-+			if (sbp2_add_logical_unit(tgt, value) < 0)
-+				return -ENOMEM;
-+			break;
-+
-+		case SBP2_CSR_LOGICAL_UNIT_DIRECTORY:
-+			subdir = ci.p + value;
-+			if (subdir <= dev->config_rom + 5 ||
-+			    subdir >= dev->config_rom + dev->config_rom_length)
-+				fw_error("logical unit dir out of bounds\n");
-+			else if (sbp2_scan_logical_unit_dir(tgt, subdir) < 0)
-+				return -ENOMEM;
- 			break;
- 		}
- 	}
-+	return 0;
-+}
-+
-+static void sbp2_init_workarounds(struct sbp2_target *tgt, u32 model,
-+				  u32 firmware_revision)
-+{
-+	int i;
- 
-+	tgt->workarounds = 0;
- 	for (i = 0; i < ARRAY_SIZE(sbp2_workarounds_table); i++) {
- 		if (sbp2_workarounds_table[i].firmware_revision !=
- 		    (firmware_revision & 0xffffff00))
-@@ -701,8 +734,40 @@ static int sbp2_probe(struct device *dev
- 	if (tgt->workarounds)
- 		fw_notify("Workarounds for node %s: 0x%x "
- 			  "(firmware_revision 0x%06x, model_id 0x%06x)\n",
--			  unit->device.bus_id,
-+			  tgt->unit->device.bus_id,
- 			  tgt->workarounds, firmware_revision, model);
-+}
-+
-+static atomic_t sbp2_starget_id = ATOMIC_INIT(-1);
-+
-+static int sbp2_probe(struct device *dev)
-+{
-+	struct fw_unit *unit = fw_unit(dev);
-+	struct sbp2_target *tgt;
-+	struct sbp2_logical_unit *lu;
-+	u32 model, firmware_revision;
-+
-+	tgt = kmalloc(sizeof(*tgt), GFP_KERNEL);
-+	if (!tgt)
-+		return -ENOMEM;
-+
-+	unit->device.driver_data = tgt;
-+	tgt->unit = unit;
-+	kref_init(&tgt->kref);
-+	INIT_LIST_HEAD(&tgt->lu_list);
-+
-+	/* Initialize to values that won't match anything in our table. */
-+	model = 0xff000000;
-+	firmware_revision = 0xff000000;
-+	if (sbp2_scan_unit_dir(tgt, unit->directory, &model,
-+			       &firmware_revision) < 0)
-+		goto out;
-+
-+	if (fw_device_enable_phys_dma(fw_device(unit->device.parent)) < 0)
-+		goto out;
-+
-+	sbp2_init_workarounds(tgt, model, firmware_revision);
-+	tgt->starget_id = atomic_inc_return(&sbp2_starget_id);
- 
- 	get_device(&unit->device);
- 
-@@ -710,18 +775,15 @@ static int sbp2_probe(struct device *dev
- 	 * We schedule work to do the login so we can easily reschedule retries.
- 	 * Always get the ref when scheduling work.
- 	 */
--	INIT_DELAYED_WORK(&lu->work, sbp2_login);
--	if (schedule_delayed_work(&lu->work, 0))
--		kref_get(&tgt->kref);
-+	list_for_each_entry(lu, &tgt->lu_list, tgt_list)
-+		if (schedule_delayed_work(&lu->work, 0))
-+			kref_get(&tgt->kref);
- 
- 	return 0;
-+ out:
-+	kref_put(&tgt->kref, release_sbp2_device);
- 
-- out_remove_address_handler:
--	fw_core_remove_address_handler(&lu->address_handler);
-- out_free:
--	kfree(tgt);
-- out_error:
--	return error;
-+	return -ENOMEM;
- }
- 
- static int sbp2_remove(struct device *dev)
-@@ -771,17 +833,18 @@ static void sbp2_reconnect(struct work_s
- 	kref_put(&lu->tgt->kref, release_sbp2_device);
- }
- 
--/*  FIXME: Loop over logical units */
- static void sbp2_update(struct fw_unit *unit)
- {
--	struct fw_device *device = fw_device(unit->device.parent);
- 	struct sbp2_target *tgt = unit->device.driver_data;
--	struct sbp2_logical_unit *lu = tgt->lu;
-+	struct sbp2_logical_unit *lu;
- 
--	lu->retries = 0;
--	fw_device_enable_phys_dma(device);
--	if (schedule_delayed_work(&lu->work, 0))
--		kref_get(&tgt->kref);
-+	fw_device_enable_phys_dma(fw_device(unit->device.parent));
-+
-+	list_for_each_entry(lu, &tgt->lu_list, tgt_list) {
-+		lu->retries = 0;
-+		if (schedule_delayed_work(&lu->work, 0))
-+			kref_get(&tgt->kref);
-+	}
- }
- 
- #define SBP2_UNIT_SPEC_ID_ENTRY	0x0000609e
-
--- 
-Stefan Richter
--=====-=-=== -=== ===-=
-http://arcgraph.de/sr/
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >>  http://get.splunk.com/
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
