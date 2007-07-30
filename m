@@ -1,37 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: advansys update 2007-07-30
-Date: Mon, 30 Jul 2007 14:05:13 -0400
-Message-ID: <46AE2859.8060408@garzik.org>
-References: <20070730165508.GH21219@parisc-linux.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] qla2xxx: fix panic caused by previous patch
+Date: Mon, 30 Jul 2007 12:17:13 -0600
+Message-ID: <20070730181713.GJ21219@parisc-linux.org>
+References: <46AE2763.2040608@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58602 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967322AbXG3SFT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jul 2007 14:05:19 -0400
-In-Reply-To: <20070730165508.GH21219@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:33561 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966832AbXG3SRP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 14:17:15 -0400
+Content-Disposition: inline
+In-Reply-To: <46AE2763.2040608@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-Matthew Wilcox wrote:
-> It's Monday morning, so time for another round of patches.
-> 
-> I'd like to thank jejb for merging the Lindent patch into Linus'
-> tree already.  And I'd like to thank jgarzik for being indefatigable
-> in his reviews.  I'd also like to thank jgarzik for telling me about
-> isa_register_driver which I wasn't previously aware of.
+On Mon, Jul 30, 2007 at 11:01:07AM -0700, Seokmann Ju wrote:
+> As a fix to the issue initiated by the email thread 'qla2xyz broken in current Linus tree',
+> Following patch should fix the problem.
 
-I'm too slack to re-review, but based on your description here, I'm 
-happy where things are at (relatively speaking, modulo the loads of 
-other stuff you already know about :))
+Confirmed.  Thanks!
 
-ACK
-
-	Jeff
-
-
-
+-- 
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
