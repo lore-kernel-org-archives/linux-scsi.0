@@ -1,53 +1,32 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] scsi: Fix SRP_ATTRS Kconfig
-Date: Mon, 30 Jul 2007 11:12:10 -0500
-Message-ID: <15156.0195409276$1185811948@news.gmane.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: [PATCH 3/5] Use mutex instead of semaphore in the SCSI Tape
+ driver
+Date: Mon, 30 Jul 2007 19:27:20 +0300 (EEST)
+Message-ID: <Pine.LNX.4.64.0707301925410.5391@kai.makisara.local>
+References: <20070729212909.GC3432@traven> <20070729213815.GF3432@traven>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:37948 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756518AbXG3QMP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:12:15 -0400
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e32.co.us.ibm.com (8.12.11.20060308/8.13.8) with ESMTP id l6UF66bU011351
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Jul 2007 11:06:06 -0400
-Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.4) with ESMTP id l6UGCDh3192782
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Jul 2007 10:12:13 -0600
-Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l6UGCCH9030396
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Jul 2007 10:12:13 -0600
+Received: from emh05.mail.saunalahti.fi ([62.142.5.111]:47351 "EHLO
+	emh05.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S966724AbXG3Q1Z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:27:25 -0400
+In-Reply-To: <20070729213815.GF3432@traven>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, brking@linux.vnet.ibm.com
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
+On Sun, 29 Jul 2007, Matthias Kaehlcke wrote:
 
-Since the srp transport class was added, if scsi tgt support is not
-selected, the current Kconfig allows for enabling a dependent device
-driver, such as ibmvscsi, which does a select of SCSI_SRP_ATTRS. This
-does not, however, enable SCSI_TGT also. This fixes this up to prevent
-the following build problem:
+> The SCSI Tape driver uses a semaphore as mutex. Use the mutex API
+> instead of the (binary) semaphore.
+> 
+> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> 
+Signed-off-by: Kai Makisara <kai.makisara@kolumbus.fi>
 
-ERROR: ".scsi_tgt_it_nexus_create" [drivers/scsi/scsi_transport_srp.ko] undefined!
-ERROR: ".scsi_tgt_it_nexus_destroy" [drivers/scsi/scsi_transport_srp.ko] undefined!
+Thanks.
 
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- scsi-pending-2.6.git-bjking1/drivers/scsi/Kconfig |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff -puN drivers/scsi/Kconfig~scsi_tgt_kconfig_fix drivers/scsi/Kconfig
---- scsi-pending-2.6.git/drivers/scsi/Kconfig~scsi_tgt_kconfig_fix	2007-07-30 10:44:34.000000000 -0500
-+++ scsi-pending-2.6.git-bjking1/drivers/scsi/Kconfig	2007-07-30 10:45:00.000000000 -0500
-@@ -291,7 +291,8 @@ source "drivers/scsi/libsas/Kconfig"
- 
- config SCSI_SRP_ATTRS
- 	tristate "SRP Transport Attributes"
--	depends on SCSI && SCSI_TGT
-+	depends on SCSI
-+	select SCSI_TGT
- 	help
- 	  If you wish to export transport-specific information about
- 	  each attached SRP device to sysfs, say Y.
-_
+-- 
+Kai
