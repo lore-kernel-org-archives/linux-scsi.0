@@ -1,79 +1,148 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: advansys update 2007-07-30
-Date: Mon, 30 Jul 2007 10:55:08 -0600
-Message-ID: <20070730165508.GH21219@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 1/23] advansys: version, copyright, etc
+Date: Mon, 30 Jul 2007 10:56:46 -0600
+Message-ID: <11858146283240-git-send-email-matthew@wil.cx>
+References: <20070730165508.GH21219@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41687 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758693AbXG3QzJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:55:09 -0400
-Content-Disposition: inline
+Received: from mail.tor.primus.ca ([216.254.136.21]:55957 "EHLO
+	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761845AbXG3Q5K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:10 -0400
+In-Reply-To: <20070730165508.GH21219@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>
 
+Update the version to 3.4
+Add my copyright
+Add myself to MAINTAINERS
+Exercise my right to change the license from dual BSD/GPL to GPL
+Don't force the definition of CONFIG_ISA on x86
+Always include pci.h
+Stop including stat.h
+---
+ MAINTAINERS             |    6 ++++++
+ drivers/scsi/advansys.c |   43 +++++++++++++++++++------------------------
+ 2 files changed, 25 insertions(+), 24 deletions(-)
 
-It's Monday morning, so time for another round of patches.
-
-I'd like to thank jejb for merging the Lindent patch into Linus'
-tree already.  And I'd like to thank jgarzik for being indefatigable
-in his reviews.  I'd also like to thank jgarzik for telling me about
-isa_register_driver which I wasn't previously aware of.
-
- - Moved ioport variable from EISA patch to request_region patch
- - Moved advansys_interrupt patch early in the sequence
- - Kill uses of asc_host array earlier
- - Added isa_driver 
- - Free wide memory in its own function (paired with advansys_wide_init_chip)
-   instead of freeing the memory in advansys_board_found and advansys_release
- - Added comment to advansys_eisa_probe about the mysterious inw()
- - Check pci_resource_len in advansys_pci_probe
- - No longer attempt to drive devices when a register_driver call fails
-
-I have the following todo list for this driver:
- - use_sg?
- - irq number shenanigan
- - replace spin_lock_irqsave with spin_lock in interrupt handler
- - should boardp->lock just be using the host lock?
- - delete no-ops DvcEnterCritical and DvcLeaveCritical
- - define DRV_NAME "advansys"
- - add __FUNCTION__ to ASC_PRINTx and ASC_DBGx
- - sort out CONFIG_PCI/CONFIG_EISA/CONFIG_ISA situation
- - Get rid of more prototypes
-
-as well as the FIXME comment in the driver source:
-/* FIXME:
- *
- *  1. Although all of the necessary command mapping places have the
- *     appropriate dma_map.. APIs, the driver still processes its internal
- *     queue using bus_to_virt() and virt_to_bus() which are illegal under
- *     the API.  The entire queue processing structure will need to be
- *     altered to fix this.
- *  2. Need to add memory mapping workaround. Test the memory mapping.
- *     If it doesn't work revert to I/O port access. Can a test be done
- *     safely?
- *  3. Handle an interrupt not working. Keep an interrupt counter in
- *     the interrupt handler. In the timeout function if the interrupt
- *     has not occurred then print a message and run in polled mode.
- *  4. Need to add support for target mode commands, cf. CAM XPT.
- *  5. check DMA mapping functions for failure
- *  6. Remove internal queueing
- *  7. Use scsi_transport_spi
- *  8. advansys_info is not safe against multiple simultaneous callers
- *  9. Kill boardp->id
- * 10. Add module_param to override ISA/VLB ioport array
- */
-
-(why do I have two lists?  Not quite sure.  The one outside the driver
-is more like notes to myself)
-
-As before the patches will be available as a reply to this mail, and at
-http://www.kernel.org/pub/linux/kernel/people/willy/advansys-2007-07-30/
-and http://git.kernel.org/?p=linux/kernel/git/willy/advansys.git;a=shortlog
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index babd00b..f10c9ae 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -282,6 +282,12 @@ P:	Colin Leroy
+ M:	colin@colino.net
+ S:	Maintained
+ 
++ADVANSYS SCSI DRIVER
++P:	Matthew Wilcox
++M:	matthew@wil.cx
++L:	linux-scsi@vger.kernel.org
++S:	Maintained
++
+ AEDSP16 DRIVER
+ P:	Riccardo Facchetti
+ M:	fizban@tin.it
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 79c0b6e..8ace30e 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -1,20 +1,23 @@
+-#define ASC_VERSION "3.3K"	/* AdvanSys Driver Version */
++#define ASC_VERSION "3.4"	/* AdvanSys Driver Version */
+ 
+ /*
+  * advansys.c - Linux Host Driver for AdvanSys SCSI Adapters
+  *
+  * Copyright (c) 1995-2000 Advanced System Products, Inc.
+  * Copyright (c) 2000-2001 ConnectCom Solutions, Inc.
++ * Copyright (c) 2007 Matthew Wilcox <matthew@wil.cx>
+  * All Rights Reserved.
+  *
+- * Redistribution and use in source and binary forms, with or without
+- * modification, are permitted provided that redistributions of source
+- * code retain the above copyright notice and this comment without
+- * modification.
+- *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ */
++
++/*
+  * As of March 8, 2000 Advanced System Products, Inc. (AdvanSys)
+  * changed its name to ConnectCom Solutions, Inc.
+- *
++ * On June 18, 2001 Initio Corp. acquired ConnectCom's SCSI assets
+  */
+ 
+ /*
+@@ -755,11 +758,6 @@
+  */
+ 
+ #include <linux/module.h>
+-
+-#if defined(CONFIG_X86) && !defined(CONFIG_ISA)
+-#define CONFIG_ISA
+-#endif /* CONFIG_X86 && !CONFIG_ISA */
+-
+ #include <linux/string.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+@@ -771,7 +769,7 @@
+ #include <linux/proc_fs.h>
+ #include <linux/init.h>
+ #include <linux/blkdev.h>
+-#include <linux/stat.h>
++#include <linux/pci.h>
+ #include <linux/spinlock.h>
+ #include <linux/dma-mapping.h>
+ 
+@@ -779,6 +777,12 @@
+ #include <asm/system.h>
+ #include <asm/dma.h>
+ 
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
++#include <scsi/scsi_tcq.h>
++#include <scsi/scsi.h>
++#include <scsi/scsi_host.h>
++
+ /* FIXME: (by jejb@steeleye.com) This warning is present for two
+  * reasons:
+  *
+@@ -793,15 +797,6 @@
+  */
+ #warning this driver is still not properly converted to the DMA API
+ 
+-#include <scsi/scsi_cmnd.h>
+-#include <scsi/scsi_device.h>
+-#include <scsi/scsi_tcq.h>
+-#include <scsi/scsi.h>
+-#include <scsi/scsi_host.h>
+-#ifdef CONFIG_PCI
+-#include <linux/pci.h>
+-#endif /* CONFIG_PCI */
+-
+ /*
+  * --- Driver Options
+  */
+@@ -17772,8 +17767,6 @@ static void AdvInquiryHandling(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 	}
+ }
+ 
+-MODULE_LICENSE("Dual BSD/GPL");
+-
+ static struct Scsi_Host *__devinit
+ advansys_board_found(int iop, struct device *dev, int bus_type)
+ {
+@@ -19029,3 +19022,5 @@ static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
+ 
+ MODULE_DEVICE_TABLE(pci, advansys_pci_tbl);
+ #endif /* CONFIG_PCI */
++
++MODULE_LICENSE("GPL");
 -- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.4.4.4
+
