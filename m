@@ -1,152 +1,565 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 18/23] advansys: Stop using n_io_port in Scsi_Host structure
-Date: Mon, 30 Jul 2007 10:57:03 -0600
-Message-ID: <11858146281160-git-send-email-matthew@wil.cx>
-References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx> <11858146282332-git-send-email-matthew@wil.cx> <11858146283924-git-send-email-matthew@wil.cx> <1185814628436-git-send-email-matthew@wil.cx> <11858146281677-git-send-email-matthew@wil.cx> <11858146282603-git-send-email-matthew@wil.cx> <11858146281750-git-send-email-matthew@wil.cx> <11858146282891-git-send-email-matthew@wil.cx> <11858146284113-git-send-email-matthew@wil.cx>
+Subject: [PATCH 15/23] advansys: misc reformatting
+Date: Mon, 30 Jul 2007 10:57:00 -0600
+Message-ID: <11858146281750-git-send-email-matthew@wil.cx>
+References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx> <11858146282332-git-send-email-matthew@wil.cx> <11858146283924-git-send-email-matthew@wil.cx> <1185814628436-git-send-email-matthew@wil.cx> <11858146281677-git-send-email-matthew@wil.cx> <11858146282603-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:47055 "EHLO
+Received: from mail.tor.primus.ca ([216.254.136.21]:47036 "EHLO
 	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936900AbXG3Q5M (ORCPT
+	with ESMTP id S936946AbXG3Q5M (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:12 -0400
-In-Reply-To: <11858146284113-git-send-email-matthew@wil.cx>
+In-Reply-To: <11858146282603-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-n_io_port isn't suitable for advansys because some of the boards have
-more than 255 bytes of io port space.  There's already a driver-private
-replacement, asc_n_io_port, but for some reason the driver was still
-setting and occasionally reporting n_io_port.
+Remove some useless forward declarations
+Reformat some comments, debug messages, and the occasional piece of real code
+Removal of unnecessary braces
+Remove duplicate setting of shost->irq
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |   38 ++++++++------------------------------
- 1 files changed, 8 insertions(+), 30 deletions(-)
+ drivers/scsi/advansys.c |  260 ++++++++++++++++++++---------------------------
+ 1 files changed, 110 insertions(+), 150 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 2f37076..e79f795 100644
+index 5885ce4..dc9dca3 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -2289,10 +2289,8 @@ typedef struct adveep_38C1600_config {
- #define BIOS_CTRL_AIPP_DIS           0x2000
- 
- #define ADV_3550_MEMSIZE   0x2000	/* 8 KB Internal Memory */
--#define ADV_3550_IOLEN     0x40	/* I/O Port Range in bytes */
- 
- #define ADV_38C0800_MEMSIZE  0x4000	/* 16 KB Internal Memory */
--#define ADV_38C0800_IOLEN    0x100	/* I/O Port Range in bytes */
+@@ -1815,9 +1815,6 @@ static void AscEnableInterrupt(PortAddr);
+ static void AscSetBank(PortAddr, uchar);
+ static int AscResetChipAndScsiBus(ASC_DVC_VAR *);
+ #ifdef CONFIG_ISA
+-static ushort AscGetIsaDmaChannel(PortAddr);
+-static ushort AscSetIsaDmaChannel(PortAddr, ushort);
+-static uchar AscSetIsaDmaSpeed(PortAddr, uchar);
+ static uchar AscGetIsaDmaSpeed(PortAddr);
+ #endif /* CONFIG_ISA */
+ static uchar AscReadLramByte(PortAddr, ushort);
+@@ -1862,18 +1859,11 @@ static int AscIsrQDone(ASC_DVC_VAR *);
+ static ushort AscGetEisaChipCfg(PortAddr);
+ #endif /* CONFIG_ISA */
+ static uchar AscGetChipScsiCtrl(PortAddr);
+-static uchar AscSetChipScsiID(PortAddr, uchar);
+ static uchar AscGetChipVersion(PortAddr, ushort);
+-static ushort AscGetChipBusType(PortAddr);
+ static ASC_DCNT AscLoadMicroCode(PortAddr, ushort, uchar *, ushort);
+-static int AscFindSignature(PortAddr);
+ static void AscToggleIRQAct(PortAddr);
+-static uchar AscGetChipIRQ(PortAddr, ushort);
+-static uchar AscSetChipIRQ(PortAddr, uchar, ushort);
+-static ushort AscGetChipBiosAddress(PortAddr, ushort);
+ static inline ulong DvcEnterCritical(void);
+ static inline void DvcLeaveCritical(ulong);
+-static ushort AscGetChipBiosAddress(PortAddr, ushort);
+ static void DvcSleepMilliSecond(ASC_DCNT);
+ static void DvcDelayNanoSecond(ASC_DVC_VAR *, ASC_DCNT);
+ static void DvcPutScsiQ(PortAddr, ushort, uchar *, int);
+@@ -1887,7 +1877,6 @@ static int AscSgListToQueue(int);
+ #ifdef CONFIG_ISA
+ static void AscEnableIsaDma(uchar);
+ #endif /* CONFIG_ISA */
+-static ASC_DCNT AscGetMaxDmaCount(ushort);
+ static const char *advansys_info(struct Scsi_Host *shost);
  
  /*
-  * XXX - Since ASC38C1600 Rev.3 has a local RAM failure issue, there is
-@@ -2302,8 +2300,6 @@ typedef struct adveep_38C1600_config {
-  * #define ADV_38C1600_MEMSIZE  0x8000L   * 32 KB Internal Memory *
-  */
- #define ADV_38C1600_MEMSIZE  0x4000	/* 16 KB Internal Memory */
--#define ADV_38C1600_IOLEN    0x100	/* I/O Port Range 256 bytes */
--#define ADV_38C1600_MEMLEN   0x1000	/* Memory Range 4KB bytes */
+@@ -3710,10 +3699,6 @@ static int asc_prt_adv_board_info(struct Scsi_Host *, char *, int);
+ static int asc_prt_line(char *, int, char *fmt, ...);
+ #endif /* CONFIG_PROC_FS */
  
- /*
-  * Byte I/O register address from base of 'iop_base'.
-@@ -3952,7 +3948,6 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 	ASC_DVC_VAR *asc_dvc_varp;
- 	ADV_DVC_VAR *adv_dvc_varp;
- 	char *busname;
--	int iolen;
- 	char *widename = NULL;
- 
- 	boardp = ASC_BOARDP(shost);
-@@ -3966,13 +3961,12 @@ static const char *advansys_info(struct Scsi_Host *shost)
+-/* Declaration for Asc Library internal functions referenced by driver. */
+-static int AscFindSignature(PortAddr);
+-static ushort AscGetEEPConfig(PortAddr, ASCEEP_CONFIG *, ushort);
+-
+ /* Statistics function prototypes. */
+ #ifdef ADVANSYS_STATS
+ #ifdef CONFIG_PROC_FS
+@@ -3822,8 +3807,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 		cp = boardp->prtbuf;
+ 		cplen = asc_prt_adv_bios(shost, cp, ASC_PRTBUF_SIZE);
+ 		ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+-		cnt =
+-		    asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
++		cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
+ 				  cplen);
+ 		totcnt += cnt;
+ 		leftlen -= cnt;
+@@ -3910,11 +3894,10 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	for (tgt_id = 0; tgt_id <= ADV_MAX_TID; tgt_id++) {
+ 		cp = boardp->prtbuf;
+ 		cplen = asc_prt_target_stats(shost, tgt_id, cp,
+-							ASC_PRTBUF_SIZE);
++					     ASC_PRTBUF_SIZE);
+ 		ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
+-		cnt =
+-		    asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
+-				  cplen);
++		cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
++				    cplen);
+ 		totcnt += cnt;
+ 		leftlen -= cnt;
+ 		if (leftlen == 0) {
+@@ -4004,15 +3987,14 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 				}
  			} else {
- 				busname = "ISA";
+ 				busname = "?";
+-				ASC_PRINT2
+-				    ("advansys_info: board %d: unknown bus type %d\n",
+-				     boardp->id, asc_dvc_varp->bus_type);
++				ASC_PRINT2("advansys_info: board %d: unknown "
++					   "bus type %d\n", boardp->id,
++					   asc_dvc_varp->bus_type);
  			}
--			/* Don't reference 'shost->n_io_port'; It may be truncated. */
- 			sprintf(info,
- 				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X, DMA 0x%X",
- 				ASC_VERSION, busname,
- 				(ulong)shost->io_port,
--				(ulong)shost->io_port + boardp->asc_n_io_port -
--				1, shost->irq, shost->dma_channel);
-+				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
-+				shost->irq, shost->dma_channel);
- 		} else {
- 			if (asc_dvc_varp->bus_type & ASC_IS_VL) {
- 				busname = "VL";
-@@ -3991,12 +3985,11 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 					   "bus type %d\n", boardp->id,
- 					   asc_dvc_varp->bus_type);
- 			}
--			/* Don't reference 'shost->n_io_port'; It may be truncated. */
+ 			/* Don't reference 'shost->n_io_port'; It may be truncated. */
  			sprintf(info,
  				"AdvanSys SCSI %s: %s: IO 0x%lX-0x%lX, IRQ 0x%X",
- 				ASC_VERSION, busname, (ulong)shost->io_port,
--				(ulong)shost->io_port + boardp->asc_n_io_port -
--				1, shost->irq);
-+				(ulong)shost->io_port + ASC_IOADR_GAP - 1,
-+				shost->irq);
+-				ASC_VERSION, busname,
+-				(ulong)shost->io_port,
++				ASC_VERSION, busname, (ulong)shost->io_port,
+ 				(ulong)shost->io_port + boardp->asc_n_io_port -
+ 				1, shost->irq);
  		}
- 	} else {
- 		/*
-@@ -4008,19 +4001,16 @@ static const char *advansys_info(struct Scsi_Host *shost)
- 		 */
- 		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
- 		if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
--			iolen = ADV_3550_IOLEN;
- 			widename = "Ultra-Wide";
- 		} else if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800) {
--			iolen = ADV_38C0800_IOLEN;
- 			widename = "Ultra2-Wide";
+@@ -4193,18 +4175,16 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 
+ 		/* Refer to ASC_IERR_* defintions for meaning of 'err_code'. */
+ 		if (asc_dvc_varp->err_code) {
+-			ASC_PRINT2
+-			    ("advansys_reset: board %d: SCSI bus reset error: 0x%x\n",
+-			     boardp->id, asc_dvc_varp->err_code);
++			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
++				   "error: 0x%x\n", boardp->id,
++				   asc_dvc_varp->err_code);
+ 			ret = FAILED;
+ 		} else if (status) {
+-			ASC_PRINT2
+-			    ("advansys_reset: board %d: SCSI bus reset warning: 0x%x\n",
+-			     boardp->id, status);
++			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
++				   "warning: 0x%x\n", boardp->id, status);
  		} else {
--			iolen = ADV_38C1600_IOLEN;
- 			widename = "Ultra3-Wide";
+-			ASC_PRINT1
+-			    ("advansys_reset: board %d: SCSI bus reset successful.\n",
+-			     boardp->id);
++			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
++				   "successful.\n", boardp->id);
  		}
- 		sprintf(info,
- 			"AdvanSys SCSI %s: PCI %s: PCIMEM 0x%lX-0x%lX, IRQ 0x%X",
- 			ASC_VERSION, widename, (ulong)adv_dvc_varp->iop_base,
--			(ulong)adv_dvc_varp->iop_base + iolen - 1, shost->irq);
-+			(ulong)adv_dvc_varp->iop_base + boardp->asc_n_io_port - 1, shost->irq);
+ 
+ 		ASC_DBG(1, "advansys_reset: after AscInitAsc1000Driver()\n");
+@@ -4225,15 +4205,13 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 		ASC_DBG(1, "advansys_reset: before AdvResetChipAndSB()\n");
+ 		switch (AdvResetChipAndSB(adv_dvc_varp)) {
+ 		case ASC_TRUE:
+-			ASC_PRINT1
+-			    ("advansys_reset: board %d: SCSI bus reset successful.\n",
+-			     boardp->id);
++			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
++				   "successful.\n", boardp->id);
+ 			break;
+ 		case ASC_FALSE:
+ 		default:
+-			ASC_PRINT1
+-			    ("advansys_reset: board %d: SCSI bus reset error.\n",
+-			     boardp->id);
++			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
++				   "error.\n", boardp->id);
+ 			ret = FAILED;
+ 			break;
+ 		}
+@@ -4254,8 +4232,8 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 	 * is returned in 'last_scp'.
+ 	 */
+ 	if (done_scp == NULL) {
+-		done_scp =
+-		    asc_dequeue_list(&boardp->active, &last_scp, ASC_TID_ALL);
++		done_scp = asc_dequeue_list(&boardp->active, &last_scp,
++					    ASC_TID_ALL);
+ 		for (tscp = done_scp; tscp; tscp = REQPNEXT(tscp)) {
+ 			tscp->result = HOST_BYTE(DID_RESET);
+ 		}
+@@ -4281,8 +4259,8 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 	 * to DID_RESET.
+ 	 */
+ 	if (done_scp == NULL) {
+-		done_scp =
+-		    asc_dequeue_list(&boardp->waiting, &last_scp, ASC_TID_ALL);
++		done_scp = asc_dequeue_list(&boardp->waiting, &last_scp,
++					    ASC_TID_ALL);
+ 		for (tscp = done_scp; tscp; tscp = REQPNEXT(tscp)) {
+ 			tscp->result = HOST_BYTE(DID_RESET);
+ 		}
+@@ -4313,9 +4291,8 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 	/*
+ 	 * Complete all the 'done_scp' requests.
+ 	 */
+-	if (done_scp != NULL) {
++	if (done_scp)
+ 		asc_scsi_done_list(done_scp);
+-	}
+ 
+ 	ASC_DBG1(1, "advansys_reset: ret %d\n", ret);
+ 
+@@ -4829,33 +4806,33 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 		case ASC_NOERROR:
+ 			ASC_STATS(scp->device->host, exe_noerror);
+ 			/*
+-			 * Increment monotonically increasing per device successful
+-			 * request counter. Wrapping doesn't matter.
++			 * Increment monotonically increasing per device
++			 * successful request counter. Wrapping doesn't matter.
+ 			 */
+ 			boardp->reqcnt[scp->device->id]++;
+ 			asc_enqueue(&boardp->active, scp, ASC_BACK);
+-			ASC_DBG(1,
+-				"asc_execute_scsi_cmnd: AscExeScsiQueue(), ASC_NOERROR\n");
++			ASC_DBG(1, "asc_execute_scsi_cmnd: AscExeScsiQueue(), "
++				"ASC_NOERROR\n");
+ 			break;
+ 		case ASC_BUSY:
+ 			/*
+-			 * Caller will enqueue request on the target's waiting queue
+-			 * and retry later.
++			 * Caller will enqueue request on the target's waiting
++			 * queue and retry later.
+ 			 */
+ 			ASC_STATS(scp->device->host, exe_busy);
+ 			break;
+ 		case ASC_ERROR:
+-			ASC_PRINT2
+-			    ("asc_execute_scsi_cmnd: board %d: AscExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
+-			     boardp->id, asc_dvc_varp->err_code);
++			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
++				"AscExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
++				boardp->id, asc_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_error);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+ 			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			break;
+ 		default:
+-			ASC_PRINT2
+-			    ("asc_execute_scsi_cmnd: board %d: AscExeScsiQueue() unknown, err_code 0x%x\n",
+-			     boardp->id, asc_dvc_varp->err_code);
++			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
++				"AscExeScsiQueue() unknown, err_code 0x%x\n",
++				boardp->id, asc_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_unknown);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+ 			asc_enqueue(&boardp->done, scp, ASC_BACK);
+@@ -4875,20 +4852,21 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 		 */
+ 		switch (adv_build_req(boardp, scp, &adv_scsiqp)) {
+ 		case ASC_NOERROR:
+-			ASC_DBG(3,
+-				"asc_execute_scsi_cmnd: adv_build_req ASC_NOERROR\n");
++			ASC_DBG(3, "asc_execute_scsi_cmnd: adv_build_req "
++				"ASC_NOERROR\n");
+ 			break;
+ 		case ASC_BUSY:
+-			ASC_DBG(1,
+-				"asc_execute_scsi_cmnd: adv_build_req ASC_BUSY\n");
++			ASC_DBG(1, "asc_execute_scsi_cmnd: adv_build_req "
++				"ASC_BUSY\n");
+ 			/*
+-			 * If busy is returned the request has not been enqueued.
+-			 * It will be enqueued by the caller on the target's waiting
+-			 * queue and retried later.
++			 * If busy is returned the request has not been
++			 * enqueued.  It will be enqueued by the caller on the
++			 * target's waiting queue and retried later.
+ 			 *
+-			 * The asc_stats fields 'adv_build_noreq' and 'adv_build_nosg'
+-			 * count wide board busy conditions. They are updated in
+-			 * adv_build_req and adv_get_sglist, respectively.
++			 * The asc_stats fields 'adv_build_noreq' and
++			 * 'adv_build_nosg' count wide board busy conditions.
++			 * They are updated in adv_build_req and
++			 * adv_get_sglist, respectively.
+ 			 */
+ 			return ASC_BUSY;
+ 		case ASC_ERROR:
+@@ -4898,8 +4876,8 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 			 * by the caller.
+ 			 */
+ 		default:
+-			ASC_DBG(1,
+-				"asc_execute_scsi_cmnd: adv_build_req ASC_ERROR\n");
++			ASC_DBG(1, "asc_execute_scsi_cmnd: adv_build_req "
++				"ASC_ERROR\n");
+ 			ASC_STATS(scp->device->host, build_error);
+ 			return ASC_ERROR;
+ 		}
+@@ -4912,33 +4890,33 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 		case ASC_NOERROR:
+ 			ASC_STATS(scp->device->host, exe_noerror);
+ 			/*
+-			 * Increment monotonically increasing per device successful
+-			 * request counter. Wrapping doesn't matter.
++			 * Increment monotonically increasing per device
++			 * successful request counter. Wrapping doesn't matter.
+ 			 */
+ 			boardp->reqcnt[scp->device->id]++;
+ 			asc_enqueue(&boardp->active, scp, ASC_BACK);
+-			ASC_DBG(1,
+-				"asc_execute_scsi_cmnd: AdvExeScsiQueue(), ASC_NOERROR\n");
++			ASC_DBG(1, "asc_execute_scsi_cmnd: AdvExeScsiQueue(), "
++				"ASC_NOERROR\n");
+ 			break;
+ 		case ASC_BUSY:
+ 			/*
+-			 * Caller will enqueue request on the target's waiting queue
+-			 * and retry later.
++			 * Caller will enqueue request on the target's waiting
++			 * queue and retry later.
+ 			 */
+ 			ASC_STATS(scp->device->host, exe_busy);
+ 			break;
+ 		case ASC_ERROR:
+-			ASC_PRINT2
+-			    ("asc_execute_scsi_cmnd: board %d: AdvExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
+-			     boardp->id, adv_dvc_varp->err_code);
++			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
++				"AdvExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
++				boardp->id, adv_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_error);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+ 			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			break;
+ 		default:
+-			ASC_PRINT2
+-			    ("asc_execute_scsi_cmnd: board %d: AdvExeScsiQueue() unknown, err_code 0x%x\n",
+-			     boardp->id, adv_dvc_varp->err_code);
++			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
++				"AdvExeScsiQueue() unknown, err_code 0x%x\n",
++				boardp->id, adv_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_unknown);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+ 			asc_enqueue(&boardp->done, scp, ASC_BACK);
+@@ -4981,9 +4959,9 @@ static int asc_build_req(asc_board_t *boardp, struct scsi_cmnd *scp)
+ 	 * is supported.
+ 	 */
+ 	if (scp->cmd_len > ASC_MAX_CDB_LEN) {
+-		ASC_PRINT3
+-		    ("asc_build_req: board %d: cmd_len %d > ASC_MAX_CDB_LEN  %d\n",
+-		     boardp->id, scp->cmd_len, ASC_MAX_CDB_LEN);
++		ASC_PRINT3("asc_build_req: board %d: cmd_len %d > "
++			"ASC_MAX_CDB_LEN %d\n", boardp->id, scp->cmd_len,
++			ASC_MAX_CDB_LEN);
+ 		scp->result = HOST_BYTE(DID_ERROR);
+ 		asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 		return ASC_ERROR;
+@@ -7330,27 +7308,27 @@ DvcGetQinfo(PortAddr iop_base, ushort s_addr, uchar *inbuf, int words)
+  * Return the BIOS address of the adapter at the specified
+  * I/O port and with the specified bus type.
+  */
+-static ushort __devinit AscGetChipBiosAddress(PortAddr iop_base, ushort bus_type)
++static unsigned short __devinit
++AscGetChipBiosAddress(PortAddr iop_base, unsigned short bus_type)
+ {
+-	ushort cfg_lsw;
+-	ushort bios_addr;
++	unsigned short cfg_lsw;
++	unsigned short bios_addr;
+ 
+ 	/*
+ 	 * The PCI BIOS is re-located by the motherboard BIOS. Because
+ 	 * of this the driver can not determine where a PCI BIOS is
+ 	 * loaded and executes.
+ 	 */
+-	if (bus_type & ASC_IS_PCI) {
+-		return (0);
+-	}
++	if (bus_type & ASC_IS_PCI)
++		return 0;
++
+ #ifdef CONFIG_ISA
+ 	if ((bus_type & ASC_IS_EISA) != 0) {
+ 		cfg_lsw = AscGetEisaChipCfg(iop_base);
+ 		cfg_lsw &= 0x000F;
+-		bios_addr = (ushort)(ASC_BIOS_MIN_ADDR +
+-				     (cfg_lsw * ASC_BIOS_BANK_SIZE));
+-		return (bios_addr);
+-	}			/* if */
++		bios_addr = ASC_BIOS_MIN_ADDR + cfg_lsw * ASC_BIOS_BANK_SIZE;
++		return bios_addr;
++	}
+ #endif /* CONFIG_ISA */
+ 
+ 	cfg_lsw = AscGetChipCfgLsw(iop_base);
+@@ -7358,13 +7336,10 @@ static ushort __devinit AscGetChipBiosAddress(PortAddr iop_base, ushort bus_type
+ 	/*
+ 	 *  ISA PnP uses the top bit as the 32K BIOS flag
+ 	 */
+-	if (bus_type == ASC_IS_ISAPNP) {
++	if (bus_type == ASC_IS_ISAPNP)
+ 		cfg_lsw &= 0x7FFF;
+-	}
+-	/* if */
+-	bios_addr = (ushort)(((cfg_lsw >> 12) * ASC_BIOS_BANK_SIZE) +
+-			     ASC_BIOS_MIN_ADDR);
+-	return (bios_addr);
++	bios_addr = ASC_BIOS_MIN_ADDR + (cfg_lsw >> 12) * ASC_BIOS_BANK_SIZE;
++	return bios_addr;
+ }
+ 
+ /*
+@@ -7661,10 +7636,8 @@ static void asc_prt_scsi_cmnd(struct scsi_cmnd *s)
+ 
+ 	printk(" timeout_per_command %d\n", s->timeout_per_command);
+ 
+-	printk
+-	    (" scsi_done 0x%lx, done 0x%lx, host_scribble 0x%lx, result 0x%x\n",
+-	     (ulong)s->scsi_done, (ulong)s->done, (ulong)s->host_scribble,
+-	     s->result);
++	printk(" scsi_done 0x%p, done 0x%p, host_scribble 0x%p, result 0x%x\n",
++		s->scsi_done, s->done, s->host_scribble, s->result);
+ 
+ 	printk(" tag %u, pid %u\n", (unsigned)s->tag, (unsigned)s->pid);
+ }
+@@ -7676,34 +7649,31 @@ static void asc_prt_asc_dvc_var(ASC_DVC_VAR *h)
+ {
+ 	printk("ASC_DVC_VAR at addr 0x%lx\n", (ulong)h);
+ 
+-	printk
+-	    (" iop_base 0x%x, err_code 0x%x, dvc_cntl 0x%x, bug_fix_cntl %d,\n",
+-	     h->iop_base, h->err_code, h->dvc_cntl, h->bug_fix_cntl);
++	printk(" iop_base 0x%x, err_code 0x%x, dvc_cntl 0x%x, bug_fix_cntl "
++	       "%d,\n", h->iop_base, h->err_code, h->dvc_cntl, h->bug_fix_cntl);
+ 
+-	printk
+-	    (" bus_type %d, isr_callback 0x%lx, exe_callback 0x%lx, init_sdtr 0x%x,\n",
+-	     h->bus_type, (ulong)h->isr_callback, (ulong)h->exe_callback,
+-	     (unsigned)h->init_sdtr);
++	printk(" bus_type %d, isr_callback 0x%p, exe_callback 0x%p, "
++	       "init_sdtr 0x%x,\n", h->bus_type, h->isr_callback,
++	       h->exe_callback, (unsigned)h->init_sdtr);
+ 
+-	printk
+-	    (" sdtr_done 0x%x, use_tagged_qng 0x%x, unit_not_ready 0x%x, chip_no 0x%x,\n",
+-	     (unsigned)h->sdtr_done, (unsigned)h->use_tagged_qng,
+-	     (unsigned)h->unit_not_ready, (unsigned)h->chip_no);
++	printk(" sdtr_done 0x%x, use_tagged_qng 0x%x, unit_not_ready 0x%x, "
++	       "chip_no 0x%x,\n", (unsigned)h->sdtr_done,
++	       (unsigned)h->use_tagged_qng, (unsigned)h->unit_not_ready,
++	       (unsigned)h->chip_no);
+ 
+-	printk
+-	    (" queue_full_or_busy 0x%x, start_motor 0x%x, scsi_reset_wait %u,\n",
+-	     (unsigned)h->queue_full_or_busy, (unsigned)h->start_motor,
+-	     (unsigned)h->scsi_reset_wait);
++	printk(" queue_full_or_busy 0x%x, start_motor 0x%x, scsi_reset_wait "
++	       "%u,\n", (unsigned)h->queue_full_or_busy,
++	       (unsigned)h->start_motor, (unsigned)h->scsi_reset_wait);
+ 
+-	printk
+-	    (" is_in_int %u, max_total_qng %u, cur_total_qng %u, in_critical_cnt %u,\n",
+-	     (unsigned)h->is_in_int, (unsigned)h->max_total_qng,
+-	     (unsigned)h->cur_total_qng, (unsigned)h->in_critical_cnt);
++	printk(" is_in_int %u, max_total_qng %u, cur_total_qng %u, "
++	       "in_critical_cnt %u,\n", (unsigned)h->is_in_int,
++	       (unsigned)h->max_total_qng, (unsigned)h->cur_total_qng,
++	       (unsigned)h->in_critical_cnt);
+ 
+-	printk
+-	    (" last_q_shortage %u, init_state 0x%x, no_scam 0x%x, pci_fix_asyn_xfer 0x%x,\n",
+-	     (unsigned)h->last_q_shortage, (unsigned)h->init_state,
+-	     (unsigned)h->no_scam, (unsigned)h->pci_fix_asyn_xfer);
++	printk(" last_q_shortage %u, init_state 0x%x, no_scam 0x%x, "
++	       "pci_fix_asyn_xfer 0x%x,\n", (unsigned)h->last_q_shortage,
++	       (unsigned)h->init_state, (unsigned)h->no_scam,
++	       (unsigned)h->pci_fix_asyn_xfer);
+ 
+ 	printk(" cfg 0x%lx, irq_no 0x%x\n", (ulong)h->cfg, (unsigned)h->irq_no);
+ }
+@@ -8007,27 +7977,28 @@ static uchar __devinit AscSetChipScsiID(PortAddr iop_base, uchar new_host_id)
+ 	return (AscGetChipScsiID(iop_base));
+ }
+ 
+-static uchar __devinit AscGetChipScsiCtrl(PortAddr iop_base)
++static unsigned char __devinit AscGetChipScsiCtrl(PortAddr iop_base)
+ {
+-	uchar sc;
++	unsigned char sc;
+ 
+ 	AscSetBank(iop_base, 1);
+ 	sc = inp(iop_base + IOP_REG_SC);
+ 	AscSetBank(iop_base, 0);
+-	return (sc);
++	return sc;
+ }
+ 
+-static uchar __devinit AscGetChipVersion(PortAddr iop_base, ushort bus_type)
++static unsigned char __devinit
++AscGetChipVersion(PortAddr iop_base, unsigned short bus_type)
+ {
+-	if ((bus_type & ASC_IS_EISA) != 0) {
++	if (bus_type & ASC_IS_EISA) {
+ 		PortAddr eisa_iop;
+-		uchar revision;
++		unsigned char revision;
+ 		eisa_iop = (PortAddr) ASC_GET_EISA_SLOT(iop_base) |
+ 		    (PortAddr) ASC_EISA_REV_IOP_MASK;
+ 		revision = inp(eisa_iop);
+-		return ((uchar)((ASC_CHIP_MIN_VER_EISA - 1) + revision));
++		return ASC_CHIP_MIN_VER_EISA - 1 + revision;
  	}
- 	ASC_ASSERT(strlen(info) < ASC_INFO_SIZE);
- 	ASC_DBG(1, "advansys_info: end\n");
-@@ -6700,10 +6690,7 @@ static int asc_prt_driver_conf(struct Scsi_Host *shost, char *cp, int cplen)
- 			   boardp->asc_n_io_port);
- 	ASC_PRT_NEXT();
+-	return (AscGetChipVerNo(iop_base));
++	return AscGetChipVerNo(iop_base);
+ }
  
--	/* 'shost->n_io_port' may be truncated because it is only one byte. */
--	len = asc_prt_line(cp, leftlen,
--			   " io_port 0x%x, n_io_port 0x%x\n",
--			   shost->io_port, shost->n_io_port);
-+	len = asc_prt_line(cp, leftlen, " io_port 0x%x\n", shost->io_port);
- 	ASC_PRT_NEXT();
+ static ushort __devinit AscGetChipBusType(PortAddr iop_base)
+@@ -10281,13 +10252,12 @@ static ushort __devinit AscInitGetConfig(ASC_DVC_VAR *asc_dvc)
+ 		warn_code |= AscInitAscDvcVar(asc_dvc);
+ 		warn_code |= AscInitFromEEP(asc_dvc);
+ 		asc_dvc->init_state |= ASC_INIT_STATE_END_GET_CFG;
+-		if (asc_dvc->scsi_reset_wait > ASC_MAX_SCSI_RESET_WAIT) {
++		if (asc_dvc->scsi_reset_wait > ASC_MAX_SCSI_RESET_WAIT)
+ 			asc_dvc->scsi_reset_wait = ASC_MAX_SCSI_RESET_WAIT;
+-		}
+ 	} else {
+ 		asc_dvc->err_code = ASC_IERR_BAD_SIGNATURE;
+ 	}
+-	return (warn_code);
++	return warn_code;
+ }
  
- 	if (ASC_NARROW_BOARD(boardp)) {
-@@ -7595,8 +7582,8 @@ static void asc_prt_scsi_host(struct Scsi_Host *s)
- 	printk(" host_busy %u, host_no %d, last_reset %d,\n",
- 	       s->host_busy, s->host_no, (unsigned)s->last_reset);
+ static ushort __devinit AscInitSetConfig(ASC_DVC_VAR *asc_dvc)
+@@ -17154,14 +17124,11 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	int ret;
  
--	printk(" base 0x%lx, io_port 0x%lx, n_io_port %u, irq 0x%x,\n",
--	       (ulong)s->base, (ulong)s->io_port, s->n_io_port, s->irq);
-+	printk(" base 0x%lx, io_port 0x%lx, irq 0x%x,\n",
-+	       (ulong)s->base, (ulong)s->io_port, s->irq);
+ 	/*
+-	 * Adapter found.
+-	 *
+ 	 * Register the adapter, get its configuration, and
+ 	 * initialize it.
+ 	 */
+ 	ASC_DBG(2, "advansys_board_found: scsi_host_alloc()\n");
+ 	shost = scsi_host_alloc(&advansys_template, sizeof(asc_board_t));
+-
+ 	if (!shost)
+ 		return NULL;
  
- 	printk(" dma_channel %d, this_id %d, can_queue %d,\n",
- 	       s->dma_channel, s->this_id, s->can_queue);
-@@ -17537,15 +17524,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+@@ -17169,8 +17136,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	boardp = ASC_BOARDP(shost);
+ 	memset(boardp, 0, sizeof(asc_board_t));
+ 	boardp->id = asc_board_count++;
+-
+-	/* Initialize spinlock. */
+ 	spin_lock_init(&boardp->lock);
+ 
+ 	/*
+@@ -17590,11 +17555,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		 */
+ 		boardp->init_tidmask |=
+ 		    ADV_TID_TO_TIDMASK(adv_dvc_varp->chip_scsi_id);
+-
+-		/*
+-		 * Finish initializing the 'Scsi_Host' structure.
+-		 */
+-		shost->irq = adv_dvc_varp->irq_no;
  	}
  
  	/*
--	 * 'n_io_port' currently is one byte.
--	 *
--	 * Set a value to 'n_io_port', but never referenced it because
--	 * it may be truncated.
--	 */
--	shost->n_io_port = boardp->asc_n_io_port <= 255 ?
--	    boardp->asc_n_io_port : 255;
--
--	/*
- 	 * Following v1.3.89, 'cmd_per_lun' is no longer needed
- 	 * and should be set to zero.
- 	 *
 -- 
 1.4.4.4
 
