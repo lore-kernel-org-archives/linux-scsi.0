@@ -1,29 +1,48 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] qla2xxx: fix panic caused by previous patch
-Date: Mon, 30 Jul 2007 12:17:13 -0600
-Message-ID: <20070730181713.GJ21219@parisc-linux.org>
-References: <46AE2763.2040608@qlogic.com>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: [ofa-general] Announcing new open source iSER (iSCSI/RDMA) target
+Date: Mon, 30 Jul 2007 14:23:40 -0400
+Message-ID: <20070730182340.GI12789@osc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:33561 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966832AbXG3SRP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 14:17:15 -0400
+Return-path: <general-bounces@lists.openfabrics.org>
 Content-Disposition: inline
-In-Reply-To: <46AE2763.2040608@qlogic.com>
-Sender: linux-scsi-owner@vger.kernel.org
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: stgt-devel@lists.berlios.de, linux-scsi@vger.kernel.org, general@lists.openfabrics.org, open-iscsi@googlegroups.com
 List-Id: linux-scsi@vger.kernel.org
-To: Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
 
-On Mon, Jul 30, 2007 at 11:01:07AM -0700, Seokmann Ju wrote:
-> As a fix to the issue initiated by the email thread 'qla2xyz broken in current Linus tree',
-> Following patch should fix the problem.
+We are releasing code to add support for iSCSI Extensions for RDMA
+(iSER) to the existing STGT user space SCSI target.  It uses
+OpenFabrics libraries and kernel drivers to act as a SCSI target
+over RDMA-capable devices.  The code has been tested against
+the existing Linux iSER initiator over InfiniBand cards, but
+should be specification compliant and work generally.
 
-Confirmed.  Thanks!
+A bit of documentation is included, and a short technical report is
+available at http://www.osc.edu/~pw/papers/iser-techreport.pdf .
+For performance, a single SCSI client using iSCSI over gigabit
+ethernet does 100 MB/s.  iSCSI over IPoIB gets 200 MB/s, and iSER
+over native IB sees 500 MB/s.
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+More information on STGT is available at http://stgt.berlios.de .
+
+The seven iSER patches can be downloaded from:
+
+	git://git.osc.edu/tgt
+
+or browsed at:
+
+	http://git.osc.edu/?p=tgt.git;a=summary
+
+New and modified files are distributed under a GPLv2 license.  I'll
+submit individual patches to stgt-devel for review and eventual
+inclusion in STGT.
+
+		-- Pete
