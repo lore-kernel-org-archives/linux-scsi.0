@@ -1,308 +1,101 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 8/23] advansys: Convert to EISA driver model
-Date: Mon, 30 Jul 2007 10:56:53 -0600
-Message-ID: <11858146282469-git-send-email-matthew@wil.cx>
-References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx>
+Subject: [PATCH 4/23] advansys: Stop checking the scsi_cmnd belongs to our Scsi_Host
+Date: Mon, 30 Jul 2007 10:56:49 -0600
+Message-ID: <11858146283106-git-send-email-matthew@wil.cx>
+References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:58792 "EHLO
+Received: from mail.tor.primus.ca ([216.254.136.21]:58778 "EHLO
 	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936804AbXG3Q5K (ORCPT
+	with ESMTP id S934884AbXG3Q5K (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:10 -0400
-In-Reply-To: <11858146281215-git-send-email-matthew@wil.cx>
+In-Reply-To: <11858146282602-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
- - Switch EISA probing to the driver model
- - Remove some now-unused macros and functions
- - Update the FIXME now that we use the correct driver model probing API
+The interrupt routines used to walk the list of Scsi_Hosts belonging to
+this driver to make sure that the scsi_cmnd belonged to one of them.
+This is a waste of time and gets in the way of later cleanups, so
+delete it.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  175 +++++++++++++++++++++++++----------------------
- 1 files changed, 94 insertions(+), 81 deletions(-)
+ drivers/scsi/advansys.c |   38 --------------------------------------
+ 1 files changed, 0 insertions(+), 38 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 3ba7032..e096f19 100644
+index a407ff3..7a964bb 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -769,6 +769,7 @@
- #include <linux/proc_fs.h>
- #include <linux/init.h>
- #include <linux/blkdev.h>
-+#include <linux/eisa.h>
- #include <linux/pci.h>
- #include <linux/spinlock.h>
- #include <linux/dma-mapping.h>
-@@ -783,13 +784,9 @@
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
+@@ -5506,7 +5506,6 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 	asc_board_t *boardp;
+ 	struct scsi_cmnd *scp;
+ 	struct Scsi_Host *shost;
+-	int i;
  
--/* FIXME: (by jejb@steeleye.com) This warning is present for two
-- * reasons:
-+/* FIXME: (by jejb@steeleye.com)
-  *
-- * 1) This driver badly needs converting to the correct driver model
-- *    probing API
-- *
-- * 2) Although all of the necessary command mapping places have the
-+ * Although all of the necessary command mapping places have the
-  * appropriate dma_map.. APIs, the driver still processes its internal
-  * queue using bus_to_virt() and virt_to_bus() which are illegal under
-  * the API.  The entire queue processing structure will need to be
-@@ -1787,16 +1784,10 @@ typedef struct asceep_config {
- #define ASC_1000_ID0W      0x04C1
- #define ASC_1000_ID0W_FIX  0x00C1
- #define ASC_1000_ID1B      0x25
--#define ASC_EISA_BIG_IOP_GAP   (0x1C30-0x0C50)
--#define ASC_EISA_SMALL_IOP_GAP (0x0020)
--#define ASC_EISA_MIN_IOP_ADDR  (0x0C30)
--#define ASC_EISA_MAX_IOP_ADDR  (0xFC50)
- #define ASC_EISA_REV_IOP_MASK  (0x0C83)
- #define ASC_EISA_PID_IOP_MASK  (0x0C80)
- #define ASC_EISA_CFG_IOP_MASK  (0x0C86)
- #define ASC_GET_EISA_SLOT(iop)  (PortAddr)((iop) & 0xF000)
--#define ASC_EISA_ID_740    0x01745004UL
--#define ASC_EISA_ID_750    0x01755004UL
- #define INS_HALTINT        (ushort)0x6281
- #define INS_HALT           (ushort)0x6280
- #define INS_SINT           (ushort)0x6200
-@@ -1943,8 +1934,6 @@ static int AscIsrQDone(ASC_DVC_VAR *);
- static int AscCompareString(uchar *, uchar *, int);
- #ifdef CONFIG_ISA
- static ushort AscGetEisaChipCfg(PortAddr);
--static ASC_DCNT AscGetEisaProductID(PortAddr);
--static PortAddr AscSearchIOPortAddrEISA(PortAddr);
- static PortAddr AscSearchIOPortAddr11(PortAddr);
- static PortAddr AscSearchIOPortAddr(PortAddr, ushort);
- static void AscSetISAPNPWaitForKey(void);
-@@ -3418,7 +3407,7 @@ typedef struct {
- 
- #define ASC_NUM_BOARD_SUPPORTED 16
- #define ASC_NUM_IOPORT_PROBE    4
--#define ASC_NUM_BUS             3
-+#define ASC_NUM_BUS             2
- 
- /* Reference Scsi_Host hostdata */
- #define ASC_BOARDP(host) ((asc_board_t *) &((host)->hostdata))
-@@ -3864,7 +3853,6 @@ static ASC_SG_HEAD asc_sg_head = { 0 };
- static ushort asc_bus[ASC_NUM_BUS] __initdata = {
- 	ASC_IS_ISA,
- 	ASC_IS_VL,
--	ASC_IS_EISA,
- };
- 
- static int asc_iopflag = ASC_FALSE;
-@@ -3874,7 +3862,6 @@ static int asc_ioport[ASC_NUM_IOPORT_PROBE] = { 0, 0, 0, 0 };
- static char *asc_bus_name[ASC_NUM_BUS] = {
- 	"ASC_IS_ISA",
- 	"ASC_IS_VL",
--	"ASC_IS_EISA",
- };
- 
- static int asc_dbglvl = 3;
-@@ -8241,12 +8228,6 @@ static PortAddr __init AscSearchIOPortAddr(PortAddr iop_beg, ushort bus_type)
- 		}
- 		return (0);
+ 	ASC_DBG2(1, "asc_isr_callback: asc_dvc_varp 0x%lx, qdonep 0x%lx\n",
+ 		 (ulong)asc_dvc_varp, (ulong)qdonep);
+@@ -5525,23 +5524,7 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
  	}
--	if (bus_type & ASC_IS_EISA) {
--		if ((iop_beg = AscSearchIOPortAddrEISA(iop_beg)) != 0) {
--			return (iop_beg);
--		}
--		return (0);
--	}
- 	return (0);
- }
+ 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
  
-@@ -10256,57 +10237,6 @@ static void DvcDelayNanoSecond(ASC_DVC_VAR *asc_dvc, ASC_DCNT nano_sec)
- 	udelay((nano_sec + 999) / 1000);
- }
- 
--#ifdef CONFIG_ISA
--static ASC_DCNT __init AscGetEisaProductID(PortAddr iop_base)
--{
--	PortAddr eisa_iop;
--	ushort product_id_high, product_id_low;
--	ASC_DCNT product_id;
--
--	eisa_iop = ASC_GET_EISA_SLOT(iop_base) | ASC_EISA_PID_IOP_MASK;
--	product_id_low = inpw(eisa_iop);
--	product_id_high = inpw(eisa_iop + 2);
--	product_id = ((ASC_DCNT) product_id_high << 16) |
--	    (ASC_DCNT) product_id_low;
--	return (product_id);
--}
--
--static PortAddr __init AscSearchIOPortAddrEISA(PortAddr iop_base)
--{
--	ASC_DCNT eisa_product_id;
--
--	if (iop_base == 0) {
--		iop_base = ASC_EISA_MIN_IOP_ADDR;
--	} else {
--		if (iop_base == ASC_EISA_MAX_IOP_ADDR)
--			return (0);
--		if ((iop_base & 0x0050) == 0x0050) {
--			iop_base += ASC_EISA_BIG_IOP_GAP;
--		} else {
--			iop_base += ASC_EISA_SMALL_IOP_GAP;
+-	/*
+-	 * If the request's host pointer is not valid, display a
+-	 * message and return.
+-	 */
+ 	shost = scp->device->host;
+-	for (i = 0; i < asc_board_count; i++) {
+-		if (asc_host[i] == shost) {
+-			break;
 -		}
 -	}
--	while (iop_base <= ASC_EISA_MAX_IOP_ADDR) {
--		eisa_product_id = AscGetEisaProductID(iop_base);
--		if ((eisa_product_id == ASC_EISA_ID_740) ||
--		    (eisa_product_id == ASC_EISA_ID_750)) {
--			if (AscFindSignature(iop_base)) {
--				inpw(iop_base + 4);
--				return (iop_base);
--			}
--		}
--		if (iop_base == ASC_EISA_MAX_IOP_ADDR)
--			return (0);
--		if ((iop_base & 0x0050) == 0x0050) {
--			iop_base += ASC_EISA_BIG_IOP_GAP;
--		} else {
--			iop_base += ASC_EISA_SMALL_IOP_GAP;
+-	if (i == asc_board_count) {
+-		ASC_PRINT2
+-		    ("asc_isr_callback: scp 0x%lx has bad host pointer, host 0x%lx\n",
+-		     (ulong)scp, (ulong)shost);
+-		return;
+-	}
+-
+ 	ASC_STATS(shost, callback);
+ 	ASC_DBG1(1, "asc_isr_callback: shost 0x%lx\n", (ulong)shost);
+ 
+@@ -5680,7 +5663,6 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	adv_sgblk_t *sgblkp;
+ 	struct scsi_cmnd *scp;
+ 	struct Scsi_Host *shost;
+-	int i;
+ 	ADV_DCNT resid_cnt;
+ 
+ 	ASC_DBG2(1, "adv_isr_callback: adv_dvc_varp 0x%lx, scsiqp 0x%lx\n",
+@@ -5716,27 +5698,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	}
+ 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
+ 
+-	/*
+-	 * If the request's host pointer is not valid, display a message
+-	 * and return.
+-	 */
+ 	shost = scp->device->host;
+-	for (i = 0; i < asc_board_count; i++) {
+-		if (asc_host[i] == shost) {
+-			break;
 -		}
 -	}
--	return (0);
--}
--#endif /* CONFIG_ISA */
+-	/*
+-	 * Note: If the host structure is not found, the adv_req_t request
+-	 * structure and adv_sgblk_t structure, if any, is dropped.
+-	 */
+-	if (i == asc_board_count) {
+-		ASC_PRINT2
+-		    ("adv_isr_callback: scp 0x%lx has bad host pointer, host 0x%lx\n",
+-		     (ulong)scp, (ulong)shost);
+-		return;
+-	}
 -
- static int AscStartChip(PortAddr iop_base)
- {
- 	AscSetChipControl(iop_base, 0);
-@@ -18607,12 +18537,6 @@ static int __init advansys_detect(void)
- #endif /* CONFIG_ISA */
- 				break;
+ 	ASC_STATS(shost, callback);
+ 	ASC_DBG1(1, "adv_isr_callback: shost 0x%lx\n", (ulong)shost);
  
--			case ASC_IS_EISA:
--#ifdef CONFIG_ISA
--				iop = AscSearchIOPortAddr(iop, asc_bus[bus]);
--#endif /* CONFIG_ISA */
--				break;
--
- 			default:
- 				ASC_PRINT1
- 				    ("advansys_detect: unknown bus type: %d\n",
-@@ -18667,6 +18591,87 @@ static int advansys_release(struct Scsi_Host *shost)
- 	return 0;
- }
- 
-+static struct eisa_device_id advansys_eisa_table[] __devinitdata = {
-+	{ "ABP7401" },
-+	{ "ABP7501" },
-+	{ "" }
-+};
-+
-+MODULE_DEVICE_TABLE(eisa, advansys_eisa_table);
-+
-+/*
-+ * EISA is a little more tricky than PCI; each EISA device may have two
-+ * channels, and this driver is written to make each channel its own Scsi_Host
-+ */
-+struct eisa_scsi_data {
-+	struct Scsi_Host *host[2];
-+};
-+
-+static int __devinit advansys_eisa_probe(struct device *dev)
-+{
-+	int i, ioport;
-+	int err;
-+	struct eisa_device *edev = to_eisa_device(dev);
-+	struct eisa_scsi_data *data;
-+
-+	err = -ENOMEM;
-+	data = kzalloc(sizeof(*data), GFP_KERNEL);
-+	if (!data)
-+		goto fail;
-+	ioport = edev->base_addr + 0xc30;
-+
-+	err = -ENODEV;
-+	for (i = 0; i < 2; i++, ioport += 0x20) {
-+		if (!AscFindSignature(ioport))
-+			continue;
-+		/*
-+		 * I don't know why we need to do this for EISA chips, but
-+		 * not for any others.  It looks to be equivalent to
-+		 * AscGetChipCfgMsw, but I may have overlooked something,
-+		 * so I'm not converting it until I get an EISA board to
-+		 * test with.
-+		 */
-+		inw(ioport + 4);
-+		data->host[i] = advansys_board_found(ioport, dev, ASC_IS_EISA);
-+		if (data->host[i])
-+			err = 0;
-+	}
-+
-+	if (err) {
-+		kfree(data);
-+	} else {
-+		dev_set_drvdata(dev, data);
-+	}
-+
-+ fail:
-+	return err;
-+}
-+
-+static __devexit int advansys_eisa_remove(struct device *dev)
-+{
-+	int i;
-+	struct eisa_scsi_data *data = dev_get_drvdata(dev);
-+
-+	for (i = 0; i < 2; i++) {
-+		struct Scsi_Host *shost = data->host[i];
-+		if (!shost)
-+			continue;
-+		advansys_release(shost);
-+	}
-+
-+	kfree(data);
-+	return 0;
-+}
-+
-+static struct eisa_driver advansys_eisa_driver = {
-+	.id_table =		advansys_eisa_table,
-+	.driver = {
-+		.name =		"advansys",
-+		.probe =	advansys_eisa_probe,
-+		.remove =	__devexit_p(advansys_eisa_remove),
-+	}
-+};
-+
- /* PCI Devices supported by this driver */
- static struct pci_device_id advansys_pci_tbl[] __devinitdata = {
- 	{PCI_VENDOR_ID_ASP, PCI_DEVICE_ID_ASP_1200A,
-@@ -18732,12 +18737,19 @@ static int __init advansys_init(void)
- {
- 	int i, error;
- 	advansys_detect();
--	error = pci_register_driver(&advansys_pci_driver);
-+
-+	error = eisa_driver_register(&advansys_eisa_driver);
- 	if (error)
- 		goto fail;
- 
-+	error = pci_register_driver(&advansys_pci_driver);
-+	if (error)
-+		goto unregister_eisa;
-+
- 	return 0;
- 
-+ unregister_eisa:
-+	eisa_driver_unregister(&advansys_eisa_driver);
-  fail:
- 	for (i = 0; i < asc_legacy_count; i++)
- 		advansys_release(asc_host[i]);
-@@ -18750,6 +18762,7 @@ static void __exit advansys_exit(void)
- 	int i;
- 
- 	pci_unregister_driver(&advansys_pci_driver);
-+	eisa_driver_unregister(&advansys_eisa_driver);
- 
- 	for (i = 0; i < asc_legacy_count; i++)
- 		advansys_release(asc_host[i]);
 -- 
 1.4.4.4
 
