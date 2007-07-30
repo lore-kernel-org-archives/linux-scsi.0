@@ -1,39 +1,133 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 13/23] Add QUANTUM XP34301 to the blacklist
-Date: Mon, 30 Jul 2007 10:56:58 -0600
-Message-ID: <11858146281677-git-send-email-matthew@wil.cx>
-References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx> <11858146282332-git-send-email-matthew@wil.cx> <11858146283924-git-send-email-matthew@wil.cx> <1185814628436-git-send-email-matthew@wil.cx>
+Subject: [PATCH 17/23] advansys: ioremap no longer needs page-aligned addresses
+Date: Mon, 30 Jul 2007 10:57:02 -0600
+Message-ID: <11858146284113-git-send-email-matthew@wil.cx>
+References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx> <11858146282332-git-send-email-matthew@wil.cx> <11858146283924-git-send-email-matthew@wil.cx> <1185814628436-git-send-email-matthew@wil.cx> <11858146281677-git-send-email-matthew@wil.cx> <11858146282603-git-send-email-matthew@wil.cx> <11858146281750-git-send-email-matthew@wil.cx> <11858146282891-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:47025 "EHLO
-	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S936097AbXG3Q5K (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:10 -0400
-In-Reply-To: <1185814628436-git-send-email-matthew@wil.cx>
+Received: from mail.tor.primus.ca ([216.254.136.21]:59964 "EHLO
+	mail-08.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S937077AbXG3Q5M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:12 -0400
+In-Reply-To: <11858146282891-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-According to the AdvanSys driver, this device has a problem with tagged
-queueing.
+At some point during Linux 2.1 development, ioremap() gained the ability
+to handle addresses which weren't page-aligned.  Also expand the CONFIG_PCI
+range to encompass that entire section of wide board initialisation, since
+all wide boards are PCI.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/scsi_devinfo.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+ drivers/scsi/advansys.c |   52 ++++++++++------------------------------------
+ 1 files changed, 12 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index e2ea739..348cc5a 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -214,6 +214,7 @@ static struct {
- 	{"PIONEER", "CD-ROM DRM-604X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
- 	{"PIONEER", "CD-ROM DRM-624X", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
- 	{"Promise", "", NULL, BLIST_SPARSELUN},
-+	{"QUANTUM", "XP34301", "1071", BLIST_NOTQ},
- 	{"REGAL", "CDC-4X", NULL, BLIST_MAX5LUN | BLIST_SINGLELUN},
- 	{"SanDisk", "ImageMate CF-SD1", NULL, BLIST_FORCELUN},
- 	{"SEAGATE", "ST34555N", "0930", BLIST_NOTQ},	/* Chokes on tagged INQUIRY */
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index e661986..2f37076 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -17090,8 +17090,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	ASC_DVC_VAR *asc_dvc_varp = NULL;
+ 	ADV_DVC_VAR *adv_dvc_varp = NULL;
+ 	int share_irq;
+-	int iolen = 0;
+-	ADV_PADDR pci_memory_address;
+ 	int warn_code, err_code;
+ 	int ret;
+ 
+@@ -17136,13 +17134,13 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		asc_dvc_varp->iop_base = iop;
+ 		asc_dvc_varp->isr_callback = asc_isr_callback;
+ 	} else {
++#ifdef CONFIG_PCI
+ 		ASC_DBG(1, "advansys_board_found: wide board\n");
+ 		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
+ 		adv_dvc_varp->drv_ptr = boardp;
+ 		adv_dvc_varp->cfg = &boardp->dvc_cfg.adv_dvc_cfg;
+ 		adv_dvc_varp->isr_callback = adv_isr_callback;
+ 		adv_dvc_varp->async_callback = adv_async_callback;
+-#ifdef CONFIG_PCI
+ 		if (pdev->device == PCI_DEVICE_ID_ASP_ABP940UW) {
+ 			ASC_DBG(1, "advansys_board_found: ASC-3550\n");
+ 			adv_dvc_varp->chip_type = ADV_CHIP_ASC3550;
+@@ -17153,46 +17151,20 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 			ASC_DBG(1, "advansys_board_found: ASC-38C1600\n");
+ 			adv_dvc_varp->chip_type = ADV_CHIP_ASC38C1600;
+ 		}
+-#endif /* CONFIG_PCI */
+ 
+-		/*
+-		 * Map the board's registers into virtual memory for
+-		 * PCI slave access. Only memory accesses are used to
+-		 * access the board's registers.
+-		 *
+-		 * Note: The PCI register base address is not always
+-		 * page aligned, but the address passed to ioremap()
+-		 * must be page aligned. It is guaranteed that the
+-		 * PCI register base address will not cross a page
+-		 * boundary.
+-		 */
+-		if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
+-			iolen = ADV_3550_IOLEN;
+-		} else if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800) {
+-			iolen = ADV_38C0800_IOLEN;
+-		} else {
+-			iolen = ADV_38C1600_IOLEN;
+-		}
+-#ifdef CONFIG_PCI
+-		pci_memory_address = pci_resource_start(pdev, 1);
+-		ASC_DBG1(1,
+-			 "advansys_board_found: pci_memory_address: 0x%lx\n",
+-			 (ulong)pci_memory_address);
+-		if ((boardp->ioremap_addr =
+-		     ioremap(pci_memory_address & PAGE_MASK, PAGE_SIZE)) == 0) {
++		boardp->asc_n_io_port = pci_resource_len(pdev, 1);
++		boardp->ioremap_addr = ioremap(pci_resource_start(pdev, 1),
++					       boardp->asc_n_io_port);
++		if (!boardp->ioremap_addr) {
+ 			ASC_PRINT3
+ 			    ("advansys_board_found: board %d: ioremap(%x, %d) returned NULL\n",
+-			     boardp->id, pci_memory_address, iolen);
++			     boardp->id, pci_resource_start(pdev, 1),
++			     boardp->asc_n_io_port);
+ 			goto err_shost;
+ 		}
+-		ASC_DBG1(1, "advansys_board_found: ioremap_addr: 0x%lx\n",
+-			 (ulong)boardp->ioremap_addr);
+-		adv_dvc_varp->iop_base = (AdvPortAddr)
+-		    (boardp->ioremap_addr +
+-		     (pci_memory_address - (pci_memory_address & PAGE_MASK)));
++		adv_dvc_varp->iop_base = (AdvPortAddr)boardp->ioremap_addr
+ 		ASC_DBG1(1, "advansys_board_found: iop_base: 0x%lx\n",
+ 			 adv_dvc_varp->iop_base);
+-#endif /* CONFIG_PCI */
+ 
+ 		/*
+ 		 * Even though it isn't used to access wide boards, other
+@@ -17201,9 +17173,10 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		 */
+ 		boardp->ioport = iop;
+ 
+-		ASC_DBG2(1,
+-			 "advansys_board_found: iopb_chip_id_1 0x%x, iopw_chip_id_0 0x%x\n",
+-			 (ushort)inp(iop + 1), (ushort)inpw(iop));
++		ASC_DBG2(1, "advansys_board_found: iopb_chip_id_1 0x%x, "
++			 "iopw_chip_id_0 0x%x\n", (ushort)inp(iop + 1),
++			 (ushort)inpw(iop));
++#endif /* CONFIG_PCI */
+ 	}
+ 
+ #ifdef CONFIG_PROC_FS
+@@ -17556,7 +17529,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		 * PCI Memory Mapped I/O.
+ 		 */
+ 		shost->io_port = iop;
+-		boardp->asc_n_io_port = iolen;
+ 
+ 		shost->this_id = adv_dvc_varp->chip_scsi_id;
+ 
 -- 
 1.4.4.4
 
