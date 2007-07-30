@@ -1,45 +1,47 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.23-rc1
-Date: Sun, 29 Jul 2007 22:14:22 -0400
-Message-ID: <46AD497E.8030401@garzik.org>
-References: <1185720592.3434.7.camel@localhost.localdomain>	 <46AD19F7.7040905@garzik.org>	 <1185756759.3434.19.camel@localhost.localdomain>	 <46AD390B.2080400@garzik.org> <1185760909.3434.22.camel@localhost.localdomain>
+From: Satyam Sharma <satyam@infradead.org>
+Subject: Re: [PATCH 2/5] Use mutex instead of semaphore in the OnStream SCSI
+ Tape driver
+Date: Mon, 30 Jul 2007 08:57:15 +0530 (IST)
+Message-ID: <alpine.LFD.0.999.0707300853390.10861@enigma.security.iitk.ac.in>
+References: <20070729212909.GC3432@traven> <20070729213633.GE3432@traven>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38932 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S936048AbXG3CO0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 29 Jul 2007 22:14:26 -0400
-In-Reply-To: <1185760909.3434.22.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S937902AbXG3DPM@vger.kernel.org>
+In-Reply-To: <20070729213633.GE3432@traven>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Cc: osst@riede.org, osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-James Bottomley wrote:
-> On Sun, 2007-07-29 at 21:04 -0400, Jeff Garzik wrote:
->> James Bottomley wrote:
->>> msleep_interruptible -> ssleep is a
->>> change with zero practical impact for this driver,
->> eh, how do you figure?
->>
->> A signal can clearly cause the abort-related functions to delay far 
->> shorter than the driver wishes.
->>
->> The msleep_interruptible() in arcmsr_wait_msgint_ready() probably isn't 
->> fatal -- unless it's there to ensure the hardware isn't pounded -- but 
->> again, a signal can cause a CPU-wasting busy loop that could last for 
->> quite a while (in CPU terms).
+Hi,
+
+
+On Sun, 29 Jul 2007, Matthias Kaehlcke wrote:
+
+> The OnStream SCSI Tape driver uses a semaphore as mutex. Use the mutex
+> API instead of the (binary) semaphore.
 > 
-> I didn't say the usage wasn't a bad example or couldn't cause problems
-> in certain cases.  I said "zero practical effect".  This is because the
-> two possible threads that enter these routines already have all user
-> signals blocked.
+> Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+> [...]
+> @@ -3298,7 +3298,7 @@ static ssize_t osst_write(struct file * filp, const char __user * buf, size_t co
+>  	char		    * name = tape_name(STp);
+>  
+>  
+> -	if (down_interruptible(&STp->lock))
+> +	if (mutex_lock_interruptible(&STp->lock))
+>  		return (-ERESTARTSYS);
 
-Ah!  Understood.
+The () after return existed in the code already, but you could've felt
+free to remove them :-)
 
-	Jeff
+> @@ -3619,7 +3619,7 @@ static ssize_t osst_read(struct file * filp, char __user * buf, size_t count, lo
+>  	char		    * name  = tape_name(STp);
+>  
+>  
+> -	if (down_interruptible(&STp->lock))
+> +	if (mutex_lock_interruptible(&STp->lock))
+>  		return (-ERESTARTSYS);
 
+Same here.
 
-
+Reviewed-by: Satyam Sharma <satyam@infradead.org>
