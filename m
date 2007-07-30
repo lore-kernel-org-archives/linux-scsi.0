@@ -1,62 +1,113 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Mon, 30 Jul 2007 12:32:54 -0400
-Message-ID: <46AE12B6.6090408@garzik.org>
-References: <20070705194909.337398431@intel.com> <20070705130518.135e4e3c.kristen.c.accardi@intel.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [2/3] 2.6.23-rc1: known regressions v3
+Date: Mon, 30 Jul 2007 18:33:57 +0200
+Message-ID: <46AE12F5.4030706@googlemail.com>
+References: <46AE0F5D.3000500@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070705130518.135e4e3c.kristen.c.accardi@intel.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nf-out-0910.google.com ([64.233.182.185]:6001 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965668AbXG3QeF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:34:05 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so161773nfb
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jul 2007 09:34:04 -0700 (PDT)
+In-Reply-To: <46AE0F5D.3000500@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Len Brown <lenb@kernel.org>, Denis Sadykov <denis.m.sadykov@intel.com>, dth <dth@dth.net>, Netdev <netdev@vger.kernel.org>, Stephen Hemminger <shemminger@osdl.org>, Thomas Meyer <thomas@m3y3r.de>, Florian Lohoff <flo@rfc822.org>, =?ISO-8859-2?Q?Ismail_D=F6nmez?= <ismail@pardus.org.tr>, linux-acpi@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, James Smart <James.Smart@emulex.com>, Adrian Bunk <bunk@stusta.de>
 
-Kristen Carlson Accardi wrote:
-> @@ -42,6 +42,16 @@ enum scsi_eh_timer_return {
->  	EH_RESET_TIMER,
->  };
->  
-> +/*
-> + * shost pm policy: If you alter this, you also need to alter scsi_sysfs.c
-> + * (for the ascii descriptions)
-> + */
-> +enum scsi_host_link_pm {
-> +	SHOST_NOT_AVAILABLE,
-> +	SHOST_MIN_POWER,
-> +	SHOST_MAX_PERFORMANCE,
-> +	SHOST_MEDIUM_POWER,
-> +};
->  
->  struct scsi_host_template {
->  	struct module *module;
-> @@ -345,6 +355,12 @@ struct scsi_host_template {
->  	int (*suspend)(struct scsi_device *, pm_message_t state);
->  
->  	/*
-> + 	 * link power management support
-> + 	 */
-> +	int (*set_link_pm_policy)(struct Scsi_Host *, enum scsi_host_link_pm);
-> +	enum scsi_host_link_pm default_link_pm_policy;
-> +
-> +	/*
->  	 * Name of proc directory
->  	 */
->  	char *proc_name;
-> @@ -642,6 +658,7 @@ struct Scsi_Host {
->  	
->  
->  	enum scsi_host_state shost_state;
-> +	enum scsi_host_link_pm shost_link_pm_policy;
->  
->  	/* ldm bits */
->  	struct device		shost_gendev;
+Hi all,
+
+Here is a list of some known regressions in 2.6.23-rc1.
+
+=46eel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
+
+List of Aces
+
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            6
+Andi Kleen                             4
+Andrew Morton                          4
+Linus Torvalds                         4
+Al Viro                                3
+Jens Axboe                             3
+Tejun Heo                              3
+David Woodhouse                        2
+Hugh Dickins                           2
 
 
-Any chance the SCSI peeps could ACK this, and then let me include it in 
-the ALPM patchset in the libata tree?
 
-	Jeff
+CPUFREQ/ACPI
+
+Subject         : ide problems: 2.6.22-git17 working, 2.6.23-rc1* is no=
+t
+References      : http://lkml.org/lkml/2007/7/27/298
+                  http://lkml.org/lkml/2007/7/29/371
+Last known good : ?
+Submitter       : dth <dth@dth.net>
+Caused-By       : ?
+Handled-By      : ?
+Status          : unknown
 
 
+
+Networking
+
+Subject         : sky2 boot crash in sky2_mac_intr
+References      : http://lkml.org/lkml/2007/7/24/91
+Last known good : ?
+Submitter       : Florian Lohoff <flo@rfc822.org>
+Caused-By       :=20
+Handled-By      : Stephen Hemminger <shemminger@osdl.org>
+Status          : unknown
+
+Subject         : New wake ups from sky2
+References      : http://lkml.org/lkml/2007/7/20/386
+Last known good : ?
+Submitter       : Thomas Meyer <thomas@m3y3r.de>
+Caused-By       : Stephen Hemminger <shemminger@osdl.org>
+                  commit eb35cf60e462491249166182e3e755d3d5d91a28
+Handled-By      : Stephen Hemminger <shemminger@osdl.org>
+Status          : unknown
+
+
+
+Power Management
+
+Subject         : New ACPI error/warning with Linus' latest GIT
+References      : http://lkml.org/lkml/2007/7/26/395
+Last known good : ?
+Submitter       : Ismail D=F6nmez <ismail@pardus.org.tr>
+Caused-By       : ?
+Handled-By      : ?
+Status          : unknown
+
+
+
+SCSI
+
+Subject         : lpfc_sli.c: off-by-10
+References      : http://lkml.org/lkml/2007/7/22/284
+Last known good : ?
+Submitter       : Adrian Bunk <bunk@stusta.de>
+Caused-By       : ?
+Handled-By      : ?
+Status          : unknown
+
+
+
+Regards,
+Michal
+
+--
+LOG
+http://www.stardust.webpages.pl/log/
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
