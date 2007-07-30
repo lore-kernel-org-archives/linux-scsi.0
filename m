@@ -1,48 +1,58 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: [ofa-general] Announcing new open source iSER (iSCSI/RDMA) target
-Date: Mon, 30 Jul 2007 14:23:40 -0400
-Message-ID: <20070730182340.GI12789@osc.edu>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 0/5] mpt fusion: Add logging support
+Date: Mon, 30 Jul 2007 12:33:00 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D708B3F1D@NAMAIL4.ad.lsil.com>
+References: <1185644421.11492.32.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <general-bounces@lists.openfabrics.org>
-Content-Disposition: inline
-List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
-List-Archive: <http://lists.openfabrics.org/pipermail/general>
-List-Post: <mailto:general@lists.openfabrics.org>
-List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
-List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
-	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
-Sender: general-bounces@lists.openfabrics.org
-Errors-To: general-bounces@lists.openfabrics.org
-To: stgt-devel@lists.berlios.de, linux-scsi@vger.kernel.org, general@lists.openfabrics.org, open-iscsi@googlegroups.com
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:36486 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S966346AbXG3SdQ convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 14:33:16 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1185644421.11492.32.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "Prakash, Sathya" <Sathya.Prakash@lsi.com>, linux-scsi@vger.kernel.org, tomof@acm.org, jens.axboe@oracle.com
 
-We are releasing code to add support for iSCSI Extensions for RDMA
-(iSER) to the existing STGT user space SCSI target.  It uses
-OpenFabrics libraries and kernel drivers to act as a SCSI target
-over RDMA-capable devices.  The code has been tested against
-the existing Linux iSER initiator over InfiniBand cards, but
-should be specification compliant and work generally.
+On Saturday, July 28, 2007 11:40 AM,  James Bottomley wrote: 
+> 
+> I tell you what, let me just show you the actual patch.  This 
+> allows you
+> to write to the 
+> /sys/module/mptbase/parameters/mpt_debug_level and have
+> it take effect in every ioc.
+> 
 
-A bit of documentation is included, and a short technical report is
-available at http://www.osc.edu/~pw/papers/iser-techreport.pdf .
-For performance, a single SCSI client using iSCSI over gigabit
-ethernet does 100 MB/s.  iSCSI over IPoIB gets 200 MB/s, and iSER
-over native IB sees 500 MB/s.
+ACK,  If possible, I would like this patch thrown in with the other
+fusion logging patchs you added over the weekend to the
+scsi-rc-fixes-2.6 stream. Thanks.
 
-More information on STGT is available at http://stgt.berlios.de .
+On another note, while unloading the driver, and I get an following opps
+from bsg in the context of scsi_remove_host.   This is w/o the "SMP
+passthrough" patch, so why would fusion drivers be linked to bsg?
+Woudn't this break mptspi and mptfc, since they will not be working with
+bsg.
 
-The seven iSER patches can be downloaded from:
 
-	git://git.osc.edu/tgt
+Call Trace:
+ [<ffffffff881f519c>] :scsi_transport_sas:sas_bsg_remove+0x27/0x32
+ [<ffffffff881f6349>] :scsi_transport_sas:sas_host_remove+0x30/0x34
+ [<ffffffff80375326>] transport_remove_classdev+0x1d/0x4c
+ [<ffffffff80375001>] attribute_container_device_trigger+0x69/0xa7
+ [<ffffffff8803778b>] :scsi_mod:scsi_remove_host+0xcd/0xfa
+ [<ffffffff883461ac>] :mptscsih:mptscsih_remove+0x32/0xae
+ [<ffffffff8031416d>] pci_device_remove+0x24/0x48
+ [<ffffffff803720ed>] __device_release_driver+0x91/0xb3
+ [<ffffffff80372631>] driver_detach+0xd6/0x115
+ [<ffffffff80371ba3>] bus_remove_driver+0x6d/0x90
+ [<ffffffff803143f4>] pci_unregister_driver+0x17/0x6b
+ [<ffffffff88355044>] :mptsas:mptsas_exit+0x10/0x5f
+ [<ffffffff80252afb>] sys_delete_module+0x1b1/0x1e0
+ [<ffffffff80307d9c>] __up_write+0x21/0x10d
+ [<ffffffff8020bc4e>] system_call+0x7e/0x83
 
-or browsed at:
-
-	http://git.osc.edu/?p=tgt.git;a=summary
-
-New and modified files are distributed under a GPLv2 license.  I'll
-submit individual patches to stgt-devel for review and eventual
-inclusion in STGT.
-
-		-- Pete
