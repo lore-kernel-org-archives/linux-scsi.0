@@ -1,86 +1,133 @@
 From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: qla2xyz broken in current Linus tree
-Date: Mon, 30 Jul 2007 10:42:02 -0700
-Message-ID: <46AE22EA.1090302@qlogic.com>
-References: <20070730163947.GF21219@parisc-linux.org>
+Subject: [PATCH] qla2xxx: fix panic caused by previous patch
+Date: Mon, 30 Jul 2007 11:01:07 -0700
+Message-ID: <46AE2763.2040608@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------070601020109090005060107"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:46498 "EHLO
+Received: from avexch2.qlogic.com ([198.70.193.116]:50150 "EHLO
 	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966071AbXG3RnH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 13:43:07 -0400
-In-Reply-To: <20070730163947.GF21219@parisc-linux.org>
+	with ESMTP id S966229AbXG3SCM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 14:02:12 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Richard Lary <rlary@us.ibm.com>, James.Bottomley@SteelEye.com
+To: James.Bottomley@SteelEye.com
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> Reverting 281afe1947d855661754850de29d7530b2ff18dc fixes this panic:
-It turned out that one of changes didn't committed into local git tree that is being used to generate the patch.
-I'm sorry for creating a serious problem on the kernel.
-The patch that fixes the problem will be submitted, soon.
+This is a multi-part message in MIME format.
+--------------070601020109090005060107
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-Regards,
+As a fix to the issue initiated by the email thread 'qla2xyz broken in current Linus tree',
+Following patch should fix the problem.
+
+Thank you,
 Seokmann
-> 
-> qla2xxx 0000:42:07.0: Found an ISP2322, irq 19, iobase 0xf8812000
-> qla2xxx 0000:42:07.0: Configuring PCI space...
-> qla2xxx 0000:42:07.0: Configure NVRAM parameters...
-> BUG: unable to handle kernel NULL pointer dereference at virtual address 0000000
-> 0
->  printing eip:
-> c02e88f6
-> *pde = 00000000
-> Oops: 0002 [#1]
-> PREEMPT SMP
-> Modules linked in:
-> CPU:    0
-> EIP:    0060:[<c02e88f6>]    Not tainted VLI
-> EFLAGS: 00010202   (2.6.23-rc1-g33eff927 #109)
-> EIP is at qla2x00_read_nvram_data+0x23/0x55
-> eax: 00005349   ebx: 00000000   ecx: e2de3d63   edx: 00000035
-> esi: c1a0e2ec   edi: 00000000   ebp: 00000000   esp: c1903da0
-> ds: 007b   es: 007b   fs: 00d8  gs: 0000  ss: 0068
-> Process swapper (pid: 1, ti=c1902000 task=c1901670 task.ti=c1902000)
-> Stack: 00000000 c02e88d3 00000000 c1a0e2ec 00000000 c02d99d1 00000100 00000038
->        f7e80000 00000000 00000000 00000024 c1a0e2ec c1a0e2ec c1a0e2ec c1958000
->        c1aded14 c1a0e2ec c1a0e2ec f8812000 c02d8048 c050e7ad c050cf76 c1aded14
-> Call Trace:
->  [<c02e88d3>] qla2x00_read_nvram_data+0x0/0x55
->  [<c02d99d1>] qla2x00_nvram_config+0x7e/0x765
->  [<c02d8048>] qla2x00_initialize_adapter+0x113/0x226
->  [<c02d4ad9>] qla2x00_probe_one+0x8b0/0xc87
->  [<c01961b7>] sysfs_ilookup_test+0x0/0xd
->  [<c01961b7>] sysfs_ilookup_test+0x0/0xd
->  [<c019669d>] sysfs_addrm_finish+0x13/0x1d9
->  [<c01976bc>] sysfs_create_link+0xf1/0x149
->  [<c0130a9e>] call_usermodehelper_exec+0xab/0xb5
->  [<c023744a>] pci_match_device+0x84/0xa4
->  [<c02374b6>] pci_device_probe+0x36/0x57
->  [<c028cac3>] driver_probe_device+0xe1/0x15f
->  [<c044f795>] klist_next+0x58/0x6d
->  [<c028cbd3>] __driver_attach+0x0/0x7f
->  [<c028cc1c>] __driver_attach+0x49/0x7f
->  [<c028c076>] bus_for_each_dev+0x33/0x55
->  [<c028c91b>] driver_attach+0x16/0x18
->  [<c028cbd3>] __driver_attach+0x0/0x7f
->  [<c028c360>] bus_add_driver+0x6d/0x170
->  [<c02375ff>] __pci_register_driver+0x52/0x7e
->  [<c05bf2ef>] qla2x00_module_init+0xd4/0xfe
->  [<c05a746a>] kernel_init+0x140/0x2a2
->  [<c0120d6e>] schedule_tail+0x2e/0x81
->  [<c0103db6>] ret_from_fork+0x6/0x1c
->  [<c05a732a>] kernel_init+0x0/0x2a2
->  [<c05a732a>] kernel_init+0x0/0x2a2
->  [<c0104ae7>] kernel_thread_helper+0x7/0x10
->  =======================
-> Code: 83 c4 10 5b 5e 5f 5d c3 55 57 56 53 83 ec 04 89 c6 89 14 24 89 cf e8 a4 e2
->  ff ff 31 ed 8b 1c 24 eb 11 89 fa 89 f0 e8 21 e1 ff ff <66> 89 03 45 83 c3 02 47
->  8b 44 24 18 d1 e8 39 c5 72 e5 8b 86 88
-> EIP: [<c02e88f6>] qla2x00_read_nvram_data+0x23/0x55 SS:ESP 0068:c1903da0
-> Kernel panic - not syncing: Attempted to kill init!
-> 
+---
+>From d0355c3c61a12ce466c87d8ef953425d2b21725b Mon Sep 17 00:00:00 2001
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Date: Mon, 30 Jul 2007 13:12:17 -0400
+Subject: [PATCH] qla2xxx: fix panic caused by previous patch
 
+- this patch will fix a panic caused by omitted memory allocation for the nvram.
+
+
+Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8bdc5a2..33d5d80 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2154,6 +2154,19 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+ 			}
+ 		}
+ 
++		/* Get memory for cached NVRAM */
++		ha->nvram = kzalloc(MAX_NVRAM_SIZE, GFP_KERNEL);
++		if (ha->nvram == NULL) {
++			/* error */
++			qla_printk(KERN_WARNING, ha,
++			    "Memory Allocation failed - nvram cache\n");
++
++			qla2x00_mem_free(ha);
++			msleep(100);
++
++			continue;
++		}
++
+ 		/* Done all allocations without any error. */
+ 		status = 0;
+ 
+@@ -2266,6 +2279,7 @@ qla2x00_mem_free(scsi_qla_host_t *ha)
+ 	ha->fw_dump_reading = 0;
+ 
+ 	vfree(ha->optrom_buffer);
++	kfree(ha->nvram);
+ }
+ 
+ /*
+-- 
+1.5.2
+
+--------------070601020109090005060107
+Content-Type: text/plain;
+ name="0002-qla2xxx-fix-panic-caused-by-previous-patch.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename*0="0002-qla2xxx-fix-panic-caused-by-previous-patch.patch"
+
+>From d0355c3c61a12ce466c87d8ef953425d2b21725b Mon Sep 17 00:00:00 2001
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Date: Mon, 30 Jul 2007 13:12:17 -0400
+Subject: [PATCH] qla2xxx: fix panic caused by previous patch
+
+- this patch will fix a panic caused by omitted memory allocation for the nvram.
+
+
+Signed-off-by: Seokmann Ju <seokmann.ju@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c |   14 ++++++++++++++
+ 1 files changed, 14 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8bdc5a2..33d5d80 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -2154,6 +2154,19 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+ 			}
+ 		}
+ 
++		/* Get memory for cached NVRAM */
++		ha->nvram = kzalloc(MAX_NVRAM_SIZE, GFP_KERNEL);
++		if (ha->nvram == NULL) {
++			/* error */
++			qla_printk(KERN_WARNING, ha,
++			    "Memory Allocation failed - nvram cache\n");
++
++			qla2x00_mem_free(ha);
++			msleep(100);
++
++			continue;
++		}
++
+ 		/* Done all allocations without any error. */
+ 		status = 0;
+ 
+@@ -2266,6 +2279,7 @@ qla2x00_mem_free(scsi_qla_host_t *ha)
+ 	ha->fw_dump_reading = 0;
+ 
+ 	vfree(ha->optrom_buffer);
++	kfree(ha->nvram);
+ }
+ 
+ /*
+-- 
+1.5.2
+
+
+--------------070601020109090005060107--
