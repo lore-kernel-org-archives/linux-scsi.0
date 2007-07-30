@@ -1,302 +1,242 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 3/23] advansys: Improve interrupt handler
-Date: Mon, 30 Jul 2007 10:56:48 -0600
-Message-ID: <11858146282602-git-send-email-matthew@wil.cx>
-References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx>
+Subject: [PATCH 10/23] advansys: Update resource management
+Date: Mon, 30 Jul 2007 10:56:55 -0600
+Message-ID: <11858146282332-git-send-email-matthew@wil.cx>
+References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:59932 "EHLO
+Received: from mail.tor.primus.ca ([216.254.136.21]:59939 "EHLO
 	mail-08.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932826AbXG3Q5K (ORCPT
+	with ESMTP id S936769AbXG3Q5K (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:10 -0400
-In-Reply-To: <1185814628978-git-send-email-matthew@wil.cx>
+In-Reply-To: <11858146281137-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-Pass the Scsi_Host to the interrupt handler, rather than polling all
-hosts for each interrupt.
-Return IRQ_NONE if we didn't handle this interrupt
-Don't set the IRQF_DISABLED flag; this is not a fast-executing interrupt
-handler.
+Make sure the resources are reserved and released by all the callers of
+advansys_board_found().  This eliminates the check_region-style race.
+It also allows us to use the pci_request_regions() API.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  172 ++++++++++++++++++++---------------------------
- 1 files changed, 72 insertions(+), 100 deletions(-)
+ drivers/scsi/advansys.c |   70 ++++++++++++++++++++++-------------------------
+ 1 files changed, 33 insertions(+), 37 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 6d11076..a407ff3 100644
+index eda41f2..d51ca86 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -3951,7 +3951,6 @@ static PortAddr _asc_def_iop_base[];
-  * advansys.h contains function prototypes for functions global to Linux.
-  */
- 
--static irqreturn_t advansys_interrupt(int, void *);
- static int advansys_slave_configure(struct scsi_device *);
- static void asc_scsi_done_list(struct scsi_cmnd *);
- static int asc_execute_scsi_cmnd(struct scsi_cmnd *);
-@@ -4684,89 +4683,76 @@ static struct scsi_host_template driver_template = {
-  */
- static irqreturn_t advansys_interrupt(int irq, void *dev_id)
- {
--	ulong flags;
--	int i;
--	asc_board_t *boardp;
-+	unsigned long flags;
- 	struct scsi_cmnd *done_scp = NULL, *last_scp = NULL;
- 	struct scsi_cmnd *new_last_scp;
--	struct Scsi_Host *shost;
-+	struct Scsi_Host *shost = dev_id;
-+	asc_board_t *boardp = ASC_BOARDP(shost);
-+	irqreturn_t result = IRQ_NONE;
- 
--	ASC_DBG(1, "advansys_interrupt: begin\n");
-+	ASC_DBG1(2, "advansys_interrupt: boardp 0x%p\n", boardp);
-+	spin_lock_irqsave(&boardp->lock, flags);
-+	if (ASC_NARROW_BOARD(boardp)) {
-+		/*
-+		 * Narrow Board
-+		 */
-+		if (AscIsIntPending(shost->io_port)) {
-+			result = IRQ_HANDLED;
-+			ASC_STATS(shost, interrupt);
-+			ASC_DBG(1, "advansys_interrupt: before AscISR()\n");
-+			AscISR(&boardp->dvc_var.asc_dvc_var);
-+		}
-+	} else {
-+		/*
-+		 * Wide Board
-+		 */
-+		ASC_DBG(1, "advansys_interrupt: before AdvISR()\n");
-+		if (AdvISR(&boardp->dvc_var.adv_dvc_var)) {
-+			result = IRQ_HANDLED;
-+			ASC_STATS(shost, interrupt);
-+		}
-+	}
- 
- 	/*
--	 * Check for interrupts on all boards.
--	 * AscISR() will call asc_isr_callback().
--	 */
--	for (i = 0; i < asc_board_count; i++) {
--		shost = asc_host[i];
--		boardp = ASC_BOARDP(shost);
--		ASC_DBG2(2, "advansys_interrupt: i %d, boardp 0x%lx\n",
--			 i, (ulong)boardp);
--		spin_lock_irqsave(&boardp->lock, flags);
--		if (ASC_NARROW_BOARD(boardp)) {
--			/*
--			 * Narrow Board
--			 */
--			if (AscIsIntPending(shost->io_port)) {
--				ASC_STATS(shost, interrupt);
--				ASC_DBG(1,
--					"advansys_interrupt: before AscISR()\n");
--				AscISR(&boardp->dvc_var.asc_dvc_var);
--			}
--		} else {
--			/*
--			 * Wide Board
--			 */
--			ASC_DBG(1, "advansys_interrupt: before AdvISR()\n");
--			if (AdvISR(&boardp->dvc_var.adv_dvc_var)) {
--				ASC_STATS(shost, interrupt);
--			}
-+	 * Start waiting requests and create a list of completed requests.
-+	 *
-+	 * If a reset request is being performed for the board, the reset
-+	 * handler will complete pending requests after it has completed.
-+	 */
-+	if ((boardp->flags & ASC_HOST_IN_RESET) == 0) {
-+		ASC_DBG2(1, "advansys_interrupt: done_scp 0x%p, "
-+			 "last_scp 0x%p\n", done_scp, last_scp);
-+
-+		/* Start any waiting commands for the board. */
-+		if (!ASC_QUEUE_EMPTY(&boardp->waiting)) {
-+			ASC_DBG(1, "advansys_interrupt: before "
-+				"asc_execute_queue()\n");
-+			asc_execute_queue(&boardp->waiting);
+@@ -17681,14 +17681,12 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 			     boardp->id, pci_memory_address, iolen);
+ 			goto err_shost;
  		}
- 
- 		/*
--		 * Start waiting requests and create a list of completed requests.
-+		 * Add to the list of requests that must be completed.
- 		 *
--		 * If a reset request is being performed for the board, the reset
--		 * handler will complete pending requests after it has completed.
-+		 * 'done_scp' will always be NULL on the first iteration of
-+		 * this loop. 'last_scp' is set at the same time as 'done_scp'.
- 		 */
--		if ((boardp->flags & ASC_HOST_IN_RESET) == 0) {
--			ASC_DBG2(1,
--				 "advansys_interrupt: done_scp 0x%lx, last_scp 0x%lx\n",
--				 (ulong)done_scp, (ulong)last_scp);
--
--			/* Start any waiting commands for the board. */
--			if (!ASC_QUEUE_EMPTY(&boardp->waiting)) {
--				ASC_DBG(1,
--					"advansys_interrupt: before asc_execute_queue()\n");
--				asc_execute_queue(&boardp->waiting);
--			}
--
--			/*
--			 * Add to the list of requests that must be completed.
--			 *
--			 * 'done_scp' will always be NULL on the first iteration
--			 * of this loop. 'last_scp' is set at the same time as
--			 * 'done_scp'.
--			 */
--			if (done_scp == NULL) {
--				done_scp =
--				    asc_dequeue_list(&boardp->done, &last_scp,
--						     ASC_TID_ALL);
--			} else {
--				ASC_ASSERT(last_scp != NULL);
--				last_scp->host_scribble =
--				    (unsigned char *)asc_dequeue_list(&boardp->
--								      done,
--								      &new_last_scp,
--								      ASC_TID_ALL);
--				if (new_last_scp != NULL) {
--					ASC_ASSERT(REQPNEXT(last_scp) != NULL);
--					last_scp = new_last_scp;
--				}
-+		if (done_scp == NULL) {
-+			done_scp = asc_dequeue_list(&boardp->done,
-+						&last_scp, ASC_TID_ALL);
-+		} else {
-+			ASC_ASSERT(last_scp != NULL);
-+			last_scp->host_scribble =
-+			    (unsigned char *)asc_dequeue_list(&boardp->
-+							      done,
-+							      &new_last_scp,
-+							      ASC_TID_ALL);
-+			if (new_last_scp != NULL) {
-+				ASC_ASSERT(REQPNEXT(last_scp) != NULL);
-+				last_scp = new_last_scp;
- 			}
- 		}
--		spin_unlock_irqrestore(&boardp->lock, flags);
- 	}
-+	spin_unlock_irqrestore(&boardp->lock, flags);
- 
- 	/*
- 	 * If interrupts were enabled on entry, then they
-@@ -4778,7 +4764,7 @@ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
- 	asc_scsi_done_list(done_scp);
- 
- 	ASC_DBG(1, "advansys_interrupt: end\n");
--	return IRQ_HANDLED;
-+	return result;
- }
- 
- /*
-@@ -17764,7 +17750,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	ASC_DVC_VAR *asc_dvc_varp = NULL;
- 	ADV_DVC_VAR *adv_dvc_varp = NULL;
- 	adv_sgblk_t *sgp = NULL;
--	int share_irq = FALSE;
-+	int share_irq;
- 	int iolen = 0;
- 	ADV_PADDR pci_memory_address;
- 	int warn_code, err_code;
-@@ -17918,15 +17904,15 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- #ifdef CONFIG_ISA
- 		case ASC_IS_ISA:
- 			shost->unchecked_isa_dma = TRUE;
--			share_irq = FALSE;
-+			share_irq = 0;
- 			break;
- 		case ASC_IS_VL:
- 			shost->unchecked_isa_dma = FALSE;
--			share_irq = FALSE;
-+			share_irq = 0;
- 			break;
- 		case ASC_IS_EISA:
- 			shost->unchecked_isa_dma = FALSE;
--			share_irq = TRUE;
-+			share_irq = IRQF_SHARED;
- 			break;
- #endif /* CONFIG_ISA */
- #ifdef CONFIG_PCI
-@@ -17937,7 +17923,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 					 PCI_SLOT(pdev->devfn),
- 					 PCI_FUNC(pdev->devfn));
- 			shost->unchecked_isa_dma = FALSE;
--			share_irq = TRUE;
-+			share_irq = IRQF_SHARED;
- 			break;
+-		ASC_DBG1(1,
+-			 "advansys_board_found: ioremap_addr: 0x%lx\n",
++		ASC_DBG1(1, "advansys_board_found: ioremap_addr: 0x%lx\n",
+ 			 (ulong)boardp->ioremap_addr);
+ 		adv_dvc_varp->iop_base = (AdvPortAddr)
+ 		    (boardp->ioremap_addr +
+ 		     (pci_memory_address - (pci_memory_address & PAGE_MASK)));
+-		ASC_DBG1(1,
+-			 "advansys_board_found: iop_base: 0x%lx\n",
++		ASC_DBG1(1, "advansys_board_found: iop_base: 0x%lx\n",
+ 			 adv_dvc_varp->iop_base);
  #endif /* CONFIG_PCI */
- 		default:
-@@ -17945,7 +17931,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 			    ("advansys_board_found: board %d: unknown adapter type: %d\n",
- 			     boardp->id, asc_dvc_varp->bus_type);
- 			shost->unchecked_isa_dma = TRUE;
--			share_irq = FALSE;
-+			share_irq = 0;
- 			break;
- 		}
- 	} else {
-@@ -17961,7 +17947,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 				 PCI_SLOT(pdev->devfn),
- 				 PCI_FUNC(pdev->devfn));
- 		shost->unchecked_isa_dma = FALSE;
--		share_irq = TRUE;
-+		share_irq = IRQF_SHARED;
- #endif /* CONFIG_PCI */
- 	}
  
-@@ -18425,25 +18411,11 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+@@ -18169,25 +18167,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 	 * Register Board Resources - I/O Port, DMA, IRQ
+ 	 */
  
- 	/* Register IRQ Number. */
- 	ASC_DBG1(2, "advansys_board_found: request_irq() %d\n", shost->irq);
 -	/*
--	 * If request_irq() fails with the IRQF_DISABLED flag set,
--	 * then try again without the IRQF_DISABLED flag set. This
--	 * allows IRQ sharing to work even with other drivers that
--	 * do not set the IRQF_DISABLED flag.
+-	 * Register I/O port range.
 -	 *
--	 * If IRQF_DISABLED is not set, then interrupts are enabled
--	 * before the driver interrupt function is called.
+-	 * For Wide boards the I/O ports are not used to access
+-	 * the board, but request the region anyway.
+-	 *
+-	 * 'shost->n_io_port' is not referenced, because it may be truncated.
 -	 */
--	if (((ret = request_irq(shost->irq, advansys_interrupt,
--				IRQF_DISABLED | (share_irq ==
--						 TRUE ?
--						 IRQF_SHARED :
--						 0), "advansys", boardp)) != 0)
--	    &&
--	    ((ret =
--	      request_irq(shost->irq, advansys_interrupt,
--			  (share_irq == TRUE ? IRQF_SHARED : 0),
--			  "advansys", boardp)) != 0)) {
-+
-+	ret = request_irq(shost->irq, advansys_interrupt, share_irq,
-+			  "advansys", shost);
-+
-+	if (ret) {
- 		if (ret == -EBUSY) {
- 			ASC_PRINT2
- 			    ("advansys_board_found: board %d: request_irq(): IRQ 0x%x already in use.\n",
-@@ -18644,7 +18616,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- #ifdef CONFIG_PROC_FS
- 		kfree(boardp->prtbuf);
- #endif /* CONFIG_PROC_FS */
--		free_irq(shost->irq, boardp);
-+		free_irq(shost->irq, shost);
- 		scsi_unregister(shost);
- 		asc_board_count--;
- 		return NULL;
-@@ -18960,7 +18932,7 @@ static int advansys_release(struct Scsi_Host *shost)
- 
- 	ASC_DBG(1, "advansys_release: begin\n");
- 	boardp = ASC_BOARDP(shost);
--	free_irq(shost->irq, boardp);
-+	free_irq(shost->irq, shost);
- 	if (shost->dma_channel != NO_ISA_DMA) {
+-	ASC_DBG2(2,
+-		 "advansys_board_found: request_region port 0x%lx, len 0x%x\n",
+-		 (ulong)shost->io_port, boardp->asc_n_io_port);
+-	if (request_region(shost->io_port, boardp->asc_n_io_port,
+-			   "advansys") == NULL) {
+-		ASC_PRINT3
+-		    ("advansys_board_found: board %d: request_region() failed, port 0x%lx, len 0x%x\n",
+-		     boardp->id, (ulong)shost->io_port, boardp->asc_n_io_port);
+-		goto err_free_proc;
+-	}
+-
+ 	/* Register DMA Channel for Narrow boards. */
+ 	shost->dma_channel = NO_ISA_DMA;	/* Default to no ISA DMA. */
+ #ifdef CONFIG_ISA
+@@ -18200,7 +18179,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 				ASC_PRINT3
+ 				    ("advansys_board_found: board %d: request_dma() %d failed %d\n",
+ 				     boardp->id, shost->dma_channel, ret);
+-				goto err_free_region;
++				goto err_free_proc;
+ 			}
+ 			AscEnableIsaDma(shost->dma_channel);
+ 		}
+@@ -18266,8 +18245,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+  err_free_dma:
+ 	if (shost->dma_channel != NO_ISA_DMA)
+ 		free_dma(shost->dma_channel);
+- err_free_region:
+-	release_region(shost->io_port, boardp->asc_n_io_port);
+  err_free_proc:
+ 	kfree(boardp->prtbuf);
+  err_unmap:
+@@ -18295,7 +18272,6 @@ static int advansys_release(struct Scsi_Host *shost)
  		ASC_DBG(1, "advansys_release: free_dma()\n");
  		free_dma(shost->dma_channel);
+ 	}
+-	release_region(shost->io_port, boardp->asc_n_io_port);
+ 	if (ASC_WIDE_BOARD(boardp)) {
+ 		iounmap(boardp->ioremap_addr);
+ 		advansys_wide_free_mem(boardp);
+@@ -18317,19 +18293,17 @@ static int __devinit advansys_isa_probe(struct device *dev, unsigned int id)
+ 	struct Scsi_Host *shost;
+ 
+ 	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")) {
+-		ASC_DBG1(1, "advansys_isa_match: check_region() failed "
+-			 "I/O port 0x%x\n", iop_base);
++		ASC_DBG1(1, "advansys_isa_match: I/O port 0x%x busy\n",
++			 iop_base);
+ 		return -ENODEV;
+ 	}
+ 	ASC_DBG1(1, "advansys_isa_match: probing I/O port 0x%x\n", iop_base);
+-	release_region(iop_base, ASC_IOADR_GAP);
+ 	if (!AscFindSignature(iop_base))
+ 		goto nodev;
+ 	if (!(AscGetChipVersion(iop_base, ASC_IS_ISA) & ASC_CHIP_VER_ISA_BIT))
+ 		goto nodev;
+ 
+ 	shost = advansys_board_found(iop_base, dev, ASC_IS_ISA);
+-
+ 	if (!shost)
+ 		goto nodev;
+ 
+@@ -18337,12 +18311,15 @@ static int __devinit advansys_isa_probe(struct device *dev, unsigned int id)
+ 	return 0;
+ 
+  nodev:
++	release_region(iop_base, ASC_IOADR_GAP);
+ 	return -ENODEV;
+ }
+ 
+ static int __devexit advansys_isa_remove(struct device *dev, unsigned int id)
+ {
++	int ioport = _asc_def_iop_base[id];
+ 	advansys_release(dev_get_drvdata(dev));
++	release_region(ioport, ASC_IOADR_GAP);
+ 	return 0;
+ }
+ 
+@@ -18361,12 +18338,11 @@ static int __devinit advansys_vlb_probe(struct device *dev, unsigned int id)
+ 	struct Scsi_Host *shost;
+ 
+ 	if (!request_region(iop_base, ASC_IOADR_GAP, "advansys")) {
+-		ASC_DBG1(1, "advansys_vlb_match: check_region() failed "
+-			 "I/O port 0x%x\n", iop_base);
++		ASC_DBG1(1, "advansys_vlb_match: I/O port 0x%x busy\n",
++			 iop_base);
+ 		return -ENODEV;
+ 	}
+ 	ASC_DBG1(1, "advansys_vlb_match: probing I/O port 0x%x\n", iop_base);
+-	release_region(iop_base, ASC_IOADR_GAP);
+ 	if (!AscFindSignature(iop_base))
+ 		goto nodev;
+ 	/*
+@@ -18378,7 +18354,6 @@ static int __devinit advansys_vlb_probe(struct device *dev, unsigned int id)
+ 		goto nodev;
+ 
+ 	shost = advansys_board_found(iop_base, dev, ASC_IS_VL);
+-
+ 	if (!shost)
+ 		goto nodev;
+ 
+@@ -18386,6 +18361,7 @@ static int __devinit advansys_vlb_probe(struct device *dev, unsigned int id)
+ 	return 0;
+ 
+  nodev:
++	release_region(iop_base, ASC_IOADR_GAP);
+ 	return -ENODEV;
+ }
+ 
+@@ -18429,8 +18405,16 @@ static int __devinit advansys_eisa_probe(struct device *dev)
+ 
+ 	err = -ENODEV;
+ 	for (i = 0; i < 2; i++, ioport += 0x20) {
+-		if (!AscFindSignature(ioport))
++		if (!request_region(ioport, ASC_IOADR_GAP, "advansys")) {
++			printk(KERN_WARNING "Region %x-%x busy\n", ioport,
++			       ioport + ASC_IOADR_GAP - 1);
++			continue;
++		}
++		if (!AscFindSignature(ioport)) {
++			release_region(ioport, ASC_IOADR_GAP);
+ 			continue;
++		}
++
+ 		/*
+ 		 * I don't know why we need to do this for EISA chips, but
+ 		 * not for any others.  It looks to be equivalent to
+@@ -18440,8 +18424,11 @@ static int __devinit advansys_eisa_probe(struct device *dev)
+ 		 */
+ 		inw(ioport + 4);
+ 		data->host[i] = advansys_board_found(ioport, dev, ASC_IS_EISA);
+-		if (data->host[i])
++		if (data->host[i]) {
+ 			err = 0;
++		} else {
++			release_region(ioport, ASC_IOADR_GAP);
++		}
+ 	}
+ 
+ 	if (err) {
+@@ -18460,10 +18447,13 @@ static __devexit int advansys_eisa_remove(struct device *dev)
+ 	struct eisa_scsi_data *data = dev_get_drvdata(dev);
+ 
+ 	for (i = 0; i < 2; i++) {
++		int ioport;
+ 		struct Scsi_Host *shost = data->host[i];
+ 		if (!shost)
+ 			continue;
++		ioport = shost->io_port;
+ 		advansys_release(shost);
++		release_region(ioport, ASC_IOADR_GAP);
+ 	}
+ 
+ 	kfree(data);
+@@ -18507,6 +18497,9 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	err = pci_enable_device(pdev);
+ 	if (err)
+ 		goto fail;
++	err = pci_request_regions(pdev, "advansys");
++	if (err)
++		goto disable_device;
+ 
+ 	if (pci_resource_len(pdev, 0) == 0)
+ 		goto nodev;
+@@ -18522,6 +18515,8 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 
+  nodev:
+ 	err = -ENODEV;
++	pci_release_regions(pdev);
++ disable_device:
+ 	pci_disable_device(pdev);
+  fail:
+ 	return err;
+@@ -18530,6 +18525,7 @@ advansys_pci_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ static void __devexit advansys_pci_remove(struct pci_dev *pdev)
+ {
+ 	advansys_release(pci_get_drvdata(pdev));
++	pci_release_regions(pdev);
+ 	pci_disable_device(pdev);
+ }
+ 
 -- 
 1.4.4.4
 
