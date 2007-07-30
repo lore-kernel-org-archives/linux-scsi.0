@@ -1,138 +1,225 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 21/23] advansys: Remove pci_slot_info
-Date: Mon, 30 Jul 2007 10:57:06 -0600
-Message-ID: <1185814628684-git-send-email-matthew@wil.cx>
+Subject: [PATCH 22/23] advansys: use memcpy instead of open-coded loop
+Date: Mon, 30 Jul 2007 10:57:07 -0600
+Message-ID: <11858146283087-git-send-email-matthew@wil.cx>
 References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx> <11858146282332-git-send-email-matthew@wil.cx> <11858146283924-git-send-email-matthew@wil.cx> <1185814628436-git-send-email-matthew@wil.cx> <11858146281677-git-send-email-matthew@wil.cx> <11858146282603-git-send-email-matthew@wil.cx> <11858146281750-git-send-email-matthew@wil.cx> <11858146282891-git-send-email-matthew@wil.cx> <11858146284113-git-send-email-matthew@wil.cx> <11858146281160-git-send-email-matthew@wil.cx> <1
  1858146283502-git-send-email-matthew@wil.cx> <11858146282735-git-send-email-matthew@wil.cx
- >
+ > <1185814628684-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:43526 "EHLO
+Received: from mail.tor.primus.ca ([216.254.136.21]:43541 "EHLO
 	mail-01.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761845AbXG3Q5N (ORCPT
+	with ESMTP id S964989AbXG3Q5N (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:13 -0400
-In-Reply-To: <11858146282735-git-send-email-matthew@wil.cx>
+In-Reply-To: <1185814628684-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-The driver kept a copy of the PCI config address; refer to the pci_dev
-associated with the card instead.
+Use memcpy to initialise eep_config instead of a loop.  For
+AdvInitFrom38C1600EEP where we need to modify the default EEPROM
+configuration, do it after the loop, and do it using the structure
+definition, not by finding the right byte.  I think it was wrong for
+big-endian machines.
+
+Also delete some non-useful comments and prototypes.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |   29 +++++++++--------------------
- 1 files changed, 9 insertions(+), 20 deletions(-)
+ drivers/scsi/advansys.c |  119 ++++++++++++++++-------------------------------
+ 1 files changed, 40 insertions(+), 79 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 310b926..986c52a 100644
+index 986c52a..19c2d19 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -854,8 +854,6 @@ typedef unsigned char uchar;
- #define ERR      (-1)
- #define UW_ERR   (uint)(0xFFFF)
- #define isodd_word(val)   ((((uint)val) & (uint)0x0001) != 0)
--#define ASC_PCI_ID2FUNC(id)   (((id) >> 8) & 0x7)
--#define ASC_PCI_MKID(bus, dev, func) ((((dev) & 0x1F) << 11) | (((func) & 0x7) << 8) | ((bus) & 0xFF))
- 
- #define  ASC_DVCLIB_CALL_DONE     (1)
- #define  ASC_DVCLIB_CALL_FAILED   (0)
-@@ -1378,7 +1376,6 @@ typedef struct asc_dvc_cfg {
- 	uchar max_tag_qng[ASC_MAX_TID + 1];
- 	uchar *overrun_buf;
- 	uchar sdtr_period_offset[ASC_MAX_TID + 1];
--	ushort pci_slot_info;
- 	uchar adapter_info[6];
- } ASC_DVC_CFG;
- 
-@@ -2814,9 +2811,6 @@ typedef struct adv_dvc_cfg {
- 	ushort control_flag;	/* Microcode Control Flag */
- 	ushort mcode_date;	/* Microcode date */
- 	ushort mcode_version;	/* Microcode version */
--	ushort pci_slot_info;	/* high byte device/function number */
--	/* bits 7-3 device num., bits 2-0 function num. */
--	/* low byte bus num. */
- 	ushort serial1;		/* EEPROM serial number word 1 */
- 	ushort serial2;		/* EEPROM serial number word 2 */
- 	ushort serial3;		/* EEPROM serial number word 3 */
-@@ -3632,6 +3626,10 @@ typedef struct asc_board {
- 	ushort bios_codelen;	/* BIOS Code Segment Length. */
- } asc_board_t;
- 
-+#define adv_dvc_to_board(adv_dvc) container_of(adv_dvc, struct asc_board, \
-+							dvc_var.adv_dvc_var)
-+#define adv_dvc_to_pdev(adv_dvc) to_pci_dev(adv_dvc_to_board(adv_dvc)->dev)
-+
- /* Number of boards detected in system. */
- static int asc_board_count;
- 
-@@ -7764,8 +7762,7 @@ static void asc_prt_adv_dvc_cfg(ADV_DVC_CFG *h)
- 	printk("  mcode_version 0x%x, pci_device_id 0x%x, lib_version %u\n",
- 	       h->mcode_version, to_pci_dev(h->dev)->device, h->lib_version);
- 
--	printk("  control_flag 0x%x, pci_slot_info 0x%x\n",
--	       h->control_flag, h->pci_slot_info);
-+	printk("  control_flag 0x%x\n", h->control_flag);
- }
+@@ -3168,13 +3168,6 @@ do { \
+ #define QHSTA_M_SGBACKUP_ERROR      0x47	/* Scatter-Gather backup error */
  
  /*
-@@ -15201,6 +15198,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
- 	 * ready to be 'ored' into SCSI_CFG1.
- 	 */
- 	if ((asc_dvc->cfg->termination & TERM_SE) == 0) {
-+		struct pci_dev *pdev = adv_dvc_to_pdev(asc_dvc);
- 		/* SE automatic termination control is enabled. */
- 		switch (scsi_cfg1 & C_DET_SE) {
- 			/* TERM_SE_HI: on, TERM_SE_LO: on */
-@@ -15211,7 +15209,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
- 			break;
+- * Default EEPROM Configuration structure defined in a_init.c.
+- */
+-static ADVEEP_3550_CONFIG Default_3550_EEPROM_Config;
+-static ADVEEP_38C0800_CONFIG Default_38C0800_EEPROM_Config;
+-static ADVEEP_38C1600_CONFIG Default_38C1600_EEPROM_Config;
+-
+-/*
+  * DvcGetPhyAddr() flag arguments
+  */
+ #define ADV_IS_SCSIQ_FLAG       0x01	/* 'addr' is ASC_SCSI_REQ_Q pointer */
+@@ -13183,7 +13176,6 @@ static unsigned char _adv_asc38C1600_buf[] = {
+ static unsigned short _adv_asc38C1600_size = sizeof(_adv_asc38C1600_buf);	/* 0x1673 */
+ static ADV_DCNT _adv_asc38C1600_chksum = 0x0604EF77UL;	/* Expanded little-endian checksum. */
  
- 		case 0x0:
--			if (ASC_PCI_ID2FUNC(asc_dvc->cfg->pci_slot_info) == 0) {
-+			if (PCI_FUNC(pdev->devfn) == 0) {
- 				/* Function 0 - TERM_SE_HI: off, TERM_SE_LO: off */
- 			} else {
- 				/* Function 1 - TERM_SE_HI: on, TERM_SE_LO: off */
-@@ -15817,15 +15815,14 @@ static int __devinit AdvInitFrom38C1600EEP(ADV_DVC_VAR *asc_dvc)
- 	 */
- 	if (AdvGet38C1600EEPConfig(iop_base, &eep_config) !=
- 	    eep_config.check_sum) {
-+		struct pci_dev *pdev = adv_dvc_to_pdev(asc_dvc);
- 		warn_code |= ASC_WARN_EEPROM_CHKSUM;
+-/* a_init.c */
+ /*
+  * EEPROM Configuration.
+  *
+@@ -15443,7 +15435,6 @@ static int __devinit AdvInitFrom3550EEP(ADV_DVC_VAR *asc_dvc)
+ 	AdvPortAddr iop_base;
+ 	ushort warn_code;
+ 	ADVEEP_3550_CONFIG eep_config;
+-	int i;
  
+ 	iop_base = asc_dvc->iop_base;
+ 
+@@ -15460,15 +15451,12 @@ static int __devinit AdvInitFrom3550EEP(ADV_DVC_VAR *asc_dvc)
  		/*
  		 * Set EEPROM default values.
  		 */
- 		for (i = 0; i < sizeof(ADVEEP_38C1600_CONFIG); i++) {
--			if (i == 1
--			    && ASC_PCI_ID2FUNC(asc_dvc->cfg->pci_slot_info) !=
--			    0) {
-+			if (i == 1 && PCI_FUNC(pdev->devfn) != 0) {
- 				/*
- 				 * Set Function 1 EEPROM Word 0 MSB
- 				 *
-@@ -17146,10 +17143,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- #ifdef CONFIG_PCI
- 		case ASC_IS_PCI:
- 			shost->irq = asc_dvc_varp->irq_no = pdev->irq;
--			asc_dvc_varp->cfg->pci_slot_info =
--			    ASC_PCI_MKID(pdev->bus->number,
--					 PCI_SLOT(pdev->devfn),
--					 PCI_FUNC(pdev->devfn));
- 			shost->unchecked_isa_dma = FALSE;
- 			share_irq = IRQF_SHARED;
- 			break;
-@@ -17169,10 +17162,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+-		for (i = 0; i < sizeof(ADVEEP_3550_CONFIG); i++) {
+-			*((uchar *)&eep_config + i) =
+-			    *((uchar *)&Default_3550_EEPROM_Config + i);
+-		}
++		memcpy(&eep_config, &Default_3550_EEPROM_Config,
++			sizeof(ADVEEP_3550_CONFIG));
+ 
+ 		/*
+-		 * Assume the 6 byte board serial number that was read
+-		 * from EEPROM is correct even if the EEPROM checksum
+-		 * failed.
++		 * Assume the 6 byte board serial number that was read from
++		 * EEPROM is correct even if the EEPROM checksum failed.
  		 */
- #ifdef CONFIG_PCI
- 		shost->irq = adv_dvc_varp->irq_no = pdev->irq;
--		adv_dvc_varp->cfg->pci_slot_info =
--		    ASC_PCI_MKID(pdev->bus->number,
--				 PCI_SLOT(pdev->devfn),
--				 PCI_FUNC(pdev->devfn));
- 		shost->unchecked_isa_dma = FALSE;
- 		share_irq = IRQF_SHARED;
- #endif /* CONFIG_PCI */
+ 		eep_config.serial_number_word3 =
+ 		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
+@@ -15597,7 +15585,6 @@ static int __devinit AdvInitFrom38C0800EEP(ADV_DVC_VAR *asc_dvc)
+ 	AdvPortAddr iop_base;
+ 	ushort warn_code;
+ 	ADVEEP_38C0800_CONFIG eep_config;
+-	int i;
+ 	uchar tid, termination;
+ 	ushort sdtr_speed = 0;
+ 
+@@ -15617,15 +15604,12 @@ static int __devinit AdvInitFrom38C0800EEP(ADV_DVC_VAR *asc_dvc)
+ 		/*
+ 		 * Set EEPROM default values.
+ 		 */
+-		for (i = 0; i < sizeof(ADVEEP_38C0800_CONFIG); i++) {
+-			*((uchar *)&eep_config + i) =
+-			    *((uchar *)&Default_38C0800_EEPROM_Config + i);
+-		}
++		memcpy(&eep_config, &Default_38C0800_EEPROM_Config,
++			sizeof(ADVEEP_38C0800_CONFIG));
+ 
+ 		/*
+-		 * Assume the 6 byte board serial number that was read
+-		 * from EEPROM is correct even if the EEPROM checksum
+-		 * failed.
++		 * Assume the 6 byte board serial number that was read from
++		 * EEPROM is correct even if the EEPROM checksum failed.
+ 		 */
+ 		eep_config.serial_number_word3 =
+ 		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
+@@ -15800,7 +15784,6 @@ static int __devinit AdvInitFrom38C1600EEP(ADV_DVC_VAR *asc_dvc)
+ 	AdvPortAddr iop_base;
+ 	ushort warn_code;
+ 	ADVEEP_38C1600_CONFIG eep_config;
+-	int i;
+ 	uchar tid, termination;
+ 	ushort sdtr_speed = 0;
+ 
+@@ -15821,68 +15804,46 @@ static int __devinit AdvInitFrom38C1600EEP(ADV_DVC_VAR *asc_dvc)
+ 		/*
+ 		 * Set EEPROM default values.
+ 		 */
+-		for (i = 0; i < sizeof(ADVEEP_38C1600_CONFIG); i++) {
+-			if (i == 1 && PCI_FUNC(pdev->devfn) != 0) {
+-				/*
+-				 * Set Function 1 EEPROM Word 0 MSB
+-				 *
+-				 * Clear the BIOS_ENABLE (bit 14) and INTAB (bit 11)
+-				 * EEPROM bits.
+-				 *
+-				 * Disable Bit 14 (BIOS_ENABLE) to fix SPARC Ultra 60 and
+-				 * old Mac system booting problem. The Expansion ROM must
+-				 * be disabled in Function 1 for these systems.
+-				 *
+-				 */
+-				*((uchar *)&eep_config + i) =
+-				    ((*
+-				      ((uchar *)&Default_38C1600_EEPROM_Config
+-				       +
+-				       i)) &
+-				     (~
+-				      (((ADV_EEPROM_BIOS_ENABLE |
+-					 ADV_EEPROM_INTAB) >> 8) & 0xFF)));
++		memcpy(&eep_config, &Default_38C1600_EEPROM_Config,
++			sizeof(ADVEEP_38C1600_CONFIG));
+ 
+-				/*
+-				 * Set the INTAB (bit 11) if the GPIO 0 input indicates
+-				 * the Function 1 interrupt line is wired to INTA.
+-				 *
+-				 * Set/Clear Bit 11 (INTAB) from the GPIO bit 0 input:
+-				 *   1 - Function 1 interrupt line wired to INT A.
+-				 *   0 - Function 1 interrupt line wired to INT B.
+-				 *
+-				 * Note: Adapter boards always have Function 0 wired to INTA.
+-				 * Put all 5 GPIO bits in input mode and then read
+-				 * their input values.
+-				 */
+-				AdvWriteByteRegister(iop_base, IOPB_GPIO_CNTL,
+-						     0);
+-				if (AdvReadByteRegister
+-				    (iop_base, IOPB_GPIO_DATA) & 0x01) {
+-					/* Function 1 interrupt wired to INTA; Set EEPROM bit. */
+-					*((uchar *)&eep_config + i) |=
+-					    ((ADV_EEPROM_INTAB >> 8) & 0xFF);
+-				}
+-			} else {
+-				*((uchar *)&eep_config + i) =
+-				    *((uchar *)&Default_38C1600_EEPROM_Config
+-				      + i);
+-			}
++		if (PCI_FUNC(pdev->devfn) != 0) {
++			u8 ints;
++			/*
++			 * Disable Bit 14 (BIOS_ENABLE) to fix SPARC Ultra 60
++			 * and old Mac system booting problem. The Expansion
++			 * ROM must be disabled in Function 1 for these systems
++			 */
++			eep_config.cfg_lsw &= ~ADV_EEPROM_BIOS_ENABLE;
++			/*
++			 * Clear the INTAB (bit 11) if the GPIO 0 input
++			 * indicates the Function 1 interrupt line is wired
++			 * to INTB.
++			 *
++			 * Set/Clear Bit 11 (INTAB) from the GPIO bit 0 input:
++			 *   1 - Function 1 interrupt line wired to INT A.
++			 *   0 - Function 1 interrupt line wired to INT B.
++			 *
++			 * Note: Function 0 is always wired to INTA.
++			 * Put all 5 GPIO bits in input mode and then read
++			 * their input values.
++			 */
++			AdvWriteByteRegister(iop_base, IOPB_GPIO_CNTL, 0);
++			ints = AdvReadByteRegister(iop_base, IOPB_GPIO_DATA);
++			if ((ints & 0x01) == 0)
++				eep_config.cfg_lsw &= ~ADV_EEPROM_INTAB;
+ 		}
+ 
+ 		/*
+-		 * Assume the 6 byte board serial number that was read
+-		 * from EEPROM is correct even if the EEPROM checksum
+-		 * failed.
++		 * Assume the 6 byte board serial number that was read from
++		 * EEPROM is correct even if the EEPROM checksum failed.
+ 		 */
+ 		eep_config.serial_number_word3 =
+-		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
+-
++			AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 1);
+ 		eep_config.serial_number_word2 =
+-		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 2);
+-
++			AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 2);
+ 		eep_config.serial_number_word1 =
+-		    AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 3);
++			AdvReadEEPWord(iop_base, ADV_EEP_DVC_CFG_END - 3);
+ 
+ 		AdvSet38C1600EEPConfig(iop_base, &eep_config);
+ 	}
 -- 
 1.4.4.4
 
