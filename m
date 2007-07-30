@@ -1,133 +1,140 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 17/23] advansys: ioremap no longer needs page-aligned addresses
-Date: Mon, 30 Jul 2007 10:57:02 -0600
-Message-ID: <11858146284113-git-send-email-matthew@wil.cx>
-References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx> <1185814628978-git-send-email-matthew@wil.cx> <11858146282602-git-send-email-matthew@wil.cx> <11858146283106-git-send-email-matthew@wil.cx> <11858146282252-git-send-email-matthew@wil.cx> <11858146281790-git-send-email-matthew@wil.cx> <11858146281215-git-send-email-matthew@wil.cx> <11858146282469-git-send-email-matthew@wil.cx> <11858146281137-git-send-email-matthew@wil.cx> <11858146282332-git-send-email-matthew@wil.cx> <11858146283924-git-send-email-matthew@wil.cx> <1185814628436-git-send-email-matthew@wil.cx> <11858146281677-git-send-email-matthew@wil.cx> <11858146282603-git-send-email-matthew@wil.cx> <11858146281750-git-send-email-matthew@wil.cx> <11858146282891-git-send-email-matthew@wil.cx>
+Subject: [PATCH 2/23] advansys: Clean up proc_info implementation
+Date: Mon, 30 Jul 2007 10:56:47 -0600
+Message-ID: <1185814628978-git-send-email-matthew@wil.cx>
+References: <20070730165508.GH21219@parisc-linux.org> <11858146283240-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:59964 "EHLO
-	mail-08.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S937077AbXG3Q5M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:12 -0400
-In-Reply-To: <11858146282891-git-send-email-matthew@wil.cx>
+Received: from mail.tor.primus.ca ([216.254.136.21]:35764 "EHLO
+	smtp-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934299AbXG3Q5K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jul 2007 12:57:10 -0400
+In-Reply-To: <11858146283240-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-At some point during Linux 2.1 development, ioremap() gained the ability
-to handle addresses which weren't page-aligned.  Also expand the CONFIG_PCI
-range to encompass that entire section of wide board initialisation, since
-all wide boards are PCI.
+Just use the Scsi_Host passed in, rather than looking through the driver's
+own array of boards for one that matches it.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |   52 ++++++++++------------------------------------
- 1 files changed, 12 insertions(+), 40 deletions(-)
+ drivers/scsi/advansys.c |   36 ++++++++++++------------------------
+ 1 files changed, 12 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index e661986..2f37076 100644
+index 8ace30e..6d11076 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -17090,8 +17090,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 	ASC_DVC_VAR *asc_dvc_varp = NULL;
- 	ADV_DVC_VAR *adv_dvc_varp = NULL;
- 	int share_irq;
--	int iolen = 0;
--	ADV_PADDR pci_memory_address;
- 	int warn_code, err_code;
- 	int ret;
+@@ -4031,9 +4031,7 @@ static int
+ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 		   off_t offset, int length, int inout)
+ {
+-	struct Scsi_Host *shp;
+ 	asc_board_t *boardp;
+-	int i;
+ 	char *cp;
+ 	int cplen;
+ 	int cnt;
+@@ -4058,18 +4056,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 * User read of /proc/scsi/advansys/[0...] file.
+ 	 */
  
-@@ -17136,13 +17134,13 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 		asc_dvc_varp->iop_base = iop;
- 		asc_dvc_varp->isr_callback = asc_isr_callback;
- 	} else {
-+#ifdef CONFIG_PCI
- 		ASC_DBG(1, "advansys_board_found: wide board\n");
- 		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
- 		adv_dvc_varp->drv_ptr = boardp;
- 		adv_dvc_varp->cfg = &boardp->dvc_cfg.adv_dvc_cfg;
- 		adv_dvc_varp->isr_callback = adv_isr_callback;
- 		adv_dvc_varp->async_callback = adv_async_callback;
--#ifdef CONFIG_PCI
- 		if (pdev->device == PCI_DEVICE_ID_ASP_ABP940UW) {
- 			ASC_DBG(1, "advansys_board_found: ASC-3550\n");
- 			adv_dvc_varp->chip_type = ADV_CHIP_ASC3550;
-@@ -17153,46 +17151,20 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 			ASC_DBG(1, "advansys_board_found: ASC-38C1600\n");
- 			adv_dvc_varp->chip_type = ADV_CHIP_ASC38C1600;
- 		}
--#endif /* CONFIG_PCI */
- 
--		/*
--		 * Map the board's registers into virtual memory for
--		 * PCI slave access. Only memory accesses are used to
--		 * access the board's registers.
--		 *
--		 * Note: The PCI register base address is not always
--		 * page aligned, but the address passed to ioremap()
--		 * must be page aligned. It is guaranteed that the
--		 * PCI register base address will not cross a page
--		 * boundary.
--		 */
--		if (adv_dvc_varp->chip_type == ADV_CHIP_ASC3550) {
--			iolen = ADV_3550_IOLEN;
--		} else if (adv_dvc_varp->chip_type == ADV_CHIP_ASC38C0800) {
--			iolen = ADV_38C0800_IOLEN;
--		} else {
--			iolen = ADV_38C1600_IOLEN;
+-	/* Find the specified board. */
+-	for (i = 0; i < asc_board_count; i++) {
+-		if (asc_host[i]->host_no == shost->host_no) {
+-			break;
 -		}
--#ifdef CONFIG_PCI
--		pci_memory_address = pci_resource_start(pdev, 1);
--		ASC_DBG1(1,
--			 "advansys_board_found: pci_memory_address: 0x%lx\n",
--			 (ulong)pci_memory_address);
--		if ((boardp->ioremap_addr =
--		     ioremap(pci_memory_address & PAGE_MASK, PAGE_SIZE)) == 0) {
-+		boardp->asc_n_io_port = pci_resource_len(pdev, 1);
-+		boardp->ioremap_addr = ioremap(pci_resource_start(pdev, 1),
-+					       boardp->asc_n_io_port);
-+		if (!boardp->ioremap_addr) {
- 			ASC_PRINT3
- 			    ("advansys_board_found: board %d: ioremap(%x, %d) returned NULL\n",
--			     boardp->id, pci_memory_address, iolen);
-+			     boardp->id, pci_resource_start(pdev, 1),
-+			     boardp->asc_n_io_port);
- 			goto err_shost;
- 		}
--		ASC_DBG1(1, "advansys_board_found: ioremap_addr: 0x%lx\n",
--			 (ulong)boardp->ioremap_addr);
--		adv_dvc_varp->iop_base = (AdvPortAddr)
--		    (boardp->ioremap_addr +
--		     (pci_memory_address - (pci_memory_address & PAGE_MASK)));
-+		adv_dvc_varp->iop_base = (AdvPortAddr)boardp->ioremap_addr
- 		ASC_DBG1(1, "advansys_board_found: iop_base: 0x%lx\n",
- 			 adv_dvc_varp->iop_base);
--#endif /* CONFIG_PCI */
+-	}
+-	if (i == asc_board_count) {
+-		return (-ENOENT);
+-	}
+-
+-	shp = asc_host[i];
+-	boardp = ASC_BOARDP(shp);
++	boardp = ASC_BOARDP(shost);
  
- 		/*
- 		 * Even though it isn't used to access wide boards, other
-@@ -17201,9 +17173,10 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 		 */
- 		boardp->ioport = iop;
- 
--		ASC_DBG2(1,
--			 "advansys_board_found: iopb_chip_id_1 0x%x, iopw_chip_id_0 0x%x\n",
--			 (ushort)inp(iop + 1), (ushort)inpw(iop));
-+		ASC_DBG2(1, "advansys_board_found: iopb_chip_id_1 0x%x, "
-+			 "iopw_chip_id_0 0x%x\n", (ushort)inp(iop + 1),
-+			 (ushort)inpw(iop));
-+#endif /* CONFIG_PCI */
+ 	/* Copy read data starting at the beginning of the buffer. */
+ 	*start = buffer;
+@@ -4083,7 +4070,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 *
+ 	 * advansys_info() returns the board string from its own static buffer.
+ 	 */
+-	cp = (char *)advansys_info(shp);
++	cp = (char *)advansys_info(shost);
+ 	strcat(cp, "\n");
+ 	cplen = strlen(cp);
+ 	/* Copy board information. */
+@@ -4102,7 +4089,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	if (ASC_WIDE_BOARD(boardp)) {
+ 		cp = boardp->prtbuf;
+-		cplen = asc_prt_adv_bios(shp, cp, ASC_PRTBUF_SIZE);
++		cplen = asc_prt_adv_bios(shost, cp, ASC_PRTBUF_SIZE);
+ 		ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+ 		cnt =
+ 		    asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
+@@ -4121,7 +4108,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 * Display driver information for each device attached to the board.
+ 	 */
+ 	cp = boardp->prtbuf;
+-	cplen = asc_prt_board_devices(shp, cp, ASC_PRTBUF_SIZE);
++	cplen = asc_prt_board_devices(shost, cp, ASC_PRTBUF_SIZE);
+ 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+@@ -4138,9 +4125,9 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	cp = boardp->prtbuf;
+ 	if (ASC_NARROW_BOARD(boardp)) {
+-		cplen = asc_prt_asc_board_eeprom(shp, cp, ASC_PRTBUF_SIZE);
++		cplen = asc_prt_asc_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
+ 	} else {
+-		cplen = asc_prt_adv_board_eeprom(shp, cp, ASC_PRTBUF_SIZE);
++		cplen = asc_prt_adv_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
  	}
- 
- #ifdef CONFIG_PROC_FS
-@@ -17556,7 +17529,6 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
- 		 * PCI Memory Mapped I/O.
- 		 */
- 		shost->io_port = iop;
--		boardp->asc_n_io_port = iolen;
- 
- 		shost->this_id = adv_dvc_varp->chip_scsi_id;
- 
+ 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+@@ -4157,7 +4144,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 * Display driver configuration and information for the board.
+ 	 */
+ 	cp = boardp->prtbuf;
+-	cplen = asc_prt_driver_conf(shp, cp, ASC_PRTBUF_SIZE);
++	cplen = asc_prt_driver_conf(shost, cp, ASC_PRTBUF_SIZE);
+ 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+@@ -4174,7 +4161,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 * Display driver statistics for the board.
+ 	 */
+ 	cp = boardp->prtbuf;
+-	cplen = asc_prt_board_stats(shp, cp, ASC_PRTBUF_SIZE);
++	cplen = asc_prt_board_stats(shost, cp, ASC_PRTBUF_SIZE);
+ 	ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+@@ -4191,7 +4178,8 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	for (tgt_id = 0; tgt_id <= ADV_MAX_TID; tgt_id++) {
+ 		cp = boardp->prtbuf;
+-		cplen = asc_prt_target_stats(shp, tgt_id, cp, ASC_PRTBUF_SIZE);
++		cplen = asc_prt_target_stats(shost, tgt_id, cp,
++							ASC_PRTBUF_SIZE);
+ 		ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
+ 		cnt =
+ 		    asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
+@@ -4213,9 +4201,9 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	cp = boardp->prtbuf;
+ 	if (ASC_NARROW_BOARD(boardp)) {
+-		cplen = asc_prt_asc_board_info(shp, cp, ASC_PRTBUF_SIZE);
++		cplen = asc_prt_asc_board_info(shost, cp, ASC_PRTBUF_SIZE);
+ 	} else {
+-		cplen = asc_prt_adv_board_info(shp, cp, ASC_PRTBUF_SIZE);
++		cplen = asc_prt_adv_board_info(shost, cp, ASC_PRTBUF_SIZE);
+ 	}
+ 	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
 -- 
 1.4.4.4
 
