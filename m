@@ -1,37 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Correct some mistakes in drivers using the scsi hotplug model
-Date: Tue, 31 Jul 2007 10:00:40 -0600
-Message-ID: <20070731160040.GQ21219@parisc-linux.org>
-References: <20070731125510.GN21219@parisc-linux.org> <1185892945.3468.9.camel@localhost.localdomain> <20070731145227.GP21219@parisc-linux.org> <20070731145723.GA18819@infradead.org> <1185894351.3468.17.camel@localhost.localdomain>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Tue, 31 Jul 2007 09:15:31 -0700
+Message-ID: <1185898532.2766.2.camel@laptopd505.fenrus.org>
+References: <20070705194909.337398431@intel.com>
+	 <20070705130518.135e4e3c.kristen.c.accardi@intel.com>
+	 <46AE12B6.6090408@garzik.org>  <46AED656.8070407@gmail.com>
+	 <1185891382.2750.8.camel@laptopd505.fenrus.org>
+	 <46AF4B05.4010700@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:58090 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751243AbXGaQAm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 12:00:42 -0400
-Content-Disposition: inline
-In-Reply-To: <1185894351.3468.17.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <46AF4B05.4010700@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org
 
-On Tue, Jul 31, 2007 at 10:05:50AM -0500, James Bottomley wrote:
-> I agree the NCR_700_release should be the last method called.  However,
-> the NCR_700_detect() API calls scsi_host_alloc/scsi_add_host() ... the
-> API will be horribly assymetric (and thus prone to misuse) with regard
-> to the host lifetime management if the NCR_700_release() method doesn't
-> tidy up the host.
-> 
-> I can go either way, but either the alloc/add has to come out of the
-> detect method or the put has to go into the release method.
 
-It's already asymmetric -- scsi_remove_host is called by the front
-end driver, and that's the opposite to scsi_add_host, which is done in
-NCR_700_detect.
+> They were hardware problems.  I don't think any amount of proper
+> implementation can fix them.  I have one DVD RAM somewhere in my pile of
+> hardware which locks up solidly if any link PS mode is used and had a
+
+and the AHCI ALPM code decides to use power savings on this device? if
+so, please give us the idents so that we can add it to the blacklist as
+the first entry... (or can buy it to check it in detail first)
 
 -- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+if you want to mail me at work (you don't), use arjan (at) linux.intel.com
+Test the interaction between Linux and your BIOS via http://www.linuxfirmwarekit.org
+
