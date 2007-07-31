@@ -1,95 +1,66 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH 5/6] aha152x.c - Fix check_condition code-path
-Date: Tue, 31 Jul 2007 11:40:21 -0700
-Message-ID: <20070731114021.488735ec.rdunlap@xenotime.net>
-References: <46ACE62F.4070108@panasas.com>
-	<46ACEA0A.5040101@panasas.com>
-	<20070730171331.5237bb94.rdunlap@xenotime.net>
-	<46AEEBF7.3060808@panasas.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH update 3/3] firewire: fw-sbp2: add support for multiple
+	logical units per target
+Date: Tue, 31 Jul 2007 20:37:16 +0200
+Message-ID: <46AF815C.8050102@s5r6.in-berlin.de>
+References: <tkrat.b8bfd55a441e870f@s5r6.in-berlin.de>	
+	<tkrat.1c43b4e95fa76945@s5r6.in-berlin.de>	
+	<tkrat.79f0390686f53591@s5r6.in-berlin.de>
+	<59ad55d30707311045y3978a956wd4c090e9b579ae50@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:54913 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932207AbXGaSew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jul 2007 14:34:52 -0400
-Received: from midway.site ([71.245.96.223]) by xenotime.net for <linux-scsi@vger.kernel.org>; Tue, 31 Jul 2007 11:34:46 -0700
-In-Reply-To: <46AEEBF7.3060808@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <59ad55d30707311045y3978a956wd4c090e9b579ae50@mail.gmail.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: =?ISO-8859-1?Q?Kristian_H=F8gsberg?= <krh@bitplanet.net>
+Cc: =?ISO-8859-1?Q?gsberg?= <krh@redhat.com>, =?ISO-8859-1?Q?Kristian_H=F8?=@sc8-sf-spam2.sourceforge.net, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "=?ISO-8859-1?Q? J=FCrg?= =?ISO-8859-1?Q?en_E._Fischer ?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 31 Jul 2007 10:59:51 +0300 Boaz Harrosh wrote:
+Kristian H=F8gsberg wrote:
+> On 7/28/07, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+>>  struct sbp2_logical_unit {
+>>         struct sbp2_target *tgt;
+>> +       struct list_head tgt_list;
+> =
 
-> Randy Dunlap wrote:
-> > 
-> > Since you grok all of that (above), maybe you can help here:
-> > 
-> > With these 6 patches applied, I do the following:
-> > 
-> > 1.  insert PCMCIA aha152x card with SCSI drive attached (/dev/sdb4)
-> > 2.  mount -t vfat /dev/sdb4 /mnt/disk
-> > 3.  play with /mnt/disk
-> > 4.  umount /mnt/disk
-> > 
-> > Now I would like to rmmod the aha152x_cs module, but its use count
-> > is 2.  Even if I eject the card, its use count stays at 2.
-> > Maybe the reset or check_condition patch doesn't clean up correctly,
-> > or one of them isn't releasing a used resource ?
-> > 
-> > (this is 2.6.23-rc1 + your 6 patches + 1 acpi seq-file throttling fix.)
-> > 
-> 
-> I had an hard look and a very careful line-by-line compare
-> and I can't find anything obvious. Could you do a bisect.
-> maybe it will give me a clue as to where to look. Also please
-> Enable debug prints. Maybe the driver is stuck at some state 
-> and does not exit.
+> I would call this link. I've consistently named all instances of
+> struct list_head that are used as a list link either 'link'
+> 'something_link'.  I find that it's a helpful convention for figuring
+> out/remembering whether the field is a list head or the link part of
+> an element in a list.
 
-The good news is that this problem has nothing to do with this
-patch series.  The bad news is that this problem is there anyway.
+Yes, it's a good convention.  I somehow missed the pattern.
 
-When I umount /mnt/disk and then eject the SCSI adapter card,
-a sync-cache SCSI command is sent to the LLD and its use count
-increments, but the LLD cannot send this command to the drive.
-The LLD never recovers from this situation.
+>> +               case SBP2_CSR_LOGICAL_UNIT_DIRECTORY:
+>> +                       subdir =3D ci.p + value;
+>> +                       if (subdir <=3D dev->config_rom + 5 ||
+>> +                           subdir >=3D dev->config_rom + dev->config_ro=
+m_length)
+>> +                               fw_error("logical unit dir out of bounds=
+\n");
+> =
 
+> This check isn't necessary, read_bus_info_block ensures that all
+> blocks read are within the config rom area.
 
-[   88.821277] pccard: card ejected from slot 0
-[   88.830891] sd 2:0:4:0: [sdb] Synchronizing SCSI cache
-[   88.836187] (scsi2:4:0) queue: f7fab1a0; cmd_len=10 pieces=0 size=0 cmnd=Synchronize Cac
-he(10) 35 00 00 00 00 00 00 00 00 00
-[   88.847545] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locking
-[   88.853528] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locked
-[   88.859437] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocking (locked at aha152x_in
-ternal_queue:1039)
-[   88.869051] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocked
-[   89.884469] (scsi-1:-1:-1) (aha152x_abort:1113) locking
-[   89.889717] (scsi-1:-1:-1) (aha152x_abort:1113) locked
-[   89.894835] (scsi-1:-1:-1) (aha152x_abort:1123) unlocking (locked at aha152x_abort:1113)
-[   89.902904] (scsi-1:-1:-1) (aha152x_abort:1123) unlocked
-[   89.908224] (scsi2:4:0) queue: f7fab1a0; cmd_len=6 pieces=0 size=0 cmnd=Test Unit Ready 
-00 00 00 00 00 00
-[   89.917878] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locking
-[   89.923861] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locked
-[   89.929764] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocking (locked at aha152x_in
-ternal_queue:1039)
-[   89.939375] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocked
-[   90.415863] (scsi-1:-1:-1) (aha152x_abort:1113) locking
-[   90.421098] (scsi-1:-1:-1) (aha152x_abort:1113) locked
-[   90.426219] (scsi-1:-1:-1) (aha152x_abort:1123) unlocking (locked at aha152x_abort:1113)
-[   90.434289] (scsi-1:-1:-1) (aha152x_abort:1123) unlocked
-[   90.439593] (scsi-1:-1:-1) (aha152x_device_reset:1173) locking
-[   90.445412] (scsi-1:-1:-1) (aha152x_device_reset:1173) locked
-[   90.451134] (scsi-1:-1:-1) (aha152x_device_reset:1176) unlocking (locked at aha152x_devi
-ce_reset:1173)
-[   90.460413] (scsi-1:-1:-1) (aha152x_device_reset:1176) unlocked
-[   90.466319] (scsi2:4:0) queue: f7fab1a0; cmd_len=0 pieces=0 size=0 cmnd=Synchronize Cach
-e(10) 35 00 00 00 00 00 00 00 00 00
-[   90.477686] (scsi2:4:0) cannot reuse command
+Right, fw_device_init fetched the directory for us, so we have it. #-)
+-- =
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D-=3D=3D=3D -=3D=3D=3D =3D=3D=3D=3D=3D
+http://arcgraph.de/sr/
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc.
+Still grepping through log files to find problems?  Stop.
+Now Search log events and configuration files using AJAX and a browser.
+Download your FREE copy of Splunk now >>  http://get.splunk.com/
