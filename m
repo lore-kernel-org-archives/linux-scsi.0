@@ -1,48 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: git-scsi-misc build error
-Date: Tue, 31 Jul 2007 17:46:05 -0500
-Message-ID: <1185921965.3468.59.camel@localhost.localdomain>
-References: <20070731152732.ae8d251d.akpm@linux-foundation.org>
-	 <1185921052.3468.51.camel@localhost.localdomain>
-	 <20070731154134.ccea0265.akpm@linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] initialize shost_data to zero
+Date: Wed, 01 Aug 2007 08:40:27 +0900
+Message-ID: <20070801084027X.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39165 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751199AbXGaWqI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 18:46:08 -0400
-In-Reply-To: <20070731154134.ccea0265.akpm@linux-foundation.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:38078 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756310AbXGaXkj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 19:40:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, 2007-07-31 at 15:41 -0700, Andrew Morton wrote:
-> On Tue, 31 Jul 2007 17:30:52 -0500
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> 
-> > On Tue, 2007-07-31 at 15:27 -0700, Andrew Morton wrote:
-> > > ERROR: "scsi_tgt_it_nexus_create" [drivers/scsi/scsi_transport_srp.ko] undefined!
-> > > ERROR: "scsi_tgt_it_nexus_destroy" [drivers/scsi/scsi_transport_srp.ko] undefined!
-> > > 
-> > > This bug was reported about seven times against 2.6.23-rc1-mm1's
-> > > git-scsi-target, and now it has been moved into git-scsi-misc.
-> > 
-> > Yes ... Tomo's on the hook for a better fix, which is promised.
-> > 
-> 
-> mutter.
-> 
-> Please, nothing which uses Kconfig `select'.  They regularly go wrong.
+It's better to initialize host->shost_data to zero like
+target->starget_data and device->sdev_data.
 
-He has explicit instructions on that point.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/hosts.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-> Please copy me on that fix so I know when to drop this one.
-
-Will do.
-
-James
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index bd8e7f3..96bc312 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -220,7 +220,7 @@ int scsi_add_host(struct Scsi_Host *shost, struct device *dev)
+ 	get_device(&shost->shost_gendev);
+ 
+ 	if (shost->transportt->host_size &&
+-	    (shost->shost_data = kmalloc(shost->transportt->host_size,
++	    (shost->shost_data = kzalloc(shost->transportt->host_size,
+ 					 GFP_KERNEL)) == NULL)
+ 		goto out_del_classdev;
+ 
+-- 
+1.5.2.4
 
