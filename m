@@ -1,43 +1,95 @@
-From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Subject: [PATCH 47] drivers/scsi/megaraid.c: kmalloc + memset conversion to kzalloc
-Date: Tue, 31 Jul 2007 20:34:14 +0200
-Message-ID: <200707312034.15089.m.kozlowski@tuxland.pl>
-References: <200707311845.48807.m.kozlowski@tuxland.pl>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [PATCH 5/6] aha152x.c - Fix check_condition code-path
+Date: Tue, 31 Jul 2007 11:40:21 -0700
+Message-ID: <20070731114021.488735ec.rdunlap@xenotime.net>
+References: <46ACE62F.4070108@panasas.com>
+	<46ACEA0A.5040101@panasas.com>
+	<20070730171331.5237bb94.rdunlap@xenotime.net>
+	<46AEEBF7.3060808@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <200707311845.48807.m.kozlowski@tuxland.pl>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, megaraidlinux@lsi.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xenotime.net ([66.160.160.81]:54913 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S932207AbXGaSew (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jul 2007 14:34:52 -0400
+Received: from midway.site ([71.245.96.223]) by xenotime.net for <linux-scsi@vger.kernel.org>; Tue, 31 Jul 2007 11:34:46 -0700
+In-Reply-To: <46AEEBF7.3060808@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, "=?ISO-8859-1?Q? J=FCrg?= =?ISO-8859-1?Q?en_E._Fischer ?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-This patch does kmalloc + memset conversion to kzalloc and adds missing check for
-kzaloc return value.
+On Tue, 31 Jul 2007 10:59:51 +0300 Boaz Harrosh wrote:
 
-Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+> Randy Dunlap wrote:
+> > 
+> > Since you grok all of that (above), maybe you can help here:
+> > 
+> > With these 6 patches applied, I do the following:
+> > 
+> > 1.  insert PCMCIA aha152x card with SCSI drive attached (/dev/sdb4)
+> > 2.  mount -t vfat /dev/sdb4 /mnt/disk
+> > 3.  play with /mnt/disk
+> > 4.  umount /mnt/disk
+> > 
+> > Now I would like to rmmod the aha152x_cs module, but its use count
+> > is 2.  Even if I eject the card, its use count stays at 2.
+> > Maybe the reset or check_condition patch doesn't clean up correctly,
+> > or one of them isn't releasing a used resource ?
+> > 
+> > (this is 2.6.23-rc1 + your 6 patches + 1 acpi seq-file throttling fix.)
+> > 
+> 
+> I had an hard look and a very careful line-by-line compare
+> and I can't find anything obvious. Could you do a bisect.
+> maybe it will give me a clue as to where to look. Also please
+> Enable debug prints. Maybe the driver is stuck at some state 
+> and does not exit.
 
- drivers/scsi/megaraid.c | 116109 -> 116094 (-15 bytes)
- drivers/scsi/megaraid.o | 257872 -> 257772 (-100 bytes)
+The good news is that this problem has nothing to do with this
+patch series.  The bad news is that this problem is there anyway.
 
- drivers/scsi/megaraid.c |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+When I umount /mnt/disk and then eject the SCSI adapter card,
+a sync-cache SCSI command is sent to the LLD and its use count
+increments, but the LLD cannot send this command to the drive.
+The LLD never recovers from this situation.
 
---- linux-2.6.23-rc1-mm1-a/drivers/scsi/megaraid.c	2007-07-26 13:07:42.000000000 +0200
-+++ linux-2.6.23-rc1-mm1-b/drivers/scsi/megaraid.c	2007-07-31 11:11:58.000000000 +0200
-@@ -4408,8 +4408,10 @@ mega_internal_command(adapter_t *adapter
- 	scmd = &adapter->int_scmd;
- 	memset(scmd, 0, sizeof(Scsi_Cmnd));
 
--	sdev = kmalloc(sizeof(struct scsi_device), GFP_KERNEL);
--	memset(sdev, 0, sizeof(struct scsi_device));
-+	sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
-+	if (!sdev)
-+		return -ENOMEM;
-+
- 	scmd->device = sdev;
+[   88.821277] pccard: card ejected from slot 0
+[   88.830891] sd 2:0:4:0: [sdb] Synchronizing SCSI cache
+[   88.836187] (scsi2:4:0) queue: f7fab1a0; cmd_len=10 pieces=0 size=0 cmnd=Synchronize Cac
+he(10) 35 00 00 00 00 00 00 00 00 00
+[   88.847545] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locking
+[   88.853528] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locked
+[   88.859437] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocking (locked at aha152x_in
+ternal_queue:1039)
+[   88.869051] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocked
+[   89.884469] (scsi-1:-1:-1) (aha152x_abort:1113) locking
+[   89.889717] (scsi-1:-1:-1) (aha152x_abort:1113) locked
+[   89.894835] (scsi-1:-1:-1) (aha152x_abort:1123) unlocking (locked at aha152x_abort:1113)
+[   89.902904] (scsi-1:-1:-1) (aha152x_abort:1123) unlocked
+[   89.908224] (scsi2:4:0) queue: f7fab1a0; cmd_len=6 pieces=0 size=0 cmnd=Test Unit Ready 
+00 00 00 00 00 00
+[   89.917878] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locking
+[   89.923861] (scsi-1:-1:-1) (aha152x_internal_queue:1039) locked
+[   89.929764] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocking (locked at aha152x_in
+ternal_queue:1039)
+[   89.939375] (scsi-1:-1:-1) (aha152x_internal_queue:1055) unlocked
+[   90.415863] (scsi-1:-1:-1) (aha152x_abort:1113) locking
+[   90.421098] (scsi-1:-1:-1) (aha152x_abort:1113) locked
+[   90.426219] (scsi-1:-1:-1) (aha152x_abort:1123) unlocking (locked at aha152x_abort:1113)
+[   90.434289] (scsi-1:-1:-1) (aha152x_abort:1123) unlocked
+[   90.439593] (scsi-1:-1:-1) (aha152x_device_reset:1173) locking
+[   90.445412] (scsi-1:-1:-1) (aha152x_device_reset:1173) locked
+[   90.451134] (scsi-1:-1:-1) (aha152x_device_reset:1176) unlocking (locked at aha152x_devi
+ce_reset:1173)
+[   90.460413] (scsi-1:-1:-1) (aha152x_device_reset:1176) unlocked
+[   90.466319] (scsi2:4:0) queue: f7fab1a0; cmd_len=0 pieces=0 size=0 cmnd=Synchronize Cach
+e(10) 35 00 00 00 00 00 00 00 00 00
+[   90.477686] (scsi2:4:0) cannot reuse command
 
- 	scmd->device->host = adapter->host;
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
