@@ -1,58 +1,50 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Tue, 31 Jul 2007 09:30:14 -0700
-Message-ID: <20070731093014.db9e0734.kristen.c.accardi@intel.com>
-References: <20070705194909.337398431@intel.com>
-	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>
-	<46AE12B6.6090408@garzik.org>
-	<46AED656.8070407@gmail.com>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Subject: [PATCH 01] kmalloc + memset conversion co kzalloc
+Date: Tue, 31 Jul 2007 18:50:12 +0200
+Message-ID: <200707311850.13184.m.kozlowski@tuxland.pl>
+References: <200707311845.48807.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <46AED656.8070407@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <200707311845.48807.m.kozlowski@tuxland.pl>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Kars de Jong <jongk@linux-m68k.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 31 Jul 2007 15:27:34 +0900
-Tejun Heo <htejun@gmail.com> wrote:
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-> Jeff Garzik wrote:
-> > Any chance the SCSI peeps could ACK this, and then let me include it in
-> > the ALPM patchset in the libata tree?
-> 
-> ATA link PS is pretty complex with HIPM, DIPM and AHCI ALPM.  I'm not
-> sure whether this three level knob would be sufficient.  It might be
-> good enough if we're gonna develop extensive in-kernel black/white list
-> specifying which method works on which combination but my gut tells me
-> that it's best left to userland (probably in the form of per-notebook PS
-> profile).
+ drivers/scsi/a4000t.c | 3534 -> 3457 (-77 bytes)
 
-I think what you are saying is that you'd like a way to use your HIPM
-and DIPM without ALPM on the AHCI driver.  Fine - it's really easy
-to add these levels later - if they don't make sense at the sysfs interface
-we can add module params to specify the definition of "min_power" as 
-being performed via HIPM and DIPM instead of ALPM - although as of yet we
-have no evidence what so ever that this method actually adds value over
-ALPM.
+ drivers/scsi/a4000t.c |    7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-> 
-> Adding to the fun, there are quite a few broken devices out there which
-> act weirdly when link PS actions are taken.
+--- linux-2.6.23-rc1-mm1-a/drivers/scsi/a4000t.c	2007-07-26 13:07:42.000000000 +0200
++++ linux-2.6.23-rc1-mm1-b/drivers/scsi/a4000t.c	2007-07-31 14:00:37.000000000 +0200
+@@ -37,7 +37,7 @@ static struct platform_device *a4000t_sc
 
-OK - this is why I added the blacklist for this feature.
+ static int __devinit a4000t_probe(struct device *dev)
+ {
+-	struct Scsi_Host * host = NULL;
++	struct Scsi_Host *host;
+ 	struct NCR_700_Host_Parameters *hostdata;
 
-> 
-> Also, I generally don't think AHCI ALPM is a good idea.  It doesn't have
-> 'cool down' period before entering PS state which unnecessarily hampers
-> performance and might increase chance of device malfunction.
+ 	if (!(MACH_IS_AMIGA && AMIGAHW_PRESENT(A4000_SCSI)))
+@@ -47,12 +47,11 @@ static int __devinit a4000t_probe(struct
+ 				"A4000T builtin SCSI"))
+ 		goto out;
 
-"might increase"?  How about some actual examples of where you've shown
-this to be a problem?  I can assert that I think ALPM is a good idea,
-because I've never had a report of it causing problems.  Windows has 
-been using this feature for a very long time - and you have to admit that
-they have a pretty large market share.  Nobody is complaining about ALPM
-increasing device malfunction, so unless you have proof it seems insane
-to nak due to this. 
+-	hostdata = kmalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
+-	if (hostdata == NULL) {
++	hostdata = kzalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
++	if (!hostdata) {
+ 		printk(KERN_ERR "a4000t-scsi: Failed to allocate host data\n");
+ 		goto out_release;
+ 	}
+-	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
+
+ 	/* Fill in the required pieces of hostdata */
+ 	hostdata->base = (void __iomem *)ZTWO_VADDR(A4000T_SCSI_ADDR);
