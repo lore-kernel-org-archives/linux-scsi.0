@@ -1,30 +1,34 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: git-scsi-misc build error
-Date: Tue, 31 Jul 2007 17:30:52 -0500
-Message-ID: <1185921052.3468.51.camel@localhost.localdomain>
-References: <20070731152732.ae8d251d.akpm@linux-foundation.org>
+Subject: Re: scsi: fix warning in scsi_sysfs.c
+Date: Tue, 31 Jul 2007 17:39:12 -0500
+Message-ID: <1185921553.3468.57.camel@localhost.localdomain>
+References: <200707312335.24919.lpenko@gmx.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:37301 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:55148 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751816AbXGaWay (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 18:30:54 -0400
-In-Reply-To: <20070731152732.ae8d251d.akpm@linux-foundation.org>
+	with ESMTP id S1756753AbXGaWjO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 18:39:14 -0400
+In-Reply-To: <200707312335.24919.lpenko@gmx.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org
+To: Lado <lpenko@gmx.de>
+Cc: scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 2007-07-31 at 15:27 -0700, Andrew Morton wrote:
-> ERROR: "scsi_tgt_it_nexus_create" [drivers/scsi/scsi_transport_srp.ko] undefined!
-> ERROR: "scsi_tgt_it_nexus_destroy" [drivers/scsi/scsi_transport_srp.ko] undefined!
+On Tue, 2007-07-31 at 23:35 +0200, Lado wrote:
+> Subject: scsi: fix warning in scsi_sysfs.c
 > 
-> This bug was reported about seven times against 2.6.23-rc1-mm1's
-> git-scsi-target, and now it has been moved into git-scsi-misc.
+> From: Ladislav Penko <lpenko@gmx.de>
+> 
+> change: trivial fix warning (removed unused variable rq)
+> 
+> Signed-off-by: Ladislav Penko <lpenko@gmx.de>
 
-Yes ... Tomo's on the hook for a better fix, which is promised.
+The trivial fixes aren't always the best.  In this case, if you set
+CONFIG_BLK_DEV_BSG=y you'll find the compile breaks with this fix.  The
+correct fix should already be upstream by now.
 
 James
 
