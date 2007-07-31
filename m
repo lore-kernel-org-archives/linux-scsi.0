@@ -1,30 +1,25 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] Correct some mistakes in drivers using the scsi hotplug model
-Date: Tue, 31 Jul 2007 15:57:23 +0100
-Message-ID: <20070731145723.GA18819@infradead.org>
-References: <20070731125510.GN21219@parisc-linux.org> <1185892945.3468.9.camel@localhost.localdomain> <20070731145227.GP21219@parisc-linux.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Tue, 31 Jul 2007 23:58:26 +0900
+Message-ID: <46AF4E12.8060204@gmail.com>
+References: <20070705194909.337398431@intel.com>	 <20070705130518.135e4e3c.kristen.c.accardi@intel.com>	 <46AE12B6.6090408@garzik.org>  <46AED656.8070407@gmail.com> <1185891382.2750.8.camel@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:33211 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754535AbXGaO50 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 10:57:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20070731145227.GP21219@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1185891382.2750.8.camel@laptopd505.fenrus.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-On Tue, Jul 31, 2007 at 08:52:28AM -0600, Matthew Wilcox wrote:
-> On Tue, Jul 31, 2007 at 09:42:25AM -0500, James Bottomley wrote:
-> > Rather than changing this in every 53c700 based driver, shouldn't it
-> > just be added to NCR_700_release()?
-> 
-> Then I'd have to change the few drivers that weren't leaking scsi_hosts
-> ;-)  But I can, if that's what you prefer.
+Arjan van de Ven wrote:
+> either sucks. AHCI ALPM ought to work if it's supported; it's what other
+> operating systems also use... 
 
-I don't think it's a good idea.  scsi_hhost_put should be the very
-last thing in the release method and all the drivers do some kind
-of cleanup after detaching from the generic ncr53c00 driver.
+A question.  Does the other OS enable ALPM without checking against
+white/black list?  Or is it enabled only on certain configurations -
+e.g. specific notebooks, etc?
+
+-- 
+tejun
