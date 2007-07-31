@@ -1,240 +1,197 @@
-From: Randy Dunlap <rdunlap@xenotime.net>
-Subject: Re: [PATCH 5/6] aha152x.c - Fix check_condition code-path
-Date: Mon, 30 Jul 2007 17:13:31 -0700
-Message-ID: <20070730171331.5237bb94.rdunlap@xenotime.net>
-References: <46ACE62F.4070108@panasas.com>
-	<46ACEA0A.5040101@panasas.com>
+From: Neil Brown <neilb@suse.de>
+Subject: [PATCHSET/RFC] Refactor block layer to improve support
+	for stacked devices.
+Date: Tue, 31 Jul 2007 12:27:12 +1000
+Message-ID: <18094.40448.257550.417390@notabene.brown>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xenotime.net ([66.160.160.81]:42191 "HELO xenotime.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S932229AbXGaAID (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 30 Jul 2007 20:08:03 -0400
-Received: from midway.site ([71.245.96.223]) by xenotime.net for <linux-scsi@vger.kernel.org>; Mon, 30 Jul 2007 17:08:01 -0700
-In-Reply-To: <46ACEA0A.5040101@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Jens Axboe <jens.axboe@oracle.com>, Tejun Heo <htejun@gmail.com>, device-mapper development <dm-devel@redhat.com>, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vg
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "=?ISO-8859-1?Q? J=FCrg?= =?ISO-8859-1?Q?en_E._Fischer ?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, 29 Jul 2007 22:27:06 +0300 Boaz Harrosh wrote:
 
-> 
->   check_condition code-path was similar but more
->   complicated to Reset. It went like this:
->   1. extra space was allocated at aha152x_scdata for mirroring
->     scsi_cmnd members.
->   2. At aha152x_internal_queue() every not check_condition
->     (REQUEST_SENSE) command was copied to above members in
->     case of error.
->   3. At busfree_run() in the DONE_CS phase if a Status of
->     SAM_STAT_CHECK_CONDITION was detected. The command was
->     re-queued Internally using aha152x_internal_queue(,,check_condition,)
->     The old command members are over written with the
->     REQUEST_SENSE info.
->   4. At busfree_run() in the DONE_CS phase again. If it is a
->     check_condition command, info was restored from mirror
->     made at first call to aha152x_internal_queue() (see 2)
->     and the command is completed.
+Hi,
+ I have just sent a patch-set to linux-kernel that touches quite a
+ number of block device drives, with particular relevance to md and
+ dm.
 
-Since you grok all of that (above), maybe you can help here:
+ Rather than fill lots of peoples mailboxes multiple times (35 patches
+ in the set), I only sent the full set to linux-kernel, and am just
+ sending this single notification to other relevant lists.
 
-With these 6 patches applied, I do the following:
+ If you want to look at the patch set (and please do) and are not
+ subscribe to linux-kernel, you can view it here:
 
-1.  insert PCMCIA aha152x card with SCSI drive attached (/dev/sdb4)
-2.  mount -t vfat /dev/sdb4 /mnt/disk
-3.  play with /mnt/disk
-4.  umount /mnt/disk
+   http://lkml.org/lkml/2007/7/30/468
+ 
+ or ask and I'll send you all 35 patches.
 
-Now I would like to rmmod the aha152x_cs module, but its use count
-is 2.  Even if I eject the card, its use count stays at 2.
-Maybe the reset or check_condition patch doesn't clean up correctly,
-or one of them isn't releasing a used resource ?
+Below is the introductory email
 
-(this is 2.6.23-rc1 + your 6 patches + 1 acpi seq-file throttling fix.)
-
-[  376.206253] pccard: PCMCIA card inserted into slot 0
-[  376.211235] cs: memory probe 0xdfc00000-0xdfcfffff: excluding 0xdfc00000-0xdfc0ffff 0xdfcf0000-0xdfcfffff
-[  376.226859] pcmcia: registering new device pcmcia0.0
-[  376.332335] aha152x: resetting bus...
-[  376.689008] aha152x2: vital data: rev=1, io=0x2340 (0x2340/0x2340), irq=3, scsiid=7, reconnect=enabled, parity=enabled, synchronous=enabled, delay=100, extended translation=disabled
-[  376.713448] aha152x2: trying software interrupt, ok.
-[  377.713637] scsi2 : Adaptec 152x SCSI driver; $Revision: 2.7 $
-[  377.857969] (scsi2:4:0) Synchronous Data Transfer Request period = 200 ns offset = 8 
-[  377.867504] scsi 2:0:4:0: Direct-Access     iomega   jaz 2GB          E.17 PQ: 0 ANSI: 2
-[  377.879079] sd 2:0:4:0: [sdb] Spinning up disk......<6>SysRq : Changing Loglevel
-[  378.158714] Loglevel set to 8
-[  378.224925] ......ready
-[  378.618907] sd 2:0:4:0: [sdb] 2091050 512-byte hardware sectors (1071 MB)
-[  378.628155] sd 2:0:4:0: [sdb] Write Protect is off
-[  378.632944] sd 2:0:4:0: [sdb] Mode Sense: 39 00 10 08
-[  378.642617] sd 2:0:4:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
-[  378.653722] sd 2:0:4:0: [sdb] 2091050 512-byte hardware sectors (1071 MB)
-[  378.662927] sd 2:0:4:0: [sdb] Write Protect is off
-[  378.667718] sd 2:0:4:0: [sdb] Mode Sense: 39 00 10 08
-[  378.677401] sd 2:0:4:0: [sdb] Write cache: enabled, read cache: enabled, supports DPO and FUA
-[  378.686028]  sdb: sdb4
-[  378.723811] sd 2:0:4:0: [sdb] Attached SCSI removable disk
-[  378.737794] sd 2:0:4:0: Attached scsi generic sg2 type 0
-[  378.800377] modprobe used greatest stack depth: 4212 bytes left
-[  378.881432] pcmcia: Detected deprecated PCMCIA ioctl usage from process: hald.
-[  378.888659] pcmcia: This interface will soon be removed from the kernel; please expect breakage unless you upgrade to new tools.
-[  378.900205] pcmcia: see http://www.kernel.org/pub/linux/utils/kernel/pcmcia/pcmcia.html for details.
-[  388.150827] pccard: card ejected from slot 0
-[  388.160260] sd 2:0:4:0: [sdb] Synchronizing SCSI cache
-[  389.692020] (scsi2:4:0) cannot reuse command
-[  395.689698] sd 2:0:4:0: scsi: Device offlined - not ready after error recovery
-[  399.745374] (scsi2:4:0) cannot reuse command
-[  405.316897] sd 2:0:4:0: scsi: Device offlined - not ready after error recovery
-[  406.792484] (scsi2:4:0) cannot reuse command
-[  412.428955] sd 2:0:4:0: scsi: Device offlined - not ready after error recovery
-[  413.855090] (scsi2:4:0) cannot reuse command
+Thanks,
+NeilBrown
 
 
 
->   What I did is:
->   1. Allocate less space in aha152x_scdata only for the 16-byte
->     original command. (which is actually not needed by scsi-ml
->     anymore at this stage. But this is to much knowledge of scsi-ml)
->   2. If Status == SAM_STAT_CHECK_CONDITION, then like before
->      re-queue a REQUEST_SENSE command. But only now save original
->      command members. (Less of them)
->   3. In aha152x_internal_queue(), just like for Reset, use the
->     check_condition hint to set differently the working members.
->     execute the command.
->   4. At busfree_run() in the DONE_CS phase again. restore needed
->      members.
-> 
->   While at it. This patch fixes a BUG. Old code when sending
->   a REQUEST_SENSE for a failed command. Would than return with
->   cmd->resid == 0 which was the status of the REQUEST_SENSE.
->   The failing command resid was lost. And when would resid
->   be interesting if not on a failing command?
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> 
-> ---
->  drivers/scsi/aha152x.c |   55 +++++++++++++++++++++++------------------------
->  1 files changed, 27 insertions(+), 28 deletions(-)
-> 
-> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-> index d7ca86f..cf49ed5 100644
-> --- a/drivers/scsi/aha152x.c
-> +++ b/drivers/scsi/aha152x.c
-> @@ -552,14 +552,11 @@ struct aha152x_hostdata {
->  struct aha152x_scdata {
->  	Scsi_Cmnd *next;	/* next sc in queue */
->  	struct completion *done;/* semaphore to block on */
-> -	unsigned char cmd_len;
-> -	unsigned char cmnd[MAX_COMMAND_SIZE];
-> -	unsigned short use_sg;
-> -	unsigned request_bufflen;
-> -	void *request_buffer;
-> +	unsigned char aha_orig_cmd_len;
-> +	unsigned char aha_orig_cmnd[MAX_COMMAND_SIZE];
-> +	int aha_orig_resid;
->  };
->  
-> -
->  /* access macros for hostdata */
->  
->  #define HOSTDATA(shpnt)		((struct aha152x_hostdata *) &shpnt->hostdata)
-> @@ -997,20 +994,11 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
->  			return FAILED;
->  		}
->  	} else {
-> -		struct aha152x_scdata *sc;
-> -
->  		SCpnt->host_scribble = kmalloc(sizeof(struct aha152x_scdata), GFP_ATOMIC);
->  		if(SCpnt->host_scribble==0) {
->  			printk(ERR_LEAD "allocation failed\n", CMDINFO(SCpnt));
->  			return FAILED;
->  		}
-> -
-> -		sc = SCDATA(SCpnt);
-> -		memcpy(sc->cmnd, SCpnt->cmnd, sizeof(sc->cmnd));
-> -		sc->request_buffer  = SCpnt->request_buffer;
-> -		sc->request_bufflen = SCpnt->request_bufflen;
-> -		sc->use_sg          = SCpnt->use_sg;
-> -		sc->cmd_len         = SCpnt->cmd_len;
->  	}
->  
->  	SCNEXT(SCpnt)		= NULL;
-> @@ -1023,10 +1011,16 @@ static int aha152x_internal_queue(Scsi_Cmnd *SCpnt, struct completion *complete,
->  	   SCp.buffers_residual : left buffers in list
->  	   SCp.phase            : current state of the command */
->  
-> -	if(phase & resetting) {
-> -		SCpnt->SCp.ptr           = NULL;
-> -		SCpnt->SCp.this_residual = 0;
-> -		SCpnt->resid             = 0;
-> +	if (phase & (check_condition|resetting)) {
-> +		if (phase & check_condition) {
-> +			SCpnt->SCp.ptr           = SCpnt->sense_buffer;
-> +			SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
-> +			SCpnt->resid             = sizeof(SCpnt->sense_buffer);
-> +		} else {
-> +			SCpnt->SCp.ptr           = NULL;
-> +			SCpnt->SCp.this_residual = 0;
-> +			SCpnt->resid             = 0;
-> +		}
->  		SCpnt->SCp.buffer           = NULL;
->  		SCpnt->SCp.buffers_residual = 0;
->  	} else {
-> @@ -1568,11 +1562,9 @@ static void busfree_run(struct Scsi_Host *shpnt)
->  #endif
->  
->  			/* restore old command */
-> -			memcpy(cmd->cmnd, sc->cmnd, sizeof(sc->cmnd));
-> -			cmd->request_buffer  = sc->request_buffer;
-> -			cmd->request_bufflen = sc->request_bufflen;
-> -			cmd->use_sg          = sc->use_sg;
-> -			cmd->cmd_len         = sc->cmd_len;
-> +			memcpy(cmd->cmnd, sc->aha_orig_cmnd, sizeof(cmd->cmnd));
-> +			cmd->cmd_len = sc->aha_orig_cmd_len;
-> +			cmd->resid = sc->aha_orig_resid;
->  
->  			cmd->SCp.Status = SAM_STAT_CHECK_CONDITION;
->  
-> @@ -1588,12 +1580,22 @@ static void busfree_run(struct Scsi_Host *shpnt)
->  #endif
->  
->  			if(!(DONE_SC->SCp.phase & not_issued)) {
-> +				struct aha152x_scdata *sc;
->  				Scsi_Cmnd *ptr = DONE_SC;
->  				DONE_SC=NULL;
->  #if 0
->  				DPRINTK(debug_eh, ERR_LEAD "requesting sense\n", CMDINFO(ptr));
->  #endif
->  
-> +				/* save old command */
-> +				sc = SCDATA(ptr);
-> +				/* It was allocated in aha152x_internal_queue? */
-> +				BUG_ON(!sc);
-> +				memcpy(sc->aha_orig_cmnd, ptr->cmnd,
-> +				                            sizeof(ptr->cmnd));
-> +				sc->aha_orig_cmd_len = ptr->cmd_len;
-> +				sc->aha_orig_resid = ptr->resid;
-> +
->  				ptr->cmnd[0]         = REQUEST_SENSE;
->  				ptr->cmnd[1]         = 0;
->  				ptr->cmnd[2]         = 0;
-> @@ -1601,10 +1603,7 @@ static void busfree_run(struct Scsi_Host *shpnt)
->  				ptr->cmnd[4]         = sizeof(ptr->sense_buffer);
->  				ptr->cmnd[5]         = 0;
->  				ptr->cmd_len         = 6;
-> -				ptr->use_sg          = 0; 
-> -				ptr->request_buffer  = ptr->sense_buffer;
-> -				ptr->request_bufflen = sizeof(ptr->sense_buffer);
-> -			
-> +
->  				DO_UNLOCK(flags);
->  				aha152x_internal_queue(ptr, NULL, check_condition, ptr->scsi_done);
->  				DO_LOCK(flags);
-> -- 
+From: NeilBrown <neilb@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Date:	Tue, 31 Jul 2007 12:15:45 +1000
 
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+
+The following 35(!) patches achieve a refactoring of some parts of the
+block layer to provide better support for stacked devices.
+
+The core issue is that of letting bio_add_page know the limitation
+that the device imposes so that it doesn't create a bio that is too large.
+
+For a unstacked disk device (e.g. scsi), bio_add_page can access
+max_nr_sectors and max_nr_segments and some other details to know how
+segments should be counted, and does the appropriate checks (this is a
+simplification, get is close enough for this discussion).
+
+For stacked devices (dm, md etc) bio_add_page can also call into the
+driver via merge_bvec_fn to find out if a page can be added to a bio.
+
+This mostly works for a simple stack (e.g. md on scsi) but breaks down
+with more complicated stacks (dm on md on scsi) as the recusive calls
+to merge_bvec_fn that are required are difficult to get right, and
+don't provide any guarantees in the face of array reconfiguration anyway.
+dm and md both take the approach of "if the never level down defines
+merge_bvec_fn, then set max_sectors to PAGE_SIZE/512 and live with small
+requests".
+
+So this patchset introduces a new approach.  bio_add_page is allowed
+to create bios as big as it likes, and each layer is responsible for
+splitting that bio up as required.
+
+For intermediate levels like raid0, a number of new bios might be
+created which refer to parts of the original, including parts of the
+bi_io_vec.
+
+For the bottom level driver (__make_request), each "struct request"
+can refer to just part of a bio, so a bio can be effectively split
+among several requests (a request can still reference multiple small
+bios, and can concievable list parts of large bios and some small bios
+as well, though the merging required to achieve this isn't implemented
+yet - that patch set is big enough as it is).
+
+This requires that the bi_io_vec become immutable, and that certain
+parts of the bio become immutable.
+
+To achieve this, we introduce fields into the bio so that it can point
+to just part of the bi_io_vec (an offset and a size) and introduce
+similar fields into 'struct request' to refer to only part of a bio list.
+
+I am keen to receive both review and testing.  I have tested it on
+SATA drives with a range of md configurations, but haven't tested dm,
+or ide-floppy, or various other bits that needed to be changed.
+
+Probably the changes that are mostly likely to raise eyebrows involve
+the code to iterate over the segments in a bio or in a 'struct
+request', so I'll give a bit more detail about them here.
+
+Previously these (bio_for_each_segment, rq_for_each_bio) were simple
+macros that provided pointers into bi_io_vec.  
+
+As the actual segments that a request might need to handle may no
+longer be explicitly in bi_io_vec (e.g. an offset might need to be
+added, or a size restriction might need to be imposed) this is no
+longer possible.  Instead, these functions (now rq_for_each_segment
+and bio_for_each_segment) fill in a 'struct bio_vec' with appropriate
+values.  e.g.
+  struct bio_vec bvec;
+  struct bio_iterator i;
+  bio_for_each_segment(bvec, bio, i)
+	use bvec.bv_page, bvec.bi_offset, bvec.bv_len
+
+This might seem like data is being copied around a bit more, but it
+should all be in L1 cache and could conceivable be optimised into
+registers by the compiler, so I don't believe this is a big problem
+(no, I haven't figured a good way to test it).
+
+To achieve this, the "for_each" macros are now somewhat more complex.
+For example, rq_for_each_segment is:
+
+#define bio_for_each_segment_offset(bv, bio, _i, offs, _size)		\
+	for (_i.i = 0, _i.offset = (bio)->bi_offset + offs,		\
+		 _i.size = min_t(int, _size, (bio)->bi_size - offs);   	\
+	     _i.i < (bio)->bi_vcnt && _i.size > 0;			\
+	     _i.i++)							\
+		if (bv = *bio_iovec_idx((bio), _i.i),			\
+		    bv.bv_offset += _i.offset,				\
+		    bv.bv_len <= _i.offset				\
+		    ? (_i.offset -= bv.bv_len, 0)			\
+		    : (bv.bv_len -= _i.offset,				\
+		       _i.offset = 0,					\
+		       bv.bv_len < _i.size				\
+		       ? (_i.size -= bv.bv_len, 1)			\
+		       : (bv.bv_len = _i.size,				\
+			  _i.size = 0,					\
+			  bv.bv_len > 0)))
+
+#define bio_for_each_segment(bv, bio, __i)				\
+		bio_for_each_segment_offset(bv, bio, __i, 0, (bio)->bi_size)
+
+It does some with some explanatory text in a comment, but it is still
+a bit daunting.  Any suggestions on making this more approachable
+would be very welcome.
+
+Rather than 'cc' this to various lists or individuals who might be
+stake-holders in the relevant code, I am posting this full patchset
+just to linux-kernel and will separate email some stakeholders with
+pointers and an offer of the full patch set.
+
+The patches are against 2.6.23-rc1-mm1.
+
+Thanks for any feedback.
+
+NeilBrown
+
+
+ [PATCH 001 of 35] Replace bio_data with blk_rq_data
+ [PATCH 002 of 35] Replace bio_cur_sectors with blk_rq_cur_sectors.
+ [PATCH 003 of 35] Introduce rq_for_each_segment replacing rq_for_each_bio
+ [PATCH 004 of 35] Merge blk_recount_segments into blk_recalc_rq_segments
+ [PATCH 005 of 35] Stop updating bi_idx, bv_len, bv_offset when a request completes
+ [PATCH 006 of 35] Only call bi_end_io once for any bio.
+ [PATCH 007 of 35] Drop 'size' argument from bio_endio and bi_end_io.
+ [PATCH 008 of 35] Introduce bi_iocnt to count requests sharing the one bio.
+ [PATCH 009 of 35] Remove overloading of bi_hw_segments in raid5.
+ [PATCH 010 of 35] New function blk_req_append_bio
+ [PATCH 011 of 35] Stop exporting blk_rq_bio_prep
+ [PATCH 012 of 35] Share code between init_request_from_bio and blk_rq_bio_prep
+ [PATCH 013 of 35] Don't update bi_hw_*_size if we aren't going to merge.
+ [PATCH 014 of 35] Change blk_phys/hw_contig_segment to take requests, not bios.
+ [PATCH 015 of 35] Move hw_front_size and hw_back_size from bio to request.
+ [PATCH 016 of 35] Centralise setting for REQ_NOMERGE.
+ [PATCH 017 of 35] Fix various abuse of bio fields in umem.c
+ [PATCH 018 of 35] Remove bi_idx
+ [PATCH 019 of 35] Convert bio_for_each_segment to fill in a fresh bio_vec
+ [PATCH 020 of 35] Add bi_offset and allow a bio to reference only part of a bi_io_vec
+ [PATCH 021 of 35] Teach umem.c about bi_offset and to limit to bi_size.
+ [PATCH 022 of 35] Teach dm-crypt to honour bi_offset and bi_size
+ [PATCH 023 of 35] Teach pktcdvd.c to honour bi_offset and bi_size
+ [PATCH 024 of 35] Allow request bio list not to end with NULL
+ [PATCH 025 of 35] Treat rq->hard_nr_sectors as setting an overriding limit in the size of the request
+ [PATCH 026 of 35] Split any large bios that arrive at __make_request.
+ [PATCH 027 of 35] Remove bi_XXX_segments and related code.
+ [PATCH 028 of 35] Split arbitrarily large requests to md/raid0 and md/linear
+ [PATCH 029 of 35] Teach md/raid10 to split arbitrarily large bios.
+ [PATCH 030 of 35] Teach raid5 to split incoming bios.
+ [PATCH 031 of 35] Use bio_multi_split to fully split bios for pktcdvd.
+ [PATCH 032 of 35] Remove blk_queue_merge_bvec and bio_split and related code.
+ [PATCH 033 of 35] Simplify stacking of IO restrictions
+ [PATCH 034 of 35] Simplify bio_add_page and raid1/raid10 resync which use it.
+ [PATCH 035 of 35] Simplify bio splitting in dm.
