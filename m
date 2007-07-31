@@ -1,40 +1,43 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Wed, 01 Aug 2007 03:29:18 +0900
-Message-ID: <46AF7F7E.6060300@gmail.com>
-References: <20070705194909.337398431@intel.com>	 <20070705130518.135e4e3c.kristen.c.accardi@intel.com>	 <46AE12B6.6090408@garzik.org>  <46AED656.8070407@gmail.com>	 <1185891382.2750.8.camel@laptopd505.fenrus.org>	 <46AF4B05.4010700@gmail.com> <1185898532.2766.2.camel@laptopd505.fenrus.org>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Subject: [PATCH 47] drivers/scsi/megaraid.c: kmalloc + memset conversion to kzalloc
+Date: Tue, 31 Jul 2007 20:34:14 +0200
+Message-ID: <200707312034.15089.m.kozlowski@tuxland.pl>
+References: <200707311845.48807.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.185]:62674 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762185AbXGaS32 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 14:29:28 -0400
-Received: by rv-out-0910.google.com with SMTP id k20so657969rvb
-        for <linux-scsi@vger.kernel.org>; Tue, 31 Jul 2007 11:29:28 -0700 (PDT)
-In-Reply-To: <1185898532.2766.2.camel@laptopd505.fenrus.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <200707311845.48807.m.kozlowski@tuxland.pl>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, megaraidlinux@lsi.com
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 
-Arjan van de Ven wrote:
->> They were hardware problems.  I don't think any amount of proper
->> implementation can fix them.  I have one DVD RAM somewhere in my pile of
->> hardware which locks up solidly if any link PS mode is used and had a
-> 
-> and the AHCI ALPM code decides to use power savings on this device? if
-> so, please give us the idents so that we can add it to the blacklist as
-> the first entry... (or can buy it to check it in detail first)
+This patch does kmalloc + memset conversion to kzalloc and adds missing check for
+kzaloc return value.
 
-Yeap, lemme check.
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-It's "TSSTcorpCD/DVDW SH-S183A" with firmware revision "SB01".  Wanna
-check ID capability bits but 'hdparm -I /dev/sr0' is still broken and
-it's already past 3 am here.  I'll report back tomorrow.
+ drivers/scsi/megaraid.c | 116109 -> 116094 (-15 bytes)
+ drivers/scsi/megaraid.o | 257872 -> 257772 (-100 bytes)
 
-Thanks.
+ drivers/scsi/megaraid.c |    6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
--- 
-tejun
+--- linux-2.6.23-rc1-mm1-a/drivers/scsi/megaraid.c	2007-07-26 13:07:42.000000000 +0200
++++ linux-2.6.23-rc1-mm1-b/drivers/scsi/megaraid.c	2007-07-31 11:11:58.000000000 +0200
+@@ -4408,8 +4408,10 @@ mega_internal_command(adapter_t *adapter
+ 	scmd = &adapter->int_scmd;
+ 	memset(scmd, 0, sizeof(Scsi_Cmnd));
+
+-	sdev = kmalloc(sizeof(struct scsi_device), GFP_KERNEL);
+-	memset(sdev, 0, sizeof(struct scsi_device));
++	sdev = kzalloc(sizeof(struct scsi_device), GFP_KERNEL);
++	if (!sdev)
++		return -ENOMEM;
++
+ 	scmd->device = sdev;
+
+ 	scmd->device->host = adapter->host;
