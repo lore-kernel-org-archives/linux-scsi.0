@@ -1,41 +1,56 @@
-From: Lado <lpenko@gmx.de>
-Subject: scsi: fix warning in scsi_sysfs.c
-Date: Tue, 31 Jul 2007 23:35:24 +0200
-Message-ID: <200707312335.24919.lpenko@gmx.de>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Subject: [PATCH 82] drivers/scsi/zorro7xx.c: kmalloc + memset conversion to kzalloc
+Date: Wed, 1 Aug 2007 00:21:33 +0200
+Message-ID: <200708010021.34147.m.kozlowski@tuxland.pl>
+References: <200707311845.48807.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="utf-8"
+  charset="iso-8859-2"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from server22.mivitec.net ([213.131.236.1]:47720 "EHLO
-	server22.mivitec.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754334AbXGaWUc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 18:20:32 -0400
-Received: from [192.168.178.56] (krlh-590f26c9.pool.einsundeins.de [89.15.38.201])
-	by server22.mivitec.net (Postfix) with ESMTP id AD294133E19
-	for <linux-scsi@vger.kernel.org>; Tue, 31 Jul 2007 23:47:53 +0200 (CEST)
+Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:1830 "EHLO
+	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754156AbXGaWVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 31 Jul 2007 18:21:35 -0400
+In-Reply-To: <200707311845.48807.m.kozlowski@tuxland.pl>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-Subject: scsi: fix warning in scsi_sysfs.c
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-From: Ladislav Penko <lpenko@gmx.de>
+ drivers/scsi/zorro7xx.c | 4579 -> 4501 (-78 bytes)
 
-change: trivial fix warning (removed unused variable rq)
+ drivers/scsi/zorro7xx.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Signed-off-by: Ladislav Penko <lpenko@gmx.de>
-
-Index: linux/drivers/scsi/scsi_sysfs.c
-===================================================================
---- linux.orig/drivers/scsi/scsi_sysfs.c
-+++ linux/drivers/scsi/scsi_sysfs.c
-@@ -715,7 +715,6 @@ static int attr_add(struct device *dev,
- int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+--- linux-2.6.23-rc1-mm1-a/drivers/scsi/zorro7xx.c	2007-07-26 13:07:42.000000000 +0200
++++ linux-2.6.23-rc1-mm1-b/drivers/scsi/zorro7xx.c	2007-07-31 14:25:58.000000000 +0200
+@@ -69,7 +69,7 @@ static struct zorro_device_id zorro7xx_z
+ static int __devinit zorro7xx_init_one(struct zorro_dev *z,
+ 				       const struct zorro_device_id *ent)
  {
-        int error, i;
--       struct request_queue *rq = sdev->request_queue;
+-	struct Scsi_Host * host = NULL;
++	struct Scsi_Host *host;
+ 	struct NCR_700_Host_Parameters *hostdata;
+ 	struct zorro_driver_data *zdd;
+ 	unsigned long board, ioaddr;
+@@ -89,14 +89,12 @@ static int __devinit zorro7xx_init_one(s
+ 		return -EBUSY;
+ 	}
 
-        if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
-                return error;
+-	hostdata = kmalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
+-	if (hostdata == NULL) {
++	hostdata = kzalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
++	if (!hostdata) {
+ 		printk(KERN_ERR "zorro7xx: Failed to allocate host data\n");
+ 		goto out_release;
+ 	}
+
+-	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
+-
+ 	/* Fill in the required pieces of hostdata */
+ 	if (ioaddr > 0x01000000)
+ 		hostdata->base = ioremap(ioaddr, zorro_resource_len(z));
