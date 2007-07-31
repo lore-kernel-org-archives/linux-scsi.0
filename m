@@ -1,26 +1,41 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH 64] drivers/scsi/qla2xxx/qla_init.c: mostly kmalloc + memset conversion to k[cz]alloc
-Date: Tue, 31 Jul 2007 15:00:07 -0700
-Message-ID: <20070731220007.GI8842@plap.qlogic.org>
-References: <200707311845.48807.m.kozlowski@tuxland.pl> <200707312351.10536.m.kozlowski@tuxland.pl>
+From: Lado <lpenko@gmx.de>
+Subject: scsi: fix warning in scsi_sysfs.c
+Date: Tue, 31 Jul 2007 23:35:24 +0200
+Message-ID: <200707312335.24919.lpenko@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from server22.mivitec.net ([213.131.236.1]:47720 "EHLO
+	server22.mivitec.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754334AbXGaWUc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 18:20:32 -0400
+Received: from [192.168.178.56] (krlh-590f26c9.pool.einsundeins.de [89.15.38.201])
+	by server22.mivitec.net (Postfix) with ESMTP id AD294133E19
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Jul 2007 23:47:53 +0200 (CEST)
 Content-Disposition: inline
-In-Reply-To: <200707312351.10536.m.kozlowski@tuxland.pl>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: scsi <linux-scsi@vger.kernel.org>
 
-On Tue, 31 Jul 2007, Mariusz Kozlowski wrote:
+Subject: scsi: fix warning in scsi_sysfs.c
 
-> Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-> 
->  drivers/scsi/qla2xxx/qla_init.c | 107445 -> 107327 (-118 bytes)
->  drivers/scsi/qla2xxx/qla_init.o | 237540 -> 237424 (-116 bytes)
-> 
->  drivers/scsi/qla2xxx/qla_init.c |   14 ++++++--------
->  1 file changed, 6 insertions(+), 8 deletions(-)
+From: Ladislav Penko <lpenko@gmx.de>
 
-Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+change: trivial fix warning (removed unused variable rq)
+
+Signed-off-by: Ladislav Penko <lpenko@gmx.de>
+
+Index: linux/drivers/scsi/scsi_sysfs.c
+===================================================================
+--- linux.orig/drivers/scsi/scsi_sysfs.c
++++ linux/drivers/scsi/scsi_sysfs.c
+@@ -715,7 +715,6 @@ static int attr_add(struct device *dev,
+ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
+ {
+        int error, i;
+-       struct request_queue *rq = sdev->request_queue;
+
+        if ((error = scsi_device_set_state(sdev, SDEV_RUNNING)) != 0)
+                return error;
