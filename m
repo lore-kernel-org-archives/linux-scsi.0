@@ -1,45 +1,41 @@
-From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Subject: [PATCH 54] drivers/scsi/mvme16x_scsi.c: kmalloc + memset conversion to kzalloc
-Date: Tue, 31 Jul 2007 23:23:36 +0200
-Message-ID: <200707312323.36541.m.kozlowski@tuxland.pl>
-References: <200707311845.48807.m.kozlowski@tuxland.pl>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH 0/8] lpfc 8.2.2 : lpfc 8.2.2 patches
+Date: Tue, 31 Jul 2007 21:27:11 +0000 (UTC)
+Message-ID: <1186067373.14374.12.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:3248 "EHLO
-	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756286AbXGaVXg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 31 Jul 2007 17:23:36 -0400
-In-Reply-To: <200707311845.48807.m.kozlowski@tuxland.pl>
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:50128 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759342AbXGaV0u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jul 2007 17:26:50 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l6VLQnic028958
+	for <linux-scsi@vger.kernel.org>; Tue, 31 Jul 2007 14:26:49 -0700 (PDT)
+Date: Thu, 02 Aug 2007 11:09:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, jongk@linux-m68k.org
+To: linux-scsi@vger.kernel.org
 
-Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+This set of patches updates the lpfc driver to revision 8.2.2.
 
- drivers/scsi/mvme16x_scsi.c | 3740 -> 3678 (-62 bytes)
+It is mainly bug fixes, further splitting of parameters between physical
+port and virtual port, and expanded debug logging.
 
- drivers/scsi/mvme16x_scsi.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+The patches contain the following:
+ - Error messages and debugfs updates
+ - Fix locking around HBA's port_list
+ - Attribute and Parameter splits for vport and physical port
+ - Rework the lpfc_printf_log() macro so that logging is enabled on a
+   per-vport basis. 
+ - Miscellaneous management and logging mods:
+ - Miscellaneous Bug Fixes
+ - Style cleanups
+ - Change version number to 8.2.2
 
---- linux-2.6.23-rc1-mm1-a/drivers/scsi/mvme16x_scsi.c	2007-07-26 13:07:42.000000000 +0200
-+++ linux-2.6.23-rc1-mm1-b/drivers/scsi/mvme16x_scsi.c	2007-07-31 11:02:11.000000000 +0200
-@@ -48,13 +48,12 @@ mvme16x_probe(struct device *dev)
- 		goto out;
- 	}
+-- james s
 
--	hostdata = kmalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
-+	hostdata = kzalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
- 	if (hostdata == NULL) {
- 		printk(KERN_ERR "mvme16x-scsi: "
- 				"Failed to allocate host data\n");
- 		goto out;
- 	}
--	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
 
- 	/* Fill in the required pieces of hostdata */
- 	hostdata->base = (void __iomem *)0xfff47000UL;
+
