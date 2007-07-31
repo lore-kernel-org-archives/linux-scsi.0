@@ -1,50 +1,58 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 Subject: Re: [patch 2/4] Expose Power Management Policy option to users
-Date: Tue, 31 Jul 2007 09:18:41 -0700
-Message-ID: <20070731091841.857d22bb.kristen.c.accardi@intel.com>
+Date: Tue, 31 Jul 2007 09:30:14 -0700
+Message-ID: <20070731093014.db9e0734.kristen.c.accardi@intel.com>
 References: <20070705194909.337398431@intel.com>
 	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>
 	<46AE12B6.6090408@garzik.org>
 	<46AED656.8070407@gmail.com>
-	<1185891382.2750.8.camel@laptopd505.fenrus.org>
-	<46AF4B05.4010700@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <46AF4B05.4010700@gmail.com>
+In-Reply-To: <46AED656.8070407@gmail.com>
 Sender: linux-ide-owner@vger.kernel.org
 To: Tejun Heo <htejun@gmail.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
+Cc: Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 31 Jul 2007 23:45:25 +0900
+On Tue, 31 Jul 2007 15:27:34 +0900
 Tejun Heo <htejun@gmail.com> wrote:
 
-> Anyways, I don't really think this attribute belongs to SCSI sysfs
-> hierarchy.  There currently isn't any alternative but sysfs is part of
-> userland visible interface and putting something into SCSI sysfs
-> hierarchy just because libata doesn't have one doesn't look like a good
-> idea.
+> Jeff Garzik wrote:
+> > Any chance the SCSI peeps could ACK this, and then let me include it in
+> > the ALPM patchset in the libata tree?
 > 
-> sysfs isn't far from being detached from kobject and driver model.  I
-> think it would be best to wait a bit and build proper libata sysfs
-> hierarchy which won't have to be changed later when libata departs from
-> SCSI.  Well, it isn't really a good way but IMHO it's better than
-> sticking ATA power saving node into SCSI sysfs hierarchy.
+> ATA link PS is pretty complex with HIPM, DIPM and AHCI ALPM.  I'm not
+> sure whether this three level knob would be sufficient.  It might be
+> good enough if we're gonna develop extensive in-kernel black/white list
+> specifying which method works on which combination but my gut tells me
+> that it's best left to userland (probably in the form of per-notebook PS
+> profile).
 
-"Wait a bit" could be a very long time.  Who is working on building this
-new libata sysfs support now?  If the answer is "no one", which I think it 
-may be, do you want to hold up a feature that actually helps many people
-for possibly 6 months or more just because we have to go through scsi
-right now for our sysfs interface?  on top of that, the last mail I 
-got from James on this subject indicated that if we kept our granularity
-large with the power savings levels, SCSI can actually take advantage of
-this as well.  Sure, we may have to tweak things around later, but isn't
-this what we do routinely?  Holding up valuable features from the kernel 
-because things aren't perfect yet seems really broken. 
+I think what you are saying is that you'd like a way to use your HIPM
+and DIPM without ALPM on the AHCI driver.  Fine - it's really easy
+to add these levels later - if they don't make sense at the sysfs interface
+we can add module params to specify the definition of "min_power" as 
+being performed via HIPM and DIPM instead of ALPM - although as of yet we
+have no evidence what so ever that this method actually adds value over
+ALPM.
 
-As far as your complaints about broken hardware go, keep in mind that
-the patch set does provide a method of adding these disks to a blacklist,
-so I don't see that as a problem.  And, the default for this feature is
-"off", and user space would have to explicitly enable it.
+> 
+> Adding to the fun, there are quite a few broken devices out there which
+> act weirdly when link PS actions are taken.
+
+OK - this is why I added the blacklist for this feature.
+
+> 
+> Also, I generally don't think AHCI ALPM is a good idea.  It doesn't have
+> 'cool down' period before entering PS state which unnecessarily hampers
+> performance and might increase chance of device malfunction.
+
+"might increase"?  How about some actual examples of where you've shown
+this to be a problem?  I can assert that I think ALPM is a good idea,
+because I've never had a report of it causing problems.  Windows has 
+been using this feature for a very long time - and you have to admit that
+they have a pretty large market share.  Nobody is complaining about ALPM
+increasing device malfunction, so unless you have proof it seems insane
+to nak due to this. 
