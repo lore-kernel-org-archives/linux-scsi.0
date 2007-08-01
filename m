@@ -1,166 +1,83 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: git-scsi-misc build error
-Date: Thu, 2 Aug 2007 07:22:19 +0900
-Message-ID: <20070801082602J.tomof@acm.org>
-References: <20070731152732.ae8d251d.akpm@linux-foundation.org>
-	<1185921052.3468.51.camel@localhost.localdomain>
-	<20070731154134.ccea0265.akpm@linux-foundation.org>
+From: Jesper Juhl <jesper.juhl@gmail.com>
+Subject: [PATCH] Fix two potential mem leaks in MPT Fusion (mpt_attach())
+Date: Thu, 2 Aug 2007 01:55:33 +0200
+Message-ID: <200708020155.33690.jesper.juhl@gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:49648 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753400AbXHAWW3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 1 Aug 2007 18:22:29 -0400
-In-Reply-To: <20070731154134.ccea0265.akpm@linux-foundation.org>
+Received: from mu-out-0910.google.com ([209.85.134.191]:45460 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752060AbXHAX5S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Aug 2007 19:57:18 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so445638mue
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Aug 2007 16:57:17 -0700 (PDT)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@SteelEye.com, tomof@acm.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Eric Moore <Eric.Moore@lsi.com>
+Cc: DL-MPTFusionLinux@lsi.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>, support@lsi.com, mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-On Tue, 31 Jul 2007 15:41:34 -0700
-Andrew Morton <akpm@linux-foundation.org> wrote:
+Greetings & Salutations,
 
-> On Tue, 31 Jul 2007 17:30:52 -0500
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> 
-> > On Tue, 2007-07-31 at 15:27 -0700, Andrew Morton wrote:
-> > > ERROR: "scsi_tgt_it_nexus_create" [drivers/scsi/scsi_transport_srp.ko] undefined!
-> > > ERROR: "scsi_tgt_it_nexus_destroy" [drivers/scsi/scsi_transport_srp.ko] undefined!
-> > > 
-> > > This bug was reported about seven times against 2.6.23-rc1-mm1's
-> > > git-scsi-target, and now it has been moved into git-scsi-misc.
-> > 
-> > Yes ... Tomo's on the hook for a better fix, which is promised.
-> > 
-> 
-> mutter.
-> 
-> Please, nothing which uses Kconfig `select'.  They regularly go wrong.
-> 
-> Please copy me on that fix so I know when to drop this one.
+The Coverity checker spotted two potential memory leaks in 
+drivers/message/fusion/mptbase.c::mpt_attach().
 
-Really sorry about this issue that I should have fixed a long time
-ago. The following patch was merged to scsi-misc. Hopefully it will
-fix the issue.
+There are two returns that may leak the storage allocated for 
+'ioc' (sizeof(MPT_ADAPTER) bytes).
+A simple fix would be to simply add two kfree() calls before 
+the return statements, but a better fix (that this patch 
+implements) is to reorder the code so that if we hit the first 
+return condition we don't have to do the allocation at all and 
+then just add a kfree() call for the second case.
 
+Please consider applying.  Patch has been compile tested only.
+
+
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
 ---
->From 00924b31df30e4ddcf9ba9b5082171e5e46b9eb0 Mon Sep 17 00:00:00 2001
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Date: Thu, 2 Aug 2007 00:03:11 +0900
-Subject: [PATCH] scsi_transport_srp: remove tgt dependencies
 
-it's better to remove tgt dependencies in srp transport class since
-most people want only initiator support.
+ drivers/message/fusion/mptbase.c |   13 +++++++------
+ 1 files changed, 7 insertions(+), 6 deletions(-)
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/Kconfig                       |   11 +++++++++--
- drivers/scsi/scsi_transport_srp.c          |   10 +++++-----
- drivers/scsi/scsi_transport_srp_internal.h |   25 +++++++++++++++++++++++++
- 3 files changed, 39 insertions(+), 7 deletions(-)
- create mode 100644 drivers/scsi/scsi_transport_srp_internal.h
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 4562273..7877dfd 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -291,11 +291,18 @@ source "drivers/scsi/libsas/Kconfig"
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index e866dac..f9bb705 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1393,18 +1393,18 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	struct proc_dir_entry *dent, *ent;
+ #endif
  
- config SCSI_SRP_ATTRS
- 	tristate "SRP Transport Attributes"
--	depends on SCSI && SCSI_TGT
-+	depends on SCSI
- 	help
- 	  If you wish to export transport-specific information about
- 	  each attached SRP device to sysfs, say Y.
- 
-+config SCSI_SRP_TGT_ATTRS
-+	bool "SCSI target support for SRP Transport Attributes"
-+	depends on SCSI_SRP_ATTRS
-+	depends on SCSI_TGT = y || SCSI_TGT = SCSI_SRP_ATTRS
-+	help
-+		If you want to use SCSI target mode drivers enable this option.
++	if (mpt_debug_level)
++		printk(KERN_INFO MYNAM ": mpt_debug_level=%xh\n", mpt_debug_level);
 +
- endmenu
++	if (pci_enable_device(pdev))
++		return r;
++
+ 	ioc = kzalloc(sizeof(MPT_ADAPTER), GFP_ATOMIC);
+ 	if (ioc == NULL) {
+ 		printk(KERN_ERR MYNAM ": ERROR - Insufficient memory to add adapter!\n");
+ 		return -ENOMEM;
+ 	}
+-
+ 	ioc->debug_level = mpt_debug_level;
+-	if (mpt_debug_level)
+-		printk(KERN_INFO MYNAM ": mpt_debug_level=%xh\n", mpt_debug_level);
+-
+-	if (pci_enable_device(pdev))
+-		return r;
  
- menuconfig SCSI_LOWLEVEL
-@@ -848,7 +855,7 @@ config SCSI_IBMVSCSI
+ 	dinitprintk(ioc, printk(KERN_WARNING MYNAM ": mpt_adapter_install\n"));
  
- config SCSI_IBMVSCSIS
- 	tristate "IBM Virtual SCSI Server support"
--	depends on PPC_PSERIES && SCSI_TGT && SCSI_SRP && SCSI_SRP_ATTRS
-+	depends on PPC_PSERIES && SCSI_SRP && SCSI_SRP_TGT_ATTRS
- 	help
- 	  This is the SRP target driver for IBM pSeries virtual environments.
- 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index cdd001a..430501e 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -30,7 +30,7 @@
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
- #include <scsi/scsi_transport_srp.h>
--#include <scsi/scsi_tgt.h>
-+#include "scsi_transport_srp_internal.h"
- 
- struct srp_host_attrs {
- 	atomic_t next_port_id;
-@@ -223,8 +223,8 @@ struct srp_rport *srp_rport_add(struct Scsi_Host *shost,
+@@ -1413,6 +1413,7 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 			": 64 BIT PCI BUS DMA ADDRESSING SUPPORTED\n"));
+ 	} else if (pci_set_dma_mask(pdev, DMA_32BIT_MASK)) {
+ 		printk(KERN_WARNING MYNAM ": 32 BIT PCI BUS DMA ADDRESSING NOT SUPPORTED\n");
++		kfree(ioc);
+ 		return r;
  	}
  
- 	if (ids->roles == SRP_RPORT_ROLE_INITIATOR) {
--		ret = scsi_tgt_it_nexus_create(shost, (unsigned long)rport,
--					       rport->port_id);
-+		ret = srp_tgt_it_nexus_create(shost, (unsigned long)rport,
-+					      rport->port_id);
- 		if (ret) {
- 			device_del(&rport->dev);
- 			transport_destroy_device(&rport->dev);
-@@ -251,8 +251,8 @@ void srp_rport_del(struct srp_rport *rport)
- 	struct device *dev = &rport->dev;
- 
- 	if (rport->roles == SRP_RPORT_ROLE_INITIATOR)
--		scsi_tgt_it_nexus_destroy(dev_to_shost(dev->parent),
--					  (unsigned long)rport);
-+		srp_tgt_it_nexus_destroy(dev_to_shost(dev->parent),
-+					 (unsigned long)rport);
- 
- 	transport_remove_device(dev);
- 	device_del(dev);
-diff --git a/drivers/scsi/scsi_transport_srp_internal.h b/drivers/scsi/scsi_transport_srp_internal.h
-new file mode 100644
-index 0000000..8a79747
---- /dev/null
-+++ b/drivers/scsi/scsi_transport_srp_internal.h
-@@ -0,0 +1,25 @@
-+#include <scsi/scsi_tgt.h>
-+
-+#ifdef CONFIG_SCSI_SRP_TGT_ATTRS
-+static inline int srp_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
-+					  char *initiator)
-+{
-+	return scsi_tgt_it_nexus_create(shost, itn_id, initiator);
-+}
-+
-+static inline int srp_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
-+{
-+	return scsi_tgt_it_nexus_destroy(shost, itn_id);
-+}
-+
-+#else
-+static inline int srp_tgt_it_nexus_create(struct Scsi_Host *shost, u64 itn_id,
-+					  char *initiator)
-+{
-+	return 0;
-+}
-+static inline int srp_tgt_it_nexus_destroy(struct Scsi_Host *shost, u64 itn_id)
-+{
-+	return 0;
-+}
-+#endif
--- 
-1.5.2.4
+
+
 
