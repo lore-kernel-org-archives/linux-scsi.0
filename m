@@ -1,21 +1,21 @@
 From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 1/4] Store interrupt value
-Date: Wed, 1 Aug 2007 14:18:16 -0700
-Message-ID: <20070801141816.5a78940d.kristen.c.accardi@intel.com>
-References: <20070705194909.337398431@intel.com>
-	<20070705130500.ad5f7739.kristen.c.accardi@intel.com>
-	<46B0923B.4040707@garzik.org>
+Subject: [patch 1/3] Store interrupt value
+Date: Wed, 1 Aug 2007 14:28:52 -0700
+Message-ID: <20070801142852.e1860bec.kristen.c.accardi@intel.com>
+References: <20070801210713.809095009@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <46B0923B.4040707@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James.Bottomley@steeleye.com, edwintorok@gmail.com, axboe@kernel.dk, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:45635 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755641AbXHAVb7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Aug 2007 17:31:59 -0400
+In-Reply-To: <20070801210713.809095009@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-Store interrupt value
+To: jeff@garzik.org
+Cc: james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, arjan@linux.intel.com
 
 Use a stored value for which interrupts to enable.  Changing this allows
 us to selectively turn off certain interrupts later and have them 
@@ -73,3 +73,5 @@ Index: 2.6-git/drivers/ata/ahci.c
  	ap->private_data = pp;
  
  	/* engage engines, captain */
+
+-- 
