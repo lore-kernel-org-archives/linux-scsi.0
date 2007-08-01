@@ -1,43 +1,35 @@
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: [RFC][PATCH] Remove stat.h from drivers/scsi/gvp11.c
-Date: Wed, 01 Aug 2007 17:39:29 +0200
-Message-ID: <46B0A931.9070209@googlemail.com>
+From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Subject: Re: [patch 2/4] Expose Power Management Policy option to users
+Date: Wed, 1 Aug 2007 08:52:46 -0700
+Message-ID: <20070801085246.ba934083.kristen.c.accardi@intel.com>
+References: <20070705194909.337398431@intel.com>
+	<20070705130518.135e4e3c.kristen.c.accardi@intel.com>
+	<46AE12B6.6090408@garzik.org>
+	<46AED656.8070407@gmail.com>
+	<20070731093014.db9e0734.kristen.c.accardi@intel.com>
+	<46AF794F.1020107@gmail.com>
+	<20070731125849.501443c1.kristen.c.accardi@intel.com>
+	<46AFFCFC.7020902@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.186]:53541 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755692AbXHAPj7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Aug 2007 11:39:59 -0400
-Received: by nf-out-0910.google.com with SMTP id g13so64373nfb
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Aug 2007 08:39:57 -0700 (PDT)
+Received: from mga01.intel.com ([192.55.52.88]:36966 "EHLO mga01.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752771AbXHAPzp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 1 Aug 2007 11:55:45 -0400
+In-Reply-To: <46AFFCFC.7020902@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, edwintorok@gmail.com, axboe@kernel.dk
 
-Hi,
+On Wed, 01 Aug 2007 12:24:44 +0900
+Tejun Heo <htejun@gmail.com> wrote:
 
-"There is no reason at all for a scsi driver to include stat.h"
--- Christoph Hellwig
+> It would be *really* great if we can find more about how they do it.
+> How and when it's enabled and on which systems.  Is it possible to find
+> this out?
 
-Regards,
-Michal
-
---
-LOG
-http://www.stardust.webpages.pl/log/
-
-Signed-off-by: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-
---- linux-mm-clean/drivers/scsi/gvp11.c	2007-07-09 01:32:17.000000000 +0200
-+++ linux-mm/drivers/scsi/gvp11.c	2007-08-01 17:36:45.000000000 +0200
-@@ -18,8 +18,6 @@
- #include "wd33c93.h"
- #include "gvp11.h"
- 
--#include<linux/stat.h>
--
- #define DMA(ptr) ((gvp11_scsiregs *)((ptr)->base))
- #define HDATA(ptr) ((struct WD33C93_hostdata *)((ptr)->hostdata))
- 
+No - it's really not a good idea for us to go and ask other OS's how they
+implement things in this level of detail. 
