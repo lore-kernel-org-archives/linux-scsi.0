@@ -1,31 +1,32 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 82] drivers/scsi/zorro7xx.c: kmalloc + memset
-	conversion to kzalloc
-Date: Wed, 01 Aug 2007 11:11:21 -0500
-Message-ID: <1185984681.3468.78.camel@localhost.localdomain>
-References: <200707311845.48807.m.kozlowski@tuxland.pl>
-	 <200708010021.34147.m.kozlowski@tuxland.pl>
+Subject: Re: [PATCH] scsi_transport_srp: remove tgt dependencies
+Date: Wed, 01 Aug 2007 11:20:04 -0500
+Message-ID: <1185985204.3468.83.camel@localhost.localdomain>
+References: <20070801051532F.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <200708010021.34147.m.kozlowski@tuxland.pl>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:55049 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756243AbXHAQUG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Aug 2007 12:20:06 -0400
+In-Reply-To: <20070801051532F.tomof@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Wed, 2007-08-01 at 00:21 +0200, Mariusz Kozlowski wrote:
-> [PATCH 82] ...
+On Thu, 2007-08-02 at 00:20 +0900, FUJITA Tomonori wrote:
+> Hopefully, this works. Is there an easier way to remove tgt
+> dependencies in scsi_transport_srp?
+[...]
+> +	depends on SCSI_SRP_ATTRS
+> +	depends on SCSI_TGT = y || SCSI_TGT = SCSI_SRP_ATTRS
 
-Please no.  This should be a simple mechanical substitution.  I don't
-need to collect acks from everyone.  This is a nice point to do a
-conversion like this, so I'll sort out the mismerges.
-
-Please assure me you have a good methodology for doing the replacement
-and a reasonable one for testing and then send either one patch for the
-entirety of SCSI to me, or one patch for the entirety of the kernel to
-Andrew and we'll see if we can get it through the process.
+I asked the same thing for the same problem in the libata in libsas
+config varible.  Didn't get an answer though ... but my solution was the
+same as yours, if it helps.
 
 James
 
