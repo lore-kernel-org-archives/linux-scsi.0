@@ -1,124 +1,286 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: regression: panic from qlogic driver in qla2x00_read_nvram_data
-Date: Wed, 01 Aug 2007 12:52:16 -0700
-Message-ID: <46B0E470.1040403@qlogic.com>
-References: <1185997129.9592.39.camel@deimos.americas.hpqcorp.net>
+From: Doug Thompson <norsk5@yahoo.com>
+Subject: [ofa-general] Re: EDAC stats & PCI error recovery (was Re: [PATCH
+	2/2] powerpc: MPC85xx EDAC device driver)
+Date: Wed, 1 Aug 2007 13:34:43 -0700 (PDT)
+Message-ID: <335267.8821.qm@web50104.mail.re2.yahoo.com>
+References: <20070801194857.GL4884@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:58749 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762683AbXHATu0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Aug 2007 15:50:26 -0400
-In-Reply-To: <1185997129.9592.39.camel@deimos.americas.hpqcorp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: quoted-printable
+Return-path: <general-bounces@lists.openfabrics.org>
+In-Reply-To: <20070801194857.GL4884@austin.ibm.com>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: amitkale@netxen.com, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, galak@kernel.crashing.org, openib-general@openib.org, Dave Jiang <djiang@mvista.com>, munsone@us.ibm.com, linuxppc-dev@ozlabs.org, mpt_linux_developer@lsi.com, norsk5@yahoo.com, Eric.Moore@lsi.com, bluesmoke-devel@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Chapman <doug.chapman@hp.com>
-Cc: linux-scsi@vger.kernel.org
 
-Doug Chapman wrote:
-> I am seeing a panic on the latest git trees on my ia64 servers with
-> qlogic cards installed.  The latest this was known to work OK was
-> v2.6.23-rc1.  I am currently working on a git bisect to narrow down what
-> introduced this but due to other unrelated problems that is not going
-> smoothly.  Let me know if there is other info I can provide that would
-> be helpful.
-> 
-> Here is what I do know:
-This issue has been addressed, as below.
-http://marc.info/?l=linux-scsi&m=118581884800073&w=2
 
-Thank you,
-Seokmann
-> 
-> Hardware info:
-> I am seeing this on multiple HP ia64 servers (don't know if this is ia64
-> specific since that is all I have).  Here is what I see as the card is
-> seen on a good boot (I don't get this far on the current kernels):
-> 
-> qla2xxx 0000:80:02.0: Found an ISP2312, irq 68, iobase 0xc0000000c0041000
-> qla2xxx 0000:80:02.0: Configuring PCI space...
-> qla2xxx 0000:80:02.0: Configure NVRAM parameters...
-> qla2xxx 0000:80:02.0: Verifying loaded RISC code...
-> qla2xxx 0000:80:02.0: Allocated (412 KB) for firmware dump...
-> scsi2 : qla2xxx
-> qla2xxx 0000:80:02.0:
->  QLogic Fibre Channel HBA Driver: 8.02.00-k2
->   QLogic HP A6826-60001 -
->   ISP2312: PCI-X (66 MHz) @ 0000:80:02.0 hdma+, host#=2, fw=3.03.20 IPX
-> 
-> 
-> 
-> Appears the panic happens at drivers/scsi/qla2xxx/qla_sup.c:668
-> 
-> 663
-> 664             /* Word reads to NVRAM via registers. */
-> 665             wptr = (uint16_t *)buf;
-> 666             qla2x00_lock_nvram_access(ha);
-> 667             for (i = 0; i < bytes >> 1; i++, naddr++)
-> 668                     wptr[i] = cpu_to_le16(qla2x00_get_nvram_word(ha,
-> 669                         naddr));
-> 670             qla2x00_unlock_nvram_access(ha);
-> 671
-> 672             return buf;
-> 
-> 
-> Here is the full stack trace (note, this is from loading the module, not
-> from a static build but appears to be the same).
-> 
-> 
-> Unable to handle kernel NULL pointer dereference (address 0000000000000000)
-> 
-> ip is at qla2x00_read_nvram_data+0x61/0xe0 [qla2xxx]
-> 
-> Call Trace:
->  [<a000000100015260>] show_stack+0x40/0xa0
->                                 sp=e0000040f34a7770 bsp=e0000040f34a14b0
->  [<a000000100015b60>] show_regs+0x840/0x880
->                                 sp=e0000040f34a7940 bsp=e0000040f34a1458
->  [<a000000100038d20>] die+0x1a0/0x280
->                                 sp=e0000040f34a7940 bsp=e0000040f34a1410
->  [<a00000010066c570>] ia64_do_page_fault+0x8f0/0xa20
->                                 sp=e0000040f34a7940 bsp=e0000040f34a13b0
->  [<a00000010000ba00>] ia64_leave_kernel+0x0/0x270
->                                 sp=e0000040f34a79d0 bsp=e0000040f34a13b0
->  [<a00000021b7778a0>] qla2x00_read_nvram_data+0x60/0xe0 [qla2xxx]
->                                 sp=e0000040f34a7ba0 bsp=e0000040f34a1358
->  [<a00000021b74b310>] qla2x00_nvram_config+0x190/0x14e0 [qla2xxx]
->                                 sp=e0000040f34a7ba0 bsp=e0000040f34a12f8
->  [<a00000021b748070>] qla2x00_initialize_adapter+0x350/0x5a0 [qla2xxx]
->                                 sp=e0000040f34a7ba0 bsp=e0000040f34a12c0
->  [<a00000021b73d3c0>] qla2x00_probe_one+0x1620/0x1e60 [qla2xxx]
->                                 sp=e0000040f34a7bc0 bsp=e0000040f34a1228
->  [<a00000010030fd20>] pci_device_probe+0x260/0x3a0
->                                 sp=e0000040f34a7d10 bsp=e0000040f34a11d8
->  [<a000000100424e90>] driver_probe_device+0x250/0x380
->                                 sp=e0000040f34a7de0 bsp=e0000040f34a1198
->  [<a0000001004252a0>] __driver_attach+0x100/0x1a0
->                                 sp=e0000040f34a7de0 bsp=e0000040f34a1168
->  [<a000000100423260>] bus_for_each_dev+0x80/0x100
->                                 sp=e0000040f34a7de0 bsp=e0000040f34a1130
->  [<a000000100424a60>] driver_attach+0x40/0x60
->                                 sp=e0000040f34a7e00 bsp=e0000040f34a1110
->  [<a000000100423a50>] bus_add_driver+0xf0/0x3c0
->                                 sp=e0000040f34a7e00 bsp=e0000040f34a10d0
->  [<a000000100425800>] driver_register+0x140/0x160
->                                 sp=e0000040f34a7e00 bsp=e0000040f34a10b0
->  [<a0000001003101f0>] __pci_register_driver+0xd0/0x160
->                                 sp=e0000040f34a7e00 bsp=e0000040f34a1078
->  [<a00000021b304260>] qla2x00_module_init+0x260/0x400 [qla2xxx]
->                                 sp=e0000040f34a7e00 bsp=e0000040f34a1040
->  [<a0000001000e5f90>] sys_init_module+0x2db0/0x3160
->                                 sp=e0000040f34a7e00 bsp=e0000040f34a0ec0
->  [<a00000010000b860>] ia64_ret_from_syscall+0x0/0x20
->                                 sp=e0000040f34a7e30 bsp=e0000040f34a0ec0
->  [<a000000000010620>] __kernel_syscall_via_break+0x0/0x20
->                                 sp=e0000040f34a8000 bsp=e0000040f34a0ec0
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--- Linas Vepstas <linas@austin.ibm.com> wrote:
 
+> On Mon, Jul 30, 2007 at 03:47:05PM -0700, Doug Thompson wrote:
+> >=20
+> > --- Linas Vepstas <linas@austin.ibm.com> wrote:
+> > > Also: please note that the linux kernel has a pci error recovery
+> > > mechanism built in; its used by pseries and PCI-E. I'm not clear
+> > > on what any of this has to do with EDAC, which I thought was suppos=
+ed=20
+> > > to be for RAM only. (The EDAC project once talked about doing pci e=
+rror=20
+> > > recovery, but that was years ago, and there is a separate system fo=
+r
+> > > that, now.)
+> >=20
+> > no, edac can/does harvest PCI bus errors, via polling and other hardw=
+are error detectors.
+>=20
+> Ehh! I had no idea. A few years ago, when I was working on the PCI erro=
+r
+> recovery, I sent a number of emails to the various EDAC people and mail=
+ing=20
+> lists that I could find, and never got a response.  I assumed the
+> project was dead. I guess its not ...=20
+
+No its not, just some company lay offs stirred the pot, at least for me, =
+for awhile.
+I did see the ibm patches go by, but didn't have the time to check up at =
+that time. I actually,
+didn't know the recovery interface had gotten into the kernel (My failure=
+ to watch for them), so I
+was pleasantly surprised at this last OLS to attend the presentation.
+
+>=20
+> > But at the current time, few PCI device drivers initialize those call=
+back functions and
+> > thus errors are lost and some IO transactions fail.
+>=20
+> There are patches for 6 drivers in mainline (e100, e1000, ixgb, s2io,
+> ipr, lpfc), and two more pending (sym53cxxx, tg3).  So far, I've writte=
+n=20
+> all of them.=20
+
+Great.
+EDAC does nothing for recovery, just logging and stats gathering and pres=
+entation.
+
+>=20
+> > Over time, as drivers get updated (might take some time) then drivers
+> > can take some sort of action FOR THEMSELVES
+>=20
+> I think I need to do more to raise awareness and interest.
+
+good point
+
+>=20
+> > Yet, there is no tracking of errors - except for a log message in the=
+ log file.
+> >=20
+> > There is NO meter on frequency of errors, etc. One must grep the log =
+file and that is not a
+> very
+> > cycle friendly mechanism.
+>=20
+> Yeah, there was low interest in stats. There's a core set of stats in
+> /proc/pp64/eeh, but these are clearly arch-specific. I'd ike to move
+> away from those.  Some recent patches added stats to the /sys tree,
+> under the individual pci bridge and device nodes.  Again, these are
+> arch-specific; I'd like to move to some geeral/standardized presentatio=
+n.
+
+the memory error consumers really like the stats of EDAC. Allows them to =
+track trends.
+Cluster types, with thousands of nodes, like the monitoring for both memo=
+ry and PCI, as well as
+some newer hardware detector harvesting.
+
+>=20
+> > The reason I added PCI parity/error device scanning, was that when I =
+was at Linux Networx, we
+> had
+> > parity errors on the PCI-X bus, but didn't know the cause.  After we =
+discovered that a simple
+> > PCI-X riser card had manufacturing problems (quality) and didn't driv=
+e lines properly, it
+> caused
+> > parity errors.=20
+>=20
+> Heh. Not unusual. I've seen/heard of cases with voltages being low,
+> and/or ground-bounce in slots near the end. There's a whole zoo of
+> hardware/firmware bugs that we've had to painfully crawl through and
+> fix. That's why the IBM boxes cost big $$$; here's to hoping that=20
+> customers understand why.
+
+I understand
+
+
+>=20
+> > This feature allowed us to track nodes that were having parity proble=
+ms, but we had
+> > no METER to know it.
+> >=20
+> > Recovery is a good thing, BUT how do you know you having LOTS of erro=
+rs/recovery events? You
+> need
+> > a meter. EDAC provides that METER
+>=20
+> I'm lazy. What source code should I be looking at?  I'm concerned about
+> duplication of function and proliferation of interfaces. I've got my=20
+> metering data under (for example)
+> /sys/bus/pci/devices/0001:c0:01.0/eeh_*, mostly very arch specific.
+> The code for this is in arch/powerpc/platforms/pseries/eeh_sysfs.c
+
+http://bluesmoke.sourceforge.net/
+
+is the SF project zone (bluesmoke was the out-of-tree name, changed to ED=
+AC when it came into
+tree, and source forge doesn't allow renaming)
+
+EDAC info is under:
+
+/sys/devices/system/edac/....
+
+mc for memory controllers
+pci for pci info.
+
+very basic, just counters and some controls
+
+
+>=20
+> > I met with Yanmin Zhang of Intel at OLS after his paper presentation =
+on PCI Express Advanced
+> Error
+> > Reporting in the Kernel, and we talked about this same thing. I am ta=
+lking with him on having
+> the
+> > recovery code present information into EDAC sysfs area. (hopefully, a=
+nyway)
+>=20
+> Hmm. OK, where's that?  Back when, I'd talked to Yamin about coming up=20
+> with a generic, arch-indep way of driving the recovery routines. But
+> this wasn't exactly easy, and we were still grappling with just getting
+> things working.  Now that things are working, its time to broaden
+> horizons.
+
+Not very far, but I see the potential.
+When EDAC was received, it was placed where it was in the sysfs from vari=
+ous kernel developers as
+a good spot on its own.
+
+>=20
+> Can you point me to the current edac code?
+> find . -print |grep edac is not particuarly revealing at the moment.
+
+drivers/edac
+
+latest is in 2.6.23-rc1.  =20
+
+-rc2 will have a few vital bug fixes. This release is fairly large since =
+2.6.26 when it first was
+in the tree.
+
+>=20
+> > The recovery generates log messages BUT having to periodically 'grep'=
+ the log file looking for
+> > errors is not a good use of CPU cycles. grep once for a count and the=
+n grep later for a count
+> and
+> > then compare the counts for a delta count per unit time. ugly.
+>=20
+> Yep. Maybe send events up to udev?
+
+That is a possibility, yet EDAC consumers like the stats being available =
+as well.
+
+>=20
+> > The EDAC solution is to be able to have a Listener thread in user spa=
+ce that can be notified
+> (via
+> > poll()) that an event has occurred.
+>=20
+> Hmm. OK, I'm alarmingly nave about udev, but my initial gut instinct is
+> to pipe all such events to udev. Most of user-space has already been
+> given the marching orders to use udev and/or hal for this kind of stuff=
+.
+> So this makes sense to me.
+
+I need a learning process as well on udev.
+It being the unified highway of event notification from kernel to user sp=
+ace. Although, when
+memory errors fires, sometimes they can generate MASSIVE Number of events=
+ on every memory access.
+PCI being different might have different constraints. Each needs investig=
+ation and classification
+of timing, etc.
+
+>=20
+> > There are more than one consumer (error recover) of error events:
+> > 1) driver recovery after a transaction (which is the recovery consume=
+r above)
+>=20
+> I had to argue loudly for recovery in the kernel. The problem was that
+> it was impossible to recover erros on scsi devics from userspace (since
+> the block device and filesystems would go bonkers).
+
+I hear you. It took the cluster consumers to demand ROBUST "meters" to fo=
+r their machines to give
+'validation' (so to speak) of their calculations. Bluesmoke/EDAC became t=
+hat in our sandbox.
+
+>=20
+> > 2) Management agents for health of a node
+> > 3) Maintainance agents for predictive component replacement
+>=20
+> Yes, agreed. Care to ask your management agent friends for where they'd
+> like to get these events from (i.e. udev, or somewhere else?)
+
+They are in a learning curve as well.
+Error event processing is still so "young" under linux. Getting people aw=
+are of it is the current
+push.
+
+>=20
+> > We have MEMORY (edac_mc) devices for chipsets now, but via the new ed=
+ac_device class, such
+> things
+> > as ECC error tracking on DMA error checkers, FABRIC switchs, L1 and L=
+2 cache ECC events, core
+> CPU
+> > data ECC checkers, etc can be done. I have an out of kernel tree MIPS=
+ driver do just this.
+> Other
+> > types of harvesters can be generated as well for other and/or new har=
+dware error detectors.
+>=20
+> Ohh. I've got hardware tha does this, but its not currently usng EDAC.
+> There must be some edac mailing list I'm not subscribed to??
+
+the new edac_device class  rolled out in 2.6.23-rc1
+No in tree drivers, but I have a test_device_edac module that uses it and=
+ it is in the svn repos.
+
+I need to update the edac tarball to contain this stuff.
+
+for mailing list, goto=20
+
+http://bluesmoke.sourceforge.net/
+
+find the subscribe to mailing list action item. Fairly low bandwidth, but=
+ has notices, and some
+discussion on things now and then.
+
+bluesmoke-devel@lists.sourceforge.net is the development email
+
+
+doug t
+
+>=20
+> --linas
+>=20
+>=20
