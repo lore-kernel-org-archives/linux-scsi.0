@@ -1,67 +1,63 @@
-From: =?iso-8859-1?B?SvxyZ2VuIEUu?= Fischer <fischer@linux-buechse.de>
-Subject: Re: [PATCH 5/6] aha152x.c - Fix check_condition code-path
-Date: Thu, 2 Aug 2007 22:22:16 +0200
-Message-ID: <20070802202216.GA26321@linux-buechse.de>
-References: <46ACE62F.4070108@panasas.com> <46ACEA0A.5040101@panasas.com> <20070730171331.5237bb94.rdunlap@xenotime.net> <46AEEBF7.3060808@panasas.com> <20070731114021.488735ec.rdunlap@xenotime.net> <1185976274.3468.70.camel@localhost.localdomain> <20070801093422.f986597d.rdunlap@xenotime.net> <46B1BF77.6060804@panasas.com> <20070802120926.63a76fce.rdunlap@xenotime.net>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Some quick scsi documentation questions:
+Date: Thu, 02 Aug 2007 23:19:51 +0200
+Message-ID: <46B24A77.2050809@s5r6.in-berlin.de>
+References: <200707252328.28981.rob@landley.net> <1185455711.3501.46.camel@localhost.localdomain> <200707271729.11422.rob@landley.net> <46B2256A.3070902@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.179]:59414 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759364AbXHBUSE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2007 16:18:04 -0400
-Content-Disposition: inline
-In-Reply-To: <20070802120926.63a76fce.rdunlap@xenotime.net>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:46345 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760832AbXHBVUR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2007 17:20:17 -0400
+In-Reply-To: <46B2256A.3070902@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "David A. Hinds" <dahinds@users.sourceforge.net>
+To: Rob Landley <rob@landley.net>
+Cc: dougg@torque.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Hi Randy,
+> Rob Landley wrote:
+>> On Thursday 26 July 2007 9:15:11 am James Bottomley wrote:
+>>> Users have great difficulty understanding how to 
+>>> map sg to sr (or sd), so we're trying to encourage them only to use the
+>>> actual device node, so /dev/sdx or /dev/srn.
+>> Actually, these days everybody I know uses /dev/cdrom, expects it to be a 
+>> symlink, and doesn't care where it points.  Last time I used a system that 
+>> had more than one of the suckers I believe it had /dev/cdrom0, /dev/cdrom1, 
+>> etc.
+>>
+>> I note that in the ubuntu system on my laptop, /dev/sr0 is a symlink 
+>> to /dev/scd0, which is an actual device node with a major and minor that 
+>> presumably means something to the system, but not to me personally.  (Not 
+>> that I consider Ubuntu 7.04 much of a model on how to arrange devices 
+>> considering it put a UUID label on every _partition_ on my hard drive and 
+>> mounts them by label in /etc/fstab rather than that having udev do its job 
+>> and make stable symlinks.)
+>>
+>> But it seems that users aren't the only ones who have trouble with this, 
+>> distro maintainers do too.
 
-On Thu, Aug 02, 2007 at 12:09:26 -0700, Randy Dunlap wrote:
-> > 6. One more second passes and 2nd abort comes in.
-> > 7. Than a reset comes in. Here too Should driver check for hardware
-> >    presence.
-> > 
-> > since ds.c is doing: p_dev->_removed=1;
-> > before the shutdown. Maybe a solution is to have aha152x_stub.c,
-> > which is the only one that knows of PCMCIA, Override queuecommand
-> > and just check for p_dev->_removed==1. Something like:
+Alternatively to partition labels, you can also have udev create
+persistently named symlinks for you.
 
-> This makes sense, but it didn't work:
+$ ls /dev/disk/by-id/
+ata-HTE721010G9AT00_MPC0J1Y0GRKYGD
+ata-HTE721010G9AT00_MPC0J1Y0GRKYGD-part1
+ata-HTE721010G9AT00_MPC0J1Y0GRKYGD-part2
+ieee1394-00101003ae0001e0:00042c:0000
+ieee1394-00101003ae0001e0:00042c:0000-part1
+scsi-SATA_ST3750640AS_3QD067RX
+scsi-SATA_ST3750640AS_3QD067RX-part1
+usb-JetFlash_128MB_39680ADE3E2627FB
+usb-JetFlash_128MB_39680ADE3E2627FB-part1
 
-Looks like that's just because aha152x_bus_reset_host locks up when
-debugging output is on.
-
-
---- a/aha152x.c	2007-08-02 21:27:12.756833348 +0200
-+++ b/aha152x.c	2007-08-02 21:28:12.320227674 +0200
-@@ -1102,7 +1102,7 @@
- 
- #if defined(AHA152X_DEBUG)
- 	if(HOSTDATA(shpnt)->debug & debug_eh) {
--		printk(DEBUG_LEAD "abort(%p)", CMDINFO(SCpnt), SCpnt);
-+		printk(DEBUG_LEAD "abort(%p)\n", CMDINFO(SCpnt), SCpnt);
- 		show_queues(shpnt);
- 	}
- #endif
-@@ -1267,15 +1267,15 @@
- {
- 	unsigned long flags;
- 
--	DO_LOCK(flags);
--
- #if defined(AHA152X_DEBUG)
- 	if(HOSTDATA(shpnt)->debug & debug_eh) {
--		printk(KERN_DEBUG "scsi%d: bus reset", shpnt->host_no);
-+		printk(KERN_DEBUG "scsi%d: bus reset\n", shpnt->host_no);
- 		show_queues(shpnt);
- 	}
- #endif
- 
-+	DO_LOCK(flags);
-+
- 	free_hard_reset_SCs(shpnt, &ISSUE_SC);
- 	free_hard_reset_SCs(shpnt, &DISCONNECTED_SC);
- 
+The udev rules I have here (Gentoo's) apparently don't do this for
+CD/DVD-ROM/R/Ws although that should be possible as well.  On the other
+hand, application programs like K3B already nicely show devices with
+vendor and model strings.  I don't know how much effort that imposes on
+the application programs.
+-- 
+Stefan Richter
+-=====-=-=== =--- ---=-
+http://arcgraph.de/sr/
