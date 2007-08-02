@@ -1,178 +1,231 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] block: add protocol discriminators to requests and queues
-Date: Thu, 02 Aug 2007 12:47:25 -0500
-Message-ID: <1186076845.3449.22.camel@localhost.localdomain>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Some quick scsi documentation questions:
+Date: Thu, 02 Aug 2007 14:41:46 -0400
+Message-ID: <46B2256A.3070902@torque.net>
+References: <200707252328.28981.rob@landley.net> <1185455711.3501.46.camel@localhost.localdomain> <200707271729.11422.rob@landley.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
-Cc: Jens Axboe <Jens.Axboe@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:57053 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751921AbXHBSmA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2007 14:42:00 -0400
+In-Reply-To: <200707271729.11422.rob@landley.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-This looks small and innocuous, but it's actually the beginning of
-moving the upper layer drivers into block and adding a filtering layer.
-The idea is that the queue contains a queue_protocol parameter which
-details what the device actually speaks.  The requests are likewise
-filled in with a cmd_protocol parameter by the ULDs (or bsg if it's a
-user initiated command, using the existing sgv4 protocol fields).
+Rob Landley wrote:
+> On Thursday 26 July 2007 9:15:11 am James Bottomley wrote:
+>> On Wed, 2007-07-25 at 23:28 -0400, Rob Landley wrote:
+>>> 1) Is the summary of the scsi subsystem in appendix A of your 2002 OLS
+>>> paper still more or less current?  (The scsi mid-layer document never
+>>> seems to talk about the _upper_ layer it interfaces with.  Which is
+>>> presumably the block layer...)
+>> No, the block layer is the service layer.  Upper layer is the SCSI
+>> driver layer (top level drivers like sd, sr and st).
+> 
+> Now that I've noticed that http://sg.torque.net/scsi/SCSI-2.4-HOWTO.html and 
+> http://sg.torque.net/scsi/SCSI-Generic-HOWTO.html are separate documents, I 
+> see where that's documented. :)
+> 
+> So upper layer drivers provide /dev nodes, lower level talks to SCSI hardware, 
+> and the mid-layer understands scsi commands ala http://www.t10.org/scsi-3.htm  
+> 
+> Where _does_ the block layer work into this?
+> 
+>>> 2) Documentation/scsi/scsi_fc_transport.txt is talking about Fiber
+>>> Channel, right?  (It never expands the fc, not even in the title...)
+>> Yes.
+> 
+> Already sent a separate email about that one.  (Although I now see that 
+> t10.org inclues some fiber channel standards, and what the relationship 
+> between it and t11 is I have no idea.)
+> 
+>>> 3) After reading Documentation/scsi/scsi-generic.txt I'm curious what the
+>>> relationships between a given sg device and sd device.  Each sd has a
+>>> corresponding sg?  (I can't find where it explicitly says this, but it's
+>>> a char device, not a block device, so...)  They're always in the same
+>>> order? Does _each_ sd have an sg?  Can I call the SG_IO ioctl on an sd? 
+>>> Is there an obvious document on this I've missed?
+>> This is one of those evolutionary problems in Linux.  Originally sg
+>> existed simply to provide the SG_IO ioctl to SCSI devices.  Then,
+>> because it was extremely useful, we made it a core feature of the block
+>> layer (in block/scsi_ioctl.c) which extended it as a general packet
+>> command feature to devices beyond SCSI.
+> 
+> But it's still a char device, so you presumably can't mount /dev/sg1 to read 
+> the CD in your burner.  You need to burn the CD and mount the CD through 
+> separate devices.
+> 
+> To someone like me from the IDE world, the numbering on scsi is weird.  It 
+> won't leave holes like the ATA driver did to avoid renumbering categories of 
+> devices that can't be moved without a screwdriver.  (I realize there _are_ 
+> truly dynamic devices, but the hard drive in my laptop is not one of them and 
+> it's an artifact of the scsi layer that it's considered so.)
+> 
+> So if you don't attach an sg to every sd, then either there are holes, or they 
+> don't line up, in which case how do you tell which sg goes with a given sd?
+> 
+>> The logical thing then became to 
+>> attach sg as an upper driver *only* to devices which otherwise wouldn't
+>> have one ... however, the sg maintainer has never accepted this.
+> 
+> Do you mean only to devices that otherwise wouldn't have an upper driver?  (So 
+> there would be an sg for devices that have _no_ sd?  This implies that the 
+> answer to my earlier question about whether the SG_IO ioctl can be used on sd 
+> block devices is "yes"?  (In which case the bit where the sg document talked 
+> about the nonblocking write to sg thing being useful for queueing commands 
+> comes back up, is there currently a way to do that through the sd ioctl?)
+> 
+> It sounds like your preferred solution would be to have either an sg _or_ an 
+> sd for each scsi device, so there would be no duplicates but only "no holes" 
+> if you look at _both_ groups and interlace them.  And the sg maintainer went 
+> with "have both for every device"?
+> 
+>> Various distros have tried it at various times, though, so currently
+>> it's safe to say that if sg is loaded, every SCSI device has an sg node,
+>> but it's not safe to assume that universally.
+> 
+> Ok, so currently, on distros using recent 2.6 kernels, there's an sg 
+> corresponding to every sd, using the same number.  Right.
+> 
+> Did the various distros patch the kernel, or did they do udev rules to filter 
+> out the sg they didn't want?  Any idea which distros those were, and whether 
+> or not they're still relevant?
+> 
+>> We can't even agree on 
+>> unifying the SG_IO paths, so we have two separate codings, one in sg.c
+>> and one in block/scsi_ioctl.c.
+> 
+> What would unifying the SG_IO paths mean?  Would it have any impact on 
+> userspace, or is it just an implementation detail inside the kernel?
+> 
+>>>  seems that a read-only cd will be an sd, but you talk to a burner
+>>> through an sg...)
+>> No, they're both sr.
+> 
+> What was that again?  (Googles...)  Oh yeah, the "upper layer" drivers from 
+> the scsi-2.4-howto.  I thought scsi-tape and scsi-cdrom were obsolete, but I 
+> guess not. 
+> 
+> Back in the IDE world, my hard drive was /dev/hda and my CD burner 
+> was /dev/hdc.  When /dev/hdc gained the ability to be used directly as a cd 
+> burner, I just assumed you could do it to sd as well.  My initial mental 
+> model was "sg gives you a char device to pass through scsi commands for a 
+> random scsi device, and sd gives you a way to look at it as a block device", 
+> which doesn't explain sr and st but as I said I thought they were obsolete...
+> 
+>> Users have great difficulty understanding how to 
+>> map sg to sr (or sd), so we're trying to encourage them only to use the
+>> actual device node, so /dev/sdx or /dev/srn.
+> 
+> Actually, these days everybody I know uses /dev/cdrom, expects it to be a 
+> symlink, and doesn't care where it points.  Last time I used a system that 
+> had more than one of the suckers I believe it had /dev/cdrom0, /dev/cdrom1, 
+> etc.
+> 
+> I note that in the ubuntu system on my laptop, /dev/sr0 is a symlink 
+> to /dev/scd0, which is an actual device node with a major and minor that 
+> presumably means something to the system, but not to me personally.  (Not 
+> that I consider Ubuntu 7.04 much of a model on how to arrange devices 
+> considering it put a UUID label on every _partition_ on my hard drive and 
+> mounts them by label in /etc/fstab rather than that having udev do its job 
+> and make stable symlinks.)
+> 
+> But it seems that users aren't the only ones who have trouble with this, 
+> distro maintainers do too.
+> 
+> Question: how much of the difference between /dev/sd* and /dev/sr* do users 
+> actually have to care about these days?  (And is st still relevant, or does 
+> sg cover that?)
+> 
+>>> 4) Is http://www.tldp.org/HOWTO/SCSI-Generic-HOWTO/ still current, given
+>>> it was last updated in 2002?
+>> Probably not ... the transport classes all come after that.
+> 
+> Unfortunately, Documentation/scsi/scsi-generic.txt (which seems a logical 
+> starting point) is essentially nothing more than a link to that document and 
+> a note about using scsi drivers as modules.
+> 
+> It also still seems to be the best introduction to sd vs sr vs sg.  It would 
+> be nice if there was some kind of quick reference card listing the 
+> concepts...
+> 
+> Similarly, Documentation/scsi/scsi.txt is a link to the SCSI-2.4-HOWTO and a 
+> note about using scsi drivers as modules.  (And the first time I read those 
+> two, I didn't notice that the SCSI-2.4-HOWTO and the SCSI-Generic-HOWTO were 
+> two separate documents...)
+> 
+>>> 5) I notice there's a "man 4 sd", from 1992.  Still relevant?
+>> Yes .. but only as far as it goes, which isn't very far.
+> 
+> I noticed.  It'd be nice if it at least explained the differences between sd, 
+> sr, st, and sg.  I'll ping the man-pages maintainer about it...
+> 
+>> Taking this to linux-scsi might be the best course ...
+> 
+> And now that I've confirmed it's ok with you, I've cc'd this thread there.
+> 
+>> Doug Gilbert 
+>> tends to be the best maintainer of our docs, although he's the sg
+>> author, which is why the docs tend to emphasize it as the preferred
+>> option ...
+> 
+> I'm still trying to figure what the other options _are_.
+> 
+>> James
+> 
+> Rob
 
-Now we have the capability of adding say native ATA pass through to BSG,
-but also we can add things like an ATAPI filter:  sr creates SCSI
-requests, but these could be sent through a PACKET_COMMAND wrapper and
-emerge as BLK_PROTOCOL_ATAPI before being sent to the device.  Likewise,
-sd requests going to BLK_PROTOCOL_ATA devices would have to go through
-SATL filters.  
+Interesting discussion.
 
-The next steps are to make the block prep layer capable of binding to
-drivers (and moving the SCSI ULDs up) followed by making the prep layer
-filter capable.
+However I think that I would object to this statement by James:
+" The logical thing then became to attach sg as an upper driver
+  *only* to devices which otherwise wouldn't have one ... however,
+  the sg maintainer has never accepted this."
 
-James
+It is interesting to note that the new bsg driver follows the
+approach by the sg driver: mapping all ** devices irrespective
+of whether they "belong" to other drivers or not.
 
-Index: BUILD-2.6/block/bsg.c
-===================================================================
---- BUILD-2.6.orig/block/bsg.c	2007-08-02 10:22:24.000000000 -0500
-+++ BUILD-2.6/block/bsg.c	2007-08-02 10:22:47.000000000 -0500
-@@ -192,6 +192,25 @@ static int blk_fill_sgv4_hdr_rq(struct r
- 	 */
- 	rq->cmd_len = hdr->request_len;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	switch (hdr->protocol) {
-+	case BSG_PROTOCOL_SCSI:
-+		switch (hdr->subprotocol) {
-+		case BSG_SUB_PROTOCOL_SCSI_CMD:
-+			rq->cmd_protocol = BLK_PROTOCOL_SCSI;
-+			break;
-+		case BSG_SUB_PROTOCOL_SCSI_TRANSPORT:
-+			/* whatever format the transport defines */
-+			rq->cmd_protocol = BLK_PROTOCOL_NATIVE;
-+			break;
-+		default:
-+			rq->cmd_protocol = BLK_PROTOCOL_NATIVE;
-+			break;
-+		}
-+		break;
-+	default:
-+		rq->cmd_protocol = BLK_PROTOCOL_NATIVE;
-+		break;
-+	}
- 
- 	rq->timeout = (hdr->timeout * HZ) / 1000;
- 	if (!rq->timeout)
-Index: BUILD-2.6/block/ll_rw_blk.c
-===================================================================
---- BUILD-2.6.orig/block/ll_rw_blk.c	2007-08-02 10:22:24.000000000 -0500
-+++ BUILD-2.6/block/ll_rw_blk.c	2007-08-02 12:45:23.000000000 -0500
-@@ -231,6 +231,7 @@ void blk_queue_make_request(struct reque
- 	 * by default assume old behaviour and bounce for any highmem page
- 	 */
- 	blk_queue_bounce_limit(q, BLK_BOUNCE_HIGH);
-+	blk_queue_protocol(q, BLK_PROTOCOL_NATIVE);
- }
- 
- EXPORT_SYMBOL(blk_queue_make_request);
-@@ -788,6 +789,21 @@ void blk_queue_dma_alignment(struct requ
- EXPORT_SYMBOL(blk_queue_dma_alignment);
- 
- /**
-+ * blk_queue_protocol - set the native protocol for the device
-+ * @q:		The request queue for the device
-+ * @proto:	The protocol
-+ *
-+ * description:
-+ *	This is used to set the underlying device protocol.  It is used
-+ *	by the prepare functions to decide how to package commands.
-+ */
-+void blk_queue_protocol(struct request_queue *q, enum blk_protocol proto)
-+{
-+	q->queue_protocol = proto;
-+}
-+EXPORT_SYMBOL(blk_queue_protocol);
-+
-+/**
-  * blk_queue_find_tag - find a request by its tag and queue
-  * @q:	 The request queue for the device
-  * @tag: The tag of the request
-Index: BUILD-2.6/block/scsi_ioctl.c
-===================================================================
---- BUILD-2.6.orig/block/scsi_ioctl.c	2007-08-02 10:22:24.000000000 -0500
-+++ BUILD-2.6/block/scsi_ioctl.c	2007-08-02 10:22:47.000000000 -0500
-@@ -229,6 +229,7 @@ static int blk_fill_sghdr_rq(struct requ
- 	 */
- 	rq->cmd_len = hdr->cmd_len;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->cmd_protocol = BLK_PROTOCOL_SCSI;
- 
- 	rq->timeout = (hdr->timeout * HZ) / 1000;
- 	if (!rq->timeout)
-@@ -494,6 +495,7 @@ int sg_scsi_ioctl(struct file *file, str
- 	rq->sense = sense;
- 	rq->sense_len = 0;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->cmd_protocol = BLK_PROTOCOL_SCSI;
- 
- 	blk_execute_rq(q, disk, rq, 0);
- 
-@@ -527,6 +529,7 @@ static int __blk_send_generic(struct req
- 
- 	rq = blk_get_request(q, WRITE, __GFP_WAIT);
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
-+	rq->cmd_protocol = BLK_PROTOCOL_SCSI;
- 	rq->data = NULL;
- 	rq->data_len = 0;
- 	rq->timeout = BLK_DEFAULT_SG_TIMEOUT;
-Index: BUILD-2.6/include/linux/blkdev.h
-===================================================================
---- BUILD-2.6.orig/include/linux/blkdev.h	2007-08-02 10:22:24.000000000 -0500
-+++ BUILD-2.6/include/linux/blkdev.h	2007-08-02 10:22:47.000000000 -0500
-@@ -164,6 +164,21 @@ enum rq_cmd_type_bits {
- };
- 
- /*
-+ * Add protocol types.  The idea here is to flag what the
-+ * queue speaks natively, but allow other protocols to be sent
-+ * (i.e. allow us to identify the need to find translators)
-+ *
-+ * Any device using REQ_BLOCK_PC with its own defined format should
-+ * set BLK_PROTOCOL_NATIVE
-+ */
-+enum blk_protocol {
-+	BLK_PROTOCOL_NATIVE, /* device defined REQ_BLOCK_PC */
-+	BLK_PROTOCOL_ATA,
-+	BLK_PROTOCOL_ATAPI,
-+	BLK_PROTOCOL_SCSI,
-+};
-+
-+/*
-  * For request of type REQ_TYPE_LINUX_BLOCK, rq->cmd[0] is the opcode being
-  * sent down (similar to how REQ_TYPE_BLOCK_PC means that ->cmd[] holds a
-  * SCSI cdb.
-@@ -237,6 +252,7 @@ struct request {
- 
- 	unsigned int cmd_flags;
- 	enum rq_cmd_type_bits cmd_type;
-+	enum blk_protocol cmd_protocol;
- 
- 	/* Maintain bio traversal state for part by part I/O submission.
- 	 * hard_* are block layer internals, no driver should touch them!
-@@ -454,6 +470,7 @@ struct request_queue
- 
- 	unsigned int		nr_sorted;
- 	unsigned int		in_flight;
-+	enum blk_protocol	queue_protocol;
- 
- 	/*
- 	 * sg stuff
-@@ -766,6 +783,7 @@ extern void blk_queue_segment_boundary(s
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
- extern void blk_queue_dma_alignment(struct request_queue *, int);
-+extern void blk_queue_protocol(struct request_queue *, enum blk_protocol);
- extern void blk_queue_softirq_done(struct request_queue *, softirq_done_fn *);
- extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
- extern int blk_queue_ordered(struct request_queue *, unsigned, prepare_flush_fn *);
+In the case of the sg driver, there was backward compatibility
+to worry about. In the case of bsg it is just a mistake, IMO.
+The bsg driver should be doing what it did in its original
+incarnation: have one char device called /dev/bsg (why not
+/dev/csg ??) and let apps open that device to get a file
+descriptor context from which they could bind to any entity
+that would permit it. That entity might be:
+   - the SCSI mid layer
+   - a (SCSI) transport
+   - a host driver
+   - a host device (SCSI initiator device or port)
+   - a SCSI target
+   - a SCSI logical unit
+   - an active element in a SCSI delivery subsystem
+     (e.g. a switch in FC or and expander in SAS)
 
 
+We continue to have a model where the mid-level's scan
+algorithm (and perhaps the transport) decide what "devices"
+will be shown. As an example will they show a SCSI target
+(perhaps a bridge) with no logical units visible, even
+though lun 0 replies [peri_qual=3 and pdt=0x1f]? I
+suspect not. Such a target might support an access control
+well known logical unit which, given the correct interaction,
+may expose otherwise hidden storage logical units.
 
+In the same way a pass-through is a nuisance to many
+overarching OS designs, the reverse is true for some
+pass-through users.
+
+
+** As noted above "all" is an overestimate. The pass-through
+only gets to map to devices that the sysfs/udev mess decides
+are relevant.
+
+
+Doug Gilbert
