@@ -1,45 +1,58 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH]: PCI Error Recovery: Symbios SCSI device driver
-Date: Thu, 2 Aug 2007 17:53:37 -0500
-Message-ID: <20070802225337.GK26837@austin.ibm.com>
-References: <20070702183917.GJ4501@austin.ibm.com> <20070705112838.2d8c959b.akpm@linux-foundation.org> <20070705185406.GA3527@parisc-linux.org>
+From: Rob Landley <rob@landley.net>
+Subject: Re: Some quick scsi documentation questions:
+Date: Thu, 2 Aug 2007 20:39:02 -0400
+Message-ID: <200708022039.02387.rob@landley.net>
+References: <200707252328.28981.rob@landley.net> <200707271729.11422.rob@landley.net> <46B2256A.3070902@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:41263 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754875AbXHBWxj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 2 Aug 2007 18:53:39 -0400
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:48506
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751638AbXHCAjN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Aug 2007 20:39:13 -0400
+In-Reply-To: <46B2256A.3070902@torque.net>
 Content-Disposition: inline
-In-Reply-To: <20070705185406.GA3527@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@steeleye.com, willy@debian.org, linux-scsi@vger.kernel.org, Paul Mackerras <paulus@samba.org>, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: dougg@torque.net
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Thu, Jul 05, 2007 at 12:54:06PM -0600, Matthew Wilcox wrote:
-> On Thu, Jul 05, 2007 at 11:28:38AM -0700, Andrew Morton wrote:
-> > Well you've sent it a couple of times, and I've sent it in five more times
-> > over the past year.  Once we were told "awaiting maintainer ack".
-> > 
-> > This situation is fairly stupid.  How about we make you the maintainer?
-> 
-> Last time I looked at it, I still wasn't comfortable with it.  I'm going
-> to look at it again.
+On Thursday 02 August 2007 2:41:46 pm Douglas Gilbert wrote:
+> > I'm still trying to figure what the other options _are_.
+> >
+> >> James
+> >
+> > Rob
+>
+> Interesting discussion.
 
-Please do. Its burning the proverbial hole in my pocket; I'd really
-like to get this off my list of things I worry about.
+I'm trying to pull together documentation of the scsi layer and link it into 
+the index I'm trying to put up at http://kernel.org/doc, but I'm working 
+under the handicap of never having used scsi hardware.
 
-> I'm fairly sure Linas doesn't want to be the sym2 maintainer.  It's
-> still an ugly pile of junk that needs cleaning up.
+Technically I still don't own any scsi hardware except a scanner I've never 
+gotten to work, but the scsi layer has now eaten my ide devices, it's 
+handling my new sata hard drive which makes sas look even more hilarious than 
+it did in 2005, and my vague impression is that the bsg patch turns my 
+intended-as-joke question to James at OLS (so when do ramdisks start going 
+through the scsi layer?) into a potential reality.  (Not that I pretend to 
+understand the bsg code.)
 
-Heh. I have no difficulty living with ugly code: its actually a 
-great excuse to fix things instead of doing "real work" :-)
+I also didn't understand the rest of your message well enough to comment on 
+any of it (does my USB key have a LUN?  The scsi layer grabbed it...)
 
-Rather, the menagerie of hardware I have access to is constantly 
-changing; I don't have a symbios card just right now, and it might 
-take a few days to even find someone who did.  Which is an incredibly
-unpleasent, unrewarding activity.
+> ** As noted above "all" is an overestimate. The pass-through
+> only gets to map to devices that the sysfs/udev mess decides
+> are relevant.
 
---linas
+Don't get me started on udev.  As far as I can tell, Greg KH disagrees with me 
+on every topic I've ever raised with him...
 
+> Doug Gilbert
+
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
