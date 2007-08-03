@@ -1,129 +1,58 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] sd: disentangle barriers in SCSI
-Date: Fri, 03 Aug 2007 16:41:11 -0500
-Message-ID: <1186177271.5493.30.camel@localhost.localdomain>
+From: Rob Landley <rob@landley.net>
+Subject: Re: Some quick scsi documentation questions:
+Date: Fri, 3 Aug 2007 17:39:32 -0400
+Message-ID: <200708031639.32343.rob@landley.net>
+References: <200707252328.28981.rob@landley.net> <200708031407.31175.rob@landley.net> <46B383DE.9060408@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:58765 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761891AbXHCVlO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2007 17:41:14 -0400
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:50931
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1762266AbXHCVlP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2007 17:41:15 -0400
+In-Reply-To: <46B383DE.9060408@s5r6.in-berlin.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: dougg@torque.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Our current implementation has a generic set of barrier functions that
-go through the SCSI driver model.  Realistically, this is unnecessary,
-because the only device that can use barriers (sd) can set the flush
-functions up at probe or revalidate time.  This patch pulls the barrier
-functions out of the mid layer and scsi driver model and relocates them
-directly in sd.
+On Friday 03 August 2007 2:37:02 pm Stefan Richter wrote:
+> Rob Landley wrote:
+> > They keep using the fact that they're exporting random kernel data as an
+> > excuse for not documenting a stable subset of this as an API userspace
+> > can rely on.
+>
+> At least sysfs-rules.txt is a start, although it contains more Don'ts
+> than Dos.
 
-James
+I've noticed this. :)
 
-Index: BUILD-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_lib.c	2007-08-03 16:00:43.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/scsi_lib.c	2007-08-03 16:01:08.000000000 -0500
-@@ -1038,22 +1038,6 @@ static int scsi_init_io(struct scsi_cmnd
- 	return BLKPREP_KILL;
- }
- 
--static int scsi_issue_flush_fn(struct request_queue *q, struct gendisk *disk,
--			       sector_t *error_sector)
--{
--	struct scsi_device *sdev = q->queuedata;
--	struct scsi_driver *drv;
--
--	if (sdev->sdev_state != SDEV_RUNNING)
--		return -ENXIO;
--
--	drv = *(struct scsi_driver **) disk->private_data;
--	if (drv->issue_flush)
--		return drv->issue_flush(&sdev->sdev_gendev, error_sector);
--
--	return -EOPNOTSUPP;
--}
--
- static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
- 		struct request *req)
- {
-@@ -1596,7 +1580,6 @@ struct request_queue *scsi_alloc_queue(s
- 		return NULL;
- 
- 	blk_queue_prep_rq(q, scsi_prep_fn);
--	blk_queue_issue_flush_fn(q, scsi_issue_flush_fn);
- 	blk_queue_softirq_done(q, scsi_softirq_done);
- 	blk_queue_protocol(q, BLK_PROTOCOL_SCSI);
- 	return q;
-Index: BUILD-2.6/drivers/scsi/sd.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/sd.c	2007-08-03 16:00:37.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/sd.c	2007-08-03 16:39:13.000000000 -0500
-@@ -241,7 +241,6 @@ static struct scsi_driver sd_template = 
- 	},
- 	.rescan			= sd_rescan,
- 	.init_command		= sd_init_command,
--	.issue_flush		= sd_issue_flush,
- };
- 
- /*
-@@ -800,10 +799,17 @@ static int sd_sync_cache(struct scsi_dis
- 	return 0;
- }
- 
--static int sd_issue_flush(struct device *dev, sector_t *error_sector)
-+static int sd_issue_flush(struct request_queue *q, struct gendisk *disk,
-+			  sector_t *error_sector)
- {
- 	int ret = 0;
--	struct scsi_disk *sdkp = scsi_disk_get_from_dev(dev);
-+	struct scsi_device *sdp = q->queuedata;
-+	struct scsi_disk *sdkp;
-+
-+	if (sdp->sdev_state != SDEV_RUNNING)
-+		return -ENXIO;
-+
-+	sdkp = scsi_disk_get_from_dev(&sdp->sdev_gendev);
- 
- 	if (!sdkp)
-                return -ENODEV;
-@@ -1663,6 +1669,8 @@ static int sd_probe(struct device *dev)
- 
- 	sd_revalidate_disk(gd);
- 
-+	blk_queue_issue_flush_fn(sdp->request_queue, sd_issue_flush);
-+
- 	gd->driverfs_dev = &sdp->sdev_gendev;
- 	gd->flags = GENHD_FL_DRIVERFS;
- 	if (sdp->removable)
-Index: BUILD-2.6/include/scsi/scsi_driver.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/scsi_driver.h	2007-08-03 16:00:30.000000000 -0500
-+++ BUILD-2.6/include/scsi/scsi_driver.h	2007-08-03 16:00:50.000000000 -0500
-@@ -13,8 +13,6 @@ struct scsi_driver {
- 
- 	int (*init_command)(struct scsi_cmnd *);
- 	void (*rescan)(struct device *);
--	int (*issue_flush)(struct device *, sector_t *);
--	int (*prepare_flush)(struct request_queue *, struct request *);
- };
- #define to_scsi_driver(drv) \
- 	container_of((drv), struct scsi_driver, gendrv)
-Index: BUILD-2.6/include/scsi/sd.h
-===================================================================
---- BUILD-2.6.orig/include/scsi/sd.h	2007-08-03 16:06:29.000000000 -0500
-+++ BUILD-2.6/include/scsi/sd.h	2007-08-03 16:06:44.000000000 -0500
-@@ -56,8 +56,6 @@ static int sd_suspend(struct device *dev
- static int sd_resume(struct device *dev);
- static void sd_rescan(struct device *);
- static int  sd_init_command(struct scsi_cmnd *);
--static int  sd_issue_flush(struct device *, sector_t *);
--static void sd_prepare_flush(struct request_queue *, struct request *);
- static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
- static void scsi_disk_release(struct class_device *cdev);
- static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+> > This is a bug, not a feature.  Linux has always had a
+> > stable _USERSPACE_ API.  This is exposed to userspace, and userspace is
+> > expected to be able to use this.  If they're exporting stuff they
+> > shouldn't be exporting, then they should stop exporting it.
+>
+> The kernel log is exported to userspace too.
 
+The kernel log is debug info, and nothing but debug info.  You should only 
+ever need to look at if something bad has happened.  Attempts to extract 
+information from it in an automated fashion during the normal operation of 
+the system are a bad idea, and always have been.
 
+Sysfs _claims_ to provide information for use by userspace programs.  It 
+claims to do so without providing a stable API.  This is a contradiction in 
+terms.
+
+I realize that the easy way to see what name the scsi layer assigned to the 
+USB key you just plugged in is dmesg | tail and then look at it a bit, but 
+this is a horrible workaround for the scsi layer's tendency to conflate 
+different classes of devices into a single arbitrarily ordered sequence, and 
+there are less horrible workarounds.
+
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
