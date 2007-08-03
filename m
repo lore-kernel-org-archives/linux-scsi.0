@@ -1,50 +1,59 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 44] drivers/scsi/lpfc/lpfc_debugfs.c: kmalloc + memset
- conversion to kcalloc
-Date: Fri, 03 Aug 2007 11:42:03 -0400
-Message-ID: <46B34CCB.4070602@emulex.com>
-References: <200707311845.48807.m.kozlowski@tuxland.pl> <200707312025.45603.m.kozlowski@tuxland.pl>
+Subject: [PATCH] lpfc : lpfc_debugfs.c kmalloc + memset conversion to
+	kzalloc
+Date: Fri, 3 Aug 2007 16:14:56 +0000 (UTC)
+Message-ID: <1186308017.2983.9.camel@localhost.localdomain>
+References: <200707311845.48807.m.kozlowski@tuxland.pl>
+	 <200707312027.55149.m.kozlowski@tuxland.pl>  <46B34CA6.6010502@emulex.com>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <200707312025.45603.m.kozlowski@tuxland.pl>
+In-Reply-To: <46B34CA6.6010502@emulex.com>
+Date: Sun, 05 Aug 2007 06:00:17 -0400
 Sender: kernel-janitors-owner@vger.kernel.org
-To: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 List-Id: linux-scsi@vger.kernel.org
 
-ACK
+One more area, introduced by the lpfc 8.2.2 patches, that need the 
+  kmalloc+memset conversion.
+
+This patch to be applied atop the 8.2.2 patches.
 
 -- james s
 
-Mariusz Kozlowski wrote:
-> Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-> 
->  drivers/scsi/lpfc/lpfc_debugfs.c | 13809 -> 13716 (-93 bytes)
->  drivers/scsi/lpfc/lpfc_debugfs.o | 146124 -> 146124 (0 bytes)
-> 
->  drivers/scsi/lpfc/lpfc_debugfs.c |    7 ++-----
->  1 file changed, 2 insertions(+), 5 deletions(-)
-> 
-> --- linux-2.6.23-rc1-mm1-a/drivers/scsi/lpfc/lpfc_debugfs.c	2007-07-26 13:07:42.000000000 +0200
-> +++ linux-2.6.23-rc1-mm1-b/drivers/scsi/lpfc/lpfc_debugfs.c	2007-07-31 14:11:24.000000000 +0200
-> @@ -432,14 +432,11 @@ lpfc_debugfs_initialize(struct lpfc_vpor
->  	if (!lpfc_debugfs_start_time)
->  		lpfc_debugfs_start_time = jiffies;
-> 
-> -	vport->disc_trc = kmalloc(
-> -		(sizeof(struct lpfc_disc_trc) * lpfc_debugfs_max_disc_trc),
-> -		GFP_KERNEL);
-> +	vport->disc_trc = kcalloc(lpfc_debugfs_max_disc_trc,
-> +				  sizeof(struct lpfc_disc_trc),	GFP_KERNEL);
-> 
->  	if (!vport->disc_trc)
->  		goto debug_failed;
-> -	memset(vport->disc_trc, 0,
-> -		(sizeof(struct lpfc_disc_trc) * lpfc_debugfs_max_disc_trc));
-> 
->  	snprintf(name, sizeof(name), "discovery_trace");
->  	vport->debug_disc_trc =
-> 
+
+Signed-off-by: James Smart <James.Smart@emulex.com>
+
+
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 2e3c01b..ef99e2b 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -856,9 +856,9 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			goto debug_failed;
+ 		}
+ 		if (!phba->slow_ring_trc) {
+-			phba->slow_ring_trc = kmalloc(
+-				(sizeof(struct lpfc_debugfs_trc) *
+-				lpfc_debugfs_max_slow_ring_trc),
++			phba->slow_ring_trc = kcalloc(
++				lpfc_debugfs_max_slow_ring_trc,
++				sizeof(struct lpfc_debugfs_trc),
+ 				GFP_KERNEL);
+ 			if (!phba->slow_ring_trc) {
+ 				lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
+@@ -867,9 +867,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 				goto debug_failed;
+ 			}
+ 			atomic_set(&phba->slow_ring_trc_cnt, 0);
+-			memset(phba->slow_ring_trc, 0,
+-				(sizeof(struct lpfc_debugfs_trc) *
+-				lpfc_debugfs_max_slow_ring_trc));
+ 		}
+ 	}
+ 
+
+
