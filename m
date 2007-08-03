@@ -1,25 +1,21 @@
 From: James Smart <James.Smart@Emulex.Com>
 Subject: [PATCH] lpfc : lpfc_debugfs.c kmalloc + memset conversion to
 	kzalloc
-Date: Fri, 3 Aug 2007 16:14:59 +0000 (UTC)
-Message-ID: <1186308017.2983.9.camel__29888.1924631589$1186157699$gmane$org@localhost.localdomain>
+Date: Fri, 3 Aug 2007 16:15:23 +0000 (UTC)
+Message-ID: <1186308017.2983.9.camel__25819.2735760987$1186157723$gmane$org@localhost.localdomain>
 References: <200707311845.48807.m.kozlowski@tuxland.pl>
 	 <200707312027.55149.m.kozlowski@tuxland.pl>  <46B34CA6.6010502@emulex.com>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:49752 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757344AbXHCQOs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Aug 2007 12:14:48 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763974AbXHCQO7@vger.kernel.org>
 In-Reply-To: <46B34CA6.6010502@emulex.com>
 Date: Sun, 05 Aug 2007 06:00:17 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+List-Id: linux-scsi@vger.kernel.org
 
 One more area, introduced by the lpfc 8.2.2 patches, that need the 
   kmalloc+memset conversion.
@@ -59,5 +55,3 @@ index 2e3c01b..ef99e2b 100644
  		}
  	}
  
-
-
