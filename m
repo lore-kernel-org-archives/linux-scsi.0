@@ -1,95 +1,95 @@
-From: "Justin T. Gibbs" <gibbs@scsiguy.com>
-Subject: Re: [PATCH][RESEND] Fix a potential NULL pointer deref in the aic7xxx,
- ahc_print_register() function
-Date: Sun, 05 Aug 2007 09:42:31 -0600
-Message-ID: <46B5EFE7.6090008@scsiguy.com>
-References: <200708042030.52405.jesper.juhl@gmail.com>	 <1186256627.3439.22.camel@localhost.localdomain> <9a8748490708050836m20b5dd38gf6a8968cd4b106f9@mail.gmail.com>
+From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [3/3] 2.6.23-rc2: known regressions
+Date: Sun, 05 Aug 2007 18:26:33 +0200
+Message-ID: <46B5FA39.5050907@googlemail.com>
+References: <46B5F74D.7010708@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.scsiguy.com ([70.89.174.89]:53368 "EHLO ns1.scsiguy.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752073AbXHEQFL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 5 Aug 2007 12:05:11 -0400
-In-Reply-To: <9a8748490708050836m20b5dd38gf6a8968cd4b106f9@mail.gmail.com>
+Received: from fk-out-0910.google.com ([209.85.128.191]:26502 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758167AbXHEQ1q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2007 12:27:46 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1215282fkz
+        for <linux-scsi@vger.kernel.org>; Sun, 05 Aug 2007 09:27:45 -0700 (PDT)
+In-Reply-To: <46B5F74D.7010708@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Andrew Morton <akpm@linux-foundation.org>, James Bottomley <jejb@kernel.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, James Smart <James.Smart@emulex.com>, Adrian Bunk <bunk@stusta.de>, linux-usb-devel@lists.sourceforge.net, Greg KH <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Tino Keitel <tino.keitel@gmx.de>, Mark Hindley <mark@hindley.org.uk>, Jeremy Fitzhardinge <jeremy@goop.org>
 
-All of this logic was simplified back in '05 in the BSD drivers by adding
-this to the top of the function:
+Hi all,
 
-        u_int   dummy_column;
-  
-        if (cur_column == NULL) {
-                dummy_column = 0;
-                cur_column = &dummy_column;
-        }
+Here is a list of some known regressions in 2.6.23-rc2.
 
-and then stripping out the cur_column == NULL checks in the routine.
+Feel free to add new regressions/remove fixed etc.
+http://kernelnewbies.org/known_regressions
+
+List of Aces
+
+Name                    Regressions fixed since 21-Jun-2007
+Adrian Bunk                            6
+Andi Kleen                             4
+Andrew Morton                          4
+Linus Torvalds                         4
+Al Viro                                3
+Cornelia Huck                          3
+Jens Axboe                             3
+Tejun Heo                              3
+David Woodhouse                        2
+Hugh Dickins                           2
+Trent Piepho                           2
+
+
+
+SCSI
+
+Subject         : lpfc_sli.c: off-by-10
+References      : http://lkml.org/lkml/2007/7/22/284
+Last known good : ?
+Submitter       : Adrian Bunk <bunk@stusta.de>
+Caused-By       : ?
+Handled-By      : ?
+Status          : unknown
+
+
+
+USB
+
+Subject         : 2.6.23-rc1: uhci_hcd. irq 4: nobody cared
+References      : http://lkml.org/lkml/2007/7/29/75
+Last known good : ?
+Submitter       : Mark Hindley <mark@hindley.org.uk>
+Caused-By       : ?
+Handled-By      : Alan Stern <stern@rowland.harvard.edu>
+Status          : unknown
+
+Subject         : 2.6.23-rc1: USB hard disk broken
+References      : http://lkml.org/lkml/2007/7/25/62
+Last known good : ?
+Submitter       : Tino Keitel <tino.keitel@gmx.de>
+Caused-By       : ?
+Handled-By      : Oliver Neukum <oliver@neukum.org>
+Status          : unknown
+
+
+
+Virtualization
+
+Subject         : drivers/net/xen-netfront.c: bogus code
+References      : http://lkml.org/lkml/2007/7/22/256
+Last known good : ?
+Submitter       : Adrian Bunk <bunk@stusta.de>
+Caused-By       : ?
+Handled-By      : Jeremy Fitzhardinge <jeremy@goop.org>
+Status          : unknown
+
+
+
+Regards,
+Michal
 
 --
-Justin
-
-Jesper Juhl wrote:
-> On 04/08/07, James Bottomley <James.Bottomley@steeleye.com> wrote:
->> On Sat, 2007-08-04 at 20:30 +0200, Jesper Juhl wrote:
->>> (resend of patch previously submitted on 28-Jul-2007 23:06)
->>>
->>>
->>> Ehlo,
->>>
->>> The Coverity checker noticed that we have a potential NULL pointer
->>> deref in drivers/scsi/aic7xxx/aic7xxx_core.c::ahc_print_register().
->>> This patch handles it by adding the same test against NULL that is
->>> used elsewhere in the same function.
->> It's on my list of things to look at ... but not very high.  I suspect
->> it actually isn't triggerable, but if you can tell me how, it will save
->> me from looking.
->>
-> 
-> Here's what Coverity reported :
-> ...
-> 6525 	int
-> 6526 	ahc_print_register(ahc_reg_parse_entry_t *table, u_int num_entries,
-> 6527 			   const char *name, u_int address, u_int value,
-> 6528 			   u_int *cur_column, u_int wrap_point)
-> 6529 	{
-> 6530 		int	printed;
-> 6531 		u_int	printed_mask;
-> 6532 	
-> 
-> Event var_compare_op: Added "cur_column" due to comparison "cur_column != 0"
-> Also see events: [var_deref_op]
-> At conditional (1): "cur_column != 0" taking false path
-> 
-> 6533 		if (cur_column != NULL && *cur_column >= wrap_point) {
-> 6534 			printf("\n");
-> 6535 			*cur_column = 0;
-> 6536 		}
-> 6537 		printed = printf("%s[0x%x]", name, value);
-> 
-> At conditional (2): "table == 0" taking true path
-> 
-> 6538 		if (table == NULL) {
-> 6539 			printed += printf(" ");
-> 
-> Event var_deref_op: Variable "cur_column" tracked as NULL was dereferenced.
-> Also see events: [var_compare_op]
-> 
-> 6540 			*cur_column += printed;
-> 6541 			return (printed);
-> 6542 		}
-> ...
-> 
-> So it requires a NULL 'table' and a != NULL 'cur_column' to trigger.
-> Whether or not that's actually possible I'm not sure, but it seems
-> safer to guard against it :)
-> 
-> 
-> By the way; if this can actually be triggered, then
-> ahd_print_register() has the same problem.
-> 
-> 
+LOG
+http://www.stardust.webpages.pl/log/
