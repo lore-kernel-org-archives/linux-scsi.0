@@ -1,27 +1,28 @@
 From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [3/3] 2.6.23-rc2: known regressions
-Date: Sun, 05 Aug 2007 18:26:33 +0200
-Message-ID: <46B5FA39.5050907@googlemail.com>
-References: <46B5F74D.7010708@googlemail.com>
+Subject: Re: [2/2] 2.6.23-rc2: known regressions with patches
+Date: Sun, 05 Aug 2007 18:26:52 +0200
+Message-ID: <46B5FA4C.2070700@googlemail.com>
+References: <46B5F93A.1020100@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-2
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.191]:26502 "EHLO
+Received: from fk-out-0910.google.com ([209.85.128.190]:26483 "EHLO
 	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758167AbXHEQ1q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2007 12:27:46 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1215282fkz
-        for <linux-scsi@vger.kernel.org>; Sun, 05 Aug 2007 09:27:45 -0700 (PDT)
-In-Reply-To: <46B5F74D.7010708@googlemail.com>
+	with ESMTP id S1758611AbXHEQ2M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2007 12:28:12 -0400
+Received: by fk-out-0910.google.com with SMTP id z23so1215281fkz
+        for <linux-scsi@vger.kernel.org>; Sun, 05 Aug 2007 09:28:11 -0700 (PDT)
+In-Reply-To: <46B5F93A.1020100@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, James Smart <James.Smart@emulex.com>, Adrian Bunk <bunk@stusta.de>, linux-usb-devel@lists.sourceforge.net, Greg KH <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Tino Keitel <tino.keitel@gmx.de>, Mark Hindley <mark@hindley.org.uk>, Jeremy Fitzhardinge <jeremy@goop.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Lameter <clameter@sgi.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@elte.hu>, Jan Dittmer <jdi@l4x.org>, Thomas Renninger <trenn@suse.de>, Netdev <netdev@vger.kernel.org>, Joachim Deguara <joachim.deguara@amd.com>, Michael Chan <mchan@broadcom.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, Seokmann Ju <seokmann.ju@qlogic.com>, Richard Lary <rlary@us.ibm.com>
 
 Hi all,
 
-Here is a list of some known regressions in 2.6.23-rc2.
+Here is a list of some known regressions in 2.6.23-rc2
+with patches available.
 
 Feel free to add new regressions/remove fixed etc.
 http://kernelnewbies.org/known_regressions
@@ -43,47 +44,58 @@ Trent Piepho                           2
 
 
 
+Memory management
+
+Subject         : [bug] SLUB & freeing locks
+References      : http://lkml.org/lkml/2007/7/26/90
+Last known good : ?
+Submitter       : Ingo Molnar <mingo@elte.hu>
+Caused-By       : ?
+Handled-By      : Peter Zijlstra <peterz@infradead.org>
+Patch           : http://lkml.org/lkml/2007/7/26/97
+Status          : patch available
+
+
+
+Modpost
+
+Subject         : modpost bug breaks ia64 cross compilation
+References      : http://lkml.org/lkml/2007/7/27/30
+                  http://lkml.org/lkml/2007/7/27/418
+Last known good : ?
+Submitter       : Jan Dittmer <jdi@l4x.org>
+Caused-By       : Thomas Renninger <trenn@suse.de>
+                  commit 29b71a1ca74491fab9fed09e9d835d840d042690
+Handled-By      : ?
+Patch           : http://lkml.org/lkml/2007/8/2/211
+Status          : patch was suggested
+
+
+
+Networking
+
+Subject         : tg3 dead after s2ram
+References      : http://lkml.org/lkml/2007/7/31/121
+Last known good : ?
+Submitter       : Joachim Deguara <joachim.deguara@amd.com>
+Caused-By       : ?
+Handled-By      : Michael Chan <mchan@broadcom.com>
+Patch           : http://lkml.org/lkml/2007/8/2/288
+Status          : patch available
+
+
+
 SCSI
 
-Subject         : lpfc_sli.c: off-by-10
-References      : http://lkml.org/lkml/2007/7/22/284
+Subject         : qla2xyz broken in current Linus tree
+References      : http://marc.info/?l=linux-scsi&m=118581420308892&w=2
 Last known good : ?
-Submitter       : Adrian Bunk <bunk@stusta.de>
-Caused-By       : ?
-Handled-By      : ?
-Status          : unknown
-
-
-
-USB
-
-Subject         : 2.6.23-rc1: uhci_hcd. irq 4: nobody cared
-References      : http://lkml.org/lkml/2007/7/29/75
-Last known good : ?
-Submitter       : Mark Hindley <mark@hindley.org.uk>
-Caused-By       : ?
-Handled-By      : Alan Stern <stern@rowland.harvard.edu>
-Status          : unknown
-
-Subject         : 2.6.23-rc1: USB hard disk broken
-References      : http://lkml.org/lkml/2007/7/25/62
-Last known good : ?
-Submitter       : Tino Keitel <tino.keitel@gmx.de>
-Caused-By       : ?
-Handled-By      : Oliver Neukum <oliver@neukum.org>
-Status          : unknown
-
-
-
-Virtualization
-
-Subject         : drivers/net/xen-netfront.c: bogus code
-References      : http://lkml.org/lkml/2007/7/22/256
-Last known good : ?
-Submitter       : Adrian Bunk <bunk@stusta.de>
-Caused-By       : ?
-Handled-By      : Jeremy Fitzhardinge <jeremy@goop.org>
-Status          : unknown
+Submitter       : Matthew Wilcox <matthew@wil.cx>
+Caused-By       : Seokmann Ju <seokmann.ju@qlogic.com>
+                  commit 281afe1947d855661754850de29d7530b2ff
+Handled-By      : Seokmann Ju <seokmann.ju@qlogic.com>
+Patch           : http://marc.info/?l=linux-scsi&m=118581884800073&w=2
+Status          : patch available
 
 
 
