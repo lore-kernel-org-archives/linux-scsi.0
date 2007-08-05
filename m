@@ -1,53 +1,305 @@
-From: Thomas Renninger <trenn@suse.de>
-Subject: Re: [2/2] 2.6.23-rc2: known regressions with patches
-Date: Sun, 05 Aug 2007 18:39:36 +0200
-Message-ID: <1186331976.3858.39.camel@fanta4.site>
-References: <46B5F93A.1020100@googlemail.com>
-	 <46B5FA4C.2070700@googlemail.com>
-Reply-To: trenn@suse.de
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: Some quick scsi documentation questions:
+Date: Sun, 05 Aug 2007 12:50:33 -0400
+Message-ID: <46B5FFD9.403@torque.net>
+References: <200707252328.28981.rob@landley.net> <200708022055.45523.rob@landley.net> <46B306CD.3030002@s5r6.in-berlin.de> <200708031611.26768.rob@landley.net> <46B3C36F.8060405@s5r6.in-berlin.de>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <46B5FA4C.2070700@googlemail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Lameter <clameter@sgi.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@elte.hu>, Jan Dittmer <jdi@l4x.org>, Netdev <netdev@vger.kernel.org>, Joachim Deguara <joachim.deguara@amd.com>, Michael Chan <mchan@broadcom.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, Seokmann Ju <seokmann.ju@qlogic.com>, Richard Lary <rlary@us.ibm.com>, tony.luck@intel.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:44195 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752354AbXHEQvI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2007 12:51:08 -0400
+In-Reply-To: <46B3C36F.8060405@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Rob Landley <rob@landley.net>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Sun, 2007-08-05 at 18:26 +0200, Michal Piotrowski wrote:
-> Hi all,
-
-> Modpost
+Stefan Richter wrote:
+> Rob Landley wrote:
+>> So an sg device is for something like a scanner that doesn't 
+>> present a block device?
 > 
-> Subject         : modpost bug breaks ia64 cross compilation
-> References      : http://lkml.org/lkml/2007/7/27/30
->                   http://lkml.org/lkml/2007/7/27/418
-> Last known good : ?
-> Submitter       : Jan Dittmer <jdi@l4x.org>
-> Caused-By       : Thomas Renninger <trenn@suse.de>
->                   commit 29b71a1ca74491fab9fed09e9d835d840d042690
-> Handled-By      : ?
-> Patch           : http://lkml.org/lkml/2007/8/2/211
-> Status          : patch was suggested
+> That's what I heard.
 
-A patch was sent to Tony. AFAIK it got accepted, not sure whether it
-already is in any and which git tree...
+The sg driver is a SCSI pass-through while the bsg driver is
+a pass-through the specializes in SCSI and other (usually)
+storage related protocols. Both work at the level of industry
+recognized standard (and draft) protocols.
 
-> Networking
+That approach makes the Linux block layer either a nuisance,
+irrelevant or a complete anachronism (in the case of OSD).
+IMO the linux block layer should be morphed into a library
+of internal queue handling routines. Storage upper level
+drivers such as sd can continue to present the "block"
+view ** of storage devices such as disks.
+
+** In OO terminology a storage device may have a "block"
+   interface. A storage device is not derived from "block".
+
+
+In practical terms the block layer SG_IO ioctl is still a
+scaled down version of what the corresponding ioctl in
+the sg driver can do. The block layer SG_IO ioctl is saddled
+with whatever strange policy the upper level driver might
+have for that device class (e.g. wait forever if removal media
+is not present). Also the block layer SG_IO ioctl cannot do
+asynchronous IO (either can the bsg driver at the moment).
+
+
+There was a version of Fedora that came out with sg devices
+only available for SCSI devices not already claimed by
+other upper level drivers. It was a surprise to me (Arjan
+may have mentioned it on this list). I got some complaints
+(as if I could do anything). Anyway it was amusing
+to watch how quickly that misstep was reversed. Obviously
+some folks with a lot me influence than me got to the Fedora
+designers who did that.
+
+>>> In case of FireWire drives and several other types of drives (I believe
+>>> also in case of SATA devices) there is a UUID tied to the *drive* too,
+>>> alongside UUIDs of the media.
+>> I can't find it under /sys/block/sda or device under that.  I can find "model" 
+>> and "vendor", but that's about it.  (I can't even get anything to admit it's 
+>> sata vs firewire.  The vendor for the hard drive is "ATA" but the vendor for 
+>> the dvd is "TEAC", and they're both sata devices on the spec sheet...)
 > 
-> Subject         : tg3 dead after s2ram
-> References      : http://lkml.org/lkml/2007/7/31/121
-> Last known good : ?
-> Submitter       : Joachim Deguara <joachim.deguara@amd.com>
-> Caused-By       : ?
-> Handled-By      : Michael Chan <mchan@broadcom.com>
-> Patch           : http://lkml.org/lkml/2007/8/2/288
-> Status          : patch available
+> # /lib/udev/ata_id /dev/hda
+> HTE721010G9AT00_MPC0J1Y0GRKYGD
+> # /lib/udev/ata_id /dev/sda
+> ST3750640AS_3QD07L23
+> # /lib/udev/ata_id /dev/hdb
+> PLEXTOR_DVD-ROM_PX-130A
 > 
-David Miller sent a message that it got applied.
+> Not very unique in case of the IDE DVD-ROM.  I don't know if SATA
+> DVD_ROMs have an actual UUID.
+> 
+>> There are such things as external SATA enclosures, but 
+>> they're A) few and far between,
+> 
+> What?  They are all the rage now.  :-)
 
-Thanks,
+ATA8-ACS (still draft I think) has provision for a NAA-5
+based UUID. Not sure if any SATA disks are complying
+yet. [I don't think the Seagate ES series ("enterprise")
+did so it will be interesting if their recently announced
+ES.2 series does.]
 
-   Thomas
+Yes SATA external enclosures are everywhere. They make more
+sense than USB 2 and marginalize 1394. The problems start
+for SATA when you want to have more than one disk in that
+enclosure. SAS is much better as an interconnect.
+
+>> In 99.x% of systems with SATA hard drives, said drives are sealed inside the 
+>> machine, whether it's a laptop or a server.  USB can move around between 
+>> boots (or with the power on) as a matter of course, but SATA really isn't 
+>> designed for that or expected to do that.
+> 
+> I suppose you could still have a not too complicated topology-based
+> naming scheme even with eSATA.
+
+Recent SAS-2 drafts have some heuristic for ATA disks (that
+don't have real UUIDs) that combines the manufacturer, model
+and serial number into a single number for identification
+purposes. With potentially hundreds of SATA disks hanging
+off SAS infrastructure, someone who changed the slot a SATA
+disk was connected to could cause a lot of fun.
+
+>> As someone who used ATA drives for 10 years before this became a problem, and 
+>> is now using a SATA drive inside a laptop in a configuration Dell (ok, 
+>> Quanta) churns out by the millions, I consider it a design flaw in the scsi 
+>> layer that anything that goes through the scsi layer loses its original 
+>> identity.
+>>
+>> There have been numerous proposals to compensate for the scsi layer's 
+>> renumbering with udev rules, but at least two of the most widely used 
+>> distributions are still doing them wrong, so it's apparently not a trivial 
+>> problem to recover from.
+> 
+> At least some PPC Linux distributions have had boot-from-FireWire for
+> some time, even though there are neither deterministic discovery times
+> nor a fixed bus topology with FireWire.  SATA should be simpler.
+> 
+> ...
+>> You can reliably enumerate ATA and SATA.
+> 
+> You mean, you can reliably enumerate ATA and SATA based on bus topology.
+> Do SATA port multipliers still fit into the picture?
+
+Hopefully they will be chased out of the picture by SAS
+expanders. It is a bit like comparing a first generation
+ethernet 10 Mbps hub with a modern ethernet switch.
+
+When a SATA port multiplier is used
+  - the SATA controller and its driver must detect it and
+    know what to do
+  - the SATA disks are being tricked into thinking they still
+    have a point to point connection! [Oh what a tangled web
+    we weave ...]
+
+> ...
+>>>> Telling
+>>>> udev to do something complicated to keep track of a device that I know,
+>>>> at OS install time, _can't_ever_physically_move_, is one of them.
+>>> There is a variety of possible naming schemes:
+>>>
+>>>   - Naming by order of discovery.
+>>>   - Naming by vendor/model name strings.
+>>>   - Naming by universally unique identifier.
+>>>   - Naming by topology.
+>>>   - ...
+>> See "I followed the discussion of all this years ago"...
+>>
+>>> Only the simplest of these schemes (naming by order of discovery) is
+>>> hardwired into the kernel portion of the Linux OS.
+>> The issue you're ignoring when you talk about "order of discovery" is that the 
+>> first Sata drive and the first USB drive are lumped into the same sequence.
+> 
+> No, I'm not ignoring that.  I never stated that naming by order of
+> discovery would be a particularly useful naming scheme.  For
+> administration and applications it is of course the least useful naming
+> scheme.
+> 
+>> The sata drives can't move, but I have an external USB drive that may or may 
+>> not be plugged in at boot time.  The fact that the presence or absence of a 
+>> USB drive can change the names assigned to the SATA drives is a loss of 
+>> orthogonality caused by the SCSI layer.
+> 
+> Only names based on order of discovery change when SATA and USB are
+> intermingled.  The other names don't change.  (But these other names
+> have to be put together by userspace.)
+> 
+> A simple workaround for simple configurations is to only load the
+> low-level drivers (transport and interconnect drivers) in the early boot
+> phase which are known to be required for the disk with root filesystem.
+> 
+>> I consider this a design flaw, and 
+>> migrating the ATA drives to do this was a regression.
+>>
+>>> The other naming  
+>>> schemes are (or can be) implemented in the userland portion of the Linux
+>>> OS.
+>> Userland can work around the scsi layer, yes.
+> 
+> All newer SCSI transports are far too complicated for a kernelspace-only
+> implementation.  So in case of such transports, it's not a workaround.
+
+Ah user space device discovery! If only folks wouldn't
+design things so that protocols used to device discovery
+(yes I am talking about the SAS Management Protocol [SMP])
+did _not_ need discovered (or about to be discovered)
+devices already in the kernel's sysfs or dev space.
+
+> It may be a workaround in case of ATA and PATA.
+> 
+>>> There is only the most primitive naming scheme implemented in the kernel
+>>> because naming policy, like most other kinds of policy, is better left
+>>> to userland.  The kernel is a too restricted framework to implement such
+>>> things.  The kernel lacks runtime-configuration files, scripting
+>>> interfaces, et cetera.
+>> /dev/hdc staying put when you removed or inserted a /dev/hdb was nice.  It 
+>> worked well for 15 years.
+>>
+>> Not _all_ hardware is hotpluggable, and ignoring this knowledge during device 
+>> enumeration is silly.
+> 
+> If I understand you correctly, what you desire is to have at least two
+> naming schemes implemented in the kernel:  Topology-based for those
+> transports (and interconnects) which have simple topologies (notably ATA
+> and SATA), and the primitive order-of-discovery-based scheme as fallback
+> for the rest.  Right?
+> 
+> ...
+>>> K3B doesn't use sysfs for that.  It most certainly uses SG IO (SCSI
+>>> generic IO) to figure out these names.
+>> Good to know.  I haven't read far enough through the scsi docs to see how to 
+>> do that yet.
+> 
+> A pro pos SCSI docs.  I haven't read the full thread.  Did people point
+> you already to http://www.t10.org/scsi-3.htm?
+> 
+> ...
+>> I currently view the scsi layer as a weird sort of networking stack.  Although 
+>> actual SCSI hardware seems essentially extinct, lots of devices speak 
+>> dialects of the SCSI protocol, and they still send data packets in that 
+>> format back and forth through the hardware du jour (sometimes even tunneled 
+>> over TCP/IP).  The SCSI layer lets you talk to these devices using that 
+>> protocol.
+> 
+> See above page.  Also have a look at the SAM-4 spec, figure 2.  The
+> Linux SCSI stack is not a 1:1 reflection of that architecture, but it
+> gives an approximate idea of the roles of high-level drivers (sd, sr,
+> st, sg), the mid-layer (scsi-mod), and low-level drivers (transport
+> layers and transport libraries, and the numerous interconnect drivers).
+> 
+> (Also scroll a bit further through SAM-4 --- you will see mostly quite
+> abstract stuff which is this way in order to cover all the various
+> flavors of SCSI that came into existence.  It's really quite far from
+> the SCSI of the 1980s.  SCSI actually started to become more diverse
+> already during the 1990s.)
+
+I agree with both angles. The linux SCSI/storage subsystem
+should look a lot more like the networking layers. No-one
+tries to enumerate the whole IP space but it may make sense
+to enumerate a small part of it (e.g. MAC addresses in the
+directly attached ethernet subnet).
+
+If any enumeration is required then it should be done by
+user space tools (e.g. udev) interacting with the transport
+concerned. That also implies that SCSI hosts and ATA
+controllers need to be promoted to "first class" devices
+(cf "interfaces" in networking), not hidden as if they were
+some sort of an embarrassment.
+
+
+Ah, it's time to stop wasting my time (and others who have
+read this far) about what might be. The storage paradigm
+thinking of the management is stuck somewhere between the
+70s and 80s of the last century.
+
+Doug Gilbert
+
+>> SCSI doesn't handle device enumeration any more than TCP/IP does, and 
+>> sometimes to do device enumeration you have to look at or talk to the 
+>> underlying hardware, just like you have to dig down to ethernet broadcast 
+>> packets in order to do DHCP.
+> 
+> These matters are defined in the transport layer of the SCSI
+> Architecture Model, and implemented in Linux' SCSI low-level drivers.
+> There are considerable differences in discovery and addressing between
+> the various transport protocols.  The SCSI core doesn't really play a
+> role in these matters.
+> 
+> (There are remnants of SPI-specific addressing sprinkled throughout the
+> SCSI mid-layer's APIs though; something that is seemingly very hard to
+> get rid of.  SPI = SCSI Parallel Interconnect.)
+> 
+>> Unfortunately, the only way to talk to the 
+>> underlying hardware seems to be through the SCSI layer.  I can find "eth0" 
+>> without having a TCP/IP address assigned to it,
+> 
+> But what is "eth0"?  Is it one of the onboard ethernet ports?  Is it an
+> add-on PCI or CardBus card?  Or is it even an IP-over-FireWire
+> interface?  (Those too have been named eth* for historical reasons but
+> now haven't anything to do with Ethernet anymore.)
+> 
+> It's almost the same story with networking interfaces:  The kernel
+> implements only one of several possible naming policies --- a very
+> primitive and not very useful one:  There is a prefix like "eth" (there
+> are a few other prefixes for other types of interfaces but I don't know
+> which in particular), and then there is a number which is handed out by
+> the networking core in order of discovery.
+> 
+>> but I can only list the sata 
+>> devices in the system by going through the list of devices the SCSI layer has 
+>> detected and working backwards...
+>>  
+>> It's entirely possible my metaphor is wrong here, but I'm trying to 
+>> understand...
+>>
+>> Rob
+> 
 
