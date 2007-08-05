@@ -1,53 +1,32 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold structure
-Date: Sun, 05 Aug 2007 12:55:16 -0400
-Message-ID: <46B600F4.7020601@torque.net>
-References: <200708051531.l75FVnjP011717@mbox.iij4u.or.jp>
-Reply-To: dougg@torque.net
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [2/2] 2.6.23-rc2: known regressions with patches
+Date: Sun, 5 Aug 2007 19:51:55 +0200
+Message-ID: <20070805175155.GA3244@elte.hu>
+References: <46B5F93A.1020100@googlemail.com> <46B5FA4C.2070700@googlemail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:41346 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751496AbXHEQzg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Aug 2007 12:55:36 -0400
-In-Reply-To: <200708051531.l75FVnjP011717@mbox.iij4u.or.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <46B5FA4C.2070700@googlemail.com>
+Sender: netdev-owner@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Lameter <clameter@sgi.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Peter Zijlstra <peterz@infradead.org>, Jan Dittmer <jdi@l4x.org>, Thomas Renninger <trenn@suse.de>, Netdev <netdev@vger.kernel.org>, Joachim Deguara <joachim.deguara@amd.com>, Michael Chan <mchan@broadcom.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, Seokmann Ju <seokmann.ju@qlogic.com>, Richard Lary <rlary@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp
 
-FUJITA Tomonori wrote:
-> unsigned short is too small for sizeof(struct scatterlist) *
-> min(q->max_hw_segments, q->max_phys_segments).
-> 
-> This fixes memory leak with 4096 segments since 16 (likely sg size
-> with x86) * 4096 sets sglist_len to zero.
-> 
-> This might not happen without sg chaining support.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/sg.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 2fc24e7..2c44bb0 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -114,7 +114,7 @@ static struct class_interface sg_interface = {
->  
->  typedef struct sg_scatter_hold { /* holding area for scsi scatter gather info */
->  	unsigned short k_use_sg; /* Count of kernel scatter-gather pieces */
-> -	unsigned short sglist_len; /* size of malloc'd scatter-gather list ++ */
-> +	unsigned sglist_len; /* size of malloc'd scatter-gather list ++ */
->  	unsigned bufflen;	/* Size of (aggregate) data buffer */
->  	unsigned b_malloc_len;	/* actual len malloc'ed in buffer */
->  	struct scatterlist *buffer;/* scatter list */
 
-Tomo,
-Thanks.
+* Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
 
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> Memory management
+> 
+> Subject         : [bug] SLUB & freeing locks
+> References      : http://lkml.org/lkml/2007/7/26/90
+> Last known good : ?
+> Submitter       : Ingo Molnar <mingo@elte.hu>
+> Caused-By       : ?
+> Handled-By      : Peter Zijlstra <peterz@infradead.org>
+> Patch           : http://lkml.org/lkml/2007/7/26/97
+> Status          : patch available
 
+fixed by commit 2208b764c14d0f1ad63da64b1a42db6077b6fe42.
+
+	Ingo
