@@ -1,32 +1,36 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [2/2] 2.6.23-rc2: known regressions with patches
-Date: Sun, 5 Aug 2007 19:51:55 +0200
-Message-ID: <20070805175155.GA3244@elte.hu>
-References: <46B5F93A.1020100@googlemail.com> <46B5FA4C.2070700@googlemail.com>
+From: Jeremy Fitzhardinge <jeremy@goop.org>
+Subject: Re: [3/3] 2.6.23-rc2: known regressions
+Date: Sun, 05 Aug 2007 10:59:16 -0700
+Message-ID: <46B60FF4.3070208@goop.org>
+References: <46B5F74D.7010708@googlemail.com> <46B5FA39.5050907@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <46B5FA4C.2070700@googlemail.com>
-Sender: netdev-owner@vger.kernel.org
-To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, Christoph Lameter <clameter@sgi.com>, Pekka Enberg <penberg@cs.helsinki.fi>, Peter Zijlstra <peterz@infradead.org>, Jan Dittmer <jdi@l4x.org>, Thomas Renninger <trenn@suse.de>, Netdev <netdev@vger.kernel.org>, Joachim Deguara <joachim.deguara@amd.com>, Michael Chan <mchan@broadcom.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, Seokmann Ju <seokmann.ju@qlogic.com>, Richard Lary <rlary@us.ibm.com>
+Content-Type: text/plain; charset=ISO-8859-2
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw.goop.org ([64.81.55.164]:50306 "EHLO mail.goop.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752614AbXHESAi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 5 Aug 2007 14:00:38 -0400
+In-Reply-To: <46B5FA39.5050907@googlemail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, James Smart <James.Smart@emulex.com>, Adrian Bunk <bunk@stusta.de>, linux-usb-devel@lists.sourceforge.net, Greg KH <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Tino Keitel <tino.keitel@gmx.de>, Mark Hindley <mark@hindley.org.uk>
 
-
-* Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
-
-> Memory management
-> 
-> Subject         : [bug] SLUB & freeing locks
-> References      : http://lkml.org/lkml/2007/7/26/90
+Michal Piotrowski wrote:
+> Virtualization
+>
+> Subject         : drivers/net/xen-netfront.c: bogus code
+> References      : http://lkml.org/lkml/2007/7/22/256
 > Last known good : ?
-> Submitter       : Ingo Molnar <mingo@elte.hu>
+> Submitter       : Adrian Bunk <bunk@stusta.de>
 > Caused-By       : ?
-> Handled-By      : Peter Zijlstra <peterz@infradead.org>
-> Patch           : http://lkml.org/lkml/2007/7/26/97
-> Status          : patch available
+> Handled-By      : Jeremy Fitzhardinge <jeremy@goop.org>
+> Status          : unknown
+>   
 
-fixed by commit 2208b764c14d0f1ad63da64b1a42db6077b6fe42.
+This is just a chunk of dead code.  It probably doesn't even affect the
+generated code.  I've got a patch here for it, and I'll probably post it
+in the next day or so, but this seems like a non-issue.
 
-	Ingo
+    J
