@@ -1,42 +1,49 @@
 From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [PATCH] ps3rom: convert to use the data buffer accessors
-Date: Mon, 6 Aug 2007 15:12:27 +0200 (CEST)
-Message-ID: <Pine.LNX.4.62.0708061512060.31116@pademelon.sonytel.be>
-References: <20070723094232S.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [Cbe-oss-dev] Playstation 3 BD-ROM access and LV1_DENIED_BY_POLICY
+Date: Mon, 6 Aug 2007 15:38:03 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0708061533230.31116@pademelon.sonytel.be>
+References: <46B1F92C.8030206@am.sony.com>  <1186072148.13194.46.camel@haakon2.linux-iscsi.org>
+  <20070803110537.A84C.MOKUNO@sm.sony.co.jp> <1186133997.3198.19.camel@haakon2.linux-iscsi.org>
+ <46B3770E.4070805@am.sony.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584337861-541239771-1186405947=:31116"
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584337861-338147029-1186407220=:31116"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:46640 "EHLO
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:46990 "EHLO
 	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1763455AbXHFNMd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Aug 2007 09:12:33 -0400
-In-Reply-To: <20070723094232S.fujita.tomonori@lab.ntt.co.jp>
+	by vger.kernel.org with ESMTP id S1762254AbXHFNiE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Aug 2007 09:38:04 -0400
+In-Reply-To: <46B3770E.4070805@am.sony.com>
+Content-ID: <Pine.LNX.4.62.0708061533440.31116@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+To: "Nicholas A. Bellinger" <nab@kernel.org>
+Cc: Geoff Levand <geoffrey.levand@am.sony.com>, Masakazu Mokuno <mokuno@sm.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org
 
   This message is in MIME format.  The first part should be readable text,
   while the remaining parts are likely unreadable without MIME-aware tools.
 
----584337861-541239771-1186405947=:31116
-Content-Type: TEXT/PLAIN; charset=UTF-8
+---584337861-338147029-1186407220=:31116
+Content-Type: TEXT/PLAIN; CHARSET=UTF-8
 Content-Transfer-Encoding: 8BIT
+Content-ID: <Pine.LNX.4.62.0708061533441.31116@pademelon.sonytel.be>
 
-On Mon, 23 Jul 2007, FUJITA Tomonori wrote:
-> This is against Linus' tree since scsi-misc doesn't include ps3rom
-> driver yet.
+On Fri, 3 Aug 2007, Geoff Levand wrote:
+> Nicholas A. Bellinger wrote:
+> > Thank you for this information.  I since been able to resolve my issue
+> > on 2.6.16 (which ended up being my fault), and was able to determine
+> > that the issue on 2.6.23-rc1 is due to
+> > drivers/scsi/scsi_lib.c:scsi_execute_async() rejecting READ_10 and
+> > TEST_UNIT_READY commands in certain cases (perhaps a race in
+> > drivers/scsi/ps3rom.c..?) using this API that was causing the win32 side
+> > to throw exceptions.
 > 
-> ---
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] ps3rom: convert to use the data buffer accessors
-> 
-> This converts ps3rom driver to use the new accessors for the sg lists
-> and the parameters.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> If you get more info on what was happening here, please report it to Geert
+> so he can investigate.  He should return next week.
 
-Acked-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Indeed.
+
+Perhaps because ps3rom cannot queue more than 1 command?
+I'm CCing the SCSI guys, just in case this rings a bell.
 
 With kind regards,
  
@@ -56,4 +63,4 @@ A division of Sony Service Centre (Europe) N.V.
 Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium	
 VAT BE 0413.825.160 · RPR Brussels	
 Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
----584337861-541239771-1186405947=:31116--
+---584337861-338147029-1186407220=:31116--
