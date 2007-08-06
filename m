@@ -1,63 +1,69 @@
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold
- structure
-Date: Mon, 06 Aug 2007 13:09:44 +0900
-Message-ID: <20070806130944R.fujita.tomonori@lab.ntt.co.jp>
-References: <200708051531.l75FVnjP011717@mbox.iij4u.or.jp>
-	<46B600F4.7020601@torque.net>
+Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
+ IO sg-chaining
+Date: Mon, 06 Aug 2007 16:22:05 +0900
+Message-ID: <20070806162205P.fujita.tomonori@lab.ntt.co.jp>
+References: <20070725174258T.fujita.tomonori@lab.ntt.co.jp>
+	<46A7A2EC.6040400@panasas.com>
+	<46AF97AA.5000908@panasas.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:51893 "EHLO
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:44243 "EHLO
 	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750836AbXHFEKP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Aug 2007 00:10:15 -0400
-In-Reply-To: <46B600F4.7020601@torque.net>
+	with ESMTP id S1756100AbXHFHYq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Aug 2007 03:24:46 -0400
+In-Reply-To: <46AF97AA.5000908@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp
+To: jens.axboe@oracle.com, bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, bhalevy@panasas.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On Sun, 05 Aug 2007 12:55:16 -0400
-Douglas Gilbert <dougg@torque.net> wrote:
+On Tue, 31 Jul 2007 23:12:26 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-> FUJITA Tomonori wrote:
-> > unsigned short is too small for sizeof(struct scatterlist) *
-> > min(q->max_hw_segments, q->max_phys_segments).
-> > 
-> > This fixes memory leak with 4096 segments since 16 (likely sg size
-> > with x86) * 4096 sets sglist_len to zero.
-> > 
-> > This might not happen without sg chaining support.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  drivers/scsi/sg.c |    2 +-
-> >  1 files changed, 1 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> > index 2fc24e7..2c44bb0 100644
-> > --- a/drivers/scsi/sg.c
-> > +++ b/drivers/scsi/sg.c
-> > @@ -114,7 +114,7 @@ static struct class_interface sg_interface = {
-> >  
-> >  typedef struct sg_scatter_hold { /* holding area for scsi scatter gather info */
-> >  	unsigned short k_use_sg; /* Count of kernel scatter-gather pieces */
-> > -	unsigned short sglist_len; /* size of malloc'd scatter-gather list ++ */
-> > +	unsigned sglist_len; /* size of malloc'd scatter-gather list ++ */
-> >  	unsigned bufflen;	/* Size of (aggregate) data buffer */
-> >  	unsigned b_malloc_len;	/* actual len malloc'ed in buffer */
-> >  	struct scatterlist *buffer;/* scatter list */
+> The tested Kernels:
 > 
-> Tomo,
-> Thanks.
-> 
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
+> 1. Jens's sglist-arch
+>   I was not able to pass all tests with this Kernel. For some reason when
+>   bigger than 256 pages commands are queued the Machine will run out
+>   of memory and will kill the test. After the test is killed the system
+>   is left with 10M of memory and can hardly reboot.
+>   I have done some prints at the queuecommand entry in scsi_debug.c
+>   and I can see that I receive the expected large sg_count and bufflen
+>   but unlike other tests I get a different pointer at scsi_sglist().
+>   In other tests since nothing is happening at this machine while in
+>   the test, the sglist pointer is always the same. commands comes in,
+>   allocates memory, do nothing in scsi_debug, freed, and returns. 
+>   I suspect sglist leak or allocation bug.
 
-Thanks for the quick reply.
+Ok, I found the leak.
 
-Allocating 64K contiguous memory is not good so the next thing to do
-is converting sg to use the sg chaining support fully. Or it might be
-time to finish the overdue task, to convert sg to use the block layer
-functions.
+
+>From 011c05c2e514d1db4834147ed83526473711b0a3 Mon Sep 17 00:00:00 2001
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Date: Mon, 6 Aug 2007 16:16:24 +0900
+Subject: [PATCH] fix sg chaining leak
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_lib.c |    1 -
+ 1 files changed, 0 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 5884b1b..25988b9 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -48,7 +48,6 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
+ 	SP(32),
+ 	SP(64),
+ 	SP(128),
+-	SP(256),
+ };
+ #undef SP
+ 
+-- 
+1.5.2.4
+
+
