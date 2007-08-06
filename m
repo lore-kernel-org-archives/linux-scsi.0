@@ -1,62 +1,59 @@
-From: Olaf Hering <olh@suse.de>
-Subject: [PATCH] do not export /usr/include/scsi in make headers_install
-Date: Mon, 6 Aug 2007 15:02:10 +0200
-Message-ID: <20070806130210.GA2239@suse.de>
-References: <20070806124546.GA2117@suse.de> <20070806125212.GB12896@infradead.org>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [PATCH] ps3rom: convert to use the data buffer accessors
+Date: Mon, 6 Aug 2007 15:12:27 +0200 (CEST)
+Message-ID: <Pine.LNX.4.62.0708061512060.31116@pademelon.sonytel.be>
+References: <20070723094232S.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584337861-541239771-1186405947=:31116"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:40638 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752883AbXHFNCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 6 Aug 2007 09:02:13 -0400
-Content-Disposition: inline
-In-Reply-To: <20070806125212.GB12896@infradead.org>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:46640 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1763455AbXHFNMd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Aug 2007 09:12:33 -0400
+In-Reply-To: <20070723094232S.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@osdl.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: "James E.J. Bottomley" <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
-On Mon, Aug 06, Christoph Hellwig wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> On Mon, Aug 06, 2007 at 02:45:46PM +0200, Olaf Hering wrote:
-> > 
-> > glibc and make headers_install_all provide /usr/include/scsi
-> > One of them has to go.
-> > 
-> > A quick diff shows no differences, expect:
+---584337861-541239771-1186405947=:31116
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+
+On Mon, 23 Jul 2007, FUJITA Tomonori wrote:
+> This is against Linus' tree since scsi-misc doesn't include ps3rom
+> driver yet.
 > 
-> ..
+> ---
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Subject: [PATCH] ps3rom: convert to use the data buffer accessors
 > 
-> > Which copy should be provided by a distributor?
+> This converts ps3rom driver to use the new accessors for the sg lists
+> and the parameters.
 > 
-> The glibc one of course.  The kernel scsi.h should never have been
-> added to the list of exportable headers.  
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-/usr/include/scsi is provided by glibc.
-Remove the scsi export from make headers_install target.
+Acked-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
 
+With kind regards,
+ 
+Geert Uytterhoeven
+Software Architect
 
-Signed-off-by: Olaf Hering <olh@suse.de>
-
----
- include/Kbuild      |    1 -
- include/scsi/Kbuild |    4 ----
- 2 files changed, 5 deletions(-)
-
---- a/include/Kbuild
-+++ b/include/Kbuild
-@@ -1,6 +1,5 @@
- header-y += asm-generic/
- header-y += linux/
--header-y += scsi/
- header-y += sound/
- header-y += mtd/
- header-y += rdma/
---- a/include/scsi/Kbuild
-+++ /dev/null
-@@ -1,4 +0,0 @@
--header-y += scsi.h
--
--unifdef-y += scsi_ioctl.h
--unifdef-y += sg.h
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+ 
+Phone:    +32 (0)2 700 8453	
+Fax:      +32 (0)2 700 8622	
+E-mail:   Geert.Uytterhoeven@sonycom.com	
+Internet: http://www.sony-europe.com/
+ 	
+Sony Network and Software Technology Center Europe	
+A division of Sony Service Centre (Europe) N.V.	
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium	
+VAT BE 0413.825.160 · RPR Brussels	
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584337861-541239771-1186405947=:31116--
