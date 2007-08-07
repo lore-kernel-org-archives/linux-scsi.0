@@ -1,129 +1,128 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large
-  IO sg-chaining
-Date: Tue, 07 Aug 2007 17:36:19 +0900
-Message-ID: <20070807173619J.fujita.tomonori@lab.ntt.co.jp>
-References: <46AF97AA.5000908@panasas.com>
-	<20070806162205P.fujita.tomonori@lab.ntt.co.jp>
-	<20070807065549.GR5245@kernel.dk>
+From: "Nicholas A. Bellinger" <nab@kernel.org>
+Subject: Re: [Cbe-oss-dev] Playstation 3 BD-ROM access and
+	LV1_DENIED_BY_POLICY
+Date: Tue, 07 Aug 2007 01:45:42 -0700
+Message-ID: <1186476342.3188.105.camel@haakon2.linux-iscsi.org>
+References: <46B1F92C.8030206@am.sony.com>
+	 <1186072148.13194.46.camel@haakon2.linux-iscsi.org>
+	 <20070803110537.A84C.MOKUNO@sm.sony.co.jp>
+	 <1186133997.3198.19.camel@haakon2.linux-iscsi.org>
+	 <46B3770E.4070805@am.sony.com>
+	 <Pine.LNX.4.62.0708061533230.31116@pademelon.sonytel.be>
+	 <1186409379.3436.3.camel@localhost.localdomain>
+	 <Pine.LNX.4.62.0708061617190.31116@pademelon.sonytel.be>
+Reply-To: nab@kernel.org
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:43000 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756431AbXHGIrM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 04:47:12 -0400
-In-Reply-To: <20070807065549.GR5245@kernel.dk>
+Received: from smtp115.sbc.mail.re3.yahoo.com ([66.196.96.88]:24168 "HELO
+	smtp115.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753436AbXHGIzH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 04:55:07 -0400
+In-Reply-To: <Pine.LNX.4.62.0708061617190.31116@pademelon.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: fujita.tomonori@lab.ntt.co.jp, bharrosh@panasas.com, bhalevy@panasas.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Masakazu Mokuno <mokuno@sm.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, Bernard Li <bernard@vanhpc.org>, Patrick Mansfield <patmans@us.ibm.com>, Mike Mazarick <mazarick@bellsouth.net>
 
-On Tue, 7 Aug 2007 08:55:49 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
-
-> On Mon, Aug 06 2007, FUJITA Tomonori wrote:
-> > On Tue, 31 Jul 2007 23:12:26 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> > > The tested Kernels:
+On Mon, 2007-08-06 at 16:19 +0200, Geert Uytterhoeven wrote:
+> On Mon, 6 Aug 2007, James Bottomley wrote:
+> > On Mon, 2007-08-06 at 15:38 +0200, Geert Uytterhoeven wrote:
+> > > On Fri, 3 Aug 2007, Geoff Levand wrote:
+> > > > Nicholas A. Bellinger wrote:
+> > > > > Thank you for this information.  I since been able to resolve my issue
+> > > > > on 2.6.16 (which ended up being my fault), and was able to determine
+> > > > > that the issue on 2.6.23-rc1 is due to
+> > > > > drivers/scsi/scsi_lib.c:scsi_execute_async() rejecting READ_10 and
+> > > > > TEST_UNIT_READY commands in certain cases (perhaps a race in
+> > > > > drivers/scsi/ps3rom.c..?) using this API that was causing the win32 side
+> > > > > to throw exceptions.
+> > > > 
+> > > > If you get more info on what was happening here, please report it to Geert
+> > > > so he can investigate.  He should return next week.
 > > > 
-> > > 1. Jens's sglist-arch
-> > >   I was not able to pass all tests with this Kernel. For some reason when
-> > >   bigger than 256 pages commands are queued the Machine will run out
-> > >   of memory and will kill the test. After the test is killed the system
-> > >   is left with 10M of memory and can hardly reboot.
-> > >   I have done some prints at the queuecommand entry in scsi_debug.c
-> > >   and I can see that I receive the expected large sg_count and bufflen
-> > >   but unlike other tests I get a different pointer at scsi_sglist().
-> > >   In other tests since nothing is happening at this machine while in
-> > >   the test, the sglist pointer is always the same. commands comes in,
-> > >   allocates memory, do nothing in scsi_debug, freed, and returns. 
-> > >   I suspect sglist leak or allocation bug.
+> > > Indeed.
+> > > 
+> > > Perhaps because ps3rom cannot queue more than 1 command?
+> > > I'm CCing the SCSI guys, just in case this rings a bell.
 > > 
-> > Ok, I found the leak.
+> > Without details, it's really hard to speculate.  The problem description
+> > is manifestly strange for two reasons
 > > 
-> > 
-> > From 011c05c2e514d1db4834147ed83526473711b0a3 Mon Sep 17 00:00:00 2001
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Date: Mon, 6 Aug 2007 16:16:24 +0900
-> > Subject: [PATCH] fix sg chaining leak
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  drivers/scsi/scsi_lib.c |    1 -
-> >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index 5884b1b..25988b9 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -48,7 +48,6 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
-> >  	SP(32),
-> >  	SP(64),
-> >  	SP(128),
-> > -	SP(256),
-> >  };
-> >  #undef SP
+
+My apologies for the delay as things have been busy on late..
+
+On the kernel side, the setup is:
+
+Sector Size:
+
+2048 bytes for TYPE_ROM
+
+Max Sectors:
+
+32 from struct scsi_host->max_sectors.  The iSCSI/HD client software is
+requesting single sector READ_10s at various LBAs of the media.
+
+iSCSI TCQ:
+
+Setting ExpCmdSn/MaxCmdSn Window == 1 has had no effect.
+
+ATAPI Transport Level TCQ:
+
+A single TCQ slot is detected from struct scsi_host & struct scsi_device
+and the lowest of either is set and enforced.  Both scsi_execute_async()
+and legacy scsi-request APIs are working elsewhere (outside of PS3
+BD-ROM) with single ATAPI Transport level TCQ for SATA + USB and single
+or many iSCSI TCQs value settings.
+
+PS3-Linux BD-ROM support:
+
+Also of interest is that both implementations of
+drivers/block/ps3pf_storage.c and drivers/scsi/ps3rom.c using
+scsi_execute_async() are able to trigger the exception scenario in
+question.
+
+PS3 System Software Revision.
+
+There is no affect on PS3 System Software Revision. 
+
+> >      1. READ_10 should never be issued via scsi_execute_async.  There's
+> >         no ULD in the current kernel that does this.  The READ_X/WRITE_X
+> >         commands are issued through the filesystem path.
+
+Gotcha.  The filesystem path with scsi_excute_async() for SG_IO Cdbs is
+where I will move towards supporting ps3-linux git latest.   Also, as
+you mention, TUR expections is what eventually causes the software
+player stop.  Only the READ_10s appear to be affected by the scenario in
+question.
+
+Thanks for this pointer, I will take another look at the wireshark logs
+to verify this is indeed the case.
+
+> Nicholas is using the PS3 as an iSCSI target for watching BD-ROM content on
+> other machines. That's probably where the weird command submission comes from.
 > 
-> Thanks Tomo! Trying to catch up with mails, will apply this one right
-> away.
+> He will hopefully fill in the rest...
+> 
 
-You can add the following patch to your sglist branches:
+On my side, the goal has been successful export of Linux-iSCSI Targets
+with both formats of commerical HD with win32 iSCSI Initiator(s) and
+commerical software decoding the many HD discs I have purchased.  These
+iSCSI targets include a Linux/ppc64 with PS3 BD-ROM and a Xbox 360
+HD-DVD USB, and Linux/x86 and Linux/Alpha export of Philips SPD7000P BD
+Writer over GB/sec Ethernet and IPv4/IPv6.  I have been very pleased the
+progress so far, and will be posting more info for an HOWTO in the
+upcoming weeks.
 
+> With kind regards,
+>  
+> Geert Uytterhoeven
+> Software Architect
+> 
 
->From abd73c05d5f08ee307776150e1deecac7a709b60 Mon Sep 17 00:00:00 2001
-From: FUJITA Tomonori <tomof@acm.org>
-Date: Mon, 30 Jul 2007 23:01:32 +0900
-Subject: [PATCH] zfcp: sg chaining support
+Many thanks for your most valuable of time.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/s390/scsi/zfcp_def.h  |    1 +
- drivers/s390/scsi/zfcp_qdio.c |    6 ++----
- 2 files changed, 3 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/s390/scsi/zfcp_def.h b/drivers/s390/scsi/zfcp_def.h
-index b36dfc4..0d80150 100644
---- a/drivers/s390/scsi/zfcp_def.h
-+++ b/drivers/s390/scsi/zfcp_def.h
-@@ -34,6 +34,7 @@
- #include <linux/slab.h>
- #include <linux/mempool.h>
- #include <linux/syscalls.h>
-+#include <linux/scatterlist.h>
- #include <linux/ioctl.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_tcq.h>
-diff --git a/drivers/s390/scsi/zfcp_qdio.c b/drivers/s390/scsi/zfcp_qdio.c
-index 81daa82..60bc269 100644
---- a/drivers/s390/scsi/zfcp_qdio.c
-+++ b/drivers/s390/scsi/zfcp_qdio.c
-@@ -591,7 +591,7 @@ zfcp_qdio_sbals_from_segment(struct zfcp_fsf_req *fsf_req, unsigned long sbtype,
-  */
- int
- zfcp_qdio_sbals_from_sg(struct zfcp_fsf_req *fsf_req, unsigned long sbtype,
--                        struct scatterlist *sg,	int sg_count, int max_sbals)
-+                        struct scatterlist *sgl, int sg_count, int max_sbals)
- {
- 	int sg_index;
- 	struct scatterlist *sg_segment;
-@@ -607,9 +607,7 @@ zfcp_qdio_sbals_from_sg(struct zfcp_fsf_req *fsf_req, unsigned long sbtype,
- 	sbale->flags |= sbtype;
- 
- 	/* process all segements of scatter-gather list */
--	for (sg_index = 0, sg_segment = sg, bytes = 0;
--	     sg_index < sg_count;
--	     sg_index++, sg_segment++) {
-+	for_each_sg(sgl, sg_segment, sg_count, sg_index) {
- 		retval = zfcp_qdio_sbals_from_segment(
- 				fsf_req,
- 				sbtype,
--- 
-1.5.2.4
-
-
-
+--nab
 
 
