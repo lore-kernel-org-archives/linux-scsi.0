@@ -1,43 +1,43 @@
-From: Rene Herman <rene.herman@gmail.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.23-rc2
-Date: Tue, 07 Aug 2007 16:53:32 +0200
-Message-ID: <46B8876C.70604@gmail.com>
-References: <1186248703.3439.20.camel@localhost.localdomain>	 <alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org> <1186458941.6637.44.camel@localhost.localdomain>
+Date: Tue, 07 Aug 2007 10:56:54 -0400
+Message-ID: <46B88836.5020604@garzik.org>
+References: <1186248703.3439.20.camel@localhost.localdomain>	<alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org>	<1186458941.6637.44.camel@localhost.localdomain>	<20070807001429.f8cb3b22.akpm@linux-foundation.org>	<1186496712.3414.17.camel@localhost.localdomain> <20070807155521.0dc9f068@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934480AbXHGO4o@vger.kernel.org>
-In-Reply-To: <1186458941.6637.44.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:39352 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S934780AbXHGO45 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Aug 2007 10:56:57 -0400
+In-Reply-To: <20070807155521.0dc9f068@the-village.bc.nu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On 08/07/2007 05:55 AM, James Bottomley wrote:
+Alan Cox wrote:
+>> I fully agree, and firmly believe that the current stabilisation works
+>> incredibly well for shaking out bugs.  My problem is that it doesn't
+>> work for stabilising features.  Either we have to get far more people
+>> doing feature integration testing before the merge window, or we have to
+>> accept feature updates after the merge window (for existing features
+>> that are having stability issues).
+> 
+> The other alternative is that if Linus won't take updates you ask him to
+> revert bsg so that you don't get a half baked merge as a result of this.
+> I'm not sure that is a good path to follow either however.
 
-> I really, *really* think we need a pre-release tree that consists of all 
-> the upstream targetted features (i.e. all of the for the next merge 
-> window git trees) and nothing else.  -mm doesn't really satisfy this, 
-> because it has so much other stuff that the people I need to get testing 
-> this don't trust it.
+Like everything else in life, it's a balance.  If something is clearly 
+half-baked and requires a bunch of post-rc1 changes just to be usable, a 
+revert might make a lot of sense.
 
-I much agree with this. I used to run -mm at least somewhat frequently if it 
-included stuff I was interested in (random features, or for example latest 
-ALSA) but gave that up after I had it break on something unrelated and (to 
-me) uninteresting a few times too many. There's so much in there that before 
-you know it you end up spending time not on that which you wanted to spend 
-time on but on something completely unrelated which given a fixed amount of 
-available total time (and level/spread of knowledge/interest) gets to be a 
-problem.
+It's questions of: how much further change is required, how invasive are 
+those changes, how half-baked and incomplete is the feature really, what 
+is the downside of a revert, ...
 
-For latest ALSA, I now sometimes look at the ALSA repositories directly but 
-otherwise it seems I'm not testing much of anything before late -rc's.
+	Jeff
 
-Not everything going to Linus gets there by way of -mm, but perhaps it could 
-help if Andrew split off -merge from -mm, where -merge contained only stuff 
-(from -mm) expected to go upstream in the next merge window.
 
-Not sure if this is proposing that other people do more work -- wouldn't 
-want do to anything of the sort...
 
-Rene.
