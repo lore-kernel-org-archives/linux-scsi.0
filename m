@@ -1,34 +1,43 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Rene Herman <rene.herman@gmail.com>
 Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.23-rc2
-Date: Tue, 7 Aug 2007 15:55:21 +0100
-Message-ID: <20070807155521.0dc9f068@the-village.bc.nu>
-References: <1186248703.3439.20.camel@localhost.localdomain>
-	<alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org>
-	<1186458941.6637.44.camel@localhost.localdomain>
-	<20070807001429.f8cb3b22.akpm@linux-foundation.org>
-	<1186496712.3414.17.camel@localhost.localdomain>
+Date: Tue, 07 Aug 2007 16:53:32 +0200
+Message-ID: <46B8876C.70604@gmail.com>
+References: <1186248703.3439.20.camel@localhost.localdomain>	 <alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org> <1186458941.6637.44.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:52780 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753240AbXHGOsZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 10:48:25 -0400
-In-Reply-To: <1186496712.3414.17.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934480AbXHGO4o@vger.kernel.org>
+In-Reply-To: <1186458941.6637.44.camel@localhost.localdomain>
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-> I fully agree, and firmly believe that the current stabilisation works
-> incredibly well for shaking out bugs.  My problem is that it doesn't
-> work for stabilising features.  Either we have to get far more people
-> doing feature integration testing before the merge window, or we have to
-> accept feature updates after the merge window (for existing features
-> that are having stability issues).
+On 08/07/2007 05:55 AM, James Bottomley wrote:
 
-The other alternative is that if Linus won't take updates you ask him to
-revert bsg so that you don't get a half baked merge as a result of this.
-I'm not sure that is a good path to follow either however.
+> I really, *really* think we need a pre-release tree that consists of all 
+> the upstream targetted features (i.e. all of the for the next merge 
+> window git trees) and nothing else.  -mm doesn't really satisfy this, 
+> because it has so much other stuff that the people I need to get testing 
+> this don't trust it.
 
+I much agree with this. I used to run -mm at least somewhat frequently if it 
+included stuff I was interested in (random features, or for example latest 
+ALSA) but gave that up after I had it break on something unrelated and (to 
+me) uninteresting a few times too many. There's so much in there that before 
+you know it you end up spending time not on that which you wanted to spend 
+time on but on something completely unrelated which given a fixed amount of 
+available total time (and level/spread of knowledge/interest) gets to be a 
+problem.
+
+For latest ALSA, I now sometimes look at the ALSA repositories directly but 
+otherwise it seems I'm not testing much of anything before late -rc's.
+
+Not everything going to Linus gets there by way of -mm, but perhaps it could 
+help if Andrew split off -merge from -mm, where -merge contained only stuff 
+(from -mm) expected to go upstream in the next merge window.
+
+Not sure if this is proposing that other people do more work -- wouldn't 
+want do to anything of the sort...
+
+Rene.
