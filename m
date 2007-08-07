@@ -1,74 +1,55 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: default timeout for arrays too short
-Date: Tue, 7 Aug 2007 15:36:18 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01CB811F@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01CB79D7@otce2k301.adaptec.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold
+ structure
+Date: Wed, 08 Aug 2007 07:38:01 +0900
+Message-ID: <20070808073801U.fujita.tomonori@lab.ntt.co.jp>
+References: <46B600F4.7020601@torque.net>
+	<20070806130944R.fujita.tomonori@lab.ntt.co.jp>
+	<46B8A845.4080106@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7D92A.39E7544F"
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:57892 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755065AbXHGTg1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 15:36:27 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 61DB818FBAE
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Aug 2007 12:36:26 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01CB79D7@otce2k301.adaptec.com>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:51070 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755929AbXHGWiY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 18:38:24 -0400
+In-Reply-To: <46B8A845.4080106@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu
+Cc: fujita.tomonori@lab.ntt.co.jp, dougg@torque.net, tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com
 
-This is a multi-part message in MIME format.
+On Tue, 07 Aug 2007 12:13:41 -0500
+Mike Christie <michaelc@cs.wisc.edu> wrote:
 
-------_=_NextPart_001_01C7D92A.39E7544F
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+> FUJITA Tomonori wrote:
+> > Allocating 64K contiguous memory is not good so the next thing to do
+> > is converting sg to use the sg chaining support fully. Or it might be
+> 
+> For LLDs like aic7xxx, I think we are stuck with a small 
+> scsi_host_template->sg_tablesize, so to continue to get large requests 
+> like before will we have to still allocate large segments?
 
-The default SCSI timeout is 30 seconds for a logical device. The aacraid
-based controllers currently have a 35 second timeout for the array. We
-are bumping up the default SCSI timeout for array devices, which
-typically manage many physical disks, to 45 seconds to provide a small
-margin to permit the controller to do what it is designed for. We have
-not observed any bad side-effects either way because no significant
-actions are taken by the aacraid timeout handler except to take
-advantage of the quiesced state to allow completion of all outstanding
-commands in the controller to provide a poor-mans guaranty of delivery.
-This is merely a preferential decision to reduce the number of timeout
-reports in the system logs to only the more serious conditions.
+No. sg.c has:
 
-This attached patch is against current scsi-misc-2.6.
+sizeof(struct scatterlist) * min(q->max_hw_segments, q->max_phys_segments)
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
+If a lld has small max_hw_segments, it doesn't allocate big contiguous
+memory.
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
- drivers/scsi/aacraid/linit.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+> Is block/scsi_ioctl.c converted to sg chaining in any tree yet? Is that 
+> in your tree or one of Jen's branches.
 
-Sincerely -- Mark Salyzyn
+block/scsi_ioctl.c uses the standard block layer functions, there is
+nothing to convert in it. sglist doesn't change the standard block
+layer functions much since it doesn't allocate sg list. It changes
+only blk_rq_map_sg.
 
-------_=_NextPart_001_01C7D92A.39E7544F
-Content-Type: application/octet-stream;
-	name="aacraid_array_timeout_too_short.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_array_timeout_too_short.patch
-Content-Disposition: attachment;
-	filename="aacraid_array_timeout_too_short.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDctMDgt
-MDcgMTQ6NTA6NDIuMDg3NDM5NzMyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
-bml0LmMJMjAwNy0wOC0wNyAxNDo1NTo1NC45NzM1MzAzMDAgLTA0MDAKQEAgLTQyMCw2ICs0MjAs
-MTIgQEAKIAkJdW5zaWduZWQgbnVtX29uZSA9IDA7CiAJCXVuc2lnbmVkIGRlcHRoOwogCisJCS8q
-CisJCSAqIEZpcm13YXJlIGhhcyBhbiBpbmRpdmlkdWFsIGRldmljZSByZWNvdmVyeSB0aW1lIHR5
-cGljYWxseQorCQkgKiBvZiAzNSBzZWNvbmRzLCBnaXZlIHVzIGEgbWFyZ2luLgorCQkgKi8KKwkJ
-aWYgKHNkZXYtPnRpbWVvdXQgPCAoNDUgKiBIWikpCisJCQlzZGV2LT50aW1lb3V0ID0gNDUgKiBI
-WjsKIAkJX19zaG9zdF9mb3JfZWFjaF9kZXZpY2UoZGV2LCBob3N0KSB7CiAJCQlpZiAoZGV2LT50
-YWdnZWRfc3VwcG9ydGVkICYmIChkZXYtPnR5cGUgPT0gVFlQRV9ESVNLKSAmJgogCQkJCShzZGV2
-X2NoYW5uZWwoZGV2KSA9PSBDT05UQUlORVJfQ0hBTk5FTCkpCg==
-
-------_=_NextPart_001_01C7D92A.39E7544F--
+Now only scsi-ml is changed to allocate chaining sg list
+properly. Others like cciss are not converted yet, I think. It might
+make sense to have the standard block layer functions to allocate
+chaining sg list properly. So we could convert to potential consumers
+(scsi-ml, sg, ccisss, etc) use them though I'm not sure how many non
+scsi-ml needs chaining sg list.
