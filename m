@@ -1,50 +1,53 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.23-rc2
-Date: Tue, 7 Aug 2007 10:51:44 -0700
-Message-ID: <20070807105144.0ba67d81.akpm@linux-foundation.org>
-References: <1186248703.3439.20.camel@localhost.localdomain>
-	<alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org>
-	<1186458941.6637.44.camel@localhost.localdomain>
-	<20070807001429.f8cb3b22.akpm@linux-foundation.org>
-	<1186496712.3414.17.camel@localhost.localdomain>
-	<46B88B91.4050703@garzik.org>
-	<1186501124.3414.32.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: BUG in SCSI async scanning
+Date: Tue, 7 Aug 2007 14:32:41 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0708071425170.2799-100000@iolanthe.rowland.org>
+References: <1186505933.3414.53.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45241 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760895AbXHGRwD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 13:52:03 -0400
-In-Reply-To: <1186501124.3414.32.camel@localhost.localdomain>
+Received: from iolanthe.rowland.org ([192.131.102.54]:57904 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751908AbXHGScm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 14:32:42 -0400
+In-Reply-To: <1186505933.3414.53.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Tue, 07 Aug 2007 10:38:44 -0500 James Bottomley <James.Bottomley@SteelEye.com> wrote:
+On Tue, 7 Aug 2007, James Bottomley wrote:
 
-> On Tue, 2007-08-07 at 11:11 -0400, Jeff Garzik wrote:
-> > James Bottomley wrote:
-> > > The initial bsg submit went via the block git tree ... which I believe
-> > > you have in -mm.  We only started taking the updates via the scsi tree
-> > 
-> > Seven hours before you posted this, in 
-> > <20070807001429.f8cb3b22.akpm@linux-foundation.org>, Andrew already 
-> > noted it was not in -mm.
-> > 
-> > A trivial examination of the broken-out mm patches backs up the absence 
-> >   of Jens' block tree, too.
-> > 
-> > So let's put this myth / bad assumption to rest, shall we?
+> On Tue, 2007-08-07 at 12:54 -0400, Alan Stern wrote:
+> > Can somebody explain the reason for calling a separate 
+> > scsi_sysfs_add_devices() routine in the async scanning code instead of 
+> > just calling scsi_sysfs_add_sdev() normally from within scsi_add_lun()?
 > 
-> Sorry ... I just assumed from the fact that it had been in the block git
-> tree for six months that it was also in -mm.
+> Matthew's away at the moment, so I'll speak for him.
+> 
+> The reason is so that the order of device enumeration remains
+> approximately constant.   We didn't necessarily want completely random
+> and timing related enumerations with the async scanning patch.
 
-bsg was never in the #for-akpm branch of git-block.  So I assume that
-Jens had it in some other branch and for some reason never pulled it
-across into #for-akpm.
+If you say so.  But aren't synchronous enumerations just about as 
+random and timing-related?  I guess you're concerned about cases where 
+multiple SCSI buses are scanned in parallel.
 
-It was most reasonable of you to expect that bsg had received a decent
-run in -mm.
+> > This peculiar delayed approach has introduced a bug.  It evades the
+> > protection provided by shost->scan_mutex and as a result, if a host is
+> > hot-unplugged in the middle of an async scan, the SCSI core will
+> > attempt to unregister the host's devices before they have been
+> > registered!  Obviously this is not good.
+> 
+> Does this patch fix it:
+> 
+> http://marc.info/?l=linux-scsi&m=118289275414202
+> 
+> ? it's one of a number designed to address the problems.
+
+Yes it does, thank you very much.  I urge you to send the patch 
+upstream in time for 2.6.23 and also to submit it for the 2.6.22-stable 
+branch (if you haven't done so already).
+
+Alan Stern
+
