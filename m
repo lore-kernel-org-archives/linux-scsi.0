@@ -1,128 +1,398 @@
-From: "Nicholas A. Bellinger" <nab@kernel.org>
-Subject: Re: [Cbe-oss-dev] Playstation 3 BD-ROM access and
-	LV1_DENIED_BY_POLICY
-Date: Tue, 07 Aug 2007 01:45:42 -0700
-Message-ID: <1186476342.3188.105.camel@haakon2.linux-iscsi.org>
-References: <46B1F92C.8030206@am.sony.com>
-	 <1186072148.13194.46.camel@haakon2.linux-iscsi.org>
-	 <20070803110537.A84C.MOKUNO@sm.sony.co.jp>
-	 <1186133997.3198.19.camel@haakon2.linux-iscsi.org>
-	 <46B3770E.4070805@am.sony.com>
-	 <Pine.LNX.4.62.0708061533230.31116@pademelon.sonytel.be>
-	 <1186409379.3436.3.camel@localhost.localdomain>
-	 <Pine.LNX.4.62.0708061617190.31116@pademelon.sonytel.be>
-Reply-To: nab@kernel.org
+From: "Hommel, Thomas (GE Indust, GE Fanuc)" <Thomas.Hommel@gefanuc.com>
+Subject: RE: Mptlinux crashes on kernel 2.6.22.1
+Date: Tue, 7 Aug 2007 12:58:04 +0200
+Message-ID: <62DDBB9E5E23CC4A929EE46F9427CEAF1F8475@BUDMLVEM04.e2k.ad.ge.com>
+References: <62DDBB9E5E23CC4A929EE46F9427CEAF1F8007@BUDMLVEM04.e2k.ad.ge.com> <62DDBB9E5E23CC4A929EE46F9427CEAF1F829D@BUDMLVEM04.e2k.ad.ge.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="US-ASCII"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.re3.yahoo.com ([66.196.96.88]:24168 "HELO
-	smtp115.sbc.mail.re3.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753436AbXHGIzH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 04:55:07 -0400
-In-Reply-To: <Pine.LNX.4.62.0708061617190.31116@pademelon.sonytel.be>
+Received: from ext-nj2ut-11.online-age.net ([64.14.54.241]:58416 "EHLO
+	ext-nj2ut-11.online-age.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758151AbXHGK6K convert rfc822-to-8bit
+	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 7 Aug 2007 06:58:10 -0400
+Received: from int-nj2ut-2.online-age.net (int-nj2ut-2.online-age.net [3.159.237.71])
+	by ext-nj2ut-11.online-age.net (8.13.6/8.13.6/20051114-SVVS-TLS-DNSBL) with ESMTP id l77Aw8hf001490
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Aug 2007 06:58:08 -0400
+Received: from cinmlef12.e2k.ad.ge.com (int-nj2ut-2.online-age.net [3.159.237.71])
+	by int-nj2ut-2.online-age.net (8.13.6/8.13.6/20050510-SVVS) with ESMTP id l77Aw7JI004616
+	for <linux-scsi@vger.kernel.org>; Tue, 7 Aug 2007 06:58:08 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <62DDBB9E5E23CC4A929EE46F9427CEAF1F829D@BUDMLVEM04.e2k.ad.ge.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Geoff Levand <geoffrey.levand@am.sony.com>, Masakazu Mokuno <mokuno@sm.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, Bernard Li <bernard@vanhpc.org>, Patrick Mansfield <patmans@us.ibm.com>, Mike Mazarick <mazarick@bellsouth.net>
+To: linux-scsi@vger.kernel.org, eric.moore@lsi.com
 
-On Mon, 2007-08-06 at 16:19 +0200, Geert Uytterhoeven wrote:
-> On Mon, 6 Aug 2007, James Bottomley wrote:
-> > On Mon, 2007-08-06 at 15:38 +0200, Geert Uytterhoeven wrote:
-> > > On Fri, 3 Aug 2007, Geoff Levand wrote:
-> > > > Nicholas A. Bellinger wrote:
-> > > > > Thank you for this information.  I since been able to resolve my issue
-> > > > > on 2.6.16 (which ended up being my fault), and was able to determine
-> > > > > that the issue on 2.6.23-rc1 is due to
-> > > > > drivers/scsi/scsi_lib.c:scsi_execute_async() rejecting READ_10 and
-> > > > > TEST_UNIT_READY commands in certain cases (perhaps a race in
-> > > > > drivers/scsi/ps3rom.c..?) using this API that was causing the win32 side
-> > > > > to throw exceptions.
-> > > > 
-> > > > If you get more info on what was happening here, please report it to Geert
-> > > > so he can investigate.  He should return next week.
-> > > 
-> > > Indeed.
-> > > 
-> > > Perhaps because ps3rom cannot queue more than 1 command?
-> > > I'm CCing the SCSI guys, just in case this rings a bell.
-> > 
-> > Without details, it's really hard to speculate.  The problem description
-> > is manifestly strange for two reasons
-> > 
+Here's a record of driver initialization with debugging enabled. I can't
+figure out what goes wrong, but maybe sombody else can...
 
-My apologies for the delay as things have been busy on late..
+Any help is appreciated
 
-On the kernel side, the setup is:
-
-Sector Size:
-
-2048 bytes for TYPE_ROM
-
-Max Sectors:
-
-32 from struct scsi_host->max_sectors.  The iSCSI/HD client software is
-requesting single sector READ_10s at various LBAs of the media.
-
-iSCSI TCQ:
-
-Setting ExpCmdSn/MaxCmdSn Window == 1 has had no effect.
-
-ATAPI Transport Level TCQ:
-
-A single TCQ slot is detected from struct scsi_host & struct scsi_device
-and the lowest of either is set and enforced.  Both scsi_execute_async()
-and legacy scsi-request APIs are working elsewhere (outside of PS3
-BD-ROM) with single ATAPI Transport level TCQ for SATA + USB and single
-or many iSCSI TCQs value settings.
-
-PS3-Linux BD-ROM support:
-
-Also of interest is that both implementations of
-drivers/block/ps3pf_storage.c and drivers/scsi/ps3rom.c using
-scsi_execute_async() are able to trigger the exception scenario in
-question.
-
-PS3 System Software Revision.
-
-There is no affect on PS3 System Software Revision. 
-
-> >      1. READ_10 should never be issued via scsi_execute_async.  There's
-> >         no ULD in the current kernel that does this.  The READ_X/WRITE_X
-> >         commands are issued through the filesystem path.
-
-Gotcha.  The filesystem path with scsi_excute_async() for SG_IO Cdbs is
-where I will move towards supporting ps3-linux git latest.   Also, as
-you mention, TUR expections is what eventually causes the software
-player stop.  Only the READ_10s appear to be affected by the scenario in
-question.
-
-Thanks for this pointer, I will take another look at the wireshark logs
-to verify this is indeed the case.
-
-> Nicholas is using the PS3 as an iSCSI target for watching BD-ROM content on
-> other machines. That's probably where the weird command submission comes from.
-> 
-> He will hopefully fill in the rest...
-> 
-
-On my side, the goal has been successful export of Linux-iSCSI Targets
-with both formats of commerical HD with win32 iSCSI Initiator(s) and
-commerical software decoding the many HD discs I have purchased.  These
-iSCSI targets include a Linux/ppc64 with PS3 BD-ROM and a Xbox 360
-HD-DVD USB, and Linux/x86 and Linux/Alpha export of Philips SPD7000P BD
-Writer over GB/sec Ethernet and IPv4/IPv6.  I have been very pleased the
-progress so far, and will be posting more info for an HOWTO in the
-upcoming weeks.
-
-> With kind regards,
->  
-> Geert Uytterhoeven
-> Software Architect
-> 
-
-Many thanks for your most valuable of time.
-
---nab
-
-
+Fusion MPT base driver 3.04.04
+Copyright (c) 1999-2007 LSI Logic Corporation
+mptbase: Register for IOC reset notification
+Fusion MPT SPI Host driver 3.04.04
+mptspi: Registered for IOC event notifications
+mptspi: Registered for IOC reset notifications
+mptbase: mpt_adapter_install
+mptbase: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED
+mptbase: Using 64 bit consistent mask
+mptbase: mem = c1080000, mem_phys = 80000000
+mptbase: facts @ afe3b274, pfacts[0] @ afe3b2c4
+mptbase: ioc0: PCI device 0000:02:04.0 devfn=2/20, searching for devfn
+match on ffffffff or 1
+mptbase: Initiating ioc0 bringup
+mptbase::MakeIocReady, ioc0 [raw] state=10000000
+mptbase: ioc0: Sending get IocFacts request req_sz=12 reply_sz=80
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=12, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@bffc3d48) header
+  03000000 00000000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=030f0102
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  030f0102 00000e00 00000000 00000000 00000000 00080030 001800ff
+02020000 00000000 000100ff 00000000 01100000 00009f30 01940192 01032700
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=15)
+mptbase: ioc0: HandShake reply count=15
+mptbase: ioc0: NB_for_64_byte_frame=2 NBShiftFactor=5 BlockSize=8
+mptbase: ioc0: reply_sz= 80, reply_depth= 128
+mptbase: ioc0: req_sz  = 96, req_depth  = 255
+mptbase: ioc0: Sending get PortFacts(0) request
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=12, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@bffc3d54) header
+  05000000 00000000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=050a0000
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  050a0000 00000000 00000000 00000000 00000000 00100100 000c0007
+00000020 00000000 00000000
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=10)
+mptbase: ioc0: HandShake reply count=10
+ioc0: 53C1030: Capabilities={Initiator,Target}
+mptbase: ioc0 installed at interrupt 16
+mptbase: ioc0 ReqToChain alloc  @ afe35000, sz=1020 bytes
+mptbase: ioc0 RequestNB alloc  @ afe41c00, sz=1020 bytes
+mptbase: ioc0 num_sge=17 numSGE=534
+mptbase: ioc0 Now numSGE=128 num_sge=138 num_chain=13
+mptbase: ioc0 ChainToChain alloc @ a0830000, sz=6604 bytes
+mptbase: ioc0.ReplyBuffer sz=80 bytes, ReplyDepth=128
+mptbase: ioc0.ReplyBuffer sz=10240[2800] bytes
+mptbase: ioc0.RequestBuffer sz=96 bytes, RequestDepth=255
+mptbase: ioc0.RequestBuffer sz=24480[5fa0] bytes
+mptbase: ioc0.ChainBuffer sz=96 bytes, ChainDepth=1651
+mptbase: ioc0.ChainBuffer sz=158496[26b20] bytes num_chain=1651
+mptbase: ioc0.Total alloc @ bfe80000[1fe80000], sz=193216[2f2c0] bytes
+mptbase: ioc0 ReplyBuffers @ bfe80000[1fe80000]
+mptbase: ioc0 RequestBuffers @ bfe82800[1fe82800]
+mptbase :ioc0 ChainBuffers @ bfe887a0(1fe887a0)
+mptbase: ioc0.SenseBuffers @ afe7c000[0fe7c000]
+mptbase: ioc0.ReplyBuffers @ bfe80000[1fe80000]
+mptbase: ioc0: upload_fw 0 facts.Flags=0
+mptbase: ioc0: facts.MsgVersion=102
+mptbase: ioc0: Sending IOCInit (req @ bffc3d2c)
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=44, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@bffc3d2c) header
+  02000004 00011000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=10
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=02050004
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  02050004 00011000 00000000 00000000 00000000
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=5)
+mptbase: ioc0: HandShake reply count=5
+mptbase: ioc0: Sending PortEnable (req @ bffc3d2c)
+mptbase: ioc0: Sending Port(0)Enable (req @ bffc3cf8)
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=12, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@bffc3cf8) header
+  06000000 00000000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=30
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=06050000
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  06050000 00000000 00000000 00000000 00000000
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=5)
+mptbase: ioc0: HandShake reply count=5
+mptbase: ioc0: INFO - Wait IOC_OPERATIONAL state (cnt=0)
+mptbase: ioc0: Sending EventNotification (1) request bfe82800
+mptbase: ioc0: mf_dma_addr=1fe82802 req_idx=0 RequestNB=2
+mptbase: ioc0: SCSI device NVRAM settings @ a08bb9a0, sz=64
+mptbase: ioc0: Sending Config request type 3, page 0 and action 0
+mptbase: ioc0: mf_dma_addr=1fe82862 req_idx=1 RequestNB=2
+mptbase: ioc0: WARNING - mpt_timer_expired!
+mptbase: IOC setup_reset routed to MPT base driver!
+mptbase: Initiating ioc0 recovery
+mptbase::MakeIocReady, ioc0 [raw] state=24000000
+mptbase: ioc0: IOC operational unexpected
+mptbase: whoinit 0x4 statefault 0 force 1
+mptbase: KickStarting ioc0!
+mptbase: ioc0: Sending IOC reset(0x40)!
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: DbG1: diag0=00000120, diag1=00000000
+mptbase: ioc0: Wrote magic DiagWriteEn sequence (1a0)
+mptbase: ioc0: DbG2: diag0=000001a0, diag1=00000000
+mptbase: ioc0: Diagnostic reset performed
+mptbase: ioc0: Calling IOC pre_reset handler #15
+mptbase: IOC pre_reset routed to MPT base driver!
+mptbase: ioc0: Calling IOC pre_reset handler #14
+mptbase: ioc0: DbG3: diag0=00000120, diag1=00000000
+mptbase: ioc0: DbG4: diag0=00000100, diag1=00000000
+mptbase: ioc0: Diagnostic reset successful!
+mptbase: ioc0: KickStart successful! (cnt=0)
+mptbase: ioc0: Sending get IocFacts request req_sz=12 reply_sz=80
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=12, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@a0373cb8) header
+  03000000 00000000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=030f0102
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  030f0102 00000e00 00000000 00000000 00000000 00080030 001800ff
+02020000 00000000 000100ff 00000000 01100000 00009f30 01940192 01032700
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=15)
+mptbase: ioc0: HandShake reply count=15
+mptbase: ioc0: NB_for_64_byte_frame=2 NBShiftFactor=5 BlockSize=8
+mptbase: ioc0.ReplyBuffers @ bfe80000[1fe80000]
+mptbase: ioc0: upload_fw 0 facts.Flags=0
+mptbase: ioc0: facts.MsgVersion=102
+mptbase: ioc0: Sending IOCInit (req @ a0373c9c)
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=44, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@a0373c9c) header
+  02000004 00011000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=10
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=02050004
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  02050004 00011000 00000000 00000000 00000000
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=5)
+mptbase: ioc0: HandShake reply count=5
+mptbase: ioc0: Sending PortEnable (req @ a0373c9c)
+mptbase: ioc0: Sending Port(0)Enable (req @ a0373c68)
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: HandShake request start reqBytes=12, WaitCnt=1
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: ioc0: WaitForDoorbell ACK (count=0)
+mptbase: Handshake request frame (@a0373c68) header
+  06000000 00000000 00000000
+mptbase: ioc0: HandShake request post done, WaitCnt=0
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=30
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitCnt=1 First handshake reply word=06050000
+mptbase: ioc0: WaitForDoorbell INT (cnt=0) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: WaitForDoorbell INT (cnt=1) howlong=5
+mptbase: ioc0: Got Handshake reply:
+  06050000 00000000 00000000 00000000 00000000
+mptbase: ioc0: WaitForDoorbell REPLY WaitCnt=1 (sz=5)
+mptbase: ioc0: HandShake reply count=5
+mptbase: ioc0: INFO - Wait IOC_OPERATIONAL state (cnt=0)
+mptbase: ioc0: Sending EventNotification (1) request bfe828c0
+mptbase: ioc0: mf_dma_addr=1fe828c2 req_idx=2 RequestNB=2
+mptbase: ioc0: Calling IOC post_reset handler #15
+mptbase: IOC post_reset routed to MPT base driver!
+mptbase: ioc0: Calling IOC post_reset handler #14
+mptbase: ioc0: WARNING - mpt_timer_expired complete!
+Unable to handle kernel paging request for data at address 0x00000542
+Faulting instruction address: 0xa01d93b8
+Oops: Kernel access of bad area, sig: 11 [#1]
+SBS CM6
+NIP: a01d93b8 LR: a01d93b8 CTR: a000c2ac
+REGS: bffcbea0 TRAP: 0300   Not tainted  (2.6.22.1)
+MSR: 00009032 <EE,ME,IR,DR>  CR: 82004028  XER: 00000000
+DAR: 00000542, DSISR: 40000000
+TASK = bffc0030[5] 'events/0' THREAD: bffca000
+GPR00: a01d93b8 bffcbf50 bffc0030 bfffd0c0 bfff7800 00000001 004971e0
+00000000
+GPR08: 0001c7d0 00000010 a039c000 bfff783c 00000000 ff9f6b57 0fffbd00
+ffffffff
+GPR16: 00000001 00000000 007fff00 00000000 00000000 007ffeb0 00000000
+a034dd74
+GPR24: a0350000 a034dd74 a0030000 a034dd74 a02e0000 bffca000 a01d93a0
+000002c4
+NIP [a01d93b8] mptspi_dv_renegotiate_work+0x18/0x120
+LR [a01d93b8] mptspi_dv_renegotiate_work+0x18/0x120
+Call Trace:
+[bffcbf50] [a01d93b8] mptspi_dv_renegotiate_work+0x18/0x120 (unreliable)
+[bffcbf80] [a002d33c] run_workqueue+0xac/0x158
+[bffcbfa0] [a002d7a8] worker_thread+0x6c/0xd0
+[bffcbfd0] [a0030e74] kthread+0x84/0x8c
+[bffcbff0] [a00115c4] kernel_thread+0x44/0x60
+Instruction dump:
+4bffd6d1 80010024 83e1001c 38210020 7c0803a6 4e800020 7c0802a6 9421ffd0
+bf810020 90010034 83e30010 4be83521 <a01f027e> 2f800000 419e009c
+813f0000
+mptbase: ioc0: Sending Config request type 4, page 1 and action 0
+mptbase: ioc0: mf_dma_addr=1fe82922 req_idx=3 RequestNB=2
+mptbase: ioc0: WARNING - mpt_timer_expired!
+mptbase: IOC setup_reset routed to MPT base driver!
+mptbase: Initiating ioc0 recovery
+mptbase::MakeIocReady, ioc0 [raw] state=24000000
+mptbase: ioc0: IOC operational unexpected
+mptbase: whoinit 0x4 statefault 0 force 1
