@@ -1,101 +1,75 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: Mptlinux crashes on kernel 2.6.22.1
-Date: Tue, 7 Aug 2007 13:11:11 +0200
-Message-ID: <200708071311.16207.eike-kernel@sf-tec.de>
-References: <62DDBB9E5E23CC4A929EE46F9427CEAF1F8007@BUDMLVEM04.e2k.ad.ge.com> <62DDBB9E5E23CC4A929EE46F9427CEAF1F829D@BUDMLVEM04.e2k.ad.ge.com> <62DDBB9E5E23CC4A929EE46F9427CEAF1F8475@BUDMLVEM04.e2k.ad.ge.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.23-rc2
+Date: Tue, 07 Aug 2007 09:12:21 -0400
+Message-ID: <46B86FB5.7020700@emulex.com>
+References: <1186248703.3439.20.camel@localhost.localdomain>  <alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org> <1186458941.6637.44.camel@localhost.localdomain> <alpine.LFD.0.999.0708062059030.5037@woody.linux-foundation.org>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart9649716.QQs4P9nIDk";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:57758 "EHLO mail.sf-mail.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933425AbXHGLSE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 7 Aug 2007 07:18:04 -0400
-Received: from pd907f0e2.dip0.t-ipconnect.de ([::ffff:217.7.240.226] HELO donald.sf-tec.de) (auth=eike-kernel@sf-tec.de)
-	by mail.sf-mail.de (Qsmtpd 0.9) with (DHE-RSA-AES256-SHA encrypted) ESMTPSA
-	for <linux-scsi@vger.kernel.org>; Tue, 07 Aug 2007 13:11:19 +0200
-In-Reply-To: <62DDBB9E5E23CC4A929EE46F9427CEAF1F8475@BUDMLVEM04.e2k.ad.ge.com>
+Received: from emulex.emulex.com ([138.239.112.1]:49294 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759532AbXHGNMh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 09:12:37 -0400
+In-Reply-To: <alpine.LFD.0.999.0708062059030.5037@woody.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "Hommel, Thomas (GE Indust, GE Fanuc)" <Thomas.Hommel@gefanuc.com>, eric.moore@lsi.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
---nextPart9649716.QQs4P9nIDk
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+In defense of my maintainer, who was working on my behalf! ...
 
-Hommel, Thomas (GE Indust, GE Fanuc) wrote:
-> Here's a record of driver initialization with debugging enabled. I can't
-> figure out what goes wrong, but maybe sombody else can...
->
-> Any help is appreciated
+The lpfc mods were the bulk of the +/- counts.  We batch our bug fixes
+together and then push to James as a large lump. Unfortunately, we had
+a change that changed logging from a base object to a subobject. Although
+not risky, it did account for a lot of +/- changes.  The way we pushed
+to James, did not allow for him to easily segment one set of changes
+from the other. Emulex will change this behavior, hopefully making this
+easier on James to keep you happy.
 
-[...]
-> mptbase: ioc0: WARNING - mpt_timer_expired complete!
-> Unable to handle kernel paging request for data at address 0x00000542
-> Faulting instruction address: 0xa01d93b8
-> Oops: Kernel access of bad area, sig: 11 [#1]
-> SBS CM6
-> NIP: a01d93b8 LR: a01d93b8 CTR: a000c2ac
-> REGS: bffcbea0 TRAP: 0300   Not tainted  (2.6.22.1)
-> MSR: 00009032 <EE,ME,IR,DR>  CR: 82004028  XER: 00000000
-> DAR: 00000542, DSISR: 40000000
-> TASK = bffc0030[5] 'events/0' THREAD: bffca000
-> GPR00: a01d93b8 bffcbf50 bffc0030 bfffd0c0 bfff7800 00000001 004971e0
-> 00000000
-> GPR08: 0001c7d0 00000010 a039c000 bfff783c 00000000 ff9f6b57 0fffbd00
-> ffffffff
-> GPR16: 00000001 00000000 007fff00 00000000 00000000 007ffeb0 00000000
-> a034dd74
-> GPR24: a0350000 a034dd74 a0030000 a034dd74 a02e0000 bffca000 a01d93a0
-> 000002c4
-> NIP [a01d93b8] mptspi_dv_renegotiate_work+0x18/0x120
-> LR [a01d93b8] mptspi_dv_renegotiate_work+0x18/0x120
-> Call Trace:
-> [bffcbf50] [a01d93b8] mptspi_dv_renegotiate_work+0x18/0x120 (unreliable)
-> [bffcbf80] [a002d33c] run_workqueue+0xac/0x158
-> [bffcbfa0] [a002d7a8] worker_thread+0x6c/0xd0
-> [bffcbfd0] [a0030e74] kthread+0x84/0x8c
-> [bffcbff0] [a00115c4] kernel_thread+0x44/0x60
-> Instruction dump:
-> 4bffd6d1 80010024 83e1001c 38210020 7c0803a6 4e800020 7c0802a6 9421ffd0
-> bf810020 90010034 83e30010 4be83521 <a01f027e> 2f800000 419e009c
-> 813f0000
-> mptbase: ioc0: Sending Config request type 4, page 1 and action 0
-> mptbase: ioc0: mf_dma_addr=1fe82922 req_idx=3 RequestNB=2
-> mptbase: ioc0: WARNING - mpt_timer_expired!
-> mptbase: IOC setup_reset routed to MPT base driver!
-> mptbase: Initiating ioc0 recovery
-> mptbase::MakeIocReady, ioc0 [raw] state=24000000
-> mptbase: ioc0: IOC operational unexpected
-> mptbase: whoinit 0x4 statefault 0 force 1
+However, I take issue with looking at line counts as the sole basis
+for what's appropriate or not. It can be argued that some bug fixes may be
+larger in scope than others, or patch batching so that the bug fix count is
+higher will skew this perception. I also believe that more "lesser" bugfixes
+should be allowed in an earlier -rc? than later, so a hard-and-fast rule for
+line counts seem odd.  Also - what's a bug fix ?  There are many things
+which are not "features" but are necessities for diagnosis or support of the
+larger change. Some of these you simply don't find in time to make sure they
+are in place for the -rc1 merge. Do you hold off on them, or do you make a
+choice based risk/reward based on where the -rc is ? I vote for the latter.
+I realize that the Linux kernel is such a beast overall that you must have
+some simple guidelines, but basing it solely on numbers is a very bad pitfall.
 
-Looks like a NULL deref.
+-- james s
 
-Find your mptspi.o, fusion.o or fusion.ko (all of them should work), and do
 
-gdb fusion.o
-l *mptspi_dv_renegotiate_work+0x18
-
-That should give you the faulting line.
-
-Eike
-
---nextPart9649716.QQs4P9nIDk
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.5 (GNU/Linux)
-
-iD8DBQBGuFNUXKSJPmm5/E4RAqMPAJsFcETwNAHBk3NJCB4v9YJIbR6ZjwCgogrg
-yzyi1YG/Ut4xMIiBQAWksaY=
-=XK40
------END PGP SIGNATURE-----
-
---nextPart9649716.QQs4P9nIDk--
+Linus Torvalds wrote:
+> 
+> On Mon, 6 Aug 2007, James Bottomley wrote:
+>> Confused ... you did get the first pull request in the first week.
+> 
+> Here's the problem. Let me repeat it again:
+> 
+>>> And after -rc1, I don't want to see crap like this:
+>>>
+>>> 	 46 files changed, 2837 insertions(+), 2050 deletions(-)
+> 
+> It DOES NOT MATTER if I get a first pull request in the first week, if 
+> that pull request is purely cosmetic, and is followed by stuff that 
+> *should* have been in the merge window four weeks afterwards.
+> 
+>> OK ... that's arguable.
+> 
+> There's nothing arguable at all about it.
+> 
+> If you have 5000 lines of changes, that's not a "bugfix" any more. That's 
+> a big damn change, and it should have happened in the merge window. Or if 
+> it doesn't make it in time, in the *next* merge window.
+> 
+> 			Linus
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
