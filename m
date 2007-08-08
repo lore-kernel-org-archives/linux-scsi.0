@@ -1,75 +1,66 @@
-From: Eugene Teo <eugeneteo@kernel.sg>
-Subject: [PATCH] drivers/scsi/ips.c: fix scsi_add_host warning
-Date: Wed, 8 Aug 2007 12:58:49 +0800
-Message-ID: <20070808045849.GA8529@kernel.sg>
-Reply-To: Eugene Teo <eugeneteo@kernel.sg>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Subject: [PATCH] message/fusion: remove redundant memset
+Date: Wed, 8 Aug 2007 08:32:51 +0200
+Message-ID: <200708080832.51578.m.kozlowski@tuxland.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935360AbXHHE7J@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-2"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:2235 "EHLO
+	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753955AbXHHGcy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Aug 2007 02:32:54 -0400
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eric.Moore@lsi.com
+Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch fixes the following warning:
+Hello,
 
-drivers/scsi/ips.c: In function 'ips_register_scsi':
-drivers/scsi/ips.c:6867: warning: ignoring return value of
-	'scsi_add_host', declared with attribute warn_unused_result
+	alloc_fcdev() calls alloc_netdev() which uses kzalloc to alloc
+all the memory together with dev->priv region hence no zeroing of structs
+inside struct mpt_lan_priv needed.
 
-Signed-off-by: Eugene Teo <eugeneteo@kernel.sg>
----
- drivers/scsi/ips.c |   16 ++++++++++++----
- 1 files changed, 12 insertions(+), 4 deletions(-)
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 492a51b..b04c42f 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -6824,13 +6824,14 @@ ips_order_controllers(void)
- static int
- ips_register_scsi(int index)
+ drivers/message/fusion/mptlan.c | 47738 -> 47618 (-120 bytes)
+ drivers/message/fusion/mptlan.o | 170800 -> 170124 (-676 bytes)
+
+ drivers/message/fusion/mptlan.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+--- linux-2.6.23-rc1-mm2-a/drivers/message/fusion/mptlan.c	2007-08-01 08:43:47.000000000 +0200
++++ linux-2.6.23-rc1-mm2-b/drivers/message/fusion/mptlan.c	2007-08-07 01:33:49.000000000 +0200
+@@ -1351,10 +1351,11 @@ mpt_lan_post_receive_buckets_work(struct
+ static struct net_device *
+ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
  {
-+	int rc = -1;
- 	struct Scsi_Host *sh;
- 	ips_ha_t *ha, *oldha = ips_ha[index];
- 	sh = scsi_host_alloc(&ips_driver_template, sizeof (ips_ha_t));
- 	if (!sh) {
- 		IPS_PRINTK(KERN_WARNING, oldha->pcidev,
- 			   "Unable to register controller with SCSI subsystem\n");
--		return -1;
-+		return rc;
- 	}
- 	ha = IPS_HA(sh);
- 	memcpy(ha, oldha, sizeof (ips_ha_t));
-@@ -6839,8 +6840,7 @@ ips_register_scsi(int index)
- 	if (request_irq(ha->irq, do_ipsintr, IRQF_SHARED, ips_name, ha)) {
- 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
- 			   "Unable to install interrupt handler\n");
--		scsi_host_put(sh);
--		return -1;
-+		goto err_put_sh;
- 	}
- 
- 	kfree(oldha);
-@@ -6864,10 +6864,18 @@ ips_register_scsi(int index)
- 	sh->max_channel = ha->nbus - 1;
- 	sh->can_queue = ha->max_cmds - 1;
- 
--	scsi_add_host(sh, NULL);
-+	rc = scsi_add_host(sh, NULL);
-+	if (rc)
-+		goto err_free_irq;
- 	scsi_scan_host(sh);
- 
- 	return 0;
-+
-+err_free_irq:
-+	free_irq(ha->irq);
-+err_put_sh:
-+	scsi_host_put(sh);
-+	return rc;
- }
- 
- /*---------------------------------------------------------------------------*/
+-	struct net_device *dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
+-	struct mpt_lan_priv *priv = NULL;
++	struct net_device *dev;
++	struct mpt_lan_priv *priv;
+ 	u8 HWaddr[FC_ALEN], *a;
+
++	dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
+ 	if (!dev)
+ 		return NULL;
+
+@@ -1366,7 +1367,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
+ 	priv->mpt_dev = mpt_dev;
+ 	priv->pnum = pnum;
+
+-	memset(&priv->post_buckets_task, 0, sizeof(priv->post_buckets_task));
+ 	INIT_DELAYED_WORK(&priv->post_buckets_task,
+ 			  mpt_lan_post_receive_buckets_work);
+ 	priv->post_buckets_active = 0;
+@@ -1391,8 +1391,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
+ 	spin_lock_init(&priv->txfidx_lock);
+ 	spin_lock_init(&priv->rxfidx_lock);
+
+-	memset(&priv->stats, 0, sizeof(priv->stats));
+-
+ 	/*  Grab pre-fetched LANPage1 stuff. :-) */
+ 	a = (u8 *) &mpt_dev->lan_cnfg_page1.HardwareAddressLow;
+
