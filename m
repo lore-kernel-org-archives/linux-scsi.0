@@ -1,66 +1,39 @@
-From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Subject: [PATCH] message/fusion: remove redundant memset
-Date: Wed, 8 Aug 2007 08:32:51 +0200
-Message-ID: <200708080832.51578.m.kozlowski@tuxland.pl>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold  structure
+Date: Wed, 8 Aug 2007 09:15:28 +0200
+Message-ID: <20070808071528.GJ5245@kernel.dk>
+References: <46B600F4.7020601@torque.net> <20070806130944R.fujita.tomonori@lab.ntt.co.jp> <46B8A845.4080106@cs.wisc.edu> <20070808073801U.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-2"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from xdsl-664.zgora.dialog.net.pl ([81.168.226.152]:2235 "EHLO
-	tuxland.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753955AbXHHGcy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Aug 2007 02:32:54 -0400
+Received: from brick.kernel.dk ([87.55.233.238]:2796 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1765026AbXHHHPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Aug 2007 03:15:31 -0400
 Content-Disposition: inline
+In-Reply-To: <20070808073801U.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eric.Moore@lsi.com
-Cc: mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: michaelc@cs.wisc.edu, dougg@torque.net, tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Hello,
+On Wed, Aug 08 2007, FUJITA Tomonori wrote:
+> Now only scsi-ml is changed to allocate chaining sg list
+> properly. Others like cciss are not converted yet, I think. It might
+> make sense to have the standard block layer functions to allocate
+> chaining sg list properly. So we could convert to potential consumers
+> (scsi-ml, sg, ccisss, etc) use them though I'm not sure how many non
+> scsi-ml needs chaining sg list.
 
-	alloc_fcdev() calls alloc_netdev() which uses kzalloc to alloc
-all the memory together with dev->priv region hence no zeroing of structs
-inside struct mpt_lan_priv needed.
+The scsi chain table allocation/freeing could be made generic. The
+reason I didn't do that is - as you list - that probably not many
+non-scsi drivers need/want it. If they do, we can put that functionality
+in the block layer.
 
-Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+The cciss hardware doesn't support more than 31 segments iirc. Newer
+firmwares can do chaining as well, but the linux driver doesn't actually
+support it. Once it does, we can add sg chaining support there too.
 
- drivers/message/fusion/mptlan.c | 47738 -> 47618 (-120 bytes)
- drivers/message/fusion/mptlan.o | 170800 -> 170124 (-676 bytes)
-
- drivers/message/fusion/mptlan.c |    8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
-
---- linux-2.6.23-rc1-mm2-a/drivers/message/fusion/mptlan.c	2007-08-01 08:43:47.000000000 +0200
-+++ linux-2.6.23-rc1-mm2-b/drivers/message/fusion/mptlan.c	2007-08-07 01:33:49.000000000 +0200
-@@ -1351,10 +1351,11 @@ mpt_lan_post_receive_buckets_work(struct
- static struct net_device *
- mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
- {
--	struct net_device *dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
--	struct mpt_lan_priv *priv = NULL;
-+	struct net_device *dev;
-+	struct mpt_lan_priv *priv;
- 	u8 HWaddr[FC_ALEN], *a;
-
-+	dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
- 	if (!dev)
- 		return NULL;
-
-@@ -1366,7 +1367,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
- 	priv->mpt_dev = mpt_dev;
- 	priv->pnum = pnum;
-
--	memset(&priv->post_buckets_task, 0, sizeof(priv->post_buckets_task));
- 	INIT_DELAYED_WORK(&priv->post_buckets_task,
- 			  mpt_lan_post_receive_buckets_work);
- 	priv->post_buckets_active = 0;
-@@ -1391,8 +1391,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
- 	spin_lock_init(&priv->txfidx_lock);
- 	spin_lock_init(&priv->rxfidx_lock);
-
--	memset(&priv->stats, 0, sizeof(priv->stats));
--
- 	/*  Grab pre-fetched LANPage1 stuff. :-) */
- 	a = (u8 *) &mpt_dev->lan_cnfg_page1.HardwareAddressLow;
+-- 
+Jens Axboe
 
