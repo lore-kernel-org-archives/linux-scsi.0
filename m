@@ -1,102 +1,37 @@
-From: Michal Piotrowski <michal.k.k.piotrowski@gmail.com>
-Subject: Re: [3/3] 2.6.23-rc2: known regressions v2
-Date: Wed, 08 Aug 2007 19:12:35 +0200
-Message-ID: <46B9F983.9020700@googlemail.com>
-References: <46B9F664.9060600@googlemail.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold structure
+Date: Wed, 08 Aug 2007 12:20:43 -0500
+Message-ID: <46B9FB6B.70501@cs.wisc.edu>
+References: <46B600F4.7020601@torque.net>	<20070806130944R.fujita.tomonori@lab.ntt.co.jp>	<46B8A845.4080106@cs.wisc.edu> <20070808073801U.fujita.tomonori@lab.ntt.co.jp> <46B9F626.9020200@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-2
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S937016AbXHHRNn@vger.kernel.org>
-In-Reply-To: <46B9F664.9060600@googlemail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>, linux-pm@lists.linux-foundation.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Pavel Machek <pavel@ucw.cz>, Meelis Roos <mroos@linux.ee>, linux-scsi@vger.kernel.org, Andrew Vasquez <linux-driver@qlogic.com>, Zhang Yanmin <yanmin_zhang@linux.intel.com>, linux-usb-devel@lists.sourceforge.net, Greg KH <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Oliver Neukum <oliver@neukum.org>, Tino Keitel <tino.keitel@gmx.de>, Mark Hindley <mark@hindley.org.uk>, Richard Henderson <rth@twiddle.net>, Ivan Kokshaysky <ink@jurassic.park.msu.ru>, Oliver Falk <oliver@linux-kernel.at>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:44669 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S937466AbXHHRVq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Aug 2007 13:21:46 -0400
+In-Reply-To: <46B9F626.9020200@cs.wisc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: dougg@torque.net, tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com
 
-Hi all,
+Mike Christie wrote:
+> For drivers like sg and st, do mean the the sg list that is passed to 
+> functions like scsi_execute_async? If we kill that argument, and instead 
+> have sg.c and other scsi_execute_async callers just call blk helpers 
+> like blk_rq_map_user then we would not have to worry about drivers like 
+> sg needing to know about chaining right? I mean sg.c would not every 
+> interact with a scatterlist. It would just interact with a request and 
+> the blk helpers map data for it.
 
-Here is a list of some known regressions in 2.6.23-rc2.
+There should be a return there.
 
-Feel free to add new regressions/remove fixed etc.
-http://kernelnewbies.org/known_regressions
+  The scatterlist that sg and st interact
+> with is bogus. It gets thrown away in scsi_execute_async and is only 
+> used for book keeping.
 
-List of Aces
-
-Name                    Regressions fixed since 21-Jun-2007
-Adrian Bunk                            6
-Andi Kleen                             4
-Andrew Morton                          4
-Linus Torvalds                         4
-Al Viro                                3
-Cornelia Huck                          3
-Jens Axboe                             3
-Tejun Heo                              3
-David Woodhouse                        2
-Hugh Dickins                           2
-Peter Zijlstra                         2
-Trent Piepho                           2
-
-
-
-Power management
-
-Subject         : Kconfig: 'SUSPEND_SMP' refers to undefined symbol 'HOTPLUG_CPU'
-References      : http://lkml.org/lkml/2007/8/4/39
-Last known good : ?
-Submitter       : Meelis Roos <mroos@linux.ee>
-Caused-By       : ?
-Handled-By      : Rafael J. Wysocki <rjw@sisk.pl>
-Status          : unknown
-
-
-
-SCSI
-
-Subject         : unable to handle kernel NULL pointer dereference in qla2x00_read_nvram_data
-References      : http://lkml.org/lkml/2007/8/6/506
-Last known good : ?
-Submitter       : Zhang, Yanmin <yanmin_zhang@linux.intel.com>
-Caused-By       : ?
-Handled-By      : ?
-Status          : unknown
-
-
-
-USB
-
-Subject         : 2.6.23-rc1: uhci_hcd. irq 4: nobody cared
-References      : http://lkml.org/lkml/2007/7/29/75
-Last known good : ?
-Submitter       : Mark Hindley <mark@hindley.org.uk>
-Caused-By       : ?
-Handled-By      : Alan Stern <stern@rowland.harvard.edu>
-Status          : unknown
-
-Subject         : 2.6.23-rc1: USB hard disk broken
-References      : http://lkml.org/lkml/2007/7/25/62
-Last known good : ?
-Submitter       : Tino Keitel <tino.keitel@gmx.de>
-Caused-By       : ?
-Handled-By      : Oliver Neukum <oliver@neukum.org>
-Status          : unknown
-
-
-
-Alpha
-
-Subject         : -Werror compilation problem - make[1]: *** [arch/alpha/kernel/sys_titan.o] Error 1
-References      : http://lkml.org/lkml/2007/8/6/137
-Last known good : ?
-Submitter       : Oliver Falk <oliver@linux-kernel.at>
-Caused-By       : ?
-Handled-By      : ?
-Status          : unknown
-
-
-
-Regards,
-Michal
-
---
-LOG
-http://www.stardust.webpages.pl/log/
+I mean currently the scatterlist that sg and st use is bogus and gets 
+thrown away. If we convert sg and st to use blk_rq_map_user then those 
+drivers will not have to interact with a scatterlist at all.
