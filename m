@@ -1,37 +1,62 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold structure
-Date: Wed, 08 Aug 2007 12:20:43 -0500
-Message-ID: <46B9FB6B.70501@cs.wisc.edu>
-References: <46B600F4.7020601@torque.net>	<20070806130944R.fujita.tomonori@lab.ntt.co.jp>	<46B8A845.4080106@cs.wisc.edu> <20070808073801U.fujita.tomonori@lab.ntt.co.jp> <46B9F626.9020200@cs.wisc.edu>
+From: Eric Moore <eric.moore@lsi.com>
+Subject: RE: Mptlinux crashes on kernel 2.6.22.1
+Date: Wed, 8 Aug 2007 12:12:23 -0600
+Message-ID: <20070808181223.GA12287@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:44669 "EHLO sabe.cs.wisc.edu"
+Received: from mail0.lsil.com ([147.145.40.20]:53950 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937466AbXHHRVq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Aug 2007 13:21:46 -0400
-In-Reply-To: <46B9F626.9020200@cs.wisc.edu>
+	id S1760901AbXHHSPX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 8 Aug 2007 14:15:23 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: dougg@torque.net, tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com
+To: linux-scsi@vger.kernel.org, Thomas.Hommel@gefanuc.com
 
-Mike Christie wrote:
-> For drivers like sg and st, do mean the the sg list that is passed to 
-> functions like scsi_execute_async? If we kill that argument, and instead 
-> have sg.c and other scsi_execute_async callers just call blk helpers 
-> like blk_rq_map_user then we would not have to worry about drivers like 
-> sg needing to know about chaining right? I mean sg.c would not every 
-> interact with a scatterlist. It would just interact with a request and 
-> the blk helpers map data for it.
+On 2007-08-02 14:16:49, Hommel, Thomas wrote:
+> I am trying to use a LSI53C1020 based adapter on a PowerPC board with
+> MPC8641D processor. When initializing, the driver crashes the system
+> with the error message below. Kernel version is 2.6.22.1, driver
+> 3.04.04. The chip on the adapter is a 53C1020, but the driver detects a
+> 53C1030. Has anyone experienced similar problems already?
 
-There should be a return there.
 
-  The scatterlist that sg and st interact
-> with is bogus. It gets thrown away in scsi_execute_async and is only 
-> used for book keeping.
+Try this patch out.  It appears that when loading the driver, your getting a
+timeout when requesting a firmware config page. The timeout results in a
+diag_reset of the controller, and all the ioc_reset callbacks are called for
+every registered driver. When mptspi_ioc_reset is called, the hd object has
+not be initialized.  The fix is to return when hd is NULL.  This object will
+be setup once mptspi_probe has completed calling scsi_host_alloc.
 
-I mean currently the scatterlist that sg and st use is bogus and gets 
-thrown away. If we convert sg and st to use blk_rq_map_user then those 
-drivers will not have to interact with a scatterlist at all.
+Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+
+
+diff -uarpN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
+--- b/drivers/message/fusion/mptspi.c	2007-08-08 11:41:02.000000000 -0600
++++ a/drivers/message/fusion/mptspi.c	2007-08-08 11:59:56.000000000 -0600
+@@ -1249,14 +1249,20 @@ mptspi_dv_renegotiate(struct _MPT_SCSI_H
+ static int
+ mptspi_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
+ {
+-	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)ioc->sh->hostdata;
++	struct _MPT_SCSI_HOST *hd = NULL;
+ 	int rc;
+ 
+ 	rc = mptscsih_ioc_reset(ioc, reset_phase);
++	if ((ioc->bus_type != SPI) || (!rc))
++		goto out;
+ 
+-	if (reset_phase == MPT_IOC_POST_RESET)
+-		mptspi_dv_renegotiate(hd);
++	hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
++	if (!hd || !hd->ioc)
++		goto out;
+ 
++	if (ioc->active && reset_phase == MPT_IOC_POST_RESET)
++		mptspi_dv_renegotiate(hd);
++ out:
+ 	return rc;
+ }
+ 
+
