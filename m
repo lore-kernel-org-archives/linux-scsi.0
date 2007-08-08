@@ -1,55 +1,75 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH] sg: increase sglist_len of the sg_scatter_hold
- structure
-Date: Wed, 08 Aug 2007 07:38:01 +0900
-Message-ID: <20070808073801U.fujita.tomonori@lab.ntt.co.jp>
-References: <46B600F4.7020601@torque.net>
-	<20070806130944R.fujita.tomonori@lab.ntt.co.jp>
-	<46B8A845.4080106@cs.wisc.edu>
+From: Eugene Teo <eugeneteo@kernel.sg>
+Subject: [PATCH] drivers/scsi/ips.c: fix scsi_add_host warning
+Date: Wed, 8 Aug 2007 12:58:49 +0800
+Message-ID: <20070808045849.GA8529@kernel.sg>
+Reply-To: Eugene Teo <eugeneteo@kernel.sg>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:51070 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755929AbXHGWiY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Aug 2007 18:38:24 -0400
-In-Reply-To: <46B8A845.4080106@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S935360AbXHHE7J@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: fujita.tomonori@lab.ntt.co.jp, dougg@torque.net, tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com
 
-On Tue, 07 Aug 2007 12:13:41 -0500
-Mike Christie <michaelc@cs.wisc.edu> wrote:
+This patch fixes the following warning:
 
-> FUJITA Tomonori wrote:
-> > Allocating 64K contiguous memory is not good so the next thing to do
-> > is converting sg to use the sg chaining support fully. Or it might be
-> 
-> For LLDs like aic7xxx, I think we are stuck with a small 
-> scsi_host_template->sg_tablesize, so to continue to get large requests 
-> like before will we have to still allocate large segments?
+drivers/scsi/ips.c: In function 'ips_register_scsi':
+drivers/scsi/ips.c:6867: warning: ignoring return value of
+	'scsi_add_host', declared with attribute warn_unused_result
 
-No. sg.c has:
+Signed-off-by: Eugene Teo <eugeneteo@kernel.sg>
+---
+ drivers/scsi/ips.c |   16 ++++++++++++----
+ 1 files changed, 12 insertions(+), 4 deletions(-)
 
-sizeof(struct scatterlist) * min(q->max_hw_segments, q->max_phys_segments)
-
-If a lld has small max_hw_segments, it doesn't allocate big contiguous
-memory.
-
-
-> Is block/scsi_ioctl.c converted to sg chaining in any tree yet? Is that 
-> in your tree or one of Jen's branches.
-
-block/scsi_ioctl.c uses the standard block layer functions, there is
-nothing to convert in it. sglist doesn't change the standard block
-layer functions much since it doesn't allocate sg list. It changes
-only blk_rq_map_sg.
-
-Now only scsi-ml is changed to allocate chaining sg list
-properly. Others like cciss are not converted yet, I think. It might
-make sense to have the standard block layer functions to allocate
-chaining sg list properly. So we could convert to potential consumers
-(scsi-ml, sg, ccisss, etc) use them though I'm not sure how many non
-scsi-ml needs chaining sg list.
+diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+index 492a51b..b04c42f 100644
+--- a/drivers/scsi/ips.c
++++ b/drivers/scsi/ips.c
+@@ -6824,13 +6824,14 @@ ips_order_controllers(void)
+ static int
+ ips_register_scsi(int index)
+ {
++	int rc = -1;
+ 	struct Scsi_Host *sh;
+ 	ips_ha_t *ha, *oldha = ips_ha[index];
+ 	sh = scsi_host_alloc(&ips_driver_template, sizeof (ips_ha_t));
+ 	if (!sh) {
+ 		IPS_PRINTK(KERN_WARNING, oldha->pcidev,
+ 			   "Unable to register controller with SCSI subsystem\n");
+-		return -1;
++		return rc;
+ 	}
+ 	ha = IPS_HA(sh);
+ 	memcpy(ha, oldha, sizeof (ips_ha_t));
+@@ -6839,8 +6840,7 @@ ips_register_scsi(int index)
+ 	if (request_irq(ha->irq, do_ipsintr, IRQF_SHARED, ips_name, ha)) {
+ 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
+ 			   "Unable to install interrupt handler\n");
+-		scsi_host_put(sh);
+-		return -1;
++		goto err_put_sh;
+ 	}
+ 
+ 	kfree(oldha);
+@@ -6864,10 +6864,18 @@ ips_register_scsi(int index)
+ 	sh->max_channel = ha->nbus - 1;
+ 	sh->can_queue = ha->max_cmds - 1;
+ 
+-	scsi_add_host(sh, NULL);
++	rc = scsi_add_host(sh, NULL);
++	if (rc)
++		goto err_free_irq;
+ 	scsi_scan_host(sh);
+ 
+ 	return 0;
++
++err_free_irq:
++	free_irq(ha->irq);
++err_put_sh:
++	scsi_host_put(sh);
++	return rc;
+ }
+ 
+ /*---------------------------------------------------------------------------*/
