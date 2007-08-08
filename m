@@ -1,83 +1,55 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCHSET 0/5] Peaceful co-existence of scsi_sgtable and Large   IO sg-chaining
-Date: Wed, 8 Aug 2007 09:16:45 +0200
-Message-ID: <20070808071644.GK5245@kernel.dk>
-References: <46AF97AA.5000908@panasas.com> <20070806162205P.fujita.tomonori@lab.ntt.co.jp> <20070807065549.GR5245@kernel.dk> <20070807173619J.fujita.tomonori@lab.ntt.co.jp>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH 2/4] zfcp: allocate gid_pn_data objects from gid_pn_cache
+Date: Wed, 8 Aug 2007 10:47:10 +0200
+Message-ID: <200708081047.10872.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:2810 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1765200AbXHHHQs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 8 Aug 2007 03:16:48 -0400
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:1143 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757153AbXHHIpa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Aug 2007 04:45:30 -0400
 Content-Disposition: inline
-In-Reply-To: <20070807173619J.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bharrosh@panasas.com, bhalevy@panasas.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, heiko.carstens@de.ibm.com
 
-On Tue, Aug 07 2007, FUJITA Tomonori wrote:
-> On Tue, 7 Aug 2007 08:55:49 +0200
-> Jens Axboe <jens.axboe@oracle.com> wrote:
-> 
-> > On Mon, Aug 06 2007, FUJITA Tomonori wrote:
-> > > On Tue, 31 Jul 2007 23:12:26 +0300
-> > > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > > 
-> > > > The tested Kernels:
-> > > > 
-> > > > 1. Jens's sglist-arch
-> > > >   I was not able to pass all tests with this Kernel. For some reason when
-> > > >   bigger than 256 pages commands are queued the Machine will run out
-> > > >   of memory and will kill the test. After the test is killed the system
-> > > >   is left with 10M of memory and can hardly reboot.
-> > > >   I have done some prints at the queuecommand entry in scsi_debug.c
-> > > >   and I can see that I receive the expected large sg_count and bufflen
-> > > >   but unlike other tests I get a different pointer at scsi_sglist().
-> > > >   In other tests since nothing is happening at this machine while in
-> > > >   the test, the sglist pointer is always the same. commands comes in,
-> > > >   allocates memory, do nothing in scsi_debug, freed, and returns. 
-> > > >   I suspect sglist leak or allocation bug.
-> > > 
-> > > Ok, I found the leak.
-> > > 
-> > > 
-> > > From 011c05c2e514d1db4834147ed83526473711b0a3 Mon Sep 17 00:00:00 2001
-> > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > Date: Mon, 6 Aug 2007 16:16:24 +0900
-> > > Subject: [PATCH] fix sg chaining leak
-> > > 
-> > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > ---
-> > >  drivers/scsi/scsi_lib.c |    1 -
-> > >  1 files changed, 0 insertions(+), 1 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > > index 5884b1b..25988b9 100644
-> > > --- a/drivers/scsi/scsi_lib.c
-> > > +++ b/drivers/scsi/scsi_lib.c
-> > > @@ -48,7 +48,6 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
-> > >  	SP(32),
-> > >  	SP(64),
-> > >  	SP(128),
-> > > -	SP(256),
-> > >  };
-> > >  #undef SP
-> > 
-> > Thanks Tomo! Trying to catch up with mails, will apply this one right
-> > away.
-> 
-> You can add the following patch to your sglist branches:
-> 
-> 
-> From abd73c05d5f08ee307776150e1deecac7a709b60 Mon Sep 17 00:00:00 2001
-> From: FUJITA Tomonori <tomof@acm.org>
-> Date: Mon, 30 Jul 2007 23:01:32 +0900
-> Subject: [PATCH] zfcp: sg chaining support
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Thanks, applied!
+allocate gid_pn_data objects from gid_pn_cache.
 
--- 
-Jens Axboe
+Allocate gid_pn_data objects from the corresponding cache which ensures
+proper alignment.
 
+Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
+Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+---
+
+ drivers/s390/scsi/zfcp_aux.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff -urpN linux-2.6/drivers/s390/scsi/zfcp_aux.c linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c
+--- linux-2.6/drivers/s390/scsi/zfcp_aux.c	2007-08-08 10:13:39.000000000 +0200
++++ linux-2.6-patched/drivers/s390/scsi/zfcp_aux.c	2007-08-08 10:14:02.000000000 +0200
+@@ -1503,7 +1503,7 @@ zfcp_gid_pn_buffers_alloc(struct zfcp_gi
+ 			data->ct.pool = pool;
+ 		}
+ 	} else {
+-		data = kmalloc(sizeof(struct zfcp_gid_pn_data), GFP_ATOMIC);
++		data = kmem_cache_alloc(zfcp_data.gid_pn_cache, GFP_ATOMIC);
+ 	}
+ 
+         if (NULL == data)
+@@ -1531,7 +1531,7 @@ static void zfcp_gid_pn_buffers_free(str
+ 	if (gid_pn->ct.pool)
+ 		mempool_free(gid_pn, gid_pn->ct.pool);
+ 	else
+-		kfree(gid_pn);
++		kmem_cache_free(zfcp_data.gid_pn_cache, gid_pn);
+ }
+ 
+ /**
