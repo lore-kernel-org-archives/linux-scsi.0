@@ -1,79 +1,64 @@
 From: akpm@linux-foundation.org
-Subject: [patch 14/30] dtc: clean up indent damage and add printk levels
-Date: Fri, 10 Aug 2007 14:50:41 -0700
-Message-ID: <200708102150.l7ALogV5011357@imap1.linux-foundation.org>
+Subject: [patch 30/30] message/fusion: remove redundant memset
+Date: Fri, 10 Aug 2007 14:50:53 -0700
+Message-ID: <200708102150.l7ALorA8011410@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:38224 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:46119 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1761812AbXHJWCK (ORCPT
+	by vger.kernel.org with ESMTP id S1760705AbXHJWBo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Aug 2007 18:02:10 -0400
+	Fri, 10 Aug 2007 18:01:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl, Eric.Moore@lsil.com
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+alloc_fcdev() calls alloc_netdev() which uses kzalloc to alloc all the
+memory together with dev->priv region hence no zeroing of structs inside
+struct mpt_lan_priv needed.
+
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/dtc.c |   16 +++++++---------
- 1 files changed, 7 insertions(+), 9 deletions(-)
+ drivers/message/fusion/mptlan.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
-diff -puN drivers/scsi/dtc.c~dtc-clean-up-indent-damage-and-add-printk-levels drivers/scsi/dtc.c
---- a/drivers/scsi/dtc.c~dtc-clean-up-indent-damage-and-add-printk-levels
-+++ a/drivers/scsi/dtc.c
-@@ -137,11 +137,9 @@ static struct override {
- #ifdef OVERRIDE
- [] __initdata = OVERRIDE;
- #else
--[4] __initdata = { {
--0, IRQ_AUTO}, {
--0, IRQ_AUTO}, {
--0, IRQ_AUTO}, {
--0, IRQ_AUTO}};
-+[4] __initdata = {
-+	{ 0, IRQ_AUTO }, { 0, IRQ_AUTO }, { 0, IRQ_AUTO }, { 0, IRQ_AUTO }
-+};
- #endif
- 
- #define NO_OVERRIDES ARRAY_SIZE(overrides)
-@@ -176,7 +174,7 @@ static const struct signature {
-  * Inputs : str - unused, ints - array of integer parameters with ints[0]
-  *	equal to the number of ints.
-  *
--*/
-+ */
- 
- static void __init dtc_setup(char *str, int *ints)
+diff -puN drivers/message/fusion/mptlan.c~message-fusion-remove-redundant-memset drivers/message/fusion/mptlan.c
+--- a/drivers/message/fusion/mptlan.c~message-fusion-remove-redundant-memset
++++ a/drivers/message/fusion/mptlan.c
+@@ -1351,10 +1351,11 @@ mpt_lan_post_receive_buckets_work(struct
+ static struct net_device *
+ mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
  {
-@@ -233,7 +231,7 @@ static int __init dtc_detect(struct scsi
- 		} else
- 			for (; !addr && (current_base < NO_BASES); ++current_base) {
- #if (DTCDEBUG & DTCDEBUG_INIT)
--				printk("scsi-dtc : probing address %08x\n", bases[current_base].address);
-+				printk(KERN_DEBUG "scsi-dtc : probing address %08x\n", bases[current_base].address);
- #endif
- 				if (bases[current_base].noauto)
- 					continue;
-@@ -244,7 +242,7 @@ static int __init dtc_detect(struct scsi
- 					if (check_signature(base + signatures[sig].offset, signatures[sig].string, strlen(signatures[sig].string))) {
- 						addr = bases[current_base].address;
- #if (DTCDEBUG & DTCDEBUG_INIT)
--						printk("scsi-dtc : detected board.\n");
-+						printk(KERB_DEBUG "scsi-dtc : detected board.\n");
- #endif
- 						goto found;
- 					}
-@@ -253,7 +251,7 @@ static int __init dtc_detect(struct scsi
- 			}
+-	struct net_device *dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
+-	struct mpt_lan_priv *priv = NULL;
++	struct net_device *dev;
++	struct mpt_lan_priv *priv;
+ 	u8 HWaddr[FC_ALEN], *a;
  
- #if defined(DTCDEBUG) && (DTCDEBUG & DTCDEBUG_INIT)
--		printk("scsi-dtc : base = %08x\n", addr);
-+		printk(KERN_DEBUG "scsi-dtc : base = %08x\n", addr);
- #endif
++	dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
+ 	if (!dev)
+ 		return NULL;
  
- 		if (!addr)
+@@ -1366,7 +1367,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
+ 	priv->mpt_dev = mpt_dev;
+ 	priv->pnum = pnum;
+ 
+-	memset(&priv->post_buckets_task, 0, sizeof(priv->post_buckets_task));
+ 	INIT_DELAYED_WORK(&priv->post_buckets_task,
+ 			  mpt_lan_post_receive_buckets_work);
+ 	priv->post_buckets_active = 0;
+@@ -1391,8 +1391,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
+ 	spin_lock_init(&priv->txfidx_lock);
+ 	spin_lock_init(&priv->rxfidx_lock);
+ 
+-	memset(&priv->stats, 0, sizeof(priv->stats));
+-
+ 	/*  Grab pre-fetched LANPage1 stuff. :-) */
+ 	a = (u8 *) &mpt_dev->lan_cnfg_page1.HardwareAddressLow;
+ 
 _
