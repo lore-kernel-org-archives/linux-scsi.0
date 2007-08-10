@@ -1,64 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 09/30] Clean up duplicate includes in drivers/scsi/
-Date: Fri, 10 Aug 2007 14:50:38 -0700
-Message-ID: <200708102150.l7ALocW5011342@imap1.linux-foundation.org>
+Subject: [patch 07/30] Incorrect SCSI transfer length computation from odd sized scsi_execute_async() transfers.
+Date: Fri, 10 Aug 2007 14:50:36 -0700
+Message-ID: <200708102150.l7ALoaLm011335@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:43246 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:46852 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750790AbXHJVv1 (ORCPT
+	by vger.kernel.org with ESMTP id S1751810AbXHJVv1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 10 Aug 2007 17:51:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jesper.juhl@gmail.com, james.smart@emulex.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jli@greshamstorage.com
 
-From: Jesper Juhl <jesper.juhl@gmail.com>
+From: Jeremy Linton <jli@greshamstorage.com>
 
-This patch cleans up duplicate includes in
-	drivers/scsi/
+Any function which use scsi_execute_async() and transfers "odd" sized data
+that doesn't align correctly with the segment sizes may have its transfer
+length padded out to the closest segment size.
 
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
-Acked-by: James Smart <james.smart@emulex.com>
+For writes, this results in unnecessary data being transfered to the SCSI
+target.  For reads, it affects the residual data length being returned to
+the application since the residual length will be based on the padded
+transfer size rather than the actual request size.
+
+The easiest way to see this is by trying to read using the SG_IO ioctl a
+large (>32k) buffer size from a tape device that only has a few bytes of
+data stored for the current block.  The resulting resid will generally be
+incorrect.
+
+I've fixed this simply by changing scsi_req_map_sg() so that it places the
+requested transfer length in rq->data_len rather than the sum of all the sg
+segments.
+
+Signed-off-by: Jeremy Linton <jli@greshamstorage.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/NCR_D700.c          |    1 -
- drivers/scsi/lpfc/lpfc_debugfs.c |    1 -
- drivers/scsi/lpfc/lpfc_init.c    |    1 -
- 3 files changed, 3 deletions(-)
+ drivers/scsi/scsi_lib.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/NCR_D700.c~clean-up-duplicate-includes-in-drivers-scsi drivers/scsi/NCR_D700.c
---- a/drivers/scsi/NCR_D700.c~clean-up-duplicate-includes-in-drivers-scsi
-+++ a/drivers/scsi/NCR_D700.c
-@@ -97,7 +97,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/mca.h>
--#include <linux/interrupt.h>
- #include <asm/io.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
-diff -puN drivers/scsi/lpfc/lpfc_debugfs.c~clean-up-duplicate-includes-in-drivers-scsi drivers/scsi/lpfc/lpfc_debugfs.c
---- a/drivers/scsi/lpfc/lpfc_debugfs.c~clean-up-duplicate-includes-in-drivers-scsi
-+++ a/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -43,7 +43,6 @@
- #include "lpfc_crtn.h"
- #include "lpfc_vport.h"
- #include "lpfc_version.h"
--#include "lpfc_vport.h"
- #include "lpfc_debugfs.h"
+diff -puN drivers/scsi/scsi_lib.c~incorrect-scsi-transfer-length-computation-from-odd drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c~incorrect-scsi-transfer-length-computation-from-odd
++++ a/drivers/scsi/scsi_lib.c
+@@ -355,7 +355,7 @@ static int scsi_req_map_sg(struct reques
+ 	}
  
- #ifdef CONFIG_LPFC_DEBUG_FS
-diff -puN drivers/scsi/lpfc/lpfc_init.c~clean-up-duplicate-includes-in-drivers-scsi drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c~clean-up-duplicate-includes-in-drivers-scsi
-+++ a/drivers/scsi/lpfc/lpfc_init.c
-@@ -43,7 +43,6 @@
- #include "lpfc_crtn.h"
- #include "lpfc_vport.h"
- #include "lpfc_version.h"
--#include "lpfc_vport.h"
+ 	rq->buffer = rq->data = NULL;
+-	rq->data_len = data_len;
++	rq->data_len = bufflen;
+ 	return 0;
  
- static int lpfc_parse_vpd(struct lpfc_hba *, uint8_t *, int);
- static void lpfc_get_hba_model_desc(struct lpfc_hba *, uint8_t *, uint8_t *);
+ free_bios:
 _
