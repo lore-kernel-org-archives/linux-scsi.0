@@ -1,54 +1,60 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/30] drivers/scsi/a4000t.c: kmalloc + memset conversion to kzalloc
-Date: Fri, 10 Aug 2007 14:50:44 -0700
-Message-ID: <200708102150.l7ALoiH7011372@imap1.linux-foundation.org>
+Subject: [patch 12/30] Fix drivers/scsi/fdomain.c CONFIG_PCI=n warnings
+Date: Fri, 10 Aug 2007 14:50:40 -0700
+Message-ID: <200708102150.l7ALoe6g011351@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:35929 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33844 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752640AbXHJV7V (ORCPT
+	by vger.kernel.org with ESMTP id S1752418AbXHJV71 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:59:21 -0400
+	Fri, 10 Aug 2007 17:59:27 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, nix.or.die@googlemail.com
 
-From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+From: Gabriel C <nix.or.die@googlemail.com>
 
- drivers/scsi/a4000t.c | 3534 -> 3457 (-77 bytes)
+I get this warnings on current git when CONFIG_PCI is not set :
 
-Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+drivers/scsi/fdomain.c:390: warning: 'PCI_dev' defined but not used
+drivers/scsi/fdomain.c:1768: warning: 'fdomain_pci_tbl' defined but not used
+
+Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/a4000t.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/fdomain.c |    5 ++++-
+ 1 files changed, 4 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/a4000t.c~drivers-scsi-a4000tc-kmalloc-memset-conversion-to-kzalloc drivers/scsi/a4000t.c
---- a/drivers/scsi/a4000t.c~drivers-scsi-a4000tc-kmalloc-memset-conversion-to-kzalloc
-+++ a/drivers/scsi/a4000t.c
-@@ -37,7 +37,7 @@ static struct platform_device *a4000t_sc
+diff -puN drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings drivers/scsi/fdomain.c
+--- a/drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings
++++ a/drivers/scsi/fdomain.c
+@@ -387,7 +387,9 @@ static void __iomem *    bios_mem;
+ static int               bios_major;
+ static int               bios_minor;
+ static int               PCI_bus;
++#ifdef CONFIG_PCI
+ static struct pci_dev	*PCI_dev;
++#endif
+ static int               Quantum;	/* Quantum board variant */
+ static int               interrupt_level;
+ static volatile int      in_command;
+@@ -1764,6 +1766,7 @@ struct scsi_host_template fdomain_driver
+ };
  
- static int __devinit a4000t_probe(struct device *dev)
- {
--	struct Scsi_Host * host = NULL;
-+	struct Scsi_Host *host;
- 	struct NCR_700_Host_Parameters *hostdata;
+ #ifndef PCMCIA
++#ifdef CONFIG_PCI
  
- 	if (!(MACH_IS_AMIGA && AMIGAHW_PRESENT(A4000_SCSI)))
-@@ -47,12 +47,11 @@ static int __devinit a4000t_probe(struct
- 				"A4000T builtin SCSI"))
- 		goto out;
+ static struct pci_device_id fdomain_pci_tbl[] __devinitdata = {
+ 	{ PCI_VENDOR_ID_FD, PCI_DEVICE_ID_FD_36C70,
+@@ -1771,7 +1774,7 @@ static struct pci_device_id fdomain_pci_
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, fdomain_pci_tbl);
+-
++#endif
+ #define driver_template fdomain_driver_template
+ #include "scsi_module.c"
  
--	hostdata = kmalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
--	if (hostdata == NULL) {
-+	hostdata = kzalloc(sizeof(struct NCR_700_Host_Parameters), GFP_KERNEL);
-+	if (!hostdata) {
- 		printk(KERN_ERR "a4000t-scsi: Failed to allocate host data\n");
- 		goto out_release;
- 	}
--	memset(hostdata, 0, sizeof(struct NCR_700_Host_Parameters));
- 
- 	/* Fill in the required pieces of hostdata */
- 	hostdata->base = (void __iomem *)ZTWO_VADDR(A4000T_SCSI_ADDR);
 _
