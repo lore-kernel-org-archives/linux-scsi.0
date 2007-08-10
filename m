@@ -1,101 +1,117 @@
 From: akpm@linux-foundation.org
-Subject: [patch 25/30] drivers/scsi/dpt_i2o.c: kmalloc + memset conversion to kzalloc
-Date: Fri, 10 Aug 2007 14:50:49 -0700
-Message-ID: <200708102150.l7ALooaZ011395@imap1.linux-foundation.org>
+Subject: [patch 26/30] drivers/message/fusion/mptctl.c: mostly kmalloc + memset conversion to kzalloc
+Date: Fri, 10 Aug 2007 14:50:50 -0700
+Message-ID: <200708102150.l7ALoo92011398@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:54131 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:38984 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759416AbXHJWCB (ORCPT
+	by vger.kernel.org with ESMTP id S1761728AbXHJWCD (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Aug 2007 18:02:01 -0400
+	Fri, 10 Aug 2007 18:02:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl, mark_salyzyn@adaptec.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl, Eric.Moore@lsil.com
 
 From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
- drivers/scsi/dpt_i2o.c | 87632 -> 87457 (-175 bytes)
- drivers/scsi/dpt_i2o.o | 213064 -> 212324 (-740 bytes)
+This patch does kmalloc + memset conversion to kzalloc anSigned-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+d simplifies mptctl_probe().
+
+ drivers/message/fusion/mptctl.c | 82092 -> 81884 (-208 bytes)
+ drivers/message/fusion/mptctl.o | 201784 -> 200648 (-1136 bytes)
 
 Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Acked-by: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/dpt_i2o.c |   27 +++++++++++----------------
- 1 files changed, 11 insertions(+), 16 deletions(-)
+ drivers/message/fusion/mptctl.c |   36 ++++++++++--------------------
+ 1 files changed, 12 insertions(+), 24 deletions(-)
 
-diff -puN drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-kmalloc-memset-conversion-to-kzalloc drivers/scsi/dpt_i2o.c
---- a/drivers/scsi/dpt_i2o.c~drivers-scsi-dpt_i2oc-kmalloc-memset-conversion-to-kzalloc
-+++ a/drivers/scsi/dpt_i2o.c
-@@ -949,16 +949,14 @@ static int adpt_install_hba(struct pci_d
- 	}
- 	
- 	// Allocate and zero the data structure
--	pHba = kmalloc(sizeof(adpt_hba), GFP_KERNEL);
--	if( pHba == NULL) {
--		if(msg_addr_virt != base_addr_virt){
-+	pHba = kzalloc(sizeof(adpt_hba), GFP_KERNEL);
-+	if (!pHba) {
-+		if (msg_addr_virt != base_addr_virt)
- 			iounmap(msg_addr_virt);
--		}
- 		iounmap(base_addr_virt);
- 		pci_release_regions(pDev);
+diff -puN drivers/message/fusion/mptctl.c~drivers-message-fusion-mptctlc-mostly-kmalloc-memset-conversion-to-kzalloc drivers/message/fusion/mptctl.c
+--- a/drivers/message/fusion/mptctl.c~drivers-message-fusion-mptctlc-mostly-kmalloc-memset-conversion-to-kzalloc
++++ a/drivers/message/fusion/mptctl.c
+@@ -970,10 +970,9 @@ kbuf_alloc_2_sgl(int bytes, u32 sgdir, i
+ 	 * structures for the SG elements.
+ 	 */
+ 	i = MAX_SGL_BYTES / 8;
+-	buflist = kmalloc(i, GFP_USER);
+-	if (buflist == NULL)
++	buflist = kzalloc(i, GFP_USER);
++	if (!buflist)
+ 		return NULL;
+-	memset(buflist, 0, i);
+ 	buflist_ent = 0;
+ 
+ 	/* Allocate a single block of memory to store the sg elements and
+@@ -1372,13 +1371,12 @@ mptctl_gettargetinfo (unsigned long arg)
+ 	 *      15- 8: Bus Number
+ 	 *       7- 0: Target ID
+ 	 */
+-	pmem = kmalloc(numBytes, GFP_KERNEL);
+-	if (pmem == NULL) {
++	pmem = kzalloc(numBytes, GFP_KERNEL);
++	if (!pmem) {
+ 		printk(KERN_ERR "%s::mptctl_gettargetinfo() @%d - no memory available!\n",
+ 				__FILE__, __LINE__);
  		return -ENOMEM;
  	}
--	memset(pHba, 0, sizeof(adpt_hba));
+-	memset(pmem, 0, numBytes);
+ 	pdata =  (int *) pmem;
  
- 	mutex_lock(&adpt_configuration_lock);
+ 	/* Get number of devices
+@@ -1563,12 +1561,11 @@ mptctl_eventenable (unsigned long arg)
+ 		/* Have not yet allocated memory - do so now.
+ 		 */
+ 		int sz = MPTCTL_EVENT_LOG_SIZE * sizeof(MPT_IOCTL_EVENTS);
+-		ioc->events = kmalloc(sz, GFP_KERNEL);
+-		if (ioc->events == NULL) {
++		ioc->events = kzalloc(sz, GFP_KERNEL);
++		if (!ioc->events) {
+ 			printk(KERN_ERR MYNAM ": ERROR - Insufficient memory to add adapter!\n");
+ 			return -ENOMEM;
+ 		}
+-		memset(ioc->events, 0, sz);
+ 		ioc->alloc_total += sz;
  
-@@ -2622,14 +2620,13 @@ static s32 adpt_i2o_init_outbound_q(adpt
+ 		ioc->eventContext = 0;
+@@ -2853,31 +2850,22 @@ static long compat_mpctl_ioctl(struct fi
+ static int
+ mptctl_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
+-	int err;
+-	int sz;
+-	u8 *mem;
++	MPT_IOCTL *mem;
+ 	MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
  
- 	msg=(u32 __iomem *)(pHba->msg_addr_virt+m);
- 
--	status = kmalloc(4,GFP_KERNEL|ADDR32);
--	if (status==NULL) {
-+	status = kzalloc(4, GFP_KERNEL|ADDR32);
-+	if (!status) {
- 		adpt_send_nop(pHba, m);
- 		printk(KERN_WARNING"%s: IOP reset failed - no free memory.\n",
- 			pHba->name);
- 		return -ENOMEM;
- 	}
--	memset(status, 0, 4);
- 
- 	writel(EIGHT_WORD_MSG_SIZE| SGL_OFFSET_6, &msg[0]);
- 	writel(I2O_CMD_OUTBOUND_INIT<<24 | HOST_TID<<12 | ADAPTER_TID, &msg[1]);
-@@ -2668,12 +2665,11 @@ static s32 adpt_i2o_init_outbound_q(adpt
- 
- 	kfree(pHba->reply_pool);
- 
--	pHba->reply_pool = kmalloc(pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4, GFP_KERNEL|ADDR32);
--	if(!pHba->reply_pool){
--		printk(KERN_ERR"%s: Could not allocate reply pool\n",pHba->name);
--		return -1;
-+	pHba->reply_pool = kzalloc(pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4, GFP_KERNEL|ADDR32);
-+	if (!pHba->reply_pool) {
-+		printk(KERN_ERR "%s: Could not allocate reply pool\n", pHba->name);
+ 	/*
+ 	 * Allocate and inite a MPT_IOCTL structure
+ 	*/
+-	sz = sizeof (MPT_IOCTL);
+-	mem = kmalloc(sz, GFP_KERNEL);
+-	if (mem == NULL) {
+-		err = -ENOMEM;
+-		goto out_fail;
++	mem = kzalloc(sizeof(MPT_IOCTL), GFP_KERNEL);
++	if (!mem) {
++		mptctl_remove(pdev);
 +		return -ENOMEM;
  	}
--	memset(pHba->reply_pool, 0 , pHba->reply_fifo_size * REPLY_FRAME_SIZE * 4);
  
- 	ptr = pHba->reply_pool;
- 	for(i = 0; i < pHba->reply_fifo_size; i++) {
-@@ -2884,12 +2880,11 @@ static int adpt_i2o_build_sys_table(void
+-	memset(mem, 0, sz);
+-	ioc->ioctl = (MPT_IOCTL *) mem;
++	ioc->ioctl = mem;
+ 	ioc->ioctl->ioc = ioc;
+ 	mutex_init(&ioc->ioctl->ioctl_mutex);
+ 	return 0;
+-
+-out_fail:
+-
+-	mptctl_remove(pdev);
+-	return err;
+ }
  
- 	kfree(sys_tbl);
- 
--	sys_tbl = kmalloc(sys_tbl_len, GFP_KERNEL|ADDR32);
--	if(!sys_tbl) {
-+	sys_tbl = kzalloc(sys_tbl_len, GFP_KERNEL|ADDR32);
-+	if (!sys_tbl) {
- 		printk(KERN_WARNING "SysTab Set failed. Out of memory.\n");	
- 		return -ENOMEM;
- 	}
--	memset(sys_tbl, 0, sys_tbl_len);
- 
- 	sys_tbl->num_entries = hba_count;
- 	sys_tbl->version = I2OVERSION;
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
 _
