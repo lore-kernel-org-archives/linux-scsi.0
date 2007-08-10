@@ -1,77 +1,84 @@
-From: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-Subject: [PATCH][Take2] PCI legacy I/O port free driver - Making Emulex lpfc
- driver legacy I/O port free
-Date: Fri, 10 Aug 2007 18:10:07 +0900
-Message-ID: <46BC2B6F.9060508@jp.fujitsu.com>
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Re: Partition information lost on reboot.
+Date: Fri, 10 Aug 2007 14:30:36 +0200
+Message-ID: <6bffcb0e0708100530u6087a963re61dddd8f48eb630@mail.gmail.com>
+References: <2e1f41c80708100517y736b8cd7xaebed333a0748a3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fgwmail5.fujitsu.co.jp ([192.51.44.35]:52509 "EHLO
-	fgwmail5.fujitsu.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757386AbXHJJJz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Aug 2007 05:09:55 -0400
+Received: from rv-out-0910.google.com ([209.85.198.186]:65089 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755182AbXHJMah (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Aug 2007 08:30:37 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so669333rvb
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Aug 2007 05:30:36 -0700 (PDT)
+In-Reply-To: <2e1f41c80708100517y736b8cd7xaebed333a0748a3@mail.gmail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@emulex.com, gregkh@suse.de
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Jegadeesh <kovaiteam@gmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, aacraid@adaptec.com
 
-Hi
+[Adding linux-scsi and Adaptec support to CC]
 
-This patch makes Emulex lpfc driver legacy I/O port free.
-It has already been acked quite long time ago.
-So I resubmit the patch.
-http://lkml.org/lkml/2006/11/22/28
+On 10/08/07, Jegadeesh <kovaiteam@gmail.com> wrote:
+> Hi,
+>
+> I have a scsi disk on Adaptec ASC-29320 U320. I have created a linux
+> partition and ext3 filesystem over it.
+> Now the problem is, whenever the machine is rebooted, the partition
+> information to the OS is lost and I get an error saying it as a not valid
+> block device.
+> But fdisk tool shows the partitions, but "cat /proc/partitions" doesnt have
+> this. I need to do a "partprobe" and then have to mount it explicitly.
+>
+> What could be causing this problem. Given below are some of the command
+> outputs.
+>
+> # uname -a
+> Linux pr.vionline.net 2.6.18-1.2798.fc6 #1 SMP Mon Oct 16 14:37:32 EDT 2006
+> i686 i686 i386 GNU/Linux
+>
+> # mount /dev/sda1 /disk1
+> mount: /dev/sda1 is not a valid block device
+>
+> # fdisk -l /dev/sda
+>
+> Disk /dev/sda: 73.4 GB, 73407900160 bytes
+> 255 heads, 63 sectors/track, 8924 cylinders
+> Units = cylinders of 16065 * 512 = 8225280 bytes
+>
+> Device Boot Start End Blocks Id System
+> /dev/sda1 1 7417 59577021 83 Linux
+> /dev/sda2 7418 8924 12104977+ 83 Linux
+>
+> # cat /proc/partitions
+> major minor #blocks name
+>
+> 3 0 60051600 hda
+> 3 1 409626 hda1
+> 3 2 10482412 hda2
+> 3 3 10482412 hda3
+> 3 4 1 hda4
+> 3 5 10482381 hda5
+> 3 6 2096451 hda6
+> 3 7 2096451 hda7
+> 3 8 2096451 hda8
+> 8 0 71687402 sda
+>
+> Thanks
+> -Jag
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
+>
 
-Current lpfc driver is already using pci_select_bars()
-and pci_enable_device_bars() when the PCI bus has been reset.
-So I think this patch should also be acked.
+Regards,
+Michal
 
-Tomohiro Kusumi
-
-Signed-off-by: Tomohiro Kusumi <kusumi.tomohiro@jp.fujitsu.com>
-
----
-diff -Nurp linux-2.6.22.org/drivers/scsi/lpfc/lpfc_init.c linux-2.6.22/drivers/scsi/lpfc/lpfc_init.c
---- linux-2.6.22.org/drivers/scsi/lpfc/lpfc_init.c	2007-07-09 08:32:17.000000000 +0900
-+++ linux-2.6.22/drivers/scsi/lpfc/lpfc_init.c	2007-08-10 17:11:55.000000000 +0900
-@@ -1356,6 +1356,7 @@ lpfc_scsi_free(struct lpfc_hba * phba)
- void lpfc_remove_device(struct lpfc_hba *phba)
- {
- 	unsigned long iflag;
-+	int bars = pci_select_bars(phba->pcidev, IORESOURCE_MEM);
-
- 	lpfc_free_sysfs_attr(phba);
-
-@@ -1400,7 +1401,7 @@ void lpfc_remove_device(struct lpfc_hba
- 	iounmap(phba->ctrl_regs_memmap_p);
- 	iounmap(phba->slim_memmap_p);
-
--	pci_release_regions(phba->pcidev);
-+	pci_release_selected_regions(phba->pcidev, bars);
- 	pci_disable_device(phba->pcidev);
-
- 	idr_remove(&lpfc_hba_index, phba->brd_no);
-@@ -1515,10 +1516,11 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
- 	int error = -ENODEV, retval;
- 	int i;
- 	uint16_t iotag;
-+	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
-
--	if (pci_enable_device(pdev))
-+	if (pci_enable_device_bars(pdev, bars))
- 		goto out;
--	if (pci_request_regions(pdev, LPFC_DRIVER_NAME))
-+	if (pci_request_selected_regions(pdev, bars, LPFC_DRIVER_NAME))
- 		goto out_disable_device;
-
- 	host = scsi_host_alloc(&lpfc_template, sizeof (struct lpfc_hba));
-@@ -1748,7 +1750,7 @@ out_put_host:
- 	phba->host = NULL;
- 	scsi_host_put(host);
- out_release_regions:
--	pci_release_regions(pdev);
-+	pci_release_selected_regions(pdev, bars);
- out_disable_device:
- 	pci_disable_device(pdev);
-
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
