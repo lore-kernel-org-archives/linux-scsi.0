@@ -1,64 +1,45 @@
 From: akpm@linux-foundation.org
-Subject: [patch 30/30] message/fusion: remove redundant memset
-Date: Fri, 10 Aug 2007 14:50:53 -0700
-Message-ID: <200708102150.l7ALorA8011410@imap1.linux-foundation.org>
+Subject: [patch 22/30] drivers/scsi/lpfc/lpfc_init.c: kmalloc + memset conversion to kcalloc
+Date: Fri, 10 Aug 2007 14:50:47 -0700
+Message-ID: <200708102150.l7ALomZa011384@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:46119 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60620 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760705AbXHJWBo (ORCPT
+	by vger.kernel.org with ESMTP id S1757055AbXHJWBX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Aug 2007 18:01:44 -0400
+	Fri, 10 Aug 2007 18:01:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl, James.Smart@Emulex.Com
 
 From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-alloc_fcdev() calls alloc_netdev() which uses kzalloc to alloc all the
-memory together with dev->priv region hence no zeroing of structs inside
-struct mpt_lan_priv needed.
+ drivers/scsi/lpfc/lpfc_init.c | 65932 -> 65881 (-51 bytes)
+ drivers/scsi/lpfc/lpfc_init.o | 219760 -> 219616 (-144 bytes)
 
 Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Acked-by: James Smart <James.Smart@Emulex.Com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptlan.c |    8 +++-----
- 1 files changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
 
-diff -puN drivers/message/fusion/mptlan.c~message-fusion-remove-redundant-memset drivers/message/fusion/mptlan.c
---- a/drivers/message/fusion/mptlan.c~message-fusion-remove-redundant-memset
-+++ a/drivers/message/fusion/mptlan.c
-@@ -1351,10 +1351,11 @@ mpt_lan_post_receive_buckets_work(struct
- static struct net_device *
- mpt_register_lan_device (MPT_ADAPTER *mpt_dev, int pnum)
- {
--	struct net_device *dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
--	struct mpt_lan_priv *priv = NULL;
-+	struct net_device *dev;
-+	struct mpt_lan_priv *priv;
- 	u8 HWaddr[FC_ALEN], *a;
+diff -puN drivers/scsi/lpfc/lpfc_init.c~drivers-scsi-lpfc-lpfc_initc-kmalloc-memset-conversion-to-kcalloc drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c~drivers-scsi-lpfc-lpfc_initc-kmalloc-memset-conversion-to-kcalloc
++++ a/drivers/scsi/lpfc/lpfc_init.c
+@@ -1265,11 +1265,10 @@ lpfc_hba_init(struct lpfc_hba *phba, uin
+ 	uint32_t *HashWorking;
+ 	uint32_t *pwwnn = (uint32_t *) phba->wwnn;
  
-+	dev = alloc_fcdev(sizeof(struct mpt_lan_priv));
- 	if (!dev)
- 		return NULL;
+-	HashWorking = kmalloc(80 * sizeof(uint32_t), GFP_KERNEL);
++	HashWorking = kcalloc(80, sizeof(uint32_t), GFP_KERNEL);
+ 	if (!HashWorking)
+ 		return;
  
-@@ -1366,7 +1367,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
- 	priv->mpt_dev = mpt_dev;
- 	priv->pnum = pnum;
- 
--	memset(&priv->post_buckets_task, 0, sizeof(priv->post_buckets_task));
- 	INIT_DELAYED_WORK(&priv->post_buckets_task,
- 			  mpt_lan_post_receive_buckets_work);
- 	priv->post_buckets_active = 0;
-@@ -1391,8 +1391,6 @@ mpt_register_lan_device (MPT_ADAPTER *mp
- 	spin_lock_init(&priv->txfidx_lock);
- 	spin_lock_init(&priv->rxfidx_lock);
- 
--	memset(&priv->stats, 0, sizeof(priv->stats));
--
- 	/*  Grab pre-fetched LANPage1 stuff. :-) */
- 	a = (u8 *) &mpt_dev->lan_cnfg_page1.HardwareAddressLow;
+-	memset(HashWorking, 0, (80 * sizeof(uint32_t)));
+ 	HashWorking[0] = HashWorking[78] = *pwwnn++;
+ 	HashWorking[1] = HashWorking[79] = *pwwnn;
  
 _
