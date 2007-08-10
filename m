@@ -1,60 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/30] Fix drivers/scsi/fdomain.c CONFIG_PCI=n warnings
-Date: Fri, 10 Aug 2007 14:50:40 -0700
-Message-ID: <200708102150.l7ALoe6g011351@imap1.linux-foundation.org>
+Subject: [patch 23/30] drivers/scsi/lpfc/lpfc_scsi.c: kmalloc + memset conversion to kzalloc
+Date: Fri, 10 Aug 2007 14:50:48 -0700
+Message-ID: <200708102150.l7ALomF6011387@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:33844 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:57098 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752418AbXHJV71 (ORCPT
+	by vger.kernel.org with ESMTP id S1756891AbXHJWBW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 10 Aug 2007 17:59:27 -0400
+	Fri, 10 Aug 2007 18:01:22 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, nix.or.die@googlemail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, m.kozlowski@tuxland.pl, James.Smart@Emulex.Com
 
-From: Gabriel C <nix.or.die@googlemail.com>
+From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
 
-I get this warnings on current git when CONFIG_PCI is not set :
+ drivers/scsi/lpfc/lpfc_scsi.c | 42769 -> 42721 (-48 bytes)
+ drivers/scsi/lpfc/lpfc_scsi.o | 191332 -> 191240 (-92 bytes)
 
-drivers/scsi/fdomain.c:390: warning: 'PCI_dev' defined but not used
-drivers/scsi/fdomain.c:1768: warning: 'fdomain_pci_tbl' defined but not used
-
-Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
+Signed-off-by: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+Acked-by: James Smart <James.Smart@Emulex.Com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/fdomain.c |    5 ++++-
- 1 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_scsi.c |    3 +--
+ 1 files changed, 1 insertion(+), 2 deletions(-)
 
-diff -puN drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings drivers/scsi/fdomain.c
---- a/drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings
-+++ a/drivers/scsi/fdomain.c
-@@ -387,7 +387,9 @@ static void __iomem *    bios_mem;
- static int               bios_major;
- static int               bios_minor;
- static int               PCI_bus;
-+#ifdef CONFIG_PCI
- static struct pci_dev	*PCI_dev;
-+#endif
- static int               Quantum;	/* Quantum board variant */
- static int               interrupt_level;
- static volatile int      in_command;
-@@ -1764,6 +1766,7 @@ struct scsi_host_template fdomain_driver
- };
+diff -puN drivers/scsi/lpfc/lpfc_scsi.c~drivers-scsi-lpfc-lpfc_scsic-kmalloc-memset-conversion-to-kzalloc drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c~drivers-scsi-lpfc-lpfc_scsic-kmalloc-memset-conversion-to-kzalloc
++++ a/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -202,10 +202,9 @@ lpfc_new_scsi_buf(struct lpfc_vport *vpo
+ 	dma_addr_t pdma_phys;
+ 	uint16_t iotag;
  
- #ifndef PCMCIA
-+#ifdef CONFIG_PCI
+-	psb = kmalloc(sizeof(struct lpfc_scsi_buf), GFP_KERNEL);
++	psb = kzalloc(sizeof(struct lpfc_scsi_buf), GFP_KERNEL);
+ 	if (!psb)
+ 		return NULL;
+-	memset(psb, 0, sizeof (struct lpfc_scsi_buf));
  
- static struct pci_device_id fdomain_pci_tbl[] __devinitdata = {
- 	{ PCI_VENDOR_ID_FD, PCI_DEVICE_ID_FD_36C70,
-@@ -1771,7 +1774,7 @@ static struct pci_device_id fdomain_pci_
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, fdomain_pci_tbl);
--
-+#endif
- #define driver_template fdomain_driver_template
- #include "scsi_module.c"
- 
+ 	/*
+ 	 * Get memory from the pci pool to map the virt space to pci bus space
 _
