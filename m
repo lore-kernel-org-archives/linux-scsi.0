@@ -1,47 +1,36 @@
-From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [patch 10/30] megaraid: add CERC_ATA100 support
-Date: Fri, 10 Aug 2007 17:58:34 -0600
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229BF18DD@NAMAIL2.ad.lsil.com>
-References: <20070810153600.7cd204b0.akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 20/30] drivers/scsi/gdth.c: kmalloc + memset conversion
+	to kzalloc
+Date: Fri, 10 Aug 2007 21:00:55 -0400
+Message-ID: <1186794055.6334.16.camel@localhost.localdomain>
+References: <200708102150.l7ALokrZ011378@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:43394 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754640AbXHJX6w convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Aug 2007 19:58:52 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20070810153600.7cd204b0.akpm@linux-foundation.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:45224 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756226AbXHKBA6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Aug 2007 21:00:58 -0400
+In-Reply-To: <200708102150.l7ALokrZ011378@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, tkrah@fachschaft.imn.htwk-leipzig.de, protasnb@gmail.com, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, m.kozlowski@tuxland.pl
 
- 
+On Fri, 2007-08-10 at 14:50 -0700, akpm@linux-foundation.org wrote:
+> From: Mariusz Kozlowski <m.kozlowski@tuxland.pl>
+> 
+>  drivers/scsi/gdth.c | 189401 -> 189342 (-59 bytes)
+>  drivers/scsi/gdth.o | 331028 -> 330324 (-704 bytes)
 
-> -----Original Message-----
-> From: Andrew Morton [mailto:akpm@linux-foundation.org] 
-> Sent: Friday, August 10, 2007 3:36 PM
-> To: Patro, Sumant
-> Cc: James.Bottomley@steeleye.com; linux-scsi@vger.kernel.org; 
-> tkrah@fachschaft.imn.htwk-leipzig.de; protasnb@gmail.com; 
-> Kolli, Neela; Yang, Bo
-> Subject: Re: [patch 10/30] megaraid: add CERC_ATA100 support
-> 
-> On Fri, 10 Aug 2007 16:20:54 -0600
-> "Patro, Sumant" <Sumant.Patro@lsi.com> wrote:
-> 
-> > ID being added is already supported in megaraid_mbox driver.
-> 
-> umm, why should that cause us to avoid supporting it in the 
-> old driver?
-> 
+For the second time of asking, could I just have a single patch doing
+this globally for the entirety of SCSI with reasonable assurance of
+mechanical checking.
 
-With overlapping ids it will be indeterminate which one (megaraid
-legacy/mbox) claims the device.
-All overlapping IDS were removed from megaraid legacy/megaraid_mbox
-driver about 2 years back.  
+There's no real need to collect maintainer acks for something as trivial
+as this.
 
---Sumant
+James
+
+
