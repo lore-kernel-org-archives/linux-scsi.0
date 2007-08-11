@@ -1,83 +1,74 @@
-From: Adrian Bunk <bunk@stusta.de>
-Subject: Re: [patch 13/30] nsp32_restart_autoscsi(): remove error check
-Date: Sat, 11 Aug 2007 04:25:39 +0200
-Message-ID: <20070811022539.GD22213@stusta.de>
-References: <200708102150.l7ALoeZw011354@imap1.linux-foundation.org> <1186794232.6334.21.camel@localhost.localdomain>
+From: David Woodhouse <dwmw2@infradead.org>
+Subject: Re: [PATCH] do not export /usr/include/scsi in make headers_install
+Date: Sat, 11 Aug 2007 14:42:50 +0800
+Message-ID: <1186814570.3169.4.camel@shinybook.infradead.org>
+References: <20070806124546.GA2117@suse.de>
+	 <20070806125212.GB12896@infradead.org>  <20070806130210.GA2239@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:57625 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757296AbXHKCZw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Aug 2007 22:25:52 -0400
-Content-Disposition: inline
-In-Reply-To: <1186794232.6334.21.camel@localhost.localdomain>
+Received: from canuck.infradead.org ([209.217.80.40]:58519 "EHLO
+	canuck.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752330AbXHKGnH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 11 Aug 2007 02:43:07 -0400
+In-Reply-To: <20070806130210.GA2239@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, yokota@netlab.is.tsukuba.ac.jp
+To: Olaf Hering <olh@suse.de>
+Cc: Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Aug 10, 2007 at 09:03:52PM -0400, James Bottomley wrote:
-> On Fri, 2007-08-10 at 14:50 -0700, akpm@linux-foundation.org wrote:
-> > From: Adrian Bunk <bunk@stusta.de>
-> > 
-> > The Coverity checker noted that we'll anyway Oops later when we ran into
-> > this condition - and the error check didn't prevent that.
-> > 
-> > Considering that the error condition shouldn't be possible, and we are
-> > not able to handle it easily, this patch simply removes the pointless
-> > error check.
-> > 
-> > Signed-off-by: Adrian Bunk <bunk@stusta.de>
-> > Cc: <yokota@netlab.is.tsukuba.ac.jp>
-> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-> > ---
-> > 
-> >  drivers/scsi/nsp32.c |    4 ----
-> >  1 files changed, 4 deletions(-)
-> > 
-> > diff -puN drivers/scsi/nsp32.c~nsp32_restart_autoscsi-remove-error-check drivers/scsi/nsp32.c
-> > --- a/drivers/scsi/nsp32.c~nsp32_restart_autoscsi-remove-error-check
-> > +++ a/drivers/scsi/nsp32.c
-> > @@ -1905,10 +1905,6 @@ static void nsp32_restart_autoscsi(struc
-> >  
-> >  	nsp32_dbg(NSP32_DEBUG_RESTART, "enter");
-> >  
-> > -	if (data->cur_target == NULL || data->cur_lunt == NULL) {
-> > -		nsp32_msg(KERN_ERR, "Target or Lun is invalid");
-> > -	}
-> > -
+On Mon, 2007-08-06 at 15:02 +0200, Olaf Hering wrote:
+> On Mon, Aug 06, Christoph Hellwig wrote:
 > 
-> I disagree pretty strongly with this ... you're not removing an error
-> check, you're removing a warning printk.  Before the driver would say
-> what the problem is and oops.  After, it will oops and you won't
-> necessarily know why.  I think that's a retrograde step.
+> > On Mon, Aug 06, 2007 at 02:45:46PM +0200, Olaf Hering wrote:
+> > > 
+> > > glibc and make headers_install_all provide /usr/include/scsi
+> > > One of them has to go.
+> > > 
+> > > A quick diff shows no differences, expect:
+> > 
+> > ..
+> > 
+> > > Which copy should be provided by a distributor?
+> > 
+> > The glibc one of course.  The kernel scsi.h should never have been
+> > added to the list of exportable headers.  
+> 
+> /usr/include/scsi is provided by glibc.
+> Remove the scsi export from make headers_install target.
+> 
+> 
+> Signed-off-by: Olaf Hering <olh@suse.de>
 
-"Target or Lun is invalid" isn't a precise problem description either.
+Acked-by: David Woodhouse <dwmw2@infradead.org>
 
-But the main point is:
-
-An Oops indicates a programming error in the kernel (or kernel 
-corruption), and for this purpose an Oops is a good error message.
-
-We can't put printk()'s in front of all pointer dereferences in the 
-kernel.
-
-Is there any legal way how any of these could be NULL at this point?
-My impression was there isn't.
-But if there is we don't need only a printk(), we'd need an error 
-handling that returns from the function without Oops'ing plus an error 
-handling in the caller.
-
-> James
-
-cu
-Adrian
-
+> ---
+>  include/Kbuild      |    1 -
+>  include/scsi/Kbuild |    4 ----
+>  2 files changed, 5 deletions(-)
+> 
+> --- a/include/Kbuild
+> +++ b/include/Kbuild
+> @@ -1,6 +1,5 @@
+>  header-y += asm-generic/
+>  header-y += linux/
+> -header-y += scsi/
+>  header-y += sound/
+>  header-y += mtd/
+>  header-y += rdma/
+> --- a/include/scsi/Kbuild
+> +++ /dev/null
+> @@ -1,4 +0,0 @@
+> -header-y += scsi.h
+> -
+> -unifdef-y += scsi_ioctl.h
+> -unifdef-y += sg.h
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-kernel" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Please read the FAQ at  http://www.tux.org/lkml/
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+dwmw2
 
