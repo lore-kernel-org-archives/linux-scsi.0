@@ -1,36 +1,31 @@
-From: Gabriel C <nix.or.die@googlemail.com>
-Subject: Re: 2.6.23-rc2-mm2
-Date: Sun, 12 Aug 2007 17:21:23 +0200
-Message-ID: <46BF2573.20807@googlemail.com>
-References: <20070809224254.11f42716.akpm@linux-foundation.org>	<46BC3CB1.2090503@googlemail.com>	<46BC5B75.80102@googlemail.com> <20070810093817.a9bec74f.akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH] microtek: convert to use the data buffer accessors
+Date: Sun, 12 Aug 2007 10:26:35 -0500
+Message-ID: <1186932395.3400.4.camel@localhost.localdomain>
+References: <20070811072657A.tomof@acm.org>
+	 <E472128B1EB43941B4E7FB268020C89B0250BA18@riverside.int.panasas.com>
+	 <20070811153044Z.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.186]:48552 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752766AbXHLPXl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Aug 2007 11:23:41 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1867172mue
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Aug 2007 08:23:40 -0700 (PDT)
-In-Reply-To: <20070810093817.a9bec74f.akpm@linux-foundation.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:38864 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S935359AbXHLP0h (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Aug 2007 11:26:37 -0400
+In-Reply-To: <20070811153044Z.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: bharrosh@panasas.com, linux-scsi@vger.kernel.org, greg@kroah.com, fujita.tomonori@lab.ntt.co.jp
 
-Andrew Morton wrote:
-> On Fri, 10 Aug 2007 14:35:01 +0200 Gabriel C <nix.or.die@googlemail.com> wrote:
-> 
->> In file included from include/linux/blkdev.h:17,
->>                  from kernel/sched.c:45:
->> include/linux/bsg.h:67: warning: 'struct request_queue' declared inside parameter list
->> include/linux/bsg.h:67: warning: its scope is only this definition or declaration, which is probably not what you want
->> include/linux/bsg.h:71: warning: 'struct request_queue' declared inside parameter list
-> 
-> Thanks, I'll fix that up.
-> 
+On Mon, 2007-08-13 at 00:12 +0900, FUJITA Tomonori wrote:
+> Oops, I didn't realized that. Isn't the patch in scsi-misc,
+> scsi-pending, or scsi-fixes?
 
-I just realized this problem exists in mainline too , introduced by this commit :
+No ... I forgot ... after Greg told me to take it through my tree ...
+I'll add it.
 
-http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=a4ee0df8b3d007f0d685d38a56dc0b91e01aaaf7;hp=2cd614c8732172524c36cd5245620338928062b6
+James
+
+
