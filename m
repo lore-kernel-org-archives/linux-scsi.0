@@ -1,65 +1,50 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] [21/2many] MAINTAINERS - AACRAID SCSI RAID DRIVER
-Date: Mon, 13 Aug 2007 10:16:22 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01D12AA7@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01D12A93@otce2k301.adaptec.com>
+From: "Jesper Juhl" <jesper.juhl@gmail.com>
+Subject: Re: [PATCH 4/6][RESEND] Emulex FC HBA driver: fix overflow of statically allocated array
+Date: Mon, 13 Aug 2007 17:01:05 +0200
+Message-ID: <9a8748490708130801o682d1be4je076bcd7a0682def@mail.gmail.com>
+References: <200708130016.11281.jesper.juhl@gmail.com>
+	 <200708130021.07068.jesper.juhl@gmail.com>
+	 <46C038E3.5090204@emulex.com>
+	 <9a8748490708130415j790d6e49y6ae12ca8dad780f2@mail.gmail.com>
+	 <46C0584E.5060906@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:43254 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S946616AbXHMOQZ convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 10:16:25 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01D12A93@otce2k301.adaptec.com>
+Received: from wr-out-0506.google.com ([64.233.184.226]:24793 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S944685AbXHMPBH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 11:01:07 -0400
+Received: by wr-out-0506.google.com with SMTP id 36so183484wra
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Aug 2007 08:01:06 -0700 (PDT)
+In-Reply-To: <46C0584E.5060906@emulex.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: joe@perches.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: James.Smart@emulex.com
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-Second thoughts ... Add the documentation file as well.
+On 13/08/07, James Smart <James.Smart@emulex.com> wrote:
+> Ok.... here's what happened,
+>
+> - We changed the define so that it matched what we are using. We never configure
+>    more than 4 HBQ, thus the index will never be beyond 0-3. The if-check is actually
+>    innoculous. Given that the change wasn't your patch, we didn't include you as
+>    the author.
+>
+And that's not a problem. I only mentioned it to explain how I
+searched for the patch before I resend it.
 
- F:	drivers/scsi/aacraid/
-+F:	Documentation/scsi/aacraid.txt
+> - Coding-wise, you are right, we still didn't fix the range check.
+>
+> Since this really is just something to keep the tools happy - I'll recind the NACK.
+> I'll worry about simply removing this if-check later...
+>
+> James/Andrew, accept this patch - ACK.
+>
 
-Sincerely -- Mark Salyzyn
 
-> -----Original Message-----
-> From: Salyzyn, Mark 
-> Sent: Monday, August 13, 2007 9:34 AM
-> To: 'joe@perches.com'; 'torvalds@linux-foundation.org'; 
-> 'linux-scsi@vger.kernel.org'; 'linux-kernel@vger.kernel.org'; 
-> 'akpm@linux-foundation.org'; AACRAID
-> Subject: RE: [PATCH] [21/2many] MAINTAINERS - AACRAID SCSI RAID DRIVER
-> 
-> ACK
-> 
-> Sincerely -- Mark Salyzyn
-> 
-> > -----Original Message-----
-> > From: joe@perches.com [mailto:joe@perches.com] 
-> > Sent: Monday, August 13, 2007 2:22 AM
-> > To: torvalds@linux-foundation.org; 
-> > linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; 
-> > akpm@linux-foundation.org; AACRAID
-> > Subject: [PATCH] [21/2many] MAINTAINERS - AACRAID SCSI RAID DRIVER
-> > 
-> > Add file pattern to MAINTAINER entry
-> > 
-> > Signed-off-by: Joe Perches <joe@perches.com>
-> > 
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 7d58f6b..1162fb7 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -241,6 +241,7 @@ M:	aacraid@adaptec.com
-> >  L:	linux-scsi@vger.kernel.org
-> >  W:	http://www.adaptec.com/
-> >  S:	Supported
-> > +F:	drivers/scsi/aacraid/
-> >  
-> >  ACPI
-> >  P:	Len Brown
-> > 
-> 
+-- 
+Jesper Juhl <jesper.juhl@gmail.com>
+Don't top-post  http://www.catb.org/~esr/jargon/html/T/top-post.html
+Plain text mails only, please      http://www.expita.com/nomime.html
