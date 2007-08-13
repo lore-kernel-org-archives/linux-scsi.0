@@ -1,33 +1,34 @@
 From: joe@perches.com
-Subject: [PATCH] [205/2many] MAINTAINERS - GDT SCSI DISK ARRAY CONTROLLER
- DRIVER
-Date: Sun, 12 Aug 2007 23:28:10 -0700
-Message-ID: <46bff9fa.+PJkrw1WokE7d07h%joe@perches.com>
+Subject: [PATCH] [204/2many] MAINTAINERS - FUTURE DOMAIN TMC-16x0 SCSI
+ DRIVER (16-bit)
+Date: Sun, 12 Aug 2007 23:28:08 -0700
+Message-ID: <46bff9f8.oE6xI4+1tFLTvGRu%joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:4472 "EHLO perches.com"
+Received: from DSL022.labridge.com ([206.117.136.22]:4582 "EHLO perches.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966635AbXHMG2X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Aug 2007 02:28:23 -0400
+	id S966592AbXHMG3F (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Aug 2007 02:29:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, achim_leubner@adaptec.com
+To: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, faith@cs.unc.edu, akpm@linux-foundation.org
 
 Add file pattern to MAINTAINER entry
 
 Signed-off-by: Joe Perches <joe@perches.com>
 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 770b0d8..6597718 100644
+index 3bea26f..770b0d8 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -1961,6 +1961,7 @@ M:	achim_leubner@adaptec.com
+@@ -1952,6 +1952,8 @@ P:	Rik Faith
+ M:	faith@cs.unc.edu
  L:	linux-scsi@vger.kernel.org
- W:	http://www.icp-vortex.com/
- S:	Supported
-+F:	drivers/scsi/gdt*
+ S:	Odd fixes (e.g., new signatures)
++F:	drivers/scsi/fdomain.*
++F:	drivers/scsi/pcmcia/fdomain_stub.c
  
- GENERIC GPIO I2C DRIVER
- P:	Haavard Skinnemoen
+ GDT SCSI DISK ARRAY CONTROLLER DRIVER
+ P:	Achim Leubner
