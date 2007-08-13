@@ -1,36 +1,43 @@
-From: joe@perches.com
-Subject: [PATCH] [166/2many] MAINTAINERS - EATA-DMA SCSI DRIVER
-Date: Sun, 12 Aug 2007 23:26:42 -0700
-Message-ID: <46bff9a2.xVArxjKoYTQQ0aCA%joe@perches.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] [418/2many] MAINTAINERS - SCSI CDROM DRIVER
+Date: Mon, 13 Aug 2007 12:32:55 +0200
+Message-ID: <20070813103254.GO23758@kernel.dk>
+References: <46bffba3.92NZRByJnVYnqXQs%joe@perches.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from DSL022.labridge.com ([206.117.136.22]:2474 "EHLO perches.com"
+Received: from brick.kernel.dk ([87.55.233.238]:29823 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967451AbXHMGkG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Aug 2007 02:40:06 -0400
+	id S1760859AbXHMKc7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 13 Aug 2007 06:32:59 -0400
+Content-Disposition: inline
+In-Reply-To: <46bffba3.92NZRByJnVYnqXQs%joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-eata@i-connect.net, akpm@linux-foundation.org
+To: joe@perches.com
+Cc: torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 
-Add file pattern to MAINTAINER entry
+On Sun, Aug 12 2007, joe@perches.com wrote:
+> Add file pattern to MAINTAINER entry
+> 
+> Signed-off-by: Joe Perches <joe@perches.com>
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index c08c8af..d7a1c74 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -3981,6 +3981,7 @@ M:	axboe@kernel.dk
+>  L:	linux-scsi@vger.kernel.org
+>  W:	http://www.kernel.dk
+>  S:	Maintained
+> +F:	drivers/scsi/sr.*
 
-Signed-off-by: Joe Perches <joe@perches.com>
+Not correct, it should be sr*
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8c79559..a8b11ba 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1616,8 +1616,10 @@ F:	include/linux/dvb/
- 
- EATA-DMA SCSI DRIVER
- P:	Michael Neuffer
--L:	linux-eata@i-connect.net, linux-scsi@vger.kernel.org
-+L:	linux-eata@i-connect.net
-+L:	linux-scsi@vger.kernel.org
- S:	Maintained
-+F:	drivers/scsi/eata*
- 
- EATA ISA/EISA/PCI SCSI DRIVER
- P:	Dario Ballabio
+And could you please just put these patches online somewhere, posting
+hundreds of them individually (and non threaded!) is pretty much pain
+:-)
+
+-- 
+Jens Axboe
+
