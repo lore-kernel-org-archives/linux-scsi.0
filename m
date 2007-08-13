@@ -1,55 +1,70 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [GIT PATCH] scsi bug fixes for 2.6.23-rc2
-Date: Mon, 13 Aug 2007 14:42:26 +0200
-Message-ID: <20070813124225.GT23758@kernel.dk>
-References: <1186248703.3439.20.camel@localhost.localdomain> <alpine.LFD.0.999.0708061748240.5037@woody.linux-foundation.org> <1186458941.6637.44.camel@localhost.localdomain> <20070807001429.f8cb3b22.akpm@linux-foundation.org> <1186496712.3414.17.camel@localhost.localdomain> <46B88B91.4050703@garzik.org> <1186501124.3414.32.camel@localhost.localdomain> <20070807105144.0ba67d81.akpm@linux-foundation.org>
+From: vignesh babu <vignesh.babu@wipro.com>
+Subject: [kj] is_power_of_2 in scsi
+Date: Mon, 13 Aug 2007 18:25:29 +0530
+Message-ID: <1187009729.7273.9.camel@merlin.linuxcoe.com>
+Reply-To: vigneshbabu@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:1453 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S972272AbXHMMma (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 13 Aug 2007 08:42:30 -0400
-Content-Disposition: inline
-In-Reply-To: <20070807105144.0ba67d81.akpm@linux-foundation.org>
+Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:58603 "EHLO
+	wip-cdc-wd.wipro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S972353AbXHMM4E (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 08:56:04 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James.Bottomley@SteelEye.com, davem@davemloft.net, open-iscsi@googlegroups.com
+Cc: linux-scsi@vger.kernel.org, Kernel Janitors List <kernel-janitors@lists.osdl.org>
 
-On Tue, Aug 07 2007, Andrew Morton wrote:
-> On Tue, 07 Aug 2007 10:38:44 -0500 James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> 
-> > On Tue, 2007-08-07 at 11:11 -0400, Jeff Garzik wrote:
-> > > James Bottomley wrote:
-> > > > The initial bsg submit went via the block git tree ... which I believe
-> > > > you have in -mm.  We only started taking the updates via the scsi tree
-> > > 
-> > > Seven hours before you posted this, in 
-> > > <20070807001429.f8cb3b22.akpm@linux-foundation.org>, Andrew already 
-> > > noted it was not in -mm.
-> > > 
-> > > A trivial examination of the broken-out mm patches backs up the absence 
-> > >   of Jens' block tree, too.
-> > > 
-> > > So let's put this myth / bad assumption to rest, shall we?
-> > 
-> > Sorry ... I just assumed from the fact that it had been in the block git
-> > tree for six months that it was also in -mm.
-> 
-> bsg was never in the #for-akpm branch of git-block.  So I assume that
-> Jens had it in some other branch and for some reason never pulled it
-> across into #for-akpm.
+Replacing n & (n - 1) for power of 2 check by is_power_of_2(n)
 
-#for-akpm is usually only in very few -mm release anyway, so it's not
-like it would have made much difference. We/you/I need to improve that,
-certainly.
-
-Honestly, for bsg, it wasn't much of an issue. We had build problems
-when bsg was merged which was unfortunate but got fixed quickly. Having
-bsg in -mm would not have caused any testing of the driver in question
-outside of what it already received, given the nature of it.
+Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
+---
+diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+index 77b06a9..908f342 100644
+--- a/drivers/scsi/esp_scsi.c
++++ b/drivers/scsi/esp_scsi.c
+@@ -14,6 +14,7 @@
+ #include <linux/moduleparam.h>
+ #include <linux/init.h>
+ #include <linux/irqreturn.h>
++#include <linux/log2.h>
+ 
+ #include <asm/irq.h>
+ #include <asm/io.h>
+@@ -1126,7 +1127,7 @@ static int esp_reconnect(struct esp *esp)
+ 		if (!(bits & esp->scsi_id_mask))
+ 			goto do_reset;
+ 		bits &= ~esp->scsi_id_mask;
+-		if (!bits || (bits & (bits - 1)))
++		if (!is_power_of_2(bits))
+ 			goto do_reset;
+ 
+ 		target = ffs(bits) - 1;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 5606d1e..ffa6cc1 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -24,6 +24,7 @@
+ #include <linux/types.h>
+ #include <linux/kfifo.h>
+ #include <linux/delay.h>
++#include <linux/log2.h>
+ #include <asm/unaligned.h>
+ #include <net/tcp.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -1366,7 +1367,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
+ 		qdepth = ISCSI_DEF_CMD_PER_LUN;
+ 	}
+ 
+-	if (cmds_max < 2 || (cmds_max & (cmds_max - 1)) ||
++	if (!is_power_of_2(cmds_max) ||
+ 	    cmds_max >= ISCSI_MGMT_ITT_OFFSET) {
+ 		if (cmds_max != 0)
+ 			printk(KERN_ERR "iscsi: invalid can_queue of %d. "
 
 -- 
-Jens Axboe
+Vignesh Babu BM 
+_____________________________________________________________ 
+"Why is it that every time I'm with you, makes me believe in magic?"
 
