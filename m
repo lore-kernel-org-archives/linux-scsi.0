@@ -1,70 +1,49 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 4/6][RESEND] Emulex FC HBA driver: fix overflow of statically
- allocated array
-Date: Mon, 13 Aug 2007 09:10:38 -0400
-Message-ID: <46C0584E.5060906@emulex.com>
-References: <200708130016.11281.jesper.juhl@gmail.com>	 <200708130021.07068.jesper.juhl@gmail.com>	 <46C038E3.5090204@emulex.com> <9a8748490708130415j790d6e49y6ae12ca8dad780f2@mail.gmail.com>
-Reply-To: James.Smart@Emulex.Com
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] [21/2many] MAINTAINERS - AACRAID SCSI RAID DRIVER
+Date: Mon, 13 Aug 2007 09:33:51 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01D12A93@otce2k301.adaptec.com>
+References: <46bff88b.U/STkuzaGFGAV6x7%joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:59150 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1030820AbXHMNKy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 09:10:54 -0400
-In-Reply-To: <9a8748490708130415j790d6e49y6ae12ca8dad780f2@mail.gmail.com>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:42767 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S973133AbXHMNdx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 09:33:53 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <46bff88b.U/STkuzaGFGAV6x7%joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jesper Juhl <jesper.juhl@gmail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
+To: joe@perches.com, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, AACRAID <aacraid@adaptec.com>
 
-Ok.... here's what happened,
+ACK
 
-- We changed the define so that it matched what we are using. We never configure
-   more than 4 HBQ, thus the index will never be beyond 0-3. The if-check is actually
-   innoculous. Given that the change wasn't your patch, we didn't include you as
-   the author.
+Sincerely -- Mark Salyzyn
 
-- Coding-wise, you are right, we still didn't fix the range check.
-
-Since this really is just something to keep the tools happy - I'll recind the NACK.
-I'll worry about simply removing this if-check later...
-
-James/Andrew, accept this patch - ACK.
-
--- james s
-
-Jesper Juhl wrote:
-> On 13/08/07, James Smart <James.Smart@emulex.com> wrote:
->> NACK
->>
->> The fix is contained in our 8.2.2 sources recently posted and pushed by James
->> as part of his last scsi fixes.
->>
+> -----Original Message-----
+> From: joe@perches.com [mailto:joe@perches.com] 
+> Sent: Monday, August 13, 2007 2:22 AM
+> To: torvalds@linux-foundation.org; 
+> linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; 
+> akpm@linux-foundation.org; AACRAID
+> Subject: [PATCH] [21/2many] MAINTAINERS - AACRAID SCSI RAID DRIVER
 > 
-> I actually did look for it, but couldn't find any lpfc commits with me
-> listed as author, so I assumed it had not been merged.
-> I just looked again, at the source this time, up-to-date mainline git
-> tree, and I still see
+> Add file pattern to MAINTAINER entry
 > 
->         hbqno = tag >> 16;
->         if (hbqno > LPFC_MAX_HBQS)
->                 return NULL;
+> Signed-off-by: Joe Perches <joe@perches.com>
 > 
-> in drivers/scsi/lpfc/lpfc_sli.c
-> 
-> ???
-> 
-> 
->> -- james s
->>
->> Jesper Juhl wrote:
->>> (previously send on 09-Aug-2007 20:47)
->>>
->>> Hi,
->>>
->>> The Coverity checker noticed that we may overrun a statically allocated
->>> array in drivers/scsi/lpfc/lpfc_sli.c::lpfc_sli_hbqbuf_find().
-> ...
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index 7d58f6b..1162fb7 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -241,6 +241,7 @@ M:	aacraid@adaptec.com
+>  L:	linux-scsi@vger.kernel.org
+>  W:	http://www.adaptec.com/
+>  S:	Supported
+> +F:	drivers/scsi/aacraid/
+>  
+>  ACPI
+>  P:	Len Brown
 > 
