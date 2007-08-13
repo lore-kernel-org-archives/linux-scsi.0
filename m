@@ -1,70 +1,70 @@
-From: vignesh babu <vignesh.babu@wipro.com>
-Subject: [kj] is_power_of_2 in scsi
-Date: Mon, 13 Aug 2007 18:25:29 +0530
-Message-ID: <1187009729.7273.9.camel@merlin.linuxcoe.com>
-Reply-To: vigneshbabu@gmail.com
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 4/6][RESEND] Emulex FC HBA driver: fix overflow of statically
+ allocated array
+Date: Mon, 13 Aug 2007 09:10:38 -0400
+Message-ID: <46C0584E.5060906@emulex.com>
+References: <200708130016.11281.jesper.juhl@gmail.com>	 <200708130021.07068.jesper.juhl@gmail.com>	 <46C038E3.5090204@emulex.com> <9a8748490708130415j790d6e49y6ae12ca8dad780f2@mail.gmail.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wip-cdc-wd.wipro.com ([203.91.201.26]:58603 "EHLO
-	wip-cdc-wd.wipro.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S972353AbXHMM4E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 08:56:04 -0400
+Received: from emulex.emulex.com ([138.239.112.1]:59150 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030820AbXHMNKy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Aug 2007 09:10:54 -0400
+In-Reply-To: <9a8748490708130415j790d6e49y6ae12ca8dad780f2@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, davem@davemloft.net, open-iscsi@googlegroups.com
-Cc: linux-scsi@vger.kernel.org, Kernel Janitors List <kernel-janitors@lists.osdl.org>
+To: Jesper Juhl <jesper.juhl@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>
 
-Replacing n & (n - 1) for power of 2 check by is_power_of_2(n)
+Ok.... here's what happened,
 
-Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
----
-diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
-index 77b06a9..908f342 100644
---- a/drivers/scsi/esp_scsi.c
-+++ b/drivers/scsi/esp_scsi.c
-@@ -14,6 +14,7 @@
- #include <linux/moduleparam.h>
- #include <linux/init.h>
- #include <linux/irqreturn.h>
-+#include <linux/log2.h>
- 
- #include <asm/irq.h>
- #include <asm/io.h>
-@@ -1126,7 +1127,7 @@ static int esp_reconnect(struct esp *esp)
- 		if (!(bits & esp->scsi_id_mask))
- 			goto do_reset;
- 		bits &= ~esp->scsi_id_mask;
--		if (!bits || (bits & (bits - 1)))
-+		if (!is_power_of_2(bits))
- 			goto do_reset;
- 
- 		target = ffs(bits) - 1;
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 5606d1e..ffa6cc1 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -24,6 +24,7 @@
- #include <linux/types.h>
- #include <linux/kfifo.h>
- #include <linux/delay.h>
-+#include <linux/log2.h>
- #include <asm/unaligned.h>
- #include <net/tcp.h>
- #include <scsi/scsi_cmnd.h>
-@@ -1366,7 +1367,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
- 		qdepth = ISCSI_DEF_CMD_PER_LUN;
- 	}
- 
--	if (cmds_max < 2 || (cmds_max & (cmds_max - 1)) ||
-+	if (!is_power_of_2(cmds_max) ||
- 	    cmds_max >= ISCSI_MGMT_ITT_OFFSET) {
- 		if (cmds_max != 0)
- 			printk(KERN_ERR "iscsi: invalid can_queue of %d. "
+- We changed the define so that it matched what we are using. We never configure
+   more than 4 HBQ, thus the index will never be beyond 0-3. The if-check is actually
+   innoculous. Given that the change wasn't your patch, we didn't include you as
+   the author.
 
--- 
-Vignesh Babu BM 
-_____________________________________________________________ 
-"Why is it that every time I'm with you, makes me believe in magic?"
+- Coding-wise, you are right, we still didn't fix the range check.
 
+Since this really is just something to keep the tools happy - I'll recind the NACK.
+I'll worry about simply removing this if-check later...
+
+James/Andrew, accept this patch - ACK.
+
+-- james s
+
+Jesper Juhl wrote:
+> On 13/08/07, James Smart <James.Smart@emulex.com> wrote:
+>> NACK
+>>
+>> The fix is contained in our 8.2.2 sources recently posted and pushed by James
+>> as part of his last scsi fixes.
+>>
+> 
+> I actually did look for it, but couldn't find any lpfc commits with me
+> listed as author, so I assumed it had not been merged.
+> I just looked again, at the source this time, up-to-date mainline git
+> tree, and I still see
+> 
+>         hbqno = tag >> 16;
+>         if (hbqno > LPFC_MAX_HBQS)
+>                 return NULL;
+> 
+> in drivers/scsi/lpfc/lpfc_sli.c
+> 
+> ???
+> 
+> 
+>> -- james s
+>>
+>> Jesper Juhl wrote:
+>>> (previously send on 09-Aug-2007 20:47)
+>>>
+>>> Hi,
+>>>
+>>> The Coverity checker noticed that we may overrun a statically allocated
+>>> array in drivers/scsi/lpfc/lpfc_sli.c::lpfc_sli_hbqbuf_find().
+> ...
+> 
