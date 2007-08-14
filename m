@@ -1,45 +1,46 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: READ CAPACITY failed on ia64
-Date: Tue, 14 Aug 2007 06:08:08 -0600
-Message-ID: <20070814120808.GM16277@parisc-linux.org>
-References: <20070814115005.GA31094@bsd.hu>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: Linux 2.6.23-rc3
+Date: Tue, 14 Aug 2007 08:25:59 -0400
+Message-ID: <46C19F57.3070801@emulex.com>
+References: <alpine.LFD.0.999.0708122143240.30176@woody.linux-foundation.org> <46C1717E.3030908@linpro.no>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:40623 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760826AbXHNMIJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Aug 2007 08:08:09 -0400
-Content-Disposition: inline
-In-Reply-To: <20070814115005.GA31094@bsd.hu>
+Received: from emulex.emulex.com ([138.239.112.1]:57827 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758265AbXHNM0Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Aug 2007 08:26:16 -0400
+In-Reply-To: <46C1717E.3030908@linpro.no>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert Nagy <robert.nagy@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Tore Anderson <tore@linpro.no>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, James Smart <James.Smart@Emulex.Com>
 
-On Tue, Aug 14, 2007 at 01:50:05PM +0200, Robert Nagy wrote:
-> In this box I get the following error message:
+fyi....
 
-If you turn on CONFIG_SCSI_CONSTANTS, you'll get the error message
-decoded for you, but ...
+I've seen these before (and they haven't been specific to the LLDD).
 
-> sd 0:0:2:0: [sdb] READ CAPACITY failed
-> sd 0:0:2:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
-> sd 0:0:2:0: [sdb] Sense Key : 0x3 [current]
+The "-EEXIST" error, was an issue of rescan-while-deleting, and where
+refcounts held the old sdevs in place. They were ramant in 2.6.18/2.6.19.
+Supposedly, we had patches from Hannes Reinecke. to resolve it, but that
+was a while ago.  Additionally, the traps around the attribute containers
+are similar. There are still some cases of data structures being freed
+(and thus erroneously reused later) in the midlayer and transports
+even though the refcounts on child-structures haven't finished.
 
-        "Medium Error",     /* 3: Data error detected on the medium */
+If you believe these are related to the -rc3 lpfc mods, I recommend
+retesting on an -rc2 or 2.6.22 to see how similar they are.
 
-> sd 0:0:2:0: [sdb] ASC=0x31 ASCQ=0x0
+I'll pull in -rc3 and see if I can't see more on my end..
 
-        {0x3100, "Medium format corrupted"},
+-- james s
 
-> I am currently running 2.6.22 but I've also tried with serveral other
-> (and older) kernels and it still can't get the capacity of the disk.
-
-Looks like the disc is broken.  Given that a scsiformat doesn't fix it,
-it's probably irretrievable.
-
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Tore Anderson wrote:
+>   I gave it a spin, and got quite a few troubles that appears related to
+>  the lpfc driver.  I don't know if these problems happened due to the
+>  recent update as the latest kernel I ran before was 2.6.20 (where I
+>  never saw problems like these).  First I see that something failed when
+>  the volumes on the SAN (on a Sun StorageTek 6140 / Engenio 3994) is
+>  registered, causing two errors errors such as:
