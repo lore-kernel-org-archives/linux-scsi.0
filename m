@@ -1,39 +1,98 @@
-From: Tore Anderson <tore@linpro.no>
-Subject: Re: Linux 2.6.23-rc3
-Date: Tue, 14 Aug 2007 15:07:18 +0200
-Message-ID: <46C1A906.9050402@linpro.no>
-References: <alpine.LFD.0.999.0708122143240.30176@woody.linux-foundation.org> <46C1717E.3030908@linpro.no> <46C19F57.3070801@emulex.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: Problems with USB disk [solved]
+Date: Tue, 14 Aug 2007 11:08:16 -0400
+Message-ID: <46C1C560.80801@redhat.com>
+References: <f9akh8$ori$1@sea.gmane.org> <20070807211847.GA25391@kroah.com>
+	<f9c71t$r60$1@sea.gmane.org>
+	<200708081357.03238.ismail@pardus.org.tr>
+	<f9hmia$dol$1@sea.gmane.org> <f9mlcc$njk$1@sea.gmane.org>
+	<f9pr31$rdq$1@sea.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.linpro.no ([213.236.139.167]:54438 "EHLO
-	mailhub.linpro.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754780AbXHNNHU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Aug 2007 09:07:20 -0400
-In-Reply-To: <46C19F57.3070801@emulex.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <f9pr31$rdq$1@sea.gmane.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Niels <zorglub_olsen@hotmail.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-* James Smart
-
-> I've seen these before (and they haven't been specific to the LLDD).
-
-  You're probably right.  I saw trouble happening when lpfc was in
- action and thought it might have something to do with it, but then
- again I'm not very intimate with the inner workings of the kernel.
-
-> If you believe these are related to the -rc3 lpfc mods, I recommend 
-> retesting on an -rc2 or 2.6.22 to see how similar they are.
-
-  I have no opinion if this is something that appeared in -rc3 or not as
- I upgraded to it directly from 2.6.20 (which never gave me similar
- problems).  I'm compiling a new kernel with Matthew Wilcox' patch now,
- and will try a few more reboots to see how that helped.  I'll post
- about my findings tomorrow.
-
-Regards
--- 
-Tore Anderson
+T24gMDgvMTMvMjAwNyAxMDo1MCBBTSwgTmllbHMgd3JvdGU6Cj4gT24gU3VuZGF5IDEyIEF1Z3Vz
+dCAyMDA3IDExOjU0LCBOaWVscyB3cm90ZToKPiAKPj4gT24gRnJpZGF5IDEwIEF1Z3VzdCAyMDA3
+IDE0OjQzLCBOaWVscyB3cm90ZToKPj4KPj4+IE9uIFdlZG5lc2RheSAwOCBBdWd1c3QgMjAwNyAx
+Mjo1NywgSXNtYWlsIETDtm5tZXogd3JvdGU6Cj4+Pgo+Pj4+IE9uIFdlZG5lc2RheSAwOCBBdWd1
+c3QgMjAwNyAxMzo0ODoyOSB5b3Ugd3JvdGU6Cj4+Pj4+IE9uIFR1ZXNkYXkgMDcgQXVndXN0IDIw
+MDcgMjM6MTgsIEdyZWcgS0ggd3JvdGU6Cj4+Pj4+PiBPbiBUdWUsIEF1ZyAwNywgMjAwNyBhdCAx
+MDoyNjoxNVBNICswMjAwLCBOaWVscyB3cm90ZToKPj4+Pj4+PiBIaSwKPj4+Pj4+Pgo+Pj4+Pj4+
+IEknbSBoYXZpbmcgcHJvYmxlbXMgd2l0aCBhIG5ldyA1MDAgR0IgVVNCIGRpc2suIEl0IHdvcmtz
+LCBidXQKPj4+Pj4+PiBzb21ldGltZXMgSSBnZXQgdGhlc2UgaW4gZG1lc2c6Cj4+Pj4+Pj4KPj4+
+Pj4+Pgo+Pj4+Pj4+IHVzYiAxLTM6IHJlc2V0IGhpZ2ggc3BlZWQgVVNCIGRldmljZSB1c2luZyBl
+aGNpX2hjZCBhbmQgYWRkcmVzcyAyCj4+Pj4+Pj4gdXNiIDUtMTogVVNCIGRpc2Nvbm5lY3QsIGFk
+ZHJlc3MgMgo+Pj4+Pj4+IGRyaXZlcnMvdXNiL2NsYXNzL3VzYmxwLmM6IHVzYmxwMDogcmVtb3Zl
+ZAo+Pj4+Pj4+IHNkIDA6MDowOjA6IERldmljZSBub3QgcmVhZHk6IDw2PjogU2Vuc2UgS2V5IDog
+MHgyIFtjdXJyZW50XQo+Pj4+Pj4+Cj4+Pj4+Pj4gOiBBU0M9MHg0IEFTQ1E9MHgyCj4+Pj4+Pj4K
+Pj4+Pj4+PiBlbmRfcmVxdWVzdDogSS9PIGVycm9yLCBkZXYgc2RhLCBzZWN0b3IgMjU0MTQ4MjE1
+Cj4+Pj4+Pj4gc2QgMDowOjA6MDogRGV2aWNlIG5vdCByZWFkeTogPDY+OiBTZW5zZSBLZXkgOiAw
+eDIgW2N1cnJlbnRdCj4+Pj4+Pj4KPj4+Pj4+PiA6IEFTQz0weDQgQVNDUT0weDIKPj4+Pj4+Pgo+
+Pj4+Pj4+IGVuZF9yZXF1ZXN0OiBJL08gZXJyb3IsIGRldiBzZGEsIHNlY3RvciAyNTI0MzQwMjMK
+Pj4+Pj4+PiBFWFQzLWZzIGVycm9yIChkZXZpY2Ugc2RhMSk6IGV4dDNfZmluZF9lbnRyeTogcmVh
+ZGluZyBkaXJlY3RvcnkKPj4+Pj4+PiAjMTU3NjE4MzYgb2Zmc2V0IDAKPj4+Pj4+Pgo+Pj4+Pj4+
+Cj4+Pj4+Pj4gVGhlcmUncyBhbHNvIGEgcHJpbnRlciBjb25uZWN0ZWQuIFRoaXMgaXMgb24gYSBw
+Y2kvdXNiMiBjYXJkLiBXaGVuCj4+Pj4+Pj4gdGhlIGFib3ZlIGhhcHBlbnMsIEkgZ2V0IEkvTyBl
+cnJvcnMuIFdoZW4gSSBtb3VudCB0aGUgZHJpdmUgbmV4dCwKPj4+Pj4+PiB0aGVyZSBhcmUgZXJy
+b3JzIGFuZCBvZnRlbiBtaXNzaW5nIGZpbGVzLiBRdWl0ZSBhbm5veWluZyEKPj4+Pj4+Pgo+Pj4+
+Pj4+IEtlcm5lbCBpcyAyLjYuMjEKPj4+Pj4+Pgo+Pj4+Pj4+IFdoYXQncyBnb2luZyBvbj8KPj4+
+Pj4+IFlvdSBoYXZlIGEgbG93IHZvbHRhZ2UgaXNzdWUsIG9yIGEgYmFkIGNhYmxlLiAgVGhlIGRl
+dmljZSBpcwo+Pj4+Pj4gZWxlY3Ryb25pY2FsbHkgZGlzY29ubmVjdGluZyBpdHNlbGYuICBUcnkg
+dXNpbmcgYSBleHRlcm5hbGx5LXBvd2VyZWQKPj4+Pj4+IGh1Yiwgb3IgYSBuZXcgY2FibGUuCj4+
+Pj4gSSBhbSBzZWVpbmcgYSBzaW1pbGFyIHByb2JsZW0gd2l0aCAyLjYuMjIgYW5kIDIuNi4yMy0q
+IGtlcm5lbHMgd2l0aCBteQo+Pj4+IDYwRyBpUG9kIFZpZGVvLCB3b3JrcyBmaW5lIHdpdGggMi42
+LjE4IGtlcm5lbCB0aG91Z2guCj4+Pj4KPj4+Cj4+PiBTbyBmYXIgSSdtIHNlZWluZyB0aGlzOgo+
+Pj4KPj4+IC0gT24gMi42LjIxIEkgbW91bnQgdGhlIGRyaXZlLiBBZnRlciBhIHdoaWxlIGl0IHNw
+aW5zIGRvd24sIGFuZCB3aGVuIEkKPj4+IHRoZW4gdW5tb3VudCBpdCwgYW4gZXJyb3IgcG9wcyB1
+cCBpbiBkbWVzZy4KPj4+Cj4+PiAtIE9uIDIuNi4xOCBJIGNhbid0IHByb3Zva2UgdGhlIHNhbWUg
+ZXJyb3IuIFRoZSBkcml2ZSBkb2Vzbid0IGFwcGVhciB0bwo+Pj4gc3BpbiBkb3duLiBJIGRvbid0
+IGtub3cgaWYgdGhlIGRhdGEgY29ycnVwdGlvbiBmcm9tIDIuNi4yMSBvY2N1cnMgd2l0aAo+Pj4g
+cmVndWxhciB1c2UuCj4+Pgo+Pj4gVGhlcmUgYXJlIGEgbnVtYmVyIG9mIG90aGVyIGZhY3RvciBJ
+IG5lZWQgdG8gZWxpbWluYXRlIG9uIG15IHN5c3RlbSwgYnV0Cj4+PiB0aGF0J3MgaXQgc28gZmFy
+LiBDT05GSUdfVVNCX1NVU1BFTkQgaXMgbm90IHNldCBvbiBlaXRoZXIga2VybmVsLgo+Pgo+PiBP
+Sywgb24gYSB2YW5pbGxhIDIuNi4xOC44IEkgYWxzbyBoYXZlIHRoaXMgcHJvYmxlbSwgd2l0aCBi
+b3RoIHRoZSBwY2kvdXNiMgo+PiBjYXJkLCBhbmQgdGhlIHVzYjEgb24gdGhlIGJvYXJkLiBJIGxp
+c3RlbiB0byBtdXNpYyBmcm9tIHRoZSBkcml2ZSwgYW5kCj4+IGFmdGVyIHNvbWUgdGltZSAoMTAt
+MjAgbWludXRlcyBvciBzbyksIGl0IGZyZWFrcyBvdXQ6Cj4+Cj4+ID09PT09PT09PQo+PiBzZCAx
+OjA6MDowOiBEZXZpY2Ugbm90IHJlYWR5OiA8Nj46IEN1cnJlbnQ6IHNlbnNlIGtleT0weDIKPj4g
+ICAgIEFTQz0weDQgQVNDUT0weDIKPj4gZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYSwg
+c2VjdG9yIDEyNjY5MzcxMQo+PiBzZCAxOjA6MDowOiBEZXZpY2Ugbm90IHJlYWR5OiA8Nj46IEN1
+cnJlbnQ6IHNlbnNlIGtleT0weDIKPj4gICAgIEFTQz0weDQgQVNDUT0weDIKPj4gZW5kX3JlcXVl
+c3Q6IEkvTyBlcnJvciwgZGV2IHNkYSwgc2VjdG9yIDEyNjY5MzcxMQo+PiBzZCAxOjA6MDowOiBE
+ZXZpY2Ugbm90IHJlYWR5OiA8Nj46IEN1cnJlbnQ6IHNlbnNlIGtleT0weDIKPj4gICAgIEFTQz0w
+eDQgQVNDUT0weDIKPj4gZW5kX3JlcXVlc3Q6IEkvTyBlcnJvciwgZGV2IHNkYSwgc2VjdG9yIDEy
+NjY5MzcxMQo+PiA9PT09PT09PT0KPj4KPiAKPiBVc2luZyBhIG5ldyBQU1UgYW5kIGEgcG93ZXJl
+ZCBodWIgbWFkZSBubyBkaWZmZXJlbmNlLiBCdXQgSSBmb3VuZCBhIHNvbHV0aW9uCj4gaGVyZToK
+PiAKPiBodHRwOi8vYWxpZW5naGljLmxpdmVqb3VybmFsLmNvbS8zODI5MDMuaHRtbAo+IAo+IEJh
+c2ljYWxseSwgdGhlIHByb2JsZW0gaXMsIGFzIHN1c3BlY3RlZCwgdGhhdCB0aGUgZHJpdmUgc3Bp
+bnMgZG93biAvIGdvZXMgdG8KPiBzdXNwZW5kLiBUaGlzIGNhbiBiZSBkaXNhYmxlZCB3aXRoICJz
+ZHBhcm0gLS1jbGVhciBTVEFOREJZIC02IC9kZXYvc2RhIi4KPiAKPiBJdCBzZWVtcyB0byBtZSB0
+byBiZSBhbiBlcnJvciB0aGF0IHRoZSBrZXJuZWwgcmVwb3J0cyB0aGlzIGFzIHNvbWV0aGluZyBs
+aWtlCj4gYSBoYXJkd2FyZSBmYWlsdXJlLiBPciBhdCBsZWFzdCB2ZXJ5IG1pc2xlYWRpbmcuCj4g
+CgpPaCwgbmljZS4gVGhlIHVzYi1zdG9yYWdlIChTQ1NJKSBkaXNrIHNwaW5zIGl0c2VsZiBkb3du
+IGFuZCB3ZSBjYW4ndCBoYW5kbGUgdGhhdC4KU2hvdWxkIHdlIGJlIGRpc2FibGluZyBhdXRvLXNw
+aW5kb3duIHdoZW4gd2UgY29ubmVjdCB0aGUgZGV2aWNlLCBvciBiZSBhYmxlIHRvCmhhbmRsZSB0
+aGlzIGJ5IHNlbmRpbmcgdGhlIHN0YXJ0IGNvbW1hbmQgd2hlbiBuZWVkZWQ/CgoKLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLQpUaGlzIFNGLm5ldCBlbWFpbCBpcyBzcG9uc29yZWQgYnk6IFNwbHVuayBJbmMuClN0
+aWxsIGdyZXBwaW5nIHRocm91Z2ggbG9nIGZpbGVzIHRvIGZpbmQgcHJvYmxlbXM/ICBTdG9wLgpO
+b3cgU2VhcmNoIGxvZyBldmVudHMgYW5kIGNvbmZpZ3VyYXRpb24gZmlsZXMgdXNpbmcgQUpBWCBh
+bmQgYSBicm93c2VyLgpEb3dubG9hZCB5b3VyIEZSRUUgY29weSBvZiBTcGx1bmsgbm93ID4+ICBo
+dHRwOi8vZ2V0LnNwbHVuay5jb20vCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fCmxpbnV4LXVzYi1kZXZlbEBsaXN0cy5zb3VyY2Vmb3JnZS5uZXQKVG8gdW5z
+dWJzY3JpYmUsIHVzZSB0aGUgbGFzdCBmb3JtIGZpZWxkIGF0OgpodHRwczovL2xpc3RzLnNvdXJj
+ZWZvcmdlLm5ldC9saXN0cy9saXN0aW5mby9saW51eC11c2ItZGV2ZWwK
