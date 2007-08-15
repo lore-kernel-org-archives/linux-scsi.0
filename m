@@ -1,35 +1,46 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Linux 2.6.23-rc3
-Date: Wed, 15 Aug 2007 08:47:23 -0600
-Message-ID: <20070815144723.GZ16277@parisc-linux.org>
-References: <alpine.LFD.0.999.0708122143240.30176@woody.linux-foundation.org> <46C1717E.3030908@linpro.no> <20070814112429.GL16277@parisc-linux.org> <46C1A866.5090903@emulex.com> <1187186897.1457.57.camel@potomac.tworiverlabs.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Retry counters in sd.c
+Date: Wed, 15 Aug 2007 11:19:43 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0708151108000.3895-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:60194 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758225AbXHOOrZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2007 10:47:25 -0400
-Content-Disposition: inline
-In-Reply-To: <1187186897.1457.57.camel@potomac.tworiverlabs.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:46586 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1763478AbXHOPTo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2007 11:19:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Igor A. Nesterov" <igor.nesterov@indexengines.com>
-Cc: James.Smart@Emulex.Com, Tore Anderson <tore@linpro.no>, Linus Torvalds <torvalds@linux-foundation.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-On Wed, Aug 15, 2007 at 10:08:17AM -0400, Igor A. Nesterov wrote:
-> So would it be true to say that the fix for -EEXIST problem still has
-> not found its way to mainline kernel? I've been hit by this problem
-> after switching to Fedora 7, and currently running on Fedora
-> 2.6.21-1.3228 kernel patched with one of those fixes above. I always
-> hoped that 2.6.22 will be free of this problem, but apparently it still
-> exists even in 2.6.23.
+James (or anyone else who can answer):
 
-James Bottomley just added it to the tree that will be pushed for the
-2.6.24 merge window.  I'd wish for it to be added to 2.6.23 too, since
-it does fix a bug, but it's his decision, not mine.
+The retry counters in sd.c seem to be out of whack.  For example,
+consider sd_read_capacity().  There's an explicit retry loop that runs
+3 times, and inside it is a call to scsi_execute_req() with
+SD_MAX_RETRIES (= 5) as an argument.  If for any reason the device is
+not able to determine the media capacity -- other than medium not
+present -- the code ends up sending the READ CAPACITY command a total
+of 3*(5+1) = 18 times!  Isn't that a little excessive?  After all, if
+the capacity couldn't be determined the first time, how likely is the
+device to get it right on the eighteenth?
 
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+And that's not even taking into account the fact that
+sd_read_capcity(), together with everything else under
+sd_revalidate_disk(), gets called twice in a row during device
+scanning.  (What's the reason for that, anyway?)  This makes for a 
+total of 36 failed commands.
+
+There are other examples of explicit outer loops combined with large 
+retry arguments to scsi_execute_req(), but this one caught my eye 
+because of the logs attached to Bugzilla #8885.  See especially the log 
+attached to comment #22.
+
+It seems to me that we should be able to get away with using 1 instead
+of SD_MAX_RETRIES here, and probably in a few other places as well.  
+There's not much point in having an inner retry loop if there's already
+an outer loop.  Do you agree?
+
+Alan Stern
+
