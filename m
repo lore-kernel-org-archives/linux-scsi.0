@@ -1,42 +1,30 @@
 From: Pete Wyckoff <pw@osc.edu>
-Subject: [PATCH 1/3] bsg bidi block pc
-Date: Wed, 15 Aug 2007 14:16:01 -0500
-Message-ID: <20070815191601.GB14977@osc.edu>
-References: <20070815191523.GA14977@osc.edu>
+Subject: [PATCH 0/3] bsg bidirectional and variable length commands
+Date: Wed, 15 Aug 2007 14:15:23 -0500
+Message-ID: <20070815191523.GA14977@osc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:51176 "EHLO marge.padd.com"
+Received: from marge.padd.com ([66.127.62.138]:51177 "EHLO marge.padd.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754769AbXHOTXY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2007 15:23:24 -0400
+	id S1754949AbXHOTXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 15 Aug 2007 15:23:25 -0400
 Content-Disposition: inline
-In-Reply-To: <20070815191523.GA14977@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi@vger.kernel.org
 
-Set cmd_type on rq->next_rq to BLOCK_PC so that scsi_init_sgtable
-knows to look at req->data_len rather than nr_sectors.
+There are three patches here to enable using BSG to send SCSI
+commands across iscsi TCP that are bidirectional and/or use
+variable length CDBs.  They sit on top of 2.6.23-rc2 plus Mike's
+iscsi git plus the 12 core patches that Boaz has for bidirectional
+support.
 
-Signed-off-by: Pete Wyckoff <pw@osc.edu>
----
- block/bsg.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+They apply to stock 2.6.23-rc2 but I don't think it is worth
+anybody's time to take them yet.  Instead, I think it makes sense
+for Boaz to hang onto these and submit them along as part of
+the bigger bidirectional support picture.
 
-diff --git a/block/bsg.c b/block/bsg.c
-index ba4353a..eb0aaf4 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -278,6 +278,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
- 			ret = -ENOMEM;
- 			goto out;
- 		}
-+		next_rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 		rq->next_rq = next_rq;
- 
- 		dxferp = (void*)(unsigned long)hdr->din_xferp;
--- 
-1.5.2.4
+		-- Pete
 
