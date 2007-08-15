@@ -1,222 +1,189 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/2] libiscsi: sync up iscsi and scsi eh's access to the connection
-Date: Wed, 15 Aug 2007 01:38:30 -0500
-Message-ID: <1187159912258-git-send-email-michaelc@cs.wisc.edu>
-References: <11871599101926-git-send-email-michaelc@cs.wisc.edu>
- <11871599112120-git-send-email-michaelc@cs.wisc.edu>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:39917 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752818AbXHOGih (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2007 02:38:37 -0400
-In-Reply-To: <11871599112120-git-send-email-michaelc@cs.wisc.edu>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 1/4] libata: check for AN support
+Date: Wed, 15 Aug 2007 03:59:10 -0400
+Message-ID: <46C2B24E.1010506@garzik.org>
+References: <20070808190613.616085010@localhost.localdomain> <20070808120810.5f8ed457.kristen.c.accardi@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070808120810.5f8ed457.kristen.c.accardi@intel.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+Cc: James.Bottomley@steeleye.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+Kristen Carlson Accardi wrote:
+> Check to see if an ATAPI device supports Asynchronous Notification.
+> If so, enable it.
+> 
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> 
+> Index: 2.6-git/drivers/ata/libata-core.c
+> ===================================================================
+> --- 2.6-git.orig/drivers/ata/libata-core.c
+> +++ 2.6-git/drivers/ata/libata-core.c
+> @@ -70,6 +70,7 @@ const unsigned long sata_deb_timing_long
+>  static unsigned int ata_dev_init_params(struct ata_device *dev,
+>  					u16 heads, u16 sectors);
+>  static unsigned int ata_dev_set_xfermode(struct ata_device *dev);
+> +static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable);
+>  static void ata_dev_xfermask(struct ata_device *dev);
+>  static unsigned long ata_dev_blacklisted(const struct ata_device *dev);
+>  
+> @@ -1974,6 +1975,22 @@ int ata_dev_configure(struct ata_device 
+>  		}
+>  		dev->cdb_len = (unsigned int) rc;
+>  
+> +		/*
+> +		 * check to see if this ATAPI device supports
+> +		 * Asynchronous Notification
+> +		 */
+> +		if ((ap->flags & ATA_FLAG_AN) && ata_id_has_AN(id)) {
+> +			int err;
+> +			/* issue SET feature command to turn this on */
+> +			err = ata_dev_set_AN(dev, SETFEATURES_SATA_ENABLE);
+> +			if (err)
+> +				ata_dev_printk(dev, KERN_ERR,
+> +						"unable to set AN, err %x\n",
+> +						err);
+> +			else
+> +				dev->flags |= ATA_DFLAG_AN;
+> +		}
+> +
+>  		if (ata_id_cdb_intr(dev->id)) {
+>  			dev->flags |= ATA_DFLAG_CDB_INTR;
+>  			cdb_intr_string = ", CDB intr";
+> @@ -3948,6 +3965,42 @@ static unsigned int ata_dev_set_xfermode
+>  }
+>  
+>  /**
+> + *	ata_dev_set_AN - Issue SET FEATURES - SATA FEATURES
+> + *	@dev: Device to which command will be sent
+> + *	@enable: Whether to enable or disable the feature
+> + *
+> + *	Issue SET FEATURES - SATA FEATURES command to device @dev
+> + *	on port @ap with sector count set to indicate Asynchronous
+> + *	Notification feature
+> + *
+> + *	LOCKING:
+> + *	PCI/etc. bus probe sem.
+> + *
+> + *	RETURNS:
+> + *	0 on success, AC_ERR_* mask otherwise.
+> + */
+> +static unsigned int ata_dev_set_AN(struct ata_device *dev, u8 enable)
+> +{
+> +	struct ata_taskfile tf;
+> +	unsigned int err_mask;
+> +
+> +	/* set up set-features taskfile */
+> +	DPRINTK("set features - SATA features\n");
+> +
+> +	ata_tf_init(dev, &tf);
+> +	tf.command = ATA_CMD_SET_FEATURES;
+> +	tf.feature = enable;
+> +	tf.flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
+> +	tf.protocol = ATA_PROT_NODATA;
+> +	tf.nsect = SATA_AN;
+> +
+> +	err_mask = ata_exec_internal(dev, &tf, NULL, DMA_NONE, NULL, 0);
+> +
+> +	DPRINTK("EXIT, err_mask=%x\n", err_mask);
+> +	return err_mask;
+> +}
+> +
+> +/**
+>   *	ata_dev_init_params - Issue INIT DEV PARAMS command
+>   *	@dev: Device to which command will be sent
+>   *	@heads: Number of heads (taskfile parameter)
+> Index: 2.6-git/include/linux/ata.h
+> ===================================================================
+> --- 2.6-git.orig/include/linux/ata.h
+> +++ 2.6-git/include/linux/ata.h
+> @@ -217,6 +217,12 @@ enum {
+>  
+>  	SETFEATURES_SPINUP	= 0x07, /* Spin-up drive */
+>  
+> +	SETFEATURES_SATA_ENABLE = 0x10, /* Enable use of SATA feature */
+> +	SETFEATURES_SATA_DISABLE = 0x90, /* Disable use of SATA feature */
+> +
+> +	/* SETFEATURE Sector counts for SATA features */
+> +	SATA_AN			= 0x05,  /* Asynchronous Notification */
+> +
+>  	/* ATAPI stuff */
+>  	ATAPI_PKT_DMA		= (1 << 0),
+>  	ATAPI_DMADIR		= (1 << 2),	/* ATAPI data dir:
+> @@ -344,6 +350,9 @@ struct ata_taskfile {
+>  #define ata_id_queue_depth(id)	(((id)[75] & 0x1f) + 1)
+>  #define ata_id_removeable(id)	((id)[0] & (1 << 7))
+>  #define ata_id_has_dword_io(id)	((id)[50] & (1 << 0))
+> +#define ata_id_has_AN(id)	\
+> +	( (((id)[76] != 0x0000) && ((id)[76] != 0xffff)) && \
+> +	  ((id)[78] & (1 << 5)) )
+>  #define ata_id_iordy_disable(id) ((id)[49] & (1 << 10))
+>  #define ata_id_has_iordy(id) ((id)[49] & (1 << 9))
+>  #define ata_id_u32(id,n)	\
+> Index: 2.6-git/include/linux/libata.h
+> ===================================================================
+> --- 2.6-git.orig/include/linux/libata.h
+> +++ 2.6-git/include/linux/libata.h
+> @@ -139,7 +139,8 @@ enum {
+>  	ATA_DFLAG_FLUSH_EXT	= (1 << 4), /* do FLUSH_EXT instead of FLUSH */
+>  	ATA_DFLAG_ACPI_PENDING	= (1 << 5), /* ACPI resume action pending */
+>  	ATA_DFLAG_ACPI_FAILED	= (1 << 6), /* ACPI on devcfg has failed */
+> -	ATA_DFLAG_CFG_MASK	= (1 << 8) - 1,
+> +	ATA_DFLAG_AN		= (1 << 7), /* device supports AN */
+> +	ATA_DFLAG_CFG_MASK	= (1 << 12) - 1,
+>  
+>  	ATA_DFLAG_PIO		= (1 << 8), /* device limited to PIO mode */
+>  	ATA_DFLAG_NCQ_OFF	= (1 << 9), /* device limited to non-NCQ mode */
+> @@ -177,6 +178,7 @@ enum {
+>  	ATA_FLAG_IGN_SIMPLEX	= (1 << 15), /* ignore SIMPLEX */
+>  	ATA_FLAG_NO_IORDY	= (1 << 16), /* controller lacks iordy */
+>  	ATA_FLAG_ACPI_SATA	= (1 << 17), /* need native SATA ACPI layout */
+> +	ATA_FLAG_AN		= (1 << 18), /* controller supports AN */
 
-The iscsi eh could be tearing down the session/connection while
-the scsi eh is still sending task management functions. If when
-we drop the session lock to grab the recv lock, the iscsi eh
-tears down the connection we will oops.
 
-This patch is made against scsi-rc-fixes. If there is time for patches
-for 2.6.23, the please merge for that. The patch is pretty small and
-fixes a bug.
+I applied the above changes, in order to move AN forward
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/libiscsi.c |   54 +++++++++++++++++++++++++++++++++++++---------
- include/scsi/libiscsi.h |    7 ++++++
- 2 files changed, 50 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f5915d4..efceed4 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1056,7 +1056,9 @@ static int iscsi_exec_abort_task(struct scsi_cmnd *sc,
- 	ctask->mtask = __iscsi_conn_send_pdu(conn, (struct iscsi_hdr *)hdr,
- 					    NULL, 0);
- 	if (!ctask->mtask) {
-+		spin_unlock_bh(&session->lock);
- 		iscsi_conn_failure(conn, ISCSI_ERR_CONN_FAILED);
-+		spin_lock_bh(&session->lock)
- 		debug_scsi("abort sent failure [itt 0x%x]\n", ctask->itt);
- 		return -EPERM;
- 	}
-@@ -1073,6 +1075,7 @@ static int iscsi_exec_abort_task(struct scsi_cmnd *sc,
- 		debug_scsi("abort set timeout [itt 0x%x]\n", ctask->itt);
- 	}
- 	spin_unlock_bh(&session->lock);
-+	mutex_unlock(&session->eh_mutex);
- 	scsi_queue_work(session->host, &conn->xmitwork);
- 
- 	/*
-@@ -1090,6 +1093,7 @@ static int iscsi_exec_abort_task(struct scsi_cmnd *sc,
- 	if (signal_pending(current))
- 		flush_signals(current);
- 	del_timer_sync(&conn->tmabort_timer);
-+	mutex_lock(&session->eh_mutex);
- 	spin_lock_bh(&session->lock);
- 	return 0;
- }
-@@ -1165,31 +1169,45 @@ static void fail_command(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask,
- 	__iscsi_put_ctask(ctask);
- }
- 
-+static void iscsi_suspend_tx(struct iscsi_conn *conn)
-+{
-+	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	scsi_flush_work(conn->session->host);
-+}
-+
-+static void iscsi_start_tx(struct iscsi_conn *conn)
-+{
-+	clear_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
-+	scsi_queue_work(conn->session->host, &conn->xmitwork);
-+}
-+
- int iscsi_eh_abort(struct scsi_cmnd *sc)
- {
-+	struct Scsi_Host *host = sc->device->host;
-+	struct iscsi_session *session = iscsi_hostdata(host->hostdata);
- 	struct iscsi_cmd_task *ctask;
- 	struct iscsi_conn *conn;
--	struct iscsi_session *session;
- 	int rc;
- 
-+	mutex_lock(&session->eh_mutex);
-+	spin_lock_bh(&session->lock);
- 	/*
- 	 * if session was ISCSI_STATE_IN_RECOVERY then we may not have
- 	 * got the command.
- 	 */
- 	if (!sc->SCp.ptr) {
- 		debug_scsi("sc never reached iscsi layer or it completed.\n");
-+		spin_unlock_bh(&session->lock);
-+		mutex_unlock(&session->eh_mutex);
- 		return SUCCESS;
- 	}
- 
- 	ctask = (struct iscsi_cmd_task *)sc->SCp.ptr;
- 	conn = ctask->conn;
--	session = conn->session;
- 
- 	conn->eh_abort_cnt++;
- 	debug_scsi("aborting [sc %p itt 0x%x]\n", sc, ctask->itt);
- 
--	spin_lock_bh(&session->lock);
--
- 	/*
- 	 * If we are not logged in or we have started a new session
- 	 * then let the host reset code handle this
-@@ -1226,6 +1244,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 	switch (conn->tmabort_state) {
- 	case TMABORT_SUCCESS:
- 		spin_unlock_bh(&session->lock);
-+		iscsi_suspend_tx(conn);
- 		/*
- 		 * clean up task if aborted. grab the recv lock as a writer
- 		 */
-@@ -1234,11 +1253,7 @@ int iscsi_eh_abort(struct scsi_cmnd *sc)
- 		fail_command(conn, ctask, DID_ABORT << 16);
- 		spin_unlock(&session->lock);
- 		write_unlock_bh(conn->recv_lock);
--		/*
--		 * make sure xmit thread is not still touching the
--		 * ctask/scsi_cmnd
--		 */
--		scsi_flush_work(session->host);
-+		iscsi_start_tx(conn);
- 		goto success_unlocked;
- 	case TMABORT_NOT_FOUND:
- 		if (!ctask->sc) {
-@@ -1258,12 +1273,14 @@ success:
- 	spin_unlock_bh(&session->lock);
- success_unlocked:
- 	debug_scsi("abort success [sc %lx itt 0x%x]\n", (long)sc, ctask->itt);
-+	mutex_unlock(&session->eh_mutex);
- 	return SUCCESS;
- 
- failed:
- 	spin_unlock_bh(&session->lock);
- failed_unlocked:
- 	debug_scsi("abort failed [sc %lx itt 0x%x]\n", (long)sc, ctask->itt);
-+	mutex_unlock(&session->eh_mutex);
- 	return FAILED;
- }
- EXPORT_SYMBOL_GPL(iscsi_eh_abort);
-@@ -1410,6 +1427,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
- 	session->max_cmdsn = initial_cmdsn + 1;
- 	session->max_r2t = 1;
- 	session->tt = iscsit;
-+	mutex_init(&session->eh_mutex);
- 
- 	/* initialize SCSI PDU commands pool */
- 	if (iscsi_pool_init(&session->cmdpool, session->cmds_max,
-@@ -1743,9 +1761,22 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
- {
- 	int old_stop_stage;
- 
-+	mutex_lock(&session->eh_mutex);
- 	spin_lock_bh(&session->lock);
- 	if (conn->stop_stage == STOP_CONN_TERM) {
- 		spin_unlock_bh(&session->lock);
-+		mutex_unlock(&session->eh_mutex);
-+		return;
-+	}
-+
-+	/*
-+	 * The LLD either freed/unset the lock on us, or userspace called
-+	 * stop but did not create a proper connection (connection was never
-+	 * bound or it was unbound then stop was called).
-+	 */
-+	if (!conn->recv_lock) {
-+		spin_unlock_bh(&session->lock);
-+		mutex_unlock(&session->eh_mutex);
- 		return;
- 	}
- 
-@@ -1762,9 +1793,9 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
- 	old_stop_stage = conn->stop_stage;
- 	conn->stop_stage = flag;
- 	conn->c_stage = ISCSI_CONN_STOPPED;
--	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_tx);
- 	spin_unlock_bh(&session->lock);
--	scsi_flush_work(session->host);
-+
-+	iscsi_suspend_tx(conn);
- 
- 	write_lock_bh(conn->recv_lock);
- 	set_bit(ISCSI_SUSPEND_BIT, &conn->suspend_rx);
-@@ -1793,6 +1824,7 @@ static void iscsi_start_session_recovery(struct iscsi_session *session,
- 	fail_all_commands(conn);
- 	flush_control_queues(session, conn);
- 	spin_unlock_bh(&session->lock);
-+	mutex_unlock(&session->eh_mutex);
- }
- 
- void iscsi_conn_stop(struct iscsi_cls_conn *cls_conn, int flag)
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 007d442..b4b3113 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -205,6 +205,13 @@ struct iscsi_queue {
- };
- 
- struct iscsi_session {
-+	/*
-+	 * Syncs up the scsi eh thread with the iscsi eh thread when sending
-+	 * task management functions. This must be taken before the session
-+	 * and recv lock.
-+	 */
-+	struct mutex		eh_mutex;
-+
- 	/* iSCSI session-wide sequencing */
- 	uint32_t		cmdsn;
- 	uint32_t		exp_cmdsn;
--- 
-1.5.1.2
+>  	/* The following flag belongs to ap->pflags but is kept in
+>  	 * ap->flags because it's referenced in many LLDs and will be
+> Index: 2.6-git/drivers/ata/ahci.c
+> ===================================================================
+> --- 2.6-git.orig/drivers/ata/ahci.c
+> +++ 2.6-git/drivers/ata/ahci.c
+> @@ -332,14 +332,15 @@ static const struct ata_port_operations 
+>  static const struct ata_port_info ahci_port_info[] = {
+>  	/* board_ahci */
+>  	{
+> -		.flags		= AHCI_FLAG_COMMON,
+> +		.flags		= AHCI_FLAG_COMMON | ATA_FLAG_AN,
+>  		.pio_mask	= 0x1f, /* pio0-4 */
+>  		.udma_mask	= ATA_UDMA6,
+>  		.port_ops	= &ahci_ops,
+>  	},
+>  	/* board_ahci_pi */
+>  	{
+> -		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI,
+> +		.flags		= AHCI_FLAG_COMMON | AHCI_FLAG_HONOR_PI |
+> +				  ATA_FLAG_AN,
+>  		.pio_mask	= 0x1f, /* pio0-4 */
+>  		.udma_mask	= ATA_UDMA6,
+>  		.port_ops	= &ahci_ops,
+> 
+
+Since I wanted to get in Tejun's ata_link changes before this, this will 
+require a rediff.
+
+But more importantly, as I was going to apply it I noticed another 
+problem:  we need to verify that SiS and NVIDIA both support AN support 
+turning this on, since this patch affects not only Intel but also those 
+vendors' AHCI hardware as well.
+
+It's a bit annoying but this is a cross-vendor driver after all...
+
+	Jeff
+
 
