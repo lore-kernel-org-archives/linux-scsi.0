@@ -1,18 +1,16 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] qlogicfas: Close narrow race in release
-Date: Wed, 15 Aug 2007 12:56:59 -0600
-Message-ID: <1187204221728-git-send-email-matthew@wil.cx>
+Subject: [PATCH] aha152x: Close narrow race in release
+Date: Wed, 15 Aug 2007 12:56:57 -0600
+Message-ID: <11872042212630-git-send-email-matthew@wil.cx>
 References: <11872042213451-git-send-email-matthew@wil.cx>
  <11872042213665-git-send-email-matthew@wil.cx>
  <11872042211224-git-send-email-matthew@wil.cx>
- <11872042212630-git-send-email-matthew@wil.cx>
- <1187204221432-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:33283 "EHLO
+Received: from mail.tor.primus.ca ([216.254.136.21]:33276 "EHLO
 	mail-08.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1765699AbXHOS45 (ORCPT
+	with ESMTP id S1765811AbXHOS45 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2007 14:56:57 -0400
-In-Reply-To: <1187204221432-git-send-email-matthew@wil.cx>
+In-Reply-To: <11872042211224-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -24,29 +22,33 @@ Just remove the host before releasing the IRQ to close this race.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/qlogicfas.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/aha152x.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qlogicfas.c b/drivers/scsi/qlogicfas.c
-index 94baca8..1e874f1 100644
---- a/drivers/scsi/qlogicfas.c
-+++ b/drivers/scsi/qlogicfas.c
-@@ -166,6 +166,7 @@ static int qlogicfas_release(struct Scsi_Host *shost)
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index d30a307..f08e71e 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -907,9 +907,10 @@ out_host_put:
+ 
+ void aha152x_release(struct Scsi_Host *shpnt)
  {
- 	struct qlogicfas408_priv *priv = get_priv_by_host(shost);
+-	if(!shpnt)
++	if (!shpnt)
+ 		return;
  
-+	scsi_remove_host(shost);
- 	if (shost->irq) {
- 		qlogicfas408_disable_ints(priv);	
- 		free_irq(shost->irq, shost);
-@@ -174,7 +175,6 @@ static int qlogicfas_release(struct Scsi_Host *shost)
- 		free_dma(shost->dma_channel);
- 	if (shost->io_port && shost->n_io_port)
- 		release_region(shost->io_port, shost->n_io_port);
--	scsi_remove_host(shost);
- 	scsi_host_put(shost);
++	scsi_remove_host(shpnt);
+ 	if (shpnt->irq)
+ 		free_irq(shpnt->irq, shpnt);
  
- 	return 0;
+@@ -923,7 +924,6 @@ void aha152x_release(struct Scsi_Host *shpnt)
+ 		pnp_device_detach(HOSTDATA(shpnt)->pnpdev);
+ #endif
+ 
+-	scsi_remove_host(shpnt);
+ 	list_del(&HOSTDATA(shpnt)->host_list);
+ 	scsi_host_put(shpnt);
+ }
 -- 
 1.5.2.4
 
