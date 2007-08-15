@@ -1,53 +1,48 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: Re: [patch 2/4] scsi: expose AN support to user space
-Date: Wed, 15 Aug 2007 09:27:31 -0700
-Message-ID: <20070815092731.01b19e0e.kristen.c.accardi@intel.com>
-References: <20070808190613.616085010@localhost.localdomain>
-	<20070808120822.9cf187bb.kristen.c.accardi@intel.com>
-	<46C2B59A.6070200@garzik.org>
-	<1187186509.3327.7.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 12/30] Fix drivers/scsi/fdomain.c CONFIG_PCI=n warnings
+Date: Wed, 15 Aug 2007 11:35:49 -0500
+Message-ID: <1187195749.3327.27.camel@localhost.localdomain>
+References: <200708102150.l7ALoe6g011351@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:14327 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933167AbXHOQap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 15 Aug 2007 12:30:45 -0400
-In-Reply-To: <1187186509.3327.7.camel@localhost.localdomain>
+Received: from hancock.steeleye.com ([71.30.118.248]:53949 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760541AbXHOQfw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2007 12:35:52 -0400
+In-Reply-To: <200708102150.l7ALoe6g011351@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, nix.or.die@googlemail.com
 
-On Wed, 15 Aug 2007 09:01:49 -0500
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-
-> On Wed, 2007-08-15 at 04:13 -0400, Jeff Garzik wrote:
-> > Kristen Carlson Accardi wrote:
-> > > If a scsi_device supports async notification for media change, then
-> > > let user space know this capability exists by creating a new sysfs
-> > > entry "media_change_notify", which will be 1 if it is supported, and
-> > > 0 if not supported.  Create a routine which allows scsi devices to
-> > > send a uevent when media change events occur.
-> > > 
-> > > Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-> > 
-> > if James is happy with this patch, I'm happy with patch #2 and #3
+On Fri, 2007-08-10 at 14:50 -0700, akpm@linux-foundation.org wrote:
+> From: Gabriel C <nix.or.die@googlemail.com>
 > 
-> Actually, we just got a second potential consumer ... although I'll
-> reprod to have the reporter send it to the list.  It's a device that
-> needs notice of report luns data changing.  The proposed mechanism looks
-> a bit narrow now (too tied to media change).  I'll see if I can propose
-> a more generic update.
+> I get this warnings on current git when CONFIG_PCI is not set :
 > 
-> James
+> drivers/scsi/fdomain.c:390: warning: 'PCI_dev' defined but not used
+> drivers/scsi/fdomain.c:1768: warning: 'fdomain_pci_tbl' defined but not used
 > 
+> Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Too narrow because it's tied to scsi_device?  Obviously it'd be easy
-to expand the scsi_device_event enum to include LUNS_DATA_CHANGE or 
-something, and even the scsi_device_event_info struct can easily be 
-expanded if you need more info attached to the event.  Let me know if 
-there's something specific I can help with.
+This function looks decidedly dangerous since it references a
+non-existent variable when CONFIG_PCI isn't set.  It seems to work
+because pci_dev_put() is defined to a null macro, but it's not safe:
 
-Kristen
+static int fdomain_16x0_release(struct Scsi_Host *shpnt)
+{
+	if (shpnt->irq)
+		free_irq(shpnt->irq, shpnt);
+	if (shpnt->io_port && shpnt->n_io_port)
+		release_region(shpnt->io_port, shpnt->n_io_port);
+	if (PCI_bus)
+		pci_dev_put(PCI_dev);
+	return 0;
+}
+
+James
+
+
