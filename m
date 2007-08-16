@@ -1,48 +1,89 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [patch 2/4] scsi: expose AN support to user space
-Date: Wed, 15 Aug 2007 17:37:45 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70916A58@NAMAIL4.ad.lsil.com>
-References: <1187186509.3327.7.camel@localhost.localdomain>
+From: Randy Dunlap <rdunlap@xenotime.net>
+Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and
+ auditing
+Date: Wed, 15 Aug 2007 22:22:58 -0700
+Message-ID: <20070815222258.2601797f.rdunlap@xenotime.net>
+References: <4695F76F.5000305@panasas.com>
+	<20070712135750.2a4a4a54.rdunlap@xenotime.net>
+	<469B38CC.50501@panasas.com>
+	<20070717171607.ffc278eb.rdunlap@xenotime.net>
+	<469DDD74.2060208@panasas.com>
+	<20070718103320.4b6ad7b3.rdunlap@xenotime.net>
+	<20070718145818.8eebbd66.rdunlap@xenotime.net>
+	<20070718194335.e21a01e5.rdunlap@xenotime.net>
+	<20070718200315.3adcd194.rdunlap@xenotime.net>
+	<469F616D.1000909@panasas.com>
+	<20070719083719.33d8994c.rdunlap@xenotime.net>
+	<469F89FE.4080900@panasas.com>
+	<20070719104930.7ae87df8.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:53425 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S964798AbXHOXii convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Aug 2007 19:38:38 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1187186509.3327.7.camel@localhost.localdomain>
+Received: from xenotime.net ([66.160.160.81]:50423 "HELO xenotime.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754525AbXHPFQp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 16 Aug 2007 01:16:45 -0400
+Received: from midway.site ([71.117.245.18]) by xenotime.net for <linux-scsi@vger.kernel.org>; Wed, 15 Aug 2007 22:16:38 -0700
+In-Reply-To: <20070719104930.7ae87df8.rdunlap@xenotime.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Jeff Garzik <jeff@garzik.org>
-Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, venkatr@promise.com, vimal.nakum@promise.com
+To: scsi <linux-scsi@vger.kernel.org>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dougg@torque.net>, "=?ISO-8859-1?Q? J=FCrgen_E._Fischer ?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, matthew@wil.cx, jens.axboe@oracle.com
 
-On Wednesday, August 15, 2007 8:02 AM, James Bottomley wrote: 
-> Actually, we just got a second potential consumer ... although I'll
-> reprod to have the reporter send it to the list.  It's a device that
-> needs notice of report luns data changing.  The proposed 
-> mechanism looks
-> a bit narrow now (too tied to media change).  I'll see if I 
-> can propose
-> a more generic update.
+On Thu, 19 Jul 2007 10:49:30 -0700 Randy Dunlap wrote:
+
+> On Thu, 19 Jul 2007 18:57:50 +0300 Boaz Harrosh wrote:
 > 
+> > Randy Dunlap wrote:
+> > > 
+> > > Yes, this problem has been around forever AFAIK.  You didn't add
+> > > to it.
+> > Do we need to file a bug report in Bugzilla or something, so people have a 
+> > documentation of the work-around, until it is fixed?
+> 
+> Wouldn't hurt, I guess, but the SCSI people know about it.
+> 
+> > I think that for now I will wrap it up as it is. Could you send me the right
+> > BUG_ON() in place, with a printk pointing users to a solution? and I'll 
+> > redo all the patches.
+> 
+> I didn't add a BUG_ON(), so I don't have that patch.
+> (I just used a .slave_alloc function to force no high memory data
+> addresses, just like ppa.c does.)
+> 
+> You could just do a BUG_ON() just before there is an outsw()
+> or insw() to a NULL pointer, e.g., in datao_run:
+> 
+> 		BUG_ON(CURRENT_SC->SCp.ptr);
+> 
+> or we could make building the driver depend on !HIGHMEM.
+> 
+> I prefer either of the !HIGHMEM or slave_alloc changes to adding
+> a BUG_ON().  However, the SCSI people likely won't want to use the
+> slave_alloc() change because then the driver may never get fixed.
+> (Of course, it hasn't got fixed with the BUG happening either.)
+> 
+> Anyway, I'll re-read Documentation/DMA*.txt to see if I can fix it.
 
-I believe James is referring to my Promise issue. That is -  the
-customers mutipath enclosure our SAS controller.  They have alternating
-luns mapped to each path.  The odd luns mapped to a single path, and the
-even luns to the other.  When a cable is pulled, a check condition is
-generated (0x6, 0x3F, 0xE),  means report_luns data has changed.  What
-the enclosure does it move the luns over to the alternate path.    Our
-driver is not reporting the new luns because no event is generated to
-mpt fusion driver from controller firmware (firmware only reports when a
-target has been added/removed, not lun).     The mpt fusion driver
-reports to the sas transport layer, the libata layer is not involved.
-Shouldn't someone above sscsi lld be snooping that sence, and then
-sending REPORT_LUNS to find out what changed.       
 
-I've added some Promise contacts,  I hope they include the interested
-partied to this discussion.
+I have asked this once before, but I don't like the answer.
 
-Eric
+Currently aha152x.c only works with !HIGHMEM due to highmem-pages
+not being mapped into the driver's memory space.  James and hch
+tell me that using DMA mapping functions is the way to fix this,
+but those appear to me to be for DMA (!!), and this driver is (only)
+using PIO.
+
+I did try to use dma_map_sg() & dma_unmap_sg() here, but they end up
+giving the driver physical buffer addresses, which aren't what is
+needed for PIO.  Should this driver be using
+	scsi_kmap_atomic_sg() and scsi_kunmap_atomic_sg()
+or other API functions, or should the driver just use
+	kmap_atomic() + kunmap_atomic()
+for each highmem page?
+
+Thanks,
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
