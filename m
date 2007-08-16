@@ -1,89 +1,74 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] add use_sg_chaining option to scsi_host_template
-Date: Thu, 16 Aug 2007 13:31:43 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01D132C8@otce2k301.adaptec.com>
-References: <200708161648.l7GGm15B000923@mbox.iij4u.or.jp>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Deadlock in SCSI core!
+Date: Thu, 16 Aug 2007 15:21:43 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0708161511180.2557-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([216.52.22.36]:39135 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758588AbXHPRbp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Aug 2007 13:31:45 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <200708161648.l7GGm15B000923@mbox.iij4u.or.jp>
+Received: from iolanthe.rowland.org ([192.131.102.54]:48593 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753763AbXHPTVr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Aug 2007 15:21:47 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
-ACK aacraid portion (for what it is worth).
+James and others:
 
-Sincerely -- Mark Salyzyn
+One of the things scsi_host_dev_release() does is to call 
+kthread_stop(shost->ehandler).  This is all well and good, and to be 
+expected.
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of FUJITA Tomonori
-> Sent: Thursday, August 16, 2007 12:48 PM
-> To: jens.axboe@oracle.com
-> Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com; 
-> fujita.tomonori@lab.ntt.co.jp
-> Subject: [PATCH] add use_sg_chaining option to scsi_host_template
-> 
-. . .
-> diff --git a/drivers/scsi/aacraid/linit.c 
-> b/drivers/scsi/aacraid/linit.c
-> index a7f42a1..038980b 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -944,6 +944,7 @@ static struct scsi_host_template 
-> aac_driver_template = {
->  	.cmd_per_lun    		= AAC_NUM_IO_FIB, 
->  #endif	
->  	.use_clustering			= ENABLE_CLUSTERING,
-> +	.use_sg_chaining		= ENABLE_SG_CHAINING,
->  	.emulated                       = 1,
->  };
->  
-. . .
-> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> index 3b8a6a8..cbb5217 100644
-> --- a/include/scsi/scsi_host.h
-> +++ b/include/scsi/scsi_host.h
-> @@ -36,6 +36,9 @@ struct blk_queue_tags;
->  #define DISABLE_CLUSTERING 0
->  #define ENABLE_CLUSTERING 1
->  
-> +#define DISABLE_SG_CHAINING 0
-> +#define ENABLE_SG_CHAINING 1
-> +
->  enum scsi_eh_timer_return {
->  	EH_NOT_HANDLED,
->  	EH_HANDLED,
-> @@ -438,6 +441,15 @@ struct scsi_host_template {
->  	unsigned ordered_tag:1;
->  
->  	/*
-> +	 * true if the low-level driver can support sg chaining. this
-> +	 * will be removed eventually when all the drivers are
-> +	 * converted to support sg chaining.
-> +	 *
-> +	 * Status: OBSOLETE
-> +	 */
-> +	unsigned use_sg_chaining:1;
-> +
-> +	/*
->  	 * Countdown for host blocking with no commands outstanding
->  	 */
->  	unsigned int max_host_blocked;
-> @@ -580,6 +592,7 @@ struct Scsi_Host {
->  	unsigned unchecked_isa_dma:1;
->  	unsigned use_clustering:1;
->  	unsigned use_blk_tcq:1;
-> +	unsigned use_sg_chaining:1;
->  
->  	/*
->  	 * Host has requested that no further requests come 
-> through for the
+But...
+
+What if a host is hotunplugged in the middle of error recovery, and the
+error-handler thread holds the last reference?  Then when the
+error-handler gives up and does its final put, it will end up waiting 
+endlessly for itself to terminate.
+
+I have managed to trigger this a couple of times now while testing 
+other things.  Here's the relevant part of a stack trace:
+
+scsi_eh_6     D 00000136     0  7975      2
+       c87cfd88 00000096 17070554 00000136 00000000 00000008 cfdd8fec cfdd8a90 
+       00000000 cfdd8a90 cfdd8bc4 c138ac00 00000000 c02ab06a c87cfda4 cfa33280 
+       c013a35e c03d89ac c02a8818 00000046 c03d89ac c03d89ac c03d89ac c03d89a8 
+Call Trace:
+ [<c02a881d>] wait_for_completion+0x74/0xaa
+ [<c0131b3e>] kthread_stop+0x6b/0x8b
+ [<d09b8e6a>] scsi_host_dev_release+0x3e/0xa4 [scsi_mod]
+ [<c02212ae>] device_release+0x3c/0x7e
+ [<c01d2786>] kobject_cleanup+0x3c/0x4d
+ [<c01d27a2>] kobject_release+0xb/0xd
+ [<c01d33f1>] kref_put+0x79/0x88
+ [<c01d2748>] kobject_put+0x14/0x16
+ [<c0221400>] put_device+0x11/0x13
+ [<d09be37f>] scsi_target_dev_release+0x19/0x1c [scsi_mod]
+ [<c02212ae>] device_release+0x3c/0x7e
+ [<c01d2786>] kobject_cleanup+0x3c/0x4d
+ [<c01d27a2>] kobject_release+0xb/0xd
+ [<c01d33f1>] kref_put+0x79/0x88
+ [<c01d2748>] kobject_put+0x14/0x16
+ [<c0221400>] put_device+0x11/0x13
+ [<d09c11db>] scsi_device_dev_release_usercontext+0xfd/0x106 [scsi_mod]
+ [<c012f052>] execute_in_process_context+0x19/0x3d
+ [<d09c0305>] scsi_device_dev_release+0x13/0x15 [scsi_mod]
+ [<c02212ae>] device_release+0x3c/0x7e
+ [<c01d2786>] kobject_cleanup+0x3c/0x4d
+ [<c01d27a2>] kobject_release+0xb/0xd
+ [<c01d33f1>] kref_put+0x79/0x88
+ [<c01d2748>] kobject_put+0x14/0x16
+ [<c0221400>] put_device+0x11/0x13
+ [<d09b80d1>] scsi_device_put+0x32/0x36 [scsi_mod]
+ [<d09b8268>] __scsi_iterate_devices+0x57/0x60 [scsi_mod]
+ [<d09bd2d3>] scsi_run_host_queues+0x1c/0x26 [scsi_mod]
+ [<d09bc105>] scsi_error_handler+0x40d/0x46c [scsi_mod]
+ [<c0131d9a>] kthread+0x3b/0x61
+ [<c0104d53>] kernel_thread_helper+0x7/0x10
+ =======================
+
+What's the solution?
+
+Alan Stern
+
