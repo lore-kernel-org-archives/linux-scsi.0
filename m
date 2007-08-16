@@ -1,72 +1,89 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 0/4] aha152x.c - Cleanup, need help in testing and
-	auditing
-Date: Thu, 16 Aug 2007 12:18:29 -0500
-Message-ID: <1187284710.3367.31.camel@localhost.localdomain>
-References: <4695F76F.5000305@panasas.com>
-	 <20070712135750.2a4a4a54.rdunlap@xenotime.net> <469B38CC.50501@panasas.com>
-	 <20070717171607.ffc278eb.rdunlap@xenotime.net>
-	 <469DDD74.2060208@panasas.com>
-	 <20070718103320.4b6ad7b3.rdunlap@xenotime.net>
-	 <20070718145818.8eebbd66.rdunlap@xenotime.net>
-	 <20070718194335.e21a01e5.rdunlap@xenotime.net>
-	 <20070718200315.3adcd194.rdunlap@xenotime.net>
-	 <469F616D.1000909@panasas.com>
-	 <20070719083719.33d8994c.rdunlap@xenotime.net>
-	 <469F89FE.4080900@panasas.com>
-	 <20070719104930.7ae87df8.rdunlap@xenotime.net>
-	 <20070815222258.2601797f.rdunlap@xenotime.net>
-	 <1187275194.3367.21.camel@localhost.localdomain>
-	 <20070816102006.8a46281e.rdunlap@xenotime.net>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] add use_sg_chaining option to scsi_host_template
+Date: Thu, 16 Aug 2007 13:31:43 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01D132C8@otce2k301.adaptec.com>
+References: <200708161648.l7GGm15B000923@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:53573 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757702AbXHPRSc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Aug 2007 13:18:32 -0400
-In-Reply-To: <20070816102006.8a46281e.rdunlap@xenotime.net>
+Received: from mail-gw3.adaptec.com ([216.52.22.36]:39135 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758588AbXHPRbp convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Aug 2007 13:31:45 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <200708161648.l7GGm15B000923@mbox.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@lst.de>, Douglas Gilbert <dougg@torque.net>, "=?ISO-8859-1?Q? _J=FCrgen_E._Fischer_ ?=" <fischer@norbit.de>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, matthew@wil.cx, jens.axboe@oracle.com
+To: FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
 
-On Thu, 2007-08-16 at 10:20 -0700, Randy Dunlap wrote:
-> > For DMA transfers ... which is where you give the device a bus physical
-> > address and a length and tell it to go off and perform the transfer on
-> > its own, you need to use the dma_map_ functions.
-> > 
-> > For PIO transfers, which are usually ones where you have to feed the
-> > data into a special device register, since the kernel needs access to do
-> > this, it has to be done via kmap_atomic()/kunmap_atomic().  So, if
-> > everything has to go via pio, you use a sequence like
-> 
-> Thanks for the confirmation.
-> 
-> > scsi_for_each_sg(cmd, sg, max, i) {
-> > 	offset = sg->offset;
-> > 	len = sg->len;
-> 		->length;
-> 
-> > 	do {
-> > 		coffset = offset; clen =len;
-> > 		buf = scsi_kmap_atomic_sg(sg, 1, &coffset, &clen)
-> 
-> 					why   1 ?
+ACK aacraid portion (for what it is worth).
 
-You're mapping a single segment at a time to do the PIO.
+Sincerely -- Mark Salyzyn
 
-> > 		offset -= coffset; clen -= len;
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of FUJITA Tomonori
+> Sent: Thursday, August 16, 2007 12:48 PM
+> To: jens.axboe@oracle.com
+> Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com; 
+> fujita.tomonori@lab.ntt.co.jp
+> Subject: [PATCH] add use_sg_chaining option to scsi_host_template
 > 
-> 		       += ?
-> 
-> > 		<feed buf+coffset to/from PIO for clen>
-> > 		scsi_kunmap_atomic_sg(buf);
-> > 	} while (len > 0);
-> > }
-> 
-
-James
-
-
+. . .
+> diff --git a/drivers/scsi/aacraid/linit.c 
+> b/drivers/scsi/aacraid/linit.c
+> index a7f42a1..038980b 100644
+> --- a/drivers/scsi/aacraid/linit.c
+> +++ b/drivers/scsi/aacraid/linit.c
+> @@ -944,6 +944,7 @@ static struct scsi_host_template 
+> aac_driver_template = {
+>  	.cmd_per_lun    		= AAC_NUM_IO_FIB, 
+>  #endif	
+>  	.use_clustering			= ENABLE_CLUSTERING,
+> +	.use_sg_chaining		= ENABLE_SG_CHAINING,
+>  	.emulated                       = 1,
+>  };
+>  
+. . .
+> diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+> index 3b8a6a8..cbb5217 100644
+> --- a/include/scsi/scsi_host.h
+> +++ b/include/scsi/scsi_host.h
+> @@ -36,6 +36,9 @@ struct blk_queue_tags;
+>  #define DISABLE_CLUSTERING 0
+>  #define ENABLE_CLUSTERING 1
+>  
+> +#define DISABLE_SG_CHAINING 0
+> +#define ENABLE_SG_CHAINING 1
+> +
+>  enum scsi_eh_timer_return {
+>  	EH_NOT_HANDLED,
+>  	EH_HANDLED,
+> @@ -438,6 +441,15 @@ struct scsi_host_template {
+>  	unsigned ordered_tag:1;
+>  
+>  	/*
+> +	 * true if the low-level driver can support sg chaining. this
+> +	 * will be removed eventually when all the drivers are
+> +	 * converted to support sg chaining.
+> +	 *
+> +	 * Status: OBSOLETE
+> +	 */
+> +	unsigned use_sg_chaining:1;
+> +
+> +	/*
+>  	 * Countdown for host blocking with no commands outstanding
+>  	 */
+>  	unsigned int max_host_blocked;
+> @@ -580,6 +592,7 @@ struct Scsi_Host {
+>  	unsigned unchecked_isa_dma:1;
+>  	unsigned use_clustering:1;
+>  	unsigned use_blk_tcq:1;
+> +	unsigned use_sg_chaining:1;
+>  
+>  	/*
+>  	 * Host has requested that no further requests come 
+> through for the
