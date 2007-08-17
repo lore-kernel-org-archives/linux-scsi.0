@@ -1,48 +1,59 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Improve error message when offlining a device
-Date: Fri, 17 Aug 2007 11:02:10 -0600
-Message-ID: <20070817170210.GA30019@parisc-linux.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: [PATCH] SCSI: throttle SG_DXFER_TO_FROM_DEV warning message better
+Date: Sat, 18 Aug 2007 03:52:53 +0900
+Message-ID: <20070817185253.GA8590@htj.dyndns.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49521 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753453AbXHQRCM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Aug 2007 13:02:12 -0400
+Received: from rv-out-0910.google.com ([209.85.198.189]:42897 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755813AbXHQSxA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Aug 2007 14:53:00 -0400
+Received: by rv-out-0910.google.com with SMTP id k20so532162rvb
+        for <linux-scsi@vger.kernel.org>; Fri, 17 Aug 2007 11:53:00 -0700 (PDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
+When a program continually issues SG_DXFER_TO_FROM_DEV commands,
+throttling via printk_ratelimit() isn't enough.  If the drive is fast
+and the console is slow (e.g. vesafb), it can slow down the process
+quite a bit.
 
-The current code prints:
+This patch makes sg remember last printed comm name and skip warning
+message if the name matches.  This can protect most use cases.
 
-scsi 13:0:4:0: scsi: Device offlined - not ready after error recovery
+Signed-off-by: Tejun Heo <htejun@gmail.com>
+---
+ drivers/scsi/sg.c |   10 ++++++++--
+ 1 file changed, 8 insertions(+), 2 deletions(-)
 
-which is repetitively redundant.  This patch changes that message to:
-
-scsi 6:0:6:0: Device offlined - not ready after error recovery
-
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c8e351f..c05d020 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -1137,9 +1137,8 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
- 	struct scsi_cmnd *scmd, *next;
- 
- 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
--		sdev_printk(KERN_INFO, scmd->device,
--			    "scsi: Device offlined - not"
--			    " ready after error recovery\n");
-+		sdev_printk(KERN_INFO, scmd->device, "Device offlined - "
-+			    "not ready after error recovery\n");
- 		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
- 		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
- 			/*
-
--- 
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 85d3894..913408a 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -605,8 +605,10 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
+ 	 * is a non-zero input_size, so emit a warning.
+ 	 */
+-	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV)
+-		if (printk_ratelimit())
++	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
++		static char last_printed[TASK_COMM_LEN];
++
++		if (strcmp(last_printed, current->comm) && printk_ratelimit()) {
+ 			printk(KERN_WARNING
+ 			       "sg_write: data in/out %d/%d bytes for SCSI command 0x%x--"
+ 			       "guessing data in;\n" KERN_WARNING "   "
+@@ -614,6 +616,10 @@ sg_write(struct file *filp, const char __user *buf, size_t count, loff_t * ppos)
+ 			       old_hdr.reply_len - (int)SZ_SG_HEADER,
+ 			       input_size, (unsigned int) cmnd[0],
+ 			       current->comm);
++
++			memcpy(last_printed, current->comm, TASK_COMM_LEN);
++		}
++	}
+ 	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
+ 	return (k < 0) ? k : count;
+ }
