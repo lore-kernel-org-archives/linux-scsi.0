@@ -1,39 +1,71 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: Retry counters in sd.c
-Date: Thu, 16 Aug 2007 16:19:39 -0700
-Message-ID: <20070816161939.42e2d68b.zaitcev@redhat.com>
-References: <Pine.LNX.4.44L0.0708151108000.3895-100000@iolanthe.rowland.org>
+From: Maik Hampel <m.hampel@gmx.de>
+Subject: [PATCH] [SCSI] arcmsr: Fix error handling
+Date: Fri, 17 Aug 2007 16:23:47 +0200
+Message-ID: <1187360627.2665.8.camel@c64>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:34689 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752946AbXHPXXp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 16 Aug 2007 19:23:45 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0708151108000.3895-100000@iolanthe.rowland.org>
+Received: from mail.gmx.net ([213.165.64.20]:51702 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753875AbXHQOXx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 17 Aug 2007 10:23:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI development list <linux-scsi@vger.kernel.org>, zaitcev@redhat.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "erich@areca.com.tw" <erich@areca.com.tw>
 
-On Wed, 15 Aug 2007 11:19:43 -0400 (EDT), Alan Stern <stern@rowland.harvard.edu> wrote:
+Fixed error handling in queuecommand(), now all READ_ and WRITE_ commands
+are aborted in case of RAID is gone. Before only READ_6 and WRITE_6 commands
+were aborted.
 
-> And that's not even taking into account the fact that
-> sd_read_capcity(), together with everything else under
-> sd_revalidate_disk(), gets called twice in a row during device
-> scanning.  (What's the reason for that, anyway?)
+Signed-off-by: Maik Hampel <m.hampel@gmx.de>
+---
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 0ddfc21..7a001ad 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -1133,17 +1133,27 @@ static int arcmsr_queue_command(struct scsi_cmnd *cmd,
+ 		uint8_t block_cmd;
+ 
+ 		block_cmd = cmd->cmnd[0] & 0x0f;
+-		if (block_cmd == 0x08 || block_cmd == 0x0a) {
+-			printk(KERN_NOTICE
+-				"arcmsr%d: block 'read/write'"
+-				"command with gone raid volume"
+-				" Cmd = %2x, TargetId = %d, Lun = %d \n"
+-				, acb->host->host_no
+-				, cmd->cmnd[0]
+-				, target, lun);
+-			cmd->result = (DID_NO_CONNECT << 16);
+-			cmd->scsi_done(cmd);
+-			return 0;
++		switch (block_cmd) {
++			case READ_6:
++			case READ_10:
++			case READ_12:
++			case READ_16:
++			case WRITE_6:
++			case WRITE_10:
++			case WRITE_12:
++			case WRITE_16:
++				printk(KERN_NOTICE
++					"arcmsr%d: block 'read/write'"
++					"command with gone raid volume"
++					" Cmd = %2x, TargetId = %d, Lun = %d \n"
++					, acb->host->host_no
++					, cmd->cmnd[0]
++					, target, lun);
++				cmd->result = (DID_NO_CONNECT << 16);
++				cmd->scsi_done(cmd);
++				return 0;
++			default:
++				break;
+ 		}
+ 	}
+ 	if (atomic_read(&acb->ccboutstandingcount) >=
+-- 
+1.4.4.4
 
-I think this is an oldish problem in the block layer, which started
-around 2.6.9. Right about that time Al Viro did something to make the
-opens sane, and required ioctl to do opens right. This in turn busted
-DASD on s390, and even floppies. The symptom was that after a media
-change, first open would fail. This was fixed back in some 2.6.12
-or so, I do not remember exactly, but the price was the redundant
-call to revalidate the media.
 
-IIRC the issue is open-from-within open, which is needed to check
-partitions. Application opens sda1, and this in turn opens sda.
-Something like that.
 
--- Pete
