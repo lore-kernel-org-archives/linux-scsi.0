@@ -1,71 +1,48 @@
-From: Maik Hampel <m.hampel@gmx.de>
-Subject: [PATCH] [SCSI] arcmsr: Fix error handling
-Date: Fri, 17 Aug 2007 16:23:47 +0200
-Message-ID: <1187360627.2665.8.camel@c64>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH] Improve error message when offlining a device
+Date: Fri, 17 Aug 2007 11:02:10 -0600
+Message-ID: <20070817170210.GA30019@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.gmx.net ([213.165.64.20]:51702 "HELO mail.gmx.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753875AbXHQOXx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 17 Aug 2007 10:23:53 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:49521 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753453AbXHQRCM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Aug 2007 13:02:12 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "erich@areca.com.tw" <erich@areca.com.tw>
+To: linux-scsi@vger.kernel.org
 
-Fixed error handling in queuecommand(), now all READ_ and WRITE_ commands
-are aborted in case of RAID is gone. Before only READ_6 and WRITE_6 commands
-were aborted.
 
-Signed-off-by: Maik Hampel <m.hampel@gmx.de>
----
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 0ddfc21..7a001ad 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1133,17 +1133,27 @@ static int arcmsr_queue_command(struct scsi_cmnd *cmd,
- 		uint8_t block_cmd;
+The current code prints:
+
+scsi 13:0:4:0: scsi: Device offlined - not ready after error recovery
+
+which is repetitively redundant.  This patch changes that message to:
+
+scsi 6:0:6:0: Device offlined - not ready after error recovery
+
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c8e351f..c05d020 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1137,9 +1137,8 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
+ 	struct scsi_cmnd *scmd, *next;
  
- 		block_cmd = cmd->cmnd[0] & 0x0f;
--		if (block_cmd == 0x08 || block_cmd == 0x0a) {
--			printk(KERN_NOTICE
--				"arcmsr%d: block 'read/write'"
--				"command with gone raid volume"
--				" Cmd = %2x, TargetId = %d, Lun = %d \n"
--				, acb->host->host_no
--				, cmd->cmnd[0]
--				, target, lun);
--			cmd->result = (DID_NO_CONNECT << 16);
--			cmd->scsi_done(cmd);
--			return 0;
-+		switch (block_cmd) {
-+			case READ_6:
-+			case READ_10:
-+			case READ_12:
-+			case READ_16:
-+			case WRITE_6:
-+			case WRITE_10:
-+			case WRITE_12:
-+			case WRITE_16:
-+				printk(KERN_NOTICE
-+					"arcmsr%d: block 'read/write'"
-+					"command with gone raid volume"
-+					" Cmd = %2x, TargetId = %d, Lun = %d \n"
-+					, acb->host->host_no
-+					, cmd->cmnd[0]
-+					, target, lun);
-+				cmd->result = (DID_NO_CONNECT << 16);
-+				cmd->scsi_done(cmd);
-+				return 0;
-+			default:
-+				break;
- 		}
- 	}
- 	if (atomic_read(&acb->ccboutstandingcount) >=
+ 	list_for_each_entry_safe(scmd, next, work_q, eh_entry) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-			    "scsi: Device offlined - not"
+-			    " ready after error recovery\n");
++		sdev_printk(KERN_INFO, scmd->device, "Device offlined - "
++			    "not ready after error recovery\n");
+ 		scsi_device_set_state(scmd->device, SDEV_OFFLINE);
+ 		if (scmd->eh_eflags & SCSI_EH_CANCEL_CMD) {
+ 			/*
+
 -- 
-1.4.4.4
-
-
-
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
