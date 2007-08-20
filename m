@@ -1,130 +1,95 @@
-From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Subject: Re: Errors on USB-storage device are ignored.
-Date: Mon, 20 Aug 2007 10:37:23 +0200
-Message-ID: <20070820083723.GD21438@bitwizard.nl>
-References: <20070816145817.GA24105@bitwizard.nl> <20070820060946.GE9867@one-eyed-alien.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] add use_sg_chaining option to scsi_host_template
+Date: Mon, 20 Aug 2007 18:19:21 +0900
+Message-ID: <20070820181921J.fujita.tomonori@lab.ntt.co.jp>
+References: <200708161648.l7GGm15B000923@mbox.iij4u.or.jp>
+	<20070818064737O.tomof@acm.org>
+	<20070820071030.GO23758@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dtp.xs4all.nl ([80.126.206.180]:47989 "HELO abra2.bitwizard.nl"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755460AbXHTIh0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 20 Aug 2007 04:37:26 -0400
-Content-Disposition: inline
-In-Reply-To: <20070820060946.GE9867@one-eyed-alien.net>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:53084 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751877AbXHTJT1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Aug 2007 05:19:27 -0400
+In-Reply-To: <20070820071030.GO23758@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: usb-storage@lists.one-eyed-alien.net, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+To: jens.axboe@oracle.com
+Cc: tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
 
-On Sun, Aug 19, 2007 at 11:09:46PM -0700, Matthew Dharm wrote:
-> Off the cuff, this really looks like something for the SCSI layer.  I'll
-> bet there are SCSI devices that do something similar...
+On Mon, 20 Aug 2007 09:10:31 +0200
+Jens Axboe <jens.axboe@oracle.com> wrote:
+
+> On Sat, Aug 18 2007, FUJITA Tomonori wrote:
+> > On Fri, 17 Aug 2007 01:47:59 +0900
+> > FUJITA Tomonori <tomof@acm.org> wrote:
+> > 
+> > > This is for Jens' sglist branch in the block git tree.
+> > > 
+> > > It enables sg chaining support for the LLDs that use scsi_for_each_sg
+> > > accessor properly.
+> > > 
+> > > ---
+> > > >From a6e50a3b476bc193de103e8c1d95877ced38918e Mon Sep 17 00:00:00 2001
+> > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > Date: Fri, 17 Aug 2007 01:35:41 +0900
+> > > Subject: [PATCH] add use_sg_chaining option to scsi_host_template
+> > > 
+> > > This option is true if a low-level driver can support sg
+> > > chaining. This will be removed eventually when all the drivers are
+> > > converted to support sg chaining. q->max_phys_segments is set to
+> > > SCSI_MAX_SG_SEGMENTS if false.
+> > > 
+> > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > ---
+> > >  arch/ia64/hp/sim/simscsi.c            |    1 +
+> > >  drivers/scsi/3w-9xxx.c                |    1 +
+> > >  drivers/scsi/3w-xxxx.c                |    1 +
+> > >  drivers/scsi/BusLogic.c               |    1 +
+> > >  drivers/scsi/NCR53c406a.c             |    3 ++-
+> > >  drivers/scsi/a100u2w.c                |    1 +
+> > >  drivers/scsi/aacraid/linit.c          |    1 +
+> > >  drivers/scsi/aha1740.c                |    1 +
+> > >  drivers/scsi/aic7xxx/aic79xx_osm.c    |    1 +
+> > >  drivers/scsi/aic7xxx/aic7xxx_osm.c    |    1 +
+> > >  drivers/scsi/aic7xxx_old.c            |    1 +
+> > >  drivers/scsi/arcmsr/arcmsr_hba.c      |    1 +
+> > >  drivers/scsi/dc395x.c                 |    1 +
+> > >  drivers/scsi/dpt_i2o.c                |    1 +
+> > >  drivers/scsi/eata.c                   |    3 ++-
+> > >  drivers/scsi/hosts.c                  |    1 +
+> > >  drivers/scsi/hptiop.c                 |    1 +
+> > >  drivers/scsi/ibmmca.c                 |    1 +
+> > >  drivers/scsi/ibmvscsi/ibmvscsi.c      |    1 +
+> > >  drivers/scsi/initio.c                 |    1 +
+> > >  drivers/scsi/ipr.c                    |    1 +
+> > 
+> > I should have dropped ipr since we haven't converted libata yet.
 > 
-> And, I'm generally reluctant to modify the data to/from a device unless
-> usb-storage *really* has to in order to make it work....
+> But we have, are there still bits missing?
 
-I fully agree, but as the scsi layer has been in existance almost 10
-years longer than USB-storage, and that nobody seems to have encountered
-a device requesting auto-sense, and then reporting no error, I would
-say this is just a classical: "shitty USB implementation". 
+I'm just a bit nervous about possible bugs.
+
+Probably we need to remove blk_queue_max_phys_segments() in libata
+for a possible lower sg list size (< 128).
+
+BTW, I think that it would be good to test the sglist with a lower sg
+list size (like 32) to test all the llds.
 
 
-
-The reverse situation is also probelematic. If a device happens to
-occasionally request an autosense, but perhaps the problem solves
-itself before the sense request comes through, then it might report
-"no error". If that is actually true, for some SCSI harddisks, then
-changing this at the scsi layer will make those harddrives report an
-IO error every now and then, which is spurious. 
-
-That is why I chose to implement it at the lowest possible level, 
-as close as possible to the known non-conformant device. 
-
-Yes, I've generalized to: "Maybe there are other USB-IDE converters
-that may make this mistake", but won't go as far as: "Maybe there
-are other SCSI devices that make this mistake". 
-
-	Roger. 
-
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index d23a181..01a0197 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -795,8 +795,6 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
  
-> 
-> Matt
-> 
-> On Thu, Aug 16, 2007 at 04:58:17PM +0200, Rogier Wolff wrote:
-> > 
-> > Hi,
-> > 
-> > I have an usb-storage enclosure that houses a normal desktop 
-> > harddrive. I have been wondering why disks in that enclosure 
-> > seemed to be  having less errors than when connected to a 
-> > normal IDE connector. 
-> > 
-> > The reason is: USB-storage is ignoring a hint that something is
-> > wrong. Probably my enclosure is also not completely following specs, 
-> > but Linux is ignoring the hint as well.... 
-> > 
-> > On hitting a bad block, the disk reports error. The USB converter
-> > then reports "auto-sense-required", and this is carried out. However
-> > at this point, my USB enclosure returns all-zeroes. This is
-> > considered non-fatal by the kernel. 
-> > 
-> > I'm guessing not many people are testing these things with 
-> > bad drives. So, I don't know wether or not other USB converters
-> > handle this situation more gracefully. 
-> > 
-> > As a patch, I've decided to set the sense key to "vendor specific"
-> > (9), and then no "additional sense" (0:0), if, and only if the device
-> > didn't return any valid sense info. 
-> > 
-> > The rest of the kernel then correctly interprets the situation
-> > as an IO error. 
-> > 
-> > 	Roger Wolff. 
-> > 
-> > --- linux-2.6.20.3.clean/drivers/usb/storage/transport.c	2007-03-13 19:27:08.000000000 +0100
-> > +++ linux-2.6.20.3.kostunrix/drivers/usb/storage/transport.c	2007-08-16 16:47:00.000000000 +0200
-> > @@ -629,6 +629,14 @@
-> >  
-> >  		/* let's clean up right away */
-> >  		memcpy(srb->sense_buffer, us->sensebuf, US_SENSE_SIZE);
-> > +		if (((srb->sense_buffer[2]&0xf) == 0) &&
-> > +		    (srb->sense_buffer[12] == 0) &&
-> > +		    (srb->sense_buffer[13] == 0)) {
-> > +			/* Hmmmmm. The device requested sense, but then
-> > +			   declined to give us more info.... -- REW */ 
-> > +			srb->sense_buffer[2] |= 0x09; /* Vendor specific */
-> > +		}
-> > +
-> >  		srb->resid = old_resid;
-> >  		srb->request_buffer = old_request_buffer;
-> >  		srb->request_bufflen = old_request_bufflen;
-> > 
-> > 
-> > 
-> > -- 
-> > ** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
-> > **    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
-> > *-- BitWizard writes Linux device drivers for any device you may have! --*
-> > Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
-> > Does it sit on the couch all day? Is it unemployed? Please be specific! 
-> > Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
-> 
-> -- 
-> Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.net 
-> Maintainer, Linux USB Mass Storage Driver
-> 
-> G:  Money isn't everything, A.J.
-> AJ: Who convinced you of that?
-> G:  The Chief, at my last salary review.
-> 					-- Mike and Greg
-> User Friendly, 11/3/1998
+ 	ata_scsi_sdev_config(sdev);
+ 
+-	blk_queue_max_phys_segments(sdev->request_queue, LIBATA_MAX_PRD);
+-
+ 	sdev->manage_start_stop = 1;
+ 
+ 	if (dev)
 
-
-
--- 
-** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
-**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
-*-- BitWizard writes Linux device drivers for any device you may have! --*
-Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
-Does it sit on the couch all day? Is it unemployed? Please be specific! 
-Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
