@@ -1,154 +1,58 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Errors on USB-storage device are ignored.
-Date: Sun, 19 Aug 2007 23:09:46 -0700
-Message-ID: <20070820060946.GE9867@one-eyed-alien.net>
-References: <20070816145817.GA24105@bitwizard.nl>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 8908] New: 3ware 9650SE -8LPML not recognized
+ by 3w-9xxx driver
+Date: Sun, 19 Aug 2007 23:10:00 -0700
+Message-ID: <20070819231000.cc5eff11.akpm@linux-foundation.org>
+References: <bug-8908-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0910694019=="
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20070816145817.GA24105@bitwizard.nl>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: usb-storage@lists.one-eyed-alien.net, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:52137 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751108AbXHTGK0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Aug 2007 02:10:26 -0400
+In-Reply-To: <bug-8908-10286@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, Adam Radford <linuxraid@amcc.com>, svedox@t-online.de
 
+On Sun, 19 Aug 2007 11:51:38 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
 
---===============0910694019==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="tMbDGjvJuJijemkf"
-Content-Disposition: inline
-
-
---tMbDGjvJuJijemkf
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-Off the cuff, this really looks like something for the SCSI layer.  I'll
-bet there are SCSI devices that do something similar...
-
-And, I'm generally reluctant to modify the data to/from a device unless
-usb-storage *really* has to in order to make it work....
-
-Matt
-
-On Thu, Aug 16, 2007 at 04:58:17PM +0200, Rogier Wolff wrote:
->=20
-> Hi,
->=20
-> I have an usb-storage enclosure that houses a normal desktop=20
-> harddrive. I have been wondering why disks in that enclosure=20
-> seemed to be  having less errors than when connected to a=20
-> normal IDE connector.=20
->=20
-> The reason is: USB-storage is ignoring a hint that something is
-> wrong. Probably my enclosure is also not completely following specs,=20
-> but Linux is ignoring the hint as well....=20
->=20
-> On hitting a bad block, the disk reports error. The USB converter
-> then reports "auto-sense-required", and this is carried out. However
-> at this point, my USB enclosure returns all-zeroes. This is
-> considered non-fatal by the kernel.=20
->=20
-> I'm guessing not many people are testing these things with=20
-> bad drives. So, I don't know wether or not other USB converters
-> handle this situation more gracefully.=20
->=20
-> As a patch, I've decided to set the sense key to "vendor specific"
-> (9), and then no "additional sense" (0:0), if, and only if the device
-> didn't return any valid sense info.=20
->=20
-> The rest of the kernel then correctly interprets the situation
-> as an IO error.=20
->=20
-> 	Roger Wolff.=20
->=20
-> --- linux-2.6.20.3.clean/drivers/usb/storage/transport.c	2007-03-13 19:27=
-:08.000000000 +0100
-> +++ linux-2.6.20.3.kostunrix/drivers/usb/storage/transport.c	2007-08-16 1=
-6:47:00.000000000 +0200
-> @@ -629,6 +629,14 @@
-> =20
->  		/* let's clean up right away */
->  		memcpy(srb->sense_buffer, us->sensebuf, US_SENSE_SIZE);
-> +		if (((srb->sense_buffer[2]&0xf) =3D=3D 0) &&
-> +		    (srb->sense_buffer[12] =3D=3D 0) &&
-> +		    (srb->sense_buffer[13] =3D=3D 0)) {
-> +			/* Hmmmmm. The device requested sense, but then
-> +			   declined to give us more info.... -- REW */=20
-> +			srb->sense_buffer[2] |=3D 0x09; /* Vendor specific */
-> +		}
-> +
->  		srb->resid =3D old_resid;
->  		srb->request_buffer =3D old_request_buffer;
->  		srb->request_bufflen =3D old_request_bufflen;
->=20
->=20
->=20
-> --=20
-> ** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
-> **    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
-> *-- BitWizard writes Linux device drivers for any device you may have! --*
-> Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement=
-.=20
-> Does it sit on the couch all day? Is it unemployed? Please be specific!=
-=20
-> Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-G:  Money isn't everything, A.J.
-AJ: Who convinced you of that?
-G:  The Chief, at my last salary review.
-					-- Mike and Greg
-User Friendly, 11/3/1998
-
---tMbDGjvJuJijemkf
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFGyTAqHL9iwnUZqnkRAiQPAJwOrQb1rktPYaUokmAKgLrUq1g/LQCgjM/T
-l3VrJ3sAg5EJ+da+5lA7mGQ=
-=DPdm
------END PGP SIGNATURE-----
-
---tMbDGjvJuJijemkf--
-
-
---===============0910694019==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >>  http://get.splunk.com/
---===============0910694019==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
-
---===============0910694019==--
+> http://bugzilla.kernel.org/show_bug.cgi?id=8908
+> 
+>            Summary: 3ware 9650SE -8LPML not recognized by 3w-9xxx driver
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.20.1
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: Serial ATA
+>         AssignedTo: jgarzik@pobox.com
+>         ReportedBy: svedox@t-online.de
+> 
+> 
+> Most recent kernel where this bug did not occur:
+> Distribution: Debian Lenny/Sid
+> Hardware Environment: Intel Pentium D 820, Intel Mainboard with 955X Controller
+> on board
+> Software Environment: Linux/Debian
+> Problem Description: The 3w-9xxx kernel driver for 3ware 9xxx SATA RAID
+> Controller series did not recognize the 3ware 9650SE-8LPML SATA RAID
+> Controller. I tryed also with original driver from 3ware itself, but this also
+> didn't work, because of changes in module interface. If you need tester for
+> this controller, i can do it for you.
+> 
+> Steps to reproduce: Get the mentioned card, install it in your compouter, and
+> attach some sata hd's to it. Compile kernel with 3w-9xxx SATA RAID driver(SCSI
+> section) and install it. Include HD's into your fstab.conf. Reboot and watch
+> boot messages. You will see, that HD's, that are attached to the 3ware
+> Controller are not found. After boot, put lspci into your linux console. lspci
+> shows, here is an unrecognized 3ware Controller card.
+> 
