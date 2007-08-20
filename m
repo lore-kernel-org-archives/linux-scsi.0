@@ -1,60 +1,89 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Errors on USB-storage device are ignored.
-Date: Mon, 20 Aug 2007 09:03:19 -0400
-Message-ID: <1187614999.3465.2.camel@localhost.localdomain>
-References: <20070816145817.GA24105@bitwizard.nl>
-	<20070820060946.GE9867@one-eyed-alien.net>
-	<20070820083723.GD21438@bitwizard.nl>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] add use_sg_chaining option to scsi_host_template
+Date: Mon, 20 Aug 2007 15:05:22 +0200
+Message-ID: <20070820130522.GC23758@kernel.dk>
+References: <200708161648.l7GGm15B000923@mbox.iij4u.or.jp> <20070818064737O.tomof@acm.org> <20070820071030.GO23758@kernel.dk> <20070820181921J.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20070820083723.GD21438@bitwizard.nl>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Rogier Wolff <R.E.Wolff@BitWizard.nl>
-Cc: usb-storage@lists.one-eyed-alien.net, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from brick.kernel.dk ([87.55.233.238]:19635 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750926AbXHTNF0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 20 Aug 2007 09:05:26 -0400
+Content-Disposition: inline
+In-Reply-To: <20070820181921J.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: tomof@acm.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-On Mon, 2007-08-20 at 10:37 +0200, Rogier Wolff wrote:
-> On Sun, Aug 19, 2007 at 11:09:46PM -0700, Matthew Dharm wrote:
-> > Off the cuff, this really looks like something for the SCSI layer.  I'll
-> > bet there are SCSI devices that do something similar...
-> > 
-> > And, I'm generally reluctant to modify the data to/from a device unless
-> > usb-storage *really* has to in order to make it work....
+On Mon, Aug 20 2007, FUJITA Tomonori wrote:
+> On Mon, 20 Aug 2007 09:10:31 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
 > 
-> I fully agree, but as the scsi layer has been in existance almost 10
-> years longer than USB-storage, and that nobody seems to have encountered
-> a device requesting auto-sense, and then reporting no error, I would
-> say this is just a classical: "shitty USB implementation". 
+> > On Sat, Aug 18 2007, FUJITA Tomonori wrote:
+> > > On Fri, 17 Aug 2007 01:47:59 +0900
+> > > FUJITA Tomonori <tomof@acm.org> wrote:
+> > > 
+> > > > This is for Jens' sglist branch in the block git tree.
+> > > > 
+> > > > It enables sg chaining support for the LLDs that use scsi_for_each_sg
+> > > > accessor properly.
+> > > > 
+> > > > ---
+> > > > >From a6e50a3b476bc193de103e8c1d95877ced38918e Mon Sep 17 00:00:00 2001
+> > > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > > Date: Fri, 17 Aug 2007 01:35:41 +0900
+> > > > Subject: [PATCH] add use_sg_chaining option to scsi_host_template
+> > > > 
+> > > > This option is true if a low-level driver can support sg
+> > > > chaining. This will be removed eventually when all the drivers are
+> > > > converted to support sg chaining. q->max_phys_segments is set to
+> > > > SCSI_MAX_SG_SEGMENTS if false.
+> > > > 
+> > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > > > ---
+> > > >  arch/ia64/hp/sim/simscsi.c            |    1 +
+> > > >  drivers/scsi/3w-9xxx.c                |    1 +
+> > > >  drivers/scsi/3w-xxxx.c                |    1 +
+> > > >  drivers/scsi/BusLogic.c               |    1 +
+> > > >  drivers/scsi/NCR53c406a.c             |    3 ++-
+> > > >  drivers/scsi/a100u2w.c                |    1 +
+> > > >  drivers/scsi/aacraid/linit.c          |    1 +
+> > > >  drivers/scsi/aha1740.c                |    1 +
+> > > >  drivers/scsi/aic7xxx/aic79xx_osm.c    |    1 +
+> > > >  drivers/scsi/aic7xxx/aic7xxx_osm.c    |    1 +
+> > > >  drivers/scsi/aic7xxx_old.c            |    1 +
+> > > >  drivers/scsi/arcmsr/arcmsr_hba.c      |    1 +
+> > > >  drivers/scsi/dc395x.c                 |    1 +
+> > > >  drivers/scsi/dpt_i2o.c                |    1 +
+> > > >  drivers/scsi/eata.c                   |    3 ++-
+> > > >  drivers/scsi/hosts.c                  |    1 +
+> > > >  drivers/scsi/hptiop.c                 |    1 +
+> > > >  drivers/scsi/ibmmca.c                 |    1 +
+> > > >  drivers/scsi/ibmvscsi/ibmvscsi.c      |    1 +
+> > > >  drivers/scsi/initio.c                 |    1 +
+> > > >  drivers/scsi/ipr.c                    |    1 +
+> > > 
+> > > I should have dropped ipr since we haven't converted libata yet.
+> > 
+> > But we have, are there still bits missing?
+> 
+> I'm just a bit nervous about possible bugs.
 
-I'm afraid it is.  Reporting NO SENSE is actually a legitimate thing for
-a SCSI device to do.  Usually it just means that the problem it was
-reporting went away in the interim.  So, making it mean there's a
-serious drive problem would put us in volation of the spec.  If this can
-be fixed, it will have to be in USB ... probably tied as specificially
-as possible to this particular device ... USB storage that correctly
-follows the RBC spec is allowed to report NO SENSE for the same reason
-as standard SCSI.
+I hope there aren't any left in libata :-)
 
-James
+> Probably we need to remove blk_queue_max_phys_segments() in libata
+> for a possible lower sg list size (< 128).
 
+Indeed, that should go, even in mainline now.
 
+> BTW, I think that it would be good to test the sglist with a lower sg
+> list size (like 32) to test all the llds.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Splunk Inc.
-Still grepping through log files to find problems?  Stop.
-Now Search log events and configuration files using AJAX and a browser.
-Download your FREE copy of Splunk now >>  http://get.splunk.com/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+That's a good idea, then we'll get the chaining stuff exercised much
+more easily!
+
+-- 
+Jens Axboe
+
