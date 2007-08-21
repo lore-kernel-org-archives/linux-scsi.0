@@ -1,45 +1,69 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [RFC] FC transport: Disable LUN scanning from low level driver
-Date: Tue, 21 Aug 2007 17:31:57 +0200
-Message-ID: <20070821153157.GA11101@schmichrtp.de.ibm.com>
-References: <20070820112121.GA1487@schmichrtp.de.ibm.com> <46CA3ACB.7070708@emulex.com> <20070821123640.GA4821@schmichrtp.de.ibm.com> <46CAE295.2050404@emulex.com>
+Subject: [PATCH] FC transport: Allow LLDD to disable LUN scanning
+Date: Tue, 21 Aug 2007 17:37:17 +0200
+Message-ID: <20070821153716.GB11101@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate3.de.ibm.com ([195.212.29.152]:31976 "EHLO
-	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757334AbXHUPd1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Aug 2007 11:33:27 -0400
+Received: from mtagate1.de.ibm.com ([195.212.29.150]:24946 "EHLO
+	mtagate1.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760586AbXHUPiq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Aug 2007 11:38:46 -0400
 Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
-	by mtagate3.de.ibm.com (8.13.8/8.13.8) with ESMTP id l7LFXPbW180618
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Aug 2007 15:33:25 GMT
-Received: from d12av03.megacenter.de.ibm.com (d12av03.megacenter.de.ibm.com [9.149.165.213])
-	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l7LFXPu02265216
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Aug 2007 17:33:25 +0200
-Received: from d12av03.megacenter.de.ibm.com (loopback [127.0.0.1])
-	by d12av03.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l7LFXPOV005509
-	for <linux-scsi@vger.kernel.org>; Tue, 21 Aug 2007 17:33:25 +0200
+	by mtagate1.de.ibm.com (8.13.8/8.13.8) with ESMTP id l7LFcjIQ036186
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Aug 2007 15:38:45 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l7LFcjbw2310318
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Aug 2007 17:38:45 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l7LFciPu017865
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Aug 2007 17:38:45 +0200
 Content-Disposition: inline
-In-Reply-To: <46CAE295.2050404@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: James Smart <James.Smart@Emulex.Com>
 
-On Tue, Aug 21, 2007 at 09:03:17AM -0400, James Smart wrote:
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-> Nit (but preferred) : change "no_target_scan" to "disable_target_scan".
-> Otherwise, patch is good.
+Introduce a flag that allows the SCSI low level device driver to
+disable the automatic scanning for LUNs from the FC transport class.
 
-Ok. I will send the fixed version in a separate mail.
+This is for the zfcp device driver that manages the attached units on
+its own and does not want to have the automatic discovery of other
+LUNs.
 
-> Yep.  However, I don't agree with Hannes in this case.  Given that the
-> firmware is already doing funky things to share the real adapter, I
-> believe it (or the driver) should do the right thing in the LUN
-> presentation to keep the system happy. But - I guess that's something
-> for a different time.
+Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+---
+ drivers/scsi/scsi_transport_fc.c |    4 +++-
+ include/scsi/scsi_transport_fc.h |    3 +++
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
-Yes, i think it is better to fix the problems when they occur. Adapter
-sharing in general works well.
-
-Christof
+--- linux-2.6.orig/drivers/scsi/scsi_transport_fc.c
++++ linux-2.6/drivers/scsi/scsi_transport_fc.c
+@@ -2988,10 +2988,12 @@ fc_scsi_scan_rport(struct work_struct *w
+ 	struct fc_rport *rport =
+ 		container_of(work, struct fc_rport, scan_work);
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	unsigned long flags;
+ 
+ 	if ((rport->port_state == FC_PORTSTATE_ONLINE) &&
+-	    (rport->roles & FC_PORT_ROLE_FCP_TARGET)) {
++	    (rport->roles & FC_PORT_ROLE_FCP_TARGET) &&
++	    !(i->f->disable_target_scan)) {
+ 		scsi_scan_target(&rport->dev, rport->channel,
+ 			rport->scsi_target_id, SCAN_WILD_CARD, 1);
+ 	}
+--- linux-2.6.orig/include/scsi/scsi_transport_fc.h
++++ linux-2.6/include/scsi/scsi_transport_fc.h
+@@ -632,6 +632,9 @@ struct fc_function_template {
+ 	unsigned long	show_host_fabric_name:1;
+ 	unsigned long	show_host_symbolic_name:1;
+ 	unsigned long	show_host_system_hostname:1;
++
++	/* The driver can disable the LUN scanning from the FC transport class */
++	unsigned long	disable_target_scan:1;
+ };
+ 
+ 
