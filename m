@@ -1,17 +1,32 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: test email <no contents>
-Date: Wed, 22 Aug 2007 16:34:12 -0700
-Message-ID: <46CCC7F4.8010606@qlogic.com>
+From: Ralf Baechle <ralf@linux-mips.org>
+Subject: Re: [PATCH 8/9] define global BIT macro
+Date: Wed, 22 Aug 2007 23:03:21 +0100
+Message-ID: <20070822220321.GA4473@linux-mips.org>
+References: <737828602404912540@wsc.cz> <428714662539710215@wsc.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:5020 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758759AbXHVUcW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Aug 2007 16:32:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-input@atrey.karlin.mff.cuni.cz>
+Content-Disposition: inline
+In-Reply-To: <428714662539710215@wsc.cz>
+Sender: owner-linux-input@atrey.karlin.mff.cuni.cz
+List-Help: <mailto:majordomo@atrey.karlin.mff.cuni.cz?body=help>
+List-Owner: <mailto:owner-linux-input@atrey.karlin.mff.cuni.cz>
+List-Post: <mailto:linux-input@atrey.karlin.mff.cuni.cz>
+List-Unsubscribe: <mailto:linux-input-request@atrey.karlin.mff.cuni.cz?body=unsubscribe>
+To: Jiri Slaby <jirislaby@gmail.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, source@mvista.com, dougthompson@xmission.com, bluesmoke-devel@lists.sourceforge.net, dtor@mail.ru, linux-input@atrey.karlin.mff.cuni.cz, netdev@vger.kernel.org, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, gtolstolytkin@ru.mvista.com, vitalywool@gmail.com, dsaxena@plexity.net, linux-mips@linux-mips.org, mchehab@infradead.org, video4linux-list@redhat.com, jbenc@suse.cz, flamingice@sourmilk.net, linux-wireless@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi-owner@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
 
+On Sat, Aug 18, 2007 at 11:44:12AM +0200, Jiri Slaby wrote:
+
+> define global BIT macro
+> 
+> move all local BIT defines to the new globally define macro.
+> 
+> Signed-off-by: Jiri Slaby <jirislaby@gmail.com>
+
+Acked-by: Ralf Baechle <ralf@linux-mips.org>
+
+for the MACE ethernet and MIPS bits.
+
+  Ralf
