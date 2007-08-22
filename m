@@ -1,61 +1,46 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: isd200.c Has fatal bugs and is probably not used any more
-Date: Wed, 22 Aug 2007 12:18:53 +0300
-Message-ID: <46CBFF7D.2090904@panasas.com>
-References: <46CB37B2.404@panasas.com> <29728.1187727861@bebe.enoyolf.org>
+From: Gabriel C <nix.or.die@googlemail.com>
+Subject: drivers/scsi/advansys.c - ld error ( Re: 2.6.23-rc3-mm1 )
+Date: Wed, 22 Aug 2007 18:15:14 +0200
+Message-ID: <46CC6112.9030705@googlemail.com>
+References: <20070822020648.5ea3a612.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:2805 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751159AbXHVJUO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Aug 2007 05:20:14 -0400
-In-Reply-To: <29728.1187727861@bebe.enoyolf.org>
+Received: from nf-out-0910.google.com ([64.233.182.188]:12127 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758224AbXHVQQh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 22 Aug 2007 12:16:37 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so158027nfb
+        for <linux-scsi@vger.kernel.org>; Wed, 22 Aug 2007 09:16:35 -0700 (PDT)
+In-Reply-To: <20070822020648.5ea3a612.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Doug Maxey <dwm@enoyolf.org>
-Cc: =?ISO-8859-1?Q?Bj=F6rn_Stenberg?= <bjorn@haxx.se>, support@in-system.com, James Bottomley <James.Bottomley@SteelEye.com>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Doug Maxey wrote:
-> On Tue, 21 Aug 2007 22:06:26 +0300, Boaz Harrosh wrote:
->> Hi!
->>
->> the driver drivers/usb/storage/isd200.c has code like:
->>
->> static int isd200_action( struct us_data *us, int action,
->>               void* pointer, int value )
->>
->> ...
->>
->>     case ACTION_READ_STATUS:
->>         US_DEBUGP("   isd200_action(READ_STATUS)\n");
->>         ata.generic.ActionSelect = ACTION_SELECT_0|ACTION_SELECT_2;
->>         ata.generic.RegisterSelect =
->>           REG_CYLINDER_LOW | REG_CYLINDER_HIGH |
->>           REG_STATUS | REG_ERROR;
->>         srb->sc_data_direction = DMA_FROM_DEVICE;
->>         srb->request_buffer = pointer;
->>         srb->request_bufflen = value;
->>         break;
->> ...
->>
->> Now what the hell is that hijacked scsi_cmnd and who said
->> that the srb->use_sg is Zero. If this is a regular queued
->> scsi_cmnd, this can easily crash. And at best a memory leak.
->>
->> The last git recorded real change to this driver was it's insertion
->> into git by Linus.
->>
->> Is this an indication that this driver is no longer used and
->> can be removed?
-> 
-> All IBM bladecenters have the HW this driver supports.  And it does
-> mostly work.  This particular frag requires USB_DEBUG enabled, correct?
-> 
+CONFIG_SCSI_ADVANSYS=y && CONFIG_ISA=n results in :
 
-OK Thanks, Do you know if there is an active maintainer for this driver?
-Else I will need someone that can test patches for me.
+...
 
-Boaz
+drivers/built-in.o: In function `advansys_init':
+advansys.c:(.init.text+0x38ea): undefined reference to `isa_register_driver'
+advansys.c:(.init.text+0x38ff): undefined reference to `isa_register_driver'
+advansys.c:(.init.text+0x3926): undefined reference to `isa_unregister_driver'
+advansys.c:(.init.text+0x3930): undefined reference to `isa_unregister_driver'
+drivers/built-in.o: In function `advansys_exit':
+advansys.c:(.exit.text+0x340): undefined reference to `isa_unregister_driver'
+advansys.c:(.exit.text+0x34a): undefined reference to `isa_unregister_driver'
+make: *** [.tmp_vmlinux1] Error 1
+
+...
+
+
+I guess advansys_{init,exit} is missing some #ifdef's ..
+
+
+config : http://194.231.229.228/kernel/mm/2.6.23-rc3-mm1/r/randconfig-9
+
+
+Gabriel
 
