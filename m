@@ -1,71 +1,66 @@
 From: Jesper Juhl <jesper.juhl@gmail.com>
-Subject: [PATCH 19/30] scsi: Remove explicit casts of [kv]alloc return values in osst driver
-Date: Fri, 24 Aug 2007 02:12:57 +0200
-Message-ID: <aaed77aa8511322bc32b406a952c7c960091ff3b.1187912217.git.jesper.juhl@gmail.com>
+Subject: [PATCH 20/30] scsi: In the Advansys driver, do not cast allocation function return values
+Date: Fri, 24 Aug 2007 02:16:12 +0200
+Message-ID: <82de4728edd63551c2c8a2fff0350f0917ed73a5.1187912217.git.jesper.juhl@gmail.com>
 References: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
 Mime-Version: 1.0
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:12042 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933865AbXHXAPv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Aug 2007 20:15:51 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so556324fkz
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Aug 2007 17:15:49 -0700 (PDT)
+Received: from mu-out-0910.google.com ([209.85.134.190]:63545 "EHLO
+	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965000AbXHXATH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 23 Aug 2007 20:19:07 -0400
+Received: by mu-out-0910.google.com with SMTP id i10so903537mue
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Aug 2007 17:19:06 -0700 (PDT)
 In-Reply-To: <1554af80879a7ef2f78a4d654f23c248203500d9.1187912217.git.jesper.juhl@gmail.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, Willem Riede <osst@riede.org>, osst-users@lists.sourceforge.net, Jesper Juhl <jesper.juhl@gmail.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@steeleye.com>, linux@connectcom.net, Jesper Juhl <jesper.juhl@gmail.com>
 
-[kv]alloc() return void *. No need to cast the return value.
+There's no reason to cast void pointers returned by the generic
+memory allocation functions.
 
 Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
 ---
- drivers/scsi/osst.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/advansys.c |    9 +++------
+ 1 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
-index 08060fb..3ad9d49 100644
---- a/drivers/scsi/osst.c
-+++ b/drivers/scsi/osst.c
-@@ -1404,7 +1404,7 @@ static int osst_read_back_buffer_and_rewrite(struct osst_tape * STp, struct osst
- 	int			dbg              = debugging;
- #endif
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 79c0b6e..b28729c 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -18513,7 +18513,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		 * Allocate buffer carrier structures. The total size
+ 		 * is about 4 KB, so allocate all at once.
+ 		 */
+-		carrp = (ADV_CARR_T *) kmalloc(ADV_CARRIER_BUFSIZE, GFP_ATOMIC);
++		carrp = kmalloc(ADV_CARRIER_BUFSIZE, GFP_ATOMIC);
+ 		ASC_DBG1(1, "advansys_board_found: carrp 0x%lx\n", (ulong)carrp);
  
--	if ((buffer = (unsigned char *)vmalloc((nframes + 1) * OS_DATA_SIZE)) == NULL)
-+	if ((buffer = vmalloc((nframes + 1) * OS_DATA_SIZE)) == NULL)
- 		return (-EIO);
+ 		if (carrp == NULL) {
+@@ -18529,8 +18529,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		for (req_cnt = adv_dvc_varp->max_host_qng;
+ 		     req_cnt > 0; req_cnt--) {
  
- 	printk(KERN_INFO "%s:I: Reading back %d frames from drive buffer%s\n",
-@@ -2216,7 +2216,7 @@ static int osst_write_header(struct osst_tape * STp, struct osst_request ** aSRp
- 	if (STp->raw) return 0;
+-			reqp = (adv_req_t *)
+-			    kmalloc(sizeof(adv_req_t) * req_cnt, GFP_ATOMIC);
++			reqp = kmalloc(sizeof(adv_req_t) * req_cnt, GFP_ATOMIC);
  
- 	if (STp->header_cache == NULL) {
--		if ((STp->header_cache = (os_header_t *)vmalloc(sizeof(os_header_t))) == NULL) {
-+		if ((STp->header_cache = vmalloc(sizeof(os_header_t))) == NULL) {
- 			printk(KERN_ERR "%s:E: Failed to allocate header cache\n", name);
- 			return (-ENOMEM);
- 		}
-@@ -2404,7 +2404,7 @@ static int __osst_analyze_headers(struct osst_tape * STp, struct osst_request **
- 				   name, ppos, update_frame_cntr);
- #endif
- 		if (STp->header_cache == NULL) {
--			if ((STp->header_cache = (os_header_t *)vmalloc(sizeof(os_header_t))) == NULL) {
-+			if ((STp->header_cache = vmalloc(sizeof(os_header_t))) == NULL) {
- 				printk(KERN_ERR "%s:E: Failed to allocate header cache\n", name);
- 				return 0;
+ 			ASC_DBG3(1,
+ 				 "advansys_board_found: reqp 0x%lx, req_cnt %d, bytes %lu\n",
+@@ -18552,9 +18551,7 @@ advansys_board_found(int iop, struct device *dev, int bus_type)
+ 		boardp->adv_sgblkp = NULL;
+ 		for (sg_cnt = 0; sg_cnt < ADV_TOT_SG_BLOCK; sg_cnt++) {
+ 
+-			sgp = (adv_sgblk_t *)
+-			    kmalloc(sizeof(adv_sgblk_t), GFP_ATOMIC);
+-
++			sgp = kmalloc(sizeof(adv_sgblk_t), GFP_ATOMIC);
+ 			if (sgp == NULL) {
+ 				break;
  			}
-@@ -5756,7 +5756,7 @@ static int osst_probe(struct device *dev)
- 	write_lock(&os_scsi_tapes_lock);
- 	if (os_scsi_tapes == NULL) {
- 		os_scsi_tapes =
--			(struct osst_tape **)kmalloc(osst_max_dev * sizeof(struct osst_tape *),
-+			kmalloc(osst_max_dev * sizeof(struct osst_tape *),
- 				   GFP_ATOMIC);
- 		if (os_scsi_tapes == NULL) {
- 			write_unlock(&os_scsi_tapes_lock);
 -- 
 1.5.2.2
 
