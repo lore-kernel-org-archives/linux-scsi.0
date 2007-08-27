@@ -1,43 +1,42 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] drivers/scsi/imm.c: fix check-after-use
-Date: Mon, 27 Aug 2007 23:30:05 +0200
-Message-ID: <20070827213005.GM26410@stusta.de>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH] mptsas: scan the logical volume at first
+Date: Mon, 27 Aug 2007 16:20:16 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D709409BA@NAMAIL4.ad.lsil.com>
+References: <200708271058.01919.yinghai.lu@sun.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:58895 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932758AbXH0VaF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Aug 2007 17:30:05 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762017AbXH0WUu@vger.kernel.org>
+Content-class: urn:content-classes:message
+In-Reply-To: <200708271058.01919.yinghai.lu@sun.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Yinghai Lu <Yinghai.Lu@Sun.COM>, Andrew Morton <akpm@linux-foundation.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, mpt_linux_developer@lsi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-The Coverity checker spotted that we have already oops'ed if "cmd"
-was NULL.
+On Monday, August 27, 2007 11:58 AM,  Yinghai Lu wrote:
+> 
+> [PATCH] mptsas: scan the logical volume at first
+> 
+> user like to see the raid show as /dev/sda before left raw disks.
+> So scan the volume at first to make their life easier.
+> 
+> Signed-off-by: Yinghai Lu <yinghai.lu@sun.com>
+> 
 
-Since "cmd" being NULL doesn't seem to be possible at this point this 
-patch removes the NULL check.
+Although I agree with the patch, there are people on this list that will
+reject it due to the fact distro's ship today having udev label and
+device id mapping, so device ordering should be an non-issue.  However
+there are systems that ship that don't have BIOS BBS support, allowing
+you to select the boot device. Without it BBS support, you are forced to
+boot to the lowest device id.  There are HP and Dell systems like that.
+Are SUN systems like that?   If so, there is an additional patch which I
+have yet posted that will sort the raid volumes in acsending order.
+Currently they are in descending order (due to Firmware putting them in
+that order), which if you did a install to what you think is /dev/sda,
+its really the highest target id, and when you reboot, the BIOS will
+boot to the lowest id, which is /dev/sdb, and it will not find the boot
+partition.
 
-Signed-off-by: Adrian Bunk <bunk@stusta.de>
-
----
-
-This patch has been sent on:
-- 31 Jul 2007
-
---- linux-2.6.23-rc1-mm1/drivers/scsi/imm.c.old	2007-07-30 13:58:00.000000000 +0200
-+++ linux-2.6.23-rc1-mm1/drivers/scsi/imm.c	2007-07-30 13:58:24.000000000 +0200
-@@ -740,10 +740,6 @@ static void imm_interrupt(struct work_st
- 	struct Scsi_Host *host = cmd->device->host;
- 	unsigned long flags;
- 
--	if (!cmd) {
--		printk("IMM: bug in imm_interrupt\n");
--		return;
--	}
- 	if (imm_engine(dev, cmd)) {
- 		schedule_delayed_work(&dev->imm_tq, 1);
- 		return;
+Eric
