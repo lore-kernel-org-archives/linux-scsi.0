@@ -1,32 +1,37 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH] mptsas: scan the logical volume at first
-Date: Mon, 27 Aug 2007 16:50:52 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D709409DF@NAMAIL4.ad.lsil.com>
-References: <46D3557C.9010500@sun.com>
+From: "Michal Piotrowski" <michal.k.k.piotrowski@gmail.com>
+Subject: Re: [RFC][PATCH] Removal of #include <linux/stat.h> from scsi drivers
+Date: Tue, 28 Aug 2007 00:39:07 +0200
+Message-ID: <6bffcb0e0708271539n3f82e53dq3d31079e943a9618@mail.gmail.com>
+References: <46CB2865.3030103@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932518AbXH0WvV@vger.kernel.org>
-Content-class: urn:content-classes:message
-In-Reply-To: <46D3557C.9010500@sun.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai.Lu@Sun.COM
-Cc: Andrew Morton <akpm@linux-foundation.org>, "Prakash, Sathya" <Sathya.Prakash@lsi.com>, James Bottomley <James.Bottomley@steeleye.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.183]:9459 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755730AbXH0WjJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Aug 2007 18:39:09 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2273901wah
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Aug 2007 15:39:08 -0700 (PDT)
+In-Reply-To: <46CB2865.3030103@googlemail.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On Monday, August 27, 2007 4:52 PM,  Yinghai Lu wrote:
-> Yes, I was wondering why kernel.org mainline will have 
-> /dev/sdb for first raid. but it seems RHEL 5 kernel have 
-> first raid before second raid...( it 
-> after all left over raw devices..), maybe they already aplied 
-> some patch?
-> 
-> can you send out patch?
-> 
+On 21/08/07, Michal Piotrowski <michal.k.k.piotrowski@gmail.com> wrote:
+> Hi,
+>
+> This patch removes linux/stat.h from scsi drivers.
+>
+> Tested with allyesconfig and allmodconfig.
+>
 
-That is not necessary, as we have already implemented the change to sort
-volumes in acsending order to Red hat and Suse, and its been accepted.
-I will post the change to lsml.
+Any comments on this? ACK, NACK or "do not touch the SCSI code"?
 
-Eric
+Regards,
+Michal
+
+-- 
+LOG
+http://www.stardust.webpages.pl/log/
