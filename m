@@ -1,42 +1,43 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [PATCH] debloat aic7xxx and aic79xx drivers by deinlining
-Date: Mon, 27 Aug 2007 04:03:10 +0200
-Message-ID: <20070827020310.GC4121@stusta.de>
-References: <200708252257.07241.vda.linux@googlemail.com> <20070825145742.69b99168@laptopd505.fenrus.org> <200708261621.30563.vda.linux@googlemail.com>
+Subject: [2.6 patch] drivers/scsi/imm.c: fix check-after-use
+Date: Mon, 27 Aug 2007 23:30:05 +0200
+Message-ID: <20070827213005.GM26410@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:56707 "EHLO
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:58895 "EHLO
 	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753786AbXH0CDM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 26 Aug 2007 22:03:12 -0400
+	with ESMTP id S932758AbXH0VaF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 27 Aug 2007 17:30:05 -0400
 Content-Disposition: inline
-In-Reply-To: <200708261621.30563.vda.linux@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: Arjan van de Ven <arjan@infradead.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
+To: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sun, Aug 26, 2007 at 04:21:30PM +0100, Denys Vlasenko wrote:
-> On Saturday 25 August 2007 22:57, Arjan van de Ven wrote:
->...
-> > Did you run the find static
-> > script or are you waiting for Adrian to do that ;-)
-> 
-> $ find -name '*find*static*'
-> $
+The Coverity checker spotted that we have already oops'ed if "cmd"
+was NULL.
 
-  make namespacecheck
+Since "cmd" being NULL doesn't seem to be possible at this point this 
+patch removes the NULL check.
 
-> vda
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 
-cu
-Adrian
+---
 
--- 
+This patch has been sent on:
+- 31 Jul 2007
 
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+--- linux-2.6.23-rc1-mm1/drivers/scsi/imm.c.old	2007-07-30 13:58:00.000000000 +0200
++++ linux-2.6.23-rc1-mm1/drivers/scsi/imm.c	2007-07-30 13:58:24.000000000 +0200
+@@ -740,10 +740,6 @@ static void imm_interrupt(struct work_st
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	unsigned long flags;
+ 
+-	if (!cmd) {
+-		printk("IMM: bug in imm_interrupt\n");
+-		return;
+-	}
+ 	if (imm_engine(dev, cmd)) {
+ 		schedule_delayed_work(&dev->imm_tq, 1);
+ 		return;
