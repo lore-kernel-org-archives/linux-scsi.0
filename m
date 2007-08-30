@@ -1,83 +1,173 @@
-From: "Robert P. J. Day" <rpjday@mindspring.com>
-Subject: [PATCH] SCSI:  Remove references to dead "st0x" and "tmc8xx" kernel
- parms.
-Date: Wed, 29 Aug 2007 13:25:23 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0708291321480.29835@localhost.localdomain>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: Add ACCUSYS RAID driver for Linux i386/x86-64
+Date: Wed, 29 Aug 2007 23:58:18 -0700
+Message-ID: <20070829235818.c656b188.akpm@linux-foundation.org>
+References: <10BD353233FA5448B2E9C3C9005057584471D7@exchange2.accusys.com.tw>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nic.NetDirect.CA ([216.16.235.2]:46638 "EHLO
-	rubicon.netdirect.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751655AbXH2RgF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 29 Aug 2007 13:36:05 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756046AbXH3G6l@vger.kernel.org>
+In-Reply-To: <10BD353233FA5448B2E9C3C9005057584471D7@exchange2.accusys.com.tw>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Peter Chan =?UTF-8?B?6Km55a625piM?= <peter_chan@accusys.com.tw>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Accusys_JeffChang <jeffchang@accusys.com.tw>, "Accusys_Y.T.Huang" <ythuang@accusys.com.tw>, Accusys_Preng <preng@rd.accusys.com.tw>, thwu@accusys.com.tw, James Bottomley <James.Bottomley@steeleye.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+
+On Thu, 30 Aug 2007 13:45:06 +0800 Peter Chan =E8=A9=B9=E5=AE=B6=E6=98=8C=
+ <peter_chan@accusys.com.tw> wrote:
+
+> Dear Morton
+>=20
+> ACCUSYS Inc dedicated to design PCI-e RAID HBA, hence we would like t=
+o provide our driver bundle in kernel 2.6 for user.
+
+Thank you!
+
+> Could you kindly take a look attached file if it looks like Linux Dri=
+ver?
+
+It looks a bit like a Linux driver ;)  More on this below.
+
+> If you need the RAID card to verify please let me know.
+
+I personally am unlikely to make the time to test a specific HBA driver=
+=2E=20
+But perhaps James or one of the other scsi developers (or any developer=
+ at
+all) might like to volunteer to help out with testing, in which case ye=
+s,
+please do send out a card or two.
 
 
-Since these two kernel parameters don't appear to be supported, remove
-the useless references to them.
+=46irst up, please become familar with the way in which we handle code =
+patches.
+I'd suggest that you subscribe to the linux-kernel or linux-scsi mailin=
+g
+lists for a while, watch how other people prepare and present their pat=
+ches.
 
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
+Download, install and become familiar with quilt
+(http://savannah.nongnu.org/projects/quilt) and use that to prepare pat=
+ches.
+quilt can also be used to email patches which might prove useful: new
+kernel developers frequently have trouble with wordwrapping, tab-to-spa=
+ce
+conversion and other ways in which mail clients corrupt patches.
 
----
+Once you have quilt up and running you should convert this driver into =
+a
+single patch against Linus's latest kernel.  At this time, that is
+2.6.23-rc4.
 
- Documentation/kernel-parameters.txt |    6 ------
- drivers/scsi/seagate.c              |   11 -----------
- 2 files changed, 17 deletions(-)
+That patch should include the appropriate changes to drivers/scsi/Kconf=
+ig
+and drivers/scsi/Makefile to wire this driver up to the kernel
+configuration and build system.  (You may choose to create a separate
+directory drivers/scsi/acs_ame/ for this driver).
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index b41cde3..9f2638c 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -1766,9 +1766,6 @@ and is between 256 and 4096 characters. It is defined in the file
- 	st=		[HW,SCSI] SCSI tape parameters (buffers, etc.)
- 			See Documentation/scsi/st.txt.
 
--	st0x=		[HW,SCSI]
--			See header of drivers/scsi/seagate.c.
--
- 	sti=		[PARISC,HW]
- 			Format: <num>
- 			Set the STI (builtin display/keyboard on the HP-PARISC
-@@ -1853,9 +1850,6 @@ and is between 256 and 4096 characters. It is defined in the file
- 	tipar.delay=	[HW,PPT]
- 			Set inter-bit delay in microseconds (default 10).
+Once we reach this stage, we have a patch which others can apply, test =
+and
+review.  Review will be the first step.
 
--	tmc8xx=		[HW,SCSI]
--			See header of drivers/scsi/seagate.c.
--
- 	tmscsim=	[HW,SCSI]
- 			See comment before function dc390_setup() in
- 			drivers/scsi/tmscsim.c.
-diff --git a/drivers/scsi/seagate.c b/drivers/scsi/seagate.c
-index ce80fa9..900f7d6 100644
---- a/drivers/scsi/seagate.c
-+++ b/drivers/scsi/seagate.c
-@@ -32,17 +32,6 @@
-  * Configuration :
-  * To use without BIOS -DOVERRIDE=base_address -DCONTROLLER=FD or SEAGATE
-  * -DIRQ will override the default of 5.
-- * Note: You can now set these options from the kernel's "command line".
-- * The syntax is:
-- *
-- *     st0x=ADDRESS,IRQ                (for a Seagate controller)
-- * or:
-- *     tmc8xx=ADDRESS,IRQ              (for a TMC-8xx or TMC-950 controller)
-- * eg:
-- *     tmc8xx=0xC8000,15
-- *
-- * will configure the driver for a TMC-8xx style controller using IRQ 15
-- * with a base address of 0xC8000.
-  *
-  * -DARBITRATE
-  *      Will cause the host adapter to arbitrate for the
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
 
-http://crashcourse.ca
-========================================================================
+Your driver isn't ready for review yet.  There are a number of minor bu=
+t
+often-repeated problems which will require extensive changes to correct=
+=2E
+
+They're silly little things and they won't change the operation of the =
+driver
+at all, but it is best to get the driver looking and feeling like a typ=
+ical
+driver before we ask reviewers to start taking a serious look at the co=
+de.
+
+- No c++-style comments, please.  Replace all // with /* .. */
+
+- there's some commented-out and obviously dead code.  Things like
+
+//#include <asm/semaphore.h>  //void sema_init=20
+                            //DECLARE_MUTEX(name)
+                            //DECLARE_MUTEX_LOCKED(name)
+//#include <linux/rwsem.h>    // read /write semaphore
+// Why lock_kernel
+
+//    #include <linux/smp_lock.h>
+//    lock_kernel();
+//#if LINUX_VERSION_CODE < KERNEL_VERSION(2,5,60)
+////    daemonize();
+//#else
+//    daemonize("arcmsr kernel thread");
+//#endif
+//     unlock_kernel();
+
+//Use unsigned long as a pointer=20
+// cause of size(unsigend long) always equal to pointer size under all =
+linux compatible platform
+
+  just delete all that, please.
+
+- CHAR_DEV and EVENTSWITCH_ON should probably become CONFIG variables
+  (set in drivers/scsi/Kconfig)
+
+- try to keep the code fitting nicely in an 80-column display
+
+- Identifiers like RequestNode and RemapPCIMem should be renamed
+  request_node and remap_pci_mem if at all possible.  We use underscore=
+s to
+  separate "words" within an identifier, not capital letters.
+
+- Once you have a cleaned up patch, please pass that patch through
+  scripts/checkpatch.pl.
+
+  I just turned acs_ame.c, acs_ame.h and ame.h into a patch and fed it
+  through checkpatch.pl.  Please see the result at
+  http://userweb.kernel.org/~akpm/x.txt.
+
+  (For those who are curious, the patch is at
+  http://userweb.kernel.org/~akpm/a.patch)
+
+  We have about 4,000 warnings there ;) Actually, a huge number of thos=
+e
+  warnings are incorrect (trailing whitespace).  checkpatch is still un=
+der
+  development a bit.
+
+  But still, there are a lot of things in the checkpatch output which c=
+an
+  and should be fixed up.
+
+
+All together I expect that after one or maybe two days work, you will h=
+ave
+a driver patch which is ready to be applied to the kernel and is ready =
+to
+be reviewed by kernel and scsi experts.
+
+At that stage we will be able to get into more substantial details such=
+ as
+the use of the scsi APIs, the DMA APIs, locking, commenting, design, et=
+c.=20
+I'd expect that further changes will be made to the driver as a result =
+of
+that discussion, but they will improve the code.
+
+
+When sending new versions of the patch, please send them to
+
+Andrew Morton <akpm@linux-foundation.org>
+James Bottomley <James.Bottomley@steeleye.com>
+linux-scsi@vger.kernel.org
+linux-kernel@vger.kernel.org
+
+The way this driver will enter the 2.6 kernel is from you, into James's
+scsi-misc git tree and then from James's scsi-misc tree into Linus's gi=
+t
+tree.  It is possible that I'll take a copy into my -mm tree for some e=
+arly
+testing but it is unlikely that I would send a scsi patch directly into
+Linus - James does that.
+
+
+Thanks.
