@@ -1,72 +1,108 @@
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: 2.6.22 oops kernel BUG at block/elevator.c:366!
-Date: Thu, 30 Aug 2007 13:29:37 +0200
-Message-ID: <200708301329.37396.arekm@maven.pl>
-References: <200708291950.14513.arekm@maven.pl> <200708292011.47134.arekm@maven.pl> <20070829181648.GD7932@kernel.dk>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: returning scsi I/O to SCSI mid layer from Fast IRQ  context
+Date: Thu, 30 Aug 2007 08:49:32 -0400
+Message-ID: <46D6BCDC.4030501@emulex.com>
+References: <149190.47033.qm@web30103.mail.mud.yahoo.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.carme.maven.pl ([193.239.45.138]:58014 "EHLO
-	main.carme.maven.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751341AbXH3L3m convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 07:29:42 -0400
-In-Reply-To: <20070829181648.GD7932@kernel.dk>
-Content-Disposition: inline
+Received: from emulex.emulex.com ([138.239.112.1]:42443 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbXH3Mtf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 08:49:35 -0400
+In-Reply-To: <149190.47033.qm@web30103.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Ed Lin <ed.lin@promise.com>
+To: Parav Pandit <paravpandit@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wednesday 29 of August 2007, Jens Axboe wrote:
-> On Wed, Aug 29 2007, Arkadiusz Miskiewicz wrote:
-> > On Wednesday 29 of August 2007, Jens Axboe wrote:
-> > > On Wed, Aug 29 2007, Arkadiusz Miskiewicz wrote:
-> > > > On Wednesday 29 of August 2007, Jens Axboe wrote:
-> > > > > On Wed, Aug 29 2007, Arkadiusz Miskiewicz wrote:
-> > > > > > I guess I should sent these here since it looks like not sc=
-si bug
-> > > > > > anyway.
-> > > > >
-> > > > > It's stex, right? It seems to have some issues with multiple
-> > > > > completions of commands, which craps out the block layer of c=
-ourse.
-> > > >
-> > > > Yes, stex. I'm staying with 2.6.19 in that case since it works =
-fine
-> > > > in that version.
-> > > >
-> > > > So scsi bug ... 8-)
-> > >
-> > > And you based that conclusion on what exactly?
-> >
-> > Isn't drivers/scsi/* handled by linux-scsi@? (that's what I mean)
->
-> Yep indeed, I thought you meant that it was a scsi bug (and not an st=
-ex
-> one). You could try and copy the 2.6.19 stex driver into 2.6.20 and s=
-ee
-> if that works, though.
+The midlayer is written to accept scsi i/o completion (via scsi_done())
+from the context of an interrupt handler.  The scsi_done() path actually
+just traverses up the stack a little, then queues the request on a done
+queue, and scheduls a softirq thread for actual completion processing.
 
-Looks like this bug is known for months :-(
+The belief is the best-performing drivers call the command done routine
+from the interrupt handler (otherwise, you may have 2 context switches
+before completion processing).
 
-Ed Lin pointed to http://lkml.org/lkml/2007/1/23/268 with possible patc=
-h (that=20
-unfortunately serialises access to storage devices, well...)
+-- james s
 
-There is also: http://bugzilla.kernel.org/show_bug.cgi?id=3D7842
-
-I'm running 2.6.22 with that patch now, did huge (few hours) rsync that=
-=20
-previously caused oopses and now everything works properly.
-
-Can we get some form of this patch into Linus tree?
-
---=20
-Arkadiusz Mi=B6kiewicz        PLD/Linux Team
-arekm / maven.pl            http://ftp.pld-linux.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Parav Pandit wrote:
+> Let me simplify and ask in different way.
+> 
+> 1. Can I return a scsi I/O by invoking scsi_done()
+> from the Fast IRQ context in the Low level SCSI HBA
+> driver?
+> 
+> 2. Is the interrupt handler right place to call
+> scsi_done() and invoke SCSI mid layer? or should I
+> defer to the DPC thread context?
+> 
+> Parav
+> 
+> 
+> 
+> --- Parav Pandit <paravpandit@yahoo.com> wrote:
+> 
+>> Hi,
+>>
+>> A low level SCSI HBA driver can return the I/O back
+>> to
+>> the OS from various paths.
+>>
+>> Some of the common possible paths
+>> 1, enqueue_command itself
+>> 2. Timer handler (at the time of command timeout)
+>> 3. Interrupt handler (when a response is received
+>> from
+>> the storage)
+>> 4. DPC handler thread.
+>>
+>> Whenever an I/O is returned from the interrupt
+>> handler
+>> by invoking scsi_done callback function, it will
+>> invoke the SCSI mid layer.
+>>
+>> 1. Is it good practice to return call scsi_done
+>> callback function from Interrupt handler? 
+>> If no, may I know the implications of doing that?
+>> (other then blocking the interrupt context for a
+>> longer time)
+>>
+>> 2. if multiple I/Os are returned in a single
+>> interrupt, how many  commands should be returned by
+>> calling scsi_done before shifting to dpc thread?
+>>
+>> Regards,
+>> Parav Pandit
+>>
+>>
+>>
+>>        
+>>
+> ____________________________________________________________________________________
+>> Got a little couch potato? 
+>> Check out fun summer activities for kids.
+>>
+> http://search.yahoo.com/search?fr=oni_on_mail&p=summer+activities+for+kids&cs=bz
+>> -
+>> To unsubscribe from this list: send the line
+>> "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at 
+>> http://vger.kernel.org/majordomo-info.html
+>>
+> 
+> 
+> 
+>        
+> ____________________________________________________________________________________Ready for the edge of your seat? 
+> Check out tonight's top picks on Yahoo! TV. 
+> http://tv.yahoo.com/
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
