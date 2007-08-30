@@ -1,32 +1,39 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: FC - NPIV in 2.6.23-rc2
-Date: Thu, 30 Aug 2007 10:25:23 -0700
-Message-ID: <46D6FD83.4010708@qlogic.com>
-References: <c7d75baf0708300849g27a5e4c3wba73b960a89a85e5@mail.gmail.com>	 <46D6EFE7.40802@qlogic.com> <7579f7fb0708300947r4bae76a8j3715316741f3563f@mail.gmail.com>
+From: Jan Engelhardt <jengelh@computergmbh.de>
+Subject: Re: [PATCH] debloat aic7xxx and aic79xx drivers by deinlining
+Date: Thu, 30 Aug 2007 20:43:24 +0200 (CEST)
+Message-ID: <Pine.LNX.4.64.0708302042260.24730@fbirervta.pbzchgretzou.qr>
+References: <200708252257.07241.vda.linux@googlemail.com>
+ <200708281256.35162.vda.linux@googlemail.com> <20070828081710.4687185c@laptopd505.fenrus.org>
+ <200708282055.07411.vda.linux@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:23783 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932288AbXH3RYI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 13:24:08 -0400
-In-Reply-To: <7579f7fb0708300947r4bae76a8j3715316741f3563f@mail.gmail.com>
+Received: from sovereign.computergmbh.de ([85.214.69.204]:58278 "EHLO
+	sovereign.computergmbh.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761772AbXH3SnZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 14:43:25 -0400
+In-Reply-To: <200708282055.07411.vda.linux@googlemail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <lydianconcepts@gmail.com>
-Cc: Abhishek Kane <abhishek.kane@gmail.com>, linux-kernel@vger.kernel.org, linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+To: Denys Vlasenko <vda.linux@googlemail.com>
+Cc: Arjan van de Ven <arjan@infradead.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.de
 
-Matthew Jacob wrote:
->>> some sought of documentation for this, please let me know.
->> NPIV is a feature to provide multiple path available on one physical port and it has implemented based on the multiport ID (MID) capability on the switch.
->> So, you have to have the switch with MID capable on the configuration to support NPIV, besides the controller.
->>
-> 
-> No, if the switch doesn't suport NP-IV, the 24XX f/w will come up in
-> Public Loop mode (FL).
-That is correct. 
-As it should, the F/W with NPIV capability also works on the configuration with non-NPIV switches.
 
-Thank you,
-Seokmann
+On Aug 28 2007 20:55, Denys Vlasenko wrote:
+>> Fwiw I do like your debloat patch a lot; it's just only half the
+>> equation ... if you also do the namespace fixes, I bet the driver
+>> debloats even more...
+>
+>Yes, I know, and I am happy to do that too. I just don't know
+>whether patches will be accepted.
+>
+>Why this patch is not commented on by scsi people?
+>Am I sending patches to wrong people/lists?
+
+Well, you can send it to Linus/Andrew, that will usually upset people and they
+start commenting on it. Or they don't, and everything is fine.
+(The "default y" approach so to speak ;-)
+
+
+	Jan
+-- 
