@@ -1,74 +1,46 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: READ CAPACITY failed on ia64
-Date: Thu, 30 Aug 2007 16:48:48 -0400
-Message-ID: <46D72D30.2000903@torque.net>
-References: <20070814115005.GA31094@bsd.hu> <20070814120808.GM16277@parisc-linux.org>
-Reply-To: dougg@torque.net
+From: "Duane Grigsby" <duane.grigsby@qlogic.com>
+Subject: RE: FC - NPIV in 2.6.23-rc2
+Date: Thu, 30 Aug 2007 16:46:38 -0700
+Message-ID: <CD3B36223A7B9F40A6FE6BAAC4E2DA61D72006@AVEXCH1.qlogic.org>
+References: <c7d75baf0708300849g27a5e4c3wba73b960a89a85e5@mail.gmail.com> <46D6EFE7.40802@qlogic.com> <7579f7fb0708300947r4bae76a8j3715316741f3563f@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55975 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755699AbXH3UtS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 16:49:18 -0400
-In-Reply-To: <20070814120808.GM16277@parisc-linux.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:31788 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755745AbXH3Xrw convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 19:47:52 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <7579f7fb0708300947r4bae76a8j3715316741f3563f@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Robert Nagy <robert.nagy@gmail.com>, linux-scsi@vger.kernel.org
-
-Matthew Wilcox wrote:
-> On Tue, Aug 14, 2007 at 01:50:05PM +0200, Robert Nagy wrote:
->> In this box I get the following error message:
-> 
-> If you turn on CONFIG_SCSI_CONSTANTS, you'll get the error message
-> decoded for you, but ...
-> 
->> sd 0:0:2:0: [sdb] READ CAPACITY failed
->> sd 0:0:2:0: [sdb] Result: hostbyte=0x00 driverbyte=0x08
->> sd 0:0:2:0: [sdb] Sense Key : 0x3 [current]
-> 
->         "Medium Error",     /* 3: Data error detected on the medium */
-> 
->> sd 0:0:2:0: [sdb] ASC=0x31 ASCQ=0x0
-> 
->         {0x3100, "Medium format corrupted"},
-> 
->> I am currently running 2.6.22 but I've also tried with serveral other
->> (and older) kernels and it still can't get the capacity of the disk.
-> 
-> Looks like the disc is broken.  Given that a scsiformat doesn't fix it,
-> it's probably irretrievable.
-
-When a disk is formatted to a different sector size (say
-from 528 bytes to 512) then a MODE SELECT followed by a
-FORMAT is required. If the format fails or is interrupted
-(say someone powers off the machine) then the disk is said
-to be in "medium format corrupted" state.
-Any attempt to access the media when the disk is in this
-state will yield the reported error.
-
-May I suggest that you try sg_format in sg3_utils.
-Using sg_format without the '--format' option may show
-you what is happening. For a healthy disk you would see
-something like this:
-
-# sg_format /dev/sda
-    Linux     scsi_debug        1.82   peripheral_type: disk [0x0]
-Mode sense (block descriptor) data, prior to changes:
-  Number of blocks=16384 [0x4000]
-  Block size=512 [0x200]
-Read Capacity (10) results:
-   Number of blocks=16384
-   Block size=512 bytes
-No changes made. To format use '--format'. To resize use '--resize'
+To: Matthew Jacob <lydianconcepts@gmail.com>, Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: Abhishek Kane <abhishek.kane@gmail.com>, linux-kernel@vger.kernel.org, Linux Driver <Linux-Driver@qlogic.com>, linux-scsi@vger.kernel.org
 
 
-You will probably see the same error in response to
-the Read Capacity. The block size reported by
-the Mode Sense (block descriptor) most likely doesn't
-match some or all of your media.
+-----Original Message-----
+From: Matthew Jacob [mailto:lydianconcepts@gmail.com] 
+Sent: Thursday, August 30, 2007 9:47 AM
+To: Seokmann Ju
+Cc: Abhishek Kane; linux-kernel@vger.kernel.org; Linux Driver;
+linux-scsi@vger.kernel.org
+Subject: Re: FC - NPIV in 2.6.23-rc2
 
-Doug Gilbert
+> > some sought of documentation for this, please let me know.
+> NPIV is a feature to provide multiple path available on one physical
+port and it has implemented based on the multiport ID (MID) capability
+on the switch.
+> So, you have to have the switch with MID capable on the configuration
+to support NPIV, besides the controller.
+>
 
+>> No, if the switch doesn't suport NP-IV, the 24XX f/w will come up in
+>> Public Loop mode (FL).
+Yes, NPIV is optional, if the switch is NPIV capable then you can create
+virtual ports, otherwise it works as it does today. NPIV is a standard
+technology that allows sharing a single physical Fabric port (N-port)
+among multiple virtual fabric ports. Multiple ID(s) is a HBA feature
+that allows multiple virtual Loop ID(s) on a public or private loop
+topology.          
