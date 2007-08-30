@@ -1,52 +1,91 @@
-From: "Robert P. J. Day" <rpjday@mindspring.com>
-Subject: [PATCH] Documentation:  Delete final reference to "sg_def_reserved_size"
- kernel parm.
-Date: Thu, 30 Aug 2007 03:54:27 -0400 (EDT)
-Message-ID: <Pine.LNX.4.64.0708300350460.5178@localhost.localdomain>
+From: Parav Pandit <paravpandit@yahoo.com>
+Subject: Re: returning scsi I/O to SCSI mid layer from Fast IRQ  context
+Date: Thu, 30 Aug 2007 02:45:42 -0700 (PDT)
+Message-ID: <149190.47033.qm@web30103.mail.mud.yahoo.com>
+References: <474470.84138.qm@web30115.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nic.NetDirect.CA ([216.16.235.2]:39168 "EHLO
-	rubicon.netdirect.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752507AbXH3IFg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 04:05:36 -0400
+Received: from web30103.mail.mud.yahoo.com ([209.191.69.35]:47990 "HELO
+	web30103.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753049AbXH3Jpn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 30 Aug 2007 05:45:43 -0400
+In-Reply-To: <474470.84138.qm@web30115.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: trivial@kernel.org
+
+Let me simplify and ask in different way.
+
+1. Can I return a scsi I/O by invoking scsi_done()
+from the Fast IRQ context in the Low level SCSI HBA
+driver?
+
+2. Is the interrupt handler right place to call
+scsi_done() and invoke SCSI mid layer? or should I
+defer to the DPC thread context?
+
+Parav
 
 
-Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
 
----
+--- Parav Pandit <paravpandit@yahoo.com> wrote:
 
-  given the following:
+> Hi,
+> 
+> A low level SCSI HBA driver can return the I/O back
+> to
+> the OS from various paths.
+> 
+> Some of the common possible paths
+> 1, enqueue_command itself
+> 2. Timer handler (at the time of command timeout)
+> 3. Interrupt handler (when a response is received
+> from
+> the storage)
+> 4. DPC handler thread.
+> 
+> Whenever an I/O is returned from the interrupt
+> handler
+> by invoking scsi_done callback function, it will
+> invoke the SCSI mid layer.
+> 
+> 1. Is it good practice to return call scsi_done
+> callback function from Interrupt handler? 
+> If no, may I know the implications of doing that?
+> (other then blocking the interrupt context for a
+> longer time)
+> 
+> 2. if multiple I/Os are returned in a single
+> interrupt, how many  commands should be returned by
+> calling scsi_done before shifting to dpc thread?
+> 
+> Regards,
+> Parav Pandit
+> 
+> 
+> 
+>        
+>
+____________________________________________________________________________________
+> Got a little couch potato? 
+> Check out fun summer activities for kids.
+>
+http://search.yahoo.com/search?fr=oni_on_mail&p=summer+activities+for+kids&cs=bz
+> 
+> -
+> To unsubscribe from this list: send the line
+> "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at 
+> http://vger.kernel.org/majordomo-info.html
+> 
 
-$ grep -rw sg_def_reserved_size *
-Documentation/kernel-parameters.txt:    sg_def_reserved_size=   [SCSI]
-$
-
-that kernel parameter looks exceedingly dead.
 
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index b41cde3..fe43fc5 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -1562,8 +1562,6 @@ and is between 256 and 4096 characters. It is defined in the file
-
- 	serialnumber	[BUGS=X86-32]
-
--	sg_def_reserved_size=	[SCSI]
--
- 	shapers=	[NET]
- 			Maximal number of shapers.
-
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://crashcourse.ca
-========================================================================
+       
+____________________________________________________________________________________Ready for the edge of your seat? 
+Check out tonight's top picks on Yahoo! TV. 
+http://tv.yahoo.com/
