@@ -1,45 +1,62 @@
-From: Denys Vlasenko <vda.linux@googlemail.com>
-Subject: Re: [PATCH 0/3] debloat aic7xxx and aic79xx drivers
-Date: Fri, 31 Aug 2007 22:20:36 +0100
-Message-ID: <200708312220.36818.vda.linux@googlemail.com>
-References: <200708311613.59666.vda.linux@googlemail.com> <31870.1188577642@turing-police.cc.vt.edu>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+Date: Fri, 31 Aug 2007 17:31:35 -0400
+Message-ID: <46D888B7.1050301@torque.net>
+References: <1188583419.6353.9.camel@linux.site>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nf-out-0910.google.com ([64.233.182.184]:35352 "EHLO
-	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932887AbXHaVUz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 17:20:55 -0400
-Received: by nf-out-0910.google.com with SMTP id f5so799547nfh
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Aug 2007 14:20:53 -0700 (PDT)
-In-Reply-To: <31870.1188577642@turing-police.cc.vt.edu>
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:34076 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965757AbXHaVcK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 17:32:10 -0400
+In-Reply-To: <1188583419.6353.9.camel@linux.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: Hannes Reinecke <hare@suse.de>, Jan Engelhardt <jengelh@computergmbh.de>, Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Gilbert Wu <Gilbert_Wu@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Friday 31 August 2007 17:27, Valdis.Kletnieks@vt.edu wrote:
-> On Fri, 31 Aug 2007 16:13:59 BST, Denys Vlasenko said:
-> >
-> >    text    data     bss     dec     hex filename
-> >  261433   50018    1172  312623   4c52f linux-2.6.23-rc1.org.t/drivers/scsi/aic7xxx/built-in.o
-> >  199654   50018    1172  250844   3d3dc linux-2.6.23-rc1.aic.t/drivers/scsi/aic7xxx/built-in.o
-> >  184014   21314    1172  206500   326a4 linux-2.6.23-rc1.aic1.t/drivers/scsi/aic7xxx/built-in.o
-> >  202378    2850    1172  206400   32640 linux-2.6.23-rc1.aic2.t/drivers/scsi/aic7xxx/built-in.o
-> > 
-> > 1-debloat.patch    deinlines a lot of functions
-> > 2-addstatic.patch  adds statics, #ifdefs out huge amount of unused code, adds consts
-> > 3-addconst.patch   adds more consts
-> 
-> Yowza.  Looking at aic1->aic2, it looks like 20K became 'const', and only
-> 3K *wasn't* 'const'?  
+Gilbert Wu wrote:
+> Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source dev=
+ice
+> driver to fix smartctl utility problem.
+>=20
+> Contribution:
+>    Gilbert Wu <gilbert_wu@adaptec.com>
+>=20
+> Change Log:
+>=20
+>=20
+> 1. Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"
+>    does not work on aic94xx device drive with SATA devices.
+>    The smartctl utility send down ATA smart command to aic94xx
+>    driver and fail to get the result which is stored on ATA output
+>    register.=20
+>    In normal case, Aic94xx=E2=80=99s firmware does not return the val=
+ue of
+>    ATA output register to device driver due to performance reason.
+>    To solve this issue then the driver need to turn on internal
+>    flag (CSMI_TASK) for particular ATA command to enable firmware
+>    to return the value of ATA output register.
 
-Exactly. There are firmware images/patches and a lot of structures
-with char* members pointing to text/messages.
+Recent versions of smartmontools (say 5.38 from CVS at
+sourceforge) don't need the '-d ata' option any more.
 
-Btw, aic94xx driver needs the same treatment.
---
-vda
+If smartctl or smartd see /dev/sd<x> in Linux, they will
+assume a SCSI disk, do an INQUIRY and if they see
+"ATA     " in the T10 vendor identification field then an
+ATA (most likely SATA) disk is assumed behind a SAT layer.
+Thereafter ATA commands will be issued, each wrapped in
+a SCSI ATA PASS-THROUGH(16) command.
+
+Perhaps you might check that this works with the aic94xx
+driver. [It does work with MPT SAS HBAs.]
+
+Doug Gilbert
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
