@@ -1,46 +1,39 @@
-From: "Duane Grigsby" <duane.grigsby@qlogic.com>
-Subject: RE: FC - NPIV in 2.6.23-rc2
-Date: Thu, 30 Aug 2007 16:46:38 -0700
-Message-ID: <CD3B36223A7B9F40A6FE6BAAC4E2DA61D72006@AVEXCH1.qlogic.org>
-References: <c7d75baf0708300849g27a5e4c3wba73b960a89a85e5@mail.gmail.com> <46D6EFE7.40802@qlogic.com> <7579f7fb0708300947r4bae76a8j3715316741f3563f@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] debloat aic7xxx and aic79xx drivers by deinlining
+Date: Fri, 31 Aug 2007 15:42:36 +0200
+Message-ID: <46D81ACC.4080708@suse.de>
+References: <200708252257.07241.vda.linux@googlemail.com> <200708281256.35162.vda.linux@googlemail.com> <20070828081710.4687185c@laptopd505.fenrus.org> <200708282055.07411.vda.linux@googlemail.com> <Pine.LNX.4.64.0708302042260.24730@fbirervta.pbzchgretzou.qr> <20070830190235.GX14130@parisc-linux.org> <Pine.LNX.4.64.0708302150500.24730@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:31788 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755745AbXH3Xrw convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 30 Aug 2007 19:47:52 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <7579f7fb0708300947r4bae76a8j3715316741f3563f@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965587AbXHaNmy@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.64.0708302150500.24730@fbirervta.pbzchgretzou.qr>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jan Engelhardt <jengelh@computergmbh.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, Denys Vlasenko <vda.linux@googlemail.com>, Arjan van de Ven <arjan@infradead.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <lydianconcepts@gmail.com>, Seokmann Ju <seokmann.ju@qlogic.com>
-Cc: Abhishek Kane <abhishek.kane@gmail.com>, linux-kernel@vger.kernel.org, Linux Driver <Linux-Driver@qlogic.com>, linux-scsi@vger.kernel.org
 
+Jan Engelhardt wrote:
+> On Aug 30 2007 13:02, Matthew Wilcox wrote:
+>>> Well, you can send it to Linus/Andrew, that will usually upset peop=
+le and they
+>>> start commenting on it. Or they don't, and everything is fine.
+>>> (The "default y" approach so to speak ;-)
+>> The problem is that we don't really have a maintainer for the aic7xy=
+z
+>> drivers any more.  Volunteers welcome.  NOT IT!
+>=20
+> Take it before someone else does!
+>=20
+Well, the semi-official maintainers are James B. and me.
 
------Original Message-----
-From: Matthew Jacob [mailto:lydianconcepts@gmail.com] 
-Sent: Thursday, August 30, 2007 9:47 AM
-To: Seokmann Ju
-Cc: Abhishek Kane; linux-kernel@vger.kernel.org; Linux Driver;
-linux-scsi@vger.kernel.org
-Subject: Re: FC - NPIV in 2.6.23-rc2
+So I might as well do it officially.
 
-> > some sought of documentation for this, please let me know.
-> NPIV is a feature to provide multiple path available on one physical
-port and it has implemented based on the multiport ID (MID) capability
-on the switch.
-> So, you have to have the switch with MID capable on the configuration
-to support NPIV, besides the controller.
->
+Cheers,
 
->> No, if the switch doesn't suport NP-IV, the 24XX f/w will come up in
->> Public Loop mode (FL).
-Yes, NPIV is optional, if the switch is NPIV capable then you can create
-virtual ports, otherwise it works as it does today. NPIV is a standard
-technology that allows sharing a single physical Fabric port (N-port)
-among multiple virtual fabric ports. Multiple ID(s) is a HBA feature
-that allows multiple virtual Loop ID(s) on a public or private loop
-topology.          
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
