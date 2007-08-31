@@ -1,7 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 0/7] blk_end_request: full I/O completion handler
-Date: Fri, 31 Aug 2007 18:39:55 -0400 (EDT)
-Message-ID: <20070831.183955.122623475.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 1/7] blk_end_request: add new request completion
+	interface
+Date: Fri, 31 Aug 2007 18:41:12 -0400 (EDT)
+Message-ID: <20070831.184112.45519768.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,134 +21,126 @@ To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.ker
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+This patch adds 2 new interfaces for request completion:
+  o blk_end_request()   : called without queue lock
+  o __blk_end_request() : called with queue lock held
 
-This set of patches changes request completion interface
-between device drivers and block layer to 1 step procedure
-from current 2 step procedures using end_that_request_{first/chunk}
-and end_that_request_last().
+Some device drivers call some generic functions below between
+end_that_request_{first/chunk} and end_that_request_last().
+  o add_disk_randomness()
+  o blk_queue_end_tag()
+  o blkdev_dequeue_request()
+These are called in the blk_end_request() as a part of generic
+request completion.
+So all device drivers become to call above functions.
 
-This change allows request-based multipath to hook in before
-completing each chunk of request, check errors for it and
-retry it using another path if error is detected.
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+---
+ block/ll_rw_blk.c      |   82 +++++++++++++++++++++++++++++++++++++++++++++++++ include/linux/blkdev.h |    2 +
+ 2 files changed, 84 insertions(+)
 
-Summaries of each patch are below:
-  1/7: add new request completion interface, blk_end_request()
-  2/7: add some macros to get the size of request in bytes
-  3/7: convert normal drivers to use blk_end_request()
-  4/7: convert odd drivers like cciss/cpqarray/xsysace to use
-       blk_end_request()
-  5/7: convert ide-cd (cdrom_newpc_intr) to use blk_end_request()
-  6/7: remove/unexport no longer needed end_that_request_*
-  7/7: change rq->end_io to cover request completion as a whole
-
-I have tested the patch on two machines, ia64+QLA1280+QLA2200
-and x86_64+SATA+IDE-CDROM.
-I can't test other device drivers for which I don't have hardware.
-So testing help and any comments would be very much appreciated.
-
-The interface change causes code modifications of *ALL DEVICE DRIVERS*
-which are using end_that_request_{first/chunk/last} to complete request.
-But it should not affect the behavior.
-
-Please review and apply if no problem.
-This patch-set should be applied on top of 2.6.23-rc3-mm1.
-
-
-BACKGROUND
-==========
-The patch is necessary to allow device stacking at request level,
-that is request-based device-mapper multipath.
-Currently, device-mapper is implemented as a stacking block device
-at BIO level.  OTOH, request-based DM will stack at request level to
-allow better multipathing decision.
-To allow device stacking at request level, the completion procedure
-need to provide a hook for it.
-For example, dm-multipath has to check errors and retry with other
-paths if necessary before returning the I/O result to upper layer.
-struct request has 'end_io' hook currently.  But it's called at
-the very late stage of completion handling where the I/O result
-is already returned to the upper layer.
-So we need something here.
-
-The first approach to hook in completion of each chunk of request
-was adding a new rq->end_io_first() hook and calling it on the top
-of __end_that_request_first().
-  - http://marc.theaimsgroup.com/?l=linux-scsi&m=115520444515914&w=2
-  - http://marc.theaimsgroup.com/?l=linux-kernel&m=116656637425880&w=2
-However, Jens pointed out that redesigning rq->end_io() as a full
-completion handler would be better:
-
-On Thu, 21 Dec 2006 08:49:47 +0100, Jens Axboe <jens.axboe@oracle.com> wrote:
-> Ok, I see what you are getting at. The current ->end_io() is called when
-> the request has fully completed, you want notification for each chunk
-> potentially completed.
-> 
-> I think a better design here would be to use ->end_io() as the full
-> completion handler, similar to how bio->bi_end_io() works. A request
-> originating from __make_request() would set something ala:
-.....
-> instead of calling the functions manually. That would allow you to get
-> notification right at the beginning and do what you need, without adding
-> a special hook for this.
-
-I thought his comment was reasonable.
-So I modified the patches based on his suggestion.
-
-
-WHAT IS CHANGED
-===============
-The change is basically illustlated by the following pseudo code:
-
-[Before]
-  if (end_that_request_{first/chunk} succeeds) { <-- completes bios
-     <do something driver specific>
-     end_that_request_last() <-- calls end_io()
-     <the request is free from the driver>
-  } else {
-     <the request was incomplete, retry for leftover or ignoring>
-  }
-
-[After]
-  if (blk_end_request() succeeds) { <-- calls end_io(), completes bios
-     <the request is free from the driver>
-  } else {
-     <the request was incomplete, retry for leftover or ignoring>
-  }
-
-
-In detail, request completion procedures are changed like below.
-
-[Before]
-  o 2 steps completion using end_that_request_{first/chunk}
-    and end_that_request_last().
-  o Device drivers have ownership of a request until they
-    call end_that_request_last().
-  o rq->end_io() is called at the last stage of
-    end_that_request_last() for some block layer codes need
-    specific request handling when completing it.
-
-[After]
-  o 1 step completion using blk_end_request().
-    (end_that_request_* are no longer used from device drivers.)
-  o Device drivers give over ownership of a request
-    when calling blk_end_request().
-    If it returns 0, the request is completed.
-    If it returns 1, the request isn't completed and
-    the ownership is returned to the device driver again.
-  o rq->end_io() is called at the top of blk_end_request() to
-    allow to hook all parts of request completion.
-    Existing users of rq->end_io() must be changed to do
-    all parts of request completion.
-
-
-EXAMPLE CODE
-============
-Request-based Device-mapper multipath patch-set is attached as appendix,
-although it still needs some work and isn't ready for review.
-It checks error of a request and retries the request using other paths
-if error is detected, before completing bios in the request.
-(See clone_end_request() in appendix#1.)
-
-Thanks,
-Kiyoshi Ueda
+diff -rupN 2.6.23-rc3-mm1/block/ll_rw_blk.c 01-blkendreq-interface/block/ll_rw_blk.c
+--- 2.6.23-rc3-mm1/block/ll_rw_blk.c	2007-08-22 18:54:03.000000000 -0400
++++ 01-blkendreq-interface/block/ll_rw_blk.c	2007-08-23 17:19:20.000000000 -0400
+@@ -3669,6 +3669,88 @@ void end_request(struct request *req, in
+ 
+ EXPORT_SYMBOL(end_request);
+ 
++/**
++ * ____blk_end_request - Generic end_io function to complete a request.
++ * @rq:           the request being processed
++ * @uptodate:     1 for success, 0 for I/O error, < 0 for specific error
++ * @nr_bytes:     number of bytes to complete
++ * @needlock:     1 for queue lock need to be held.
++ *                0 for queue lock held already.
++ *
++ * Description:
++ *     Ends I/O on a number of bytes attached to @rq.
++ *     If @rq has leftover, sets it up for the next range of segments.
++ *
++ * Return:
++ *     0 - we are done with this request
++ *     1 - this request is not freed yet, it still has pending buffers.
++ **/
++static int ____blk_end_request(struct request *rq, int uptodate, int nr_bytes,
++			       int needlock)
++{
++	struct request_queue *q = rq->q;
++	unsigned long flags = 0UL;
++
++	if (blk_fs_request(rq) || blk_pc_request(rq)) {
++		if (__end_that_request_first(rq, uptodate, nr_bytes))
++			return 1;
++	}
++
++	/*
++	 * No need to check the argument here because it is done
++	 * in add_disk_randomness().
++	 */
++	add_disk_randomness(rq->rq_disk);
++
++	if (needlock)
++		spin_lock_irqsave(q->queue_lock, flags);
++
++	if (blk_rq_tagged(rq))
++		blk_queue_end_tag(q, rq);
++
++	if (!list_empty(&rq->queuelist))
++		blkdev_dequeue_request(rq);
++
++	end_that_request_last(rq, uptodate);
++
++	if (needlock)
++		spin_unlock_irqrestore(q->queue_lock, flags);
++
++	return 0;
++}
++
++/**
++ * blk_end_request - Helper function for drivers to complete the request.
++ * @rq:       the request being processed
++ * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
++ * @nr_bytes: number of bytes to complete
++ *
++ * Description:
++ *     Ends I/O on a number of bytes attached to @rq.
++ *     If @rq has leftover, sets it up for the next range of segments.
++ *
++ * Return:
++ *     0 - we are done with this request
++ *     1 - still buffers pending for this request
++ **/
++int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
++{
++	return ____blk_end_request(rq, uptodate, nr_bytes, 1);
++}
++EXPORT_SYMBOL_GPL(blk_end_request);
++
++/**
++ * __blk_end_request - Helper function for drivers to complete the request.
++ *
++ * Description:
++ *     Must be called with queue lock held unlike blk_end_request().
++ **/
++int __blk_end_request(struct request *rq, int uptodate, int nr_bytes)
++{
++	return ____blk_end_request(rq, uptodate, nr_bytes, 0);
++}
++EXPORT_SYMBOL_GPL(__blk_end_request);
++
+ void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+ 		     struct bio *bio)
+ {
+diff -rupN 2.6.23-rc3-mm1/include/linux/blkdev.h 01-blkendreq-interface/include/linux/blkdev.h
+--- 2.6.23-rc3-mm1/include/linux/blkdev.h	2007-08-13 00:25:24.000000000 -0400
++++ 01-blkendreq-interface/include/linux/blkdev.h	2007-08-23 17:22:50.000000000 -0400
+@@ -728,6 +728,8 @@ static inline void blk_run_address_space
+  * for parts of the original function. This prevents
+  * code duplication in drivers.
+  */
++extern int blk_end_request(struct request *rq, int uptodate, int nr_bytes);
++extern int __blk_end_request(struct request *rq, int uptodate, int nr_bytes);
+ extern int end_that_request_first(struct request *, int, int);
+ extern int end_that_request_chunk(struct request *, int, int);
+ extern void end_that_request_last(struct request *, int);
