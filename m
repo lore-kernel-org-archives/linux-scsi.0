@@ -1,113 +1,99 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-Date: Fri, 31 Aug 2007 14:27:48 -0400
-Message-ID: <46D85DA4.1070008@garzik.org>
-References: <1188583419.6353.9.camel@linux.site>
+From: Andreas Koenecke <akoenecke@akoenecke.de>
+Subject: Re: usb-storage and Motorola Z6
+Date: Fri, 31 Aug 2007 21:04:05 +0200
+Message-ID: <20070831190405.GA7506@kocom.akoenecke.de>
+References: <20070828215215.GB20127@kocom.akoenecke.de>
+	<Pine.LNX.4.44L0.0708291005300.2554-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:40820 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966031AbXHaS1u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Aug 2007 14:27:50 -0400
-In-Reply-To: <1188583419.6353.9.camel@linux.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-users-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0708291005300.2554-100000@iolanthe.rowland.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-users>
+List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-users-bounces@lists.sourceforge.net
+Errors-To: linux-usb-users-bounces@lists.sourceforge.net
+To: USB users list <linux-usb-users@lists.sourceforge.net>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Gilbert Wu <Gilbert_Wu@adaptec.com>
-Cc: linux-scsi@vger.kernel.org
 
-Gilbert Wu wrote:
-> Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source dev=
-ice
-> driver to fix smartctl utility problem.
->=20
-> Contribution:
->    Gilbert Wu <gilbert_wu@adaptec.com>
->=20
-> Change Log:
->=20
->=20
-> 1. Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"
->    does not work on aic94xx device drive with SATA devices.
->    The smartctl utility send down ATA smart command to aic94xx
->    driver and fail to get the result which is stored on ATA output
->    register.=20
->    In normal case, Aic94xx=E2=80=99s firmware does not return the val=
-ue of
->    ATA output register to device driver due to performance reason.
->    To solve this issue then the driver need to turn on internal
->    flag (CSMI_TASK) for particular ATA command to enable firmware
->    to return the value of ATA output register.
->=20
->=20
->=20
->=20
-> Patch: apply to aic94xx-sas-2.6.git development tree
->=20
-> Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
+* Mittwoch, 29. August 2007 um 10:07 (-0400) schrieb Alan Stern:
+> 
+> You can edit the source code of the SCSI core to make it ignore the PQ 
+> value.  In the file drivers/scsi/scsi_sysfs.c, find the 
+> scsi_bus_match() routine and change the last line from:
+> 
+> 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
+> 
+> to
+> 
+> 	return 1;
 
-NAK
+OK, I have done it. But there ist still no success.
+When I connect the phone the messages are:
+--------------------------------------------------------------------------------------------
+Aug 31 20:14:53 kocom kernel: usb 3-1: new high speed USB device using ehci_hcd and address 2
+Aug 31 20:14:53 kocom kernel: usb 3-1: configuration #1 chosen from 1 choice
+Aug 31 20:14:53 kocom kernel: usbcore: registered new interface driver libusual
+Aug 31 20:14:53 kocom kernel: Initializing USB Mass Storage driver...
+Aug 31 20:14:53 kocom kernel: scsi3 : SCSI emulation for USB Mass Storage devices
+Aug 31 20:14:53 kocom kernel: usb-storage: device found at 2
+Aug 31 20:14:53 kocom kernel: usb-storage: waiting for device to settle before scanning
+Aug 31 20:14:53 kocom kernel: usbcore: registered new interface driver usb-storage
+Aug 31 20:14:53 kocom kernel: USB Mass Storage support registered.
+Aug 31 20:14:58 kocom kernel: usb-storage: device scan complete
+Aug 31 20:14:58 kocom kernel: scsi 3:0:0:0: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
+Aug 31 20:14:58 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:14:58 kocom kernel: scsi 3:0:0:1: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
+Aug 31 20:14:58 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:14:58 kocom kernel: sd 3:0:0:0: [sdb] Attached SCSI removable disk
+Aug 31 20:14:58 kocom kernel: sd 3:0:0:0: Attached scsi generic sg2 type 0
+Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:14:59 kocom kernel: sd 3:0:0:1: [sdc] Attached SCSI removable disk
+Aug 31 20:14:59 kocom kernel: sd 3:0:0:1: Attached scsi generic sg3 type 0
+Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:01 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:02 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:02 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:02 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:02 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:03 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:03 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:03 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:07 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:07 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:08 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:08 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:08 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:08 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:09 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:11 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:13 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:15:13 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
+Aug 31 20:17:06 kocom kernel: usb 3-1: USB disconnect, address 2
+------------------------------------------------------------------------------------------------------------
 
-1) re-invents ATA command constants (a third time!).
+/proc/partition and 'fdisk' show no sdb or sdc.
+You can download the messages with debug-Output from
+<http://www.akoenecke.de/moto/usb_debug.txt>
 
-=46ix: use the constants in include/linux/ata.h
-
-
-2) ignores the large number of ATA commands that also need register out=
-put.
-
-=46ix: invert the test.  the only time when we do NOT want the ATA=20
-register output is upon successful completion of "hot path" READ/WRITE=20
-commands.  For ALL other cases, we need the D2H FIS and/or SDB FIS data=
-=20
-reflecting register state.
-
-
-3) Patches are normally imported by automated tools, and your email bod=
-y=20
-is copied directly into the permanent kernel changelog, archived for al=
-l=20
-eternity.  As such, you should format your patch description in a=20
-similar fashion to other patches.
-
-=46ixes:
-a) Subject line way too long and redundant.  Use:
-
-	[PATCH] aic94xx: fix smartctl utility problem
-
-Execute 'git log' in the kernel repository for more examples.  The emai=
-l=20
-subject is always copied into the kernel changelog as the FIRST LINE of=
-=20
-the change.  This is a one-line summary of your patch.
-
-b) Do not write "Subject: [...]" in email body.  Make this the subject=20
-of your email, per guidelines at http://linux.yyz.us/patch-format.html=20
-and Documentation/SubmittingPatches
-
-c) Remove the redundant line
-	Contribution:
-	   Gilbert Wu <gilbert_wu@adaptec.com>
-(this is redundant to your email address in the email, and the=20
-Signed-off-by line)
-
-d) Remove the redundant line
-	Change Log:
-(we already know its a changelog)
-
-e) Move temporal and meta-comments after the "---" separator, so that=20
-this text is not copied into the permanent kernel changelog.  See=20
-Documentation/SubmittingPatches for more info.
-
-Regards,
-
-	Jeff
+Andreas
 
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc.
+Still grepping through log files to find problems?  Stop.
+Now Search log events and configuration files using AJAX and a browser.
+Download your FREE copy of Splunk now >>  http://get.splunk.com/
+_______________________________________________
+Linux-usb-users@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-users
