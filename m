@@ -1,103 +1,92 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [Linux-usb-users] usb-storage and Motorola Z6
-Date: Fri, 31 Aug 2007 16:56:01 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0708311636090.24258-100000@netrider.rowland.org>
-References: <20070831190405.GA7506@kocom.akoenecke.de>
+From: Gilbert Wu <Gilbert_Wu@adaptec.com>
+Subject: Re: [PATCH] aic94xx: clean up PCI ID table per modern practice
+Date: Fri, 31 Aug 2007 14:14:22 -0700
+Message-ID: <1188594862.5812.5.camel@linux.site>
+References: <1188583189.6353.4.camel@linux.site>
+	 <46D85AD8.6000306@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:3902 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932301AbXHaU4W (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 16:56:22 -0400
-In-Reply-To: <20070831190405.GA7506@kocom.akoenecke.de>
+Received: from ts.adaptec.com ([162.62.93.58]:49639 "HELO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S933306AbXHaVBI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Aug 2007 17:01:08 -0400
+In-Reply-To: <46D85AD8.6000306@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Koenecke <akoenecke@akoenecke.de>
-Cc: USB users list <linux-usb-users@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, 31 Aug 2007, Andreas Koenecke wrote:
-
-> * Mittwoch, 29. August 2007 um 10:07 (-0400) schrieb Alan Stern:
+  
+On Fri, 2007-08-31 at 14:15 -0400, Jeff Garzik wrote:
+> Gilbert Wu wrote:
+> > Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+> > driver to add new PCI ID for HBA ASC58300.
 > > 
-> > You can edit the source code of the SCSI core to make it ignore the PQ 
-> > value.  In the file drivers/scsi/scsi_sysfs.c, find the 
-> > scsi_bus_match() routine and change the last line from:
+> > Contribution:
+> >    Gilbert Wu <gilbert_wu@adaptec.com>
 > > 
-> > 	return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
 > > 
-> > to
+> > Patch: apply to aic94xx-sas-2.6.git development tree
 > > 
-> > 	return 1;
+> > Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
+> > 
+> > Change Log:
+> > 
+> > 1. Add new HBA PCI ID for ASC58300 which has eight port SAS and
+> >    SATA PCI-X 133MHz low profile host bus adapter with two mini SAS
+> >         4x external connectors. 
+> > 
+> > 
+> > 
+> > diff -urN old/drivers/scsi/aic94xx/aic94xx_hwi.h
+> > new/drivers/scsi/aic94xx/aic94xx_hwi.h
+> > --- old/drivers/scsi/aic94xx/aic94xx_hwi.h	2007-08-30 16:34:21.000000000 -0700
+> > +++ new/drivers/scsi/aic94xx/aic94xx_hwi.h	2007-08-30 16:34:02.000000000 -0700
+> > @@ -45,6 +45,7 @@
+> >   */
+> >  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR10 0x410
+> >  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR12 0x412
+> > +#define PCI_DEVICE_ID_ADAPTEC2_RAZOR16 0x416
+> >  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1E 0x41E
+> >  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1F 0x41F
+> >  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR30 0x430
+> > diff -urN old/drivers/scsi/aic94xx/aic94xx_init.c new/drivers/scsi/aic94xx/aic94xx_init.c
+> > --- old/drivers/scsi/aic94xx/aic94xx_init.c	2007-08-30 16:34:18.000000000 -0700
+> > +++ new/drivers/scsi/aic94xx/aic94xx_init.c	2007-08-30 16:33:59.000000000 -0700
+> > @@ -835,6 +835,8 @@
+> >  	 0, 0, 1},
+> >  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR12),
+> >  	 0, 0, 1},
+> > +	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR16),
+> > +	 0, 0, 1},
+> >  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1E),
+> >  	 0, 0, 1},
+> >  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1F),
 > 
-> OK, I have done it. But there ist still no success.
-> When I connect the phone the messages are:
-> --------------------------------------------------------------------------------------------
-> Aug 31 20:14:53 kocom kernel: usb 3-1: new high speed USB device using ehci_hcd and address 2
-> Aug 31 20:14:53 kocom kernel: usb 3-1: configuration #1 chosen from 1 choice
-> Aug 31 20:14:53 kocom kernel: usbcore: registered new interface driver libusual
-> Aug 31 20:14:53 kocom kernel: Initializing USB Mass Storage driver...
-> Aug 31 20:14:53 kocom kernel: scsi3 : SCSI emulation for USB Mass Storage devices
-> Aug 31 20:14:53 kocom kernel: usb-storage: device found at 2
-> Aug 31 20:14:53 kocom kernel: usb-storage: waiting for device to settle before scanning
-> Aug 31 20:14:53 kocom kernel: usbcore: registered new interface driver usb-storage
-> Aug 31 20:14:53 kocom kernel: USB Mass Storage support registered.
-> Aug 31 20:14:58 kocom kernel: usb-storage: device scan complete
-> Aug 31 20:14:58 kocom kernel: scsi 3:0:0:0: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
-> Aug 31 20:14:58 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-> Aug 31 20:14:58 kocom kernel: scsi 3:0:0:1: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
-> Aug 31 20:14:58 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-> Aug 31 20:14:58 kocom kernel: sd 3:0:0:0: [sdb] Attached SCSI removable disk
-> Aug 31 20:14:58 kocom kernel: sd 3:0:0:0: Attached scsi generic sg2 type 0
-> Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-> Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-> Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-> Aug 31 20:14:59 kocom kernel: sd 3:0:0:1: [sdc] Attached SCSI removable disk
-> Aug 31 20:14:59 kocom kernel: sd 3:0:0:1: Attached scsi generic sg3 type 0
+> ACK, but, really we need to delete all of PCI_DEVICE_ID_ADAPTEC2_* and 
+> replace them with the numeric (hex) constants, since they are only used 
+> in a single location.
+> 
+> The PCI device table in aic94xx_init should really look like...  (see 
+> attached)
+> 
+> Much shorter, more maintainable, doesn't require patching the 
+> heavily-patched include/linux/pci_ids.h for single-use constants.
+> 
+> 	Jeff
+> 
+> 
+> 
 
-That's pretty much okay.  Apart from the resets, it indicates that the 
-computer did detect and install the two logical drives, sdb and sdc.
+Hi Jeff,
 
-> Aug 31 20:14:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-> Aug 31 20:15:01 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 2
-...
+   I don't think we will add new PCI id for aic94xx in the future. Even
+the ASC58300 is introduced two years ago. We should move those ID into
+include/linux/pci_ids.h. We can change it next time.
 
-All those reset messages are caused by a bug in the device.  Every 
-command sent to the device is labelled with a "Tag" value; it shows up 
-in the debugging log on each "Bulk Command" line as the number 
-following the T.  For example:
+Thanks!
+Gilbert
 
-	Bulk Command S 0x43425355 T 0x4 L 18 F 128 Trg 0 LUN 0 CL 6
-
-Here the Tag is 0x4.  In its status response, the device must include a
-matching Tag value to indicate which command the status is for.  If you
-look at the debugging log, you'll see the status line for this
-particular command was:
-
-	Bulk Status S 0x53425355 T 0x3 R 0 Stat 0x0
-
-The Tag is 0x3, which doesn't match!  The device made this mistake 15
-times in 410 commands, apparently at random, and each time the computer
-issued a reset to try and fix the problem.  That's a pretty serious 
-bug in the Z6.
-
-If you want to work around this bug, you can edit the file 
-drivers/usb/storage/transport.c.  In the usb_stor_Bulk_transport() 
-routine, edit this line:
-
-        if (bcs->Tag != us->tag || bcs->Status > US_BULK_STAT_PHASE) {
-
-and change it to:
-
-        if (bcs->Status > US_BULK_STAT_PHASE) {
-
-> /proc/partition and 'fdisk' show no sdb or sdc.
-
-That's a separate matter.  The log shows that the computer sent 
-numerous TEST UNIT READY commands to the device, and every time the 
-device answered with a code that means "Not ready, medium not present".  
-In other words, it's saying that it needs to have a memory card or 
-something like that inserted.
-
-Alan Stern
 
