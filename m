@@ -1,125 +1,45 @@
-From: Gilbert Wu <Gilbert_Wu@adaptec.com>
-Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-Date: Fri, 31 Aug 2007 14:20:59 -0700
-Message-ID: <1188595259.5812.10.camel@linux.site>
-References: <1188583419.6353.9.camel@linux.site>
-	 <46D85DA4.1070008@garzik.org>
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [PATCH 0/3] debloat aic7xxx and aic79xx drivers
+Date: Fri, 31 Aug 2007 22:20:36 +0100
+Message-ID: <200708312220.36818.vda.linux@googlemail.com>
+References: <200708311613.59666.vda.linux@googlemail.com> <31870.1188577642@turing-police.cc.vt.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:49755 "HELO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1761147AbXHaVHo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 17:07:44 -0400
-In-Reply-To: <46D85DA4.1070008@garzik.org>
+Received: from nf-out-0910.google.com ([64.233.182.184]:35352 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932887AbXHaVUz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 17:20:55 -0400
+Received: by nf-out-0910.google.com with SMTP id f5so799547nfh
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Aug 2007 14:20:53 -0700 (PDT)
+In-Reply-To: <31870.1188577642@turing-police.cc.vt.edu>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org
+To: Valdis.Kletnieks@vt.edu
+Cc: Hannes Reinecke <hare@suse.de>, Jan Engelhardt <jengelh@computergmbh.de>, Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, 2007-08-31 at 14:27 -0400, Jeff Garzik wrote:
-> Gilbert Wu wrote:
-> > Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source d=
-evice
-> > driver to fix smartctl utility problem.
-> >=20
-> > Contribution:
-> >    Gilbert Wu <gilbert_wu@adaptec.com>
-> >=20
-> > Change Log:
-> >=20
-> >=20
-> > 1. Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"
-> >    does not work on aic94xx device drive with SATA devices.
-> >    The smartctl utility send down ATA smart command to aic94xx
-> >    driver and fail to get the result which is stored on ATA output
-> >    register.=20
-> >    In normal case, Aic94xx=E2=80=99s firmware does not return the v=
-alue of
-> >    ATA output register to device driver due to performance reason.
-> >    To solve this issue then the driver need to turn on internal
-> >    flag (CSMI_TASK) for particular ATA command to enable firmware
-> >    to return the value of ATA output register.
-> >=20
-> >=20
-> >=20
-> >=20
-> > Patch: apply to aic94xx-sas-2.6.git development tree
-> >=20
-> > Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
->=20
-> NAK
->=20
-> 1) re-invents ATA command constants (a third time!).
->=20
-> Fix: use the constants in include/linux/ata.h
->=20
->=20
-> 2) ignores the large number of ATA commands that also need register o=
-utput.
->=20
-> Fix: invert the test.  the only time when we do NOT want the ATA=20
-> register output is upon successful completion of "hot path" READ/WRIT=
-E=20
-> commands.  For ALL other cases, we need the D2H FIS and/or SDB FIS da=
-ta=20
-> reflecting register state.
->=20
->=20
-> 3) Patches are normally imported by automated tools, and your email b=
-ody=20
-> is copied directly into the permanent kernel changelog, archived for =
-all=20
-> eternity.  As such, you should format your patch description in a=20
-> similar fashion to other patches.
->=20
-> Fixes:
-> a) Subject line way too long and redundant.  Use:
->=20
-> 	[PATCH] aic94xx: fix smartctl utility problem
->=20
-> Execute 'git log' in the kernel repository for more examples.  The em=
-ail=20
-> subject is always copied into the kernel changelog as the FIRST LINE =
-of=20
-> the change.  This is a one-line summary of your patch.
->=20
-> b) Do not write "Subject: [...]" in email body.  Make this the subjec=
-t=20
-> of your email, per guidelines at http://linux.yyz.us/patch-format.htm=
-l=20
-> and Documentation/SubmittingPatches
->=20
-> c) Remove the redundant line
-> 	Contribution:
-> 	   Gilbert Wu <gilbert_wu@adaptec.com>
-> (this is redundant to your email address in the email, and the=20
-> Signed-off-by line)
->=20
-> d) Remove the redundant line
-> 	Change Log:
-> (we already know its a changelog)
->=20
-> e) Move temporal and meta-comments after the "---" separator, so that=
-=20
-> this text is not copied into the permanent kernel changelog.  See=20
-> Documentation/SubmittingPatches for more info.
->=20
-> Regards,
->=20
-> 	Jeff
->=20
+On Friday 31 August 2007 17:27, Valdis.Kletnieks@vt.edu wrote:
+> On Fri, 31 Aug 2007 16:13:59 BST, Denys Vlasenko said:
+> >
+> >    text    data     bss     dec     hex filename
+> >  261433   50018    1172  312623   4c52f linux-2.6.23-rc1.org.t/drivers/scsi/aic7xxx/built-in.o
+> >  199654   50018    1172  250844   3d3dc linux-2.6.23-rc1.aic.t/drivers/scsi/aic7xxx/built-in.o
+> >  184014   21314    1172  206500   326a4 linux-2.6.23-rc1.aic1.t/drivers/scsi/aic7xxx/built-in.o
+> >  202378    2850    1172  206400   32640 linux-2.6.23-rc1.aic2.t/drivers/scsi/aic7xxx/built-in.o
+> > 
+> > 1-debloat.patch    deinlines a lot of functions
+> > 2-addstatic.patch  adds statics, #ifdefs out huge amount of unused code, adds consts
+> > 3-addconst.patch   adds more consts
+> 
+> Yowza.  Looking at aic1->aic2, it looks like 20K became 'const', and only
+> 3K *wasn't* 'const'?  
 
-Hi Jeff,
+Exactly. There are firmware images/patches and a lot of structures
+with char* members pointing to text/messages.
 
- Thanks for your comments. I go through each item and rewrite the patch=
-=2E
-
-Thanks!
-Gilbert
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Btw, aic94xx driver needs the same treatment.
+--
+vda
