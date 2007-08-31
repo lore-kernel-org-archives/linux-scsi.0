@@ -1,43 +1,41 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH 0/5] tgt: add target mode support to fc transport and
- qla2xxx
-Date: Sat, 01 Sep 2007 02:02:03 +0900
-Message-ID: <200708311702.l7VH238n015718@mbox.iij4u.or.jp>
+Subject: [PATCH 1/5] tgt: fix can_queue bug
+Date: Sat, 01 Sep 2007 02:02:16 +0900
+Message-ID: <200708311702.l7VH2Gj6016024@mbox.iij4u.or.jp>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:46967 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:59586 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759358AbXHaRC2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 31 Aug 2007 13:02:28 -0400
+	id S1759569AbXHaRCd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Aug 2007 13:02:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com, James.Smart@Emulex.Com, andrew.vasquez@qlogic.com, hare@suse.de, michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp
+Cc: James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu
 
-This patchset adds target mode support to fc transport class and
-qla2xxx driver. The pathset is against scsi-misc.
+should use host->can_queue instead of host->hostt->can_queue.
 
-The target mode support for fc transport class works in the same way
-as srp transport class. fc_remote_port_{rolechg,delete} calls
-scsi_tgt_it_nexus_{create,destroy} for target drivers.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/scsi_tgt_lib.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-This patchset includes one major change to the mid layer. srp
-initiator-mode drivers don't find initiator remote ports (i.e. it
-finds only target ports) so srp transport class always creates tgt's
-I_T nexus when it finds an initiator remoto port. However, both
-initiator-mode and target-mode fc drivers find initiator remote ports
-so fc transport class needs to know which mode the driver runs in (or
-a driver can run in dual mode too). That is, fc transport class
-creates tgt's I_T nexus only when target-mode-enabled drivers find an
-initiator remote port.
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 5851c8e..66c692f 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -237,7 +237,7 @@ int scsi_tgt_alloc_queue(struct Scsi_Host *shost)
+ 	 * command as is recvd to userspace. uspace can then make
+ 	 * sure we do not overload the HBA
+ 	 */
+-	q->nr_requests = shost->hostt->can_queue;
++	q->nr_requests = shost->can_queue;
+ 	/*
+ 	 * We currently only support software LLDs so this does
+ 	 * not matter for now. Do we need this for the cards we support?
+-- 
+1.5.2.4
 
-To solve the above issue, the second patch adds supported_mode and
-active_mode attributes to /sys/class/sys_host/hostX/ for specifying
-the mode that a lld supports and the currently activated mode. The
-supported_mode attribute looks at a scsi_host_template and the
-active_mode attribute looks at a scsi_host. We would add a hook to a
-scsi_host_template to change the active_mode attribute
-dynamically. But now there is no hook since no lld supports that
-feature.
