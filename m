@@ -1,101 +1,154 @@
-From: Gilbert Wu <Gilbert_Wu@adaptec.com>
-Subject: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-Date: Fri, 31 Aug 2007 11:03:39 -0700
-Message-ID: <1188583419.6353.9.camel@linux.site>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] aic94xx: clean up PCI ID table per modern practice
+Date: Fri, 31 Aug 2007 14:15:52 -0400
+Message-ID: <46D85AD8.6000306@garzik.org>
+References: <1188583189.6353.4.camel@linux.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+ boundary="------------030501060107080408070603"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:45282 "HELO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S965753AbXHaSKU convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 14:10:20 -0400
-Received: from aime2k302.adaptec.com (aime2k302.adaptec.com [10.25.8.48])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id B92F31E3C9C
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Aug 2007 10:50:43 -0700 (PDT)
+Received: from srv5.dvmed.net ([207.36.208.214]:58962 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S965626AbXHaSPy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 31 Aug 2007 14:15:54 -0400
+In-Reply-To: <1188583189.6353.4.camel@linux.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Gilbert Wu <Gilbert_Wu@adaptec.com>
+Cc: linux-scsi@vger.kernel.org
 
-Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source devic=
-e
-driver to fix smartctl utility problem.
+This is a multi-part message in MIME format.
+--------------030501060107080408070603
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Contribution:
-   Gilbert Wu <gilbert_wu@adaptec.com>
+Gilbert Wu wrote:
+> Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
+> driver to add new PCI ID for HBA ASC58300.
+> 
+> Contribution:
+>    Gilbert Wu <gilbert_wu@adaptec.com>
+> 
+> 
+> Patch: apply to aic94xx-sas-2.6.git development tree
+> 
+> Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
+> 
+> Change Log:
+> 
+> 1. Add new HBA PCI ID for ASC58300 which has eight port SAS and
+>    SATA PCI-X 133MHz low profile host bus adapter with two mini SAS
+>         4x external connectors. 
+> 
+> 
+> 
+> diff -urN old/drivers/scsi/aic94xx/aic94xx_hwi.h
+> new/drivers/scsi/aic94xx/aic94xx_hwi.h
+> --- old/drivers/scsi/aic94xx/aic94xx_hwi.h	2007-08-30 16:34:21.000000000 -0700
+> +++ new/drivers/scsi/aic94xx/aic94xx_hwi.h	2007-08-30 16:34:02.000000000 -0700
+> @@ -45,6 +45,7 @@
+>   */
+>  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR10 0x410
+>  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR12 0x412
+> +#define PCI_DEVICE_ID_ADAPTEC2_RAZOR16 0x416
+>  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1E 0x41E
+>  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR1F 0x41F
+>  #define PCI_DEVICE_ID_ADAPTEC2_RAZOR30 0x430
+> diff -urN old/drivers/scsi/aic94xx/aic94xx_init.c new/drivers/scsi/aic94xx/aic94xx_init.c
+> --- old/drivers/scsi/aic94xx/aic94xx_init.c	2007-08-30 16:34:18.000000000 -0700
+> +++ new/drivers/scsi/aic94xx/aic94xx_init.c	2007-08-30 16:33:59.000000000 -0700
+> @@ -835,6 +835,8 @@
+>  	 0, 0, 1},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR12),
+>  	 0, 0, 1},
+> +	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR16),
+> +	 0, 0, 1},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1E),
+>  	 0, 0, 1},
+>  	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1F),
 
-Change Log:
+ACK, but, really we need to delete all of PCI_DEVICE_ID_ADAPTEC2_* and 
+replace them with the numeric (hex) constants, since they are only used 
+in a single location.
 
+The PCI device table in aic94xx_init should really look like...  (see 
+attached)
 
-1. Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"
-   does not work on aic94xx device drive with SATA devices.
-   The smartctl utility send down ATA smart command to aic94xx
-   driver and fail to get the result which is stored on ATA output
-   register.=20
-   In normal case, Aic94xx=E2=80=99s firmware does not return the value=
- of
-   ATA output register to device driver due to performance reason.
-   To solve this issue then the driver need to turn on internal
-   flag (CSMI_TASK) for particular ATA command to enable firmware
-   to return the value of ATA output register.
+Much shorter, more maintainable, doesn't require patching the 
+heavily-patched include/linux/pci_ids.h for single-use constants.
 
-
-
-
-Patch: apply to aic94xx-sas-2.6.git development tree
-
-Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
-
-
-
-
-diff -urN old/drivers/scsi/aic94xx/aic94xx_task.c
-new/drivers/scsi/aic94xx/aic94xx_task.c
---- old/drivers/scsi/aic94xx/aic94xx_task.c	2007-08-30 16:32:12.0000000=
-00 -0700
-+++ new/drivers/scsi/aic94xx/aic94xx_task.c	2007-08-30 16:31:50.0000000=
-00 -0700
-@@ -33,6 +33,11 @@
- static void asd_unbuild_smp_ascb(struct asd_ascb *a);
- static void asd_unbuild_ssp_ascb(struct asd_ascb *a);
-=20
-+#define ATA_SMART_COMMAND       0xb0
-+#define ATA_DEVICE_DIAGNOSTIC   0x90
-+#define ATA_CHECK_POWER_MODE    0xe5
-+#define ATA_SMART_STATUS        0xda
-+
- static inline void asd_can_dequeue(struct asd_ha_struct *asd_ha, int n=
-um)
- {
- 	unsigned long flags;
-@@ -253,6 +258,7 @@
- 		break;
- 	case TC_SSP_RESP:
- 	case TC_ATA_RESP:
-+	case TC_CSMI:
- 		ts->resp =3D SAS_TASK_COMPLETE;
- 		ts->stat =3D SAS_PROTO_RESPONSE;
- 		asd_get_response_tasklet(ascb, dl);
-@@ -427,6 +433,15 @@
- 			flags |=3D STP_AFFIL_POLICY;
- 		scb->ata_task.flags =3D flags;
- 	}
-+
-+	if ((scb->ata_task.fis.command =3D=3D ATA_SMART_COMMAND &&
-+		scb->ata_task.fis.features =3D=3D ATA_SMART_STATUS)
-+		|| scb->ata_task.fis.command =3D=3D ATA_DEVICE_DIAGNOSTIC
-+		|| scb->ata_task.fis.command =3D=3D ATA_CHECK_POWER_MODE)
-+	{
-+		scb->ata_task.ata_flags|=3DCSMI_TASK;
-+	}
-+
- 	ascb->tasklet_complete =3D asd_task_tasklet_complete;
-=20
- 	if (likely(!task->ata_task.device_control_reg_update))
+	Jeff
 
 
+
+
+--------------030501060107080408070603
+Content-Type: text/plain;
+ name="patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="patch"
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.h b/drivers/scsi/aic94xx/aic94xx_hwi.h
+index c6c3d18..491e5d8 100644
+--- a/drivers/scsi/aic94xx/aic94xx_hwi.h
++++ b/drivers/scsi/aic94xx/aic94xx_hwi.h
+@@ -40,18 +40,6 @@
+ #define ASD_MAX_PHYS       8
+ #define ASD_PCBA_SN_SIZE   12
+ 
+-/* Those are to be further named properly, the "RAZORx" part, and
+- * subsequently included in include/linux/pci_ids.h.
+- */
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR10 0x410
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR12 0x412
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR1E 0x41E
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR1F 0x41F
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR30 0x430
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR32 0x432
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR3E 0x43E
+-#define PCI_DEVICE_ID_ADAPTEC2_RAZOR3F 0x43F
 -
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+ struct asd_ha_addrspace {
+ 	void __iomem  *addr;
+ 	unsigned long  start;       /* pci resource start */
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index 63bcde2..56ed89c 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -829,23 +829,16 @@ static struct sas_domain_function_template aic94xx_transport_functions = {
+ };
+ 
+ static const struct pci_device_id aic94xx_pci_table[] __devinitdata = {
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR10),
+-	 0, 0, 1},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR12),
+-	 0, 0, 1},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1E),
+-	 0, 0, 1},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR1F),
+-	 0, 0, 1},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR30),
+-	 0, 0, 2},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR32),
+-	 0, 0, 2},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR3E),
+-	 0, 0, 2},
+-	{PCI_DEVICE(PCI_VENDOR_ID_ADAPTEC2, PCI_DEVICE_ID_ADAPTEC2_RAZOR3F),
+-	 0, 0, 2},
+-	{}
++	{ PCI_VDEVICE(ADAPTEC2, 0x410), 1 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x412), 1 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x41E), 1 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x41F), 1 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x430), 2 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x432), 2 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x43E), 2 },
++	{ PCI_VDEVICE(ADAPTEC2, 0x43F), 2 },
++
++	{ }	/* terminate list */
+ };
+ 
+ MODULE_DEVICE_TABLE(pci, aic94xx_pci_table);
+
+--------------030501060107080408070603--
