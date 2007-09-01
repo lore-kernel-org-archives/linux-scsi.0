@@ -1,72 +1,41 @@
-From: Gilbert Wu <Gilbert_Wu@adaptec.com>
-Subject: Re: [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source device
-Date: Fri, 31 Aug 2007 16:56:48 -0700
-Message-ID: <1188604608.6036.15.camel@linux.site>
-References: <1188583419.6353.9.camel@linux.site>
-	 <46D888B7.1050301@torque.net>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: [Bug 8942] dac960 driver stopped working with 2.6.22 kernel series
+Date: Sat, 1 Sep 2007 12:18:16 +0200
+Message-ID: <200709011218.17129.ak@suse.de>
+References: <bug-8942-27@http.bugzilla.kernel.org/> <20070831084259.fc2fd903.akpm@linux-foundation.org> <20070831161733.GC14130@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:52544 "HELO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1750843AbXHaXnI convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 31 Aug 2007 19:43:08 -0400
-In-Reply-To: <46D888B7.1050301@torque.net>
+Received: from mx1.suse.de ([195.135.220.2]:56504 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752307AbXIAKdS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 1 Sep 2007 06:33:18 -0400
+In-Reply-To: <20070831161733.GC14130@parisc-linux.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>, alex@nibbles.it, dac@conglom-o.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, linux-scsi@vger.kernel.org
 
-On Fri, 2007-08-31 at 17:31 -0400, Douglas Gilbert wrote:
-> Gilbert Wu wrote:
-> > Subject:  [PATCH] scsi: Update Aic94xx SAS/SATA Linux open source d=
-evice
-> > driver to fix smartctl utility problem.
-> >=20
-> > Contribution:
-> >    Gilbert Wu <gilbert_wu@adaptec.com>
-> >=20
-> > Change Log:
-> >=20
-> >=20
-> > 1. Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"
-> >    does not work on aic94xx device drive with SATA devices.
-> >    The smartctl utility send down ATA smart command to aic94xx
-> >    driver and fail to get the result which is stored on ATA output
-> >    register.=20
-> >    In normal case, Aic94xx=E2=80=99s firmware does not return the v=
-alue of
-> >    ATA output register to device driver due to performance reason.
-> >    To solve this issue then the driver need to turn on internal
-> >    flag (CSMI_TASK) for particular ATA command to enable firmware
-> >    to return the value of ATA output register.
->=20
-> Recent versions of smartmontools (say 5.38 from CVS at
-> sourceforge) don't need the '-d ata' option any more.
->=20
-> If smartctl or smartd see /dev/sd<x> in Linux, they will
-> assume a SCSI disk, do an INQUIRY and if they see
-> "ATA     " in the T10 vendor identification field then an
-> ATA (most likely SATA) disk is assumed behind a SAT layer.
-> Thereafter ATA commands will be issued, each wrapped in
-> a SCSI ATA PASS-THROUGH(16) command.
->=20
-> Perhaps you might check that this works with the aic94xx
-> driver. [It does work with MPT SAS HBAs.]
->=20
-> Doug Gilbert
 
-The smartctl-5.38 works fine with aic94xx after fixed the ATA register
-output problem. I also verify it by adding debug message that
-smartctl-5.8 utility sends ATA smart command to aic94xx driver with SAT=
-A
-device.
+> So anyway, what's actually failing is one of these:
 
-Thanks!
-Gilbert
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks for the analysis.
+
+In theory we could not fail DAC if the machine has <4GB RAM to work around
+such buggy drivers, but then they would fail anyways with >4GB. Also
+the failure was intended to allow some drivers to use more efficient non DAC
+operation.
+
+> It seems a bit mean to write off *all* VIA bridges as data-corruptors.
+> Maybe the people who haven't had problems before can help us start a
+> white-list of VIA PCI bridges that don't have a problem with DAC.
+
+The reason I blacklisted all was that there was a small triple of data corruption
+reports with VIA bridges. Also it's impossible to get any errata information
+out of VIA. And there are not that many >4GB VIA systems because these
+chipsets are usually used in lower end systems.
+
+-Andi
