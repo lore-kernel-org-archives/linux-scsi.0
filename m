@@ -1,41 +1,122 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [Bug 8942] dac960 driver stopped working with 2.6.22 kernel series
-Date: Sat, 1 Sep 2007 12:18:16 +0200
-Message-ID: <200709011218.17129.ak@suse.de>
-References: <bug-8942-27@http.bugzilla.kernel.org/> <20070831084259.fc2fd903.akpm@linux-foundation.org> <20070831161733.GC14130@parisc-linux.org>
+From: Andreas Koenecke <akoenecke@akoenecke.de>
+Subject: Re: usb-storage and Motorola Z6
+Date: Sat, 1 Sep 2007 13:56:26 +0200
+Message-ID: <20070901115626.GA21586@kocom.akoenecke.de>
+References: <20070831190405.GA7506@kocom.akoenecke.de>
+	<Pine.LNX.4.44L0.0708311636090.24258-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:56504 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752307AbXIAKdS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 1 Sep 2007 06:33:18 -0400
-In-Reply-To: <20070831161733.GC14130@parisc-linux.org>
+Return-path: <linux-usb-users-bounces@lists.sourceforge.net>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <Pine.LNX.4.44L0.0708311636090.24258-100000@netrider.rowland.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-users>
+List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-users-bounces@lists.sourceforge.net
+Errors-To: linux-usb-users-bounces@lists.sourceforge.net
+To: USB users list <linux-usb-users@lists.sourceforge.net>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, Greg KH <greg@kroah.com>, alex@nibbles.it, dac@conglom-o.org, "bugme-daemon@kernel-bugs.osdl.org" <bugme-daemon@bugzilla.kernel.org>, linux-scsi@vger.kernel.org
 
+* Freitag, 31. August 2007 um 16:56 (-0400) schrieb Alan Stern:
+> 
+> All those reset messages are caused by a bug in the device.  Every 
+> command sent to the device is labelled with a "Tag" value; it shows up 
+> in the debugging log on each "Bulk Command" line as the number 
+> following the T.  For example:
+> 
+> 	Bulk Command S 0x43425355 T 0x4 L 18 F 128 Trg 0 LUN 0 CL 6
+> 
+> Here the Tag is 0x4.  In its status response, the device must include a
+> matching Tag value to indicate which command the status is for.  If you
+> look at the debugging log, you'll see the status line for this
+> particular command was:
+> 
+> 	Bulk Status S 0x53425355 T 0x3 R 0 Stat 0x0
+> 
+> The Tag is 0x3, which doesn't match!  The device made this mistake 15
+> times in 410 commands, apparently at random, and each time the computer
+> issued a reset to try and fix the problem.  That's a pretty serious 
+> bug in the Z6.
+> 
+> If you want to work around this bug, you can edit the file 
+> drivers/usb/storage/transport.c.  In the usb_stor_Bulk_transport() 
+> routine, edit this line:
+> 
+>         if (bcs->Tag != us->tag || bcs->Status > US_BULK_STAT_PHASE) {
+> 
+> and change it to:
+> 
+>         if (bcs->Status > US_BULK_STAT_PHASE) {
 
-> So anyway, what's actually failing is one of these:
+I' done this, too.
+The non-debug-messages are now:
+----------------------------------------------------------------------------
+Sep  1 13:09:17 kocom kernel: usb 3-1: new high speed USB device using ehci_hcd and address 12
+Sep  1 13:09:17 kocom kernel: usb 3-1: configuration #1 chosen from 1 choice
+Sep  1 13:09:17 kocom kernel: Initializing USB Mass Storage driver...
+Sep  1 13:09:17 kocom kernel: scsi7 : SCSI emulation for USB Mass Storage devices
+Sep  1 13:09:17 kocom kernel: usb-storage: device found at 12
+Sep  1 13:09:17 kocom kernel: usb-storage: waiting for device to settle before scanning
+Sep  1 13:09:17 kocom kernel: usbcore: registered new interface driver usb-storage
+Sep  1 13:09:17 kocom kernel: USB Mass Storage support registered.
+Sep  1 13:09:22 kocom kernel: usb-storage: device scan complete
+Sep  1 13:09:22 kocom kernel: scsi 7:0:0:0: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
+Sep  1 13:09:22 kocom kernel: scsi 7:0:0:1: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
+Sep  1 13:09:22 kocom kernel: sd 7:0:0:0: [sdb] Attached SCSI removable disk
+Sep  1 13:09:22 kocom kernel: sd 7:0:0:0: Attached scsi generic sg2 type 0
+Sep  1 13:09:22 kocom kernel: sd 7:0:0:1: [sdc] Attached SCSI removable disk
+Sep  1 13:09:22 kocom kernel: sd 7:0:0:1: Attached scsi generic sg3 type 0
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] 1983495 512-byte hardware sectors (1016 MB)
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] Write Protect is off
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] Mode Sense: 03 00 00 00
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] Assuming drive cache: write through
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] 1983495 512-byte hardware sectors (1016 MB)
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] Write Protect is off
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] Mode Sense: 03 00 00 00
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:0: [sdb] Assuming drive cache: write through
+Sep  1 13:09:28 kocom kernel:  sdb:
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] 128673 512-byte hardware sectors (66 MB)
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] Write Protect is off
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] Mode Sense: 03 00 00 00
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] Assuming drive cache: write through
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] 128673 512-byte hardware sectors (66 MB)
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] Write Protect is off
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] Mode Sense: 03 00 00 00
+Sep  1 13:09:28 kocom kernel: sd 7:0:0:1: [sdc] Assuming drive cache: write through
+Sep  1 13:09:28 kocom kernel:  sdc:
+Sep  1 13:09:59 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 12
+Sep  1 13:10:14 kocom kernel: usb 3-1: device descriptor read/64, error -110
+Sep  1 13:10:29 kocom kernel: usb 3-1: device descriptor read/64, error -110
+Sep  1 13:10:29 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 12
+Sep  1 13:10:44 kocom kernel: usb 3-1: device descriptor read/64, error -110
+Sep  1 13:11:00 kocom kernel: usb 3-1: device descriptor read/64, error -110
+Sep  1 13:11:00 kocom kernel: usb 3-1: reset high speed USB device using ehci_hcd and address 12
+Sep  1 13:11:05 kocom kernel: usb 3-1: device descriptor read/8, error -110
+------------------------------------------------------------------------------------------------
 
-Thanks for the analysis.
+sdb and sdc appear in /proc/partitions, but trying to access with 'fdisk -l` or
+'mount' freezes the phone.
 
-In theory we could not fail DAC if the machine has <4GB RAM to work around
-such buggy drivers, but then they would fail anyways with >4GB. Also
-the failure was intended to allow some drivers to use more efficient non DAC
-operation.
+I uploaded the debug-log to:
+<http://www.akoenecke.de/moto/usb_debug2.txt>
 
-> It seems a bit mean to write off *all* VIA bridges as data-corruptors.
-> Maybe the people who haven't had problems before can help us start a
-> white-list of VIA PCI bridges that don't have a problem with DAC.
+The debug-log included 2 spontaneous reboots and 1 freeze (in this order) of
+the phone without unplugging.
 
-The reason I blacklisted all was that there was a small triple of data corruption
-reports with VIA bridges. Also it's impossible to get any errata information
-out of VIA. And there are not that many >4GB VIA systems because these
-chipsets are usually used in lower end systems.
+Andreas
 
--Andi
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Splunk Inc.
+Still grepping through log files to find problems?  Stop.
+Now Search log events and configuration files using AJAX and a browser.
+Download your FREE copy of Splunk now >>  http://get.splunk.com/
+_______________________________________________
+Linux-usb-users@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-users
