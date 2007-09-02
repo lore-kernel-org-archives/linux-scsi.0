@@ -1,85 +1,84 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH -mm] IPS SCSI driver: Check return of scsi_add_host()
-Date: Sun, 02 Sep 2007 16:32:10 -0400
-Message-ID: <46DB1DCA.3050509@garzik.org>
-References: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.i n> <alpine.LFD.0.999.0709030142490.29617@enigma.security.iitk.ac.in>
+From: Satyam Sharma <satyam@infradead.org>
+Subject: Re: [PATCH -mm] DC395x SCSI driver: Shut up uninitialized variable
+ build warning
+Date: Mon, 3 Sep 2007 02:19:59 +0530 (IST)
+Message-ID: <alpine.LFD.0.999.0709030211040.29617@enigma.security.iitk.ac.in>
+References: <alpine.LFD.0.999.0709022344550.27844@enigma.security.iitk.ac.i
+ n> <alpine.LFD.0.999.0709030152260.29617@enigma.security.iitk.ac.in>
+ <46DB1BDF.4090100@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252;
-	format=flowed
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="464262402-1586562954-1188766100=:29617"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39349 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750715AbXIBUcM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 2 Sep 2007 16:32:12 -0400
-In-Reply-To: <alpine.LFD.0.999.0709030142490.29617@enigma.security.iitk.ac.in>
+Received: from pentafluge.infradead.org ([213.146.154.40]:35524 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751205AbXIBUg4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 2 Sep 2007 16:36:56 -0400
+In-Reply-To: <46DB1BDF.4090100@garzik.org>
+Content-ID: <alpine.LFD.0.999.0709030219380.29617@enigma.security.iitk.ac.in>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satyam Sharma <satyam@infradead.org>
-Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>, aacraid@adaptec.com, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>, Oliver Neukum <oliver@neukum.name>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Ingo Molnar <mingo@elte.hu>
 
-Satyam Sharma wrote:
-> drivers/scsi/ips.c: In function =91ips_register_scsi=92:
-> drivers/scsi/ips.c:6869:
-> warning: ignoring return value of =91scsi_add_host=92, declared with =
-attribute warn_unused_result
->=20
-> scsi_add_host() is __must_check, so let's check it's return and clean=
-up
-> appropriately on errors.
->=20
-> Signed-off-by: Satyam Sharma <satyam@infradead.org>
->=20
-> ---
->=20
->  drivers/scsi/ips.c |    7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
->=20
-> --- linux-2.6.23-rc4-mm1/drivers/scsi/ips.c~fix	2007-09-02 20:21:27.0=
-00000000 +0530
-> +++ linux-2.6.23-rc4-mm1/drivers/scsi/ips.c	2007-09-02 20:25:58.00000=
-0000 +0530
-> @@ -6866,7 +6866,12 @@ ips_register_scsi(int index)
->  	sh->max_channel =3D ha->nbus - 1;
->  	sh->can_queue =3D ha->max_cmds - 1;
-> =20
-> -	scsi_add_host(sh, NULL);
-> +	if (scsi_add_host(sh, NULL)) {
-> +		IPS_PRINTK(KERN_WARNING, ha->pcidev, "Unable to add SCSI host\n");
-> +		free_irq(ha->irq, ha);
-> +		scsi_host_put(sh);
-> +		return -1;
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-ACK, as long as you add a comment to this code and the request_irq()=20
-failure code:  the oldha/old irq is not restored upon failure, in this=20
-function.
-
-That is a pre-existing bug, and not your fault, but your patch=20
-"continues in the same buggy tradition" :)  We should at least note the=
-=20
-=46IXME at each error handling code branch.
-
-Ideally you or somebody should do a detailed analysis to
-a) (preferably) get rid of the silly oldha/ double-irq-request weirdnes=
-s=20
-and make it look like other drivers,
-	or,
-b) analyze the code and see what it takes to _really_ unwind the error.
-
-Also, I would recommend moving the error handling code to the end of th=
-e=20
-function and using the standard 'goto' approach for function error=20
-handling.  This eliminates the duplicate scsi_host_put() calls upon err=
-or.
-
-	Jeff
+--464262402-1586562954-1188766100=:29617
+Content-Type: TEXT/PLAIN; CHARSET=iso-2022-jp
+Content-ID: <alpine.LFD.0.999.0709030219381.29617@enigma.security.iitk.ac.in>
 
 
 
+On Sun, 2 Sep 2007, Jeff Garzik wrote:
+> 
+> Satyam Sharma wrote:
+> > drivers/scsi/dc395x.c: In function ‘dc395x_init_one’:
+> > drivers/scsi/dc395x.c:4272: warning: ‘ptr’ may be used uninitialized in this
+> > function
+> > 
+> > has been verified to be a bogus warning. Let's shut it up.
+> > 
+> > Signed-off-by: Satyam Sharma <satyam@infradead.org>
+> > 
+> > ---
+> > 
+> >  drivers/scsi/dc395x.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > --- linux-2.6.23-rc4-mm1/drivers/scsi/dc395x.c~fix	2007-09-02
+> > 20:57:51.000000000 +0530
+> > +++ linux-2.6.23-rc4-mm1/drivers/scsi/dc395x.c	2007-09-02
+> > 21:10:49.000000000 +0530
+> > @@ -4269,7 +4269,7 @@ static int __devinit adapter_sg_tables_a
+> >  	const unsigned srbs_per_page = PAGE_SIZE/SEGMENTX_LEN;
+> >  	int srb_idx = 0;
+> >  	unsigned i = 0;
+> > -	struct SGentry *ptr;
+> > +	struct SGentry * uninitialized_var(ptr);
+> 
+> For things like this, we need to see (perhaps a separate email in the same
+> thread) your build details:  config, arch, compiler version, etc.
 
+I'll post the info as a reply to the first mail in this series. I have
+fairly recent gcc (4.1.1) and I don't see us dropping support for it in
+the next few years.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> I paid careful attention to my recent set of uninitialized_var() markers (now
+> upstream), making sure that they persisted across several compiler versions,
+> ensuring the warning was not a temporary optimizer bug quickly remedied.
+> 
+> I hope to encourage similar diligence in others :)  These markers have the
+> very-real potential downside of hiding bugs, so they should be used sparingly.
+
+Well, uninitialized_var() is definitely more greppable than "= 0" which
+code all over does all the time :-) Anyway, the point is that the
+warnings are bogus anyway (hence maintainers Cc:'ed so that they can
+confirm if I arrived at the conclusion correctly) /and/ that
+uninitialized_var() stands out sorely, so I don't see bugs getting
+"hidden" at all -- in fact I did find two bugs during this process, and
+fixed them accordingly.
+
+Thanks,
+
+Satyam
+--464262402-1586562954-1188766100=:29617--
