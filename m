@@ -1,75 +1,42 @@
-From: Parav Pandit <paravpandit@yahoo.com>
-Subject: Re: state of the I/O memory when arrives at low level HBA driver
-Date: Tue, 4 Sep 2007 05:02:37 -0700 (PDT)
-Message-ID: <788706.48115.qm@web30112.mail.mud.yahoo.com>
-References: <547218.81228.qm@web30103.mail.mud.yahoo.com>
+From: Bernhard Walle <bwalle@suse.de>
+Subject: [PATCH] Update version information of ips driver
+Date: Tue, 4 Sep 2007 16:16:26 +0200
+Message-ID: <20070904141626.GA9777@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web30112.mail.mud.yahoo.com ([209.191.69.44]:47117 "HELO
-	web30112.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752220AbXIDMCi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2007 08:02:38 -0400
-In-Reply-To: <547218.81228.qm@web30103.mail.mud.yahoo.com>
+Received: from ns2.suse.de ([195.135.220.15]:36634 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753459AbXIDOQ2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Sep 2007 10:16:28 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 
-o.k. I got the answer.
-
-It is already been locked when it comes to the low
-level HBA driver.
-
-Thanks,
-Parav
-
---- Parav Pandit <paravpandit@yahoo.com> wrote:
-
-> Hi,
-> 
-> This may be petty question, but I am not really sure
-> about this.
-> 
-> When a I/O comes to the low level SCSI HBA driver
-> through enqueue() interface, 
-> 
-> can it happen that I/O data memory is paged out or
-> can
-> be paged out?
-> 
-> I mean, doing DMA mapping such as pci_map_single()
-> provides, just physical addresses or it also
-> (page-in
-> if requires) followed by locking the page(s) in the
-> system?
-> 
-> Regards,
-> Parav Pandit
-> 
-> 
-> 
->        
->
-____________________________________________________________________________________
-> Boardwalk for $500? In 2007? Ha! Play Monopoly Here
-> and Now (it's updated for today's economy) at Yahoo!
-> Games.
->
-http://get.games.yahoo.com/proddesc?gamekey=monopolyherenow
->  
-> -
-> To unsubscribe from this list: send the line
-> "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at 
-> http://vger.kernel.org/majordomo-info.html
-> 
+This patch just makes the version number in ips.c and ips.h consistent. It
+seems that this has been forgotten in a60768e2d43eb30a1adb8a119aeac35dc0d03ef6.
 
 
+Signed-off-by: Bernhard Walle <bwalle@suse.de>
 
-       
-____________________________________________________________________________________
-Need a vacation? Get great deals
-to amazing places on Yahoo! Travel.
-http://travel.yahoo.com/
+---
+ drivers/scsi/ips.h |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+--- a/drivers/scsi/ips.h
++++ b/drivers/scsi/ips.h
+@@ -1175,9 +1175,9 @@ typedef struct {
+ #define IPS_VER_MAJOR_STRING "7"
+ #define IPS_VER_MINOR 12
+ #define IPS_VER_MINOR_STRING "12"
+-#define IPS_VER_BUILD 02
+-#define IPS_VER_BUILD_STRING "02"
+-#define IPS_VER_STRING "7.12.02"
++#define IPS_VER_BUILD 05
++#define IPS_VER_BUILD_STRING "05"
++#define IPS_VER_STRING "7.12.05"
+ #define IPS_RELEASE_ID 0x00020000
+ #define IPS_BUILD_IDENT 761
+ #define IPS_LEGALCOPYRIGHT_STRING "(C) Copyright IBM Corp. 1994, 2002. All Rights Reserved."
