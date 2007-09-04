@@ -1,84 +1,186 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: Add documentation for new Adaptec, SMC and SUN cards
-Date: Tue, 4 Sep 2007 12:55:47 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01DE34E2@otce2k301.adaptec.com>
-References: <AE4F746F2AECFC4DA4AADD66A1DFEF01CB79D7@otce2k301.adaptec.com> <AE4F746F2AECFC4DA4AADD66A1DFEF01CB811F@otce2k301.adaptec.com>
+From: "Halevy, Benny" <bhalevy@panasas.com>
+Subject: RE: [PATCH 6/7] blk_end_request: remove/unexport end_that_request_*
+Date: Tue, 4 Sep 2007 17:25:14 -0400
+Message-ID: <E472128B1EB43941B4E7FB268020C89B02992D9B@riverside.int.panasas.com>
+References: <20070831.184335.85683085.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C7EF14.70F6A115"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:38071 "HELO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752160AbXIDRKU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Sep 2007 13:10:20 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id F074B1EE6BA
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Sep 2007 09:55:48 -0700 (PDT)
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01CB811F@otce2k301.adaptec.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant
+Cc: dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
+Boaz raised my attention to this patchset today...
+We suspect we'll still need the extern entry points for handling the bidi 
+request in the scsi_io_completion() path as we only want to call
+end_that_request_chunk on req->next_rq and never
+end_that_request_last.
+ 
+(see 
+http://www.bhalevy.com/open-osd/download/linux-2.6.23-rc2_and_iscsi-iscsi-2007_08_09/0005-SCSI-bidi-support.patch)
+ 
+If this is ok with you I'd leave these entry points in place rather than
+taking them out and putting them back in later.
+ 
+Benny
 
-------_=_NextPart_001_01C7EF14.70F6A115
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+________________________________
 
-Add the SMC LP, SUN EM and Adaptec 5405 cards to the aacraid
-documentation list of supported products. These cards are picked up with
-family match, so no associated code changes.
+From: linux-scsi-owner@vger.kernel.org on behalf of Kiyoshi Ueda
+Sent: Sat 2007-09-01 01:43
+To: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; linux-ide@vger.kernel.org; jens.axboe@oracle.com; mike.miller@hp.com; grant.likely@secretlab.ca
+Cc: dm-devel@redhat.com; j-nomura@ce.jp.nec.com; k-ueda@ct.jp.nec.com
+Subject: [PATCH 6/7] blk_end_request: remove/unexport end_that_request_*
 
-This attached patch is against current scsi-misc-2.6.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+This patch removes the following functions:
+  o end_that_request_first()
+  o end_that_request_chunk()
+and stops exporting the functions below:
+  o end_that_request_last()
 
- Documentation/scsi/aacraid.txt |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+---
+ block/ll_rw_blk.c      |   61 ++++++++++++------------------------------------- include/linux/blkdev.h |   15 ++++--------
+ 2 files changed, 21 insertions(+), 55 deletions(-)
 
-Sincerely -- Mark Salyzyn
+diff -rupN 05-ide-cd-change/block/ll_rw_blk.c 06-remove-old-interface/block/ll_rw_blk.c
+--- 05-ide-cd-change/block/ll_rw_blk.c  2007-08-24 12:11:02.000000000 -0400
++++ 06-remove-old-interface/block/ll_rw_blk.c   2007-08-24 12:19:02.000000000 -0400
+@@ -3388,6 +3388,20 @@ static void blk_recalc_rq_sectors(struct
+        }
+ }
 
-------_=_NextPart_001_01C7EF14.70F6A115
-Content-Type: application/octet-stream;
-	name="aacraid_SMC_SUN.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_SMC_SUN.patch
-Content-Disposition: attachment;
-	filename="aacraid_SMC_SUN.patch"
++/**
++ * __end_that_request_first - end I/O on a request
++ * @req:      the request being processed
++ * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
++ * @nr_bytes: number of bytes to complete
++ *
++ * Description:
++ *     Ends I/O on a number of bytes attached to @req, and sets it up
++ *     for the next range of segments (if any) in the cluster.
++ *
++ * Return:
++ *     0 - we are done with this request, call end_that_request_last()
++ *     1 - still buffers pending for this request
++ **/
+ static int __end_that_request_first(struct request *req, int uptodate,
+                                    int nr_bytes)
+ {
+@@ -3498,49 +3512,6 @@ static int __end_that_request_first(stru
+        return 1;
+ }
 
-ZGlmZiAtcnUgYS9Eb2N1bWVudGF0aW9uL3Njc2kvYWFjcmFpZC50eHQgYi9Eb2N1bWVudGF0aW9u
-L3Njc2kvYWFjcmFpZC50eHQKLS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpL2FhY3JhaWQudHh0CTIw
-MDctMDktMDQgMTI6NDA6MTcuNzYxMDQ4MjczIC0wNDAwCisrKyBiL0RvY3VtZW50YXRpb24vc2Nz
-aS9hYWNyYWlkLnR4dAkyMDA3LTA5LTA0IDEyOjUwOjA1Ljc4NTcyNzgxMCAtMDQwMApAQCAtMzgs
-MTAgKzM4LDggQEAKIAk5MDA1OjAyODY6OTAwNTowMmFjCUFkYXB0ZWMJMTgwMCAoVHlwaG9vbjQ0
-KQogCTkwMDU6MDI4NTo5MDA1OjAyYjUJQWRhcHRlYwk1NDQ1IChWb29kb280NCkKIAk5MDA1OjAy
-ODU6MTVkOTowMmI1CVNNQwlBT0MtVVNBUy1TNGkKLQk5MDA1OjAyODU6MTVkOTowMmM5CVNNQwlB
-T0MtVVNBUy1TNGlSCiAJOTAwNTowMjg1OjkwMDU6MDJiNglBZGFwdGVjCTU4MDUgKFZvb2Rvbzgw
-KQogCTkwMDU6MDI4NToxNWQ5OjAyYjYJU01DCUFPQy1VU0FTLVM4aQotCTkwMDU6MDI4NToxNWQ5
-OjAyY2EJU01DCUFPQy1VU0FTLVM4aVIKIAk5MDA1OjAyODU6OTAwNTowMmI3CUFkYXB0ZWMJNTA4
-NSAoVm9vZG9vMDgpCiAJOTAwNTowMjg1OjkwMDU6MDJiYglBZGFwdGVjCTM0MDUgKE1hcmF1ZGVy
-NDBMUCkKIAk5MDA1OjAyODU6OTAwNTowMmJjCUFkYXB0ZWMJMzgwNSAoTWFyYXVkZXI4MExQKQpA
-QCAtNTAsOSArNDgsMTQgQEAKIAk5MDA1OjAyODU6OTAwNTowMmJlCUFkYXB0ZWMJMzE2MDUgKE1h
-cmF1ZGVyMTYwKQogCTkwMDU6MDI4NTo5MDA1OjAyYzMJQWRhcHRlYwk1MTIwNSAoVm9vZG9vMTIw
-KQogCTkwMDU6MDI4NTo5MDA1OjAyYzQJQWRhcHRlYwk1MTYwNSAoVm9vZG9vMTYwKQorCTkwMDU6
-MDI4NToxNWQ5OjAyYzkJU01DCUFPQy1VU0FTLVM0aVIKKwk5MDA1OjAyODU6MTVkOTowMmNhCVNN
-QwlBT0MtVVNBUy1TOGlSCiAJOTAwNTowMjg1OjkwMDU6MDJjZQlBZGFwdGVjCTUxMjQ1IChWb29k
-b28xMjQpCiAJOTAwNTowMjg1OjkwMDU6MDJjZglBZGFwdGVjCTUxNjQ1IChWb29kb28xNjQpCiAJ
-OTAwNTowMjg1OjkwMDU6MDJkMAlBZGFwdGVjCTUyNDQ1IChWb29kb28yNDQpCisJOTAwNTowMjg1
-OjkwMDU6MDJkMQlBZGFwdGVjCTU0MDUgKFZvb2RvbzQwKQorCTkwMDU6MDI4NToxNWQ5OjAyZDIJ
-U01DCUFPQy1VU0FTLVM4aS1MUAorCTkwMDU6MDI4NToxNWQ5OjAyZDMJU01DCUFPQy1VU0FTLVM4
-aVItTFAKIAkxMDExOjAwNDY6OTAwNTowMzY0CUFkYXB0ZWMJNTQwMFMgKE11c3RhbmcpCiAJOTAw
-NTowMjg3OjkwMDU6MDgwMAlBZGFwdGVjCVRoZW1pc3RvIChKdXBpdGVyKQogCTkwMDU6MDIwMDo5
-MDA1OjAyMDAJQWRhcHRlYwlUaGVtaXN0byAoSnVwaXRlcikKQEAgLTEwMyw2ICsxMDYsNyBAQAog
-CTkwMDU6MDI4NToxMDhlOjdhYWMJU1VOCVNUSyBSQUlEIFJFTSAoVm9vZG9vNDQgQ295b3RlKQog
-CTkwMDU6MDI4NToxMDhlOjAyODYJU1VOCVNUSyBSQUlEIElOVCAoQ291Z2FyKQogCTkwMDU6MDI4
-NToxMDhlOjAyODcJU1VOCVNUSyBSQUlEIEVYVCAoUHJvbWV0aGV1cykKKwk5MDA1OjAyODU6MTA4
-ZTo3YWFlCVNVTglTVEsgUkFJRCBFTSAoTmFydmkpCiAKIFBlb3BsZQogLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQo=
+-/**
+- * end_that_request_first - end I/O on a request
+- * @req:      the request being processed
+- * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
+- * @nr_sectors: number of sectors to end I/O on
+- *
+- * Description:
+- *     Ends I/O on a number of sectors attached to @req, and sets it up
+- *     for the next range of segments (if any) in the cluster.
+- *
+- * Return:
+- *     0 - we are done with this request, call end_that_request_last()
+- *     1 - still buffers pending for this request
+- **/
+-int end_that_request_first(struct request *req, int uptodate, int nr_sectors)
+-{
+-       return __end_that_request_first(req, uptodate, nr_sectors << 9);
+-}
+-
+-EXPORT_SYMBOL(end_that_request_first);
+-
+-/**
+- * end_that_request_chunk - end I/O on a request
+- * @req:      the request being processed
+- * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
+- * @nr_bytes: number of bytes to complete
+- *
+- * Description:
+- *     Ends I/O on a number of bytes attached to @req, and sets it up
+- *     for the next range of segments (if any). Like end_that_request_first(),
+- *     but deals with bytes instead of sectors.
+- *
+- * Return:
+- *     0 - we are done with this request, call end_that_request_last()
+- *     1 - still buffers pending for this request
+- **/
+-int end_that_request_chunk(struct request *req, int uptodate, int nr_bytes)
+-{
+-       return __end_that_request_first(req, uptodate, nr_bytes);
+-}
+-
+-EXPORT_SYMBOL(end_that_request_chunk);
+-
+ /*
+  * splice the completion data to a local structure and hand off to
+  * process_completion_queue() to complete the requests
+@@ -3620,7 +3591,7 @@ EXPORT_SYMBOL(blk_complete_request);
+ /*
+  * queue lock must be held
+  */
+-void end_that_request_last(struct request *req, int uptodate)
++static void end_that_request_last(struct request *req, int uptodate)
+ {
+        struct gendisk *disk = req->rq_disk;
+        int error;
+@@ -3655,8 +3626,6 @@ void end_that_request_last(struct reques
+                __blk_put_request(req->q, req);
+ }
 
-------_=_NextPart_001_01C7EF14.70F6A115--
+-EXPORT_SYMBOL(end_that_request_last);
+-
+ void end_request(struct request *req, int uptodate)
+ {
+        __blk_end_request(req, uptodate, sect2byte(req->hard_cur_sectors));
+diff -rupN 05-ide-cd-change/include/linux/blkdev.h 06-remove-old-interface/include/linux/blkdev.h
+--- 05-ide-cd-change/include/linux/blkdev.h     2007-08-24 12:21:45.000000000 -0400
++++ 06-remove-old-interface/include/linux/blkdev.h      2007-08-24 12:21:15.000000000 -0400
+@@ -720,19 +720,16 @@ static inline void blk_run_address_space
+ }
+
+ /*
+- * end_request() and friends. Must be called with the request queue spinlock
+- * acquired. All functions called within end_request() _must_be_ atomic.
++ * blk_end_request() and friends.
++ * __blk_end_request() and end_request() must be called with
++ * the request queue spinlock acquired.
+  *
+  * Several drivers define their own end_request and call
+- * end_that_request_first() and end_that_request_last()
+- * for parts of the original function. This prevents
+- * code duplication in drivers.
++ * blk_end_request() for parts of the original function.
++ * This prevents code duplication in drivers.
+  */
+ extern int blk_end_request(struct request *rq, int uptodate, int nr_bytes);
+ extern int __blk_end_request(struct request *rq, int uptodate, int nr_bytes);
+-extern int end_that_request_first(struct request *, int, int);
+-extern int end_that_request_chunk(struct request *, int, int);
+-extern void end_that_request_last(struct request *, int);
+ extern void end_request(struct request *req, int uptodate);
+ extern int blk_end_request_callback(struct request *rq, int uptodate,
+                                    int nr_bytes,
+@@ -749,7 +746,7 @@ extern void blk_complete_request(struct
+ #define blk_rq_cur_size(rq) (sect2byte((rq)->current_nr_sectors))
+
+ /*
+- * end_that_request_first/chunk() takes an uptodate argument. we account
++ * blk_end_request() takes an uptodate argument. we account
+  * any value <= as an io error. 0 means -EIO for compatability reasons,
+  * any other < 0 value is the direct error type. An uptodate value of
+  * 1 indicates successful io completion
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
