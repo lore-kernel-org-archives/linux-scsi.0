@@ -1,54 +1,88 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 6/7] blk_end_request: remove/unexport end_that_request_*
-Date: Wed, 05 Sep 2007 10:36:48 +0300
-Message-ID: <46DE5C90.2020700@panasas.com>
-References: <20070831.184335.85683085.k-ueda@ct.jp.nec.com>	<E472128B1EB43941B4E7FB268020C89B02992D9B@riverside.int.panasas.com> <20070904.191318.23007091.k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 3/7] blk_end_request: changing "normal" drivers
+Date: Wed, 05 Sep 2007 10:45:54 +0300
+Message-ID: <46DE5EB2.4050505@panasas.com>
+References: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070904.191318.23007091.k-ueda@ct.jp.nec.com>
+In-Reply-To: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, jens.axboe@oracle.com
-Cc: bhalevy@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 05 2007 at 2:13 +0300, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> Hi,
+On Sat, Sep 01 2007 at 1:42 +0300, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+> This patch converts "normal" drivers, which complete request
+> in a standard way shown below, to use blk_end_request().
 > 
-> On Tue, 4 Sep 2007 17:25:14 -0400, "Halevy, Benny" <bhalevy@panasas.com> wrote:
->> We suspect we'll still need the extern entry points for handling the bidi 
->> request in the scsi_io_completion() path as we only want to call
->> end_that_request_chunk on req->next_rq and never
->> end_that_request_last.
->>  
->> (see 
->> http://www.bhalevy.com/open-osd/download/linux-2.6.23-rc2_and_iscsi-iscsi-2007_08_09/0005-SCSI-bidi-support.patch)
+>  a) end_that_request_{chunk/first}
+>     spin_lock_irqsave()
+>     (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
+>     end_that_request_last()
+>     spin_unlock_irqrestore()
+>     => blk_end_request()
 > 
-> If this patch-set is merged, there may be other way to do that.
+>  b) spin_lock_irqsave()
+>     end_that_request_{chunk/first}
+>     (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
+>     end_that_request_last()
+>     spin_unlock_irqrestore()
+>     => spin_lock_irqsave()
+>        __blk_end_request()
+>        spin_unlock_irqsave()
 > 
-> For tricky drivers, special interface, blk_end_request_callback(),
-> is added in the patch 5/7.
-> (http://marc.info/?l=linux-kernel&m=118860027714753&w=2)
-> Currently, only user of the interface is ide-cd (cdrom_newpc_intr()).
-> It needs to call only end_that_request_first() too.
+>  c) end_that_request_last()
+>     => __blk_end_request()
 > 
-> With the patch 7/7, you can set your own handler in rq->end_io()
-> to complete the request by your own way.
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> ---
+>  arch/arm/plat-omap/mailbox.c    |    9 ++++++---
+>  arch/um/drivers/ubd_kern.c      |   10 +---------
+>  block/elevator.c                |    4 ++--
+>  block/ll_rw_blk.c               |   15 +++++----------
+>  drivers/block/DAC960.c          |    6 ++----
+>  drivers/block/floppy.c          |    8 +++-----
+>  drivers/block/lguest_blk.c      |    5 +----
+>  drivers/block/nbd.c             |    4 +---
+>  drivers/block/ps3disk.c         |    6 +-----
+>  drivers/block/sunvdc.c          |    5 +----
+>  drivers/block/sx8.c             |    4 +---
+>  drivers/block/ub.c              |    4 ++--
+>  drivers/block/viodasd.c         |    5 +----
+>  drivers/block/xen-blkfront.c    |    5 ++---
+>  drivers/cdrom/viocd.c           |    5 +----
+>  drivers/ide/ide-cd.c            |    6 +++---
+>  drivers/ide/ide-io.c            |   22 +++++++---------------
+>  drivers/message/i2o/i2o_block.c |    8 ++------
+>  drivers/mmc/card/block.c        |   24 +++++-------------------
+>  drivers/mmc/card/queue.c        |    4 ++--
+>  drivers/s390/block/dasd.c       |    4 +---
+>  drivers/s390/char/tape_block.c  |    3 +--
+>  drivers/scsi/ide-scsi.c         |    8 ++++----
+>  drivers/scsi/scsi_lib.c         |   13 ++-----------
+>  24 files changed, 57 insertions(+), 130 deletions(-)
 > 
-> Thanks,
-> Kiyoshi Ueda
+> diff -rupN 02-sect2byte-macro/arch/arm/plat-omap/mailbox.c 03-normal-caller-change/arch/arm/plat-omap/mailbox.c
+> --- 02-sect2byte-macro/arch/arm/plat-omap/mailbox.c	2007-08-13 00:25:24.000000000 -0400
+> +++ 03-normal-caller-change/arch/arm/plat-omap/mailbox.c	2007-08-23 17:51:33.000000000 -0400
+> @@ -117,7 +117,8 @@ static void mbox_tx_work(struct work_str
+>  
+> ...
 
-That will not work, as I will have no means of releasing the BIOs of
-the bidi request, which can not use end_request().
+Please Separate this patch to at least three patches.
+1. Block layer - block/elevator.c block/ll_rw_blk.c
+2. SCSI-ML - drivers/scsi/scsi_lib.c
+3. Normal drivers, can also be separated into logical
+   groups like scsi/block etc..
 
-I guess as Jens said it's OK to remove them now, and later we can
-just add end_that_request_first(), will be enough.
-Or we can patch end_request() to also call 
-__end_that_request_first(req->next_rq) if not NULL.
-
-Jens which method do you prefer? I will adjust my patches accordingly.
+This is because these patches introduce conflicts
+to lots of queued work I have, and if you separate
+them it will help me with my giting. Also I think
+that this is logical. Block-layer and scsi_lib are
+not drivers, the Subject of the patch does not match.
 
 Thanks
-Boaz Harrosh
-
+Boaz
