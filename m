@@ -1,88 +1,57 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 3/7] blk_end_request: changing "normal" drivers
-Date: Wed, 05 Sep 2007 10:45:54 +0300
-Message-ID: <46DE5EB2.4050505@panasas.com>
-References: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: Re: [RFC] zfcp: add statistics and other zfcp related information to sysfs
+Date: Wed, 5 Sep 2007 12:33:11 +0200
+Message-ID: <200709051233.11335.swen@vnet.ibm.com>
+References: <200709031416.21901.swen@vnet.ibm.com> <20070903124059.GP14130@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, jens.axboe@oracle.com, mike.miller@hp.com, grant.likely@secretlab.ca, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:64545 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755620AbXIEKaV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Sep 2007 06:30:21 -0400
+In-Reply-To: <20070903124059.GP14130@parisc-linux.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Sep 01 2007 at 1:42 +0300, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> This patch converts "normal" drivers, which complete request
-> in a standard way shown below, to use blk_end_request().
+On Monday 03 September 2007 14:40, Matthew Wilcox wrote:
+> On Mon, Sep 03, 2007 at 02:16:21PM +0200, Swen Schillig wrote:
+> > /sys/bus/ccw/drivers/zfcp/0.0.1707 
+> > /* information for the virtual adapter */
+> > 	statistic_services/ 	
+> > 		requests	
+> > 		megabytes
+> > 		utilization
+> > 		seconds_active
+> > /* LUN specific info for channel- and fabric-latency */
+> > 	0x500507630300c562/0x401040a600000000/  
+> > 		read_latency
+> > 		write_latency
+> > 		cmd_latency
+> > 
+> > Please comment if this would be an acceptable way to publish 
+> > the additional information.
 > 
->  a) end_that_request_{chunk/first}
->     spin_lock_irqsave()
->     (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
->     end_that_request_last()
->     spin_unlock_irqrestore()
->     => blk_end_request()
+> This seems like it might be information that other adapters could,
+> in theory, also provide.  Maybe the first set of stats should
+> be added to /sys/class/scsi_host/hostN/ and the second set to
+> /sys/class/scsi_device/H:C:T:L/ ?  The names of the individual files
+> make sense to me.
 > 
->  b) spin_lock_irqsave()
->     end_that_request_{chunk/first}
->     (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
->     end_that_request_last()
->     spin_unlock_irqrestore()
->     => spin_lock_irqsave()
->        __blk_end_request()
->        spin_unlock_irqsave()
-> 
->  c) end_that_request_last()
->     => __blk_end_request()
-> 
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> ---
->  arch/arm/plat-omap/mailbox.c    |    9 ++++++---
->  arch/um/drivers/ubd_kern.c      |   10 +---------
->  block/elevator.c                |    4 ++--
->  block/ll_rw_blk.c               |   15 +++++----------
->  drivers/block/DAC960.c          |    6 ++----
->  drivers/block/floppy.c          |    8 +++-----
->  drivers/block/lguest_blk.c      |    5 +----
->  drivers/block/nbd.c             |    4 +---
->  drivers/block/ps3disk.c         |    6 +-----
->  drivers/block/sunvdc.c          |    5 +----
->  drivers/block/sx8.c             |    4 +---
->  drivers/block/ub.c              |    4 ++--
->  drivers/block/viodasd.c         |    5 +----
->  drivers/block/xen-blkfront.c    |    5 ++---
->  drivers/cdrom/viocd.c           |    5 +----
->  drivers/ide/ide-cd.c            |    6 +++---
->  drivers/ide/ide-io.c            |   22 +++++++---------------
->  drivers/message/i2o/i2o_block.c |    8 ++------
->  drivers/mmc/card/block.c        |   24 +++++-------------------
->  drivers/mmc/card/queue.c        |    4 ++--
->  drivers/s390/block/dasd.c       |    4 +---
->  drivers/s390/char/tape_block.c  |    3 +--
->  drivers/scsi/ide-scsi.c         |    8 ++++----
->  drivers/scsi/scsi_lib.c         |   13 ++-----------
->  24 files changed, 57 insertions(+), 130 deletions(-)
-> 
-> diff -rupN 02-sect2byte-macro/arch/arm/plat-omap/mailbox.c 03-normal-caller-change/arch/arm/plat-omap/mailbox.c
-> --- 02-sect2byte-macro/arch/arm/plat-omap/mailbox.c	2007-08-13 00:25:24.000000000 -0400
-> +++ 03-normal-caller-change/arch/arm/plat-omap/mailbox.c	2007-08-23 17:51:33.000000000 -0400
-> @@ -117,7 +117,8 @@ static void mbox_tx_work(struct work_str
->  
-> ...
 
-Please Separate this patch to at least three patches.
-1. Block layer - block/elevator.c block/ll_rw_blk.c
-2. SCSI-ML - drivers/scsi/scsi_lib.c
-3. Normal drivers, can also be separated into logical
-   groups like scsi/block etc..
+Matthew, thanks for your feedback. 
+In the past we were trying a centralized and common approach a couple of times,
+with no success.
+Since we really need to have our data available soon, 
+I'd prefer to start off with the "proprietary" location and make this data available 
+to our customers.
 
-This is because these patches introduce conflicts
-to lots of queued work I have, and if you separate
-them it will help me with my giting. Also I think
-that this is logical. Block-layer and scsi_lib are
-not drivers, the Subject of the patch does not match.
+Anybody else some comments ?
+Otherwise I'll post the patch.
 
-Thanks
-Boaz
+Cheers Swen
