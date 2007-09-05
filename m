@@ -1,76 +1,43 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 3/7] blk_end_request: changing "normal"
-	drivers
-Date: Wed, 05 Sep 2007 09:54:15 -0400 (EDT)
-Message-ID: <20070905.095415.74754238.k-ueda@ct.jp.nec.com>
-References: <20070831.184219.95065632.k-ueda@ct.jp.nec.com>
-	<46DE5EB2.4050505@panasas.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
+Date: Wed, 5 Sep 2007 08:05:34 -0700
+Message-ID: <20070905150534.GJ17977@plap.qlogic.org>
+References: <200708311703.l7VH3NkK016220@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <46DE5EB2.4050505@panasas.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bharrosh@panasas.com
-Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:36437 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752160AbXIEPFv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Sep 2007 11:05:51 -0400
+Content-Disposition: inline
+In-Reply-To: <200708311703.l7VH3NkK016220@mbox.iij4u.or.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp
 
-Hi Benny,
+On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
 
-Thank you for the comments.
-
-On Wed, 05 Sep 2007 10:45:54 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> On Sat, Sep 01 2007 at 1:42 +0300, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> >  arch/arm/plat-omap/mailbox.c    |    9 ++++++---
-> >  arch/um/drivers/ubd_kern.c      |   10 +---------
-> >  block/elevator.c                |    4 ++--
-> >  block/ll_rw_blk.c               |   15 +++++----------
-> >  drivers/block/DAC960.c          |    6 ++----
-> >  drivers/block/floppy.c          |    8 +++-----
-> >  drivers/block/lguest_blk.c      |    5 +----
-> >  drivers/block/nbd.c             |    4 +---
-> >  drivers/block/ps3disk.c         |    6 +-----
-> >  drivers/block/sunvdc.c          |    5 +----
-> >  drivers/block/sx8.c             |    4 +---
-> >  drivers/block/ub.c              |    4 ++--
-> >  drivers/block/viodasd.c         |    5 +----
-> >  drivers/block/xen-blkfront.c    |    5 ++---
-> >  drivers/cdrom/viocd.c           |    5 +----
-> >  drivers/ide/ide-cd.c            |    6 +++---
-> >  drivers/ide/ide-io.c            |   22 +++++++---------------
-> >  drivers/message/i2o/i2o_block.c |    8 ++------
-> >  drivers/mmc/card/block.c        |   24 +++++-------------------
-> >  drivers/mmc/card/queue.c        |    4 ++--
-> >  drivers/s390/block/dasd.c       |    4 +---
-> >  drivers/s390/char/tape_block.c  |    3 +--
-> >  drivers/scsi/ide-scsi.c         |    8 ++++----
-> >  drivers/scsi/scsi_lib.c         |   13 ++-----------
-> >  24 files changed, 57 insertions(+), 130 deletions(-)
+> This adds target mode support to qla2xxx.
 > 
-> Please Separate this patch to at least three patches.
-> 1. Block layer - block/elevator.c block/ll_rw_blk.c
-> 2. SCSI-ML - drivers/scsi/scsi_lib.c
-> 3. Normal drivers, can also be separated into logical
->    groups like scsi/block etc..
+> With set ql2enable_target_mode module parameter to 1, the driver runs
+> in target mode. By default, ql2enable_target_mode is set to 0, and the
+> driver should work in initiator mode as before.
 > 
-> This is because these patches introduce conflicts
-> to lots of queued work I have, and if you separate
-> them it will help me with my giting. Also I think
-> that this is logical. Block-layer and scsi_lib are
-> not drivers, the Subject of the patch does not match.
+> The driver could support dual-mode in the future but it doesn't at the
+> moment (we need to add dual-mode support tgt first).
+> 
+> It is based on scst qla2xxx target mode driver. Mike converted the
+> driver to use tgt long ago. I changed it to use the latest (mainline)
+> version of qla2xxx driver and tgt, and also converted it to use fc
+> transport class.
 
-I see.
-OK, I will separate this patch for each driver so that
-driver maintainers and developers can apply them easily.
+Thanks for doing this.  Some initial comments before a full review is
+complete, As was seen from the initiator updates needed for 24xx
+support, there are comparable changes needed in the area of
+target-mode support for 4gb and 8gb parts.  Also, which ISPs and
+firmwares were exercised with this code?
 
-Thanks,
-Kiyoshi Ueda
+--
+av
