@@ -1,15 +1,16 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH 5/9] tgt: convert to use scsi_data_buffer
-Date: Fri, 7 Sep 2007 06:50:24 +0900
-Message-ID: <20070906183715D.tomof@acm.org>
+Subject: [PATCH 6/9] tgt: convert ibmvstgt and libsrp to use
+ scsi_data_buffer
+Date: Fri, 7 Sep 2007 06:50:27 +0900
+Message-ID: <20070906183756K.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:42962 "EHLO mo11.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:42989 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932301AbXIFVvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Sep 2007 17:51:18 -0400
+	id S932360AbXIFVv2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Sep 2007 17:51:28 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
@@ -18,75 +19,94 @@ Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, bharrosh@panasas.com, f
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/scsi_tgt_if.c  |    2 +-
- drivers/scsi/scsi_tgt_lib.c |   27 ++++++++++++++-------------
+ drivers/scsi/ibmvscsi/ibmvstgt.c |    2 +-
+ drivers/scsi/libsrp.c            |   27 ++++++++++++++-------------
  2 files changed, 15 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
-index ca22ddf..bdfc9b0 100644
---- a/drivers/scsi/scsi_tgt_if.c
-+++ b/drivers/scsi/scsi_tgt_if.c
-@@ -110,7 +110,7 @@ int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, struct scsi_lun *lun, u64 ta
+diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
+index 8ba7dd0..ab173d4 100644
+--- a/drivers/scsi/ibmvscsi/ibmvstgt.c
++++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
+@@ -286,7 +286,7 @@ static int ibmvstgt_cmd_done(struct scsi_cmnd *sc,
+ 	dprintk("%p %p %x %u\n", iue, target, vio_iu(iue)->srp.cmd.cdb[0],
+ 		cmd->usg_sg);
  
- 	memset(&ev, 0, sizeof(ev));
- 	ev.p.cmd_req.host_no = shost->host_no;
--	ev.p.cmd_req.data_len = cmd->request_bufflen;
-+	ev.p.cmd_req.data_len = scsi_bufflen(cmd);
- 	memcpy(ev.p.cmd_req.scb, cmd->cmnd, sizeof(ev.p.cmd_req.scb));
- 	memcpy(ev.p.cmd_req.lun, lun, sizeof(ev.p.cmd_req.lun));
- 	ev.p.cmd_req.attribute = cmd->tag;
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index 2ee7b5a..30c8ec1 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -328,8 +328,8 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
+-	if (sc->use_sg)
++	if (scsi_sg_count(sc))
+ 		err = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvstgt_rdma, 1, 1);
  
- 	scsi_tgt_uspace_send_status(cmd, tcmd->tag);
+ 	spin_lock_irqsave(&target->lock, flags);
+diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
+index 732446e..32e1529 100644
+--- a/drivers/scsi/libsrp.c
++++ b/drivers/scsi/libsrp.c
+@@ -192,18 +192,18 @@ static int srp_direct_data(struct scsi_cmnd *sc, struct srp_direct_buf *md,
  
--	if (cmd->request_buffer)
--		scsi_free_sgtable(cmd);
-+	if (cmd->sdb.sglist)
-+		scsi_free_sgtable(&cmd->sdb);
+ 	if (dma_map) {
+ 		iue = (struct iu_entry *) sc->SCp.ptr;
+-		sg = sc->request_buffer;
++		sg = scsi_sglist(sc);
  
- 	queue_work(scsi_tgtd, &tcmd->work);
- }
-@@ -353,24 +353,25 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
- static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- {
- 	struct request *rq = cmd->request;
-+	struct scsi_data_buffer *sdb = &cmd->sdb;
- 	int count;
-+	int ret;
+-		dprintk("%p %u %u %d\n", iue, sc->request_bufflen,
+-			md->len, sc->use_sg);
++		dprintk("%p %u %u %d\n", iue, scsi_bufflen(sc),
++			md->len, scsi_sg_count(sc));
  
--	cmd->use_sg = rq->nr_phys_segments;
--	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
--	if (!cmd->request_buffer)
--		return -ENOMEM;
-+	ret = scsi_alloc_sgtable(sdb, gfp_mask, rq->nr_phys_segments);
-+	if (ret)
-+		return ret;
+-		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg,
++		nsg = dma_map_sg(iue->target->dev, sg, scsi_sg_count(sc),
+ 				 DMA_BIDIRECTIONAL);
+ 		if (!nsg) {
+-			printk("fail to map %p %d\n", iue, sc->use_sg);
++			printk("fail to map %p %d\n", iue, scsi_sg_count(sc));
+ 			return 0;
+ 		}
+-		len = min(sc->request_bufflen, md->len);
++		len = min(scsi_bufflen(sc), md->len);
+ 	} else
+ 		len = md->len;
  
--	cmd->request_bufflen = rq->data_len;
-+	sdb->length = rq->data_len;
+@@ -229,10 +229,10 @@ static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
  
--	dprintk("cmd %p cnt %d %lu\n", cmd, cmd->use_sg, rq_data_dir(rq));
--	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
--	if (likely(count <= cmd->use_sg)) {
--		cmd->use_sg = count;
-+	dprintk("cmd %p cnt %d %lu\n", cmd, scsi_sg_count(cmd), rq_data_dir(rq));
-+	count = blk_rq_map_sg(rq->q, rq, sdb->sglist);
-+	if (likely(count <= sdb->sg_count)) {
-+		sdb->sg_count = count;
- 		return 0;
+ 	if (dma_map || ext_desc) {
+ 		iue = (struct iu_entry *) sc->SCp.ptr;
+-		sg = sc->request_buffer;
++		sg = scsi_sglist(sc);
+ 
+ 		dprintk("%p %u %u %d %d\n",
+-			iue, sc->request_bufflen, id->len,
++			iue, scsi_bufflen(sc), id->len,
+ 			cmd->data_in_desc_cnt, cmd->data_out_desc_cnt);
  	}
  
--	eprintk("cmd %p cnt %d\n", cmd, cmd->use_sg);
--	scsi_free_sgtable(cmd);
-+	eprintk("cmd %p cnt %d\n", cmd, scsi_sg_count(cmd));
-+	scsi_free_sgtable(&cmd->sdb);
- 	return -EINVAL;
- }
+@@ -268,13 +268,14 @@ static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
  
+ rdma:
+ 	if (dma_map) {
+-		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg, DMA_BIDIRECTIONAL);
++		nsg = dma_map_sg(iue->target->dev, sg, scsi_sg_count(sc),
++				 DMA_BIDIRECTIONAL);
+ 		if (!nsg) {
+-			eprintk("fail to map %p %d\n", iue, sc->use_sg);
++			eprintk("fail to map %p %d\n", iue, scsi_sg_count(sc));
+ 			err = -EIO;
+ 			goto free_mem;
+ 		}
+-		len = min(sc->request_bufflen, id->len);
++		len = min(scsi_bufflen(sc), id->len);
+ 	} else
+ 		len = id->len;
+ 
+@@ -425,8 +426,8 @@ int srp_cmd_queue(struct Scsi_Host *shost, struct srp_cmd *cmd, void *info,
+ 
+ 	sc->SCp.ptr = info;
+ 	memcpy(sc->cmnd, cmd->cdb, MAX_COMMAND_SIZE);
+-	sc->request_bufflen = len;
+-	sc->request_buffer = (void *) (unsigned long) addr;
++	sc->sdb.length = len;
++	sc->sdb.sglist = (void *) (unsigned long) addr;
+ 	sc->tag = tag;
+ 	err = scsi_tgt_queue_command(sc, (struct scsi_lun *) &cmd->lun, cmd->tag);
+ 	if (err)
 -- 
 1.5.2.4
 
