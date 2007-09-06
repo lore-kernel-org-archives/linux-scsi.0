@@ -1,49 +1,92 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: adding lsi MegaRaid SAS 8208ELP support to fusion
-Date: Thu, 6 Sep 2007 14:21:50 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D7096C264@NAMAIL4.ad.lsil.com>
-References: <1189103995.6180.56.camel@lgelinas>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH 5/9] tgt: convert to use scsi_data_buffer
+Date: Fri, 7 Sep 2007 06:50:24 +0900
+Message-ID: <20070906183715D.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33654 "EHLO mail0.lsil.com"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:42962 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757523AbXIFUVy convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Sep 2007 16:21:54 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1189103995.6180.56.camel@lgelinas>
+	id S932301AbXIFVvS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 6 Sep 2007 17:51:18 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Louis-Michel Gelinas <lgelinas@coradiant.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp
 
-On September 06, 2007 12:40 PM,  Louis-Michel Gelinas wrote:
-> 
-> After messing around with various kernels and drivers, I finnaly got
-> this adaptor to work by changing the define 
-> MPI_MANUFACTPAGE_DEVID_SAS1068E to (0x0059) from (0x0058) in 
-> 
-> drivers/message/fusion/lsi/mpi_cnfg.h:553
-> 
-> I understand this is not the preferred method to say the 
-> least. However,
-> it is the only way I could this adaptor running, also my tests show it
-> to be stable...
-> 
-> Should I submit a proper patch? Shouldn't this card use the 
-> megaraid_sas
-> driver ?!
-> 
-> Please indicate against which git url I should base my patch. 
-> 
-> I am using 2.6.21.3 but I believe this change can be applied to any
-> kernel/git. 
-> 
 
-The driver that works with the (0x59) pci_device_id is megasr.    You
-will need to contact the megaraid folks to obtain those sources, as its
-not supplied in the linux kernel.  Please don't supply any patch against
-fusion to support that, as I will reject it.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_tgt_if.c  |    2 +-
+ drivers/scsi/scsi_tgt_lib.c |   27 ++++++++++++++-------------
+ 2 files changed, 15 insertions(+), 14 deletions(-)
 
-Eric Moore
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index ca22ddf..bdfc9b0 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -110,7 +110,7 @@ int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, struct scsi_lun *lun, u64 ta
+ 
+ 	memset(&ev, 0, sizeof(ev));
+ 	ev.p.cmd_req.host_no = shost->host_no;
+-	ev.p.cmd_req.data_len = cmd->request_bufflen;
++	ev.p.cmd_req.data_len = scsi_bufflen(cmd);
+ 	memcpy(ev.p.cmd_req.scb, cmd->cmnd, sizeof(ev.p.cmd_req.scb));
+ 	memcpy(ev.p.cmd_req.lun, lun, sizeof(ev.p.cmd_req.lun));
+ 	ev.p.cmd_req.attribute = cmd->tag;
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 2ee7b5a..30c8ec1 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -328,8 +328,8 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
+ 
+ 	scsi_tgt_uspace_send_status(cmd, tcmd->tag);
+ 
+-	if (cmd->request_buffer)
+-		scsi_free_sgtable(cmd);
++	if (cmd->sdb.sglist)
++		scsi_free_sgtable(&cmd->sdb);
+ 
+ 	queue_work(scsi_tgtd, &tcmd->work);
+ }
+@@ -353,24 +353,25 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
+ static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ {
+ 	struct request *rq = cmd->request;
++	struct scsi_data_buffer *sdb = &cmd->sdb;
+ 	int count;
++	int ret;
+ 
+-	cmd->use_sg = rq->nr_phys_segments;
+-	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
+-	if (!cmd->request_buffer)
+-		return -ENOMEM;
++	ret = scsi_alloc_sgtable(sdb, gfp_mask, rq->nr_phys_segments);
++	if (ret)
++		return ret;
+ 
+-	cmd->request_bufflen = rq->data_len;
++	sdb->length = rq->data_len;
+ 
+-	dprintk("cmd %p cnt %d %lu\n", cmd, cmd->use_sg, rq_data_dir(rq));
+-	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
+-	if (likely(count <= cmd->use_sg)) {
+-		cmd->use_sg = count;
++	dprintk("cmd %p cnt %d %lu\n", cmd, scsi_sg_count(cmd), rq_data_dir(rq));
++	count = blk_rq_map_sg(rq->q, rq, sdb->sglist);
++	if (likely(count <= sdb->sg_count)) {
++		sdb->sg_count = count;
+ 		return 0;
+ 	}
+ 
+-	eprintk("cmd %p cnt %d\n", cmd, cmd->use_sg);
+-	scsi_free_sgtable(cmd);
++	eprintk("cmd %p cnt %d\n", cmd, scsi_sg_count(cmd));
++	scsi_free_sgtable(&cmd->sdb);
+ 	return -EINVAL;
+ }
+ 
+-- 
+1.5.2.4
+
