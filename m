@@ -1,31 +1,33 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 0/9] scsi_data_buffer structure (in preparation for
- bidi)
-Date: Fri, 7 Sep 2007 06:52:58 +0900
-Message-ID: <20070906184615W.tomof@acm.org>
-References: <20070906183448I.tomof@acm.org>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH 0/2] zfcp: cleanup and add statistics
+Date: Fri, 7 Sep 2007 09:15:25 +0200
+Message-ID: <200709070915.25446.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:60960 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932507AbXIFWAc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Sep 2007 18:00:32 -0400
-In-Reply-To: <20070906183448I.tomof@acm.org>
+Received: from mtagate6.uk.ibm.com ([195.212.29.139]:49055 "EHLO
+	mtagate6.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S964893AbXIGHPz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Sep 2007 03:15:55 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jens.axboe@oracle.com, James.Bottomley@SteelEye.com, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, heiko.carstens@de.ibm.com
 
-On Fri, 7 Sep 2007 06:50:08 +0900
-FUJITA Tomonori <tomof@acm.org> wrote:
+James
 
-> This patchset, which I submitted before, adds a new data structure,
-> scsi_data_buffer, including everything for data transfer:
+please drop my first attempt for the zfcp add statistics patch and instead use the 2 
+which are following.
 
-This patch is against Jens' sglist branch with the following patches:
+Patch 1: whitespace cleanup.
+Patch 2: the modified zfcp add statistics patch
 
-http://marc.info/?l=linux-scsi&m=118881570332241&w=2
+This patchset was created due to the comments from Heiko Carstens pointing out
+a few things which could be improved.
 
-http://marc.info/?l=linux-scsi&m=118908296515488&w=2
+Sorry, for the inconvenience.
+
+Cheers Swen.
