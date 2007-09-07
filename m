@@ -1,951 +1,659 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH 1/2] zfcp: whitespace cleanup
-Date: Fri, 7 Sep 2007 09:15:31 +0200
-Message-ID: <200709070915.31492.swen@vnet.ibm.com>
+From: Martin Peschke <mp3@de.ibm.com>
+Subject: Re: [PATCH 2/2] zfcp: zfcp: add statistics and other zfcp relatedinformation
+ to sysfs
+Date: Fri, 07 Sep 2007 16:52:37 +0200
+Message-ID: <46E165B5.9060606@de.ibm.com>
+References: <200709070915.33439.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.uk.ibm.com ([195.212.29.138]:29317 "EHLO
-	mtagate5.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S964859AbXIGHQR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Sep 2007 03:16:17 -0400
-Content-Disposition: inline
+Received: from mtagate7.de.ibm.com ([195.212.29.156]:48445 "EHLO
+	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S965470AbXIGOzM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Sep 2007 10:55:12 -0400
+In-Reply-To: <200709070915.33439.swen@vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, heiko.carstens@de.ibm.com
+To: Swen Schillig <swen@vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, heiko.carstens@de.ibm.com
 
-From: Swen Schillig <swen@vnet.ibm.com>
+I am afraid this patch can't be applied as it is.
 
-Cleanup the whitepace from the entire zfcp driver to prevent
-to have those changes in future feature or function patches.
+The problem is that the code doesn't take into account that older adapters do 
+not provide the data which your patch tries to extract. There is a feature flag 
+for that in the hardware specification. So the right response to Heiko's 
+complaint about an unused feature flag wasn't to remove the flag definition... :-)
 
-Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
----
- drivers/s390/scsi/zfcp_aux.c        |    4 -
- drivers/s390/scsi/zfcp_def.h        |   46 ++++++------
- drivers/s390/scsi/zfcp_erp.c        |  134 ++++++++++++++++++------------------
- drivers/s390/scsi/zfcp_ext.h        |   30 ++++----
- drivers/s390/scsi/zfcp_fsf.c        |   40 +++++-----
- drivers/s390/scsi/zfcp_fsf.h        |   30 ++++----
- drivers/s390/scsi/zfcp_qdio.c       |    7 -
- drivers/s390/scsi/zfcp_scsi.c       |   36 ++++-----
- drivers/s390/scsi/zfcp_sysfs_unit.c |    4 -
- 9 files changed, 165 insertions(+), 166 deletions(-)
+Is this patch against 2.6.23-rc or something? It doesn't apply without some 
+minor noise. Besides there are some "HEAD"s below, which makes me think this is 
+against some internal CVS revision...
 
-Index: HEAD/drivers/s390/scsi/zfcp_aux.c
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_aux.c
-+++ HEAD/drivers/s390/scsi/zfcp_aux.c
-@@ -891,7 +891,7 @@ zfcp_unit_dequeue(struct zfcp_unit *unit
- /*
-  * Allocates a combined QTCB/fsf_req buffer for erp actions and fcp/SCSI
-  * commands.
-- * It also genrates fcp-nameserver request/response buffer and unsolicited 
-+ * It also genrates fcp-nameserver request/response buffer and unsolicited
-  * status read fsf_req buffers.
-  *
-  * locks:       must only be called with zfcp_data.config_sema taken
-@@ -982,7 +982,7 @@ zfcp_adapter_enqueue(struct ccw_device *
- 	struct zfcp_adapter *adapter;
- 
- 	/*
--	 * Note: It is safe to release the list_lock, as any list changes 
-+	 * Note: It is safe to release the list_lock, as any list changes
- 	 * are protected by the config_sema, which must be held to get here
- 	 */
- 
-Index: HEAD/drivers/s390/scsi/zfcp_def.h
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_def.h
-+++ HEAD/drivers/s390/scsi/zfcp_def.h
-@@ -1,23 +1,23 @@
--/* 
-+/*
-  * This file is part of the zfcp device driver for
-  * FCP adapters for IBM System z9 and zSeries.
-  *
-  * (C) Copyright IBM Corp. 2002, 2006
-- * 
-- * This program is free software; you can redistribute it and/or modify 
-- * it under the terms of the GNU General Public License as published by 
-- * the Free Software Foundation; either version 2, or (at your option) 
-- * any later version. 
-- * 
-- * This program is distributed in the hope that it will be useful, 
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-- * GNU General Public License for more details. 
-- * 
-- * You should have received a copy of the GNU General Public License 
-- * along with this program; if not, write to the Free Software 
-- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
-- */ 
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-+ */
- 
- #ifndef ZFCP_DEF_H
- #define ZFCP_DEF_H
-@@ -90,7 +90,7 @@ zfcp_address_to_sg(void *address, struct
- #define ZFCP_DEVICE_TYPE        0x1732
- #define ZFCP_DEVICE_MODEL       0x03
- #define ZFCP_DEVICE_MODEL_PRIV	0x04
-- 
-+
- /* allow as many chained SBALs as are supported by hardware */
- #define ZFCP_MAX_SBALS_PER_REQ		FSF_MAX_SBALS_PER_REQ
- #define ZFCP_MAX_SBALS_PER_CT_REQ	FSF_MAX_SBALS_PER_REQ
-@@ -508,7 +508,7 @@ struct zfcp_rc_entry {
- 
- /*
-  * this allows removal of logging code by the preprocessor
-- * (the most detailed log level still to be compiled in is specified, 
-+ * (the most detailed log level still to be compiled in is specified,
-  * higher log levels are removed)
-  */
- #define ZFCP_LOG_LEVEL_LIMIT	ZFCP_LOG_LEVEL_TRACE
-@@ -546,7 +546,7 @@ do { \
- 	if (ZFCP_LOG_CHECK(level)) \
- 		_ZFCP_LOG(fmt, ##args); \
- } while (0)
--	
-+
- #if ZFCP_LOG_LEVEL_LIMIT < ZFCP_LOG_LEVEL_NORMAL
- # define ZFCP_LOG_NORMAL(fmt, args...)	do { } while (0)
- #else
-@@ -583,8 +583,8 @@ do { \
- 
- /*************** ADAPTER/PORT/UNIT AND FSF_REQ STATUS FLAGS ******************/
- 
--/* 
-- * Note, the leftmost status byte is common among adapter, port 
-+/*
-+ * Note, the leftmost status byte is common among adapter, port
-  * and unit
-  */
- #define ZFCP_COMMON_FLAGS			0xfff00000
-@@ -1007,8 +1007,8 @@ struct zfcp_fsf_req {
- 	u32		       fsf_command;    /* FSF Command copy */
- 	struct fsf_qtcb	       *qtcb;	       /* address of associated QTCB */
- 	u32		       seq_no;         /* Sequence number of request */
--        unsigned long          data;           /* private data of request */ 
--	struct timer_list      timer;	       /* used for erp or scsi er */
-+	unsigned long	       data;           /* private data of request */
-+	struct timer_list     timer;	       /* used for erp or scsi er */
- 	struct zfcp_erp_action *erp_action;    /* used if this request is
- 						  issued on behalf of erp */
- 	mempool_t	       *pool;	       /* used if request was alloacted
-Index: HEAD/drivers/s390/scsi/zfcp_erp.c
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_erp.c
-+++ HEAD/drivers/s390/scsi/zfcp_erp.c
-@@ -1,22 +1,22 @@
--/* 
-+/*
-  * This file is part of the zfcp device driver for
-  * FCP adapters for IBM System z9 and zSeries.
-  *
-  * (C) Copyright IBM Corp. 2002, 2006
-- * 
-- * This program is free software; you can redistribute it and/or modify 
-- * it under the terms of the GNU General Public License as published by 
-- * the Free Software Foundation; either version 2, or (at your option) 
-- * any later version. 
-- * 
-- * This program is distributed in the hope that it will be useful, 
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-- * GNU General Public License for more details. 
-- * 
-- * You should have received a copy of the GNU General Public License 
-- * along with this program; if not, write to the Free Software 
-- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
- 
- #define ZFCP_LOG_AREA			ZFCP_LOG_AREA_ERP
-@@ -191,7 +191,7 @@ void zfcp_fsf_start_timer(struct zfcp_fs
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	called if an adapter failed,
-  *		initiates adapter recovery which is done
-@@ -228,7 +228,7 @@ zfcp_erp_adapter_reopen_internal(struct 
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	Wrappper for zfcp_erp_adapter_reopen_internal
-  *              used to ensure the correct locking
-@@ -476,7 +476,7 @@ zfcp_test_link(struct zfcp_port *port)
- 
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	called if a port failed to be opened normally
-  *		initiates Forced Reopen recovery which is done
-@@ -517,7 +517,7 @@ zfcp_erp_port_forced_reopen_internal(str
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	Wrappper for zfcp_erp_port_forced_reopen_internal
-  *              used to ensure the correct locking
-@@ -543,7 +543,7 @@ zfcp_erp_port_forced_reopen(struct zfcp_
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	called if a port is to be opened
-  *		initiates Reopen recovery which is done
-@@ -612,7 +612,7 @@ zfcp_erp_port_reopen(struct zfcp_port *p
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	called if a unit is to be opened
-  *		initiates Reopen recovery which is done
-@@ -704,7 +704,7 @@ static void zfcp_erp_adapter_unblock(str
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	disable I/O,
-  *		return any open requests and clean them up,
-@@ -725,7 +725,7 @@ zfcp_erp_port_block(struct zfcp_port *po
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	enable I/O
-  *
-@@ -742,7 +742,7 @@ zfcp_erp_port_unblock(struct zfcp_port *
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	disable I/O,
-  *		return any open requests and clean them up,
-@@ -763,7 +763,7 @@ zfcp_erp_unit_block(struct zfcp_unit *un
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	enable I/O
-  *
-@@ -792,7 +792,7 @@ zfcp_erp_action_ready(struct zfcp_erp_ac
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:
-  *
-@@ -967,7 +967,7 @@ static void zfcp_erp_timeout_handler(uns
-  * zfcp_erp_action_dismiss - dismiss an erp_action
-  *
-  * adapter->erp_lock must be held
-- * 
-+ *
-  * Dismissal of an erp_action is usually required if an erp_action of
-  * higher priority is generated.
-  */
-@@ -1005,9 +1005,9 @@ zfcp_erp_thread_setup(struct zfcp_adapte
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:
-  *
-@@ -1094,7 +1094,7 @@ zfcp_erp_thread(void *data)
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	drives single error recovery action and schedules higher and
-  *		subordinate actions, if necessary
-@@ -1206,7 +1206,7 @@ zfcp_erp_strategy(struct zfcp_erp_action
- 
- 	/*
- 	 * put this target through the erp mill again if someone has
--	 * requested to change the status of a target being online 
-+	 * requested to change the status of a target being online
- 	 * to offline or the other way around
- 	 * (old retval is preserved if nothing has to be done here)
- 	 */
-@@ -1228,7 +1228,7 @@ zfcp_erp_strategy(struct zfcp_erp_action
-  unlock:
- 	write_unlock(&adapter->erp_lock);
- 	read_unlock_irqrestore(&zfcp_data.config_lock, flags);
--	
-+
- 	if (retval != ZFCP_ERP_CONTINUES)
- 		zfcp_erp_action_cleanup(action, adapter, port, unit, retval);
- 
-@@ -1250,9 +1250,9 @@ zfcp_erp_strategy(struct zfcp_erp_action
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_DISMISSED	- if action has been dismissed
-  *		retval			- otherwise
-@@ -1322,7 +1322,7 @@ zfcp_erp_strategy_do_action(struct zfcp_
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	triggers retry of this action after a certain amount of time
-  *		by means of timer provided by erp_action
-@@ -1346,7 +1346,7 @@ zfcp_erp_strategy_memwait(struct zfcp_er
- 	return retval;
- }
- 
--/* 
-+/*
-  * function:    zfcp_erp_adapter_failed
-  *
-  * purpose:     sets the adapter and all underlying devices to ERP_FAILED
-@@ -1362,7 +1362,7 @@ zfcp_erp_adapter_failed(struct zfcp_adap
- 	debug_text_event(adapter->erp_dbf, 2, "a_afail");
- }
- 
--/* 
-+/*
-  * function:    zfcp_erp_port_failed
-  *
-  * purpose:     sets the port and all underlying devices to ERP_FAILED
-@@ -1386,7 +1386,7 @@ zfcp_erp_port_failed(struct zfcp_port *p
- 	debug_event(port->adapter->erp_dbf, 2, &port->wwpn, sizeof (wwn_t));
- }
- 
--/* 
-+/*
-  * function:    zfcp_erp_unit_failed
-  *
-  * purpose:     sets the unit to ERP_FAILED
-@@ -1417,7 +1417,7 @@ zfcp_erp_unit_failed(struct zfcp_unit *u
-  *              successfully is reset.
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (not considered)
-- *		ZFCP_ERP_SUCCEEDED	- action finished successfully 
-+ *		ZFCP_ERP_SUCCEEDED	- action finished successfully
-  *		ZFCP_ERP_EXIT		- action failed and will not continue
-  */
- static int
-@@ -1646,7 +1646,7 @@ zfcp_erp_schedule_work(struct zfcp_unit 
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	remaining things in good cases,
-  *		escalation in bad cases
-@@ -1815,7 +1815,7 @@ zfcp_erp_modify_unit_status(struct zfcp_
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	Wrappper for zfcp_erp_port_reopen_all_internal
-  *              used to ensure the correct locking
-@@ -1852,9 +1852,9 @@ zfcp_erp_port_reopen_all_internal(struct
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	FIXME
-  */
-@@ -1871,7 +1871,7 @@ zfcp_erp_unit_reopen_all_internal(struct
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	this routine executes the 'Reopen Adapter' action
-  *		(the entire action is processed synchronously, since
-@@ -1908,9 +1908,9 @@ zfcp_erp_adapter_strategy(struct zfcp_er
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_SUCCEEDED      - action finished successfully
-  *              ZFCP_ERP_FAILED         - action finished unsuccessfully
-@@ -1930,9 +1930,9 @@ zfcp_erp_adapter_strategy_close(struct z
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_SUCCEEDED      - action finished successfully
-  *              ZFCP_ERP_FAILED         - action finished unsuccessfully
-@@ -1957,7 +1957,7 @@ zfcp_erp_adapter_strategy_open(struct zf
-  * purpose:	allocate the irq associated with this devno and register
-  *		the FSF adapter with the SCSI stack
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_erp_adapter_strategy_generic(struct zfcp_erp_action *erp_action, int close)
-@@ -2249,7 +2249,7 @@ zfcp_erp_adapter_strategy_open_fsf_statu
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	this routine executes the 'Reopen Physical Port' action
-  *
-@@ -2308,7 +2308,7 @@ zfcp_erp_port_forced_strategy(struct zfc
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	this routine executes the 'Reopen Port' action
-  *
-@@ -2530,7 +2530,7 @@ zfcp_erp_port_strategy_open_nameserver(s
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	makes the erp thread continue with reopen (physical) port
-  *		actions which have been paused until the name server port
-@@ -2570,9 +2570,9 @@ zfcp_erp_port_strategy_open_nameserver_w
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (asynchronously)
-  *		ZFCP_ERP_FAILED		- action finished unsuccessfully
-@@ -2626,9 +2626,9 @@ zfcp_erp_port_strategy_clearstati(struct
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (asynchronously)
-  *		ZFCP_ERP_FAILED		- action finished unsuccessfully
-@@ -2663,9 +2663,9 @@ zfcp_erp_port_strategy_close(struct zfcp
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (asynchronously)
-  *		ZFCP_ERP_FAILED		- action finished unsuccessfully
-@@ -2700,9 +2700,9 @@ zfcp_erp_port_strategy_open_port(struct 
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (asynchronously)
-  *		ZFCP_ERP_FAILED		- action finished unsuccessfully
-@@ -2737,7 +2737,7 @@ zfcp_erp_port_strategy_open_common_looku
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	this routine executes the 'Reopen Unit' action
-  *		currently no retries
-@@ -2825,9 +2825,9 @@ zfcp_erp_unit_strategy_clearstati(struct
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (asynchronously)
-  *		ZFCP_ERP_FAILED		- action finished unsuccessfully
-@@ -2865,9 +2865,9 @@ zfcp_erp_unit_strategy_close(struct zfcp
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	ZFCP_ERP_CONTINUES	- action continues (asynchronously)
-  *		ZFCP_ERP_FAILED		- action finished unsuccessfully
-@@ -2913,7 +2913,7 @@ void zfcp_erp_start_timer(struct zfcp_fs
- }
- 
- /*
-- * function:	
-+ * function:
-  *
-  * purpose:	enqueue the specified error recovery action, if needed
-  *
-@@ -2992,7 +2992,7 @@ zfcp_erp_action_enqueue(int action,
- 					      port->erp_action.action);
- 				debug_text_event(adapter->erp_dbf, 4,
- 						 "pf_actenq_drp");
--			} else 
-+			} else
- 				debug_text_event(adapter->erp_dbf, 4,
- 						 "pf_actenq_drpcp");
- 			debug_event(adapter->erp_dbf, 4, &port->wwpn,
-Index: HEAD/drivers/s390/scsi/zfcp_ext.h
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_ext.h
-+++ HEAD/drivers/s390/scsi/zfcp_ext.h
-@@ -1,22 +1,22 @@
--/* 
-+/*
-  * This file is part of the zfcp device driver for
-  * FCP adapters for IBM System z9 and zSeries.
-  *
-  * (C) Copyright IBM Corp. 2002, 2006
-- * 
-- * This program is free software; you can redistribute it and/or modify 
-- * it under the terms of the GNU General Public License as published by 
-- * the Free Software Foundation; either version 2, or (at your option) 
-- * any later version. 
-- * 
-- * This program is distributed in the hope that it will be useful, 
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-- * GNU General Public License for more details. 
-- * 
-- * You should have received a copy of the GNU General Public License 
-- * along with this program; if not, write to the Free Software 
-- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
- 
- #ifndef ZFCP_EXT_H
-Index: HEAD/drivers/s390/scsi/zfcp_fsf.c
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_fsf.c
-+++ HEAD/drivers/s390/scsi/zfcp_fsf.c
-@@ -80,10 +80,10 @@ static const char zfcp_act_subtable_type
- /*
-  * function:	zfcp_fsf_req_alloc
-  *
-- * purpose:     Obtains an fsf_req and potentially a qtcb (for all but 
-+ * purpose:     Obtains an fsf_req and potentially a qtcb (for all but
-  *              unsolicited requests) via helper functions
-  *              Does some initial fsf request set-up.
-- *              
-+ *
-  * returns:	pointer to allocated fsf_req if successfull
-  *              NULL otherwise
-  *
-@@ -192,7 +192,7 @@ void zfcp_fsf_req_dismiss_all(struct zfc
-  * returns:	0 - success
-  *		!0 - failure
-  *
-- * context:	
-+ * context:
-  */
- int
- zfcp_fsf_req_complete(struct zfcp_fsf_req *fsf_req)
-@@ -214,8 +214,8 @@ zfcp_fsf_req_complete(struct zfcp_fsf_re
- 	}
- 
- 	/*
--	 * fsf_req may be deleted due to waking up functions, so 
--	 * cleanup is saved here and used later 
-+	 * fsf_req may be deleted due to waking up functions, so
-+	 * cleanup is saved here and used later
- 	 */
- 	if (likely(fsf_req->status & ZFCP_STATUS_FSFREQ_CLEANUP))
- 		cleanup = 1;
-@@ -259,9 +259,9 @@ zfcp_fsf_req_complete(struct zfcp_fsf_re
-  *		and initiates appropriate actions
-  *		(usually calling FSF command specific handlers)
-  *
-- * returns:	
-+ * returns:
-  *
-- * context:	
-+ * context:
-  *
-  * locks:
-  */
-@@ -638,7 +638,7 @@ zfcp_fsf_link_down_info_eval(struct zfcp
-  *
-  * purpose:	calls the appropriate command specific handler
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_req_dispatch(struct zfcp_fsf_req *fsf_req)
-@@ -854,7 +854,7 @@ zfcp_fsf_status_read_port_closed(struct 
-  *
-  * purpose:	is called for finished Open Port command
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_status_read_handler(struct zfcp_fsf_req *fsf_req)
-@@ -1088,7 +1088,7 @@ zfcp_fsf_status_read_handler(struct zfcp
-  * returns:	address of initiated FSF request
-  *		NULL - request could not be initiated
-  *
-- * FIXME(design): should be watched by a timeout !!! 
-+ * FIXME(design): should be watched by a timeout !!!
-  * FIXME(design) shouldn't this be modified to return an int
-  *               also...don't know how though
-  */
-@@ -1157,7 +1157,7 @@ zfcp_fsf_abort_fcp_command(unsigned long
-  *
-  * purpose:	is called for finished Abort FCP Command request
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_abort_fcp_command_handler(struct zfcp_fsf_req *new_fsf_req)
-@@ -2437,10 +2437,10 @@ zfcp_fsf_exchange_port_data_handler(stru
- /*
-  * function:    zfcp_fsf_open_port
-  *
-- * purpose:	
-+ * purpose:
-  *
-  * returns:	address of initiated FSF request
-- *		NULL - request could not be initiated 
-+ *		NULL - request could not be initiated
-  */
- int
- zfcp_fsf_open_port(struct zfcp_erp_action *erp_action)
-@@ -2501,7 +2501,7 @@ zfcp_fsf_open_port(struct zfcp_erp_actio
-  *
-  * purpose:	is called for finished Open Port command
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_open_port_handler(struct zfcp_fsf_req *fsf_req)
-@@ -3103,7 +3103,7 @@ zfcp_fsf_open_unit(struct zfcp_erp_actio
-  *
-  * purpose:	is called for finished Open LUN command
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_open_unit_handler(struct zfcp_fsf_req *fsf_req)
-@@ -3366,7 +3366,7 @@ zfcp_fsf_open_unit_handler(struct zfcp_f
-  * purpose:
-  *
-  * returns:	address of fsf_req - request successfully initiated
-- *		NULL - 
-+ *		NULL -
-  *
-  * assumptions: This routine does not check whether the associated
-  *              remote port/lun has already been opened. This should be
-@@ -3828,7 +3828,7 @@ zfcp_fsf_send_fcp_command_task_managemen
-  *
-  * purpose:	is called for finished Send FCP Command
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_send_fcp_command_handler(struct zfcp_fsf_req *fsf_req)
-@@ -4065,7 +4065,7 @@ zfcp_fsf_send_fcp_command_handler(struct
-  *
-  * purpose:	evaluates FCP_RSP IU
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_send_fcp_command_task_handler(struct zfcp_fsf_req *fsf_req)
-@@ -4292,7 +4292,7 @@ zfcp_fsf_send_fcp_command_task_handler(s
-  *
-  * purpose:	evaluates FCP_RSP IU
-  *
-- * returns:	
-+ * returns:
-  */
- static int
- zfcp_fsf_send_fcp_command_task_management_handler(struct zfcp_fsf_req *fsf_req)
-@@ -4735,7 +4735,7 @@ zfcp_fsf_req_create(struct zfcp_adapter 
- 	INIT_LIST_HEAD(&fsf_req->list);
- 	init_timer(&fsf_req->timer);
- 
--	/* initialize waitqueue which may be used to wait on 
-+	/* initialize waitqueue which may be used to wait on
- 	   this request completion */
- 	init_waitqueue_head(&fsf_req->completion_wq);
- 
-Index: HEAD/drivers/s390/scsi/zfcp_fsf.h
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_fsf.h
-+++ HEAD/drivers/s390/scsi/zfcp_fsf.h
-@@ -1,22 +1,22 @@
--/* 
-+/*
-  * This file is part of the zfcp device driver for
-  * FCP adapters for IBM System z9 and zSeries.
-  *
-  * (C) Copyright IBM Corp. 2002, 2006
-- * 
-- * This program is free software; you can redistribute it and/or modify 
-- * it under the terms of the GNU General Public License as published by 
-- * the Free Software Foundation; either version 2, or (at your option) 
-- * any later version. 
-- * 
-- * This program is distributed in the hope that it will be useful, 
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-- * GNU General Public License for more details. 
-- * 
-- * You should have received a copy of the GNU General Public License 
-- * along with this program; if not, write to the Free Software 
-- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
- 
- #ifndef FSF_H
-Index: HEAD/drivers/s390/scsi/zfcp_qdio.c
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_qdio.c
-+++ HEAD/drivers/s390/scsi/zfcp_qdio.c
-@@ -176,10 +176,9 @@ zfcp_qdio_handler_error_check(struct zfc
-                 * That is why we need to clear the link-down flag
-                 * which is set again in case we have missed by a mile.
-                 */
--               zfcp_erp_adapter_reopen(
--                       adapter, 
--                       ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED |
--                       ZFCP_STATUS_COMMON_ERP_FAILED);
-+		zfcp_erp_adapter_reopen(adapter,
-+				       ZFCP_STATUS_ADAPTER_LINK_UNPLUGGED |
-+				       ZFCP_STATUS_COMMON_ERP_FAILED);
- 	}
- 	return retval;
- }
-Index: HEAD/drivers/s390/scsi/zfcp_scsi.c
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_scsi.c
-+++ HEAD/drivers/s390/scsi/zfcp_scsi.c
-@@ -1,22 +1,22 @@
--/* 
-+/*
-  * This file is part of the zfcp device driver for
-  * FCP adapters for IBM System z9 and zSeries.
-  *
-  * (C) Copyright IBM Corp. 2002, 2006
-- * 
-- * This program is free software; you can redistribute it and/or modify 
-- * it under the terms of the GNU General Public License as published by 
-- * the Free Software Foundation; either version 2, or (at your option) 
-- * any later version. 
-- * 
-- * This program is distributed in the hope that it will be useful, 
-- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the 
-- * GNU General Public License for more details. 
-- * 
-- * You should have received a copy of the GNU General Public License 
-- * along with this program; if not, write to the Free Software 
-- * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA. 
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; if not, write to the Free Software
-+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
-  */
- 
- #define ZFCP_LOG_AREA			ZFCP_LOG_AREA_SCSI
-@@ -101,7 +101,7 @@ zfcp_get_fcp_dl_ptr(struct fcp_cmnd_iu *
- 		((unsigned char *) fcp_cmd +
- 		 sizeof (struct fcp_cmnd_iu) + additional_length);
- 	/*
--	 * fcp_dl_addr = start address of fcp_cmnd structure + 
-+	 * fcp_dl_addr = start address of fcp_cmnd structure +
- 	 * size of fixed part + size of dynamically sized add_dcp_cdb field
- 	 * SEE FCP-2 documentation
- 	 */
-@@ -194,7 +194,7 @@ static void zfcp_scsi_slave_destroy(stru
- 				"address %p\n", sdpnt);
- }
- 
--/* 
-+/*
-  * called from scsi midlayer to allow finetuning of a device.
-  */
- static int
-@@ -372,7 +372,7 @@ zfcp_unit_lookup(struct zfcp_adapter *ad
- 
- /**
-  * zfcp_scsi_eh_abort_handler - abort the specified SCSI command
-- * @scpnt: pointer to scsi_cmnd to be aborted 
-+ * @scpnt: pointer to scsi_cmnd to be aborted
-  * Return: SUCCESS - command has been aborted and cleaned up in internal
-  *          bookkeeping, SCSI stack won't be called for aborted command
-  *         FAILED - otherwise
-Index: HEAD/drivers/s390/scsi/zfcp_sysfs_unit.c
-===================================================================
---- HEAD.orig/drivers/s390/scsi/zfcp_sysfs_unit.c
-+++ HEAD/drivers/s390/scsi/zfcp_sysfs_unit.c
-@@ -139,7 +139,7 @@ static struct attribute_group zfcp_unit_
- 	.attrs = zfcp_unit_attrs,
- };
- 
--/** 
-+/**
-  * zfcp_sysfs_create_unit_files - create sysfs unit files
-  * @dev: pointer to belonging device
-  *
-@@ -151,7 +151,7 @@ zfcp_sysfs_unit_create_files(struct devi
- 	return sysfs_create_group(&dev->kobj, &zfcp_unit_attr_group);
- }
- 
--/** 
-+/**
-  * zfcp_sysfs_remove_unit_files - remove sysfs unit files
-  * @dev: pointer to belonging device
-  *
+For more nit-picking please see below.
+
+Thanks,
+Martin
+
+Swen Schillig wrote:
+> From: Swen Schillig <swen@vnet.ibm.com>
+> 
+> add statistics and other zfcp related information to sysfs
+> 
+> The zfcp adapter provides a variety of information which was never
+> published to the external world. This patch adds a few of those "statistics"
+> to the sysfs tree structure.
+> 
+> These are reflected in the following attributes
+> 
+> /sys/bus/ccw/drivers/zfcp/0.0.1707 
+> /* information for the virtual adapter */
+>         statistic_services/     
+>                 requests        
+>                 megabytes
+>                 utilization
+>                 seconds_active
+> /* LUN specific info for channel- and fabric-latency */
+>         0x500507630300c562/0x401040a600000000/  
+>                 read_latency
+>                 write_latency
+>                 cmd_latency
+> 
+> Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+> ---
+>  drivers/s390/scsi/Makefile                |    2 
+>  drivers/s390/scsi/zfcp_aux.c              |   30 ++++-
+>  drivers/s390/scsi/zfcp_def.h              |   14 ++
+>  drivers/s390/scsi/zfcp_ext.h              |    2 
+>  drivers/s390/scsi/zfcp_fsf.c              |    1 
+>  drivers/s390/scsi/zfcp_fsf.h              |   28 ++++-
+>  drivers/s390/scsi/zfcp_qdio.c             |   39 +++++++
+>  drivers/s390/scsi/zfcp_sysfs_statistics.c |  162 ++++++++++++++++++++++++++++++
+>  drivers/s390/scsi/zfcp_sysfs_unit.c       |   63 +++++++++++
+>  9 files changed, 333 insertions(+), 8 deletions(-)
+> 
+> Index: HEAD/drivers/s390/scsi/zfcp_def.h
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_def.h
+> +++ HEAD/drivers/s390/scsi/zfcp_def.h
+> @@ -868,6 +868,17 @@ struct zfcp_erp_action {
+>  	struct timer_list timer;
+>  };
+> 
+> +struct latency_cont {
+> +	u32 channel;
+> +	u32 fabric;
+> +	u32 counter;
+> +};
+
+Are you sure you want just 32 bits for sums? Given the unit used (hw ticks) it 
+overruns quickly.
+
+> +
+> +struct zfcp_latencies {
+> +	struct latency_cont read;
+> +	struct latency_cont write;
+> +	struct latency_cont cmd;
+> +};
+> 
+>  struct zfcp_adapter {
+>  	struct list_head	list;              /* list of adapters */
+> @@ -883,6 +894,7 @@ struct zfcp_adapter {
+>  	u32			adapter_features;  /* FCP channel features */
+>  	u32			connection_features; /* host connection features */
+>          u32			hardware_version;  /* of FCP channel */
+> +	u16			timer_ticks;       /* time int for a tick */
+>  	struct Scsi_Host	*scsi_host;	   /* Pointer to mid-layer */
+>  	struct list_head	port_list_head;	   /* remote port list */
+>  	struct list_head        port_remove_lh;    /* head of ports to be
+> @@ -930,6 +942,7 @@ struct zfcp_adapter {
+>  	struct zfcp_scsi_dbf_record	scsi_dbf_buf;
+>  	struct zfcp_adapter_mempool	pool;      /* Adapter memory pools */
+>  	struct qdio_initialize  qdio_init_data;    /* for qdio_establish */
+> +	struct device		stat_services;
+
+After my fancy, stat_services is not a good choice. Shorten it; statistics is 
+descriptive enough.
+
+In case you have been inspired by generic_services below: generic_services 
+refers to Generic Services (GS) as defined by FC standard documents.
+
+>  	struct device           generic_services;  /* directory for WKA ports */
+>  	struct fc_host_statistics *fc_stats;
+>  	struct fsf_qtcb_bottom_port *stats_reset_data;
+> @@ -986,6 +999,7 @@ struct zfcp_unit {
+>  						  all scsi_scan_target
+>  						  requests have been
+>  						  completed. */
+> +	struct zfcp_latencies	latencies;
+>  };
+> 
+>  /* FSF request */
+> Index: HEAD/drivers/s390/scsi/zfcp_fsf.c
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_fsf.c
+> +++ HEAD/drivers/s390/scsi/zfcp_fsf.c
+> @@ -2079,6 +2079,7 @@ zfcp_fsf_exchange_config_evaluate(struct
+>  		fc_host_supported_classes(shost) =
+>  				FC_COS_CLASS2 | FC_COS_CLASS3;
+>  		adapter->hydra_version = bottom->adapter_type;
+> +		adapter->timer_ticks = bottom->timer_interval;
+>  		if (fc_host_permanent_port_name(shost) == -1)
+>  			fc_host_permanent_port_name(shost) =
+>  				fc_host_port_name(shost);
+> Index: HEAD/drivers/s390/scsi/zfcp_fsf.h
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_fsf.h
+> +++ HEAD/drivers/s390/scsi/zfcp_fsf.h
+> @@ -322,11 +322,18 @@ struct fsf_link_down_info {
+>  	u8 vendor_specific_code;
+>  } __attribute__ ((packed));
+> 
+> +struct fsf_qual_latency_info {
+> +	u32 channel_lat;
+> +	u32 fabric_lat;
+> +	u8 res1[8];
+> +} __attribute__ ((packed));
+> +
+>  union fsf_prot_status_qual {
+>  	u64 doubleword[FSF_PROT_STATUS_QUAL_SIZE / sizeof(u64)];
+>  	struct fsf_qual_version_error   version_error;
+>  	struct fsf_qual_sequence_error  sequence_error;
+>  	struct fsf_link_down_info link_down_info;
+> +	struct fsf_qual_latency_info latency_info;
+>  } __attribute__ ((packed));
+> 
+>  struct fsf_qtcb_prefix {
+> @@ -340,6 +347,15 @@ struct fsf_qtcb_prefix {
+>  	u8  res1[20];
+>  } __attribute__ ((packed));
+> 
+> +struct fsf_statistics_info {
+> +	u64 input_req;
+> +	u64 output_req;
+> +	u64 control_req;
+> +	u64 input_mb;
+> +	u64 output_mb;
+> +	u64 seconds_act;
+> +} __attribute__ ((packed));
+> +
+>  union fsf_status_qual {
+>  	u8  byte[FSF_STATUS_QUALIFIER_SIZE];
+>  	u16 halfword[FSF_STATUS_QUALIFIER_SIZE / sizeof (u16)];
+> @@ -427,7 +443,9 @@ struct fsf_qtcb_bottom_config {
+>  	u32 fc_link_speed;
+>  	u32 adapter_type;
+>  	u32 peer_d_id;
+> -	u8 res2[12];
+> +	u8 res1[2];
+> +	u16 timer_interval;
+> +	u8 res2[8];
+>  	u32 s_id;
+>  	struct fsf_nport_serv_param nport_serv_param;
+>  	u8 reserved_nport_serv_param[16];
+> @@ -436,7 +454,8 @@ struct fsf_qtcb_bottom_config {
+>  	u32 hardware_version;
+>  	u8 serial_number[32];
+>  	struct fsf_nport_serv_param plogi_payload;
+> -	u8 res4[160];
+> +	struct fsf_statistics_info stat_info;
+> +	u8 res4[112];
+>  } __attribute__ ((packed));
+> 
+>  struct fsf_qtcb_bottom_port {
+> @@ -469,7 +488,10 @@ struct fsf_qtcb_bottom_port {
+>  	u64 control_requests;
+>  	u64 input_mb;		/* where 1 MByte == 1.000.000 Bytes */
+>  	u64 output_mb;		/* where 1 MByte == 1.000.000 Bytes */
+> -	u8 res2[256];
+> +	u8 cp_util;
+> +	u8 cb_util;
+> +	u8 a_util;
+> +	u8 res2[253];
+>  } __attribute__ ((packed));
+> 
+>  union fsf_qtcb_bottom {
+> Index: HEAD/drivers/s390/scsi/zfcp_qdio.c
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_qdio.c
+> +++ HEAD/drivers/s390/scsi/zfcp_qdio.c
+> @@ -232,6 +232,40 @@ zfcp_qdio_request_handler(struct ccw_dev
+>  	return;
+>  }
+> 
+> +static void zfcp_qdio_fsf_req_latency(struct zfcp_fsf_req *fsf_req)
+> +{
+> +	struct fsf_qual_latency_info *lat_inf;
+> +	struct zfcp_unit *unit;
+> +
+> +	lat_inf = &fsf_req->qtcb->prefix.prot_status_qual.latency_info;
+> +	unit = fsf_req->unit;
+> +
+> +	switch (fsf_req->qtcb->bottom.io.data_direction) {
+> +	case FSF_DATADIR_READ:
+> +		unit->latencies.read.channel +=
+> +				lat_inf->channel_lat;
+
+Do you really need these line breaks?
+
+> +		unit->latencies.read.fabric +=
+> +				lat_inf->fabric_lat;
+> +		unit->latencies.read.counter++;
+> +		break;
+> +	case FSF_DATADIR_WRITE:
+> +		unit->latencies.write.channel +=
+> +				lat_inf->channel_lat;
+> +		unit->latencies.write.fabric +=
+> +				lat_inf->fabric_lat;
+> +		unit->latencies.write.counter++;
+> +		break;
+> +	case FSF_DATADIR_CMND:
+> +		unit->latencies.cmd.channel +=
+> +				lat_inf->channel_lat;
+> +		unit->latencies.cmd.fabric +=
+> +				lat_inf->fabric_lat;
+> +		unit->latencies.cmd.counter++;
+> +		break;
+> +	}
+> +}
+> +
+> +
+>  /**
+>   * zfcp_qdio_reqid_check - checks for valid reqids.
+>   */
+> @@ -254,6 +288,11 @@ static void zfcp_qdio_reqid_check(struct
+>  		panic("error: unknown request id (%ld) on adapter %s.\n",
+>  		      req_id, zfcp_get_busid_by_adapter(adapter));
+> 
+> +	if ((fsf_req->fsf_command == FSF_QTCB_FCP_CMND) &&
+> +	    (fsf_req->qtcb->prefix.prot_status &
+> +	    (FSF_PROT_GOOD | FSF_PROT_FSF_STATUS_PRESENTED)))
+
+According to hw specs. you need to check FSF_FCP_RSP_AVAILABLE as well.
+
+Btw. this code only applies to FCP commands and should be moved to the 
+corresponding handler function. You don't want to clutter this function with 
+special case stuff.
+
+> +		zfcp_qdio_fsf_req_latency(fsf_req);
+> +
+>  	zfcp_reqlist_remove(adapter, fsf_req);
+>  	atomic_dec(&adapter->reqs_active);
+>  	spin_unlock_irqrestore(&adapter->req_list_lock, flags);
+> Index: HEAD/drivers/s390/scsi/zfcp_sysfs_unit.c
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_sysfs_unit.c
+> +++ HEAD/drivers/s390/scsi/zfcp_sysfs_unit.c
+> @@ -125,6 +125,66 @@ zfcp_sysfs_unit_failed_show(struct devic
+>  static DEVICE_ATTR(failed, S_IWUSR | S_IRUGO, zfcp_sysfs_unit_failed_show,
+>  		   zfcp_sysfs_unit_failed_store);
+> 
+> +static ssize_t
+> +zfcp_sysfs_unit_read_latency_show(struct device *dev,
+> +				  struct device_attribute *attr, char *buf) {
+> +	struct zfcp_unit *unit;
+> +	struct zfcp_latencies *lat;
+> +	struct zfcp_adapter *adapter;
+> +
+> +	unit = dev_get_drvdata(dev);
+> +	lat = &unit->latencies;
+> +	adapter = unit->port->adapter;
+> +
+> +	return sprintf(buf, "%u %u %u\n",
+> +			lat->read.fabric * adapter->timer_ticks / 1000,
+> +			lat->read.channel * adapter->timer_ticks / 1000,
+> +			lat->read.counter);
+> +}
+> +
+> +static DEVICE_ATTR(read_latency, S_IRUGO, zfcp_sysfs_unit_read_latency_show,
+> +		   NULL);
+> +
+> +static ssize_t
+> +zfcp_sysfs_unit_write_latency_show(struct device *dev,
+> +				   struct device_attribute *attr, char *buf) {
+> +	struct zfcp_unit *unit;
+> +	struct zfcp_latencies *lat;
+> +	struct zfcp_adapter *adapter;
+> +
+> +	unit = dev_get_drvdata(dev);
+> +	lat = &unit->latencies;
+> +	adapter = unit->port->adapter;
+> +
+> +	return sprintf(buf, "%u %u %u\n",
+> +		       lat->write.fabric * adapter->timer_ticks / 1000,
+> +		       lat->write.channel * adapter->timer_ticks / 1000,
+> +		       lat->write.counter);
+> +}
+> +
+> +static DEVICE_ATTR(write_latency, S_IRUGO, zfcp_sysfs_unit_write_latency_show,
+> +		   NULL);
+> +
+> +static ssize_t
+> +zfcp_sysfs_unit_cmd_latency_show(struct device *dev,
+> +				 struct device_attribute *attr, char *buf) {
+> +	struct zfcp_unit *unit;
+> +	struct zfcp_latencies *lat;
+> +	struct zfcp_adapter *adapter;
+> +
+> +	unit = dev_get_drvdata(dev);
+> +	lat = &unit->latencies;
+> +	adapter = unit->port->adapter;
+> +
+> +	return sprintf(buf, "%u %u %u\n",
+> +		       lat->cmd.fabric * adapter->timer_ticks / 1000,
+> +		       lat->cmd.channel * adapter->timer_ticks / 1000,
+> +		       lat->cmd.counter);
+> +}
+> +
+> +static DEVICE_ATTR(cmd_latency, S_IRUGO, zfcp_sysfs_unit_cmd_latency_show,
+> +		   NULL);
+> +
+>  static struct attribute *zfcp_unit_attrs[] = {
+>  	&dev_attr_failed.attr,
+>  	&dev_attr_in_recovery.attr,
+> @@ -132,6 +192,9 @@ static struct attribute *zfcp_unit_attrs
+>  	&dev_attr_access_denied.attr,
+>  	&dev_attr_access_shared.attr,
+>  	&dev_attr_access_readonly.attr,
+> +	&dev_attr_read_latency.attr,
+> +	&dev_attr_write_latency.attr,
+> +	&dev_attr_cmd_latency.attr,
+>  	NULL
+>  };
+> 
+> Index: HEAD/drivers/s390/scsi/zfcp_ext.h
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_ext.h
+> +++ HEAD/drivers/s390/scsi/zfcp_ext.h
+> @@ -37,6 +37,8 @@ extern int  zfcp_sysfs_unit_create_files
+>  extern void zfcp_sysfs_unit_remove_files(struct device *);
+>  extern void zfcp_sysfs_port_release(struct device *);
+>  extern void zfcp_sysfs_unit_release(struct device *);
+> +extern int  zfcp_sysfs_statistic_services_create_files(struct device *);
+> +extern void zfcp_sysfs_statistic_services_remove_files(struct device *);
+> 
+>  /**************************** CONFIGURATION  *********************************/
+>  extern struct zfcp_unit *zfcp_get_unit_by_lun(struct zfcp_port *, fcp_lun_t);
+> Index: HEAD/drivers/s390/scsi/zfcp_aux.c
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/zfcp_aux.c
+> +++ HEAD/drivers/s390/scsi/zfcp_aux.c
+> @@ -1067,13 +1067,32 @@ zfcp_adapter_enqueue(struct ccw_device *
+>  	if (zfcp_sysfs_adapter_create_files(&ccw_device->dev))
+>  		goto sysfs_failed;
+> 
+> +	adapter->stat_services.parent = &adapter->ccw_device->dev;
+> +	adapter->stat_services.release = zfcp_dummy_release;
+> +	snprintf(adapter->stat_services.bus_id, BUS_ID_SIZE,
+> +		 "statistic_services");
+
+please shorten statistic_services
+
+> +	dev_set_drvdata(&adapter->stat_services, adapter);
+> +
+> +	if (device_register(&adapter->stat_services))
+> +		goto services_failed;
+> +
+> +	if (zfcp_sysfs_statistic_services_create_files(&adapter->stat_services))
+> +	{
+> +		device_unregister(&adapter->stat_services);
+
+Please move this unregister stuff down to a proper label and just jump there 
+immediately. This admittedly long function used to get by on this method just fine.
+
+> +		goto services_failed;
+> +	}
+> +
+>  	adapter->generic_services.parent = &adapter->ccw_device->dev;
+>  	adapter->generic_services.release = zfcp_dummy_release;
+>  	snprintf(adapter->generic_services.bus_id, BUS_ID_SIZE,
+>  		 "generic_services");
+> 
+> -	if (device_register(&adapter->generic_services))
+> -		goto generic_services_failed;
+> +	if (device_register(&adapter->generic_services)) {
+> +		zfcp_sysfs_statistic_services_remove_files(&adapter->
+
+Please don't do a line break within a function call argument like this.
+What about shorter function names?
+
+> +							   stat_services);
+> +		device_unregister(&adapter->stat_services);
+
+No, please stuff all the undo-stuff at the end of the function.
+
+> +		goto services_failed;
+
+You probably want a seperate label for this goto.
+
+> +	}
+> 
+>  	/* put allocated adapter at list tail */
+>  	write_lock_irq(&zfcp_data.config_lock);
+> @@ -1085,7 +1104,7 @@ zfcp_adapter_enqueue(struct ccw_device *
+> 
+>  	goto out;
+> 
+> - generic_services_failed:
+> + services_failed:
+
+I disagree about aggregating these cases.
+
+>  	zfcp_sysfs_adapter_remove_files(&adapter->ccw_device->dev);
+>   sysfs_failed:
+>  	zfcp_adapter_debug_unregister(adapter);
+> @@ -1118,9 +1137,11 @@ zfcp_adapter_dequeue(struct zfcp_adapter
+>  	int retval = 0;
+>  	unsigned long flags;
+> 
+> -	zfcp_adapter_scsi_unregister(adapter);
+
+Oh, moving this line is a functional change (or fix?) unrelated to the 
+functionality you are adding, isn't it?
+
+If this change is intentional, it should go into a separate (bug fix) patch.
+
+>  	device_unregister(&adapter->generic_services);
+> +	zfcp_sysfs_statistic_services_remove_files(&adapter->stat_services);
+> +	device_unregister(&adapter->stat_services);
+>  	zfcp_sysfs_adapter_remove_files(&adapter->ccw_device->dev);
+> +	zfcp_adapter_scsi_unregister(adapter);
+>  	dev_set_drvdata(&adapter->ccw_device->dev, NULL);
+>  	/* sanity check: no pending FSF requests */
+>  	spin_lock_irqsave(&adapter->req_list_lock, flags);
+> @@ -1264,6 +1285,7 @@ zfcp_port_enqueue(struct zfcp_adapter *a
+> 
+>  	if (zfcp_sysfs_port_create_files(&port->sysfs_device, status)) {
+>  		device_unregister(&port->sysfs_device);
+> +		kfree(port);
+
+Scratching my head... another unrelated change (looks like a fix for a real 
+memory leak)?
+
+>  		return NULL;
+>  	}
+> 
+> Index: HEAD/drivers/s390/scsi/Makefile
+> ===================================================================
+> --- HEAD.orig/drivers/s390/scsi/Makefile
+> +++ HEAD/drivers/s390/scsi/Makefile
+> @@ -4,6 +4,6 @@
+> 
+>  zfcp-objs := zfcp_aux.o zfcp_ccw.o zfcp_scsi.o zfcp_erp.o zfcp_qdio.o \
+>  	     zfcp_fsf.o zfcp_dbf.o zfcp_sysfs_adapter.o zfcp_sysfs_port.o \
+> -	     zfcp_sysfs_unit.o zfcp_sysfs_driver.o
+> +	     zfcp_sysfs_unit.o zfcp_sysfs_driver.o zfcp_sysfs_statistics.o
+> 
+>  obj-$(CONFIG_ZFCP) += zfcp.o
+> Index: HEAD/drivers/s390/scsi/zfcp_sysfs_statistics.c
+> ===================================================================
+> --- /dev/null
+> +++ HEAD/drivers/s390/scsi/zfcp_sysfs_statistics.c
+> @@ -0,0 +1,162 @@
+> +/*
+> + * This file is part of the zfcp device driver for
+> + * FCP adapters for IBM System z9 and zSeries.
+> + *
+> + * Copyright IBM Corp. 2007
+> + *
+> + * This program is free software; you can redistribute it and/or modify
+> + * it under the terms of the GNU General Public License as published by
+> + * the Free Software Foundation; either version 2, or (at your option)
+> + * any later version.
+> + *
+> + * This program is distributed in the hope that it will be useful,
+> + * but WITHOUT ANY WARRANTY; without even the implied warranty of
+> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+> + * GNU General Public License for more details.
+> + *
+> + * You should have received a copy of the GNU General Public License
+> + * along with this program; if not, write to the Free Software
+> + * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+> + */
+> +
+> +#include "zfcp_ext.h"
+> +
+> +#define ZFCP_LOG_AREA                   ZFCP_LOG_AREA_CONFIG
+> +
+> +
+> +static ssize_t
+> +zfcp_sysfs_adapter_utilization_show(struct device *dev,
+> +				    struct device_attribute *attr, char *buf)
+> +{
+> +	struct zfcp_adapter *adapter;
+> +	struct fsf_qtcb_bottom_port *qtcb_port;
+> +	int retval;
+> +
+> +	adapter = dev_get_drvdata(dev);
+> +
+> +	qtcb_port = kzalloc(sizeof(struct fsf_qtcb_bottom_port), GFP_KERNEL);
+> +	if (!qtcb_port)
+> +		return -ENOMEM;
+> +
+> +	retval = zfcp_fsf_exchange_port_data_sync(adapter, qtcb_port);
+> +	if (!retval)
+> +		retval = sprintf(buf, "%u %u %u\n", qtcb_port->cp_util,
+> +				 qtcb_port->cb_util, qtcb_port->a_util);
+> +	kfree(qtcb_port);
+> +	return retval;
+> +}
+> +
+> +static DEVICE_ATTR(utilization, S_IRUGO, zfcp_sysfs_adapter_utilization_show,
+> +		   NULL);
+> +
+> +static ssize_t
+> +zfcp_sysfs_adapter_request_show(struct device *dev,
+> +				struct device_attribute *attr, char *buf)
+> +{
+> +	struct zfcp_adapter *adapter;
+> +	struct fsf_qtcb_bottom_config *qtcb_config;
+> +	int retval;
+> +
+> +	adapter = dev_get_drvdata(dev);
+> +
+> +	qtcb_config = kzalloc(sizeof(struct fsf_qtcb_bottom_config),
+> +			      GFP_KERNEL);
+> +	if (!qtcb_config)
+> +		return -ENOMEM;
+> +
+> +	retval = zfcp_fsf_exchange_config_data_sync(adapter, qtcb_config);
+> +	if (!retval)
+> +		retval = sprintf(buf, "%lu %lu %lu\n",
+> +				 qtcb_config->stat_info.input_req,
+> +				 qtcb_config->stat_info.output_req,
+> +				 qtcb_config->stat_info.control_req);
+> +
+> +	kfree(qtcb_config);
+> +	return retval;
+> +}
+> +
+> +static DEVICE_ATTR(requests, S_IRUGO, zfcp_sysfs_adapter_request_show, NULL);
+> +
+> +static ssize_t
+> +zfcp_sysfs_adapter_mb_show(struct device *dev,
+> +			   struct device_attribute *attr, char *buf)
+> +{
+> +	struct zfcp_adapter *adapter;
+> +	struct fsf_qtcb_bottom_config *qtcb_config;
+> +	int retval;
+> +
+> +	adapter = dev_get_drvdata(dev);
+> +
+> +	qtcb_config = kzalloc(sizeof(struct fsf_qtcb_bottom_config),
+> +			      GFP_KERNEL);
+> +
+> +	if (!qtcb_config)
+> +		return -ENOMEM;
+> +
+> +	retval = zfcp_fsf_exchange_config_data_sync(adapter, qtcb_config);
+> +	if (!retval)
+> +		retval = sprintf(buf, "%lu %lu\n",
+> +				 qtcb_config->stat_info.input_mb,
+> +				 qtcb_config->stat_info.output_mb);
+> +
+> +	kfree(qtcb_config);
+> +	return retval;
+> +}
+> +
+> +static DEVICE_ATTR(megabytes, S_IRUGO, zfcp_sysfs_adapter_mb_show, NULL);
+> +
+> +static ssize_t
+> +zfcp_sysfs_adapter_seconds_active_show(struct device *dev,
+> +				       struct device_attribute *attr,
+> +				       char *buf)
+> +{
+> +	struct zfcp_adapter *adapter;
+> +	struct fsf_qtcb_bottom_config *qtcb_config;
+> +	int retval;
+> +
+> +	adapter = dev_get_drvdata(dev);
+> +
+> +	qtcb_config = kzalloc(sizeof(struct fsf_qtcb_bottom_config),
+> +			      GFP_KERNEL);
+> +
+> +	if (!qtcb_config)
+> +		return -ENOMEM;
+> +
+> +	retval = zfcp_fsf_exchange_config_data_sync(adapter, qtcb_config);
+> +	if (!retval)
+> +		retval = sprintf(buf, "%lu\n",
+> +				 qtcb_config->stat_info.seconds_act);
+> +
+> +	kfree(qtcb_config);
+> +	return retval;
+> +}
+> +
+> +static DEVICE_ATTR(seconds_active, S_IRUGO,
+> +		   zfcp_sysfs_adapter_seconds_active_show, NULL);
+> +
+> +static struct attribute *zfcp_statistic_services_attrs[] = {
+> +	&dev_attr_utilization.attr,
+> +	&dev_attr_requests.attr,
+> +	&dev_attr_megabytes.attr,
+> +	&dev_attr_seconds_active.attr,
+> +	NULL
+> +};
+> +
+> +static struct attribute_group zfcp_statistic_services_attr_group = {
+> +	.attrs = zfcp_statistic_services_attrs,
+> +};
+> +
+> +int
+> +zfcp_sysfs_statistic_services_create_files(struct device *dev)
+> +{
+> +	return sysfs_create_group(&dev->kobj,
+> +				  &zfcp_statistic_services_attr_group);
+> +}
+> +
+> +void
+> +zfcp_sysfs_statistic_services_remove_files(struct device *dev)
+> +{
+> +	sysfs_remove_group(&dev->kobj, &zfcp_statistic_services_attr_group);
+> +}
+> +
+> +#undef ZFCP_LOG_AREA
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-s390" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 
