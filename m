@@ -1,105 +1,143 @@
-From: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-Date: Fri, 7 Sep 2007 16:58:42 -0700
-Message-ID: <BC382691D59EC94C8E57543C47EF8ED55B20C6@aime2k302.adaptec.com>
-References: <46E1D818.4080608@garzik.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 8989] New: LSIFC909 card don't recognice any
+ more my FC drives
+Date: Fri, 7 Sep 2007 21:49:02 -0700
+Message-ID: <20070907214902.ed22eff9.akpm@linux-foundation.org>
+References: <bug-8989-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:52947 "HELO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1751231AbXIGX6o convert rfc822-to-8bit (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 7 Sep 2007 19:58:44 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <46E1D818.4080608@garzik.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:58126 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750805AbXIHEtJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Sep 2007 00:49:09 -0400
+In-Reply-To: <bug-8989-10286@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: bugme-daemon@bugzilla.kernel.org, pfammatter-egi@hispeed.ch
 
-Hi Jeff,
+On Fri,  7 Sep 2007 05:42:12 -0700 (PDT) bugme-daemon@bugzilla.kernel.org wrote:
 
- Thanks for your suggestions. I have done some experiment to return all
-ATA output register except for Read/Write command. But the aic94xx
-discovery machine just can not find the SATA device. Probably I will fix
-the new issue by next week since I have the other hot issue here.
-
-Thanks!
-Gilbert
-
------Original Message-----
-From: Jeff Garzik [mailto:jeff@garzik.org] 
-Sent: Friday, September 07, 2007 4:01 PM
-To: Wu, Gilbert
-Cc: Linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] aic94xx: fix smartctl utility problem
-
-Wu, Gilbert wrote:
-> HI Jeff,
+> http://bugzilla.kernel.org/show_bug.cgi?id=8989
 > 
->   I was thinking the checking "READ/WRITE" command table is larger
-than
-> my current table. This does not cover vendor-specific command. 
-
-You can implement the check in a _far_ more optimal manner:
-
-Possibility 1:
-
-	static const u8 ata_rw_command_table[256] = {
-		[ATA_CMD_READ]		= 1,
-		[ATA_CMD_READ_EXT]	= 1,
-		... other READ/WRITE commands here, always value==1 ...
-	};
-
-	...
-
-	u8 ata_command = ... ;
-
-	if (ata_rw_command_table[ata_command]) {
-		/* it is a read/write command */
-	} else {
-		/* it is NOT a read/write command */
-	}
-
-Possibility 2:
-
-	static inline int is_ata_rw_cmd(u8 ata_cmd)
-	{
-		switch (ata_cmd) {
-		case ATA_CMD_READ:
-		case ATA_CMD_READ_EXT:
-		... other READ/WRITE commands here ...
-			return 1;
-		}
-
-		return 0;
-	}
-
-Either way you avoid the iteration, and simplify things down to a single
-
-test.
-
-Once that is done, it should be self-evident that testing -any- list of 
-commands is O(1), rather than O(n) for the case of table iteration.  And
-
-therefore, the cost of checking "is it a READ/WRITE command?" is equal 
-to the cost of checking for any other commands.
-
-
-> Do you wan me just check READ/WRITE command? 
-
-Yes, please.
-
-
-> The aic94xx default implementation is all ATA command will be
-returning
-> ATA output register if the command did not succeed.
-
-Great!
-
-	Jeff
-
-
-
+>            Summary: LSIFC909 card don't recognice any more my FC drives
+>            Product: Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.18
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: drivers_other@kernel-bugs.osdl.org
+>         ReportedBy: pfammatter-egi@hispeed.ch
+> 
+> 
+> Hello,
+> 
+> I had upgraded my server from debian sarge (kernel 2.6.8) to debian etch
+> (kernel 2.6.18).
+> Since this upgrade I can't any more see my fc-drives. I get no failures
+> during the system boot.
+> It seems that the card would be reginized correct, but as I wrote, I
+> can't see any drives.
+> When I boot the server with debian sarge (kernel 2.6.8) all works
+> fine ..;-)
+> I had compile a new kernel 2.6.22.6 also with MPT- direct compiled into
+> the kernel (not as moduls) and tries with them also.. but no success.
+> 
+> Here is my config:
+> HBA: LSIFC909
+> Disk: 1 x SEGATE CHEETAH 18 GB 10Krpm + 2 x HITACHI 146GB 15Krpm drives
+> in AL (works fine with kernel 2.6.8...)
+> 
+> I send you here any logs:
+> lspci:
+> 00:00.0 Host bridge: Intel Corporation 82865G/PE/P DRAM
+> Controller/Host-Hub Interface (rev 02)
+> 00:01.0 PCI bridge: Intel Corporation 82865G/PE/P PCI to AGP Controller
+> (rev 02)
+> 00:1d.0 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R) USB
+> UHCI Controller #1 (rev 02)
+> 00:1d.1 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R) USB
+> UHCI Controller #2 (rev 02)
+> 00:1d.2 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R) USB
+> UHCI Controller #3 (rev 02)
+> 00:1d.3 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R) USB
+> UHCI Controller #4 (rev 02)
+> 00:1d.7 USB Controller: Intel Corporation 82801EB/ER (ICH5/ICH5R) USB2
+> EHCI Controller (rev 02)
+> 00:1e.0 PCI bridge: Intel Corporation 82801 PCI Bridge (rev c2)
+> 00:1f.0 ISA bridge: Intel Corporation 82801EB/ER (ICH5/ICH5R) LPC
+> Interface Bridge (rev 02)
+> 00:1f.1 IDE interface: Intel Corporation 82801EB/ER (ICH5/ICH5R) IDE
+> Controller (rev 02)
+> 00:1f.3 SMBus: Intel Corporation 82801EB/ER (ICH5/ICH5R) SMBus
+> Controller (rev 02)
+> 01:00.0 VGA compatible controller: nVidia Corporation NV20 [GeForce3 Ti
+> 500] (rev a3)
+> 02:02.0 SCSI storage controller: LSI Logic / Symbios Logic FC909 Fibre
+> Channel Adapter (rev 01)
+> 02:04.0 Multimedia audio controller: Creative Labs SB Live! EMU10k1 (rev
+> 0a)
+> 02:04.1 Input device controller: Creative Labs SB Live! Game Port (rev
+> 0a)
+> 02:08.0 Ethernet controller: Intel Corporation 82562EZ 10/100 Ethernet
+> Controller (rev 02)
+> 
+> /var/log/messages: (debuging enabled
+> in /usr/src/linux/drivers/message/fusion/Makefile: EXTRA_CFLAGS +=
+> -DMPT_DEBUG_INIT)
+> 
+> ..
+> Sep  6 09:47:10 localhost kernel: Copyright (c) 1999-2005 LSI Logic
+> Corporation
+> Sep  6 09:49:22 localhost kernel: mptscsih: Unknown symbol
+> scsi_remove_host
+> Sep  6 09:49:22 localhost kernel: mptscsih: Unknown symbol scsi_host_put
+> Sep  6 09:49:22 localhost kernel: mptscsih: Unknown symbol
+> scsi_print_command
+> Sep  6 09:49:22 localhost kernel: mptscsih: Unknown symbol
+> scsi_adjust_queue_depth
+> Sep  6 09:50:09 localhost kernel: SCSI subsystem initialized
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol
+> fc_attach_transport
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol
+> fc_remote_port_add
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol fc_remove_host
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol
+> fc_remote_port_delete
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol
+> fc_release_transport
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol
+> fc_remote_port_rolechg
+> Sep  6 09:50:53 localhost kernel: mptfc: Unknown symbol scsi_is_fc_rport
+> Sep  6 09:51:28 localhost kernel: Fusion MPT misc device (ioctl) driver
+> 3.04.01
+> Sep  6 09:51:28 localhost kernel: mptctl: Registered with Fusion MPT
+> base driver
+> Sep  6 09:51:28 localhost kernel: mptctl: /dev/mptctl @
+> (major,minor=10,220)
+> Sep  6 09:52:08 localhost kernel: Fusion MPT FC Host driver 3.04.01
+> Sep  6 09:52:08 localhost kernel: mptbase: Initiating ioc0 bringup
+> Sep  6 09:52:09 localhost kernel: scsi0 : ioc0: LSIFC909,
+> FwRev=01000000h, Ports=1, MaxQ=1023, IRQ=201
+> Sep  6 09:54:37 localhost mpt-statusd: detected non-optimal RAID status
+> 
+> 
+> loaded modules:
+> mptfc                  14468  0
+> mptscsih               21696  1 mptfc
+> mptbase                46176  2 mptfc,mptscsih
+> scsi_transport_fc      28544  1 mptfc
+> scsi_mod              124168  3 mptfc,mptscsih,scsi_transport_fc
+> 
+> 
+> -- 
+> Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
