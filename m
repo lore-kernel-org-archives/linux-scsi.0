@@ -1,38 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Sat, 8 Sep 2007 10:53:51 -0600
-Message-ID: <20070908165351.GA6809@parisc-linux.org>
-References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de> <20070908095008.08eb4930.randy.dunlap@oracle.com>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: Re: [PATCH v3 2/2][BNX2]: Add iSCSI support to BNX2 devices.
+Date: Sat, 08 Sep 2007 10:57:39 -0700
+Message-ID: <1189274259.12688.28.camel@localhost.localdomain>
+References: <1551EAE59135BE47B544934E30FC4FC002AABA51@nt-irva-0751.brcm.ad.broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:54120 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753589AbXIHQxx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Sep 2007 12:53:53 -0400
-Content-Disposition: inline
-In-Reply-To: <20070908095008.08eb4930.randy.dunlap@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1551EAE59135BE47B544934E30FC4FC002AABA51@nt-irva-0751.brcm.ad.broadcom.com>
+Sender: netdev-owner@vger.kernel.org
+To: Michael Chan <mchan@broadcom.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Mike Christie <mchristi@redhat.com>, davem@davemloft.net, netdev@vger.kernel.org, open-iscsi@googlegroups.com, Tal Moyal <talm@broadcom.com>, Robert Lusinsky <lusinsky@broadcom.com>, Uri Elzur <uri@broadcom.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, Sep 08, 2007 at 09:50:08AM -0700, Randy Dunlap wrote:
-> On 08 Sep 2007 18:07:00 +0200 Andi Kleen wrote:
-> > This has also bitten me one or two times. A reasonable way would
-> > be to just select SD automatically for !EMBEDDED
+On Sat, 2007-09-08 at 07:49 -0700, Michael Chan wrote:
+> Christoph Hellwig wrote:
 > 
-> I'd say that someone needs to use a vendor kernel, or at least
-> begin with a vendor .config file...
+> > Most of it should just go away, and the other bits shouldn't 
+> > change over
+> > the lifetime of the driver except for additions.  So there 
+> > really isn't
+> > any point in auto-generating it.
+> > 
+> 
+> Yes, I agree with Mike Christie on this.  These values in
+> question are defined in iSCSI RFC and therefore should be defined
+> in a common file. 
 
-That's not entirely fair ... if you're switching over from a config
-you've been dragging around for years which uses IDE rather than ATA,
-it's far from obvious which config options you need to change.  I think
-Andi's patch is a good one.  It might also be good to select SR (at
-least my wife's laptop has the cd-rom on SATA).
+Sure, we will remove these duplicate defines from bnx2i header file and
+work of iscsi_proto.h macro definitions
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
