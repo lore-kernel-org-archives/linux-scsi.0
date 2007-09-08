@@ -1,41 +1,136 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Sat, 08 Sep 2007 21:32:08 +0200
-Message-ID: <46E2F8B8.5020003@s5r6.in-berlin.de>
-References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de> <20070908095008.08eb4930.randy.dunlap@oracle.com> <20070908181309.GA8647@one.firstfloor.org> <46E2EA2E.6020002@s5r6.in-berlin.de> <20070908191457.GB8647@one.firstfloor.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: usb-storage and Motorola Z6
+Date: Sat, 8 Sep 2007 16:32:16 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0709081617201.4819-100000@netrider.rowland.org>
+References: <46E2C8FB.4090003@udgaard.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755157AbXIHTdZ@vger.kernel.org>
-In-Reply-To: <20070908191457.GB8647@one.firstfloor.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-usb-users-bounces@lists.sourceforge.net>
+In-Reply-To: <46E2C8FB.4090003@udgaard.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-users>
+List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
+	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-users-bounces@lists.sourceforge.net
+Errors-To: linux-usb-users-bounces@lists.sourceforge.net
+To: Peter Rasmussen <plr@udgaard.com>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB users list <linux-usb-users@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
 
-Andi Kleen wrote:
-> On Sat, Sep 08, 2007 at 08:30:06PM +0200, Stefan Richter wrote:
->> Andi Kleen wrote:
->>> when you've been using CONFIG_IDE before it is not completely
->>> obvious you need BLK_SD for your hard disk.
->> Switching to different drivers without reading the help text?
->> Tough.
+On Sat, 8 Sep 2007, Peter Rasmussen wrote:
+
+> > In fact there was another patch from earlier in the email thread, which 
+> > was needed to work around the PQ = 1 problem.  Since you didn't apply 
+> > that patch, the SCSI disk driver wasn't bound to your Z6.
+> >
+> >   
+> Now I applied that patch, too, and it did make a difference, in drivers/scsi/scsi_sysfs.c I have:
 > 
-> The individual driver descriptions don't say BLK_SD needs to be selected.
+> static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
+> {
+>         struct scsi_device *sdp = to_scsi_device(dev);
+>         if (sdp->no_uld_attach)
+>                 return 0;
+>         return 1;
+> //      return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
+> }
 
-At least the help to CONFIG_ATA says so.
+Did you also make the change to usb-storage for ignoring wrong Tag 
+values?
 
-> Besides if all descriptions said that
+> Before posting a lot of USB debug output, I'll explain a shorter version :-)
+> 
+> 1.After reboot I connected the Z6 (incl. a micro-SD card) and got
+> what looked good, if not the usual output from dmesg:
+> 
+> <snip>
+> scsi 0:0:0:0: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
+> <snip>
+> sd 0:0:0:0: [sda] Attached SCSI removable disk
+> sd 0:0:0:0: Attached scsi generic sg0 type 0
+> <snip>
+> scsi 0:0:0:1: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
+> <snip>
+> sd 0:0:0:1: [sdb] Attached SCSI removable disk
+> sd 0:0:0:1: Attached scsi generic sg1 type 0
+> <snip>
 
-We certainly don't want (too much) redundancy in help texts.
+Evidently the phone didn't report that the micro-SD card was present.  
+Otherwise you would have seen log entries describing the number of
+sectors and the write-protect status.
 
-> the computer could as well
-> do it for the user automatically. After all it's a stupid repetive
-> task and computers are much better at those than humans.
+> 2.I could then mount the SCSI devices like this:
+> 
+> # mount /dev/sda /mnt/usb
+> # mount /dev/sdb /mnt/usb2
+> 
+> When I normally with a USB mass storage device do, eg.:
+> 
+> # mount /dev/sda1 /mnt/usb
+> 
+> 3.I couldn't however, always mount the mentioned devices as I would
+> sometimes get a 'mount: No medium found' error, and a message on the
+> mobile will sometimes show "USB connected" and sometimes "USB
+> disconnected" even though it didn't seem to correlate to successful
+> connection between my PC and the Z6.
+> 
+> 4.So, something seems to be inconsistent. I have tried it with a few
+> different cables and I can't detect a difference.
+> 
+> 5.Should I post a full log of eg. connecting the Z6, mounting it and the SD card, accessing it and then unmounting? 
+>   A full log may then include failed attempts, which will perhaps give some hints at what is wrong?
+>   Or do you already have a pretty good idea as to what is wrong, and find that such an exercise is not really useful?
 
-In your patch, it is not the computer who finds out that the user wants
-BLK_SD.  It is you who predetermined that the user wants it.
--- 
-Stefan Richter
--=====-=-=== =--= -=---
-http://arcgraph.de/sr/
+If you want to post a log, include only the initial connection and one 
+failed mount attempt.  Also, you can remove linux-scsi from the CC: 
+list above, since this bug no longer involves any SCSI-level issues.
+
+> > :-)  There's no necessary relation between the OS running on a device
+> > like your phone and its interoperability with computers running the
+> > same OS.
+> >
+> >   
+> Well, I would have expected that they have similar methods to
+> connect, even though different Linux kernel version of course may
+> have introduced some differences. My A780 has a 2.4.20 kernel and I
+> wouldn't be surprised if other Motorola mobiles also use the 2.4.*
+> series of Linux kernels.
+
+Not at all -- the methods used for connecting are _completely_
+different, because the phone connects as a peripheral whereas the
+kernel expects to connect as a host.
+
+> >> And you say that this seems to be a more widespread problem with 
+> >> Motorola devices? Do you remember which ones, and do they run Linux as well?
+> >>     
+> >
+> > There were two problems.  First was the PQ = 1 problem; I have never
+> > seen it before now (so only on the Z6).  The other problem was the
+> > capacity, or last sector number; we know that the RAZR V3i and V3x both
+> > suffer from it as well.  (I have no idea whether they run Linux.)  
+> > Possibly other devices do too, and we just don't know about them.
+
+Plus the third (incorrect Tags) problem, which I forgot to mention
+earlier.
+
+> I know that those two don't run Linux, but can they connect to a
+> Linux host, or do they also have problems?
+
+They can connect to a Linux host with no problem, now that the 
+appropriate quirks entries have been created.
+
+Alan Stern
+
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2005.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+_______________________________________________
+Linux-usb-users@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-users
