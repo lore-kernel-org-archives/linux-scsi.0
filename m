@@ -1,44 +1,34 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 4/9] scsi_debug: convert to use the data buffer
- accessors
-Date: Sat, 8 Sep 2007 22:04:26 +0900
-Message-ID: <20070908113929X.tomof@acm.org>
-References: <20070906183616C.tomof@acm.org>
-	<46E1A286.9030403@torque.net>
+From: "Michael Chan" <mchan@broadcom.com>
+Subject: Re: [PATCH v3 2/2][BNX2]: Add iSCSI support to BNX2 devices.
+Date: Sat, 8 Sep 2007 07:49:45 -0700
+Message-ID: <1551EAE59135BE47B544934E30FC4FC002AABA51@nt-irva-0751.brcm.ad.broadcom.com>
+References: <20070908115907.GA8478@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+ charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:36715 "EHLO mo10.iij4u.or.jp"
+Received: from mms2.broadcom.com ([216.31.210.18]:2692 "EHLO mms2.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751532AbXIHNFD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Sep 2007 09:05:03 -0400
-In-Reply-To: <46E1A286.9030403@torque.net>
+	id S1751211AbXIHOuF convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Sep 2007 10:50:05 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20070908115907.GA8478@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: tomof@acm.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@SteelEye.com, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp
+To: Christoph Hellwig <hch@infradead.org>, Anil Veerabhadrappa <anilgv@broadcom.com>
+Cc: Mike Christie <mchristi@redhat.com>, davem@davemloft.net, netdev@vger.kernel.org, open-iscsi@googlegroups.com, Tal Moyal <talm@broadcom.com>, Robert Lusinsky <lusinsky@broadcom.com>, Uri Elzur <uri@broadcom.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Fri, 07 Sep 2007 15:12:06 -0400
-Douglas Gilbert <dougg@torque.net> wrote:
+Christoph Hellwig wrote:
 
-> FUJITA Tomonori wrote:
-> > From: Boaz Harrosh <bharrosh@panasas.com>
-> > 
-> > - remove the unnecessary map_single path.
-> > 
-> > - convert to use the new accessors for the sg lists and the
-> > parameters.
-> > 
-> > Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> Most of it should just go away, and the other bits shouldn't 
+> change over
+> the lifetime of the driver except for additions.  So there 
+> really isn't
+> any point in auto-generating it.
 > 
-> Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
-This patch is on the top of the following patch:
+Yes, I agree with Mike Christie on this.  These values in
+question are defined in iSCSI RFC and therefore should be defined
+in a common file.
 
-http://git.kernel.org/?p=linux/kernel/git/axboe/linux-2.6-block.git;a=commitdiff;h=63499aaafa6ec0c107a925574c2af84a2cd86703
-
-
-Can we get your ACK on this too?
-
-Probably, it would be fine to integrate these patches.
