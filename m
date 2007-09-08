@@ -1,32 +1,30 @@
-From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
-Subject: Re: [PATCH v3 2/2][BNX2]: Add iSCSI support to BNX2 devices.
-Date: Sat, 08 Sep 2007 10:57:39 -0700
-Message-ID: <1189274259.12688.28.camel@localhost.localdomain>
-References: <1551EAE59135BE47B544934E30FC4FC002AABA51@nt-irva-0751.brcm.ad.broadcom.com>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: sata & scsi suggestion for make menuconfig
+Date: Sat, 8 Sep 2007 20:13:09 +0200
+Message-ID: <20070908181309.GA8647@one.firstfloor.org>
+References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de> <20070908095008.08eb4930.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1551EAE59135BE47B544934E30FC4FC002AABA51@nt-irva-0751.brcm.ad.broadcom.com>
-Sender: netdev-owner@vger.kernel.org
-To: Michael Chan <mchan@broadcom.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Mike Christie <mchristi@redhat.com>, davem@davemloft.net, netdev@vger.kernel.org, open-iscsi@googlegroups.com, Tal Moyal <talm@broadcom.com>, Robert Lusinsky <lusinsky@broadcom.com>, Uri Elzur <uri@broadcom.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from one.firstfloor.org ([213.235.205.2]:39112 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753298AbXIHSNM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Sep 2007 14:13:12 -0400
+Content-Disposition: inline
+In-Reply-To: <20070908095008.08eb4930.randy.dunlap@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sat, 2007-09-08 at 07:49 -0700, Michael Chan wrote:
-> Christoph Hellwig wrote:
-> 
-> > Most of it should just go away, and the other bits shouldn't 
-> > change over
-> > the lifetime of the driver except for additions.  So there 
-> > really isn't
-> > any point in auto-generating it.
-> > 
-> 
-> Yes, I agree with Mike Christie on this.  These values in
-> question are defined in iSCSI RFC and therefore should be defined
-> in a common file. 
+> I'd say that someone needs to use a vendor kernel, or at least
+> begin with a vendor .config file...
 
-Sure, we will remove these duplicate defines from bnx2i header file and
-work of iscsi_proto.h macro definitions
+Vendor kernels tend to compile forever and require initrds. For 
+just testing a kernel quickly compiling only a few drivers in
+is much more convenient.
 
+Also when you've been using CONFIG_IDE before it is not completely
+obvious you need BLK_SD for your hard disk.
+
+-Andi
