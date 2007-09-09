@@ -1,47 +1,49 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Sun, 09 Sep 2007 17:11:44 -0400
-Message-ID: <46E46190.6080607@garzik.org>
-References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de> <1189371621.3526.28.camel@localhost.localdomain> <20070909210329.GE25798@one.firstfloor.org>
+Date: Sun, 09 Sep 2007 17:39:11 -0400
+Message-ID: <1189373951.3526.37.camel@localhost.localdomain>
+References: <20070907124800.GP16806@vanheusden.com>
+	 <p73fy1p9m57.fsf@bingen.suse.de>
+	 <1189371621.3526.28.camel@localhost.localdomain>
+	 <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org>
+	 <20070909212159.GF25798@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760613AbXIIVOJ@vger.kernel.org>
-In-Reply-To: <20070909210329.GE25798@one.firstfloor.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759689AbXIIVjZ@vger.kernel.org>
+In-Reply-To: <20070909212159.GF25798@one.firstfloor.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Andi Kleen <andi@firstfloor.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Jeff Garzik <jeff@garzik.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Andi Kleen wrote:
->> I can see where you're coming from, but logically, this is wrong.
->> There's a huge slew of enterprise machines that only have DVD on SATA.
+On Sun, 2007-09-09 at 23:22 +0200, Andi Kleen wrote:
+> > The current setup expresses the dependencies as they exist -- OPTIONAL 
+> > extras, and that is a problem once a year or so, when someone builds 
 > 
-> ... and enterprise systems don't really care about a few KB more of code.
-> In fact you definitely want to have SATA compiled in in case you need
-> to recover the machine later when the SAN is down.
+> Disk support over SCSI/SATA is hardly an "optional extra". It's more the 99+%
+> case.
+
+Using that argument, there's an equal case for always requiring SCSI to
+be built for every kernel, since very few people can boot a system
+without a disk.  However, the 1% case is the embedded flash booting
+community plus a few others, so we allow SCSI to be optional for our 1%
+who don't want it.
+
+At base, the Kconfig system is designed to give the greatest flexibility
+with the fewest foot shooting opportunities.  However, we do tend to err
+on the side of flexibility if there's a conflict between the two design
+goals.
+
+> > their own kernel but must learn this fact anew.
 > 
->> On the other hand, all of these machines will have SCSI disk devices on
->> various other transports, so no harm is done, it's just an inelegant
->> solution.
-> 
-> Do you know of a better one?
+> When it costs 10000 people half an hour to learn and correct this it 
+> wasted 5000 hours of previous livetime.
+>
+> Besides there is no good reason to have ever learned this imho.
 
-Let's step back a moment and consider the actual scale and impact of the 
-problem at hand.
+The process of becoming an expert in the kernel build system naturally
+involves making mistakes and learning from them, so this is probably
+time reasonably well spent.
 
-The vast majority of users are consumers of pre-compiled kernels, built 
-by People With Clue(tm), who figured this stuff out as soon as it was 
-introduced.
-
-The current setup expresses the dependencies as they exist -- OPTIONAL 
-extras, and that is a problem once a year or so, when someone builds 
-their own kernel but must learn this fact anew.
-
-There is simply no compelling need at all to change things from the 
-current setup.
-
-Our Kconfig system is for people who already know the kernel, not Aunt 
-Tillie.
-
-	Jeff
+James
