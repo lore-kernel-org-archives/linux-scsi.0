@@ -1,94 +1,170 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 6/9] tgt: convert ibmvstgt and libsrp to use
- scsi_data_buffer
-Date: Sun, 9 Sep 2007 23:38:55 +0900
-Message-ID: <20070909054929C.tomof@acm.org>
-References: <46E3C6F3.6020506@panasas.com>
-	<20070909045722P.tomof@acm.org>
-	<46E40319.4030704@panasas.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: [PATCH 20/22] advansys: Improve reset handler
+Date: Sun,  9 Sep 2007 08:56:45 -0600
+Message-ID: <11893498073093-git-send-email-matthew@wil.cx>
+References: <20070909145358.GG6809@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:60759 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756933AbXIIOjv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 9 Sep 2007 10:39:51 -0400
-In-Reply-To: <46E40319.4030704@panasas.com>
+Received: from mail.tor.primus.ca ([216.254.136.21]:45187 "EHLO
+	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757233AbXIIO4u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:56:50 -0400
+In-Reply-To: <20070909145358.GG6809@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: tomof@acm.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-On Sun, 09 Sep 2007 17:28:41 +0300
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+ - Don't need to set ASC_HOST_IN_RESET any more
+ - Don't need to test scp->device->host for NULL -- if it's NULL, we
+   couldn't've been called.
+ - Use scmd_printk instead of ASC_PRINT
 
-> On Sun, Sep 09 2007 at 16:47 +0300, FUJITA Tomonori <tomof@acm.org> wrote:
-> > On Sun, 09 Sep 2007 13:12:03 +0300
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >> On Fri, Sep 07 2007 at 0:50 +0300, FUJITA Tomonori <tomof@acm.org> wrote:
-> >>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> >>> ---
-> >>> ...
-> >>> @@ -425,8 +426,8 @@ int srp_cmd_queue(struct Scsi_Host *shost, struct srp_cmd *cmd, void *info,
-> >>>  
-> >>>  	sc->SCp.ptr = info;
-> >>>  	memcpy(sc->cmnd, cmd->cdb, MAX_COMMAND_SIZE);
-> >>> -	sc->request_bufflen = len;
-> >>> -	sc->request_buffer = (void *) (unsigned long) addr;
-> >>> +	sc->sdb.length = len;
-> >>> +	sc->sdb.sglist = (void *) (unsigned long) addr;
-> >>>  	sc->tag = tag;
-> >>>  	err = scsi_tgt_queue_command(sc, (struct scsi_lun *) &cmd->lun, cmd->tag);
-> >>>  	if (err)
-> >> What is done here in srp_cmd_queue() looks scary to me. even today.
-> >> What is that u64 addr that gets truncated to unsigned long and put
-> >> on sglist? What data-buffer "len" is suppose to describe? And "dir"
-> >> is for what data?
-> > 
-> > No trancated since it's used for an address. addr, data length, and
-> > data transfer direction though they are not used now.
-> > 
-> I wish you could maybe clean up the unused stuff,
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+---
+ drivers/scsi/advansys.c |   83 ++++++++++++----------------------------------
+ 1 files changed, 22 insertions(+), 61 deletions(-)
 
-Well, I put them for Xen scsiback driver though now I could remove it.
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 3fbeea7..76dfb0c 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -2229,7 +2229,6 @@ do { \
+ #define ASC_BOARDP(host) ((asc_board_t *) &((host)->hostdata))
+ 
+ /* asc_board_t flags */
+-#define ASC_HOST_IN_RESET       0x01
+ #define ASC_IS_WIDE_BOARD       0x04	/* AdvanSys Wide Board */
+ #define ASC_SELECT_QUEUE_DEPTHS 0x08
+ 
+@@ -9751,106 +9750,68 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
+  */
+ static int advansys_reset(struct scsi_cmnd *scp)
+ {
+-	struct Scsi_Host *shost;
+-	asc_board_t *boardp;
+-	ASC_DVC_VAR *asc_dvc_varp;
+-	ADV_DVC_VAR *adv_dvc_varp;
+-	ulong flags;
++	struct Scsi_Host *shost = scp->device->host;
++	struct asc_board *boardp = ASC_BOARDP(shost);
++	unsigned long flags;
+ 	int status;
+ 	int ret = SUCCESS;
+ 
+-	ASC_DBG1(1, "advansys_reset: 0x%lx\n", (ulong)scp);
++	ASC_DBG1(1, "advansys_reset: 0x%p\n", scp);
+ 
+-#ifdef ADVANSYS_STATS
+-	if (scp->device->host != NULL) {
+-		ASC_STATS(scp->device->host, reset);
+-	}
+-#endif /* ADVANSYS_STATS */
+-
+-	if ((shost = scp->device->host) == NULL) {
+-		scp->result = HOST_BYTE(DID_ERROR);
+-		return FAILED;
+-	}
++	ASC_STATS(shost, reset);
+ 
+-	boardp = ASC_BOARDP(shost);
+-
+-	ASC_PRINT1("advansys_reset: board %d: SCSI bus reset started...\n",
+-		   boardp->id);
+-	/*
+-	 * Check for re-entrancy.
+-	 */
+-	spin_lock_irqsave(&boardp->lock, flags);
+-	if (boardp->flags & ASC_HOST_IN_RESET) {
+-		spin_unlock_irqrestore(&boardp->lock, flags);
+-		return FAILED;
+-	}
+-	boardp->flags |= ASC_HOST_IN_RESET;
+-	spin_unlock_irqrestore(&boardp->lock, flags);
++	scmd_printk(KERN_INFO, scp, "SCSI bus reset started...\n");
+ 
+ 	if (ASC_NARROW_BOARD(boardp)) {
+-		/*
+-		 * Narrow Board
+-		 */
+-		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
++		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
+ 
+-		/*
+-		 * Reset the chip and SCSI bus.
+-		 */
++		/* Reset the chip and SCSI bus. */
+ 		ASC_DBG(1, "advansys_reset: before AscInitAsc1000Driver()\n");
+-		status = AscInitAsc1000Driver(asc_dvc_varp);
++		status = AscInitAsc1000Driver(asc_dvc);
+ 
+ 		/* Refer to ASC_IERR_* defintions for meaning of 'err_code'. */
+-		if (asc_dvc_varp->err_code) {
+-			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
+-				   "error: 0x%x\n", boardp->id,
+-				   asc_dvc_varp->err_code);
++		if (asc_dvc->err_code) {
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset error: "
++				    "0x%x\n", asc_dvc->err_code);
+ 			ret = FAILED;
+ 		} else if (status) {
+-			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
+-				   "warning: 0x%x\n", boardp->id, status);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset warning: "
++				    "0x%x\n", status);
+ 		} else {
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "successful.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
++				    "successful\n");
+ 		}
+ 
+ 		ASC_DBG(1, "advansys_reset: after AscInitAsc1000Driver()\n");
+ 		spin_lock_irqsave(&boardp->lock, flags);
+-
+ 	} else {
+ 		/*
+-		 * Wide Board
+-		 *
+ 		 * If the suggest reset bus flags are set, then reset the bus.
+ 		 * Otherwise only reset the device.
+ 		 */
+-		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
++		ADV_DVC_VAR *adv_dvc = &boardp->dvc_var.adv_dvc_var;
+ 
+ 		/*
+ 		 * Reset the target's SCSI bus.
+ 		 */
+ 		ASC_DBG(1, "advansys_reset: before AdvResetChipAndSB()\n");
+-		switch (AdvResetChipAndSB(adv_dvc_varp)) {
++		switch (AdvResetChipAndSB(adv_dvc)) {
+ 		case ASC_TRUE:
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "successful.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
++				    "successful\n");
+ 			break;
+ 		case ASC_FALSE:
+ 		default:
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "error.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset error\n");
+ 			ret = FAILED;
+ 			break;
+ 		}
+ 		spin_lock_irqsave(&boardp->lock, flags);
+-		AdvISR(adv_dvc_varp);
++		AdvISR(adv_dvc);
+ 	}
+-	/* Board lock is held. */
+ 
+ 	/* Save the time of the most recently completed reset. */
+ 	boardp->last_reset = jiffies;
+-
+-	/* Clear reset flag. */
+-	boardp->flags &= ~ASC_HOST_IN_RESET;
+ 	spin_unlock_irqrestore(&boardp->lock, flags);
+ 
+ 	ASC_DBG1(1, "advansys_reset: ret %d\n", ret);
+-- 
+1.5.2.4
 
-
-> and/or give addr its proper type. If it's a pointer than make it a
-> pointer.
-
-You need to read the SRP spec.
-
-
-> Also you are implying a use_sg==0 here which is not allowed.
-> 
-> > 
-> >> It is made to look like addr is a linear pointer with a use_sg==0
-> >> issued command, which is no longer allowed. Only we know it is not,
-> >> because of the "(void *)(unsigned long) addr;" which is a bug in
-> >> 64-bit.
-> >>
-> >> If this is a totally private message sent threw the scsi-ml. I would
-> >> rather it was done with DMA_NONE,bufflen=0,sglist=NULL and put all
-> >> the user-info into scsi_cmnd.SCp like above "void* info".
-> > 
-> > tgt doesn't queue a command to scsi-ml. It queues it to user space.
-> 
-> Even though. Please don't misuse scsi_cmnd members in this way.
-> If you are not using any of scsi-ml functions on these commands and
-> they do not carry sg-lists than why use a scsi_cmnd at all?
-
-We try to use scsi-ml and transport class as much as possible.
-
-
-> You can just use a tgt private structure.
-
-And we don't try to do this.
-
-
-> If these commands do go through some scsi-ml functions than banging
-> scsi_cmnd.sdb.sglist this way is dangerous.
-
-As I said, these commands will not go to scsi-ml in a way as you
-think.
