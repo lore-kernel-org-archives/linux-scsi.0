@@ -1,136 +1,113 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: usb-storage and Motorola Z6
-Date: Sat, 8 Sep 2007 16:32:16 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0709081617201.4819-100000@netrider.rowland.org>
-References: <46E2C8FB.4090003@udgaard.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 0/9] scsi_data_buffer structure (in preparation for bidi)
+Date: Sun, 09 Sep 2007 11:25:57 +0300
+Message-ID: <46E3AE15.1060204@panasas.com>
+References: <20070906183448I.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-users-bounces@lists.sourceforge.net>
-In-Reply-To: <46E2C8FB.4090003@udgaard.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-users>
-List-Post: <mailto:linux-usb-users@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-users-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-users>,
-	<mailto:linux-usb-users-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-users-bounces@lists.sourceforge.net
-Errors-To: linux-usb-users-bounces@lists.sourceforge.net
-To: Peter Rasmussen <plr@udgaard.com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, USB users list <linux-usb-users@lists.sourceforge.net>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28283 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751271AbXIII01 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 04:26:27 -0400
+In-Reply-To: <20070906183448I.tomof@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+Cc: James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
 
-On Sat, 8 Sep 2007, Peter Rasmussen wrote:
-
-> > In fact there was another patch from earlier in the email thread, which 
-> > was needed to work around the PQ = 1 problem.  Since you didn't apply 
-> > that patch, the SCSI disk driver wasn't bound to your Z6.
-> >
-> >   
-> Now I applied that patch, too, and it did make a difference, in drivers/scsi/scsi_sysfs.c I have:
+On Fri, Sep 07 2007 at 0:50 +0300, FUJITA Tomonori <tomof@acm.org> wrote:
+> This patchset, which I submitted before, adds a new data structure, 
+> scsi_data_buffer, including everything for data transfer:
 > 
-> static int scsi_bus_match(struct device *dev, struct device_driver *gendrv)
-> {
->         struct scsi_device *sdp = to_scsi_device(dev);
->         if (sdp->no_uld_attach)
->                 return 0;
->         return 1;
-> //      return (sdp->inq_periph_qual == SCSI_INQ_PQ_CON)? 1: 0;
-> }
-
-Did you also make the change to usb-storage for ignoring wrong Tag 
-values?
-
-> Before posting a lot of USB debug output, I'll explain a shorter version :-)
+> struct scsi_data_buffer { unsigned length; int resid; short sg_count;
+>  short __sg_count; struct scatterlist *sglist; };
 > 
-> 1.After reboot I connected the Z6 (incl. a micro-SD card) and got
-> what looked good, if not the usual output from dmesg:
+> One scsi_data_buffer structure is embedded in struct scsi_cmnd for 
+> uni-directional transfer. All the members are just moved from 
+> scsi_cmnd structure to scsi_data_buffer structure. So nothing is
+> added to scsi_cmnd structure.
 > 
-> <snip>
-> scsi 0:0:0:0: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
-> <snip>
-> sd 0:0:0:0: [sda] Attached SCSI removable disk
-> sd 0:0:0:0: Attached scsi generic sg0 type 0
-> <snip>
-> scsi 0:0:0:1: Direct-Access     Motorola MSnc.                 PQ: 1 ANSI: 0 CCS
-> <snip>
-> sd 0:0:0:1: [sdb] Attached SCSI removable disk
-> sd 0:0:0:1: Attached scsi generic sg1 type 0
-> <snip>
-
-Evidently the phone didn't report that the micro-SD card was present.  
-Otherwise you would have seen log entries describing the number of
-sectors and the write-protect status.
-
-> 2.I could then mount the SCSI devices like this:
+> After applying this patchset, llds must use the scsi data accessors.
+> This patchset includes some conversation patches (most of them are
+> patches that Boaz submitted before), however there is still some code
+> that is needed to be converted.
 > 
-> # mount /dev/sda /mnt/usb
-> # mount /dev/sdb /mnt/usb2
+> Boaz, if you still have other conversation patches, please submit 
+> them.
 > 
-> When I normally with a USB mass storage device do, eg.:
+> I suspect that nobody cares about some of unconverted llds, which
+> will be not compilable after this patchset. I'll fix ldds that people
+>  complain about.
 > 
-> # mount /dev/sda1 /mnt/usb
-> 
-> 3.I couldn't however, always mount the mentioned devices as I would
-> sometimes get a 'mount: No medium found' error, and a message on the
-> mobile will sometimes show "USB connected" and sometimes "USB
-> disconnected" even though it didn't seem to correlate to successful
-> connection between my PC and the Z6.
-> 
-> 4.So, something seems to be inconsistent. I have tried it with a few
-> different cables and I can't detect a difference.
-> 
-> 5.Should I post a full log of eg. connecting the Z6, mounting it and the SD card, accessing it and then unmounting? 
->   A full log may then include failed attempts, which will perhaps give some hints at what is wrong?
->   Or do you already have a pretty good idea as to what is wrong, and find that such an exercise is not really useful?
+> It's difficult to test this patchset in -mm via scsi-misc. Jens, 
+> please send this to -mm via the block tree.
 
-If you want to post a log, include only the initial connection and one 
-failed mount attempt.  Also, you can remove linux-scsi from the CC: 
-list above, since this bug no longer involves any SCSI-level issues.
+Sorry for the late response. Just am back from vacation.
 
-> > :-)  There's no necessary relation between the OS running on a device
-> > like your phone and its interoperability with computers running the
-> > same OS.
-> >
-> >   
-> Well, I would have expected that they have similar methods to
-> connect, even though different Linux kernel version of course may
-> have introduced some differences. My A780 has a 2.4.20 kernel and I
-> wouldn't be surprised if other Motorola mobiles also use the 2.4.*
-> series of Linux kernels.
+Tomo please hold with these patches a bit longer the
+Tree is not ready for it. 
 
-Not at all -- the methods used for connecting are _completely_
-different, because the phone connects as a peripheral whereas the
-kernel expects to connect as a host.
+Mainly you will totally break USB storage mid-layer. 
+There is one converted USB driver - microtek.c - that is 
+currently broken. This is because usb mid-layer still issues 
+a synchronous REQUEST_SENSE with use_sg == 0. 
+(And still bangs all over scsi_cmnd members) I have a 
+complete and somewhat tested solution for the USB stack
+and all the drivers. as well as lots of other drivers 
+(see list below). I will submit them group by group during
+this week and next week. The reason I did not release them
+yet is because I did not want to do this before the vacation
+and not be available for debugging.
 
-> >> And you say that this seems to be a more widespread problem with 
-> >> Motorola devices? Do you remember which ones, and do they run Linux as well?
-> >>     
-> >
-> > There were two problems.  First was the PQ = 1 problem; I have never
-> > seen it before now (so only on the Z6).  The other problem was the
-> > capacity, or last sector number; we know that the RAZR V3i and V3x both
-> > suffer from it as well.  (I have no idea whether they run Linux.)  
-> > Possibly other devices do too, and we just don't know about them.
+Some of the files I have patches for are:
 
-Plus the third (incorrect Tags) problem, which I forgot to mention
-earlier.
+git-diff --stat
+ drivers/fc4/fc.c                    |   40 ++---
+ drivers/scsi/NCR5380.c              |   39 ++--
+ drivers/scsi/NCR5380.h              |    7 +
+ drivers/scsi/NCR53C9x.c             |   40 ++---
+ drivers/scsi/NCR53C9x.h             |    2 -
+ drivers/scsi/a2091.c                |   36 +---
+ drivers/scsi/a3000.c                |   15 +--
+ drivers/scsi/aha1542.c              |   54 ++----
+ drivers/scsi/arm/acornscsi.c        |   14 +-
+ drivers/scsi/arm/fas216.c           |    5 +-
+ drivers/scsi/arm/fas216.h           |    3 +
+ drivers/scsi/arm/scsi.h             |   34 +---
+ drivers/scsi/atari_NCR5380.c        |   47 ++---
+ drivers/scsi/atp870u.c              |  102 ++---------
+ drivers/scsi/dec_esp.c              |   17 --
+ drivers/scsi/eata_pio.c             |   12 +-
+ drivers/scsi/fd_mcs.c               |   36 +---
+ drivers/scsi/gdth.c                 |    2 +-
+ drivers/scsi/imm.c                  |   13 +-
+ drivers/scsi/in2000.c               |   10 +-
+ drivers/scsi/oktagon_esp.c          |   14 --
+ drivers/scsi/pluto.c                |    2 +-
+ drivers/scsi/ppa.c                  |   12 +-
+ drivers/scsi/qla1280.c              |  348 +++++++++++++++--------------------
+ drivers/scsi/qlogicpti.c            |   54 +-----
+ drivers/scsi/scsi_error.c           |  114 ++++++++----
+ drivers/scsi/seagate.c              |   17 +-
+ drivers/scsi/sun3_NCR5380.c         |   42 ++---
+ drivers/scsi/sun3x_esp.c            |   21 +--
+ drivers/scsi/wd33c93.c              |   10 +-
+ drivers/usb/storage/freecom.c       |   14 +-
+ drivers/usb/storage/isd200.c        |    6 +-
+ drivers/usb/storage/protocol.c      |  120 +++++-------
+ drivers/usb/storage/sddr09.c        |    9 +-
+ drivers/usb/storage/shuttle_usbat.c |   54 +++---
+ drivers/usb/storage/transport.c     |   95 ++++------
+ drivers/usb/storage/transport.h     |    2 +
+ include/scsi/scsi_eh.h              |   17 ++-
+ 38 files changed, 574 insertions(+), 905 deletions(-)
 
-> I know that those two don't run Linux, but can they connect to a
-> Linux host, or do they also have problems?
 
-They can connect to a Linux host with no problem, now that the 
-appropriate quirks entries have been created.
+If any of these are obsolete and should be removed please
+say so. Save me the work to submit them.
 
-Alan Stern
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-_______________________________________________
-Linux-usb-users@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-users
+Thanks
+Boaz
+ 
