@@ -1,59 +1,69 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 12/22] advansys: Remove a check for an impossible condition
-Date: Sun,  9 Sep 2007 08:56:37 -0600
-Message-ID: <11893498072714-git-send-email-matthew@wil.cx>
-References: <20070909145358.GG6809@parisc-linux.org>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 0/9] scsi_data_buffer structure (in preparation for
+ bidi)
+Date: Sun, 9 Sep 2007 23:46:51 +0900
+Message-ID: <20070909055725N.tomof@acm.org>
+References: <46E3AE15.1060204@panasas.com>
+	<20070909045734Y.tomof@acm.org>
+	<46E3FE8B.8020401@panasas.com>
+Mime-Version: 1.0
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:45163 "EHLO
-	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757250AbXIIO4s (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:56:48 -0400
-In-Reply-To: <20070909145358.GG6809@parisc-linux.org>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:33136 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756164AbXIIOr0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Sep 2007 10:47:26 -0400
+In-Reply-To: <46E3FE8B.8020401@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <matthew@wil.cx>
+To: bharrosh@panasas.com
+Cc: tomof@acm.org, linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
 
-AscExeScsiQueue() has one caller, and it passes the address of a
-variable; this cannot ever be NULL.  This is the only place that ever
-sets ASCQ_ERR_SCSIQ_NULL_PTR, so delete that error code too, as well as
-several other unused ASCQ_ERR codes.
+On Sun, 09 Sep 2007 17:09:15 +0300
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Signed-off-by: Matthew Wilcox <matthew@wil.cx>
----
- drivers/scsi/advansys.c |   12 ------------
- 1 files changed, 0 insertions(+), 12 deletions(-)
+> On Sun, Sep 09 2007 at 16:47 +0300, FUJITA Tomonori <tomof@acm.org> wrote:
+> > On Sun, 09 Sep 2007 11:25:57 +0300
+> > Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > 
+> >> On Fri, Sep 07 2007 at 0:50 +0300, FUJITA Tomonori <tomof@acm.org> wrote:
+> >>> This patchset, which I submitted before, adds a new data structure, 
+> >>> scsi_data_buffer, including everything for data transfer:
+> >>>
+> >>> struct scsi_data_buffer { unsigned length; int resid; short sg_count;
+> >>>  short __sg_count; struct scatterlist *sglist; };
+> >>>
+> >>> One scsi_data_buffer structure is embedded in struct scsi_cmnd for 
+> >>> uni-directional transfer. All the members are just moved from 
+> >>> scsi_cmnd structure to scsi_data_buffer structure. So nothing is
+> >>> added to scsi_cmnd structure.
+> >>>
+> >>> After applying this patchset, llds must use the scsi data accessors.
+> >>> This patchset includes some conversation patches (most of them are
+> >>> patches that Boaz submitted before), however there is still some code
+> >>> that is needed to be converted.
+> >>>
+> >>> Boaz, if you still have other conversation patches, please submit 
+> >>> them.
+> >>>
+> >>> I suspect that nobody cares about some of unconverted llds, which
+> >>> will be not compilable after this patchset. I'll fix ldds that people
+> >>>  complain about.
+> >>>
+> >>> It's difficult to test this patchset in -mm via scsi-misc. Jens, 
+> >>> please send this to -mm via the block tree.
+> >> Sorry for the late response. Just am back from vacation.
+> >>
+> >> Tomo please hold with these patches a bit longer the
+> >> Tree is not ready for it. 
+> > 
+> > Then we have no chance to merge scsi_data_buffer into 2.6.24.
+> > 
+> I hope to submit all/most of the work this week. If we miss the window
+> for 2.6.24 than I'm very sorry for that. But I don't think we are 
+> aloud to break USB storage subsystem.
 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index ef4f679..60a9188 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -520,14 +520,6 @@ typedef struct asc_risc_sg_list_q {
- #define ASCQ_ERR_ISR_RE_ENTRY         0x1A
- #define ASCQ_ERR_CRITICAL_RE_ENTRY    0x1B
- #define ASCQ_ERR_ISR_ON_CRITICAL      0x1C
--#define ASCQ_ERR_SG_LIST_ODD_ADDRESS  0x1D
--#define ASCQ_ERR_XFER_ADDRESS_TOO_BIG 0x1E
--#define ASCQ_ERR_SCSIQ_NULL_PTR       0x1F
--#define ASCQ_ERR_SCSIQ_BAD_NEXT_PTR   0x20
--#define ASCQ_ERR_GET_NUM_OF_FREE_Q    0x21
--#define ASCQ_ERR_SEND_SCSI_Q          0x22
--#define ASCQ_ERR_HOST_REQ_RISC_HALT   0x23
--#define ASCQ_ERR_RESET_SDTR           0x24
- 
- /*
-  * Warning code values are set in ASC_DVC_VAR  'warn_code'.
-@@ -7578,10 +7570,6 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
- 	sg_head = scsiq->sg_head;
- 	if (asc_dvc->err_code != 0)
- 		return (ERR);
--	if (scsiq == (ASC_SCSI_Q *)0L) {
--		AscSetLibErrorCode(asc_dvc, ASCQ_ERR_SCSIQ_NULL_PTR);
--		return (ERR);
--	}
- 	scsiq->q1.q_no = 0;
- 	if ((scsiq->q2.tag_code & ASC_TAG_FLAG_EXTRA_BYTES) == 0) {
- 		scsiq->q1.extra_bytes = 0;
--- 
-1.5.2.4
-
+I'll send patches for USB (in a 'search and replace' way) if you don't
+soon. Except for USB, I suspect that nobody cares about most of the
+unconverted drivers.
