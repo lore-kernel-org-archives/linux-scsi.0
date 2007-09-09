@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 06/22] advansys: Remove `waiting' queue
-Date: Sun,  9 Sep 2007 08:56:31 -0600
-Message-ID: <11893498071713-git-send-email-matthew@wil.cx>
+Subject: [PATCH 13/22] advansys: Remove some custom wrappers
+Date: Sun,  9 Sep 2007 08:56:38 -0600
+Message-ID: <1189349807287-git-send-email-matthew@wil.cx>
 References: <20070909145358.GG6809@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:43203 "EHLO
-	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757293AbXIIO4u (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:43109 "EHLO
+	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757346AbXIIO4u (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:56:50 -0400
 In-Reply-To: <20070909145358.GG6809@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,336 +14,702 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-If the adapter is busy, return the request to the midlayer rather than
-queueing it in the driver.  asc_execute_queue() and asc_dequeue() become
-unused, and we don't need to print out stats on the waiting queue any more.
+ - Replace ASC_ASSERT() with BUG_ON().
+   In a few places, get rid of the assertion altogether -- the ensuing
+   crash will tell us all we need to know.  Use BUG() where it fits better
+   than BUG_ON().  Also fix a fencepost error in advansys_proc_info().
+ - Replace DvcSleepMilliSecond with mdelay.
+   Despite its name using 'sleep', the implementation was a delay.
+   I've marked some places with XXX where we should probably be using
+   msleep instead.  They need to be audited to be sure we can sleep in
+   that context.
+ - Replace DvcDelayMicroSecond with udelay.
+ - Replace DvcDelayNanoSecond with udelay too.
+   All callers were multiples of 1000.
+ - Remove DvcEnterCritical and DvcLeaveCritical.
+   These functions are no-ops, and as the comments said, the spinlock
+   protects the critical sections.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  186 ++--------------------------------------------
- 1 files changed, 9 insertions(+), 177 deletions(-)
+ drivers/scsi/advansys.c |  213 +++++++++++------------------------------------
+ 1 files changed, 49 insertions(+), 164 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index fe289b1..526239a 100644
+index 60a9188..9c5d37d 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -2852,7 +2852,6 @@ typedef struct asc_board {
- 	} dvc_cfg;
- 	ushort asc_n_io_port;	/* Number I/O ports. */
- 	asc_queue_t active;	/* Active command queue */
--	asc_queue_t waiting;	/* Waiting command queue */
- 	asc_queue_t done;	/* Done command queue */
- 	ADV_SCSI_BIT_ID_TYPE init_tidmask;	/* Target init./valid mask */
- 	struct scsi_device *device[ADV_MAX_TID + 1];	/* Mid-Level Scsi Device */
-@@ -2922,10 +2921,8 @@ static int asc_build_req(asc_board_t *, struct scsi_cmnd *);
- static int adv_build_req(asc_board_t *, struct scsi_cmnd *, ADV_SCSI_REQ_Q **);
- static int adv_get_sglist(asc_board_t *, adv_req_t *, struct scsi_cmnd *, int);
- static void asc_enqueue(asc_queue_t *, REQP, int);
--static REQP asc_dequeue(asc_queue_t *, int);
- static REQP asc_dequeue_list(asc_queue_t *, REQP *, int);
- static int asc_rmqueue(asc_queue_t *, REQP);
--static void asc_execute_queue(asc_queue_t *);
- #ifdef CONFIG_PROC_FS
- static int asc_proc_copy(off_t, off_t, char *, int, char *, int);
- static int asc_prt_board_devices(struct Scsi_Host *, char *, int);
-@@ -3274,6 +3271,7 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
- 	asc_board_t *boardp;
- 	ulong flags;
- 	struct scsi_cmnd *done_scp;
-+	int asc_res, result = 0;
+@@ -70,9 +70,6 @@
+  */
+ #warning this driver is still not properly converted to the DMA API
  
- 	shost = scp->device->host;
- 	boardp = ASC_BOARDP(shost);
-@@ -3302,37 +3300,13 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
- 		return 0;
- 	}
- 
--	/*
--	 * Attempt to execute any waiting commands for the board.
--	 */
--	if (!ASC_QUEUE_EMPTY(&boardp->waiting)) {
--		ASC_DBG(1,
--			"advansys_queuecommand: before asc_execute_queue() waiting\n");
--		asc_execute_queue(&boardp->waiting);
--	}
+-/* Enable driver assertions. */
+-#define ADVANSYS_ASSERT
 -
--	/*
--	 * Save the function pointer to Linux mid-level 'done' function
--	 * and attempt to execute the command.
--	 *
--	 * If ASC_NOERROR is returned the request has been added to the
--	 * board's 'active' queue and will be completed by the interrupt
--	 * handler.
--	 *
--	 * If ASC_BUSY is returned add the request to the board's per
--	 * target waiting list. This is the first time the request has
--	 * been tried. Add it to the back of the waiting list. It will be
--	 * retried later.
--	 *
--	 * If an error occurred, the request will have been placed on the
--	 * board's 'done' queue and must be completed before returning.
--	 */
- 	scp->scsi_done = done;
--	switch (asc_execute_scsi_cmnd(scp)) {
-+	asc_res = asc_execute_scsi_cmnd(scp);
-+	switch (asc_res) {
- 	case ASC_NOERROR:
- 		break;
- 	case ASC_BUSY:
--		asc_enqueue(&boardp->waiting, scp, ASC_BACK);
-+		result = SCSI_MLQUEUE_HOST_BUSY;
- 		break;
- 	case ASC_ERROR:
- 	default:
-@@ -3343,7 +3317,7 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
- 	}
- 	spin_unlock_irqrestore(&boardp->lock, flags);
+ /* Enable driver /proc statistics. */
+ #define ADVANSYS_STATS
  
--	return 0;
-+	return result;
- }
+@@ -1121,10 +1118,6 @@ static uchar AscGetChipScsiCtrl(PortAddr);
+ static uchar AscGetChipVersion(PortAddr, ushort);
+ static ASC_DCNT AscLoadMicroCode(PortAddr, ushort, uchar *, ushort);
+ static void AscToggleIRQAct(PortAddr);
+-static inline ulong DvcEnterCritical(void);
+-static inline void DvcLeaveCritical(ulong);
+-static void DvcSleepMilliSecond(ASC_DCNT);
+-static void DvcDelayNanoSecond(ASC_DVC_VAR *, ASC_DCNT);
+ static void DvcPutScsiQ(PortAddr, ushort, uchar *, int);
+ static void DvcGetQinfo(PortAddr, ushort, uchar *, int);
+ static ushort AscInitAsc1000Driver(ASC_DVC_VAR *);
+@@ -2226,15 +2219,8 @@ typedef struct adv_scsi_req_q {
+ 
+ #define ADV_HOST_SCSI_BUS_RESET      0x80	/* Host Initiated SCSI Bus Reset. */
+ 
+-/*
+- * Device drivers must define the following functions.
+- */
+-static inline ulong DvcEnterCritical(void);
+-static inline void DvcLeaveCritical(ulong);
+-static void DvcSleepMilliSecond(ADV_DCNT);
+ static ADV_PADDR DvcGetPhyAddr(ADV_DVC_VAR *, ADV_SCSI_REQ_Q *,
+ 			       uchar *, ASC_SDCNT *, int);
+-static void DvcDelayMicroSecond(ADV_DVC_VAR *, ushort);
  
  /*
-@@ -3488,33 +3462,6 @@ static int advansys_reset(struct scsi_cmnd *scp)
- 		}
- 	}
+  * Adv Library functions available to drivers.
+@@ -2670,24 +2656,6 @@ do { \
+         ASC_DBG_PRT_HEX((lvl), "INQUIRY", (uchar *) (inq), (len));
+ #endif /* ADVANSYS_DEBUG */
  
--	/*
--	 * Dequeue all 'waiting' requests and set the request status
--	 * to DID_RESET.
--	 */
--	if (done_scp == NULL) {
--		done_scp = asc_dequeue_list(&boardp->waiting, &last_scp,
--					    ASC_TID_ALL);
--		for (tscp = done_scp; tscp; tscp = REQPNEXT(tscp)) {
--			tscp->result = HOST_BYTE(DID_RESET);
--		}
--	} else {
--		/* Append to 'done_scp' at the end with 'last_scp'. */
--		ASC_ASSERT(last_scp != NULL);
--		last_scp->host_scribble =
--		    (unsigned char *)asc_dequeue_list(&boardp->waiting,
--						      &new_last_scp,
--						      ASC_TID_ALL);
--		if (new_last_scp != NULL) {
--			ASC_ASSERT(REQPNEXT(last_scp) != NULL);
--			for (tscp = REQPNEXT(last_scp); tscp;
--			     tscp = REQPNEXT(tscp)) {
--				tscp->result = HOST_BYTE(DID_RESET);
--			}
--			last_scp = new_last_scp;
--		}
--	}
+-#ifndef ADVANSYS_ASSERT
+-#define ASC_ASSERT(a)
+-#else /* ADVANSYS_ASSERT */
 -
- 	/* Save the time of the most recently completed reset. */
- 	boardp->last_reset = jiffies;
+-#define ASC_ASSERT(a) \
+-    { \
+-        if (!(a)) { \
+-            printk("ASC_ASSERT() Failure: file %s, line %d\n", \
+-                __FILE__, __LINE__); \
+-        } \
+-    }
+-
+-#endif /* ADVANSYS_ASSERT */
+-
+-/*
+- * --- Driver Structures
+- */
+-
+ #ifdef ADVANSYS_STATS
  
-@@ -3650,7 +3597,7 @@ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
+ /* Per board statistics structure */
+@@ -2949,7 +2917,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	if (ASC_WIDE_BOARD(boardp)) {
+ 		cp = boardp->prtbuf;
+ 		cplen = asc_prt_adv_bios(shost, cp, ASC_PRTBUF_SIZE);
+-		ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
++		BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+ 		cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp,
+ 				  cplen);
+ 		totcnt += cnt;
+@@ -2967,7 +2935,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	cp = boardp->prtbuf;
+ 	cplen = asc_prt_board_devices(shost, cp, ASC_PRTBUF_SIZE);
+-	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
++	BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+ 	leftlen -= cnt;
+@@ -2987,7 +2955,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	} else {
+ 		cplen = asc_prt_adv_board_eeprom(shost, cp, ASC_PRTBUF_SIZE);
  	}
+-	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
++	BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+ 	leftlen -= cnt;
+@@ -3003,7 +2971,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	cp = boardp->prtbuf;
+ 	cplen = asc_prt_driver_conf(shost, cp, ASC_PRTBUF_SIZE);
+-	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
++	BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+ 	leftlen -= cnt;
+@@ -3020,7 +2988,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	 */
+ 	cp = boardp->prtbuf;
+ 	cplen = asc_prt_board_stats(shost, cp, ASC_PRTBUF_SIZE);
+-	ASC_ASSERT(cplen <= ASC_PRTBUF_SIZE);
++	BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+ 	leftlen -= cnt;
+@@ -3042,7 +3010,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	} else {
+ 		cplen = asc_prt_adv_board_info(shost, cp, ASC_PRTBUF_SIZE);
+ 	}
+-	ASC_ASSERT(cplen < ASC_PRTBUF_SIZE);
++	BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+ 	cnt = asc_proc_copy(advoffset, offset, curbuf, leftlen, cp, cplen);
+ 	totcnt += cnt;
+ 	leftlen -= cnt;
+@@ -3139,7 +3107,7 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 			ASC_VERSION, widename, (ulong)adv_dvc_varp->iop_base,
+ 			(ulong)adv_dvc_varp->iop_base + boardp->asc_n_io_port - 1, shost->irq);
+ 	}
+-	ASC_ASSERT(strlen(info) < ASC_INFO_SIZE);
++	BUG_ON(strlen(info) >= ASC_INFO_SIZE);
+ 	ASC_DBG(1, "advansys_info: end\n");
+ 	return info;
+ }
+@@ -4201,7 +4169,6 @@ adv_get_sglist(asc_board_t *boardp, adv_req_t *reqp, struct scsi_cmnd *scp,
+ 				 * Point the previous ADV_SG_BLOCK structure to
+ 				 * the newly allocated ADV_SG_BLOCK structure.
+ 				 */
+-				ASC_ASSERT(prev_sg_block != NULL);
+ 				prev_sg_block->sg_ptr =
+ 				    cpu_to_le32(sg_block_paddr);
+ 			}
+@@ -4262,7 +4229,7 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 	ASC_DBG1(1, "asc_isr_callback: shost 0x%lx\n", (ulong)shost);
+ 
+ 	boardp = ASC_BOARDP(shost);
+-	ASC_ASSERT(asc_dvc_varp == &boardp->dvc_var.asc_dvc_var);
++	BUG_ON(asc_dvc_varp != &boardp->dvc_var.asc_dvc_var);
  
  	/*
--	 * Start waiting requests and create a list of completed requests.
-+	 * Create a list of completed requests.
- 	 *
- 	 * If a reset request is being performed for the board, the reset
- 	 * handler will complete pending requests after it has completed.
-@@ -3659,13 +3606,6 @@ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
- 		ASC_DBG2(1, "advansys_interrupt: done_scp 0x%p, "
- 			 "last_scp 0x%p\n", done_scp, last_scp);
+ 	 * 'qdonep' contains the command's ending status.
+@@ -4408,7 +4375,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 	ASC_DBG1(1, "adv_isr_callback: shost 0x%lx\n", (ulong)shost);
  
--		/* Start any waiting commands for the board. */
--		if (!ASC_QUEUE_EMPTY(&boardp->waiting)) {
--			ASC_DBG(1, "advansys_interrupt: before "
--				"asc_execute_queue()\n");
--			asc_execute_queue(&boardp->waiting);
--		}
--
- 		/*
- 		 * Add to the list of requests that must be completed.
- 		 *
-@@ -3986,8 +3926,8 @@ static void asc_scsi_done_list(struct scsi_cmnd *scp)
-  * If this function returns ASC_NOERROR the request has been enqueued
-  * on the board's 'done' queue and must be completed by the caller.
-  *
-- * If ASC_BUSY is returned the request will be enqueued by the
-- * caller on the target's waiting queue and re-tried later.
-+ * If ASC_BUSY is returned the request will be returned to the midlayer
-+ * and re-tried later.
+ 	boardp = ASC_BOARDP(shost);
+-	ASC_ASSERT(adv_dvc_varp == &boardp->dvc_var.adv_dvc_var);
++	BUG_ON(adv_dvc_varp != &boardp->dvc_var.adv_dvc_var);
+ 
+ 	/*
+ 	 * 'done_status' contains the command's ending status.
+@@ -5738,7 +5705,7 @@ static int asc_prt_line(char *buf, int buflen, char *fmt, ...)
+ 
+ 	va_start(args, fmt);
+ 	ret = vsprintf(s, fmt, args);
+-	ASC_ASSERT(ret < ASC_PRTLINE_SIZE);
++	BUG_ON(ret >= ASC_PRTLINE_SIZE);
+ 	if (buf == NULL) {
+ 		(void)printk(s);
+ 		ret = 0;
+@@ -5756,36 +5723,6 @@ static int asc_prt_line(char *buf, int buflen, char *fmt, ...)
   */
- static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- {
-@@ -4043,10 +3983,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 				"ASC_NOERROR\n");
- 			break;
- 		case ASC_BUSY:
--			/*
--			 * Caller will enqueue request on the target's waiting
--			 * queue and retry later.
--			 */
- 			ASC_STATS(scp->device->host, exe_busy);
- 			break;
- 		case ASC_ERROR:
-@@ -4087,10 +4023,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 			ASC_DBG(1, "asc_execute_scsi_cmnd: adv_build_req "
- 				"ASC_BUSY\n");
- 			/*
--			 * If busy is returned the request has not been
--			 * enqueued.  It will be enqueued by the caller on the
--			 * target's waiting queue and retried later.
--			 *
- 			 * The asc_stats fields 'adv_build_noreq' and
- 			 * 'adv_build_nosg' count wide board busy conditions.
- 			 * They are updated in adv_build_req and
-@@ -4127,10 +4059,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 				"ASC_NOERROR\n");
- 			break;
- 		case ASC_BUSY:
--			/*
--			 * Caller will enqueue request on the target's waiting
--			 * queue and retry later.
--			 */
- 			ASC_STATS(scp->device->host, exe_busy);
- 			break;
- 		case ASC_ERROR:
-@@ -5005,39 +4933,6 @@ static void asc_enqueue(asc_queue_t *ascq, REQP reqp, int flag)
- }
  
  /*
-- * Return first queued 'REQP' on the specified queue for
-- * the specified target device. Clear the 'tidmask' bit for
-- * the device if no more commands are left queued for it.
-- *
-- * 'REQPNEXT(reqp)' returns reqp's next pointer.
+- * Delay for 'n' milliseconds. Don't use the 'jiffies'
+- * global variable which is incremented once every 5 ms
+- * from a timer interrupt, because this function may be
+- * called when interrupts are disabled.
 - */
--static REQP asc_dequeue(asc_queue_t *ascq, int tid)
+-static void DvcSleepMilliSecond(ADV_DCNT n)
 -{
--	REQP reqp;
--
--	ASC_DBG2(3, "asc_dequeue: ascq 0x%lx, tid %d\n", (ulong)ascq, tid);
--	ASC_ASSERT(tid >= 0 && tid <= ADV_MAX_TID);
--	if ((reqp = ascq->q_first[tid]) != NULL) {
--		ASC_ASSERT(ascq->q_tidmask & ADV_TID_TO_TIDMASK(tid));
--		ascq->q_first[tid] = REQPNEXT(reqp);
--		/* If the queue is empty, clear its bit and the last pointer. */
--		if (ascq->q_first[tid] == NULL) {
--			ascq->q_tidmask &= ~ADV_TID_TO_TIDMASK(tid);
--			ASC_ASSERT(ascq->q_last[tid] == reqp);
--			ascq->q_last[tid] = NULL;
--		}
--#ifdef ADVANSYS_STATS
--		/* Maintain request queue statistics. */
--		ascq->q_cur_cnt[tid]--;
--		ASC_ASSERT(ascq->q_cur_cnt[tid] >= 0);
--		REQTIMESTAT("asc_dequeue", ascq, reqp, tid);
--#endif /* ADVANSYS_STATS */
--	}
--	ASC_DBG1(3, "asc_dequeue: reqp 0x%lx\n", (ulong)reqp);
--	return reqp;
+-	ASC_DBG1(4, "DvcSleepMilliSecond: %lu\n", (ulong)n);
+-	mdelay(n);
 -}
 -
 -/*
-  * Return a pointer to a singly linked list of all the requests queued
-  * for 'tid' on the 'asc_queue_t' pointed to by 'ascq'.
-  *
-@@ -5202,45 +5097,6 @@ static int asc_rmqueue(asc_queue_t *ascq, REQP reqp)
- 	return ret;
- }
- 
--/*
-- * Execute as many queued requests as possible for the specified queue.
-- *
-- * Calls asc_execute_scsi_cmnd() to execute a REQP/struct scsi_cmnd.
+- * Currently and inline noop but leave as a placeholder.
+- * Leave DvcEnterCritical() as a noop placeholder.
 - */
--static void asc_execute_queue(asc_queue_t *ascq)
+-static inline ulong DvcEnterCritical(void)
 -{
--	ADV_SCSI_BIT_ID_TYPE scan_tidmask;
--	REQP reqp;
--	int i;
+-	return 0;
+-}
 -
--	ASC_DBG1(1, "asc_execute_queue: ascq 0x%lx\n", (ulong)ascq);
--	/*
--	 * Execute queued commands for devices attached to
--	 * the current board in round-robin fashion.
--	 */
--	scan_tidmask = ascq->q_tidmask;
--	do {
--		for (i = 0; i <= ADV_MAX_TID; i++) {
--			if (scan_tidmask & ADV_TID_TO_TIDMASK(i)) {
--				if ((reqp = asc_dequeue(ascq, i)) == NULL) {
--					scan_tidmask &= ~ADV_TID_TO_TIDMASK(i);
--				} else
--				    if (asc_execute_scsi_cmnd
--					((struct scsi_cmnd *)reqp)
--					== ASC_BUSY) {
--					scan_tidmask &= ~ADV_TID_TO_TIDMASK(i);
--					/*
--					 * The request returned ASC_BUSY. Enqueue at the front of
--					 * target's waiting list to maintain correct ordering.
--					 */
--					asc_enqueue(ascq, reqp, ASC_FRONT);
--				}
--			}
--		}
--	} while (scan_tidmask);
+-/*
+- * Critical sections are all protected by the board spinlock.
+- * Leave DvcLeaveCritical() as a noop placeholder.
+- */
+-static inline void DvcLeaveCritical(ulong flags)
+-{
 -	return;
 -}
 -
- #ifdef CONFIG_PROC_FS
- /*
-  * asc_prt_board_devices()
-@@ -6723,7 +6579,6 @@ asc_prt_target_stats(struct Scsi_Host *shost, int tgt_id, char *cp, int cplen)
- 	ushort chip_scsi_id;
+-/*
+  * void
+  * DvcPutScsiQ(PortAddr iop_base, ushort s_addr, uchar *outbuf, int words)
+  *
+@@ -6317,10 +6254,9 @@ static void asc_prt_adv_sgblock(int sgblockno, ADV_SG_BLOCK *b)
+ 	       (ulong)b, sgblockno);
+ 	printk("  sg_cnt %u, sg_ptr 0x%lx\n",
+ 	       b->sg_cnt, (ulong)le32_to_cpu(b->sg_ptr));
+-	ASC_ASSERT(b->sg_cnt <= NO_OF_SG_PER_BLOCK);
+-	if (b->sg_ptr != 0) {
+-		ASC_ASSERT(b->sg_cnt == NO_OF_SG_PER_BLOCK);
+-	}
++	BUG_ON(b->sg_cnt > NO_OF_SG_PER_BLOCK);
++	if (b->sg_ptr != 0)
++		BUG_ON(b->sg_cnt != NO_OF_SG_PER_BLOCK);
+ 	for (i = 0; i < b->sg_cnt; i++) {
+ 		printk("  [%u]: sg_addr 0x%lx, sg_count 0x%lx\n",
+ 		       i, (ulong)b->sg_list[i].sg_addr,
+@@ -6590,7 +6526,7 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 	uchar scsi_status;
  	asc_board_t *boardp;
- 	asc_queue_t *active;
--	asc_queue_t *waiting;
  
- 	leftlen = cplen;
- 	totlen = len = 0;
-@@ -6732,7 +6587,6 @@ asc_prt_target_stats(struct Scsi_Host *shost, int tgt_id, char *cp, int cplen)
- 	s = &boardp->asc_stats;
+-	ASC_ASSERT(asc_dvc->drv_ptr != NULL);
++	BUG_ON(!asc_dvc->drv_ptr);
+ 	boardp = asc_dvc->drv_ptr;
  
- 	active = &ASC_BOARDP(shost)->active;
--	waiting = &ASC_BOARDP(shost)->waiting;
+ 	iop_base = asc_dvc->iop_base;
+@@ -7199,7 +7135,7 @@ static int AscIsrQDone(ASC_DVC_VAR *asc_dvc)
+ 					AscSetChipControl(iop_base,
+ 							  (uchar)(CC_SCSI_RESET
+ 								  | CC_HALT));
+-					DvcDelayNanoSecond(asc_dvc, 60000);
++					udelay(60);
+ 					AscSetChipControl(iop_base, CC_HALT);
+ 					AscSetChipStatus(iop_base,
+ 							 CIW_CLR_SCSI_RESET_INT);
+@@ -7276,7 +7212,7 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
+ 			saved_ctrl_reg &= (uchar)(~CC_HALT);
+ 			while ((AscGetChipStatus(iop_base) &
+ 				CSW_SCSI_RESET_ACTIVE) && (i-- > 0)) {
+-				DvcSleepMilliSecond(100);
++				mdelay(100);
+ 			}
+ 			AscSetChipControl(iop_base, (CC_CHIP_RESET | CC_HALT));
+ 			AscSetChipControl(iop_base, CC_HALT);
+@@ -7549,7 +7485,6 @@ static uchar _syn_offset_one_disable_cmd[ASC_SYN_OFFSET_ONE_DISABLE_LIST] = {
+ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
+ {
+ 	PortAddr iop_base;
+-	ulong last_int_level;
+ 	int sta;
+ 	int n_q_required;
+ 	int disable_syn_offset_one_fix;
+@@ -7593,9 +7528,7 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
+ 			scsiq->q1.cntl |= (QC_MSG_OUT | QC_URGENT);
+ 		}
+ 	}
+-	last_int_level = DvcEnterCritical();
+ 	if (asc_dvc->in_critical_cnt != 0) {
+-		DvcLeaveCritical(last_int_level);
+ 		AscSetLibErrorCode(asc_dvc, ASCQ_ERR_CRITICAL_RE_ENTRY);
+ 		return (ERR);
+ 	}
+@@ -7603,13 +7536,11 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
+ 	if ((scsiq->q1.cntl & QC_SG_HEAD) != 0) {
+ 		if ((sg_entry_cnt = sg_head->entry_cnt) == 0) {
+ 			asc_dvc->in_critical_cnt--;
+-			DvcLeaveCritical(last_int_level);
+ 			return (ERR);
+ 		}
+ #if !CC_VERY_LONG_SG_LIST
+ 		if (sg_entry_cnt > ASC_MAX_SG_LIST) {
+ 			asc_dvc->in_critical_cnt--;
+-			DvcLeaveCritical(last_int_level);
+ 			return (ERR);
+ 		}
+ #endif /* !CC_VERY_LONG_SG_LIST */
+@@ -7724,7 +7655,6 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
+ 			     AscSendScsiQueue(asc_dvc, scsiq,
+ 					      n_q_required)) == 1) {
+ 				asc_dvc->in_critical_cnt--;
+-				DvcLeaveCritical(last_int_level);
+ 				return (sta);
+ 			}
+ 		}
+@@ -7769,13 +7699,11 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
+ 			if ((sta = AscSendScsiQueue(asc_dvc, scsiq,
+ 						    n_q_required)) == 1) {
+ 				asc_dvc->in_critical_cnt--;
+-				DvcLeaveCritical(last_int_level);
+ 				return (sta);
+ 			}
+ 		}
+ 	}
+ 	asc_dvc->in_critical_cnt--;
+-	DvcLeaveCritical(last_int_level);
+ 	return (sta);
+ }
  
- 	if (ASC_NARROW_BOARD(boardp)) {
- 		chip_scsi_id = boardp->dvc_cfg.asc_dvc_cfg.chip_scsi_id;
-@@ -6746,8 +6600,7 @@ asc_prt_target_stats(struct Scsi_Host *shost, int tgt_id, char *cp, int cplen)
+@@ -8308,7 +8236,7 @@ static int AscHostReqRiscHalt(PortAddr iop_base)
+ 			sta = 1;
+ 			break;
+ 		}
+-		DvcSleepMilliSecond(100);
++		mdelay(100);
+ 	} while (count++ < 20);
+ 	AscWriteLramByte(iop_base, ASCV_STOP_CODE_B, saved_stop_code);
+ 	return (sta);
+@@ -8326,22 +8254,12 @@ static int AscStopQueueExe(PortAddr iop_base)
+ 			    ASC_STOP_ACK_RISC_STOP) {
+ 				return (1);
+ 			}
+-			DvcSleepMilliSecond(100);
++			mdelay(100);
+ 		} while (count++ < 20);
+ 	}
+ 	return (0);
+ }
+ 
+-static void DvcDelayMicroSecond(ADV_DVC_VAR *asc_dvc, ushort micro_sec)
+-{
+-	udelay(micro_sec);
+-}
+-
+-static void DvcDelayNanoSecond(ASC_DVC_VAR *asc_dvc, ASC_DCNT nano_sec)
+-{
+-	udelay((nano_sec + 999) / 1000);
+-}
+-
+ static int AscStartChip(PortAddr iop_base)
+ {
+ 	AscSetChipControl(iop_base, 0);
+@@ -8460,16 +8378,16 @@ static int AscResetChipAndScsiBus(ASC_DVC_VAR *asc_dvc)
+ 	iop_base = asc_dvc->iop_base;
+ 	while ((AscGetChipStatus(iop_base) & CSW_SCSI_RESET_ACTIVE)
+ 	       && (i-- > 0)) {
+-		DvcSleepMilliSecond(100);
++		mdelay(100);
+ 	}
+ 	AscStopChip(iop_base);
+ 	AscSetChipControl(iop_base, CC_CHIP_RESET | CC_SCSI_RESET | CC_HALT);
+-	DvcDelayNanoSecond(asc_dvc, 60000);
++	udelay(60);
+ 	AscSetChipIH(iop_base, INS_RFLAG_WTM);
+ 	AscSetChipIH(iop_base, INS_HALT);
+ 	AscSetChipControl(iop_base, CC_CHIP_RESET | CC_HALT);
+ 	AscSetChipControl(iop_base, CC_HALT);
+-	DvcSleepMilliSecond(200);
++	mdelay(200);
+ 	AscSetChipStatus(iop_base, CIW_CLR_SCSI_RESET_INT);
+ 	AscSetChipStatus(iop_base, 0);
+ 	return (AscIsChipHalted(iop_base));
+@@ -8711,8 +8629,7 @@ static ushort AscInitAsc1000Driver(ASC_DVC_VAR *asc_dvc)
+ 	if ((asc_dvc->dvc_cntl & ASC_CNTL_RESET_SCSI) &&
+ 	    !(asc_dvc->init_state & ASC_INIT_RESET_SCSI_DONE)) {
+ 		AscResetChipAndScsiBus(asc_dvc);
+-		DvcSleepMilliSecond((ASC_DCNT)
+-				    ((ushort)asc_dvc->scsi_reset_wait * 1000));
++		mdelay(asc_dvc->scsi_reset_wait * 1000); /* XXX: msleep? */
+ 	}
+ 	asc_dvc->init_state |= ASC_INIT_STATE_BEG_LOAD_MC;
+ 	if (asc_dvc->err_code != 0)
+@@ -8869,8 +8786,7 @@ static ushort __devinit AscInitFromEEP(ASC_DVC_VAR *asc_dvc)
+ 	    (AscGetChipScsiCtrl(iop_base) != 0)) {
+ 		asc_dvc->init_state |= ASC_INIT_RESET_SCSI_DONE;
+ 		AscResetChipAndScsiBus(asc_dvc);
+-		DvcSleepMilliSecond((ASC_DCNT)
+-				    ((ushort)asc_dvc->scsi_reset_wait * 1000));
++		mdelay(asc_dvc->scsi_reset_wait * 1000); /* XXX: msleep? */
+ 	}
+ 	if (AscIsChipHalted(iop_base) == FALSE) {
+ 		asc_dvc->err_code |= ASC_IERR_START_STOP_CHIP;
+@@ -9084,7 +9000,7 @@ static int __devinit AscTestExternalLram(ASC_DVC_VAR *asc_dvc)
+ 	saved_word = AscReadLramWord(iop_base, q_addr);
+ 	AscSetChipLramAddr(iop_base, q_addr);
+ 	AscSetChipLramData(iop_base, 0x55AA);
+-	DvcSleepMilliSecond(10);
++	mdelay(10);
+ 	AscSetChipLramAddr(iop_base, q_addr);
+ 	if (AscGetChipLramData(iop_base) == 0x55AA) {
+ 		sta = 1;
+@@ -9101,7 +9017,7 @@ static int __devinit AscWriteEEPCmdReg(PortAddr iop_base, uchar cmd_reg)
+ 	retry = 0;
+ 	while (TRUE) {
+ 		AscSetChipEEPCmd(iop_base, cmd_reg);
+-		DvcSleepMilliSecond(1);
++		mdelay(1);
+ 		read_back = AscGetChipEEPCmd(iop_base);
+ 		if (read_back == cmd_reg) {
+ 			return (1);
+@@ -9120,7 +9036,7 @@ static int __devinit AscWriteEEPDataReg(PortAddr iop_base, ushort data_reg)
+ 	retry = 0;
+ 	while (TRUE) {
+ 		AscSetChipEEPData(iop_base, data_reg);
+-		DvcSleepMilliSecond(1);
++		mdelay(1);
+ 		read_back = AscGetChipEEPData(iop_base);
+ 		if (read_back == data_reg) {
+ 			return (1);
+@@ -9133,13 +9049,13 @@ static int __devinit AscWriteEEPDataReg(PortAddr iop_base, ushort data_reg)
+ 
+ static void __devinit AscWaitEEPRead(void)
+ {
+-	DvcSleepMilliSecond(1);
++	mdelay(1);
+ 	return;
+ }
+ 
+ static void __devinit AscWaitEEPWrite(void)
+ {
+-	DvcSleepMilliSecond(20);
++	mdelay(20);
+ 	return;
+ }
+ 
+@@ -11364,7 +11280,7 @@ AdvInitGetConfig(struct pci_dev *pdev, asc_board_t *boardp)
+ 		 */
+ 		AdvWriteWordRegister(iop_base, IOPW_CTRL_REG,
+ 				     ADV_CTRL_REG_CMD_RESET);
+-		DvcSleepMilliSecond(100);
++		mdelay(100);
+ 		AdvWriteWordRegister(iop_base, IOPW_CTRL_REG,
+ 				     ADV_CTRL_REG_CMD_WR_IO_REG);
+ 
+@@ -12048,7 +11964,7 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
+ 	 */
+ 	for (i = 0; i < 2; i++) {
+ 		AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, PRE_TEST_MODE);
+-		DvcSleepMilliSecond(10);	/* Wait for 10ms before reading back. */
++		mdelay(10);	/* Wait for 10ms before reading back. */
+ 		byte = AdvReadByteRegister(iop_base, IOPB_RAM_BIST);
+ 		if ((byte & RAM_TEST_DONE) == 0
+ 		    || (byte & 0x0F) != PRE_TEST_VALUE) {
+@@ -12057,7 +11973,7 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
+ 		}
+ 
+ 		AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, NORMAL_MODE);
+-		DvcSleepMilliSecond(10);	/* Wait for 10ms before reading back. */
++		mdelay(10);	/* Wait for 10ms before reading back. */
+ 		if (AdvReadByteRegister(iop_base, IOPB_RAM_BIST)
+ 		    != NORMAL_VALUE) {
+ 			asc_dvc->err_code = ASC_IERR_BIST_PRE_TEST;
+@@ -12073,7 +11989,7 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
+ 	 * err_code, and return an error.
+ 	 */
+ 	AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, RAM_TEST_MODE);
+-	DvcSleepMilliSecond(10);	/* Wait for 10ms before checking status. */
++	mdelay(10);	/* Wait for 10ms before checking status. */
+ 
+ 	byte = AdvReadByteRegister(iop_base, IOPB_RAM_BIST);
+ 	if ((byte & RAM_TEST_DONE) == 0 || (byte & RAM_TEST_STATUS) != 0) {
+@@ -12529,7 +12445,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
+ 	 */
+ 	for (i = 0; i < 2; i++) {
+ 		AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, PRE_TEST_MODE);
+-		DvcSleepMilliSecond(10);	/* Wait for 10ms before reading back. */
++		mdelay(10);	/* Wait for 10ms before reading back. */
+ 		byte = AdvReadByteRegister(iop_base, IOPB_RAM_BIST);
+ 		if ((byte & RAM_TEST_DONE) == 0
+ 		    || (byte & 0x0F) != PRE_TEST_VALUE) {
+@@ -12538,7 +12454,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
+ 		}
+ 
+ 		AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, NORMAL_MODE);
+-		DvcSleepMilliSecond(10);	/* Wait for 10ms before reading back. */
++		mdelay(10);	/* Wait for 10ms before reading back. */
+ 		if (AdvReadByteRegister(iop_base, IOPB_RAM_BIST)
+ 		    != NORMAL_VALUE) {
+ 			asc_dvc->err_code = ASC_IERR_BIST_PRE_TEST;
+@@ -12554,7 +12470,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
+ 	 * err_code, and return an error.
+ 	 */
+ 	AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, RAM_TEST_MODE);
+-	DvcSleepMilliSecond(10);	/* Wait for 10ms before checking status. */
++	mdelay(10);	/* Wait for 10ms before checking status. */
+ 
+ 	byte = AdvReadByteRegister(iop_base, IOPB_RAM_BIST);
+ 	if ((byte & RAM_TEST_DONE) == 0 || (byte & RAM_TEST_STATUS) != 0) {
+@@ -13645,12 +13561,11 @@ static void __devinit AdvWaitEEPCmd(AdvPortAddr iop_base)
+ 		    ASC_EEP_CMD_DONE) {
+ 			break;
+ 		}
+-		DvcSleepMilliSecond(1);
++		mdelay(1);
+ 	}
+ 	if ((AdvReadWordRegister(iop_base, IOPW_EE_CMD) & ASC_EEP_CMD_DONE) ==
+-	    0) {
+-		ASC_ASSERT(0);
+-	}
++	    0)
++		BUG();
+ 	return;
+ }
+ 
+@@ -13688,7 +13603,7 @@ AdvSet3550EEPConfig(AdvPortAddr iop_base, ADVEEP_3550_CONFIG *cfg_buf)
+ 		AdvWriteWordRegister(iop_base, IOPW_EE_CMD,
+ 				     ASC_EEP_CMD_WRITE | addr);
+ 		AdvWaitEEPCmd(iop_base);
+-		DvcSleepMilliSecond(ADV_EEP_DELAY_MS);
++		mdelay(ADV_EEP_DELAY_MS);
  	}
  
- 	do {
--		if (active->q_tot_cnt[tgt_id] > 0
--		    || waiting->q_tot_cnt[tgt_id] > 0) {
-+		if (active->q_tot_cnt[tgt_id] > 0) {
- 			len = asc_prt_line(cp, leftlen, " target %d\n", tgt_id);
- 			ASC_PRT_NEXT();
+ 	/*
+@@ -13756,7 +13671,7 @@ AdvSet38C0800EEPConfig(AdvPortAddr iop_base, ADVEEP_38C0800_CONFIG *cfg_buf)
+ 		AdvWriteWordRegister(iop_base, IOPW_EE_CMD,
+ 				     ASC_EEP_CMD_WRITE | addr);
+ 		AdvWaitEEPCmd(iop_base);
+-		DvcSleepMilliSecond(ADV_EEP_DELAY_MS);
++		mdelay(ADV_EEP_DELAY_MS);
+ 	}
  
-@@ -6771,27 +6624,6 @@ asc_prt_target_stats(struct Scsi_Host *shost, int tgt_id, char *cp, int cplen)
- 								q_tot_cnt
- 								[tgt_id]));
- 			ASC_PRT_NEXT();
+ 	/*
+@@ -13824,7 +13739,7 @@ AdvSet38C1600EEPConfig(AdvPortAddr iop_base, ADVEEP_38C1600_CONFIG *cfg_buf)
+ 		AdvWriteWordRegister(iop_base, IOPW_EE_CMD,
+ 				     ASC_EEP_CMD_WRITE | addr);
+ 		AdvWaitEEPCmd(iop_base);
+-		DvcSleepMilliSecond(ADV_EEP_DELAY_MS);
++		mdelay(ADV_EEP_DELAY_MS);
+ 	}
+ 
+ 	/*
+@@ -13882,14 +13797,11 @@ AdvSet38C1600EEPConfig(AdvPortAddr iop_base, ADVEEP_38C1600_CONFIG *cfg_buf)
+  */
+ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ {
+-	ulong last_int_level;
+ 	AdvPortAddr iop_base;
+ 	ADV_DCNT req_size;
+ 	ADV_PADDR req_paddr;
+ 	ADV_CARR_T *new_carrp;
+ 
+-	ASC_ASSERT(scsiq != NULL);	/* 'scsiq' should never be NULL. */
 -
--			len = asc_prt_line(cp, leftlen,
--					   "   waiting: cnt [cur %d, max %d, tot %u], time [min %u, max %u, avg %lu.%01lu]\n",
--					   waiting->q_cur_cnt[tgt_id],
--					   waiting->q_max_cnt[tgt_id],
--					   waiting->q_tot_cnt[tgt_id],
--					   waiting->q_min_tim[tgt_id],
--					   waiting->q_max_tim[tgt_id],
--					   (waiting->q_tot_cnt[tgt_id] ==
--					    0) ? 0 : (waiting->
--						      q_tot_tim[tgt_id] /
--						      waiting->
--						      q_tot_cnt[tgt_id]),
--					   (waiting->q_tot_cnt[tgt_id] ==
--					    0) ? 0 : ASC_TENTHS(waiting->
--								q_tot_tim
--								[tgt_id],
--								waiting->
--								q_tot_cnt
--								[tgt_id]));
--			ASC_PRT_NEXT();
+ 	/*
+ 	 * The ADV_SCSI_REQ_Q 'target_id' field should never exceed ADV_MAX_TID.
+ 	 */
+@@ -13901,14 +13813,11 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 
+ 	iop_base = asc_dvc->iop_base;
+ 
+-	last_int_level = DvcEnterCritical();
+-
+ 	/*
+ 	 * Allocate a carrier ensuring at least one carrier always
+ 	 * remains on the freelist and initialize fields.
+ 	 */
+ 	if ((new_carrp = asc_dvc->carr_freelist) == NULL) {
+-		DvcLeaveCritical(last_int_level);
+ 		return ADV_BUSY;
+ 	}
+ 	asc_dvc->carr_freelist = (ADV_CARR_T *)
+@@ -13931,8 +13840,8 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 	req_paddr = DvcGetPhyAddr(asc_dvc, scsiq, (uchar *)scsiq,
+ 				  (ADV_SDCNT *)&req_size, ADV_IS_SCSIQ_FLAG);
+ 
+-	ASC_ASSERT(ADV_32BALIGN(req_paddr) == req_paddr);
+-	ASC_ASSERT(req_size >= sizeof(ADV_SCSI_REQ_Q));
++	BUG_ON(req_paddr & 31);
++	BUG_ON(req_size < sizeof(ADV_SCSI_REQ_Q));
+ 
+ 	/* Wait for assertion before making little-endian */
+ 	req_paddr = cpu_to_le32(req_paddr);
+@@ -13991,8 +13900,6 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+ 				      le32_to_cpu(new_carrp->carr_pa));
+ 	}
+ 
+-	DvcLeaveCritical(last_int_level);
+-
+ 	return ADV_SUCCESS;
+ }
+ 
+@@ -14024,7 +13931,7 @@ static int AdvResetSB(ADV_DVC_VAR *asc_dvc)
+ 	 * The hold time delay is done on the host because the RISC has no
+ 	 * microsecond accurate timer.
+ 	 */
+-	DvcDelayMicroSecond(asc_dvc, (ushort)ASC_SCSI_RESET_HOLD_TIME_US);
++	udelay(ASC_SCSI_RESET_HOLD_TIME_US);
+ 
+ 	/*
+ 	 * Send the SCSI Bus Reset end idle command which de-asserts
+@@ -14035,7 +13942,7 @@ static int AdvResetSB(ADV_DVC_VAR *asc_dvc)
+ 		return status;
+ 	}
+ 
+-	DvcSleepMilliSecond((ADV_DCNT)asc_dvc->scsi_reset_wait * 1000);
++	mdelay(asc_dvc->scsi_reset_wait * 1000);	/* XXX: msleep? */
+ 
+ 	return status;
+ }
+@@ -14086,7 +13993,7 @@ static int AdvResetChipAndSB(ADV_DVC_VAR *asc_dvc)
+ 	 */
+ 	AdvWriteWordRegister(iop_base, IOPW_RISC_CSR, ADV_RISC_CSR_STOP);
+ 	AdvWriteWordRegister(iop_base, IOPW_CTRL_REG, ADV_CTRL_REG_CMD_RESET);
+-	DvcSleepMilliSecond(100);
++	mdelay(100);
+ 	AdvWriteWordRegister(iop_base, IOPW_CTRL_REG,
+ 			     ADV_CTRL_REG_CMD_WR_IO_REG);
+ 
+@@ -14158,11 +14065,8 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 	ushort target_bit;
+ 	ADV_CARR_T *free_carrp;
+ 	ADV_VADDR irq_next_vpa;
+-	int flags;
+ 	ADV_SCSI_REQ_Q *scsiq;
+ 
+-	flags = DvcEnterCritical();
+-
+ 	iop_base = asc_dvc->iop_base;
+ 
+ 	/* Reading the register clears the interrupt. */
+@@ -14170,7 +14074,6 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 
+ 	if ((int_stat & (ADV_INTR_STATUS_INTRA | ADV_INTR_STATUS_INTRB |
+ 			 ADV_INTR_STATUS_INTRC)) == 0) {
+-		DvcLeaveCritical(flags);
+ 		return ADV_FALSE;
+ 	}
+ 
+@@ -14243,7 +14146,6 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 		asc_dvc->carr_freelist = free_carrp;
+ 		asc_dvc->carr_pending_cnt--;
+ 
+-		ASC_ASSERT(scsiq != NULL);
+ 		target_bit = ADV_TID_TO_TIDMASK(scsiq->target_id);
+ 
+ 		/*
+@@ -14264,18 +14166,7 @@ static int AdvISR(ADV_DVC_VAR *asc_dvc)
+ 		 * Fall through and continue processing other completed
+ 		 * requests...
+ 		 */
+-
+-		/*
+-		 * Disable interrupts again in case the driver inadvertently
+-		 * enabled interrupts in its callback function.
+-		 *
+-		 * The DvcEnterCritical() return value is ignored, because
+-		 * the 'flags' saved when AdvISR() was first entered will be
+-		 * used to restore the interrupt flag on exit.
+-		 */
+-		(void)DvcEnterCritical();
+ 	}
+-	DvcLeaveCritical(flags);
+ 	return ADV_TRUE;
+ }
+ 
+@@ -14297,13 +14188,10 @@ static int
+ AdvSendIdleCmd(ADV_DVC_VAR *asc_dvc,
+ 	       ushort idle_cmd, ADV_DCNT idle_cmd_parameter)
+ {
+-	ulong last_int_level;
+ 	int result;
+ 	ADV_DCNT i, j;
+ 	AdvPortAddr iop_base;
+ 
+-	last_int_level = DvcEnterCritical();
+-
+ 	iop_base = asc_dvc->iop_base;
+ 
+ 	/*
+@@ -14343,16 +14231,13 @@ AdvSendIdleCmd(ADV_DVC_VAR *asc_dvc,
+ 		for (j = 0; j < SCSI_US_PER_MSEC; j++) {
+ 			AdvReadWordLram(iop_base, ASC_MC_IDLE_CMD_STATUS,
+ 					result);
+-			if (result != 0) {
+-				DvcLeaveCritical(last_int_level);
++			if (result != 0)
+ 				return result;
+-			}
+-			DvcDelayMicroSecond(asc_dvc, (ushort)1);
++			udelay(1);
  		}
- 	} while (0);
+ 	}
+ 
+-	ASC_ASSERT(0);		/* The idle command should never timeout. */
+-	DvcLeaveCritical(last_int_level);
++	BUG();		/* The idle command should never timeout. */
+ 	return ADV_ERROR;
+ }
  
 -- 
 1.5.2.4
