@@ -1,189 +1,82 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 18/22] advansys: Restructure asc_execute_scsi_cmnd()
-Date: Sun,  9 Sep 2007 08:56:43 -0600
-Message-ID: <11893498071486-git-send-email-matthew@wil.cx>
+Subject: [PATCH 10/22] advansys: Enable interrupts earlier in queuecommand
+Date: Sun,  9 Sep 2007 08:56:35 -0600
+Message-ID: <1189349807463-git-send-email-matthew@wil.cx>
 References: <20070909145358.GG6809@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:53989 "EHLO
-	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757307AbXIIO4t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:56:49 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:45154 "EHLO
+	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757292AbXIIO4s (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:56:48 -0400
 In-Reply-To: <20070909145358.GG6809@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-The wide and narrow boards share identical handling of the return value,
-except for some trivial error messages.  Move the handling to the common
-end of the function.  Also move variable declarations to the arms of
-the `if' that they're used in and delete some pointless comments.
+Move as much as possible outside the critical section in queuecommand, eg:
+ - Set the scsi_done field before acquiring the lock
+ - Call asc_scsi_done after dropping the lock
+
+Also remove a comment suggesting we should enable interrupts (now we do)
+and do some minor reformatting for readability.
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  131 ++++++++++++++---------------------------------
- 1 files changed, 39 insertions(+), 92 deletions(-)
+ drivers/scsi/advansys.c |   23 +++++++++++------------
+ 1 files changed, 11 insertions(+), 12 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index f1f2bfe..36c557f 100644
+index 67cdfe6..d7bc0cf 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -11331,80 +11331,26 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+@@ -3176,23 +3176,24 @@ static void asc_scsi_done(struct scsi_cmnd *scp)
+  * in the 'scp' result field.
   */
- static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ static int
+-advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
++advansys_queuecommand(struct scsi_cmnd *scp, void (*done)(struct scsi_cmnd *))
  {
+-	struct Scsi_Host *shost;
 -	asc_board_t *boardp;
--	ASC_DVC_VAR *asc_dvc_varp;
--	ADV_DVC_VAR *adv_dvc_varp;
--	ADV_SCSI_REQ_Q *adv_scsiqp;
--	int ret;
-+	int ret, err_code;
-+	asc_board_t *boardp = ASC_BOARDP(scp->device->host);
+-	ulong flags;
++	struct Scsi_Host *shost = scp->device->host;
++	asc_board_t *boardp = ASC_BOARDP(shost);
++	unsigned long flags;
+ 	int asc_res, result = 0;
  
--	ASC_DBG2(1, "asc_execute_scsi_cmnd: scp 0x%lx, done 0x%lx\n",
--		 (ulong)scp, (ulong)scp->scsi_done);
+-	shost = scp->device->host;
+-	boardp = ASC_BOARDP(shost);
+ 	ASC_STATS(shost, queuecommand);
++	scp->scsi_done = done;
+ 
+-	/* host_lock taken by mid-level prior to call but need to protect */
+-	/* against own ISR */
++	/*
++	 * host_lock taken by mid-level prior to call, but need
++	 * to protect against own ISR
++	 */
+ 	spin_lock_irqsave(&boardp->lock, flags);
 -
--	boardp = ASC_BOARDP(scp->device->host);
-+	ASC_DBG1(1, "asc_execute_scsi_cmnd: scp 0x%p\n", scp);
- 
- 	if (ASC_NARROW_BOARD(boardp)) {
--		/*
--		 * Build and execute Narrow Board request.
--		 */
--
--		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
-+		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
- 
--		/*
--		 * Build Asc Library request structure using the
--		 * global structures 'asc_scsi_req' and 'asc_sg_head'.
--		 *
--		 * If an error is returned, then the request has been
--		 * queued on the board done queue. It will be completed
--		 * by the caller.
--		 *
--		 * asc_build_req() can not return ASC_BUSY.
--		 */
-+		/* asc_build_req() can not return ASC_BUSY. */
- 		if (asc_build_req(boardp, scp) == ASC_ERROR) {
- 			ASC_STATS(scp->device->host, build_error);
- 			return ASC_ERROR;
- 		}
- 
--		switch (ret = AscExeScsiQueue(asc_dvc_varp, &asc_scsi_q)) {
--		case ASC_NOERROR:
--			ASC_STATS(scp->device->host, exe_noerror);
--			/*
--			 * Increment monotonically increasing per device
--			 * successful request counter. Wrapping doesn't matter.
--			 */
--			boardp->reqcnt[scp->device->id]++;
--			ASC_DBG(1, "asc_execute_scsi_cmnd: AscExeScsiQueue(), "
--				"ASC_NOERROR\n");
--			break;
--		case ASC_BUSY:
--			ASC_STATS(scp->device->host, exe_busy);
--			break;
--		case ASC_ERROR:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AscExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
--				boardp->id, asc_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_error);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		default:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AscExeScsiQueue() unknown, err_code 0x%x\n",
--				boardp->id, asc_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_unknown);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		}
-+		ret = AscExeScsiQueue(asc_dvc, &asc_scsi_q);
-+		err_code = asc_dvc->err_code;
- 	} else {
--		/*
--		 * Build and execute Wide Board request.
--		 */
--		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
-+		ADV_DVC_VAR *adv_dvc = &boardp->dvc_var.adv_dvc_var;
-+		ADV_SCSI_REQ_Q *adv_scsiqp;
- 
--		/*
--		 * Build and get a pointer to an Adv Library request structure.
--		 *
--		 * If the request is successfully built then send it below,
--		 * otherwise return with an error.
--		 */
- 		switch (adv_build_req(boardp, scp, &adv_scsiqp)) {
- 		case ASC_NOERROR:
- 			ASC_DBG(3, "asc_execute_scsi_cmnd: adv_build_req "
-@@ -11428,35 +11374,36 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 			return ASC_ERROR;
- 		}
- 
--		switch (ret = AdvExeScsiQueue(adv_dvc_varp, adv_scsiqp)) {
--		case ASC_NOERROR:
--			ASC_STATS(scp->device->host, exe_noerror);
--			/*
--			 * Increment monotonically increasing per device
--			 * successful request counter. Wrapping doesn't matter.
--			 */
--			boardp->reqcnt[scp->device->id]++;
--			ASC_DBG(1, "asc_execute_scsi_cmnd: AdvExeScsiQueue(), "
--				"ASC_NOERROR\n");
--			break;
--		case ASC_BUSY:
--			ASC_STATS(scp->device->host, exe_busy);
--			break;
--		case ASC_ERROR:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AdvExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
--				boardp->id, adv_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_error);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		default:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AdvExeScsiQueue() unknown, err_code 0x%x\n",
--				boardp->id, adv_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_unknown);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		}
-+		ret = AdvExeScsiQueue(adv_dvc, adv_scsiqp);
-+		err_code = adv_dvc->err_code;
-+	}
+-	scp->scsi_done = done;
+ 	asc_res = asc_execute_scsi_cmnd(scp);
++	spin_unlock_irqrestore(&boardp->lock, flags);
 +
-+	switch (ret) {
-+	case ASC_NOERROR:
-+		ASC_STATS(scp->device->host, exe_noerror);
-+		/*
-+		 * Increment monotonically increasing per device
-+		 * successful request counter. Wrapping doesn't matter.
-+		 */
-+		boardp->reqcnt[scp->device->id]++;
-+		ASC_DBG(1, "asc_execute_scsi_cmnd: ExeScsiQueue(), "
-+			"ASC_NOERROR\n");
-+		break;
-+	case ASC_BUSY:
-+		ASC_STATS(scp->device->host, exe_busy);
-+		break;
-+	case ASC_ERROR:
-+		ASC_PRINT2("asc_execute_scsi_cmnd: board %d: ExeScsiQueue() "
-+			   "ASC_ERROR, err_code 0x%x\n", boardp->id, err_code);
-+		ASC_STATS(scp->device->host, exe_error);
-+		scp->result = HOST_BYTE(DID_ERROR);
-+		break;
-+	default:
-+		ASC_PRINT2("asc_execute_scsi_cmnd: board %d: ExeScsiQueue() "
-+			   "unknown, err_code 0x%x\n", boardp->id, err_code);
-+		ASC_STATS(scp->device->host, exe_unknown);
-+		scp->result = HOST_BYTE(DID_ERROR);
-+		break;
+ 	switch (asc_res) {
+ 	case ASC_NOERROR:
+ 		break;
+@@ -3201,11 +3202,9 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
+ 		break;
+ 	case ASC_ERROR:
+ 	default:
+-		/* Interrupts could be enabled here. */
+ 		asc_scsi_done(scp);
+ 		break;
  	}
+-	spin_unlock_irqrestore(&boardp->lock, flags);
  
- 	ASC_DBG(1, "asc_execute_scsi_cmnd: end\n");
+ 	return result;
+ }
 -- 
 1.5.2.4
 
