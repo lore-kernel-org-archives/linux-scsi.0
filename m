@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 03/22] advansys: Create AdvLoadMicrocode
-Date: Sun,  9 Sep 2007 08:56:28 -0600
-Message-ID: <11893498071397-git-send-email-matthew@wil.cx>
+Subject: [PATCH 08/22] advansys: Remove `done' queue
+Date: Sun,  9 Sep 2007 08:56:33 -0600
+Message-ID: <11893498073763-git-send-email-matthew@wil.cx>
 References: <20070909145358.GG6809@parisc-linux.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:50172 "EHLO
-	mail-01.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757287AbXIIO4s (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:43073 "EHLO
+	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757280AbXIIO4s (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:56:48 -0400
 In-Reply-To: <20070909145358.GG6809@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,549 +14,302 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-Split AdvLoadMicrocode out of AdvInitAsc3550Driver, AdvInitAsc38C0800Driver
-and AdvInitAsc38C1600Driver.
+ - Move the guts of asc_scsi_done_list() into a new function, asc_scsi_done.
+ - Call asc_scsi_done() in asc_isr_callback() and adv_isr_callback().  The
+   comment was wrong; scsi_done cannot enable interrupts.
+ - All other places which queued an scp on the done list are error paths
+   for queuecommand, and so we can just call asc_scsi_done() in queuecommand
+   if we receive an error.
+ - We no longer need to keep a list of done requests in advansys_interrupt
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |  382 +++++++++++++----------------------------------
- 1 files changed, 107 insertions(+), 275 deletions(-)
+ drivers/scsi/advansys.c |  120 +++++++++-------------------------------------
+ 1 files changed, 24 insertions(+), 96 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index c216d6a..0f02f3f 100644
+index cd17f28..90f05c5 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -12932,6 +12932,78 @@ static void AdvBuildCarrierFreelist(struct adv_dvc_var *asc_dvc)
+@@ -2852,7 +2852,6 @@ typedef struct asc_board {
+ 	} dvc_cfg;
+ 	ushort asc_n_io_port;	/* Number I/O ports. */
+ 	asc_queue_t active;	/* Active command queue */
+-	asc_queue_t done;	/* Done command queue */
+ 	ADV_SCSI_BIT_ID_TYPE init_tidmask;	/* Target init./valid mask */
+ 	struct scsi_device *device[ADV_MAX_TID + 1];	/* Mid-Level Scsi Device */
+ 	ushort reqcnt[ADV_MAX_TID + 1];	/* Starvation request count */
+@@ -3258,6 +3257,23 @@ static const char *advansys_info(struct Scsi_Host *shost)
+ 	return info;
  }
  
- /*
-+ * Load the Microcode
-+ *
-+ * Write the microcode image to RISC memory starting at address 0.
-+ *
-+ * The microcode is stored compressed in the following format:
-+ *
-+ *  254 word (508 byte) table indexed by byte code followed
-+ *  by the following byte codes:
-+ *
-+ *    1-Byte Code:
-+ *      00: Emit word 0 in table.
-+ *      01: Emit word 1 in table.
-+ *      .
-+ *      FD: Emit word 253 in table.
-+ *
-+ *    Multi-Byte Code:
-+ *      FE WW WW: (3 byte code) Word to emit is the next word WW WW.
-+ *      FF BB WW WW: (4 byte code) Emit BB count times next word WW WW.
-+ *
-+ * Returns 0 or an error if the checksum doesn't match
-+ */
-+static int AdvLoadMicrocode(AdvPortAddr iop_base, unsigned char *buf, int size,
-+			    int memsize, int chksum)
++static void asc_scsi_done(struct scsi_cmnd *scp)
 +{
-+	int i, j, end, len = 0;
-+	ADV_DCNT sum;
++	struct asc_board *boardp = ASC_BOARDP(scp->device->host);
 +
-+	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
++	if (scp->use_sg)
++		dma_unmap_sg(boardp->dev,
++			     (struct scatterlist *)scp->request_buffer,
++			     scp->use_sg, scp->sc_data_direction);
++	else if (scp->request_bufflen)
++		dma_unmap_single(boardp->dev, scp->SCp.dma_handle,
++				 scp->request_bufflen, scp->sc_data_direction);
 +
-+	for (i = 253 * 2; i < size; i++) {
-+		if (buf[i] == 0xff) {
-+			unsigned short word = (buf[i + 3] << 8) | buf[i + 2];
-+			for (j = 0; j < buf[i + 1]; j++) {
-+				AdvWriteWordAutoIncLram(iop_base, word);
-+				len += 2;
-+			}
-+			i += 3;
-+		} else if (buf[i] == 0xfe) {
-+			unsigned short word = (buf[i + 2] << 8) | buf[i + 1];
-+			AdvWriteWordAutoIncLram(iop_base, word);
-+			i += 2;
-+			len += 2;
-+		} else {
-+			unsigned char off = buf[i] * 2;
-+			unsigned short word = (buf[off + 1] << 8) | buf[off];
-+			AdvWriteWordAutoIncLram(iop_base, word);
-+			len += 2;
-+		}
-+	}
++	ASC_STATS(scp->device->host, done);
 +
-+	end = len;
-+
-+	while (len < memsize) {
-+		AdvWriteWordAutoIncLram(iop_base, 0);
-+		len += 2;
-+	}
-+
-+	/* Verify the microcode checksum. */
-+	sum = 0;
-+	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
-+
-+	for (len = 0; len < end; len += 2) {
-+		sum += AdvReadWordAutoIncLram(iop_base);
-+	}
-+
-+	if (sum != chksum)
-+		return ASC_IERR_MCODE_CHKSUM;
-+
-+	return 0;
++	scp->scsi_done(scp);
 +}
 +
-+/*
-  * Initialize the ASC-3550.
+ /*
+  * advansys_queuecommand() - interrupt-driven I/O entrypoint.
   *
-  * On failure set the ADV_DVC_VAR field 'err_code' and return ADV_ERROR.
-@@ -12945,13 +13017,10 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dvc)
- {
- 	AdvPortAddr iop_base;
- 	ushort warn_code;
--	ADV_DCNT sum;
- 	int begin_addr;
- 	int end_addr;
- 	ushort code_sum;
- 	int word;
--	int j;
--	int adv_asc3550_expanded_size;
- 	int i;
- 	ushort scsi_cfg1;
- 	uchar tid;
-@@ -12960,15 +13029,14 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dvc)
- 	uchar max_cmd[ADV_MAX_TID + 1];
+@@ -3270,7 +3286,6 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
+ 	struct Scsi_Host *shost;
+ 	asc_board_t *boardp;
+ 	ulong flags;
+-	struct scsi_cmnd *done_scp;
+ 	int asc_res, result = 0;
  
- 	/* If there is already an error, don't continue. */
--	if (asc_dvc->err_code != 0) {
-+	if (asc_dvc->err_code != 0)
- 		return ADV_ERROR;
--	}
+ 	shost = scp->device->host;
+@@ -3291,9 +3306,8 @@ advansys_queuecommand(struct scsi_cmnd *scp, void (*done) (struct scsi_cmnd *))
+ 		break;
+ 	case ASC_ERROR:
+ 	default:
+-		done_scp = asc_dequeue_list(&boardp->done, NULL, ASC_TID_ALL);
+ 		/* Interrupts could be enabled here. */
+-		asc_scsi_done_list(done_scp);
++		asc_scsi_done(scp);
+ 		break;
+ 	}
+ 	spin_unlock_irqrestore(&boardp->lock, flags);
+@@ -3410,12 +3424,6 @@ static int advansys_reset(struct scsi_cmnd *scp)
+ 	/* Board lock is held. */
  
  	/*
- 	 * The caller must set 'chip_type' to ADV_CHIP_ASC3550.
- 	 */
- 	if (asc_dvc->chip_type != ADV_CHIP_ASC3550) {
--		asc_dvc->err_code |= ASC_IERR_BAD_CHIPTYPE;
-+		asc_dvc->err_code = ASC_IERR_BAD_CHIPTYPE;
- 		return ADV_ERROR;
- 	}
- 
-@@ -13012,84 +13080,11 @@ static int AdvInitAsc3550Driver(ADV_DVC_VAR *asc_dvc)
- 				max_cmd[tid]);
+-	 * Dequeue all board 'done' requests. A pointer to the last request
+-	 * is returned in 'last_scp'.
+-	 */
+-	done_scp = asc_dequeue_list(&boardp->done, &last_scp, ASC_TID_ALL);
+-
+-	/*
+ 	 * Dequeue all board 'active' requests for all devices and set
+ 	 * the request status to DID_RESET. A pointer to the last request
+ 	 * is returned in 'last_scp'.
+@@ -3548,8 +3556,6 @@ static struct scsi_host_template advansys_template = {
+ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
+ {
+ 	unsigned long flags;
+-	struct scsi_cmnd *done_scp = NULL, *last_scp = NULL;
+-	struct scsi_cmnd *new_last_scp;
+ 	struct Scsi_Host *shost = dev_id;
+ 	asc_board_t *boardp = ASC_BOARDP(shost);
+ 	irqreturn_t result = IRQ_NONE;
+@@ -3577,49 +3583,13 @@ static irqreturn_t advansys_interrupt(int irq, void *dev_id)
+ 		}
  	}
  
 -	/*
--	 * Load the Microcode
+-	 * Create a list of completed requests.
 -	 *
--	 * Write the microcode image to RISC memory starting at address 0.
+-	 * If a reset request is being performed for the board, the reset
+-	 * handler will complete pending requests after it has completed.
 -	 */
--	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
--	/* Assume the following compressed format of the microcode buffer:
--	 *
--	 *  254 word (508 byte) table indexed by byte code followed
--	 *  by the following byte codes:
--	 *
--	 *    1-Byte Code:
--	 *      00: Emit word 0 in table.
--	 *      01: Emit word 1 in table.
--	 *      .
--	 *      FD: Emit word 253 in table.
--	 *
--	 *    Multi-Byte Code:
--	 *      FE WW WW: (3 byte code) Word to emit is the next word WW WW.
--	 *      FF BB WW WW: (4 byte code) Emit BB count times next word WW WW.
--	 */
--	word = 0;
--	for (i = 253 * 2; i < _adv_asc3550_size; i++) {
--		if (_adv_asc3550_buf[i] == 0xff) {
--			for (j = 0; j < _adv_asc3550_buf[i + 1]; j++) {
--				AdvWriteWordAutoIncLram(iop_base, (((ushort)
--								    _adv_asc3550_buf
--								    [i +
--								     3] << 8) |
--								   _adv_asc3550_buf
--								   [i + 2]));
--				word++;
--			}
--			i += 3;
--		} else if (_adv_asc3550_buf[i] == 0xfe) {
--			AdvWriteWordAutoIncLram(iop_base, (((ushort)
--							    _adv_asc3550_buf[i +
--									     2]
--							    << 8) |
--							   _adv_asc3550_buf[i +
--									    1]));
--			i += 2;
--			word++;
+-	if ((boardp->flags & ASC_HOST_IN_RESET) == 0) {
+-		ASC_DBG2(1, "advansys_interrupt: done_scp 0x%p, "
+-			 "last_scp 0x%p\n", done_scp, last_scp);
+-
+-		/*
+-		 * Add to the list of requests that must be completed.
+-		 *
+-		 * 'done_scp' will always be NULL on the first iteration of
+-		 * this loop. 'last_scp' is set at the same time as 'done_scp'.
+-		 */
+-		if (done_scp == NULL) {
+-			done_scp = asc_dequeue_list(&boardp->done,
+-						&last_scp, ASC_TID_ALL);
 -		} else {
--			AdvWriteWordAutoIncLram(iop_base, (((ushort)
--							    _adv_asc3550_buf[(_adv_asc3550_buf[i] * 2) + 1] << 8) | _adv_asc3550_buf[_adv_asc3550_buf[i] * 2]));
--			word++;
+-			ASC_ASSERT(last_scp != NULL);
+-			last_scp->host_scribble =
+-			    (unsigned char *)asc_dequeue_list(&boardp->
+-							      done,
+-							      &new_last_scp,
+-							      ASC_TID_ALL);
+-			if (new_last_scp != NULL) {
+-				ASC_ASSERT(REQPNEXT(last_scp) != NULL);
+-				last_scp = new_last_scp;
+-			}
 -		}
 -	}
--
--	/*
--	 * Set 'word' for later use to clear the rest of memory and save
--	 * the expanded mcode size.
--	 */
--	word *= 2;
--	adv_asc3550_expanded_size = word;
--
--	/*
--	 * Clear the rest of ASC-3550 Internal RAM (8KB).
--	 */
--	for (; word < ADV_3550_MEMSIZE; word += 2) {
--		AdvWriteWordAutoIncLram(iop_base, 0);
--	}
--
--	/*
--	 * Verify the microcode checksum.
--	 */
--	sum = 0;
--	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
--
--	for (word = 0; word < adv_asc3550_expanded_size; word += 2) {
--		sum += AdvReadWordAutoIncLram(iop_base);
--	}
--
--	if (sum != _adv_asc3550_chksum) {
--		asc_dvc->err_code |= ASC_IERR_MCODE_CHKSUM;
-+	asc_dvc->err_code = AdvLoadMicrocode(iop_base, _adv_asc3550_buf,
-+					_adv_asc3550_size, ADV_3550_MEMSIZE,
-+					_adv_asc3550_chksum);
-+	if (asc_dvc->err_code)
- 		return ADV_ERROR;
--	}
+ 	spin_unlock_irqrestore(&boardp->lock, flags);
  
  	/*
- 	 * Restore the RISC memory BIOS region.
-@@ -13460,13 +13455,10 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
+ 	 * If interrupts were enabled on entry, then they
+ 	 * are now enabled here.
+-	 *
+-	 * Complete all requests on the done list.
+ 	 */
+ 
+-	asc_scsi_done_list(done_scp);
+-
+ 	ASC_DBG(1, "advansys_interrupt: end\n");
+ 	return result;
+ }
+@@ -3836,27 +3806,11 @@ static void asc_scsi_done_list(struct scsi_cmnd *scp)
+ 
+ 	ASC_DBG(2, "asc_scsi_done_list: begin\n");
+ 	while (scp != NULL) {
+-		asc_board_t *boardp;
+-
+ 		ASC_DBG1(3, "asc_scsi_done_list: scp 0x%lx\n", (ulong)scp);
+ 		tscp = REQPNEXT(scp);
+ 		scp->host_scribble = NULL;
+ 
+-		boardp = ASC_BOARDP(scp->device->host);
+-
+-		if (scp->use_sg)
+-			dma_unmap_sg(boardp->dev,
+-				     (struct scatterlist *)scp->request_buffer,
+-				     scp->use_sg, scp->sc_data_direction);
+-		else if (scp->request_bufflen)
+-			dma_unmap_single(boardp->dev, scp->SCp.dma_handle,
+-					 scp->request_bufflen,
+-					 scp->sc_data_direction);
+-
+-		ASC_STATS(scp->device->host, done);
+-		ASC_ASSERT(scp->scsi_done != NULL);
+-
+-		scp->scsi_done(scp);
++		asc_scsi_done(scp);
+ 
+ 		scp = tscp;
+ 	}
+@@ -3904,8 +3858,8 @@ static void asc_scsi_done_list(struct scsi_cmnd *scp)
+  * on the board's 'active' queue and will be completed from the
+  * interrupt handler.
+  *
+- * If this function returns ASC_NOERROR the request has been enqueued
+- * on the board's 'done' queue and must be completed by the caller.
++ * If this function returns ASC_ERROR the host error code has been set,
++ * and the called must call asc_scsi_done.
+  *
+  * If ASC_BUSY is returned the request will be returned to the midlayer
+  * and re-tried later.
+@@ -3972,7 +3926,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 				boardp->id, asc_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_error);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+-			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			break;
+ 		default:
+ 			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
+@@ -3980,7 +3933,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 				boardp->id, asc_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_unknown);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+-			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			break;
+ 		}
+ 	} else {
+@@ -4011,11 +3963,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 			 */
+ 			return ASC_BUSY;
+ 		case ASC_ERROR:
+-			/* 
+-			 * If an error is returned, then the request has been
+-			 * queued on the board done queue. It will be completed
+-			 * by the caller.
+-			 */
+ 		default:
+ 			ASC_DBG(1, "asc_execute_scsi_cmnd: adv_build_req "
+ 				"ASC_ERROR\n");
+@@ -4048,7 +3995,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 				boardp->id, adv_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_error);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+-			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			break;
+ 		default:
+ 			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
+@@ -4056,7 +4002,6 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 				boardp->id, adv_dvc_varp->err_code);
+ 			ASC_STATS(scp->device->host, exe_unknown);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+-			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			break;
+ 		}
+ 	}
+@@ -4071,8 +4016,7 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+  * The global structures 'asc_scsi_q' and 'asc_sg_head' are
+  * used to build the request.
+  *
+- * If an error occurs, then queue the request on the board done
+- * queue and return ASC_ERROR.
++ * If an error occurs, then return ASC_ERROR.
+  */
+ static int asc_build_req(asc_board_t *boardp, struct scsi_cmnd *scp)
  {
- 	AdvPortAddr iop_base;
- 	ushort warn_code;
--	ADV_DCNT sum;
- 	int begin_addr;
- 	int end_addr;
- 	ushort code_sum;
- 	int word;
--	int j;
--	int adv_asc38C0800_expanded_size;
- 	int i;
- 	ushort scsi_cfg1;
- 	uchar byte;
-@@ -13476,9 +13468,8 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 	uchar max_cmd[ADV_MAX_TID + 1];
- 
- 	/* If there is already an error, don't continue. */
--	if (asc_dvc->err_code != 0) {
-+	if (asc_dvc->err_code != 0)
- 		return ADV_ERROR;
--	}
- 
- 	/*
- 	 * The caller must set 'chip_type' to ADV_CHIP_ASC38C0800.
-@@ -13550,7 +13541,7 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 		byte = AdvReadByteRegister(iop_base, IOPB_RAM_BIST);
- 		if ((byte & RAM_TEST_DONE) == 0
- 		    || (byte & 0x0F) != PRE_TEST_VALUE) {
--			asc_dvc->err_code |= ASC_IERR_BIST_PRE_TEST;
-+			asc_dvc->err_code = ASC_IERR_BIST_PRE_TEST;
- 			return ADV_ERROR;
+@@ -4098,7 +4042,6 @@ static int asc_build_req(asc_board_t *boardp, struct scsi_cmnd *scp)
+ 			"ASC_MAX_CDB_LEN %d\n", boardp->id, scp->cmd_len,
+ 			ASC_MAX_CDB_LEN);
+ 		scp->result = HOST_BYTE(DID_ERROR);
+-		asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 		return ASC_ERROR;
+ 	}
+ 	asc_scsi_q.cdbptr = &scp->cmnd[0];
+@@ -4167,7 +4110,6 @@ static int asc_build_req(asc_board_t *boardp, struct scsi_cmnd *scp)
+ 			dma_unmap_sg(boardp->dev, slp, scp->use_sg,
+ 				     scp->sc_data_direction);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+-			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 			return ASC_ERROR;
  		}
  
-@@ -13558,7 +13549,7 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 		DvcSleepMilliSecond(10);	/* Wait for 10ms before reading back. */
- 		if (AdvReadByteRegister(iop_base, IOPB_RAM_BIST)
- 		    != NORMAL_VALUE) {
--			asc_dvc->err_code |= ASC_IERR_BIST_PRE_TEST;
-+			asc_dvc->err_code = ASC_IERR_BIST_PRE_TEST;
- 			return ADV_ERROR;
- 		}
+@@ -4274,7 +4216,6 @@ adv_build_req(asc_board_t *boardp, struct scsi_cmnd *scp,
+ 		    ("adv_build_req: board %d: cmd_len %d > ADV_MAX_CDB_LEN  %d\n",
+ 		     boardp->id, scp->cmd_len, ADV_MAX_CDB_LEN);
+ 		scp->result = HOST_BYTE(DID_ERROR);
+-		asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 		return ASC_ERROR;
  	}
-@@ -13577,99 +13568,18 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 	if ((byte & RAM_TEST_DONE) == 0 || (byte & RAM_TEST_STATUS) != 0) {
- 		/* Get here if Done bit not set or Status not 0. */
- 		asc_dvc->bist_err_code = byte;	/* for BIOS display message */
--		asc_dvc->err_code |= ASC_IERR_BIST_RAM_TEST;
-+		asc_dvc->err_code = ASC_IERR_BIST_RAM_TEST;
- 		return ADV_ERROR;
+ 	scsiqp->cdb_len = scp->cmd_len;
+@@ -4342,7 +4283,6 @@ adv_build_req(asc_board_t *boardp, struct scsi_cmnd *scp,
+ 			dma_unmap_sg(boardp->dev, slp, scp->use_sg,
+ 				     scp->sc_data_direction);
+ 			scp->result = HOST_BYTE(DID_ERROR);
+-			asc_enqueue(&boardp->done, scp, ASC_BACK);
+ 
+ 			/*
+ 			 * Free the 'adv_req_t' structure by adding it back
+@@ -4628,13 +4568,7 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 		boardp->init_tidmask |= ADV_TID_TO_TIDMASK(scp->device->id);
  	}
  
- 	/* We need to reset back to normal mode after LRAM test passes. */
- 	AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, NORMAL_MODE);
+-	/*
+-	 * Because interrupts may be enabled by the 'struct scsi_cmnd' done
+-	 * function, add the command to the end of the board's done queue.
+-	 * The done function for the command will be called from
+-	 * advansys_interrupt().
+-	 */
+-	asc_enqueue(&boardp->done, scp, ASC_BACK);
++	asc_scsi_done(scp);
+ 
+ 	return;
+ }
+@@ -4790,13 +4724,7 @@ static void adv_isr_callback(ADV_DVC_VAR *adv_dvc_varp, ADV_SCSI_REQ_Q *scsiqp)
+ 		boardp->init_tidmask |= ADV_TID_TO_TIDMASK(scp->device->id);
+ 	}
  
 -	/*
--	 * Load the Microcode
--	 *
--	 * Write the microcode image to RISC memory starting at address 0.
--	 *
+-	 * Because interrupts may be enabled by the 'struct scsi_cmnd' done
+-	 * function, add the command to the end of the board's done queue.
+-	 * The done function for the command will be called from
+-	 * advansys_interrupt().
 -	 */
--	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
--
--	/* Assume the following compressed format of the microcode buffer:
--	 *
--	 *  254 word (508 byte) table indexed by byte code followed
--	 *  by the following byte codes:
--	 *
--	 *    1-Byte Code:
--	 *      00: Emit word 0 in table.
--	 *      01: Emit word 1 in table.
--	 *      .
--	 *      FD: Emit word 253 in table.
--	 *
--	 *    Multi-Byte Code:
--	 *      FE WW WW: (3 byte code) Word to emit is the next word WW WW.
--	 *      FF BB WW WW: (4 byte code) Emit BB count times next word WW WW.
--	 */
--	word = 0;
--	for (i = 253 * 2; i < _adv_asc38C0800_size; i++) {
--		if (_adv_asc38C0800_buf[i] == 0xff) {
--			for (j = 0; j < _adv_asc38C0800_buf[i + 1]; j++) {
--				AdvWriteWordAutoIncLram(iop_base, (((ushort)
--								    _adv_asc38C0800_buf
--								    [i +
--								     3] << 8) |
--								   _adv_asc38C0800_buf
--								   [i + 2]));
--				word++;
--			}
--			i += 3;
--		} else if (_adv_asc38C0800_buf[i] == 0xfe) {
--			AdvWriteWordAutoIncLram(iop_base, (((ushort)
--							    _adv_asc38C0800_buf
--							    [i +
--							     2] << 8) |
--							   _adv_asc38C0800_buf[i
--									       +
--									       1]));
--			i += 2;
--			word++;
--		} else {
--			AdvWriteWordAutoIncLram(iop_base, (((ushort)
--							    _adv_asc38C0800_buf[(_adv_asc38C0800_buf[i] * 2) + 1] << 8) | _adv_asc38C0800_buf[_adv_asc38C0800_buf[i] * 2]));
--			word++;
--		}
--	}
--
--	/*
--	 * Set 'word' for later use to clear the rest of memory and save
--	 * the expanded mcode size.
--	 */
--	word *= 2;
--	adv_asc38C0800_expanded_size = word;
--
--	/*
--	 * Clear the rest of ASC-38C0800 Internal RAM (16KB).
--	 */
--	for (; word < ADV_38C0800_MEMSIZE; word += 2) {
--		AdvWriteWordAutoIncLram(iop_base, 0);
--	}
--
--	/*
--	 * Verify the microcode checksum.
--	 */
--	sum = 0;
--	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
--
--	for (word = 0; word < adv_asc38C0800_expanded_size; word += 2) {
--		sum += AdvReadWordAutoIncLram(iop_base);
--	}
--	ASC_DBG2(1, "AdvInitAsc38C0800Driver: word %d, i %d\n", word, i);
--
--	ASC_DBG2(1,
--		 "AdvInitAsc38C0800Driver: sum 0x%lx, _adv_asc38C0800_chksum 0x%lx\n",
--		 (ulong)sum, (ulong)_adv_asc38C0800_chksum);
--
--	if (sum != _adv_asc38C0800_chksum) {
--		asc_dvc->err_code |= ASC_IERR_MCODE_CHKSUM;
-+	asc_dvc->err_code = AdvLoadMicrocode(iop_base, _adv_asc38C0800_buf,
-+				 _adv_asc38C0800_size, ADV_38C0800_MEMSIZE,
-+				 _adv_asc38C0800_chksum);
-+	if (asc_dvc->err_code)
- 		return ADV_ERROR;
--	}
+-	asc_enqueue(&boardp->done, scp, ASC_BACK);
++	asc_scsi_done(scp);
  
  	/*
- 	 * Restore the RISC memory BIOS region.
-@@ -13807,16 +13717,18 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 	}
- 
- 	/*
--	 * All kind of combinations of devices attached to one of four connectors
--	 * are acceptable except HVD device attached. For example, LVD device can
--	 * be attached to SE connector while SE device attached to LVD connector.
--	 * If LVD device attached to SE connector, it only runs up to Ultra speed.
-+	 * All kind of combinations of devices attached to one of four
-+	 * connectors are acceptable except HVD device attached. For example,
-+	 * LVD device can be attached to SE connector while SE device attached
-+	 * to LVD connector.  If LVD device attached to SE connector, it only
-+	 * runs up to Ultra speed.
- 	 *
--	 * If an HVD device is attached to one of LVD connectors, return an error.
--	 * However, there is no way to detect HVD device attached to SE connectors.
-+	 * If an HVD device is attached to one of LVD connectors, return an
-+	 * error.  However, there is no way to detect HVD device attached to
-+	 * SE connectors.
- 	 */
- 	if (scsi_cfg1 & HVD) {
--		asc_dvc->err_code |= ASC_IERR_HVD_DEVICE;
-+		asc_dvc->err_code = ASC_IERR_HVD_DEVICE;
- 		return ADV_ERROR;
- 	}
- 
-@@ -13825,8 +13737,8 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 	 * set the termination value based on a table listed in a_condor.h.
- 	 *
- 	 * If manual termination was specified with an EEPROM setting then
--	 * 'termination' was set-up in AdvInitFrom38C0800EEPROM() and is ready to
--	 * be 'ored' into SCSI_CFG1.
-+	 * 'termination' was set-up in AdvInitFrom38C0800EEPROM() and is ready
-+	 * to be 'ored' into SCSI_CFG1.
- 	 */
- 	if ((asc_dvc->cfg->termination & TERM_SE) == 0) {
- 		/* SE automatic termination control is enabled. */
-@@ -13872,9 +13784,9 @@ static int AdvInitAsc38C0800Driver(ADV_DVC_VAR *asc_dvc)
- 	scsi_cfg1 |= (~asc_dvc->cfg->termination & 0xF0);
- 
- 	/*
--	 * Clear BIG_ENDIAN, DIS_TERM_DRV, Terminator Polarity and HVD/LVD/SE bits
--	 * and set possibly modified termination control bits in the Microcode
--	 * SCSI_CFG1 Register Value.
-+	 * Clear BIG_ENDIAN, DIS_TERM_DRV, Terminator Polarity and HVD/LVD/SE
-+	 * bits and set possibly modified termination control bits in the
-+	 * Microcode SCSI_CFG1 Register Value.
- 	 */
- 	scsi_cfg1 &= (~BIG_ENDIAN & ~DIS_TERM_DRV & ~TERM_POL & ~HVD_LVD_SE);
- 
-@@ -14022,13 +13934,10 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
- {
- 	AdvPortAddr iop_base;
- 	ushort warn_code;
--	ADV_DCNT sum;
- 	int begin_addr;
- 	int end_addr;
- 	ushort code_sum;
- 	long word;
--	int j;
--	int adv_asc38C1600_expanded_size;
- 	int i;
- 	ushort scsi_cfg1;
- 	uchar byte;
-@@ -14113,7 +14022,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
- 		byte = AdvReadByteRegister(iop_base, IOPB_RAM_BIST);
- 		if ((byte & RAM_TEST_DONE) == 0
- 		    || (byte & 0x0F) != PRE_TEST_VALUE) {
--			asc_dvc->err_code |= ASC_IERR_BIST_PRE_TEST;
-+			asc_dvc->err_code = ASC_IERR_BIST_PRE_TEST;
- 			return ADV_ERROR;
- 		}
- 
-@@ -14121,7 +14030,7 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
- 		DvcSleepMilliSecond(10);	/* Wait for 10ms before reading back. */
- 		if (AdvReadByteRegister(iop_base, IOPB_RAM_BIST)
- 		    != NORMAL_VALUE) {
--			asc_dvc->err_code |= ASC_IERR_BIST_PRE_TEST;
-+			asc_dvc->err_code = ASC_IERR_BIST_PRE_TEST;
- 			return ADV_ERROR;
- 		}
- 	}
-@@ -14140,95 +14049,18 @@ static int AdvInitAsc38C1600Driver(ADV_DVC_VAR *asc_dvc)
- 	if ((byte & RAM_TEST_DONE) == 0 || (byte & RAM_TEST_STATUS) != 0) {
- 		/* Get here if Done bit not set or Status not 0. */
- 		asc_dvc->bist_err_code = byte;	/* for BIOS display message */
--		asc_dvc->err_code |= ASC_IERR_BIST_RAM_TEST;
-+		asc_dvc->err_code = ASC_IERR_BIST_RAM_TEST;
- 		return ADV_ERROR;
- 	}
- 
- 	/* We need to reset back to normal mode after LRAM test passes. */
- 	AdvWriteByteRegister(iop_base, IOPB_RAM_BIST, NORMAL_MODE);
- 
--	/*
--	 * Load the Microcode
--	 *
--	 * Write the microcode image to RISC memory starting at address 0.
--	 *
--	 */
--	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
--
--	/*
--	 * Assume the following compressed format of the microcode buffer:
--	 *
--	 *  254 word (508 byte) table indexed by byte code followed
--	 *  by the following byte codes:
--	 *
--	 *    1-Byte Code:
--	 *      00: Emit word 0 in table.
--	 *      01: Emit word 1 in table.
--	 *      .
--	 *      FD: Emit word 253 in table.
--	 *
--	 *    Multi-Byte Code:
--	 *      FE WW WW: (3 byte code) Word to emit is the next word WW WW.
--	 *      FF BB WW WW: (4 byte code) Emit BB count times next word WW WW.
--	 */
--	word = 0;
--	for (i = 253 * 2; i < _adv_asc38C1600_size; i++) {
--		if (_adv_asc38C1600_buf[i] == 0xff) {
--			for (j = 0; j < _adv_asc38C1600_buf[i + 1]; j++) {
--				AdvWriteWordAutoIncLram(iop_base, (((ushort)
--								    _adv_asc38C1600_buf
--								    [i +
--								     3] << 8) |
--								   _adv_asc38C1600_buf
--								   [i + 2]));
--				word++;
--			}
--			i += 3;
--		} else if (_adv_asc38C1600_buf[i] == 0xfe) {
--			AdvWriteWordAutoIncLram(iop_base, (((ushort)
--							    _adv_asc38C1600_buf
--							    [i +
--							     2] << 8) |
--							   _adv_asc38C1600_buf[i
--									       +
--									       1]));
--			i += 2;
--			word++;
--		} else {
--			AdvWriteWordAutoIncLram(iop_base, (((ushort)
--							    _adv_asc38C1600_buf[(_adv_asc38C1600_buf[i] * 2) + 1] << 8) | _adv_asc38C1600_buf[_adv_asc38C1600_buf[i] * 2]));
--			word++;
--		}
--	}
--
--	/*
--	 * Set 'word' for later use to clear the rest of memory and save
--	 * the expanded mcode size.
--	 */
--	word *= 2;
--	adv_asc38C1600_expanded_size = word;
--
--	/*
--	 * Clear the rest of ASC-38C1600 Internal RAM (32KB).
--	 */
--	for (; word < ADV_38C1600_MEMSIZE; word += 2) {
--		AdvWriteWordAutoIncLram(iop_base, 0);
--	}
--
--	/*
--	 * Verify the microcode checksum.
--	 */
--	sum = 0;
--	AdvWriteWordRegister(iop_base, IOPW_RAM_ADDR, 0);
--
--	for (word = 0; word < adv_asc38C1600_expanded_size; word += 2) {
--		sum += AdvReadWordAutoIncLram(iop_base);
--	}
--
--	if (sum != _adv_asc38C1600_chksum) {
--		asc_dvc->err_code |= ASC_IERR_MCODE_CHKSUM;
-+	asc_dvc->err_code = AdvLoadMicrocode(iop_base, _adv_asc38C1600_buf,
-+				 _adv_asc38C1600_size, ADV_38C1600_MEMSIZE,
-+				 _adv_asc38C1600_chksum);
-+	if (asc_dvc->err_code)
- 		return ADV_ERROR;
--	}
- 
- 	/*
- 	 * Restore the RISC memory BIOS region.
+ 	 * Free all 'adv_sgblk_t' structures allocated for the request.
 -- 
 1.5.2.4
 
