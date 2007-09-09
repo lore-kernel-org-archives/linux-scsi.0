@@ -1,36 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [0/22] Advansys updates 2007-09-09
-Date: Sun, 9 Sep 2007 08:53:58 -0600
-Message-ID: <20070909145358.GG6809@parisc-linux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 6/9] tgt: convert ibmvstgt and libsrp to use scsi_data_buffer
+Date: Sun, 09 Sep 2007 18:09:02 +0300
+Message-ID: <46E40C8E.5030906@panasas.com>
+References: <46E3C6F3.6020506@panasas.com>	<20070909045722P.tomof@acm.org>	<46E40319.4030704@panasas.com> <20070909054929C.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:59306 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754187AbXIIOx7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 10:53:59 -0400
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:15158 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757442AbXIIPJc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 11:09:32 -0400
+In-Reply-To: <20070909054929C.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
 
-Here's another mammoth patch series for the advansys driver against
-scsi-misc.  I've tested that it compiles at each stage and that the
-final result works.
+On Sun, Sep 09 2007 at 17:38 +0300, FUJITA Tomonori <tomof@acm.org> wrote:
+> On Sun, 09 Sep 2007 17:28:41 +0300
+> Boaz Harrosh <bharrosh@panasas.com> wrote:
+> 
+>>>
+>> I wish you could maybe clean up the unused stuff,
+> 
+> Well, I put them for Xen scsiback driver though now I could remove it.
+> 
+> 
 
-Some important parts to note:
+Please do and we'll see after that.
 
-1/22 Essential bugfix.  Please apply ASAP.
-4/22 Reformat microcode.  Boring and large.
-6,7,8,9/22 Remove internal queueing from driver
-11/22 Allow advansys to accept 16-byte commands for wide boards
-13/22 Remove some custom wrappers
-15/22 Add DRV_NAME
-16/22 Eliminate prototypes.  Boring and large.
-19/22 Fix simultaneous calls to ->queuecommand
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
