@@ -1,167 +1,735 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH ver2 1/5] scsi_error: code cleanup before refactoring of scsi_send_eh_cmnd()
-Date: Mon, 10 Sep 2007 22:34:22 +0300
-Message-ID: <46E59C3E.1020703@panasas.com>
-References: <46E59760.9020705@panasas.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: 2.6.23-rc4-mm1
+Date: Tue, 11 Sep 2007 04:31:12 +0900
+Message-ID: <20070910044323T.tomof@acm.org>
+References: <20070831215822.26e1432b.akpm@linux-foundation.org>
+	<20070910174926.GC30335@shadowen.org>
+	<20070910111926.9c942358.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28901 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757762AbXIJTes (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 15:34:48 -0400
-In-Reply-To: <46E59760.9020705@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761113AbXIJTc0@vger.kernel.org>
+In-Reply-To: <20070910111926.9c942358.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: akpm@linux-foundation.org
+Cc: apw@shadowen.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg
-Cc: Christoph Hellwig <hch@infradead.org>, Randy Dunlap <rdunlap@xenotime.net>
 
+On Mon, 10 Sep 2007 11:19:26 -0700
+Andrew Morton <akpm@linux-foundation.org> wrote:
 
-  - regrouped variables for easier reviewing of next patch
-  - Support of cmnd==NULL in call to scsi_send_eh_cmnd()
-  - In the copy_sense case set transfer size to the minimum
-    size of sense_buffer and passed copy_sense. cmnd[4] is
-    set accordingly.
-  - REQUEST_SENSE is set into cmnd[0] so if copy_sense is
-    not Zero passed cmnd can/should be NULL.
-  - Also save/restore resid of faild command.
+> On Mon, 10 Sep 2007 18:49:26 +0100 Andy Whitcroft <apw@shadowen.org> wrote:
+> 
+> > I have a couple of old NUMA-Q systems which are unable to read their
+> > boot disks with 2.6.23-rc4-mm1.  The disks appear to be recognised and
+> > even the partition tables read correctly, and then they go pop:
+> > 
+> >   qla1280: QLA1040 found on PCI bus 0, dev 10
+> 
+> cc's added.
+> 
+> >   Clocksource tsc unstable (delta = 99922590 ns)
+> >   Time: jiffies clocksource has been installed.
+> >   scsi(0:0): Resetting SCSI BUS
+> >   scsi0 : QLogic QLA1040 PCI to SCSI Host Adapter
+> >          Firmware version:  7.65.06, Driver version 3.26
+> >   scsi 0:0:0:0: Direct-Access     IBM      DGHS18X          0360 PQ: 0 ANSI: 3
+> >   scsi(0:0:0:0): Sync: period 10, offset 12, Wide
+> >   scsi 0:0:1:0: Direct-Access     IBM OEM  DCHS09X          5454 PQ: 0 ANSI: 2
+> >   scsi(0:0:1:0): Sync: period 10, offset 12, Wide
+> >   scsi 0:0:2:0: Direct-Access     IBM OEM  DCHS09X          5454 PQ: 0 ANSI: 2
+> >   scsi(0:0:2:0): Sync: period 10, offset 12, Wide
+> >   scsi 0:0:3:0: Direct-Access     IBM OEM  DCHS09X          5454 PQ: 0 ANSI: 2
+> >   scsi(0:0:3:0): Sync: period 10, offset 12, Wide
+> >   scsi 0:0:4:0: Direct-Access     IBM OEM  DCHS09X          5454 PQ: 0 ANSI: 2
+> >   scsi(0:0:4:0): Sync: period 10, offset 12, Wide
+> >   st: Version 20070203, fixed bufsize 32768, s/g segs 256
+> >   sd 0:0:0:0: [sda] 35843670 512-byte hardware sectors (18352 MB)
+> >   sd 0:0:0:0: [sda] Write Protect is off
+> >   sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >   sd 0:0:0:0: [sda] 35843670 512-byte hardware sectors (18352 MB)
+> >   sd 0:0:0:0: [sda] Write Protect is off
+> >   sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >    sda: sda1
+> >   sd 0:0:0:0: [sda] Attached SCSI disk
+> >   sd 0:0:1:0: [sdb] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:1:0: [sdb] Write Protect is off
+> >   sd 0:0:1:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >   sd 0:0:1:0: [sdb] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:1:0: [sdb] Write Protect is off
+> >   sd 0:0:1:0: [sdb] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >    sdb: unknown partition table
+> >   sd 0:0:1:0: [sdb] Attached SCSI disk
+> >   sd 0:0:2:0: [sdc] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:2:0: [sdc] Write Protect is off
+> >   sd 0:0:2:0: [sdc] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >   sd 0:0:2:0: [sdc] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:2:0: [sdc] Write Protect is off
+> >   sd 0:0:2:0: [sdc] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >    sdc: sdc1
+> >   sd 0:0:2:0: [sdc] Attached SCSI disk
+> >   sd 0:0:3:0: [sdd] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:3:0: [sdd] Write Protect is off
+> >   sd 0:0:3:0: [sdd] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >   sd 0:0:3:0: [sdd] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:3:0: [sdd] Write Protect is off
+> >   sd 0:0:3:0: [sdd] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >    sdd: sdd1
+> >   sd 0:0:3:0: [sdd] Attached SCSI disk
+> >   sd 0:0:4:0: [sde] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:4:0: [sde] Write Protect is off
+> >   sd 0:0:4:0: [sde] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >   sd 0:0:4:0: [sde] 17796077 512-byte hardware sectors (9112 MB)
+> >   sd 0:0:4:0: [sde] Write Protect is off
+> >   sd 0:0:4:0: [sde] Write cache: disabled, read cache: enabled, supports DPO and FUA
+> >    sde: unknown partition table
+> >   sd 0:0:4:0: [sde] Attached SCSI disk
+> >   sd 0:0:0:0: Attached scsi generic sg0 type 0
+> >   sd 0:0:1:0: Attached scsi generic sg1 type 0
+> >   sd 0:0:2:0: Attached scsi generic sg2 type 0
+> >   sd 0:0:3:0: Attached scsi generic sg3 type 0
+> >   sd 0:0:4:0: Attached scsi generic sg4 type 0
+> >   serio: i8042 KBD port at 0x60,0x64 irq 1
+> >   serio: i8042 AUX port at 0x60,0x64 irq 12
+> >   mice: PS/2 mouse device common for all mice
+> >   input: AT Translated Set 2 keyboard as /class/input/input0
+> >   oprofile: using NMI interrupt.
+> >   TCP cubic registered
+> >   NET: Registered protocol family 1
+> >   NET: Registered protocol family 17
+> >   Using IPI Shortcut mode
+> >   input: PS/2 Logitech Mouse as /class/input/input1
+> >   RAMDISK: cramfs filesystem found at block 0
+> >   RAMDISK: Loading 1244KiB [1 disk] into ram disk... |/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/done.
+> >   VFS: Mounted root (cramfs filesystem) readonly.
+> >   Freeing unused kernel memory: 220k freed
+> >   initrd-tools: 0.1.81.1
+> >   mount: fs type devfs not supported by kernel
+> >   FATAL: Module sd_mod not found.
+> >   umount: devfs: not mounted
+> >   ext3: No journal on filesystem on sda1
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 63
+> >   Buffer I/O error on device sda1, logical block 0
+> >   Buffer I/O error on device sda1, logical block 1
+> >   Buffer I/O error on device sda1, logical block 2
+> >   Buffer I/O error on device sda1, logical block 3
+> >   mount: fs type devfs not supported by kernel
+> >   ext3: No journal on filesystem on sda1
+> >   umount: devfs: not mounted
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 28010831
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 31080815
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 31080855
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 31080919
+> >   Buffer I/O error on device sda1, logical block 3885107
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 28411047
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 31135687
+> >   sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> >   end_request: I/O error, dev sda, sector 31138007
+> >   sd 0:0:0:0: [sda] <6>sd 0:0:0:0: [sda] Result: hostbyte=0x07 driverbyte=0x00
+> > 
+> 
+> The only patch which touches qla1280 is git-block.patch.  From a quick
+> squizz the change looks OK, although it's tricky and something might have
+> broken.
+> 
+> (the dprintk at line 2929 needs to print remseg, not seg_cnt).
+> 
+> Can you retest with that change reverted (below)?  If it's not that then
+> perhaps something in scsi core broke, dunno.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Even if we revert the qla1280 patch, scsi-ml still sends chaining sg
+list. So it doesn't work.
+
+The following patch disables chaining sg list for qla1280. If the fix
+that I've just sent doesn't work, please try this.
+
+-
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH] add use_sg_chaining option to scsi_host_template
+
+This option is true if a low-level driver can support sg
+chaining. This will be removed eventually when all the drivers are
+converted to support sg chaining. q->max_phys_segments is set to
+SCSI_MAX_SG_SEGMENTS if false.
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/scsi_error.c |   63 +++++++++++++++++++++++++--------------------
- 1 files changed, 35 insertions(+), 28 deletions(-)
+ arch/ia64/hp/sim/simscsi.c            |    1 +
+ drivers/scsi/3w-9xxx.c                |    1 +
+ drivers/scsi/3w-xxxx.c                |    1 +
+ drivers/scsi/BusLogic.c               |    1 +
+ drivers/scsi/NCR53c406a.c             |    3 ++-
+ drivers/scsi/a100u2w.c                |    1 +
+ drivers/scsi/aacraid/linit.c          |    1 +
+ drivers/scsi/aha1740.c                |    1 +
+ drivers/scsi/aic7xxx/aic79xx_osm.c    |    1 +
+ drivers/scsi/aic7xxx/aic7xxx_osm.c    |    1 +
+ drivers/scsi/aic7xxx_old.c            |    1 +
+ drivers/scsi/arcmsr/arcmsr_hba.c      |    1 +
+ drivers/scsi/dc395x.c                 |    1 +
+ drivers/scsi/dpt_i2o.c                |    1 +
+ drivers/scsi/eata.c                   |    3 ++-
+ drivers/scsi/hosts.c                  |    1 +
+ drivers/scsi/hptiop.c                 |    1 +
+ drivers/scsi/ibmmca.c                 |    1 +
+ drivers/scsi/ibmvscsi/ibmvscsi.c      |    1 +
+ drivers/scsi/initio.c                 |    1 +
+ drivers/scsi/ipr.c                    |    1 +
+ drivers/scsi/lpfc/lpfc_scsi.c         |    2 ++
+ drivers/scsi/mac53c94.c               |    1 +
+ drivers/scsi/megaraid.c               |    1 +
+ drivers/scsi/megaraid/megaraid_mbox.c |    1 +
+ drivers/scsi/megaraid/megaraid_sas.c  |    1 +
+ drivers/scsi/mesh.c                   |    1 +
+ drivers/scsi/nsp32.c                  |    1 +
+ drivers/scsi/pcmcia/sym53c500_cs.c    |    1 +
+ drivers/scsi/qla2xxx/qla_os.c         |    2 ++
+ drivers/scsi/qla4xxx/ql4_os.c         |    1 +
+ drivers/scsi/qlogicfas.c              |    1 +
+ drivers/scsi/scsi_lib.c               |    5 ++++-
+ drivers/scsi/stex.c                   |    1 +
+ drivers/scsi/sym53c416.c              |    1 +
+ drivers/scsi/sym53c8xx_2/sym_glue.c   |    1 +
+ drivers/scsi/u14-34f.c                |    1 +
+ drivers/scsi/ultrastor.c              |    1 +
+ drivers/scsi/wd7000.c                 |    1 +
+ include/scsi/scsi_host.h              |   13 +++++++++++++
+ 40 files changed, 59 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index c8e351f..20a72aa 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -607,21 +607,24 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
-  *    SUCCESS or FAILED or NEEDS_RETRY
-  **/
- static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
--			     int cmnd_size, int timeout, int copy_sense)
-+			     int cmnd_size, int timeout, unsigned copy_sense)
- {
- 	struct scsi_device *sdev = scmd->device;
- 	struct Scsi_Host *shost = sdev->host;
--	int old_result = scmd->result;
- 	DECLARE_COMPLETION_ONSTACK(done);
- 	unsigned long timeleft;
- 	unsigned long flags;
--	struct scatterlist sgl;
-+
-+	unsigned char old_cmd_len;
- 	unsigned char old_cmnd[MAX_COMMAND_SIZE];
- 	enum dma_data_direction old_data_direction;
--	unsigned short old_use_sg;
--	unsigned char old_cmd_len;
- 	unsigned old_bufflen;
- 	void *old_buffer;
-+	unsigned short old_use_sg;
-+	int old_resid;
-+	int old_result;
-+
-+	struct scatterlist sgl;
- 	int rtn;
+diff --git a/arch/ia64/hp/sim/simscsi.c b/arch/ia64/hp/sim/simscsi.c
+index 4552a1c..e711657 100644
+--- a/arch/ia64/hp/sim/simscsi.c
++++ b/arch/ia64/hp/sim/simscsi.c
+@@ -360,6 +360,7 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors		= 1024,
+ 	.cmd_per_lun		= SIMSCSI_REQ_QUEUE_LEN,
+ 	.use_clustering		= DISABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
  
- 	/*
-@@ -631,24 +634,37 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 	 * we will need to restore these values prior to running the actual
- 	 * command.
- 	 */
--	old_buffer = scmd->request_buffer;
--	old_bufflen = scmd->request_bufflen;
-+	old_cmd_len = scmd->cmd_len;
- 	memcpy(old_cmnd, scmd->cmnd, sizeof(scmd->cmnd));
- 	old_data_direction = scmd->sc_data_direction;
--	old_cmd_len = scmd->cmd_len;
-+	old_bufflen = scmd->request_bufflen;
-+	old_buffer = scmd->request_buffer;
- 	old_use_sg = scmd->use_sg;
-+	old_resid = scmd->resid;
-+	old_result = scmd->result;
+ static int __init
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index efd9d8d..fb14014 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1990,6 +1990,7 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors		= TW_MAX_SECTORS,
+ 	.cmd_per_lun		= TW_MAX_CMDS_PER_LUN,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.shost_attrs		= twa_host_attrs,
+ 	.emulated		= 1
+ };
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index c7995fc..a64153b 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -2261,6 +2261,7 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors		= TW_MAX_SECTORS,
+ 	.cmd_per_lun		= TW_MAX_CMDS_PER_LUN,	
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.shost_attrs		= tw_host_attrs,
+ 	.emulated		= 1
+ };
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index 9b20617..49e1ffa 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -3575,6 +3575,7 @@ static struct scsi_host_template Bus_Logic_template = {
+ 	.unchecked_isa_dma = 1,
+ 	.max_sectors = 128,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.use_sg_chaining = ENABLE_SG_CHAINING,
+ };
  
--	memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
--	memcpy(scmd->cmnd, cmnd, cmnd_size);
-+	if (cmnd) {
-+		memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
-+		memcpy(scmd->cmnd, cmnd, cmnd_size);
-+		scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
-+	}
+ /*
+diff --git a/drivers/scsi/NCR53c406a.c b/drivers/scsi/NCR53c406a.c
+index eda8c48..3168a17 100644
+--- a/drivers/scsi/NCR53c406a.c
++++ b/drivers/scsi/NCR53c406a.c
+@@ -1066,7 +1066,8 @@ static struct scsi_host_template driver_template =
+      .sg_tablesize      	= 32			/*SG_ALL*/ /*SG_NONE*/, 
+      .cmd_per_lun       	= 1			/* commands per lun */, 
+      .unchecked_isa_dma 	= 1			/* unchecked_isa_dma */,
+-     .use_clustering    	= ENABLE_CLUSTERING                               
++     .use_clustering    	= ENABLE_CLUSTERING,
++     .use_sg_chaining           = ENABLE_SG_CHAINING,
+ };
  
- 	if (copy_sense) {
- 		sg_init_one(&sgl, scmd->sense_buffer,
- 			    sizeof(scmd->sense_buffer));
--
--		scmd->sc_data_direction = DMA_FROM_DEVICE;
--		scmd->request_bufflen = sgl.length;
- 		scmd->request_buffer = &sgl;
-+		scmd->sc_data_direction = DMA_FROM_DEVICE;
-+		scmd->request_bufflen = min_t(unsigned,
-+		                       sizeof(scmd->sense_buffer), copy_sense);
- 		scmd->use_sg = 1;
-+		memset(scmd->cmnd, 0, 6);
-+		scmd->cmnd[0] = REQUEST_SENSE;
-+		scmd->cmnd[4] = scmd->request_bufflen;
-+		/*
-+		 * Zero the sense buffer.  The scsi spec mandates that any
-+		 * untransferred sense data should be interpreted as being zero.
-+		 */
-+		memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
- 	} else {
- 		scmd->request_buffer = NULL;
- 		scmd->request_bufflen = 0;
-@@ -657,18 +673,11 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 	}
+ #include "scsi_module.c"
+diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
+index f608d4a..d3a6d15 100644
+--- a/drivers/scsi/a100u2w.c
++++ b/drivers/scsi/a100u2w.c
+@@ -1071,6 +1071,7 @@ static struct scsi_host_template inia100_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun 		= 1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
  
- 	scmd->underflow = 0;
--	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
+ static int __devinit inia100_probe_one(struct pci_dev *pdev,
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index a7f42a1..038980b 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -944,6 +944,7 @@ static struct scsi_host_template aac_driver_template = {
+ 	.cmd_per_lun    		= AAC_NUM_IO_FIB, 
+ #endif	
+ 	.use_clustering			= ENABLE_CLUSTERING,
++	.use_sg_chaining		= ENABLE_SG_CHAINING,
+ 	.emulated                       = 1,
+ };
  
--	if (sdev->scsi_level <= SCSI_2)
-+	if (sdev->scsi_level <= SCSI_2 && sdev->scsi_level != SCSI_UNKNOWN)
- 		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
- 			(sdev->lun << 5 & 0xe0);
+diff --git a/drivers/scsi/aha1740.c b/drivers/scsi/aha1740.c
+index e4a4f3a..f6722fd 100644
+--- a/drivers/scsi/aha1740.c
++++ b/drivers/scsi/aha1740.c
+@@ -563,6 +563,7 @@ static struct scsi_host_template aha1740_template = {
+ 	.sg_tablesize     = AHA1740_SCATTER,
+ 	.cmd_per_lun      = AHA1740_CMDLUN,
+ 	.use_clustering   = ENABLE_CLUSTERING,
++	.use_sg_chaining  = ENABLE_SG_CHAINING,
+ 	.eh_abort_handler = aha1740_eh_abort_handler,
+ };
  
--	/*
--	 * Zero the sense buffer.  The scsi spec mandates that any
--	 * untransferred sense data should be interpreted as being zero.
--	 */
--	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
--
- 	shost->eh_action = &done;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index a055a96..42c0f14 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -766,6 +766,7 @@ struct scsi_host_template aic79xx_driver_template = {
+ 	.max_sectors		= 8192,
+ 	.cmd_per_lun		= 2,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.slave_alloc		= ahd_linux_slave_alloc,
+ 	.slave_configure	= ahd_linux_slave_configure,
+ 	.target_alloc		= ahd_linux_target_alloc,
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index 2e9c38f..7770bef 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -747,6 +747,7 @@ struct scsi_host_template aic7xxx_driver_template = {
+ 	.max_sectors		= 8192,
+ 	.cmd_per_lun		= 2,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.slave_alloc		= ahc_linux_slave_alloc,
+ 	.slave_configure	= ahc_linux_slave_configure,
+ 	.target_alloc		= ahc_linux_target_alloc,
+diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
+index 1a71b02..4025608 100644
+--- a/drivers/scsi/aic7xxx_old.c
++++ b/drivers/scsi/aic7xxx_old.c
+@@ -11142,6 +11142,7 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors		= 2048,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
  
- 	spin_lock_irqsave(shost->host_lock, flags);
-@@ -716,12 +725,13 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
- 	/*
- 	 * Restore original data
- 	 */
--	scmd->request_buffer = old_buffer;
--	scmd->request_bufflen = old_bufflen;
-+	scmd->cmd_len = old_cmd_len;
- 	memcpy(scmd->cmnd, old_cmnd, sizeof(scmd->cmnd));
- 	scmd->sc_data_direction = old_data_direction;
--	scmd->cmd_len = old_cmd_len;
-+	scmd->request_bufflen = old_bufflen;
-+	scmd->request_buffer = old_buffer;
- 	scmd->use_sg = old_use_sg;
-+	scmd->resid = old_resid;
- 	scmd->result = old_result;
- 	return rtn;
- }
-@@ -737,10 +747,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
-  **/
- static int scsi_request_sense(struct scsi_cmnd *scmd)
- {
--	static unsigned char generic_sense[6] =
--		{REQUEST_SENSE, 0, 0, 0, 252, 0};
--
--	return scsi_send_eh_cmnd(scmd, generic_sense, 6, SENSE_TIMEOUT, 1);
-+	return scsi_send_eh_cmnd(scmd, NULL, 0, SENSE_TIMEOUT, ~0);
- }
+ #include "scsi_module.c"
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 0ddfc21..d5039f3 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -121,6 +121,7 @@ static struct scsi_host_template arcmsr_scsi_host_template = {
+ 	.max_sectors    	= ARCMSR_MAX_XFER_SECTORS,
+ 	.cmd_per_lun		= ARCMSR_MAX_CMD_PERLUN,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.shost_attrs		= arcmsr_host_attrs,
+ };
+ static struct pci_error_handlers arcmsr_pci_error_handlers = {
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 7b8a345..d2a2026 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -4765,6 +4765,7 @@ static struct scsi_host_template dc395x_driver_template = {
+ 	.eh_bus_reset_handler   = dc395x_eh_bus_reset,
+ 	.unchecked_isa_dma      = 0,
+ 	.use_clustering         = DISABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
+ 
+ 
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index bea9d65..8258506 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -3295,6 +3295,7 @@ static struct scsi_host_template adpt_template = {
+ 	.this_id		= 7,
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
+ 
+ static s32 adpt_scsi_register(adpt_hba* pHba)
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index a83e9f1..2f685cf 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -523,7 +523,8 @@ static struct scsi_host_template driver_template = {
+ 	.slave_configure = eata2x_slave_configure,
+ 	.this_id = 7,
+ 	.unchecked_isa_dma = 1,
+-	.use_clustering = ENABLE_CLUSTERING
++	.use_clustering = ENABLE_CLUSTERING,
++	.use_sg_chaining = ENABLE_SG_CHAINING,
+ };
+ 
+ #if !defined(__BIG_ENDIAN_BITFIELD) && !defined(__LITTLE_ENDIAN_BITFIELD)
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 96bc312..8c42539 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -342,6 +342,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
++	shost->use_sg_chaining = sht->use_sg_chaining;
+ 
+ 	if (sht->max_host_blocked)
+ 		shost->max_host_blocked = sht->max_host_blocked;
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 8b384fa..8515054 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -655,6 +655,7 @@ static struct scsi_host_template driver_template = {
+ 	.unchecked_isa_dma          = 0,
+ 	.emulated                   = 0,
+ 	.use_clustering             = ENABLE_CLUSTERING,
++	.use_sg_chaining            = ENABLE_SG_CHAINING,
+ 	.proc_name                  = driver_name,
+ 	.shost_attrs                = hptiop_attrs,
+ 	.this_id                    = -1,
+diff --git a/drivers/scsi/ibmmca.c b/drivers/scsi/ibmmca.c
+index bff8252..695941a 100644
+--- a/drivers/scsi/ibmmca.c
++++ b/drivers/scsi/ibmmca.c
+@@ -1501,6 +1501,7 @@ static struct scsi_host_template ibmmca_driver_template = {
+           .sg_tablesize   = 16,
+           .cmd_per_lun    = 1,
+           .use_clustering = ENABLE_CLUSTERING,
++          .use_sg_chaining = ENABLE_SG_CHAINING,
+ };
+ 
+ static int ibmmca_probe(struct device *dev)
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 93bd01b..084488c 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -1545,6 +1545,7 @@ static struct scsi_host_template driver_template = {
+ 	.this_id = -1,
+ 	.sg_tablesize = SG_ALL,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.use_sg_chaining = ENABLE_SG_CHAINING,
+ 	.shost_attrs = ibmvscsi_attrs,
+ };
+ 
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index d9dfb69..22d40fd 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -2831,6 +2831,7 @@ static struct scsi_host_template initio_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
+ 
+ static int initio_probe_one(struct pci_dev *pdev,
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index b41dfb5..ba7b567 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -4949,6 +4949,7 @@ static struct scsi_host_template driver_template = {
+ 	.max_sectors = IPR_IOA_MAX_SECTORS,
+ 	.cmd_per_lun = IPR_MAX_CMD_PER_LUN,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.use_sg_chaining = ENABLE_SG_CHAINING,
+ 	.shost_attrs = ipr_ioa_attrs,
+ 	.sdev_attrs = ipr_dev_attrs,
+ 	.proc_name = IPR_NAME
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index cd67493..c075556 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -1438,6 +1438,7 @@ struct scsi_host_template lpfc_template = {
+ 	.scan_finished		= lpfc_scan_finished,
+ 	.this_id		= -1,
+ 	.sg_tablesize		= LPFC_SG_SEG_CNT,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+ 	.shost_attrs		= lpfc_hba_attrs,
+@@ -1460,6 +1461,7 @@ struct scsi_host_template lpfc_vport_template = {
+ 	.sg_tablesize		= LPFC_SG_SEG_CNT,
+ 	.cmd_per_lun		= LPFC_CMD_PER_LUN,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.shost_attrs		= lpfc_vport_attrs,
+ 	.max_sectors		= 0xFFFF,
+ };
+diff --git a/drivers/scsi/mac53c94.c b/drivers/scsi/mac53c94.c
+index b12ad7c..a035001 100644
+--- a/drivers/scsi/mac53c94.c
++++ b/drivers/scsi/mac53c94.c
+@@ -402,6 +402,7 @@ static struct scsi_host_template mac53c94_template = {
+ 	.sg_tablesize	= SG_ALL,
+ 	.cmd_per_lun	= 1,
+ 	.use_clustering	= DISABLE_CLUSTERING,
++	.use_sg_chaining = ENABLE_SG_CHAINING,
+ };
+ 
+ static int mac53c94_probe(struct macio_dev *mdev, const struct of_device_id *match)
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 9023ec6..a0133b5 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4484,6 +4484,7 @@ static struct scsi_host_template megaraid_template = {
+ 	.sg_tablesize			= MAX_SGLIST,
+ 	.cmd_per_lun			= DEF_CMD_PER_LUN,
+ 	.use_clustering			= ENABLE_CLUSTERING,
++	.use_sg_chaining		= ENABLE_SG_CHAINING,
+ 	.eh_abort_handler		= megaraid_abort,
+ 	.eh_device_reset_handler	= megaraid_reset,
+ 	.eh_bus_reset_handler		= megaraid_reset,
+diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
+index c6a53dc..e4e4c6a 100644
+--- a/drivers/scsi/megaraid/megaraid_mbox.c
++++ b/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -361,6 +361,7 @@ static struct scsi_host_template megaraid_template_g = {
+ 	.eh_host_reset_handler		= megaraid_reset_handler,
+ 	.change_queue_depth		= megaraid_change_queue_depth,
+ 	.use_clustering			= ENABLE_CLUSTERING,
++	.use_sg_chaining		= ENABLE_SG_CHAINING,
+ 	.sdev_attrs			= megaraid_sdev_attrs,
+ 	.shost_attrs			= megaraid_shost_attrs,
+ };
+diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
+index ebb948c..e3c5c52 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.c
++++ b/drivers/scsi/megaraid/megaraid_sas.c
+@@ -1110,6 +1110,7 @@ static struct scsi_host_template megasas_template = {
+ 	.eh_timed_out = megasas_reset_timer,
+ 	.bios_param = megasas_bios_param,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.use_sg_chaining = ENABLE_SG_CHAINING,
+ };
  
  /**
+diff --git a/drivers/scsi/mesh.c b/drivers/scsi/mesh.c
+index 651d09b..7470ff3 100644
+--- a/drivers/scsi/mesh.c
++++ b/drivers/scsi/mesh.c
+@@ -1843,6 +1843,7 @@ static struct scsi_host_template mesh_template = {
+ 	.sg_tablesize			= SG_ALL,
+ 	.cmd_per_lun			= 2,
+ 	.use_clustering			= DISABLE_CLUSTERING,
++	.use_sg_chaining		= ENABLE_SG_CHAINING,
+ };
+ 
+ static int mesh_probe(struct macio_dev *mdev, const struct of_device_id *match)
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index 4215f3b..6da1504 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -281,6 +281,7 @@ static struct scsi_host_template nsp32_template = {
+ 	.cmd_per_lun			= 1,
+ 	.this_id			= NSP32_HOST_SCSIID,
+ 	.use_clustering			= DISABLE_CLUSTERING,
++	.use_sg_chaining		= ENABLE_SG_CHAINING,
+ 	.eh_abort_handler       	= nsp32_eh_abort,
+ 	.eh_bus_reset_handler		= nsp32_eh_bus_reset,
+ 	.eh_host_reset_handler		= nsp32_eh_host_reset,
+diff --git a/drivers/scsi/pcmcia/sym53c500_cs.c b/drivers/scsi/pcmcia/sym53c500_cs.c
+index 961839e..190e2a7 100644
+--- a/drivers/scsi/pcmcia/sym53c500_cs.c
++++ b/drivers/scsi/pcmcia/sym53c500_cs.c
+@@ -694,6 +694,7 @@ static struct scsi_host_template sym53c500_driver_template = {
+      .sg_tablesize		= 32,
+      .cmd_per_lun		= 1,
+      .use_clustering		= ENABLE_CLUSTERING,
++     .use_sg_chaining		= ENABLE_SG_CHAINING,
+      .shost_attrs		= SYM53C500_shost_attrs
+ };
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index acca898..3abbbc0 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -132,6 +132,7 @@ struct scsi_host_template qla2x00_driver_template = {
+ 	.this_id		= -1,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.sg_tablesize		= SG_ALL,
+ 
+ 	/*
+@@ -163,6 +164,7 @@ struct scsi_host_template qla24xx_driver_template = {
+ 	.this_id		= -1,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.sg_tablesize		= SG_ALL,
+ 
+ 	.max_sectors		= 0xFFFF,
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 8fa5aea..89460d2 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -94,6 +94,7 @@ static struct scsi_host_template qla4xxx_driver_template = {
+ 	.this_id		= -1,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.sg_tablesize		= SG_ALL,
+ 
+ 	.max_sectors		= 0xFFFF,
+diff --git a/drivers/scsi/qlogicfas.c b/drivers/scsi/qlogicfas.c
+index 94baca8..2268ca1 100644
+--- a/drivers/scsi/qlogicfas.c
++++ b/drivers/scsi/qlogicfas.c
+@@ -197,6 +197,7 @@ static struct scsi_host_template qlogicfas_driver_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= DISABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
+ 
+ static __init int qlogicfas_init(void)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d0a1028..38eec00 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1685,7 +1685,10 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+ 	 * converted, so better keep it safe.
+ 	 */
+ #ifdef ARCH_HAS_SG_CHAIN
+-	blk_queue_max_phys_segments(q, SCSI_MAX_SG_CHAIN_SEGMENTS);
++	if (shost->use_sg_chaining)
++		blk_queue_max_phys_segments(q, SCSI_MAX_SG_CHAIN_SEGMENTS);
++	else
++		blk_queue_max_phys_segments(q, SCSI_MAX_SG_SEGMENTS);
+ #else
+ 	blk_queue_max_phys_segments(q, SCSI_MAX_SG_SEGMENTS);
+ #endif
+diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
+index 72f6d80..e3fab3a 100644
+--- a/drivers/scsi/stex.c
++++ b/drivers/scsi/stex.c
+@@ -1123,6 +1123,7 @@ static struct scsi_host_template driver_template = {
+ 	.this_id			= -1,
+ 	.sg_tablesize			= ST_MAX_SG,
+ 	.cmd_per_lun			= ST_CMD_PER_LUN,
++	.use_sg_chaining		= ENABLE_SG_CHAINING,
+ };
+ 
+ static int stex_set_dma_mask(struct pci_dev * pdev)
+diff --git a/drivers/scsi/sym53c416.c b/drivers/scsi/sym53c416.c
+index 92bfaea..8befab7 100644
+--- a/drivers/scsi/sym53c416.c
++++ b/drivers/scsi/sym53c416.c
+@@ -854,5 +854,6 @@ static struct scsi_host_template driver_template = {
+ 	.cmd_per_lun =		1,
+ 	.unchecked_isa_dma =	1,
+ 	.use_clustering =	ENABLE_CLUSTERING,
++	.use_sg_chaining =	ENABLE_SG_CHAINING,
+ };
+ #include "scsi_module.c"
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 764490e..7576c99 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -1827,6 +1827,7 @@ static struct scsi_host_template sym2_template = {
+ 	.eh_host_reset_handler	= sym53c8xx_eh_host_reset_handler,
+ 	.this_id		= 7,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.max_sectors		= 0xFFFF,
+ #ifdef SYM_LINUX_PROC_INFO_SUPPORT
+ 	.proc_info		= sym53c8xx_proc_info,
+diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
+index 9e8232a..a0d9ef4 100644
+--- a/drivers/scsi/u14-34f.c
++++ b/drivers/scsi/u14-34f.c
+@@ -451,6 +451,7 @@ static struct scsi_host_template driver_template = {
+                 .this_id                 = 7,
+                 .unchecked_isa_dma       = 1,
+                 .use_clustering          = ENABLE_CLUSTERING
++                .use_sg_chaining         = ENABLE_SG_CHAINING,
+                 };
+ 
+ #if !defined(__BIG_ENDIAN_BITFIELD) && !defined(__LITTLE_ENDIAN_BITFIELD)
+diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
+index c08235d..ea72bbe 100644
+--- a/drivers/scsi/ultrastor.c
++++ b/drivers/scsi/ultrastor.c
+@@ -1197,5 +1197,6 @@ static struct scsi_host_template driver_template = {
+ 	.cmd_per_lun       = ULTRASTOR_MAX_CMDS_PER_LUN,
+ 	.unchecked_isa_dma = 1,
+ 	.use_clustering    = ENABLE_CLUSTERING,
++	.use_sg_chaining   = ENABLE_SG_CHAINING,
+ };
+ #include "scsi_module.c"
+diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
+index d6fd425..255c611 100644
+--- a/drivers/scsi/wd7000.c
++++ b/drivers/scsi/wd7000.c
+@@ -1671,6 +1671,7 @@ static struct scsi_host_template driver_template = {
+ 	.cmd_per_lun		= 1,
+ 	.unchecked_isa_dma	= 1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ };
+ 
+ #include "scsi_module.c"
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 88f6871..3ee3805 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -36,6 +36,9 @@ struct blk_queue_tags;
+ #define DISABLE_CLUSTERING 0
+ #define ENABLE_CLUSTERING 1
+ 
++#define DISABLE_SG_CHAINING 0
++#define ENABLE_SG_CHAINING 1
++
+ enum scsi_eh_timer_return {
+ 	EH_NOT_HANDLED,
+ 	EH_HANDLED,
+@@ -435,6 +438,15 @@ struct scsi_host_template {
+ 	unsigned ordered_tag:1;
+ 
+ 	/*
++	 * true if the low-level driver can support sg chaining. this
++	 * will be removed eventually when all the drivers are
++	 * converted to support sg chaining.
++	 *
++	 * Status: OBSOLETE
++	 */
++	unsigned use_sg_chaining:1;
++
++	/*
+ 	 * Countdown for host blocking with no commands outstanding
+ 	 */
+ 	unsigned int max_host_blocked;
+@@ -577,6 +589,7 @@ struct Scsi_Host {
+ 	unsigned unchecked_isa_dma:1;
+ 	unsigned use_clustering:1;
+ 	unsigned use_blk_tcq:1;
++	unsigned use_sg_chaining:1;
+ 
+ 	/*
+ 	 * Host has requested that no further requests come through for the
 -- 
-1.5.3.1
-
-
+1.5.2.4
