@@ -1,84 +1,57 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 5/5] arm: fas216 Use scsi_eh API for REQUEST_SENSE invocation
-Date: Mon, 10 Sep 2007 17:29:22 +0300
-Message-ID: <46E554C2.6020804@panasas.com>
-References: <46E5508B.7030108@panasas.com>
+Subject: [patchset 0/5] Refactoring scsi_error to facilitate in synchronous
+ REQUEST_SENSE
+Date: Mon, 10 Sep 2007 17:11:23 +0300
+Message-ID: <46E5508B.7030108@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:22667 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:16352 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755750AbXIJOcr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 10:32:47 -0400
-In-Reply-To: <46E5508B.7030108@panasas.com>
+	with ESMTP id S1756985AbXIJOMX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 10:12:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
+To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg
 Cc: Christoph Hellwig <hch@infradead.org>
 
 
-  - Use new scsi_eh_prep/restor_cmnd() for synchronous
-    REQUEST_SENSE invocation.
+In motivation to abstract scsi_cmnd members and insulate
+drivers/transports from scsi_cmnd internals. The last
+place left was the REQUEST_SENSE sequence when done
+synchronous, by drivers.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/arm/fas216.c |    5 ++---
- drivers/scsi/arm/fas216.h |    3 +++
- 2 files changed, 5 insertions(+), 3 deletions(-)
+Also all these drivers would do a use_sg==0 command
+invocation, preventing from doing cleanups on these
+drivers/transports. So this patchset is left-overs
+from Christoph's 2.6.18 cleanups.
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index fb5f202..d80702b 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -2018,6 +2018,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
- 	 * the upper layers to process.  This would have been set
- 	 * correctly by fas216_std_done.
- 	 */
-+	scsi_eh_restore_cmnd(SCpnt, &info->sesci);
- 	SCpnt->scsi_done(SCpnt);
- }
- 
-@@ -2103,6 +2104,7 @@ request_sense:
- 	if (SCpnt->cmnd[0] == REQUEST_SENSE)
- 		goto done;
- 
-+	scsi_eh_prep_cmnd(SCpnt, &info->sesci, NULL, 0, 1);
- 	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
- 			  "requesting sense");
- 	memset(SCpnt->cmnd, 0, sizeof (SCpnt->cmnd));
-@@ -2117,9 +2119,6 @@ request_sense:
- 	SCpnt->SCp.phase = sizeof(SCpnt->sense_buffer);
- 	SCpnt->SCp.Message = 0;
- 	SCpnt->SCp.Status = 0;
--	SCpnt->request_bufflen = sizeof(SCpnt->sense_buffer);
--	SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	SCpnt->use_sg = 0;
- 	SCpnt->tag = 0;
- 	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
- 
-diff --git a/drivers/scsi/arm/fas216.h b/drivers/scsi/arm/fas216.h
-index 00e5f05..8449416 100644
---- a/drivers/scsi/arm/fas216.h
-+++ b/drivers/scsi/arm/fas216.h
-@@ -16,6 +16,8 @@
- #define NO_IRQ 255
- #endif
- 
-+#include <scsi/scsi_eh.h>
-+
- #include "queue.h"
- #include "msgqueue.h"
- 
-@@ -311,6 +313,7 @@ typedef struct {
- 
- 	/* miscellaneous */
- 	int			internal_done;		/* flag to indicate request done */
-+	struct scsi_eh_save_cmnd_info *sesci;		/* holds request sense restore info */
- 	unsigned long		magic_end;
- } FAS216_Info;
- 
--- 
-1.5.3.1
+In this patchset I have re-factored scsi_error to
+make it possible for drivers to use an abstract
+(easy to use, I hope) API for invoking a REQUEST_SENSE
+command. The API is declared in scsi/scsi_eh.h
 
+[patch 1/5] scsi_error: code cleanup before refactoring of scsi_send_eh_cmnd()
+  Move some code around and add new fixtures here. So next patch is
+  left a Mechanical breakup of code.
 
+[patch 2/5] scsi_error: Refactoring scsi_error to facilitate in synchronous REQUEST_SENSE
+  Here new API is introduced in scsi/scsi_eh.h and mechanical move of code
+  to the new functions.
+
+[PATCH 3/5] usb: transport.c use scsi_eh API in REQUEST_SENSE execution
+  Use above API for drivers/usb/storage/transport.c. Now that last
+  User of use_sg==0, we can do the USB storage cleanups.
+
+[PATCH 4/5] NCR5380: Use scsi_eh API for REQUEST_SENSE invocation
+  All NCR5380 family of drivers used to send a REQUEST_SENSE
+  command.
+
+[PATCH 5/5] arm: fas216 Use scsi_eh API for REQUEST_SENSE invocation
+	drivers/scsi/arm/fas216.c need change also.
+
+Please Test as much as possible, and report any problems/differences.
+
+Boaz Harrosh
+ 
