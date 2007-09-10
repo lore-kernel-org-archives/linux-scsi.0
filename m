@@ -1,60 +1,86 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [patchset 0/5] Refactoring scsi_error to facilitate in synchronous
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: [PATCH 2/5] Refactoring scsi_error to facilitate in synchronous
  REQUEST_SENSE
-Date: Mon, 10 Sep 2007 11:58:09 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0709101145110.2732-100000@iolanthe.rowland.org>
+Date: Mon, 10 Sep 2007 08:19:59 -0700
+Message-ID: <20070910081959.5636785c.randy.dunlap@oracle.com>
 References: <46E5508B.7030108@panasas.com>
+	<46E55378.1090600@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:52720 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S964834AbXIJP6L (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 11:58:11 -0400
-In-Reply-To: <46E5508B.7030108@panasas.com>
+Received: from rgminet01.oracle.com ([148.87.113.118]:55031 "EHLO
+	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758446AbXIJPWj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 11:22:39 -0400
+In-Reply-To: <46E55378.1090600@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Greg Kroah-Hartman <gregkh@suse.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Christoph Hellwig <hch@infradead.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@suse.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Christoph Hellwig <hch@infradead.org>
 
-On Mon, 10 Sep 2007, Boaz Harrosh wrote:
+On Mon, 10 Sep 2007 17:23:52 +0300 Boaz Harrosh wrote:
 
-> In motivation to abstract scsi_cmnd members and insulate
-> drivers/transports from scsi_cmnd internals. The last
-> place left was the REQUEST_SENSE sequence when done
-> synchronous, by drivers.
+
+Hi Boaz,
+
+Just a small nit:  several of the kernel-doc lines need ':' added.
+See below.
+
+> Sign-off-by Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/scsi_error.c |  133 +++++++++++++++++++++++++++------------------
+>  include/scsi/scsi_eh.h    |   23 ++++++++-
+>  2 files changed, 102 insertions(+), 54 deletions(-)
 > 
-> Also all these drivers would do a use_sg==0 command
-> invocation, preventing from doing cleanups on these
-> drivers/transports. So this patchset is left-overs
-> from Christoph's 2.6.18 cleanups.
-> 
-> In this patchset I have re-factored scsi_error to
-> make it possible for drivers to use an abstract
-> (easy to use, I hope) API for invoking a REQUEST_SENSE
-> command. The API is declared in scsi/scsi_eh.h
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 0bcfbe5..0327e20 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -590,42 +590,24 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
+>  }
+>  
+>  /**
+> - * scsi_send_eh_cmnd  - submit a scsi command as part of error recory
+> + * scsi_prep_eh_cmnd  - Save a scsi command info as part of error recory
+>   * @scmd:       SCSI command structure to hijack
+> - * @cmnd:       CDB to send
+> + * @sesci       structure to save restore information
 
-This is a good idea, but the implementation has a few problems.
+ * @sesci:
 
-A trivial problem is that quilt complains about patch 3, which leaves 
-extra whitespace at the end of line 591 in transport.c.
+> + * @cmnd:       CDB to send. Can be NULL if no new cmnd is needed
+>   * @cmnd_size:  size in bytes of @cmnd
+> - * @timeout:    timeout for this request
+>   * @copy_sense: request sense data if set to 1
+>   *
+>   **/
+> -static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+> -			     int cmnd_size, int timeout, int copy_sense)
+> +void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd,
+> +	struct scsi_eh_save_cmnd_info *sesci, unsigned char *cmnd,
+> +	int cmnd_size, int copy_sense)
+>  {
 
-More seriously, why make the caller define a static generic_sense 
-array?  Why not put the array in scsi_eh_prep_cmnd(), where it can be 
-used whenever copy_sense is nonzero?
+> @@ -676,7 +659,62 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+>  
+> +/**
+> + * scsi_restore_eh_cmnd  - Restore a scsi command info as part of error recory
+> + * @scmd:       SCSI command structure to restore
+> + * @sesci	saved information from a coresponding call to scsi_prep_eh_cmnd
 
-The line initializing the sense buffer to zero should be inside the 
-copy_sense conditional block.
+ * @sesci:
 
-The code setting the LUN bits in scmd[1] is wrong.  It should be like 
-the code in scsi_dispatch_cmd(); i.e., those bits should not be set if 
-the scsi_level is SCSI_UNKNOWN.
+> + *
+> + * Undo any damage done by above scsi_prep_eh_cmnd().
+> + **/
+> +void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd,
+> +	struct scsi_eh_save_cmnd_info *sesci)
+> +{
+> +}
+> +EXPORT_SYMBOL(scsi_eh_restore_cmnd);
 
-Finally, a really serious problem.  The code sets the buffer length for
-the REQUEST SENSE command to be the length of scmd->sense_buffer, which
-is 96.  But many USB devices won't work properly unless the requesed
-sense data length is 18.  The appropriate adjustment must be added to 
-transport.c in patch 3.
-
-Alan Stern
-
+Thanks.
+---
+~Randy
+*** Remember to use Documentation/SubmitChecklist when testing your code ***
