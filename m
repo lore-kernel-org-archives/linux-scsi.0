@@ -1,71 +1,79 @@
-From: devzero@web.de
-Subject: Re: [PATCH 1/2] fusion :  shost max_id not set in VMWare guest os
-Date: Mon, 10 Sep 2007 00:58:39 +0200
-Message-ID: <1969544227@web.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: sata & scsi suggestion for make menuconfig
+Date: Mon, 10 Sep 2007 08:38:07 +0200
+Message-ID: <46E4E64F.3070005@s5r6.in-berlin.de>
+References: <20070907124800.GP16806@vanheusden.com>	 <p73fy1p9m57.fsf@bingen.suse.de>	 <1189371621.3526.28.camel@localhost.localdomain>	 <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org>	 <20070909212159.GF25798@one.firstfloor.org> <1189373951.3526.37.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fmmailgate04.web.de ([217.72.192.242]:50115 "EHLO
-	fmmailgate04.web.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752618AbXIIW67 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Sep 2007 18:58:59 -0400
-Received: from web.de
-	by fmmailgate04.web.de (Postfix) with SMTP id 8001D30F2213
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Sep 2007 00:58:40 +0200 (CEST)
+Received: from einhorn.in-berlin.de ([192.109.42.8]:51091 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753861AbXIJGii (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 02:38:38 -0400
+In-Reply-To: <1189373951.3526.37.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andi Kleen <andi@firstfloor.org>, Jeff Garzik <jeff@garzik.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi ,=20
+James Bottomley wrote:
+> On Sun, 2007-09-09 at 23:22 +0200, Andi Kleen wrote:
+>> When it costs 10000 people half an hour to learn and correct this it 
+>> wasted 5000 hours of previous livetime.
+>>
+>> Besides there is no good reason to have ever learned this imho.
+> 
+> The process of becoming an expert in the kernel build system naturally
+> involves making mistakes and learning from them, so this is probably
+> time reasonably well spent.
 
-there`s probably another bug in VMWare LSI emulated scsi controller, re=
-cent solaris builds crash the vmware process on boot (iirc, it was a re=
-gression introduced in snv_63).
+Nevertheless we should try to arrange the menus in a way that makes
+sense to as many people as possible.  The difficulty is, different
+environments call for different menu layouts, as your previous example
+of SATA DVD-only boxes demonstrates.
 
-from what i`ve read so far it happens during scsi device initialization=
- from withing mpt driver, but unfortunately the mpt driver in solaris s=
-eems to be closed source.
+However, liberal usage of 'select' is not the ultimate solution to
+create menus that work for more people.  Just one problem with select is
+that it works behind the back of the people configuring kernels (unless
+they use an UI with debug options turned on) --- they have less control,
+they are less informed.  ATA already 'select's SCSI.  What do we gain
+from hiding the fact that Linux' SCSI option is not just for those
+50-wire ribbons (which people still think SCSI stands for) but is a very
+central Linux subsystem for even more than what complies to the SCSI
+family of standards?
 
-since there i found no more information within vmware community or with=
-in opensolaris community about details of this bug - maybe anybody here=
- knows what`s causing this crash and if it can perhaps be reproduced fr=
-om within linux ?
-i`m even unsure if some hacker could exploit this to break out of a vir=
-tual machine !? i`m running VMs in dmz setup.....
+'select' should really be limited to switch on small library-like code
+without further dependencies or requirements.  SCSI, together with its
+upper layer options, is not of this kind of library.
 
-regards
-roland
+We should think about order and grouping of prompts and the labels of
+prompts (there were already suggestions in this discussion) before we
+resort to 'select' --- or even worse, select options unconditionally
+which are not always necessary to be enabled.
 
+A pro pos grouping of options --- consider how options for another
+central subsystem are laid out:
 
+	Networking
+		Networking options
+			...
+			TCP/IP networking
+			...
+		...
 
->[PATCH 1/2] fusion :  shost max_id not set in VMWare guest os
->
->In vmware guest os with emulated LSI 53c1030, the port facts config pa=
-ge is
->not having MaxDevices initialized to 16 devices. Instead its set to ze=
-ro.
->Thereforewhen driver loads, no devices are scanned for from scsi_scan_=
-host.
->Prior to the3.04.04 driver, shost max_id was set to hard coded value \
->MPT_MAX_SCSI_DEVICES. After that release, support for greater than 255=
- targets was \
->added, and the driver was taking the target count from the port facts =
-instead.  With \
->this patch we will restore the hard coded values for SPI, but at the s=
-ame time use \
->the settingsneeded for SAS and Fibre Channel.
->
->Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
+	Device Drivers
+		...
+		Network device support
+			...
+			Ethernet (10 or 100MBit)
+			...
+		...
 
-_______________________________________________________________________=
-___
-Erweitern Sie FreeMail zu einem noch leistungsst=E4rkeren E-Mail-Postfa=
-ch!	=09
-Mehr Infos unter http://produkte.web.de/club/?mc=3D021131
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This also happens to reflect the layout of sources in directories, and
+the current SCSI menu layout is close to source layout too --- but it
+doesn't have to be that way.
+-- 
+Stefan Richter
+-=====-=-=== =--= -=-=-
+http://arcgraph.de/sr/
