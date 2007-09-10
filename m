@@ -1,86 +1,76 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH 2/5] Refactoring scsi_error to facilitate in synchronous
- REQUEST_SENSE
-Date: Mon, 10 Sep 2007 08:19:59 -0700
-Message-ID: <20070910081959.5636785c.randy.dunlap@oracle.com>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: [patchset 0/5] Refactoring scsi_error to facilitate in synchronous REQUEST_SENSE
+Date: Mon, 10 Sep 2007 10:03:34 -0700
+Message-ID: <20070910170334.GA12369@one-eyed-alien.net>
 References: <46E5508B.7030108@panasas.com>
-	<46E55378.1090600@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="UlVJffcvxoiEqYs2"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:55031 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758446AbXIJPWj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 11:22:39 -0400
-In-Reply-To: <46E55378.1090600@panasas.com>
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:58456
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756716AbXIJRD4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Sep 2007 13:03:56 -0400
+Content-Disposition: inline
+In-Reply-To: <46E5508B.7030108@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@suse.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Christoph Hellwig <hch@infradead.org>
-
-On Mon, 10 Sep 2007 17:23:52 +0300 Boaz Harrosh wrote:
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@suse.de>, Christoph Hellwig <hch@infradead.org>
 
 
-Hi Boaz,
+--UlVJffcvxoiEqYs2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Just a small nit:  several of the kernel-doc lines need ':' added.
-See below.
+On Mon, Sep 10, 2007 at 05:11:23PM +0300, Boaz Harrosh wrote:
+>=20
+> In motivation to abstract scsi_cmnd members and insulate
+> drivers/transports from scsi_cmnd internals. The last
+> place left was the REQUEST_SENSE sequence when done
+> synchronous, by drivers.
 
-> Sign-off-by Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/scsi_error.c |  133 +++++++++++++++++++++++++++------------------
->  include/scsi/scsi_eh.h    |   23 ++++++++-
->  2 files changed, 102 insertions(+), 54 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 0bcfbe5..0327e20 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -590,42 +590,24 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
->  }
->  
->  /**
-> - * scsi_send_eh_cmnd  - submit a scsi command as part of error recory
-> + * scsi_prep_eh_cmnd  - Save a scsi command info as part of error recory
->   * @scmd:       SCSI command structure to hijack
-> - * @cmnd:       CDB to send
-> + * @sesci       structure to save restore information
+This probably isn't serious, but I noticed one thing (beyond what Alan's
+analysis noted)...
 
- * @sesci:
+I've always assumed that the scatterlist structs passed to an HCD were,
+themselves, allocated from DMA-able memory.  That is, not just the transfer
+buffers themselves, but the struct scatterlist also.
 
-> + * @cmnd:       CDB to send. Can be NULL if no new cmnd is needed
->   * @cmnd_size:  size in bytes of @cmnd
-> - * @timeout:    timeout for this request
->   * @copy_sense: request sense data if set to 1
->   *
->   **/
-> -static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
-> -			     int cmnd_size, int timeout, int copy_sense)
-> +void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd,
-> +	struct scsi_eh_save_cmnd_info *sesci, unsigned char *cmnd,
-> +	int cmnd_size, int copy_sense)
->  {
+In this implementation, the struct scatterlist used for the single-element
+transfer of the request sense buffer is part of the
+struct scsi_eh_save_cmnd_info, which is allocated on the stack (for at
+least usb-storage).  And, stack isn't DMA-able on all arches.
 
-> @@ -676,7 +659,62 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
->  
-> +/**
-> + * scsi_restore_eh_cmnd  - Restore a scsi command info as part of error recory
-> + * @scmd:       SCSI command structure to restore
-> + * @sesci	saved information from a coresponding call to scsi_prep_eh_cmnd
+It is not a problem for usb-storage, since the struct scatterlists are
+processed in code into a series of URBs, so nobody actually does DMA the
+scatterlist structures.  However, I don't know enough about the other HCDs
+to be certain about them.
 
- * @sesci:
+Matt
 
-> + *
-> + * Undo any damage done by above scsi_prep_eh_cmnd().
-> + **/
-> +void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd,
-> +	struct scsi_eh_save_cmnd_info *sesci)
-> +{
-> +}
-> +EXPORT_SYMBOL(scsi_eh_restore_cmnd);
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
 
-Thanks.
----
-~Randy
-*** Remember to use Documentation/SubmitChecklist when testing your code ***
+Now payink attention, please.  This is mouse.  Click-click. Easy to=20
+use, da? Now you try...
+					-- Pitr to Miranda
+User Friendly, 10/11/1998
+
+--UlVJffcvxoiEqYs2
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFG5XjmHL9iwnUZqnkRArtiAJ9fhLHcvnhqTRsVvIkUYlP/K/U0HACgsK+T
+1+PmotIQY0gUeBpw0sl1+QU=
+=zCQM
+-----END PGP SIGNATURE-----
+
+--UlVJffcvxoiEqYs2--
