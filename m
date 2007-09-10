@@ -1,100 +1,183 @@
-From: Rene Herman <rene.herman@gmail.com>
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Mon, 10 Sep 2007 14:43:44 +0200
-Message-ID: <46E53C00.6060107@gmail.com>
-References: <20070907124800.GP16806@vanheusden.com>	 <p73fy1p9m57.fsf@bingen.suse.de>	 <1189371621.3526.28.camel@localhost.localdomain>	 <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org>	 <20070909212159.GF25798@one.firstfloor.org> <1189373951.3526.37.camel@localhost.localdomain> <46E4E64F.3070005@s5r6.in-berlin.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 4/5] NCR5380: Use scsi_eh API for REQUEST_SENSE invocation
+Date: Mon, 10 Sep 2007 17:25:54 +0300
+Message-ID: <46E553F2.7030603@panasas.com>
+References: <46E5508B.7030108@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtpq2.tilbu1.nb.home.nl ([213.51.146.201]:36023 "EHLO
-	smtpq2.tilbu1.nb.home.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758879AbXIJMux (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 08:50:53 -0400
-In-Reply-To: <46E4E64F.3070005@s5r6.in-berlin.de>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11512 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759322AbXIJO0X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 10:26:23 -0400
+In-Reply-To: <46E5508B.7030108@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andi Kleen <andi@firstfloor.org>, Jeff Garzik <jeff@garzik.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg
+Cc: Christoph Hellwig <hch@infradead.org>
 
-On 09/10/2007 08:38 AM, Stefan Richter wrote:
 
-> Nevertheless we should try to arrange the menus in a way that makes
-> sense to as many people as possible.  The difficulty is, different
-> environments call for different menu layouts, as your previous example
-> of SATA DVD-only boxes demonstrates.
-> 
-> However, liberal usage of 'select' is not the ultimate solution to
-> create menus that work for more people.  Just one problem with select is
-> that it works behind the back of the people configuring kernels (unless
-> they use an UI with debug options turned on) --- they have less control,
-> they are less informed.  ATA already 'select's SCSI.  What do we gain
-> from hiding the fact that Linux' SCSI option is not just for those
-> 50-wire ribbons (which people still think SCSI stands for) but is a very
-> central Linux subsystem for even more than what complies to the SCSI
-> family of standards?
-> 
-> 'select' should really be limited to switch on small library-like code
-> without further dependencies or requirements.  SCSI, together with its
-> upper layer options, is not of this kind of library.
-> 
-> We should think about order and grouping of prompts and the labels of
-> prompts (there were already suggestions in this discussion) before we
-> resort to 'select' --- or even worse, select options unconditionally
-> which are not always necessary to be enabled.
-> 
-> A pro pos grouping of options --- consider how options for another
-> central subsystem are laid out:
-> 
-> 	Networking
-> 		Networking options
-> 			...
-> 			TCP/IP networking
-> 			...
-> 		...
-> 
-> 	Device Drivers
-> 		...
-> 		Network device support
-> 			...
-> 			Ethernet (10 or 100MBit)
-> 			...
-> 		...
-> 
-> This also happens to reflect the layout of sources in directories, and
-> the current SCSI menu layout is close to source layout too --- but it
-> doesn't have to be that way.
+  - Use new scsi_eh_prep/restor_cmnd() for synchronous
+    REQUEST_SENSE invocation.
 
-If someone's keen on really restructuring these things -- in this analogy:
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/NCR5380.c       |   25 +++++++++++--------------
+ drivers/scsi/NCR5380.h       |    7 +++++++
+ drivers/scsi/atari_NCR5380.c |   25 ++++++++++---------------
+ drivers/scsi/sun3_NCR5380.c  |   20 +++++++++-----------
+ 4 files changed, 37 insertions(+), 40 deletions(-)
 
-Storage
-	Storage Options
-		...
-		Disk
-		Optical
-		...
-	...
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index f8e449a..1ca3727 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -1542,9 +1542,7 @@ part2:
+ 	hostdata->connected = cmd;
+ 	hostdata->busy[cmd->device->id] |= (1 << cmd->device->lun);
+ 
+-	if (cmd->SCp.ptr != (char *)cmd->sense_buffer) {
+-		initialize_SCp(cmd);
+-	}
++	initialize_SCp(cmd);
+ 
+ 	return 0;
+ 
+@@ -2280,19 +2278,18 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance) {
+ 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 
+ #ifdef AUTOSENSE
++					if ((cmd->cmnd[0] == REQUEST_SENSE) &&
++						hostdata->sesci.old_cmd_len) {
++						scsi_eh_restore_cmnd(cmd, &hostdata->sesci);
++						hostdata->sesci.old_cmd_len = 0 ;
++					}
++
+ 					if ((cmd->cmnd[0] != REQUEST_SENSE) && (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
++						unsigned char cmnd[6] = {REQUEST_SENSE ,0 ,0 ,0 ,0 ,0};
++						scsi_eh_prep_cmnd(cmd, &hostdata->sesci, cmnd,
++						                                     sizeof(cmnd), 1);
++
+ 						dprintk(NDEBUG_AUTOSENSE, ("scsi%d : performing request sense\n", instance->host_no));
+-						cmd->cmnd[0] = REQUEST_SENSE;
+-						cmd->cmnd[1] &= 0xe0;
+-						cmd->cmnd[2] = 0;
+-						cmd->cmnd[3] = 0;
+-						cmd->cmnd[4] = sizeof(cmd->sense_buffer);
+-						cmd->cmnd[5] = 0;
+-
+-						cmd->SCp.buffer = NULL;
+-						cmd->SCp.buffers_residual = 0;
+-						cmd->SCp.ptr = (char *) cmd->sense_buffer;
+-						cmd->SCp.this_residual = sizeof(cmd->sense_buffer);
+ 
+ 						LIST(cmd, hostdata->issue_queue);
+ 						cmd->host_scribble = (unsigned char *)
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index bccf13f..73855fc 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -30,6 +30,10 @@
+ 
+ #include <linux/interrupt.h>
+ 
++#ifdef AUTOSENSE
++#include <scsi/scsi_eh.h>
++#endif
++
+ #define NCR5380_PUBLIC_RELEASE 7
+ #define NCR53C400_PUBLIC_RELEASE 2
+ 
+@@ -281,6 +285,9 @@ struct NCR5380_hostdata {
+ 	unsigned pendingr;
+ 	unsigned pendingw;
+ #endif
++#ifdef AUTOSENSE
++	struct scsi_eh_save_cmnd_info sesci;
++#endif
+ };
+ 
+ #ifdef __KERNEL__
+diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
+index 03dbe60..a4bdd4c 100644
+--- a/drivers/scsi/atari_NCR5380.c
++++ b/drivers/scsi/atari_NCR5380.c
+@@ -2235,24 +2235,19 @@ static void NCR5380_information_transfer(struct Scsi_Host *instance)
+ 						cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 
+ #ifdef AUTOSENSE
++					if ((cmd->cmnd[0] == REQUEST_SENSE) &&
++						hostdata->sesci.old_cmd_len) {
++						scsi_eh_restore_cmnd(cmd, &hostdata->sesci);
++						hostdata->sesci.old_cmd_len = 0 ;
++					}
++
+ 					if ((cmd->cmnd[0] != REQUEST_SENSE) &&
+ 					    (status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
++						unsigned char cmnd[6] = {REQUEST_SENSE ,0 ,0 ,0 ,0 ,0};
++						scsi_eh_prep_cmnd(cmd, &hostdata->sesci, cmnd,
++						                                     sizeof(cmnd), 1);
++
+ 						ASEN_PRINTK("scsi%d: performing request sense\n", HOSTNO);
+-						cmd->cmnd[0] = REQUEST_SENSE;
+-						cmd->cmnd[1] &= 0xe0;
+-						cmd->cmnd[2] = 0;
+-						cmd->cmnd[3] = 0;
+-						cmd->cmnd[4] = sizeof(cmd->sense_buffer);
+-						cmd->cmnd[5] = 0;
+-						cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
+-
+-						cmd->use_sg = 0;
+-						/* this is initialized from initialize_SCp
+-						cmd->SCp.buffer = NULL;
+-						cmd->SCp.buffers_residual = 0;
+-						*/
+-						cmd->request_buffer = (char *) cmd->sense_buffer;
+-						cmd->request_bufflen = sizeof(cmd->sense_buffer);
+ 
+ 						local_irq_save(flags);
+ 						LIST(cmd,hostdata->issue_queue);
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index 98e3fe1..7a5287e 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -2254,25 +2254,23 @@ static void NCR5380_information_transfer (struct Scsi_Host *instance)
+ 			cmd->result = (cmd->result & 0x00ffff) | (DID_ERROR << 16);
+ 		    
+ #ifdef AUTOSENSE
++		    if ((cmd->cmnd[0] == REQUEST_SENSE) &&
++			                        hostdata->sesci.old_cmd_len) {
++			scsi_eh_restore_cmnd(cmd, &hostdata->sesci);
++			hostdata->sesci.old_cmd_len = 0 ;
++		    }
++
+ 		    if ((cmd->cmnd[0] != REQUEST_SENSE) && 
+ 			(status_byte(cmd->SCp.Status) == CHECK_CONDITION)) {
++			unsigned char cmnd[6] = {REQUEST_SENSE ,0 ,0 ,0 ,0 ,0};
++			scsi_eh_prep_cmnd(cmd, &hostdata->sesci, cmnd,
++			                                       sizeof(cmnd), 1);
+ 			ASEN_PRINTK("scsi%d: performing request sense\n",
+ 				    HOSTNO);
+-			cmd->cmnd[0] = REQUEST_SENSE;
+-			cmd->cmnd[1] &= 0xe0;
+-			cmd->cmnd[2] = 0;
+-			cmd->cmnd[3] = 0;
+-			cmd->cmnd[4] = sizeof(cmd->sense_buffer);
+-			cmd->cmnd[5] = 0;
+-			cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
+-
+-			cmd->use_sg = 0;
+ 			/* this is initialized from initialize_SCp 
+ 			cmd->SCp.buffer = NULL;
+ 			cmd->SCp.buffers_residual = 0;
+ 			*/
+-			cmd->request_buffer = (char *) cmd->sense_buffer;
+-			cmd->request_bufflen = sizeof(cmd->sense_buffer);
+ 
+ 			local_irq_save(flags);
+ 			LIST(cmd,hostdata->issue_queue);
+-- 
+1.5.3.1
 
-Device Drivers
-	...
-	Storage Support
-		...
-		IDE
-		PATA
-		SATA
-		SCSI
-		USB
-		FW
-		...
-	...
-
-(sound is an example where both in the menus and the tree everything is kept 
-under one top-level sound/ directory, not sound/ and drivers/sound/ as for 
-networking -- opinions may vary which one's better I guess).
-
-This is just config menus -- on a source code level, it would also make 
-sense at least at some point to introduce "storage/" alongside net/ and 
-sound/ and move things around I guess.
-
-Rene.
 
