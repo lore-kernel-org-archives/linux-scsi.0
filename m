@@ -1,107 +1,167 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [patchset ver2 0/5] Refactoring scsi_error to facilitate in synchronous
- REQUEST_SENSE
-Date: Mon, 10 Sep 2007 22:13:36 +0300
-Message-ID: <46E59760.9020705@panasas.com>
+Subject: [PATCH ver2 1/5] scsi_error: code cleanup before refactoring of scsi_send_eh_cmnd()
+Date: Mon, 10 Sep 2007 22:34:22 +0300
+Message-ID: <46E59C3E.1020703@panasas.com>
+References: <46E59760.9020705@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:22058 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28901 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752821AbXIJTOV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 15:14:21 -0400
+	with ESMTP id S1757762AbXIJTes (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Sep 2007 15:34:48 -0400
+In-Reply-To: <46E59760.9020705@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg
 Cc: Christoph Hellwig <hch@infradead.org>, Randy Dunlap <rdunlap@xenotime.net>
 
-Thank you Christoph, Randy, Alen for your comments.
-Here is ver 2 incorporating all your suggestions.
 
-On Mon, Sep 10 2007 at 18:12 +0300, Christoph Hellwig <hch@infradead.org> wrote:
-> I think just struct "struct scsi_eh_save *save" is descriptive enough and
-> almost fits on a line as well..  Also continuation of the prototype
-> is indented by two tabs normally.
-> I think you can kill the old prefixes in the struct, they're saved
-> per defintion.
-Done
+  - regrouped variables for easier reviewing of next patch
+  - Support of cmnd==NULL in call to scsi_send_eh_cmnd()
+  - In the copy_sense case set transfer size to the minimum
+    size of sense_buffer and passed copy_sense. cmnd[4] is
+    set accordingly.
+  - REQUEST_SENSE is set into cmnd[0] so if copy_sense is
+    not Zero passed cmnd can/should be NULL.
+  - Also save/restore resid of faild command.
 
-On Mon, Sep 10 2007 at 18:58 +0300, Alan Stern <stern@rowland.harvard.edu> wrote:
-> A trivial problem is that quilt complains about patch 3, which leaves 
-> extra whitespace at the end of line 591 in transport.c.
-> 
-Thanks
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/scsi_error.c |   63 +++++++++++++++++++++++++--------------------
+ 1 files changed, 35 insertions(+), 28 deletions(-)
 
-> More seriously, why make the caller define a static generic_sense 
-> array?  Why not put the array in scsi_eh_prep_cmnd(), where it can be 
-> used whenever copy_sense is nonzero?
-> 
-I hope you like my solution
-
-> The line initializing the sense buffer to zero should be inside the 
-> copy_sense conditional block.
-> 
-Thanks 
-
-> The code setting the LUN bits in scmd[1] is wrong.  It should be like 
-> the code in scsi_dispatch_cmd(); i.e., those bits should not be set if 
-> the scsi_level is SCSI_UNKNOWN.
-> 
-Thanks, good catch
-
-> Finally, a really serious problem.  The code sets the buffer length for
-> the REQUEST SENSE command to be the length of scmd->sense_buffer, which
-> is 96.  But many USB devices won't work properly unless the requesed
-> sense data length is 18.  The appropriate adjustment must be added to 
-> transport.c in patch 3.
-> 
-I was afraid of that at the beginning. But testing both with a Seagate
-USB sata hard-disk and Sandisk 2Gb usb-stick. They both returned a short
-read of 56 but other wise were happy. So I thought it is leftovers from
-The time the sense buffer was driver allocated. Also the standard 
-recommends a short-read behavior. But I have taken your advise to hart
-and changed the code accordingly. Please check me out.
-
-----------------------------------------------------------------  
-
-In motivation to abstract scsi_cmnd members and insulate
-drivers/transports from scsi_cmnd internals. The last
-place left was the REQUEST_SENSE sequence when done
-synchronous, by drivers.
-
-Also all these drivers would do a use_sg==0 command
-invocation, preventing from doing cleanups on these
-drivers/transports. So this patchset is left-overs
-from Christoph's 2.6.18 cleanups.
-
-In this patchset I have re-factored scsi_error to
-make it possible for drivers to use an abstract
-(easy to use, I hope) API for invoking a REQUEST_SENSE
-command. The API is declared in scsi/scsi_eh.h
-
-[patch 1/5] scsi_error: code cleanup before refactoring of scsi_send_eh_cmnd()
-  Move some code around and add new fixtures here. So next patch is
-  left a Mechanical breakup of code.
-
-[patch 2/5] scsi_error: Refactoring scsi_error to facilitate in synchronous REQUEST_SENSE
-  Here new API is introduced in scsi/scsi_eh.h and mechanical move of code
-  to the new functions.
-
-[PATCH 3/5] usb: transport.c use scsi_eh API in REQUEST_SENSE execution
-  Use above API for drivers/usb/storage/transport.c. Now that last
-  User of use_sg==0, we can do the USB storage cleanups.
-
-[PATCH 4/5] NCR5380: Use scsi_eh API for REQUEST_SENSE invocation
-  All NCR5380 family of drivers used to send a REQUEST_SENSE
-  command.
-
-[PATCH 5/5] arm: fas216 Use scsi_eh API for REQUEST_SENSE invocation
-	drivers/scsi/arm/fas216.c need change also.
-
-Please Test as much as possible, and report any problems/differences.
-
-Boaz Harrosh
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index c8e351f..20a72aa 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -607,21 +607,24 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
+  *    SUCCESS or FAILED or NEEDS_RETRY
+  **/
+ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+-			     int cmnd_size, int timeout, int copy_sense)
++			     int cmnd_size, int timeout, unsigned copy_sense)
+ {
+ 	struct scsi_device *sdev = scmd->device;
+ 	struct Scsi_Host *shost = sdev->host;
+-	int old_result = scmd->result;
+ 	DECLARE_COMPLETION_ONSTACK(done);
+ 	unsigned long timeleft;
+ 	unsigned long flags;
+-	struct scatterlist sgl;
++
++	unsigned char old_cmd_len;
+ 	unsigned char old_cmnd[MAX_COMMAND_SIZE];
+ 	enum dma_data_direction old_data_direction;
+-	unsigned short old_use_sg;
+-	unsigned char old_cmd_len;
+ 	unsigned old_bufflen;
+ 	void *old_buffer;
++	unsigned short old_use_sg;
++	int old_resid;
++	int old_result;
++
++	struct scatterlist sgl;
+ 	int rtn;
  
+ 	/*
+@@ -631,24 +634,37 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 	 * we will need to restore these values prior to running the actual
+ 	 * command.
+ 	 */
+-	old_buffer = scmd->request_buffer;
+-	old_bufflen = scmd->request_bufflen;
++	old_cmd_len = scmd->cmd_len;
+ 	memcpy(old_cmnd, scmd->cmnd, sizeof(scmd->cmnd));
+ 	old_data_direction = scmd->sc_data_direction;
+-	old_cmd_len = scmd->cmd_len;
++	old_bufflen = scmd->request_bufflen;
++	old_buffer = scmd->request_buffer;
+ 	old_use_sg = scmd->use_sg;
++	old_resid = scmd->resid;
++	old_result = scmd->result;
+ 
+-	memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
+-	memcpy(scmd->cmnd, cmnd, cmnd_size);
++	if (cmnd) {
++		memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
++		memcpy(scmd->cmnd, cmnd, cmnd_size);
++		scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
++	}
+ 
+ 	if (copy_sense) {
+ 		sg_init_one(&sgl, scmd->sense_buffer,
+ 			    sizeof(scmd->sense_buffer));
+-
+-		scmd->sc_data_direction = DMA_FROM_DEVICE;
+-		scmd->request_bufflen = sgl.length;
+ 		scmd->request_buffer = &sgl;
++		scmd->sc_data_direction = DMA_FROM_DEVICE;
++		scmd->request_bufflen = min_t(unsigned,
++		                       sizeof(scmd->sense_buffer), copy_sense);
+ 		scmd->use_sg = 1;
++		memset(scmd->cmnd, 0, 6);
++		scmd->cmnd[0] = REQUEST_SENSE;
++		scmd->cmnd[4] = scmd->request_bufflen;
++		/*
++		 * Zero the sense buffer.  The scsi spec mandates that any
++		 * untransferred sense data should be interpreted as being zero.
++		 */
++		memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
+ 	} else {
+ 		scmd->request_buffer = NULL;
+ 		scmd->request_bufflen = 0;
+@@ -657,18 +673,11 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 	}
+ 
+ 	scmd->underflow = 0;
+-	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
+ 
+-	if (sdev->scsi_level <= SCSI_2)
++	if (sdev->scsi_level <= SCSI_2 && sdev->scsi_level != SCSI_UNKNOWN)
+ 		scmd->cmnd[1] = (scmd->cmnd[1] & 0x1f) |
+ 			(sdev->lun << 5 & 0xe0);
+ 
+-	/*
+-	 * Zero the sense buffer.  The scsi spec mandates that any
+-	 * untransferred sense data should be interpreted as being zero.
+-	 */
+-	memset(scmd->sense_buffer, 0, sizeof(scmd->sense_buffer));
+-
+ 	shost->eh_action = &done;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+@@ -716,12 +725,13 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+ 	/*
+ 	 * Restore original data
+ 	 */
+-	scmd->request_buffer = old_buffer;
+-	scmd->request_bufflen = old_bufflen;
++	scmd->cmd_len = old_cmd_len;
+ 	memcpy(scmd->cmnd, old_cmnd, sizeof(scmd->cmnd));
+ 	scmd->sc_data_direction = old_data_direction;
+-	scmd->cmd_len = old_cmd_len;
++	scmd->request_bufflen = old_bufflen;
++	scmd->request_buffer = old_buffer;
+ 	scmd->use_sg = old_use_sg;
++	scmd->resid = old_resid;
+ 	scmd->result = old_result;
+ 	return rtn;
+ }
+@@ -737,10 +747,7 @@ static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
+  **/
+ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ {
+-	static unsigned char generic_sense[6] =
+-		{REQUEST_SENSE, 0, 0, 0, 252, 0};
+-
+-	return scsi_send_eh_cmnd(scmd, generic_sense, 6, SENSE_TIMEOUT, 1);
++	return scsi_send_eh_cmnd(scmd, NULL, 0, SENSE_TIMEOUT, ~0);
+ }
+ 
+ /**
+-- 
+1.5.3.1
 
 
