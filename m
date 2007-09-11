@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 18/27] blk_end_request: changing mmc (take 2)
-Date: Tue, 11 Sep 2007 15:02:30 -0400 (EDT)
-Message-ID: <20070911.150230.101501522.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 20/27] blk_end_request: changing scsi (take 2)
+Date: Tue, 11 Sep 2007 15:03:04 -0400 (EDT)
+Message-ID: <20070911.150304.03593612.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,78 +20,53 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts mmc to use blk_end_request().
+This patch converts scsi mid-layer to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/mmc/card/block.c |   24 +++++-------------------
- drivers/mmc/card/queue.c |    4 ++--
- 2 files changed, 7 insertions(+), 21 deletions(-)
+ drivers/scsi/scsi_lib.c |   13 ++-----------
+ 1 files changed, 2 insertions(+), 11 deletions(-)
 
-diff -rupN 17-i2o-caller-change/drivers/mmc/card/block.c 18-mmc-caller-change/drivers/mmc/card/block.c
---- 17-i2o-caller-change/drivers/mmc/card/block.c	2007-09-10 17:32:13.000000000 -0400
-+++ 18-mmc-caller-change/drivers/mmc/card/block.c	2007-09-10 18:08:53.000000000 -0400
-@@ -336,15 +336,7 @@ static int mmc_blk_issue_rq(struct mmc_q
- 		 * A block was successfully transferred.
- 		 */
- 		spin_lock_irq(&md->lock);
--		ret = end_that_request_chunk(req, 1, brq.data.bytes_xfered);
--		if (!ret) {
--			/*
--			 * The whole request completed successfully.
--			 */
--			add_disk_randomness(req->rq_disk);
--			blkdev_dequeue_request(req);
--			end_that_request_last(req, 1);
--		}
-+		ret = __blk_end_request(req, 1, brq.data.bytes_xfered);
- 		spin_unlock_irq(&md->lock);
- 	} while (ret);
+diff -rupN 19-s390-caller-change/drivers/scsi/scsi_lib.c 20-scsi-mid-caller-change/drivers/scsi/scsi_lib.c
+--- 19-s390-caller-change/drivers/scsi/scsi_lib.c	2007-09-10 17:32:15.000000000 -0400
++++ 20-scsi-mid-caller-change/drivers/scsi/scsi_lib.c	2007-09-10 18:11:55.000000000 -0400
+@@ -655,13 +655,12 @@ static struct scsi_cmnd *scsi_end_reques
+ {
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+-	unsigned long flags;
  
-@@ -374,27 +366,21 @@ static int mmc_blk_issue_rq(struct mmc_q
- 			else
- 				bytes = blocks << 9;
- 			spin_lock_irq(&md->lock);
--			ret = end_that_request_chunk(req, 1, bytes);
-+			ret = __blk_end_request(req, 1, bytes);
- 			spin_unlock_irq(&md->lock);
+ 	/*
+ 	 * If there are blocks left over at the end, set up the command
+ 	 * to queue the remainder of them.
+ 	 */
+-	if (end_that_request_chunk(req, uptodate, bytes)) {
++	if (blk_end_request(req, uptodate, bytes)) {
+ 		int leftover = (req->hard_nr_sectors << 9);
+ 
+ 		if (blk_pc_request(req))
+@@ -669,7 +668,7 @@ static struct scsi_cmnd *scsi_end_reques
+ 
+ 		/* kill remainder if no retrys */
+ 		if (!uptodate && blk_noretry_request(req))
+-			end_that_request_chunk(req, 0, leftover);
++			blk_end_request(req, 0, leftover);
+ 		else {
+ 			if (requeue) {
+ 				/*
+@@ -684,14 +683,6 @@ static struct scsi_cmnd *scsi_end_reques
  		}
- 	} else if (rq_data_dir(req) != READ &&
- 		   (card->host->caps & MMC_CAP_MULTIWRITE)) {
- 		spin_lock_irq(&md->lock);
--		ret = end_that_request_chunk(req, 1, brq.data.bytes_xfered);
-+		ret = __blk_end_request(req, 1, brq.data.bytes_xfered);
- 		spin_unlock_irq(&md->lock);
  	}
  
- 	mmc_release_host(card->host);
- 
- 	spin_lock_irq(&md->lock);
--	while (ret) {
--		ret = end_that_request_chunk(req, 0,
--				req->current_nr_sectors << 9);
--	}
--
 -	add_disk_randomness(req->rq_disk);
--	blkdev_dequeue_request(req);
--	end_that_request_last(req, 0);
-+	while (ret)
-+		ret = __blk_end_request(req, 0, blk_rq_cur_size(req));
- 	spin_unlock_irq(&md->lock);
- 
- 	return 0;
-diff -rupN 17-i2o-caller-change/drivers/mmc/card/queue.c 18-mmc-caller-change/drivers/mmc/card/queue.c
---- 17-i2o-caller-change/drivers/mmc/card/queue.c	2007-08-27 21:32:35.000000000 -0400
-+++ 18-mmc-caller-change/drivers/mmc/card/queue.c	2007-09-10 18:08:53.000000000 -0400
-@@ -93,8 +93,8 @@ static void mmc_request(struct request_q
- 		printk(KERN_ERR "MMC: killing requests for dead queue\n");
- 		while ((req = elv_next_request(q)) != NULL) {
- 			do {
--				ret = end_that_request_chunk(req, 0,
--					req->current_nr_sectors << 9);
-+				ret = __blk_end_request(req, 0,
-+							blk_rq_cur_size(req));
- 			} while (ret);
- 		}
- 		return;
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	if (blk_rq_tagged(req))
+-		blk_queue_end_tag(q, req);
+-	end_that_request_last(req, uptodate);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+-
+ 	/*
+ 	 * This will goose the queue request function at the end, so we don't
+ 	 * need to worry about launching another command.
