@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 23/27] blk_end_request: changing cciss (take 2)
-Date: Tue, 11 Sep 2007 15:04:12 -0400 (EDT)
-Message-ID: <20070911.150412.01284032.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 24/27] blk_end_request: changing cpqarray (take 2)
+Date: Tue, 11 Sep 2007 15:04:34 -0400 (EDT)
+Message-ID: <20070911.150434.109053539.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,10 +20,10 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts cciss to use blk_end_request().
+This patch converts cpqarray to use blk_end_request().
 
-cciss is a little bit different from "normal" drivers.
-cciss directly calls bio_endio() and disk_stat_add()
+cpqarray is a little bit different from "normal" drivers.
+cpqarray directly calls bio_endio() and disk_stat_add()
 when completing request.  But those can be replaced with
 __end_that_request_first().
 After the replacement, request completion procedures of
@@ -32,42 +32,52 @@ those drivers become like the following:
     o add_disk_randomness()
     o end_that_request_last()
 This can be converted to blk_end_request() by following
-the rule (a) mentioned in the patch subject
+the rule (b) mentioned in the patch subject
 "[PATCH 01/27] blk_end_request: add new request completion interface".
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/cciss.c |   26 +++-----------------------
- 1 files changed, 3 insertions(+), 23 deletions(-)
+ drivers/block/cpqarray.c |   28 ++--------------------------
+ 1 files changed, 2 insertions(+), 26 deletions(-)
 
-diff -rupN 22-xsysace-caller-change/drivers/block/cciss.c 23-cciss-caller-change/drivers/block/cciss.c
---- 22-xsysace-caller-change/drivers/block/cciss.c	2007-09-10 17:32:11.000000000 -0400
-+++ 23-cciss-caller-change/drivers/block/cciss.c	2007-09-10 18:16:34.000000000 -0400
-@@ -1187,18 +1187,6 @@ static int cciss_ioctl(struct inode *ino
+diff -rupN 23-cciss-caller-change/drivers/block/cpqarray.c 24-cpqarray-caller-change/drivers/block/cpqarray.c
+--- 23-cciss-caller-change/drivers/block/cpqarray.c	2007-08-27 21:32:35.000000000 -0400
++++ 24-cpqarray-caller-change/drivers/block/cpqarray.c	2007-09-10 18:17:03.000000000 -0400
+@@ -166,7 +166,6 @@ static void start_io(ctlr_info_t *h);
+ 
+ static inline void addQ(cmdlist_t **Qptr, cmdlist_t *c);
+ static inline cmdlist_t *removeQ(cmdlist_t **Qptr, cmdlist_t *c);
+-static inline void complete_buffers(struct bio *bio, int ok);
+ static inline void complete_command(cmdlist_t *cmd, int timeout);
+ 
+ static irqreturn_t do_ida_intr(int irq, void *dev_id);
+@@ -978,20 +977,6 @@ static void start_io(ctlr_info_t *h)
  	}
  }
  
--static inline void complete_buffers(struct bio *bio, int status)
+-static inline void complete_buffers(struct bio *bio, int ok)
 -{
--	while (bio) {
--		struct bio *xbh = bio->bi_next;
+-	struct bio *xbh;
+-	while(bio) {
 -		int nr_sectors = bio_sectors(bio);
 -
+-		xbh = bio->bi_next;
 -		bio->bi_next = NULL;
--		bio_endio(bio, nr_sectors << 9, status ? 0 : -EIO);
+-		
+-		bio_endio(bio, nr_sectors << 9, ok ? 0 : -EIO);
+-
 -		bio = xbh;
 -	}
 -}
--
- static void cciss_check_queues(ctlr_info_t *h)
- {
- 	int start_queue = h->next_to_run;
-@@ -1264,21 +1252,14 @@ static void cciss_softirq_done(struct re
- 		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
- 	}
+ /*
+  * Mark all buffers that cmd was responsible for
+  */
+@@ -1029,18 +1014,9 @@ static inline void complete_command(cmdl
+                 pci_unmap_page(hba[cmd->ctlr]->pci_dev, cmd->req.sg[i].addr,
+ 				cmd->req.sg[i].size, ddir);
  
--	complete_buffers(rq->bio, (rq->errors == 0));
+-	complete_buffers(rq->bio, ok);
 -
 -	if (blk_fs_request(rq)) {
 -		const int rw = rq_data_dir(rq);
@@ -75,24 +85,12 @@ diff -rupN 22-xsysace-caller-change/drivers/block/cciss.c 23-cciss-caller-change
 -		disk_stat_add(rq->rq_disk, sectors[rw], rq->nr_sectors);
 -	}
 -
- #ifdef CCISS_DEBUG
- 	printk("Done with %p\n", rq);
- #endif				/* CCISS_DEBUG */
- 
 -	add_disk_randomness(rq->rq_disk);
-+	if (blk_end_request(rq, (rq->errors == 0), blk_rq_size(rq)))
+-
+ 	DBGPX(printk("Done with %p\n", rq););
+-	end_that_request_last(rq, ok ? 1 : -EIO);
++	if (__blk_end_request(rq, ok, blk_rq_size(rq)))
 +		BUG();
-+
- 	spin_lock_irqsave(&h->lock, flags);
--	end_that_request_last(rq, (rq->errors == 0));
- 	cmd_free(h, cmd, 1);
- 	cciss_check_queues(h);
- 	spin_unlock_irqrestore(&h->lock, flags);
-@@ -2545,7 +2526,6 @@ after_error_processing:
- 	}
- 	cmd->rq->data_len = 0;
- 	cmd->rq->completion_data = cmd;
--	blk_add_trace_rq(cmd->rq->q, cmd->rq, BLK_TA_COMPLETE);
- 	blk_complete_request(cmd->rq);
  }
  
+ /*
