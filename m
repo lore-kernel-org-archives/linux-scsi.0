@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 11/27] blk_end_request: changing sunvdc (take 2)
-Date: Tue, 11 Sep 2007 15:00:01 -0400 (EDT)
-Message-ID: <20070911.150001.39667186.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 12/27] blk_end_request: changing sx8 (take 2)
+Date: Tue, 11 Sep 2007 15:00:32 -0400 (EDT)
+Message-ID: <20070911.150032.15584999.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,26 +20,27 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts sunvdc to use blk_end_request().
+This patch converts sx8 to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/sunvdc.c |    5 +----
- 1 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/block/sx8.c |    4 +---
+ 1 files changed, 1 insertion(+), 3 deletions(-)
 
-diff -rupN 10-ps3disk-caller-change/drivers/block/sunvdc.c 11-sunvdc-caller-change/drivers/block/sunvdc.c
---- 10-ps3disk-caller-change/drivers/block/sunvdc.c	2007-08-27 21:32:35.000000000 -0400
-+++ 11-sunvdc-caller-change/drivers/block/sunvdc.c	2007-09-10 18:03:31.000000000 -0400
-@@ -213,10 +213,7 @@ static void vdc_end_special(struct vdc_p
+diff -rupN 11-sunvdc-caller-change/drivers/block/sx8.c 12-sx8-caller-change/drivers/block/sx8.c
+--- 11-sunvdc-caller-change/drivers/block/sx8.c	2007-08-27 21:32:35.000000000 -0400
++++ 12-sx8-caller-change/drivers/block/sx8.c	2007-09-10 18:04:02.000000000 -0400
+@@ -747,11 +747,9 @@ static inline void carm_end_request_queu
+ 	struct request *req = crq->rq;
+ 	int rc;
  
- static void vdc_end_request(struct request *req, int uptodate, int num_sectors)
- {
--	if (end_that_request_first(req, uptodate, num_sectors))
--		return;
--	add_disk_randomness(req->rq_disk);
+-	rc = end_that_request_first(req, uptodate, req->hard_nr_sectors);
++	rc = __blk_end_request(req, uptodate, blk_rq_size(req));
+ 	assert(rc == 0);
+ 
 -	end_that_request_last(req, uptodate);
-+	__blk_end_request(req, uptodate, num_sectors << 9);
+-
+ 	rc = carm_put_request(host, crq);
+ 	assert(rc == 0);
  }
- 
- static void vdc_end_one(struct vdc_port *port, struct vio_dring_state *dr,
