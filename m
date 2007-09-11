@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 16/27] blk_end_request: changing viocd (take 2)
-Date: Tue, 11 Sep 2007 15:01:50 -0400 (EDT)
-Message-ID: <20070911.150150.10127251.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 19/27] blk_end_request: changing s390 (take 2)
+Date: Tue, 11 Sep 2007 15:02:49 -0400 (EDT)
+Message-ID: <20070911.150249.78157677.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,27 +20,41 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts viocd to use blk_end_request().
+This patch converts s390 to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/cdrom/viocd.c |    5 +----
- 1 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/s390/block/dasd.c      |    4 +---
+ drivers/s390/char/tape_block.c |    3 +--
+ 2 files changed, 2 insertions(+), 5 deletions(-)
 
-diff -rupN 15-xen-caller-change/drivers/cdrom/viocd.c 16-viocd-caller-change/drivers/cdrom/viocd.c
---- 15-xen-caller-change/drivers/cdrom/viocd.c	2007-08-27 21:32:35.000000000 -0400
-+++ 16-viocd-caller-change/drivers/cdrom/viocd.c	2007-09-10 18:06:02.000000000 -0400
-@@ -389,11 +389,8 @@ static void viocd_end_request(struct req
- 	if (!nsectors)
- 		nsectors = 1;
- 
--	if (end_that_request_first(req, uptodate, nsectors))
-+	if (__blk_end_request(req, uptodate, nsectors << 9))
+diff -rupN 18-mmc-caller-change/drivers/s390/block/dasd.c 19-s390-caller-change/drivers/s390/block/dasd.c
+--- 18-mmc-caller-change/drivers/s390/block/dasd.c	2007-08-27 21:32:35.000000000 -0400
++++ 19-s390-caller-change/drivers/s390/block/dasd.c	2007-09-10 18:09:25.000000000 -0400
+@@ -1080,10 +1080,8 @@ dasd_int_handler(struct ccw_device *cdev
+ static inline void
+ dasd_end_request(struct request *req, int uptodate)
+ {
+-	if (end_that_request_first(req, uptodate, req->hard_nr_sectors))
++	if (__blk_end_request(req, uptodate, blk_rq_size(req)))
  		BUG();
 -	add_disk_randomness(req->rq_disk);
--	blkdev_dequeue_request(req);
 -	end_that_request_last(req, uptodate);
  }
  
- static int rwreq;
+ /*
+diff -rupN 18-mmc-caller-change/drivers/s390/char/tape_block.c 19-s390-caller-change/drivers/s390/char/tape_block.c
+--- 18-mmc-caller-change/drivers/s390/char/tape_block.c	2007-08-27 21:32:35.000000000 -0400
++++ 19-s390-caller-change/drivers/s390/char/tape_block.c	2007-09-10 18:09:25.000000000 -0400
+@@ -76,9 +76,8 @@ tapeblock_trigger_requeue(struct tape_de
+ static void
+ tapeblock_end_request(struct request *req, int uptodate)
+ {
+-	if (end_that_request_first(req, uptodate, req->hard_nr_sectors))
++	if (__blk_end_request(req, uptodate, blk_rq_size(req)))
+ 		BUG();
+-	end_that_request_last(req, uptodate);
+ }
+ 
+ static void
