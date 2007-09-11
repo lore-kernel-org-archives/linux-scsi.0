@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 12/27] blk_end_request: changing sx8 (take 2)
-Date: Tue, 11 Sep 2007 15:00:32 -0400 (EDT)
-Message-ID: <20070911.150032.15584999.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 13/27] blk_end_request: changing ub (take 2)
+Date: Tue, 11 Sep 2007 15:00:51 -0400 (EDT)
+Message-ID: <20070911.150051.25402848.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,27 +20,25 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts sx8 to use blk_end_request().
+This patch converts ub to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/sx8.c |    4 +---
- 1 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/block/ub.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-diff -rupN 11-sunvdc-caller-change/drivers/block/sx8.c 12-sx8-caller-change/drivers/block/sx8.c
---- 11-sunvdc-caller-change/drivers/block/sx8.c	2007-08-27 21:32:35.000000000 -0400
-+++ 12-sx8-caller-change/drivers/block/sx8.c	2007-09-10 18:04:02.000000000 -0400
-@@ -747,11 +747,9 @@ static inline void carm_end_request_queu
- 	struct request *req = crq->rq;
- 	int rc;
- 
--	rc = end_that_request_first(req, uptodate, req->hard_nr_sectors);
-+	rc = __blk_end_request(req, uptodate, blk_rq_size(req));
- 	assert(rc == 0);
- 
--	end_that_request_last(req, uptodate);
--
- 	rc = carm_put_request(host, crq);
- 	assert(rc == 0);
+diff -rupN 12-sx8-caller-change/drivers/block/ub.c 13-ub-caller-change/drivers/block/ub.c
+--- 12-sx8-caller-change/drivers/block/ub.c	2007-08-27 21:32:35.000000000 -0400
++++ 13-ub-caller-change/drivers/block/ub.c	2007-09-10 18:04:31.000000000 -0400
+@@ -814,8 +814,8 @@ static void ub_end_rq(struct request *rq
+ 		uptodate = 0;
+ 		rq->errors = scsi_status;
+ 	}
+-	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
+-	end_that_request_last(rq, uptodate);
++	if (__blk_end_request(rq, uptodate, blk_rq_size(rq)))
++		BUG();
  }
+ 
+ static int ub_rw_cmd_retry(struct ub_dev *sc, struct ub_lun *lun,
