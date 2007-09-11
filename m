@@ -1,40 +1,50 @@
-From: "Julian Calaby" <julian.calaby@gmail.com>
-Subject: Re: [PATCH ver3 1/5] scsi_error: code cleanup before refactoring of scsi_send_eh_cmnd()
-Date: Tue, 11 Sep 2007 18:11:44 +1000
-Message-ID: <646765f40709110111w5a6a2913n9c7080f13206c366@mail.gmail.com>
-References: <46E59760.9020705@panasas.com> <46E59C3E.1020703@panasas.com>
-	 <46E64BDE.2070602@panasas.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 2.6.23-rc4-mm1
+Date: Tue, 11 Sep 2007 10:32:04 +0200
+Message-ID: <20070911083204.GE4187@kernel.dk>
+References: <20070910111926.9c942358.akpm@linux-foundation.org> <64bb37e0709101159v47f586aby7f078ef1db5cbc39@mail.gmail.com> <20070910122038.1f1bb006.akpm@linux-foundation.org> <20070910045503O.tomof@acm.org> <64bb37e0709101343t2a621239pfc3545263e0b7674@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.233]:10932 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759444AbXIKILp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 04:11:45 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so668163nze
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Sep 2007 01:11:45 -0700 (PDT)
-In-Reply-To: <46E64BDE.2070602@panasas.com>
+Received: from brick.kernel.dk ([87.55.233.238]:23385 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762951AbXIKIXe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Sep 2007 04:23:34 -0400
 Content-Disposition: inline
+In-Reply-To: <64bb37e0709101343t2a621239pfc3545263e0b7674@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@suse.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, Randy Dunlap <rdunlap@xenotime.net>
+To: Torsten Kaiser <just.for.lkml@googlemail.com>
+Cc: FUJITA Tomonori <tomof@acm.org>, akpm@linux-foundation.org, apw@shadowen.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-(added CCs - that's what you get for sending emails after 5.)
+On Mon, Sep 10 2007, Torsten Kaiser wrote:
+> On 9/10/07, FUJITA Tomonori <tomof@acm.org> wrote:
+> > On Mon, 10 Sep 2007 12:20:38 -0700
+> > Andrew Morton <akpm@linux-foundation.org> wrote:
+> >
+> > > On Mon, 10 Sep 2007 20:59:49 +0200 "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
+> > > > The system boots, reads the partition tables, starts the RAID and then
+> > > > kicks one drive out because of errors.
+> > >
+> > > Andy is using qla1280.  You're using sata.  So it's probably a different
+> > > bug, with the same symptoms.
+> >
+> > This might be a sg chaining bug too (probabaly sg chaining libata
+> > patch).
+> >
+> > Can you try the following patch that I've just sent:
+> >
+> > http://lkml.org/lkml/2007/9/10/251
+> >
+> > The patch also disables chaining sg list for libata.
+> >
+> With this patch 2.6.23-rc4-mm1 works for me.
+> Mainline 2.6.23-rc5-git1 works also without needing any patches.
 
-On 9/11/07, Boaz Harrosh <bharrosh@panasas.com> wrote:
->
->  static int scsi_send_eh_cmnd(struct scsi_cmnd *scmd, unsigned char *cmnd,
-> -                            int cmnd_size, int timeout, int copy_sense)
-> +                            int cmnd_size, int timeout, unsigned sense_bytes)
+OK, thanks for testing that. I'll merge Tomo's patch so that we can
+selectively enable drivers when we KNOW they work, instead of trying to
+do this (massive) operation whole sale.
 
-Shouldn't that be unsigned _int_?
+-- 
+Jens Axboe
 
-Thanks,
-
---
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
