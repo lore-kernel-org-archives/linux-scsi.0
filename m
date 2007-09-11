@@ -1,8 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 02/27] blk_end_request: add blk_rq_size()
-	functions (take 2)
-Date: Tue, 11 Sep 2007 14:56:25 -0400 (EDT)
-Message-ID: <20070911.145625.110018211.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 03/27] blk_end_request: changing block layer core
+	(take 2)
+Date: Tue, 11 Sep 2007 14:56:58 -0400 (EDT)
+Message-ID: <20070911.145658.112978437.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -21,47 +21,50 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds functions to get the size of request in bytes.
-They are useful because blk_end_request() takes bytes
-as a completed I/O size instead of sectors.
+This patch converts core parts of block layer to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- include/linux/blkdev.h |   24 ++++++++++++++++++++++++
- 1 files changed, 24 insertions(+)
+ block/ll_rw_blk.c |   15 +++++----------
+ 1 files changed, 5 insertions(+), 10 deletions(-)
 
-diff -rupN 01-blkendreq-interface/include/linux/blkdev.h 02-rq-size-macro/include/linux/blkdev.h
---- 01-blkendreq-interface/include/linux/blkdev.h	2007-09-10 17:42:56.000000000 -0400
-+++ 02-rq-size-macro/include/linux/blkdev.h	2007-09-10 17:44:43.000000000 -0400
-@@ -737,6 +737,30 @@ extern void end_queued_request(struct re
- extern void blk_complete_request(struct request *);
+diff -rupN 02-rq-size-macro/block/ll_rw_blk.c 03-blkcore-caller-change/block/ll_rw_blk.c
+--- 02-rq-size-macro/block/ll_rw_blk.c	2007-09-10 17:42:56.000000000 -0400
++++ 03-blkcore-caller-change/block/ll_rw_blk.c	2007-09-10 17:57:59.000000000 -0400
+@@ -365,8 +365,8 @@ void blk_ordered_complete_seq(struct req
+ 	q->ordseq = 0;
+ 	rq = q->orig_bar_rq;
  
- /*
-+ * blk_end_request() takes bytes instead of sectors as a complete size.
-+ * blk_rq_size() returns the entire size left to complete in the request.
-+ * blk_rq_cur_size() returns the size left to complete in the current segment.
-+ */
-+static inline int blk_rq_size(struct request *rq)
-+{
-+	if (blk_fs_request(rq))
-+		return rq->hard_nr_sectors << 9;
-+
-+	return rq->data_len;
-+}
-+
-+static inline int blk_rq_cur_size(struct request *rq)
-+{
-+	if (blk_fs_request(rq))
-+		return rq->current_nr_sectors << 9;
-+
-+	if (rq->bio)
-+		return rq->bio->bi_size;
-+
-+	return rq->data_len;
-+}
-+
-+/*
-  * end_that_request_first/chunk() takes an uptodate argument. we account
-  * any value <= as an io error. 0 means -EIO for compatability reasons,
-  * any other < 0 value is the direct error type. An uptodate value of
+-	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
+-	end_that_request_last(rq, uptodate);
++	if (__blk_end_request(rq, uptodate, blk_rq_size(rq)))
++		BUG();
+ }
+ 
+ static void pre_flush_end_io(struct request *rq, int error)
+@@ -484,9 +484,8 @@ int blk_do_ordered(struct request_queue 
+ 			 * ORDERED_NONE while this request is on it.
+ 			 */
+ 			blkdev_dequeue_request(rq);
+-			end_that_request_first(rq, -EOPNOTSUPP,
+-					       rq->hard_nr_sectors);
+-			end_that_request_last(rq, -EOPNOTSUPP);
++			if (__blk_end_request(rq, -EOPNOTSUPP, blk_rq_size(rq)))
++				BUG();
+ 			*rqp = NULL;
+ 			return 0;
+ 		}
+@@ -3720,11 +3719,7 @@ EXPORT_SYMBOL(end_that_request_last);
+ static inline void __end_request(struct request *rq, int uptodate,
+ 				 unsigned int nr_bytes)
+ {
+-	if (!end_that_request_chunk(rq, uptodate, nr_bytes)) {
+-		blkdev_dequeue_request(rq);
+-		add_disk_randomness(rq->rq_disk);
+-		end_that_request_last(rq, uptodate);
+-	}
++	__blk_end_request(rq, uptodate, nr_bytes);
+ }
+ 
+ /**
