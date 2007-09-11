@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 08/27] blk_end_request: changing lguest (take 2)
-Date: Tue, 11 Sep 2007 14:58:53 -0400 (EDT)
-Message-ID: <20070911.145853.62670389.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 09/27] blk_end_request: changing nbd (take 2)
+Date: Tue, 11 Sep 2007 14:59:24 -0400 (EDT)
+Message-ID: <20070911.145924.85814380.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,27 +20,25 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts lguest to use blk_end_request().
+This patch converts nbd to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/lguest_blk.c |    5 +----
- 1 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/block/nbd.c |    4 +---
+ 1 files changed, 1 insertion(+), 3 deletions(-)
 
-diff -rupN 07-floppy-caller-change/drivers/block/lguest_blk.c 08-lguest-caller-change/drivers/block/lguest_blk.c
---- 07-floppy-caller-change/drivers/block/lguest_blk.c	2007-08-27 21:32:35.000000000 -0400
-+++ 08-lguest-caller-change/drivers/block/lguest_blk.c	2007-09-10 18:01:53.000000000 -0400
-@@ -77,11 +77,8 @@ struct blockdev
-  * request.  This improved disk speed by 130%. */
- static void end_entire_request(struct request *req, int uptodate)
- {
--	if (end_that_request_first(req, uptodate, req->hard_nr_sectors))
-+	if (__blk_end_request(req, uptodate, blk_rq_size(req)))
- 		BUG();
--	add_disk_randomness(req->rq_disk);
--	blkdev_dequeue_request(req);
--	end_that_request_last(req, uptodate);
+diff -rupN 08-lguest-caller-change/drivers/block/nbd.c 09-nbd-caller-change/drivers/block/nbd.c
+--- 08-lguest-caller-change/drivers/block/nbd.c	2007-09-10 17:32:11.000000000 -0400
++++ 09-nbd-caller-change/drivers/block/nbd.c	2007-09-10 18:02:30.000000000 -0400
+@@ -107,9 +107,7 @@ static void nbd_end_request(struct reque
+ 			req, uptodate? "done": "failed");
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+-	if (!end_that_request_first(req, uptodate, req->nr_sectors)) {
+-		end_that_request_last(req, uptodate);
+-	}
++	__blk_end_request(req, uptodate, req->nr_sectors << 9);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
  }
  
- /* I'm told there are only two stories in the world worth telling: love and
