@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 06/27] blk_end_request: changing DAC960 (take 2)
-Date: Tue, 11 Sep 2007 14:58:17 -0400 (EDT)
-Message-ID: <20070911.145817.80035153.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 07/27] blk_end_request: changing floppy (take 2)
+Date: Tue, 11 Sep 2007 14:58:38 -0400 (EDT)
+Message-ID: <20070911.145838.98716522.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,26 +20,36 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts DAC960 to use blk_end_request().
+This patch converts floppy to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/DAC960.c |    5 +----
- 1 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/block/floppy.c |    8 +++-----
+ 1 files changed, 3 insertions(+), 5 deletions(-)
 
-diff -rupN 05-um-caller-change/drivers/block/DAC960.c 06-dac960-caller-change/drivers/block/DAC960.c
---- 05-um-caller-change/drivers/block/DAC960.c	2007-09-10 17:32:11.000000000 -0400
-+++ 06-dac960-caller-change/drivers/block/DAC960.c	2007-09-10 18:00:55.000000000 -0400
-@@ -3460,10 +3460,7 @@ static inline bool DAC960_ProcessComplet
- 	pci_unmap_sg(Command->Controller->PCIDevice, Command->cmd_sglist,
- 		Command->SegmentCount, Command->DmaDirection);
+diff -rupN 06-dac960-caller-change/drivers/block/floppy.c 07-floppy-caller-change/drivers/block/floppy.c
+--- 06-dac960-caller-change/drivers/block/floppy.c	2007-09-10 17:32:11.000000000 -0400
++++ 07-floppy-caller-change/drivers/block/floppy.c	2007-09-10 18:01:23.000000000 -0400
+@@ -2290,18 +2290,16 @@ static int do_format(int drive, struct f
+ static void floppy_end_request(struct request *req, int uptodate)
+ {
+ 	unsigned int nr_sectors = current_count_sectors;
++	unsigned int drive = (unsigned int)req->rq_disk->private_data;
  
--	 if (!end_that_request_first(Request, UpToDate, Command->BlockCount)) {
--		add_disk_randomness(Request->rq_disk);
-- 	 	end_that_request_last(Request, UpToDate);
--
-+	 if (!__blk_end_request(Request, UpToDate, Command->BlockCount << 9)) {
- 		if (Command->Completion) {
- 			complete(Command->Completion);
- 			Command->Completion = NULL;
+ 	/* current_count_sectors can be zero if transfer failed */
+ 	if (!uptodate)
+ 		nr_sectors = req->current_nr_sectors;
+-	if (end_that_request_first(req, uptodate, nr_sectors))
++	if (__blk_end_request(req, uptodate, nr_sectors << 9))
+ 		return;
+-	add_disk_randomness(req->rq_disk);
+-	floppy_off((long)req->rq_disk->private_data);
+-	blkdev_dequeue_request(req);
+-	end_that_request_last(req, uptodate);
+ 
+ 	/* We're done with the request */
++	floppy_off(drive);
+ 	current_req = NULL;
+ }
+ 
