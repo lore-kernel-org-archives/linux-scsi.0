@@ -1,13 +1,16 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 27/27] blk_end_request: remove/unexport
- end_that_request_* (take 2)
-Date: Tue, 11 Sep 2007 15:06:14 -0400 (EDT)
-Message-ID: <20070911.150614.15401288.k-ueda@ct.jp.nec.com>
+From: "Grant Likely" <grant.likely@secretlab.ca>
+Subject: Re: [PATCH 22/27] blk_end_request: changing xsysace
+	(take 2)
+Date: Tue, 11 Sep 2007 13:15:13 -0600
+Message-ID: <fa686aa40709111215o14cc485fhfb8edf393ea3b559@mail.gmail.com>
+References: <20070911.150349.43387432.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20070911.150349.43387432.k-ueda@ct.jp.nec.com>
+Content-Disposition: inline
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -17,149 +20,60 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, mike.miller@hp.com, grant.likely@secretlab.ca
-Cc: dm-devel@redhat.com
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: linux-scsi@vger.kernel.org, mike.miller@hp.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch removes the following functions:
-  o end_that_request_first()
-  o end_that_request_chunk()
-and stops exporting the functions below:
-  o end_that_request_last()
+On 9/11/07, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+> This patch converts xsysace to use blk_end_request().
+>
+> xsysace is a little bit different from "normal" drivers.
+> xsysace driver has a state machine in it.
+> It calls end_that_request_first() and end_that_request_last()
+> from different states. (ACE_FSM_STATE_REQ_TRANSFER and
+> ACE_FSM_STATE_REQ_COMPLETE, respectively.)
+>
+> However, those states are consecutive and without any interruption
+> inbetween.
+> So we can just follow the standard conversion rule (b) mentioned in
+> the patch subject "[PATCH 01/27] blk_end_request: add new request
+> completion interface".
+>
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+Acked-by: Grant Likely <grant.likely@secretlab.ca>
 
-Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
----
- block/ll_rw_blk.c      |   61 ++++++++++++------------------------------------
- include/linux/blkdev.h |   15 ++++--------
- 2 files changed, 21 insertions(+), 55 deletions(-)
+> ---
+>  drivers/block/xsysace.c |    5 +----
+>  1 files changed, 1 insertion(+), 4 deletions(-)
+>
+> diff -rupN 21-ide-scsi-caller-change/drivers/block/xsysace.c 22-xsysace-caller-change/drivers/block/xsysace.c
+> --- 21-ide-scsi-caller-change/drivers/block/xsysace.c   2007-09-10 17:32:11.000000000 -0400
+> +++ 22-xsysace-caller-change/drivers/block/xsysace.c    2007-09-10 18:14:20.000000000 -0400
+> @@ -696,7 +696,7 @@ static void ace_fsm_dostate(struct ace_d
+>
+>                 /* bio finished; is there another one? */
+>                 i = ace->req->current_nr_sectors;
+> -               if (end_that_request_first(ace->req, 1, i)) {
+> +               if (__blk_end_request(ace->req, 1, i)) {
+>                         /* dev_dbg(ace->dev, "next block; h=%li c=%i\n",
+>                          *      ace->req->hard_nr_sectors,
+>                          *      ace->req->current_nr_sectors);
+> @@ -711,9 +711,6 @@ static void ace_fsm_dostate(struct ace_d
+>                 break;
+>
+>         case ACE_FSM_STATE_REQ_COMPLETE:
+> -               /* Complete the block request */
+> -               blkdev_dequeue_request(ace->req);
+> -               end_that_request_last(ace->req, 1);
+>                 ace->req = NULL;
+>
+>                 /* Finished request; go to idle state */
+>
 
-diff -rupN 26-ide-odd-caller-change/block/ll_rw_blk.c 27-remove-old-interface/block/ll_rw_blk.c
---- 26-ide-odd-caller-change/block/ll_rw_blk.c	2007-09-10 18:21:27.000000000 -0400
-+++ 27-remove-old-interface/block/ll_rw_blk.c	2007-09-10 18:28:47.000000000 -0400
-@@ -3439,6 +3439,20 @@ static void blk_recalc_rq_sectors(struct
- 	}
- }
- 
-+/**
-+ * __end_that_request_first - end I/O on a request
-+ * @req:      the request being processed
-+ * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-+ * @nr_bytes: number of bytes to complete
-+ *
-+ * Description:
-+ *     Ends I/O on a number of bytes attached to @req, and sets it up
-+ *     for the next range of segments (if any) in the cluster.
-+ *
-+ * Return:
-+ *     0 - we are done with this request, call end_that_request_last()
-+ *     1 - still buffers pending for this request
-+ **/
- static int __end_that_request_first(struct request *req, int uptodate,
- 				    int nr_bytes)
- {
-@@ -3557,49 +3571,6 @@ static int __end_that_request_first(stru
- 	return 1;
- }
- 
--/**
-- * end_that_request_first - end I/O on a request
-- * @req:      the request being processed
-- * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-- * @nr_sectors: number of sectors to end I/O on
-- *
-- * Description:
-- *     Ends I/O on a number of sectors attached to @req, and sets it up
-- *     for the next range of segments (if any) in the cluster.
-- *
-- * Return:
-- *     0 - we are done with this request, call end_that_request_last()
-- *     1 - still buffers pending for this request
-- **/
--int end_that_request_first(struct request *req, int uptodate, int nr_sectors)
--{
--	return __end_that_request_first(req, uptodate, nr_sectors << 9);
--}
--
--EXPORT_SYMBOL(end_that_request_first);
--
--/**
-- * end_that_request_chunk - end I/O on a request
-- * @req:      the request being processed
-- * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-- * @nr_bytes: number of bytes to complete
-- *
-- * Description:
-- *     Ends I/O on a number of bytes attached to @req, and sets it up
-- *     for the next range of segments (if any). Like end_that_request_first(),
-- *     but deals with bytes instead of sectors.
-- *
-- * Return:
-- *     0 - we are done with this request, call end_that_request_last()
-- *     1 - still buffers pending for this request
-- **/
--int end_that_request_chunk(struct request *req, int uptodate, int nr_bytes)
--{
--	return __end_that_request_first(req, uptodate, nr_bytes);
--}
--
--EXPORT_SYMBOL(end_that_request_chunk);
--
- /*
-  * splice the completion data to a local structure and hand off to
-  * process_completion_queue() to complete the requests
-@@ -3679,7 +3650,7 @@ EXPORT_SYMBOL(blk_complete_request);
- /*
-  * queue lock must be held
-  */
--void end_that_request_last(struct request *req, int uptodate)
-+static void end_that_request_last(struct request *req, int uptodate)
- {
- 	struct gendisk *disk = req->rq_disk;
- 	int error;
-@@ -3714,8 +3685,6 @@ void end_that_request_last(struct reques
- 		__blk_put_request(req->q, req);
- }
- 
--EXPORT_SYMBOL(end_that_request_last);
--
- static inline void __end_request(struct request *rq, int uptodate,
- 				 unsigned int nr_bytes)
- {
-diff -rupN 26-ide-odd-caller-change/include/linux/blkdev.h 27-remove-old-interface/include/linux/blkdev.h
---- 26-ide-odd-caller-change/include/linux/blkdev.h	2007-09-10 18:21:27.000000000 -0400
-+++ 27-remove-old-interface/include/linux/blkdev.h	2007-09-10 18:28:47.000000000 -0400
-@@ -719,19 +719,16 @@ static inline void blk_run_address_space
- }
- 
- /*
-- * end_request() and friends. Must be called with the request queue spinlock
-- * acquired. All functions called within end_request() _must_be_ atomic.
-+ * blk_end_request() and friends.
-+ * __blk_end_request() and end_request() must be called with
-+ * the request queue spinlock acquired.
-  *
-  * Several drivers define their own end_request and call
-- * end_that_request_first() and end_that_request_last()
-- * for parts of the original function. This prevents
-- * code duplication in drivers.
-+ * blk_end_request() for parts of the original function.
-+ * This prevents code duplication in drivers.
-  */
- extern int blk_end_request(struct request *rq, int uptodate, int nr_bytes);
- extern int __blk_end_request(struct request *rq, int uptodate, int nr_bytes);
--extern int end_that_request_first(struct request *, int, int);
--extern int end_that_request_chunk(struct request *, int, int);
--extern void end_that_request_last(struct request *, int);
- extern void end_request(struct request *, int);
- extern void end_queued_request(struct request *, int);
- extern int blk_end_request_callback(struct request *rq, int uptodate,
-@@ -764,7 +761,7 @@ static inline int blk_rq_cur_size(struct
- }
- 
- /*
-- * end_that_request_first/chunk() takes an uptodate argument. we account
-+ * blk_end_request() takes an uptodate argument. we account
-  * any value <= as an io error. 0 means -EIO for compatability reasons,
-  * any other < 0 value is the direct error type. An uptodate value of
-  * 1 indicates successful io completion
+
+-- 
+Grant Likely, B.Sc., P.Eng.
+Secret Lab Technologies Ltd.
+grant.likely@secretlab.ca
+(403) 399-0195
