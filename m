@@ -1,8 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 15/27] blk_end_request: changing xen-blkfront
-	(take 2)
-Date: Tue, 11 Sep 2007 15:01:31 -0400 (EDT)
-Message-ID: <20070911.150131.50590147.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 14/27] blk_end_request: changing viodasd (take 2)
+Date: Tue, 11 Sep 2007 15:01:10 -0400 (EDT)
+Message-ID: <20070911.150110.78388754.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -21,27 +20,26 @@ To: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.
 Cc: dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts xen-blkfront to use blk_end_request().
+This patch converts viodasd to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/xen-blkfront.c |    5 ++---
- 1 files changed, 2 insertions(+), 3 deletions(-)
+ drivers/block/viodasd.c |    5 +----
+ 1 files changed, 1 insertion(+), 4 deletions(-)
 
-diff -rupN 14-viodasd-caller-change/drivers/block/xen-blkfront.c 15-xen-caller-change/drivers/block/xen-blkfront.c
---- 14-viodasd-caller-change/drivers/block/xen-blkfront.c	2007-08-27 21:32:35.000000000 -0400
-+++ 15-xen-caller-change/drivers/block/xen-blkfront.c	2007-09-10 18:05:29.000000000 -0400
-@@ -498,10 +498,9 @@ static irqreturn_t blkif_interrupt(int i
- 				dev_dbg(&info->xbdev->dev, "Bad return from blkdev data "
- 					"request: %x\n", bret->status);
+diff -rupN 13-ub-caller-change/drivers/block/viodasd.c 14-viodasd-caller-change/drivers/block/viodasd.c
+--- 13-ub-caller-change/drivers/block/viodasd.c	2007-08-27 21:32:35.000000000 -0400
++++ 14-viodasd-caller-change/drivers/block/viodasd.c	2007-09-10 18:05:02.000000000 -0400
+@@ -275,10 +275,7 @@ static struct block_device_operations vi
+ static void viodasd_end_request(struct request *req, int uptodate,
+ 		int num_sectors)
+ {
+-	if (end_that_request_first(req, uptodate, num_sectors))
+-		return;
+-	add_disk_randomness(req->rq_disk);
+-	end_that_request_last(req, uptodate);
++	__blk_end_request(req, uptodate, num_sectors << 9);
+ }
  
--			ret = end_that_request_first(req, uptodate,
--				req->hard_nr_sectors);
-+			ret = __blk_end_request(req, uptodate,
-+						blk_rq_size(req));
- 			BUG_ON(ret);
--			end_that_request_last(req, uptodate);
- 			break;
- 		default:
- 			BUG();
+ /*
