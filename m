@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 14/24] atp870u.c: convert to accessors and !use_sg cleanup
-Date: Wed, 12 Sep 2007 03:03:36 +0300
-Message-ID: <46E72CD8.5070908@panasas.com>
+Subject: [PATCH 11/24] a2091.c: convert to accessors and !use_sg cleanup
+Date: Wed, 12 Sep 2007 03:00:55 +0300
+Message-ID: <46E72C37.207@panasas.com>
 References: <46E6F92D.2090409@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:6815 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:5319 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753671AbXILAEO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 20:04:14 -0400
+	with ESMTP id S1753660AbXILAEk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 20:04:40 -0400
 In-Reply-To: <46E6F92D.2090409@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,180 +18,71 @@ To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomo
 
 
  - convert to accessors and !use_sg cleanup
- - Probably not ready for sg-chaining
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/atp870u.c |  102 ++++++++----------------------------------------
- 1 files changed, 17 insertions(+), 85 deletions(-)
+ drivers/scsi/a2091.c |   36 +++++-------------------------------
+ 1 files changed, 5 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/atp870u.c b/drivers/scsi/atp870u.c
-index fec58cc..db6de5e 100644
---- a/drivers/scsi/atp870u.c
-+++ b/drivers/scsi/atp870u.c
-@@ -471,18 +471,8 @@ go_42:
- 			/*
- 			 *	Complete the command
- 			 */
--			if (workreq->use_sg) {
--				pci_unmap_sg(dev->pdev,
--					(struct scatterlist *)workreq->request_buffer,
--					workreq->use_sg,
--					workreq->sc_data_direction);
--			} else if (workreq->request_bufflen &&
--					workreq->sc_data_direction != DMA_NONE) {
--				pci_unmap_single(dev->pdev,
--					workreq->SCp.dma_handle,
--					workreq->request_bufflen,
--					workreq->sc_data_direction);
--			}			
-+			scsi_dma_unmap(workreq);
-+
- 			spin_lock_irqsave(dev->host->host_lock, flags);
- 			(*workreq->scsi_done) (workreq);
- #ifdef ED_DBGP
-@@ -624,7 +614,7 @@ static int atp870u_queuecommand(struct scsi_cmnd * req_p,
- 
- 	c = scmd_channel(req_p);
- 	req_p->sense_buffer[0]=0;
--	req_p->resid = 0;
-+	scsi_set_resid(req_p, 0);
- 	if (scmd_channel(req_p) > 1) {
- 		req_p->result = 0x00040000;
- 		done(req_p);
-@@ -722,7 +712,6 @@ static void send_s870(struct atp_unit *dev,unsigned char c)
- 	unsigned short int tmpcip, w;
- 	unsigned long l, bttl = 0;
- 	unsigned int workport;
--	struct scatterlist *sgpnt;
- 	unsigned long  sg_count;
- 
- 	if (dev->in_snd[c] != 0) {
-@@ -793,6 +782,8 @@ oktosend:
- 	}
- 	printk("\n");
- #endif	
-+	l = scsi_bufflen(workreq);
-+
- 	if (dev->dev_id == ATP885_DEVID) {
- 		j = inb(dev->baseport + 0x29) & 0xfe;
- 		outb(j, dev->baseport + 0x29);
-@@ -800,12 +791,11 @@ oktosend:
- 	}
- 	
- 	if (workreq->cmnd[0] == READ_CAPACITY) {
--		if (workreq->request_bufflen > 8) {
--			workreq->request_bufflen = 0x08;
--		}
-+		if (l > 8)
-+			l = 8;
- 	}
- 	if (workreq->cmnd[0] == 0x00) {
--		workreq->request_bufflen = 0;
-+		l = 0;
+diff --git a/drivers/scsi/a2091.c b/drivers/scsi/a2091.c
+index b7c5385..23f27c9 100644
+--- a/drivers/scsi/a2091.c
++++ b/drivers/scsi/a2091.c
+@@ -73,18 +73,9 @@ static int dma_setup(struct scsi_cmnd *cmd, int dir_in)
  	}
  
- 	tmport = workport + 0x1b;
-@@ -852,40 +842,8 @@ oktosend:
- #ifdef ED_DBGP	
- 	printk("dev->id[%d][%d].devsp = %2x\n",c,target_id,dev->id[c][target_id].devsp);
- #endif
--	/*
--	 *	Figure out the transfer size
--	 */
--	if (workreq->use_sg) {
--#ifdef ED_DBGP
--		printk("Using SGL\n");
--#endif		
--		l = 0;
--		
--		sgpnt = (struct scatterlist *) workreq->request_buffer;
--		sg_count = pci_map_sg(dev->pdev, sgpnt, workreq->use_sg,
--	   			workreq->sc_data_direction);		
--		
--		for (i = 0; i < workreq->use_sg; i++) {
--			if (sgpnt[i].length == 0 || workreq->use_sg > ATP870U_SCATTER) {
--				panic("Foooooooood fight!");
--			}
--			l += sgpnt[i].length;
--		}
--#ifdef ED_DBGP		
--		printk( "send_s870: workreq->use_sg %d, sg_count %d l %8ld\n", workreq->use_sg, sg_count, l);
+ 	if (!dir_in) {
+-	    /* copy to bounce buffer for a write */
+-	    if (cmd->use_sg)
+-#if 0
+-		panic ("scsi%ddma: incomplete s/g support",
+-		       instance->host_no);
+-#else
++		/* copy to bounce buffer for a write */
+ 		memcpy (HDATA(instance)->dma_bounce_buffer,
+ 			cmd->SCp.ptr, cmd->SCp.this_residual);
 -#endif
--	} else if(workreq->request_bufflen && workreq->sc_data_direction != PCI_DMA_NONE) {
--#ifdef ED_DBGP
--		printk("Not using SGL\n");
--#endif					
--		workreq->SCp.dma_handle = pci_map_single(dev->pdev, workreq->request_buffer,
--				workreq->request_bufflen,
--				workreq->sc_data_direction);		
--		l = workreq->request_bufflen;
--#ifdef ED_DBGP		
--		printk( "send_s870: workreq->use_sg %d, l %8ld\n", workreq->use_sg, l);
--#endif
--	} else l = 0;
-+
-+	sg_count = scsi_dma_map(workreq);
- 	/*
- 	 *	Write transfer size
- 	 */
-@@ -938,16 +896,16 @@ oktosend:
- 	 *	a linear chain.
- 	 */
+-	    else
+-		memcpy (HDATA(instance)->dma_bounce_buffer,
+-			cmd->request_buffer, cmd->request_bufflen);
+ 	}
+     }
  
--	if (workreq->use_sg) {
--		sgpnt = (struct scatterlist *) workreq->request_buffer;
-+	if (l) {
-+		struct scatterlist *sgpnt;
- 		i = 0;
--		for (j = 0; j < workreq->use_sg; j++) {
--			bttl = sg_dma_address(&sgpnt[j]);
--			l=sg_dma_len(&sgpnt[j]);
-+		scsi_for_each_sg(workreq, sgpnt, sg_count, j) {
-+			bttl = sg_dma_address(sgpnt);
-+			l=sg_dma_len(sgpnt);
- #ifdef ED_DBGP		
--		printk("1. bttl %x, l %x\n",bttl, l);
-+			printk("1. bttl %x, l %x\n",bttl, l);
- #endif			
--		while (l > 0x10000) {
-+			while (l > 0x10000) {
- 				(((u16 *) (prd))[i + 3]) = 0x0000;
- 				(((u16 *) (prd))[i + 2]) = 0x0000;
- 				(((u32 *) (prd))[i >> 1]) = cpu_to_le32(bttl);
-@@ -965,32 +923,6 @@ oktosend:
- 		printk("prd %4x %4x %4x %4x\n",(((unsigned short int *)prd)[0]),(((unsigned short int *)prd)[1]),(((unsigned short int *)prd)[2]),(((unsigned short int *)prd)[3]));
- 		printk("2. bttl %x, l %x\n",bttl, l);
- #endif			
+@@ -144,30 +135,13 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 
+     /* copy from a bounce buffer, if necessary */
+     if (status && HDATA(instance)->dma_bounce_buffer) {
+-	if (SCpnt && SCpnt->use_sg) {
+-#if 0
+-	    panic ("scsi%d: incomplete s/g support",
+-		   instance->host_no);
+-#else
+-	    if( HDATA(instance)->dma_dir )
++	if( HDATA(instance)->dma_dir )
+ 		memcpy (SCpnt->SCp.ptr, 
+ 			HDATA(instance)->dma_bounce_buffer,
+ 			SCpnt->SCp.this_residual);
+-	    kfree (HDATA(instance)->dma_bounce_buffer);
+-	    HDATA(instance)->dma_bounce_buffer = NULL;
+-	    HDATA(instance)->dma_bounce_len = 0;
+-	    
+-#endif
 -	} else {
--		/*
--		 *	For a linear request write a chain of blocks
--		 */        
--		bttl = workreq->SCp.dma_handle;
--		l = workreq->request_bufflen;
--		i = 0;
--#ifdef ED_DBGP		
--		printk("3. bttl %x, l %x\n",bttl, l);
--#endif			
--		while (l > 0x10000) {
--				(((u16 *) (prd))[i + 3]) = 0x0000;
--				(((u16 *) (prd))[i + 2]) = 0x0000;
--				(((u32 *) (prd))[i >> 1]) = cpu_to_le32(bttl);
--				l -= 0x10000;
--				bttl += 0x10000;
--				i += 0x04;
--			}
--			(((u16 *) (prd))[i + 3]) = cpu_to_le16(0x8000);
--			(((u16 *) (prd))[i + 2]) = cpu_to_le16(l);
--			(((u32 *) (prd))[i >> 1]) = cpu_to_le32(bttl);		
--#ifdef ED_DBGP		
--		printk("prd %4x %4x %4x %4x\n",(((unsigned short int *)prd)[0]),(((unsigned short int *)prd)[1]),(((unsigned short int *)prd)[2]),(((unsigned short int *)prd)[3]));
--		printk("4. bttl %x, l %x\n",bttl, l);
--#endif			
--		
- 	}
- 	tmpcip += 4;
- #ifdef ED_DBGP		
+-	    if (HDATA(instance)->dma_dir && SCpnt)
+-		memcpy (SCpnt->request_buffer,
+-			HDATA(instance)->dma_bounce_buffer,
+-			SCpnt->request_bufflen);
+-
+-	    kfree (HDATA(instance)->dma_bounce_buffer);
+-	    HDATA(instance)->dma_bounce_buffer = NULL;
+-	    HDATA(instance)->dma_bounce_len = 0;
+-	}
++	kfree (HDATA(instance)->dma_bounce_buffer);
++	HDATA(instance)->dma_bounce_buffer = NULL;
++	HDATA(instance)->dma_bounce_len = 0;
+     }
+ }
+ 
 -- 
 1.5.3.1
 
