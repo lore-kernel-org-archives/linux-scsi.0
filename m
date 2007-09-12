@@ -1,78 +1,35 @@
-From: Benny Halevy <bhalevy@panasas.com>
-Subject: Re: [PATCH ver2 5/5] arm: fas216 Use scsi_eh API for REQUEST_SENSE
- invocation
-Date: Wed, 12 Sep 2007 11:15:36 +0300
-Message-ID: <46E7A028.9020609@panasas.com>
-References: <46E59760.9020705@panasas.com> <46E59D5F.5060500@panasas.com> <20070912074434.GC2653@flint.arm.linux.org.uk>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg cleanup
+Date: Wed, 12 Sep 2007 17:00:30 +0100 (BST)
+Message-ID: <Pine.LNX.4.64N.0709121654580.24030@blysk.ds.pg.gda.pl>
+References: <46E6F92D.2090409@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:19079 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757486AbXILIQX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Sep 2007 04:16:23 -0400
-In-Reply-To: <20070912074434.GC2653@flint.arm.linux.org.uk>
+Received: from cerber.ds.pg.gda.pl ([153.19.208.18]:56344 "EHLO
+	cerber.ds.pg.gda.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752663AbXILQAq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Sep 2007 12:00:46 -0400
+In-Reply-To: <46E6F92D.2090409@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@suse.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Christoph Hellwig <hch@infradead.org>, Randy Dunlap <rdunlap@xenotime.net>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
-Russell King wrote:
-> On Mon, Sep 10, 2007 at 10:39:11PM +0300, Boaz Harrosh wrote:
->   
->>   - Use new scsi_eh_prep/restor_cmnd() for synchronous
->>     REQUEST_SENSE invocation.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
->> ---
->>  drivers/scsi/arm/fas216.c |   16 +++-------------
->>  drivers/scsi/arm/fas216.h |    3 +++
->>  2 files changed, 6 insertions(+), 13 deletions(-)
->>
->> diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
->> index fb5f202..a715632 100644
->> --- a/drivers/scsi/arm/fas216.c
->> +++ b/drivers/scsi/arm/fas216.c
->> @@ -2018,6 +2018,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
->>  	 * the upper layers to process.  This would have been set
->>  	 * correctly by fas216_std_done.
->>  	 */
->> +	scsi_eh_restore_cmnd(SCpnt, &info->ses);
->>  	SCpnt->scsi_done(SCpnt);
->>  }
->>  
->> @@ -2103,23 +2104,12 @@ request_sense:
->>  	if (SCpnt->cmnd[0] == REQUEST_SENSE)
->>  		goto done;
->>  
->> +	scsi_eh_prep_cmnd(SCpnt, &info->ses, NULL, 0, ~0);
->>  	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
->>  			  "requesting sense");
->> -	memset(SCpnt->cmnd, 0, sizeof (SCpnt->cmnd));
->> -	SCpnt->cmnd[0] = REQUEST_SENSE;
->> -	SCpnt->cmnd[1] = SCpnt->device->lun << 5;
->> -	SCpnt->cmnd[4] = sizeof(SCpnt->sense_buffer);
->> -	SCpnt->cmd_len = COMMAND_SIZE(SCpnt->cmnd[0]);
->> -	SCpnt->SCp.buffer = NULL;
->> -	SCpnt->SCp.buffers_residual = 0;
->> -	SCpnt->SCp.ptr = (char *)SCpnt->sense_buffer;
->> -	SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
->> -	SCpnt->SCp.phase = sizeof(SCpnt->sense_buffer);
->> +	init_SCp(SCpnt);
->>  	SCpnt->SCp.Message = 0;
->>  	SCpnt->SCp.Status = 0;
->> -	SCpnt->request_bufflen = sizeof(SCpnt->sense_buffer);
->> -	SCpnt->sc_data_direction = DMA_FROM_DEVICE;
->> -	SCpnt->use_sg = 0;
->>  	SCpnt->tag = 0;
->>  	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
->>     
->
-> So where do we end up setting up the request sense command?
->
->   
-In scsi_eh_prep_cmnd(), when (sense_bytes != 0), called here:
+On Tue, 11 Sep 2007, Boaz Harrosh wrote:
 
-+	scsi_eh_prep_cmnd(SCpnt, &info->ses, NULL, 0, ~0);
+> [esp family] - Maciej W. Rozycki <macro@linux-mips.org>
+> 0020 	drivers/scsi/NCR53C9x.c drivers/scsi/NCR53C9x.h
+> 	drivers/scsi/dec_esp.c drivers/scsi/oktagon_esp.c
+> 	drivers/scsi/sun3x_esp.c
 
+ Not really, but I have suitable hardware and can test your changes to 
+drivers/scsi/NCR53C9x.c, drivers/scsi/NCR53C9x.h and 
+drivers/scsi/dec_esp.c only.  Fortunately it does not really matter that 
+much, because the the whole family of drivers has been deprecated and is 
+going away at some pace in favour to the framework around the new 
+drivers/scsi/esp_scsi.c core.
+
+ Thanks for your effort though!
+
+  Maciej
