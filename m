@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 07/24] arm: scsi convert to accessors and !use_sg cleanup
-Date: Wed, 12 Sep 2007 02:55:19 +0300
-Message-ID: <46E72AE7.4030507@panasas.com>
+Subject: [PATCH 10/24] eata_pio.c: convert to accessors and !use_sg cleanup
+Date: Wed, 12 Sep 2007 03:00:05 +0300
+Message-ID: <46E72C05.4030405@panasas.com>
 References: <46E6F92D.2090409@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:1120 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:6878 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S932511AbXIKX7E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 19:59:04 -0400
+	with ESMTP id S965735AbXILAAj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 20:00:39 -0400
 In-Reply-To: <46E6F92D.2090409@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -21,141 +21,42 @@ To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomo
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/arm/acornscsi.c |   14 +++++++-------
- drivers/scsi/arm/scsi.h      |   34 +++++++++++-----------------------
- 2 files changed, 18 insertions(+), 30 deletions(-)
+ drivers/scsi/eata_pio.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index eceacf6..3bedf24 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -1790,7 +1790,7 @@ int acornscsi_starttransfer(AS_Host *host)
- 	return 0;
-     }
+diff --git a/drivers/scsi/eata_pio.c b/drivers/scsi/eata_pio.c
+index f33ad01..266ddc9 100644
+--- a/drivers/scsi/eata_pio.c
++++ b/drivers/scsi/eata_pio.c
+@@ -400,7 +400,7 @@ static int eata_pio_queue(struct scsi_cmnd *cmd,
+ 		cp->DataIn = 0;	/* Input mode  */
  
--    residual = host->SCpnt->request_bufflen - host->scsi.SCp.scsi_xferred;
-+    residual = scsi_bufflen(host->SCpnt) - host->scsi.SCp.scsi_xferred;
+ 	cp->Interpret = (cmd->device->id == hd->hostid);
+-	cp->cp_datalen = cpu_to_be32(cmd->request_bufflen);
++	cp->cp_datalen = cpu_to_be32(scsi_bufflen(cmd));
+ 	cp->Auto_Req_Sen = 0;
+ 	cp->cp_reqDMA = 0;
+ 	cp->reqlen = 0;
+@@ -417,14 +417,14 @@ static int eata_pio_queue(struct scsi_cmnd *cmd,
+ 	cp->cmd = cmd;
+ 	cmd->host_scribble = (char *) &hd->ccb[y];
  
-     sbic_arm_write(host->scsi.io_port, SBIC_SYNCHTRANSFER, host->device[host->SCpnt->device->id].sync_xfer);
-     sbic_arm_writenext(host->scsi.io_port, residual >> 16);
-@@ -2270,7 +2270,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4b:			/* -> PHASE_STATUSIN				*/
- 	case 0x8b:			/* -> PHASE_STATUSIN				*/
- 	    /* DATA IN -> STATUS */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_readstatusbyte(host);
-@@ -2281,7 +2281,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4e:			/* -> PHASE_MSGOUT				*/
- 	case 0x8e:			/* -> PHASE_MSGOUT				*/
- 	    /* DATA IN -> MESSAGE OUT */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_sendmessage(host);
-@@ -2291,7 +2291,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4f:			/* message in					*/
- 	case 0x8f:			/* message in					*/
- 	    /* DATA IN -> MESSAGE IN */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_message(host);	/* -> PHASE_MSGIN, PHASE_DISCONNECT		*/
-@@ -2319,7 +2319,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4b:			/* -> PHASE_STATUSIN				*/
- 	case 0x8b:			/* -> PHASE_STATUSIN				*/
- 	    /* DATA OUT -> STATUS */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-@@ -2331,7 +2331,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4e:			/* -> PHASE_MSGOUT				*/
- 	case 0x8e:			/* -> PHASE_MSGOUT				*/
- 	    /* DATA OUT -> MESSAGE OUT */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-@@ -2342,7 +2342,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4f:			/* message in					*/
- 	case 0x8f:			/* message in					*/
- 	    /* DATA OUT -> MESSAGE IN */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-diff --git a/drivers/scsi/arm/scsi.h b/drivers/scsi/arm/scsi.h
-index 21ba571..95cfb21 100644
---- a/drivers/scsi/arm/scsi.h
-+++ b/drivers/scsi/arm/scsi.h
-@@ -70,48 +70,36 @@ static inline void init_SCp(struct scsi_cmnd *SCpnt)
- {
- 	memset(&SCpnt->SCp, 0, sizeof(struct scsi_pointer));
- 
--	if (SCpnt->use_sg) {
-+	if (scsi_bufflen(SCpnt)) {
- 		unsigned long len = 0;
- 		int buf;
- 
--		SCpnt->SCp.buffer = (struct scatterlist *) SCpnt->request_buffer;
--		SCpnt->SCp.buffers_residual = SCpnt->use_sg - 1;
-+		SCpnt->SCp.buffer = scsi_sglist(SCpnt);
-+		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
- 		SCpnt->SCp.ptr = (char *)
- 			 (page_address(SCpnt->SCp.buffer->page) +
- 			  SCpnt->SCp.buffer->offset);
- 		SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
--		SCpnt->SCp.phase = SCpnt->request_bufflen;
-+		SCpnt->SCp.phase = scsi_bufflen(SCpnt);
- 
- #ifdef BELT_AND_BRACES
- 		/*
- 		 * Calculate correct buffer length.  Some commands
--		 * come in with the wrong request_bufflen.
-+		 * come in with the wrong scsi_bufflen.
- 		 */
- 		for (buf = 0; buf <= SCpnt->SCp.buffers_residual; buf++)
- 			len += SCpnt->SCp.buffer[buf].length;
- 
--		if (SCpnt->request_bufflen != len)
-+		if (scsi_bufflen(SCpnt) != len) {
-+			WARN_ON(1);
- 			printk(KERN_WARNING "scsi%d.%c: bad request buffer "
- 			       "length %d, should be %ld\n", SCpnt->device->host->host_no,
--			       '0' + SCpnt->device->id, SCpnt->request_bufflen, len);
--		SCpnt->request_bufflen = len;
-+			       '0' + SCpnt->device->id, scsi_bufflen(SCpnt), len);
-+		}
- #endif
+-	if (cmd->use_sg == 0) {
++	if (!scsi_bufflen(cmd)) {
+ 		cmd->SCp.buffers_residual = 1;
+-		cmd->SCp.ptr = cmd->request_buffer;
+-		cmd->SCp.this_residual = cmd->request_bufflen;
++		cmd->SCp.ptr = NULL;
++		cmd->SCp.this_residual = 0;
+ 		cmd->SCp.buffer = NULL;
  	} else {
--		SCpnt->SCp.ptr = (unsigned char *)SCpnt->request_buffer;
--		SCpnt->SCp.this_residual = SCpnt->request_bufflen;
--		SCpnt->SCp.phase = SCpnt->request_bufflen;
--	}
--
--	/*
--	 * If the upper SCSI layers pass a buffer, but zero length,
--	 * we aren't interested in the buffer pointer.
--	 */
--	if (SCpnt->SCp.this_residual == 0 && SCpnt->SCp.ptr) {
--#if 0 //def BELT_AND_BRACES
--		printk(KERN_WARNING "scsi%d.%c: zero length buffer passed for "
--		       "command ", SCpnt->host->host_no, '0' + SCpnt->target);
--		__scsi_print_command(SCpnt->cmnd);
--#endif
- 		SCpnt->SCp.ptr = NULL;
-+		SCpnt->SCp.this_residual = 0;
-+		SCpnt->SCp.phase = 0;
+-		cmd->SCp.buffer = cmd->request_buffer;
+-		cmd->SCp.buffers_residual = cmd->use_sg;
++		cmd->SCp.buffer = scsi_sglist(cmd);
++		cmd->SCp.buffers_residual = scsi_sg_count(cmd);
+ 		cmd->SCp.ptr = page_address(cmd->SCp.buffer->page) + cmd->SCp.buffer->offset;
+ 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
  	}
- }
 -- 
 1.5.3.1
 
