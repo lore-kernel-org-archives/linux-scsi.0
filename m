@@ -1,38 +1,63 @@
-From: "Boaz Harrosh" <bharrosh@panasas.com>
-Subject: Re: [PATCH 09/24] libata-scsi: convert to use the data buffer accessors
-Date: Wed, 12 Sep 2007 09:36:16 +0300
-Message-ID: <ec7f7ee70709112336w3aeda276wb7064f6a34420f88@mail.gmail.com>
-References: <46E6F92D.2090409@panasas.com> <46E72B8D.1080508@panasas.com>
-	 <46E72E4F.9020508@garzik.org>
-	 <20070912014046.GB14439@one-eyed-alien.net>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [PATCH 07/24] arm: scsi convert to accessors and !use_sg cleanup
+Date: Wed, 12 Sep 2007 08:42:05 +0100
+Message-ID: <20070912074205.GB2653@flint.arm.linux.org.uk>
+References: <46E6F92D.2090409@panasas.com> <46E72AE7.4030507@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.178]:63669 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751276AbXILGgS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Sep 2007 02:36:18 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so131823wah
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Sep 2007 23:36:17 -0700 (PDT)
-In-Reply-To: <20070912014046.GB14439@one-eyed-alien.net>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:58608 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1764468AbXILHor (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Sep 2007 03:44:47 -0400
 Content-Disposition: inline
+In-Reply-To: <46E72AE7.4030507@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@steeleye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kro
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
-On 9/12/07, Matthew Dharm <mdharm-scsi@one-eyed-alien.net> wrote:
-> On Tue, Sep 11, 2007 at 08:09:51PM -0400, Jeff Garzik wrote:
-> > I would much rather see the !use_sg cleanup in a separate patch series...
->
-> Are we really sure this can all go?  No requests, not even ones from SG_IO
-> will ever use the non-sg paths?
->
-> Matt
->
+On Wed, Sep 12, 2007 at 02:55:19AM +0300, Boaz Harrosh wrote:
+> -		if (SCpnt->request_bufflen != len)
+> +		if (scsi_bufflen(SCpnt) != len) {
+> +			WARN_ON(1);
 
-The last place that did !use_sg was fixed Yesterday. It was the
-REQUEST_SENSE in usb's transport.c
-The before the last one was removed by Christoph in 2.6.18
+NAK.  The call trace generally doesn't provide any additional information
+on the cause of the error.
 
-Boaz
+>  			printk(KERN_WARNING "scsi%d.%c: bad request buffer "
+>  			       "length %d, should be %ld\n", SCpnt->device->host->host_no,
+> -			       '0' + SCpnt->device->id, SCpnt->request_bufflen, len);
+> -		SCpnt->request_bufflen = len;
+> +			       '0' + SCpnt->device->id, scsi_bufflen(SCpnt), len);
+> +		}
+>  #endif
+>  	} else {
+> -		SCpnt->SCp.ptr = (unsigned char *)SCpnt->request_buffer;
+> -		SCpnt->SCp.this_residual = SCpnt->request_bufflen;
+> -		SCpnt->SCp.phase = SCpnt->request_bufflen;
+> -	}
+> -
+> -	/*
+> -	 * If the upper SCSI layers pass a buffer, but zero length,
+> -	 * we aren't interested in the buffer pointer.
+> -	 */
+> -	if (SCpnt->SCp.this_residual == 0 && SCpnt->SCp.ptr) {
+> -#if 0 //def BELT_AND_BRACES
+> -		printk(KERN_WARNING "scsi%d.%c: zero length buffer passed for "
+> -		       "command ", SCpnt->host->host_no, '0' + SCpnt->target);
+> -		__scsi_print_command(SCpnt->cmnd);
+> -#endif
+>  		SCpnt->SCp.ptr = NULL;
+> +		SCpnt->SCp.this_residual = 0;
+> +		SCpnt->SCp.phase = 0;
+>  	}
+>  }
+
+Also NAK.  This was added due to bad behaviour of the SCSI layer and
+was found to be necessary.
+
+-- 
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
