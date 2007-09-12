@@ -1,345 +1,135 @@
-From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-Subject: [PATCH] scsi: use notifier chain for Asynchronous Event
- Notification
-Date: Wed, 12 Sep 2007 11:02:36 -0700
-Message-ID: <20070912110236.e51d05e7.kristen.c.accardi@intel.com>
+From: Mark Lord <lkml@rtr.ca>
+Subject: Re: Problems with USB disk [solved]
+Date: Wed, 12 Sep 2007 18:10:50 -0400
+Message-ID: <46E863EA.4060806@rtr.ca>
+References: <f9akh8$ori$1@sea.gmane.org> <20070807211847.GA25391@kroah.com> <f9c71t$r60$1@sea.gmane.org> <200708081357.03238.ismail@pardus.org.tr> <f9hmia$dol$1@sea.gmane.org> <f9mlcc$njk$1@sea.gmane.org> <f9pr31$rdq$1@sea.gmane.org> <46C1C560.80801@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga01.intel.com ([192.55.52.88]:7860 "EHLO mga01.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S967656AbXILSGr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Sep 2007 14:06:47 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1;
+	format=flowed
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759419AbXILWLF@vger.kernel.org>
+In-Reply-To: <46C1C560.80801@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>
+Cc: Niels <zorglub_olsen@hotmail.com>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jeff@garzik.org, akpm@linux-foundation.org
 
-Add a notifier chain for SCSI asynchronous events.  Add a 
-notifier block for events which should be sent to user
-space, and add support for the MEDIA_CHANGE event, which
-would be used by a driver when new media has been inserted.
+Chuck Ebbert wrote:
+> On 08/13/2007 10:50 AM, Niels wrote:
+>> On Sunday 12 August 2007 11:54, Niels wrote:
+>>
+>>> On Friday 10 August 2007 14:43, Niels wrote:
+>>>
+>>>> On Wednesday 08 August 2007 12:57, Ismail D=C3=B6nmez wrote:
+>>>>
+>>>>> On Wednesday 08 August 2007 13:48:29 you wrote:
+>>>>>> On Tuesday 07 August 2007 23:18, Greg KH wrote:
+>>>>>>> On Tue, Aug 07, 2007 at 10:26:15PM +0200, Niels wrote:
+>>>>>>>> Hi,
+>>>>>>>>
+>>>>>>>> I'm having problems with a new 500 GB USB disk. It works, but
+>>>>>>>> sometimes I get these in dmesg:
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> usb 1-3: reset high speed USB device using ehci_hcd and addres=
+s 2
+>>>>>>>> usb 5-1: USB disconnect, address 2
+>>>>>>>> drivers/usb/class/usblp.c: usblp0: removed
+>>>>>>>> sd 0:0:0:0: Device not ready: <6>: Sense Key : 0x2 [current]
+>>>>>>>>
+>>>>>>>> : ASC=3D0x4 ASCQ=3D0x2
+>>>>>>>>
+>>>>>>>> end_request: I/O error, dev sda, sector 254148215
+>>>>>>>> sd 0:0:0:0: Device not ready: <6>: Sense Key : 0x2 [current]
+>>>>>>>>
+>>>>>>>> : ASC=3D0x4 ASCQ=3D0x2
+>>>>>>>>
+>>>>>>>> end_request: I/O error, dev sda, sector 252434023
+>>>>>>>> EXT3-fs error (device sda1): ext3_find_entry: reading director=
+y
+>>>>>>>> #15761836 offset 0
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> There's also a printer connected. This is on a pci/usb2 card. =
+When
+>>>>>>>> the above happens, I get I/O errors. When I mount the drive ne=
+xt,
+>>>>>>>> there are errors and often missing files. Quite annoying!
+>>>>>>>>
+>>>>>>>> Kernel is 2.6.21
+>>>>>>>>
+>>>>>>>> What's going on?
+>>>>>>> You have a low voltage issue, or a bad cable.  The device is
+>>>>>>> electronically disconnecting itself.  Try using a externally-po=
+wered
+>>>>>>> hub, or a new cable.
+>>>>> I am seeing a similar problem with 2.6.22 and 2.6.23-* kernels wi=
+th my
+>>>>> 60G iPod Video, works fine with 2.6.18 kernel though.
+>>>>>
+>>>> So far I'm seeing this:
+>>>>
+>>>> - On 2.6.21 I mount the drive. After a while it spins down, and wh=
+en I
+>>>> then unmount it, an error pops up in dmesg.
+>>>>
+>>>> - On 2.6.18 I can't provoke the same error. The drive doesn't appe=
+ar to
+>>>> spin down. I don't know if the data corruption from 2.6.21 occurs =
+with
+>>>> regular use.
+>>>>
+>>>> There are a number of other factor I need to eliminate on my syste=
+m, but
+>>>> that's it so far. CONFIG_USB_SUSPEND is not set on either kernel.
+>>> OK, on a vanilla 2.6.18.8 I also have this problem, with both the p=
+ci/usb2
+>>> card, and the usb1 on the board. I listen to music from the drive, =
+and
+>>> after some time (10-20 minutes or so), it freaks out:
+>>>
+>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>> sd 1:0:0:0: Device not ready: <6>: Current: sense key=3D0x2
+>>>     ASC=3D0x4 ASCQ=3D0x2
+>>> end_request: I/O error, dev sda, sector 126693711
+>>> sd 1:0:0:0: Device not ready: <6>: Current: sense key=3D0x2
+>>>     ASC=3D0x4 ASCQ=3D0x2
+>>> end_request: I/O error, dev sda, sector 126693711
+>>> sd 1:0:0:0: Device not ready: <6>: Current: sense key=3D0x2
+>>>     ASC=3D0x4 ASCQ=3D0x2
+>>> end_request: I/O error, dev sda, sector 126693711
+>>> =3D=3D=3D=3D=3D=3D=3D=3D=3D
+>>>
+>> Using a new PSU and a powered hub made no difference. But I found a =
+solution
+>> here:
+>>
+>> http://alienghic.livejournal.com/382903.html
+>>
+>> Basically, the problem is, as suspected, that the drive spins down /=
+ goes to
+>> suspend. This can be disabled with "sdparm --clear STANDBY -6 /dev/s=
+da".
+>>
+>> It seems to me to be an error that the kernel reports this as someth=
+ing like
+>> a hardware failure. Or at least very misleading.
+>>
+>=20
+> Oh, nice. The usb-storage (SCSI) disk spins itself down and we can't =
+handle that.
+> Should we be disabling auto-spindown when we connect the device, or b=
+e able to
+> handle this by sending the start command when needed?
 
-Signed-off-by:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
----
-This patch is against the latest -mm and is on top of what
-has already been put in for AN support.  It just moves the 
-event notification thread out of scsi_lib.c and into it's own
-file, as well as adding notifier chain support. 
+There's more to this.
 
-Index: 2.6-mm/drivers/scsi/scsi.c
-===================================================================
---- 2.6-mm.orig/drivers/scsi/scsi.c
-+++ 2.6-mm/drivers/scsi/scsi.c
-@@ -1045,6 +1045,8 @@ static int __init init_scsi(void)
- 	if (error)
- 		goto cleanup_sysctl;
- 
-+	scsi_aen_init();
-+
- 	scsi_netlink_init();
- 
- 	printk(KERN_NOTICE "SCSI subsystem initialized\n");
-Index: 2.6-mm/drivers/scsi/scsi_aen.c
-===================================================================
---- /dev/null
-+++ 2.6-mm/drivers/scsi/scsi_aen.c
-@@ -0,0 +1,168 @@
-+/*
-+ *  SCSI Asynchronous Event Notification
-+ *
-+ *  Copyright (c) 2007, Intel Corporation
-+ *
-+ *  This program is free software; you can redistribute it and/or modify
-+ *  it under the terms of the GNU General Public License as published by
-+ *  the Free Software Foundation; either version 2 of the License, or
-+ *  (at your option) any later version.
-+ *
-+ *  This program is distributed in the hope that it will be useful,
-+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ *  GNU General Public License for more details.
-+ *
-+ *  You should have received a copy of the GNU General Public License
-+ *  along with this program; if not, write to the Free Software
-+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-+ *
-+ *  Send Feedback to:  Kristen Carlson Accardi <kristen.c.accardi@intel.com>
-+ */
-+#include <linux/notifier.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_driver.h>
-+#include <scsi/scsi_eh.h>
-+#include <scsi/scsi_host.h>
-+
-+static int scsi_aen_uevent_notifier(struct notifier_block *nb,
-+				    unsigned long action, void *sdev);
-+
-+BLOCKING_NOTIFIER_HEAD(scsi_aen_chain);
-+
-+static struct notifier_block scsi_aen_nb = {
-+	.notifier_call = scsi_aen_uevent_notifier,
-+};
-+
-+/* must match scsi_device_event enum in scsi_device.h */
-+static char * scsi_device_event_strings[] = {
-+	"MEDIA_CHANGE=1",
-+};
-+
-+/**	scsi_aen_notifier_register - register to receive aen events
-+ * 	@nb: callers notifier_block
-+ *
-+ * 	Add a callers notifier_block to the AEN notify chain.
-+ */
-+int scsi_aen_notifier_register(struct notifier_block *nb)
-+{
-+	return blocking_notifier_chain_register(&scsi_aen_chain, nb);
-+}
-+EXPORT_SYMBOL_GPL(scsi_aen_notifier_register);
-+
-+/**	scsi_aen_notifier_register - register to receive aen events
-+ * 	@nb: callers notifier_block
-+ *
-+ * 	remove a callers notifier_block from the AEN notify chain.
-+ */
-+int scsi_aen_notifier_unregister(struct notifier_block *nb)
-+{
-+	return blocking_notifier_chain_unregister(&scsi_aen_chain, nb);
-+}
-+EXPORT_SYMBOL_GPL(scsi_aen_notifier_unregister);
-+
-+/**
-+ * 	scsi_device_set_event - Add a new Async event to the event list
-+ *	@sdev: scsi_device event occurred on
-+ *	@event: the scsi device event
-+ *
-+ * 	Add a new scsi_device_event_info struct to the scsi_device_event_list
-+ * 	queue.  This may be called from interrupt context.
-+ *
-+ * 	Returns 0 if successful, -ENOMEM otherwise.
-+ */
-+static int
-+scsi_device_set_event(struct scsi_device *sdev, enum scsi_device_event event)
-+{
-+	struct scsi_device_event_info *scsi_event;
-+	unsigned long flags;
-+
-+	scsi_event = kzalloc(sizeof(*scsi_event), GFP_ATOMIC);
-+	if (!scsi_event)
-+		return -ENOMEM;
-+	INIT_LIST_HEAD(&scsi_event->link);
-+	scsi_event->event = event;
-+	spin_lock_irqsave(&sdev->list_lock, flags);
-+	list_add_tail(&scsi_event->link, &sdev->sdev_event_list);
-+	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+	return 0;
-+}
-+
-+/**
-+ * 	scsi_device_event_notify_thread - send a uevent for each scsi event
-+ *	@work: work struct for scsi_device
-+ *
-+ * 	Traverse the queue of scsi device events, dequeue each event and
-+ * 	send a uevent.  Frees event.  May not be called from interrupt.
-+ */
-+static void scsi_event_notify_thread(struct work_struct *work)
-+{
-+	struct scsi_device *sdev;
-+	struct list_head *tmp;
-+	struct list_head *next;
-+	struct scsi_device_event_info *sdev_event;
-+	unsigned long flags;
-+
-+	sdev = container_of(work, struct scsi_device, ew.work);
-+	list_for_each_safe(tmp, next, &sdev->sdev_event_list) {
-+		sdev_event = list_entry(tmp, struct scsi_device_event_info,
-+					link);
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		list_del(&sdev_event->link);
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
-+		/* ignore return code for now */
-+		blocking_notifier_call_chain(&scsi_aen_chain,
-+			sdev_event->event, sdev);
-+		kfree(sdev_event);
-+	}
-+}
-+
-+static int scsi_aen_uevent_notifier(struct notifier_block *nb,
-+				    unsigned long action, void *data)
-+{
-+	struct scsi_device *sdev = data;
-+	char *envp[] = { NULL, NULL };
-+
-+	if (action == SDEV_MEDIA_CHANGE) {
-+		envp[0] = scsi_device_event_strings[action-1];
-+		kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
-+	}
-+	return NOTIFY_OK;
-+}
-+
-+/**
-+ * 	scsi_device_event_notify - store event info and send an event
-+ *	@sdev: scsi_device event occurred on
-+ *	@event: the scsi device event
-+ *
-+ * 	Store the event information and then switch process context
-+ * 	so that the event may be sent to user space.
-+ * 	This may be called from interrupt context.
-+ *
-+ * 	Returns 0 if successful, -ENOMEM otherwise.
-+ */
-+int scsi_device_event_notify(struct scsi_device *sdev, enum scsi_device_event event)
-+{
-+	int rc;
-+
-+	rc = scsi_device_set_event(sdev, event);
-+	if (!rc)
-+		execute_in_process_context(scsi_event_notify_thread, &sdev->ew);
-+	return rc;
-+}
-+EXPORT_SYMBOL_GPL(scsi_device_event_notify);
-+
-+__init int scsi_aen_init(void)
-+{
-+	return scsi_aen_notifier_register(&scsi_aen_nb);
-+}
-+
-+void scsi_aen_exit(void)
-+{
-+	scsi_aen_notifier_unregister(&scsi_aen_nb);
-+}
-+
-Index: 2.6-mm/drivers/scsi/scsi_lib.c
-===================================================================
---- 2.6-mm.orig/drivers/scsi/scsi_lib.c
-+++ 2.6-mm/drivers/scsi/scsi_lib.c
-@@ -51,11 +51,6 @@ static struct scsi_host_sg_pool scsi_sg_
- };
- #undef SP
- 
--/* must match scsi_device_event enum in scsi_device.h */
--static char * scsi_device_event_strings[] = {
--	"MEDIA_CHANGE=1",
--};
--
- static void scsi_run_queue(struct request_queue *q);
- 
- /*
-@@ -2136,84 +2131,6 @@ scsi_device_set_state(struct scsi_device
- EXPORT_SYMBOL(scsi_device_set_state);
- 
- /**
-- * 	scsi_device_set_event - Add a new Async event to the event list
-- *	@sdev: scsi_device event occurred on
-- *	@event: the scsi device event
-- *
-- * 	Add a new scsi_device_event_info struct to the scsi_device_event_list
-- * 	queue.  This may be called from interrupt context.
-- *
-- * 	Returns 0 if successful, -ENOMEM otherwise.
-- */
--static int
--scsi_device_set_event(struct scsi_device *sdev, enum scsi_device_event event)
--{
--	struct scsi_device_event_info *scsi_event;
--	unsigned long flags;
--
--	scsi_event = kzalloc(sizeof(*scsi_event), GFP_ATOMIC);
--	if (!scsi_event)
--		return -ENOMEM;
--	INIT_LIST_HEAD(&scsi_event->link);
--	scsi_event->event = event;
--	spin_lock_irqsave(&sdev->list_lock, flags);
--	list_add_tail(&scsi_event->link, &sdev->sdev_event_list);
--	spin_unlock_irqrestore(&sdev->list_lock, flags);
--	return 0;
--}
--
--/**
-- * 	scsi_device_event_notify_thread - send a uevent for each scsi event
-- *	@work: work struct for scsi_device
-- *
-- * 	Traverse the queue of scsi device events, dequeue each event and
-- * 	send a uevent.  Frees event.  May not be called from interrupt.
-- */
--static void scsi_event_notify_thread(struct work_struct *work)
--{
--	struct scsi_device *sdev;
--	char *envp[] = { NULL, NULL };
--	struct list_head *tmp;
--	struct list_head *next;
--	struct scsi_device_event_info *sdev_event;
--	unsigned long flags;
--
--	sdev = container_of(work, struct scsi_device, ew.work);
--	list_for_each_safe(tmp, next, &sdev->sdev_event_list) {
--		sdev_event = list_entry(tmp, struct scsi_device_event_info,
--					link);
--		spin_lock_irqsave(&sdev->list_lock, flags);
--		list_del(&sdev_event->link);
--		spin_unlock_irqrestore(&sdev->list_lock, flags);
--		envp[0] = scsi_device_event_strings[sdev_event->event-1];
--		kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
--		kfree(sdev_event);
--	}
--}
--
--/**
-- * 	scsi_device_event_notify - store event info and send an event
-- *	@sdev: scsi_device event occurred on
-- *	@event: the scsi device event
-- *
-- * 	Store the event information and then switch process context
-- * 	so that the event may be sent to user space.
-- * 	This may be called from interrupt context.
-- *
-- * 	Returns 0 if successful, -ENOMEM otherwise.
-- */
--int scsi_device_event_notify(struct scsi_device *sdev, enum scsi_device_event event)
--{
--	int rc;
--
--	rc = scsi_device_set_event(sdev, event);
--	if (!rc)
--		execute_in_process_context(scsi_event_notify_thread, &sdev->ew);
--	return rc;
--}
--EXPORT_SYMBOL_GPL(scsi_device_event_notify);
--
--/**
-  *	scsi_device_quiesce - Block user issued commands.
-  *	@sdev:	scsi device to quiesce.
-  *
-Index: 2.6-mm/drivers/scsi/Makefile
-===================================================================
---- 2.6-mm.orig/drivers/scsi/Makefile
-+++ 2.6-mm/drivers/scsi/Makefile
-@@ -150,7 +150,7 @@ obj-$(CONFIG_SCSI_DEBUG)	+= scsi_debug.o
- obj-$(CONFIG_SCSI_WAIT_SCAN)	+= scsi_wait_scan.o
- 
- scsi_mod-y			+= scsi.o hosts.o scsi_ioctl.o constants.o \
--				   scsicam.o scsi_error.o scsi_lib.o
-+				   scsicam.o scsi_error.o scsi_lib.o scsi_aen.o
- scsi_mod-$(CONFIG_SCSI_DMA)	+= scsi_lib_dma.o
- scsi_mod-y			+= scsi_scan.o scsi_sysfs.o scsi_devinfo.o
- scsi_mod-$(CONFIG_SCSI_NETLINK)	+= scsi_netlink.o
-Index: 2.6-mm/drivers/scsi/scsi_priv.h
-===================================================================
---- 2.6-mm.orig/drivers/scsi/scsi_priv.h
-+++ 2.6-mm/drivers/scsi/scsi_priv.h
-@@ -128,6 +128,10 @@ static inline void scsi_netlink_init(voi
- static inline void scsi_netlink_exit(void) {}
- #endif
- 
-+/* scsi_aen.c */
-+extern int scsi_aen_init(void);
-+extern void scsi_aen_exit(void);
-+
- /* 
-  * internal scsi timeout functions: for use by mid-layer and transport
-  * classes.
+My Sandisk Cruzer Micro 1GB USB sticks suffer from this regression.
+Plug one in, it works for about 5 seconds, then the light goes off (bad=
+).
+Next access requires a 30s timeout + reset.  Etc..
+
+This is with 2.6.23-rc6.
+Works without any problems in 2.6.22.  REGRESSION.
+
+-ml
