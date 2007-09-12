@@ -1,72 +1,127 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 23/24] wd7000.c - proper fix for boards without sg support
-Date: Wed, 12 Sep 2007 03:11:52 +0300
-Message-ID: <46E72EC8.9020706@panasas.com>
+Subject: [PATCH 21/24] qlogicpti.c: convert to accessors and !use_sg cleanup
+Date: Wed, 12 Sep 2007 03:09:54 +0300
+Message-ID: <46E72E52.7030607@panasas.com>
 References: <46E6F92D.2090409@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:5473 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:30643 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755108AbXILAMX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 20:12:23 -0400
+	with ESMTP id S1752560AbXILANi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Sep 2007 20:13:38 -0400
 In-Reply-To: <46E6F92D.2090409@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew
 
 
-  - code used to set sg_tablesize to zero for board revision
-    less than 6. This is no longer supported, therefore I
-    use sg_tablesize=1 and open code the sg handling for that case.
-  - Get rid of use of SG_NONE which will be removed soon.
+ - convert to accessors and !use_sg cleanup
+
+[Note: This patch might conflict with upstream patches to this driver.
+ If so, please tell me and I'll fix it.]
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/wd7000.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/qlogicpti.c |   54 +++++++++------------------------------------
+ 1 files changed, 11 insertions(+), 43 deletions(-)
 
-diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
-index d6fd425..11db201 100644
---- a/drivers/scsi/wd7000.c
-+++ b/drivers/scsi/wd7000.c
-@@ -1108,13 +1108,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
- 	scb->host = host;
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 5948872..b685c4f 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -873,11 +873,12 @@ static inline int load_cmd(struct scsi_cmnd *Cmnd, struct Command_Entry *cmd,
+ 	struct scatterlist *sg;
+ 	int i, n;
  
- 	nseg = scsi_sg_count(SCpnt);
--	if (nseg) {
-+	if (nseg > 1) {
- 		struct scatterlist *sg;
- 		unsigned i;
+-	if (Cmnd->use_sg) {
++	if (scsi_bufflen(Cmnd)) {
+ 		int sg_count;
  
--		if (SCpnt->device->host->sg_tablesize == SG_NONE) {
--			panic("wd7000_queuecommand: scatter/gather not supported.\n");
--		}
- 		dprintk("Using scatter/gather with %d elements.\n", nseg);
+-		sg = (struct scatterlist *) Cmnd->request_buffer;
+-		sg_count = sbus_map_sg(qpti->sdev, sg, Cmnd->use_sg, Cmnd->sc_data_direction);
++		sg = scsi_sglist(Cmnd);
++		sg_count = sbus_map_sg(qpti->sdev, sg, scsi_sg_count(Cmnd),
++		                                      Cmnd->sc_data_direction);
  
- 		sgb = scb->sgb;
-@@ -1128,7 +1125,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
+ 		ds = cmd->dataseg;
+ 		cmd->segment_cnt = sg_count;
+@@ -915,16 +916,6 @@ static inline int load_cmd(struct scsi_cmnd *Cmnd, struct Command_Entry *cmd,
+ 			}
+ 			sg_count -= n;
  		}
+-	} else if (Cmnd->request_bufflen) {
+-		Cmnd->SCp.ptr = (char *)(unsigned long)
+-			sbus_map_single(qpti->sdev,
+-					Cmnd->request_buffer,
+-					Cmnd->request_bufflen,
+-					Cmnd->sc_data_direction);
+-
+-		cmd->dataseg[0].d_base = (u32) ((unsigned long)Cmnd->SCp.ptr);
+-		cmd->dataseg[0].d_count = Cmnd->request_bufflen;
+-		cmd->segment_cnt = 1;
  	} else {
- 		scb->op = 0;
--		any2scsi(scb->dataptr, isa_virt_to_bus(scsi_sglist(SCpnt)));
-+		if (nseg) {
-+			struct scatterlist *sg = scsi_sglist(SCpnt);
-+			any2scsi(scb->dataptr, isa_page_to_bus(sg->page) + sg->offset);
-+		}
- 		any2scsi(scb->maxlen, scsi_bufflen(SCpnt));
- 	}
+ 		cmd->dataseg[0].d_base = 0;
+ 		cmd->dataseg[0].d_count = 0;
+@@ -953,32 +944,15 @@ static inline void update_can_queue(struct Scsi_Host *host, u_int in_ptr, u_int
  
-@@ -1524,7 +1524,7 @@ static __init int wd7000_detect(struct scsi_host_template *tpnt)
- 				 *  For boards before rev 6.0, scatter/gather isn't supported.
- 				 */
- 				if (host->rev1 < 6)
--					sh->sg_tablesize = SG_NONE;
-+					sh->sg_tablesize = 1;
+ static unsigned int scsi_rbuf_get(struct scsi_cmnd *cmd, unsigned char **buf_out)
+ {
+-	unsigned char *buf;
+-	unsigned int buflen;
++	struct scatterlist *sg = scsi_sglist(cmd);
  
- 				present++;	/* count it */
+-	if (cmd->use_sg) {
+-		struct scatterlist *sg;
+-
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+-		buflen = sg->length;
+-	} else {
+-		buf = cmd->request_buffer;
+-		buflen = cmd->request_bufflen;
+-	}
+-
+-	*buf_out = buf;
+-	return buflen;
++	*buf_out = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
++	return sg->length;
+ }
  
+ static void scsi_rbuf_put(struct scsi_cmnd *cmd, unsigned char *buf)
+ {
+-	if (cmd->use_sg) {
+-		struct scatterlist *sg;
+-
+-		sg = (struct scatterlist *) cmd->request_buffer;
+-		kunmap_atomic(buf - sg->offset, KM_IRQ0);
+-	}
++	kunmap_atomic(buf - scsi_sglist(cmd)->offset, KM_IRQ0);
+ }
+ 
+ /*
+@@ -1278,17 +1252,11 @@ static struct scsi_cmnd *qlogicpti_intr_handler(struct qlogicpti *qpti)
+ 		else
+ 			Cmnd->result = DID_ERROR << 16;
+ 
+-		if (Cmnd->use_sg) {
++		if (scsi_bufflen(Cmnd))
+ 			sbus_unmap_sg(qpti->sdev,
+-				      (struct scatterlist *)Cmnd->request_buffer,
+-				      Cmnd->use_sg,
++				      scsi_sglist(Cmnd), scsi_sg_count(Cmnd),
+ 				      Cmnd->sc_data_direction);
+-		} else if (Cmnd->request_bufflen) {
+-			sbus_unmap_single(qpti->sdev,
+-					  (__u32)((unsigned long)Cmnd->SCp.ptr),
+-					  Cmnd->request_bufflen,
+-					  Cmnd->sc_data_direction);
+-		}
++
+ 		qpti->cmd_count[Cmnd->device->id]--;
+ 		sbus_writew(out_ptr, qpti->qregs + MBOX5);
+ 		Cmnd->host_scribble = (unsigned char *) done_queue;
 -- 
 1.5.3.1
 
