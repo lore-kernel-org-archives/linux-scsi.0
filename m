@@ -1,84 +1,39 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: [PATCH] Fix race with shared tag queue maps
-Date: Thu, 13 Sep 2007 14:26:53 +0200
-Message-ID: <20070913122652.GK25592@kernel.dk>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: switch sdev sysfs attributes to default attributes
+Date: Thu, 13 Sep 2007 14:29:25 +0100
+Message-ID: <20070913132925.GA30622@infradead.org>
+References: <1189522814.4564.12.camel@lov.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:11396 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751699AbXIMM1I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Sep 2007 08:27:08 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:47634 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752932AbXIMN33 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Sep 2007 09:29:29 -0400
 Content-Disposition: inline
+In-Reply-To: <1189522814.4564.12.camel@lov.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: orgis@agnld.uni-potsdam.de, arekm@maven.pl, ed.lin@promise.com, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, James.Bottomley@SteelEye.com
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
 
-Hi,
+On Tue, Sep 11, 2007 at 05:00:14PM +0200, Kay Sievers wrote:
+> From: Kay Sievers <kay.sievers@vrfy.org>
+> Subject: [SCSI] switch sdev sysfs attributes to default attributes
+> 
+> This removes the unused sysfs attribute overwriting logic for most of
+> the attributes, and plugs them into the driver core default attribute
+> creation.
+> 
+> Without this patch, at the time of the events for the SCSI LUN's, there
+> will be no sysfs files, because their creation is delayed until the sd
+> driver has spun up the disks, which might take several seconds. It is the
+> last WAIT_FOR_SYSFS rule in the default udev setup which can be removed
+> with this change.
 
-There's a race condition in blk_queue_end_tag() for shared tag maps,
-users include stex (promise supertrak thingy) and qla2xxx. The former at
-least has reported bugs in this area, not sure why we haven't seen any
-for the latter. It could be because the window is narrow and that other
-conditions in the qla2xxx code hide this. It's a real bug, though, as
-the stex smp users can attest.
-
-We need to ensure two things - the tag bit clearing needs to happen
-AFTER we cleared the tag pointer, as the tag bit clearing/setting is
-what protects this map. Secondly, we need to ensure that the visibility
-of the tag pointer and tag bit clear are ordered properly.
-
-This is for 2.6.23-rc6-current, but it needs to go into -stable as well
-once Linus has committed it. I'm cc'ing users that reported stex
-problems, hopefully they can test this patch and report back.
-
-Also see http://bugzilla.kernel.org/show_bug.cgi?id=7842
-
-Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
-
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index a15845c..3d9e6a1 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -1075,12 +1075,6 @@ void blk_queue_end_tag(struct request_queue *q, struct request *rq)
- 		 */
- 		return;
- 
--	if (unlikely(!__test_and_clear_bit(tag, bqt->tag_map))) {
--		printk(KERN_ERR "%s: attempt to clear non-busy tag (%d)\n",
--		       __FUNCTION__, tag);
--		return;
--	}
--
- 	list_del_init(&rq->queuelist);
- 	rq->cmd_flags &= ~REQ_QUEUED;
- 	rq->tag = -1;
-@@ -1090,6 +1084,23 @@ void blk_queue_end_tag(struct request_queue *q, struct request *rq)
- 		       __FUNCTION__, tag);
- 
- 	bqt->tag_index[tag] = NULL;
-+
-+	/*
-+	 * Ensure ordering with tag section
-+	 */
-+	smp_mb__before_clear_bit();
-+
-+	if (unlikely(!test_and_clear_bit(tag, bqt->tag_map))) {
-+		printk(KERN_ERR "%s: attempt to clear non-busy tag (%d)\n",
-+		       __FUNCTION__, tag);
-+		return;
-+	}
-+
-+	/*
-+	 * Ensure ordering between ->tag_index[tag] clear and tag clear
-+	 */
-+	smp_mb__after_clear_bit();
-+
- 	bqt->busy--;
- }
- 
-
--- 
-Jens Axboe
+Looks good for to me.  How does sysfs react if some driver would add the
+same attribute the core has already added?  If it give back a sane error
+(and maybe even prints a message) then it's fine, otherwise we might have
+to add some debug code to error out if a driver tries to add an existing
+attribute because it sneaked through review or similar.
 
