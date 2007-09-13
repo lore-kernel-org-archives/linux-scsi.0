@@ -1,60 +1,34 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] Problems with USB disk [solved]
-Date: Thu, 13 Sep 2007 11:09:20 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0709131105250.3619-100000@iolanthe.rowland.org>
-References: <46E94AC2.3030607@rtr.ca>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [PATCH] Fix race with shared tag queue maps
+Date: Thu, 13 Sep 2007 08:16:52 -0700 (PDT)
+Message-ID: <alpine.LFD.0.999.0709130813220.16478@woody.linux-foundation.org>
+References: <20070913122652.GK25592@kernel.dk>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760148AbXIMPJb@vger.kernel.org>
-In-Reply-To: <46E94AC2.3030607@rtr.ca>
+Content-Type: TEXT/PLAIN; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760680AbXIMPTW@vger.kernel.org>
+In-Reply-To: <20070913122652.GK25592@kernel.dk>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Niels <zorglub_olsen@hotmail.com>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, orgis@agnld.uni-potsdam.de, arekm@maven.pl, ed.lin@promise.com, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 13 Sep 2007, Mark Lord wrote:
 
-> Alan Stern wrote:
-> > On Wed, 12 Sep 2007, Mark Lord wrote:
-> > 
-> >> Chuck Ebbert wrote:
-> ..
-> >>> Oh, nice. The usb-storage (SCSI) disk spins itself down and we can't handle that.
-> >>> Should we be disabling auto-spindown when we connect the device, or be able to
-> >>> handle this by sending the start command when needed?
-> >> There's more to this.
-> >>
-> >> My Sandisk Cruzer Micro 1GB USB sticks suffer from this regression.
-> > 
-> > I seriously doubt that.  Are you claiming that your USB stick spins 
-> > itself down during a suspend?  And then requires to be spun back up 
-> > before it will resume proper operation?
-> 
-> No, the machine is not being suspended at all.
-> 
-> What happens is, there's a nice little LED on the Cruzer stick,
-> that is "lit" when the stick itself is not in a "power suspend" state
-> (or whatever you USB folks call it).
 
-We call it "suspended".  (Wasn't there an episode of Classic Trek where 
-Mr. Spock explained to somebody, "I call them `ears'."?)
+On Thu, 13 Sep 2007, Jens Axboe wrote:
+> +
+> +	/*
+> +	 * Ensure ordering with tag section
+> +	 */
+> +	smp_mb__before_clear_bit();
+> +
+> +	if (unlikely(!test_and_clear_bit(tag, bqt->tag_map))) {
 
-> On 2.6.22, that little LED stays "on" normally, and flickers off/on
-> when data is being transfered.
-> 
-> The new "USB autosuspend" logic in 2.6.23 now causes that little LED
-> to turn off after a few seconds of inactivity.
-> 
-> Once that happens, the USB stick is not accessible until after a longish
-> timeout (~30s I think), followed by a USB reset.  Then it is usable again
-> until the next inactivity timeout and autosuspend (a few seconds).
+You don't need the "smp_mb__before_clear_bit()" there.
 
-So this _isn't_ the regression described above -- to wit, that the 
-drive gets spun down and then won't work without first being spun back 
-up.  You wrote:
+The regular "clear_bit()" needs it, but the "test_and_xxx()" versions are 
+architecturally defined to be memory barriers, exactly because they are 
+regularly used for locking.
 
-> >> My Sandisk Cruzer Micro 1GB USB sticks suffer from this regression.
+This is even documented - see Documentation/atomic_ops.txt.
 
-But it doesn't.  It suffers from a different regression.
-
-Alan Stern
+		Linus
