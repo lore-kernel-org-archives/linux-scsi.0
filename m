@@ -1,48 +1,73 @@
-From: Mark Lord <lkml@rtr.ca>
-Subject: Re: [linux-usb-devel] Problems with USB disk [solved]
-Date: Thu, 13 Sep 2007 10:35:46 -0400
-Message-ID: <46E94AC2.3030607@rtr.ca>
-References: <Pine.LNX.4.44L0.0709131008360.3619-100000@iolanthe.rowland.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [1/4] 2.6.23-rc6: known regressions
+Date: Thu, 13 Sep 2007 09:50:21 -0500
+Message-ID: <1189695021.4082.10.camel@localhost.localdomain>
+References: <20070913093651.GA5077@suse.de>
+	<Pine.LNX.4.44L0.0709131013270.3619-100000@iolanthe.rowland.org>
+	<20070913144139.GD3309@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759449AbXIMOgA@vger.kernel.org>
-In-Reply-To: <Pine.LNX.4.44L0.0709131008360.3619-100000@iolanthe.rowland.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Chuck Ebbert <cebbert@redhat.com>, Niels <zorglub_olsen@hotmail.com>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20070913144139.GD3309@suse.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Greg KH <gregkh@suse.de>
+Cc: Oliver Neukum <oneukum@suse.de>, Alan Stern <stern@rowland.harvard.edu>, USB development list <linux-usb-devel@lists.sourceforge.net>, SCSI development list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Alan Stern wrote:
-> On Wed, 12 Sep 2007, Mark Lord wrote:
+On Thu, 2007-09-13 at 07:41 -0700, Greg KH wrote:
+> On Thu, Sep 13, 2007 at 10:19:48AM -0400, Alan Stern wrote:
+> > On Thu, 13 Sep 2007, Greg KH wrote:
+> > 
+> > > Ok, after conferring with Oliver this morning, I think the best solution
+> > > here is to both revert the usb-storage suspend patch as it has some
+> > > basic problems that can cause data loss, _and_ add the change to the
+> > > kernel that by default disables autosuspend on all USB devices except
+> > > hubs.
+> > 
+> > Are you referring to the disk spin-down issue?  As far as I know, 
+> > that's the only troublesome aspect of usb-storage autosuspend (apart 
+> > from the fact that so many devices don't seem to support it very well, 
+> > if at all).
+> > 
+> > Solving the spin-down problem will require coordination with the SCSI 
+> > developers.  Basically, the SCSI core has to notify the HBA driver 
+> > whenever the bus has been idle sufficiently long and all its devices 
+> > are ready to be suspended.  In particular, all disk heads should be 
+> > parked and drives spun down, if they need to be.
 > 
->> Chuck Ebbert wrote:
-..
->>> Oh, nice. The usb-storage (SCSI) disk spins itself down and we can't handle that.
->>> Should we be disabling auto-spindown when we connect the device, or be able to
->>> handle this by sending the start command when needed?
->> There's more to this.
->>
->> My Sandisk Cruzer Micro 1GB USB sticks suffer from this regression.
+> I am not sure.  I will defer to Oliver for the knowledge of the details,
+> it was early in the morning and I can't remember them all exactly :)
 > 
-> I seriously doubt that.  Are you claiming that your USB stick spins 
-> itself down during a suspend?  And then requires to be spun back up 
-> before it will resume proper operation?
+> (although it might be a few days for him to respond, he's here at a
+> conference without a laptop, so his lag time might be a bit longer than
+> normal...)
 
-No, the machine is not being suspended at all.
+I'll wait, certainly ... enjoy the Czech backwoods.
 
-What happens is, there's a nice little LED on the Cruzer stick,
-that is "lit" when the stick itself is not in a "power suspend" state
-(or whatever you USB folks call it).
+One thing I would say though is that if there's special action we have
+to take after autosuspend, it should probably be built into the
+framework Kristen is developing for ACHI link power management (your USB
+autosuspend is effectively a simple type of link power management as
+well).
 
-On 2.6.22, that little LED stays "on" normally, and flickers off/on
-when data is being transfered.
+James
 
-The new "USB autosuspend" logic in 2.6.23 now causes that little LED
-to turn off after a few seconds of inactivity.
 
-Once that happens, the USB stick is not accessible until after a longish
-timeout (~30s I think), followed by a USB reset.  Then it is usable again
-until the next inactivity timeout and autosuspend (a few seconds).
 
-Etc.
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2005.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
