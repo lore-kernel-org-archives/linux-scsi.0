@@ -1,39 +1,62 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: switch sdev sysfs attributes to default attributes
-Date: Thu, 13 Sep 2007 14:29:25 +0100
-Message-ID: <20070913132925.GA30622@infradead.org>
-References: <1189522814.4564.12.camel@lov.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] Problems with USB disk [solved]
+Date: Thu, 13 Sep 2007 10:12:11 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0709131008360.3619-100000@iolanthe.rowland.org>
+References: <46E863EA.4060806@rtr.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:47634 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752932AbXIMN33 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Sep 2007 09:29:29 -0400
-Content-Disposition: inline
-In-Reply-To: <1189522814.4564.12.camel@lov.localdomain>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35086 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751977AbXIMOMN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Sep 2007 10:12:13 -0400
+In-Reply-To: <46E863EA.4060806@rtr.ca>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
+To: Mark Lord <lkml@rtr.ca>
+Cc: Chuck Ebbert <cebbert@redhat.com>, Niels <zorglub_olsen@hotmail.com>, linux-kernel@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, USB development list <linux-usb-devel@lists.sourceforge.net>
 
-On Tue, Sep 11, 2007 at 05:00:14PM +0200, Kay Sievers wrote:
-> From: Kay Sievers <kay.sievers@vrfy.org>
-> Subject: [SCSI] switch sdev sysfs attributes to default attributes
-> 
-> This removes the unused sysfs attribute overwriting logic for most of
-> the attributes, and plugs them into the driver core default attribute
-> creation.
-> 
-> Without this patch, at the time of the events for the SCSI LUN's, there
-> will be no sysfs files, because their creation is delayed until the sd
-> driver has spun up the disks, which might take several seconds. It is the
-> last WAIT_FOR_SYSFS rule in the default udev setup which can be removed
-> with this change.
+On Wed, 12 Sep 2007, Mark Lord wrote:
 
-Looks good for to me.  How does sysfs react if some driver would add the
-same attribute the core has already added?  If it give back a sane error
-(and maybe even prints a message) then it's fine, otherwise we might have
-to add some debug code to error out if a driver tries to add an existing
-attribute because it sneaked through review or similar.
+> Chuck Ebbert wrote:
+
+> >>> =========
+> >>> sd 1:0:0:0: Device not ready: <6>: Current: sense key=0x2
+> >>>     ASC=0x4 ASCQ=0x2
+> >>> end_request: I/O error, dev sda, sector 126693711
+> >>> sd 1:0:0:0: Device not ready: <6>: Current: sense key=0x2
+> >>>     ASC=0x4 ASCQ=0x2
+> >>> end_request: I/O error, dev sda, sector 126693711
+> >>> sd 1:0:0:0: Device not ready: <6>: Current: sense key=0x2
+> >>>     ASC=0x4 ASCQ=0x2
+> >>> end_request: I/O error, dev sda, sector 126693711
+> >>> =========
+> >>>
+> >> Using a new PSU and a powered hub made no difference. But I found a solution
+> >> here:
+> >>
+> >> http://alienghic.livejournal.com/382903.html
+> >>
+> >> Basically, the problem is, as suspected, that the drive spins down / goes to
+> >> suspend. This can be disabled with "sdparm --clear STANDBY -6 /dev/sda".
+> >>
+> >> It seems to me to be an error that the kernel reports this as something like
+> >> a hardware failure. Or at least very misleading.
+> >>
+> > 
+> > Oh, nice. The usb-storage (SCSI) disk spins itself down and we can't handle that.
+> > Should we be disabling auto-spindown when we connect the device, or be able to
+> > handle this by sending the start command when needed?
+> 
+> There's more to this.
+> 
+> My Sandisk Cruzer Micro 1GB USB sticks suffer from this regression.
+
+I seriously doubt that.  Are you claiming that your USB stick spins 
+itself down during a suspend?  And then requires to be spun back up 
+before it will resume proper operation?
+
+(Hint: Flash memory devices don't contain rotating media...)
+
+Alan Stern
 
