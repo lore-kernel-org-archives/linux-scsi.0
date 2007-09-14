@@ -1,225 +1,158 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: 2.6.23-rc4-mm1
-Date: Fri, 14 Sep 2007 15:01:03 +0200
-Message-ID: <64bb37e0709140601te21f5d0l9871ea03dbf4b135@mail.gmail.com>
-References: <20070831215822.26e1432b.akpm@linux-foundation.org>
-	 <20070910174926.GC30335@shadowen.org>
-	 <20070910111926.9c942358.akpm@linux-foundation.org>
-	 <20070910044323T.tomof@acm.org> <20070914081018.GA20042@shadowen.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 1/4] scsi: megaraid_sas -- add hibernation support
+Date: Fri, 14 Sep 2007 09:42:42 -0500
+Message-ID: <1189780962.3343.9.camel@localhost.localdomain>
+References: <1189513284.6082.4.camel@dhcp-75-534.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.232]:3823 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754097AbXINNBE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Sep 2007 09:01:04 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so653248nze
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Sep 2007 06:01:04 -0700 (PDT)
-In-Reply-To: <20070914081018.GA20042@shadowen.org>
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:42370 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751594AbXINOmo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Sep 2007 10:42:44 -0400
+In-Reply-To: <1189513284.6082.4.camel@dhcp-75-534.se.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Whitcroft <apw@shadowen.org>
-Cc: FUJITA Tomonori <tomof@acm.org>, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, jens.axboe@oracle.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: linux-box <bo.yang@lsi.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, sumant.patro@lsi.com
 
-On 9/14/07, Andy Whitcroft <apw@shadowen.org> wrote:
-> On Tue, Sep 11, 2007 at 04:31:12AM +0900, FUJITA Tomonori wrote:
-> [...]
-> >
-> > Even if we revert the qla1280 patch, scsi-ml still sends chaining sg
-> > list. So it doesn't work.
-> >
-> > The following patch disables chaining sg list for qla1280. If the fix
-> > that I've just sent doesn't work, please try this.
->
-> Ok, the other patch _did_ work, but this got tested anyhow and it did
-> _not_ fix things.
->
+On Tue, 2007-09-11 at 12:21 +0000, linux-box wrote:
+> The megaraid_sas driver doesn't support the hibernation, the suspend/resume  
+> routine implemented to support the hibernation.
+> 
+> Signed-off-by: Bo Yang <bo.yang@lsi.com> 
 
-Sorry to confirm this. My RAID5 got destroyed a second time.
-To summarize what worked / not worked / and seems to work for me:
+Just from a process point of view, your email from: is linux-box
+<bo.yang@lsi.com>, but your signoff is Bo Yang <bo.yang@lsi.com>, I'm
+assuming the signoff line is the real name you want me to use?
 
-First 2 tries with unpatched rc4-mm1: Both times one sata_sil24-drive got kicked
-Then I switched back to rc3-mm1, 18 boots with that kernel worked.
-Then I tried the patched rc4-mm1 and it worked too.
-The next boot also worked, but the third time kicked a drive out again.
-But as nobody reads logs, I did not notice that and keep using the
-patched rc4-mm1.
-The next 5 times the system worked normally with the two remaining drives.
-The sixth boot kicked the second sata_sil24 drive. That I did notice...
-After reassembling the RAID, I'm now back to the patch rc4-mm1 that
-did boot correctly this time.
-So the patch just makes it unlikelier to hit the bug. Instead of
-failing 2 out of 2 times, it only failed 2 out of 8 times.
-I compared the rc4-mm1 boot from a working case and the case where it
-kicked the first drive. Nothing seems to stand out...
+> @@ -2525,6 +2560,138 @@ static void megasas_shutdown_controller(
+>  }
+>  
+>  /**
+> + * megasas_suspend -    driver suspend entry point
+> + * @pdev:               PCI device structure
+> + * @state:		PCI power state to suspend routine
+> + */
+> +static int __devinit
+> +megasas_suspend(struct pci_dev *pdev, pm_message_t state)
+> +{
+> +	struct Scsi_Host *host;
+> +	struct megasas_instance *instance;
+> +
+> +	instance = pci_get_drvdata(pdev);
+> +	host = instance->host;
+> +
+> +	megasas_flush_cache(instance);
+> +	megasas_shutdown_controller(instance, MR_DCMD_HIBERNATE_SHUTDOWN);
+> +	tasklet_kill(&instance->isr_tasklet);
+> +
+> +	pci_set_drvdata(instance->pdev, instance);
+> +	instance->instancet->disable_intr(instance->reg_set);
+> +	free_irq(instance->pdev->irq, instance);
+> +
+> +	scsi_host_put(host);
 
-< == good rc4-mm1 boot
-> == bad rc4-mm1 boot that kicked the drive
+This can't be right.  You're not relinquishing the host here, since you
+simply pick it out of the pci driver data on resume.
 
-145c145
-< CPU 0: aperture @ 4000000 size 32 MB
----
-> CPU 0: aperture @ b7f0000000 size 32 MB
-154c154
-< Calibrating delay using timer specific routine.. 5203.23 BogoMIPS
-(lpj=26016160)
----
-> Calibrating delay using timer specific routine.. 5203.22 BogoMIPS (lpj=26016138)
-169c169
-< APIC timer calibration result 12499998
----
-> APIC timer calibration result 12499994
-173c173
-< Calibrating delay using timer specific routine.. 5222.40 BogoMIPS
-(lpj=26112010)
----
-> Calibrating delay using timer specific routine.. 5200.01 BogoMIPS (lpj=26000052)
-182c182
-< Calibrating delay using timer specific routine.. 5222.73 BogoMIPS
-(lpj=26113694)
----
-> Calibrating delay using timer specific routine.. 5200.01 BogoMIPS (lpj=26000081)
-191c191
-< Calibrating delay using timer specific routine.. 5223.07 BogoMIPS
-(lpj=26115369)
----
-> Calibrating delay using timer specific routine.. 5200.03 BogoMIPS (lpj=26000164)
-269d268
-< Switched to high resolution mode on CPU 3
-270a270
-> Switched to high resolution mode on CPU 3
-502,509c502,509
-< raid6: int64x1   2634 MB/s
-< raid6: int64x2   3244 MB/s
-< raid6: int64x4   3405 MB/s
-< raid6: int64x8   2614 MB/s
-< raid6: sse2x1    3607 MB/s
-< raid6: sse2x2    4834 MB/s
-< raid6: sse2x4    4946 MB/s
-< raid6: using algorithm sse2x4 (4946 MB/s)
----
-> raid6: int64x1   2680 MB/s
-> raid6: int64x2   3232 MB/s
-> raid6: int64x4   3411 MB/s
-> raid6: int64x8   2620 MB/s
-> raid6: sse2x1    3606 MB/s
-> raid6: sse2x2    4810 MB/s
-> raid6: sse2x4    4910 MB/s
-> raid6: using algorithm sse2x4 (4910 MB/s)
-567c567
-< md1: bitmap initialized from disk: read 10/10 pages, set 96 bits
----
-> md1: bitmap initialized from disk: read 10/10 pages, set 104 bits
-568a569,655
-> ata1.00: exception Emask 0x20 SAct 0x1 SErr 0x0 action 0x2
-> ata1.00: irq_stat 0x00020002, PCI master abort while fetching SGT
-> ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-> ata1.00: status: {DRDY }
-> ata1: soft resetting link
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> ata1.00: exception Emask 0x20 SAct 0x1 SErr 0x0 action 0x2
-> ata1.00: irq_stat 0x00020002, PCI master abort while fetching SGT
-> ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-> ata1.00: status: {DRDY }
-> ata1: soft resetting link
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> ata1.00: exception Emask 0x20 SAct 0x1 SErr 0x0 action 0x2
-> ata1.00: irq_stat 0x00020002, PCI master abort while fetching SGT
-> ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-> ata1.00: status: {DRDY }
-> ata1: soft resetting link
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> ata1.00: exception Emask 0x20 SAct 0x1 SErr 0x0 action 0x2
-> ata1.00: irq_stat 0x00020002, PCI master abort while fetching SGT
-> ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-> ata1.00: status: {DRDY }
-> ata1: soft resetting link
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> ata1.00: exception Emask 0x20 SAct 0x1 SErr 0x0 action 0x2
-> ata1.00: irq_stat 0x00020002, PCI master abort while fetching SGT
-> ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-> ata1.00: status: {DRDY }
-> ata1: soft resetting link
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/100
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> ata1.00: exception Emask 0x20 SAct 0x1 SErr 0x0 action 0x2
-> ata1.00: irq_stat 0x00020002, PCI master abort while fetching SGT
-> ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0 cdb 0x0 data 4096 out
->          res 50/00:00:af:ea:42/00:00:25:00:00/e0 Emask 0x20 (host bus error)
-> ata1.00: status: {DRDY }
-> ata1: soft resetting link
-> ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
-> ata1.00: configured for UDMA/100
-> sd 0:0:0:0: [sda] Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE,SUGGEST_OK
-> sd 0:0:0:0: [sda] Sense Key : Aborted Command [current] [descriptor]
-> Descriptor sense data with sense descriptors (in hex):
->         72 0b 00 00 00 00 00 0c 00 0a 80 00 00 00 00 00
->         00 00 00 af
-> sd 0:0:0:0: [sda] Add. Sense: No additional sense information
-> end_request: I/O error, dev sda, sector 625137161
-> ata1: EH complete
-> sd 0:0:0:0: [sda] 625142448 512-byte hardware sectors (320073 MB)
-> sd 0:0:0:0: [sda] Write Protect is off
-> sd 0:0:0:0: [sda] Mode Sense: 00 3a 00 00
-> sd 0:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-> md: super_written gets error=-5, uptodate=0
-> raid5: Disk failure on sda2, disabling device. Operation continuing on 2 devices
-571a659,663
-> RAID5 conf printout:
->  --- rd:3 wd:2
->  disk 0, o:0, dev:sda2
->  disk 1, o:1, dev:sdb2
->  disk 2, o:1, dev:sdc2
-576a669,672
-> RAID5 conf printout:
->  --- rd:3 wd:2
->  disk 1, o:1, dev:sdb2
->  disk 2, o:1, dev:sdc2
+> +
+> +	pci_save_state(pdev);
+> +	pci_disable_device(pdev);
+> +
+> +	pci_set_power_state(pdev, pci_choose_state(pdev, state));
+> +
+> +	return 0;
+> +}
+> +
+> +/**
+> + * megasas_resume-      driver resume entry point
+> + * @pdev:               PCI device structure
+> + */
+> +static int __devinit
+> +megasas_resume(struct pci_dev *pdev)
+> +{
+> +	int rval;
+> +	struct Scsi_Host *host;
+> +	struct megasas_instance *instance;
+> +
+> +	instance = pci_get_drvdata(pdev);
+> +	host = instance->host;
 
-Another good boot also showed the aperture at a similar high address:
-CPU 0: aperture @ b7f2000000 size 32 MB
-And that good boot also showed the "correct" BogoMIPS:
-Calibrating delay using timer specific routine.. 5205.43 BogoMIPS (lpj=26027183)
-Calibrating delay using timer specific routine.. 5200.01 BogoMIPS (lpj=26000052)
-Calibrating delay using timer specific routine.. 5200.01 BogoMIPS (lpj=26000082)
-Calibrating delay using timer specific routine.. 5200.03 BogoMIPS (lpj=26000166)
+As in here ... to get the correct refcounting, you'd have to bump up the
+reference here.  However, I don't think the put on suspend is correct.
 
-Anything more I can provide to help debugging this?
+> +       pci_set_power_state(pdev, PCI_D0);
+> +       pci_enable_wake(pdev, PCI_D0, 0);
+> +       pci_restore_state(pdev);
+> +
+> +       /*
+> +        * PCI prepping: enable device set bus mastering and dma mask
+> +        */
+> +       rval = pci_enable_device(pdev);
+> +
+> +       if (rval) {
+> +               printk(KERN_ERR "megasas: Enable device failed\n");
+> +               return rval;
+> +       }
+> +
+> +       pci_set_master(pdev);
+> +
+> +       if (megasas_set_dma_mask(pdev))
+> +               goto fail_set_dma_mask;
+> +
+> +       /*
+> +        * Initialize MFI Firmware
+> +        */
+> +
+> +       *instance->producer = 0;
+> +       *instance->consumer = 0;
+> +
+> +       atomic_set(&instance->fw_outstanding, 0);
+> +
+> +       /*
+> +        * We expect the FW state to be READY
+> +        */
+> +       if (megasas_transition_to_ready(instance))
+> +               goto fail_ready_state;
+> +
+> +       if (megasas_issue_init_mfi(instance))
+> +               goto fail_init_mfi;
+> +
+> +       tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
+> +                       (unsigned long)instance);
+> +
+> +       /*
+> +        * Register IRQ
+> +        */
+> +       if (request_irq(pdev->irq, megasas_isr, IRQF_SHARED,
+> +               "megasas", instance)) {
+> +               printk(KERN_ERR "megasas: Failed to register IRQ\n");
+> +               goto fail_irq;
+> +       }
+> +
+> +       instance->instancet->enable_intr(instance->reg_set);
+> +
+> +       /*
+> +        * Store instance in PCI softstate
+> +        */
+> +       pci_set_drvdata(pdev, instance);
 
-Torsten
+This better be redundant ... you picked the instance out of the driver
+data at the beginning of this routine ... it better still be there or
+else something is seriously wrong.
+
+> +
+> +       /*
+> +        * Initiate AEN (Asynchronous Event Notification)
+> +        */
+> +       if (megasas_start_aen(instance))
+> +               printk(KERN_ERR "megasas: Start AEN failed\n");
+> +
+> +       return 0;
+
+
+James
+
+
