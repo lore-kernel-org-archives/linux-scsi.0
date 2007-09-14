@@ -1,79 +1,38 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] SCSI: trailing whitespace in Kconfig
-Date: Fri, 14 Sep 2007 20:04:49 +0200 (CEST)
-Message-ID: <tkrat.6bd1ddc8d38342e8@s5r6.in-berlin.de>
-References: <20070907124800.GP16806@vanheusden.com>
- <p73fy1p9m57.fsf@bingen.suse.de>
- <1189371621.3526.28.camel@localhost.localdomain>
- <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org>
- <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de>
- <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de>
- <tkrat.d922469e152fe0f3@s5r6.in-berlin.de>
- <tkrat.913e8b183cdf7888@s5r6.in-berlin.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] aic94xx: fix smartctl utility problem
+Date: Fri, 14 Sep 2007 14:14:46 -0400
+Message-ID: <46EACF96.7010501@garzik.org>
+References: <1189792710.6030.3.camel@linux.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756011AbXINSFu@vger.kernel.org>
-In-Reply-To: <tkrat.913e8b183cdf7888@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:60437 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756602AbXINSOs (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2007 14:14:48 -0400
+In-Reply-To: <1189792710.6030.3.camel@linux.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gilbert Wu <Gilbert_Wu@adaptec.com>
+Cc: Linux-scsi@vger.kernel.org
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
+Gilbert Wu wrote:
+> Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"  does
+> not work on SATA device. ( The smartctl v5.38 does need "-d ata"
+> option.)
+>   The aic94xx need to return ATA output register for all ATA commands
+> except ATA Read/Write commands.
+>   The aic94xx also mark out the DRQ bit from status register which is
+> treated as AC_ERR_HSM (host state machine violation) error by top layer
+> if it set to one.
+>  The firmware of aic94xx chip handle all ATA handshaking, data transfer
+> and return ATA output register which is sent by the device.  So the DRQ
+> bit may not reflect the last state of device when the command finished
+> and it is no meaning for the caller.
+> 
+> Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
 
-Applies after patch "SCSI: split Kconfig menu into two".
-I didn't want to change whitespace in the portions that this patch
-moved from drivers/scsi/Kconfig to drivers/scsi/Kconfig.lowlevel,
-hence produced this follow-up.
+ACK
 
 
- drivers/scsi/Kconfig.lowlevel |    8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
-
-Index: linux-2.6.23-rc6/drivers/scsi/Kconfig.lowlevel
-===================================================================
---- linux-2.6.23-rc6.orig/drivers/scsi/Kconfig.lowlevel
-+++ linux-2.6.23-rc6/drivers/scsi/Kconfig.lowlevel
-@@ -252,7 +252,7 @@ config SCSI_DPT_I2O
- 	tristate "Adaptec I2O RAID support "
- 	depends on !64BIT && SCSI && PCI && VIRT_TO_BUS
- 	help
--	  This driver supports all of Adaptec's I2O based RAID controllers as 
-+	  This driver supports all of Adaptec's I2O based RAID controllers as
- 	  well as the DPT SmartRaid V cards.  This is an Adaptec maintained
- 	  driver by Deanna Bonds.  See <file:Documentation/scsi/dpti.txt>.
- 
-@@ -457,7 +457,7 @@ config SCSI_GDTH
- 	---help---
- 	  Formerly called GDT SCSI Disk Array Controller Support.
- 
--	  This is a driver for RAID/SCSI Disk Array Controllers (EISA/ISA/PCI) 
-+	  This is a driver for RAID/SCSI Disk Array Controllers (EISA/ISA/PCI)
- 	  manufactured by Intel Corporation/ICP vortex GmbH. It is documented
- 	  in the kernel source in <file:drivers/scsi/gdth.c> and
- 	  <file:drivers/scsi/gdth.h.>
-@@ -491,7 +491,7 @@ config SCSI_GENERIC_NCR5380_MMIO
- 	select SCSI_SPI_ATTRS
- 	---help---
- 	  This is a driver for the old NCR 53c80 series of SCSI controllers
--	  on boards using memory mapped I/O. 
-+	  on boards using memory mapped I/O.
- 	  It is explained in section 3.8 of the SCSI-HOWTO, available from
- 	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
- 	  of the box, you may have to change some settings in
-@@ -1261,7 +1261,7 @@ config SCSI_DEBUG
- 	  each with multiple dummy SCSI devices (disks). It defaults to one
- 	  host adapter with one dummy SCSI disk. Each dummy disk uses kernel
- 	  RAM as storage (i.e. it is a ramdisk). To save space when multiple
--	  dummy disks are simulated, they share the same kernel RAM for 
-+	  dummy disks are simulated, they share the same kernel RAM for
- 	  their storage. See <http://www.torque.net/sg/sdebug.html> for more
- 	  information. This driver is primarily of use to those testing the
- 	  SCSI and block subsystems. If unsure, say N.
-
--- 
-Stefan Richter
--=====-=-=== =--= -===-
-http://arcgraph.de/sr/
