@@ -1,104 +1,174 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 9018] New: Kernel bug in aic94xx driver
- shipped with kernel 2.6.21.7
-Date: Fri, 14 Sep 2007 13:56:00 -0700
-Message-ID: <20070914135600.67f798e3.akpm@linux-foundation.org>
-References: <bug-9018-10286@http.bugzilla.kernel.org/>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH] SCSI: update Kconfig help text to indicate SCSI core's
+ widespread usage
+Date: Fri, 14 Sep 2007 23:06:44 +0200 (CEST)
+Message-ID: <tkrat.f4379d6e5f1ce499@s5r6.in-berlin.de>
+References: <1189371621.3526.28.camel@localhost.localdomain>
+ <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org>
+ <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de>
+ <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de>
+ <tkrat.d922469e152fe0f3@s5r6.in-berlin.de>
+ <20070914185434.GD5386@csclub.uwaterloo.ca>
+ <tkrat.e1d898d6a272d681@s5r6.in-berlin.de>
+ <20070914202102.GE5386@csclub.uwaterloo.ca>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:44635 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754143AbXINU4h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Sep 2007 16:56:37 -0400
-In-Reply-To: <bug-9018-10286@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759904AbXINVIP@vger.kernel.org>
+In-Reply-To: <20070914202102.GE5386@csclub.uwaterloo.ca>
+Content-Disposition: INLINE
+Sender: linux-kernel-owner@vger.kernel.org
+To: Lennart Sorensen <lsorense@csclub.uwaterloo.ca>
+Cc: James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bugme-new@lists.osdl.org, martijn@databoss.nl, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On Fri, 14 Sep 2007 07:11:54 -0700 (PDT)
-bugme-daemon@bugzilla.kernel.org wrote:
+On 14 Sep, Lennart Sorensen wrote:
+> On Fri, Sep 14, 2007 at 10:14:16PM +0200, Stefan Richter wrote:
+>> -	  If you want to use a SCSI or FireWire CD-ROM under Linux,
+>> +	  If you want to use a SCSI, SATA, USB or FireWire CD-ROM or DVD-ROM,
+>>  	  say Y and read the SCSI-HOWTO and the CDROM-HOWTO at
+>>  	  <http://www.tldp.org/docs.html#howto>. Also make sure to say
+>>  	  Y or M to "ISO 9660 CD-ROM file system support" later.
+> 
+> How about that one for libata driven PATA CDROM drives?  Could replace
+> SATA with libata, or something similar.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=9018
-> 
->            Summary: Kernel bug in aic94xx driver shipped with kernel
->                     2.6.21.7
->            Product: Drivers
->            Version: 2.5
->      KernelVersion: 2.6.21.7
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->         AssignedTo: drivers_other@kernel-bugs.osdl.org
->         ReportedBy: martijn@databoss.nl
-> 
-> 
-> While rebuilding a MD raid5, every time I try to rebuild:
-> 
-> -- START DUMP --
-> RAID5 conf printout:
->  --- rd:3 wd:2
->  disk 0, o:1, dev:sdb1
->  disk 1, o:1, dev:sdc1
->  disk 2, o:1, dev:sdd1
-> md: recovery of RAID array md0
-> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
-> md: using maximum available idle IO bandwidth (but not more than 200000 KB/sec)
-> for recovery.
-> md: using 128k window, over a total of 71681920 blocks.
-> ------------[ cut here ]------------
-> kernel BUG at drivers/scsi/aic94xx/aic94xx_hwi.h:354!
 
-whee!  That's BUG_ON(!list_empty(&ascb->list));
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: SCSI: update Kconfig help text to indicate SCSI core's widespread usage
 
-yet anoher scsi driver with no entry in MAINTAINERS.  Darrick, maybe?
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
+ drivers/scsi/Kconfig |   67 ++++++++++++++++++++++---------------------
+ 1 file changed, 35 insertions(+), 32 deletions(-)
 
-> invalid opcode: 0000 [1] SMP
-> CPU 1
-> Modules linked in: aic94xx
-> Pid: 1182, comm: scsi_eh_2 Not tainted 2.6.21.7 #2
-> RIP: 0010:[<ffffffff8800a78d>]  [<ffffffff8800a78d>]
-> :aic94xx:asd_abort_task+0x3c3/0x4d6
-> RSP: 0018:ffff81022e4c5d80  EFLAGS: 00010287
-> RAX: 0000000000000000 RBX: ffff810228226380 RCX: 0000000000000001
-> RDX: ffff810228226410 RSI: 0000000000000282 RDI: ffff8102280d1098
-> RBP: ffff81022fb08000 R08: 0000000000000000 R09: 0000000000000001
-> R10: 0000000000000001 R11: ffff81022e3b4480 R12: ffff810228224c80
-> R13: 0000000000000000 R14: ffff8102280d1098 R15: ffff810228226380
-> FS:  0000000000000000(0000) GS:ffff81022fc3a940(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0018 ES: 0018 CR0: 000000008005003b
-> CR2: 00000000005b2b50 CR3: 0000000000201000 CR4: 00000000000006e0
-> Process scsi_eh_2 (pid: 1182, threadinfo ffff81022e4c4000, task
-> ffff81022f470440)
-> Stack:  ffff81022f470440 0000018de129b192 000000002fe8c100 ffff81022fb08108
->  0000000000000000 ffff8102280d1080 ffff8102280d1098 ffff81022e4c5eb0
->  ffff810228262a80 ffffffff803c4f1b 0000000000000000 ffff81022e4c5e20
-> Call Trace:
->  [<ffffffff803c4f1b>] sas_scsi_recover_host+0x1eb/0x690
->  [<ffffffff803b22c5>] scsi_error_handler+0xa5/0x300
->  [<ffffffff803b2220>] scsi_error_handler+0x0/0x300
->  [<ffffffff80288d09>] keventd_create_kthread+0x0/0x65
->  [<ffffffff802315fb>] kthread+0xcb/0xf5
->  [<ffffffff8025cf38>] child_rip+0xa/0x12
->  [<ffffffff80288d09>] keventd_create_kthread+0x0/0x65
->  [<ffffffff80231530>] kthread+0x0/0xf5
->  [<ffffffff8025cf2e>] child_rip+0x0/0x12
-> 
-> 
-> Code: 0f 0b eb fe 48 8d bd f0 41 00 00 e8 c6 91 25 f8 48 89 c6 8b
-> RIP  [<ffffffff8800a78d>] :aic94xx:asd_abort_task+0x3c3/0x4d6
->  RSP <ffff81022e4c5d80>
-> -- END DUMP --
-> 
-> 
-> -- 
-> Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-> ------- You are receiving this mail because: -------
-> You are on the CC list for the bug, or are watching someone who is.
+Index: linux-2.6.23-rc6/drivers/scsi/Kconfig
+===================================================================
+--- linux-2.6.23-rc6.orig/drivers/scsi/Kconfig
++++ linux-2.6.23-rc6/drivers/scsi/Kconfig
+@@ -12,23 +12,31 @@ config SCSI
+ 	depends on BLOCK
+ 	select SCSI_DMA if HAS_DMA
+ 	---help---
+-	  If you want to use a SCSI hard disk, SCSI tape drive, SCSI CD-ROM or
+-	  any other SCSI device under Linux, say Y and make sure that you know
+-	  the name of your SCSI host adapter (the card inside your computer
+-	  that "speaks" the SCSI protocol, also called SCSI controller),
+-	  because you will be asked for it.
+-
+-	  You also need to say Y here if you have a device which speaks
+-	  the SCSI protocol.  Examples of this include the parallel port
+-	  version of the IOMEGA ZIP drive, USB storage devices, Fibre
+-	  Channel, FireWire storage and the IDE-SCSI emulation driver.
++	  This option enables core support for SCSI protocols.
++	  You need it
++	  - for classic parallel SCSI hardware,
++	  - for newer SCSI transports such as Fibre Channel, FireWire storage,
++	    or iSCSI,
++	  - for non-SCSI hardware which speaks SCSI protocols, such as USB
++	    storage devices or the parallel port version of Iomega Zip drive,
++	  - for non-SCSI hardware whose drivers translate from and to SCSI
++	    protocols, most notably all Serial ATA drivers, and Parallel ATA
++	    via the ATA configuration option.
+ 
+ 	  To compile this driver as a module, choose M here and read
+ 	  <file:Documentation/scsi/scsi.txt>.
+ 	  The module will be called scsi_mod.
+ 
+ 	  However, do not compile this as a module if your root file system
+-	  (the one containing the directory /) is located on a SCSI device.
++	  (the one containing the directory /) is located on a SCSI device
++	  or on a device whose driver represents it as SCSI device, as
++	  indicated above.  Choose Y in this case, or set up an initrd.
++
++	  Subsequent options in this menu enable specific SCSI command set
++	  support for harddisks, CD/DVD-ROM/R/W, tapes etc..  This menu also
++	  presents options for specific SCSI controllers, while options for
++	  some other SCSI transports and all non-SCSI controllers are located
++	  in other menus (SATA, USB, FireWire etc.).
+ 
+ config SCSI_DMA
+ 	bool
+@@ -57,32 +65,27 @@ config SCSI_PROC_FS
+ 
+ 	  If unsure say Y.
+ 
+-comment "SCSI support type (disk, tape, CD-ROM)"
++comment "SCSI command set drivers (disk, tape, CD-ROM)"
+ 	depends on SCSI
+ 
+ config BLK_DEV_SD
+-	tristate "SCSI disk support"
++	tristate "Harddisks and other Direct access devices"
+ 	depends on SCSI
+ 	---help---
+-	  If you want to use SCSI hard disks, Fibre Channel disks,
+-	  Serial ATA (SATA) or Parallel ATA (PATA) hard disks,
+-	  USB storage or the SCSI or parallel port version of
+-	  the IOMEGA ZIP drive, say Y and read the SCSI-HOWTO,
+-	  the Disk-HOWTO and the Multi-Disk-HOWTO, available from
+-	  <http://www.tldp.org/docs.html#howto>. This is NOT for SCSI
+-	  CD-ROMs.
++	  Say Y if you want to use harddisks and similar block-oriented devices
++	  via SCSI or via drivers which use SCSI command sets (e.g. the Serial
++	  and Parallel ATA kernel subsystem, USB, and more).
+ 
+ 	  To compile this driver as a module, choose M here and read
+ 	  <file:Documentation/scsi/scsi.txt>.
+ 	  The module will be called sd_mod.
+ 
+-	  Do not compile this driver as a module if your root file system
+-	  (the one containing the directory /) is located on a SCSI disk.
+-	  In this case, do not compile the driver for your SCSI host adapter
+-	  (below) as a module either.
++	  If your root file system (the one containing the directory /) is
++	  located on a disk which accessed via this driver, choose Y instead of
++	  M or set up a suitable initrd.
+ 
+ config CHR_DEV_ST
+-	tristate "SCSI tape support"
++	tristate "Tape drives"
+ 	depends on SCSI
+ 	---help---
+ 	  If you want to use a SCSI tape drive under Linux, say Y and read the
+@@ -95,7 +98,7 @@ config CHR_DEV_ST
+ 	  <file:Documentation/scsi/scsi.txt>. The module will be called st.
+ 
+ config CHR_DEV_OSST
+-	tristate "SCSI OnStream SC-x0 tape support"
++	tristate "SCSI OnStream SC-x0 tape drives"
+ 	depends on SCSI
+ 	---help---
+ 	  The OnStream SC-x0 SCSI tape drives cannot be driven by the
+@@ -117,13 +120,13 @@ config CHR_DEV_OSST
+ 	  <file:Documentation/scsi/scsi.txt>. The module will be called osst.
+ 
+ config BLK_DEV_SR
+-	tristate "SCSI CDROM support"
++	tristate "CD-ROMs, DVD-ROMs"
+ 	depends on SCSI
+ 	---help---
+-	  If you want to use a SCSI or FireWire CD-ROM under Linux,
+-	  say Y and read the SCSI-HOWTO and the CDROM-HOWTO at
+-	  <http://www.tldp.org/docs.html#howto>. Also make sure to say
+-	  Y or M to "ISO 9660 CD-ROM file system support" later.
++	  Say Y if you want to use CD-ROMs or DVD-ROMs via SCSI or via drivers
++	  which use SCSI command sets (e.g. the Serial and Parallel ATA kernel
++	  subsystem, USB, and more). Also make sure to say Y or M to "ISO 9660
++	  CD-ROM file system support" later.
+ 
+ 	  To compile this driver as a module, choose M here and read
+ 	  <file:Documentation/scsi/scsi.txt>.
+@@ -164,7 +167,7 @@ config CHR_DEV_SG
+ 	  If unsure, say N.
+ 
+ config CHR_DEV_SCH
+-	tristate "SCSI media changer support"
++	tristate "SCSI media changers"
+ 	depends on SCSI
+ 	---help---
+ 	  This is a driver for SCSI media changers.  Most common devices are
+
+-- 
+Stefan Richter
+-=====-=-=== =--= -===-
+http://arcgraph.de/sr/
