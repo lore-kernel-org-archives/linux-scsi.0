@@ -1,95 +1,76 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] SCSI: update Kconfig help text to indicate SCSI core's
- widespread usage
-Date: Fri, 14 Sep 2007 18:01:53 +0200 (CEST)
-Message-ID: <tkrat.d922469e152fe0f3@s5r6.in-berlin.de>
-References: <20070907124800.GP16806@vanheusden.com>
- <p73fy1p9m57.fsf@bingen.suse.de>
- <1189371621.3526.28.camel@localhost.localdomain>
- <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org>
- <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de>
- <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: sata & scsi suggestion for make menuconfig
+Date: Fri, 14 Sep 2007 18:16:19 +0200
+Message-ID: <20070914161619.GM3563@stusta.de>
+References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de> <1189371621.3526.28.camel@localhost.localdomain> <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:41999 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753378AbXINQCm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Sep 2007 12:02:42 -0400
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764292AbXINQQ2@vger.kernel.org>
+Content-Disposition: inline
 In-Reply-To: <46EAAAC1.3050409@s5r6.in-berlin.de>
-Content-Disposition: INLINE
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@SteelEye.com>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org
-Cc: Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
+On Fri, Sep 14, 2007 at 05:37:37PM +0200, Stefan Richter wrote:
+> Adrian Bunk wrote:
+> > On Fri, Sep 14, 2007 at 04:54:07PM +0200, Stefan Richter wrote:
+> >> The patch which is discussed here is specifically targeted towards users
+> >> who are convinced that they can migrate to different drivers without
+> >> reading Kconfig help texts.
+> > 
+> > Nothing about the patch is only about migration.
+> > 
+> > The same applies if you configure a kernel from scratch.
+> > 
+> > Do "make menuconfig" with the .config you are normally using, count the 
+> > number of options that are visible, and ask yourself whether we can 
+> > really expect users to read the help texts for every single option shown.
+> > 
+> > People mostly read help texts for options where they don't understand 
+> > what this option is about - and "Serial ATA" therefore is an option that 
+> > is likely to get enabled without the user looking at the help text.
+> 
+> If you create .config from scratch, then you can get away without
+> reading help texts if you have a target with minimal hardware and
+> protocols requirements and you know all the subsystems involved.
+> 
+> In all other cases, you theoretically need to read all help texts (minus
+> the ones that don't appear because you deselect entire subsystems).  In
+> practice, this takes too much time, hence you take an existing .config
+> (yours or somebody else's) and go from there.
 
-Applicable to 2.6.23-rc6 and to scsi-misc.
+Kconfig let's you start with the defconfig when doing "make menuconfig" 
+without any .config present, so in practice users start from the 
+defconfig and then go through all menus at once enabling and disabling 
+options to adapt the configurations to their needs.
 
- drivers/scsi/Kconfig |   32 ++++++++++++++++++++------------
- 1 file changed, 20 insertions(+), 12 deletions(-)
+Or they start from the "includes everything" .config of their 
+distribution and remove everything they don't need.
 
-Index: linux-2.6.23-rc6/drivers/scsi/Kconfig
-===================================================================
---- linux-2.6.23-rc6.orig/drivers/scsi/Kconfig
-+++ linux-2.6.23-rc6/drivers/scsi/Kconfig
-@@ -12,23 +12,31 @@ config SCSI
- 	depends on BLOCK
- 	select SCSI_DMA if HAS_DMA
- 	---help---
--	  If you want to use a SCSI hard disk, SCSI tape drive, SCSI CD-ROM or
--	  any other SCSI device under Linux, say Y and make sure that you know
--	  the name of your SCSI host adapter (the card inside your computer
--	  that "speaks" the SCSI protocol, also called SCSI controller),
--	  because you will be asked for it.
--
--	  You also need to say Y here if you have a device which speaks
--	  the SCSI protocol.  Examples of this include the parallel port
--	  version of the IOMEGA ZIP drive, USB storage devices, Fibre
--	  Channel, FireWire storage and the IDE-SCSI emulation driver.
-+	  This option enables core support for SCSI protocols.
-+	  You need it
-+	  - for classic parallel SCSI hardware,
-+	  - for newer SCSI transports such as Fibre Channel, FireWire storage,
-+	    or iSCSI,
-+	  - for non-SCSI hardware which speaks SCSI protocols, such as USB
-+	    storage devices or the parallel port version of Iomega Zip drive,
-+	  - for non-SCSI hardware whose drivers translate from and to SCSI
-+	    protocols, like the IDE-SCSI emulation driver and most notably
-+	    for all SATA drivers.
- 
- 	  To compile this driver as a module, choose M here and read
- 	  <file:Documentation/scsi/scsi.txt>.
- 	  The module will be called scsi_mod.
- 
- 	  However, do not compile this as a module if your root file system
--	  (the one containing the directory /) is located on a SCSI device.
-+	  (the one containing the directory /) is located on a SCSI device
-+	  or on a device whose driver represents it as SCSI device, as
-+	  indicated above.  Choose Y in this case, or set up an initrd.
-+
-+	  Subsequent options in this menu enable specific SCSI command set
-+	  support for harddisks, CD/DVD-ROM/R/W, tapes etc..  This menu also
-+	  presents options for specific SCSI controllers, while options for
-+	  some other SCSI transports and all non-SCSI controllers are located
-+	  in other menus (SATA, USB, FireWire etc.).
- 
- config SCSI_DMA
- 	bool
-@@ -120,7 +128,7 @@ config BLK_DEV_SR
- 	tristate "SCSI CDROM support"
- 	depends on SCSI
- 	---help---
--	  If you want to use a SCSI or FireWire CD-ROM under Linux,
-+	  If you want to use a SCSI, SATA, USB or FireWire CD-ROM or DVD-ROM,
- 	  say Y and read the SCSI-HOWTO and the CDROM-HOWTO at
- 	  <http://www.tldp.org/docs.html#howto>. Also make sure to say
- 	  Y or M to "ISO 9660 CD-ROM file system support" later.
+> Whenever one enables an option for the first time, it would IMO be
+> foolish to ignore its help text.
+
+Then the number of non-foolish users is quite near to 0...
+
+If you expect people to read several hundreds or thousands of help texts 
+only for configuring a kernel then you are expecting something that is 
+simply not realistic.
+
+It is intuitive for a user to enable the "Serial ATA" menu and he might 
+not expect to have to read the help text when he has SATA drivers, while 
+having to enable anything in the "SCSI device support" menu is highly 
+unintuitively when the user does not have SCSI hardware.
+
+> Stefan Richter
+
+cu
+Adrian
 
 -- 
-Stefan Richter
--=====-=-=== =--= -===-
-http://arcgraph.de/sr/
 
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
