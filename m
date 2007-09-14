@@ -1,73 +1,112 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Fri, 14 Sep 2007 18:50:03 +0200
-Message-ID: <46EABBBB.7060201@s5r6.in-berlin.de>
-References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de> <1189371621.3526.28.camel@localhost.localdomain> <20070909210329.GE25798@one.firstfloor.org> <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de> <20070914161619.GM3563@stusta.de>
+From: Gilbert Wu <Gilbert_Wu@adaptec.com>
+Subject: [PATCH] aic94xx: fix smartctl utility problem
+Date: Fri, 14 Sep 2007 05:30:08 -0700
+Message-ID: <1189773008.5949.10.camel@linux.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:43526 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751329AbXINQu7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Sep 2007 12:50:59 -0400
-In-Reply-To: <20070914161619.GM3563@stusta.de>
+Received: from ts.adaptec.com ([162.62.93.58]:53301 "HELO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1752827AbXINRXN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2007 13:23:13 -0400
+Received: from aime2k302.adaptec.com (aime2k302.adaptec.com [10.25.8.48])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 9B94C205522
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Sep 2007 10:23:12 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@SteelEye.com>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Adrian Bunk wrote:
-> On Fri, Sep 14, 2007 at 05:37:37PM +0200, Stefan Richter wrote:
->> In
->> practice, this takes too much time, hence you take an existing .config
->> (yours or somebody else's) and go from there.
-> 
-> Kconfig let's you start with the defconfig when doing "make menuconfig" 
-> without any .config present,
-[...]
+Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"  does
+not work on SATA device. ( The smartctl v5.38 does need "-d ata"
+option.)
+  The aic94xx need to return ATA output register for all ATA commands
+except ATA Read/Write commands.
+  The aic94xx also mark out the DRQ bit from status register which is
+treated as AC_ERR_HSM (host state machine violation) error by top layer
+if it set to one.
+ The firmware of aic94xx chip handle all ATA handshaking, data transfer
+and return ATA output register which is sent by the device.  So the DRQ
+bit may not reflect the last state of device when the command finished
+and it is no meaning for the caller.
 
-This is one of those "somebody else's .config".
+Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
 
->> Whenever one enables an option for the first time, it would IMO be
->> foolish to ignore its help text.
-> 
-> Then the number of non-foolish users is quite near to 0...
 
-Perhaps.  Although I meant only options which one enables oneself, not
-options which are taken over from somebody else's .config.
+diff -urN a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+--- a/drivers/scsi/aic94xx/aic94xx_task.c	2007-09-13 04:46:00.000000000 -0700
++++ b/drivers/scsi/aic94xx/aic94xx_task.c	2007-09-13 04:46:31.000000000 -0700
+@@ -25,6 +25,7 @@
+  */
+ 
+ #include <linux/spinlock.h>
++#include <linux/ata.h>
+ #include "aic94xx.h"
+ #include "aic94xx_sas.h"
+ #include "aic94xx_hwi.h"
+@@ -220,6 +221,7 @@
+ 			memcpy(&resp->ending_fis[0], r+16, 24);
+ 			ts->buf_valid_size = sizeof(*resp);
+ 		}
++		resp->ending_fis[2] &= ~ATA_DRQ;
+ 	}
+ 
+ 	asd_invalidate_edb(escb, edb_id);
+@@ -257,6 +259,11 @@
+ 		ts->stat = SAS_PROTO_RESPONSE;
+ 		asd_get_response_tasklet(ascb, dl);
+ 		break;
++	case TC_CSMI:
++		ts->resp = SAS_TASK_COMPLETE;
++		ts->stat = SAM_GOOD;
++		asd_get_response_tasklet(ascb, dl);
++		break;
+ 	case TF_OPEN_REJECT:
+ 		ts->resp = SAS_TASK_UNDELIVERED;
+ 		ts->stat = SAS_OPEN_REJECT;
+@@ -374,7 +381,32 @@
+ }
+ 
+ /* ---------- ATA ---------- */
++int is_ata_rw_cmd(u8 ata_cmd)
++{
+ 
++	switch (ata_cmd) {
++	case ATA_CMD_READ:
++	case ATA_CMD_READ_EXT:
++	case ATA_CMD_WRITE:
++	case ATA_CMD_WRITE_EXT:
++	case ATA_CMD_WRITE_FUA_EXT:
++	case ATA_CMD_FPDMA_READ:
++	case ATA_CMD_FPDMA_WRITE:
++	case ATA_CMD_PIO_READ:
++	case ATA_CMD_PIO_READ_EXT:
++	case ATA_CMD_PIO_WRITE:
++	case ATA_CMD_PIO_WRITE_EXT:
++	case ATA_CMD_READ_MULTI:
++	case ATA_CMD_READ_MULTI_EXT:
++	case ATA_CMD_WRITE_MULTI:
++	case ATA_CMD_WRITE_MULTI_EXT:
++	case ATA_CMD_WRITE_MULTI_FUA_EXT:
++	case ATA_CMD_VERIFY:
++	case ATA_CMD_VERIFY_EXT:
++		return 1;
++	}
++	return 0;
++}
+ static int asd_build_ata_ascb(struct asd_ascb *ascb, struct sas_task *task,
+ 			      gfp_t gfp_flags)
+ {
+@@ -427,6 +459,9 @@
+ 			flags |= STP_AFFIL_POLICY;
+ 		scb->ata_task.flags = flags;
+ 	}
++	if (!is_ata_rw_cmd(scb->ata_task.fis.command))
++		scb->ata_task.ata_flags|=CSMI_TASK;
++
+ 	ascb->tasklet_complete = asd_task_tasklet_complete;
+ 
+ 	if (likely(!task->ata_task.device_control_reg_update))
 
-> If you expect people to read several hundreds or thousands of help texts 
-> only for configuring a kernel then you are expecting something that is 
-> simply not realistic.
-> 
-> It is intuitive for a user to enable the "Serial ATA" menu and he might 
-> not expect to have to read the help text when he has SATA drivers, while 
-> having to enable anything in the "SCSI device support" menu is highly 
-> unintuitively when the user does not have SCSI hardware.
 
-It surely is unintuitive, and it is one of the worse cases where the
-current menu layout is unintuitive.  We have to improve that, even
-though it is ultimately impossible to serve everyone's needs equally
-well or, generally, make kernel configuration a piece of cake.
 
-Note though, some suggestions which came up here don't actually make the
-menus more intuitive.  Notably the patch "Select BLK_DEV_SD for all
-SCSI/libata drivers" is counterintuitive in a different color:  It
-follows the philosophy of "I know what's good for you and I act on your
-behalf behind your back --- trust me, it's for your best".
-
-I too am guilty of proposing the usage of 'select'
-(http://lkml.org/lkml/2007/9/8/9) but I suggested a variant which lets
-the user stay informed and in control (as far as this is possible with
-'select' which always increases complexity, never reduces it).
-
-But rather than adding multiple menu items which enable the same option,
-a reorganization of the menus which better reflect the role of SCSI core
-and SCSI highlevel might be more effective --- similar to "Networking"
-which is separate from "Network device support"
-(http://lkml.org/lkml/2007/9/10/5, http://lkml.org/lkml/2007/9/10/115).
--- 
-Stefan Richter
--=====-=-=== =--= -===-
-http://arcgraph.de/sr/
