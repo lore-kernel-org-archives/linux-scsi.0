@@ -1,33 +1,59 @@
-From: Dave Jiang <djiang@mvista.com>
-Subject: command failing at iSCSI disconnect
-Date: Fri, 14 Sep 2007 14:43:43 -0700
-Message-ID: <46EB008F.7040003@mvista.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH update] SCSI: update Kconfig help text to indicate SCSI
+ core's widespread usage
+Date: Sat, 15 Sep 2007 07:02:34 +0900
+Message-ID: <20070914031256T.tomof@acm.org>
+References: <20070914202102.GE5386@csclub.uwaterloo.ca>
+	<tkrat.f4379d6e5f1ce499@s5r6.in-berlin.de>
+	<tkrat.0e73b94c1e80a481@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway-1237.mvista.com ([63.81.120.158]:27194 "EHLO
-	gateway-1237.mvista.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753284AbXINVmA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Sep 2007 17:42:00 -0400
-Received: from [127.0.0.1] (asshur.mvista.com [10.0.0.11])
-	by hermes.mvista.com (Postfix) with ESMTP id 82D4F1E3ED
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Sep 2007 14:41:59 -0700 (PDT)
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:57605 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753457AbXINWDm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Sep 2007 18:03:42 -0400
+In-Reply-To: <tkrat.0e73b94c1e80a481@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: stefanr@s5r6.in-berlin.de
+Cc: lsorense@csclub.uwaterloo.ca, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, jeff@garzik.org, andi@firstfloor.org, folkert@vanheusden.com, bunk@kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-I'm using the latest linus git tree. This is in fileio mode with
-IOMode=wb. It seems that if I do I/O and then immediately disconnect
-then the cache sync commands fail. Is this expected behavior or should
-the connection wait till all existing commands has been flushed before
-logout? Thanks!
+On Fri, 14 Sep 2007 23:14:21 +0200 (CEST)
+Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
 
-root@192.168.1.171:~/iscsi2# iscsiadm -m node -T
-iqn.2007.com.mvista:disk1 -p 192.168.1.239:3260 --logout
-Logout session [sd 1:0:0:0: [sdb] Synchronizing SCSI cache
-sid: 1, target: iqn.2007.com.mvista:disk1, portal: 192.168.1.239,3260]
-iscsi: cmd 0x35 is not queued (6)
-iscsi: cmd 0x35 is not queued (6)
-iscsi: cmd 0x35 is not queued (6)
-sd 1:0:0:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
+> Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+> ---
+> 
+> And one more update:
+> There is SAS too, and I forgot 'is' in "on a disk which __ accessed via".
+> 
+>  drivers/scsi/Kconfig |   67 ++++++++++++++++++++++---------------------
+>  1 file changed, 35 insertions(+), 32 deletions(-)
+> 
+> Index: linux-2.6.23-rc6/drivers/scsi/Kconfig
+> ===================================================================
+> --- linux-2.6.23-rc6.orig/drivers/scsi/Kconfig
+> +++ linux-2.6.23-rc6/drivers/scsi/Kconfig
+> @@ -12,23 +12,31 @@ config SCSI
+>  	depends on BLOCK
+>  	select SCSI_DMA if HAS_DMA
+>  	---help---
+> -	  If you want to use a SCSI hard disk, SCSI tape drive, SCSI CD-ROM or
+> -	  any other SCSI device under Linux, say Y and make sure that you know
+> -	  the name of your SCSI host adapter (the card inside your computer
+> -	  that "speaks" the SCSI protocol, also called SCSI controller),
+> -	  because you will be asked for it.
+> -
+> -	  You also need to say Y here if you have a device which speaks
+> -	  the SCSI protocol.  Examples of this include the parallel port
+> -	  version of the IOMEGA ZIP drive, USB storage devices, Fibre
+> -	  Channel, FireWire storage and the IDE-SCSI emulation driver.
+> +	  This option enables core support for SCSI protocols.
+> +	  You need it
+> +	  - for classic parallel SCSI hardware,
+> +	  - for newer SCSI transports such as Fibre Channel, FireWire storage,
+> +	    SAS, or iSCSI,
+
+There is SRP too.
