@@ -1,74 +1,153 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: 2.6.23-rc4-mm1
-Date: Sat, 15 Sep 2007 19:52:36 +0900
-Message-ID: <20070914104157D.tomof@acm.org>
-References: <20070910111926.9c942358.akpm@linux-foundation.org>
-	<20070910042256Z.tomof@acm.org>
-	<20070914211635.4774c971.pj@sgi.com>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
+Date: Sat, 15 Sep 2007 13:40:55 +0200
+Message-ID: <20070915114055.GP3563@stusta.de>
+References: <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de> <tkrat.d922469e152fe0f3@s5r6.in-berlin.de> <tkrat.913e8b183cdf7888@s5r6.in-berlin.de> <20070914190033.GA4003@uranus.ravnborg.org> <20070914190609.GN3563@stusta.de> <tkrat.552dbee831c88bbe@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:55671 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760550AbXIOKxi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Sep 2007 06:53:38 -0400
-In-Reply-To: <20070914211635.4774c971.pj@sgi.com>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:57261 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751169AbXIOLkp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 07:40:45 -0400
+Content-Disposition: inline
+In-Reply-To: <tkrat.552dbee831c88bbe@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: pj@sgi.com, jens.axboe@oracle.com
-Cc: tomof@acm.org, apw@shadowen.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
 
-On Fri, 14 Sep 2007 21:16:35 -0700
-Paul Jackson <pj@sgi.com> wrote:
-
-> FUJITA Tomonori wrote:
-> > Can you try this patch (against 2.6.23-rc4-mm1)?
-> > 
-> > >From 592bd2049cb3e6e1f1dde7cf631879f26ddffeaa Mon Sep 17 00:00:00 2001
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Date: Mon, 10 Sep 2007 04:17:13 +0100
-> > Subject: [PATCH] qla1280: sg chaining fixes
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  drivers/scsi/qla1280.c |    5 ++++-
-> >  1 files changed, 4 insertions(+), 1 deletions(-)
+On Fri, Sep 14, 2007 at 10:01:18PM +0200, Stefan Richter wrote:
+> On 14 Sep, Adrian Bunk wrote:
+> > On Fri, Sep 14, 2007 at 09:00:33PM +0200, Sam Ravnborg wrote:
+> >> Hi Stefan.
+> >> 
+> >> Such a patch really calls for some minimal unifacation among
+> >> the architectures.
+> >> 
+> >> > 
+> >> >  arch/alpha/Kconfig            |    2 
+> >> >  arch/arm/Kconfig              |    2 
+> >> >  arch/avr32/Kconfig            |    2 
+> >> >  arch/blackfin/Kconfig         |    2 
+> >> >  arch/cris/Kconfig             |    2 
+> >> >  arch/frv/Kconfig              |    2 
+> >> >  arch/i386/Kconfig             |    2 
+> >> >  arch/ia64/Kconfig             |    2 
+> >> >  arch/m32r/Kconfig             |    2 
+> >> >  arch/m68k/Kconfig             |    2 
+> >> >  arch/m68knommu/Kconfig        |    2 
+> >> >  arch/mips/Kconfig             |    2 
+> >> >  arch/parisc/Kconfig           |    2 
+> >> >  arch/powerpc/Kconfig          |    2 
+> >> >  arch/ppc/Kconfig              |    2 
+> >> >  arch/s390/Kconfig             |    2 
+> >> >  arch/sh/Kconfig               |    2 
+> >> >  arch/sh64/Kconfig             |    2 
+> >> >  arch/sparc/Kconfig            |    2 
+> >> >  arch/sparc64/Kconfig          |    2 
+> >> >  arch/um/Kconfig               |    2 
+> >> >  arch/v850/Kconfig             |    2 
+> >> >  arch/x86_64/Kconfig           |    4 
+> >> >  arch/xtensa/Kconfig           |    2 
+> >> 
+> >> 
+> >> Exactly the same change for all architectures.
+> >> IT would be good to introduce a common file that contains
+> >> some of the shared stuff from the different architectures.
+> >> We could start out simple with:
+> >> 
+> >> arch/Kconfig.arch:
+> >>...
 > 
-> This patch works for me.
+> Yes, that would be good.  But Adrian has a point too.
 > 
-> I was getting the scsi errors reported earlier in
-> this thread, running 2.6.23-rc4-mm1 on one of our
-> big SGI Altix systems.
-> 
-> Applying this patch fixed it, so far as I can tell,
-> which is to say my system boots cleanly once again.
+> > Stefan simply shouldn't move it out of drivers/Kconfig.
+>...
+>  drivers/Kconfig               |    4 
+>  drivers/scsi/Kconfig          | 1589 ----------------------------------
+>  drivers/scsi/Kconfig.lowlevel | 1578 +++++++++++++++++++++++++++++++++
+>  3 files changed, 1588 insertions(+), 1583 deletions(-)
 
-Thanks for testing!
+Nearly right.  ;-)
 
-Jens, we could enable use_sg_chaining option for qla1280.
+There are a few architectures not (yet) using drivers/Kconfig.
 
+> Index: linux-2.6.23-rc6/drivers/Kconfig
+> ===================================================================
+> --- linux-2.6.23-rc6.orig/drivers/Kconfig
+> +++ linux-2.6.23-rc6/drivers/Kconfig
+> @@ -1,5 +1,7 @@
+>  # drivers/Kconfig
+>  
+> +source "drivers/scsi/Kconfig"
+> +
+>  menu "Device Drivers"
+>  
+>  source "drivers/base/Kconfig"
+> @@ -22,7 +24,7 @@ source "drivers/misc/Kconfig"
+>  
+>  source "drivers/ide/Kconfig"
+>  
+> -source "drivers/scsi/Kconfig"
+> +source "drivers/scsi/Kconfig.lowlevel"
+>  
+>  source "drivers/ata/Kconfig"
+>...
 
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] qla1280: enable use_sg_chaining option
+This way the order is wrong:
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/scsi/qla1280.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+There should first be the lowlevel SCSI, SATA, USB etc. drivers, these 
+drivers should select CONFIG_SCSI, and then the menu offering support 
+for disk, CD,...
 
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 7c1eaec..83249af 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -4259,6 +4259,7 @@ static struct scsi_host_template qla1280_driver_template = {
- 	.sg_tablesize		= SG_ALL,
- 	.cmd_per_lun		= 1,
- 	.use_clustering		= ENABLE_CLUSTERING,
-+	.use_sg_chaining	= ENABLE_SG_CHAINING,
- };
- 
- 
+> Index: linux-2.6.23-rc6/drivers/scsi/Kconfig
+> ===================================================================
+> --- linux-2.6.23-rc6.orig/drivers/scsi/Kconfig
+> +++ linux-2.6.23-rc6/drivers/scsi/Kconfig
+> @@ -1,14 +1,7 @@
+> -menu "SCSI device support"
+> -
+> -config RAID_ATTRS
+> -	tristate "RAID Transport Class"
+> -	default n
+> -	depends on BLOCK
+> -	---help---
+> -	  Provides RAID
+> +menu "Storage (core and SCSI commands)"
+>  
+>  config SCSI
+> -	tristate "SCSI device support"
+> +	tristate "Storage support (core and SCSI commands)"
+>  	depends on BLOCK
+>  	select SCSI_DMA if HAS_DMA
+>  	---help---
+>...
+
+What is "storage support"?
+SATA?
+PATA?
+USB mass storage?
+MMC?
+MTD?
+
+Whether or not a driver uses the SCSI layer is an implementation detail 
+(it even differs for the two USB mass storage implementations and the 
+two PATA implementations in the kernel) the user shouldn't have to know 
+about.
+
+I don't see any reason why CONFIG_SCSI should have to stay user-visible 
+at all after your patch.
+
+> Stefan Richter
+
+cu
+Adrian
+
 -- 
-1.5.2.4
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
