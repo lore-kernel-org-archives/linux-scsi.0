@@ -1,45 +1,66 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH update] SCSI: update Kconfig help text to indicate SCSI
- core's widespread usage
-Date: Sat, 15 Sep 2007 08:16:03 +0200
-Message-ID: <46EB78A3.9050404@s5r6.in-berlin.de>
-References: <20070914202102.GE5386@csclub.uwaterloo.ca>	<tkrat.f4379d6e5f1ce499@s5r6.in-berlin.de>	<tkrat.0e73b94c1e80a481@s5r6.in-berlin.de> <20070914031256T.tomof@acm.org>
+From: Paul Rolland <rol@as2917.net>
+Subject: Re: sata & scsi suggestion for make menuconfig
+Date: Sat, 15 Sep 2007 08:04:48 +0000
+Message-ID: <20070915080448.37457dcf@tux.DEF.witbe.net>
+References: <20070907124800.GP16806@vanheusden.com>
+	<p73fy1p9m57.fsf@bingen.suse.de>
+	<1189371621.3526.28.camel@localhost.localdomain>
+	<20070909210329.GE25798@one.firstfloor.org>
+	<46E46190.6080607@garzik.org>
+	<20070912224655.GC3563@stusta.de>
+	<46EAA08F.30703@s5r6.in-berlin.de>
+	<20070914151522.GL3563@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:59720 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752864AbXIOGRI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 02:17:08 -0400
-In-Reply-To: <20070914031256T.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754677AbXIOIGP@vger.kernel.org>
+In-Reply-To: <20070914151522.GL3563@stusta.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@SteelEye.com>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rol@witbe.net
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: lsorense@csclub.uwaterloo.ca, james.bottomley@steeleye.com, linux-scsi@vger.kernel.org, jeff@garzik.org, andi@firstfloor.org, folkert@vanheusden.com, bunk@kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-FUJITA Tomonori wrote:
-> On Fri, 14 Sep 2007 23:14:21 +0200 (CEST)
-> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-...
->> And one more update:
->> There is SAS too,
-...
->> +	  You need it
->> +	  - for classic parallel SCSI hardware,
->> +	  - for newer SCSI transports such as Fibre Channel, FireWire storage,
->> +	    SAS, or iSCSI,
+Hello,
+
+On Fri, 14 Sep 2007 17:15:22 +0200
+Adrian Bunk <bunk@kernel.org> wrote:
+
+> On Fri, Sep 14, 2007 at 04:54:07PM +0200, Stefan Richter wrote:
+> > Adrian Bunk wrote:
+> > > On Sun, Sep 09, 2007 at 05:11:44PM -0400, Jeff Garzik wrote:
+> > >> Let's step back a moment and consider the actual scale and impact of
+> > >> the problem at hand.
+> Do "make menuconfig" with the .config you are normally using, count the 
+> number of options that are visible, and ask yourself whether we can 
+> really expect users to read the help texts for every single option shown.
 > 
-> There is SRP too.
+> People mostly read help texts for options where they don't understand 
+> what this option is about - and "Serial ATA" therefore is an option that 
+> is likely to get enabled without the user looking at the help text.
+> 
 
-I think I'll rewrite it as "for newer SCSI transports such as FireWire
-storage."  ;-)
+As a "make menuconfig" user, let me say that I agree. Of course, I'm used
+to rebuild kernel, but sometimes, some options are not clear, and the help
+text is searched for. But, getting too much of "No help text available"
+usually results in people no more reading the help text.
 
-If SRP was in, can 'such as' be omitted?  "for newer SCSI transports
-(Fibre Channel, FireWire storage, iSCSI, SAS, SRP),"  Or would be "for
-newer SCSI transports such as Fibre Channel, FireWire storage, iSCSI,
-SAS, and more," be OK?
+What about splitting the screen to have the top half with the menu, and the
+bottom half with the help ?
+
+Paul
+
+
 -- 
-Stefan Richter
--=====-=-=== =--= -====
-http://arcgraph.de/sr/
+Paul Rolland                                E-Mail : rol(at)witbe.net
+Witbe.net SA                                Tel. +33 (0)1 47 67 77 77
+Les Collines de l'Arche                     Fax. +33 (0)1 47 67 77 99
+F-92057 Paris La Defense                    RIPE : PR12-RIPE
+
+Please no HTML, I'm not a browser - Pas d'HTML, je ne suis pas un navigateur 
+"Some people dream of success... while others wake up and work hard at it" 
+
+"I worry about my child and the Internet all the time, even though she's too 
+young to have logged on yet. Here's what I worry about. I worry that 10 or 15 
+years from now, she will come to me and say 'Daddy, where were you when they 
+took freedom of the press away from the Internet?'"
+--Mike Godwin, Electronic Frontier Foundation 
