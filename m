@@ -1,102 +1,90 @@
-From: Adrian Bunk <bunk@kernel.org>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
-Date: Sat, 15 Sep 2007 18:42:20 +0200
-Message-ID: <20070915164219.GW3563@stusta.de>
-References: <20070914190609.GN3563@stusta.de> <tkrat.552dbee831c88bbe@s5r6.in-berlin.de> <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de> <20070915125055.GQ3563@stusta.de> <46EBDC06.3030202@s5r6.in-berlin.de> <20070915135314.GS3563@stusta.de> <46EBE821.2080300@s5r6.in-berlin.de> <20070915144341.GT3563@stusta.de> <46EBF9DC.1000503@s5r6.in-berlin.de>
+Date: Sat, 15 Sep 2007 18:52:42 +0200
+Message-ID: <200709151852.43157.bzolnier@gmail.com>
+References: <tkrat.552dbee831c88bbe@s5r6.in-berlin.de> <46EBFDFB.5040401@garzik.org> <20070915162313.GV3563@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:56510 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751562AbXIOQmJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 12:42:09 -0400
+Received: from nf-out-0910.google.com ([64.233.182.189]:2702 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbXIOQwP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 12:52:15 -0400
+Received: by nf-out-0910.google.com with SMTP id g13so872699nfb
+        for <linux-scsi@vger.kernel.org>; Sat, 15 Sep 2007 09:52:14 -0700 (PDT)
+In-Reply-To: <20070915162313.GV3563@stusta.de>
 Content-Disposition: inline
-In-Reply-To: <46EBF9DC.1000503@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Greg Kroah-Hartman <gregkh@suse.de>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
 
-On Sat, Sep 15, 2007 at 05:27:24PM +0200, Stefan Richter wrote:
-> Adrian Bunk wrote:
-> > On Sat, Sep 15, 2007 at 04:11:45PM +0200, Stefan Richter wrote:
-> >> Perfect is in the eye of the beholder.  You would consequently have to
-> >> add such options into all menus which contain scsi low-level providers.
-> > 
-> > Kconfig is a user interface, so perfect is what is best for the
-> > kconfig users.
+On Saturday 15 September 2007, Adrian Bunk wrote:
+> On Sat, Sep 15, 2007 at 11:44:59AM -0400, Jeff Garzik wrote:
+> > Stefan Richter wrote:
+> >> Adrian Bunk wrote:
+> >>> On Sat, Sep 15, 2007 at 04:11:45PM +0200, Stefan Richter wrote:
+> >>>> Perfect is in the eye of the beholder.  You would consequently have to
+> >>>> add such options into all menus which contain scsi low-level providers.
+> >>> Kconfig is a user interface, so perfect is what is best for the
+> >>> kconfig users.
+> >> Duplicate options with different names in different menus, but which all
+> >> do the same, --- is this the best for users?
+> >
+> > I recognize it's a rhetorical question :)  The answer is of course "no".
+> >
+> > I hope the other participants of this thread register the severe 
+> > disinclination of the maintainers to change this stuff, as this is a 
+> > classic case of making a mountain out of a molehill[1].
+> >
+> > For the -vast majority- of people configuring the kernel, this is not a 
+> > problem.  Kernel people are -expected- to know what they're doing, 
 > 
-> Duplicate options with different names in different menus, but which all
-> do the same, --- is this the best for users?
+> I doubt your claim is true since the vast majority of kconfig users
+> are most likely not kernel developers.
 
-Different to your approach of trying to achieve the same with one huge 
-help text I see a realistic chance of it working.
+Yes, we shouldn't be needlessly raising the bar for power users.
 
-What's other alternatives do we have?
-
-Automatically select BLK_DEV_SD and BLK_DEV_SR if one driver that uses 
-the SCSI layer gets enabled by the user?
-
-> >> Also, one more question on whether CONFIG_SCSI ought to be 'select'ed:
-> >> Where do scsi-core options like CONFIG_SCSI_CONSTANTS go?
-> > 
-> > The first question is whether it's for actual SCSI hardware [1] or for 
-> > the block layer functionality which the SCSI subsystem has become.
-> > The mixture of these two is the root of much user confusion.
-> > 
-> > With the help text "The error messages regarding your SCSI hardware will 
-> > be easier to understand if you say Y here" a user wouldn't have expected 
-> > to see you using it in a firewire driver.
+> @Greg:
+> Do you have any numbers regarding how your "Linux Kernel in a Nutshell" 
+> is selling?
+> Even download numbers?
 > 
-> FireWire hardware which implements SBP-2 is SCSI hardware...  But this
-> detail aside --- yes, of course this help text is old and misleading.
+> > especially when switching from one major subsystem to another.
 > 
-> > But unless I miss anything, 
-> > the setting of SCSI_SCAN_ASYNC does only affect "real" SCSI hardware.
+> It's not only about switching, the same problems awaits people when 
+> configuring a kernel for their hardware the first time.
+
+*nods*
+
+> > Therefore, all this is IMO wasted effort and hot air.  There are far more 
+> > important issues to deal with.
 > 
-> It affects every hardware which is driven by scsi low-level providers
-> which have been integrated with the SCSI_SCAN_ASYNC facility.
+> Why don't we dump kconfig and write the .config by hand?  ;-)
 > 
-> > If you check each option and place it either in the generic storage menu 
-> > or the SCSI lowlevel menu this would fix much possible user confusion.
-> > 
-> > But these are relatively unimportant options compared to e.g.
-> > USB_STORAGE=y, BLK_DEV_SD=n, which is a misconfiguration many
-> > users run into, so having one menu somewhere with these advanced 
-> > options should be enough.
-> 
-> True.
-> 
-> So,
->     config SCSI_CONSTANTS
->         "Kernel log messages from the SCSI subsystem will be easier to
->         understand if you say Y here..."
-> would say what this option really does.  But to some degree the need to
-> explain what the SCSI subsystem or SCSI core is and which other
-> subsystems make use of it remains.  Maybe it's OK to provide
-> documentation of this kind outside of Kconfig help though.
+> More seriously:
+> Yes, there are many other important issues in the kernel.
+> But not fixing kconfig UI problems doesn't fix these issues faster.
 
-This is a debug option and it's unlikely that users will need it unless 
-someone explicitely requested them to do so, so it's not such an 
-important issue.
+Agreed, and actually not fixing Kconfig UI problems will make the other
+issues being fixed *slower* (because they result in *increased* workload
+on developers' side).
 
-> > [1] SCSI as in "sold as SCSI"
-> 
-> Difficult.  Does e.g. hardware sold as SAS count as "sold as SCSI"?  How
-> about SBP-2 then?  ;-)
+> I have seen people running into problems because some required 
+> option wasn't set - in the simplest cases things like IDE without DMA 
+> because a help text wasn't updated when more hardware support was added 
+> to a driver.
 
-If SBP-2 is what you get in a shop when asking for an external
-Firewire disk enclosure then it's not sold as SCSI.
+This is why nowadays IDE DMA support is automatically selected by IDE
+host drivers that need it - a big relief for everybody.
 
-> Stefan Richter
+> You might not care about the kconfig users.
+> But other people do.
 
-cu
-Adrian
+...and even if their attempts/solutions may not be proper yet they should
+not be discouraged to work on these problems...
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Thanks,
+Bart
