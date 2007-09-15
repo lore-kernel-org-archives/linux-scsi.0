@@ -1,82 +1,129 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
-Date: Sat, 15 Sep 2007 18:23:13 +0200
-Message-ID: <20070915162313.GV3563@stusta.de>
-References: <tkrat.552dbee831c88bbe@s5r6.in-berlin.de> <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de> <20070915125055.GQ3563@stusta.de> <46EBDC06.3030202@s5r6.in-berlin.de> <20070915135314.GS3563@stusta.de> <46EBE821.2080300@s5r6.in-berlin.de> <20070915144341.GT3563@stusta.de> <46EBF9DC.1000503@s5r6.in-berlin.de> <46EBFDFB.5040401@garzik.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] scsi: upstream arcmsr-1.20.00.15
+Date: Sat, 15 Sep 2007 11:41:53 -0500
+Message-ID: <1189874513.3339.9.camel@localhost.localdomain>
+References: <000301c7f5e8$313604b0$5900a8c0@Nick>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:51092 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751585AbXIOQXD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 12:23:03 -0400
-Content-Disposition: inline
-In-Reply-To: <46EBFDFB.5040401@garzik.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:37994 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750893AbXIOQl5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 12:41:57 -0400
+In-Reply-To: <000301c7f5e8$313604b0$5900a8c0@Nick>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Greg Kroah-Hartman <gregkh@suse.de>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
+To: nick.cheng@areca.com.tw
+Cc: 'Andrew Morton' <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, randy.dunlap@oracle.com
 
-On Sat, Sep 15, 2007 at 11:44:59AM -0400, Jeff Garzik wrote:
-> Stefan Richter wrote:
->> Adrian Bunk wrote:
->>> On Sat, Sep 15, 2007 at 04:11:45PM +0200, Stefan Richter wrote:
->>>> Perfect is in the eye of the beholder.  You would consequently have to
->>>> add such options into all menus which contain scsi low-level providers.
->>> Kconfig is a user interface, so perfect is what is best for the
->>> kconfig users.
->> Duplicate options with different names in different menus, but which all
->> do the same, --- is this the best for users?
->
-> I recognize it's a rhetorical question :)  The answer is of course "no".
->
-> I hope the other participants of this thread register the severe 
-> disinclination of the maintainers to change this stuff, as this is a 
-> classic case of making a mountain out of a molehill[1].
->
-> For the -vast majority- of people configuring the kernel, this is not a 
-> problem.  Kernel people are -expected- to know what they're doing, 
+On Thu, 2007-09-13 at 17:26 +0800, nickcheng wrote:
+> Subject: [PATCH] scsi: upstream arcmsr-1.20.00.15
+> From: Nick Cheng <nick.cheng@areca.com.tw>
+> Description:
+> ** support ARC1200/1201/1202 SATA RAID adapter, which is named
+> ACB_ADAPTER_TYPE_B
+> ** modify the arcmsr_pci_slot_reset function
+> ** modify the arcmsr_pci_ers_disconnect_forepart function
+> ** modify the arcmsr_pci_ers_need_reset_forepart function 
+> Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
 
-I doubt your claim is true since the vast majority of kconfig users
-are most likely not kernel developers.
+OK, I fixed this up and applied it ... there was quite a fantastic
+amount of white space damage to the patch; could you run the next one
+through
 
-@Greg:
-Do you have any numbers regarding how your "Linux Kernel in a Nutshell" 
-is selling?
-Even download numbers?
+scripts/checkpatch.pl
 
-> especially when switching from one major subsystem to another.
+please?
 
-It's not only about switching, the same problems awaits people when 
-configuring a kernel for their hardware the first time.
+However, even with this applied I get:
 
-> Therefore, all this is IMO wasted effort and hot air.  There are far more 
-> important issues to deal with.
+  CC [M]  drivers/scsi/arcmsr/arcmsr_hba.o
+drivers/scsi/arcmsr/arcmsr_attr.c:186: warning: initialization from
+incompatible pointer type
+drivers/scsi/arcmsr/arcmsr_attr.c:196: warning: initialization from
+incompatible pointer type
+drivers/scsi/arcmsr/arcmsr_attr.c:206: warning: initialization from
+incompatible pointer type
+drivers/scsi/arcmsr/arcmsr_hba.c: In function 'arcmsr_alloc_ccb_pool':
+drivers/scsi/arcmsr/arcmsr_hba.c:329: warning: assignment from
+incompatible pointer type
+drivers/scsi/arcmsr/arcmsr_hba.c: At top level:
+drivers/scsi/arcmsr/arcmsr_hba.c:101: warning:
+'arcmsr_pci_error_detected' declared 'static' but never defined
+drivers/scsi/arcmsr/arcmsr_hba.c:102: warning: 'arcmsr_pci_slot_reset'
+declared 'static' but never defined
 
-Why don't we dump kconfig and write the .config by hand?  ;-)
+The majority being incorrect casting or the fact that binary attributes
+now take an additional argument.  I fixed all of this up with the patch
+below.
 
-More seriously:
-Yes, there are many other important issues in the kernel.
-But not fixing kconfig UI problems doesn't fix these issues faster.
+Thanks,
 
-I have seen people running into problems because some required 
-option wasn't set - in the simplest cases things like IDE without DMA 
-because a help text wasn't updated when more hardware support was added 
-to a driver.
+James
 
-You might not care about the kconfig users.
-But other people do.
+diff --git a/drivers/scsi/arcmsr/arcmsr_attr.c b/drivers/scsi/arcmsr/arcmsr_attr.c
+index 0f0a1ae..d04d1aa 100644
+--- a/drivers/scsi/arcmsr/arcmsr_attr.c
++++ b/drivers/scsi/arcmsr/arcmsr_attr.c
+@@ -59,7 +59,10 @@
+ 
+ struct class_device_attribute *arcmsr_host_attrs[];
+ 
+-static ssize_t arcmsr_sysfs_iop_message_read(struct kobject *kobj, char *buf, loff_t off, size_t count)
++static ssize_t arcmsr_sysfs_iop_message_read(struct kobject *kobj,
++					     struct bin_attribute *bin,
++					     char *buf, loff_t off,
++					     size_t count)
+ {
+ 	struct class_device *cdev = container_of(kobj,struct class_device,kobj);
+ 	struct Scsi_Host *host = class_to_shost(cdev);
+@@ -102,7 +105,10 @@ static ssize_t arcmsr_sysfs_iop_message_read(struct kobject *kobj, char *buf, lo
+ 	return (allxfer_len);
+ }
+ 
+-static ssize_t arcmsr_sysfs_iop_message_write(struct kobject *kobj, char *buf, loff_t off, size_t count)
++static ssize_t arcmsr_sysfs_iop_message_write(struct kobject *kobj,
++					      struct bin_attribute *bin,
++					      char *buf, loff_t off,
++					      size_t count)
+ {
+ 	struct class_device *cdev = container_of(kobj,struct class_device,kobj);
+ 	struct Scsi_Host *host = class_to_shost(cdev);
+@@ -147,7 +153,10 @@ static ssize_t arcmsr_sysfs_iop_message_write(struct kobject *kobj, char *buf, l
+ 	}
+ }
+ 
+-static ssize_t arcmsr_sysfs_iop_message_clear(struct kobject *kobj, char *buf, loff_t off, size_t count)
++static ssize_t arcmsr_sysfs_iop_message_clear(struct kobject *kobj,
++					      struct bin_attribute *bin,
++					      char *buf, loff_t off,
++					      size_t count)
+ {
+ 	struct class_device *cdev = container_of(kobj,struct class_device,kobj);
+ 	struct Scsi_Host *host = class_to_shost(cdev);
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index d70398a..50e1310 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -97,9 +97,6 @@ static void arcmsr_flush_hba_cache(struct AdapterControlBlock *acb);
+ static void arcmsr_flush_hbb_cache(struct AdapterControlBlock *acb);
+ static const char *arcmsr_info(struct Scsi_Host *);
+ static irqreturn_t arcmsr_interrupt(struct AdapterControlBlock *acb);
+-static pci_ers_result_t arcmsr_pci_error_detected(struct pci_dev *pdev,
+-						pci_channel_state_t state);
+-static pci_ers_result_t arcmsr_pci_slot_reset(struct pci_dev *pdev);
+ static int arcmsr_adjust_disk_queue_depth(struct scsi_device *sdev,
+ 								int queue_depth)
+ {
+@@ -326,7 +323,7 @@ static int arcmsr_alloc_ccb_pool(struct AdapterControlBlock *acb)
+ 
+ 		reg = (struct MessageUnit_B *)(dma_coherent +
+ 		ARCMSR_MAX_FREECCB_NUM * sizeof(struct CommandControlBlock));
+-		acb->pmu = (struct MessageUnit_B *)reg;
++		acb->pmu = (struct MessageUnit *)reg;
+ 		mem_base0 = ioremap(pci_resource_start(pdev, 0),
+ 					pci_resource_len(pdev, 0));
+ 		mem_base1 = ioremap(pci_resource_start(pdev, 2),
 
-> 	Jeff
->...
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
 
