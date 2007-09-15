@@ -1,53 +1,102 @@
-From: david@lang.hm
-Subject: Re: sata & scsi suggestion for make menuconfig
-Date: Sat, 15 Sep 2007 11:23:16 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0709151122000.24221@asgard.lang.hm>
-References: <20070907124800.GP16806@vanheusden.com> <p73fy1p9m57.fsf@bingen.suse.de>
- <1189371621.3526.28.camel@localhost.localdomain> <20070909210329.GE25798@one.firstfloor.org>
- <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de>
- <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de>
- <20070915080448.37457dcf@tux.DEF.witbe.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
+Date: Sat, 15 Sep 2007 15:17:33 -0400
+Message-ID: <46EC2FCD.5080803@garzik.org>
+References: <tkrat.552dbee831c88bbe@s5r6.in-berlin.de> <46EBFDFB.5040401@garzik.org> <20070915162313.GV3563@stusta.de> <200709151852.43157.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-033-126.lax1.dsl.speakeasy.net ([64.81.33.126]:46097
-	"EHLO bifrost.lang.hm" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755648AbXIOSYT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 15 Sep 2007 14:24:19 -0400
-In-Reply-To: <20070915080448.37457dcf@tux.DEF.witbe.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:49486 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751829AbXIOTR4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Sep 2007 15:17:56 -0400
+In-Reply-To: <200709151852.43157.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Rolland <rol@as2917.net>
-Cc: Adrian Bunk <bunk@kernel.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@SteelEye.com>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rol@witbe.net
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Adrian Bunk <bunk@kernel.org>, Greg Kroah-Hartman <gregkh@suse.de>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
 
-On Sat, 15 Sep 2007, Paul Rolland wrote:
+Bartlomiej Zolnierkiewicz wrote:
+> On Saturday 15 September 2007, Adrian Bunk wrote:
+>> On Sat, Sep 15, 2007 at 11:44:59AM -0400, Jeff Garzik wrote:
+>>> Stefan Richter wrote:
+>>>> Adrian Bunk wrote:
+>>>>> On Sat, Sep 15, 2007 at 04:11:45PM +0200, Stefan Richter wrote:
+>>>>>> Perfect is in the eye of the beholder.  You would consequently have to
+>>>>>> add such options into all menus which contain scsi low-level providers.
+>>>>> Kconfig is a user interface, so perfect is what is best for the
+>>>>> kconfig users.
+>>>> Duplicate options with different names in different menus, but which all
+>>>> do the same, --- is this the best for users?
+>>> I recognize it's a rhetorical question :)  The answer is of course "no".
+>>>
+>>> I hope the other participants of this thread register the severe 
+>>> disinclination of the maintainers to change this stuff, as this is a 
+>>> classic case of making a mountain out of a molehill[1].
+>>>
+>>> For the -vast majority- of people configuring the kernel, this is not a 
+>>> problem.  Kernel people are -expected- to know what they're doing, 
+>> I doubt your claim is true since the vast majority of kconfig users
+>> are most likely not kernel developers.
+> 
+> Yes, we shouldn't be needlessly raising the bar for power users.
 
-> On Fri, 14 Sep 2007 17:15:22 +0200
-> Adrian Bunk <bunk@kernel.org> wrote:
->
->> On Fri, Sep 14, 2007 at 04:54:07PM +0200, Stefan Richter wrote:
->>> Adrian Bunk wrote:
->>>> On Sun, Sep 09, 2007 at 05:11:44PM -0400, Jeff Garzik wrote:
->>>>> Let's step back a moment and consider the actual scale and impact of
->>>>> the problem at hand.
->> Do "make menuconfig" with the .config you are normally using, count the
->> number of options that are visible, and ask yourself whether we can
->> really expect users to read the help texts for every single option shown.
+In this case, no bar is being "raised," for any user.
+
+
+>> @Greg:
+>> Do you have any numbers regarding how your "Linux Kernel in a Nutshell" 
+>> is selling?
+>> Even download numbers?
 >>
->> People mostly read help texts for options where they don't understand
->> what this option is about - and "Serial ATA" therefore is an option that
->> is likely to get enabled without the user looking at the help text.
+>>> especially when switching from one major subsystem to another.
+>> It's not only about switching, the same problems awaits people when 
+>> configuring a kernel for their hardware the first time.
+> 
+> *nods*
+> 
+>>> Therefore, all this is IMO wasted effort and hot air.  There are far more 
+>>> important issues to deal with.
+>> Why don't we dump kconfig and write the .config by hand?  ;-)
 >>
->
-> As a "make menuconfig" user, let me say that I agree. Of course, I'm used
-> to rebuild kernel, but sometimes, some options are not clear, and the help
-> text is searched for. But, getting too much of "No help text available"
-> usually results in people no more reading the help text.
->
-> What about splitting the screen to have the top half with the menu, and the
-> bottom half with the help ?
+>> More seriously:
+>> Yes, there are many other important issues in the kernel.
+>> But not fixing kconfig UI problems doesn't fix these issues faster.
+> 
+> Agreed, and actually not fixing Kconfig UI problems will make the other
+> issues being fixed *slower* (because they result in *increased* workload
+> on developers' side).
 
-I useually have more screen space available to the side then above and 
-below the list of options.
+Irrelevant in this case, because there is no increased workload on the 
+developer's side.
 
-David Lang
+
+>> I have seen people running into problems because some required 
+>> option wasn't set - in the simplest cases things like IDE without DMA 
+>> because a help text wasn't updated when more hardware support was added 
+>> to a driver.
+> 
+> This is why nowadays IDE DMA support is automatically selected by IDE
+> host drivers that need it - a big relief for everybody.
+
+Please don't take this any more off-topic than it already is.
+
+IDE DMA option was vastly different.  The options in question here 
+affect whether or not you have a block device to use -- something that 
+is immediately obviously and corrected quickly.
+
+
+>> You might not care about the kconfig users.
+>> But other people do.
+> 
+> ...and even if their attempts/solutions may not be proper yet they should
+> not be discouraged to work on these problems...
+
+There is no problem, in this case.
+
+Otherwise, there would be more than a complaint or two per year.
+
+	Jeff
+
+
