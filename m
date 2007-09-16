@@ -1,163 +1,170 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 11/17] advansys: Remove library version & serial numbers
-Date: Sun, 16 Sep 2007 09:37:42 -0600
-Message-ID: <11899570694075-git-send-email-matthew@wil.cx>
+Subject: [PATCH 05/17] advansys: Improve reset handler
+Date: Sun, 16 Sep 2007 09:37:36 -0600
+Message-ID: <1189957069733-git-send-email-matthew@wil.cx>
 References: <1189867145.3339.3.camel@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:53198 "EHLO
-	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752769AbXIPPhm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 11:37:42 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:34309 "EHLO
+	mail-05.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752031AbXIPPhj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 11:37:39 -0400
 In-Reply-To: <1189867145.3339.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>
 
-With the ASC and ADV libraries merged into the driver, there really is
-no point in reporting their version numbers, or even trying to maintain
-them.
+ - Don't need to set ASC_HOST_IN_RESET any more
+ - Don't need to test scp->device->host for NULL -- if it's NULL, we
+   couldn't've been called.
+ - Use scmd_printk instead of ASC_PRINT
 
 Signed-off-by: Matthew Wilcox <matthew@wil.cx>
 ---
- drivers/scsi/advansys.c |   60 +++++++++++-----------------------------------
- 1 files changed, 15 insertions(+), 45 deletions(-)
+ drivers/scsi/advansys.c |   83 ++++++++++++----------------------------------
+ 1 files changed, 22 insertions(+), 61 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index e09ab95..530765f 100644
+index fd4d669..52ea41d 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -77,10 +77,6 @@
- /* Enable driver tracing. */
- /* #define ADVANSYS_DEBUG */
+@@ -2229,7 +2229,6 @@ do { \
+ #define ASC_BOARDP(host) ((asc_board_t *) &((host)->hostdata))
  
--#define ASC_LIB_VERSION_MAJOR  1
--#define ASC_LIB_VERSION_MINOR  24
--#define ASC_LIB_SERIAL_NUMBER  123
+ /* asc_board_t flags */
+-#define ASC_HOST_IN_RESET       0x01
+ #define ASC_IS_WIDE_BOARD       0x04	/* AdvanSys Wide Board */
+ #define ASC_SELECT_QUEUE_DEPTHS 0x08
+ 
+@@ -9751,106 +9750,68 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
+  */
+ static int advansys_reset(struct scsi_cmnd *scp)
+ {
+-	struct Scsi_Host *shost;
+-	asc_board_t *boardp;
+-	ASC_DVC_VAR *asc_dvc_varp;
+-	ADV_DVC_VAR *adv_dvc_varp;
+-	ulong flags;
++	struct Scsi_Host *shost = scp->device->host;
++	struct asc_board *boardp = ASC_BOARDP(shost);
++	unsigned long flags;
+ 	int status;
+ 	int ret = SUCCESS;
+ 
+-	ASC_DBG1(1, "advansys_reset: 0x%lx\n", (ulong)scp);
++	ASC_DBG1(1, "advansys_reset: 0x%p\n", scp);
+ 
+-#ifdef ADVANSYS_STATS
+-	if (scp->device->host != NULL) {
+-		ASC_STATS(scp->device->host, reset);
+-	}
+-#endif /* ADVANSYS_STATS */
 -
- /*
-  * Portable Data Types
-  *
-@@ -554,8 +550,6 @@ typedef struct asc_dvc_cfg {
- 	uchar isa_dma_speed;
- 	uchar isa_dma_channel;
- 	uchar chip_version;
--	ushort lib_serial_no;
--	ushort lib_version;
- 	ushort mcode_date;
- 	ushort mcode_version;
- 	uchar max_tag_qng[ASC_MAX_TID + 1];
-@@ -958,13 +952,6 @@ typedef struct asc_mc_saved {
- #define AscReadChipDvcID(port)            (uchar)inp((port)+IOP_REG_ID)
- #define AscWriteChipDvcID(port, data)     outp((port)+IOP_REG_ID, data)
+-	if ((shost = scp->device->host) == NULL) {
+-		scp->result = HOST_BYTE(DID_ERROR);
+-		return FAILED;
+-	}
++	ASC_STATS(shost, reset);
  
--#define ADV_LIB_VERSION_MAJOR  5
--#define ADV_LIB_VERSION_MINOR  14
+-	boardp = ASC_BOARDP(shost);
 -
--/*
-- * Define Adv Library required special types.
-- */
+-	ASC_PRINT1("advansys_reset: board %d: SCSI bus reset started...\n",
+-		   boardp->id);
+-	/*
+-	 * Check for re-entrancy.
+-	 */
+-	spin_lock_irqsave(&boardp->lock, flags);
+-	if (boardp->flags & ASC_HOST_IN_RESET) {
+-		spin_unlock_irqrestore(&boardp->lock, flags);
+-		return FAILED;
+-	}
+-	boardp->flags |= ASC_HOST_IN_RESET;
+-	spin_unlock_irqrestore(&boardp->lock, flags);
++	scmd_printk(KERN_INFO, scp, "SCSI bus reset started...\n");
+ 
+ 	if (ASC_NARROW_BOARD(boardp)) {
+-		/*
+-		 * Narrow Board
+-		 */
+-		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
++		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
+ 
+-		/*
+-		 * Reset the chip and SCSI bus.
+-		 */
++		/* Reset the chip and SCSI bus. */
+ 		ASC_DBG(1, "advansys_reset: before AscInitAsc1000Driver()\n");
+-		status = AscInitAsc1000Driver(asc_dvc_varp);
++		status = AscInitAsc1000Driver(asc_dvc);
+ 
+ 		/* Refer to ASC_IERR_* defintions for meaning of 'err_code'. */
+-		if (asc_dvc_varp->err_code) {
+-			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
+-				   "error: 0x%x\n", boardp->id,
+-				   asc_dvc_varp->err_code);
++		if (asc_dvc->err_code) {
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset error: "
++				    "0x%x\n", asc_dvc->err_code);
+ 			ret = FAILED;
+ 		} else if (status) {
+-			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
+-				   "warning: 0x%x\n", boardp->id, status);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset warning: "
++				    "0x%x\n", status);
+ 		} else {
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "successful.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
++				    "successful\n");
+ 		}
+ 
+ 		ASC_DBG(1, "advansys_reset: after AscInitAsc1000Driver()\n");
+ 		spin_lock_irqsave(&boardp->lock, flags);
 -
- /*
-  * Portable Data Types
-  *
-@@ -1856,7 +1843,6 @@ typedef struct adv_dvc_cfg {
- 	ushort disc_enable;	/* enable disconnection */
- 	uchar chip_version;	/* chip version */
- 	uchar termination;	/* Term. Ctrl. bits 6-5 of SCSI_CFG1 register */
--	ushort lib_version;	/* Adv Library version number */
- 	ushort control_flag;	/* Microcode Control Flag */
- 	ushort mcode_date;	/* Microcode date */
- 	ushort mcode_version;	/* Microcode version */
-@@ -2637,18 +2623,13 @@ static void asc_prt_asc_dvc_cfg(ASC_DVC_CFG *h)
- 	printk(" disc_enable 0x%x, sdtr_enable 0x%x,\n",
- 	       h->disc_enable, h->sdtr_enable);
+ 	} else {
+ 		/*
+-		 * Wide Board
+-		 *
+ 		 * If the suggest reset bus flags are set, then reset the bus.
+ 		 * Otherwise only reset the device.
+ 		 */
+-		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
++		ADV_DVC_VAR *adv_dvc = &boardp->dvc_var.adv_dvc_var;
  
--	printk
--	    (" chip_scsi_id %d, isa_dma_speed %d, isa_dma_channel %d, chip_version %d,\n",
--	     h->chip_scsi_id, h->isa_dma_speed, h->isa_dma_channel,
--	     h->chip_version);
+ 		/*
+ 		 * Reset the target's SCSI bus.
+ 		 */
+ 		ASC_DBG(1, "advansys_reset: before AdvResetChipAndSB()\n");
+-		switch (AdvResetChipAndSB(adv_dvc_varp)) {
++		switch (AdvResetChipAndSB(adv_dvc)) {
+ 		case ASC_TRUE:
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "successful.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
++				    "successful\n");
+ 			break;
+ 		case ASC_FALSE:
+ 		default:
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "error.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset error\n");
+ 			ret = FAILED;
+ 			break;
+ 		}
+ 		spin_lock_irqsave(&boardp->lock, flags);
+-		AdvISR(adv_dvc_varp);
++		AdvISR(adv_dvc);
+ 	}
+-	/* Board lock is held. */
+ 
+ 	/* Save the time of the most recently completed reset. */
+ 	boardp->last_reset = jiffies;
 -
--	printk
--	    (" pci_device_id %d, lib_serial_no %u, lib_version %u, mcode_date 0x%x,\n",
--	     to_pci_dev(h->dev)->device, h->lib_serial_no, h->lib_version,
--	     h->mcode_date);
-+	printk(" chip_scsi_id %d, isa_dma_speed %d, isa_dma_channel %d, "
-+		"chip_version %d,\n", h->chip_scsi_id, h->isa_dma_speed,
-+		h->isa_dma_channel, h->chip_version);
+-	/* Clear reset flag. */
+-	boardp->flags &= ~ASC_HOST_IN_RESET;
+ 	spin_unlock_irqrestore(&boardp->lock, flags);
  
--	printk(" mcode_version %d, overrun_buf 0x%lx\n",
--	       h->mcode_version, (ulong)h->overrun_buf);
-+	printk(" pci_device_id %d, mcode_date 0x%x, mcode_version %d, "
-+		"overrun_buf 0x%p\n", to_pci_dev(h->dev)->device,
-+		h->mcode_date, h->mcode_version, h->overrun_buf);
- }
- 
- /*
-@@ -2752,8 +2733,8 @@ static void asc_prt_adv_dvc_cfg(ADV_DVC_CFG *h)
- 	printk("  chip_version 0x%x, mcode_date 0x%x\n",
- 	       h->chip_version, h->mcode_date);
- 
--	printk("  mcode_version 0x%x, pci_device_id 0x%x, lib_version %u\n",
--	       h->mcode_version, to_pci_dev(h->dev)->device, h->lib_version);
-+	printk("  mcode_version 0x%x, pci_device_id 0x%x\n",
-+	       h->mcode_version, to_pci_dev(h->dev)->device);
- 
- 	printk("  control_flag 0x%x\n", h->control_flag);
- }
-@@ -3731,15 +3712,10 @@ static int asc_prt_asc_board_info(struct Scsi_Host *shost, char *cp, int cplen)
- 			   shost->host_no);
- 	ASC_PRT_NEXT();
- 
--	len = asc_prt_line(cp, leftlen,
--			   " chip_version %u, lib_version 0x%x, lib_serial_no %u, mcode_date 0x%x\n",
--			   c->chip_version, c->lib_version, c->lib_serial_no,
--			   c->mcode_date);
--	ASC_PRT_NEXT();
--
--	len = asc_prt_line(cp, leftlen,
--			   " mcode_version 0x%x, err_code %u\n",
--			   c->mcode_version, v->err_code);
-+	len = asc_prt_line(cp, leftlen, " chip_version %u, mcode_date 0x%x, "
-+			   "mcode_version 0x%x, err_code %u\n",
-+			   c->chip_version, c->mcode_date, c->mcode_version,
-+			   v->err_code);
- 	ASC_PRT_NEXT();
- 
- 	/* Current number of commands waiting for the host. */
-@@ -3934,10 +3910,9 @@ static int asc_prt_adv_board_info(struct Scsi_Host *shost, char *cp, int cplen)
- 			   v->err_code);
- 	ASC_PRT_NEXT();
- 
--	len = asc_prt_line(cp, leftlen,
--			   " chip_version %u, lib_version 0x%x, mcode_date 0x%x, mcode_version 0x%x\n",
--			   c->chip_version, c->lib_version, c->mcode_date,
--			   c->mcode_version);
-+	len = asc_prt_line(cp, leftlen, " chip_version %u, mcode_date 0x%x, "
-+			   "mcode_version 0x%x\n", c->chip_version,
-+			   c->mcode_date, c->mcode_version);
- 	ASC_PRT_NEXT();
- 
- 	AdvReadWordLram(iop_base, ASC_MC_TAGQNG_ABLE, tagqng_able);
-@@ -11566,9 +11541,6 @@ static ushort __devinit AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
- 	asc_dvc->cfg->sdtr_enable = ASC_SCSI_WIDTH_BIT_SET;
- 	asc_dvc->cfg->disc_enable = ASC_SCSI_WIDTH_BIT_SET;
- 	asc_dvc->cfg->chip_scsi_id = ASC_DEF_CHIP_SCSI_ID;
--	asc_dvc->cfg->lib_serial_no = ASC_LIB_SERIAL_NUMBER;
--	asc_dvc->cfg->lib_version = (ASC_LIB_VERSION_MAJOR << 8) |
--	    ASC_LIB_VERSION_MINOR;
- 	chip_version = AscGetChipVersion(iop_base, asc_dvc->bus_type);
- 	asc_dvc->cfg->chip_version = chip_version;
- 	asc_dvc->sdtr_period_tbl[0] = SYN_XFER_NS_0;
-@@ -13542,8 +13514,6 @@ AdvInitGetConfig(struct pci_dev *pdev, struct asc_board *boardp)
- 	if ((cmd & PCI_COMMAND_PARITY) == 0)
- 		asc_dvc->cfg->control_flag |= CONTROL_FLAG_IGNORE_PERR;
- 
--	asc_dvc->cfg->lib_version = (ADV_LIB_VERSION_MAJOR << 8) |
--	    ADV_LIB_VERSION_MINOR;
- 	asc_dvc->cfg->chip_version =
- 	    AdvGetChipVersion(iop_base, asc_dvc->bus_type);
- 
+ 	ASC_DBG1(1, "advansys_reset: ret %d\n", ret);
 -- 
 1.5.2.4
 
