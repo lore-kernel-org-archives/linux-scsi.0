@@ -1,73 +1,46 @@
-From: dann frazier <dannf@dannf.org>
-Subject: [PATCH] typos in megaraid driver
-Date: Sun, 16 Sep 2007 10:07:44 -0600
-Message-ID: <20070916160744.GA3174@ldl.fc.hp.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 10/17] advansys: Remove asc_board_t typedef and ASC_BOARDP macro
+Date: Sun, 16 Sep 2007 10:14:21 -0600
+Message-ID: <20070916161421.GB28350@parisc-linux.org>
+References: <1189867145.3339.3.camel@localhost.localdomain> <11899570694170-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from atlrel6.hp.com ([156.153.255.205]:42339 "EHLO atlrel6.hp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751730AbXIPQGp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Sep 2007 12:06:45 -0400
-Received: from smtp2.fc.hp.com (smtp.fc.hp.com [15.11.136.114])
-	by atlrel6.hp.com (Postfix) with ESMTP id 6EDE537991
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Sep 2007 12:06:44 -0400 (EDT)
-Received: from ldl.fc.hp.com (ldl.fc.hp.com [15.11.146.30])
-	by smtp2.fc.hp.com (Postfix) with ESMTP id 14774225897
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Sep 2007 16:06:44 +0000 (UTC)
-Received: from localhost (ldl.fc.hp.com [127.0.0.1])
-	by ldl.fc.hp.com (Postfix) with ESMTP id DBCFE39C1A3
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Sep 2007 10:06:43 -0600 (MDT)
-Received: from ldl.fc.hp.com ([127.0.0.1])
-	by localhost (ldl.fc.hp.com [127.0.0.1]) (amavisd-new, port 10024)
-	with ESMTP id jm8FfHzHZcrM for <linux-scsi@vger.kernel.org>;
-	Sun, 16 Sep 2007 10:06:42 -0600 (MDT)
-Received: from krebs (krebs.dannf [10.8.0.7])
-	by ldl.fc.hp.com (Postfix) with ESMTP id 9CF8C39C1A0
-	for <linux-scsi@vger.kernel.org>; Sun, 16 Sep 2007 10:06:42 -0600 (MDT)
+Received: from palinux.external.hp.com ([192.25.206.14]:40795 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752440AbXIPQOW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 12:14:22 -0400
 Content-Disposition: inline
+In-Reply-To: <11899570694170-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Cleanup a few typos in megaraid
+On Sun, Sep 16, 2007 at 09:37:41AM -0600, Matthew Wilcox wrote:
+> @@ -2475,7 +2469,7 @@ typedef struct adv_req {
+>   * of the 'Scsi_Host' structure starting at the 'hostdata'
+>   * field. It is guaranteed to be allocated from DMA-able memory.
+>   */
+> -typedef struct asc_board {
+> +struct asc_board {
+>  	struct device *dev;
+>  	int id;			/* Board Id */
+>  	uint flags;		/* Board flags */
+> @@ -2523,7 +2517,7 @@ typedef struct asc_board {
+>  	ushort bios_version;	/* BIOS Version. */
+>  	ushort bios_codeseg;	/* BIOS Code Segment. */
+>  	ushort bios_codelen;	/* BIOS Code Segment Length. */
+> -} asc_board_t;
+> +} asc_board;
+>  
+>  #define adv_dvc_to_board(adv_dvc) container_of(adv_dvc, struct asc_board, \
+>  							dvc_var.adv_dvc_var)
 
-Signed-off-by: dann frazier <dannf@dannf.org>
+"oops".  I'll send a replacement for this patch.  I can't believe this
+struct is 512 bytes.
 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index c6a53dc..4963b96 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -500,7 +500,7 @@ megaraid_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	// Start the mailbox based controller
- 	if (megaraid_init_mbox(adapter) != 0) {
- 		con_log(CL_ANN, (KERN_WARNING
--			"megaraid: maibox adapter did not initialize\n"));
-+			"megaraid: mailbox adapter did not initialize\n"));
- 
- 		goto out_free_adapter;
- 	}
-@@ -972,8 +972,8 @@ megaraid_fini_mbox(adapter_t *adapter)
-  * megaraid_alloc_cmd_packets - allocate shared mailbox
-  * @adapter		: soft state of the raid controller
-  *
-- * Allocate and align the shared mailbox. This maibox is used to issue
-- * all the commands. For IO based controllers, the mailbox is also regsitered
-+ * Allocate and align the shared mailbox. This mailbox is used to issue
-+ * all the commands. For IO based controllers, the mailbox is also registered
-  * with the FW. Allocate memory for all commands as well.
-  * This is our big allocator.
-  */
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.h b/drivers/scsi/megaraid/megaraid_mbox.h
-index 626459d..2e760c2 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.h
-+++ b/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -116,7 +116,7 @@
-  * @raw_mbox		: raw mailbox pointer
-  * @mbox		: mailbox
-  * @mbox64		: extended mailbox
-- * @mbox_dma_h		: maibox dma address
-+ * @mbox_dma_h		: mailbox dma address
-  * @sgl64		: 64-bit scatter-gather list
-  * @sgl32		: 32-bit scatter-gather list
-  * @sgl_dma_h		: dma handle for the scatter-gather list
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
