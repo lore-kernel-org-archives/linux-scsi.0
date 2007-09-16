@@ -1,46 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 10/17] advansys: Remove asc_board_t typedef and ASC_BOARDP macro
-Date: Sun, 16 Sep 2007 10:14:21 -0600
-Message-ID: <20070916161421.GB28350@parisc-linux.org>
-References: <1189867145.3339.3.camel@localhost.localdomain> <11899570694170-git-send-email-matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aic94xx: fix smartctl utility problem
+Date: Sun, 16 Sep 2007 11:37:12 -0500
+Message-ID: <1189960632.3383.4.camel@localhost.localdomain>
+References: <1189792710.6030.3.camel@linux.site>
+	 <1189875940.3339.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:40795 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752440AbXIPQOW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 12:14:22 -0400
-Content-Disposition: inline
-In-Reply-To: <11899570694170-git-send-email-matthew@wil.cx>
+Received: from hancock.steeleye.com ([71.30.118.248]:58287 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751261AbXIPQhQ (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 12:37:16 -0400
+In-Reply-To: <1189875940.3339.12.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Gilbert Wu <Gilbert_Wu@adaptec.com>
+Cc: Linux-scsi@vger.kernel.org
 
-On Sun, Sep 16, 2007 at 09:37:41AM -0600, Matthew Wilcox wrote:
-> @@ -2475,7 +2469,7 @@ typedef struct adv_req {
->   * of the 'Scsi_Host' structure starting at the 'hostdata'
->   * field. It is guaranteed to be allocated from DMA-able memory.
->   */
-> -typedef struct asc_board {
-> +struct asc_board {
->  	struct device *dev;
->  	int id;			/* Board Id */
->  	uint flags;		/* Board flags */
-> @@ -2523,7 +2517,7 @@ typedef struct asc_board {
->  	ushort bios_version;	/* BIOS Version. */
->  	ushort bios_codeseg;	/* BIOS Code Segment. */
->  	ushort bios_codelen;	/* BIOS Code Segment Length. */
-> -} asc_board_t;
-> +} asc_board;
->  
->  #define adv_dvc_to_board(adv_dvc) container_of(adv_dvc, struct asc_board, \
->  							dvc_var.adv_dvc_var)
+On Sat, 2007-09-15 at 12:05 -0500, James Bottomley wrote:
+> On Fri, 2007-09-14 at 10:58 -0700, Gilbert Wu wrote:
+> > Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"  does
+> > not work on SATA device. ( The smartctl v5.38 does need "-d ata"
+> > option.)
+> >   The aic94xx need to return ATA output register for all ATA commands
+> > except ATA Read/Write commands.
+> >   The aic94xx also mark out the DRQ bit from status register which is
+> > treated as AC_ERR_HSM (host state machine violation) error by top layer
+> > if it set to one.
+> >  The firmware of aic94xx chip handle all ATA handshaking, data transfer
+> > and return ATA output register which is sent by the device.  So the DRQ
+> > bit may not reflect the last state of device when the command finished
+> > and it is no meaning for the caller.
+> > 
+> > Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
+> 
+> I'm afraid this can't go in.  It has a bad effect on my expander remote
+> ATAPI device:
 
-"oops".  I'll send a replacement for this patch.  I can't believe this
-struct is 512 bytes.
+OK, found the root cause: your CSMI_TASK flag is getting set on all
+packet commands.  I can think of two fixes: either smartctl should never
+be used on ATAPI devices (reasonable, since smart is a disc protocol),
+so we predicate the check by a test for the device being ATA:
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+	if (dev->sata_dev.command_set == ATA_COMMAND_SET
+	    && !is_ata_rw_cmd(scb->ata_task.fis.command))
+
+Or simply add ATA_CMD_PACKET to your is_ata_rw_cmd() switch.
+
+Either works on my system ... which do you prefer.
+
+James
+
+
+
+
