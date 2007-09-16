@@ -1,38 +1,61 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
-Date: Sun, 16 Sep 2007 13:12:59 -0700
-Message-ID: <20070916201259.GA11272@suse.de>
-References: <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de> <20070915125055.GQ3563@stusta.de> <46EBDC06.3030202@s5r6.in-berlin.de> <20070915135314.GS3563@stusta.de> <46EBE821.2080300@s5r6.in-berlin.de> <20070915144341.GT3563@stusta.de> <46EBF9DC.1000503@s5r6.in-berlin.de> <46EBFDFB.5040401@garzik.org> <20070915162313.GV3563@stusta.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] aic94xx: fix smartctl utility problem
+Date: Sun, 16 Sep 2007 19:01:11 -0400
+Message-ID: <46EDB5B7.10101@torque.net>
+References: <1189792710.6030.3.camel@linux.site>	 <1189875940.3339.12.camel@localhost.localdomain> <1189960632.3383.4.camel@localhost.localdomain>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:55893 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753197AbXIPWnr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Sep 2007 18:43:47 -0400
-Content-Disposition: inline
-In-Reply-To: <20070915162313.GV3563@stusta.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:59556 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753573AbXIPXBy (ORCPT
+	<rfc822;Linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 19:01:54 -0400
+In-Reply-To: <1189960632.3383.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Jeff Garzik <jeff@garzik.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Gilbert Wu <Gilbert_Wu@adaptec.com>, Linux-scsi@vger.kernel.org
 
-On Sat, Sep 15, 2007 at 06:23:13PM +0200, Adrian Bunk wrote:
+James Bottomley wrote:
+> On Sat, 2007-09-15 at 12:05 -0500, James Bottomley wrote:
+>> On Fri, 2007-09-14 at 10:58 -0700, Gilbert Wu wrote:
+>>> Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"  does
+>>> not work on SATA device. ( The smartctl v5.38 does need "-d ata"
+>>> option.)
+>>>   The aic94xx need to return ATA output register for all ATA commands
+>>> except ATA Read/Write commands.
+>>>   The aic94xx also mark out the DRQ bit from status register which is
+>>> treated as AC_ERR_HSM (host state machine violation) error by top layer
+>>> if it set to one.
+>>>  The firmware of aic94xx chip handle all ATA handshaking, data transfer
+>>> and return ATA output register which is sent by the device.  So the DRQ
+>>> bit may not reflect the last state of device when the command finished
+>>> and it is no meaning for the caller.
+>>>
+>>> Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
+>> I'm afraid this can't go in.  It has a bad effect on my expander remote
+>> ATAPI device:
 > 
-> @Greg:
-> Do you have any numbers regarding how your "Linux Kernel in a Nutshell" 
-> is selling?
+> OK, found the root cause: your CSMI_TASK flag is getting set on all
+> packet commands.  I can think of two fixes: either smartctl should never
+> be used on ATAPI devices (reasonable, since smart is a disc protocol),
 
-It is selling reasonably well for an O'Reilly book from what I have been
-told.  But I have not seen any real numbers yet.
+Feature code 101h in MMC seems to sink your argument for
+cd/dvd drives.
 
-> Even download numbers?
+Also tape drives may support SMART and if they do,
+smartmontools can access the associated data. And tape
+drives may be on an ATAPI transport.
 
-The downloads are spread around all of the kernel.org mirrors so I have
-absolutely no idea what they are.
+Doug Gilbert
 
-Nor do I really want to, as it doesn't matter to me.
-
-thanks,
-
-greg k-h
+> so we predicate the check by a test for the device being ATA:
+> 
+> 	if (dev->sata_dev.command_set == ATA_COMMAND_SET
+> 	    && !is_ata_rw_cmd(scb->ata_task.fis.command))
+> 
+> Or simply add ATA_CMD_PACKET to your is_ata_rw_cmd() switch.
+> 
+> Either works on my system ... which do you prefer.
