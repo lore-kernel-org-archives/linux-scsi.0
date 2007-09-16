@@ -1,61 +1,47 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH] aic94xx: fix smartctl utility problem
-Date: Sun, 16 Sep 2007 19:01:11 -0400
-Message-ID: <46EDB5B7.10101@torque.net>
-References: <1189792710.6030.3.camel@linux.site>	 <1189875940.3339.12.camel@localhost.localdomain> <1189960632.3383.4.camel@localhost.localdomain>
-Reply-To: dougg@torque.net
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 16/22] advansys: Eliminate prototypes
+Date: Sun, 16 Sep 2007 17:03:50 -0600
+Message-ID: <20070916230349.GE28350@parisc-linux.org>
+References: <11893498072821-git-send-email-matthew@wil.cx> <1189867145.3339.3.camel@localhost.localdomain> <20070916153134.GA28350@parisc-linux.org> <20070915224331U.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:59556 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753573AbXIPXBy (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 19:01:54 -0400
-In-Reply-To: <1189960632.3383.4.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:52577 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750822AbXIPXDv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 19:03:51 -0400
+Content-Disposition: inline
+In-Reply-To: <20070915224331U.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Gilbert Wu <Gilbert_Wu@adaptec.com>, Linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-James Bottomley wrote:
-> On Sat, 2007-09-15 at 12:05 -0500, James Bottomley wrote:
->> On Fri, 2007-09-14 at 10:58 -0700, Gilbert Wu wrote:
->>> Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"  does
->>> not work on SATA device. ( The smartctl v5.38 does need "-d ata"
->>> option.)
->>>   The aic94xx need to return ATA output register for all ATA commands
->>> except ATA Read/Write commands.
->>>   The aic94xx also mark out the DRQ bit from status register which is
->>> treated as AC_ERR_HSM (host state machine violation) error by top layer
->>> if it set to one.
->>>  The firmware of aic94xx chip handle all ATA handshaking, data transfer
->>> and return ATA output register which is sent by the device.  So the DRQ
->>> bit may not reflect the last state of device when the command finished
->>> and it is no meaning for the caller.
->>>
->>> Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
->> I'm afraid this can't go in.  It has a bad effect on my expander remote
->> ATAPI device:
+On Mon, Sep 17, 2007 at 07:41:06AM +0900, FUJITA Tomonori wrote:
+> On Sun, 16 Sep 2007 09:31:34 -0600
+> Matthew Wilcox <matthew@wil.cx> wrote:
 > 
-> OK, found the root cause: your CSMI_TASK flag is getting set on all
-> packet commands.  I can think of two fixes: either smartctl should never
-> be used on ATAPI devices (reasonable, since smart is a disc protocol),
-
-Feature code 101h in MMC seems to sink your argument for
-cd/dvd drives.
-
-Also tape drives may support SMART and if they do,
-smartmontools can access the associated data. And tape
-drives may be on an ATAPI transport.
-
-Doug Gilbert
-
-> so we predicate the check by a test for the device being ATA:
+> > On Sat, Sep 15, 2007 at 09:39:05AM -0500, James Bottomley wrote:
+> > > I get a compile failure at this point in your patch sequence:
+> > 
+> > Thanks.  I'd been compiling with CONFIG_ISA=n, so hadn't spotted these
+> > two problems.  I've set it back to Y now.
 > 
-> 	if (dev->sata_dev.command_set == ATA_COMMAND_SET
-> 	    && !is_ata_rw_cmd(scb->ata_task.fis.command))
+> If I compile your latest patchset with CONFIG_ISA=n, I got:
 > 
-> Or simply add ATA_CMD_PACKET to your is_ata_rw_cmd() switch.
-> 
-> Either works on my system ... which do you prefer.
+> drivers/built-in.o: In function `advansys_init':
+> advansys.c:(.init.text+0x3efb): undefined reference to `isa_register_driver'
+> advansys.c:(.init.text+0x3f22): undefined reference to `isa_unregister_driver'
+
+Fixed by http://marc.info/?l=linux-kernel&m=118780055118323&w=2 which I
+thought was in -mm, but I can't find it.  I've just reset it to Linus &
+Andrew.  Thanks for mentioning it.
+
+Now I'm back home, I'll add your sg patch to my tree.  I'd forgotten
+about it ...
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
