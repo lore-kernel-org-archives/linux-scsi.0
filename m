@@ -1,85 +1,38 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 16/22] advansys: Eliminate prototypes
-Date: Mon, 17 Sep 2007 07:41:06 +0900
-Message-ID: <20070915224331U.tomof@acm.org>
-References: <11893498072821-git-send-email-matthew@wil.cx>
-	<1189867145.3339.3.camel@localhost.localdomain>
-	<20070916153134.GA28350@parisc-linux.org>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
+Date: Sun, 16 Sep 2007 13:12:59 -0700
+Message-ID: <20070916201259.GA11272@suse.de>
+References: <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de> <20070915125055.GQ3563@stusta.de> <46EBDC06.3030202@s5r6.in-berlin.de> <20070915135314.GS3563@stusta.de> <46EBE821.2080300@s5r6.in-berlin.de> <20070915144341.GT3563@stusta.de> <46EBF9DC.1000503@s5r6.in-berlin.de> <46EBFDFB.5040401@garzik.org> <20070915162313.GV3563@stusta.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:55540 "EHLO mo11.iij4u.or.jp"
+Received: from mx1.suse.de ([195.135.220.2]:55893 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753427AbXIPWlR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 16 Sep 2007 18:41:17 -0400
-In-Reply-To: <20070916153134.GA28350@parisc-linux.org>
+	id S1753197AbXIPWnr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Sep 2007 18:43:47 -0400
+Content-Disposition: inline
+In-Reply-To: <20070915162313.GV3563@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Adrian Bunk <bunk@kernel.org>
+Cc: Jeff Garzik <jeff@garzik.org>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
 
-On Sun, 16 Sep 2007 09:31:34 -0600
-Matthew Wilcox <matthew@wil.cx> wrote:
-
-> On Sat, Sep 15, 2007 at 09:39:05AM -0500, James Bottomley wrote:
-> > I get a compile failure at this point in your patch sequence:
+On Sat, Sep 15, 2007 at 06:23:13PM +0200, Adrian Bunk wrote:
 > 
-> Thanks.  I'd been compiling with CONFIG_ISA=n, so hadn't spotted these
-> two problems.  I've set it back to Y now.
+> @Greg:
+> Do you have any numbers regarding how your "Linux Kernel in a Nutshell" 
+> is selling?
 
-If I compile your latest patchset with CONFIG_ISA=n, I got:
+It is selling reasonably well for an O'Reilly book from what I have been
+told.  But I have not seen any real numbers yet.
 
-drivers/built-in.o: In function `advansys_init':
-advansys.c:(.init.text+0x3edc): undefined reference to `isa_register_driver'
-advansys.c:(.init.text+0x3efb): undefined reference to `isa_register_driver'
-advansys.c:(.init.text+0x3f22): undefined reference to `isa_unregister_driver'
-advansys.c:(.init.text+0x3f36): undefined reference to `isa_unregister_driver'
-drivers/built-in.o: In function `advansys_exit':
-advansys.c:(.exit.text+0x210): undefined reference to `isa_unregister_driver'
-advansys.c:(.exit.text+0x21a): undefined reference to `isa_unregister_driver'
-make[1]: *** [.tmp_vmlinux1] Error 1
-make[1]: Leaving directory `/home/fujita/git/linux-2.6'
-make: *** [debian/stamp-build-kernel] Error 2
+> Even download numbers?
 
+The downloads are spread around all of the kernel.org mirrors so I have
+absolutely no idea what they are.
 
-Is this already fixed like this?
+Nor do I really want to, as it doesn't matter to me.
 
--
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] isa: add fake isa_register_driver and isa_unregister_driver
+thanks,
 
-add fake isa_register_driver and isa_unregister_driver for !CONFIG_ISA
-case.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- include/linux/isa.h |   10 ++++++++++
- 1 files changed, 10 insertions(+), 0 deletions(-)
-
-diff --git a/include/linux/isa.h b/include/linux/isa.h
-index 1b85533..6d3aaaf 100644
---- a/include/linux/isa.h
-+++ b/include/linux/isa.h
-@@ -22,7 +22,17 @@ struct isa_driver {
- 
- #define to_isa_driver(x) container_of((x), struct isa_driver, driver)
- 
-+#ifdef CONFIG_ISA
- int isa_register_driver(struct isa_driver *, unsigned int);
- void isa_unregister_driver(struct isa_driver *);
-+#else
-+static inline int isa_register_driver(struct isa_driver *idrv, unsigned int n)
-+{
-+	return 0;
-+}
-+static inline void isa_unregister_driver(struct isa_driver *idrv)
-+{
-+}
-+#endif
- 
- #endif /* __LINUX_ISA_H */
--- 
-1.5.2.4
-
-
+greg k-h
