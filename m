@@ -1,35 +1,56 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 16/22] advansys: Eliminate prototypes
-Date: Sun, 16 Sep 2007 09:31:34 -0600
-Message-ID: <20070916153134.GA28350@parisc-linux.org>
-References: <20070909145358.GG6809@parisc-linux.org> <11893498072821-git-send-email-matthew@wil.cx> <1189867145.3339.3.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 07/17] advansys: Remove ASC_WIDE_BOARD predicate
+Date: Sun, 16 Sep 2007 09:37:38 -0600
+Message-ID: <11899570693465-git-send-email-matthew@wil.cx>
+References: <1189867145.3339.3.camel@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:59012 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751557AbXIPPbf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 11:31:35 -0400
-Content-Disposition: inline
+Received: from mail.tor.primus.ca ([216.254.136.21]:52608 "EHLO
+	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752391AbXIPPhi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Sep 2007 11:37:38 -0400
 In-Reply-To: <1189867145.3339.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Matthew Wilcox <matthew@wil.cx>
 
-On Sat, Sep 15, 2007 at 09:39:05AM -0500, James Bottomley wrote:
-> I get a compile failure at this point in your patch sequence:
+Replace it with !ASC_NARROW_BOARD
 
-Thanks.  I'd been compiling with CONFIG_ISA=n, so hadn't spotted these
-two problems.  I've set it back to Y now.
+Signed-off-by: Matthew Wilcox <matthew@wil.cx>
+---
+ drivers/scsi/advansys.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-> I've put 1-15 in .. could you rebase against scsi-misc and eliminate
-> this problem?
-
-Yup.  I've written some more patches since, and I'll include those too.
-
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 5e6bcf2..a5bb4e4 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -2232,7 +2232,6 @@ do { \
+ #define ASC_IS_WIDE_BOARD       0x04	/* AdvanSys Wide Board */
+ 
+ #define ASC_NARROW_BOARD(boardp) (((boardp)->flags & ASC_IS_WIDE_BOARD) == 0)
+-#define ASC_WIDE_BOARD(boardp)   ((boardp)->flags & ASC_IS_WIDE_BOARD)
+ 
+ #define NO_ISA_DMA              0xff	/* No ISA DMA Channel Used */
+ 
+@@ -4385,7 +4384,7 @@ advansys_proc_info(struct Scsi_Host *shost, char *buffer, char **start,
+ 	/*
+ 	 * Display Wide Board BIOS Information.
+ 	 */
+-	if (ASC_WIDE_BOARD(boardp)) {
++	if (!ASC_NARROW_BOARD(boardp)) {
+ 		cp = boardp->prtbuf;
+ 		cplen = asc_prt_adv_bios(shost, cp, ASC_PRTBUF_SIZE);
+ 		BUG_ON(cplen >= ASC_PRTBUF_SIZE);
+@@ -14432,7 +14431,7 @@ static int advansys_release(struct Scsi_Host *shost)
+ 		ASC_DBG(1, "advansys_release: free_dma()\n");
+ 		free_dma(shost->dma_channel);
+ 	}
+-	if (ASC_WIDE_BOARD(boardp)) {
++	if (!ASC_NARROW_BOARD(boardp)) {
+ 		iounmap(boardp->ioremap_addr);
+ 		advansys_wide_free_mem(boardp);
+ 	}
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.2.4
+
