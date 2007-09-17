@@ -1,93 +1,43 @@
-From: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-Date: Mon, 17 Sep 2007 13:53:54 -0700
-Message-ID: <BC382691D59EC94C8E57543C47EF8ED55B20E1@aime2k302.adaptec.com>
-References: <1189984871.3383.17.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg cleanup
+Date: Mon, 17 Sep 2007 16:57:36 -0400
+Message-ID: <46EEEA40.40908@garzik.org>
+References: <46E6F92D.2090409@panasas.com> <200709171246.15142.bzolnier@gmail.com> <1190037090.3386.3.camel@localhost.localdomain> <200709172205.36070.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:32797 "HELO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1753589AbXIQUx7 convert rfc822-to-8bit (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 16:53:59 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1189984871.3383.17.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:39422 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755184AbXIQU7r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Sep 2007 16:59:47 -0400
+In-Reply-To: <200709172205.36070.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, dougg@torque.net
-Cc: Linux-scsi@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, osst@riede.org
 
-Hi All,
-
-   I tested the SATA DVD Plextor model 716SA and 755SA with direct
-attached. Both failed in my tested system and it end up with System
-Panic even without my patch. The CSMI_TASK should not make any
-difference between ATA and ATAPI device. I am digging into it for root
-cause.
-
-Thanks!
-Gilbert
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Sunday, September 16, 2007 4:21 PM
-To: dougg@torque.net
-Cc: Wu, Gilbert; Linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] aic94xx: fix smartctl utility problem
-
-On Sun, 2007-09-16 at 19:01 -0400, Douglas Gilbert wrote:
-> James Bottomley wrote:
-> > On Sat, 2007-09-15 at 12:05 -0500, James Bottomley wrote:
-> >> On Fri, 2007-09-14 at 10:58 -0700, Gilbert Wu wrote:
-> >>> Fixed the problem that "smartctl -a /dev/some_sata_disk -d ata"
-does
-> >>> not work on SATA device. ( The smartctl v5.38 does need "-d ata"
-> >>> option.)
-> >>>   The aic94xx need to return ATA output register for all ATA
-commands
-> >>> except ATA Read/Write commands.
-> >>>   The aic94xx also mark out the DRQ bit from status register which
-is
-> >>> treated as AC_ERR_HSM (host state machine violation) error by top
-layer
-> >>> if it set to one.
-> >>>  The firmware of aic94xx chip handle all ATA handshaking, data
-transfer
-> >>> and return ATA output register which is sent by the device.  So
-the DRQ
-> >>> bit may not reflect the last state of device when the command
-finished
-> >>> and it is no meaning for the caller.
-> >>>
-> >>> Signed-off-by: Gilbert Wu <gilbert_wu@adaptec.com>
-> >> I'm afraid this can't go in.  It has a bad effect on my expander
-remote
-> >> ATAPI device:
-> > 
-> > OK, found the root cause: your CSMI_TASK flag is getting set on all
-> > packet commands.  I can think of two fixes: either smartctl should
-never
-> > be used on ATAPI devices (reasonable, since smart is a disc
-protocol),
+Bartlomiej Zolnierkiewicz wrote:
+> On Monday 17 September 2007, James Bottomley wrote:
+>> Realistically (and I hate myself for saying this) libata-pata does
+>> provide a much better alternative for the ATAPI devices.  Is it just
+>> time to recognise the inevitable and kill ide-scsi?
 > 
-> Feature code 101h in MMC seems to sink your argument for
-> cd/dvd drives.
+> Agreed, libata-pata is a much better version of ide-scsi. ;-)
+> 
+> If there is general consensus about ide-scsi removal I think that we
+> should start with disabling ide-scsi Kconfig entry in 2.6.24 to later
+> remove the ide-scsi driver completely in 2.6.25.
 
-I was more thinking that smartctl is a pure ATA type thing (The problem
-which the flag is set for is to allow smartctl to muck with ATA
-commands)... the MMC devices supporting smart features report this via
-the informational exceptions mode page to conform to the MMC command
-set.  So, when smartctl does SCSI transports, they'll go via a packet
-command anyway.
 
-> Also tape drives may support SMART and if they do,
-> smartmontools can access the associated data. And tape
-> drives may be on an ATAPI transport.
+Perhaps it is strange to hear me say this, but...
 
-That's probably via the same mechanism, isn't it?
+My experience with the IDE driver in the field is that ide-scsi sees a 
+fair amount of use, as an intentional replacement for ide-cd and the 
+other hand-written ide-$class ATAPI drivers.
 
-James
+I would prefer that ide-scsi stays around as long as ide stays around.
+
+	Jeff
 
 
