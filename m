@@ -1,68 +1,50 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: 2.6.23-rc4-mm1
-Date: Mon, 17 Sep 2007 23:32:58 +0900
-Message-ID: <20070917192528E.tomof@acm.org>
-References: <20070914211635.4774c971.pj@sgi.com>
-	<20070914104157D.tomof@acm.org>
-	<20070917132819.GC25592@kernel.dk>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
+Date: Mon, 17 Sep 2007 16:46:21 +0200
+Message-ID: <46EE933D.60207@s5r6.in-berlin.de>
+References: <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de> <tkrat.d922469e152fe0f3@s5r6.in-berlin.de> <tkrat.913e8b183cdf7888@s5r6.in-berlin.de> <20070914190033.GA4003@uranus.ravnborg.org> <20070914190609.GN3563@stusta.de> <tkrat.552dbee831c88bbe@s5r6.in-berlin.de> <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de> <Pine.LNX.4.64N.0709171217350.17606@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:60465 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754279AbXIQOdy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Sep 2007 10:33:54 -0400
-In-Reply-To: <20070917132819.GC25592@kernel.dk>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:58299 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753914AbXIQOqX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 10:46:23 -0400
+In-Reply-To: <Pine.LNX.4.64N.0709171217350.17606@blysk.ds.pg.gda.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: tomof@acm.org, pj@sgi.com, apw@shadowen.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, mel@csn.ul.ie, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: "Maciej W. Rozycki" <macro@linux-mips.org>
+Cc: Adrian Bunk <bunk@kernel.org>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
 
-On Mon, 17 Sep 2007 15:28:19 +0200
-Jens Axboe <jens.axboe@oracle.com> wrote:
+Maciej W. Rozycki wrote:
+>  SCSI is a generic peripheral bus
 
-> On Sat, Sep 15 2007, FUJITA Tomonori wrote:
-> > On Fri, 14 Sep 2007 21:16:35 -0700
-> > Paul Jackson <pj@sgi.com> wrote:
-> > 
-> > > FUJITA Tomonori wrote:
-> > > > Can you try this patch (against 2.6.23-rc4-mm1)?
-> > > > 
-> > > > >From 592bd2049cb3e6e1f1dde7cf631879f26ddffeaa Mon Sep 17 00:00:00 2001
-> > > > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > Date: Mon, 10 Sep 2007 04:17:13 +0100
-> > > > Subject: [PATCH] qla1280: sg chaining fixes
-> > > > 
-> > > > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > > > ---
-> > > >  drivers/scsi/qla1280.c |    5 ++++-
-> > > >  1 files changed, 4 insertions(+), 1 deletions(-)
-> > > 
-> > > This patch works for me.
-> > > 
-> > > I was getting the scsi errors reported earlier in
-> > > this thread, running 2.6.23-rc4-mm1 on one of our
-> > > big SGI Altix systems.
-> > > 
-> > > Applying this patch fixed it, so far as I can tell,
-> > > which is to say my system boots cleanly once again.
-> > 
-> > Thanks for testing!
-> > 
-> > Jens, we could enable use_sg_chaining option for qla1280.
-> 
-> Added, thanks!
+No, not anymore.  http://www.t10.org/scsi-3.htm
 
-Thanks.
+> (recall the expansion of the acronym).
 
-BTW, please don't forget to integrate the following patches:
+The expansion of the acronym doesn't fit anymore to what SCSI is today,
+or even to what it became already circa 10 years ago.
 
+> Even though probably the most common, storage is one of its applications 
+> only (think scanners for an immediately obvious other one).  I find 
+> describing CONFIG_SCSI as "storage support" misleading and inappropriate.
 
-- revert sg segment size ifdefs
+Right.  I wrote that in lack of better words, but at least I added "SCSI
+commands" in parentheses.  Something like "SCSI I/O - core and command
+sets" would much better describe what it is, but it would put "SCSI"
+first again and thus wouldn't reflect that  Linux' SCSI core and
+highlevel is in broader use than just for actual SCSI hardware...  Of
+course there is no way around the issue that Linux' SCSI core's and
+highlevel's role cannot be characterized in 3...6 words only, but there
+should be a way to point out its general importance.
 
-http://marc.info/?l=linux-scsi&m=118881264013097&w=2
+>  Referring to your example it is like calling generic networking (i.e. 
+> CONFIG_NET) "Ethernet support".
 
-- remove sglist_len
-
-http://marc.info/?l=linux-scsi&m=118907920405100&w=2
+Wrong comparison.
+-- 
+Stefan Richter
+-=====-=-=== =--= =---=
+http://arcgraph.de/sr/
