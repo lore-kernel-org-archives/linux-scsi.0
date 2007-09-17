@@ -1,50 +1,67 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
-Date: Mon, 17 Sep 2007 16:46:21 +0200
-Message-ID: <46EE933D.60207@s5r6.in-berlin.de>
-References: <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de> <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de> <46EAAAC1.3050409@s5r6.in-berlin.de> <tkrat.d922469e152fe0f3@s5r6.in-berlin.de> <tkrat.913e8b183cdf7888@s5r6.in-berlin.de> <20070914190033.GA4003@uranus.ravnborg.org> <20070914190609.GN3563@stusta.de> <tkrat.552dbee831c88bbe@s5r6.in-berlin.de> <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de> <Pine.LNX.4.64N.0709171217350.17606@blysk.ds.pg.gda.pl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: David Howells <dhowells@redhat.com>
+Subject: Re: CONFIG_BLK_DEV_BSG=n
+Date: Mon, 17 Sep 2007 15:46:30 +0100
+Message-ID: <19650.1190040390@redhat.com>
+References: <1189800008.3343.21.camel@localhost.localdomain> <598D5675D34BE349929AF5EDE9B03E27015558EA@az33exm24.fsl.freescale.net>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:58299 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753914AbXIQOqX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 10:46:23 -0400
-In-Reply-To: <Pine.LNX.4.64N.0709171217350.17606@blysk.ds.pg.gda.pl>
+Received: from mx1.redhat.com ([66.187.233.31]:41920 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754683AbXIQOr1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Sep 2007 10:47:27 -0400
+In-Reply-To: <1189800008.3343.21.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Maciej W. Rozycki" <macro@linux-mips.org>
-Cc: Adrian Bunk <bunk@kernel.org>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, akpm@osdl.org, jens.axboe@oracle.com
+Cc: dhowells@redhat.com, Medve Emilian-EMMEDVE1 <Emilian.Medve@freescale.com>, fujita.tomonori@lab.ntt.co.jp, linuxppc-dev@ozlabs.org, Gala Kumar-B11780 <kumar.gala@freescale.com>, paulus@samba.org, linux-scsi@vger.kernel.org
 
-Maciej W. Rozycki wrote:
->  SCSI is a generic peripheral bus
 
-No, not anymore.  http://www.t10.org/scsi-3.htm
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-> (recall the expansion of the acronym).
+> > Which solution would you be more comfortable with?
+> 
+> The one which is currently in -mm is this one:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=49892223f7d3a2333ef9e6cbdd526676e1fc517a
 
-The expansion of the acronym doesn't fit anymore to what SCSI is today,
-or even to what it became already circa 10 years ago.
+In my opinion, this is the wrong fix.  There shouldn't be anything in the
+kernel using stuff from bsg.h if CONFIG_BLOCK=n, so there should be an error if
+anything tries to.  The correct fix is to exclude the non-userspace-visible
+contents of bsg.h with #ifdef CONFIG_BLOCK, not to declare things that we've
+tried to make sure specifically aren't declared.
 
-> Even though probably the most common, storage is one of its applications 
-> only (think scanners for an immediately obvious other one).  I find 
-> describing CONFIG_SCSI as "storage support" misleading and inappropriate.
+David
+---
 
-Right.  I wrote that in lack of better words, but at least I added "SCSI
-commands" in parentheses.  Something like "SCSI I/O - core and command
-sets" would much better describe what it is, but it would put "SCSI"
-first again and thus wouldn't reflect that  Linux' SCSI core and
-highlevel is in broader use than just for actual SCSI hardware...  Of
-course there is no way around the issue that Linux' SCSI core's and
-highlevel's role cannot be characterized in 3...6 words only, but there
-should be a way to point out its general importance.
+[PATCH] VFS: Make BSG declarations dependent on CONFIG_BLOCK
 
->  Referring to your example it is like calling generic networking (i.e. 
-> CONFIG_NET) "Ethernet support".
+From: David Howells <dhowells@redhat.com>
 
-Wrong comparison.
--- 
-Stefan Richter
--=====-=-=== =--= =---=
-http://arcgraph.de/sr/
+Make BSG function declarations dependent on CONFIG_BLOCK as they are not
+compilable if the block layer is compiled out.
+
+Signed-off-by: David Howells <dhowells@redhat.com>
+---
+
+ include/linux/bsg.h |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/include/linux/bsg.h b/include/linux/bsg.h
+index 60e377b..28f5d44 100644
+--- a/include/linux/bsg.h
++++ b/include/linux/bsg.h
+@@ -52,6 +52,7 @@ struct sg_io_v4 {
+ };
+ 
+ #ifdef __KERNEL__
++#ifdef CONFIG_BLOCK
+ 
+ #if defined(CONFIG_BLK_DEV_BSG)
+ struct bsg_class_device {
+@@ -73,6 +74,7 @@ static inline void bsg_unregister_queue(struct request_queue *rq)
+ }
+ #endif
+ 
++#endif /* CONFIG_BLOCK */
+ #endif /* __KERNEL__ */
+ 
+ #endif
