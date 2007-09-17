@@ -1,195 +1,53 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 24/24] ide-scsi.c: convert to data accessors and !use_sg cleanup
-Date: Mon, 17 Sep 2007 13:04:08 +0200
-Message-ID: <200709171304.08503.bzolnier@gmail.com>
-References: <46E6F92D.2090409@panasas.com> <46E72F13.3090200@panasas.com>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: Re: [RFC PATCH] SCSI: split Kconfig menu into two
+Date: Mon, 17 Sep 2007 12:29:23 +0100 (BST)
+Message-ID: <Pine.LNX.4.64N.0709171217350.17606@blysk.ds.pg.gda.pl>
+References: <46E46190.6080607@garzik.org> <20070912224655.GC3563@stusta.de>
+ <46EAA08F.30703@s5r6.in-berlin.de> <20070914151522.GL3563@stusta.de>
+ <46EAAAC1.3050409@s5r6.in-berlin.de> <tkrat.d922469e152fe0f3@s5r6.in-berlin.de>
+ <tkrat.913e8b183cdf7888@s5r6.in-berlin.de> <20070914190033.GA4003@uranus.ravnborg.org>
+ <20070914190609.GN3563@stusta.de> <tkrat.552dbee831c88bbe@s5r6.in-berlin.de>
+ <20070915114055.GP3563@stusta.de> <46EBCEF1.4030702@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.173]:6976 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752758AbXIQLHG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 07:07:06 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so709388ugc
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Sep 2007 04:07:06 -0700 (PDT)
-In-Reply-To: <46E72F13.3090200@panasas.com>
-Content-Disposition: inline
+Received: from cerber.ds.pg.gda.pl ([153.19.208.18]:54070 "EHLO
+	cerber.ds.pg.gda.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754986AbXIQL3c (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 07:29:32 -0400
+In-Reply-To: <46EBCEF1.4030702@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Adrian Bunk <bunk@kernel.org>, Sam Ravnborg <sam@ravnborg.org>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Jeff Garzik <jeff@garzik.org>, Andi Kleen <andi@firstfloor.org>, Folkert van Heusden <folkert@vanheusden.com>, linux-kernel@vger.kernel.org
 
-On Wednesday 12 September 2007, Boaz Harrosh wrote:
+On Sat, 15 Sep 2007, Stefan Richter wrote:
+
+> >> +menu "Storage (core and SCSI commands)"
+> >>  
+> >>  config SCSI
+> >> -	tristate "SCSI device support"
+> >> +	tristate "Storage support (core and SCSI commands)"
+> >>  	depends on BLOCK
+> >>  	select SCSI_DMA if HAS_DMA
+> >>  	---help---
+> >> ...
+> > 
+> > What is "storage support"?
+> > SATA?
+> > PATA?
+> > USB mass storage?
+> > MMC?
+> > MTD?
 > 
->  - Convert ide-scsi to the new data accessors and cleanup
->    the !use_sg code paths.
-> 
->   Inspecting old code I can see places that still assume
->   scsi_cmnd->request_buffer is a linear char pointer. Though I
->   admit this assumption is hidden behind a flag:
->   test_bit(PC_TRANSFORM, &pc->flags).
+> What is "Networking"?  Ethernet?  Infiniband?  ...?
 
-Sigh... somebody forgot to update ide-scsi.c while making SCSI use
-only sg for REQ_TYPE_BLOCK_PC.
+ SCSI is a generic peripheral bus (recall the expansion of the acronym).  
+Even though probably the most common, storage is one of its applications 
+only (think scanners for an immediately obvious other one).  I find 
+describing CONFIG_SCSI as "storage support" misleading and inappropriate.
 
->   I have commented out the offending code and put a
->   WARN_ON(1) in it's place. So if there is missing functionality
+ Referring to your example it is like calling generic networking (i.e. 
+CONFIG_NET) "Ethernet support".
 
-in idescsi_transform_pc2():
-
-        if (drive->media == ide_cdrom || drive->media == ide_optical) {
-...
-		WARN_ON(1) + #if/#endif 0 should be here
-...
-	}
-
-rest of the changes look OK and you can add my ACK after fixing
-idescsi_transform_pc2()
-
->   it will complain but will not crash the kernel.
-
-sr is likely to complain due to scsi_mode_sense() usage :(
-
->   Maintainer of this driver please inspect if this functionality
->   is still needed, if not then please remove the commented code.
-> 
->   Thanks
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/ide-scsi.c |   53 ++++++++++++++++++++++++++++++----------------
->  1 files changed, 34 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-> index 1cc01ac..e3e7d65 100644
-> --- a/drivers/scsi/ide-scsi.c
-> +++ b/drivers/scsi/ide-scsi.c
-> @@ -175,7 +175,8 @@ static void idescsi_input_buffers (ide_drive_t *drive, idescsi_pc_t *pc, unsigne
->  	char *buf;
->  
->  	while (bcount) {
-> -		if (pc->sg - (struct scatterlist *) pc->scsi_cmd->request_buffer > pc->scsi_cmd->use_sg) {
-> +		if (pc->sg - scsi_sglist(pc->scsi_cmd) >
-> +		                                 scsi_sg_count(pc->scsi_cmd)) {
->  			printk (KERN_ERR "ide-scsi: scatter gather table too small, discarding data\n");
->  			idescsi_discard_data (drive, bcount);
->  			return;
-> @@ -210,7 +211,8 @@ static void idescsi_output_buffers (ide_drive_t *drive, idescsi_pc_t *pc, unsign
->  	char *buf;
->  
->  	while (bcount) {
-> -		if (pc->sg - (struct scatterlist *) pc->scsi_cmd->request_buffer > pc->scsi_cmd->use_sg) {
-> +		if (pc->sg - scsi_sglist(pc->scsi_cmd) >
-> +		                                 scsi_sg_count(pc->scsi_cmd)) {
->  			printk (KERN_ERR "ide-scsi: scatter gather table too small, padding with zeros\n");
->  			idescsi_output_zeros (drive, bcount);
->  			return;
-> @@ -260,6 +262,10 @@ static inline void idescsi_transform_pc1 (ide_drive_t *drive, idescsi_pc_t *pc)
->  			unsigned short new_len;
->  			if (!scsi_buf)
->  				return;
-> +			/* FIXME: see comment below at idescsi_transform_pc2 */
-> +			WARN_ON(1);
-> +
-> +#if 0
->  			if ((atapi_buf = kmalloc(pc->buffer_size + 4, GFP_ATOMIC)) == NULL)
->  				return;
->  			memset(atapi_buf, 0, pc->buffer_size + 4);
-> @@ -281,12 +287,28 @@ static inline void idescsi_transform_pc1 (ide_drive_t *drive, idescsi_pc_t *pc)
->  			pc->buffer = atapi_buf;
->  			pc->request_transfer += 4;
->  			pc->buffer_size += 4;
-> +#endif
->  		}
->  	}
->  }
->  
->  static inline void idescsi_transform_pc2 (ide_drive_t *drive, idescsi_pc_t *pc)
->  {
-> +	if (!test_bit(PC_TRANSFORM, &pc->flags))
-> +		return;
-> +
-> +	/*
-> +	 * FIXME: if code reached here then this driver is not
-> +	 * working for sure. If it is dead code then it can
-> +	 * surly be properly removed.
-> +	 *
-> +	 * Same is with above idescsi_transform_pc1() which
-> +	 * assumes pc->buffer must have something which surly
-> +	 * does not.
-> +	 */
-> +        WARN_ON(1);
-> +
-> +#if 0
->  	u8 *atapi_buf = pc->buffer;
->  	u8 *sc = pc->scsi_cmd->cmnd;
->  	u8 *scsi_buf = pc->scsi_cmd->request_buffer;
-> @@ -308,6 +330,7 @@ static inline void idescsi_transform_pc2 (ide_drive_t *drive, idescsi_pc_t *pc)
->  	}
->  	if (atapi_buf && atapi_buf != scsi_buf)
->  		kfree(atapi_buf);
-> +#endif
->  }
->  
->  static void hexdump(u8 *x, int len)
-> @@ -435,6 +458,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
->  	} else {
->  		pc->scsi_cmd->result = DID_OK << 16;
->  		idescsi_transform_pc2 (drive, pc);
-> +#if 0
->  		if (log) {
->  			printk ("ide-scsi: %s: suc %lu", drive->name, pc->scsi_cmd->serial_number);
->  			if (!test_bit(PC_WRITING, &pc->flags) && pc->actually_transferred && pc->actually_transferred <= 1024 && pc->buffer) {
-> @@ -443,6 +467,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
->  				hexdump(scsi_buf, min_t(unsigned, 16, pc->scsi_cmd->request_bufflen));
->  			} else printk("\n");
->  		}
-> +#endif
->  	}
->  	host = pc->scsi_cmd->device->host;
->  	spin_lock_irqsave(host->host_lock, flags);
-> @@ -637,19 +662,14 @@ static int idescsi_map_sg(ide_drive_t *drive, idescsi_pc_t *pc)
->  		return 1;
->  
->  	sg = hwif->sg_table;
-> -	scsi_sg = pc->scsi_cmd->request_buffer;
-> -	segments = pc->scsi_cmd->use_sg;
-> +	scsi_sg = scsi_sglist(pc->scsi_cmd);
-> +	segments = scsi_sg_count(pc->scsi_cmd);
->  
->  	if (segments > hwif->sg_max_nents)
->  		return 1;
->  
-> -	if (!segments) {
-> -		hwif->sg_nents = 1;
-> -		sg_init_one(sg, pc->scsi_cmd->request_buffer, pc->request_transfer);
-> -	} else {
-> -		hwif->sg_nents = segments;
-> -		memcpy(sg, scsi_sg, sizeof(*sg) * segments);
-> -	}
-> +	hwif->sg_nents = segments;
-> +	memcpy(sg, scsi_sg, sizeof(*sg) * segments);
->  
->  	return 0;
->  }
-> @@ -905,15 +925,10 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
->  	pc->flags = 0;
->  	pc->rq = rq;
->  	memcpy (pc->c, cmd->cmnd, cmd->cmd_len);
-> -	if (cmd->use_sg) {
-> -		pc->buffer = NULL;
-> -		pc->sg = cmd->request_buffer;
-> -	} else {
-> -		pc->buffer = cmd->request_buffer;
-> -		pc->sg = NULL;
-> -	}
-> +	pc->buffer = NULL;
-> +	pc->sg = scsi_sglist(cmd);
->  	pc->b_count = 0;
-> -	pc->request_transfer = pc->buffer_size = cmd->request_bufflen;
-> +	pc->request_transfer = pc->buffer_size = scsi_bufflen(cmd);
->  	pc->scsi_cmd = cmd;
->  	pc->done = done;
->  	pc->timeout = jiffies + cmd->timeout_per_command;
+  Maciej
