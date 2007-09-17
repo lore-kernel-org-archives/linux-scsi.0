@@ -1,50 +1,69 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg	cleanup
-Date: Mon, 17 Sep 2007 17:05:08 -0400
-Message-ID: <46EEEC04.1080609@garzik.org>
-References: <46E6F92D.2090409@panasas.com>	 <200709171246.15142.bzolnier@gmail.com>	 <1190037090.3386.3.camel@localhost.localdomain>	 <200709172205.36070.bzolnier@gmail.com>  <46EEEA40.40908@garzik.org> <1190062829.3386.49.camel@localhost.localdomain>
+From: Michael Reed <mdr@sgi.com>
+Subject: [PATCH 1/1] stale residual returned on write following BUSY retry
+Date: Mon, 17 Sep 2007 15:11:39 -0700
+Message-ID: <46EEFB9B.7050108@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------060704080004090006080902"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47208 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759969AbXIQVGc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Sep 2007 17:06:32 -0400
-In-Reply-To: <1190062829.3386.49.camel@localhost.localdomain>
+Received: from netops-testserver-4-out.sgi.com ([192.48.171.29]:35876 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760796AbXIQWKk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 18:10:40 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, osst@riede.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Jeremy Higdon <jeremy@sgi.com>, Kevan Rehm <kfr@sgi.com>, James Bottomley <James.Bottomley@SteelEye.com>
 
-James Bottomley wrote:
-> On Mon, 2007-09-17 at 16:57 -0400, Jeff Garzik wrote:
->> Bartlomiej Zolnierkiewicz wrote:
->>> On Monday 17 September 2007, James Bottomley wrote:
->>>> Realistically (and I hate myself for saying this) libata-pata does
->>>> provide a much better alternative for the ATAPI devices.  Is it just
->>>> time to recognise the inevitable and kill ide-scsi?
->>> Agreed, libata-pata is a much better version of ide-scsi. ;-)
->>>
->>> If there is general consensus about ide-scsi removal I think that we
->>> should start with disabling ide-scsi Kconfig entry in 2.6.24 to later
->>> remove the ide-scsi driver completely in 2.6.25.
->>
->> Perhaps it is strange to hear me say this, but...
->>
->> My experience with the IDE driver in the field is that ide-scsi sees a 
->> fair amount of use, as an intentional replacement for ide-cd and the 
->> other hand-written ide-$class ATAPI drivers.
->>
->> I would prefer that ide-scsi stays around as long as ide stays around.
-> 
-> Of course ... as long as we get to address you as Mr Maintainer ...
+This is a multi-part message in MIME format.
+--------------060704080004090006080902
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 
-I don't claim maintainer, I only claim there are quite a few _users_.
+A BUSY status returned on a write request results in a stale residual
+being returned when the write ultimately successfully completes.
 
-Which is IMO the far more relevant point.
+This can be reproduced as follows:
 
-	Jeff
+1) issue immediate mode rewind to scsi tape drive
+2) issue write request
+
+The tape drive returns busy.  The low level driver detects underrun and
+sets the residual into the scsi command.  The low level driver responds
+with (DID_OK << 16) | scsi_status.  scsi_status is 8, hence
+status_byte(result) == 4, i.e., BUSY.
+
+scsi_softirq_done() calls scsi_decide_disposition() which returns
+ADD_TO_MLQUEUE.  scsi_softirq_done() then calls scsi_queue_insert()
+which, on the way to resubmitting the request to the driver, calls
+scsi_init_cmd_errh().
+
+The attached patch modifies scsi_init_cmd_errh() to clear the resid
+field.  This prevents a "stale" residual from being returned when the
+scsi command finally completes without a BUSY status.
+
+This patch applies to 2.6.23-rc6-git7.
+
+Signed-off-by: Michael Reed <mdr@sgi.com>
 
 
 
+--------------060704080004090006080902
+Content-Type: text/x-patch;
+ name="residual.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="residual.patch"
+
+--- linux-2.6.23-rc6-git7.orig/drivers/scsi/scsi_lib.c	2007-09-17 14:02:03.000000000 -0700
++++ linux-2.6.23-rc6-git7/drivers/scsi/scsi_lib.c	2007-09-17 14:05:51.000000000 -0700
+@@ -443,6 +443,7 @@ EXPORT_SYMBOL_GPL(scsi_execute_async);
+ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ {
+ 	cmd->serial_number = 0;
++	cmd->resid = 0;
+ 	memset(cmd->sense_buffer, 0, sizeof cmd->sense_buffer);
+ 	if (cmd->cmd_len == 0)
+ 		cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
+
+--------------060704080004090006080902--
