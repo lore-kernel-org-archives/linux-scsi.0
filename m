@@ -1,69 +1,72 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: [PATCH 1/1] stale residual returned on write following BUSY retry
-Date: Mon, 17 Sep 2007 15:11:39 -0700
-Message-ID: <46EEFB9B.7050108@sgi.com>
+From: Satyam Sharma <satyam@infradead.org>
+Subject: [PATCH -mm][resend] mpt fusion: Shut up uninitialized variable
+ warnings
+Date: Tue, 18 Sep 2007 04:12:41 +0530 (IST)
+Message-ID: <alpine.LFD.0.999.0709180407480.8863@enigma.security.iitk.ac.in>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------060704080004090006080902"
+Content-Type: MULTIPART/MIXED; BOUNDARY="464262402-922654524-1190068964=:8863"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netops-testserver-4-out.sgi.com ([192.48.171.29]:35876 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1760796AbXIQWKk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 18:10:40 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:35141 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755478AbXIQWj4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Sep 2007 18:39:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Jeremy Higdon <jeremy@sgi.com>, Kevan Rehm <kfr@sgi.com>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Eric Moore <eric.moore@lsi.com>, James Bottomley <james.bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-This is a multi-part message in MIME format.
---------------060704080004090006080902
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-A BUSY status returned on a write request results in a stale residual
-being returned when the write ultimately successfully completes.
-
-This can be reproduced as follows:
-
-1) issue immediate mode rewind to scsi tape drive
-2) issue write request
-
-The tape drive returns busy.  The low level driver detects underrun and
-sets the residual into the scsi command.  The low level driver responds
-with (DID_OK << 16) | scsi_status.  scsi_status is 8, hence
-status_byte(result) == 4, i.e., BUSY.
-
-scsi_softirq_done() calls scsi_decide_disposition() which returns
-ADD_TO_MLQUEUE.  scsi_softirq_done() then calls scsi_queue_insert()
-which, on the way to resubmitting the request to the driver, calls
-scsi_init_cmd_errh().
-
-The attached patch modifies scsi_init_cmd_errh() to clear the resid
-field.  This prevents a "stale" residual from being returned when the
-scsi command finally completes without a BUSY status.
-
-This patch applies to 2.6.23-rc6-git7.
-
-Signed-off-by: Michael Reed <mdr@sgi.com>
+--464262402-922654524-1190068964=:8863
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
 
+drivers/message/fusion/mptctl.c: In function ‘mptctl_mpt_command’:
+drivers/message/fusion/mptctl.c:1764: warning: ‘bufIn.len’ may be used uninitialized in this function
+drivers/message/fusion/mptctl.c:1765: warning: ‘bufOut.len’ may be used uninitialized in this function
 
---------------060704080004090006080902
-Content-Type: text/x-patch;
- name="residual.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="residual.patch"
+come because gcc gets confused by some "goto" statements in above function.
+The warnings have been verified to be bogus, however, the function does
+initialize these later (after the offending goto's) in the function anyway.
+So let's move those initializations to top of function, thereby also shutting
+up these warnings.
 
---- linux-2.6.23-rc6-git7.orig/drivers/scsi/scsi_lib.c	2007-09-17 14:02:03.000000000 -0700
-+++ linux-2.6.23-rc6-git7/drivers/scsi/scsi_lib.c	2007-09-17 14:05:51.000000000 -0700
-@@ -443,6 +443,7 @@ EXPORT_SYMBOL_GPL(scsi_execute_async);
- static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
- {
- 	cmd->serial_number = 0;
-+	cmd->resid = 0;
- 	memset(cmd->sense_buffer, 0, sizeof cmd->sense_buffer);
- 	if (cmd->cmd_len == 0)
- 		cmd->cmd_len = COMMAND_SIZE(cmd->cmnd[0]);
+Signed-off-by: Satyam Sharma <satyam@infradead.org>
+Acked-by: Eric Moore <eric.moore@lsi.com>
 
---------------060704080004090006080902--
+---
+
+[ Had not copied Andrew and linux-scsi@ last time,
+  don't yet see this in any of the SCSI git trees. ]
+
+ drivers/message/fusion/mptctl.c |    8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+--- linux-2.6.23-rc4-mm1/drivers/message/fusion/mptctl.c~fix	2007-09-02 21:51:14.000000000 +0530
++++ linux-2.6.23-rc4-mm1/drivers/message/fusion/mptctl.c	2007-09-02 21:54:25.000000000 +0530
+@@ -1773,7 +1773,10 @@ mptctl_do_mpt_command (struct mpt_ioctl_
+ 	ulong 		timeout;
+ 	struct scsi_device *sdev;
+ 
++	/* bufIn and bufOut are used for user to kernel space transfers
++	 */
+ 	bufIn.kptr = bufOut.kptr = NULL;
++	bufIn.len = bufOut.len = 0;
+ 
+ 	if (((iocnum = mpt_verify_adapter(karg.hdr.iocnum, &ioc)) < 0) ||
+ 	    (ioc == NULL)) {
+@@ -2107,11 +2110,6 @@ mptctl_do_mpt_command (struct mpt_ioctl_
+ 	psge = (char *) (((int *) mf) + karg.dataSgeOffset);
+ 	flagsLength = 0;
+ 
+-	/* bufIn and bufOut are used for user to kernel space transfers
+-	 */
+-	bufIn.kptr = bufOut.kptr = NULL;
+-	bufIn.len = bufOut.len = 0;
+-
+ 	if (karg.dataOutSize > 0)
+ 		sgSize ++;
+ 
+--464262402-922654524-1190068964=:8863--
