@@ -1,108 +1,56 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH ver2 2/2] libata-scsi: convert to use the data buffer accessors
-Date: Tue, 18 Sep 2007 17:48:50 +0200
-Message-ID: <46EFF362.50308@panasas.com>
-References: <46E6F92D.2090409@panasas.com> <46E72B8D.1080508@panasas.com> <46E72E4F.9020508@garzik.org>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: mptsas related problem [2.6.22], LSI SAS1064ET PCI-E
+Date: Tue, 18 Sep 2007 10:06:29 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D709A718B@NAMAIL4.ad.lsil.com>
+References: <200709101955.57016.arekm@maven.pl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa3.bezeqint.net ([192.115.104.17]:40446 "EHLO sa3.bezeqint.net"
+Received: from mail0.lsil.com ([147.145.40.20]:38911 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757478AbXIRPtA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Sep 2007 11:49:00 -0400
-In-Reply-To: <46E72E4F.9020508@garzik.org>
+	id S1755908AbXIRQGy convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Sep 2007 12:06:54 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <200709101955.57016.arekm@maven.pl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
+To: Arkadiusz Miskiewicz <arekm@maven.pl>, linux-scsi@vger.kernel.org
+Cc: "Prakash, Sathya" <Sathya.Prakash@lsi.com>
 
+On  Monday, September 10, 2007 11:56 AM, Arkadiusz Miskiewicz wrote:
 
-  simple search-and-replace of direct scsi_cmnd access to
-  use the data buffer accessors.
+> 
+> SR2520SAXS platform (S5000VSA mainboard in 2U SR2520 chassis) with
+> 
+> 08:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1064ET 
+> PCI-Express Fusion-MPT SAS (rev 02)
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/ata/libata-scsi.c |   18 +++++++++---------
- 1 files changed, 9 insertions(+), 9 deletions(-)
+You have a 1064E B1 part. How much system memory do you have?
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 6145a64..d23a181 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -450,8 +450,8 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
- 		qc->scsicmd = cmd;
- 		qc->scsidone = done;
- 
--		qc->__sg = (struct scatterlist *) cmd->request_buffer;
--		qc->n_elem = cmd->use_sg;
-+		qc->__sg = scsi_sglist(cmd);
-+		qc->n_elem = scsi_sg_count(cmd);
- 	} else {
- 		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
- 		done(cmd);
-@@ -1493,13 +1493,13 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	/* data is present; dma-map it */
- 	if (cmd->sc_data_direction == DMA_FROM_DEVICE ||
- 	    cmd->sc_data_direction == DMA_TO_DEVICE) {
--		if (unlikely(cmd->request_bufflen < 1)) {
-+		if (unlikely(scsi_bufflen(cmd) < 1)) {
- 			ata_dev_printk(dev, KERN_WARNING,
- 				       "WARNING: zero len r/w req\n");
- 			goto err_did;
- 		}
- 
--		ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
-+		ata_sg_init(qc, scsi_sglist(cmd), scsi_sg_count(cmd));
- 
- 		qc->dma_dir = cmd->sc_data_direction;
- 	}
-@@ -1553,7 +1553,7 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
- 	u8 *buf;
- 	unsigned int buflen;
- 
--	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
-+	struct scatterlist *sg = scsi_sglist(cmd);
- 
- 	if (sg) {
- 		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
-@@ -1580,7 +1580,7 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
- 
- static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
- {
--	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
-+	struct scatterlist *sg = scsi_sglist(cmd);
- 	if (sg)
- 		kunmap_atomic(buf - sg->offset, KM_IRQ0);
- }
-@@ -2383,7 +2383,7 @@ static unsigned int atapi_xlat(struct ata_queued_cmd *qc)
- 	}
- 
- 	qc->tf.command = ATA_CMD_PACKET;
--	qc->nbytes = scmd->request_bufflen;
-+	qc->nbytes = scsi_bufflen(scmd);
- 
- 	/* check whether ATAPI DMA is safe */
- 	if (!using_pio && ata_check_atapi_dma(qc))
-@@ -2618,7 +2618,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	case ATA_CMD_WRITE_LONG_ONCE:
- 		if (tf->protocol != ATA_PROT_PIO || tf->nsect != 1)
- 			goto invalid_fld;
--		qc->sect_size = scmd->request_bufflen;
-+		qc->sect_size = scsi_bufflen(scmd);
- 	}
- 
- 	/*
-@@ -2648,7 +2648,7 @@ static unsigned int ata_scsi_pass_thru(struct ata_queued_cmd *qc)
- 	 * TODO: find out if we need to do more here to
- 	 *       cover scatter/gather case.
- 	 */
--	qc->nbytes = scmd->request_bufflen;
-+	qc->nbytes = scsi_bufflen(scmd);
- 
- 	/* request result TF */
- 	qc->flags |= ATA_QCFLAG_RESULT_TF;
--- 
-1.5.3.1
+> ps. If someone knows how FwRev=01100000h relates to firmware 
+> version at
+> http://downloadcenter.intel.com/filter_results.aspx?strTypes=a
+> ll&ProductID=2487&OSFullName=OS+Independent&lang=eng&strOSs=38
+> &submit=Go%21
+> then that's also interesting. Simply 01 10 ...== 1.16.0.0 ?
 
+1.16 firmware is Phase 7 firmware, which is over a year old.  Perhaps
+you could attempt upgrading by obtaining it from
+http://www.lsi.com/support/index.html or sending a request to
+support@lsi.com.   Phase 11 just released.
 
+> sd 0:0:2:0: [sdc] CDB: cdb[0]=0x2a: 2a 00 0a ad 28 de 00 00 10 00
+> mptbase: ioc0: LogInfo(0x31120403): Originator={PL}, Code={Abort}, 
+> SubCode(0x0403)
+
+0x403 means FRAME_XFER_ERROR, which says your command packet didn't make
+it.
+
+> mptbase: ioc0: LogInfo(0x31111000): Originator={PL}, Code={Reset}, 
+> SubCode(0x1000)
+
+0x1000 means SATA_INIT_TIMEOUT
+
+Can you obtain a SAS trace?
