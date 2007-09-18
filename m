@@ -1,74 +1,105 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 07/24] arm: scsi convert to accessors and !use_sg cleanup
-Date: Tue, 18 Sep 2007 17:04:31 +0200
-Message-ID: <46EFE8FF.3010907@panasas.com>
-References: <46E6F92D.2090409@panasas.com> <46E72AE7.4030507@panasas.com> <20070912074205.GB2653@flint.arm.linux.org.uk>
+Subject: [PATCH ver2 1/2] libata-scsi: Remove !use_sg code paths
+Date: Tue, 18 Sep 2007 17:46:12 +0200
+Message-ID: <46EFF2C4.8050204@panasas.com>
+References: <46E6F92D.2090409@panasas.com> <46E72B8D.1080508@panasas.com> <46E72E4F.9020508@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa7.bezeqint.net ([192.115.104.21]:58230 "EHLO sa7.bezeqint.net"
+Received: from sa3.bezeqint.net ([192.115.104.17]:39817 "EHLO sa3.bezeqint.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757888AbXIRPEj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 18 Sep 2007 11:04:39 -0400
-In-Reply-To: <20070912074205.GB2653@flint.arm.linux.org.uk>
+	id S1759043AbXIRPqX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 18 Sep 2007 11:46:23 -0400
+In-Reply-To: <46E72E4F.9020508@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Russell King <rmk@arm.linux.org.uk>, James Bottomley <James.Bottomley@SteelEye.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
+To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
-On Wed, Sep 12 2007 at 10:42 +0300, Russell King <rmk@arm.linux.org.uk> wrote:
-> On Wed, Sep 12, 2007 at 02:55:19AM +0300, Boaz Harrosh wrote:
->> -		if (SCpnt->request_bufflen != len)
->> +		if (scsi_bufflen(SCpnt) != len) {
->> +			WARN_ON(1);
-> 
-> NAK.  The call trace generally doesn't provide any additional information
-> on the cause of the error.
-> 
-In my opinion this can not happen any more. If it does, I want to see that
-it is not through the regular scsi-ml .queuecommand mechanism.
-But if you insist than sure I will remove it.
 
->>  			printk(KERN_WARNING "scsi%d.%c: bad request buffer "
->>  			       "length %d, should be %ld\n", SCpnt->device->host->host_no,
->> -			       '0' + SCpnt->device->id, SCpnt->request_bufflen, len);
->> -		SCpnt->request_bufflen = len;
->> +			       '0' + SCpnt->device->id, scsi_bufflen(SCpnt), len);
->> +		}
->>  #endif
->>  	} else {
->> -		SCpnt->SCp.ptr = (unsigned char *)SCpnt->request_buffer;
->> -		SCpnt->SCp.this_residual = SCpnt->request_bufflen;
->> -		SCpnt->SCp.phase = SCpnt->request_bufflen;
->> -	}
->> -
->> -	/*
->> -	 * If the upper SCSI layers pass a buffer, but zero length,
->> -	 * we aren't interested in the buffer pointer.
->> -	 */
->> -	if (SCpnt->SCp.this_residual == 0 && SCpnt->SCp.ptr) {
->> -#if 0 //def BELT_AND_BRACES
->> -		printk(KERN_WARNING "scsi%d.%c: zero length buffer passed for "
->> -		       "command ", SCpnt->host->host_no, '0' + SCpnt->target);
->> -		__scsi_print_command(SCpnt->cmnd);
->> -#endif
->>  		SCpnt->SCp.ptr = NULL;
->> +		SCpnt->SCp.this_residual = 0;
->> +		SCpnt->SCp.phase = 0;
->>  	}
->>  }
-> 
-> Also NAK.  This was added due to bad behaviour of the SCSI layer and
-> was found to be necessary.
-> 
-No! This check is no longer Relevant. The master if() is on bufflen() now,
-and only than do we ever set SCp.ptr. The else will always set both to Zero.
-(Which is what you want)
+     This is a minimal patch needed to remove use of !use_sg
+     but it is not a complete clean up of the !use_sg paths.
+     Libata-core still has the qc->flags & ATA_QCFLAG_SG
+     and !qc->n_elem code paths. Perhaps an ata maintainer
+     would have a go at it.
 
-In any way this check is done in scsi-ml, and since 2.6.18 only scsi-ml
-can allocate and issue commands. All other sources of commands where removed.
-All upper layers issue requests now.
+     - TODO: further cleanup of qc->flags & ATA_QCFLAG_SG
+       and !qc->n_elem code paths in libata-core
+     - TODO: Use scsi_dma_{map,unmap} where applicable.
+---
+ drivers/ata/libata-scsi.c |   31 +++++++++----------------------
+ 1 files changed, 9 insertions(+), 22 deletions(-)
 
-Boaz
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index e836476..6145a64 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -450,13 +450,8 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
+ 		qc->scsicmd = cmd;
+ 		qc->scsidone = done;
+ 
+-		if (cmd->use_sg) {
+-			qc->__sg = (struct scatterlist *) cmd->request_buffer;
+-			qc->n_elem = cmd->use_sg;
+-		} else if (cmd->request_bufflen) {
+-			qc->__sg = &qc->sgent;
+-			qc->n_elem = 1;
+-		}
++		qc->__sg = (struct scatterlist *) cmd->request_buffer;
++		qc->n_elem = cmd->use_sg;
+ 	} else {
+ 		cmd->result = (DID_OK << 16) | (QUEUE_FULL << 1);
+ 		done(cmd);
+@@ -1504,11 +1499,7 @@ static int ata_scsi_translate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 			goto err_did;
+ 		}
+ 
+-		if (cmd->use_sg)
+-			ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
+-		else
+-			ata_sg_init_one(qc, cmd->request_buffer,
+-					cmd->request_bufflen);
++		ata_sg_init(qc, cmd->request_buffer, cmd->use_sg);
+ 
+ 		qc->dma_dir = cmd->sc_data_direction;
+ 	}
+@@ -1562,15 +1553,14 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
+ 	u8 *buf;
+ 	unsigned int buflen;
+ 
+-	if (cmd->use_sg) {
+-		struct scatterlist *sg;
++	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
+ 
+-		sg = (struct scatterlist *) cmd->request_buffer;
++	if (sg) {
+ 		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
+ 		buflen = sg->length;
+ 	} else {
+-		buf = cmd->request_buffer;
+-		buflen = cmd->request_bufflen;
++		buf = NULL;
++		buflen = 0;
+ 	}
+ 
+ 	*buf_out = buf;
+@@ -1590,12 +1580,9 @@ static unsigned int ata_scsi_rbuf_get(struct scsi_cmnd *cmd, u8 **buf_out)
+ 
+ static inline void ata_scsi_rbuf_put(struct scsi_cmnd *cmd, u8 *buf)
+ {
+-	if (cmd->use_sg) {
+-		struct scatterlist *sg;
+-
+-		sg = (struct scatterlist *) cmd->request_buffer;
++	struct scatterlist *sg = (struct scatterlist *) cmd->request_buffer;
++	if (sg)
+ 		kunmap_atomic(buf - sg->offset, KM_IRQ0);
+-	}
+ }
+ 
+ /**
+-- 
+1.5.3.1
+
 
