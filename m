@@ -1,78 +1,93 @@
-From: Arkadiusz Miskiewicz <arekm@maven.pl>
-Subject: Re: mptsas related problem [2.6.22], LSI SAS1064ET PCI-E
-Date: Tue, 18 Sep 2007 18:15:35 +0200
-Message-ID: <200709181815.35878.arekm@maven.pl>
-References: <664A4EBB07F29743873A87CF62C26D709A718B@NAMAIL4.ad.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-2
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+From: Martijn Prummel <martijn@databoss.nl>
+Subject: Re: [Bugme-new] [Bug 9018] New: Kernel bug in aic94xx driver	shipped with kernel 2.6.21.7
+Date: Tue, 18 Sep 2007 22:14:22 +0200
+Message-ID: <019BB005-14D0-4238-9664-072F2F730DBE@databoss.nl>
+References: <bug-9018-10286@http.bugzilla.kernel.org/> <20070914135600.67f798e3.akpm@linux-foundation.org> <1189804923.3343.28.camel@localhost.localdomain>
+Mime-Version: 1.0 (Apple Message framework v752.3)
+Content-Type: text/plain; charset=US-ASCII; delsp=yes; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.carme.maven.pl ([193.239.45.138]:17556 "EHLO
-	main.carme.maven.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756105AbXIRQPo convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Sep 2007 12:15:44 -0400
-In-Reply-To: <664A4EBB07F29743873A87CF62C26D709A718B@NAMAIL4.ad.lsil.com>
-Content-Disposition: inline
+Received: from viefep18-int.chello.at ([213.46.255.22]:60666 "EHLO
+	viefep19-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757527AbXIRUOP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Sep 2007 16:14:15 -0400
+In-Reply-To: <1189804923.3343.28.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Moore, Eric" <Eric.Moore@lsi.com>
-Cc: linux-scsi@vger.kernel.org, "Prakash, Sathya" <Sathya.Prakash@lsi.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-new@lists.osdl.org, "Darrick J. Wong" <djwong@us.ibm.com>
 
-On Tuesday 18 of September 2007, Moore, Eric wrote:
-> On  Monday, September 10, 2007 11:56 AM, Arkadiusz Miskiewicz wrote:
-> > SR2520SAXS platform (S5000VSA mainboard in 2U SR2520 chassis) with
-> >
-> > 08:00.0 SCSI storage controller: LSI Logic / Symbios Logic SAS1064E=
-T
-> > PCI-Express Fusion-MPT SAS (rev 02)
+
+I applied the patch and it's rebuilding now.. It used to crash during  
+a rebuild sometimes, aswell. But this seems to have been gone already.
+I'll stress it for some time and will let you all know whether it  
+crashes again.
+
+Thanks a lot for your help thusfar!
+
+Best regards,
+
+-- 
+Martijn Prummel
+
+On Sep 14, 2007, at 11:22 PM, James Bottomley wrote:
+
+> On Fri, 2007-09-14 at 13:56 -0700, Andrew Morton wrote:
+>> On Fri, 14 Sep 2007 07:11:54 -0700 (PDT)
+>> bugme-daemon@bugzilla.kernel.org wrote:
+>>
+>>> http://bugzilla.kernel.org/show_bug.cgi?id=9018
+>>>
+>>>            Summary: Kernel bug in aic94xx driver shipped with kernel
+>>>                     2.6.21.7
+>>>            Product: Drivers
+>>>            Version: 2.5
+>>>      KernelVersion: 2.6.21.7
+>>>           Platform: All
+>>>         OS/Version: Linux
+>>>               Tree: Mainline
+>>>             Status: NEW
+>>>           Severity: normal
+>>>           Priority: P1
+>>>          Component: Other
+>>>         AssignedTo: drivers_other@kernel-bugs.osdl.org
+>>>         ReportedBy: martijn@databoss.nl
+>>>
+>>>
+>>> While rebuilding a MD raid5, every time I try to rebuild:
+>>>
+>>> -- START DUMP --
+>>> RAID5 conf printout:
+>>>  --- rd:3 wd:2
+>>>  disk 0, o:1, dev:sdb1
+>>>  disk 1, o:1, dev:sdc1
+>>>  disk 2, o:1, dev:sdd1
+>>> md: recovery of RAID array md0
+>>> md: minimum _guaranteed_  speed: 1000 KB/sec/disk.
+>>> md: using maximum available idle IO bandwidth (but not more than  
+>>> 200000 KB/sec)
+>>> for recovery.
+>>> md: using 128k window, over a total of 71681920 blocks.
+>>> ------------[ cut here ]------------
+>>> kernel BUG at drivers/scsi/aic94xx/aic94xx_hwi.h:354!
+>>
+>> whee!  That's BUG_ON(!list_empty(&ascb->list));
 >
-> You have a 1064E B1 part. How much system memory do you have?
-
-4GB on first and 1Gb on second.
-
-> > ps. If someone knows how FwRev=3D01100000h relates to firmware
-> > version at
-> > http://downloadcenter.intel.com/filter_results.aspx?strTypes=3Da
-> > ll&ProductID=3D2487&OSFullName=3DOS+Independent&lang=3Deng&strOSs=3D=
-38
-> > &submit=3DGo%21
-> > then that's also interesting. Simply 01 10 ...=3D=3D 1.16.0.0 ?
+> Yes; it means the task was still in use when we tried to free it.  I
+> surmise that this is the tascb not the ascb in asd_abort_task(). What
+> this seems to indicate is some sort of race between the abort  
+> completing
+> the task and the owning entity taking it off the sequencer list.
 >
-> 1.16 firmware is Phase 7 firmware, which is over a year old.  Perhaps
-> you could attempt upgrading by obtaining it from
-> http://www.lsi.com/support/index.html or sending a request to
-> support@lsi.com.   Phase 11 just released.
-
-The question is: is it safe to use lsi.com firmware for Intel SR2520SAX=
-S=20
-platform where SAS1064ET resides on backplane (afaik) ? (There is no ne=
-w=20
-firmware on intel website).
-
-> > sd 0:0:2:0: [sdc] CDB: cdb[0]=3D0x2a: 2a 00 0a ad 28 de 00 00 10 00
-> > mptbase: ioc0: LogInfo(0x31120403): Originator=3D{PL}, Code=3D{Abor=
-t},
-> > SubCode(0x0403)
+> I don't understand this piece of the driver enough yet to fix a more
+> definite cause.
 >
-> 0x403 means FRAME_XFER_ERROR, which says your command packet didn't m=
-ake
-> it.
+>> yet anoher scsi driver with no entry in MAINTAINERS.  Darrick, maybe?
 >
-> > mptbase: ioc0: LogInfo(0x31111000): Originator=3D{PL}, Code=3D{Rese=
-t},
-> > SubCode(0x1000)
+> Gilbert Wu should be taking over eventually, but for now it's a bit
+> unmaintained.
 >
-> 0x1000 means SATA_INIT_TIMEOUT
+> James
 >
-> Can you obtain a SAS trace?
+>
 
-Probably, just tell me how to get sas trace.
-
---=20
-Arkadiusz Mi=B6kiewicz        PLD/Linux Team
-arekm / maven.pl            http://ftp.pld-linux.org/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
