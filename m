@@ -1,37 +1,47 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: [PATCH] MAINTAINERS: mark ide-scsi as Orphan
-Date: Wed, 19 Sep 2007 22:08:56 +0200
-Message-ID: <200709192208.57023.bzolnier@gmail.com>
+From: Johannes Dickgreber <tanzy@gmx.de>
+Subject: [PATCH] qla1280: uses wrong failure path after failed pci_set_dma_mask
+Date: Thu, 20 Sep 2007 01:07:57 +0200
+Message-ID: <46F1ABCD.8050102@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.gmx.net ([213.165.64.20]:48850 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1754878AbXISXG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Sep 2007 19:06:28 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Hi
 
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+I think there will be a wrong goto target after a failed
+pci_set_dma_mask.
+
+Please Check.
+
+Signed-off-by: Johannes Dickgreber tanzy@gmx.de
 ---
- MAINTAINERS |    5 +++++
- 1 file changed, 5 insertions(+)
+--- qla1280.c.orig	2007-09-19 23:32:33 +0200
++++ qla1280.c	2007-09-19 23:58:46 +0200
+@@ -4298,7 +4298,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
+ 			printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 			       "suitable DMA mask - aborting\n", ha->host_no);
+ 			error = -ENODEV;
+-			goto error_free_irq;
++			goto error_put_host;
+ 		}
+ 	} else
+ 		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
+@@ -4308,7 +4308,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
+ 		printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 		       "suitable DMA mask - aborting\n", ha->host_no);
+ 		error = -ENODEV;
+-		goto error_free_irq;
++		goto error_put_host;
+ 	}
+ #endif
 
-Index: b/MAINTAINERS
-===================================================================
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -1889,6 +1889,11 @@ M:	Gadi Oxman <gadio@netvision.net.il>
- L:	linux-kernel@vger.kernel.org
- S:	Maintained
- 
-+IDE-SCSI DRIVER
-+L:	linux-ide@vger.kernel.org
-+L:	linux-scsi@vger.kernel.org
-+S:	Orphan
-+
- IEEE 1394 SUBSYSTEM
- P:	Ben Collins
- M:	ben.collins@ubuntu.com
+
+
