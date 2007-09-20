@@ -1,51 +1,36 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] mptbase: Reset ioc initiator during PCI resume
-Date: Thu, 20 Sep 2007 14:10:15 -0700
-Message-ID: <20070920211014.GA24047@tree.beaverton.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH ver2 1/2] libata-scsi: Remove !use_sg code paths
+Date: Thu, 20 Sep 2007 17:12:13 -0400
+Message-ID: <46F2E22D.9030404@garzik.org>
+References: <46E6F92D.2090409@panasas.com> <46E72B8D.1080508@panasas.com> <46E72E4F.9020508@garzik.org> <46EFF2C4.8050204@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:57594 "EHLO e5.ny.us.ibm.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:59525 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751159AbXITVKK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2007 17:10:10 -0400
-Content-Disposition: inline
+	id S1750857AbXITVMz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2007 17:12:55 -0400
+In-Reply-To: <46EFF2C4.8050204@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, mpt_linux_developer@lsi.com, Eric.Moore@lsi.com, support@lsi.com
-Cc: linux-kernel@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
-It appears that the LSI SAS 1064E chip needs to be reset after a
-suspend/resume cycle before the driver attempts further communications with
-the chip.  Without this patch, resuming the chip results in this error
-message being printed repeatedly and no more disk I/O.
+Boaz Harrosh wrote:
+>      This is a minimal patch needed to remove use of !use_sg
+>      but it is not a complete clean up of the !use_sg paths.
+>      Libata-core still has the qc->flags & ATA_QCFLAG_SG
+>      and !qc->n_elem code paths. Perhaps an ata maintainer
+>      would have a go at it.
+> 
+>      - TODO: further cleanup of qc->flags & ATA_QCFLAG_SG
+>        and !qc->n_elem code paths in libata-core
+>      - TODO: Use scsi_dma_{map,unmap} where applicable.
+> ---
+>  drivers/ata/libata-scsi.c |   31 +++++++++----------------------
+>  1 files changed, 9 insertions(+), 22 deletions(-)
 
-mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
+applied 1-2
 
-So far it seems to fix suspend/resume on all the MPT Fusion cards I have
-(SAS and U320 SCSI) but since I don't know the internals of that chip I
-can't say for sure if this is a proper fix.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
-
- drivers/message/fusion/mptbase.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 414c109..97895bd 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1772,6 +1772,12 @@ mpt_resume(struct pci_dev *pdev)
- 		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
- 		CHIPREG_READ32(&ioc->chip->Doorbell));
- 
-+	/* put ioc into READY_STATE */
-+	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-+		printk(MYIOC_s_ERR_FMT
-+		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
-+	}
-+
- 	/* bring ioc to operational state */
- 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
- 	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
