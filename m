@@ -1,156 +1,579 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 12/19] qla2xxx: Retrieve max-NPIV support capabilities from FW.
-Date: Thu, 20 Sep 2007 14:07:43 -0700
-Message-ID: <1190322470-15543-12-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 14/19] qla2xxx: Use shost_priv().
+Date: Thu, 20 Sep 2007 14:07:45 -0700
+Message-ID: <1190322470-15543-14-git-send-email-andrew.vasquez@qlogic.com>
 References: <20070920210422.GE8456@plap3.qlogic.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:11180 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751939AbXITVIA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2007 17:08:00 -0400
+	with ESMTP id S1751987AbXITVIE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2007 17:08:04 -0400
 In-Reply-To: <20070920210422.GE8456@plap3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-From: Seokmann Ju <seokmann.ju@qlogic.com>
+Drop usage of legacy to_qla_host() macro.
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |    2 +-
- drivers/scsi/qla2xxx/qla_def.h  |    2 +-
- drivers/scsi/qla2xxx/qla_gbl.h  |    4 ++--
- drivers/scsi/qla2xxx/qla_init.c |   16 +++++++++++-----
- drivers/scsi/qla2xxx/qla_mbx.c  |   11 +++++++----
- 5 files changed, 22 insertions(+), 13 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |   88 +++++++++++++++++++-------------------
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 +-
+ drivers/scsi/qla2xxx/qla_def.h  |    2 -
+ drivers/scsi/qla2xxx/qla_mid.c  |    6 +-
+ drivers/scsi/qla2xxx/qla_os.c   |   20 ++++----
+ 5 files changed, 58 insertions(+), 60 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 445d583..c90dc59 100644
+index c90dc59..05fa779 100644
 --- a/drivers/scsi/qla2xxx/qla_attr.c
 +++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -1250,6 +1250,6 @@ qla2x00_init_host_attr(scsi_qla_host_t *ha)
- 	fc_host_node_name(ha->host) = wwn_to_u64(ha->node_name);
- 	fc_host_port_name(ha->host) = wwn_to_u64(ha->port_name);
- 	fc_host_supported_classes(ha->host) = FC_COS_CLASS3;
--	fc_host_max_npiv_vports(ha->host) = MAX_NUM_VPORT_FABRIC;
-+	fc_host_max_npiv_vports(ha->host) = ha->max_npiv_vports;;
- 	fc_host_npiv_vports_inuse(ha->host) = ha->cur_vport_count;
+@@ -18,7 +18,7 @@ qla2x00_sysfs_read_fw_dump(struct kobject *kobj,
+ 			   struct bin_attribute *bin_attr,
+ 			   char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	char *rbuf = (char *)ha->fw_dump;
+ 
+@@ -39,7 +39,7 @@ qla2x00_sysfs_write_fw_dump(struct kobject *kobj,
+ 			    struct bin_attribute *bin_attr,
+ 			    char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	int reading;
+ 
+@@ -89,7 +89,7 @@ qla2x00_sysfs_read_nvram(struct kobject *kobj,
+ 			 struct bin_attribute *bin_attr,
+ 			 char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	int		size = ha->nvram_size;
+ 	char		*nvram_cache = ha->nvram;
+@@ -112,7 +112,7 @@ qla2x00_sysfs_write_nvram(struct kobject *kobj,
+ 			  struct bin_attribute *bin_attr,
+ 			  char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	unsigned long	flags;
+ 	uint16_t	cnt;
+@@ -170,7 +170,7 @@ qla2x00_sysfs_read_optrom(struct kobject *kobj,
+ 			  struct bin_attribute *bin_attr,
+ 			  char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 
+ 	if (ha->optrom_state != QLA_SREADING)
+@@ -190,7 +190,7 @@ qla2x00_sysfs_write_optrom(struct kobject *kobj,
+ 			   struct bin_attribute *bin_attr,
+ 			   char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 
+ 	if (ha->optrom_state != QLA_SWRITING)
+@@ -220,7 +220,7 @@ qla2x00_sysfs_write_optrom_ctl(struct kobject *kobj,
+ 			       struct bin_attribute *bin_attr,
+ 			       char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	uint32_t start = 0;
+ 	uint32_t size = ha->optrom_size;
+@@ -372,7 +372,7 @@ qla2x00_sysfs_read_vpd(struct kobject *kobj,
+ 		       struct bin_attribute *bin_attr,
+ 		       char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	int           size = ha->vpd_size;
+ 	char          *vpd_cache = ha->vpd;
+@@ -395,7 +395,7 @@ qla2x00_sysfs_write_vpd(struct kobject *kobj,
+ 			struct bin_attribute *bin_attr,
+ 			char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	unsigned long flags;
+ 
+@@ -426,7 +426,7 @@ qla2x00_sysfs_read_sfp(struct kobject *kobj,
+ 		       struct bin_attribute *bin_attr,
+ 		       char *buf, loff_t off, size_t count)
+ {
+-	struct scsi_qla_host *ha = to_qla_host(dev_to_shost(container_of(kobj,
++	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
+ 	    struct device, kobj)));
+ 	uint16_t iter, addr, offset;
+ 	int rval;
+@@ -531,7 +531,7 @@ qla2x00_drvr_version_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_fw_version_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	char fw_str[30];
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%s\n",
+@@ -541,7 +541,7 @@ qla2x00_fw_version_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_serial_num_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	uint32_t sn;
+ 
+ 	sn = ((ha->serial0 & 0x1f) << 16) | (ha->serial2 << 8) | ha->serial1;
+@@ -552,14 +552,14 @@ qla2x00_serial_num_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_isp_name_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	return snprintf(buf, PAGE_SIZE, "ISP%04X\n", ha->pdev->device);
  }
+ 
+ static ssize_t
+ qla2x00_isp_id_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	return snprintf(buf, PAGE_SIZE, "%04x %04x %04x %04x\n",
+ 	    ha->product_id[0], ha->product_id[1], ha->product_id[2],
+ 	    ha->product_id[3]);
+@@ -568,14 +568,14 @@ qla2x00_isp_id_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_model_name_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	return snprintf(buf, PAGE_SIZE, "%s\n", ha->model_number);
+ }
+ 
+ static ssize_t
+ qla2x00_model_desc_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	return snprintf(buf, PAGE_SIZE, "%s\n",
+ 	    ha->model_desc ? ha->model_desc: "");
+ }
+@@ -583,7 +583,7 @@ qla2x00_model_desc_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_pci_info_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	char pci_info[30];
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%s\n",
+@@ -593,7 +593,7 @@ qla2x00_pci_info_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_state_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	int len = 0;
+ 
+ 	if (atomic_read(&ha->loop_state) == LOOP_DOWN ||
+@@ -631,7 +631,7 @@ qla2x00_state_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_zio_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	int len = 0;
+ 
+ 	switch (ha->zio_mode) {
+@@ -648,7 +648,7 @@ qla2x00_zio_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_zio_store(struct class_device *cdev, const char *buf, size_t count)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	int val = 0;
+ 	uint16_t zio_mode;
+ 
+@@ -674,7 +674,7 @@ qla2x00_zio_store(struct class_device *cdev, const char *buf, size_t count)
+ static ssize_t
+ qla2x00_zio_timer_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%d us\n", ha->zio_timer * 100);
+ }
+@@ -683,7 +683,7 @@ static ssize_t
+ qla2x00_zio_timer_store(struct class_device *cdev, const char *buf,
+     size_t count)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	int val = 0;
+ 	uint16_t zio_timer;
+ 
+@@ -701,7 +701,7 @@ qla2x00_zio_timer_store(struct class_device *cdev, const char *buf,
+ static ssize_t
+ qla2x00_beacon_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	int len = 0;
+ 
+ 	if (ha->beacon_blink_led)
+@@ -715,7 +715,7 @@ static ssize_t
+ qla2x00_beacon_store(struct class_device *cdev, const char *buf,
+     size_t count)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 	int val = 0;
+ 	int rval;
+ 
+@@ -745,7 +745,7 @@ qla2x00_beacon_store(struct class_device *cdev, const char *buf,
+ static ssize_t
+ qla2x00_optrom_bios_version_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->bios_revision[1],
+ 	    ha->bios_revision[0]);
+@@ -754,7 +754,7 @@ qla2x00_optrom_bios_version_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_optrom_efi_version_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->efi_revision[1],
+ 	    ha->efi_revision[0]);
+@@ -763,7 +763,7 @@ qla2x00_optrom_efi_version_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_optrom_fcode_version_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%d.%02d\n", ha->fcode_revision[1],
+ 	    ha->fcode_revision[0]);
+@@ -772,7 +772,7 @@ qla2x00_optrom_fcode_version_show(struct class_device *cdev, char *buf)
+ static ssize_t
+ qla2x00_optrom_fw_version_show(struct class_device *cdev, char *buf)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(class_to_shost(cdev));
++	scsi_qla_host_t *ha = shost_priv(class_to_shost(cdev));
+ 
+ 	return snprintf(buf, PAGE_SIZE, "%d.%02d.%02d %d\n",
+ 	    ha->fw_revision[0], ha->fw_revision[1], ha->fw_revision[2],
+@@ -829,7 +829,7 @@ struct class_device_attribute *qla2x00_host_attrs[] = {
+ static void
+ qla2x00_get_host_port_id(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	fc_host_port_id(shost) = ha->d_id.b.domain << 16 |
+ 	    ha->d_id.b.area << 8 | ha->d_id.b.al_pa;
+@@ -838,7 +838,7 @@ qla2x00_get_host_port_id(struct Scsi_Host *shost)
+ static void
+ qla2x00_get_host_speed(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 	uint32_t speed = 0;
+ 
+ 	switch (ha->link_data_rate) {
+@@ -858,7 +858,7 @@ qla2x00_get_host_speed(struct Scsi_Host *shost)
+ static void
+ qla2x00_get_host_port_type(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 	uint32_t port_type = FC_PORTTYPE_UNKNOWN;
+ 
+ 	switch (ha->current_topology) {
+@@ -882,7 +882,7 @@ static void
+ qla2x00_get_starget_node_name(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
+-	scsi_qla_host_t *ha = to_qla_host(host);
++	scsi_qla_host_t *ha = shost_priv(host);
+ 	fc_port_t *fcport;
+ 	u64 node_name = 0;
+ 
+@@ -900,7 +900,7 @@ static void
+ qla2x00_get_starget_port_name(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
+-	scsi_qla_host_t *ha = to_qla_host(host);
++	scsi_qla_host_t *ha = shost_priv(host);
+ 	fc_port_t *fcport;
+ 	u64 port_name = 0;
+ 
+@@ -918,7 +918,7 @@ static void
+ qla2x00_get_starget_port_id(struct scsi_target *starget)
+ {
+ 	struct Scsi_Host *host = dev_to_shost(starget->dev.parent);
+-	scsi_qla_host_t *ha = to_qla_host(host);
++	scsi_qla_host_t *ha = shost_priv(host);
+ 	fc_port_t *fcport;
+ 	uint32_t port_id = ~0U;
+ 
+@@ -937,7 +937,7 @@ static void
+ qla2x00_get_rport_loss_tmo(struct fc_rport *rport)
+ {
+ 	struct Scsi_Host *host = rport_to_shost(rport);
+-	scsi_qla_host_t *ha = to_qla_host(host);
++	scsi_qla_host_t *ha = shost_priv(host);
+ 
+ 	rport->dev_loss_tmo = ha->port_down_retry_count + 5;
+ }
+@@ -946,7 +946,7 @@ static void
+ qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+ {
+ 	struct Scsi_Host *host = rport_to_shost(rport);
+-	scsi_qla_host_t *ha = to_qla_host(host);
++	scsi_qla_host_t *ha = shost_priv(host);
+ 
+ 	if (timeout)
+ 		ha->port_down_retry_count = timeout;
+@@ -959,7 +959,7 @@ qla2x00_set_rport_loss_tmo(struct fc_rport *rport, uint32_t timeout)
+ static int
+ qla2x00_issue_lip(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	set_bit(LOOP_RESET_NEEDED, &ha->dpc_flags);
+ 	return 0;
+@@ -968,7 +968,7 @@ qla2x00_issue_lip(struct Scsi_Host *shost)
+ static struct fc_host_statistics *
+ qla2x00_get_fc_host_stats(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 	int rval;
+ 	uint16_t mb_stat[1];
+ 	link_stat_t stat_buf;
+@@ -1006,7 +1006,7 @@ done:
+ static void
+ qla2x00_get_host_symbolic_name(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	qla2x00_get_sym_node_name(ha, fc_host_symbolic_name(shost));
+ }
+@@ -1014,7 +1014,7 @@ qla2x00_get_host_symbolic_name(struct Scsi_Host *shost)
+ static void
+ qla2x00_set_host_system_hostname(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	set_bit(REGISTER_FDMI_NEEDED, &ha->dpc_flags);
+ }
+@@ -1022,7 +1022,7 @@ qla2x00_set_host_system_hostname(struct Scsi_Host *shost)
+ static void
+ qla2x00_get_host_fabric_name(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 	u64 node_name;
+ 
+ 	if (ha->device_flags & SWITCH_FOUND)
+@@ -1036,7 +1036,7 @@ qla2x00_get_host_fabric_name(struct Scsi_Host *shost)
+ static void
+ qla2x00_get_host_port_state(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(shost);
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	if (!ha->flags.online)
+ 		fc_host_port_state(shost) = FC_PORTSTATE_OFFLINE;
+@@ -1050,7 +1050,7 @@ static int
+ qla24xx_vport_create(struct fc_vport *fc_vport, bool disable)
+ {
+ 	int	ret = 0;
+-	scsi_qla_host_t *ha = (scsi_qla_host_t *) fc_vport->shost->hostdata;
++	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
+ 	scsi_qla_host_t *vha;
+ 
+ 	ret = qla24xx_vport_create_req_sanity_check(fc_vport);
+@@ -1119,7 +1119,7 @@ vport_create_failed_2:
+ int
+ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ {
+-	scsi_qla_host_t *ha = (scsi_qla_host_t *) fc_vport->shost->hostdata;
++	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
+ 	scsi_qla_host_t *vha = fc_vport->dd_data;
+ 
+ 	qla24xx_disable_vp(vha);
+diff --git a/drivers/scsi/qla2xxx/qla_dbg.c b/drivers/scsi/qla2xxx/qla_dbg.c
+index ca7f70d..eaa04da 100644
+--- a/drivers/scsi/qla2xxx/qla_dbg.c
++++ b/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1402,7 +1402,7 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd * cmd)
+ 	struct scsi_qla_host *ha;
+ 	srb_t *sp;
+ 
+-	ha = (struct scsi_qla_host *)cmd->device->host->hostdata;
++	ha = shost_priv(cmd->device->host);
+ 
+ 	sp = (srb_t *) cmd->SCp.ptr;
+ 	printk("SCSI Command @=0x%p, Handle=0x%p\n", cmd, cmd->host_scribble);
 diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 511e3cd..1396f4d 100644
+index b928e31..1900fbf 100644
 --- a/drivers/scsi/qla2xxx/qla_def.h
 +++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2534,7 +2534,7 @@ typedef struct scsi_qla_host {
- #define VP_ERR_FAB_NORESOURCES	3
- #define VP_ERR_FAB_LOGOUT	4
- #define VP_ERR_ADAP_NORESOURCES	5
--	int		max_npiv_vports;	/* 63 or 125 per topoloty */
-+	uint16_t	max_npiv_vports;	/* 63 or 125 per topoloty */
- 	int		cur_vport_count;
- } scsi_qla_host_t;
+@@ -2545,8 +2545,6 @@ typedef struct scsi_qla_host {
+ 	 test_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags) || \
+ 	 atomic_read(&ha->loop_state) == LOOP_DOWN)
  
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index e8122e8..09cb2a9 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -215,8 +215,8 @@ extern int
- qla2x00_get_id_list(scsi_qla_host_t *, void *, dma_addr_t, uint16_t *);
+-#define to_qla_host(x)		((scsi_qla_host_t *) (x)->hostdata)
+-
+ #define qla_printk(level, ha, format, arg...) \
+ 	dev_printk(level , &((ha)->pdev->dev) , format , ## arg)
  
- extern int
--qla2x00_get_resource_cnts(scsi_qla_host_t *, uint16_t *, uint16_t *, uint16_t *,
--    uint16_t *);
-+qla2x00_get_resource_cnts(scsi_qla_host_t *, uint16_t *, uint16_t *,
-+    uint16_t *, uint16_t *, uint16_t *);
- 
- extern int
- qla2x00_get_fcal_position_map(scsi_qla_host_t *ha, char *pos_map);
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 45da947..191dafd 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -849,7 +849,8 @@ qla2x00_resize_request_q(scsi_qla_host_t *ha)
- 		return;
- 
- 	/* Retrieve IOCB counts available to the firmware. */
--	rval = qla2x00_get_resource_cnts(ha, NULL, NULL, NULL, &fw_iocb_cnt);
-+	rval = qla2x00_get_resource_cnts(ha, NULL, NULL, NULL, &fw_iocb_cnt,
-+	    &ha->max_npiv_vports);
- 	if (rval)
- 		return;
- 	/* No point in continuing if current settings are sufficient. */
-@@ -916,9 +917,15 @@ qla2x00_setup_chip(scsi_qla_host_t *ha)
- 				    &ha->fw_attributes, &ha->fw_memory_size);
- 				qla2x00_resize_request_q(ha);
- 				ha->flags.npiv_supported = 0;
--				if (IS_QLA24XX(ha) &&
--				    (ha->fw_attributes & BIT_2))
-+				if ((IS_QLA24XX(ha) || IS_QLA25XX(ha)) &&
-+				    (ha->fw_attributes & BIT_2)) {
- 					ha->flags.npiv_supported = 1;
-+					if ((!ha->max_npiv_vports) ||
-+					    ((ha->max_npiv_vports + 1) %
-+					    MAX_MULTI_ID_FABRIC))
-+						ha->max_npiv_vports =
-+						    MAX_NUM_VPORT_FABRIC;
-+				}
- 
- 				if (ql2xallocfwdump)
- 					qla2x00_alloc_fw_dump(ha);
-@@ -1155,8 +1162,7 @@ qla2x00_init_rings(scsi_qla_host_t *ha)
- 
- 	DEBUG(printk("scsi(%ld): Issue init firmware.\n", ha->host_no));
- 
--	mid_init_cb->count = MAX_NUM_VPORT_FABRIC;
--	ha->max_npiv_vports = MAX_NUM_VPORT_FABRIC;
-+	mid_init_cb->count = ha->max_npiv_vports;
- 
- 	rval = qla2x00_init_firmware(ha, ha->init_cb_size);
- 	if (rval) {
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index e4f4b1f..ec48871 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -1919,7 +1919,8 @@ qla2x00_get_id_list(scsi_qla_host_t *ha, void *id_list, dma_addr_t id_list_dma,
-  */
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 54dc415..1a2cdcd 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -363,7 +363,7 @@ qla2x00_do_dpc_all_vps(scsi_qla_host_t *ha)
  int
- qla2x00_get_resource_cnts(scsi_qla_host_t *ha, uint16_t *cur_xchg_cnt,
--    uint16_t *orig_xchg_cnt, uint16_t *cur_iocb_cnt, uint16_t *orig_iocb_cnt)
-+    uint16_t *orig_xchg_cnt, uint16_t *cur_iocb_cnt,
-+    uint16_t *orig_iocb_cnt, uint16_t *max_npiv_vports)
+ qla24xx_vport_create_req_sanity_check(struct fc_vport *fc_vport)
  {
- 	int rval;
- 	mbx_cmd_t mc;
-@@ -1929,7 +1930,7 @@ qla2x00_get_resource_cnts(scsi_qla_host_t *ha, uint16_t *cur_xchg_cnt,
+-	scsi_qla_host_t *ha = (scsi_qla_host_t *) fc_vport->shost->hostdata;
++	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
+ 	scsi_qla_host_t *vha;
+ 	uint8_t port_name[WWN_SIZE];
  
- 	mcp->mb[0] = MBC_GET_RESOURCE_COUNTS;
- 	mcp->out_mb = MBX_0;
--	mcp->in_mb = MBX_10|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
-+	mcp->in_mb = MBX_11|MBX_10|MBX_7|MBX_6|MBX_3|MBX_2|MBX_1|MBX_0;
- 	mcp->tov = 30;
- 	mcp->flags = 0;
- 	rval = qla2x00_mailbox_command(ha, mcp);
-@@ -1940,9 +1941,9 @@ qla2x00_get_resource_cnts(scsi_qla_host_t *ha, uint16_t *cur_xchg_cnt,
- 		    ha->host_no, mcp->mb[0]));
- 	} else {
- 		DEBUG11(printk("%s(%ld): done. mb1=%x mb2=%x mb3=%x mb6=%x "
--		    "mb7=%x mb10=%x.\n", __func__, ha->host_no,
-+		    "mb7=%x mb10=%x mb11=%x.\n", __func__, ha->host_no,
- 		    mcp->mb[1], mcp->mb[2], mcp->mb[3], mcp->mb[6], mcp->mb[7],
--		    mcp->mb[10]));
-+		    mcp->mb[10], mcp->mb[11]));
+@@ -397,7 +397,7 @@ qla24xx_vport_create_req_sanity_check(struct fc_vport *fc_vport)
+ scsi_qla_host_t *
+ qla24xx_create_vhost(struct fc_vport *fc_vport)
+ {
+-	scsi_qla_host_t *ha = (scsi_qla_host_t *) fc_vport->shost->hostdata;
++	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
+ 	scsi_qla_host_t *vha;
+ 	struct Scsi_Host *host;
  
- 		if (cur_xchg_cnt)
- 			*cur_xchg_cnt = mcp->mb[3];
-@@ -1952,6 +1953,8 @@ qla2x00_get_resource_cnts(scsi_qla_host_t *ha, uint16_t *cur_xchg_cnt,
- 			*cur_iocb_cnt = mcp->mb[7];
- 		if (orig_iocb_cnt)
- 			*orig_iocb_cnt = mcp->mb[10];
-+		if (max_npiv_vports)
-+			*max_npiv_vports = mcp->mb[11];
+@@ -409,7 +409,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
+ 		return(NULL);
  	}
  
- 	return (rval);
+-	vha = (scsi_qla_host_t *)host->hostdata;
++	vha = shost_priv(host);
+ 
+ 	/* clone the parent hba */
+ 	memcpy(vha, ha, sizeof (scsi_qla_host_t));
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 4314f94..a6bb8d0 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -379,7 +379,7 @@ qla2x00_get_new_sp(scsi_qla_host_t *ha, fc_port_t *fcport,
+ static int
+ qla2x00_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ {
+-	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
++	scsi_qla_host_t *ha = shost_priv(cmd->device->host);
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmd->device));
+ 	srb_t *sp;
+@@ -445,7 +445,7 @@ qc_fail_command:
+ static int
+ qla24xx_queuecommand(struct scsi_cmnd *cmd, void (*done)(struct scsi_cmnd *))
+ {
+-	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
++	scsi_qla_host_t *ha = shost_priv(cmd->device->host);
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	struct fc_rport *rport = starget_to_rport(scsi_target(cmd->device));
+ 	srb_t *sp;
+@@ -663,7 +663,7 @@ qla2x00_block_error_handler(struct scsi_cmnd *cmnd)
+ static int
+ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
++	scsi_qla_host_t *ha = shost_priv(cmd->device->host);
+ 	srb_t *sp;
+ 	int ret, i;
+ 	unsigned int id, lun;
+@@ -803,7 +803,7 @@ qla2x00_eh_wait_for_pending_target_commands(scsi_qla_host_t *ha, unsigned int t)
+ static int
+ qla2xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
++	scsi_qla_host_t *ha = shost_priv(cmd->device->host);
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	int ret = FAILED;
+ 	unsigned int id, lun;
+@@ -932,7 +932,7 @@ qla2x00_eh_wait_for_pending_commands(scsi_qla_host_t *ha)
+ static int
+ qla2xxx_eh_bus_reset(struct scsi_cmnd *cmd)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
++	scsi_qla_host_t *ha = shost_priv(cmd->device->host);
+ 	scsi_qla_host_t *pha = to_qla_parent(ha);
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	int ret = FAILED;
+@@ -992,7 +992,7 @@ eh_bus_reset_done:
+ static int
+ qla2xxx_eh_host_reset(struct scsi_cmnd *cmd)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(cmd->device->host);
++	scsi_qla_host_t *ha = shost_priv(cmd->device->host);
+ 	fc_port_t *fcport = (struct fc_port *) cmd->device->hostdata;
+ 	int ret = FAILED;
+ 	unsigned int id, lun;
+@@ -1142,7 +1142,7 @@ qla2xxx_slave_alloc(struct scsi_device *sdev)
+ static int
+ qla2xxx_slave_configure(struct scsi_device *sdev)
+ {
+-	scsi_qla_host_t *ha = to_qla_host(sdev->host);
++	scsi_qla_host_t *ha = shost_priv(sdev->host);
+ 	struct fc_rport *rport = starget_to_rport(sdev->sdev_target);
+ 
+ 	if (sdev->tagged_supported)
+@@ -1543,7 +1543,7 @@ iospace_error_exit:
+ static void
+ qla2xxx_scan_start(struct Scsi_Host *shost)
+ {
+-	scsi_qla_host_t *ha = (scsi_qla_host_t *)shost->hostdata;
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	set_bit(LOOP_RESYNC_NEEDED, &ha->dpc_flags);
+ 	set_bit(LOCAL_LOOP_UPDATE, &ha->dpc_flags);
+@@ -1553,7 +1553,7 @@ qla2xxx_scan_start(struct Scsi_Host *shost)
+ static int
+ qla2xxx_scan_finished(struct Scsi_Host *shost, unsigned long time)
+ {
+-	scsi_qla_host_t *ha = (scsi_qla_host_t *)shost->hostdata;
++	scsi_qla_host_t *ha = shost_priv(shost);
+ 
+ 	if (!ha->host)
+ 		return 1;
+@@ -1600,7 +1600,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	}
+ 
+ 	/* Clear our data area */
+-	ha = (scsi_qla_host_t *)host->hostdata;
++	ha = shost_priv(host);
+ 	memset(ha, 0, sizeof(scsi_qla_host_t));
+ 
+ 	ha->pdev = pdev;
 -- 
 1.5.3.2.80.g077d6f
 
