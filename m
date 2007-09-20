@@ -1,62 +1,81 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: [PATCH] Clean up IOC reset code to obey coding style
-Date: Thu, 20 Sep 2007 15:28:56 -0700
-Message-ID: <20070920222856.GD24047@tree.beaverton.ibm.com>
+From: "Anil K. Ravindranath" <anil_ravindranath@adaptec.com>
+Subject: Re: [PATCH] aic7xxx driver. Restrict DMA to 32bit for 29320LPE
+	Adaptec SCSI controller
+Date: Thu, 20 Sep 2007 08:08:09 -0700
+Message-ID: <1190300889.31372.4.camel@linux.site>
+References: <1183207551.14436.15.camel@linux.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:41479 "EHLO e6.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751248AbXITW2v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2007 18:28:51 -0400
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l8KMUIaQ007973
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Sep 2007 18:30:18 -0400
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l8KMSo3q675880
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Sep 2007 18:28:50 -0400
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l8KMSoMU004011
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Sep 2007 18:28:50 -0400
-Content-Disposition: inline
+Received: from ts.adaptec.com ([162.62.93.58]:49852 "HELO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1751975AbXIUAbE (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2007 20:31:04 -0400
+In-Reply-To: <1183207551.14436.15.camel@linux.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, support@lsi.com, DL-MPTFusionLinux@lsi.com, Eric.Moore@lsi.com
+To: Linux-scsi@vger.kernel.org, James.Bottemley@SteelEye.com
 
-Randy Dunlap scolded me for introducing poorly styled code.  Since it
-was a copy-and-paste block from mpt_suspend(), fix both.
+Hi,
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
----
+We have not heard any comments or inputs on this patch. 
 
- drivers/message/fusion/mptbase.c |    6 ++----
- 1 files changed, 2 insertions(+), 4 deletions(-)
+With regards,
+  Anil
 
-diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-index 40b8b41..2952a54 100644
---- a/drivers/message/fusion/mptbase.c
-+++ b/drivers/message/fusion/mptbase.c
-@@ -1721,10 +1721,9 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
- 	pci_save_state(pdev);
- 
- 	/* put ioc into READY_STATE */
--	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-+	if (SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP))
- 		printk(MYIOC_s_ERR_FMT
- 		"pci-suspend:  IOC msg unit reset failed!\n", ioc->name);
--	}
- 
- 	/* disable interrupts */
- 	CHIPREG_WRITE32(&ioc->chip->IntMask, 0xFFFFFFFF);
-@@ -1773,10 +1772,9 @@ mpt_resume(struct pci_dev *pdev)
- 		CHIPREG_READ32(&ioc->chip->Doorbell));
- 
- 	/* put ioc into READY_STATE */
--	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-+	if (SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP))
- 		printk(MYIOC_s_ERR_FMT
- 		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
--	}
- 
- 	/* bring ioc to operational state */
- 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
+On Sat, 2007-06-30 at 05:45 -0700, Anil K. Ravindranath wrote:
+> Subject: [PATCH] aic7xxx driver. Restrict DMA to 32bit for 29320LPE
+> Adaptec SCSI controller
+> 
+> Contribution:
+> 
+> Anil Ravindranath <anil_ravindranath@adaptec.com>
+> 
+> Issue:
+> 
+> Data Bursts that cross from 32- to 64-Bit address space have incorrect
+> address for 29320LPE. This leads to potential data corruption.
+> 
+> Fix:
+> 
+> Restrict DMA to 32bit so that it does not cross 4GB boundary.
+> 
+> Change Log:
+> 
+> Restrict DMA to 32bit for 29320LPE so that it does not cross 4GB
+> boundary
+> 
+> Patch: apply to scsi-misc-2.6.git development tree
+> 
+> Signed off By:  Anil Ravindranath <anil_ravindranath@adaptec.com>
+> 
+> diff -urN a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+> b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c    2007-06-30
+> 05:24:08.000000000 -0700
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c    2007-06-30
+> 05:25:40.000000000 -0700
+> @@ -161,7 +161,10 @@
+>         }
+>         pci_set_master(pdev);
+> 
+> -       if (sizeof(dma_addr_t) > 4) {
+> +       /*
+> +        * Restrict DMA to 32bit for 29320LPE
+> +        */
+> +       if ((sizeof(dma_addr_t) > 4) && (entry->full_id !=
+> ID_AHA_29320LPE)) {
+>                 const u64 required_mask = dma_get_required_mask(dev);
+> 
+>                 if (required_mask > DMA_39BIT_MASK &&
+> 
+> 
+> 
+> diffstat output:
+> 
+> aic79xx_osm_pci.c |    5 ++++-
+>  1 files changed, 4 insertions(+), 1 deletion(-)
+> 
+> With regards,
+>   Anil
