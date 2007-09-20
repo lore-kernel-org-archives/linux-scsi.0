@@ -1,61 +1,38 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 0/19] qla2xxx: Driver update [8.02.00-k4].
-Date: Thu, 20 Sep 2007 14:04:22 -0700
-Message-ID: <20070920210422.GE8456@plap3.qlogic.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 17/19] qla2xxx: Clear options-flags while staging firmware-execution.
+Date: Thu, 20 Sep 2007 14:07:48 -0700
+Message-ID: <1190322470-15543-17-git-send-email-andrew.vasquez@qlogic.com>
+References: <20070920210422.GE8456@plap3.qlogic.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:10494 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:11180 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751301AbXITVE3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2007 17:04:29 -0400
-Content-Disposition: inline
+	with ESMTP id S1751334AbXITVHl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2007 17:07:41 -0400
+In-Reply-To: <20070920210422.GE8456@plap3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-This patchset updates the qla2xxx driver to 8.02.00-k4
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
 
- drivers/scsi/qla2xxx/qla_attr.c    |  200 +++--
- drivers/scsi/qla2xxx/qla_dbg.c     | 1846 +++++++++++-------------------------
- drivers/scsi/qla2xxx/qla_dbg.h     |    2 +
- drivers/scsi/qla2xxx/qla_def.h     |   15 +-
- drivers/scsi/qla2xxx/qla_fw.h      |    6 +-
- drivers/scsi/qla2xxx/qla_gbl.h     |    9 +-
- drivers/scsi/qla2xxx/qla_gs.c      |    6 +-
- drivers/scsi/qla2xxx/qla_init.c    |   26 +-
- drivers/scsi/qla2xxx/qla_iocb.c    |    4 +-
- drivers/scsi/qla2xxx/qla_isr.c     |   88 ++-
- drivers/scsi/qla2xxx/qla_mbx.c     |   62 ++-
- drivers/scsi/qla2xxx/qla_mid.c     |   40 +-
- drivers/scsi/qla2xxx/qla_os.c      |  140 +++-
- drivers/scsi/qla2xxx/qla_sup.c     |  221 ++++--
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 15 files changed, 1189 insertions(+), 1478 deletions(-)
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index ec48871..c53ec67 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -391,7 +391,8 @@ qla2x00_execute_fw(scsi_qla_host_t *ha, uint32_t risc_addr)
+ 		mcp->mb[1] = MSW(risc_addr);
+ 		mcp->mb[2] = LSW(risc_addr);
+ 		mcp->mb[3] = 0;
+-		mcp->out_mb |= MBX_3|MBX_2|MBX_1;
++		mcp->mb[4] = 0;
++		mcp->out_mb |= MBX_4|MBX_3|MBX_2|MBX_1;
+ 		mcp->in_mb |= MBX_1;
+ 	} else {
+ 		mcp->mb[1] = LSW(risc_addr);
+-- 
+1.5.3.2.80.g077d6f
 
-here's the commits:
-
-- Collapse and simplify ISP2XXX firmware dump routines.
-- Add flash burst-read/write support.
-- Limit iIDMA speed adjustments.
-- Allow region-based flash-part accesses.
-- Add PCI error recovery support.
-- Query additional RISC information during a pause.
-- Correct staging of RISC while attempting to pause.
-- Query additional RISC registers during ISP25XX firmware dump.
-- Correct infinite-login-retry issue.
-- Set correct attribute count during FDMI RPA.
-- Use the correct pointer-address during NVRAM writes.
-- Retrieve max-NPIV support capabilities from FW.
-- Remove unused member (list) from srb_t structure.
-- Use shost_priv().
-- Cleanup several 'sparse' warnings.
-- Sparse cleanups in qla_mid.c
-- Clear options-flags while staging firmware-execution.
-- Rework MSI-X handlers.
-- Update version number to 8.02.00-k4.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
