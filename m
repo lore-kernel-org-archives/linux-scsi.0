@@ -1,168 +1,110 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 3/3] use default attributes for scsi_host
-Date: Thu, 20 Sep 2007 13:48:14 +0200
-Message-ID: <20070920114814.4824F3110BD@pentland.suse.de>
+From: stefan@mdy.univie.ac.at (Stefan Boresch)
+Subject: aic79xx problems
+Date: Thu, 20 Sep 2007 15:04:40 +0200
+Message-ID: <20070920130440.GE1606@loop.mdy.univie.ac.at>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:49427 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750786AbXITLsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Sep 2007 07:48:15 -0400
+Received: from helix.mdy.univie.ac.at ([131.130.40.7]:43747 "EHLO
+	epsilon.mdy.univie.ac.at" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1756294AbXITNZ2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Sep 2007 09:25:28 -0400
+Received: from loop.mdy.univie.ac.at (loop.mdy.univie.ac.at [131.130.40.12])
+	by server1.mdy.univie.ac.at (Postfix) with ESMTP id 7D12716C2B4
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Sep 2007 15:00:30 +0200 (CEST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: kay.sievers@vrfy.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This patch removes the unused sysfs attribute overwriting logic for
-most of the attributes, and plugs them into the driver core default
-attribute creation.
- 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
----
- hosts.c      |    1 
- scsi_priv.h  |    1 
- scsi_sysfs.c |   88 +++++++++++++++++++----------------------------------------
- 3 files changed, 31 insertions(+), 59 deletions(-)
+I am trying to set up a server with an onboard Super Micro AIC 7902B
+U320 controller under the latest Ubuntu version(s), i.e., using the
+respective Ubuntu supplied kernels (2.6.20 based for "feisty" and 2.6.22 based
+for "gutsy"). However, so far all kernels
+based on 2.6.x, x greater or equal to 20 hang/crash when inserting the
+aic79xx module. Earlier kernels from various distributions,
+e.g. 2.6.15 (ubuntu dapper), 2.6.18 (opensuse 10.2), 2.6.18 (debian
+unstable install kernel) work, but the discs are only running at a
+fraction of the theoretical performance (see below).
 
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -387,7 +387,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	shost->shost_classdev.class = &shost_class;
- 	snprintf(shost->shost_classdev.class_id, BUS_ID_SIZE, "host%d",
- 		  shost->host_no);
-+	shost->shost_classdev.groups = scsi_sysfs_shost_attr_groups;
+I fully understand that it's not the job of the developers to take
+care of users of the various distributions, but I guess if there are
+experts to be found who have "been there, done this", then this is the
+place to ask. I am perfectly happy to try to boot the machine with a
+standard, self-compiled Linux 2.6.2x kernel, but would appreciate
+hints as to what version plus which patches (if any) to use.
+
+So, if anyone is willing to take a look, here are some facts (again,
+please let me know whatever other info you need!). I have put the output of
+lspci, dmesg and cat /proc/scsi/aic79xx/0 of the system running a
+default Ubuntu dapper installation (2.6.15 based kernel) on
  
- 	shost->ehandler = kthread_run(scsi_error_handler, shost,
- 			"scsi_eh_%d", shost->host_no);
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -117,7 +117,8 @@ extern struct scsi_transport_template blank_transport_template;
- extern void __scsi_remove_device(struct scsi_device *);
- 
- extern struct bus_type scsi_bus_type;
-+extern struct attribute_group *scsi_sysfs_shost_attr_groups[];
- 
- /* scsi_netlink.c */
- #ifdef CONFIG_SCSI_NETLINK
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -200,16 +200,24 @@ shost_rd_attr(sg_tablesize, "%hu\n");
- shost_rd_attr(unchecked_isa_dma, "%d\n");
- shost_rd_attr2(proc_name, hostt->proc_name, "%s\n");
- 
--static struct class_device_attribute *scsi_sysfs_shost_attrs[] = {
--	&class_device_attr_unique_id,
--	&class_device_attr_host_busy,
--	&class_device_attr_cmd_per_lun,
--	&class_device_attr_can_queue,
--	&class_device_attr_sg_tablesize,
--	&class_device_attr_unchecked_isa_dma,
--	&class_device_attr_proc_name,
--	&class_device_attr_scan,
--	&class_device_attr_state,
-+static struct attribute *scsi_shost_attrs[] = {
-+	&class_device_attr_unique_id.attr,
-+	&class_device_attr_host_busy.attr,
-+	&class_device_attr_cmd_per_lun.attr,
-+	&class_device_attr_can_queue.attr,
-+	&class_device_attr_sg_tablesize.attr,
-+	&class_device_attr_unchecked_isa_dma.attr,
-+	&class_device_attr_proc_name.attr,
-+	&class_device_attr_scan.attr,
-+	NULL
-+};
-+
-+struct attribute_group scsi_shost_attr_group = {
-+	.attrs =	scsi_shost_attrs,
-+};
-+
-+struct attribute_group *scsi_sysfs_shost_attr_groups[] = {
-+	&scsi_shost_attr_group,
- 	NULL
- };
- 
-@@ -867,44 +875,6 @@ int scsi_register_interface(struct class_interface *intf)
- }
- EXPORT_SYMBOL(scsi_register_interface);
- 
--
--static struct class_device_attribute *class_attr_overridden(
--		struct class_device_attribute **attrs,
--		struct class_device_attribute *attr)
--{
--	int i;
--
--	if (!attrs)
--		return NULL;
--	for (i = 0; attrs[i]; i++)
--		if (!strcmp(attrs[i]->attr.name, attr->attr.name))
--			return attrs[i];
--	return NULL;
--}
--
--static int class_attr_add(struct class_device *classdev,
--		struct class_device_attribute *attr)
--{
--	struct class_device_attribute *base_attr;
--
--	/*
--	 * Spare the caller from having to copy things it's not interested in.
--	 */
--	base_attr = class_attr_overridden(scsi_sysfs_shost_attrs, attr);
--	if (base_attr) {
--		/* extend permissions */
--		attr->attr.mode |= base_attr->attr.mode;
--
--		/* override null show/store with default */
--		if (!attr->show)
--			attr->show = base_attr->show;
--		if (!attr->store)
--			attr->store = base_attr->store;
--	}
--
--	return class_device_create_file(classdev, attr);
--}
--
- /**
-  * scsi_sysfs_add_host - add scsi host to subsystem
-  * @shost:     scsi host struct to add to subsystem
-@@ -912,25 +882,25 @@ static int class_attr_add(struct class_device *classdev,
-  **/
- int scsi_sysfs_add_host(struct Scsi_Host *shost)
- {
--	int error, i;
-+	int error, i, state_overridden = 0;
- 
-+	/* add host specific attributes */
- 	if (shost->hostt->shost_attrs) {
- 		for (i = 0; shost->hostt->shost_attrs[i]; i++) {
--			error = class_attr_add(&shost->shost_classdev,
-+			/* Some FC driver define their own 'state' attribute */
-+			if (!strcmp(shost->hostt->shost_attrs[i]->attr.name,"state"))
-+				state_overridden = 1;
-+			error = class_device_create_file(&shost->shost_classdev,
- 					shost->hostt->shost_attrs[i]);
- 			if (error)
- 				return error;
- 		}
- 	}
--
--	for (i = 0; scsi_sysfs_shost_attrs[i]; i++) {
--		if (!class_attr_overridden(shost->hostt->shost_attrs,
--					scsi_sysfs_shost_attrs[i])) {
--			error = class_device_create_file(&shost->shost_classdev,
--					scsi_sysfs_shost_attrs[i]);
--			if (error)
--				return error;
--		}
-+	if (!state_overridden) {
-+		error = class_device_create_file(&shost->shost_classdev,
-+						 &class_device_attr_state);
-+		if (error)
-+			return error;
- 	}
- 
- 	transport_register_device(&shost->shost_gendev);
+http://www.mdy.univie.ac.at/de/people/boresch/privat/dapper.lspci.output
+http://www.mdy.univie.ac.at/de/people/boresch/privat/dapper.dmesg.output
+http://www.mdy.univie.ac.at/de/people/boresch/privat/dapper.proc_aic79xx.output
+
+respectively.
+
+Hardware:
+
+* Supermicro H8DAR-8 motherboard with two dual-core Opterons
+* Two Seagate Cheetahs (ST373207LC) attached to the onboard Super
+  Micro (Adaptec) AIC 7902B U320 controller
+* There is also a LSI Logic / Symbios Logic 53c1030 PCI-X Fusion-MPT
+  Dual Ultra320 SCSI (rev 08) controller, to which an external RAID is
+  connected. This part of the system seems to be working flawlessly!!
+
+The problem(s):
+
+With the kernels 2.6.x (x < 20) I have tried so far the system boots,
+but there are many warnings during the boot when loading the aic79xx
+controller and the result to me seems nowhere near the speed which the
+disks should be capable of.
+
+E.g., for the first SCSI disk from /proc/scsi/aic79xx/0
+
+Target 0 Negotiation Settings
+	User: 320.000MB/s transfers (160.000MHz RDSTRM|DT|IU|RTI|QAS, 16bit)
+	Goal: 40.000MB/s transfers (40.000MHz)
+	Curr: 40.000MB/s transfers (40.000MHz)
+	Channel A Target 0 Lun 0 Settings
+		Commands Queued 3039
+		Commands Active 0
+		Command Openings 32
+		Max Tagged Openings 32
+		Device Queue Frozen Count 0
+
+The User: entries correspond to what is set in the SCSI BIOS (Adaptec,
+version 4.30), and which, according to the vendor of the box
+(transtec) is correct.
+
+I could live with all this if kernels 2.6.2x I have tried would not
+simply crash.  When the aic79xx module loads, I get again endless
+
+>>>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+
+listings, but the warnings / error messages get more and more severe
+until the system hangs.
+
+At this point I am really unexperienced and have no clue how I could
+capture these pages of messages. Again, I am happy to dig in but don't
+quite know where to start.
+
+According to Seagate Tools the disks themselves are fine.
+
+I can easily dig out all the source from which the various Ubuntu kernels
+are compiled; in fact, i have stared at them, and my feeling is that
+this may be less an issue with the low level driver itself (which claims to
+be version 3.0 in all cases) but with the
+surrounding SCSI subsystem ...
+
+Many thanks in advance,
+
+Stefan
+
+-- 
+Stefan Boresch
+Institute for Computational Biological Chemistry
+University of Vienna, Waehringerstr. 17       A-1090 Vienna, Austria
+Phone: -43-1-427752715                        Fax:   -43-1-427752790
