@@ -1,94 +1,89 @@
-From: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-Date: Fri, 21 Sep 2007 11:53:22 -0700
-Message-ID: <BC382691D59EC94C8E57543C47EF8ED55B20E8@aime2k302.adaptec.com>
-References: <1190069941.3386.64.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH] libata: translate INQUIRY VPD page 89h (ATA info)
+Date: Fri, 21 Sep 2007 16:05:06 -0400
+Message-ID: <46F423F2.40401@garzik.org>
+References: <20070921094825.GA15940@havoc.gtf.org> <1190383924.3333.2.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:35669 "HELO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752545AbXIUSxX convert rfc822-to-8bit (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 21 Sep 2007 14:53:23 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1190069941.3386.64.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:48365 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762515AbXIUUFK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Sep 2007 16:05:10 -0400
+In-Reply-To: <1190383924.3333.2.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dougg@torque.net, Linux-scsi@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi James,
+James Bottomley wrote:
+> On Fri, 2007-09-21 at 05:48 -0400, Jeff Garzik wrote:
+>> commit a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+>> Author: Jeff Garzik <jeff@garzik.org>
+>> Date:   Fri Sep 21 05:07:19 2007 -0400
+>>
+>>     [libata] SCSI: support INQUIRY page 89h (ATA info page)
+>>     
+>>     Signed-off-by: Jeff Garzik <jeff@garzik.org>
+>>
+>>  drivers/ata/libata-scsi.c |   82 +++++++++++++++++++++++++++++++++++++++++++---
+>>  1 file changed, 78 insertions(+), 4 deletions(-)
+>>
+>> a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index 7ad046b..bb5a5c1 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1804,6 +1804,71 @@ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+>>  }
+>>  
+>>  /**
+>> + *	ata_scsiop_inq_89 - Simulate INQUIRY VPD page 89, ATA info
+>> + *	@args: device IDENTIFY data / SCSI command of interest.
+>> + *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+>> + *	@buflen: Response buffer length.
+>> + *
+>> + *	Yields SAT-specified ATA VPD page.
+>> + *
+>> + *	LOCKING:
+>> + *	spin_lock_irqsave(host lock)
+>> + */
+>> +
+>> +unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
+>> +			      unsigned int buflen)
+>> +{
+>> +	struct ata_device *dev = args->dev;
+>> +	u8 pbuf[60];
+>> +	bool is_atapi = (dev->class == ATA_DEV_ATAPI);
+> 
+> I thought this was only used in the dev->class == ATA_DEV_ATA leg of the
+> ata_scsi_queuecommand(), so isn't this always false?
 
-   I can reproduce the problem on my machine. Most likely, the Sequencer
-(Firmware) has bug on handling ATA output register for ATAPI device. I
-am still working on this issue with Sequencer engineer.
-
-Thanks!
-Gilbert
-
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Monday, September 17, 2007 3:59 PM
-To: Wu, Gilbert
-Cc: dougg@torque.net; Linux-scsi@vger.kernel.org
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-
-On Mon, 2007-09-17 at 13:53 -0700, Wu, Gilbert wrote:
->    I tested the SATA DVD Plextor model 716SA and 755SA with direct
-> attached. Both failed in my tested system and it end up with System
-> Panic even without my patch.
-
-Actually, because of the difficulty of wiring it up, I've not tried
-directly attached SATAPI devices, only expander remote ones (which do
-work).  I did manage to cheat and force one into a drive bay using a
-mini inifiniband connector, and it seems to work just fine as well.
-This is the boot log with it directly connected to phy6:
-
-aic94xx: posting 8 control phy scbs
-aic94xx: control_phy_tasklet_complete: phy6, lrate:0x8, proto:0xe
-aic94xx: control_phy_tasklet_complete: phy0: no device present:
-oob_status:0x0
-aic94xx: control_phy_tasklet_complete: phy1: no device present:
-oob_status:0x0
-aic94xx: control_phy_tasklet_complete: phy2: no device present:
-oob_status:0x0
-aic94xx: control_phy_tasklet_complete: phy3: no device present:
-oob_status:0x0
-aic94xx: control_phy_tasklet_complete: phy4: no device present:
-oob_status:0x0
-aic94xx: control_phy_tasklet_complete: phy5: no device present:
-oob_status:0x0
-aic94xx: control_phy_tasklet_complete: phy7: no device present:
-oob_status:0x0
-aic94xx: escb_tasklet_complete: phy6: BYTES_DMAED
-aic94xx: STP proto device-to-host FIS:
-aic94xx: 00: 34 00 10 01
-aic94xx: 04: 01 14 eb 00
-aic94xx: 08: 00 00 00 00
-aic94xx: 0c: 01 00 00 00
-aic94xx: 10: 00 00 00 00
-aic94xx: asd_form_port: updating phy_mask 0x40 for phy6
-sas: phy6 added to port0, phy_mask:0x40
-sas: DOING DISCOVERY on port 0, pid:3197
-sas: sas_ata_phy_reset: Found ATAPI device.
-ata1.00: ATAPI: PLEXTOR DVDR   PX-755A, 1.03, max UDMA/66
-ata1.00: configured for UDMA/66
-scsi 3:0:0:0: CD-ROM            PLEXTOR  DVDR   PX-755A   1.03 PQ: 0
-ANSI: 5
-sr0: scsi3-mmc drive: 40x/40x writer cd/rw xa/form2 cdda tray
-sr 3:0:0:0: Attached scsi generic sg1 type 5
-sas: DONE DISCOVERY on port 0, pid:3197, result:0
+Actually, yes, you're right.
 
 
->  The CSMI_TASK should not make any
-> difference between ATA and ATAPI device. I am digging into it for root
-> cause.
+>> +	struct ata_taskfile tf;
+>> +	unsigned int i;
+>> +
+>> +	if (!buflen)
+>> +		return 0;
+>> +
+>> +	memset(&pbuf, 0, sizeof(pbuf));
+>> +	memset(&tf, 0, sizeof(tf));
+>> +
+>> +	if (is_atapi)
+>> +		pbuf[0] = 0x5;	/* FIXME: hardcodes MMC */
+> 
+> Actually, in MMC implementation of INQUIRY per SPC-3 (or earlier if MMC
+> < 5) is mandatory.  The problem cases I can see are non-standard ATAPI
+> devices (probably scanners).
 
-It does if it's set on a command that's not generated by the smartctl
-utility ... which is what happens for the ATA PACKET COMMAND case.
+The problem at hand is that the device might -not- be an MMC device at all.
 
-James
+But it sounds like that stuff can be removed regardless.
+
+	Jeff
+
 
 
