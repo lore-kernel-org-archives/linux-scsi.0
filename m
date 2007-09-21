@@ -1,31 +1,47 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-Date: Fri, 21 Sep 2007 15:40:02 -0500
-Message-ID: <1190407202.3333.55.camel@localhost.localdomain>
-References: <BC382691D59EC94C8E57543C47EF8ED55B20E8@aime2k302.adaptec.com>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Megaraid driver not detecting RAID volumes in kernel 2.6.22?
+Date: Fri, 21 Sep 2007 17:43:52 -0400
+Message-ID: <46F43B18.4090306@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:55717 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752400AbXIUUkJ (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 21 Sep 2007 16:40:09 -0400
-In-Reply-To: <BC382691D59EC94C8E57543C47EF8ED55B20E8@aime2k302.adaptec.com>
+Received: from mx1.redhat.com ([66.187.233.31]:45699 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758466AbXIUVn4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Sep 2007 17:43:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Cc: dougg@torque.net, Linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, megaraidlinux@lsi.com, djabbour@intronis.com
 
-On Fri, 2007-09-21 at 11:53 -0700, Wu, Gilbert wrote:
->    I can reproduce the problem on my machine. Most likely, the Sequencer
-> (Firmware) has bug on handling ATA output register for ATAPI device. I
-> am still working on this issue with Sequencer engineer.
+https://bugzilla.redhat.com/show_bug.cgi?id=288421
 
-But, since you already vet the commands we can simply work around this
-by not asking for the ATA output register on packet commands (i.e. just
-add ATA_CMD_PACKET to the is_ata_rw_command() switch statement.
+When running Fedora on a Dell 2950 w/ integrated LSI Perc5i (megaraid), the
+system will not boot after upgrading to 2.6.22.  The boot message indicates the
+system is somehow seeing through RAID, cannot access logical volume.  This
+causes the root device to be unavailable and the kernel to panic.
 
-James
+Version-Release number of selected component (if applicable):
+I experience this problem with kernel 2.6.22 and higher.  I do not believe it is
+isolated to FC6, as I downloaded the stock 2.6.22 kernel from kernel.org and was
+able to reproduce.
 
+How reproducible:
+Every time.
+
+Steps to Reproduce:
+1. Configure RAID10 (I've also tried RAID5) on a Perc5i in this system.
+
+2. Load Fedora Core.  The installer works fine since the kernel version it uses
+has a working LSI driver.
+
+3. Upgrade to 2.6.22 kernel image (in yum) or download kernel.org sources,
+compile, and install.
+
+4. Reboot system.  It comes up unable to boot.  The kernel panics.
+  
+Actual results:
+As the system boots, it cannot mount the root device.  Also in the output we see
+all 6 disks separately, when they should be showing up as one logical volume.
 
