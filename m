@@ -1,50 +1,70 @@
-From: "Wu, Gilbert" <Gilbert_Wu@adaptec.com>
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-Date: Fri, 21 Sep 2007 16:05:11 -0700
-Message-ID: <BC382691D59EC94C8E57543C47EF8ED55B20EA@aime2k302.adaptec.com>
-References: <1190407202.3333.55.camel@localhost.localdomain>
+From: "Bagalkote, Sreenivas" <Sreenivas.Bagalkote@lsi.com>
+Subject: RE: Megaraid driver not detecting RAID volumes in kernel 2.6.22?
+Date: Fri, 21 Sep 2007 17:05:51 -0600
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501B2CAB8@NAMAIL1.ad.lsil.com>
+References: <46F43B18.4090306@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
-	charset="us-ascii"
+	charset="US-ASCII"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:46497 "HELO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1763134AbXIUXFM convert rfc822-to-8bit (ORCPT
-	<rfc822;Linux-scsi@vger.kernel.org>); Fri, 21 Sep 2007 19:05:12 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:52789 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762112AbXIUXGP convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2007 19:06:15 -0400
 Content-class: urn:content-classes:message
-In-Reply-To: <1190407202.3333.55.camel@localhost.localdomain>
+In-Reply-To: <46F43B18.4090306@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: dougg@torque.net, Linux-scsi@vger.kernel.org
+To: Chuck Ebbert <cebbert@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, djabbour@intronis.com
 
-Hi James,
+> 
+> https://bugzilla.redhat.com/show_bug.cgi?id=288421
+> 
+> When running Fedora on a Dell 2950 w/ integrated LSI Perc5i
+(megaraid), the
+> system will not boot after upgrading to 2.6.22.  The boot message
+indicates the
+> system is somehow seeing through RAID, cannot access logical volume.
+This
+> causes the root device to be unavailable and the kernel to panic.
+> 
+> Version-Release number of selected component (if applicable):
+> I experience this problem with kernel 2.6.22 and higher.  I do not
+believe it is
+> isolated to FC6, as I downloaded the stock 2.6.22 kernel from
+kernel.org and was
+> able to reproduce.
+> 
+> How reproducible:
+> Every time.
+> 
+> Steps to Reproduce:
+> 1. Configure RAID10 (I've also tried RAID5) on a Perc5i in this
+system.
+> 
+> 2. Load Fedora Core.  The installer works fine since the kernel
+version it uses
+> has a working LSI driver.
+> 
+> 3. Upgrade to 2.6.22 kernel image (in yum) or download kernel.org
+sources,
+> compile, and install.
+> 
+> 4. Reboot system.  It comes up unable to boot.  The kernel panics.
+> 
+> Actual results:
+> As the system boots, it cannot mount the root device.  Also in the
+output we see
+> all 6 disks separately, when they should be showing up as one logical
+volume.
 
-   We want to find the root cause and make sure this problem will happen
-on STA device certain commands. If it does not affect SATA device then
-we can adopt the workaround.
+Could a standard MPT driver (non-RAID) be loading on this controller?
+During the reboot, can you see megaraid driver loading at all? Or do you
+see mpt_scsi driver?
 
-Thanks!
-Gilbert
+Before upgrading, can you blacklist this controller in pci hotplug? I
+see shpchp on your screenshot.
 
------Original Message-----
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com] 
-Sent: Friday, September 21, 2007 1:40 PM
-To: Wu, Gilbert
-Cc: dougg@torque.net; Linux-scsi@vger.kernel.org
-Subject: RE: [PATCH] aic94xx: fix smartctl utility problem
-
-On Fri, 2007-09-21 at 11:53 -0700, Wu, Gilbert wrote:
->    I can reproduce the problem on my machine. Most likely, the
-Sequencer
-> (Firmware) has bug on handling ATA output register for ATAPI device. I
-> am still working on this issue with Sequencer engineer.
-
-But, since you already vet the commands we can simply work around this
-by not asking for the ATA output register on packet commands (i.e. just
-add ATA_CMD_PACKET to the is_ata_rw_command() switch statement.
-
-James
-
-
+Sreenivas
