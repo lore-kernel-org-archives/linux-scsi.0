@@ -1,84 +1,48 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] libata: improve FORMAT UNIT; minor code cleanups
-Date: Fri, 21 Sep 2007 07:26:56 -0400
-Message-ID: <20070921112656.GA20981@havoc.gtf.org>
+Subject: [PATCH] libata: clean up R/W recovery mode page
+Date: Fri, 21 Sep 2007 07:55:25 -0400
+Message-ID: <20070921115525.GA22118@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:46776 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752868AbXIUL04 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Sep 2007 07:26:56 -0400
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 
-commit ee67edb0e7701f8ae9114692837a8bbee9f99a35
+commit 14052d9ba16b826e4bc79db4b2b77e451faf0b01
 Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Sep 21 07:26:08 2007 -0400
+Date:   Fri Sep 21 07:54:49 2007 -0400
 
-    [libata] SCSI: improve FORMAT UNIT; minor code cleanups
+    [libata] SCSI: clean up R/W recovery mode page
     
-    * SAT specifies that FORMAT UNIT should be translated into a series
-      of READ and WRITE commands that zero the ATA device.  That is far too
-      cumbersome to bother with.
+    Clear ARRE, we don't do auto-reallocation on reads, just on writes.
     
-      Since we don't actually format the device, the old behavior of
-      always returning success was inaccurate.  Change FORMAT UNIT from
-      returning success immediately (old behavior) to always returning
-      an error (new behavior).
-    
-    * Add some comments around SYNCHRONIZE CACHE
-    
-    * Shuffle scsi command code around a bit, so that things are close
-      to alphabetic order.
+    Also, hardcode the size of the array using RW_RECOVERY_MPAGE_LEN,
+    following the style of the surrounding code.
     
     Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
- drivers/ata/libata-scsi.c |   23 ++++++++++++++++-------
- 1 file changed, 16 insertions(+), 7 deletions(-)
+ drivers/ata/libata-scsi.c |    5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-ee67edb0e7701f8ae9114692837a8bbee9f99a35
+14052d9ba16b826e4bc79db4b2b77e451faf0b01
 diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 456b75f..cd192c1 100644
+index cd192c1..29e2cf6 100644
 --- a/drivers/ata/libata-scsi.c
 +++ b/drivers/ata/libata-scsi.c
-@@ -2961,13 +2961,9 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 	args.done = done;
+@@ -71,11 +71,10 @@ static int ata_scsi_user_scan(struct Scsi_Host *shost, unsigned int channel,
+ #define ALL_SUB_MPAGES 0xff
  
- 	switch(scsicmd[0]) {
--		/* no-op's, complete with success */
--		case SYNCHRONIZE_CACHE:
--		case REZERO_UNIT:
--		case SEEK_6:
--		case SEEK_10:
--		case FORMAT_UNIT:		/* FIXME: correct? */
--			ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
-+		/* TODO: worth improving? */
-+		case FORMAT_UNIT:
-+			ata_scsi_invalid_field(cmd, done);
- 			break;
  
- 		case INQUIRY:
-@@ -3025,6 +3021,19 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			done(cmd);
- 			break;
- 
-+		/* if we reach this, then writeback caching is disabled,
-+		 * turning this into a no-op.
-+		 */
-+		case SYNCHRONIZE_CACHE:
-+			/* fall through */
-+
-+		/* no-op's, complete with success */
-+		case REZERO_UNIT:
-+		case SEEK_6:
-+		case SEEK_10:
-+			ata_scsi_rbuf_fill(&args, ata_scsiop_noop);
-+			break;
-+
- 		case SEND_DIAGNOSTIC:
- 			tmp8 = scsicmd[1] & ~(1 << 3);
- 			if ((tmp8 == 0x4) && (!scsicmd[3]) && (!scsicmd[4]))
+-static const u8 def_rw_recovery_mpage[] = {
++static const u8 def_rw_recovery_mpage[RW_RECOVERY_MPAGE_LEN] = {
+ 	RW_RECOVERY_MPAGE,
+ 	RW_RECOVERY_MPAGE_LEN - 2,
+-	(1 << 7) |	/* AWRE, sat-r06 say it shall be 0 */
+-	    (1 << 6),	/* ARRE (auto read reallocation) */
++	(1 << 7),	/* AWRE */
+ 	0,		/* read retry count */
+ 	0, 0, 0, 0,
+ 	0,		/* write retry count */
