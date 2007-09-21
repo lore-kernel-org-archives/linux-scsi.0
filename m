@@ -1,49 +1,76 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
-Date: Fri, 21 Sep 2007 07:34:18 -0700
-Message-ID: <46F3D66A.9010000@qlogic.com>
-References: <200708311703.l7VH3NkK016220@mbox.iij4u.or.jp> <20070905150534.GJ17977@plap.qlogic.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] aic7xxx driver. Restrict DMA to 32bit for 29320LPE
+	Adaptec SCSI controller
+Date: Fri, 21 Sep 2007 10:37:46 -0500
+Message-ID: <1190389066.3333.18.camel@localhost.localdomain>
+References: <1183207551.14436.15.camel@linux.site>
+	 <1190300889.31372.4.camel@linux.site>
+	 <1190335307.3360.66.camel@localhost.localdomain>
+	 <1190305223.1588.7.camel@linux.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:21209 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758677AbXIUOe7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2007 10:34:59 -0400
-In-Reply-To: <20070905150534.GJ17977@plap.qlogic.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:37773 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751924AbXIUPhw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Sep 2007 11:37:52 -0400
+In-Reply-To: <1190305223.1588.7.camel@linux.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp
+To: "Anil K. Ravindranath" <anil_ravindranath@adaptec.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Andrew Vasquez wrote:
-> On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
-> 
->> This adds target mode support to qla2xxx.
->>
->> With set ql2enable_target_mode module parameter to 1, the driver runs
->> in target mode. By default, ql2enable_target_mode is set to 0, and the
->> driver should work in initiator mode as before.
->>
->> The driver could support dual-mode in the future but it doesn't at the
->> moment (we need to add dual-mode support tgt first).
->>
->> It is based on scst qla2xxx target mode driver. Mike converted the
->> driver to use tgt long ago. I changed it to use the latest (mainline)
->> version of qla2xxx driver and tgt, and also converted it to use fc
->> transport class.
-> 
-> Thanks for doing this.  Some initial comments before a full review is
-> complete, As was seen from the initiator updates needed for 24xx
-> support, there are comparable changes needed in the area of
-> target-mode support for 4gb and 8gb parts.  Also, which ISPs and
-> firmwares were exercised with this code?
-The patch is still under reviewing and will get done, soon.
-One quick question on the patch, 
-The tgt core will invoke transfer_response() once it completes the command processing. 
-Could you point out where the actual data transfer is happening if the command required it?
-I guest it should happen in scsi_tgt_kspace_exec(), but not sure where it is happening?
+please don't drop linux-scsi ... just because no-one else has asked the
+question doesn't mean they're not interested in the answer.  Having the
+answer in the list means that search tools can find it.
 
-Thank you,
-Seokmann
+On Thu, 2007-09-20 at 09:20 -0700, Anil K. Ravindranath wrote: 
+> Oh I see. I looked into the scsi_host_alloc(), now I see this.Thanks. By
+> setting a dma_boundary to 4G, does it mean the kernel(in block) is
+> ensuring that a DMA segment will not cross this 4G boundary. I mean a
+> DMA segment will not be split at 4G boundary.
+
+Yes, that's exactly what it means.  Primarily, as I said, because PCI
+bridges can't necessarily span non-DAC to DAC in a single DMA transfer.
+
+James
+
+
+> With regards,
+>   Anil
+> 
+> 
+> On Thu, 2007-09-20 at 19:41 -0500, James Bottomley wrote:
+> > On Thu, 2007-09-20 at 08:08 -0700, Anil K. Ravindranath wrote:
+> > > Hi,
+> > > 
+> > > We have not heard any comments or inputs on this patch. 
+> > > 
+> > > With regards,
+> > >   Anil
+> > > 
+> > > On Sat, 2007-06-30 at 05:45 -0700, Anil K. Ravindranath wrote:
+> > > > Subject: [PATCH] aic7xxx driver. Restrict DMA to 32bit for 29320LPE
+> > > > Adaptec SCSI controller
+> > > > 
+> > > > Contribution:
+> > > > 
+> > > > Anil Ravindranath <anil_ravindranath@adaptec.com>
+> > > > 
+> > > > Issue:
+> > > > 
+> > > > Data Bursts that cross from 32- to 64-Bit address space have incorrect
+> > > > address for 29320LPE. This leads to potential data corruption.
+> > 
+> > Where do you think you see this happening?  The block layer has a
+> > dma_boundary parameter (basically a mask which it refuses to allow dma
+> > to cross).  By default this is set to 4GB (because a lot of PCI cards
+> > have difficulty going from non-DAC to DAC).  The aic79xx driver does
+> > nothing to alter this, so you shouldn't be seeing any DMA segments
+> > crossing the 4GB boundary.
+> > 
+> > James
+> > 
+> > 
+
