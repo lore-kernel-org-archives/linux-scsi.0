@@ -1,53 +1,130 @@
-From: "Julian Calaby" <julian.calaby@gmail.com>
-Subject: Re: aic79xx problems
-Date: Fri, 21 Sep 2007 11:16:52 +1000
-Message-ID: <646765f40709201816v7d60cfbem8d348238db5e6b11@mail.gmail.com>
-References: <20070920130440.GE1606@loop.mdy.univie.ac.at>
-	 <1190297751.3360.15.camel@localhost.localdomain>
-	 <20070920143448.GF1606@loop.mdy.univie.ac.at>
-	 <1190299275.3360.22.camel@localhost.localdomain>
-	 <20070920145336.GH1606@loop.mdy.univie.ac.at>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] libata: translate INQUIRY VPD page 89h (ATA info)
+Date: Fri, 21 Sep 2007 05:48:25 -0400
+Message-ID: <20070921094825.GA15940@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.226]:3410 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750758AbXIUBQy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Sep 2007 21:16:54 -0400
-Received: by nz-out-0506.google.com with SMTP id s18so586417nze
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Sep 2007 18:16:53 -0700 (PDT)
-In-Reply-To: <20070920145336.GH1606@loop.mdy.univie.ac.at>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+To: linux-ide@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Boresch <stefan@mdy.univie.ac.at>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On 9/21/07, Stefan Boresch <stefan@mdy.univie.ac.at> wrote:
->
-> I will try, but a very dumb question first. If I have a kernel that
-> crashes because of a disk problem ..., how do I get to save the output?
-> (Never worked with a serial console, but there might be a first time
-> for everything ...) But maybe there is an obvious solution that I overlook?
->
-> Or should I just try to watch and look for certain messages (ordering of
-> messages), which given the huge amount of output seems a bit daunting ...
 
-Ok, in response to your dumb question, an answer from another dumb user: (me)
+commit a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Fri Sep 21 05:07:19 2007 -0400
 
-Firstly, serial consoles aren't that difficult to set up - all you
-need is a null modem cable and suitable software on the other end.
-Then ensure that it's built in and pass "console=ttyS0" (or
-"console=ttyS1" if you're using serial port #2) when you boot.
+    [libata] SCSI: support INQUIRY page 89h (ATA info page)
+    
+    Signed-off-by: Jeff Garzik <jeff@garzik.org>
 
-There is a network console - but I'm not sure whether that is useful
-for boot messages.
+ drivers/ata/libata-scsi.c |   82 +++++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 78 insertions(+), 4 deletions(-)
 
-Hope that helps =)
-
---
-
-Julian Calaby
-
-Email: julian.calaby@gmail.com
+a6d5ac6a3a1cfbed2a045928bbadd5285f1df084
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 7ad046b..bb5a5c1 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1804,6 +1804,71 @@ unsigned int ata_scsiop_inq_83(struct ata_scsi_args *args, u8 *rbuf,
+ }
+ 
+ /**
++ *	ata_scsiop_inq_89 - Simulate INQUIRY VPD page 89, ATA info
++ *	@args: device IDENTIFY data / SCSI command of interest.
++ *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
++ *	@buflen: Response buffer length.
++ *
++ *	Yields SAT-specified ATA VPD page.
++ *
++ *	LOCKING:
++ *	spin_lock_irqsave(host lock)
++ */
++
++unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf,
++			      unsigned int buflen)
++{
++	struct ata_device *dev = args->dev;
++	u8 pbuf[60];
++	bool is_atapi = (dev->class == ATA_DEV_ATAPI);
++	struct ata_taskfile tf;
++	unsigned int i;
++
++	if (!buflen)
++		return 0;
++
++	memset(&pbuf, 0, sizeof(pbuf));
++	memset(&tf, 0, sizeof(tf));
++
++	if (is_atapi)
++		pbuf[0] = 0x5;	/* FIXME: hardcodes MMC */
++
++	pbuf[1] = 0x89;			/* our page code */
++	pbuf[2] = (0x238 >> 8);		/* page size fixed at 238h */
++	pbuf[3] = (0x238 & 0xff);
++
++	memcpy(&pbuf[8], "ATA     ", 8);
++	ata_id_string(args->id, &pbuf[16], ATA_ID_PROD, 16);
++	ata_id_string(args->id, &pbuf[32], ATA_ID_FW_REV, 4);
++
++	/* we don't store the ATA/ATAPI device signature, so we fake it */
++	if (is_atapi) {
++		tf.command = ATA_CMD_ID_ATAPI;
++		tf.lbam = 0x14;
++		tf.lbah = 0xeb;
++	} else {
++		tf.command = ATA_CMD_ID_ATA;
++	}
++	tf.lbal = 0x1;
++	tf.nsect = 0x1;
++
++	/* FIXME: PMP. don't use H2D Reg FIS. */
++	ata_tf_to_fis(&tf, 0, 1, &pbuf[36]);
++
++	pbuf[56] = tf.command;
++
++	i = min(buflen, 60U);
++	memcpy(rbuf, &pbuf[0], i);
++	buflen -= i;
++
++	if (!i)
++		return 0;
++
++	memcpy(&rbuf[60], &args->id[0], min(buflen, 512U));
++	return 0;
++}
++
++/**
+  *	ata_scsiop_noop - Command handler that simply returns success.
+  *	@args: device IDENTIFY data / SCSI command of interest.
+  *	@rbuf: Response buffer, to which simulated SCSI cmd output is sent.
+@@ -2880,14 +2945,23 @@ void ata_scsi_simulate(struct ata_device *dev, struct scsi_cmnd *cmd,
+ 				ata_scsi_invalid_field(cmd, done);
+ 			else if ((scsicmd[1] & 1) == 0)    /* is EVPD clear? */
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_std);
+-			else if (scsicmd[2] == 0x00)
++			else switch (scsicmd[2]) {
++			case 0x00:
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_00);
+-			else if (scsicmd[2] == 0x80)
++				break;
++			case 0x80:
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_80);
+-			else if (scsicmd[2] == 0x83)
++				break;
++			case 0x83:
+ 				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_83);
+-			else
++				break;
++			case 0x89:
++				ata_scsi_rbuf_fill(&args, ata_scsiop_inq_89);
++				break;
++			default:
+ 				ata_scsi_invalid_field(cmd, done);
++				break;
++			}
+ 			break;
+ 
+ 		case MODE_SENSE:
