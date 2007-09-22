@@ -1,115 +1,48 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] scsi_transport_spi: fix domain validation failure from
-	incorrect width setting
-Date: Sat, 22 Sep 2007 08:40:09 -0500
-Message-ID: <1190468409.3347.3.camel@localhost.localdomain>
+Subject: Re: [PATCH 4/9] mpt fusion: error recovery improvements, and
+	synchronizing internal commands
+Date: Sat, 22 Sep 2007 10:38:39 -0500
+Message-ID: <1190475519.3347.13.camel@localhost.localdomain>
+References: <20070918015801.GA22729@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50100 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:51082 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751496AbXIVNkL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Sep 2007 09:40:11 -0400
+	with ESMTP id S1751034AbXIVPil (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Sep 2007 11:38:41 -0400
+In-Reply-To: <20070918015801.GA22729@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Stefan Boresch <stefan@mdy.univie.ac.at>
+To: Eric Moore <eric.moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-The previous patch was a bit non-standard because it actually adjusted
-the user setting max_width.  This would mean that if the user replaced
-the cable and then re-ran domain validation, it still wouldn't try wide
-transfers, which is wrong.
+On Mon, 2007-09-17 at 19:58 -0600, Eric Moore wrote:
+> 1) mpt_fault_reset_work - new workthread to quickly handle a card that goes into FAULT state.  Previously handled by eh threads, requiring commands to timeout (SD_TIMEOUT) to recover a card.
+> 2) mpt_SoftResetHandler - less expensive method to reset card, other known as MESSAGE_UNIT_RESET-MUR.  The MUR doesn't perform a start_of_day recovery as does mpt_HardResetHandler, hence its quicker recovery time.  Also with MUR, the firmware is not reloaded, and only single pci function will be reset, whereas mpt_HardResetHandler will reset both functions.  An example of dual function card is the U320 1030 chip.
+> 3) rewrite of all internal generated functions that issue commands to firmware, porting them to be single threaded using the generic MPT_MGMT struct. Killing all the watchdog timer functions that were previously handling timeout of internal commands, thus addressing race conditions reported by several customers.
+> 4) cleanup MPT_SCSI_HOST struct, deleting unused struct members
+> 5) cleanup ioc_reset callback handlers, introducing wrappers for synronizing error recovery (mpt_set_taskmgmt_in_progress_flag, mpt_clear_taskmgmt_in_progress_flag), as the fusion firmware only handles one task management request at a time.
+> 
+> Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
 
-The attached patch fixes the problem by physically nailing the wide
-setting to what it deduces it should be for the whole of Domain
-Validation.
+Well, I'll put this in this time.  However, it contains a whole slew of
+pointless changes like this:
+
+
+> -                       mdelay (10);
+> +                       udelay (10000);
+
+and
+
+> -               mdelay(1);
+> +               udelay(1000);
+
+Which is going to excite the janitors into a frenzy of replace udelay
+with mdelay patches, which I can well do without ... please don't do
+this type of change unless there's some actual reason for it.
 
 James
-
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 6f56f87..bb8a726 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -787,10 +787,12 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 	struct scsi_target *starget = sdev->sdev_target;
- 	struct Scsi_Host *shost = sdev->host;
- 	int len = sdev->inquiry_len;
-+	int min_period = spi_min_period(starget);
-+	int max_width = spi_max_width(starget);
- 	/* first set us up for narrow async */
- 	DV_SET(offset, 0);
- 	DV_SET(width, 0);
--	
-+
- 	if (spi_dv_device_compare_inquiry(sdev, buffer, buffer, DV_LOOPS)
- 	    != SPI_COMPARE_SUCCESS) {
- 		starget_printk(KERN_ERR, starget, "Domain Validation Initial Inquiry Failed\n");
-@@ -798,9 +800,13 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 		return;
- 	}
- 
-+	if (!scsi_device_wide(sdev)) {
-+		spi_max_width(starget) = 0;
-+		max_width = 0;
-+	}
-+	
- 	/* test width */
--	if (i->f->set_width && spi_max_width(starget) &&
--	    scsi_device_wide(sdev)) {
-+	if (i->f->set_width && max_width) {
- 		i->f->set_width(starget, 1);
- 
- 		if (spi_dv_device_compare_inquiry(sdev, buffer,
-@@ -809,6 +815,11 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 		    != SPI_COMPARE_SUCCESS) {
- 			starget_printk(KERN_ERR, starget, "Wide Transfers Fail\n");
- 			i->f->set_width(starget, 0);
-+			/* Make sure we don't force wide back on by asking
-+			 * for a transfer period that requires it */
-+			max_width = 0;
-+			if (min_period < 10)
-+				min_period = 10;
- 		}
- 	}
- 
-@@ -828,7 +839,8 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 
- 	/* now set up to the maximum */
- 	DV_SET(offset, spi_max_offset(starget));
--	DV_SET(period, spi_min_period(starget));
-+	DV_SET(period, min_period);
-+
- 	/* try QAS requests; this should be harmless to set if the
- 	 * target supports it */
- 	if (scsi_device_qas(sdev)) {
-@@ -837,14 +849,14 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 		DV_SET(qas, 0);
- 	}
- 
--	if (scsi_device_ius(sdev) && spi_min_period(starget) < 9) {
-+	if (scsi_device_ius(sdev) && min_period < 9) {
- 		/* This u320 (or u640). Set IU transfers */
- 		DV_SET(iu, 1);
- 		/* Then set the optional parameters */
- 		DV_SET(rd_strm, 1);
- 		DV_SET(wr_flow, 1);
- 		DV_SET(rti, 1);
--		if (spi_min_period(starget) == 8)
-+		if (min_period == 8)
- 			DV_SET(pcomp_en, 1);
- 	} else {
- 		DV_SET(iu, 0);
-@@ -862,6 +874,10 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
- 	} else {
- 		DV_SET(dt, 1);
- 	}
-+	/* set width last because it will pull all the other
-+	 * parameters down to required values */
-+	DV_SET(width, max_width);
-+
- 	/* Do the read only INQUIRY tests */
- 	spi_dv_retrain(sdev, buffer, buffer + sdev->inquiry_len,
- 		       spi_dv_device_compare_inquiry);
 
 
