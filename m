@@ -1,27 +1,115 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH v2] libata: translate INQUIRY VPD page 89h (ATA info)
-Date: Fri, 21 Sep 2007 21:05:40 -0400
-Message-ID: <46F46A64.40707@garzik.org>
-References: <20070921094825.GA15940@havoc.gtf.org> <20070922005444.GA29744@havoc.gtf.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: [PATCH] scsi_transport_spi: fix domain validation failure from
+	incorrect width setting
+Date: Sat, 22 Sep 2007 08:40:09 -0500
+Message-ID: <1190468409.3347.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20070922005444.GA29744@havoc.gtf.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:50100 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751496AbXIVNkL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Sep 2007 09:40:11 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Stefan Boresch <stefan@mdy.univie.ac.at>
 
-Jeff Garzik wrote:
-> +	memcpy(&pbuf[8], "ATA     ", 8);
-> +	ata_id_string(args->id, &pbuf[16], ATA_ID_PROD, 16);
-> +	ata_id_string(args->id, &pbuf[32], ATA_ID_FW_REV, 4);
+The previous patch was a bit non-standard because it actually adjusted
+the user setting max_width.  This would mean that if the user replaced
+the cable and then re-ran domain validation, it still wouldn't try wide
+transfers, which is wrong.
 
+The attached patch fixes the problem by physically nailing the wide
+setting to what it deduces it should be for the whole of Domain
+Validation.
 
-And I just checked in a fix that changes the above to reflect the SCSI 
-simulator's vendor/product/version (linux/libata/DRV_VERSION), rather 
-than the ATA device's, as the spec wants.
+James
 
-	Jeff
+diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+index 6f56f87..bb8a726 100644
+--- a/drivers/scsi/scsi_transport_spi.c
++++ b/drivers/scsi/scsi_transport_spi.c
+@@ -787,10 +787,12 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 	struct scsi_target *starget = sdev->sdev_target;
+ 	struct Scsi_Host *shost = sdev->host;
+ 	int len = sdev->inquiry_len;
++	int min_period = spi_min_period(starget);
++	int max_width = spi_max_width(starget);
+ 	/* first set us up for narrow async */
+ 	DV_SET(offset, 0);
+ 	DV_SET(width, 0);
+-	
++
+ 	if (spi_dv_device_compare_inquiry(sdev, buffer, buffer, DV_LOOPS)
+ 	    != SPI_COMPARE_SUCCESS) {
+ 		starget_printk(KERN_ERR, starget, "Domain Validation Initial Inquiry Failed\n");
+@@ -798,9 +800,13 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 		return;
+ 	}
+ 
++	if (!scsi_device_wide(sdev)) {
++		spi_max_width(starget) = 0;
++		max_width = 0;
++	}
++	
+ 	/* test width */
+-	if (i->f->set_width && spi_max_width(starget) &&
+-	    scsi_device_wide(sdev)) {
++	if (i->f->set_width && max_width) {
+ 		i->f->set_width(starget, 1);
+ 
+ 		if (spi_dv_device_compare_inquiry(sdev, buffer,
+@@ -809,6 +815,11 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 		    != SPI_COMPARE_SUCCESS) {
+ 			starget_printk(KERN_ERR, starget, "Wide Transfers Fail\n");
+ 			i->f->set_width(starget, 0);
++			/* Make sure we don't force wide back on by asking
++			 * for a transfer period that requires it */
++			max_width = 0;
++			if (min_period < 10)
++				min_period = 10;
+ 		}
+ 	}
+ 
+@@ -828,7 +839,8 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 
+ 	/* now set up to the maximum */
+ 	DV_SET(offset, spi_max_offset(starget));
+-	DV_SET(period, spi_min_period(starget));
++	DV_SET(period, min_period);
++
+ 	/* try QAS requests; this should be harmless to set if the
+ 	 * target supports it */
+ 	if (scsi_device_qas(sdev)) {
+@@ -837,14 +849,14 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 		DV_SET(qas, 0);
+ 	}
+ 
+-	if (scsi_device_ius(sdev) && spi_min_period(starget) < 9) {
++	if (scsi_device_ius(sdev) && min_period < 9) {
+ 		/* This u320 (or u640). Set IU transfers */
+ 		DV_SET(iu, 1);
+ 		/* Then set the optional parameters */
+ 		DV_SET(rd_strm, 1);
+ 		DV_SET(wr_flow, 1);
+ 		DV_SET(rti, 1);
+-		if (spi_min_period(starget) == 8)
++		if (min_period == 8)
+ 			DV_SET(pcomp_en, 1);
+ 	} else {
+ 		DV_SET(iu, 0);
+@@ -862,6 +874,10 @@ spi_dv_device_internal(struct scsi_device *sdev, u8 *buffer)
+ 	} else {
+ 		DV_SET(dt, 1);
+ 	}
++	/* set width last because it will pull all the other
++	 * parameters down to required values */
++	DV_SET(width, max_width);
++
+ 	/* Do the read only INQUIRY tests */
+ 	spi_dv_retrain(sdev, buffer, buffer + sdev->inquiry_len,
+ 		       spi_dv_device_compare_inquiry);
 
 
