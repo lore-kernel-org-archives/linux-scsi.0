@@ -1,56 +1,48 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [RFC] Fix device not ready printk
-Date: Sun, 23 Sep 2007 08:25:01 -0600
-Message-ID: <20070923142501.GI10625@parisc-linux.org>
-References: <20070629132126.GA18722@parisc-linux.org> <20070719185145.GU14791@parisc-linux.org> <1190556526.3378.3.camel@localhost.localdomain>
+From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
+Subject: Re: What's in linux-2.6-block.git for 2.6.24
+Date: Sun, 23 Sep 2007 17:31:58 +0200
+Message-ID: <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
+References: <20070921085711.GG2367@kernel.dk>
+	 <64bb37e0709230619v196cf34ev29f0c844e2a79ec9@mail.gmail.com>
+	 <20070923225320I.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:44603 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754300AbXIWOZD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Sep 2007 10:25:03 -0400
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20070923225320I.tomof@acm.org>
 Content-Disposition: inline
-In-Reply-To: <1190556526.3378.3.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Sun, Sep 23, 2007 at 09:08:46AM -0500, James Bottomley wrote:
-> The main thing I don't like is that we've spent a lot of time moving
-> sense prints into a library so that if someone gullible^Wsensible enough
-> to want to do a reporting infrastructure comes along, we have all the
-> entry points nicely laid out, this is a retrograde step on that because
-> it reintroduces the open coding.
+On 9/23/07, FUJITA Tomonori <tomof@acm.org> wrote:
+> On Sun, 23 Sep 2007 15:19:13 +0200
+> "Torsten Kaiser" <just.for.lkml@googlemail.com> wrote:
+> > To update the statistik:
+> > prior to 2.6.23-rc4-mm1: no trouble with any drives on the SiI 3132.
+> > 2.6.23-rc4-mm1 without patch: 2 out of 2 bad.
+> > back to 2.6.23-rc3-mm1: 18x good.
+> > 2.6.23-rc4-mm1 with patch:  2 out of 8 bad
+> > after that second mail:
+> > 2.6.23-rc4-mm1 with patch: 1 out of 5 bad
+> > 2.6.23-rc6-mm1: 1 out of 2 bad
+>
+> git-block.patch in 2.6.23-rc6-mm1 includes my patch that disables sg
+> chaining for libata but it still includes libata's sg chaining
+> changes. So these changes breaks libata or libata was broken after
+> 2.6.23-rc3-mm1.
+>
+> Can you try Jens's sglist-arch branch? If it works, probably libata in
+> -mm has bugs.
+>
+> For your convenience, I put a sglist-arch branch patch against v2.6.23-rc7:
+>
+> http://www.kernel.org/pub/linux/kernel/people/tomo/misc/v2.6.23-rc7-sglist-arch.diff.bz2
 
-Your patch is certainly an improvement from that point of view; it
-consolidates two calls (which would have to be tied together by said
-infrastructure) into one.
+Thanks for the patch.
+I tried it and 3 out of 3 boot attempts worked without problems.
+But I can't rule out that the bug is still there, as I have no way to
+trigger it on demand.
 
-> How about something like the attached.  It does exactly what you want
-> but retains the tap into the constants file for logging?
-
-> +/*
-> + * Print normalized SCSI sense header with device information and a prefix.
-> + */
-> +void
-> +scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *name,
-> +			  struct scsi_sense_hdr *sshdr)
-> +{
-> +	scmd_printk(KERN_INFO, scmd, "%s: ", name);
-> +	scsi_show_sense_hdr(sshdr);
-> +	scmd_printk(KERN_INFO, scmd, "%s: ", name);
-> +	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
-> +}
-
-I think 'name' is wrong.  It's not a name, it's a description.  How
-about s/name/desc/g ?
-
-With that change, Acked-by: Matthew Wilcox <willy@linux.intel.com>
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Torsten
