@@ -1,60 +1,41 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
-Date: Sun, 23 Sep 2007 23:15:16 +0900
-Message-ID: <20070923231416K.tomof@acm.org>
-References: <200708311703.l7VH3NkK016220@mbox.iij4u.or.jp>
-	<20070905150534.GJ17977@plap.qlogic.org>
-	<46F3D66A.9010000@qlogic.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Needed: advansys driver testers
+Date: Sun, 23 Sep 2007 08:16:57 -0600
+Message-ID: <20070923141657.GH10625@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:42038 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752974AbXIWOPk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 23 Sep 2007 10:15:40 -0400
-In-Reply-To: <46F3D66A.9010000@qlogic.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:46571 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbXIWOQ7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Sep 2007 10:16:59 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: seokmann.ju@qlogic.com
-Cc: tomof@acm.org, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp
-
-On Fri, 21 Sep 2007 07:34:18 -0700
-Seokmann Ju <seokmann.ju@qlogic.com> wrote:
-
-> Andrew Vasquez wrote:
-> > On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
-> > 
-> >> This adds target mode support to qla2xxx.
-> >>
-> >> With set ql2enable_target_mode module parameter to 1, the driver runs
-> >> in target mode. By default, ql2enable_target_mode is set to 0, and the
-> >> driver should work in initiator mode as before.
-> >>
-> >> The driver could support dual-mode in the future but it doesn't at the
-> >> moment (we need to add dual-mode support tgt first).
-> >>
-> >> It is based on scst qla2xxx target mode driver. Mike converted the
-> >> driver to use tgt long ago. I changed it to use the latest (mainline)
-> >> version of qla2xxx driver and tgt, and also converted it to use fc
-> >> transport class.
-> > 
-> > Thanks for doing this.  Some initial comments before a full review is
-> > complete, As was seen from the initiator updates needed for 24xx
-> > support, there are comparable changes needed in the area of
-> > target-mode support for 4gb and 8gb parts.  Also, which ISPs and
-> > firmwares were exercised with this code?
-> The patch is still under reviewing and will get done, soon.
-
-Great, thinks!
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-> One quick question on the patch, 
-> The tgt core will invoke transfer_response() once it completes the command processing. 
-> Could you point out where the actual data transfer is happening if the command required it?
-> I guest it should happen in scsi_tgt_kspace_exec(), but not sure where it is happening?
+I've removed all uses of bus_to_virt[1] and virt_to_bus from the advansys
+driver for the narrow card; it's now at the point where I can get 8MB/s
+on a parisc machine [2].  But I don't have a wide advansys card, and the code
+paths in the driver are very, very different.  I think I know everything
+that needs to be done to make it work, but not having a card to test with,
+and not being infallible makes life tricky.
 
-The user-space daemon sends an mapped address then
-scsi_tgt_kspace_exec calls blk_rq_map_user against
-it. scsi_tgt_cmd_destroy calls blk_rq_unmap_user thats set pages
-dirty.
+So, anyone got a *wide* advansys card that they would like to test with?
+Bonus points if you have ethnic hardware to plug it into; something with
+an IOMMU like ia64, parisc or sparc64 would be a real bonus.  Or if you
+have such a card, and don't want it any more, I'll take it off your hands.
+
+[1] A highly evil interface from the bad old days when machines only had
+one bus and no iommus.
+[2] 10MHz bus, 8 bits wide ... I'm at 80% bus utilisation, that's not too
+shabby.  I've not looked into performance yet, only getting it working.
+I've got a scsi analyser, and this seems like a great opportunity to
+learn how to use it.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
