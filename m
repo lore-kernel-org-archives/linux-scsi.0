@@ -1,63 +1,56 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] scsi_scan: Cope with kthread_run failing
-Date: Sun, 23 Sep 2007 09:17:06 -0500
-Message-ID: <1190557027.3378.7.camel@localhost.localdomain>
-References: <118762312894-git-send-email-matthew@wil.cx>
-	 <20070820152035.GH30019@parisc-linux.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [RFC] Fix device not ready printk
+Date: Sun, 23 Sep 2007 08:25:01 -0600
+Message-ID: <20070923142501.GI10625@parisc-linux.org>
+References: <20070629132126.GA18722@parisc-linux.org> <20070719185145.GU14791@parisc-linux.org> <1190556526.3378.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:46344 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754576AbXIWORI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Sep 2007 10:17:08 -0400
-In-Reply-To: <20070820152035.GH30019@parisc-linux.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:44603 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754300AbXIWOZD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Sep 2007 10:25:03 -0400
+Content-Disposition: inline
+In-Reply-To: <1190556526.3378.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2007-08-20 at 09:20 -0600, Matthew Wilcox wrote:
-> Oops.  I fail to drive git-send-email properly again.
-> James, when you're committing this, please use the
-> Subject: [PATCH] scsi_scan: Cope with kthread_run failing
-> 
-> On Mon, Aug 20, 2007 at 09:18:48AM -0600, Matthew Wilcox wrote:
-> > If kthread_run failed, we would fail to scan the host, and leak the
-> > allocated async_scan_data.  Since using a separate thread is just an
-> > optimisation, do the scan synchronously if we fail to spawn a thread.
-> > 
-> > Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-> > 
-> > diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> > index 309b224..a001ca1 100644
-> > --- a/drivers/scsi/scsi_scan.c
-> > +++ b/drivers/scsi/scsi_scan.c
-> > @@ -1799,6 +1799,7 @@ static int do_scan_async(void *_data)
-> >   **/
-> >  void scsi_scan_host(struct Scsi_Host *shost)
-> >  {
-> > +	struct task_struct *p;
-> >  	struct async_scan_data *data;
-> >  
-> >  	if (strncmp(scsi_scan_type, "none", 4) == 0)
-> > @@ -1810,7 +1811,9 @@ void scsi_scan_host(struct Scsi_Host *shost)
-> >  		return;
-> >  	}
-> >  
-> > -	kthread_run(do_scan_async, data, "scsi_scan_%d", shost->host_no);
-> > +	p = kthread_run(do_scan_async, data, "scsi_scan_%d", shost->host_no);
-> > +	if (IS_ERR(p))
+On Sun, Sep 23, 2007 at 09:08:46AM -0500, James Bottomley wrote:
+> The main thing I don't like is that we've spent a lot of time moving
+> sense prints into a library so that if someone gullible^Wsensible enough
+> to want to do a reporting infrastructure comes along, we have all the
+> entry points nicely laid out, this is a retrograde step on that because
+> it reintroduces the open coding.
 
-I fixed this one up in situ, but for future reference, an error
-condition that's so unlikely we weren't even checking it before needs
-an 
+Your patch is certainly an improvement from that point of view; it
+consolidates two calls (which would have to be tied together by said
+infrastructure) into one.
 
-if (unlikely(IS_ERR(p)))
+> How about something like the attached.  It does exactly what you want
+> but retains the tap into the constants file for logging?
 
-to get the compiler to do the right thing if it can.
+> +/*
+> + * Print normalized SCSI sense header with device information and a prefix.
+> + */
+> +void
+> +scsi_cmd_print_sense_hdr(struct scsi_cmnd *scmd, const char *name,
+> +			  struct scsi_sense_hdr *sshdr)
+> +{
+> +	scmd_printk(KERN_INFO, scmd, "%s: ", name);
+> +	scsi_show_sense_hdr(sshdr);
+> +	scmd_printk(KERN_INFO, scmd, "%s: ", name);
+> +	scsi_show_extd_sense(sshdr->asc, sshdr->ascq);
+> +}
 
-James
+I think 'name' is wrong.  It's not a name, it's a description.  How
+about s/name/desc/g ?
 
+With that change, Acked-by: Matthew Wilcox <willy@linux.intel.com>
 
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
