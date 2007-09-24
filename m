@@ -1,55 +1,63 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/3] debloat aic7xxx and aic79xx drivers
-Date: Mon, 24 Sep 2007 12:24:21 +0200
-Message-ID: <46F79055.1020808@suse.de>
-References: <200708311613.59666.vda.linux@googlemail.com> <200708311615.54991.vda.linux@googlemail.com> <200708311616.36251.vda.linux@googlemail.com> <200708311617.05972.vda.linux@googlemail.com>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: question on flushing buffers and spinning down disk
+Date: Mon, 24 Sep 2007 12:33:22 +0200
+Message-ID: <200709241233.23028.oliver@neukum.org>
+References: <200709181032.29864.oliver@neukum.org> <200709181615.46537.oliver@neukum.org> <1190125566.3375.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:41068 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752712AbXIXKYW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 24 Sep 2007 06:24:22 -0400
-In-Reply-To: <200708311617.05972.vda.linux@googlemail.com>
+Received: from smtp-out002.kontent.com ([81.88.40.216]:39309 "EHLO
+	smtp-out.kontent.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753520AbXIXKcc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 06:32:32 -0400
+In-Reply-To: <1190125566.3375.9.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: Jan Engelhardt <jengelh@computergmbh.de>, Matthew Wilcox <matthew@wil.cx>, Arjan van de Ven <arjan@infradead.org>, Adrian Bunk <bunk@kernel.org>, Andrew Morton <akpm@osdl.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 
-Denys Vlasenko wrote:
-> On Friday 31 August 2007 16:16, Denys Vlasenko wrote:
->> On Friday 31 August 2007 16:15, Denys Vlasenko wrote:
->>> On Friday 31 August 2007 16:13, Denys Vlasenko wrote:
->>>> Attached are three patches which fix that:
->>>>
->>>>    text    data     bss     dec     hex filename
->>>>  261433   50018    1172  312623   4c52f linux-2.6.23-rc1.org.t/dri=
-vers/scsi/aic7xxx/built-in.o
->>>>  199654   50018    1172  250844   3d3dc linux-2.6.23-rc1.aic.t/dri=
-vers/scsi/aic7xxx/built-in.o
->>>>  184014   21314    1172  206500   326a4 linux-2.6.23-rc1.aic1.t/dr=
-ivers/scsi/aic7xxx/built-in.o
->>>>  202378    2850    1172  206400   32640 linux-2.6.23-rc1.aic2.t/dr=
-ivers/scsi/aic7xxx/built-in.o
->>>>
->>>> 1-debloat.patch    deinlines a lot of functions
->>>> 2-addstatic.patch  adds statics, #ifdefs out huge amount of unused=
- code, adds consts
->>>> 3-addconst.patch   adds more consts
+Am Dienstag 18 September 2007 schrieb James Bottomley:
+> On Tue, 2007-09-18 at 16:15 +0200, Oliver Neukum wrote:
+> > Am Dienstag 18 September 2007 schrieb James Bottomley:
+> > > On Tue, 2007-09-18 at 10:32 +0200, Oliver Neukum wrote:
+> > > > which function should a lldd call to make the scsi layer flush
+> > > > a device's buffers and spin it down? Which kind of locking is
+> > > > required?
+> > > 
+> > > Depends on the context. Is this for suspend? If so it's done
+> > > automatically by the sd driver, but the device has to be marked for it
+> > > in the manage_start_stop attributes.
+> > 
+> > It is for runtime power management. We've gotten a bug report about
+> > a drive enclosure that doesn't properly park heads if the usb device is
+> > simply suspended. Apparently it simply cuts power so the cache can
+> > be lost, too.
+> 
+> But even for runtime, if you want to suspend the device, shouldn't you
+> be calling the suspend methods in the device tree?
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Very good question. It seems to that yes indeed, we should. But we don't
+in case of autosuspend. We simply suspend the interfaces:
 
-Cheers,
+static int usb_suspend_both(struct usb_device *udev, pm_message_t msg)
 
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+[..]
+	/* Suspend all the interfaces and then udev itself */
+	if (udev->actconfig) {
+		for (; i < udev->actconfig->desc.bNumInterfaces; i++) {
+			intf = udev->actconfig->interface[i];
+			status = usb_suspend_interface(intf, msg);
+			if (status != 0)
+				break;
+		}
+	}
+
+without involving the driver core.
+
+Is this a design bug?
+
+	Regards
+		Oliver
