@@ -1,47 +1,54 @@
-From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
-Subject: Re: What's in linux-2.6-block.git for 2.6.24
-Date: Mon, 24 Sep 2007 20:48:03 +0200
-Message-ID: <64bb37e0709241148r58a99403k5f51f364de64eeb5@mail.gmail.com>
-References: <20070921085711.GG2367@kernel.dk>
-	 <64bb37e0709230619v196cf34ev29f0c844e2a79ec9@mail.gmail.com>
-	 <20070923225320I.tomof@acm.org>
-	 <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [linux-usb-devel] question on flushing buffers and spinning down disk
+Date: Mon, 24 Sep 2007 21:16:29 +0200
+Message-ID: <200709242116.29635.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0709241257070.5501-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.243]:53914 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757212AbXIXSsE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 14:48:04 -0400
-Received: by an-out-0708.google.com with SMTP id d31so241152and
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Sep 2007 11:48:03 -0700 (PDT)
-In-Reply-To: <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
+Received: from smtp-out002.kontent.com ([81.88.40.216]:60770 "EHLO
+	smtp-out.kontent.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754879AbXIXTPm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 15:15:42 -0400
+In-Reply-To: <Pine.LNX.4.44L0.0709241257070.5501-100000@iolanthe.rowland.org>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: linux-usb-devel@lists.sourceforge.net
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-On 9/23/07, Torsten Kaiser <just.for.lkml@googlemail.com> wrote:
-> On 9/23/07, FUJITA Tomonori <tomof@acm.org> wrote:
-> > Can you try Jens's sglist-arch branch? If it works, probably libata in
-> > -mm has bugs.
-> >
-> > For your convenience, I put a sglist-arch branch patch against v2.6.23-rc7:
-> >
-> > http://www.kernel.org/pub/linux/kernel/people/tomo/misc/v2.6.23-rc7-sglist-arch.diff.bz2
->
-> Thanks for the patch.
-> I tried it and 3 out of 3 boot attempts worked without problems.
-> But I can't rule out that the bug is still there, as I have no way to
-> trigger it on demand.
+Am Montag 24 September 2007 schrieb Alan Stern:
+> On Mon, 24 Sep 2007, Oliver Neukum wrote:
 
-Short update:
-2 more boots with that kernel did also work.
-I have just installed 2.6.23-rc7-mm1 and booted three times.
-Also no problems with that version.
+> > But we don't bother when suspending the whole system. So why not simply
+> > walk the subtrees under a USB device? Let the subsystem choose what
+> > depth of sleep to use.
+> 
+> Because by doing so you are effectively telling the drivers in the
+> subtree that the entire system is going to be suspended, which isn't
 
-I will keep on using 2.6.23-rc7-mm1 and post again, if the error shows up again.
+Unfortunately, that is correct.
 
-Torsten
+> correct.  It may also turn out that the user wants to keep the
+> subsystem active, even though the USB driver isn't aware of it.  Last
+> but not least, the subsystem will need to have some form of autoresume.  
+
+Not necessarily.
+ 
+> The way it should work is for the lower subsystem to tell the USB
+> driver when suspending is okay, not the other way around.  When the
+
+Absolutely.
+
+> subsystem implements its own form of runtime PM support, then you'll be
+> able to use it properly.  But until then, there isn't anything much you
+> can do.
+
+Well, we can't simply cut power. Buffers must be flushed and the disk
+spun down. The suspend() method of the storage driver will have to become
+complex.
+ 
+	Regards
+		Oliver
