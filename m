@@ -1,63 +1,58 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: question on flushing buffers and spinning down disk
-Date: Mon, 24 Sep 2007 12:33:22 +0200
-Message-ID: <200709241233.23028.oliver@neukum.org>
-References: <200709181032.29864.oliver@neukum.org> <200709181615.46537.oliver@neukum.org> <1190125566.3375.9.camel@localhost.localdomain>
+From: stefan@mdy.univie.ac.at (Stefan Boresch)
+Subject: Re: [PATCH] scsi_transport_spi: fix domain validation failure from incorrect width setting
+Date: Mon, 24 Sep 2007 14:10:04 +0200
+Message-ID: <20070924121004.GR1606@loop.mdy.univie.ac.at>
+References: <1190468409.3347.3.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:39309 "EHLO
-	smtp-out.kontent.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753520AbXIXKcc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 06:32:32 -0400
-In-Reply-To: <1190125566.3375.9.camel@localhost.localdomain>
+Received: from epsilon.mdy.univie.ac.at ([131.130.40.18]:53847 "EHLO
+	epsilon.mdy.univie.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753433AbXIXMKL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 08:10:11 -0400
 Content-Disposition: inline
+In-Reply-To: <1190468409.3347.3.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-Am Dienstag 18 September 2007 schrieb James Bottomley:
-> On Tue, 2007-09-18 at 16:15 +0200, Oliver Neukum wrote:
-> > Am Dienstag 18 September 2007 schrieb James Bottomley:
-> > > On Tue, 2007-09-18 at 10:32 +0200, Oliver Neukum wrote:
-> > > > which function should a lldd call to make the scsi layer flush
-> > > > a device's buffers and spin it down? Which kind of locking is
-> > > > required?
-> > > 
-> > > Depends on the context. Is this for suspend? If so it's done
-> > > automatically by the sd driver, but the device has to be marked for it
-> > > in the manage_start_stop attributes.
-> > 
-> > It is for runtime power management. We've gotten a bug report about
-> > a drive enclosure that doesn't properly park heads if the usb device is
-> > simply suspended. Apparently it simply cuts power so the cache can
-> > be lost, too.
+
+Dear James!
+
+Sorry for replying so late!
+
+On Sat, Sep 22, 2007 at 08:40:09AM -0500, James Bottomley wrote:
+> The previous patch was a bit non-standard because it actually adjusted
+> the user setting max_width.  This would mean that if the user replaced
+> the cable and then re-ran domain validation, it still wouldn't try wide
+> transfers, which is wrong.
 > 
-> But even for runtime, if you want to suspend the device, shouldn't you
-> be calling the suspend methods in the device tree?
+> The attached patch fixes the problem by physically nailing the wide
+> setting to what it deduces it should be for the whole of Domain
+> Validation.
+> 
+> James
+> 
+> diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
+[snip]
 
-Very good question. It seems to that yes indeed, we should. But we don't
-in case of autosuspend. We simply suspend the interfaces:
+A self-compiled kernel based on the Ubuntu "gutsy" kernel sources
+(linux-source-2.6.22_2.6.22-12.36_all.deb, for whatever that is worth) boots
+successfully, after applying your patch (which applied cleanly)
 
-static int usb_suspend_both(struct usb_device *udev, pm_message_t msg)
+Thanks so much for your help,
 
-[..]
-	/* Suspend all the interfaces and then udev itself */
-	if (udev->actconfig) {
-		for (; i < udev->actconfig->desc.bNumInterfaces; i++) {
-			intf = udev->actconfig->interface[i];
-			status = usb_suspend_interface(intf, msg);
-			if (status != 0)
-				break;
-		}
-	}
+Stefan Boresch
 
-without involving the driver core.
+PS: BTW, your original post (diagnosis of hardware issues) has also
+convinced my vendor to do some work to honor his warranty. So, my next
+job is to dig into the big box which just arrived by fed-ex containing
+all possible replacements (including a new motherboard ..). Maybe,
+I'll eventually get U320 running on this machine ;-)
 
-Is this a design bug?
-
-	Regards
-		Oliver
+-- 
+Stefan Boresch
+Institute for Computational Biological Chemistry
+University of Vienna, Waehringerstr. 17       A-1090 Vienna, Austria
+Phone: -43-1-427752715                        Fax:   -43-1-427752790
