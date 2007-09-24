@@ -1,87 +1,48 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] Broadcom 8603 SAS/SATA driver, rough draft
-Date: Mon, 24 Sep 2007 09:06:46 -0500
-Message-ID: <1190642806.3355.12.camel@localhost.localdomain>
-References: <20070923040437.GA30170@havoc.gtf.org>
-	 <1190588723.3378.25.camel@localhost.localdomain>
-	 <46F6FA11.2070501@garzik.org>
-	 <1190591947.3378.31.camel@localhost.localdomain>
-	 <46F70162.3000108@garzik.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: question on flushing buffers and spinning down disk
+Date: Mon, 24 Sep 2007 10:38:15 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0709241032180.4256-100000@iolanthe.rowland.org>
+References: <200709241233.23028.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:57652 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757131AbXIXOGs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 10:06:48 -0400
-In-Reply-To: <46F70162.3000108@garzik.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:47760 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752634AbXIXOiQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 10:38:16 -0400
+In-Reply-To: <200709241233.23028.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: Oliver Neukum <oliver@neukum.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-On Sun, 2007-09-23 at 20:14 -0400, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > On Sun, 2007-09-23 at 19:43 -0400, Jeff Garzik wrote:
-> >> James Bottomley wrote:
-> >>> On Sun, 2007-09-23 at 00:04 -0400, Jeff Garzik wrote:
-> >>>> Rather than sitting on this for far too long, I wanted to go ahead and
-> >>>> get this out there.  I heard some chips might be trickling out into
-> >>>> public hands.
-> >>> The first thing to note is about the specs and the pre-production
-> >>> hardware: the Linux Foundation has mechanism to get both into the hands
-> >>> of interested developers; if you can point me to contacts, I can at
-> >>> least get the NDA documentation programme ball rolling.
-> >> Well, are there interested, motivated, skilled developers with time?  :)
-> >>
-> >> Otherwise it's a moot point.
+On Mon, 24 Sep 2007, Oliver Neukum wrote:
+
+> Am Dienstag 18 September 2007 schrieb James Bottomley:
+> > On Tue, 2007-09-18 at 16:15 +0200, Oliver Neukum wrote:
+
+> > > It is for runtime power management. We've gotten a bug report about
+> > > a drive enclosure that doesn't properly park heads if the usb device is
+> > > simply suspended. Apparently it simply cuts power so the cache can
+> > > be lost, too.
 > > 
-> > We have GregKH's minions ... this would be a good project for them.
+> > But even for runtime, if you want to suspend the device, shouldn't you
+> > be calling the suspend methods in the device tree?
 > 
-> > Same answer ... GregKH has a legion ... lets use it.
-> 
-> This is a good project for somebody who knows how SAS behaves on the 
-> wire, which is a rather limited group.
-> 
-> I'm willing to help anyone who proactively moves in this direction, but 
-> they need to be proactive about it...  I am the person who will have to 
-> make introductions at Broadcom, and convince Broadcom that new Person is 
-> a highly capable SAS software engineer.
-> 
-> Telling bcm "I don't know this guy, its doubtful he knows SAS, but we 
-> want to make him the primary engineer anyway" is not a very winning tale :)
+> Very good question. It seems to that yes indeed, we should. But we don't
+> in case of autosuspend. We simply suspend the interfaces:
 
-I wasn't actually planning that ... I was planning to say we have an NDA
-programme to allow them to get their docs and early access silicon in to
-the hands of potential developers who can help on the driver.
+It's a loaded question.  The fact is, the existing suspend methods in
+the device tree are intended for system-wide suspend, not for runtime
+suspend.  The PM and driver cores don't include _any_ provision for
+runtime suspend; it has to be managed separately by each subsystem.
 
-> > SMP and STP, by the way, are simple frame in, frame out.  If it
-> > identifies the initiator and target protocols and allows us to send
-> > frames, we can probably transmit both protocols.
-> [...]
-> > That's going to be a bit of a bit oops ...
-> [...]
-> > well, I suppose it was designed for simple direct connection ...
-> 
-> That's the way it's looking.  There are a few avenues for exposing 
-> IDENTIFY and OPEN frames and related details, but no obvious "any frame, 
-> no problem" method like with the Marvell chip.
-> 
-> IMO it's also indicative that Marvell's chip uses a single set of 
-> command and response queues, whereas Broadcom has command/response 
-> queues for each "port" (bcm's term).
+And that means we need a method of communication between the SCSI and 
+USB subsystems.  The SCSI core has to tell usb-storage when it's okay 
+to do a runtime suspend.  More generally, every host adapter driver 
+should have a method in its driver template which the SCSI core can 
+invoke when it is safe to suspend the adapter (and thus the entire 
+bus).
 
-Heh, OK ... I'm happy to bet that the market won't be too appreciative
-of a chip like this, unless its sold as pure SATA.  The only real reason
-for HBAs to speak SAS as well as SATA is that most dual SAS/SATA
-enclosures have internal expanders, which this chip won't be able to
-talk to.
-
-On the other hand, I think I can find a nice lever to move Marvell with,
-so I'll take this on without needing potentially to compromise your
-contacts.
-
-James
-
+Alan Stern
 
