@@ -1,46 +1,35 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [GIT PATCH] SCSI bug fix for 2.6.23-rc8
-Date: Tue, 25 Sep 2007 12:55:24 -0500
-Message-ID: <1190742924.3345.42.camel@localhost.localdomain>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: [PATCH 6/9] mpt fusion: error recovery improvements,andsynchronizing internal commands
+Date: Tue, 25 Sep 2007 12:22:56 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D709D940E@NAMAIL4.ad.lsil.com>
+References: <1190741527.3345.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:34973 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751507AbXIYRz1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 13:55:27 -0400
+Received: from mail0.lsil.com ([147.145.40.20]:51173 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753361AbXIYSXB convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 14:23:01 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <1190741527.3345.27.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org
 
-This is, unfortunately, not a recent regression but it's only been
-recently diagnosed.  Apparently the SCSI Parallel transport class domain
-validation cable width detection wasn't working, leading to cases where
-controllers with damaged cables would end up hanging the system (the
-reported one was an aic79xx controller, but the potential is there for
-all SPI based systems).  This bug would *only* affect systems whose
-cable integrity or connectors were compromised, so it isn't life
-threatening to every SCSI Parallel installation, but the consequence of
-running into it is a system hang.
+On Tuesday, September 25, 2007 11:32 AM,  James Bottomley  wrote:
+ 
+> > Youve rejected the error recovery patchs, which is fair enough.  
+> 
+> Just the separation ... the actual patch looks OK.
+> 
 
-The fix is available here:
+I'll will continue working to separate the "error recovery
+improvements:" into smaller feature add, but will take some time.   I
+want some constructive feedback, and too big of patch is deterring some
+people from looking at it.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-
-The short changelog is:
-
-James Bottomley (1):
-      scsi_transport_spi: fix domain validation failure from incorrect
-width setting
-
-And the diffstat:
-
- scsi_transport_spi.c |   28 ++++++++++++++++++++++------
- 1 file changed, 22 insertions(+), 6 deletions(-)
-
-James
-
-
-
+Thanks,
+Eric 
