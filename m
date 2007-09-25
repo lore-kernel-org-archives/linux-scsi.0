@@ -1,162 +1,89 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] gdth: Stop abusing ->done for internal commands
-Date: Tue, 25 Sep 2007 19:30:29 +0200
-Message-ID: <46F945B5.2030305@panasas.com>
-References: <1190738524460-git-send-email-willy@linux.intel.com> <1190738524757-git-send-email-willy@linux.intel.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH 6/9] mpt fusion: error recovery improvements,
+	andsynchronizing internal commands
+Date: Tue, 25 Sep 2007 12:32:07 -0500
+Message-ID: <1190741527.3345.27.camel@localhost.localdomain>
+References: <664A4EBB07F29743873A87CF62C26D709D92A3@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25350 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752657AbXIYRag (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 13:30:36 -0400
-In-Reply-To: <1190738524757-git-send-email-willy@linux.intel.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:60492 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754396AbXIYRcN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 13:32:13 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D709D92A3@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <willy@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 25 2007 at 18:42 +0200, Matthew Wilcox <willy@linux.intel.com> wrote:
-> From: Matthew Wilcox <matthew@wil.cx>
+On Mon, 2007-09-24 at 19:26 -0600, Moore, Eric wrote:
+> On Saturday, September 22, 2007 10:23 AM,  James Bottomley wrote:
 > 
-> The ->done member was being used to mark commands as being internal.
-> I decided to put a magic number in ->underflow instead.  I believe this
-> to be safe as no current user of ->underflow has any of the bottom 9
-> bits set.
+> > 
+> > OK, I thought I'd wait here for the breakout, but in the meantime I
+> > tried to compile the first five patches, but they don't:
+> > 
+> >   CC [M]  drivers/message/fusion/mptscsih.o
+> > drivers/message/fusion/mptscsih.c: In function 'mptscsih_qcmd':
+> > drivers/message/fusion/mptscsih.c:1357: error: 'MPT_SCSI_HOST' has no
+> > member named 'resetPending'
+> > drivers/message/fusion/mptscsih.c: In function 'mptscsih_TMHandler':
+> > drivers/message/fusion/mptscsih.c:1554: error: 'MPT_ADAPTER' has no
+> > member named 'diagLock'
+> > ...
 > 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> ---
->  drivers/scsi/gdth.c      |   19 +++++++++++--------
->  drivers/scsi/gdth_proc.c |    4 ++--
->  2 files changed, 13 insertions(+), 10 deletions(-)
+> Its not going to compile if you didn't pull down all 6 patchs associated
+> to "error recovery improvements".   Those six patchs were divided by
+> sources.  Meaning patch 4 was mptbase.[h,c] changes, then patch5 was
+> mptctl.[c,h] changes, and so on.  So the changes assoicated for
+> mptscsich.c are in patch 8.   Since you didn't apply the 8th patch,
+> offcourse your going to get the errrors in mptscish.c.    All patchs 4-9
+> need to go togeather, as mentioned in the first patch 0.
+
+If that's the case, and they can't be split up into logically separate
+sub patches (each of which individually compiles), then they'll have to
+go as a single patch.
+
+> > 
+> > The series can't be applied in this form, because if git bisect steps
+> > into the middle of this, the compile will break (and hence the
+> > bisection) and a lot of people will say a lot of nasty things.
 > 
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index 8a6a5f8..42a200f 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -691,6 +691,9 @@ static const struct file_operations gdth_fops = {
->      .release = gdth_close,
->  };
+> > 
+> > A patch series really needs to be one patch per logical change (with
+> > other peoples' patches broken out) in a form that is separately
+> > compilable for each patch.  Additionally, with a separate 
+> > change log and
+> > summary (i.e. not four patches all saying "mpt fusion: error recovery
+> > improvements, and synchronizing internal commands").
+> >
+> 
+> I understand, and thats been going on for the past couple months,
+> starting with Sathya's patchs early August.   The changes associated
+> with the rewrite of internal commands, and errror recovery is rather
+> difficult to seperate due to many depandancies and new structure
+> changes, and my concerned risk of what small steps could introduce more
+> issues, so IMO, the least risk was jump starting you to the customer and
+> factory tested code. 
 >  
-> +#define GDTH_MAGIC	0xc2e7c389	/* I got it from /dev/urandom */
-> +#define IS_GDTH_INTERNAL_CMD(scp)	(scp->underflow == GDTH_MAGIC)
-> +
->  #include "gdth_proc.h"
->  #include "gdth_proc.c"
->  
-> @@ -713,7 +716,7 @@ static void gdth_scsi_done(struct scsi_cmnd *scp)
->  {
->  	TRACE2(("gdth_scsi_done()\n"));
->  
-> -	if (scp->done == gdth_scsi_done)
-> +	if (IS_GDTH_INTERNAL_CMD(scp))
->  		complete((struct completion *)scp->request);
->  	else 
->  		scp->scsi_done(scp);
-> @@ -738,7 +741,7 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
->      scp->cmd_len = 12;
->      memcpy(scp->cmnd, cmnd, 12);
->      scp->SCp.this_residual = IOCTL_PRI;   /* priority */
-> -    scp->done = gdth_scsi_done;
-> +    scp->underflow = GDTH_MAGIC;
->      gdth_queuecommand(scp, NULL);
->      wait_for_completion(&wait);
->  
-> @@ -2319,7 +2322,7 @@ static void gdth_putq(int hanum,Scsi_Cmnd *scp,unchar priority)
->      ha = HADATA(gdth_ctr_tab[hanum]);
->      spin_lock_irqsave(&ha->smp_lock, flags);
->  
-> -    if (scp->done != gdth_scsi_done) {
-> +    if (!IS_GDTH_INTERNAL_CMD(scp)) {
->          scp->SCp.this_residual = (int)priority;
->          b = virt_ctr ? NUMDATA(scp->device->host)->busnum:scp->device->channel;
->          t = scp->device->id;
-> @@ -2382,7 +2385,7 @@ static void gdth_next(int hanum)
->      for (nscp = pscp = ha->req_first; nscp; nscp = (Scsi_Cmnd *)nscp->SCp.ptr) {
->          if (nscp != pscp && nscp != (Scsi_Cmnd *)pscp->SCp.ptr)
->              pscp = (Scsi_Cmnd *)pscp->SCp.ptr;
-> -        if (nscp->done != gdth_scsi_done) {
-> +        if (!IS_GDTH_INTERNAL_CMD(nscp)) {
->              b = virt_ctr ?
->                  NUMDATA(nscp->device->host)->busnum : nscp->device->channel;
->              t = nscp->device->id;
-> @@ -2408,7 +2411,7 @@ static void gdth_next(int hanum)
->              firsttime = FALSE;
->          }
->  
-> -        if (nscp->done != gdth_scsi_done) {
-> +        if (!IS_GDTH_INTERNAL_CMD(nscp)) {
->          if (nscp->SCp.phase == -1) {
->              nscp->SCp.phase = CACHESERVICE;           /* default: cache svc. */ 
->              if (nscp->cmnd[0] == TEST_UNIT_READY) {
-> @@ -2471,7 +2474,7 @@ static void gdth_next(int hanum)
->                  else
->                      gdth_scsi_done(nscp);
->              }
-> -        } else if (nscp->done == gdth_scsi_done) {
-> +        } else if (IS_GDTH_INTERNAL_CMD(nscp)) {
->              if (!(cmd_index=gdth_special_cmd(hanum,nscp)))
->                  this_cmd = FALSE;
->              next_cmd = FALSE;
-> @@ -3812,7 +3815,7 @@ static int gdth_sync_event(int hanum,int service,unchar index,Scsi_Cmnd *scp)
->                      scp->sense_buffer[2] = NOT_READY;
->                      scp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
->                  }
-> -                if (scp->done != gdth_scsi_done) {
-> +                if (!IS_GDTH_INTERNAL_CMD(scp)) {
->                      ha->dvr.size = sizeof(ha->dvr.eu.sync);
->                      ha->dvr.eu.sync.ionode  = hanum;
->                      ha->dvr.eu.sync.service = service;
-> @@ -4910,7 +4913,7 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
->  #endif
->  
->      priority = DEFAULT_PRI;
-> -    if (scp->done == gdth_scsi_done)
-> +    if (IS_GDTH_INTERNAL_CMD(scp))
->          priority = scp->SCp.this_residual;
->      else
->          gdth_update_timeout(hanum, scp, scp->timeout_per_command * 6);
-> diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
-> index 32982eb..1f8d9a5 100644
-> --- a/drivers/scsi/gdth_proc.c
-> +++ b/drivers/scsi/gdth_proc.c
-> @@ -805,7 +805,7 @@ static void gdth_stop_timeout(int hanum, int busnum, int id)
->      spin_lock_irqsave(&ha->smp_lock, flags);
->  
->      for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
-> -        if (scp->done != gdth_scsi_done) {
-> +        if (!IS_GDTH_INTERNAL_CMD(scp)) {
->              b = virt_ctr ?
->                  NUMDATA(scp->device->host)->busnum : scp->device->channel;
->              t = scp->device->id;
-> @@ -829,7 +829,7 @@ static void gdth_start_timeout(int hanum, int busnum, int id)
->      spin_lock_irqsave(&ha->smp_lock, flags);
->  
->      for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
-> -        if (scp->done != gdth_scsi_done) {
-> +        if (!IS_GDTH_INTERNAL_CMD(scp)) {
->              b = virt_ctr ?
->                  NUMDATA(scp->device->host)->busnum : scp->device->channel;
->              t = scp->device->id;
+> > I'll back all of this out; can you resend the series conforming to the
+> > above request?
+> > 
+> 
+> The first three patchs did conform that, which are:
+> 
+> 1) adding usage of shost_priv and removing all the typecasting
+> 2) Fixing sparse warnings
+> 3) locking down ScsiLookup
 
-OK This is on top of the first patch that I will take care of,
-right? (http://www.spinics.net/lists/linux-scsi/msg19470.html)
+OK ... I'll look at applying those.
 
-Here 2 it will not merge with my patchset. So I'll take it off your hands
-and rebase it to mine.
+> Youve rejected the error recovery patchs, which is fair enough.  
 
-In my patchset I have introduced a gdth_cmnd_priv. That is associated
-with every command and is put on cmnd->host_scribble, I than moved lots
-of abused Scp and other members to that new structure. I also put a 
-simple boolean that states that these are Internal commands. So what
-is left of this patch is the:
--    scp->done = gdth_scsi_done;
-I will add that one line removal to your previous patch.
+Just the separation ... the actual patch looks OK.
 
-> Ah; I was basing this on linus + scsi-misc.  I guess scsi_lib hadn't
-> been converted because I just took the code from there.
-Yes scsi_lib was not converted, but scsi.c was.
+James
 
-Boaz
 
