@@ -1,54 +1,61 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] gdth: Stop abusing ->done for internal commands
-Date: Tue, 25 Sep 2007 11:33:37 -0600
-Message-ID: <20070925173337.GX10625@parisc-linux.org>
-References: <1190738524460-git-send-email-willy@linux.intel.com> <1190738524757-git-send-email-willy@linux.intel.com> <46F945B5.2030305@panasas.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH 4/9] mpt fusion: error recovery improvements,
+	andsynchronizing internal commands
+Date: Tue, 25 Sep 2007 12:34:47 -0500
+Message-ID: <1190741687.3345.30.camel@localhost.localdomain>
+References: <664A4EBB07F29743873A87CF62C26D709D92A4@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:59210 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752764AbXIYRdi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 13:33:38 -0400
-Content-Disposition: inline
-In-Reply-To: <46F945B5.2030305@panasas.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:60558 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751214AbXIYRet (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 13:34:49 -0400
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D709D92A4@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Sep 25, 2007 at 07:30:29PM +0200, Boaz Harrosh wrote:
-> OK This is on top of the first patch that I will take care of,
-> right? (http://www.spinics.net/lists/linux-scsi/msg19470.html)
+On Mon, 2007-09-24 at 19:26 -0600, Moore, Eric wrote:
+> On Saturday, September 22, 2007 9:39 AM,  James Bottomley wrote:
+> > 
+> > Well, I'll put this in this time.  However, it contains a 
+> > whole slew of
+> > pointless changes like this:
+> > 
+> > 
+> > > -                       mdelay (10);
+> > > +                       udelay (10000);
+> > 
+> > and
+> > 
+> > > -               mdelay(1);
+> > > +               udelay(1000);
+> > 
+> > Which is going to excite the janitors into a frenzy of replace udelay
+> > with mdelay patches, which I can well do without ... please don't do
+> > this type of change unless there's some actual reason for it.
+> > 
+> 
+> I recall the reason for this change.  I found that medlay called during
+> interrupt context didn't work well, whereas udelay did.  Oringally when
+> mpt_fault_reset_work was added, this code was called using timers, which
+> as you know, is called as part of softirq bottom half handler.  Since
+> then, we converted mpt_fault_reset_work to being called using user
+> context work task, so really its a non-issue I guess.
 
-That's right.
+That shouldn't have happened ... if you look (include/linux/delay.h)
+mdelay is implemented in terms of udelay, so the behaviour should be the
+same.
 
-> Here 2 it will not merge with my patchset. So I'll take it off your hands
-> and rebase it to mine.
+There is a technical difference, though.  Because udelay is busy waiting
+in a calculated processor loop, it can overflow for large values (and
+large is defined to be anything > 1000) mdelay() is careful to call
+udelay multiple times to avoid the potential overflow.
 
-Wonderful.  Again, I don't care about this driver, just want it to not
-break (more than it's already broken).
+James
 
-> In my patchset I have introduced a gdth_cmnd_priv. That is associated
-> with every command and is put on cmnd->host_scribble, I than moved lots
-> of abused Scp and other members to that new structure. I also put a 
-> simple boolean that states that these are Internal commands. So what
-> is left of this patch is the:
-> -    scp->done = gdth_scsi_done;
-> I will add that one line removal to your previous patch.
 
-Excellent.  Makes perfect sense.
 
-> > Ah; I was basing this on linus + scsi-misc.  I guess scsi_lib hadn't
-> > been converted because I just took the code from there.
-> Yes scsi_lib was not converted, but scsi.c was.
-
-OK.  I've converted that in my tree now, and fixed a small whitespace
-error I introduced.  I'll wait for more comments before posting a
-replacement patch.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
