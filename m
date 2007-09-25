@@ -1,47 +1,66 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [PATCH 6/9] mpt fusion: error recovery improvements, andsynchronizing internal commands
-Date: Mon, 24 Sep 2007 19:35:42 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D709D92A7@NAMAIL4.ad.lsil.com>
-References: <1190476911.3347.19.camel@localhost.localdomain>
+From: "Torsten Kaiser" <just.for.lkml@googlemail.com>
+Subject: Re: What's in linux-2.6-block.git for 2.6.24
+Date: Tue, 25 Sep 2007 07:52:53 +0200
+Message-ID: <64bb37e0709242252l48d54d16w5f645d324914fd16@mail.gmail.com>
+References: <20070921085711.GG2367@kernel.dk>
+	 <64bb37e0709230619v196cf34ev29f0c844e2a79ec9@mail.gmail.com>
+	 <20070923225320I.tomof@acm.org>
+	 <64bb37e0709230831t16eaa86dub5abcb97fdce12eb@mail.gmail.com>
+	 <64bb37e0709241148r58a99403k5f51f364de64eeb5@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35871 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754112AbXIYBft convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 21:35:49 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <1190476911.3347.19.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <64bb37e0709241148r58a99403k5f51f364de64eeb5@mail.gmail.com>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
 
-On Saturday, September 22, 2007 10:02 AM, James Bottomley  wrote: 
+On 9/24/07, Torsten Kaiser <just.for.lkml@googlemail.com> wrote:
+> I will keep on using 2.6.23-rc7-mm1 and post again, if the error shows up again.
 
-> What fixes?
-> 
-> The object of a change log is to preserve the history of a particular
-> change (as per the Developer Certificate of Origin).  This 
-> means if you
-> get a patch from someone, you should also collect their 
-> signoff with it,
-> then you pass it on to me complete with your signoff added (and a note
-> if you had to modify it to fit it into the patch series or otherwise
-> alter it).
-> 
-> James
-> 
-> 
-> 
+On the next boot it did show up again, so 2.6.23-rc7-mm1 still has the bug.
 
-James, Mike sent me an email back on June 13, contain 11 suggested
-changes associated with his test efforts with my new code having rewrote
-internal command error handling, and adding new polling function for
-controller fault handling.   The changes he quoted associated to the
-ones in mptfc seem vague.  I have the email I could forward, but at that
-time, It probably doesnt matter.
+[   33.810000] md1: bitmap initialized from disk: read 10/10 pages, set 0 bits
+[   33.810000] created bitmap (145 pages) for device md1
+[   63.910000] ata1.00: exception Emask 0x0 SAct 0x1 SErr 0x0 action 0x6 frozen
+[   63.910000] ata1.00: cmd 61/08:00:09:d6:42/00:00:25:00:00/40 tag 0
+cdb 0x0 data 4096 out
+[   63.910000]          res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
+0x4 (timeout)
+[   63.910000] ata1.00: status: {DRDY }
+[   63.910000] ata1: hard resetting link
+[   66.210000] ata1: softreset failed (port not ready)
+[   66.210000] ata1: reset failed (errno=-5), retrying in 8 secs
+[   73.910000] ata1: hard resetting link
+[   76.210000] ata1: softreset failed (port not ready)
+[   76.210000] ata1: reset failed (errno=-5), retrying in 8 secs
+[   83.910000] ata1: hard resetting link
+[   86.210000] ata1: softreset failed (port not ready)
+[   86.210000] ata1: reset failed (errno=-5), retrying in 33 secs
+[  118.910000] ata1: limiting SATA link speed to 1.5 Gbps
+[  118.910000] ata1: hard resetting link
+[  121.210000] ata1: softreset failed (port not ready)
+[  121.210000] ata1: reset failed, giving up
+[  121.210000] ata1.00: disabled
+[  121.210000] ata1: EH complete
+[  121.210000] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK,SUGGEST_OK
+[  121.210000] end_request: I/O error, dev sda, sector 625137161
+[  121.210000] md: super_written gets error=-5, uptodate=0
+[  121.210000] raid5: Disk failure on sda2, disabling device.
+Operation continuing on 2 devices
 
-Eric
+After that there are many more error like this in the log:
+[  135.760000] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK,SUGGEST_OK
+[  135.760000] end_request: I/O error, dev sda, sector 19551113
+[  135.760000] Buffer I/O error on device sda2, logical block 1
+or:
+[  135.760000] sd 0:0:0:0: [sda] Result: hostbyte=DID_BAD_TARGET
+driverbyte=DRIVER_OK,SUGGEST_OK
+[  135.760000] end_request: I/O error, dev sda, sector 19551105
+
+Torsten
