@@ -1,53 +1,54 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [linux-usb-devel] question on flushing buffers and spinning down disk
-Date: Mon, 24 Sep 2007 22:00:03 +0200
-Message-ID: <200709242200.04278.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0709241532380.5920-100000@iolanthe.rowland.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 0/4] more gdth patches for your amusement
+Date: Mon, 24 Sep 2007 20:25:28 -0400
+Message-ID: <46F85578.70503@garzik.org>
+References: <20070721203410.GA1004@havoc.gtf.org> <1189865576.3339.0.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out001.kontent.com ([81.88.40.215]:36517 "EHLO
-	smtp-out.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753614AbXIXT7M convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Sep 2007 15:59:12 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0709241532380.5920-100000@iolanthe.rowland.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:41511 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753800AbXIYAZc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 24 Sep 2007 20:25:32 -0400
+In-Reply-To: <1189865576.3339.0.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-usb-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, achim_leubner@adaptec.com, Andrew Morton <akpm@linux-foundation.org>
 
-Am Montag 24 September 2007 schrieb Alan Stern:
-> On Mon, 24 Sep 2007, Oliver Neukum wrote:
->=20
-> > > subsystem implements its own form of runtime PM support, then you=
-'ll be
-> > > able to use it properly. =A0But until then, there isn't anything =
-much you
-> > > can do.
-> >=20
-> > Well, we can't simply cut power. Buffers must be flushed and the di=
-sk
-> > spun down. The suspend() method of the storage driver will have to =
-become
-> > complex.
->=20
-> That's right, if the device is a real disk. =A0If it's a flash memory
-> device then of course these issues don't arise. =A0Unfortunately the
-> driver isn't able to tell one from the other; the user will have to
-> do that for us.
+James Bottomley wrote:
+> On Sat, 2007-07-21 at 16:34 -0400, Jeff Garzik wrote:
+>> This is the rest of the stuff checked into the 'gdth' branch of
+>> git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/misc-2.6.git
+>>
+>> As noted before, I'm fine with Christoph's gdth work superceding mine,
+>> or whatever.  This was just me poking around.  Hopefully the patches
+>> are useful for illustration, if nothing else.
+>>
+>> 1) [SCSI] gdth: kill gdth_{read,write}[bwl] wrappers
+>> 2) [SCSI] gdth: Move probe-time error handling code to end of each function
+>> 3) [SCSI] gdth: make some virt ctrlr code common; shuffle SHT members
+>> 4) [SCSI] gdth: convert to modern SCSI host alloc/scan
+> 
+> OK, we've had these competing patch sets floating around for two months
+> now.  Christoph and Jeff, can we get agreement on which is going in?
 
-So those devices which draw most power we don't suspend :-(
-=46urthermore for many devices it will take real user intervention to
-determine what is in the enclosure. This isn't very good. I think
-we can do better.
+Well, my opinion is
 
-	Regards
-		Oliver
+1) When judging by total amount of positive improvement, Christoph's 
+patches are superior -- he has more overall cleanups than I do.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2) When judging by likelihood of inducing breakage, I feel my changes 
+are superior.  My gdth changes tightly adhere to the 
+equivalent-transformation method of shuffing code around, enabling 
+further improvements.  IOW, I resisted the urge to make cleanups and fix 
+insignificant, pre-existing bugs during the transformations.
+
+3) I am utterly unmotivated to merge the two patchsets.  Someone should 
+make an executive decision, pull one patchset, and drop the other.  My 
+coding "mood" has swung from cleaning up code to writing new SAS drivers :)
+
+	Jeff
+
+
