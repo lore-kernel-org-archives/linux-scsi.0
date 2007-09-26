@@ -1,64 +1,192 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/8] gdth: Split out PCI register into separate function
-Date: Wed, 26 Sep 2007 00:34:10 -0400
-Message-ID: <20070926043410.GA16185@havoc.gtf.org>
-References: <20070926043321.GA16055@havoc.gtf.org>
+Subject: [PATCH 1/8] gdth: Split out EISA and ISA register into separate
+	functions
+Date: Wed, 26 Sep 2007 00:33:22 -0400
+Message-ID: <20070926043321.GA16055@havoc.gtf.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:37838 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751262AbXIZEeM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Sep 2007 00:34:12 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756940AbXIZEdj@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20070926043321.GA16055@havoc.gtf.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: achim_leubner@adaptec.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 
-An equivalent-transformation change.  No functional changes beyond those
-necessary to call the new function.
-    
+An equivalent-transformation change.  No functional changes beyond
+those necessary to call the new, split-out functions.
+
 Signed-off-by: Jeff Garzik <jeff@garzik.org>
 ---
 
 diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index f330d34..840bdf6 100644
+index b20c188..f330d34 100644
 --- a/drivers/scsi/gdth.c
 +++ b/drivers/scsi/gdth.c
-@@ -4545,16 +4545,167 @@ LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
- 	return 1;	/* continue looping */
+@@ -4277,6 +4277,274 @@ int __init option_setup(char *str)
+     return 1;
  }
  
-+static int __init gdth_start_pci(struct scsi_host_template *shtp,
-+				 gdth_pci_str *pcistr, int ctr)
++static int __init gdth_start_isa(struct scsi_host_template *shtp,
++				 ulong32 isa_bios)
 +{
 +	struct Scsi_Host *shp;
-+	dma_addr_t scratch_dma_handle = 0;
 +	gdth_ha_str *ha;
-+	int i, hanum, err;
++	int i, hanum;
++	dma_addr_t scratch_dma_handle = 0;
 +
-+	if (gdth_ctr_count >= MAXHA)
-+		return 0;	/* end loop: success */
++	shp = scsi_register(shtp, sizeof(gdth_ext_str));
++	if (shp == NULL)
++		return 1;	/* continue looping */
++
++	ha = HADATA(shp);
++	if (!gdth_init_isa(isa_bios, ha)) {
++		scsi_unregister(shp);
++		return 1;	/* continue looping */
++	}
++
++#ifdef __ia64__
++	return 0;		/* end loop: success */
++#else
++	/* controller found and initialized */
++	printk("Configuring GDT-ISA HA at BIOS 0x%05X IRQ %u DRQ %u\n",
++	       isa_bios, ha->irq, ha->drq);
++
++	if (request_irq(ha->irq, gdth_interrupt, IRQF_DISABLED, "gdth", ha)) {
++		printk("GDT-ISA: Unable to allocate IRQ\n");
++		scsi_unregister(shp);
++		return 1;	/* continue looping */
++	}
++	if (request_dma(ha->drq, "gdth")) {
++		printk("GDT-ISA: Unable to allocate DMA channel\n");
++		free_irq(ha->irq, ha);
++		scsi_unregister(shp);
++		return 1;	/* continue looping */
++	}
++
++	set_dma_mode(ha->drq, DMA_MODE_CASCADE);
++	enable_dma(ha->drq);
++	shp->unchecked_isa_dma = 1;
++	shp->irq = ha->irq;
++	shp->dma_channel = ha->drq;
++	hanum = gdth_ctr_count;         
++	gdth_ctr_tab[gdth_ctr_count++] = shp;
++	gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
++
++	NUMDATA(shp)->hanum = (ushort)hanum;
++	NUMDATA(shp)->busnum= 0;
++
++	ha->pccb = CMDDATA(shp);
++	ha->ccb_phys = 0L;
++	ha->pdev = NULL;
++	ha->pscratch = pci_alloc_consistent(ha->pdev, GDTH_SCRATCH, 
++					    &scratch_dma_handle);
++	ha->scratch_phys = scratch_dma_handle;
++	ha->pmsg = pci_alloc_consistent(ha->pdev, sizeof(gdth_msg_str), 
++					&scratch_dma_handle);
++	ha->msg_phys = scratch_dma_handle;
++
++#ifdef INT_COAL
++	ha->coal_stat = (gdth_coal_status *)
++	pci_alloc_consistent(ha->pdev, sizeof(gdth_coal_status) *
++			     MAXOFFSETS, &scratch_dma_handle);
++	ha->coal_stat_phys = scratch_dma_handle;
++#endif
++
++	ha->scratch_busy = FALSE;
++	ha->req_first = NULL;
++	ha->tid_cnt = MAX_HDRIVES;
++	if (max_ids > 0 && max_ids < ha->tid_cnt)
++		ha->tid_cnt = max_ids;
++	for (i=0; i<GDTH_MAXCMDS; ++i)
++		ha->cmd_tab[i].cmnd = UNUSED_CMND;
++	ha->scan_mode = rescan ? 0x10 : 0;
++
++	if (ha->pscratch == NULL || ha->pmsg == NULL || 
++	    !gdth_search_drives(hanum)) {
++		printk("GDT-ISA: Error during device scan\n");
++		--gdth_ctr_count;
++		--gdth_ctr_vcount;
++
++#ifdef INT_COAL
++		if (ha->coal_stat)
++			pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
++					    MAXOFFSETS, ha->coal_stat,
++					    ha->coal_stat_phys);
++#endif
++
++		if (ha->pscratch)
++			pci_free_consistent(ha->pdev, GDTH_SCRATCH, 
++					    ha->pscratch, ha->scratch_phys);
++		if (ha->pmsg)
++			pci_free_consistent(ha->pdev, sizeof(gdth_msg_str), 
++					    ha->pmsg, ha->msg_phys);
++
++		free_irq(ha->irq,ha);
++		scsi_unregister(shp);
++		return 1;	/* continue looping */
++	}
++
++	if (hdr_channel < 0 || hdr_channel > ha->bus_cnt)
++		hdr_channel = ha->bus_cnt;
++	ha->virt_bus = hdr_channel;
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20) && \
++    LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
++	shp->highmem_io  = 0;
++#endif
++	if (ha->cache_feat & ha->raw_feat & ha->screen_feat & GDT_64BIT) 
++		shp->max_cmd_len = 16;
++
++	shp->max_id      = ha->tid_cnt;
++	shp->max_lun     = MAXLUN;
++	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
++	if (virt_ctr) {
++		unchar b;
++
++		virt_ctr = 1;
++		/* register addit. SCSI channels as virtual controllers */
++		for (b = 1; b < ha->bus_cnt + 1; ++b) {
++			shp = scsi_register(shtp,sizeof(gdth_num_str));
++			shp->unchecked_isa_dma = 1;
++			shp->irq = ha->irq;
++			shp->dma_channel = ha->drq;
++			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
++			NUMDATA(shp)->hanum = (ushort)hanum;
++			NUMDATA(shp)->busnum = b;
++		}
++	}  
++
++	spin_lock_init(&ha->smp_lock);
++	gdth_enable_int(hanum);
++#endif /* !__ia64__ */
++
++	return 1;	/* continue looping */
++}
++
++static int __init gdth_start_eisa(struct scsi_host_template *shtp,
++				  ushort eisa_slot)
++{
++	struct Scsi_Host *shp;
++	gdth_ha_str *ha;
++	int i, hanum;
++	dma_addr_t scratch_dma_handle = 0;
++
 +	shp = scsi_register(shtp,sizeof(gdth_ext_str));
 +	if (shp == NULL)
 +		return 1;	/* continue looping */
 +
 +	ha = HADATA(shp);
-+	if (!gdth_init_pci(&pcistr[ctr],ha)) {
++	if (!gdth_init_eisa(eisa_slot,ha)) {
 +		scsi_unregister(shp);
 +		return 1;	/* continue looping */
 +	}
 +
 +	/* controller found and initialized */
-+	printk("Configuring GDT-PCI HA at %d/%d IRQ %u\n",
-+	       pcistr[ctr].pdev->bus->number,
-+	       PCI_SLOT(pcistr[ctr].pdev->devfn), ha->irq);
++	printk("Configuring GDT-EISA HA at Slot %d IRQ %u\n",
++	       eisa_slot >> 12, ha->irq);
 +
-+	if (request_irq(ha->irq, gdth_interrupt,
-+			IRQF_DISABLED | IRQF_SHARED, "gdth", ha)) {
-+		printk("GDT-PCI: Unable to allocate IRQ\n");
++	if (request_irq(ha->irq,gdth_interrupt,IRQF_DISABLED,"gdth",ha)) {
++		printk("GDT-EISA: Unable to allocate IRQ\n");
 +		scsi_unregister(shp);
 +		return 1;	/* continue looping */
 +	}
@@ -72,10 +200,13 @@ index f330d34..840bdf6 100644
 +
 +	NUMDATA(shp)->hanum = (ushort)hanum;
 +	NUMDATA(shp)->busnum= 0;
++	TRACE2(("EISA detect Bus 0: hanum %d\n",
++	NUMDATA(shp)->hanum));
 +
 +	ha->pccb = CMDDATA(shp);
-+	ha->ccb_phys = 0L;
++	ha->ccb_phys = 0L; 
 +
++	ha->pdev = NULL;
 +	ha->pscratch = pci_alloc_consistent(ha->pdev, GDTH_SCRATCH, 
 +					&scratch_dma_handle);
 +	ha->scratch_phys = scratch_dma_handle;
@@ -90,78 +221,57 @@ index f330d34..840bdf6 100644
 +	ha->coal_stat_phys = scratch_dma_handle;
 +#endif
 +
++	ha->ccb_phys = 
++		pci_map_single(ha->pdev,ha->pccb,
++				sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
 +	ha->scratch_busy = FALSE;
 +	ha->req_first = NULL;
-+	ha->tid_cnt = pcistr[ctr].pdev->device >= 0x200 ? MAXID : MAX_HDRIVES;
++	ha->tid_cnt = MAX_HDRIVES;
 +	if (max_ids > 0 && max_ids < ha->tid_cnt)
 +		ha->tid_cnt = max_ids;
 +	for (i=0; i<GDTH_MAXCMDS; ++i)
 +		ha->cmd_tab[i].cmnd = UNUSED_CMND;
 +	ha->scan_mode = rescan ? 0x10 : 0;
 +
-+	err = FALSE;
 +	if (ha->pscratch == NULL || ha->pmsg == NULL || 
 +	    !gdth_search_drives(hanum)) {
-+		err = TRUE;
-+	} else {
-+		if (hdr_channel < 0 || hdr_channel > ha->bus_cnt)
-+			hdr_channel = ha->bus_cnt;
-+		ha->virt_bus = hdr_channel;
-+
-+#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
-+		scsi_set_pci_device(shp, pcistr[ctr].pdev);
-+#endif
-+
-+		if (!(ha->cache_feat & ha->raw_feat & ha->screen_feat &
-+		      GDT_64BIT) ||
-+			/* 64-bit DMA only supported from FW >= x.43 */
-+		    (!ha->dma64_support)) {
-+			if (pci_set_dma_mask(pcistr[ctr].pdev, DMA_32BIT_MASK)){
-+				printk(KERN_WARNING "GDT-PCI %d: Unable to "
-+				       "set 32-bit DMA\n", hanum);
-+				err = TRUE;
-+			}
-+		} else {
-+			shp->max_cmd_len = 16;
-+			if (!pci_set_dma_mask(pcistr[ctr].pdev,DMA_64BIT_MASK)){
-+				printk("GDT-PCI %d: 64-bit DMA enabled\n",
-+				       hanum);
-+			} else if (pci_set_dma_mask(pcistr[ctr].pdev,
-+						    DMA_32BIT_MASK)) {
-+				printk(KERN_WARNING "GDT-PCI %d: Unable to set "
-+				       "64/32-bit DMA\n", hanum);
-+				err = TRUE;
-+			}
-+		}
-+	}
-+
-+	if (err) {
-+		printk("GDT-PCI %d: Error during device scan\n", hanum);
++		printk("GDT-EISA: Error during device scan\n");
 +		--gdth_ctr_count;
 +		--gdth_ctr_vcount;
-+
 +#ifdef INT_COAL
 +		if (ha->coal_stat)
 +			pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
 +					MAXOFFSETS, ha->coal_stat,
 +					ha->coal_stat_phys);
 +#endif
-+
 +		if (ha->pscratch)
 +			pci_free_consistent(ha->pdev, GDTH_SCRATCH, 
 +					ha->pscratch, ha->scratch_phys);
 +		if (ha->pmsg)
 +			pci_free_consistent(ha->pdev, sizeof(gdth_msg_str), 
 +					ha->pmsg, ha->msg_phys);
++		if (ha->ccb_phys)
++			pci_unmap_single(ha->pdev,ha->ccb_phys,
++				    sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
 +		free_irq(ha->irq,ha);
 +		scsi_unregister(shp);
 +		return 1;	/* continue looping */
 +	}
 +
++	if (hdr_channel < 0 || hdr_channel > ha->bus_cnt)
++		hdr_channel = ha->bus_cnt;
++	ha->virt_bus = hdr_channel;
++
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20) && \
++LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
++	shp->highmem_io  = 0;
++#endif
++	if (ha->cache_feat & ha->raw_feat & ha->screen_feat & GDT_64BIT) 
++		shp->max_cmd_len = 16;
++
 +	shp->max_id      = ha->tid_cnt;
 +	shp->max_lun     = MAXLUN;
 +	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
-+
 +	if (virt_ctr) {
 +		unchar b;
 +
@@ -187,174 +297,282 @@ index f330d34..840bdf6 100644
  #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,0)
  static int __init gdth_detect(struct scsi_host_template *shtp)
  #else
- static int __init gdth_detect(Scsi_Host_Template *shtp)
- #endif
- {
--    struct Scsi_Host *shp;
+@@ -4286,11 +4554,8 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
+     struct Scsi_Host *shp;
      gdth_pci_str pcistr[MAXHA];
--    gdth_ha_str *ha;
--    int i,hanum,cnt,ctr,err;
-+    int cnt,ctr;
+     gdth_ha_str *ha;
+-    ulong32 isa_bios;
+-    ushort eisa_slot;
+     int i,hanum,cnt,ctr,err;
      unchar b;
+-    
   
  #ifdef DEBUG_GDTH
-@@ -4595,7 +4746,7 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
+     printk("GDT: This driver contains debugging information !! Trace level = %d\n",
+@@ -4322,255 +4587,30 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
+ 
+     /* As default we do not probe for EISA or ISA controllers */
+     if (probe_eisa_isa) {    
++        ulong32 isa_bios;
++        ushort eisa_slot;
++
+         /* scanning for controllers, at first: ISA controller */
+         for (isa_bios=0xc8000UL; isa_bios<=0xd8000UL; isa_bios+=0x8000UL) {
+-            dma_addr_t scratch_dma_handle;
+-            scratch_dma_handle = 0;
+-
              if (gdth_ctr_count >= MAXHA) 
                  break;
              if (gdth_search_isa(isa_bios)) {        /* controller found */
--	        err = gdth_start_isa(shtp, isa_bios);
-+	        int err = gdth_start_isa(shtp, isa_bios);
- 		if (err <= 0)
- 			break;
- 	    	/* err > 0 == continue looping */
-@@ -4607,7 +4758,7 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
+-                shp = scsi_register(shtp,sizeof(gdth_ext_str));
+-                if (shp == NULL)
+-                    continue;  
+-
+-                ha = HADATA(shp);
+-                if (!gdth_init_isa(isa_bios,ha)) {
+-                    scsi_unregister(shp);
+-                    continue;
+-                }
+-#ifdef __ia64__
+-                break;
+-#else
+-                /* controller found and initialized */
+-                printk("Configuring GDT-ISA HA at BIOS 0x%05X IRQ %u DRQ %u\n",
+-                       isa_bios,ha->irq,ha->drq);
+-
+-                if (request_irq(ha->irq,gdth_interrupt,IRQF_DISABLED,"gdth",ha)) {
+-                    printk("GDT-ISA: Unable to allocate IRQ\n");
+-                    scsi_unregister(shp);
+-                    continue;
+-                }
+-                if (request_dma(ha->drq,"gdth")) {
+-                    printk("GDT-ISA: Unable to allocate DMA channel\n");
+-                    free_irq(ha->irq,ha);
+-                    scsi_unregister(shp);
+-                    continue;
+-                }
+-                set_dma_mode(ha->drq,DMA_MODE_CASCADE);
+-                enable_dma(ha->drq);
+-                shp->unchecked_isa_dma = 1;
+-                shp->irq = ha->irq;
+-                shp->dma_channel = ha->drq;
+-                hanum = gdth_ctr_count;         
+-                gdth_ctr_tab[gdth_ctr_count++] = shp;
+-                gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
+-
+-                NUMDATA(shp)->hanum = (ushort)hanum;
+-                NUMDATA(shp)->busnum= 0;
+-
+-                ha->pccb = CMDDATA(shp);
+-                ha->ccb_phys = 0L;
+-                ha->pdev = NULL;
+-                ha->pscratch = pci_alloc_consistent(ha->pdev, GDTH_SCRATCH, 
+-                                                    &scratch_dma_handle);
+-                ha->scratch_phys = scratch_dma_handle;
+-                ha->pmsg = pci_alloc_consistent(ha->pdev, sizeof(gdth_msg_str), 
+-                                                &scratch_dma_handle);
+-                ha->msg_phys = scratch_dma_handle;
+-#ifdef INT_COAL
+-                ha->coal_stat = (gdth_coal_status *)
+-                    pci_alloc_consistent(ha->pdev, sizeof(gdth_coal_status) *
+-                        MAXOFFSETS, &scratch_dma_handle);
+-                ha->coal_stat_phys = scratch_dma_handle;
+-#endif
+-
+-                ha->scratch_busy = FALSE;
+-                ha->req_first = NULL;
+-                ha->tid_cnt = MAX_HDRIVES;
+-                if (max_ids > 0 && max_ids < ha->tid_cnt)
+-                    ha->tid_cnt = max_ids;
+-                for (i=0; i<GDTH_MAXCMDS; ++i)
+-                    ha->cmd_tab[i].cmnd = UNUSED_CMND;
+-                ha->scan_mode = rescan ? 0x10 : 0;
+-
+-                if (ha->pscratch == NULL || ha->pmsg == NULL || 
+-                    !gdth_search_drives(hanum)) {
+-                    printk("GDT-ISA: Error during device scan\n");
+-                    --gdth_ctr_count;
+-                    --gdth_ctr_vcount;
+-
+-#ifdef INT_COAL
+-                    if (ha->coal_stat)
+-                        pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
+-                                            MAXOFFSETS, ha->coal_stat,
+-                                            ha->coal_stat_phys);
+-#endif
+-                    if (ha->pscratch)
+-                        pci_free_consistent(ha->pdev, GDTH_SCRATCH, 
+-                                            ha->pscratch, ha->scratch_phys);
+-                    if (ha->pmsg)
+-                        pci_free_consistent(ha->pdev, sizeof(gdth_msg_str), 
+-                                            ha->pmsg, ha->msg_phys);
+-
+-                    free_irq(ha->irq,ha);
+-                    scsi_unregister(shp);
+-                    continue;
+-                }
+-                if (hdr_channel < 0 || hdr_channel > ha->bus_cnt)
+-                    hdr_channel = ha->bus_cnt;
+-                ha->virt_bus = hdr_channel;
+-
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20) && \
+-    LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+-                shp->highmem_io  = 0;
+-#endif
+-                if (ha->cache_feat & ha->raw_feat & ha->screen_feat & GDT_64BIT) 
+-                    shp->max_cmd_len = 16;
+-
+-                shp->max_id      = ha->tid_cnt;
+-                shp->max_lun     = MAXLUN;
+-                shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
+-                if (virt_ctr) {
+-                    virt_ctr = 1;
+-                    /* register addit. SCSI channels as virtual controllers */
+-                    for (b = 1; b < ha->bus_cnt + 1; ++b) {
+-                        shp = scsi_register(shtp,sizeof(gdth_num_str));
+-                        shp->unchecked_isa_dma = 1;
+-                        shp->irq = ha->irq;
+-                        shp->dma_channel = ha->drq;
+-                        gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
+-                        NUMDATA(shp)->hanum = (ushort)hanum;
+-                        NUMDATA(shp)->busnum = b;
+-                    }
+-                }  
+-
+-                spin_lock_init(&ha->smp_lock);
+-                gdth_enable_int(hanum);
+-#endif /* !__ia64__ */
++	        err = gdth_start_isa(shtp, isa_bios);
++		if (err <= 0)
++			break;
++	    	/* err > 0 == continue looping */
+             }
+         }
+ 
+         /* scanning for EISA controllers */
+         for (eisa_slot=0x1000; eisa_slot<=0x8000; eisa_slot+=0x1000) {
+-            dma_addr_t scratch_dma_handle;
+-            scratch_dma_handle = 0;
+-
              if (gdth_ctr_count >= MAXHA) 
                  break;
              if (gdth_search_eisa(eisa_slot)) {      /* controller found */
--	        err = gdth_start_eisa(shtp, eisa_slot);
-+	        int err = gdth_start_eisa(shtp, eisa_slot);
- 		if (err <= 0)
- 			break;
- 	    	/* err > 0 == continue looping */
-@@ -4620,137 +4771,10 @@ static int __init gdth_detect(Scsi_Host_Template *shtp)
-     printk("GDT-HA: Found %d PCI Storage RAID Controllers\n",cnt);
-     gdth_sort_pci(pcistr,cnt);
-     for (ctr = 0; ctr < cnt; ++ctr) {
--        dma_addr_t scratch_dma_handle;
--        scratch_dma_handle = 0;
+-                shp = scsi_register(shtp,sizeof(gdth_ext_str));
+-                if (shp == NULL)
+-                    continue;  
 -
--        if (gdth_ctr_count >= MAXHA)
--            break;
--        shp = scsi_register(shtp,sizeof(gdth_ext_str));
--        if (shp == NULL)
--            continue;  
--
--        ha = HADATA(shp);
--        if (!gdth_init_pci(&pcistr[ctr],ha)) {
--            scsi_unregister(shp);
--            continue;
--        }
--        /* controller found and initialized */
--        printk("Configuring GDT-PCI HA at %d/%d IRQ %u\n",
--               pcistr[ctr].pdev->bus->number,
--	       PCI_SLOT(pcistr[ctr].pdev->devfn), ha->irq);
--
--        if (request_irq(ha->irq, gdth_interrupt,
--                        IRQF_DISABLED|IRQF_SHARED, "gdth", ha))
--        {
--            printk("GDT-PCI: Unable to allocate IRQ\n");
--            scsi_unregister(shp);
--            continue;
--        }
--        shp->unchecked_isa_dma = 0;
--        shp->irq = ha->irq;
--        shp->dma_channel = 0xff;
--        hanum = gdth_ctr_count;
--        gdth_ctr_tab[gdth_ctr_count++] = shp;
--        gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
--
--        NUMDATA(shp)->hanum = (ushort)hanum;
--        NUMDATA(shp)->busnum= 0;
--
--        ha->pccb = CMDDATA(shp);
--        ha->ccb_phys = 0L;
--
--        ha->pscratch = pci_alloc_consistent(ha->pdev, GDTH_SCRATCH, 
--                                            &scratch_dma_handle);
--        ha->scratch_phys = scratch_dma_handle;
--        ha->pmsg = pci_alloc_consistent(ha->pdev, sizeof(gdth_msg_str), 
--                                        &scratch_dma_handle);
--        ha->msg_phys = scratch_dma_handle;
--#ifdef INT_COAL
--        ha->coal_stat = (gdth_coal_status *)
--            pci_alloc_consistent(ha->pdev, sizeof(gdth_coal_status) *
--                                 MAXOFFSETS, &scratch_dma_handle);
--        ha->coal_stat_phys = scratch_dma_handle;
--#endif
--        ha->scratch_busy = FALSE;
--        ha->req_first = NULL;
--        ha->tid_cnt = pcistr[ctr].pdev->device >= 0x200 ? MAXID : MAX_HDRIVES;
--        if (max_ids > 0 && max_ids < ha->tid_cnt)
--            ha->tid_cnt = max_ids;
--        for (i=0; i<GDTH_MAXCMDS; ++i)
--            ha->cmd_tab[i].cmnd = UNUSED_CMND;
--        ha->scan_mode = rescan ? 0x10 : 0;
--
--        err = FALSE;
--        if (ha->pscratch == NULL || ha->pmsg == NULL || 
--            !gdth_search_drives(hanum)) {
--            err = TRUE;
--        } else {
--            if (hdr_channel < 0 || hdr_channel > ha->bus_cnt)
--                hdr_channel = ha->bus_cnt;
--            ha->virt_bus = hdr_channel;
--
--
--#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
--            scsi_set_pci_device(shp, pcistr[ctr].pdev);
--#endif
--            if (!(ha->cache_feat & ha->raw_feat & ha->screen_feat &GDT_64BIT)||
--                /* 64-bit DMA only supported from FW >= x.43 */
--                (!ha->dma64_support)) {
--                if (pci_set_dma_mask(pcistr[ctr].pdev, DMA_32BIT_MASK)) {
--                    printk(KERN_WARNING "GDT-PCI %d: Unable to set 32-bit DMA\n", hanum);
--                    err = TRUE;
+-                ha = HADATA(shp);
+-                if (!gdth_init_eisa(eisa_slot,ha)) {
+-                    scsi_unregister(shp);
+-                    continue;
 -                }
--            } else {
--                shp->max_cmd_len = 16;
--                if (!pci_set_dma_mask(pcistr[ctr].pdev, DMA_64BIT_MASK)) {
--                    printk("GDT-PCI %d: 64-bit DMA enabled\n", hanum);
--                } else if (pci_set_dma_mask(pcistr[ctr].pdev, DMA_32BIT_MASK)) {
--                    printk(KERN_WARNING "GDT-PCI %d: Unable to set 64/32-bit DMA\n", hanum);
--                    err = TRUE;
+-                /* controller found and initialized */
+-                printk("Configuring GDT-EISA HA at Slot %d IRQ %u\n",
+-                       eisa_slot>>12,ha->irq);
+-
+-                if (request_irq(ha->irq,gdth_interrupt,IRQF_DISABLED,"gdth",ha)) {
+-                    printk("GDT-EISA: Unable to allocate IRQ\n");
+-                    scsi_unregister(shp);
+-                    continue;
 -                }
--            }
--        }
--
--        if (err) {
--            printk("GDT-PCI %d: Error during device scan\n", hanum);
--            --gdth_ctr_count;
--            --gdth_ctr_vcount;
--#ifdef INT_COAL
--            if (ha->coal_stat)
--                pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
--                                    MAXOFFSETS, ha->coal_stat,
--                                    ha->coal_stat_phys);
--#endif
--            if (ha->pscratch)
--                pci_free_consistent(ha->pdev, GDTH_SCRATCH, 
--                                    ha->pscratch, ha->scratch_phys);
--            if (ha->pmsg)
--                pci_free_consistent(ha->pdev, sizeof(gdth_msg_str), 
--                                    ha->pmsg, ha->msg_phys);
--            free_irq(ha->irq,ha);
--            scsi_unregister(shp);
--            continue;
--        }
--
--        shp->max_id      = ha->tid_cnt;
--        shp->max_lun     = MAXLUN;
--        shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
--        if (virt_ctr) {
--            virt_ctr = 1;
--            /* register addit. SCSI channels as virtual controllers */
--            for (b = 1; b < ha->bus_cnt + 1; ++b) {
--                shp = scsi_register(shtp,sizeof(gdth_num_str));
 -                shp->unchecked_isa_dma = 0;
 -                shp->irq = ha->irq;
 -                shp->dma_channel = 0xff;
+-                hanum = gdth_ctr_count;
+-                gdth_ctr_tab[gdth_ctr_count++] = shp;
 -                gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
--                NUMDATA(shp)->hanum = (ushort)hanum;
--                NUMDATA(shp)->busnum = b;
--            }
--        }  
 -
--        spin_lock_init(&ha->smp_lock);
--        gdth_enable_int(hanum);
-+        int err = gdth_start_pci(shtp, pcistr, ctr);
-+	if (err <= 0)
-+		break;
-+    	/* err > 0 == continue looping */
+-                NUMDATA(shp)->hanum = (ushort)hanum;
+-                NUMDATA(shp)->busnum= 0;
+-                TRACE2(("EISA detect Bus 0: hanum %d\n",
+-                        NUMDATA(shp)->hanum));
+-
+-                ha->pccb = CMDDATA(shp);
+-                ha->ccb_phys = 0L; 
+-
+-                ha->pdev = NULL;
+-                ha->pscratch = pci_alloc_consistent(ha->pdev, GDTH_SCRATCH, 
+-                                                    &scratch_dma_handle);
+-                ha->scratch_phys = scratch_dma_handle;
+-                ha->pmsg = pci_alloc_consistent(ha->pdev, sizeof(gdth_msg_str), 
+-                                                &scratch_dma_handle);
+-                ha->msg_phys = scratch_dma_handle;
+-#ifdef INT_COAL
+-                ha->coal_stat = (gdth_coal_status *)
+-                    pci_alloc_consistent(ha->pdev, sizeof(gdth_coal_status) *
+-                                         MAXOFFSETS, &scratch_dma_handle);
+-                ha->coal_stat_phys = scratch_dma_handle;
+-#endif
+-                ha->ccb_phys = 
+-                    pci_map_single(ha->pdev,ha->pccb,
+-                                   sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
+-                ha->scratch_busy = FALSE;
+-                ha->req_first = NULL;
+-                ha->tid_cnt = MAX_HDRIVES;
+-                if (max_ids > 0 && max_ids < ha->tid_cnt)
+-                    ha->tid_cnt = max_ids;
+-                for (i=0; i<GDTH_MAXCMDS; ++i)
+-                    ha->cmd_tab[i].cmnd = UNUSED_CMND;
+-                ha->scan_mode = rescan ? 0x10 : 0;
+-
+-                if (ha->pscratch == NULL || ha->pmsg == NULL || 
+-                    !gdth_search_drives(hanum)) {
+-                    printk("GDT-EISA: Error during device scan\n");
+-                    --gdth_ctr_count;
+-                    --gdth_ctr_vcount;
+-#ifdef INT_COAL
+-                    if (ha->coal_stat)
+-                        pci_free_consistent(ha->pdev, sizeof(gdth_coal_status) *
+-                                            MAXOFFSETS, ha->coal_stat,
+-                                            ha->coal_stat_phys);
+-#endif
+-                    if (ha->pscratch)
+-                        pci_free_consistent(ha->pdev, GDTH_SCRATCH, 
+-                                            ha->pscratch, ha->scratch_phys);
+-                    if (ha->pmsg)
+-                        pci_free_consistent(ha->pdev, sizeof(gdth_msg_str), 
+-                                            ha->pmsg, ha->msg_phys);
+-                    if (ha->ccb_phys)
+-                        pci_unmap_single(ha->pdev,ha->ccb_phys,
+-                                        sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
+-                    free_irq(ha->irq,ha);
+-                    scsi_unregister(shp);
+-                    continue;
+-                }
+-                if (hdr_channel < 0 || hdr_channel > ha->bus_cnt)
+-                    hdr_channel = ha->bus_cnt;
+-                ha->virt_bus = hdr_channel;
+-
+-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,4,20) && \
+-    LINUX_VERSION_CODE < KERNEL_VERSION(2,6,0)
+-                shp->highmem_io  = 0;
+-#endif
+-                if (ha->cache_feat & ha->raw_feat & ha->screen_feat & GDT_64BIT) 
+-                    shp->max_cmd_len = 16;
+-
+-                shp->max_id      = ha->tid_cnt;
+-                shp->max_lun     = MAXLUN;
+-                shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
+-                if (virt_ctr) {
+-                    virt_ctr = 1;
+-                    /* register addit. SCSI channels as virtual controllers */
+-                    for (b = 1; b < ha->bus_cnt + 1; ++b) {
+-                        shp = scsi_register(shtp,sizeof(gdth_num_str));
+-                        shp->unchecked_isa_dma = 0;
+-                        shp->irq = ha->irq;
+-                        shp->dma_channel = 0xff;
+-                        gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
+-                        NUMDATA(shp)->hanum = (ushort)hanum;
+-                        NUMDATA(shp)->busnum = b;
+-                    }
+-                }  
+-
+-                spin_lock_init(&ha->smp_lock);
+-                gdth_enable_int(hanum);
++	        err = gdth_start_eisa(shtp, eisa_slot);
++		if (err <= 0)
++			break;
++	    	/* err > 0 == continue looping */
+             }
+         }
      }
-     
-     TRACE2(("gdth_detect() %d controller detected\n",gdth_ctr_count));
