@@ -1,39 +1,51 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Wed, 26 Sep 2007 09:02:16 -0600
-Message-ID: <20070926150216.GH3899@parisc-linux.org>
-References: <20070420204114.GL31947@austin.ibm.com> <20070420204720.GM31947@austin.ibm.com>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
+Date: Wed, 26 Sep 2007 09:05:58 -0700
+Message-ID: <20070926160558.GA10819@suse.de>
+References: <20070925142157B.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:53740 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755045AbXIZPCR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 11:02:17 -0400
+Received: from cantor2.suse.de ([195.135.220.15]:36576 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752770AbXIZQND (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Sep 2007 12:13:03 -0400
 Content-Disposition: inline
-In-Reply-To: <20070420204720.GM31947@austin.ibm.com>
+In-Reply-To: <20070925142157B.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: James.Bottomley@SteelEye.com, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Fri, Apr 20, 2007 at 03:47:20PM -0500, Linas Vepstas wrote:
-> Implement the so-called "first failure data capture" (FFDC) for the
-> symbios PCI error recovery.  After a PCI error event is reported,
-> the driver requests that MMIO be enabled. Once enabled, it 
-> then reads and dumps assorted status registers, and concludes
-> by requesting the usual reset sequence.
+On Wed, Sep 26, 2007 at 05:58:01PM +0900, FUJITA Tomonori wrote:
+> iommu code merges sg segments without considering lld's sg segment
+> restrictions. iommu code can't access to the limitations because they
+> are in request_queue. This patch adds max_segment_size to device
+> structure. seg_boundary_mask will be added too later.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  include/linux/device.h |    7 +++++++
+>  1 files changed, 7 insertions(+), 0 deletions(-)
+> 
+> diff --git a/include/linux/device.h b/include/linux/device.h
+> index 3a38d1f..8046b60 100644
+> --- a/include/linux/device.h
+> +++ b/include/linux/device.h
+> @@ -443,6 +443,13 @@ struct device {
+>  
+>  	struct dma_coherent_mem	*dma_mem; /* internal for coherent mem
+>  					     override */
+> +
+> +	/*
+> +	 * a low level driver may set these to teach IOMMU code about
+> +	 * sg limitations.
+> +	 */
+> +	unsigned int max_segment_size;
 
-> +	/* Request that MMIO be enabled, so register dump can be taken. */
-> +	return PCI_ERS_RESULT_CAN_RECOVER;
-> +}
+Does this really need to be here?  Can't it go into the bus specific
+device that needs this?
 
-I'm a little concerned by the mention of MMIO.  It's entirely possible
-for the sym2 driver to be using ioports to access the card rather than
-MMIO.  Is it simply that it can't on the platform you test on?
+thanks,
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+greg k-h
