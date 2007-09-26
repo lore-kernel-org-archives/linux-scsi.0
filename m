@@ -1,98 +1,64 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: queued patches for SCSI for 2.6.24
-Date: Wed, 26 Sep 2007 09:07:37 -0500
-Message-ID: <1190815658.3359.11.camel@localhost.localdomain>
-References: <20070926025608.GA3899@parisc-linux.org>
-	 <46F9D328.4030801@garzik.org>
-	 <1190778353.8707.29.camel@localhost.localdomain>
-	 <20070925102150V.tomof@acm.org>
+Subject: Re: scsi-misc build breakage
+Date: Wed, 26 Sep 2007 09:30:19 -0500
+Message-ID: <1190817019.3359.14.camel@localhost.localdomain>
+References: <46F9E1D8.2070106@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39969 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:47827 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754534AbXIZOHk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 10:07:40 -0400
-In-Reply-To: <20070925102150V.tomof@acm.org>
+	with ESMTP id S1762112AbXIZOaY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 10:30:24 -0400
+In-Reply-To: <46F9E1D8.2070106@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: jeff@garzik.org, matthew@wil.cx, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 2007-09-26 at 13:56 +0900, FUJITA Tomonori wrote:
-> On Tue, 25 Sep 2007 22:45:53 -0500
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> 
-> > On Tue, 2007-09-25 at 23:34 -0400, Jeff Garzik wrote:
-> > > Matthew Wilcox wrote:
-> > > > On Tue, Sep 25, 2007 at 10:37:33PM -0400, Jeff Garzik wrote:
-> > > >> Are there any const-ness worries for scsi_host_template, or plans for 
-> > > >> the future?  I do not see any other examples of the host template 
-> > > >> members getting modified.
-> > > > 
-> > > > Goodness, Jeff, you haven't looked too hard.  There's dozens of examples
-> > > > I've come across trawling the horrible unmaintained drivers.  I'd love
-> > > > to see scsi_host_template become const, but it's not happening any time
-> > > > soon, and we can address this little piece when the time comes.
-> > > 
-> > > Well, sure, the driver is the owner of that memory.
-> > > 
-> > > We're talking about common code.
-> > > 
-> > > If everybody agrees SHT is R/W in the core, Fujita-san's patch is fine.
-> > 
-> > Well, I don't like mucking with the template either.
-> > 
-> > This whole mess is generated basically because the zero default of the
-> > template should be treated as initiator.  How about this, which makes
-> > that manifest?
-> > 
-> > James
-> > 
-> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> > index adc9559..7e26440 100644
-> > --- a/drivers/scsi/hosts.c
-> > +++ b/drivers/scsi/hosts.c
-> > @@ -342,7 +342,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
-> >  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
-> >  	shost->use_clustering = sht->use_clustering;
-> >  	shost->ordered_tag = sht->ordered_tag;
-> > -	shost->active_mode = sht->supported_mode;
-> > +	if (sht->supported_mode == MODE_UNKNOWN)
-> > +		/* means we didn't set it ... default to INITIATOR */
-> > +		shost->active_mode = MODE_INITIATOR;
-> > +	else
-> > +		shost->active_mode = sht->supported_mode;
-> >  
-> >  	if (sht->max_host_blocked)
-> >  		shost->max_host_blocked = sht->max_host_blocked;
-> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-> > index 0088c4d..4965e9e 100644
-> > --- a/drivers/scsi/scsi_sysfs.c
-> > +++ b/drivers/scsi/scsi_sysfs.c
-> > @@ -209,11 +209,13 @@ show_shost_mode(unsigned int mode, char *buf)
-> >  static ssize_t show_shost_supported_mode(struct class_device *class_dev, char *buf)
-> >  {
-> >  	struct Scsi_Host *shost = class_to_shost(class_dev);
-> > +	unsigned int supported_mode = shost->hostt->supported_mode;
-> >  
-> > -	if (shost->hostt->supported_mode == MODE_UNKNOWN)
-> > -		return snprintf(buf, 20, "unknown\n");
-> > -	else
-> > -		return show_shost_mode(shost->hostt->supported_mode, buf);
-> > +	if (supported_mode == MODE_UNKNOWN)
-> > +		/* by default this should be initiator */
-> > +		supported_mode = MODE_INITIATOR;
-> > +
-> > +	return show_shost_mode(shost->hostt->supported_mode, buf);
-> 
-> should be:
-> 
-> return show_shost_mode(supported_mode, buf);
+On Wed, 2007-09-26 at 00:36 -0400, Jeff Garzik wrote:
+> current scsi-misc on i386 says:
+>=20
+> drivers/scsi/arcmsr/arcmsr_hba.c:129: error: =E2=80=98arcmsr_pci_erro=
+r_detected=E2=80=99=20
+> undeclared here (not in a function)
+> drivers/scsi/arcmsr/arcmsr_hba.c:130: error: =E2=80=98arcmsr_pci_slot=
+_reset=E2=80=99=20
+> undeclared here (not in a function)
+> make[2]: *** [drivers/scsi/arcmsr/arcmsr_hba.o] Error 1
+> make[1]: *** [drivers/scsi/arcmsr] Error 2
 
-Yes, sorry ... code in haste etc.
+That's my fault ... I took the templates out of the code because it was
+giving warnings about static defined but unused functions.  I must be
+compiling without CONFIG_SCSI_ARCMSR_AER.
+
+This should fix it.
 
 James
 
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arc=
+msr_hba.c
+index f4d2d52..449bceb 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -125,6 +125,10 @@ static struct scsi_host_template arcmsr_scsi_host_=
+template =3D {
+ 	.shost_attrs		=3D arcmsr_host_attrs,
+ };
+ #ifdef CONFIG_SCSI_ARCMSR_AER
++static pci_ers_result_t arcmsr_pci_error_detected(struct pci_dev *pdev=
+,
++						  pci_channel_state_t state);
++static pci_ers_result_t arcmsr_pci_slot_reset(struct pci_dev *pdev);
++
+ static struct pci_error_handlers arcmsr_pci_error_handlers =3D {
+ 	.error_detected		=3D arcmsr_pci_error_detected,
+ 	.slot_reset		=3D arcmsr_pci_slot_reset,
 
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
