@@ -1,51 +1,43 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
-Date: Wed, 26 Sep 2007 09:05:58 -0700
-Message-ID: <20070926160558.GA10819@suse.de>
-References: <20070925142157B.tomof@acm.org>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: [PATCH] fix leftover from default sdev attribute switch
+Date: Wed, 26 Sep 2007 19:54:49 +0200
+Message-ID: <1190829289.3773.74.camel@lov.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:36576 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752770AbXIZQND (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Sep 2007 12:13:03 -0400
-Content-Disposition: inline
-In-Reply-To: <20070925142157B.tomof@acm.org>
+Received: from charybdis-ext.suse.de ([195.135.221.2]:41176 "EHLO
+	emea5-mh.id5.novell.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756034AbXIZRye (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 13:54:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: James.Bottomley@SteelEye.com, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Sep 26, 2007 at 05:58:01PM +0900, FUJITA Tomonori wrote:
-> iommu code merges sg segments without considering lld's sg segment
-> restrictions. iommu code can't access to the limitations because they
-> are in request_queue. This patch adds max_segment_size to device
-> structure. seg_boundary_mask will be added too later.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  include/linux/device.h |    7 +++++++
->  1 files changed, 7 insertions(+), 0 deletions(-)
-> 
-> diff --git a/include/linux/device.h b/include/linux/device.h
-> index 3a38d1f..8046b60 100644
-> --- a/include/linux/device.h
-> +++ b/include/linux/device.h
-> @@ -443,6 +443,13 @@ struct device {
->  
->  	struct dma_coherent_mem	*dma_mem; /* internal for coherent mem
->  					     override */
-> +
-> +	/*
-> +	 * a low level driver may set these to teach IOMMU code about
-> +	 * sg limitations.
-> +	 */
-> +	unsigned int max_segment_size;
+Hi James,
+seems we miss the following fix in the current tree.
 
-Does this really need to be here?  Can't it go into the bus specific
-device that needs this?
+Thanks,
+Kay
 
-thanks,
 
-greg k-h
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: [SCSI] fix scsi_is_sdev_device() after switch to default sdev attributes
+
+Signed-off-by: Kay Sievers <kay.sievers@vrfy.org>
+---
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 0088c4d..8e880ef 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -995,7 +995,7 @@ void scsi_sysfs_device_initialize(struct scsi_device *sdev)
+ 
+ int scsi_is_sdev_device(const struct device *dev)
+ {
+-	return dev->release == scsi_device_dev_release;
++	return dev->type == &scsi_dev_type;
+ }
+ EXPORT_SYMBOL(scsi_is_sdev_device);
+ 
+
