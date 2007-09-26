@@ -1,66 +1,48 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH 2/5] sata_inic162x: use dma_max_segment_size in
- scsi_host_template
-Date: Wed, 26 Sep 2007 17:58:00 +0900
-Message-ID: <20070925142146P.tomof@acm.org>
+Subject: [PATCH 3/5] add sg segment limitation info to device structure
+Date: Wed, 26 Sep 2007 17:58:01 +0900
+Message-ID: <20070925142157B.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:50116 "EHLO mo11.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:39667 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752865AbXIZI6d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Sep 2007 04:58:33 -0400
+	id S1752886AbXIZI6g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Sep 2007 04:58:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, gregkh@suse.de, hare@suse.de, linux-scsi@vger.kernel.org
 Cc: fujita.tomonori@lab.ntt.co.jp
 
-This removes blk_queue_max_segment_size and uses dma_max_segment_size
-in scsi_host_template.
+iommu code merges sg segments without considering lld's sg segment
+restrictions. iommu code can't access to the limitations because they
+are in request_queue. This patch adds max_segment_size to device
+structure. seg_boundary_mask will be added too later.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/ata/sata_inic162x.c |   19 +++++++------------
- 1 files changed, 7 insertions(+), 12 deletions(-)
+ include/linux/device.h |    7 +++++++
+ 1 files changed, 7 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
-index fdbed8e..ae3590f 100644
---- a/drivers/ata/sata_inic162x.c
-+++ b/drivers/ata/sata_inic162x.c
-@@ -108,17 +108,11 @@ struct inic_port_priv {
- 	u8	cached_pirq_mask;
- };
+diff --git a/include/linux/device.h b/include/linux/device.h
+index 3a38d1f..8046b60 100644
+--- a/include/linux/device.h
++++ b/include/linux/device.h
+@@ -443,6 +443,13 @@ struct device {
  
--static int inic_slave_config(struct scsi_device *sdev)
--{
--	/* This controller is braindamaged.  dma_boundary is 0xffff
--	 * like others but it will lock up the whole machine HARD if
--	 * 65536 byte PRD entry is fed.  Reduce maximum segment size.
--	 */
--	blk_queue_max_segment_size(sdev->request_queue, 65536 - 512);
--
--	return ata_scsi_slave_config(sdev);
--}
--
-+/*
-+ * This controller is braindamaged.  dma_boundary is 0xffff
-+ * like others but it will lock up the whole machine HARD if
-+ * 65536 byte PRD entry is fed. Reduce maximum segment size.
-+ */
- static struct scsi_host_template inic_sht = {
- 	.module			= THIS_MODULE,
- 	.name			= DRV_NAME,
-@@ -132,7 +126,8 @@ static struct scsi_host_template inic_sht = {
- 	.use_clustering		= ATA_SHT_USE_CLUSTERING,
- 	.proc_name		= DRV_NAME,
- 	.dma_boundary		= ATA_DMA_BOUNDARY,
--	.slave_configure	= inic_slave_config,
-+	.dma_max_segment_size	= 65536 - 512,
-+	.slave_configure	= ata_scsi_slave_config,
- 	.slave_destroy		= ata_scsi_slave_destroy,
- 	.bios_param		= ata_std_bios_param,
- };
+ 	struct dma_coherent_mem	*dma_mem; /* internal for coherent mem
+ 					     override */
++
++	/*
++	 * a low level driver may set these to teach IOMMU code about
++	 * sg limitations.
++	 */
++	unsigned int max_segment_size;
++
+ 	/* arch specific additions */
+ 	struct dev_archdata	archdata;
+ 
 -- 
 1.5.2.4
 
