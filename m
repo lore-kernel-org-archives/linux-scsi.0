@@ -1,30 +1,98 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 Subject: Re: queued patches for SCSI for 2.6.24
-Date: Wed, 26 Sep 2007 05:15:21 -0600
-Message-ID: <20070926111521.GC3899@parisc-linux.org>
-References: <1190768402.8707.20.camel@localhost.localdomain> <20070926085020.GC1606@loop.mdy.univie.ac.at>
+Date: Wed, 26 Sep 2007 09:07:37 -0500
+Message-ID: <1190815658.3359.11.camel@localhost.localdomain>
+References: <20070926025608.GA3899@parisc-linux.org>
+	 <46F9D328.4030801@garzik.org>
+	 <1190778353.8707.29.camel@localhost.localdomain>
+	 <20070925102150V.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41157 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752131AbXIZLPX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 07:15:23 -0400
-Content-Disposition: inline
-In-Reply-To: <20070926085020.GC1606@loop.mdy.univie.ac.at>
+Received: from hancock.steeleye.com ([71.30.118.248]:39969 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754534AbXIZOHk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 10:07:40 -0400
+In-Reply-To: <20070925102150V.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Boresch <stefan@mdy.univie.ac.at>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jeff@garzik.org, matthew@wil.cx, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Wed, Sep 26, 2007 at 10:50:20AM +0200, Stefan Boresch wrote:
-> Just curious: Is the patch for scsi_transport_spi.c you sent me for my
-> hardware problem going to make it into an official kernel?
+On Wed, 2007-09-26 at 13:56 +0900, FUJITA Tomonori wrote:
+> On Tue, 25 Sep 2007 22:45:53 -0500
+> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> 
+> > On Tue, 2007-09-25 at 23:34 -0400, Jeff Garzik wrote:
+> > > Matthew Wilcox wrote:
+> > > > On Tue, Sep 25, 2007 at 10:37:33PM -0400, Jeff Garzik wrote:
+> > > >> Are there any const-ness worries for scsi_host_template, or plans for 
+> > > >> the future?  I do not see any other examples of the host template 
+> > > >> members getting modified.
+> > > > 
+> > > > Goodness, Jeff, you haven't looked too hard.  There's dozens of examples
+> > > > I've come across trawling the horrible unmaintained drivers.  I'd love
+> > > > to see scsi_host_template become const, but it's not happening any time
+> > > > soon, and we can address this little piece when the time comes.
+> > > 
+> > > Well, sure, the driver is the owner of that memory.
+> > > 
+> > > We're talking about common code.
+> > > 
+> > > If everybody agrees SHT is R/W in the core, Fujita-san's patch is fine.
+> > 
+> > Well, I don't like mucking with the template either.
+> > 
+> > This whole mess is generated basically because the zero default of the
+> > template should be treated as initiator.  How about this, which makes
+> > that manifest?
+> > 
+> > James
+> > 
+> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> > index adc9559..7e26440 100644
+> > --- a/drivers/scsi/hosts.c
+> > +++ b/drivers/scsi/hosts.c
+> > @@ -342,7 +342,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+> >  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+> >  	shost->use_clustering = sht->use_clustering;
+> >  	shost->ordered_tag = sht->ordered_tag;
+> > -	shost->active_mode = sht->supported_mode;
+> > +	if (sht->supported_mode == MODE_UNKNOWN)
+> > +		/* means we didn't set it ... default to INITIATOR */
+> > +		shost->active_mode = MODE_INITIATOR;
+> > +	else
+> > +		shost->active_mode = sht->supported_mode;
+> >  
+> >  	if (sht->max_host_blocked)
+> >  		shost->max_host_blocked = sht->max_host_blocked;
+> > diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> > index 0088c4d..4965e9e 100644
+> > --- a/drivers/scsi/scsi_sysfs.c
+> > +++ b/drivers/scsi/scsi_sysfs.c
+> > @@ -209,11 +209,13 @@ show_shost_mode(unsigned int mode, char *buf)
+> >  static ssize_t show_shost_supported_mode(struct class_device *class_dev, char *buf)
+> >  {
+> >  	struct Scsi_Host *shost = class_to_shost(class_dev);
+> > +	unsigned int supported_mode = shost->hostt->supported_mode;
+> >  
+> > -	if (shost->hostt->supported_mode == MODE_UNKNOWN)
+> > -		return snprintf(buf, 20, "unknown\n");
+> > -	else
+> > -		return show_shost_mode(shost->hostt->supported_mode, buf);
+> > +	if (supported_mode == MODE_UNKNOWN)
+> > +		/* by default this should be initiator */
+> > +		supported_mode = MODE_INITIATOR;
+> > +
+> > +	return show_shost_mode(shost->hostt->supported_mode, buf);
+> 
+> should be:
+> 
+> return show_shost_mode(supported_mode, buf);
 
-That patch has been requested to go into 2.6.23, so isn't in this list.
+Yes, sorry ... code in haste etc.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+James
+
+
