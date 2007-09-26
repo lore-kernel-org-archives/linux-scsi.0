@@ -1,47 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: queued patches for SCSI for 2.6.24
-Date: Tue, 25 Sep 2007 22:37:33 -0400
-Message-ID: <46F9C5ED.6050505@garzik.org>
-References: <1190768402.8707.20.camel@localhost.localdomain>	<20070925065233Q.tomof@acm.org>	<1190770955.8707.23.camel@localhost.localdomain> <20070925073735U.tomof@acm.org>
+Date: Tue, 25 Sep 2007 20:56:08 -0600
+Message-ID: <20070926025608.GA3899@parisc-linux.org>
+References: <1190768402.8707.20.camel@localhost.localdomain> <20070925065233Q.tomof@acm.org> <1190770955.8707.23.camel@localhost.localdomain> <20070925073735U.tomof@acm.org> <46F9C5ED.6050505@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:38943 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754533AbXIZChk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 25 Sep 2007 22:37:40 -0400
-In-Reply-To: <20070925073735U.tomof@acm.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:41860 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755030AbXIZC4L (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 22:56:11 -0400
+Content-Disposition: inline
+In-Reply-To: <46F9C5ED.6050505@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>, James.Bottomley@SteelEye.com
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Jeff Garzik <jeff@garzik.org>
+Cc: FUJITA Tomonori <tomof@acm.org>, James.Bottomley@SteelEye.com, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-FUJITA Tomonori wrote:
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index adc9559..694015d 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -342,6 +342,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
->  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
->  	shost->use_clustering = sht->use_clustering;
->  	shost->ordered_tag = sht->ordered_tag;
-> +
-> +	if (!sht->supported_mode)
-> +		sht->supported_mode = MODE_INITIATOR;
-> +
->  	shost->active_mode = sht->supported_mode;
+On Tue, Sep 25, 2007 at 10:37:33PM -0400, Jeff Garzik wrote:
+> Are there any const-ness worries for scsi_host_template, or plans for 
+> the future?  I do not see any other examples of the host template 
+> members getting modified.
 
+Goodness, Jeff, you haven't looked too hard.  There's dozens of examples
+I've come across trawling the horrible unmaintained drivers.  I'd love
+to see scsi_host_template become const, but it's not happening any time
+soon, and we can address this little piece when the time comes.
 
-I almost hesitate to speak up, after making the original suggestion, but:
-
-Are there any const-ness worries for scsi_host_template, or plans for 
-the future?  I do not see any other examples of the host template 
-members getting modified.
-
-Perhaps this value should instead be mirrored in scsi_host, like many 
-others?
-
-	Jeff
-
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
