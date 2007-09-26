@@ -1,321 +1,94 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 8/8] gdth: convert to modern SCSI host alloc/scan
-Date: Wed, 26 Sep 2007 00:36:27 -0400
-Message-ID: <20070926043627.GG16185@havoc.gtf.org>
-References: <20070926043321.GA16055@havoc.gtf.org>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: queued patches for SCSI for 2.6.24
+Date: Wed, 26 Sep 2007 13:56:23 +0900
+Message-ID: <20070925102150V.tomof@acm.org>
+References: <20070926025608.GA3899@parisc-linux.org>
+	<46F9D328.4030801@garzik.org>
+	<1190778353.8707.29.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:44674 "EHLO havoc.gtf.org"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:42203 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758907AbXIZEg2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Sep 2007 00:36:28 -0400
-Content-Disposition: inline
-In-Reply-To: <20070926043321.GA16055@havoc.gtf.org>
+	id S1751324AbXIZE4m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Sep 2007 00:56:42 -0400
+In-Reply-To: <1190778353.8707.29.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: achim_leubner@adaptec.com, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: James.Bottomley@SteelEye.com
+Cc: jeff@garzik.org, matthew@wil.cx, tomof@acm.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
+On Tue, 25 Sep 2007 22:45:53 -0500
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
----
+> On Tue, 2007-09-25 at 23:34 -0400, Jeff Garzik wrote:
+> > Matthew Wilcox wrote:
+> > > On Tue, Sep 25, 2007 at 10:37:33PM -0400, Jeff Garzik wrote:
+> > >> Are there any const-ness worries for scsi_host_template, or plans for 
+> > >> the future?  I do not see any other examples of the host template 
+> > >> members getting modified.
+> > > 
+> > > Goodness, Jeff, you haven't looked too hard.  There's dozens of examples
+> > > I've come across trawling the horrible unmaintained drivers.  I'd love
+> > > to see scsi_host_template become const, but it's not happening any time
+> > > soon, and we can address this little piece when the time comes.
+> > 
+> > Well, sure, the driver is the owner of that memory.
+> > 
+> > We're talking about common code.
+> > 
+> > If everybody agrees SHT is R/W in the core, Fujita-san's patch is fine.
+> 
+> Well, I don't like mucking with the template either.
+> 
+> This whole mess is generated basically because the zero default of the
+> template should be treated as initiator.  How about this, which makes
+> that manifest?
+> 
+> James
+> 
+> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> index adc9559..7e26440 100644
+> --- a/drivers/scsi/hosts.c
+> +++ b/drivers/scsi/hosts.c
+> @@ -342,7 +342,11 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+>  	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+>  	shost->use_clustering = sht->use_clustering;
+>  	shost->ordered_tag = sht->ordered_tag;
+> -	shost->active_mode = sht->supported_mode;
+> +	if (sht->supported_mode == MODE_UNKNOWN)
+> +		/* means we didn't set it ... default to INITIATOR */
+> +		shost->active_mode = MODE_INITIATOR;
+> +	else
+> +		shost->active_mode = sht->supported_mode;
+>  
+>  	if (sht->max_host_blocked)
+>  		shost->max_host_blocked = sht->max_host_blocked;
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index 0088c4d..4965e9e 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -209,11 +209,13 @@ show_shost_mode(unsigned int mode, char *buf)
+>  static ssize_t show_shost_supported_mode(struct class_device *class_dev, char *buf)
+>  {
+>  	struct Scsi_Host *shost = class_to_shost(class_dev);
+> +	unsigned int supported_mode = shost->hostt->supported_mode;
+>  
+> -	if (shost->hostt->supported_mode == MODE_UNKNOWN)
+> -		return snprintf(buf, 20, "unknown\n");
+> -	else
+> -		return show_shost_mode(shost->hostt->supported_mode, buf);
+> +	if (supported_mode == MODE_UNKNOWN)
+> +		/* by default this should be initiator */
+> +		supported_mode = MODE_INITIATOR;
+> +
+> +	return show_shost_mode(shost->hostt->supported_mode, buf);
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index f382664..3f3ef4b 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -3960,7 +3960,7 @@ static int __init gdth_register_virt(struct scsi_host_template *shtp,
- {
- 	struct Scsi_Host *shp;
- 	unchar b;
--	int done = 0;
-+	int rc, done = 0;
- 
- 	if (!virt_ctr)
- 		return 0;
-@@ -3969,7 +3969,7 @@ static int __init gdth_register_virt(struct scsi_host_template *shtp,
- 
- 	/* register addit. SCSI channels as virtual controllers */
- 	for (b = 1; b < ha->bus_cnt + 1; ++b) {
--		shp = scsi_register(shtp, sizeof(gdth_num_str));
-+		shp = scsi_host_alloc(shtp, sizeof(gdth_num_str));
- 
- 		if (isa_dma) {
- 			shp->unchecked_isa_dma = 1;
-@@ -3981,12 +3981,17 @@ static int __init gdth_register_virt(struct scsi_host_template *shtp,
- 
- 		shp->irq = ha->irq;
- 
--		gdth_push_vshp(shp);
-+		rc = scsi_add_host(shp, dev);
-+		if (rc)
-+			scsi_host_put(shp);
-+		else {
-+			gdth_push_vshp(shp);
- 
--		NUMDATA(shp)->hanum = (ushort)hanum;
--		NUMDATA(shp)->busnum = b;
-+			NUMDATA(shp)->hanum = (ushort)hanum;
-+			NUMDATA(shp)->busnum = b;
- 
--		done++;
-+			done++;
-+		}
- 	}
- 
- 	return done ? 0 : -ENODEV;
-@@ -3997,10 +4002,10 @@ static int __init gdth_start_isa(struct scsi_host_template *shtp,
- {
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
--	int i, hanum;
-+	int i, hanum, rc;
- 	dma_addr_t scratch_dma_handle = 0;
- 
--	shp = scsi_register(shtp, sizeof(gdth_ext_str));
-+	shp = scsi_host_alloc(shtp, sizeof(gdth_ext_str));
- 	if (shp == NULL)
- 		goto err_out;
- 
-@@ -4009,6 +4014,8 @@ static int __init gdth_start_isa(struct scsi_host_template *shtp,
- 		goto err_out_shp;
- 
- #ifdef __ia64__
-+	if (scsi_add_host(shp, NULL))
-+		scsi_host_put(shp);
- 	return 0;		/* end loop: success */
- #else
- 	/* controller found and initialized */
-@@ -4077,13 +4084,26 @@ static int __init gdth_start_isa(struct scsi_host_template *shtp,
- 	shp->max_lun     = MAXLUN;
- 	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
- 
--	gdth_register_virt(shtp, ha, hanum, NULL, true);
--
- 	spin_lock_init(&ha->smp_lock);
-+
-+	rc = scsi_add_host(shp, NULL);
-+	if (rc) {
-+		printk("GDT-ISA: Error adding host\n");
-+		goto err_out_ha;
-+	}
-+
-+	rc = gdth_register_virt(shtp, ha, hanum, NULL, true);
-+	if (rc) {
-+		printk("GDT-ISA: Error adding virt controllers\n");
-+		goto err_out_host;
-+	}
-+
- 	gdth_enable_int(hanum);
- 
- 	return 1;	/* continue looping */
- 
-+err_out_host:
-+	scsi_remove_host(shp);
- err_out_ha:
- 	gdth_pop_shp();
- 
-@@ -4104,7 +4124,7 @@ err_out_irq:
- 	free_irq(ha->irq, ha);
- #endif /* !__ia64__ */
- err_out_shp:
--	scsi_unregister(shp);
-+	scsi_host_put(shp);
- err_out:
- 	return 1;	/* continue looping */
- }
-@@ -4114,10 +4134,10 @@ static int __init gdth_start_eisa(struct scsi_host_template *shtp,
- {
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
--	int i, hanum;
-+	int i, hanum, rc;
- 	dma_addr_t scratch_dma_handle = 0;
- 
--	shp = scsi_register(shtp,sizeof(gdth_ext_str));
-+	shp = scsi_host_alloc(shtp, sizeof(gdth_ext_str));
- 	if (shp == NULL)
- 		goto err_out;
- 
-@@ -4191,13 +4211,26 @@ static int __init gdth_start_eisa(struct scsi_host_template *shtp,
- 	shp->max_lun     = MAXLUN;
- 	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
- 
--	gdth_register_virt(shtp, ha, hanum, NULL, false);
--
- 	spin_lock_init(&ha->smp_lock);
-+
-+	rc = scsi_add_host(shp, NULL);
-+	if (rc) {
-+		printk("GDT-EISA: Error adding host\n");
-+		goto err_out_ha;
-+	}
-+
-+	rc = gdth_register_virt(shtp, ha, hanum, NULL, false);
-+	if (rc) {
-+		printk("GDT-EISA: Error adding virt controllers\n");
-+		goto err_out_host;
-+	}
-+
- 	gdth_enable_int(hanum);
- 
- 	return 1;	/* continue looping */
- 
-+err_out_host:
-+	scsi_remove_host(shp);
- err_out_ha:
- 	gdth_pop_shp();
- 
-@@ -4218,7 +4251,7 @@ err_out_ha:
- 			    sizeof(gdth_cmd_str),PCI_DMA_BIDIRECTIONAL);
- 	free_irq(ha->irq, ha);
- err_out_shp:
--	scsi_unregister(shp);
-+	scsi_host_put(shp);
- err_out:
- 	return 1;	/* continue looping */
- }
-@@ -4229,11 +4262,11 @@ static int __init gdth_start_pci(struct scsi_host_template *shtp,
- 	struct Scsi_Host *shp;
- 	dma_addr_t scratch_dma_handle = 0;
- 	gdth_ha_str *ha;
--	int i, hanum;
-+	int i, hanum, rc;
- 
- 	if (gdth_ctr_count >= MAXHA)
- 		return 0;	/* end loop: success */
--	shp = scsi_register(shtp,sizeof(gdth_ext_str));
-+	shp = scsi_host_alloc(shtp, sizeof(gdth_ext_str));
- 	if (shp == NULL)
- 		goto err_out;
- 
-@@ -4318,13 +4351,26 @@ static int __init gdth_start_pci(struct scsi_host_template *shtp,
- 	shp->max_lun     = MAXLUN;
- 	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
- 
--	gdth_register_virt(shtp, ha, hanum, &pcistr[ctr].pdev->dev, false);
--
- 	spin_lock_init(&ha->smp_lock);
-+
-+	rc = scsi_add_host(shp, NULL);
-+	if (rc) {
-+		printk("GDT-PCI: Error adding host\n");
-+		goto err_out_ha;
-+	}
-+
-+	rc = gdth_register_virt(shtp, ha, hanum, &pcistr[ctr].pdev->dev, false);
-+	if (rc) {
-+		printk("GDT-PCI: Error adding virt controllers\n");
-+		goto err_out_host;
-+	}
-+
- 	gdth_enable_int(hanum);
- 
- 	return 1;	/* continue looping */
- 
-+err_out_host:
-+	scsi_remove_host(shp);
- err_out_ha:
- 	gdth_pop_shp();
- 
-@@ -4343,7 +4389,7 @@ err_out_ha:
- 				ha->pmsg, ha->msg_phys);
- 	free_irq(ha->irq, ha);
- err_out_shp:
--	scsi_unregister(shp);
-+	scsi_host_put(shp);
- err_out:
- 	return 1;	/* continue looping */
- }
-@@ -4351,7 +4397,7 @@ err_out:
- static int __init gdth_detect(struct scsi_host_template *shtp)
- {
-     gdth_pci_str pcistr[MAXHA];
--    int cnt,ctr;
-+    int cnt, ctr, i;
-     unchar b;
-  
- #ifdef DEBUG_GDTH
-@@ -4374,7 +4420,7 @@ static int __init gdth_detect(struct scsi_host_template *shtp)
- 
-     if (disable) {
-         printk("GDT-HA: Controller driver disabled from command line !\n");
--        return 0;
-+        return -ENODEV;
-     }
- 
-     printk("GDT-HA: Storage RAID Controller Driver. Version: %s\n",GDTH_VERSION_STR);
-@@ -4438,14 +4484,22 @@ static int __init gdth_detect(struct scsi_host_template *shtp)
-         register_reboot_notifier(&gdth_notifier);
-     }
-     gdth_polling = FALSE;
--    return gdth_ctr_vcount;
-+
-+    for (i = 0; i < gdth_ctr_vcount; i++)
-+    	if (gdth_ctr_vtab[i])
-+    	    scsi_scan_host(gdth_ctr_vtab[i]);
-+
-+    return gdth_ctr_vcount > 0 ? 0 : -ENODEV;
- }
- 
--static int gdth_release(struct Scsi_Host *shp)
-+static void __exit gdth_release(struct Scsi_Host *shp)
- {
-     int hanum;
-     gdth_ha_str *ha;
- 
-+    if (!shp)
-+    	return;
-+
-     TRACE2(("gdth_release()\n"));
-     if (NUMDATA(shp)->busnum == 0) {
-         hanum = NUMDATA(shp)->hanum;
-@@ -4491,8 +4545,7 @@ static int gdth_release(struct Scsi_Host *shp)
-         }
-     }
- 
--    scsi_unregister(shp);
--    return 0;
-+    scsi_host_put(shp);
- }
-             
- 
-@@ -5328,9 +5381,8 @@ static int gdth_slave_configure(struct scsi_device *sdev)
- }
- 
- static struct scsi_host_template driver_template = {
-+	.module			= THIS_MODULE,
-         .name                   = "GDT SCSI Disk Array Controller",
--        .detect                 = gdth_detect, 
--        .release                = gdth_release,
-         .info                   = gdth_info, 
-         .queuecommand           = gdth_queuecommand,
-         .eh_bus_reset_handler   = gdth_eh_bus_reset,
-@@ -5346,7 +5398,26 @@ static struct scsi_host_template driver_template = {
-         .use_clustering         = ENABLE_CLUSTERING,
- };
- 
--#include "scsi_module.c"
- #ifndef MODULE
- __setup("gdth=", option_setup);
- #endif
-+
-+static int __init gdth_mod_init(void)
-+{
-+	return gdth_detect(&driver_template);
-+}
-+
-+static void __exit gdth_mod_exit(void)
-+{
-+	int i;
-+
-+	for (i = 0; i < gdth_ctr_vcount; i++)
-+		if (gdth_ctr_vtab[i])
-+			scsi_remove_host(gdth_ctr_vtab[i]);
-+	for (i = 0; i < gdth_ctr_vcount; i++)
-+		gdth_release(gdth_ctr_vtab[i]);
-+}
-+
-+module_init(gdth_mod_init);
-+module_exit(gdth_mod_exit);
-+
+should be:
+
+return show_shost_mode(supported_mode, buf);
+
+>  
+>  static CLASS_DEVICE_ATTR(supported_mode, S_IRUGO | S_IWUSR, show_shost_supported_mode, NULL);
+> 
