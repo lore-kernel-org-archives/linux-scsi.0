@@ -1,71 +1,73 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [GIT PATCH] SCSI bug fix for 2.6.23-rc8
-Date: Tue, 25 Sep 2007 20:57:01 -0500
-Message-ID: <1190771821.8707.25.camel@localhost.localdomain>
-References: <1190742924.3345.42.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: queued patches for SCSI for 2.6.24
+Date: Wed, 26 Sep 2007 11:12:42 +0900
+Message-ID: <20070925073735U.tomof@acm.org>
+References: <1190768402.8707.20.camel@localhost.localdomain>
+	<20070925065233Q.tomof@acm.org>
+	<1190770955.8707.23.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:55706 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752942AbXIZB5E (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Sep 2007 21:57:04 -0400
-In-Reply-To: <1190742924.3345.42.camel@localhost.localdomain>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:55361 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752949AbXIZCMy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 25 Sep 2007 22:12:54 -0400
+In-Reply-To: <1190770955.8707.23.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James.Bottomley@SteelEye.com
+Cc: tomof@acm.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Tue, 2007-09-25 at 12:55 -0500, James Bottomley wrote:
-> This is, unfortunately, not a recent regression but it's only been
-> recently diagnosed.  Apparently the SCSI Parallel transport class domain
-> validation cable width detection wasn't working, leading to cases where
-> controllers with damaged cables would end up hanging the system (the
-> reported one was an aic79xx controller, but the potential is there for
-> all SPI based systems).  This bug would *only* affect systems whose
-> cable integrity or connectors were compromised, so it isn't life
-> threatening to every SCSI Parallel installation, but the consequence of
-> running into it is a system hang.
+On Tue, 25 Sep 2007 20:42:35 -0500
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+
+> On Wed, 2007-09-26 at 10:28 +0900, FUJITA Tomonori wrote:
+> > On Tue, 25 Sep 2007 20:00:02 -0500
+> > James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> > 
+> > > Andrew asked that I provide a status report of pending updates.  The
+> > > list is attached below.  It's pretty much driver updates and minor bug
+> > > fixes.  The main functionality changes are Kay's sysfs updates and the
+> > > shift of the ULD attachement towards the block prep function.
+> > 
+> > Can we make new 'supporrted_mode' and 'active_mode' attributes look
+> > better?
+> > 
+> > http://marc.info/?l=linux-scsi&m=118991196128245&w=2
 > 
-> The fix is available here:
-> 
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
-> 
-> The short changelog is:
-> 
-> James Bottomley (1):
->       scsi_transport_spi: fix domain validation failure from incorrect
-> width setting
-> 
-> And the diffstat:
-> 
->  scsi_transport_spi.c |   28 ++++++++++++++++++++++------
->  1 file changed, 22 insertions(+), 6 deletions(-)
+> Sure, but Jeff's suggestion was a good one to avoid me having to change
+> hundreds of files.  Could you roll it up and resubmit?
 
-We've had another late arriving bug fix:
+This can be cleanly applied to scsi-misc.
 
-commit ff4abd6cfacf0bb23a077f615d3a5cd17359db1b
-Author: David Miller <davem@davemloft.net>
-Date:   Fri Aug 24 22:25:58 2007 -0700
+-
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH] set supported_mode to MODE_INITIATOR by default
 
-    [SCSI] esp: fix instance numbering.
-    
-    Because the ->unique_id is set too late, the ESP scsi host
-    instance numbers in the kernel log during probing are
-    wrong.
-    
-    Bug reported by Meelis Roos.
-    
-    Signed-off-by: David S. Miller <davem@davemloft.net>
-    Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+This sets supported_mode to MODE_INITIATOR if a lld doesn't specify
+supported_mode in scsi_host_template.
 
-Which I've added.  The diffstat is now:
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/hosts.c |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
- esp_scsi.c           |    3 ++-
- scsi_transport_spi.c |   28 ++++++++++++++++++++++------
- 2 files changed, 24 insertions(+), 7 deletions(-)
-
-James
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index adc9559..694015d 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -342,6 +342,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
+ 	shost->unchecked_isa_dma = sht->unchecked_isa_dma;
+ 	shost->use_clustering = sht->use_clustering;
+ 	shost->ordered_tag = sht->ordered_tag;
++
++	if (!sht->supported_mode)
++		sht->supported_mode = MODE_INITIATOR;
++
+ 	shost->active_mode = sht->supported_mode;
+ 
+ 	if (sht->max_host_blocked)
+-- 
+1.5.2.4
 
