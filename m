@@ -1,60 +1,185 @@
 From: bo yang <bo.yang@lsi.com>
-Subject: [PATCH 5/8] scsi: megaraid_sas - using unsigned long for
-	sense_buff ptr
-Date: Wed, 26 Sep 2007 11:41:07 -0400
-Message-ID: <1190821267.5955.20.camel@dhcp-75-534.se.lsil.com>
+Subject: [PATCH 6/8] scsi: megaraid_sas - call cmd completion from reset
+Date: Wed, 26 Sep 2007 11:46:22 -0400
+Message-ID: <1190821582.5955.25.camel@dhcp-75-534.se.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:52035 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:52372 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752157AbXI1UXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Sep 2007 16:23:47 -0400
+	id S1753671AbXI1U26 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Sep 2007 16:28:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, Bo.yang@lsi.com, Sumant.patro@lsi.com
 
-MegaRAID utilities expect sense_buff to be of type unsigned long.
+Driver will call cmd completion routine from Reset path without waiting for cmd completion from isr context.
 
 Signed-off-by: Bo Yang <bo.yang@lsi.com>
 
 ---
- drivers/scsi/megaraid/megaraid_sas.c |   13 ++++++++-----
- 1 files changed, 8 insertions(+), 5 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.c |  107 ++++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas.h |    2
+ 2 files changed, 55 insertions(+), 54 deletions(-)
 
 diff -uprN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
---- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c	2007-09-27 04:41:39.000000000 -0700
-+++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c	2007-09-27 04:50:14.000000000 -0700
-@@ -2969,6 +2969,7 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
- 	void *sense = NULL;
- 	dma_addr_t sense_handle;
- 	u32 *sense_ptr;
-+	unsigned long *sense_buff;
+--- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c	2007-09-27 05:48:10.000000000 -0700
++++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c	2007-09-27 21:31:34.000000000 -0700
+@@ -109,6 +109,10 @@ static DEFINE_MUTEX(megasas_async_queue_
  
- 	memset(kbuff_arr, 0, sizeof(kbuff_arr));
+ static u32 megasas_dbg_lvl;
  
-@@ -3073,14 +3074,16 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
- 	 */
- 	if (ioc->sense_len) {
- 		/*
--		 * sense_ptr points to the location that has the user
-+		 * sense_buff points to the location that has the user
- 		 * sense buffer address
- 		 */
--		sense_ptr = (u32 *) ((unsigned long)ioc->frame.raw +
--				     ioc->sense_off);
-+		sense_buff = (unsigned long *) ((unsigned long)ioc->frame.raw +
-+								ioc->sense_off);
++static void
++megasas_complete_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd,
++		     u8 alt_status);
++
+ /**
+  * megasas_get_cmd -	Get a command from the free pool
+  * @instance:		Adapter soft state
+@@ -919,6 +923,49 @@ static int megasas_slave_configure(struc
+ }
  
--		if (copy_to_user((void __user *)((unsigned long)(*sense_ptr)),
--				 sense, ioc->sense_len)) {
-+		if (copy_to_user((void __user *)(unsigned long)(*sense_buff),
-+				sense, ioc->sense_len)) {
-+			printk(KERN_ERR "megasas: Failed to copy out to user"
-+					"sense data\n");
- 			error = -EFAULT;
- 			goto out;
+ /**
++ * megasas_complete_cmd_dpc	 -	Returns FW's controller structure
++ * @instance_addr:			Address of adapter soft state
++ *
++ * Tasklet to complete cmds
++ */
++static void megasas_complete_cmd_dpc(unsigned long instance_addr)
++{
++	u32 producer;
++	u32 consumer;
++	u32 context;
++	struct megasas_cmd *cmd;
++	struct megasas_instance *instance =
++				(struct megasas_instance *)instance_addr;
++	unsigned long flags;
++
++	/* If we have already declared adapter dead, donot complete cmds */
++	if (instance->hw_crit_error)
++		return;
++
++	spin_lock_irqsave(&instance->completion_lock, flags);
++
++	producer = *instance->producer;
++	consumer = *instance->consumer;
++
++	while (consumer != producer) {
++		context = instance->reply_queue[consumer];
++
++		cmd = instance->cmd_list[context];
++
++		megasas_complete_cmd(instance, cmd, DID_OK);
++
++		consumer++;
++		if (consumer == (instance->max_fw_cmds + 1)) {
++			consumer = 0;
++		}
++	}
++
++	*instance->consumer = producer;
++
++	spin_unlock_irqrestore(&instance->completion_lock, flags);
++}
++
++/**
+  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
+  * @instance:				Adapter soft state
+  *
+@@ -941,6 +988,11 @@ static int megasas_wait_for_outstanding(
+ 		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL)) {
+ 			printk(KERN_NOTICE "megasas: [%2d]waiting for %d "
+ 			       "commands to complete\n",i,outstanding);
++			/*
++			 * Call cmd completion routine. Cmd to be
++			 * be completed directly without depending on isr.
++			 */
++			megasas_complete_cmd_dpc((unsigned long)instance);
  		}
+ 
+ 		msleep(1000);
+@@ -1820,60 +1872,6 @@ megasas_get_ctrl_info(struct megasas_ins
+ }
+ 
+ /**
+- * megasas_complete_cmd_dpc	 -	Returns FW's controller structure
+- * @instance_addr:			Address of adapter soft state
+- *
+- * Tasklet to complete cmds
+- */
+-static void megasas_complete_cmd_dpc(unsigned long instance_addr)
+-{
+-	u32 producer;
+-	u32 consumer;
+-	u32 context;
+-	struct megasas_cmd *cmd;
+-	struct megasas_instance *instance = (struct megasas_instance *)instance_addr;
+-	unsigned long flags;
+-
+-	/* If we have already declared adapter dead, donot complete cmds */
+-	if (instance->hw_crit_error)
+-		return;
+-
+-	producer = *instance->producer;
+-	consumer = *instance->consumer;
+-
+-	while (consumer != producer) {
+-		context = instance->reply_queue[consumer];
+-
+-		cmd = instance->cmd_list[context];
+-
+-		megasas_complete_cmd(instance, cmd, DID_OK);
+-
+-		consumer++;
+-		if (consumer == (instance->max_fw_cmds + 1)) {
+-			consumer = 0;
+-		}
+-	}
+-
+-	*instance->consumer = producer;
+-
+-	/*
+-	 * Check if we can restore can_queue
+-	 */
+-	if (instance->flag & MEGASAS_FW_BUSY
+-		&& time_after(jiffies, instance->last_time + 5 * HZ)
+-		&& atomic_read(&instance->fw_outstanding) < 17) {
+-
+-		spin_lock_irqsave(instance->host->host_lock, flags);
+-		instance->flag &= ~MEGASAS_FW_BUSY;
+-		instance->host->can_queue =
+-				instance->max_fw_cmds - MEGASAS_INT_CMDS;
+-
+-		spin_unlock_irqrestore(instance->host->host_lock, flags);
+-	}
+-
+-}
+-
+-/**
+  * megasas_issue_init_mfi -	Initializes the FW
+  * @instance:		Adapter soft state
+  *
+@@ -2537,6 +2535,7 @@ megasas_probe_one(struct pci_dev *pdev, 
+ 	init_waitqueue_head(&instance->abort_cmd_wait_q);
+ 
+ 	spin_lock_init(&instance->cmd_pool_lock);
++	spin_lock_init(&instance->completion_lock);
+ 
+ 	sema_init(&instance->aen_mutex, 1);
+ 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
+diff -uprN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
+--- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h	2007-09-26 15:15:26.000000000 -0700
++++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h	2007-09-27 04:58:15.000000000 -0700
+@@ -1086,6 +1086,8 @@ struct megasas_instance {
+ 	struct megasas_cmd **cmd_list;
+ 	struct list_head cmd_pool;
+ 	spinlock_t cmd_pool_lock;
++	/* used to synch producer, consumer ptrs in dpc */
++	spinlock_t completion_lock;
+ 	struct dma_pool *frame_dma_pool;
+ 	struct dma_pool *sense_dma_pool;
+ 
+
 
