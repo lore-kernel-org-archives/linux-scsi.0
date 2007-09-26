@@ -1,51 +1,69 @@
-From: stefan@mdy.univie.ac.at (Stefan Boresch)
-Subject: Re: queued patches for SCSI for 2.6.24
-Date: Wed, 26 Sep 2007 10:50:20 +0200
-Message-ID: <20070926085020.GC1606@loop.mdy.univie.ac.at>
-References: <1190768402.8707.20.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH 5/5] x86-64: pci-gart iommu uses max_segment_size
+Date: Wed, 26 Sep 2007 17:58:03 +0900
+Message-ID: <20070925142201H.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from epsilon.mdy.univie.ac.at ([131.130.40.18]:40911 "EHLO
-	epsilon.mdy.univie.ac.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751616AbXIZIuY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Sep 2007 04:50:24 -0400
-Content-Disposition: inline
-In-Reply-To: <1190768402.8707.20.camel@localhost.localdomain>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:39664 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753020AbXIZI6e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 26 Sep 2007 04:58:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Bottomley@SteelEye.com, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, gregkh@suse.de, hare@suse.de, linux-scsi@vger.kernel.org
+Cc: fujita.tomonori@lab.ntt.co.jp
 
-On Tue, Sep 25, 2007 at 08:00:02PM -0500, James Bottomley wrote:
-> Andrew asked that I provide a status report of pending updates.  The
-> list is attached below.  It's pretty much driver updates and minor bug
-> fixes.  The main functionality changes are Kay's sysfs updates and the
-> shift of the ULD attachement towards the block prep function.
-> 
+This enables pci-gart iommu to merge sg lists properly about lld's max
+segment size limit.
 
-[snip]
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ arch/x86_64/kernel/pci-gart.c |    6 ++++++
+ 1 files changed, 6 insertions(+), 0 deletions(-)
 
-Just curious: Is the patch for scsi_transport_spi.c you sent me for my
-hardware problem going to make it into an official kernel?
-
-(Referring to your patch which you posted under:
-
-[PATCH] scsi_transport_spi: fix domain validation failure from
-incorrect width setting
-
-)
-
-Arguably, it works around a hardware problem of mine, but it
-could make also for others the differences of a machine not
-booting at all and one that at least comes up and is usable ...
-
-Sincerely,
-
-Stefan Boresch
-
+diff --git a/arch/x86_64/kernel/pci-gart.c b/arch/x86_64/kernel/pci-gart.c
+index 4918c57..be98341 100644
+--- a/arch/x86_64/kernel/pci-gart.c
++++ b/arch/x86_64/kernel/pci-gart.c
+@@ -381,6 +381,7 @@ int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents, int dir)
+ 	int start;
+ 	unsigned long pages = 0;
+ 	int need = 0, nextneed;
++	unsigned len;
+ 
+ 	if (nents == 0) 
+ 		return 0;
+@@ -390,6 +391,7 @@ int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents, int dir)
+ 
+ 	out = 0;
+ 	start = 0;
++	len = 0;
+ 	for (i = 0; i < nents; i++) {
+ 		struct scatterlist *s = &sg[i];
+ 		dma_addr_t addr = page_to_phys(s->page) + s->offset;
+@@ -404,16 +406,20 @@ int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents, int dir)
+ 			/* Can only merge when the last chunk ends on a page 
+ 			   boundary and the new one doesn't have an offset. */
+ 			if (!iommu_merge || !nextneed || !need || s->offset ||
++			    (dev->max_segment_size &&
++			     dev->max_segment_size < s->length + len) ||
+ 			    (ps->offset + ps->length) % PAGE_SIZE) { 
+ 				if (dma_map_cont(sg, start, i, sg+out, pages,
+ 						 need) < 0)
+ 					goto error;
+ 				out++;
++				len = 0;
+ 				pages = 0;
+ 				start = i;	
+ 			}
+ 		}
+ 
++		len += s->length;
+ 		need = nextneed;
+ 		pages += to_pages(s->offset, s->length);
+ 	}
 -- 
-Stefan Boresch
-Institute for Computational Biological Chemistry
-University of Vienna, Waehringerstr. 17       A-1090 Vienna, Austria
-Phone: -43-1-427752715                        Fax:   -43-1-427752790
+1.5.2.4
+
