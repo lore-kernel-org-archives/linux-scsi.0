@@ -1,63 +1,39 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Thu, 27 Sep 2007 18:34:37 -0500
-Message-ID: <20070927233437.GF18686@austin.ibm.com>
-References: <20070420204114.GL31947@austin.ibm.com> <20070420204720.GM31947@austin.ibm.com> <20070926150216.GH3899@parisc-linux.org> <20070927220022.GC18686@austin.ibm.com> <20070927221031.GY3899@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: generating a Linux WWN?
+Date: Thu, 27 Sep 2007 19:40:43 -0400
+Message-ID: <46FC3F7B.7010401@garzik.org>
+References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <CE7B1A4EF22E704CBFFD9A35BA5C822252505C@ausx3mpc110.aus.amer.dell.com> <20070927144649.GV3899@parisc-linux.org> <46FBC723.2070607@sgi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:52646 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759605AbXI0Xe7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 19:34:59 -0400
-Content-Disposition: inline
-In-Reply-To: <20070927221031.GY3899@parisc-linux.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:59757 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751584AbXI0Xkv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Sep 2007 19:40:51 -0400
+In-Reply-To: <46FBC723.2070607@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: Michael Reed <mdr@sgi.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Patrick_Boyd@Dell.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
 
-On Thu, Sep 27, 2007 at 04:10:31PM -0600, Matthew Wilcox wrote:
-> In the error handler, we wait_for_completion(io_reset_wait).
-> In sym2_io_error_detected, we init_completion(io_reset_wait).
-> Isn't it possible that we hit the error handler before we hit the
-> io_error_detected path, and thus the completion wait is lost?
-> Since the completion is already initialised in sym_attach(), I don't
-> think we need to initialise it in sym2_io_error_detected().
-> Makes sense to just delete it?
+Michael Reed wrote:
+> Record the WWN of your SAS / FC port so that if/when it goes missing you
+> can put it back?  Have spares on site?
 
-Good catch. But no ... and I had to study this a bit. Bear with me:
+Linux:  not just for million dollar data centers any more :)
 
-It is enough to call init_completion() once, and not once per use:
-it initializes spinlocks, which shouldn't be intialized twice. 
+(sorry, couldn't resist :))
 
-But, that completion might be used multiple times when there are
-multiple errors, and so, before using it a second time, one must 
-set completion->done = 0.  The INIT_COMPLETION() macro does this. 
+More seriously, SAS will be making an increasing appearance on commodity 
+hardware, through the new SAS/SATA chips that are just starting to make 
+their appearance (like the chips I'm working on).  And Marvell and 
+Broadcom are big guys.  Just wait until the tiny Taiwanese shops start 
+cranking out SAS/SATA chips.
 
-One must have completion->done = 0 before every use, as otherwise, 
-wait_for_completion() won't actually wait. And since complete_all()
-sets x->done += UINT_MAX/2, I'm pretty sure x->done won't be zero
-the next time we use it, unless we make it so.
+With that, you'll get all the joys of low-cost volume production, and 
+the user field foibles that come with it.
 
-So I need to find a place to safely call INIT_COMPLETION() again, 
-after the completion has been used. At the moment, I'm stumped
-as to where to do this. 
+	Jeff
 
----- [think ... think ... think] ----
-
-I think the race you describe above is harmless. The first time
-that sym_eh_handler() will run, it will be with SYM_EH_ABORT, 
-in it doesn't matter if we lose that, since the device is hosed
-anyway. At some later time, it will run with SYM_EH_DEVICE_RESET
-and then SYM_EH_BUS_RESET and then SYM_EH_HOST_RESET, and we won't 
-miss those, since, by now, sym2_io_error_detected() will have run.
-
-So, by my reading, I'd say that init_completion() in
-sym2_io_error_detected() has to stay (although perhaps
-it should be replaced by the INIT_COMPLETION() macro.)
-Removing it will prevent correct operation on the second 
-and subsequent errors.
-
---Linas
 
