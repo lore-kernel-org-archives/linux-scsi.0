@@ -1,73 +1,63 @@
-From: <Patrick_Boyd@Dell.com>
-Subject: RE: generating a Linux WWN?
-Date: Thu, 27 Sep 2007 09:16:13 -0500
-Message-ID: <CE7B1A4EF22E704CBFFD9A35BA5C822252505C@ausx3mpc110.aus.amer.dell.com>
-References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: generating a Linux WWN?
+Date: Thu, 27 Sep 2007 09:29:38 -0500
+Message-ID: <46FBBE52.1080507@sgi.com>
+References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <46FBBBEB.4020605@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ausc60pc101.us.dell.com ([143.166.85.206]:65097 "EHLO
-	ausc60pc101.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752121AbXI0O0p convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 10:26:45 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <46FBB86B.8000206@emulex.com>
+Received: from netops-testserver-4-out.sgi.com ([192.48.171.29]:59417 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757477AbXI0O3n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 10:29:43 -0400
+In-Reply-To: <46FBBBEB.4020605@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, jeff@garzik.org
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Unfortunately, it looks like IEEE doesn't have any OID's registered for
-Linux or other reserved areas
-(http://standards.ieee.org/regauth/oui/oui.txt). However, it does look
-like they go in order... so maybe if you used an OID of 0xFFFFFF you
-could at least guarantee that you didn't conflict with any company's SAS
-WWNs.
 
-Patrick Boyd
 
-James Smart wrote:
->Uh, although this may work very well for small constrained configs, as
-one
->who debugs larger environments (and things always grow or get connected
-in
->ways you don't expect), depending on a random number for uniqueness
-makes
->me very unsettled. Debugging that small-percentage potential, when/if
-it
->does occur can be an absolute nightmare with all kinds of weird
-behavior.
->Rarely will you solve it from the context of a single server. There are
->lots of ways to cheat, but I believe they all have to be based on some
->small part that is guaranteed to be unique (like the IEEE id's).
->
->-- james s
->
->Jeff Garzik wrote:
->> Is there an accepted way to generate a SAS address, when the adapter 
->> does not supply one (NVRAM invalid or missing, etc.)?
->> 
->> Unless somebody complains, I was just planning to use 
->> get_random_bytes().  But maybe Linux has an IEEE id we can use, to
-make 
->> the practice a bit more legitimate and avoid stomping on others?  Or
-an 
->> IEEE id specifically designed for generated-address purposes?
->> 
->>     Jeff
->> 
->> 
->> 
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->> 
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jeff Garzik wrote:
+> James Smart wrote:
+>> Uh, although this may work very well for small constrained configs, as one
+>> who debugs larger environments (and things always grow or get connected in
+>> ways you don't expect), depending on a random number for uniqueness makes
+>> me very unsettled. Debugging that small-percentage potential, when/if it
+>> does occur can be an absolute nightmare with all kinds of weird behavior.
+>> Rarely will you solve it from the context of a single server. There are
+>> lots of ways to cheat, but I believe they all have to be based on some
+>> small part that is guaranteed to be unique (like the IEEE id's).
+> 
+> That's the ideal world, sure  :) 
+> 
+> But the reality is, just like with ethernet MAC addresses, you don't always have one when you "supposed to" have one.
+> 
+
+I'm curious about the problem you're trying to solve.  Generally a missing WWN,
+as having a unique WWN should be a product requirement, is an indicator of
+a problem.  Shouldn't the proper solution be to have the card repaired?
+Arbitrarily assigning a WWN could mask or introduce other problems, in particular
+with regard to storage connectivity.
+
+> There are obvious limitations and problems arising from a generated WWN -- particularly for an HBA, where serial numbers and other unique identifiers are scarce.  But that doesn't wish the missing-WWN problem away.  Decades of networking experience have taught us a few things  :) 
+> 
+> As an aside, we also need a way to override the HBA's WWN, just like we do with ethernet MAC address.
+
+We do?  Perhaps if it's corrupt and you know the correct value.  But, in that case
+shouldn't the card be replaced?  When would you need to override the default WWN?
+
+Linux: it's not just for desktops anymore.  :)
+
+Mike
+
+
+> 
+>     Jeff
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
