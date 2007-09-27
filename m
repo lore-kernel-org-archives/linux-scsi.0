@@ -1,70 +1,66 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: generating a Linux WWN?
-Date: Thu, 27 Sep 2007 18:48:14 -0400
-Message-ID: <46FC332E.2040001@garzik.org>
-References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <CE7B1A4EF22E704CBFFD9A35BA5C822252505C@ausx3mpc110.aus.amer.dell.com> <20070927144649.GV3899@parisc-linux.org>
+Date: Thu, 27 Sep 2007 19:12:50 -0400
+Message-ID: <46FC38F2.2070206@garzik.org>
+References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <46FBBBEB.4020605@garzik.org> <46FBBE52.1080507@sgi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:43822 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:43378 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755671AbXI0WsW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2007 18:48:22 -0400
-In-Reply-To: <20070927144649.GV3899@parisc-linux.org>
+	id S1756723AbXI0XMz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Sep 2007 19:12:55 -0400
+In-Reply-To: <46FBBE52.1080507@sgi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Patrick_Boyd@Dell.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Michael Reed <mdr@sgi.com>
+Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> On Thu, Sep 27, 2007 at 09:16:13AM -0500, Patrick_Boyd@Dell.com wrote:
->> Unfortunately, it looks like IEEE doesn't have any OID's registered for
->> Linux or other reserved areas
->> (http://standards.ieee.org/regauth/oui/oui.txt). However, it does look
->> like they go in order... so maybe if you used an OID of 0xFFFFFF you
->> could at least guarantee that you didn't conflict with any company's SAS
->> WWNs.
-> 
-> It's something that happens frequently enough that we should come up
-> with a proper way of handling this.  I heard a story of someone at HP
-> taking an old computer, reading the MAC address from the motherboard,
-> then snapping the board in half.  I suppose if you're going to use a MAC
-> address from a 10Mbit ethernet card for a SAS WWN, there's no chance of
-> conflict, but still ... 3com might choose to do the same thing, and then
-> we're in trouble.
-> 
-> I don't have a good solution for WWN assignment.  Even if we get a
-> 24-bit OID assignment for 'software use' or something, how do we control
-> the use withi the SAN to be sure we get no overlapping WWNs?
+Michael Reed wrote:
+> I'm curious about the problem you're trying to solve.  Generally a missing WWN,
 
-To a perfectionist, there are no good answers besides "try your best."
+I'm writing two SAS HBA drivers, Marvell 6440 and Broadcom 8603/HT1100, 
+and must deal with this scenario.
 
-The popular solutions I've seen are:
 
-1) Random bytes, or fixed id + random bytes.  Even on a worldwide net, 
-collisions are highly unlikely.
+> as having a unique WWN should be a product requirement, is an indicator of
+> a problem.  Shouldn't the proper solution be to have the card repaired?
+> Arbitrarily assigning a WWN could mask or introduce other problems, in particular
+> with regard to storage connectivity.
 
-2) [pseudo-]hash of reasonably static properties of your platform.
+If you are an admin suffering from the /common/ problem of missing or 
+invalid NVRAM, would you rather wait for card repair or get it going 
+immediately?
 
-3) Admin makes a site-specific decision, blending cases #1 and #2 with 
-other schemes such as site-defined numbering.
+The standard Linux policy for unique ids like ethernet MAC has been, for 
+the 98% case where you have a useful MAC from the hardware, of course 
+use it.  For the 2% case, you give the admin solutions for supplying a 
+useful MAC.
 
-In the ethernet world, all the drivers permit programmable MAC 
-addresses, and many generate a random MAC if one is unavailable through 
-other means.  In practice this is deployed rarely, though things like 
-bonding and seamless failover are making much more use of programmable 
-MAC addresses than ever before.
+Mirroring decades of ethernet NIC history, the HBA silicon and the 
+source of the unique id are most often vastly different.  Normally it is 
+a different chip on the same board, but sometimes the unique id source 
+is not on the same board at all.
 
-For case #2, one might consider creating a WWN for an ATA device that 
-lacks one (they often do, even with a defined WWN field), by hashing the 
-vendor id, firmware rev, and media serial number together.  But even 
-with such hueristics, persistence and uniqueness are difficult to recreate.
+For those reasons and more, Linux users have a LONG history of running 
+into situations where, for one reason or another, their silicon is fine 
+but their unique id is not.  I've heard them all:
+	- hw from government auction, had NVRAM intentionally wiped
+	- hw resale w/ NVRAM wiped by paranoid corporate IT staff
+	- hw with NVRAM chip missing
+	- old hw out of warranty
+	- old dev kit (they rarely ship with useful NVRAM data)
+	- and plenty more
 
-With either case 1 or 2 -- both have seen success in the field -- you 
-are essentially relying on luck after a certain point.  And that's life.
+We have to behave sanely in the 2% case.  "refuse to operate" is just 
+not an option, when this problem case is so historically clear, and so 
+easy to work around.
+
+Linux drivers have to continue operating long after support contracts 
+run out, long after chip EOL, and sometimes, long after companies go out 
+of business.
 
 	Jeff
-
 
 
