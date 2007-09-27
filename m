@@ -1,57 +1,66 @@
-From: Al Viro <viro@ftp.linux.org.uk>
-Subject: Re: /dev/sda with 8 byte offset
-Date: Thu, 27 Sep 2007 08:42:55 +0100
-Message-ID: <20070927074255.GU8181@ftp.linux.org.uk>
-References: <Pine.LNX.4.64.0709262121040.17048@valhalla.fs.tum.de>
-	<46FAC72F.5020304@s5r6.in-berlin.de>
-	<20070926210359.GS8181@ftp.linux.org.uk>
-	<46FB5175.3000509@s5r6.in-berlin.de>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH v3 2/2][BNX2]: Add iSCSI support to BNX2 devices.
+Date: Thu, 27 Sep 2007 17:06:13 +0900
+Message-ID: <20070926075800T.tomof@acm.org>
+References: <46F8C935.8050907@suse.de>
+	<20070925133624H.tomof@acm.org>
+	<46FB5C6B.3020506@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-user-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <46FB5175.3000509@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
-	<mailto:linux1394-user-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-user>
-List-Post: <mailto:linux1394-user@lists.sourceforge.net>
-List-Help: <mailto:linux1394-user-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-user>,
-	<mailto:linux1394-user-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-user-bounces@lists.sourceforge.net
-Errors-To: linux1394-user-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, linux1394-user@lists.sourceforge.net
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <46FB5C6B.3020506@garzik.org>
+Sender: netdev-owner@vger.kernel.org
+To: jeff@garzik.org
+Cc: tomof@acm.org, hare@suse.de, open-iscsi@googlegroups.com, hch@infradead.org, davem@davemloft.net, mchristi@redhat.com, netdev@vger.kernel.org, anilgv@broadcom.com, talm@broadcom.com, lusinsky@broadcom.com, uri@broadcom.com, fujita.tomonori@lab.ntt.co.jp, benh@kernel.crashing.org, jens.axboe@oracle.com, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Sep 27, 2007 at 08:45:09AM +0200, Stefan Richter wrote:
-> Al Viro wrote:
-> > On Wed, Sep 26, 2007 at 10:55:11PM +0200, Stefan Richter wrote:
-> >> Strange.  I haven't heard of this before.  From which vendor and model
-> >> is the device, and do you know which chip is on its IDE bridge board?
-> > 
-> > I've seen it, all right.  8 bytes stuck in FIFO, pl3507 IDE bridge,
-> > and judging by google search that turd is b0rken regardless of the
-> > OS (along the lines of "works under Windows if you power-cycle it
-> > once in about half an hour").
-> > 
-> > Suggested fix: use as a barf-bag; the authors of that thing certainly had
-> > done that.
+CC'ed Jens, James, and linux-scsi.
+
+On Thu, 27 Sep 2007 03:31:55 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> FUJITA Tomonori wrote:
+> > Yeah, we could nicely handle lld's restrictions (especially with
+> > stacking devices). But iommu code needs only max_segment_size and
+> > seg_boundary_mask, right? If so, the first simple approach to add two
+> > values to device structure is not so bad, I think.
 > 
-> Sounds plausible.  I wasn't aware of the particular 8-byte-garbage
-> symptom (or heard of it and forgot it).
+> (replying to slightly older email in the thread)
+> (added benh, since we've discussed this issue in the past)
+> 
+> dumb question, what happened to seg_boundary_mask?
 
-IIRC, it can be triggered by the second INQUIRY during the same firewire
-session (i.e. device survives only one INQUIRY after login and using e.g.
-scsiinfo -i afterwards triggers that behaviour).
+I'll work on it too after finishing max_seg_size.
 
-Can't verify that, since the hardware in question had been met its end
-(after a week spent debugging that mess).  It was of the "can't upgrade
-the firmware" variety and frankly, it's easier to spend $20 on a working
-enclosure than to waste time on that dreck.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+> If you look at drivers/ata/libata-core.c:ata_fill_sg(), you will note 
+> that we split s/g segments after DMA-mapping.  Looking at libata LLDD's, 
+> you will also note judicious use of ATA_DMA_BOUNDARY (0xffff).
+
+I know the workaround since I fixed libata's sg chaining patch.
+
+
+> It was drilled into my head by James and benh that I cannot rely on the 
+> DMA boundary + block/scsi + dma_map_sg() to ensure that my S/G segments 
+> never cross a 64K boundary, a legacy IDE requirement.  Thus the 
+> additional code in ata_fill_sg() to split S/G segments straddling 64K, 
+> in addition to setting dma boundary to 0xffff.
+
+I think that the block layer can handle both max_segment_size and
+seg_boundary_mask properly (and SCSI-ml just uses the block layer). So
+if we fix iommu, then we can remove a workaround to fix sg lists in
+llds.
+
+
+> A key problem I was hoping would be solved with your work here was the 
+> elimination of that post dma_map_sg() split.
+
+Yeah, that's my goal too.
+
+
+> If I understood James and Ben correctly, one of the key problems was 
+> always in communicating libata's segment boundary needs to the IOMMU layers?
+> 
+> 	Jeff
+> 
