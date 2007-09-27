@@ -1,55 +1,44 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
-Date: Thu, 27 Sep 2007 07:34:52 -0700
-Message-ID: <46FBBF8C.80409@qlogic.com>
-References: <200708311703.l7VH3NkK016220@mbox.iij4u.or.jp>	<20070905150534.GJ17977@plap.qlogic.org>	<46F3D66A.9010000@qlogic.com> <20070923231416K.tomof@acm.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: generating a Linux WWN?
+Date: Thu, 27 Sep 2007 08:46:50 -0600
+Message-ID: <20070927144649.GV3899@parisc-linux.org>
+References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <CE7B1A4EF22E704CBFFD9A35BA5C822252505C@ausx3mpc110.aus.amer.dell.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:56900 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757201AbXI0OfY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 10:35:24 -0400
-In-Reply-To: <20070923231416K.tomof@acm.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:49481 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754189AbXI0Oqw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 10:46:52 -0400
+Content-Disposition: inline
+In-Reply-To: <CE7B1A4EF22E704CBFFD9A35BA5C822252505C@ausx3mpc110.aus.amer.dell.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp
+To: Patrick_Boyd@Dell.com
+Cc: James.Smart@Emulex.Com, jeff@garzik.org, linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Fri, 21 Sep 2007 07:34:18 -0700
-> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
-> 
->> Andrew Vasquez wrote:
->>> On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
->>>
->>>> This adds target mode support to qla2xxx.
->>>>
->>>> With set ql2enable_target_mode module parameter to 1, the driver runs
->>>> in target mode. By default, ql2enable_target_mode is set to 0, and the
->>>> driver should work in initiator mode as before.
->>>>
->>>> The driver could support dual-mode in the future but it doesn't at the
->>>> moment (we need to add dual-mode support tgt first).
->>>>
->>>> It is based on scst qla2xxx target mode driver. Mike converted the
->>>> driver to use tgt long ago. I changed it to use the latest (mainline)
->>>> version of qla2xxx driver and tgt, and also converted it to use fc
->>>> transport class.
->>> Thanks for doing this.  Some initial comments before a full review is
->>> complete, As was seen from the initiator updates needed for 24xx
->>> support, there are comparable changes needed in the area of
->>> target-mode support for 4gb and 8gb parts.  Also, which ISPs and
->>> firmwares were exercised with this code?
->> The patch is still under reviewing and will get done, soon.
-> 
-> Great, thinks!
-One more question on typical testing setup.
-I wonder how should I setup the testing environment esp., for the target-mode.
-If you have, could you share the details of the layout of the environment that you have had used for the feature verification?
-Also, it would be great if shared with me for those specific test cases that need to be in place.
-I will try to add more cases on top of it if there are.
+On Thu, Sep 27, 2007 at 09:16:13AM -0500, Patrick_Boyd@Dell.com wrote:
+> Unfortunately, it looks like IEEE doesn't have any OID's registered for
+> Linux or other reserved areas
+> (http://standards.ieee.org/regauth/oui/oui.txt). However, it does look
+> like they go in order... so maybe if you used an OID of 0xFFFFFF you
+> could at least guarantee that you didn't conflict with any company's SAS
+> WWNs.
 
-Thank you,
-Seokmann
+It's something that happens frequently enough that we should come up
+with a proper way of handling this.  I heard a story of someone at HP
+taking an old computer, reading the MAC address from the motherboard,
+then snapping the board in half.  I suppose if you're going to use a MAC
+address from a 10Mbit ethernet card for a SAS WWN, there's no chance of
+conflict, but still ... 3com might choose to do the same thing, and then
+we're in trouble.
+
+I don't have a good solution for WWN assignment.  Even if we get a
+24-bit OID assignment for 'software use' or something, how do we control
+the use withi the SAN to be sure we get no overlapping WWNs?
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
