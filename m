@@ -1,67 +1,57 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: question on flushing buffers and spinning
-	down disk
-Date: Thu, 27 Sep 2007 20:12:14 +0200
-Message-ID: <200709272012.15567.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0709271159570.7735-100000@iolanthe.rowland.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-usb-devel] question on flushing buffers and spinning down
+ disk
+Date: Thu, 27 Sep 2007 15:07:46 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0709271455080.7735-100000@iolanthe.rowland.org>
+References: <200709272012.15567.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <Pine.LNX.4.44L0.0709271159570.7735-100000@iolanthe.rowland.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:37089 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755157AbXI0THs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 15:07:48 -0400
+In-Reply-To: <200709272012.15567.oliver@neukum.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: linux-usb-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
 
-Am Donnerstag 27 September 2007 schrieb Alan Stern:
-> On Thu, 27 Sep 2007, Oliver Neukum wrote:
-> =
+On Thu, 27 Sep 2007, Oliver Neukum wrote:
 
-> > Am Dienstag 25 September 2007 schrieb Alan Stern:
-> > > Getting all this to work will be tricky, because sd is a block device
-> > > driven by requests issued through the block layer in atomic context,
-> > > whereas suspend and resume require a process context. =A0Probably the =
+> > Oliver, I'm surprised at you!  This patch is a big hack, not to mention 
+> > a layering violation and an inversion of the proper calling sequence.
+> 
+> Well,
+> 
+> 1. autosuspend should not be specific to USB
 
-> > > SCSI core would have to get involved in managing the synchronization.
-> > =
+Correct.  Which means support for it should be added to the SCSI
+drivers.  SCSI autosuspend shouldn't be kluged into usb-storage in a
+way that basically ignores what the SCSI layer is doing.
 
-> > =
+> 2. I like to view the generic SCSI code as a library
 
-> > Well,
-> > =
+That viewpoint might work out okay in some cases, but I don't think 
+it's tenable when dealing with high-level drivers like sd and sr.
 
-> > here's a patch that seems to do what needs to be done to make it work.
-> =
+> 3. The low level drivers will have to decide whether to suspend devices,
+> as the generic code doesn't know whether the bus is shared.
 
-> Oliver, I'm surprised at you!  This patch is a big hack, not to mention =
+I'm having trouble understanding this; it's a bit ambiguous.  Does
+"devices" mean "SCSI devices", "host adapter devices", or both?  Does
+"generic code" refer to the SCSI core, the high-level SCSI drivers, or
+something else?  When you say the bus is "shared", do you mean there
+are multiple SCSI devices attached to it or do you mean something else?  
+(I assume you mean something else, as the SCSI core certainly does know
+when multiple SCSI devices are attached to a SCSI bus.)
 
-> a layering violation and an inversion of the proper calling sequence.
+In any case, that's not how I would put it.  The SCSI core and
+high-level drivers will have to decide when they are not using SCSI
+devices and the devices can be suspended.  When all the devices the
+SCSI core knows about are suspended, it should tell the LLD.  Then the
+LLD can suspend the bus and the host adapter, whatever is appropriate,
+based on its own private knowledge.
 
-Well,
+Alan Stern
 
-1. autosuspend should not be specific to USB
-2. I like to view the generic SCSI code as a library
-3. The low level drivers will have to decide whether to suspend devices,
-as the generic code doesn't know whether the bus is shared.
-
-	Regards
-		Oliver
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
