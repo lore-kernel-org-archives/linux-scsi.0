@@ -1,72 +1,67 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] x86-64: pci-gart iommu sg chaining zeroes wrong sg.
-Date: Fri, 28 Sep 2007 01:46:36 +0900
-Message-ID: <20070928014634H.tomof@acm.org>
-References: <20070928013550M.tomof@acm.org>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: question on flushing buffers and spinning
+	down disk
+Date: Thu, 27 Sep 2007 20:12:14 +0200
+Message-ID: <200709272012.15567.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0709271159570.7735-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:41807 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753413AbXI0Qrg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2007 12:47:36 -0400
-In-Reply-To: <20070928013550M.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <Pine.LNX.4.44L0.0709271159570.7735-100000@iolanthe.rowland.org>
+Content-Disposition: inline
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jens.axboe@oracle.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Fri, 28 Sep 2007 01:38:27 +0900
-FUJITA Tomonori <tomof@acm.org> wrote:
+Am Donnerstag 27 September 2007 schrieb Alan Stern:
+> On Thu, 27 Sep 2007, Oliver Neukum wrote:
+> =
 
-> This patch is for Jens' block tree (sg chaining branch).
-> 
-> I don't have the hardware but this looks like a bug.
-> 
-> ---
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] x86-64: pci-gart iommu sg chaining zeroes a wrong sg's dma_length
-> 
-> Needs to zero the end of the list.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  arch/x86_64/kernel/pci-gart.c |    3 ++-
->  1 files changed, 2 insertions(+), 1 deletions(-)
-> 
-> diff --git a/arch/x86_64/kernel/pci-gart.c b/arch/x86_64/kernel/pci-gart.c
-> index 27b7db4..a4151a7 100644
-> --- a/arch/x86_64/kernel/pci-gart.c
-> +++ b/arch/x86_64/kernel/pci-gart.c
-> @@ -425,9 +425,10 @@ int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents, int dir)
->  	if (dma_map_cont(start_sg, i - start, sgmap, pages, need) < 0)
->  		goto error;
->  	out++;
-> +	sgmap = sg_next(sgmap);
->  	flush_gart();
->  	if (out < nents)
-> -		ps->dma_length = 0;
-> +		sgmap->dma_length = 0;
->  	return out;
+> > Am Dienstag 25 September 2007 schrieb Alan Stern:
+> > > Getting all this to work will be tricky, because sd is a block device
+> > > driven by requests issued through the block layer in atomic context,
+> > > whereas suspend and resume require a process context. =A0Probably the =
 
-Sorry, it should be:
+> > > SCSI core would have to get involved in managing the synchronization.
+> > =
 
+> > =
 
-diff --git a/arch/x86_64/kernel/pci-gart.c b/arch/x86_64/kernel/pci-gart.c
-index 27b7db4..cfcc84e 100644
---- a/arch/x86_64/kernel/pci-gart.c
-+++ b/arch/x86_64/kernel/pci-gart.c
-@@ -426,8 +426,10 @@ int gart_map_sg(struct device *dev, struct scatterlist *sg, int nents, int dir)
- 		goto error;
- 	out++;
- 	flush_gart();
--	if (out < nents)
--		ps->dma_length = 0;
-+	if (out < nents) {
-+		sgmap = sg_next(sgmap);
-+		sgmap->dma_length = 0;
-+	}
- 	return out;
- 
- error:
+> > Well,
+> > =
+
+> > here's a patch that seems to do what needs to be done to make it work.
+> =
+
+> Oliver, I'm surprised at you!  This patch is a big hack, not to mention =
+
+> a layering violation and an inversion of the proper calling sequence.
+
+Well,
+
+1. autosuspend should not be specific to USB
+2. I like to view the generic SCSI code as a library
+3. The low level drivers will have to decide whether to suspend devices,
+as the generic code doesn't know whether the bus is shared.
+
+	Regards
+		Oliver
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2005.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
