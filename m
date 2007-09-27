@@ -1,44 +1,54 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Thu, 27 Sep 2007 16:10:31 -0600
-Message-ID: <20070927221031.GY3899@parisc-linux.org>
-References: <20070420204114.GL31947@austin.ibm.com> <20070420204720.GM31947@austin.ibm.com> <20070926150216.GH3899@parisc-linux.org> <20070927220022.GC18686@austin.ibm.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: generating a Linux WWN?
+Date: Thu, 27 Sep 2007 18:32:15 -0400
+Message-ID: <46FC2F6F.3020009@garzik.org>
+References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <46FBBBEB.4020605@garzik.org> <46FBBE52.1080507@sgi.com> <46FBCC89.2030702@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41528 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757983AbXI0WKd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 18:10:33 -0400
-Content-Disposition: inline
-In-Reply-To: <20070927220022.GC18686@austin.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:58547 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755732AbXI0WcU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Sep 2007 18:32:20 -0400
+In-Reply-To: <46FBCC89.2030702@torque.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linas Vepstas <linas@austin.ibm.com>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: dougg@torque.net
+Cc: Michael Reed <mdr@sgi.com>, James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Sep 27, 2007 at 05:00:22PM -0500, Linas Vepstas wrote:
-> On Wed, Sep 26, 2007 at 09:02:16AM -0600, Matthew Wilcox wrote:
-> > I'm a little concerned by the mention of MMIO.  It's entirely possible
-> > for the sym2 driver to be using ioports to access the card rather than
-> > MMIO.  Is it simply that it can't on the platform you test on?
+Douglas Gilbert wrote:
+> I have come across two types of problems:
+>   a) the scsi_debug driver looks like one or more logical units
+>      behind one or more dual ported SAS devices. All generated
+>      SAS address (for target ports, target devices and lus)
+>      should be distinct and preferably world wide unique.
+>      [My scsi_ses driver has a similar problem.]
+>   b) SAS HBAs that can run in target mode don't have enough
+>      unique SAS addresses allocated. A SAS initiator (the HBA's
+>      normal mode) only needs a couple a SAS addresses (e.g.
+>      3: one for the 4 internal phys, another for the 4
+>      external phys and 1 for the SAS initiator _device_
+>      (but I have never seen that done properly)). When you turn
+>      the SAS HBA around as a target (or initiator/target for
+>      bonus points) then each logical unit connected to or
+>      simulated by the SAS target needs a unique SAS address.
 > 
-> The comment is misleading. I've been in the bad habit of calling
-> it "mmio" whenever its not DMA.
+> Years ago I asked for linux to get a IEEE OID. In the absence
+> of that perhaps we should use 0xffffff. FreeBSD, OpenBSD etc
+> face a similar problem.
 
-OK, cool, thanks.  I'll update the comment for you.
 
-One last thing (sorry, I only just noticed):
-In the error handler, we wait_for_completion(io_reset_wait).
-In sym2_io_error_detected, we init_completion(io_reset_wait).
-Isn't it possible that we hit the error handler before we hit the
-io_error_detected path, and thus the completion wait is lost?
-Since the completion is already initialised in sym_attach(), I don't
-think we need to initialise it in sym2_io_error_detected().
-Makes sense to just delete it?
+In absence of a better solution, I would be quite happy to start a 
+precedent of using a high identifier -- but not 0xffffff.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Maybe we could start using 0xFE for open source operating systems. 
+FE-00-00 for Linux, FE-00-01 for OpenBSD, etc.
+
+Once it catches on, assign IANA the task of managing the FE-XX-XX 
+numberspace.  The IEEE yearly fee alone for an identifier makes it 
+unrealistic for open source operating systems, otherwise.
+
+	Jeff
+
+
