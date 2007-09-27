@@ -1,63 +1,55 @@
-From: Michael Reed <mdr@sgi.com>
-Subject: Re: generating a Linux WWN?
-Date: Thu, 27 Sep 2007 09:29:38 -0500
-Message-ID: <46FBBE52.1080507@sgi.com>
-References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <46FBBBEB.4020605@garzik.org>
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
+Date: Thu, 27 Sep 2007 07:34:52 -0700
+Message-ID: <46FBBF8C.80409@qlogic.com>
+References: <200708311703.l7VH3NkK016220@mbox.iij4u.or.jp>	<20070905150534.GJ17977@plap.qlogic.org>	<46F3D66A.9010000@qlogic.com> <20070923231416K.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netops-testserver-4-out.sgi.com ([192.48.171.29]:59417 "EHLO
-	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757477AbXI0O3n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 10:29:43 -0400
-In-Reply-To: <46FBBBEB.4020605@garzik.org>
+Received: from avexch2.qlogic.com ([198.70.193.116]:56900 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757201AbXI0OfY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 10:35:24 -0400
+In-Reply-To: <20070923231416K.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp
 
-
-
-Jeff Garzik wrote:
-> James Smart wrote:
->> Uh, although this may work very well for small constrained configs, as one
->> who debugs larger environments (and things always grow or get connected in
->> ways you don't expect), depending on a random number for uniqueness makes
->> me very unsettled. Debugging that small-percentage potential, when/if it
->> does occur can be an absolute nightmare with all kinds of weird behavior.
->> Rarely will you solve it from the context of a single server. There are
->> lots of ways to cheat, but I believe they all have to be based on some
->> small part that is guaranteed to be unique (like the IEEE id's).
+FUJITA Tomonori wrote:
+> On Fri, 21 Sep 2007 07:34:18 -0700
+> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
 > 
-> That's the ideal world, sure  :) 
+>> Andrew Vasquez wrote:
+>>> On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
+>>>
+>>>> This adds target mode support to qla2xxx.
+>>>>
+>>>> With set ql2enable_target_mode module parameter to 1, the driver runs
+>>>> in target mode. By default, ql2enable_target_mode is set to 0, and the
+>>>> driver should work in initiator mode as before.
+>>>>
+>>>> The driver could support dual-mode in the future but it doesn't at the
+>>>> moment (we need to add dual-mode support tgt first).
+>>>>
+>>>> It is based on scst qla2xxx target mode driver. Mike converted the
+>>>> driver to use tgt long ago. I changed it to use the latest (mainline)
+>>>> version of qla2xxx driver and tgt, and also converted it to use fc
+>>>> transport class.
+>>> Thanks for doing this.  Some initial comments before a full review is
+>>> complete, As was seen from the initiator updates needed for 24xx
+>>> support, there are comparable changes needed in the area of
+>>> target-mode support for 4gb and 8gb parts.  Also, which ISPs and
+>>> firmwares were exercised with this code?
+>> The patch is still under reviewing and will get done, soon.
 > 
-> But the reality is, just like with ethernet MAC addresses, you don't always have one when you "supposed to" have one.
-> 
+> Great, thinks!
+One more question on typical testing setup.
+I wonder how should I setup the testing environment esp., for the target-mode.
+If you have, could you share the details of the layout of the environment that you have had used for the feature verification?
+Also, it would be great if shared with me for those specific test cases that need to be in place.
+I will try to add more cases on top of it if there are.
 
-I'm curious about the problem you're trying to solve.  Generally a missing WWN,
-as having a unique WWN should be a product requirement, is an indicator of
-a problem.  Shouldn't the proper solution be to have the card repaired?
-Arbitrarily assigning a WWN could mask or introduce other problems, in particular
-with regard to storage connectivity.
-
-> There are obvious limitations and problems arising from a generated WWN -- particularly for an HBA, where serial numbers and other unique identifiers are scarce.  But that doesn't wish the missing-WWN problem away.  Decades of networking experience have taught us a few things  :) 
-> 
-> As an aside, we also need a way to override the HBA's WWN, just like we do with ethernet MAC address.
-
-We do?  Perhaps if it's corrupt and you know the correct value.  But, in that case
-shouldn't the card be replaced?  When would you need to override the default WWN?
-
-Linux: it's not just for desktops anymore.  :)
-
-Mike
-
-
-> 
->     Jeff
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thank you,
+Seokmann
