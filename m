@@ -1,42 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] SCSI: export sas_hash_addr()
-Date: Thu, 27 Sep 2007 21:01:40 -0400
-Message-ID: <46FC5274.10802@garzik.org>
-References: <20070926073557.GA22773@havoc.gtf.org> <1190937846.5392.46.camel@localhost.localdomain>
+Subject: [PATCH] aic94xx: fix SMP request DMA direction
+Date: Thu, 27 Sep 2007 22:33:41 -0400
+Message-ID: <20070928023341.GA10750@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:58043 "EHLO mail.dvmed.net"
+Received: from havoc.gtf.org ([69.61.125.42]:55832 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757630AbXI1BBm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2007 21:01:42 -0400
-In-Reply-To: <1190937846.5392.46.camel@localhost.localdomain>
+	id S1756733AbXI1Cdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Sep 2007 22:33:42 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
-
-James Bottomley wrote:
-> On Wed, 2007-09-26 at 03:35 -0400, Jeff Garzik wrote:
->> sas_hash_addr() is the spec-defined standard hashing function.  Make it
->> available to drivers that need it.
-> 
-> I'm not opposed in principle to exporting this, but I have a hard time
-> understanding why a driver would need it.
-> 
-> The hashed address is a property of the constructed SAS frames, which is
-> done in libsas.  The driver shouldn't really be calculating its own hash
-> instead of using what libsas provides ... or is this because the hashed
-> self address isn't calculated by the HBA so it needs to be programmed or
-> something?
-
-It is needed to build the SSP frame header.
-
-If there is common code that does that, I will definitely use that, but 
-do not see any such code.
-
-	Jeff
+To: linux-scsi@vger.kernel.org
 
 
+Unless I'm missing something, the SMP request goes /to/ the PCI device :)
 
+Signed-off-by: Jeff Garzik <jeff@garzik.org>
+---
+ drivers/scsi/aic94xx/aic94xx_task.c |    4 -
+ 2 files changed, 83 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
+index d5d8cab..ab13824 100644
+--- a/drivers/scsi/aic94xx/aic94xx_task.c
++++ b/drivers/scsi/aic94xx/aic94xx_task.c
+@@ -451,7 +451,7 @@ static int asd_build_smp_ascb(struct asd_ascb *ascb, struct sas_task *task,
+ 	struct scb *scb;
+ 
+ 	pci_map_sg(asd_ha->pcidev, &task->smp_task.smp_req, 1,
+-		   PCI_DMA_FROMDEVICE);
++		   PCI_DMA_TODEVICE);
+ 	pci_map_sg(asd_ha->pcidev, &task->smp_task.smp_resp, 1,
+ 		   PCI_DMA_FROMDEVICE);
+ 
+@@ -486,7 +486,7 @@ static void asd_unbuild_smp_ascb(struct asd_ascb *a)
+ 
+ 	BUG_ON(!task);
+ 	pci_unmap_sg(a->ha->pcidev, &task->smp_task.smp_req, 1,
+-		     PCI_DMA_FROMDEVICE);
++		     PCI_DMA_TODEVICE);
+ 	pci_unmap_sg(a->ha->pcidev, &task->smp_task.smp_resp, 1,
+ 		     PCI_DMA_FROMDEVICE);
+ }
