@@ -1,326 +1,54 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH 7/8] scsi: megaraid_sas - support for poll_mode_io (reduced
- interrupt)
-Date: Fri, 28 Sep 2007 16:58:02 -0500
-Message-ID: <46FD78EA.9000502@linux.vnet.ibm.com>
-References: <1190821907.5955.30.camel@dhcp-75-534.se.lsil.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: Some plans for scsi_cmnd
+Date: Fri, 28 Sep 2007 16:15:56 -0600
+Message-ID: <664A4EBB07F29743873A87CF62C26D70A0A205@NAMAIL4.ad.lsil.com>
+References: <20070925133733.GT10625@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e32.co.us.ibm.com ([32.97.110.150]:36452 "EHLO
-	e32.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751297AbXI1V6Q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Sep 2007 17:58:16 -0400
-In-Reply-To: <1190821907.5955.30.camel@dhcp-75-534.se.lsil.com>
+Received: from mail0.lsil.com ([147.145.40.20]:58547 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753654AbXI1WQg convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Sep 2007 18:16:36 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20070925133733.GT10625@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bo yang <bo.yang@lsi.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, Sumant.patro@lsi.com
+To: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, hch@infradead.org
 
-bo yang wrote:
-> Added module parameter "poll_mode_io" to support for "polling" (reduced interrupt operation). 
->         In this mode, IO completion interrupts are delayed. At the end of initiating IOs, 
->         the driver schedules for cmd completion if there are pending cmds. 
->         A timer-based interrupt has also been added to prevent IO completion from 
->         being delayed indefinitely in the case that no new IOs are initiated.  
+On Tuesday, September 25, 2007 7:38 AM, Matthew Wilcox wrote: 
 
-I'm not sure what to think of this patch, but it seems like most of the code to
-do something like this might be better off in scsi core so that other LLDDs can
-also make use of it.
-
-What is the problem that you are trying to solve with this patch? Are you
-trying to do something like NAPI where you are getting too many interrupts
-so this is a performance problem, or is this to work around some hardware
-problem of interrupts not working properly in certain configurations?
-
-Incidentally, there was a discussion on a similar topic on linux-ide today:
-
-http://marc.info/?l=linux-ide&m=119099381329307&w=2
+> As I said, it's ambitious.  But it'll let us get rid of scsi_pointer
+> and host_scribble entirely.
+> 
 
 
--Brian
+Are you serious about removing the host_scribble?     In fusion we
+currently are hanging our per request message frame pointer there.
+Its used for two reasons:
 
-> Some formatting issues in resume, suspend comment block also corrected
-> 
-> Signed-off-by: Bo Yang <bo.yang@lsi.com>
-> 
-> ---
->  drivers/scsi/megaraid/megaraid_sas.c |  152 ++++++++++++++++++++++++-
->  drivers/scsi/megaraid/megaraid_sas.h |    3
->  2 files changed, 149 insertions(+), 6 deletions(-)
-> 
-> diff -uprN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
-> --- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c	2007-09-27 21:32:23.000000000 -0700
-> +++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c	2007-09-27 21:43:52.000000000 -0700
-> @@ -79,6 +79,14 @@ module_param_named(cmd_per_lun, cmd_per_
->  MODULE_PARM_DESC(cmd_per_lun,
->  	"Maximum number of commands per logical unit (default=128)");
-> 
-> +/*
-> + * poll_mode_io:1- schedule complete completion from q cmd
-> + */
-> +static unsigned int poll_mode_io;
-> +module_param_named(poll_mode_io, poll_mode_io, int, 0);
-> +MODULE_PARM_DESC(poll_mode_io,
-> +	"Complete cmds from IO path, (default=0)");
-> +
->  MODULE_LICENSE("GPL");
->  MODULE_VERSION(MEGASAS_VERSION);
->  MODULE_AUTHOR("megaraidlinux@lsi.com");
-> @@ -892,6 +900,12 @@ megasas_queue_command(struct scsi_cmnd *
->  	atomic_inc(&instance->fw_outstanding);
-> 
->  	instance->instancet->fire_cmd(cmd->frame_phys_addr ,cmd->frame_count-1,instance->reg_set);
-> +	/*
-> +	 * Check if we have pend cmds to be completed
-> +	 */
-> +	if (poll_mode_io && atomic_read(&instance->fw_outstanding))
-> +		tasklet_schedule(&instance->isr_tasklet);
-> +
-> 
->  	return 0;
-> 
-> @@ -1947,6 +1961,47 @@ fail_fw_init:
->  }
-> 
->  /**
-> + * megasas_start_timer - Initializes a timer object
-> + * @instance:		Adapter soft state
-> + * @timer:		timer object to be initialized
-> + * @fn:			timer function
-> + * @interval:		time interval between timer function call
-> + */
-> +static inline void
-> +megasas_start_timer(struct megasas_instance *instance,
-> +			struct timer_list *timer,
-> +			void *fn, unsigned long interval)
-> +{
-> +	init_timer(timer);
-> +	timer->expires = jiffies + interval;
-> +	timer->data = (unsigned long)instance;
-> +	timer->function = fn;
-> +	add_timer(timer);
-> +}
-> +
-> +/**
-> + * megasas_io_completion_timer - Timer fn
-> + * @instance_addr:	Address of adapter soft state
-> + *
-> + * Schedules tasklet for cmd completion
-> + * if poll_mode_io is set
-> + */
-> +static void
-> +megasas_io_completion_timer(unsigned long instance_addr)
-> +{
-> +	struct megasas_instance *instance =
-> +			(struct megasas_instance *)instance_addr;
-> +
-> +	if (atomic_read(&instance->fw_outstanding))
-> +		tasklet_schedule(&instance->isr_tasklet);
-> +
-> +	/* Restart timer */
-> +	if (poll_mode_io)
-> +		mod_timer(&instance->io_completion_timer,
-> +			jiffies + MEGASAS_COMPLETION_TIMER_INTERVAL);
-> +}
-> +
-> +/**
->   * megasas_init_mfi -	Initializes the FW
->   * @instance:		Adapter soft state
->   *
-> @@ -2073,8 +2128,14 @@ static int megasas_init_mfi(struct megas
->  	* Setup tasklet for cmd completion
->  	*/
-> 
-> -        tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
-> -                        (unsigned long)instance);
-> +	tasklet_init(&instance->isr_tasklet, megasas_complete_cmd_dpc,
-> +		(unsigned long)instance);
-> +
-> +	/* Initialize the cmd completion timer */
-> +	if (poll_mode_io)
-> +		megasas_start_timer(instance, &instance->io_completion_timer,
-> +				megasas_io_completion_timer,
-> +				MEGASAS_COMPLETION_TIMER_INTERVAL);
->  	return 0;
-> 
->        fail_fw_init:
-> @@ -2705,8 +2766,8 @@ static void megasas_shutdown_controller(
->  }
-> 
->  /**
-> - * megasas_suspend -    driver suspend entry point
-> - * @pdev:               PCI device structure
-> + * megasas_suspend -	driver suspend entry point
-> + * @pdev:		PCI device structure
->   * @state:		PCI power state to suspend routine
->   */
->  static int __devinit
-> @@ -2718,6 +2779,9 @@ megasas_suspend(struct pci_dev *pdev, pm
->  	instance = pci_get_drvdata(pdev);
->  	host = instance->host;
-> 
-> +	if (poll_mode_io)
-> +		del_timer_sync(&instance->io_completion_timer);
-> +
->  	megasas_flush_cache(instance);
->  	megasas_shutdown_controller(instance, MR_DCMD_HIBERNATE_SHUTDOWN);
->  	tasklet_kill(&instance->isr_tasklet);
-> @@ -2804,6 +2868,11 @@ megasas_resume(struct pci_dev *pdev)
->  	if (megasas_start_aen(instance))
->  		printk(KERN_ERR "megasas: Start AEN failed\n");
-> 
-> +	/* Initialize the cmd completion timer */
-> +	if (poll_mode_io)
-> +		megasas_start_timer(instance, &instance->io_completion_timer,
-> +				megasas_io_completion_timer,
-> +				MEGASAS_COMPLETION_TIMER_INTERVAL);
->  	return 0;
-> 
->  fail_irq:
-> @@ -2842,6 +2911,9 @@ static void megasas_detach_one(struct pc
->  	instance = pci_get_drvdata(pdev);
->  	host = instance->host;
-> 
-> +	if (poll_mode_io)
-> +		del_timer_sync(&instance->io_completion_timer);
-> +
->  	sysfs_remove_bin_file(&host->shost_classdev.kobj,
->  				&sysfs_max_sectors_attr);
->  	scsi_remove_host(instance->host);
-> @@ -3303,7 +3375,7 @@ static DRIVER_ATTR(release_date, S_IRUGO
->  static ssize_t
->  megasas_sysfs_show_dbg_lvl(struct device_driver *dd, char *buf)
->  {
-> -	return sprintf(buf,"%u",megasas_dbg_lvl);
-> +	return sprintf(buf, "%u\n", megasas_dbg_lvl);
->  }
-> 
->  static ssize_t
-> @@ -3318,7 +3390,65 @@ megasas_sysfs_set_dbg_lvl(struct device_
->  }
-> 
->  static DRIVER_ATTR(dbg_lvl, S_IRUGO|S_IWUGO, megasas_sysfs_show_dbg_lvl,
-> -		   megasas_sysfs_set_dbg_lvl);
-> +		megasas_sysfs_set_dbg_lvl);
-> +
-> +static ssize_t
-> +megasas_sysfs_show_poll_mode_io(struct device_driver *dd, char *buf)
-> +{
-> +	return sprintf(buf, "%u\n", poll_mode_io);
-> +}
-> +
-> +static ssize_t
-> +megasas_sysfs_set_poll_mode_io(struct device_driver *dd,
-> +				const char *buf, size_t count)
-> +{
-> +	int retval = count;
-> +	int tmp = poll_mode_io;
-> +	int i;
-> +	struct megasas_instance *instance;
-> +
-> +	if (sscanf(buf, "%u", &poll_mode_io) < 1) {
-> +		printk(KERN_ERR "megasas: could not set poll_mode_io\n");
-> +		retval = -EINVAL;
-> +	}
-> +
-> +	/*
-> +	 * Check if poll_mode_io is already set or is same as previous value
-> +	 */
-> +	if ((tmp && poll_mode_io) || (tmp == poll_mode_io))
-> +		goto out;
-> +
-> +	if (poll_mode_io) {
-> +		/*
-> +		 * Start timers for all adapters
-> +		 */
-> +		for (i = 0; i < megasas_mgmt_info.max_index; i++) {
-> +			instance = megasas_mgmt_info.instance[i];
-> +			if (instance) {
-> +				megasas_start_timer(instance,
-> +					&instance->io_completion_timer,
-> +					megasas_io_completion_timer,
-> +					MEGASAS_COMPLETION_TIMER_INTERVAL);
-> +			}
-> +		}
-> +	} else {
-> +		/*
-> +		 * Delete timers for all adapters
-> +		 */
-> +		for (i = 0; i < megasas_mgmt_info.max_index; i++) {
-> +			instance = megasas_mgmt_info.instance[i];
-> +			if (instance)
-> +				del_timer_sync(&instance->io_completion_timer);
-> +		}
-> +	}
-> +
-> +out:
-> +	return retval;
-> +}
-> +
-> +static DRIVER_ATTR(poll_mode_io, S_IRUGO|S_IWUGO,
-> +		megasas_sysfs_show_poll_mode_io,
-> +		megasas_sysfs_set_poll_mode_io);
-> 
->  /**
->   * megasas_init - Driver load entry point
-> @@ -3369,8 +3499,16 @@ static int __init megasas_init(void)
->  				  &driver_attr_dbg_lvl);
->  	if (rval)
->  		goto err_dcf_dbg_lvl;
-> +	rval = driver_create_file(&megasas_pci_driver.driver,
-> +				  &driver_attr_poll_mode_io);
-> +	if (rval)
-> +		goto err_dcf_poll_mode_io;
-> 
->  	return rval;
-> +
-> +err_dcf_poll_mode_io:
-> +	driver_remove_file(&megasas_pci_driver.driver,
-> +			   &driver_attr_dbg_lvl);
->  err_dcf_dbg_lvl:
->  	driver_remove_file(&megasas_pci_driver.driver,
->  			   &driver_attr_release_date);
-> @@ -3389,6 +3527,8 @@ err_pcidrv:
->  static void __exit megasas_exit(void)
->  {
->  	driver_remove_file(&megasas_pci_driver.driver,
-> +			   &driver_attr_poll_mode_io);
-> +	driver_remove_file(&megasas_pci_driver.driver,
->  			   &driver_attr_dbg_lvl);
->  	driver_remove_file(&megasas_pci_driver.driver,
->  			   &driver_attr_release_date);
-> diff -uprN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
-> --- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h	2007-09-27 05:08:55.000000000 -0700
-> +++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h	2007-09-27 22:35:32.000000000 -0700
-> @@ -573,6 +573,7 @@ struct megasas_ctrl_info {
-> 
->  #define MFI_OB_INTR_STATUS_MASK			0x00000002
->  #define MFI_POLL_TIMEOUT_SECS			60
-> +#define MEGASAS_COMPLETION_TIMER_INTERVAL      (HZ/10)
-> 
->  #define MFI_REPLY_1078_MESSAGE_INTERRUPT	0x80000000
-> 
-> @@ -1113,6 +1114,8 @@ struct megasas_instance {
-> 
->  	u8 flag;
->  	unsigned long last_time;
-> +
-> +	struct timer_list io_completion_timer;
->  };
-> 
->  #define MEGASAS_IS_LOGICAL(scp)						\
-> 
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+(1)  Old fibre channel firmware bug.  The bug is the same message frame
+completed twice.  1st completion is okay and the scsi_cmd is reallocated
+to some other IO.  Meanwhile the driver receives a double completion of
+the same message frame, and the driver attempts to complete the
+reallocated scsi_cmd to some other IO.  The sanity check on
+host_scribble avoids this.
+
+(2)  error recovery threads decides to complete a scsi_cmd before its
+been returned back by the scsi lld, and the scsi_cmd is reused for some
+other IO.  Meanwhile fusion firmware finally  decides it wants to
+command the command, then the driver is completing the  reallocated
+scsi_cmd that is mapped to some other IO.  Again, host_scribble sanity
+check makes sure we finish off the scsi_cmd that its intended for.
 
 
--- 
-Brian King
-Linux on Power Virtualization
-IBM Linux Technology Center
+Thus said, someone upgrades to newer FC firmware, they will not have
+issue #1.    
+
+Regarding issue #2, if eh threads allow scsi lld to cleanup ts own scsi
+cmds, then we shouldn't need this.
+
+
+Eric
