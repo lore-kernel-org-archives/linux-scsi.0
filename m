@@ -1,46 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] aic94xx: fix SMP request DMA direction
-Date: Thu, 27 Sep 2007 22:33:41 -0400
-Message-ID: <20070928023341.GA10750@havoc.gtf.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [linux-usb-devel] question on flushing buffers and spinning
+	down disk
+Date: Thu, 27 Sep 2007 21:27:10 -0700
+Message-ID: <20070928042710.GA24458@kroah.com>
+References: <Pine.LNX.4.44L0.0709251012210.3909-100000@iolanthe.rowland.org> <200709251711.01216.oliver@neukum.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:55832 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756733AbXI1Cdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2007 22:33:42 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:37238 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754165AbXI1EXm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Sep 2007 00:23:42 -0400
 Content-Disposition: inline
+In-Reply-To: <200709251711.01216.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@steeleye.com>, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
+On Tue, Sep 25, 2007 at 05:11:00PM +0200, Oliver Neukum wrote:
+> 
+> PS: Whoever designed klists is suffering from a case of overengineeringosis.
 
-Unless I'm missing something, the SMP request goes /to/ the PCI device :)
+No objection from me there.  If you can think of a way to do list
+traversal without taking locks, please, feel free to redo the whole
+klist stuff.
 
-Signed-off-by: Jeff Garzik <jeff@garzik.org>
----
- drivers/scsi/aic94xx/aic94xx_task.c |    4 -
- 2 files changed, 83 insertions(+), 17 deletions(-)
+As it was, Pat emerged out of nowhere, threw the code at us, it fixed
+some locking issues I was trying to solve at the time, so I added it.
+Then he ran away to a different continent :(
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_task.c b/drivers/scsi/aic94xx/aic94xx_task.c
-index d5d8cab..ab13824 100644
---- a/drivers/scsi/aic94xx/aic94xx_task.c
-+++ b/drivers/scsi/aic94xx/aic94xx_task.c
-@@ -451,7 +451,7 @@ static int asd_build_smp_ascb(struct asd_ascb *ascb, struct sas_task *task,
- 	struct scb *scb;
- 
- 	pci_map_sg(asd_ha->pcidev, &task->smp_task.smp_req, 1,
--		   PCI_DMA_FROMDEVICE);
-+		   PCI_DMA_TODEVICE);
- 	pci_map_sg(asd_ha->pcidev, &task->smp_task.smp_resp, 1,
- 		   PCI_DMA_FROMDEVICE);
- 
-@@ -486,7 +486,7 @@ static void asd_unbuild_smp_ascb(struct asd_ascb *a)
- 
- 	BUG_ON(!task);
- 	pci_unmap_sg(a->ha->pcidev, &task->smp_task.smp_req, 1,
--		     PCI_DMA_FROMDEVICE);
-+		     PCI_DMA_TODEVICE);
- 	pci_unmap_sg(a->ha->pcidev, &task->smp_task.smp_resp, 1,
- 		     PCI_DMA_FROMDEVICE);
- }
+Oh well...
+
+greg k-h
