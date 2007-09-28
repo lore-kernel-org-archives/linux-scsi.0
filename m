@@ -1,46 +1,70 @@
-From: Oliver Neukum <oliver@neukum.org>
-Subject: Re: [linux-usb-devel] question on flushing buffers and spinning down disk
-Date: Fri, 28 Sep 2007 11:04:48 +0200
-Message-ID: <200709281104.48673.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0709271600200.7735-100000@iolanthe.rowland.org>
+From: Eduardo Habkost <ehabkost@redhat.com>
+Subject: [PATCH] 3w-9xxx: use PCI resource length correctly
+Date: Fri, 28 Sep 2007 11:45:56 -0300
+Message-ID: <20070928144556.GG4668@blackpad.ctb.virtua.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:49276 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756122AbXI1JDp convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Sep 2007 05:03:45 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0709271600200.7735-100000@iolanthe.rowland.org>
+Received: from mx1.redhat.com ([66.187.233.31]:35491 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755939AbXI1OqI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Sep 2007 10:46:08 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>, Pavel Machek <pavel@ucw.cz>
-Cc: linux-usb-devel@lists.sourceforge.net, James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linuxraid@amcc.com
+Cc: linux-scsi@vger.kernel.org
 
-Am Donnerstag 27 September 2007 schrieb Alan Stern:
-> There's also a philosophical objection. =A0Who is in a better positio=
-n to
-> judge when a device like a SCSI drive should be autosuspended: its ow=
-n
-> driver (sd) or someone else (usb-storage)?
+Trying to ioremap() a larger area than pci_resource_len()
+may fail (e.g. under Xen). Fixes 3w-9xxx to use pci_resource_len()
+as length parameter to ioremap() instead of PAGE_SIZE.
 
-Then a philosophical answer. The highest entity which understands what
-it is doing when using power management. Highest here to be understood
-not as a position in the device tree, but in the flow of information.
+Signed-off-by: Eduardo Habkost <ehabkost@redhat.com>
+---
+ drivers/scsi/3w-9xxx.c |   14 +++++++++-----
+ 1 files changed, 9 insertions(+), 5 deletions(-)
 
-That is in our case usb-storage. Sr or sd can't do it because they don'=
-t
-and can't understand power management.
-Now they might be asked to provide some helpers. An open count and
-notifications about the state of the queue would be obvious. Other
-suggestions?
-
-	Regards
-		Oliver
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index efd9d8d..885b340 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1999,7 +1999,8 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
+ {
+ 	struct Scsi_Host *host = NULL;
+ 	TW_Device_Extension *tw_dev;
+-	u32 mem_addr;
++	int bar;
++	unsigned long mem_addr, mem_len;
+ 	int retval = -ENODEV;
+ 
+ 	retval = pci_enable_device(pdev);
+@@ -2046,12 +2047,15 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
+ 	}
+ 
+ 	if (pdev->device == PCI_DEVICE_ID_3WARE_9000)
+-		mem_addr = pci_resource_start(pdev, 1);
++		bar = 1;
+ 	else
+-		mem_addr = pci_resource_start(pdev, 2);
++		bar = 2;
++
++	mem_addr = pci_resource_start(pdev, bar);
++	mem_len = pci_resource_len(pdev, bar);
+ 
+ 	/* Save base address */
+-	tw_dev->base_addr = ioremap(mem_addr, PAGE_SIZE);
++	tw_dev->base_addr = ioremap(mem_addr, mem_len);
+ 	if (!tw_dev->base_addr) {
+ 		TW_PRINTK(tw_dev->host, TW_DRIVER, 0x35, "Failed to ioremap");
+ 		goto out_release_mem_region;
+@@ -2086,7 +2090,7 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
+ 
+ 	pci_set_drvdata(pdev, host);
+ 
+-	printk(KERN_WARNING "3w-9xxx: scsi%d: Found a 3ware 9000 Storage Controller at 0x%x, IRQ: %d.\n",
++	printk(KERN_WARNING "3w-9xxx: scsi%d: Found a 3ware 9000 Storage Controller at 0x%lx, IRQ: %d.\n",
+ 	       host->host_no, mem_addr, pdev->irq);
+ 	printk(KERN_WARNING "3w-9xxx: scsi%d: Firmware %s, BIOS %s, Ports: %d.\n",
+ 	       host->host_no,
+-- 
+1.5.3.rc1.gaf83
