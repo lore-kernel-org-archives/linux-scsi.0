@@ -1,39 +1,35 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: generating a Linux WWN?
-Date: Thu, 27 Sep 2007 19:40:43 -0400
-Message-ID: <46FC3F7B.7010401@garzik.org>
-References: <46FB8024.8040807@garzik.org> <46FBB86B.8000206@emulex.com> <CE7B1A4EF22E704CBFFD9A35BA5C822252505C@ausx3mpc110.aus.amer.dell.com> <20070927144649.GV3899@parisc-linux.org> <46FBC723.2070607@sgi.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] SCSI: export sas_hash_addr()
+Date: Thu, 27 Sep 2007 20:04:05 -0400
+Message-ID: <1190937846.5392.46.camel@localhost.localdomain>
+References: <20070926073557.GA22773@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59757 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751584AbXI0Xkv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Sep 2007 19:40:51 -0400
-In-Reply-To: <46FBC723.2070607@sgi.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:35844 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756413AbXI1AEI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Sep 2007 20:04:08 -0400
+In-Reply-To: <20070926073557.GA22773@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Reed <mdr@sgi.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Patrick_Boyd@Dell.com, James.Smart@Emulex.Com, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org
 
-Michael Reed wrote:
-> Record the WWN of your SAS / FC port so that if/when it goes missing you
-> can put it back?  Have spares on site?
+On Wed, 2007-09-26 at 03:35 -0400, Jeff Garzik wrote:
+> sas_hash_addr() is the spec-defined standard hashing function.  Make it
+> available to drivers that need it.
 
-Linux:  not just for million dollar data centers any more :)
+I'm not opposed in principle to exporting this, but I have a hard time
+understanding why a driver would need it.
 
-(sorry, couldn't resist :))
+The hashed address is a property of the constructed SAS frames, which is
+done in libsas.  The driver shouldn't really be calculating its own hash
+instead of using what libsas provides ... or is this because the hashed
+self address isn't calculated by the HBA so it needs to be programmed or
+something?
 
-More seriously, SAS will be making an increasing appearance on commodity 
-hardware, through the new SAS/SATA chips that are just starting to make 
-their appearance (like the chips I'm working on).  And Marvell and 
-Broadcom are big guys.  Just wait until the tiny Taiwanese shops start 
-cranking out SAS/SATA chips.
-
-With that, you'll get all the joys of low-cost volume production, and 
-the user field foibles that come with it.
-
-	Jeff
+James
 
 
