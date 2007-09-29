@@ -1,12 +1,13 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: David Brownell <david-b@pacbell.net>
 Subject: Re: question on flushing buffers and spinning
  down disk
-Date: Sat, 29 Sep 2007 16:56:28 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0709291640200.1094-100000@netrider.rowland.org>
-References: <200709292206.17377.oliver@neukum.org>
+Date: Sat, 29 Sep 2007 14:03:26 -0700
+Message-ID: <20070929210326.804C4112B7A@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
+References: <Pine.LNX.4.44L0.0709291428050.1094-100000@netrider.rowland.org>
+	<200709292206.17377.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
 In-Reply-To: <200709292206.17377.oliver@neukum.org>
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
@@ -18,88 +19,38 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
 	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: linux-usb-devel-bounces@lists.sourceforge.net
 Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Oliver Neukum <oliver@neukum.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-usb-devel@lists.sourceforge.net, Pavel Machek <pavel@ucw.cz>, linux-scsi@vger.kernel.org
+To: stern@rowland.harvard.edu, oliver@neukum.org
+Cc: James.Bottomley@steeleye.com, linux-usb-devel@lists.sourceforge.net, pavel@ucw.cz, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 29 Sep 2007, Oliver Neukum wrote:
-
-> > autosuspend. =A0It's not supposed to work by the higher level announcin=
-g: =A0
-> > "I want to autosuspend now, so all you lower guys had better get
-> > ready."
-> =
-
-> I see. And there's an appealing simplicity to it. But why insist that
-> this is the one true way?
-
-Well, I don't really insist on it.  But keeping things unidirectional =
-
-makes life easier and helps prevent deadlock issues.
-
-Another thing to consider is this: If SCSI autosuspend is initiated by
-the host adapter driver, then it won't be possible for different
-devices on a SCSI bus to autosuspend at different times.  With
-usb-storage this doesn't matter much, because there's almost always
-only one target.  But for other buses it could matter.
-
-> > Even in the case of system suspend things don't work that way. =A0We
-> > don't have higher-level drivers telling lower-level drivers to suspend.=
- =A0
-> > Rather, the PM core (acting on behalf of the user) tells _every_ driver
-> > to suspend -- in the correct order, of course.
-> =
-
-> True. And putting the notification into a driver is a kludge at best.
-> It simply was the only way I could come up with without moving
-> autosuspend into generic code.
-> Nevertheless, I am not convinced that autosuspend has to work
-> on the device level only.
-
-Well, suppose usb-storage decides it is ready to autosuspend and it =
-
-asks sd for permission.  What if sd says "No"?  How long should =
-
-usb-storage wait before asking again?  Why should usb-storage have to =
-
-poll sd, instead of being notified just once when sd is ready?
-
-Another thing: I haven't followed the current work in new SCSI
-development, but it wouldn't be at all surprising to learn that Power
-Management is one of the topics they are focused on.  We should expect
-that it will eventually become part of the standard, with associated
-special commands and other requirements.  When that happens, Linux's
-SCSI stack should be ready to implement the new specs.  Basing our SCSI
-autosuspend on hacky code in usb-storage doesn't seem like a good way
-to prepare.
-
-> > Now, how much extra work is involved in having the lower-level drivers =
-
-> > implement autosuspend as opposed to having the higher-level driver ask =
-
-> > permission? =A0Not much more than adding the autosuspend timers. =A0
-> > Everything else is needed anyway for supporting manual runtime suspend.
-> =
-
-> Move autosuspend into generic code and I'll certainly try to come up with
-> something better than what I wrote.
-
-It's hard to make something generic when there's only one example to =
-
-work from!  Suppose we do it the other way: Add autosuspend support =
-
-into the SCSI drivers and then see what common features it shares with =
-
-USB.  Those common parts can be moved into generic code.
-
-Alan Stern
-
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+PiA+IGF1dG9zdXNwZW5kLiDCoEl0J3Mgbm90IHN1cHBvc2VkIHRvIHdvcmsgYnkgdGhlIGhpZ2hl
+ciBsZXZlbCBhbm5vdW5jaW5nOiDCoAo+ID4gIkkgd2FudCB0byBhdXRvc3VzcGVuZCBub3csIHNv
+IGFsbCB5b3UgbG93ZXIgZ3V5cyBoYWQgYmV0dGVyIGdldAo+ID4gcmVhZHkuIgo+Cj4gSSBzZWUu
+IEFuZCB0aGVyZSdzIGFuIGFwcGVhbGluZyBzaW1wbGljaXR5IHRvIGl0LiBCdXQgd2h5IGluc2lz
+dCB0aGF0Cj4gdGhpcyBpcyB0aGUgb25lIHRydWUgd2F5PwoKSSB3YXMgdW5hd2FyZSB0aGVyZSB3
+YXMgYW5vdGhlciBkZWZpbml0aW9uIG9mIGF1dG9zdXNwZW5kOyB0aGF0J3MgaG93CndlJ3ZlIGFs
+d2F5cyBkaXNjdXNzZWQgaXQuICBJdCdzIGEgYm90dG9tLXVwIHBvd2VyIG1hbmFnZW1lbnQgc3Ry
+YXRlZ3kKbGV2ZXJhZ2luZyBsb2NhbGl6ZWQga25vd2xlZGdlIHRoYXQgaXNuJ3Qga25vd2FibGUg
+Ynkgb3RoZXIgbW9kdWxlcy4KKE1haW50YWluYWJsZSBzeXN0ZW1zIHVzZSBpbmZvcm1hdGlvbiBo
+aWRpbmcvc2VwYXJhdGlvbiBhbGwgb3Zlci4uLikKCkl0J3MgYSBzb2Z0d2FyZSB2ZXJzaW9uIG9m
+IHdoYXQgc29tZSBzbWFydGVyIGhhcmR3YXJlIGRvZXMgYXV0b21hdGljYWxseS4KYnkgYXV0b21h
+dGljYWxseSBnYXRpbmcgY2h1bmtzIG9mIHRoZSBjbG9jayB0cmVlIHdoZW4gdGhleSdyZSBub3Qg
+bmVlZGVkLApsZWF2aW5nIHRoZSBjaGlwIGluIGEgInJldGVudGlvbiIgbW9kZSwgdG8gbWluaW1p
+emUgYWN0aXZlIHdhc3RhZ2UuCkRvaW5nIHRoYXQgY29uc2lzdGVudGx5IG92ZXIgYSB3aG9sZSBP
+UyBjYW4gbGVhZCB0byBzaWduaWZpY2FudCBwb3dlcgpzYXZpbmdzIG5vdCBqdXN0IGJ5IHNocmlu
+a2luZyBwZXItbW9kdWxlIHBvd2VyIGNvbnN1bXB0aW9uLCBidXQgYWxzbyBieQpsZXR0aW5nIHZh
+cmlvdXMgUExMcyBhbmQgb3NjaWxsYXRvcnMgYmUgcG93ZXJlZCBvZmYuCgpTb2Z0d2FyZSBjYW4g
+b2YgY291cnNlIGtub3cgYWJvdXQgbW9yZSBwb3dlci1yZWxldmFudCByZXNvdXJjZXMgdGhhbiBq
+dXN0CmNsb2NrcyAuLi4KCklmIHNvbWVvbmUgZWxzZSBoYXMgZGlyZWN0ZWQgYSBtb2R1bGUgdG8g
+c3VzcGVuZCwgaXQncyBoYXJkbHkgImF1dG9tYXRpYyIKZnJvbSB0aGUgcGVyc3BlY3RpdmUgb2Yg
+dGhhdCBtb2R1bGUuICBJdCdkIGhhdmUgdG8gZGVjaWRlIHdoYXQgdG8gZG8Kd2l0aCBhY3Rpdml0
+aWVzIHRoYXQgdGhlICJoaWdoZXIgbGV2ZWwiIGNvZGUgd291bGRuJ3QgaGF2ZSBrbm93biBhYm91
+dC4KQWZ0ZXIgYWxsLCB0aGUgcmVhc29uIHRob3NlIGxheWVycyBleGlzdCBpcyB0byBoaWRlIGlu
+Zm9ybWF0aW9uIGxpa2UgdGhhdCEKCi0gRGF2ZQoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBTRi5u
+ZXQgZW1haWwgaXMgc3BvbnNvcmVkIGJ5OiBNaWNyb3NvZnQKRGVmeSBhbGwgY2hhbGxlbmdlcy4g
+TWljcm9zb2Z0KFIpIFZpc3VhbCBTdHVkaW8gMjAwNS4KaHR0cDovL2Nsay5hdGRtdC5jb20vTVJU
+L2dvL3ZzZTAxMjAwMDAwNzBtcnQvZGlyZWN0LzAxLwpfX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fXwpsaW51eC11c2ItZGV2ZWxAbGlzdHMuc291cmNlZm9yZ2Uu
+bmV0ClRvIHVuc3Vic2NyaWJlLCB1c2UgdGhlIGxhc3QgZm9ybSBmaWVsZCBhdDoKaHR0cHM6Ly9s
+aXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vbGludXgtdXNiLWRldmVsCg==
