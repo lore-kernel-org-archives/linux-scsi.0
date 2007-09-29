@@ -1,608 +1,178 @@
 From: Eric Moore <eric.moore@lsi.com>
-Subject: [PATCH 1/6] mpt fusion: adding usage of shost_priv and removing all the typecasting
-Date: Sat, 29 Sep 2007 10:15:59 -0600
-Message-ID: <20070929161559.GA4356@lsil.com>
+Subject: [PATCH 2/6] mpt fusion: Fixing sparse warnings
+Date: Sat, 29 Sep 2007 10:16:28 -0600
+Message-ID: <20070929161628.GA4361@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:41933 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:41985 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755898AbXI2QPz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 29 Sep 2007 12:15:55 -0400
+	id S1756036AbXI2QQZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 29 Sep 2007 12:16:25 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com
 
-The driver is currently typecasting to obtain the shost hostdata. The driver is updated to use the shost_priv macro.
+List below is output from C=2 sparse compilation, which are fixed with this patch.
+
+1) mptspi: pg0 is defined in x86 version of include/asm/pgtable.h
+2) mptsas: context imbalance in 'mptsas_probe' different lock contexts for basic block
+3) mptbase: from mpt_attach - cast adds address space to expression
+4) mptbase: from mpt_do_upload - request[] is bad constant expression
 
 Signed-off-by: Eric Moore <Eric.Moore@lsi.com>
 
-diff -uarpN b/drivers/message/fusion/mptctl.c a/drivers/message/fusion/mptctl.c
---- b/drivers/message/fusion/mptctl.c	2007-09-17 10:41:08.000000000 -0600
-+++ a/drivers/message/fusion/mptctl.c	2007-09-17 11:58:15.000000000 -0600
-@@ -348,7 +348,7 @@ static int mptctl_bus_reset(MPT_IOCTL *i
- 	if (ioctl->ioc->sh == NULL)
- 		return -EPERM;
- 
--	hd = (MPT_SCSI_HOST *) ioctl->ioc->sh->hostdata;
-+	hd = shost_priv(ioctl->ioc->sh);
- 	if (hd == NULL)
- 		return -EPERM;
- 
-@@ -449,7 +449,7 @@ mptctl_free_tm_flags(MPT_ADAPTER *ioc)
- 	MPT_SCSI_HOST * hd;
- 	unsigned long flags;
- 
--	hd = (MPT_SCSI_HOST *) ioc->sh->hostdata;
-+	hd = shost_priv(ioc->sh);
- 	if (hd == NULL)
- 		return;
- 
-@@ -2026,7 +2026,7 @@ mptctl_do_mpt_command (struct mpt_ioctl_
- 	case MPI_FUNCTION_SCSI_TASK_MGMT:
- 		{
- 			MPT_SCSI_HOST *hd = NULL;
--			if ((ioc->sh == NULL) || ((hd = (MPT_SCSI_HOST *)ioc->sh->hostdata) == NULL)) {
-+			if ((ioc->sh == NULL) || ((hd = shost_priv(ioc->sh)) == NULL)) {
- 				printk(MYIOC_s_ERR_FMT "%s@%d::mptctl_do_mpt_command - "
- 					"SCSI driver not loaded or SCSI host not found. \n",
- 					ioc->name, __FILE__, __LINE__);
-@@ -2466,7 +2466,7 @@ mptctl_hp_hostinfo(unsigned long arg, un
- 	karg.soft_resets = 0;
- 	karg.timeouts = 0;
- 	if (ioc->sh != NULL) {
--		MPT_SCSI_HOST *hd =  (MPT_SCSI_HOST *)ioc->sh->hostdata;
-+		MPT_SCSI_HOST *hd =  shost_priv(ioc->sh);
- 
- 		if (hd && (cim_rev == 1)) {
- 			karg.hard_resets = hd->hard_resets;
-@@ -2683,7 +2683,7 @@ mptctl_hp_targetinfo(unsigned long arg)
- 			pci_free_consistent(ioc->pcidev, data_sz, (u8 *) pg3_alloc, page_dma);
- 		}
- 	}
--	hd = (MPT_SCSI_HOST *) ioc->sh->hostdata;
-+	hd = shost_priv(ioc->sh);
- 	if (hd != NULL)
- 		karg.select_timeouts = hd->sel_timeout[karg.hdr.id];
- 
-diff -uarpN b/drivers/message/fusion/mptfc.c a/drivers/message/fusion/mptfc.c
---- b/drivers/message/fusion/mptfc.c	2007-09-17 10:41:08.000000000 -0600
-+++ a/drivers/message/fusion/mptfc.c	2007-09-17 11:57:11.000000000 -0600
-@@ -196,7 +196,7 @@ mptfc_block_error_handler(struct scsi_cm
- 	int			ready;
- 	MPT_ADAPTER 		*ioc;
- 
--	hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata;
-+	hd = shost_priv(SCpnt->device->host);
- 	ioc = hd->ioc;
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	while ((ready = fc_remote_port_chkready(rport) >> 16) == DID_IMM_RETRY) {
-@@ -204,8 +204,7 @@ mptfc_block_error_handler(struct scsi_cm
- 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
- 			"mptfc_block_error_handler.%d: %d:%d, port status is "
- 			"DID_IMM_RETRY, deferring %s recovery.\n",
--			((MPT_SCSI_HOST *) shost->hostdata)->ioc->name,
--			((MPT_SCSI_HOST *) shost->hostdata)->ioc->sh->host_no,
-+			ioc->name, ioc->sh->host_no,
- 			SCpnt->device->id, SCpnt->device->lun, caller));
- 		msleep(1000);
- 		spin_lock_irqsave(shost->host_lock, flags);
-@@ -216,16 +215,14 @@ mptfc_block_error_handler(struct scsi_cm
- 		dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
- 			"%s.%d: %d:%d, failing recovery, "
- 			"port state %d, vdevice %p.\n", caller,
--			((MPT_SCSI_HOST *) shost->hostdata)->ioc->name,
--			((MPT_SCSI_HOST *) shost->hostdata)->ioc->sh->host_no,
-+			ioc->name, ioc->sh->host_no,
- 			SCpnt->device->id, SCpnt->device->lun, ready,
- 			SCpnt->device->hostdata));
- 		return FAILED;
- 	}
- 	dfcprintk (ioc, printk(MYIOC_s_DEBUG_FMT
- 		"%s.%d: %d:%d, executing recovery.\n", caller,
--		((MPT_SCSI_HOST *) shost->hostdata)->ioc->name,
--		((MPT_SCSI_HOST *) shost->hostdata)->ioc->sh->host_no,
-+		ioc->name, ioc->sh->host_no,
- 		SCpnt->device->id, SCpnt->device->lun));
- 	return (*func)(SCpnt);
- }
-@@ -615,7 +612,7 @@ mptfc_slave_alloc(struct scsi_device *sd
- 	if (!rport || fc_remote_port_chkready(rport))
- 		return -ENXIO;
- 
--	hd = (MPT_SCSI_HOST *)sdev->host->hostdata;
-+	hd = shost_priv(sdev->host);
- 	ioc = hd->ioc;
- 
- 	vdevice = kzalloc(sizeof(VirtDevice), GFP_KERNEL);
-@@ -1279,7 +1276,7 @@ mptfc_probe(struct pci_dev *pdev, const 
- 
- 	spin_unlock_irqrestore(&ioc->FreeQlock, flags);
- 
--	hd = (MPT_SCSI_HOST *) sh->hostdata;
-+	hd = shost_priv(sh);
- 	hd->ioc = ioc;
- 
- 	/* SCSI needs scsi_cmnd lookup table!
-@@ -1386,7 +1383,7 @@ mptfc_event_process(MPT_ADAPTER *ioc, Ev
- 			ioc->name, event));
- 
- 	if (ioc->sh == NULL ||
--		((hd = (MPT_SCSI_HOST *)ioc->sh->hostdata) == NULL))
-+		((hd = shost_priv(ioc->sh)) == NULL))
- 		return 1;
- 
- 	switch (event) {
-diff -uarpN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
---- b/drivers/message/fusion/mptsas.c	2007-09-17 10:41:08.000000000 -0600
-+++ a/drivers/message/fusion/mptsas.c	2007-09-17 11:56:56.000000000 -0600
-@@ -575,7 +575,7 @@ static void
- mptsas_target_reset_queue(MPT_ADAPTER *ioc,
-     EVENT_DATA_SAS_DEVICE_STATUS_CHANGE *sas_event_data)
+diff -uarpN b/drivers/message/fusion/mptbase.c a/drivers/message/fusion/mptbase.c
+--- b/drivers/message/fusion/mptbase.c	2007-09-17 10:41:08.000000000 -0600
++++ a/drivers/message/fusion/mptbase.c	2007-09-17 15:39:28.000000000 -0600
+@@ -1452,6 +1452,7 @@ mpt_attach(struct pci_dev *pdev, const s
  {
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(ioc->sh);
- 	VirtTarget *vtarget = NULL;
- 	struct mptsas_target_reset_event *target_reset_list;
- 	u8		id, channel;
-@@ -622,7 +622,7 @@ mptsas_target_reset_queue(MPT_ADAPTER *i
- static void
- mptsas_dev_reset_complete(MPT_ADAPTER *ioc)
- {
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(ioc->sh);
-         struct list_head *head = &hd->target_reset_list;
- 	struct mptsas_target_reset_event *target_reset_list;
- 	struct mptsas_hotplug_event *ev;
-@@ -739,7 +739,7 @@ mptsas_ioc_reset(MPT_ADAPTER *ioc, int r
- 
- 	if (!ioc->sh || !ioc->sh->hostdata)
- 		goto out;
--	hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	hd = shost_priv(ioc->sh);
- 	if (!hd->ioc)
- 		goto out;
- 
-@@ -839,7 +839,7 @@ static int
- mptsas_target_alloc(struct scsi_target *starget)
- {
- 	struct Scsi_Host *host = dev_to_shost(&starget->dev);
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST		*hd = shost_priv(host);
- 	VirtTarget		*vtarget;
- 	u8			id, channel;
- 	struct sas_rphy		*rphy;
-@@ -908,7 +908,7 @@ static void
- mptsas_target_destroy(struct scsi_target *starget)
- {
- 	struct Scsi_Host *host = dev_to_shost(&starget->dev);
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST		*hd = shost_priv(host);
- 	struct sas_rphy		*rphy;
- 	struct mptsas_portinfo	*p;
- 	int 			 i;
-@@ -941,7 +941,7 @@ static int
- mptsas_slave_alloc(struct scsi_device *sdev)
- {
- 	struct Scsi_Host	*host = sdev->host;
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST		*hd = shost_priv(host);
- 	struct sas_rphy		*rphy;
- 	struct mptsas_portinfo	*p;
- 	VirtDevice		*vdevice;
-@@ -3215,7 +3215,7 @@ mptsas_probe(struct pci_dev *pdev, const
- 		sh->sg_tablesize = numSGE;
- 	}
- 
--	hd = (MPT_SCSI_HOST *) sh->hostdata;
-+	hd = shost_priv(sh);
- 	hd->ioc = ioc;
- 
- 	/* SCSI needs scsi_cmnd lookup table!
-diff -uarpN b/drivers/message/fusion/mptscsih.c a/drivers/message/fusion/mptscsih.c
---- b/drivers/message/fusion/mptscsih.c	2007-09-17 10:41:08.000000000 -0600
-+++ a/drivers/message/fusion/mptscsih.c	2007-09-17 11:43:44.000000000 -0600
-@@ -647,8 +647,7 @@ mptscsih_io_done(MPT_ADAPTER *ioc, MPT_F
- 	VirtDevice	 *vdevice;
- 	VirtTarget	 *vtarget;
- 
--	hd = (MPT_SCSI_HOST *) ioc->sh->hostdata;
--
-+	hd = shost_priv(ioc->sh);
- 	req_idx = le16_to_cpu(mf->u.frame.hwhdr.msgctxu.fld.req_idx);
- 	req_idx_MR = (mr != NULL) ?
- 	    le16_to_cpu(mr->u.frame.hwhdr.msgctxu.fld.req_idx) : req_idx;
-@@ -1105,7 +1104,7 @@ mptscsih_report_queue_full(struct scsi_c
- 		return;
- 	if (sc->device->host == NULL)
- 		return;
--	if ((hd = (MPT_SCSI_HOST *)sc->device->host->hostdata) == NULL)
-+	if ((hd = shost_priv(sc->device->host)) == NULL)
- 		return;
- 	ioc = hd->ioc;
- 	if (time - hd->last_queue_full > 10 * HZ) {
-@@ -1137,7 +1136,7 @@ mptscsih_remove(struct pci_dev *pdev)
- 
- 	scsi_remove_host(host);
- 
--	if((hd = (MPT_SCSI_HOST *)host->hostdata) == NULL)
-+	if((hd = shost_priv(host)) == NULL)
- 		return;
- 
- 	mptscsih_shutdown(pdev);
-@@ -1174,15 +1173,6 @@ mptscsih_remove(struct pci_dev *pdev)
- void
- mptscsih_shutdown(struct pci_dev *pdev)
- {
--	MPT_ADAPTER 		*ioc = pci_get_drvdata(pdev);
--	struct Scsi_Host 	*host = ioc->sh;
--	MPT_SCSI_HOST		*hd;
--
--	if(!host)
--		return;
--
--	hd = (MPT_SCSI_HOST *)host->hostdata;
--
- }
- 
- #ifdef CONFIG_PM
-@@ -1228,7 +1218,7 @@ mptscsih_info(struct Scsi_Host *SChost)
- 	MPT_SCSI_HOST *h;
- 	int size = 0;
- 
--	h = (MPT_SCSI_HOST *)SChost->hostdata;
-+	h = shost_priv(SChost);
- 
- 	if (h) {
- 		if (h->info_kbuf == NULL)
-@@ -1322,7 +1312,7 @@ int
- mptscsih_proc_info(struct Scsi_Host *host, char *buffer, char **start, off_t offset,
- 			int length, int func)
- {
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER	*ioc = hd->ioc;
- 	int size = 0;
- 
-@@ -1371,7 +1361,7 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt, v
- 	int	 ii;
- 	MPT_ADAPTER *ioc;
- 
--	hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata;
-+	hd = shost_priv(SCpnt->device->host);
- 	ioc = hd->ioc;
- 	lun = SCpnt->device->lun;
- 	SCpnt->scsi_done = done;
-@@ -1807,7 +1797,7 @@ mptscsih_abort(struct scsi_cmnd * SCpnt)
- 
- 	/* If we can't locate our host adapter structure, return FAILED status.
- 	 */
--	if ((hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata) == NULL) {
-+	if ((hd = shost_priv(SCpnt->device->host)) == NULL) {
- 		SCpnt->result = DID_RESET << 16;
- 		SCpnt->scsi_done(SCpnt);
- 		printk(KERN_ERR MYNAM ": task abort: "
-@@ -1913,7 +1903,7 @@ mptscsih_dev_reset(struct scsi_cmnd * SC
- 
- 	/* If we can't locate our host adapter structure, return FAILED status.
- 	 */
--	if ((hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata) == NULL){
-+	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
- 		printk(KERN_ERR MYNAM ": target reset: "
- 		   "Can't locate host! (sc=%p)\n", SCpnt);
- 		return FAILED;
-@@ -1976,7 +1966,7 @@ mptscsih_bus_reset(struct scsi_cmnd * SC
- 
- 	/* If we can't locate our host adapter structure, return FAILED status.
- 	 */
--	if ((hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata) == NULL){
-+	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
- 		printk(KERN_ERR MYNAM ": bus reset: "
- 		   "Can't locate host! (sc=%p)\n", SCpnt);
- 		return FAILED;
-@@ -2020,7 +2010,7 @@ mptscsih_host_reset(struct scsi_cmnd *SC
  	MPT_ADAPTER	*ioc;
+ 	u8		__iomem *mem;
++	u8		__iomem *pmem;
+ 	unsigned long	 mem_phys;
+ 	unsigned long	 port;
+ 	u32		 msize;
+@@ -1576,11 +1577,9 @@ mpt_attach(struct pci_dev *pdev, const s
+ 	ioc->chip = (SYSIF_REGS __iomem *)mem;
  
- 	/*  If we can't locate the host to reset, then we failed. */
--	if ((hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata) == NULL){
-+	if ((hd = shost_priv(SCpnt->device->host)) == NULL){
- 		printk(KERN_ERR MYNAM ": host reset: "
- 		    "Can't locate host! (sc=%p)\n", SCpnt);
- 		return FAILED;
-@@ -2186,7 +2176,7 @@ mptscsih_taskmgmt_complete(MPT_ADAPTER *
- 		return 1;
+ 	/* Save Port IO values in case we need to do downloadboot */
+-	{
+-		u8 *pmem = (u8*)port;
+-		ioc->pio_mem_phys = port;
+-		ioc->pio_chip = (SYSIF_REGS __iomem *)pmem;
+-	}
++	ioc->pio_mem_phys = port;
++	pmem = (u8 __iomem *)port;
++	ioc->pio_chip = (SYSIF_REGS __iomem *)pmem;
+ 
+ 	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
+ 	mpt_get_product_name(pdev->vendor, pdev->device, revision, ioc->prod_name);
+@@ -3103,7 +3102,6 @@ mpt_free_fw_memory(MPT_ADAPTER *ioc)
+ static int
+ mpt_do_upload(MPT_ADAPTER *ioc, int sleepFlag)
+ {
+-	u8			 request[ioc->req_sz];
+ 	u8			 reply[sizeof(FWUploadReply_t)];
+ 	FWUpload_t		*prequest;
+ 	FWUploadReply_t		*preply;
+@@ -3129,11 +3127,16 @@ mpt_do_upload(MPT_ADAPTER *ioc, int slee
+ 		return -ENOMEM;
  	}
  
--	hd = (MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	hd = shost_priv(ioc->sh);
- 	pScsiTmReply = (SCSITaskMgmtReply_t*)mr;
- 	pScsiTmReq = (SCSITaskMgmt_t*)mf;
- 	tmType = pScsiTmReq->TaskType;
-@@ -2380,7 +2370,7 @@ void
- mptscsih_slave_destroy(struct scsi_device *sdev)
- {
- 	struct Scsi_Host	*host = sdev->host;
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST		*hd = shost_priv(host);
- 	VirtTarget		*vtarget;
- 	VirtDevice		*vdevice;
- 	struct scsi_target 	*starget;
-@@ -2407,7 +2397,7 @@ mptscsih_slave_destroy(struct scsi_devic
- int
- mptscsih_change_queue_depth(struct scsi_device *sdev, int qdepth)
- {
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)sdev->host->hostdata;
-+	MPT_SCSI_HOST		*hd = shost_priv(sdev->host);
- 	VirtTarget 		*vtarget;
- 	struct scsi_target 	*starget;
- 	int			max_depth;
-@@ -2452,7 +2442,7 @@ mptscsih_slave_configure(struct scsi_dev
- 	VirtTarget		*vtarget;
- 	VirtDevice		*vdevice;
- 	struct scsi_target 	*starget;
--	MPT_SCSI_HOST		*hd = (MPT_SCSI_HOST *)sh->hostdata;
-+	MPT_SCSI_HOST		*hd = shost_priv(sh);
- 	MPT_ADAPTER		*ioc = hd->ioc;
+-	prequest = (FWUpload_t *)&request;
+-	preply = (FWUploadReply_t *)&reply;
++	prequest = (sleepFlag == NO_SLEEP) ? kzalloc(ioc->req_sz, GFP_ATOMIC) :
++	    kzalloc(ioc->req_sz, GFP_KERNEL);
++	if (!prequest) {
++		dinitprintk(ioc, printk(MYIOC_s_DEBUG_FMT "fw upload failed "
++		    "while allocating memory \n", ioc->name));
++		mpt_free_fw_memory(ioc);
++		return -ENOMEM;
++	}
  
- 	starget = scsi_target(sdev);
-@@ -2567,7 +2557,7 @@ SCPNT_TO_LOOKUP_IDX(struct scsi_cmnd *sc
- 	MPT_SCSI_HOST *hd;
- 	int i;
+-	/*  Destination...  */
+-	memset(prequest, 0, ioc->req_sz);
++	preply = (FWUploadReply_t *)&reply;
  
--	hd = (MPT_SCSI_HOST *) sc->device->host->hostdata;
-+	hd = shost_priv(sc->device->host);
+ 	reply_sz = sizeof(reply);
+ 	memset(preply, 0, reply_sz);
+@@ -3145,11 +3148,12 @@ mpt_do_upload(MPT_ADAPTER *ioc, int slee
+ 	ptcsge->DetailsLength = 12;
+ 	ptcsge->Flags = MPI_SGE_FLAGS_TRANSACTION_ELEMENT;
+ 	ptcsge->ImageSize = cpu_to_le32(sz);
++	ptcsge++;
  
- 	for (i = 0; i < hd->ioc->req_depth; i++) {
- 		if (hd->ScsiLookup[i] == sc) {
-@@ -2595,10 +2585,10 @@ mptscsih_ioc_reset(MPT_ADAPTER *ioc, int
- 	 * before all scsi hosts have been attached, then an alt_ioc
- 	 * may have a NULL sh pointer.
- 	 */
--	if ((ioc->sh == NULL) || (ioc->sh->hostdata == NULL))
-+	if (ioc->sh == NULL || shost_priv(ioc->sh) == NULL)
- 		return 0;
- 	else
--		hd = (MPT_SCSI_HOST *) ioc->sh->hostdata;
-+		hd = shost_priv(ioc->sh);
+ 	sgeoffset = sizeof(FWUpload_t) - sizeof(SGE_MPI_UNION) + sizeof(FWUploadTCSGE_t);
  
- 	if (reset_phase == MPT_IOC_SETUP_RESET) {
- 		dtmprintk(ioc, printk(MYIOC_s_DEBUG_FMT "Setup-Diag Reset\n", ioc->name));
-@@ -2691,7 +2681,7 @@ mptscsih_event_process(MPT_ADAPTER *ioc,
- 			ioc->name, event));
+ 	flagsLength = MPT_SGE_FLAGS_SSIMPLE_READ | sz;
+-	mpt_add_sge(&request[sgeoffset], flagsLength, ioc->cached_fw_dma);
++	mpt_add_sge((char *)ptcsge, flagsLength, ioc->cached_fw_dma);
  
- 	if (ioc->sh == NULL ||
--		((hd = (MPT_SCSI_HOST *)ioc->sh->hostdata) == NULL))
-+		((hd = shost_priv(ioc->sh)) == NULL))
- 		return 1;
+ 	sgeoffset += sizeof(u32) + sizeof(dma_addr_t);
+ 	dinitprintk(ioc, printk(MYIOC_s_INFO_FMT ": Sending FW Upload (req @ %p) sgeoffset=%d \n",
+@@ -3184,6 +3188,7 @@ mpt_do_upload(MPT_ADAPTER *ioc, int slee
+ 			ioc->name));
+ 		mpt_free_fw_memory(ioc);
+ 	}
++	kfree(prequest);
  
- 	switch (event) {
-@@ -2770,7 +2760,7 @@ mptscsih_scandv_complete(MPT_ADAPTER *io
- 	int		 completionCode;
- 	u16		 req_idx;
- 
--	hd = (MPT_SCSI_HOST *) ioc->sh->hostdata;
-+	hd = shost_priv(ioc->sh);
- 
- 	if ((mf == NULL) ||
- 	    (mf >= MPT_INDEX_2_MFPTR(ioc, ioc->req_depth))) {
-@@ -3254,7 +3244,7 @@ static ssize_t
- mptscsih_version_fw_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
-@@ -3269,7 +3259,7 @@ static ssize_t
- mptscsih_version_bios_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%02x.%02x.%02x.%02x\n",
-@@ -3284,7 +3274,7 @@ static ssize_t
- mptscsih_version_mpi_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%03x\n", ioc->facts.MsgVersion);
-@@ -3295,7 +3285,7 @@ static ssize_t
- mptscsih_version_product_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->prod_name);
-@@ -3307,7 +3297,7 @@ static ssize_t
- mptscsih_version_nvdata_persistent_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%02xh\n",
-@@ -3320,7 +3310,7 @@ static ssize_t
- mptscsih_version_nvdata_default_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%02xh\n",ioc->nvdata_version_default);
-@@ -3332,7 +3322,7 @@ static ssize_t
- mptscsih_board_name_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_name);
-@@ -3343,7 +3333,7 @@ static ssize_t
- mptscsih_board_assembly_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_assembly);
-@@ -3355,7 +3345,7 @@ static ssize_t
- mptscsih_board_tracer_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%s\n", ioc->board_tracer);
-@@ -3367,7 +3357,7 @@ static ssize_t
- mptscsih_io_delay_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
-@@ -3379,7 +3369,7 @@ static ssize_t
- mptscsih_device_delay_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
-@@ -3391,7 +3381,7 @@ static ssize_t
- mptscsih_debug_level_show(struct class_device *cdev, char *buf)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 
- 	return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->debug_level);
-@@ -3401,7 +3391,7 @@ mptscsih_debug_level_store(struct class_
- 								size_t count)
- {
- 	struct Scsi_Host *host = class_to_shost(cdev);
--	MPT_SCSI_HOST	*hd = (MPT_SCSI_HOST *)host->hostdata;
-+	MPT_SCSI_HOST	*hd = shost_priv(host);
- 	MPT_ADAPTER *ioc = hd->ioc;
- 	int val = 0;
+ 	return cmdStatus;
+ }
+diff -uarpN b/drivers/message/fusion/mptsas.c a/drivers/message/fusion/mptsas.c
+--- b/drivers/message/fusion/mptsas.c	2007-09-17 11:56:56.000000000 -0600
++++ a/drivers/message/fusion/mptsas.c	2007-09-17 15:14:35.000000000 -0600
+@@ -3224,6 +3224,7 @@ mptsas_probe(struct pci_dev *pdev, const
+ 	hd->ScsiLookup = kcalloc(ioc->req_depth, sizeof(void *), GFP_ATOMIC);
+ 	if (!hd->ScsiLookup) {
+ 		error = -ENOMEM;
++		spin_unlock_irqrestore(&ioc->FreeQlock, flags);
+ 		goto out_mptsas_probe;
+ 	}
  
 diff -uarpN b/drivers/message/fusion/mptspi.c a/drivers/message/fusion/mptspi.c
---- b/drivers/message/fusion/mptspi.c	2007-09-17 10:41:08.000000000 -0600
-+++ a/drivers/message/fusion/mptspi.c	2007-09-17 11:59:07.000000000 -0600
-@@ -397,7 +397,7 @@ mptspi_is_raid(struct _MPT_SCSI_HOST *hd
- static int mptspi_target_alloc(struct scsi_target *starget)
- {
+--- b/drivers/message/fusion/mptspi.c	2007-09-17 11:59:07.000000000 -0600
++++ a/drivers/message/fusion/mptspi.c	2007-09-17 15:17:26.000000000 -0600
+@@ -516,8 +516,8 @@ static int mptspi_read_spi_device_pg0(st
  	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)shost->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(shost);
- 	VirtTarget		*vtarget;
- 	MPT_ADAPTER *ioc;
- 
-@@ -514,7 +514,7 @@ static int mptspi_read_spi_device_pg0(st
- 			     struct _CONFIG_PAGE_SCSI_DEVICE_0 *pass_pg0)
- {
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)shost->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(shost);
+ 	struct _MPT_SCSI_HOST *hd = shost_priv(shost);
  	struct _MPT_ADAPTER *ioc = hd->ioc;
- 	struct _CONFIG_PAGE_SCSI_DEVICE_0 *pg0;
- 	dma_addr_t pg0_dma;
-@@ -702,7 +702,7 @@ static void mptspi_dv_device(struct _MPT
+-	struct _CONFIG_PAGE_SCSI_DEVICE_0 *pg0;
+-	dma_addr_t pg0_dma;
++	struct _CONFIG_PAGE_SCSI_DEVICE_0 *spi_dev_pg0;
++	dma_addr_t spi_dev_pg0_dma;
+ 	int size;
+ 	struct _x_config_parms cfg;
+ 	struct _CONFIG_PAGE_HEADER hdr;
+@@ -535,8 +535,8 @@ static int mptspi_read_spi_device_pg0(st
+ 	size += 2048;
+ 	*/
  
- static int mptspi_slave_alloc(struct scsi_device *sdev)
+-	pg0 = dma_alloc_coherent(&ioc->pcidev->dev, size, &pg0_dma, GFP_KERNEL);
+-	if (pg0 == NULL) {
++	spi_dev_pg0 = dma_alloc_coherent(&ioc->pcidev->dev, size, &spi_dev_pg0_dma, GFP_KERNEL);
++	if (spi_dev_pg0 == NULL) {
+ 		starget_printk(MYIOC_s_ERR_FMT, starget,
+ 		    "dma_alloc_coherent for parameters failed\n", ioc->name);
+ 		return -EINVAL;
+@@ -552,7 +552,7 @@ static int mptspi_read_spi_device_pg0(st
+ 	memset(&cfg, 0, sizeof(cfg));
+ 
+ 	cfg.cfghdr.hdr = &hdr;
+-	cfg.physAddr = pg0_dma;
++	cfg.physAddr = spi_dev_pg0_dma;
+ 	cfg.action = MPI_CONFIG_ACTION_PAGE_READ_CURRENT;
+ 	cfg.dir = 0;
+ 	cfg.pageAddr = starget->id;
+@@ -562,12 +562,12 @@ static int mptspi_read_spi_device_pg0(st
+ 		goto out_free;
+ 	}
+ 	err = 0;
+-	memcpy(pass_pg0, pg0, size);
++	memcpy(pass_pg0, spi_dev_pg0, size);
+ 
+-	mptspi_print_read_nego(hd, starget, le32_to_cpu(pg0->NegotiatedParameters));
++	mptspi_print_read_nego(hd, starget, le32_to_cpu(spi_dev_pg0->NegotiatedParameters));
+ 
+  out_free:
+-	dma_free_coherent(&ioc->pcidev->dev, size, pg0, pg0_dma);
++	dma_free_coherent(&ioc->pcidev->dev, size, spi_dev_pg0, spi_dev_pg0_dma);
+ 	return err;
+ }
+ 
+@@ -594,11 +594,11 @@ static u32 mptspi_getRP(struct scsi_targ
+ static void mptspi_read_parameters(struct scsi_target *starget)
  {
--	MPT_SCSI_HOST *hd = (MPT_SCSI_HOST *)sdev->host->hostdata;
-+	MPT_SCSI_HOST *hd = shost_priv(sdev->host);
- 	VirtTarget		*vtarget;
- 	VirtDevice		*vdevice;
- 	struct scsi_target 	*starget;
-@@ -735,8 +735,7 @@ static int mptspi_slave_alloc(struct scs
+ 	int nego;
+-	struct _CONFIG_PAGE_SCSI_DEVICE_0 pg0;
++	struct _CONFIG_PAGE_SCSI_DEVICE_0 spi_dev_pg0;
  
- static int mptspi_slave_configure(struct scsi_device *sdev)
- {
--	struct _MPT_SCSI_HOST *hd =
--		(struct _MPT_SCSI_HOST *)sdev->host->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(sdev->host);
- 	VirtTarget *vtarget = scsi_target(sdev)->hostdata;
- 	int ret;
+-	mptspi_read_spi_device_pg0(starget, &pg0);
++	mptspi_read_spi_device_pg0(starget, &spi_dev_pg0);
  
-@@ -764,7 +763,7 @@ static int mptspi_slave_configure(struct
- static int
- mptspi_qcmd(struct scsi_cmnd *SCpnt, void (*done)(struct scsi_cmnd *))
- {
--	struct _MPT_SCSI_HOST *hd = (MPT_SCSI_HOST *) SCpnt->device->host->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(SCpnt->device->host);
- 	VirtDevice	*vdevice = SCpnt->device->hostdata;
- 	MPT_ADAPTER *ioc = hd->ioc;
+-	nego = le32_to_cpu(pg0.NegotiatedParameters);
++	nego = le32_to_cpu(spi_dev_pg0.NegotiatedParameters);
  
-@@ -839,7 +838,7 @@ static int mptspi_write_spi_device_pg1(s
- 			       struct _CONFIG_PAGE_SCSI_DEVICE_1 *pass_pg1)
- {
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)shost->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(shost);
- 	struct _MPT_ADAPTER *ioc = hd->ioc;
- 	struct _CONFIG_PAGE_SCSI_DEVICE_1 *pg1;
- 	dma_addr_t pg1_dma;
-@@ -1027,7 +1026,7 @@ static void mptspi_write_qas(struct scsi
- {
- 	struct _CONFIG_PAGE_SCSI_DEVICE_1 pg1;
- 	struct Scsi_Host *shost = dev_to_shost(&starget->dev);
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)shost->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(shost);
- 	VirtTarget *vtarget = starget->hostdata;
- 	u32 nego;
- 
-@@ -1137,7 +1136,7 @@ static int
- mptspi_event_process(MPT_ADAPTER *ioc, EventNotificationReply_t *pEvReply)
- {
- 	u8 event = le32_to_cpu(pEvReply->Event) & 0xFF;
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(ioc->sh);
- 
- 	if (hd && event ==  MPI_EVENT_INTEGRATED_RAID) {
- 		int reason
-@@ -1267,7 +1266,7 @@ mptspi_dv_renegotiate(struct _MPT_SCSI_H
- static int
- mptspi_ioc_reset(MPT_ADAPTER *ioc, int reset_phase)
- {
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(ioc->sh);
- 	int rc;
- 
- 	rc = mptscsih_ioc_reset(ioc, reset_phase);
-@@ -1286,7 +1285,7 @@ static int
- mptspi_resume(struct pci_dev *pdev)
- {
- 	MPT_ADAPTER 	*ioc = pci_get_drvdata(pdev);
--	struct _MPT_SCSI_HOST *hd = (struct _MPT_SCSI_HOST *)ioc->sh->hostdata;
-+	struct _MPT_SCSI_HOST *hd = shost_priv(ioc->sh);
- 	int rc;
- 
- 	rc = mptscsih_resume(pdev);
-@@ -1441,7 +1440,7 @@ mptspi_probe(struct pci_dev *pdev, const
- 
- 	spin_unlock_irqrestore(&ioc->FreeQlock, flags);
- 
--	hd = (MPT_SCSI_HOST *) sh->hostdata;
-+	hd = shost_priv(sh);
- 	hd->ioc = ioc;
- 
- 	/* SCSI needs scsi_cmnd lookup table!
+ 	spi_iu(starget) = (nego & MPI_SCSIDEVPAGE0_NP_IU) ? 1 : 0;
+ 	spi_dt(starget) = (nego & MPI_SCSIDEVPAGE0_NP_DT) ? 1 : 0;
