@@ -1,170 +1,50 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
-Date: Sat, 29 Sep 2007 15:16:08 +0900
-Message-ID: <20070929151608P.fujita.tomonori@lab.ntt.co.jp>
-References: <46F3D66A.9010000@qlogic.com>
-	<20070923231416K.tomof@acm.org>
-	<46FBBF8C.80409@qlogic.com>
+From: Muli Ben-Yehuda <muli@il.ibm.com>
+Subject: Re: [PATCH] aic94xx: fix SMP request DMA direction
+Date: Sat, 29 Sep 2007 08:22:15 +0200
+Message-ID: <20070929062215.GD4239@rhun.haifa.ibm.com>
+References: <20070928023341.GA10750@havoc.gtf.org> <20070928235534.GC22855@tree.beaverton.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:45412 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752617AbXI2GUq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2007 02:20:46 -0400
-In-Reply-To: <46FBBF8C.80409@qlogic.com>
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:30575 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750882AbXI2GWS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Sep 2007 02:22:18 -0400
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate8.de.ibm.com (8.13.8/8.13.8) with ESMTP id l8T6MHDD076124
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Sep 2007 06:22:17 GMT
+Received: from d12av01.megacenter.de.ibm.com (d12av01.megacenter.de.ibm.com [9.149.165.212])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l8T6MHKX2035732
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Sep 2007 08:22:17 +0200
+Received: from d12av01.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av01.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l8T6MGUv005563
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Sep 2007 08:22:17 +0200
+Content-Disposition: inline
+In-Reply-To: <20070928235534.GC22855@tree.beaverton.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: seokmann.ju@qlogic.com
-Cc: tomof@acm.org, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de, fujita.tomonori@lab.ntt.co.jp
+To: "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org
 
-On Thu, 27 Sep 2007 07:34:52 -0700
-Seokmann Ju <seokmann.ju@qlogic.com> wrote:
-
-> FUJITA Tomonori wrote:
-> > On Fri, 21 Sep 2007 07:34:18 -0700
-> > Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+On Fri, Sep 28, 2007 at 04:55:34PM -0700, Darrick J. Wong wrote:
+> On Thu, Sep 27, 2007 at 10:33:41PM -0400, Jeff Garzik wrote:
 > > 
-> >> Andrew Vasquez wrote:
-> >>> On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
-> >>>
-> >>>> This adds target mode support to qla2xxx.
-> >>>>
-> >>>> With set ql2enable_target_mode module parameter to 1, the driver runs
-> >>>> in target mode. By default, ql2enable_target_mode is set to 0, and the
-> >>>> driver should work in initiator mode as before.
-> >>>>
-> >>>> The driver could support dual-mode in the future but it doesn't at the
-> >>>> moment (we need to add dual-mode support tgt first).
-> >>>>
-> >>>> It is based on scst qla2xxx target mode driver. Mike converted the
-> >>>> driver to use tgt long ago. I changed it to use the latest (mainline)
-> >>>> version of qla2xxx driver and tgt, and also converted it to use fc
-> >>>> transport class.
-> >>> Thanks for doing this.  Some initial comments before a full review is
-> >>> complete, As was seen from the initiator updates needed for 24xx
-> >>> support, there are comparable changes needed in the area of
-> >>> target-mode support for 4gb and 8gb parts.  Also, which ISPs and
-> >>> firmwares were exercised with this code?
-> >> The patch is still under reviewing and will get done, soon.
+> > Unless I'm missing something, the SMP request goes /to/ the PCI device :)
 > > 
-> > Great, thinks!
-> One more question on typical testing setup.
-> I wonder how should I setup the testing environment esp., for the
-> target-mode.
+> > Signed-off-by: Jeff Garzik <jeff@garzik.org>
+> 
+> ACK; builds ok and SMP commands seem to work ok (not that they
+> didn't before).
 
-Sorry, I should have explained it with the patch.
+Could this explain some weirdness we were seeing with aic94xx and
+Calgary/CalIOC2 enabled, or are SMP commands not likely to be used in
+normal operation? We map the IOMMU entries differently for FROMDEVICE
+(RW) and TODEVICE(RO).
 
-Probabaly, you need to compile scsi-misc with the qla2xxx target patch
-and the user-space target code.
+Cheers,
+Muli
+-- 
+SYSTOR 2007 --- 1st Annual Haifa Systems and Storage Conference 2007
+http://www.haifa.il.ibm.com/Workshops/systor2007/
 
-1. scsi-misc + the qla2xxx target patch
-
-CONFIG_SCSI_TGT=m
-CONFIG_SCSI_FC_ATTRS=m
-CONFIG_SCSI_FC_TGT_ATTRS=y
-CONFIG_SCSI_QLA_FC=m
-CONFIG_SCSI_QLA_FC_TGT=y
-
-2. the user-space target code
-
-git://git.kernel.org/pub/scm/linux/kernel/git/tomo/tgt.git
-
-rouen:~/git/tgt/usr$ make FCP=1 KERNELSRC=/home/fujita/git/scsi-misc-2.6
-
-
-Starting the fc target mode is not so simple now (Mike and I know that
-we need to fix it...).
-
-1. load scsi_tgt.ko
-
-2. start the user-space daemon
-
-Here's a simple example.
-
-./tgt/usr/tgtd
-./tgt/usr/tgtadm --lld fc --mode target --op new --tid 1 --targetname volume1
-./tgt/usr/tgtadm --lld fc --mode logicalunit --op new --tid 1 --lun 1 -b /var/tmp/lun1
-./tgt/usr/tgtadm --lld fc --mode target --op bind --tid 1 --host 2
-
-You use a /var/tmp/lun1 file as #1 logical unit. The host number must
-be equal to qla2xxx scsi host number (when you load qla2xxx module).
-
-Then load scsi_transport_fc.ko and qla2xxx.ko (please don't forget
-ql2enable_target_mode=1 option).
-
-You can make sure everything is fine by the following command:
-
-luce:/home/fujita# cat /sys/class/scsi_host/host2/model_name
-QLA2340
-luce:/home/fujita# cat /sys/class/scsi_host/host2/active_mode
-Target
-
-luce:/home/fujita# ./tgt/usr/tgtadm --lld fc --mode target --op show
-Target 1: volume1
-    System information:
-        Driver: fc
-        Status: running
-    I_T nexus information:
-    LUN information:
-        LUN: 0
-            Type: controller
-            SCSI ID: deadbeaf1:0
-            SCSI SN: beaf10
-            Size: 0
-            Online: No
-            Poweron/Reset: Yes
-            Removable media: No
-            Backing store: No backing store
-        LUN: 1
-            Type: disk
-            SCSI ID: deadbeaf1:1
-            SCSI SN: beaf11
-            Size: 1G
-            Online: Yes
-            Poweron/Reset: No
-            Removable media: No
-            Backing store: /var/tmp/lun1
-    ACL information:
-
-
-
-> If you have, could you share the details of the layout of the
-> environment that you have had used for the feature verification?
-
-I use two hosts with qla23xx and a host with lpfc, which are connected
-via Brocade SilkWorm. One of qla23xx host runs in target mode. Another
-qla23xx host and the lpfc host can connect to the qla23xx target host.
-
-
-Here's lsscsi output in the lpfc host. The qla23xx target host gives
-[13:0:0:0] and [13:0:0:1] (yeah, I know, IET vendor name is strange).
-
-lily:/home/fujita# lsscsi
-[0:0:0:0]    disk    ServeRA  Drive 1          V1.0  /dev/sda
-[0:0:1:0]    disk    ServeRA  Drive 2          V1.0  /dev/sdb
-[0:1:0:0]    disk    IBM-ESXS GNA300C3ESTT0Z N BH0G  -
-[0:1:1:0]    disk    IBM-ESXS GNA300C3ESTT0Z N BH0G  -
-[0:3:0:0]    enclosu IBM      SAS SES-2 DEVICE 1.06  -
-[13:0:0:0]   storage IET      Controller       0001  -
-[13:0:0:1]   disk    IET      VIRTUAL-DISK     0001  /dev/sdc
-[13:0:1:0]   disk    IBM      1814      FAStT  2916  /dev/sdd
-[13:0:1:1]   disk    IBM      1814      FAStT  2916  /dev/sde
-[13:0:1:31]  disk    IBM      Universal Xport  2916  -
-[13:0:2:0]   disk    IBM      1814      FAStT  2916  /dev/sdf
-[13:0:2:1]   disk    IBM      1814      FAStT  2916  /dev/sdg
-[13:0:2:31]  disk    IBM      Universal Xport  2916  -
-
-
-> Also, it would be great if shared with me for those specific test
-> cases that need to be in place.
-
-I don't use anything special. I use some benchmark software like
-postmark and a script to extract a tar file and checks MD5 digests of
-all the files in the tar file again and again.
-
-
-> I will try to add more cases on top of it if there are.
-
-Thanks.
+Oct 29, 2007: virtualization workshop | Oct 30, 2007: storage workshop
