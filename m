@@ -1,41 +1,30 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 10/16] gdth: gdth_get_status() return pointer to host not its index
-Date: Sun, 30 Sep 2007 22:26:28 +0100
-Message-ID: <20070930212628.GC13343@infradead.org>
-References: <46FFFC8C.6080804@panasas.com> <47000270.8000209@panasas.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC 0/16] gdth combined patchset & call for testers
+Date: Sun, 30 Sep 2007 17:27:17 -0400
+Message-ID: <470014B5.8050804@garzik.org>
+References: <46FFFC8C.6080804@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:40356 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751614AbXI3V0g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2007 17:26:36 -0400
-Content-Disposition: inline
-In-Reply-To: <47000270.8000209@panasas.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:60841 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752215AbXI3V1l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 30 Sep 2007 17:27:41 -0400
+In-Reply-To: <46FFFC8C.6080804@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Sep 30, 2007 at 10:09:20PM +0200, Boaz Harrosh wrote:
-> 
->   - Return the interrupting host and not it's index.
->     NULL if intr is not by gdth.
->   - fix calling site
-> 
->   FIXME:
->    Why are we looping on all cards? the passed dev_id
->    can be used for pinpointing the exact interrupting
->    card. The kernel is already looping on all sharing
->    cards so this code makes it O(n^2).
+BTW, when reposting the patches of others, its nice to add a From: 
+header to the very first line of the email body.  Andrew does that a 
+lot, and the git tools are aware of this convention.
 
-This is just pre-historic code that makes no sense whatover in a modern
-kernel.  I'd much prefer to stop doing this and use dev_id properly.
+Also, hey, if you like our patches, I think you should add your own 
+Signed-off-by line (assuming/hoping you reviewed it....).
 
->    What is that polling mode? can we pass dev_id to
->    gdth_get_status() and do a poll only if dev_id is
->    NULL?
+	Jeff
 
-Just loop over all host adapters in gdth_wait instead and pass in the
-ha pointer.
+
 
