@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 6/16] Reorder scsi_host_template intitializers
-Date: Sun, 30 Sep 2007 21:59:22 +0200
-Message-ID: <4700001A.3010802@panasas.com>
+Subject: [PATCH 7/16] gdth: make some virt ctrlr code common
+Date: Sun, 30 Sep 2007 22:01:56 +0200
+Message-ID: <470000B4.1060504@panasas.com>
 References: <46FFFC8C.6080804@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa12.bezeqint.net ([192.115.104.27]:51642 "EHLO
-	sa12.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751289AbXI3T7a (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2007 15:59:30 -0400
+Received: from sa10.bezeqint.net ([192.115.104.24]:55997 "EHLO
+	sa10.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751566AbXI3UCC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2007 16:02:02 -0400
 In-Reply-To: <46FFFC8C.6080804@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,42 +18,124 @@ To: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, James 
 Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
 
-  * shuffle scsi_host_template members such that they appear in the
-    order in which they are defined in the header.  this makes is easier
-    to verify when initializers are missing members.
+  * New function gdth_register_virt() replaces the three
+    basically-duplicate copies of virtual controller registration.
 
   Signed-off-by: Jeff Garzik <jeff@garzik.org>
   Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/gdth.c |    6 +++---
- 1 files changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/gdth.c |   80 ++++++++++++++++++++++++++-------------------------
+ 1 files changed, 41 insertions(+), 39 deletions(-)
 
 diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index c911ebc..4fa6609 100644
+index 4fa6609..b31c5eb 100644
 --- a/drivers/scsi/gdth.c
 +++ b/drivers/scsi/gdth.c
-@@ -4898,17 +4898,17 @@ static int gdth_slave_configure(struct scsi_device *sdev)
+@@ -3925,6 +3925,44 @@ int __init option_setup(char *str)
+     return 1;
  }
  
- static struct scsi_host_template driver_template = {
--        .proc_name              = "gdth", 
--        .proc_info              = gdth_proc_info,
-         .name                   = "GDT SCSI Disk Array Controller",
-         .detect                 = gdth_detect, 
-         .release                = gdth_release,
-         .info                   = gdth_info, 
-         .queuecommand           = gdth_queuecommand,
-         .eh_bus_reset_handler   = gdth_eh_bus_reset,
-+        .slave_configure        = gdth_slave_configure,
-         .bios_param             = gdth_bios_param,
-+        .proc_info              = gdth_proc_info,
-+        .proc_name              = "gdth",
-         .can_queue              = GDTH_MAXCMDS,
--        .slave_configure        = gdth_slave_configure,
-         .this_id                = -1,
-         .sg_tablesize           = GDTH_MAXSG,
-         .cmd_per_lun            = GDTH_MAXC_P_L,
--- 
-1.5.3.1
-
-
++static int __init gdth_register_virt(struct scsi_host_template *shtp,
++				     gdth_ha_str *ha, int hanum,
++				     struct device *dev, bool isa_dma)
++{
++	struct Scsi_Host *shp;
++	unchar b;
++	int done = 0;
++
++	if (!virt_ctr)
++		return 0;
++
++	virt_ctr = 1;
++
++	/* register addit. SCSI channels as virtual controllers */
++	for (b = 1; b < ha->bus_cnt + 1; ++b) {
++		shp = scsi_register(shtp, sizeof(gdth_num_str));
++
++		if (isa_dma) {
++			shp->unchecked_isa_dma = 1;
++			shp->dma_channel = ha->drq;
++		} else {
++			shp->unchecked_isa_dma = 0;
++			shp->dma_channel = 0xff;
++		}
++
++		shp->irq = ha->irq;
++
++		gdth_push_vshp(shp);
++
++		NUMDATA(shp)->hanum = (ushort)hanum;
++		NUMDATA(shp)->busnum = b;
++
++		done++;
++	}
++
++	return done ? 0 : -ENODEV;
++}
++
+ 
+ static int __init gdth_detect(struct scsi_host_template *shtp)
+ {
+@@ -5017,19 +5055,7 @@ static int gdth_isa_probe_one(struct scsi_host_template *shtp, ulong32 isa_bios)
+ 	shp->max_id      = ha->tid_cnt;
+ 	shp->max_lun     = MAXLUN;
+ 	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
+-	if (virt_ctr) {
+-		virt_ctr = 1;
+-		/* register addit. SCSI channels as virtual controllers */
+-		for (b = 1; b < ha->bus_cnt + 1; ++b) {
+-			shp = scsi_register(shtp,sizeof(gdth_num_str));
+-			shp->unchecked_isa_dma = 1;
+-			shp->irq = ha->irq;
+-			shp->dma_channel = ha->drq;
+-			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
+-			NUMDATA(shp)->hanum = (ushort)hanum;
+-			NUMDATA(shp)->busnum = b;
+-		}
+-	}
++	gdth_register_virt(shtp, ha, hanum, NULL, true);
+ 
+ 	spin_lock_init(&ha->smp_lock);
+ 	gdth_enable_int(hanum);
+@@ -5159,19 +5185,7 @@ static int gdth_eisa_probe_one(struct scsi_host_template *shtp,
+ 	shp->max_id      = ha->tid_cnt;
+ 	shp->max_lun     = MAXLUN;
+ 	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
+-	if (virt_ctr) {
+-		virt_ctr = 1;
+-		/* register addit. SCSI channels as virtual controllers */
+-		for (b = 1; b < ha->bus_cnt + 1; ++b) {
+-			shp = scsi_register(shtp,sizeof(gdth_num_str));
+-			shp->unchecked_isa_dma = 0;
+-			shp->irq = ha->irq;
+-			shp->dma_channel = 0xff;
+-			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
+-			NUMDATA(shp)->hanum = (ushort)hanum;
+-			NUMDATA(shp)->busnum = b;
+-		}
+-	}
++	gdth_register_virt(shtp, ha, hanum, NULL, false);
+ 
+ 	spin_lock_init(&ha->smp_lock);
+ 	gdth_enable_int(hanum);
+@@ -5310,19 +5324,7 @@ static int gdth_pci_probe_one(struct scsi_host_template *shtp,
+ 	shp->max_id      = ha->tid_cnt;
+ 	shp->max_lun     = MAXLUN;
+ 	shp->max_channel = virt_ctr ? 0 : ha->bus_cnt;
+-	if (virt_ctr) {
+-		virt_ctr = 1;
+-		/* register addit. SCSI channels as virtual controllers */
+-		for (b = 1; b < ha->bus_cnt + 1; ++b) {
+-			shp = scsi_register(shtp,sizeof(gdth_num_str));
+-			shp->unchecked_isa_dma = 0;
+-			shp->irq = ha->irq;
+-			shp->dma_channel = 0xff;
+-			gdth_ctr_vtab[gdth_ctr_vcount++] = shp;
+-			NUMDATA(shp)->hanum = (ushort)hanum;
+-			NUMDATA(shp)->busnum = b;
+-		}
+-	}
++	gdth_register_virt(shtp, ha, hanum, &pcistr[ctr].pdev->dev, false);
+ 
+ 	spin_lock_init(&ha->smp_lock);
+ 	gdth_enable_int(hanum);
