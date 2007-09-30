@@ -1,45 +1,26 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC 0/16] gdth combined patchset & call for testers
-Date: Sun, 30 Sep 2007 17:07:53 -0400
-Message-ID: <47001029.80709@garzik.org>
-References: <46FFFC8C.6080804@panasas.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 7/16] gdth: make some virt ctrlr code common
+Date: Sun, 30 Sep 2007 22:22:01 +0100
+Message-ID: <20070930212201.GA13343@infradead.org>
+References: <46FFFC8C.6080804@panasas.com> <470000B4.1060504@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47631 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752066AbXI3VIB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Sep 2007 17:08:01 -0400
-In-Reply-To: <46FFFC8C.6080804@panasas.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53558 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751365AbXI3VWS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2007 17:22:18 -0400
+Content-Disposition: inline
+In-Reply-To: <470000B4.1060504@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Boaz Harrosh wrote:
-> [11/16] gdth: switch to modern scsi host registration - Christoph
->   Christoph what is missing from here is the remove of the deprecated 
->   pci_find_device() call. Can I Just use pci_get_device() of the same signature
->   or do I need to call some other pci_ members after that?
+On Sun, Sep 30, 2007 at 10:01:56PM +0200, Boaz Harrosh wrote:
+> 
+>   * New function gdth_register_virt() replaces the three
+>     basically-duplicate copies of virtual controller registration.
 
-
-The driver needs to be converted to the "new" hotplug APIs.
-
-The main pre-reqs are accomplished by your patches: the driver is using 
-the modern scsi hotplug API, and uses pointers for the adapter struct 
-rather than indices.
-
-The final pre-req -- if your patches do not do this already -- is to 
-completely eliminate any global driver arrays, and make sure all 
-structures are allocated on a per-HBA basis.
-
-Once this is done, conversion to ISA/EISA/PCI hotplug API is pretty 
-straightforward.  Each of those three bus APIs are the same: 
-per-instance probe and remove functions, and (for PCI and sometimes 
-EISA) an id table.  This is the reason why the ISA/EISA/PCI codes were 
-split out into separate functions, to prepare for this conversion.
-
-	Jeff
-
+I think we can just kill this one if 8/16 goes in..
 
