@@ -1,56 +1,58 @@
-From: David Brownell <david-b@pacbell.net>
-Subject: Re: question on flushing buffers and spinning
- down disk
-Date: Sat, 29 Sep 2007 14:03:26 -0700
-Message-ID: <20070929210326.804C4112B7A@adsl-69-226-248-13.dsl.pltn13.pacbell.net>
-References: <Pine.LNX.4.44L0.0709291428050.1094-100000@netrider.rowland.org>
-	<200709292206.17377.oliver@neukum.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] aic94xx: fix SMP request DMA direction
+Date: Sun, 30 Sep 2007 00:13:55 -0700
+Message-ID: <20070930071355.GC21125@tree.beaverton.ibm.com>
+References: <20070928023341.GA10750@havoc.gtf.org> <20070928235534.GC22855@tree.beaverton.ibm.com> <20070929062215.GD4239@rhun.haifa.ibm.com> <46FDEFDD.8070401@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <200709292206.17377.oliver@neukum.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: stern@rowland.harvard.edu, oliver@neukum.org
-Cc: James.Bottomley@steeleye.com, linux-usb-devel@lists.sourceforge.net, pavel@ucw.cz, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:55359 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753144AbXI3HNZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Sep 2007 03:13:25 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l8U7DPBB027052
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Sep 2007 03:13:25 -0400
+Received: from d03av04.boulder.ibm.com (d03av04.boulder.ibm.com [9.17.195.170])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l8U7DOE0405138
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Sep 2007 01:13:25 -0600
+Received: from d03av04.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av04.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l8U7DOoP013850
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Sep 2007 01:13:24 -0600
+Content-Disposition: inline
+In-Reply-To: <46FDEFDD.8070401@garzik.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Muli Ben-Yehuda <muli@il.ibm.com>, linux-scsi@vger.kernel.org
 
-PiA+IGF1dG9zdXNwZW5kLiDCoEl0J3Mgbm90IHN1cHBvc2VkIHRvIHdvcmsgYnkgdGhlIGhpZ2hl
-ciBsZXZlbCBhbm5vdW5jaW5nOiDCoAo+ID4gIkkgd2FudCB0byBhdXRvc3VzcGVuZCBub3csIHNv
-IGFsbCB5b3UgbG93ZXIgZ3V5cyBoYWQgYmV0dGVyIGdldAo+ID4gcmVhZHkuIgo+Cj4gSSBzZWUu
-IEFuZCB0aGVyZSdzIGFuIGFwcGVhbGluZyBzaW1wbGljaXR5IHRvIGl0LiBCdXQgd2h5IGluc2lz
-dCB0aGF0Cj4gdGhpcyBpcyB0aGUgb25lIHRydWUgd2F5PwoKSSB3YXMgdW5hd2FyZSB0aGVyZSB3
-YXMgYW5vdGhlciBkZWZpbml0aW9uIG9mIGF1dG9zdXNwZW5kOyB0aGF0J3MgaG93CndlJ3ZlIGFs
-d2F5cyBkaXNjdXNzZWQgaXQuICBJdCdzIGEgYm90dG9tLXVwIHBvd2VyIG1hbmFnZW1lbnQgc3Ry
-YXRlZ3kKbGV2ZXJhZ2luZyBsb2NhbGl6ZWQga25vd2xlZGdlIHRoYXQgaXNuJ3Qga25vd2FibGUg
-Ynkgb3RoZXIgbW9kdWxlcy4KKE1haW50YWluYWJsZSBzeXN0ZW1zIHVzZSBpbmZvcm1hdGlvbiBo
-aWRpbmcvc2VwYXJhdGlvbiBhbGwgb3Zlci4uLikKCkl0J3MgYSBzb2Z0d2FyZSB2ZXJzaW9uIG9m
-IHdoYXQgc29tZSBzbWFydGVyIGhhcmR3YXJlIGRvZXMgYXV0b21hdGljYWxseS4KYnkgYXV0b21h
-dGljYWxseSBnYXRpbmcgY2h1bmtzIG9mIHRoZSBjbG9jayB0cmVlIHdoZW4gdGhleSdyZSBub3Qg
-bmVlZGVkLApsZWF2aW5nIHRoZSBjaGlwIGluIGEgInJldGVudGlvbiIgbW9kZSwgdG8gbWluaW1p
-emUgYWN0aXZlIHdhc3RhZ2UuCkRvaW5nIHRoYXQgY29uc2lzdGVudGx5IG92ZXIgYSB3aG9sZSBP
-UyBjYW4gbGVhZCB0byBzaWduaWZpY2FudCBwb3dlcgpzYXZpbmdzIG5vdCBqdXN0IGJ5IHNocmlu
-a2luZyBwZXItbW9kdWxlIHBvd2VyIGNvbnN1bXB0aW9uLCBidXQgYWxzbyBieQpsZXR0aW5nIHZh
-cmlvdXMgUExMcyBhbmQgb3NjaWxsYXRvcnMgYmUgcG93ZXJlZCBvZmYuCgpTb2Z0d2FyZSBjYW4g
-b2YgY291cnNlIGtub3cgYWJvdXQgbW9yZSBwb3dlci1yZWxldmFudCByZXNvdXJjZXMgdGhhbiBq
-dXN0CmNsb2NrcyAuLi4KCklmIHNvbWVvbmUgZWxzZSBoYXMgZGlyZWN0ZWQgYSBtb2R1bGUgdG8g
-c3VzcGVuZCwgaXQncyBoYXJkbHkgImF1dG9tYXRpYyIKZnJvbSB0aGUgcGVyc3BlY3RpdmUgb2Yg
-dGhhdCBtb2R1bGUuICBJdCdkIGhhdmUgdG8gZGVjaWRlIHdoYXQgdG8gZG8Kd2l0aCBhY3Rpdml0
-aWVzIHRoYXQgdGhlICJoaWdoZXIgbGV2ZWwiIGNvZGUgd291bGRuJ3QgaGF2ZSBrbm93biBhYm91
-dC4KQWZ0ZXIgYWxsLCB0aGUgcmVhc29uIHRob3NlIGxheWVycyBleGlzdCBpcyB0byBoaWRlIGlu
-Zm9ybWF0aW9uIGxpa2UgdGhhdCEKCi0gRGF2ZQoKCi0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0KVGhpcyBTRi5u
-ZXQgZW1haWwgaXMgc3BvbnNvcmVkIGJ5OiBNaWNyb3NvZnQKRGVmeSBhbGwgY2hhbGxlbmdlcy4g
-TWljcm9zb2Z0KFIpIFZpc3VhbCBTdHVkaW8gMjAwNS4KaHR0cDovL2Nsay5hdGRtdC5jb20vTVJU
-L2dvL3ZzZTAxMjAwMDAwNzBtcnQvZGlyZWN0LzAxLwpfX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fXwpsaW51eC11c2ItZGV2ZWxAbGlzdHMuc291cmNlZm9yZ2Uu
-bmV0ClRvIHVuc3Vic2NyaWJlLCB1c2UgdGhlIGxhc3QgZm9ybSBmaWVsZCBhdDoKaHR0cHM6Ly9s
-aXN0cy5zb3VyY2Vmb3JnZS5uZXQvbGlzdHMvbGlzdGluZm8vbGludXgtdXNiLWRldmVsCg==
+On Sat, Sep 29, 2007 at 02:25:33AM -0400, Jeff Garzik wrote:
+> Muli Ben-Yehuda wrote:
+>> On Fri, Sep 28, 2007 at 04:55:34PM -0700, Darrick J. Wong wrote:
+>>> On Thu, Sep 27, 2007 at 10:33:41PM -0400, Jeff Garzik wrote:
+>>>> Unless I'm missing something, the SMP request goes /to/ the PCI device 
+>>>> :)
+>>>>
+>>>> Signed-off-by: Jeff Garzik <jeff@garzik.org>
+>>> ACK; builds ok and SMP commands seem to work ok (not that they
+>>> didn't before).
+>> Could this explain some weirdness we were seeing with aic94xx and
+>> Calgary/CalIOC2 enabled, or are SMP commands not likely to be used in
+>> normal operation? We map the IOMMU entries differently for FROMDEVICE
+>> (RW) and TODEVICE(RO).
+>
+> SMP == scsi management == not used during normal data transfer.
+>
+> It could certainly explain flakiness if you have expanders, though
+
+Actually, SMP commands are used during device discovery to find things
+attached to expanders, so it seems likely that "it blows up almost
+immediately after loading the module" symptoms are a result of this bug.
+
+That said, the bug that Jeff fixed resulted in extra permissions (+w)
+being set for the SMP request buffer, so that's probably why I've never
+seen any problems manifesting on x260/x3800 systems.
+
+(Unless the CalIOC2 has a write only mode?)
+
+--D
