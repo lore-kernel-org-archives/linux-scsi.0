@@ -1,59 +1,47 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: generating a Linux WWN?
-Date: Mon, 1 Oct 2007 12:56:36 +0200
-Message-ID: <200710011256.36708.ak@suse.de>
-References: <46FB8024.8040807@garzik.org> <20070927144649.GV3899@parisc-linux.org> <46FC332E.2040001@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: slave_configure for qlogicpti
+Date: Mon, 01 Oct 2007 08:22:07 -0400
+Message-ID: <4700E66F.40808@garzik.org>
+References: <20070919124637.GE7624@parisc-linux.org>	<20070930.172952.85384131.davem@davemloft.net>	<470044DD.40100@garzik.org> <20070930.182412.08350831.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53308 "EHLO mx2.suse.de"
+Received: from srv5.dvmed.net ([207.36.208.214]:44376 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751299AbXJAK4o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Oct 2007 06:56:44 -0400
-In-Reply-To: <46FC332E.2040001@garzik.org>
-Content-Disposition: inline
+	id S1750804AbXJAMWK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Oct 2007 08:22:10 -0400
+In-Reply-To: <20070930.182412.08350831.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Patrick_Boyd@dell.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: matthew@wil.cx, sparclinux@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-> The popular solutions I've seen are:
+David Miller wrote:
+> From: Jeff Garzik <jeff@garzik.org>
+> Date: Sun, 30 Sep 2007 20:52:45 -0400
 > 
-> 1) Random bytes, or fixed id + random bytes.  Even on a worldwide net, 
-> collisions are highly unlikely.
+>> David Miller wrote:
+>>> It compiles :-)  You deleted the only uses of scsi_rbuf_{get,put}()
+>>> so you can kill those off too.
+>>
+>> Seeing as how they are exact duplicates of libata's 
+>> ata_scsi_rbuf_{get,put}, I wonder how they got there in the first place 
+>> (rather than becoming common code), and I wonder how many more copies 
+>> are floating out there...
+> 
+> I bet: 1) they were common code in scsi_lib.c 2) qlogicpti and libata
+> became the only remaining users so 3) they got copied to those
+> two users verbatim anticipating that the qlogicpti usage would
+> eventually be deleted.
 
-The problem is that the random bytes are not necessarily random; especially
-not at boot:
+I wrote the libata code from scratch, so I was just sorta curious.  No 
+biggie either (read: I'm too lazy to search the history).
 
-get_random_bytes gets its randomness from the entropy pool. The pool starts with the 
-time of the day and some always the same data and then gets feed by time 
-stamps from a few interrupts. This doesn't include network interrupts
-(or rather only a small handfull of network drivers set the flag -- but
-at early boot you don't have any network anyways), but is primarily keyboard/mouse 
-and storage interrupts. On headless systems typically only storage interrupts.
+After the qlogicpti use goes away, libata-scsi is the remaining user of 
+that logic.  The code is already local to libata, so... all good.
 
-Now do you see the problem with using get_random_bytes() to get your
-storage working? In many cases the time of the day in the pool
-will prevent the worst, but if you have a cluster where all boxes boot 
-at the same time it's quite likely your early randomness will
-be all the same.(ok cluster boots are usually staggered, but you
-still have a large number of systems booting at the same time) 
+	Jeff
 
-The whole thing would probably work if you could mix something 
-machine unique into the entropy pool at boot (e.g. a network
-mac address); but Linux can't do that do to boot strap ordering
-issues.
 
-I agree with the people who say this is a highly dangerous
-thing to do. It is much better to fail clearly that to create a hard
-to debug subtle problem in a storage network.
-
-If you have prototype hardware that doesn't supply an unique ID then
-I would suggest you add some module parameter to allow choosing a unique 
-(or even random) one. But don't make it default.
-
--Andi
 
