@@ -1,249 +1,49 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH] Add a slave_configure method to qlogicpti
-Date: Mon, 1 Oct 2007 08:07:52 -0600
-Message-ID: <20071001140752.GG12049@parisc-linux.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 16/16] gdth: !use_sg cleanup and use of scsi accessors
+Date: Mon, 01 Oct 2007 16:06:59 +0200
+Message-ID: <4700FF03.2060507@panasas.com>
+References: <46FFFC8C.6080804@panasas.com> <47000467.70707@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:36258 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbXJAOHx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2007 10:07:53 -0400
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:10754 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751400AbXJAOKV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2007 10:10:21 -0400
+In-Reply-To: <47000467.70707@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
+On Sun, Sep 30 2007 at 22:17 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+>   gdth_execute() will issue an internal, none scsi-standard commands
+>   onto __gdth_queuecommand(). Since it is not recommended to set
+>   struct scsi_cmnd IO members in llds, gdth now uses internal IO
+>   members for IO. In the case of gdth_execute() these members will be
+>   set properly. In case the command was issued from scsi-ml
+>   (by gdth_queuecommand) they will be set from scsi IO accessors.
+> 
+>   * define gdth IO accessors and use them throughout the driver.
+>   * use an sg-of-one in gdth_execute() and fix gdth_special_cmd()
+>     accordingly.
+>   * Clean the not use_sg code path and company
+> 
+> Signed-off-by Boaz Harrosh <bharrosh@panasas.com>
+OK My usual bug in this one. I woke up in the middle
+of the night with this in my head.
 
-By configuring targets in slave_configure, we can eliminate a shadow
-queuecommand, a shadow scsi_done, a write to the host template, abuse of
-SCp->Message and SCp->Status, a use of kmap_atomic() and sniffing the
-results of INQUIRY.
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -517,4 +517,5 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+     sg_init_one(&one_sg, gdtcmd, sizeof(*gdtcmd));
+     gdth_set_sglist(scp, &one_sg);
++    gdth_set_sg_count(scp, 1);
+     gdth_set_bufflen(scp, sizeof(*gdtcmd));
+     scp->cmd_len = 12;
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-Acked-by: David S. Miller <davem@davemloft.net>
+I will resend the patch as reply to this one
 
- qlogicpti.c |  171 +++++++++---------------------------------------------------
- qlogicpti.h |    3 -
- 2 files changed, 27 insertions(+), 147 deletions(-)
-
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index 5948872..e93f803 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -310,8 +310,6 @@ static inline void qlogicpti_set_hostdev_defaults(struct qlogicpti *qpti)
- 		}
- 		qpti->dev_param[i].device_enable = 1;
- 	}
--	/* this is very important to set! */
--	qpti->sbits = 1 << qpti->scsi_id;
- }
- 
- static int qlogicpti_reset_hardware(struct Scsi_Host *host)
-@@ -951,153 +949,35 @@ static inline void update_can_queue(struct Scsi_Host *host, u_int in_ptr, u_int
- 	host->sg_tablesize = QLOGICPTI_MAX_SG(num_free);
- }
- 
--static unsigned int scsi_rbuf_get(struct scsi_cmnd *cmd, unsigned char **buf_out)
-+static int qlogicpti_slave_configure(struct scsi_device *sdev)
- {
--	unsigned char *buf;
--	unsigned int buflen;
--
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
-+	struct qlogicpti *qpti = shost_priv(sdev->host);
-+	int tgt = sdev->id;
-+	u_short param[6];
- 
--		sg = (struct scatterlist *) cmd->request_buffer;
--		buf = kmap_atomic(sg->page, KM_IRQ0) + sg->offset;
--		buflen = sg->length;
-+	/* tags handled in midlayer */
-+	/* enable sync mode? */
-+	if (sdev->sdtr) {
-+		qpti->dev_param[tgt].device_flags |= 0x10;
- 	} else {
--		buf = cmd->request_buffer;
--		buflen = cmd->request_bufflen;
-+		qpti->dev_param[tgt].synchronous_offset = 0;
-+		qpti->dev_param[tgt].synchronous_period = 0;
- 	}
--
--	*buf_out = buf;
--	return buflen;
--}
--
--static void scsi_rbuf_put(struct scsi_cmnd *cmd, unsigned char *buf)
--{
--	if (cmd->use_sg) {
--		struct scatterlist *sg;
--
--		sg = (struct scatterlist *) cmd->request_buffer;
--		kunmap_atomic(buf - sg->offset, KM_IRQ0);
--	}
--}
--
--/*
-- * Until we scan the entire bus with inquiries, go throught this fella...
-- */
--static void ourdone(struct scsi_cmnd *Cmnd)
--{
--	struct qlogicpti *qpti = (struct qlogicpti *) Cmnd->device->host->hostdata;
--	int tgt = Cmnd->device->id;
--	void (*done) (struct scsi_cmnd *);
--
--	/* This grot added by DaveM, blame him for ugliness.
--	 * The issue is that in the 2.3.x driver we use the
--	 * host_scribble portion of the scsi command as a
--	 * completion linked list at interrupt service time,
--	 * so we have to store the done function pointer elsewhere.
--	 */
--	done = (void (*)(struct scsi_cmnd *))
--		(((unsigned long) Cmnd->SCp.Message)
--#ifdef __sparc_v9__
--		 | ((unsigned long) Cmnd->SCp.Status << 32UL)
--#endif
--		 );
--
--	if ((qpti->sbits & (1 << tgt)) == 0) {
--		int ok = host_byte(Cmnd->result) == DID_OK;
--		if (Cmnd->cmnd[0] == 0x12 && ok) {
--			unsigned char *iqd;
--			unsigned int iqd_len;
--
--			iqd_len = scsi_rbuf_get(Cmnd, &iqd);
--
--			/* tags handled in midlayer */
--			/* enable sync mode? */
--			if (iqd[7] & 0x10) {
--				qpti->dev_param[tgt].device_flags |= 0x10;
--			} else {
--				qpti->dev_param[tgt].synchronous_offset = 0;
--				qpti->dev_param[tgt].synchronous_period = 0;
--			}
--			/* are we wide capable? */
--			if (iqd[7] & 0x20) {
--				qpti->dev_param[tgt].device_flags |= 0x20;
--			}
--
--			scsi_rbuf_put(Cmnd, iqd);
--
--			qpti->sbits |= (1 << tgt);
--		} else if (!ok) {
--			qpti->sbits |= (1 << tgt);
--		}
--	}
--	done(Cmnd);
--}
--
--static int qlogicpti_queuecommand(struct scsi_cmnd *Cmnd, void (*done)(struct scsi_cmnd *));
--
--static int qlogicpti_queuecommand_slow(struct scsi_cmnd *Cmnd,
--				       void (*done)(struct scsi_cmnd *))
--{
--	struct qlogicpti *qpti = (struct qlogicpti *) Cmnd->device->host->hostdata;
--
--	/*
--	 * done checking this host adapter?
--	 * If not, then rewrite the command
--	 * to finish through ourdone so we
--	 * can peek at Inquiry data results.
--	 */
--	if (qpti->sbits && qpti->sbits != 0xffff) {
--		/* See above about in ourdone this ugliness... */
--		Cmnd->SCp.Message = ((unsigned long)done) & 0xffffffff;
--#ifdef CONFIG_SPARC64
--		Cmnd->SCp.Status = ((unsigned long)done >> 32UL) & 0xffffffff;
--#endif
--		return qlogicpti_queuecommand(Cmnd, ourdone);
--	}
--
--	/*
--	 * We've peeked at all targets for this bus- time
--	 * to set parameters for devices for real now.
--	 */
--	if (qpti->sbits == 0xffff) {
--		int i;
--		for(i = 0; i < MAX_TARGETS; i++) {
--			u_short param[6];
--			param[0] = MBOX_SET_TARGET_PARAMS;
--			param[1] = (i << 8);
--			param[2] = (qpti->dev_param[i].device_flags << 8);
--			if (qpti->dev_param[i].device_flags & 0x10) {
--				param[3] = (qpti->dev_param[i].synchronous_offset << 8) |
--					qpti->dev_param[i].synchronous_period;
--			} else {
--				param[3] = 0;
--			}
--			(void) qlogicpti_mbox_command(qpti, param, 0);
--		}
--		/*
--		 * set to zero so any traverse through ourdone
--		 * doesn't start the whole process again,
--		 */
--		qpti->sbits = 0;
--	}
--
--	/* check to see if we're done with all adapters... */
--	for (qpti = qptichain; qpti != NULL; qpti = qpti->next) {
--		if (qpti->sbits) {
--			break;
--		}
-+	/* are we wide capable? */
-+	if (sdev->wdtr)
-+		qpti->dev_param[tgt].device_flags |= 0x20;
-+
-+	param[0] = MBOX_SET_TARGET_PARAMS;
-+	param[1] = (tgt << 8);
-+	param[2] = (qpti->dev_param[tgt].device_flags << 8);
-+	if (qpti->dev_param[tgt].device_flags & 0x10) {
-+		param[3] = (qpti->dev_param[tgt].synchronous_offset << 8) |
-+			qpti->dev_param[tgt].synchronous_period;
-+	} else {
-+		param[3] = 0;
- 	}
--
--	/*
--	 * if we hit the end of the chain w/o finding adapters still
--	 * capability-configuring, then we're done with all adapters
--	 * and can rock on..
--	 */
--	if (qpti == NULL)
--		Cmnd->device->host->hostt->queuecommand = qlogicpti_queuecommand;
--
--	return qlogicpti_queuecommand(Cmnd, done);
-+	qlogicpti_mbox_command(qpti, param, 0);
-+	return 0;
- }
- 
- /*
-@@ -1390,7 +1270,8 @@ static struct scsi_host_template qpti_template = {
- 	.module			= THIS_MODULE,
- 	.name			= "qlogicpti",
- 	.info			= qlogicpti_info,
--	.queuecommand		= qlogicpti_queuecommand_slow,
-+	.queuecommand		= qlogicpti_queuecommand,
-+	.slave_configure	= qlogicpti_slave_configure,
- 	.eh_abort_handler	= qlogicpti_abort,
- 	.eh_bus_reset_handler	= qlogicpti_reset,
- 	.can_queue		= QLOGICPTI_REQ_QUEUE_LEN,
-diff --git a/drivers/scsi/qlogicpti.h b/drivers/scsi/qlogicpti.h
-index 6cd1c07..ef6da2d 100644
---- a/drivers/scsi/qlogicpti.h
-+++ b/drivers/scsi/qlogicpti.h
-@@ -380,8 +380,7 @@ struct qlogicpti {
- 	unsigned char             swsreg;
- 	unsigned int	
- 		gotirq	:	1,	/* this instance got an irq */
--		is_pti	: 	1,	/* Non-zero if this is a PTI board. */
--		sbits	:	16;	/* syncmode known bits */
-+		is_pti	: 	1;	/* Non-zero if this is a PTI board. */
- };
- 
- /* How to twiddle them bits... */
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Boaz
