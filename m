@@ -1,39 +1,111 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC 0/16] gdth combined patchset & call for testers
-Date: Mon, 01 Oct 2007 16:29:31 +0200
-Message-ID: <4701044B.90002@panasas.com>
-References: <46FFFC8C.6080804@panasas.com> <470014B5.8050804@garzik.org>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/8] scsi: megaraid_sas - add module param max_sectors,
+ cmd_per_lun
+Date: Mon, 01 Oct 2007 12:50:22 -0500
+Message-ID: <4701335E.6080906@linux.vnet.ibm.com>
+References: <1190820470.5955.12.camel@dhcp-75-534.se.lsil.com> <46FD727C.3090008@linux.vnet.ibm.com> <9738BCBE884FDB42801FAD8A7769C265010A09BF@NAMAIL1.ad.lsil.com>
+Reply-To: brking@linux.vnet.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27223 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752322AbXJAOcx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2007 10:32:53 -0400
-In-Reply-To: <470014B5.8050804@garzik.org>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:56696 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752176AbXJARu1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Oct 2007 13:50:27 -0400
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265010A09BF@NAMAIL1.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Christoph Hellwig <hch@infradead.org>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-On Sun, Sep 30 2007 at 23:27 +0200, Jeff Garzik <jeff@garzik.org> wrote:
-> BTW, when reposting the patches of others, its nice to add a From: 
-> header to the very first line of the email body.  Andrew does that a 
-> lot, and the git tools are aware of this convention.
+Yang, Bo wrote:
+> Brian,
+>  
+> Thanks for your review.  What is your objection to the current
+> implementation by using bin_attribute?
+
+Binary attributes are generally used for data which cannot
+be parsed by the user. Since this attribute is simply a
+single decimal value, it makes most sense to just use a regular
+class_device_attribute. Additionally, if you use the
+existing shost_attrs infrastructure in the scsi_host_template,
+you can simplify your code, since you don't need to manually
+create and destroy the sysfs files as scsi core will do this for
+you.
+
+-Brian
+
+>  
+> Bo Yang
 > 
-Thanks, yes I was not aware of that at all. Apparently git-am
-will make me the author of the patch, but adding a From: like
-you said will preserve the original author.
-Awaiting comments, I will resend all of these, fixed.
-
-> Also, hey, if you like our patches, I think you should add your own 
-> Signed-off-by line (assuming/hoping you reviewed it....).
+> ------------------------------------------------------------------------
+> *From:* Brian King [mailto:brking@linux.vnet.ibm.com]
+> *Sent:* Fri 9/28/2007 3:30 PM
+> *To:* Yang, Bo
+> *Cc:* linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
+> akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant
+> *Subject:* Re: [PATCH 3/8] scsi: megaraid_sas - add module param
+> max_sectors, cmd_per_lun
 > 
-I wanted to, but I thought only if I change something than I'm
-suppose to put the Signed-off-by. But yes I have reviewed all these
-patches and am confident in their content. Will fix in next round.
+> bo yang wrote:
+> 
+>> +static ssize_t
+>> +sysfs_max_sectors_read(struct kobject *kobj,
+>> +                     struct bin_attribute *bin_attr,
+>> +                     char *buf, loff_t off, size_t count)
+>> +{
+>> +     struct Scsi_Host *host = class_to_shost(container_of(kobj,
+>> +                                     struct class_device, kobj));
+>> +     struct megasas_instance *instance =
+>> +                             (struct megasas_instance *)host->hostdata;
+>> +
+>> +     count = sprintf(buf, "%u\n", instance->max_sectors_per_req);
+>> +
+>> +     return count+1;
+>> +}
+>> +
+>> +static struct bin_attribute sysfs_max_sectors_attr = {
+>> +     .attr = {
+>> +             .name = "max_sectors",
+>> +             .mode = S_IRUSR|S_IRGRP|S_IROTH,
+>> +             .owner = THIS_MODULE,
+>> +     },
+>> +     .size = 7,
+>> +     .read = sysfs_max_sectors_read,
+>> +};
+> 
+> Why is this implemented as a binary sysfs attribute? Also, can you use
+> the existing shost_attrs infrastructure that's in the scsi_host_template
+> like megaraid_mbox uses?
+> 
+> 
+>> +
+>> +     /*
+>> +      * Check if the module parameter value for max_sectors can be used
+>> +      */
+>> +     if (max_sectors && max_sectors <= instance->max_sectors_per_req)
+>> +             instance->max_sectors_per_req = max_sectors;
+>> +     else {
+>> +             if (max_sectors)
+>> +                     printk(KERN_INFO
+>> +                             "megasas: max_sectors should be > 0 and"
+>> +                             "<= %d\n",
+>> +                             instance->max_sectors_per_req);
+>> +     }
+> 
+> Could be simplified to an else if, which would remove one indent level...
+> 
+> -Brian
+> 
+> --
+> Brian King
+> Linux on Power Virtualization
+> IBM Linux Technology Center
+> 
 
-> 	Jeff
 
-Boaz
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
