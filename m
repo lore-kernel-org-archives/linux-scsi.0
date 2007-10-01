@@ -1,49 +1,74 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Mon, 1 Oct 2007 17:41:32 -0500
-Message-ID: <20071001224132.GH4338@austin.ibm.com>
-References: <20070420204114.GL31947@austin.ibm.com> <20070420204720.GM31947@austin.ibm.com> <20070926150216.GH3899@parisc-linux.org> <20070927220022.GC18686@austin.ibm.com> <20070927221031.GY3899@parisc-linux.org> <20070927233437.GF18686@austin.ibm.com> <20071001201247.GN12049@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
+Date: Mon, 01 Oct 2007 19:36:10 -0400
+Message-ID: <1191281770.3530.24.camel@localhost.localdomain>
+References: <20070925142157B.tomof@acm.org> <20070926160558.GA10819@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e34.co.us.ibm.com ([32.97.110.152]:43524 "EHLO
-	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752164AbXJAWlg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2007 18:41:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20071001201247.GN12049@parisc-linux.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:40128 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752018AbXJAXgT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2007 19:36:19 -0400
+In-Reply-To: <20070926160558.GA10819@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: Greg KH <gregkh@suse.de>
+Cc: FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Mon, Oct 01, 2007 at 02:12:47PM -0600, Matthew Wilcox wrote:
+On Wed, 2007-09-26 at 09:05 -0700, Greg KH wrote:
+> On Wed, Sep 26, 2007 at 05:58:01PM +0900, FUJITA Tomonori wrote:
+> > iommu code merges sg segments without considering lld's sg segment
+> > restrictions. iommu code can't access to the limitations because they
+> > are in request_queue. This patch adds max_segment_size to device
+> > structure. seg_boundary_mask will be added too later.
+> > 
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > ---
+> >  include/linux/device.h |    7 +++++++
+> >  1 files changed, 7 insertions(+), 0 deletions(-)
+> > 
+> > diff --git a/include/linux/device.h b/include/linux/device.h
+> > index 3a38d1f..8046b60 100644
+> > --- a/include/linux/device.h
+> > +++ b/include/linux/device.h
+> > @@ -443,6 +443,13 @@ struct device {
+> >  
+> >  	struct dma_coherent_mem	*dma_mem; /* internal for coherent mem
+> >  					     override */
+> > +
+> > +	/*
+> > +	 * a low level driver may set these to teach IOMMU code about
+> > +	 * sg limitations.
+> > +	 */
+> > +	unsigned int max_segment_size;
 > 
-> I think the fundamental problem is that completions aren't really
-> supposed to be used like this.  Here's one attempt at using completions
-> perhaps a little more the way they're supposed to be used, 
+> Does this really need to be here?  Can't it go into the bus specific
+> device that needs this?
 
-Yes, that looks very good to me.  I see it solves a bug that
-I hadn't been quite aware of. I don't understand why 
-struct host_data is preferable to struct sym_shcb (is it because 
-this is the structure that is "naturally protectected" by the 
-spinlock?)
+Unfortunately, no.  The IOMMU may not be on the bus for the device (on
+HPPA for instance, the IOMMU sits on the runway bus which is plugged
+into the parisc bus, which finally plugs into the PCI bus) which means
+that the iommu itself can only deal with generic devices (because it
+doesn't want to do massive casing on the possible busses).
 
-My gut instinct is to say "ack", although prudence dictates that 
-I should test first. Which might take a few days...
+One possibility we could do is to add a
 
-> although now
-> I've written it, I wonder if we shouldn't just use a waitqueue instead.
+struct dma_device {
+	struct device dev;
+	u64 dma_mask;
+	u64 coherent_dma_mask;
+	unsigned int max_segment_size;
+	/* plus any other DMA parameters */
+};
 
-I thought that earlier versions of the driver used waitqueues (I vaguely
-remember "eh_wait" in the code), which were later converted to 
-completions (I also vaguely recall thinking that the new code was
-more elegant/simpler). I converted my patch to use the completions 
-likewise, and, as you've clearly shown, did a rather sloppy job in 
-the conversion.
+but then every bus that can do DMA would need to include a struct
+dma_device instead of the struct device they do now.  Then the IOMMU
+would know it could cast out from struct device to struct dma_device,
+but this would be a lot of work to thread through the current
+infrastructure.
 
-I'm tempted to go with this patch; but if you prod, I could attempt
-a wait-queue based patch.
+James
 
---linas
 
