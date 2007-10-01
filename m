@@ -1,146 +1,164 @@
-From: Seokmann Ju <seokmann.ju@qlogic.com>
-Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
-Date: Mon, 01 Oct 2007 11:00:44 -0700
-Message-ID: <470135CC.4080101@qlogic.com>
-References: <46F3D66A.9010000@qlogic.com>	<20070923231416K.tomof@acm.org>	<46FBBF8C.80409@qlogic.com> <20070929151608P.fujita.tomonori@lab.ntt.co.jp>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
+Date: Mon, 1 Oct 2007 14:12:47 -0600
+Message-ID: <20071001201247.GN12049@parisc-linux.org>
+References: <20070420204114.GL31947@austin.ibm.com>
+	<20070420204720.GM31947@austin.ibm.com>
+	<20070926150216.GH3899@parisc-linux.org>
+	<20070927220022.GC18686@austin.ibm.com>
+	<20070927221031.GY3899@parisc-linux.org>
+	<20070927233437.GF18686@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch2.qlogic.com ([198.70.193.116]:39452 "EHLO
-	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751648AbXJASBQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 1 Oct 2007 14:01:16 -0400
-In-Reply-To: <20070929151608P.fujita.tomonori@lab.ntt.co.jp>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+Content-Disposition: inline
+In-Reply-To: <20070927233437.GF18686@austin.ibm.com>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Linas Vepstas <linas@austin.ibm.com>
+Cc: linuxppc-dev@ozlabs.org, linux-pci@atrey.karlin.mff.cuni.cz, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: tomof@acm.org, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de
 
-FUJITA Tomonori wrote:
-> On Thu, 27 Sep 2007 07:34:52 -0700
-> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
-> 
->> FUJITA Tomonori wrote:
->>> On Fri, 21 Sep 2007 07:34:18 -0700
->>> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
->>>
->>>> Andrew Vasquez wrote:
->>>>> On Sat, 01 Sep 2007, FUJITA Tomonori wrote:
->>>>>
->>>>>> This adds target mode support to qla2xxx.
->>>>>>
->>>>>> With set ql2enable_target_mode module parameter to 1, the driver runs
->>>>>> in target mode. By default, ql2enable_target_mode is set to 0, and the
->>>>>> driver should work in initiator mode as before.
->>>>>>
->>>>>> The driver could support dual-mode in the future but it doesn't at the
->>>>>> moment (we need to add dual-mode support tgt first).
->>>>>>
->>>>>> It is based on scst qla2xxx target mode driver. Mike converted the
->>>>>> driver to use tgt long ago. I changed it to use the latest (mainline)
->>>>>> version of qla2xxx driver and tgt, and also converted it to use fc
->>>>>> transport class.
->>>>> Thanks for doing this.  Some initial comments before a full review is
->>>>> complete, As was seen from the initiator updates needed for 24xx
->>>>> support, there are comparable changes needed in the area of
->>>>> target-mode support for 4gb and 8gb parts.  Also, which ISPs and
->>>>> firmwares were exercised with this code?
->>>> The patch is still under reviewing and will get done, soon.
->>> Great, thinks!
->> One more question on typical testing setup.
->> I wonder how should I setup the testing environment esp., for the
->> target-mode.
-> 
-> Sorry, I should have explained it with the patch.
-> 
-> Probabaly, you need to compile scsi-misc with the qla2xxx target patch
-> and the user-space target code.
-> 
-> 1. scsi-misc + the qla2xxx target patch
-> 
-> CONFIG_SCSI_TGT=m
-> CONFIG_SCSI_FC_ATTRS=m
-> CONFIG_SCSI_FC_TGT_ATTRS=y
-> CONFIG_SCSI_QLA_FC=m
-> CONFIG_SCSI_QLA_FC_TGT=y
-> 
-> 2. the user-space target code
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/tomo/tgt.git
-> 
-> rouen:~/git/tgt/usr$ make FCP=1 KERNELSRC=/home/fujita/git/scsi-misc-2.6
-> 
-> 
-> Starting the fc target mode is not so simple now (Mike and I know that
-> we need to fix it...).
-> 
-> 1. load scsi_tgt.ko
-> 
-> 2. start the user-space daemon
-> 
-> Here's a simple example.
-> 
-> ./tgt/usr/tgtd
-> ./tgt/usr/tgtadm --lld fc --mode target --op new --tid 1 --targetname volume1
-> ./tgt/usr/tgtadm --lld fc --mode logicalunit --op new --tid 1 --lun 1 -b /var/tmp/lun1
-Above command execution on the system with the HBA with target mode returns "invalid request" for some reason.
-Not sure if there are any steps that has to be in place?
+On Thu, Sep 27, 2007 at 06:34:37PM -0500, Linas Vepstas wrote:
+> Good catch. But no ... and I had to study this a bit. Bear with me:
 
-The configuration is as follow,
-- two systems + a switch + a target device (JBOD) are involved.
-- each of systems has a QLogic HBA in it. The HBA on one system is in initiator mode and the other one is in target mode.
-- each of the port of the HBAs is connected to the switch and a target device (JBOD) is connected to the switch, too.
+I agree with the analysis which I've now snipped.
 
-Thank you,
-Seokmann
----
-atl-01:/lib/modules/2.6.23-rc3-smp-tgt/kernel/drivers/scsi/qla2xxx # tgtadm --lld fc --mode target --op show
-Target 1: volume1
-    System information:
-        Driver: fc
-        Status: running
-    I_T nexus information:
-    LUN information:
-        LUN: 0
-            Type: controller
-            SCSI ID: deadbeaf1:0
-            SCSI SN: beaf10
-            Size: 0
-            Online: No
-            Poweron/Reset: Yes
-            Removable media: No
-            Backing store: No backing store
-    ACL information:
-atl-01:/lib/modules/2.6.23-rc3-smp-tgt/kernel/drivers/scsi/qla2xxx # lsmod
-Module                  Size  Used by
-qla2xxx               173672  0 
-ipv6                  254244  14 
-snd_pcm_oss            50560  0 
-snd_mixer_oss          20224  1 snd_pcm_oss
-snd_seq                55152  0 
-snd_seq_device         12556  1 snd_seq
-loop                   21252  0 
-dm_mod                 56768  0 
-snd_hda_intel         280092  0 
-snd_pcm                82436  2 snd_pcm_oss,snd_hda_intel
-snd_timer              26244  2 snd_seq,snd_pcm
-snd                    58628  7 snd_pcm_oss,snd_mixer_oss,snd_seq,snd_seq_device,snd_hda_intel,snd_pcm,snd_timer
-soundcore              11744  1 snd
-snd_page_alloc         14088  2 snd_hda_intel,snd_pcm
-parport_pc             41956  1 
-lp                     15396  0 
-parport                38344  2 parport_pc,lp
-reiserfs              223744  1 
-edd                    13124  0 
-firmware_class         13696  1 qla2xxx
-sg                     37404  0 
-scsi_transport_fc      45444  1 qla2xxx
-sd_mod                 31616  3 
-scsi_tgt               18504  3 qla2xxx,scsi_transport_fc
-sr_mod                 19620  0 
-cdrom                  36896  1 sr_mod
-ata_piix               20356  2 
-atl-01:/lib/modules/2.6.23-rc3-smp-tgt/kernel/drivers/scsi/qla2xxx # uname -r
-2.6.23-rc3-smp-tgt
----
+> I think the race you describe above is harmless. The first time
+> that sym_eh_handler() will run, it will be with SYM_EH_ABORT, 
+> in it doesn't matter if we lose that, since the device is hosed
+> anyway. At some later time, it will run with SYM_EH_DEVICE_RESET
+> and then SYM_EH_BUS_RESET and then SYM_EH_HOST_RESET, and we won't 
+> miss those, since, by now, sym2_io_error_detected() will have run.
+> 
+> So, by my reading, I'd say that init_completion() in
+> sym2_io_error_detected() has to stay (although perhaps
+> it should be replaced by the INIT_COMPLETION() macro.)
+> Removing it will prevent correct operation on the second 
+> and subsequent errors.
+
+I think the fundamental problem is that completions aren't really
+supposed to be used like this.  Here's one attempt at using completions
+perhaps a little more the way they're supposed to be used, although now
+I've written it, I wonder if we shouldn't just use a waitqueue instead.
+
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index e8a4361..b425b89 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -602,6 +602,7 @@ static int sym_eh_handler(int op, char *opname, struct scsi_cmnd *cmd)
+ 	struct sym_hcb *np = SYM_SOFTC_PTR(cmd);
+ 	struct sym_ucmd *ucmd = SYM_UCMD_PTR(cmd);
+ 	struct Scsi_Host *host = cmd->device->host;
++	struct pci_dev *pdev = np->s.device;
+ 	SYM_QUEHEAD *qp;
+ 	int cmd_queued = 0;
+ 	int sts = -1;
+@@ -616,9 +617,19 @@ static int sym_eh_handler(int op, char *opname, struct scsi_cmnd *cmd)
+ 	 * point in hurrying; take a leisurely wait.
+ 	 */
+ #define WAIT_FOR_PCI_RECOVERY	35
+-	if (pci_channel_offline(np->s.device)) {
+-		int finished_reset = wait_for_completion_timeout(
+-			&np->s.io_reset_wait, WAIT_FOR_PCI_RECOVERY*HZ);
++	if (pci_channel_offline(pdev)) {
++		struct host_data *hostdata = shost_priv(host);
++		int finished_reset = 0;
++		init_completion(&eh_done);
++		spin_lock_irq(host->host_lock);
++		if (!hostdata->io_reset)
++			hostdata->io_reset = &eh_done;
++		if (!pci_channel_offline(pdev))
++			finished_reset = 1;
++		spin_unlock_irq(host->host_lock);
++		if (!finished_reset)
++			finished_reset = wait_for_completion_timeout(
++				hostdata->io_reset, WAIT_FOR_PCI_RECOVERY*HZ);
+ 		if (!finished_reset)
+ 			return SCSI_FAILED;
+ 	}
+@@ -1396,7 +1407,6 @@ static struct Scsi_Host * __devinit sym_attach(struct scsi_host_template *tpnt,
+ 	np->maxoffs	= dev->chip.offset_max;
+ 	np->maxburst	= dev->chip.burst_max;
+ 	np->myaddr	= dev->host_id;
+-	init_completion(&np->s.io_reset_wait);
+ 
+ 	/*
+ 	 *  Edit its name.
+@@ -1842,15 +1852,12 @@ static void __devexit sym2_remove(struct pci_dev *pdev)
+ static pci_ers_result_t sym2_io_error_detected(struct pci_dev *pdev,
+                                          enum pci_channel_state state)
+ {
+-	struct sym_hcb *np = pci_get_drvdata(pdev);
+-
+ 	/* If slot is permanently frozen, turn everything off */
+ 	if (state == pci_channel_io_perm_failure) {
+ 		sym2_remove(pdev);
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+-	init_completion(&np->s.io_reset_wait);
+ 	disable_irq(pdev->irq);
+ 	pci_disable_device(pdev);
+ 
+@@ -1912,7 +1919,7 @@ static pci_ers_result_t sym2_io_slot_reset(struct pci_dev *pdev)
+ 	          sym_name(np));
+ 
+ 	if (pci_enable_device(pdev)) {
+-		printk(KERN_ERR "%s: Unable to enable afer PCI reset\n",
++		printk(KERN_ERR "%s: Unable to enable after PCI reset\n",
+ 		        sym_name(np));
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+@@ -1953,7 +1960,14 @@ static pci_ers_result_t sym2_io_slot_reset(struct pci_dev *pdev)
+ static void sym2_io_resume(struct pci_dev *pdev)
+ {
+ 	struct sym_hcb *np = pci_get_drvdata(pdev);
+-	complete_all(&np->s.io_reset_wait);
++	struct Scsi_Host *shost = np->s.host;
++	struct host_data *hostdata = shost_priv(shost);
++
++	spin_lock_irq(shost->host_lock);
++	if (hostdata->io_reset)
++		complete_all(hostdata->io_reset);
++	hostdata->io_reset = NULL;
++	spin_unlock_irq(shost->host_lock);
+ }
+ 
+ static void sym2_get_signalling(struct Scsi_Host *shost)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.h b/drivers/scsi/sym53c8xx_2/sym_glue.h
+index a172cc5..b961f70 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.h
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.h
+@@ -180,9 +180,6 @@ struct sym_shcb {
+ 	char		chip_name[8];
+ 	struct pci_dev	*device;
+ 
+-	/* Waiter for clearing of frozen PCI bus */
+-	struct completion io_reset_wait;
+-
+ 	struct Scsi_Host *host;
+ 
+ 	void __iomem *	ioaddr;		/* MMIO kernel io address	*/
+@@ -223,6 +220,7 @@ struct sym_device {
+  */
+ struct host_data {
+ 	struct sym_hcb *ncb;
++	struct completion *io_reset;		/* PCI error handling */
+ };
+ 
+ static inline struct sym_hcb * sym_get_hcb(struct Scsi_Host *host)
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
