@@ -1,47 +1,35 @@
-From: linas@austin.ibm.com (Linas Vepstas)
-Subject: Re: [PATCH 2/2]: PCI Error Recovery: Symbios SCSI First Failure
-Date: Tue, 2 Oct 2007 16:59:59 -0500
-Message-ID: <20071002215959.GM4338@austin.ibm.com>
-References: <20070420204114.GL31947@austin.ibm.com> <20070420204720.GM31947@austin.ibm.com> <20070926150216.GH3899@parisc-linux.org> <20070927220022.GC18686@austin.ibm.com> <20070927221031.GY3899@parisc-linux.org> <20070927233437.GF18686@austin.ibm.com> <20071001201247.GN12049@parisc-linux.org> <20071001224132.GH4338@austin.ibm.com> <20071002012730.GO12049@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [patch 01/17] git-scsi-misc: arcmsr build fix
+Date: Tue, 02 Oct 2007 17:03:51 -0500
+Message-ID: <1191362631.3530.141.camel@localhost.localdomain>
+References: <200710022137.l92LbxEw023552@imap1.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e33.co.us.ibm.com ([32.97.110.151]:59917 "EHLO
-	e33.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753669AbXJBWAF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 18:00:05 -0400
-Content-Disposition: inline
-In-Reply-To: <20071002012730.GO12049@parisc-linux.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:54327 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754143AbXJBWDx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 18:03:53 -0400
+In-Reply-To: <200710022137.l92LbxEw023552@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Oct 01, 2007 at 07:27:30PM -0600, Matthew Wilcox wrote:
+On Tue, 2007-10-02 at 14:37 -0700, akpm@linux-foundation.org wrote:
+> From: Andrew Morton <akpm@linux-foundation.org>
 > 
-> Fine by me.  Do you have the ability to produce failures on a whim on
-> your platforms?  
+> drivers/scsi/arcmsr/arcmsr_hba.c:129: error: 'arcmsr_pci_error_detected' undeclared here (not in a function)
+> drivers/scsi/arcmsr/arcmsr_hba.c:130: error: 'arcmsr_pci_slot_reset' undeclared here (not in a function)
+> 
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Yes, although it is very platform specific -- there are actually
-transistors in the pci bridge chip, which actually short out lines,
-and so, from the point of view of the rest of the chip, it did
-actually see a "real" error. Its supposed to be a very realistic 
-test.
+Heh, snap:
 
-> I've been vaguely musing a PCI device failure patch for
-> x86, just so people can test driver failure paths.
+http://marc.info/?l=linux-scsi&m=119081791117423&w=2
 
-That would be good ... I've recently agreed to accept a fedex
-to test someone elses card for them, which is outside my usual
-activities.
+James
 
-There's also supposed to be some PCI-X riser card out there, 
-(never seen one) which has the ability to inject actual pci 
-errors. Its the Agilent PCI BestX card; I got the impression 
-they might not sell it anymore; dunno.
-
-One guy in the lab used to brush a grounding strap across
-the pins; this usually got a rise out of the audience.
-
---linas
 
