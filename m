@@ -1,56 +1,107 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
-Subject: Re: 2.6.23-rc9 boot failure (megaraid?)
-Date: Tue, 2 Oct 2007 21:55:19 +0200
-Message-ID: <200710022155.20287.rjw@sisk.pl>
-References: <Pine.LNX.4.64.0710021242510.6275@postal> <20071002181518.GC10852@stusta.de> <Pine.LNX.4.64.0710021442450.6275@postal>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [0/16 ver2] gdth combined patchset & call for testers
+Date: Tue, 02 Oct 2007 22:05:53 +0200
+Message-ID: <4702A4A1.2080404@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:34179 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752055AbXJBTk2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Oct 2007 15:40:28 -0400
-In-Reply-To: <Pine.LNX.4.64.0710021442450.6275@postal>
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:3183 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751664AbXJBUMK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 16:12:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Burton Windle <bwindle@fint.org>
-Cc: Adrian Bunk <bunk@kernel.org>, linux-kernel@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Sumant Patro <sumant.patro@lsi.com>, James Bottomley <James.Bottomley@steeleye.com>, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kerne>
 
-On Tuesday, 2 October 2007 20:46, Burton Windle wrote:
-> On Tue, 2 Oct 2007, Adrian Bunk wrote:
-> 
-> > Cc's added, the complete bug report is at
-> >  http://lkml.org/lkml/2007/10/2/243
-> >
-> > On Tue, Oct 02, 2007 at 12:48:26PM -0400, Burton Windle wrote:
-> >> 2.6.23-rc9 fails to boot for me; 2.6.22.9 works fine.
-> >>
-> >> System is a Dell Poweredge with PERC 2/DC with RAID1 volume.
-> >> ...
-> >
-> > Thanks for your report.
-> >
-> > Does reverting the commit below fix the problem?
-> >
-> > cu
-> > Adrian
-> >
-> >
-> > commit 3f6270ef76f2ce5c134615a470685d6c2a66c07e
-> > Author: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Date:   Mon May 14 20:17:27 2007 +0900
-> >
-> 
-> Confirmed; reverting the above (snipped) patch does fix the issue.
+Hi!
 
-I've created a bugzilla entry for your report at:
+following is an attempted at unified patchset for the gdth driver.
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9113
+They try to incorporate floating patches to gdth from:
+Christoph Hellwig
+Jeff Garzik
+Matthew Wilcox
+and Me Boaz Harrosh
 
-Please add a summary of your observations in there.
+They are done in the mindset of "likelihood of inducing breakage",
+hence the need for testers. Christoph & Jeff please review for any
+obvious easy-to-catch bugs. Also there was a massive code shifts
+and rebasing I hope nothing was lost.
 
-Greetings,
-Rafael
+The differences from last set are:
+- Matthews patches are first so they can go in. They
+  are a bit modified so please take these and not the
+  original. Mainly they restrain from cleanups
+
+- Fix Christoph bug that was spotted by jeff of the misplaced
+  #endif. Also when compiling with out CONFIG_{ISA,EISA,PCI}
+  compiler would complain about unused params, functions and
+  so on so fixed that.
+
+- More Aggressive fix for gdth_interrupt() and friends
+  Christoph pleeeeeeease review.
+
+- Rebasing to all above. I hope I'll get the From:
+  right this time
+
+Some short explanations:
+[01/16] gdth: Make one abuse of scsi_cmnd less obvious - Matthew Wilcox
+[02/16] gdth: Stop abusing ->done for internal commands - Matthew Wilcox
+  Patches from Matthew, but cleaned for future patchability.
+
+[03/16] gdth: split out isa probing - Christoph Hellwig
+[04/16] gdth: split out eisa probing - Christoph Hellwig
+[05/16] gdth: split out pci probing - Christoph Hellwig
+  These three are from Christoph and where ACKed by
+  Jeff at the time. Revised by me for warning fixes when
+  one of the buses ISA/EISA/PCI is not defined.
+
+[06/16] gdth: Remove 2.4.x support, in-kernel changelog - Jeff Garzik
+  Same but partial work was done both by Christoph and Matthew.
+
+[07/16] gdth: kill gdth_{read,write}[bwl] wrappers - Jeff Garzik
+[08/16] Reorder scsi_host_template intitializers
+[09/16] gdth: Remove virt hosts - Christoph && Boaz
+  Here we need an executive decision! The issue is as stated by Christoph:
+
+    "The virt_ctr option allows to register a new scsi_host for each bus
+    on the raid controller.  This non-default option makes no sense with
+    the current scsi code and prevents cleaning up the host registration,
+    so remove it."
+
+  I agree. This is just exactly the same as done buy scsi-ml scans but only
+  more resource consuming. Unless I'm totally missing something, perhaps it is
+  just a leftover from old kernels.
+
+[10/16] gdth: clean up host private data - Christoph && Boaz
+  This is based on the same patch from Christoph, but taken one step
+  farther, by just passing the ha pointer everywhere instead of hanum.
+
+[11/16] gdth_interrupt gdth_get_status & gdth_wait fixes - Boaz
+  This logically belongs to [9/16] but is separated for reviewing and 
+  bisect-ability As it is a sensitive matter. 
+  It is done aggressively this time around Please review!
+
+[12/16] gdth: switch to modern scsi host registration - Christoph
+  Christoph what is missing from here is the remove of the deprecated 
+  pci_find_device() call. Can I Just use pci_get_device() of the same signature
+  or do I need to call some other pci_ members after that?
+
+[13/16] gdth: Remove gdth_ctr_tab[] - Boaz
+  I took Christoph's cleanup one step farther and got read of the statically
+  allocated gdth_ctr_tab[]. In it's place I use the new link-list introduced
+  by the [11/16] patch.
+
+[14/16] gdth: Setup proper per-command private data - Boaz
+[15/16] gdth: Move members from SCp to gdth_cmndinfo, stage 2 - Boaz
+  These two move me much closer to the agenda I had in all this,
+  which is: "gdth diss-abuse of of scsi_cmnd IO members".
+  With these patches I also conform to Matthew's second patch:
+  "gdth: Stop abusing ->done for internal commands"
+
+[16/16] gdth: !use_sg cleanup and use of scsi accessors
+  And finally this one.
+
+Boaz
+
