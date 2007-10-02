@@ -1,112 +1,36 @@
-From: akpm@linux-foundation.org
-Subject: [patch 03/17] PCI Error Recovery: Symbios SCSI First Failure
-Date: Tue, 02 Oct 2007 14:38:00 -0700
-Message-ID: <200710022138.l92Lc1wB023558@imap1.linux-foundation.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [patch 02/17] PCI Error Recovery: Symbios SCSI base support
+Date: Tue, 2 Oct 2007 15:49:26 -0600
+Message-ID: <20071002214926.GY12049@parisc-linux.org>
+References: <200710022138.l92Lc0sG023555@imap1.linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:40014 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755308AbXJBViy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:54 -0400
+Received: from palinux.external.hp.com ([192.25.206.14]:51471 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753918AbXJBVt2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:49:28 -0400
+Content-Disposition: inline
+In-Reply-To: <200710022138.l92Lc0sG023555@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linas@austin.ibm.com, willy@debian.org
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, linas@austin.ibm.com, willy@debian.org
 
-From: Linas Vepstas <linas@austin.ibm.com>
+On Tue, Oct 02, 2007 at 02:38:00PM -0700, akpm@linux-foundation.org wrote:
+> From: Linas Vepstas <linas@austin.ibm.com>
+> 
+> Various PCI bus errors can be signaled by newer PCI controllers.  This
+> patch adds the PCI error recovery callbacks to the Symbios SCSI device
+> driver.  The patch has been tested, and appears to work well.
 
-Implement the so-called "first failure data capture" (FFDC) for the symbios
-PCI error recovery.  After a PCI error event is reported, the driver
-requests that MMIO be enabled.  Once enabled, it then reads and dumps
-assorted status registers, and concludes by requesting the usual reset
-sequence.
+Linas and I have been discussing the problems with this patch.  I think
+we have a solution; we certainly have something in my tree that's
+acceptable to me; he'd jus like to test it before it's unleashed on the
+world.
 
-(includes a whitespace fix for bad indentation).
-
-Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
-Cc: Matthew Wilcox <willy@debian.org>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
----
-
- drivers/scsi/sym53c8xx_2/sym_glue.c |   15 +++++++++++++++
- drivers/scsi/sym53c8xx_2/sym_glue.h |    1 +
- drivers/scsi/sym53c8xx_2/sym_hipd.c |   18 ++++++++++++++----
- 3 files changed, 30 insertions(+), 4 deletions(-)
-
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-first-failure
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -1926,6 +1926,20 @@ static pci_ers_result_t sym2_io_error_de
- 	disable_irq(pdev->irq);
- 	pci_disable_device(pdev);
- 
-+	/* Request that MMIO be enabled, so register dump can be taken. */
-+	return PCI_ERS_RESULT_CAN_RECOVER;
-+}
-+
-+/**
-+ * sym2_io_slot_dump -- Enable MMIO and dump debug registers
-+ * @pdev: pointer to PCI device
-+ */
-+static pci_ers_result_t sym2_io_slot_dump(struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	sym_dump_registers(np);
-+
- 	/* Request a slot reset. */
- 	return PCI_ERS_RESULT_NEED_RESET;
- }
-@@ -2180,6 +2194,7 @@ MODULE_DEVICE_TABLE(pci, sym2_id_table);
- 
- static struct pci_error_handlers sym2_err_handler = {
- 	.error_detected = sym2_io_error_detected,
-+	.mmio_enabled = sym2_io_slot_dump,
- 	.slot_reset = sym2_io_slot_reset,
- 	.resume = sym2_io_resume,
- };
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_glue.h
---- a/drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-first-failure
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
-@@ -270,5 +270,6 @@ void sym_xpt_async_bus_reset(struct sym_
- void sym_xpt_async_sent_bdr(struct sym_hcb *np, int target);
- int  sym_setup_data_and_start (struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
- void sym_log_bus_error(struct sym_hcb *np);
-+void sym_dump_registers(struct sym_hcb *np);
- 
- #endif /* SYM_GLUE_H */
-diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_hipd.c
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-first-failure
-+++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -1180,10 +1180,10 @@ static void sym_log_hard_error(struct sy
- 			scr_to_cpu((int) *(u32 *)(script_base + script_ofs)));
- 	}
- 
--        printf ("%s: regdump:", sym_name(np));
--        for (i=0; i<24;i++)
--            printf (" %02x", (unsigned)INB_OFF(np, i));
--        printf (".\n");
-+	printf("%s: regdump:", sym_name(np));
-+	for (i = 0; i < 24; i++)
-+		printf(" %02x", (unsigned)INB_OFF(np, i));
-+	printf(".\n");
- 
- 	/*
- 	 *  PCI BUS error.
-@@ -1192,6 +1192,16 @@ static void sym_log_hard_error(struct sy
- 		sym_log_bus_error(np);
- }
- 
-+void sym_dump_registers(struct sym_hcb *np)
-+{
-+	u_short sist;
-+	u_char dstat;
-+
-+	sist = INW(np, nc_sist);
-+	dstat = INB(np, nc_dstat);
-+	sym_log_hard_error(np, sist, dstat);
-+}
-+
- static struct sym_chip sym_dev_table[] = {
-  {PCI_DEVICE_ID_NCR_53C810, 0x0f, "810", 4, 8, 4, 64,
-  FE_ERL}
-_
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
