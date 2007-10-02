@@ -1,158 +1,112 @@
 From: akpm@linux-foundation.org
-Subject: [patch 14/17] SCSI: early detection of medium not present, updated
-Date: Tue, 02 Oct 2007 14:38:10 -0700
-Message-ID: <200710022138.l92LcAPo023597@imap1.linux-foundation.org>
+Subject: [patch 03/17] PCI Error Recovery: Symbios SCSI First Failure
+Date: Tue, 02 Oct 2007 14:38:00 -0700
+Message-ID: <200710022138.l92Lc1wB023558@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:40523 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:40014 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755590AbXJBViw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:52 -0400
+	by vger.kernel.org with ESMTP id S1755308AbXJBViy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:54 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, stern@rowland.harvard.edu, albertcc@tw.ibm.com, htejun@gmail.com, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linas@austin.ibm.com, willy@debian.org
 
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Linas Vepstas <linas@austin.ibm.com>
 
-Taken from http://bugzilla.kernel.org/show_bug.cgi?id=8904
+Implement the so-called "first failure data capture" (FFDC) for the symbios
+PCI error recovery.  After a PCI error event is reported, the driver
+requests that MMIO be enabled.  Once enabled, it then reads and dumps
+assorted status registers, and concludes by requesting the usual reset
+sequence.
 
-An updated (by Albert, I assume) version of the fourteen-month-old patch here:
+(includes a whitespace fix for bad indentation).
 
-http://marc.info/?l=linux-kernel&m=115412002912837&w=2
-
-Apparently fixes the bug described at
-http://bugzilla.kernel.org/show_bug.cgi?id=8904
-
-Needs some TLC.  Perhaps urgently.
-
-Cc: Albert Lee <albertcc@tw.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
+Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
+Cc: Matthew Wilcox <willy@debian.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/scsi_ioctl.c  |    2 +-
- drivers/scsi/scsi_lib.c    |   20 ++++++++++++++++++--
- drivers/scsi/sd.c          |    2 +-
- drivers/scsi/sr.c          |   15 +++++++++------
- include/scsi/scsi_device.h |    2 +-
- 5 files changed, 30 insertions(+), 11 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |   15 +++++++++++++++
+ drivers/scsi/sym53c8xx_2/sym_glue.h |    1 +
+ drivers/scsi/sym53c8xx_2/sym_hipd.c |   18 ++++++++++++++----
+ 3 files changed, 30 insertions(+), 4 deletions(-)
 
-diff -puN drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_ioctl.c
---- a/drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/scsi_ioctl.c
-@@ -239,7 +239,7 @@ int scsi_ioctl(struct scsi_device *sdev,
- 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
- 	case SCSI_IOCTL_TEST_UNIT_READY:
- 		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
--					    NORMAL_RETRIES);
-+					    NORMAL_RETRIES, NULL);
- 	case SCSI_IOCTL_START_UNIT:
- 		scsi_cmd[0] = START_STOP;
- 		scsi_cmd[1] = 0;
-diff -puN drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/scsi_lib.c
-@@ -1875,15 +1875,26 @@ scsi_mode_sense(struct scsi_device *sdev
- }
- EXPORT_SYMBOL(scsi_mode_sense);
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_glue.c
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-first-failure
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -1926,6 +1926,20 @@ static pci_ers_result_t sym2_io_error_de
+ 	disable_irq(pdev->irq);
+ 	pci_disable_device(pdev);
  
++	/* Request that MMIO be enabled, so register dump can be taken. */
++	return PCI_ERS_RESULT_CAN_RECOVER;
++}
++
 +/**
-+ *	scsi_test_unit_ready - test if unit is ready
-+ *	@sdev:	scsi device to change the state of.
-+ *	@timeout: command timeout
-+ *	@retries: number of retries before failing
-+ *	@media_maybe_present: 1 if media maybe present or not.
-+ *		              0 if media not present.
-+ *
-+ *	Returns zero if unsuccessful or an error if TUR failed.
-+ **/
- int
--scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries)
-+scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries, int *media_maybe_present)
- {
- 	char cmd[] = {
- 		TEST_UNIT_READY, 0, 0, 0, 0, 0,
- 	};
- 	struct scsi_sense_hdr sshdr;
- 	int result;
--	
-+	int maybe_present = 1;
++ * sym2_io_slot_dump -- Enable MMIO and dump debug registers
++ * @pdev: pointer to PCI device
++ */
++static pci_ers_result_t sym2_io_slot_dump(struct pci_dev *pdev)
++{
++	struct sym_hcb *np = pci_get_drvdata(pdev);
 +
- 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
- 				  timeout, retries);
- 
-@@ -1892,10 +1903,15 @@ scsi_test_unit_ready(struct scsi_device 
- 		if ((scsi_sense_valid(&sshdr)) &&
- 		    ((sshdr.sense_key == UNIT_ATTENTION) ||
- 		     (sshdr.sense_key == NOT_READY))) {
-+			if (sshdr.asc == 0x3A)
-+				maybe_present = 0;
- 			sdev->changed = 1;
- 			result = 0;
- 		}
- 	}
++	sym_dump_registers(np);
 +
-+	if (media_maybe_present)
-+		*media_maybe_present = maybe_present;
- 	return result;
+ 	/* Request a slot reset. */
+ 	return PCI_ERS_RESULT_NEED_RESET;
  }
- EXPORT_SYMBOL(scsi_test_unit_ready);
-diff -puN drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/sd.c
-@@ -759,7 +759,7 @@ static int sd_media_changed(struct gendi
- 	retval = -ENODEV;
+@@ -2180,6 +2194,7 @@ MODULE_DEVICE_TABLE(pci, sym2_id_table);
  
- 	if (scsi_block_when_processing_errors(sdp))
--		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES);
-+		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
+ static struct pci_error_handlers sym2_err_handler = {
+ 	.error_detected = sym2_io_error_detected,
++	.mmio_enabled = sym2_io_slot_dump,
+ 	.slot_reset = sym2_io_slot_reset,
+ 	.resume = sym2_io_resume,
+ };
+diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_glue.h
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-first-failure
++++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
+@@ -270,5 +270,6 @@ void sym_xpt_async_bus_reset(struct sym_
+ void sym_xpt_async_sent_bdr(struct sym_hcb *np, int target);
+ int  sym_setup_data_and_start (struct sym_hcb *np, struct scsi_cmnd *csio, struct sym_ccb *cp);
+ void sym_log_bus_error(struct sym_hcb *np);
++void sym_dump_registers(struct sym_hcb *np);
+ 
+ #endif /* SYM_GLUE_H */
+diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-first-failure drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-first-failure
++++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -1180,10 +1180,10 @@ static void sym_log_hard_error(struct sy
+ 			scr_to_cpu((int) *(u32 *)(script_base + script_ofs)));
+ 	}
+ 
+-        printf ("%s: regdump:", sym_name(np));
+-        for (i=0; i<24;i++)
+-            printf (" %02x", (unsigned)INB_OFF(np, i));
+-        printf (".\n");
++	printf("%s: regdump:", sym_name(np));
++	for (i = 0; i < 24; i++)
++		printf(" %02x", (unsigned)INB_OFF(np, i));
++	printf(".\n");
  
  	/*
- 	 * Unable to test, unit probably not ready.   This usually
-diff -puN drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sr.c
---- a/drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/sr.c
-@@ -177,18 +177,21 @@ static int sr_media_change(struct cdrom_
- {
- 	struct scsi_cd *cd = cdi->handle;
- 	int retval;
-+	int media_maybe_present;
+ 	 *  PCI BUS error.
+@@ -1192,6 +1192,16 @@ static void sym_log_hard_error(struct sy
+ 		sym_log_bus_error(np);
+ }
  
- 	if (CDSL_CURRENT != slot) {
- 		/* no changer support */
- 		return -EINVAL;
- 	}
- 
--	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES);
--	if (retval) {
--		/* Unable to test, unit probably not ready.  This usually
--		 * means there is no disc in the drive.  Mark as changed,
--		 * and we will figure it out later once the drive is
--		 * available again.  */
-+	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
-+				      &media_maybe_present);
-+	if (retval || !media_maybe_present) {
-+		/* Media not present or unable to test, unit probably not
-+		 * ready. This usually means there is no disc in the drive.
-+		 * Mark as changed, and we will figure it out later once
-+		 * the drive is available again.
-+		 */
- 		cd->device->changed = 1;
- 		/* This will force a flush, if called from check_disk_change */
- 		retval = 1;
-diff -puN include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated
-+++ a/include/scsi/scsi_device.h
-@@ -283,7 +283,7 @@ extern int scsi_mode_select(struct scsi_
- 			    struct scsi_mode_data *data,
- 			    struct scsi_sense_hdr *);
- extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
--				int retries);
-+				int retries, int *media_maybe_present);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
- extern int scsi_device_event_notify(struct scsi_device *sdev,
++void sym_dump_registers(struct sym_hcb *np)
++{
++	u_short sist;
++	u_char dstat;
++
++	sist = INW(np, nc_sist);
++	dstat = INB(np, nc_dstat);
++	sym_log_hard_error(np, sist, dstat);
++}
++
+ static struct sym_chip sym_dev_table[] = {
+  {PCI_DEVICE_ID_NCR_53C810, 0x0f, "810", 4, 8, 4, 64,
+  FE_ERL}
 _
