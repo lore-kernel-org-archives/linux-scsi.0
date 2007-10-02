@@ -1,59 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 06/17] Fix drivers/scsi/fdomain.c CONFIG_PCI=n warnings
+Subject: [patch 05/17] Remove dead references to MODULE_PARM macro
 Date: Tue, 02 Oct 2007 14:38:02 -0700
-Message-ID: <200710022138.l92Lc2Gg023573@imap1.linux-foundation.org>
+Message-ID: <200710022138.l92Lc2Am023570@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45164 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:35944 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754107AbXJBViK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:10 -0400
+	by vger.kernel.org with ESMTP id S1753290AbXJBViH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:07 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, nix.or.die@googlemail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, rpjday@mindspring.com
 
-From: Gabriel C <nix.or.die@googlemail.com>
+From: "Robert P. J. Day" <rpjday@mindspring.com>
 
-I get this warnings on current git when CONFIG_PCI is not set :
+Remove the useless references to the obsolete MODULE_PARM macro.
 
-drivers/scsi/fdomain.c:390: warning: 'PCI_dev' defined but not used
-drivers/scsi/fdomain.c:1768: warning: 'fdomain_pci_tbl' defined but not used
-
-Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
+Signed-off-by: Robert P. J. Day <rpjday@mindspring.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/fdomain.c |    5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/ibmmca.c |    7 -------
+ 1 file changed, 7 deletions(-)
 
-diff -puN drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings drivers/scsi/fdomain.c
---- a/drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings
-+++ a/drivers/scsi/fdomain.c
-@@ -387,7 +387,9 @@ static void __iomem *    bios_mem;
- static int               bios_major;
- static int               bios_minor;
- static int               PCI_bus;
-+#ifdef CONFIG_PCI
- static struct pci_dev	*PCI_dev;
-+#endif
- static int               Quantum;	/* Quantum board variant */
- static int               interrupt_level;
- static volatile int      in_command;
-@@ -1764,6 +1766,7 @@ struct scsi_host_template fdomain_driver
- };
+diff -puN drivers/scsi/ibmmca.c~remove-dead-references-to-module_parm-macro drivers/scsi/ibmmca.c
+--- a/drivers/scsi/ibmmca.c~remove-dead-references-to-module_parm-macro
++++ a/drivers/scsi/ibmmca.c
+@@ -460,13 +460,6 @@ module_param(boot_options, charp, 0);
+ module_param_array(io_port, int, NULL, 0);
+ module_param_array(scsi_id, int, NULL, 0);
  
- #ifndef PCMCIA
-+#ifdef CONFIG_PCI
- 
- static struct pci_device_id fdomain_pci_tbl[] __devinitdata = {
- 	{ PCI_VENDOR_ID_FD, PCI_DEVICE_ID_FD_36C70,
-@@ -1771,7 +1774,7 @@ static struct pci_device_id fdomain_pci_
- 	{ }
- };
- MODULE_DEVICE_TABLE(pci, fdomain_pci_tbl);
+-#if 0 /* FIXME: No longer exist? --RR */
+-MODULE_PARM(display, "1i");
+-MODULE_PARM(adisplay, "1i");
+-MODULE_PARM(normal, "1i");
+-MODULE_PARM(ansi, "1i");
+-#endif
 -
-+#endif
- #define driver_template fdomain_driver_template
- #include "scsi_module.c"
- 
+ MODULE_LICENSE("GPL");
+ #endif
+ /*counter of concurrent disk read/writes, to turn on/off disk led */
 _
