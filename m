@@ -1,50 +1,46 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/17] advansys printk fix
-Date: Tue, 02 Oct 2007 14:38:09 -0700
-Message-ID: <200710022138.l92Lc9Zp023591@imap1.linux-foundation.org>
+Subject: [patch 07/17] nsp32_restart_autoscsi(): remove error check
+Date: Tue, 02 Oct 2007 14:38:03 -0700
+Message-ID: <200710022138.l92Lc3Gb023576@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:56471 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48098 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754107AbXJBViM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:12 -0400
+	by vger.kernel.org with ESMTP id S1754573AbXJBViQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:16 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de, yokota@netlab.is.tsukuba.ac.jp
 
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Adrian Bunk <bunk@stusta.de>
 
-Fix this:
+The Coverity checker noted that we'll anyway Oops later when we ran into
+this condition - and the error check didn't prevent that.
 
-drivers/scsi/advansys.c: In function 'advansys_board_found':
-drivers/scsi/advansys.c:16320: warning: format '%x' expects type 'unsigned int', but argument 3 has type 'resource_size_t'
+Considering that the error condition shouldn't be possible, and we are
+not able to handle it easily, this patch simply removes the pointless
+error check.
 
-and clean the code up a little.
-
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: <yokota@netlab.is.tsukuba.ac.jp>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/advansys.c |    9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+ drivers/scsi/nsp32.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-diff -puN drivers/scsi/advansys.c~advansys-printk-fix drivers/scsi/advansys.c
---- a/drivers/scsi/advansys.c~advansys-printk-fix
-+++ a/drivers/scsi/advansys.c
-@@ -14254,10 +14254,11 @@ advansys_board_found(int iop, struct dev
- 		boardp->ioremap_addr = ioremap(pci_resource_start(pdev, 1),
- 					       boardp->asc_n_io_port);
- 		if (!boardp->ioremap_addr) {
--			ASC_PRINT3
--			    ("advansys_board_found: board %d: ioremap(%x, %d) returned NULL\n",
--			     boardp->id, pci_resource_start(pdev, 1),
--			     boardp->asc_n_io_port);
-+			ASC_PRINT3("advansys_board_found: board %d: "
-+				"ioremap(%llx, %d) returned NULL\n",
-+				boardp->id,
-+				(unsigned long long)pci_resource_start(pdev, 1),
-+				boardp->asc_n_io_port);
- 			goto err_shost;
- 		}
- 		adv_dvc_varp->iop_base = (AdvPortAddr)boardp->ioremap_addr
+diff -puN drivers/scsi/nsp32.c~nsp32_restart_autoscsi-remove-error-check drivers/scsi/nsp32.c
+--- a/drivers/scsi/nsp32.c~nsp32_restart_autoscsi-remove-error-check
++++ a/drivers/scsi/nsp32.c
+@@ -1905,10 +1905,6 @@ static void nsp32_restart_autoscsi(struc
+ 
+ 	nsp32_dbg(NSP32_DEBUG_RESTART, "enter");
+ 
+-	if (data->cur_target == NULL || data->cur_lunt == NULL) {
+-		nsp32_msg(KERN_ERR, "Target or Lun is invalid");
+-	}
+-
+ 	/*
+ 	 * set SYNC_REG
+ 	 * Don't set BM_START_ADR before setting this register.
 _
