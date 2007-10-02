@@ -1,46 +1,59 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] aic94xx: fix SSP IU status print-out
-Date: Tue, 02 Oct 2007 10:35:47 -0400
-Message-ID: <47025743.3070100@garzik.org>
-References: <20070930140317.GA7134@havoc.gtf.org>	 <4702399A.9010708@garzik.org> <1191334857.3530.39.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
+Date: Tue, 02 Oct 2007 09:45:11 -0500
+Message-ID: <1191336311.3530.59.camel@localhost.localdomain>
+References: <20070925142157B.tomof@acm.org> <20070926160558.GA10819@suse.de>
+	 <1191281770.3530.24.camel@localhost.localdomain>
+	 <20071002013902.GP12049@parisc-linux.org>  <20071002042248.GA23399@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46880 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751628AbXJBOft (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Oct 2007 10:35:49 -0400
-In-Reply-To: <1191334857.3530.39.camel@localhost.localdomain>
+Received: from hancock.steeleye.com ([71.30.118.248]:54576 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752529AbXJBOpT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 10:45:19 -0400
+In-Reply-To: <20071002042248.GA23399@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Greg KH <gregkh@suse.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-James Bottomley wrote:
-> On Tue, 2007-10-02 at 08:29 -0400, Jeff Garzik wrote:
->> James, what is the upstream status of my two aic94xx bug fixes?
->>
->> Have they been sent to Linus yet?
->>
->> Since you seem M.I.A., I'll send them upstream if I do not hear from you 
->> today.
+On Mon, 2007-10-01 at 21:22 -0700, Greg KH wrote:
+> On Mon, Oct 01, 2007 at 07:39:02PM -0600, Matthew Wilcox wrote:
+> > On Mon, Oct 01, 2007 at 07:36:10PM -0400, James Bottomley wrote:
+> > > One possibility we could do is to add a
+> > > 
+> > > struct dma_device {
+> > > 	struct device dev;
+> > > 	u64 dma_mask;
+> > > 	u64 coherent_dma_mask;
+> > > 	unsigned int max_segment_size;
+> > > 	/* plus any other DMA parameters */
+> > > };
+> > > 
+> > > but then every bus that can do DMA would need to include a struct
+> > > dma_device instead of the struct device they do now.  Then the IOMMU
+> > > would know it could cast out from struct device to struct dma_device,
+> > > but this would be a lot of work to thread through the current
+> > > infrastructure.
 > 
-> They're hardly -rc8 critical bug fixes, since no-one has noticed their
-> effects for about 5 kernel releases.  I'll stick them into scsi-misc
-> with the rest of the pending stuff.
+> Why not just hang these fields off of a struct device, that way if the
+> device doesn't/can't do dma, it only has the "loss" of a single pointer,
+> not all of these fields?
 
-Except for those people who want SMP to work, on platforms where 
-TODEVICE actually matters.
+Well, that's just a bit ugly ... I assume you're thinking of adding a
+struct device_dma_parameters, and then defining the platform device as
 
-I'll send them upstream myself.
+struct pci_dev {
+	...
+	struct device dev;
+	struct device_dma_parameters dma_parms;
+	...
+};
 
+and then setting up the pointer?
 
-> And going away for the Weekend is hardly MIA.
-
-A week has gone by since any SCSI commit, and longer than that if you 
-actually look at the send-date of the most recent patch applied.
-
-	Jeff
+James
 
 
