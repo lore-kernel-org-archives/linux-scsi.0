@@ -1,247 +1,158 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/17] PCI Error Recovery: Symbios SCSI base support
-Date: Tue, 02 Oct 2007 14:38:00 -0700
-Message-ID: <200710022138.l92Lc0sG023555@imap1.linux-foundation.org>
+Subject: [patch 14/17] SCSI: early detection of medium not present, updated
+Date: Tue, 02 Oct 2007 14:38:10 -0700
+Message-ID: <200710022138.l92LcAPo023597@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:51137 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:40523 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754863AbXJBViq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:46 -0400
+	by vger.kernel.org with ESMTP id S1755590AbXJBViw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, linas@austin.ibm.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, stern@rowland.harvard.edu, albertcc@tw.ibm.com, htejun@gmail.com, jens.axboe@oracle.com
 
-From: Linas Vepstas <linas@austin.ibm.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 
-Various PCI bus errors can be signaled by newer PCI controllers.  This
-patch adds the PCI error recovery callbacks to the Symbios SCSI device
-driver.  The patch has been tested, and appears to work well.
+Taken from http://bugzilla.kernel.org/show_bug.cgi?id=8904
 
-Signed-off-by: Linas Vepstas <linas@austin.ibm.com>
-Cc: Matthew Wilcox <willy@debian.org>
+An updated (by Albert, I assume) version of the fourteen-month-old patch here:
+
+http://marc.info/?l=linux-kernel&m=115412002912837&w=2
+
+Apparently fixes the bug described at
+http://bugzilla.kernel.org/show_bug.cgi?id=8904
+
+Needs some TLC.  Perhaps urgently.
+
+Cc: Albert Lee <albertcc@tw.ibm.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |  136 ++++++++++++++++++++++++++
- drivers/scsi/sym53c8xx_2/sym_glue.h |    4 
- drivers/scsi/sym53c8xx_2/sym_hipd.c |    6 +
- 3 files changed, 146 insertions(+)
+ drivers/scsi/scsi_ioctl.c  |    2 +-
+ drivers/scsi/scsi_lib.c    |   20 ++++++++++++++++++--
+ drivers/scsi/sd.c          |    2 +-
+ drivers/scsi/sr.c          |   15 +++++++++------
+ include/scsi/scsi_device.h |    2 +-
+ 5 files changed, 30 insertions(+), 11 deletions(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-base-support drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~pci-error-recovery-symbios-scsi-base-support
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -596,6 +596,10 @@ static irqreturn_t sym53c8xx_intr(int ir
- 	unsigned long flags;
- 	struct sym_hcb *np = (struct sym_hcb *)dev_id;
+diff -puN drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_ioctl.c
+--- a/drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/scsi_ioctl.c
+@@ -239,7 +239,7 @@ int scsi_ioctl(struct scsi_device *sdev,
+ 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+ 	case SCSI_IOCTL_TEST_UNIT_READY:
+ 		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
+-					    NORMAL_RETRIES);
++					    NORMAL_RETRIES, NULL);
+ 	case SCSI_IOCTL_START_UNIT:
+ 		scsi_cmd[0] = START_STOP;
+ 		scsi_cmd[1] = 0;
+diff -puN drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/scsi_lib.c
+@@ -1875,15 +1875,26 @@ scsi_mode_sense(struct scsi_device *sdev
+ }
+ EXPORT_SYMBOL(scsi_mode_sense);
  
-+	/* Avoid spinloop trying to handle interrupts on frozen device */
-+	if (pci_channel_offline(np->s.device))
-+		return IRQ_HANDLED;
++/**
++ *	scsi_test_unit_ready - test if unit is ready
++ *	@sdev:	scsi device to change the state of.
++ *	@timeout: command timeout
++ *	@retries: number of retries before failing
++ *	@media_maybe_present: 1 if media maybe present or not.
++ *		              0 if media not present.
++ *
++ *	Returns zero if unsuccessful or an error if TUR failed.
++ **/
+ int
+-scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries)
++scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries, int *media_maybe_present)
+ {
+ 	char cmd[] = {
+ 		TEST_UNIT_READY, 0, 0, 0, 0, 0,
+ 	};
+ 	struct scsi_sense_hdr sshdr;
+ 	int result;
+-	
++	int maybe_present = 1;
 +
- 	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
+ 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
+ 				  timeout, retries);
  
- 	spin_lock_irqsave(np->s.host->host_lock, flags);
-@@ -665,6 +669,20 @@ static int sym_eh_handler(int op, char *
- 
- 	dev_warn(&cmd->device->sdev_gendev, "%s operation started.\n", opname);
- 
-+	/* We may be in an error condition because the PCI bus
-+	 * went down. In this case, we need to wait until the
-+	 * PCI bus is reset, the card is reset, and only then
-+	 * proceed with the scsi error recovery.  There's no
-+	 * point in hurrying; take a leisurely wait.
-+	 */
-+#define WAIT_FOR_PCI_RECOVERY	35
-+	if (pci_channel_offline(np->s.device)) {
-+		int finished_reset = wait_for_completion_timeout(
-+			&np->s.io_reset_wait, WAIT_FOR_PCI_RECOVERY*HZ);
-+		if (!finished_reset)
-+			return SCSI_FAILED;
-+	}
+@@ -1892,10 +1903,15 @@ scsi_test_unit_ready(struct scsi_device 
+ 		if ((scsi_sense_valid(&sshdr)) &&
+ 		    ((sshdr.sense_key == UNIT_ATTENTION) ||
+ 		     (sshdr.sense_key == NOT_READY))) {
++			if (sshdr.asc == 0x3A)
++				maybe_present = 0;
+ 			sdev->changed = 1;
+ 			result = 0;
+ 		}
+ 	}
 +
- 	spin_lock_irq(host->host_lock);
- 	/* This one is queued in some place -> to wait for completion */
- 	FOR_EACH_QUEUED_ELEMENT(&np->busy_ccbq, qp) {
-@@ -1449,6 +1467,7 @@ static struct Scsi_Host * __devinit sym_
- 	np->maxoffs	= dev->chip.offset_max;
- 	np->maxburst	= dev->chip.burst_max;
- 	np->myaddr	= dev->host_id;
-+	init_completion(&np->s.io_reset_wait);
++	if (media_maybe_present)
++		*media_maybe_present = maybe_present;
+ 	return result;
+ }
+ EXPORT_SYMBOL(scsi_test_unit_ready);
+diff -puN drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/sd.c
+@@ -759,7 +759,7 @@ static int sd_media_changed(struct gendi
+ 	retval = -ENODEV;
+ 
+ 	if (scsi_block_when_processing_errors(sdp))
+-		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES);
++		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
  
  	/*
- 	 *  Edit its name.
-@@ -1887,6 +1906,116 @@ static void __devexit sym2_remove(struct
- 	attach_count--;
- }
- 
-+/**
-+ * sym2_io_error_detected() -- called when PCI error is detected
-+ * @pdev: pointer to PCI device
-+ * @state: current state of the PCI slot
-+ */
-+static pci_ers_result_t sym2_io_error_detected(struct pci_dev *pdev,
-+                                         enum pci_channel_state state)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	/* If slot is permanently frozen, turn everything off */
-+	if (state == pci_channel_io_perm_failure) {
-+		sym2_remove(pdev);
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	init_completion(&np->s.io_reset_wait);
-+	disable_irq(pdev->irq);
-+	pci_disable_device(pdev);
-+
-+	/* Request a slot reset. */
-+	return PCI_ERS_RESULT_NEED_RESET;
-+}
-+
-+/**
-+ * sym2_reset_workarounds -- hardware-specific work-arounds
-+ *
-+ * This routine is similar to sym_set_workarounds(), except
-+ * that, at this point, we already know that the device was
-+ * succesfully intialized at least once before, and so most
-+ * of the steps taken there are un-needed here.
-+ */
-+static void sym2_reset_workarounds(struct pci_dev *pdev)
-+{
-+	u_char revision;
-+	u_short status_reg;
-+	struct sym_chip *chip;
-+
-+	pci_read_config_byte(pdev, PCI_CLASS_REVISION, &revision);
-+	chip = sym_lookup_chip_table(pdev->device, revision);
-+
-+	/* Work around for errant bit in 895A, in a fashion
-+	 * similar to what is done in sym_set_workarounds().
-+	 */
-+	pci_read_config_word(pdev, PCI_STATUS, &status_reg);
-+	if (!(chip->features & FE_66MHZ) && (status_reg & PCI_STATUS_66MHZ)) {
-+	 	status_reg = PCI_STATUS_66MHZ;
-+		pci_write_config_word(pdev, PCI_STATUS, status_reg);
-+		pci_read_config_word(pdev, PCI_STATUS, &status_reg);
-+	}
-+}
-+
-+/**
-+ * sym2_io_slot_reset() -- called when the pci bus has been reset.
-+ * @pdev: pointer to PCI device
-+ *
-+ * Restart the card from scratch.
-+ */
-+static pci_ers_result_t sym2_io_slot_reset(struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+
-+	printk(KERN_INFO "%s: recovering from a PCI slot reset\n",
-+	          sym_name(np));
-+
-+	if (pci_enable_device(pdev)) {
-+		printk(KERN_ERR "%s: Unable to enable afer PCI reset\n",
-+		        sym_name(np));
-+		return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	pci_set_master(pdev);
-+	enable_irq(pdev->irq);
-+
-+	/* If the chip can do Memory Write Invalidate, enable it */
-+	if (np->features & FE_WRIE) {
-+		if (pci_set_mwi(pdev))
-+				return PCI_ERS_RESULT_DISCONNECT;
-+	}
-+
-+	/* Perform work-arounds, analogous to sym_set_workarounds() */
-+	sym2_reset_workarounds(pdev);
-+
-+	/* Perform host reset only on one instance of the card */
-+	if (PCI_FUNC (pdev->devfn) == 0) {
-+		if (sym_reset_scsi_bus(np, 0)) {
-+			printk(KERN_ERR "%s: Unable to reset scsi host\n",
-+			        sym_name(np));
-+			return PCI_ERS_RESULT_DISCONNECT;
-+		}
-+		sym_start_up(np, 1);
-+	}
-+
-+	return PCI_ERS_RESULT_RECOVERED;
-+}
-+
-+/**
-+ * sym2_io_resume() -- resume normal ops after PCI reset
-+ * @pdev: pointer to PCI device
-+ *
-+ * Called when the error recovery driver tells us that its
-+ * OK to resume normal operation. Use completion to allow
-+ * halted scsi ops to resume.
-+ */
-+static void sym2_io_resume(struct pci_dev *pdev)
-+{
-+	struct sym_hcb *np = pci_get_drvdata(pdev);
-+	complete_all(&np->s.io_reset_wait);
-+}
-+
- static void sym2_get_signalling(struct Scsi_Host *shost)
+ 	 * Unable to test, unit probably not ready.   This usually
+diff -puN drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/sr.c
+@@ -177,18 +177,21 @@ static int sr_media_change(struct cdrom_
  {
- 	struct sym_hcb *np = sym_get_hcb(shost);
-@@ -2049,11 +2178,18 @@ static struct pci_device_id sym2_id_tabl
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
++	int media_maybe_present;
  
- MODULE_DEVICE_TABLE(pci, sym2_id_table);
+ 	if (CDSL_CURRENT != slot) {
+ 		/* no changer support */
+ 		return -EINVAL;
+ 	}
  
-+static struct pci_error_handlers sym2_err_handler = {
-+	.error_detected = sym2_io_error_detected,
-+	.slot_reset = sym2_io_slot_reset,
-+	.resume = sym2_io_resume,
-+};
-+
- static struct pci_driver sym2_driver = {
- 	.name		= NAME53C8XX,
- 	.id_table	= sym2_id_table,
- 	.probe		= sym2_probe,
- 	.remove		= __devexit_p(sym2_remove),
-+	.err_handler 	= &sym2_err_handler,
- };
- 
- static int __init sym2_init(void)
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-base-support drivers/scsi/sym53c8xx_2/sym_glue.h
---- a/drivers/scsi/sym53c8xx_2/sym_glue.h~pci-error-recovery-symbios-scsi-base-support
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.h
-@@ -40,6 +40,7 @@
- #ifndef SYM_GLUE_H
- #define SYM_GLUE_H
- 
-+#include <linux/completion.h>
- #include <linux/delay.h>
- #include <linux/ioport.h>
- #include <linux/pci.h>
-@@ -179,6 +180,9 @@ struct sym_shcb {
- 	char		chip_name[8];
- 	struct pci_dev	*device;
- 
-+	/* Waiter for clearing of frozen PCI bus */
-+	struct completion io_reset_wait;
-+
- 	struct Scsi_Host *host;
- 
- 	void __iomem *	ioaddr;		/* MMIO kernel io address	*/
-diff -puN drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-base-support drivers/scsi/sym53c8xx_2/sym_hipd.c
---- a/drivers/scsi/sym53c8xx_2/sym_hipd.c~pci-error-recovery-symbios-scsi-base-support
-+++ a/drivers/scsi/sym53c8xx_2/sym_hipd.c
-@@ -2809,6 +2809,12 @@ void sym_interrupt (struct sym_hcb *np)
- 			dstat |= INB(np, nc_dstat);
- 		istatc = INB(np, nc_istat);
- 		istat |= istatc;
-+
-+		/* Prevent deadlock waiting on a condition that may never clear. */
-+		if (unlikely(sist == 0xffff && dstat == 0xff)) {
-+			if (pci_channel_offline(np->s.device))
-+				return;
-+		}
- 	} while (istatc & (SIP|DIP));
- 
- 	if (DEBUG_FLAGS & DEBUG_TINY)
+-	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES);
+-	if (retval) {
+-		/* Unable to test, unit probably not ready.  This usually
+-		 * means there is no disc in the drive.  Mark as changed,
+-		 * and we will figure it out later once the drive is
+-		 * available again.  */
++	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
++				      &media_maybe_present);
++	if (retval || !media_maybe_present) {
++		/* Media not present or unable to test, unit probably not
++		 * ready. This usually means there is no disc in the drive.
++		 * Mark as changed, and we will figure it out later once
++		 * the drive is available again.
++		 */
+ 		cd->device->changed = 1;
+ 		/* This will force a flush, if called from check_disk_change */
+ 		retval = 1;
+diff -puN include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated include/scsi/scsi_device.h
+--- a/include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated
++++ a/include/scsi/scsi_device.h
+@@ -283,7 +283,7 @@ extern int scsi_mode_select(struct scsi_
+ 			    struct scsi_mode_data *data,
+ 			    struct scsi_sense_hdr *);
+ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
+-				int retries);
++				int retries, int *media_maybe_present);
+ extern int scsi_device_set_state(struct scsi_device *sdev,
+ 				 enum scsi_device_state state);
+ extern int scsi_device_event_notify(struct scsi_device *sdev,
 _
