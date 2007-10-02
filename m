@@ -1,38 +1,42 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [0/16 ver2] gdth combined patchset & call for testers
-Date: Tue, 02 Oct 2007 23:22:31 +0200
-Message-ID: <4702B697.5080100@panasas.com>
-References: <4702A4A1.2080404@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 08/17] Fix a potential NULL pointer deref in the aic7xxx, ahc_print_register() function
+Date: Tue, 02 Oct 2007 14:38:04 -0700
+Message-ID: <200710022138.l92Lc4iM023579@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7840 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755797AbXJBVWr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:22:47 -0400
-In-Reply-To: <4702A4A1.2080404@panasas.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45259 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753331AbXJBViI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:08 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Mike Christie <michaelc@cs.wisc.edu>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kerne>
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jesper.juhl@gmail.com
 
-On Tue, Oct 02 2007 at 22:05 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> Hi!
-> 
-> following is an attempted at unified patchset for the gdth driver.
-> 
-> They try to incorporate floating patches to gdth from:
-> Christoph Hellwig
-> Jeff Garzik
-> Matthew Wilcox
-> and Me Boaz Harrosh
-> 
+From: Jesper Juhl <jesper.juhl@gmail.com>
 
-I have mistakenly put "To: Mike Christie <michaelc@cs.wisc.edu>"
-instead of "To: Christoph Hellwig <hch@infradead.org>"
+The Coverity checker noticed that we have a potential NULL pointer
+deref in drivers/scsi/aic7xxx/aic7xxx_core.c::ahc_print_register().
+This patch handles it by adding the same test against NULL that is
+used elsewhere in the same function.
 
-Please Cc all replys To: Christoph Hellwig <hch@infradead.org>
-Also.
+Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
-Please for give me
-Boaz
+ drivers/scsi/aic7xxx/aic7xxx_core.c |    3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~fix-a-potential-null-pointer-deref-in-the-aic7xxx-ahc_print_register-function drivers/scsi/aic7xxx/aic7xxx_core.c
+--- a/drivers/scsi/aic7xxx/aic7xxx_core.c~fix-a-potential-null-pointer-deref-in-the-aic7xxx-ahc_print_register-function
++++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
+@@ -6557,7 +6557,8 @@ ahc_print_register(ahc_reg_parse_entry_t
+ 	printed = printf("%s[0x%x]", name, value);
+ 	if (table == NULL) {
+ 		printed += printf(" ");
+-		*cur_column += printed;
++		if (cur_column != NULL)
++			*cur_column += printed;
+ 		return (printed);
+ 	}
+ 	printed_mask = 0;
+_
