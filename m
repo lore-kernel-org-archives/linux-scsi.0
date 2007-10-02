@@ -1,75 +1,71 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] aic94xx: fix SSP IU status print-out
-Date: Tue, 02 Oct 2007 10:00:13 -0500
-Message-ID: <1191337213.3530.71.camel@localhost.localdomain>
-References: <20070930140317.GA7134@havoc.gtf.org>
-	 <4702399A.9010708@garzik.org>
-	 <1191334857.3530.39.camel@localhost.localdomain>
-	 <47025743.3070100@garzik.org>
-	 <1191336373.3530.62.camel@localhost.localdomain>
-	 <47025A4E.6040200@garzik.org>
+From: "Kay Sievers" <kay.sievers@vrfy.org>
+Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
+Date: Tue, 2 Oct 2007 17:02:27 +0200
+Message-ID: <3ae72650710020802r75cc2e39h2f1e7ee1e0a17efb@mail.gmail.com>
+References: <20070925142157B.tomof@acm.org> <20070926160558.GA10819@suse.de>
+	 <1191281770.3530.24.camel@localhost.localdomain>
+	 <20071002013902.GP12049@parisc-linux.org>
+	 <20071002042248.GA23399@suse.de>
+	 <1191336311.3530.59.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:35604 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751755AbXJBPAP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 11:00:15 -0400
-In-Reply-To: <47025A4E.6040200@garzik.org>
+Received: from nz-out-0506.google.com ([64.233.162.233]:29979 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751790AbXJBPCa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 11:02:30 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so2944425nze
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Oct 2007 08:02:28 -0700 (PDT)
+In-Reply-To: <1191336311.3530.59.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Greg KH <gregkh@suse.de>, Matthew Wilcox <matthew@wil.cx>, FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Tue, 2007-10-02 at 10:48 -0400, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > On Tue, 2007-10-02 at 10:35 -0400, Jeff Garzik wrote:
-> >> James Bottomley wrote:
-> >>> On Tue, 2007-10-02 at 08:29 -0400, Jeff Garzik wrote:
-> >>>> James, what is the upstream status of my two aic94xx bug fixes?
-> >>>>
-> >>>> Have they been sent to Linus yet?
-> >>>>
-> >>>> Since you seem M.I.A., I'll send them upstream if I do not hear from you 
-> >>>> today.
-> >>> They're hardly -rc8 critical bug fixes, since no-one has noticed their
-> >>> effects for about 5 kernel releases.  I'll stick them into scsi-misc
-> >>> with the rest of the pending stuff.
-> >> Except for those people who want SMP to work, on platforms where 
-> >> TODEVICE actually matters.
-> > 
-> > And the number of bug reports on this?
-> > 
-> >> I'll send them upstream myself.
-> > 
-> > No, you won't; because that would be completely irresponsible.  You
-> > don't turn code for no reason at the last minute unless it's essential
-> > because of the danger of introducing inadvertent bugs along with the
-> > changes.  Since there are no users affected, there's zero benefit and
-> > there is a potential non-zero detriment to the code turn.
-> > 
-> > There's absolutely no reason to rush these into the release at the last
-> > minute.  The correct path is via scsi-misc and then to be backported
-> > into the stable series once we're sure they're OK.
-> 
-> What's irresponsible is holding onto simple, obvious bug fixes that 
-> obviously break certain scenarios.
+On 10/2/07, James Bottomley <James.Bottomley@steeleye.com> wrote:
+> On Mon, 2007-10-01 at 21:22 -0700, Greg KH wrote:
+> > On Mon, Oct 01, 2007 at 07:39:02PM -0600, Matthew Wilcox wrote:
+> > > On Mon, Oct 01, 2007 at 07:36:10PM -0400, James Bottomley wrote:
+> > > > One possibility we could do is to add a
+> > > >
+> > > > struct dma_device {
+> > > >   struct device dev;
+> > > >   u64 dma_mask;
+> > > >   u64 coherent_dma_mask;
+> > > >   unsigned int max_segment_size;
+> > > >   /* plus any other DMA parameters */
+> > > > };
+> > > >
+> > > > but then every bus that can do DMA would need to include a struct
+> > > > dma_device instead of the struct device they do now.  Then the IOMMU
+> > > > would know it could cast out from struct device to struct dma_device,
+> > > > but this would be a lot of work to thread through the current
+> > > > infrastructure.
+> >
+> > Why not just hang these fields off of a struct device, that way if the
+> > device doesn't/can't do dma, it only has the "loss" of a single pointer,
+> > not all of these fields?
+>
+> Well, that's just a bit ugly ... I assume you're thinking of adding a
+> struct device_dma_parameters, and then defining the platform device as
+>
+> struct pci_dev {
+>         ...
+>         struct device dev;
+>         struct device_dma_parameters dma_parms;
+>         ...
+> };
+>
+> and then setting up the pointer?
 
-Those scenarios don't exist.  I spent quite a while with Adaptec trying
-to get this card to work on non-x86 platforms.  There's a bug which
-manifests as the driver decides the card hasn't been setup by bios and
-it tries to write the OCF parameters itself ... on non-x86 platforms
-this always ends up inducing a master abort on the PCI bus for no
-explicable reason (and it's not the code you're fixing, it happens way
-before this).  There is actually an ia64 box at Adaptec which exhibits
-the problem ... and they're trying to trace the PCI bus transactions.
-The fascinating thing will be to see if this also shows up in the
-Calgary when we get all of that working.
+I guess Greg means:
+  struct device {
+      ...
+      struct device_dma_parameters *dma_parms;
+  }
 
-So I know, beyond a shadow of a doubt, that there are no non-x86 users
-of this.
+and allocate dma_parms on demand.
 
-James
-
-
+Kay
