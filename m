@@ -1,58 +1,63 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
-Date: Tue, 02 Oct 2007 09:45:11 -0500
-Message-ID: <1191336311.3530.59.camel@localhost.localdomain>
-References: <20070925142157B.tomof@acm.org> <20070926160558.GA10819@suse.de>
-	 <1191281770.3530.24.camel@localhost.localdomain>
-	 <20071002013902.GP12049@parisc-linux.org>  <20071002042248.GA23399@suse.de>
+Subject: Re: [PATCH] aic94xx: fix SSP IU status print-out
+Date: Tue, 02 Oct 2007 09:46:13 -0500
+Message-ID: <1191336373.3530.62.camel@localhost.localdomain>
+References: <20070930140317.GA7134@havoc.gtf.org>
+	 <4702399A.9010708@garzik.org>
+	 <1191334857.3530.39.camel@localhost.localdomain>
+	 <47025743.3070100@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:54576 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:54592 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752529AbXJBOpT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 10:45:19 -0400
-In-Reply-To: <20071002042248.GA23399@suse.de>
+	with ESMTP id S1751151AbXJBOqO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 10:46:14 -0400
+In-Reply-To: <47025743.3070100@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@suse.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, 2007-10-01 at 21:22 -0700, Greg KH wrote:
-> On Mon, Oct 01, 2007 at 07:39:02PM -0600, Matthew Wilcox wrote:
-> > On Mon, Oct 01, 2007 at 07:36:10PM -0400, James Bottomley wrote:
-> > > One possibility we could do is to add a
-> > > 
-> > > struct dma_device {
-> > > 	struct device dev;
-> > > 	u64 dma_mask;
-> > > 	u64 coherent_dma_mask;
-> > > 	unsigned int max_segment_size;
-> > > 	/* plus any other DMA parameters */
-> > > };
-> > > 
-> > > but then every bus that can do DMA would need to include a struct
-> > > dma_device instead of the struct device they do now.  Then the IOMMU
-> > > would know it could cast out from struct device to struct dma_device,
-> > > but this would be a lot of work to thread through the current
-> > > infrastructure.
+On Tue, 2007-10-02 at 10:35 -0400, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > On Tue, 2007-10-02 at 08:29 -0400, Jeff Garzik wrote:
+> >> James, what is the upstream status of my two aic94xx bug fixes?
+> >>
+> >> Have they been sent to Linus yet?
+> >>
+> >> Since you seem M.I.A., I'll send them upstream if I do not hear from you 
+> >> today.
+> > 
+> > They're hardly -rc8 critical bug fixes, since no-one has noticed their
+> > effects for about 5 kernel releases.  I'll stick them into scsi-misc
+> > with the rest of the pending stuff.
 > 
-> Why not just hang these fields off of a struct device, that way if the
-> device doesn't/can't do dma, it only has the "loss" of a single pointer,
-> not all of these fields?
+> Except for those people who want SMP to work, on platforms where 
+> TODEVICE actually matters.
 
-Well, that's just a bit ugly ... I assume you're thinking of adding a
-struct device_dma_parameters, and then defining the platform device as
+And the number of bug reports on this?
 
-struct pci_dev {
-	...
-	struct device dev;
-	struct device_dma_parameters dma_parms;
-	...
-};
+> I'll send them upstream myself.
 
-and then setting up the pointer?
+No, you won't; because that would be completely irresponsible.  You
+don't turn code for no reason at the last minute unless it's essential
+because of the danger of introducing inadvertent bugs along with the
+changes.  Since there are no users affected, there's zero benefit and
+there is a potential non-zero detriment to the code turn.
+
+There's absolutely no reason to rush these into the release at the last
+minute.  The correct path is via scsi-misc and then to be backported
+into the stable series once we're sure they're OK.
+
+> > And going away for the Weekend is hardly MIA.
+> 
+> A week has gone by since any SCSI commit, and longer than that if you 
+> actually look at the send-date of the most recent patch applied.
+
+If you follow the linux-scsi mailing list, you'll see fairly active
+participation after that, I think.
 
 James
 
