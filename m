@@ -1,332 +1,368 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 13/16] gdth: Remove gdth_ctr_tab[]
-Date: Tue, 02 Oct 2007 23:11:24 +0200
-Message-ID: <4702B3FC.1040405@panasas.com>
+Subject: [PATCH 14/16] gdth: Setup proper per-command private data
+Date: Tue, 02 Oct 2007 23:14:39 +0200
+Message-ID: <4702B4BF.9060702@panasas.com>
 References: <4702A4A1.2080404@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:14251 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11630 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751451AbXJBVLh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:11:37 -0400
+	with ESMTP id S1753977AbXJBVPA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:15:00 -0400
 In-Reply-To: <4702A4A1.2080404@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kern>
 
 
-  - Places like Initialization and Reset that Just loop on all devices can
-    use the link list with the list_for_each_entry macro.
-    But the io_ctrl from user mode now suffers performance-wise because
-    code has to do a sequential search for the requested host number.
-    I have isolated this search in a gdth_find_ha(int hanum) member
-    for future enhancement if needed.
+  - scsi_cmnd and specifically ->SCp of, where heavily abused
+    with internal meaning members and flags. So introduce a new
+    struct gdth_cmndinfo, put it on ->host_scribble and define a
+    gdth_cmnd_priv() accessor to retrieve it from a scsi_cmnd.
+
+  - The structure now holds two members:
+    internal_command - replaces the IS_GDTH_INTERNAL_CMD() croft.
+    sense_paddr - which was a 64-bit spanning on 2 32-bit members of SCp.
+    More overloaded members from SCp and scsi_cmnd will be moved in a later
+    patch (For easy review).
+
+  - Split up gdth_queuecommand to an additional internal_function. The later
+    is the one called by gdth_execute(). This will be more evident later in
+    the scsi accessors patch, but it also facilitates in the differentiation
+    between internal_command and external. And the setup of gdth_cmndinfo of
+    each command.
 
 Signed-off-by Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/gdth.c |  107 ++++++++++++++++++++++++---------------------------
- 1 files changed, 50 insertions(+), 57 deletions(-)
+ drivers/scsi/gdth.c      |  111 ++++++++++++++++++++++++++++++++--------------
+ drivers/scsi/gdth.h      |   10 ++++
+ drivers/scsi/gdth_proc.c |    6 ++-
+ 3 files changed, 91 insertions(+), 36 deletions(-)
 
 diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index e53b4e8..62b1bb7 100644
+index 62b1bb7..966f632 100644
 --- a/drivers/scsi/gdth.c
 +++ b/drivers/scsi/gdth.c
-@@ -290,8 +290,7 @@ static unchar   gdth_irq_tab[6] = {0,10,11,12,14,0};    /* IRQ table */
- #endif
- static unchar   gdth_polling;                           /* polling if TRUE */
- static int      gdth_ctr_count  = 0;                    /* controller count */
--static struct Scsi_Host *gdth_ctr_tab[MAXHA];           /* controller table */
--static LIST_HEAD(gdth_instances);
-+static LIST_HEAD(gdth_instances);                       /* controller list */
- static unchar   gdth_write_through = FALSE;             /* write through */
- static gdth_evt_str ebuffer[MAX_EVENTS];                /* event buffer */
- static int elastidx;
-@@ -384,6 +383,17 @@ static struct notifier_block gdth_notifier = {
- };
- static int notifier_disabled = 0;
+@@ -86,8 +86,8 @@
+ /* The meaning of the Scsi_Pointer members in this driver is as follows:
+  * ptr:                     Chaining
+  * this_residual:           Command priority
+- * buffer:                  phys. DMA sense buffer 
+- * dma_handle:              phys. DMA buffer (kernel >= 2.4.0)
++ * buffer:                  unused
++ * dma_handle:              will drop in !use_sg patch.
+  * buffers_residual:        Timeout value
+  * Status:                  Command status (gdth_do_cmd()), DMA mem. mappings
+  * Message:                 Additional info (gdth_do_cmd()), DMA direction
+@@ -184,6 +184,8 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
+ static void gdth_flush(gdth_ha_str *ha);
+ static int gdth_halt(struct notifier_block *nb, ulong event, void *buf);
+ static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *));
++static int __gdth_queuecommand(gdth_ha_str *ha, struct scsi_cmnd *scp,
++				struct gdth_cmndinfo *cmndinfo);
+ static void gdth_scsi_done(struct scsi_cmnd *scp);
  
-+static gdth_ha_str *gdth_find_ha(int hanum)
+ #ifdef DEBUG_GDTH
+@@ -371,9 +373,6 @@ static const struct file_operations gdth_fops = {
+     .release = gdth_close,
+ };
+ 
+-#define GDTH_MAGIC	0xc2e7c389	/* I got it from /dev/urandom */
+-#define IS_GDTH_INTERNAL_CMD(scp)	(scp->underflow == GDTH_MAGIC)
+-
+ #include "gdth_proc.h"
+ #include "gdth_proc.c"
+ 
+@@ -394,6 +393,34 @@ static gdth_ha_str *gdth_find_ha(int hanum)
+ 	return NULL;
+ }
+ 
++static struct gdth_cmndinfo *gdth_get_cmndinfo(gdth_ha_str *ha)
 +{
-+	gdth_ha_str *ha;
++	struct gdth_cmndinfo *priv = NULL;
++	ulong flags;
++	int i;
 +
-+	list_for_each_entry(ha, &gdth_instances, list)
-+		if (hanum == ha->hanum)
-+			return ha;
++	spin_lock_irqsave(&ha->smp_lock, flags);
 +
-+	return NULL;
++	for (i=0; i<GDTH_MAXCMDS; ++i) {
++		if (ha->cmndinfo[i].index == 0) {
++			priv = &ha->cmndinfo[i];
++			priv->index = i;
++			memset(priv, 0, sizeof(*priv));
++			break;
++		}
++	}
++
++	spin_unlock_irqrestore(&ha->smp_lock, flags);
++
++	return priv;
++}
++
++static void gdth_put_cmndinfo(struct gdth_cmndinfo *priv)
++{
++	BUG_ON(!priv);
++	priv->index = 0;
 +}
 +
  static void gdth_delay(int milliseconds)
  {
      if (milliseconds == 0) {
-@@ -3755,7 +3765,7 @@ static void gdth_timeout(ulong data)
-     gdth_ha_str *ha;
-     ulong flags;
+@@ -405,9 +432,15 @@ static void gdth_delay(int milliseconds)
  
--    ha = shost_priv(gdth_ctr_tab[0]);
-+    ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
+ static void gdth_scsi_done(struct scsi_cmnd *scp)
+ {
++	struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
++	int internal_command = cmndinfo->internal_command;
++
+ 	TRACE2(("gdth_scsi_done()\n"));
+ 
+-	if (IS_GDTH_INTERNAL_CMD(scp))
++	gdth_put_cmndinfo(cmndinfo);
++	scp->host_scribble = NULL;
++
++	if (internal_command)
+ 		complete((struct completion *)scp->request);
+ 	else
+ 		scp->scsi_done(scp);
+@@ -416,7 +449,9 @@ static void gdth_scsi_done(struct scsi_cmnd *scp)
+ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+                    int timeout, u32 *info)
+ {
++    gdth_ha_str *ha = shost_priv(sdev->host);
+     Scsi_Cmnd *scp;
++    struct gdth_cmndinfo cmndinfo;
+     DECLARE_COMPLETION_ONSTACK(wait);
+     int rval;
+ 
+@@ -425,6 +460,8 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+         return -ENOMEM;
+ 
+     scp->device = sdev;
++    memset(&cmndinfo, 0, sizeof(cmndinfo));
++
+     /* use request field to save the ptr. to completion struct. */
+     scp->request = (struct request *)&wait;
+     scp->timeout_per_command = timeout*HZ;
+@@ -432,8 +469,11 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
+     scp->cmd_len = 12;
+     memcpy(scp->cmnd, cmnd, 12);
+     scp->SCp.this_residual = IOCTL_PRI;   /* priority */
+-    scp->underflow = GDTH_MAGIC;
+-    gdth_queuecommand(scp, NULL);
++    cmndinfo.internal_command = 1;
++
++    TRACE(("__gdth_execute() cmd 0x%x\n", scp->cmnd[0]));
++    __gdth_queuecommand(ha, scp, &cmndinfo);
++
+     wait_for_completion(&wait);
+ 
+     rval = scp->SCp.Status;
+@@ -1966,6 +2006,7 @@ static int gdth_analyse_hdrive(gdth_ha_str *ha, ushort hdrive)
+ 
+ static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar priority)
+ {
++    struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+     register Scsi_Cmnd *pscp;
+     register Scsi_Cmnd *nscp;
+     ulong flags;
+@@ -1974,7 +2015,7 @@ static void gdth_putq(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar priority)
+     TRACE(("gdth_putq() priority %d\n",priority));
      spin_lock_irqsave(&ha->smp_lock, flags);
  
-     for (act_stats=0,i=0; i<GDTH_MAXCMDS; ++i) 
-@@ -4015,12 +4025,10 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
- static int gdth_open(struct inode *inode, struct file *filep)
+-    if (!IS_GDTH_INTERNAL_CMD(scp)) {
++    if (!cmndinfo->internal_command) {
+         scp->SCp.this_residual = (int)priority;
+         b = scp->device->channel;
+         t = scp->device->id;
+@@ -2035,7 +2076,7 @@ static void gdth_next(gdth_ha_str *ha)
+     for (nscp = pscp = ha->req_first; nscp; nscp = (Scsi_Cmnd *)nscp->SCp.ptr) {
+         if (nscp != pscp && nscp != (Scsi_Cmnd *)pscp->SCp.ptr)
+             pscp = (Scsi_Cmnd *)pscp->SCp.ptr;
+-        if (!IS_GDTH_INTERNAL_CMD(nscp)) {
++        if (!gdth_cmnd_priv(nscp)->internal_command) {
+             b = nscp->device->channel;
+             t = nscp->device->id;
+             l = nscp->device->lun;
+@@ -2060,7 +2101,7 @@ static void gdth_next(gdth_ha_str *ha)
+             firsttime = FALSE;
+         }
+ 
+-        if (!IS_GDTH_INTERNAL_CMD(nscp)) {
++        if (!gdth_cmnd_priv(nscp)->internal_command) {
+         if (nscp->SCp.phase == -1) {
+             nscp->SCp.phase = CACHESERVICE;           /* default: cache svc. */ 
+             if (nscp->cmnd[0] == TEST_UNIT_READY) {
+@@ -2123,7 +2164,7 @@ static void gdth_next(gdth_ha_str *ha)
+                 else
+                     gdth_scsi_done(nscp);
+             }
+-        } else if (IS_GDTH_INTERNAL_CMD(nscp)) {
++        } else if (gdth_cmnd_priv(nscp)->internal_command) {
+             if (!(cmd_index=gdth_special_cmd(ha, nscp)))
+                 this_cmd = FALSE;
+             next_cmd = FALSE;
+@@ -2622,6 +2663,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
+     unchar t,l;
+     struct page *page;
+     ulong offset;
++    struct gdth_cmndinfo *cmndinfo;
+ 
+     t = scp->device->id;
+     l = scp->device->lun;
+@@ -2645,6 +2687,7 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
+     if (ha->cmd_cnt == 0)
+         gdth_set_sema0(ha);
+ 
++    cmndinfo = gdth_cmnd_priv(scp);
+     /* fill command */  
+     if (scp->SCp.sent_command != -1) {
+         cmdp->OpCode           = scp->SCp.sent_command; /* special raw cmd. */
+@@ -2668,9 +2711,8 @@ static int gdth_fill_raw_cmd(gdth_ha_str *ha, Scsi_Cmnd *scp, unchar b)
+         offset = (ulong)scp->sense_buffer & ~PAGE_MASK;
+         sense_paddr = pci_map_page(ha->pdev,page,offset,
+                                    16,PCI_DMA_FROMDEVICE);
+-        *(ulong32 *)&scp->SCp.buffer = (ulong32)sense_paddr;
+-        /* high part, if 64bit */
+-        *(ulong32 *)&scp->host_scribble = (ulong32)((ulong64)sense_paddr >> 32);
++
++	cmndinfo->sense_paddr  = sense_paddr;
+         cmdp->OpCode           = GDT_WRITE;             /* always */
+         cmdp->BoardNode        = LOCALBOARD;
+         if (mode64) { 
+@@ -3271,6 +3313,7 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
+     gdth_msg_str *msg;
+     gdth_cmd_str *cmdp;
+     unchar b, t;
++    struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
+ 
+     cmdp = ha->pccb;
+     TRACE(("gdth_sync_event() serv %d status %d\n",
+@@ -3364,14 +3407,9 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
+         else if (scp->SCp.Status == GDTH_MAP_SINGLE) 
+             pci_unmap_page(ha->pdev,scp->SCp.dma_handle,
+                            scp->request_bufflen,scp->SCp.Message);
+-        if (scp->SCp.buffer) {
+-            dma_addr_t addr;
+-            addr = (dma_addr_t)*(ulong32 *)&scp->SCp.buffer;
+-            if (scp->host_scribble)
+-                addr += (dma_addr_t)
+-                    ((ulong64)(*(ulong32 *)&scp->host_scribble) << 32);
+-            pci_unmap_page(ha->pdev,addr,16,PCI_DMA_FROMDEVICE);
+-        }
++        if (cmndinfo->sense_paddr)
++            pci_unmap_page(ha->pdev, cmndinfo->sense_paddr, 16,
++                                                           PCI_DMA_FROMDEVICE);
+ 
+         if (ha->status == S_OK) {
+             scp->SCp.Status = S_OK;
+@@ -3450,7 +3488,7 @@ static int gdth_sync_event(gdth_ha_str *ha, int service, unchar index,
+                     scp->sense_buffer[2] = NOT_READY;
+                     scp->result = (DID_OK << 16) | (CHECK_CONDITION << 1);
+                 }
+-                if (!IS_GDTH_INTERNAL_CMD(scp)) {
++                if (!cmndinfo->internal_command) {
+                     ha->dvr.size = sizeof(ha->dvr.eu.sync);
+                     ha->dvr.eu.sync.ionode  = ha->hanum;
+                     ha->dvr.eu.sync.service = service;
+@@ -3995,28 +4033,33 @@ static int gdth_queuecommand(struct scsi_cmnd *scp,
+ 				void (*done)(struct scsi_cmnd *))
  {
-     gdth_ha_str *ha;
--    int i;
+     gdth_ha_str *ha = shost_priv(scp->device->host);
+-    int priority;
++    struct gdth_cmndinfo *cmndinfo;
  
--    for (i = 0; i < gdth_ctr_count; i++) {
--        ha = shost_priv(gdth_ctr_tab[i]);
-+    list_for_each_entry(ha, &gdth_instances, list) {
-         if (!ha->sdev)
--            ha->sdev = scsi_get_host_dev(gdth_ctr_tab[i]);
-+            ha->sdev = scsi_get_host_dev(ha->shost);
-     }
- 
-     TRACE(("gdth_open()\n"));
-@@ -4039,10 +4047,11 @@ static int ioc_event(void __user *arg)
-     gdth_ha_str *ha;
-     ulong flags;
- 
--    if (copy_from_user(&evt, arg, sizeof(gdth_ioctl_event)) ||
--        evt.ionode >= gdth_ctr_count)
-+    if (copy_from_user(&evt, arg, sizeof(gdth_ioctl_event)))
-+        return -EFAULT;
-+    ha = gdth_find_ha(evt.ionode);
-+    if (!ha)
-         return -EFAULT;
--    ha = shost_priv(gdth_ctr_tab[evt.ionode]);
- 
-     if (evt.erase == 0xff) {
-         if (evt.event.event_source == ES_TEST)
-@@ -4076,11 +4085,12 @@ static int ioc_lockdrv(void __user *arg)
-     ulong flags;
-     gdth_ha_str *ha;
- 
--    if (copy_from_user(&ldrv, arg, sizeof(gdth_ioctl_lockdrv)) ||
--        ldrv.ionode >= gdth_ctr_count)
-+    if (copy_from_user(&ldrv, arg, sizeof(gdth_ioctl_lockdrv)))
-         return -EFAULT;
--    ha = shost_priv(gdth_ctr_tab[ldrv.ionode]);
-- 
-+    ha = gdth_find_ha(ldrv.ionode);
-+    if (!ha)
-+        return -EFAULT;
+     TRACE(("gdth_queuecommand() cmd 0x%x\n", scp->cmnd[0]));
+-    
 +
-     for (i = 0; i < ldrv.drive_cnt && i < MAX_HDRIVES; ++i) {
-         j = ldrv.drives[i];
-         if (j >= MAX_HDRIVES || !ha->hdr[j].present)
-@@ -4110,9 +4120,11 @@ static int ioc_resetdrv(void __user *arg, char *cmnd)
-     int rval;
- 
-     if (copy_from_user(&res, arg, sizeof(gdth_ioctl_reset)) ||
--        res.ionode >= gdth_ctr_count || res.number >= MAX_HDRIVES)
-+        res.number >= MAX_HDRIVES)
-+        return -EFAULT;
-+    ha = gdth_find_ha(res.ionode);
-+    if (!ha)
-         return -EFAULT;
--    ha = shost_priv(gdth_ctr_tab[res.ionode]);
- 
-     if (!ha->hdr[res.number].present)
-         return 0;
-@@ -4141,11 +4153,12 @@ static int ioc_general(void __user *arg, char *cmnd)
-     ulong64 paddr; 
-     gdth_ha_str *ha;
-     int rval;
--        
--    if (copy_from_user(&gen, arg, sizeof(gdth_ioctl_general)) ||
--        gen.ionode >= gdth_ctr_count)
++    cmndinfo = gdth_get_cmndinfo(ha);
++    BUG_ON(!cmndinfo);
 +
-+    if (copy_from_user(&gen, arg, sizeof(gdth_ioctl_general)))
-+        return -EFAULT;
-+    ha = gdth_find_ha(gen.ionode);
-+    if (!ha)
-         return -EFAULT;
--    ha = shost_priv(gdth_ctr_tab[gen.ionode]);
-     if (gen.data_len + gen.sense_len != 0) {
-         if (!(buf = gdth_ioctl_alloc(ha, gen.data_len + gen.sense_len,
-                                      FALSE, &paddr)))
-@@ -4265,11 +4278,10 @@ static int ioc_hdrlist(void __user *arg, char *cmnd)
-         goto free_fail;
- 
-     if (copy_from_user(rsc, arg, sizeof(gdth_ioctl_rescan)) ||
--        rsc->ionode >= gdth_ctr_count) {
-+        (NULL == (ha = gdth_find_ha(rsc->ionode)))) {
-         rc = -EFAULT;
-         goto free_fail;
-     }
--    ha = shost_priv(gdth_ctr_tab[rsc->ionode]);
-     memset(cmd, 0, sizeof(gdth_cmd_str));
-    
-     for (i = 0; i < MAX_HDRIVES; ++i) { 
-@@ -4321,11 +4333,10 @@ static int ioc_rescan(void __user *arg, char *cmnd)
-         goto free_fail;
- 
-     if (copy_from_user(rsc, arg, sizeof(gdth_ioctl_rescan)) ||
--        rsc->ionode >= gdth_ctr_count) {
-+        (NULL == (ha = gdth_find_ha(rsc->ionode)))) {
-         rc = -EFAULT;
-         goto free_fail;
-     }
--    ha = shost_priv(gdth_ctr_tab[rsc->ionode]);
-     memset(cmd, 0, sizeof(gdth_cmd_str));
- 
-     if (rsc->flag == 0) {
-@@ -4482,9 +4493,9 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
-         gdth_ioctl_ctrtype ctrt;
-         
-         if (copy_from_user(&ctrt, argp, sizeof(gdth_ioctl_ctrtype)) ||
--            ctrt.ionode >= gdth_ctr_count)
-+            (NULL == (ha = gdth_find_ha(ctrt.ionode))))
-             return -EFAULT;
--        ha = shost_priv(gdth_ctr_tab[ctrt.ionode]);
+     scp->scsi_done = done;
++    gdth_update_timeout(scp, scp->timeout_per_command * 6);
++    scp->SCp.this_residual = DEFAULT_PRI;
++    return __gdth_queuecommand(ha, scp, cmndinfo);
++}
 +
-         if (ha->type == GDT_ISA || ha->type == GDT_EISA) {
-             ctrt.type = (unchar)((ha->stype>>20) - 0x10);
-         } else {
-@@ -4523,10 +4534,9 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
-         unchar i, j;
++static int __gdth_queuecommand(gdth_ha_str *ha, struct scsi_cmnd *scp,
++				struct gdth_cmndinfo *cmndinfo)
++{
++    scp->host_scribble = (unsigned char *)cmndinfo;
+     scp->SCp.have_data_in = 1;
+     scp->SCp.phase = -1;
+     scp->SCp.sent_command = -1;
+     scp->SCp.Status = GDTH_MAP_NONE;
+-    scp->SCp.buffer = (struct scatterlist *)NULL;
  
-         if (copy_from_user(&lchn, argp, sizeof(gdth_ioctl_lockchn)) ||
--            lchn.ionode >= gdth_ctr_count)
-+            (NULL == (ha = gdth_find_ha(lchn.ionode))))
-             return -EFAULT;
--        ha = shost_priv(gdth_ctr_tab[lchn.ionode]);
--        
-+
-         i = lchn.channel;
-         if (i < ha->bus_cnt) {
-             if (lchn.lock) {
-@@ -4562,9 +4572,8 @@ static int gdth_ioctl(struct inode *inode, struct file *filep,
-         int rval;
- 
-         if (copy_from_user(&res, argp, sizeof(gdth_ioctl_reset)) ||
--            res.ionode >= gdth_ctr_count)
-+            (NULL == (ha = gdth_find_ha(res.ionode))))
-             return -EFAULT;
--        ha = shost_priv(gdth_ctr_tab[res.ionode]);
- 
-         scp  = kzalloc(sizeof(*scp), GFP_KERNEL);
-         if (!scp)
-@@ -4626,7 +4635,7 @@ static void gdth_flush(gdth_ha_str *ha)
- /* shutdown routine */
- static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
- {
--    int             hanum;
-+    gdth_ha_str *ha;
- #ifndef __alpha__
-     gdth_cmd_str    gdtcmd;
-     char            cmnd[MAX_COMMAND_SIZE];   
-@@ -4641,8 +4650,7 @@ static int gdth_halt(struct notifier_block *nb, ulong event, void *buf)
- 
-     notifier_disabled = 1;
-     printk("GDT-HA: Flushing all host drives .. ");
--    for (hanum = 0; hanum < gdth_ctr_count; ++hanum) {
--        gdth_ha_str *ha = shost_priv(gdth_ctr_tab[hanum]);
-+    list_for_each_entry(ha, &gdth_instances, list) {
-         gdth_flush(ha);
- 
- #ifndef __alpha__
-@@ -4695,7 +4703,7 @@ static int gdth_isa_probe_one(ulong32 isa_bios)
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
- 	dma_addr_t scratch_dma_handle = 0;
--	int error, hanum, i;
-+	int error, i;
- 
- 	if (!gdth_search_isa(isa_bios))
- 		return -ENXIO;
-@@ -4730,10 +4738,8 @@ static int gdth_isa_probe_one(ulong32 isa_bios)
- 	shp->unchecked_isa_dma = 1;
- 	shp->irq = ha->irq;
- 	shp->dma_channel = ha->drq;
--	hanum = gdth_ctr_count;
--	gdth_ctr_tab[gdth_ctr_count++] = shp;
- 
--	ha->hanum = (ushort)hanum;
-+	ha->hanum = gdth_ctr_count++;
- 	ha->shost = shp;
- 
- 	ha->pccb = &ha->cmdext;
-@@ -4825,7 +4831,7 @@ static int gdth_eisa_probe_one(ushort eisa_slot)
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
- 	dma_addr_t scratch_dma_handle = 0;
--	int error, hanum, i;
-+	int error, i;
- 
- 	if (!gdth_search_eisa(eisa_slot))
- 		return -ENXIO;
-@@ -4852,10 +4858,8 @@ static int gdth_eisa_probe_one(ushort eisa_slot)
- 	shp->unchecked_isa_dma = 0;
- 	shp->irq = ha->irq;
- 	shp->dma_channel = 0xff;
--	hanum = gdth_ctr_count;
--	gdth_ctr_tab[gdth_ctr_count++] = shp;
- 
--	ha->hanum = (ushort)hanum;
-+	ha->hanum = gdth_ctr_count++;
- 	ha->shost = shp;
- 
- 	TRACE2(("EISA detect Bus 0: hanum %d\n", ha->hanum));
-@@ -4956,7 +4960,7 @@ static int gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
- 	struct Scsi_Host *shp;
- 	gdth_ha_str *ha;
- 	dma_addr_t scratch_dma_handle = 0;
--	int error, hanum, i;
-+	int error, i;
- 
- 	shp = scsi_host_alloc(&gdth_template, sizeof(gdth_ha_str));
- 	if (!shp)
-@@ -4983,10 +4987,8 @@ static int gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
- 	shp->unchecked_isa_dma = 0;
- 	shp->irq = ha->irq;
- 	shp->dma_channel = 0xff;
--	hanum = gdth_ctr_count;
--	gdth_ctr_tab[gdth_ctr_count++] = shp;
- 
--	ha->hanum = (ushort)hanum;
-+	ha->hanum = gdth_ctr_count++;
- 	ha->shost = shp;
- 
- 	ha->pccb = &ha->cmdext;
-@@ -5148,20 +5150,14 @@ static int __init gdth_init(void)
- 		ulong32 isa_bios;
- 		for (isa_bios = 0xc8000UL; isa_bios <= 0xd8000UL;
- 		                isa_bios += 0x8000UL) {
--			if (gdth_ctr_count >= MAXHA)
--				break;
- 			gdth_isa_probe_one(isa_bios);
--		}
+ #ifdef GDTH_STATISTICS
+     ++act_ios;
  #endif
- #ifdef CONFIG_EISA
- 		{
- 			ushort eisa_slot;
- 			for (eisa_slot = 0x1000; eisa_slot <= 0x8000;
--			                         eisa_slot += 0x1000) {
--				if (gdth_ctr_count >= MAXHA)
--					break;
-+			                         eisa_slot += 0x1000)
- 				gdth_eisa_probe_one(eisa_slot);
--			}
- 		}
- #endif
- 	}
-@@ -5175,11 +5171,8 @@ static int __init gdth_init(void)
- 		cnt = gdth_search_pci(pcistr);
- 		printk("GDT-HA: Found %d PCI Storage RAID Controllers\n", cnt);
- 		gdth_sort_pci(pcistr,cnt);
--		for (ctr = 0; ctr < cnt; ++ctr) {
--			if (gdth_ctr_count >= MAXHA)
--				break;
-+		for (ctr = 0; ctr < cnt; ++ctr)
- 			gdth_pci_probe_one(pcistr, ctr);
--		}
- 	}
- #endif /* CONFIG_PCI */
  
+-    priority = DEFAULT_PRI;
+-    if (IS_GDTH_INTERNAL_CMD(scp))
+-        priority = scp->SCp.this_residual;
+-    else
+-        gdth_update_timeout(scp, scp->timeout_per_command * 6);
+-
+-    gdth_putq(ha, scp, priority);
++    gdth_putq(ha, scp, scp->SCp.this_residual);
+     gdth_next(ha);
+     return 0;
+ }
+diff --git a/drivers/scsi/gdth.h b/drivers/scsi/gdth.h
+index e6178c4..be4ae5a 100644
+--- a/drivers/scsi/gdth.h
++++ b/drivers/scsi/gdth.h
+@@ -919,6 +919,11 @@ typedef struct {
+         Scsi_Cmnd       *cmnd;                  /* pending request */
+         ushort          service;                /* service */
+     } cmd_tab[GDTH_MAXCMDS];                    /* table of pend. requests */
++    struct gdth_cmndinfo {                      /* per-command private info */
++        int index;
++        int internal_command;                   /* don't call scsi_done */
++        dma_addr_t sense_paddr;                 /* sense dma-addr */
++    } cmndinfo[GDTH_MAXCMDS];                   /* index==0 is free */
+     unchar              bus_cnt;                /* SCSI bus count */
+     unchar              tid_cnt;                /* Target ID count */
+     unchar              bus_id[MAXBUS];         /* IOP IDs */
+@@ -941,6 +946,11 @@ typedef struct {
+     struct scsi_device         *sdev;
+ } gdth_ha_str;
+ 
++static inline struct gdth_cmndinfo *gdth_cmnd_priv(struct scsi_cmnd* cmd)
++{
++	return (struct gdth_cmndinfo *)cmd->host_scribble;
++}
++
+ /* INQUIRY data format */
+ typedef struct {
+     unchar      type_qual;
+diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
+index 6391e6a..ad1b60d 100644
+--- a/drivers/scsi/gdth_proc.c
++++ b/drivers/scsi/gdth_proc.c
+@@ -758,7 +758,8 @@ static void gdth_stop_timeout(gdth_ha_str *ha, int busnum, int id)
+     spin_lock_irqsave(&ha->smp_lock, flags);
+ 
+     for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
+-        if (IS_GDTH_INTERNAL_CMD(scp)) {
++        struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
++        if (!cmndinfo->internal_command) {
+             b = scp->device->channel;
+             t = scp->device->id;
+             if (t == (unchar)id && b == (unchar)busnum) {
+@@ -779,7 +780,8 @@ static void gdth_start_timeout(gdth_ha_str *ha, int busnum, int id)
+     spin_lock_irqsave(&ha->smp_lock, flags);
+ 
+     for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
+-        if (!IS_GDTH_INTERNAL_CMD(scp)) {
++        struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
++        if (!cmndinfo->internal_command) {
+             b = scp->device->channel;
+             t = scp->device->id;
+             if (t == (unchar)id && b == (unchar)busnum) {
 -- 
 1.5.3.1
 
