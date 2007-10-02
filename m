@@ -1,44 +1,52 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
-Date: Mon, 1 Oct 2007 21:22:48 -0700
-Message-ID: <20071002042248.GA23399@suse.de>
-References: <20070925142157B.tomof@acm.org> <20070926160558.GA10819@suse.de> <1191281770.3530.24.camel@localhost.localdomain> <20071002013902.GP12049@parisc-linux.org>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: kdump detection in SCSI drivers
+Date: Tue, 2 Oct 2007 10:00:03 +0200
+Message-ID: <20071002080000.GA5743@atrey.karlin.mff.cuni.cz>
+References: <9738BCBE884FDB42801FAD8A7769C26501B2C44C@NAMAIL1.ad.lsil.com> <20070920104249.GB12157@atrey.karlin.mff.cuni.cz> <9738BCBE884FDB42801FAD8A7769C26501B2C7D8@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.suse.de ([195.135.220.2]:39307 "EHLO mx1.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750828AbXJBEUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Oct 2007 00:20:05 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756157AbXJBIA0@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20071002013902.GP12049@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501B2C7D8@NAMAIL1.ad.lsil.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Mukker, Atul" <Atul.Mukker@lsi.com>
+Cc: Linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <tomof@acm.org>, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Mon, Oct 01, 2007 at 07:39:02PM -0600, Matthew Wilcox wrote:
-> On Mon, Oct 01, 2007 at 07:36:10PM -0400, James Bottomley wrote:
-> > One possibility we could do is to add a
+Hi!
+
+> How do we "know" when little memory is available?
+
+Kernel already scales its hash tables according to total RAM
+available, perhaps you can use similar mechanism?
+
+> Other suggestion which came about was to parse the kernel command line
+> and look for "elfcorehdr=". Is this ok? Is kernel command line visible
+> to the SCSI drivers?
+
+Kernel command line probably is visible, but I'd recommend against
+doing that.
+
+							Pavel
+
+> Cc: Linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: kdump detection in SCSI drivers
+> 
+> > Hi,
 > > 
-> > struct dma_device {
-> > 	struct device dev;
-> > 	u64 dma_mask;
-> > 	u64 coherent_dma_mask;
-> > 	unsigned int max_segment_size;
-> > 	/* plus any other DMA parameters */
-> > };
-> > 
-> > but then every bus that can do DMA would need to include a struct
-> > dma_device instead of the struct device they do now.  Then the IOMMU
-> > would know it could cast out from struct device to struct dma_device,
-> > but this would be a lot of work to thread through the current
-> > infrastructure.
+> > Is there a standard way for drivers (RAID) to detect if the current
+> > kernel is running in kdump mode? We would like to adjust driver
+> behavior
+> > dynamically when kdump is active by scaling down resources.
+> 
+> Perhaps you should be automatically using little resources when little
+> memory is available, or something? 
+> 
+> With upcomping kjump patches, it is more "interesting" than kdump
+> vs. no kdump.
+> 	
+> Pavel
 
-Why not just hang these fields off of a struct device, that way if the
-device doesn't/can't do dma, it only has the "loss" of a single pointer,
-not all of these fields?
-
-thanks,
-
-greg k-h
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
