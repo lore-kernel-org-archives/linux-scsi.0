@@ -1,42 +1,59 @@
 From: akpm@linux-foundation.org
-Subject: [patch 08/17] Fix a potential NULL pointer deref in the aic7xxx, ahc_print_register() function
-Date: Tue, 02 Oct 2007 14:38:04 -0700
-Message-ID: <200710022138.l92Lc4iM023579@imap1.linux-foundation.org>
+Subject: [patch 06/17] Fix drivers/scsi/fdomain.c CONFIG_PCI=n warnings
+Date: Tue, 02 Oct 2007 14:38:02 -0700
+Message-ID: <200710022138.l92Lc2Gg023573@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:45259 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45164 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753331AbXJBViI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:08 -0400
+	by vger.kernel.org with ESMTP id S1754107AbXJBViK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:10 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jesper.juhl@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, nix.or.die@googlemail.com
 
-From: Jesper Juhl <jesper.juhl@gmail.com>
+From: Gabriel C <nix.or.die@googlemail.com>
 
-The Coverity checker noticed that we have a potential NULL pointer
-deref in drivers/scsi/aic7xxx/aic7xxx_core.c::ahc_print_register().
-This patch handles it by adding the same test against NULL that is
-used elsewhere in the same function.
+I get this warnings on current git when CONFIG_PCI is not set :
 
-Signed-off-by: Jesper Juhl <jesper.juhl@gmail.com>
+drivers/scsi/fdomain.c:390: warning: 'PCI_dev' defined but not used
+drivers/scsi/fdomain.c:1768: warning: 'fdomain_pci_tbl' defined but not used
+
+Signed-off-by: Gabriel Craciunescu <nix.or.die@googlemail.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic7xxx/aic7xxx_core.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/fdomain.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-diff -puN drivers/scsi/aic7xxx/aic7xxx_core.c~fix-a-potential-null-pointer-deref-in-the-aic7xxx-ahc_print_register-function drivers/scsi/aic7xxx/aic7xxx_core.c
---- a/drivers/scsi/aic7xxx/aic7xxx_core.c~fix-a-potential-null-pointer-deref-in-the-aic7xxx-ahc_print_register-function
-+++ a/drivers/scsi/aic7xxx/aic7xxx_core.c
-@@ -6557,7 +6557,8 @@ ahc_print_register(ahc_reg_parse_entry_t
- 	printed = printf("%s[0x%x]", name, value);
- 	if (table == NULL) {
- 		printed += printf(" ");
--		*cur_column += printed;
-+		if (cur_column != NULL)
-+			*cur_column += printed;
- 		return (printed);
- 	}
- 	printed_mask = 0;
+diff -puN drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings drivers/scsi/fdomain.c
+--- a/drivers/scsi/fdomain.c~fix-drivers-scsi-fdomainc-config_pci=n-warnings
++++ a/drivers/scsi/fdomain.c
+@@ -387,7 +387,9 @@ static void __iomem *    bios_mem;
+ static int               bios_major;
+ static int               bios_minor;
+ static int               PCI_bus;
++#ifdef CONFIG_PCI
+ static struct pci_dev	*PCI_dev;
++#endif
+ static int               Quantum;	/* Quantum board variant */
+ static int               interrupt_level;
+ static volatile int      in_command;
+@@ -1764,6 +1766,7 @@ struct scsi_host_template fdomain_driver
+ };
+ 
+ #ifndef PCMCIA
++#ifdef CONFIG_PCI
+ 
+ static struct pci_device_id fdomain_pci_tbl[] __devinitdata = {
+ 	{ PCI_VENDOR_ID_FD, PCI_DEVICE_ID_FD_36C70,
+@@ -1771,7 +1774,7 @@ static struct pci_device_id fdomain_pci_
+ 	{ }
+ };
+ MODULE_DEVICE_TABLE(pci, fdomain_pci_tbl);
+-
++#endif
+ #define driver_template fdomain_driver_template
+ #include "scsi_module.c"
+ 
 _
