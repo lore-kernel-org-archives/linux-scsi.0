@@ -1,43 +1,44 @@
 From: akpm@linux-foundation.org
-Subject: [patch 09/17] add includes to scsi_transport_iscsi.h
-Date: Tue, 02 Oct 2007 14:38:05 -0700
-Message-ID: <200710022138.l92Lc5NQ023582@imap1.linux-foundation.org>
+Subject: [patch 13/17] drivers/scsi/imm.c: fix check-after-use
+Date: Tue, 02 Oct 2007 14:38:09 -0700
+Message-ID: <200710022138.l92Lc9CR023594@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:40165 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48410 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755590AbXJBViZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:25 -0400
+	by vger.kernel.org with ESMTP id S1756490AbXJBVid (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 17:38:33 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, mst@dev.mellanox.co.il, michaelc@cs.wisc.edu, rdreier@cisco.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, bunk@stusta.de
 
-From: "Michael S. Tsirkin" <mst@dev.mellanox.co.il>
+From: Adrian Bunk <bunk@kernel.org>
 
-scsi/scsi_transport_iscsi.h uses struct mutex and struct list_head,
-so while linux/mutex.h and linux/list.h seem to be pulled in indirectly
-by one of the headers it includes, the right thing
-is to include linux/mutex.h and linus/list.h directly.
+The Coverity checker spotted that we have already oops'ed if "cmd"
+was NULL.
 
-Signed-off-by: Michael S. Tsirkin <mst@dev.mellanox.co.il>
-Acked-by: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Roland Dreier <rdreier@cisco.com>
+Since "cmd" being NULL doesn't seem to be possible at this point this
+patch removes the NULL check.
+
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- include/scsi/scsi_transport_iscsi.h |    2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/imm.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-diff -puN include/scsi/scsi_transport_iscsi.h~add-includes-to-scsi_transport_iscsih include/scsi/scsi_transport_iscsi.h
---- a/include/scsi/scsi_transport_iscsi.h~add-includes-to-scsi_transport_iscsih
-+++ a/include/scsi/scsi_transport_iscsi.h
-@@ -24,6 +24,8 @@
- #define SCSI_TRANSPORT_ISCSI_H
+diff -puN drivers/scsi/imm.c~drivers-scsi-immc-fix-check-after-use drivers/scsi/imm.c
+--- a/drivers/scsi/imm.c~drivers-scsi-immc-fix-check-after-use
++++ a/drivers/scsi/imm.c
+@@ -740,10 +740,6 @@ static void imm_interrupt(struct work_st
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	unsigned long flags;
  
- #include <linux/device.h>
-+#include <linux/list.h>
-+#include <linux/mutex.h>
- #include <scsi/iscsi_if.h>
- 
- struct scsi_transport_template;
+-	if (!cmd) {
+-		printk("IMM: bug in imm_interrupt\n");
+-		return;
+-	}
+ 	if (imm_engine(dev, cmd)) {
+ 		schedule_delayed_work(&dev->imm_tq, 1);
+ 		return;
 _
