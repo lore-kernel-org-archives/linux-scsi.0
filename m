@@ -1,56 +1,50 @@
-From: Douglas Gilbert <dougg@torque.net>
+From: Michael Reed <mdr@sgi.com>
 Subject: Re: generating a Linux WWN?
-Date: Wed, 03 Oct 2007 10:59:47 -0400
-Message-ID: <4703AE63.3010109@torque.net>
-References: <50432.44268.qm@web31802.mail.mud.yahoo.com> <47032C67.8080109@garzik.org>
-Reply-To: dougg@torque.net
+Date: Wed, 03 Oct 2007 10:33:01 -0500
+Message-ID: <4703B62D.3020002@sgi.com>
+References: <660594.90733.qm@web31808.mail.mud.yahoo.com> <47032CDA.1020303@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44238 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754763AbXJCPAq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 11:00:46 -0400
-In-Reply-To: <47032C67.8080109@garzik.org>
+Received: from netops-testserver-4-out.sgi.com ([192.48.171.29]:53592 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751341AbXJCPdE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 11:33:04 -0400
+In-Reply-To: <47032CDA.1020303@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jeff Garzik <jeff@garzik.org>
-Cc: ltuikov@yahoo.com, Michael Reed <mdr@sgi.com>, James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: ltuikov@yahoo.com, James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+
+
 
 Jeff Garzik wrote:
 > Luben Tuikov wrote:
->> --- Jeff Garzik <jeff@garzik.org> wrote:
->>> The admin will have the option to auto-generate a WWN, should they so
->>> desire.
+>> Do you mean:
+>>   "The admin will have the option to SPECIFY(SET) a WWN, should they
+>> so    desire."
+>> OR do you mean:
+>>   "The admin will have the option to HAVE THE KERNEL auto-generate a WWN,
+>>    should they so desire."
 > 
->> What does that mean?  "auto-generate"?  By whom?
+> Both.  It is up to admin policy to decide if they wish to use the
+> available board's WWN (if present/valid), manually apportion WWNs, or
+> whether the kernel's generation algo is fine with them.
+
+Could the reassignment of a board's WWN present any security issues?
+A board which is allowed to access only some targets is now allowed to
+access others.  I would assume that most sites that care about security
+would have other measures in place to guard against this, but it's still
+worth pondering.
+
+Mike
+
 > 
-> The admin tells the kernel module to auto-generate a WWN, and the kernel
-> module happily obliges.
-> 
-> The generation algorithm is whatever makes people happy.  I would
-> probably pick a fixed prefix like 0x6C 0x69 0x63 ("lin"), something that
-> doesn't conflict with IEEE org ids for a long time to come.  Then,
-> get_random_bytes() or hash some useful machine characteristics for the
-> rest of the bytes.
+>     Jeff
 > 
 > 
->> What if they don't "auto-generate" (whatever that means)?
-> 
-> Well, you either have a WWN or you don't :)
-
-Jeff,
-It is not quite black and white. As I tried to point
-out, when a SAS HBA is run in target mode, there is
-a good chance there aren't _enough_ unique SAS addresses
-allocated by the manufacturer.
-
-There should be naa-5 addresses for the ports, it is
-the target device address and 0 or more lu addresses that
-may need to be generated.
-
-
-Doug Gilbert
-
-
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
