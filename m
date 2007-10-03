@@ -1,80 +1,88 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 21/21] advansys: Changes to work on parisc
-Date: Tue,  2 Oct 2007 21:55:42 -0400
-Message-ID: <11913765432770-git-send-email-matthew@wil.cx>
+Subject: [PATCH 09/21] advansys: Merge ASC_IERR definitions
+Date: Tue,  2 Oct 2007 21:55:30 -0400
+Message-ID: <11913765422893-git-send-email-matthew@wil.cx>
 References: <11913765421743-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:45206 "EHLO
-	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753930AbXJCBzt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:49 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:55216 "EHLO
+	mail-06.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754149AbXJCBzr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:47 -0400
 In-Reply-To: <11913765421743-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-Change PortAddr to be an unsigned int instead of an unsigned short (IO
-Port address are 24 bit on parisc).  Fix a couple of printk argument
-warnings.  Remove the Kconfig marking as 'BROKEN'.
-
-I haven't removed the #warning yet because virt_to_bus/bus_to_virt are
-only eliminated for narrow boards.  Wide boards need more work.
+There were two blocks of ASC_IERR definitions; one for narrow and one for
+wide boards.  Some of the same names were used (with the same values),
+and some of the same values were used with different names.  This could
+only lead to confusion, so I unified them in one block of definitions
+with no overlapping values.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/Kconfig    |    1 -
- drivers/scsi/advansys.c |   10 +++++-----
- 2 files changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/advansys.c |   40 ++++++++++++++++------------------------
+ 1 files changed, 16 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 69b2fac..de6a641 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -521,7 +521,6 @@ config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
- 	depends on SCSI
- 	depends on ISA || EISA || PCI
--	depends on BROKEN || X86_32
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
- 	  AdvanSys. It is documented in the kernel source in
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 8e39df5..bc0f2e5 100644
+index ad9639d..4c792db 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -120,7 +120,7 @@ typedef unsigned char uchar;
- #define CC_VERY_LONG_SG_LIST 0
- #define ASC_SRB2SCSIQ(srb_ptr)  (srb_ptr)
+@@ -459,14 +459,22 @@ typedef struct asc_risc_sg_list_q {
+ #define ASC_WARN_CFG_MSW_RECOVER      0x0040
  
--#define PortAddr                 unsigned short	/* port address size  */
-+#define PortAddr                 unsigned int	/* port address size  */
- #define inp(port)                inb(port)
- #define outp(port, byte)         outb((byte), (port))
+ /*
+- * Error code values are set in ASC_DVC_VAR  'err_code'.
+- */
+-#define ASC_IERR_MCODE_CHKSUM         0x0002
+-#define ASC_IERR_SET_PC_ADDR          0x0004
+-#define ASC_IERR_START_STOP_CHIP      0x0008
+-#define ASC_IERR_SET_SCSI_ID          0x0080
+-#define ASC_IERR_BAD_SIGNATURE        0x0200
+-#define ASC_IERR_NO_BUS_TYPE          0x0400
++ * Error code values are set in {ASC/ADV}_DVC_VAR  'err_code'.
++ */
++#define ASC_IERR_NO_CARRIER		0x0001	/* No more carrier memory */
++#define ASC_IERR_MCODE_CHKSUM		0x0002	/* micro code check sum error */
++#define ASC_IERR_SET_PC_ADDR		0x0004
++#define ASC_IERR_START_STOP_CHIP	0x0008	/* start/stop chip failed */
++#define ASC_IERR_ILLEGAL_CONNECTION	0x0010	/* Illegal cable connection */
++#define ASC_IERR_SINGLE_END_DEVICE	0x0020	/* SE device on DIFF bus */
++#define ASC_IERR_REVERSED_CABLE		0x0040	/* Narrow flat cable reversed */
++#define ASC_IERR_SET_SCSI_ID		0x0080	/* set SCSI ID failed */
++#define ASC_IERR_HVD_DEVICE		0x0100	/* HVD device on LVD port */
++#define ASC_IERR_BAD_SIGNATURE		0x0200	/* signature not found */
++#define ASC_IERR_NO_BUS_TYPE		0x0400
++#define ASC_IERR_BIST_PRE_TEST		0x0800	/* BIST pre-test error */
++#define ASC_IERR_BIST_RAM_TEST		0x1000	/* BIST RAM test error */
++#define ASC_IERR_BAD_CHIPTYPE		0x2000	/* Invalid chip_type setting */
  
-@@ -13333,8 +13333,8 @@ static int __devinit advansys_wide_init_chip(struct Scsi_Host *shost)
+ #define ASC_DEF_MAX_TOTAL_QNG   (0xF0)
+ #define ASC_MIN_TAG_Q_PER_DVC   (0x04)
+@@ -1698,22 +1706,6 @@ typedef struct adveep_38C1600_config {
+ #define ADV_MAX_LUN                     7	/* max. logical unit number */
  
- 	}
- 
--	ASC_DBG(1, "sg_cnt %d * %u = %u bytes\n", sg_cnt, sizeof(adv_sgblk_t),
--		 (unsigned)(sizeof(adv_sgblk_t) * sg_cnt));
-+	ASC_DBG(1, "sg_cnt %d * %lu = %lu bytes\n", sg_cnt, sizeof(adv_sgblk_t),
-+		 sizeof(adv_sgblk_t) * sg_cnt);
- 
- 	if (!board->adv_sgblkp)
- 		goto kmalloc_failed;
-@@ -13428,9 +13428,9 @@ static int __devinit advansys_board_found(struct Scsi_Host *shost,
- 		boardp->ioremap_addr = ioremap(pci_resource_start(pdev, 1),
- 					       boardp->asc_n_io_port);
- 		if (!boardp->ioremap_addr) {
--			shost_printk(KERN_ERR, shost, "ioremap(%x, %d) "
-+			shost_printk(KERN_ERR, shost, "ioremap(%lx, %d) "
- 					"returned NULL\n",
--					pci_resource_start(pdev, 1),
-+					(long)pci_resource_start(pdev, 1),
- 					boardp->asc_n_io_port);
- 			ret = -ENODEV;
- 			goto err_shost;
+ /*
+- * Error code values are set in ADV_DVC_VAR 'err_code'.
+- */
+-#define ASC_IERR_MCODE_CHKSUM       0x0002	/* micro code check sum error */
+-#define ASC_IERR_NO_CARRIER         0x0004	/* No more carrier memory. */
+-#define ASC_IERR_START_STOP_CHIP    0x0008	/* start/stop chip failed */
+-#define ASC_IERR_SET_SCSI_ID        0x0080	/* set SCSI ID failed */
+-#define ASC_IERR_HVD_DEVICE         0x0100	/* HVD attached to LVD connector. */
+-#define ASC_IERR_BAD_SIGNATURE      0x0200	/* signature not found */
+-#define ASC_IERR_ILLEGAL_CONNECTION 0x0400	/* Illegal cable connection */
+-#define ASC_IERR_SINGLE_END_DEVICE  0x0800	/* Single-end used w/differential */
+-#define ASC_IERR_REVERSED_CABLE     0x1000	/* Narrow flat cable reversed */
+-#define ASC_IERR_BIST_PRE_TEST      0x2000	/* BIST pre-test error */
+-#define ASC_IERR_BIST_RAM_TEST      0x4000	/* BIST RAM test error */
+-#define ASC_IERR_BAD_CHIPTYPE       0x8000	/* Invalid 'chip_type' setting. */
+-
+-/*
+  * Fixed locations of microcode operating variables.
+  */
+ #define ASC_MC_CODE_BEGIN_ADDR          0x0028	/* microcode start address */
 -- 
 1.5.3.1
 
