@@ -1,88 +1,57 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 3/5] add sg segment limitation info to device structure
-Date: Wed, 3 Oct 2007 14:50:19 -0700
-Message-ID: <20071003215019.GF17863@suse.de>
-References: <3ae72650710020823j17219ab5u6c2aefe491884ca6@mail.gmail.com> <20071002152534.GT12049@parisc-linux.org> <20071002164413.GA12571@suse.de> <20071003231034P.tomof@acm.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: generating a Linux WWN?
+Date: Wed, 3 Oct 2007 15:08:48 -0700 (PDT)
+Message-ID: <344765.55522.qm@web31815.mail.mud.yahoo.com>
+References: <4703FAB0.10702@garzik.org>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:53973 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753668AbXJCVuo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Oct 2007 17:50:44 -0400
-Content-Disposition: inline
-In-Reply-To: <20071003231034P.tomof@acm.org>
+Received: from web31815.mail.mud.yahoo.com ([68.142.206.168]:39471 "HELO
+	web31815.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1755506AbXJCWIt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 18:08:49 -0400
+In-Reply-To: <4703FAB0.10702@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: matthew@wil.cx, kay.sievers@vrfy.org, James.Bottomley@steeleye.com, jens.axboe@oracle.com, hch@infradead.org, jeff@garzik.org, hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Matthew Jacob <lydianconcepts@gmail.com>, Michael Reed <mdr@sgi.com>, James.Smart@emulex.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 03, 2007 at 11:19:22PM +0900, FUJITA Tomonori wrote:
-> On Tue, 2 Oct 2007 09:44:13 -0700
-> Greg KH <gregkh@suse.de> wrote:
-> 
-> > On Tue, Oct 02, 2007 at 09:25:34AM -0600, Matthew Wilcox wrote:
-> > > On Tue, Oct 02, 2007 at 05:23:39PM +0200, Kay Sievers wrote:
-> > > > Just looking at the number of devices, it seems that allocating it
-> > > > dynamically would be the better deal. We allocate the name of every
-> > > > kobject dynamically today, so I guess it's fine to do that with the
-> > > > DMA data too.
-> > > 
-> > > But we don't need to allocate it dynamically.  We can embed it in the
-> > > pci_dev, eisa_dev, zorro_dev, mca_dev and parisc_device.
-> > 
-> > But then you run into the issue that James pointed out originally.
-> > 
-> > Anyway, I don't care which, let's see some patches :)
-> 
-> How about this (based on James' proposal)?
-> 
-> - Currently, there are only max_segment_size and segment_boundary_mask
-> in struct device_dma_parameters (I'll add segment_boundary_mask
-> support later after I finish the iommu part). We'll move more dma
-> stuff in struct device (like dma_mask) to struct device_dma_parameters
-> later (needs some cleanups before that).
-> 
-> - New accessors for the dma parameters are added. So we can easily
-> change where to place struct device_dma_parameters in the future.
-> 
-> - the default max_segment_size is set to 64K, same to the block
-> layer's default value.
+--- Jeff Garzik <jeff@garzik.org> wrote:
+> Luben Tuikov wrote:
+> > What is needed is persistence, regardless of reboots of what OS
+> > is running on the host CPU/system.  SAS WWNs are properties of
+> > the SAS target/initiator port, they are not properties of when
+> > the host system was booted, or what OS is running on it.
 > 
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 37c00f6..c93ebe8 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -1392,6 +1392,13 @@ pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
->  }
->  #endif
->  
-> +#ifndef HAVE_ARCH_PCI_SET_DMA_MAX_SEGMENT_SIZE
-> +int pci_set_dma_max_seg_size(struct pci_dev *dev, unsigned int size)
-> +{
-> +	return dma_set_max_seg_size(&dev->dev, size);
-> +}
-> +#endif
-> +
->  /**
->   * pcix_get_max_mmrbc - get PCI-X maximum designed memory read byte count
->   * @dev: PCI device to query
-> @@ -1624,6 +1631,7 @@ EXPORT_SYMBOL(pci_clear_mwi);
->  EXPORT_SYMBOL_GPL(pci_intx);
->  EXPORT_SYMBOL(pci_set_dma_mask);
->  EXPORT_SYMBOL(pci_set_consistent_dma_mask);
-> +EXPORT_SYMBOL(pci_set_dma_max_seg_size);
->  EXPORT_SYMBOL(pci_assign_resource);
->  EXPORT_SYMBOL(pci_find_parent_resource);
->  EXPORT_SYMBOL(pci_select_bars);
+> As part of the previously described schemes, the admin is certainly 
+> allowed to choose an option (manual WWN specification) that enables an 
+> external system of persistance.
+> 
+> But such a system should not be a /requirement/, when all an admin might 
+> want to do is simply get their card working.
 
-Export the symbol right next to the function, that way the #ifdef
-doesn't have to be duplicated.
+It *is* a requirement, in fact at all levels of the product.
 
-other than that minor problem, this looks good to me.  James, any
-objection to this?
+How would you query the storage domain (at boot time mind you) that
+no such WWN exists, and/or will not exist when another storage component
+is connected to or comes online, if you generated it in the kernel?
 
-thanks,
+SAS ports not having a WWN as part of the MS/NVRAM is an *exception*,
+and a bad one at that.  The driver should just complain and not bring
+up the HA.
 
-greg k-h
+Your "want to get their card working" way of view is very
+simplistic to justify generating and assigning SAS WWN in the kernel.
+This is the job of the manufacturer/packager, not the host OS.
+
+    Luben
+
+
+> 
+> The admin knows whats best for their site, and may choose.
+> 
+> 	Jeff
+
