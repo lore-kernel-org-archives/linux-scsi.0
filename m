@@ -1,73 +1,66 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: [patch 16/17] mptbase: reset ioc initiator during PCI resume
-Date: Wed, 3 Oct 2007 13:32:56 -0600
-Message-ID: <664A4EBB07F29743873A87CF62C26D70A0A994@NAMAIL4.ad.lsil.com>
-References: <20071002230625.GA16003@tree.beaverton.ibm.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: generating a Linux WWN?
+Date: Wed, 3 Oct 2007 12:44:17 -0700 (PDT)
+Message-ID: <983400.77431.qm@web31814.mail.mud.yahoo.com>
+References: <4703DADF.70509@garzik.org>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:54886 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752362AbXJCTd2 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 15:33:28 -0400
-Content-class: urn:content-classes:message
-In-Reply-To: <20071002230625.GA16003@tree.beaverton.ibm.com>
+Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:39721 "HELO
+	web31814.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1752791AbXJCToT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 15:44:19 -0400
+In-Reply-To: <4703DADF.70509@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: akpm@linux-foundation.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, Matthew Jacob <lydianconcepts@gmail.com>
+Cc: ltuikov@yahoo.com, Michael Reed <mdr@sgi.com>, James.Smart@emulex.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tuesday, October 02, 2007 5:06 PM,  Darrick J. Wong wrote:
-> Yep.  Replied to it, too.  Apparently it never got to you, so I've
-> attached it below.
+--- Jeff Garzik <jeff@garzik.org> wrote:
+> Matthew Jacob wrote:
+> >> The generation algorithm is whatever makes people happy.  I would
+> >> probably pick a fixed prefix like 0x6C 0x69 0x63 ("lin"), something that
+> >> doesn't conflict with IEEE org ids for a long time to come.  Then,
+> >> get_random_bytes() or hash some useful machine characteristics for the
+> >> rest of the bytes.
+> > 
+> > The "probably" here is kind of amusing.
+> > 
+> > Look, Linux development has the moolah (look at all the money IBM and
+> > SGI and others have shoveled in)- why don't you get a Linux block of
+> > OUIs from the IEEE and set up an RSS-like feed so the Open Source
+> > community can get WWNs with that OUI and a incrementing serial number
+> > as needed- that would be a *real* service. I've thought about doing
+> > this, but I'd have to fork over at least 1700$USD to get an official
+> > IEEE OUI and over the last ten years I've already spent far too much
+> > of my own money on open source support.
+> > 
+> > Heck, maybe even the IEEE would comp you on OUIs.
 > 
-
-Sorry, I didn't receive the previous email you sent. 
-
-> ---------------------
+> Certainly, I would love for this to happen!  Although my employer (Red 
+> Hat), SGI, IBM or whomever might be willing to tackle this, it might be 
+> more appropriate for the Linux Foundation.
 > 
-> On Thu, Sep 20, 2007 at 07:06:35PM -0600, Moore, Eric wrote:
-> > Darrick - MESSAGE_UNIT_RESET is already issued from inside
-> > mpt_do_ioc_recovery(), so you don't need to send this in advance of
-> > that.    YOu will find that occuring from the function MakeIocReady.
-> > Anyways... would it be possible for you to enable debug 
-> logging so I can
-> > see what problem your having?   I suggest MPT_DEBUG and 
-> MPT_DEBUG_INIT.
-> > If its possible for you to manually load mptbase, that way 
-> you can set
-> > the command line option. 
-> 
-> I took a look at MakeIocReady(), and this section caught my eye:
-> 
-> /* Is it already READY? */
-> if (!statefault && (ioc_state & MPI_IOC_STATE_MASK) == 
-> MPI_IOC_STATE_READY)
-> 	return 0;
+> Anybody wanna volunteer to pursue this?
 
-Yes, the purpose of MakeIocReady is to get the card in READY state.  If
-your already in READY state, there is no reason to continue in
-MakeIocReady.  A MESSAGE_UNIT_RESET places the card into READY state.
-You will see that we already issued MESSAGE_UNIT_RESET from
-mptbase_suspend.  So it should be in READY state coming into
-mptbase_resume, depending on which power state you transferred to from
-suspend.    The code you added in this patch is not required, meaning we
-dont need to send MESSAGE_UNIT_RESET prior to ioc_do_recovery, becuase
-from MakeIocReady will issue a MESSAGE_UNIT_RESET if your not already in
-READY.    I suspect there must be something else going on if you have to
-issue MESSAGE_UNIT_RESET when your already in READY state.   My card
-works fine without your patch.  I did the following:
+SAS WWN have nothing to do with Linux.
 
-# echo standby > /sys/power/state
+The kernel should not generate SAS WWN and assign them to SAS initiator
+ports.  SAS WWNs should be given to SAS initiator ports and SAS target
+ports by a storage management application which maintains and configures
+the storage domain, zoning, permissions, connectivity, etc.
 
+What is needed is persistence, regardless of reboots of what OS
+is running on the host CPU/system.  SAS WWNs are properties of
+the SAS target/initiator port, they are not properties of when
+the host system was booted, or what OS is running on it.
 
-There could be issues in the firmware your using.   I noticed
-FwRev=00060200h in the log,, which is 6.02, and over a year old.    
+Think about it this way: you don't change your name every morning
+you wake up and MAC addresses are not generated by the kernel for
+a network device which has none.  Those are persistent across
+reboots or type of host OS.
 
-I will send out a seperate email which I will copy you to the IBM system
-engineer support here at LSI, should be able to assist on this issue.
-
-Eric
+   Luben
 
