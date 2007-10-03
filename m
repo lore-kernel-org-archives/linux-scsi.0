@@ -1,38 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 19/21] advansys: Remove a couple of uses of bus_to_virt
-Date: Wed, 03 Oct 2007 10:46:16 -0400
-Message-ID: <4703AB38.6090605@garzik.org>
-References: <11913765421743-git-send-email-matthew@wil.cx> <1191376543887-git-send-email-matthew@wil.cx> <4702FAB3.7020608@garzik.org> <20071003123748.GF12049@parisc-linux.org> <4703A70F.1090500@garzik.org> <20071003143423.GG12049@parisc-linux.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: generating a Linux WWN?
+Date: Wed, 03 Oct 2007 10:59:47 -0400
+Message-ID: <4703AE63.3010109@torque.net>
+References: <50432.44268.qm@web31802.mail.mud.yahoo.com> <47032C67.8080109@garzik.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35537 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753937AbXJCOqR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Oct 2007 10:46:17 -0400
-In-Reply-To: <20071003143423.GG12049@parisc-linux.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:44238 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754763AbXJCPAq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 11:00:46 -0400
+In-Reply-To: <47032C67.8080109@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: ltuikov@yahoo.com, Michael Reed <mdr@sgi.com>, James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Matthew Wilcox wrote:
-> On Wed, Oct 03, 2007 at 10:28:31AM -0400, Jeff Garzik wrote:
->> Matthew Wilcox wrote:
->>> On Tue, Oct 02, 2007 at 10:13:07PM -0400, Jeff Garzik wrote:
->>>> check dma_map_single for error
->>> It's on the todo list.  Since so many other drivers don't check
->>> dma_map_single for error, I feel comfortable with leaving it for later.
->> The issue became more urgent with x86-64 and its smaller IOMMU area.
+Jeff Garzik wrote:
+> Luben Tuikov wrote:
+>> --- Jeff Garzik <jeff@garzik.org> wrote:
+>>> The admin will have the option to auto-generate a WWN, should they so
+>>> desire.
 > 
-> I'll bump up the priority of fixing it then.  I don't think this should
-> block the series from going in (since it wasn't even compilable on
-> x86-64 before this point).
+>> What does that mean?  "auto-generate"?  By whom?
+> 
+> The admin tells the kernel module to auto-generate a WWN, and the kernel
+> module happily obliges.
+> 
+> The generation algorithm is whatever makes people happy.  I would
+> probably pick a fixed prefix like 0x6C 0x69 0x63 ("lin"), something that
+> doesn't conflict with IEEE org ids for a long time to come.  Then,
+> get_random_bytes() or hash some useful machine characteristics for the
+> rest of the bytes.
+> 
+> 
+>> What if they don't "auto-generate" (whatever that means)?
+> 
+> Well, you either have a WWN or you don't :)
 
-Oh, certainly agreed...  I never used the word NAK.
+Jeff,
+It is not quite black and white. As I tried to point
+out, when a SAS HBA is run in target mode, there is
+a good chance there aren't _enough_ unique SAS addresses
+allocated by the manufacturer.
 
-	Jeff
+There should be naa-5 addresses for the ports, it is
+the target device address and 0 or more lu addresses that
+may need to be generated.
 
+
+Doug Gilbert
 
 
