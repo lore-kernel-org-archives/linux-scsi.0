@@ -1,170 +1,241 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 05/21] advansys: Improve reset handler
-Date: Tue,  2 Oct 2007 21:55:26 -0400
-Message-ID: <11913765422341-git-send-email-matthew@wil.cx>
+Subject: [PATCH 15/21] advansys: Make sdtr_period_tbl a pointer
+Date: Tue,  2 Oct 2007 21:55:36 -0400
+Message-ID: <1191376543599-git-send-email-matthew@wil.cx>
 References: <11913765421743-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:58757 "EHLO
+Received: from mail.tor.primus.ca ([216.254.136.21]:58789 "EHLO
 	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753351AbXJCBzo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:44 -0400
+	with ESMTP id S1753972AbXJCBzq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:46 -0400
 In-Reply-To: <11913765421743-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
- - Don't need to set ASC_HOST_IN_RESET any more
- - Don't need to test scp->device->host for NULL -- if it's NULL, we
-   couldn't've been called.
- - Use scmd_printk instead of ASC_PRINT
+It's somewhat neater to make this a pointer to one of two tables
+than initialising an array in the driver.  Also delete the unused
+AscSynIndexToPeriod and rename host_init_sdtr_index to min_sdtr_index
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/advansys.c |   83 ++++++++++++----------------------------------
- 1 files changed, 22 insertions(+), 61 deletions(-)
+ drivers/scsi/advansys.c |   90 +++++++++++++----------------------------------
+ 1 files changed, 25 insertions(+), 65 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index fd4d669..52ea41d 100644
+index e9a51bb..644582d 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -2229,7 +2229,6 @@ do { \
- #define ASC_BOARDP(host) ((asc_board_t *) &((host)->hostdata))
+@@ -481,34 +481,22 @@ typedef struct asc_risc_sg_list_q {
+ #define ASC_MAX_PCI_INRAM_TOTAL_QNG  20
+ #define ASC_MAX_INRAM_TAG_QNG   16
+ #define ASC_IOADR_GAP   0x10
+-#define ASC_MAX_SYN_XFER_NO        16
+ #define ASC_SYN_MAX_OFFSET         0x0F
+ #define ASC_DEF_SDTR_OFFSET        0x0F
+ #define ASC_SDTR_ULTRA_PCI_10MB_INDEX  0x02
+-#define SYN_XFER_NS_0  25
+-#define SYN_XFER_NS_1  30
+-#define SYN_XFER_NS_2  35
+-#define SYN_XFER_NS_3  40
+-#define SYN_XFER_NS_4  50
+-#define SYN_XFER_NS_5  60
+-#define SYN_XFER_NS_6  70
+-#define SYN_XFER_NS_7  85
+-#define SYN_ULTRA_XFER_NS_0    12
+-#define SYN_ULTRA_XFER_NS_1    19
+-#define SYN_ULTRA_XFER_NS_2    25
+-#define SYN_ULTRA_XFER_NS_3    32
+-#define SYN_ULTRA_XFER_NS_4    38
+-#define SYN_ULTRA_XFER_NS_5    44
+-#define SYN_ULTRA_XFER_NS_6    50
+-#define SYN_ULTRA_XFER_NS_7    57
+-#define SYN_ULTRA_XFER_NS_8    63
+-#define SYN_ULTRA_XFER_NS_9    69
+-#define SYN_ULTRA_XFER_NS_10   75
+-#define SYN_ULTRA_XFER_NS_11   82
+-#define SYN_ULTRA_XFER_NS_12   88
+-#define SYN_ULTRA_XFER_NS_13   94
+-#define SYN_ULTRA_XFER_NS_14  100
+-#define SYN_ULTRA_XFER_NS_15  107
++#define ASYN_SDTR_DATA_FIX_PCI_REV_AB 0x41
++
++/* The narrow chip only supports a limited selection of transfer rates.
++ * These are encoded in the range 0..7 or 0..15 depending whether the chip
++ * is Ultra-capable or not.  These tables let us convert from one to the other.
++ */
++static const unsigned char asc_syn_xfer_period[8] = {
++	25, 30, 35, 40, 50, 60, 70, 85
++};
++
++static const unsigned char asc_syn_ultra_xfer_period[16] = {
++	12, 19, 25, 32, 38, 44, 50, 57, 63, 69, 75, 82, 88, 94, 100, 107
++};
  
- /* asc_board_t flags */
--#define ASC_HOST_IN_RESET       0x01
- #define ASC_IS_WIDE_BOARD       0x04	/* AdvanSys Wide Board */
- #define ASC_SELECT_QUEUE_DEPTHS 0x08
+ typedef struct ext_msg {
+ 	uchar msg_type;
+@@ -572,7 +560,6 @@ typedef struct asc_dvc_cfg {
+ #define ASC_INIT_STATE_WITHOUT_EEP   0x8000
+ #define ASC_BUG_FIX_IF_NOT_DWB       0x0001
+ #define ASC_BUG_FIX_ASYN_USE_SYN     0x0002
+-#define ASYN_SDTR_DATA_FIX_PCI_REV_AB 0x41
+ #define ASC_MIN_TAGGED_CMD  7
+ #define ASC_MAX_SCSI_RESET_WAIT      30
  
-@@ -9751,106 +9750,68 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
-  */
- static int advansys_reset(struct scsi_cmnd *scp)
+@@ -602,7 +589,7 @@ typedef struct asc_dvc_var {
+ 	uchar max_dvc_qng[ASC_MAX_TID + 1];
+ 	ASC_SCSI_Q *scsiq_busy_head[ASC_MAX_TID + 1];
+ 	ASC_SCSI_Q *scsiq_busy_tail[ASC_MAX_TID + 1];
+-	uchar sdtr_period_tbl[ASC_MAX_SYN_XFER_NO];
++	const uchar *sdtr_period_tbl;
+ 	ASC_DVC_CFG *cfg;
+ 	ASC_SCSI_BIT_ID_TYPE pci_fix_asyn_xfer_always;
+ 	char redo_scam;
+@@ -611,8 +598,8 @@ typedef struct asc_dvc_var {
+ 	ASC_DCNT max_dma_count;
+ 	ASC_SCSI_BIT_ID_TYPE no_scam;
+ 	ASC_SCSI_BIT_ID_TYPE pci_fix_asyn_xfer;
++	uchar min_sdtr_index;
+ 	uchar max_sdtr_index;
+-	uchar host_init_sdtr_index;
+ 	struct asc_board *drv_ptr;
+ 	ASC_DCNT uc_break;
+ } ASC_DVC_VAR;
+@@ -896,7 +883,6 @@ typedef struct asc_mc_saved {
+ #define AscGetMCodeSDTRDoneAtID(port, id)        AscReadLramByte((port), (ushort)((ushort)ASCV_SDTR_DONE_BEG+(ushort)id))
+ #define AscPutMCodeInitSDTRAtID(port, id, data)  AscWriteLramByte((port), (ushort)((ushort)ASCV_SDTR_DATA_BEG+(ushort)id), data)
+ #define AscGetMCodeInitSDTRAtID(port, id)        AscReadLramByte((port), (ushort)((ushort)ASCV_SDTR_DATA_BEG+(ushort)id))
+-#define AscSynIndexToPeriod(index)        (uchar)(asc_dvc->sdtr_period_tbl[ (index) ])
+ #define AscGetChipSignatureByte(port)     (uchar)inp((port)+IOP_SIG_BYTE)
+ #define AscGetChipSignatureWord(port)     (ushort)inpw((port)+IOP_SIG_WORD)
+ #define AscGetChipVerNo(port)             (uchar)inp((port)+IOP_VERSION)
+@@ -8556,14 +8542,14 @@ static void AscAckInterrupt(PortAddr iop_base)
+ 
+ static uchar AscGetSynPeriodIndex(ASC_DVC_VAR *asc_dvc, uchar syn_time)
  {
--	struct Scsi_Host *shost;
--	asc_board_t *boardp;
--	ASC_DVC_VAR *asc_dvc_varp;
--	ADV_DVC_VAR *adv_dvc_varp;
--	ulong flags;
-+	struct Scsi_Host *shost = scp->device->host;
-+	struct asc_board *boardp = ASC_BOARDP(shost);
-+	unsigned long flags;
- 	int status;
- 	int ret = SUCCESS;
+-	uchar *period_table;
++	const uchar *period_table;
+ 	int max_index;
+ 	int min_index;
+ 	int i;
  
--	ASC_DBG1(1, "advansys_reset: 0x%lx\n", (ulong)scp);
-+	ASC_DBG1(1, "advansys_reset: 0x%p\n", scp);
+ 	period_table = asc_dvc->sdtr_period_tbl;
+ 	max_index = (int)asc_dvc->max_sdtr_index;
+-	min_index = (int)asc_dvc->host_init_sdtr_index;
++	min_index = (int)asc_dvc->min_sdtr_index;
+ 	if ((syn_time <= period_table[max_index])) {
+ 		for (i = min_index; i < (max_index - 1); i++) {
+ 			if (syn_time <= period_table[i]) {
+@@ -8612,9 +8598,8 @@ AscCalSDTRData(ASC_DVC_VAR *asc_dvc, uchar sdtr_period, uchar syn_offset)
+ 	uchar sdtr_period_ix;
  
--#ifdef ADVANSYS_STATS
--	if (scp->device->host != NULL) {
--		ASC_STATS(scp->device->host, reset);
+ 	sdtr_period_ix = AscGetSynPeriodIndex(asc_dvc, sdtr_period);
+-	if (sdtr_period_ix > asc_dvc->max_sdtr_index) {
++	if (sdtr_period_ix > asc_dvc->max_sdtr_index)
+ 		return 0xFF;
 -	}
--#endif /* ADVANSYS_STATS */
+ 	byte = (sdtr_period_ix << 4) | (syn_offset & ASC_SYN_MAX_OFFSET);
+ 	return byte;
+ }
+@@ -8725,15 +8710,14 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 				ext_msg.req_ack_offset = ASC_SYN_MAX_OFFSET;
+ 			}
+ 			if ((ext_msg.xfer_period <
+-			     asc_dvc->sdtr_period_tbl[asc_dvc->
+-						      host_init_sdtr_index])
++			     asc_dvc->sdtr_period_tbl[asc_dvc->min_sdtr_index])
+ 			    || (ext_msg.xfer_period >
+ 				asc_dvc->sdtr_period_tbl[asc_dvc->
+ 							 max_sdtr_index])) {
+ 				sdtr_accept = FALSE;
+ 				ext_msg.xfer_period =
+ 				    asc_dvc->sdtr_period_tbl[asc_dvc->
+-							     host_init_sdtr_index];
++							     min_sdtr_index];
+ 			}
+ 			if (sdtr_accept) {
+ 				sdtr_data =
+@@ -8757,7 +8741,6 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 				AscSetChipSDTR(iop_base, asyn_sdtr, tid_no);
+ 			} else {
+ 				if (sdtr_accept && (q_cntl & QC_MSG_OUT)) {
 -
--	if ((shost = scp->device->host) == NULL) {
--		scp->result = HOST_BYTE(DID_ERROR);
--		return FAILED;
--	}
-+	ASC_STATS(shost, reset);
- 
--	boardp = ASC_BOARDP(shost);
+ 					q_cntl &= ~QC_MSG_OUT;
+ 					asc_dvc->sdtr_done |= target_id;
+ 					asc_dvc->init_sdtr |= target_id;
+@@ -8772,7 +8755,6 @@ static int AscIsrChipHalted(ASC_DVC_VAR *asc_dvc)
+ 						       tid_no);
+ 					boardp->sdtr_data[tid_no] = sdtr_data;
+ 				} else {
 -
--	ASC_PRINT1("advansys_reset: board %d: SCSI bus reset started...\n",
--		   boardp->id);
--	/*
--	 * Check for re-entrancy.
--	 */
--	spin_lock_irqsave(&boardp->lock, flags);
--	if (boardp->flags & ASC_HOST_IN_RESET) {
--		spin_unlock_irqrestore(&boardp->lock, flags);
--		return FAILED;
--	}
--	boardp->flags |= ASC_HOST_IN_RESET;
--	spin_unlock_irqrestore(&boardp->lock, flags);
-+	scmd_printk(KERN_INFO, scp, "SCSI bus reset started...\n");
- 
- 	if (ASC_NARROW_BOARD(boardp)) {
--		/*
--		 * Narrow Board
--		 */
--		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
-+		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
- 
--		/*
--		 * Reset the chip and SCSI bus.
--		 */
-+		/* Reset the chip and SCSI bus. */
- 		ASC_DBG(1, "advansys_reset: before AscInitAsc1000Driver()\n");
--		status = AscInitAsc1000Driver(asc_dvc_varp);
-+		status = AscInitAsc1000Driver(asc_dvc);
- 
- 		/* Refer to ASC_IERR_* defintions for meaning of 'err_code'. */
--		if (asc_dvc_varp->err_code) {
--			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
--				   "error: 0x%x\n", boardp->id,
--				   asc_dvc_varp->err_code);
-+		if (asc_dvc->err_code) {
-+			scmd_printk(KERN_INFO, scp, "SCSI bus reset error: "
-+				    "0x%x\n", asc_dvc->err_code);
- 			ret = FAILED;
- 		} else if (status) {
--			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
--				   "warning: 0x%x\n", boardp->id, status);
-+			scmd_printk(KERN_INFO, scp, "SCSI bus reset warning: "
-+				    "0x%x\n", status);
- 		} else {
--			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
--				   "successful.\n", boardp->id);
-+			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
-+				    "successful\n");
- 		}
- 
- 		ASC_DBG(1, "advansys_reset: after AscInitAsc1000Driver()\n");
- 		spin_lock_irqsave(&boardp->lock, flags);
--
- 	} else {
- 		/*
--		 * Wide Board
--		 *
- 		 * If the suggest reset bus flags are set, then reset the bus.
- 		 * Otherwise only reset the device.
- 		 */
--		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
-+		ADV_DVC_VAR *adv_dvc = &boardp->dvc_var.adv_dvc_var;
- 
- 		/*
- 		 * Reset the target's SCSI bus.
- 		 */
- 		ASC_DBG(1, "advansys_reset: before AdvResetChipAndSB()\n");
--		switch (AdvResetChipAndSB(adv_dvc_varp)) {
-+		switch (AdvResetChipAndSB(adv_dvc)) {
- 		case ASC_TRUE:
--			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
--				   "successful.\n", boardp->id);
-+			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
-+				    "successful\n");
- 			break;
- 		case ASC_FALSE:
- 		default:
--			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
--				   "error.\n", boardp->id);
-+			scmd_printk(KERN_INFO, scp, "SCSI bus reset error\n");
- 			ret = FAILED;
- 			break;
- 		}
- 		spin_lock_irqsave(&boardp->lock, flags);
--		AdvISR(adv_dvc_varp);
-+		AdvISR(adv_dvc);
+ 					q_cntl |= QC_MSG_OUT;
+ 					AscMsgOutSDTR(asc_dvc,
+ 						      ext_msg.xfer_period,
+@@ -11407,7 +11389,7 @@ static ushort __devinit AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ 	asc_dvc->queue_full_or_busy = 0;
+ 	asc_dvc->redo_scam = 0;
+ 	asc_dvc->res2 = 0;
+-	asc_dvc->host_init_sdtr_index = 0;
++	asc_dvc->min_sdtr_index = 0;
+ 	asc_dvc->cfg->can_tagged_qng = 0;
+ 	asc_dvc->cfg->cmd_qng_enabled = 0;
+ 	asc_dvc->dvc_cntl = ASC_DEF_DVC_CNTL;
+@@ -11421,34 +11403,12 @@ static ushort __devinit AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ 	asc_dvc->cfg->chip_scsi_id = ASC_DEF_CHIP_SCSI_ID;
+ 	chip_version = AscGetChipVersion(iop_base, asc_dvc->bus_type);
+ 	asc_dvc->cfg->chip_version = chip_version;
+-	asc_dvc->sdtr_period_tbl[0] = SYN_XFER_NS_0;
+-	asc_dvc->sdtr_period_tbl[1] = SYN_XFER_NS_1;
+-	asc_dvc->sdtr_period_tbl[2] = SYN_XFER_NS_2;
+-	asc_dvc->sdtr_period_tbl[3] = SYN_XFER_NS_3;
+-	asc_dvc->sdtr_period_tbl[4] = SYN_XFER_NS_4;
+-	asc_dvc->sdtr_period_tbl[5] = SYN_XFER_NS_5;
+-	asc_dvc->sdtr_period_tbl[6] = SYN_XFER_NS_6;
+-	asc_dvc->sdtr_period_tbl[7] = SYN_XFER_NS_7;
++	asc_dvc->sdtr_period_tbl = asc_syn_xfer_period;
+ 	asc_dvc->max_sdtr_index = 7;
+ 	if ((asc_dvc->bus_type & ASC_IS_PCI) &&
+ 	    (chip_version >= ASC_CHIP_VER_PCI_ULTRA_3150)) {
+ 		asc_dvc->bus_type = ASC_IS_PCI_ULTRA;
+-		asc_dvc->sdtr_period_tbl[0] = SYN_ULTRA_XFER_NS_0;
+-		asc_dvc->sdtr_period_tbl[1] = SYN_ULTRA_XFER_NS_1;
+-		asc_dvc->sdtr_period_tbl[2] = SYN_ULTRA_XFER_NS_2;
+-		asc_dvc->sdtr_period_tbl[3] = SYN_ULTRA_XFER_NS_3;
+-		asc_dvc->sdtr_period_tbl[4] = SYN_ULTRA_XFER_NS_4;
+-		asc_dvc->sdtr_period_tbl[5] = SYN_ULTRA_XFER_NS_5;
+-		asc_dvc->sdtr_period_tbl[6] = SYN_ULTRA_XFER_NS_6;
+-		asc_dvc->sdtr_period_tbl[7] = SYN_ULTRA_XFER_NS_7;
+-		asc_dvc->sdtr_period_tbl[8] = SYN_ULTRA_XFER_NS_8;
+-		asc_dvc->sdtr_period_tbl[9] = SYN_ULTRA_XFER_NS_9;
+-		asc_dvc->sdtr_period_tbl[10] = SYN_ULTRA_XFER_NS_10;
+-		asc_dvc->sdtr_period_tbl[11] = SYN_ULTRA_XFER_NS_11;
+-		asc_dvc->sdtr_period_tbl[12] = SYN_ULTRA_XFER_NS_12;
+-		asc_dvc->sdtr_period_tbl[13] = SYN_ULTRA_XFER_NS_13;
+-		asc_dvc->sdtr_period_tbl[14] = SYN_ULTRA_XFER_NS_14;
+-		asc_dvc->sdtr_period_tbl[15] = SYN_ULTRA_XFER_NS_15;
++		asc_dvc->sdtr_period_tbl = asc_syn_ultra_xfer_period;
+ 		asc_dvc->max_sdtr_index = 15;
+ 		if (chip_version == ASC_CHIP_VER_PCI_ULTRA_3150) {
+ 			AscSetExtraControl(iop_base,
+@@ -11889,7 +11849,7 @@ static ushort __devinit AscInitFromEEP(ASC_DVC_VAR *asc_dvc)
+ 	asc_dvc->cfg->chip_scsi_id = ASC_EEP_GET_CHIP_ID(eep_config);
+ 	if (((asc_dvc->bus_type & ASC_IS_PCI_ULTRA) == ASC_IS_PCI_ULTRA) &&
+ 	    !(asc_dvc->dvc_cntl & ASC_CNTL_SDTR_ENABLE_ULTRA)) {
+-		asc_dvc->host_init_sdtr_index = ASC_SDTR_ULTRA_PCI_10MB_INDEX;
++		asc_dvc->min_sdtr_index = ASC_SDTR_ULTRA_PCI_10MB_INDEX;
  	}
--	/* Board lock is held. */
  
- 	/* Save the time of the most recently completed reset. */
- 	boardp->last_reset = jiffies;
--
--	/* Clear reset flag. */
--	boardp->flags &= ~ASC_HOST_IN_RESET;
- 	spin_unlock_irqrestore(&boardp->lock, flags);
- 
- 	ASC_DBG1(1, "advansys_reset: ret %d\n", ret);
+ 	for (i = 0; i <= ASC_MAX_TID; i++) {
+@@ -11897,7 +11857,7 @@ static ushort __devinit AscInitFromEEP(ASC_DVC_VAR *asc_dvc)
+ 		asc_dvc->cfg->max_tag_qng[i] = eep_config->max_tag_qng;
+ 		asc_dvc->cfg->sdtr_period_offset[i] =
+ 		    (uchar)(ASC_DEF_SDTR_OFFSET |
+-			    (asc_dvc->host_init_sdtr_index << 4));
++			    (asc_dvc->min_sdtr_index << 4));
+ 	}
+ 	eep_config->cfg_msw = AscGetChipCfgMsw(iop_base);
+ 	if (write_eep) {
 -- 
 1.5.3.1
 
