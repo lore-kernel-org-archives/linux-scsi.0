@@ -1,51 +1,38 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 21/21] advansys: Changes to work on parisc
-Date: Wed, 03 Oct 2007 10:45:20 -0400
-Message-ID: <4703AB00.4050509@garzik.org>
-References: <11913765421743-git-send-email-matthew@wil.cx> <11913765432770-git-send-email-matthew@wil.cx> <4702F7B2.7080600@garzik.org> <20071003021545.GD12049@parisc-linux.org> <4702FE4D.4030603@garzik.org> <20071003080559.GA10081@infradead.org>
+Subject: Re: [PATCH 19/21] advansys: Remove a couple of uses of bus_to_virt
+Date: Wed, 03 Oct 2007 10:46:16 -0400
+Message-ID: <4703AB38.6090605@garzik.org>
+References: <11913765421743-git-send-email-matthew@wil.cx> <1191376543887-git-send-email-matthew@wil.cx> <4702FAB3.7020608@garzik.org> <20071003123748.GF12049@parisc-linux.org> <4703A70F.1090500@garzik.org> <20071003143423.GG12049@parisc-linux.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35523 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:35537 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753133AbXJCOp2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Oct 2007 10:45:28 -0400
-In-Reply-To: <20071003080559.GA10081@infradead.org>
+	id S1753937AbXJCOqR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Oct 2007 10:46:17 -0400
+In-Reply-To: <20071003143423.GG12049@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-Christoph Hellwig wrote:
-> On Tue, Oct 02, 2007 at 10:28:29PM -0400, Jeff Garzik wrote:
->> Incorrect.  That is highly platform specific, with many using unsigned 
->> long, since the [non-x86] platform is generally pointing to a special 
->> memory region rather than directly using an x86-like instruction.
+Matthew Wilcox wrote:
+> On Wed, Oct 03, 2007 at 10:28:31AM -0400, Jeff Garzik wrote:
+>> Matthew Wilcox wrote:
+>>> On Tue, Oct 02, 2007 at 10:13:07PM -0400, Jeff Garzik wrote:
+>>>> check dma_map_single for error
+>>> It's on the todo list.  Since so many other drivers don't check
+>>> dma_map_single for error, I feel comfortable with leaving it for later.
+>> The issue became more urgent with x86-64 and its smaller IOMMU area.
 > 
-> For port I/O we _do_ use int everywhere.
+> I'll bump up the priority of fixing it then.  I don't think this should
+> block the series from going in (since it wasn't even compilable on
+> x86-64 before this point).
 
-ioport_map() disagrees with you.
-request_region disagrees with you.
-release_region disagrees with you.
-ia64 disagrees with you.
-alpha disagrees with you.
-sparc64 disagrees with you.
-sh disagrees with you.
-serial driver disagrees with you.
-pcmcia disagrees with you.
-net driver history disagrees with you.
-
-It should also be self-evident from READING THE ARCH CODE that a 64-bit 
-arch is allowed to fill in a 64-bit address in an IORESOURCE_IO struct 
-resource.
-
-Thus, unsigned long is the least common demoninator.
-
-unsigned long is the ONLY way to guarantee portability.
-
-Not all port I/O is hardcoded legacy ISA addresses.
+Oh, certainly agreed...  I never used the word NAK.
 
 	Jeff
+
 
 
