@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 03/21] advansys: Restructure asc_execute_scsi_cmnd()
-Date: Tue,  2 Oct 2007 21:55:24 -0400
-Message-ID: <11913765423260-git-send-email-matthew@wil.cx>
+Subject: [PATCH 05/21] advansys: Improve reset handler
+Date: Tue,  2 Oct 2007 21:55:26 -0400
+Message-ID: <11913765422341-git-send-email-matthew@wil.cx>
 References: <11913765421743-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:36038 "EHLO
-	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753779AbXJCBzo (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:58757 "EHLO
+	mail-07.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753351AbXJCBzo (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:44 -0400
 In-Reply-To: <11913765421743-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,176 +14,157 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-The wide and narrow boards share identical handling of the return value,
-except for some trivial error messages.  Move the handling to the common
-end of the function.  Also move variable declarations to the arms of
-the `if' that they're used in and delete some pointless comments.
+ - Don't need to set ASC_HOST_IN_RESET any more
+ - Don't need to test scp->device->host for NULL -- if it's NULL, we
+   couldn't've been called.
+ - Use scmd_printk instead of ASC_PRINT
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/advansys.c |  131 ++++++++++++++---------------------------------
- 1 files changed, 39 insertions(+), 92 deletions(-)
+ drivers/scsi/advansys.c |   83 ++++++++++++----------------------------------
+ 1 files changed, 22 insertions(+), 61 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 737c0e4..3dd7856 100644
+index fd4d669..52ea41d 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -11331,80 +11331,26 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+@@ -2229,7 +2229,6 @@ do { \
+ #define ASC_BOARDP(host) ((asc_board_t *) &((host)->hostdata))
+ 
+ /* asc_board_t flags */
+-#define ASC_HOST_IN_RESET       0x01
+ #define ASC_IS_WIDE_BOARD       0x04	/* AdvanSys Wide Board */
+ #define ASC_SELECT_QUEUE_DEPTHS 0x08
+ 
+@@ -9751,106 +9750,68 @@ static int AscISR(ASC_DVC_VAR *asc_dvc)
   */
- static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ static int advansys_reset(struct scsi_cmnd *scp)
  {
+-	struct Scsi_Host *shost;
 -	asc_board_t *boardp;
 -	ASC_DVC_VAR *asc_dvc_varp;
 -	ADV_DVC_VAR *adv_dvc_varp;
--	ADV_SCSI_REQ_Q *adv_scsiqp;
--	int ret;
-+	int ret, err_code;
-+	asc_board_t *boardp = ASC_BOARDP(scp->device->host);
+-	ulong flags;
++	struct Scsi_Host *shost = scp->device->host;
++	struct asc_board *boardp = ASC_BOARDP(shost);
++	unsigned long flags;
+ 	int status;
+ 	int ret = SUCCESS;
  
--	ASC_DBG2(1, "asc_execute_scsi_cmnd: scp 0x%lx, done 0x%lx\n",
--		 (ulong)scp, (ulong)scp->scsi_done);
+-	ASC_DBG1(1, "advansys_reset: 0x%lx\n", (ulong)scp);
++	ASC_DBG1(1, "advansys_reset: 0x%p\n", scp);
+ 
+-#ifdef ADVANSYS_STATS
+-	if (scp->device->host != NULL) {
+-		ASC_STATS(scp->device->host, reset);
+-	}
+-#endif /* ADVANSYS_STATS */
 -
--	boardp = ASC_BOARDP(scp->device->host);
-+	ASC_DBG1(1, "asc_execute_scsi_cmnd: scp 0x%p\n", scp);
+-	if ((shost = scp->device->host) == NULL) {
+-		scp->result = HOST_BYTE(DID_ERROR);
+-		return FAILED;
+-	}
++	ASC_STATS(shost, reset);
+ 
+-	boardp = ASC_BOARDP(shost);
+-
+-	ASC_PRINT1("advansys_reset: board %d: SCSI bus reset started...\n",
+-		   boardp->id);
+-	/*
+-	 * Check for re-entrancy.
+-	 */
+-	spin_lock_irqsave(&boardp->lock, flags);
+-	if (boardp->flags & ASC_HOST_IN_RESET) {
+-		spin_unlock_irqrestore(&boardp->lock, flags);
+-		return FAILED;
+-	}
+-	boardp->flags |= ASC_HOST_IN_RESET;
+-	spin_unlock_irqrestore(&boardp->lock, flags);
++	scmd_printk(KERN_INFO, scp, "SCSI bus reset started...\n");
  
  	if (ASC_NARROW_BOARD(boardp)) {
 -		/*
--		 * Build and execute Narrow Board request.
+-		 * Narrow Board
 -		 */
--
 -		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
 +		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
  
 -		/*
--		 * Build Asc Library request structure using the
--		 * global structures 'asc_scsi_req' and 'asc_sg_head'.
--		 *
--		 * If an error is returned, then the request has been
--		 * queued on the board done queue. It will be completed
--		 * by the caller.
--		 *
--		 * asc_build_req() can not return ASC_BUSY.
+-		 * Reset the chip and SCSI bus.
 -		 */
-+		/* asc_build_req() can not return ASC_BUSY. */
- 		if (asc_build_req(boardp, scp) == ASC_ERROR) {
- 			ASC_STATS(scp->device->host, build_error);
- 			return ASC_ERROR;
++		/* Reset the chip and SCSI bus. */
+ 		ASC_DBG(1, "advansys_reset: before AscInitAsc1000Driver()\n");
+-		status = AscInitAsc1000Driver(asc_dvc_varp);
++		status = AscInitAsc1000Driver(asc_dvc);
+ 
+ 		/* Refer to ASC_IERR_* defintions for meaning of 'err_code'. */
+-		if (asc_dvc_varp->err_code) {
+-			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
+-				   "error: 0x%x\n", boardp->id,
+-				   asc_dvc_varp->err_code);
++		if (asc_dvc->err_code) {
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset error: "
++				    "0x%x\n", asc_dvc->err_code);
+ 			ret = FAILED;
+ 		} else if (status) {
+-			ASC_PRINT2("advansys_reset: board %d: SCSI bus reset "
+-				   "warning: 0x%x\n", boardp->id, status);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset warning: "
++				    "0x%x\n", status);
+ 		} else {
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "successful.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
++				    "successful\n");
  		}
  
--		switch (ret = AscExeScsiQueue(asc_dvc_varp, &asc_scsi_q)) {
--		case ASC_NOERROR:
--			ASC_STATS(scp->device->host, exe_noerror);
--			/*
--			 * Increment monotonically increasing per device
--			 * successful request counter. Wrapping doesn't matter.
--			 */
--			boardp->reqcnt[scp->device->id]++;
--			ASC_DBG(1, "asc_execute_scsi_cmnd: AscExeScsiQueue(), "
--				"ASC_NOERROR\n");
--			break;
--		case ASC_BUSY:
--			ASC_STATS(scp->device->host, exe_busy);
--			break;
--		case ASC_ERROR:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AscExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
--				boardp->id, asc_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_error);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		default:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AscExeScsiQueue() unknown, err_code 0x%x\n",
--				boardp->id, asc_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_unknown);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		}
-+		ret = AscExeScsiQueue(asc_dvc, &asc_scsi_q);
-+		err_code = asc_dvc->err_code;
+ 		ASC_DBG(1, "advansys_reset: after AscInitAsc1000Driver()\n");
+ 		spin_lock_irqsave(&boardp->lock, flags);
+-
  	} else {
--		/*
--		 * Build and execute Wide Board request.
--		 */
+ 		/*
+-		 * Wide Board
+-		 *
+ 		 * If the suggest reset bus flags are set, then reset the bus.
+ 		 * Otherwise only reset the device.
+ 		 */
 -		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
 +		ADV_DVC_VAR *adv_dvc = &boardp->dvc_var.adv_dvc_var;
-+		ADV_SCSI_REQ_Q *adv_scsiqp;
  
--		/*
--		 * Build and get a pointer to an Adv Library request structure.
--		 *
--		 * If the request is successfully built then send it below,
--		 * otherwise return with an error.
--		 */
- 		switch (adv_build_req(boardp, scp, &adv_scsiqp)) {
- 		case ASC_NOERROR:
- 			ASC_DBG(3, "asc_execute_scsi_cmnd: adv_build_req "
-@@ -11428,35 +11374,36 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
- 			return ASC_ERROR;
+ 		/*
+ 		 * Reset the target's SCSI bus.
+ 		 */
+ 		ASC_DBG(1, "advansys_reset: before AdvResetChipAndSB()\n");
+-		switch (AdvResetChipAndSB(adv_dvc_varp)) {
++		switch (AdvResetChipAndSB(adv_dvc)) {
+ 		case ASC_TRUE:
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "successful.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset "
++				    "successful\n");
+ 			break;
+ 		case ASC_FALSE:
+ 		default:
+-			ASC_PRINT1("advansys_reset: board %d: SCSI bus reset "
+-				   "error.\n", boardp->id);
++			scmd_printk(KERN_INFO, scp, "SCSI bus reset error\n");
+ 			ret = FAILED;
+ 			break;
  		}
- 
--		switch (ret = AdvExeScsiQueue(adv_dvc_varp, adv_scsiqp)) {
--		case ASC_NOERROR:
--			ASC_STATS(scp->device->host, exe_noerror);
--			/*
--			 * Increment monotonically increasing per device
--			 * successful request counter. Wrapping doesn't matter.
--			 */
--			boardp->reqcnt[scp->device->id]++;
--			ASC_DBG(1, "asc_execute_scsi_cmnd: AdvExeScsiQueue(), "
--				"ASC_NOERROR\n");
--			break;
--		case ASC_BUSY:
--			ASC_STATS(scp->device->host, exe_busy);
--			break;
--		case ASC_ERROR:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AdvExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
--				boardp->id, adv_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_error);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		default:
--			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
--				"AdvExeScsiQueue() unknown, err_code 0x%x\n",
--				boardp->id, adv_dvc_varp->err_code);
--			ASC_STATS(scp->device->host, exe_unknown);
--			scp->result = HOST_BYTE(DID_ERROR);
--			break;
--		}
-+		ret = AdvExeScsiQueue(adv_dvc, adv_scsiqp);
-+		err_code = adv_dvc->err_code;
-+	}
-+
-+	switch (ret) {
-+	case ASC_NOERROR:
-+		ASC_STATS(scp->device->host, exe_noerror);
-+		/*
-+		 * Increment monotonically increasing per device
-+		 * successful request counter. Wrapping doesn't matter.
-+		 */
-+		boardp->reqcnt[scp->device->id]++;
-+		ASC_DBG(1, "asc_execute_scsi_cmnd: ExeScsiQueue(), "
-+			"ASC_NOERROR\n");
-+		break;
-+	case ASC_BUSY:
-+		ASC_STATS(scp->device->host, exe_busy);
-+		break;
-+	case ASC_ERROR:
-+		ASC_PRINT2("asc_execute_scsi_cmnd: board %d: ExeScsiQueue() "
-+			   "ASC_ERROR, err_code 0x%x\n", boardp->id, err_code);
-+		ASC_STATS(scp->device->host, exe_error);
-+		scp->result = HOST_BYTE(DID_ERROR);
-+		break;
-+	default:
-+		ASC_PRINT2("asc_execute_scsi_cmnd: board %d: ExeScsiQueue() "
-+			   "unknown, err_code 0x%x\n", boardp->id, err_code);
-+		ASC_STATS(scp->device->host, exe_unknown);
-+		scp->result = HOST_BYTE(DID_ERROR);
-+		break;
+ 		spin_lock_irqsave(&boardp->lock, flags);
+-		AdvISR(adv_dvc_varp);
++		AdvISR(adv_dvc);
  	}
+-	/* Board lock is held. */
  
- 	ASC_DBG(1, "asc_execute_scsi_cmnd: end\n");
+ 	/* Save the time of the most recently completed reset. */
+ 	boardp->last_reset = jiffies;
+-
+-	/* Clear reset flag. */
+-	boardp->flags &= ~ASC_HOST_IN_RESET;
+ 	spin_unlock_irqrestore(&boardp->lock, flags);
+ 
+ 	ASC_DBG1(1, "advansys_reset: ret %d\n", ret);
 -- 
 1.5.3.1
 
