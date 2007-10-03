@@ -1,66 +1,99 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: generating a Linux WWN?
-Date: Wed, 3 Oct 2007 12:44:17 -0700 (PDT)
-Message-ID: <983400.77431.qm@web31814.mail.mud.yahoo.com>
-References: <4703DADF.70509@garzik.org>
-Reply-To: ltuikov@yahoo.com
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
+Date: Wed, 03 Oct 2007 12:47:26 -0700
+Message-ID: <4703F1CE.3020803@qlogic.com>
+References: <46FBBF8C.80409@qlogic.com>	<20070929151608P.fujita.tomonori@lab.ntt.co.jp>	<470135CC.4080101@qlogic.com> <20071003214933Y.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:39721 "HELO
-	web31814.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1752791AbXJCToT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 15:44:19 -0400
-In-Reply-To: <4703DADF.70509@garzik.org>
+Received: from avexch2.qlogic.com ([198.70.193.116]:57076 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752077AbXJCTr6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 15:47:58 -0400
+In-Reply-To: <20071003214933Y.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Matthew Jacob <lydianconcepts@gmail.com>
-Cc: ltuikov@yahoo.com, Michael Reed <mdr@sgi.com>, James.Smart@emulex.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: fujita.tomonori@lab.ntt.co.jp, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de
 
---- Jeff Garzik <jeff@garzik.org> wrote:
-> Matthew Jacob wrote:
-> >> The generation algorithm is whatever makes people happy.  I would
-> >> probably pick a fixed prefix like 0x6C 0x69 0x63 ("lin"), something that
-> >> doesn't conflict with IEEE org ids for a long time to come.  Then,
-> >> get_random_bytes() or hash some useful machine characteristics for the
-> >> rest of the bytes.
-> > 
-> > The "probably" here is kind of amusing.
-> > 
-> > Look, Linux development has the moolah (look at all the money IBM and
-> > SGI and others have shoveled in)- why don't you get a Linux block of
-> > OUIs from the IEEE and set up an RSS-like feed so the Open Source
-> > community can get WWNs with that OUI and a incrementing serial number
-> > as needed- that would be a *real* service. I've thought about doing
-> > this, but I'd have to fork over at least 1700$USD to get an official
-> > IEEE OUI and over the last ten years I've already spent far too much
-> > of my own money on open source support.
-> > 
-> > Heck, maybe even the IEEE would comp you on OUIs.
+FUJITA Tomonori wrote:
+> On Mon, 01 Oct 2007 11:00:44 -0700
+> Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+>> atl-01:/lib/modules/2.6.23-rc3-smp-tgt/kernel/drivers/scsi/qla2xxx # tgtadm --lld fc --mode target --op show
+>> Target 1: volume1
+>>     System information:
+>>         Driver: fc
+>>         Status: running
+>>     I_T nexus information:
+>>     LUN information:
+>>         LUN: 0
+>>             Type: controller
+>>             SCSI ID: deadbeaf1:0
+>>             SCSI SN: beaf10
+>>             Size: 0
+>>             Online: No
+>>             Poweron/Reset: Yes
+>>             Removable media: No
+>>             Backing store: No backing store
+>>     ACL information:
 > 
-> Certainly, I would love for this to happen!  Although my employer (Red 
-> Hat), SGI, IBM or whomever might be willing to tackle this, it might be 
-> more appropriate for the Linux Foundation.
+> You successfully created a new target but failed to add a new logical
+> unit (#1) to it (note that lun 0 was created automatically).
+Yes, I have noticed it.
+
+>>> ./tgt/usr/tgtadm --lld fc --mode logicalunit --op new --tid 1 --lun 1 -b /var/tmp/lun1
 > 
-> Anybody wanna volunteer to pursue this?
+> We are try to add a regular file (/var/tmp/lun1) to the target and
+> export it as a logical unit to initiators. Do you have /var/tmp/lun1?
+With the creation of an empty file, it started to display the lun1.
+---
+atl-01:~ # tgtadm --lld fc --mode target --op show
+Target 1: tgt-vol1
+    System information:
+        Driver: fc
+        Status: running
+    I_T nexus information:
+        I_T nexus: f6fb6000
+    LUN information:
+        LUN: 0
+            Type: controller
+            SCSI ID: deadbeaf1:0
+            SCSI SN: beaf10
+            Size: 0
+            Online: No
+            Poweron/Reset: Yes
+            Removable media: No
+            Backing store: No backing store
+        LUN: 1
+            Type: disk
+            SCSI ID: deadbeaf1:1
+            SCSI SN: beaf11
+            Size: 0
+            Online: Yes
+            Poweron/Reset: Yes
+            Removable media: No
+            Backing store: /var/tmp/lun1
+    ACL information:
+atl-01:~ #
+---
 
-SAS WWN have nothing to do with Linux.
+However, from the initiator, still not be able to see the target - from the lsscsi, no other devices (controller/virtual-disk) than those physical devices available on the fabric.
+Instead, the host with target-mode displays following messages,
+---
+Oct 3 11:21:13 atl-01 kernel: q2t_it_nexus_response 1191:  dff46400 0
+Oct 3 11:21:13 atl-01 kernel: q2t_it_nexus_response 1191:  dff46400 0
+---
 
-The kernel should not generate SAS WWN and assign them to SAS initiator
-ports.  SAS WWNs should be given to SAS initiator ports and SAS target
-ports by a storage management application which maintains and configures
-the storage domain, zoning, permissions, connectivity, etc.
+If I understood correctly, the F/W on the host with target-mode should have gotten some SCSI commands from the host with initiator-mode by now.
+And those commands should have been forwarded to the target driver via the interrupt handler (qla24xx_intr_handler()).
 
-What is needed is persistence, regardless of reboots of what OS
-is running on the host CPU/system.  SAS WWNs are properties of
-the SAS target/initiator port, they are not properties of when
-the host system was booted, or what OS is running on it.
+Just for my learning, could you share with me which of the F/W version (on the target-mode QLogic FC HBA) you are using?
 
-Think about it this way: you don't change your name every morning
-you wake up and MAC addresses are not generated by the kernel for
-a network device which has none.  Those are persistent across
-reboots or type of host OS.
+Thank you,
+Seokmann
 
-   Luben
+> 
+> fujita@arbre:/var/tmp$ ls -l lun1
+> -rw-r--r-- 1 fujita fujita 67108864 2007-06-14 22:01 lun1
 
