@@ -1,93 +1,128 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: generating a Linux WWN?
-Date: Tue, 2 Oct 2007 16:47:40 -0700 (PDT)
-Message-ID: <842443.13470.qm@web31811.mail.mud.yahoo.com>
-References: <46FC38F2.2070206@garzik.org>
-Reply-To: ltuikov@yahoo.com
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: 2.6.23-rc9 boot failure (megaraid?)
+Date: Wed, 03 Oct 2007 09:09:33 +0900
+Message-ID: <20071003090933E.fujita.tomonori@lab.ntt.co.jp>
+References: <Pine.LNX.4.64.0710021242510.6275@postal>
+	<20071002181518.GC10852@stusta.de>
+	<1191357493.3530.129.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31811.mail.mud.yahoo.com ([68.142.207.74]:43370 "HELO
-	web31811.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753124AbXJBXrl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 19:47:41 -0400
-In-Reply-To: <46FC38F2.2070206@garzik.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:54123 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752252AbXJCAJi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 20:09:38 -0400
+In-Reply-To: <1191357493.3530.129.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>, Michael Reed <mdr@sgi.com>
-Cc: James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Bottomley@SteelEye.com
+Cc: bunk@kernel.org, bwindle@fint.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, sumant.patro@lsi.com, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
 
---- Jeff Garzik <jeff@garzik.org> wrote:
-> Michael Reed wrote:
+On Tue, 02 Oct 2007 15:38:13 -0500
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
+
+> On Tue, 2007-10-02 at 20:15 +0200, Adrian Bunk wrote:
+> > Cc's added, the complete bug report is at
+> >   http://lkml.org/lkml/2007/10/2/243
+> > 
+> > On Tue, Oct 02, 2007 at 12:48:26PM -0400, Burton Windle wrote:
+> > > 2.6.23-rc9 fails to boot for me; 2.6.22.9 works fine.
+> > >
+> > > System is a Dell Poweredge with PERC 2/DC with RAID1 volume.
+> > >...
+> > 
+> > Thanks for your report.
+> > 
+> > Diff'ing the dmesg's shows:
+> > 
+> > <--  snip  -->
+> > 
+> >  scsi0: scanning scsi channel 4 [P0] for physical devices.
+> >  scsi0: scanning scsi channel 5 [P1] for physical devices.
+> >  st: Version 20070203, fixed bufsize 32768, s/g segs 256
+> > -sd 0:0:0:0: [sda] 17547264 512-byte hardware sectors (8984 MB)
+> > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
+> > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
+> >  sd 0:0:0:0: [sda] Write Protect is off
+> >  sd 0:0:0:0: [sda] Asking for cache data failed
+> >  sd 0:0:0:0: [sda] Assuming drive cache: write through
+> > -sd 0:0:0:0: [sda] 17547264 512-byte hardware sectors (8984 MB)
+> > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
+> > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
+> >  sd 0:0:0:0: [sda] Write Protect is off
+> >  sd 0:0:0:0: [sda] Asking for cache data failed
+> >  sd 0:0:0:0: [sda] Assuming drive cache: write through
+> >   sda: sda1
+> > + sda: p1 exceeds device capacity
+> > 
+> > <--  snip  -->
+> > 
+> > -	case MEGA_BULK_DATA:
+> > -		if (scb->cmd->use_sg == 0)
+> > -			length = scb->cmd->request_bufflen;
+> > -		else {
+> > -			struct scatterlist *sgl =
+> > -				(struct scatterlist *)scb->cmd->request_buffer;
+> > -			length = sgl->length;
+> > -		}
+> > -		pci_unmap_page(adapter->dev, scb->dma_h_bulkdata,
+> > -			       length, scb->dma_direction);
+> > -		break;
+> > -
 > 
-> > as having a unique WWN should be a product requirement, is an indicator of
-> > a problem.  Shouldn't the proper solution be to have the card repaired?
-> > Arbitrarily assigning a WWN could mask or introduce other problems, in particular
-> > with regard to storage connectivity.
-
-This is absolutely correct.
-
-> If you are an admin suffering from the /common/ problem of missing or 
-> invalid NVRAM, would you rather wait for card repair or get it going 
-> immediately?
-
-If you have a SAS HA, and it is missing its NVRAM (erased, etc), then
-this is something catastrophic, and you have much bigger problems to solve
-than just to "generate" a WWN.
-
-It is extremely, extremely *uncommon* for SAS HA to be missing their
-manufacturing sector/NVRAM, for products out in the field.  Internally
-bound HAs, for testing, validation, etc, may be missing their MS/NVRAM,
-but those products are never supposed to leave the testing/validation
-process, without the "packager" writing their MS/NVRAM into the device.
-
-> The standard Linux policy for unique ids like ethernet MAC has been, for 
-> the 98% case where you have a useful MAC from the hardware, of course 
-> use it.  For the 2% case, you give the admin solutions for supplying a 
-> useful MAC.
-
-So the same rule of principle applies to SAS HAs, to quote:
-   "you give the admin solutions for supplying a useful WWN [was: MAC]"
-
-If the SAS HA does NOT have a WWN, then you'll just complain in the
-kernel log, and not start it up, unless the admin has provided one
-via kernel/module parameter.
-
-In the case where a WWN is missing, it is essential that userspace
-provides a WWN to the driver, possibly via a kernel/module parameter,
-and then the driver will use that WWN to assign to the HA.
-
-But you MUST NOT establish policy by "generating" it internally in the
-kernel.  I know it would be "cool", but it is unsound.  So instead,
-establish mechanism.
-
-> Mirroring decades of ethernet NIC history, the HBA silicon and the 
-> source of the unique id are most often vastly different.  Normally it is 
-> a different chip on the same board, but sometimes the unique id source 
-> is not on the same board at all.
+> This is the problem piece I think.  We've reintroduced a very old bug:
 > 
-> For those reasons and more, Linux users have a LONG history of running 
-> into situations where, for one reason or another, their silicon is fine 
-> but their unique id is not.  I've heard them all:
-> 	- hw from government auction, had NVRAM intentionally wiped
-> 	- hw resale w/ NVRAM wiped by paranoid corporate IT staff
-> 	- hw with NVRAM chip missing
-> 	- old hw out of warranty
-> 	- old dev kit (they rarely ship with useful NVRAM data)
-> 	- and plenty more
+> commit 51c928c34fa7cff38df584ad01de988805877dba
+> Author: James Bottomley <James.Bottomley@SteelEye.com>
+> Date:   Sat Oct 1 09:38:05 2005 -0500
 > 
-> We have to behave sanely in the 2% case.  "refuse to operate" is just 
-> not an option, when this problem case is so historically clear, and so 
-> easy to work around.
+>     [SCSI] Legacy MegaRAID: Fix READ CAPACITY
+>     
+>     Some Legacy megaraid cards can't actually cope with the scatter/gather
+>     version of the READ CAPACITY command (which is what we now send them
+>     since altering all SCSI internal I/O to go via the block layer).  Fix
+>     this (and a few other broken megaraid driver assumptions) by sending
+>     the non-sg version of the command if the sg list only has a single
+>     element.
+>     
+>     Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
 > 
-> Linux drivers have to continue operating long after support contracts 
-> run out, long after chip EOL, and sometimes, long after companies go out 
-> of business.
+> So what we have to do is put back the check for use_sg == 1 and send
+> that as a bulk transfer command.
 
-This still does not justify "let's generate it in the kernel".
-If the MS/NVRAM is missing and thus there is no hw WWN, then it
-should be left to the admin to provide one via a kernel/module option.
+Sorry again. Needs to check sg count before dma mapping.
 
-   Luben
 
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
+index 3907f67..ae0b220 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -1737,9 +1737,12 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 	Scsi_Cmnd	*cmd;
+ 	int	sgcnt;
+ 	int	idx;
++	int bulkdata;
+ 
+ 	cmd = scb->cmd;
+ 
++	bulkdata = (scsi_sg_count(cmd) == 1) ? 1 : 0;
++
+ 	/*
+ 	 * Copy Scatter-Gather list info into controller structure.
+ 	 *
+@@ -1753,6 +1756,14 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
+ 
+ 	*len = 0;
+ 
++	if (bulkdata && !adapter->has_64bit_addr) {
++		sg = scsi_sglist(cmd);
++		scb->dma_h_bulkdata = sg_dma_address(sg);
++		*buf = (u32)scb->dma_h_bulkdata;
++		*len = sg_dma_len(sg);
++		return 0;
++	}
++
+ 	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
+ 		if (adapter->has_64bit_addr) {
+ 			scb->sgl64[idx].address = sg_dma_address(sg);
