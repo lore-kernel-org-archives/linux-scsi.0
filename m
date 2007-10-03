@@ -1,34 +1,26 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: generating a Linux WWN?
-Date: Wed, 03 Oct 2007 01:47:06 -0400
-Message-ID: <47032CDA.1020303@garzik.org>
-References: <660594.90733.qm@web31808.mail.mud.yahoo.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 21/21] advansys: Changes to work on parisc
+Date: Wed, 3 Oct 2007 09:05:59 +0100
+Message-ID: <20071003080559.GA10081@infradead.org>
+References: <11913765421743-git-send-email-matthew@wil.cx> <11913765432770-git-send-email-matthew@wil.cx> <4702F7B2.7080600@garzik.org> <20071003021545.GD12049@parisc-linux.org> <4702FE4D.4030603@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:35144 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751948AbXJCFrL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Oct 2007 01:47:11 -0400
-In-Reply-To: <660594.90733.qm@web31808.mail.mud.yahoo.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:39067 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752065AbXJCIGP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 04:06:15 -0400
+Content-Disposition: inline
+In-Reply-To: <4702FE4D.4030603@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: Michael Reed <mdr@sgi.com>, James.Smart@Emulex.Com, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-Luben Tuikov wrote:
-> Do you mean:
->   "The admin will have the option to SPECIFY(SET) a WWN, should they so 
->    desire."
-> OR do you mean:
->   "The admin will have the option to HAVE THE KERNEL auto-generate a WWN,
->    should they so desire."
+On Tue, Oct 02, 2007 at 10:28:29PM -0400, Jeff Garzik wrote:
+> Incorrect.  That is highly platform specific, with many using unsigned 
+> long, since the [non-x86] platform is generally pointing to a special 
+> memory region rather than directly using an x86-like instruction.
 
-Both.  It is up to admin policy to decide if they wish to use the 
-available board's WWN (if present/valid), manually apportion WWNs, or 
-whether the kernel's generation algo is fine with them.
-
-	Jeff
-
+For port I/O we _do_ use int everywhere.
 
