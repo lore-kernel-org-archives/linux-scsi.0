@@ -1,26 +1,52 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 21/21] advansys: Changes to work on parisc
-Date: Wed, 3 Oct 2007 09:06:33 +0100
-Message-ID: <20071003080633.GB10081@infradead.org>
-References: <11913765421743-git-send-email-matthew@wil.cx> <11913765432770-git-send-email-matthew@wil.cx> <4702F7B2.7080600@garzik.org> <20071003021545.GD12049@parisc-linux.org> <4702FE4D.4030603@garzik.org> <20071003030039.GE12049@parisc-linux.org> <47030935.5020000@garzik.org>
+From: Johannes Dickgreber <tanzy@gmx.de>
+Subject: Resend [PATCH] qla1280: uses wrong failure path after failed pci_set_dma_mask
+Date: Wed, 03 Oct 2007 13:22:19 +0200
+Message-ID: <47037B6B.3090309@gmx.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:39072 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756023AbXJCIGg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 04:06:36 -0400
-Content-Disposition: inline
-In-Reply-To: <47030935.5020000@garzik.org>
+Received: from mail.gmx.net ([213.165.64.20]:36957 "HELO mail.gmx.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1758071AbXJCLWU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Oct 2007 07:22:20 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Oct 02, 2007 at 11:15:01PM -0400, Jeff Garzik wrote:
-> You're pushing against over a decade-long practice and moving into 
-> NAK-land...  This is the way portable drivers have always been written.
+Hi
 
-Fortunately you're not the one to NAK scsi driver for this kind of
-bullshit.  Pleae grow up.
+Sorry, I got no answer, so i resend.
 
+I think there will be a wrong goto target after a failed
+pci_set_dma_mask.
+
+Please Check.
+
+Signed-off-by: Johannes Dickgreber tanzy@gmx.de
+---
+--- qla1280.c.orig	2007-09-19 23:32:33 +0200
++++ qla1280.c	2007-09-19 23:58:46 +0200
+@@ -4298,7 +4298,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
+ 			printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 			       "suitable DMA mask - aborting\n", ha->host_no);
+ 			error = -ENODEV;
+-			goto error_free_irq;
++			goto error_put_host;
+ 		}
+ 	} else
+ 		dprintk(2, "scsi(%li): 64 Bit PCI Addressing Enabled\n",
+@@ -4308,7 +4308,7 @@ qla1280_probe_one(struct pci_dev *pdev, 
+ 		printk(KERN_WARNING "scsi(%li): Unable to set a "
+ 		       "suitable DMA mask - aborting\n", ha->host_no);
+ 		error = -ENODEV;
+-		goto error_free_irq;
++		goto error_put_host;
+ 	}
+ #endif
+
+
+
+Thanks
+
+	tanzy
