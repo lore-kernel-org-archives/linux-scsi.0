@@ -1,117 +1,41 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: 2.6.23-rc9 boot failure (megaraid?)
-Date: Wed, 03 Oct 2007 09:00:58 +0900
-Message-ID: <20071003090058R.fujita.tomonori@lab.ntt.co.jp>
-References: <Pine.LNX.4.64.0710021242510.6275@postal>
-	<20071002181518.GC10852@stusta.de>
-	<1191357493.3530.129.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 21/21] advansys: Changes to work on parisc
+Date: Tue, 2 Oct 2007 21:00:39 -0600
+Message-ID: <20071003030039.GE12049@parisc-linux.org>
+References: <11913765421743-git-send-email-matthew@wil.cx> <11913765432770-git-send-email-matthew@wil.cx> <4702F7B2.7080600@garzik.org> <20071003021545.GD12049@parisc-linux.org> <4702FE4D.4030603@garzik.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:56705 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753701AbXJCCrE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 22:47:04 -0400
-In-Reply-To: <1191357493.3530.129.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:53902 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753713AbXJCDAm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 23:00:42 -0400
+Content-Disposition: inline
+In-Reply-To: <4702FE4D.4030603@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: bunk@kernel.org, bwindle@fint.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, sumant.patro@lsi.com, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-On Tue, 02 Oct 2007 15:38:13 -0500
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-
-> On Tue, 2007-10-02 at 20:15 +0200, Adrian Bunk wrote:
-> > Cc's added, the complete bug report is at
-> >   http://lkml.org/lkml/2007/10/2/243
-> > 
-> > On Tue, Oct 02, 2007 at 12:48:26PM -0400, Burton Windle wrote:
-> > > 2.6.23-rc9 fails to boot for me; 2.6.22.9 works fine.
-> > >
-> > > System is a Dell Poweredge with PERC 2/DC with RAID1 volume.
-> > >...
-> > 
-> > Thanks for your report.
-> > 
-> > Diff'ing the dmesg's shows:
-> > 
-> > <--  snip  -->
-> > 
-> >  scsi0: scanning scsi channel 4 [P0] for physical devices.
-> >  scsi0: scanning scsi channel 5 [P1] for physical devices.
-> >  st: Version 20070203, fixed bufsize 32768, s/g segs 256
-> > -sd 0:0:0:0: [sda] 17547264 512-byte hardware sectors (8984 MB)
-> > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
-> >  sd 0:0:0:0: [sda] Write Protect is off
-> >  sd 0:0:0:0: [sda] Asking for cache data failed
-> >  sd 0:0:0:0: [sda] Assuming drive cache: write through
-> > -sd 0:0:0:0: [sda] 17547264 512-byte hardware sectors (8984 MB)
-> > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
-> >  sd 0:0:0:0: [sda] Write Protect is off
-> >  sd 0:0:0:0: [sda] Asking for cache data failed
-> >  sd 0:0:0:0: [sda] Assuming drive cache: write through
-> >   sda: sda1
-> > + sda: p1 exceeds device capacity
-> > 
-> > <--  snip  -->
-> > 
-> > -	case MEGA_BULK_DATA:
-> > -		if (scb->cmd->use_sg == 0)
-> > -			length = scb->cmd->request_bufflen;
-> > -		else {
-> > -			struct scatterlist *sgl =
-> > -				(struct scatterlist *)scb->cmd->request_buffer;
-> > -			length = sgl->length;
-> > -		}
-> > -		pci_unmap_page(adapter->dev, scb->dma_h_bulkdata,
-> > -			       length, scb->dma_direction);
-> > -		break;
-> > -
+On Tue, Oct 02, 2007 at 10:28:29PM -0400, Jeff Garzik wrote:
+> Incorrect.  That is highly platform specific, with many using unsigned 
+> long, since the [non-x86] platform is generally pointing to a special 
+> memory region rather than directly using an x86-like instruction.
 > 
-> This is the problem piece I think.  We've reintroduced a very old bug:
+> unsigned long is the portable size to use, because it is guaranteed to 
+> work on all platforms.
 > 
-> commit 51c928c34fa7cff38df584ad01de988805877dba
-> Author: James Bottomley <James.Bottomley@SteelEye.com>
-> Date:   Sat Oct 1 09:38:05 2005 -0500
-> 
->     [SCSI] Legacy MegaRAID: Fix READ CAPACITY
->     
->     Some Legacy megaraid cards can't actually cope with the scatter/gather
->     version of the READ CAPACITY command (which is what we now send them
->     since altering all SCSI internal I/O to go via the block layer).  Fix
->     this (and a few other broken megaraid driver assumptions) by sending
->     the non-sg version of the command if the sg list only has a single
->     element.
->     
->     Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-> 
-> So what we have to do is put back the check for use_sg == 1 and send
-> that as a bulk transfer command.
+> unsigned int means you exclude powerpc[64], alpha, sparc64, sh, ... 
+> it's not portable, unlike unsigned long.
 
-Sorry about this. Can this fix the problem?
+I don't think that's true.  I asked a powerpc64 person about it the
+other day, and he said they don't use anything beyond the lower 32 bits.
 
-Thanks,
+If people are really supposed to use unsigned long, it would make sense
+to get the i386 macros changed, since they are canonical.
 
-
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 3907f67..da56163 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -1753,6 +1753,14 @@ mega_build_sglist(adapter_t *adapter, scb_t *scb, u32 *buf, u32 *len)
- 
- 	*len = 0;
- 
-+	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
-+		sg = scsi_sglist(cmd);
-+		scb->dma_h_bulkdata = sg_dma_address(sg);
-+		*buf = (u32)scb->dma_h_bulkdata;
-+		*len = sg_dma_len(sg);
-+		return 0;
-+	}
-+
- 	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
- 		if (adapter->has_64bit_addr) {
- 			scb->sgl64[idx].address = sg_dma_address(sg);
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
