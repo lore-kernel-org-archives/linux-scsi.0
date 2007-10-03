@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 16/21] advansys: Move a couple of fields from struct board to struct adv_dvc
-Date: Tue,  2 Oct 2007 21:55:37 -0400
-Message-ID: <1191376543943-git-send-email-matthew@wil.cx>
+Subject: [PATCH 11/21] advansys: Remove library version & serial numbers
+Date: Tue,  2 Oct 2007 21:55:32 -0400
+Message-ID: <1191376542497-git-send-email-matthew@wil.cx>
 References: <11913765421743-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:53919 "EHLO
-	mail-01.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754015AbXJCBzq (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:36062 "EHLO
+	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753809AbXJCBzq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:46 -0400
 In-Reply-To: <11913765421743-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,293 +14,150 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-board->carrp is a duplicate of asc_dvc->carrier_buf, so cut out the
-middle-man and assign directly to carrier_buf.  Move orig_reqp to adv_dvc
-too, since it's wide-board specific.  Also eliminate an unnecessary BUG_ON
-(we'll never get there with a NULL carrier_buf, and will crash if we do).
-The bulk of this patch is rearranging structures so everything's declared
-in the right order.
+With the ASC and ADV libraries merged into the driver, there really is
+no point in reporting their version numbers, or even trying to maintain
+them.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/advansys.c |  193 ++++++++++++++++++++++------------------------
- 1 files changed, 92 insertions(+), 101 deletions(-)
+ drivers/scsi/advansys.c |   60 +++++++++++-----------------------------------
+ 1 files changed, 15 insertions(+), 45 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 644582d..1e2b3b0 100644
+index e17626c..4a7bba3 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -983,15 +983,14 @@ typedef struct asc_mc_saved {
-  * elements. Allow each command to have at least one ADV_SG_BLOCK structure.
-  * This allows about 15 commands to have the maximum 17 ADV_SG_BLOCK
-  * structures or 255 scatter-gather elements.
-- *
-  */
- #define ADV_TOT_SG_BLOCK        ASC_DEF_MAX_HOST_QNG
+@@ -77,10 +77,6 @@
+ /* Enable driver tracing. */
+ /* #define ADVANSYS_DEBUG */
  
+-#define ASC_LIB_VERSION_MAJOR  1
+-#define ASC_LIB_VERSION_MINOR  24
+-#define ASC_LIB_SERIAL_NUMBER  123
+-
  /*
-- * Define Adv Library required maximum number of scatter-gather
-- * elements per request.
-+ * Define maximum number of scatter-gather elements per request.
-  */
- #define ADV_MAX_SG_LIST         255
-+#define NO_OF_SG_PER_BLOCK              15
- 
- /* Number of SG blocks needed. */
- #define ADV_NUM_SG_BLOCK \
-@@ -1839,55 +1838,6 @@ typedef struct adv_dvc_cfg {
- struct adv_dvc_var;
- struct adv_scsi_req_q;
- 
--/*
-- * Adapter operation variable structure.
-- *
-- * One structure is required per host adapter.
-- *
-- * Field naming convention:
-- *
-- *  *_able indicates both whether a feature should be enabled or disabled
-- *  and whether a device isi capable of the feature. At initialization
-- *  this field may be set, but later if a device is found to be incapable
-- *  of the feature, the field is cleared.
-- */
--typedef struct adv_dvc_var {
--	AdvPortAddr iop_base;	/* I/O port address */
--	ushort err_code;	/* fatal error code */
--	ushort bios_ctrl;	/* BIOS control word, EEPROM word 12 */
--	ushort wdtr_able;	/* try WDTR for a device */
--	ushort sdtr_able;	/* try SDTR for a device */
--	ushort ultra_able;	/* try SDTR Ultra speed for a device */
--	ushort sdtr_speed1;	/* EEPROM SDTR Speed for TID 0-3   */
--	ushort sdtr_speed2;	/* EEPROM SDTR Speed for TID 4-7   */
--	ushort sdtr_speed3;	/* EEPROM SDTR Speed for TID 8-11  */
--	ushort sdtr_speed4;	/* EEPROM SDTR Speed for TID 12-15 */
--	ushort tagqng_able;	/* try tagged queuing with a device */
--	ushort ppr_able;	/* PPR message capable per TID bitmask. */
--	uchar max_dvc_qng;	/* maximum number of tagged commands per device */
--	ushort start_motor;	/* start motor command allowed */
--	uchar scsi_reset_wait;	/* delay in seconds after scsi bus reset */
--	uchar chip_no;		/* should be assigned by caller */
--	uchar max_host_qng;	/* maximum number of Q'ed command allowed */
--	ushort no_scam;		/* scam_tolerant of EEPROM */
--	struct asc_board *drv_ptr;	/* driver pointer to private structure */
--	uchar chip_scsi_id;	/* chip SCSI target ID */
--	uchar chip_type;
--	uchar bist_err_code;
--	ADV_CARR_T *carrier_buf;
--	ADV_CARR_T *carr_freelist;	/* Carrier free list. */
--	ADV_CARR_T *icq_sp;	/* Initiator command queue stopper pointer. */
--	ADV_CARR_T *irq_sp;	/* Initiator response queue stopper pointer. */
--	ushort carr_pending_cnt;	/* Count of pending carriers. */
--	/*
--	 * Note: The following fields will not be used after initialization. The
--	 * driver may discard the buffer after initialization is done.
--	 */
--	ADV_DVC_CFG *cfg;	/* temporary configuration structure  */
--} ADV_DVC_VAR;
--
--#define NO_OF_SG_PER_BLOCK              15
--
- typedef struct asc_sg_block {
- 	uchar reserved1;
- 	uchar reserved2;
-@@ -1946,6 +1896,83 @@ typedef struct adv_scsi_req_q {
- } ADV_SCSI_REQ_Q;
- 
- /*
-+ * The following two structures are used to process Wide Board requests.
-+ *
-+ * The ADV_SCSI_REQ_Q structure in adv_req_t is passed to the Adv Library
-+ * and microcode with the ADV_SCSI_REQ_Q field 'srb_ptr' pointing to the
-+ * adv_req_t. The adv_req_t structure 'cmndp' field in turn points to the
-+ * Mid-Level SCSI request structure.
-+ *
-+ * Zero or more ADV_SG_BLOCK are used with each ADV_SCSI_REQ_Q. Each
-+ * ADV_SG_BLOCK structure holds 15 scatter-gather elements. Under Linux
-+ * up to 255 scatter-gather elements may be used per request or
-+ * ADV_SCSI_REQ_Q.
-+ *
-+ * Both structures must be 32 byte aligned.
-+ */
-+typedef struct adv_sgblk {
-+	ADV_SG_BLOCK sg_block;	/* Sgblock structure. */
-+	uchar align[32];	/* Sgblock structure padding. */
-+	struct adv_sgblk *next_sgblkp;	/* Next scatter-gather structure. */
-+} adv_sgblk_t;
-+
-+typedef struct adv_req {
-+	ADV_SCSI_REQ_Q scsi_req_q;	/* Adv Library request structure. */
-+	uchar align[32];	/* Request structure padding. */
-+	struct scsi_cmnd *cmndp;	/* Mid-Level SCSI command pointer. */
-+	adv_sgblk_t *sgblkp;	/* Adv Library scatter-gather pointer. */
-+	struct adv_req *next_reqp;	/* Next Request Structure. */
-+} adv_req_t;
-+
-+/*
-+ * Adapter operation variable structure.
-+ *
-+ * One structure is required per host adapter.
-+ *
-+ * Field naming convention:
-+ *
-+ *  *_able indicates both whether a feature should be enabled or disabled
-+ *  and whether a device isi capable of the feature. At initialization
-+ *  this field may be set, but later if a device is found to be incapable
-+ *  of the feature, the field is cleared.
-+ */
-+typedef struct adv_dvc_var {
-+	AdvPortAddr iop_base;	/* I/O port address */
-+	ushort err_code;	/* fatal error code */
-+	ushort bios_ctrl;	/* BIOS control word, EEPROM word 12 */
-+	ushort wdtr_able;	/* try WDTR for a device */
-+	ushort sdtr_able;	/* try SDTR for a device */
-+	ushort ultra_able;	/* try SDTR Ultra speed for a device */
-+	ushort sdtr_speed1;	/* EEPROM SDTR Speed for TID 0-3   */
-+	ushort sdtr_speed2;	/* EEPROM SDTR Speed for TID 4-7   */
-+	ushort sdtr_speed3;	/* EEPROM SDTR Speed for TID 8-11  */
-+	ushort sdtr_speed4;	/* EEPROM SDTR Speed for TID 12-15 */
-+	ushort tagqng_able;	/* try tagged queuing with a device */
-+	ushort ppr_able;	/* PPR message capable per TID bitmask. */
-+	uchar max_dvc_qng;	/* maximum number of tagged commands per device */
-+	ushort start_motor;	/* start motor command allowed */
-+	uchar scsi_reset_wait;	/* delay in seconds after scsi bus reset */
-+	uchar chip_no;		/* should be assigned by caller */
-+	uchar max_host_qng;	/* maximum number of Q'ed command allowed */
-+	ushort no_scam;		/* scam_tolerant of EEPROM */
-+	struct asc_board *drv_ptr;	/* driver pointer to private structure */
-+	uchar chip_scsi_id;	/* chip SCSI target ID */
-+	uchar chip_type;
-+	uchar bist_err_code;
-+	ADV_CARR_T *carrier_buf;
-+	ADV_CARR_T *carr_freelist;	/* Carrier free list. */
-+	ADV_CARR_T *icq_sp;	/* Initiator command queue stopper pointer. */
-+	ADV_CARR_T *irq_sp;	/* Initiator response queue stopper pointer. */
-+	ushort carr_pending_cnt;	/* Count of pending carriers. */
-+	struct adv_req *orig_reqp;	/* adv_req_t memory block. */
-+	/*
-+	 * Note: The following fields will not be used after initialization. The
-+	 * driver may discard the buffer after initialization is done.
-+	 */
-+	ADV_DVC_CFG *cfg;	/* temporary configuration structure  */
-+} ADV_DVC_VAR;
-+
-+/*
-  * Microcode idle loop commands
-  */
- #define IDLE_CMD_COMPLETED           0
-@@ -2362,37 +2389,6 @@ struct asc_stats {
- #endif /* ADVANSYS_STATS */
- 
- /*
-- * Adv Library Request Structures
-- *
-- * The following two structures are used to process Wide Board requests.
-- *
-- * The ADV_SCSI_REQ_Q structure in adv_req_t is passed to the Adv Library
-- * and microcode with the ADV_SCSI_REQ_Q field 'srb_ptr' pointing to the
-- * adv_req_t. The adv_req_t structure 'cmndp' field in turn points to the
-- * Mid-Level SCSI request structure.
-- *
-- * Zero or more ADV_SG_BLOCK are used with each ADV_SCSI_REQ_Q. Each
-- * ADV_SG_BLOCK structure holds 15 scatter-gather elements. Under Linux
-- * up to 255 scatter-gather elements may be used per request or
-- * ADV_SCSI_REQ_Q.
-- *
-- * Both structures must be 32 byte aligned.
-- */
--typedef struct adv_sgblk {
--	ADV_SG_BLOCK sg_block;	/* Sgblock structure. */
--	uchar align[32];	/* Sgblock structure padding. */
--	struct adv_sgblk *next_sgblkp;	/* Next scatter-gather structure. */
--} adv_sgblk_t;
--
--typedef struct adv_req {
--	ADV_SCSI_REQ_Q scsi_req_q;	/* Adv Library request structure. */
--	uchar align[32];	/* Request structure padding. */
--	struct scsi_cmnd *cmndp;	/* Mid-Level SCSI command pointer. */
--	adv_sgblk_t *sgblkp;	/* Adv Library scatter-gather pointer. */
--	struct adv_req *next_reqp;	/* Next Request Structure. */
--} adv_req_t;
--
--/*
-  * Structure allocated for each board.
+  * Portable Data Types
   *
-  * This structure is allocated by scsi_host_alloc() at the end
-@@ -2437,8 +2433,6 @@ struct asc_board {
- 	 */
- 	void __iomem *ioremap_addr;	/* I/O Memory remap address. */
- 	ushort ioport;		/* I/O Port address. */
--	ADV_CARR_T *carrp;	/* ADV_CARR_T memory block. */
--	adv_req_t *orig_reqp;	/* adv_req_t memory block. */
- 	adv_req_t *adv_reqp;	/* Request structures. */
- 	adv_sgblk_t *adv_sgblkp;	/* Scatter-gather structures. */
- 	ushort bios_signature;	/* BIOS Signature. */
-@@ -6518,8 +6512,6 @@ static void AdvBuildCarrierFreelist(struct adv_dvc_var *asc_dvc)
- 	ADV_SDCNT buf_size;
- 	ADV_PADDR carr_paddr;
+@@ -554,8 +550,6 @@ typedef struct asc_dvc_cfg {
+ 	uchar isa_dma_speed;
+ 	uchar isa_dma_channel;
+ 	uchar chip_version;
+-	ushort lib_serial_no;
+-	ushort lib_version;
+ 	ushort mcode_date;
+ 	ushort mcode_version;
+ 	uchar max_tag_qng[ASC_MAX_TID + 1];
+@@ -958,13 +952,6 @@ typedef struct asc_mc_saved {
+ #define AscReadChipDvcID(port)            (uchar)inp((port)+IOP_REG_ID)
+ #define AscWriteChipDvcID(port, data)     outp((port)+IOP_REG_ID, data)
  
--	BUG_ON(!asc_dvc->carrier_buf);
+-#define ADV_LIB_VERSION_MAJOR  5
+-#define ADV_LIB_VERSION_MINOR  14
 -
- 	carrp = (ADV_CARR_T *) ADV_16BALIGN(asc_dvc->carrier_buf);
- 	asc_dvc->carr_freelist = NULL;
- 	if (carrp == asc_dvc->carrier_buf) {
-@@ -13442,10 +13434,10 @@ static int __devinit advansys_wide_init_chip(struct Scsi_Host *shost)
- 	 * Allocate buffer carrier structures. The total size
- 	 * is about 4 KB, so allocate all at once.
- 	 */
--	board->carrp = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
--	ASC_DBG(1, "carrp 0x%p\n", board->carrp);
-+	adv_dvc->carrier_buf = kmalloc(ADV_CARRIER_BUFSIZE, GFP_KERNEL);
-+	ASC_DBG(1, "carrier_buf 0x%p\n", adv_dvc->carrier_buf);
- 
--	if (!board->carrp)
-+	if (!adv_dvc->carrier_buf)
- 		goto kmalloc_failed;
- 
- 	/*
-@@ -13466,7 +13458,7 @@ static int __devinit advansys_wide_init_chip(struct Scsi_Host *shost)
- 	if (!reqp)
- 		goto kmalloc_failed;
- 
--	board->orig_reqp = reqp;
-+	adv_dvc->orig_reqp = reqp;
- 
- 	/*
- 	 * Allocate up to ADV_TOT_SG_BLOCK request structures for
-@@ -13490,8 +13482,6 @@ static int __devinit advansys_wide_init_chip(struct Scsi_Host *shost)
- 	if (!board->adv_sgblkp)
- 		goto kmalloc_failed;
- 
--	adv_dvc->carrier_buf = board->carrp;
+-/*
+- * Define Adv Library required special types.
+- */
 -
- 	/*
- 	 * Point 'adv_reqp' to the request structures and
- 	 * link them together.
-@@ -13529,15 +13519,16 @@ static int __devinit advansys_wide_init_chip(struct Scsi_Host *shost)
- 	return err_code;
+ /*
+  * Portable Data Types
+  *
+@@ -1856,7 +1843,6 @@ typedef struct adv_dvc_cfg {
+ 	ushort disc_enable;	/* enable disconnection */
+ 	uchar chip_version;	/* chip version */
+ 	uchar termination;	/* Term. Ctrl. bits 6-5 of SCSI_CFG1 register */
+-	ushort lib_version;	/* Adv Library version number */
+ 	ushort control_flag;	/* Microcode Control Flag */
+ 	ushort mcode_date;	/* Microcode date */
+ 	ushort mcode_version;	/* Microcode version */
+@@ -2637,18 +2623,13 @@ static void asc_prt_asc_dvc_cfg(ASC_DVC_CFG *h)
+ 	printk(" disc_enable 0x%x, sdtr_enable 0x%x,\n",
+ 	       h->disc_enable, h->sdtr_enable);
+ 
+-	printk
+-	    (" chip_scsi_id %d, isa_dma_speed %d, isa_dma_channel %d, chip_version %d,\n",
+-	     h->chip_scsi_id, h->isa_dma_speed, h->isa_dma_channel,
+-	     h->chip_version);
+-
+-	printk
+-	    (" pci_device_id %d, lib_serial_no %u, lib_version %u, mcode_date 0x%x,\n",
+-	     to_pci_dev(h->dev)->device, h->lib_serial_no, h->lib_version,
+-	     h->mcode_date);
++	printk(" chip_scsi_id %d, isa_dma_speed %d, isa_dma_channel %d, "
++		"chip_version %d,\n", h->chip_scsi_id, h->isa_dma_speed,
++		h->isa_dma_channel, h->chip_version);
+ 
+-	printk(" mcode_version %d, overrun_buf 0x%lx\n",
+-	       h->mcode_version, (ulong)h->overrun_buf);
++	printk(" pci_device_id %d, mcode_date 0x%x, mcode_version %d, "
++		"overrun_buf 0x%p\n", to_pci_dev(h->dev)->device,
++		h->mcode_date, h->mcode_version, h->overrun_buf);
  }
  
--static void advansys_wide_free_mem(struct asc_board *boardp)
-+static void advansys_wide_free_mem(struct asc_board *board)
- {
--	kfree(boardp->carrp);
--	boardp->carrp = NULL;
--	kfree(boardp->orig_reqp);
--	boardp->orig_reqp = boardp->adv_reqp = NULL;
--	while (boardp->adv_sgblkp) {
--		adv_sgblk_t *sgp = boardp->adv_sgblkp;
--		boardp->adv_sgblkp = sgp->next_sgblkp;
-+	struct adv_dvc_var *adv_dvc = &board->dvc_var.adv_dvc_var;
-+	kfree(adv_dvc->carrier_buf);
-+	adv_dvc->carrier_buf = NULL;
-+	kfree(adv_dvc->orig_reqp);
-+	adv_dvc->orig_reqp = board->adv_reqp = NULL;
-+	while (board->adv_sgblkp) {
-+		adv_sgblk_t *sgp = board->adv_sgblkp;
-+		board->adv_sgblkp = sgp->next_sgblkp;
- 		kfree(sgp);
- 	}
+ /*
+@@ -2752,8 +2733,8 @@ static void asc_prt_adv_dvc_cfg(ADV_DVC_CFG *h)
+ 	printk("  chip_version 0x%x, mcode_date 0x%x\n",
+ 	       h->chip_version, h->mcode_date);
+ 
+-	printk("  mcode_version 0x%x, pci_device_id 0x%x, lib_version %u\n",
+-	       h->mcode_version, to_pci_dev(h->dev)->device, h->lib_version);
++	printk("  mcode_version 0x%x, pci_device_id 0x%x\n",
++	       h->mcode_version, to_pci_dev(h->dev)->device);
+ 
+ 	printk("  control_flag 0x%x\n", h->control_flag);
  }
+@@ -3731,15 +3712,10 @@ static int asc_prt_asc_board_info(struct Scsi_Host *shost, char *cp, int cplen)
+ 			   shost->host_no);
+ 	ASC_PRT_NEXT();
+ 
+-	len = asc_prt_line(cp, leftlen,
+-			   " chip_version %u, lib_version 0x%x, lib_serial_no %u, mcode_date 0x%x\n",
+-			   c->chip_version, c->lib_version, c->lib_serial_no,
+-			   c->mcode_date);
+-	ASC_PRT_NEXT();
+-
+-	len = asc_prt_line(cp, leftlen,
+-			   " mcode_version 0x%x, err_code %u\n",
+-			   c->mcode_version, v->err_code);
++	len = asc_prt_line(cp, leftlen, " chip_version %u, mcode_date 0x%x, "
++			   "mcode_version 0x%x, err_code %u\n",
++			   c->chip_version, c->mcode_date, c->mcode_version,
++			   v->err_code);
+ 	ASC_PRT_NEXT();
+ 
+ 	/* Current number of commands waiting for the host. */
+@@ -3934,10 +3910,9 @@ static int asc_prt_adv_board_info(struct Scsi_Host *shost, char *cp, int cplen)
+ 			   v->err_code);
+ 	ASC_PRT_NEXT();
+ 
+-	len = asc_prt_line(cp, leftlen,
+-			   " chip_version %u, lib_version 0x%x, mcode_date 0x%x, mcode_version 0x%x\n",
+-			   c->chip_version, c->lib_version, c->mcode_date,
+-			   c->mcode_version);
++	len = asc_prt_line(cp, leftlen, " chip_version %u, mcode_date 0x%x, "
++			   "mcode_version 0x%x\n", c->chip_version,
++			   c->mcode_date, c->mcode_version);
+ 	ASC_PRT_NEXT();
+ 
+ 	AdvReadWordLram(iop_base, ASC_MC_TAGQNG_ABLE, tagqng_able);
+@@ -11566,9 +11541,6 @@ static ushort __devinit AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
+ 	asc_dvc->cfg->sdtr_enable = ASC_SCSI_WIDTH_BIT_SET;
+ 	asc_dvc->cfg->disc_enable = ASC_SCSI_WIDTH_BIT_SET;
+ 	asc_dvc->cfg->chip_scsi_id = ASC_DEF_CHIP_SCSI_ID;
+-	asc_dvc->cfg->lib_serial_no = ASC_LIB_SERIAL_NUMBER;
+-	asc_dvc->cfg->lib_version = (ASC_LIB_VERSION_MAJOR << 8) |
+-	    ASC_LIB_VERSION_MINOR;
+ 	chip_version = AscGetChipVersion(iop_base, asc_dvc->bus_type);
+ 	asc_dvc->cfg->chip_version = chip_version;
+ 	asc_dvc->sdtr_period_tbl[0] = SYN_XFER_NS_0;
+@@ -13542,8 +13514,6 @@ AdvInitGetConfig(struct pci_dev *pdev, struct asc_board *boardp)
+ 	if ((cmd & PCI_COMMAND_PARITY) == 0)
+ 		asc_dvc->cfg->control_flag |= CONTROL_FLAG_IGNORE_PERR;
+ 
+-	asc_dvc->cfg->lib_version = (ADV_LIB_VERSION_MAJOR << 8) |
+-	    ADV_LIB_VERSION_MINOR;
+ 	asc_dvc->cfg->chip_version =
+ 	    AdvGetChipVersion(iop_base, asc_dvc->bus_type);
+ 
 -- 
 1.5.3.1
 
