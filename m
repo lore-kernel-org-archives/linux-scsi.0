@@ -1,157 +1,189 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 17/21] advansys: Remove DvcGetPhyAddr
-Date: Tue,  2 Oct 2007 21:55:38 -0400
-Message-ID: <1191376543243-git-send-email-matthew@wil.cx>
+Subject: [PATCH 03/21] advansys: Restructure asc_execute_scsi_cmnd()
+Date: Tue,  2 Oct 2007 21:55:24 -0400
+Message-ID: <11913765423260-git-send-email-matthew@wil.cx>
 References: <11913765421743-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:57887 "EHLO
-	mail-08.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754083AbXJCBzq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:46 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:36038 "EHLO
+	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753779AbXJCBzo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:44 -0400
 In-Reply-To: <11913765421743-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-This rather complex function boiled down to calling virt_to_bus().
-Also get rid of some obsolete defines and variables that could never vary.
+The wide and narrow boards share identical handling of the return value,
+except for some trivial error messages.  Move the handling to the common
+end of the function.  Also move variable declarations to the arms of
+the `if' that they're used in and delete some pointless comments.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/advansys.c |   73 ++---------------------------------------------
- 1 files changed, 3 insertions(+), 70 deletions(-)
+ drivers/scsi/advansys.c |  131 ++++++++++++++---------------------------------
+ 1 files changed, 39 insertions(+), 92 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 1e2b3b0..4cc60e4 100644
+index 737c0e4..3dd7856 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -992,19 +992,6 @@ typedef struct asc_mc_saved {
- #define ADV_MAX_SG_LIST         255
- #define NO_OF_SG_PER_BLOCK              15
- 
--/* Number of SG blocks needed. */
--#define ADV_NUM_SG_BLOCK \
--    ((ADV_MAX_SG_LIST + (NO_OF_SG_PER_BLOCK - 1))/NO_OF_SG_PER_BLOCK)
--
--/* Total contiguous memory needed for SG blocks. */
--#define ADV_SG_TOTAL_MEM_SIZE \
--    (sizeof(ADV_SG_BLOCK) *  ADV_NUM_SG_BLOCK)
--
--#define ADV_PAGE_SIZE PAGE_SIZE
--
--#define ADV_NUM_PAGE_CROSSING \
--    ((ADV_SG_TOTAL_MEM_SIZE + (ADV_PAGE_SIZE - 1))/ADV_PAGE_SIZE)
--
- #define ADV_EEP_DVC_CFG_BEGIN           (0x00)
- #define ADV_EEP_DVC_CFG_END             (0x15)
- #define ADV_EEP_DVC_CTL_BEGIN           (0x16)	/* location of OEM name */
-@@ -1792,8 +1779,7 @@ typedef struct adv_carr_t {
- #define ASC_GET_CARRP(carrp) ((carrp) & ASC_NEXT_VPA_MASK)
- 
- #define ADV_CARRIER_NUM_PAGE_CROSSING \
--    (((ADV_CARRIER_COUNT * sizeof(ADV_CARR_T)) + \
--        (ADV_PAGE_SIZE - 1))/ADV_PAGE_SIZE)
-+    (((ADV_CARRIER_COUNT * sizeof(ADV_CARR_T)) + (PAGE_SIZE - 1))/PAGE_SIZE)
- 
- #define ADV_CARRIER_BUFSIZE \
-     ((ADV_CARRIER_COUNT + ADV_CARRIER_NUM_PAGE_CROSSING) * sizeof(ADV_CARR_T))
-@@ -2174,16 +2160,6 @@ do { \
- #define QHSTA_M_FROZEN_TIDQ         0x46	/* TID Queue frozen. */
- #define QHSTA_M_SGBACKUP_ERROR      0x47	/* Scatter-Gather backup error */
- 
--/*
-- * DvcGetPhyAddr() flag arguments
-- */
--#define ADV_IS_SCSIQ_FLAG       0x01	/* 'addr' is ASC_SCSI_REQ_Q pointer */
--#define ADV_ASCGETSGLIST_VADDR  0x02	/* 'addr' is AscGetSGList() virtual addr */
--#define ADV_IS_SENSE_FLAG       0x04	/* 'addr' is sense virtual pointer */
--#define ADV_IS_DATA_FLAG        0x08	/* 'addr' is data virtual pointer */
--#define ADV_IS_SGLIST_FLAG      0x10	/* 'addr' is sglist virtual pointer */
--#define ADV_IS_CARRIER_FLAG     0x20	/* 'addr' is ADV_CARR_T pointer */
--
- /* Return the address that is aligned at the next doubleword >= to 'addr'. */
- #define ADV_8BALIGN(addr)      (((ulong) (addr) + 0x7) & ~0x7)
- #define ADV_16BALIGN(addr)     (((ulong) (addr) + 0xF) & ~0xF)
-@@ -6483,29 +6459,6 @@ static int AdvLoadMicrocode(AdvPortAddr iop_base, unsigned char *buf, int size,
- 	return 0;
- }
- 
--/*
-- * DvcGetPhyAddr()
-- *
-- * Return the physical address of 'vaddr' and set '*lenp' to the
-- * number of physically contiguous bytes that follow 'vaddr'.
-- * 'flag' indicates the type of structure whose physical address
-- * is being translated.
-- *
-- * Note: Because Linux currently doesn't page the kernel and all
-- * kernel buffers are physically contiguous, leave '*lenp' unchanged.
-- */
--ADV_PADDR
--DvcGetPhyAddr(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq,
--	      uchar *vaddr, ADV_SDCNT *lenp, int flag)
--{
--	ADV_PADDR paddr = virt_to_bus(vaddr);
--
--	ASC_DBG(4, "vaddr 0x%p, lenp 0x%p *lenp %lu, paddr 0x%lx\n",
--		 vaddr, lenp, (ulong)*((ulong *)lenp), (ulong)paddr);
--
--	return paddr;
--}
--
- static void AdvBuildCarrierFreelist(struct adv_dvc_var *asc_dvc)
+@@ -11331,80 +11331,26 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
+  */
+ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
  {
- 	ADV_CARR_T *carrp;
-@@ -6522,24 +6475,10 @@ static void AdvBuildCarrierFreelist(struct adv_dvc_var *asc_dvc)
+-	asc_board_t *boardp;
+-	ASC_DVC_VAR *asc_dvc_varp;
+-	ADV_DVC_VAR *adv_dvc_varp;
+-	ADV_SCSI_REQ_Q *adv_scsiqp;
+-	int ret;
++	int ret, err_code;
++	asc_board_t *boardp = ASC_BOARDP(scp->device->host);
  
- 	do {
- 		/* Get physical address of the carrier 'carrp'. */
--		ADV_DCNT contig_len = sizeof(ADV_CARR_T);
--		carr_paddr = cpu_to_le32(DvcGetPhyAddr(asc_dvc, NULL,
--						       (uchar *)carrp,
--						       (ADV_SDCNT *)&contig_len,
--						       ADV_IS_CARRIER_FLAG));
-+		carr_paddr = cpu_to_le32(virt_to_bus(carrp));
+-	ASC_DBG2(1, "asc_execute_scsi_cmnd: scp 0x%lx, done 0x%lx\n",
+-		 (ulong)scp, (ulong)scp->scsi_done);
+-
+-	boardp = ASC_BOARDP(scp->device->host);
++	ASC_DBG1(1, "asc_execute_scsi_cmnd: scp 0x%p\n", scp);
  
- 		buf_size -= sizeof(ADV_CARR_T);
+ 	if (ASC_NARROW_BOARD(boardp)) {
+-		/*
+-		 * Build and execute Narrow Board request.
+-		 */
+-
+-		asc_dvc_varp = &boardp->dvc_var.asc_dvc_var;
++		ASC_DVC_VAR *asc_dvc = &boardp->dvc_var.asc_dvc_var;
  
 -		/*
--		 * If the current carrier is not physically contiguous, then
--		 * maybe there was a page crossing. Try the next carrier
--		 * aligned start address.
+-		 * Build Asc Library request structure using the
+-		 * global structures 'asc_scsi_req' and 'asc_sg_head'.
+-		 *
+-		 * If an error is returned, then the request has been
+-		 * queued on the board done queue. It will be completed
+-		 * by the caller.
+-		 *
+-		 * asc_build_req() can not return ASC_BUSY.
 -		 */
--		if (contig_len < sizeof(ADV_CARR_T)) {
--			carrp++;
--			continue;
++		/* asc_build_req() can not return ASC_BUSY. */
+ 		if (asc_build_req(boardp, scp) == ASC_ERROR) {
+ 			ASC_STATS(scp->device->host, build_error);
+ 			return ASC_ERROR;
+ 		}
+ 
+-		switch (ret = AscExeScsiQueue(asc_dvc_varp, &asc_scsi_q)) {
+-		case ASC_NOERROR:
+-			ASC_STATS(scp->device->host, exe_noerror);
+-			/*
+-			 * Increment monotonically increasing per device
+-			 * successful request counter. Wrapping doesn't matter.
+-			 */
+-			boardp->reqcnt[scp->device->id]++;
+-			ASC_DBG(1, "asc_execute_scsi_cmnd: AscExeScsiQueue(), "
+-				"ASC_NOERROR\n");
+-			break;
+-		case ASC_BUSY:
+-			ASC_STATS(scp->device->host, exe_busy);
+-			break;
+-		case ASC_ERROR:
+-			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
+-				"AscExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
+-				boardp->id, asc_dvc_varp->err_code);
+-			ASC_STATS(scp->device->host, exe_error);
+-			scp->result = HOST_BYTE(DID_ERROR);
+-			break;
+-		default:
+-			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
+-				"AscExeScsiQueue() unknown, err_code 0x%x\n",
+-				boardp->id, asc_dvc_varp->err_code);
+-			ASC_STATS(scp->device->host, exe_unknown);
+-			scp->result = HOST_BYTE(DID_ERROR);
+-			break;
 -		}
--
- 		carrp->carr_pa = carr_paddr;
- 		carrp->carr_va = cpu_to_le32(ADV_VADDR_TO_U32(carrp));
++		ret = AscExeScsiQueue(asc_dvc, &asc_scsi_q);
++		err_code = asc_dvc->err_code;
+ 	} else {
+-		/*
+-		 * Build and execute Wide Board request.
+-		 */
+-		adv_dvc_varp = &boardp->dvc_var.adv_dvc_var;
++		ADV_DVC_VAR *adv_dvc = &boardp->dvc_var.adv_dvc_var;
++		ADV_SCSI_REQ_Q *adv_scsiqp;
  
-@@ -10915,7 +10854,6 @@ static int AscExeScsiQueue(ASC_DVC_VAR *asc_dvc, ASC_SCSI_Q *scsiq)
- static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
- {
- 	AdvPortAddr iop_base;
--	ADV_DCNT req_size;
- 	ADV_PADDR req_paddr;
- 	ADV_CARR_T *new_carrp;
+-		/*
+-		 * Build and get a pointer to an Adv Library request structure.
+-		 *
+-		 * If the request is successfully built then send it below,
+-		 * otherwise return with an error.
+-		 */
+ 		switch (adv_build_req(boardp, scp, &adv_scsiqp)) {
+ 		case ASC_NOERROR:
+ 			ASC_DBG(3, "asc_execute_scsi_cmnd: adv_build_req "
+@@ -11428,35 +11374,36 @@ static int asc_execute_scsi_cmnd(struct scsi_cmnd *scp)
+ 			return ASC_ERROR;
+ 		}
  
-@@ -10953,13 +10891,8 @@ static int AdvExeScsiQueue(ADV_DVC_VAR *asc_dvc, ADV_SCSI_REQ_Q *scsiq)
- 	 */
- 	scsiq->a_flag &= ~ADV_SCSIQ_DONE;
+-		switch (ret = AdvExeScsiQueue(adv_dvc_varp, adv_scsiqp)) {
+-		case ASC_NOERROR:
+-			ASC_STATS(scp->device->host, exe_noerror);
+-			/*
+-			 * Increment monotonically increasing per device
+-			 * successful request counter. Wrapping doesn't matter.
+-			 */
+-			boardp->reqcnt[scp->device->id]++;
+-			ASC_DBG(1, "asc_execute_scsi_cmnd: AdvExeScsiQueue(), "
+-				"ASC_NOERROR\n");
+-			break;
+-		case ASC_BUSY:
+-			ASC_STATS(scp->device->host, exe_busy);
+-			break;
+-		case ASC_ERROR:
+-			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
+-				"AdvExeScsiQueue() ASC_ERROR, err_code 0x%x\n",
+-				boardp->id, adv_dvc_varp->err_code);
+-			ASC_STATS(scp->device->host, exe_error);
+-			scp->result = HOST_BYTE(DID_ERROR);
+-			break;
+-		default:
+-			ASC_PRINT2("asc_execute_scsi_cmnd: board %d: "
+-				"AdvExeScsiQueue() unknown, err_code 0x%x\n",
+-				boardp->id, adv_dvc_varp->err_code);
+-			ASC_STATS(scp->device->host, exe_unknown);
+-			scp->result = HOST_BYTE(DID_ERROR);
+-			break;
+-		}
++		ret = AdvExeScsiQueue(adv_dvc, adv_scsiqp);
++		err_code = adv_dvc->err_code;
++	}
++
++	switch (ret) {
++	case ASC_NOERROR:
++		ASC_STATS(scp->device->host, exe_noerror);
++		/*
++		 * Increment monotonically increasing per device
++		 * successful request counter. Wrapping doesn't matter.
++		 */
++		boardp->reqcnt[scp->device->id]++;
++		ASC_DBG(1, "asc_execute_scsi_cmnd: ExeScsiQueue(), "
++			"ASC_NOERROR\n");
++		break;
++	case ASC_BUSY:
++		ASC_STATS(scp->device->host, exe_busy);
++		break;
++	case ASC_ERROR:
++		ASC_PRINT2("asc_execute_scsi_cmnd: board %d: ExeScsiQueue() "
++			   "ASC_ERROR, err_code 0x%x\n", boardp->id, err_code);
++		ASC_STATS(scp->device->host, exe_error);
++		scp->result = HOST_BYTE(DID_ERROR);
++		break;
++	default:
++		ASC_PRINT2("asc_execute_scsi_cmnd: board %d: ExeScsiQueue() "
++			   "unknown, err_code 0x%x\n", boardp->id, err_code);
++		ASC_STATS(scp->device->host, exe_unknown);
++		scp->result = HOST_BYTE(DID_ERROR);
++		break;
+ 	}
  
--	req_size = sizeof(ADV_SCSI_REQ_Q);
--	req_paddr = DvcGetPhyAddr(asc_dvc, scsiq, (uchar *)scsiq,
--				  (ADV_SDCNT *)&req_size, ADV_IS_SCSIQ_FLAG);
--
-+	req_paddr = virt_to_bus(scsiq);
- 	BUG_ON(req_paddr & 31);
--	BUG_ON(req_size < sizeof(ADV_SCSI_REQ_Q));
--
- 	/* Wait for assertion before making little-endian */
- 	req_paddr = cpu_to_le32(req_paddr);
- 
+ 	ASC_DBG(1, "asc_execute_scsi_cmnd: end\n");
 -- 
 1.5.3.1
 
