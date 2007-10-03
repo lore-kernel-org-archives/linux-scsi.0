@@ -1,12 +1,12 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 11/21] advansys: Remove library version & serial numbers
-Date: Tue,  2 Oct 2007 21:55:32 -0400
-Message-ID: <1191376542497-git-send-email-matthew@wil.cx>
+Subject: [PATCH 19/21] advansys: Remove a couple of uses of bus_to_virt
+Date: Tue,  2 Oct 2007 21:55:40 -0400
+Message-ID: <1191376543887-git-send-email-matthew@wil.cx>
 References: <11913765421743-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:36062 "EHLO
-	mail-09.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753809AbXJCBzq (ORCPT
+Received: from mail.tor.primus.ca ([216.254.136.21]:45167 "EHLO
+	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754084AbXJCBzq (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Oct 2007 21:55:46 -0400
 In-Reply-To: <11913765421743-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,150 +14,202 @@ List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-With the ASC and ADV libraries merged into the driver, there really is
-no point in reporting their version numbers, or even trying to maintain
-them.
+Replace ASC_VADDR_TO_U32 and ASC_U32_TO_VADDR with an auto-expanding
+array that maps pointers to 32-bit IDs and back.  One of the uses of
+ASC_VADDR_TO_U32 was in error; it should have been using ADV_VADDR_TO_U32.
+
+Also replace the use of virt_to_bus when setting the sense_address with
+a call to dma_map_single() followed by dma_cache_sync.  This part cribbed
+from the 53c700 driver.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/advansys.c |   60 +++++++++++-----------------------------------
- 1 files changed, 15 insertions(+), 45 deletions(-)
+ drivers/scsi/advansys.c |  105 +++++++++++++++++++++++++++++++++++------------
+ 1 files changed, 79 insertions(+), 26 deletions(-)
 
 diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index e17626c..4a7bba3 100644
+index 7d334f8..d31a281 100644
 --- a/drivers/scsi/advansys.c
 +++ b/drivers/scsi/advansys.c
-@@ -77,10 +77,6 @@
- /* Enable driver tracing. */
- /* #define ADVANSYS_DEBUG */
+@@ -90,17 +90,6 @@
+ #define ASC_DCNT  __u32		/* Unsigned Data count type. */
+ #define ASC_SDCNT __s32		/* Signed Data count type. */
  
--#define ASC_LIB_VERSION_MAJOR  1
--#define ASC_LIB_VERSION_MINOR  24
--#define ASC_LIB_SERIAL_NUMBER  123
--
- /*
-  * Portable Data Types
-  *
-@@ -554,8 +550,6 @@ typedef struct asc_dvc_cfg {
- 	uchar isa_dma_speed;
- 	uchar isa_dma_channel;
- 	uchar chip_version;
--	ushort lib_serial_no;
--	ushort lib_version;
- 	ushort mcode_date;
- 	ushort mcode_version;
- 	uchar max_tag_qng[ASC_MAX_TID + 1];
-@@ -958,13 +952,6 @@ typedef struct asc_mc_saved {
- #define AscReadChipDvcID(port)            (uchar)inp((port)+IOP_REG_ID)
- #define AscWriteChipDvcID(port, data)     outp((port)+IOP_REG_ID, data)
- 
--#define ADV_LIB_VERSION_MAJOR  5
--#define ADV_LIB_VERSION_MINOR  14
--
 -/*
-- * Define Adv Library required special types.
+- * These macros are used to convert a virtual address to a
+- * 32-bit value. This currently can be used on Linux Alpha
+- * which uses 64-bit virtual address but a 32-bit bus address.
+- * This is likely to break in the future, but doing this now
+- * will give us time to change the HW and FW to handle 64-bit
+- * addresses.
 - */
+-#define ASC_VADDR_TO_U32   virt_to_bus
+-#define ASC_U32_TO_VADDR   bus_to_virt
 -
+ typedef unsigned char uchar;
+ 
+ #ifndef TRUE
+@@ -601,6 +590,8 @@ typedef struct asc_dvc_var {
+ 	uchar min_sdtr_index;
+ 	uchar max_sdtr_index;
+ 	struct asc_board *drv_ptr;
++	int ptr_map_count;
++	void **ptr_map;
+ 	ASC_DCNT uc_break;
+ } ASC_DVC_VAR;
+ 
+@@ -2748,6 +2739,59 @@ static void asc_prt_adv_scsi_req_q(ADV_SCSI_REQ_Q *q)
+ #endif /* ADVANSYS_DEBUG */
+ 
  /*
-  * Portable Data Types
++ * The advansys chip/microcode contains a 32-bit identifier for each command
++ * known as the 'srb'.  I don't know what it stands for.  The driver used
++ * to encode the scsi_cmnd pointer by calling virt_to_bus and retrieve it
++ * with bus_to_virt.  Now the driver keeps a per-host map of integers to
++ * pointers.  It auto-expands when full, unless it can't allocate memory.
++ * Note that an srb of 0 is treated specially by the chip/firmware, hence
++ * the return of i+1 in this routine, and the corresponding subtraction in
++ * the inverse routine.
++ */
++#define BAD_SRB 0
++static u32 advansys_ptr_to_srb(struct asc_dvc_var *asc_dvc, void *ptr)
++{
++	int i;
++	void **new_ptr;
++
++	for (i = 0; i < asc_dvc->ptr_map_count; i++) {
++		if (!asc_dvc->ptr_map[i])
++			goto out;
++	}
++
++	if (asc_dvc->ptr_map_count == 0)
++		asc_dvc->ptr_map_count = 1;
++	else
++		asc_dvc->ptr_map_count *= 2;
++
++	new_ptr = krealloc(asc_dvc->ptr_map,
++			asc_dvc->ptr_map_count * sizeof(void *), GFP_ATOMIC);
++	if (!new_ptr)
++		return BAD_SRB;
++	asc_dvc->ptr_map = new_ptr;
++ out:
++	ASC_DBG(3, "Putting ptr %p into array offset %d\n", ptr, i);
++	asc_dvc->ptr_map[i] = ptr;
++	return i + 1;
++}
++
++static void * advansys_srb_to_ptr(struct asc_dvc_var *asc_dvc, u32 srb)
++{
++	void *ptr;
++
++	srb--;
++	if (srb >= asc_dvc->ptr_map_count) {
++		printk("advansys: bad SRB %u, max %u\n", srb,
++							asc_dvc->ptr_map_count);
++		return NULL;
++	}
++	ptr = asc_dvc->ptr_map[srb];
++	asc_dvc->ptr_map[srb] = NULL;
++	ASC_DBG(3, "Returning ptr %p from array offset %d\n", ptr, srb);
++	return ptr;
++}
++
++/*
+  * advansys_info()
   *
-@@ -1856,7 +1843,6 @@ typedef struct adv_dvc_cfg {
- 	ushort disc_enable;	/* enable disconnection */
- 	uchar chip_version;	/* chip version */
- 	uchar termination;	/* Term. Ctrl. bits 6-5 of SCSI_CFG1 register */
--	ushort lib_version;	/* Adv Library version number */
- 	ushort control_flag;	/* Microcode Control Flag */
- 	ushort mcode_date;	/* Microcode date */
- 	ushort mcode_version;	/* Microcode version */
-@@ -2637,18 +2623,13 @@ static void asc_prt_asc_dvc_cfg(ASC_DVC_CFG *h)
- 	printk(" disc_enable 0x%x, sdtr_enable 0x%x,\n",
- 	       h->disc_enable, h->sdtr_enable);
+  * Return suitable for printing on the console with the argument
+@@ -9075,17 +9119,10 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 	ASC_DBG(1, "asc_dvc_varp 0x%p, qdonep 0x%p\n", asc_dvc_varp, qdonep);
+ 	ASC_DBG_PRT_ASC_QDONE_INFO(2, qdonep);
  
--	printk
--	    (" chip_scsi_id %d, isa_dma_speed %d, isa_dma_channel %d, chip_version %d,\n",
--	     h->chip_scsi_id, h->isa_dma_speed, h->isa_dma_channel,
--	     h->chip_version);
+-	/*
+-	 * Get the struct scsi_cmnd structure and Scsi_Host structure for the
+-	 * command that has been completed.
+-	 */
+-	scp = (struct scsi_cmnd *)ASC_U32_TO_VADDR(qdonep->d2.srb_ptr);
+-	ASC_DBG(1, "scp 0x%p\n", scp);
 -
--	printk
--	    (" pci_device_id %d, lib_serial_no %u, lib_version %u, mcode_date 0x%x,\n",
--	     to_pci_dev(h->dev)->device, h->lib_serial_no, h->lib_version,
--	     h->mcode_date);
-+	printk(" chip_scsi_id %d, isa_dma_speed %d, isa_dma_channel %d, "
-+		"chip_version %d,\n", h->chip_scsi_id, h->isa_dma_speed,
-+		h->isa_dma_channel, h->chip_version);
+-	if (scp == NULL) {
+-		ASC_PRINT("asc_isr_callback: scp is NULL\n");
++	scp = advansys_srb_to_ptr(asc_dvc_varp, qdonep->d2.srb_ptr);
++	if (!scp)
+ 		return;
+-	}
++
+ 	ASC_DBG_PRT_CDB(2, scp->cmnd, scp->cmd_len);
  
--	printk(" mcode_version %d, overrun_buf 0x%lx\n",
--	       h->mcode_version, (ulong)h->overrun_buf);
-+	printk(" pci_device_id %d, mcode_date 0x%x, mcode_version %d, "
-+		"overrun_buf 0x%p\n", to_pci_dev(h->dev)->device,
-+		h->mcode_date, h->mcode_version, h->overrun_buf);
+ 	shost = scp->device->host;
+@@ -9095,6 +9132,8 @@ static void asc_isr_callback(ASC_DVC_VAR *asc_dvc_varp, ASC_QDONE_INFO *qdonep)
+ 	boardp = shost_priv(shost);
+ 	BUG_ON(asc_dvc_varp != &boardp->dvc_var.asc_dvc_var);
+ 
++	dma_unmap_single(boardp->dev, scp->SCp.dma_handle,
++			sizeof(scp->sense_buffer), DMA_FROM_DEVICE);
+ 	/*
+ 	 * 'qdonep' contains the command's ending status.
+ 	 */
+@@ -9835,9 +9874,20 @@ static int advansys_slave_configure(struct scsi_device *sdev)
+ 	return 0;
  }
  
- /*
-@@ -2752,8 +2733,8 @@ static void asc_prt_adv_dvc_cfg(ADV_DVC_CFG *h)
- 	printk("  chip_version 0x%x, mcode_date 0x%x\n",
- 	       h->chip_version, h->mcode_date);
++static __le32 advansys_get_sense_buffer_dma(struct scsi_cmnd *scp)
++{
++	struct asc_board *board = shost_priv(scp->device->host);
++	scp->SCp.dma_handle = dma_map_single(board->dev, scp->sense_buffer,
++				sizeof(scp->sense_buffer), DMA_FROM_DEVICE);
++	dma_cache_sync(board->dev, scp->sense_buffer,
++				sizeof(scp->sense_buffer), DMA_FROM_DEVICE);
++	return cpu_to_le32(scp->SCp.dma_handle);
++}
++
+ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 			struct asc_scsi_q *asc_scsi_q)
+ {
++	struct asc_dvc_var *asc_dvc = &boardp->dvc_var.asc_dvc_var;
+ 	int use_sg;
  
--	printk("  mcode_version 0x%x, pci_device_id 0x%x, lib_version %u\n",
--	       h->mcode_version, to_pci_dev(h->dev)->device, h->lib_version);
-+	printk("  mcode_version 0x%x, pci_device_id 0x%x\n",
-+	       h->mcode_version, to_pci_dev(h->dev)->device);
+ 	memset(asc_scsi_q, 0, sizeof(*asc_scsi_q));
+@@ -9845,7 +9895,11 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	/*
+ 	 * Point the ASC_SCSI_Q to the 'struct scsi_cmnd'.
+ 	 */
+-	asc_scsi_q->q2.srb_ptr = ASC_VADDR_TO_U32(scp);
++	asc_scsi_q->q2.srb_ptr = advansys_ptr_to_srb(asc_dvc, scp);
++	if (asc_scsi_q->q2.srb_ptr == BAD_SRB) {
++		scp->result = HOST_BYTE(DID_SOFT_ERROR);
++		return ASC_ERROR;
++	}
  
- 	printk("  control_flag 0x%x\n", h->control_flag);
- }
-@@ -3731,15 +3712,10 @@ static int asc_prt_asc_board_info(struct Scsi_Host *shost, char *cp, int cplen)
- 			   shost->host_no);
- 	ASC_PRT_NEXT();
+ 	/*
+ 	 * Build the ASC_SCSI_Q request.
+@@ -9856,8 +9910,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	asc_scsi_q->q1.target_lun = scp->device->lun;
+ 	asc_scsi_q->q2.target_ix =
+ 	    ASC_TIDLUN_TO_IX(scp->device->id, scp->device->lun);
+-	asc_scsi_q->q1.sense_addr =
+-	    cpu_to_le32(virt_to_bus(&scp->sense_buffer[0]));
++	asc_scsi_q->q1.sense_addr = advansys_get_sense_buffer_dma(scp);
+ 	asc_scsi_q->q1.sense_len = sizeof(scp->sense_buffer);
  
--	len = asc_prt_line(cp, leftlen,
--			   " chip_version %u, lib_version 0x%x, lib_serial_no %u, mcode_date 0x%x\n",
--			   c->chip_version, c->lib_version, c->lib_serial_no,
--			   c->mcode_date);
--	ASC_PRT_NEXT();
--
--	len = asc_prt_line(cp, leftlen,
--			   " mcode_version 0x%x, err_code %u\n",
--			   c->mcode_version, v->err_code);
-+	len = asc_prt_line(cp, leftlen, " chip_version %u, mcode_date 0x%x, "
-+			   "mcode_version 0x%x, err_code %u\n",
-+			   c->chip_version, c->mcode_date, c->mcode_version,
-+			   v->err_code);
- 	ASC_PRT_NEXT();
+ 	/*
+@@ -9871,7 +9924,7 @@ static int asc_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	 * started request.
+ 	 *
+ 	 */
+-	if ((boardp->dvc_var.asc_dvc_var.cur_dvc_qng[scp->device->id] > 0) &&
++	if ((asc_dvc->cur_dvc_qng[scp->device->id] > 0) &&
+ 	    (boardp->reqcnt[scp->device->id] % 255) == 0) {
+ 		asc_scsi_q->q2.tag_code = MSG_ORDERED_TAG;
+ 	} else {
+@@ -10091,7 +10144,7 @@ adv_build_req(struct asc_board *boardp, struct scsi_cmnd *scp,
+ 	/*
+ 	 * Set the ADV_SCSI_REQ_Q 'srb_ptr' to point to the adv_req_t structure.
+ 	 */
+-	scsiqp->srb_ptr = ASC_VADDR_TO_U32(reqp);
++	scsiqp->srb_ptr = ADV_VADDR_TO_U32(reqp);
  
- 	/* Current number of commands waiting for the host. */
-@@ -3934,10 +3910,9 @@ static int asc_prt_adv_board_info(struct Scsi_Host *shost, char *cp, int cplen)
- 			   v->err_code);
- 	ASC_PRT_NEXT();
- 
--	len = asc_prt_line(cp, leftlen,
--			   " chip_version %u, lib_version 0x%x, mcode_date 0x%x, mcode_version 0x%x\n",
--			   c->chip_version, c->lib_version, c->mcode_date,
--			   c->mcode_version);
-+	len = asc_prt_line(cp, leftlen, " chip_version %u, mcode_date 0x%x, "
-+			   "mcode_version 0x%x\n", c->chip_version,
-+			   c->mcode_date, c->mcode_version);
- 	ASC_PRT_NEXT();
- 
- 	AdvReadWordLram(iop_base, ASC_MC_TAGQNG_ABLE, tagqng_able);
-@@ -11566,9 +11541,6 @@ static ushort __devinit AscInitAscDvcVar(ASC_DVC_VAR *asc_dvc)
- 	asc_dvc->cfg->sdtr_enable = ASC_SCSI_WIDTH_BIT_SET;
- 	asc_dvc->cfg->disc_enable = ASC_SCSI_WIDTH_BIT_SET;
- 	asc_dvc->cfg->chip_scsi_id = ASC_DEF_CHIP_SCSI_ID;
--	asc_dvc->cfg->lib_serial_no = ASC_LIB_SERIAL_NUMBER;
--	asc_dvc->cfg->lib_version = (ASC_LIB_VERSION_MAJOR << 8) |
--	    ASC_LIB_VERSION_MINOR;
- 	chip_version = AscGetChipVersion(iop_base, asc_dvc->bus_type);
- 	asc_dvc->cfg->chip_version = chip_version;
- 	asc_dvc->sdtr_period_tbl[0] = SYN_XFER_NS_0;
-@@ -13542,8 +13514,6 @@ AdvInitGetConfig(struct pci_dev *pdev, struct asc_board *boardp)
- 	if ((cmd & PCI_COMMAND_PARITY) == 0)
- 		asc_dvc->cfg->control_flag |= CONTROL_FLAG_IGNORE_PERR;
- 
--	asc_dvc->cfg->lib_version = (ADV_LIB_VERSION_MAJOR << 8) |
--	    ADV_LIB_VERSION_MINOR;
- 	asc_dvc->cfg->chip_version =
- 	    AdvGetChipVersion(iop_base, asc_dvc->bus_type);
- 
+ 	/*
+ 	 * Set the adv_req_t 'cmndp' to point to the struct scsi_cmnd structure.
 -- 
 1.5.3.1
 
