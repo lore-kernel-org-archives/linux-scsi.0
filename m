@@ -1,49 +1,30 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: generating a Linux WWN?
-Date: Wed, 03 Oct 2007 14:09:35 -0400
-Message-ID: <4703DADF.70509@garzik.org>
-References: <50432.44268.qm@web31802.mail.mud.yahoo.com>	 <47032C67.8080109@garzik.org> <7579f7fb0710031102q34f9d02dp1c1077758dbe7982@mail.gmail.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 15/16] gdth: Move members from SCp to gdth_cmndinfo, stage 2
+Date: Wed, 3 Oct 2007 19:15:57 +0100
+Message-ID: <20071003181557.GA10022@infradead.org>
+References: <46FFFC8C.6080804@panasas.com> <4700040E.2000007@panasas.com> <200710022002.46919.eike-kernel@sf-tec.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:47424 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756137AbXJCSJo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Oct 2007 14:09:44 -0400
-In-Reply-To: <7579f7fb0710031102q34f9d02dp1c1077758dbe7982@mail.gmail.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53625 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757587AbXJCSQJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 14:16:09 -0400
+Content-Disposition: inline
+In-Reply-To: <200710022002.46919.eike-kernel@sf-tec.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Jacob <lydianconcepts@gmail.com>
-Cc: ltuikov@yahoo.com, Michael Reed <mdr@sgi.com>, James.Smart@emulex.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: Rolf Eike Beer <eike-kernel@sf-tec.de>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@infradead.org>, Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <willy@linux.intel.com>, achim_leubner@adaptec.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Matthew Jacob wrote:
->> The generation algorithm is whatever makes people happy.  I would
->> probably pick a fixed prefix like 0x6C 0x69 0x63 ("lin"), something that
->> doesn't conflict with IEEE org ids for a long time to come.  Then,
->> get_random_bytes() or hash some useful machine characteristics for the
->> rest of the bytes.
-> 
-> The "probably" here is kind of amusing.
-> 
-> Look, Linux development has the moolah (look at all the money IBM and
-> SGI and others have shoveled in)- why don't you get a Linux block of
-> OUIs from the IEEE and set up an RSS-like feed so the Open Source
-> community can get WWNs with that OUI and a incrementing serial number
-> as needed- that would be a *real* service. I've thought about doing
-> this, but I'd have to fork over at least 1700$USD to get an official
-> IEEE OUI and over the last ten years I've already spent far too much
-> of my own money on open source support.
-> 
-> Heck, maybe even the IEEE would comp you on OUIs.
+On Tue, Oct 02, 2007 at 08:02:45PM +0200, Rolf Eike Beer wrote:
+> volatile here is probably nonsense. Either you need proper locking on this 
+> struct in case there may be side-effects between different callers or it's 
+> unneeded at all. This looks really suspicious:
 
-Certainly, I would love for this to happen!  Although my employer (Red 
-Hat), SGI, IBM or whomever might be willing to tackle this, it might be 
-more appropriate for the Linux Foundation.
-
-Anybody wanna volunteer to pursue this?
-
-	Jeff
-
-
+Yes, it's most likely wrong.  But for now there's a really huge plate
+of patches already, and we'd rather keep behaviour similar.  Once we've
+managed to actually test this big pile we can move on to cleaning up things
+like that.  And I suspect part of the right solution will be to get rid
+of this busy loop entirely.
 
