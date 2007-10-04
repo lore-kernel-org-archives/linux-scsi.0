@@ -1,73 +1,120 @@
-From: Luben Tuikov <ltuikov@yahoo.com>
-Subject: Re: generating a Linux WWN?
-Date: Wed, 3 Oct 2007 17:11:14 -0700 (PDT)
-Message-ID: <189434.76759.qm@web31810.mail.mud.yahoo.com>
-References: <20071003.151729.95504687.davem@davemloft.net>
-Reply-To: ltuikov@yahoo.com
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 4/5] qla2xxx: add target mode support
+Date: Thu, 4 Oct 2007 09:44:21 +0900
+Message-ID: <20071004013053T.tomof@acm.org>
+References: <470135CC.4080101@qlogic.com>
+	<20071003214933Y.tomof@acm.org>
+	<4703F1CE.3020803@qlogic.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:23405 "HELO
-	web31810.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751108AbXJDALP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 20:11:15 -0400
-In-Reply-To: <20071003.151729.95504687.davem@davemloft.net>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:59095 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751705AbXJDApR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Oct 2007 20:45:17 -0400
+In-Reply-To: <4703F1CE.3020803@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: jeff@garzik.org, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
+To: seokmann.ju@qlogic.com
+Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, andrew.vasquez@qlogic.com, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, hare@suse.de
 
---- David Miller <davem@davemloft.net> wrote:
-> From: Luben Tuikov <ltuikov@yahoo.com>
-> Date: Wed, 3 Oct 2007 15:08:48 -0700 (PDT)
+On Wed, 03 Oct 2007 12:47:26 -0700
+Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+
+> FUJITA Tomonori wrote:
+> > On Mon, 01 Oct 2007 11:00:44 -0700
+> > Seokmann Ju <seokmann.ju@qlogic.com> wrote:
+> >> atl-01:/lib/modules/2.6.23-rc3-smp-tgt/kernel/drivers/scsi/qla2xxx # tgtadm --lld fc --mode target --op show
+> >> Target 1: volume1
+> >>     System information:
+> >>         Driver: fc
+> >>         Status: running
+> >>     I_T nexus information:
+> >>     LUN information:
+> >>         LUN: 0
+> >>             Type: controller
+> >>             SCSI ID: deadbeaf1:0
+> >>             SCSI SN: beaf10
+> >>             Size: 0
+> >>             Online: No
+> >>             Poweron/Reset: Yes
+> >>             Removable media: No
+> >>             Backing store: No backing store
+> >>     ACL information:
+> > 
+> > You successfully created a new target but failed to add a new logical
+> > unit (#1) to it (note that lun 0 was created automatically).
+> Yes, I have noticed it.
 > 
-> > Your "want to get their card working" way of view is very
-> > simplistic to justify generating and assigning SAS WWN in the kernel.
-> > This is the job of the manufacturer/packager, not the host OS.
+> >>> ./tgt/usr/tgtadm --lld fc --mode logicalunit --op new --tid 1 --lun 1 -b /var/tmp/lun1
+> > 
+> > We are try to add a regular file (/var/tmp/lun1) to the target and
+> > export it as a logical unit to initiators. Do you have /var/tmp/lun1?
+> With the creation of an empty file, it started to display the lun1.
+> ---
+> atl-01:~ # tgtadm --lld fc --mode target --op show
+> Target 1: tgt-vol1
+>     System information:
+>         Driver: fc
+>         Status: running
+>     I_T nexus information:
+>         I_T nexus: f6fb6000
+
+The target got an initiator. Can you setup a target first (all the
+initiators are shut down (or fc kernel modules in initiators hosts are
+unloaded). There is no I_T nexus in the show operation's output. Then
+you start initiator hosts (or load the kernel modules) and hopefully
+the initiator hots can see luns.
+
+
+>     LUN information:
+>         LUN: 0
+>             Type: controller
+>             SCSI ID: deadbeaf1:0
+>             SCSI SN: beaf10
+>             Size: 0
+>             Online: No
+>             Poweron/Reset: Yes
+>             Removable media: No
+>             Backing store: No backing store
+>         LUN: 1
+>             Type: disk
+>             SCSI ID: deadbeaf1:1
+>             SCSI SN: beaf11
+>             Size: 0
+
+Note 'Size: 0' line. Needs to use a non-empty file.
+
+
+>             Online: Yes
+>             Poweron/Reset: Yes
+>             Removable media: No
+>             Backing store: /var/tmp/lun1
+>     ACL information:
+> atl-01:~ #
+> ---
 > 
-> When you are thousands of miles away from the data center and lose all
-> of your storage and therefore can't boot correctly because the WWN
-> info is corrupted, you won't have this unbelievably fascist attitude
-> about this problem.
+> However, from the initiator, still not be able to see the target - from the lsscsi, no other devices (controller/virtual-disk) than those physical devices available on the fabric.
+> Instead, the host with target-mode displays following messages,
+> ---
+> Oct 3 11:21:13 atl-01 kernel: q2t_it_nexus_response 1191:  dff46400 0
+> Oct 3 11:21:13 atl-01 kernel: q2t_it_nexus_response 1191:  dff46400 0
+
+It means that user-space daemon (tgtd) sent a message that a new I_T
+nexus was created.
+
+
 > 
-> Give people an _OPTION_!
-> 
-> This is about as anti-social as when the Intel folks refused to
-> themselves put in a driver option to try to use an eepro100 card even
-> if the EEPROM was corrupted and had a bad checksum.
-> 
-> For the person who hits this, it's a big issue to have a way to still
-> try to bring things up.
-> 
-> If you don't provide this, you want people to suffer more than
-> necessary when something goes wrong, and that by definition makes you
-> an asshole.
+> If I understood correctly, the F/W on the host with target-mode should have gotten some SCSI commands from the host with initiator-mode by now.
+> And those commands should have been forwarded to the target driver via the interrupt handler (qla24xx_intr_handler()).
 
-No, not all.
+Yeah, I think so.
 
-If the MS/NVRAM is corrupted (becomes corrupted) then it is better
-for the admin to see that the system wouldn't boot or that the storage
-domain is not visible (if the system doesn't boot from it), and provide
-a sample WWN at kernel boot line or module load time, just to
-connect to the storage network.
 
-But having a WWN generator in the kernel, although not terribly
-difficult to write, makes it possible to create an inconsistent
-storage domain.  It is that possibility which troubles me,
-due to the intention of SAS WWNs.
+> Just for my learning, could you share with me which of the F/W version (on the target-mode QLogic FC HBA) you are using?
 
-I guess much of this argument doesn't really matter, since
-most SAS HA would really be a ROC, and as thus much more
-would need to happen before the HA is useable, than just
-having a MS/NVRAM with the WWN.
-
-Here is what "modinfo aic94xx.ko" (the version I maintain)
-says:
-
-parm:           sas_addr_str:
-        Provide a SAS address for a single host adapter.
-        This is for testing only! You should not need to provide this!
-
-    Luben
-
+qla2xxx 0000:0a:02.0:
+ QLogic Fibre Channel HBA Driver: 8.02.00-k2
+  QLogic QLA2340 - 133MHz PCI-X to 2Gb FC, Single Channel
+  ISP2312: PCI-X (133 MHz) @ 0000:0a:02.0 hdma-, host#=3, fw=3.03.20 IPX
