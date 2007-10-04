@@ -1,157 +1,73 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: RE: 2.6.23-rc9 boot failure (megaraid?)
-Date: Thu, 04 Oct 2007 08:46:51 +0900
-Message-ID: <20071004084651L.fujita.tomonori@lab.ntt.co.jp>
-References: <20071003090058R.fujita.tomonori@lab.ntt.co.jp>
-	<0631C836DBF79F42B5A60C8C8D4E8229CC39C7@NAMAIL2.ad.lsil.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: generating a Linux WWN?
+Date: Wed, 3 Oct 2007 17:11:14 -0700 (PDT)
+Message-ID: <189434.76759.qm@web31810.mail.mud.yahoo.com>
+References: <20071003.151729.95504687.davem@davemloft.net>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:50357 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751050AbXJCXrZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 19:47:25 -0400
-In-Reply-To: <0631C836DBF79F42B5A60C8C8D4E8229CC39C7@NAMAIL2.ad.lsil.com>
+Received: from web31810.mail.mud.yahoo.com ([68.142.207.73]:23405 "HELO
+	web31810.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751108AbXJDALP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Oct 2007 20:11:15 -0400
+In-Reply-To: <20071003.151729.95504687.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumant.Patro@lsi.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, bunk@kernel.org, bwindle@fint.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: jeff@garzik.org, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
-On Wed, 3 Oct 2007 17:32:55 -0600
-"Patro, Sumant" <Sumant.Patro@lsi.com> wrote:
-
->  
+--- David Miller <davem@davemloft.net> wrote:
+> From: Luben Tuikov <ltuikov@yahoo.com>
+> Date: Wed, 3 Oct 2007 15:08:48 -0700 (PDT)
 > 
-> > -----Original Message-----
-> > From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp] 
-> > Sent: Tuesday, October 02, 2007 5:01 PM
-> > To: James.Bottomley@SteelEye.com
-> > Cc: bunk@kernel.org; bwindle@fint.org; 
-> > linux-kernel@vger.kernel.org; jens.axboe@oracle.com; 
-> > fujita.tomonori@lab.ntt.co.jp; Patro, Sumant; DL-MegaRAID 
-> > Linux; linux-scsi@vger.kernel.org
-> > Subject: Re: 2.6.23-rc9 boot failure (megaraid?)
-> > 
-> > On Tue, 02 Oct 2007 15:38:13 -0500
-> > James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> > 
-> > > On Tue, 2007-10-02 at 20:15 +0200, Adrian Bunk wrote:
-> > > > Cc's added, the complete bug report is at
-> > > >   http://lkml.org/lkml/2007/10/2/243
-> > > > 
-> > > > On Tue, Oct 02, 2007 at 12:48:26PM -0400, Burton Windle wrote:
-> > > > > 2.6.23-rc9 fails to boot for me; 2.6.22.9 works fine.
-> > > > >
-> > > > > System is a Dell Poweredge with PERC 2/DC with RAID1 volume.
-> > > > >...
-> > > > 
-> > > > Thanks for your report.
-> > > > 
-> > > > Diff'ing the dmesg's shows:
-> > > > 
-> > > > <--  snip  -->
-> > > > 
-> > > >  scsi0: scanning scsi channel 4 [P0] for physical devices.
-> > > >  scsi0: scanning scsi channel 5 [P1] for physical devices.
-> > > >  st: Version 20070203, fixed bufsize 32768, s/g segs 256 -sd 
-> > > > 0:0:0:0: [sda] 17547264 512-byte hardware sectors (8984 MB)
-> > > > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> > > > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
-> > > >  sd 0:0:0:0: [sda] Write Protect is off  sd 0:0:0:0: [sda] Asking 
-> > > > for cache data failed  sd 0:0:0:0: [sda] Assuming drive 
-> > cache: write 
-> > > > through -sd 0:0:0:0: [sda] 17547264 512-byte hardware 
-> > sectors (8984 
-> > > > MB)
-> > > > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> > > > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
-> > > >  sd 0:0:0:0: [sda] Write Protect is off  sd 0:0:0:0: [sda] Asking 
-> > > > for cache data failed  sd 0:0:0:0: [sda] Assuming drive 
-> > cache: write 
-> > > > through
-> > > >   sda: sda1
-> > > > + sda: p1 exceeds device capacity
-> > > > 
-> > > > <--  snip  -->
-> > > > 
-> > > > -	case MEGA_BULK_DATA:
-> > > > -		if (scb->cmd->use_sg == 0)
-> > > > -			length = scb->cmd->request_bufflen;
-> > > > -		else {
-> > > > -			struct scatterlist *sgl =
-> > > > -				(struct scatterlist 
-> > *)scb->cmd->request_buffer;
-> > > > -			length = sgl->length;
-> > > > -		}
-> > > > -		pci_unmap_page(adapter->dev, scb->dma_h_bulkdata,
-> > > > -			       length, scb->dma_direction);
-> > > > -		break;
-> > > > -
-> > > 
-> > > This is the problem piece I think.  We've reintroduced a 
-> > very old bug:
-> > > 
-> > > commit 51c928c34fa7cff38df584ad01de988805877dba
-> > > Author: James Bottomley <James.Bottomley@SteelEye.com>
-> > > Date:   Sat Oct 1 09:38:05 2005 -0500
-> > > 
-> > >     [SCSI] Legacy MegaRAID: Fix READ CAPACITY
-> > >     
-> > >     Some Legacy megaraid cards can't actually cope with the 
-> > scatter/gather
-> > >     version of the READ CAPACITY command (which is what we 
-> > now send them
-> > >     since altering all SCSI internal I/O to go via the 
-> > block layer).  Fix
-> > >     this (and a few other broken megaraid driver 
-> > assumptions) by sending
-> > >     the non-sg version of the command if the sg list only 
-> > has a single
-> > >     element.
-> > >     
-> > >     Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-> > > 
-> > > So what we have to do is put back the check for use_sg == 1 
-> > and send 
-> > > that as a bulk transfer command.
-> > 
-> > Sorry about this. Can this fix the problem?
-> > 
-> > Thanks,
-> > 
-> > 
-> > diff --git a/drivers/scsi/megaraid.c 
-> > b/drivers/scsi/megaraid.c index 3907f67..da56163 100644
-> > --- a/drivers/scsi/megaraid.c
-> > +++ b/drivers/scsi/megaraid.c
-> > @@ -1753,6 +1753,14 @@ mega_build_sglist(adapter_t *adapter, 
-> > scb_t *scb, u32 *buf, u32 *len)
-> >  
-> >  	*len = 0;
-> >  
-> > +	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
-> > +		sg = scsi_sglist(cmd);
-> > +		scb->dma_h_bulkdata = sg_dma_address(sg);
-> > +		*buf = (u32)scb->dma_h_bulkdata;
-> > +		*len = sg_dma_len(sg);
-> > +		return 0;
-> > +	}
-> > +
-> >  	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
-> >  		if (adapter->has_64bit_addr) {
-> >  			scb->sgl64[idx].address = sg_dma_address(sg);
-> > 
+> > Your "want to get their card working" way of view is very
+> > simplistic to justify generating and assigning SAS WWN in the kernel.
+> > This is the job of the manufacturer/packager, not the host OS.
 > 
+> When you are thousands of miles away from the data center and lose all
+> of your storage and therefore can't boot correctly because the WWN
+> info is corrupted, you won't have this unbelievably fascist attitude
+> about this problem.
 > 
-> With this patch I see the correct logical disk size reported.
-> Thanks.
+> Give people an _OPTION_!
+> 
+> This is about as anti-social as when the Intel folks refused to
+> themselves put in a driver option to try to use an eepro100 card even
+> if the EEPROM was corrupted and had a bad checksum.
+> 
+> For the person who hits this, it's a big issue to have a way to still
+> try to bring things up.
+> 
+> If you don't provide this, you want people to suffer more than
+> necessary when something goes wrong, and that by definition makes you
+> an asshole.
 
-Great, thanks for testing!
+No, not all.
 
-Can you try the following patch instead of the above patch?
+If the MS/NVRAM is corrupted (becomes corrupted) then it is better
+for the admin to see that the system wouldn't boot or that the storage
+domain is not visible (if the system doesn't boot from it), and provide
+a sample WWN at kernel boot line or module load time, just to
+connect to the storage network.
 
-http://marc.info/?l=linux-scsi&m=119137033016550&w=2
+But having a WWN generator in the kernel, although not terribly
+difficult to write, makes it possible to create an inconsistent
+storage domain.  It is that possibility which troubles me,
+due to the intention of SAS WWNs.
 
+I guess much of this argument doesn't really matter, since
+most SAS HA would really be a ROC, and as thus much more
+would need to happen before the HA is useable, than just
+having a MS/NVRAM with the WWN.
 
-I know the changes are pretty trivial and it should work...
+Here is what "modinfo aic94xx.ko" (the version I maintain)
+says:
+
+parm:           sas_addr_str:
+        Provide a SAS address for a single host adapter.
+        This is for testing only! You should not need to provide this!
+
+    Luben
+
