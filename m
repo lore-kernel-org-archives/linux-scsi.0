@@ -1,181 +1,78 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.23-rc9 boot failure (megaraid?)
-Date: Thu, 04 Oct 2007 08:50:08 -0400
-Message-ID: <1191502208.9479.30.camel@localhost.localdomain>
-References: <0631C836DBF79F42B5A60C8C8D4E8229CC39C7@NAMAIL2.ad.lsil.com>
-	 <20071004084651L.fujita.tomonori@lab.ntt.co.jp>
-	 <20071004072834.GD5236@kernel.dk>
-	 <20071004192047H.fujita.tomonori@lab.ntt.co.jp>
-	 <20071004103655.GA5711@kernel.dk>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: SCSI runtime power management
+Date: Thu, 4 Oct 2007 11:03:02 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0710041026040.3990-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:56286 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753468AbXJDMuK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Oct 2007 08:50:10 -0400
-In-Reply-To: <20071004103655.GA5711@kernel.dk>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54412 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1756591AbXJDPDG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Oct 2007 11:03:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Sumant.Patro@lsi.com, bunk@kernel.org, bwindle@fint.org, linux-kernel@vger.kernel.org, megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, 2007-10-04 at 12:36 +0200, Jens Axboe wrote:
-> On Thu, Oct 04 2007, FUJITA Tomonori wrote:
-> > On Thu, 4 Oct 2007 09:28:34 +0200
-> > Jens Axboe <jens.axboe@oracle.com> wrote:
-> > 
-> > > On Thu, Oct 04 2007, FUJITA Tomonori wrote:
-> > > > On Wed, 3 Oct 2007 17:32:55 -0600
-> > > > "Patro, Sumant" <Sumant.Patro@lsi.com> wrote:
-> > > > 
-> > > > >  
-> > > > > 
-> > > > > > -----Original Message-----
-> > > > > > From: FUJITA Tomonori [mailto:fujita.tomonori@lab.ntt.co.jp] 
-> > > > > > Sent: Tuesday, October 02, 2007 5:01 PM
-> > > > > > To: James.Bottomley@SteelEye.com
-> > > > > > Cc: bunk@kernel.org; bwindle@fint.org; 
-> > > > > > linux-kernel@vger.kernel.org; jens.axboe@oracle.com; 
-> > > > > > fujita.tomonori@lab.ntt.co.jp; Patro, Sumant; DL-MegaRAID 
-> > > > > > Linux; linux-scsi@vger.kernel.org
-> > > > > > Subject: Re: 2.6.23-rc9 boot failure (megaraid?)
-> > > > > > 
-> > > > > > On Tue, 02 Oct 2007 15:38:13 -0500
-> > > > > > James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> > > > > > 
-> > > > > > > On Tue, 2007-10-02 at 20:15 +0200, Adrian Bunk wrote:
-> > > > > > > > Cc's added, the complete bug report is at
-> > > > > > > >   http://lkml.org/lkml/2007/10/2/243
-> > > > > > > > 
-> > > > > > > > On Tue, Oct 02, 2007 at 12:48:26PM -0400, Burton Windle wrote:
-> > > > > > > > > 2.6.23-rc9 fails to boot for me; 2.6.22.9 works fine.
-> > > > > > > > >
-> > > > > > > > > System is a Dell Poweredge with PERC 2/DC with RAID1 volume.
-> > > > > > > > >...
-> > > > > > > > 
-> > > > > > > > Thanks for your report.
-> > > > > > > > 
-> > > > > > > > Diff'ing the dmesg's shows:
-> > > > > > > > 
-> > > > > > > > <--  snip  -->
-> > > > > > > > 
-> > > > > > > >  scsi0: scanning scsi channel 4 [P0] for physical devices.
-> > > > > > > >  scsi0: scanning scsi channel 5 [P1] for physical devices.
-> > > > > > > >  st: Version 20070203, fixed bufsize 32768, s/g segs 256 -sd 
-> > > > > > > > 0:0:0:0: [sda] 17547264 512-byte hardware sectors (8984 MB)
-> > > > > > > > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> > > > > > > > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
-> > > > > > > >  sd 0:0:0:0: [sda] Write Protect is off  sd 0:0:0:0: [sda] Asking 
-> > > > > > > > for cache data failed  sd 0:0:0:0: [sda] Assuming drive 
-> > > > > > cache: write 
-> > > > > > > > through -sd 0:0:0:0: [sda] 17547264 512-byte hardware 
-> > > > > > sectors (8984 
-> > > > > > > > MB)
-> > > > > > > > +sd 0:0:0:0: [sda] Sector size 0 reported, assuming 512.
-> > > > > > > > +sd 0:0:0:0: [sda] 1 512-byte hardware sectors (0 MB)
-> > > > > > > >  sd 0:0:0:0: [sda] Write Protect is off  sd 0:0:0:0: [sda] Asking 
-> > > > > > > > for cache data failed  sd 0:0:0:0: [sda] Assuming drive 
-> > > > > > cache: write 
-> > > > > > > > through
-> > > > > > > >   sda: sda1
-> > > > > > > > + sda: p1 exceeds device capacity
-> > > > > > > > 
-> > > > > > > > <--  snip  -->
-> > > > > > > > 
-> > > > > > > > -	case MEGA_BULK_DATA:
-> > > > > > > > -		if (scb->cmd->use_sg == 0)
-> > > > > > > > -			length = scb->cmd->request_bufflen;
-> > > > > > > > -		else {
-> > > > > > > > -			struct scatterlist *sgl =
-> > > > > > > > -				(struct scatterlist 
-> > > > > > *)scb->cmd->request_buffer;
-> > > > > > > > -			length = sgl->length;
-> > > > > > > > -		}
-> > > > > > > > -		pci_unmap_page(adapter->dev, scb->dma_h_bulkdata,
-> > > > > > > > -			       length, scb->dma_direction);
-> > > > > > > > -		break;
-> > > > > > > > -
-> > > > > > > 
-> > > > > > > This is the problem piece I think.  We've reintroduced a 
-> > > > > > very old bug:
-> > > > > > > 
-> > > > > > > commit 51c928c34fa7cff38df584ad01de988805877dba
-> > > > > > > Author: James Bottomley <James.Bottomley@SteelEye.com>
-> > > > > > > Date:   Sat Oct 1 09:38:05 2005 -0500
-> > > > > > > 
-> > > > > > >     [SCSI] Legacy MegaRAID: Fix READ CAPACITY
-> > > > > > >     
-> > > > > > >     Some Legacy megaraid cards can't actually cope with the 
-> > > > > > scatter/gather
-> > > > > > >     version of the READ CAPACITY command (which is what we 
-> > > > > > now send them
-> > > > > > >     since altering all SCSI internal I/O to go via the 
-> > > > > > block layer).  Fix
-> > > > > > >     this (and a few other broken megaraid driver 
-> > > > > > assumptions) by sending
-> > > > > > >     the non-sg version of the command if the sg list only 
-> > > > > > has a single
-> > > > > > >     element.
-> > > > > > >     
-> > > > > > >     Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
-> > > > > > > 
-> > > > > > > So what we have to do is put back the check for use_sg == 1 
-> > > > > > and send 
-> > > > > > > that as a bulk transfer command.
-> > > > > > 
-> > > > > > Sorry about this. Can this fix the problem?
-> > > > > > 
-> > > > > > Thanks,
-> > > > > > 
-> > > > > > 
-> > > > > > diff --git a/drivers/scsi/megaraid.c 
-> > > > > > b/drivers/scsi/megaraid.c index 3907f67..da56163 100644
-> > > > > > --- a/drivers/scsi/megaraid.c
-> > > > > > +++ b/drivers/scsi/megaraid.c
-> > > > > > @@ -1753,6 +1753,14 @@ mega_build_sglist(adapter_t *adapter, 
-> > > > > > scb_t *scb, u32 *buf, u32 *len)
-> > > > > >  
-> > > > > >  	*len = 0;
-> > > > > >  
-> > > > > > +	if (scsi_sg_count(cmd) == 1 && !adapter->has_64bit_addr) {
-> > > > > > +		sg = scsi_sglist(cmd);
-> > > > > > +		scb->dma_h_bulkdata = sg_dma_address(sg);
-> > > > > > +		*buf = (u32)scb->dma_h_bulkdata;
-> > > > > > +		*len = sg_dma_len(sg);
-> > > > > > +		return 0;
-> > > > > > +	}
-> > > > > > +
-> > > > > >  	scsi_for_each_sg(cmd, sg, sgcnt, idx) {
-> > > > > >  		if (adapter->has_64bit_addr) {
-> > > > > >  			scb->sgl64[idx].address = sg_dma_address(sg);
-> > > > > > 
-> > > > > 
-> > > > > 
-> > > > > With this patch I see the correct logical disk size reported.
-> > > > > Thanks.
-> > > > 
-> > > > Great, thanks for testing!
-> > > > 
-> > > > Can you try the following patch instead of the above patch?
-> > > > 
-> > > > http://marc.info/?l=linux-scsi&m=119137033016550&w=2
-> > > > 
-> > > > 
-> > > > I know the changes are pretty trivial and it should work...
-> > > 
-> > > Tomo, this is the patch I added.
-> > 
-> > Thanks. I thought that it will be sent via scsi-misc because the scsi
-> > accessor patch introduced this bug. But either is ok with me.
-> 
-> If it only affects the driver _after_ the scsi accessor patch and as
-> such doesn't screw over git-block, then I'll drop it for sure.
+I'm trying to work out a simple framework for SCSI runtime management 
+but am handicapped by lack of detailed knowledge of many of the nuances 
+in the SCSI stack.  Here's an initial proposal, modelled after the USB 
+implementation:
 
-No, this is a release critical fix ... I'll roll it up and send it in
-for 2.6.23.
+There are three reasons why a SCSI device might be suspended.  They
+differ in how I/O requests get treated:
 
-James
+	System suspend: The device is suspended because the system
+	as a whole is being suspended.  Incoming requests should be
+	deferred until the system and device are resumed.
 
+	Manual suspend: The user has told the kernel (via sysfs) that 
+	the device should be suspended and should remain that way, 
+	unusable until the user says otherwise.  Incoming requests 
+	should fail immediately.
+
+	Autosuspend: The device has been idle for an appropriate time
+	and is automatically suspended by the SCSI midlayer.  Incoming
+	requests should cause the device to be automatically resumed.
+
+Each of these would fall under the SDEV_BLOCK state in the state model,
+distinguished by a couple of bits in the scsi_device structure.  Or 
+maybe there should be a separate SDEV_SUSPENDED state?
+
+In general a device would count as "idle" when there are no requests in
+flight, although there will be a way for drivers to declare that a
+device is busy even when no I/O is going on.  The autosuspend idle-time
+limit will be adjustable per-device by means of a sysfs attribute.  
+
+Periodically, say every 10 seconds, a timer or workqueue routine will
+walk through all the devices attached to each host, checking to see
+which of them can be autosuspended.  Conversely, there will be a
+workqueue used for autoresuming; it will be invoked by scsi_prep_fn()
+whenever a request arrives for an autosuspended device.
+
+Each host structure will maintain a count of the number of unsuspended
+devices on its bus.  (It's not clear whether an offline device should
+contribute to the count.)  When that count drops to 0, the midlayer
+will call the lower-level driver through a new "autosuspend" method
+pointer in the host template, and the LLD can then autosuspend the host
+adapter.  When the count rises above 0, the midlayer will call the LLD
+through a new "autoresume" method pointer and the LLD can then
+autoresume the host adapter.  It might make sense to add an
+SHOST_SUSPENDED state, or it might be unnecessary.
+
+
+I don't know how any of this would interact with the link power 
+management work Kristen has been doing.  Perhaps they would cooperate 
+nicely.
+
+Does this seem reasonable?  Too naive?  Not workable for some reason?  
+Can anyone provide suggestions or helpful criticism?
+
+Thanks,
+
+Alan Stern
+
+P.S.: James, why is it that some requests are allowed to go through
+scsi_prep_fn() when the device is in the SDEV_BLOCK state, only to fail 
+later in scsi_dispatch_cmd()?
 
