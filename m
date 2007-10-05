@@ -1,48 +1,98 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 5/17] sym53c8xx: Don't disable interrupts in the interrupt handler
-Date: Fri,  5 Oct 2007 15:55:02 -0400
-Message-ID: <11916141143743-git-send-email-matthew@wil.cx>
+Subject: [PATCH 3/17] sym53c8xx: Remove data_mapping and data_mapped
+Date: Fri,  5 Oct 2007 15:55:00 -0400
+Message-ID: <11916141144042-git-send-email-matthew@wil.cx>
 References: <11916141143747-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:40284 "EHLO
-	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761028AbXJETzU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Oct 2007 15:55:20 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:43984 "EHLO
+	mail-01.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760957AbXJETzV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Oct 2007 15:55:21 -0400
 In-Reply-To: <11916141143747-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
 
-Interrupts can't be re-entered, so it's sufficient to call spin_lock, not
-spin_lock_irqsave().
+Before all commands used sg, data_mapping and data_mapped were used to
+distinguish whether the command had used map_single or map_sg.  Now all
+commands are sg, so we can delete data_mapping, data_mapped and the
+wrapper functions __unmap_scsi_data, __map_scsi_sg_data, unmap_scsi_data
+and map_scsi_sg_data.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- drivers/scsi/sym53c8xx_2/sym_glue.c |    7 +++----
- 1 files changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c |   33 +++------------------------------
+ 1 files changed, 3 insertions(+), 30 deletions(-)
 
 diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index d614a9c..4d49a9b 100644
+index 11e0a28..924b5dd 100644
 --- a/drivers/scsi/sym53c8xx_2/sym_glue.c
 +++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -550,14 +550,13 @@ static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
+@@ -134,8 +134,6 @@ static struct scsi_transport_template *sym2_transport_template = NULL;
+  *  Driver private area in the SCSI command structure.
   */
- static irqreturn_t sym53c8xx_intr(int irq, void *dev_id)
+ struct sym_ucmd {		/* Override the SCSI pointer structure */
+-	dma_addr_t	data_mapping;
+-	unsigned char	data_mapped;
+ 	unsigned char	to_do;			/* For error handling */
+ 	void (*old_done)(struct scsi_cmnd *);	/* For error handling */
+ 	struct completion *eh_done;		/* For error handling */
+@@ -144,37 +142,12 @@ struct sym_ucmd {		/* Override the SCSI pointer structure */
+ #define SYM_UCMD_PTR(cmd)  ((struct sym_ucmd *)(&(cmd)->SCp))
+ #define SYM_SOFTC_PTR(cmd) sym_get_hcb(cmd->device->host)
+ 
+-static void __unmap_scsi_data(struct pci_dev *pdev, struct scsi_cmnd *cmd)
+-{
+-	if (SYM_UCMD_PTR(cmd)->data_mapped)
+-		scsi_dma_unmap(cmd);
+-
+-	SYM_UCMD_PTR(cmd)->data_mapped = 0;
+-}
+-
+-static int __map_scsi_sg_data(struct pci_dev *pdev, struct scsi_cmnd *cmd)
+-{
+-	int use_sg;
+-
+-	use_sg = scsi_dma_map(cmd);
+-	if (use_sg > 0) {
+-		SYM_UCMD_PTR(cmd)->data_mapped  = 2;
+-		SYM_UCMD_PTR(cmd)->data_mapping = use_sg;
+-	}
+-
+-	return use_sg;
+-}
+-
+-#define unmap_scsi_data(np, cmd)	\
+-		__unmap_scsi_data(np->s.device, cmd)
+-#define map_scsi_sg_data(np, cmd)	\
+-		__map_scsi_sg_data(np->s.device, cmd)
+ /*
+  *  Complete a pending CAM CCB.
+  */
+ void sym_xpt_done(struct sym_hcb *np, struct scsi_cmnd *cmd)
  {
--	unsigned long flags;
--	struct sym_hcb *np = (struct sym_hcb *)dev_id;
-+	struct sym_hcb *np = dev_id;
+-	unmap_scsi_data(np, cmd);
++	scsi_dma_unmap(cmd);
+ 	cmd->scsi_done(cmd);
+ }
  
- 	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("[");
+@@ -307,14 +280,14 @@ static int sym_scatter(struct sym_hcb *np, struct sym_ccb *cp, struct scsi_cmnd
  
--	spin_lock_irqsave(np->s.host->host_lock, flags);
-+	spin_lock(np->s.host->host_lock);
- 	sym_interrupt(np);
--	spin_unlock_irqrestore(np->s.host->host_lock, flags);
-+	spin_unlock(np->s.host->host_lock);
+ 	cp->data_len = 0;
  
- 	if (DEBUG_FLAGS & DEBUG_TINY) printf_debug ("]\n");
+-	use_sg = map_scsi_sg_data(np, cmd);
++	use_sg = scsi_dma_map(cmd);
+ 	if (use_sg > 0) {
+ 		struct scatterlist *sg;
+ 		struct sym_tcb *tp = &np->target[cp->target];
+ 		struct sym_tblmove *data;
+ 
+ 		if (use_sg > SYM_CONF_MAX_SG) {
+-			unmap_scsi_data(np, cmd);
++			scsi_dma_unmap(cmd);
+ 			return -1;
+ 		}
  
 -- 
 1.4.4.2
