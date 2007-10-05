@@ -1,23 +1,24 @@
 From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [RFC] [PATCH 1/2] blk request timeout handler patches
-Date: Fri, 5 Oct 2007 14:49:40 +0200
-Message-ID: <20071005124940.GA7863@kernel.dk>
+Date: Fri, 5 Oct 2007 14:50:29 +0200
+Message-ID: <20071005125029.GB7863@kernel.dk>
 References: <20071004181259.GA16689@us.ibm.com> <20071004181750.GB16689@us.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:3942 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([87.55.233.238]:3949 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753243AbXJEMsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Oct 2007 08:48:18 -0400
-Received: from nelson.home.kernel.dk (nelson.home.kernel.dk [192.168.0.33])
-	by kernel.dk (Postfix) with ESMTP id 5E294257AAE
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Oct 2007 14:48:14 +0200 (CEST)
+	id S1755605AbXJEMtH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Oct 2007 08:49:07 -0400
 Content-Disposition: inline
 In-Reply-To: <20071004181750.GB16689@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: malahal@us.ibm.com
+
+
+(resend, with proper CC - stupid mutt)
 
 On Thu, Oct 04 2007, malahal@us.ibm.com wrote:
 > Mike Christie's patches refreshed to 2.6.23-rc8-mm1.
