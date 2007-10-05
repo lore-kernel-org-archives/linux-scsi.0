@@ -1,51 +1,42 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [patch 01/17] git-scsi-misc: arcmsr build fix
-Date: Fri, 5 Oct 2007 14:04:12 -0700
-Message-ID: <20071005140412.21452aa0.akpm@linux-foundation.org>
-References: <200710022137.l92LbxEw023552@imap1.linux-foundation.org>
-	<20071005120700.45630fac.akpm@linux-foundation.org>
-	<1191617362.3475.17.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 15/17] sym53c8xx: Make interrupt handler capable of returning
+ IRQ_NONE
+Date: Fri, 05 Oct 2007 17:04:56 -0400
+Message-ID: <4706A6F8.4@garzik.org>
+References: <11916141143747-git-send-email-matthew@wil.cx> <11916141153280-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:56857 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750796AbXJEVER (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Oct 2007 17:04:17 -0400
-In-Reply-To: <1191617362.3475.17.camel@localhost.localdomain>
+Received: from srv5.dvmed.net ([207.36.208.214]:36805 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750822AbXJEVE6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Oct 2007 17:04:58 -0400
+In-Reply-To: <11916141153280-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-On Fri, 05 Oct 2007 16:49:22 -0400
-James Bottomley <James.Bottomley@SteelEye.com> wrote:
-
-> On Fri, 2007-10-05 at 12:07 -0700, Andrew Morton wrote:
-> > I sent seventeen patches and only one was applied.
-> > 
-> > Please either merge the others or give them a nack-with-reasons or specify
-> > how they need to be altered.
-> > 
-> > Please do not just ignore them.  This creates additional ongoing
-> > maintenance work for myself.
+Matthew Wilcox wrote:
+> Make sym_interrupt return an irqreturn_t instead of void, and take a
+> Scsi_Host instead of a sym_hcb.  Pass the Scsi_Host to the interrupt
+> handler instead of the sym_hcb.  Rename the host_data to sym_data.
+> Keep a pci_dev pointer in the sym_data.  Rename the Scsi_Host from
+> instance to shost.
 > 
-> Actually, none were applied ...
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 
-ok, mpt-fusion-shut-up-uninitialized-variable.patch arrive in your tree via
-some other route and confused me.
+ACK
 
-> you just got a fortuitous match with one
-> of Matthew's advansys patches, like he said you would.  Yours are in the
-> queue behind the gdth patch set which is currently causing me merge
-> problems.  Once I get that sorted out, I'll likely apply all of yours
-> bar the ones I already replied about.
+Additionally, consider checking for istat==0xffffffff and returning 
+IRQ_NONE, like most other drivers.  This handles the window during 
+hot-unplug where you wind up reading a hardware register after the 
+hardware is gone, but before the driver has been notified of unplug. 
+The normal behavior of hardware for this case is to return all 1's upon 
+PCI device fault/unplug.
 
-OK, thanks.
+Presuming you don't have fancy-shmancy PCI error reporting hw :)
 
-wrt the ones you already replied about: I'm unsure which those are so can
-you please re-reply?  I'd prefer to drop marginal stuff rather than having
-it hang around for ever.
 
-Thanks.
+
