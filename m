@@ -1,64 +1,186 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [RFC] [PATCH 1/2] blk request timeout handler patches
-Date: Thu, 4 Oct 2007 16:40:55 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01EE627C@otce2k301.adaptec.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [RFC] [PATCH 1/2] blk request timeout handler patches
+Date: Fri, 5 Oct 2007 14:49:40 +0200
+Message-ID: <20071005124940.GA7863@kernel.dk>
 References: <20071004181259.GA16689@us.ibm.com> <20071004181750.GB16689@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:37508 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756825AbXJDUlR convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Oct 2007 16:41:17 -0400
-Content-class: urn:content-classes:message
+Received: from brick.kernel.dk ([87.55.233.238]:3942 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753243AbXJEMsS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Oct 2007 08:48:18 -0400
+Received: from nelson.home.kernel.dk (nelson.home.kernel.dk [192.168.0.33])
+	by kernel.dk (Postfix) with ESMTP id 5E294257AAE
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Oct 2007 14:48:14 +0200 (CEST)
+Content-Disposition: inline
 In-Reply-To: <20071004181750.GB16689@us.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: malahal@us.ibm.com, linux-scsi@vger.kernel.org, jens.axboe@oracle.com
+To: linux-scsi@vger.kernel.org
 
-ACK for the trivial portion surrounding aacraid and ips!
-
-Sincerely -- Mark Salyzyn
- 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org 
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of 
-> malahal@us.ibm.com
-> Sent: Thursday, October 04, 2007 2:18 PM
-> To: linux-scsi@vger.kernel.org; jens.axboe@oracle.com
-> Subject: [RFC] [PATCH 1/2] blk request timeout handler patches
-> 
+On Thu, Oct 04 2007, malahal@us.ibm.com wrote:
 > Mike Christie's patches refreshed to 2.6.23-rc8-mm1.
 > 
 > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 > Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
-. . .
-> diff -r 3697367c6e4d drivers/scsi/aacraid/aachba.c
-> --- a/drivers/scsi/aacraid/aachba.c	Thu Sep 27 00:12:13 2007 -0700
-> +++ b/drivers/scsi/aacraid/aachba.c	Thu Sep 27 00:13:07 2007 -0700
-> @@ -1125,7 +1125,7 @@ static struct aac_srb * aac_scsi_common(
->  	srbcmd->id       = cpu_to_le32(scmd_id(cmd));
->  	srbcmd->lun      = cpu_to_le32(cmd->device->lun);
->  	srbcmd->flags    = cpu_to_le32(flag);
-> -	timeout = cmd->timeout_per_command/HZ;
-> +	timeout = cmd->request->timeout/HZ;
->  	if (timeout == 0)
->  		timeout = 1;
->  	srbcmd->timeout  = cpu_to_le32(timeout);  // timeout in seconds
-. . .
-> diff -r 3697367c6e4d drivers/scsi/ips.c
-> --- a/drivers/scsi/ips.c	Thu Sep 27 00:12:13 2007 -0700
-> +++ b/drivers/scsi/ips.c	Thu Sep 27 00:13:07 2007 -0700
-> @@ -3862,7 +3862,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * 
->  		scb->cmd.dcdb.segment_4G = 0;
->  		scb->cmd.dcdb.enhanced_sg = 0;
+> 
+> 
+> diff -r 3697367c6e4d block/ll_rw_blk.c
+> --- a/block/ll_rw_blk.c	Thu Sep 27 00:12:13 2007 -0700
+> +++ b/block/ll_rw_blk.c	Thu Sep 27 00:13:07 2007 -0700
+> @@ -181,6 +181,19 @@ void blk_queue_softirq_done(struct reque
 >  
-> -		TimeOut = scb->scsi_cmd->timeout_per_command;
-> +		TimeOut = scb->scsi_cmd->request->timeout;
+>  EXPORT_SYMBOL(blk_queue_softirq_done);
 >  
->  		if (ha->subsys->param[4] & 0x00100000) {	
-> /* If NEW Tape DCDB is Supported */
->  			if (!scb->sg_len) {
-. . .
+> +void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
+> +{
+> +	q->rq_timeout = timeout;
+> +}
+> +EXPORT_SYMBOL_GPL(blk_queue_rq_timeout);
+> +
+> +void blk_queue_rq_timed_out(struct request_queue *q, rq_timed_out_fn *fn)
+> +{
+> +	q->rq_timed_out_fn = fn;
+> +}
+> +
+> +EXPORT_SYMBOL_GPL(blk_queue_rq_timed_out);
+> +
+>  /**
+>   * blk_queue_make_request - define an alternate make_request function for a device
+>   * @q:  the request queue for the device to be affected
+> @@ -243,7 +256,9 @@ static void rq_init(struct request_queue
+>  {
+>  	INIT_LIST_HEAD(&rq->queuelist);
+>  	INIT_LIST_HEAD(&rq->donelist);
+> -
+> +	init_timer(&rq->timer);
+> +
+> +	rq->timeout = 0;
+>  	rq->errors = 0;
+>  	rq->bio = rq->biotail = NULL;
+>  	INIT_HLIST_NODE(&rq->hash);
+> @@ -2305,6 +2320,7 @@ EXPORT_SYMBOL(blk_start_queueing);
+>   */
+>  void blk_requeue_request(struct request_queue *q, struct request *rq)
+>  {
+> +	blk_delete_timer(rq);
+>  	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
+>  
+>  	if (blk_rq_tagged(rq))
+> @@ -3647,8 +3663,121 @@ static struct notifier_block blk_cpu_not
+>  };
+>  
+>  /**
+> + * blk_delete_timer - Delete/cancel timer for a given function.
+> + * @req:	request that we are canceling timer for
+> + *
+> + * Return value:
+> + *     1 if we were able to detach the timer.  0 if we blew it, and the
+> + *     timer function has already started to run.
+> + **/
+> +int blk_delete_timer(struct request *req)
+> +{
+> +	int rtn;
+> +
+> +	if (!req->q->rq_timed_out_fn)
+> +		return 1;
+> +
+> +	rtn = del_timer(&req->timer);
+> +	req->timer.data = (unsigned long)NULL;
+> +	req->timer.function = NULL;
+> +
+> +	return rtn;
+> +}
+
+Hmm, that looks fishy. What if the timer _just_ fired, yet it hasn't
+retrieved ->data yet?
+
+> +
+> +EXPORT_SYMBOL_GPL(blk_delete_timer);
+> +
+> +static void blk_rq_timed_out(struct request *req)
+> +{
+> +	struct request_queue *q = req->q;
+> +
+> +	switch (q->rq_timed_out_fn(req)) {
+> +	case BLK_EH_HANDLED:
+> +		__blk_complete_request(req);
+> +		return;
+> +	case BLK_EH_RESET_TIMER:
+> +		blk_add_timer(req);
+> +		return;
+> +	case BLK_EH_NOT_HANDLED:
+> +		/*
+> +		 * LLD handles this for now but in the future
+> +		 * we can send a request msg to abort the command
+> +		 * and we can move more of the generic scsi eh code to
+> +		 * the blk layer.
+> +		 */
+> +		return;
+> +	}
+> +}
+> +
+> +/**
+> + * blk_abort_req -- Request request recovery for the specified command
+> + * req:		pointer to the request of interest
+> + *
+> + * This function requests that the block layer start recovery for the
+> + * request by deleting the timer and calling the q's timeout function.
+> + * LLDDs who implement their own error recovery MAY ignore the timeout
+> + * event if they generated blk_abort_req.
+> + */
+> +void blk_abort_req(struct request *req)
+> +{
+> +        if (!blk_delete_timer(req))
+> +                return;
+> +        blk_rq_timed_out(req);
+> +}
+> +
+> +EXPORT_SYMBOL_GPL(blk_abort_req);
+> +
+> +/**
+> + * blk_add_timer - Start timeout timer for a single request
+> + * @req:	request that is about to start running.
+> + *
+> + * Notes:
+> + *    Each request has its own timer, and as it is added to the queue, we
+> + *    set up the timer.  When the request completes, we cancel the timer.
+> + **/
+> +void blk_add_timer(struct request *req)
+> +{
+> +	struct request_queue *q = req->q;
+> +
+> +	/*
+> +	 * If the clock was already running for this command, then
+> +	 * first delete the timer.  The timer handling code gets rather
+> +	 * confused if we don't do this.
+> +	 */
+> +	if (req->timer.function)
+> +		del_timer(&req->timer);
+> +
+> +	req->timer.data = (unsigned long)req;
+> +	if (req->timeout)
+> +		req->timer.expires = jiffies + req->timeout;
+> +	else
+> +		req->timer.expires = jiffies + q->rq_timeout;
+> +	req->timer.function = (void (*)(unsigned long))blk_rq_timed_out;
+
+Why the cast?
+
+> +        add_timer(&req->timer);
+
+You have space vs tab issues.
+
+> +}
+
+That's an ugly interface. I'd say it's a bug to call blk_add_timer()
+with it already pending, so fix the API.
+
+Apart from that, this has been a TODO item for me for some time. So
+thanks for refreshing these, lets see if we can get them beat into
+submission and agree on how it should work so we can take this forward.
+
+-- 
+Jens Axboe
+
