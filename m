@@ -1,38 +1,31 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch 01/17] git-scsi-misc: arcmsr build fix
-Date: Fri, 05 Oct 2007 16:49:22 -0400
-Message-ID: <1191617362.3475.17.camel@localhost.localdomain>
-References: <200710022137.l92LbxEw023552@imap1.linux-foundation.org>
-	 <20071005120700.45630fac.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 2/17] sym53c8xx: Use pci_dev irq number
+Date: Fri, 05 Oct 2007 16:51:19 -0400
+Message-ID: <4706A3C7.5070302@garzik.org>
+References: <11916141143747-git-send-email-matthew@wil.cx> <11916141142823-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:50762 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761390AbXJEUt0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Oct 2007 16:49:26 -0400
-In-Reply-To: <20071005120700.45630fac.akpm@linux-foundation.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:33102 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752359AbXJEUvY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Oct 2007 16:51:24 -0400
+In-Reply-To: <11916141142823-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-On Fri, 2007-10-05 at 12:07 -0700, Andrew Morton wrote:
-> I sent seventeen patches and only one was applied.
+Matthew Wilcox wrote:
+> Don't cache a private copy of the interrupt number
 > 
-> Please either merge the others or give them a nack-with-reasons or specify
-> how they need to be altered.
-> 
-> Please do not just ignore them.  This creates additional ongoing
-> maintenance work for myself.
+> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> ---
+>  drivers/scsi/sym53c8xx_2/sym_glue.c |    7 +++----
+>  drivers/scsi/sym53c8xx_2/sym_glue.h |    1 -
+>  2 files changed, 3 insertions(+), 5 deletions(-)
 
-Actually, none were applied ... you just got a fortuitous match with one
-of Matthew's advansys patches, like he said you would.  Yours are in the
-queue behind the gdth patch set which is currently causing me merge
-problems.  Once I get that sorted out, I'll likely apply all of yours
-bar the ones I already replied about.
-
-James
+ACK patches 1-2
 
 
