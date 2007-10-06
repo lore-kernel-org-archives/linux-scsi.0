@@ -1,59 +1,49 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: generating a Linux WWN?
-Date: Sat, 06 Oct 2007 09:11:10 -0500
-Message-ID: <1191679870.3338.17.camel@localhost.localdomain>
-References: <1191622146.3475.51.camel@localhost.localdomain>
-	 <20071005.151131.125883267.davem@davemloft.net>
-	 <1191622488.3475.54.camel@localhost.localdomain>
-	 <20071005.151711.112302061.davem@davemloft.net>
+Date: Sat, 06 Oct 2007 10:36:20 -0400
+Message-ID: <47079D64.3070000@garzik.org>
+References: <1191622146.3475.51.camel@localhost.localdomain>	 <20071005.151131.125883267.davem@davemloft.net>	 <1191622488.3475.54.camel@localhost.localdomain>	 <20071005.151711.112302061.davem@davemloft.net> <1191679870.3338.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39433 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752666AbXJFOLP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Oct 2007 10:11:15 -0400
-In-Reply-To: <20071005.151711.112302061.davem@davemloft.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:56323 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755515AbXJFOgk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Oct 2007 10:36:40 -0400
+In-Reply-To: <1191679870.3338.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: ltuikov@yahoo.com, jeff@garzik.org, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: David Miller <davem@davemloft.net>, ltuikov@yahoo.com, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
-On Fri, 2007-10-05 at 15:17 -0700, David Miller wrote:
-> From: James Bottomley <James.Bottomley@SteelEye.com>
-> Date: Fri, 05 Oct 2007 18:14:48 -0400
+James Bottomley wrote:
+> My problem with auto generated is that it's provably impossible to
+> generate globally unique numbers for WWNs without some internal source
+> of uniqueness (I know sparcs have this in their serial number, but most
+> PCs unfortunately don't).
 > 
-> > On Fri, 2007-10-05 at 15:11 -0700, David Miller wrote:
-> > > auto_wwn=1 or somthing like that
-> > 
-> > I'd far prefer
-> > 
-> > override_wwn = <fully specific WWN>
-> > 
-> > since I assume auto_wwn means get the kernel to generate one?
-> 
-> I think providing both possibilities (kernel auto-generated and user
-> specified) is appropriate.
+> I know the auto generated number can be statistically reasonably unique,
+> but sysadmins are lazy people.  If they run into this problem, they'll
+> take the knob with the on/off switch rather than the think about the
+> problem and specify the full WWN; and then, being busy people, they'll
+> forget about it as "problem solved".  When they do this, statistically
+> (and probably years later) there will be a cluster reboot where the
+> entire SAN simply collapses and no-one knows why ... the poor SAN
+> administrator will likely spend weeks working out the problem is.
 
-My problem with auto generated is that it's provably impossible to
-generate globally unique numbers for WWNs without some internal source
-of uniqueness (I know sparcs have this in their serial number, but most
-PCs unfortunately don't).
+Why, if we give lazy administrators root access, that's all they'll use, 
+and they will just think "problem solved" until a serious security issue 
+arises that takes down the cluster.
 
-I know the auto generated number can be statistically reasonably unique,
-but sysadmins are lazy people.  If they run into this problem, they'll
-take the knob with the on/off switch rather than the think about the
-problem and specify the full WWN; and then, being busy people, they'll
-forget about it as "problem solved".  When they do this, statistically
-(and probably years later) there will be a cluster reboot where the
-entire SAN simply collapses and no-one knows why ... the poor SAN
-administrator will likely spend weeks working out the problem is.
+See how silly and un-Linux that logic is?  In Linux, the admin has the 
+power to make stupid decisions -- or to make informed decisions that 
+disagree your rigid "an admin should never do that" line of thought. 
+It's their hardware.
 
-I'd rather not give an interface which seems like a magic bullet but
-which is a potential time bomb in a cluster (particularly when it has
-such a long fuse).
+You're also using the 1% case of a 1% case of a 1% case to argue against 
+a feature that is useful in making things Just Work(tm).
 
-James
+	Jeff
 
 
