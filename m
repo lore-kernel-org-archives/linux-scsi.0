@@ -1,35 +1,37 @@
 From: David Miller <davem@davemloft.net>
 Subject: Re: generating a Linux WWN?
-Date: Sat, 06 Oct 2007 19:48:36 -0700 (PDT)
-Message-ID: <20071006.194836.66070475.davem@davemloft.net>
-References: <1191679870.3338.17.camel@localhost.localdomain>
-	<47079D64.3070000@garzik.org>
-	<1191683096.3338.29.camel@localhost.localdomain>
+Date: Sat, 06 Oct 2007 19:46:25 -0700 (PDT)
+Message-ID: <20071006.194625.64817413.davem@davemloft.net>
+References: <1191622488.3475.54.camel@localhost.localdomain>
+	<20071005.151711.112302061.davem@davemloft.net>
+	<1191679870.3338.17.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42949
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42941
 	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751332AbXJGCsh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Oct 2007 22:48:37 -0400
-In-Reply-To: <1191683096.3338.29.camel@localhost.localdomain>
+	by vger.kernel.org with ESMTP id S1751192AbXJGCq0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Oct 2007 22:46:26 -0400
+In-Reply-To: <1191679870.3338.17.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@SteelEye.com
-Cc: jeff@garzik.org, ltuikov@yahoo.com, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
+Cc: ltuikov@yahoo.com, jeff@garzik.org, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Date: Sat, 06 Oct 2007 10:04:55 -0500
+Date: Sat, 06 Oct 2007 09:11:10 -0500
 
-> If you remember Rusty's guide to interfaces, this is a level 14 easy to
-> misuse interface: "The obvious use is wrong"; since the obvious use is
-> to put it in module parameters and have the problem go away (for
-> now ...).  Actually, I could be harsher and say it's level 17 "There's
-> no correct use" because statistically every time you use it, you expose
-> yourself to potential duplicate WWNs.
+> My problem with auto generated is that it's provably impossible to
+> generate globally unique numbers for WWNs without some internal source
+> of uniqueness (I know sparcs have this in their serial number, but most
+> PCs unfortunately don't).
 
-Every time you use GIT you expose yourself to potential duplicate SHAs
-which will corrupt the tree.
+If you have at least one ethernet NIC, you have at least one
+globally unique MAC address, which is 6 bytes of uniqueness to
+draw from.
 
-This argument borders on lunacy, give it up :-)
+I'm sure there are countless other possibilities.
+
+I think the SAN issue is way overstated.  Sure it's real, but
+so are SHA conflicts in the kernel GIT repository.
