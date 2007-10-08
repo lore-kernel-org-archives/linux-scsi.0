@@ -1,37 +1,204 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: generating a Linux WWN?
-Date: Sat, 06 Oct 2007 19:46:25 -0700 (PDT)
-Message-ID: <20071006.194625.64817413.davem@davemloft.net>
-References: <1191622488.3475.54.camel@localhost.localdomain>
-	<20071005.151711.112302061.davem@davemloft.net>
-	<1191679870.3338.17.camel@localhost.localdomain>
+From: malahal@us.ibm.com
+Subject: Re: [RFC] [PATCH 1/2] blk request timeout handler patches
+Date: Sun, 7 Oct 2007 23:54:24 -0700
+Message-ID: <20071008065424.GA19845@us.ibm.com>
+References: <20071004181259.GA16689@us.ibm.com> <20071004181750.GB16689@us.ibm.com> <20071005124940.GA7863@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:42941
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751192AbXJGCq0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 6 Oct 2007 22:46:26 -0400
-In-Reply-To: <1191679870.3338.17.camel@localhost.localdomain>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:32923 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751503AbXJHGy1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Oct 2007 02:54:27 -0400
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id l986sQrY028419
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Oct 2007 02:54:26 -0400
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l986sQYA469382
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Oct 2007 00:54:26 -0600
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l986sQtC011715
+	for <linux-scsi@vger.kernel.org>; Mon, 8 Oct 2007 00:54:26 -0600
+Content-Disposition: inline
+In-Reply-To: <20071005124940.GA7863@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: ltuikov@yahoo.com, jeff@garzik.org, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Date: Sat, 06 Oct 2007 09:11:10 -0500
+Jens Axboe [jens.axboe@oracle.com] wrote:
+> On Thu, Oct 04 2007, malahal@us.ibm.com wrote:
+> > Mike Christie's patches refreshed to 2.6.23-rc8-mm1.
+> > 
+> > Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> > Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
+> > 
+> > 
+> > diff -r 3697367c6e4d block/ll_rw_blk.c
+> > --- a/block/ll_rw_blk.c	Thu Sep 27 00:12:13 2007 -0700
+> > +++ b/block/ll_rw_blk.c	Thu Sep 27 00:13:07 2007 -0700
+> > @@ -181,6 +181,19 @@ void blk_queue_softirq_done(struct reque
+> >  
+> >  EXPORT_SYMBOL(blk_queue_softirq_done);
+> >  
+> > +void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
+> > +{
+> > +	q->rq_timeout = timeout;
+> > +}
+> > +EXPORT_SYMBOL_GPL(blk_queue_rq_timeout);
+> > +
+> > +void blk_queue_rq_timed_out(struct request_queue *q, rq_timed_out_fn *fn)
+> > +{
+> > +	q->rq_timed_out_fn = fn;
+> > +}
+> > +
+> > +EXPORT_SYMBOL_GPL(blk_queue_rq_timed_out);
+> > +
+> >  /**
+> >   * blk_queue_make_request - define an alternate make_request function for a device
+> >   * @q:  the request queue for the device to be affected
+> > @@ -243,7 +256,9 @@ static void rq_init(struct request_queue
+> >  {
+> >  	INIT_LIST_HEAD(&rq->queuelist);
+> >  	INIT_LIST_HEAD(&rq->donelist);
+> > -
+> > +	init_timer(&rq->timer);
+> > +
+> > +	rq->timeout = 0;
+> >  	rq->errors = 0;
+> >  	rq->bio = rq->biotail = NULL;
+> >  	INIT_HLIST_NODE(&rq->hash);
+> > @@ -2305,6 +2320,7 @@ EXPORT_SYMBOL(blk_start_queueing);
+> >   */
+> >  void blk_requeue_request(struct request_queue *q, struct request *rq)
+> >  {
+> > +	blk_delete_timer(rq);
+> >  	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
+> >  
+> >  	if (blk_rq_tagged(rq))
+> > @@ -3647,8 +3663,121 @@ static struct notifier_block blk_cpu_not
+> >  };
+> >  
+> >  /**
+> > + * blk_delete_timer - Delete/cancel timer for a given function.
+> > + * @req:	request that we are canceling timer for
+> > + *
+> > + * Return value:
+> > + *     1 if we were able to detach the timer.  0 if we blew it, and the
+> > + *     timer function has already started to run.
+> > + **/
+> > +int blk_delete_timer(struct request *req)
+> > +{
+> > +	int rtn;
+> > +
+> > +	if (!req->q->rq_timed_out_fn)
+> > +		return 1;
+> > +
+> > +	rtn = del_timer(&req->timer);
+> > +	req->timer.data = (unsigned long)NULL;
+> > +	req->timer.function = NULL;
+> > +
+> > +	return rtn;
+> > +}
+> 
+> Hmm, that looks fishy. What if the timer _just_ fired, yet it hasn't
+> retrieved ->data yet?
+> 
 
-> My problem with auto generated is that it's provably impossible to
-> generate globally unique numbers for WWNs without some internal source
-> of uniqueness (I know sparcs have this in their serial number, but most
-> PCs unfortunately don't).
+Looks like it is just copied from the SCSI code. More over _run_timers()
+copies data and function on to stack variables before calling the timer
+function. So, I don't think there is a problem here but assuming that
+implementation detail is bad! I would like modify the above function to
+reinitialize data and function fields only if del_timer() returns TRUE.
+Please let me know if that is OK.
 
-If you have at least one ethernet NIC, you have at least one
-globally unique MAC address, which is 6 bytes of uniqueness to
-draw from.
+> > +
+> > +EXPORT_SYMBOL_GPL(blk_delete_timer);
+> > +
+> > +static void blk_rq_timed_out(struct request *req)
+> > +{
+> > +	struct request_queue *q = req->q;
+> > +
+> > +	switch (q->rq_timed_out_fn(req)) {
+> > +	case BLK_EH_HANDLED:
+> > +		__blk_complete_request(req);
+> > +		return;
+> > +	case BLK_EH_RESET_TIMER:
+> > +		blk_add_timer(req);
+> > +		return;
+> > +	case BLK_EH_NOT_HANDLED:
+> > +		/*
+> > +		 * LLD handles this for now but in the future
+> > +		 * we can send a request msg to abort the command
+> > +		 * and we can move more of the generic scsi eh code to
+> > +		 * the blk layer.
+> > +		 */
+> > +		return;
+> > +	}
+> > +}
+> > +
+> > +/**
+> > + * blk_abort_req -- Request request recovery for the specified command
+> > + * req:		pointer to the request of interest
+> > + *
+> > + * This function requests that the block layer start recovery for the
+> > + * request by deleting the timer and calling the q's timeout function.
+> > + * LLDDs who implement their own error recovery MAY ignore the timeout
+> > + * event if they generated blk_abort_req.
+> > + */
+> > +void blk_abort_req(struct request *req)
+> > +{
+> > +        if (!blk_delete_timer(req))
+> > +                return;
+> > +        blk_rq_timed_out(req);
+> > +}
+> > +
+> > +EXPORT_SYMBOL_GPL(blk_abort_req);
+> > +
+> > +/**
+> > + * blk_add_timer - Start timeout timer for a single request
+> > + * @req:	request that is about to start running.
+> > + *
+> > + * Notes:
+> > + *    Each request has its own timer, and as it is added to the queue, we
+> > + *    set up the timer.  When the request completes, we cancel the timer.
+> > + **/
+> > +void blk_add_timer(struct request *req)
+> > +{
+> > +	struct request_queue *q = req->q;
+> > +
+> > +	/*
+> > +	 * If the clock was already running for this command, then
+> > +	 * first delete the timer.  The timer handling code gets rather
+> > +	 * confused if we don't do this.
+> > +	 */
+> > +	if (req->timer.function)
+> > +		del_timer(&req->timer);
+> > +
+> > +	req->timer.data = (unsigned long)req;
+> > +	if (req->timeout)
+> > +		req->timer.expires = jiffies + req->timeout;
+> > +	else
+> > +		req->timer.expires = jiffies + q->rq_timeout;
+> > +	req->timer.function = (void (*)(unsigned long))blk_rq_timed_out;
+> 
+> Why the cast?
+> 
 
-I'm sure there are countless other possibilities.
+Because blk_rq_timed_out() doesn't take "unsigned long" as its input
+parameter. Again, copied from SCSI.
 
-I think the SAN issue is way overstated.  Sure it's real, but
-so are SHA conflicts in the kernel GIT repository.
+> > +        add_timer(&req->timer);
+> 
+> You have space vs tab issues.
+> 
+> > +}
+> 
+> That's an ugly interface. I'd say it's a bug to call blk_add_timer()
+> with it already pending, so fix the API.
+
+blk_add_timer is also called from the timer function (blk_rq_timed_out) if
+BLK_EH_RESET_TIMER is retuned. This is also copied from SCSI! Please let me
+know if you want to do it some other way.
+
+Thanks, Malahal.
