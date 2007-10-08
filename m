@@ -1,62 +1,50 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: sil3114 data corruption
-Date: Mon, 8 Oct 2007 17:09:17 +0200
-Message-ID: <200710081709.18253.bs@q-leap.de>
+From: Michael Reed <mdr@sgi.com>
+Subject: Re: generating a Linux WWN?
+Date: Mon, 08 Oct 2007 10:41:04 -0500
+Message-ID: <470A4F90.3030901@sgi.com>
+References: <1191679870.3338.17.camel@localhost.localdomain>	<47079D64.3070000@garzik.org>	<1191683096.3338.29.camel@localhost.localdomain> <20071006.194836.66070475.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: linux-ide@vger.kernel.org, Bernd Schubert <bs@q-leap.de>, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from netops-testserver-3-out.sgi.com ([192.48.171.28]:37080 "EHLO
+	relay.sgi.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751503AbXJHPlL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Oct 2007 11:41:11 -0400
+In-Reply-To: <20071006.194836.66070475.davem@davemloft.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-
-[sorry for sending twice, but after I read the sil sources, I see the mail 
-address had been wrong]
-
-Hi,
-
-somehow the sil3114 causes data corruption with some (newer?) disks. Simply 
-filling the filesystem with zeros and reading the these data will make the 
-kernel to report filesystem corruption. 
-This is definitely not an issue of memory, since the systems (several tested) 
-do have ECC memory and the memory is monitored with EDAC. 
-
-Also not an issue of the filesystem, also several tested. 
+To: David Miller <davem@davemloft.net>
+Cc: James.Bottomley@SteelEye.com, jeff@garzik.org, ltuikov@yahoo.com, lydianconcepts@gmail.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
 
-[  345.051369]   Vendor: ATA       Model: ST3250820AS       Rev: 3.AA
-[  345.060526]   Type:   Direct-Access                      ANSI SCSI 
-revision: 05
-[  345.069302]   Vendor: ATA       Model: ST3200822AS       Rev: 3.01
-[  345.078551]   Type:   Direct-Access                      ANSI SCSI 
-revision: 05
-[  345.087522] SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-[  345.095381] SCSI device sda: drive cache: write back
-[  345.101314] SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-[  345.109150] SCSI device sda: drive cache: write back
-[  345.115007]  /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
-[  345.134017] sd 0:0:0:0: Attached scsi disk sda
-[  345.139458] SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-[  345.147558] SCSI device sdb: drive cache: write back
-[  345.153671] SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-[  345.161740] SCSI device sdb: drive cache: write back
-[  345.167725]  /dev/scsi/host1/bus0/target0/lun0: p1 p2 p3
-[  345.187133] sd 1:0:0:0: Attached scsi disk sdb
 
+David Miller wrote:
+> From: James Bottomley <James.Bottomley@SteelEye.com>
+> Date: Sat, 06 Oct 2007 10:04:55 -0500
+> 
+>> If you remember Rusty's guide to interfaces, this is a level 14 easy to
+>> misuse interface: "The obvious use is wrong"; since the obvious use is
+>> to put it in module parameters and have the problem go away (for
+>> now ...).  Actually, I could be harsher and say it's level 17 "There's
+>> no correct use" because statistically every time you use it, you expose
+>> yourself to potential duplicate WWNs.
+> 
+> Every time you use GIT you expose yourself to potential duplicate SHAs
+> which will corrupt the tree.
+> 
+> This argument borders on lunacy, give it up :-)
 
-The ST3250820AS data on the ST3250820AS disk will suffer from data corruption, 
-but the data on the older ST3200822AS will *not*.
+As long as two systems on the same SAN are quite unlikely to wind up with
+the same WWN.  override_wwn=5000000000000001 comes to mind.  Two months
+later, another admin does the same thing to another system.  As Jeff has
+pointed out, there really should be some method in place that allows for
+some randomness in the wwn.  (Other than fixing the broken hardware. :)
+Handing the admins the rope doesn't mean we want to see it around their necks!
 
-kernel versions tested: 2.6.15-2.6.20
+And, while I'm thinking about it, whatever implementation is chosen, doesn't
+it need to allow for the targeting of a particular sas host adapter and
+perhaps even a particular sas port on the adapter?
 
-Any ideas how to proceed?
+Mike
 
-Thanks,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
