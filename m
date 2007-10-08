@@ -1,72 +1,63 @@
 From: Luben Tuikov <ltuikov@yahoo.com>
 Subject: Re: generating a Linux WWN?
-Date: Mon, 8 Oct 2007 11:18:56 -0700 (PDT)
-Message-ID: <423911.99564.qm@web31805.mail.mud.yahoo.com>
-References: <1191622146.3475.51.camel@localhost.localdomain>
+Date: Mon, 8 Oct 2007 11:34:43 -0700 (PDT)
+Message-ID: <962818.30064.qm@web31813.mail.mud.yahoo.com>
+References: <47079D64.3070000@garzik.org>
 Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:37403 "HELO
-	web31805.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753573AbXJHSS5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Oct 2007 14:18:57 -0400
-In-Reply-To: <1191622146.3475.51.camel@localhost.localdomain>
+Received: from web31813.mail.mud.yahoo.com ([68.142.207.76]:24433 "HELO
+	web31813.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754793AbXJHSep (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Oct 2007 14:34:45 -0400
+In-Reply-To: <47079D64.3070000@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, David Miller <davem@davemloft.net>
-Cc: ltuikov@yahoo.com, jeff@garzik.org, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: David Miller <davem@davemloft.net>, ltuikov@yahoo.com, lydianconcepts@gmail.com, mdr@sgi.com, James.Smart@emulex.com, linux-scsi@vger.kernel.org
 
---- James Bottomley <James.Bottomley@SteelEye.com> wrote:
+--- Jeff Garzik <jeff@garzik.org> wrote:
+
+> James Bottomley wrote:
+> > My problem with auto generated is that it's provably impossible to
+> > generate globally unique numbers for WWNs without some internal source
+> > of uniqueness (I know sparcs have this in their serial number, but most
+> > PCs unfortunately don't).
+> > 
+> > I know the auto generated number can be statistically reasonably unique,
+> > but sysadmins are lazy people.  If they run into this problem, they'll
+> > take the knob with the on/off switch rather than the think about the
+> > problem and specify the full WWN; and then, being busy people, they'll
+> > forget about it as "problem solved".  When they do this, statistically
+> > (and probably years later) there will be a cluster reboot where the
+> > entire SAN simply collapses and no-one knows why ... the poor SAN
+> > administrator will likely spend weeks working out the problem is.
 > 
-> For the record, what the current in-kernel aic94xx driver does for this
-> case is allow a parameter override to specify the WWN in the case where
-> the card burned in one has gone missing or is corrupt.  I think this is
-> the correctly balanced approach to the problem.
+> Why, if we give lazy administrators root access, that's all they'll use, 
+> and they will just think "problem solved" until a serious security issue 
+> arises that takes down the cluster.
 > 
-> For the record, I pretty much agree completely with Luben's position on
-> this:  I want to allow the user a method to correct any problem (i.e.
-> supply a WWN override).  However, I also want them to think about the
-> issue before they do this.  What I really don't want is the driver
-> silently correcting what it thinks to be a defective WWN and generating
-> its own replacement because that's a recipe for disaster on a SAN (SANs
-> are a lot less robust than networks to duplicate MAC addresses: because
-> of the way expander routing is done, you can possibly collapse the
-> entire SAN with duplicate WWNs).
+> See how silly and un-Linux that logic is?  In Linux, the admin has the 
+> power to make stupid decisions -- or to make informed decisions that 
+> disagree your rigid "an admin should never do that" line of thought. 
+> It's their hardware.
 > 
-> So, the procedure for a SAS card should be:
-> 
->      1. Obtain the WWN from a device specific storage method (like
->         flash)
->      2. Replace this with a passed in command line parameter if one
->         exists
->      3. refuse to attach if there's still no valid WWN and give an
->         explicit method saying what the problem is (and possibly how to
->         fix it)
+> You're also using the 1% case of a 1% case of a 1% case to argue against 
+> a feature that is useful in making things Just Work(tm).
 
-That is absolutely correct.
+What he's arguing about is the _capability_ for a node in a SAN
+to *(auto)generate* WWN and assign it to itself (at every
+reboot, etc).  This is considered a _rogue_ node and *no* SAN
+architect or admin will tolerate such a node.
 
-If a node in a SAN doesn't come up, the SAN admin will inspect
-the kernel log and find out that the driver failed to attach
-due to a missing WWN.  This is a grave condition.
+The problem here is NOT the _capability_ to assign a WWN.
+Admin does have the capability to assign (if missing) and/or
+override (if present) a WWN currently with aic94xx driver.
+This is fine.
 
-In enterprise, if one component is compromised, then the whole
-system should fail and be brought to admin's attention.
-
-The admin may decide to replace this card with a working one,
-or ask the Storage Manager to generate a temporary WWN (which could
-be the next machine over), or if the admin themselves maintain
-the SAN, they can generate a temporary WWN.
-
-But it is imperative that the admin immediately knows
-of the fact that a node in the SAN has experienced a problem
-and cannot read its WWN.
-
-Alternatively, if the SAN is zoned, then the _rogue_ node
-who autogenerated its WWN will be rejected access to the SAN.
-A node which autogenerates WWNs is considered a security
-risk and a rogue node.
+The problem is "(auto)generate".  Think of SANs.
 
    Luben
 
