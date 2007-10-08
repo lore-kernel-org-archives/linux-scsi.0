@@ -1,63 +1,66 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: sil3114 data corruption
-Date: Mon, 8 Oct 2007 14:44:28 +0200
-Message-ID: <200710081444.28960.bs@q-leap.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH ver4 1/5] scsi_error: code cleanup before refactoring
+ of scsi_send_eh_cmnd()
+Date: Mon, 08 Oct 2007 16:29:39 +0200
+Message-ID: <470A3ED3.5070402@panasas.com>
+References: <46E59760.9020705@panasas.com> <46E59C3E.1020703@panasas.com>	 <46E6D2ED.1060201@panasas.com> <1191426957.3340.8.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:60434 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754558AbXJHMob (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 8 Oct 2007 08:44:31 -0400
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11930 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750959AbXJHOab (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Oct 2007 10:30:31 -0400
+In-Reply-To: <1191426957.3340.8.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Greg Kroah-Hartman <gregkh@suse.de>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Christoph Hellwig <hch@infradead.org>, Randy Dunlap <rdunlap@xenotime.net>
 
-Hi,
+I will send a ver4 of these patches as reply to base patches
+Meanwhile I have some comments below.
 
-somehow the sil3114 causes data corruption with some (newer?) disks. Simply 
-filling the filesystem with zeros and reading the these data will make the 
-kernel to report filesystem corruption. 
-This is definitely not an issue of memory, since the systems (several tested) 
-do have ECC memory and the memory is monitored with EDAC. 
+Thanks for the review.
 
-Also not an issue of the filesystem, also several tested. 
+On Wed, Oct 03 2007 at 17:55 +0200, James Bottomley <James.Bottomley@SteelEye.com> wrote:
+> 
+> You've altered the signature and function of the routine here, this
+> needs to be documented by updating the docbook description above the
+> function.  (I know you do it later, but each changeset should really be
+> logically complete).
+> 
+Done, thanks
 
+>> +		memset(scmd->cmnd, 0, 6);
+> 
+> This will lead to subtle bugs: some devices (notably ATAPI) have a fixed
+> command slot they will copy this into.  You have potentially trailing
+> bytes of junk that this could pick up ... we have ATAPI devices known to
+> fall over if they see trailing junk in the command.  Just consolidate
+> the scmd->cmnd memsets to
+> 
+> memset(scmd->cmnd, 0, sizeof(scmd->cmnd);
+> 
+> outside of the ifs
+> 
+I wanted to have a fixture where if @cmnd and @sense_bytes are Zero than
+scsi_cmnd->cmnd is not touched at all. So I fixed it by doing if (@cmnd)
+only in the second arm of the if and fixed the above to what you said.
+(See patch that follows)
 
-[  345.051369]   Vendor: ATA       Model: ST3250820AS       Rev: 3.AA
-[  345.060526]   Type:   Direct-Access                      ANSI SCSI 
-revision: 05
-[  345.069302]   Vendor: ATA       Model: ST3200822AS       Rev: 3.01
-[  345.078551]   Type:   Direct-Access                      ANSI SCSI 
-revision: 05
-[  345.087522] SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-[  345.095381] SCSI device sda: drive cache: write back
-[  345.101314] SCSI device sda: 488397168 512-byte hdwr sectors (250059 MB)
-[  345.109150] SCSI device sda: drive cache: write back
-[  345.115007]  /dev/scsi/host0/bus0/target0/lun0: p1 p2 p3
-[  345.134017] sd 0:0:0:0: Attached scsi disk sda
-[  345.139458] SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-[  345.147558] SCSI device sdb: drive cache: write back
-[  345.153671] SCSI device sdb: 390721968 512-byte hdwr sectors (200050 MB)
-[  345.161740] SCSI device sdb: drive cache: write back
-[  345.167725]  /dev/scsi/host1/bus0/target0/lun0: p1 p2 p3
-[  345.187133] sd 1:0:0:0: Attached scsi disk sdb
+> 
+> Moving this to the sense_bytes specific piece of the if also introduces
+> a subtle bug:  If the driver doesn't do auto request sense and the
+> command completes with CHECK CONDITION, the sense checking routine will
+> potentially pick up stale sense data here
+> 
+Good call thanks, done.
 
+> 
+> Other than the three comments, this looks OK.
+> 
+> James
+> 
+> 
 
-The ST3250820AS data on the ST3250820AS disk will suffer from data corruption, 
-but the data on the older ST3200822AS will *not*.
-
-kernel versions tested: 2.6.15-2.6.20
-
-Any ideas how to proceed?
-
-Thanks,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
