@@ -1,47 +1,101 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [PATCH] aic94xx: Use request_firmware() to provide SAS address
-	if the adapter lacks one
-Date: Mon, 8 Oct 2007 17:12:40 -0700
-Message-ID: <20071009001240.GA13922@plap3.qlogic.org>
-References: <20071008212553.GI16752@tree.beaverton.ibm.com> <20071008224832.GB11993@plap3.qlogic.org> <20071008235009.GB16003@tree.beaverton.ibm.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH 1/2] libsas: Provide a transport-level facility to request
+	SAS addrs
+Date: Mon, 8 Oct 2007 17:39:13 -0700
+Message-ID: <20071009003913.GC16003@tree.beaverton.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753868AbXJIAM4@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:54965 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751024AbXJIAip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Oct 2007 20:38:45 -0400
 Content-Disposition: inline
-In-Reply-To: <20071008235009.GB16003@tree.beaverton.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, James Bottomley <james.bottomley@steeleye.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Mon, 08 Oct 2007, Darrick J. Wong wrote:
+Use the request_firmware() interface to get a SAS address from userspace.
+This way, there's no debate as to who or how an address gets generated;
+it's up to the administrator to provide one if the driver can't find one
+on its own.
 
-> On Mon, Oct 08, 2007 at 03:48:32PM -0700, Andrew Vasquez wrote:
-> 
-> > So how about factoring that out to a transport-level interface.  How
-> > about something along the lines of the following patch, whereby the
-> > software driver upon detecting no valid WWPN, makes an upcall to each
-> > interface's 'request_wwn()'.  The data passed in from shost_gendev
-> > should be enough for some helper script to cull relevent device bits
-> > and perhaps offer some level of persistence...  Off base?
-> 
-> Hrm... jejb made a remark that it might be better to pass the
-> scsi_host's device into request_firmware() as your example does, so I'll
-> pitch in a patch to do likewise with libsas--the scsi_host knows the
-> actual device it's coming from, and userland can sort that all out later
-> anyway via DEVPATH.
-> 
-> I suppose one could also have multiple scsi_hosts per PCI device, which
-> means that my first patch would stumble horribly in more than a few
-> cases.
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
-This is done already in the FC case -- NPIV.  Though with that
-interface, the administrator is already responsible for assigning
-proper WWNN/WWPN during creation.
+ drivers/scsi/libsas/sas_scsi_host.c |   41 +++++++++++++++++++++++++++++++++++
+ include/scsi/libsas.h               |    3 +++
+ 2 files changed, 44 insertions(+), 0 deletions(-)
 
-> > Darrick, forgive the FC example, I don't do SAS...
-> 
-> That's ok, I don't do FC. :)  Looks mostly good to me...
-
---
-av
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index 7663841..0fa0296 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -24,6 +24,8 @@
+  */
+ 
+ #include <linux/kthread.h>
++#include <linux/firmware.h>
++#include <linux/ctype.h>
+ 
+ #include "sas_internal.h"
+ 
+@@ -1047,6 +1049,45 @@ void sas_target_destroy(struct scsi_target *starget)
+ 	return;
+ }
+ 
++static void sas_parse_addr(u8 *sas_addr, const char *p)
++{
++	int i;
++	for (i = 0; i < SAS_ADDR_SIZE; i++) {
++		u8 h, l;
++		if (!*p)
++			break;
++		h = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
++		p++;
++		l = isdigit(*p) ? *p-'0' : toupper(*p)-'A'+10;
++		p++;
++		sas_addr[i] = (h<<4) | l;
++	}
++}
++
++#define SAS_STRING_ADDR_SIZE	16
++
++int sas_request_addr(struct Scsi_Host *shost, u8 *addr)
++{
++	int res;
++	const struct firmware *fw;
++
++	res = request_firmware(&fw, "sas_addr", &shost->shost_gendev);
++	if (res)
++		return res;
++
++	if (fw->size < SAS_STRING_ADDR_SIZE) {
++		res = -ENODEV;
++		goto out;
++	}
++
++	sas_parse_addr(addr, fw->data);
++
++out:
++	release_firmware(fw);
++	return res;
++}
++EXPORT_SYMBOL_GPL(sas_request_addr);
++
+ EXPORT_SYMBOL_GPL(sas_queuecommand);
+ EXPORT_SYMBOL_GPL(sas_target_alloc);
+ EXPORT_SYMBOL_GPL(sas_slave_configure);
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 8dda2d6..58aa2aa 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -676,4 +676,7 @@ extern int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg);
+ 
+ extern int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
+ 			   struct request *req);
++
++int sas_request_addr(struct Scsi_Host *shost, u8 *addr);
++
+ #endif /* _SASLIB_H_ */
