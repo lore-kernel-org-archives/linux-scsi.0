@@ -1,76 +1,38 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [RFC] [PATCH 1/1] blk request timeout handler patches
-Date: Tue, 09 Oct 2007 10:56:12 -0500
-Message-ID: <1191945372.3294.28.camel@localhost.localdomain>
-References: <20071004181259.GA16689@us.ibm.com>
-	 <20071004181750.GB16689@us.ibm.com> <20071005124940.GA7863@kernel.dk>
-	 <20071009053610.GA17794@us.ibm.com>
-	 <20071009120048.GB13842@parisc-linux.org> <20071009121524.GO5241@kernel.dk>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH] aic94xx: Use request_firmware() to provide SAS address
+	if the adapter lacks one
+Date: Tue, 9 Oct 2007 09:41:47 -0700
+Message-ID: <20071009164147.GB19854@plap3.qlogic.org>
+References: <20071008212553.GI16752@tree.beaverton.ibm.com> <20071008224832.GB11993@plap3.qlogic.org> <20071008235009.GB16003@tree.beaverton.ibm.com> <20071009001240.GA13922@plap3.qlogic.org> <470B9E50.2090205@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:39240 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754647AbXJIP4R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Oct 2007 11:56:17 -0400
-In-Reply-To: <20071009121524.GO5241@kernel.dk>
+Received: from avexch1.qlogic.com ([198.70.193.115]:22832 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753636AbXJIQlt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Oct 2007 12:41:49 -0400
+Content-Disposition: inline
+In-Reply-To: <470B9E50.2090205@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: James Smart <James.Smart@Emulex.Com>
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, James Bottomley <james.bottomley@steeleye.com>
 
-On Tue, 2007-10-09 at 14:15 +0200, Jens Axboe wrote:
-> On Tue, Oct 09 2007, Matthew Wilcox wrote:
-> > On Mon, Oct 08, 2007 at 10:36:10PM -0700, malahal@us.ibm.com wrote:
-> > > Thank you Randy, Jens for your suggestions. I folded the second patch as
-> > > it is just a clean up. Here is the fixed one patch version.
-> > 
-> > I was thinking about this (in the context of shrinking scsi_cmnd --
-> > obviously, things are not improved if we simply move the timer to request
-> > instead of scsi_cmnd).  Why do we need a timer _per request_?  We don't
-> > need one per network packet.  I appreciate we had one per scsi_cmnd and
-> > this patch is just moving it upwards in the hierarchy, but perhaps we
-> > can do better.
-> > 
-> > What if we have one timer per request queue instead?  It needs to expire
-> > as soon as the earliest request timer would expire, then needs to be
-> > reset to the next earliest one.  We might walk the request queue more
-> > frequently, but we'd save 48 bytes in the struct request.
+On Tue, 09 Oct 2007, James Smart wrote:
+
+>  Why do you prefer request_firmware() vs something over sysfs ?
 > 
-> I agree, adding a full timer to each request is not nice. You jump over
-> the actual implementation details of having just one timer in the queue
-> though, it's pretty cheap to just say it can be done :-). You need to
-> track each request anyways. If all drivers used the block layer tagging
-> it would be easy since we are tracking each pending request in that
-> case, but right now they don't. So pending requests may very well be
-> outside of block layer knowledge.
+>  Does environments like the kdump kernel also have access to data needed
+>  by request_firmware() ?
 
-Can't we handle this a bit like the Linux timer infrastructure?  Instead
-of a timer per cmnd we have one per queue that's reset by commands
-returning?  If we retained a linked list of commands in timer order and
-expiry times, that's still going to save us an unsigned long and two
-pointers over struct timer_list.
+There's already much in the way of automation and infrastructure
+present in supporting the request_firwmare() interfaces (perhaps not
+the best of names) which can provide for a level of flexibility beyond
+a basic 'soft_port_name' interface.
 
-> You'd also end up using lots of extra cycles to find and move the timer
-> when it expires (not likely) or is deleted (most likely). I'd greatly
-> prefer the space overhead in this case, even if it is quite costly.
-
-If there's another command on the linked list, you mod_timer otherwise
-you del_timer_sync.  Returning commands obviously delete from this list.
-
-> There's also the issue of fiddling with just one vs many timers,
-> potentially more cache bouncy.
-
-Yes, I agree it's more fiddly.
-
-The beauty is that I think it can all be done at the block layer via
-helpers ... so it becomes Somebody Else's Problem from the SCSI point of
-view ...
-
-James
-
-
-James
-
-
+Though I don't see why both can't coexist cleanly -- I take it the use
+case you are considering is: software recognizes no valid WWPN
+available, query via request_firmware() fails, software halts
+initialization (rather than fail), and awaits the admin to poke
+'0x123456.. > /sys/.../fc_host/soft_port_name', causing a ping to the
+driver and continuation of initialization with requested portname?
