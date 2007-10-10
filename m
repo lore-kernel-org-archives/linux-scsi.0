@@ -1,1398 +1,777 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [RFC] [PATCH 1/1] blk request timeout handler patches
-Date: Wed, 10 Oct 2007 14:25:08 +0200
-Message-ID: <20071010122508.GL4984@kernel.dk>
-References: <20071004181259.GA16689@us.ibm.com> <20071004181750.GB16689@us.ibm.com> <20071005124940.GA7863@kernel.dk> <20071009053610.GA17794@us.ibm.com> <20071009120048.GB13842@parisc-linux.org> <20071009121524.GO5241@kernel.dk> <1191945372.3294.28.camel@localhost.localdomain>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Add ALUA hardware handler
+Date: Wed, 10 Oct 2007 14:55:12 +0200
+Message-ID: <470CCBB0.2020904@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+ boundary="------------070700050301000404000908"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:15998 "EHLO kernel.dk"
+Received: from mail.suse.de ([195.135.220.2]:35668 "EHLO mx1.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750807AbXJJMZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Oct 2007 08:25:13 -0400
-Content-Disposition: inline
-In-Reply-To: <1191945372.3294.28.camel@localhost.localdomain>
+	id S1751270AbXJJMzO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Oct 2007 08:55:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, malahal@us.ibm.com
+To: Alasdair G Kergon <agk@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>
 
-On Tue, Oct 09 2007, James Bottomley wrote:
-> On Tue, 2007-10-09 at 14:15 +0200, Jens Axboe wrote:
-> > On Tue, Oct 09 2007, Matthew Wilcox wrote:
-> > > On Mon, Oct 08, 2007 at 10:36:10PM -0700, malahal@us.ibm.com wrote:
-> > > > Thank you Randy, Jens for your suggestions. I folded the second patch as
-> > > > it is just a clean up. Here is the fixed one patch version.
-> > > 
-> > > I was thinking about this (in the context of shrinking scsi_cmnd --
-> > > obviously, things are not improved if we simply move the timer to request
-> > > instead of scsi_cmnd).  Why do we need a timer _per request_?  We don't
-> > > need one per network packet.  I appreciate we had one per scsi_cmnd and
-> > > this patch is just moving it upwards in the hierarchy, but perhaps we
-> > > can do better.
-> > > 
-> > > What if we have one timer per request queue instead?  It needs to expire
-> > > as soon as the earliest request timer would expire, then needs to be
-> > > reset to the next earliest one.  We might walk the request queue more
-> > > frequently, but we'd save 48 bytes in the struct request.
-> > 
-> > I agree, adding a full timer to each request is not nice. You jump over
-> > the actual implementation details of having just one timer in the queue
-> > though, it's pretty cheap to just say it can be done :-). You need to
-> > track each request anyways. If all drivers used the block layer tagging
-> > it would be easy since we are tracking each pending request in that
-> > case, but right now they don't. So pending requests may very well be
-> > outside of block layer knowledge.
-> 
-> Can't we handle this a bit like the Linux timer infrastructure?  Instead
-> of a timer per cmnd we have one per queue that's reset by commands
-> returning?  If we retained a linked list of commands in timer order and
-> expiry times, that's still going to save us an unsigned long and two
-> pointers over struct timer_list.
+This is a multi-part message in MIME format.
+--------------070700050301000404000908
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-Here's an approach that uses a single timer. I purposely do not sort
-commands in expiry times, as that would introduce an O(N) operation far
-out weighing the IO scheduling cost, pretty silly for a timeout
-mechanism that supposedly should never trigger. Or we could waste more
-memory and fewer cycles (but still far more cycles than we need) by
-sorting in some sort of tree.
+Hi Alasdair,
 
-So I don't sort the list, instead I push the cost of locating expired
-request to the timeout handler. It should really only run, when a
-request times out. Timeout is then reset to next command timeout
-(rounded), if further commands exist. It also doesn't fiddle with the
-timer unless an incoming command has a lower timeout than the current
-one.
+this is a patch to add a SPC-3 hardware handler. SPC-3 ALUA has
+provisioning for 'explicit' port group state change via the
+SET TARGET GROUP STATES command, and some newer storage
+arrays do benefit from this.
+Eg HP EVAs and newer EMC Clariions already support explicit ALUA.
 
-Totally untested...
+Please apply.
 
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index ed39313..cb3210a 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -42,6 +42,7 @@ static void drive_stat_acct(struct request *rq, int nr_sectors, int new_io);
- static void init_request_from_bio(struct request *req, struct bio *bio);
- static int __make_request(struct request_queue *q, struct bio *bio);
- static struct io_context *current_io_context(gfp_t gfp_flags, int node);
-+static void blk_rq_timed_out_timer(unsigned long);
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
+
+--------------070700050301000404000908
+Content-Type: text/plain;
+ name="dm-mpath-alua-support"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="dm-mpath-alua-support"
+
+diff --git a/drivers/md/Kconfig b/drivers/md/Kconfig
+index 531d4d1..3fa9df3 100644
+--- a/drivers/md/Kconfig
++++ b/drivers/md/Kconfig
+@@ -267,6 +267,13 @@ config DM_MULTIPATH_RDAC
+ 	---help---
+ 	  Multipath support for LSI/Engenio RDAC.
  
- /*
-  * For the allocated request tables
-@@ -177,6 +178,18 @@ void blk_queue_softirq_done(struct request_queue *q, softirq_done_fn *fn)
- 
- EXPORT_SYMBOL(blk_queue_softirq_done);
- 
-+void blk_queue_rq_timeout(struct request_queue *q, unsigned int timeout)
-+{
-+	q->rq_timeout = timeout;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_rq_timeout);
++config DM_MULTIPATH_ALUA
++	tristate "SPC-3 ALUA multipath support (EXPERIMENTAL)"
++	depends on DM_MULTIPATH && BLK_DEV_DM && EXPERIMENTAL
++	---help---
++	  Multipath support for SPC-3 Asymmetric Logical Unit
++	  Access (ALUA).
 +
-+void blk_queue_rq_timed_out(struct request_queue *q, rq_timed_out_fn *fn)
-+{
-+	q->rq_timed_out_fn = fn;
-+}
-+EXPORT_SYMBOL_GPL(blk_queue_rq_timed_out);
-+
- /**
-  * blk_queue_make_request - define an alternate make_request function for a device
-  * @q:  the request queue for the device to be affected
-@@ -239,7 +252,9 @@ static void rq_init(struct request_queue *q, struct request *rq)
- {
- 	INIT_LIST_HEAD(&rq->queuelist);
- 	INIT_LIST_HEAD(&rq->donelist);
-+	INIT_LIST_HEAD(&rq->timeout_list);
- 
-+	rq->timeout = 0;
- 	rq->errors = 0;
- 	rq->bio = rq->biotail = NULL;
- 	INIT_HLIST_NODE(&rq->hash);
-@@ -1851,6 +1866,8 @@ struct request_queue *blk_alloc_queue_node(gfp_t gfp_mask, int node_id)
- 		return NULL;
- 
- 	init_timer(&q->unplug_timer);
-+	setup_timer(&q->timeout, blk_rq_timed_out_timer, (unsigned long) q);
-+	INIT_LIST_HEAD(&q->timeout_list);
- 
- 	snprintf(q->kobj.name, KOBJ_NAME_LEN, "%s", "queue");
- 	q->kobj.ktype = &queue_ktype;
-@@ -2271,6 +2288,7 @@ EXPORT_SYMBOL(blk_start_queueing);
-  */
- void blk_requeue_request(struct request_queue *q, struct request *rq)
- {
-+	blk_delete_timer(rq);
- 	blk_add_trace_rq(q, rq, BLK_TA_REQUEUE);
- 
- 	if (blk_rq_tagged(rq))
-@@ -3600,24 +3618,132 @@ static struct notifier_block __devinitdata blk_cpu_notifier = {
- };
- 
- /**
-- * blk_complete_request - end I/O on a request
-- * @req:      the request being processed
-+ * blk_delete_timer - Delete/cancel timer for a given function.
-+ * @req:	request that we are canceling timer for
-  *
-- * Description:
-- *     Ends all I/O on a request. It does not handle partial completions,
-- *     unless the driver actually implements this in its completion callback
-- *     through requeueing. Theh actual completion happens out-of-order,
-- *     through a softirq handler. The user must have registered a completion
-- *     callback through blk_queue_softirq_done().
-- **/
-+ * Return value:
-+ *     1 if we were able to detach the timer.  0 if we blew it, and the
-+ *     timer function has already started to run.
+ config DM_DELAY
+ 	tristate "I/O delaying target (EXPERIMENTAL)"
+ 	depends on BLK_DEV_DM && EXPERIMENTAL
+diff --git a/drivers/md/Makefile b/drivers/md/Makefile
+index c49366c..5013920 100644
+--- a/drivers/md/Makefile
++++ b/drivers/md/Makefile
+@@ -8,6 +8,7 @@ dm-multipath-objs := dm-hw-handler.o dm-path-selector.o dm-mpath.o
+ dm-snapshot-objs := dm-snap.o dm-exception-store.o
+ dm-mirror-objs	:= dm-log.o dm-raid1.o
+ dm-rdac-objs	:= dm-mpath-rdac.o
++dm-alua-objs	:= dm-mpath-alua.o
+ md-mod-objs     := md.o bitmap.o
+ raid456-objs	:= raid5.o raid6algos.o raid6recov.o raid6tables.o \
+ 		   raid6int1.o raid6int2.o raid6int4.o \
+@@ -36,6 +37,7 @@ obj-$(CONFIG_DM_DELAY)		+= dm-delay.o
+ obj-$(CONFIG_DM_MULTIPATH)	+= dm-multipath.o dm-round-robin.o
+ obj-$(CONFIG_DM_MULTIPATH_EMC)	+= dm-emc.o
+ obj-$(CONFIG_DM_MULTIPATH_RDAC)	+= dm-rdac.o
++obj-$(CONFIG_DM_MULTIPATH_ALUA)	+= dm-alua.o
+ obj-$(CONFIG_DM_SNAPSHOT)	+= dm-snapshot.o
+ obj-$(CONFIG_DM_MIRROR)		+= dm-mirror.o
+ obj-$(CONFIG_DM_ZERO)		+= dm-zero.o
+diff --git a/drivers/md/dm-mpath-alua.c b/drivers/md/dm-mpath-alua.c
+new file mode 100644
+index 0000000..40b9d4d
+--- /dev/null
++++ b/drivers/md/dm-mpath-alua.c
+@@ -0,0 +1,662 @@
++/*
++ * Generic SCSI-3 ALUA DM HW handler
++ *
++ * Copyright (C) 2007 Hannes Reinecke. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License as published by
++ * the Free Software Foundation; either version 2 of the License, or
++ * (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software
++ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
++ *
 + */
-+int blk_delete_timer(struct request *req)
++#include <scsi/scsi.h>
++#include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_eh.h>
++
++#define DM_MSG_PREFIX "multipath alua"
++
++#include "dm.h"
++#include "dm-hw-handler.h"
++
++#define ALUA_DM_HWH_NAME "alua"
++#define ALUA_DM_HWH_VER "0.2"
++
++enum tpgs_state {
++	TPGS_STATE_UNKNOWN = -1,
++	TPGS_STATE_OPTIMIZED = 0x0,
++	TPGS_STATE_NONOPTIMIZED,
++	TPGS_STATE_STANDBY,
++	TPGS_STATE_UNAVAILABLE,
++	TPGS_STATE_OFFLINE = 0xe,
++	TPGS_STATE_TRANSITIONING,
++};
++
++#define TPGS_SUPPORT_NONE		0x00
++#define TPGS_SUPPORT_OPTIMIZED		0x01
++#define TPGS_SUPPORT_NONOPTIMIZED	0x02
++#define TPGS_SUPPORT_STANDBY		0x04
++#define TPGS_SUPPORT_UNAVAILABLE	0x08
++#define TPGS_SUPPORT_OFFLINE		0x40
++#define TPGS_SUPPORT_TRANSITION		0x80
++
++#define TPGS_MODE_UNINITIALIZED	-1
++#define TPGS_MODE_NONE		0x0
++#define TPGS_MODE_IMPLICIT	0x1
++#define TPGS_MODE_EXPLICIT	0x2
++
++#define TPGS_INQUIRY_SIZE	36
++#define TPGS_FAILOVER_TIMEOUT	(60 * HZ)
++
++struct alua_handler {
++	struct dm_path		*path;
++	int			debug;
++	int			group_id;
++	int			rel_port;
++	int			tpgs;
++	enum tpgs_state		state;
++	unsigned char		inq[TPGS_INQUIRY_SIZE];
++	unsigned char		*buff;
++	int			bufflen;
++	unsigned char		sense[SCSI_SENSE_BUFFERSIZE];
++};
++
++#define ALUA_POLICY_SWITCH_CURRENT	0
++#define ALUA_POLICY_SWITCH_ALL		1
++
++#define DPRINT(h, f, arg...) \
++	if (h->debug) DMINFO("%s: " f, h->path->dev->name, arg)
++
++static inline int had_failures(int error)
 +{
-+	if (!req->q->rq_timed_out_fn)
-+		return 1;
- 
--void blk_complete_request(struct request *req)
-+	if (!list_empty(&req->timeout_list)) {
-+		list_del_init(&req->timeout_list);
++	return (host_byte(error) != DID_OK ||
++		msg_byte(error) != COMMAND_COMPLETE);
++}
++
++static int realloc_buffer(struct alua_handler *h, unsigned len)
++{
++	if (h->buff && h->buff != h->inq)
++		kfree(h->buff);
++
++	h->buff = kmalloc(len, GFP_ATOMIC);
++	if (!h->buff) {
++		DMINFO("%s: kmalloc buffer failed",__FUNCTION__);
++		h->buff = h->inq;
++		h->bufflen = TPGS_INQUIRY_SIZE;
 +		return 1;
 +	}
++	h->bufflen = len;
++	return 0;
++}
++
++static struct request *prepare_req(struct alua_handler *h,
++				   void *buffer, unsigned buflen, int rw)
++{
++	struct request *rq;
++	struct request_queue *q = bdev_get_queue(h->path->dev->bdev);
++
++	if (!q) {
++		DMWARN("%s: no queue", __FUNCTION__);
++		return NULL;
++	}
++
++	rq = blk_get_request(q, rw, GFP_KERNEL);
++
++	if (!rq) {
++		DMINFO("%s: blk_get_request failed", __FUNCTION__);
++		return NULL;
++	}
++
++	if (buflen && blk_rq_map_kern(q, rq, buffer, buflen, GFP_KERNEL)) {
++		blk_put_request(rq);
++		DMINFO("%s: blk_rq_map_kern failed", __FUNCTION__);
++		return NULL;
++	}
++
++	memset(&rq->cmd, 0, BLK_MAX_CDB);
++	rq->sense = h->sense;
++	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
++	rq->sense_len = 0;
++
++	rq->timeout = TPGS_FAILOVER_TIMEOUT;
++	rq->cmd_type = REQ_TYPE_BLOCK_PC;
++	rq->cmd_flags |= REQ_FAILFAST | REQ_NOMERGE;
++	rq->end_io_data = h;
++
++	return rq;
++}
++
++/*
++ * Issue a standard INQUIRY command
++ */
++static int submit_std_inquiry(struct alua_handler *h)
++{
++	struct request *rq;
++	unsigned err = (DRIVER_ERROR << 24);
++
++	rq = prepare_req(h, h->inq, TPGS_INQUIRY_SIZE, READ);
++	if (!rq)
++		return err;
++
++	/* Prepare the command. */
++	rq->cmd[0] = INQUIRY;
++	rq->cmd[1] = 0;
++	rq->cmd[2] = 0;
++	rq->cmd[4] = TPGS_INQUIRY_SIZE;
++	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++
++	blk_execute_rq(rq->q, NULL, rq, 1);
++	err = rq->errors;
++	blk_put_request(rq);
++
++	return err;
++}
++
++/*
++ * Issue an INQUIRY VPD page 0x83 command
++ */
++static int submit_vpd_inquiry(struct alua_handler *h)
++{
++	struct request *rq;
++	unsigned err = (DRIVER_ERROR << 24);
++
++	rq = prepare_req(h, h->buff, h->bufflen, READ);
++	if (!rq) {
++		DMWARN("failed to send INQUIRY VPD page 0x83");
++		return err;
++	}
++
++	/* Prepare the command. */
++	rq->cmd[0] = INQUIRY;
++	rq->cmd[1] = 1;
++	rq->cmd[2] = 0x83;
++	rq->cmd[4] = h->bufflen;
++	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++
++	DPRINT(h, "submit INQUIRY VPD page 0x83 len %d", h->bufflen);
++	blk_execute_rq(rq->q, NULL, rq, 1);
++	err = rq->errors;
++	blk_put_request(rq);
++
++	return err;
++}
++
++/*
++ * Issue a REPORT TARGET GROUP STATES command.
++ */
++static unsigned submit_rtpg(struct alua_handler *h)
++{
++	struct request *rq;
++	unsigned err = (DRIVER_ERROR << 24);
++
++	rq = prepare_req(h, h->buff, h->bufflen, READ);
++	if (!rq)
++		return err;
++
++	/* Prepare the command. */
++	rq->cmd[0] = MAINTENANCE_IN;
++	rq->cmd[1] = MI_REPORT_TARGET_PGS;
++	rq->cmd[6] = (h->bufflen >> 24) & 0xff;
++	rq->cmd[7] = (h->bufflen >> 16) & 0xff;
++	rq->cmd[8] = (h->bufflen >>  8) & 0xff;
++	rq->cmd[9] = h->bufflen & 0xff;
++	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_IN);
++
++	DPRINT(h, "submit REPORT TARGET GROUP STATES len %d", h->bufflen);
++	blk_execute_rq(rq->q, NULL, rq, 1);
++	err = rq->errors;
++	blk_put_request(rq);
++
++	return err;
++}
++
++/*
++ * Issue a SET TARGET GROUP STATES command.
++ *
++ * Currently we're only setting the current target port group state
++ * to 'active/optimized' and let the array firmware figure out
++ * the states of the remaining groups.
++ */
++static unsigned submit_stpg(struct alua_handler *h)
++{
++	struct request *rq;
++	int stpg_len = 8;
++	unsigned err = (DRIVER_ERROR << 24);
++
++	/* Prepare the data buffer */
++	memset(h->buff, 0, stpg_len);
++	h->buff[4] = TPGS_STATE_OPTIMIZED & 0x0f;
++	h->buff[6] = (h->group_id >> 8) & 0x0f;
++	h->buff[7] = h->group_id & 0x0f;
++
++	rq = prepare_req(h, h->buff, stpg_len, WRITE);
++	if (!rq)
++		return err;
++
++	/* Prepare the command. */
++	rq->cmd[0] = MAINTENANCE_OUT;
++	rq->cmd[1] = MO_SET_TARGET_PGS;
++	rq->cmd[6] = (stpg_len >> 24) & 0xff;
++	rq->cmd[7] = (stpg_len >> 16) & 0xff;
++	rq->cmd[8] = (stpg_len >>  8) & 0xff;
++	rq->cmd[9] = stpg_len & 0xff;
++	rq->cmd_len = COMMAND_SIZE(MAINTENANCE_OUT);
++
++	if (h->debug)
++		DMINFO("%s: submit SET TARGET GROUP STATES",
++		       h->path->dev->name);
++
++	blk_execute_rq(rq->q, NULL, rq, 1);
++	err = rq->errors;
++	blk_put_request(rq);
++
++	return err;
++}
++
++/*
++ * Evaluate standard INQUIRY command
++ *
++ * Just extract the TPGS setting to find out if ALUA
++ * is supported.
++ */
++static void alua_std_inquiry(struct alua_handler *h)
++{
++	int error;
++
++	error = submit_std_inquiry(h);
++
++	if (had_failures(error)) {
++		dm_pg_init_complete(h->path, MP_FAIL_PATH);
++		return;
++	}
++
++	/* Check TPGS setting */
++	h->tpgs = (h->inq[5] >> 4) & 0x3;
++	switch (h->tpgs) {
++	case TPGS_MODE_EXPLICIT|TPGS_MODE_IMPLICIT:
++		DMWARN("%s: supports implicit and explicit TPGS",
++		       h->path->dev->name);
++		break;
++	case TPGS_MODE_EXPLICIT:
++		DMWARN("%s: supports explicit TPGS",
++		       h->path->dev->name);
++		break;
++	case TPGS_MODE_IMPLICIT:
++		DMWARN("%s: supports implicit TPGS",
++		       h->path->dev->name);
++		break;
++	default:
++		DMWARN("%s:TPGS not supported",
++		       h->path->dev->name);
++		break;
++	}
++
++	if (h->tpgs == TPGS_MODE_NONE) {
++		/*
++		 * ALUA not supported
++		 */
++		dm_pg_init_complete(h->path, 0);
++	}
++	/*
++	 * Don't call dm_pg_init_complete, continue
++	 * with INQUIRY VPD page 0x83 command.
++	 */
++	return;
++}
++
++/*
++ * Evaluate INQUIRY vpd page 0x83
++ *
++ * Extract the relative target port and the target port group
++ * descriptor from the list of identificators.
++ */
++static void alua_vpd_inquiry(struct alua_handler *h)
++{
++	int len;
++	unsigned error;
++	unsigned char *d;
++
++ retry:
++	error = submit_vpd_inquiry(h);
++
++	if (had_failures(error)) {
++		dm_pg_init_complete(h->path, MP_FAIL_PATH);
++		return;
++	}
++
++	/* Check if vpd page exceeds initial buffer */
++	len = (h->buff[2] << 8) + h->buff[3] + 4;
++	if (len > h->bufflen) {
++		/* Resubmit with the correct length */
++		if (realloc_buffer(h, len)) {
++			DMINFO("%s: kmalloc buffer failed",__FUNCTION__);
++			/* Temporary failure, bypass */
++			dm_pg_init_complete(h->path, MP_BYPASS_PG);
++			return;
++		}
++		goto retry;
++	}
++
++	/*
++	 * Now look for the correct descriptor.
++	 */
++	d = h->buff + 4;
++	while (d < h->buff + len) {
++		switch (d[1] & 0xf) {
++		case 0x4:
++			/* Relative target port */
++			h->rel_port = (d[6] << 8) + d[7];
++			break;
++		case 0x5:
++			/* Target port group */
++			h->group_id = (d[6] << 8) + d[7];
++			break;
++		default:
++			break;
++		}
++		d += d[3] + 4;
++	}
++
++	if (h->group_id == -1) {
++		/*
++		 * Internal error; TPGS supported but required
++		 * VPD identification descriptors not present.
++		 * Disable ALUA support
++		 */
++		DMWARN("%s: No target port descriptors in VPD page 0x83\n",
++		       h->path->dev->name);
++		h->state = TPGS_STATE_OPTIMIZED;
++		h->tpgs = TPGS_MODE_NONE;
++		dm_pg_init_complete(h->path, 0);
++	} else {
++		DMWARN("%s: port group %02x rel port %02x",
++		       h->path->dev->name, h->group_id, h->rel_port);
++	}
++
++	/*
++	 * Don't call dm_pg_init_complete, continue
++	 * with REPORT TARGET GROUP STATES command.
++	 */
++	return;
++}
++
++static char print_alua_state(enum tpgs_state s)
++{
++	switch (s) {
++	case TPGS_STATE_OPTIMIZED:
++		return 'A';
++	case TPGS_STATE_NONOPTIMIZED:
++		return 'N';
++	case TPGS_STATE_STANDBY:
++		return 'S';
++	case TPGS_STATE_UNAVAILABLE:
++		return 'U';
++	case TPGS_STATE_OFFLINE:
++		return 'O';
++	case TPGS_STATE_TRANSITIONING:
++		return 'T';
++	default:
++		return 'X';
++	}
++}
++
++/*
++ * Evaluate SET TARGET GROUP STATES
++ *
++ * We only have to test here if we should resubmit the command;
++ * any other error is assumed as a failure.
++ * Maybe we should analyze the sensebuffer here, too.
++ */
++static void alua_stpg(struct alua_handler *h, enum tpgs_state n)
++{
++	unsigned error;
++	int retry = 5;
++
++ retry:
++	error = submit_stpg(h);
++	switch(host_byte(error)) {
++	case DID_BUS_BUSY:
++		if (!retry)
++			break;
++		retry++;
++	case DID_REQUEUE:
++	case DID_IMM_RETRY:
++		goto retry;
++	}
++
++	if (had_failures(error)) {
++		DMWARN("%s: stpg failed %x, disable path",
++		       h->path->dev->name, error);
++		dm_pg_init_complete(h->path, MP_FAIL_PATH);
++	} else {
++		h-state = n;
++		DMWARN("%s: port group %02x new state %c",
++		       h->path->dev->name, h->group_id,
++		       print_alua_state(h->state) );
++		dm_pg_init_complete(h->path, 0);
++	}
++}
++
++/*
++ * Evaluate REPORT TARGET GROUP STATES
++ *
++ * Set the Target Port Group State. If the state
++ * is not 'active/optimized' we will try to activate
++ * this group by sending a 'SET TARGET GROUP STATES'
++ * command.
++ * If the state is 'offline' we will just fail the
++ * path.
++ */
++static void alua_rtpg(struct alua_handler *h)
++{
++	struct scsi_sense_hdr sense_hdr;
++	int len, k, off, valid_states = 0, sense = 0;
++	char *ucp;
++	unsigned error;
++
++ retry:
++	error = submit_rtpg(h);
++
++	if (had_failures(error)) {
++		dm_pg_init_complete(h->path, MP_FAIL_PATH);
++		return;
++	}
++
++	if (status_byte(error) == CHECK_CONDITION) {
++		scsi_normalize_sense(h->sense, SCSI_SENSE_BUFFERSIZE,
++				     &sense_hdr);
++		/* Retry if not ready */
++		if (sense_hdr.sense_key == NOT_READY) {
++			DMWARN("%s: device not ready, retry",
++			       h->path->dev->name);
++			goto retry;
++		}
++		/* Retry on Unit Attention */
++		sense = (sense_hdr.sense_key << 16) | (sense_hdr.asc << 8) |
++				sense_hdr.ascq;
++		if (sense == 0x62a06) {
++			DMWARN("%s: unit attention after state transition",
++			       h->path->dev->name);
++			goto retry;
++		}
++	}
++
++	len = (h->buff[0] << 24) + (h->buff[1] << 16) +
++		(h->buff[2] << 8) + h->buff[3] + 4;
++
++	if (len > h->bufflen) {
++		/* Resubmit with the correct length */
++		if (realloc_buffer(h, len)) {
++			DMINFO("%s: kmalloc buffer failed",__FUNCTION__);
++			/* Temporary failure, bypass */
++			dm_pg_init_complete(h->path, MP_BYPASS_PG);
++			return;
++		}
++		goto retry;
++	}
++
++	for (k = 4, ucp = h->buff + 4; k < len; k += off, ucp += off) {
++		if (h->group_id == (ucp[2] << 8) + ucp[3]) {
++			h->state = ucp[0] & 0x0f;
++			valid_states = ucp[1];
++		}
++		off = 8 + (ucp[7] * 4);
++	}
++
++	DMWARN("%s: port group %02x state %c supports %c%c%c%c%c%c",
++	       h->path->dev->name, h->group_id, print_alua_state(h->state),
++	       valid_states&TPGS_SUPPORT_TRANSITION?'T':'t',
++	       valid_states&TPGS_SUPPORT_OFFLINE?'O':'o',
++	       valid_states&TPGS_SUPPORT_UNAVAILABLE?'U':'u',
++	       valid_states&TPGS_SUPPORT_STANDBY?'S':'s',
++	       valid_states&TPGS_SUPPORT_NONOPTIMIZED?'N':'n',
++	       valid_states&TPGS_SUPPORT_OPTIMIZED?'A':'a');
++
++	if (h->tpgs & TPGS_MODE_EXPLICIT) {
++		switch (h->state) {
++		case TPGS_STATE_TRANSITIONING:
++			/* State transition, retry */
++			goto retry;
++			break;
++		case TPGS_STATE_OPTIMIZED:
++			/* Path in Active/Optmized state, all done */
++			dm_pg_init_complete(h->path, 0);
++			break;
++		case TPGS_STATE_OFFLINE:
++			/* Path is offline, fail */
++			dm_pg_init_complete(h->path, MP_FAIL_PATH);
++			break;
++		default:
++			/* Switch path to Active/Optimized */
++			alua_stpg(h, TPGS_STATE_OPTIMIZED);
++			break;
++		}
++	} else {
++		/* Only Implicit ALUA support */
++		if (h->state == TPGS_STATE_OPTIMIZED ||
++		    h->state == TPGS_STATE_NONOPTIMIZED ||
++		    h->state == TPGS_STATE_STANDBY)
++			/* Useable path if active */
++			dm_pg_init_complete(h->path, 0);
++		else
++			/* Path unuseable for unavailable/offline */
++			dm_pg_init_complete(h->path, MP_FAIL_PATH);
++	}
++}
++
++/*
++ * We're currently switching the port group to be activated only and
++ * let the array figure out the rest.
++ * There may be others arrays which require us to switch all port groups
++ * based on a certain policy. But until we actually encounter them this
++ * should be okay.
++ */
++static int alua_create(struct hw_handler *hwh, unsigned argc, char **argv)
++{
++	struct alua_handler *h;
++	int debug = 0;
++
++	if (argc == 0) {
++		/* No arguments: use defaults */
++		debug = 0;
++	} else if (argc != 1) {
++		DMWARN("incorrect number of arguments");
++		return -EINVAL;
++	} else {
++		if (sscanf(argv[1], "%u", &debug) != 1) {
++			DMWARN("invalid debug value");
++			return -EINVAL;
++		}
++	}
++
++	h = kzalloc(sizeof(*h), GFP_KERNEL);
++	if (!h)
++		return -ENOMEM;
++
++	hwh->context = h;
++	h->debug = debug;
++	h->tpgs = TPGS_MODE_UNINITIALIZED;
++	h->group_id = -1;
++	h->rel_port = -1;
++	h->state = TPGS_STATE_UNKNOWN;
++	h->buff = h->inq;
++	h->bufflen = TPGS_INQUIRY_SIZE;
 +
 +	return 0;
 +}
-+EXPORT_SYMBOL_GPL(blk_delete_timer);
 +
-+static void blk_rq_timed_out(struct request *req)
++static void alua_destroy(struct hw_handler *hwh)
 +{
-+	struct request_queue *q = req->q;
-+	enum blk_eh_timer_return ret;
++	struct alua_handler *h = hwh->context;
 +
-+	ret = q->rq_timed_out_fn(req);
-+	switch (ret) {
-+	case BLK_EH_HANDLED:
-+		__blk_complete_request(req);
-+		break;
-+	case BLK_EH_RESET_TIMER:
-+		blk_add_timer(req);
-+		break;
-+	case BLK_EH_NOT_HANDLED:
-+		/*
-+		 * LLD handles this for now but in the future
-+		 * we can send a request msg to abort the command
-+		 * and we can move more of the generic scsi eh code to
-+		 * the blk layer.
-+		 */
-+		break;
-+	default:
-+		printk(KERN_ERR "block: bad eh return: %d\n", ret);
-+		break;
-+	}
++	if (h->buff && h->inq != h->buff)
++		kfree(h->buff);
++	kfree(h);
++	hwh->context = NULL;
 +}
 +
-+static void blk_rq_timed_out_timer(unsigned long data)
++static unsigned alua_error(struct hw_handler *hwh, struct bio *bio)
 +{
-+	struct request_queue *q = (struct request_queue *) data;
-+	unsigned long flags, next = 0;
-+	struct request *rq, *tmp;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+
-+	list_for_each_entry_safe(rq, tmp, &q->timeout_list, timeout_list) {
-+		if (!next || time_before(next, rq->timeout))
-+			next = rq->timeout;
-+		if (time_after_eq(jiffies, rq->timeout))
-+			blk_rq_timed_out(rq);
-+	}
-+
-+	if (next)
-+		mod_timer(&q->timeout, round_jiffies(next));
-+
-+	spin_unlock_irqrestore(q->queue_lock, flags);
++	/* Try default handler */
++	return dm_scsi_err_handler(hwh, bio);
 +}
 +
-+/**
-+ * blk_abort_req -- Request request recovery for the specified command
-+ * @req:	pointer to the request of interest
-+ *
-+ * This function requests that the block layer start recovery for the
-+ * request by deleting the timer and calling the q's timeout function.
-+ * LLDDs who implement their own error recovery MAY ignore the timeout
-+ * event if they generated blk_abort_req.
-+ */
-+void blk_abort_req(struct request *req)
++static void alua_pg_init(struct hw_handler *hwh, unsigned bypassed,
++			struct dm_path *path)
 +{
-+        if (!blk_delete_timer(req))
-+                return;
-+        blk_rq_timed_out(req);
-+}
-+EXPORT_SYMBOL_GPL(blk_abort_req);
++	struct alua_handler *h = hwh->context;
 +
-+/**
-+ * blk_add_timer - Start timeout timer for a single request
-+ * @req:	request that is about to start running.
-+ *
-+ * Notes:
-+ *    Each request has its own timer, and as it is added to the queue, we
-+ *    set up the timer.  When the request completes, we cancel the timer.
-+ */
-+void blk_add_timer(struct request *req)
-+{
-+	struct request_queue *q = req->q;
-+	unsigned long expiry;
-+
-+	BUG_ON(!list_empty(&req->timeout_list));
-+
-+	if (req->timeout)
-+		expiry = jiffies + req->timeout;
-+	else
-+		expiry = jiffies + q->rq_timeout;
-+
-+	req->timeout = expiry;
-+	list_add_tail(&req->timeout_list, &q->timeout_list);
-+
-+	/*
-+	 * This is for timeout purposes, round to next second
-+	 */
-+	expiry = round_jiffies(expiry);
-+
-+	if (!timer_pending(&q->timeout) || time_before(expiry, q->timeout.expires))
-+		mod_timer(&q->timeout, expiry);
-+}
-+EXPORT_SYMBOL_GPL(blk_add_timer);
-+
-+void __blk_complete_request(struct request *req)
- {
- 	struct list_head *cpu_list;
- 	unsigned long flags;
- 
- 	BUG_ON(!req->q->softirq_done_fn);
--		
-+
- 	local_irq_save(flags);
- 
- 	cpu_list = &__get_cpu_var(blk_cpu_done);
-@@ -3627,8 +3753,34 @@ void blk_complete_request(struct request *req)
- 	local_irq_restore(flags);
- }
- 
-+/**
-+ * blk_complete_request - end I/O on a request
-+ * @req:	the request being processed
-+ *
-+ * Description:
-+ *     Ends all I/O on a request. It does not handle partial completions,
-+ *     unless the driver actually implements this in its completion callback
-+ *     through requeueing. Theh actual completion happens out-of-order,
-+ *     through a softirq handler. The user must have registered a completion
-+ *     callback through blk_queue_softirq_done().
-+ */
-+void blk_complete_request(struct request *req)
-+{
-+	/*
-+	 * We don't have to worry about this one timing out any more.
-+	 * If we are unable to remove the timer, then the command
-+	 * has already timed out.  In which case, we have no choice but to
-+	 * let the timeout function run, as we have no idea where in fact
-+	 * that function could really be.  It might be on another processor,
-+	 * etc, etc.
-+	 */
-+	if (!blk_delete_timer(req))
-+		return;
-+
-+	__blk_complete_request(req);
-+}
- EXPORT_SYMBOL(blk_complete_request);
--	
-+
- /*
-  * queue lock must be held
-  */
-diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
-index ac6ceed..017a236 100644
---- a/drivers/ata/libata-eh.c
-+++ b/drivers/ata/libata-eh.c
-@@ -33,6 +33,7 @@
-  */
- 
- #include <linux/kernel.h>
-+#include <linux/blkdev.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_eh.h>
-@@ -244,29 +245,29 @@ static void ata_eh_clear_action(struct ata_device *dev,
-  *	RETURNS:
-  *	EH_HANDLED or EH_NOT_HANDLED
-  */
--enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd)
-+enum blk_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host = cmd->device->host;
- 	struct ata_port *ap = ata_shost_to_port(host);
- 	unsigned long flags;
- 	struct ata_queued_cmd *qc;
--	enum scsi_eh_timer_return ret;
-+	enum blk_eh_timer_return ret;
- 
- 	DPRINTK("ENTER\n");
- 
- 	if (ap->ops->error_handler) {
--		ret = EH_NOT_HANDLED;
-+		ret = BLK_EH_NOT_HANDLED;
- 		goto out;
- 	}
- 
--	ret = EH_HANDLED;
-+	ret = BLK_EH_HANDLED;
- 	spin_lock_irqsave(ap->lock, flags);
- 	qc = ata_qc_from_tag(ap, ap->active_tag);
- 	if (qc) {
- 		WARN_ON(qc->scsicmd != cmd);
- 		qc->flags |= ATA_QCFLAG_EH_SCHEDULED;
- 		qc->err_mask |= AC_ERR_TIMEOUT;
--		ret = EH_NOT_HANDLED;
-+		ret = BLK_EH_NOT_HANDLED;
- 	}
- 	spin_unlock_irqrestore(ap->lock, flags);
- 
-@@ -692,7 +693,7 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
- 	 * Note that ATA_QCFLAG_FAILED is unconditionally set after
- 	 * this function completes.
- 	 */
--	scsi_req_abort_cmd(qc->scsicmd);
-+	blk_abort_req(qc->scsicmd->request);
- }
- 
- /**
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 564cd23..6021b9c 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -148,7 +148,7 @@ extern void ata_scsi_dev_rescan(struct work_struct *work);
- extern int ata_bus_probe(struct ata_port *ap);
- 
- /* libata-eh.c */
--extern enum scsi_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
-+extern enum blk_eh_timer_return ata_scsi_timed_out(struct scsi_cmnd *cmd);
- extern void ata_scsi_error(struct Scsi_Host *host);
- extern void ata_port_wait_eh(struct ata_port *ap);
- extern void ata_eh_fastdrain_timerfn(unsigned long arg);
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 6800e57..6fa65c8 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1125,7 +1125,7 @@ static struct aac_srb * aac_scsi_common(struct fib * fib, struct scsi_cmnd * cmd
- 	srbcmd->id       = cpu_to_le32(scmd_id(cmd));
- 	srbcmd->lun      = cpu_to_le32(cmd->device->lun);
- 	srbcmd->flags    = cpu_to_le32(flag);
--	timeout = cmd->timeout_per_command/HZ;
-+	timeout = cmd->request->timeout/HZ;
- 	if (timeout == 0)
- 		timeout = 1;
- 	srbcmd->timeout  = cpu_to_le32(timeout);  // timeout in seconds
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 79c0b6e..d139075 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -7901,7 +7901,7 @@ static void asc_prt_scsi_cmnd(struct scsi_cmnd *s)
- 	printk(" serial_number 0x%x, retries %d, allowed %d\n",
- 	       (unsigned)s->serial_number, s->retries, s->allowed);
- 
--	printk(" timeout_per_command %d\n", s->timeout_per_command);
-+	printk(" request timeout %d\n", s->request->timeout);
- 
- 	printk
- 	    (" scsi_done 0x%lx, done 0x%lx, host_scribble 0x%lx, result 0x%x\n",
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 55e4d2d..c5fc436 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -733,7 +733,6 @@ int __gdth_execute(struct scsi_device *sdev, gdth_cmd_str *gdtcmd, char *cmnd,
-     scp->device = sdev;
-     /* use request field to save the ptr. to completion struct. */
-     scp->request = (struct request *)&wait;
--    scp->timeout_per_command = timeout*HZ;
-     scp->request_buffer = gdtcmd;
-     scp->cmd_len = 12;
-     memcpy(scp->cmnd, cmnd, 12);
-@@ -4948,7 +4947,7 @@ static int gdth_queuecommand(Scsi_Cmnd *scp,void (*done)(Scsi_Cmnd *))
-     if (scp->done == gdth_scsi_done)
-         priority = scp->SCp.this_residual;
-     else
--        gdth_update_timeout(hanum, scp, scp->timeout_per_command * 6);
-+        gdth_update_timeout(hanum, scp, scp->request->timeout* 6);
- 
-     gdth_putq( hanum, scp, priority );
-     gdth_next( hanum );
-diff --git a/drivers/scsi/gdth_proc.c b/drivers/scsi/gdth_proc.c
-index 32982eb..22a9013 100644
---- a/drivers/scsi/gdth_proc.c
-+++ b/drivers/scsi/gdth_proc.c
-@@ -846,19 +846,19 @@ static int gdth_update_timeout(int hanum, Scsi_Cmnd *scp, int timeout)
- {
-     int oldto;
- 
--    oldto = scp->timeout_per_command;
--    scp->timeout_per_command = timeout;
-+    oldto = scp->request->timeout;
-+    scp->request->timeout = timeout;
- 
-     if (timeout == 0) {
--        del_timer(&scp->eh_timeout);
--        scp->eh_timeout.data = (unsigned long) NULL;
--        scp->eh_timeout.expires = 0;
-+        del_timer(&scp->request->timer);
-+        scp->request->timer.data = (unsigned long) NULL;
-+        scp->request->timer.expires = 0;
-     } else {
--        if (scp->eh_timeout.data != (unsigned long) NULL) 
--            del_timer(&scp->eh_timeout);
--        scp->eh_timeout.data = (unsigned long) scp;
--        scp->eh_timeout.expires = jiffies + timeout;
--        add_timer(&scp->eh_timeout);
-+        if (scp->request->timer.data != (unsigned long) NULL) 
-+            del_timer(&scp->request->timer);
-+        scp->request->timer.data = (unsigned long) scp;
-+        scp->request->timer.expires = jiffies + timeout;
-+        add_timer(&scp->request->timer);
-     }
- 
-     return oldto;
-diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
-index 5ecc63d..04dbe3b 100644
---- a/drivers/scsi/ibmvscsi/ibmvscsi.c
-+++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
-@@ -726,7 +726,7 @@ static int ibmvscsi_queuecommand(struct scsi_cmnd *cmnd,
- 	init_event_struct(evt_struct,
- 			  handle_cmd_rsp,
- 			  VIOSRP_SRP_FORMAT,
--			  cmnd->timeout_per_command/HZ);
-+			  cmnd->request->timeout/HZ);
- 
- 	evt_struct->cmnd = cmnd;
- 	evt_struct->cmnd_done = done;
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index 1cc01ac..2035923 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -916,7 +916,7 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
- 	pc->request_transfer = pc->buffer_size = cmd->request_bufflen;
- 	pc->scsi_cmd = cmd;
- 	pc->done = done;
--	pc->timeout = jiffies + cmd->timeout_per_command;
-+	pc->timeout = jiffies + cmd->request->timeout;
- 
- 	if (should_transform(drive, cmd))
- 		set_bit(PC_TRANSFORM, &pc->flags);
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index f142eaf..b351f14 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -3654,7 +3654,8 @@ static int ipr_slave_configure(struct scsi_device *sdev)
- 			sdev->no_uld_attach = 1;
- 		}
- 		if (ipr_is_vset_device(res)) {
--			sdev->timeout = IPR_VSET_RW_TIMEOUT;
-+			blk_queue_rq_timeout(sdev->request_queue,
-+					     IPR_VSET_RW_TIMEOUT);
- 			blk_queue_max_sectors(sdev->request_queue, IPR_VSET_MAX_SECTORS);
- 		}
- 		if (ipr_is_vset_device(res) || ipr_is_scsi_disk(res))
-diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 492a51b..c81dd8f 100644
---- a/drivers/scsi/ips.c
-+++ b/drivers/scsi/ips.c
-@@ -3860,7 +3860,7 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
- 		scb->cmd.dcdb.segment_4G = 0;
- 		scb->cmd.dcdb.enhanced_sg = 0;
- 
--		TimeOut = scb->scsi_cmd->timeout_per_command;
-+		TimeOut = scb->scsi_cmd->request->timeout;
- 
- 		if (ha->subsys->param[4] & 0x00100000) {	/* If NEW Tape DCDB is Supported */
- 			if (!scb->sg_len) {
-diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
-index 5e573ef..f3ae2df 100644
---- a/drivers/scsi/libsas/sas_ata.c
-+++ b/drivers/scsi/libsas/sas_ata.c
-@@ -408,7 +408,7 @@ void sas_ata_task_abort(struct sas_task *task)
- 
- 	/* Bounce SCSI-initiated commands to the SCSI EH */
- 	if (qc->scsicmd) {
--		scsi_req_abort_cmd(qc->scsicmd);
-+		blk_abort_req(qc->scsicmd->request);
- 		scsi_schedule_eh(qc->scsicmd->device->host);
- 		return;
- 	}
-diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
-index 2b8213b..13ac4a3 100644
---- a/drivers/scsi/libsas/sas_internal.h
-+++ b/drivers/scsi/libsas/sas_internal.h
-@@ -55,7 +55,7 @@ void sas_unregister_phys(struct sas_ha_struct *sas_ha);
- int  sas_register_ports(struct sas_ha_struct *sas_ha);
- void sas_unregister_ports(struct sas_ha_struct *sas_ha);
- 
--enum scsi_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *);
-+enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *);
- 
- int  sas_init_queue(struct sas_ha_struct *sas_ha);
- int  sas_init_events(struct sas_ha_struct *sas_ha);
-diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
-index 7663841..6d6867c 100644
---- a/drivers/scsi/libsas/sas_scsi_host.c
-+++ b/drivers/scsi/libsas/sas_scsi_host.c
-@@ -654,43 +654,43 @@ out:
- 	return;
- }
- 
--enum scsi_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
-+enum blk_eh_timer_return sas_scsi_timed_out(struct scsi_cmnd *cmd)
- {
- 	struct sas_task *task = TO_SAS_TASK(cmd);
- 	unsigned long flags;
- 
- 	if (!task) {
--		cmd->timeout_per_command /= 2;
-+		cmd->request->timeout /= 2;
- 		SAS_DPRINTK("command 0x%p, task 0x%p, gone: %s\n",
--			    cmd, task, (cmd->timeout_per_command ?
--			    "EH_RESET_TIMER" : "EH_NOT_HANDLED"));
--		if (!cmd->timeout_per_command)
--			return EH_NOT_HANDLED;
--		return EH_RESET_TIMER;
-+			    cmd, task, (cmd->request->timeout ?
-+			    "BLK_EH_RESET_TIMER" : "BLK_EH_NOT_HANDLED"));
-+		if (!cmd->request->timeout)
-+			return BLK_EH_NOT_HANDLED;
-+		return BLK_EH_RESET_TIMER;
- 	}
- 
- 	spin_lock_irqsave(&task->task_state_lock, flags);
- 	BUG_ON(task->task_state_flags & SAS_TASK_STATE_ABORTED);
- 	if (task->task_state_flags & SAS_TASK_STATE_DONE) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
--		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_HANDLED\n",
--			    cmd, task);
--		return EH_HANDLED;
-+		SAS_DPRINTK("command 0x%p, task 0x%p, timed out: "
-+			    "BLK_EH_HANDLED\n", cmd, task);
-+		return BLK_EH_HANDLED;
- 	}
- 	if (!(task->task_state_flags & SAS_TASK_AT_INITIATOR)) {
- 		spin_unlock_irqrestore(&task->task_state_lock, flags);
- 		SAS_DPRINTK("command 0x%p, task 0x%p, not at initiator: "
--			    "EH_RESET_TIMER\n",
-+			    "BLK_EH_RESET_TIMER\n",
- 			    cmd, task);
--		return EH_RESET_TIMER;
-+		return BLK_EH_RESET_TIMER;
- 	}
- 	task->task_state_flags |= SAS_TASK_STATE_ABORTED;
- 	spin_unlock_irqrestore(&task->task_state_lock, flags);
- 
--	SAS_DPRINTK("command 0x%p, task 0x%p, timed out: EH_NOT_HANDLED\n",
-+	SAS_DPRINTK("command 0x%p, task 0x%p, timed out: BLK_EH_NOT_HANDLED\n",
- 		    cmd, task);
- 
--	return EH_NOT_HANDLED;
-+	return BLK_EH_NOT_HANDLED;
- }
- 
- int sas_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
-@@ -1020,7 +1020,7 @@ void sas_task_abort(struct sas_task *task)
- 		return;
- 	}
- 
--	scsi_req_abort_cmd(sc);
-+	blk_abort_req(sc->request);
- 	scsi_schedule_eh(sc->device->host);
- }
- 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.c b/drivers/scsi/megaraid/megaraid_sas.c
-index ebb948c..84c0eb4 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -969,7 +969,7 @@ static int megasas_generic_reset(struct scsi_cmnd *scmd)
-  * cmd has not been completed within the timeout period.
-  */
- static enum
--scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
-+blk_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
- {
- 	struct megasas_cmd *cmd = (struct megasas_cmd *)scmd->SCp.ptr;
- 	struct megasas_instance *instance;
-@@ -977,7 +977,7 @@ scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
- 
- 	if (time_after(jiffies, scmd->jiffies_at_alloc +
- 				(MEGASAS_DEFAULT_CMD_TIMEOUT * 2) * HZ)) {
--		return EH_NOT_HANDLED;
-+		return BLK_EH_NOT_HANDLED;
- 	}
- 
- 	instance = cmd->instance;
-@@ -991,7 +991,7 @@ scsi_eh_timer_return megasas_reset_timer(struct scsi_cmnd *scmd)
- 
- 		spin_unlock_irqrestore(instance->host->host_lock, flags);
- 	}
--	return EH_RESET_TIMER;
-+	return BLK_EH_RESET_TIMER;
- }
- 
- /**
-diff --git a/drivers/scsi/ncr53c8xx.c b/drivers/scsi/ncr53c8xx.c
-index 030ba49..39c2d4b 100644
---- a/drivers/scsi/ncr53c8xx.c
-+++ b/drivers/scsi/ncr53c8xx.c
-@@ -4170,8 +4170,8 @@ static int ncr_queue_command (struct ncb *np, struct scsi_cmnd *cmd)
- 	**
- 	**----------------------------------------------------
- 	*/
--	if (np->settle_time && cmd->timeout_per_command >= HZ) {
--		u_long tlimit = jiffies + cmd->timeout_per_command - HZ;
-+	if (np->settle_time && cmd->request->timeout >= HZ) {
-+		u_long tlimit = jiffies + cmd->request->timeout - HZ;
- 		if (time_after(np->settle_time, tlimit))
- 			np->settle_time = tlimit;
- 	}
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 54d8bdf..f5d5b2a 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -2862,7 +2862,7 @@ qla1280_64bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
- 
- 	/* Set ISP command timeout. */
--	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
-+	pkt->timeout = cpu_to_le16(cmd->request->timeout/HZ);
- 
- 	/* Set device target ID and LUN */
- 	pkt->lun = SCSI_LUN_32(cmd);
-@@ -3161,7 +3161,7 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 	memset(((char *)pkt + 8), 0, (REQUEST_ENTRY_SIZE - 8));
- 
- 	/* Set ISP command timeout. */
--	pkt->timeout = cpu_to_le16(cmd->timeout_per_command/HZ);
-+	pkt->timeout = cpu_to_le16(cmd->request->timeout/HZ);
- 
- 	/* Set device target ID and LUN */
- 	pkt->lun = SCSI_LUN_32(cmd);
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index b1d565c..005eb66 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -1564,7 +1564,7 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
- 	DEBUG2(printk(KERN_INFO
- 		      "scsi%ld: DEVICE_RESET cmd=%p jiffies = 0x%lx, to=%x,"
- 		      "dpc_flags=%lx, status=%x allowed=%d\n", ha->host_no,
--		      cmd, jiffies, cmd->timeout_per_command / HZ,
-+		      cmd, jiffies, cmd->request->timeout / HZ,
- 		      ha->dpc_flags, cmd->result, cmd->allowed));
- 
- 	/* FIXME: wait for hba to go online */
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a5de1a8..e67eb6e 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -203,7 +203,6 @@ struct scsi_cmnd *scsi_get_command(struct scsi_device *dev, gfp_t gfp_mask)
- 
- 		memset(cmd, 0, sizeof(*cmd));
- 		cmd->device = dev;
--		init_timer(&cmd->eh_timeout);
- 		INIT_LIST_HEAD(&cmd->list);
- 		spin_lock_irqsave(&dev->list_lock, flags);
- 		list_add_tail(&cmd->list, &dev->cmd_list);
-@@ -472,14 +471,19 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	unsigned long timeout;
- 	int rtn = 0;
- 
-+	/*
-+	 * We will use a queued command if possible, otherwise we will
-+	 * emulate the queuing and calling of completion function ourselves.
-+	 */
-+	atomic_inc(&cmd->device->iorequest_cnt);
-+
- 	/* check if the device is still usable */
- 	if (unlikely(cmd->device->sdev_state == SDEV_DEL)) {
- 		/* in SDEV_DEL we error all commands. DID_NO_CONNECT
- 		 * returns an immediate error upwards, and signals
- 		 * that the device is no longer present */
- 		cmd->result = DID_NO_CONNECT << 16;
--		atomic_inc(&cmd->device->iorequest_cnt);
--		__scsi_done(cmd);
-+		scsi_done(cmd);
- 		/* return 0 (because the command has been processed) */
- 		goto out;
- 	}
-@@ -492,7 +496,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		 * future requests should not occur until the device 
- 		 * transitions out of the suspend state.
- 		 */
--		scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
-+
-+		scsi_queue_retry(cmd, SCSI_MLQUEUE_DEVICE_BUSY);
- 
- 		SCSI_LOG_MLQUEUE(3, printk("queuecommand : device blocked \n"));
- 
-@@ -534,21 +539,9 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 		host->resetting = 0;
- 	}
- 
--	/* 
--	 * AK: unlikely race here: for some reason the timer could
--	 * expire before the serial number is set up below.
--	 */
--	scsi_add_timer(cmd, cmd->timeout_per_command, scsi_times_out);
--
- 	scsi_log_send(cmd);
- 
- 	/*
--	 * We will use a queued command if possible, otherwise we will
--	 * emulate the queuing and calling of completion function ourselves.
--	 */
--	atomic_inc(&cmd->device->iorequest_cnt);
--
--	/*
- 	 * Before we queue this command, check if the command
- 	 * length exceeds what the host adapter can handle.
- 	 */
-@@ -562,6 +555,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	}
- 
- 	spin_lock_irqsave(host->host_lock, flags);
-+	/* 
-+	 * AK: unlikely race here: for some reason the timer could
-+	 * expire before the serial number is set up below.
-+	 *
-+	 * TODO: kill serial or move to blk layer
-+	 */
- 	scsi_cmd_get_serial(host, cmd); 
- 
- 	if (unlikely(host->shost_state == SHOST_DEL)) {
-@@ -572,12 +571,8 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- 	}
- 	spin_unlock_irqrestore(host->host_lock, flags);
- 	if (rtn) {
--		if (scsi_delete_timer(cmd)) {
--			atomic_inc(&cmd->device->iodone_cnt);
--			scsi_queue_insert(cmd,
--					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
--					  rtn : SCSI_MLQUEUE_HOST_BUSY);
--		}
-+		scsi_queue_retry(cmd, (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
-+						rtn : SCSI_MLQUEUE_HOST_BUSY);
- 		SCSI_LOG_MLQUEUE(3,
- 		    printk("queuecommand : request rejected\n"));
- 	}
-@@ -588,24 +583,6 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
- }
- 
- /**
-- * scsi_req_abort_cmd -- Request command recovery for the specified command
-- * cmd: pointer to the SCSI command of interest
-- *
-- * This function requests that SCSI Core start recovery for the
-- * command by deleting the timer and adding the command to the eh
-- * queue.  It can be called by either LLDDs or SCSI Core.  LLDDs who
-- * implement their own error recovery MAY ignore the timeout event if
-- * they generated scsi_req_abort_cmd.
-- */
--void scsi_req_abort_cmd(struct scsi_cmnd *cmd)
--{
--	if (!scsi_delete_timer(cmd))
--		return;
--	scsi_times_out(cmd);
--}
--EXPORT_SYMBOL(scsi_req_abort_cmd);
--
--/**
-  * scsi_done - Enqueue the finished SCSI command into the done queue.
-  * @cmd: The SCSI Command for which a low-level device driver (LLDD) gives
-  * ownership back to SCSI Core -- i.e. the LLDD has finished with it.
-@@ -620,42 +597,7 @@ EXPORT_SYMBOL(scsi_req_abort_cmd);
-  */
- static void scsi_done(struct scsi_cmnd *cmd)
- {
--	/*
--	 * We don't have to worry about this one timing out any more.
--	 * If we are unable to remove the timer, then the command
--	 * has already timed out.  In which case, we have no choice but to
--	 * let the timeout function run, as we have no idea where in fact
--	 * that function could really be.  It might be on another processor,
--	 * etc, etc.
--	 */
--	if (!scsi_delete_timer(cmd))
--		return;
--	__scsi_done(cmd);
--}
--
--/* Private entry to scsi_done() to complete a command when the timer
-- * isn't running --- used by scsi_times_out */
--void __scsi_done(struct scsi_cmnd *cmd)
--{
--	struct request *rq = cmd->request;
--
--	/*
--	 * Set the serial numbers back to zero
--	 */
--	cmd->serial_number = 0;
--
--	atomic_inc(&cmd->device->iodone_cnt);
--	if (cmd->result)
--		atomic_inc(&cmd->device->ioerr_cnt);
--
--	BUG_ON(!rq);
--
--	/*
--	 * The uptodate/nbytes values don't matter, as we allow partial
--	 * completes and thus will check this in the softirq callback
--	 */
--	rq->completion_data = cmd;
--	blk_complete_request(rq);
-+	blk_complete_request(cmd->request);
- }
- 
- /*
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 8a525ab..4475648 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -112,69 +112,8 @@ int scsi_eh_scmd_add(struct scsi_cmnd *scmd, int eh_flag)
- }
- 
- /**
-- * scsi_add_timer - Start timeout timer for a single scsi command.
-- * @scmd:	scsi command that is about to start running.
-- * @timeout:	amount of time to allow this command to run.
-- * @complete:	timeout function to call if timer isn't canceled.
-- *
-- * Notes:
-- *    This should be turned into an inline function.  Each scsi command
-- *    has its own timer, and as it is added to the queue, we set up the
-- *    timer.  When the command completes, we cancel the timer.
-- **/
--void scsi_add_timer(struct scsi_cmnd *scmd, int timeout,
--		    void (*complete)(struct scsi_cmnd *))
--{
--
--	/*
--	 * If the clock was already running for this command, then
--	 * first delete the timer.  The timer handling code gets rather
--	 * confused if we don't do this.
--	 */
--	if (scmd->eh_timeout.function)
--		del_timer(&scmd->eh_timeout);
--
--	scmd->eh_timeout.data = (unsigned long)scmd;
--	scmd->eh_timeout.expires = jiffies + timeout;
--	scmd->eh_timeout.function = (void (*)(unsigned long)) complete;
--
--	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p, time:"
--					  " %d, (%p)\n", __FUNCTION__,
--					  scmd, timeout, complete));
--
--	add_timer(&scmd->eh_timeout);
--}
--
--/**
-- * scsi_delete_timer - Delete/cancel timer for a given function.
-- * @scmd:	Cmd that we are canceling timer for
-- *
-- * Notes:
-- *     This should be turned into an inline function.
-- *
-- * Return value:
-- *     1 if we were able to detach the timer.  0 if we blew it, and the
-- *     timer function has already started to run.
-- **/
--int scsi_delete_timer(struct scsi_cmnd *scmd)
--{
--	int rtn;
--
--	rtn = del_timer(&scmd->eh_timeout);
--
--	SCSI_LOG_ERROR_RECOVERY(5, printk("%s: scmd: %p,"
--					 " rtn: %d\n", __FUNCTION__,
--					 scmd, rtn));
--
--	scmd->eh_timeout.data = (unsigned long)NULL;
--	scmd->eh_timeout.function = NULL;
--
--	return rtn;
--}
--
--/**
-  * scsi_times_out - Timeout function for normal scsi commands.
-- * @scmd:	Cmd that is timing out.
-+ * @req:	request that is timing out.
-  *
-  * Notes:
-  *     We do not need to lock this.  There is the potential for a race
-@@ -182,9 +121,11 @@ int scsi_delete_timer(struct scsi_cmnd *scmd)
-  *     normal completion function determines that the timer has already
-  *     fired, then it mustn't do anything.
-  **/
--void scsi_times_out(struct scsi_cmnd *scmd)
-+enum blk_eh_timer_return scsi_times_out(struct request *req)
- {
--	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
-+	struct scsi_cmnd *scmd = req->special;
-+	enum blk_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
-+	enum blk_eh_timer_return rtn = BLK_EH_NOT_HANDLED;
- 
- 	scsi_log_completion(scmd, TIMEOUT_ERROR);
- 
-@@ -196,22 +137,20 @@ void scsi_times_out(struct scsi_cmnd *scmd)
- 		eh_timed_out = NULL;
- 
- 	if (eh_timed_out)
--		switch (eh_timed_out(scmd)) {
--		case EH_HANDLED:
--			__scsi_done(scmd);
--			return;
--		case EH_RESET_TIMER:
--			scsi_add_timer(scmd, scmd->timeout_per_command,
--				       scsi_times_out);
--			return;
--		case EH_NOT_HANDLED:
-+		rtn = eh_timed_out(scmd);
-+		switch (rtn) {
-+		case BLK_EH_NOT_HANDLED:
- 			break;
-+		default:
-+			return rtn;
- 		}
- 
- 	if (unlikely(!scsi_eh_scmd_add(scmd, SCSI_EH_CANCEL_CMD))) {
- 		scmd->result |= DID_TIME_OUT << 16;
--		__scsi_done(scmd);
-+		return BLK_EH_HANDLED;
- 	}
-+
-+	return BLK_EH_NOT_HANDLED;
- }
- 
- /**
-@@ -1666,7 +1605,6 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 	int rtn;
- 
- 	scmd->request = &req;
--	memset(&scmd->eh_timeout, 0, sizeof(scmd->eh_timeout));
- 
- 	memset(&scmd->cmnd, '\0', sizeof(scmd->cmnd));
-     
-@@ -1679,8 +1617,6 @@ scsi_reset_provider(struct scsi_device *dev, int flag)
- 
- 	scmd->sc_data_direction		= DMA_BIDIRECTIONAL;
- 
--	init_timer(&scmd->eh_timeout);
--
- 	/*
- 	 * Sometimes the command can get back into the timer chain,
- 	 * so use the pid as an identifier.
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index a417a6f..d9c7581 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -162,6 +162,29 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- }
- 
- /**
-+ * scsi_queue_retry - Try inserting a command in the midlevel queue.
-+ *
-+ * @cmd:	command that we are adding to queue.
-+ * @reason:	why we are inserting command to queue.
-+ *
-+ * Notes:       This is very similar to scsi_queue_insert except that we
-+ *              call this function when we don't know if the blk layer timer
-+ *              is active or not. We could implement this either by calling
-+ *              blk_delete_timer and inserting in the midlevel queue if we
-+ *              successfully delete the timer OR setting appropriate result
-+ *              field in the cmd and letting it go through the normal done
-+ *              routines which will retry the command. For now, We call
-+ *              blk_delete_timer!
-+ */
-+void scsi_queue_retry(struct scsi_cmnd *cmd, int reason)
-+{
-+	if (blk_delete_timer(cmd->request)) {
-+		atomic_inc(&cmd->device->iodone_cnt);
-+		scsi_queue_insert(cmd, reason);
-+	}
++	h->path = path;
++	if (h->tpgs == TPGS_MODE_UNINITIALIZED)
++		alua_std_inquiry(h);
++	if (h->tpgs & (TPGS_MODE_IMPLICIT | TPGS_MODE_EXPLICIT))
++		alua_vpd_inquiry(h);
++	if (h->group_id != -1)
++		alua_rtpg(h);
 +}
 +
-+/**
-  * scsi_execute - insert request and wait for the result
-  * @sdev:	scsi device
-  * @cmd:	scsi command
-@@ -1115,7 +1138,6 @@ static int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
- 	
- 	cmd->transfersize = req->data_len;
- 	cmd->allowed = req->retries;
--	cmd->timeout_per_command = req->timeout;
- 	cmd->done = scsi_blk_pc_done;
- 	return BLKPREP_OK;
- }
-@@ -1354,17 +1376,26 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
- 	spin_unlock(shost->host_lock);
- 	spin_lock(sdev->request_queue->queue_lock);
- 
--	__scsi_done(cmd);
-+	__blk_complete_request(req);
- }
- 
- static void scsi_softirq_done(struct request *rq)
- {
--	struct scsi_cmnd *cmd = rq->completion_data;
--	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-+	struct scsi_cmnd *cmd = rq->special;
-+	unsigned long wait_for = (cmd->allowed + 1) * rq->timeout;
- 	int disposition;
- 
- 	INIT_LIST_HEAD(&cmd->eh_entry);
- 
-+	/*
-+	 * Set the serial numbers back to zero
-+	 */
-+	cmd->serial_number = 0;
-+	
-+	atomic_inc(&cmd->device->iodone_cnt);
-+	if (cmd->result)
-+		atomic_inc(&cmd->device->ioerr_cnt);
-+
- 	disposition = scsi_decide_disposition(cmd);
- 	if (disposition != SUCCESS &&
- 	    time_before(cmd->jiffies_at_alloc + wait_for, jiffies)) {
-@@ -1581,6 +1612,7 @@ struct request_queue *scsi_alloc_queue(struct scsi_device *sdev)
- 
- 	blk_queue_prep_rq(q, scsi_prep_fn);
- 	blk_queue_softirq_done(q, scsi_softirq_done);
-+	blk_queue_rq_timed_out(q, scsi_times_out);
- 	return q;
- }
- 
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index ee8efe8..4c29a95 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -4,6 +4,7 @@
- #include <linux/device.h>
- 
- struct request_queue;
-+struct request;
- struct scsi_cmnd;
- struct scsi_device;
- struct scsi_host_template;
-@@ -27,7 +28,6 @@ extern void scsi_exit_hosts(void);
- extern int scsi_dispatch_cmd(struct scsi_cmnd *cmd);
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
--extern void __scsi_done(struct scsi_cmnd *cmd);
- #ifdef CONFIG_SCSI_LOGGING
- void scsi_log_send(struct scsi_cmnd *cmd);
- void scsi_log_completion(struct scsi_cmnd *cmd, int disposition);
-@@ -49,10 +49,7 @@ extern int __init scsi_init_devinfo(void);
- extern void scsi_exit_devinfo(void);
- 
- /* scsi_error.c */
--extern void scsi_add_timer(struct scsi_cmnd *, int,
--		void (*)(struct scsi_cmnd *));
--extern int scsi_delete_timer(struct scsi_cmnd *);
--extern void scsi_times_out(struct scsi_cmnd *cmd);
-+extern enum blk_eh_timer_return scsi_times_out(struct request *req);
- extern int scsi_error_handler(void *host);
- extern int scsi_decide_disposition(struct scsi_cmnd *cmd);
- extern void scsi_eh_wakeup(struct Scsi_Host *shost);
-@@ -67,6 +64,7 @@ int scsi_eh_get_sense(struct list_head *work_q,
- extern int scsi_maybe_unblock_host(struct scsi_device *sdev);
- extern void scsi_device_unbusy(struct scsi_device *sdev);
- extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
-+extern void scsi_queue_retry(struct scsi_cmnd *cmd, int reason);
- extern void scsi_next_command(struct scsi_cmnd *cmd);
- extern void scsi_run_host_queues(struct Scsi_Host *shost);
- extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 34cdce6..59d1570 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -443,12 +443,15 @@ sdev_rd_attr (vendor, "%.8s\n");
- sdev_rd_attr (model, "%.16s\n");
- sdev_rd_attr (rev, "%.4s\n");
- 
-+/*
-+ * TODO: can we make these symlinks to the block layer ones?
-+ */
- static ssize_t
- sdev_show_timeout (struct device *dev, struct device_attribute *attr, char *buf)
- {
- 	struct scsi_device *sdev;
- 	sdev = to_scsi_device(dev);
--	return snprintf (buf, 20, "%d\n", sdev->timeout / HZ);
-+	return snprintf (buf, 20, "%d\n", sdev->request_queue->rq_timeout / HZ);
- }
- 
- static ssize_t
-@@ -458,7 +461,7 @@ sdev_store_timeout (struct device *dev, struct device_attribute *attr, const cha
- 	int timeout;
- 	sdev = to_scsi_device(dev);
- 	sscanf (buf, "%d\n", &timeout);
--	sdev->timeout = timeout * HZ;
-+	blk_queue_rq_timeout(sdev->request_queue, timeout * HZ);
- 	return count;
- }
- static DEVICE_ATTR(timeout, S_IRUGO | S_IWUSR, sdev_show_timeout, sdev_store_timeout);
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 4705725..0aef522 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -1920,15 +1920,15 @@ static int fc_vport_match(struct attribute_container *cont,
-  * Notes:
-  *	This routine assumes no locks are held on entry.
-  **/
--static enum scsi_eh_timer_return
-+static enum blk_eh_timer_return
- fc_timed_out(struct scsi_cmnd *scmd)
- {
- 	struct fc_rport *rport = starget_to_rport(scsi_target(scmd->device));
- 
- 	if (rport->port_state == FC_PORTSTATE_BLOCKED)
--		return EH_RESET_TIMER;
-+		return BLK_EH_RESET_TIMER;
- 
--	return EH_NOT_HANDLED;
-+	return BLK_EH_NOT_HANDLED;
- }
- 
- /*
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 2c6116f..7720698 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -338,7 +338,6 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
- 	struct gendisk *disk = rq->rq_disk;
- 	sector_t block = rq->sector;
- 	unsigned int this_count = SCpnt->request_bufflen >> 9;
--	unsigned int timeout = sdp->timeout;
- 
- 	SCSI_LOG_HLQUEUE(1, scmd_printk(KERN_INFO, SCpnt,
- 					"sd_init_command: block=%llu, "
-@@ -489,7 +488,6 @@ static int sd_init_command(struct scsi_cmnd * SCpnt)
- 	SCpnt->transfersize = sdp->sector_size;
- 	SCpnt->underflow = this_count << 9;
- 	SCpnt->allowed = SD_MAX_RETRIES;
--	SCpnt->timeout_per_command = timeout;
- 
- 	/*
- 	 * This is the completion routine we use.  This is matched in terms
-@@ -1629,11 +1627,12 @@ static int sd_probe(struct device *dev)
- 	sdkp->index = index;
- 	sdkp->openers = 0;
- 
--	if (!sdp->timeout) {
-+	if (!sdp->request_queue->rq_timeout) {
- 		if (sdp->type != TYPE_MOD)
--			sdp->timeout = SD_TIMEOUT;
-+			blk_queue_rq_timeout(sdp->request_queue, SD_TIMEOUT);
- 		else
--			sdp->timeout = SD_MOD_TIMEOUT;
-+			blk_queue_rq_timeout(sdp->request_queue,
-+					     SD_MOD_TIMEOUT);
- 	}
- 
- 	class_device_initialize(&sdkp->cdev);
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 902eb11..cb73d58 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -298,7 +298,7 @@ static void rw_intr(struct scsi_cmnd * SCpnt)
- 
- static int sr_init_command(struct scsi_cmnd * SCpnt)
- {
--	int block=0, this_count, s_size, timeout = SR_TIMEOUT;
-+	int block=0, this_count, s_size;
- 	struct scsi_cd *cd = scsi_cd(SCpnt->request->rq_disk);
- 
- 	SCSI_LOG_HLQUEUE(1, printk("Doing sr request, dev = %s, block = %d\n",
-@@ -407,7 +407,6 @@ static int sr_init_command(struct scsi_cmnd * SCpnt)
- 	SCpnt->transfersize = cd->device->sector_size;
- 	SCpnt->underflow = this_count << 9;
- 	SCpnt->allowed = MAX_RETRIES;
--	SCpnt->timeout_per_command = timeout;
- 
- 	/*
- 	 * This is the completion routine we use.  This is matched in terms
-@@ -570,6 +569,8 @@ static int sr_probe(struct device *dev)
- 	disk->fops = &sr_bdops;
- 	disk->flags = GENHD_FL_CD;
- 
-+	blk_queue_rq_timeout(sdev->request_queue, SR_TIMEOUT);
-+
- 	cd->device = sdev;
- 	cd->disk = disk;
- 	cd->driver = &sr_template;
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index 3db2232..702f730 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -571,8 +571,8 @@ static int sym53c8xx_queue_command(struct scsi_cmnd *cmd,
- 	 *  Shorten our settle_time if needed for 
- 	 *  this command not to time out.
- 	 */
--	if (np->s.settle_time_valid && cmd->timeout_per_command) {
--		unsigned long tlimit = jiffies + cmd->timeout_per_command;
-+	if (np->s.settle_time_valid && cmd->request->timeout) {
-+		unsigned long tlimit = jiffies + cmd->request->timeout;
- 		tlimit -= SYM_CONF_TIMER_INTERVAL*2;
- 		if (time_after(np->s.settle_time, tlimit)) {
- 			np->s.settle_time = tlimit;
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index b126c6f..bb59cdb 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -309,7 +309,8 @@ struct request {
- 	void *data;
- 	void *sense;
- 
--	unsigned int timeout;
-+	unsigned long timeout;
-+	struct list_head timeout_list;
- 	int retries;
- 
- 	/*
-@@ -348,6 +349,14 @@ typedef int (issue_flush_fn) (struct request_queue *, struct gendisk *, sector_t
- typedef void (prepare_flush_fn) (struct request_queue *, struct request *);
- typedef void (softirq_done_fn)(struct request *);
- 
-+enum blk_eh_timer_return {
-+	BLK_EH_NOT_HANDLED,
-+	BLK_EH_HANDLED,
-+	BLK_EH_RESET_TIMER,
++static struct hw_handler_type alua_handler = {
++	.name = ALUA_DM_HWH_NAME,
++	.module = THIS_MODULE,
++	.create = alua_create,
++	.destroy = alua_destroy,
++	.pg_init = alua_pg_init,
++	.error = alua_error,
 +};
 +
-+typedef enum blk_eh_timer_return (rq_timed_out_fn)(struct request *);
++static int __init alua_init(void)
++{
++	int r = dm_register_hw_handler(&alua_handler);
 +
- enum blk_queue_state {
- 	Queue_down,
- 	Queue_up,
-@@ -385,6 +394,7 @@ struct request_queue
- 	issue_flush_fn		*issue_flush_fn;
- 	prepare_flush_fn	*prepare_flush_fn;
- 	softirq_done_fn		*softirq_done_fn;
-+	rq_timed_out_fn		*rq_timed_out_fn;
- 
- 	/*
- 	 * Dispatch queue sorting
-@@ -455,6 +465,10 @@ struct request_queue
- 	unsigned int		nr_sorted;
- 	unsigned int		in_flight;
- 
-+	unsigned int		rq_timeout;
-+	struct			timer_list timeout;
-+	struct list_head	timeout_list;
++	if (r < 0) {
++		DMERR("%s: register failed %d", ALUA_DM_HWH_NAME, r);
++		return r;
++	}
 +
- 	/*
- 	 * sg stuff
- 	 */
-@@ -733,6 +747,10 @@ extern int end_that_request_chunk(struct request *, int, int);
- extern void end_that_request_last(struct request *, int);
- extern void end_request(struct request *req, int uptodate);
- extern void blk_complete_request(struct request *);
-+extern void __blk_complete_request(struct request *);
-+extern void blk_abort_req(struct request *);
-+extern int blk_delete_timer(struct request *);
-+extern void blk_add_timer(struct request *);
++	DMINFO("%s: version %s loaded", ALUA_DM_HWH_NAME, ALUA_DM_HWH_VER);
++	return 0;
++}
++
++static void __exit alua_exit(void)
++{
++	int r = dm_unregister_hw_handler(&alua_handler);
++
++	if (r < 0)
++		DMERR("%s: unregister failed %d", ALUA_DM_HWH_NAME, r);
++}
++
++module_init(alua_init);
++module_exit(alua_exit);
++
++MODULE_DESCRIPTION("DM Multipath ALUA support");
++MODULE_AUTHOR("Hannes Reinecke");
++MODULE_LICENSE("GPL");
++MODULE_VERSION(ALUA_DM_HWH_VER);
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 9f8f80a..4e87c84 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -98,6 +98,7 @@ extern const unsigned char scsi_command_size[8];
+ #define PERSISTENT_RESERVE_OUT 0x5f
+ #define REPORT_LUNS           0xa0
+ #define MAINTENANCE_IN        0xa3
++#define MAINTENANCE_OUT       0xa4
+ #define MOVE_MEDIUM           0xa5
+ #define EXCHANGE_MEDIUM       0xa6
+ #define READ_12               0xa8
+@@ -117,6 +118,8 @@ extern const unsigned char scsi_command_size[8];
+ #define	SAI_READ_CAPACITY_16  0x10
+ /* values for maintenance in */
+ #define MI_REPORT_TARGET_PGS  0x0a
++/* values for maintenance out */
++#define MO_SET_TARGET_PGS     0x0a
  
- /*
-  * end_that_request_first/chunk() takes an uptodate argument. we account
-@@ -744,6 +762,8 @@ extern void blk_complete_request(struct request *);
- 
- static inline void blkdev_dequeue_request(struct request *req)
- {
-+	if (req->q->rq_timed_out_fn)
-+		blk_add_timer(req);
- 	elv_dequeue_request(req->q, req);
- }
- 
-@@ -767,6 +787,8 @@ extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
- extern void blk_queue_dma_alignment(struct request_queue *, int);
- extern void blk_queue_softirq_done(struct request_queue *, softirq_done_fn *);
-+extern void blk_queue_rq_timed_out(struct request_queue *, rq_timed_out_fn *);
-+extern void blk_queue_rq_timeout(struct request_queue *, unsigned int);
- extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
- extern int blk_queue_ordered(struct request_queue *, unsigned, prepare_flush_fn *);
- extern void blk_queue_issue_flush_fn(struct request_queue *, issue_flush_fn *);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 53e1705..5841369 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -56,7 +56,6 @@ struct scsi_cmnd {
- 
- 	int retries;
- 	int allowed;
--	int timeout_per_command;
- 
- 	unsigned char cmd_len;
- 	enum dma_data_direction sc_data_direction;
-@@ -66,7 +65,6 @@ struct scsi_cmnd {
- 	unsigned char cmnd[MAX_COMMAND_SIZE];
- 	unsigned request_bufflen;	/* Actual request size */
- 
--	struct timer_list eh_timeout;	/* Used to time out the command. */
- 	void *request_buffer;		/* Actual requested buffer */
- 
- 	/* These elements define the operation we ultimately want to perform */
-@@ -126,7 +124,6 @@ extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
- 			       struct device *);
- extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
- extern void scsi_finish_command(struct scsi_cmnd *cmd);
--extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
- 
- extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
- 				 size_t *offset, size_t *len);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 3b8a6a8..165ccaf 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -36,13 +36,6 @@ struct blk_queue_tags;
- #define DISABLE_CLUSTERING 0
- #define ENABLE_CLUSTERING 1
- 
--enum scsi_eh_timer_return {
--	EH_NOT_HANDLED,
--	EH_HANDLED,
--	EH_RESET_TIMER,
--};
--
--
- struct scsi_host_template {
- 	struct module *module;
- 	const char *name;
-@@ -336,7 +329,7 @@ struct scsi_host_template {
- 	 *
- 	 * Status: OPTIONAL
- 	 */
--	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
-+	enum blk_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
- 
- 	/*
- 	 * Name of proc directory
-diff --git a/include/scsi/scsi_transport.h b/include/scsi/scsi_transport.h
-index 3c18baa..23e8d97 100644
---- a/include/scsi/scsi_transport.h
-+++ b/include/scsi/scsi_transport.h
-@@ -21,6 +21,7 @@
- #define SCSI_TRANSPORT_H
- 
- #include <linux/transport_class.h>
-+#include <linux/blkdev.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_device.h>
- 
-@@ -64,7 +65,7 @@ struct scsi_transport_template {
- 	 *			begin counting again
- 	 * EH_NOT_HANDLED	Begin normal error recovery
- 	 */
--	enum scsi_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
-+	enum blk_eh_timer_return (* eh_timed_out)(struct scsi_cmnd *);
- };
- 
- #define transport_class_to_shost(tc) \
+ /* Values for T10/04-262r7 */
+ #define	ATA_16		      0x85	/* 16-byte pass-thru */
 
--- 
-Jens Axboe
-
+--------------070700050301000404000908--
