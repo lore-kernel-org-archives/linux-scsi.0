@@ -1,93 +1,81 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg cleanup
-Date: Wed, 10 Oct 2007 20:24:46 +0200
-Message-ID: <470D18EE.3090608@panasas.com>
-References: <46E6F92D.2090409@panasas.com>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] Add ALUA hardware handler
+Date: Wed, 10 Oct 2007 13:45:02 -0500
+Message-ID: <470D1DAE.1000900@cs.wisc.edu>
+References: <470CCBB0.2020904@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28273 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752128AbXJJS3A (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2007 14:29:00 -0400
-In-Reply-To: <46E6F92D.2090409@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <470CCBB0.2020904@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: device-mapper development <dm-devel@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew
 
-On Tue, Sep 11 2007 at 23:23 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> Here are more accessors patches. I have tried
-> to find Maintainers of drivers but please help me if
-> I missed any.
+Hannes Reinecke wrote:
+> Hi Alasdair,
 > 
-> After this there are 3 drivers left (I think)
-> - gdth.c, pluto.c, seagate.c
-> These I'll send only next week in a set of their own.
-> {Please tell me I can kill pluto and seagate.}
+> this is a patch to add a SPC-3 hardware handler. SPC-3 ALUA has
+> provisioning for 'explicit' port group state change via the
+> SET TARGET GROUP STATES command, and some newer storage
+> arrays do benefit from this.
+> Eg HP EVAs and newer EMC Clariions already support explicit ALUA.
 > 
-> Some of the drivers that are not here were already posted by Tomo.
-> Some of the drivers here were posted before but these are better
-> versions of them.
+> Please apply.
 > 
-> [USB] - Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>,
-> 	Matthew Dharm <mdharm-usb@one-eyed-alien.net>
-> 0001- 	drivers/usb/storage/transport.c drivers/usb/storage/transport.h
-> 0002- 	drivers/usb/storage/protocol.c
-> 0003- 	drivers/usb/storage/shuttle_usbat.c
-> 0004- 	drivers/usb/storage/freecom.c drivers/usb/storage/sddr09.c
-> 0005 	drivers/usb/storage/isd200.c
+> Cheers,
 > 
-> [NCR5380 family] - ?
-> 0006 	drivers/scsi/NCR5380.c drivers/scsi/atari_NCR5380.c
-> 	drivers/scsi/sun3_NCR5380.c
+> Hannes
 > 
-> [esp family] - Maciej W. Rozycki <macro@linux-mips.org>
-> 0020 	drivers/scsi/NCR53C9x.c drivers/scsi/NCR53C9x.h
-> 	drivers/scsi/dec_esp.c drivers/scsi/oktagon_esp.c
-> 	drivers/scsi/sun3x_esp.c
-> 
-> [ARM] - Russell King <rmk@arm.linux.org.uk>
-> 0007 	drivers/scsi/arm/acornscsi.c drivers/scsi/arm/scsi.h
-> 
-> [other drivers]
-> 0008 	drivers/scsi/pcmcia/nsp_cs.c - YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
-> 0009 	drivers/ata/libata-scsi.c - Jeff Garzik <jeff@garzik.org>
-> 0010 	drivers/scsi/eata_pio.c - Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> ?
-> 0011 	drivers/scsi/a2091.c - ?
-> 0012 	drivers/scsi/a3000.c - ? 
-> 0013 	drivers/scsi/aha1542.c - ? 
-> 0014 	drivers/scsi/atp870u.c - ? 
-> 0015 	drivers/scsi/fd_mcs.c - ? 
-> 0016 	drivers/scsi/imm.c - ? 
-> 0017 	drivers/scsi/in2000.c - ? 
-> 0018 	drivers/scsi/ppa.c - ? 
-> 0019 	drivers/scsi/wd33c93.c - ? 
-> 0021 	drivers/scsi/qlogicpti.c - David S. Miller <davem@davemloft.net>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
-> 0024 	drivers/scsi/ide-scsi.c - Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-> 
-> [remove psi240i.c driver] - ?
-> 0022 	drivers/scsi/Kconfig drivers/scsi/Makefile   
-> 	delete drivers/scsi/psi240i.c
-> 	delete drivers/scsi/psi240i.h
-> 	delete drivers/scsi/psi_chip.h
-> 
-> [fixes]
-> 0023 	drivers/scsi/wd7000.c - ? 
-> -
 
-James Hi!
-I just did a rebase for all drivers they patch and compile
-over current scsi-misc. Save one, qlogicpti.c, a fix will follow.
-(I keep stumbling over Matthew's patches ;)
+Does this also work for adaptec or snap iscsi targets or whatever they 
+are called targets?
 
-Please note that you must apply: 
-"[PATCH 05/24] isd200.c: use one-element sg list in issuing commands"
-first and specifically before the usb patches. Otherwise this driver
-will be broken for the duration. (Sorry for the mess)
 
-Please ask for any help needed or if you need all any patches
-to be resent
 
-Thanks
-Boaz
+Just some quick higher level comments
+
++static int submit_std_inquiry(struct alua_handler *h)
++{
++	struct request *rq;
++	unsigned err = (DRIVER_ERROR << 24);
++
++	rq = prepare_req(h, h->inq, TPGS_INQUIRY_SIZE, READ);
+
+
+I do not think you want to use GFP_KERNEL allocations in this path, so 
+all the prepare_req allocs should be changed. GFP_NOIO is probably best.
+
+
++	if (!rq)
++		return err;
++
++	/* Prepare the command. */
++	rq->cmd[0] = INQUIRY;
++	rq->cmd[1] = 0;
++	rq->cmd[2] = 0;
++	rq->cmd[4] = TPGS_INQUIRY_SIZE;
++	rq->cmd_len = COMMAND_SIZE(INQUIRY);
++
++	blk_execute_rq(rq->q, NULL, rq, 1);
+
+There is only one workqueue for all the dm devices, so you do not want 
+to do one command (or how many processors there are) at a time and wait 
+for each one to complete with blk_execute_rq. You should use the async 
+one, blk_execute_rq_nowait, like rdac.
+
++	err = rq->errors;
++	blk_put_request(rq);
++
++	return err;
++}
