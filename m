@@ -1,89 +1,93 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 21/24 ver2] qlogicpti.c: convert to accessors and !use_sg
- cleanup
-Date: Wed, 10 Oct 2007 20:25:30 +0200
-Message-ID: <470D191A.6090101@panasas.com>
-References: <46E6F92D.2090409@panasas.com> <46E72E52.7030607@panasas.com>
+Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg cleanup
+Date: Wed, 10 Oct 2007 20:24:46 +0200
+Message-ID: <470D18EE.3090608@panasas.com>
+References: <46E6F92D.2090409@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:26411 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:28273 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752466AbXJJSZi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2007 14:25:38 -0400
-In-Reply-To: <46E72E52.7030607@panasas.com>
+	with ESMTP id S1752128AbXJJS3A (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2007 14:29:00 -0400
+In-Reply-To: <46E6F92D.2090409@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>, Matthew Wilcox <matthew@wil.cx>
+To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew
 
+On Tue, Sep 11 2007 at 23:23 +0300, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> Here are more accessors patches. I have tried
+> to find Maintainers of drivers but please help me if
+> I missed any.
+> 
+> After this there are 3 drivers left (I think)
+> - gdth.c, pluto.c, seagate.c
+> These I'll send only next week in a set of their own.
+> {Please tell me I can kill pluto and seagate.}
+> 
+> Some of the drivers that are not here were already posted by Tomo.
+> Some of the drivers here were posted before but these are better
+> versions of them.
+> 
+> [USB] - Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>,
+> 	Matthew Dharm <mdharm-usb@one-eyed-alien.net>
+> 0001- 	drivers/usb/storage/transport.c drivers/usb/storage/transport.h
+> 0002- 	drivers/usb/storage/protocol.c
+> 0003- 	drivers/usb/storage/shuttle_usbat.c
+> 0004- 	drivers/usb/storage/freecom.c drivers/usb/storage/sddr09.c
+> 0005 	drivers/usb/storage/isd200.c
+> 
+> [NCR5380 family] - ?
+> 0006 	drivers/scsi/NCR5380.c drivers/scsi/atari_NCR5380.c
+> 	drivers/scsi/sun3_NCR5380.c
+> 
+> [esp family] - Maciej W. Rozycki <macro@linux-mips.org>
+> 0020 	drivers/scsi/NCR53C9x.c drivers/scsi/NCR53C9x.h
+> 	drivers/scsi/dec_esp.c drivers/scsi/oktagon_esp.c
+> 	drivers/scsi/sun3x_esp.c
+> 
+> [ARM] - Russell King <rmk@arm.linux.org.uk>
+> 0007 	drivers/scsi/arm/acornscsi.c drivers/scsi/arm/scsi.h
+> 
+> [other drivers]
+> 0008 	drivers/scsi/pcmcia/nsp_cs.c - YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>
+> 0009 	drivers/ata/libata-scsi.c - Jeff Garzik <jeff@garzik.org>
+> 0010 	drivers/scsi/eata_pio.c - Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> ?
+> 0011 	drivers/scsi/a2091.c - ?
+> 0012 	drivers/scsi/a3000.c - ? 
+> 0013 	drivers/scsi/aha1542.c - ? 
+> 0014 	drivers/scsi/atp870u.c - ? 
+> 0015 	drivers/scsi/fd_mcs.c - ? 
+> 0016 	drivers/scsi/imm.c - ? 
+> 0017 	drivers/scsi/in2000.c - ? 
+> 0018 	drivers/scsi/ppa.c - ? 
+> 0019 	drivers/scsi/wd33c93.c - ? 
+> 0021 	drivers/scsi/qlogicpti.c - David S. Miller <davem@davemloft.net>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
+> 0024 	drivers/scsi/ide-scsi.c - Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+> 
+> [remove psi240i.c driver] - ?
+> 0022 	drivers/scsi/Kconfig drivers/scsi/Makefile   
+> 	delete drivers/scsi/psi240i.c
+> 	delete drivers/scsi/psi240i.h
+> 	delete drivers/scsi/psi_chip.h
+> 
+> [fixes]
+> 0023 	drivers/scsi/wd7000.c - ? 
+> -
 
- - convert to accessors and !use_sg cleanup
+James Hi!
+I just did a rebase for all drivers they patch and compile
+over current scsi-misc. Save one, qlogicpti.c, a fix will follow.
+(I keep stumbling over Matthew's patches ;)
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/qlogicpti.c |   29 +++++++----------------------
- 1 files changed, 7 insertions(+), 22 deletions(-)
+Please note that you must apply: 
+"[PATCH 05/24] isd200.c: use one-element sg list in issuing commands"
+first and specifically before the usb patches. Otherwise this driver
+will be broken for the duration. (Sorry for the mess)
 
-diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
-index e93f803..db43d1c 100644
---- a/drivers/scsi/qlogicpti.c
-+++ b/drivers/scsi/qlogicpti.c
-@@ -871,11 +871,12 @@ static inline int load_cmd(struct scsi_cmnd *Cmnd, struct Command_Entry *cmd,
- 	struct scatterlist *sg;
- 	int i, n;
- 
--	if (Cmnd->use_sg) {
-+	if (scsi_bufflen(Cmnd)) {
- 		int sg_count;
- 
--		sg = (struct scatterlist *) Cmnd->request_buffer;
--		sg_count = sbus_map_sg(qpti->sdev, sg, Cmnd->use_sg, Cmnd->sc_data_direction);
-+		sg = scsi_sglist(Cmnd);
-+		sg_count = sbus_map_sg(qpti->sdev, sg, scsi_sg_count(Cmnd),
-+		                                      Cmnd->sc_data_direction);
- 
- 		ds = cmd->dataseg;
- 		cmd->segment_cnt = sg_count;
-@@ -913,16 +914,6 @@ static inline int load_cmd(struct scsi_cmnd *Cmnd, struct Command_Entry *cmd,
- 			}
- 			sg_count -= n;
- 		}
--	} else if (Cmnd->request_bufflen) {
--		Cmnd->SCp.ptr = (char *)(unsigned long)
--			sbus_map_single(qpti->sdev,
--					Cmnd->request_buffer,
--					Cmnd->request_bufflen,
--					Cmnd->sc_data_direction);
--
--		cmd->dataseg[0].d_base = (u32) ((unsigned long)Cmnd->SCp.ptr);
--		cmd->dataseg[0].d_count = Cmnd->request_bufflen;
--		cmd->segment_cnt = 1;
- 	} else {
- 		cmd->dataseg[0].d_base = 0;
- 		cmd->dataseg[0].d_count = 0;
-@@ -1158,17 +1149,11 @@ static struct scsi_cmnd *qlogicpti_intr_handler(struct qlogicpti *qpti)
- 		else
- 			Cmnd->result = DID_ERROR << 16;
- 
--		if (Cmnd->use_sg) {
-+		if (scsi_bufflen(Cmnd))
- 			sbus_unmap_sg(qpti->sdev,
--				      (struct scatterlist *)Cmnd->request_buffer,
--				      Cmnd->use_sg,
-+				      scsi_sglist(Cmnd), scsi_sg_count(Cmnd),
- 				      Cmnd->sc_data_direction);
--		} else if (Cmnd->request_bufflen) {
--			sbus_unmap_single(qpti->sdev,
--					  (__u32)((unsigned long)Cmnd->SCp.ptr),
--					  Cmnd->request_bufflen,
--					  Cmnd->sc_data_direction);
--		}
-+
- 		qpti->cmd_count[Cmnd->device->id]--;
- 		sbus_writew(out_ptr, qpti->qregs + MBOX5);
- 		Cmnd->host_scribble = (unsigned char *) done_queue;
--- 
-1.5.3.1
+Please ask for any help needed or if you need all any patches
+to be resent
 
-
+Thanks
+Boaz
