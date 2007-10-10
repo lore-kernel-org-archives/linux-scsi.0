@@ -1,81 +1,32 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] Add ALUA hardware handler
-Date: Wed, 10 Oct 2007 13:45:02 -0500
-Message-ID: <470D1DAE.1000900@cs.wisc.edu>
-References: <470CCBB0.2020904@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg cleanup
+Date: Wed, 10 Oct 2007 13:14:24 -0600
+Message-ID: <20071010191424.GE2730@parisc-linux.org>
+References: <46E6F92D.2090409@panasas.com> <470D18EE.3090608@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <470CCBB0.2020904@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Hannes Reinecke <hare@suse.de>
-Cc: device-mapper development <dm-devel@redhat.com>, christophe varoqui <christophe.varoqui@free.fr>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:38715 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755406AbXJJTO0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2007 15:14:26 -0400
+Content-Disposition: inline
+In-Reply-To: <470D18EE.3090608@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
 
-Hannes Reinecke wrote:
-> Hi Alasdair,
-> 
-> this is a patch to add a SPC-3 hardware handler. SPC-3 ALUA has
-> provisioning for 'explicit' port group state change via the
-> SET TARGET GROUP STATES command, and some newer storage
-> arrays do benefit from this.
-> Eg HP EVAs and newer EMC Clariions already support explicit ALUA.
-> 
-> Please apply.
-> 
-> Cheers,
-> 
-> Hannes
-> 
+On Wed, Oct 10, 2007 at 08:24:46PM +0200, Boaz Harrosh wrote:
+> I just did a rebase for all drivers they patch and compile
+> over current scsi-misc. Save one, qlogicpti.c, a fix will follow.
+> (I keep stumbling over Matthew's patches ;)
 
-Does this also work for adaptec or snap iscsi targets or whatever they 
-are called targets?
+At least this time I only deleted some code you were patching.  It's
+nothing on the mess in the gdth driver ;-)
 
-
-
-Just some quick higher level comments
-
-+static int submit_std_inquiry(struct alua_handler *h)
-+{
-+	struct request *rq;
-+	unsigned err = (DRIVER_ERROR << 24);
-+
-+	rq = prepare_req(h, h->inq, TPGS_INQUIRY_SIZE, READ);
-
-
-I do not think you want to use GFP_KERNEL allocations in this path, so 
-all the prepare_req allocs should be changed. GFP_NOIO is probably best.
-
-
-+	if (!rq)
-+		return err;
-+
-+	/* Prepare the command. */
-+	rq->cmd[0] = INQUIRY;
-+	rq->cmd[1] = 0;
-+	rq->cmd[2] = 0;
-+	rq->cmd[4] = TPGS_INQUIRY_SIZE;
-+	rq->cmd_len = COMMAND_SIZE(INQUIRY);
-+
-+	blk_execute_rq(rq->q, NULL, rq, 1);
-
-There is only one workqueue for all the dm devices, so you do not want 
-to do one command (or how many processors there are) at a time and wait 
-for each one to complete with blk_execute_rq. You should use the async 
-one, blk_execute_rq_nowait, like rdac.
-
-+	err = rq->errors;
-+	blk_put_request(rq);
-+
-+	return err;
-+}
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
