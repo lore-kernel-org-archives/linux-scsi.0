@@ -1,32 +1,46 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patchset 0/24] Lots of the Accessors patches and !use_sg cleanup
-Date: Wed, 10 Oct 2007 13:14:24 -0600
-Message-ID: <20071010191424.GE2730@parisc-linux.org>
-References: <46E6F92D.2090409@panasas.com> <470D18EE.3090608@panasas.com>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] aic94xx: Use request_firmware() to provide SAS address if the adapter lacks one
+Date: Wed, 10 Oct 2007 12:38:42 -0700 (PDT)
+Message-ID: <105757.49287.qm@web31805.mail.mud.yahoo.com>
+References: <470CE78B.2080509@emulex.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:38715 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755406AbXJJTO0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2007 15:14:26 -0400
-Content-Disposition: inline
-In-Reply-To: <470D18EE.3090608@panasas.com>
+Received: from web31805.mail.mud.yahoo.com ([68.142.207.68]:40797 "HELO
+	web31805.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756307AbXJJTio (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Oct 2007 15:38:44 -0400
+In-Reply-To: <470CE78B.2080509@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Greg Kroah-Hartman <gregkh@suse.de>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>
+To: James.Smart@Emulex.Com, "Darrick J. Wong" <djwong@us.ibm.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, James Bottomley <james.bottomley@steeleye.com>
 
-On Wed, Oct 10, 2007 at 08:24:46PM +0200, Boaz Harrosh wrote:
-> I just did a rebase for all drivers they patch and compile
-> over current scsi-misc. Save one, qlogicpti.c, a fix will follow.
-> (I keep stumbling over Matthew's patches ;)
+--- James Smart <James.Smart@Emulex.Com> wrote:
+> Here's one pro for setting WWNs at arbitrary times...
+>    If the box is migrating applications (say containers) that want
+>    different SAN connectivity, where that connectivity (view) is based
+>    on their WWN, it would be really nice to selectively set the WWN and
+>    not touch the SAN config.
 
-At least this time I only deleted some code you were patching.  It's
-nothing on the mess in the gdth driver ;-)
+No.  The WWN stays the same and the SAN is re-configured to be
+aware of the node migration.  Access patterns could be more
+complex than just a single portal allowing access to/from the
+SAN from/to the node.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+WWN is supposed to be persistent.  This is what it actually is.
+It is NOT supposed to be "(auto)generated" and/or changed at a whim.
+
+This also has security implications, and enterprise networks may
+refuse to use software (read "kernel") which allows for arbitrary
+changes to a node's WWN.
+
+If access to a node is compromised, a rogue agent may change
+the node's WWN in order to access SAN zones that it normally
+will be denied access to.
+
+    Luben
+
