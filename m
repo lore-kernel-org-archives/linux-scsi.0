@@ -1,76 +1,37 @@
-From: James Smart <James.Smart@Emulex.Com>
+From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH] aic94xx: Use request_firmware() to provide SAS address
  if the adapter lacks one
-Date: Wed, 10 Oct 2007 10:54:03 -0400
-Message-ID: <470CE78B.2080509@emulex.com>
-References: <20071008212553.GI16752@tree.beaverton.ibm.com> <20071008224832.GB11993@plap3.qlogic.org> <20071008235009.GB16003@tree.beaverton.ibm.com> <20071009001240.GA13922@plap3.qlogic.org> <470B9E50.2090205@emulex.com> <20071009164147.GB19854@plap3.qlogic.org> <20071009170643.GE16003@tree.beaverton.ibm.com>
-Reply-To: James.Smart@Emulex.Com
+Date: Wed, 10 Oct 2007 11:40:10 -0400
+Message-ID: <470CF25A.9050403@garzik.org>
+References: <20071008212553.GI16752@tree.beaverton.ibm.com> <20071008224832.GB11993@plap3.qlogic.org> <20071008235009.GB16003@tree.beaverton.ibm.com> <20071009001240.GA13922@plap3.qlogic.org> <470B9E50.2090205@emulex.com> <20071009164147.GB19854@plap3.qlogic.org> <20071009170643.GE16003@tree.beaverton.ibm.com> <470CE78B.2080509@emulex.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:63303 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753547AbXJJOym (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Oct 2007 10:54:42 -0400
-In-Reply-To: <20071009170643.GE16003@tree.beaverton.ibm.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:52651 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754177AbXJJPkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Oct 2007 11:40:24 -0400
+In-Reply-To: <470CE78B.2080509@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, James Bottomley <james.bottomley@steeleye.com>
+To: James.Smart@Emulex.Com
+Cc: "Darrick J. Wong" <djwong@us.ibm.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Alexis Bruemmer <alexisb@us.ibm.com>, James Bottomley <james.bottomley@steeleye.com>
 
-Darrick J. Wong wrote:
->> Though I don't see why both can't coexist cleanly -- I take it the use
->> case you are considering is: software recognizes no valid WWPN
->> available, query via request_firmware() fails, software halts
->> initialization (rather than fail), and awaits the admin to poke
->> '0x123456.. > /sys/.../fc_host/soft_port_name', causing a ping to the
->> driver and continuation of initialization with requested portname?
-> 
-> Hmm... could we use such a sysfs attribute to reassign adapter WWNs at
-> arbitrary times?  Is that even a good idea?
+James Smart wrote:
+> So, what's the decision - are we only allowing this for physical adapters
+> that don't have a name ? or are we allowing it to be more dynamic ?
 
-As the threads on this topic has shown - allowing any kind of override
-or WWN generation isn't a well-liked idea. But there are plausible
-scenarios where it makes sense.
+At a minimum, I think(?) we all agree that current upstream aic94xx 
+behavior is nice:  allow the admin to override the WWN manually, even if 
+the adapter already has one.
 
-Here's one pro for setting WWNs at arbitrary times...
-   If the box is migrating applications (say containers) that want
-   different SAN connectivity, where that connectivity (view) is based
-   on their WWN, it would be really nice to selectively set the WWN and
-   not touch the SAN config.  Granted, in FC, NPIV can do the same thing,
-   but this could be done on an adapter or configuration that can't do NPIV.
+As to the question of request_firmware() versus sysfs, it's IMO largely 
+a question of taste -- do you like the "get property" on-demand pull 
+model, or a push model that presumes the property must be set before it 
+is needed?  And which solution requires the least amount of additional 
+userspace machinery in order to be usable?
 
-So, what's the decision - are we only allowing this for physical adapters
-that don't have a name ? or are we allowing it to be more dynamic ?
+	Jeff
 
-My thoughts on request_firmware() vs sysfs:
-  via request_firmware
-    pro: It seems to imply a stronger level of control, as it seems more
-      hidden from the casual admin and/or tools. Too many random things
-      now peruse sysfs attributes without knowing their meaning.
-      Also, easier (more correct) to pass multiple elements (WWNN & WWPN)
-      if needed.
-    con: ?? when does it get used - only at initial attachment and
-      under failure ?  If you were to make it more arbitrary, doesn't
-      it imply some sysfs use to poke the driver/transport to get the
-      new value ? and if arbitrary, how to marry that with kdump so the
-      initrd is up to date.  Also, it's yet another mgmt interface - how many
-      does an admin need to know about ?  Hotplug scripts to identify the
-      adapter and specify the proper names are more complex for the admin
-      than sysfs.
-
-  via sysfs:
-    pro: Keeps all mgmt in the sysfs area, which admins are starting to
-      become comfortable with. Easily supports a dynamic, change at any time
-      model.
-    con: Drives to a set-after-attachment model, and doesn't support kdump
-      well (requires initrd tools). Multiple elements can be a bit cumbersome
-      if one follows the one-value-per-attribute sysfs rules.
-      Must protect against random rogue sysfs tools.
-
-Overall, I guess I like the stronger controls of request_firmware(), but dislike
-using yet another mgmt interface for admins.
-
--- james s
 
