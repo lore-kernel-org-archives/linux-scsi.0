@@ -1,51 +1,47 @@
 From: Jeff Garzik <jeff@garzik.org>
 Subject: Re: [PATCH 3/3] faster workaround
-Date: Thu, 11 Oct 2007 10:59:01 -0400
-Message-ID: <470E3A35.4000104@garzik.org>
-References: <200710081709.18253.bs@q-leap.de>	<200710101112.20448.bs@q-leap.de>	<200710111409.56210.bs@q-leap.de>	<200710111433.23833.bs@q-leap.de>	<20071011142628.48272a4a@the-village.bc.nu>	<470E30F9.5060705@garzik.org> <20071011155024.46007973@the-village.bc.nu>
+Date: Thu, 11 Oct 2007 11:04:45 -0400
+Message-ID: <470E3B8D.4080002@garzik.org>
+References: <200710081709.18253.bs@q-leap.de> <20071011142628.48272a4a@the-village.bc.nu> <470E30F9.5060705@garzik.org> <200710111639.38240.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20071011155024.46007973@the-village.bc.nu>
-Sender: linux-ide-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, Bernd Schubert <bs@q-leap.de>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:42067 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754177AbXJKPEu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Oct 2007 11:04:50 -0400
+In-Reply-To: <200710111639.38240.bs@q-leap.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan Cox wrote:
->> The problem is that the 3112 generates Data FIS's of a size other than a 
->> multiple of 512 bytes.  Spec-legal, but exposed firmware bugs in many 
->> early SATA drives.  Early Seagate hard drives choked when the formula 
->> (sector%15)==1 was satisfied (or something along those lines).
+Bernd Schubert wrote:
+> On Thursday 11 October 2007 16:19:37 Jeff Garzik wrote:
+>> 1) Just about the only valid optimization is to ensure that only the
+>> write path must be limited to small chunks, not both read- and
+>> write-paths.  Tejun had a patch to do this a long time ago, but it's an
+>> open question whether the large amount of code is worth it for a rare
+>> combination.
 > 
-> And the 3114 is the same ?
+> How large? This patch is rather small? Where can I find it?
 
-3114 should not be affected by this problem (see below).
+http://home-tj.org/wiki/index.php/Sil_m15w
 
-Most likely we are led down this road because the 'slow_down' module 
-parameter has an excellent capacity for hiding all manner of problems.
-
-As a tangent from this thread, this is why I was OK with adding the 
-libata.dma even for SATA.  Sometimes knobs are found useful by users, 
-though perhaps not its original intended use.  Sometimes masking a 
-hardware problem can help you get through the rest of your day on hold 
-with vendor support :)
-
-
->> 2) Once we identified, over time, the set of drives affected by this 
->> 3112 quirk (aka drives that didn't fully comply to SATA spec), the 
->> debugging of corruption cases largely shifted to the standard routine: 
->> update the BIOS, replace the cables/RAM/power/mainboard/slot/etc. to be 
->> certain of problem location.
+> The problem came up, when 200GB drives were replaced by *newer* 250GB drives 
+> (well maybe not the newest, no idea were they came from).
 > 
-> Except for the continued series of later SI + Nvidia chipset (mostly)
-> pattern which seems unanswered but also being later chips I assume
-> unrelated to this problem.
+> Anyway, I'm testing for more than 24h already and didn't observe any data 
+> corruption as without the patch. I know this is only an obersavation and no 
+> definite prove...
+> Also, this is with 3114, maybe this chip behaves a bit different than 3112?
 
-The SIL_FLAG_MOD15WRITE flag is set in sil_port_info[] is set according 
-to the best info we have from SiI, which indicates that 3114 and 3512 do 
-not have the same problem as the 3112.
+3114 + new SATA drive is definitely a new one for us.
+
+It would help to (a) use the latest kernel, (b) post your .config with 
+the latest kernel, (c) post lspci booted into latest kernel, and (d) 
+post dmesg booted into latest kernel.
 
 	Jeff
 
