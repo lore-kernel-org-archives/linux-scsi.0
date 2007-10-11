@@ -1,174 +1,88 @@
-From: Rob Landley <rob@landley.net>
-Subject: Re: Scsi on sparc build break in 2.6.23.
-Date: Thu, 11 Oct 2007 08:17:22 -0500
-Message-ID: <200710110817.22344.rob@landley.net>
-References: <200710110552.49129.rob@landley.net> <20071011110555.GV16424@stusta.de>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH 3/3] faster workaround
+Date: Thu, 11 Oct 2007 14:26:28 +0100
+Message-ID: <20071011142628.48272a4a@the-village.bc.nu>
+References: <200710081709.18253.bs@q-leap.de>
+	<200710101112.20448.bs@q-leap.de>
+	<200710111409.56210.bs@q-leap.de>
+	<200710111433.23833.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_iJiDHa8xrR1VwBb"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:39955
-	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751983AbXJKNR2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Oct 2007 09:17:28 -0400
-In-Reply-To: <20071011110555.GV16424@stusta.de>
-Content-Disposition: inline
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55546 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752307AbXJKNVz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2007 09:21:55 -0400
+In-Reply-To: <200710111433.23833.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---Boundary-00=_iJiDHa8xrR1VwBb
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+> -static void ata_fill_sg(struct ata_queued_cmd *qc)
+> +void ata_fill_sg(struct ata_queued_cmd *qc)
+>  {
+>  	struct ata_port *ap = qc->ap;
+>  	struct scatterlist *sg;
+> @@ -4217,10 +4217,15 @@ int ata_check_atapi_dma(struct ata_queue
+>   */
+>  void ata_qc_prep(struct ata_queued_cmd *qc)
+>  {
+> +	struct ata_port *ap = qc->ap;
+> +
+>  	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
+>  		return;
+>  
+> -	ata_fill_sg(qc);
+> +	if (ap->ops->fill_sg)
+> +		ap->ops->fill_sg(qc);
+> +	else
+> +		ata_fill_sg(qc);
+>  }
 
-On Thursday 11 October 2007 6:05:55 am Adrian Bunk wrote:
-> On Thu, Oct 11, 2007 at 05:52:48AM -0500, Rob Landley wrote:
-> > CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
-> >
-> >   LD      vmlinux
-> > `scsi_esp_unregister' referenced in section `__ksymtab' of
-> > drivers/built-in.o: defined in discarded section `.exit.text' of
-> > drivers/built-in.o
-> > make: *** [vmlinux] Error 1
-> >
-> > Do you need my full .config to reproduce this?
->
-> Please always attach the .config when reporting errors.
-> The few bytes don't matter and it often saves some time.
->
-> I have an idea regarding what might be going wrong in this case,
-> but it would cost me additional time to look at it because you didn't
-> send your .config.
+Its probably better to simply make your own sil_qc_prep function for this
+case rather than touch the core code.
 
-*shrug*  That's why I asked.
+> -	.sg_tablesize		= LIBATA_MAX_PRD,
+> +	.sg_tablesize		= 120, /* max 15 kiB sectors ? */
 
-The reason I hesitated is I use miniconfig files rather than big .config 
-files, and some people get confused by that.  Drop the attached 
-miniconfig-linux in the kernel source directory and go:
-  make ARCH=sparc allnoconfig KCONFIG_ALLCONFIG=miniconfig-linux
+If you are just fiddling with the way the data is split then
+LIBATA_MAX_PRD - 1 should be totally safe)
 
-That expands it to a big .config file, and from there "make ARCH=sparc 
-CROSS_COMPILE=sparc-" to reproduce the problem.  Assuming you have a sparc 
-cross-compiler lying around.
+>  	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
+>  	.emulated		= ATA_SHT_EMULATED,
+> -	.use_clustering		= ATA_SHT_USE_CLUSTERING,
+> +	.use_clustering		= 1,
 
-Disable CONFIG_SCSI_SUNESP and it builds to the end, (and the result boots but 
-won't mount the root filesystem, which is sort of expected).
+Un-needed
 
-Rob
--- 
-"One of my most productive days was throwing away 1000 lines of code."
-  - Ken Thompson.
+>  	.proc_name		= DRV_NAME,
+> -	.dma_boundary		= ATA_DMA_BOUNDARY,
+> +	.dma_boundary		= 0x1fff,
 
---Boundary-00=_iJiDHa8xrR1VwBb
-Content-Type: text/plain;
-  charset="utf-8";
-  name="miniconfig-linux"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="miniconfig-linux"
+Ok
 
-CONFIG_EXPERIMENTAL=y
-CONFIG_SWAP=y
-CONFIG_SYSVIPC=y
-CONFIG_IKCONFIG=y
-CONFIG_IKCONFIG_PROC=y
-CONFIG_EMBEDDED=y
-CONFIG_UID16=y
-CONFIG_SYSCTL_SYSCALL=y
-CONFIG_PRINTK=y
-CONFIG_BUG=y
-CONFIG_ELF_CORE=y
-CONFIG_BASE_FULL=y
-CONFIG_FUTEX=y
-CONFIG_EPOLL=y
-CONFIG_SHMEM=y
-CONFIG_SLAB=y
-CONFIG_VM_EVENT_COUNTERS=y
-CONFIG_MODULES=y
-CONFIG_MODULE_UNLOAD=y
-CONFIG_MODULE_FORCE_UNLOAD=y
-CONFIG_KMOD=y
-CONFIG_BLOCK=y
-CONFIG_IOSCHED_AS=y
-CONFIG_IOSCHED_DEADLINE=y
-CONFIG_BINFMT_ELF=y
-CONFIG_NET=y
-CONFIG_PACKET=y
-CONFIG_UNIX=y
-CONFIG_INET=y
-CONFIG_IP_MULTICAST=y
-CONFIG_IP_ADVANCED_ROUTER=y
-CONFIG_IP_PNP=y
-CONFIG_INET_DIAG=y
-CONFIG_NETFILTER=y
-CONFIG_VLAN_8021Q=y
-CONFIG_STANDALONE=y
-CONFIG_PREVENT_FIRMWARE_BUILD=y
-CONFIG_BLK_DEV=y
-CONFIG_BLK_DEV_RAM=y
-CONFIG_BLK_DEV_RAM_COUNT=4
-CONFIG_BLK_DEV_INITRD=y
-CONFIG_SCSI=y
-CONFIG_SCSI_LOWLEVEL=y
-CONFIG_SCSI_PROC_FS=y
-CONFIG_BLK_DEV_SD=y
-CONFIG_BLK_DEV_SR=y
-CONFIG_SCSI_SUNESP=y
-CONFIG_NETDEVICES=y
-CONFIG_DUMMY=y
-CONFIG_NET_ETHERNET=y
-CONFIG_MII=y
-CONFIG_SUNLANCE=y
-CONFIG_INPUT=y
-CONFIG_INPUT_KEYBOARD=y
-CONFIG_KEYBOARD_ATKBD=y
-CONFIG_INPUT_MOUSE=y
-CONFIG_MOUSE_PS2=y
-CONFIG_SERIAL_SUNZILOG=y
-CONFIG_SERIAL_SUNZILOG_CONSOLE=y
-CONFIG_UNIX98_PTYS=y
-CONFIG_HWMON=y
-CONFIG_FIRMWARE_EDID=y
-CONFIG_UNIX98_PTY_COUNT=64
-CONFIG_EXT2_FS=y
-CONFIG_EXT2_FS_XATTR=y
-CONFIG_EXT3_FS=y
-CONFIG_EXT3_FS_XATTR=y
-CONFIG_INOTIFY=y
-CONFIG_INOTIFY_USER=y
-CONFIG_DNOTIFY=y
-CONFIG_ISO9660_FS=y
-CONFIG_PROC_FS=y
-CONFIG_PROC_KCORE=y
-CONFIG_PROC_SYSCTL=y
-CONFIG_SYSFS=y
-CONFIG_TMPFS=y
-CONFIG_NLS=y
-CONFIG_NLS_DEFAULT="ascii"
-CONFIG_NLS_CODEPAGE_437=y
-CONFIG_NLS_CODEPAGE_850=y
-CONFIG_NLS_ASCII=y
-CONFIG_NLS_ISO8859_1=y
-CONFIG_PRINTK_TIME=y
-CONFIG_ENABLE_MUST_CHECK=y
-CONFIG_MAGIC_SYSRQ=y
-CONFIG_DEBUG_KERNEL=y
-CONFIG_LOG_BUF_SHIFT=15
-CONFIG_DETECT_SOFTLOCKUP=y
-CONFIG_DEBUG_SLAB=y
-CONFIG_DEBUG_SPINLOCK=y
-CONFIG_DEBUG_SPINLOCK_SLEEP=y
-CONFIG_DEBUG_KOBJECT=y
-CONFIG_DEBUG_BUGVERBOSE=y
-CONFIG_DEBUG_INFO=y
-CONFIG_UNWIND_INFO=y
-CONFIG_FORCED_INLINING=y
-CONFIG_SECURITY=y
-CONFIG_SECURITY_CAPABILITIES=y
-CONFIG_SQUASHFS=y
+>  	.slave_configure	= ata_scsi_slave_config,
+>  	.slave_destroy		= ata_scsi_slave_destroy,
+>  	.bios_param		= ata_std_bios_param,
 
---Boundary-00=_iJiDHa8xrR1VwBb--
+> +	/* Errata workaround: if last segment is exactly 8K, split
+> +	 * into 7.5K and 512b pieces.
+> +	 */
+> +	len = le32_to_cpu(ap->prd[idx].flags_len) & 0xffff;
+> +	if (len == 8192) {
+> +		addr = le32_to_cpu(ap->prd[idx].addr);
+> +		ap->prd[idx].flags_len = cpu_to_le32(15 * 512);
+> +
+> +		idx++;
+> +		ap->prd[idx].addr = cpu_to_le32(addr + (15 * 512));
+> +		ap->prd[idx].flags_len = cpu_to_le32(512 | ATA_PRD_EOT);
+> +	}
+> +}
+
+And since in this approach we are merely splitting the last PRD entry in
+some obscure cases we might as well do it by default as it should have no
+performance impact of any note done this way.
+
+
