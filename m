@@ -1,144 +1,110 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] esp_scsi.c: remove __dev{init,exit}
-Date: Thu, 11 Oct 2007 17:35:20 +0200
-Message-ID: <20071011153520.GA16424@stusta.de>
-References: <200710110552.49129.rob@landley.net> <20071011110555.GV16424@stusta.de> <200710110817.22344.rob@landley.net> <1192109439.3352.11.camel@localhost.localdomain>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: Re: [PATCH] Add ALUA hardware handler
+Date: Thu, 11 Oct 2007 12:19:51 -0500
+Message-ID: <470E5B37.1060902@cs.wisc.edu>
+References: <470CCBB0.2020904@suse.de> <470D1DAE.1000900@cs.wisc.edu>
+	<470DDF6F.5090909@suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:43574 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753874AbXJKPex (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2007 11:34:53 -0400
-Content-Disposition: inline
-In-Reply-To: <1192109439.3352.11.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <470DDF6F.5090909@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: device-mapper development <dm-devel@redhat.com>
+Cc: Alasdair G Kergon <agk@redhat.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, christophe varoqui <christophe.varoqui@free.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Rob Landley <rob@landley.net>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>
 
-On Thu, Oct 11, 2007 at 08:30:38AM -0500, James Bottomley wrote:
-> On Thu, 2007-10-11 at 08:17 -0500, Rob Landley wrote:
-> > On Thursday 11 October 2007 6:05:55 am Adrian Bunk wrote:
-> > > On Thu, Oct 11, 2007 at 05:52:48AM -0500, Rob Landley wrote:
-> > > > CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
-> > > >
-> > > >   LD      vmlinux
-> > > > `scsi_esp_unregister' referenced in section `__ksymtab' of
-> > > > drivers/built-in.o: defined in discarded section `.exit.text' of
-> > > > drivers/built-in.o
-> > > > make: *** [vmlinux] Error 1
-> > > >
-> > > > Do you need my full .config to reproduce this?
-> > >
-> > > Please always attach the .config when reporting errors.
-> > > The few bytes don't matter and it often saves some time.
-> > >
-> > > I have an idea regarding what might be going wrong in this case,
-> > > but it would cost me additional time to look at it because you didn't
-> > > send your .config.
-> > 
-> > *shrug*  That's why I asked.
-> > 
-> > The reason I hesitated is I use miniconfig files rather than big .config 
-> > files, and some people get confused by that.  Drop the attached 
-> > miniconfig-linux in the kernel source directory and go:
-> >   make ARCH=sparc allnoconfig KCONFIG_ALLCONFIG=miniconfig-linux
-> > 
-> > That expands it to a big .config file, and from there "make ARCH=sparc 
-> > CROSS_COMPILE=sparc-" to reproduce the problem.  Assuming you have a sparc 
-> > cross-compiler lying around.
-> > 
-> > Disable CONFIG_SCSI_SUNESP and it builds to the end, (and the result boots but 
-> > won't mount the root filesystem, which is sort of expected).
+Hannes Reinecke wrote:
+> Mike Christie wrote:
+>> Hannes Reinecke wrote:
+>>> Hi Alasdair,
+>>>
+>>> this is a patch to add a SPC-3 hardware handler. SPC-3 ALUA has
+>>> provisioning for 'explicit' port group state change via the
+>>> SET TARGET GROUP STATES command, and some newer storage
+>>> arrays do benefit from this.
+>>> Eg HP EVAs and newer EMC Clariions already support explicit ALUA.
+>>>
+>>> Please apply.
+>>>
+>>> Cheers,
+>>>
+>>> Hannes
+>>>
+>> Does this also work for adaptec or snap iscsi targets or whatever they
+>> are called targets?
+>>
+> Don't know, I don't have one. Care to try?
+
+I do not have it. I was asking because some people were asking about 
+alua and I told them to talk to you.
+
 > 
-> This is a very subtle error.  You're building without hotplug, which
-> causes __devexit to become __exit, so scsi_esp_unregister is placed in
-> the discard section of vmlinux.  Unfortunately, the EXPORT_SYMBOL causes
-> it to be referenced from the symbol export table.
+>>
+>> Just some quick higher level comments
+>>
+>> +static int submit_std_inquiry(struct alua_handler *h)
+>> +{
+>> +    struct request *rq;
+>> +    unsigned err = (DRIVER_ERROR << 24);
+>> +
+>> +    rq = prepare_req(h, h->inq, TPGS_INQUIRY_SIZE, READ);
+>>
+>>
+>> I do not think you want to use GFP_KERNEL allocations in this path, so
+>> all the prepare_req allocs should be changed. GFP_NOIO is probably best.
+>>
+> Yes, probably.
 > 
-> The fix is probably just to remove the __devexit tag from the function
-> rather than trying to work out how to make the export symbol conditional
-> on the symbol not being discarded.
+>> +    if (!rq)
+>> +        return err;
+>> +
+>> +    /* Prepare the command. */
+>> +    rq->cmd[0] = INQUIRY;
+>> +    rq->cmd[1] = 0;
+>> +    rq->cmd[2] = 0;
+>> +    rq->cmd[4] = TPGS_INQUIRY_SIZE;
+>> +    rq->cmd_len = COMMAND_SIZE(INQUIRY);
+>> +
+>> +    blk_execute_rq(rq->q, NULL, rq, 1);
+>>
+>> There is only one workqueue for all the dm devices, so you do not want
+>> to do one command (or how many processors there are) at a time and wait
+>> for each one to complete with blk_execute_rq. You should use the async
+>> one, blk_execute_rq_nowait, like rdac.
+>>
+> This is actually by design. Problem here is the port group as returned by
+> REPORT TARGET PORT GROUPS does not have any association to the controller
+> which handles these ports.
+> So if we were to send all REPORT TARGET PORT GROUPS commands (roughly)
+> simultaneously we're pretty much guaranteed to hit the same controller
+> several times; and if we have to do a SET TARGET PORT GROUPS in addition
+> we'll be having to do loads of retries as the controller might be busy
+> (if he's transitioning) or reporting an UNIT ATTENTION if the port
+> group states have been updated. So I'd rather keep it that way so as
+> to not flood the controller. And then we're only having to send two
+> commands, so this should okay even sequentially.
 
-You can't make it conditional on that since a built-in esp_scsi could 
-have modular users.
+What if I have emc box and another non alua box? Your handler blocks 
+activity for all other devices.
 
-scsi_esp_register() is also buggy since it's impossible that the 
-EXPORT_SYMBOL(scsi_esp_register) works in the CONFIG_HOTPLUG=n case when 
-it's __devinit - it will always Oops.
+> 
+> And incidentally, rdac implements it's own workqueue per controller
 
-Having anything exported __{,dev}{init,exit} is always very likely to be 
-buggy.
+rdac does one single threaded workqueue for the entire module, and it 
+does not send IO synchronously.
 
-Patch below.
+> as it's only capable to handle one MODE SELECT command at time.
+> 
 
-> James
-
-cu
-Adrian
-
-
-<--  snip  -->
-
-
-Since scsi_esp_{,un}register() are EXPORT_SYMBOL'ed, these functions
-(and the functions they use) can't be __dev{init,exit}.
-
-Based on a bug report by Rob Landley.
-
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
----
-
- drivers/scsi/esp_scsi.c |   10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
---- linux-2.6.23/drivers/scsi/esp_scsi.c.old	2007-10-11 17:29:50.000000000 +0200
-+++ linux-2.6.23/drivers/scsi/esp_scsi.c	2007-10-11 17:31:25.000000000 +0200
-@@ -2138,7 +2138,7 @@
- }
- EXPORT_SYMBOL(scsi_esp_intr);
- 
--static void __devinit esp_get_revision(struct esp *esp)
-+static void esp_get_revision(struct esp *esp)
- {
- 	u8 val;
- 
-@@ -2187,7 +2187,7 @@
- 	}
- }
- 
--static void __devinit esp_init_swstate(struct esp *esp)
-+static void esp_init_swstate(struct esp *esp)
- {
- 	int i;
- 
-@@ -2233,7 +2233,7 @@
- 	esp_read8(ESP_INTRPT);
- }
- 
--static void __devinit esp_set_clock_params(struct esp *esp)
-+static void esp_set_clock_params(struct esp *esp)
- {
- 	int fmhz;
- 	u8 ccf;
-@@ -2306,7 +2306,7 @@
- 
- static struct scsi_transport_template *esp_transport_template;
- 
--int __devinit scsi_esp_register(struct esp *esp, struct device *dev)
-+int scsi_esp_register(struct esp *esp, struct device *dev)
- {
- 	static int instance;
- 	int err;
-@@ -2346,7 +2346,7 @@
- }
- EXPORT_SYMBOL(scsi_esp_register);
- 
--void __devexit scsi_esp_unregister(struct esp *esp)
-+void scsi_esp_unregister(struct esp *esp)
- {
- 	scsi_remove_host(esp->host);
- }
-
+Yeah, and chandra handled it in a way that does not affect all other 
+handlers.
