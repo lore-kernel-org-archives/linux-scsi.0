@@ -1,33 +1,43 @@
-From: Rob Landley <rob@landley.net>
-Subject: Scsi on sparc build break in 2.6.23.
-Date: Thu, 11 Oct 2007 05:52:48 -0500
-Message-ID: <200710110552.49129.rob@landley.net>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: Scsi on sparc build break in 2.6.23.
+Date: Thu, 11 Oct 2007 13:05:55 +0200
+Message-ID: <20071011110555.GV16424@stusta.de>
+References: <200710110552.49129.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:58446
-	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751419AbXJKKwx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Oct 2007 06:52:53 -0400
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757969AbXJKLFk@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <200710110552.49129.rob@landley.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
 
-CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
+On Thu, Oct 11, 2007 at 05:52:48AM -0500, Rob Landley wrote:
+> CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
+> 
+>   LD      vmlinux
+> `scsi_esp_unregister' referenced in section `__ksymtab' of drivers/built-in.o: 
+> defined in discarded section `.exit.text' of drivers/built-in.o
+> make: *** [vmlinux] Error 1
+> 
+> Do you need my full .config to reproduce this?
 
-  LD      vmlinux
-`scsi_esp_unregister' referenced in section `__ksymtab' of drivers/built-in.o: 
-defined in discarded section `.exit.text' of drivers/built-in.o
-make: *** [vmlinux] Error 1
+Please always attach the .config when reporting errors.
+The few bytes don't matter and it often saves some time.
 
-Do you need my full .config to reproduce this?
+I have an idea regarding what might be going wrong in this case,
+but it would cost me additional time to look at it because you didn't 
+send your .config.
 
-Rob
+> Rob
+
+cu
+Adrian
+
 -- 
-"One of my most productive days was throwing away 1000 lines of code."
-  - Ken Thompson.
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
