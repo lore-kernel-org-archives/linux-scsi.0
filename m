@@ -1,41 +1,41 @@
 From: Gilbert Wu <Gilbert_Wu@adaptec.com>
 Subject: [PATCH] aic94xx: update BIOS image from user space.
-Date: Wed, 10 Oct 2007 18:41:15 -0700
-Message-ID: <1192066875.6747.3.camel@linux.site>
+Date: Wed, 10 Oct 2007 18:34:38 -0700
+Message-ID: <1192066478.6042.6.camel@linux.site>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:45089 "EHLO mail-gw3.adaptec.com"
+Received: from ts.adaptec.com ([162.62.93.58]:45087 "EHLO mail-gw3.adaptec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751623AbXJKBI3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751571AbXJKBI3 (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
 	Wed, 10 Oct 2007 21:08:29 -0400
 Received: from aime2k302.adaptec.com (aime2k302.adaptec.com [10.25.8.48])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 55D4620EF1D
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Oct 2007 18:09:04 -0700 (PDT)
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id DD41B1F585C
+	for <Linux-scsi@vger.kernel.org>; Wed, 10 Oct 2007 18:09:03 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Linux-scsi@vger.kernel.org
 
  1. Create a file "update_bios" in sysfs to allow user to update bios
     from user space.
 
- 2. The BIOS image file can be downloaded from web site 
+ 2. The aic94xx BIOS image file can be downloaded from web site 
     "http://www.adaptec.com/en-US/downloads/bios_fw/bios_fw_ver?productId=SAS-48300&dn=Adaptec+Serial+Attached+SCSI+48300"
     and copy the BIOS image into /lib/firmware folder.
 
  3. The aic994xx will accept "update bios_file" and "verify bios_file"
     commands to perform update and verify BIOS image .
 
-    For example:
+      For example:
 
-     Type "echo "update asc483c01.ufi" > /sys/devices/.../update_bios"
-          to update BIOS image from /lib/firmware/as483c01.ufi file into
-          HBA's flash memory.
+       Type "echo "update asc483c01.ufi" > /sys/devices/.../update_bios"
+            to update BIOS image from /lib/firmware/as483c01.ufi file into
+            HBA's flash memory.
 
-     Type "echo "verify asc483c01.ufi" > /sys/devices/.../update_bios"
-          to verify BIOS image between /lib/firmware/asc48c01.ufi file and
-          HBA's flash memory.
+       Type "echo "verify asc483c01.ufi" > /sys/devices/.../update_bios"
+            to verify BIOS image between /lib/firmware/asc48c01.ufi file and
+            HBA's flash memory.
 
  4. Type "cat  /sys/devices/.../update_bios" to view the status or result
     of updating BIOS.
