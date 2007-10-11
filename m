@@ -1,36 +1,34 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 3/3] faster workaround
-Date: Thu, 11 Oct 2007 15:50:24 +0100
-Message-ID: <20071011155024.46007973@the-village.bc.nu>
-References: <200710081709.18253.bs@q-leap.de>
-	<200710101112.20448.bs@q-leap.de>
-	<200710111409.56210.bs@q-leap.de>
-	<200710111433.23833.bs@q-leap.de>
-	<20071011142628.48272a4a@the-village.bc.nu>
-	<470E30F9.5060705@garzik.org>
+From: "saeed bishara" <saeed.bishara@gmail.com>
+Subject: question about scsi hotswap
+Date: Thu, 11 Oct 2007 16:47:50 +0200
+Message-ID: <c70ff3ad0710110747i38265247m312a3f09cae6d19d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <470E30F9.5060705@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Bernd Schubert <bs@q-leap.de>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from nz-out-0506.google.com ([64.233.162.228]:8353 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753579AbXJKOrw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2007 10:47:52 -0400
+Received: by nz-out-0506.google.com with SMTP id s18so449217nze
+        for <linux-scsi@vger.kernel.org>; Thu, 11 Oct 2007 07:47:51 -0700 (PDT)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> The problem is that the 3112 generates Data FIS's of a size other than a 
-> multiple of 512 bytes.  Spec-legal, but exposed firmware bugs in many 
-> early SATA drives.  Early Seagate hard drives choked when the formula 
-> (sector%15)==1 was satisfied (or something along those lines).
+Hi,
+   the kernel behavior regarding scsi hotswap when the device is used
+is not uniform, assume that one disk (sda) is connected to hba, and
+this disk is part of a raid array. now if I do disconnect then connect
+the same drive again to the same port, then the disk is detected as
+new disk (sdb), but the next time I do disconnect and connect, then I
+got an error message saying:
+kobject_add failed for 1:0:0:0 with -EEXIST, don't try to register
+things with the same name in the same directory.
+also, the disk is not recognized!. and the same results are got when
+doing farther disconnects.
 
-And the 3114 is the same ?
+my question is, why the Linux treats the first disconnect/connect differently!
 
-> 2) Once we identified, over time, the set of drives affected by this 
-> 3112 quirk (aka drives that didn't fully comply to SATA spec), the 
-> debugging of corruption cases largely shifted to the standard routine: 
-> update the BIOS, replace the cables/RAM/power/mainboard/slot/etc. to be 
-> certain of problem location.
-
-Except for the continued series of later SI + Nvidia chipset (mostly)
-pattern which seems unanswered but also being later chips I assume
-unrelated to this problem.
+saeed
