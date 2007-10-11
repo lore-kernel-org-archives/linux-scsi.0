@@ -1,27 +1,33 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: drivers/fc4/fc.c in git-scsi-misc
-Date: Thu, 11 Oct 2007 02:52:03 -0700
-Message-ID: <20071011025203.e95690ee.akpm@linux-foundation.org>
+From: Rob Landley <rob@landley.net>
+Subject: Scsi on sparc build break in 2.6.23.
+Date: Thu, 11 Oct 2007 05:52:48 -0500
+Message-ID: <200710110552.49129.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36412 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752537AbXJKJwJ (ORCPT
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:58446
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751419AbXJKKwx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Oct 2007 05:52:09 -0400
+	Thu, 11 Oct 2007 06:52:53 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
 
-davem won't be happy
+CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
 
-drivers/fc4/fc.c: In function `fcp_scsi_receive':
-drivers/fc4/fc.c:397: error: structure has no member named `done'
-drivers/fc4/fc.c:450: error: structure has no member named `done'
-drivers/fc4/fc.c: In function `fcp_scsi_queuecommand':
-drivers/fc4/fc.c:837: error: structure has no member named `done'
-drivers/fc4/fc.c:838: error: structure has no member named `done'
-drivers/fc4/fc.c:839: error: structure has no member named `done'
+  LD      vmlinux
+`scsi_esp_unregister' referenced in section `__ksymtab' of drivers/built-in.o: 
+defined in discarded section `.exit.text' of drivers/built-in.o
+make: *** [vmlinux] Error 1
+
+Do you need my full .config to reproduce this?
+
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
