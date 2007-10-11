@@ -1,88 +1,66 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: [PATCH 3/3] faster workaround
-Date: Thu, 11 Oct 2007 14:26:28 +0100
-Message-ID: <20071011142628.48272a4a@the-village.bc.nu>
-References: <200710081709.18253.bs@q-leap.de>
-	<200710101112.20448.bs@q-leap.de>
-	<200710111409.56210.bs@q-leap.de>
-	<200710111433.23833.bs@q-leap.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Scsi on sparc build break in 2.6.23.
+Date: Thu, 11 Oct 2007 08:30:38 -0500
+Message-ID: <1192109439.3352.11.camel@localhost.localdomain>
+References: <200710110552.49129.rob@landley.net>
+	 <20071011110555.GV16424@stusta.de>  <200710110817.22344.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:55546 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752307AbXJKNVz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2007 09:21:55 -0400
-In-Reply-To: <200710111433.23833.bs@q-leap.de>
+Received: from hancock.steeleye.com ([71.30.118.248]:34199 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759376AbXJKNap (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2007 09:30:45 -0400
+In-Reply-To: <200710110817.22344.rob@landley.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Jeff Garzik <jeff@garzik.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: Adrian Bunk <bunk@kernel.org>, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org, David Miller <davem@davemloft.net>
 
-> -static void ata_fill_sg(struct ata_queued_cmd *qc)
-> +void ata_fill_sg(struct ata_queued_cmd *qc)
->  {
->  	struct ata_port *ap = qc->ap;
->  	struct scatterlist *sg;
-> @@ -4217,10 +4217,15 @@ int ata_check_atapi_dma(struct ata_queue
->   */
->  void ata_qc_prep(struct ata_queued_cmd *qc)
->  {
-> +	struct ata_port *ap = qc->ap;
-> +
->  	if (!(qc->flags & ATA_QCFLAG_DMAMAP))
->  		return;
->  
-> -	ata_fill_sg(qc);
-> +	if (ap->ops->fill_sg)
-> +		ap->ops->fill_sg(qc);
-> +	else
-> +		ata_fill_sg(qc);
->  }
+On Thu, 2007-10-11 at 08:17 -0500, Rob Landley wrote:
+> On Thursday 11 October 2007 6:05:55 am Adrian Bunk wrote:
+> > On Thu, Oct 11, 2007 at 05:52:48AM -0500, Rob Landley wrote:
+> > > CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
+> > >
+> > >   LD      vmlinux
+> > > `scsi_esp_unregister' referenced in section `__ksymtab' of
+> > > drivers/built-in.o: defined in discarded section `.exit.text' of
+> > > drivers/built-in.o
+> > > make: *** [vmlinux] Error 1
+> > >
+> > > Do you need my full .config to reproduce this?
+> >
+> > Please always attach the .config when reporting errors.
+> > The few bytes don't matter and it often saves some time.
+> >
+> > I have an idea regarding what might be going wrong in this case,
+> > but it would cost me additional time to look at it because you didn't
+> > send your .config.
+> 
+> *shrug*  That's why I asked.
+> 
+> The reason I hesitated is I use miniconfig files rather than big .config 
+> files, and some people get confused by that.  Drop the attached 
+> miniconfig-linux in the kernel source directory and go:
+>   make ARCH=sparc allnoconfig KCONFIG_ALLCONFIG=miniconfig-linux
+> 
+> That expands it to a big .config file, and from there "make ARCH=sparc 
+> CROSS_COMPILE=sparc-" to reproduce the problem.  Assuming you have a sparc 
+> cross-compiler lying around.
+> 
+> Disable CONFIG_SCSI_SUNESP and it builds to the end, (and the result boots but 
+> won't mount the root filesystem, which is sort of expected).
 
-Its probably better to simply make your own sil_qc_prep function for this
-case rather than touch the core code.
+This is a very subtle error.  You're building without hotplug, which
+causes __devexit to become __exit, so scsi_esp_unregister is placed in
+the discard section of vmlinux.  Unfortunately, the EXPORT_SYMBOL causes
+it to be referenced from the symbol export table.
 
-> -	.sg_tablesize		= LIBATA_MAX_PRD,
-> +	.sg_tablesize		= 120, /* max 15 kiB sectors ? */
+The fix is probably just to remove the __devexit tag from the function
+rather than trying to work out how to make the export symbol conditional
+on the symbol not being discarded.
 
-If you are just fiddling with the way the data is split then
-LIBATA_MAX_PRD - 1 should be totally safe)
-
->  	.cmd_per_lun		= ATA_SHT_CMD_PER_LUN,
->  	.emulated		= ATA_SHT_EMULATED,
-> -	.use_clustering		= ATA_SHT_USE_CLUSTERING,
-> +	.use_clustering		= 1,
-
-Un-needed
-
->  	.proc_name		= DRV_NAME,
-> -	.dma_boundary		= ATA_DMA_BOUNDARY,
-> +	.dma_boundary		= 0x1fff,
-
-Ok
-
->  	.slave_configure	= ata_scsi_slave_config,
->  	.slave_destroy		= ata_scsi_slave_destroy,
->  	.bios_param		= ata_std_bios_param,
-
-> +	/* Errata workaround: if last segment is exactly 8K, split
-> +	 * into 7.5K and 512b pieces.
-> +	 */
-> +	len = le32_to_cpu(ap->prd[idx].flags_len) & 0xffff;
-> +	if (len == 8192) {
-> +		addr = le32_to_cpu(ap->prd[idx].addr);
-> +		ap->prd[idx].flags_len = cpu_to_le32(15 * 512);
-> +
-> +		idx++;
-> +		ap->prd[idx].addr = cpu_to_le32(addr + (15 * 512));
-> +		ap->prd[idx].flags_len = cpu_to_le32(512 | ATA_PRD_EOT);
-> +	}
-> +}
-
-And since in this approach we are merely splitting the last PRD entry in
-some obscure cases we might as well do it by default as it should have no
-performance impact of any note done this way.
+James
 
 
