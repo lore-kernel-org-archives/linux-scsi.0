@@ -1,43 +1,51 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: Scsi on sparc build break in 2.6.23.
-Date: Thu, 11 Oct 2007 13:05:55 +0200
-Message-ID: <20071011110555.GV16424@stusta.de>
-References: <200710110552.49129.rob@landley.net>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: drivers/fc4/fc.c in git-scsi-misc
+Date: Thu, 11 Oct 2007 13:05:32 +0200
+Message-ID: <470E037C.4080204@panasas.com>
+References: <20071011025203.e95690ee.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757969AbXJKLFk@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200710110552.49129.rob@landley.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:10570 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754552AbXJKLFq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Oct 2007 07:05:46 -0400
+In-Reply-To: <20071011025203.e95690ee.akpm@linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On Thu, Oct 11, 2007 at 05:52:48AM -0500, Rob Landley wrote:
-> CONFIG_SCSI_SUNESP=y breaks the build in 2.6.23:
+On Thu, Oct 11 2007 at 11:52 +0200, Andrew Morton <akpm@linux-foundation.org> wrote:
+> davem won't be happy
 > 
->   LD      vmlinux
-> `scsi_esp_unregister' referenced in section `__ksymtab' of drivers/built-in.o: 
-> defined in discarded section `.exit.text' of drivers/built-in.o
-> make: *** [vmlinux] Error 1
-> 
-> Do you need my full .config to reproduce this?
+> drivers/fc4/fc.c: In function `fcp_scsi_receive':
+> drivers/fc4/fc.c:397: error: structure has no member named `done'
+> drivers/fc4/fc.c:450: error: structure has no member named `done'
+> drivers/fc4/fc.c: In function `fcp_scsi_queuecommand':
+> drivers/fc4/fc.c:837: error: structure has no member named `done'
+> drivers/fc4/fc.c:838: error: structure has no member named `done'
+> drivers/fc4/fc.c:839: error: structure has no member named `done'
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Please always attach the .config when reporting errors.
-The few bytes don't matter and it often saves some time.
+OK that was a nice lesson in Kconfig and Linux-Makefile for me :)
 
-I have an idea regarding what might be going wrong in this case,
-but it would cost me additional time to look at it because you didn't 
-send your .config.
+So I can see that drivers/fc4/Kconfig is only "source"d from 
+arch/sparc64/Kconfig. Hence no one experienced the breakage.
 
-> Rob
+[
+If I add to, say, drivrs/Kconfig
++source drivers/fc4/Kconfig
+Than everything compiles and I can see the breakage now
+]
 
-cu
-Adrian
+Do you have a cross-compiling environment to compile all these
+ARCHs, or you actually have these machines laying around for
+compilation. (It's the cross-compiling I'm interested in)
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+Thanks
+Boaz
