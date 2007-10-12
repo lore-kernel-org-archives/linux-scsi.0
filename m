@@ -1,32 +1,37 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH 3/3] faster workaround
-Date: Fri, 12 Oct 2007 17:08:21 -0400
-Message-ID: <470FE245.5040702@garzik.org>
-References: <200710081709.18253.bs@q-leap.de> <200710111639.38240.bs@q-leap.de> <470E3B8D.4080002@garzik.org> <200710111718.43159.bs@q-leap.de>
+Subject: Re: [patch 1/1] scsi: expose AN support to user space
+Date: Fri, 12 Oct 2007 17:09:46 -0400
+Message-ID: <470FE29A.7050605@garzik.org>
+References: <200710032104.l93L40CM008614@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200710111718.43159.bs@q-leap.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from srv5.dvmed.net ([207.36.208.214]:56533 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757349AbXJLVJz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Oct 2007 17:09:55 -0400
+In-Reply-To: <200710032104.l93L40CM008614@imap1.linux-foundation.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: akpm@linux-foundation.org, kristen.c.accardi@intel.com, htejun@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-Bernd Schubert wrote:
-> a) 2.6.23 + sil-patch I posted, this is on a customer system (though my former 
-> group), I wouldn't like to use -mm there.
+akpm@linux-foundation.org wrote:
+> From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
 > 
-> b) .config is attached
+> If a scsi_device supports async notification for media change, then let user
+> space know this capability exists by creating a new sysfs entry
+> "media_change_notify", which will be 1 if it is supported, and 0 if not
+> supported.  Create a routine which allows scsi devices to send a uevent when
+> media change events occur.
 > 
-> c) attached
-> 
-> d) attached (don't get irritaded by those machine check events, thats "GART 
-> TLB errorr", harmless warnings, just not disabled in the bios).
+> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+> Acked-by: Jeff Garzik <jeff@garzik.org>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-Any chance you could provide dmesg on 2.6.23 without the sil patch?
-
-	Jeff
-
+Ping?
 
 
