@@ -1,93 +1,52 @@
-From: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-Subject: Build Failure (Was Re: 2.6.23-mm1)
-Date: Fri, 12 Oct 2007 15:12:31 +0530
-Message-ID: <20071012094231.GA15012@linux.vnet.ibm.com>
-References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
-Reply-To: Dhaval Giani <dhaval@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 0/3] Update sysfs registration
+Date: Fri, 12 Oct 2007 16:42:01 +0200
+Message-ID: <470F87B9.2070604@suse.de>
+References: <46F25D13.6020305@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from E23SMTP03.au.ibm.com ([202.81.18.172]:47652 "EHLO
-	e23smtp03.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750906AbXJLJtg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Oct 2007 05:49:36 -0400
-Content-Disposition: inline
-In-Reply-To: <20071011213126.cf92efb7.akpm@linux-foundation.org>
+Received: from ns1.suse.de ([195.135.220.2]:44847 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753994AbXJLOmE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Oct 2007 10:42:04 -0400
+In-Reply-To: <46F25D13.6020305@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, ballabio_dario@emc.com, linux-scsi@vger.kernel.org, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Kay Sievers <kay.sievers@vrfy.org>
 
-On Thu, Oct 11, 2007 at 09:31:26PM -0700, Andrew Morton wrote:
+Hi James,
+
+I recently posted this patchset:
+
+> these patches are a follow-up to the earlier patch from Kay Sievers n=
+amed
+> "[SCSI] switch sdev sysfs attributes to default attributes".
+> It consists of three parts:
 >=20
-> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/=
-2.6.23-mm1/
+> - PATCH 1/3: Rework scsi target allocation so that uevents will only
+>   be sent for existing targets
+> - PATCH 2/3: Add scsi_bus type to scsi_target and scsi_host, so they
+>   will show up in the scsi bus device listing.
+> - PATCH 3/3: switch scsi_host sysfs attributes to default attributes
 >=20
+Did you have a chance to look at it?
+Will that be included in 2.6.24?
 
-Hi Andrew
+Some other pending sysfs patches are based on this, so we'd rather like=
+ to
+know where we stand ...
 
-My compile just failed with=20
+Cheers,
 
-drivers/scsi/gdth.c: In function =E2=80=98gdth_search_dev=E2=80=99:
-drivers/scsi/gdth.c:646: warning: =E2=80=98pci_find_device=E2=80=99 is =
-deprecated
-(declared at include/linux/pci.h:482)
-drivers/scsi/gdth.c: In function =E2=80=98gdth_init_isa=E2=80=99:
-drivers/scsi/gdth.c:857: error: =E2=80=98gdth_irq_tab=E2=80=99 undeclar=
-ed (first use in
-this function)
-drivers/scsi/gdth.c:857: error: (Each undeclared identifier is reported
-only once
-drivers/scsi/gdth.c:857: error: for each function it appears in.)
-drivers/scsi/gdth.c: In function =E2=80=98gdth_copy_internal_data=E2=80=
-=99:
-drivers/scsi/gdth.c:2362: warning: unused variable =E2=80=98sg=E2=80=99
-make[2]: *** [drivers/scsi/gdth.o] Error 1
-make[1]: *** [drivers/scsi] Error 2
-make: *** [drivers] Error 2
-[dhaval@gondor linux-2.6.23]$
-
-Looking into the code I notice that gdth_irq_tab is not declared with
-CONFIG_ISA=3Dy and !CONFIG_EISA.
-
-The values seem to be same in 2.6.23 (I am not sure why it has been put
-with #ifdefs in -mm) so I have just modified the #ifdef to take care of
-CONFIG_ISA as well.
-
-(Compile tested only)
-
-Thanks,
-
---
-
-Signed-off-by: Dhaval Giani <dhaval@linux.vnet.ibm.com>
-
-
-Index: linux-2.6.23/drivers/scsi/gdth.c
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
---- linux-2.6.23.orig/drivers/scsi/gdth.c	2007-10-12 14:07:28.000000000=
- +0530
-+++ linux-2.6.23/drivers/scsi/gdth.c	2007-10-12 15:06:47.000000000 +053=
-0
-@@ -288,7 +288,7 @@ static struct timer_list gdth_timer;
- #ifdef CONFIG_ISA
- static unchar   gdth_drq_tab[4] =3D {5,6,7,7};            /* DRQ table=
- */
- #endif
--#ifdef CONFIG_EISA
-+#if defined(CONFIG_EISA) || defined(CONFIG_ISA)
- static unchar   gdth_irq_tab[6] =3D {0,10,11,12,14,0};    /* IRQ table=
- */
- #endif
- static unchar   gdth_polling;                           /* polling if =
-TRUE */
-
+Hannes
 --=20
-regards,
-Dhaval
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
 n
