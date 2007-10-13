@@ -1,63 +1,72 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: Scsi on sparc build break in 2.6.23.
-Date: Sat, 13 Oct 2007 21:26:31 +0200
-Message-ID: <20071013192631.GE4211@stusta.de>
-References: <200710110552.49129.rob@landley.net> <200710111737.30420.rob@landley.net> <20071011235659.GB3620@stusta.de> <200710131409.36164.rob@landley.net>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: What still uses the block layer?
+Date: Sat, 13 Oct 2007 16:05:39 -0600
+Message-ID: <20071013220539.GD29934@parisc-linux.org>
+References: <200710112011.22000.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <sparclinux-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:54957 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758599AbXJMWFm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Oct 2007 18:05:42 -0400
 Content-Disposition: inline
-In-Reply-To: <200710131409.36164.rob@landley.net>
-Sender: sparclinux-owner@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <200710112011.22000.rob@landley.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Sat, Oct 13, 2007 at 02:09:35PM -0500, Rob Landley wrote:
-> On Thursday 11 October 2007 6:56:59 pm Adrian Bunk wrote:
-> > On Thu, Oct 11, 2007 at 05:37:30PM -0500, Rob Landley wrote:
-> > > On Thursday 11 October 2007 10:21:49 am Adrian Bunk wrote:
-> > > > I assume you have the full .config in your build directory, and could
-> > > > have taken it from there?
-> > >
-> > > Actually I don't.  (The extracted source tree is in a temporary directory
-> > > which the script deletes afterwards unless I tell it not to.  I just
-> > > followed my own instructions to create the .config and attach it, but I
-> > > see that James Bottomley already diagnosed it and you came up with a
-> > > patch.  Off to try it...)
-> >
-> > I was able to follow your instructions for generating it.
-> >
-> > But I hope you got my point that it's much easier to debug such issues
-> > when you generate the .config yourself and attach it when sending the
-> > bug report.
-> 
-> *shrug*  I find miniconfig much easier to read because I can see what the 50 
-> or so intentional options are, not just the 1000 or so background options set 
-> to various default values.
+On Thu, Oct 11, 2007 at 08:11:21PM -0500, Rob Landley wrote:
+> My impression from asking questions on the linux-scsi mailing list is that the 
+> scsi upper/middle/lower layers doesn't use the block layer described in 
+> Documentation/block/*.
 
-The .config is the canonical format everyone is used to.
+Entirely incorrect.
 
-It also has advantages like a defined order of the options.
+> Instead of using the block layer, SCSI reinvents this particular wheel itself.  
+> There's a scsi "upper layer" that provides /dev nodes, scsi low-level 
+> drivers, and a gigantic glue layer in between call the "scsi midlayer" that's 
+> something like a networking stack, and is responsible for losing track of all 
+> your devices so that the one SATA disk hardwired into your laptop might be 
+> sda or sdc depending on whether or not you had a USB key plugged in when you 
+> booted up.  Anyway, the block layer isn't between any of these three, that I 
+> can tell.
 
-And it is actually an advantage that you see what the other options are 
-set to (e.g. in this case your miniconfig did not show the value of 
-CONFIG_HOTPLUG which was the most important option for understanding the 
-bug) - it doesn't matter whether you {dis,en}abled it intentionally, 
-all that matter is it's value.
+You really need to get the fuck over yourself.
 
-There might be use cases where a miniconfig is better, but for debugging 
-compile errors a full .config is much better.
+> Now that IDE disks have been rerouted through the scsi layer, SATA goes 
+> through the scsi layer, USB goes through the scsi layer, firewire goes 
+> through the scsi layer...  What's left?  It seems like everything but 
+> ramdisks have now been routed through the scsi layer.  My laptop hasn't got a 
+> single SCSI device but it also hasn't got any block devices that don't show 
+> up as scsi.
 
-> Rob
+That's nice.  Why not take a look in drivers/block?  Floppy, CCISS,
+CPQDA, UMEM, UBD, loop, NBD, SX8, UB, AoE, and many more.
 
-cu
-Adrian
+> So what's still using the block layer?  How do the scsi layers and the block 
+> layer relate?  I'm confused!  (This is normal for me, but still...)
+
+sd and sr are block drivers.  In fact, the whole SCSI subsystem ...
+
+        depends on BLOCK
+
+Just take a look at sd.c.  The init code reads:
+
+        for (i = 0; i < SD_MAJORS; i++)
+                if (register_blkdev(sd_major(i), "sd") == 0)
+                        majors++;
+
+Then look at struct scsi_cmnd.  It has a pointer to the block request
+that was passed down to it.  struct scsi_device has a pointer to the
+block request_queue that's associated with the device.  Block is what
+has elevators and io schedulers -- that work isn't duplicated by scsi.
+There's work to push more of scsi's infrastructure up into the block
+layer, so non-scsi block devices can take advantage of it.
 
 -- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
