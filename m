@@ -1,40 +1,43 @@
-From: Gabriel C <nix.or.die@googlemail.com>
-Subject: Re: [PATCH 0/3] debloat aic7xxx and aic79xx drivers
-Date: Sun, 14 Oct 2007 19:47:31 +0200
-Message-ID: <47125633.3030404@googlemail.com>
-References: <200710141558.27156.vda.linux@googlemail.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: linux-2.6.23-mm1 crashed
+Date: Sun, 14 Oct 2007 12:21:44 -0700
+Message-ID: <20071014122144.f8e56ed9.akpm@linux-foundation.org>
+References: <2a382c6e0710141145j51286bd0o8a2eb307f7455cd@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mu-out-0910.google.com ([209.85.134.190]:45189 "EHLO
-	mu-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1761334AbXJNRu7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 14 Oct 2007 13:50:59 -0400
-Received: by mu-out-0910.google.com with SMTP id i10so1691434mue
-        for <linux-scsi@vger.kernel.org>; Sun, 14 Oct 2007 10:50:57 -0700 (PDT)
-In-Reply-To: <200710141558.27156.vda.linux@googlemail.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:57615 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752369AbXJNTV6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Oct 2007 15:21:58 -0400
+In-Reply-To: <2a382c6e0710141145j51286bd0o8a2eb307f7455cd@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Dave Milter <davemilter@gmail.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-Denys Vlasenko wrote:
-> Hi,
+On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
 
-Hi,
+> I build linux-2.6.23-mm1 and try to boot it using qemu,
+> and it crashed with trace like this:
+> do_page_fault
+> error_code
+> lock_acquire
+> _spin_lock_irqsave
+> gdth_timeout
+> run_timer_softirq
+> __do_softirq
+> do_softirq
+> 
+> I have screenshot, but have no idea, is it legal to include it, if I
+> sent copy to lkml.
+> config of kernel in attachment,
+> I apply all three patches from hot-fixes.
+> 
 
-> Compile tested and applies cleanly to 2.6.23.
-> I don't have this hardware anymore and cannot run test these patches.
+The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
 
-I can test these patches on an aic7892 controller later on today if you want.
-
-BTW while you seems to care about this driver could you have a look at :
-
-http://bugzilla.kernel.org/show_bug.cgi?id=3062 ?!?
-
-
-Regards,
-
-Gabriel C
-
+It would appear that gdth_timeout() is passing a bad pointer into
+spin_lock_irqsave().
