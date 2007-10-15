@@ -1,145 +1,137 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Theodore Tso <tytso@mit.edu>
 Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 09:10:49 -0400
-Message-ID: <1192453849.6368.26.camel@localhost.localdomain>
-References: <200710112011.22000.rob@landley.net>
-	 <20071013220539.GD29934@parisc-linux.org>
-	 <1192400672.3351.56.camel@localhost.localdomain>
-	 <200710141845.44750.rob@landley.net>
+Date: Mon, 15 Oct 2007 09:21:06 -0400
+Message-ID: <20071015132106.GE21216@thunk.org>
+References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015014503.GF9715@thunk.org> <200710150304.00901.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764721AbXJONLD@vger.kernel.org>
-In-Reply-To: <200710141845.44750.rob@landley.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1764938AbXJONWB@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200710150304.00901.rob@landley.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Rob Landley <rob@landley.net>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@oracle.com>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, 2007-10-14 at 18:45 -0500, Rob Landley wrote:
-> On Sunday 14 October 2007 5:24:32 pm James Bottomley wrote:
-> > On Sat, 2007-10-13 at 16:05 -0600, Matthew Wilcox wrote:
-> > > On Thu, Oct 11, 2007 at 08:11:21PM -0500, Rob Landley wrote:
-> > > > My impression from asking questions on the linux-scsi mailing list is
-> > > > that the scsi upper/middle/lower layers doesn't use the block layer
-> > > > described in Documentation/block/*.
-> > >
-> > > Entirely incorrect.
-> >
-> > OK, right ... could we please get a sense of decorum back on this list.
+On Mon, Oct 15, 2007 at 03:04:00AM -0500, Rob Landley wrote:
+> Ok, I'll bite.  If it's all "real" scsi, why does ioctl(SG_EMULATED_HOST) 
+> exist? exist if it's all "real" scsi?
+
+SG_EMULATED_HOST was added before Linux 2.4, at least six or seven
+years ago.  Back then the migration of ATA devices through the various
+versions the ATAPI specification and then into SATA was very early in
+its evolution, and back then, yes there were people who considered
+anything that didn't use the honking huge parallel SCSI cables not
+"real" SCSI.  Over time, that distinction at both the physical
+connector level and logical level has declined to the point of almost
+non-existence.  It's note quite at the point where SAS exists only to
+justify massive prices differences between commodity and "data-center
+grade" disks to the benefit of hard drive manufacturers, but it's
+darned close.  (There are differences such as voltage levels so that
+the max cable differences for SAS are larger, etc., but those could
+have been optional additions to the SATA spec, and allegedly SAS
+drives are supposedly manufactered to be more robust --- although some
+recent papers published at FAST have raised some interesting questions
+about how true those marketing claims really are in practice.)
+
+> > just 
+> > as Ethernet and PPP interfaces really are fundamentally the same
+> > thing.
 > 
-> Did I reply to the insult?
+> They're the same thing?
 > 
-> > Rob, if you didn't ask your alleged questions in such a pejorative
-> > manner, we'd get a lot further
+> Do you mean that on a system with both, going:
+>   ifconfig eth1 66.92.53.140
+>   ifconfig ppp 192.168.0.42
 > 
-> I'm not attempting to be pejorative.
+> Would be functionally equivalent to:
+>   ifconfig eth1 192.168.0.42
+>   ifconfig ppp 66.92.53.140
 
-OK, so could we get back to the original discussion?  The question I
-think you meant to ask is "does SCSI use the block layer, and if so;
-how?"
+No, of course not.  But we don't have separate IP stacks for ethernet
+and ppp devices.  And how we connect to a host via ssh makes no
+difference whether we accessed it via Ethernet or PPP.  And I would
+argue that how we address a filesystem should also make no difference
+depending on the path to hard drive.
 
-The answer is yes (just do an ls /sys/block on any scsi machine).  The
-how is that it bascially uses the block layer as a service library (i.e.
-most SCSI services are built on top of those already provided by block).
-The email you cited was basically from our one area of confusion:  SCSI
-and block both provide services to decode the SG_IO ioctl.  This is
-partly historical; block and SCSI are very much intertwined; so much so
-that they both tend to drive each other's development.  The programme
-over the last few years has been to identify features in SCSI that
-should be more generic (and hence moved to block).  SG_IO is one of
-these, so we end up with the situation where Block provides this as a
-service (and sr, st and sd make use of it) while the sg driver still
-doesn't use what the block layer provides but rolls its own.  I think
-the layout of how all this works is illustrated at a reasonably high
-level here on slide 15:
+> By the way, ethernet cards contain a unique MAC address.  Hard
+> drives do not seem to, or if they do it's not being consistently
+> exposed in a way I can find.
 
-http://licensing.steeleye.com/support/papers/ols_2005_slides.pdf
+You can pull a Model and Serial number via hdparm -i, but it's not as
+easy to manipulate as a fixed-length MAC address.  That's why people
+tend to use filesystem UUID's.   
 
-
-> I admit a certain amount of personal annoyance that once the SCSI layer 
-> consumes a category of device (USB, SATA, PATA), they can often _only_ be 
-> used by going through the SCSI midlayer.  (This strikes me as analogous to 
-> TCP/IP claiming ethernet and PPP devices so thoroughly that you can no longer 
-> address them as eth1 or /dev/ttyS0.)
-
-OK.  But that's the bit I need you to separate from your inquiry into
-how SCSI actually works.  You can't go on a research trip if you allow
-preconceived notions to spill over into it.
-
-For the record, USB and firewire are SCSI at their core, so they can
-never really be separated.  SATA (but not SATAPI) is a separate
-protocol, so it can theoretically be separated later, and we are
-actually working on that.  It's only in SCSI because there's a well
-defined and standardised way to place it their (called the SAT
-layer---SCSI to ATA Translation) and because it's a lot easier since
-SCSI has all the features and quite a few of the necessary ones aren't
-yet migrated to block.
-
-> This has the annoying effect of bundling together different types of devices 
-> and making device enumeration unnecessarily difficult: my laptop only has one 
-> SATA hard drive and can't gain another without a soldering iron, but that 
-> drive could move from /dev/sda to /dev/sdb if I reboot the system with a USB 
-> key plugged in.  This seems like a regrettable loss of orthogonality to me.  
-> I remember back when /dev/usb0 and /dev/hda were separate devices that showed 
-> up in /dev, but these days "it's SCSI" seems to trump "it's USB", "it's ATA", 
-> or "it's SATA".  (Even though none of those are actually SCSI hardware, they 
-> just send a similar packet protocol across the wire.)
+> > More to the point, with SATA, hot plugging has been designed in, so
+> > probing order is not going to be well defined,
 > 
-> The fact that udev can theoretically unwind this hairball is not an excuse for 
-> conflating different categories of devices in the first place.  Avoiding an 
-> unnecessary problem seems superior to trying to get udev to solve it.  Note 
-> that Ubuntu 7.04 solves it by sticking a UUID on every _partition_, and then 
-> spinning up my external USB hard drive trying to find the root partition on a 
-> reboot.  Tell me how this can be considered progress:
-> 
-> > # /etc/fstab: static file system information.
-> > #
-> > # <file system> <mount point>   <type>  <options>       <dump>  <pass>
-> > proc            /proc           proc    defaults        0       0
-> > # /dev/sda1
-> > UUID=04d1b984-bd65-46f1-9a77-c158cf4bed1b /               ext3 
-> defaults,errors=remount-ro,noatime 0       1
-> > # /dev/sda5 
-> > UUID=cdf0936d-9f19-42c6-b131-9fefcf1321ef none            swap    sw        
-> 0       0
-> > /dev/scd0       /media/cdrom0   udf,iso9660 user,noauto   0       0 
-> > UUID=86bbb512-ab7e-4a12-8618-1190f032c082  /boot ext3 defaults 0 0 
-> 
-> Conflating categories of hardware that cannot easily be enumerated (USB) with 
-> categories that can (the SATA hard drive in my laptop, of which there can be 
-> only one) strikes me as a bad thing.  Putting them in a common "scsi device 
-> pool" within which they do not enumerate consistently is not something I 
-> enjoy dealing with.
+> The spec may define the capability to hotplug, but your average
+> laptop doesn't not offer the capability to hotplug anything into its
+> SATA controllers.  The hard drive is screwed in (due to the
+> portability part of laptopness), all the controllers wired onto the
+> motherboard are accounted for, none are exposed externally.  What
+> _is_ exposed externally is USB, and if you want to add an extra hard
+> drive you can buy a cheap USB one at Fry's.
 
-However, by design choice, we got the SCSI layer in the kernel out of
-the business of trying to provide a stable name space, since Richard
-Gooch did a brilliant job of demonstrating the insoluability of that
-problem.  There are many ways to identify a device (UUID being just one
-of them).  It seems much more desirable to give the users the choice.
-You can even have what you seem to want (SATA stably at /dev/sda) simply
-by ensuring that you have a modular kernel and that libata always loads
-before USB or any other storage device (not that I'd recommend doing
-this, because it will fail for a large configuration, but it would work
-for you).
+That may be true for laptops today, but Linux doesn't run just on
+servers.  You can easily get home servers with hot-swap SATA bays.  My
+home fileserver, which is a white box I purchased on my own nickel,
+NOT IBM big iron, has 3TB of raw storage for less than $10,000 a year
+ago.  Today, that amount of home storage with hot-swap SATA drives and
+a battery-backed hardware RAID controller could probably be purchased
+for about half that price. 
 
-> However, the response to my attempts to express this dissatisfaction on the 
-> SCSI list a few months ago came too close to a flamewar for me to consider 
-> continuing it productive.  I'd still love to update the "2.4 scsi howto" and 
-> corresponding sg howto, but lack the expertise.  The SCSI layer really isn't 
-> my area, and I was much happier back when I could avoid using it at all.
+And even for laptops, if you need the performance, you can get Cardbus
+cards that will allow you to connect eSATA drives to your laptop at
+Fry's.
 
-That was because your initial inquiry came across as "I'm trying to
-document this, and by the way it's rubbish".  By all means have an
-inquiry and an argument, but saying effectively I don't understand this
-but I know it's wrong is a guaranteed way to antagonise everyone who's
-worked to try to make all of this as functional as possible.  Find out
-the facts first then argue from them.
+So even if you ignore "big data center" interconnects like FC, this
+problem exists even for commodity grade SATA devices.
 
-> The question I was trying to ask _here_ was about the block layer.  I seem not 
-> to have asked it very well.  Sorry 'bout that.
+I agree at the moment we have an issue where if the root device isn't
+guaranteed, it forces people to use initrd's, and the quality and
+debuggability of initrd's between distro's is highly variable and not
+standardized.  In practice though the /dev/sda is actually pretty
+stable on laptops, especially if you end up compiling ehci and uhci
+support as modules (which is a good idea from a power savings point of
+view anyway).  The reason why Ubuntu and other distributions are using
+UUID-based labels is not just because of the root device, but also for
+all of the other disks that might be mounted on the system, including
+some that might be using USB devices that don't have stable /dev
+names. 
 
-OK, so look at the diagram and the other SCSI documents and come back
-for further clarification as you need it.
+> It's necessary for IBM big iron to do this.  It's generally not
+> necessary for laptops or embedded systems to do this if they
+> distinguish between _types_ of devices, which is something they
+> until recently did for the types of devices I was interested in, and
+> something they _stopped_ doing when everything got merged into the
+> scsi layer, and I consider this a regression.
 
-James
+As another example, it's easy to see a home media server running Linux
+which doesn't have any expansion bays for additional hard drive --- so
+the only way a user could expand their storage is by using one or more
+permanently connected USB disks.  So we do need to solve the general
+device enumeration problem in the general case; it's not just the case
+of IBM "big iron" as you seem to think.
+
+> No, distinguishing between types of devices is not a perfect
+> solution to device enumeration, but it was sufficient for all my use
+> cases for many years, and would still be if the kernel still did it,
+> and I'm not alone here.
+
+News flash!  The kernel wasn't built just for you, and over time, more
+and more people will have multiple disk drives of the same type, so we
+will need to solve the device naming problem sooner or later.  Why not
+solve it sooner, especially given that a number of companies (not just
+IBM) are funding the organization that is paying *your* salary are
+interested in solving the general case?  
+
+Furthermore, I've already pointed a number of situations where the
+home user might have multiple USB devices on their system today, and
+that is probably going to go up over time, not down.  Have you seen
+how cheap 500GB USB disks are at Costco?  And for a typical
+unsophisticated user, plugging in another 500G USB disk when they need
+more storage is a lot easier than cracking open the computer case and
+futzing with screws and disk cables and power connectors.
+
+		     	    	     	    - Ted
