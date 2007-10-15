@@ -1,45 +1,64 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 10:25:13 -0700
-Message-ID: <20071015172513.GA5738@kroah.com>
-References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015060015.GB32268@kroah.com> <200710150336.15774.rob@landley.net>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 2/3] pluto/fc - Enable compilation for all ARCHs
+Date: Mon, 15 Oct 2007 19:26:51 +0200
+Message-ID: <4713A2DB.2000302@panasas.com>
+References: <4713A175.9020408@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932751AbXJOR05@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <200710150336.15774.rob@landley.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:7286 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756646AbXJOR1I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 13:27:08 -0400
+In-Reply-To: <4713A175.9020408@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, "David S. Miller" <davem@davemloft.net>, Matthew Wilcox <matthew@wil.cx>, Andrew Morton <akpm@linux-foundation.org>linux-scsi <linux>
+Cc: FUJITA Tomonori <tomof@acm.org>
 
-On Mon, Oct 15, 2007 at 03:36:15AM -0500, Rob Landley wrote:
-> 
-> The point I was trying to make is that it seems to me like it would be 
-> possible to keep the namespace separate here, and thus reduce the enumeration 
-> problems to the point where common cases (like my laptop) aren't impacted by 
-> them during early boot.
 
-Proposals on how to do this would be gladly reviewed.
+  - It was suggested on the linux-scsi-ml that:
+    "Well if fc4.c compiles OK on non-sparc64 then perhaps we should
+     enable compilation on non-sparc64.  It will increase maintainability
+     and code quality and stuff."
 
-But again, please remember that these USB devices are really SCSI
-devices.  Same for SATA devices.  There is a reason they are using the
-SCSI layer, and it isn't just because the developers felt like it :)
+  - WATCH OUT Distro maintainers:
+	"otoh people might end up shipping useless drivers in x86 distros."
 
-> I don't think anybody (outside the embedded space) is actually upset
-> that /dev/hda now goes through the scsi layer:  they're upset Ubuntu
-> 7.04 no longer calls it /dev/hda.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ arch/sparc64/Kconfig |    2 --
+ drivers/Kconfig      |    2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Use mount-by-label instead, it's much saner and handles device name
-movement just fine (as does the UUID method that you seem to hate.)
-Look in /dev/disk/ for a wide range of options that you have in which to
-choose how to pick your block devices.
+diff --git a/arch/sparc64/Kconfig b/arch/sparc64/Kconfig
+index 33dabf5..897afd8 100644
+--- a/arch/sparc64/Kconfig
++++ b/arch/sparc64/Kconfig
+@@ -456,8 +456,6 @@ source "drivers/Kconfig"
+ 
+ source "drivers/sbus/char/Kconfig"
+ 
+-source "drivers/fc4/Kconfig"
+-
+ source "fs/Kconfig"
+ 
+ menu "Instrumentation Support"
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 3e1c442..b57232d 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -22,6 +22,8 @@ source "drivers/misc/Kconfig"
+ 
+ source "drivers/ide/Kconfig"
+ 
++source "drivers/fc4/Kconfig"
++
+ source "drivers/scsi/Kconfig"
+ 
+ source "drivers/ata/Kconfig"
+-- 
+1.5.3.1
 
-Oh, and this seems like a very Ubuntu specific rant, might I suggest you
-contact the Ubuntu developers about this?  The kernel doesn't dictate
-that the distro has to use these long identifiers, and there is nothing
-we can do about it.
 
-good luck,
-
-greg k-h
