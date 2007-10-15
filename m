@@ -1,52 +1,45 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 14:46:35 -0400
-Message-ID: <4713B58B.9050905@garzik.org>
-References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015060015.GB32268@kroah.com> <200710150336.15774.rob@landley.net> <20071015172513.GA5738@kroah.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 2/3] pluto/fc - Enable compilation for all ARCHs
+Date: Mon, 15 Oct 2007 20:18:24 +0200
+Message-ID: <4713AEF0.5070706@panasas.com>
+References: <4713A175.9020408@panasas.com> <4713A2DB.2000302@panasas.com> <20071015180949.GC25488@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S933299AbXJOSuc@vger.kernel.org>
-In-Reply-To: <20071015172513.GA5738@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Rob Landley <rob@landley.net>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:26318 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933463AbXJOSSl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 14:18:41 -0400
+In-Reply-To: <20071015180949.GC25488@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>
 
-Greg KH wrote:
-> On Mon, Oct 15, 2007 at 03:36:15AM -0500, Rob Landley wrote:
->> The point I was trying to make is that it seems to me like it would be 
->> possible to keep the namespace separate here, and thus reduce the enumeration 
->> problems to the point where common cases (like my laptop) aren't impacted by 
->> them during early boot.
+Matthew Wilcox wrote:
+> On Mon, Oct 15, 2007 at 07:26:51PM +0200, Boaz Harrosh wrote:
+>> @@ -22,6 +22,8 @@ source "drivers/misc/Kconfig"
+>>  
+>>  source "drivers/ide/Kconfig"
+>>  
+>> +source "drivers/fc4/Kconfig"
+>> +
+>>  source "drivers/scsi/Kconfig"
+>>  
+>>  source "drivers/ata/Kconfig"
 > 
-> Proposals on how to do this would be gladly reviewed.
+> I think I see two problems ... one is that fc4 plainly depends on SCSI,
+> yet it's not mentioned in the fc4 Kconfig file.  The other is that,
+> given this dependency, fc4 should come after scsi.  And maybe even be
+> included from drivers/scsi/Kconfig rather than drivers/Kconfig.  I don't
+> have a strong feeling on that last point.
+> 
 
-Agreed.
+This is all new territory for me. But CONFIG_SCSI_PLUTO is dependent on
+SCSI and fc.c is not the real driver just the needed bits from the sparc
+side. So the code mess calls for a Kconfig mess, I guess.
 
+Please, anyone, try something better, it is the best I could think of.
 
-> But again, please remember that these USB devices are really SCSI
-> devices.  Same for SATA devices.  There is a reason they are using the
-> SCSI layer, and it isn't just because the developers felt like it :)
-
-/somewhat/ true I'm afraid:  libata uses the SCSI layer for ATAPI 
-devices because they are essentially bridges to SCSI devices.  It uses 
-the SCSI layer for ATA devices because the SCSI layer provided a huge 
-amount of infrastructure that would need to have been otherwise 
-duplicated, /then/ massaged into coordinating between <jgarzik's ATA 
-layer> and <SCSI layer> when dealing with ATAPI.
-
-There is also a detail that was of /huge/ value when introducing a new 
-device class:  distro installers automatically work, if you use SCSI. 
-If you use a new block device type, that behaves differently from other 
-types and is on a different major, you have to poke the distros into 
-action or do it yourself.
-
-IOW, it was the high Just Works(tm) value of the SCSI layer when it came 
-to ATA (not ATAPI) devices.
-
-For the future, ATA will eventually be more independent (though the SCSI 
-simulator will be available as an option, for compat), but the value is 
-big enough to put that task on the back-burner.
-
-	Jeff
+Thanks Boaz
