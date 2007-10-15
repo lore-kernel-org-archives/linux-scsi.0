@@ -1,30 +1,29 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 13:44:37 -0400
-Message-ID: <4713A705.60403@garzik.org>
-References: <200710112011.22000.rob@landley.net>	<200710141845.44750.rob@landley.net>	<20071015014503.GF9715@thunk.org>	<200710150304.00901.rob@landley.net>	<20071015132106.GE21216@thunk.org> <20071015142945.2cb27911@the-village.bc.nu>
+Date: Mon, 15 Oct 2007 12:00:50 -0600
+Message-ID: <20071015180050.GB25488@parisc-linux.org>
+References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015060015.GB32268@kroah.com> <200710150336.15774.rob@landley.net> <20071015172513.GA5738@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932793AbXJORpT@vger.kernel.org>
-In-Reply-To: <20071015142945.2cb27911@the-village.bc.nu>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1752896AbXJOSBd@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20071015172513.GA5738@kroah.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Theodore Tso <tytso@mit.edu>, Rob Landley <rob@landley.net>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+To: Greg KH <greg@kroah.com>
+Cc: Rob Landley <rob@landley.net>, James Bottomley <James.Bottomley@steeleye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
 
-Alan Cox wrote:
->> You can pull a Model and Serial number via hdparm -i, but it's not as
->> easy to manipulate as a fixed-length MAC address.  That's why people
->> tend to use filesystem UUID's.   
-> 
-> ATA8 at the moment looks set to add a true "MAC" or "WWN" type identifier
-> to each device.. Right now model/serial is not always unique.
+On Mon, Oct 15, 2007 at 10:25:13AM -0700, Greg KH wrote:
+> Use mount-by-label instead, it's much saner and handles device name
+> movement just fine (as does the UUID method that you seem to hate.)
+> Look in /dev/disk/ for a wide range of options that you have in which to
+> choose how to pick your block devices.
 
-WWN was added in ATA-7, AFAICS.
+But you still have to spin up the disc to read the label (which seems
+like a legitimate complaint to me).
 
-However, I've seen quite a few ATA-7 devices that do not bother to fill 
-it in.  I wonder if ATA-8 device firmwares will act with similar 
-slackness.  :)
-
-	Jeff
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
