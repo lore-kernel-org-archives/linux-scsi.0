@@ -1,62 +1,72 @@
 From: Rob Landley <rob@landley.net>
-Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 03:36:15 -0500
-Message-ID: <200710150336.15774.rob@landley.net>
-References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015060015.GB32268@kroah.com>
+Subject: Re: OOM killer gripe (was Re: What still uses the block layer?)
+Date: Mon, 15 Oct 2007 04:52:30 -0500
+Message-ID: <200710150452.30939.rob@landley.net>
+References: <200710112011.22000.rob@landley.net> <200710150304.00901.rob@landley.net> <200710152337.45252.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760163AbXJOJ01@vger.kernel.org>
-In-Reply-To: <20071015060015.GB32268@kroah.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:51356
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758235AbXJOJwf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 05:52:35 -0400
+In-Reply-To: <200710152337.45252.nickpiggin@yahoo.com.au>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Monday 15 October 2007 1:00:15 am Greg KH wrote:
-> If you hate USB storage devices using scsi, please use the ub driver,
-> that is what it was written for.
-
-For the embedded space, the ability to configure out the scsi layer is 
-interesting from a size perspective.  I bookmarked that a while back, but had 
-forgotten about it.  Thanks for the reminder.
-
-For the desktop I don't object to the scsi layer.  I object to the naming.  
-Merging a half-dozen different types of devices into a single name space, and 
-then warning us that the order they appear within that namespace could be the 
-result of race conditions...  Seems like an artificially inflated problem to 
-me.  Don't merge them together and each namespace is a smaller problem, often 
-with only a single device or with a stable relationship between the devices.
-
-(That said, the answer to my original question, "is the block layer still in 
-use" seems to be yes, so creating a 00-INDEX for Documentation/block is a 
-good thing, and I'll go do that.  I acknowledge that I asked this question 
-_horribly_, due to having other unresolved issues with the scsi layer...)
-
-> When did usb-storage devices ever show up as /dev/usb0?  USB flash disks
-> are really SCSI devices, look at the USB storage spec for proof of that.
-
-Um, possibly I _was_ playing with the ub driver and got a /dev/ub0.  (I 
-vaguely recall playing with back around...  February?  When did it wander 
-across Pavel's blog...  I don't actually remember if I got it to work or 
-not.)  Possibly this is from playing with a usb scanner back around 2004.  (I 
-just dragged out my other USB device from that period, an ethernet dongle, 
-but it doesn't create /dev anything.  Just shows up as usb2. :)
-
-The point I was trying to make is that it seems to me like it would be 
-possible to keep the namespace separate here, and thus reduce the enumeration 
-problems to the point where common cases (like my laptop) aren't impacted by 
-them during early boot.  I don't think anybody (outside the embedded space) 
-is actually upset that /dev/hda now goes through the scsi layer:  they're 
-upset Ubuntu 7.04 no longer calls it /dev/hda.
-
-> thanks,
+On Monday 15 October 2007 8:37:44 am Nick Piggin wrote:
+> > Virtual memory isn't perfect.  I've _always_ been able to come up with
+> > examples where it just doesn't work for me.  This doesn't mean VM
+> > overcommit should be abolished, because it's useful more often than not.
 >
-> greg k-h
+> I hate to go completely offtopic here, but disks are so incredibly
+> slow when compared to RAM that there is really nothing the kernel
+> can do about this.
 
-Thank you,
+I know.
+
+> Presumably the job will finish, given infinite 
+> time.
+
+I gave it about half an hour, then it locked solid and stopped writing to the 
+disk at all.  (I gave it another 5 minutes at that point, then held down the 
+power button.)
+
+Lost about 50 open konqueror tabs...
+
+> How much swap do you have configured?
+
+2 gigs, same as ram.
+
+> You really shouldn't configure 
+> so much unless you do want the kernel to actually use it all, right?
+
+Two words: "Software suspend".  I've actually been thinking of increasing it 
+on the next install...
+
+> Because if we're not really conservative about OOM killing, then the
+> user who actually really did want to use all the swap they configured
+> gets angry when we kill their jobs without using it all.
+
+I tend to lower "swappiness" and when that happens all sorts of stuff goes 
+weird.  Software suspend used to say says it can't free enough memory if I 
+put swappiness at 0 (dunno if it still does).  This time the OOM killer never 
+triggered before hard deadlock.  (I think I had it around 20 or 40 or some 
+such.)
+
+> Would an oom-kill-someone-now sysrq be of help, I wonder?
+
+*shrug* It might.  I was a letting it run hoping it would complete itself when 
+it locked solid.  (The keyboard LEDs weren't flashing, so I don't _think_ it 
+paniced.  I was in X so I wouldn't have seen a message...)
+
+(To be honest, I can never remember how to trigger sysrq on a laptop keyboard.  
+Presumably X won't intercept it the way it does alt-f1 and ctrl-alt-del...)
 
 Rob
 -- 
