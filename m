@@ -1,41 +1,54 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH 2/2] pluto fix disable/enable irq
-Date: Mon, 15 Oct 2007 13:16:05 -0700
-Message-ID: <20071015131605.3678922d.randy.dunlap@oracle.com>
-References: <4713A175.9020408@panasas.com>
-	<4713A2DB.2000302@panasas.com>
-	<20071015180949.GC25488@parisc-linux.org>
-	<4713AEF0.5070706@panasas.com>
+From: Wilfried Klaebe <linux-kernel@chaos.in-kiel.de>
+Subject: Re: What still uses the block layer?
+Date: Mon, 15 Oct 2007 22:29:56 +0200
+Message-ID: <20071015202956.GA29461@kaos.in-kiel.de>
+References: <200710112011.22000.rob@landley.net> <200710141836.55211.rob@landley.net> <4712FE33.3000400@s5r6.in-berlin.de> <200710150426.04924.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:57514 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756019AbXJOUSz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 16:18:55 -0400
-In-Reply-To: <4713AEF0.5070706@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765796AbXJOUlA@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200710150426.04924.rob@landley.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, David Newall <david@davidnewall.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+Am Mon, Oct 15, 2007 at 04:26:04AM -0500 schrieb Rob Landley:
+> To clarify, I think that merging ide, sata, usb, firewire, and others into a 
+> single device namespace causes each type of device to inherit that 
+> namespace's cumulative ordering issues, which is a bad thing.  I have no real 
+> attachment to the underlying scsi or block layers.  I've never seriously 
+> worked on either (although I'm trying to understand both).
+> 
+> For example, usb devices are never easy to order.  IDE devices (back when they 
+> had their own namespace) were trivial to order back when /dev/hda couldn't 
+> move without use of a screwdriver.  USB and IDE devices are very different in 
+> that it's not possible to plug a USB device into an IDE controller (not 
+> without one _heck_ of an adapter) and vice versa.  USB devices usually live 
+> outside the computer's case, and IDE devices inside the case.  They're not 
+> the same thing.
+> 
+> Combining USB and IDE into the same /dev/sd? namespace makes enumerating the 
+> IDE devices much harder than in the traditional "/dev/hdb doesn't move 
+> without a screwdriver" model.
 
-Pluto drivers uses disable/enable_irq(), so add prototypes for them.
+I have udev here, and it generates several useful symlinks.
+/dev/disk/by-path/pci-0000:00:1f.1-scsi-0:0:0:0-part2 will always point
+to the second primary partition of the IDE master on the first IDE
+channel here, be there as many USB sticks as there may.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/pluto.c |    1 +
- 1 file changed, 1 insertion(+)
+(But still I'd like it if it wasn't named "scsi-0:0:0:0", because the
+"0:0:0:0" part could change.)
 
---- linux-2.6.23-git7.orig/drivers/scsi/pluto.c
-+++ linux-2.6.23-git7/drivers/scsi/pluto.c
-@@ -14,6 +14,7 @@
- #include <linux/proc_fs.h>
- #include <linux/stat.h>
- #include <linux/init.h>
-+#include <linux/interrupt.h>
- #ifdef CONFIG_KMOD
- #include <linux/kmod.h>
- #endif
+>  The merger creates a new problem for IDE, one 
+> which didn't exist before: the addition or removal of other unrelated types 
+> of devices may change this device's location next boot.  It may be possible 
+> to add additional complication to the system to compensate, but what was the 
+> advantage of merging the namespaces in the first place?
+
+I don't think there was any intent to merge namespaces. It "just happened"
+as a byproduct of having sata/pata use the scsi subsystem.
+
+Wilfried
+-- 
+Irgendwas ist ja immer...
