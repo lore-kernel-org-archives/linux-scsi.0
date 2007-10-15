@@ -1,44 +1,45 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Greg KH <greg@kroah.com>
 Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 10:08:00 -0600
-Message-ID: <20071015160800.GA324@parisc-linux.org>
-References: <200710112011.22000.rob@landley.net> <200710141836.55211.rob@landley.net> <4712FE33.3000400@s5r6.in-berlin.de> <200710150426.04924.rob@landley.net>
+Date: Mon, 15 Oct 2007 10:25:13 -0700
+Message-ID: <20071015172513.GA5738@kroah.com>
+References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015060015.GB32268@kroah.com> <200710150336.15774.rob@landley.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762923AbXJOQIT@vger.kernel.org>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932751AbXJOR05@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <200710150426.04924.rob@landley.net>
+In-Reply-To: <200710150336.15774.rob@landley.net>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Rob Landley <rob@landley.net>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, David Newall <david@davidnewall.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 15, 2007 at 04:26:04AM -0500, Rob Landley wrote:
-> For example, usb devices are never easy to order.  IDE devices (back when they 
-> had their own namespace) were trivial to order back when /dev/hda couldn't 
-> move without use of a screwdriver.
+On Mon, Oct 15, 2007 at 03:36:15AM -0500, Rob Landley wrote:
+> 
+> The point I was trying to make is that it seems to me like it would be 
+> possible to keep the namespace separate here, and thus reduce the enumeration 
+> problems to the point where common cases (like my laptop) aren't impacted by 
+> them during early boot.
 
-Ah, but it could.  If you had more than one IDE controller (which is
-even possible on laptops; the Fujitsu P7120 is one that I'm familiar
-with that has more than one), the initialisation order *of the
-controllers* would change which was hda and which was hde.
+Proposals on how to do this would be gladly reviewed.
 
-> Combining USB and IDE into the same /dev/sd? namespace makes enumerating the 
-> IDE devices much harder than in the traditional "/dev/hdb doesn't move 
-> without a screwdriver" model.  The merger creates a new problem for IDE, one 
-> which didn't exist before: the addition or removal of other unrelated types 
-> of devices may change this device's location next boot.  It may be possible 
-> to add additional complication to the system to compensate, but what was the 
-> advantage of merging the namespaces in the first place?
+But again, please remember that these USB devices are really SCSI
+devices.  Same for SATA devices.  There is a reason they are using the
+SCSI layer, and it isn't just because the developers felt like it :)
 
-It's not something anyone particularly set out to do, it's just how
-it worked out.  It was justified by saying "ok, this goes from a 99%
-solution to a 96% solution, but there's 100% solution called uuids".
-I don't particularly agree with this line of argumentation, but it did
-hold sway.
+> I don't think anybody (outside the embedded space) is actually upset
+> that /dev/hda now goes through the scsi layer:  they're upset Ubuntu
+> 7.04 no longer calls it /dev/hda.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Use mount-by-label instead, it's much saner and handles device name
+movement just fine (as does the UUID method that you seem to hate.)
+Look in /dev/disk/ for a wide range of options that you have in which to
+choose how to pick your block devices.
+
+Oh, and this seems like a very Ubuntu specific rant, might I suggest you
+contact the Ubuntu developers about this?  The kernel doesn't dictate
+that the distro has to use these long identifiers, and there is nothing
+we can do about it.
+
+good luck,
+
+greg k-h
