@@ -1,60 +1,103 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: [PATCH] initio: Merge fallout
-Date: Mon, 15 Oct 2007 20:51:32 +0100
-Message-ID: <20071015205132.4edbffbd@the-village.bc.nu>
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: [PATCH 1/2] fc4/pluto - Enable compilation for all ARCHs
+Date: Mon, 15 Oct 2007 13:15:54 -0700
+Message-ID: <20071015131554.9a5cfb5b.randy.dunlap@oracle.com>
+References: <4713A175.9020408@panasas.com>
+	<4713A2DB.2000302@panasas.com>
+	<20071015180949.GC25488@parisc-linux.org>
+	<4713AEF0.5070706@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:42796 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756554AbXJOTsG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 15:48:06 -0400
+Received: from agminet01.oracle.com ([141.146.126.228]:57513 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757919AbXJOUSz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 16:18:55 -0400
+In-Reply-To: <4713AEF0.5070706@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@osdl.org, james.bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>
 
-Fix IRQ reporting - just assign the ->pci_dev pointer earlier and use the
-pci_dev irq field rather than keeping a private one
+> > I think I see two problems ... one is that fc4 plainly depends on SCSI,
 
-Init the spinlock as it works better on SMP that way
+Does it?  It builds with SCSI=n.
 
-Signed-off-by: Alan Cox <alan@redhat.com>
+> > yet it's not mentioned in the fc4 Kconfig file.  The other is that,
+> > given this dependency, fc4 should come after scsi.  And maybe even be
+> > included from drivers/scsi/Kconfig rather than drivers/Kconfig.  I don't
+> > have a strong feeling on that last point.
 
-diff -u --exclude-from /usr/src/exclude --new-file --recursive linux.vanilla-2.6.23-mm1/drivers/scsi/initio.c linux-2.6.23-mm1/drivers/scsi/initio.c
---- linux.vanilla-2.6.23-mm1/drivers/scsi/initio.c	2007-10-15 15:03:36.000000000 +0100
-+++ linux-2.6.23-mm1/drivers/scsi/initio.c	2007-10-15 15:19:48.000000000 +0100
-@@ -665,7 +665,7 @@
- 		host->max_tags[i] = 0xFF;
- 	}			/* for                          */
- 	printk("i91u: PCI Base=0x%04X, IRQ=%d, BIOS=0x%04X0, SCSI ID=%d\n",
--	       host->addr, host->irq,
-+	       host->addr, host->pci_dev->irq,
- 	       host->bios_addr, host->scsi_id);
- 	/* Reset SCSI Bus */
- 	if (host->config & HCC_SCSI_RESET) {
-@@ -2892,6 +2892,8 @@
- 		goto out_release_region;
- 	}
+Me either.  I moved it to after scsi/Kconfig.
+
+> This is all new territory for me. But CONFIG_SCSI_PLUTO is dependent on
+> SCSI and fc.c is not the real driver just the needed bits from the sparc
+> side. So the code mess calls for a Kconfig mess, I guess.
+> 
+> Please, anyone, try something better, it is the best I could think of.
+
+Here's my attempt.
+patch 1/2 for fc4.
+patch 2/2 for one more pluto fix.
+
+---
+
+From: Randy Dunlap <randy.dunlap@oracle.com>
+
+Move drivers/fc4/Kconfig to the main drivers/Kconfig file & menu.
+This allows any $arch to build fc4.
+
+fc.c (on non-sparc) uses pci interfaces, so include pci.h and
+make FC4 depend on PCI || SPARC.
+
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+---
+ arch/sparc64/Kconfig |    2 --
+ drivers/Kconfig      |    2 ++
+ drivers/fc4/Kconfig  |    1 +
+ drivers/fc4/fc.c     |    1 +
+ 4 files changed, 4 insertions(+), 2 deletions(-)
+
+--- linux-2.6.23-git7.orig/arch/sparc64/Kconfig
++++ linux-2.6.23-git7/arch/sparc64/Kconfig
+@@ -456,8 +456,6 @@ source "drivers/Kconfig"
  
-+	host->pci_dev = pdev;
+ source "drivers/sbus/char/Kconfig"
+ 
+-source "drivers/fc4/Kconfig"
+-
+ source "fs/Kconfig"
+ 
+ menu "Instrumentation Support"
+--- linux-2.6.23-git7.orig/drivers/Kconfig
++++ linux-2.6.23-git7/drivers/Kconfig
+@@ -24,6 +24,8 @@ source "drivers/ide/Kconfig"
+ 
+ source "drivers/scsi/Kconfig"
+ 
++source "drivers/fc4/Kconfig"
 +
- 	host->num_scbs = num_scb;
- 	host->scb = scb;
- 	host->next_pending = scb;
-@@ -2906,6 +2908,7 @@
- 	host->scb_end = tmp;
- 	host->first_avail = scb;
- 	host->last_avail = prev;
-+	spin_lock_init(&host->avail_lock);
+ source "drivers/ata/Kconfig"
  
- 	initio_init(host, phys_to_virt(bios_seg << 4));
+ source "drivers/md/Kconfig"
+--- linux-2.6.23-git7.orig/drivers/fc4/fc.c
++++ linux-2.6.23-git7/drivers/fc4/fc.c
+@@ -30,6 +30,7 @@
+ #include <linux/ptrace.h>
+ #include <linux/ioport.h>
+ #include <linux/in.h>
++#include <linux/pci.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
+ #include <linux/init.h>
+--- linux-2.6.23-git7.orig/drivers/fc4/Kconfig
++++ linux-2.6.23-git7/drivers/fc4/Kconfig
+@@ -6,6 +6,7 @@ menu "Fibre Channel support"
  
-@@ -2929,7 +2932,6 @@
- 	}
- 
- 	pci_set_drvdata(pdev, shost);
--	host->pci_dev = pdev;
- 
- 	error = scsi_add_host(shost, &pdev->dev);
- 	if (error)
+ config FC4
+ 	tristate "Fibre Channel and FC4 SCSI support"
++	depends on SPARC || PCI
+ 	---help---
+ 	  Fibre Channel is a high speed serial protocol mainly used to
+ 	  connect large storage devices to the computer; it is compatible with
