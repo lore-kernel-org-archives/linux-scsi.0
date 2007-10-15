@@ -1,402 +1,524 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: [PATCH 3/3] faster workaround
-Date: Mon, 15 Oct 2007 12:18:37 +0200
-Message-ID: <200710151218.38311.bs@q-leap.de>
-References: <200710081709.18253.bs@q-leap.de> <200710111718.43159.bs@q-leap.de> <470FE245.5040702@garzik.org>
+From: "=?ISO-8859-1?Q?Lo=EFc_Greni=E9?=" <loic.grenie@gmail.com>
+Subject: Re: What still uses the block layer?
+Date: Mon, 15 Oct 2007 12:32:32 +0200
+Message-ID: <9b06e8d20710150332u53092454x13219e28fcfb4244@mail.gmail.com>
+References: <200710112011.22000.rob@landley.net>
+	 <200710141845.44750.rob@landley.net> <20071015014503.GF9715@thunk.org>
+	 <200710150304.00901.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: Multipart/Mixed;
-  boundary="Boundary-00=_+5zEHNo0XtvPKzz"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <470FE245.5040702@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
---Boundary-00=_+5zEHNo0XtvPKzz
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.174]:61133 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757893AbXJOKcf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 06:32:35 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so846307ugc
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Oct 2007 03:32:33 -0700 (PDT)
+In-Reply-To: <200710150304.00901.rob@landley.net>
 Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Friday 12 October 2007 23:08:21 Jeff Garzik wrote:
-> Bernd Schubert wrote:
-> > a) 2.6.23 + sil-patch I posted, this is on a customer system (though my
-> > former group), I wouldn't like to use -mm there.
-> >
-> > b) .config is attached
-> >
-> > c) attached
-> >
-> > d) attached (don't get irritaded by those machine check events, thats
-> > "GART TLB errorr", harmless warnings, just not disabled in the bios).
+2007/10/15, Rob Landley <rob@landley.net>:
+> On Sunday 14 October 2007 8:45:03 pm Theodore Tso wrote:
+>> On Sun, Oct 14, 2007 at 06:45:44PM -0500, Rob Landley wrote:
+>>> I admit a certain amount of personal annoyance that once the SCSI
+>>> layer consumes a category of device (USB, SATA, PATA), they can
+>>> often _only_ be used by going through the SCSI midlayer.  (This
+>>> strikes me as analogous to TCP/IP claiming ethernet and PPP devices
+>>> so thoroughly that you can no longer address them as eth1 or
+>>> /dev/ttyS0.)
+>>
+>> That's because modern USB, ATAPI (what was once known as IDE), SATA
+>> really *all* using the SCSI command protocols at the low level,
 >
-> Any chance you could provide dmesg on 2.6.23 without the sil patch?
+> Ok, I'll bite.  If it's all "real" scsi, why does ioctl(SG_EMULATED_H=
+OST)
+> exist? exist if it's all "real" scsi?
 
-Its attached.
+     How do you define real SCSI ? The definition of SCSI in the kernel=
+ is
+  "a device that accept the SCSI command set" (more precisely "a
+  suitably large subset a the SCSI command set". It looks as if you
+  definition of SCSI is "a device that is sold with written SCSI on the
+  box and that attaches to a card with SCSI written on the box"; is it
+  correct ?
 
+    The host is the expansion card that connects the device to the
+  motherboard. If it is emulated this means that it is not a native
+  SCSI host. In case of USB drives/keys this is probably the case.
 
-Bernd
+>> just as Ethernet and PPP interfaces really are fundamentally the
+>> same thing.
+>
+> They're the same thing?
+>
+> Do you mean that on a system with both, going:
+>   ifconfig eth1 66.92.53.140
+>   ifconfig ppp 192.168.0.42
+>
+> Would be functionally equivalent to:
+>   ifconfig eth1 192.168.0.42
+>   ifconfig ppp 66.92.53.140
+>
+> So if on one boot the addresses are assigned the first way, and upon =
+reboot
+> they're assigned in the second way by exact the same set of commands.=
+=2E.  well
+> that's not IMPORTANT, is it?  (Or is it that everyone everywhere shou=
+ld use
+> dhcp for everything, and static addressing is obsolete and no longer
+> supported?
 
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+     You are really looking like you are out for a fight.
 
---Boundary-00=_+5zEHNo0XtvPKzz
-Content-Type: text/plain;
-  charset="iso-8859-1";
-  name="dmesg.out"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: attachment;
-	filename="dmesg.out"
+> Apparently dhcp addresses should be delivered by machines with
+> only one network interface of any type...)
 
-[    0.000000] Linux version 2.6.23-l162 (bschubert@lanczos) (gcc version 3.4.6 (Ubuntu 3.4.6-5ubuntu1)) #7 SMP Mon Oct 15 11:50:28 CEST 2007
-[    0.000000] Command line:  root=/dev/ram0 ramdisk_size=110592 console=tty0 console=ttyS0,115200  
-[    0.000000] BIOS-provided physical RAM map:
-[    0.000000]  BIOS-e820: 0000000000000000 - 000000000009f400 (usable)
-[    0.000000]  BIOS-e820: 000000000009f400 - 00000000000a0000 (reserved)
-[    0.000000]  BIOS-e820: 00000000000e0000 - 0000000000100000 (reserved)
-[    0.000000]  BIOS-e820: 0000000000100000 - 00000000fbff0000 (usable)
-[    0.000000]  BIOS-e820: 00000000fbff0000 - 00000000fbfff000 (ACPI data)
-[    0.000000]  BIOS-e820: 00000000fbfff000 - 00000000fc000000 (ACPI NVS)
-[    0.000000]  BIOS-e820: 00000000ff780000 - 0000000100000000 (reserved)
-[    0.000000]  BIOS-e820: 0000000100000000 - 0000000400000000 (usable)
-[    0.000000] Entering add_active_range(0, 0, 159) 0 entries of 3200 used
-[    0.000000] Entering add_active_range(0, 256, 1032176) 1 entries of 3200 used
-[    0.000000] Entering add_active_range(0, 1048576, 4194304) 2 entries of 3200 used
-[    0.000000] end_pfn_map = 4194304
-[    0.000000] DMI 2.3 present.
-[    0.000000] ACPI: RSDP 000F6F20, 0014 (r0 ACPIAM)
-[    0.000000] ACPI: RSDT FBFF0000, 0038 (r1 A M I  OEMRSDT   7000626 MSFT       97)
-[    0.000000] ACPI: FACP FBFF0200, 0081 (r1 A M I  OEMFACP   7000626 MSFT       97)
-[    0.000000] ACPI: DSDT FBFF0410, 3751 (r1  0AAAA 0AAAA000        0 INTL  2002026)
-[    0.000000] ACPI: FACS FBFFF000, 0040
-[    0.000000] ACPI: APIC FBFF0380, 0084 (r1 A M I  OEMAPIC   7000626 MSFT       97)
-[    0.000000] ACPI: OEMB FBFFF040, 0041 (r1 A M I  OEMBIOS   7000626 MSFT       97)
-[    0.000000] ACPI: SRAT FBFF3B70, 0110 (r1 A M I  OEMSRAT   7000626 MSFT       97)
-[    0.000000] ACPI: ASF! FBFF3C80, 0086 (r1 AMIASF AMDSTRET        1 INTL  2002026)
-[    0.000000] SRAT: PXM 0 -> APIC 0 -> Node 0
-[    0.000000] SRAT: PXM 1 -> APIC 1 -> Node 1
-[    0.000000] SRAT: Node 0 PXM 0 100000-fc000000
-[    0.000000] Entering add_active_range(0, 256, 1032176) 0 entries of 3200 used
-[    0.000000] SRAT: Node 1 PXM 1 200000000-400000000
-[    0.000000] Entering add_active_range(1, 2097152, 4194304) 1 entries of 3200 used
-[    0.000000] SRAT: Node 0 PXM 0 100000-200000000
-[    0.000000] Entering add_active_range(0, 256, 1032176) 2 entries of 3200 used
-[    0.000000] Entering add_active_range(0, 1048576, 2097152) 2 entries of 3200 used
-[    0.000000] SRAT: Node 0 PXM 0 0-200000000
-[    0.000000] Entering add_active_range(0, 0, 159) 3 entries of 3200 used
-[    0.000000] Entering add_active_range(0, 256, 1032176) 4 entries of 3200 used
-[    0.000000] Entering add_active_range(0, 1048576, 2097152) 4 entries of 3200 used
-[    0.000000] NUMA: Using 33 for the hash shift.
-[    0.000000] Bootmem setup node 0 0000000000000000-0000000200000000
-[    0.000000] Bootmem setup node 1 0000000200000000-0000000400000000
-[    0.000000] Zone PFN ranges:
-[    0.000000]   DMA             0 ->     4096
-[    0.000000]   DMA32        4096 ->  1048576
-[    0.000000]   Normal    1048576 ->  4194304
-[    0.000000] Movable zone start PFN for each node
-[    0.000000] early_node_map[4] active PFN ranges
-[    0.000000]     0:        0 ->      159
-[    0.000000]     0:      256 ->  1032176
-[    0.000000]     0:  1048576 ->  2097152
-[    0.000000]     1:  2097152 ->  4194304
-[    0.000000] On node 0 totalpages: 2080655
-[    0.000000]   DMA zone: 56 pages used for memmap
-[    0.000000]   DMA zone: 1451 pages reserved
-[    0.000000]   DMA zone: 2492 pages, LIFO batch:0
-[    0.000000]   DMA32 zone: 14280 pages used for memmap
-[    0.000000]   DMA32 zone: 1013800 pages, LIFO batch:31
-[    0.000000]   Normal zone: 14336 pages used for memmap
-[    0.000000]   Normal zone: 1034240 pages, LIFO batch:31
-[    0.000000]   Movable zone: 0 pages used for memmap
-[    0.000000] On node 1 totalpages: 2097152
-[    0.000000]   DMA zone: 0 pages used for memmap
-[    0.000000]   DMA32 zone: 0 pages used for memmap
-[    0.000000]   Normal zone: 28672 pages used for memmap
-[    0.000000]   Normal zone: 2068480 pages, LIFO batch:31
-[    0.000000]   Movable zone: 0 pages used for memmap
-[    0.000000] ACPI: PM-Timer IO Port: 0x1008
-[    0.000000] ACPI: Local APIC address 0xfee00000
-[    0.000000] ACPI: LAPIC (acpi_id[0x01] lapic_id[0x00] enabled)
-[    0.000000] Processor #0 (Bootup-CPU)
-[    0.000000] ACPI: LAPIC (acpi_id[0x02] lapic_id[0x01] enabled)
-[    0.000000] Processor #1
-[    0.000000] ACPI: LAPIC (acpi_id[0x03] lapic_id[0x82] disabled)
-[    0.000000] ACPI: LAPIC (acpi_id[0x04] lapic_id[0x83] disabled)
-[    0.000000] ACPI: IOAPIC (id[0x02] address[0xfec00000] gsi_base[0])
-[    0.000000] IOAPIC[0]: apic_id 2, address 0xfec00000, GSI 0-23
-[    0.000000] ACPI: IOAPIC (id[0x03] address[0xfebff000] gsi_base[24])
-[    0.000000] IOAPIC[1]: apic_id 3, address 0xfebff000, GSI 24-27
-[    0.000000] ACPI: IOAPIC (id[0x04] address[0xfebfe000] gsi_base[28])
-[    0.000000] IOAPIC[2]: apic_id 4, address 0xfebfe000, GSI 28-31
-[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-[    0.000000] ACPI: INT_SRC_OVR (bus 0 bus_irq 0 global_irq 2 dfl dfl)
-[    0.000000] ACPI: IRQ0 used by override.
-[    0.000000] ACPI: IRQ2 used by override.
-[    0.000000] ACPI: IRQ9 used by override.
-[    0.000000] Setting APIC routing to flat
-[    0.000000] Using ACPI (MADT) for SMP configuration information
-[    0.000000] Allocating PCI resources starting at fc400000 (gap: fc000000:3780000)
-[    0.000000] .eh_frame_hdr for 'kernel' present but unusable
-[    0.000000] SMP: Allowing 4 CPUs, 2 hotplug CPUs
-[    0.000000] PERCPU: Allocating 32872 bytes of per cpu data
-[    0.000000] Built 2 zonelists in Zone order.  Total pages: 4119012
-[    0.000000] Policy zone: Normal
-[    0.000000] Kernel command line:  root=/dev/ram0 ramdisk_size=110592 console=tty0 console=ttyS0,115200  
-[    0.000000] Initializing CPU#0
-[    0.000000] PID hash table entries: 4096 (order: 12, 32768 bytes)
-[    0.000000] Marking TSC unstable due to TSCs unsynchronized
-[  114.643908] time.c: Detected 1992.367 MHz processor.
-[  114.648062] Console: colour VGA+ 80x25
-[  114.648065] console [tty0] enabled
-[  114.660503] console [ttyS0] enabled
-[  115.061441] Checking aperture...
-[  115.064821] CPU 0: aperture @ 4000000 size 32 MB
-[  115.069609] Aperture too small (32 MB)
-[  115.080187] No AGP bridge found
-[  115.083491] Your BIOS doesn't leave a aperture memory hole
-[  115.089157] Please enable the IOMMU option in the BIOS setup
-[  115.094996] This costs you 64 MB of RAM
-[  115.129197] Mapping aperture over 65536 KB of RAM @ 4000000
-[  115.657704] Memory: 16368744k/16777216k available (3104k kernel code, 342484k reserved, 1703k data, 320k init)
-[  115.668042] SLUB: Genslabs=23, HWalign=64, Order=0-1, MinObjects=4, CPUs=4, Nodes=2
-[  115.751854] Calibrating delay using timer specific routine.. 3988.62 BogoMIPS (lpj=7977257)
-[  115.761773] Dentry cache hash table entries: 2097152 (order: 12, 16777216 bytes)
-[  115.781701] Inode-cache hash table entries: 1048576 (order: 11, 8388608 bytes)
-[  115.795079] Mount-cache hash table entries: 256
-[  115.799928] CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-[  115.807258] CPU: L2 Cache: 1024K (64 bytes/line)
-[  115.812046] CPU 0/0 -> Node 0
-[  115.815186] SMP alternatives: switching to UP code
-[  115.820804] ACPI: Core revision 20070126
-[  115.866967] Using local APIC timer interrupts.
-[  115.921673] result 12452292
-[  115.924622] Detected 12.452 MHz APIC timer.
-[  115.931591] SMP alternatives: switching to SMP code
-[  115.937126] Booting processor 1/2 APIC 0x1
-[  115.951486] Initializing CPU#1
-[  116.031323] Calibrating delay using timer specific routine.. 3984.78 BogoMIPS (lpj=7969570)
-[  116.031332] CPU: L1 I Cache: 64K (64 bytes/line), D cache 64K (64 bytes/line)
-[  116.031334] CPU: L2 Cache: 1024K (64 bytes/line)
-[  116.031337] CPU 1/1 -> Node 1
-[  116.031467] AMD Opteron(tm) Processor 246 stepping 0a
-[  116.035345] Brought up 2 CPUs
-[  116.073142] NET: Registered protocol family 16
-[  116.077915] ACPI: bus type pci registered
-[  116.082208] PCI: Using configuration type 1
-[  116.091900] ACPI: EC: Look up EC in DSDT
-[  116.095037] ACPI: Interpreter enabled
-[  116.098858] ACPI: (supports S0 S1 S5)
-[  116.102917] ACPI: Using IOAPIC for interrupt routing
-[  116.113996] ACPI: PCI Root Bridge [PCI0] (0000:00)
-[  116.119869] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0._PRT]
-[  116.119937] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.PCI1._PRT]
-[  116.120018] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.GOLA._PRT]
-[  116.120113] ACPI: PCI Interrupt Routing Table [\_SB_.PCI0.GOLB._PRT]
-[  116.122439] ACPI: PCI Interrupt Link [LNKA] (IRQs 3 4 *5 6 7 9 10 11 12 14 15)
-[  116.130993] ACPI: PCI Interrupt Link [LNKB] (IRQs 3 4 5 6 7 *9 10 11 12 14 15)
-[  116.139545] ACPI: PCI Interrupt Link [LNKC] (IRQs 3 4 5 6 7 9 10 *11 12 14 15)
-[  116.148099] ACPI: PCI Interrupt Link [LNKD] (IRQs 3 4 5 6 7 9 *10 11 12 14 15)
-[  116.156662] Linux Plug and Play Support v0.97 (c) Adam Belay
-[  116.162529] pnp: PnP ACPI init
-[  116.165778] ACPI: bus type pnp registered
-[  116.173458] pnp: PnP ACPI: found 15 devices
-[  116.177812] ACPI: ACPI bus type pnp unregistered
-[  116.182789] SCSI subsystem initialized
-[  116.186738] libata version 2.21 loaded.
-[  116.186886] PCI: Using ACPI for IRQ routing
-[  116.191261] PCI: If a device doesn't work, try "pci=routeirq".  If it helps, post a report
-[  116.231015] PCI-DMA: Disabling AGP.
-[  116.235147] PCI-DMA: aperture base @ 4000000 size 65536 KB
-[  116.240820] PCI-DMA: using GART IOMMU.
-[  116.244738] PCI-DMA: Reserving 64MB of IOMMU area in the AGP aperture
-[  116.267017] pnp: 00:0a: ioport range 0x680-0x6ff has been reserved
-[  116.273381] pnp: 00:0a: ioport range 0x295-0x296 has been reserved
-[  116.279745] pnp: 00:0a: ioport range 0x778-0x77f has been reserved
-[  116.286109] pnp: 00:0a: ioport range 0xb78-0xb7f has been reserved
-[  116.292466] pnp: 00:0a: ioport range 0xf78-0xf7f has been reserved
-[  116.298834] pnp: 00:0d: ioport range 0xca0-0xcaf has been reserved
-[  116.305199] pnp: 00:0d: iomem range 0xfec00000-0xfec00fff has been reserved
-[  116.312350] pnp: 00:0d: iomem range 0xfee00000-0xfee00fff could not be reserved
-[  116.319916] pnp: 00:0d: iomem range 0xfff80000-0xffffffff could not be reserved
-[  116.327484] pnp: 00:0d: iomem range 0xff780000-0xff7fffff could not be reserved
-[  116.335054] pnp: 00:0e: iomem range 0x0-0x9ffff could not be reserved
-[  116.341680] pnp: 00:0e: iomem range 0xc0000-0xdffff has been reserved
-[  116.348307] pnp: 00:0e: iomem range 0xe0000-0xfffff could not be reserved
-[  116.355281] pnp: 00:0e: iomem range 0x100000-0xfbffffff could not be reserved
-[  116.362943] PCI: Bridge: 0000:00:06.0
-[  116.366718] Time: acpi_pm clocksource has been installed.
-[  116.372341]   IO window: 9000-bfff
-[  116.375907]   MEM window: fc900000-feafffff
-[  116.380256]   PREFETCH window: disabled.
-[  116.384344] PCI: Bridge: 0000:00:0a.0
-[  116.388169]   IO window: disabled.
-[  116.391730]   MEM window: fc800000-fc8fffff
-[  116.396081]   PREFETCH window: ff500000-ff5fffff
-[  116.400869] PCI: Bridge: 0000:00:0b.0
-[  116.404691]   IO window: disabled.
-[  116.408250]   MEM window: disabled.
-[  116.411900]   PREFETCH window: disabled.
-[  116.416058] NET: Registered protocol family 2
-[  116.462865] IP route cache hash table entries: 524288 (order: 10, 4194304 bytes)
-[  116.476537] TCP established hash table entries: 2097152 (order: 13, 50331648 bytes)
-[  116.519246] TCP bind hash table entries: 65536 (order: 8, 1048576 bytes)
-[  116.526767] TCP: Hash tables configured (established 2097152 bind 65536)
-[  116.533653] TCP reno registered
-[  116.546520] checking if image is initramfs...it isn't (no cpio magic); looks like an initrd
-[  118.007208] Freeing initrd memory: 41021k freed
-[  118.037873] VFS: Disk quotas dquot_6.5.1
-[  118.042028] Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
-[  118.049125] io scheduler noop registered
-[  118.053215] io scheduler deadline registered (default)
-[  118.058587] io scheduler cfq registered
-[  118.062599] PCI: MSI quirk detected. PCI_BUS_FLAGS_NO_MSI set for 0000:00:0a.0 subordinate bus.
-[  118.071598] AMD8131 rev 12 detected, disabling PCI-X MMRBC
-[  118.077277] PCI: MSI quirk detected. PCI_BUS_FLAGS_NO_MSI set for 0000:00:0b.0 subordinate bus.
-[  118.086269] AMD8131 rev 12 detected, disabling PCI-X MMRBC
-[  118.092882] Boot video device is 0000:03:06.0
-[  118.119406] hpet_acpi_add: no address or irqs in _CRS
-[  118.124703] AMD768 RNG detected
-[  118.128499] Linux agpgart interface v0.102
-[  118.132759] Serial: 8250/16550 driver $Revision: 1.90 $ 4 ports, IRQ sharing enabled
-[  118.140906] serial8250: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-[  118.147480] serial8250: ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
-[  118.154102] 00:06: ttyS0 at I/O 0x3f8 (irq = 4) is a 16550A
-[  118.160032] 00:07: ttyS1 at I/O 0x2f8 (irq = 3) is a 16550A
-[  118.166014] Floppy drive(s): fd0 is 1.44M
-[  118.191199] FDC 0 is a post-1991 82077
-[  118.196725] RAMDISK driver initialized: 16 RAM disks of 110592K size 1024 blocksize
-[  118.204932] loop: module loaded
-[  118.208235] Intel(R) PRO/1000 Network Driver - version 7.3.20-k2
-[  118.214417] Copyright (c) 1999-2006 Intel Corporation.
-[  118.219799] e100: Intel(R) PRO/100 Network Driver, 3.5.23-k4-NAPI
-[  118.226078] e100: Copyright(c) 1999-2006 Intel Corporation
-[  118.231832] tg3.c:v3.81 (September 5, 2007)
-[  118.236202] ACPI: PCI Interrupt 0000:02:09.0[A] -> GSI 24 (level, low) -> IRQ 24
-[  118.270915] eth0: Tigon3 [partno(BCM95704A7) rev 2003 PHY(5704)] (PCIX:100MHz:64-bit) 10/100/1000Base-T Ethernet 00:e0:81:2b:91:4a
-[  118.283405] eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] WireSpeed[1] TSOcap[1]
-[  118.291152] eth0: dma_rwctrl[769f4000] dma_mask[64-bit]
-[  118.296570] ACPI: PCI Interrupt 0000:02:09.1[B] -> GSI 25 (level, low) -> IRQ 25
-[  118.337338] eth1: Tigon3 [partno(BCM95704A7) rev 2003 PHY(5704)] (PCIX:100MHz:64-bit) 10/100/1000Base-T Ethernet 00:e0:81:2b:91:4b
-[  118.349827] eth1: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[0] WireSpeed[1] TSOcap[1]
-[  118.357567] eth1: dma_rwctrl[769f4000] dma_mask[64-bit]
-[  118.363091] forcedeth.c: Reverse Engineered nForce ethernet driver. Version 0.60.
-[  118.371119] sata_sil 0000:03:05.0: version 2.3
-[  118.371171] ACPI: PCI Interrupt 0000:03:05.0[A] -> GSI 19 (level, low) -> IRQ 19
-[  118.379382] scsi0 : sata_sil
-[  118.382496] scsi1 : sata_sil
-[  118.385586] scsi2 : sata_sil
-[  118.388685] scsi3 : sata_sil
-[  118.391789] ata1: SATA max UDMA/100 cmd 0xffffc20004d4ac80 ctl 0xffffc20004d4ac8a bmdma 0xffffc20004d4ac00 irq 19
-[  118.402344] ata2: SATA max UDMA/100 cmd 0xffffc20004d4acc0 ctl 0xffffc20004d4acca bmdma 0xffffc20004d4ac08 irq 19
-[  118.412886] ata3: SATA max UDMA/100 cmd 0xffffc20004d4ae80 ctl 0xffffc20004d4ae8a bmdma 0xffffc20004d4ae00 irq 19
-[  118.423428] ata4: SATA max UDMA/100 cmd 0xffffc20004d4aec0 ctl 0xffffc20004d4aeca bmdma 0xffffc20004d4ae08 irq 19
-[  118.746253] ata1: SATA link down (SStatus 0 SControl 310)
-[  119.065650] ata2: SATA link down (SStatus 0 SControl 310)
-[  119.540775] ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-[  119.715051] ata3.00: ATA-7: ST3250820AS, 3.AAC, max UDMA/133
-[  119.720896] ata3.00: 488397168 sectors, multi 16: LBA48 NCQ (depth 0/32)
-[  119.789857] ata3.00: configured for UDMA/100
-[  120.107695] ata4: SATA link down (SStatus 0 SControl 310)
-[  120.113359] scsi 2:0:0:0: Direct-Access     ATA      ST3250820AS      3.AA PQ: 0 ANSI: 5
-[  120.121823] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
-[  120.129153] sd 2:0:0:0: [sda] Write Protect is off
-[  120.134117] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  120.134131] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  120.143487] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
-[  120.150816] sd 2:0:0:0: [sda] Write Protect is off
-[  120.155772] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  120.155785] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  120.165105]  sda: sda1 sda2 sda3
-[  120.188930] sd 2:0:0:0: [sda] Attached SCSI disk
-[  120.193959] PNP: PS/2 Controller [PNP0303:PS2K] at 0x60,0x64 irq 1
-[  120.200324] PNP: PS/2 appears to have AUX port disabled, if this is incorrect please boot with i8042.nopnp
-[  120.210587] serio: i8042 KBD port at 0x60,0x64 irq 1
-[  120.215763] mice: PS/2 mouse device common for all mice
-[  120.221239] device-mapper: ioctl: 4.11.0-ioctl (2006-10-12) initialised: dm-devel@redhat.com
-[  120.230097] oprofile: using NMI interrupt.
-[  120.234372] TCP cubic registered
-[  120.237762] NET: Registered protocol family 1
-[  120.242285] NET: Registered protocol family 17
-[  120.275750] input: AT Translated Set 2 keyboard as /class/input/input0
-[  120.351314] RAMDISK: Compressed image found at block 0
-[  122.022214] VFS: Mounted root (ext2 filesystem) readonly.
-[  122.027810] Freeing unused kernel memory: 320k freed
-[  122.411934] ACPI: Processor [CPU1] (supports 8 throttling states)
-[  122.418811] ACPI Exception (processor_core-0818): AE_NOT_FOUND, Processor Device is not present [20070126]
-[  122.429596] ACPI Exception (processor_core-0818): AE_NOT_FOUND, Processor Device is not present [20070126]
-[  122.512126] EDAC MC: Ver: 2.1.0 Oct 15 2007
-[  122.535388] pata_amd 0000:00:07.1: version 0.3.9
-[  122.551700] scsi4 : pata_amd
-[  122.556552] usbcore: registered new interface driver usbfs
-[  122.557169] scsi5 : pata_amd
-[  122.557220] ata5: PATA max UDMA/133 cmd 0x00000000000101f0 ctl 0x00000000000103f6 bmdma 0x000000000001ffa0 irq 14
-[  122.557223] ata6: PATA max UDMA/133 cmd 0x0000000000010170 ctl 0x0000000000010376 bmdma 0x000000000001ffa8 irq 15
-[  122.587473] usbcore: registered new interface driver hub
-[  122.601842] usbcore: registered new device driver usb
-[  122.617149] ohci_hcd: 2006 August 04 USB 1.1 'Open' Host Controller (OHCI) Driver
-[  122.870859] ata5.00: ATAPI: QSI CD-ROM SCR-242, CXAC, max UDMA/33
-[  123.034541] ata5.00: configured for UDMA/33
-[  123.209599] scsi 4:0:0:0: CD-ROM            QSI      CD-ROM SCR-242   CXAC PQ: 0 ANSI: 5
-[  123.219087] EDAC MC0: Giving out device to 'k8_edac' 'Athlon64/Opteron': DEV 0000:00:18.2
-[  123.228109] EDAC PCI0: Giving out device to module 'k8_edac' controller 'EDAC PCI controller': DEV '0000:00:18.2' (POLLED)
-[  123.240297] EDAC MC1: Giving out device to 'k8_edac' 'Athlon64/Opteron': DEV 0000:00:19.2
-[  123.249295] ACPI: PCI Interrupt 0000:03:00.0[D] -> GSI 19 (level, low) -> IRQ 19
-[  123.257796] ohci_hcd 0000:03:00.0: OHCI Host Controller
-[  123.265955] ohci_hcd 0000:03:00.0: new USB bus registered, assigned bus number 1
-[  123.274154] ohci_hcd 0000:03:00.0: irq 19, io mem 0xfeafc000
-[  123.339774] usb usb1: configuration #1 chosen from 1 choice
-[  123.345952] hub 1-0:1.0: USB hub found
-[  123.350140] hub 1-0:1.0: 3 ports detected
-[  123.461475] ACPI: PCI Interrupt 0000:03:00.1[D] -> GSI 19 (level, low) -> IRQ 19
-[  123.469952] ohci_hcd 0000:03:00.1: OHCI Host Controller
-[  123.475794] ohci_hcd 0000:03:00.1: new USB bus registered, assigned bus number 2
-[  123.483993] ohci_hcd 0000:03:00.1: irq 19, io mem 0xfeafd000
-[  123.551350] usb usb2: configuration #1 chosen from 1 choice
-[  123.557509] hub 2-0:1.0: USB hub found
-[  123.561690] hub 2-0:1.0: 3 ports detected
-[  123.687627] sd 2:0:0:0: Attached scsi generic sg0 type 0
-[  123.693485] scsi 4:0:0:0: Attached scsi generic sg1 type 5
-[  123.932540] usb 2-2: new full speed USB device using ohci_hcd and address 2
-[  123.998960] Real Time Clock Driver v1.12ac
-[  124.113162] usb 2-2: configuration #1 chosen from 1 choice
-[  124.128282] usbcore: registered new interface driver usbserial
-[  124.134695] drivers/usb/serial/usb-serial.c: USB Serial support registered for generic
-[  124.143496] usbcore: registered new interface driver usbserial_generic
-[  124.150640] drivers/usb/serial/usb-serial.c: USB Serial Driver core
-[  124.158844] w83627hf: Found W83627HF chip at 0x290
-[  124.167540] drivers/usb/serial/usb-serial.c: USB Serial support registered for pl2303
-[  124.176218] pl2303 2-2:1.0: pl2303 converter detected
-[  124.182958] usb 2-2: pl2303 converter now attached to ttyUSB0
-[  124.190363] usbcore: registered new interface driver pl2303
-[  124.196580] drivers/usb/serial/pl2303.c: Prolific PL2303 USB to serial adaptor driver
-[  127.525919] tg3: eth0: Link is up at 1000 Mbps, full duplex.
-[  127.531978] tg3: eth0: Flow control is off for TX and off for RX.
-[  136.766030] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
-[  136.773917] sd 2:0:0:0: [sda] Write Protect is off
-[  136.779229] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  136.779247] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  136.789232]  sda: sda1 sda2 sda3
-[  139.812179] sd 2:0:0:0: [sda] 488397168 512-byte hardware sectors (250059 MB)
-[  139.820030] sd 2:0:0:0: [sda] Write Protect is off
-[  139.825347] sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
-[  139.825365] sd 2:0:0:0: [sda] Write cache: enabled, read cache: enabled, doesn't support DPO or FUA
-[  139.835312]  sda: sda1 sda2 sda3
-[  142.861469] ReiserFS: sda1: found reiserfs format "3.6" with standard journal
-[  142.870083] ReiserFS: sda1: using ordered data mode
-[  142.880261] ReiserFS: sda1: journal params: device sda1, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-[  142.896826] ReiserFS: sda1: checking transaction log (sda1)
-[  142.919220] ReiserFS: sda1: Using r5 hash to sort names
-[  143.330225] ReiserFS: sda1: found reiserfs format "3.6" with standard journal
-[  143.337841] ReiserFS: sda1: using ordered data mode
-[  143.343314] ReiserFS: sda1: journal params: device sda1, size 8192, journal first block 18, max trans len 1024, max batch 900, max commit age 30, max trans age 30
-[  143.359638] ReiserFS: sda1: checking transaction log (sda1)
-[  143.376333] ReiserFS: sda1: Using r5 hash to sort names
-[  143.396521] SGI XFS with ACLs, security attributes, large block/inode numbers, no debug enabled
-[  143.407882] SGI XFS Quota Management subsystem
-[  143.461049] XFS mounting filesystem sda3
-[  143.562173] Ending clean XFS mount for filesystem: sda3
-[  147.325573] fuse init (API version 7.8)
+     I don't understand this one.
 
---Boundary-00=_+5zEHNo0XtvPKzz--
+> This is my objection.  Even when enumerating multiple devices of the =
+same type
+> is tricky, enumerating multiple devices of _different_ types should n=
+ot be.
+> There's a great big type indicator that is being _deliberately_ ignor=
+ed, and
+> large classes of devices (millions of laptops) where you know there's=
+ only
+> going to be _one_ instance of a given type.
+
+      Your objection is interesting. It is lost in the middle of e-mail=
+s which,
+  to the untrained eye, look like you are trying to fight everyone and
+  everybody.
+
+> By the way, ethernet cards contain a unique MAC address.  Hard drives=
+ do not
+> seem to, or if they do it's not being consistently exposed in a way I=
+ can
+> find.  This is sad.  (No, reading data from the device to determine t=
+his gets
+> us back to the "spinning up the external USB drive to find my root pa=
+rtition"
+> gripe mentioned earlier.)
+
+     As far as I can tell the hard drives do not have serial numbers ea=
+sily
+  readable by the kernel (I think it's only printed on the label). Howe=
+ver
+  (feverishly plugging his USB key in the laptop), you can tell how a d=
+rive
+  is attached to the motherboard:
+
+Laptop's SATA drive:
+cognac $ readlink /sys/block/sda/device
+=2E./../devices/pci0000:00/0000:00:12.0/host0/target0:0:0/0:0:0:0
+
+USB key:
+coghac $ readlink /sys/block/sdb/device
+=2E./../devices/pci0000:00/0000:00:13.5/usb6/6-3/6-3:1.0/host4/target4:=
+0:0/4:0:0:0
+
+    By the way, did you look in /dev/disk/by-id (udev magic) ? It's pro=
+bably
+  not very difficult to reconfigure udevd to not read the UUIDs of the
+  partitions and not spin up your holy external disk at each reboot. I =
+think
+  the one that is spinning up your holy external hard drive is udevd. B=
+y
+  the way, how many time do you reboot instead of resuming from
+  suspend-to-disk ? Have you given a try to TuxOnIce ?
+
+    If you had asked your first question in a way similar to this one:
+
+    "I have my laptop hard drive that shows as different devices depend=
+ing
+  whether there are USB drives plugged in or not, what should I do ?
+  Shouldn't SATA/USB drives/PATA/iSCSI drives be enumerated in differen=
+t
+  queues ?"
+
+    You would probably have received more interesting answers and less
+  insults.
+
+>> You can rail against it, but that's the mark of someone who
+>> refuses to accept reality.
+>
+> Let me clarify: I'm talking about device enumeration.
+>
+> I've never had trouble enumerating a device that was _not_ routed thr=
+ough the
+> scsi layer, largely because the systems I work with don't usually hav=
+e more
+> than one device of the same type.  (There are millions of laptop and =
+desktop
+> devices out there where this is the common case.  As I said, I may ha=
+ve four
+> USB ports and the ability to plug hubs into them, but you can't add a=
+nother
+> SATA hard drive to my laptop without a soldering iron.)
+>
+> However, as soon as a device _is_ routed through the scsi layer (as P=
+ATA was a
+> few versions back), it gets conflated with numerous other devices.  T=
+his
+> creates problems.  SATA isn't hard to enmerate in my laptop, USB pote=
+ntially
+> is.  Dumping all the SATA devices into the same bucket with the USB d=
+evices
+> makes both harder to enumerate.
+
+    Indeed. Propose a solution. Remember that it is indispensable that =
+all
+  goes through the SCSI layer(s) because all those devices respond to t=
+he
+  same command set thus you do not want several implementations of
+  the routines.
+
+>>> This has the annoying effect of bundling together different types o=
+f
+>>> devices and making device enumeration unnecessarily difficult: my
+>>> laptop only has one SATA hard drive and can't gain another without =
+a
+>>> soldering iron, but that drive could move from /dev/sda to /dev/sdb
+>>> if I reboot the system with a USB key plugged in.  This seems like =
+a
+>>> regrettable loss of orthogonality to me.  I remember back when
+>>> /dev/usb0 and /dev/hda were separate devices that showed up in /dev=
+,
+>>> but these days "it's SCSI" seems to trump "it's USB", "it's ATA", o=
+r
+>>> "it's SATA".  (Even though none of those are actually SCSI hardware=
+,
+>>> they just send a similar packet protocol across the wire.)
+>>
+>> You're showing your ignorance here.
+>
+> I have buckets of ignorance.  It's why I ask questions.
+
+     Once again. You are so aggressive in your asking that it does not
+  lead to an interesting discussion.
+
+>> In fact in the past few years,
+>> ATA and SCSI has been converging significantly,
+>
+> And down far enough all these devices are powered by electricity.  Ar=
+e we
+> going to wind up with /dev/electric[1-999]?
+
+     Out for a fight ?
+
+> SATA !=3D PATA !=3D USB.  But /dev/sda can be PATA, /dev/sdb SATA, an=
+d /dev/sdc
+> USB.  And they can move relative to each other.  This didn't used to =
+be the
+> case.  Why is it considered an improvement?
+
+     Each device is different from each other (they do not share their =
+atoms).
+  Where do you want to put the line between using a single driver for t=
+hem
+  or not ?
+
+     In that case the sd driver registers all disk-like devices that re=
+spond to
+  (a suitably large subset of) the SCSI command set. It is an improvmen=
+t
+  to have all devices share a driver because if you improve it, you imp=
+rove
+  it for all the devices; if you debug it, you debug it for all your
+devices; you
+  use less memory.
+
+   The enumeration of the devices is not the nightmare you are trying t=
+o
+  imply. If it is hard in your particular case, many people are likely =
+to want
+  to help you. Just try to ask politely, without shouting, without sayi=
+ng that
+  block layer is useless, without saying that device enumeration in the
+  SCSI layer (or sd device driver) is braindead. If you want to propose=
+ a
+  change, propose it: "we could also do it that other way". "The way th=
+e
+  SCSI disk is attached should show in the name of the device". I suspe=
+ct
+  this will be refused anyway because that would mean that you need
+  a (series of) major block number(s) for each type of SCSI attachment
+  (if the device has not a different major block number, there is nothi=
+ng
+  short of udev that can give it a different name).
+
+>> with the ATAPI
+>> specification has essentially incorporating the SCSI protocol by
+>> reference and by value --- with the point that SAS was developed by
+>> the SCSI Trade Association, and SAS is effectively a superset of SAT=
+A,
+>> to the point where with care, you can actually mix SAS and SATA driv=
+es
+>> on the same in enclosure (SAS and SATA are physically compatible on
+>> the connector level).
+>
+> I'm aware of this, and under the impression they're both modified gig=
+abit
+> ethernet at the PHY level.  Should the hard drive become eth2?
+
+     Out for a fight ?
+
+>> More to the point, with SATA, hot plugging has been designed in, so
+>> probing order is not going to be well defined,
+>
+> The spec may define the capability to hotplug, but your average
+> laptop doesn't not offer the capability to hotplug anything into its
+> SATA controllers.
+
+    How long before eSATA enabled laptops (with eSATA enumerated
+  before SATA obviously) ?
+
+> The hard drive is screwed in (due to the portability part of laptopne=
+ss),
+> all the controllers wired onto the motherboard are accounted for, non=
+e
+> are exposed externally.  What _is_ exposed externally is USB, and if =
+you
+> want to add an extra hard drive you can buy a cheap USB one at Fry's.
+>
+> In such a case, which is common, the first SATA hard drive is reliabl=
+y the
+> disk containing the root partition, and there's no need to stick a UU=
+ID
+> in /etc/fstab.
+>
+> The problem is, "the first SATA hard drive" is not a stable identifie=
+r in a
+> system where SATA and USB devices are dumped in the same bucket
+> and given big stir.  Dumping SATA and USB devices into the same
+> bucket (because they smell a bit like SCSI) is what I am objecting to=
+=2E
+
+     You should have told it in the first place -- with cooler tone.
+
+>> just as with USB
+>> devices.  And there are already relatively common situations where t=
+he
+>> same disk can show up via multiple different interfaces.
+>
+> It was also possible to buy a hotplug PATA ide enclosure.  So what?  =
+The vast
+> majority of traditional IDE users happily ignored this, and went on w=
+ith
+> their lives.
+>
+> > For example, if you have a modern Thinkpad with an secondary SATA h=
+ard
+> > drive in an Ultrabay, and you plug it into the Ultrabay in your T60=
+,
+> > it will show up as a SATA drive.
+>
+> I remember the config option about enumerating onboard IDE controller=
+s first.
+> It didn't really matter what order they were enumerated in as long as=
+ it was
+> controllable.
+>
+> Presumably if the primary SATA hard drive was /dev/sata and the slot
+> with "secondary" in its name got /dev/satb, life would be good.  And =
+the
+> presence or absence of /dev/satb wouldn't affect USB devices and such=
+ if they
+> weren't in the same namespace.
+>
+>> However, if you plug it into the
+>> Advanced dock, it shows up as a USB device.
+>
+> You plug it in somewhere else, it shows up somewhere else.  This soun=
+ds
+> familiar to old IDE users. :)
+>
+> How is it harder for udev to make a stable symlink for this drive tha=
+t
+> sometimes points to /dev/satb and sometimes to /dev/usb1?  (Harder th=
+an a
+> symlink that sometimes points to /dev/sdb and sometimes to /dev/sdd? =
+ You
+> don't have persistent naming _now_, so the objection seems to be that
+> maintaining the distinction between device types would not be a perfe=
+ct
+> solution in all cases.  I agree.  So?)
+>
+> > And with iSCSI not only
+> > can you encapsulate a SCSI command stream over USB, you can do so o=
+ver
+> > IP as well.
+>
+> Yup.  And you've been able to make a network block device for years. =
+ They
+> showed up as /dev/nd0, a distinct type of block device which you (and=
+ your
+> scripts) could find.  Now yet another way of doing the same thing is =
+mixed
+> into the same scsi bucket and given a stir...
+>
+> > In any case, regardless of how the physical SATA drive is
+> > attached to the system, you want it to show up as the same device a=
+nd
+> > be mounted in the same location.
+>
+> If my laptop's hard drive reliably showed up as /dev/sda every time, =
+and I
+> could count on that, I wouldn't be complaining about it.  The entire =
+problem
+> is that it isn't guaranteed to do that, and thus /etc/fstab is a nigh=
+tmare I
+> can't edit.
+>
+> You could meet this definition of "the same" by having every block de=
+vice in
+> the system show up as /dev/block[a-z] no matter what type it was, and=
+ all the
+> char devices show up as /dev/char[aa-zz], shuffle them all each reboo=
+t, and
+> then have all the programs iterate through all of them any time they =
+wanted
+> something specific.
+>
+> I'm rather glad that /dev/ttyS0 and /dev/zero aren't easy to mix up.
+>
+> > That's why identifying filesystem by UUID's or Labels is so critica=
+l.
+> > This is not a new concept; we've had the capability to do this for
+> > over a decade, and I always knew it would be necessary for us to do
+> > this sooner or later --- which is why I added the UUID support to e=
+xt2
+> > back in 1996.
+>
+> It's necessary for IBM big iron to do this.  It's generally not neces=
+sary for
+> laptops or embedded systems to do this if they distinguish between _t=
+ypes_ of
+> devices, which is something they until recently did for the types of =
+devices
+> I was interested in, and something they _stopped_ doing when everythi=
+ng got
+> merged into the scsi layer, and I consider this a regression.
+>
+> No, distinguishing between types of devices is not a perfect solution=
+ to
+> device enumeration, but it was sufficient for all my use cases for ma=
+ny
+> years, and would still be if the kernel still did it, and I'm not alo=
+ne here.
+>
+> > > The fact that udev can theoretically unwind this hairball is not =
+an
+> > > excuse for conflating different categories of devices in the firs=
+t
+> > > place.
+> >
+> > See the thinkpad Ultrabay drive example above.
+>
+> Last week I drove my laptop so deep into swap (with a "make -j" on qe=
+mu) that
+> after half an hour trying to repaint my kmail window, it locked solid=
+=2E
+> Again.  You'd think the oom killer would come to the rescue, but it d=
+idn't.
+> Maybe Ubuntu disabled it.  I have _2_gigs_ of ram in this sucker, on =
+a stock
+> Ubuntu 7.04 install (with the "upgrade all" tab pressed a few times),=
+ and yet
+> I managed to make it swap itself to death one more time.
+>
+> Virtual memory isn't perfect.  I've _always_ been able to come up wit=
+h
+> examples where it just doesn't work for me.  This doesn't mean VM ove=
+rcommit
+> should be abolished, because it's useful more often than not.
+>
+> So you have a counterexample.  Ok.  I can't actually see how your
+> counterexample would be worse off than it is now; just differently wo=
+rse off.
+>
+> > You address hosts by
+> > IP address; it doesn't matter whether you access them via a PPP
+> > interface, or a wireless interface, or a ethernet interface.
+>
+> It does when I'm configuring the interfaces.
+>
+> > Similarly, a disk could in theory be accessible over USB, SATA, or
+> > iSCSI, and the Thinkpad example is only one such where the same
+> > filesystem might be accessible over multiple interfaces.  And with
+> > multipath fiber channel SAN's (and I hate to break it to you, but F=
+C
+> > also uses SCSI protocols) storage is very much looking more and mor=
+e
+> > like networking.
+>
+> And in the networking world I'm able to say that this local machine h=
+as a
+> static IP that is not world-routable.  It is separate, manually confi=
+gured, I
+> put it _right_here_, and I personally know that it's not going to mov=
+e
+> because I'm the one who put it there and I'm the only one who would m=
+ove it.
+>
+> Over on the networking side of things I can "ifconfig lo 127.0.0.1" w=
+ithout
+> first probing all the interfaces to figure out which one's loopback a=
+nd which
+> one's the wireless card.
+>
+> I note that the eth0 and eth1 names are dynamically assigned on a fir=
+st come
+> first serve basis (like scsi).  This never causes me a problem becaus=
+e the
+> driver loading order is constant, and once you figure out that eth0 i=
+s
+> gigabit and eth1 is the 80211g it _stays_ that way across reboots, re=
+liably.
+> Yeah, it's a heuristic.  Hands up everybody relying on such a heurist=
+ic in
+> the real world.
+
+     It' also easier because you have the MAC address to help.
+
+> Possibly one solution here is to document that the SATA drivers load
+> before any other scsi device, and the driver subsystem _waits_ for
+> that to finish enumerating before trying any other kind of scsi devic=
+e,
+> with a barrier of some kind), and then any SATA devices present at
+> boot time will reliably get those names in that order (no races, no
+> variation) and anything after that is a separate problem.  (Of course
+> this would involve making it true if it currently isn't.  It's still =
+a mess to
+> dump all sorts of different devices in the same namespace, but at
+> least for the common case of a laptop with a SATA root partition this
+> would let us get the UUID out of /etc/fstab).
+
+     There is also the need to ensure that each distribution loads the =
+ahci
+  driver before any other SCSI or emulated SCSI host. It looks as if Ub=
+untu
+  does not do it that way (I've tried to understand the module probing =
+logic
+  in the initramfs but have miserably failed; too much magic probably).
+
+    Remember that udevd starts your holy external hard disk, not the
+  UUID in /etc/fstab (obiously if you have an UUID in fstab, you need u=
+dev
+  to probe for it, but it'll do it regardless of whether or not UUSID i=
+s present
+  in fstab.
+
+    Regards,
+
+          Lo=EFc
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
