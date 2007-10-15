@@ -1,75 +1,42 @@
-From: Nick Piggin <nickpiggin@yahoo.com.au>
-Subject: Re: OOM killer gripe (was Re: What still uses the block layer?)
-Date: Tue, 16 Oct 2007 01:08:37 +1000
-Message-ID: <200710160108.38222.nickpiggin@yahoo.com.au>
-References: <200710112011.22000.rob@landley.net> <200710152337.45252.nickpiggin@yahoo.com.au> <200710150452.30939.rob@landley.net>
+From: Rob Landley <rob@landley.net>
+Subject: Re: What still uses the block layer?
+Date: Mon, 15 Oct 2007 05:08:36 -0500
+Message-ID: <200710150508.37332.rob@landley.net>
+References: <200710112011.22000.rob@landley.net> <200710150304.00901.rob@landley.net> <646765f40710150206j75af4c4dwac4f4565451b64b1@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.mail.mud.yahoo.com ([209.191.85.214]:35768 "HELO
-	smtp104.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1757528AbXJOJ6b (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Oct 2007 05:58:31 -0400
-In-Reply-To: <200710150452.30939.rob@landley.net>
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:52093
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756363AbXJOKIl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 06:08:41 -0400
+In-Reply-To: <646765f40710150206j75af4c4dwac4f4565451b64b1@mail.gmail.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+To: Julian Calaby <julian.calaby@gmail.com>
+Cc: Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Monday 15 October 2007 19:52, Rob Landley wrote:
-> On Monday 15 October 2007 8:37:44 am Nick Piggin wrote:
-> > > Virtual memory isn't perfect.  I've _always_ been able to come up with
-> > > examples where it just doesn't work for me.  This doesn't mean VM
-> > > overcommit should be abolished, because it's useful more often than
-> > > not.
-> >
-> > I hate to go completely offtopic here, but disks are so incredibly
-> > slow when compared to RAM that there is really nothing the kernel
-> > can do about this.
+On Monday 15 October 2007 4:06:20 am Julian Calaby wrote:
+> On 10/15/07, Rob Landley <rob@landley.net> wrote:
+> > I note that the eth0 and eth1 names are dynamically assigned on a first
+> > come first serve basis (like scsi).  This never causes me a problem
+> > because the driver loading order is constant, and once you figure out
+> > that eth0 is gigabit and eth1 is the 80211g it _stays_ that way across
+> > reboots, reliably. Yeah, it's a heuristic.  Hands up everybody relying on
+> > such a heuristic in the real world.
 >
-> I know.
->
-> > Presumably the job will finish, given infinite
-> > time.
->
-> I gave it about half an hour, then it locked solid and stopped writing to
-> the disk at all.  (I gave it another 5 minutes at that point, then held
-> down the power button.)
+> Umm, not quite, from my experiences with pre-production wireless
+> drivers, (another story, another time) fancy stuff is being done in
+> udev to make sure that your gigabit card is always assigned to eth0.
 
-Maybe it was a bug then. Hard to say without backtraces ;)
+I remember building a 2.4 kernel, statically linking in all the drivers, and 
+getting the ethernet devices showing up in a reliable order for years.  Where 
+does the need for fancy stuff come in?
 
-
-> > You really shouldn't configure
-> > so much unless you do want the kernel to actually use it all, right?
->
-> Two words: "Software suspend".  I've actually been thinking of increasing
-> it on the next install...
-
-Kernel doesn't know that you want to use it for suspend but not
-regular swapping, unfortunately.
-
-
-> > Because if we're not really conservative about OOM killing, then the
-> > user who actually really did want to use all the swap they configured
-> > gets angry when we kill their jobs without using it all.
->
-> I tend to lower "swappiness" and when that happens all sorts of stuff goes
-> weird.  Software suspend used to say says it can't free enough memory if I
-> put swappiness at 0 (dunno if it still does).  This time the OOM killer
-> never triggered before hard deadlock.  (I think I had it around 20 or 40 or
-> some such.)
->
-> > Would an oom-kill-someone-now sysrq be of help, I wonder?
->
-> *shrug* It might.  I was a letting it run hoping it would complete itself
-> when it locked solid.  (The keyboard LEDs weren't flashing, so I don't
-> _think_ it paniced.  I was in X so I wouldn't have seen a message...)
-
-If you can work out where things are spinning/sleeping when that happens,
-along with sysrq+M data, then it could make for a useful bug report. Not
-entirely helpful, but if it is a reproducible problem for you, then you
-might be able to get that data from outside X.
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
