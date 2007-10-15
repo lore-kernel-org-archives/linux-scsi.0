@@ -1,46 +1,46 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 17:46:16 -0400
-Message-ID: <4713DFA8.6020304@garzik.org>
-References: <200710112011.22000.rob@landley.net> <200710150304.00901.rob@landley.net> <18195.19678.500863.613193@notabene.brown> <200710151634.57407.rob@landley.net>
+Subject: Re: [git patches] libata update
+Date: Mon, 15 Oct 2007 18:31:53 -0400
+Message-ID: <4713EA59.30409@garzik.org>
+References: <20071012194002.GA1545@havoc.gtf.org> <200710130342.22217.bzolnier@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:34240 "EHLO mail.dvmed.net"
+Received: from srv5.dvmed.net ([207.36.208.214]:59274 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751722AbXJOVqc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Oct 2007 17:46:32 -0400
-In-Reply-To: <200710151634.57407.rob@landley.net>
+	id S1751029AbXJOWb5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Oct 2007 18:31:57 -0400
+In-Reply-To: <200710130342.22217.bzolnier@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: Neil Brown <neilb@suse.de>, Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Sonic Zhang <sonic.zhang@analog.com>, Kristoffer Nyborg Gregertsen <kngregertsen@norway.atmel.com>
 
-Rob Landley wrote:
-> I realize that both views are valid.  This is why the US has a house and a 
-> senate, and filters things through both views.  My gripe is that forcing my 
-> laptop to look at my USB devices to find my SATA hard drive is aligned with 
-> only one of those viewpoints, and completely opposed to the other.
+Bartlomiej Zolnierkiewicz wrote:
+> On Friday 12 October 2007, Jeff Garzik wrote:
+>> [ I just sent this upstream to Andrew and Linus ]
+>>
+>> Now that I have nailed down the corruption problem, I can attend to
+>> this...  Fun stuff:
+>>
+>> * port multiplier support (like an ethernet hub, only dumber)
 > 
-> An approach that makes things much easier on laptops is seen to hurt big iron, 
-> not because it the approach itself has a direct negative impact on big iron, 
-> but only because then laptops are not saddled with the problems of big iron.
+> Great to see this here.
+> 
+>> * Asynchronous notification -- finally userspace CD-ROM polling can go away!
+> 
+> Is this AHCI specific or could be used by some other SATA hosts?
 
+Can be used by any controller that supports SNotification (or is able to 
+capture and parse the raw FIS's).
 
-And we are telling you that, in a modern hotplug world -- yes even on a 
-laptop -- you are clinging too much to assumptions that were never 100% 
-true in the first place, and much less so on today's laptops.
+And FWIW, Tejun's PMP work also uses a few bits of same async-notify stuff.
 
-When you can unplug a SATA drive from a laptop, and plug it back in via 
-USB, you can see how unwise it is to hardcode device names into your fstab.
-
-We invented udev, sysfs, mount-by-label, mount-by-uuid, LVM and all 
-sorts of other gadgets to make this problem go away.
-
-If you ignore the solutions that exist to solve these problems, then of 
-course annoyances will persist as the state of hardware marches forward.
+I agree with your review items, and will look at those if others don't 
+beat me to it.
 
 	Jeff
+
 
 
