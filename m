@@ -1,115 +1,88 @@
-From: Neil Brown <neilb@suse.de>
+From: Theodore Tso <tytso@mit.edu>
 Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 11:23:43 +1000
-Message-ID: <18194.49439.864088.169436@notabene.brown>
-References: <200710112011.22000.rob@landley.net>
-	<4711AF18.3030201@davidnewall.com>
-	<471255E4.3070009@s5r6.in-berlin.de>
-	<200710141836.55211.rob@landley.net>
+Date: Sun, 14 Oct 2007 21:45:03 -0400
+Message-ID: <20071015014503.GF9715@thunk.org>
+References: <200710112011.22000.rob@landley.net> <20071013220539.GD29934@parisc-linux.org> <1192400672.3351.56.camel@localhost.localdomain> <200710141845.44750.rob@landley.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:52945 "EHLO mx1.suse.de"
+Received: from thunk.org ([69.25.196.29]:34424 "EHLO thunker.thunk.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752361AbXJOBXy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 14 Oct 2007 21:23:54 -0400
-In-Reply-To: message from Rob Landley on Sunday October 14
+	id S1759869AbXJOBpr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 14 Oct 2007 21:45:47 -0400
+Content-Disposition: inline
+In-Reply-To: <200710141845.44750.rob@landley.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rob Landley <rob@landley.net>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, David Newall <david@davidnewall.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Sunday October 14, rob@landley.net wrote:
-> On Sunday 14 October 2007 12:46:12 pm Stefan Richter wrote:
-> > David Newall wrote:
-> > > That is so rude.
-> 
-> When a reply contains as a reply to the first paragraph "you're wrong" with no 
-> elaboration, and as a reply to the second paragraph nothing but expletives 
-> and personal insults, I tend to stop reading.  It really doesn't come across 
-> as a serious reply.
-> 
-> I was at least attempting to ask a serious question.
+On Sun, Oct 14, 2007 at 06:45:44PM -0500, Rob Landley wrote:
+> I admit a certain amount of personal annoyance that once the SCSI
+> layer consumes a category of device (USB, SATA, PATA), they can
+> often _only_ be used by going through the SCSI midlayer.  (This
+> strikes me as analogous to TCP/IP claiming ethernet and PPP devices
+> so thoroughly that you can no longer address them as eth1 or
+> /dev/ttyS0.)
 
-Indeed you were, and let me try to answer it as best I can.
+That's because modern USB, ATAPI (what was once known as IDE), SATA
+really *all* using the SCSI command protocols at the low level, just
+as Ethernet and PPP interfaces really are fundamentally the same
+thing.  You can rail against it, but that's the mark of someone who
+refuses to accept reality.
 
-I like to think of the "block layer" as two main parts.
+> This has the annoying effect of bundling together different types of
+> devices and making device enumeration unnecessarily difficult: my
+> laptop only has one SATA hard drive and can't gain another without a
+> soldering iron, but that drive could move from /dev/sda to /dev/sdb
+> if I reboot the system with a USB key plugged in.  This seems like a
+> regrettable loss of orthogonality to me.  I remember back when
+> /dev/usb0 and /dev/hda were separate devices that showed up in /dev,
+> but these days "it's SCSI" seems to trump "it's USB", "it's ATA", or
+> "it's SATA".  (Even though none of those are actually SCSI hardware,
+> they just send a similar packet protocol across the wire.)
 
-Firstly there is the "interface" which it defines, embodied primarily
-in generic_make_request() and 'struct bio'.  There are various other
-small routines in ll_rw_blk.c, and there is 'struct request_queue'
-which is also involved in the other half of the block layer.
+You're showing your ignorance here.  In fact in the past few years,
+ATA and SCSI has been converging significantly, with the ATAPI
+specification has essentially incorporating the SCSI protocol by
+reference and by value --- with the point that SAS was developed by
+the SCSI Trade Association, and SAS is effectively a superset of SATA,
+to the point where with care, you can actually mix SAS and SATA drives
+on the same in enclosure (SAS and SATA are physically compatible on
+the connector level).
 
-This interface defines how requests are passed down, how their
-completion is acknowledged, and various other little details
+More to the point, with SATA, hot plugging has been designed in, so
+probing order is not going to be well defined, just as with USB
+devices.  And there are already relatively common situations where the
+same disk can show up via multiple different interfaces.
 
-Any block device can register a make_request_fn function and get the
-requests (struct bio) almost exactly as the client (filesystem or
-whatever) sent them down - just with a few sanity checks and some
-translation (for partitions) applied.
+For example, if you have a modern Thinkpad with an secondary SATA hard
+drive in an Ultrabay, and you plug it into the Ultrabay in your T60,
+it will show up as a SATA drive.  However, if you plug it into the
+Advanced dock, it shows up as a USB device.  And with iSCSI not only
+can you encapsulate a SCSI command stream over USB, you can do so over
+IP as well.  In any case, regardless of how the physical SATA drive is
+attached to the system, you want it to show up as the same device and
+be mounted in the same location.
 
-The other half of the "block layer" is the io scheduler code.
-This involves the 'struct request' and __make_request() and the various
-routines it calls.
-This collects bios (passed down from clients) and produces 'requests'
-which devices can handle.  One of the important differences between
-bios and requests is the amount of parallelism.
-A filesystem can send down as may concurrent bios as it likes (or as
-it can allocate memory for).
-A device can only handle a limited number of requests at a time,
-depending on the limit of the 'tags command queueing' mechanism
-particular to that device.
-The scheduler bridges this parallelism gap by .... scheduling.
+That's why identifying filesystem by UUID's or Labels is so critical.
+This is not a new concept; we've had the capability to do this for
+over a decade, and I always knew it would be necessary for us to do
+this sooner or later --- which is why I added the UUID support to ext2
+back in 1996.
 
-So the "block layer" consists of "block interface" and "io scheduler"
+> The fact that udev can theoretically unwind this hairball is not an
+> excuse for conflating different categories of devices in the first
+> place.
 
-All block devices use the "block interface" - they have no choice.
-Many block devices use the "io scheduler", but many don't.
-md and dm, loop, umem, and others do their own scheduling as they have
-needs that are specific to the devices, or that otherwise don't
-benefit from the io scheduler (which is really designed for
-rotating-media style devices).
+See the thinkpad Ultrabay drive example above.  You address hosts by
+IP address; it doesn't matter whether you access them via a PPP
+interface, or a wireless interface, or a ethernet interface.
+Similarly, a disk could in theory be accessible over USB, SATA, or
+iSCSI, and the Thinkpad example is only one such where the same
+filesystem might be accessible over multiple interfaces.  And with
+multipath fiber channel SAN's (and I hate to break it to you, but FC
+also uses SCSI protocols) storage is very much looking more and more
+like networking.
 
-SCSI devices can be both block device and non-block devices
-(traditionally 'char devices').
-
-The 'scsi generic' or 'sg' interface to SCSI devices allows arbitrary
-SCSI commands to be sent to a SCSI device.  There are many SCSI
-devices that are not block devices as all (media robots, etc).
-
-When a SCSI device is being used as a block device, the block
-interface is used.  When it is being used as a 'generic device', the
-block interface is not used.
-
-Now we get to the heart of the matter, and to where my knowledge
-becomes a little less detailed - so please forgive if I say something
-silly.
-
-I believe that the SCSI-generic handling still uses the IO scheduler,
-even though it doesn't use the block interface.
-It is probable that the IO scheduler is not a perfect match for the
-needs of SCSI-generic handling.  Given it's origin, that should not be
-surprising.
-
-I believe the linux-scsi email that you referred was addressing this
-issue.  When the author says:
-
-    That approach makes the Linux block layer either a nuisance,
-    irrelevant or a complete anachronism 
-
-I believe he is referring to what I would call the IO scheduler, and is
-observing that it is not a perfect fit.  He is probably right.
-
-So to answer your question:
-
-  SCSI block devices use both the "block interface" and the "io
-  scheduler" and I believe that when people talk about "the block layer"
-  they refer to these two things.
-  i.e. the SCSI layer provides "scsi_request_fn".  The block interface
-  calls __make_request which performs IO scheduling and calls
-  scsi_request_fn for each request.
-
-Hope that helps.
-
-NeilBrown
+						- Ted
