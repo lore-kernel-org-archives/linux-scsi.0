@@ -1,45 +1,39 @@
-From: HighPoint Linux Team <linux@highpoint-tech.com>
-Subject: [PATCH] hptiop: avoid buffer overflow when returning sense data
-Date: Mon, 15 Oct 2007 14:42:52 +0800
-Message-ID: <200710151442.52230.linux@highpoint-tech.com>
-References: <200605101704.27491.linux@highpoint-tech.com> <200605161438.09717.linux@highpoint-tech.com> <200708291510.53793.linux@highpoint-tech.com>
+From: Rob Landley <rob@landley.net>
+Subject: Re: What still uses the block layer?
+Date: Mon, 15 Oct 2007 01:51:30 -0500
+Message-ID: <200710150151.31080.rob@landley.net>
+References: <838477.92423.qm@web31803.mail.mud.yahoo.com>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp110.biz.mail.re2.yahoo.com ([206.190.53.9]:21987 "HELO
-	smtp110.biz.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1754241AbXJOGlH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Oct 2007 02:41:07 -0400
-In-Reply-To: <200708291510.53793.linux@highpoint-tech.com>
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:54175
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751634AbXJOGvg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 02:51:36 -0400
+In-Reply-To: <838477.92423.qm@web31803.mail.mud.yahoo.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: James.Bottomley@SteelEye.com
+To: ltuikov@yahoo.com
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
+On Sunday 14 October 2007 7:45:46 pm Luben Tuikov wrote:
+> Matthew's expletive and extremely rude response really shows
+> the general attitude of the linux-scsi people.
 
-avoid buffer overflow when returning sense data.
+No, it doesn't.  James Bottomley has been exceedingly polite and helpful, as 
+were several other people on the linux-scsi list when I asked them about this 
+stuff back in August.
 
-Signed-off-by: HighPoint Linux Team <linux@highpoint-tech.com>
----
+Religion, politics, and anything remotely related to hotplug appear to be 
+topics to avoid in polite company if you want it to remain polite.  (My 
+gripes with scsi mostly have to do with device enumeration.  My attempts to 
+use sysfs also have to do with device enumeration.  I've spotted a trend 
+here.)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index 8b384fa..d32a4a9 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -375,8 +375,9 @@ static void hptiop_host_request_callback
- 		scp->result = SAM_STAT_CHECK_CONDITION;
- 		memset(&scp->sense_buffer,
- 				0, sizeof(scp->sense_buffer));
--		memcpy(&scp->sense_buffer,
--			&req->sg_list, le32_to_cpu(req->dataxfer_length));
-+		memcpy(&scp->sense_buffer, &req->sg_list,
-+				min(sizeof(scp->sense_buffer),
-+					le32_to_cpu(req->dataxfer_length)));
- 		break;
- 
- 	default:
-
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
