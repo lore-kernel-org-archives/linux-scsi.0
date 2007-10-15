@@ -1,29 +1,58 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 3/3 ver2] pluto/fc - fix INQUIRY still using !use_sg commands
-Date: Mon, 15 Oct 2007 12:12:07 -0600
-Message-ID: <20071015181207.GD25488@parisc-linux.org>
-References: <4713A175.9020408@panasas.com> <4713A491.7020701@panasas.com> <4713AAB6.8070709@panasas.com>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch 1/1] scsi: expose AN support to user space
+Date: Mon, 15 Oct 2007 14:12:15 -0400
+Message-ID: <4713AD7F.8030906@garzik.org>
+References: <200710032104.l93L40CM008614@imap1.linux-foundation.org> <470FE29A.7050605@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:40858 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753927AbXJOSMI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 14:12:08 -0400
-Content-Disposition: inline
-In-Reply-To: <4713AAB6.8070709@panasas.com>
+Received: from srv5.dvmed.net ([207.36.208.214]:46196 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754348AbXJOSMS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Oct 2007 14:12:18 -0400
+In-Reply-To: <470FE29A.7050605@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, "David S. Miller" <davem@davemloft.net>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <tomof@acm.org>
+To: James.Bottomley@steeleye.com, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: akpm@linux-foundation.org, kristen.c.accardi@intel.com, htejun@gmail.com, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>
 
-On Mon, Oct 15, 2007 at 08:00:22PM +0200, Boaz Harrosh wrote:
-> Some people, me included, might like this approach better
+Jeff Garzik wrote:
+> akpm@linux-foundation.org wrote:
+>> From: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+>>
+>> If a scsi_device supports async notification for media change, then 
+>> let user
+>> space know this capability exists by creating a new sysfs entry
+>> "media_change_notify", which will be 1 if it is supported, and 0 if not
+>> supported.  Create a routine which allows scsi devices to send a 
+>> uevent when
+>> media change events occur.
+>>
+>> Signed-off-by: Kristen Carlson Accardi <kristen.c.accardi@intel.com>
+>> Acked-by: Jeff Garzik <jeff@garzik.org>
+>> Cc: Tejun Heo <htejun@gmail.com>
+>> Cc: James Bottomley <James.Bottomley@steeleye.com>
+>> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> 
+> Ping?
 
-I think I prefer this approach too.
+Re-Ping?
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+This patch works (it has been working for months), is ACK'd by me, 
+addresses some of the feedback given in August, and has not received any 
+comments despite the SCSI maintainers being To'd or CC'd for weeks 
+(months, if you include the older thread).
+
+Further, this patch is required to round out interrupt-driven media 
+change notification, that which eliminates the CD-ROM polling that 
+userspace has done since the dawn of time.
+
+It was not in the merge window SCSI push, while being in -mm for a while 
+and linux-scsi having the patch for a while.  Which means, if the 
+silence continues, it must wait 4-6 months for 2.6.25 release, for no 
+apparent reason.
+
+	Jeff
+
+
