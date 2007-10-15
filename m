@@ -1,54 +1,63 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: Greg KH <greg@kroah.com>
 Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 07:44:19 +0200
-Message-ID: <4712FE33.3000400@s5r6.in-berlin.de>
-References: <200710112011.22000.rob@landley.net> <4711AF18.3030201@davidnewall.com> <471255E4.3070009@s5r6.in-berlin.de> <200710141836.55211.rob@landley.net>
+Date: Sun, 14 Oct 2007 23:00:15 -0700
+Message-ID: <20071015060015.GB32268@kroah.com>
+References: <200710112011.22000.rob@landley.net> <20071013220539.GD29934@parisc-linux.org> <1192400672.3351.56.camel@localhost.localdomain> <200710141845.44750.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:38455 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752668AbXJOFpE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 01:45:04 -0400
-In-Reply-To: <200710141836.55211.rob@landley.net>
+Received: from pentafluge.infradead.org ([213.146.154.40]:55219 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752718AbXJOGGB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 02:06:01 -0400
+Content-Disposition: inline
+In-Reply-To: <200710141845.44750.rob@landley.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Rob Landley <rob@landley.net>
-Cc: David Newall <david@davidnewall.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-Rob Landley wrote:
-> I was at least attempting to ask a serious question.
-...
-> Actually, I was going through Documentation/block thinking about making a 
-> 00-INDEX for it, but my earlier questions of the scsi guys left me with the 
-> impression that the block layer is _not_ used by the SCSI layer.
+On Sun, Oct 14, 2007 at 06:45:44PM -0500, Rob Landley wrote:
+> On Sunday 14 October 2007 5:24:32 pm James Bottomley wrote:
+> > On Sat, 2007-10-13 at 16:05 -0600, Matthew Wilcox wrote:
+> > > On Thu, Oct 11, 2007 at 08:11:21PM -0500, Rob Landley wrote:
+> > > > My impression from asking questions on the linux-scsi mailing list is
+> > > > that the scsi upper/middle/lower layers doesn't use the block layer
+> > > > described in Documentation/block/*.
+> > >
+> > > Entirely incorrect.
+> >
+> > OK, right ... could we please get a sense of decorum back on this list.
+> 
+> Did I reply to the insult?
+> 
+> > Rob, if you didn't ask your alleged questions in such a pejorative
+> > manner, we'd get a lot further
+> 
+> I'm not attempting to be pejorative.
+> 
+> I admit a certain amount of personal annoyance that once the SCSI layer 
+> consumes a category of device (USB, SATA, PATA), they can often _only_ be 
+> used by going through the SCSI midlayer.  (This strikes me as analogous to 
+> TCP/IP claiming ethernet and PPP devices so thoroughly that you can no longer 
+> address them as eth1 or /dev/ttyS0.)
 
-Ah, so it was about your documentation work.  I already forgot the
-context of your previous inquiries.  Alas the tone of them already did
-some damage, leading to responses like these.
+If you hate USB storage devices using scsi, please use the ub driver,
+that is what it was written for.
 
-...
-> since 
-> every non-embedded modern storage device I'm aware of has been consumed by 
-> the SCSI layer (despite none of them actually having a discernably closer 
-> relationship to SCSI than ATA did)
-...
+> This has the annoying effect of bundling together different types of devices 
+> and making device enumeration unnecessarily difficult: my laptop only has one 
+> SATA hard drive and can't gain another without a soldering iron, but that 
+> drive could move from /dev/sda to /dev/sdb if I reboot the system with a USB 
+> key plugged in.  This seems like a regrettable loss of orthogonality to me.  
+> I remember back when /dev/usb0 and /dev/hda were separate devices that showed 
+> up in /dev, but these days "it's SCSI" seems to trump "it's USB", "it's ATA", 
+> or "it's SATA".  (Even though none of those are actually SCSI hardware, they 
+> just send a similar packet protocol across the wire.)
 
-The Linux SCSI subsystems don't consume, they provide services; nowadays
-not only for SCSI hardware and SCSI protocols but also for a number of
-subsystems whose tasks are similar enough to SCSI subsystems to make the
-SCSI core and upper SCSI layer useful to them too.
+When did usb-storage devices ever show up as /dev/usb0?  USB flash disks
+are really SCSI devices, look at the USB storage spec for proof of that.
 
-BTW:
-| Now that IDE disks have been rerouted through the scsi layer, SATA goes
-| through the scsi layer, USB goes through the scsi layer, firewire goes
-| through the scsi layer...
+thanks,
 
-As a side note, SBP-2 is a SCSI transport protocol, hence ieee1394/sbp2
-and firewire/fw-sbp2 are Linux SCSI low-level drivers.  Anything else
-would be just wrong and infeasible in this particular case.
--- 
-Stefan Richter
--=====-=-=== =-=- -====
-http://arcgraph.de/sr/
+greg k-h
