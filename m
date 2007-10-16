@@ -1,57 +1,76 @@
 From: david@lang.hm
 Subject: Re: What still uses the block layer?
-Date: Mon, 15 Oct 2007 19:54:22 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0710151952250.3949@asgard.lang.hm>
-References: <200710112011.22000.rob@landley.net> <200710150304.00901.rob@landley.net>
- <646765f40710150206j75af4c4dwac4f4565451b64b1@mail.gmail.com>
- <200710150508.37332.rob@landley.net> <20071015173357.GB5738@kroah.com>
+Date: Mon, 15 Oct 2007 20:06:43 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0710151954550.3949@asgard.lang.hm>
+References: <200710112011.22000.rob@landley.net> <200710141836.55211.rob@landley.net>
+ <4712FE33.3000400@s5r6.in-berlin.de> <200710150426.04924.rob@landley.net>
+ <20071015160800.GA324@parisc-linux.org> <47139F15.7050702@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-033-126.lax1.dsl.speakeasy.net ([64.81.33.126]:44636
-	"EHLO bifrost.lang.hm" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757676AbXJPCu4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Oct 2007 22:50:56 -0400
-In-Reply-To: <20071015173357.GB5738@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763344AbXJPDD3@vger.kernel.org>
+In-Reply-To: <47139F15.7050702@s5r6.in-berlin.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, Rob Landley <rob@landley.net>, David Newall <david@davidnewall.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Rob Landley <rob@landley.net>, Julian Calaby <julian.calaby@gmail.com>, Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Mon, 15 Oct 2007, Greg KH wrote:
+On Mon, 15 Oct 2007, Stefan Richter wrote:
 
-> On Mon, Oct 15, 2007 at 05:08:36AM -0500, Rob Landley wrote:
->> On Monday 15 October 2007 4:06:20 am Julian Calaby wrote:
->>> On 10/15/07, Rob Landley <rob@landley.net> wrote:
->>>> I note that the eth0 and eth1 names are dynamically assigned on a first
->>>> come first serve basis (like scsi).  This never causes me a problem
->>>> because the driver loading order is constant, and once you figure out
->>>> that eth0 is gigabit and eth1 is the 80211g it _stays_ that way across
->>>> reboots, reliably. Yeah, it's a heuristic.  Hands up everybody relying on
->>>> such a heuristic in the real world.
->>>
->>> Umm, not quite, from my experiences with pre-production wireless
->>> drivers, (another story, another time) fancy stuff is being done in
->>> udev to make sure that your gigabit card is always assigned to eth0.
+> Subject: Re: What still uses the block layer?
+> 
+> Matthew Wilcox wrote:
+>> On Mon, Oct 15, 2007 at 04:26:04AM -0500, Rob Landley wrote:
+>>> Combining USB and IDE into the same /dev/sd? namespace makes enumerating the
+>>> IDE devices much harder than in the traditional "/dev/hdb doesn't move
+>>> without a screwdriver" model.  The merger creates a new problem for IDE, one
+>>> which didn't exist before: the addition or removal of other unrelated types
+>>> of devices may change this device's location next boot.  It may be possible
+>>> to add additional complication to the system to compensate, but what was the
+>>> advantage of merging the namespaces in the first place?
 >>
->> I remember building a 2.4 kernel, statically linking in all the drivers, and
->> getting the ethernet devices showing up in a reliable order for years.  Where
->> does the need for fancy stuff come in?
+>> It's not something anyone particularly set out to do, it's just how
+>> it worked out.  It was justified by saying "ok, this goes from a 99%
+>> solution to a 96% solution, but there's 100% solution called uuids".
+>> I don't particularly agree with this line of argumentation, but it did
+>> hold sway.
 >
-> Because PCI devices reorder their bus numbers all the time.  And we have
-> ethernet devices hanging off of USB connections now (yes, even built-in
-> to the machine), and we have network connections on other hot-pluggable
-> busses (remember, PCI is hot pluggable.)
+> Low-level networking drivers suggest a default interface name (per
+> interface or as a template like eth%d into which the networking core
+> inserts a lowest spare number).  Userspace can rename interfaces, but
+> nevertheless it's nice to have different default kernel names for
+> ethernet, wlan etc..
+>
+> Could low-level SCSI drivers provide similar name templates which give a
+> hint on the transport involved?  It's a bit more difficult as with
+> networking interfaces though because
+>  - SCSI devices can have sd, sr, st, osst, ch, sg interfaces,
+>  - SCSI device files share a namespace with all other device files.
+>
+> E.g.
+> /dev/sd-ide-b	- second IDE HDD,
+> /dev/sd-iscsi-e	- fifth iSCSI direct access device,
+> /dev/sr-sata-0	- first SATA CD-ROM,
+> /dev/sr-usb-0	- a USB CD-ROM,
+> /dev/st-fw-0	- a FireWire tape drive,
+> /dev/sda	- a device whose transport driver didn't propose a name
+>
+> Of course the really interesting names will still be provided by
+> udev-generated symlinks.
 
-do PCI devices reorder their bus numbers spontaniously, or only if you 
-change the hardware?
+this is a nice option, and since most of the existing userspace code is 
+looking for /dev/sd*, /dev/sr*, etc this should be able to work for new 
+installs with no userspace changes. Since it would break existing installs 
+it would need to be optional.
 
-> So, the distros need to name network devices in a persistant way, that
-> is why the distros now do this.  If you don't like the distro doing it,
-> complain to them, it's not a kernel issue :)
+one other option that could be considered (and I do realize I'm bringing 
+up flame-bait here) is that drivers that have fixed addresses could offer 
+up a device name that include that address.
+i.e. depending on the config option a device could show up as either sda, 
+sd-scsi-a, sd-scsi-0:0:0:0, or even sd-scsi-<WWN>
 
-I have, at least the response was to tell me how to kill this 'feature' 
-even if they won't change it.
+if the driver or bus doesn't have a real numbering, it wouldn't invent a 
+fake one (which is a big problem with most of the prior suggestions that 
+have tried to offer a numbering option), it would just offer the most 
+specific information it has.
 
 David Lang
-
