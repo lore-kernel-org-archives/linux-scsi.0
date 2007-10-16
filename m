@@ -1,32 +1,68 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: What still uses the block layer?
-Date: Tue, 16 Oct 2007 22:56:14 +0200
-Message-ID: <4715256E.4050609@s5r6.in-berlin.de>
-References: <200710112011.22000.rob@landley.net> <200710141836.55211.rob@landley.net> <4712FE33.3000400@s5r6.in-berlin.de> <200710150426.04924.rob@landley.net> <20071015160800.GA324@parisc-linux.org> <47139F15.7050702@s5r6.in-berlin.de> <Pine.LNX.4.64.0710151954550.3949@asgard.lang.hm> <20071016111911.30a18e12@the-village.bc.nu> <Pine.LNX.4.64.0710161238140.6995@asgard.lang.hm> <20071016195432.GA31306@parisc-linux.org> <20071016203449.GA1314@closure.lan>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+From: akpm@linux-foundation.org
+Subject: [patch 1/7] git-scsi-misc gdth fix
+Date: Tue, 16 Oct 2007 14:28:19 -0700
+Message-ID: <200710162128.l9GLSJV1018164@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:41427 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S934926AbXJPU4y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Oct 2007 16:56:54 -0400
-In-Reply-To: <20071016203449.GA1314@closure.lan>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60097 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S934092AbXJPV24 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 16 Oct 2007 17:28:56 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Tso <tytso@mit.edu>, Matthew Wilcox <matthew@wil.cx>, david@lang.hm, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Rob Landley <rob@landley>
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, James.Bottomley@steeleye.com, davemilter@gmail.com
 
-Theodore Tso wrote:
-> Yet another reason why people who desperately are trying to cling to
-> the good old days of stable device enumerations are going to be
-> disappointed;
+From: James Bottomley <James.Bottomley@SteelEye.com>
 
-Sure enough; stable device enumeration is a thing of the past.
+On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
+> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
+>
+> > I build linux-2.6.23-mm1 and try to boot it using qemu,
+> > and it crashed with trace like this:
+> > do_page_fault
+> > error_code
+> > lock_acquire
+> > _spin_lock_irqsave
+> > gdth_timeout
+> > run_timer_softirq
+> > __do_softirq
+> > do_softirq
+> >
+> > I have screenshot, but have no idea, is it legal to include it, if I
+> > sent copy to lkml.
+> > config of kernel in attachment,
+> > I apply all three patches from hot-fixes.
+> >
+>
+> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
+>
+> It would appear that gdth_timeout() is passing a bad pointer into
+> spin_lock_irqsave().
 
-This doesn't have to stop us though from providing speaking default
-names for device files, just like we already provide speaking default
-names for network interfaces.  (Not for all, but for many.)
--- 
-Stefan Richter
--=====-=-=== =-=- =----
-http://arcgraph.de/sr/
+There's a bug in the gdth rework in that the instance can be deleted
+from the list before the actual timer is stopped.  This can be worked
+around I think by the following patch; although we really should be
+stopping the timer from firing when the list goes empty.
+
+
+
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/gdth.c |    3 +++
+ 1 file changed, 3 insertions(+)
+
+diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
++++ a/drivers/scsi/gdth.c
+@@ -3793,6 +3793,9 @@ static void gdth_timeout(ulong data)
+     gdth_ha_str *ha;
+     ulong flags;
+ 
++    if (list_empty(&gdth_instances))
++	return;
++
+     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
+     spin_lock_irqsave(&ha->smp_lock, flags);
+ 
+_
