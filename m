@@ -1,95 +1,44 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.24
-Date: Tue, 16 Oct 2007 21:21:48 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0710162121330.29643@anakin>
-References: <1192421381.3429.6.camel@localhost.localdomain>
- <Pine.LNX.4.64.0710160846030.16889@anakin> <4714762B.5040401@panasas.com>
+From: david@lang.hm
+Subject: Re: What still uses the block layer?
+Date: Tue, 16 Oct 2007 12:54:58 -0700 (PDT)
+Message-ID: <Pine.LNX.4.64.0710161238140.6995@asgard.lang.hm>
+References: <200710112011.22000.rob@landley.net> <200710141836.55211.rob@landley.net>
+ <4712FE33.3000400@s5r6.in-berlin.de> <200710150426.04924.rob@landley.net>
+ <20071015160800.GA324@parisc-linux.org> <47139F15.7050702@s5r6.in-berlin.de>
+ <Pine.LNX.4.64.0710151954550.3949@asgard.lang.hm> <20071016111911.30a18e12@the-village.bc.nu>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S965445AbXJPTWR@vger.kernel.org>
-In-Reply-To: <4714762B.5040401@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from dsl081-033-126.lax1.dsl.speakeasy.net ([64.81.33.126]:45923
+	"EHLO bifrost.lang.hm" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934219AbXJPTvO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Oct 2007 15:51:14 -0400
+In-Reply-To: <20071016111911.30a18e12@the-village.bc.nu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Matthew Wilcox <matthew@wil.cx>, Rob Landley <rob@landley.net>, David Newall <david@davidnewall.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Tue, 16 Oct 2007, Boaz Harrosh wrote:
-> On Tue, Oct 16 2007 at 8:49 +0200, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
-> > On Mon, 15 Oct 2007, James Bottomley wrote:
-> >> This is the accumulated updates queued for 2.6.24.  It contains the
-> >> usual slew of driver updates, plus some gdth and advansys rewrites.  We
-> >> still have some outstanding bugs in gdth and fc4 for which I'm hoping to
-> >> sweep fixes into the next update.
-> > 
-> >> Boaz Harrosh (12):
-> >>       NCR5380: Use scsi_eh API for REQUEST_SENSE invocation
-> > 
-> > This change broke compilation of the mac_scsi.c driver:
-> > 
-> > | linux/drivers/scsi/NCR5380.c: In function 'NCR5380_information_transfer':
-> > | linux/drivers/scsi/NCR5380.c:2282: error: 'struct NCR5380_hostdata' has no member named 'ses'
-> > | linux/drivers/scsi/NCR5380.c:2283: error: 'struct NCR5380_hostdata' has no member named 'ses'
-> > | linux/drivers/scsi/NCR5380.c:2284: error: 'struct NCR5380_hostdata' has no member named 'ses'
-> > | linux/drivers/scsi/NCR5380.c:2288: error: 'struct NCR5380_hostdata' has no member named 'ses'
-> > 
-> fix below, Sorry.
-> ----
-> >From 1e10cf1a39ff4909696a5c7950367261b38b3345 Mon Sep 17 00:00:00 2001
-> From: Boaz Harrosh <bharrosh@panasas.com>
-> Date: Tue, 16 Oct 2007 10:25:01 +0200
-> Subject: [PATCH] scsi_mac.h: Define AUTOSENSE before include of NCR5380.h
-> 
->   - Previese patch to NCR5380 broke scsi_mac because
->     AUTOSENSE was defined after the inclusion of
->     NCR5380.h. Fix it
-> 
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+On Tue, 16 Oct 2007, Alan Cox wrote:
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+>>> /dev/sd-ide-b	- second IDE HDD,
+>>> /dev/sr-sata-0	- first SATA CD-ROM,
+>
+> I wouldn't try dividing those by pata v sata. You'll cause all sorts of
+> problems in the process because of PATA-SATA and SATA-PATA bridges.
 
-> ---
->  drivers/scsi/mac_scsi.c |    9 +++++----
->  1 files changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
-> index cdbcaa5..abe2bda 100644
-> --- a/drivers/scsi/mac_scsi.c
-> +++ b/drivers/scsi/mac_scsi.c
-> @@ -53,6 +53,11 @@
->  #include "scsi.h"
->  #include <scsi/scsi_host.h>
->  #include "mac_scsi.h"
-> +
-> +/* These control the behaviour of the generic 5380 core */
-> +#define AUTOSENSE
-> +#define PSEUDO_DMA
-> +
->  #include "NCR5380.h"
->  
->  #if 0
-> @@ -571,10 +576,6 @@ static int macscsi_pwrite (struct Scsi_Host *instance,
->  }
->  
->  
-> -/* These control the behaviour of the generic 5380 core */
-> -#define AUTOSENSE
-> -#define PSEUDO_DMA
-> -
->  #include "NCR5380.c"
->  
->  static struct scsi_host_template driver_template = {
-> -- 
-> 1.5.3.1
-> 
-> 
+if you use a PATA-SATA bridge (IDE drive SATA controller), it would look 
+to the system like a SATA drive and be addressed and enumerated as SATA.
 
-Gr{oetje,eeting}s,
+if you use a SATA-PATA bridge (SATA drive, PATA controller), it would look 
+to the system like a PATA drive and be addressed and enumerated as PATA. 
+prior to libata the device would be /dev/hdX, with X depending on how it's 
+cabled and if it's set to master or slave, it wouldn't matter if that 
+device then converts to other things, the system would still know it as an 
+IDE drive.
 
-						Geert
+this works exactly the same way that external encosures that hold SATA or 
+IDE drives, but have SCSI interfaces to the system have always worked so 
+it's what sysadmins will expect.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+David Lang
