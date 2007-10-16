@@ -1,34 +1,30 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: Remove FC4 and all associated drivers
-Date: Mon, 15 Oct 2007 22:11:15 -0700 (PDT)
-Message-ID: <20071015.221115.36921776.davem@davemloft.net>
-References: <20071016050507.GB15744@parisc-linux.org>
+From: "Dave Milter" <davemilter@gmail.com>
+Subject: Re: linux-2.6.23-mm1 crashed
+Date: Tue, 16 Oct 2007 09:44:24 +0400
+Message-ID: <2a382c6e0710152244r4b6e214dk93988263b193efa8@mail.gmail.com>
+References: <2a382c6e0710141145j51286bd0o8a2eb307f7455cd@mail.gmail.com>
+	 <2a382c6e0710141224n2b8a47c8v1346f1a9dedc7943@mail.gmail.com>
+	 <20071014123101.208b102b.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:34944
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1754767AbXJPFLK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Oct 2007 01:11:10 -0400
-In-Reply-To: <20071016050507.GB15744@parisc-linux.org>
+Received: from wa-out-1112.google.com ([209.85.146.178]:40116 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758779AbXJPFoZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Oct 2007 01:44:25 -0400
+Received: by wa-out-1112.google.com with SMTP id v27so2255543wah
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Oct 2007 22:44:24 -0700 (PDT)
+In-Reply-To: <20071014123101.208b102b.akpm@linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-From: Matthew Wilcox <matthew@wil.cx>
-Date: Mon, 15 Oct 2007 23:05:07 -0600
+On 10/14/07, Andrew Morton <akpm@linux-foundation.org> wrote:
+> I didn't notice that qemu was involved.  Does qemu have an emulator for the
+> gdth hardware?
+>
 
->     Remove FC4 and all associated drivers
->     
->     This code has been slowly rotting for about eight years.  It's currently
->     impeding a few SCSI cleanups, and nobody seems to have hardware to test
->     it any more.  I talked to Dave Miller about it, and he agrees we can
->     delete it.  If anyone wants a software FC stack in future, they can
->     retrieve this driver from git.
->     
->     Signed-off-by: Matthew Wilcox <matthew@wil.cx>
-
-Acked-by: David S. Miller <davem@davemloft.net>
+I think no, the kernel just probe exist or not hardware, and hangs after that.
