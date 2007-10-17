@@ -1,52 +1,86 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [GIT PATCH] SCSI updates for 2.6.24
-Date: Wed, 17 Oct 2007 08:08:03 -0400
-Message-ID: <1192622883.28752.15.camel@localhost.localdomain>
-References: <1192421381.3429.6.camel@localhost.localdomain>
-	 <20071017132026D.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [patch 1/7] git-scsi-misc gdth fix
+Date: Wed, 17 Oct 2007 08:28:48 -0400
+Message-ID: <1192624128.28752.20.camel@localhost.localdomain>
+References: <200710162128.l9GLSJV1018164@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:56613 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:46016 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753874AbXJQMIH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 08:08:07 -0400
-In-Reply-To: <20071017132026D.fujita.tomonori@lab.ntt.co.jp>
+	with ESMTP id S1761494AbXJQM2z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 08:28:55 -0400
+In-Reply-To: <200710162128.l9GLSJV1018164@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: akpm@linux-foundation.org, Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi@vger.kernel.org, davemilter@gmail.com
 
-On Wed, 2007-10-17 at 13:20 +0900, FUJITA Tomonori wrote:
-> On Mon, 15 Oct 2007 00:09:41 -0400
-> James Bottomley <James.Bottomley@SteelEye.com> wrote:
+On Tue, 2007-10-16 at 14:28 -0700, akpm@linux-foundation.org wrote:
+> From: James Bottomley <James.Bottomley@SteelEye.com>
 > 
-> > This is the accumulated updates queued for 2.6.24.  It contains the
-> > usual slew of driver updates, plus some gdth and advansys rewrites.  We
-> > still have some outstanding bugs in gdth and fc4 for which I'm hoping to
-> > sweep fixes into the next update.
-> > 
-> > The patch is available here:
-> > 
-> > master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> > 
-> > The short changelog is:
+> On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
+> > On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
+> >
+> > > I build linux-2.6.23-mm1 and try to boot it using qemu,
+> > > and it crashed with trace like this:
+> > > do_page_fault
+> > > error_code
+> > > lock_acquire
+> > > _spin_lock_irqsave
+> > > gdth_timeout
+> > > run_timer_softirq
+> > > __do_softirq
+> > > do_softirq
+> > >
+> > > I have screenshot, but have no idea, is it legal to include it, if I
+> > > sent copy to lkml.
+> > > config of kernel in attachment,
+> > > I apply all three patches from hot-fixes.
+> > >
+> >
+> > The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
+> >
+> > It would appear that gdth_timeout() is passing a bad pointer into
+> > spin_lock_irqsave().
 > 
-> (snip)
+> There's a bug in the gdth rework in that the instance can be deleted
+> from the list before the actual timer is stopped.  This can be worked
+> around I think by the following patch; although we really should be
+> stopping the timer from firing when the list goes empty.
 > 
-> > James Bottomley (4):
-> >       Fix device not ready printk
-> >       sg: use idr to replace static arrays
-> >       move ULD attachment into the prep function
-> >       arcmsr: fix compile problems
 > 
-> The patch to beautify supported_mode and active_mode in sysfs?
 > 
-> http://marc.info/?l=linux-kernel&m=119077857701415&w=2
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> ---
+> 
+>  drivers/scsi/gdth.c |    3 +++
+>  1 file changed, 3 insertions(+)
+> 
+> diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
+> --- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
+> +++ a/drivers/scsi/gdth.c
+> @@ -3793,6 +3793,9 @@ static void gdth_timeout(ulong data)
+>      gdth_ha_str *ha;
+>      ulong flags;
+>  
+> +    if (list_empty(&gdth_instances))
+> +	return;
+> +
+>      ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
+>      spin_lock_irqsave(&ha->smp_lock, flags);
+>  
 
-Well, I suppose losing your own patches is a sign of fairness in patch
-loss ... OK I'll stick them in.
+This is almost certainly the wrong fix for real hardware.  Although it
+kills the timer when the list goes empty, nothing will ever restart it
+when the list fills again.
+
+Boaz, since you touched all of this, you get to fix it.  The correct fix
+will be to control the timer along with the actual list instead of at
+entry/exit time.  If you're not going to add this empty check to the
+timer routine, make sure you use del_timer_sync() before removing the
+last element from the list.
 
 James
 
