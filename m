@@ -1,138 +1,127 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 29/32] scsi_data_buffer - sd.c and sr.c
-Date: Wed, 17 Oct 2007 20:25:12 +0200
-Message-ID: <47165388.6010205@panasas.com>
+Subject: [PATCH 30/32] tgt: convert to use scsi_data_buffer
+Date: Wed, 17 Oct 2007 20:28:59 +0200
+Message-ID: <4716546B.5020105@panasas.com>
 References: <47164306.6090702@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:15017 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:15287 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756162AbXJQS1d (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:27:33 -0400
+	with ESMTP id S1753926AbXJQS3k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:29:40 -0400
 In-Reply-To: <47164306.6090702@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Wilcox <matthew@wil.cx>, Matthew Dharm <mdharm-scsi@one-e>
 Cc: Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
+From: FUJITA Tomonori <tomof@acm.org>
 
-  - sd and sr would adjust IO size to align on device's block
-    size so code needs to change once we move to scsi_data_buff
-    implementation.
-  - Convert code to use scsi_for_each_sg
-  - Use data accessors where appropriate.
-  - Remove dead code (req_data_dir() != READ && != WRITE)
-
- Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: FUJITA Tomonori <tomof@acm.org>
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/sd.c |    7 ++-----
- drivers/scsi/sr.c |   28 +++++++++++++---------------
- 2 files changed, 15 insertions(+), 20 deletions(-)
+ drivers/scsi/scsi_tgt_if.c  |    2 +-
+ drivers/scsi/scsi_tgt_lib.c |   43 ++++++++++++-------------------------------
+ 2 files changed, 13 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 69f542c..c241f7e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -448,9 +448,6 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_6;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
--		goto out;
- 	}
+diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
+index 9815a1a..d2557db 100644
+--- a/drivers/scsi/scsi_tgt_if.c
++++ b/drivers/scsi/scsi_tgt_if.c
+@@ -112,7 +112,7 @@ int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, u64 itn_id,
+ 	memset(&ev, 0, sizeof(ev));
+ 	ev.p.cmd_req.host_no = shost->host_no;
+ 	ev.p.cmd_req.itn_id = itn_id;
+-	ev.p.cmd_req.data_len = cmd->request_bufflen;
++	ev.p.cmd_req.data_len = scsi_bufflen(cmd);
+ 	memcpy(ev.p.cmd_req.scb, cmd->cmnd, sizeof(ev.p.cmd_req.scb));
+ 	memcpy(ev.p.cmd_req.lun, lun, sizeof(ev.p.cmd_req.lun));
+ 	ev.p.cmd_req.attribute = cmd->tag;
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index b4b3af5..c2e776d 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -60,24 +60,6 @@ struct scsi_tgt_queuedata {
+ 	spinlock_t cmd_hash_lock;
+ };
  
- 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
-@@ -510,7 +507,7 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 		SCpnt->cmnd[4] = (unsigned char) this_count;
- 		SCpnt->cmnd[5] = 0;
- 	}
--	SCpnt->request_bufflen = this_count * sdp->sector_size;
-+	SCpnt->sdb.length = this_count * sdp->sector_size;
+-/* FIXME Begin: Shim API until tgt is converted to use sdb */
+-static struct scatterlist *tgt_scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t flags)
+-{
+-	if (scsi_alloc_sgtable(&cmd->sdb, cmd->use_sg, flags))
+-		return NULL;
+-	return cmd->sdb.sglist;
+-}
+-
+-static void tgt_scsi_free_sgtable(struct scsi_cmnd *cmd)
+-{
+-	scsi_free_sgtable(&cmd->sdb);
+-}
+-#define scsi_alloc_sgtable tgt_scsi_alloc_sgtable
+-#define scsi_free_sgtable tgt_scsi_free_sgtable
+-
+-/* FIXME End: Shim API until tgt is converted to use sdb */
+-
+-
+ /*
+  * Function:	scsi_host_get_command()
+  *
+@@ -349,8 +331,8 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
  
- 	/*
- 	 * We shouldn't disconnect in the middle of a sector, so with a dumb
-@@ -904,7 +901,7 @@ static struct block_device_operations sd_fops = {
- static int sd_done(struct scsi_cmnd *SCpnt)
+ 	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
+ 
+-	if (cmd->request_buffer)
+-		scsi_free_sgtable(cmd);
++	if (cmd->sdb.sglist)
++		scsi_free_sgtable(&cmd->sdb);
+ 
+ 	queue_work(scsi_tgtd, &tcmd->work);
+ }
+@@ -374,24 +356,23 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
+ static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
  {
- 	int result = SCpnt->result;
-- 	unsigned int xfer_size = SCpnt->request_bufflen;
-+	unsigned int xfer_size = scsi_bufflen(SCpnt);
-  	unsigned int good_bytes = result ? 0 : xfer_size;
-  	u64 start_lba = SCpnt->request->sector;
-  	u64 bad_lba;
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index c619990..0375ad2 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -218,7 +218,7 @@ static int sr_media_change(struct cdrom_device_info *cdi, int slot)
- static int sr_done(struct scsi_cmnd *SCpnt)
- {
- 	int result = SCpnt->result;
--	int this_count = SCpnt->request_bufflen;
-+	int this_count = scsi_bufflen(SCpnt);
- 	int good_bytes = (result == 0 ? this_count : 0);
- 	int block_sectors = 0;
- 	long error_sector;
-@@ -360,23 +360,21 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
- 	} else if (rq_data_dir(rq) == READ) {
- 		SCpnt->cmnd[0] = READ_10;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		blk_dump_rq_flags(rq, "Unknown sr command");
--		goto out;
+ 	struct request *rq = cmd->request;
++	struct scsi_data_buffer *sdb = &cmd->sdb;
+ 	int count;
+ 
+-	cmd->use_sg = rq->nr_phys_segments;
+-	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
+-	if (!cmd->request_buffer)
++	if (scsi_alloc_sgtable(sdb, rq->nr_phys_segments, gfp_mask))
+ 		return -ENOMEM;
+ 
+-	cmd->request_bufflen = rq->data_len;
++	sdb->length = rq->data_len;
+ 
+-	dprintk("cmd %p cnt %d %lu\n", cmd, cmd->use_sg, rq_data_dir(rq));
+-	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
+-	if (likely(count <= cmd->use_sg)) {
+-		cmd->use_sg = count;
++	dprintk("cmd %p cnt %d %lu\n", cmd, scsi_sg_count(cmd), rq_data_dir(rq));
++	count = blk_rq_map_sg(rq->q, rq, sdb->sglist);
++	if (likely(count <= sdb->sg_count)) {
++		sdb->sg_count = count;
+ 		return 0;
  	}
  
- 	{
--		struct scatterlist *sg = SCpnt->request_buffer;
--		int i, size = 0;
--		for (i = 0; i < SCpnt->use_sg; i++)
--			size += sg[i].length;
-+		struct scatterlist *sg;
-+		int i, size = 0, sg_count = scsi_sg_count(SCpnt);
-+
-+		scsi_for_each_sg (SCpnt, sg, sg_count, i)
-+			size += sg->length;
+-	eprintk("cmd %p cnt %d\n", cmd, cmd->use_sg);
+-	scsi_free_sgtable(cmd);
++	eprintk("cmd %p cnt %d\n", cmd, scsi_sg_count(cmd));
++	scsi_free_sgtable(&cmd->sdb);
+ 	return -EINVAL;
+ }
  
--		if (size != SCpnt->request_bufflen && SCpnt->use_sg) {
-+		if (size != scsi_bufflen(SCpnt)) {
- 			scmd_printk(KERN_ERR, SCpnt,
- 				"mismatch count %d, bytes %d\n",
--				size, SCpnt->request_bufflen);
--			if (SCpnt->request_bufflen > size)
--				SCpnt->request_bufflen = size;
-+				size, scsi_bufflen(SCpnt));
-+			if (scsi_bufflen(SCpnt) > size)
-+				SCpnt->sdb.length = size;
- 		}
- 	}
+@@ -515,7 +496,7 @@ int scsi_tgt_kspace_exec(int host_no, u64 itn_id, int result, u64 tag,
+ 	cmd = rq->special;
  
-@@ -384,12 +382,12 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
- 	 * request doesn't start on hw block boundary, add scatter pads
- 	 */
- 	if (((unsigned int)rq->sector % (s_size >> 9)) ||
--	    (SCpnt->request_bufflen % s_size)) {
-+	    (scsi_bufflen(SCpnt) % s_size)) {
- 		scmd_printk(KERN_NOTICE, SCpnt, "unaligned transfer\n");
- 		goto out;
- 	}
+ 	dprintk("cmd %p scb %x result %d len %d bufflen %u %lu %x\n",
+-		cmd, cmd->cmnd[0], result, len, cmd->request_bufflen,
++		cmd, cmd->cmnd[0], result, len, scsi_bufflen(cmd),
+ 		rq_data_dir(rq), cmd->cmnd[0]);
  
--	this_count = (SCpnt->request_bufflen >> 9) / (s_size >> 9);
-+	this_count = (scsi_bufflen(SCpnt) >> 9) / (s_size >> 9);
- 
- 
- 	SCSI_LOG_HLQUEUE(2, printk("%s : %s %d/%ld 512 byte blocks.\n",
-@@ -403,7 +401,7 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
- 
- 	if (this_count > 0xffff) {
- 		this_count = 0xffff;
--		SCpnt->request_bufflen = this_count * s_size;
-+		SCpnt->sdb.length = this_count * s_size;
- 	}
- 
- 	SCpnt->cmnd[2] = (unsigned char) (block >> 24) & 0xff;
+ 	if (result == TASK_ABORTED) {
 -- 
 1.5.3.1
 
