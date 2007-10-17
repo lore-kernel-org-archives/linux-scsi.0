@@ -1,89 +1,92 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [patchset 0/33] scsi_data_buffer for after the last driver is converted
-Date: Wed, 17 Oct 2007 19:14:46 +0200
-Message-ID: <47164306.6090702@panasas.com>
+Subject: [PATCH 1/32] arm: fas216 Use scsi_eh API for REQUEST_SENSE invocation
+Date: Wed, 17 Oct 2007 19:19:25 +0200
+Message-ID: <4716441D.4010505@panasas.com>
+References: <47164306.6090702@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13413 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18203 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754566AbXJQRPx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 13:15:53 -0400
+	with ESMTP id S1765198AbXJQRUV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 13:20:21 -0400
+In-Reply-To: <47164306.6090702@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Wilcox <matthew@wil.cx>, Matthew Dharm <mdharm-scsi@one-e>
 Cc: Jeff Garzik <jeff@garzik.org>, Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
-This is a resend of all the remaining drivers rebased
-to latest code. And once the entire tree is converted,
-move to scsi_data_buffer in scsi_cmnd.
 
-The work is on top of Jens's for-linus branch which
-is effectively sglist-arch (+ last minute fixes)
-This is because sglist-arch was already rebased to
-latest scsi-misc through linus tree, merged with 
-the extra work done there on scsi-ml (and the drivers)
-(Thanks Jens)
+  - Use new scsi_eh_prep/restor_cmnd() for synchronous
+    REQUEST_SENSE invocation.
 
-summery of patches:
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/arm/fas216.c |   16 +++-------------
+ drivers/scsi/arm/fas216.h |    3 +++
+ 2 files changed, 6 insertions(+), 13 deletions(-)
 
-left over from scsi_eh last change
-  [PATCH 01/32] arm: fas216 Use scsi_eh API for REQUEST_SENSE invocation
-
-lots and lots of drivers left:
-  [PATCH 02/32] isd200.c: use one-element sg list in issuing commands
-  [PATCH 03/32] usb: transport - convert to accessors and !use_sg code path removal
-  [PATCH 04/32] usb: protocol.c - convert to accessors and !use_sg code path removal
-  [PATCH 05/32] usb: shuttle_usbat.c - convert to accessors and !use_sg code path removal
-  [PATCH 06/32] usb: freecom.c & sddr09.c - convert to accessors and !use_sg cleanup
-  [PATCH 07/32] NCR5380 familly convert to accessors & !use_sg cleanup
-  [PATCH 08/32] arm: scsi convert to accessors and !use_sg cleanup
-  [PATCH 09/32] nsp_cs.c convert to data accessors and !use_sg cleanup
-  [PATCH 10/32] eata_pio.c: convert to accessors and !use_sg cleanup
-  [PATCH 11/32] a2091.c: convert to accessors and !use_sg cleanup
-  [PATCH 12/32] a3000.c: convert to accessors and !use_sg cleanup
-  [PATCH 13/32] aha1542.c: convert to accessors and !use_sg cleanup
-  [PATCH 14/32] atp870u.c: convert to accessors and !use_sg cleanup
-  [PATCH 15/32] fd_mcs.c: convert to accessors and !use_sg cleanup
-  [PATCH 16/32] imm.c: convert to accessors and !use_sg cleanup
-  [PATCH 17/32] ppa.c: convert to accessors and !use_sg cleanup
-  [PATCH 18/32] wd32c93.c: convert to accessors and !use_sg cleanup
-  [PATCH 19/32] qlogicpti.c: convert to accessors and !use_sg cleanup
-  [PATCH 20/32] in2000.c: convert to accessors and !use_sg cleanup
-  [PATCH 21/32] scsi_debug: convert to use the data buffer accessors
-
-Tomo's patch cleaned up:
-   [PATCH 22/32] qla1280: convert to use the data buffer accessors
-   [PATCH 23/32] qla1280: Indentation fix
-
- I separated the indentation from the real change make
- the patch humanly readable.
-
-A small fix:
-  [PATCH 24/32] wd7000.c - proper fix for boards without sg support
-  
-Remove broken drivers:
-  [PATCH 25/32] Remove psi240i driver from kernel
-  [PATCH 26/32] Remove of seagate.c driver
-  (pluto/fc was removed by Matthew.)
-
-Move to scsi_data_buffer:
-
-  [PATCH 27/32] scsi_data_buffer
-  [PATCH 28/32] scsi_data_buffer - scsi_error.c
-  [PATCH 29/32] scsi_data_buffer - sd.c and sr.c
-  [PATCH 30/32] tgt: convert to use scsi_data_buffer
-  [PATCH 31/32] tgt: convert ibmvstgt and libsrp to use scsi_data_buffer
-  [PATCH 32/32] isd200.c - use of scsi_data_buffer
-
- It used to be that the tgt was broken between scsi_data_buffer patch
- and the patch to tgt, because of the API change to scsi_alloc/free_sgtable().
- I have added a shim in scsi_tgt_lib.c so it can compile and run. The shim is 
- later removed in the tgt patch.
-
- Did I miss any maintainers in the To: fields?
-
-Boaz
+diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+index fb5f202..a715632 100644
+--- a/drivers/scsi/arm/fas216.c
++++ b/drivers/scsi/arm/fas216.c
+@@ -2018,6 +2018,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+ 	 * the upper layers to process.  This would have been set
+ 	 * correctly by fas216_std_done.
+ 	 */
++	scsi_eh_restore_cmnd(SCpnt, &info->ses);
+ 	SCpnt->scsi_done(SCpnt);
+ }
+ 
+@@ -2103,23 +2104,12 @@ request_sense:
+ 	if (SCpnt->cmnd[0] == REQUEST_SENSE)
+ 		goto done;
+ 
++	scsi_eh_prep_cmnd(SCpnt, &info->ses, NULL, 0, ~0);
+ 	fas216_log_target(info, LOG_CONNECT, SCpnt->device->id,
+ 			  "requesting sense");
+-	memset(SCpnt->cmnd, 0, sizeof (SCpnt->cmnd));
+-	SCpnt->cmnd[0] = REQUEST_SENSE;
+-	SCpnt->cmnd[1] = SCpnt->device->lun << 5;
+-	SCpnt->cmnd[4] = sizeof(SCpnt->sense_buffer);
+-	SCpnt->cmd_len = COMMAND_SIZE(SCpnt->cmnd[0]);
+-	SCpnt->SCp.buffer = NULL;
+-	SCpnt->SCp.buffers_residual = 0;
+-	SCpnt->SCp.ptr = (char *)SCpnt->sense_buffer;
+-	SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
+-	SCpnt->SCp.phase = sizeof(SCpnt->sense_buffer);
++	init_SCp(SCpnt);
+ 	SCpnt->SCp.Message = 0;
+ 	SCpnt->SCp.Status = 0;
+-	SCpnt->request_bufflen = sizeof(SCpnt->sense_buffer);
+-	SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+-	SCpnt->use_sg = 0;
+ 	SCpnt->tag = 0;
+ 	SCpnt->host_scribble = (void *)fas216_rq_sns_done;
+ 
+diff --git a/drivers/scsi/arm/fas216.h b/drivers/scsi/arm/fas216.h
+index 00e5f05..3e73e26 100644
+--- a/drivers/scsi/arm/fas216.h
++++ b/drivers/scsi/arm/fas216.h
+@@ -16,6 +16,8 @@
+ #define NO_IRQ 255
+ #endif
+ 
++#include <scsi/scsi_eh.h>
++
+ #include "queue.h"
+ #include "msgqueue.h"
+ 
+@@ -311,6 +313,7 @@ typedef struct {
+ 
+ 	/* miscellaneous */
+ 	int			internal_done;		/* flag to indicate request done */
++	struct scsi_eh_save	*ses;		/* holds request sense restore info */
+ 	unsigned long		magic_end;
+ } FAS216_Info;
+ 
+-- 
+1.5.3.1
 
 
