@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 23/32] scsi_debug: convert to use the data buffer accessors
-Date: Wed, 17 Oct 2007 20:12:58 +0200
-Message-ID: <471650AA.6040508@panasas.com>
+Subject: [PATCH 24/32] wd7000.c - proper fix for boards without sg support
+Date: Wed, 17 Oct 2007 20:15:40 +0200
+Message-ID: <4716514C.3050405@panasas.com>
 References: <47164306.6090702@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:4885 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:12915 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757600AbXJQSOC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:14:02 -0400
+	with ESMTP id S1755500AbXJQSQd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:16:33 -0400
 In-Reply-To: <47164306.6090702@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,100 +18,56 @@ To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracl
 Cc: Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
 
-  - remove the unnecessary map_single path.
-  - convert to use the new accessors for the sg lists and the
-    parameters.
+  - code used to set sg_tablesize to zero for board revision
+    less than 6. This is no longer supported, therefore I
+    use sg_tablesize=1 and open code the sg handling for that case.
+  - Get rid of use of SG_NONE which will be removed soon.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Signed-off-by: FUJITA Tomonori <tomof@acm.org>
-Signed-off-by: Douglas Gilbert <dougg@torque.net>
 ---
- drivers/scsi/scsi_debug.c |   36 ++++++++++--------------------------
- 1 files changed, 10 insertions(+), 26 deletions(-)
+ drivers/scsi/wd7000.c |   12 ++++++------
+ 1 files changed, 6 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 72ee4c9..c08ebf4 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -329,7 +329,7 @@ int scsi_debug_queuecommand(struct scsi_cmnd * SCpnt, done_funct_t done)
- 	if (done == NULL)
- 		return 0;	/* assume mid level reprocessing command */
+diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
+index 255c611..3887640 100644
+--- a/drivers/scsi/wd7000.c
++++ b/drivers/scsi/wd7000.c
+@@ -1108,13 +1108,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
+ 	scb->host = host;
  
--	SCpnt->resid = 0;
-+	scsi_set_resid(SCpnt, 0);
- 	if ((SCSI_DEBUG_OPT_NOISE & scsi_debug_opts) && cmd) {
- 		printk(KERN_INFO "scsi_debug: cmd ");
- 		for (k = 0, len = SCpnt->cmd_len; k < len; ++k)
-@@ -603,26 +603,16 @@ static int fill_from_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
- 	void * kaddr_off;
- 	struct scatterlist * sg;
+ 	nseg = scsi_sg_count(SCpnt);
+-	if (nseg) {
++	if (nseg > 1) {
+ 		struct scatterlist *sg;
+ 		unsigned i;
  
--	if (0 == scp->request_bufflen)
-+	if (0 == scsi_bufflen(scp))
- 		return 0;
--	if (NULL == scp->request_buffer)
-+	if (NULL == scsi_sglist(scp))
- 		return (DID_ERROR << 16);
- 	if (! ((scp->sc_data_direction == DMA_BIDIRECTIONAL) ||
- 	      (scp->sc_data_direction == DMA_FROM_DEVICE)))
- 		return (DID_ERROR << 16);
--	if (0 == scp->use_sg) {
--		req_len = scp->request_bufflen;
--		act_len = (req_len < arr_len) ? req_len : arr_len;
--		memcpy(scp->request_buffer, arr, act_len);
--		if (scp->resid)
--			scp->resid -= act_len;
--		else
--			scp->resid = req_len - act_len;
--		return 0;
--	}
- 	active = 1;
- 	req_len = act_len = 0;
--	scsi_for_each_sg(scp, sg, scp->use_sg, k) {
-+	scsi_for_each_sg(scp, sg, scsi_sg_count(scp), k) {
- 		if (active) {
- 			kaddr = (unsigned char *)
- 				kmap_atomic(sg->page, KM_USER0);
-@@ -640,10 +630,10 @@ static int fill_from_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
+-		if (SCpnt->device->host->sg_tablesize == SG_NONE) {
+-			panic("wd7000_queuecommand: scatter/gather not supported.\n");
+-		}
+ 		dprintk("Using scatter/gather with %d elements.\n", nseg);
+ 
+ 		sgb = scb->sgb;
+@@ -1128,7 +1125,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
  		}
- 		req_len += sg->length;
+ 	} else {
+ 		scb->op = 0;
+-		any2scsi(scb->dataptr, isa_virt_to_bus(scsi_sglist(SCpnt)));
++		if (nseg) {
++			struct scatterlist *sg = scsi_sglist(SCpnt);
++			any2scsi(scb->dataptr, isa_page_to_bus(sg->page) + sg->offset);
++		}
+ 		any2scsi(scb->maxlen, scsi_bufflen(SCpnt));
  	}
--	if (scp->resid)
--		scp->resid -= act_len;
-+	if (scsi_get_resid(scp))
-+		scsi_set_resid(scp, scsi_get_resid(scp) - act_len);
- 	else
--		scp->resid = req_len - act_len;
-+		scsi_set_resid(scp, req_len - act_len);
- 	return 0;
- }
  
-@@ -656,22 +646,16 @@ static int fetch_to_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
- 	void * kaddr_off;
- 	struct scatterlist * sg;
+@@ -1524,7 +1524,7 @@ static __init int wd7000_detect(struct scsi_host_template *tpnt)
+ 				 *  For boards before rev 6.0, scatter/gather isn't supported.
+ 				 */
+ 				if (host->rev1 < 6)
+-					sh->sg_tablesize = SG_NONE;
++					sh->sg_tablesize = 1;
  
--	if (0 == scp->request_bufflen)
-+	if (0 == scsi_bufflen(scp))
- 		return 0;
--	if (NULL == scp->request_buffer)
-+	if (NULL == scsi_sglist(scp))
- 		return -1;
- 	if (! ((scp->sc_data_direction == DMA_BIDIRECTIONAL) ||
- 	      (scp->sc_data_direction == DMA_TO_DEVICE)))
- 		return -1;
--	if (0 == scp->use_sg) {
--		req_len = scp->request_bufflen;
--		len = (req_len < max_arr_len) ? req_len : max_arr_len;
--		memcpy(arr, scp->request_buffer, len);
--		return len;
--	}
- 	sg = scsi_sglist(scp);
- 	req_len = fin = 0;
--	for (k = 0; k < scp->use_sg; ++k, sg = sg_next(sg)) {
-+	for (k = 0; k < scsi_sg_count(scp); ++k, sg = sg_next(sg)) {
- 		kaddr = (unsigned char *)kmap_atomic(sg->page, KM_USER0);
- 		if (NULL == kaddr)
- 			return -1;
+ 				present++;	/* count it */
+ 
 -- 
 1.5.3.1
 
