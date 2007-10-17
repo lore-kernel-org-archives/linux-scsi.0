@@ -1,33 +1,34 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] SPARC64: fix iommu sg chaining
-Date: Wed, 17 Oct 2007 16:36:18 +0200
-Message-ID: <20071017143618.GR5043@kernel.dk>
-References: <20071017203758E.fujita.tomonori@lab.ntt.co.jp> <20071017114117.GA5043@kernel.dk> <20071017205717Q.fujita.tomonori@lab.ntt.co.jp> <20071017210535K.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] Add suspend/resume support for aic7xxx/aic79xx
+Date: Wed, 17 Oct 2007 16:37:21 +0200
+Message-ID: <20071017143721.GS5043@kernel.dk>
+References: <47161877.1090000@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:26238 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([87.55.233.238]:26245 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754936AbXJQOgs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:36:48 -0400
+	id S1756478AbXJQOhu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Oct 2007 10:37:50 -0400
 Content-Disposition: inline
-In-Reply-To: <20071017210535K.fujita.tomonori@lab.ntt.co.jp>
+In-Reply-To: <47161877.1090000@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tomof@acm.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Wed, Oct 17 2007, FUJITA Tomonori wrote:
-> > I think that it would be better that IOMMU code handles uninitialized
-> > sg entries (sg list can be pretty large). Execpt for sparc64, the
-> > IOMMU code can do, I think.
+On Wed, Oct 17 2007, Hannes Reinecke wrote:
+> Hi James,
 > 
-> And I think that with this patch, sparc64 can handle it:
+> due to popular demand I've clobbered together a patch for
+> suspend/resume support in aic79xx/aic7xxx.
 > 
-> http://marc.info/?l=linux-scsi&m=119261920425120&w=2
+> Looks reasonable enough, boots, but now I'd need someone
+> to actually test it :-)
+> 
+> As usual, comments, results, fixes, etc. welcome.
 
-I would tend to agree. Get davem to ack that patch, and we can move it
-forward.
+As it so happens, I run aic7xxx on my desktop. I'll give it a spin.
 
 -- 
 Jens Axboe
