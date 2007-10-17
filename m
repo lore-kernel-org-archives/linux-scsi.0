@@ -1,181 +1,59 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] SPARC64: fix iommu sg chaining
-Date: Wed, 17 Oct 2007 14:07:47 +0900
-Message-ID: <20071017140747Q.fujita.tomonori@lab.ntt.co.jp>
+From: Valdis.Kletnieks@vt.edu
+Subject: Re: What still uses the block layer?
+Date: Wed, 17 Oct 2007 01:34:24 -0400
+Message-ID: <25897.1192599264@turing-police.cc.vt.edu>
+References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net> <20071015014503.GF9715@thunk.org>
+            <200710150304.00901.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: multipart/signed; boundary="==_Exmh_1192599264_3070P";
+	 micalg=pgp-sha1; protocol="application/pgp-signature"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756801AbXJQFJG@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: davem@davemloft.net, linux-kernel@vger.kernel.org
-Cc: jens.axboe@oracle.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from turing-police.cc.vt.edu ([128.173.14.107]:35904 "EHLO
+	turing-police.cc.vt.edu" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750741AbXJQFfm (ORCPT
+	<RFC822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 01:35:42 -0400
+In-Reply-To: Your message of "Mon, 15 Oct 2007 03:04:00 CDT."
+             <200710150304.00901.rob@landley.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rob Landley <rob@landley.net>
+Cc: Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-Commit 2c941a204070ab32d92d40318a3196a7fb994c00 looks incomplete. The
-helper functions like prepare_sg() need to support sg chaining too.
+--==_Exmh_1192599264_3070P
+Content-Type: text/plain; charset=us-ascii
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- arch/sparc64/kernel/iommu.c        |    1 -
- arch/sparc64/kernel/iommu_common.c |   51 +++++++++++++++++++++---------------
- arch/sparc64/kernel/iommu_common.h |    1 +
- arch/sparc64/kernel/pci_sun4v.c    |    1 -
- 4 files changed, 31 insertions(+), 23 deletions(-)
+On Mon, 15 Oct 2007 03:04:00 CDT, Rob Landley said:
+> I note that the eth0 and eth1 names are dynamically assigned on a first come
+> first serve basis (like scsi).  This never causes me a problem because the
+> driver loading order is constant, and once you figure out that eth0 is
+> gigabit and eth1 is the 80211g it _stays_ that way across reboots, reliably.
+> Yeah, it's a heuristic.  Hands up everybody relying on such a heuristic in
+> the real world.
 
-diff --git a/arch/sparc64/kernel/iommu.c b/arch/sparc64/kernel/iommu.c
-index db3ffcf..5d4e96d 100644
---- a/arch/sparc64/kernel/iommu.c
-+++ b/arch/sparc64/kernel/iommu.c
-@@ -10,7 +10,6 @@
- #include <linux/device.h>
- #include <linux/dma-mapping.h>
- #include <linux/errno.h>
--#include <linux/scatterlist.h>
- 
- #ifdef CONFIG_PCI
- #include <linux/pci.h>
-diff --git a/arch/sparc64/kernel/iommu_common.c b/arch/sparc64/kernel/iommu_common.c
-index 12c93a3..d7ca900 100644
---- a/arch/sparc64/kernel/iommu_common.c
-+++ b/arch/sparc64/kernel/iommu_common.c
-@@ -12,18 +12,22 @@
-  */
- 
- #ifdef VERIFY_SG
--static int verify_lengths(struct scatterlist *sg, int nents, int npages)
-+static int verify_lengths(struct scatterlist *sglist, int nents, int npages)
- {
- 	int sg_len, dma_len;
- 	int i, pgcount;
-+	struct scatterlist *sg;
- 
- 	sg_len = 0;
--	for (i = 0; i < nents; i++)
--		sg_len += sg[i].length;
-+	for_each_sg(sglist, sg, nents, i)
-+		sg_len += sg->length;
- 
- 	dma_len = 0;
--	for (i = 0; i < nents && sg[i].dma_length; i++)
--		dma_len += sg[i].dma_length;
-+	for_each_sg(sglist, sg, nents, i) {
-+		if (!sg->dma_length)
-+			break;
-+		dma_len += sg->dma_length;
-+	}
- 
- 	if (sg_len != dma_len) {
- 		printk("verify_lengths: Error, different, sg[%d] dma[%d]\n",
-@@ -32,13 +36,16 @@ static int verify_lengths(struct scatterlist *sg, int nents, int npages)
- 	}
- 
- 	pgcount = 0;
--	for (i = 0; i < nents && sg[i].dma_length; i++) {
-+	for_each_sg(sglist, sg, nents, i) {
- 		unsigned long start, end;
- 
--		start = sg[i].dma_address;
-+		if (!sg->dma_length)
-+			break;
-+
-+		start = sg->dma_address;
- 		start = start & IO_PAGE_MASK;
- 
--		end = sg[i].dma_address + sg[i].dma_length;
-+		end = sg->dma_address + sg->dma_length;
- 		end = (end + (IO_PAGE_SIZE - 1)) & IO_PAGE_MASK;
- 
- 		pgcount += ((end - start) >> IO_PAGE_SHIFT);
-@@ -113,7 +120,7 @@ static int verify_one_map(struct scatterlist *dma_sg, struct scatterlist **__sg,
- 		if (dlen > 0 && ((daddr & ~IO_PAGE_MASK) == 0))
- 			iopte++;
- 
--		sg++;
-+		sg = sg_next(sg);
- 		if (--nents <= 0)
- 			break;
- 		sgaddr = (unsigned long) (page_address(sg->page) + sg->offset);
-@@ -147,7 +154,7 @@ static int verify_maps(struct scatterlist *sg, int nents, iopte_t *iopte)
- 		nents = verify_one_map(dma_sg, &sg, nents, &iopte);
- 		if (nents <= 0)
- 			break;
--		dma_sg++;
-+		dma_sg = sg_next(dma_sg);
- 		if (dma_sg->dma_length == 0)
- 			break;
- 	}
-@@ -169,22 +176,24 @@ static int verify_maps(struct scatterlist *sg, int nents, iopte_t *iopte)
- 	return 0;
- }
- 
--void verify_sglist(struct scatterlist *sg, int nents, iopte_t *iopte, int npages)
-+void verify_sglist(struct scatterlist *sglist, int nents, iopte_t *iopte, int npages)
- {
--	if (verify_lengths(sg, nents, npages) < 0 ||
--	    verify_maps(sg, nents, iopte) < 0) {
-+	struct scatterlist *sg;
-+
-+	if (verify_lengths(sglist, nents, npages) < 0 ||
-+	    verify_maps(sglist, nents, iopte) < 0) {
- 		int i;
- 
- 		printk("verify_sglist: Crap, messed up mappings, dumping, iodma at ");
--		printk("%016lx.\n", sg->dma_address & IO_PAGE_MASK);
-+		printk("%016lx.\n", sglist->dma_address & IO_PAGE_MASK);
- 
--		for (i = 0; i < nents; i++) {
-+		for_each_sg(sglist, sg, nents, i) {
- 			printk("sg(%d): page_addr(%p) off(%x) length(%x) "
--			       "dma_address[%016lx] dma_length[%016lx]\n",
-+			       "dma_address[%016x] dma_length[%016x]\n",
- 			       i,
--			       page_address(sg[i].page), sg[i].offset,
--			       sg[i].length,
--			       sg[i].dma_address, sg[i].dma_length);
-+			       page_address(sg->page), sg->offset,
-+			       sg->length,
-+			       sg->dma_address, sg->dma_length);
- 		}
- 	}
- 
-@@ -205,12 +214,12 @@ unsigned long prepare_sg(struct scatterlist *sg, int nents)
- 	while (--nents) {
- 		unsigned long addr;
- 
--		sg++;
-+		sg = sg_next(sg);
- 		addr = (unsigned long) (page_address(sg->page) + sg->offset);
- 		if (! VCONTIG(prev, addr)) {
- 			dma_sg->dma_address = dent_addr;
- 			dma_sg->dma_length = dent_len;
--			dma_sg++;
-+			dma_sg = sg_next(dma_sg);
- 
- 			dent_addr = ((dent_addr +
- 				      dent_len +
-diff --git a/arch/sparc64/kernel/iommu_common.h b/arch/sparc64/kernel/iommu_common.h
-index ad79101..75b5a58 100644
---- a/arch/sparc64/kernel/iommu_common.h
-+++ b/arch/sparc64/kernel/iommu_common.h
-@@ -8,6 +8,7 @@
- #include <linux/types.h>
- #include <linux/sched.h>
- #include <linux/mm.h>
-+#include <linux/scatterlist.h>
- 
- #include <asm/iommu.h>
- #include <asm/scatterlist.h>
-diff --git a/arch/sparc64/kernel/pci_sun4v.c b/arch/sparc64/kernel/pci_sun4v.c
-index cacacfa..119f8ef 100644
---- a/arch/sparc64/kernel/pci_sun4v.c
-+++ b/arch/sparc64/kernel/pci_sun4v.c
-@@ -13,7 +13,6 @@
- #include <linux/irq.h>
- #include <linux/msi.h>
- #include <linux/log2.h>
--#include <linux/scatterlist.h>
- 
- #include <asm/iommu.h>
- #include <asm/irq.h>
--- 
-1.5.2.4
+I've gotten burned by that heuristic enough times to not rely on it.  My last
+laptop had an ethernet on the motherboard, a *separate* ethernet in the docking
+station, an ethernet on a multifunction pcmcia card (I usually just used the
+modem side), and a wireless that looked like an ethernet - so it was possible
+for a given interface to be eth1 (if no dock and no pcmcia card) or eth3 (if
+both were present).  And that's on a laptop from almost 5 years ago.
+
+And then there's the recent Sun and Dell 1U rack-mounts that have 4 ethernets
+on the motherboard, and they *never* seem to assign in a 0,1,2,3 order that
+matches the 0 1 2 3 printed above the 4 RJ45's ;)
+
+So I have for years been a proponent of 'ethN is nailed by MAC address' :)
+
+--==_Exmh_1192599264_3070P
+Content-Type: application/pgp-signature
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+Comment: Exmh version 2.5 07/13/2001
+
+iD8DBQFHFZ7gcC3lWbTT17ARAsZXAJ4xuUB1ebX7Vk0jcCwwfaDOEL+g4gCg7TJf
+rz3Is447x34Dx3ZHEU167KY=
+=glX8
+-----END PGP SIGNATURE-----
+
+--==_Exmh_1192599264_3070P--
