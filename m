@@ -1,55 +1,36 @@
-From: david@lang.hm
-Subject: Re: What still uses the block layer?
-Date: Wed, 17 Oct 2007 14:04:33 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0710171401170.10276@asgard.lang.hm>
-References: <200710141836.55211.rob@landley.net> <4712FE33.3000400@s5r6.in-berlin.de>
- <200710150426.04924.rob@landley.net> <20071015160800.GA324@parisc-linux.org>
- <47139F15.7050702@s5r6.in-berlin.de> <Pine.LNX.4.64.0710151954550.3949@asgard.lang.hm>
- <20071016111911.30a18e12@the-village.bc.nu> <Pine.LNX.4.64.0710161238140.6995@asgard.lang.hm>
- <20071016195432.GA31306@parisc-linux.org> <Pine.LNX.4.64.0710161302460.6995@asgard.lang.hm>
- <20071017094838.GB18035@boogie.lpds.sztaki.hu>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 22/32] qla1280: Indentation fix
+Date: Wed, 17 Oct 2007 16:15:56 -0600
+Message-ID: <20071017221556.GE10980@parisc-linux.org>
+References: <47164306.6090702@panasas.com> <47165001.2090204@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-033-126.lax1.dsl.speakeasy.net ([64.81.33.126]:56263
-	"EHLO bifrost.lang.hm" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S935961AbXJQVAy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 17:00:54 -0400
-In-Reply-To: <20071017094838.GB18035@boogie.lpds.sztaki.hu>
+Received: from palinux.external.hp.com ([192.25.206.14]:53682 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758405AbXJQWP7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 18:15:59 -0400
+Content-Disposition: inline
+In-Reply-To: <47165001.2090204@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: Matthew Wilcox <matthew@wil.cx>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Rob Landley <rob@landley.net>, David Newall <david@davidnewall.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
-On Wed, 17 Oct 2007, Gabor Gombas wrote:
+On Wed, Oct 17, 2007 at 08:10:09PM +0200, Boaz Harrosh wrote:
+> 
+>   - Indentation fix of last patch. Don't be fooled by diff,
+>     all I did was back-indent from open-bracket to close-bracket,
+>     and remove the brackets.
 
-> On Tue, Oct 16, 2007 at 01:55:07PM -0700, david@lang.hm wrote:
->
->> why is this any different from the external enclosures? they have always
->> appeared as the type of device that connects them to the motherboard, (and
->> even with SCSI, there are some controllers that don't generate sdX devices)
->
-> In the past enclosures supported only one kind of connector so this
-> assumption was fine. But nowadays an external disk may have several
-> connectors (like USB, Firewire and eSata). Why should the disk's name
-> depend on what type of cable did I manage to grab first? It is the
-> _same_ disk regardless of the cable type.
+Applying 'qla1280: Indentation fix'
 
-the right type for the type of cable you choose to use. yes it's the same 
-disk, but by choosing to hook it up in a different way you get different 
-results from it (different performance, different predictability)
+Adds trailing whitespace.
+.dotest/patch:90: sn_pci_set_vchan(ha->pdev, 
+warning: 1 line adds trailing whitespaces.
 
-again, if you want to have a udev rule that then maps these different name 
-onto the same name, more power to you, but why do you insist on makeing 
-_everyone_ work that way (or go to significant extra effort to find the 
-info in the changing directory structure of sysfs to track down the info 
-that you throw away)
-
-> There is one thing however that could be improved: renaming a disk in an
-> udev rule should propagate the new name back to the kernel, just like
-> renaming an ethernet interface does. That way mapping error messages to
-> physical disk locations could be made much easier.
-
-definantly.
-
-David Lang
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
