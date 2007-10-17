@@ -1,41 +1,49 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] SPARC64: fix iommu sg chaining
-Date: Wed, 17 Oct 2007 10:45:28 +0200
-Message-ID: <20071017084528.GI5043@kernel.dk>
-References: <20071017140747Q.fujita.tomonori@lab.ntt.co.jp> <20071017072149.GC5041@kernel.dk> <20071017.013325.74747630.davem@davemloft.net> <20071017.014211.41637735.davem@davemloft.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] IA64: iommu uses sg_next with an invalid sg element
+Date: Wed, 17 Oct 2007 17:49:27 +0900
+Message-ID: <20071017174927N.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:6675 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755533AbXJQIpz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Oct 2007 04:45:55 -0400
-Content-Disposition: inline
-In-Reply-To: <20071017.014211.41637735.davem@davemloft.net>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:56517 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753330AbXJQIto (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 04:49:44 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, jens.axboe@oracle.com, tony.luck@intel.com
+Cc: linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Wed, Oct 17 2007, David Miller wrote:
-> From: David Miller <davem@davemloft.net>
-> Date: Wed, 17 Oct 2007 01:33:25 -0700 (PDT)
-> 
-> > sg_next() gives you a NULL after the last entry, but tests have been
-> > changed to compare against sg_last() which is likely not what we
-> > want for those checks.
-> 
-> This of course isn't true, ignore me as I'm still learning how this
-> new stuff works :-)
+sg list elements might not be continuous.
 
-Righto, it's invalid to call sg_next() on the last entry! Let me know if
-you need any help with debugging this, unfortunately I cannot test on
-sparc64 myself...
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ arch/ia64/hp/common/sba_iommu.c |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
 
-(I can say that easily, since I know that davem will a) not rest until
-this is fixed, and b) is a really good debugger and will not need my
-help)
-
+diff --git a/arch/ia64/hp/common/sba_iommu.c b/arch/ia64/hp/common/sba_iommu.c
+index 4338f41..3c95f41 100644
+--- a/arch/ia64/hp/common/sba_iommu.c
++++ b/arch/ia64/hp/common/sba_iommu.c
+@@ -1179,7 +1179,6 @@ sba_fill_pdir(
+ 	u64 *pdirp = NULL;
+ 	unsigned long dma_offset = 0;
+ 
+-	dma_sg--;
+ 	while (nents-- > 0) {
+ 		int     cnt = startsg->dma_length;
+ 		startsg->dma_length = 0;
+@@ -1201,7 +1200,8 @@ sba_fill_pdir(
+ 			u32 pide = startsg->dma_address & ~PIDE_FLAG;
+ 			dma_offset = (unsigned long) pide & ~iovp_mask;
+ 			startsg->dma_address = 0;
+-			dma_sg = sg_next(dma_sg);
++			if (n_mappings)
++				dma_sg = sg_next(dma_sg);
+ 			dma_sg->dma_address = pide | ioc->ibase;
+ 			pdirp = &(ioc->pdir_base[pide >> iovp_shift]);
+ 			n_mappings++;
 -- 
-Jens Axboe
+1.5.2.4
 
