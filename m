@@ -1,36 +1,119 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH 22/32] qla1280: Indentation fix
-Date: Wed, 17 Oct 2007 16:15:56 -0600
-Message-ID: <20071017221556.GE10980@parisc-linux.org>
-References: <47164306.6090702@panasas.com> <47165001.2090204@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] SPARC64: fix iommu sg chaining
+Date: Thu, 18 Oct 2007 08:01:10 +0900
+Message-ID: <20071018080110O.fujita.tomonori@lab.ntt.co.jp>
+References: <20071017105840.GT5043@kernel.dk>
+	<20071017110142.GU5043@kernel.dk>
+	<20071017203758E.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:53682 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758405AbXJQWP7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 18:15:59 -0400
-Content-Disposition: inline
-In-Reply-To: <47165001.2090204@panasas.com>
+Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:64523 "EHLO
+	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751278AbXJQXMV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 19:12:21 -0400
+In-Reply-To: <20071017203758E.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
+To: jens.axboe@oracle.com
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Wed, Oct 17, 2007 at 08:10:09PM +0200, Boaz Harrosh wrote:
+On Wed, 17 Oct 2007 20:37:58 +0900
+FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+
+> On Wed, 17 Oct 2007 13:01:42 +0200
+> Jens Axboe <jens.axboe@oracle.com> wrote:
 > 
->   - Indentation fix of last patch. Don't be fooled by diff,
->     all I did was back-indent from open-bracket to close-bracket,
->     and remove the brackets.
+> > On Wed, Oct 17 2007, Jens Axboe wrote:
+> > > On Wed, Oct 17 2007, David Miller wrote:
+> > > > From: Jens Axboe <jens.axboe@oracle.com>
+> > > > Date: Wed, 17 Oct 2007 11:16:29 +0200
+> > > > 
+> > > > > On Wed, Oct 17 2007, David Miller wrote:
+> > > > > > From: Jens Axboe <jens.axboe@oracle.com>
+> > > > > > Date: Wed, 17 Oct 2007 10:45:28 +0200
+> > > > > > 
+> > > > > > > Righto, it's invalid to call sg_next() on the last entry!
+> > > > > > 
+> > > > > > Unfortunately, that's what the sparc64 code wanted to do, this
+> > > > > > transformation in the sparc64 sg chaining patch is not equilavent:
+> > > > > > 
+> > > > > > -	struct scatterlist *sg_end = sg + nelems;
+> > > > > > +	struct scatterlist *sg_end = sg_last(sg, nelems);
+> > > > > >  ...
+> > > > > > -			while (sg < sg_end &&
+> > > > > > +			while (sg != sg_end &&
+> > > > > 
+> > > > > Auch indeed. That'd probably be better as a
+> > > > > 
+> > > > >         do {
+> > > > >                 ...
+> > > > >         } while (sg != sg_end);
+> > > > 
+> > > > Ok, next bug, introduced by this change:
+> > > > 
+> > > > commit f565913ef8a8d0cfa46a1faaf8340cc357a46f3a
+> > > > Author: Jens Axboe <jens.axboe@oracle.com>
+> > > > Date:   Fri Sep 21 10:44:19 2007 +0200
+> > > > 
+> > > >     block: convert to using sg helpers
+> > > >     
+> > > >     Convert the main rq mapper (blk_rq_map_sg()) to the sg helper setup.
+> > > >     
+> > > >     Signed-off-by: Jens Axboe <jens.axboe@oracle.com>
+> > > > 
+> > > > Specifically this part:
+> > > > 
+> > > >  new_segment:
+> > > > -			memset(&sg[nsegs],0,sizeof(struct scatterlist));
+> > > > -			sg[nsegs].page = bvec->bv_page;
+> > > > -			sg[nsegs].length = nbytes;
+> > > > -			sg[nsegs].offset = bvec->bv_offset;
+> > > > +			sg = next_sg;
+> > > > +			next_sg = sg_next(sg);
+> > > >  
+> > > > +			sg->page = bvec->bv_page;
+> > > > +			sg->length = nbytes;
+> > > > +			sg->offset = bvec->bv_offset;
+> > > > 
+> > > > You can't remove that memset(), it's there for a reason.  The IOMMU
+> > > > layers depended upon the code zero'ing out the whole scatterlist
+> > > > struct, there might be more to it than page, length and offset :-)
+> > > 
+> > > I realize that, and I was pretty worried about this specific change. But
+> > > there's only been one piece of fallout because if it until now - well
+> > > two, with the sparc64 stuff.
+> > > 
+> > > The problem is that you cannot zero the entire sg entry, because then
+> > > you'd potentially overwrite the chain pointer.
+> > > 
+> > > I'd propose just adding a
+> > > 
+> > >         sg_dma_address(sg) = 0;
+> > >         sg_dma_len(sg) = 0;
+> > > 
+> > > there for now, or provide an arch_clear_sg_entry() helper if we need
+> > > more killed.
+> > 
+> > Actually, just clearing AFTER sg_next() would be fine, since we know
+> > that is not a link entry. Duh...
+> > 
+> > diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+> > index 9eabac9..1014d34 100644
+> > --- a/block/ll_rw_blk.c
+> > +++ b/block/ll_rw_blk.c
+> > @@ -1352,6 +1352,7 @@ new_segment:
+> >  			sg = next_sg;
+> >  			next_sg = sg_next(sg);
+> >  
+> > +			memset(sg, 0, sizeof(*sg));
+> >  			sg->page = bvec->bv_page;
+> >  			sg->length = nbytes;
+> >  			sg->offset = bvec->bv_offset;
+> > 
+> > -- 
+> 
+> So now how about removing zero'ing out sglist in scsi-ml?
 
-Applying 'qla1280: Indentation fix'
-
-Adds trailing whitespace.
-.dotest/patch:90: sn_pci_set_vchan(ha->pdev, 
-warning: 1 line adds trailing whitespaces.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Really sorry, I must have been stoned.
