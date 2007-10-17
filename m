@@ -1,55 +1,179 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: What still uses the block layer?
-Date: Wed, 17 Oct 2007 19:23:59 +0200
-Message-ID: <4716452F.4080408@s5r6.in-berlin.de>
-References: <200710141836.55211.rob@landley.net> <4712FE33.3000400@s5r6.in-berlin.de> <200710150426.04924.rob@landley.net> <20071015160800.GA324@parisc-linux.org> <47139F15.7050702@s5r6.in-berlin.de> <Pine.LNX.4.64.0710151954550.3949@asgard.lang.hm> <20071016111911.30a18e12@the-village.bc.nu> <Pine.LNX.4.64.0710161238140.6995@asgard.lang.hm> <20071016195432.GA31306@parisc-linux.org> <Pine.LNX.4.64.0710161302460.6995@asgard.lang.hm> <20071017094838.GB18035@boogie.lpds.sztaki.hu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 3/32] usb: transport - convert to accessors and !use_sg code
+ path removal
+Date: Wed, 17 Oct 2007 19:26:15 +0200
+Message-ID: <471645B7.1050207@panasas.com>
+References: <47164306.6090702@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:57184 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760147AbXJQRZW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 13:25:22 -0400
-In-Reply-To: <20071017094838.GB18035@boogie.lpds.sztaki.hu>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:29059 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759386AbXJQR1S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 13:27:18 -0400
+In-Reply-To: <47164306.6090702@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Gabor Gombas <gombasg@sztaki.hu>
-Cc: david@lang.hm, Matthew Wilcox <matthew@wil.cx>, Alan Cox <alan@lxorguk.ukuu.org.uk>, Rob Landley <rob@landley.net>, David Newall <david@davidnewall.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Wilcox <matthew@wil.cx>, Matthew Dharm <mdharm-scsi@one-e>
+Cc: Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
-Gabor Gombas wrote:
-> On Tue, Oct 16, 2007 at 01:55:07PM -0700, david@lang.hm wrote:
->> why is this any different from the external enclosures? they have al=
-ways=20
->> appeared as the type of device that connects them to the motherboard=
-, (and=20
->> even with SCSI, there are some controllers that don't generate sdX d=
-evices)
->=20
-> In the past enclosures supported only one kind of connector so this
-> assumption was fine. But nowadays an external disk may have several
-> connectors (like USB, Firewire and eSata). Why should the disk's name
-> depend on what type of cable did I manage to grab first? It is the
-> _same_ disk regardless of the cable type.
 
-Yes, but even udev won't give you one and the same symlink to the disk'=
-s
-device file then.=B9  There isn't a persistent unique target/unit prope=
-rty
-which all of these transports have in common.
+  - Use scsi data accessors and remove of !use_sg code path.
+  - New usb_stor_bulk_srb() for use by drivers
 
-The only thing that could be common in the best case is the symlink to
-the partition's device file, based on filesystem UUID or filesystem lab=
-el.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/usb/storage/transport.c |   44 +++++++++++++++++++++++---------------
+ drivers/usb/storage/transport.h |    2 +
+ 2 files changed, 29 insertions(+), 17 deletions(-)
 
-=B9) unless you write your own rule specific to this on particular encl=
-osure
---=20
-Stefan Richter
--=3D=3D=3D=3D=3D-=3D-=3D=3D=3D =3D-=3D- =3D---=3D
-http://arcgraph.de/sr/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index c646750..d3a84a2 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -459,6 +459,21 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
+ }
+ 
+ /*
++ * Common used function. Transfer a complete command
++ * via usb_stor_bulk_transfer_sglist() above. Set cmnd resid
++ */
++int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
++		      struct scsi_cmnd* srb)
++{
++	int resid = scsi_get_resid(srb);
++	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
++				      scsi_sg_count(srb), scsi_bufflen(srb),
++				      &resid);
++	scsi_set_resid(srb, resid);
++	return result;
++}
++
++/*
+  * Transfer an entire SCSI command's worth of data payload over the bulk
+  * pipe.
+  *
+@@ -508,7 +523,7 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 	int result;
+ 
+ 	/* send the command to the transport layer */
+-	srb->resid = 0;
++	scsi_set_resid(srb, 0);
+ 	result = us->transport(srb, us);
+ 
+ 	/* if the command gets aborted by the higher layers, we need to
+@@ -568,7 +583,7 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 	 * A short transfer on a command where we don't expect it
+ 	 * is unusual, but it doesn't mean we need to auto-sense.
+ 	 */
+-	if ((srb->resid > 0) &&
++	if ((scsi_get_resid(srb) > 0) &&
+ 	    !((srb->cmnd[0] == REQUEST_SENSE) ||
+ 	      (srb->cmnd[0] == INQUIRY) ||
+ 	      (srb->cmnd[0] == MODE_SENSE) ||
+@@ -593,7 +608,7 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 			srb->cmd_len = 12;
+ 
+ 		/* issue the auto-sense command */
+-		srb->resid = 0;
++		scsi_set_resid(srb, 0);
+ 		temp_result = us->transport(us->srb, us);
+ 
+ 		/* let's clean up right away */
+@@ -649,7 +664,7 @@ void usb_stor_invoke_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 
+ 	/* Did we transfer less than the minimum amount required? */
+ 	if (srb->result == SAM_STAT_GOOD &&
+-			srb->request_bufflen - srb->resid < srb->underflow)
++			scsi_bufflen(srb) - scsi_get_resid(srb) < srb->underflow)
+ 		srb->result = (DID_ERROR << 16) | (SUGGEST_RETRY << 24);
+ 
+ 	return;
+@@ -708,7 +723,7 @@ void usb_stor_stop_transport(struct us_data *us)
+ 
+ int usb_stor_CBI_transport(struct scsi_cmnd *srb, struct us_data *us)
+ {
+-	unsigned int transfer_length = srb->request_bufflen;
++	unsigned int transfer_length = scsi_bufflen(srb);
+ 	unsigned int pipe = 0;
+ 	int result;
+ 
+@@ -737,9 +752,7 @@ int usb_stor_CBI_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 	if (transfer_length) {
+ 		pipe = srb->sc_data_direction == DMA_FROM_DEVICE ? 
+ 				us->recv_bulk_pipe : us->send_bulk_pipe;
+-		result = usb_stor_bulk_transfer_sg(us, pipe,
+-					srb->request_buffer, transfer_length,
+-					srb->use_sg, &srb->resid);
++		result = usb_stor_bulk_srb(us, pipe, srb);
+ 		US_DEBUGP("CBI data stage result is 0x%x\n", result);
+ 
+ 		/* if we stalled the data transfer it means command failed */
+@@ -808,7 +821,7 @@ int usb_stor_CBI_transport(struct scsi_cmnd *srb, struct us_data *us)
+  */
+ int usb_stor_CB_transport(struct scsi_cmnd *srb, struct us_data *us)
+ {
+-	unsigned int transfer_length = srb->request_bufflen;
++	unsigned int transfer_length = scsi_bufflen(srb);
+ 	int result;
+ 
+ 	/* COMMAND STAGE */
+@@ -836,9 +849,7 @@ int usb_stor_CB_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 	if (transfer_length) {
+ 		unsigned int pipe = srb->sc_data_direction == DMA_FROM_DEVICE ? 
+ 				us->recv_bulk_pipe : us->send_bulk_pipe;
+-		result = usb_stor_bulk_transfer_sg(us, pipe,
+-					srb->request_buffer, transfer_length,
+-					srb->use_sg, &srb->resid);
++		result = usb_stor_bulk_srb(us, pipe, srb);
+ 		US_DEBUGP("CB data stage result is 0x%x\n", result);
+ 
+ 		/* if we stalled the data transfer it means command failed */
+@@ -904,7 +915,7 @@ int usb_stor_Bulk_transport(struct scsi_cmnd *srb, struct us_data *us)
+ {
+ 	struct bulk_cb_wrap *bcb = (struct bulk_cb_wrap *) us->iobuf;
+ 	struct bulk_cs_wrap *bcs = (struct bulk_cs_wrap *) us->iobuf;
+-	unsigned int transfer_length = srb->request_bufflen;
++	unsigned int transfer_length = scsi_bufflen(srb);
+ 	unsigned int residue;
+ 	int result;
+ 	int fake_sense = 0;
+@@ -955,9 +966,7 @@ int usb_stor_Bulk_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 	if (transfer_length) {
+ 		unsigned int pipe = srb->sc_data_direction == DMA_FROM_DEVICE ? 
+ 				us->recv_bulk_pipe : us->send_bulk_pipe;
+-		result = usb_stor_bulk_transfer_sg(us, pipe,
+-					srb->request_buffer, transfer_length,
+-					srb->use_sg, &srb->resid);
++		result = usb_stor_bulk_srb(us, pipe, srb);
+ 		US_DEBUGP("Bulk data transfer result 0x%x\n", result);
+ 		if (result == USB_STOR_XFER_ERROR)
+ 			return USB_STOR_TRANSPORT_ERROR;
+@@ -1036,7 +1045,8 @@ int usb_stor_Bulk_transport(struct scsi_cmnd *srb, struct us_data *us)
+ 	if (residue) {
+ 		if (!(us->flags & US_FL_IGNORE_RESIDUE)) {
+ 			residue = min(residue, transfer_length);
+-			srb->resid = max(srb->resid, (int) residue);
++			scsi_set_resid(srb, max(scsi_get_resid(srb),
++			                                       (int) residue));
+ 		}
+ 	}
+ 
+diff --git a/drivers/usb/storage/transport.h b/drivers/usb/storage/transport.h
+index 633a715..ada7c2f 100644
+--- a/drivers/usb/storage/transport.h
++++ b/drivers/usb/storage/transport.h
+@@ -139,6 +139,8 @@ extern int usb_stor_bulk_transfer_buf(struct us_data *us, unsigned int pipe,
+ 		void *buf, unsigned int length, unsigned int *act_len);
+ extern int usb_stor_bulk_transfer_sg(struct us_data *us, unsigned int pipe,
+ 		void *buf, unsigned int length, int use_sg, int *residual);
++extern int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
++		struct scsi_cmnd* srb);
+ 
+ extern int usb_stor_port_reset(struct us_data *us);
+ #endif
+-- 
+1.5.3.1
+
+
