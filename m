@@ -1,44 +1,32 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [Bug 3680] sym53c8xx_2 SMP deadlock on driver load
-Date: Wed, 17 Oct 2007 10:27:47 -0600
-Message-ID: <20071017162747.GA32174@parisc-linux.org>
-References: <20071017013045.A19ED108036@picon.linux-foundation.org> <471621D2.5080806@cybernetics.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch 3/7] qla2xxx printk fixes
+Date: Wed, 17 Oct 2007 09:33:03 -0700
+Message-ID: <20071017163303.GE15441@plap3.qlogic.org>
+References: <200710162128.l9GLSLBv018170@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:46870 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760026AbXJQQ1t (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 12:27:49 -0400
+Received: from avexch1.qlogic.com ([198.70.193.115]:32303 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763848AbXJQQdN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 12:33:13 -0400
 Content-Disposition: inline
-In-Reply-To: <471621D2.5080806@cybernetics.com>
+In-Reply-To: <200710162128.l9GLSLBv018170@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: w@1wt.eu, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, protasnb@gmail.com, bugme-daemon@bugzilla.kernel.org
+To: akpm@linux-foundation.org
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Wed, Oct 17, 2007 at 10:53:06AM -0400, Tony Battersby wrote:
-> After looking at it carefully, this is true of pci_map_mem, but not
-> pci_unmap_mem.  pci_unmap_mem can be called from both ->detect and
-> ->release.  io_request_lock is held in ->detect but not in ->release.
-> So, your patch locks up the system on module unload.
+On Tue, 16 Oct 2007, akpm@linux-foundation.org wrote:
 
-My mistake.  I should have checked the iorl was held over ->release too.
+> From: Andrew Morton <akpm@linux-foundation.org>
+> 
+> drivers/scsi/qla2xxx/qla_sup.c: In function 'qla24xx_write_flash_data':
+> drivers/scsi/qla2xxx/qla_sup.c:655: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'dma_addr_t'
+> drivers/scsi/qla2xxx/qla_sup.c: In function 'qla25xx_read_optrom_data':
+> drivers/scsi/qla2xxx/qla_sup.c:1853: warning: format '%llx' expects type 'long long unsigned int', but argument 6 has type 'dma_addr_t'
+> 
+> Cc: James Bottomley <James.Bottomley@steeleye.com>
+> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-This is a pretty ugly patch, but I think the three alternatives are
-worse:
-
- - Drop the iorl at the beginning of ->detect and reacquire it at exit.
-   We don't know what else the iorl might be protecting.  Probably
-   nothing, but I don't want to audit it.
- - Convert sym2 back to old error handling so the midlayer doesn't
-   acquire the iorl for us in ->detect.
- - Acquire the iorl in ->release.  We might deadlock on something.
-
-So, sure, apply this patch.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
