@@ -1,17 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 6/32] usb: freecom.c & sddr09.c - convert to accessors and
- !use_sg cleanup
-Date: Wed, 17 Oct 2007 19:34:35 +0200
-Message-ID: <471647AB.1060209@panasas.com>
+Subject: [PATCH 7/32] NCR5380 familly convert to accessors & !use_sg cleanup
+Date: Wed, 17 Oct 2007 19:37:47 +0200
+Message-ID: <4716486B.8050900@panasas.com>
 References: <47164306.6090702@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25631 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18439 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761733AbXJQRgU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 13:36:20 -0400
+	with ESMTP id S932719AbXJQRjN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 13:39:13 -0400
 In-Reply-To: <47164306.6090702@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,92 +18,218 @@ To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracl
 Cc: Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
 
- - Use scsi data accessors and remove of !use_sg code path
- - This patch is dependent on cleanup patch to usb transport.c/h
+  - convert to accessors and !use_sg cleanup
+  - FIXME: Not sg-chain ready look for ++cmd->SCp.buffer
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/usb/storage/freecom.c |   14 ++++++--------
- drivers/usb/storage/sddr09.c  |    9 +++------
- 2 files changed, 9 insertions(+), 14 deletions(-)
+ drivers/scsi/NCR5380.c       |   14 +++++++-------
+ drivers/scsi/atari_NCR5380.c |   22 +++++++++++-----------
+ drivers/scsi/sun3_NCR5380.c  |   22 +++++++++++-----------
+ 3 files changed, 29 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/usb/storage/freecom.c b/drivers/usb/storage/freecom.c
-index 88aa59a..f5a4e8d 100644
---- a/drivers/usb/storage/freecom.c
-+++ b/drivers/usb/storage/freecom.c
-@@ -132,8 +132,7 @@ freecom_readdata (struct scsi_cmnd *srb, struct us_data *us,
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 988f0bc..47ee320 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -295,17 +295,17 @@ static __inline__ void initialize_SCp(Scsi_Cmnd * cmd)
+ 	 * various queues are valid.
+ 	 */
  
- 	/* Now transfer all of our blocks. */
- 	US_DEBUGP("Start of read\n");
--	result = usb_stor_bulk_transfer_sg(us, ipipe, srb->request_buffer,
--			count, srb->use_sg, &srb->resid);
-+	result = usb_stor_bulk_srb(us, ipipe, srb);
- 	US_DEBUGP("freecom_readdata done!\n");
+-	if (cmd->use_sg) {
+-		cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
+-		cmd->SCp.buffers_residual = cmd->use_sg - 1;
++	if (scsi_bufflen(cmd)) {
++		cmd->SCp.buffer = scsi_sglist(cmd);
++		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
+ 		cmd->SCp.ptr = page_address(cmd->SCp.buffer->page)+
+ 			       cmd->SCp.buffer->offset;
+ 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
+ 	} else {
+ 		cmd->SCp.buffer = NULL;
+ 		cmd->SCp.buffers_residual = 0;
+-		cmd->SCp.ptr = (char *) cmd->request_buffer;
+-		cmd->SCp.this_residual = cmd->request_bufflen;
++		cmd->SCp.ptr = NULL;
++		cmd->SCp.this_residual = 0;
+ 	}
+ }
  
- 	if (result > USB_STOR_XFER_SHORT)
-@@ -166,8 +165,7 @@ freecom_writedata (struct scsi_cmnd *srb, struct us_data *us,
- 
- 	/* Now transfer all of our blocks. */
- 	US_DEBUGP("Start of write\n");
--	result = usb_stor_bulk_transfer_sg(us, opipe, srb->request_buffer,
--			count, srb->use_sg, &srb->resid);
-+	result = usb_stor_bulk_srb(us, opipe, srb);
- 
- 	US_DEBUGP("freecom_writedata done!\n");
- 	if (result > USB_STOR_XFER_SHORT)
-@@ -281,7 +279,7 @@ int freecom_transport(struct scsi_cmnd *srb, struct us_data *us)
- 	 * and such will hang. */
- 	US_DEBUGP("Device indicates that it has %d bytes available\n",
- 			le16_to_cpu (fst->Count));
--	US_DEBUGP("SCSI requested %d\n", srb->request_bufflen);
-+	US_DEBUGP("SCSI requested %d\n", scsi_bufflen(srb));
- 
- 	/* Find the length we desire to read. */
- 	switch (srb->cmnd[0]) {
-@@ -292,12 +290,12 @@ int freecom_transport(struct scsi_cmnd *srb, struct us_data *us)
- 			length = le16_to_cpu(fst->Count);
+@@ -976,14 +976,14 @@ static int NCR5380_queue_command(Scsi_Cmnd * cmd, void (*done) (Scsi_Cmnd *))
+ 		case WRITE_6:
+ 		case WRITE_10:
+ 			hostdata->time_write[cmd->device->id] -= (jiffies - hostdata->timebase);
+-			hostdata->bytes_write[cmd->device->id] += cmd->request_bufflen;
++			hostdata->bytes_write[cmd->device->id] += scsi_bufflen(cmd);
+ 			hostdata->pendingw++;
  			break;
- 		default:
-- 			length = srb->request_bufflen;
-+			length = scsi_bufflen(srb);
+ 		case READ:
+ 		case READ_6:
+ 		case READ_10:
+ 			hostdata->time_read[cmd->device->id] -= (jiffies - hostdata->timebase);
+-			hostdata->bytes_read[cmd->device->id] += cmd->request_bufflen;
++			hostdata->bytes_read[cmd->device->id] += scsi_bufflen(cmd);
+ 			hostdata->pendingr++;
+ 			break;
  	}
+diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
+index 52d0b87..062d8aa 100644
+--- a/drivers/scsi/atari_NCR5380.c
++++ b/drivers/scsi/atari_NCR5380.c
+@@ -512,9 +512,9 @@ static inline void initialize_SCp(Scsi_Cmnd *cmd)
+ 	 * various queues are valid.
+ 	 */
  
- 	/* verify that this amount is legal */
--	if (length > srb->request_bufflen) {
--		length = srb->request_bufflen;
-+	if (length > scsi_bufflen(srb)) {
-+		length = scsi_bufflen(srb);
- 		US_DEBUGP("Truncating request to match buffer length: %d\n", length);
+-	if (cmd->use_sg) {
+-		cmd->SCp.buffer = (struct scatterlist *)cmd->request_buffer;
+-		cmd->SCp.buffers_residual = cmd->use_sg - 1;
++	if (scsi_bufflen(cmd)) {
++		cmd->SCp.buffer = scsi_sglist(cmd);
++		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
+ 		cmd->SCp.ptr = (char *)page_address(cmd->SCp.buffer->page) +
+ 			       cmd->SCp.buffer->offset;
+ 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
+@@ -525,8 +525,8 @@ static inline void initialize_SCp(Scsi_Cmnd *cmd)
+ 	} else {
+ 		cmd->SCp.buffer = NULL;
+ 		cmd->SCp.buffers_residual = 0;
+-		cmd->SCp.ptr = (char *)cmd->request_buffer;
+-		cmd->SCp.this_residual = cmd->request_bufflen;
++		cmd->SCp.ptr = NULL;
++		cmd->SCp.this_residual = 0;
  	}
+ }
  
-diff --git a/drivers/usb/storage/sddr09.c b/drivers/usb/storage/sddr09.c
-index b12202c..8972b17 100644
---- a/drivers/usb/storage/sddr09.c
-+++ b/drivers/usb/storage/sddr09.c
-@@ -1623,7 +1623,7 @@ int sddr09_transport(struct scsi_cmnd *srb, struct us_data *us)
- 		return USB_STOR_TRANSPORT_ERROR;
+@@ -938,21 +938,21 @@ static int NCR5380_queue_command(Scsi_Cmnd *cmd, void (*done)(Scsi_Cmnd *))
  	}
+ # endif
+ # ifdef NCR5380_STAT_LIMIT
+-	if (cmd->request_bufflen > NCR5380_STAT_LIMIT)
++	if (scsi_bufflen(cmd) > NCR5380_STAT_LIMIT)
+ # endif
+ 		switch (cmd->cmnd[0]) {
+ 		case WRITE:
+ 		case WRITE_6:
+ 		case WRITE_10:
+ 			hostdata->time_write[cmd->device->id] -= (jiffies - hostdata->timebase);
+-			hostdata->bytes_write[cmd->device->id] += cmd->request_bufflen;
++			hostdata->bytes_write[cmd->device->id] += scsi_bufflen(cmd);
+ 			hostdata->pendingw++;
+ 			break;
+ 		case READ:
+ 		case READ_6:
+ 		case READ_10:
+ 			hostdata->time_read[cmd->device->id] -= (jiffies - hostdata->timebase);
+-			hostdata->bytes_read[cmd->device->id] += cmd->request_bufflen;
++			hostdata->bytes_read[cmd->device->id] += scsi_bufflen(cmd);
+ 			hostdata->pendingr++;
+ 			break;
+ 		}
+@@ -1354,21 +1354,21 @@ static irqreturn_t NCR5380_intr(int irq, void *dev_id)
+ static void collect_stats(struct NCR5380_hostdata* hostdata, Scsi_Cmnd *cmd)
+ {
+ # ifdef NCR5380_STAT_LIMIT
+-	if (cmd->request_bufflen > NCR5380_STAT_LIMIT)
++	if (scsi_bufflen(cmd) > NCR5380_STAT_LIMIT)
+ # endif
+ 		switch (cmd->cmnd[0]) {
+ 		case WRITE:
+ 		case WRITE_6:
+ 		case WRITE_10:
+ 			hostdata->time_write[cmd->device->id] += (jiffies - hostdata->timebase);
+-			/*hostdata->bytes_write[cmd->device->id] += cmd->request_bufflen;*/
++			/*hostdata->bytes_write[cmd->device->id] += scsi_bufflen(cmd);*/
+ 			hostdata->pendingw--;
+ 			break;
+ 		case READ:
+ 		case READ_6:
+ 		case READ_10:
+ 			hostdata->time_read[cmd->device->id] += (jiffies - hostdata->timebase);
+-			/*hostdata->bytes_read[cmd->device->id] += cmd->request_bufflen;*/
++			/*hostdata->bytes_read[cmd->device->id] += scsi_bufflen(cmd);*/
+ 			hostdata->pendingr--;
+ 			break;
+ 		}
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index dc15a22..75cd3b0 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -516,9 +516,9 @@ static __inline__ void initialize_SCp(struct scsi_cmnd *cmd)
+      * various queues are valid.
+      */
  
--	if (srb->request_bufflen == 0)
-+	if (scsi_bufflen(srb) == 0)
- 		return USB_STOR_TRANSPORT_GOOD;
+-    if (cmd->use_sg) {
+-	cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
+-	cmd->SCp.buffers_residual = cmd->use_sg - 1;
++    if (scsi_bufflen(cmd)) {
++	cmd->SCp.buffer = scsi_sglist(cmd);
++	cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
+ 	cmd->SCp.ptr = (char *) SGADDR(cmd->SCp.buffer);
+ 	cmd->SCp.this_residual = cmd->SCp.buffer->length;
  
- 	if (srb->sc_data_direction == DMA_TO_DEVICE ||
-@@ -1634,12 +1634,9 @@ int sddr09_transport(struct scsi_cmnd *srb, struct us_data *us)
- 		US_DEBUGP("SDDR09: %s %d bytes\n",
- 			  (srb->sc_data_direction == DMA_TO_DEVICE) ?
- 			  "sending" : "receiving",
--			  srb->request_bufflen);
-+			  scsi_bufflen(srb));
- 
--		result = usb_stor_bulk_transfer_sg(us, pipe,
--					srb->request_buffer,
--					srb->request_bufflen,
--					srb->use_sg, &srb->resid);
-+		result = usb_stor_bulk_srb(us, pipe, srb);
- 
- 		return (result == USB_STOR_XFER_GOOD ?
- 			USB_STOR_TRANSPORT_GOOD : USB_STOR_TRANSPORT_ERROR);
+@@ -529,8 +529,8 @@ static __inline__ void initialize_SCp(struct scsi_cmnd *cmd)
+     } else {
+ 	cmd->SCp.buffer = NULL;
+ 	cmd->SCp.buffers_residual = 0;
+-	cmd->SCp.ptr = (char *) cmd->request_buffer;
+-	cmd->SCp.this_residual = cmd->request_bufflen;
++	cmd->SCp.ptr = NULL;
++	cmd->SCp.this_residual = 0;
+     }
+     
+ }
+@@ -936,7 +936,7 @@ static int NCR5380_queue_command(struct scsi_cmnd *cmd,
+     }
+ # endif
+ # ifdef NCR5380_STAT_LIMIT
+-    if (cmd->request_bufflen > NCR5380_STAT_LIMIT)
++    if (scsi_bufflen(cmd) > NCR5380_STAT_LIMIT)
+ # endif
+ 	switch (cmd->cmnd[0])
+ 	{
+@@ -944,14 +944,14 @@ static int NCR5380_queue_command(struct scsi_cmnd *cmd,
+ 	    case WRITE_6:
+ 	    case WRITE_10:
+ 		hostdata->time_write[cmd->device->id] -= (jiffies - hostdata->timebase);
+-		hostdata->bytes_write[cmd->device->id] += cmd->request_bufflen;
++		hostdata->bytes_write[cmd->device->id] += scsi_bufflen(cmd);
+ 		hostdata->pendingw++;
+ 		break;
+ 	    case READ:
+ 	    case READ_6:
+ 	    case READ_10:
+ 		hostdata->time_read[cmd->device->id] -= (jiffies - hostdata->timebase);
+-		hostdata->bytes_read[cmd->device->id] += cmd->request_bufflen;
++		hostdata->bytes_read[cmd->device->id] += scsi_bufflen(cmd);
+ 		hostdata->pendingr++;
+ 		break;
+ 	}
+@@ -1346,7 +1346,7 @@ static void collect_stats(struct NCR5380_hostdata *hostdata,
+ 			  struct scsi_cmnd *cmd)
+ {
+ # ifdef NCR5380_STAT_LIMIT
+-    if (cmd->request_bufflen > NCR5380_STAT_LIMIT)
++    if (scsi_bufflen(cmd) > NCR5380_STAT_LIMIT)
+ # endif
+ 	switch (cmd->cmnd[0])
+ 	{
+@@ -1354,14 +1354,14 @@ static void collect_stats(struct NCR5380_hostdata *hostdata,
+ 	    case WRITE_6:
+ 	    case WRITE_10:
+ 		hostdata->time_write[cmd->device->id] += (jiffies - hostdata->timebase);
+-		/*hostdata->bytes_write[cmd->device->id] += cmd->request_bufflen;*/
++		/*hostdata->bytes_write[cmd->device->id] += scsi_bufflen(cmd);*/
+ 		hostdata->pendingw--;
+ 		break;
+ 	    case READ:
+ 	    case READ_6:
+ 	    case READ_10:
+ 		hostdata->time_read[cmd->device->id] += (jiffies - hostdata->timebase);
+-		/*hostdata->bytes_read[cmd->device->id] += cmd->request_bufflen;*/
++		/*hostdata->bytes_read[cmd->device->id] += scsi_bufflen(cmd);*/
+ 		hostdata->pendingr--;
+ 		break;
+ 	}
 -- 
 1.5.3.1
 
