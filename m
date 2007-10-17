@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 24/32] wd7000.c - proper fix for boards without sg support
-Date: Wed, 17 Oct 2007 20:15:40 +0200
-Message-ID: <4716514C.3050405@panasas.com>
+Subject: [PATCH 25/32] Remove psi240i driver from kernel
+Date: Wed, 17 Oct 2007 20:17:35 +0200
+Message-ID: <471651BF.4050800@panasas.com>
 References: <47164306.6090702@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:12915 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:15195 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755500AbXJQSQd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:16:33 -0400
+	with ESMTP id S1755824AbXJQSSe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:18:34 -0400
 In-Reply-To: <47164306.6090702@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,56 +18,1276 @@ To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracl
 Cc: Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
 
-  - code used to set sg_tablesize to zero for board revision
-    less than 6. This is no longer supported, therefore I
-    use sg_tablesize=1 and open code the sg handling for that case.
-  - Get rid of use of SG_NONE which will be removed soon.
+  The psi240i driver is still written for cmnd->request_buffer
+  as a char pointer to actual data. There was never any attempt
+  to use the scatterlist option.
+
+  - remove all source files (3) from drivers/scsi
+  - Remove from Makefile and Kconfig
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/wd7000.c |   12 ++++++------
- 1 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/Kconfig    |   11 -
+ drivers/scsi/Makefile   |    1 -
+ drivers/scsi/psi240i.c  |  689 -----------------------------------------------
+ drivers/scsi/psi240i.h  |  315 ---------------------
+ drivers/scsi/psi_chip.h |  195 -------------
+ 5 files changed, 0 insertions(+), 1211 deletions(-)
+ delete mode 100644 drivers/scsi/psi240i.c
+ delete mode 100644 drivers/scsi/psi240i.h
+ delete mode 100644 drivers/scsi/psi_chip.h
 
-diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
-index 255c611..3887640 100644
---- a/drivers/scsi/wd7000.c
-+++ b/drivers/scsi/wd7000.c
-@@ -1108,13 +1108,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
- 	scb->host = host;
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 30905ce..0480f6b 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -1288,17 +1288,6 @@ config SCSI_PAS16
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called pas16.
  
- 	nseg = scsi_sg_count(SCpnt);
--	if (nseg) {
-+	if (nseg > 1) {
- 		struct scatterlist *sg;
- 		unsigned i;
- 
--		if (SCpnt->device->host->sg_tablesize == SG_NONE) {
--			panic("wd7000_queuecommand: scatter/gather not supported.\n");
+-config SCSI_PSI240I
+-	tristate "PSI240i support"
+-	depends on ISA && SCSI
+-	help
+-	  This is support for the PSI240i EIDE interface card which acts as a
+-	  SCSI host adapter.  Please read the SCSI-HOWTO, available from
+-	  <http://www.tldp.org/docs.html#howto>.
+-
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called psi240i.
+-
+ config SCSI_QLOGIC_FAS
+ 	tristate "Qlogic FAS SCSI support"
+ 	depends on ISA && SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index 6141389..ffb800d 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -59,7 +59,6 @@ obj-$(CONFIG_MVME16x_SCSI)	+= 53c700.o	mvme16x_scsi.o
+ obj-$(CONFIG_BVME6000_SCSI)	+= 53c700.o	bvme6000_scsi.o
+ obj-$(CONFIG_SCSI_SIM710)	+= 53c700.o	sim710.o
+ obj-$(CONFIG_SCSI_ADVANSYS)	+= advansys.o
+-obj-$(CONFIG_SCSI_PSI240I)	+= psi240i.o
+ obj-$(CONFIG_SCSI_BUSLOGIC)	+= BusLogic.o
+ obj-$(CONFIG_SCSI_DPT_I2O)	+= dpt_i2o.o
+ obj-$(CONFIG_SCSI_U14_34F)	+= u14-34f.o
+diff --git a/drivers/scsi/psi240i.c b/drivers/scsi/psi240i.c
+deleted file mode 100644
+index 899e89d..0000000
+--- a/drivers/scsi/psi240i.c
++++ /dev/null
+@@ -1,689 +0,0 @@
+-/*+M*************************************************************************
+- * Perceptive Solutions, Inc. PSI-240I device driver proc support for Linux.
+- *
+- * Copyright (c) 1997 Perceptive Solutions, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2, or (at your option)
+- * any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; see the file COPYING.  If not, write to
+- * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+- *
+- *
+- *	File Name:		psi240i.c
+- *
+- *	Description:	SCSI driver for the PSI240I EIDE interface card.
+- *
+- *-M*************************************************************************/
+-
+-#include <linux/module.h>
+-
+-#include <linux/blkdev.h>
+-#include <linux/kernel.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/ioport.h>
+-#include <linux/delay.h>
+-#include <linux/interrupt.h>
+-#include <linux/proc_fs.h>
+-#include <linux/spinlock.h>
+-#include <linux/stat.h>
+-
+-#include <asm/dma.h>
+-#include <asm/system.h>
+-#include <asm/io.h>
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-
+-#include "psi240i.h"
+-#include "psi_chip.h"
+-
+-//#define DEBUG 1
+-
+-#ifdef DEBUG
+-#define DEB(x) x
+-#else
+-#define DEB(x)
+-#endif
+-
+-#define MAXBOARDS 6	/* Increase this and the sizes of the arrays below, if you need more. */
+-
+-#define	PORT_DATA				0
+-#define	PORT_ERROR				1
+-#define	PORT_SECTOR_COUNT		2
+-#define	PORT_LBA_0				3
+-#define	PORT_LBA_8				4
+-#define	PORT_LBA_16				5
+-#define	PORT_LBA_24				6
+-#define	PORT_STAT_CMD			7
+-#define	PORT_SEL_FAIL			8
+-#define	PORT_IRQ_STATUS			9
+-#define	PORT_ADDRESS			10
+-#define	PORT_FAIL				11
+-#define	PORT_ALT_STAT		   	12
+-
+-typedef struct
+-	{
+-	UCHAR		   	device;				// device code
+-	UCHAR			byte6;				// device select register image
+-	UCHAR			spigot;				// spigot number
+-	UCHAR			expectingIRQ;		// flag for expecting and interrupt
+-	USHORT			sectors;			// number of sectors per track
+-	USHORT			heads;				// number of heads
+-	USHORT			cylinders;			// number of cylinders for this device
+-	USHORT			spareword;			// placeholder
+-	ULONG			blocks;				// number of blocks on device
+-	}	OUR_DEVICE, *POUR_DEVICE;
+-
+-typedef struct
+-	{
+-	USHORT		 ports[13];
+-	OUR_DEVICE	 device[8];
+-	struct scsi_cmnd *pSCmnd;
+-	IDE_STRUCT	 ide;
+-	ULONG		 startSector;
+-	USHORT		 sectorCount;
+-	struct scsi_cmnd *SCpnt;
+-	VOID		*buffer;
+-	USHORT		 expectingIRQ;
+-	}	ADAPTER240I, *PADAPTER240I;
+-
+-#define HOSTDATA(host) ((PADAPTER240I)&host->hostdata)
+-
+-static struct	Scsi_Host *PsiHost[6] = {NULL,};  /* One for each IRQ level (10-15) */
+-static			IDENTIFY_DATA	identifyData;
+-static			SETUP			ChipSetup;
+-
+-static	USHORT	portAddr[6] = {CHIP_ADRS_0, CHIP_ADRS_1, CHIP_ADRS_2, CHIP_ADRS_3, CHIP_ADRS_4, CHIP_ADRS_5};
+-
+-/****************************************************************
+- *	Name:	WriteData	:LOCAL
+- *
+- *	Description:	Write data to device.
+- *
+- *	Parameters:		padapter - Pointer adapter data structure.
+- *
+- *	Returns:		TRUE if drive does not assert DRQ in time.
+- *
+- ****************************************************************/
+-static int WriteData (PADAPTER240I padapter)
+-	{
+-	ULONG	timer;
+-	USHORT *pports = padapter->ports;
+-
+-	timer = jiffies + TIMEOUT_DRQ;								// calculate the timeout value
+-	do  {
+-		if ( inb_p (pports[PORT_STAT_CMD]) & IDE_STATUS_DRQ )
+-			{
+-			outsw (pports[PORT_DATA], padapter->buffer, (USHORT)padapter->ide.ide.ide[2] * 256);
+-			return 0;
+-			}
+-		}	while ( time_after(timer, jiffies) );									// test for timeout
+-
+-	padapter->ide.ide.ides.cmd = 0;									// null out the command byte
+-	return 1;
+-	}
+-/****************************************************************
+- *	Name:	IdeCmd	:LOCAL
+- *
+- *	Description:	Process a queued command from the SCSI manager.
+- *
+- *	Parameters:		padapter - Pointer adapter data structure.
+- *
+- *	Returns:		Zero if no error or status register contents on error.
+- *
+- ****************************************************************/
+-static UCHAR IdeCmd (PADAPTER240I padapter)
+-	{
+-	ULONG	timer;
+-	USHORT *pports = padapter->ports;
+-	UCHAR	status;
+-
+-	outb_p (padapter->ide.ide.ides.spigot, pports[PORT_SEL_FAIL]);	// select the spigot
+-	outb_p (padapter->ide.ide.ide[6], pports[PORT_LBA_24]);			// select the drive
+-	timer = jiffies + TIMEOUT_READY;							// calculate the timeout value
+-	do  {
+-		status = inb_p (padapter->ports[PORT_STAT_CMD]);
+-		if ( status & IDE_STATUS_DRDY )
+-			{
+-			outb_p (padapter->ide.ide.ide[2], pports[PORT_SECTOR_COUNT]);
+-			outb_p (padapter->ide.ide.ide[3], pports[PORT_LBA_0]);
+-			outb_p (padapter->ide.ide.ide[4], pports[PORT_LBA_8]);
+-			outb_p (padapter->ide.ide.ide[5], pports[PORT_LBA_16]);
+-			padapter->expectingIRQ = 1;
+-			outb_p (padapter->ide.ide.ide[7], pports[PORT_STAT_CMD]);
+-
+-			if ( padapter->ide.ide.ides.cmd == IDE_CMD_WRITE_MULTIPLE )
+-				return (WriteData (padapter));
+-
+-			return 0;
+-			}
+-		}	while ( time_after(timer, jiffies) );									// test for timeout
+-
+-	padapter->ide.ide.ides.cmd = 0;									// null out the command byte
+-	return status;
+-	}
+-/****************************************************************
+- *	Name:	SetupTransfer	:LOCAL
+- *
+- *	Description:	Setup a data transfer command.
+- *
+- *	Parameters:		padapter - Pointer adapter data structure.
+- *					drive	 - Drive/head register upper nibble only.
+- *
+- *	Returns:		TRUE if no data to transfer.
+- *
+- ****************************************************************/
+-static int SetupTransfer (PADAPTER240I padapter, UCHAR drive)
+-	{
+-	if ( padapter->sectorCount )
+-		{
+-		*(ULONG *)padapter->ide.ide.ides.lba = padapter->startSector;
+-		padapter->ide.ide.ide[6] |= drive;
+-		padapter->ide.ide.ides.sectors = ( padapter->sectorCount > SECTORSXFER ) ? SECTORSXFER : padapter->sectorCount;
+-		padapter->sectorCount -= padapter->ide.ide.ides.sectors;	// bump the start and count for next xfer
+-		padapter->startSector += padapter->ide.ide.ides.sectors;
+-		return 0;
 -		}
- 		dprintk("Using scatter/gather with %d elements.\n", nseg);
- 
- 		sgb = scb->sgb;
-@@ -1128,7 +1125,10 @@ static int wd7000_queuecommand(struct scsi_cmnd *SCpnt,
- 		}
- 	} else {
- 		scb->op = 0;
--		any2scsi(scb->dataptr, isa_virt_to_bus(scsi_sglist(SCpnt)));
-+		if (nseg) {
-+			struct scatterlist *sg = scsi_sglist(SCpnt);
-+			any2scsi(scb->dataptr, isa_page_to_bus(sg->page) + sg->offset);
-+		}
- 		any2scsi(scb->maxlen, scsi_bufflen(SCpnt));
- 	}
- 
-@@ -1524,7 +1524,7 @@ static __init int wd7000_detect(struct scsi_host_template *tpnt)
- 				 *  For boards before rev 6.0, scatter/gather isn't supported.
- 				 */
- 				if (host->rev1 < 6)
--					sh->sg_tablesize = SG_NONE;
-+					sh->sg_tablesize = 1;
- 
- 				present++;	/* count it */
- 
+-	else
+-		{
+-		padapter->ide.ide.ides.cmd = 0;								// null out the command byte
+-		padapter->SCpnt = NULL;
+-		return 1;
+-		}
+-	}
+-/****************************************************************
+- *	Name:	DecodeError	:LOCAL
+- *
+- *	Description:	Decode and process device errors.
+- *
+- *	Parameters:		pshost - Pointer to host data block.
+- *					status - Status register code.
+- *
+- *	Returns:		The driver status code.
+- *
+- ****************************************************************/
+-static ULONG DecodeError (struct Scsi_Host *pshost, UCHAR status)
+-	{
+-	PADAPTER240I	padapter = HOSTDATA(pshost);
+-	UCHAR			error;
+-
+-	padapter->expectingIRQ = 0;
+-	padapter->SCpnt = NULL;
+-	if ( status & IDE_STATUS_WRITE_FAULT )
+-		{
+-		return DID_PARITY << 16;
+-		}
+-	if ( status & IDE_STATUS_BUSY )
+-		return DID_BUS_BUSY << 16;
+-
+-	error = inb_p (padapter->ports[PORT_ERROR]);
+-	DEB(printk ("\npsi240i error register: %x", error));
+-	switch ( error )
+-		{
+-		case IDE_ERROR_AMNF:
+-		case IDE_ERROR_TKONF:
+-		case IDE_ERROR_ABRT:
+-		case IDE_ERROR_IDFN:
+-		case IDE_ERROR_UNC:
+-		case IDE_ERROR_BBK:
+-		default:
+-			return DID_ERROR << 16;
+-		}
+-	return DID_ERROR << 16;
+-	}
+-/****************************************************************
+- *	Name:	Irq_Handler	:LOCAL
+- *
+- *	Description:	Interrupt handler.
+- *
+- *	Parameters:		irq		- Hardware IRQ number.
+- *					dev_id	-
+- *
+- *	Returns:		TRUE if drive is not ready in time.
+- *
+- ****************************************************************/
+-static void Irq_Handler (int irq, void *dev_id)
+-	{
+-	struct Scsi_Host *shost;	// Pointer to host data block
+-	PADAPTER240I padapter;		// Pointer to adapter control structure
+-	USHORT *pports;			// I/O port array
+-	struct scsi_cmnd *SCpnt;
+-	UCHAR status;
+-	int z;
+-
+-	DEB(printk ("\npsi240i received interrupt\n"));
+-
+-	shost = PsiHost[irq - 10];
+-	if ( !shost )
+-		panic ("Splunge!");
+-
+-	padapter = HOSTDATA(shost);
+-	pports = padapter->ports;
+-	SCpnt = padapter->SCpnt;
+-
+-	if ( !padapter->expectingIRQ )
+-		{
+-		DEB(printk ("\npsi240i Unsolicited interrupt\n"));
+-		return;
+-		}
+-	padapter->expectingIRQ = 0;
+-
+-	status = inb_p (padapter->ports[PORT_STAT_CMD]);			// read the device status
+-	if ( status & (IDE_STATUS_ERROR | IDE_STATUS_WRITE_FAULT) )
+-		goto irqerror;
+-
+-	DEB(printk ("\npsi240i processing interrupt"));
+-	switch ( padapter->ide.ide.ides.cmd )							// decide how to handle the interrupt
+-		{
+-		case IDE_CMD_READ_MULTIPLE:
+-			if ( status & IDE_STATUS_DRQ )
+-				{
+-				insw (pports[PORT_DATA], padapter->buffer, (USHORT)padapter->ide.ide.ides.sectors * 256);
+-				padapter->buffer += padapter->ide.ide.ides.sectors * 512;
+-				if ( SetupTransfer (padapter, padapter->ide.ide.ide[6] & 0xF0) )
+-					{
+-					SCpnt->result = DID_OK << 16;
+-					padapter->SCpnt = NULL;
+-					SCpnt->scsi_done (SCpnt);
+-					return;
+-					}
+-				if ( !(status = IdeCmd (padapter)) )
+-					return;
+-				}
+-			break;
+-
+-		case IDE_CMD_WRITE_MULTIPLE:
+-			padapter->buffer += padapter->ide.ide.ides.sectors * 512;
+-			if ( SetupTransfer (padapter, padapter->ide.ide.ide[6] & 0xF0) )
+-				{
+-				SCpnt->result = DID_OK << 16;
+-				padapter->SCpnt = NULL;
+-				SCpnt->scsi_done (SCpnt);
+-				return;
+-				}
+-			if ( !(status = IdeCmd (padapter)) )
+-				return;
+-			break;
+-
+-		case IDE_COMMAND_IDENTIFY:
+-			{
+-			PINQUIRYDATA	pinquiryData  = SCpnt->request_buffer;
+-
+-			if ( status & IDE_STATUS_DRQ )
+-				{
+-				insw (pports[PORT_DATA], &identifyData, sizeof (identifyData) >> 1);
+-
+-				memset (pinquiryData, 0, SCpnt->request_bufflen);		// Zero INQUIRY data structure.
+-				pinquiryData->DeviceType = 0;
+-				pinquiryData->Versions = 2;
+-				pinquiryData->AdditionalLength = 35 - 4;
+-
+-				// Fill in vendor identification fields.
+-				for ( z = 0;  z < 8;  z += 2 )
+-					{
+-					pinquiryData->VendorId[z]	  = ((UCHAR *)identifyData.ModelNumber)[z + 1];
+-					pinquiryData->VendorId[z + 1] = ((UCHAR *)identifyData.ModelNumber)[z];
+-					}
+-
+-				// Initialize unused portion of product id.
+-				for ( z = 0;  z < 4;  z++ )
+-					pinquiryData->ProductId[12 + z] = ' ';
+-
+-				// Move firmware revision from IDENTIFY data to
+-				// product revision in INQUIRY data.
+-				for ( z = 0;  z < 4;  z += 2 )
+-					{
+-					pinquiryData->ProductRevisionLevel[z]	 = ((UCHAR *)identifyData.FirmwareRevision)[z + 1];
+-					pinquiryData->ProductRevisionLevel[z + 1] = ((UCHAR *)identifyData.FirmwareRevision)[z];
+-					}
+-
+-				SCpnt->result = DID_OK << 16;
+-				padapter->SCpnt = NULL;
+-				SCpnt->scsi_done (SCpnt);
+-				return;
+-				}
+-			break;
+-			}
+-
+-		default:
+-			SCpnt->result = DID_OK << 16;
+-			padapter->SCpnt = NULL;
+-			SCpnt->scsi_done (SCpnt);
+-			return;
+-		}
+-
+-irqerror:;
+-	DEB(printk ("\npsi240i error  Device Status: %X\n", status));
+-	SCpnt->result = DecodeError (shost, status);
+-	SCpnt->scsi_done (SCpnt);
+-	}
+-
+-static irqreturn_t do_Irq_Handler (int irq, void *dev_id)
+-{
+-	unsigned long flags;
+-	struct Scsi_Host *dev = dev_id;
+-	
+-	spin_lock_irqsave(dev->host_lock, flags);
+-	Irq_Handler(irq, dev_id);
+-	spin_unlock_irqrestore(dev->host_lock, flags);
+-	return IRQ_HANDLED;
+-}
+-
+-/****************************************************************
+- *	Name:	Psi240i_QueueCommand
+- *
+- *	Description:	Process a queued command from the SCSI manager.
+- *
+- *	Parameters:		SCpnt - Pointer to SCSI command structure.
+- *					done  - Pointer to done function to call.
+- *
+- *	Returns:		Status code.
+- *
+- ****************************************************************/
+-static int Psi240i_QueueCommand(struct scsi_cmnd *SCpnt,
+-				void (*done)(struct scsi_cmnd *))
+-	{
+-	UCHAR *cdb = (UCHAR *)SCpnt->cmnd;
+-	// Pointer to SCSI CDB
+-	PADAPTER240I padapter = HOSTDATA (SCpnt->device->host);
+-	// Pointer to adapter control structure
+-	POUR_DEVICE pdev = &padapter->device [SCpnt->device->id];
+-	// Pointer to device information
+-	UCHAR rc;
+-	// command return code
+-
+-	SCpnt->scsi_done = done;
+-	padapter->ide.ide.ides.spigot = pdev->spigot;
+-	padapter->buffer = SCpnt->request_buffer;
+-	if (done)
+-		{
+-		if ( !pdev->device )
+-			{
+-			SCpnt->result = DID_BAD_TARGET << 16;
+-			done (SCpnt);
+-			return 0;
+-			}
+-		}
+-	else
+-		{
+-		printk("psi240i_queuecommand: %02X: done can't be NULL\n", *cdb);
+-		return 0;
+-		}
+-
+-	switch ( *cdb )
+-		{
+-		case SCSIOP_INQUIRY:   					// inquiry CDB
+-			{
+-			padapter->ide.ide.ide[6] = pdev->byte6;
+-			padapter->ide.ide.ides.cmd = IDE_COMMAND_IDENTIFY;
+-			break;
+-			}
+-
+-		case SCSIOP_TEST_UNIT_READY:			// test unit ready CDB
+-			SCpnt->result = DID_OK << 16;
+-			done (SCpnt);
+-			return 0;
+-
+-		case SCSIOP_READ_CAPACITY:			  	// read capctiy CDB
+-			{
+-			PREAD_CAPACITY_DATA	pdata = (PREAD_CAPACITY_DATA)SCpnt->request_buffer;
+-
+-			pdata->blksiz = 0x20000;
+-			XANY2SCSI ((UCHAR *)&pdata->blks, pdev->blocks);
+-			SCpnt->result = DID_OK << 16;
+-			done (SCpnt);
+-			return 0;
+-			}
+-
+-		case SCSIOP_VERIFY:						// verify CDB
+-			*(ULONG *)padapter->ide.ide.ides.lba = XSCSI2LONG (&cdb[2]);
+-			padapter->ide.ide.ide[6] |= pdev->byte6;
+-			padapter->ide.ide.ide[2] = (UCHAR)((USHORT)cdb[8] | ((USHORT)cdb[7] << 8));
+-			padapter->ide.ide.ides.cmd = IDE_COMMAND_VERIFY;
+-			break;
+-
+-		case SCSIOP_READ:						// read10 CDB
+-			padapter->startSector = XSCSI2LONG (&cdb[2]);
+-			padapter->sectorCount = (USHORT)cdb[8] | ((USHORT)cdb[7] << 8);
+-			SetupTransfer (padapter, pdev->byte6);
+-			padapter->ide.ide.ides.cmd = IDE_CMD_READ_MULTIPLE;
+-			break;
+-
+-		case SCSIOP_READ6:						// read6  CDB
+-			padapter->startSector = SCSI2LONG (&cdb[1]);
+-			padapter->sectorCount = cdb[4];
+-			SetupTransfer (padapter, pdev->byte6);
+-			padapter->ide.ide.ides.cmd = IDE_CMD_READ_MULTIPLE;
+-			break;
+-
+-		case SCSIOP_WRITE:						// write10 CDB
+-			padapter->startSector = XSCSI2LONG (&cdb[2]);
+-			padapter->sectorCount = (USHORT)cdb[8] | ((USHORT)cdb[7] << 8);
+-			SetupTransfer (padapter, pdev->byte6);
+-			padapter->ide.ide.ides.cmd = IDE_CMD_WRITE_MULTIPLE;
+-			break;
+-		case SCSIOP_WRITE6:						// write6  CDB
+-			padapter->startSector = SCSI2LONG (&cdb[1]);
+-			padapter->sectorCount = cdb[4];
+-			SetupTransfer (padapter, pdev->byte6);
+-			padapter->ide.ide.ides.cmd = IDE_CMD_WRITE_MULTIPLE;
+-			break;
+-
+-		default:
+-			DEB (printk ("psi240i_queuecommand: Unsupported command %02X\n", *cdb));
+-			SCpnt->result = DID_ERROR << 16;
+-			done (SCpnt);
+-			return 0;
+-		}
+-
+-	padapter->SCpnt = SCpnt;  									// Save this command data
+-
+-	rc = IdeCmd (padapter);
+-	if ( rc )
+-		{
+-		padapter->expectingIRQ = 0;
+-		DEB (printk ("psi240i_queuecommand: %02X, %02X: Device failed to respond for command\n", *cdb, padapter->ide.ide.ides.cmd));
+-		SCpnt->result = DID_ERROR << 16;
+-		done (SCpnt);
+-		return 0;
+-		}
+-	DEB (printk("psi240i_queuecommand: %02X, %02X now waiting for interrupt ", *cdb, padapter->ide.ide.ides.cmd));
+-	return 0;
+-	}
+-
+-/***************************************************************************
+- *	Name:			ReadChipMemory
+- *
+- *	Description:	Read information from controller memory.
+- *
+- *	Parameters:		psetup	- Pointer to memory image of setup information.
+- *					base	- base address of memory.
+- *					length	- lenght of data space in bytes.
+- *					port	- I/O address of data port.
+- *
+- *	Returns:		Nothing.
+- *
+- **************************************************************************/
+-static void ReadChipMemory (void *pdata, USHORT base, USHORT length, USHORT port)
+-	{
+-	USHORT	z, zz;
+-	UCHAR	*pd = (UCHAR *)pdata;
+-	outb_p (SEL_NONE, port + REG_SEL_FAIL);				// setup data port
+-	zz = 0;
+-	while ( zz < length )
+-		{
+-		outw_p (base, port + REG_ADDRESS);				// setup address
+-
+-		for ( z = 0;  z < 8;  z++ )
+-			{
+-			if ( (zz + z) < length )
+-			*pd++ = inb_p (port + z);	// read data byte
+-			}
+-		zz += 8;
+-		base += 8;
+-		}
+-	}
+-/****************************************************************
+- *	Name:	Psi240i_Detect
+- *
+- *	Description:	Detect and initialize our boards.
+- *
+- *	Parameters:		tpnt - Pointer to SCSI host template structure.
+- *
+- *	Returns:		Number of adapters found.
+- *
+- ****************************************************************/
+-static int Psi240i_Detect (struct scsi_host_template *tpnt)
+-	{
+-	int					board;
+-	int					count = 0;
+-	int					unit;
+-	int					z;
+-	USHORT				port, port_range = 16;
+-	CHIP_CONFIG_N		chipConfig;
+-	CHIP_DEVICE_N		chipDevice[8];
+-	struct Scsi_Host   *pshost;
+-
+-	for ( board = 0;  board < MAXBOARDS;  board++ )					// scan for I/O ports
+-		{
+-		pshost = NULL;
+-		port = portAddr[board];								// get base address to test
+-		if ( !request_region (port, port_range, "psi240i") )
+-			continue;
+-		if ( inb_p (port + REG_FAIL) != CHIP_ID )			// do the first test for likley hood that it is us
+-			goto host_init_failure;
+-		outb_p (SEL_NONE, port + REG_SEL_FAIL);				// setup EEPROM/RAM access
+-		outw (0, port + REG_ADDRESS);						// setup EEPROM address zero
+-		if ( inb_p (port) != 0x55 )							// test 1st byte
+-			goto host_init_failure;									//   nope
+-		if ( inb_p (port + 1) != 0xAA )						// test 2nd byte
+-			goto host_init_failure;								//   nope
+-
+-		// at this point our board is found and can be accessed.  Now we need to initialize
+-		// our informatation and register with the kernel.
+-
+-
+-		ReadChipMemory (&chipConfig, CHIP_CONFIG, sizeof (chipConfig), port);
+-		ReadChipMemory (&chipDevice, CHIP_DEVICE, sizeof (chipDevice), port);
+-		ReadChipMemory (&ChipSetup, CHIP_EEPROM_DATA, sizeof (ChipSetup), port);
+-
+-		if ( !chipConfig.numDrives )						// if no devices on this board
+-			goto host_init_failure;
+-
+-		pshost = scsi_register (tpnt, sizeof(ADAPTER240I));
+-		if(pshost == NULL)
+-			goto host_init_failure;	
+-
+-		PsiHost[chipConfig.irq - 10] = pshost;
+-		pshost->unique_id = port;
+-		pshost->io_port = port;
+-		pshost->n_io_port = 16;  /* Number of bytes of I/O space used */
+-		pshost->irq = chipConfig.irq;
+-
+-		for ( z = 0;  z < 11;  z++ )						// build regester address array
+-			HOSTDATA(pshost)->ports[z] = port + z;
+-		HOSTDATA(pshost)->ports[11] = port + REG_FAIL;
+-		HOSTDATA(pshost)->ports[12] = port + REG_ALT_STAT;
+-		DEB (printk ("\nPorts ="));
+-		DEB (for (z=0;z<13;z++) printk(" %#04X",HOSTDATA(pshost)->ports[z]););
+-
+-		for ( z = 0;  z < chipConfig.numDrives;  ++z )
+-			{
+-			unit = chipDevice[z].channel & 0x0F;
+-			HOSTDATA(pshost)->device[unit].device	 = ChipSetup.setupDevice[unit].device;
+-			HOSTDATA(pshost)->device[unit].byte6	 = (UCHAR)(((unit & 1) << 4) | 0xE0);
+-			HOSTDATA(pshost)->device[unit].spigot	 = (UCHAR)(1 << (unit >> 1));
+-			HOSTDATA(pshost)->device[unit].sectors	 = ChipSetup.setupDevice[unit].sectors;
+-			HOSTDATA(pshost)->device[unit].heads	 = ChipSetup.setupDevice[unit].heads;
+-			HOSTDATA(pshost)->device[unit].cylinders = ChipSetup.setupDevice[unit].cylinders;
+-			HOSTDATA(pshost)->device[unit].blocks	 = ChipSetup.setupDevice[unit].blocks;
+-			DEB (printk ("\nHOSTDATA->device    = %X", HOSTDATA(pshost)->device[unit].device));
+-			DEB (printk ("\n          byte6     = %X", HOSTDATA(pshost)->device[unit].byte6));
+-			DEB (printk ("\n          spigot    = %X", HOSTDATA(pshost)->device[unit].spigot));
+-			DEB (printk ("\n          sectors   = %X", HOSTDATA(pshost)->device[unit].sectors));
+-			DEB (printk ("\n          heads     = %X", HOSTDATA(pshost)->device[unit].heads));
+-			DEB (printk ("\n          cylinders = %X", HOSTDATA(pshost)->device[unit].cylinders));
+-			DEB (printk ("\n          blocks    = %lX", HOSTDATA(pshost)->device[unit].blocks));
+-			}
+-
+-		if ( request_irq (chipConfig.irq, do_Irq_Handler, 0, "psi240i", pshost) == 0 ) 
+-			{
+-			printk("\nPSI-240I EIDE CONTROLLER: at I/O = %x  IRQ = %d\n", port, chipConfig.irq);
+-		        printk("(C) 1997 Perceptive Solutions, Inc. All rights reserved\n\n");
+-		        count++;
+-		        continue;
+-			}
+-
+-		printk ("Unable to allocate IRQ for PSI-240I controller.\n");
+-           
+-host_init_failure:
+-		
+-		release_region (port, port_range);
+-		if (pshost)
+-			scsi_unregister (pshost);
+-
+-		}
+-	return count;
+-	}
+-
+-static int Psi240i_Release(struct Scsi_Host *shost)
+-{
+-	if (shost->irq)
+-		free_irq(shost->irq, NULL);
+-	if (shost->io_port && shost->n_io_port)
+-		release_region(shost->io_port, shost->n_io_port);
+-	scsi_unregister(shost);
+-	return 0;
+-}
+-
+-/****************************************************************
+- *	Name:	Psi240i_BiosParam
+- *
+- *	Description:	Process the biosparam request from the SCSI manager to
+- *					return C/H/S data.
+- *
+- *	Parameters:		disk - Pointer to SCSI disk structure.
+- *					dev	 - Major/minor number from kernel.
+- *					geom - Pointer to integer array to place geometry data.
+- *
+- *	Returns:		zero.
+- *
+- ****************************************************************/
+-static int Psi240i_BiosParam (struct scsi_device *sdev, struct block_device *dev,
+-		sector_t capacity, int geom[])
+-	{
+-	POUR_DEVICE	pdev;
+-
+-	pdev = &(HOSTDATA(sdev->host)->device[sdev_id(sdev)]);
+-
+-	geom[0] = pdev->heads;
+-	geom[1] = pdev->sectors;
+-	geom[2] = pdev->cylinders;
+-	return 0;
+-	}
+-
+-MODULE_LICENSE("GPL");
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "psi240i", 
+-	.name			= "PSI-240I EIDE Disk Controller",
+-	.detect			= Psi240i_Detect,
+-	.release		= Psi240i_Release,
+-	.queuecommand		= Psi240i_QueueCommand,
+-	.bios_param	  	= Psi240i_BiosParam,
+-	.can_queue	  	= 1,
+-	.this_id	  	= -1,
+-	.sg_tablesize	  	= SG_NONE,
+-	.cmd_per_lun	  	= 1, 
+-	.use_clustering		= DISABLE_CLUSTERING,
+-};
+-#include "scsi_module.c"
+diff --git a/drivers/scsi/psi240i.h b/drivers/scsi/psi240i.h
+deleted file mode 100644
+index 21ebb92..0000000
+--- a/drivers/scsi/psi240i.h
++++ /dev/null
+@@ -1,315 +0,0 @@
+-/*+M*************************************************************************
+- * Perceptive Solutions, Inc. PSI-240I device driver proc support for Linux.
+- *
+- * Copyright (c) 1997 Perceptive Solutions, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2, or (at your option)
+- * any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; see the file COPYING.  If not, write to
+- * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+- *
+- *
+- *	File Name:		psi240i.h
+- *
+- *	Description:	Header file for the SCSI driver for the PSI240I
+- *					EIDE interface card.
+- *
+- *-M*************************************************************************/
+-#ifndef _PSI240I_H
+-#define _PSI240I_H
+-
+-#include <linux/types.h>
+-
+-#ifndef	PSI_EIDE_SCSIOP
+-#define	PSI_EIDE_SCSIOP	1
+-
+-/************************************************/
+-/*		Some defines that we like 				*/
+-/************************************************/
+-#define	CHAR		char
+-#define	UCHAR		unsigned char
+-#define	SHORT		short
+-#define	USHORT		unsigned short
+-#define	BOOL		unsigned short
+-#define	LONG		long
+-#define	ULONG		unsigned long
+-#define	VOID		void
+-
+-/************************************************/
+-/*		Timeout konstants		 				*/
+-/************************************************/
+-#define	TIMEOUT_READY				10		// 100 mSec
+-#define	TIMEOUT_DRQ					40		// 400 mSec
+-
+-/************************************************/
+-/*		Misc. macros			 				*/
+-/************************************************/
+-#define ANY2SCSI(up, p)					\
+-((UCHAR *)up)[0] = (((ULONG)(p)) >> 8);	\
+-((UCHAR *)up)[1] = ((ULONG)(p));
+-
+-#define SCSI2LONG(up)					\
+-( (((long)*(((UCHAR *)up))) << 16)		\
+-+ (((long)(((UCHAR *)up)[1])) << 8)		\
+-+ ((long)(((UCHAR *)up)[2])) )
+-
+-#define XANY2SCSI(up, p)				\
+-((UCHAR *)up)[0] = ((long)(p)) >> 24;	\
+-((UCHAR *)up)[1] = ((long)(p)) >> 16;	\
+-((UCHAR *)up)[2] = ((long)(p)) >> 8;	\
+-((UCHAR *)up)[3] = ((long)(p));
+-
+-#define XSCSI2LONG(up)					\
+-( (((long)(((UCHAR *)up)[0])) << 24)	\
+-+ (((long)(((UCHAR *)up)[1])) << 16)	\
+-+ (((long)(((UCHAR *)up)[2])) <<  8)	\
+-+ ((long)(((UCHAR *)up)[3])) )
+-
+-/************************************************/
+-/*		SCSI CDB operation codes 				*/
+-/************************************************/
+-#define SCSIOP_TEST_UNIT_READY		0x00
+-#define SCSIOP_REZERO_UNIT			0x01
+-#define SCSIOP_REWIND				0x01
+-#define SCSIOP_REQUEST_BLOCK_ADDR	0x02
+-#define SCSIOP_REQUEST_SENSE		0x03
+-#define SCSIOP_FORMAT_UNIT			0x04
+-#define SCSIOP_READ_BLOCK_LIMITS	0x05
+-#define SCSIOP_REASSIGN_BLOCKS		0x07
+-#define SCSIOP_READ6				0x08
+-#define SCSIOP_RECEIVE				0x08
+-#define SCSIOP_WRITE6				0x0A
+-#define SCSIOP_PRINT				0x0A
+-#define SCSIOP_SEND					0x0A
+-#define SCSIOP_SEEK6				0x0B
+-#define SCSIOP_TRACK_SELECT			0x0B
+-#define SCSIOP_SLEW_PRINT			0x0B
+-#define SCSIOP_SEEK_BLOCK			0x0C
+-#define SCSIOP_PARTITION			0x0D
+-#define SCSIOP_READ_REVERSE			0x0F
+-#define SCSIOP_WRITE_FILEMARKS		0x10
+-#define SCSIOP_FLUSH_BUFFER			0x10
+-#define SCSIOP_SPACE				0x11
+-#define SCSIOP_INQUIRY				0x12
+-#define SCSIOP_VERIFY6				0x13
+-#define SCSIOP_RECOVER_BUF_DATA		0x14
+-#define SCSIOP_MODE_SELECT			0x15
+-#define SCSIOP_RESERVE_UNIT			0x16
+-#define SCSIOP_RELEASE_UNIT			0x17
+-#define SCSIOP_COPY					0x18
+-#define SCSIOP_ERASE				0x19
+-#define SCSIOP_MODE_SENSE			0x1A
+-#define SCSIOP_START_STOP_UNIT		0x1B
+-#define SCSIOP_STOP_PRINT			0x1B
+-#define SCSIOP_LOAD_UNLOAD			0x1B
+-#define SCSIOP_RECEIVE_DIAGNOSTIC	0x1C
+-#define SCSIOP_SEND_DIAGNOSTIC		0x1D
+-#define SCSIOP_MEDIUM_REMOVAL		0x1E
+-#define SCSIOP_READ_CAPACITY		0x25
+-#define SCSIOP_READ					0x28
+-#define SCSIOP_WRITE				0x2A
+-#define SCSIOP_SEEK					0x2B
+-#define SCSIOP_LOCATE				0x2B
+-#define SCSIOP_WRITE_VERIFY			0x2E
+-#define SCSIOP_VERIFY				0x2F
+-#define SCSIOP_SEARCH_DATA_HIGH		0x30
+-#define SCSIOP_SEARCH_DATA_EQUAL	0x31
+-#define SCSIOP_SEARCH_DATA_LOW		0x32
+-#define SCSIOP_SET_LIMITS			0x33
+-#define SCSIOP_READ_POSITION		0x34
+-#define SCSIOP_SYNCHRONIZE_CACHE	0x35
+-#define SCSIOP_COMPARE				0x39
+-#define SCSIOP_COPY_COMPARE			0x3A
+-#define SCSIOP_WRITE_DATA_BUFF		0x3B
+-#define SCSIOP_READ_DATA_BUFF		0x3C
+-#define SCSIOP_CHANGE_DEFINITION	0x40
+-#define SCSIOP_READ_SUB_CHANNEL		0x42
+-#define SCSIOP_READ_TOC				0x43
+-#define SCSIOP_READ_HEADER			0x44
+-#define SCSIOP_PLAY_AUDIO			0x45
+-#define SCSIOP_PLAY_AUDIO_MSF		0x47
+-#define SCSIOP_PLAY_TRACK_INDEX		0x48
+-#define SCSIOP_PLAY_TRACK_RELATIVE	0x49
+-#define SCSIOP_PAUSE_RESUME			0x4B
+-#define SCSIOP_LOG_SELECT			0x4C
+-#define SCSIOP_LOG_SENSE			0x4D
+-#define SCSIOP_MODE_SELECT10		0x55
+-#define SCSIOP_MODE_SENSE10			0x5A
+-#define SCSIOP_LOAD_UNLOAD_SLOT		0xA6
+-#define SCSIOP_MECHANISM_STATUS		0xBD
+-#define SCSIOP_READ_CD				0xBE
+-
+-// IDE command definitions
+-#define IDE_COMMAND_ATAPI_RESET		0x08
+-#define IDE_COMMAND_READ			0x20
+-#define IDE_COMMAND_WRITE			0x30
+-#define IDE_COMMAND_RECALIBRATE		0x10
+-#define IDE_COMMAND_SEEK			0x70
+-#define IDE_COMMAND_SET_PARAMETERS	0x91
+-#define IDE_COMMAND_VERIFY			0x40
+-#define IDE_COMMAND_ATAPI_PACKET	0xA0
+-#define IDE_COMMAND_ATAPI_IDENTIFY	0xA1
+-#define	IDE_CMD_READ_MULTIPLE		0xC4
+-#define	IDE_CMD_WRITE_MULTIPLE		0xC5
+-#define	IDE_CMD_SET_MULTIPLE		0xC6
+-#define IDE_COMMAND_WRITE_DMA		0xCA
+-#define IDE_COMMAND_READ_DMA		0xC8
+-#define IDE_COMMAND_IDENTIFY		0xEC
+-
+-// IDE status definitions
+-#define IDE_STATUS_ERROR			0x01
+-#define IDE_STATUS_INDEX			0x02
+-#define IDE_STATUS_CORRECTED_ERROR	0x04
+-#define IDE_STATUS_DRQ				0x08
+-#define IDE_STATUS_DSC				0x10
+-#define	IDE_STATUS_WRITE_FAULT		0x20
+-#define IDE_STATUS_DRDY				0x40
+-#define IDE_STATUS_BUSY				0x80
+-
+-// IDE error definitions
+-#define	IDE_ERROR_AMNF				0x01
+-#define	IDE_ERROR_TKONF				0x02
+-#define	IDE_ERROR_ABRT				0x04
+-#define	IDE_ERROR_MCR				0x08
+-#define	IDE_ERROR_IDFN				0x10
+-#define	IDE_ERROR_MC				0x20
+-#define	IDE_ERROR_UNC				0x40
+-#define	IDE_ERROR_BBK				0x80
+-
+-//	IDE interface structure
+-typedef struct _IDE_STRUCT
+-	{
+-	union
+-		{
+-		UCHAR	ide[9];
+-		struct
+-			{
+-			USHORT	data;
+-			UCHAR	sectors;
+-			UCHAR	lba[4];
+-			UCHAR	cmd;
+-			UCHAR	spigot;
+-			}	ides;
+-		} ide;
+-	}	IDE_STRUCT;
+-
+-// SCSI read capacity structure
+-typedef	struct _READ_CAPACITY_DATA
+-	{
+-	ULONG blks;				/* total blocks (converted to little endian) */
+-	ULONG blksiz;			/* size of each (converted to little endian) */
+-	}	READ_CAPACITY_DATA, *PREAD_CAPACITY_DATA;
+-
+-// SCSI inquiry data
+-#ifndef HOSTS_C
+-
+-typedef struct _INQUIRYDATA
+-	{
+-	UCHAR DeviceType			:5;
+-	UCHAR DeviceTypeQualifier	:3;
+-	UCHAR DeviceTypeModifier	:7;
+-	UCHAR RemovableMedia		:1;
+-    UCHAR Versions;
+-    UCHAR ResponseDataFormat;
+-    UCHAR AdditionalLength;
+-    UCHAR Reserved[2];
+-	UCHAR SoftReset				:1;
+-	UCHAR CommandQueue			:1;
+-	UCHAR Reserved2				:1;
+-	UCHAR LinkedCommands		:1;
+-	UCHAR Synchronous			:1;
+-	UCHAR Wide16Bit				:1;
+-	UCHAR Wide32Bit				:1;
+-	UCHAR RelativeAddressing	:1;
+-    UCHAR VendorId[8];
+-    UCHAR ProductId[16];
+-    UCHAR ProductRevisionLevel[4];
+-    UCHAR VendorSpecific[20];
+-    UCHAR Reserved3[40];
+-	}	INQUIRYDATA, *PINQUIRYDATA;
+-#endif
+-
+-// IDE IDENTIFY data
+-typedef struct _IDENTIFY_DATA
+-	{
+-    USHORT GeneralConfiguration;            // 00
+-    USHORT NumberOfCylinders;               // 02
+-    USHORT Reserved1;                       // 04
+-    USHORT NumberOfHeads;                   // 06
+-    USHORT UnformattedBytesPerTrack;        // 08
+-    USHORT UnformattedBytesPerSector;       // 0A
+-    USHORT SectorsPerTrack;                 // 0C
+-    USHORT VendorUnique1[3];                // 0E
+-    USHORT SerialNumber[10];                // 14
+-    USHORT BufferType;                      // 28
+-    USHORT BufferSectorSize;                // 2A
+-    USHORT NumberOfEccBytes;                // 2C
+-    USHORT FirmwareRevision[4];             // 2E
+-    USHORT ModelNumber[20];                 // 36
+-    UCHAR  MaximumBlockTransfer;            // 5E
+-    UCHAR  VendorUnique2;                   // 5F
+-    USHORT DoubleWordIo;                    // 60
+-    USHORT Capabilities;                    // 62
+-    USHORT Reserved2;                       // 64
+-    UCHAR  VendorUnique3;                   // 66
+-    UCHAR  PioCycleTimingMode;              // 67
+-    UCHAR  VendorUnique4;                   // 68
+-    UCHAR  DmaCycleTimingMode;              // 69
+-    USHORT TranslationFieldsValid:1;        // 6A
+-    USHORT Reserved3:15;
+-    USHORT NumberOfCurrentCylinders;        // 6C
+-    USHORT NumberOfCurrentHeads;            // 6E
+-    USHORT CurrentSectorsPerTrack;          // 70
+-    ULONG  CurrentSectorCapacity;           // 72
+-    USHORT Reserved4[197];                  // 76
+-	}	IDENTIFY_DATA, *PIDENTIFY_DATA;
+-
+-// Identify data without the Reserved4.
+-typedef struct _IDENTIFY_DATA2 {
+-    USHORT GeneralConfiguration;            // 00
+-    USHORT NumberOfCylinders;               // 02
+-    USHORT Reserved1;                       // 04
+-    USHORT NumberOfHeads;                   // 06
+-    USHORT UnformattedBytesPerTrack;        // 08
+-    USHORT UnformattedBytesPerSector;       // 0A
+-    USHORT SectorsPerTrack;                 // 0C
+-    USHORT VendorUnique1[3];                // 0E
+-    USHORT SerialNumber[10];                // 14
+-    USHORT BufferType;                      // 28
+-    USHORT BufferSectorSize;                // 2A
+-    USHORT NumberOfEccBytes;                // 2C
+-    USHORT FirmwareRevision[4];             // 2E
+-    USHORT ModelNumber[20];                 // 36
+-    UCHAR  MaximumBlockTransfer;            // 5E
+-    UCHAR  VendorUnique2;                   // 5F
+-    USHORT DoubleWordIo;                    // 60
+-    USHORT Capabilities;                    // 62
+-    USHORT Reserved2;                       // 64
+-    UCHAR  VendorUnique3;                   // 66
+-    UCHAR  PioCycleTimingMode;              // 67
+-    UCHAR  VendorUnique4;                   // 68
+-    UCHAR  DmaCycleTimingMode;              // 69
+-	USHORT TranslationFieldsValid:1;     	// 6A
+-    USHORT Reserved3:15;
+-    USHORT NumberOfCurrentCylinders;        // 6C
+-    USHORT NumberOfCurrentHeads;            // 6E
+-    USHORT CurrentSectorsPerTrack;          // 70
+-    ULONG  CurrentSectorCapacity;           // 72
+-	}	IDENTIFY_DATA2, *PIDENTIFY_DATA2;
+-
+-#endif	// PSI_EIDE_SCSIOP
+-
+-// function prototypes
+-int Psi240i_Command(struct scsi_cmnd *SCpnt);
+-int Psi240i_Abort(struct scsi_cmnd *SCpnt);
+-int Psi240i_Reset(struct scsi_cmnd *SCpnt, unsigned int flags);
+-#endif
+diff --git a/drivers/scsi/psi_chip.h b/drivers/scsi/psi_chip.h
+deleted file mode 100644
+index 224cf8f..0000000
+--- a/drivers/scsi/psi_chip.h
++++ /dev/null
+@@ -1,195 +0,0 @@
+-/*+M*************************************************************************
+- * Perceptive Solutions, Inc. PSI-240I device driver proc support for Linux.
+- *
+- * Copyright (c) 1997 Perceptive Solutions, Inc.
+- *
+- * This program is free software; you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation; either version 2, or (at your option)
+- * any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program; see the file COPYING.  If not, write to
+- * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
+- *
+- *
+- *	File Name:	psi_chip.h
+- *
+- *	Description:	This file contains the interface defines and
+- *					error codes.
+- *
+- *-M*************************************************************************/
+-#ifndef PSI_CHIP
+-#define PSI_CHIP
+-
+-/************************************************/
+-/*		Misc konstants							*/
+-/************************************************/
+-#define	CHIP_MAXDRIVES			8
+-
+-/************************************************/
+-/*		Chip I/O addresses						*/
+-/************************************************/
+-#define	CHIP_ADRS_0				0x0130
+-#define	CHIP_ADRS_1				0x0150
+-#define	CHIP_ADRS_2				0x0190
+-#define	CHIP_ADRS_3				0x0210
+-#define	CHIP_ADRS_4				0x0230
+-#define	CHIP_ADRS_5				0x0250
+-
+-/************************************************/
+-/*		EEPROM locations		*/
+-/************************************************/
+-#define	CHIP_EEPROM_BIOS		0x0000		// BIOS base address
+-#define	CHIP_EEPROM_DATA		0x2000	   	// SETUP data base address
+-#define	CHIP_EEPROM_FACTORY		0x2400	   	// FACTORY data base address
+-#define	CHIP_EEPROM_SETUP		0x3000	   	// SETUP PROGRAM base address
+-
+-#define	CHIP_EEPROM_SIZE		32768U	   	// size of the entire EEPROM
+-#define	CHIP_EEPROM_BIOS_SIZE	8192	   	// size of the BIOS in bytes
+-#define	CHIP_EEPROM_DATA_SIZE	4096	   	// size of factory, setup, log data block in bytes
+-#define	CHIP_EEPROM_SETUP_SIZE	20480U	   	// size of the setup program in bytes
+-
+-/************************************************/
+-/*		Chip Interrupts							*/
+-/************************************************/
+-#define	CHIP_IRQ_10				0x72
+-#define	CHIP_IRQ_11				0x73
+-#define	CHIP_IRQ_12				0x74
+-
+-/************************************************/
+-/*		Chip Setup addresses		*/
+-/************************************************/
+-#define	CHIP_SETUP_BASE			0x0000C000L
+-
+-/************************************************/
+-/*		Chip Register address offsets	*/
+-/************************************************/
+-#define	REG_DATA				0x00
+-#define	REG_ERROR				0x01
+-#define	REG_SECTOR_COUNT		0x02
+-#define	REG_LBA_0				0x03
+-#define	REG_LBA_8				0x04
+-#define	REG_LBA_16				0x05
+-#define	REG_LBA_24				0x06
+-#define	REG_STAT_CMD			0x07
+-#define	REG_SEL_FAIL			0x08
+-#define	REG_IRQ_STATUS			0x09
+-#define	REG_ADDRESS				0x0A
+-#define	REG_FAIL				0x0C
+-#define	REG_ALT_STAT		   	0x0E
+-#define	REG_DRIVE_ADRS			0x0F
+-
+-/************************************************/
+-/*		Chip RAM locations		*/
+-/************************************************/
+-#define	CHIP_DEVICE				0x8000
+-#define	CHIP_DEVICE_0			0x8000
+-#define CHIP_DEVICE_1			0x8008
+-#define	CHIP_DEVICE_2			0x8010
+-#define	CHIP_DEVICE_3			0x8018
+-#define	CHIP_DEVICE_4			0x8020
+-#define	CHIP_DEVICE_5			0x8028
+-#define	CHIP_DEVICE_6			0x8030
+-#define	CHIP_DEVICE_7			0x8038
+-typedef struct
+-	{
+-	UCHAR	channel;		// channel of this device (0-8).
+-	UCHAR	spt;			// Sectors Per Track.
+-	ULONG	spc;			// Sectors Per Cylinder.
+-	}	CHIP_DEVICE_N;
+-
+-#define	CHIP_CONFIG				0x8100		// address of boards configuration.
+-typedef struct
+-	{
+-	UCHAR		irq;			// interrupt request channel number
+-	UCHAR		numDrives;		// Number of accessible drives
+-	UCHAR		fastFormat;	 	// Boolean for fast format enable
+-	}	CHIP_CONFIG_N;
+-
+-#define	CHIP_MAP				0x8108 		// eight byte device type map.
+-
+-
+-#define	CHIP_RAID				0x8120 		// array of RAID signature structures and LBA
+-#define	CHIP_RAID_1				0x8120
+-#define CHIP_RAID_2				0x8130
+-#define	CHIP_RAID_3				0x8140
+-#define	CHIP_RAID_4				0x8150
+-
+-/************************************************/
+-/*		Chip Register Masks		*/
+-/************************************************/
+-#define	CHIP_ID					0x7B
+-#define	SEL_RAM					0x8000
+-#define	MASK_FAIL				0x80
+-
+-/************************************************/
+-/*		Chip cable select bits		*/
+-/************************************************/
+-#define	SECTORSXFER				8
+-
+-/************************************************/
+-/*		Chip cable select bits		*/
+-/************************************************/
+-#define	SEL_NONE				0x00
+-#define	SEL_1					0x01
+-#define	SEL_2					0x02
+-#define	SEL_3					0x04
+-#define	SEL_4					0x08
+-
+-/************************************************/
+-/*		Programmable Interrupt Controller*/
+-/************************************************/
+-#define	PIC1					0x20		// first 8259 base port address
+-#define	PIC2					0xA0		// second 8259 base port address
+-#define	INT_OCW1				1			// Operation Control Word 1: IRQ mask
+-#define	EOI						0x20		// non-specific end-of-interrupt
+-
+-/************************************************/
+-/*		Device/Geometry controls				*/
+-/************************************************/
+-#define GEOMETRY_NONE		 	0x0			// No device
+-#define GEOMETRY_AUTO			0x1			// Geometry set automatically
+-#define GEOMETRY_USER		 	0x2			// User supplied geometry
+-
+-#define	DEVICE_NONE				0x0			// No device present
+-#define	DEVICE_INACTIVE			0x1			// device present but not registered active
+-#define	DEVICE_ATAPI			0x2			// ATAPI device (CD_ROM, Tape, Etc...)
+-#define	DEVICE_DASD_NONLBA		0x3			// Non LBA incompatible device
+-#define	DEVICE_DASD_LBA			0x4			// LBA compatible device
+-
+-/************************************************/
+-/*		Setup Structure Definitions	*/
+-/************************************************/
+-typedef struct							// device setup parameters
+-	{
+-	UCHAR			geometryControl;	// geometry control flags
+-	UCHAR		   	device;				// device code
+-	USHORT			sectors;			// number of sectors per track
+-	USHORT			heads;				// number of heads
+-	USHORT			cylinders;			// number of cylinders for this device
+-	ULONG			blocks;				// number of blocks on device
+-	USHORT			spare1;
+-	USHORT			spare2;
+-	} SETUP_DEVICE, *PSETUP_DEVICE;
+-
+-typedef struct		// master setup structure
+-	{
+-	USHORT 			startupDelay;
+-	USHORT 			promptBIOS;
+-	USHORT 			fastFormat;
+-	USHORT			spare2;
+-	USHORT			spare3;
+-	USHORT			spare4;
+-	USHORT			spare5;
+-	USHORT			spare6;
+-	SETUP_DEVICE	setupDevice[8];
+-	}	SETUP, *PSETUP;
+-
+-#endif
+-
 -- 
 1.5.3.1
 
