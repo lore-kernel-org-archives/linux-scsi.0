@@ -1,54 +1,52 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 32/32] isd200.c - use of scsi_data_buffer
-Date: Wed, 17 Oct 2007 20:32:03 +0200
-Message-ID: <47165523.3090903@panasas.com>
-References: <47164306.6090702@panasas.com>
+From: Willy Tarreau <w@1wt.eu>
+Subject: Re: [Bug 3680] sym53c8xx_2 SMP deadlock on driver load
+Date: Wed, 17 Oct 2007 20:46:48 +0200
+Message-ID: <20071017184648.GB4533@1wt.eu>
+References: <20071017013045.A19ED108036@picon.linux-foundation.org> <471621D2.5080806@cybernetics.com> <20071017162747.GA32174@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:27758 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757302AbXJQSdJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 14:33:09 -0400
-In-Reply-To: <47164306.6090702@panasas.com>
+Received: from 1wt.eu ([62.212.114.60]:3180 "EHLO 1wt.eu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756751AbXJQSwA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Oct 2007 14:52:00 -0400
+Content-Disposition: inline
+In-Reply-To: <20071017162747.GA32174@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Wilcox <matthew@wil.cx>, Matthew Dharm <mdharm-scsi@one-e>
-Cc: Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Tony Battersby <tonyb@cybernetics.com>, linux-scsi@vger.kernel.org, James.Bottomley@HansenPartnership.com, protasnb@gmail.com, bugme-daemon@bugzilla.kernel.org
 
+On Wed, Oct 17, 2007 at 10:27:47AM -0600, Matthew Wilcox wrote:
+> On Wed, Oct 17, 2007 at 10:53:06AM -0400, Tony Battersby wrote:
+> > After looking at it carefully, this is true of pci_map_mem, but not
+> > pci_unmap_mem.  pci_unmap_mem can be called from both ->detect and
+> > ->release.  io_request_lock is held in ->detect but not in ->release.
+> > So, your patch locks up the system on module unload.
+> 
+> My mistake.  I should have checked the iorl was held over ->release too.
+> 
+> This is a pretty ugly patch, but I think the three alternatives are
+> worse:
+> 
+>  - Drop the iorl at the beginning of ->detect and reacquire it at exit.
+>    We don't know what else the iorl might be protecting.  Probably
+>    nothing, but I don't want to audit it.
+>  - Convert sym2 back to old error handling so the midlayer doesn't
+>    acquire the iorl for us in ->detect.
+>  - Acquire the iorl in ->release.  We might deadlock on something.
+> 
+> So, sure, apply this patch.
 
-  - This driver still bags on scsi_cmnd IO members, so need changing
+Matthew,
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/usb/storage/isd200.c |    8 ++++----
- 1 files changed, 4 insertions(+), 4 deletions(-)
+Sincere thanks for your help and review. I'll apply this patch in
+2.4.36-pre2 and in next 2.4.35.X. An ugly fix is clearly better than
+a massive change at this stage.
 
-diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-index a624b4e..15e844d 100644
---- a/drivers/usb/storage/isd200.c
-+++ b/drivers/usb/storage/isd200.c
-@@ -415,14 +415,14 @@ static void isd200_set_srb(struct isd200_info *info,
- 		sg_init_one(&info->sg, buff, bufflen);
- 
- 	srb->sc_data_direction = dir;
--	srb->request_buffer = buff ? &info->sg : NULL;
--	srb->request_bufflen = bufflen;
--	srb->use_sg = buff ? 1 : 0;
-+	srb->sdb.sglist = buff ? &info->sg : NULL;
-+	srb->sdb.length = bufflen;
-+	srb->sdb.sg_count = buff ? 1 : 0;
- }
- 
- static void isd200_srb_set_bufflen(struct scsi_cmnd *srb, unsigned bufflen)
- {
--	srb->request_bufflen = bufflen;
-+	srb->sdb.length = bufflen;
- }
- 
- 
--- 
-1.5.3.1
+Natalie, if you want, you can close the bug right now, I've queued the
+patch for both branches.
 
+Best regards,
+Willy
 
