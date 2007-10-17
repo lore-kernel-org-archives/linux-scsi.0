@@ -1,27 +1,34 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: SCSI target drivers?
-Date: Wed, 17 Oct 2007 10:27:54 -0400
-Message-ID: <47161BEA.704@garzik.org>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [PATCH] SPARC64: fix iommu sg chaining
+Date: Wed, 17 Oct 2007 16:36:18 +0200
+Message-ID: <20071017143618.GR5043@kernel.dk>
+References: <20071017203758E.fujita.tomonori@lab.ntt.co.jp> <20071017114117.GA5043@kernel.dk> <20071017205717Q.fujita.tomonori@lab.ntt.co.jp> <20071017210535K.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46056 "EHLO mail.dvmed.net"
+Received: from brick.kernel.dk ([87.55.233.238]:26238 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751641AbXJQO17 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Oct 2007 10:27:59 -0400
+	id S1754936AbXJQOgs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Oct 2007 10:36:48 -0400
+Content-Disposition: inline
+In-Reply-To: <20071017210535K.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: davem@davemloft.net, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tomof@acm.org
 
-Where can one find patches/code that illustrates target mode support?
+On Wed, Oct 17 2007, FUJITA Tomonori wrote:
+> > I think that it would be better that IOMMU code handles uninitialized
+> > sg entries (sg list can be pretty large). Execpt for sparc64, the
+> > IOMMU code can do, I think.
+> 
+> And I think that with this patch, sparc64 can handle it:
+> 
+> http://marc.info/?l=linux-scsi&m=119261920425120&w=2
 
-Marvell 6440 ("mvsas") supports target mode for both SAS and SATA, and I 
-would like to prepare the driver as best I can for target mode.
+I would tend to agree. Get davem to ack that patch, and we can move it
+forward.
 
-Thanks,
-
-	Jeff
-
+-- 
+Jens Axboe
 
