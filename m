@@ -1,63 +1,77 @@
-From: david@lang.hm
-Subject: Re: What still uses the block layer?
-Date: Tue, 16 Oct 2007 23:07:33 -0700 (PDT)
-Message-ID: <Pine.LNX.4.64.0710162302090.1538@asgard.lang.hm>
-References: <200710112011.22000.rob@landley.net> <200710141845.44750.rob@landley.net>
- <20071015014503.GF9715@thunk.org>            <200710150304.00901.rob@landley.net>
- <25897.1192599264@turing-police.cc.vt.edu>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH] cciss: fix scsi_dma_map failure handiling
+Date: Wed, 17 Oct 2007 15:36:56 +0900
+Message-ID: <20071017153656R.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from dsl081-033-126.lax1.dsl.speakeasy.net ([64.81.33.126]:44330
-	"EHLO bifrost.lang.hm" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750741AbXJQGEQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 02:04:16 -0400
-In-Reply-To: <25897.1192599264@turing-police.cc.vt.edu>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:56096 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752613AbXJQGhG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 02:37:06 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Valdis.Kletnieks@vt.edu
-Cc: Rob Landley <rob@landley.net>, Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
+To: James.Bottomley@SteelEye.com, Mike.Miller@hp.com
+Cc: linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Wed, 17 Oct 2007, Valdis.Kletnieks@vt.edu wrote:
+This fixes the scsi_dma_map failure path, which could lead to data
+corruption.
 
-> On Mon, 15 Oct 2007 03:04:00 CDT, Rob Landley said:
->> I note that the eth0 and eth1 names are dynamically assigned on a first come
->> first serve basis (like scsi).  This never causes me a problem because the
->> driver loading order is constant, and once you figure out that eth0 is
->> gigabit and eth1 is the 80211g it _stays_ that way across reboots, reliably.
->> Yeah, it's a heuristic.  Hands up everybody relying on such a heuristic in
->> the real world.
->
-> I've gotten burned by that heuristic enough times to not rely on it.  My last
-> laptop had an ethernet on the motherboard, a *separate* ethernet in the docking
-> station, an ethernet on a multifunction pcmcia card (I usually just used the
-> modem side), and a wireless that looked like an ethernet - so it was possible
-> for a given interface to be eth1 (if no dock and no pcmcia card) or eth3 (if
-> both were present).  And that's on a laptop from almost 5 years ago.
->
-> And then there's the recent Sun and Dell 1U rack-mounts that have 4 ethernets
-> on the motherboard, and they *never* seem to assign in a 0,1,2,3 order that
-> matches the 0 1 2 3 printed above the 4 RJ45's ;)
->
-> So I have for years been a proponent of 'ethN is nailed by MAC address' :)
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/block/cciss_scsi.c |   17 +++++++++++++----
+ 1 files changed, 13 insertions(+), 4 deletions(-)
 
-on the other hand, I have two systems in my lab with identical hardware, 
-loaded with the same OS image, but one calls the interfaces eth0, eth1, 
-eth2 while the other calls them eth12, eth13, eth14 becouse it had three 
-quad cards installed in it for a few days several months ago.
+diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
+index 4aca7dd..9d9aa53 100644
+--- a/drivers/block/cciss_scsi.c
++++ b/drivers/block/cciss_scsi.c
+@@ -1185,7 +1185,7 @@ cciss_scsi_proc_info(struct Scsi_Host *sh,
+    dma mapping  and fills in the scatter gather entries of the 
+    cciss command, cp. */
+ 
+-static void
++static int
+ cciss_scatter_gather(struct pci_dev *pdev, 
+ 		CommandList_struct *cp,	
+ 		struct scsi_cmnd *cmd)
+@@ -1198,7 +1198,9 @@ cciss_scatter_gather(struct pci_dev *pdev,
+ 	BUG_ON(scsi_sg_count(cmd) > MAXSGENTRIES);
+ 
+ 	use_sg = scsi_dma_map(cmd);
+-	if (use_sg) {	/* not too many addrs? */
++	if (use_sg < 0)
++		return use_sg;
++	else if (use_sg) {	/* not too many addrs? */
+ 		scsi_for_each_sg(cmd, sg, use_sg, i) {
+ 			addr64 = (__u64) sg_dma_address(sg);
+ 			len  = sg_dma_len(sg);
+@@ -1213,7 +1215,7 @@ cciss_scatter_gather(struct pci_dev *pdev,
+ 
+ 	cp->Header.SGList = (__u8) use_sg;   /* no. SGs contig in this cmd */
+ 	cp->Header.SGTotal = (__u16) use_sg; /* total sgs in this cmd list */
+-	return;
++	return 0;
+ }
+ 
+ 
+@@ -1311,7 +1313,14 @@ cciss_scsi_queue_command (struct scsi_cmnd *cmd, void (* done)(struct scsi_cmnd
+ 		break;
+ 	}
+ 
+-	cciss_scatter_gather((*c)->pdev, cp, cmd); // Fill the SG list
++	rc = cciss_scatter_gather((*c)->pdev, cp, cmd); // Fill the SG list
++	if (rc < 0) {
++		spin_lock_irqsave(CCISS_LOCK(ctlr), flags);
++		scsi_cmd_free(*c, cp);
++		spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
++
++		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 
+ 	/* Put the request on the tail of the request queue */
+ 
+-- 
+1.5.2.4
 
-also think what happens to a system if you replace a failed NIC with an 
-card identical except the MAC addresses. instead of everything just 
-working as before, you now have new ethX devices and are missing the old 
-ethX devices.
-
-both ways of doing things can yield nonsense results in cases where the 
-other one gives perfectly useable results.
-
-nobody is arguing that the ability to nail things down by MAC address 
-(or drives by UUID) should be removed, we're just arguing that the option 
-to get useable consistant names from hardware that is consistant is being 
-removed and that it shouldn't be, it has it's place just like the 'best 
-effort' naming.
-
-David Lang
