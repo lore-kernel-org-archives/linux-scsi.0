@@ -1,46 +1,42 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] swiotlb: fix map_sg failure handling
-Date: Wed, 17 Oct 2007 10:05:34 +0200
-Message-ID: <20071017080534.GB5043@kernel.dk>
-References: <20071017170329B.fujita.tomonori@lab.ntt.co.jp>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] SPARC64: fix iommu sg chaining
+Date: Wed, 17 Oct 2007 01:33:25 -0700 (PDT)
+Message-ID: <20071017.013325.74747630.davem@davemloft.net>
+References: <20071017140747Q.fujita.tomonori@lab.ntt.co.jp>
+	<20071017072149.GC5041@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:12635 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753295AbXJQIGE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Oct 2007 04:06:04 -0400
-Content-Disposition: inline
-In-Reply-To: <20071017170329B.fujita.tomonori@lab.ntt.co.jp>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:33066
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752450AbXJQIdO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 17 Oct 2007 04:33:14 -0400
+In-Reply-To: <20071017072149.GC5041@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, tomof@acm.org
+To: jens.axboe@oracle.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Oct 17 2007, FUJITA Tomonori wrote:
-> sg list elements might not be continuous.
+From: Jens Axboe <jens.axboe@oracle.com>
+Date: Wed, 17 Oct 2007 09:21:49 +0200
+
+> On Wed, Oct 17 2007, FUJITA Tomonori wrote:
+> > Commit 2c941a204070ab32d92d40318a3196a7fb994c00 looks incomplete. The
+> > helper functions like prepare_sg() need to support sg chaining too.
 > 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  lib/swiotlb.c |    2 +-
->  1 files changed, 1 insertions(+), 1 deletions(-)
-> 
-> diff --git a/lib/swiotlb.c b/lib/swiotlb.c
-> index c419ecf..752fd95 100644
-> --- a/lib/swiotlb.c
-> +++ b/lib/swiotlb.c
-> @@ -696,7 +696,7 @@ swiotlb_map_sg(struct device *hwdev, struct scatterlist *sgl, int nelems,
->  				/* Don't panic here, we expect map_sg users
->  				   to do proper error handling. */
->  				swiotlb_full(hwdev, sg->length, dir, 0);
-> -				swiotlb_unmap_sg(hwdev, sg - i, i, dir);
-> +				swiotlb_unmap_sg(hwdev, sgl, i, dir);
->  				sgl[0].dma_length = 0;
->  				return 0;
->  			}
+> Thanks Tomo, applied. I'll get this pushed out later today with any
+> other sg chaining fallout we may see.
 
-Auch indeed, no math on sg entries! Applied.
+I'm still debugging crashes on sparc64 early on boot even with this
+latest fix applied.
 
--- 
-Jens Axboe
+I think there are still problems in functions like fill_sg().
 
+There is a lot of confusion involving loop termination.  sg_next()
+gives you a NULL after the last entry, but tests have been changed
+to compare against sg_last() which is likely not what we want for
+those checks.
+
+I'll try to figure it out, just a heads up...
