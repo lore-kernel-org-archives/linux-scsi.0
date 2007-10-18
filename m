@@ -1,80 +1,40 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Thu, 18 Oct 2007 06:57:35 -0400
-Message-ID: <1192705055.13229.3.camel@localhost.localdomain>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
-	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [PATCH 0/3] debloat aic7xxx and aic79xx drivers
+Date: Thu, 18 Oct 2007 12:19:34 +0100
+Message-ID: <200710181219.34951.vda.linux@googlemail.com>
+References: <200710141558.27156.vda.linux@googlemail.com> <47125633.3030404@googlemail.com> <471370C4.8000803@googlemail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:60225 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1762394AbXJRK5h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 06:57:37 -0400
-In-Reply-To: <4716B786.80804@garzik.org>
+Received: from ug-out-1314.google.com ([66.249.92.172]:1722 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755417AbXJRLUR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 07:20:17 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so407720ugc
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Oct 2007 04:20:15 -0700 (PDT)
+In-Reply-To: <471370C4.8000803@googlemail.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Robert Hancock <hancockr@shaw.ca>, Mathieu Fluhr <mfluhr@nero.com>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@steeleye.com>
+Cc: Gabriel C <nix.or.die@googlemail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 2007-10-17 at 21:31 -0400, Jeff Garzik wrote:
-> Robert Hancock wrote:
-> > This doesn't seem a very reliable way to identify an IDE device, as all
-> > that 0 means is that the device does not claim conformance to any
-> > standard. I would think it would be legitimate for an IDE device to put
-> > a value like 5 in there as well, if it complies with SPC-4..
-> 
-> Via the this-doesnt-really-matter-but-it-should-be-noted department:
-> 
-> According to the latest on t10.org, MMC retroactively permitted SCSI 
-> version to be zero, for MMC-compliant USB and ATAPI devices.
-> 
-> 
-> > In the case of libata though, that appears to be due to this code in
-> > drivers/ata/libata-scsi.c:
+Hi Andrew, James,
+
+On Monday 15 October 2007 14:53, Gabriel C wrote:
+> >> Compile tested and applies cleanly to 2.6.23.
+> >> I don't have this hardware anymore and cannot run test these patches.
 > > 
-> >     /* ATAPI devices typically report zero for their SCSI version,
-> >      * and sometimes deviate from the spec WRT response data
-> >      * format.  If SCSI version is reported as zero like normal,
-> >      * then we make the following fixups:  1) Fake MMC-5 version,
-> >      * to indicate to the Linux scsi midlayer this is a modern
-> >      * device.  2) Ensure response data format / ATAPI information
-> >      * are always correct.
-> >      */
-> >             if (buf[2] == 0) {
-> >                 buf[2] = 0x5;
-> >                 buf[3] = 0x32;
-> >             }
-> > 
-> > This technically seems to go against what the SCSI/ATA Translation (SAT)
-> > spec says regarding INQUIRY on ATAPI devices: "the SATL shall use the
-> > ATA PACKET Command feature set to pass all INQUIRY commands and
-> > parameter data to the ATAPI device without altering the INQUIRY
-> > commands or the parameter data." However, it might realistically be
-> > needed if the SCSI layer in the kernel has problems with a device
-> > indicating it supports no SCSI version..
+> > I can test these patches on an aic7892 controller later on today if you want.
 > 
-> The above tweak is entirely software->software communication...  as the 
-> comment you quoted notes, it's just a signal to the SCSI midlayer.
+> Works fine for me tested on :
 > 
-> At the moment, the SCSI midlayer assumes any device that reports scsi 
-> version as less than 2 is forced to SCSI version 2.  Ultimately that's 
-> incorrect behavior for all ATAPI devices (and later MMC revisions).
+> 03:0e.0 SCSI storage controller [0100]: Adaptec AIC-7892P U160/m [9005:008f] (rev 02)
 
-Actually, no we don't.  SCSI level 0 means "no compliant standard
-specified".  We're quite careful if we see this not to do anything that
-might upset the device ... SCSI level 0 is a fairly usual thing to see
-on USB devices, which is why we process it differently.
+I hope this is enough for these patches to be accepted.
 
-> At the time, libata simply worked around this SCSI buglet in its own 
-> code, since that was easier than auditing all SCSI code paths to ensure 
-> new ATAPI/USB MMC logic does not break ancient devices.
-> 
-> But if someone is motivated enough to revisit this...
-
-Like I said, it should all be fixed ... if you try it.
-
-James
-
-
+If it is not, please let me know what do I need to do more.
+--
+vda
