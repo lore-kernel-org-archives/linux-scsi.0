@@ -1,40 +1,60 @@
-From: Denys Vlasenko <vda.linux@googlemail.com>
-Subject: Re: [PATCH 0/3] debloat aic7xxx and aic79xx drivers
-Date: Thu, 18 Oct 2007 12:19:34 +0100
-Message-ID: <200710181219.34951.vda.linux@googlemail.com>
-References: <200710141558.27156.vda.linux@googlemail.com> <47125633.3030404@googlemail.com> <471370C4.8000803@googlemail.com>
+From: Mathieu Fluhr <mfluhr@nero.com>
+Subject: Re: Inquiry data and emulated SG devices
+Date: Thu, 18 Oct 2007 13:57:30 +0200
+Message-ID: <1192708650.3266.38.camel@de-c-l-110.nero-de.internal>
+References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
+	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
+	 <1192701555.3247.28.camel@de-c-l-110.nero-de.internal>
+	 <4717302D.4050107@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:1722 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755417AbXJRLUR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 07:20:17 -0400
-Received: by ug-out-1314.google.com with SMTP id z38so407720ugc
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Oct 2007 04:20:15 -0700 (PDT)
-In-Reply-To: <471370C4.8000803@googlemail.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4717302D.4050107@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Robert Hancock <hancockr@shaw.ca>, James Bottomley <James.Bottomley@SteelEye.com>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@steeleye.com>
-Cc: Gabriel C <nix.or.die@googlemail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Andrew, James,
+On Thu, 2007-10-18 at 06:06 -0400, Jeff Garzik wrote:
 
-On Monday 15 October 2007 14:53, Gabriel C wrote:
-> >> Compile tested and applies cleanly to 2.6.23.
-> >> I don't have this hardware anymore and cannot run test these patches.
-> > 
-> > I can test these patches on an aic7892 controller later on today if you want.
-> 
-> Works fine for me tested on :
-> 
-> 03:0e.0 SCSI storage controller [0100]: Adaptec AIC-7892P U160/m [9005:008f] (rev 02)
+> The SCSI midlayer makes a lot of "if scsi version <= 2" choices.  In the 
+> case of ATAPI, we do not want to force ATAPI down the path of ancient 
+> SCSI devices, as this disables some MMC features that modern ATAPI 
+> devices support.
 
-I hope this is enough for these patches to be accepted.
+If I fully understand your point, if this faking code wasn't present,
+and if the inquiry data was left as it is, all modern ATAPI devices
+would be considered as really old SCSI devices. Am I right?
 
-If it is not, please let me know what do I need to do more.
---
-vda
+And then why external (FireWire and USB) devices reports the inquiry
+data correctly? After all they are also considered to be SCSI devices...
+ -> But apparently, from what /proc/scsi/scsi outputs, the ANSI SCSI   
+    revision is set to 0 (for both ieee1394 and USB devices). This 
+    seems to be coherent with what the inquiry data buffer outputs.
+
+
+Also another question, more from the developer point of view, you have
+to know which real interface is behind a device. You might get
+performance loss if the real type is not known.
+
+For example, I send a BLANK cdb to fully blank a disc, with the 'immed'
+flag not set, so that the requested operation is processed to completion
+prior to returning status.
+- for real SCSI devices, this is not harmfull, as the bus is not blocked
+- for IDE devices, AFAIK, the bus will be blocked until the command
+termination... so for a CD erased a 1x, the bus might be blocked for
+74min.
+
+
+Also the SCSI commands that are sent to the device depends from its
+hardware bus type. Not only for the CDB length, but also for MODE
+SENSE/MODE SELECT CDBs in which for example a MODE SENSE (6) would fail
+on an IDE device... even if it is described in the SPC-3 standard.
+
+As far as I saw in libata-scsi.c there a SCSI-to-ATAPI and ATAPI-to-SCSI
+translator that automatically transform the command sent... Am I also
+right on this point?
+    
+	Mathieu
+
