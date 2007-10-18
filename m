@@ -1,47 +1,41 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 27/32] scsi_data_buffer
-Date: Thu, 18 Oct 2007 10:16:38 +0200
-Message-ID: <47171666.7080705@panasas.com>
-References: <47164306.6090702@panasas.com> <4716529B.7020107@panasas.com> <20071018004722.GA14883@parisc-linux.org> <4717046E.9040101@panasas.com>
+From: Rob Landley <rob@landley.net>
+Subject: Re: [2.6 patch] esp_scsi.c: remove __dev{init,exit}
+Date: Thu, 18 Oct 2007 03:18:01 -0500
+Message-ID: <200710180318.01463.rob@landley.net>
+References: <1192109439.3352.11.camel@localhost.localdomain> <200710111747.03119.rob@landley.net> <20071011.144928.45188136.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:10535 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752615AbXJRIRQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 04:17:16 -0400
-In-Reply-To: <4717046E.9040101@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <20071011.144928.45188136.davem@davemloft.net>
+Content-Disposition: inline
+Sender: sparclinux-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: bunk@kernel.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benny Halevy <bhalevy@panasas.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Pete Wyckoff <pw@osc.edu>
 
-On Thu, Oct 18 2007 at 8:59 +0200, Benny Halevy <bhalevy@panasas.com> wrote:
->>
->> Updated patch below.  I'm fully expecting the 'result' shenanigan to get
->> it NACKed, but I'd like to see if it inspires anyone else to a more
->> creative way of saving this space.
-> 
-> 
-> yeah. The sglist pointer shuffle makes sense and so are the field type
-> changes and coalescing, but the union holding the deprecated fields
-> of scsi_data_buff is going away.
-> 
-> #pragma pack(4) before struct scsi_cmnd
-> (followed by #pragma pack()) should do the trick 
-> by saving member padding bytes. As a general rule I don't like pragma's
-> but this one works, is easy to understand, and is pretty standard.
-> 
->> ---
->>
+On Thursday 11 October 2007 4:49:28 pm David Miller wrote:
+> From: Rob Landley <rob@landley.net>
+> Date: Thu, 11 Oct 2007 17:47:02 -0500
+>
+> > On Thursday 11 October 2007 10:35:20 am Adrian Bunk wrote:
+> > > Since scsi_esp_{,un}register() are EXPORT_SYMBOL'ed, these functions
+> > > (and the functions they use) can't be __dev{init,exit}.
+> > >
+> > > Based on a bug report by Rob Landley.
+> > >
+> > > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> >
+> > Acked-by: Rob Landley <rob@landley.net>
+>
+> I'm fine with this fix too.
+>
+> Acked-by: David S. Miller <davem@davemloft.net>
 
-Sorry Matthew, my mistake I forgot to send the last [33/33] patch
-this here should be done on top of that last one.
+Did this already go to the -stable guys for 2.6.23.2?
 
-I will grab your tool and play with it. The sglist pointer shuffle
-is good, and also I know that if you put the scsi_data_buffer
-at the beginning of scsi_cmnd, than you can fill the holes with small types
-following the sub-structure. I'll give it a try.
-
-Boaz
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
