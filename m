@@ -1,124 +1,69 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 1/4] scsi_cmnd: Rearrange and shrink some elements
-Date: Thu, 18 Oct 2007 12:28:05 +0200
-Message-ID: <47173535.6020904@panasas.com>
-References: <1192697175888-git-send-email-matthew@wil.cx>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] SCSI gdth __init fixes
+Date: Thu, 18 Oct 2007 12:51:05 +0200
+Message-ID: <20071018105104.GH3778@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18575 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761135AbXJRK2J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 06:28:09 -0400
-In-Reply-To: <1192697175888-git-send-email-matthew@wil.cx>
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:44747 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1764164AbXJRKul (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 06:50:41 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: Christoph Hellwig <hch@lst.de>, achim_leubner@adaptec.com, James.Bottomley@SteelEye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Thu, Oct 18 2007 at 10:46 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> By
->  - rearranging the elements of the scsi_pointer
->  - shrinking and moving the eh_eflags element
->  - turning sc_data_direction into an unsigned char
->  - moving tag
-> 
-> we achieve a size reduction in scsi_cmnd of 376 to 352 bytes on x86-64
-> and from 272 to 260 bytes on i386.
-> 
-> Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
-> ---
->  include/scsi/scsi_cmnd.h |   19 ++++++++-----------
->  1 files changed, 8 insertions(+), 11 deletions(-)
-> 
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index 047ffe6..04fe0d8 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -13,22 +13,21 @@ struct Scsi_Host;
->  struct scsi_device;
->  
->  struct scsi_data_buffer {
-> +	struct scatterlist* sglist;
->  	unsigned length;
->  	int resid;
->  	unsigned short sg_count;
->  	unsigned short alloc_sg_count;
-> -	struct scatterlist* sglist;
->  };
->  
->  /* embedded in scsi_cmnd */
->  struct scsi_pointer {
->  	char *ptr;		/* data pointer */
-> -	int this_residual;	/* left in this buffer */
->  	struct scatterlist *buffer;	/* which buffer */
-> +	dma_addr_t dma_handle;
-> +	int this_residual;	/* left in this buffer */
->  	int buffers_residual;	/* how many buffers left */
->  
-> -        dma_addr_t dma_handle;
-> -
->  	volatile int Status;
->  	volatile int Message;
->  	volatile int have_data_in;
-> @@ -40,7 +39,6 @@ struct scsi_cmnd {
->  	struct scsi_device *device;
->  	struct list_head list;  /* scsi_cmnd participates in queue lists */
->  	struct list_head eh_entry; /* entry for the host eh_cmd_q */
-> -	int eh_eflags;		/* Used by error handlr */
->  
->  	/*
->  	 * A SCSI Command is assigned a nonzero serial_number before passed
-> @@ -64,7 +62,9 @@ struct scsi_cmnd {
->  	int timeout_per_command;
->  
->  	unsigned char cmd_len;
-> -	enum dma_data_direction sc_data_direction;
-> +	unsigned char eh_eflags;		/* Used by error handler */
-> +	unsigned char sc_data_direction;	/* enum dma_data_direction */
-> +	unsigned char tag;			/* SCSI-II queued command tag */
->  
->  	/* These elements define the operation we are about to perform */
->  #define MAX_COMMAND_SIZE	16
-> @@ -82,8 +82,7 @@ struct scsi_cmnd {
->  				   reconnects.   Probably == sector
->  				   size */
->  
-> -	struct request *request;	/* The command we are
-> -				   	   working on */
-> +	struct request *request;	/* The command we are working on */
->  
->  #define SCSI_SENSE_BUFFERSIZE 	96
->  	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-> @@ -111,8 +110,6 @@ struct scsi_cmnd {
->  
->  	int result;		/* Status code from lower level driver */
->  
-> -	unsigned char tag;	/* SCSI-II queued command tag */
-> -
->  	union {
->  		struct scsi_data_buffer sdb;
->  		/*
-> @@ -121,11 +118,11 @@ struct scsi_cmnd {
->  		 *        of struct scsi_data_buffer members.
->  		 */
->  		struct {
-> +			void __deprecated *request_buffer;
->  			unsigned __deprecated request_bufflen;
->  			int __deprecated resid;
->  			unsigned short __deprecated use_sg;
->  			unsigned short __deprecated place_holder_sg_alloc;
-> -			void __deprecated *request_buffer;
->  		};
->  	};
->  };
-Sorry again...
-Please redo that patch ontop of patch [33/33]
-http://www.spinics.net/lists/linux-scsi/msg20327.html
+This patch fixes the following build warnings:
 
-Again sorry, It was getting late and people where
-waiting for me, so I just plain forgot to include
-it.
+<--  snip  -->
 
-Boaz
+...
+  MODPOST vmlinux.o
+WARNING: vmlinux.o(.text+0xbcffdb): Section mismatch: reference to .init.text.20:gdth_search_drives (between 'gdth_pci_probe_one' and 'gdth_start_timeout')
+WARNING: vmlinux.o(.text+0xbd0102): Section mismatch: reference to .init.text.20:gdth_enable_int (between 'gdth_pci_probe_one' and 'gdth_start_timeout')
+...
+
+<--  snip  -->
+
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
+---
+
+ drivers/scsi/gdth.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+81e1643617f1b0f76a5804359d2988dc523d0cc3 
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 3ac080e..56de5a6 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -4734,7 +4734,7 @@ static struct scsi_host_template gdth_template = {
+ };
+ 
+ #ifdef CONFIG_ISA
+-static int gdth_isa_probe_one(ulong32 isa_bios)
++static int __init gdth_isa_probe_one(ulong32 isa_bios)
+ {
+ 	struct Scsi_Host *shp;
+ 	gdth_ha_str *ha;
+@@ -4862,7 +4862,7 @@ static int gdth_isa_probe_one(ulong32 isa_bios)
+ #endif /* CONFIG_ISA */
+ 
+ #ifdef CONFIG_EISA
+-static int gdth_eisa_probe_one(ushort eisa_slot)
++static int __init gdth_eisa_probe_one(ushort eisa_slot)
+ {
+ 	struct Scsi_Host *shp;
+ 	gdth_ha_str *ha;
+@@ -4991,7 +4991,7 @@ static int gdth_eisa_probe_one(ushort eisa_slot)
+ #endif /* CONFIG_EISA */
+ 
+ #ifdef CONFIG_PCI
+-static int gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
++static int __init gdth_pci_probe_one(gdth_pci_str *pcistr, int ctr)
+ {
+ 	struct Scsi_Host *shp;
+ 	gdth_ha_str *ha;
+
