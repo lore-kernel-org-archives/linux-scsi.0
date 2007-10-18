@@ -1,21 +1,21 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
 Subject: Re: [patch 1/7] git-scsi-misc gdth fix
-Date: Thu, 18 Oct 2007 18:54:15 +0200
-Message-ID: <47178FB7.9010409@panasas.com>
+Date: Thu, 18 Oct 2007 19:41:26 +0200
+Message-ID: <47179AC6.9020506@panasas.com>
 References: <200710162128.l9GLSJV1018164@imap1.linux-foundation.org> <1192624128.28752.20.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:20634 "EHLO
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:9246 "EHLO
 	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753373AbXJRQyf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 12:54:35 -0400
+	with ESMTP id S1764393AbXJRRli (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 13:41:38 -0400
 In-Reply-To: <1192624128.28752.20.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, davemilter@gmail.com
+To: James Bottomley <James.Bottomley@SteelEye.com>, davemilter@gmail.com
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org
 
 On Wed, Oct 17 2007 at 14:28 +0200, James Bottomley <James.Bottomley@SteelEye.com> wrote:
 > On Tue, 2007-10-16 at 14:28 -0700, akpm@linux-foundation.org wrote:
@@ -84,7 +84,57 @@ On Wed, Oct 17 2007 at 14:28 +0200, James Bottomley <James.Bottomley@SteelEye.co
 > James
 > 
 > 
-OK I'm on it give me 24h
+OK I can see the crash, but than I do not understand
+why the fix above works. Let me explain
 
-Boaz
+gdth is not yet hotplug. the only place that deletes
+hosts is in the module_exit(gdth_exit) routine.
+Now, the code does not do a list_del() anywhere it will
+just deallocate the hosts and only after that delete the
+timer. Now, suppose a timer gets through between the time
+hosts are deallocated and the timer is removed. The list
+is not empty it points to garbage memory, yes. But the
+check above will not fix it. See my problem.
+
+please try below patch, and report if the WARN_ON I put
+triggers. If it works I will send a proper patch later
+with a one that does a list_del() too.
+(this is with out the patch above)
+
+-------------
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index 3ac080e..b84a869 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -3793,6 +3793,11 @@ static void gdth_timeout(ulong data)
+     gdth_ha_str *ha;
+     ulong flags;
+ 
++    if (list_empty(&gdth_instances)) {
++        WARN_ON(1);
++        return;
++    }
++
+     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
+     spin_lock_irqsave(&ha->smp_lock, flags);
+ 
+@@ -5236,12 +5241,13 @@ static void __exit gdth_exit(void)
+ {
+ 	gdth_ha_str *ha;
+ 
++#ifdef GDTH_STATISTICS
++	del_timer_sync(&gdth_timer);
++#endif
++
+ 	list_for_each_entry(ha, &gdth_instances, list)
+ 		gdth_remove_one(ha);
+ 
+-#ifdef GDTH_STATISTICS
+-	del_timer(&gdth_timer);
+-#endif
+ 	unregister_chrdev(major,"gdth");
+ 	unregister_reboot_notifier(&gdth_notifier);
+ }
+
+
 
