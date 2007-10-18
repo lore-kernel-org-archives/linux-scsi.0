@@ -1,70 +1,143 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [patchset 0/33] scsi_data_buffer for after the last driver is
- converted
-Date: Thu, 18 Oct 2007 08:32:28 +0900
-Message-ID: <20071018083228C.fujita.tomonori@lab.ntt.co.jp>
-References: <47164306.6090702@panasas.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 27/32] scsi_data_buffer
+Date: Wed, 17 Oct 2007 18:47:22 -0600
+Message-ID: <20071018004722.GA14883@parisc-linux.org>
+References: <47164306.6090702@panasas.com> <4716529B.7020107@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama55.ecl.ntt.co.jp ([129.60.39.103]:49692 "EHLO
-	tama55.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759260AbXJQXrY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 19:47:24 -0400
-In-Reply-To: <47164306.6090702@panasas.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:36268 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763046AbXJRAr0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 17 Oct 2007 20:47:26 -0400
+Content-Disposition: inline
+In-Reply-To: <4716529B.7020107@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: James.Bottomley@SteelEye.com, jens.axboe@oracle.com, tomof@acm.org, matthew@wil.cx, mdharm-scsi@one-eyed-alien.net, rmk@arm.linux.org.uk, stern@rowland.harvard.edu, davem@davemloft.net, hch@infradead.org, linux-scsi@vger.kernel.org, jeff@garzik.org, bhalevy@panasas.com, pw@osc.edu
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Benny Halevy <bhalevy@panasas.com>, Pete Wyckoff <pw@osc.edu>
 
-On Wed, 17 Oct 2007 19:14:46 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Wed, Oct 17, 2007 at 08:21:15PM +0200, Boaz Harrosh wrote:
+>   - Group all IO members of scsi_cmnd into a scsi_data_buffer
+>     structure.
 
-> This is a resend of all the remaining drivers rebased
-> to latest code. And once the entire tree is converted,
-> move to scsi_data_buffer in scsi_cmnd.
-> 
-> The work is on top of Jens's for-linus branch which
-> is effectively sglist-arch (+ last minute fixes)
-> This is because sglist-arch was already rebased to
-> latest scsi-misc through linus tree, merged with 
-> the extra work done there on scsi-ml (and the drivers)
-> (Thanks Jens)
-> 
-> summery of patches:
-> 
-> left over from scsi_eh last change
->   [PATCH 01/32] arm: fas216 Use scsi_eh API for REQUEST_SENSE invocation
-> 
-> lots and lots of drivers left:
->   [PATCH 02/32] isd200.c: use one-element sg list in issuing commands
->   [PATCH 03/32] usb: transport - convert to accessors and !use_sg code path removal
->   [PATCH 04/32] usb: protocol.c - convert to accessors and !use_sg code path removal
->   [PATCH 05/32] usb: shuttle_usbat.c - convert to accessors and !use_sg code path removal
->   [PATCH 06/32] usb: freecom.c & sddr09.c - convert to accessors and !use_sg cleanup
->   [PATCH 07/32] NCR5380 familly convert to accessors & !use_sg cleanup
->   [PATCH 08/32] arm: scsi convert to accessors and !use_sg cleanup
->   [PATCH 09/32] nsp_cs.c convert to data accessors and !use_sg cleanup
->   [PATCH 10/32] eata_pio.c: convert to accessors and !use_sg cleanup
->   [PATCH 11/32] a2091.c: convert to accessors and !use_sg cleanup
->   [PATCH 12/32] a3000.c: convert to accessors and !use_sg cleanup
->   [PATCH 13/32] aha1542.c: convert to accessors and !use_sg cleanup
->   [PATCH 14/32] atp870u.c: convert to accessors and !use_sg cleanup
->   [PATCH 15/32] fd_mcs.c: convert to accessors and !use_sg cleanup
->   [PATCH 16/32] imm.c: convert to accessors and !use_sg cleanup
->   [PATCH 17/32] ppa.c: convert to accessors and !use_sg cleanup
->   [PATCH 18/32] wd32c93.c: convert to accessors and !use_sg cleanup
->   [PATCH 19/32] qlogicpti.c: convert to accessors and !use_sg cleanup
->   [PATCH 20/32] in2000.c: convert to accessors and !use_sg cleanup
->   [PATCH 21/32] scsi_debug: convert to use the data buffer accessors
-> 
-> Tomo's patch cleaned up:
->    [PATCH 22/32] qla1280: convert to use the data buffer accessors
->    [PATCH 23/32] qla1280: Indentation fix
-> 
->  I separated the indentation from the real change make
->  the patch humanly readable.
+> +struct scsi_data_buffer {
+> +	unsigned length;
+> +	int resid;
+> +	unsigned short sg_count;
+> +	unsigned short alloc_sg_count;
+> +	struct scatterlist* sglist;
+> +};
 
-It doesn't hurt but I'm not sure how useful the separation is.
+This has exactly the problems I thought it would have.  Due to alignment
+rules, it grows the scsi_cmnd from 368 to 376 bytes on x86-64.
+It remains at 272 bytes on i386 though, which is some consolation.
+By porting the patch I had for shrinking the scsi_cmnd, I can get it
+down to 352 bytes, but not as far as the 344 bytes I had it at before.
 
+The problem is the padding at the *end* of scsi_data_buffer (er, after I
+rearrange it in the patch below).  There's nothing we can realistically
+put in it, given that we don't want to expand scsi_data_buffer's size on
+32-bit machines.  I have a fix ... but I don't think you'll like it.
+I certainly don't.  But it does get us back down to 344 bytes.
+
+Updated patch below.  I'm fully expecting the 'result' shenanigan to get
+it NACKed, but I'd like to see if it inspires anyone else to a more
+creative way of saving this space.
+
+---
+
+Thanks to acme's pahole utility, I found some places where we can save
+a lot of bytes in scsi_cmnd, just by rearranging struct elements and
+reducing the size of some elements.  We go from 272 to 260 bytes on x86
+and from 368 to 344 bytes on x86-64.
+
+ - eh_eflags had a 4-byte hole after it on 64-bit.  In fact, this has
+   value 0 or 1, so reduce it to an unsigned char, and put it with the
+   other chars in scsi_cmnd.  Saves 8 bytes on 64-bit.
+ - sc_data_direction has a value from 0-3, so make it an unsigned char
+   rather than an enum.  Saves at least 4 bytes.
+ - Putting 'tag' with the other char elements saves another 4 bytes
+ - Moving 'result' into the union with the deprecated members saves 8
+   bytes on 64-bit.
+
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 047ffe6..2b10779 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -13,22 +13,21 @@ struct Scsi_Host;
+ struct scsi_device;
+ 
+ struct scsi_data_buffer {
++	struct scatterlist* sglist;
+ 	unsigned length;
+ 	int resid;
+ 	unsigned short sg_count;
+ 	unsigned short alloc_sg_count;
+-	struct scatterlist* sglist;
+ };
+ 
+ /* embedded in scsi_cmnd */
+ struct scsi_pointer {
+ 	char *ptr;		/* data pointer */
+-	int this_residual;	/* left in this buffer */
+ 	struct scatterlist *buffer;	/* which buffer */
++	dma_addr_t dma_handle;
++	int this_residual;	/* left in this buffer */
+ 	int buffers_residual;	/* how many buffers left */
+ 
+-        dma_addr_t dma_handle;
+-
+ 	volatile int Status;
+ 	volatile int Message;
+ 	volatile int have_data_in;
+@@ -40,7 +39,6 @@ struct scsi_cmnd {
+ 	struct scsi_device *device;
+ 	struct list_head list;  /* scsi_cmnd participates in queue lists */
+ 	struct list_head eh_entry; /* entry for the host eh_cmd_q */
+-	int eh_eflags;		/* Used by error handlr */
+ 
+ 	/*
+ 	 * A SCSI Command is assigned a nonzero serial_number before passed
+@@ -64,7 +62,9 @@ struct scsi_cmnd {
+ 	int timeout_per_command;
+ 
+ 	unsigned char cmd_len;
+-	enum dma_data_direction sc_data_direction;
++	unsigned char eh_eflags;		/* Used by error handler */
++	unsigned char sc_data_direction;	/* enum dma_data_direction */
++	unsigned char tag;	/* SCSI-II queued command tag */
+ 
+ 	/* These elements define the operation we are about to perform */
+ #define MAX_COMMAND_SIZE	16
+@@ -109,10 +109,6 @@ struct scsi_cmnd {
+ 					 * obtained by scsi_malloc is guaranteed
+ 					 * to be at an address < 16Mb). */
+ 
+-	int result;		/* Status code from lower level driver */
+-
+-	unsigned char tag;	/* SCSI-II queued command tag */
+-
+ 	union {
+ 		struct scsi_data_buffer sdb;
+ 		/*
+@@ -121,11 +117,12 @@ struct scsi_cmnd {
+ 		 *        of struct scsi_data_buffer members.
+ 		 */
+ 		struct {
++			void __deprecated *request_buffer;
+ 			unsigned __deprecated request_bufflen;
+ 			int __deprecated resid;
+ 			unsigned short __deprecated use_sg;
+ 			unsigned short __deprecated place_holder_sg_alloc;
+-			void __deprecated *request_buffer;
++			int result; /* Status code from lower level driver */
+ 		};
+ 	};
+ };
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
