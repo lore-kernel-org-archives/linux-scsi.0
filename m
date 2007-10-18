@@ -1,87 +1,51 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH 27/32] scsi_data_buffer
-Date: Thu, 18 Oct 2007 16:57:23 +0900
-Message-ID: <20071018165723L.fujita.tomonori@lab.ntt.co.jp>
-References: <4716529B.7020107@panasas.com>
-	<20071018084008Z.fujita.tomonori@lab.ntt.co.jp>
-	<4717106E.7040404@panasas.com>
+Date: Thu, 18 Oct 2007 02:06:41 -0600
+Message-ID: <20071018080640.GA9883@parisc-linux.org>
+References: <47164306.6090702@panasas.com> <4716529B.7020107@panasas.com> <20071018004722.GA14883@parisc-linux.org> <4717046E.9040101@panasas.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:43746 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755749AbXJRIBd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 04:01:33 -0400
-In-Reply-To: <4717106E.7040404@panasas.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:50695 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762222AbXJRIGp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 04:06:45 -0400
+Content-Disposition: inline
+In-Reply-To: <4717046E.9040101@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, tomof@acm.org, matthew@wil.cx, mdharm-scsi@one-eyed-alien.net, rmk@arm.linux.org.uk, stern@rowland.harvard.edu, davem@davemloft.net, hch@infradead.org, linux-scsi@vger.kernel.org, bhalevy@panasas.com, pw@osc.edu
+To: Benny Halevy <bhalevy@panasas.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <tomof@acm.org>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Russell King <rmk@arm.linux.org.uk>, Alan Stern <stern@rowland.harvard.edu>, "David S. Miller" <davem@davemloft.net>, Christoph Hellwig <hch@infradead.org>, linux-scsi <linux-scsi@vger.kernel.org>, Pete Wyckoff <pw@osc.edu>
 
-On Thu, 18 Oct 2007 09:51:10 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Thu, Oct 18, 2007 at 08:59:58AM +0200, Benny Halevy wrote:
+> yeah. The sglist pointer shuffle makes sense and so are the field type
+> changes and coalescing, but the union holding the deprecated fields
+> of scsi_data_buff is going away.
 
-> On Thu, Oct 18 2007 at 1:40 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > On Wed, 17 Oct 2007 20:21:15 +0200
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >>   In preparation for bidi we abstract all IO members of scsi_cmnd,
-> >>   that will need to duplicate, into a substructure.
-> >>
-> >>   - Group all IO members of scsi_cmnd into a scsi_data_buffer
-> >>     structure.
-> >>   - Adjust accessors to new members.
-> >>   - scsi_{alloc,free}_sgtable receive a scsi_data_buffer instead of
-> >>     scsi_cmnd. And work on it.
-> >>   - Adjust scsi_init_io() and  scsi_release_buffers() for above
-> >>     change.
-> >>   - Fix other parts of scsi_lib/scsi.c to members migration. Use
-> >>     accessors where appropriate.
-> >>
-> >>   - Old I/O members are kept for backward compatibility, since
-> >>     not all of scsi-ml/ul is converted yet. Once done they will
-> >>     be removed in a closing patch. (Other wise the patchset will
-> >>     not be bisectable)
-> > 
-> > (snip)
-> > 
-> >> @@ -114,6 +112,22 @@ struct scsi_cmnd {
-> >>  	int result;		/* Status code from lower level driver */
-> >>  
-> >>  	unsigned char tag;	/* SCSI-II queued command tag */
-> >> +
-> >> +	union {
-> >> +		struct scsi_data_buffer sdb;
-> >> +		/*
-> >> +		 * FIXME: Here for compatibility with unconverted drivers.
-> >> +		 *        Must be kept in sync with exact type and order
-> >> +		 *        of struct scsi_data_buffer members.
-> >> +		 */
-> >> +		struct {
-> >> +			unsigned __deprecated request_bufflen;
-> >> +			int __deprecated resid;
-> >> +			unsigned short __deprecated use_sg;
-> >> +			unsigned short __deprecated place_holder_sg_alloc;
-> >> +			void __deprecated *request_buffer;
-> >> +		};
-> >> +	};
-> >>  };
-> > 
-> > If we add something like this, why couldn't we merge the
-> > scsi_data_buffer patchset when I submitted last month?
-> > 
-> > I thought that I wait you to fix all the old LLDs, then will send a
-> > clean scsi_data_buffer patchset.
-> 
-> We do have all the old LLDs fixed. After this patchset the entire tree
-> is clean. I have just forgot to send the last [33/33] patch that removes
-> this. I have just sent it now, sorry.
-> (The change log above explains exactly why this is done here)
+Indeed.  We could always do ...
 
-As I said, I can't see why we need this compatibility hack in the
-first place.
+	union {
+		struct scsi_data_pointer;
+		struct {
+			char _padding_[sizeof(struct scsi_data_pointer)];
+			int result;
+		}
+	}
 
-We need to wait patches 1-26 to be merged. After that, we can merge
-clean scsi_data_buffer patchset (without the compatibility hack).
+But that might set a new record of depths of obfuscation.
 
+> #pragma pack(4) before struct scsi_cmnd
+> (followed by #pragma pack()) should do the trick 
+> by saving member padding bytes. As a general rule I don't like pragma's
+> but this one works, is easy to understand, and is pretty standard.
+
+But it might well have the effect of pessimising accesses to the struct,
+and accesses to scsi_cmnd are pretty hot.  I've seen gcc revert to byte
+loads and stores to packed structs in the past.  Maybe it's got better
+now.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
