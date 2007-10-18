@@ -1,80 +1,69 @@
-From: Mathieu Fluhr <mfluhr@nero.com>
-Subject: Re: Inquiry data and emulated SG devices
-Date: Thu, 18 Oct 2007 14:44:48 +0200
-Message-ID: <1192711488.3254.11.camel@de-c-l-110.nero-de.internal>
-References: <fa.PgEHbZ0E5ogcX8bZwvrUeZB+eJs@ifi.uio.no>
-	 <4716B56A.1090501@shaw.ca>  <4716B786.80804@garzik.org>
-	 <1192701555.3247.28.camel@de-c-l-110.nero-de.internal>
-	 <4717302D.4050107@garzik.org>
-	 <1192708650.3266.38.camel@de-c-l-110.nero-de.internal>
-	 <1192709602.13229.27.camel@localhost.localdomain>
+From: Rogier Wolff <R.E.Wolff@BitWizard.nl>
+Subject: Re: OOM killer gripe (was Re: What still uses the block layer?)
+Date: Thu, 18 Oct 2007 15:00:49 +0200
+Message-ID: <20071018130048.GA25084@bitwizard.nl>
+References: <200710112011.22000.rob@landley.net> <200710161659.28826.nickpiggin@yahoo.com.au> <m1lka3ishi.fsf@ebiederm.dsl.xmission.com> <200710161734.15880.nickpiggin@yahoo.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from s1.mailresponder.info ([193.24.237.10]:3060 "EHLO
-	s1.mailresponder.info" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757191AbXJRMp4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 08:45:56 -0400
-Received: from moonfish.nero.com (193.47.77.31)
-          by s1.mailresponder.info with MERCUR Mailserver (v4.02.30 ODAtMjQzOS03MTc5)
-          for <linux-scsi@vger.kernel.org>; Thu, 18 Oct 2007 14:45:00 +0200
-In-Reply-To: <1192709602.13229.27.camel@localhost.localdomain>
+Received: from dtp.xs4all.nl ([80.126.206.180]:40520 "HELO abra2.bitwizard.nl"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1756685AbXJRNHe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Oct 2007 09:07:34 -0400
+Content-Disposition: inline
+In-Reply-To: <200710161734.15880.nickpiggin@yahoo.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Jeff Garzik <jeff@garzik.org>, Robert Hancock <hancockr@shaw.ca>, LKML <linux-kernel@vger.kernel.org>, ide <linux-ide@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Nick Piggin <nickpiggin@yahoo.com.au>
+Cc: "Eric W. Biederman" <ebiederm@xmission.com>, Rob Landley <rob@landley.net>, Theodore Tso <tytso@mit.edu>, James Bottomley <James.Bottomley@steeleye.com>, Matthew Wilcox <matthew@wil.cx>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@suse.de>, Suparna Bhattacharya <suparna@in.ibm.com>, Nick Piggin <piggin@cyberone.com.au>
 
-On Thu, 2007-10-18 at 08:13 -0400, James Bottomley wrote:
-> On Thu, 2007-10-18 at 13:57 +0200, Mathieu Fluhr wrote:
-> > On Thu, 2007-10-18 at 06:06 -0400, Jeff Garzik wrote:
-> > 
-> > > The SCSI midlayer makes a lot of "if scsi version <= 2" choices.  In the 
-> > > case of ATAPI, we do not want to force ATAPI down the path of ancient 
-> > > SCSI devices, as this disables some MMC features that modern ATAPI 
-> > > devices support.
-> > 
-> > If I fully understand your point, if this faking code wasn't present,
-> > and if the inquiry data was left as it is, all modern ATAPI devices
-> > would be considered as really old SCSI devices. Am I right?
+On Tue, Oct 16, 2007 at 05:34:15PM +1000, Nick Piggin wrote:
+> > It's a hard call.  The I/O time for 1MB of contiguous disk data
+> > is about the I/O time of 512 bytes of contiguous disk data.
 > 
-> Not really.  Firstly, a lot of ATAPI devices report the correct
-> compliance level and secondly, the consequence of reporting no
-> compliance (level 0) is that the mid layer will be very careful to use
-> the most minimal command set it can (the usual consequence of sending a
-> USB device a command it doesn't understand is to have it crash).
-> 
+> And if you're thrashing, then by definition you need to throw
+> out 1MB of your working set in order to read it in.
 
-Ok, then, what about what the standard is saying regarding the ANSI
-version field? Quoting to the latest MtFuji draft (Section 17.7.1):
- "The ANSI Version field shall contain a non-zero value to comply with 
-  this version of the Specification for a SCSI logical unit or zero for
-  an ATAPI logical unit."
+Right. But you need a differential hit rate of only a few percent on
+that 1020 extra kb of data you swapped in versus the 1Mb of data you
+swapped out for this to be advantageous.
 
-and this is exactly how we see that the logical unit is a real SCSI one
-or an ATAPI one.
+With "differential hit rate" I mean the chances of getting a hit on
+the 1Mb of data just paged in, minus the chances of getting a hit on
+the 1Mb of data just paged out. 
 
-> However, this will have no effect for at least CDs:  The sr driver is
-> only interested in the MMC compliance level not the SCSI compliance
-> level.
+With a little luck that 1Mb that is paged out didn't get used for
+quite a while, while there is a hint that the 1Mb you're paging in
+is active, as one of its sub-pages just got a hit.
 
-We are not using the sr driver to perform our SCSI commands, as it is
-filtering which CDB is allowed and which isn't. As we have some
-vendor-specific SCSI commands (like the one for changing booktype), we
-are using the sg driver to be able to use them.
+So... IMHO, it would be useful to implement something that pages out
+chunks of memory larger than a single hardware page. This would reduce
+the size of the memory management tables (*), as well as improve disk
+throughput if things DO come to paging....
+
+This should of course be configurable. Some workloads are better off
+with a virtual page size of 8k, some with 128k. some with 1M.
+
+As far as I can see, the "page-cluster" parameter defines how many
+pages at a time are selected for page-out at a time. This increases
+the page-out efficiency. Improving the page-in efficiency is also
+useful: It is the other half of hte equation.
+
+	Roger. 
+
+
+(*) If the kernel starts working with a 1Mb virtual page size, you
+need a 256 times smaller mapping table between processes and memory or
+swap. Of course, the hardware doesn't support this (actually, it does
+for 1Mb virtual pages), so you'll have to create 256 page table
+entries for the hardware instead of just one.
 
 
 
-> > As far as I saw in libata-scsi.c there a SCSI-to-ATAPI and ATAPI-to-SCSI
-> > translator that automatically transform the command sent... Am I also
-> > right on this point?
-> 
-> The former only, I believe.
-
-Absolutly... but if the inquiry data buffer gets modified by the
-midlayer, after that I am not able anymore to setup correctly the
-commands for the _real_ interface. (once again, the blank command
-example).
-
-Mathieu
-
+-- 
+** R.E.Wolff@BitWizard.nl ** http://www.BitWizard.nl/ ** +31-15-2600998 **
+**    Delftechpark 26 2628 XH  Delft, The Netherlands. KVK: 27239233    **
+*-- BitWizard writes Linux device drivers for any device you may have! --*
+Q: It doesn't work. A: Look buddy, doesn't work is an ambiguous statement. 
+Does it sit on the couch all day? Is it unemployed? Please be specific! 
+Define 'it' and what it isn't doing. --------- Adapted from lxrbot FAQ
