@@ -1,140 +1,29 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [patch 1/7] git-scsi-misc gdth fix
-Date: Thu, 18 Oct 2007 19:41:26 +0200
-Message-ID: <47179AC6.9020506@panasas.com>
-References: <200710162128.l9GLSJV1018164@imap1.linux-foundation.org> <1192624128.28752.20.camel@localhost.localdomain>
+From: Seokmann Ju <seokmann.ju@qlogic.com>
+Subject: Re: [PATCH 3/4] qla1280,qla2xxx: Remove display of transfersize
+Date: Thu, 18 Oct 2007 11:57:33 -0700
+Message-ID: <4717AC9D.4040000@qlogic.com>
+References: <11927248762034-git-send-email-matthew@wil.cx> <11927248763320-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:9246 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764393AbXJRRli (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 13:41:38 -0400
-In-Reply-To: <1192624128.28752.20.camel@localhost.localdomain>
+Received: from avexch2.qlogic.com ([198.70.193.116]:17922 "EHLO
+	avexch2.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758788AbXJRS4Q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 14:56:16 -0400
+In-Reply-To: <11927248763320-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, davemilter@gmail.com
-Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
 
-On Wed, Oct 17 2007 at 14:28 +0200, James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Tue, 2007-10-16 at 14:28 -0700, akpm@linux-foundation.org wrote:
->> From: James Bottomley <James.Bottomley@SteelEye.com>
->>
->> On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
->>> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
->>>
->>>> I build linux-2.6.23-mm1 and try to boot it using qemu,
->>>> and it crashed with trace like this:
->>>> do_page_fault
->>>> error_code
->>>> lock_acquire
->>>> _spin_lock_irqsave
->>>> gdth_timeout
->>>> run_timer_softirq
->>>> __do_softirq
->>>> do_softirq
->>>>
->>>> I have screenshot, but have no idea, is it legal to include it, if I
->>>> sent copy to lkml.
->>>> config of kernel in attachment,
->>>> I apply all three patches from hot-fixes.
->>>>
->>> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
->>>
->>> It would appear that gdth_timeout() is passing a bad pointer into
->>> spin_lock_irqsave().
->> There's a bug in the gdth rework in that the instance can be deleted
->> from the list before the actual timer is stopped.  This can be worked
->> around I think by the following patch; although we really should be
->> stopping the timer from firing when the list goes empty.
->>
->>
->>
->> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
->> ---
->>
->>  drivers/scsi/gdth.c |    3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
->> --- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
->> +++ a/drivers/scsi/gdth.c
->> @@ -3793,6 +3793,9 @@ static void gdth_timeout(ulong data)
->>      gdth_ha_str *ha;
->>      ulong flags;
->>  
->> +    if (list_empty(&gdth_instances))
->> +	return;
->> +
->>      ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
->>      spin_lock_irqsave(&ha->smp_lock, flags);
->>  
-> 
-> This is almost certainly the wrong fix for real hardware.  Although it
-> kills the timer when the list goes empty, nothing will ever restart it
-> when the list fills again.
-> 
-> Boaz, since you touched all of this, you get to fix it.  The correct fix
-> will be to control the timer along with the actual list instead of at
-> entry/exit time.  If you're not going to add this empty check to the
-> timer routine, make sure you use del_timer_sync() before removing the
-> last element from the list.
-> 
-> James
-> 
-> 
-OK I can see the crash, but than I do not understand
-why the fix above works. Let me explain
+Matthew Wilcox wrote:
+> As part of their debug routines, both of these drivers print out the
+> transfersize.  That's just unnecessary, particularly since neither driver
+> actually uses it.
+NACK for qla2xxx - I would rather change it to 'cmd->device->sector_size' instead of removing it.
+A patch will be followed by.
 
-gdth is not yet hotplug. the only place that deletes
-hosts is in the module_exit(gdth_exit) routine.
-Now, the code does not do a list_del() anywhere it will
-just deallocate the hosts and only after that delete the
-timer. Now, suppose a timer gets through between the time
-hosts are deallocated and the timer is removed. The list
-is not empty it points to garbage memory, yes. But the
-check above will not fix it. See my problem.
-
-please try below patch, and report if the WARN_ON I put
-triggers. If it works I will send a proper patch later
-with a one that does a list_del() too.
-(this is with out the patch above)
-
--------------
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index 3ac080e..b84a869 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -3793,6 +3793,11 @@ static void gdth_timeout(ulong data)
-     gdth_ha_str *ha;
-     ulong flags;
- 
-+    if (list_empty(&gdth_instances)) {
-+        WARN_ON(1);
-+        return;
-+    }
-+
-     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
-     spin_lock_irqsave(&ha->smp_lock, flags);
- 
-@@ -5236,12 +5241,13 @@ static void __exit gdth_exit(void)
- {
- 	gdth_ha_str *ha;
- 
-+#ifdef GDTH_STATISTICS
-+	del_timer_sync(&gdth_timer);
-+#endif
-+
- 	list_for_each_entry(ha, &gdth_instances, list)
- 		gdth_remove_one(ha);
- 
--#ifdef GDTH_STATISTICS
--	del_timer(&gdth_timer);
--#endif
- 	unregister_chrdev(major,"gdth");
- 	unregister_reboot_notifier(&gdth_notifier);
- }
-
-
+Thank you,
+Seokmann
 
