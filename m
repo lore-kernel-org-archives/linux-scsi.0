@@ -1,97 +1,132 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: [PATCH 1/4] scsi_cmnd: Rearrange and shrink some elements
-Date: Thu, 18 Oct 2007 12:27:53 -0400
-Message-ID: <11927248762034-git-send-email-matthew@wil.cx>
+Subject: [PATCH 2/4] shuttle_usbat: Eliminate use of transfersize
+Date: Thu, 18 Oct 2007 12:27:54 -0400
+Message-ID: <1192724876703-git-send-email-matthew@wil.cx>
+References: <11927248762034-git-send-email-matthew@wil.cx>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.tor.primus.ca ([216.254.136.21]:43878 "EHLO
-	mail-08.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753373AbXJRQ1g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 12:27:36 -0400
+Received: from mail.tor.primus.ca ([216.254.136.21]:39387 "EHLO
+	mail-02.primus.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755313AbXJRQ1i (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Oct 2007 12:27:38 -0400
+In-Reply-To: <11927248762034-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Matthew Wilcox <matthew@wil.cx>, Matthew Wilcox <willy@linux.intel.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, Daniel Drake <dsd@gentoo.org>, Matthew Wilcox <willy@linux.intel.com>
 
- - rearrange the elements of the scsi_pointer
- - shrink and move the eh_eflags element
- - turn sc_data_direction into an unsigned char
- - move tag
+It's more intuitive to go straight to the struct device for the
+sector_size, when that's what we want, rather than using transfersize
+as a replacement.
 
-By doing this, we reduce the size of scsi_cmnd from 376 to 352 bytes
-on x86-64 and from 272 to 260 bytes on i386.
+Also fix a bug in handling of GPCMD_READ_CD where we were pulling the
+wrong bytes out of the packet to calculate the length.  I checked this
+against MMC5r04.
 
 Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
 ---
- include/scsi/scsi_cmnd.h |   17 +++++++----------
- 1 files changed, 7 insertions(+), 10 deletions(-)
+ drivers/usb/storage/shuttle_usbat.c |   46 +++++++++++++++++++---------------
+ 1 files changed, 26 insertions(+), 20 deletions(-)
 
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 8b8759c..b9c7846 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -13,22 +13,21 @@ struct Scsi_Host;
- struct scsi_device;
+diff --git a/drivers/usb/storage/shuttle_usbat.c b/drivers/usb/storage/shuttle_usbat.c
+index 570c125..a172e98 100644
+--- a/drivers/usb/storage/shuttle_usbat.c
++++ b/drivers/usb/storage/shuttle_usbat.c
+@@ -49,6 +49,7 @@
  
- struct scsi_data_buffer {
-+	struct scatterlist* sglist;
- 	unsigned length;
- 	int resid;
- 	unsigned short sg_count;
- 	unsigned short alloc_sg_count;
--	struct scatterlist* sglist;
- };
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
++#include <scsi/scsi_device.h>
  
- /* embedded in scsi_cmnd */
- struct scsi_pointer {
- 	char *ptr;		/* data pointer */
--	int this_residual;	/* left in this buffer */
- 	struct scatterlist *buffer;	/* which buffer */
-+	dma_addr_t dma_handle;
-+	int this_residual;	/* left in this buffer */
- 	int buffers_residual;	/* how many buffers left */
+ #include "usb.h"
+ #include "transport.h"
+@@ -1164,12 +1165,10 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 	unsigned char *buffer;
+ 	unsigned int len;
+ 	unsigned int sector;
++	unsigned int sector_size;
+ 	unsigned int sg_offset = 0;
+ 	struct scatterlist *sg = NULL;
  
--        dma_addr_t dma_handle;
+-	US_DEBUGP("handle_read10: transfersize %d\n",
+-		srb->transfersize);
 -
- 	volatile int Status;
- 	volatile int Message;
- 	volatile int have_data_in;
-@@ -40,7 +39,6 @@ struct scsi_cmnd {
- 	struct scsi_device *device;
- 	struct list_head list;  /* scsi_cmnd participates in queue lists */
- 	struct list_head eh_entry; /* entry for the host eh_cmd_q */
--	int eh_eflags;		/* Used by error handlr */
+ 	if (scsi_bufflen(srb) < 0x10000) {
+ 
+ 		result = usbat_hp8200e_rw_block_test(us, USBAT_ATA, 
+@@ -1184,25 +1183,32 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 	}
  
  	/*
- 	 * A SCSI Command is assigned a nonzero serial_number before passed
-@@ -64,7 +62,9 @@ struct scsi_cmnd {
- 	int timeout_per_command;
+-	 * Since we're requesting more data than we can handle in
+-	 * a single read command (max is 64k-1), we will perform
+-	 * multiple reads, but each read must be in multiples of
+-	 * a sector.  Luckily the sector size is in srb->transfersize
+-	 * (see linux/drivers/scsi/sr.c).
++	 * Since we're requesting more data than we can handle in a
++	 * single read command (max is 64k-1), we will perform multiple
++	 * reads, but each read must be in multiples of a sector.
++	 *
++	 * For ordinary READ_10 commands, we're reading at the current
++	 * sector size, so use the device's sector size.  If the command
++	 * is a READ_CD, we might be reading different sector sizes.
++	 * Fortunately, we can calculate the sector size from the
++	 * contents of the command.
+ 	 */
  
- 	unsigned char cmd_len;
--	enum dma_data_direction sc_data_direction;
-+	unsigned char eh_eflags;		/* Used by error handler */
-+	unsigned char sc_data_direction;	/* enum dma_data_direction */
-+	unsigned char tag;			/* SCSI-II queued command tag */
+ 	if (data[7+0] == GPCMD_READ_CD) {
+-		len = short_pack(data[7+9], data[7+8]);
+-		len <<= 16;
+-		len |= data[7+7];
++		len = data[7+8] | ((u32)data[7+7] << 8) |
++							((u32)data[7+6] << 16);
+ 		US_DEBUGP("handle_read10: GPCMD_READ_CD: len %d\n", len);
+-		srb->transfersize = scsi_bufflen(srb)/len;
++		sector_size = scsi_bufflen(srb) / len;
++	} else {
++		sector_size = srb->device->sector_size;
+ 	}
  
- 	/* These elements define the operation we are about to perform */
- #define MAX_COMMAND_SIZE	16
-@@ -82,8 +82,7 @@ struct scsi_cmnd {
- 				   reconnects.   Probably == sector
- 				   size */
+-	if (!srb->transfersize)  {
+-		srb->transfersize = 2048; /* A guess */
+-		US_DEBUGP("handle_read10: transfersize 0, forcing %d\n",
+-			srb->transfersize);
++	US_DEBUGP("handle_read10: sector_size %d\n", sector_size);
++
++	if (!sector_size)  {
++		sector_size = 2048; /* A guess */
++		US_DEBUGP("handle_read10: sector_size 0, forcing %d\n",
++			sector_size);
+ 	}
  
--	struct request *request;	/* The command we are
--				   	   working on */
-+	struct request *request;	/* The command we are working on */
+ 	/*
+@@ -1211,7 +1217,7 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 	 * bounce buffer and the actual transfer buffer.
+ 	 */
  
- #define SCSI_SENSE_BUFFERSIZE 	96
- 	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-@@ -111,8 +110,6 @@ struct scsi_cmnd {
+-	len = (65535/srb->transfersize) * srb->transfersize;
++	len = (65535/sector_size) * sector_size;
+ 	US_DEBUGP("Max read is %d bytes\n", len);
+ 	len = min(len, scsi_bufflen(srb));
+ 	buffer = kmalloc(len, GFP_NOIO);
+@@ -1238,8 +1244,8 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 		data[7+5] = LSB_of(sector&0xFFFF);
+ 		if (data[7+0] == GPCMD_READ_CD)
+ 			data[7+6] = 0;
+-		data[7+7] = MSB_of(len / srb->transfersize); /* SCSI command */
+-		data[7+8] = LSB_of(len / srb->transfersize); /* num sectors */
++		data[7+7] = MSB_of(len / sector_size); /* SCSI command */
++		data[7+8] = LSB_of(len / sector_size); /* num sectors */
  
- 	int result;		/* Status code from lower level driver */
+ 		result = usbat_hp8200e_rw_block_test(us, USBAT_ATA, 
+ 			registers, data, 19,
+@@ -1259,7 +1265,7 @@ static int usbat_hp8200e_handle_read10(struct us_data *us,
+ 		/* Update the amount transferred and the sector number */
  
--	unsigned char tag;	/* SCSI-II queued command tag */
--
- 	struct scsi_data_buffer sdb;
- };
+ 		transferred += len;
+-		sector += len / srb->transfersize;
++		sector += len / sector_size;
+ 
+ 	} /* while transferred != scsi_bufflen(srb) */
  
 -- 
 1.4.4.2
