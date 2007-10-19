@@ -1,73 +1,96 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 4/4] Replace scmd->transfersize with scsi_transfer_size()
-Date: Fri, 19 Oct 2007 19:45:54 +0200 (CEST)
-Message-ID: <tkrat.c6961aca23c6c3f9@s5r6.in-berlin.de>
-References: <11927248762034-git-send-email-matthew@wil.cx>
- <1192724876702-git-send-email-matthew@wil.cx>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH] Correct tag initialisation for commands
+Date: Fri, 19 Oct 2007 12:57:20 -0500
+Message-ID: <4718F000.6020104@cs.wisc.edu>
+References: <4718AFD7.5000203@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:46755 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758387AbXJSRqB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 13:46:01 -0400
-In-Reply-To: <1192724876702-git-send-email-matthew@wil.cx>
-Content-Disposition: INLINE
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:42157 "EHLO sabe.cs.wisc.edu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756139AbXJSR53 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Oct 2007 13:57:29 -0400
+In-Reply-To: <4718AFD7.5000203@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <willy@linux.intel.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On 18 Oct, Matthew Wilcox wrote:
+Hannes Reinecke wrote:
+> Hi all,
+> 
+> currently the initialisation of scmd->tag seems to be wrong.
+> We have this lines from scsi_lib.c:scsi_get_cmd_from_req():
+> 
+> 	/* pull a tag out of the request if we have one */
+> 	cmd->tag = req->tag;
+> 
+> which are supposed to fill the tag value for a given command.
+> However, the function is called from the ->prep_fn callback,
+> invoked from elv_next_request() in scsi_request_fn().
+> 
+> In scsi_request_fn() we have:
+> 
+> 	req = elv_next_request(q);
+> 	if (!req || !scsi_dev_queue_ready(q, sdev))
+> 		break;
+> 
+> 	if (unlikely(!scsi_device_online(sdev))) {
+> 		sdev_printk(KERN_ERR, sdev,
+> 			    "rejecting I/O to offline device\n");
+> 		scsi_kill_request(req, q);
+> 		continue;
+> 	}
+> 
+> 	/*
+> 	 * Remove the request from the request list.
+> 	 */
+> 	if (!(blk_queue_tagged(q) && !blk_queue_start_tag(q, req)))
+> 		blkdev_dequeue_request(req);
+> 
+> ie the value of rq->tag is filled _after it has been copied
+> to scmd->tag.
+> 
+> A proposed patch would be:
+> 
 > --- a/drivers/scsi/scsi_lib.c
 > +++ b/drivers/scsi/scsi_lib.c
-...
-> @@ -2355,3 +2354,18 @@ void scsi_kunmap_atomic_sg(void *virt)
->  	kunmap_atomic(virt, KM_BIO_SRC_IRQ);
->  }
->  EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
+> @@ -1055,8 +1055,6 @@ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
+>  		cmd = req->special;
+>  	}
+>  
+> -	/* pull a tag out of the request if we have one */
+> -	cmd->tag = req->tag;
+>  	cmd->request = req;
+>  
+>  	return cmd;
+> @@ -1445,6 +1443,9 @@ static void scsi_request_fn(struct request_queue *q)
+>  			blk_dump_rq_flags(req, "foo");
+>  			BUG();
+>  		}
+> +		/* pull a tag out of the request if we have one */
+> +		cmd->tag = req->tag;
 > +
-> +/*
-> + * Returns the minimum size that must be transferred in one go.  For
-> + * normal commands, this is the sector size of the device.  For special
-> + * commands, the whole command must be transferred at once.  If a driver
-> + * cannot transfer at least this much, it should fail the command.
-> + */
+>  		spin_lock(shost->host_lock);
+>  
+>  		if (!scsi_host_queue_ready(q, shost, sdev))
+> 
+> Comments?
+> 
 
+I saw that while working on qla4xxx. I think the reason no one ever 
+complained before is because of how most drivers use the tags. Was there 
+some driver accesing the scsi cmd tag value?
 
-As it is an exported symbol, kerneldoc format for the description is
-appropriate:
+qla4xxx and other drivers, if I remember drivers like ipr and qla2xxx, 
+never access scsi_cmd->tag. Instead they use scsi_find_tag to go from a 
+tag to a command or they use scsi_populate_tag_msg to get the MSG_* bits.
 
-/**
- * scsi_transfer_size - returns the minimum size that must be transferred in one go
- * @cmd: command for which to get the transfer size
- *
- * For normal commands, this is the sector size of the device.  For special
- * commands, the whole command must be transferred at once.  If a driver
- * cannot transfer at least this much, it should fail the command.
- */
+If every ones uses the scsi_tcq wrappers, maybe the scsi_cmnd->tag field 
+would be something that could be deleted and help Mathew's goals to 
+shrink the struct.
 
-IMO the last paragraph could be condensed to
-
- * If a driver cannot transfer at least this much, it should fail the command.
- */
-
-> +unsigned int scsi_transfer_size(struct scsi_cmnd *cmd)
-> +{
-> +	struct request *req = cmd->request;
-
-Whitespace police says:  Here goes a blank line.
-
-> +	if (req->cmd_type == REQ_TYPE_BLOCK_PC)
-> +		return req->data_len;
-> +	return cmd->device->sector_size;
-> +}
-> +EXPORT_SYMBOL(scsi_transfer_size);
-
-
--- 
-Stefan Richter
--=====-=-=== =-=- =--==
-http://arcgraph.de/sr/
-
-
+If not your patch looks ok, but maybe we could convert to using the 
+wrappers since it does not seem that there is a good reason to duplicate 
+the tag now that every scsi command has proper request backing.
