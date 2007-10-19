@@ -1,43 +1,28 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: [PATCH] Make advansys depend on CONFIG_VIRT_TO_BUS
-Date: Fri, 19 Oct 2007 15:04:31 +1000
-Message-ID: <20071019150431.996522c5.sfr@canb.auug.org.au>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH] Make advansys depend on CONFIG_VIRT_TO_BUS
+Date: Thu, 18 Oct 2007 22:07:28 -0700 (PDT)
+Message-ID: <20071018.220728.51864105.davem@davemloft.net>
+References: <20071019150431.996522c5.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:54366 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750760AbXJSFEk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Oct 2007 01:04:40 -0400
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:59941
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1754057AbXJSFHP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Oct 2007 01:07:15 -0400
+In-Reply-To: <20071019150431.996522c5.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: sfr@canb.auug.org.au
+Cc: matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
 
-At least for now.
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Date: Fri, 19 Oct 2007 15:04:31 +1000
 
-Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
----
- drivers/scsi/Kconfig |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+> At least for now.
+> 
+> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
 
--- 
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 30905ce..325533c 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -523,6 +523,7 @@ config SCSI_ADVANSYS
- 	tristate "AdvanSys SCSI support"
- 	depends on SCSI
- 	depends on ISA || EISA || PCI
-+	depends on VIRT_TO_BUS
- 	help
- 	  This is a driver for all SCSI host adapters manufactured by
- 	  AdvanSys. It is documented in the kernel source in
--- 
-1.5.3.4
-
+Acked-by: David S. Miller <davem@davemloft.net>
