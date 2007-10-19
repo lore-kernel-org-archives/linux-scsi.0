@@ -1,63 +1,49 @@
-From: Stephen Rothwell <sfr@canb.auug.org.au>
-Subject: Re: [PATCH] Make advansys depend on CONFIG_VIRT_TO_BUS
-Date: Fri, 19 Oct 2007 16:33:59 +1000
-Message-ID: <20071019163359.2409613d.sfr@canb.auug.org.au>
-References: <20071019150431.996522c5.sfr@canb.auug.org.au>
-	<20071018222017.514df7b9.randy.dunlap@oracle.com>
-	<20071018223023.d805c8c4.akpm@linux-foundation.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] aha152x: delete pointless test in irq handler
+Date: Fri, 19 Oct 2007 03:33:54 -0400
+Message-ID: <20071019073354.GA5766@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; protocol="application/pgp-signature";
- micalg="PGP-SHA1";
- boundary="Signature=_Fri__19_Oct_2007_16_33_59_+1000_tAUFkayY_.ipfDEA"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from chilli.pcug.org.au ([203.10.76.44]:50591 "EHLO smtps.tip.net.au"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753324AbXJSGeI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Oct 2007 02:34:08 -0400
-In-Reply-To: <20071018223023.d805c8c4.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, Matthew Wilcox <matthew@wil.cx>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
-
---Signature=_Fri__19_Oct_2007_16_33_59_+1000_tAUFkayY_.ipfDEA
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934301AbXJSHeW@vger.kernel.org>
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 18 Oct 2007 22:30:23 -0700 Andrew Morton <akpm@linux-foundation.org=
-> wrote:
->
-> On Thu, 18 Oct 2007 22:20:17 -0700 Randy Dunlap <randy.dunlap@oracle.com>=
- wrote:
-> >=20
-> > Please explain "why" in the changelog (what changelog?).
-> >=20
-> > E.g.:
-> > so that make allmodconfig on powerpc will have a better chance
-> > of building.
 
-Yep, sorry.
+commit c8f14a99beb85918935334a8374e47db12608d8e
+Author: Jeff Garzik <jeff@garzik.org>
+Date:   Fri Oct 19 03:17:14 2007 -0400
 
-> My version of this patch does that.  I'll be sending it into Linus in an
-> hour or so.
+    [SCSI] aha152x: delete pointless test in irq handler
+    
+    Remove always-false test in interrupt handler.
+    
+    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 
-Thanks.
+ drivers/scsi/aha152x.c |    7 +------
+ 1 file changed, 1 insertion(+), 6 deletions(-)
 
---=20
-Cheers,
-Stephen Rothwell                    sfr@canb.auug.org.au
-http://www.canb.auug.org.au/~sfr/
-
---Signature=_Fri__19_Oct_2007_16_33_59_+1000_tAUFkayY_.ipfDEA
-Content-Type: application/pgp-signature
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHGE/bTgG2atn1QN8RAn1+AJ9eVWU+wYtXEyVAbeH3UDDVTkxFMQCgmdcL
-jYEw3b2DRKeoxWqyWODdqzs=
-=I0mA
------END PGP SIGNATURE-----
-
---Signature=_Fri__19_Oct_2007_16_33_59_+1000_tAUFkayY_.ipfDEA--
+c8f14a99beb85918935334a8374e47db12608d8e
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index f08e71e..973778a 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -1439,15 +1439,10 @@ static void run(struct work_struct *work)
+  */
+ static irqreturn_t intr(int irqno, void *dev_id)
+ {
+-	struct Scsi_Host *shpnt = (struct Scsi_Host *)dev_id;
++	struct Scsi_Host *shpnt = dev_id;
+ 	unsigned long flags;
+ 	unsigned char rev, dmacntrl0;
+ 
+-	if (!shpnt) {
+-		printk(KERN_ERR "aha152x: catched interrupt %d for unknown controller.\n", irqno);
+-		return IRQ_NONE;
+-	}
+-
+ 	/*
+ 	 * Read a couple of registers that are known to not be all 1's. If
+ 	 * we read all 1's (-1), that means that either:
