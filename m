@@ -1,44 +1,44 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 0/8] qla2xxx: Driver updates for 2.6.24 [8.02.00-k5].
-Date: Fri, 19 Oct 2007 15:58:24 -0700
-Message-ID: <20071019225824.GG24197@plap3.qlogic.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Subject: [PATCH 1/8] qla2xxx: Resync with latest HBA SSID specification -- 2.2u.
+Date: Fri, 19 Oct 2007 15:59:13 -0700
+Message-ID: <1192834760-573-1-git-send-email-andrew.vasquez@qlogic.com>
+References: <20071019225824.GG24197@plap3.qlogic.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:28975 "EHLO
+Received: from avexch1.qlogic.com ([198.70.193.115]:29118 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755344AbXJSW6g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 18:58:36 -0400
-Content-Disposition: inline
+	with ESMTP id S966599AbXJSW7b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 18:59:31 -0400
+In-Reply-To: <20071019225824.GG24197@plap3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@steeleye.com>, Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-This patchset updates the qla2xxx driver to 8.02.00-k5
+Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
+---
+ drivers/scsi/qla2xxx/qla_devtbl.h |    7 ++++++-
+ 1 files changed, 6 insertions(+), 1 deletions(-)
 
- drivers/scsi/qla2xxx/qla_attr.c    |    9 ++----
- drivers/scsi/qla2xxx/qla_def.h     |    1 +
- drivers/scsi/qla2xxx/qla_devtbl.h  |    7 ++++-
- drivers/scsi/qla2xxx/qla_iocb.c    |    2 +-
- drivers/scsi/qla2xxx/qla_isr.c     |    8 +++++-
- drivers/scsi/qla2xxx/qla_mbx.c     |    2 +-
- drivers/scsi/qla2xxx/qla_os.c      |   50 +++++++++++++++++++++--------------
- drivers/scsi/qla2xxx/qla_sup.c     |   25 ++++++++++++++++--
- drivers/scsi/qla2xxx/qla_version.h |    2 +-
- 9 files changed, 72 insertions(+), 34 deletions(-)
+diff --git a/drivers/scsi/qla2xxx/qla_devtbl.h b/drivers/scsi/qla2xxx/qla_devtbl.h
+index dd43541..d78d35e 100644
+--- a/drivers/scsi/qla2xxx/qla_devtbl.h
++++ b/drivers/scsi/qla2xxx/qla_devtbl.h
+@@ -1,4 +1,4 @@
+-#define QLA_MODEL_NAMES		0x57
++#define QLA_MODEL_NAMES		0x5C
+ 
+ /*
+  * Adapter model names and descriptions.
+@@ -91,4 +91,9 @@ static char *qla2x00_model_name[QLA_MODEL_NAMES*2] = {
+ 	" ",		" ",						/* 0x154 */
+ 	"QLE220",	"PCI-Express to 4Gb FC, Single Channel",	/* 0x155 */
+ 	"QLE220",	"PCI-Express to 4Gb FC, Single Channel",	/* 0x156 */
++	" ",		" ",						/* 0x157 */
++	" ",		" ",						/* 0x158 */
++	" ",		" ",						/* 0x159 */
++	" ",		" ",						/* 0x15a */
++	"QME2472",	"Dell BS PCI-Express to 4Gb FC, Dual Channel",	/* 0x15b */
+ };
+-- 
+1.5.3.4.206.g58ba4
 
-here's the commits:
-
-- Resync with latest HBA SSID specification -- 2.2u.
-- Defer explicit interrupt-polling processing to init-time scenarios.
-- Handle unaligned sector writes during NVRAM/VPD updates.
-- Fix issue where final flash-segment updates were falling into the slow-path write handler.
-- Make driver (mostly) legacy I/O port free.
-- Correct residual-count handling discrepancies during UNDERRUN handling.
-- Correct display of ISP serial-number.
-- Update version number to 8.02.00-k5.
-
-Regards,
-Andrew Vasquez
-QLogic Corporation
