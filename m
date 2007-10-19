@@ -1,77 +1,54 @@
-From: hare@suse.de (Hannes Reinecke)
-Subject: [PATCH 2/4] aic7xxx: Update Maintainer information
-Date: Fri, 19 Oct 2007 10:32:29 +0200
-Message-ID: <20071019083229.6AF9718C61E@pentland.suse.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/4] aic7xxx: Add suspend/resume support
+Date: Fri, 19 Oct 2007 09:44:07 +0100
+Message-ID: <20071019084407.GA23211@infradead.org>
+References: <20071019083222.11DAE18C61E@pentland.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:47020 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S966289AbXJSIcM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 19 Oct 2007 04:32:12 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:53001 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755153AbXJSIoJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 04:44:09 -0400
+Content-Disposition: inline
+In-Reply-To: <20071019083222.11DAE18C61E@pentland.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
+I think this needs a little restructuring. ahd_pci_suspend/ahd_pci_resume
+should be merged into their callers and use the normal Linux pci accessors,
+and ahd_suspend/ahd_resume are tiny enough to merged into the caller aswell.
 
-Might as well take the blame officially.
+> +#ifdef CONFIG_PM
+> +	.suspend	= ahd_linux_pci_dev_suspend,
+> +	.resume		= ahd_linux_pci_dev_resume,
+> +#endif
+>  	.remove		= ahd_linux_pci_dev_remove,
+>  	.id_table	= ahd_linux_pci_id_table
+>  };
+>  
+> +static int
+> +ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg)
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
----
- MAINTAINERS                        |    6 ++++++
- drivers/scsi/aic7xxx/aic79xx_osm.c |    4 ++--
- drivers/scsi/aic7xxx/aic7xxx_osm.c |    4 ++--
- 3 files changed, 10 insertions(+), 4 deletions(-)
+I think this needsa #ifdef CONFIG_PM aswell.  Also any chance you
+could implement functions before their use so we can avoid forward
+declarations.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 10deabe..75fd297 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -325,6 +325,12 @@ M:	Juergen Fischer <fischer@norbit.de>
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- 
-+AIC7XXX / AIC79XX SCSI DRIVER
-+P:	Hannes Reinecke
-+M:	hare@suse.de
-+L:	linux-scsi@vger.kernel.org
-+S:	Maintained
-+
- ALCATEL SPEEDTOUCH USB DRIVER
- P:	Duncan Sands
- M:	duncan.sands@free.fr
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 42c0f14..2d02040 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -315,8 +315,8 @@ uint32_t aic79xx_slowcrc;
-  */
- static char *aic79xx = NULL;
- 
--MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
--MODULE_DESCRIPTION("Adaptec Aic790X U320 SCSI Host Bus Adapter driver");
-+MODULE_AUTHOR("Maintainer: Hannes Reinecke <hare@suse.de>");
-+MODULE_DESCRIPTION("Adaptec AIC790X U320 SCSI Host Bus Adapter driver");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC79XX_DRIVER_VERSION);
- module_param(aic79xx, charp, 0444);
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index 7770bef..390b0fc 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -335,8 +335,8 @@ static uint32_t aic7xxx_periodic_otag;
-  */
- static char *aic7xxx = NULL;
- 
--MODULE_AUTHOR("Maintainer: Justin T. Gibbs <gibbs@scsiguy.com>");
--MODULE_DESCRIPTION("Adaptec Aic77XX/78XX SCSI Host Bus Adapter driver");
-+MODULE_AUTHOR("Maintainer: Hannes Reinecke <hare@suse.de>");
-+MODULE_DESCRIPTION("Adaptec AIC77XX/78XX SCSI Host Bus Adapter driver");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
- module_param(aic7xxx, charp, 0444);
--- 
-1.5.2.4
+> +{
+> +	struct ahd_softc *ahd = pci_get_drvdata(pdev);
+> +	int rc;
+> +
+> +	if ((rc = ahd_suspend(ahd)))
+> +		return rc;
 
+	rc = ahd_suspend(ahd)
+	if (rc)
+		return rc;
+
+but as I mentioned above better just inline the content of ahd_suspend
+into this function. That would also catch that ahd_suspend returns
+positive errno values and we'd have to invert them here.
+
+Same comments apply to the aic7xxx portion.
