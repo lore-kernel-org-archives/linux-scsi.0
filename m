@@ -1,49 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH] aha152x: delete pointless test in irq handler
-Date: Fri, 19 Oct 2007 03:33:54 -0400
-Message-ID: <20071019073354.GA5766@havoc.gtf.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 0/4] aic7xxx fixes
+Date: Fri, 19 Oct 2007 10:29:39 +0200
+Message-ID: <47186AF3.4020503@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S934301AbXJSHeW@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: LKML <linux-kernel@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns.suse.de ([195.135.220.2]:59868 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751312AbXJSI3l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 19 Oct 2007 04:29:41 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
+Hi James,
 
-commit c8f14a99beb85918935334a8374e47db12608d8e
-Author: Jeff Garzik <jeff@garzik.org>
-Date:   Fri Oct 19 03:17:14 2007 -0400
+this is just small patchset with some queue fixes:
 
-    [SCSI] aha152x: delete pointless test in irq handler
-    
-    Remove always-false test in interrupt handler.
-    
-    Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+- Add suspend/resume support; this time with a fixed aic7770
+- Update MAINTAINER
+- Fixup firmware build; I'd suspect some recent gcc change
+- Enable 16-byte CDBs
 
- drivers/scsi/aha152x.c |    7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+Please apply.
 
-c8f14a99beb85918935334a8374e47db12608d8e
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index f08e71e..973778a 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -1439,15 +1439,10 @@ static void run(struct work_struct *work)
-  */
- static irqreturn_t intr(int irqno, void *dev_id)
- {
--	struct Scsi_Host *shpnt = (struct Scsi_Host *)dev_id;
-+	struct Scsi_Host *shpnt = dev_id;
- 	unsigned long flags;
- 	unsigned char rev, dmacntrl0;
- 
--	if (!shpnt) {
--		printk(KERN_ERR "aha152x: catched interrupt %d for unknown controller.\n", irqno);
--		return IRQ_NONE;
--	}
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
 -
- 	/*
- 	 * Read a couple of registers that are known to not be all 1's. If
- 	 * we read all 1's (-1), that means that either:
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
