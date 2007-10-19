@@ -1,146 +1,154 @@
 From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 3/8] qla2xxx: Handle unaligned sector writes during NVRAM/VPD updates.
-Date: Fri, 19 Oct 2007 15:59:15 -0700
-Message-ID: <1192834760-573-3-git-send-email-andrew.vasquez@qlogic.com>
+Subject: [PATCH 5/8] qla2xxx: Make driver (mostly) legacy I/O port free.
+Date: Fri, 19 Oct 2007 15:59:17 -0700
+Message-ID: <1192834760-573-5-git-send-email-andrew.vasquez@qlogic.com>
 References: <20071019225824.GG24197@plap3.qlogic.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from avexch1.qlogic.com ([198.70.193.115]:29152 "EHLO
 	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966599AbXJSW7h (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 18:59:37 -0400
+	with ESMTP id S966648AbXJSW7k (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 18:59:40 -0400
 In-Reply-To: <20071019225824.GG24197@plap3.qlogic.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
 Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
 
-Since both NVRAM and VPD regions of the flash reside on unaligned
-sector boundaries, during update, the driver must perform a
-read-modify-write operation to the composite NVRAM/VPD region.
-This affects ISP25xx type boards only.
+Recent ISPs need only the single MMIO BAR to manipulate HW
+registers.  Unfortunately, ISP21xx, ISP22xx, ISP23xx, and ISP63xx
+type cards still require the I/O mapped region to manipulate the
+FLASH via the two HW flash-registers (flash_address and
+flash_data).
 
 Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |    6 ------
- drivers/scsi/qla2xxx/qla_sup.c  |   23 +++++++++++++++++++++--
- 2 files changed, 21 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |    1 +
+ drivers/scsi/qla2xxx/qla_os.c  |   50 ++++++++++++++++++++++++----------------
+ 2 files changed, 31 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 05fa779..2f0bd5a 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -114,7 +114,6 @@ qla2x00_sysfs_write_nvram(struct kobject *kobj,
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	unsigned long	flags;
- 	uint16_t	cnt;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1900fbf..04e8cbc 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2271,6 +2271,7 @@ typedef struct scsi_qla_host {
  
- 	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != ha->nvram_size)
-@@ -144,11 +143,9 @@ qla2x00_sysfs_write_nvram(struct kobject *kobj,
+ 	spinlock_t		hardware_lock ____cacheline_aligned;
+ 
++	int		bars;
+ 	device_reg_t __iomem *iobase;		/* Base I/O address */
+ 	unsigned long	pio_address;
+ 	unsigned long	pio_length;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 0351d38..a5bcf1f 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1482,6 +1482,17 @@ qla2x00_iospace_config(scsi_qla_host_t *ha)
+ 	unsigned long	pio, pio_len, pio_flags;
+ 	unsigned long	mmio, mmio_len, mmio_flags;
+ 
++	if (pci_request_selected_regions(ha->pdev, ha->bars,
++	    QLA2XXX_DRIVER_NAME)) {
++		qla_printk(KERN_WARNING, ha,
++		    "Failed to reserve PIO/MMIO regions (%s)\n",
++		    pci_name(ha->pdev));
++
++		goto iospace_error_exit;
++	}
++	if (!(ha->bars & 1))
++		goto skip_pio;
++
+ 	/* We only need PIO for Flash operations on ISP2312 v2 chips. */
+ 	pio = pci_resource_start(ha->pdev, 0);
+ 	pio_len = pci_resource_len(ha->pdev, 0);
+@@ -1499,7 +1510,10 @@ qla2x00_iospace_config(scsi_qla_host_t *ha)
+ 		    pci_name(ha->pdev));
+ 		pio = 0;
+ 	}
++	ha->pio_address = pio;
++	ha->pio_length = pio_len;
+ 
++skip_pio:
+ 	/* Use MMIO operations for all accesses. */
+ 	mmio = pci_resource_start(ha->pdev, 1);
+ 	mmio_len = pci_resource_len(ha->pdev, 1);
+@@ -1518,16 +1532,6 @@ qla2x00_iospace_config(scsi_qla_host_t *ha)
+ 		goto iospace_error_exit;
  	}
  
- 	/* Write NVRAM. */
--	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	ha->isp_ops->write_nvram(ha, (uint8_t *)buf, ha->nvram_base, count);
- 	ha->isp_ops->read_nvram(ha, (uint8_t *)ha->nvram, ha->nvram_base,
- 	    count);
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-	if (pci_request_regions(ha->pdev, QLA2XXX_DRIVER_NAME)) {
+-		qla_printk(KERN_WARNING, ha,
+-		    "Failed to reserve PIO/MMIO regions (%s)\n",
+-		    pci_name(ha->pdev));
+-
+-		goto iospace_error_exit;
+-	}
+-
+-	ha->pio_address = pio;
+-	ha->pio_length = pio_len;
+ 	ha->iobase = ioremap(mmio, MIN_IOBASE_LEN);
+ 	if (!ha->iobase) {
+ 		qla_printk(KERN_ERR, ha,
+@@ -1579,21 +1583,26 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	char pci_info[30];
+ 	char fw_str[30];
+ 	struct scsi_host_template *sht;
++	int bars;
  
- 	set_bit(ISP_ABORT_NEEDED, &ha->dpc_flags);
- 
-@@ -397,16 +394,13 @@ qla2x00_sysfs_write_vpd(struct kobject *kobj,
- {
- 	struct scsi_qla_host *ha = shost_priv(dev_to_shost(container_of(kobj,
- 	    struct device, kobj)));
--	unsigned long flags;
- 
- 	if (!capable(CAP_SYS_ADMIN) || off != 0 || count != ha->vpd_size)
- 		return 0;
- 
- 	/* Write NVRAM. */
--	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	ha->isp_ops->write_nvram(ha, (uint8_t *)buf, ha->vpd_base, count);
- 	ha->isp_ops->read_nvram(ha, (uint8_t *)ha->vpd, ha->vpd_base, count);
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	return count;
- }
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_sup.c
-index 40b059f..b3faff0 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -7,6 +7,7 @@
- #include "qla_def.h"
- 
- #include <linux/delay.h>
-+#include <linux/vmalloc.h>
- #include <asm/uaccess.h>
- 
- static uint16_t qla2x00_nvram_request(scsi_qla_host_t *, uint32_t);
-@@ -745,9 +746,11 @@ qla2x00_write_nvram_data(scsi_qla_host_t *ha, uint8_t *buf, uint32_t naddr,
- 	int ret, stat;
- 	uint32_t i;
- 	uint16_t *wptr;
-+	unsigned long flags;
- 
- 	ret = QLA_SUCCESS;
- 
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	qla2x00_lock_nvram_access(ha);
- 
- 	/* Disable NVRAM write-protection. */
-@@ -764,6 +767,7 @@ qla2x00_write_nvram_data(scsi_qla_host_t *ha, uint8_t *buf, uint32_t naddr,
- 	qla2x00_set_nvram_protection(ha, stat);
- 
- 	qla2x00_unlock_nvram_access(ha);
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	return ret;
- }
-@@ -776,9 +780,11 @@ qla24xx_write_nvram_data(scsi_qla_host_t *ha, uint8_t *buf, uint32_t naddr,
- 	uint32_t i;
- 	uint32_t *dwptr;
- 	struct device_reg_24xx __iomem *reg = &ha->iobase->isp24;
-+	unsigned long flags;
- 
- 	ret = QLA_SUCCESS;
- 
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	/* Enable flash write. */
- 	WRT_REG_DWORD(&reg->ctrl_status,
- 	    RD_REG_DWORD(&reg->ctrl_status) | CSRX_FLASH_ENABLE);
-@@ -812,6 +818,7 @@ qla24xx_write_nvram_data(scsi_qla_host_t *ha, uint8_t *buf, uint32_t naddr,
- 	WRT_REG_DWORD(&reg->ctrl_status,
- 	    RD_REG_DWORD(&reg->ctrl_status) & ~CSRX_FLASH_ENABLE);
- 	RD_REG_DWORD(&reg->ctrl_status);	/* PCI Posting. */
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	return ret;
- }
-@@ -836,8 +843,20 @@ int
- qla25xx_write_nvram_data(scsi_qla_host_t *ha, uint8_t *buf, uint32_t naddr,
-     uint32_t bytes)
- {
--	return qla24xx_write_flash_data(ha, (uint32_t *)buf,
--	    FA_VPD_NVRAM_ADDR | naddr, bytes >> 2);
-+#define RMW_BUFFER_SIZE	(64 * 1024)
-+	uint8_t *dbuf;
+-	if (pci_enable_device(pdev))
+-		goto probe_out;
+-
+-	if (pci_find_aer_capability(pdev))
+-		if (pci_enable_pcie_error_reporting(pdev))
+-			goto probe_out;
+-
++	bars = pci_select_bars(pdev, IORESOURCE_MEM | IORESOURCE_IO);
+ 	sht = &qla2x00_driver_template;
+ 	if (pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2422 ||
+ 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2432 ||
+ 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP5422 ||
+ 	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP5432 ||
+-	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2532)
++	    pdev->device == PCI_DEVICE_ID_QLOGIC_ISP2532) {
++		bars = pci_select_bars(pdev, IORESOURCE_MEM);
+ 		sht = &qla24xx_driver_template;
++	}
 +
-+	dbuf = vmalloc(RMW_BUFFER_SIZE);
-+	if (!dbuf)
-+		return QLA_MEMORY_ALLOC_FAILED;
-+	ha->isp_ops->read_optrom(ha, dbuf, FA_VPD_NVRAM_ADDR << 2,
-+	    RMW_BUFFER_SIZE);
-+	memcpy(dbuf + (naddr << 2), buf, bytes);
-+	ha->isp_ops->write_optrom(ha, dbuf, FA_VPD_NVRAM_ADDR << 2,
-+	    RMW_BUFFER_SIZE);
-+	vfree(dbuf);
++	if (pci_enable_device_bars(pdev, bars))
++		goto probe_out;
 +
-+	return QLA_SUCCESS;
++	if (pci_find_aer_capability(pdev))
++		if (pci_enable_pcie_error_reporting(pdev))
++			goto probe_out;
++
+ 	host = scsi_host_alloc(sht, sizeof(scsi_qla_host_t));
+ 	if (host == NULL) {
+ 		printk(KERN_WARNING
+@@ -1610,6 +1619,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ha->host_no = host->host_no;
+ 	sprintf(ha->host_str, "%s_%ld", QLA2XXX_DRIVER_NAME, ha->host_no);
+ 	ha->parent = NULL;
++	ha->bars = bars;
+ 
+ 	/* Set ISP-type information. */
+ 	qla2x00_set_isp_flags(ha);
+@@ -1880,7 +1890,7 @@ qla2x00_free_device(scsi_qla_host_t *ha)
+ 	/* release io space registers  */
+ 	if (ha->iobase)
+ 		iounmap(ha->iobase);
+-	pci_release_regions(ha->pdev);
++	pci_release_selected_regions(ha->pdev, ha->bars);
  }
  
  static inline void
+@@ -2890,7 +2900,7 @@ qla2xxx_pci_slot_reset(struct pci_dev *pdev)
+ 	pci_ers_result_t ret = PCI_ERS_RESULT_DISCONNECT;
+ 	scsi_qla_host_t *ha = pci_get_drvdata(pdev);
+ 
+-	if (pci_enable_device(pdev)) {
++	if (pci_enable_device_bars(pdev, ha->bars)) {
+ 		qla_printk(KERN_WARNING, ha,
+ 		    "Can't re-enable PCI device after reset.\n");
+ 
 -- 
 1.5.3.4.206.g58ba4
 
