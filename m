@@ -1,53 +1,42 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: [PATCH 6/8] qla2xxx: Correct residual-count handling discrepancies during UNDERRUN handling.
-Date: Fri, 19 Oct 2007 15:59:18 -0700
-Message-ID: <1192834760-573-6-git-send-email-andrew.vasquez@qlogic.com>
-References: <20071019225824.GG24197@plap3.qlogic.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: oops in lbmIODone, fails to boot [Re: 2.6.23-mm1]
+Date: Fri, 19 Oct 2007 22:34:40 -0700
+Message-ID: <20071019223440.3bf845ef.akpm@linux-foundation.org>
+References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
+	<20071020045753.GA4660@inferi.kami.home>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:29152 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S966596AbXJSW7i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Oct 2007 18:59:38 -0400
-In-Reply-To: <20071019225824.GG24197@plap3.qlogic.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:55436 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751845AbXJTFe5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 20 Oct 2007 01:34:57 -0400
+In-Reply-To: <20071020045753.GA4660@inferi.kami.home>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>, Seokmann Ju <seokmann.ju@qlogic.com>
+To: Mattia Dongili <malattia@linux.it>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Dave Kleikamp <shaggy@austin.ibm.com>
 
-For recent ISPs, software during CS_UNDERRUN handling must
-determine if the two residuals, firmware-calculated and FCP_RSP,
-are different to recognize if a frame has been dropped.  Update
-the driver to catch this condition, and clear the
-SS_RESIDUAL_UNDER and lscsi_status bits.  This logic is
-consistent with what earlier firmwares did by explicitly
-cracking open the FCP_RSP statuses and clearing
-SS_RESIDUAL_UNDER.
+On Sat, 20 Oct 2007 13:57:54 +0900 Mattia Dongili <malattia@linux.it> wrote:
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
- drivers/scsi/qla2xxx/qla_isr.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+> On Thu, Oct 11, 2007 at 09:31:26PM -0700, Andrew Morton wrote:
+> > 
+> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm1/
+> 
+> Hey there!!
+> fails to boot here with this friendly oops:
+> http://oioio.altervista.org/linux/dsc01702.jpg
+> 
+> .config: http://oioio.altervista.org/linux/config-2.6.23-mm1-1
+> 
+> 2.6.23-rc8-mm2 booted ok but had other problems I haven't reported yet
+> (no s2ram with mysql running and some net WARNING).
+> Let's see if .23-mm1 still has those first.
+> 
+> I'm adding Cc: linux-scsi
+> 
+> PS: I'll hardly be able to bisect in the next days... :P
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index c4768c4..1104bd2 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1012,8 +1012,14 @@ qla2x00_status_entry(scsi_qla_host_t *ha, void *pkt)
- 	case CS_DATA_UNDERRUN:
- 		resid = resid_len;
- 		/* Use F/W calculated residual length. */
--		if (IS_FWI2_CAPABLE(ha))
-+		if (IS_FWI2_CAPABLE(ha)) {
-+			if (scsi_status & SS_RESIDUAL_UNDER &&
-+			    resid != fw_resid_len) {
-+				scsi_status &= ~SS_RESIDUAL_UNDER;
-+				lscsi_status = 0;
-+			}
- 			resid = fw_resid_len;
-+		}
- 
- 		if (scsi_status & SS_RESIDUAL_UNDER) {
- 			scsi_set_resid(cp, resid);
--- 
-1.5.3.4.206.g58ba4
-
+That looks like a Jens and Dave production to me.
