@@ -1,11 +1,13 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 01/10] use seperate bioset for REQ_TYPE_BLOCK_PC
-Date: Sat, 20 Oct 2007 00:44:35 -0500
-Message-ID: <1192859085521-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 02/10] rm block device arg from bio map user
+	functions
+Date: Sat, 20 Oct 2007 00:44:36 -0500
+Message-ID: <11928590862112-git-send-email-michaelc@cs.wisc.edu>
 References: <11928590843394-git-send-email-michaelc@cs.wisc.edu>
+	<1192859085521-git-send-email-michaelc@cs.wisc.edu>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <11928590843394-git-send-email-michaelc@cs.wisc.edu>
+In-Reply-To: <1192859085521-git-send-email-michaelc@cs.wisc.edu>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -21,91 +23,125 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-If we are failing over a device or trying to do sg io to add a path to a
-device where all paths are failed, we do not want to allocate bios from the
-same bioset as the FS above it, because the device could have been internally
-queueing IO while there were no paths and the fs bioset could be depleted.
+Everyone is passing in NULL, so let's just drop the
+block device argument from the bio mapping functions.
 
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- fs/bio.c |   22 +++++++++++++++++++---
- 1 files changed, 19 insertions(+), 3 deletions(-)
+ block/ll_rw_blk.c   |    4 ++--
+ fs/bio.c            |   17 ++++++-----------
+ include/linux/bio.h |    5 ++---
+ 3 files changed, 10 insertions(+), 16 deletions(-)
 
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 3935469..7c90e9b 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -2383,7 +2383,7 @@ static int __blk_rq_map_user(struct request_queue *q, struct request *rq,
+ 	 */
+ 	uaddr = (unsigned long) ubuf;
+ 	if (!(uaddr & queue_dma_alignment(q)) && !(len & queue_dma_alignment(q)))
+-		bio = bio_map_user(q, NULL, uaddr, len, reading);
++		bio = bio_map_user(q, uaddr, len, reading);
+ 	else
+ 		bio = bio_copy_user(q, uaddr, len, reading);
+ 
+@@ -2508,7 +2508,7 @@ int blk_rq_map_user_iov(struct request_queue *q, struct request *rq,
+ 	/* we don't allow misaligned data like bio_map_user() does.  If the
+ 	 * user is using sg, they're expected to know the alignment constraints
+ 	 * and respect them accordingly */
+-	bio = bio_map_user_iov(q, NULL, iov, iov_count, rq_data_dir(rq)== READ);
++	bio = bio_map_user_iov(q, iov, iov_count, rq_data_dir(rq)== READ);
+ 	if (IS_ERR(bio))
+ 		return PTR_ERR(bio);
+ 
 diff --git a/fs/bio.c b/fs/bio.c
-index d59ddbf..0781e65 100644
+index 0781e65..f85139a 100644
 --- a/fs/bio.c
 +++ b/fs/bio.c
-@@ -75,6 +75,10 @@ struct bio_set {
-  * IO code that does not need private memory pools.
-  */
- static struct bio_set *fs_bio_set;
-+/*
-+ * blk_bio_set is for block layer commands like REQ_TYPE_BLOCK_PC
-+ */
-+static struct bio_set *blk_bio_set;
- 
- static inline struct bio_vec *bvec_alloc_bs(gfp_t gfp_mask, int nr, unsigned long *idx, struct bio_set *bs)
- {
-@@ -128,6 +132,11 @@ static void bio_fs_destructor(struct bio *bio)
- 	bio_free(bio, fs_bio_set);
+@@ -602,7 +602,6 @@ out_bmd:
  }
  
-+static void bio_blk_destructor(struct bio *bio)
-+{
-+	bio_free(bio, blk_bio_set);
-+}
-+
- void bio_init(struct bio *bio)
+ static struct bio *__bio_map_user_iov(struct request_queue *q,
+-				      struct block_device *bdev,
+ 				      struct sg_iovec *iov, int iov_count,
+ 				      int write_to_vm)
  {
- 	memset(bio, 0, sizeof(*bio));
-@@ -532,11 +541,12 @@ struct bio *bio_copy_user(struct request_queue *q, unsigned long uaddr,
- 	bmd->userptr = (void __user *) uaddr;
+@@ -696,7 +695,6 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
+ 	if (!write_to_vm)
+ 		bio->bi_rw |= (1 << BIO_RW);
  
- 	ret = -ENOMEM;
--	bio = bio_alloc(GFP_KERNEL, end - start);
-+	bio = bio_alloc_bioset(GFP_KERNEL, end - start, blk_bio_set);
- 	if (!bio)
- 		goto out_bmd;
+-	bio->bi_bdev = bdev;
+ 	bio->bi_flags |= (1 << BIO_USER_MAPPED);
+ 	return bio;
  
- 	bio->bi_rw |= (!write_to_vm << BIO_RW);
-+	bio->bi_destructor = bio_blk_destructor;
+@@ -715,7 +713,6 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
+ /**
+  *	bio_map_user	-	map user address into bio
+  *	@q: the struct request_queue for the bio
+- *	@bdev: destination block device
+  *	@uaddr: start of user address
+  *	@len: length in bytes
+  *	@write_to_vm: bool indicating writing to pages or not
+@@ -723,21 +720,20 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+-struct bio *bio_map_user(struct request_queue *q, struct block_device *bdev,
+-			 unsigned long uaddr, unsigned int len, int write_to_vm)
++struct bio *bio_map_user(struct request_queue *q, unsigned long uaddr,
++			 unsigned int len, int write_to_vm)
+ {
+ 	struct sg_iovec iov;
  
- 	ret = 0;
- 	while (len) {
-@@ -620,9 +630,10 @@ static struct bio *__bio_map_user_iov(struct request_queue *q,
- 	if (!nr_pages)
- 		return ERR_PTR(-EINVAL);
+ 	iov.iov_base = (void __user *)uaddr;
+ 	iov.iov_len = len;
  
--	bio = bio_alloc(GFP_KERNEL, nr_pages);
-+	bio = bio_alloc_bioset(GFP_KERNEL, nr_pages, blk_bio_set);
- 	if (!bio)
- 		return ERR_PTR(-ENOMEM);
-+	bio->bi_destructor = bio_blk_destructor;
+-	return bio_map_user_iov(q, bdev, &iov, 1, write_to_vm);
++	return bio_map_user_iov(q, &iov, 1, write_to_vm);
+ }
  
- 	ret = -ENOMEM;
- 	pages = kcalloc(nr_pages, sizeof(struct page *), GFP_KERNEL);
-@@ -805,9 +816,10 @@ static struct bio *__bio_map_kern(struct request_queue *q, void *data,
- 	int offset, i;
+ /**
+  *	bio_map_user_iov - map user sg_iovec table into bio
+  *	@q: the struct request_queue for the bio
+- *	@bdev: destination block device
+  *	@iov:	the iovec.
+  *	@iov_count: number of elements in the iovec
+  *	@write_to_vm: bool indicating writing to pages or not
+@@ -745,13 +741,12 @@ struct bio *bio_map_user(struct request_queue *q, struct block_device *bdev,
+  *	Map the user space address into a bio suitable for io to a block
+  *	device. Returns an error pointer in case of error.
+  */
+-struct bio *bio_map_user_iov(struct request_queue *q, struct block_device *bdev,
+-			     struct sg_iovec *iov, int iov_count,
+-			     int write_to_vm)
++struct bio *bio_map_user_iov(struct request_queue *q, struct sg_iovec *iov,
++			     int iov_count, int write_to_vm)
+ {
  	struct bio *bio;
  
--	bio = bio_alloc(gfp_mask, nr_pages);
-+	bio = bio_alloc_bioset(gfp_mask, nr_pages, blk_bio_set);
- 	if (!bio)
- 		return ERR_PTR(-ENOMEM);
-+	bio->bi_destructor = bio_blk_destructor;
+-	bio = __bio_map_user_iov(q, bdev, iov, iov_count, write_to_vm);
++	bio = __bio_map_user_iov(q, iov, iov_count, write_to_vm);
  
- 	offset = offset_in_page(kaddr);
- 	for (i = 0; i < nr_pages; i++) {
-@@ -1172,6 +1184,10 @@ static int __init init_bio(void)
- 	if (!fs_bio_set)
- 		panic("bio: can't allocate bios\n");
- 
-+	blk_bio_set = bioset_create(BIO_POOL_SIZE, 2);
-+	if (!blk_bio_set)
-+		panic("Failed to create blk_bio_set");
-+
- 	bio_split_pool = mempool_create_kmalloc_pool(BIO_SPLIT_ENTRIES,
- 						     sizeof(struct bio_pair));
- 	if (!bio_split_pool)
+ 	if (IS_ERR(bio))
+ 		return bio;
+diff --git a/include/linux/bio.h b/include/linux/bio.h
+index 4da4413..b76eb77 100644
+--- a/include/linux/bio.h
++++ b/include/linux/bio.h
+@@ -315,11 +315,10 @@ extern int bio_add_page(struct bio *, struct page *, unsigned int,unsigned int);
+ extern int bio_add_pc_page(struct request_queue *, struct bio *, struct page *,
+ 			   unsigned int, unsigned int);
+ extern int bio_get_nr_vecs(struct block_device *);
+-extern struct bio *bio_map_user(struct request_queue *, struct block_device *,
+-				unsigned long, unsigned int, int);
++extern struct bio *bio_map_user(struct request_queue *, unsigned long,
++				unsigned int, int);
+ struct sg_iovec;
+ extern struct bio *bio_map_user_iov(struct request_queue *,
+-				    struct block_device *,
+ 				    struct sg_iovec *, int, int);
+ extern void bio_unmap_user(struct bio *);
+ extern struct bio *bio_map_kern(struct request_queue *, void *, unsigned int,
 -- 
 1.5.1.2
