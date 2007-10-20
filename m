@@ -1,42 +1,55 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: oops in lbmIODone, fails to boot [Re: 2.6.23-mm1]
-Date: Fri, 19 Oct 2007 22:34:40 -0700
-Message-ID: <20071019223440.3bf845ef.akpm@linux-foundation.org>
-References: <20071011213126.cf92efb7.akpm@linux-foundation.org>
-	<20071020045753.GA4660@inferi.kami.home>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:55436 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751845AbXJTFe5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 20 Oct 2007 01:34:57 -0400
-In-Reply-To: <20071020045753.GA4660@inferi.kami.home>
-Sender: linux-scsi-owner@vger.kernel.org
+From: michaelc@cs.wisc.edu
+Subject: reserve mem for REQ_TYPE_BLOCK_PC reqs and covert sg to
+	block/bio helpers
+Date: Sat, 20 Oct 2007 00:44:34 -0500
+Message-ID: <11928590843394-git-send-email-michaelc@cs.wisc.edu>
+Reply-To: device-mapper development <dm-devel@redhat.com>
+Return-path: <dm-devel-bounces@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: linux-scsi@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Mattia Dongili <malattia@linux.it>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Dave Kleikamp <shaggy@austin.ibm.com>
 
-On Sat, 20 Oct 2007 13:57:54 +0900 Mattia Dongili <malattia@linux.it> wrote:
+This patchset has to goals. The first is to be able to reserve
+memory (bio, bio vec and pages), for REQ_TYPE_BLOCK_PC commands.
+This is needed for multipath where we need to make forward
+progress when failing over the device. And it is needed if all
+the paths are failed and we need userspace or the scsi layer
+to send IO. Userspace multipathd does path testing and
+userspace and the scsi layer send commands that are needed to setup
+new devices (if dev_loss_tmo fires and devices are removed, we need to
+be able to readd them).
 
-> On Thu, Oct 11, 2007 at 09:31:26PM -0700, Andrew Morton wrote:
-> > 
-> > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm1/
-> 
-> Hey there!!
-> fails to boot here with this friendly oops:
-> http://oioio.altervista.org/linux/dsc01702.jpg
-> 
-> .config: http://oioio.altervista.org/linux/config-2.6.23-mm1-1
-> 
-> 2.6.23-rc8-mm2 booted ok but had other problems I haven't reported yet
-> (no s2ram with mysql running and some net WARNING).
-> Let's see if .23-mm1 still has those first.
-> 
-> I'm adding Cc: linux-scsi
-> 
-> PS: I'll hardly be able to bisect in the next days... :P
+The second goal is to convert sg, st and osst to the blk and bio
+layer helpers to map and copy data.
 
-That looks like a Jens and Dave production to me.
+I am not done testing the patchset. The first two patches are ok
+and are pretty safe since they only add biosets to the bio layer.
+
+0005-have-block-scsi_ioctl-user-GFP_NOIO.patch,
+0006-use-GFP_NOIO-in-dm-rdac.patch and
+0007-fix-blk_rq_map_user_iov-bounce-code.patch
+are also pretty safe, but they are built on other patches since
+I noticed them while testing my patches and I can rediff them.
+
+Since the last time I sent the patches, I killed the bio_reserve_buffer
+junk and replaced it with biosets and a mempool. And before I finish up
+testing and start on st, I wanted to get comments since I am pretty happy
+overall with the patches. I want to figure out better names for the
+functions and maybe merge some other functions like the blk_rq_map_iov
+with the old blk_map_user, but I can at least do the latter in another patch.
+
+My only major bug concern is if blk_copy_user_iov only works for request
+that go to the scsi layer. In the original code, bio_copy_user
+copied the bv_len to a second struct, but for requests going
+to the scsi layer this is not needed because we always complete
+the whole request in one call (__end_that request will never
+modify bv_len and do a recalc). I am not done grepping through
+the other possble users like IDE.
