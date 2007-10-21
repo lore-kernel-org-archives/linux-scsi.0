@@ -1,50 +1,52 @@
-From: Mattia Dongili <malattia@linux.it>
-Subject: Re: oops in lbmIODone, fails to boot [Re: 2.6.23-mm1]
-Date: Sun, 21 Oct 2007 14:44:28 +0900
-Message-ID: <20071021054427.GA4164@inferi.kami.home>
-References: <20071011213126.cf92efb7.akpm@linux-foundation.org> <20071020045753.GA4660@inferi.kami.home> <20071019223440.3bf845ef.akpm@linux-foundation.org> <1192882706.9464.1.camel@norville.austin.ibm.com>
+From: egi <pfammatter-egi@swissonline.ch>
+Subject: LSIFC909 problem
+Date: Sun, 21 Oct 2007 09:33:52 +0200
+Message-ID: <1192952032.16384.11.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtoichi13.ns.itscom.net ([219.110.2.183]:44898 "EHLO
-	mtoichi13.ns.itscom.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750888AbXJUFol (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Oct 2007 01:44:41 -0400
-Content-Disposition: inline
-In-Reply-To: <1192882706.9464.1.camel@norville.austin.ibm.com>
+Received: from viefep18-int.chello.at ([213.46.255.22]:4098 "EHLO
+	viefep34-int.chello.at" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750738AbXJUHeF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Oct 2007 03:34:05 -0400
+Received: from [192.168.1.5] (really [84.73.223.163])
+          by viefep28-int.chello.at
+          (InterMail vM.7.08.02.02 201-2186-121-104-20070414) with ESMTP
+          id <20071021073357.QGKM16158.viefep28-int.chello.at@[192.168.1.5]>
+          for <linux-scsi@vger.kernel.org>; Sun, 21 Oct 2007 09:33:57 +0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Kleikamp <shaggy@linux.vnet.ibm.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
 
-On Sat, Oct 20, 2007 at 07:18:26AM -0500, Dave Kleikamp wrote:
-> On Fri, 2007-10-19 at 22:34 -0700, Andrew Morton wrote:
-> > On Sat, 20 Oct 2007 13:57:54 +0900 Mattia Dongili <malattia@linux.it> wrote:
-> > 
-> > > On Thu, Oct 11, 2007 at 09:31:26PM -0700, Andrew Morton wrote:
-> > > > 
-> > > > ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.23/2.6.23-mm1/
-> > > 
-> > > Hey there!!
-> > > fails to boot here with this friendly oops:
-> > > http://oioio.altervista.org/linux/dsc01702.jpg
-> > > 
-> > > .config: http://oioio.altervista.org/linux/config-2.6.23-mm1-1
-> > > 
-> > > 2.6.23-rc8-mm2 booted ok but had other problems I haven't reported yet
-> > > (no s2ram with mysql running and some net WARNING).
-> > > Let's see if .23-mm1 still has those first.
-> > > 
-> > > I'm adding Cc: linux-scsi
-> > > 
-> > > PS: I'll hardly be able to bisect in the next days... :P
-> > 
-> > That looks like a Jens and Dave production to me.
-> 
-> Yes, and it's been fixed:
-> http://git.kernel.org/gitweb.cgi?p=linux/kernel/git/torvalds/linux-2.6.git;a=commitdiff;h=8d8fe64237646fdd2c2de2722ec4189a5999119d
+Since kenel > 2.6.8 my system doesn't regonize any more my FC-drives.
+I installed latest kernel 2.6.23-git7 incl patch but no chance.
+I get the following message during the boot:
 
-thanks this fixes it
--- 
-mattia
-:wq!
+Oct 21 08:57:06 localhost kernel: Fusion MPT base driver 3.04.05
+Oct 21 08:57:06 localhost kernel: Copyright (c) 1999-2007 LSI Logic
+Corporation
+Oct 21 08:57:06 localhost kernel: Fusion MPT FC Host driver 3.04.05
+Oct 21 08:57:06 localhost kernel: mptbase: Initiating ioc0 bringup
+Oct 21 08:57:06 localhost kernel: ioc0: LSIFC909 B1:
+Capabilities={Initiator,LAN}
+Oct 21 08:57:06 localhost kernel: mptbase: ioc0: IOCStatus(0x0022):
+Config Page Invalid Page: type=00h, page=02h, action=00h, form=00000000h
+Oct 21 08:57:06 localhost kernel: mptbase: ioc0: IOCStatus(0x0022):
+Config Page Invalid Page: type=09h, page=00h, action=00h, form=00000000h
+Oct 21 08:57:06 localhost kernel: scsi0 : ioc0: LSIFC909 B1,
+FwRev=01000000h, Ports=1, MaxQ=1023, IRQ=21
+modules:
+
+mptfc                  17508  0
+mptscsih               32672  1 mptfc
+mptbase                70112  2 mptfc,mptscsih
+scsi_transport_fc      40548  1 mptfc
+
+
+If I boot my system with kernel 2.6.8-rc2 the fc-drives are available.
+But with Kernel > 2.6.8-rc2 nothing works any more.
+
+Can someone help me?
+
+
