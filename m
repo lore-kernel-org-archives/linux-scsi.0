@@ -1,80 +1,82 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: [Announce] sg3_utils-1.25 available
-Date: Sun, 21 Oct 2007 13:07:24 +0200
-Message-ID: <471B32EC.3040404@torque.net>
-Reply-To: dougg@torque.net
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 4/4] aic7xxx: Enable 16-bit CDBs
+Date: Sun, 21 Oct 2007 11:19:22 -0500
+Message-ID: <1192983563.3339.4.camel@localhost.localdomain>
+References: <20071019083239.D88FE18C61E@pentland.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:43861 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751402AbXJULHd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Oct 2007 07:07:33 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:51126 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751525AbXJUQTZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Oct 2007 12:19:25 -0400
+In-Reply-To: <20071019083239.D88FE18C61E@pentland.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
-Cc: emschwar@debian.org, "Robin H. Johnson" <robbat2@gentoo.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org
 
-sg3_utils is a package of command line utilities for sending
-SCSI and some ATA commands to devices. This package targets
-the linux kernel (lk) 2.6 and lk 2.4 series. In the lk 2.6
-series these utilities (except sgp_dd) can be used with any
-devices that support the SG_IO ioctl. Ported to FreeBSD,
-Tru64, Solaris, and Windows (cygwin and mingw).
+On Fri, 2007-10-19 at 10:32 +0200, Hannes Reinecke wrote:
+> The patch enables support for 16-bit CDBs in aic7xxx and aic79xx.
+> aic7xxx can actually support up to 32-bit CDBs, should they ever see
+> the light of day.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  drivers/scsi/aic7xxx/aic79xx.h     |    2 ++
+>  drivers/scsi/aic7xxx/aic79xx_osm.c |    1 +
+>  drivers/scsi/aic7xxx/aic7xxx_osm.c |    1 +
+>  3 files changed, 4 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+> index ce638aa..883f26a 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx.h
+> +++ b/drivers/scsi/aic7xxx/aic79xx.h
+> @@ -413,6 +413,8 @@ struct target_status {
+>   * the sense buffer address in the SCB.  This allows
+>   * us to retrieve sense information without interrupting
+>   * the host in packetized mode.
+> + * The current firmware relies on a CDB len of 16, so
+> + * don't change it unless you know what you're doing.
+>   */
+>  typedef uint32_t sense_addr_t;
+>  #define MAX_CDB_LEN 16
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> index 2d02040..f4e12e1 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -1090,6 +1090,7 @@ ahd_linux_register_host(struct ahd_softc *ahd, struct scsi_host_template *templa
+>  	host->max_id = (ahd->features & AHD_WIDE) ? 16 : 8;
+>  	host->max_lun = AHD_NUM_LUNS;
+>  	host->max_channel = 0;
+> +	host->max_cmd_len = 16;
 
-This version adds three new utilities: sg_sat_set_features, sg_stpg
-and sg_safte. The sg_dd utility now has a sparse write capability.
-Various utilities have been updated to reflect changes in t10.org
-drafts. The build infrastructure has been changed to use autotools
-rather than hand-crafted Makefiles. Copy of ChangeLog below.
+Actually, the aic79xx doc we now have through the LF NDA programme says
+that the 79xx can also go up to 32 byte CDBs.
 
-For an overview of sg3_utils and downloads see this page:
-http://www.torque.net/sg/sg3_utils.html
-The sg_dd utility has its own page at:
-http://www.torque.net/sg/sg_dd.html
-The SG_IO ioctl is discussed at:
-http://www.torque.net/sg/sg_io.html
-A full changelog can be found at:
-http://www.torque.net/sg/p/sg3_utils.CHANGELOG
+>  	host->sg_tablesize = AHD_NSEG;
+>  	ahd_lock(ahd, &s);
+>  	ahd_set_unit(ahd, ahd_linux_unit++);
+> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> index 390b0fc..d488764 100644
+> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> @@ -1048,6 +1048,7 @@ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *templa
+>  	host->max_id = (ahc->features & AHC_WIDE) ? 16 : 8;
+>  	host->max_lun = AHC_NUM_LUNS;
+>  	host->max_channel = (ahc->features & AHC_TWIN) ? 1 : 0;
+> +	host->max_cmd_len = 32;
+>  	host->sg_tablesize = AHC_NSEG;
+>  	ahc_lock(ahc, &s);
+>  	ahc_set_unit(ahc, ahc_linux_unit++);
 
-A release announcement has been sent to freshmeat.net .
+But, I suppose the main point is: is this really necessary?  The
+default, when unspecified, is 16 bytes and the mid-layer can't deliver
+anything larger.  I would anticipate the large CDB infrastructure will
+have some separate enabling, so why not simply do nothing until that
+gets merged?
 
-Top of Changelog:
-Changelog for sg3_utils-1.25 [20071016]
-  - sg_stpg: new utility to Set Target Port Groups
-  - sg_safte: new utility to query SAF-TE processor (SES like)
-  - sg_sat_set_features: new utility (actually copied from examples
-    directory); renamed examples version to: sg__sat_set_features
-  - sg_read_buffer: restore (had fallen out of build scripts)
-  - sg_dd: add oflag=sparse to step over bs*bpt number of zeros;
-    - with oflag=sparse, write last bs*bpt segment at end or after
-      error so file length of OFILE is appropriate
-    - when coe>1 then SCSI READ LONG logic remembers extended block
-      length of first encountered error
-  - sg_dd, sgm_dd, sgp_dd: allow iflag=null and oflag=null both of
-    which do nothing (placeholders)
-  - sg_ses: sync with ses2r17 then r18
-  - sg_vpd, sg_inq: add block device characteristics VPD page
-  - sg_inq: add '--vpd' option (or '-e') for backward compatibility
-  - sg_vpd: decode protocol specific lu information page for SAS
-    - add more RDAC vendor VPD pages
-  - sg_logs: update background scan results log page, sbc3r11
-    - add generation code to protocol specific page for SAS SSP
-    - add media changer diagnostic data log page
-  - sg_raw: fix error message when do_scsi_pt() fails
-  - sg_lib: sync asc/ascq codes with spc4r11
-    - add sg_get_num_nomult()
-    - add TPROTO_* protocol identifier constants to sg_lib.h
-  - sg_cmds_extra: add sg_ll_set_tgt_prt_grp()
-  - place source in subversion repository
-  - split code into src/ lib/ and include/ directories
-  - sync debian directory with their 1.24 version (sid unstable)
-  - convert build logic to use autotools (i.e. './configure ; make')
-    - rename this file from CHANGELOG to ChangeLog
-    - note: only code in lib/ and src/ directories built by
-      autotools; some other subdirectories still use hand-crafted
-      Makefiles
+James
 
 
-Doug Gilbert
