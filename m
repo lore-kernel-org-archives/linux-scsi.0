@@ -1,82 +1,35 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: [PATCH 4/4] aic7xxx: Enable 16-bit CDBs
-Date: Sun, 21 Oct 2007 11:19:22 -0500
-Message-ID: <1192983563.3339.4.camel@localhost.localdomain>
-References: <20071019083239.D88FE18C61E@pentland.suse.de>
+Date: Sun, 21 Oct 2007 21:46:05 -0600
+Message-ID: <20071022034605.GB8421@parisc-linux.org>
+References: <20071019083239.D88FE18C61E@pentland.suse.de> <1192983563.3339.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:51126 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751525AbXJUQTZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Oct 2007 12:19:25 -0400
-In-Reply-To: <20071019083239.D88FE18C61E@pentland.suse.de>
+Received: from palinux.external.hp.com ([192.25.206.14]:38202 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751603AbXJVDqH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 21 Oct 2007 23:46:07 -0400
+Content-Disposition: inline
+In-Reply-To: <1192983563.3339.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
 
-On Fri, 2007-10-19 at 10:32 +0200, Hannes Reinecke wrote:
-> The patch enables support for 16-bit CDBs in aic7xxx and aic79xx.
-> aic7xxx can actually support up to 32-bit CDBs, should they ever see
-> the light of day.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/aic7xxx/aic79xx.h     |    2 ++
->  drivers/scsi/aic7xxx/aic79xx_osm.c |    1 +
->  drivers/scsi/aic7xxx/aic7xxx_osm.c |    1 +
->  3 files changed, 4 insertions(+), 0 deletions(-)
-> 
-> diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
-> index ce638aa..883f26a 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx.h
-> +++ b/drivers/scsi/aic7xxx/aic79xx.h
-> @@ -413,6 +413,8 @@ struct target_status {
->   * the sense buffer address in the SCB.  This allows
->   * us to retrieve sense information without interrupting
->   * the host in packetized mode.
-> + * The current firmware relies on a CDB len of 16, so
-> + * don't change it unless you know what you're doing.
->   */
->  typedef uint32_t sense_addr_t;
->  #define MAX_CDB_LEN 16
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> index 2d02040..f4e12e1 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> @@ -1090,6 +1090,7 @@ ahd_linux_register_host(struct ahd_softc *ahd, struct scsi_host_template *templa
->  	host->max_id = (ahd->features & AHD_WIDE) ? 16 : 8;
->  	host->max_lun = AHD_NUM_LUNS;
->  	host->max_channel = 0;
-> +	host->max_cmd_len = 16;
+On Sun, Oct 21, 2007 at 11:19:22AM -0500, James Bottomley wrote:
+> But, I suppose the main point is: is this really necessary?  The
+> default, when unspecified, is 16 bytes and the mid-layer can't deliver
+> anything larger.  I would anticipate the large CDB infrastructure will
+> have some separate enabling, so why not simply do nothing until that
+> gets merged?
 
-Actually, the aic79xx doc we now have through the LF NDA programme says
-that the 79xx can also go up to 32 byte CDBs.
+You're sadly mistaken ... the default is 12 byte cdbs:
 
->  	host->sg_tablesize = AHD_NSEG;
->  	ahd_lock(ahd, &s);
->  	ahd_set_unit(ahd, ahd_linux_unit++);
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> index 390b0fc..d488764 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-> @@ -1048,6 +1048,7 @@ ahc_linux_register_host(struct ahc_softc *ahc, struct scsi_host_template *templa
->  	host->max_id = (ahc->features & AHC_WIDE) ? 16 : 8;
->  	host->max_lun = AHC_NUM_LUNS;
->  	host->max_channel = (ahc->features & AHC_TWIN) ? 1 : 0;
-> +	host->max_cmd_len = 32;
->  	host->sg_tablesize = AHC_NSEG;
->  	ahc_lock(ahc, &s);
->  	ahc_set_unit(ahc, ahc_linux_unit++);
+        shost->max_cmd_len = 12;
 
-But, I suppose the main point is: is this really necessary?  The
-default, when unspecified, is 16 bytes and the mid-layer can't deliver
-anything larger.  I would anticipate the large CDB infrastructure will
-have some separate enabling, so why not simply do nothing until that
-gets merged?
-
-James
-
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
