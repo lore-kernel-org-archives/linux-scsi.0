@@ -1,42 +1,51 @@
-From: Benny Halevy <bhalevy@panasas.com>
-Subject: Re: [PATCH 4/4] aic7xxx: Enable 16-bit CDBs
-Date: Mon, 22 Oct 2007 23:24:49 +0200
-Message-ID: <471D1521.3090405@panasas.com>
-References: <20071019083239.D88FE18C61E@pentland.suse.de> <1192983563.3339.4.camel@localhost.localdomain> <471CF5B9.2090800@panasas.com> <20071022193551.GF27248@parisc-linux.org>
+From: Michael Tokarev <mjt@tls.msk.ru>
+Subject: why disk info gets printk'ed twice?
+Date: Tue, 23 Oct 2007 01:37:28 +0400
+Message-ID: <471D1818.3070509@msgid.tls.msk.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa14.bezeqint.net ([192.115.104.29]:47977 "EHLO
-	sa14.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750828AbXJVVYw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Oct 2007 17:24:52 -0400
-In-Reply-To: <20071022193551.GF27248@parisc-linux.org>
+Received: from hobbit.corpit.ru ([81.13.94.6]:22270 "EHLO hobbit.corpit.ru"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751029AbXJVVpj (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+	Mon, 22 Oct 2007 17:45:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+To: Linux-scsi@vger.kernel.org
 
-On Oct. 22, 2007, 21:35 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Mon, Oct 22, 2007 at 09:10:49PM +0200, Boaz Harrosh wrote:
->> I'm about to finish an RFC patchset for the extended commands.
->> I have implemented a more aggressive approach than the one
->> I've been sending for the last year.
->> (Matthew I have an extra 8-bytes save to scsi_cmnd on 
->> 64bit and 12 bytes for 32bit. Guess how? ;))
-> 
-> Well ... the command has to be stored somewhere.  If it's an additional
-> kmalloc, that's a loss.  If it's in the request, that's a loss too ...
-> let's see where you're keeping it ;-)
-> 
-I love spoiling Boaz's surprise :)
+Every dmesg users provide contains double info
+about identification of [scsi,ata,..] disk drives
+found in the system.  Here's mine:
 
-The gist of it is scsi_cmnd->cmnd pointing at req->cmd
-or at req->varlen_cmd as appropriate.
+scsi 2:0:0:0: Direct-Access     ATA      ST3808110AS      n/a  PQ: 0 ANSI: 5
+loading module sd_mod
+sd 2:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+sd 2:0:0:0: [sda] 156301488 512-byte hardware sectors (80026 MB)
+sd 2:0:0:0: [sda] Write Protect is off
+sd 2:0:0:0: [sda] Mode Sense: 00 3a 00 00
+sd 2:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support DPO or FUA
+ sda: sda1 sda2 sda3 sda4 < sda5 sda6 sda7 >
+sd 2:0:0:0: [sda] Attached SCSI disk
 
-Most users can't tell the difference except if they
-tried using sizeof(scsi_cmnd->cmnd) in which case they
-can use MAX_COMMAND_SIZE instead.
+Why the lines beginning with "sd 2:0:0:0:" gets duplicated?
+Can this be fixed somehow?
 
-Benny
+All the messages are in drivers/scsi/sd_mod.c, printed out by
+functions called from within sd_revalidate_disk().  This routine
+gets called from two contexts:
+ sd_store_cache_type(), which is a sysfs thing, it seems, and
+ sd_probe(), which gets called from .probe method of scsi_driver
 
+So it seems to me that scsi_driver.probe() method gets called
+twice for some reason...
+
+This question has been asked several times, but I don't recall
+any answers to it.
+
+Thanks.
+
+/mjt
