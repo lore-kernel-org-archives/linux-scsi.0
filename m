@@ -1,60 +1,35 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Sparse fix for scsi_request_fn
-Date: Mon, 22 Oct 2007 19:48:45 -0600
-Message-ID: <20071023014845.GN27248@parisc-linux.org>
+From: David Miller <davem@davemloft.net>
+Subject: Re: Add ACCUSYS RAID driver for Linux i386/x86-64
+Date: Mon, 22 Oct 2007 19:02:53 -0700 (PDT)
+Message-ID: <20071022.190253.95509114.davem@davemloft.net>
+References: <cbc61c0d0710220317w68f4f119xceb10192f2ad0158@mail.gmail.com>
+	<cbc61c0d0710221845h46f40d6p435f994b88a92b89@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37348 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751417AbXJWBsr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Oct 2007 21:48:47 -0400
-Content-Disposition: inline
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:37358
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1751029AbXJWCCb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 22 Oct 2007 22:02:31 -0400
+In-Reply-To: <cbc61c0d0710221845h46f40d6p435f994b88a92b89@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@osdl.org>, James Bottomley <James.Bottomley@steeleye.com>, Al Viro <viro@ftp.linux.org.uk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: accusys.sw5@gmail.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Introduce new __holds() macro to tell sparse it's OK to drop and then
-reacquire a lock within a function.  Use it in scsi_request_fn.
+From: "Peter Chan" <accusys.sw5@gmail.com>
+Date: Tue, 23 Oct 2007 09:45:48 +0800
 
-Signed-off-by: Matthew Wilcox <willy@linux.intel.com>
+> Add linux-scsi and linux-kernel in mail group.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 207f1aa..5e0583a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1374,6 +1372,7 @@ static void scsi_softirq_done(struct request *rq)
-  * Lock status: IO request lock assumed to be held when called.
-  */
- static void scsi_request_fn(struct request_queue *q)
-+		__holds(q->queue_lock)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	struct Scsi_Host *shost;
-diff --git a/include/linux/compiler.h b/include/linux/compiler.h
-index 86f9a3a..1611ac6 100644
---- a/include/linux/compiler.h
-+++ b/include/linux/compiler.h
-@@ -12,6 +12,7 @@
- # define __iomem	__attribute__((noderef, address_space(2)))
- # define __acquires(x)	__attribute__((context(x,0,1)))
- # define __releases(x)	__attribute__((context(x,1,0)))
-+# define __holds(x)	__attribute__((context(x,1,1)))
- # define __acquire(x)	__context__(x,1)
- # define __release(x)	__context__(x,-1)
- # define __cond_lock(x,c)	((c) ? ({ __acquire(x); 1; }) : 0)
-@@ -29,6 +30,7 @@ extern void __chk_io_ptr(const volatile void __iomem *);
- # define __builtin_warning(x, y...) (1)
- # define __acquires(x)
- # define __releases(x)
-+# define __holds(x)
- # define __acquire(x) (void)0
- # define __release(x) (void)0
- # define __cond_lock(x,c) (c)
+Please do not post your driver as a "RAR" attachment,
+not only are most Linux folks not familiar with this
+archive format, it is also an attachment type rejected
+by just about every large email service provider out
+there.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+gmail.com itself automatically rejects this attachment
+type, as I just learned by seeing several hundred bounces
+hit vger.kernel.org's postmaster mailbox due to your posting.
