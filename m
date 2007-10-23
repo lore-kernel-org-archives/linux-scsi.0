@@ -1,36 +1,40 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
-Date: Tue, 23 Oct 2007 17:09:39 -0400
-Message-ID: <471E6313.1040704@garzik.org>
-References: <1193173128.3434.1.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Sparse fix for scsi_request_fn
+Date: Tue, 23 Oct 2007 15:13:37 -0600
+Message-ID: <20071023211337.GT27248@parisc-linux.org>
+References: <20071023014845.GN27248@parisc-linux.org> <alpine.LFD.0.999.0710221908130.30120@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:39114 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751878AbXJWVJm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Oct 2007 17:09:42 -0400
-In-Reply-To: <1193173128.3434.1.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:35837 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754810AbXJWVNi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2007 17:13:38 -0400
+Content-Disposition: inline
+In-Reply-To: <alpine.LFD.0.999.0710221908130.30120@woody.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Al Viro <viro@ftp.linux.org.uk>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> This should be the final SCSI updates; it's mainly just a few accessor
-> completion updates and two driver merges (sym2 and qla2xxx) we also
-> secured DaveM's agreement to remove fcal/fc4, which explains the high
-> removal line count.
+On Mon, Oct 22, 2007 at 07:09:56PM -0700, Linus Torvalds wrote:
+> Umm. This is why we write things like
 > 
-> The patch is available here:
+> 	static void double_lock_balance(struct rq *this_rq, struct rq *busiest)
+> 		__releases(this_rq->lock)
+> 		__acquires(busiest->lock)
+> 		__acquires(this_rq->lock)
+> 	{
+> 		...
 > 
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> ie your "__holds()" is nothing new, and should be written as 
+> a pair of __releases(x) and __acquires(x), which is more readable anyway 
+> (since it actually says what the function does!)
 
-I guess I have the go-ahead to merge the end-CDROM-polling async 
-notification work you've been repeatedly ignoring?
+Thanks, I hadn't realised that sparse would unify the two declarations.
 
-	Jeff
-
-
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
