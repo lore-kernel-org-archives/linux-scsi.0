@@ -1,71 +1,54 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC 1/2] scsi core: alloc_cmnd
-Date: Tue, 23 Oct 2007 21:49:12 +0200
-Message-ID: <471E5038.8010600@panasas.com>
-References: <20071019183331.GC30807@parisc-linux.org> <471E260D.6030605@panasas.com> <20071023174804.GR27248@parisc-linux.org> <471E419C.9020005@panasas.com> <20071023191526.GS27248@parisc-linux.org>
+From: Mike Aerts <mmgaerts@skynet.be>
+Subject: Mysterious hangs of system.
+Date: Tue, 23 Oct 2007 22:13:38 +0200
+Message-ID: <200710232213.38194.mmgaerts@skynet.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31867 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751684AbXJWTtS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2007 15:49:18 -0400
-In-Reply-To: <20071023191526.GS27248@parisc-linux.org>
+Received: from mailrelay007.isp.belgacom.be ([195.238.6.173]:20790 "EHLO
+	mailrelay007.isp.belgacom.be" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751968AbXJWUNk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 23 Oct 2007 16:13:40 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: promise_linux@promise.com
 
-On Tue, Oct 23 2007 at 21:15 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Tue, Oct 23, 2007 at 08:46:52PM +0200, Boaz Harrosh wrote:
->>> We could also add an alloc_bidi_cmnd/destroy_bidi_cmnd to the shost
->>> template.  Presumably most commands won't be bidi for any given host,
->>> so it'd be a waste of space to allocate them for all commands.
->> Well no one really knows. The OSD scsi devices I use are bidi only commands
->> (OK not only, 99%). The rest are not yet defined. (Like raid arrays that do 
->> write-return-XOR)
-> 
-> What's the usage scenario though?  Do we envisage one scsi_host being
-> dedicated to OSD, or do we envisage OSDs being one component on a FC
-> network?  I suspect the latter, which leads me to want to do something
-> like ...
-> 
-Yes, like I have OSD devices on the other side of an iscsi transport.
-So there can be other none OSD devices on the iscsi initiator. It's
-a per device thing.
+Hi all,
 
-> struct qla_cmnd {
-> 	char *sp;
-> 	unsigned int compl_status;
-> 	unsigned int resid_len;
-> 	unsigned int scsi_status;
-> 	unsigned int actual_snslen;
-> 	unsigned int entry_status;
-> }
-> 
-> struct qla_bidi_cmnd {
-> 	struct bidi_cmnd;
-> 	struct qla_cmnd;
-> }
-> 
-> struct qla_cmnd {
-> 	struct scsi_cmnd;
-> 	struct qla_cmnd;
-> }
-> 
-> But then this requires us to have a bidi_queue_command.  That might not
-> be such a bad idea anyway ...
-> 
-The current solution is pretty simple, we hang an extra scsi_data_buffer on
-cmd->request->next_rq->special and allocate it when needed from a new cache_mem_pool
-of bidi scsi_data_buffer's. Since for an OSD device all Cmnds are bidi, I thought
-of saving that extra allocation. But it looks like the current model is not working
-for my case, so I'll keep it as it is now.
+I have 44 supermicro PDSMi servers running linux 2.6.17.13.
+Each of these systems have a Promise Super Trak EX16350 controller with 16 WDC 
+WD5000ABYS-01TNA disks connected.
+The controllers have BIOS 2.9.022 installed and the stex driver used is 
+version 2.9.0.16.
+These servers are used in a backup-to-disk environment and are connected via 
+NFS to 4 backup servers.
+Now every few days, mostly at night, one of these servers hang for about 40 
+minutes which can be defined as not accepting any TCP/IP connections; no 
+crontab jobs (sar) are run.  After this period that can vary from 5 minutes 
+to 60 minutes spontaneously the system becomes available again and 
+disconnects the stex controller device not the disks.
 
-You can see an example of this here:
-http://www.bhalevy.com/open-osd/download/bidi_2.6.23/0004-SCSI-bidi-support.patch
+This also occurs with the latest version of Linux 2.6.23.1 but in this version 
+it has as a more negative effect as also both devices created on these disks 
+are offlined and the system hangs for the same amount of time. With the newer 
+version of the kernel I also get an handshake failure message.  As the root 
+filesystem is on these disks too I cannot login into the server and have to 
+reboot the system after what the system comes up like nothing has happened. 
+With the newer version of the kernel and stex driver the system is also 
+unstable when I allow the system to start in SMP then I cannot even create a 
+ext3 filesystem as I get a kernel panic in add_list telling me the pointers 
+are corrupt.
 
-Thanks
-Boaz
- 
+Question has anybody else encountered these problem? In what direction do I 
+have to seek is this a issue with the stex driver or stex firmware?
+
+Thanks in advance
+
+
+Mike.
+  
