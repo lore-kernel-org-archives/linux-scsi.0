@@ -1,59 +1,44 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [RFC 1/2] scsi core: alloc_cmnd
-Date: Tue, 23 Oct 2007 18:49:17 +0200
-Message-ID: <471E260D.6030605@panasas.com>
-References: <20071019183331.GC30807@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 4/4] aic7xxx: Enable 16-bit CDBs
+Date: Tue, 23 Oct 2007 12:56:52 -0400
+Message-ID: <1193158612.6294.9.camel@localhost.localdomain>
+References: <20071019083239.D88FE18C61E@pentland.suse.de>
+	 <1192983563.3339.4.camel@localhost.localdomain>
+	 <20071022034605.GB8421@parisc-linux.org> <471C4845.20708@suse.de>
+	 <20071022112345.GC8421@parisc-linux.org>  <471C9030.6030700@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25047 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752403AbXJWQtY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2007 12:49:24 -0400
-In-Reply-To: <20071019183331.GC30807@parisc-linux.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:42780 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752365AbXJWQ4z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2007 12:56:55 -0400
+In-Reply-To: <471C9030.6030700@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Fri, Oct 19 2007 at 20:33 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> This fairly naive patch introduces alloc_cmnd and destroy_cmnd.  I'm not
-> exactly happy about passing down the gfp_mask -- I'd prefer to be able
-> to allocate scsi_cmnds before we grab the queue_lock (and hence get
-> rid of the possibility we might need to GFP_ATOMIC), but I don't see
-> anywhere to do that.  Maybe there's a simple change we can make to the
-> block layer to allow it.
-> 
-> Merely-an-RFC-by: Matthew Wilcox <willy@linux.intel.com>
+On Mon, 2007-10-22 at 13:57 +0200, Hannes Reinecke wrote:
+> Matthew Wilcox wrote:
+> > On Mon, Oct 22, 2007 at 08:50:45AM +0200, Hannes Reinecke wrote:
+> >> That's what I thought, too. Hence the patch.
+> >> But if we set the default to 16 byte cdbs you can of course ignore
+> >> the patch.
+> > 
+> > I think the comment in hosts.c explains why we shouldn't do that ...
+> > 
+> _I_ certainly wouldn't. But if the maintainer says so :-)
 
-You know Matthew when you first talked about this, I envisioned
-something else.
+Actually, I misremembered.  I thought I did a commit a few years ago
+that automatically raised the cutoff to 16 byte cdbs and forced drivers
+who couldn't do that to lower the limit, but apparently it was never
+merged.
 
-My idea was to have a new variable in scsi_host_template that states
-the host_cmnd_extra_bytes. The mid-layer allocates a mempool with
-sizeof(struct scsi_cmnd) + host_cmnd_extra_bytes.
-A utility function will return that space for drivers given
-a cmnd like:
-void *host_cmnd_priv(struct scsi_cmnd *cmd)
-{
-	return cmd + 1;
-}
+So, just pick either 16 or 32 for both drivers and add that as the max
+cdb size.
 
-This serves the drivers well because all they need to do is set
-host_cmnd_extra_bytes = size_of(my_cmnd_stuff) and start using
-it. much more simple than setting up cache pools. It also keeps
-the Q per host vs Q per driver.
+James
 
-This also solves your problem with locks and allocation flags
-since nothing changes, and it is all private to the mid-layer.
-
-And it serves me, because when bidi comes I just do:
-sizeof(struct scsi_cmnd) + host_cmnd_extra_bytes + sizeof(bidi_stuff)
-for hosts that support bidi. And the rest of the work was done by you.
-
-Do you need that I scribble some tryout patch for above + example driver
-
-Thanks for doing this
-Boaz
 
