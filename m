@@ -1,231 +1,181 @@
 From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/4] [SCSI] ips: trim trailing whitespace
-Date: Wed, 24 Oct 2007 19:48:29 -0400 (EDT)
-Message-ID: <20071024234829.133121F81A7@havoc.gtf.org>
+Subject: [PATCH 3/4] [SCSI] ips: PCI API cleanups
+Date: Wed, 24 Oct 2007 19:48:30 -0400 (EDT)
+Message-ID: <20071024234830.8F7891F81A9@havoc.gtf.org>
 References: <09821349085390234lkjasdflkjasflkdj24746@havoc.gtf.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:50712 "EHLO havoc.gtf.org"
+Received: from havoc.gtf.org ([69.61.125.42]:37462 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758372AbXJXXs3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 19:48:29 -0400
+	id S1758563AbXJXXsb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Oct 2007 19:48:31 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 Cc: akpm@linux-foundation.org
 
+* pass Scsi_Host to ips_remove_device() via pci_set_drvdata(),
+  allowing us to eliminate the ips_ha[] search loop and call
+  ips_release() directly.
+
+* call pci_{request,release}_regions() and eliminate individual
+  request/release_[mem_]region() calls
+
+* call pci_disable_device(), paired with pci_enable_device()
+
+* s/0/NULL/ in a few places
+
+* check ioremap() return value
+
 Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 ---
- drivers/scsi/ips.c |   44 ++++++++++++++++++++++----------------------
- drivers/scsi/ips.h |   12 ++++++------
- 2 files changed, 28 insertions(+), 28 deletions(-)
+ drivers/scsi/ips.c |   72 ++++++++++++++++++++++-----------------------------
+ 1 files changed, 31 insertions(+), 41 deletions(-)
 
 diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
-index 595a91a..c9f3e1f 100644
+index c9f3e1f..fb90b6c 100644
 --- a/drivers/scsi/ips.c
 +++ b/drivers/scsi/ips.c
-@@ -389,17 +389,17 @@ static struct  pci_device_id  ips_pci_table[] = {
- MODULE_DEVICE_TABLE( pci, ips_pci_table );
+@@ -702,10 +702,6 @@ ips_release(struct Scsi_Host *sh)
+ 	/* free extra memory */
+ 	ips_free(ha);
  
- static char ips_hot_plug_name[] = "ips";
--   
-+
- static int __devinit  ips_insert_device(struct pci_dev *pci_dev, const struct pci_device_id *ent);
- static void __devexit ips_remove_device(struct pci_dev *pci_dev);
--   
-+
- static struct pci_driver ips_pci_driver = {
- 	.name		= ips_hot_plug_name,
- 	.id_table	= ips_pci_table,
- 	.probe		= ips_insert_device,
- 	.remove		= __devexit_p(ips_remove_device),
- };
--           
-+
+-	/* Free I/O Region */
+-	if (ha->io_addr)
+-		release_region(ha->io_addr, ha->io_len);
+-
+ 	/* free IRQ */
+ 	free_irq(ha->pcidev->irq, ha);
  
- /*
-  * Necessary forward function protoypes
-@@ -587,7 +587,7 @@ static void
- ips_setup_funclist(ips_ha_t * ha)
- {
+@@ -4393,8 +4389,6 @@ ips_free(ips_ha_t * ha)
+ 			ha->mem_ptr = NULL;
+ 		}
  
--	/*                                
-+	/*
- 	 * Setup Functions
- 	 */
- 	if (IPS_IS_MORPHEUS(ha) || IPS_IS_MARCO(ha)) {
-@@ -2081,7 +2081,7 @@ ips_host_info(ips_ha_t * ha, char *ptr, off_t offset, int len)
-     /* That keeps everything happy for "text" operations on the proc file.                    */
+-		if (ha->mem_addr)
+-			release_mem_region(ha->mem_addr, ha->mem_len);
+ 		ha->mem_addr = 0;
  
- 	if (le32_to_cpu(ha->nvram->signature) == IPS_NVRAM_P5_SIG) {
--        if (ha->nvram->bios_low[3] == 0) { 
-+        if (ha->nvram->bios_low[3] == 0) {
-             copy_info(&info,
- 			          "\tBIOS Version                      : %c%c%c%c%c%c%c\n",
- 			          ha->nvram->bios_high[0], ha->nvram->bios_high[1],
-@@ -2782,8 +2782,8 @@ ips_next(ips_ha_t * ha, int intr)
- 
-         /* Allow a WRITE BUFFER Command to Have no Data */
-         /* This is Used by Tape Flash Utilites          */
--        if ((scb->scsi_cmd->cmnd[0] == WRITE_BUFFER) && (scb->data_len == 0)) 
--            scb->dcdb.cmd_attribute = 0;                  
-+        if ((scb->scsi_cmd->cmnd[0] == WRITE_BUFFER) && (scb->data_len == 0))
-+            scb->dcdb.cmd_attribute = 0;
- 
- 		if (!(scb->dcdb.cmd_attribute & 0x3))
- 			scb->dcdb.transfer_length = 0;
-@@ -3404,7 +3404,7 @@ ips_map_status(ips_ha_t * ha, ips_scb_t * scb, ips_stat_t * sp)
- 
- 				/* Restrict access to physical DASD */
- 				if (scb->scsi_cmd->cmnd[0] == INQUIRY) {
--				    ips_scmd_buf_read(scb->scsi_cmd, 
-+				    ips_scmd_buf_read(scb->scsi_cmd,
-                                       &inquiryData, sizeof (inquiryData));
-  				    if ((inquiryData.DeviceType & 0x1f) == TYPE_DISK) {
- 				        errcode = DID_TIME_OUT;
-@@ -4090,10 +4090,10 @@ ips_chkstatus(ips_ha_t * ha, IPS_STATUS * pstatus)
- 			scb->scsi_cmd->result = errcode << 16;
- 		} else {	/* bus == 0 */
- 			/* restrict access to physical drives */
--			if (scb->scsi_cmd->cmnd[0] == INQUIRY) { 
--			    ips_scmd_buf_read(scb->scsi_cmd, 
-+			if (scb->scsi_cmd->cmnd[0] == INQUIRY) {
-+			    ips_scmd_buf_read(scb->scsi_cmd,
-                                   &inquiryData, sizeof (inquiryData));
--			    if ((inquiryData.DeviceType & 0x1f) == TYPE_DISK) 
-+			    if ((inquiryData.DeviceType & 0x1f) == TYPE_DISK)
- 			        scb->scsi_cmd->result = DID_TIME_OUT << 16;
- 			}
- 		}		/* else */
-@@ -4661,8 +4661,8 @@ ips_isinit_morpheus(ips_ha_t * ha)
- 	uint32_t bits;
- 
- 	METHOD_TRACE("ips_is_init_morpheus", 1);
--   
--	if (ips_isintr_morpheus(ha)) 
-+
-+	if (ips_isintr_morpheus(ha))
- 	    ips_flush_and_reset(ha);
- 
- 	post = readl(ha->mem_ptr + IPS_REG_I960_MSG0);
-@@ -4686,7 +4686,7 @@ ips_isinit_morpheus(ips_ha_t * ha)
- /*   state ( was trying to INIT and an interrupt was already pending ) ...  */
- /*                                                                          */
- /****************************************************************************/
--static void 
-+static void
- ips_flush_and_reset(ips_ha_t *ha)
- {
- 	ips_scb_t *scb;
-@@ -4718,9 +4718,9 @@ ips_flush_and_reset(ips_ha_t *ha)
- 	    if (ret == IPS_SUCCESS) {
- 	        time = 60 * IPS_ONE_SEC;	              /* Max Wait time is 60 seconds */
- 	        done = 0;
--	            
-+
- 	        while ((time > 0) && (!done)) {
--	           done = ips_poll_for_flush_complete(ha); 	   
-+	           done = ips_poll_for_flush_complete(ha);
- 	           /* This may look evil, but it's only done during extremely rare start-up conditions ! */
- 	           udelay(1000);
- 	           time--;
-@@ -4749,17 +4749,17 @@ static int
- ips_poll_for_flush_complete(ips_ha_t * ha)
- {
- 	IPS_STATUS cstatus;
--    
-+
- 	while (TRUE) {
- 	    cstatus.value = (*ha->func.statupd) (ha);
- 
- 	    if (cstatus.value == 0xffffffff)      /* If No Interrupt to process */
- 			break;
--            
-+
- 	    /* Success is when we see the Flush Command ID */
--	    if (cstatus.fields.command_id == IPS_MAX_CMDS ) 
-+	    if (cstatus.fields.command_id == IPS_MAX_CMDS )
- 	        return 1;
--	 }	
-+	 }
- 
- 	return 0;
- }
-@@ -5920,7 +5920,7 @@ ips_read_config(ips_ha_t * ha, int intr)
- 
- 		return (0);
  	}
--	
+@@ -6879,20 +6873,14 @@ ips_register_scsi(int index)
+ static void __devexit
+ ips_remove_device(struct pci_dev *pci_dev)
+ {
+-	int i;
+-	struct Scsi_Host *sh;
+-	ips_ha_t *ha;
++	struct Scsi_Host *sh = pci_get_drvdata(pci_dev);
+ 
+-	for (i = 0; i < IPS_MAX_ADAPTERS; i++) {
+-		ha = ips_ha[i];
+-		if (ha) {
+-			if ((pci_dev->bus->number == ha->pcidev->bus->number) &&
+-			    (pci_dev->devfn == ha->pcidev->devfn)) {
+-				sh = ips_sh[i];
+-				ips_release(sh);
+-			}
+-		}
+-	}
++	pci_set_drvdata(pci_dev, NULL);
 +
- 	memcpy(ha->conf, ha->ioctl_data, sizeof(*ha->conf));
- 	return (1);
++	ips_release(sh);
++
++	pci_release_regions(pci_dev);
++	pci_disable_device(pci_dev);
  }
-@@ -5959,7 +5959,7 @@ ips_readwrite_page5(ips_ha_t * ha, int write, int intr)
- 	scb->cmd.nvram.buffer_addr = ha->ioctl_busaddr;
- 	if (write)
- 		memcpy(ha->ioctl_data, ha->nvram, sizeof(*ha->nvram));
--	
-+
- 	/* issue the command */
- 	if (((ret =
- 	      ips_send_wait(ha, scb, ips_cmd_timeout, intr)) == IPS_FAILURE)
-diff --git a/drivers/scsi/ips.h b/drivers/scsi/ips.h
-index fb4a036..e0657b6 100644
---- a/drivers/scsi/ips.h
-+++ b/drivers/scsi/ips.h
-@@ -92,7 +92,7 @@
-    #ifndef min
-       #define min(x,y) ((x) < (y) ? x : y)
-    #endif
--   
-+
-    #ifndef __iomem       /* For clean compiles in earlier kernels without __iomem annotations */
-       #define __iomem
-    #endif
-@@ -171,7 +171,7 @@
-    #define IPS_CMD_DOWNLOAD             0x20
-    #define IPS_CMD_RW_BIOSFW            0x22
-    #define IPS_CMD_GET_VERSION_INFO     0xC6
--   #define IPS_CMD_RESET_CHANNEL        0x1A  
-+   #define IPS_CMD_RESET_CHANNEL        0x1A
  
-    /*
-     * Adapter Equates
-@@ -458,7 +458,7 @@ typedef struct {
-    uint32_t reserved3;
-    uint32_t buffer_addr;
-    uint32_t reserved4;
--} IPS_IOCTL_CMD, *PIPS_IOCTL_CMD; 
-+} IPS_IOCTL_CMD, *PIPS_IOCTL_CMD;
- 
- typedef struct {
-    uint8_t  op_code;
-@@ -552,7 +552,7 @@ typedef struct {
-    uint32_t cccr;
- } IPS_NVRAM_CMD, *PIPS_NVRAM_CMD;
- 
--typedef struct 
-+typedef struct
+ /****************************************************************************/
+@@ -6946,12 +6934,17 @@ module_exit(ips_module_exit);
+ static int __devinit
+ ips_insert_device(struct pci_dev *pci_dev, const struct pci_device_id *ent)
  {
-     uint8_t  op_code;
-     uint8_t  command_id;
-@@ -650,7 +650,7 @@ typedef struct {
-    uint8_t   device_address;
-    uint8_t   cmd_attribute;
-    uint8_t   cdb_length;
--   uint8_t   reserved_for_LUN; 	 
-+   uint8_t   reserved_for_LUN;
-    uint32_t  transfer_length;
-    uint32_t  buffer_pointer;
-    uint16_t  sg_count;
-@@ -790,7 +790,7 @@ typedef struct {
-                                              /* SubSystem Parameter[4]      */
- #define  IPS_GET_VERSION_SUPPORT 0x00018000  /* Mask for Versioning Support */
+-	int uninitialized_var(index);
++	int index = -1;
+ 	int rc;
  
--typedef struct 
-+typedef struct
- {
-    uint32_t  revision;
-    uint8_t   bootBlkVersion[32];
+ 	METHOD_TRACE("ips_insert_device", 1);
+-	if (pci_enable_device(pci_dev))
+-		return -1;
++	rc = pci_enable_device(pci_dev);
++	if (rc)
++		return rc;
++
++	rc = pci_request_regions(pci_dev, "ips");
++	if (rc)
++		goto err_out;
+ 
+ 	rc = ips_init_phase1(pci_dev, &index);
+ 	if (rc == SUCCESS)
+@@ -6967,6 +6960,19 @@ ips_insert_device(struct pci_dev *pci_dev, const struct pci_device_id *ent)
+ 		ips_num_controllers++;
+ 
+ 	ips_next_controller = ips_num_controllers;
++
++	if (rc < 0) {
++		rc = -ENODEV;
++		goto err_out_regions;
++	}
++
++	pci_set_drvdata(pci_dev, ips_sh[index]);
++	return 0;
++
++err_out_regions:
++	pci_release_regions(pci_dev);
++err_out:
++	pci_disable_device(pci_dev);
+ 	return rc;
+ }
+ 
+@@ -6999,7 +7005,7 @@ ips_init_phase1(struct pci_dev *pci_dev, int *indexPtr)
+ 	METHOD_TRACE("ips_init_phase1", 1);
+ 	index = IPS_MAX_ADAPTERS;
+ 	for (j = 0; j < IPS_MAX_ADAPTERS; j++) {
+-		if (ips_ha[j] == 0) {
++		if (ips_ha[j] == NULL) {
+ 			index = j;
+ 			break;
+ 		}
+@@ -7036,32 +7042,17 @@ ips_init_phase1(struct pci_dev *pci_dev, int *indexPtr)
+ 		uint32_t base;
+ 		uint32_t offs;
+ 
+-		if (!request_mem_region(mem_addr, mem_len, "ips")) {
+-			IPS_PRINTK(KERN_WARNING, pci_dev,
+-				   "Couldn't allocate IO Memory space %x len %d.\n",
+-				   mem_addr, mem_len);
+-			return -1;
+-		}
+-
+ 		base = mem_addr & PAGE_MASK;
+ 		offs = mem_addr - base;
+ 		ioremap_ptr = ioremap(base, PAGE_SIZE);
++		if (!ioremap_ptr)
++			return -1;
+ 		mem_ptr = ioremap_ptr + offs;
+ 	} else {
+ 		ioremap_ptr = NULL;
+ 		mem_ptr = NULL;
+ 	}
+ 
+-	/* setup I/O mapped area (if applicable) */
+-	if (io_addr) {
+-		if (!request_region(io_addr, io_len, "ips")) {
+-			IPS_PRINTK(KERN_WARNING, pci_dev,
+-				   "Couldn't allocate IO space %x len %d.\n",
+-				   io_addr, io_len);
+-			return -1;
+-		}
+-	}
+-
+ 	/* found a controller */
+ 	ha = kzalloc(sizeof (ips_ha_t), GFP_KERNEL);
+ 	if (ha == NULL) {
+@@ -7070,7 +7061,6 @@ ips_init_phase1(struct pci_dev *pci_dev, int *indexPtr)
+ 		return -1;
+ 	}
+ 
+-
+ 	ips_sh[index] = NULL;
+ 	ips_ha[index] = ha;
+ 	ha->active = 1;
 -- 
 1.5.2.4
 
