@@ -1,99 +1,144 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH -mm 04/11] ppc: make iommu respect the segment size limits
-Date: Wed, 24 Oct 2007 19:48:13 +0900
-Message-ID: <20071024171642A.tomof@acm.org>
+Subject: [PATCH -mm 06/11] alpha: make pci_iommu respect the segment size
+ limits
+Date: Wed, 24 Oct 2007 19:48:20 +0900
+Message-ID: <20071024171938Q.tomof@acm.org>
 References: <67bb10d9f4e9473ddc84d9839114602c1966f19f.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:59507 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757649AbXJXKxY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 06:53:24 -0400
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757656AbXJXKx1@vger.kernel.org>
 In-Reply-To: <67bb10d9f4e9473ddc84d9839114602c1966f19f.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: akpm@linux-foundation.org
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, paulus@samba.org, fujita.tomonori@lab.ntt.co.jp
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+List-Id: linux-scsi@vger.kernel.org
 
-This patch makes iommu respect segment size limits when merging sg
+This patch makes pci_iommu respect segment size limits when merging sg
 lists.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- arch/powerpc/kernel/dma_64.c |    2 +-
- arch/powerpc/kernel/iommu.c  |    8 ++++++--
- include/asm-powerpc/iommu.h  |    2 +-
- 3 files changed, 8 insertions(+), 4 deletions(-)
+ arch/alpha/kernel/pci_iommu.c |   24 ++++++++++++++++++------
+ include/asm-alpha/pci.h       |    1 +
+ 2 files changed, 19 insertions(+), 6 deletions(-)
 
-diff --git a/arch/powerpc/kernel/dma_64.c b/arch/powerpc/kernel/dma_64.c
-index 14206e3..1806d96 100644
---- a/arch/powerpc/kernel/dma_64.c
-+++ b/arch/powerpc/kernel/dma_64.c
-@@ -68,7 +68,7 @@ static void dma_iommu_unmap_single(struct device *dev, dma_addr_t dma_handle,
- static int dma_iommu_map_sg(struct device *dev, struct scatterlist *sglist,
- 			    int nelems, enum dma_data_direction direction)
- {
--	return iommu_map_sg(dev->archdata.dma_data, sglist, nelems,
-+	return iommu_map_sg(dev, sglist, nelems,
- 			    device_to_mask(dev), direction);
- }
+diff --git a/arch/alpha/kernel/pci_iommu.c b/arch/alpha/kernel/pci_iommu.c
+index 2d00a08..26d3789 100644
+--- a/arch/alpha/kernel/pci_iommu.c
++++ b/arch/alpha/kernel/pci_iommu.c
+@@ -9,6 +9,7 @@
+ #include <linux/bootmem.h>
+ #include <linux/scatterlist.h>
+ #include <linux/log2.h>
++#include <linux/dma-mapping.h>
  
-diff --git a/arch/powerpc/kernel/iommu.c b/arch/powerpc/kernel/iommu.c
-index 2d0c9ef..7a5d247 100644
---- a/arch/powerpc/kernel/iommu.c
-+++ b/arch/powerpc/kernel/iommu.c
-@@ -270,15 +270,17 @@ static void iommu_free(struct iommu_table *tbl, dma_addr_t dma_addr,
- 	spin_unlock_irqrestore(&(tbl->it_lock), flags);
- }
+ #include <asm/io.h>
+ #include <asm/hwrpb.h>
+@@ -470,22 +471,29 @@ EXPORT_SYMBOL(pci_free_consistent);
+ #define SG_ENT_PHYS_ADDRESS(SG) __pa(SG_ENT_VIRT_ADDRESS(SG))
  
--int iommu_map_sg(struct iommu_table *tbl, struct scatterlist *sglist,
-+int iommu_map_sg(struct device *dev, struct scatterlist *sglist,
- 		 int nelems, unsigned long mask,
- 		 enum dma_data_direction direction)
+ static void
+-sg_classify(struct scatterlist *sg, struct scatterlist *end, int virt_ok)
++sg_classify(struct device *dev, struct scatterlist *sg, struct scatterlist *end,
++	    int virt_ok)
  {
-+	struct iommu_table *tbl = dev->archdata.dma_data;
- 	dma_addr_t dma_next = 0, dma_addr;
- 	unsigned long flags;
- 	struct scatterlist *s, *outs, *segstart;
- 	int outcount, incount, i;
- 	unsigned long handle;
+ 	unsigned long next_paddr;
+ 	struct scatterlist *leader;
+ 	long leader_flag, leader_length;
 +	unsigned int max_seg_size;
  
- 	BUG_ON(direction == DMA_NONE);
+ 	leader = sg;
+ 	leader_flag = 0;
+ 	leader_length = leader->length;
+ 	next_paddr = SG_ENT_PHYS_ADDRESS(leader) + leader_length;
  
-@@ -297,6 +299,7 @@ int iommu_map_sg(struct iommu_table *tbl, struct scatterlist *sglist,
++	/* we will not marge sg without device. */
++	max_seg_size = dev ? dma_get_max_seg_size(dev) : 0;
+ 	for (++sg; sg < end; ++sg) {
+ 		unsigned long addr, len;
+ 		addr = SG_ENT_PHYS_ADDRESS(sg);
+ 		len = sg->length;
  
- 	spin_lock_irqsave(&(tbl->it_lock), flags);
++		if (leader_length + len > max_seg_size)
++			goto new_segment;
++
+ 		if (next_paddr == addr) {
+ 			sg->dma_address = -1;
+ 			leader_length += len;
+@@ -494,6 +502,7 @@ sg_classify(struct scatterlist *sg, struct scatterlist *end, int virt_ok)
+ 			leader_flag = 1;
+ 			leader_length += len;
+ 		} else {
++new_segment:
+ 			leader->dma_address = leader_flag;
+ 			leader->dma_length = leader_length;
+ 			leader = sg;
+@@ -512,7 +521,7 @@ sg_classify(struct scatterlist *sg, struct scatterlist *end, int virt_ok)
+    in the blanks.  */
  
-+	max_seg_size = dma_get_max_seg_size(dev);
- 	for_each_sg(sglist, s, nelems, i) {
- 		unsigned long vaddr, npages, entry, slen;
+ static int
+-sg_fill(struct scatterlist *leader, struct scatterlist *end,
++sg_fill(struct device *dev, struct scatterlist *leader, struct scatterlist *end,
+ 	struct scatterlist *out, struct pci_iommu_arena *arena,
+ 	dma_addr_t max_dma, int dac_allowed)
+ {
+@@ -562,8 +571,8 @@ sg_fill(struct scatterlist *leader, struct scatterlist *end,
  
-@@ -338,7 +341,8 @@ int iommu_map_sg(struct iommu_table *tbl, struct scatterlist *sglist,
- 			/* We cannot merge if:
- 			 * - allocated dma_addr isn't contiguous to previous allocation
- 			 */
--			if (novmerge || (dma_addr != dma_next)) {
-+			if (novmerge || (dma_addr != dma_next) ||
-+			    (outs->dma_length + s->length > max_seg_size)) {
- 				/* Can't merge: create a new segment */
- 				segstart = s;
- 				outcount++;
-diff --git a/include/asm-powerpc/iommu.h b/include/asm-powerpc/iommu.h
-index 4a82fdc..5225f05 100644
---- a/include/asm-powerpc/iommu.h
-+++ b/include/asm-powerpc/iommu.h
-@@ -80,7 +80,7 @@ extern void iommu_free_table(struct device_node *dn);
- extern struct iommu_table *iommu_init_table(struct iommu_table * tbl,
- 					    int nid);
+ 		/* Otherwise, break up the remaining virtually contiguous
+ 		   hunks into individual direct maps and retry.  */
+-		sg_classify(leader, end, 0);
+-		return sg_fill(leader, end, out, arena, max_dma, dac_allowed);
++		sg_classify(dev, leader, end, 0);
++		return sg_fill(dev, leader, end, out, arena, max_dma, dac_allowed);
+ 	}
  
--extern int iommu_map_sg(struct iommu_table *tbl, struct scatterlist *sglist,
-+extern int iommu_map_sg(struct device *dev, struct scatterlist *sglist,
- 			int nelems, unsigned long mask,
- 			enum dma_data_direction direction);
- extern void iommu_unmap_sg(struct iommu_table *tbl, struct scatterlist *sglist,
+ 	out->dma_address = arena->dma_base + dma_ofs*PAGE_SIZE + paddr;
+@@ -619,12 +628,15 @@ pci_map_sg(struct pci_dev *pdev, struct scatterlist *sg, int nents,
+ 	struct pci_iommu_arena *arena;
+ 	dma_addr_t max_dma;
+ 	int dac_allowed;
++	struct device *dev;
+ 
+ 	if (direction == PCI_DMA_NONE)
+ 		BUG();
+ 
+ 	dac_allowed = pdev ? pci_dac_dma_supported(pdev, pdev->dma_mask) : 0;
+ 
++	dev = pdev ? &pdev->dev : NULL;
++
+ 	/* Fast path single entry scatterlists.  */
+ 	if (nents == 1) {
+ 		sg->dma_length = sg->length;
+@@ -638,7 +650,7 @@ pci_map_sg(struct pci_dev *pdev, struct scatterlist *sg, int nents,
+ 	end = sg + nents;
+ 
+ 	/* First, prepare information about the entries.  */
+-	sg_classify(sg, end, alpha_mv.mv_pci_tbi != 0);
++	sg_classify(dev, sg, end, alpha_mv.mv_pci_tbi != 0);
+ 
+ 	/* Second, figure out where we're going to map things.  */
+ 	if (alpha_mv.mv_pci_tbi) {
+@@ -658,7 +670,7 @@ pci_map_sg(struct pci_dev *pdev, struct scatterlist *sg, int nents,
+ 	for (out = sg; sg < end; ++sg) {
+ 		if ((int) sg->dma_address < 0)
+ 			continue;
+-		if (sg_fill(sg, end, out, arena, max_dma, dac_allowed) < 0)
++		if (sg_fill(dev, sg, end, out, arena, max_dma, dac_allowed) < 0)
+ 			goto error;
+ 		out++;
+ 	}
+diff --git a/include/asm-alpha/pci.h b/include/asm-alpha/pci.h
+index 30ee766..d5b10ef 100644
+--- a/include/asm-alpha/pci.h
++++ b/include/asm-alpha/pci.h
+@@ -4,6 +4,7 @@
+ #ifdef __KERNEL__
+ 
+ #include <linux/spinlock.h>
++#include <linux/dma-mapping.h>
+ #include <asm/scatterlist.h>
+ #include <asm/machvec.h>
+ 
 -- 
 1.5.2.4
-
