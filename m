@@ -1,60 +1,84 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH -mm 0/11] fix iommu sg merging problem
-Date: Wed, 24 Oct 2007 23:32:11 +0900
-Message-ID: <20071024233419K.tomof@acm.org>
-References: <67bb10d9f4e9473ddc84d9839114602c1966f19f.tomof@acm.org>
-	<471F2F42.1080806@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH -mm 09/11] call blk_queue_segment_boundary in __scsi_alloc_queue
+Date: Wed, 24 Oct 2007 10:34:44 -0400
+Message-ID: <471F5804.30305@garzik.org>
+References: <67bb10d9f4e9473ddc84d9839114602c1966f19f.tomof@acm.org>	<20071024172611B.tomof@acm.org>	<471F2EE4.5000309@garzik.org> <20071024231724T.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:51036 "EHLO mo10.iij4u.or.jp"
+Received: from srv5.dvmed.net ([207.36.208.214]:59153 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758324AbXJXOcx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 10:32:53 -0400
-In-Reply-To: <471F2F42.1080806@garzik.org>
+	id S1759968AbXJXOev (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Oct 2007 10:34:51 -0400
+In-Reply-To: <20071024231724T.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@garzik.org
-Cc: tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, greg@kroah.com, muli@il.ibm.com, paulus@samba.org, tony.luck@intel.com, davem@davemloft.net, kyle@parisc-linux.org, aacraid@adaptec.com, fujita.tomonori@lab.ntt.co.jp
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: jens.axboe@oracle.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
 
-On Wed, 24 Oct 2007 07:40:50 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
-
-> FUJITA Tomonori wrote:
-> > IOMMUs merges scatter/gather segments without considering a low level
-> > driver's restrictions. The problem is that IOMMUs can't access to the
-> > limitations because they are in request_queue.
-> > 
-> > This patchset introduces a new structure, device_dma_parameters,
-> > including dma information. A pointer to device_dma_parameters is added
-> > to struct device. The bus specific structures (like pci_dev) includes
-> > device_dma_parameters. Low level drivers can use dma_set_max_seg_size
-> > to tell IOMMUs about the restrictions.
-> > 
-> > We can move more dma stuff in struct device (like dma_mask) to struct
-> > device_dma_parameters later (needs some cleanups before that).
-> > 
-> > This includes patches for all the IOMMUs that could merge sg (x86_64,
-> > ppc, IA64, alpha, sparc64, and parisc) though only the ppc patch was
-> > tested. The patches for other IOMMUs are only compile tested.
-> > 
-> > Thanks to everyone for the comments on the previous submission
-> > to linux-scsi.
-> > 
-> > This is against 2.6.24-rc1. The same patchset is also available:
-> > 
-> > git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git iommu-sg-fixes
+FUJITA Tomonori wrote:
+> On Wed, 24 Oct 2007 07:39:16 -0400
+> Jeff Garzik <jeff@garzik.org> wrote:
 > 
-> Are you interested in collecting patches to libata that eliminate the 
-> hand-rolled S/G splitting?  e.g. now ata_fill_sg() and mv_fill_sg() can 
-> be made much more efficient.
+>> FUJITA Tomonori wrote:
+>>> request_queue and device struct must have the same value of a segment
+>>> size limit. This patch adds blk_queue_segment_boundary in
+>>> __scsi_alloc_queue so LLDs don't need to call both
+>>> blk_queue_segment_boundary and set_dma_max_seg_size. A LLD can change
+>>> the default value (64KB) can call device_dma_parameters accessors like
+>>> pci_set_dma_max_seg_size when allocating scsi_host.
+>>>
+>>> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+>>> ---
+>>>  drivers/scsi/scsi_lib.c |    3 +++
+>>>  1 files changed, 3 insertions(+), 0 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+>>> index 61fdaf0..23a30ab 100644
+>>> --- a/drivers/scsi/scsi_lib.c
+>>> +++ b/drivers/scsi/scsi_lib.c
+>>> @@ -1645,6 +1645,7 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+>>>  					 request_fn_proc *request_fn)
+>>>  {
+>>>  	struct request_queue *q;
+>>> +	struct device *dev = shost->shost_gendev.parent;
+>>>  
+>>>  	q = blk_init_queue(request_fn, NULL);
+>>>  	if (!q)
+>>> @@ -1673,6 +1674,8 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+>>>  	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+>>>  	blk_queue_segment_boundary(q, shost->dma_boundary);
+>>>  
+>>> +	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+>>> +
+>> it would be nice to have something more general that's useable in 
+>> drivers/block/sx8.c (for example), something like
+>>
+>> 	static inline void
+>> 	dev_blk_associate(struct device *dev, request_queue *q)
+>> 	{
+>> 		blk_queue_max_segment_size(q,
+>> 					dma_get_max_seg_size(dev));
+>> 	}
+>>
+>> still, I will ACK the above patch (#9) in case you wish that to become a 
+>> future cleanup, or others dislike this suggestion
+> 
+> Yeah, I thought about something like that. But I can't find many
+> non-scsi drivers (ide, sx8, mmc/card/, anymore?) doing dma and having
+> the restrictions so I just call blk_queue_max_segment_size here.
 
-Yeah, but ATA has the segment boundary limit too. It's much more
-tricky than the segment size limit. It makes the IOMMU free space
-managemet complicated.
+My main idea was that request_queue will eventually want to know struct 
+device details directly, if it can.
 
 
-> Again, thanks for doing this!  It's been needed for a long time.
+> Either is ok with me. I'll modify the patch if Jens prefers such
+> function. Jens?
 
-My pleasure.
+I have no strong opinion... it was just a thought.
+
+	Jeff
+
+
+
