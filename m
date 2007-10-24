@@ -1,65 +1,60 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
-Date: Wed, 24 Oct 2007 10:32:50 -0400
-Message-ID: <471F5792.1030000@garzik.org>
-References: <1193173128.3434.1.camel@localhost.localdomain>	 <471E6313.1040704@garzik.org> <1193174424.3434.3.camel@localhost.localdomain> <471E707B.1020505@garzik.org> <471F104C.5040005@torque.net>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH -mm 0/11] fix iommu sg merging problem
+Date: Wed, 24 Oct 2007 23:32:11 +0900
+Message-ID: <20071024233419K.tomof@acm.org>
+References: <67bb10d9f4e9473ddc84d9839114602c1966f19f.tomof@acm.org>
+	<471F2F42.1080806@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:59103 "EHLO mail.dvmed.net"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:51036 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756804AbXJXOcx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1758324AbXJXOcx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 24 Oct 2007 10:32:53 -0400
-In-Reply-To: <471F104C.5040005@torque.net>
+In-Reply-To: <471F2F42.1080806@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: jeff@garzik.org
+Cc: tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, jens.axboe@oracle.com, greg@kroah.com, muli@il.ibm.com, paulus@samba.org, tony.luck@intel.com, davem@davemloft.net, kyle@parisc-linux.org, aacraid@adaptec.com, fujita.tomonori@lab.ntt.co.jp
 
-Douglas Gilbert wrote:
-> Jeff Garzik wrote:
->> James Bottomley wrote:
->>> On Tue, 2007-10-23 at 17:09 -0400, Jeff Garzik wrote:
->>>> James Bottomley wrote:
->>>>> This should be the final SCSI updates; it's mainly just a few accessor
->>>>> completion updates and two driver merges (sym2 and qla2xxx) we also
->>>>> secured DaveM's agreement to remove fcal/fc4, which explains the high
->>>>> removal line count.
->>>>>
->>>>> The patch is available here:
->>>>>
->>>>> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
->>>> I guess I have the go-ahead to merge the end-CDROM-polling async
->>>> notification work you've been repeatedly ignoring?
->>> I haven't been ignoring it ... it just needs quite a bit of work; the
->>> best way to accelerate it seems to be simply to do it (add the
->>> supported/trigger event bitmasks and expand the infrastructure).  I just
->>> haven't had the time within the merge window.
->> James, things cannot get bottlenecked like this.  You have had MONTHS to
->> say something like this.  The code was ready BEFORE the merge window.
->>
->> I really think you have the knowledge to be SCSI maintainer, but not the
->> time.
+On Wed, 24 Oct 2007 07:40:50 -0400
+Jeff Garzik <jeff@garzik.org> wrote:
+
+> FUJITA Tomonori wrote:
+> > IOMMUs merges scatter/gather segments without considering a low level
+> > driver's restrictions. The problem is that IOMMUs can't access to the
+> > limitations because they are in request_queue.
+> > 
+> > This patchset introduces a new structure, device_dma_parameters,
+> > including dma information. A pointer to device_dma_parameters is added
+> > to struct device. The bus specific structures (like pci_dev) includes
+> > device_dma_parameters. Low level drivers can use dma_set_max_seg_size
+> > to tell IOMMUs about the restrictions.
+> > 
+> > We can move more dma stuff in struct device (like dma_mask) to struct
+> > device_dma_parameters later (needs some cleanups before that).
+> > 
+> > This includes patches for all the IOMMUs that could merge sg (x86_64,
+> > ppc, IA64, alpha, sparc64, and parisc) though only the ppc patch was
+> > tested. The patches for other IOMMUs are only compile tested.
+> > 
+> > Thanks to everyone for the comments on the previous submission
+> > to linux-scsi.
+> > 
+> > This is against 2.6.24-rc1. The same patchset is also available:
+> > 
+> > git://git.kernel.org/pub/scm/linux/kernel/git/tomo/linux-2.6-misc.git iommu-sg-fixes
 > 
-> Jeff,
-> If only I had a dollar (Canadian unit please) for
-> each day some of my libata patches were queued
-> up to you before you accepted them.
-> 
-> Remember MODE SELECT ...
+> Are you interested in collecting patches to libata that eliminate the 
+> hand-rolled S/G splitting?  e.g. now ata_fill_sg() and mv_fill_sg() can 
+> be made much more efficient.
 
-You're darned right, I've screwed up in the past.  Sat on stuff "until I 
-get time to rewrite it" and that sort of thing.  My colleagues give me 
-lumps for it too :)
-
-We talked about this issue at the Kernel Summit -- collectively we need 
-to stop holding on to useful, working stuff for months on end.  It 
-serves nobody.
-
-We have to rediscover our roots:  "release early, release often"
-
-	Jeff
+Yeah, but ATA has the segment boundary limit too. It's much more
+tricky than the segment size limit. It makes the IOMMU free space
+managemet complicated.
 
 
+> Again, thanks for doing this!  It's been needed for a long time.
 
+My pleasure.
