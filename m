@@ -1,59 +1,82 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] scsi/advansys.c: make 3 functions static
-Date: Wed, 24 Oct 2007 18:23:22 +0200
-Message-ID: <20071024162322.GM30533@stusta.de>
+Subject: [RFC: 2.6 patch] nsp32_restart_autoscsi(): remove error check
+Date: Wed, 24 Oct 2007 18:25:15 +0200
+Message-ID: <20071024162515.GV30533@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:33308 "EHLO
+Received: from emailhub.stusta.mhn.de ([141.84.69.5]:60943 "EHLO
 	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756698AbXJXQWx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 12:22:53 -0400
+	with ESMTP id S1759807AbXJXQYp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 12:24:45 -0400
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@SteelEye.com>
+To: yokota@netlab.is.tsukuba.ac.jp, James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-This patch makes three needlessly global functions static.
+The Coverity checker noted that we'll anyway Oops later when we ran into 
+this condition - and the error check didn't prevent that.
+
+Considering that the error condition shouldn't be possible, and we are 
+not able to handle it easily, this patch simply removes the pointless 
+error check.
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
 
- drivers/scsi/advansys.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+This patch has been sent on:
+- 23 Jul 2007
 
-ad7c16573cd33555f4136c50fa35d1fb2c3669ca 
-diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-index 9dd3952..e316ff2 100644
---- a/drivers/scsi/advansys.c
-+++ b/drivers/scsi/advansys.c
-@@ -12261,7 +12261,7 @@ static ushort __devinit AdvReadEEPWord(AdvPortAddr iop_base, int eep_word_addr)
+ drivers/scsi/nsp32.c |    4 ----
+ 1 file changed, 4 deletions(-)
+
+--- linux-2.6.22-rc6-mm1/drivers/scsi/nsp32.c.old	2007-07-23 19:38:58.000000000 +0200
++++ linux-2.6.22-rc6-mm1/drivers/scsi/nsp32.c	2007-07-23 20:17:14.000000000 +0200
+@@ -1888,44 +1888,40 @@ static void nsp32_msgout_occur(struct sc
+ 
+ 	data->msgout_len = 0;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_MSGOUTOCCUR, "exit");
+ }
+ 
  /*
-  * Write the EEPROM from 'cfg_buf'.
+  * Restart AutoSCSI
+  *
+  * Note: Restarting AutoSCSI needs set:
+  *		SYNC_REG, ACK_WIDTH, SGT_ADR, TRANSFER_CONTROL
   */
--void __devinit
-+static void __devinit
- AdvSet3550EEPConfig(AdvPortAddr iop_base, ADVEEP_3550_CONFIG *cfg_buf)
+ static void nsp32_restart_autoscsi(struct scsi_cmnd *SCpnt, unsigned short command)
  {
- 	ushort *wbuf;
-@@ -12328,7 +12328,7 @@ AdvSet3550EEPConfig(AdvPortAddr iop_base, ADVEEP_3550_CONFIG *cfg_buf)
- /*
-  * Write the EEPROM from 'cfg_buf'.
-  */
--void __devinit
-+static void __devinit
- AdvSet38C0800EEPConfig(AdvPortAddr iop_base, ADVEEP_38C0800_CONFIG *cfg_buf)
- {
- 	ushort *wbuf;
-@@ -12395,7 +12395,7 @@ AdvSet38C0800EEPConfig(AdvPortAddr iop_base, ADVEEP_38C0800_CONFIG *cfg_buf)
- /*
-  * Write the EEPROM from 'cfg_buf'.
-  */
--void __devinit
-+static void __devinit
- AdvSet38C1600EEPConfig(AdvPortAddr iop_base, ADVEEP_38C1600_CONFIG *cfg_buf)
- {
- 	ushort *wbuf;
+ 	nsp32_hw_data *data = (nsp32_hw_data *)SCpnt->device->host->hostdata;
+ 	unsigned int   base = data->BaseAddress;
+ 	unsigned short transfer = 0;
+ 
+ 	nsp32_dbg(NSP32_DEBUG_RESTART, "enter");
+ 
+-	if (data->cur_target == NULL || data->cur_lunt == NULL) {
+-		nsp32_msg(KERN_ERR, "Target or Lun is invalid");
+-	}
+-
+ 	/*
+ 	 * set SYNC_REG
+ 	 * Don't set BM_START_ADR before setting this register.
+ 	 */
+ 	nsp32_write1(base, SYNC_REG, data->cur_target->syncreg);
+ 
+ 	/*
+ 	 * set ACKWIDTH
+ 	 */
+ 	nsp32_write1(base, ACK_WIDTH, data->cur_target->ackwidth);
+ 
+ 	/*
+ 	 * set SREQ hazard killer sampling rate
+ 	 */
+ 	nsp32_write1(base, SREQ_SMPL_RATE, data->cur_target->sample_reg);
+ 
+ 	/*
+ 	 * set SGT ADDR (physical address)
+ 	 */
+ 	nsp32_write4(base, SGT_ADR, data->cur_lunt->sglun_paddr);
 
