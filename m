@@ -1,51 +1,42 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
-Date: Wed, 24 Oct 2007 12:09:14 -0700
-Message-ID: <20071024120914.180682a6.akpm@linux-foundation.org>
-References: <471E6313.1040704@garzik.org>
-	<1193174424.3434.3.camel@localhost.localdomain>
-	<471E707B.1020505@garzik.org>
-	<20071023.153635.21595587.davem@davemloft.net>
-	<1193232490.3396.10.camel@localhost.localdomain>
-	<alpine.LFD.0.999.0710240818320.30120@woody.linux-foundation.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: stex driver panic in kernel 2.6.23
+Date: Wed, 24 Oct 2007 15:15:55 -0400
+Message-ID: <1193253355.3441.4.camel@localhost.localdomain>
+References: <NONAMEWzsLqIfQdmEB40000023f@nonamew.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:53257 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753155AbXJXTJc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 15:09:32 -0400
-In-Reply-To: <alpine.LFD.0.999.0710240818320.30120@woody.linux-foundation.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:49931 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753433AbXJXTQH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 15:16:07 -0400
+In-Reply-To: <NONAMEWzsLqIfQdmEB40000023f@nonamew.ptu.promise.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
+To: Ed Lin <ed.lin@promise.com>
+Cc: "jens.axboe" <jens.axboe@oracle.com>, akpm <akpm@linux-foundation.org>, jeff <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, 24 Oct 2007 08:35:21 -0700 (PDT) Linus Torvalds <torvalds@linux-foundation.org> wrote:
+On Wed, 2007-10-24 at 11:59 -0700, Ed Lin wrote:
+> The shared tag issue was not fixed yet. Kernel panic
+> happened while running I/O test in kernel 2.6.23
+> (information attached). After applying the patch I posted
+> (or the version James modified), panic disappeared.
+> Switch back to standard kernel, panic again.
 
-> On Wed, 24 Oct 2007, James Bottomley wrote:
-> > 
-> > OK, so it's no secret that I'm the last of the subsystem maintainers
-> > whose day job isn't working on the linux kernel.  If you want a full
-> > time person, who did you have in mind?
-> 
-> Quite frankly, at least for me personally, what I would rather have (in 
-> general: this is really not at all SCSI-specific in any way, shape, or 
-> form, and not directed at James!) is a less rigid maintainership 
-> structure.
-> 
-> Let's face it, we are *all* likely to be overworked at different times, 
-> and even when not overworked, it's just the fact that people need to take 
-> a breather etc. And there is seldom - if ever - a very strong argument for 
-> having one person per subsystem.
+Just so we're on the same page, do you have a pointer to the patch?
 
-Am OK with all of that, but with a rider.  It would make my life even more
-miserable if there was a (say) git-scsi-tweedledee and a
-git-scsi-tweedledum.  We already have too much out-of-scope code turning up
-in the git trees and having two trees explicitly modifying the same
-subsystem would hurt.  It's also bad from an engineering POV: there's a
-decent chance that when combined, they just won't work.
+I thought the issue was fixed by this patch
 
-So Tweedledee and Tweedledum should both commit to the same tree, please.
+http://marc.info/?l=linux-scsi&m=118968649513338
+
+Which Linus said he modified and then committed here:
+
+http://marc.info/?l=linux-kernel&m=118969824104600
+
+However, I have to confess I can't find this patch in the current
+kernel.
+
+James
+
+
