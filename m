@@ -1,69 +1,40 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: [PATCH] scsi/sym53c8xx: Fix a warning in sym_eh_handler
-Date: Wed, 24 Oct 2007 11:59:20 +0200
-Message-ID: <20071024115920.6728832c@hyperion.delvare>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] hptiop: fix type mismatch warning
+Date: Wed, 24 Oct 2007 06:34:09 -0400
+Message-ID: <20071024103409.GA31302@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-dmz-233-wednesday.dmz.nerim.net ([195.5.254.233]:56118
-	"EHLO kellthuzad.dmz.nerim.net" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751226AbXJXKY3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 06:24:29 -0400
-Received: from kraid.nerim.net (smtp-103-wednesday.nerim.net [62.4.16.103])
-	by kellthuzad.dmz.nerim.net (Postfix) with ESMTP id BD844248CC
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Oct 2007 12:01:18 +0200 (CEST)
+Received: from havoc.gtf.org ([69.61.125.42]:46302 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754275AbXJXKeK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Oct 2007 06:34:10 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, LKML <linux-kernel@vger.kernel.org>
 
-In 2.6.24-rc1 I see the following warning:
-drivers/scsi/sym53c8xx_2/sym_glue.c: In function "sym_eh_handler":
-drivers/scsi/sym53c8xx_2/sym_glue.c:612: warning: "io_reset" may be used uninitialized in this function
 
-Although gcc is wrong and the code is actually correct, it can easily
-be made more obvious to keep the compiler quiet.
+drivers/scsi/hptiop.c: In function 'hptiop_host_request_callback':
+drivers/scsi/hptiop.c:378: warning: comparison of distinct pointer types lacks a cast
+drivers/scsi/hptiop.c:378: warning: comparison of distinct pointer types lacks a cast
 
-Signed-off-by: Jean Delvare <khali@linux-fr.org>
+Use min_t(size_t, ...) to fix.
+
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 ---
- drivers/scsi/sym53c8xx_2/sym_glue.c |   13 ++++++-------
- 1 file changed, 6 insertions(+), 7 deletions(-)
 
---- linux-2.6.24-rc1.orig/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-10-24 09:59:46.000000000 +0200
-+++ linux-2.6.24-rc1/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-10-24 11:53:14.000000000 +0200
-@@ -609,8 +609,8 @@ static int sym_eh_handler(int op, char *
- 	 */
- #define WAIT_FOR_PCI_RECOVERY	35
- 	if (pci_channel_offline(pdev)) {
--		struct completion *io_reset;
--		int finished_reset = 0;
-+		struct completion *io_reset = NULL;
-+		int finished_reset;
- 		init_completion(&eh_done);
- 		spin_lock_irq(shost->host_lock);
- 		/* Make sure we didn't race */
-@@ -618,15 +618,14 @@ static int sym_eh_handler(int op, char *
- 			if (!sym_data->io_reset)
- 				sym_data->io_reset = &eh_done;
- 			io_reset = sym_data->io_reset;
--		} else {
--			finished_reset = 1;
- 		}
- 		spin_unlock_irq(shost->host_lock);
--		if (!finished_reset)
-+		if (io_reset) {
- 			finished_reset = wait_for_completion_timeout(io_reset,
- 						WAIT_FOR_PCI_RECOVERY*HZ);
--		if (!finished_reset)
--			return SCSI_FAILED;
-+			if (!finished_reset)
-+				return SCSI_FAILED;
-+		}
- 	}
+diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
+index 0844331..7fc532b 100644
+--- a/drivers/scsi/hptiop.c
++++ b/drivers/scsi/hptiop.c
+@@ -376,7 +376,7 @@ static void hptiop_host_request_callback(struct hptiop_hba *hba, u32 _tag)
+ 		memset(&scp->sense_buffer,
+ 				0, sizeof(scp->sense_buffer));
+ 		memcpy(&scp->sense_buffer, &req->sg_list,
+-				min(sizeof(scp->sense_buffer),
++				min_t(size_t, sizeof(scp->sense_buffer),
+ 					le32_to_cpu(req->dataxfer_length)));
+ 		break;
  
- 	spin_lock_irq(shost->host_lock);
-
-
--- 
-Jean Delvare
