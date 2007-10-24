@@ -1,76 +1,34 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH -mm 09/11] call blk_queue_segment_boundary in
- __scsi_alloc_queue
-Date: Wed, 24 Oct 2007 23:15:17 +0900
-Message-ID: <20071024231724T.tomof@acm.org>
-References: <67bb10d9f4e9473ddc84d9839114602c1966f19f.tomof@acm.org>
-	<20071024172611B.tomof@acm.org>
-	<471F2EE4.5000309@garzik.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
+Date: Wed, 24 Oct 2007 08:27:30 -0600
+Message-ID: <20071024142729.GZ27248@parisc-linux.org>
+References: <471E6313.1040704@garzik.org> <1193174424.3434.3.camel@localhost.localdomain> <471E707B.1020505@garzik.org> <20071023.153635.21595587.davem@davemloft.net> <1193232490.3396.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:49735 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757164AbXJXOQM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 10:16:12 -0400
-In-Reply-To: <471F2EE4.5000309@garzik.org>
+Received: from palinux.external.hp.com ([192.25.206.14]:42921 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757366AbXJXO1b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 10:27:31 -0400
+Content-Disposition: inline
+In-Reply-To: <1193232490.3396.10.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@garzik.org, jens.axboe@oracle.com
-Cc: tomof@acm.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, fujita.tomonori@lab.ntt.co.jp
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: David Miller <davem@davemloft.net>, jeff@garzik.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 24 Oct 2007 07:39:16 -0400
-Jeff Garzik <jeff@garzik.org> wrote:
+On Wed, Oct 24, 2007 at 09:28:10AM -0400, James Bottomley wrote:
+> OK, so it's no secret that I'm the last of the subsystem maintainers
+> whose day job isn't working on the linux kernel.  If you want a full
+> time person, who did you have in mind?
 
-> FUJITA Tomonori wrote:
-> > request_queue and device struct must have the same value of a segment
-> > size limit. This patch adds blk_queue_segment_boundary in
-> > __scsi_alloc_queue so LLDs don't need to call both
-> > blk_queue_segment_boundary and set_dma_max_seg_size. A LLD can change
-> > the default value (64KB) can call device_dma_parameters accessors like
-> > pci_set_dma_max_seg_size when allocating scsi_host.
-> > 
-> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > ---
-> >  drivers/scsi/scsi_lib.c |    3 +++
-> >  1 files changed, 3 insertions(+), 0 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> > index 61fdaf0..23a30ab 100644
-> > --- a/drivers/scsi/scsi_lib.c
-> > +++ b/drivers/scsi/scsi_lib.c
-> > @@ -1645,6 +1645,7 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
-> >  					 request_fn_proc *request_fn)
-> >  {
-> >  	struct request_queue *q;
-> > +	struct device *dev = shost->shost_gendev.parent;
-> >  
-> >  	q = blk_init_queue(request_fn, NULL);
-> >  	if (!q)
-> > @@ -1673,6 +1674,8 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
-> >  	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
-> >  	blk_queue_segment_boundary(q, shost->dma_boundary);
-> >  
-> > +	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
-> > +
-> 
-> it would be nice to have something more general that's useable in 
-> drivers/block/sx8.c (for example), something like
-> 
-> 	static inline void
-> 	dev_blk_associate(struct device *dev, request_queue *q)
-> 	{
-> 		blk_queue_max_segment_size(q,
-> 					dma_get_max_seg_size(dev));
-> 	}
-> 
-> still, I will ACK the above patch (#9) in case you wish that to become a 
-> future cleanup, or others dislike this suggestion
+I'm willing to take on the role of scsi git-monkey.  Alternatively, we
+could split the scsi maintainer role the same way that Dave and Jeff
+do for net where Dave handles the core and Jeff handles the drivers.
+Or we can negotiate some other arrangement.
 
-Yeah, I thought about something like that. But I can't find many
-non-scsi drivers (ide, sx8, mmc/card/, anymore?) doing dma and having
-the restrictions so I just call blk_queue_max_segment_size here.
-
-Either is ok with me. I'll modify the patch if Jens prefers such
-function. Jens?
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
