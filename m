@@ -1,156 +1,183 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH] tgt: convert to use the data buffer accessors
-Date: Thu, 25 Oct 2007 01:21:30 +0900
-Message-ID: <20071025011919N.tomof@acm.org>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] 53c7xx removal fallout
+Date: Wed, 24 Oct 2007 18:26:22 +0200
+Message-ID: <20071024162622.GI30533@stusta.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:38963 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759198AbXJXQZJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 24 Oct 2007 12:25:09 -0400
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:60982 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760072AbXJXQZ5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 12:25:57 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-scsi@vger.kernel.org, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp
+To: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-This converts tgt to use the data buffer accessors to reduce the size
-of the scsi_data_buffer patch for tgt, which will be merged later.
+This patch does some additional cleanups after the 53c7xx removal.
 
--
-Subject: [PATCH] tgt: convert to use the data buffer accessors
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
-- convert to use the new accessors for the sg lists and the
-parameters.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/ibmvscsi/ibmvstgt.c |    2 +-
- drivers/scsi/libsrp.c            |   23 ++++++++++++-----------
- drivers/scsi/scsi_tgt_if.c       |    2 +-
- drivers/scsi/scsi_tgt_lib.c      |   11 ++++++-----
- 4 files changed, 20 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvstgt.c b/drivers/scsi/ibmvscsi/ibmvstgt.c
-index 82bcab6..d63f11e 100644
---- a/drivers/scsi/ibmvscsi/ibmvstgt.c
-+++ b/drivers/scsi/ibmvscsi/ibmvstgt.c
-@@ -292,7 +292,7 @@ static int ibmvstgt_cmd_done(struct scsi_cmnd *sc,
- 	dprintk("%p %p %x %u\n", iue, target, vio_iu(iue)->srp.cmd.cdb[0],
- 		cmd->usg_sg);
+ Documentation/dontdiff                |    2 
+ Documentation/m68k/kernel-options.txt |   60 --------------------------
+ Documentation/scsi/00-INDEX           |    2 
+ Documentation/scsi/ncr53c7xx.txt      |   40 -----------------
+ drivers/scsi/.gitignore               |    2 
+ 5 files changed, 106 deletions(-)
+
+cc96ec601a55800f9a6bce6e208c7ff1e2f618fd 
+diff --git a/Documentation/dontdiff b/Documentation/dontdiff
+index f2d658a..c09a96b 100644
+--- a/Documentation/dontdiff
++++ b/Documentation/dontdiff
+@@ -46,8 +46,6 @@
+ .mailmap
+ .mm
+ 53c700_d.h
+-53c7xx_d.h
+-53c7xx_u.h
+ 53c8xx_d.h*
+ BitKeeper
+ COPYING
+diff --git a/Documentation/m68k/kernel-options.txt b/Documentation/m68k/kernel-options.txt
+index 248589e..c93bed6 100644
+--- a/Documentation/m68k/kernel-options.txt
++++ b/Documentation/m68k/kernel-options.txt
+@@ -867,66 +867,6 @@ controller and should be autodetected by the driver. An example is the
+ 24 bit region which is specified by a mask of 0x00fffffe.
  
--	if (sc->use_sg)
-+	if (scsi_sg_count(sc))
- 		err = srp_transfer_data(sc, &vio_iu(iue)->srp.cmd, ibmvstgt_rdma, 1, 1);
  
- 	spin_lock_irqsave(&target->lock, flags);
-diff --git a/drivers/scsi/libsrp.c b/drivers/scsi/libsrp.c
-index 2ad0a27..5cff020 100644
---- a/drivers/scsi/libsrp.c
-+++ b/drivers/scsi/libsrp.c
-@@ -192,18 +192,18 @@ static int srp_direct_data(struct scsi_cmnd *sc, struct srp_direct_buf *md,
- 
- 	if (dma_map) {
- 		iue = (struct iu_entry *) sc->SCp.ptr;
--		sg = sc->request_buffer;
-+		sg = scsi_sglist(sc);
- 
--		dprintk("%p %u %u %d\n", iue, sc->request_bufflen,
--			md->len, sc->use_sg);
-+		dprintk("%p %u %u %d\n", iue, scsi_bufflen(sc),
-+			md->len, scsi_sg_count(sc));
- 
--		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg,
-+		nsg = dma_map_sg(iue->target->dev, sg, scsi_sg_count(sc),
- 				 DMA_BIDIRECTIONAL);
- 		if (!nsg) {
--			printk("fail to map %p %d\n", iue, sc->use_sg);
-+			printk("fail to map %p %d\n", iue, scsi_sg_count(sc));
- 			return 0;
- 		}
--		len = min(sc->request_bufflen, md->len);
-+		len = min(scsi_bufflen(sc), md->len);
- 	} else
- 		len = md->len;
- 
-@@ -229,10 +229,10 @@ static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
- 
- 	if (dma_map || ext_desc) {
- 		iue = (struct iu_entry *) sc->SCp.ptr;
--		sg = sc->request_buffer;
-+		sg = scsi_sglist(sc);
- 
- 		dprintk("%p %u %u %d %d\n",
--			iue, sc->request_bufflen, id->len,
-+			iue, scsi_bufflen(sc), id->len,
- 			cmd->data_in_desc_cnt, cmd->data_out_desc_cnt);
- 	}
- 
-@@ -268,13 +268,14 @@ static int srp_indirect_data(struct scsi_cmnd *sc, struct srp_cmd *cmd,
- 
- rdma:
- 	if (dma_map) {
--		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg, DMA_BIDIRECTIONAL);
-+		nsg = dma_map_sg(iue->target->dev, sg, scsi_sg_count(sc),
-+				 DMA_BIDIRECTIONAL);
- 		if (!nsg) {
--			eprintk("fail to map %p %d\n", iue, sc->use_sg);
-+			eprintk("fail to map %p %d\n", iue, scsi_sg_count(sc));
- 			err = -EIO;
- 			goto free_mem;
- 		}
--		len = min(sc->request_bufflen, id->len);
-+		len = min(scsi_bufflen(sc), id->len);
- 	} else
- 		len = id->len;
- 
-diff --git a/drivers/scsi/scsi_tgt_if.c b/drivers/scsi/scsi_tgt_if.c
-index 9815a1a..d2557db 100644
---- a/drivers/scsi/scsi_tgt_if.c
-+++ b/drivers/scsi/scsi_tgt_if.c
-@@ -112,7 +112,7 @@ int scsi_tgt_uspace_send_cmd(struct scsi_cmnd *cmd, u64 itn_id,
- 	memset(&ev, 0, sizeof(ev));
- 	ev.p.cmd_req.host_no = shost->host_no;
- 	ev.p.cmd_req.itn_id = itn_id;
--	ev.p.cmd_req.data_len = cmd->request_bufflen;
-+	ev.p.cmd_req.data_len = scsi_bufflen(cmd);
- 	memcpy(ev.p.cmd_req.scb, cmd->cmnd, sizeof(ev.p.cmd_req.scb));
- 	memcpy(ev.p.cmd_req.lun, lun, sizeof(ev.p.cmd_req.lun));
- 	ev.p.cmd_req.attribute = cmd->tag;
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-index d67ca14..7abef1a 100644
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -331,7 +331,7 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
- 
- 	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
- 
--	if (cmd->request_buffer)
-+	if (scsi_sglist(cmd))
- 		scsi_free_sgtable(cmd);
- 
- 	queue_work(scsi_tgtd, &tcmd->work);
-@@ -365,14 +365,15 @@ static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 
- 	cmd->request_bufflen = rq->data_len;
- 
--	dprintk("cmd %p cnt %d %lu\n", cmd, cmd->use_sg, rq_data_dir(rq));
--	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
--	if (likely(count <= cmd->use_sg)) {
-+	dprintk("cmd %p cnt %d %lu\n", cmd, scsi_sg_count(cmd),
-+		rq_data_dir(rq));
-+	count = blk_rq_map_sg(rq->q, rq, scsi_sglist(cmd));
-+	if (likely(count <= scsi_sg_count(cmd))) {
- 		cmd->use_sg = count;
- 		return 0;
- 	}
- 
--	eprintk("cmd %p cnt %d\n", cmd, cmd->use_sg);
-+	eprintk("cmd %p cnt %d\n", cmd, scsi_sg_count(cmd));
- 	scsi_free_sgtable(cmd);
- 	return -EINVAL;
- }
--- 
-1.5.2.4
+-5.5) 53c7xx=
+-------------
+-
+-Syntax: 53c7xx=<sub-options...>
+-
+-These options affect the A4000T, A4091, WarpEngine, Blizzard 603e+,
+-and GForce 040/060 SCSI controllers on the Amiga, as well as the
+-builtin MVME 16x SCSI controller.
+-
+-The <sub-options> is a comma-separated list of the sub-options listed
+-below.
+-
+-5.5.1) nosync
+--------------
+-
+-Syntax: nosync:0
+-
+-  Disables sync negotiation for all devices.  Any value after the
+-  colon is acceptable (and has the same effect).
+-
+-5.5.2) noasync
+---------------
+-
+-[OBSOLETE, REMOVED]
+-
+-5.5.3) nodisconnect
+--------------------
+-
+-Syntax: nodisconnect:0
+-
+-  Disables SCSI disconnects.  Any value after the colon is acceptable
+-  (and has the same effect).
+-
+-5.5.4) validids
+----------------
+-
+-Syntax: validids:0xNN
+-
+-  Specify which SCSI ids the driver should pay attention to.  This is
+-  a bitmask (i.e. to only pay attention to ID#4, you'd use 0x10).
+-  Default is 0x7f (devices 0-6).
+-
+-5.5.5) opthi
+-5.5.6) optlo
+-------------
+-
+-Syntax: opthi:M,optlo:N
+-
+-  Specify options for "hostdata->options".  The acceptable definitions
+-  are listed in drivers/scsi/53c7xx.h; the 32 high bits should be in
+-  opthi and the 32 low bits in optlo.  They must be specified in the
+-  order opthi=M,optlo=N.
+-
+-5.5.7) next
+------------
+-
+-  No argument. Used to separate blocks of keywords when there's more
+-  than one 53c7xx host adapter in the system.
+-
+-
+ /* Local Variables: */
+ /* mode: text       */
+ /* End:             */
+diff --git a/Documentation/scsi/00-INDEX b/Documentation/scsi/00-INDEX
+index aa1f7e9..c2e18e1 100644
+--- a/Documentation/scsi/00-INDEX
++++ b/Documentation/scsi/00-INDEX
+@@ -64,8 +64,6 @@ lpfc.txt
+ 	- LPFC driver release notes
+ megaraid.txt
+ 	- Common Management Module, shared code handling ioctls for LSI drivers
+-ncr53c7xx.txt
+-	- info on driver for NCR53c7xx based adapters
+ ncr53c8xx.txt
+ 	- info on driver for NCR53c8xx based adapters
+ osst.txt
+diff --git a/Documentation/scsi/ncr53c7xx.txt b/Documentation/scsi/ncr53c7xx.txt
+deleted file mode 100644
+index 91e9552..0000000
+--- a/Documentation/scsi/ncr53c7xx.txt
++++ /dev/null
+@@ -1,40 +0,0 @@
+-README for WarpEngine/A4000T/A4091 SCSI kernels.
+-
+-Use the following options to disable options in the SCSI driver.
+-
+-Using amiboot for example.....
+-
+-To disable Synchronous Negotiation....
+-
+-	amiboot -k kernel 53c7xx=nosync:0	
+-
+-To disable Disconnection....
+-	
+-	amiboot -k kernel 53c7xx=nodisconnect:0
+-
+-To disable certain SCSI devices...
+-
+-	amiboot -k kernel 53c7xx=validids:0x3F
+-
+-	this allows only device ID's 0,1,2,3,4 and 5 for linux to handle.
+-	(this is a bitmasked field - i.e. each bit represents a SCSI ID)
+-
+-These commands work on a per controller basis and use the option 'next' to
+-move to the next controller in the system.
+-
+-e.g.
+-	amiboot -k kernel 53c7xx=nodisconnect:0,next,nosync:0
+-
+-	this uses No Disconnection on the first controller and Asynchronous
+-	SCSI on the second controller.
+-
+-Known Issues:
+-
+-Two devices are known not to function with the default settings of using
+-synchronous SCSI. These are the Archive Viper 150 Tape Drive and the 
+-SyQuest SQ555 removeable hard drive. When using these devices on a controller
+-use the 'nosync:0' option.
+-
+-Please try these options and post any problems/successes to me.
+-
+-Alan Hourihane <alanh@fairlite.demon.co.uk>
+diff --git a/drivers/scsi/.gitignore b/drivers/scsi/.gitignore
+index b385af3..c89ae9a 100644
+--- a/drivers/scsi/.gitignore
++++ b/drivers/scsi/.gitignore
+@@ -1,3 +1 @@
+ 53c700_d.h
+-53c7xx_d.h
+-53c7xx_u.h
 
