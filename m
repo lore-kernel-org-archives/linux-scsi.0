@@ -1,35 +1,60 @@
-From: Jean Delvare <khali@linux-fr.org>
-Subject: Re: [PATCH] scsi/sym53c8xx: Fix a warning in sym_eh_handler
-Date: Wed, 24 Oct 2007 14:46:16 +0200
-Message-ID: <20071024144616.47564401@hyperion.delvare>
-References: <20071024115920.6728832c@hyperion.delvare>
-	<20071024112543.GX27248@parisc-linux.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
+Date: Wed, 24 Oct 2007 09:24:19 -0400
+Message-ID: <1193232259.3396.6.camel@localhost.localdomain>
+References: <1193173128.3434.1.camel@localhost.localdomain>
+	 <471E6313.1040704@garzik.org>
+	 <1193174424.3434.3.camel@localhost.localdomain>
+	 <471E707B.1020505@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-103-wednesday.nerim.net ([62.4.16.103]:54849 "EHLO
-	kraid.nerim.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758389AbXJXMqS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 08:46:18 -0400
-In-Reply-To: <20071024112543.GX27248@parisc-linux.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:41794 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753304AbXJXNYY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 09:24:24 -0400
+In-Reply-To: <471E707B.1020505@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Wed, 24 Oct 2007 05:25:43 -0600, Matthew Wilcox wrote:
-> On Wed, Oct 24, 2007 at 11:59:20AM +0200, Jean Delvare wrote:
-> > In 2.6.24-rc1 I see the following warning:
-> > drivers/scsi/sym53c8xx_2/sym_glue.c: In function "sym_eh_handler":
-> > drivers/scsi/sym53c8xx_2/sym_glue.c:612: warning: "io_reset" may be used uninitialized in this function
+On Tue, 2007-10-23 at 18:06 -0400, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > On Tue, 2007-10-23 at 17:09 -0400, Jeff Garzik wrote:
+> >> James Bottomley wrote:
+> >>> This should be the final SCSI updates; it's mainly just a few accessor
+> >>> completion updates and two driver merges (sym2 and qla2xxx) we also
+> >>> secured DaveM's agreement to remove fcal/fc4, which explains the high
+> >>> removal line count.
+> >>>
+> >>> The patch is available here:
+> >>>
+> >>> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
+> >> I guess I have the go-ahead to merge the end-CDROM-polling async 
+> >> notification work you've been repeatedly ignoring?
 > > 
-> > Although gcc is wrong and the code is actually correct, it can easily
-> > be made more obvious to keep the compiler quiet.
+> > I haven't been ignoring it ... it just needs quite a bit of work; the
+> > best way to accelerate it seems to be simply to do it (add the
+> > supported/trigger event bitmasks and expand the infrastructure).  I just
+> > haven't had the time within the merge window.
 > 
-> Which compiler version?  I don't see this with 4.2.1.
+> James, things cannot get bottlenecked like this.  You have had MONTHS to 
+> say something like this.  The code was ready BEFORE the merge window.
 
-gcc version 4.1.2.
+The patch in question is an interface to user space.  The problem with
+those is that you can't put them in and refine them because the user
+visible interface changes when you do that.
 
--- 
-Jean Delvare
+> I really think you have the knowledge to be SCSI maintainer, but not the 
+> time.
+
+The pot is calling the kettle black here, since libata was supposed to
+have moved out of SCSI about three years ago by helping us move the
+shared elements up to block.  As far as I can tell, the only progress
+we've made in this area is me adding the odd API shift.
+
+James
+
+
