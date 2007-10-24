@@ -1,63 +1,52 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
-Date: Tue, 23 Oct 2007 15:36:35 -0700 (PDT)
-Message-ID: <20071023.153635.21595587.davem@davemloft.net>
-References: <471E6313.1040704@garzik.org>
-	<1193174424.3434.3.camel@localhost.localdomain>
-	<471E707B.1020505@garzik.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: Target mode support for qlogic chipsets isp2422/2432/5422/5432
+Date: Wed, 24 Oct 2007 09:05:46 +0900
+Message-ID: <20071024090546S.fujita.tomonori@lab.ntt.co.jp>
+References: <3b8510d80710230117l269c6356uff350caeb1ee0e31@mail.gmail.com>
+	<20071023180302Y.fujita.tomonori@lab.ntt.co.jp>
+	<471E09BE.2030302@qlogic.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:54713
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752781AbXJWWgI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 23 Oct 2007 18:36:08 -0400
-In-Reply-To: <471E707B.1020505@garzik.org>
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:56026 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752454AbXJXAHe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Oct 2007 20:07:34 -0400
+In-Reply-To: <471E09BE.2030302@qlogic.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jeff@garzik.org
-Cc: James.Bottomley@SteelEye.com, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: seokmann.ju@qlogic.com
+Cc: fujita.tomonori@lab.ntt.co.jp, thayumk@gmail.com, linux-scsi@vger.kernel.org
 
-From: Jeff Garzik <jeff@garzik.org>
-Date: Tue, 23 Oct 2007 18:06:51 -0400
+On Tue, 23 Oct 2007 07:48:30 -0700
+Seokmann Ju <seokmann.ju@qlogic.com> wrote:
 
-> James Bottomley wrote:
-> > On Tue, 2007-10-23 at 17:09 -0400, Jeff Garzik wrote:
-> >> James Bottomley wrote:
-> >>> This should be the final SCSI updates; it's mainly just a few accessor
-> >>> completion updates and two driver merges (sym2 and qla2xxx) we also
-> >>> secured DaveM's agreement to remove fcal/fc4, which explains the high
-> >>> removal line count.
-> >>>
-> >>> The patch is available here:
-> >>>
-> >>> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> >> I guess I have the go-ahead to merge the end-CDROM-polling async 
-> >> notification work you've been repeatedly ignoring?
+> FUJITA Tomonori wrote:
+> > On Tue, 23 Oct 2007 13:47:20 +0530
+> > "Thayumanavar Sachithanantham" <thayumk@gmail.com> wrote:
 > > 
-> > I haven't been ignoring it ... it just needs quite a bit of work; the
-> > best way to accelerate it seems to be simply to do it (add the
-> > supported/trigger event bitmasks and expand the infrastructure).  I just
-> > haven't had the time within the merge window.
-> 
-> James, things cannot get bottlenecked like this.  You have had MONTHS to 
-> say something like this.  The code was ready BEFORE the merge window.
-> 
-> I really think you have the knowledge to be SCSI maintainer, but not the 
-> time.
+> >> Hi All,
+> >>
+> >> Does the recent target mode support added for tgt support target mode
+> >> for qla chipset (qla24xx series)?
+> > 
+> > We've been trying:
+> > 
+> > http://marc.info/?t=118857986700004&r=1&w=2
+> > 
+> > But I heard that the qla24xx firmware doesn't support target mode (I
+> > use QLA2340).
+> Hello Tomonori,
+> The qla24xx firmware supports target mode.
+> If I led you to that direction, please forgive me.
 
-Unfortunately, I think this is an important point.
+No, you didn't.
 
-Developers depend strongly upon a subsystem maintainer to
-"make time" for these things so that work integration does
-not get delayed past the merge window if at all possible.
 
-Not being able to "make time" to do these things is a great
-way to lose contributers.
+> When I was verifying the patch, I was confused about the patch and
+> thought it already had support for 24xx.  Now, I've verified the
+> patch with 23xx and I'm in the middle of adding support for 24xx to
+> the patch. I will get back to you as I get it done.
 
-James, whilst there is no doubt in my mind that skill-wise
-you are probably the most capable scsi maintainer, your "lack
-of time" is sounding like a broken record and harming the
-development process.
+Great! Thanks.
