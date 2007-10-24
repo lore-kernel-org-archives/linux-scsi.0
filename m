@@ -1,55 +1,51 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [RFC: 2.6 patch] nsp32_restart_autoscsi(): remove error check
-Date: Wed, 24 Oct 2007 18:54:34 +0200
-Message-ID: <20071024165434.GZ30533@stusta.de>
-References: <20071024162515.GV30533@stusta.de> <1193244072.3396.17.camel@localhost.localdomain>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
+Date: Wed, 24 Oct 2007 12:09:14 -0700
+Message-ID: <20071024120914.180682a6.akpm@linux-foundation.org>
+References: <471E6313.1040704@garzik.org>
+	<1193174424.3434.3.camel@localhost.localdomain>
+	<471E707B.1020505@garzik.org>
+	<20071023.153635.21595587.davem@davemloft.net>
+	<1193232490.3396.10.camel@localhost.localdomain>
+	<alpine.LFD.0.999.0710240818320.30120@woody.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout.stusta.mhn.de ([141.84.69.5]:37210 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764105AbXJXQyG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Oct 2007 12:54:06 -0400
-Content-Disposition: inline
-In-Reply-To: <1193244072.3396.17.camel@localhost.localdomain>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53257 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753155AbXJXTJc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 24 Oct 2007 15:09:32 -0400
+In-Reply-To: <alpine.LFD.0.999.0710240818320.30120@woody.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: yokota@netlab.is.tsukuba.ac.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, David Miller <davem@davemloft.net>, Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
-On Wed, Oct 24, 2007 at 12:41:12PM -0400, James Bottomley wrote:
-> On Wed, 2007-10-24 at 18:25 +0200, Adrian Bunk wrote:
-> > The Coverity checker noted that we'll anyway Oops later when we ran into 
-> > this condition - and the error check didn't prevent that.
+On Wed, 24 Oct 2007 08:35:21 -0700 (PDT) Linus Torvalds <torvalds@linux-foundation.org> wrote:
+
+> On Wed, 24 Oct 2007, James Bottomley wrote:
 > > 
-> > Considering that the error condition shouldn't be possible, and we are 
-> > not able to handle it easily, this patch simply removes the pointless 
-> > error check.
+> > OK, so it's no secret that I'm the last of the subsystem maintainers
+> > whose day job isn't working on the linux kernel.  If you want a full
+> > time person, who did you have in mind?
 > 
-> This is the one where I said I don't like the fact that you're removing
-> the explanatory message that's printed before we crash.  if you want to
-> shut coverity up and stop sending the patch, I'm happy adding a BUG();
-> after the nsp32_msg().
+> Quite frankly, at least for me personally, what I would rather have (in 
+> general: this is really not at all SCSI-specific in any way, shape, or 
+> form, and not directed at James!) is a less rigid maintainership 
+> structure.
+> 
+> Let's face it, we are *all* likely to be overworked at different times, 
+> and even when not overworked, it's just the fact that people need to take 
+> a breather etc. And there is seldom - if ever - a very strong argument for 
+> having one person per subsystem.
 
-Sorry, I missed your answer when resending since it was in a different 
-thread.
+Am OK with all of that, but with a rider.  It would make my life even more
+miserable if there was a (say) git-scsi-tweedledee and a
+git-scsi-tweedledum.  We already have too much out-of-scope code turning up
+in the git trees and having two trees explicitly modifying the same
+subsystem would hurt.  It's also bad from an engineering POV: there's a
+decent chance that when combined, they just won't work.
 
-I'm still not convinced we really need the nsp32_msg() here but you are 
-the maintainer and it's not a big deal anyway
-
-A BUG() would IMHO be similarly pointless as the nsp32_msg() at this 
-point and there's no value in changing code only for the sake of the 
-Coverity checker.
-
-> James
-
-cu
-Adrian
-
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
-
+So Tweedledee and Tweedledum should both commit to the same tree, please.
