@@ -1,69 +1,53 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] iscsi_tcp: fix potential lockup with write commands
-Date: Thu, 25 Oct 2007 17:17:43 -0500
-Message-ID: <47211607.5090801@cs.wisc.edu>
-References: <4720F358.8030307@cybernetics.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Maarten Bressers <mbres@gentoo.org>
+Subject: [PATCH RESEND] SCSI not showing tray status correctly
+Date: Thu, 25 Oct 2007 22:30:37 +0000 (UTC)
+Message-ID: <20071025223037.C077D65309@smtp.gentoo.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:52440 "EHLO sabe.cs.wisc.edu"
+Received: from smtp.gentoo.org ([140.211.166.183]:57792 "EHLO smtp.gentoo.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750710AbXJYWRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Oct 2007 18:17:50 -0400
-In-Reply-To: <4720F358.8030307@cybernetics.com>
+	id S1753344AbXJYWai (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Oct 2007 18:30:38 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, James.Bottomley@SteelEye.com, tasio@tasio.net, dsd@gentoo.org
 
-Tony Battersby wrote:
-> There is a race condition in iscsi_tcp.c that may cause it to forget
-> that it received a R2T from the target.  This race may cause a data-out
-> command (such as a write) to lock up.  The race occurs here:
-> 
-> static int
-> iscsi_send_unsol_pdu(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
-> {
-> 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
-> 	int rc;
-> 
-> 	if (tcp_ctask->xmstate & XMSTATE_UNS_HDR) {
-> 		BUG_ON(!ctask->unsol_count);
-> 		tcp_ctask->xmstate &= ~XMSTATE_UNS_HDR; <---- RACE
-> 		...
-> 
-> static int
-> iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
-> {
-> 	...
-> 	tcp_ctask->xmstate |= XMSTATE_SOL_HDR_INIT; <---- RACE
-> 	...
-> 
-> While iscsi_xmitworker() (called from scsi_queue_work()) is preparing to
-> send unsolicited data, iscsi_tcp_data_recv() (called from
-> tcp_read_sock()) interrupts it upon receipt of a R2T from the target.
-> Both contexts do read-modify-write of tcp_ctask->xmstate.  Usually, gcc
-> on x86 will make &= and |= atomic on UP (not guaranteed of course), but
-> in this case iscsi_send_unsol_pdu() reads the value of xmstate before
-> clearing the bit, which causes gcc to read xmstate into a CPU register,
-> test it, clear the bit, and then store it back to memory.  If the recv
-> interrupt happens during this sequence, then the XMSTATE_SOL_HDR_INIT
-> bit set by the recv interrupt will be lost, and the R2T will be
-> forgotten.
-> 
-> The patch below (against 2.6.24-rc1) converts accesses of xmstate to use
-> set_bit, clear_bit, and test_bit instead of |= and &=.  I have tested
-> this patch and verified that it fixes the problem.  Another possible
-> approach would be to hold a lock during most of the rx/tx setup and
-> post-processing, and drop the lock only for the actual rx/tx.
-> 
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+From: David Martin <tasio@tasio.net>
 
-We are going to remove that code in 2.6.25. Your patch looks good for 
-2.6.24. Nice debugging, and thanks for the patch and nice write up. I 
-think someone else was in the middle of hunting for this right now too.
+Greetings,
 
-James, could you please apply for the next round of 2.6.24 bug fixes?
+The following patch was submitted to the lkml in 2004 by David Martin
+(http://lkml.org/lkml/2004/12/27/1). It wasn't accepted, but I was
+unable to find a reason why, so I'm resending it now.
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Without this patch the SCSI ioctl CDROM_DRIVE_STATUS always returns
+CDS_TRAY_OPEN even if the tray is closed. This patch fixes that.
+Gentoo bug report: http://bugs.gentoo.org/show_bug.cgi?id=196879
+
+Signed-off by: Maarten Bressers <mbres@gentoo.org>
+
+---
+
+--- a/drivers/scsi/sr_ioctl.c	2007-10-09 22:31:38.000000000 +0200
++++ b/drivers/scsi/sr_ioctl.c	2007-10-25 22:57:21.000000000 +0200
+@@ -310,6 +310,8 @@ int sr_lock_door(struct cdrom_device_inf
+ 
+ int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+ {
++	struct media_event_desc med;
++
+ 	if (CDSL_CURRENT != slot) {
+ 		/* we have no changer support */
+ 		return -EINVAL;
+@@ -317,7 +319,10 @@ int sr_drive_status(struct cdrom_device_
+ 	if (0 == test_unit_ready(cdi->handle))
+ 		return CDS_DISC_OK;
+ 
+-	return CDS_TRAY_OPEN;
++	if (!cdrom_get_media_event(cdi, &med) && med.door_open)
++		return CDS_TRAY_OPEN;
++
++	return CDS_NO_DISC;
+ }
+ 
+ int sr_disk_status(struct cdrom_device_info *cdi)
