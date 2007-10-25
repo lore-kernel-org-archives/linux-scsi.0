@@ -1,53 +1,81 @@
-From: Maarten Bressers <mbres@gentoo.org>
-Subject: [PATCH RESEND] SCSI not showing tray status correctly
-Date: Thu, 25 Oct 2007 22:30:37 +0000 (UTC)
-Message-ID: <20071025223037.C077D65309@smtp.gentoo.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [PATCH 1/4] [SCSI] ips: remove ips_ha members that duplicate
+ struct pci_dev members
+Date: Thu, 25 Oct 2007 18:42:04 -0400
+Message-ID: <47211BBC.40608@garzik.org>
+References: <09821349085390234lkjasdflkjasflkdj24746@havoc.gtf.org>	<20071024234827.74AD61F81A1@havoc.gtf.org> <20071024212710.ae6e5120.akpm@linux-foundation.org> <4720251E.1030206@garzik.org> <4720B086.4070505@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:57792 "EHLO smtp.gentoo.org"
+Received: from srv5.dvmed.net ([207.36.208.214]:60762 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753344AbXJYWai (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Oct 2007 18:30:38 -0400
+	id S1753298AbXJYWmL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Oct 2007 18:42:11 -0400
+In-Reply-To: <4720B086.4070505@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, axboe@kernel.dk, James.Bottomley@SteelEye.com, tasio@tasio.net, dsd@gentoo.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org
 
-From: David Martin <tasio@tasio.net>
+Boaz Harrosh wrote:
+> On Thu, Oct 25 2007 at 7:09 +0200, Jeff Garzik <jeff@garzik.org> wrote:
+>> Andrew Morton wrote:
+>>> On Wed, 24 Oct 2007 19:48:26 -0400 (EDT) Jeff Garzik <jeff@garzik.org> wrote:
+>>>
+>>>>  drivers/scsi/ips.c |  178 ++++++++++++++++++++++++----------------------------
+>>> this driver seems a bit of a basket case :(
+>>>
+>>>
+>>> What's going on here?
+>>>
+>>> 		scb->dcdb.cmd_attribute =
+>>> 		    ips_command_direction[scb->scsi_cmd->cmnd[0]];
+>>>
+>>>         /* Allow a WRITE BUFFER Command to Have no Data */
+>>>         /* This is Used by Tape Flash Utilites          */
+>>>         if ((scb->scsi_cmd->cmnd[0] == WRITE_BUFFER) && (scb->data_len == 0)) 
+>>>             scb->dcdb.cmd_attribute = 0;                  
+>>>
+>>> 		if (!(scb->dcdb.cmd_attribute & 0x3))
+>>> 			scb->dcdb.transfer_length = 0;
+>>>
+>>> 		if (scb->data_len >= IPS_MAX_XFER) {
+>>>
+>>> I hope that's just busted indentation and not a missing {} block.
+>> The driver is one of the grotty drivers people are afraid to touch, 
+>> therefore it bitrots even faster, in a vicious cycle.  You don't have to 
+>> look hard at all to find checkpatch pukeage, very real bugs, and 
+>> Pythonesque silliness.
+>>
+>> Not having hardware I went only for changes that are provable and 
+>> obvious, really...
+>>
+>> 	Jeff
+>>
+> 
+>>From the experience with gdth I would say that a first patch of any
+> serious cleanup, should be the whitespace and formating cleanup.
+> And now that we can all read what it says, start changing.
+> 
+> In the gdth case I know of 3 bugs that happen just because of that mess.
+> And I promise to send that patch for gdth soooon.
+> 
+> I found that lint, even with the command line options recommended by 
+> kernel, is to aggressive, and leaves lots of work to be fixed by hand.
+> (e.g it will touch the comments)
 
-Greetings,
+Yeah, I hear you, but don't mistake my kill-warnings work for embarking 
+upon a new clean-this-driver project ;-)
 
-The following patch was submitted to the lkml in 2004 by David Martin
-(http://lkml.org/lkml/2004/12/27/1). It wasn't accepted, but I was
-unable to find a reason why, so I'm resending it now.
+I tend to make incremental improvements all over the tree, "rising tide 
+lifts all boats" and that sort of thing.
 
-Without this patch the SCSI ioctl CDROM_DRIVE_STATUS always returns
-CDS_TRAY_OPEN even if the tray is closed. This patch fixes that.
-Gentoo bug report: http://bugs.gentoo.org/show_bug.cgi?id=196879
+If I remained and worked on cleaning every grotty driver I come across 
+while killing warnings or fixing interrupt handlers, I would have no 
+free time at all :)
 
-Signed-off by: Maarten Bressers <mbres@gentoo.org>
+	Jeff
 
----
 
---- a/drivers/scsi/sr_ioctl.c	2007-10-09 22:31:38.000000000 +0200
-+++ b/drivers/scsi/sr_ioctl.c	2007-10-25 22:57:21.000000000 +0200
-@@ -310,6 +310,8 @@ int sr_lock_door(struct cdrom_device_inf
- 
- int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- {
-+	struct media_event_desc med;
-+
- 	if (CDSL_CURRENT != slot) {
- 		/* we have no changer support */
- 		return -EINVAL;
-@@ -317,7 +319,10 @@ int sr_drive_status(struct cdrom_device_
- 	if (0 == test_unit_ready(cdi->handle))
- 		return CDS_DISC_OK;
- 
--	return CDS_TRAY_OPEN;
-+	if (!cdrom_get_media_event(cdi, &med) && med.door_open)
-+		return CDS_TRAY_OPEN;
-+
-+	return CDS_NO_DISC;
- }
- 
- int sr_disk_status(struct cdrom_device_info *cdi)
+
