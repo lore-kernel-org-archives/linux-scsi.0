@@ -1,74 +1,36 @@
-From: Rob Landley <rob@landley.net>
-Subject: Re: Questions about scsi.c
-Date: Thu, 25 Oct 2007 18:13:21 -0500
-Message-ID: <200710251813.21575.rob@landley.net>
-References: <200710250606.03301.rob@landley.net> <200710251640.35758.rob@landley.net> <20071025134926.4d209584.rdunlap@xenotime.net>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: What layer are "transport classes" in?
+Date: Thu, 25 Oct 2007 17:15:00 -0500
+Message-ID: <1193350500.3301.39.camel@localhost.localdomain>
+References: <200710251713.56136.rob@landley.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:44095
-	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1752826AbXJYWNh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Oct 2007 18:13:37 -0400
-In-Reply-To: <20071025134926.4d209584.rdunlap@xenotime.net>
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:39561 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753539AbXJYWPO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Oct 2007 18:15:14 -0400
+In-Reply-To: <200710251713.56136.rob@landley.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: linux-scsi@vger.kernel.org, jgarzik <jgarzik@pobox.com>
+To: Rob Landley <rob@landley.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Thursday 25 October 2007 3:49:26 pm Randy Dunlap wrote:
-> On Thu, 25 Oct 2007 16:40:35 -0500 Rob Landley wrote:
-> > On Thursday 25 October 2007 12:32:41 pm Randy Dunlap wrote:
-> > > > Entirely possible I'm doing something wrong:
-> > > >
-> > > >    <sect1 id="scsi_device.h">
-> > > >       <title>include/scsi/scsi_device.h</title>
-> > > >       <para>
-> > > >       </para>
-> > > > !Einclude/scsi/scsi_device.h
-> > > >     </sect1>
-> > >
-> > > !E is for exported symbols and that file has none.
-> > > USe !I instead.
-> >
-> > So how do I handle a case like drivers/ata/libata-core.c which has
-> > EXPORT_SYMBOL() calls for functions that live in (and are documented in)
-> > other files, such as ata_scsi_ioctl() in drivers/ata/libata-scsi.c?
->
-> I don't see ata_scsi_ioctl() documented at all.  Are you looking at
-> a newer tree than I am?  (i'm using 2.6.24-rc1)
+On Thu, 2007-10-25 at 17:13 -0500, Rob Landley wrote:
+> Looking at the scsi_transport_*.c files...  Are these part of the lower layer 
+> or the midlayer?  I _think_ these exist primarily to expose information about 
+> the lower layers through sysfs, but I'm very fuzzy on this...
 
-No, I mean I was thinking of adding a kerneldoc comment and noticed the 
-discrepancy.
+They're part of the mid layer (the lower layer is simply all the
+drivers).
 
-As for already checked-in stuff, substitute ata_std_bios_param, 
-ata_scsi_slave_config, and ata_scsi_slave_destroy.  Each of those functions 
-has a kerneldoc comment in libata-scsi.c, but the export statement for that 
-function is in libata-core.c.
+> Should they be documented as part of the lower layer or the midlayer or are 
+> they their own area...?
 
-> Long-term answer is that we prefer EXPORT_SYMBOL() to be used
-> just under the function that is being exported.  In this case,
-> the maintainer may be disagreeing with that.  [cc-ed]
+They should be documented on their own.  They're basically service
+libraries and sysfs export helpers for drivers.
 
-Moving the EXPORT_SYMBOL()s would be nice.  The documentation tools don't 
-preserve context outside of a single file, and I'd like to get full coverage 
-documenting exported symbols before worrying much about internal ones...
+James
 
-> Short-term answer is to use !Isource_filename_where_kernel_doc_is
-> as though it's not EXPORTed.  I think.
 
-Except if the EXPORTs got moved/fixed it would then hide them from !I without 
-generating any kind of warning.
-
-Actually, for the really short term I can go "see the existing libata book in 
-this directory" and foist this problem off on Jeff Garzik. :) (Friday 
-deadline.)
-
-Rob
--- 
-"One of my most productive days was throwing away 1000 lines of code."
-  - Ken Thompson.
