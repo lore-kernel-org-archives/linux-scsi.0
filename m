@@ -1,89 +1,63 @@
-From: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Subject: Re: [PATCH 3/4] [SCSI] ips: PCI API cleanups
-Date: Thu, 25 Oct 2007 08:54:41 +0200
-Message-ID: <200710250854.47197.eike-kernel@sf-tec.de>
-References: <09821349085390234lkjasdflkjasflkdj24746@havoc.gtf.org> <20071024234830.8F7891F81A9@havoc.gtf.org>
-Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart2036536.65UjCFJZ43";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
-Content-Transfer-Encoding: 7bit
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH] Remove #warnings for longstanding conditions.
+Date: Thu, 25 Oct 2007 04:06:15 -0400 (EDT)
+Message-ID: <03231528cf69b4194111178db23a7a387a573cb7.1193299380.git.jeff@garzik.org>
+References: <a576b5944eb04a18d4df3dd27cd32e7f13601470.1193299380.git.jeff@garzik.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.sf-mail.de ([62.27.20.61]:46522 "EHLO mail.sf-mail.de"
+Received: from havoc.gtf.org ([69.61.125.42]:55016 "EHLO havoc.gtf.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754652AbXJYGyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Oct 2007 02:54:51 -0400
-In-Reply-To: <20071024234830.8F7891F81A9@havoc.gtf.org>
+	id S1752514AbXJYIGQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Oct 2007 04:06:16 -0400
+In-Reply-To: <a576b5944eb04a18d4df3dd27cd32e7f13601470.1193299380.git.jeff@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, akpm@linux-foundation.org
+To: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: akpm@linux-foundation.org, willy@linux.intel.com, kkeil@suse.de
 
---nextPart2036536.65UjCFJZ43
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Content-Disposition: inline
+These two warnings...
 
-Jeff Garzik wrote:
-> * pass Scsi_Host to ips_remove_device() via pci_set_drvdata(),
->   allowing us to eliminate the ips_ha[] search loop and call
->   ips_release() directly.
->
-> * call pci_{request,release}_regions() and eliminate individual
->   request/release_[mem_]region() calls
->
-> * call pci_disable_device(), paired with pci_enable_device()
->
-> * s/0/NULL/ in a few places
->
-> * check ioremap() return value
+drivers/isdn/capi/capidrv.c:2126:3: warning: #warning FIXME: maybe a
+race condition the card should be removed here from global list /kkeil
 
-> @@ -7036,32 +7042,17 @@ ips_init_phase1(struct pci_dev *pci_dev, int
-> *indexPtr) uint32_t base;
->  		uint32_t offs;
->
-> -		if (!request_mem_region(mem_addr, mem_len, "ips")) {
-> -			IPS_PRINTK(KERN_WARNING, pci_dev,
-> -				   "Couldn't allocate IO Memory space %x len %d.\n",
-> -				   mem_addr, mem_len);
-> -			return -1;
-> -		}
-> -
->  		base =3D mem_addr & PAGE_MASK;
->  		offs =3D mem_addr - base;
->  		ioremap_ptr =3D ioremap(base, PAGE_SIZE);
+drivers/scsi/advansys.c:71:2: warning: #warning this driver is still
+not properly converted to the DMA API
 
-This looks odd. What are we actually doing here?
+...represent conditions that have existed for years, and are duly noted
+in FIXMEs.  There does not seem to be much need to warn on every kernel
+build for a driver bug or handicap that has existed for years.
 
-It seems that we want to map that PCI BAR. Since we're playing with PAGE_MA=
-SK=20
-I assume the BAR always has a length <PAGE_SIZE, else we would get page=20
-aligned memory anyway. If that's true something like
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+---
+ drivers/isdn/capi/capidrv.c |    3 ++-
+ drivers/scsi/advansys.c     |    1 -
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-mem_ptr =3D pci_iomap(pci_dev, bar, 0)
+diff --git a/drivers/isdn/capi/capidrv.c b/drivers/isdn/capi/capidrv.c
+index 476012b..44f954d 100644
+--- a/drivers/isdn/capi/capidrv.c
++++ b/drivers/isdn/capi/capidrv.c
+@@ -2123,7 +2123,8 @@ static int capidrv_delcontr(u16 contr)
+ 		printk(KERN_ERR "capidrv: delcontr: no contr %u\n", contr);
+ 		return -1;
+ 	}
+-	#warning FIXME: maybe a race condition the card should be removed here from global list /kkeil
++
++	/* FIXME: maybe a race condition the card should be removed here from global list /kkeil */
+ 	spin_unlock_irqrestore(&global_lock, flags);
+ 
+ 	del_timer(&card->listentimer);
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 9dd3952..e13e3a8 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -68,7 +68,6 @@
+  *  7. advansys_info is not safe against multiple simultaneous callers
+  *  8. Add module_param to override ISA/VLB ioport array
+  */
+-#warning this driver is still not properly converted to the DMA API
+ 
+ /* Enable driver /proc statistics. */
+ #define ADVANSYS_STATS
+-- 
+1.5.2.4
 
-should do the trick. Later we would do
-
-pci_iounmap(pci_dev, mem_ptr)
-
-This whole ioremap_ptr stuff can go away at all. Am I right? Then I'll cook=
- up=20
-a patch soon.
-
-Eike
-
---nextPart2036536.65UjCFJZ43
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2.0.4-svn0 (GNU/Linux)
-
-iD8DBQBHID23XKSJPmm5/E4RAt7XAJ9b10Ng9vVbJX/OliGop+uSIVmGHQCgmqGO
-ntVQ9TqXYkQlrv9MzcKogV0=
-=DgBH
------END PGP SIGNATURE-----
-
---nextPart2036536.65UjCFJZ43--
