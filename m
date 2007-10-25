@@ -1,40 +1,46 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [2.6 patch] 53c7xx removal fallout
-Date: Thu, 25 Oct 2007 22:19:57 +0200 (CEST)
-Message-ID: <Pine.LNX.4.64.0710252219470.12012@anakin>
-References: <20071024162622.GI30533@stusta.de>
+From: Rob Landley <rob@landley.net>
+Subject: Re: Questions about scsi.c
+Date: Thu, 25 Oct 2007 16:40:35 -0500
+Message-ID: <200710251640.35758.rob@landley.net>
+References: <200710250606.03301.rob@landley.net> <200710251325.37586.rob@landley.net> <20071025103241.546b35ec.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762906AbXJYUVg@vger.kernel.org>
-In-Reply-To: <20071024162622.GI30533@stusta.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@SteelEye.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:56402
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1753228AbXJYUkw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Oct 2007 16:40:52 -0400
+In-Reply-To: <20071025103241.546b35ec.rdunlap@xenotime.net>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, 24 Oct 2007, Adrian Bunk wrote:
-> This patch does some additional cleanups after the 53c7xx removal.
-> 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
+On Thursday 25 October 2007 12:32:41 pm Randy Dunlap wrote:
+> > Entirely possible I'm doing something wrong:
+> >
+> >    <sect1 id="scsi_device.h">
+> >       <title>include/scsi/scsi_device.h</title>
+> >       <para>
+> >       </para>
+> > !Einclude/scsi/scsi_device.h
+> >     </sect1>
+>
+> !E is for exported symbols and that file has none.
+> USe !I instead.
 
-Acked-by: Geert Uytterhoeven <geert@linux-m68k.org>
+So how do I handle a case like drivers/ata/libata-core.c which has 
+EXPORT_SYMBOL() calls for functions that live in (and are documented in) 
+other files, such as ata_scsi_ioctl() in drivers/ata/libata-scsi.c?
 
 > ---
-> 
->  Documentation/dontdiff                |    2 
->  Documentation/m68k/kernel-options.txt |   60 --------------------------
->  Documentation/scsi/00-INDEX           |    2 
->  Documentation/scsi/ncr53c7xx.txt      |   40 -----------------
->  drivers/scsi/.gitignore               |    2 
->  5 files changed, 106 deletions(-)
+> ~Randy
 
-Gr{oetje,eeting}s,
-
-						Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
