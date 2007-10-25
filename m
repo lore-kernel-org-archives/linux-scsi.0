@@ -1,34 +1,31 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] Remove #warnings for longstanding conditions.
-Date: Thu, 25 Oct 2007 05:22:31 -0600
-Message-ID: <20071025112231.GL27248@parisc-linux.org>
-References: <a576b5944eb04a18d4df3dd27cd32e7f13601470.1193299380.git.jeff@garzik.org> <03231528cf69b4194111178db23a7a387a573cb7.1193299380.git.jeff@garzik.org>
+Subject: Re: [PATCH] Correct tag initialisation for commands
+Date: Thu, 25 Oct 2007 05:40:33 -0600
+Message-ID: <20071025114033.GM27248@parisc-linux.org>
+References: <4718AFD7.5000203@suse.de> <4718F000.6020104@cs.wisc.edu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:52812 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:53641 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752669AbXJYLWd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Oct 2007 07:22:33 -0400
+	with ESMTP id S1756654AbXJYLke (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Oct 2007 07:40:34 -0400
 Content-Disposition: inline
-In-Reply-To: <03231528cf69b4194111178db23a7a387a573cb7.1193299380.git.jeff@garzik.org>
+In-Reply-To: <4718F000.6020104@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, willy@linux.intel.com, kkeil@suse.de
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Hannes Reinecke <hare@suse.de>, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-On Thu, Oct 25, 2007 at 04:06:15AM -0400, Jeff Garzik wrote:
-> drivers/scsi/advansys.c:71:2: warning: #warning this driver is still
-> not properly converted to the DMA API
-> 
-> ...represent conditions that have existed for years, and are duly noted
-> in FIXMEs.  There does not seem to be much need to warn on every kernel
-> build for a driver bug or handicap that has existed for years.
+On Fri, Oct 19, 2007 at 12:57:20PM -0500, Mike Christie wrote:
+> If every ones uses the scsi_tcq wrappers, maybe the scsi_cmnd->tag field 
+> would be something that could be deleted and help Mathew's goals to 
+> shrink the struct.
 
-I'll be removing this #warning from advansys when I get rid of the
-last bus_to_virt.  Which I've already done ... it's just that the
-resulting driver works on i386, but crashes parisc, so there's clearly a
-bug.  I haven't had time to track it down yet.  So NACK this patch.
+It's something I'd thought about, but we don't have any other 'char'
+sized pieces of data in the scsi_cmnd, and they're all nicely packed
+together, so it won't save us anything today.  If we want to get rid of
+it for other reasons, that's fine, of course ;-)
 
 -- 
 Intel are signing my paycheques ... these opinions are still mine
