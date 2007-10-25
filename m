@@ -1,61 +1,40 @@
-From: Alexander Sabourenkov <screwdriver@lxnt.info>
-Subject: Short INQUIRY return
-Date: Thu, 25 Oct 2007 17:03:08 +0400
-Message-ID: <4720940C.9040802@lxnt.info>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 1/4] [SCSI] ips: remove ips_ha members that duplicate struct pci_dev members
+Date: Thu, 25 Oct 2007 10:32:15 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F3DD02@otce2k301.adaptec.com>
+References: <09821349085390234lkjasdflkjasflkdj24746@havoc.gtf.org> <20071024234827.74AD61F81A1@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.lxnt.info ([217.23.143.142]:64369 "EHLO mail.lxnt.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752552AbXJYNqs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Oct 2007 09:46:48 -0400
-Received: from [217.23.131.8] (helo=lxnt.inside.caravan.ru)
-	by mail.lxnt.info with esmtpsa (TLSv1:DHE-RSA-AES256-SHA:256)
-	(Exim 4.68 (FreeBSD))
-	(envelope-from <screwdriver@lxnt.info>)
-	id 1Il2Ma-000O2i-G9
-	for linux-scsi@vger.kernel.org; Thu, 25 Oct 2007 17:03:04 +0400
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:58456 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754079AbXJYOcR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Oct 2007 10:32:17 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071024234827.74AD61F81A1@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+Cc: akpm@linux-foundation.org
 
-Hello.
+ACK. Inspected; Mechanical, precise and no introduction of bugs.
 
+Sincerely -- Mark Salyzyn
 
-Background:
-	Promise TX4 SATA300 with sata_promise driver generates lots of errors, 
-both read and write.
-
-	I'm now trying to port Promise-written driver, which works ok with 
-2.6.11, to 2.6.22,
-	so that I can hopefully discover the error-inducing difference between 
-them, and gain
-	some understanding of kernel internals in the process.
-
-	I have somewhat cleaned up the horrible mess the Promise driver code 
-is, so that it compiles,
-	loads and attaches to the controller.
-
-
-Problem:
-
-	Its internal port scan prints out correct information about hard 
-drive(s) discovered, and correctly
-	(i think) fills out response to the INQUIRY command, but when scsi 
-subsystem receives it back,
-	it contains some garbage instead.
-
-	The same code works ok on 2.6.11, and I think it would work ok up to 
-2.6.16 at least, but I have not checked yet.
-
-Question:
-	Can anyone please point out some drastic change in SCSI subsystem
-	(and what it would take to fix the driver up)
-	that would result in such behavior, so that I can save some time 
-digging it up myself?
-
-
--- 
-
-./lxnt
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Jeff Garzik
+> Sent: Wednesday, October 24, 2007 7:48 PM
+> To: LKML; linux-scsi@vger.kernel.org
+> Cc: akpm@linux-foundation.org
+> Subject: [PATCH 1/4] [SCSI] ips: remove ips_ha members that 
+> duplicate struct pci_dev members
+> 
+> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+> ---
+>  drivers/scsi/ips.c |  178 
+> ++++++++++++++++++++++++----------------------------
+>  drivers/scsi/ips.h |   20 +++----
+>  2 files changed, 91 insertions(+), 107 deletions(-)
