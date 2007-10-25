@@ -1,43 +1,71 @@
-From: Karsten Keil <kkeil@suse.de>
-Subject: Re: [PATCH] Remove #warnings for longstanding conditions.
-Date: Thu, 25 Oct 2007 11:52:05 +0200
-Message-ID: <20071025095205.GB22353@pingi.kke.suse.de>
-References: <a576b5944eb04a18d4df3dd27cd32e7f13601470.1193299380.git.jeff@garzik.org> <03231528cf69b4194111178db23a7a387a573cb7.1193299380.git.jeff@garzik.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: What's left in libata-dev.git?
+Date: Thu, 25 Oct 2007 05:55:09 -0400
+Message-ID: <472067FD.3060400@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:38537 "EHLO mx2.suse.de"
+Received: from srv5.dvmed.net ([207.36.208.214]:38629 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758206AbXJYJwH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 25 Oct 2007 05:52:07 -0400
-Content-Disposition: inline
-In-Reply-To: <03231528cf69b4194111178db23a7a387a573cb7.1193299380.git.jeff@garzik.org>
+	id S1756230AbXJYJzO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 25 Oct 2007 05:55:14 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, akpm@linux-foundation.org, willy@linux.intel.com
+To: IDE/ATA development list <linux-ide@vger.kernel.org>
+Cc: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, Alan <alan@lxorguk.ukuu.org.uk>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Kristen Carlson Accardi <kristen.c.accardi@intel.com>, Jason Gaston <jason.d.gaston@intel.com>
 
-On Thu, Oct 25, 2007 at 04:06:15AM -0400, Jeff Garzik wrote:
-> These two warnings...
-> 
-> drivers/isdn/capi/capidrv.c:2126:3: warning: #warning FIXME: maybe a
-> race condition the card should be removed here from global list /kkeil
-> 
-> drivers/scsi/advansys.c:71:2: warning: #warning this driver is still
-> not properly converted to the DMA API
-> 
-> ...represent conditions that have existed for years, and are duly noted
-> in FIXMEs.  There does not seem to be much need to warn on every kernel
-> build for a driver bug or handicap that has existed for years.
-> 
-> Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
-> ---
->  drivers/isdn/capi/capidrv.c |    3 ++-
 
-Acked.
+This is a summary of items and issues that remain outstanding for 
+libata.  Whenever a git branch is mentioned, it is referring to a branch 
+at git://git.kernel.org/pub/scm/linux/kernel/git/jgarzik/libata-dev.git
 
--- 
-Karsten Keil
-SuSE Labs
-ISDN and VOIP development
-SUSE LINUX Products GmbH, Maxfeldstr.5 90409 Nuernberg, GF: Markus Rex, HRB 16746 (AG Nuernberg)
+
+Current push just sent to Linus: 
+http://marc.info/?l=linux-ide&m=119329974119307&w=2
+
+
+Changes in 'upstream' branch pending for 2.6.24-rc, but not included in 
+the above push:
+     Tejun Heo (2):
+	libata: relocate and fix post-command processing
+	libata: track SLEEP state and issue SRST to wake it up
+
+
+Active libata branches:
+   ALL			Superset branch for -mm testing
+   alpm			Link power management (2.6.24-rc hopefully)
+   an			Async notify (2.6.24-rc hopefully)
+   for-testing		Interesting-but-not-ready stuff
+   master		Vanilla linux-2.6.git clone
+   mv-ahci-pata		Marvell 6141 PATA support (incomplete)
+   mv-ncq		sata_mv NCQ support (incomplete)
+   new-eh		sata_qstore, sata_sx4 new-EH conversions
+			(TEST ME! they have been in -mm for a while)
+   pmask			proto_mask introduction
+   sii-lbt		sata_sil large block transfer enablement
+   upstream		pending for 2.6.24-rc
+   upstream-linus	just pushed upstream for 2.6.24-rc
+
+
+Patches and tasks in mbox queue, not yet in git:
+
+1) Axboe: kill sg_last(), libata is last remaining user
+
+2) Bart points out bugs in "Re: [git patches] libata update"
+
+3) Tejun: libata: implement ata_wait_after_reset()
+
+	^^^  Tejun, what case does this solve?  Still needed?
+
+4) Alan: [PATCH] libata: Deal with ATA8-ACS proposed Trusted/Treacherous 
+Computing features
+
+5) Need a pass through bz.kernel.org
+
+
+Please speak up if there is something missing.
+
+	Jeff
+
+
