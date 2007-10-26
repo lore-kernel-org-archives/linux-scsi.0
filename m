@@ -1,61 +1,24 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Questions about proc_scsi_write() in scsi_proc.c
-Date: Fri, 26 Oct 2007 16:09:37 -0500
-Message-ID: <1193432977.3293.76.camel@localhost.localdomain>
-References: <200710261507.49284.rob@landley.net>
+From: Lennert Buytenhek <buytenh@wantstofly.org>
+Subject: Re: [PATCH] Remove pointless casts from void pointers,
+Date: Fri, 26 Oct 2007 23:58:05 +0200
+Message-ID: <20071026215805.GD32372@xi.wantstofly.org>
+References: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:33600 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1759523AbXJZVJj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2007 17:09:39 -0400
-In-Reply-To: <200710261507.49284.rob@landley.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <9799624f63e093aa915947aea8fb1b8a5df959a1.1193390973.git.jeff@garzik.org>
+Sender: netdev-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, akpm@linux-foundation.org, rmk@arm.linux.org.uk, kernel@wantstofly.org, tony.luck@intel.com, jwboyer@linux.vnet.ibm.com, benh@kernel.crashing.org, paulus@samba.org, dmitry.torokhov@gmail.com, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, linux-serial@vger.kernel.org, linux-wireless@vger.kernel.org, bryan.wu@analog.com, adaplas@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: linux-scsi@vger.kernel.org
 
-On Fri, 2007-10-26 at 15:07 -0500, Rob Landley wrote:
-> I don't understanding this code:
-> 
-> 1) for echo "scsi add-single-device 0 1 2 3" > /proc/scsi/scsi, is this only 
-> for parallel scsi? 
+On Fri, Oct 26, 2007 at 05:40:22AM -0400, Jeff Garzik wrote:
 
-No.
+>  arch/arm/mach-pxa/ssp.c                    |    2 +-
+>  arch/arm/mach-s3c2410/usb-simtec.c         |    2 +-
+>  arch/arm/plat-omap/mailbox.c               |    2 +-
 
->  I thought most modern busses (usb, sata, FC, firewire, 
-> etc) dynamically assign these numbers and just use them as a unique 
-> identifier ala kdev_t.  How would this work on one of the other devices?
+FWIW
 
-It's most often used to add or remove LUNs.
-
-> 2) How do you trigger this?  /proc/scsi/scsi is read only even for root.
-
-root can still write to it.
-
-> 3) This bit is repeated in both the add and remove logic:
->                 p = buffer + 23;
-> 
->                 host = simple_strtoul(p, &p, 0);
->                 channel = simple_strtoul(p + 1, &p, 0);
->                 id = simple_strtoul(p + 1, &p, 0);
->                 lun = simple_strtoul(p + 1, &p, 0);
-> 
-> So what happens if you echo "scsi add-single-device 0" > /proc/scsi/scsi (or 
-> wherever file would trigger this function) so the read for channel skips over 
-> the null terminator (I'm assuming there is one) and reads who knows what?  Or 
-> what if instead of ending that with one 0, you end it with enough zeroes to 
-> pad right up to PAGE_SIZE, so it reads the next page?  (I don't even know 
-> what the page protections are on that, depends how 
-> __get_free_page(GFP_KERNEL) works...)
-> 
-> Confused,
-
-It's relying on the user buffer being zero padded, but even if it isn't,
-there's not much that can go wrong.  It's also a deprecated interface.
-
-James
-
-
+Acked-by: Lennert Buytenhek <buytenh@wantstofly.org>
