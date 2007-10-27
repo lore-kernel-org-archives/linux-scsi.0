@@ -1,74 +1,46 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH 15/15] Add Documentation/DocBook/scsi_midlayer.tmpl and
-	add to Makefile.
-Date: Sat, 27 Oct 2007 08:24:24 -0500
-Message-ID: <1193491464.15612.6.camel@localhost.localdomain>
-References: <200710262318.01021.rob@landley.net>
-	 <20071026230557.2ac5f9c8.rdunlap@xenotime.net>
+Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
+Date: Sat, 27 Oct 2007 11:33:47 -0500
+Message-ID: <1193502827.3281.9.camel@localhost.localdomain>
+References: <471FEB81.80103@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:42769 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:58382 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753911AbXJ0NY0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Oct 2007 09:24:26 -0400
-In-Reply-To: <20071026230557.2ac5f9c8.rdunlap@xenotime.net>
+	with ESMTP id S1752998AbXJ0Qdt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Oct 2007 12:33:49 -0400
+In-Reply-To: <471FEB81.80103@verizon.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Rob Landley <rob@landley.net>, linux-scsi@vger.kernel.org
+To: Anthony Ewell <amewell@verizon.net>
+Cc: linux-scsi@vger.kernel.org, bo yang <bo.yang@lsi.com>
 
-On Fri, 2007-10-26 at 23:05 -0700, Randy Dunlap wrote:
-> On Fri, 26 Oct 2007 23:18:00 -0500 Rob Landley wrote:
+On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
+> Hi All,
 > 
-> > From: Rob Landley <rob@landley.net>
-> > 
-> > Add Documentation/DocBook/scsi_midlayer.tmpl and add to Makefile.
+>     If you all would not mind a post from the general
+> public Linux user, after doing a complete disk wipe
+> of CentOS 4 and installing CentOS5, my system is preceived
+> to be 3 times slower.
 > 
+>      To troubleshooting this, I made a post on CentOS's
+> bugzilla:  http://bugs.centos.org/view.php?id=2382
 > 
-> I have comments for all 15 patches here.
-> 
-> a.  You should cc: the maintainer who you want/expect to apply the
-> 	patches.  Always.  Andrew Morton is the only person who
-> 	trolls for patches on a mailing list.  :)
+>      Would some of the experts on this group mind
+> looking at the bug to evaluate the possibility
+> that it is being caused by the underlying scsi
+> driver?   The post contains a dmesg from "Computer C".
+> (Yes, I am getting a bit desperate.)
 
-Realistically too, for this first batch that covers mostly the mid-layer
-and the transport classes, a single patch like you originally submitted
-was just fine.  One patch per file isn't.  Patches should be split
-across functional areas (in this case the function is simply adding the
-SCSI mid layer to the docbook build, so they can all go together).
+There's still too little information in the bug report to tell much of
+anything.  The dmesg doesn't indicate any anomaly with the megaraid
+(although the LSI people might be able to tell better).  However, it
+also doesn't contain a trace of the tape drive.
 
-> b.  The function "Description:" section header is not strictly
-> 	required by scripts/kernel-doc.  It will assume that the
-> 	first text section after parameters is the Description:
-> 	section.  FYI.
-> 
-> c.  Extraneous whitespace.  Git or quilt check for this.
-> 	I don't know about hg...
-
-Actually, the checkpatch.pl script in the scripts directory of the
-kernel is very good for this (I ran it on the original monolithic
-patch):
-
-jejb@mulgrave> ./scripts/checkpatch.pl ~/tmp.mail
-ERROR: trailing whitespace
-#1065: FILE: drivers/scsi/scsi_ioctl.c:185:
-+ * a pointer to a &struct scsi_device. $
-
-ERROR: trailing whitespace
-#1670: FILE: drivers/scsi/scsicam.c:60:
-+ * Description : determine the BIOS mapping/geometry used for a drive
-in a $
-
-total: 2 errors, 0 warnings, 1502 lines checked
-Your patch has style problems, please review.  If any of these errors
-are false positives report them to the maintainer, see
-CHECKPATCH in MAINTAINERS.
-
-In addition, there seem to be a few functions that you added kerneldoc
-for which don't show up in the doc output.  The one that caught my eye
-was scsi_cmd_get_serial(), but I think there are others.
+Best guess would be a slow down in the megaraid driver.  Can you try
+doing a speed test on it?  (hdparm -t should suffice).
 
 James
 
