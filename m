@@ -1,60 +1,251 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Questions about proc_scsi_write() in scsi_proc.c
-Date: Fri, 26 Oct 2007 16:58:19 -0600
-Message-ID: <20071026225819.GU27248@parisc-linux.org>
-References: <200710261507.49284.rob@landley.net> <1193432977.3293.76.camel@localhost.localdomain> <200710261729.53400.rob@landley.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Jeff Garzik <jeff@garzik.org>
+Subject: [PATCH 1/2] SCSI: fix bugs and canonicalize NCR5380_intr drivers
+Date: Fri, 26 Oct 2007 20:16:38 -0400 (EDT)
+Message-ID: <0f3b5fb60a45528af12178ba6c857af33ae048b1.1193444039.git.jeff@garzik.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:37641 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750737AbXJZW6V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 26 Oct 2007 18:58:21 -0400
-Content-Disposition: inline
-In-Reply-To: <200710261729.53400.rob@landley.net>
+Received: from havoc.gtf.org ([69.61.125.42]:59160 "EHLO havoc.gtf.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753472AbXJ0AQj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Oct 2007 20:16:39 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: akpm@linux-foundation.org
 
-On Fri, Oct 26, 2007 at 05:29:53PM -0500, Rob Landley wrote:
-> Ok, I'm unclear on what a LUN is.  All the devices I have lying around give me 
-> a LUN of zero.  I used to think that a LUN was a bit like partition, and 
-> mostly used for CD changes.  The structure "scsi_target" seems to aggregate 
-> host/channel/target and I thought it referred to a device.
+* Bug fix:  Make sure request_irq() and free_irq() are called
+  with the same dev_id pointer argument.
 
-Maybe the best way to understand this is by analogy with PCI.  With PCI,
-you have a 5-bit device id and a 3-bit function ID.  Most physical
-devices implement only one function, but we create a pci_dev for every
-implemented function.  I'm not sure how many bits we have for target and
-lun in SCSI, but it works much the same way; the target is the physical
-thing, and the LUN is a logical entity within that hunk of hardware.  We
-create a scsi_device for each LUN.
+* Bug fix:  always pass 'irq' and 'dev_id' (aka 'dummy')
+  arguments to NCE5380_intr() when calling it manully.  For some drivers
+  this doesn't matter, depending on whose copy of NCR5380_intr() is
+  being used.
 
-> Every device I have that shows up as SCSI has shown up with a LUN of 0, which 
-> is target-wide unique because none of those targets have sub-functions that 
-> need to be independently addressed as devices.
+* Bug fix:  always pass Scsi_Host* to NCR5380_intr().  Most
+  get this right, but some pass NULL or some other random/ignored
+  value.  For some drivers this doesn't matter, depending on whose copy
+  of NCR5380_intr() is being used.
 
-I have two devices with multiple LUNs.  One is a Plasmon PD-2000 combo
-CD-reader and optical-disc.  If you put a CD-ROM in it, that's LUN 0
-(sr) and if you put an optical disc in it, that shows up on LUN 1 (sd).
+* Wrap long request_irq() lines
 
-The other device is an HP fibre-channel Virtual Array which is a 3U
-piece of metal with up to 15 drives inside it.  It splits those discs
-up into as many LUNs as you configure it to, at whatever RAID level you
-configure it to, and (in my configuration) presents itself as a single
-target with 128 LUNs.
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+---
+ drivers/scsi/atari_scsi.c    |   10 +++++-----
+ drivers/scsi/dtc.c           |    5 +++--
+ drivers/scsi/g_NCR5380.c     |    5 +++--
+ drivers/scsi/mac_scsi.c      |    4 ++--
+ drivers/scsi/pas16.c         |    5 +++--
+ drivers/scsi/sun3_scsi.c     |    4 ++--
+ drivers/scsi/sun3_scsi_vme.c |    4 ++--
+ drivers/scsi/t128.c          |    5 +++--
+ 8 files changed, 23 insertions(+), 19 deletions(-)
 
-Not all storage arrays behave like that; I have another HP array that
-presents each disc within it as an individual target, and the controller
-is another target (it shows up as a PROCESSOR device).  In this scenario,
-you only have LUN 0 on each target.
-
-I'm sure there are plenty of other examples, but hopefully this will
-help.
-
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 6f8403b..f5732d8 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -393,7 +393,7 @@ static irqreturn_t scsi_tt_intr(int irq, void *dummy)
+ 
+ #endif /* REAL_DMA */
+ 
+-	NCR5380_intr(0, 0);
++	NCR5380_intr(irq, dummy);
+ 
+ #if 0
+ 	/* To be sure the int is not masked */
+@@ -458,7 +458,7 @@ static irqreturn_t scsi_falcon_intr(int irq, void *dummy)
+ 
+ #endif /* REAL_DMA */
+ 
+-	NCR5380_intr(0, 0);
++	NCR5380_intr(irq, dummy);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -684,7 +684,7 @@ int atari_scsi_detect(struct scsi_host_template *host)
+ 		 * interrupt after having cleared the pending flag for the DMA
+ 		 * interrupt. */
+ 		if (request_irq(IRQ_TT_MFP_SCSI, scsi_tt_intr, IRQ_TYPE_SLOW,
+-				 "SCSI NCR5380", scsi_tt_intr)) {
++				 "SCSI NCR5380", instance)) {
+ 			printk(KERN_ERR "atari_scsi_detect: cannot allocate irq %d, aborting",IRQ_TT_MFP_SCSI);
+ 			scsi_unregister(atari_scsi_host);
+ 			atari_stram_free(atari_dma_buffer);
+@@ -701,7 +701,7 @@ int atari_scsi_detect(struct scsi_host_template *host)
+ 					 IRQ_TYPE_PRIO, "Hades DMA emulator",
+ 					 hades_dma_emulator)) {
+ 				printk(KERN_ERR "atari_scsi_detect: cannot allocate irq %d, aborting (MACH_IS_HADES)",IRQ_AUTO_2);
+-				free_irq(IRQ_TT_MFP_SCSI, scsi_tt_intr);
++				free_irq(IRQ_TT_MFP_SCSI, instance);
+ 				scsi_unregister(atari_scsi_host);
+ 				atari_stram_free(atari_dma_buffer);
+ 				atari_dma_buffer = 0;
+@@ -761,7 +761,7 @@ int atari_scsi_detect(struct scsi_host_template *host)
+ int atari_scsi_release(struct Scsi_Host *sh)
+ {
+ 	if (IS_A_TT())
+-		free_irq(IRQ_TT_MFP_SCSI, scsi_tt_intr);
++		free_irq(IRQ_TT_MFP_SCSI, sh);
+ 	if (atari_dma_buffer)
+ 		atari_stram_free(atari_dma_buffer);
+ 	return 1;
+diff --git a/drivers/scsi/dtc.c b/drivers/scsi/dtc.c
+index 2596165..c2677ba 100644
+--- a/drivers/scsi/dtc.c
++++ b/drivers/scsi/dtc.c
+@@ -277,7 +277,8 @@ found:
+ 		/* With interrupts enabled, it will sometimes hang when doing heavy
+ 		 * reads. So better not enable them until I finger it out. */
+ 		if (instance->irq != SCSI_IRQ_NONE)
+-			if (request_irq(instance->irq, dtc_intr, IRQF_DISABLED, "dtc", instance)) {
++			if (request_irq(instance->irq, dtc_intr, IRQF_DISABLED,
++					"dtc", instance)) {
+ 				printk(KERN_ERR "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
+ 				instance->irq = SCSI_IRQ_NONE;
+ 			}
+@@ -459,7 +460,7 @@ static int dtc_release(struct Scsi_Host *shost)
+ 	NCR5380_local_declare();
+ 	NCR5380_setup(shost);
+ 	if (shost->irq)
+-		free_irq(shost->irq, NULL);
++		free_irq(shost->irq, shost);
+ 	NCR5380_exit(shost);
+ 	if (shost->io_port && shost->n_io_port)
+ 		release_region(shost->io_port, shost->n_io_port);
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 607336f..75585a5 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -460,7 +460,8 @@ int __init generic_NCR5380_detect(struct scsi_host_template * tpnt)
+ 			instance->irq = NCR5380_probe_irq(instance, 0xffff);
+ 
+ 		if (instance->irq != SCSI_IRQ_NONE)
+-			if (request_irq(instance->irq, generic_NCR5380_intr, IRQF_DISABLED, "NCR5380", instance)) {
++			if (request_irq(instance->irq, generic_NCR5380_intr,
++					IRQF_DISABLED, "NCR5380", instance)) {
+ 				printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
+ 				instance->irq = SCSI_IRQ_NONE;
+ 			}
+@@ -513,7 +514,7 @@ int generic_NCR5380_release_resources(struct Scsi_Host *instance)
+ 	NCR5380_setup(instance);
+ 	
+ 	if (instance->irq != SCSI_IRQ_NONE)
+-		free_irq(instance->irq, NULL);
++		free_irq(instance->irq, instance);
+ 	NCR5380_exit(instance);
+ 
+ #ifndef CONFIG_SCSI_G_NCR5380_MEM
+diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+index abe2bda..81d1f3f 100644
+--- a/drivers/scsi/mac_scsi.c
++++ b/drivers/scsi/mac_scsi.c
+@@ -303,7 +303,7 @@ int macscsi_detect(struct scsi_host_template * tpnt)
+ 
+     if (instance->irq != SCSI_IRQ_NONE)
+ 	if (request_irq(instance->irq, NCR5380_intr, IRQ_FLG_SLOW, 
+-		"ncr5380", instance)) {
++			"ncr5380", instance)) {
+ 	    printk(KERN_WARNING "scsi%d: IRQ%d not free, interrupts disabled\n",
+ 		   instance->host_no, instance->irq);
+ 	    instance->irq = SCSI_IRQ_NONE;
+@@ -326,7 +326,7 @@ int macscsi_detect(struct scsi_host_template * tpnt)
+ int macscsi_release (struct Scsi_Host *shpnt)
+ {
+ 	if (shpnt->irq != SCSI_IRQ_NONE)
+-		free_irq (shpnt->irq, NCR5380_intr);
++		free_irq (shpnt->irq, shpnt);
+ 	NCR5380_exit(shpnt);
+ 
+ 	return 0;
+diff --git a/drivers/scsi/pas16.c b/drivers/scsi/pas16.c
+index ee59656..f2018b4 100644
+--- a/drivers/scsi/pas16.c
++++ b/drivers/scsi/pas16.c
+@@ -453,7 +453,8 @@ int __init pas16_detect(struct scsi_host_template * tpnt)
+ 	    instance->irq = NCR5380_probe_irq(instance, PAS16_IRQS);
+ 
+ 	if (instance->irq != SCSI_IRQ_NONE) 
+-	    if (request_irq(instance->irq, pas16_intr, IRQF_DISABLED, "pas16", instance)) {
++	    if (request_irq(instance->irq, pas16_intr, IRQF_DISABLED,
++			    "pas16", instance)) {
+ 		printk("scsi%d : IRQ%d not free, interrupts disabled\n", 
+ 		    instance->host_no, instance->irq);
+ 		instance->irq = SCSI_IRQ_NONE;
+@@ -604,7 +605,7 @@ static inline int NCR5380_pwrite (struct Scsi_Host *instance, unsigned char *src
+ static int pas16_release(struct Scsi_Host *shost)
+ {
+ 	if (shost->irq)
+-		free_irq(shost->irq, NULL);
++		free_irq(shost->irq, shost);
+ 	NCR5380_exit(shost);
+ 	if (shost->dma_channel != 0xff)
+ 		free_dma(shost->dma_channel);
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 5e46d84..320b2a8 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -268,7 +268,7 @@ int sun3scsi_detect(struct scsi_host_template * tpnt)
+         ((struct NCR5380_hostdata *)instance->hostdata)->ctrl = 0;
+ 
+ 	if (request_irq(instance->irq, scsi_sun3_intr,
+-			     0, "Sun3SCSI-5380", NULL)) {
++			     0, "Sun3SCSI-5380", instance)) {
+ #ifndef REAL_DMA
+ 		printk("scsi%d: IRQ%d not free, interrupts disabled\n",
+ 		       instance->host_no, instance->irq);
+@@ -310,7 +310,7 @@ int sun3scsi_detect(struct scsi_host_template * tpnt)
+ int sun3scsi_release (struct Scsi_Host *shpnt)
+ {
+ 	if (shpnt->irq != SCSI_IRQ_NONE)
+-		free_irq (shpnt->irq, NULL);
++		free_irq (shpnt->irq, shpnt);
+ 
+ 	iounmap((void *)sun3_scsi_regp);
+ 
+diff --git a/drivers/scsi/sun3_scsi_vme.c b/drivers/scsi/sun3_scsi_vme.c
+index 7cb4a31..5af057e 100644
+--- a/drivers/scsi/sun3_scsi_vme.c
++++ b/drivers/scsi/sun3_scsi_vme.c
+@@ -230,7 +230,7 @@ static int sun3scsi_detect(struct scsi_host_template * tpnt)
+         ((struct NCR5380_hostdata *)instance->hostdata)->ctrl = 0;
+ 
+ 	if (request_irq(instance->irq, scsi_sun3_intr,
+-			     0, "Sun3SCSI-5380VME", NULL)) {
++			0, "Sun3SCSI-5380VME", instance)) {
+ #ifndef REAL_DMA
+ 		printk("scsi%d: IRQ%d not free, interrupts disabled\n",
+ 		       instance->host_no, instance->irq);
+@@ -279,7 +279,7 @@ static int sun3scsi_detect(struct scsi_host_template * tpnt)
+ int sun3scsi_release (struct Scsi_Host *shpnt)
+ {
+ 	if (shpnt->irq != SCSI_IRQ_NONE)
+-		free_irq (shpnt->irq, NULL);
++		free_irq (shpnt->irq, shpnt);
+ 
+ 	iounmap((void *)sun3_scsi_regp);
+ 
+diff --git a/drivers/scsi/t128.c b/drivers/scsi/t128.c
+index 248d60b..371a325 100644
+--- a/drivers/scsi/t128.c
++++ b/drivers/scsi/t128.c
+@@ -259,7 +259,8 @@ found:
+ 	    instance->irq = NCR5380_probe_irq(instance, T128_IRQS);
+ 
+ 	if (instance->irq != SCSI_IRQ_NONE) 
+-	    if (request_irq(instance->irq, t128_intr, IRQF_DISABLED, "t128", instance)) {
++	    if (request_irq(instance->irq, t128_intr, IRQF_DISABLED, "t128",
++	    		    instance)) {
+ 		printk("scsi%d : IRQ%d not free, interrupts disabled\n", 
+ 		    instance->host_no, instance->irq);
+ 		instance->irq = SCSI_IRQ_NONE;
+@@ -295,7 +296,7 @@ static int t128_release(struct Scsi_Host *shost)
+ 	NCR5380_local_declare();
+ 	NCR5380_setup(shost);
+ 	if (shost->irq)
+-		free_irq(shost->irq, NULL);
++		free_irq(shost->irq, shost);
+ 	NCR5380_exit(shost);
+ 	if (shost->io_port && shost->n_io_port)
+ 		release_region(shost->io_port, shost->n_io_port);
 -- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+1.5.2.4
+
