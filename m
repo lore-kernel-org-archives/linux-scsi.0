@@ -1,78 +1,75 @@
-From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
-Subject: [PATCH] MegaRAID SAS: Convert aen_mutex to the mutex API
-Date: Sat, 27 Oct 2007 09:48:46 +0200
-Message-ID: <20071027074846.GQ9824@traven>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 15/15] Add Documentation/DocBook/scsi_midlayer.tmpl and
+	add to Makefile.
+Date: Sat, 27 Oct 2007 08:24:24 -0500
+Message-ID: <1193491464.15612.6.camel@localhost.localdomain>
+References: <200710262318.01021.rob@landley.net>
+	 <20071026230557.2ac5f9c8.rdunlap@xenotime.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753802AbXJ0Hsp@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: megaraidlinux@lsi.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hancock.steeleye.com ([71.30.118.248]:42769 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753911AbXJ0NY0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Oct 2007 09:24:26 -0400
+In-Reply-To: <20071026230557.2ac5f9c8.rdunlap@xenotime.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Randy Dunlap <rdunlap@xenotime.net>
+Cc: Rob Landley <rob@landley.net>, linux-scsi@vger.kernel.org
 
-MegaRAID SAS: Convert aen_mutex to the mutex API
+On Fri, 2007-10-26 at 23:05 -0700, Randy Dunlap wrote:
+> On Fri, 26 Oct 2007 23:18:00 -0500 Rob Landley wrote:
+> 
+> > From: Rob Landley <rob@landley.net>
+> > 
+> > Add Documentation/DocBook/scsi_midlayer.tmpl and add to Makefile.
+> 
+> 
+> I have comments for all 15 patches here.
+> 
+> a.  You should cc: the maintainer who you want/expect to apply the
+> 	patches.  Always.  Andrew Morton is the only person who
+> 	trolls for patches on a mailing list.  :)
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Realistically too, for this first batch that covers mostly the mid-layer
+and the transport classes, a single patch like you originally submitted
+was just fine.  One patch per file isn't.  Patches should be split
+across functional areas (in this case the function is simply adding the
+SCSI mid layer to the docbook build, so they can all go together).
 
---
+> b.  The function "Description:" section header is not strictly
+> 	required by scripts/kernel-doc.  It will assume that the
+> 	first text section after parameters is the Description:
+> 	section.  FYI.
+> 
+> c.  Extraneous whitespace.  Git or quilt check for this.
+> 	I don't know about hg...
 
-index e3c5c52..3ad379f 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -31,6 +31,7 @@
- #include <linux/moduleparam.h>
- #include <linux/module.h>
- #include <linux/spinlock.h>
-+#include <linux/mutex.h>
- #include <linux/interrupt.h>
- #include <linux/delay.h>
- #include <linux/uio.h>
-@@ -2358,7 +2359,7 @@ megasas_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	spin_lock_init(&instance->cmd_pool_lock);
- 
--	sema_init(&instance->aen_mutex, 1);
-+	mutex_init(&instance->aen_mutex);
- 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
- 
- 	/*
-@@ -2874,10 +2875,10 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
- 	if (!instance)
- 		return -ENODEV;
- 
--	down(&instance->aen_mutex);
-+	mutex_lock(&instance->aen_mutex);
- 	error = megasas_register_aen(instance, aen.seq_num,
- 				     aen.class_locale_word);
--	up(&instance->aen_mutex);
-+	mutex_unlock(&instance->aen_mutex);
- 	return error;
- }
- 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 4dffc91..08c74c9 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1089,7 +1089,7 @@ struct megasas_instance {
- 	struct megasas_evt_detail *evt_detail;
- 	dma_addr_t evt_detail_h;
- 	struct megasas_cmd *aen_cmd;
--	struct semaphore aen_mutex;
-+	struct mutex aen_mutex;
- 	struct semaphore ioctl_sem;
- 
- 	struct Scsi_Host *host;
+Actually, the checkpatch.pl script in the scripts directory of the
+kernel is very good for this (I ran it on the original monolithic
+patch):
 
--- 
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
+jejb@mulgrave> ./scripts/checkpatch.pl ~/tmp.mail
+ERROR: trailing whitespace
+#1065: FILE: drivers/scsi/scsi_ioctl.c:185:
++ * a pointer to a &struct scsi_device. $
 
-    Tant qu'il y aura sur terre des hommes pour qui existe un concept
-    d' 'honneur national', la menace d'une nouvelle guerre subsistera.
-                              (B. Traven)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+ERROR: trailing whitespace
+#1670: FILE: drivers/scsi/scsicam.c:60:
++ * Description : determine the BIOS mapping/geometry used for a drive
+in a $
+
+total: 2 errors, 0 warnings, 1502 lines checked
+Your patch has style problems, please review.  If any of these errors
+are false positives report them to the maintainer, see
+CHECKPATCH in MAINTAINERS.
+
+In addition, there seem to be a few functions that you added kerneldoc
+for which don't show up in the doc output.  The one that caught my eye
+was scsi_cmd_get_serial(), but I think there are others.
+
+James
+
+
