@@ -1,53 +1,38 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH 2/2] SCSI/NCR5380: minor irq handler cleanups
-Date: Fri, 26 Oct 2007 20:16:40 -0400 (EDT)
-Message-ID: <a683fcd0b1196c41a80f57c896cc443b99d78497.1193444039.git.jeff@garzik.org>
-References: <0f3b5fb60a45528af12178ba6c857af33ae048b1.1193444039.git.jeff@garzik.org>
+From: Rob Landley <rob@landley.net>
+Subject: Re: [PATCH] Documentation/DocBook/scsi_midlayer.tmpl
+Date: Fri, 26 Oct 2007 23:05:13 -0500
+Message-ID: <200710262305.13783.rob@landley.net>
+References: <200710261714.42300.rob@landley.net> <47226E24.3000206@s5r6.in-berlin.de>
+Mime-Version: 1.0
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:40736 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753652AbXJ0AQk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Oct 2007 20:16:40 -0400
-In-Reply-To: <0f3b5fb60a45528af12178ba6c857af33ae048b1.1193444039.git.jeff@garzik.org>
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:40449
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1750905AbXJ0DFa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 26 Oct 2007 23:05:30 -0400
+In-Reply-To: <47226E24.3000206@s5r6.in-berlin.de>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: akpm@linux-foundation.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi@vger.kernel.org, scameron@beardog.cca.cpqcorp.net
 
-* remove unnecessary cast
+On Friday 26 October 2007 5:45:56 pm Stefan Richter wrote:
+> Rob Landley wrote:
+> >  drivers/scsi/scsi.c                      |  181 ++++-----
+>
+> Also have a look at this:
+> "Fix a few misleading comments in scsi.c"
+> http://marc.info/?l=linux-scsi&m=119340708627893
+> "scsi.c: fix some typos in comments"
+> http://marc.info/?l=linux-scsi&m=114279682717770
 
-* remove unnecessary use of 'irq' function arg
+Got 'em.  Updated.  And I split them up.  Stand by for patchbomb...
 
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
----
- drivers/scsi/NCR5380.c |    7 ++++---
- 1 files changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 2597209..31787d8 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -1157,16 +1157,17 @@ static void NCR5380_main(struct work_struct *work)
-  *	Locks: takes the needed instance locks
-  */
- 
--static irqreturn_t NCR5380_intr(int irq, void *dev_id) 
-+static irqreturn_t NCR5380_intr(int dummy, void *dev_id) 
- {
- 	NCR5380_local_declare();
--	struct Scsi_Host *instance = (struct Scsi_Host *)dev_id;
-+	struct Scsi_Host *instance = dev_id;
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 	int done;
- 	unsigned char basr;
- 	unsigned long flags;
- 
--	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n", irq));
-+	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n",
-+		instance->irq));
- 
- 	do {
- 		done = 1;
+Rob
 -- 
-1.5.2.4
-
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
