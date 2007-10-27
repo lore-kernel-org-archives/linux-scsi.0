@@ -1,460 +1,457 @@
 From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH 1/9] lpfc 8.2.3 : Added support for ASICs that report
-	temperature
-Date: Sat, 27 Oct 2007 13:37:05 -0400
-Message-ID: <1193506625.8770.14.camel@localhost.localdomain>
+Subject: [PATCH 2/9] lpfc 8.2.3 : NPIV bug fixes
+Date: Sat, 27 Oct 2007 13:37:17 -0400
+Message-ID: <1193506637.8770.16.camel@localhost.localdomain>
 Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:46306 "EHLO
+Received: from emulex.emulex.com ([138.239.112.1]:46314 "EHLO
 	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754118AbXJ0RhA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Oct 2007 13:37:00 -0400
+	with ESMTP id S1754149AbXJ0RhM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Oct 2007 13:37:12 -0400
 Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l9RHax9L021344
-	for <linux-scsi@vger.kernel.org>; Sat, 27 Oct 2007 10:36:59 -0700 (PDT)
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l9RHbAjv021352
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Oct 2007 10:37:11 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Added support for ASICs that report temperature. Temperature notices are
- reported as events and logged. Temperature can be read via sysfs.
+
+NPIV bug fixes:
+- Remove vport params on physical hba when npiv is disabled
+- Implement new DA_ID CT command to remove vport information from
+  the switch after delete. Some switches didn't clean this up unless
+  the physical link dropped.
+
 
 Signed-off-by: James Smart <James.Smart@emulex.com>
 
 
 diff -upNr a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
---- a/drivers/scsi/lpfc/lpfc_attr.c	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_attr.c	2007-10-27 10:33:48.000000000 -0400
-@@ -86,6 +86,15 @@ lpfc_serialnum_show(struct class_device 
- }
+--- a/drivers/scsi/lpfc/lpfc_attr.c	2007-10-27 10:33:48.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_attr.c	2007-10-27 10:37:26.000000000 -0400
+@@ -1113,7 +1113,13 @@ MODULE_PARM_DESC(lpfc_sli_mode, "SLI mod
+ 		 " 2 - select SLI-2 even on SLI-3 capable HBAs,"
+ 		 " 3 - select SLI-3");
  
- static ssize_t
-+lpfc_temp_sensor_show(struct class_device *cdev, char *buf)
-+{
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct lpfc_vport *vport = (struct lpfc_vport *) shost->hostdata;
-+	struct lpfc_hba   *phba = vport->phba;
-+	return snprintf(buf, PAGE_SIZE, "%d\n",phba->temp_sensor_support);
-+}
+-LPFC_ATTR_R(enable_npiv, 0, 0, 1, "Enable NPIV functionality");
++int lpfc_enable_npiv = 0;
++module_param(lpfc_enable_npiv, int, 0);
++MODULE_PARM_DESC(lpfc_enable_npiv, "Enable NPIV functionality");
++lpfc_param_show(enable_npiv);
++lpfc_param_init(enable_npiv, 0, 0, 1);
++static CLASS_DEVICE_ATTR(lpfc_enable_npiv, S_IRUGO,
++			 lpfc_enable_npiv_show, NULL);
+ 
+ /*
+ # lpfc_nodev_tmo: If set, it will hold all I/O errors on devices that disappear
+@@ -1259,6 +1265,13 @@ LPFC_VPORT_ATTR_HEX_RW(log_verbose, 0x0,
+ 		       "Verbose logging bit-mask");
+ 
+ /*
++# lpfc_enable_da_id: This turns on the DA_ID CT command that deregisters
++# objects that have been registered with the nameserver after login.
++*/
++LPFC_VPORT_ATTR_R(enable_da_id, 0, 0, 1,
++		  "Deregister nameserver objects before LOGO");
 +
-+static ssize_t
- lpfc_modeldesc_show(struct class_device *cdev, char *buf)
++/*
+ # lun_queue_depth:  This parameter is used to limit the number of outstanding
+ # commands per FCP LUN. Value range is [1,128]. Default value is 30.
+ */
+@@ -1564,6 +1577,7 @@ struct class_device_attribute *lpfc_vpor
+ 	&class_device_attr_lpfc_max_luns,
+ 	&class_device_attr_nport_evt_cnt,
+ 	&class_device_attr_npiv_info,
++	&class_device_attr_lpfc_enable_da_id,
+ 	NULL,
+ };
+ 
+@@ -2349,69 +2363,13 @@ struct fc_function_template lpfc_transpo
+ 	.dev_loss_tmo_callbk = lpfc_dev_loss_tmo_callbk,
+ 	.terminate_rport_io = lpfc_terminate_rport_io,
+ 
+-	.vport_create = lpfc_vport_create,
+-	.vport_delete = lpfc_vport_delete,
++	/* Vport fields are filled in at runtime based on enable_npiv */
++	.vport_create = NULL,
++	.vport_delete = NULL,
++	.vport_disable = NULL,
+ 	.dd_fcvport_size = sizeof(struct lpfc_vport *),
+ };
+ 
+-struct fc_function_template lpfc_vport_transport_functions = {
+-	/* fixed attributes the driver supports */
+-	.show_host_node_name = 1,
+-	.show_host_port_name = 1,
+-	.show_host_supported_classes = 1,
+-	.show_host_supported_fc4s = 1,
+-	.show_host_supported_speeds = 1,
+-	.show_host_maxframe_size = 1,
+-
+-	/* dynamic attributes the driver supports */
+-	.get_host_port_id = lpfc_get_host_port_id,
+-	.show_host_port_id = 1,
+-
+-	.get_host_port_type = lpfc_get_host_port_type,
+-	.show_host_port_type = 1,
+-
+-	.get_host_port_state = lpfc_get_host_port_state,
+-	.show_host_port_state = 1,
+-
+-	/* active_fc4s is shown but doesn't change (thus no get function) */
+-	.show_host_active_fc4s = 1,
+-
+-	.get_host_speed = lpfc_get_host_speed,
+-	.show_host_speed = 1,
+-
+-	.get_host_fabric_name = lpfc_get_host_fabric_name,
+-	.show_host_fabric_name = 1,
+-
+-	/*
+-	 * The LPFC driver treats linkdown handling as target loss events
+-	 * so there are no sysfs handlers for link_down_tmo.
+-	 */
+-
+-	.get_fc_host_stats = lpfc_get_stats,
+-	.reset_fc_host_stats = lpfc_reset_stats,
+-
+-	.dd_fcrport_size = sizeof(struct lpfc_rport_data),
+-	.show_rport_maxframe_size = 1,
+-	.show_rport_supported_classes = 1,
+-
+-	.set_rport_dev_loss_tmo = lpfc_set_rport_loss_tmo,
+-	.show_rport_dev_loss_tmo = 1,
+-
+-	.get_starget_port_id  = lpfc_get_starget_port_id,
+-	.show_starget_port_id = 1,
+-
+-	.get_starget_node_name = lpfc_get_starget_node_name,
+-	.show_starget_node_name = 1,
+-
+-	.get_starget_port_name = lpfc_get_starget_port_name,
+-	.show_starget_port_name = 1,
+-
+-	.dev_loss_tmo_callbk = lpfc_dev_loss_tmo_callbk,
+-	.terminate_rport_io = lpfc_terminate_rport_io,
+-
+-	.vport_disable = lpfc_vport_disable,
+-};
+-
+ void
+ lpfc_get_cfgparam(struct lpfc_hba *phba)
  {
- 	struct Scsi_Host  *shost = class_to_shost(cdev);
-@@ -908,6 +917,8 @@ static CLASS_DEVICE_ATTR(used_rpi, S_IRU
- static CLASS_DEVICE_ATTR(max_xri, S_IRUGO, lpfc_max_xri_show, NULL);
- static CLASS_DEVICE_ATTR(used_xri, S_IRUGO, lpfc_used_xri_show, NULL);
- static CLASS_DEVICE_ATTR(npiv_info, S_IRUGO, lpfc_npiv_info_show, NULL);
-+static CLASS_DEVICE_ATTR(lpfc_temp_sensor, S_IRUGO, lpfc_temp_sensor_show,
-+			 NULL);
+@@ -2460,5 +2418,6 @@ lpfc_get_vport_cfgparam(struct lpfc_vpor
+ 	lpfc_discovery_threads_init(vport, lpfc_discovery_threads);
+ 	lpfc_max_luns_init(vport, lpfc_max_luns);
+ 	lpfc_scan_down_init(vport, lpfc_scan_down);
++	lpfc_enable_da_id_init(vport, lpfc_enable_da_id);
+ 	return;
+ }
+diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
+--- a/drivers/scsi/lpfc/lpfc_crtn.h	2007-10-27 10:33:48.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_crtn.h	2007-10-27 10:37:14.000000000 -0400
+@@ -260,8 +260,8 @@ extern struct class_device_attribute *lp
+ extern struct scsi_host_template lpfc_template;
+ extern struct scsi_host_template lpfc_vport_template;
+ extern struct fc_function_template lpfc_transport_functions;
+-extern struct fc_function_template lpfc_vport_transport_functions;
+ extern int lpfc_sli_mode;
++extern int lpfc_enable_npiv;
+ 
+ int  lpfc_vport_symbolic_node_name(struct lpfc_vport *, char *, size_t);
+ void lpfc_terminate_rport_io(struct fc_rport *);
+diff -upNr a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+--- a/drivers/scsi/lpfc/lpfc_ct.c	2007-08-18 10:49:08.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_ct.c	2007-10-27 10:37:26.000000000 -0400
+@@ -458,7 +458,7 @@ lpfc_ns_rsp(struct lpfc_vport *vport, st
+ 			    ((lpfc_find_vport_by_did(phba, Did) == NULL) ||
+ 			     vport->cfg_peer_port_login)) {
+ 				if ((vport->port_type != LPFC_NPIV_PORT) ||
+-				    (vport->fc_flag & FC_RFF_NOT_SUPPORTED) ||
++				    (!vport->ct_flags & FC_CT_RFF_ID) ||
+ 				    (!vport->cfg_restrict_login)) {
+ 					ndlp = lpfc_setup_disc_node(vport, Did);
+ 					if (ndlp) {
+@@ -778,8 +778,8 @@ out:
  
 
- static char *lpfc_soft_wwn_key = "C99G71SL8032A";
-@@ -1494,6 +1505,7 @@ struct class_device_attribute *lpfc_hba_
- 	&class_device_attr_state,
- 	&class_device_attr_num_discovered_ports,
- 	&class_device_attr_lpfc_drvr_version,
-+	&class_device_attr_lpfc_temp_sensor,
- 	&class_device_attr_lpfc_log_verbose,
- 	&class_device_attr_lpfc_lun_queue_depth,
- 	&class_device_attr_lpfc_hba_queue_depth,
-diff -upNr a/drivers/scsi/lpfc/lpfc_crtn.h b/drivers/scsi/lpfc/lpfc_crtn.h
---- a/drivers/scsi/lpfc/lpfc_crtn.h	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_crtn.h	2007-10-27 10:33:48.000000000 -0400
-@@ -23,6 +23,8 @@ typedef int (*node_filter)(struct lpfc_n
- struct fc_rport;
- void lpfc_dump_mem(struct lpfc_hba *, LPFC_MBOXQ_t *, uint16_t);
- void lpfc_read_nv(struct lpfc_hba *, LPFC_MBOXQ_t *);
-+void lpfc_config_async(struct lpfc_hba *, LPFC_MBOXQ_t *, uint32_t);
-+
- void lpfc_heart_beat(struct lpfc_hba *, LPFC_MBOXQ_t *);
- int lpfc_read_la(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmb,
- 		 struct lpfc_dmabuf *mp);
-diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
---- a/drivers/scsi/lpfc/lpfc.h	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc.h	2007-10-27 10:33:48.000000000 -0400
-@@ -569,6 +569,7 @@ struct lpfc_hba {
- 	atomic_t slow_ring_trc_cnt;
- #endif
- 
-+	uint8_t temp_sensor_support;
- 	/* Fields used for heart beat. */
- 	unsigned long last_completion_time;
- 	struct timer_list hb_tmofunc;
-@@ -598,5 +599,15 @@ lpfc_is_link_up(struct lpfc_hba *phba)
- 		phba->link_state == LPFC_HBA_READY;
- }
- 
--#define FC_REG_DUMP_EVENT	0x10	/* Register for Dump events */
--
-+#define FC_REG_DUMP_EVENT		0x10	/* Register for Dump events */
-+#define FC_REG_TEMPERATURE_EVENT	0x20    /* Register for temperature
-+						   event */
-+
-+struct temp_event {
-+	uint32_t event_type;
-+	uint32_t event_code;
-+	uint32_t data;
-+};
-+#define LPFC_CRIT_TEMP		0x1
-+#define LPFC_THRESHOLD_TEMP	0x2
-+#define LPFC_NORMAL_TEMP	0x3
-diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
---- a/drivers/scsi/lpfc/lpfc_hw.h	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_hw.h	2007-10-27 10:33:48.000000000 -0400
-@@ -1228,7 +1228,8 @@ typedef struct {		/* FireFly BIU registe
- #define HS_FFER3       0x20000000	/* Bit 29 */
- #define HS_FFER2       0x40000000	/* Bit 30 */
- #define HS_FFER1       0x80000000	/* Bit 31 */
--#define HS_FFERM       0xFF000000	/* Mask for error bits 31:24 */
-+#define HS_CRIT_TEMP   0x00000100	/* Bit 8  */
-+#define HS_FFERM       0xFF000100	/* Mask for error bits 31:24 and 8 */
- 
- /* Host Control Register */
- 
-@@ -1282,6 +1283,7 @@ typedef struct {		/* FireFly BIU registe
- #define MBX_KILL_BOARD      0x24
- #define MBX_CONFIG_FARP     0x25
- #define MBX_BEACON          0x2A
-+#define MBX_ASYNCEVT_ENABLE 0x33
- #define MBX_HEARTBEAT       0x31
- 
- #define MBX_CONFIG_HBQ	    0x7C
-@@ -1344,6 +1346,7 @@ typedef struct {		/* FireFly BIU registe
- 
- /*  SLI_2 IOCB Command Set */
- 
-+#define CMD_ASYNC_STATUS        0x7C
- #define CMD_RCV_SEQUENCE64_CX   0x81
- #define CMD_XMIT_SEQUENCE64_CR  0x82
- #define CMD_XMIT_SEQUENCE64_CX  0x83
-@@ -1406,6 +1409,8 @@ typedef struct {		/* FireFly BIU registe
- #define MBX_BUSY                   0xffffff /* Attempted cmd to busy Mailbox */
- #define MBX_TIMEOUT                0xfffffe /* time-out expired waiting for */
- 
-+#define TEMPERATURE_OFFSET 0xB0	/* Slim offset for critical temperature event */
-+
- /*
-  *    Begin Structure Definitions for Mailbox Commands
-  */
-@@ -2606,6 +2611,18 @@ typedef struct {
- 	uint32_t IPAddress;
- } CONFIG_FARP_VAR;
- 
-+/* Structure for MB Command MBX_ASYNCEVT_ENABLE (0x33) */
-+
-+typedef struct {
-+#ifdef __BIG_ENDIAN_BITFIELD
-+	uint32_t rsvd:30;
-+	uint32_t ring:2;	/* Ring for ASYNC_EVENT iocb Bits 0-1*/
-+#else /*  __LITTLE_ENDIAN */
-+	uint32_t ring:2;	/* Ring for ASYNC_EVENT iocb Bits 0-1*/
-+	uint32_t rsvd:30;
-+#endif
-+} ASYNCEVT_ENABLE_VAR;
-+
- /* Union of all Mailbox Command types */
- #define MAILBOX_CMD_WSIZE	32
- #define MAILBOX_CMD_SIZE	(MAILBOX_CMD_WSIZE * sizeof(uint32_t))
-@@ -2645,6 +2662,7 @@ typedef union {
- 	CONFIG_PORT_VAR varCfgPort;	/* cmd = 0x88 (CONFIG_PORT)  */
- 	REG_VPI_VAR varRegVpi;		/* cmd = 0x96 (REG_VPI) */
- 	UNREG_VPI_VAR varUnregVpi;	/* cmd = 0x97 (UNREG_VPI) */
-+	ASYNCEVT_ENABLE_VAR varCfgAsyncEvent; /*cmd = x33 (CONFIG_ASYNC) */
- } MAILVARIANTS;
- 
- /*
-@@ -2987,6 +3005,21 @@ typedef struct {
- 	uint32_t fcpt_Length;	/* transfer ready for IWRITE */
- } FCPT_FIELDS64;
- 
-+/* IOCB Command template for Async Status iocb commands */
-+typedef struct {
-+	uint32_t rsvd[4];
-+	uint32_t param;
-+#ifdef __BIG_ENDIAN_BITFIELD
-+	uint16_t evt_code;		/* High order bits word 5 */
-+	uint16_t sub_ctxt_tag;		/* Low  order bits word 5 */
-+#else   /*  __LITTLE_ENDIAN_BITFIELD */
-+	uint16_t sub_ctxt_tag;		/* High order bits word 5 */
-+	uint16_t evt_code;		/* Low  order bits word 5 */
-+#endif
-+} ASYNCSTAT_FIELDS;
-+#define ASYNC_TEMP_WARN		0x100
-+#define ASYNC_TEMP_SAFE		0x101
-+
- /* IOCB Command template for CMD_IOCB_RCV_ELS64_CX (0xB7)
-    or CMD_IOCB_RCV_SEQ64_CX (0xB5) */
- 
-@@ -3028,6 +3061,7 @@ typedef struct _IOCB {	/* IOCB structure
- 		XMT_SEQ_FIELDS64 xseq64;	/* XMIT / BCAST cmd */
- 		FCPI_FIELDS64 fcpi64;	/* FCP 64 bit Initiator template */
- 		FCPT_FIELDS64 fcpt64;	/* FCP 64 bit target template */
-+		ASYNCSTAT_FIELDS asyncstat; /* async_status iocb */
- 
- 		uint32_t ulpWord[IOCB_WORD_SZ - 2];	/* generic 6 'words' */
- 	} un;
-diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
---- a/drivers/scsi/lpfc/lpfc_init.c	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_init.c	2007-10-27 10:33:48.000000000 -0400
-@@ -212,6 +212,18 @@ out_free_mbox:
- 	return 0;
- }
- 
-+/* Completion handler for config async event mailbox command. */
-+static void
-+lpfc_config_async_cmpl(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmboxq)
-+{
-+	if (pmboxq->mb.mbxStatus == MBX_SUCCESS)
-+		phba->temp_sensor_support = 1;
-+	else
-+		phba->temp_sensor_support = 0;
-+	mempool_free(pmboxq, phba->mbox_mem_pool);
-+	return;
-+}
-+
- /************************************************************************/
- /*                                                                      */
- /*    lpfc_config_port_post                                             */
-@@ -409,7 +421,21 @@ lpfc_config_port_post(struct lpfc_hba *p
- 		return -EIO;
- 	}
- 	/* MBOX buffer will be freed in mbox compl */
-+	pmb = mempool_alloc(phba->mbox_mem_pool, GFP_KERNEL);
-+	lpfc_config_async(phba, pmb, LPFC_ELS_RING);
-+	pmb->mbox_cmpl = lpfc_config_async_cmpl;
-+	pmb->vport = phba->pport;
-+	rc = lpfc_sli_issue_mbox(phba, pmb, MBX_NOWAIT);
- 
-+	if ((rc != MBX_BUSY) && (rc != MBX_SUCCESS)) {
-+		lpfc_printf_log(phba,
-+				KERN_ERR,
-+				LOG_INIT,
-+				"0456 Adapter failed to issue "
-+				"ASYNCEVT_ENABLE mbox status x%x \n.",
-+				rc);
-+		mempool_free(pmb, phba->mbox_mem_pool);
-+	}
- 	return (0);
- }
- 
-@@ -601,6 +627,8 @@ lpfc_handle_eratt(struct lpfc_hba *phba)
- 	struct lpfc_sli_ring  *pring;
- 	struct lpfc_vport **vports;
- 	uint32_t event_data;
-+	unsigned long temperature;
-+	struct temp_event temp_event_data;
- 	struct Scsi_Host  *shost;
- 	int i;
- 
-@@ -655,6 +683,33 @@ lpfc_handle_eratt(struct lpfc_hba *phba)
- 			return;
- 		}
- 		lpfc_unblock_mgmt_io(phba);
-+	} else if (phba->work_hs & HS_CRIT_TEMP) {
-+		temperature = readl(phba->MBslimaddr + TEMPERATURE_OFFSET);
-+		temp_event_data.event_type = FC_REG_TEMPERATURE_EVENT;
-+		temp_event_data.event_code = LPFC_CRIT_TEMP;
-+		temp_event_data.data = (uint32_t)temperature;
-+
-+		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
-+				"0459 Adapter maximum temperature exceeded "
-+				"(%ld), taking this port offline "
-+				"Data: x%x x%x x%x\n",
-+				temperature, phba->work_hs,
-+				phba->work_status[0], phba->work_status[1]);
-+
-+		shost = lpfc_shost_from_vport(phba->pport);
-+		fc_host_post_vendor_event(shost, fc_get_event_number(),
-+					  sizeof(temp_event_data),
-+					  (char *) &temp_event_data,
-+					  SCSI_NL_VID_TYPE_PCI
-+					  | PCI_VENDOR_ID_EMULEX);
-+
-+		psli->sli_flag &= ~LPFC_SLI2_ACTIVE;
-+		lpfc_offline_prep(phba);
-+		lpfc_offline(phba);
-+		lpfc_unblock_mgmt_io(phba);
-+		phba->link_state = LPFC_HBA_ERROR;
-+		lpfc_hba_down_post(phba);
-+
- 	} else {
- 		/* The if clause above forces this code path when the status
- 		 * failure is a value other than FFER6.  Do not call the offline
-diff -upNr a/drivers/scsi/lpfc/lpfc_logmsg.h b/drivers/scsi/lpfc/lpfc_logmsg.h
---- a/drivers/scsi/lpfc/lpfc_logmsg.h	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_logmsg.h	2007-10-27 10:33:48.000000000 -0400
-@@ -26,6 +26,7 @@
- #define LOG_IP                        0x20	/* IP traffic history */
- #define LOG_FCP                       0x40	/* FCP traffic history */
- #define LOG_NODE                      0x80	/* Node table events */
-+#define LOG_TEMP                      0x100	/* Temperature sensor events */
- #define LOG_MISC                      0x400	/* Miscellaneous events */
- #define LOG_SLI                       0x800	/* SLI events */
- #define LOG_FCP_ERROR                 0x1000	/* log errors, not underruns */
-diff -upNr a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
---- a/drivers/scsi/lpfc/lpfc_mbox.c	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c	2007-10-27 10:33:48.000000000 -0400
-@@ -82,6 +82,24 @@ lpfc_read_nv(struct lpfc_hba * phba, LPF
- }
- 
- /**********************************************/
-+/*  lpfc_config_async  Issue a                */
-+/*  MBX_ASYNC_EVT_ENABLE mailbox command      */
-+/**********************************************/
-+void
-+lpfc_config_async(struct lpfc_hba * phba, LPFC_MBOXQ_t * pmb,
-+		uint32_t ring)
-+{
-+	MAILBOX_t *mb;
-+
-+	mb = &pmb->mb;
-+	memset(pmb, 0, sizeof (LPFC_MBOXQ_t));
-+	mb->mbxCommand = MBX_ASYNCEVT_ENABLE;
-+	mb->un.varCfgAsyncEvent.ring = ring;
-+	mb->mbxOwner = OWN_HOST;
-+	return;
-+}
-+
-+/**********************************************/
- /*  lpfc_heart_beat  Issue a HEART_BEAT       */
- /*                mailbox command             */
- /**********************************************/
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
---- a/drivers/scsi/lpfc/lpfc_sli.c	2007-10-26 16:59:58.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.c	2007-10-27 10:33:48.000000000 -0400
-@@ -199,6 +199,7 @@ lpfc_sli_iocb_cmd_type(uint8_t iocb_cmnd
- 	case CMD_RCV_ELS_REQ_CX:
- 	case CMD_RCV_SEQUENCE64_CX:
- 	case CMD_RCV_ELS_REQ64_CX:
-+	case CMD_ASYNC_STATUS:
- 	case CMD_IOCB_RCV_SEQ64_CX:
- 	case CMD_IOCB_RCV_ELS64_CX:
- 	case CMD_IOCB_RCV_CONT64_CX:
-@@ -754,6 +755,7 @@ lpfc_sli_chk_mbx_command(uint8_t mbxComm
- 	case MBX_FLASH_WR_ULA:
- 	case MBX_SET_DEBUG:
- 	case MBX_LOAD_EXP_ROM:
-+	case MBX_ASYNCEVT_ENABLE:
- 	case MBX_REG_VPI:
- 	case MBX_UNREG_VPI:
- 	case MBX_HEARTBEAT:
-@@ -953,6 +955,7 @@ lpfc_sli_replace_hbqbuff(struct lpfc_hba
- 	return &new_hbq_entry->dbuf;
- }
- 
-+
- static int
- lpfc_sli_process_unsol_iocb(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 			    struct lpfc_iocbq *saveq)
-@@ -964,6 +967,22 @@ lpfc_sli_process_unsol_iocb(struct lpfc_
- 
- 	match = 0;
- 	irsp = &(saveq->iocb);
-+
-+	if (irsp->ulpCommand == CMD_ASYNC_STATUS) {
-+		if (pring->lpfc_sli_rcv_async_status)
-+			pring->lpfc_sli_rcv_async_status(phba, pring, saveq);
-+		else
-+			lpfc_printf_log(phba,
-+					KERN_WARNING,
-+					LOG_SLI,
-+					"0316 Ring %d handler: unexpected "
-+					"ASYNC_STATUS iocb received evt_code "
-+					"0x%x\n",
-+					pring->ringno,
-+					irsp->un.asyncstat.evt_code);
-+		return 1;
-+	}
-+
- 	if ((irsp->ulpCommand == CMD_RCV_ELS_REQ64_CX)
- 	    || (irsp->ulpCommand == CMD_RCV_ELS_REQ_CX)
- 	    || (irsp->ulpCommand == CMD_IOCB_RCV_ELS64_CX)
-@@ -2993,6 +3012,61 @@ lpfc_extra_ring_setup( struct lpfc_hba *
- 	return 0;
- }
- 
-+void
-+lpfc_sli_async_event_handler(struct lpfc_hba * phba,
-+	struct lpfc_sli_ring * pring, struct lpfc_iocbq * iocbq)
-+{
-+	IOCB_t *icmd;
-+	uint16_t evt_code;
-+	uint16_t temp;
-+	struct temp_event temp_event_data;
-+	struct Scsi_Host *shost;
-+
-+	icmd = &iocbq->iocb;
-+	evt_code = icmd->un.asyncstat.evt_code;
-+	temp = icmd->ulpContext;
-+
-+	if ((evt_code != ASYNC_TEMP_WARN) &&
-+		(evt_code != ASYNC_TEMP_SAFE)) {
-+		lpfc_printf_log(phba,
-+			KERN_ERR,
-+			LOG_SLI,
-+			"0327 Ring %d handler: unexpected ASYNC_STATUS"
-+			" evt_code 0x%x\n",
-+			pring->ringno,
-+			icmd->un.asyncstat.evt_code);
-+		return;
-+	}
-+	temp_event_data.data = (uint32_t)temp;
-+	temp_event_data.event_type = FC_REG_TEMPERATURE_EVENT;
-+	if (evt_code == ASYNC_TEMP_WARN) {
-+		temp_event_data.event_code = LPFC_THRESHOLD_TEMP;
-+		lpfc_printf_log(phba,
-+				KERN_WARNING,
-+				LOG_TEMP,
-+				"0339 Adapter is very hot, please take "
-+				"corrective action. temperature : %d Celsius\n",
-+				temp);
-+	}
-+	if (evt_code == ASYNC_TEMP_SAFE) {
-+		temp_event_data.event_code = LPFC_NORMAL_TEMP;
-+		lpfc_printf_log(phba,
-+				KERN_INFO,
-+				LOG_TEMP,
-+				"0340 Adapter temperature is OK now. "
-+				"temperature : %d Celsius\n",
-+				temp);
-+	}
-+
-+	/* Send temperature change event to applications */
-+	shost = lpfc_shost_from_vport(phba->pport);
-+	fc_host_post_vendor_event(shost, fc_get_event_number(),
-+		sizeof(temp_event_data), (char *) &temp_event_data,
-+		SCSI_NL_VID_TYPE_PCI | PCI_VENDOR_ID_EMULEX);
-+
-+}
-+
-+
- int
- lpfc_sli_setup(struct lpfc_hba *phba)
+ static void
+-lpfc_cmpl_ct_cmd_rft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+-			struct lpfc_iocbq *rspiocb)
++lpfc_cmpl_ct(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
++	     struct lpfc_iocbq *rspiocb)
  {
-@@ -3059,6 +3133,8 @@ lpfc_sli_setup(struct lpfc_hba *phba)
- 			pring->fast_iotag = 0;
- 			pring->iotag_ctr = 0;
- 			pring->iotag_max = 4096;
-+			pring->lpfc_sli_rcv_async_status =
-+				lpfc_sli_async_event_handler;
- 			pring->num_mask = 4;
- 			pring->prt[0].profile = 0;	/* Mask 0 */
- 			pring->prt[0].rctl = FC_ELS_REQ;
-diff -upNr a/drivers/scsi/lpfc/lpfc_sli.h b/drivers/scsi/lpfc/lpfc_sli.h
---- a/drivers/scsi/lpfc/lpfc_sli.h	2007-08-18 10:49:08.000000000 -0400
-+++ b/drivers/scsi/lpfc/lpfc_sli.h	2007-10-27 10:33:48.000000000 -0400
-@@ -166,6 +166,8 @@ struct lpfc_sli_ring {
+ 	struct lpfc_vport *vport = cmdiocb->vport;
+ 	struct lpfc_dmabuf *inp;
+@@ -809,7 +809,7 @@ lpfc_cmpl_ct_cmd_rft_id(struct lpfc_hba 
  
- 	struct lpfc_sli_ring_mask prt[LPFC_MAX_RING_MASK];
- 	uint32_t num_mask;	/* number of mask entries in prt array */
-+	void (*lpfc_sli_rcv_async_status) (struct lpfc_hba *,
-+		struct lpfc_sli_ring *, struct lpfc_iocbq *);
+ 	/* RFT request completes status <ulpStatus> CmdRsp <CmdRsp> */
+ 	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
+-			 "0209 RFT request completes, latt %d, "
++			 "0209 CT Request completes, latt %d, "
+ 			 "ulpStatus x%x CmdRsp x%x, Context x%x, Tag x%x\n",
+ 			 latt, irsp->ulpStatus,
+ 			 CTrsp->CommandResponse.bits.CmdRsp,
+@@ -848,10 +848,28 @@ out:
+ }
  
- 	struct lpfc_sli_ring_stat stats;	/* SLI statistical info */
+ static void
++lpfc_cmpl_ct_cmd_rft_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
++			struct lpfc_iocbq *rspiocb)
++{
++	IOCB_t *irsp = &rspiocb->iocb;
++	struct lpfc_vport *vport = cmdiocb->vport;
++
++	if (irsp->ulpStatus == IOSTAT_SUCCESS)
++		vport->ct_flags |= FC_CT_RFT_ID;
++	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
++	return;
++}
++
++static void
+ lpfc_cmpl_ct_cmd_rnn_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			struct lpfc_iocbq *rspiocb)
+ {
+-	lpfc_cmpl_ct_cmd_rft_id(phba, cmdiocb, rspiocb);
++	IOCB_t *irsp = &rspiocb->iocb;
++	struct lpfc_vport *vport = cmdiocb->vport;
++
++	if (irsp->ulpStatus == IOSTAT_SUCCESS)
++		vport->ct_flags |= FC_CT_RNN_ID;
++	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+ 	return;
+ }
  
+@@ -859,7 +877,12 @@ static void
+ lpfc_cmpl_ct_cmd_rspn_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			 struct lpfc_iocbq *rspiocb)
+ {
+-	lpfc_cmpl_ct_cmd_rft_id(phba, cmdiocb, rspiocb);
++	IOCB_t *irsp = &rspiocb->iocb;
++	struct lpfc_vport *vport = cmdiocb->vport;
++
++	if (irsp->ulpStatus == IOSTAT_SUCCESS)
++		vport->ct_flags |= FC_CT_RSPN_ID;
++	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+ 	return;
+ }
+ 
+@@ -867,7 +890,24 @@ static void
+ lpfc_cmpl_ct_cmd_rsnn_nn(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			 struct lpfc_iocbq *rspiocb)
+ {
+-	lpfc_cmpl_ct_cmd_rft_id(phba, cmdiocb, rspiocb);
++	IOCB_t *irsp = &rspiocb->iocb;
++	struct lpfc_vport *vport = cmdiocb->vport;
++
++	if (irsp->ulpStatus == IOSTAT_SUCCESS)
++		vport->ct_flags |= FC_CT_RSNN_NN;
++	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
++	return;
++}
++
++static void
++lpfc_cmpl_ct_cmd_da_id(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
++ struct lpfc_iocbq *rspiocb)
++{
++	struct lpfc_vport *vport = cmdiocb->vport;
++
++	/* even if it fails we will act as though it succeeded. */
++	vport->ct_flags = 0;
++	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+ 	return;
+ }
+ 
+@@ -878,10 +918,9 @@ lpfc_cmpl_ct_cmd_rff_id(struct lpfc_hba 
+ 	IOCB_t *irsp = &rspiocb->iocb;
+ 	struct lpfc_vport *vport = cmdiocb->vport;
+ 
+-	if (irsp->ulpStatus != IOSTAT_SUCCESS)
+-	    vport->fc_flag |= FC_RFF_NOT_SUPPORTED;
+-
+-	lpfc_cmpl_ct_cmd_rft_id(phba, cmdiocb, rspiocb);
++	if (irsp->ulpStatus == IOSTAT_SUCCESS)
++		vport->ct_flags |= FC_CT_RFF_ID;
++	lpfc_cmpl_ct(phba, cmdiocb, rspiocb);
+ 	return;
+ }
+ 
+@@ -1001,6 +1040,8 @@ lpfc_ns_cmd(struct lpfc_vport *vport, in
+ 		bpl->tus.f.bdeSize = RSPN_REQUEST_SZ;
+ 	else if (cmdcode == SLI_CTNS_RSNN_NN)
+ 		bpl->tus.f.bdeSize = RSNN_REQUEST_SZ;
++	else if (cmdcode == SLI_CTNS_DA_ID)
++		bpl->tus.f.bdeSize = DA_ID_REQUEST_SZ;
+ 	else if (cmdcode == SLI_CTNS_RFF_ID)
+ 		bpl->tus.f.bdeSize = RFF_REQUEST_SZ;
+ 	else
+@@ -1034,6 +1075,7 @@ lpfc_ns_cmd(struct lpfc_vport *vport, in
+ 		break;
+ 
+ 	case SLI_CTNS_RFT_ID:
++		vport->ct_flags &= ~FC_CT_RFT_ID;
+ 		CtReq->CommandResponse.bits.CmdRsp =
+ 		    be16_to_cpu(SLI_CTNS_RFT_ID);
+ 		CtReq->un.rft.PortId = be32_to_cpu(vport->fc_myDID);
+@@ -1042,6 +1084,7 @@ lpfc_ns_cmd(struct lpfc_vport *vport, in
+ 		break;
+ 
+ 	case SLI_CTNS_RNN_ID:
++		vport->ct_flags &= ~FC_CT_RNN_ID;
+ 		CtReq->CommandResponse.bits.CmdRsp =
+ 		    be16_to_cpu(SLI_CTNS_RNN_ID);
+ 		CtReq->un.rnn.PortId = be32_to_cpu(vport->fc_myDID);
+@@ -1051,6 +1094,7 @@ lpfc_ns_cmd(struct lpfc_vport *vport, in
+ 		break;
+ 
+ 	case SLI_CTNS_RSPN_ID:
++		vport->ct_flags &= ~FC_CT_RSPN_ID;
+ 		CtReq->CommandResponse.bits.CmdRsp =
+ 		    be16_to_cpu(SLI_CTNS_RSPN_ID);
+ 		CtReq->un.rspn.PortId = be32_to_cpu(vport->fc_myDID);
+@@ -1061,6 +1105,7 @@ lpfc_ns_cmd(struct lpfc_vport *vport, in
+ 		cmpl = lpfc_cmpl_ct_cmd_rspn_id;
+ 		break;
+ 	case SLI_CTNS_RSNN_NN:
++		vport->ct_flags &= ~FC_CT_RSNN_NN;
+ 		CtReq->CommandResponse.bits.CmdRsp =
+ 		    be16_to_cpu(SLI_CTNS_RSNN_NN);
+ 		memcpy(CtReq->un.rsnn.wwnn, &vport->fc_nodename,
+@@ -1071,8 +1116,15 @@ lpfc_ns_cmd(struct lpfc_vport *vport, in
+ 			CtReq->un.rsnn.symbname, size);
+ 		cmpl = lpfc_cmpl_ct_cmd_rsnn_nn;
+ 		break;
++	case SLI_CTNS_DA_ID:
++		/* Implement DA_ID Nameserver request */
++		CtReq->CommandResponse.bits.CmdRsp =
++			be16_to_cpu(SLI_CTNS_DA_ID);
++		CtReq->un.da_id.port_id = be32_to_cpu(vport->fc_myDID);
++		cmpl = lpfc_cmpl_ct_cmd_da_id;
++		break;
+ 	case SLI_CTNS_RFF_ID:
+-		vport->fc_flag &= ~FC_RFF_NOT_SUPPORTED;
++		vport->ct_flags &= ~FC_CT_RFF_ID;
+ 		CtReq->CommandResponse.bits.CmdRsp =
+ 		    be16_to_cpu(SLI_CTNS_RFF_ID);
+ 		CtReq->un.rff.PortId = be32_to_cpu(vport->fc_myDID);;
+diff -upNr a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+--- a/drivers/scsi/lpfc/lpfc.h	2007-10-27 10:33:48.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc.h	2007-10-27 10:37:26.000000000 -0400
+@@ -272,10 +272,16 @@ struct lpfc_vport {
+ #define FC_ABORT_DISCOVERY      0x8000	 /* we want to abort discovery */
+ #define FC_NDISC_ACTIVE         0x10000	 /* NPort discovery active */
+ #define FC_BYPASSED_MODE        0x20000	 /* NPort is in bypassed mode */
+-#define FC_RFF_NOT_SUPPORTED    0x40000	 /* RFF_ID was rejected by switch */
+ #define FC_VPORT_NEEDS_REG_VPI	0x80000  /* Needs to have its vpi registered */
+ #define FC_RSCN_DEFERRED	0x100000 /* A deferred RSCN being processed */
+ 
++	uint32_t ct_flags;
++#define FC_CT_RFF_ID		0x1	 /* RFF_ID accepted by switch */
++#define FC_CT_RNN_ID		0x2	 /* RNN_ID accepted by switch */
++#define FC_CT_RSNN_NN		0x4	 /* RSNN_NN accepted by switch */
++#define FC_CT_RSPN_ID		0x8	 /* RSPN_ID accepted by switch */
++#define FC_CT_RFT_ID		0x10	 /* RFT_ID accepted by switch */
++
+ 	struct list_head fc_nodes;
+ 
+ 	/* Keep counters for the number of entries in each list. */
+@@ -344,6 +350,7 @@ struct lpfc_vport {
+ 	uint32_t cfg_discovery_threads;
+ 	uint32_t cfg_log_verbose;
+ 	uint32_t cfg_max_luns;
++	uint32_t cfg_enable_da_id;
+ 
+ 	uint32_t dev_loss_tmo_changed;
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+--- a/drivers/scsi/lpfc/lpfc_hw.h	2007-10-27 10:33:48.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_hw.h	2007-10-27 10:37:26.000000000 -0400
+@@ -139,6 +139,9 @@ struct lpfc_sli_ct_request {
+ 			uint8_t len;
+ 			uint8_t symbname[255];
+ 		} rsnn;
++		struct da_id { /* For DA_ID requests */
++			uint32_t port_id;
++		} da_id;
+ 		struct rspn {	/* For RSPN_ID requests */
+ 			uint32_t PortId;
+ 			uint8_t len;
+@@ -177,6 +180,8 @@ struct lpfc_sli_ct_request {
+ 			   sizeof(struct rnn))
+ #define  RSNN_REQUEST_SZ  (offsetof(struct lpfc_sli_ct_request, un) + \
+ 			   sizeof(struct rsnn))
++#define DA_ID_REQUEST_SZ (offsetof(struct lpfc_sli_ct_request, un) + \
++			  sizeof(struct da_id))
+ #define  RSPN_REQUEST_SZ  (offsetof(struct lpfc_sli_ct_request, un) + \
+ 			   sizeof(struct rspn))
+ 
+diff -upNr a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+--- a/drivers/scsi/lpfc/lpfc_init.c	2007-10-27 10:33:48.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_init.c	2007-10-27 10:37:14.000000000 -0400
+@@ -2294,12 +2294,24 @@ lpfc_init(void)
+ 	printk(LPFC_MODULE_DESC "\n");
+ 	printk(LPFC_COPYRIGHT "\n");
+ 
++	if (lpfc_enable_npiv) {
++		lpfc_transport_functions.vport_create = lpfc_vport_create;
++		lpfc_transport_functions.vport_delete = lpfc_vport_delete;
++	}
+ 	lpfc_transport_template =
+ 				fc_attach_transport(&lpfc_transport_functions);
+-	lpfc_vport_transport_template =
+-			fc_attach_transport(&lpfc_vport_transport_functions);
+-	if (!lpfc_transport_template || !lpfc_vport_transport_template)
++	if (lpfc_transport_template == NULL)
+ 		return -ENOMEM;
++	if (lpfc_enable_npiv) {
++		lpfc_transport_functions.vport_create = NULL;
++		lpfc_transport_functions.vport_delete = NULL;
++		lpfc_transport_functions.issue_fc_host_lip = NULL;
++		lpfc_transport_functions.vport_disable = lpfc_vport_disable;
++		lpfc_vport_transport_template =
++				fc_attach_transport(&lpfc_transport_functions);
++		if (lpfc_vport_transport_template == NULL)
++			return -ENOMEM;
++	}
+ 	error = pci_register_driver(&lpfc_driver);
+ 	if (error) {
+ 		fc_release_transport(lpfc_transport_template);
+@@ -2314,7 +2326,8 @@ lpfc_exit(void)
+ {
+ 	pci_unregister_driver(&lpfc_driver);
+ 	fc_release_transport(lpfc_transport_template);
+-	fc_release_transport(lpfc_vport_transport_template);
++	if (lpfc_enable_npiv)
++		fc_release_transport(lpfc_vport_transport_template);
+ }
+ 
+ module_init(lpfc_init);
+diff -upNr a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+--- a/drivers/scsi/lpfc/lpfc_vport.c	2007-08-18 10:49:08.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_vport.c	2007-10-27 10:37:26.000000000 -0400
+@@ -482,8 +482,18 @@ lpfc_vport_delete(struct fc_vport *fc_vp
+ 
+ 	ndlp = lpfc_findnode_did(phba->pport, Fabric_DID);
+ 	if (ndlp && ndlp->nlp_state == NLP_STE_UNMAPPED_NODE &&
+-		phba->link_state >= LPFC_LINK_UP) {
+-
++	    phba->link_state >= LPFC_LINK_UP) {
++		if (vport->cfg_enable_da_id) {
++			timeout = msecs_to_jiffies(phba->fc_ratov * 2000);
++			if (!lpfc_ns_cmd(vport, SLI_CTNS_DA_ID, 0, 0))
++				while (vport->ct_flags && timeout)
++					timeout = schedule_timeout(timeout);
++			else
++				lpfc_printf_log(vport->phba, KERN_WARNING,
++						LOG_VPORT,
++						"1829 CT command failed to "
++						"delete objects on fabric. \n");
++		}
+ 		/* First look for the Fabric ndlp */
+ 		ndlp = lpfc_findnode_did(vport, Fabric_DID);
+ 		if (!ndlp) {
 
 
