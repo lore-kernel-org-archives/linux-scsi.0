@@ -1,91 +1,64 @@
 From: Rob Landley <rob@landley.net>
-Subject: Re: Questions about proc_scsi_write() in scsi_proc.c
-Date: Fri, 26 Oct 2007 23:16:12 -0500
-Message-ID: <200710262316.12716.rob@landley.net>
-References: <200710261507.49284.rob@landley.net> <200710261729.53400.rob@landley.net> <1193438877.3293.84.camel@localhost.localdomain>
+Subject: [PATCH 13/15] Update kerneldoc comments in drivers/scsi/scsi_transport_sas.c
+Date: Fri, 26 Oct 2007 23:16:50 -0500
+Message-ID: <200710262316.50961.rob@landley.net>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:41813
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:41816
 	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751056AbXJ0DQ1 (ORCPT
+	by vger.kernel.org with ESMTP id S1751425AbXJ0DRG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 26 Oct 2007 23:16:27 -0400
-In-Reply-To: <1193438877.3293.84.camel@localhost.localdomain>
+	Fri, 26 Oct 2007 23:17:06 -0400
+Received: from landley.net (localhost [127.0.0.1])
+	by grelber.thyrsus.com (Postfix) with ESMTP id 71CB173938
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Oct 2007 23:19:50 -0400 (EDT)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Friday 26 October 2007 5:47:57 pm James Bottomley wrote:
-> > > http://www.t10.org/ftp/t10/drafts/sam3/sam3r14.pdf
-> > > http://www.t10.org/ftp/t10/drafts/sam4/sam4r13.pdf
-> >
-> > Unfortunately those two documents are 127 pages and 148 pages,
-> > respectively, and I haven't had a chance to make any headway in them yet.
-> >
-> > Every device I have that shows up as SCSI has shown up with a LUN of 0,
-> > which is target-wide unique because none of those targets have
-> > sub-functions that need to be independently addressed as devices.
-> >
-> > Is there an easy way to distinguish between "target-wide unique lun" and
-> > this Logical Unit Number device attribute that's either 8 bytes or 2
-> > bytes wide? (Capitalization?)
->
-> They both have a section called " Definitions, symbols, abbreviations,
-> and conventions"; you'll find LUN (and LU) defined in there.
+From: Rob Landley <rob@landley.net>
 
-Page 23 of the PDF:
+Update kerneldoc comments in drivers/scsi/scsi_transport_sas.c
 
-  3.1.64 Logical Unit Number (LUN): A 64-bit or 16-bit identifier for a 
-logical unit.  See 4.9
+Signed-off-by: Rob Landley <rob@landley.net>
+---
 
+ drivers/scsi/scsi_transport_sas.c |    5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-
-> > > > 2) How do you trigger this?  /proc/scsi/scsi is read only even for
-> > > > root.
-> > >
-> > > root can still write to it.
-> >
-> > Wow.  (Is this an idiosyncrasy of /proc, or a capability of root I've
-> > been unaware of all this time?)
-> >
-> > > > 3) This bit is repeated in both the add and remove logic:
-> > > >                 p = buffer + 23;
-> > > >
-> > > >                 host = simple_strtoul(p, &p, 0);
-> > > >                 channel = simple_strtoul(p + 1, &p, 0);
-> > > >                 id = simple_strtoul(p + 1, &p, 0);
-> > > >                 lun = simple_strtoul(p + 1, &p, 0);
-> > > >
-> > > > So what happens if you echo "scsi add-single-device 0" >
-> > > > /proc/scsi/scsi (or wherever file would trigger this function) so the
-> > > > read for channel skips over the null terminator (I'm assuming there
-> > > > is one) and reads who knows what?  Or what if instead of ending that
-> > > > with one 0, you end it with enough zeroes to pad right up to
-> > > > PAGE_SIZE, so it reads the next page?  (I don't even know what the
-> > > > page protections are on that, depends how
-> > > > __get_free_page(GFP_KERNEL) works...)
-> > > >
-> > > > Confused,
-> > >
-> > > It's relying on the user buffer being zero padded, but even if it
-> > > isn't, there's not much that can go wrong.  It's also a deprecated
-> > > interface.
-> >
-> > Where do I find out what interfaces are deprecated?  (Is this written
-> > down somewhere?  Or do you just mean that the whole of /proc is moving to
-> > /sys where possible?)
->
-> It's part of the general deprecating proc except for process files
-> edict.
->
-> James
-
-
+diff -r a868e8217782 drivers/scsi/scsi_transport_sas.c
+--- a/drivers/scsi/scsi_transport_sas.c	Mon Oct 22 19:40:02 2007 -0700
++++ b/drivers/scsi/scsi_transport_sas.c	Fri Oct 26 22:44:43 2007 -0500
+@@ -1309,6 +1309,7 @@ static void sas_rphy_initialize(struct s
+ 
+ /**
+  * sas_end_device_alloc - allocate an rphy for an end device
++ * @parent: which port
+  *
+  * Allocates an SAS remote PHY structure, connected to @parent.
+  *
+@@ -1345,6 +1346,8 @@ EXPORT_SYMBOL(sas_end_device_alloc);
+ 
+ /**
+  * sas_expander_alloc - allocate an rphy for an end device
++ * @parent: which port
++ * @type: SAS_EDGE_EXPANDER_DEVICE or SAS_FANOUT_EXPANDER_DEVICE
+  *
+  * Allocates an SAS remote PHY structure, connected to @parent.
+  *
+@@ -1431,7 +1434,7 @@ EXPORT_SYMBOL(sas_rphy_add);
+ 
+ /**
+  * sas_rphy_free  --  free a SAS remote PHY
+- * @rphy	SAS remote PHY to free
++ * @rphy: SAS remote PHY to free
+  *
+  * Frees the specified SAS remote PHY.
+  *
 
 -- 
 "One of my most productive days was throwing away 1000 lines of code."
