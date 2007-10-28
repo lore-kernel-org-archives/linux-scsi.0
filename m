@@ -1,120 +1,184 @@
-From: Maarten Bressers <mbres@gentoo.org>
-Subject: Re: [PATCH RESEND] SCSI not showing tray status correctly
-Date: Sat, 27 Oct 2007 22:58:30 +0000 (UTC)
-Message-ID: <20071027225830.585C8657DB@smtp.gentoo.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
+Date: Sun, 28 Oct 2007 09:26:34 -0500
+Message-ID: <1193581594.3333.4.camel@localhost.localdomain>
+References: <471FEB81.80103@verizon.net>
+	 <1193502827.3281.9.camel@localhost.localdomain>
+	 <47239DAD.4020005@verizon.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.gentoo.org ([140.211.166.183]:57045 "EHLO smtp.gentoo.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751219AbXJ0W6b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 27 Oct 2007 18:58:31 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:38151 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751495AbXJ1O0g (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 28 Oct 2007 10:26:36 -0400
+In-Reply-To: <47239DAD.4020005@verizon.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, tasio@tasio.net, dsd@gentoo.org
+To: Anthony Ewell <amewell@verizon.net>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-> This patch is too simplistic.  ide-cd.c:ide_cdrom_drive_status() looks
-> to be a reasonable implementation.  However, the worry is that
-> GET_EVENT_NOTIFICATION is a MMC command; devices not conforming to MMC
-> won't support it.  In theory, they should just return ILLEGAL_REQUEST,
-> but USB devices have been known to crash when given commands they don't
-> understand.  How widely tested has this been (if it's been in Gentoo
-> since 2004, then it's probably widely tested enough)?
->
-> James
->
-This patch hasn't been tested at all, I'm sorry if I gave you that
-impression, it isn't in Gentoo's patches, it's just been brought to our
-attention in the bug I linked too.
+On Sat, 2007-10-27 at 13:21 -0700, Anthony Ewell wrote:
+> James Bottomley wrote:
+> > On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
+> >> Hi All,
+> >>
+> >>     If you all would not mind a post from the general
+> >> public Linux user, after doing a complete disk wipe
+> >> of CentOS 4 and installing CentOS5, my system is preceived
+> >> to be 3 times slower.
+> >>
+> >>      To troubleshooting this, I made a post on CentOS's
+> >> bugzilla:  http://bugs.centos.org/view.php?id=2382
+> >>
+> >>      Would some of the experts on this group mind
+> >> looking at the bug to evaluate the possibility
+> >> that it is being caused by the underlying scsi
+> >> driver?   The post contains a dmesg from "Computer C".
+> >> (Yes, I am getting a bit desperate.)
+> > 
+> > There's still too little information in the bug report to tell much of
+> > anything.  The dmesg doesn't indicate any anomaly with the megaraid
+> > (although the LSI people might be able to tell better).  However, it
+> > also doesn't contain a trace of the tape drive.
+> > 
+> > Best guess would be a slow down in the megaraid driver.  Can you try
+> > doing a speed test on it?  (hdparm -t should suffice).
+> > 
+> > James
+> 
+> 
+> Hi James,
+> 
+> The other guy reporting the problem
+>  
+> http://www.centos.org/modules/newbb/viewtopic.php?topic_id=10659&start=0#forumpost34209
+> is not using a MegaRAID card.  He is using 3ware9508 Raid Controllers.
+> He is also using a different processor (amd vs xeon) and a different
+> chipset (Intel Greenwood vs nVidia)
+> 
+> I also spoke to Neela Kolli (Mega RAID maintainer) and he said he'd
+> never heard of the problem.  Here are some tests (including dhparm)
+> that I sent to Neela (he never wrote back).
+> 
+> I have also checked with Stellen over at the "dump"
+> list and he has not seen the problem (yet).
+> 
+> The problem occurs when backing up to a two different types
+> of tape drives and to an eSata drive.
+> 
+> When I am running a "dump" on computer C, gnome-system-monitor
+> shows my two cores running at only about 10 to 20% and
+> switching back and forth (one at 0% the other at 20% for
+> about 5 seconds, then switching positions)
+> 
+> On Computer C (Cent OS 5), when typing in Word Pro (a windows word 
+> processor) in Parallels, I can watch myself type.  Computer B
+> (CentOS 4.4, now 4.5) has the same version of Parallels
+> installed on it (Parallels-2.2.2112-lin.i386) that computer C
+> (CentOS 5) has. The perceived speed difference is about a factor
+> of three (you can not watch yourself type).
+> 
+> All the "Low Level" test I run seem to come out the same between
+> Cent OS 4.4 and 5.  Very frustrating!  It is almost like some
+> system monitor component is looking at everything and
+> slowing things down.  If this was Windows, I'd go straight
+> to the Anti Virus as the culprit.  (Does SE Linux do such
+> things?)
+> 
+> Are there any performance tests I can run for you?
+> 
+> Thank you for letting me ramble, this problem is
+> really frustrating.  I am afraid to any additional CentOS5
+> server out there and CentOS 4.x is so terribly out of
+> date.
+> 
+> -T
+> 
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> Tests I sent to Neela:
+> 
+> CentOS 5 (2.6.18-8.1.8.el5, Sata150-4):
+> 
+> #grep -i bogomips /var/log/dmesg
+> Calibrating delay using timer specific routine.. 4001.91 BogoMIPS 
+> (lpj=2000959)
+> Calibrating delay using timer specific routine.. 3999.58 BogoMIPS 
+> (lpj=1999791)
+> Total of 2 processors activated (8001.50 BogoMIPS).
+> 
+> 
+> #/sbin/hdparm -t /dev/sda
+> /dev/sda:
+>   Timing buffered disk reads:  236 MB in  3.01 seconds =  78.53 MB/sec
+> 
+> 
+> #/sbin/hdparm -t /dev/sdb
+> /dev/sdb:
+>   Timing buffered disk reads:  182 MB in  3.01 seconds =  60.37 MB/sec
+> 
+> 
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> CentOS 4.4 (linux rescue 2.6.9-42.EL, IDE):
+> 
+> #cat /proc/cpuinfo
+> bogomips	: 4002.92
+> 
+> #/sbin/hdparm -t /dev/sda
+> /dev/sda:
+>   Timing buffered disk reads:  216 MB in  3.01 seconds =  71.87 MB/sec
+> 
+> #/sbin/hdparm -t /dev/sdb
+> /dev/sdb:
+>   Timing buffered disk reads:  184 MB in  3.01 seconds =  61.18 MB/sec
 
-I created another patch, based on your recommendations, and with a lot of
-help from Daniel Drake (dsd@gentoo.org), that's included below. Some
-changes are made to test_unit_ready() to be able to pass the sense data
-to sr_drive_status(). Currently, sr_do_ioctl() swallows this data and
-makes its own interpretations of sense codes, which isn't what we want
-here.
+That pretty much shows, if anything, that transfer speed improved
+from .9 to .18.
 
-Is this what you had in mind? Do you think the possible problems with
-USB drives that you mentioned will prevent this patch from going in? 
-The patch has only been compile tested right now, we can do some real
-testing later, for now I'd just like to get your feedback on it.
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> CentOS 5 (2.6.18-8.1.3.el5, Sata300-4):
+> #grep -i bogomips /var/log/dmesg
+> Calibrating delay using timer specific routine.. 4001.92 BogoMIPS 
+> (lpj=2000960)
+> Calibrating delay using timer specific routine.. 3999.58 BogoMIPS 
+> (lpj=1999794)
+> Total of 2 processors activated (8001.50 BogoMIPS).
+> 
+> #/sbin/hdparm -t /dev/sda
+> /dev/sda:
+>   Timing buffered disk reads:  214 MB in  3.02 seconds =  70.86 MB/sec
+> 
+> 
+> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+> CentOS 5  (2.6.18-10.1.3.el5, Sata300-4):
+> 
+> eSata:  dump -0a -z -f /dev/nul winxp.hdd
+>    DUMP: Volume 1 took 0:04:04
+>    DUMP: Volume 1 transfer rate: 4247 kB/s
+>    DUMP: Volume 1 1567020kB uncompressed, 1036385kB compressed, 1.513:1
+> 
+> eSata:  dump -0a -f /dev/nul winxp.hdd  (no compression)
+>    DUMP: Volume 1 1036420 blocks (1012.13MB)
+>    DUMP: Volume 1 took 0:02:09
+>    DUMP: Volume 1 transfer rate: 8034 kB/s
+> 
+> 
+> 150-4:  dump -0a -z -f /dev/nul winxp.hdd
+>    DUMP: Volume 1 took 0:04:05
+>    DUMP: Volume 1 transfer rate: 4230 kB/s
+>    DUMP: Volume 1 1573150kB uncompressed, 1036383kB compressed, 1.518:1
+> 
+> 150-4:  dump -0a -f /dev/nul winxp.hdd  (no compression)
+>    DUMP: Volume 1 1036420 blocks (1012.13MB)
+>    DUMP: Volume 1 took 0:02:05
+>    DUMP: Volume 1 transfer rate: 8291 kB/s
 
-Maarten
+I think this is beginning to point to problems with dump.  What are the
+corresponding figures for dump under 2.6.9 (or are the two sets of
+figures centos5 followed by centos4)?
 
----
+James
 
---- a/drivers/scsi/sr_ioctl.c	2007-10-26 22:40:41.000000000 +0200
-+++ b/drivers/scsi/sr_ioctl.c	2007-10-27 23:56:16.000000000 +0200
-@@ -275,16 +275,21 @@ int sr_do_ioctl(Scsi_CD *cd, struct pack
- /* ---------------------------------------------------------------------- */
- /* interface to cdrom.c                                                   */
- 
--static int test_unit_ready(Scsi_CD *cd)
-+static int test_unit_ready(Scsi_CD *cd, struct request_sense *sense)
- {
--	struct packet_command cgc;
-+	struct scsi_device *SDev = cd->device;
-+	unsigned char cmd[CDROM_PACKET_SIZE] = { GPCMD_TEST_UNIT_READY };
-+	int result;
- 
--	memset(&cgc, 0, sizeof(struct packet_command));
--	cgc.cmd[0] = GPCMD_TEST_UNIT_READY;
--	cgc.quiet = 1;
--	cgc.data_direction = DMA_NONE;
--	cgc.timeout = IOCTL_TIMEOUT;
--	return sr_do_ioctl(cd, &cgc);
-+	if (!scsi_block_when_processing_errors(SDev))
-+		return -ENODEV;
-+
-+	memset(sense, 0, sizeof(*sense));
-+	result = scsi_execute(SDev, cmd, DMA_NONE,
-+			      NULL, 0, (char *)sense,
-+			      IOCTL_TIMEOUT, IOCTL_RETRIES, 0);
-+
-+	return driver_byte(result);
- }
- 
- int sr_tray_move(struct cdrom_device_info *cdi, int pos)
-@@ -310,14 +315,41 @@ int sr_lock_door(struct cdrom_device_inf
- 
- int sr_drive_status(struct cdrom_device_info *cdi, int slot)
- {
-+	struct request_sense sense;
-+	struct media_event_desc med;
-+
- 	if (CDSL_CURRENT != slot) {
- 		/* we have no changer support */
- 		return -EINVAL;
- 	}
--	if (0 == test_unit_ready(cdi->handle))
-+	if ((0 == test_unit_ready(cdi->handle, &sense)) || 
-+	    sense.sense_key == UNIT_ATTENTION)
- 		return CDS_DISC_OK;
- 
--	return CDS_TRAY_OPEN;
-+	if (!cdrom_get_media_event(cdi, &med)) {
-+		if (med.media_present)
-+			return CDS_DISC_OK;
-+		else if (med.door_open)
-+			return CDS_TRAY_OPEN;
-+		else
-+			return CDS_NO_DISC;
-+	}
-+
-+	if (sense.sense_key == NOT_READY && sense.asc == 0x04 && sense.ascq == 0x04)
-+		return CDS_DISC_OK;
-+
-+	/*
-+	 * If not using Mt Fuji extended media tray reports,
-+	 * just return TRAY_OPEN since ATAPI doesn't provide
-+	 * any other way to detect this...
-+	 */
-+	if (sense.sense_key == NOT_READY) {
-+		if (sense.asc == 0x3a && sense.ascq == 1)
-+			return CDS_NO_DISC;
-+		else
-+			return CDS_TRAY_OPEN;
-+	}
-+	return CDS_DRIVE_NOT_READY;
- }
- 
- int sr_disk_status(struct cdrom_device_info *cdi)
+
+
