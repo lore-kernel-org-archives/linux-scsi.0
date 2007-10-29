@@ -1,138 +1,219 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: [PATCH] sysfs: add filter function to groups
-Date: Mon, 29 Oct 2007 10:16:59 -0500
-Message-ID: <1193671019.3383.13.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: BUG in: Driver core: convert block from raw kobjects to core
+ devices (fwd)
+Date: Mon, 29 Oct 2007 11:18:37 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0710291107180.4550-200000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="=-eBrn8utCVnnjNZnrza9u"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:52093 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752300AbXJ2PRO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 11:17:14 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:57863 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752300AbXJ2PSi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 11:18:38 -0400
+Content-ID: <Pine.LNX.4.44L0.0710291107181.4550@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>, Greg KH <greg@kroah.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-In the SCSI transport classes (and soon to be in the AEN event
-subsystem) we have a lot of need for a grouping that doesn't include all
-files in the group.  We basically want to show capability by which file
-is present.  A classic example of this is the SPI transport class
-connected to the 53c700 card.  It's incapable of doing all of the modern
-LVD functions, so we don't show any of those capabilities in its sysfs
-directory.  However, we have a lot of horrible logic to generate
-separate per host groupings of attributes for this.  We would be able to
-use the standard sysfs group attributes *if* there were a way of
-filtering them so that certain attributes didn't appear.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+  Send mail to mime@docserver.cac.washington.edu for more info.
 
-This patch is a first pass at adding a filter function to the group
-attributes, just to see how the idea flies.  If everyone's OK with this,
-I think the next thing that we might do is add bitmap functions (so
-every bit in the bitmap has a name, but also might not appear) to
-groups.
+--=-eBrn8utCVnnjNZnrza9u
+Content-Type: TEXT/PLAIN; CHARSET=US-ASCII
+Content-ID: <Pine.LNX.4.44L0.0710291107182.4550@iolanthe.rowland.org>
 
-The kzalloc in kernel/params.c is to stop the system crashing on boot
-with a bogus filter function pointer.
+James:
 
-Signed-off-by: James Bottomley <James.Bottomley@SteelEye.com>
+With regard to the discussion below, is there any objection to the 
+attached patch?  It moves the call to scsi_release_queue() from 
+scsi_device_dev_release_usercontext() to __scsi_remove_device().  In 
+fact, it might turn out that with this change, the extra _usercontext 
+routine isn't needed at all.
 
-----
+As far as I can see, the only reason for not adopting this patch would 
+be if a scsi_device's queue structure was needed even after the 
+scsi_device was unregistered.  Does this ever happen?  If it does, it 
+would be indicative of a nasty reference-loop problem (scsi_device 
+needs reference to request_queue, request_queue holds reference to 
+gendisk, gendisk holds reference to scsi_device).
 
-There's one final thing; if you're OK with this, can you ack it and let
-me take it through the SCSI tree?  we're building functionality that
-will depend on this.
+Alan Stern
+
+
+---------- Forwarded message ----------
+Date: Tue, 23 Oct 2007 13:27:49 +0200
+From: Kay Sievers <kay.sievers@vrfy.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Greg KH <greg@kroah.com>,
+     Kernel development list <linux-kernel@vger.kernel.org>,
+     Hannes Reinecke <hare@suse.de>
+Subject: Re: BUG in: Driver core: convert block from raw kobjects to core
+    devices
+
+On Tue, 2007-10-23 at 00:14 -0400, Alan Stern wrote:
+> On Tue, 23 Oct 2007, Kay Sievers wrote:
+> 
+> > There must be something going wrong with the block patch in conjunction
+> > with the crazy SCSI release logic.
+> 
+> I don't know -- there's nothing obviously wrong with the block patch 
+> except the extra put_device.  But you're right that the SCSI logic is 
+> crazy.  The scsi_device is the parent of the gendisk, which is the 
+> parent of the request_queue.  But the scsi_device holds a reference to 
+> the request_queue, which is dropped in the scsi_device's release 
+> routine!
+
+That's the thing. We see a circular reference when we use the SCSI LUN
+as the parent.
+The sysfs relationship is: scsi_device -> genhd -> queue, while the
+queue holds a ref to to the blockdev (parent), the blockdev to the
+scsi_device (parent) and the scsi_devices to the queue (SCSI). All
+waiting for their release functions to be called, to release the other
+refs.
+
+The scsi_device needs to drop the queue reference while the device is
+removed, not when it's data is released. Hannes came up with the
+attached patch, which seems to work fine here.
+
+> That doesn't make much sense to me, and it is complicated by 
+> the fact that deleting a kobject doesn't drop the kobject's reference 
+> to its parent -- only releasing the kobject does.
+
+Right, that makes things very complicated.
+
+> In fact, for my development work I normally use a patch which makes 
+> kobjects behave better: They do drop the reference to their parent when 
+> they are deleted.  This actually is nothing more than a reversion of a 
+> patch added several years ago to try and cover up some of the 
+> weaknesses of the SCSI stack!  Now that the SCSI stack is in better 
+> shape, maybe my patch should be included in the mainstream kernel.  The 
+> patch is below; see what you think.
+
+Sounds good to me, to disconnect a dead object from its parent when it's
+deleted. We only need to protect for "use after free" but not lock the
+parent, I guess. We should give it a try.
 
 Thanks,
+Kay
 
-James
+--=-eBrn8utCVnnjNZnrza9u
+Content-Type: TEXT/X-PATCH; NAME="scsi-sysfs-drop-queue-ref-on-remove.patch"; CHARSET=UTF-8
+Content-ID: <Pine.LNX.4.44L0.0710291107183.4550@iolanthe.rowland.org>
+Content-Description: 
+Content-Disposition: INLINE; FILENAME="scsi-sysfs-drop-queue-ref-on-remove.patch"
 
-Index: BUILD-2.6/fs/sysfs/group.c
-===================================================================
---- BUILD-2.6.orig/fs/sysfs/group.c	2007-10-28 17:27:04.000000000 -0500
-+++ BUILD-2.6/fs/sysfs/group.c	2007-10-29 00:55:49.000000000 -0500
-@@ -16,25 +16,31 @@
- #include "sysfs.h"
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+
+
+index daed37d..577bbf3 100644
+
+
+--- a/drivers/scsi/scsi_sysfs.c
+
+
++++ b/drivers/scsi/scsi_sysfs.c
+
+
+@@ -280,15 +280,6 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
+
+
+ 	list_del(&sdev->starved_entry);
+
+
+ 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
+
+
  
+
+
+-	if (sdev->request_queue) {
+
+
+-		sdev->request_queue->queuedata = NULL;
+
+
+-		/* user context needed to free queue */
+
+
+-		scsi_free_queue(sdev->request_queue);
+
+
+-		/* temporary expedient, try to catch use of queue lock
+
+
+-		 * after free of sdev */
+
+
+-		sdev->request_queue = NULL;
+
+
+-	}
+
+
+-
+
+
+ 	scsi_target_reap(scsi_target(sdev));
+
+
  
--static void remove_files(struct sysfs_dirent *dir_sd,
-+static void remove_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
- 			 const struct attribute_group *grp)
- {
- 	struct attribute *const* attr;
-+	int i;
- 
--	for (attr = grp->attrs; *attr; attr++)
--		sysfs_hash_and_remove(dir_sd, (*attr)->name);
-+	for (i = 0, attr = grp->attrs; *attr; i++, attr++)
-+		if (grp->filter_show &&
-+		    grp->filter_show(kobj, i))
-+			sysfs_hash_and_remove(dir_sd, (*attr)->name);
+
+
+ 	kfree(sdev->inquiry);
+
+
+@@ -799,6 +790,16 @@ void __scsi_remove_device(struct scsi_device *sdev)
+
+
+ 	if (sdev->host->hostt->slave_destroy)
+
+
+ 		sdev->host->hostt->slave_destroy(sdev);
+
+
+ 	transport_destroy_device(dev);
+
+
++
+
+
++	if (sdev->request_queue) {
+
+
++		sdev->request_queue->queuedata = NULL;
+
+
++		/* user context needed to free queue */
+
+
++		scsi_free_queue(sdev->request_queue);
+
+
++		/* temporary expedient, try to catch use of queue lock
+
+
++		 * after free of sdev */
+
+
++		sdev->request_queue = NULL;
+
+
++	}
+
+
++
+
+
+ 	put_device(dev);
+
+
  }
- 
--static int create_files(struct sysfs_dirent *dir_sd,
-+static int create_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
- 			const struct attribute_group *grp)
- {
- 	struct attribute *const* attr;
--	int error = 0;
-+	int error = 0, i;
- 
--	for (attr = grp->attrs; *attr && !error; attr++)
--		error = sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
-+	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++)
-+		if (grp->filter_show &&
-+		    grp->filter_show(kobj, i))
-+			error |=
-+				sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
- 	if (error)
--		remove_files(dir_sd, grp);
-+		remove_files(dir_sd, kobj, grp);
- 	return error;
- }
- 
-@@ -54,7 +60,7 @@ int sysfs_create_group(struct kobject * 
- 	} else
- 		sd = kobj->sd;
- 	sysfs_get(sd);
--	error = create_files(sd, grp);
-+	error = create_files(sd, kobj, grp);
- 	if (error) {
- 		if (grp->name)
- 			sysfs_remove_subdir(sd);
-@@ -75,7 +81,7 @@ void sysfs_remove_group(struct kobject *
- 	} else
- 		sd = sysfs_get(dir_sd);
- 
--	remove_files(sd, grp);
-+	remove_files(sd, kobj, grp);
- 	if (grp->name)
- 		sysfs_remove_subdir(sd);
- 
-Index: BUILD-2.6/include/linux/sysfs.h
-===================================================================
---- BUILD-2.6.orig/include/linux/sysfs.h	2007-10-28 17:20:06.000000000 -0500
-+++ BUILD-2.6/include/linux/sysfs.h	2007-10-29 00:37:18.000000000 -0500
-@@ -32,6 +32,7 @@ struct attribute {
- 
- struct attribute_group {
- 	const char		*name;
-+	int			(*filter_show)(struct kobject *, int);
- 	struct attribute	**attrs;
- };
- 
-Index: BUILD-2.6/kernel/params.c
-===================================================================
---- BUILD-2.6.orig/kernel/params.c	2007-10-29 01:18:43.000000000 -0500
-+++ BUILD-2.6/kernel/params.c	2007-10-29 01:18:49.000000000 -0500
-@@ -472,7 +472,7 @@ param_sysfs_setup(struct module_kobject 
- 			sizeof(mp->grp.attrs[0]));
- 	size[1] = (valid_attrs + 1) * sizeof(mp->grp.attrs[0]);
- 
--	mp = kmalloc(size[0] + size[1], GFP_KERNEL);
-+	mp = kzalloc(size[0] + size[1], GFP_KERNEL);
- 	if (!mp)
- 		return ERR_PTR(-ENOMEM);
+
+
  
 
 
+
+--=-eBrn8utCVnnjNZnrza9u--
