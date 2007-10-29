@@ -1,37 +1,71 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: BUG in: Driver core: convert block from raw kobjects to core
- devices (fwd)
-Date: Mon, 29 Oct 2007 13:04:52 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.0710291303380.11432-100000@iolanthe.rowland.org>
-References: <1193676321.3383.53.camel@localhost.localdomain>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: [PATCH] sysfs: add filter function to groups
+Date: Mon, 29 Oct 2007 18:18:14 +0100
+Message-ID: <20071029181814.25410e00@gondolin.boeblingen.de.ibm.com>
+References: <1193671019.3383.13.camel@localhost.localdomain>
+	<1193676852.2655.21.camel@lov.site>
+	<1193677071.3383.56.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:44851 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1756706AbXJ2REx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 13:04:53 -0400
-In-Reply-To: <1193676321.3383.53.camel@localhost.localdomain>
+Received: from mtagate6.de.ibm.com ([195.212.29.155]:53567 "EHLO
+	mtagate6.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872AbXJ2RSb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 13:18:31 -0400
+In-Reply-To: <1193677071.3383.56.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, 29 Oct 2007, James Bottomley wrote:
+On Mon, 29 Oct 2007 11:57:51 -0500,
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-> On Mon, 2007-10-29 at 12:38 -0400, Alan Stern wrote:
-> > No, that's not what happens.  The genhd's parent is the scsi_device
-> > and 
-> > the queue's parent is the genhd.  You can see this immediately from
-> > the 
-> > directory layout in sysfs.  Thus:
+> On Mon, 2007-10-29 at 17:54 +0100, Kay Sievers wrote:
+> > On Mon, 2007-10-29 at 10:16 -0500, James Bottomley wrote:
+> > > This patch is a first pass at adding a filter function to the group
+> > > attributes, just to see how the idea flies.  If everyone's OK with this,
+> > > I think the next thing that we might do is add bitmap functions (so
+> > > every bit in the bitmap has a name, but also might not appear) to
+> > > groups.
+> > 
+> > Bitmaps in the attribute groups?
 > 
-> How has this happened?  The scsi_device doesn't know anything about the
-> genhd; how can it hold a reference to it?
+> Actually, no ... that would spoil our one group for all devices rule.
+> So they would be a set of helper functions for manipulating bitmaps, but
+> the bitmap would have to be in separate storage elsewhere.
 
-No, no -- it's the other way around.  The scsi_device is the parent of 
-the genhd, so the genhd holds a reference to the scsi_device, not vice 
-versa.
+Can you determine which subset of the attributes you want just before
+actually creating the group? Then you could do something like:
 
-Alan Stern
+create_group(grp, kobj)
+{
+	grp->update_creation_mask(kobj);
+	actually_create_attrs();
+}
 
+> 
+> > >  struct attribute_group {
+> > >  	const char		*name;
+> > > +	int			(*filter_show)(struct kobject *, int);
+> > 
+> > Are you sure that you want to return an array index here, instead of the
+> > actual attribute? Like:
+> 
+> Actually, it returns a true/false value indicating whether the given
+> attribute should be displayed.
+> 
+> >   int (*filter_show)(struct kobject *kobj, struct attribute *attr);
+
+I'd agree that using the attribute is better in this function.
+
+> > 
+> > The names "show" and "store" are the ususal file-operation names, and we
+> > are not filtering a "show" here, right? Maybe "create", or "export", or
+> > something else might be a better name?
+> 
+> how about (*attribute_is_visible)?
+
+Well, you don't only stop the visibility, but the creation of the
+attribute, so perhaps (*creation_filter)?
