@@ -1,68 +1,68 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] sysfs: add filter function to groups
-Date: Mon, 29 Oct 2007 11:57:51 -0500
-Message-ID: <1193677071.3383.56.camel@localhost.localdomain>
-References: <1193671019.3383.13.camel@localhost.localdomain>
-	 <1193676852.2655.21.camel@lov.site>
+Subject: Re: [PATCH v4 1/2] SCSI: Asynchronous
+	event	notification	infrastructure
+Date: Mon, 29 Oct 2007 12:01:55 -0500
+Message-ID: <1193677315.3383.59.camel@localhost.localdomain>
+References: <15624bab8dc0206e384ac8314257a900e60127c1.1193668176.git.jeff@garzik.org>
+	 <20071029144208.676251F8168@havoc.gtf.org>
+	 <1193673088.3383.34.camel@localhost.localdomain>
+	 <47260546.9090508@garzik.org>
+	 <1193674627.3383.45.camel@localhost.localdomain>
+	 <47260A65.7040008@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:55249 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:55309 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752300AbXJ2Q55 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 12:57:57 -0400
-In-Reply-To: <1193676852.2655.21.camel@lov.site>
+	with ESMTP id S1758217AbXJ2RB5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 13:01:57 -0400
+In-Reply-To: <47260A65.7040008@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>, akpm@linux-foundation.org
 
-On Mon, 2007-10-29 at 17:54 +0100, Kay Sievers wrote:
-> On Mon, 2007-10-29 at 10:16 -0500, James Bottomley wrote:
-> > In the SCSI transport classes (and soon to be in the AEN event
-> > subsystem) we have a lot of need for a grouping that doesn't include all
-> > files in the group.  We basically want to show capability by which file
-> > is present.  A classic example of this is the SPI transport class
-> > connected to the 53c700 card.  It's incapable of doing all of the modern
-> > LVD functions, so we don't show any of those capabilities in its sysfs
-> > directory.  However, we have a lot of horrible logic to generate
-> > separate per host groupings of attributes for this.  We would be able to
-> > use the standard sysfs group attributes *if* there were a way of
-> > filtering them so that certain attributes didn't appear.
+On Mon, 2007-10-29 at 12:29 -0400, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > On Mon, 2007-10-29 at 12:07 -0400, Jeff Garzik wrote:
+> >> James Bottomley wrote:
+> >>> This still doesn't solve the fundamental corruption problem:
+> >>> sdev->event_work has to contain the work entry until the workqueue has
+> >>> finished executing it (which is some unspecified time in the future).
+> >>> As soon as you drop the sdev->list_lock, the system thinks
+> >>> sdev->event_work is available for reuse.  If we fire another event
+> >>> before the work queue finished processing the prior event, the queue
+> >>> will be corrupted.
+> >> I think you're misunderstanding the workqueue code?  You can call 
+> >> schedule_work(&sdev->event_work) from anywhere, any time you like, as 
+> >> many times as you like.
+> > 
+> > OK, take me through it slowly then ... I think schedule_work(work)
+> > inserts work->entry onto the workqueue list (in
+> > workqueue.c:insert_work()).  If the event hasn't fired, it will already
+> > be on the list, so adding the same entry to a list twice causes a list
+> > corruption problem.
 > 
-> Sounds fine.
->  
-> > This patch is a first pass at adding a filter function to the group
-> > attributes, just to see how the idea flies.  If everyone's OK with this,
-> > I think the next thing that we might do is add bitmap functions (so
-> > every bit in the bitmap has a name, but also might not appear) to
-> > groups.
+> It does a test_and_set_bit() first thing in queue_work().  Similar 
+> exclusivity logic is found in net device land.  Ah, the fun of locking 
+> without locks that benh grumbles about :)
+
+Ah, OK, sorry ... I was actually looking at __queue_work().
+
+> > Plus, unfortunately, the CC/UA events are going to have to carry extra
+> > sense data; they're not simply going to be triggers saying something
+> > happened.
 > 
-> Bitmaps in the attribute groups?
-
-Actually, no ... that would spoil our one group for all devices rule.
-So they would be a set of helper functions for manipulating bitmaps, but
-the bitmap would have to be in separate storage elsewhere.
-
-> >  struct attribute_group {
-> >  	const char		*name;
-> > +	int			(*filter_show)(struct kobject *, int);
+> OK this is a fair criticism.
 > 
-> Are you sure that you want to return an array index here, instead of the
-> actual attribute? Like:
-
-Actually, it returns a true/false value indicating whether the given
-attribute should be displayed.
-
->   int (*filter_show)(struct kobject *kobj, struct attribute *attr);
+> If additional data must be carried, then I must ditch the beloved bitmap 
+> implementation and go back to a list (with associated GFP_ATOMIC alloc).
 > 
-> The names "show" and "store" are the ususal file-operation names, and we
-> are not filtering a "show" here, right? Maybe "create", or "export", or
-> something else might be a better name?
+> I will fix this, unless I receive email to the contrary...
 
-how about (*attribute_is_visible)?
+Yes, unfortunately, thanks.  If all events were a simple number, it's
+easy, but the CC/UA events carry data as well.
 
 James
-
 
