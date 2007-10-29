@@ -1,56 +1,41 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH] sysfs: add filter function to groups
-Date: Mon, 29 Oct 2007 18:43:19 +0100
-Message-ID: <1193679799.3782.15.camel@lov.site>
-References: <1193671019.3383.13.camel@localhost.localdomain>
-	 <1193676852.2655.21.camel@lov.site>
-	 <1193677071.3383.56.camel@localhost.localdomain>
-	 <1193678844.3782.7.camel@lov.site>
-	 <1193678914.3383.79.camel@localhost.localdomain>
+Date: Mon, 29 Oct 2007 18:58:40 +0100
+Message-ID: <47261F50.3050901@s5r6.in-berlin.de>
+References: <1193671019.3383.13.camel@localhost.localdomain>	 <1193676852.2655.21.camel@lov.site> <1193677071.3383.56.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.187]:51005 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755145AbXJ2RlX (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 13:41:23 -0400
-In-Reply-To: <1193678914.3383.79.camel@localhost.localdomain>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:41062 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752752AbXJ2R6m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 13:58:42 -0400
+In-Reply-To: <1193677071.3383.56.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, 2007-10-29 at 12:28 -0500, James Bottomley wrote:
-> On Mon, 2007-10-29 at 18:27 +0100, Kay Sievers wrote:
-> > On Mon, 2007-10-29 at 11:57 -0500, James Bottomley wrote:
-> > > On Mon, 2007-10-29 at 17:54 +0100, Kay Sievers wrote:
-> > > > On Mon, 2007-10-29 at 10:16 -0500, James Bottomley wrote:
-> > 
-> > > > >  struct attribute_group {
-> > > > >  	const char		*name;
-> > > > > +	int			(*filter_show)(struct kobject *, int);
-> > > > 
-> > > > Are you sure that you want to return an array index here, instead of the
-> > > > actual attribute? Like:
-> > > 
-> > > Actually, it returns a true/false value indicating whether the given
-> > > attribute should be displayed.
-> > 
-> > It isn't about the return value of the function, that's fine. You call
-> > back with the index number (int) of the array of attributes, instead of
-> > passing the attribute pointer (struct attribute *attr) back to ask the
-> > device for the attribute to create.
-> 
-> For bitmaps, the int is what we will want.  I can add both to the
-> prototype if that will make you happy? so people searching on struct
-> attribute and not relying on the array construction order can use the
-> code as well.
+James Bottomley wrote:
+>> >  struct attribute_group {
+>> >  	const char		*name;
+>> > +	int			(*filter_show)(struct kobject *, int);
 
-Having both parameters sounds fine. Otherwise, if the code is spread
-around several files, the attribute arrays would need to be global to
-handle the callbacks, which isn't too nice.
+> Actually, it returns a true/false value indicating whether the given
+> attribute should be displayed.
 
-Thanks,
-Kay
+How about this:
 
+	int (*is_visible)(...);
+or
+	bool (*shall_be_shown)(...);
+or
+	bool (*should_be_displayed)(...);
+
+or whatever, so that it indicates that this function merely answers a
+question, but doesn't filter nor show anything.
+-- 
+Stefan Richter
+-=====-=-=== =-=- ===-=
+http://arcgraph.de/sr/
