@@ -1,57 +1,56 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH v4 2/2] libata: Utilize new SCSI event infrastructure
-Date: Mon, 29 Oct 2007 10:42:09 -0400 (EDT)
-Message-ID: <20071029144209.AEE9F1F816B@havoc.gtf.org>
-References: <15624bab8dc0206e384ac8314257a900e60127c1.1193668176.git.jeff@garzik.org>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: [PATCH] lpfc : Correct queue tag handling
+Date: Mon, 29 Oct 2007 11:00:39 -0400
+Message-ID: <1193670039.12766.1.camel@localhost.localdomain>
+Reply-To: James.Smart@Emulex.Com
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:47293 "EHLO havoc.gtf.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753768AbXJ2OmK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Oct 2007 10:42:10 -0400
-In-Reply-To: <15624bab8dc0206e384ac8314257a900e60127c1.1193668176.git.jeff@garzik.org>
+Received: from emulex.emulex.com ([138.239.112.1]:65257 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752872AbXJ2PAp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 11:00:45 -0400
+Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
+	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id l9TF0SOI007904
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Oct 2007 08:00:44 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>
-Cc: akpm@linux-foundation.org
+To: linux-scsi@vger.kernel.org
 
-An end to CD-ROM polling (if you have a device that supports AN)...
-hooray!
 
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
----
- drivers/ata/libata-scsi.c |   12 ++++++++----
- 1 files changed, 8 insertions(+), 4 deletions(-)
+This patch corrects the lpfc tag handling issue identified by Hannes Reinecke
+http://marc.info/?l=linux-scsi@m=119270235628850&w=2
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index f752edd..e6d5627 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -773,6 +773,9 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
- 		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
- 	}
+The basis for this patch originated from Hajime Kai. Thank You Hajime.
+
+-- james s
+
+Signed-off-by: hajime-kai@soft.fujitsu.com
+Signed-off-by: James Smart <James.Smart@emulex.com>
+
+
+diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+--- a/drivers/scsi/lpfc/lpfc_scsi.c	2007-10-19 09:09:21.000000000 -0400
++++ b/drivers/scsi/lpfc/lpfc_scsi.c	2007-10-29 10:17:49.000000000 -0400
+@@ -682,6 +682,7 @@ lpfc_scsi_prep_cmnd(struct lpfc_vport *v
+ 	IOCB_t *iocb_cmd = &lpfc_cmd->cur_iocbq.iocb;
+ 	struct lpfc_iocbq *piocbq = &(lpfc_cmd->cur_iocbq);
+ 	int datadir = scsi_cmnd->sc_data_direction;
++	char tag[2];
  
-+	if (dev->flags & ATA_DFLAG_AN)
-+		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
-+
- 	if (dev->flags & ATA_DFLAG_NCQ) {
- 		int depth;
+ 	lpfc_cmd->fcp_rsp->rspSnsLen = 0;
+ 	/* clear task management bits */
+@@ -692,8 +693,8 @@ lpfc_scsi_prep_cmnd(struct lpfc_vport *v
  
-@@ -3225,10 +3228,11 @@ static void ata_scsi_handle_link_detach(struct ata_link *link)
-  */
- void ata_scsi_media_change_notify(struct ata_device *dev)
- {
--#ifdef OTHER_AN_PATCHES_HAVE_BEEN_APPLIED
--	if (dev->sdev)
--		scsi_device_event_notify(dev->sdev, SDEV_MEDIA_CHANGE);
--#endif
-+	if (dev->sdev) {
-+		DECLARE_BITMAP(map, SDEV_EVT_MAXBITS);
-+		__set_bit(SDEV_EVT_MEDIA_CHANGE, map);
-+		sdev_evt_notify(dev->sdev, map);
-+	}
- }
+ 	memcpy(&fcp_cmnd->fcpCdb[0], scsi_cmnd->cmnd, 16);
  
- /**
--- 
-1.5.2.4
+-	if (scsi_cmnd->device->tagged_supported) {
+-		switch (scsi_cmnd->tag) {
++	if (scsi_populate_tag_msg(scsi_cmnd, tag)) {
++		switch (tag[0]) {
+ 		case HEAD_OF_QUEUE_TAG:
+ 			fcp_cmnd->fcpCntl1 = HEAD_OF_Q;
+ 			break;
+
 
