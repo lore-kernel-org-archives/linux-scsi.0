@@ -1,328 +1,156 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: [PATCH v5 1/2] SCSI: add asynchronous event notification API
-Date: Mon, 29 Oct 2007 17:31:57 -0400 (EDT)
-Message-ID: <20071029213157.781B71F8181@havoc.gtf.org>
-References: <1e0190fe71e148eb044c16b805738908ae2fe0bc.1193692827.git.jeff@garzik.org>
-	<1193677315.3383.59.camel@localhost.localdomain>
+From: Jeff Mahoney <jeffm@suse.com>
+Subject: Re: [PATCH] scsi: iterate over devices individually for /proc/scsi/scsi
+Date: Mon, 29 Oct 2007 17:50:32 -0400
+Message-ID: <472655A8.1090700@suse.com>
+References: <461E89C8.7040507@suse.com> <20070413072506.GA20326@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from havoc.gtf.org ([69.61.125.42]:42093 "EHLO havoc.gtf.org"
+Received: from cantor2.suse.de ([195.135.220.15]:42086 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752880AbXJ2Vb6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 29 Oct 2007 17:31:58 -0400
-In-Reply-To: <1e0190fe71e148eb044c16b805738908ae2fe0bc.1193692827.git.jeff@garzik.org>
+	id S1752700AbXJ2VrS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 29 Oct 2007 17:47:18 -0400
+In-Reply-To: <20070413072506.GA20326@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux-SCSI <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>
 
-Originally based on a patch by Kristen Carlson Accardi @ Intel.
-Copious input from James Bottomley.
+Christoph Hellwig wrote:
+> On Thu, Apr 12, 2007 at 03:34:32PM -0400, Jeff Mahoney wrote:
+>>  On systems with very large numbers (> 1600 or so) of SCSI devices,
+>>  cat /proc/scsi/scsi ends up failing with -ENOMEM. This is due to
+>>  the show routine simply iterating over all of the devices with
+>>  bus_for_each_dev(), and trying to dump all of them into the buffer
+>>  at the same time. On my test system (using scsi_debug with 4064 devices),
+>>  the output ends up being ~ 632k, far more than kmalloc will typically allow.
+>>
+>>  This patch uses seq_file directly instead of single_file, and breaks up
+>>  the operations into the 4 seq_file callbacks. The result is that
+>>  each show() operation only dumps ~ 180 bytes into the buffer at a time
+>>  so we don't run out of memory.
+> 
+> The simpler answer is don't use /proc/scsi/scsi, but lsscsi instead.
+> It even has an option to provide /proc/scsi/scsi-style output.
+> 
+> This already came up the last time someone from SuSE sent a patch
+> to fix an "issue" like that.  That time at least the patch was
+> massageable into something sane, which this one isn't.  So please
+> take the advice this time and stop using /proc/scsi/scsi.
 
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+This should be something a bit more sane. After writing this up, I'm in
+complete agreement with you on how much of an unsalvagable mess the
+previous patch was.
+
+ On systems with very large numbers (> 1600 or so) of SCSI devices,
+ cat /proc/scsi/scsi ends up failing with -ENOMEM. This is due to
+ the show routine simply iterating over all of the devices with
+ bus_for_each_dev(), and trying to dump all of them into the buffer
+ at the same time. On my test system (using scsi_debug with 4064 devices),
+ the output ends up being ~ 632k, far more than kmalloc will typically allow.
+
+ This patch defines its own seq_file opreations to iterate over the scsi
+ devices.The result is that each show() operation only dumps ~ 180 bytes
+ into the buffer at a time so we don't run out of memory.
+
+ If the "Attached devices" header isn't required, we can dump the
+ sfile->private bit completely.
+
+Signed-off-by: Jeff Mahoney <jeffm@suse.com>
+
 ---
- drivers/scsi/scsi_lib.c    |  136 ++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_scan.c   |    3 +
- drivers/scsi/scsi_sysfs.c  |   47 +++++++++++++++
- include/scsi/scsi_device.h |   25 ++++++++
- 4 files changed, 211 insertions(+), 0 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 61fdaf0..304213e 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2115,6 +2115,142 @@ scsi_device_set_state(struct scsi_device *sdev, enum scsi_device_state state)
- EXPORT_SYMBOL(scsi_device_set_state);
- 
- /**
-+ * 	sdev_evt_emit - emit a single SCSI device uevent
-+ *	@sdev: associated SCSI device
-+ *	@evt: event to emit
-+ *
-+ *	Send a single uevent (scsi_event) to the associated scsi_device.
-+ */
-+static void scsi_evt_emit(struct scsi_device *sdev, struct scsi_event *evt)
-+{
-+	int idx = 0;
-+	char *envp[3];
-+
-+	switch (evt->evt_type) {
-+	case SDEV_EVT_MEDIA_CHANGE:
-+		envp[idx++] = "SDEV_MEDIA_CHANGE=1";
-+		break;
-+
-+	default:
-+		/* do nothing */
-+		break;
-+	}
-+
-+	envp[idx++] = NULL;
-+
-+	kobject_uevent_env(&sdev->sdev_gendev.kobj, KOBJ_CHANGE, envp);
-+}
-+
-+/**
-+ * 	sdev_evt_thread - send a uevent for each scsi event
-+ *	@work: work struct for scsi_device
-+ *
-+ *	Dispatch queued events to their associated scsi_device kobjects
-+ *	as uevents.
-+ */
-+void scsi_evt_thread(struct work_struct *work)
-+{
-+	struct scsi_device *sdev;
-+	LIST_HEAD(event_list);
-+
-+	sdev = container_of(work, struct scsi_device, event_work);
-+
-+	while (1) {
-+		struct scsi_event *evt;
-+		struct list_head *this, *tmp;
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(&sdev->list_lock, flags);
-+		list_splice_init(&sdev->event_list, &event_list);
-+		spin_unlock_irqrestore(&sdev->list_lock, flags);
-+
-+		if (list_empty(&event_list))
-+			break;
-+
-+		list_for_each_safe(this, tmp, &event_list) {
-+			evt = list_entry(this, struct scsi_event, node);
-+			list_del(&evt->node);
-+			scsi_evt_emit(sdev, evt);
-+			kfree(evt);
-+		}
-+	}
-+}
-+
-+/**
-+ * 	sdev_evt_send - send asserted event to uevent thread
-+ *	@sdev: scsi_device event occurred on
-+ *	@evt: event to send
-+ *
-+ *	Assert scsi device event asynchronously.
-+ */
-+void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt)
-+{
-+	unsigned long flags;
-+
-+	if (!test_bit(evt->evt_type, sdev->supported_events)) {
-+		kfree(evt);
-+		return;
-+	}
-+
-+	spin_lock_irqsave(&sdev->list_lock, flags);
-+	list_add_tail(&evt->node, &sdev->event_list);
-+	schedule_work(&sdev->event_work);
-+	spin_unlock_irqrestore(&sdev->list_lock, flags);
-+}
-+EXPORT_SYMBOL_GPL(sdev_evt_send);
-+
-+/**
-+ * 	sdev_evt_alloc - allocate a new scsi event
-+ *	@evt_type: type of event to allocate
-+ *	@gfpflags: GFP flags for allocation
-+ *
-+ *	Allocates and returns a new scsi_event.
-+ */
-+struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+				  gfp_t gfpflags)
-+{
-+	struct scsi_event *evt = kzalloc(sizeof(struct scsi_event), gfpflags);
-+	if (!evt)
-+		return NULL;
-+
-+	evt->evt_type = evt_type;
-+	INIT_LIST_HEAD(&evt->node);
-+
-+	/* evt_type-specific initialization, if any */
-+	switch (evt_type) {
-+	case SDEV_EVT_MEDIA_CHANGE:
-+	default:
-+		/* do nothing */
-+		break;
-+	}
-+
-+	return evt;
-+}
-+EXPORT_SYMBOL_GPL(sdev_evt_alloc);
-+
-+/**
-+ * 	sdev_evt_send_simple - send asserted event to uevent thread
-+ *	@sdev: scsi_device event occurred on
-+ *	@evt_type: type of event to send
-+ *	@gfpflags: GFP flags for allocation
-+ *
-+ *	Assert scsi device event asynchronously, given an event type.
-+ */
-+void sdev_evt_send_simple(struct scsi_device *sdev,
-+			  enum scsi_device_event evt_type, gfp_t gfpflags)
-+{
-+	struct scsi_event *evt = sdev_evt_alloc(evt_type, gfpflags);
-+	if (!evt) {
-+		sdev_printk(KERN_ERR, sdev, "event %d eaten due to OOM\n",
-+			    evt_type);
-+		return;
-+	}
-+
-+	sdev_evt_send(sdev, evt);
-+}
-+EXPORT_SYMBOL_GPL(sdev_evt_send_simple);
-+
-+/**
-  *	scsi_device_quiesce - Block user issued commands.
-  *	@sdev:	scsi device to quiesce.
-  *
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index b53c5f6..40ea71c 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -236,6 +236,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	struct scsi_device *sdev;
- 	int display_failure_msg = 1, ret;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	extern void scsi_evt_thread(struct work_struct *work);
- 
- 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
- 		       GFP_ATOMIC);
-@@ -254,7 +255,9 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
- 	INIT_LIST_HEAD(&sdev->same_target_siblings);
- 	INIT_LIST_HEAD(&sdev->cmd_list);
- 	INIT_LIST_HEAD(&sdev->starved_entry);
-+	INIT_LIST_HEAD(&sdev->event_list);
- 	spin_lock_init(&sdev->list_lock);
-+	INIT_WORK(&sdev->event_work, scsi_evt_thread);
- 
- 	sdev->sdev_gendev.parent = get_device(&starget->dev);
- 	sdev->sdev_target = starget;
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d531cee..f374fdc 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -268,6 +268,7 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	struct scsi_device *sdev;
- 	struct device *parent;
- 	struct scsi_target *starget;
-+	struct list_head *this, *tmp;
- 	unsigned long flags;
- 
- 	sdev = container_of(work, struct scsi_device, ew.work);
-@@ -282,6 +283,16 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	list_del(&sdev->starved_entry);
- 	spin_unlock_irqrestore(sdev->host->host_lock, flags);
- 
-+	cancel_work_sync(&sdev->event_work);
-+
-+	list_for_each_safe(this, tmp, &sdev->event_list) {
-+		struct scsi_event *evt;
-+
-+		evt = list_entry(this, struct scsi_event, node);
-+		list_del(&evt->node);
-+		kfree(evt);
-+	}
-+
- 	if (sdev->request_queue) {
- 		sdev->request_queue->queuedata = NULL;
- 		/* user context needed to free queue */
-@@ -614,6 +625,41 @@ sdev_show_modalias(struct device *dev, struct device_attribute *attr, char *buf)
+ drivers/scsi/scsi_proc.c |   58 ++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 52 insertions(+), 6 deletions(-)
+
+--- a/drivers/scsi/scsi_proc.c	2007-10-29 13:56:28.000000000 -0400
++++ b/drivers/scsi/scsi_proc.c	2007-10-29 15:50:57.000000000 -0400
+@@ -294,20 +294,66 @@ static ssize_t proc_scsi_write(struct fi
+ 	return err;
  }
- static DEVICE_ATTR(modalias, S_IRUGO, sdev_show_modalias, NULL);
  
-+#define DECLARE_EVT_SHOW(name, Cap_name)				\
-+static ssize_t								\
-+sdev_show_evt_##name(struct device *dev, struct device_attribute *attr,	\
-+				char *buf)				\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	int val = test_bit(SDEV_EVT_##Cap_name, sdev->supported_events);\
-+	return snprintf(buf, 20, "%d\n", val);				\
+-static int proc_scsi_show(struct seq_file *s, void *p)
++static int always_match(struct device *dev, void *data)
+ {
+-	seq_printf(s, "Attached devices:\n");
+-	bus_for_each_dev(&scsi_bus_type, NULL, s, proc_print_scsidevice);
+-	return 0;
++	return 1;
 +}
 +
-+#define DECLARE_EVT_STORE(name, Cap_name)				\
-+static ssize_t								\
-+sdev_store_evt_##name(struct device *dev, struct device_attribute *attr, \
-+		      const char *buf, size_t count)			\
-+{									\
-+	struct scsi_device *sdev = to_scsi_device(dev);			\
-+	int val = simple_strtoul(buf, NULL, 0);				\
-+	if (val == 0)							\
-+		clear_bit(SDEV_EVT_##Cap_name, sdev->supported_events);	\
-+	else if (val == 1)						\
-+		set_bit(SDEV_EVT_##Cap_name, sdev->supported_events);	\
-+	else								\
-+		return -EINVAL;						\
-+	return count;							\
++static inline struct device *next_scsi_device(struct device *start)
++{
++	struct device *next = bus_find_device(&scsi_bus_type, start, NULL,
++					      always_match);
++	put_device(start);
++	return next;
 +}
 +
-+#define DECLARE_EVT(name, Cap_name)					\
-+	DECLARE_EVT_SHOW(name, Cap_name)				\
-+	DECLARE_EVT_STORE(name, Cap_name)				\
-+	static DEVICE_ATTR(evt_##name, S_IRUGO, sdev_show_evt_##name,	\
-+			   sdev_store_evt_##name);
-+#define REF_EVT(name) &dev_attr_evt_##name.attr
++static void *scsi_seq_start(struct seq_file *sfile, loff_t *pos)
++{
++	struct device *dev = NULL;
++	loff_t n = *pos;
 +
-+DECLARE_EVT(media_change, MEDIA_CHANGE)
++	while ((dev = next_scsi_device(dev))) {
++		if (!n--)
++			break;
++		sfile->private++;
++	}
++	return dev;
++}
 +
- /* Default template for device attributes.  May NOT be modified */
- static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_device_blocked.attr,
-@@ -631,6 +677,7 @@ static struct attribute *scsi_sdev_attrs[] = {
- 	&dev_attr_iodone_cnt.attr,
- 	&dev_attr_ioerr_cnt.attr,
- 	&dev_attr_modalias.attr,
-+	REF_EVT(media_change),
- 	NULL
- };
++static void *scsi_seq_next(struct seq_file *sfile, void *v, loff_t *pos)
++{
++	(*pos)++;
++	sfile->private++;
++	return next_scsi_device(v);
++}
++
++static void scsi_seq_stop(struct seq_file *sfile, void *v)
++{
++	put_device(v);
++}
++
++static int scsi_seq_show(struct seq_file *sfile, void *dev)
++{
++	if (!sfile->private)
++		seq_puts(sfile, "Attached devices:\n");
++
++	return proc_print_scsidevice(dev, sfile);
+ }
  
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d5057bc..66e9058 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -46,6 +46,22 @@ enum scsi_device_state {
- 				 * to the scsi lld. */
- };
- 
-+enum scsi_device_event {
-+	SDEV_EVT_MEDIA_CHANGE	= 1,	/* media has changed */
-+
-+	SDEV_EVT_LAST		= SDEV_EVT_MEDIA_CHANGE,
-+	SDEV_EVT_MAXBITS	= SDEV_EVT_LAST + 1
++static struct seq_operations scsi_seq_ops = {
++	.start	= scsi_seq_start,
++	.next	= scsi_seq_next,
++	.stop	= scsi_seq_stop,
++	.show	= scsi_seq_show
 +};
 +
-+struct scsi_event {
-+	enum scsi_device_event	evt_type;
-+	struct list_head	node;
-+
-+	/* put union of data structures, for non-simple event types,
-+	 * here
-+	 */
-+};
-+
- struct scsi_device {
- 	struct Scsi_Host *host;
- 	struct request_queue *request_queue;
-@@ -127,6 +143,10 @@ struct scsi_device {
- 	unsigned guess_capacity:1;	/* READ_CAPACITY might be too high by 1 */
- 	unsigned retry_hwerror:1;	/* Retry HARDWARE_ERROR */
+ static int proc_scsi_open(struct inode *inode, struct file *file)
+ {
+ 	/*
+ 	 * We don't really needs this for the write case but it doesn't
+ 	 * harm either.
+ 	 */
+-	return single_open(file, proc_scsi_show, NULL);
++	return seq_open(file, &scsi_seq_ops);
+ }
  
-+	DECLARE_BITMAP(supported_events, SDEV_EVT_MAXBITS); /* supported events */
-+	struct list_head event_list;	/* asserted events */
-+	struct work_struct event_work;
-+
- 	unsigned int device_blocked;	/* Device returned QUEUE_FULL. */
+ static struct file_operations proc_scsi_operations = {
+@@ -315,7 +361,7 @@ static struct file_operations proc_scsi_
+ 	.read		= seq_read,
+ 	.write		= proc_scsi_write,
+ 	.llseek		= seq_lseek,
+-	.release	= single_release,
++	.release	= seq_release,
+ };
  
- 	unsigned int max_device_blocked; /* what device_blocked counts down from  */
-@@ -275,6 +295,11 @@ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
- 				int retries);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
-+extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-+					  gfp_t gfpflags);
-+extern void sdev_evt_send(struct scsi_device *sdev, struct scsi_event *evt);
-+extern void sdev_evt_send_simple(struct scsi_device *sdev,
-+			  enum scsi_device_event evt_type, gfp_t gfpflags);
- extern int scsi_device_quiesce(struct scsi_device *sdev);
- extern void scsi_device_resume(struct scsi_device *sdev);
- extern void scsi_target_quiesce(struct scsi_target *);
+ int __init scsi_init_procfs(void)
+
+
 -- 
-1.5.2.4
+Jeff Mahoney
+SUSE Labs
+
 
