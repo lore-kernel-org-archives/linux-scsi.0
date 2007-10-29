@@ -1,82 +1,146 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH v4 0/2] [SCSI] Asynchronous
-	event	notification	infrastructure
-Date: Mon, 29 Oct 2007 11:34:10 -0500
-Message-ID: <1193675651.3383.49.camel@localhost.localdomain>
-References: <15624bab8dc0206e384ac8314257a900e60127c1.1193668176.git.jeff@garzik.org>
-	 <1193672624.3383.25.camel@localhost.localdomain>
-	 <47260326.9050701@garzik.org>
-	 <1193674253.3383.38.camel@localhost.localdomain>
-	 <4726095B.6030508@garzik.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: BUG in: Driver core: convert block from raw kobjects to core
+ devices (fwd)
+Date: Mon, 29 Oct 2007 12:38:56 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.0710291209250.4882-100000@iolanthe.rowland.org>
+References: <1193672157.3383.22.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:56312 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754884AbXJ2QeN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 12:34:13 -0400
-In-Reply-To: <4726095B.6030508@garzik.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:46512 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752904AbXJ2Qi5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 12:38:57 -0400
+In-Reply-To: <1193672157.3383.22.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Linux-SCSI <linux-scsi@vger.kernel.org>, akpm@linux-foundation.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Hannes Reinecke <hare@suse.de>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 2007-10-29 at 12:24 -0400, Jeff Garzik wrote:
-> James Bottomley wrote:
-> > Ah, OK; I haven't communicated what we need very clearly.  We need a way
-> > to see if the event is supported by the device, as well as a way to turn
-> > it off.  For some of the events (possibly not the SATA AN one, since I
-> > know all SATA devices will be well behaved) there's going to be a need
-> > to deal with berserk or broken devices that become trigger happy, so
-> > turning off the event will be a useful (and possibly essential) way of
-> > coping.
-> 
-> 
-> That's possible with the presented interface[1]:
-> 
-> 	# see if event is supported
-> 	cat $path/evt_media_change
-> 
-> 	# turn off event to deal with broken/beserk devices
-> 	echo 0 > $path/evt_media_change
-> 
-> Some sillyhead can always do
-> 
-> 	echo 1 > $path/evt_some_event_my_device_does_not_support
-> 
-> but that will be obviously be a no-op because their device simply will 
-> not send such events.
-> 
-> Granted ls(1) is no longer a method for viewing supported-at-boot-time 
-> list of events -- ls(1) in the presented interface lists what events the 
-> _kernel_ supports, and cat(1) is used to discover which events are 
-> actually enabled.
-> 
-> I think that is the only difference between our two positions:  [if I 
-> understand you correctly] you want ls(1) to be able to list the device's 
-> supported events.  However, I feel that is inconsistent:  for your 
-> proposal, userspace must perform two checks in order to determine a 
-> feature's availability: 1) does the file exist? 2) is the file context 
-> non-zero?
+On Mon, 29 Oct 2007, James Bottomley wrote:
 
-Yes, I agree ... however, open file is one op for the user -ENXIO means
-device doesn't support the event; value indicates whether the event is
-currently triggering.
-
-I just would rather we use the file exists if device supports event,
-because it's consistent with all the rest of our SCSI interfaces.
-
-> Regards,
+> On Mon, 2007-10-29 at 11:18 -0400, Alan Stern wrote:
+> > With regard to the discussion below, is there any objection to the 
+> > attached patch?  It moves the call to scsi_release_queue() from 
+> > scsi_device_dev_release_usercontext() to __scsi_remove_device().  In 
+> > fact, it might turn out that with this change, the extra _usercontext 
+> > routine isn't needed at all.
 > 
-> 	Jeff
+> There's a flaw in the discussion.
 > 
+> > As far as I can see, the only reason for not adopting this patch would 
+> > be if a scsi_device's queue structure was needed even after the 
+> > scsi_device was unregistered.  Does this ever happen?  If it does, it 
+> > would be indicative of a nasty reference-loop problem (scsi_device 
+> > needs reference to request_queue, request_queue holds reference to 
+> > gendisk, gendisk holds reference to scsi_device).
 > 
-> [1] modulo my comment from the original email in this thread:
-> > * I was slack and did not bother to implement the 'set' operation
-> >   for the attributes.  This can easily be done at a later time in a
-> >   separate patch.
+> I'm not sure if we can do this patch.  If you kill a device, you see
+> there's a processing state in scsi_prep_fn() for SDEV_DEL, which has a
+> printk message I see quite often when I unplug devices while they're
+> operating.
 
-James
+Me too.
 
+> If you NULL out and free the request queue immediately after setting
+> SDEV_DEL, without allowing the devices and filesystems to finish, are
+> you sure we're not going to get a null deref on sdev->request_queue?
+
+That's basically what I was asking you!  :-)  What happens if you try 
+to clean up a block queue when there are still outstanding requests?
+
+> > On Tue, 2007-10-23 at 00:14 -0400, Alan Stern wrote:
+> > > On Tue, 23 Oct 2007, Kay Sievers wrote:
+> > > 
+> > > > There must be something going wrong with the block patch in conjunction
+> > > > with the crazy SCSI release logic.
+> > > 
+> > > I don't know -- there's nothing obviously wrong with the block patch 
+> > > except the extra put_device.  But you're right that the SCSI logic is 
+> > > crazy.  The scsi_device is the parent of the gendisk, which is the 
+> > > parent of the request_queue.  But the scsi_device holds a reference to 
+> > > the request_queue, which is dropped in the scsi_device's release 
+> > > routine!
+> > 
+> > That's the thing. We see a circular reference when we use the SCSI LUN
+> > as the parent.
+> > The sysfs relationship is: scsi_device -> genhd -> queue, while the
+> 
+> That's not true.
+> 
+> The relationship is scsi_device -> queue
+
+I think Kay wrote his arrows backwards.  Or maybe he just made a simple 
+mistake.
+
+> However, genhd is conditioned on the ULD attachment (we can have queues
+> with no gendisk), so for instance, for sd it's
+> 
+> scsi_disk -> genhd -> queue
+>           -> scsi_device
+> 
+> However, when we get to the device destruction part, the first thing
+> that should happen is that the driver should unbind, so we release the
+> driver specific structure and the genhd (and it's ref to the queue and
+> the scsi_device).  Then we can let the mid-layer remove functions
+> release the queue.
+
+That's what should happen.  And in fact the scsi_disk structure doesn't
+cause any difficulties; we're only worried about the scsi_device
+structure.
+
+> > queue holds a ref to to the blockdev (parent), the blockdev to the
+> > scsi_device (parent) and the scsi_devices to the queue (SCSI). All
+> > waiting for their release functions to be called, to release the other
+> > refs.
+> 
+> This isn't how it's supposed to be ... the refs are supposed to be the
+> other way around (blockdev/genhd has a ref to the queue, but scsi_device
+> has a separate ref to the queue; the genhd should be releaseable even if
+> the device hasn't given up the queue).
+
+No, that's not what happens.  The genhd's parent is the scsi_device and 
+the queue's parent is the genhd.  You can see this immediately from the 
+directory layout in sysfs.  Thus:
+
+	the scsi_device holds a reference to the queue,
+	which holds a reference to the genhd,
+	which holds a reference to the scsi_device.
+
+In fact it's not the struct device's reference to the parent which
+causes the problem -- it's the embedded kobject's reference to the
+kobject embedded in the parent device.  This reference doesn't get
+dropped when the device (and its embedded kobject) are removed; it
+persists until they are released.  But with the reference loop they
+never do get released.
+
+> I probably need more thread context to make a more informed statement,
+> though.
+
+If you want to wade through the email messages, the thread starts here:
+
+	http://marc.info/?t=119273573500006&r=1&w=2
+
+Here's a brief summary.  Kay wrote a patch modifying the block-device 
+core, the "Driver core: convert block from raw kobjects to core 
+devices" patch in $Subject.  The patch itself is located here:
+
+http://www.kernel.org/pub/linux/kernel/people/gregkh/gregkh-2.6/gregkh-01-driver/block-device.patch
+
+although this version has been updated; in its original form the patch 
+included an extra call to put_device(&disk_dev) right at the end of 
+del_gendisk() in fs/partitions/check.c.
+
+In my testing I found the extra put_device() caused problems and I
+complained to Kay about it.  He explained that on his system the device
+structures would never get released without it.  In the end he agreed
+the call was wrong (which is presumably why the patch was modified),
+and we determined that the structures never got released because of the
+circular references.
+
+The best way to fix the problem is to drop the kobject references at 
+remove time instead of release time.  Hence my question to you about 
+whether Hannes's patch to the SCSI core would be acceptable.
+
+Alan Stern
 
