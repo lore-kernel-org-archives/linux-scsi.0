@@ -1,45 +1,58 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: AHCI finds disks; no /dev/sd inodes bound?
-Date: Wed, 09 Jan 2008 19:50:38 +0100
-Message-ID: <4785177E.6060300@s5r6.in-berlin.de>
-References: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com> <p738x2zosmd.fsf@bingen.suse.de> <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com> <1199899766.3493.20.camel@localhost.localdomain> <20080109174945.GB15346@one.firstfloor.org> <4785138A.4000809@s5r6.in-berlin.de>
+From: "Ed Lin" <ed.lin@promise.com>
+Subject: Re: stex driver panic in kernel 2.6.23
+Date: Mon, 29 Oct 2007 10:46:36 -0700
+Message-ID: <NONAMEWEXxt5BBBVhye0000037a@nonamew.ptu.promise.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:38579 "EHLO
-	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752138AbYAISvj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 13:51:39 -0500
-In-Reply-To: <4785138A.4000809@s5r6.in-berlin.de>
+Received: from 67.111.72.14.ptr.us.xo.net ([67.111.72.14]:2037 "EHLO
+	nonamew.ptu.promise.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751039AbYAITdl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 14:33:41 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jon Watte <jwatte@gmail.com>, linux-scsi@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, jeff <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Stefan Richter wrote:
-> The "select SCSI" in libata's Kconfig option is not of great
-> help with that issue and is misguided and unnecessary as well.
 
-+comment "Serial and Parallel ATA need SCSI command sets"
-+	depends on SCSI=n
+>On Wed, Oct 24 2007, James Bottomley wrote:
+>> On Wed, 2007-10-24 at 12:17 -0700, Andrew Morton wrote:
+>> > On Wed, 24 Oct 2007 11:59:30 -0700 "Ed Lin" <ed.lin@promise.com> wrote:
+>> > 
+>> > > The shared tag issue was not fixed yet. Kernel panic
+>> > > happened while running I/O test in kernel 2.6.23
+>> > > (information attached). After applying the patch I posted
+>> > > (or the version James modified), panic disappeared.
+>> > > Switch back to standard kernel, panic again.
+>> > 
+>> > Did either of those patches get merged in 2.6.24-rc1?
+>> 
+>> No ... Jens did one instead (commit
+>> f3da54ba140c6427fa4a32913e1bf406f41b5dda), which now looks like it might
+>> not have fixed the issue.
+>
+>I think there's one more bug there, for shared maps. For the locking to
+>work, only the tag map and tag bit map may be shared (incidentally, I
+>was just explaining this to Nick yesterday, but I apparently didn't
+>review the code well enough myself). But we also share the busy list!
+>The busy_list must be queue private, or we need a block_queue_tag
+>covering lock as well.
+>
+>So we have to move the busy_list to the queue. This'll work fine, and
+>it'll actually also fix a problem with blk_queue_invalidate_tags() which
+>will invalidate tags across all shared queues. This is a bit confusing,
+>the low level driver should call it for each queue seperately since
+>otherwise you cannot kill tags on just a single queue for eg a hard
+>drive that stops responding. Since the function has no callers
+>currently, it's not an issue.
+>
+>Please test.
+>
 
- menuconfig ATA
- 	tristate "Serial ATA (prod) and Parallel ATA (experimental) drivers"
-...
--	select SCSI
-+	depends on SCSI
-...
--	  NOTE: ATA enables basic SCSI support; *however*,
--	  'SCSI disk support', 'SCSI tape support', or
--	  'SCSI CDROM support' may also be needed,
--	  depending on your hardware configuration.
-+	  NOTE: 'SCSI disk support', 'SCSI tape support', or
-+	  'SCSI CDROM support' is also required if you have
-+	  ATA disks, tapes, or CD/DVD-ROM/R/Ws respectively.
-...
+With this patch the stex driver passed I/O test. So maybe this problem is
+fixed finally. Thanks. Please apply.
 
--- 
-Stefan Richter
--=====-==--- ---= -=--=
-http://arcgraph.de/sr/
+Ed Lin
+
+
