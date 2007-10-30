@@ -1,86 +1,81 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [linux-scsi-owner@vger.kernel.org: BOUNCElinux-scsi@vger.kernel.org:
-Date: Tue, 30 Oct 2007 15:19:39 +0000
-Message-ID: <20071030151938.GA6394@infradead.org>
-References: <00df01c81ae9$0f49b510$6200a8c0@jameshsu>
+From: Denys Vlasenko <vda.linux@googlemail.com>
+Subject: Re: [PATCH] drivers/scsi/lpfc/lpfc_hw.h: Some minor cleanup.
+Date: Tue, 30 Oct 2007 15:44:02 +0000
+Message-ID: <200710301544.02765.vda.linux@googlemail.com>
+References: <20071030104816.30937.77821.sendpatchset@thinktank.campus.ltu.se>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-15"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:44117 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753198AbXJ3PTs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 11:19:48 -0400
+Received: from ug-out-1314.google.com ([66.249.92.175]:41861 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168AbXJ3PoL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 11:44:11 -0400
+Received: by ug-out-1314.google.com with SMTP id z38so137573ugc
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 08:44:09 -0700 (PDT)
+In-Reply-To: <20071030104816.30937.77821.sendpatchset@thinktank.campus.ltu.se>
 Content-Disposition: inline
-In-Reply-To: <00df01c81ae9$0f49b510$6200a8c0@jameshsu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jameshsu <jameshsu@acard.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Richard Knutsson <ricknu-0@student.ltu.se>
+Cc: James.Bottomley@steeleye.com, James.Smart@emulex.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Oct 30, 2007 at 07:36:05PM +0800, jameshsu wrote:
-> Hello James Bottomley,
+On Tuesday 30 October 2007 10:54, Richard Knutsson wrote:
+> Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
+> ---
+> Diffed against linus-git
+> Checked with script/checkpatch.pl
 > 
-> This driver has nothing changed since last time submit.
-> However recently we check the 2.6.23.1 kernel and found code is not
-> up-to-date (still remain @2005).
-> Resend this message to submit the same driver again. (.c diff file under
-> atp870u.c.diff.bz2 format)
-> Please help Acard to build in this modified SCSI driver with latest Linux
-> kernel.
-> If any code still volient the documentation, please let us know the reasons
-> and file path.
-> Thanks!
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
+> index 451accd..6f56528 100644
+> --- a/drivers/scsi/lpfc/lpfc_hw.h
+> +++ b/drivers/scsi/lpfc/lpfc_hw.h
+> @@ -3158,31 +3158,30 @@ struct lpfc_sli2_slim {
+>   *
+>   * Parameters:
+>   * device : struct pci_dev 's device field
+> - *
+> - * return 1 => TRUE
+> - *        0 => FALSE
+>   */
+> -static inline int
+> +static inline bool
+>  lpfc_is_LC_HBA(unsigned short device)
+>  {
+> -	if ((device == PCI_DEVICE_ID_TFLY) ||
+> -	    (device == PCI_DEVICE_ID_PFLY) ||
+> -	    (device == PCI_DEVICE_ID_LP101) ||
+> -	    (device == PCI_DEVICE_ID_BMID) ||
+> -	    (device == PCI_DEVICE_ID_BSMB) ||
+> -	    (device == PCI_DEVICE_ID_ZMID) ||
+> -	    (device == PCI_DEVICE_ID_ZSMB) ||
+> -	    (device == PCI_DEVICE_ID_RFLY))
+> -		return 1;
+> -	else
+> -		return 0;
+> +	switch (device) {
+> +	case PCI_DEVICE_ID_TFLY:
+> +	case PCI_DEVICE_ID_PFLY:
+> +	case PCI_DEVICE_ID_LP101:
+> +	case PCI_DEVICE_ID_BMID:
+> +	case PCI_DEVICE_ID_BSMB:
+> +	case PCI_DEVICE_ID_ZMID:
+> +	case PCI_DEVICE_ID_ZSMB:
+> +	case PCI_DEVICE_ID_RFLY:
+> +		return true;
+> +	}
+> +
+> +	return false;
+>  }
 
-I tried applying both patches but none of them applies.  atp870u.h.diff reverse-applies
-so we're at the state already after your patch, and atp870u.c.diff doesn't apply at all,
-partially because the before version you have has dos line endings, while atp870u.c
-in the kernel doesn't.
+Why is this patch useful? I'd rather do this instead:
 
-> 
-> James Hsu
-> ----- Original Message -----
-> From: jameshsu
-> To: postmaster@vger.kernel.org
-> Cc: 'David Miller' ; James Bottomley
-> Sent: Thursday, March 29, 2007 3:36 PM
-> Subject: Re: FW: [linux-scsi-owner@vger.kernel.org:
-> BOUNCElinux-scsi@vger.kernel.org: - - Completed
-> 
-> 
-> To whom can take care of this driver issues:
-> 
-> We, Acard, modified this driver again based on James Bottomley's input
-> 3/16/2007.
-> In the mean time, I attach the source code with another email for James
-> Bottomley.
-> 
-> Those changes are:
-> 1.Modify coding style.
->  2.Add old copy right.
->  3.CompString, ClearString, CopyString routine replaced with memcmp, memset
-> and memcpy.
->  4.Remove adapters array form 2.6 kernel.
->  5.Removed the scsi_data_direction() hack macro.Just pass the direction
-> directly into the functions
->  6.Use defined values instead of bare numbers (REQUEST_SENSE instead of
-> 0x03)
->  7.Replace page_address() to get arbitrary userspace memory with
-> kmap_atomic()/kunmap_atomic().
->  8.Use SAM_STAT_CHECK_CONDITION/GOOD instead of separate #define
->  9.Removed home defined READ_6, WRITE_6 etc.
-> 10.Return SCSI_MLQUEUE_HOST_BUSY on out of resources in queuecommand.
-> 
-> Please let me know if this submission is proper.
-> Again, relly appreciate for your help!
-> 
-> James Hsu,
-> Manager,QA Testing Dept.
-> ACARD TECHNOLOGY CORP.
-> Taipei Hsien,Taiwan
-> 6F No78,Sec 1,Kwang Fu Road,Sang Chung,
-> (02)8512-2290 x 2311(O),(02)8512-2548(FAX)
-> 0968-989-555 (mobile)
+-static inline int
++static int
 
-
-
----end quoted text---
+(this function has three callsites, thus de-inlining will
+make code smaller)
+--
+vda
