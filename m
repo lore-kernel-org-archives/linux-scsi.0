@@ -1,64 +1,195 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: Questions about scsi.c
-Date: Tue, 30 Oct 2007 09:43:29 -0500
-Message-ID: <1193755409.3321.19.camel@localhost.localdomain>
-References: <200710250606.03301.rob@landley.net>
-	 <200710251325.37586.rob@landley.net>
-	 <20071025103241.546b35ec.rdunlap@xenotime.net>
-	 <200710251640.35758.rob@landley.net>
-	 <20071025134926.4d209584.rdunlap@xenotime.net> <472724EA.3050502@pobox.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] drivers/scsi/dpt_i2o: Convert to generic boolean
+Date: Tue, 30 Oct 2007 10:47:24 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F954EE@otce2k301.adaptec.com>
+References: <20071030104806.30936.13253.sendpatchset@thinktank.campus.ltu.se>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:46165 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752236AbXJ3Onk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 10:43:40 -0400
-In-Reply-To: <472724EA.3050502@pobox.com>
+Received: from ts.adaptec.com ([162.62.93.58]:57365 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753064AbXJ3Or2 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 10:47:28 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071030104806.30936.13253.sendpatchset@thinktank.campus.ltu.se>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jgarzik@pobox.com>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, Rob Landley <rob@landley.net>, linux-scsi@vger.kernel.org
+To: Richard Knutsson <ricknu-0@student.ltu.se>, James.Bottomley@SteelEye.com
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, 2007-10-30 at 08:34 -0400, Jeff Garzik wrote:
-> Randy Dunlap wrote:
-> > On Thu, 25 Oct 2007 16:40:35 -0500 Rob Landley wrote:
-> > 
-> >> On Thursday 25 October 2007 12:32:41 pm Randy Dunlap wrote:
-> >>>> Entirely possible I'm doing something wrong:
-> >>>>
-> >>>>    <sect1 id="scsi_device.h">
-> >>>>       <title>include/scsi/scsi_device.h</title>
-> >>>>       <para>
-> >>>>       </para>
-> >>>> !Einclude/scsi/scsi_device.h
-> >>>>     </sect1>
-> >>> !E is for exported symbols and that file has none.
-> >>> USe !I instead.
-> >> So how do I handle a case like drivers/ata/libata-core.c which has 
-> >> EXPORT_SYMBOL() calls for functions that live in (and are documented in) 
-> >> other files, such as ata_scsi_ioctl() in drivers/ata/libata-scsi.c?
-> > 
-> > I don't see ata_scsi_ioctl() documented at all.  Are you looking at
-> > a newer tree than I am?  (i'm using 2.6.24-rc1)
-> > 
-> > Long-term answer is that we prefer EXPORT_SYMBOL() to be used
-> > just under the function that is being exported.  In this case,
-> > the maintainer may be disagreeing with that.  [cc-ed]
-> > 
-> > Short-term answer is to use !Isource_filename_where_kernel_doc_is
-> > as though it's not EXPORTed.  I think.
+ACK
+
+Sincerely -- Mark Salyzyn
+ 
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of 
+> Richard Knutsson
+> Sent: Tuesday, October 30, 2007 6:54 AM
+> To: James.Bottomley@SteelEye.com
+> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org; 
+> Richard Knutsson
+> Subject: [PATCH] drivers/scsi/dpt_i2o: Convert to generic boolean
 > 
-> Yeah I tended to prefer that all exports be in one place, rather than 
-> scattered around and difficult to evaluate en masse :)
-
-My personal preference (and how I code) is export at the bottom of the
-function.  However, it's one of those stylistic things that I'm happy to
-have people code however they want (either everything at the bottom of
-the file or all exports at the bottom of the exported function) as long
-as they follow the current style of whatever file they're patching.
-
-James
-
-
+> Convert to use the generic boolean.
+> 
+> Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
+> ---
+> Diffed against linus-git
+> Checked with script/checkpatch.pl
+>   (warned about long lines, but it is not introduced by this patch)
+> 
+>  dpt_i2o.c |   22 +++++++++++-----------
+>  dpti.h    |    9 ++-------
+>  2 files changed, 13 insertions(+), 18 deletions(-)
+> 
+> 
+> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+> index 8258506..bd3a82d 100644
+> --- a/drivers/scsi/dpt_i2o.c
+> +++ b/drivers/scsi/dpt_i2o.c
+> @@ -252,7 +252,7 @@ rebuild_sys_tab:
+>  			adpt_i2o_delete_hba(pHba);
+>  			continue;
+>  		}
+> -		pHba->initialized = TRUE;
+> +		pHba->initialized = true;
+>  		pHba->state &= ~DPTI_STATE_RESET;
+>  		scsi_scan_host(pHba->host);
+>  	}
+> @@ -519,7 +519,7 @@ static int adpt_proc_info(struct 
+> Scsi_Host *host, char *buffer, char **start, of
+>  	int unit;
+>  
+>  	*start = buffer;
+> -	if (inout == TRUE) {
+> +	if (inout) {
+>  		/*
+>  		 * The user has done a write and wants us to take the
+>  		 * data in the buffer and do something with it.
+> @@ -893,7 +893,7 @@ static int adpt_install_hba(struct pci_dev* pDev)
+>  	void __iomem *base_addr_virt = NULL;
+>  	void __iomem *msg_addr_virt = NULL;
+>  
+> -	int raptorFlag = FALSE;
+> +	bool raptorFlag = false;
+>  
+>  	if(pci_enable_device(pDev)) {
+>  		return -EINVAL;
+> @@ -926,7 +926,7 @@ static int adpt_install_hba(struct pci_dev* pDev)
+>  		// Use BAR1 in this configuration
+>  		base_addr1_phys = pci_resource_start(pDev,1);
+>  		hba_map1_area_size = pci_resource_len(pDev,1);
+> -		raptorFlag = TRUE;
+> +		raptorFlag = true;
+>  	}
+>  
+>  	base_addr_virt = ioremap(base_addr0_phys,hba_map0_area_size);
+> @@ -936,7 +936,7 @@ static int adpt_install_hba(struct pci_dev* pDev)
+>  		return -EINVAL;
+>  	}
+>  
+> -        if(raptorFlag == TRUE) {
+> +	if (raptorFlag) {
+>  		msg_addr_virt = ioremap(base_addr1_phys, 
+> hba_map1_area_size );
+>  		if (!msg_addr_virt) {
+>  			PERROR("dpti: adpt_config_hba: io remap 
+> failed on BAR1\n");
+> @@ -996,7 +996,7 @@ static int adpt_install_hba(struct pci_dev* pDev)
+>  	spin_lock_init(&pHba->state_lock);
+>  	spin_lock_init(&adpt_post_wait_lock);
+>  
+> -	if(raptorFlag == 0){
+> +	if (!raptorFlag) {
+>  		printk(KERN_INFO"Adaptec I2O RAID controller %d 
+> at %p size=%x irq=%d\n", 
+>  			hba_count-1, base_addr_virt, 
+> hba_map0_area_size, pDev->irq);
+>  	} else {
+> @@ -1273,7 +1273,7 @@ static s32 adpt_i2o_reset_hba(adpt_hba* pHba)
+>  	u32 m = EMPTY_QUEUE ;
+>  	ulong timeout = jiffies + (TMOUT_IOPRESET*HZ);
+>  
+> -	if(pHba->initialized  == FALSE) {	// First time 
+> reset should be quick
+> +	if (!pHba->initialized) {	/* First time reset 
+> should be quick */
+>  		timeout = jiffies + (25*HZ);
+>  	} else {
+>  		adpt_i2o_quiesce_hba(pHba);
+> @@ -1576,7 +1576,7 @@ static int adpt_open(struct inode 
+> *inode, struct file *file)
+>  //		return -EBUSY;
+>  //	}
+>  
+> -	pHba->in_use = 1;
+> +	pHba->in_use = true;
+>  	mutex_unlock(&adpt_configuration_lock);
+>  
+>  	return 0;
+> @@ -1602,7 +1602,7 @@ static int adpt_close(struct inode 
+> *inode, struct file *file)
+>  		return -ENXIO;
+>  	}
+>  
+> -	pHba->in_use = 0;
+> +	pHba->in_use = false;
+>  
+>  	return 0;
+>  }
+> @@ -2433,8 +2433,8 @@ static s32 adpt_i2o_reparse_lct(adpt_hba* pHba)
+>  						pDev->tid = tid;
+>  						
+> memcpy(&d->lct_data, &lct->lct_entry[i], sizeof(i2o_lct_entry));
+>  						if (pDev->pScsi_dev) {
+> -							
+> pDev->pScsi_dev->changed = TRUE;
+> -							
+> pDev->pScsi_dev->removable = TRUE;
+> +							
+> pDev->pScsi_dev->changed = true;
+> +							
+> pDev->pScsi_dev->removable = true;
+>  						}
+>  					}
+>  					// Found it - mark it scanned
+> diff --git a/drivers/scsi/dpti.h b/drivers/scsi/dpti.h
+> index 0892f6c..5eb7274 100644
+> --- a/drivers/scsi/dpti.h
+> +++ b/drivers/scsi/dpti.h
+> @@ -155,11 +155,6 @@ static int adpt_device_reset(struct 
+> scsi_cmnd* cmd);
+>  #define I2O_SCSI_DSC_QUEUE_FROZEN           0x4000
+>  
+>  
+> -#ifndef TRUE
+> -#define TRUE                  1
+> -#define FALSE                 0
+> -#endif
+> -
+>  #define HBA_FLAGS_INSTALLED_B       0x00000001	// 
+> Adapter Was Installed
+>  #define HBA_FLAGS_BLINKLED_B        0x00000002	// 
+> Adapter In Blink LED State
+>  #define HBA_FLAGS_IN_RESET	0x00000040	/* in reset */
+> @@ -209,8 +204,8 @@ typedef struct _adpt_hba {
+>  	spinlock_t state_lock;
+>  	int unit;
+>  	int host_no;		/* SCSI host number */
+> -	u8 initialized;
+> -	u8 in_use;		/* is the management node open*/
+> +	bool initialized:8;
+> +	bool in_use:8;		/* is the management node open*/
+>  
+>  	char name[32];
+>  	char detail[55];
+> -
+> To unsubscribe from this list: send the line "unsubscribe 
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
