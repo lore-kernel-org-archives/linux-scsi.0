@@ -1,129 +1,251 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [PATCH] sysfs: add filter function to groups
-Date: Tue, 30 Oct 2007 13:25:43 -0500
-Message-ID: <1193768743.3321.91.camel@localhost.localdomain>
-References: <1193671019.3383.13.camel@localhost.localdomain>
-	 <1193676852.2655.21.camel@lov.site>
-	 <1193677071.3383.56.camel@localhost.localdomain>
-	 <47261F50.3050901@s5r6.in-berlin.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: [PATCH 1/1] [Bugme-new] [Bug 9133] New: aacraid driver fails with Dell PowerEdge Expandable RAID Controller 3/Di
+Date: Tue, 30 Oct 2007 15:28:12 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F955E1@otce2k301.adaptec.com>
+References: <bug-9133-10286@http.bugzilla.kernel.org/><20071008104741.5a0ecebf.akpm@linux-foundation.org><AE4F746F2AECFC4DA4AADD66A1DFEF01EE6699@otce2k301.adaptec.com> <20071008153027.10fd15df.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----_=_NextPart_001_01C81B2B.049D8A37"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:57480 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753289AbXJ3SZr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 14:25:47 -0400
-In-Reply-To: <47261F50.3050901@s5r6.in-berlin.de>
+Received: from ts.adaptec.com ([162.62.93.58]:36661 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758739AbXJ3T2S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Oct 2007 15:28:18 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071008153027.10fd15df.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, hawk@pld-linux.org, Matt Domsch <Matt_Domsch@dell.com>
 
-On Mon, 2007-10-29 at 18:58 +0100, Stefan Richter wrote:
-> James Bottomley wrote:
-> >> >  struct attribute_group {
-> >> >  	const char		*name;
-> >> > +	int			(*filter_show)(struct kobject *, int);
-> 
-> > Actually, it returns a true/false value indicating whether the given
-> > attribute should be displayed.
-> 
-> How about this:
-> 
-> 	int (*is_visible)(...);
+This is a multi-part message in MIME format.
 
-OK, so is this latest revision acceptable to everyone?
+------_=_NextPart_001_01C81B2B.049D8A37
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-James
+As reported in http://bugzilla.kernel.org/show_bug.cgi?id=3D9133 it was
+discovered that the PERC line of controllers lacked a key 64 bit
+ScatterGather capable SCSI pass-through function. The adapters are still
+capable of 64 bit ScatterGather I/O commands, but these two can not be
+mixed. This problem was exacerbated by the introduction of the SCSI
+Generic access to the DASD physical devices.
 
-Index: BUILD-2.6/fs/sysfs/group.c
-===================================================================
---- BUILD-2.6.orig/fs/sysfs/group.c	2007-10-28 17:27:04.000000000 -0500
-+++ BUILD-2.6/fs/sysfs/group.c	2007-10-30 12:35:47.000000000 -0500
-@@ -16,25 +16,31 @@
- #include "sysfs.h"
- 
- 
--static void remove_files(struct sysfs_dirent *dir_sd,
-+static void remove_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
- 			 const struct attribute_group *grp)
- {
- 	struct attribute *const* attr;
-+	int i;
- 
--	for (attr = grp->attrs; *attr; attr++)
--		sysfs_hash_and_remove(dir_sd, (*attr)->name);
-+	for (i = 0, attr = grp->attrs; *attr; i++, attr++)
-+		if (grp->is_visible &&
-+		    grp->is_visible(kobj, *attr, i))
-+			sysfs_hash_and_remove(dir_sd, (*attr)->name);
- }
- 
--static int create_files(struct sysfs_dirent *dir_sd,
-+static int create_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
- 			const struct attribute_group *grp)
- {
- 	struct attribute *const* attr;
--	int error = 0;
-+	int error = 0, i;
- 
--	for (attr = grp->attrs; *attr && !error; attr++)
--		error = sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
-+	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++)
-+		if (grp->is_visible &&
-+		    grp->is_visible(kobj, *attr, i))
-+			error |=
-+				sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
- 	if (error)
--		remove_files(dir_sd, grp);
-+		remove_files(dir_sd, kobj, grp);
- 	return error;
- }
- 
-@@ -54,7 +60,7 @@ int sysfs_create_group(struct kobject * 
- 	} else
- 		sd = kobj->sd;
- 	sysfs_get(sd);
--	error = create_files(sd, grp);
-+	error = create_files(sd, kobj, grp);
- 	if (error) {
- 		if (grp->name)
- 			sysfs_remove_subdir(sd);
-@@ -75,7 +81,7 @@ void sysfs_remove_group(struct kobject *
- 	} else
- 		sd = sysfs_get(dir_sd);
- 
--	remove_files(sd, grp);
-+	remove_files(sd, kobj, grp);
- 	if (grp->name)
- 		sysfs_remove_subdir(sd);
- 
-Index: BUILD-2.6/include/linux/sysfs.h
-===================================================================
---- BUILD-2.6.orig/include/linux/sysfs.h	2007-10-28 17:20:06.000000000 -0500
-+++ BUILD-2.6/include/linux/sysfs.h	2007-10-30 13:24:06.000000000 -0500
-@@ -32,6 +32,8 @@ struct attribute {
- 
- struct attribute_group {
- 	const char		*name;
-+	int			(*is_visible)(struct kobject *,
-+					      struct attribute *, int);
- 	struct attribute	**attrs;
- };
- 
-Index: BUILD-2.6/kernel/params.c
-===================================================================
---- BUILD-2.6.orig/kernel/params.c	2007-10-29 01:18:43.000000000 -0500
-+++ BUILD-2.6/kernel/params.c	2007-10-29 01:18:49.000000000 -0500
-@@ -472,7 +472,7 @@ param_sysfs_setup(struct module_kobject 
- 			sizeof(mp->grp.attrs[0]));
- 	size[1] = (valid_attrs + 1) * sizeof(mp->grp.attrs[0]);
- 
--	mp = kmalloc(size[0] + size[1], GFP_KERNEL);
-+	mp = kzalloc(size[0] + size[1], GFP_KERNEL);
- 	if (!mp)
- 		return ERR_PTR(-ENOMEM);
- 
+The fix for users before this patch is applied is aacraid.dacmode=3D0 on
+the kernel command line to disable 64 bit I/O.
 
+The enclosed patch introduces a new adapter quirk and tries to limp
+along by enabling pass-through in situations where memory is 32 bit
+addressable on 64 bit machines, or disable the pass-through functions
+altogether. I expect that the check for 32 bit addressable memory to be
+controversial in that it can be incorrect in non-Dell non-Intel systems
+that PERC would never be installed under, the alternative is to disable
+pass-through in all cases which could be reported as another regression.
 
+Pass-through is used for SCSI Generic access to the physical devices, or
+for the management applications to properly function.
+
+In systems where this patch has disabled pass-through because it is
+unsupportable in combination with I/O performance, the user can choose
+to enable pass-through by turning off dacmode (aacraid.dacmode=3D0) or
+limiting the discovered kernel memory (mem=3D4G) with an associated loss
+in runtime performance. If we chose instead to turn off 64 bit dacmode
+for the adapters with this quirk, then this would be reported as another
+regression.
+
+This attached patch is against current scsi-misc-2.6.
+
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
+handling of patch attachments.
+
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+
+ drivers/scsi/aacraid/aachba.c  |   15 +++++++++++++-
+ drivers/scsi/aacraid/aacraid.h |    6 +++++
+ drivers/scsi/aacraid/commsup.c |    6 ++---
+ drivers/scsi/aacraid/linit.c   |   42
++++++++++++++++++++++++------------------
+
+ 4 files changed, 47 insertions(+), 22 deletions(-)
+
+Sincerely -- Mark Salyzyn
+
+------_=_NextPart_001_01C81B2B.049D8A37
+Content-Type: application/octet-stream;
+	name="aacraid_perc2.patch"
+Content-Transfer-Encoding: base64
+Content-Description: aacraid_perc2.patch
+Content-Disposition: attachment;
+	filename="aacraid_perc2.patch"
+
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
+MTAtMzAgMTQ6NDk6MzYuMjk0MzgyOTc4IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDctMTAtMzAgMTU6MDY6NDUuNjQzMzI0MjA1IC0wNDAwCkBAIC0xMTkwLDYg
+KzExOTAsMTUgQEAKIAkJCQkgIChmaWJfY2FsbGJhY2spIGFhY19zcmJfY2FsbGJhY2ssICh2b2lk
+ICopIGNtZCk7CiB9CiAKK3N0YXRpYyBpbnQgYWFjX3Njc2lfMzJfNjQoc3RydWN0IGZpYiAqIGZp
+Yiwgc3RydWN0IHNjc2lfY21uZCAqIGNtZCkKK3sKKwlpZiAoKHNpemVvZihkbWFfYWRkcl90KSA+
+IDQpICYmCisJIChudW1fcGh5c3BhZ2VzID4gKDB4RkZGRkZGRkZVTEwgPj4gUEFHRV9TSElGVCkp
+ICYmCisJIChmaWItPmRldi0+YWRhcHRlcl9pbmZvLm9wdGlvbnMgJiBBQUNfT1BUX1NHTUFQX0hP
+U1Q2NCkpCisJCXJldHVybiBGQUlMRUQ7CisJcmV0dXJuIGFhY19zY3NpXzMyKGZpYiwgY21kKTsK
+K30KKwogaW50IGFhY19nZXRfYWRhcHRlcl9pbmZvKHN0cnVjdCBhYWNfZGV2KiBkZXYpCiB7CiAJ
+c3RydWN0IGZpYiogZmlicHRyOwpAQCAtMTI2Nyw2ICsxMjc2LDggQEAKIAkJCSAxLCAxLAogCQkJ
+IE5VTEwsIE5VTEwpOwogCisJLyogcmVhc29uZWQgZGVmYXVsdCAqLworCWRldi0+bWF4aW11bV9u
+dW1fcGh5c2ljYWxzID0gMTY7CiAJaWYgKHJjb2RlID49IDAgJiYgbGUzMl90b19jcHUoYnVzX2lu
+Zm8tPlN0YXR1cykgPT0gU1RfT0spIHsKIAkJZGV2LT5tYXhpbXVtX251bV9waHlzaWNhbHMgPSBs
+ZTMyX3RvX2NwdShidXNfaW5mby0+VGFyZ2V0c1BlckJ1cyk7CiAJCWRldi0+bWF4aW11bV9udW1f
+Y2hhbm5lbHMgPSBsZTMyX3RvX2NwdShidXNfaW5mby0+QnVzQ291bnQpOwpAQCAtMTM3Niw3ICsx
+Mzg3LDkgQEAKIAkgKiBpbnRlcmZhY2UuCiAJICovCiAJZGV2LT5hX29wcy5hZGFwdGVyX3Njc2kg
+PSAoZGV2LT5kYWNfc3VwcG9ydCkKLQkJCQk/IGFhY19zY3NpXzY0CisJICA/ICgoYWFjX2dldF9k
+cml2ZXJfaWRlbnQoZGV2LT5jYXJkdHlwZSktPnF1aXJrcyAmIEFBQ19RVUlSS19TQ1NJXzMyKQor
+CQkJCT8gYWFjX3Njc2lfMzJfNjQKKwkJCQk6IGFhY19zY3NpXzY0KQogCQkJCTogYWFjX3Njc2lf
+MzI7CiAJaWYgKGRldi0+cmF3X2lvX2ludGVyZmFjZSkgewogCQlkZXYtPmFfb3BzLmFkYXB0ZXJf
+Ym91bmRzID0gKGRldi0+cmF3X2lvXzY0KQpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY3JhaWQuaCBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAotLS0gYS9kcml2ZXJz
+L3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgJMjAwNy0xMC0zMCAxNDo0OTozNi4yOTUzODI4NTAgLTA0
+MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCTIwMDctMTAtMzAgMTU6MDY6
+NDUuNjQ0MzI0MDc5IC0wNDAwCkBAIC01MjEsNiArNTIxLDEyIEBACiAjZGVmaW5lIEFBQ19RVUlS
+S18xN1NHCTB4MDAxMAogCiAvKgorICoJU29tZSBhZGFwdGVyIGZpcm13YXJlIGRvZXMgbm90IHN1
+cHBvcnQgNjQgYml0IHNjc2kgcGFzc3Rocm91Z2gKKyAqIGNvbW1hbmRzLgorICovCisjZGVmaW5l
+IEFBQ19RVUlSS19TQ1NJXzMyCTB4MDAyMAorCisvKgogICoJVGhlIGFkYXB0ZXIgaW50ZXJmYWNl
+IHNwZWNzIGFsbCBxdWV1ZXMgdG8gYmUgbG9jYXRlZCBpbiB0aGUgc2FtZQogICoJcGh5c2ljYWxs
+eSBjb250aWdvdXMgYmxvY2suIFRoZSBob3N0IHN0cnVjdHVyZSB0aGF0IGRlZmluZXMgdGhlCiAg
+Kgljb21tdWljYXRpb24gcXVldWVzIHdpbGwgYXNzdW1lIHRoZXkgYXJlIGVhY2ggYSBzZXBhcmF0
+ZSBwaHlzaWNhbGx5CmRpZmYgLXJ1IGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jIGIv
+ZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2NvbW1zdXAuYwkyMDA3LTEwLTMwIDE0OjQ5OjM2LjI5NjM4MjcyMyAtMDQwMAorKysgYi9kcml2
+ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJMjAwNy0xMC0zMCAxNTowNjo0NS42NDUzMjM5NTMg
+LTA0MDAKQEAgLTEwOTksNyArMTA5OSw4IEBACiAJZnJlZV9pcnEoYWFjLT5wZGV2LT5pcnEsIGFh
+Yyk7CiAJa2ZyZWUoYWFjLT5mc2FfZGV2KTsKIAlhYWMtPmZzYV9kZXYgPSBOVUxMOwotCWlmIChh
+YWNfZ2V0X2RyaXZlcl9pZGVudChpbmRleCktPnF1aXJrcyAmIEFBQ19RVUlSS18zMUJJVCkgewor
+CXF1aXJrcyA9IGFhY19nZXRfZHJpdmVyX2lkZW50KGluZGV4KS0+cXVpcmtzOworCWlmIChxdWly
+a3MgJiBBQUNfUVVJUktfMzFCSVQpIHsKIAkJaWYgKCgocmV0dmFsID0gcGNpX3NldF9kbWFfbWFz
+ayhhYWMtPnBkZXYsIERNQV8zMUJJVF9NQVNLKSkpIHx8CiAJCSAgKChyZXR2YWwgPSBwY2lfc2V0
+X2NvbnNpc3RlbnRfZG1hX21hc2soYWFjLT5wZGV2LCBETUFfMzFCSVRfTUFTSykpKSkKIAkJCWdv
+dG8gb3V0OwpAQCAtMTExMCw3ICsxMTExLDcgQEAKIAl9CiAJaWYgKChyZXR2YWwgPSAoKihhYWNf
+Z2V0X2RyaXZlcl9pZGVudChpbmRleCktPmluaXQpKShhYWMpKSkKIAkJZ290byBvdXQ7Ci0JaWYg
+KGFhY19nZXRfZHJpdmVyX2lkZW50KGluZGV4KS0+cXVpcmtzICYgQUFDX1FVSVJLXzMxQklUKQor
+CWlmIChxdWlya3MgJiBBQUNfUVVJUktfMzFCSVQpCiAJCWlmICgocmV0dmFsID0gcGNpX3NldF9k
+bWFfbWFzayhhYWMtPnBkZXYsIERNQV8zMkJJVF9NQVNLKSkpCiAJCQlnb3RvIG91dDsKIAlpZiAo
+amFmbykgewpAQCAtMTEyMSw3ICsxMTIyLDYgQEAKIAkJfQogCX0KIAkodm9pZClhYWNfZ2V0X2Fk
+YXB0ZXJfaW5mbyhhYWMpOwotCXF1aXJrcyA9IGFhY19nZXRfZHJpdmVyX2lkZW50KGluZGV4KS0+
+cXVpcmtzOwogCWlmICgocXVpcmtzICYgQUFDX1FVSVJLXzM0U0cpICYmIChob3N0LT5zZ190YWJs
+ZXNpemUgPiAzNCkpIHsKICAJCWhvc3QtPnNnX3RhYmxlc2l6ZSA9IDM0OwogIAkJaG9zdC0+bWF4
+X3NlY3RvcnMgPSAoaG9zdC0+c2dfdGFibGVzaXplICogOCkgKyAxMTI7CmRpZmYgLXJ1IGEvZHJp
+dmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMK
+LS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYwkyMDA3LTEwLTMwIDE0OjQ5OjM2LjI5
+NjM4MjcyMyAtMDQwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDctMTAt
+MzAgMTU6MDY6NDUuNjQ3MzIzNzAxIC0wNDAwCkBAIC0xNjQsMjIgKzE2NCwyMiBAQAogICogZm9y
+IHRoZSBjYXJkLiAgQXQgdGhhdCB0aW1lIHdlIGNhbiByZW1vdmUgdGhlIGNoYW5uZWxzIGZyb20g
+aGVyZQogICovCiBzdGF0aWMgc3RydWN0IGFhY19kcml2ZXJfaWRlbnQgYWFjX2RyaXZlcnNbXSA9
+IHsKLQl7IGFhY19yeF9pbml0LCAicGVyY3JhaWQiLCAiREVMTCAgICAiLCAiUEVSQ1JBSUQgICAg
+ICAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIH0sIC8qIFBFUkMgMi9T
+aSAoSWd1YW5hL1BFUkMyU2kpICovCi0JeyBhYWNfcnhfaW5pdCwgInBlcmNyYWlkIiwgIkRFTEwg
+ICAgIiwgIlBFUkNSQUlEICAgICAgICAiLCAyLCBBQUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJUktf
+MzRTRyB9LCAvKiBQRVJDIDMvRGkgKE9wYWwvUEVSQzNEaSkgKi8KLQl7IGFhY19yeF9pbml0LCAi
+cGVyY3JhaWQiLCAiREVMTCAgICAiLCAiUEVSQ1JBSUQgICAgICAgICIsIDIsIEFBQ19RVUlSS18z
+MUJJVCB8IEFBQ19RVUlSS18zNFNHIH0sIC8qIFBFUkMgMy9TaSAoU2xpbUZhc3QvUEVSQzNTaSAq
+LwotCXsgYWFjX3J4X2luaXQsICJwZXJjcmFpZCIsICJERUxMICAgICIsICJQRVJDUkFJRCAgICAg
+ICAgIiwgMiwgQUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfSwgLyogUEVSQyAzL0Rp
+IChJZ3VhbmEgRmxpcENoaXAvUEVSQzNEaUYgKi8KLQl7IGFhY19yeF9pbml0LCAicGVyY3JhaWQi
+LCAiREVMTCAgICAiLCAiUEVSQ1JBSUQgICAgICAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFB
+Q19RVUlSS18zNFNHIH0sIC8qIFBFUkMgMy9EaSAoVmlwZXIvUEVSQzNEaVYpICovCi0JeyBhYWNf
+cnhfaW5pdCwgInBlcmNyYWlkIiwgIkRFTEwgICAgIiwgIlBFUkNSQUlEICAgICAgICAiLCAyLCBB
+QUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJUktfMzRTRyB9LCAvKiBQRVJDIDMvRGkgKExleHVzL1BF
+UkMzRGlMKSAqLwotCXsgYWFjX3J4X2luaXQsICJwZXJjcmFpZCIsICJERUxMICAgICIsICJQRVJD
+UkFJRCAgICAgICAgIiwgMSwgQUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfSwgLyog
+UEVSQyAzL0RpIChKYWd1YXIvUEVSQzNEaUopICovCi0JeyBhYWNfcnhfaW5pdCwgInBlcmNyYWlk
+IiwgIkRFTEwgICAgIiwgIlBFUkNSQUlEICAgICAgICAiLCAyLCBBQUNfUVVJUktfMzFCSVQgfCBB
+QUNfUVVJUktfMzRTRyB9LCAvKiBQRVJDIDMvRGkgKERhZ2dlci9QRVJDM0RpRCkgKi8KLQl7IGFh
+Y19yeF9pbml0LCAicGVyY3JhaWQiLCAiREVMTCAgICAiLCAiUEVSQ1JBSUQgICAgICAgICIsIDIs
+IEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIH0sIC8qIFBFUkMgMy9EaSAoQm94c3Rl
+ci9QRVJDM0RpQikgKi8KLQl7IGFhY19yeF9pbml0LCAiYWFjcmFpZCIsICAiQURBUFRFQyAiLCAi
+Y2F0YXB1bHQgICAgICAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIH0s
+IC8qIGNhdGFwdWx0ICovCi0JeyBhYWNfcnhfaW5pdCwgImFhY3JhaWQiLCAgIkFEQVBURUMgIiwg
+InRvbWNhdCAgICAgICAgICAiLCAyLCBBQUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJUktfMzRTRyB9
+LCAvKiB0b21jYXQgKi8KLQl7IGFhY19yeF9pbml0LCAiYWFjcmFpZCIsICAiQURBUFRFQyAiLCAi
+QWRhcHRlYyAyMTIwUyAgICIsIDEsIEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIH0s
+IC8qIEFkYXB0ZWMgMjEyMFMgKENydXNhZGVyKSAqLwotCXsgYWFjX3J4X2luaXQsICJhYWNyYWlk
+IiwgICJBREFQVEVDICIsICJBZGFwdGVjIDIyMDBTICAgIiwgMiwgQUFDX1FVSVJLXzMxQklUIHwg
+QUFDX1FVSVJLXzM0U0cgfSwgLyogQWRhcHRlYyAyMjAwUyAoVnVsY2FuKSAqLwotCXsgYWFjX3J4
+X2luaXQsICJhYWNyYWlkIiwgICJBREFQVEVDICIsICJBZGFwdGVjIDIyMDBTICAgIiwgMiwgQUFD
+X1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfSwgLyogQWRhcHRlYyAyMjAwUyAoVnVsY2Fu
+LTJtKSAqLwotCXsgYWFjX3J4X2luaXQsICJhYWNyYWlkIiwgICJMZWdlbmQgICIsICJMZWdlbmQg
+UzIyMCAgICAgIiwgMSwgQUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfSwgLyogTGVn
+ZW5kIFMyMjAgKExlZ2VuZCBDcnVzYWRlcikgKi8KLQl7IGFhY19yeF9pbml0LCAiYWFjcmFpZCIs
+ICAiTGVnZW5kICAiLCAiTGVnZW5kIFMyMzAgICAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFB
+Q19RVUlSS18zNFNHIH0sIC8qIExlZ2VuZCBTMjMwIChMZWdlbmQgVnVsY2FuKSAqLworCXsgYWFj
+X3J4X2luaXQsICJwZXJjcmFpZCIsICJERUxMICAgICIsICJQRVJDUkFJRCAgICAgICAgIiwgMiwg
+QUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9LCAv
+KiBQRVJDIDIvU2kgKElndWFuYS9QRVJDMlNpKSAqLworCXsgYWFjX3J4X2luaXQsICJwZXJjcmFp
+ZCIsICJERUxMICAgICIsICJQRVJDUkFJRCAgICAgICAgIiwgMiwgQUFDX1FVSVJLXzMxQklUIHwg
+QUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9LCAvKiBQRVJDIDMvRGkgKE9wYWwv
+UEVSQzNEaSkgKi8KKwl7IGFhY19yeF9pbml0LCAicGVyY3JhaWQiLCAiREVMTCAgICAiLCAiUEVS
+Q1JBSUQgICAgICAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIHwgQUFD
+X1FVSVJLX1NDU0lfMzIgfSwgLyogUEVSQyAzL1NpIChTbGltRmFzdC9QRVJDM1NpICovCisJeyBh
+YWNfcnhfaW5pdCwgInBlcmNyYWlkIiwgIkRFTEwgICAgIiwgIlBFUkNSQUlEICAgICAgICAiLCAy
+LCBBQUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJUktfMzRTRyB8IEFBQ19RVUlSS19TQ1NJXzMyIH0s
+IC8qIFBFUkMgMy9EaSAoSWd1YW5hIEZsaXBDaGlwL1BFUkMzRGlGICovCisJeyBhYWNfcnhfaW5p
+dCwgInBlcmNyYWlkIiwgIkRFTEwgICAgIiwgIlBFUkNSQUlEICAgICAgICAiLCAyLCBBQUNfUVVJ
+UktfMzFCSVQgfCBBQUNfUVVJUktfMzRTRyB8IEFBQ19RVUlSS19TQ1NJXzMyIH0sIC8qIFBFUkMg
+My9EaSAoVmlwZXIvUEVSQzNEaVYpICovCisJeyBhYWNfcnhfaW5pdCwgInBlcmNyYWlkIiwgIkRF
+TEwgICAgIiwgIlBFUkNSQUlEICAgICAgICAiLCAyLCBBQUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJ
+UktfMzRTRyB8IEFBQ19RVUlSS19TQ1NJXzMyIH0sIC8qIFBFUkMgMy9EaSAoTGV4dXMvUEVSQzNE
+aUwpICovCisJeyBhYWNfcnhfaW5pdCwgInBlcmNyYWlkIiwgIkRFTEwgICAgIiwgIlBFUkNSQUlE
+ICAgICAgICAiLCAxLCBBQUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJUktfMzRTRyB8IEFBQ19RVUlS
+S19TQ1NJXzMyIH0sIC8qIFBFUkMgMy9EaSAoSmFndWFyL1BFUkMzRGlKKSAqLworCXsgYWFjX3J4
+X2luaXQsICJwZXJjcmFpZCIsICJERUxMICAgICIsICJQRVJDUkFJRCAgICAgICAgIiwgMiwgQUFD
+X1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9LCAvKiBQ
+RVJDIDMvRGkgKERhZ2dlci9QRVJDM0RpRCkgKi8KKwl7IGFhY19yeF9pbml0LCAicGVyY3JhaWQi
+LCAiREVMTCAgICAiLCAiUEVSQ1JBSUQgICAgICAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFB
+Q19RVUlSS18zNFNHIHwgQUFDX1FVSVJLX1NDU0lfMzIgfSwgLyogUEVSQyAzL0RpIChCb3hzdGVy
+L1BFUkMzRGlCKSAqLworCXsgYWFjX3J4X2luaXQsICJhYWNyYWlkIiwgICJBREFQVEVDICIsICJj
+YXRhcHVsdCAgICAgICAgIiwgMiwgQUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfCBB
+QUNfUVVJUktfU0NTSV8zMiB9LCAvKiBjYXRhcHVsdCAqLworCXsgYWFjX3J4X2luaXQsICJhYWNy
+YWlkIiwgICJBREFQVEVDICIsICJ0b21jYXQgICAgICAgICAgIiwgMiwgQUFDX1FVSVJLXzMxQklU
+IHwgQUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9LCAvKiB0b21jYXQgKi8KKwl7
+IGFhY19yeF9pbml0LCAiYWFjcmFpZCIsICAiQURBUFRFQyAiLCAiQWRhcHRlYyAyMTIwUyAgICIs
+IDEsIEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIHwgQUFDX1FVSVJLX1NDU0lfMzIg
+fSwgLyogQWRhcHRlYyAyMTIwUyAoQ3J1c2FkZXIpICovCisJeyBhYWNfcnhfaW5pdCwgImFhY3Jh
+aWQiLCAgIkFEQVBURUMgIiwgIkFkYXB0ZWMgMjIwMFMgICAiLCAyLCBBQUNfUVVJUktfMzFCSVQg
+fCBBQUNfUVVJUktfMzRTRyB8IEFBQ19RVUlSS19TQ1NJXzMyIH0sIC8qIEFkYXB0ZWMgMjIwMFMg
+KFZ1bGNhbikgKi8KKwl7IGFhY19yeF9pbml0LCAiYWFjcmFpZCIsICAiQURBUFRFQyAiLCAiQWRh
+cHRlYyAyMjAwUyAgICIsIDIsIEFBQ19RVUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIHwgQUFD
+X1FVSVJLX1NDU0lfMzIgfSwgLyogQWRhcHRlYyAyMjAwUyAoVnVsY2FuLTJtKSAqLworCXsgYWFj
+X3J4X2luaXQsICJhYWNyYWlkIiwgICJMZWdlbmQgICIsICJMZWdlbmQgUzIyMCAgICAgIiwgMSwg
+QUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9LCAv
+KiBMZWdlbmQgUzIyMCAoTGVnZW5kIENydXNhZGVyKSAqLworCXsgYWFjX3J4X2luaXQsICJhYWNy
+YWlkIiwgICJMZWdlbmQgICIsICJMZWdlbmQgUzIzMCAgICAgIiwgMiwgQUFDX1FVSVJLXzMxQklU
+IHwgQUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9LCAvKiBMZWdlbmQgUzIzMCAo
+TGVnZW5kIFZ1bGNhbikgKi8KIAogCXsgYWFjX3J4X2luaXQsICJhYWNyYWlkIiwgICJBREFQVEVD
+ICIsICJBZGFwdGVjIDMyMzBTICAgIiwgMiB9LCAvKiBBZGFwdGVjIDMyMzBTIChIYXJyaWVyKSAq
+LwogCXsgYWFjX3J4X2luaXQsICJhYWNyYWlkIiwgICJBREFQVEVDICIsICJBZGFwdGVjIDMyNDBT
+ICAgIiwgMiB9LCAvKiBBZGFwdGVjIDMyNDBTIChUb3JuYWRvKSAqLwpAQCAtMjI0LDggKzIyNCw4
+IEBACiAJeyBhYWNfc2FfaW5pdCwgInBlcmNyYWlkIiwgIkRFTEwgICAgIiwgIlBFUkNSQUlEICAg
+ICAgICAiLCA0LCBBQUNfUVVJUktfMzRTRyB9LCAvKiBEZWxsIFBFUkMyL1FDICovCiAJeyBhYWNf
+c2FfaW5pdCwgImhwbnJhaWQiLCAgIkhQICAgICAgIiwgIk5ldFJBSUQgICAgICAgICAiLCA0LCBB
+QUNfUVVJUktfMzRTRyB9LCAvKiBIUCBOZXRSQUlELTRNICovCiAKLQl7IGFhY19yeF9pbml0LCAi
+YWFjcmFpZCIsICAiREVMTCAgICAiLCAiUkFJRCAgICAgICAgICAgICIsIDIsIEFBQ19RVUlSS18z
+MUJJVCB8IEFBQ19RVUlSS18zNFNHIH0sIC8qIERlbGwgQ2F0Y2hhbGwgKi8KLQl7IGFhY19yeF9p
+bml0LCAiYWFjcmFpZCIsICAiTGVnZW5kICAiLCAiUkFJRCAgICAgICAgICAgICIsIDIsIEFBQ19R
+VUlSS18zMUJJVCB8IEFBQ19RVUlSS18zNFNHIH0sIC8qIExlZ2VuZCBDYXRjaGFsbCAqLworCXsg
+YWFjX3J4X2luaXQsICJhYWNyYWlkIiwgICJERUxMICAgICIsICJSQUlEICAgICAgICAgICAgIiwg
+MiwgQUFDX1FVSVJLXzMxQklUIHwgQUFDX1FVSVJLXzM0U0cgfCBBQUNfUVVJUktfU0NTSV8zMiB9
+LCAvKiBEZWxsIENhdGNoYWxsICovCisJeyBhYWNfcnhfaW5pdCwgImFhY3JhaWQiLCAgIkxlZ2Vu
+ZCAgIiwgIlJBSUQgICAgICAgICAgICAiLCAyLCBBQUNfUVVJUktfMzFCSVQgfCBBQUNfUVVJUktf
+MzRTRyB8IEFBQ19RVUlSS19TQ1NJXzMyIH0sIC8qIExlZ2VuZCBDYXRjaGFsbCAqLwogCXsgYWFj
+X3J4X2luaXQsICJhYWNyYWlkIiwgICJBREFQVEVDICIsICJSQUlEICAgICAgICAgICAgIiwgMiB9
+LCAvKiBBZGFwdGVjIENhdGNoIEFsbCAqLwogCXsgYWFjX3JrdF9pbml0LCAiYWFjcmFpZCIsICJB
+REFQVEVDICIsICJSQUlEICAgICAgICAgICAgIiwgMiB9LCAvKiBBZGFwdGVjIFJvY2tldCBDYXRj
+aCBBbGwgKi8KIAl7IGFhY19uYXJrX2luaXQsICJhYWNyYWlkIiwgIkFEQVBURUMgIiwgIlJBSUQg
+ICAgICAgICAgICAiLCAyIH0gLyogQWRhcHRlYyBORU1FUi9BUksgQ2F0Y2ggQWxsICovCkBAIC00
+MjAsNiArNDIwLDEyIEBACiAJCXVuc2lnbmVkIG51bV9vbmUgPSAwOwogCQl1bnNpZ25lZCBkZXB0
+aDsKIAorCQkvKgorCQkgKiBGaXJtd2FyZSBoYXMgYW4gaW5kaXZpZHVhbCBkZXZpY2UgcmVjb3Zl
+cnkgdGltZSB0eXBpY2FsbHkKKwkJICogb2YgMzUgc2Vjb25kcywgZ2l2ZSB1cyBhIG1hcmdpbi4K
+KwkJICovCisJCWlmIChzZGV2LT50aW1lb3V0IDwgKDQ1ICogSFopKQorCQkJc2Rldi0+dGltZW91
+dCA9IDQ1ICogSFo7CiAJCV9fc2hvc3RfZm9yX2VhY2hfZGV2aWNlKGRldiwgaG9zdCkgewogCQkJ
+aWYgKGRldi0+dGFnZ2VkX3N1cHBvcnRlZCAmJiAoZGV2LT50eXBlID09IFRZUEVfRElTSykgJiYK
+IAkJCQkoc2Rldl9jaGFubmVsKGRldikgPT0gQ09OVEFJTkVSX0NIQU5ORUwpKQo=
+
+------_=_NextPart_001_01C81B2B.049D8A37--
