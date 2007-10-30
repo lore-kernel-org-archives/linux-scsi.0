@@ -1,56 +1,66 @@
-From: Richard Knutsson <ricknu-0@student.ltu.se>
-Subject: Re: [PATCH] drivers/scsi/dpt_i2o: Convert to generic boolean
-Date: Tue, 30 Oct 2007 21:52:41 +0100
-Message-ID: <47279999.6090002@student.ltu.se>
-References: <20071030104806.30936.13253.sendpatchset@thinktank.campus.ltu.se> <20071030145155.GL32359@parisc-linux.org> <47274781.3030606@student.ltu.se> <20071030151121.GM32359@parisc-linux.org> <47275FD0.4010400@student.ltu.se> <20071030173828.GB15111@parisc-linux.org>
+From: Rob Landley <rob@landley.net>
+Subject: Re: Questions about scsi.c
+Date: Tue, 30 Oct 2007 17:23:25 -0500
+Message-ID: <200710301723.25767.rob@landley.net>
+References: <200710250606.03301.rob@landley.net> <472724EA.3050502@pobox.com> <1193755409.3321.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gepetto.dc.ltu.se ([130.240.42.40]:50001 "EHLO
-	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752872AbXJ3U7J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 16:59:09 -0400
-In-Reply-To: <20071030173828.GB15111@parisc-linux.org>
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:33028
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758583AbXJ3WXc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Oct 2007 18:23:32 -0400
+In-Reply-To: <1193755409.3321.19.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Jeff Garzik <jgarzik@pobox.com>, Randy Dunlap <rdunlap@xenotime.net>, linux-scsi@vger.kernel.org
 
-Matthew Wilcox wrote:
-> On Tue, Oct 30, 2007 at 05:46:08PM +0100, Richard Knutsson wrote:
->   
->> I just don't see the reason why expressing a boolean as an integer. Some 
->> advantage?
->>     
+On Tuesday 30 October 2007 9:43:29 am James Bottomley wrote:
+> On Tue, 2007-10-30 at 08:34 -0400, Jeff Garzik wrote:
+> > Randy Dunlap wrote:
+> > > On Thu, 25 Oct 2007 16:40:35 -0500 Rob Landley wrote:
+> > >> On Thursday 25 October 2007 12:32:41 pm Randy Dunlap wrote:
+> > >>> !E is for exported symbols and that file has none.
+> > >>> USe !I instead.
+> > >>
+> > >> So how do I handle a case like drivers/ata/libata-core.c which has
+> > >> EXPORT_SYMBOL() calls for functions that live in (and are documented
+> > >> in) other files, such as ata_scsi_ioctl() in
+> > >> drivers/ata/libata-scsi.c?
+...
+> > Yeah I tended to prefer that all exports be in one place, rather than
+> > scattered around and difficult to evaluate en masse :)
 >
-> This is C, not Java, or some other highly-typed language.
-> if (int) and if (ptr) are perfectly acceptable in C.
->   
-Yes, and it has been "corrected" in the C99-standard (which we are using 
-since the Linux support for the the 2.95 compiler stopped). Is there 
-something wrong in actually typing the variable to the type we want it 
-to be? Or would it be better to regress (becoming like Perl or PHP)[1][2]?
-Btw, I am all for 'if (ptr)' since it rarely (if ever) makes any sense 
-to do 'if (ptr == 0x1234)', which evaluates to ptr == NULL is invalid 
-and otherwise valid. Is it really the same for integers? ;)
-(also just want to add: to the "this is not a highly-typed language" 
-that I have heard many times, it theory, I think it would suffice with 
-just the void-pointer)
->   
->> (also helps us if someone does: 'if (var == true)', even thou we should 
->> try to avoid them)
->>     
->
-> I have no idea what you mean.
->   
-There is some places where things like 'if (var == true)' is done, but 
-what happens when var is not the same number as 'true' (and still != 0)? 
-It is a potential bug if 'var' is an integer and expected to be a 
-boolean in this case. Like in a case of "var = some_var & some_flag;"
+> My personal preference (and how I code) is export at the bottom of the
+> function.  However, it's one of those stylistic things that I'm happy to
+> have people code however they want (either everything at the bottom of
+> the file or all exports at the bottom of the exported function) as long
+> as they follow the current style of whatever file they're patching.
 
-Best regards
-Richard Knutsson
-[1] Nothing wrong with Perl or PHP, they are suited for the tasks they 
-are meant to solve.
-[2] If I recall correctly, the predecessor 'B' did not have any types.
+Actually, this one is written up in CodingStyle:
+
+> In source files, separate functions with one blank line.  If the function
+> is exported, the EXPORT* macro for it should follow immediately after the
+> closing function brace line.  E.g.:
+>
+> int system_is_up(void)
+> {
+>         return system_state == SYSTEM_RUNNING;
+> }
+> EXPORT_SYMBOL(system_is_up);
+
+The functional problem is that when the EXPORT_SYMBOL() is in a different file 
+entirely, the documentation infrastructure doesn't pick up that it's an 
+exported function.
+
+> James
+
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
