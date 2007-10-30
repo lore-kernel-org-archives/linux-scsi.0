@@ -1,90 +1,34 @@
-From: Richard Knutsson <ricknu-0@student.ltu.se>
-Subject: Re: [PATCH] drivers/scsi/lpfc/lpfc_hw.h: Some minor cleanup.
-Date: Tue, 30 Oct 2007 17:41:25 +0100
-Message-ID: <47275EB5.1070704@student.ltu.se>
-References: <20071030104816.30937.77821.sendpatchset@thinktank.campus.ltu.se> <200710301544.02765.vda.linux@googlemail.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: RE: [PATCH 1/8] scsi: megaraid_sas - add hibernation support
+Date: Tue, 30 Oct 2007 12:18:12 -0500
+Message-ID: <1193764692.3321.88.camel@localhost.localdomain>
+References: <1191253256.5850.4.camel@dhcp-75-534.se.lsil.com>
+	 <9738BCBE884FDB42801FAD8A7769C265010A0A09@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gepetto.dc.ltu.se ([130.240.42.40]:40792 "EHLO
-	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751351AbXJ3RDz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 13:03:55 -0400
-In-Reply-To: <200710301544.02765.vda.linux@googlemail.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:44475 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752419AbXJ3RSO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 13:18:14 -0400
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265010A0A09@NAMAIL1.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Denys Vlasenko <vda.linux@googlemail.com>
-Cc: James.Bottomley@steeleye.com, James.Smart@emulex.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-Denys Vlasenko wrote:
-> On Tuesday 30 October 2007 10:54, Richard Knutsson wrote:
->   
->> Signed-off-by: Richard Knutsson <ricknu-0@student.ltu.se>
->> ---
->> Diffed against linus-git
->> Checked with script/checkpatch.pl
->>
->>
->> diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
->> index 451accd..6f56528 100644
->> --- a/drivers/scsi/lpfc/lpfc_hw.h
->> +++ b/drivers/scsi/lpfc/lpfc_hw.h
->> @@ -3158,31 +3158,30 @@ struct lpfc_sli2_slim {
->>   *
->>   * Parameters:
->>   * device : struct pci_dev 's device field
->> - *
->> - * return 1 => TRUE
->> - *        0 => FALSE
->>   */
->> -static inline int
->> +static inline bool
->>  lpfc_is_LC_HBA(unsigned short device)
->>  {
->> -	if ((device == PCI_DEVICE_ID_TFLY) ||
->> -	    (device == PCI_DEVICE_ID_PFLY) ||
->> -	    (device == PCI_DEVICE_ID_LP101) ||
->> -	    (device == PCI_DEVICE_ID_BMID) ||
->> -	    (device == PCI_DEVICE_ID_BSMB) ||
->> -	    (device == PCI_DEVICE_ID_ZMID) ||
->> -	    (device == PCI_DEVICE_ID_ZSMB) ||
->> -	    (device == PCI_DEVICE_ID_RFLY))
->> -		return 1;
->> -	else
->> -		return 0;
->> +	switch (device) {
->> +	case PCI_DEVICE_ID_TFLY:
->> +	case PCI_DEVICE_ID_PFLY:
->> +	case PCI_DEVICE_ID_LP101:
->> +	case PCI_DEVICE_ID_BMID:
->> +	case PCI_DEVICE_ID_BSMB:
->> +	case PCI_DEVICE_ID_ZMID:
->> +	case PCI_DEVICE_ID_ZSMB:
->> +	case PCI_DEVICE_ID_RFLY:
->> +		return true;
->> +	}
->> +
->> +	return false;
->>  }
->>     
->
-> Why is this patch useful? 
-Just simpler to read, no?
-> I'd rather do this instead:
->
-> -static inline int
-> +static int
->
-> (this function has three callsites, thus de-inlining will
-> make code smaller)
->   
-It is returning (and the results are used as) a boolean so why should it 
-be an integer? But I have no objection to de-inline it.
-Alright with:
--static inline int
-+static bool
-?
+On Mon, 2007-10-29 at 14:26 -0600, Yang, Bo wrote:
+> James,
+>  
+> We submitted the "03.16-rc1" (megaraid_sas) patches about three weeks
+> back.  Do you have any feedback or we need to re-submit the patches?
 
-Richard Knutsson
+Randy Dunlap asked you why the module parameters were invisible ... is
+there a reason (if not the patch needs to be updated to make them
+visible and writeable by root).
+
+James
+
+
 
