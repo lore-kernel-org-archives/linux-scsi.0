@@ -1,43 +1,86 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] drivers/scsi/dpt_i2o: Convert to generic boolean
-Date: Tue, 30 Oct 2007 09:11:21 -0600
-Message-ID: <20071030151121.GM32359@parisc-linux.org>
-References: <20071030104806.30936.13253.sendpatchset@thinktank.campus.ltu.se> <20071030145155.GL32359@parisc-linux.org> <47274781.3030606@student.ltu.se>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [linux-scsi-owner@vger.kernel.org: BOUNCElinux-scsi@vger.kernel.org:
+Date: Tue, 30 Oct 2007 15:19:39 +0000
+Message-ID: <20071030151938.GA6394@infradead.org>
+References: <00df01c81ae9$0f49b510$6200a8c0@jameshsu>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:41469 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753521AbXJ3PLW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 11:11:22 -0400
+Received: from pentafluge.infradead.org ([213.146.154.40]:44117 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753198AbXJ3PTs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 11:19:48 -0400
 Content-Disposition: inline
-In-Reply-To: <47274781.3030606@student.ltu.se>
+In-Reply-To: <00df01c81ae9$0f49b510$6200a8c0@jameshsu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Richard Knutsson <ricknu-0@student.ltu.se>
-Cc: James.Bottomley@SteelEye.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: jameshsu <jameshsu@acard.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Tue, Oct 30, 2007 at 04:02:25PM +0100, Richard Knutsson wrote:
-> Matthew Wilcox wrote:
-> >On Tue, Oct 30, 2007 at 11:54:22AM +0100, Richard Knutsson wrote:
-> >  
-> >>Convert to use the generic boolean.
-> >>-	u8 initialized;
-> >>-	u8 in_use;		/* is the management node open*/
-> >>+	bool initialized:8;
-> >>+	bool in_use:8;		/* is the management node open*/
-> >>    
-> >
-> >Are you serious?
-> >  
-> Well, yes. It is since it was defined to really be 8 bits before, and 
-> there is no reason why a boolean would be 8 bits and not 1 or 16.
-> If it is overly cautious/not needed, then I don't mind removing the ':8'...
+On Tue, Oct 30, 2007 at 07:36:05PM +0800, jameshsu wrote:
+> Hello James Bottomley,
+> 
+> This driver has nothing changed since last time submit.
+> However recently we check the 2.6.23.1 kernel and found code is not
+> up-to-date (still remain @2005).
+> Resend this message to submit the same driver again. (.c diff file under
+> atp870u.c.diff.bz2 format)
+> Please help Acard to build in this modified SCSI driver with latest Linux
+> kernel.
+> If any code still volient the documentation, please let us know the reasons
+> and file path.
+> Thanks!
 
-What's wrong with leaving it as 'u8'?
+I tried applying both patches but none of them applies.  atp870u.h.diff reverse-applies
+so we're at the state already after your patch, and atp870u.c.diff doesn't apply at all,
+partially because the before version you have has dos line endings, while atp870u.c
+in the kernel doesn't.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+> 
+> James Hsu
+> ----- Original Message -----
+> From: jameshsu
+> To: postmaster@vger.kernel.org
+> Cc: 'David Miller' ; James Bottomley
+> Sent: Thursday, March 29, 2007 3:36 PM
+> Subject: Re: FW: [linux-scsi-owner@vger.kernel.org:
+> BOUNCElinux-scsi@vger.kernel.org: - - Completed
+> 
+> 
+> To whom can take care of this driver issues:
+> 
+> We, Acard, modified this driver again based on James Bottomley's input
+> 3/16/2007.
+> In the mean time, I attach the source code with another email for James
+> Bottomley.
+> 
+> Those changes are:
+> 1.Modify coding style.
+>  2.Add old copy right.
+>  3.CompString, ClearString, CopyString routine replaced with memcmp, memset
+> and memcpy.
+>  4.Remove adapters array form 2.6 kernel.
+>  5.Removed the scsi_data_direction() hack macro.Just pass the direction
+> directly into the functions
+>  6.Use defined values instead of bare numbers (REQUEST_SENSE instead of
+> 0x03)
+>  7.Replace page_address() to get arbitrary userspace memory with
+> kmap_atomic()/kunmap_atomic().
+>  8.Use SAM_STAT_CHECK_CONDITION/GOOD instead of separate #define
+>  9.Removed home defined READ_6, WRITE_6 etc.
+> 10.Return SCSI_MLQUEUE_HOST_BUSY on out of resources in queuecommand.
+> 
+> Please let me know if this submission is proper.
+> Again, relly appreciate for your help!
+> 
+> James Hsu,
+> Manager,QA Testing Dept.
+> ACARD TECHNOLOGY CORP.
+> Taipei Hsien,Taiwan
+> 6F No78,Sec 1,Kwang Fu Road,Sang Chung,
+> (02)8512-2290 x 2311(O),(02)8512-2548(FAX)
+> 0968-989-555 (mobile)
+
+
+
+---end quoted text---
