@@ -1,230 +1,1293 @@
-From: Anthony Ewell <amewell@verizon.net>
-Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
-Date: Mon, 29 Oct 2007 22:36:21 -0700
-Message-ID: <4726C2D5.2070504@verizon.net>
-References: <471FEB81.80103@verizon.net>
- <1193502827.3281.9.camel@localhost.localdomain>	<47239DAD.4020005@verizon.net>
- <1193581594.3333.4.camel@localhost.localdomain>	<47252B18.6060504@verizon.net>
- <1193711771.3383.150.camel@localhost.localdomain>
+From: "jameshsu" <jameshsu@acard.com>
+Subject: Should be Acard ATP8620 2SATA / 1 IDE  driver
+Date: Tue, 30 Oct 2007 16:28:59 +0800
+Message-ID: <00b501c81ace$ece895f0$6200a8c0@jameshsu>
+Reply-To: "jameshsu" <jameshsu@acard.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+	boundary="----=_NextPart_000_00B2_01C81B11.F9D10C00"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vms169133pub.verizon.net ([206.46.169.133]:48741 "EHLO
-	vms169133pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751344AbXJ3Gg5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 02:36:57 -0400
-Received: from rn1.rent-a-nerd.local ([71.243.203.33])
- by vms169133.mailsrvcs.net
- (Sun Java System Messaging Server 6.2-6.01 (built Apr  3 2006))
- with ESMTPA id <0JQP00G5BM8NEWG0@vms169133.mailsrvcs.net> for
- linux-scsi@vger.kernel.org; Tue, 30 Oct 2007 00:36:24 -0500 (CDT)
-In-reply-to: <1193711771.3383.150.camel@localhost.localdomain>
+Received: from 219-80-62-20.static.tfn.net.tw ([219.80.62.20]:2402 "EHLO
+	Thunder.acard.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751340AbXJ3IbL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 04:31:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: 'David Miller' <davem@davemloft.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Matti Aarnio <postmaster@vger.kernel.org>, tytso@us.ibm.com
 
-James Bottomley wrote:
-> Please don't drop the cc lists.  There are others who probably have more
-> informed opinions than I do who won't get to comment if they don't see
-> it.
-> 
-> On Sun, 2007-10-28 at 17:36 -0700, Anthony Ewell wrote:
->> James Bottomley wrote:
->>> On Sat, 2007-10-27 at 13:21 -0700, Anthony Ewell wrote:
->>>> James Bottomley wrote:
->>>>> On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
->>>>>> Hi All,
->>>>>>
->>>>>>     If you all would not mind a post from the general
->>>>>> public Linux user, after doing a complete disk wipe
->>>>>> of CentOS 4 and installing CentOS5, my system is preceived
->>>>>> to be 3 times slower.
->>>>>>
->>>>>>      To troubleshooting this, I made a post on CentOS's
->>>>>> bugzilla:  http://bugs.centos.org/view.php?id=2382
->>>>>>
->>>>>>      Would some of the experts on this group mind
->>>>>> looking at the bug to evaluate the possibility
->>>>>> that it is being caused by the underlying scsi
->>>>>> driver?   The post contains a dmesg from "Computer C".
->>>>>> (Yes, I am getting a bit desperate.)
->>>>> There's still too little information in the bug report to tell much of
->>>>> anything.  The dmesg doesn't indicate any anomaly with the megaraid
->>>>> (although the LSI people might be able to tell better).  However, it
->>>>> also doesn't contain a trace of the tape drive.
->>>>>
->>>>> Best guess would be a slow down in the megaraid driver.  Can you try
->>>>> doing a speed test on it?  (hdparm -t should suffice).
->>>>>
->>>>> James
->>>> Hi James,
->>>>
->>>> The other guy reporting the problem
->>>>  
->>>> http://www.centos.org/modules/newbb/viewtopic.php?topic_id=10659&start=0#forumpost34209
->>>> is not using a MegaRAID card.  He is using 3ware9508 Raid Controllers.
->>>> He is also using a different processor (amd vs xeon) and a different
->>>> chipset (Intel Greenwood vs nVidia)
->>>>
->>>> I also spoke to Neela Kolli (Mega RAID maintainer) and he said he'd
->>>> never heard of the problem.  Here are some tests (including dhparm)
->>>> that I sent to Neela (he never wrote back).
->>>>
->>>> I have also checked with Stellen over at the "dump"
->>>> list and he has not seen the problem (yet).
->>>>
->>>> The problem occurs when backing up to a two different types
->>>> of tape drives and to an eSata drive.
->>>>
->>>> When I am running a "dump" on computer C, gnome-system-monitor
->>>> shows my two cores running at only about 10 to 20% and
->>>> switching back and forth (one at 0% the other at 20% for
->>>> about 5 seconds, then switching positions)
->>>>
->>>> On Computer C (Cent OS 5), when typing in Word Pro (a windows word 
->>>> processor) in Parallels, I can watch myself type.  Computer B
->>>> (CentOS 4.4, now 4.5) has the same version of Parallels
->>>> installed on it (Parallels-2.2.2112-lin.i386) that computer C
->>>> (CentOS 5) has. The perceived speed difference is about a factor
->>>> of three (you can not watch yourself type).
->>>>
->>>> All the "Low Level" test I run seem to come out the same between
->>>> Cent OS 4.4 and 5.  Very frustrating!  It is almost like some
->>>> system monitor component is looking at everything and
->>>> slowing things down.  If this was Windows, I'd go straight
->>>> to the Anti Virus as the culprit.  (Does SE Linux do such
->>>> things?)
->>>>
->>>> Are there any performance tests I can run for you?
->>>>
->>>> Thank you for letting me ramble, this problem is
->>>> really frustrating.  I am afraid to any additional CentOS5
->>>> server out there and CentOS 4.x is so terribly out of
->>>> date.
->>>>
->>>> -T
->>>>
->>>> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>> Tests I sent to Neela:
->>>>
->>>> CentOS 5 (2.6.18-8.1.8.el5, Sata150-4):
->>>>
->>>> #grep -i bogomips /var/log/dmesg
->>>> Calibrating delay using timer specific routine.. 4001.91 BogoMIPS 
->>>> (lpj=2000959)
->>>> Calibrating delay using timer specific routine.. 3999.58 BogoMIPS 
->>>> (lpj=1999791)
->>>> Total of 2 processors activated (8001.50 BogoMIPS).
->>>>
->>>>
->>>> #/sbin/hdparm -t /dev/sda
->>>> /dev/sda:
->>>>   Timing buffered disk reads:  236 MB in  3.01 seconds =  78.53 MB/sec
->>>>
->>>>
->>>> #/sbin/hdparm -t /dev/sdb
->>>> /dev/sdb:
->>>>   Timing buffered disk reads:  182 MB in  3.01 seconds =  60.37 MB/sec
->>>>
->>>>
->>>> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>> CentOS 4.4 (linux rescue 2.6.9-42.EL, IDE):
->>>>
->>>> #cat /proc/cpuinfo
->>>> bogomips	: 4002.92
->>>>
->>>> #/sbin/hdparm -t /dev/sda
->>>> /dev/sda:
->>>>   Timing buffered disk reads:  216 MB in  3.01 seconds =  71.87 MB/sec
->>>>
->>>> #/sbin/hdparm -t /dev/sdb
->>>> /dev/sdb:
->>>>   Timing buffered disk reads:  184 MB in  3.01 seconds =  61.18 MB/sec
->>> That pretty much shows, if anything, that transfer speed improved
->>> from .9 to .18.
->>>
->>>> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>> CentOS 5 (2.6.18-8.1.3.el5, Sata300-4):
->>>> #grep -i bogomips /var/log/dmesg
->>>> Calibrating delay using timer specific routine.. 4001.92 BogoMIPS 
->>>> (lpj=2000960)
->>>> Calibrating delay using timer specific routine.. 3999.58 BogoMIPS 
->>>> (lpj=1999794)
->>>> Total of 2 processors activated (8001.50 BogoMIPS).
->>>>
->>>> #/sbin/hdparm -t /dev/sda
->>>> /dev/sda:
->>>>   Timing buffered disk reads:  214 MB in  3.02 seconds =  70.86 MB/sec
->>>>
->>>>
->>>> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
->>>> CentOS 5  (2.6.18-10.1.3.el5, Sata300-4):
->>>>
->>>> eSata:  dump -0a -z -f /dev/nul winxp.hdd
->>>>    DUMP: Volume 1 took 0:04:04
->>>>    DUMP: Volume 1 transfer rate: 4247 kB/s
->>>>    DUMP: Volume 1 1567020kB uncompressed, 1036385kB compressed, 1.513:1
->>>>
->>>> eSata:  dump -0a -f /dev/nul winxp.hdd  (no compression)
->>>>    DUMP: Volume 1 1036420 blocks (1012.13MB)
->>>>    DUMP: Volume 1 took 0:02:09
->>>>    DUMP: Volume 1 transfer rate: 8034 kB/s
->>>>
->>>>
->>>> 150-4:  dump -0a -z -f /dev/nul winxp.hdd
->>>>    DUMP: Volume 1 took 0:04:05
->>>>    DUMP: Volume 1 transfer rate: 4230 kB/s
->>>>    DUMP: Volume 1 1573150kB uncompressed, 1036383kB compressed, 1.518:1
->>>>
->>>> 150-4:  dump -0a -f /dev/nul winxp.hdd  (no compression)
->>>>    DUMP: Volume 1 1036420 blocks (1012.13MB)
->>>>    DUMP: Volume 1 took 0:02:05
->>>>    DUMP: Volume 1 transfer rate: 8291 kB/s
->>> I think this is beginning to point to problems with dump.  What are the
->>> corresponding figures for dump under 2.6.9 (or are the two sets of
->>> figures centos5 followed by centos4)?
->>>
->>> James
->>>
->> Computer C:
->> backup drive: eSATA
->> hard drive: RAID SATA-150-4
->>
->> CentOS 4.4, 1:05 hours, approx 52 GB backup file 13,333 kBytes/sec
->> CentOS 5.0, 3:16 hours, approx 43 GB backup file 3,656 kBytes/sec
->> Note: 3.6 times slower
->>
->> Hi James,
->>
->>      The above shows the dump speed difference between CentOS 4.4 and
->> CentOS 5.
->>
->>      I suspected dump at first, until I noticed everything else
->> was about 3 times slower too, such as Parallels, etc.  Open
->> Office 2.3 (linux version) opens about 3 times slower.
->>
->>      Are there any tests you know of to shake out who is
->> slowing the works down?
-> 
-> Yes, could you do backup write tests without dump in the process (as in
-> just do a straight dd from /dev/zero to the devices in centos 4 and 5).
-> If there's no difference in that, it's some scheduling or filesystem
-> issue with dump, I'd expect.
-> 
->>      When I get a chance, I am going to run a dump from my
->> CentOS 5 install DVD in rescue mode (linux rescue).  This
->> to make sure no high level driver is slowing things
->> down.  I will let you know what shows up.
-> 
-> James
+This is a multi-part message in MIME format.
+
+------=_NextPart_000_00B2_01C81B11.F9D10C00
+Content-Type: text/plain;
+	charset="utf-8"
+Content-Transfer-Encoding: 7bit
+
+Should be in TEXT/PLAIN mode. --- resend
+
+************************
+Hello,
+
+This driver has nothing changed since last time submit.
+However recently we download 2.6.23.1 kernel and found Acard ATP8620 SATA
+driver is still not there.
+Resend this message to submit the same driver again.
+Please help Acard to build in this SATA driver with latest Linux kernel.
+If any reason not able to add in, please let us know.
+Thanks!
 
 
-Hi All,
+James Hsu
+----- Original Message -----
+From: jameshsu
+To: Matti Aarnio
+Cc: 'David Miller' ; johnnyweng@acard.com ; James Bottomley ; Jason Wu
+Sent: Monday, April 23, 2007 3:06 PM
+Subject: Another Acard scsi(Wrong, should be SATA) driver for AEC6293
+model - two SATA ports + 1 PATA port
 
-Did the test from the CentOS5 install DVD in rescue mode:
-         transfer rate 4422 KB/s, estimated  finish 4:10.
-No symptom change.  RATS!
 
--T
+To whom can take care of this driver issues:
+
+Here is one new IDE driver from Acard.
+
+Chip number: ATP8620 2S1P PCI-X controller
+Chip Description: 2 SATA(3Gbps)/ 1 UDMA Controller
+Device ID: 0x000D
+(Model name: AEC6293 serial 2 SATA 1 IDE PCI-X HBA)
+
+Would you please take time to review and let me know if this submission is
+proper. appreciate for your help!
+
+James Hsu
+Manager,QA Testing Dept.
+ACARD TECHNOLOGY CORP.
+Taipei Hsien,Taiwan
+6F No78,Sec 1,Kwang Fu Road,Sang Chung,
+(02)8512-2290 x 2311(O),(02)8512-2548(FAX)
+0968-989-555 (mobile)
+
+------=_NextPart_000_00B2_01C81B11.F9D10C00
+Content-Type: application/octet-stream;
+	name="atp8620.tar"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename="atp8620.tar"
+
+H4sIAJfaJUYAA+w9a3fbNrL9Kv8K1N2mlKPEpPyIG9e5R5aUWBvrUUlO0pPN4aFJyGYikSpJOfa2
++e93BuCboETZ1G17j9VdRyKAwWAwmBcGoObNjw7r8nP9u819ZPi8ODhg/8In+e/+i4N95fA7RT5U
+lL2D/foLqKco8sH+d0TeIE7hZ+F6mkPId45te8vqrSr/h352d8i/SMd4SRrjAWOEJqmRGyI/V2RS
+l+XDXUXZVfaJorysH7yUZfKvLbID/yOkac/vHPPq2iNSs4pVD0ij2Ri2yJjq15Y9ta/uoI4zf761
+c9/PFgk/M9swJ3fk2nQ927nbegDMnd2tHww6MS1Kes1f1dHFYNAfjitK+LTVPr14ox7JKnsuR887
+o7cqNmmetZtvscC09OnCoOSXqWktbncBx8WUPr9+lSm5oY5r2paoyLRMT/zco46zmAsLv1DHolNR
+iXc3p66owPUc07oS9mTPbUfYjUGn2p0QmH5NDVHB3LF1dSJGYG5aU1v/Imymm6LHl9MvBr0Rj0YT
+YjwF/kg+d3XX3MU/6rWdLtPc2a5753p0ln1u2jlw8sDrM8vIK4NRmDotjlh6kBMLeJB0hr++Vkdn
+jWG7tVUJuDL2kIwa8A0ebP1ALVguYcNWt6Hu1U87Y7XbGL2N2iafE/n2tf+5OI9A+Dhta76iuN7e
+2t092cQH4JKJPZ3aX4FTyWRh6R4sGmK6xJzNp3RGLY9YVKeuq4EIQOqYOoF1QohmaHNYLiouJlOb
+mv+lEvD7QvcIcBZSn+zMB7rZojfV46DhjW0aYUOHTqnmUvjXtReOTiVWujMfwfycwfS0NE+Lmib6
+hCbUk7Ci2gQW8Bs1Z0asvvO7Q72FY6leDFXPUa81y5hSCeFBnRrHaQfwVU0jp7vfF3RBdXs2g6ai
+Xn0g0o5hW7RK4lWqOYP3zBl1pIXlmlcWNcjUBurPNQcHXN5Mc1AEGd5wbp7r5OHASvnEiRwQBKTY
+ZS4H1YhuW65HksWwvFWcO+DRXBab2TeUrGbMOCaXpu3iVMyCZjFxAoxiul9qASKXKFyjIkA0pj4F
+H5fqoEqBI3Vtrummd1djPe+YczEqTLSb1sQOUGGchYuD7JydNuaeA5S5BlNq53IxmdDw1w7aV94K
+ZOzJBDCBv7CWOB5Tal151/y7adkLT4wV1OdIJbuOQ8hDNwLIJ5RDiNancKSW7S1capS7NFBpo5z2
+u1PjUof8sVXJYZnjsCSGYCiyoJSLkxZjifatRy00QuB5uNSRTO5/MxW+kXECh9rOIPG71MH7cxDn
+b1SIKmjl+VTzKCGGY96gmAoenJBRc9RRW8N36rjdHZw3xu3jFJjkqgy/qZ52OaUfPwGIQRMgtN91
+mm2101LHjdPz9gaHxfBhwwg51/95ghP8PECtcpJGtgalljbDktaw8649VHuNbhufMikFjxNSCwu4
+pIESFWlAb01PnUtJMVStbX3bxHBLlKJbQBe++AF/BL9wVzE8NJgQCWFRC2nng5QCEVtFWlfmYAh7
+X6TtBJ4vgR980oNAtAisc8KB/Mf6j7MN671S4TqcPGt3+vDzWyjRgk5RFhkzTZ1p7hcpHGfSyFqG
+A1Yl7eGwPwz6TIvJBAbBw2/+sHmHz16BJQHKlcjLRgtGIhBWtx0HtMCSITLI30shjclJbIVqYKrp
+0pPU8gSBC/aXPZGSMqRaXUp+XNEEoRIGFZf5RDOnAsx6/W67y5Gb0RnaXiF2z14hBAMlllxDq6qa
+g8oxIWBr6mDzwXqcOlQz7oAchLtVpP78kA+cDVUzDDbcqJsaeRIS21jBVrFxGUZqSBEl54sYePFE
+SFJSBldFw65Wn73yUYOZitRE8caxiY5rksIAUroEwPQuzs/XgZDRRwBDBgDhCnNusGq4wERgjvn8
+STHZQU5EXkIoGb4PFwybFS4lU/O+ctKWsID/iER9i/k7Ke1g3ll/LogkATJ+G6DOtw3I8rWsV5TW
+yQkm86TJADOYKD5hQK6yM4ojy58EbBvjU6yc68Sl3be8yRPAzOM2xs4R7Uum/GYUsso4PsH+zL9l
+k+bzEI7XoVemG5km0pOkqVLdIJupKpopIYr4I0IRcVtYq7HbzJzwqB6nWpyE0KFfxLCNo16ud9Dt
+ty7O24GxyixVNDdqaUux3F5Ld0Yr7LPU78TJToYhrkE113iLmn43NS0DvLtr0MhBY5Qr8d8gVpKR
+jKoUFCGHIDxmNJ2Qw30UCAw0+71Xh99BH/A7AXWXSKzpjo9+oGHC+q+IItf3uQaJdVI/OGBKI+rm
+cA8frNMPWmHzjzI6LcymwQrH7JkSPuO1+dN6+DToZeOqomicIGZCJfx1ZI5EtKBQQGCLucYMgcUR
+QVAfD5T6p2PuN0B933LgU8XakEjP7+6eaS5B4U4uKdT96pgeWBzEs4l3DdrZnNL/ifSylAk4BKGG
+AK9IfQSTBp3yAcTMcd9kxcY1Ioe2Mv4O2iHiT8HOZtbEJOxn+0eXvOP7CC/Jj8Zz9r/t2mDYb6qd
+3uv+sNsYd/q9GrrF4CaO4Dt4HP/uD5NPOr3Uk9OLznkLu+akB5rxHslTn/zHQCoyYmX2hHzVLA+W
+FtKNo/rsJKwXVXSn9pxTAKu88onEScAnhj9hsNuWgQFf3uZbyKvYdEM6p6wIUkyBgqXee9c4PyY4
+ouYCHCvLm94BK2H42iUaeJTPYHybGM09wlexpcPa8VF/VOpHn1CipngvznoR5zVajcG4PSyH+Xwq
+8g7/vlZV+Wq9cTE+6w+l7X/b15Z1R94Dy6FDECr9UXPYGSBtpW2+verv05LzTu/iA4uEkRazgGLN
+zsFS6I3a0vabwfn2RuyCUMcy9unaBh1oV1T+qByi9vlDOQAPXK4dsb/Bf/Xo+7fj5YCUj/V9Bqi+
+lwfoVlbwD7j6tzr7CXVulSP/WfGujgp0FYK9lffZA5De/A/8B81ujRfRw5Vj04v0qAcD2UuUyjVl
+FXy5ddr6eMQ6eJFsuxIzbJmcwTIJLYZeMm1zOllKzt1dIdDGwrNH1HJp07j8yEEGrZV9Nt7NaqYC
+u5nM7T57HzgH7Q9jWPcgLMj87Gs27r/cQV+xmTBQm9eahfGxuf+FPeS9dEDdkHn0Pb7JwBXT/MLS
+NUwbiCOE0VLNMNAbmLdmWoEqTb7zOUaHhyPFH5yh1TyP/YgXstphadA2sQtyiYED0675/yrBl3pm
+uwS+aqCrqG9mmrXPtTBekxwzf/yBKVQeg/I/fkCreDgkCsvx5nmRC98rIUR63x++7fTeMG9R7ba7
+6nm7txtGQ9/bzhcwuRglqlXyC+k2Pqi/XrQv2kE+DEkGNX/FXWcyt+2p9KNRBRvZJu5Mm04JC2Dx
+WKuwT/Bo8nrNDetuKL0AFhnaZmF8GUxxTCXaZHfZVYiumWjBVlU29xOHUnUOgsyV3rweqI1xv9tp
+1sJaSNXA9RTB5tFWcTw6kiYvL9jGBno6AiCcLM+LRd4zzUE2JrBFHkAo/nIiCf+ccQ2PPPGIncpc
+kCjYJoNPhHMGpGErlHT6JAbryUmUs9KOOlHW60QRdKLEgOX0Ul+vl7qgl3oMWLqXzS6CWBiaTyAJ
+Z3CzC4JRSDNU8Fkm5pX61XaM2HTfynLtiYCrnr16Ry3DdjqtahCcXQqlngPFV1DFoNSbOVBGi8u1
+0Km38wEtxejyzqOJcR3lAGpem/MhPMRfHJKgUsf5vbeYVcJ9IbZTmFP3FNiyYw9sx5Ohgc+kK+sq
+UV1lZeV6VLmeUxlTBlWMJELV0aDTU8/7zbfqRQ//abdyGoXKsJLcwhLW5ZSoxPfKhPXiqmsAWpCJ
+8aRCkyQpZfJUs6CqT1Em7r89DaR4w9dGYY0uE7+CWa7GokgxNZGKdgokckZ7FFQNGWusmGpI2SZp
+9cLMF5Fxmmon2gbMaJZS5CQTiMHuAuZTlgO0RS8XV0cysroEkl2pKcGcO/T3BXU9FZafcDXzhVoT
+pQryMHos57OWyAqJByGLGwGhRYRZARM7TFGJTfQDGS6zm50iTp0Tp6S57ETKzd95Z8MpB745kb4P
+JhCZxrakwHdgCjwxIdXYcmWzHZO8teV7x8tn6tS3IDgGRBatySiFIw9j5WEoR/utWTI8fEzKsjGV
+xClDzN0lqD3LAWkvvEuJBUxWKFXylBk78j4O7+u1CaQAH+pSKA6EzcgT/KbwyVqwRH1JkRmx9PkC
+t8K1W6laKrFapsvmrNMbN34ol17yWvQqezytNvLhXzisnzck/XBkuh+0KQd+EPoBJXRCxLZox6B+
+JWaI+t/ZcxzzQPnwoSIyARKEeYpkOZKFAPaKA2gLAYxevy4I4OcMBkN6NXB4CKkojCMBjNGcUqMo
+gP0EABaKadoLCw3cJH6v36gjMJ6COUoXd7Vb3lnQur4214k4rKsxw4mDXh9gLGqYz1RRnY/yJ8ZX
+0ZNnr85a6jvlwyEO+LYhp0vnET1ikctEFSQcdWBMjXHDJ9vD6TKaaje0DLI8fbpswKd/3YBHzUaP
+DXVw9tuo02yckzPcocKDcg8aMCnMBmitSiYGVMkxMckvJI/bsfjpU64uR7pmwbhF0asYEkyXskBb
+inDBT9cD04VDrIyoh1ZEx5bSEL4ROgW7htfiHQ86Rbou3PeSzlH7s/+nuWltqyDN4CMYx711SySU
+mDuYExyJJFmw5rMeqViCCvcahBsMeQByNiMy7IZxcySF2jxr9Hrt8zibRawYSXSmN1cEUcAogD52
+YGkfcYMuV8AjMCVZw//SdwzqsPJkUKIKkJ8SJQU22BkZeE6g2COAYVF+o+gH7rxUWGwk9qAqnI84
+qCHVzRv6ujPiKA/U8EFVyjZmMZQDpX5aBKNAVUvJ3aCqkOfmnLrNGa/00fy0tIvUflTO1GK1DFwG
+Nt2ec0exzo5ZCtN6qw7XMHN4OBxyboJ3DKavzhyg9cGBnTuVhGulJmJ+RkvWRhaWJ4z8ew+Os45B
+gHkePDbx4ADPkAOXDuSo6Iib9x6xKRbJ9xxx4Lzmo1pvBmMKPJzCdfeX1X2xH6+rvFhWVylKV2U/
+VjE83LysxZ7Md2ma7GjIqO04tiON2sPhQ1hyMQ9XHFu694EUF7CgM4vI4eNYM74DvrJZKFmYovvs
+K7rP5JcTpuma/W630Wv5O8XNMywLtF0Cw1BtwCI8pxZINZYGm6rT8LS5OTBtJve5EZquMoS/7x3T
+o3kVBg59TT39usHlrxgGzEFe+1MQgXlljAlOF+5dPnYudUDWyLnYAWd1F1PPnE9N0Mc5lYat8Xku
+hGFLPb3zEg5fDq355oTnXPBqP4D9qKrnnfH4vK22e61Oo7eyKaqfjJ75AQ3YIk0x8OTZ6pTu1aU0
+mOpxcKNAChAzR1OMGjxLwcCs2EDwHgeGrUA681rK29NAya6qc591nbaFAz/vHkt7PceH2Yah3XnW
+alVBdtW5oZJetol6ydWa6w0GNmWmSt9KBhfEtQbdjoEwPmdLo+BRwjHNeid8Zv0agb8yc6eUzqUj
+UJfFomWRi8om6H4+6ro2f3lzGbpIRRykjKGKM5EQPn7SUX44CD0xha8GsCKo/oUwvRhBEPHXHsxG
+gq/8nCd+AuFSWmYdHPlB7NeRuxu2xsCGvBc4uJcO1b6E/mwU7uacwB7mt4bhzK/vXFPXpoSd9OQP
+11mk6338Tvnp0tOL0W8wzNbwV3JpMmPb3zWJWWobxyY8AbliSsCwIn+yPANGbGaM8bYFzDG+jbFq
+1pVg1o+CyU1uXqS3L/wpx+kd2RPvq+ZQps/DPmqMgwJgYXYeG+x0Kf/t+x0y1onaIfP8fHj4s6yw
+7RXC6lTY1TQLsOCyi6Kyat1xQVmpJAva1mJGHQ0zPATBoGB0mYjOGjYyw7p53m4MyWnAhSGIKTPf
+4aPIP6+yoREOPwxPBnJn9LzXH3dGNf591DoNvrbOhqMEfIV/6qsM/zj87i1p1c8A2UEXVwyD58fQ
+BBPVPlX2/YlKzROLsxGeZseLRmB/dAxqeebkzjcrVsThWOpwQ9kQ4eX1Cb+E2AWcq2WE9FlBTMgy
+yNhu/j8iYzy0uq53GdcO4SVvPHNGN1U8hUZz89r2eY6c/MInzoh6eJFJ6F4OqXnlslSHpZlRz17N
+tFvVxEidkpd7laqsJ/eUljfAQ08++MPVtS3VtFW8go5tZxytvxchVnvRnG9ug/for9jgDUYFwyl3
+NPW/YheeHzpkV5CVlKCDNyjwK83EdnODZ6OMsQpLllxd6zkm5FeyR4sFWXrF4AWX28Wu72EoF2tN
+b+emQ130sszJxKQuTMy4020PVXB38B6jCl5ashYNUglZ+zwha/OnhvPyHwseakkeGfdPmgQwT/3D
+hOkzJMlyB89n8MvpwlQk5jAG/peSjN4V58QUIv4RD9YJSngXEw4tURJ9mJha87NFa08EeIcHAdLd
+xE8BRDMYT9tPtgD9HMtKLbIvIn9CFz5D54K7H7y1aCKWzkP9nzwP2CPLqSvYIbdJgm59L6PQzCyr
+LJqLeIJdyWyiPIhNlMJs4sf3ojMMhEuRte6YfOSTAnzyf4WesiZ6SqlsnIkXr8XGwtb5bFzqJwer
+wF/jXWdH4+9o1lk4PG9cWSDZQa0GBFC6mjk9tW/9rX7/VzWzLkJQif3+JdjF4IpRk4oCfP1GDX8F
+YPi5TfDzIrtI2eCNSEMeJnyIXSQ+JSge3aP0ebj02Rh62fSK5ehl6vuJ4IVZnXv5G7lOa53bt/F+
+qfBOv/WOut/3ytx177BL32qYwDlQ+MtPRH2f0P/FTwyvgMtZMnFwfPXp8UpweyRZ1iCkZSkOO48C
+2PMgCFAO0BxeZx7vCHvz4/KzFtt+2OPbDwadcr9Zde8svajzXA7G9zkMUREczChtUoKdqqG/LMsC
+nTo3tGK0sfNEazVUYg3Lokh0CyE/J1gO4OisVf5hwOTJq7LGgz2H9yCUAzXHbhFHyh58kHX1WVP/
++tkix0t9t2GTai9+vUvmxREkfHPEute6xA8ik8Rh5eP1L25ZriBXXYZyLL4F5Riv4UsFGRs8yBi/
+c1hwZZmv54As7LZlwJNf9Cu23fO15X2vMC4n1h0yAtu2GfcHPGBbLuj7aa/Hs5SPZylL+GxFebN4
+MZB/4rjcHlbmROUdPsQMNzD6Ov3Mobh5c+EMOa7ZsgFlV1MKmi05hceK2DWYY+3KL+WTE9sbjp1F
+5FYcs0lb3XW39LaW5PxF+Wmf02dSCiWVfRYklSWomCxqO06rfpZXNGqdZouyxF9G/UwqXm5WshnL
+Sg7BtW+pvvBop//R/BRA/JboMTOpK2Y1M8hB97YS2hFC/rQZ+DAXeGPLL24DlLwGE8aG4B6UQheo
+CA/vZW8hi6dWxkFwXw6/NXTPvKFhdmO8Ujkn3WKHqB8PNT4ealw22fc51HivI4Xr5AQ/nirazKmi
++50oK+MYUolJ5vdhjrzkcP+NK0WTvh/TtNPYPKZp3z9NO5W0+pil/Zil/c9NL37M0i47S7vUW4V5
+uKs9GjfAQ9lAGK94BigpMQO0zBH4+RFAofHFSH3T77fKDafHOxNE1h/0jmT+aoxlIfDw7UeaB73h
+K8fJjnul4pfj9eL26wXmBxed3q8XneFvLVzt8471+8J0WDrO6k2AVI7sl5kavGoj9cYlKJlMtSu3
+NqVWjX3LtMY3PfrNP9YP5OCFOyz4/48I56NkrRAiwGS6wLfVyFUuWm1rekfcxRwPJxAokkGYkD//
+FLQDbnrFolEgE960x3jatroFXQTXqIcNYNGCbYGvsOVro9f3x8Z2n4EdQ+CChDYRmEZXRVD+IlvX
+NxCN5FOYqLjMT4+/YvSeo4tFEfzlE2OZxOqKM01wlSVnwPRRWeGBY6zD3zokBgNlQVyEv64IuNpX
+sbwZ/A6ihX5SYWwNgOL0r7iPPazmRlrYrQf8WYyGyG5nmmPgzsAXIkUnyqvMM/hqevp1nGF1kFYY
+QeCNdXZ1JhcOL5nyS6zRTyxzTa4fZ4r28ov2edELI1v0ghft8csIKnFJxGIfUkJSVRN0iYx5XIFJ
+6uBbPKY9bUbZ285OyE+jn8DT+ZOsqOX+VK1y6+DJk1yICq87Xg7Rr+UFEMMVXGEzr8/vpPhow3vJ
+jdr2iGpXmDu1XTsKbCj/RpqBYxvI0vgaZ3yXFIhlXp6J/SiHieB1irZ42wWD1DF4CDtnEPx2ocAC
+ipuTqyl+VojinZDihKymeasQzZsxmEVpfmZ6mn5t/sNp3i1E8+5aNNcK0bxxD5p3tVv2LsO/Ac2f
+vngA1d8XovrXDXC6UQxmPVwXBWDq95jJ960mS/D7O8zkvnAm/8jp9Wh5p8EQoc+0SZC7Yv+6oR+l
+hr4lwCZ4uUMco/9t70ub2kiSht+v4lf07MZ60QBjdUuAbA08AZIYFMNlwDOeZ5dQyFKD20bHSsLG
+z5r//lbW1XV3tZCwPaOOXQ/qrsq6sjKzsvJAHSpIHaoo/TF2h0E6ij/iOwJ1gg6Scf93rL77yKfo
+YcU8AS+cDZJVuBjF3eQ66RqaIjFnToZKO2m0DyzWnDf3Gu363tlevXVJhRvohLq/6yzL60+vtypH
+5N/2UbDB9HpoQhHl+ik42t/T5BmSW1ULlLiLBEGmTBCLh9bi4ZaheGQtXjWULhtKJzURJ3BuXZxV
+ySazlUo63E37py27ELgt19KW5tXr5sVl+wKSDb4kJqNYqkb9HEz07qF5JjKloRMR/qbgBwLya/zZ
+sAKRAZlQ4b1J11C4bC38igqwplZZmi7jd1Q36/ur9LsybcenjSabM5i0PiIGZMaCrZz4TeBbjgdo
+kkCHXz5gGxS3DqtJtlFqnJ7WCa9SvT8NfYLtlfYboCKnLyhfEc9AYvJBdhwS3xUZh5EpuxOUBocD
+0ZFe21+7u3zvGjaCoTjfu4bNYSheNZbetu9exmdSZODrEfqtxwzLERqWI5xtOUINzp91OaoLW46q
+YTmqsy1HVYPzJ12OsL643dE1bY/ujPujq0P6ky5J+WAuS/JsVZ6V4vqzdO6AxxfXw4j32lgp3JJq
+Vf1qRVW5ra5ftUpJqlYitcyLhkXKSsmJRTL0kjJ++C1ghHkglVmGX96abfjVnMPfjP5c2N+Lrzt3
+t1OK+1ahsXV01Pxl76hNpeOarTiTIe+jiqvMK0kCd94B1A+b9V/b9dOTRgsyhte0ETxwGXTv6Oj0
+9/Zxs9F6fYx6enz6297RS1VCPWrWL9OXlyDqvz5pXbbhSPZH+gFfhLbBqUF412z+2t5Sfocl4cUf
+J/XD89OT1v820ekO9ZxMK9G3m+Xm35rnrQOhXXwy3KLnjk5Pfi+2RV5E6guhe7+fty6bFBYOwaV8
+EaHRN5H2hsAr8KyF4NM16XyMLTewvFyR3LNRDFXta5lTrvja5k5FKbJkj8sP57L9LMW1gqyZqJnL
+0p8U9QrpPYq5fGt42blpNWy5DuhnWpccXqxXG8pii6/YotF3hdVVpR/YXBsd+KUz02GKX951joId
+VgHVEDM9Qt5XjQMWf/4ZkSfCB0ulA7B+KK5JAFz1I6iP2CerXzo4yFW/fFUsYr0eqw8QUklEH/Ll
+uDOYIHJ4FA/yzJStmjhZhYy+Iv4ld5M3J1Atw7Y27s6nxYHMJYyoZ9HBARldviUUUeggLwpVKArN
+iEGbgEHmZXlK5Mnq5rZplIH/MKv2YdqwLzJhX7TEvrljn0q+vkkE3HrkRG8/cqKrj5voF86Jtm0B
+Ew8OZ2DCEo9Y4vP8tv+fGiu/pe0flh4502H4yKkOo8fNdVj2JgH0OGxF19PxjXWHe9KEWs4mjnI3
+cWRrQkCHXAOxYt8MDTmHY8VX2lB9OPgYj6fU1Bs7AkqnQHZQsx/HaNIVg9GaLf+cpOHDfmKtU/pC
+g5G61oKhpHwX3rnHXxvxaPouhekwKwRvHY6kNOCIfDw2jV3VwjkaOIN8OSe/8DZ8DAzTcRs8mIVh
+wWRN38XjOOig/49ICch7nQyCy87kQ4Ang5emwFrDw+Hwg2Vg2siMhofEg5lYs8Y9sUdKt7mbt1TG
+ryeGvqjgZVQweXDL7fo2bGq58J5kIpkW1Q4wV24Jgtkb0+lgbhmk4G3+/kq080wf7rsR90fTz2TZ
+g2nnRi4liWF0nFq7wdrae8/JJFNSckCUfgD0xBe070IZV8rsqv8e390rxuxiJYVMAiUjNqiyVvd9
+bbGTZosUkNkTOlQgqzb3bcc8rhj/Tv/UJ3pmDLfid3IFIexU/ObY3QliXJRQObGIhtrGIVC/UktP
+qW2cgXbJ/cF+q4SGv4O0zITejsbDbjyZzIXIYescNF4EeTpM04Gxxzh1JBK2DbtNuF1Q0NAcnCMU
+izwCwwREWlH/kO/+KAf9QWWh4ioYp8A0yCt5s/lzeH1dTGyHSzoF5crFWIQNmP5XaQECCDSaKWJ7
+yxQekkIuQcEHcdXZUfqQBmMRV202AcQI1k7KGT70YhuKCmF9jOuSHx9zoJVtNCXbzGagXSbWMWRb
+0YH7iMWkHr5guhuwqyhUfDoc57yNstzHSVeh+W5CXRehmfZ0/B409zWokkMOCwACvtxN4vbkBh2k
+nzEfIMTQGLLABdwtTGEbX+cxFzk6RdyXDvXhQ78zanemw37SXaU+TQhnOjfx+q/H7dcXzXNQUAf8
+y/D6ehJPCRh6586hrYtGJqhLrLW7gdBG2vaGCjVtsaYMgiGCPA4Jy5jluMXrytw3PrH+21D3eJP7
+kUKCuLptKI5mGf7DWxTLgydy43njtwb2oALP8tSHinoFaPeMIJxLhqxFbPcISpFn+iGqBcGbBp1b
+HJKjmNrap75jYYXTGLJ5woq4KY3+Y+nyfg/msrn2Tsbmmdfu8d0+s++fzA2k0OmZthBFEifWueyO
+52q3LI1nadWQy6pBJoNshzD5QOs1ks33767PpsLiqjKFs44Ny2TlrQICINBwdFmusRaOa5Jsn0rF
+6C1p+yrvbBK5erpduFg+4xE91wE983iuHM7N5z/7qVxSd3qcvI0TbzsuaKcN59nbcvK2H0aMOiXp
+RGo4dQfSqVs+c1ti41mOUsq5xn2UyDpJLPq4+uSb4xs9s1qWOOvU+tUPeF9JZhcCrS8suyBMCDTQ
+TgPDJIPpuI2WpIcjoE2hDI0F82Mv/thOeh7RX2aK75LGJV4fCeyt5o7bIpOIsKZGh0FQyU8ClPyN
+S53H3eRjfNC6CEb8T/TBFAuH//WmlhnaxhiABokJNT0JIxJN1s1hZkiBi/FbKsHYPqOpPB0nNwmS
+e/VSOFYNCVTDpPCaEpy+ER22aVg8nme3zaPRS0Xrw/7oNp7Gx53RuvD3RWP/4Jf1bmfQjW/b3USs
+NXkHMWH2YT8dYRGJRsCB3qAJQwJfTy+OyrAeQWpfbdT0mxyBDmLqsCFSLpQVYofgcu3pAuo85nBA
+w0aymQkgIuAnv+Dt1WJRuFoD3jb95yQYDKfB8E5KrjwHSkmJVev8Vfvk9AQC2jyQvgtdJ3HkS0J/
+EK/l3UB/dYd9YH4COQj8IpkbU0aL8VLT4lpsccKVcc4BHF9ciTNpqcmixEc01iRWYkihJjMr1rza
+Ct+8YVVwWut0qJDZWhwuZlMiCJFNC3KIRDXhtGapg9lRSkTVqxh+miTlhGOi8xxZ4xyVQ3bF/WFo
+8g6C//SSyQf8EkIBQSSgFhu+UbpQcERmwxRuB5oNeqlIXO+dD/s54eYXEqQ5T+XSjY0a/8zmxvzV
+rXH31d0bZBFVdIF/SExUO3KR9cL6QKmIIgYbB6/Ikub6pnGnwO310N8n8f1UkExtbYslBQ0QXwet
+DamqsBEycJuL4T7isYpoiiScfSukA5CW/Y17VIaNK6H5m1QEt18vCNEvnCifgfNmlLb0vVgzNGm+
+mhLGom+BN4ZQmfPllYd7J42jZqNG49eloq+V8T0yRLqJJZd4xFRVECzQ+MNCo6bopFQHnEqUfvW2
+TfVW01+4dzT8bgn47KraP8EwE42hFjx/DmF3QdaE2YZgq+jneXwTgKiPXjNCbQNUgdjiVWI0kfaD
+Ey75kgz+L0zl7i5VcYijZoH3JTshcW0I6AXJX3PKxoMVi7qcNg/oNB+Rvh6+iEfjpLOo8TTi4hjB
++7D6Nw3qTTwNPo3hbPSxc3sX/3vw7/Hf8PTx8N2WvEZ02xiRLzxoMndumKzmJY00HOy3Li8w5q1T
+6zUacxX+i89QcJOmnqf8Rl4h3sBalG5M1rI6K8RUnKCVDEADgfWDtGjpvhIGbzvdD6sxvlCBkO+d
+ySQeT4tE1BO7xjO7BF/Q5tVci9Vu7O4GL6iznQaHawrhmICLpCGScb/XPQmRqYdocpkOUuSiwvSj
+z+piYGgz6JthBUTIEpnSglN3NMSgvEm5FJKHJWmwxYsD40VQQVCBqDo7RYBBZVP9iN5s+m0tEICS
+qPHHrR4Hwk4EJEdq9qGA9Z83AJduUwJ9P5lODiDotXiSlPWqbA6Jvj4OMO6y7/ndwrnNOLs4lLbk
+uqKIEvpMOhyBYgB6TG7Cbepaj5C12vKld5mStZteYm/SzS7xSizyICKLS1iTYZkKuG/4MiPaOm/s
+WOpd6Ec3aZMr68mNRzZpoWnhjdpP46dJtw0qnnYvGcfdKYLNC0EUVOsCp/1D2GK8xDX1Uduf/c4F
+ro+oyV6vNzb2ULmYzD+KQBoJ/a+/HVj2aVJDLfkazn65m1EJ7f//+R/pyoCc5QUSzMUznTpL5udi
+OIgCPwFzpQvh0YgjTjh/0jSifrzboLPCUqvA95BA00Scb8uT7z3wmNEwQkF+5ZK/leVKgZZP6q/S
+YMtGDljV2Z0ktqdpDcLg558DnGKnUkxtjgUm4uQvLNjIrHxBZAsCO3BJMAAA+pxYMNYop1hgwukj
+vfcUMJPiFBKBNRR4rEwtSteGlREPVFwRZkLDABb97DgMNtC/27gkxkoVHBW8S8UsJGWnvQdLv1T5
+yNKvmHaslHapdN8kT+grIBoM405ACpYw/zmxkUt1g5ri1EaVSlepGOqlPOWoDQfgVduGAOuuVZPI
+xQVqKnHlUMIq0GRNVYANBs9Pj8FmMFX/2IUd8zZ0C2e5RTOZN2TFfjfG4qR79nFh9fl82KWcDOO+
+HOZ96GDvsO5Ds7h/d41hyJZNujxCymUYRElW46tQh4ZbRuu6RTW98DKMrnZ2SvdRVXQnkXCKkmlQ
+V1xAvrydICpVqkrvDK1Eeivlzqyt+C1WLtNHvB41fZ0tto9pJwT5IjAkJlgiZTZSCjfrgZZNAWDV
+9IIQb3kM0jY2DXiGdUbVzHJfxMC/3x4CsYCDFR5fQjIb8JjSbGRT+Mjp+IYo0cfQhoxyctGviHcm
+6wgfPLTUc8+Buj56elrbAU2zUTSadSBImjWIvbuCF41USfOd8Vqyr4TRaQRoiF2lBoEOS18Z2VMb
+FtHs8fvcAvJgwoXuDGYOxM58Fu7NqoENEKyVGKQDGwoVpYXHoh46sNEwH9fXQogPqtPIBBFekZBw
+LFKIm7KhUdZT55gUWWV95Dh+e5fc9gjmjjrjTj8GS/J3cacXj13zSoxv8eg3gjJJIAg6mwCRjJvp
+u4KzLg6+Lw8uusK5A/txL7nrB9PPo9gJIaIqFdwsWaEJTVKQDsMJoSxAINH4e/GkO05GkBiFDILV
+T3YqNcOcqbV4cSwomldDiKyrxhOwzfLaTsBlACV/gLXHjiHLsMhIBDgYsFDCCIimKKiWU1icoVQI
+Q9nR83vYupUorsIP7lG8uDKEBlhl21YKKmtDP2OuiBRCNROAKXuEYEfogQg0rn+3RO8GK5pp/1md
+Km8ypu8F9TA7OKhllCTj9ioZ6iXTZYFlDrm8mX4w0t81a3BelTdKiI656UcwPAdmEmDmB/SFfdcE
+GDtfnAJ8oOgbqNdFHStzCjRZEo1NpEnNxhW2BVlNRFlCpCMFnSlYjlbgflYMdoNVTJPXII0JnE7T
+hcY6G1uYb0yMWFkxYRrpH5iOBpTn7xI6v2ajQegLsA/4JYIAxQpEEId7WtQY/0QZKO11lRoPdno6
+fVVpnECKbZzLwbrU7Y87QPK52HiZg5kp0LBlcFqPI2vEiONmLuIos0p+kVrIpJVbCmk1FtpW2IK4
+IhsKv+gOR5+phCvuRn074tq+Y1wLtwzDTJMqSQP14MBpd6pswsNoZnaUtf6mbD/5+JExnHoefmQK
+sD5XfuQYuRc/qXiX3HRxHoeMKyyZ5hREiMtOBLZXwXQ47dwGUxqLTSUqMEeEFNiPxNLMsAOAP5U2
+Dexx+yeDRnAENoXbSI9WX/VIzbxb/UwNjIYGksGkwYgg67uQ7In0RrWWNiOBW9/2GBOCR1kQaAYE
+dvsBj4t34c5dvfWeyXbA33TAw3LAr/+i3YB4/35O0BTVpzbORhN0t6mJ4/ZVKOAwlrdf0i3CXt51
+q+9zG5vjOtZ8H1smj/99rIJ1Xteu3LWm7HvjSu+9FQ8Mycrgm7hcXITVl3rJqoarCE3roPYcLnW9
+6XUhgx5nfReMwkz0WqHEjyDEj6HDKhm2UuFsIpbSL2URZqHA3gQ4m/569Vygvsy9Y0lS50lSOcDc
+JDXIR0297VckjxRqnm4xaiKzkN+GWQcpmd1xX668Nsr+dsjkTGUx1XqWWmpZTGIUNbBgbT0AUx9i
+2s5YRzIJJtPk9pbxkISlNVazQ3HHD4/Ar6BsQSAHw3EfHYtYU58g/MN1Mkgm72KclAmvzXu6Nu+p
+dd172brOYxrep9YRmluAJcbq/KIKmK3PyB1CMsG40Tq53Pv7U7VLdtS6l5t0qcRTq3FfduFAM1O4
+GY5tqCMQ8QNifPQ7YKjUvRuP48EUbf5gcNd/m2o/PTcc2xirYqyDomY0JlXlGwv80+kGgd0h44l4
+Gk4ngtpECtacqWWkOVzHUy2v3Hsr6VyD3pcPiO4RJw0HetonFWO6CBAX5220vRFVBD7AJyHTordE
+oCNUQVSNEPx6i1sJP8WMzISlGJGCdK13d9Himp1VFEofermj+Fp74/2SDMDDCG0WRItbQ1iQ62SM
+5MczHiXH3BPFc1dpUXEhNtU+G8cfFb9fvefWqEtpVCPtpljqmri7YPNKopCrXlHpoqV181ZEPAId
+wuOpfIxR9v2TcYPltlVnhMuHELsI/FXPX+FrHDSuMRGgWXSwp+qRHJEiQxyt0ugX7CZDCoCRWZdW
+ItEFPJtTk+dyx03OlGTfzSdlS2g1m4OvJezcl6Ic8o6xq5kHQ6vnhLsE8b10lSCeEiVd0LYdbsQM
+HIvzyDfIZEok8ozzj8R+fI8+JsN8Y3YSIXuHfuSXM3jM6MRq5d9q1g53tg71FOWfYOK9AS3sUoUl
+HYYxU4A1C4Zv39KuGTrlleViptQDPHjfedwffjQpVRTPlgniL+jgocaxnDdGqGE0nSE0Tcdqv2Qq
+1liWbq2UIUihFStELZhOc3ARKnfNljsiewUV6mePVlGqpNG0zt59Pu99DgDNQN2AGrlB6PYsGMSf
+wLG9NUhY7IbJTyuijyF+XIJYmQpKWoith5XHE18T7V1EwEMcx5BFOpwm/Xi8KofLA0sXHODQP4Sh
+HJ8OUAShpoJpucLMQR9QHQMkipcEIQzfAQ2ePy8U1Pend6YgVkJYix+MK4VauIQ5ApyniiVjuT0y
+obhs8af4fpQgDEB9fZ9cXyfor7XgsnXcPG9f1PeOICpJodPr0dk3o4gEkHaToMic0QJNFgQAu74b
+EH36/DFOxg5YmFYvHkyT68/1fi9Cja/K8SrTv9dJ0M0RMTlYlwEJQAi6muJo1nA4SloSf8B/UbNs
+JfDij6NLxLaJ4wwO1KihNosLuaIE57NFjJYapE469E1xxK3+sOAqgThstH8L32yZo+cJofCw4Y8c
+tCVvKL0VlvKAVcS5BA5I8B+BzlZLRW61l4ZkJeF1giCZTO7GMV8TpuV99NhwdWGlM2ttG0NBlUGL
+IzJx1OdPHcQIwuBiRTsriRNK7b/R7yAs3cGBOP8E4xmWpxKYW3eIRjW4izFPQQdffPjVS6NjHjav
+IbIC7g8cj/cuLprnl4bioVa8eX5+eg5heHilB+Oqo5a+fJHebGpvKtUUDdh20Y2T4LYzNWrVliPa
+3JIkqh/tkIo4zKdllqm/L61MDGEfvJboKUNXClW2xWNWSLbPzJ3N3df8XV1M7OXcPOMsGSJG2Ee8
+/F/YeO+/qItb8TrgJ/qnUlkHew/4JwweapKgcxFPz1qn1zEaOJLGZD6TRs9EnMbGJRSmg0RysKRG
+DKegsQ/U0D3C+O7tB41voE/g/7LO4wrTOMA1K9vSOIzYW5nHyF+wTnH/9gOVzlkYRj4gWmJ0G0Oh
+3SDkBBG0i1yxyLw0CP2Wm8hFwfXdH5ZUaszJ8SbqBCKLvQm+GH6LkPV6HONzDaXJm1TBpWq3ZiDK
+FqqckuUV8YDGLjtVliic/slUWec6c7oIPWFqrHr2/G5bdBqRPsEpwytJU2yMuKXMta5KnGW2bdMt
+z7cpAZdU64V8n21HfvtCSCdLNC9wjB5eG9HfsHvQVj4GVzbMa2kSJ6UXqEgbyhR2AvBhEbz7XbCi
+LFhhCstdsCRo7eQG0XHmt85t0hOCsUXS/j+DC1roUi8eIbxA9Aud0hDhTfp3ffyRWzV3P6NjcABH
+GFQ7JX2GmU8GQL+hXh3XeY7EMSYVrWaW/gcqHRRJtii85mlbKcMHUEIfft4JKillCaNSMMBXGfYp
+qwgKIx3YlgCsmg2s7ARWTYFFlWxgkRNYWE6hlavlTGha4D9Ub6uU3YtSTdZDmwuiVWIM0oWiwQ4r
+RhBVL5Yik8D6LdDgllXexQyJVzSspoLASoEyZJ2x8j7yCx1GOWWO9Gi+qJm7RKK5y1+GaWIP0QkY
+HkGng8Hwk8ADwa42o1uhwDSZlJWP0TYPfBmtiAkmxvlXZsT0pKBobe0EoKRLrtK+RwJ+r7YYlZfH
+8QOfHX6Jp69vEb+DHruODrKoT6p0RlgnpYywcbwnjh/mlBXHkyposfF7RN7LOhllUBBZ3pbFCwlY
+pAErlZzAthzAQhXY1pYT1qYDVlUBVak4QVUcoJgAxmFlzFfZBStS5ytwwopcsEIFVskNSxHtULXB
+MLjDNSfkspOrDTDL/Brb4YJuB/+tkB6WlfNwAQOST8T8HFyQzsFwUkbUB47K/kdiyvbRBCts3yC7
+pHuSUzNhotOe6g2ymjWhFLYN5+jQN8hEIsBUCnJQCl5hLVS79IX4UX7fQorK1BSm9y0IKbOJIymS
+/2kEEk0AUSWUb0cgsW0ovGe69G7bS2pRuPbXFEkYDV6EQhNxKEnikcEpx3ReDCQdNCmcOci1GPSv
+P21oEfNN2lniOWnyJ9SOQdO7AD2vQZZclfpMdV6/D1Gt4z1qM8Wlpl0hH1oYlfD53y3rGD5TcR30
+A/flsBYEz5+vvkCwnpfRP0VJPPLuW6T0bTOrb6FH38pC315IfaPNVKpZzZSym9mKSTMhAHteiWhD
+brEjFQ9WCgadidADSWciazyYpOMQfShi2sUYrPGIFi1MaOKC6VbWKiyYL2o3abqS+d/MrqRshy6j
+XUrIKyTg8oxc+EkIeQWEDPnALB4YxTcP4cAqx31VQU6WCpxCQZUIBYJM8B2IA/V3yag1dPA0u22M
+k9uYlBqAqGfJ8Bj+uQDWxV9bVvU8vrkYxXGPrWqZmZuYyUiqaQCH0ckt5AHnYcdN5CfVGGkbQmg6
+FJwnsOFl2m0cALd0QENCfYjjUdDvTCDKEzl8E5oqVMDJfWy0nJrlb+M4jNiZTmYyFPRjh5QxnAMa
+chCPhkyiazBZYyGkLz3QHJvIlTDbZaV7gDAZ6EFqQFIqOkOs4kU2XoVpZTJWXBdflEDDP8MFwgXZ
+/bQnBHn5oDBCOxqI0vHUKdXDTXzVfd/tDMDQ1mihqZreZpEGu3mczaIORNr3Go2gVjj/2gyjKy7+
++ou3jxYvvpYZHMEll6WfYFWI2jAZQDrOWuuI39eLXD66GU4DyEPHiQiO4QexXZUTWn04uE5u9pMp
+ifSNu14qCXH4nj3zuB2uQFEyYGh9OLj9zDSSweujy3OhIyqfRNAY4qH5u71lorpaji5yocC1WX9H
+Y2q3j1qXl0cIsU8arb2Tlb8DIcW15T5fQqyto/29YEefAv5tdxeCFXKPTpIhjwXHLdjrITLO6uHk
+HiWMW38HZ5brFVJTHku9M+p0k+nn4k+vtypH5N926tLjLl8n/7ZRjUNsCFctukYUUXdtb6BHHkBZ
+KDlfoEc+Pa3mhJnV0aIZRQqGGAJRSQ4ioPTgIh4nnduT4b/eXxU0wwXhY6p20lqouFsAdnl70unH
+xibEr442qs4mDpJx//fOGDGtj8ZG5O+0Gbyf0F+OMUG41MhjWAHLPGwe2FrIQl5YQazhCJezzU2U
+2VdhHU1dTT/beiqVcAHIXENXN+VlMvVUKmHrrFooA0yKD4yoLUicoafJ7ru4+yGoVLF7L9CHLiIC
+b5NbRAYW3LjBHAr0T9Uy1YmRfKBO3qMyH9T/dqUKjtLtw+TmnYkHqUVysiK1upkjubt2NPyU0TMo
+MXvHoHYWpyTSVRYULJvwYFg8k7prxnFCdQT/yxfcDI1zn92MkCrXs5m0RpE1lSZy00QfqtOsVCE1
+m+C8KcfVyqzGAhv48c5Du+RgwMOIx3vxhm7jzGYszwndKksYoFdzA/fsej64DlFN315559shshn3
+bk7gPtNNgeecbYcIJ8O2xkTM2Bg8LB8cvnmaa9aX4GXwj9ve6j9K1ds3xQAnt163dBsL6ERKP/Ip
+gzrs26Br3O6v7G53YZyQqjPIye2fE2we+QxfGfDbgoW2n3HJUpCdNlxn4za4SGOrMnrLWCioV6SZ
+1fExtmg6mSoJWcCsiSYl0PETwW3ed+PRlI9CKbNX+r2T4PCVopoZa5nTuxzxZC+ZpqP/NuupV13G
+UXuBqmlJD8Wcy3txDm2UQaeUx90YjU13QJbjCGle7jb/Uri4hmiLEOI7+JGFW9Q0W6CewKosNciF
+qFYa1e/GNBsEXNZSWIYAF1oKSqFDrngY+xCQ/mzcozEkM3zs11U4x53kdn94zzXwWkRYe0hYXdtF
+sk2qkd7fXMdj8MaF4oC8NA4tEfYnKfaSdH+NZvu8uddow/ZHC07yW8EbTInQG6Hg7+ety6ZcEr8y
+FP2ted46+CMtR36TQozygcPzOL5JJiSFD1Y9rmqB6y+pq8NRPNBYZzHPjV0u0Edu0G+yQONgG6Ak
+UeWU7C6XZ4Cb1d/Z4B56wa3M0l+PecgP99AL7uYs6+YxDyJck6t1NgQiPLKbVGHvRpl7V963pj2r
+7Fdtr74siBtV+HzRbP5KP8Kf39J2WgzaLwo986ARvohFwrsRkYIvQS6SQ9QJB2mHc/iNMmzsxdcd
+xKBe8gvTmYMJiLYc2RzMgOlmRJe5mMbEuGFI1eqlDWEGqFw+HY4IeBKYRunfUZ9wcdOFJRMNaMwC
+fAF73gim8I7PnXG4PtYkacAhxDs5NeBje+E1NoQmdHBsJUzUwkIsFBlAFwF4Z0p/4okOZ5xobRfl
+7+AbZweFvbXwc0d6+qEhmL7m2cMU65/G5M8+mfgcP4S79MUcQB6Vanu2i3Y5YAm73G6d8qQVucAS
+gzotZUVaSzkbEeC4Ur7MGGJAe2YNUk9t4DxyCz2oxy8xicQcMkjkSx8h5Y4wJ47IyL1Aky6Ifum5
+k0X4ZYrISBOR3U+WIOIpKBS10DlrzWKjIwQ0n6uFDo0VIxrq+Iey+k6DVOWxzlmwIdcKkQ0vmpeY
+dRKkCJ6g2XnE4LLLr+pK9Se3cTxajYhPkNXiSYjypto77YWpvdMvxN7prCVbPOWxdqJ//peqvkVo
+SH5B9cZ9rK8VJ8igUaXGS0qpvWlnlNBgtmlEzIUvKT0UX1Is+udFcLZ3vnfcvGyeP0X7vuY3JkMS
+cQJnMiOxAJi3EYnYzAwmJObq8zUgkXBxVvMRK5A8xiMOYyLNBMsysXMzwLIh2NzMr+zT7m18xewi
+iBpCsz/QyRmixYyG4RMxsdJ4qXeI3DOh3kPMw7XNEjU8SL0nefXIWd1er+Kst2lsVDh+evWXu3ga
+y4punhlUW3L0lEFnT3p4jRjHzg5vDEIvYqEy6HS78WQiGL/KHVFuDoP05lB0ifNu/760WRI7UW9s
+nJ8eW1uHaUgmXR5iPTTsdL2HUalSFbuYa34zYIvxwRWAZkMZtRS/XhVtacUyRsvbo1ylUztdDfHU
+gUtRuIWbdB54SL/Ftso7hjtsz9BdFW5/pF1621vD192gRiuXRfMLbkeuIiU3z6OHdUBE0qhuQG5w
+6nyGnUjSChKe0It/2GG4hGhSJQYkxKmKQc/HRyu487okSap65hkBbVhVKOwUKI4G6bU7v2VHAnOv
+dwC58n7YwbnqhMt7obxZshRLYL3ZXihc5Htsr6e9xvc/si7mIl88CNd75xCwHV/Uz6RIW9ydPe+a
+68peOVnzOtLBmqqt7NmB8c4UNEZdlpB8B980tOFaBqwfHUXAqc5RhqjW3XBImQxAeATkQqTe8ChJ
+gNZPTy5bJ6/BA5pTAEwBhQlL/dLYOa5xiklC6znOpTA/64hCoTFs9Du4g6AWN+UlmM2CwisTNA5D
+IQfoQyMFEy060sbwLBl+1d5J6r7M7szYm+zOPCxMledLONU+umgU9cO1kTcz/WLBI0SCU3ARHFq1
+YCikq/3Z2UPdn+n1p7SfX64IUoIM/HR8U9dJDizjly/usqX7RjX1MaMIT7NnBN3eW34gkwIHRHII
+G2UEiZbpJG01uRLxWL6HLN1XtmCQWe3lbu5hRRrWxfk+khUbnWmHxEhfsSm343FgYC8INmFaY6oF
+tqvGXbWnUPsoHsgAiOqfm+DrAEiBmjp3ILy2LxCzBx7BMMW58mmNp174jLV45GI8fjVmWw6FaYwh
+3+GfaXgr2kVRik87JRtCHjXrlxQjF7itzTP9rW5qxyw7dmygz3Hpfv/Fy/TvvYXN8oKNC3z5vSLr
+zMruXUcGa6QO8+HBIDb4HF/S9ANKDgNok5xNa3YzBBzK4kMc4JQvOKtzoylG8WU3TkKXv6O7QpYz
+O9vmgKQbE4Ki87uyg+wIPRViSTMYBm8/T0FdcIfW5DbpJ9M8UDb5Bd3Ms00b28sesjm3TrRJowZx
+FTkLGtQb/4dmWguQqPkuiH7axOl2pBUNvFrNitCo58yhEoIcNRD+L6dKlaMWmYI8VYs8Ow6G2RsS
+0LnwktiYPgQ4yavcQKlcxBkD76kZCzOvqjf2HeR0h90CpTsWO3muqvlzVPE+WQuvijhCTZX5a6J9
+tsb0b4EXjCu0cYrEoIIqIw8OeAzLT6tpn6w4xU5wKscBHdiwNdz/DGd7ynPE3UmzH52cXuJjxh/i
+yYjo9MAmbNC5bYIhEVV+i0WYeRD6hIDgs80fpiJ7k26AV6Vk+fpK+JzLiOjrcjBJtfFX5GDrvX6n
+3QUgfw1OZrUZVZgZ7Cy052bkZUtW9hdjZSs0Y7mbmTEze6OKiRwciA77pfSTHNjMKqgC3b+E/L7g
+iItmB+yQ02kS75ylOiGv82mckOCFUhBBMK25PD1LzcPfrq5SAM/w5K1bs6cV/4os/BEG9Ab7eTz7
+e+eX4vTT2c+ad7csES5lifwCA+3sN2Bn75JV3Bd7MwgxM0olDl+A2azrz163Tl69bp3/0QDX8FFr
+8J+7ZPz57Z2UvRanbf7Qb+Nc0prUg9Pnrv+IvnNjcaXAxfhtqrdah59o3k/HyU2CcJ+n8SQSFwKD
+BnQ3iSXxiohecE2/znzxsPnHOgw+HqzjH0QtJbcNJgJtpllwxN65C7eCadwfhVs8qsxKgQ2ZnhME
+WC5WVkaUC1O85gsqYYkVFY8E7I6AYxV1JpMYp+GYyWPA2EyaCAXEi7QBoVyQiylLc49qGhmBD7jN
+YrH48886d5kVXqVYLOqchhhBqbMSMSElEu8FOr0AjPoh+nBfMHyy+1Jke1M4N55Qf03b+OjL8Poa
+MS5SEM125xayvrcnnY/xKkNLCoZvPNSRD+AW0ZkO+0l3lYJHZKRzE6//etxunb9CMuBawD+IbdDs
+uOIuZm+N/cMeECIAshMBnzh89PsGybIbPtVhomX02lWrAQ2pg+yPZpBZ8WDLHa1/QkkCXQ6LRCtJ
+zdFy+F+5Hxs7mPCQAlgkXYXfvAtYniaD3yVF+SddNMNVnyPM4ypri6kzPD+qm4GmPS7iTetMW5yG
+FEMPIWzZlVizWqZkIKVFRh5553BO5LCol1ylDdLIPoSe0mqsOsOsiAF8oP914grUSBeDryQ1ElSW
+mXzdIAhJr4aMa0K+L1fFsSofiMcVJS0pydlQqQknNAwC/U5yac6PXtkoFidEGh2qWRGMwE176EZB
+Ad0EmjHrBKW0nd4Yq+RdQ1eZOj3HKZMSyW6/4IFRekysGSmw4R7eVMyw7VzVHrMZVbgjKnyeTcfF
+RW9SV9vWLSnWdwHIu635rraCNO51jf3pZ337wln2kFBE30AS1dbxROqPJ2IsGC/yocUjsWIhSOGH
+ExQlHIsJ6LEqnRSL0npJ5GZFsyLBCjIieU+HS7l7drl7KXbPTezG+kmrlOdSVzI/NYH2ckqBj7Zo
+V69iQU5XryIE4SWYEFdUVae8ewSsuy88Nm7hexa3/1Kr8f2J2X8ROfu5QcrGS2+/CvxzCdrWbeiU
+quawPV0ym75pGSScsYTt3wzxaY77+tsWtDXUUJixjuKeOL5AQf4p8G5+aPdIrJsF6b6aIK9mHxNy
+9bk9P9g9/KvXzYtLYqGP79AfKde7jgxfTZKXfZ1JCUeUJcl7HGLoRNSJpbRF8wjAyzC6AqftqFrk
+fgqiJ1um57UBfKSDL3c4eG/4WeuwKO6NG+Y2FiSkH7nXXGKWhFnCDW9AwhSl179FGqZIKrWx+1s8
+hhtyEjQA56mougt9IRiVOXVPiAzM86ogXUVnzVg22jidLATkMblDPCUGma7c3RhlqeHhv5PGOBGZ
+v93bRHK4MhoHIDCyDYF9UOxwIRWnLx+8luMJsVL2aQueP7+/3/46SJpaXXCh8fvBW7n34dxxmRmX
+KDbGCh/E5amCxGDGIK0ploRSKfL6mhlAUAeqzPrhlWxa5yA2GU6RxPrhLXi3k4Teo864049BInwX
+d3rEo884g8Rpiyh9gjJxVsGKXKIGKNgr4rhP8oCiK2yr1497yV0/mH4exfbqEXEWI30nKuONySju
+JtdJN+2+vX6Z1A8IgLf45NOLJ91xMkL7lnafnNR3KjV1ktTy/Ehvm3g0WmaNIwYWss4pktqrVGqn
+1ouuLjqGKEAhXRcgYJDssxFEBc/SfbVcU45zFXZ2rMqk29KVhLv2FfgxxFjwxVVguMhgm293N70R
+MSMVRkd79aq7dmioLViVZS1yRBa5y0ICVtJ1xk5cdWoZ7JopMgFwqKy5ipGBZhcLlWJ07mEJaawo
++spIHte02UgMnFVAVti9w49oZgKg7AHmPkAOViTk4bqATA9TRFRCUUVQyCseOOUDo4Bg0NWhUUlc
+mu/2gtMEWpFx0EFql9xBQEbpLTj6P6NrBygln5JVeoELKpGL3g3R7FL+ukuo7pqNTKAvQMnhF68P
+puCN/QY2PERtkPeUedFuVimB7fR0micRIIE2GnmHg3mouxU3Te4sC2Z+4mAoCjB8b1FQaFfEaNem
+P+2SGRV183eTsi2R5hlLbIsEWpz4DZFsd4ejz2DpP4nTraTvJVzPazhr4ZZhRGtVZUxZ3C7tQpXN
+pxo4wYsZOJe07CbnWdyg8ihusLk4buAYbTZNr/gV2zST/ozwBsb72rWdqAYBxqaQG5k7b0kEAGaC
+7Fz7KS8dPxOR/YmnW4edA/1du7kgMAAmSafniqc9HGK31RlCvdOSP+yAg8vl64v2GajST34hvc8O
+eGQ4PYguLoL/2KymGc6T7Gwh5pUg87Yw85kB3HmoeVW1ljvcvG/A+cyQ8359DtJ+rzxh0CrmxQNu
+GxfD6+knHIQWof6q4J5zARcMNEWC7JhxdnxPHYCpG9ghyCgj4UdN+EhdcsRf6PNdOQrQ6qC1AV9b
+TJCxs4DQ6sbufmcSt4Zwe0KdBaIqTxtEXQnL3E9i9O7zJEFbNRgMp9gpAJJGk8nEbOthAdHUwWNL
+mAKs7xEHwL6eTcfpD1x0LYDQnvXT4+O9k0b71evm62a7flhLAXLfpWyApKgVIplm2NckMDD49IIG
+w1QckHHBs7SxCwuKw4GObhN8BFhFGCWkg5JL0x8HrQuix4GIt3qh27gz3r+bfA6YJ54wNSKMn9D/
+25efRzjy7H207Szr7ig+HAJupkWyGsZxQqlHkr3V8v0WGWeFitLnF5dU3A9XiEclWdP1jO1SxqIS
+dcVNBrdZ26uMtxeBTfaV7KS+mC0keSovHPlETPFbh5q8BKU/8xKUuKu8BzVGK5Y1fFhUfBqCWWcJ
+fChRDp+Mx6Fd+8TsjQVn5JDhBfyJ4xKvM85nDkJB/rNdIVEo5j0vOEj40elHtBhJLwanuW4c7F/8
+sQ7+zmSdpkPA8gU0LXtgZqBOFVIKgjKFoSSdnux6bMd5yRQhkymqRKbQd12AddXoZxD2JyuGYArf
+kFyxFCxEfg2MOq9AMWeRAXehMLus4JZmzsL7MOB39s5yEVVjY3RuNC+JNOGsUs7mkeF9xafQpk8h
+4LaI+DqLpcEwSvfNKpnY37Ejgja9C4ygNKsIsJpfBEhJEos3A1qUegtLI5hcazKCTqDmz9EJo0hY
+8IeFbm47Ogu4vBiG9S0v89OsKxNG0BT7cO3tCo19+LbT/XA3QvsZRkB7usqBYcZeyezUNo2E2Esm
+mBUhaPstIoiH6/GAvNu7uAga0SG8jQyBm0IatylJ4zbNHU08KHQtq1TkVarsVariVWrTq1RKlX3J
+Mr54X8Qs596Nc9iOrv2o0l0a8GjRW3Ihc5tHNI8qTA3HVM9iFDqmk5OUclghF8zWNS/5JxTOmZAf
+hURnAT19JoRIvHHJ3n1eJSveJTf9SiqCD5nf+S3/DHtrHpvLubvU7UWuWnKc7EpFHrNnx9AmMA1x
+W1kazOYoKUh+xCdXKuwX3laZs4S2VY0bKawKlUkAMDhewVBwhEf5Y3M/rOCPoqHBYaMRoK6TzEM4
+5hzmkh1mPJTGDKT3c8bRzxvJFk4cRV3BdsVHwgiEmP/n8c12BaCkSiolnqIkez2ymfR64gk0YThm
+m3w+bQ7u+vG4M41zB28T1WfuDMWPCus2Zw0cpW8sqFhBVfy1DzqD07vpghRvkqJmqdLxmKVvWKUT
+fCManaxCX0GHoyxR5mkBpvIcMP17UOHM5RbnKTQ0weJVNOJscuI5wxEC5J20/i6mNhdIbmkjEYZM
+nwhd/EomT27ruHNPWAl2j8SnV07XefhdkpiF52Mk+CiEMTE4wTjaEGRBMhZ63ySxSdUmlwlrwsnL
+W0RUz1xcAEzlUSL3NdI8sFKqdTJiYzI8IWdmQjKui5Y12mmPy6X/fUwrzbogc6qZL08HwqwwPxFs
+aZUWxHbAT2s+gwUq03g9hSmz1LRObyyVW0loo97vgUzlioWqhHe9jPsjHkPo0cKYQfir4Ti0dPxy
+gutHCnBn7fO4m3yMEcMIRvxPt2SniXQ48y34xqzjv44NRXAA57bh6tUn/+pIRkypipDIYMH2TZQK
+ipMfEA9R+qZotnwTKxCHWUHb66ns/T6uKlMEIkmuVpWhpd/Bnw0sAGYShum2CUbAXgboj1487XSn
+CNWAvcjKsHVspQ1OF0wcuiRRzp/CdmmB0iuRAJtuSTGVACldI9PHp+Tskgd9V4DQbKwIG++uwR4z
+nkxek81oDESRXRvwy7Q5Gv2OvD/0AXFoYJZ8RDw2sOMVoEpUKpGbkM0wwskvJoxIe/UJJMTpsH0b
+lyPz5tX6V/TtoAg67WxR7y0JVSGuC1u3I7AJbg6m489PYNx3dt64PFIOH/xLex91lkl6JYJGyQQn
+baFi3QySvlHlJ98hEX2forKkdD7n+UDQTYJtDgGJZNG3caoLlQzM08OEI7tHArHVcBHW42nSjwM0
+F+yWonQPsUp8rGl4+e085R+rgxOZm8eK4AUJJ1iV3IgOn0P2NYRYdFny6IuFC4ybIdETj+MbhPII
+oRFE8hbAIxn/bkQb+csvkShIAVHlLJX5W0eHw8kUqP8F07+xLERlnzNtYDrTwjRKDStB+rloys54
+1AZx7sN3COWGXEJbUpYXLqUCufSR1Kjzi29Zf7Dg45gH9Bp23+P9JzPBThvEzUqsg+Xo3zq3SQ9J
+4tT/vVQRKSDOFTUNJncjCP4fvD66PN9LY4vmXrRCBs46ZfwCE3eUQmfHrV6hoHuZ4VtyBx4oU3EJ
+bllH+3tEHLV8290Fp1M2VaUD9CAJlbqYFOz1kJjK6kGdEqFDjKWjeuKY6p1Rp5tMPxd/er1VOSL/
+tg8pP3WVrZN/26j0IZ6PatE1EqK98AR45AGQeBL6ATzy6WE1B7ysDhYtIqlGDiolJXqb1Pwx2le3
+J51+TPPhyo0JX9fIzrVVJlvVXv3KwmgjZ+8u4nHSuT0ZGjuXfjT1Tfrqqox7VjB0rerq2UEy7v+O
+HZs+GjsnfTf1Ty2QAeKKEj8LyZeElVmm0LY+FTtkb9Sxwa5aQeea3SuBLyxMDY0l/+67uPshqFSx
+CA17uos279vkFm3fBTYMjI6eY6k6tm6LjMgikSvThbrarlRRpyftw+TmnYklqEVycga1uplBuDp2
+NPyU0S8oMXu3oLabbRH/VRnA78Nxr1om7VWYJE2SY2a2RsQOHDwvYzmgYPHLlxWfMezs0N6TsXuC
+T2vgqBFC0AhV/LggslGluo8AMBM+xfE1owoJtOTF6A7trN2AkdyExRO0jYeakT0PaCu7N4Cu5oPs
+2ekcQB3yk769cs2xQ5Aybtw8kH2mmELOM8MO0UoGLHhOC8jvtV0eNFbZuX91F9/FjXiEdWRq+Aml
+I0JZSumAysG+AqLfaF382j6pvyI535DgP0Yn1g+rf4Nby5CfbV4G/+gF6/AuUt6hquwN6gB5J7QI
+L/49+Pf4b9jVXD9g4WbaFMC6+XvEv1PSrBc76f7nwgwj7UtKnGHcMOSL12dnp+eXKyzUjmOWEcKx
+aDqGY2LavKOQNBQgnCndVPEAN3zBZ5URQcxSXH00avtNdFZFIctVRDbGaj0lFN7ZGL0S5eKFF8gs
+iCnjVeHtTTujhF52mIDBUTqZdGkJYxE9Fu0mjm0lzIxzKxcyB1Gg0+KeDAbH50zMtNC5DtCuyWNd
+NKlK6sPBdXKDhkrCtyIyE0KwQYjvW9osiRrjxsb56bGQgcW9FKGOTfa4wErOlwYOYRF0ul24pfBt
+0YC/ttWnQTAWeUYAw4/r4e3t8BPcaMCZBzK7U1OQT++S7rvgbhLDt7fjpHcTgyq+Oxx8jMdYKw8k
+h8CBjN9AqmnVQYx2Vgp4NB524x5OHj8kmeShLKghB51eEF9fw0SuHibTTvddEhw2LrejaPPNG9Q9
+OPGB9W5xgfPArsP1kxv5gs6G5LJcXrXjvTZ8onsGsJYDeiYES0Kzg98HYbms7XsKA7W8XZOSoEqg
+Ig1UqeQAteUAFaqgtrYckDYdkIS0rARSpeKAVHFBqiiQnBNVdkGK1IkKHJAiF6RQgVRyQQqJzkDU
+XRuL1oQyGxviLxJtupJpU0jtIctZ5SJFFT3Pa2pU9GB5ufgnvblaXi5+80v0VS4XHzUK5vn61AaJ
+zfu4ezeNobNIUvG1RRSjnsnRtefgxWE2dKy5bAofYTgIcdfaEB0x+JHFYKv5WQsyvxBJ6gn0aOPk
+I3AOCt9Qhv5MO+BpKvj8eZZdGHUfUS3YrHZ2a2rfLjs3rYZmLeQJkhnaecGc2XrN3+BMNTcyXdZS
+UdV9DqSXHFmCyKoWOZSl2jmKB5oei6jUnTCb96O8YA+zwUZmmHiVQMtepkr2qgco0kM/33S9TUSP
+x1O4Ds0/N5VcAD1mZTMPwEOPHpZtq2eD6dHJSi6Yh14zuZkXpkc/iQSNxXem61NzRoH0ed7ca7S3
+6OWJowjiwtllIo8yW4oeUB7wG7SlCMVGp36spIVaREEh2RaCRxKJLMN0xqLKLgvo7+ety2YGVObG
+IACm82iBTsDjUcLpCnFiPh3OGrgzvIo8O5kHr1p2MYFAzESVsgioF32agYLOn5zNn57Nn6AthKIt
+hKQthKZ5qwX8qZoXWfOia9mETboZdhMs5U7YTYf0W4klZVhSBgNl8FjMinfJTe+SOMcn7MzgC86x
+5E2dmO9B8S+6pYmdq4eK0yxD1KyOOfvw7mxMYBp9PEWA689Wzc4pkFCrWMvrZqI6juheI/iW7SwZ
+gs+X0XdkHB/E0+67PXL21QtgF17jl30SJ1//YAsunAIcf4x7JXN/PE+yc/aNyRP3aZs6bR+AZMu9
+41LnuPTtzz9r+ITPnjlO4rRjX4SolTTiG9yjYdVanrCwxFcxl7Ye1xA2XO7WHma4Hfi66sKz1lJh
+OIPCkPkkLxWHfzrFYZ3c/NtTr9jnXc3wombVCci1TGMYoKO5j+6RWLPYs7ywW1kptzcCf9Y69QFf
+ygZPE2n4Cv2PD18TeQLzD3NDQu35huTzlYh95WFfadhX8+Z3d70HRfVbzi3JvF+GhMUneDXo9KiF
+vyzGMqcBGcu1XDcg64Lm6fKU8gO5NUV0LWgYbC9YMrVvzF1lEWDnLcE+LFqIDbXvSyH2cUJsbpFu
+Vqn3m5cD5b3waCEQfaS7IxjRPx4tF5rlNFOyMppWDIt+vBt99Mfb4b1bwMR5Om7ag7v++vsaSVOF
+fnYg8RcAhRSCOaU3T4GQ9g7K0B7XVNom5mvLTh1uSdeGT0FkhNAWQUm/bG1ysjZLrrastGcs4xnm
+Ru8pN3qPuBHtE/rBw6rSmUe0Hr72+h38M55MWCpyotMhCyOUQr/kEjRyGykY7JLNi8O4cr0LnX81
+rog1sIilDqpCe11TyigxQlgHatxm2wpQjNdBgRed0OUAH3yogiMVn1vwnhQ7U+DzGWzoX1h7NOnu
+Q7Ay29R5zJxlaGwT8knLO2ceU0bakKZLGThFLvIL+5IwqBu2MRvb/cKjxUiYYC9LSlZLad+Uy8NA
+T8+sZjBEoyWLyfa+f25EC02Zc05EekOJtaJgvriyYvXruIAEu7/Gn1MLUVOBvUkXF9jctBd4FVBF
+04oyEDWDJ/bpaddP0cJeIuaFy3NLNYwMbGsZyL2yFJQW32Lpzzp7UCqTgtl24SI2oZF6LWAjWmiX
+nXRZKZe8fzHdomWVLTjDRGbPoyctyzmDs1Cypw2QqAiIe7eQS3caiy+9JM05aBTtkqqq6iNqPKk8
+BLGSIFji6YlFzobDW6O1N7iFEXcw6iqnRg/VNTD4rz1EJj/Gij33NToX9YJOEPdH08/BZWfygeqe
+CoV+3MchSCWpvLQ+Sf4vHl6vXsrjoVvS3TJ2CdOLMXk1sARSa4ErCZNotdpHfXdtEuZMBECDpquL
+SPiw+JKFBGXulxsbGz/88EPwe2c8GKAy6zJOoPWi04gKoaL/HvwtPYc9ZYj28xgdwCfKLsnSt2ct
+XekrHCnpEbc1PBwOP2QPQdDti3p9e62QpQ42n6qErcIwgDXQGgbQp+AlC9g4vA6kdm6H6JzTGuLT
++8t/3PYC4m+rNEQL4M0jRRVKtfWrq+Jhs2jparGohQsdpdr0MyDeg5vWqTgiw+fCjr4p1PbOxvFH
+/DdToAmaNmluYT8a2hBkEbk8KnQS30/J9AkZPnSo1mrGTSwDzjNCrS1TaRE0VSh+tW1yHveHHz32
+uqtAVDNvpNk2CuvTN71R7OsvRhWbvksmAfrfdTKeTIMp4pREDYx4Pvn1H7iDtuwsgygvYa2pH8bd
+sKoLErZqeKgiMrPABbYtGxl6yetruB+59tVXGZ+Gx9R2ZRH7Ud6A9IqPaJOx00zWFrxsv96qBM1B
+72h/z6qZlNWMh51xr5FMPlBFoxbdmzafW78ownVpGNGBAvV59ZnNcup0fFNc174KlnKkABkzjhX9
+KZl23+nWTRgVukiCoRZVL9FKpuMLZCNmWGbm25bWCUsvpZ+R/BODpNqO1VXSI8nznuWYglRJhu9H
+5AKAHvqKXLVg7SWcOMjBMbW+cg7pQR0WMcE2zwU3z9Ymg3xJZ4P+jpTfTzYfkiF55oRI49Jm5KLZ
+/FUYGv5pnh/4pE3Nb83z1sEfTzVw0prXqElR85D/OKkfnp+etP632a7v1Q+brPvSJtZDXdh6dXD0
++uKQQPLqmlBe7V8vvu7c3U61+S+JE/+gnTMExweBgj0dyWZWGXkOF9BT4Xwh0uh673zYpwTafa+U
+YTN0OxzcBB/6bcg/qCea+hF9ectiiiufLsZv0fEXNDokyOo6vEl/0iuqZB2BQL25m8RSu5N3cI/4
+9vYDKF1HnZsY/oujbByRqyvWJ3bbmofT8NlxXmSl04uPEKyOILcFglZE5B49rJCjtgmRaJqgWh6k
+wjp32x3H/Q4S5eqN/VycSeE5BTZXSt+VcCVMJlrlxX8gIVNIuDfx7WYYFVN9Dc2KOxwnN8mgcxtM
+xm/hi26aEcn5BZXpRqy4zmfCZJfBEqnolseI3u03a4aPIZtV7ctW+oXOLBsg7R6exNJ96UWE51AD
+8IK0u0nSVmoNl1L42jehV5QMFaQWy84WD+bSotRg5RENkpxe+dt88ag2K3naFPiArb3QMnH5J/XB
+xCRL9xUsBmTtiZxb4vlzvVuckOhqB0SuEMRzchEDpPco+47GCmBMM7LY7s8MlcmdulSHvKpJ9JAX
+K8nvZfg6vZYYitZx+vVsmllTWrnjUyysnVw0F7B+ptUrBN/n+uEoEdhOjPArI51OZxOxphphH+Fe
+sLEbbO7pVaIrfanYlEZXOA76WR2nQ0Yi7xkSDJAI1Yt1OFUHnAqBQ69x4K7lFl86fQ8YSdn7Einn
+i5RBEDwGLQNftNx2wNkmcNxomYncVR8o3yJyHzXrl0+E2t8nYqcnJdb/xxnP2Y3yCoA7t+1k/J/2
+pPMxXmWHLXK7yg99qN0PYHjTmQ77SZdZqqEpQPi//utxu3X+qgTRZPmH4fX1JJ5iINJhEAMSZkUe
+aqjqA9S6SpDbzIHDsqvH00ANlYuguFEYn03BoEbszb/KVyT91E0Mx1d0ugh68aQ7TkZThNbpTiQn
+Wq02Abq2SRgUwICSUE8mbDjq3Kgz7vRjCLf1Lu70IPFZRuB7bdBsKwBoyAV4ncQIeDLBWUXBODr4
+9A71Erc2QR3uTuns0c5B/rfnn7CrJhkrHyDgFp2h3Z2ARhsUD6XY91U+7hdX5cl4cVUs/vxzuFV8
+BkYwNIg6icAONlXZAMIShlAlAAgIAUCQDSBEAJ4xa7WDg9T1VjwZp7aX9oO2hF6krVSbwU4Q6L/y
+MpPFR1tnRUX6NQSvskZmuFiDIJ4fkhHFA8SBVMwzITwCUcUrL1QVUBOyURBUnkIekLQv6SLruWVp
+3Wyck+eZ0OkHufWq2PqUqu9nZWbUMo1AXwzPy6iYRywBVtgOleGkyg3NaZzxQPSVxr/8gqOF4uX9
+EMej4OIMfQEPirODndAilmihwula8LDnJilEqSTMMGyTlI5TbPhwNxA4RspJNlQmwflHTeZHNCqd
+zJK0s7c8j0upwiFVLGWIb0CG0DmRTCC3rjAfW5Pf0gPDo0SNFyCvEHb4lBJHwCWOW0gqO47nKXLs
+lvzkDYXZl69yihtK/cpVPmFDqb55ZRY1VFkDFPPatCLuATr64rxEkTxySPUvLYdgCkhL/4Ml8GL1
+BceKpbjyZOLK9yatlO7rjZcrjnu1uQsvD5YFLd3v68YbpftGdSEilK0X+CqcmKHUG4al3DJA3L4y
+FNw2FKyaClYNBV/gguYr2JDewdIJemmQB19cBeKtluOSid8jYWDhzMDYrZwML3oEvIoBXtkFr2K8
+d7XBM6y/cMGm4uCLJ8VBtBNeLFHvL456X8OImhgEMX/AVd0G2u2uborrQw2HzL7iugSR2sAQ69B4
+0Gvfvu1sVZj1tZChusrsre3OjPs143fmy1jZtn4XXBmFVB9C65Xs1svu1kOetcg3Wi3Y4AEqza84
+Yv8Vr2LRizyNn7VOcxbHUXX9qrB4w45UZcoq6qGHHYXrdI+alz3KXvYt97JH1SykK1mRjmXhmZMd
+Mt9dXJ9S748wYP4FoBizdBXBgTbbndjhLUxmw5BJK//qeXsvh2nCury7aJ7lxW3nu+/ybrxZdl6e
+rUf2XqFAD/1ZC+hIrqoU74qqAPM+KO1l7sLIvQvLndl3oZB3Cic6gcMS2nigIrruJLd3Yy17oNy1
+txlcqZKjaxmzkNFUSc+tZ2rq6UURSuDOsBAwuhh3tyrtcF36GbGfDXTQRSQMBA0cFRN+bewqGQdX
+GRDlyxr/EslfakTeKID2zAz0ZxtQ2B3PnmVXi7RqnJ2ZB3JoHcihdSCHJKWqiC9zBP502PH8RwlB
+Lu7ePg2CbGQgiAXgrhU5ZlwCWz/gy6PX1wpcXd8fny+eAIBtPpVDnMuLFxQvgWVYOPLJqmVkxTRY
+gKX+kav+EVN3p77tBZFd2GHu+oLU7o3o+w2a82LFo71DR3tsCoTmhNbExh6ejO73GzgrG3bPANb6
+sXNLlpkElSgYYkGwcqIuJjO521Pzs0b89u6mWoIIdco1XXfYi9dheLjLkF4OBowzYDf3X//Srpba
+JBc0DrOHS+OjLxoHHWVaMY1R8iQUeWGQ/9/yWT7LZ/ksn+WzfJbP8lk+y2f5LJ/ls3yWz/JZPstn
++Syf5bN8ls/yWT7LZ/ksn+WzfJbP8lk+y2f5LJ/ls3yWz/JZPt/08/8BuyiLMACoAgA=
+
+------=_NextPart_000_00B2_01C81B11.F9D10C00
+Content-Type: application/octet-stream;
+	name="atp8620.h"
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: attachment;
+	filename="atp8620.h"
+
+#include <linux/types.h>=0A=
+#include <linux/kdev_t.h>=0A=
+#include <linux/version.h>=0A=
+#ifndef NULL=0A=
+#define NULL 0=0A=
+#endif=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=0A=
+#define DRV_VERSION_MAJOR	1=0A=
+#define DRV_VERSION_MINOR	0=0A=
+#define DRV_VERSION_BUILD	6=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0A=
+#define _ULTRA_DMA133		6=0A=
+#define _ULTRA_DMA100		5=0A=
+#define _ULTRA_DMA66		4=0A=
+#define _ULTRA_DMA33		2=0A=
+#define _MAX_ULTRA		_ULTRA_DMA133=0A=
+#define _MAX_PIO_MODE		4=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=0A=
+#define MAX_ADAPTER		4=0A=
+#define	MAX_COMMAND_QUEUE_CH	7=0A=
+#define	MAX_QUEUE_SUPPORT	16=0A=
+#define MAX_SCATTER		17=0A=
+#define MAX_XFER_SECTORS		128=0A=
+#define MAX_CMDLUN		1=0A=
+#define MAX_SATA_CHANNEL		2=0A=
+#define MAX_SATA_HDD		5 =0A=
+#define MAX_CHAIN_LEVEL		1=0A=
+#define MAXTARGETHDD		((MAX_SATA_CHANNEL * MAX_SATA_HDD) + 2)=0A=
+#define TIMER_SCALE		(HZ/10)		// 100mS=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=0A=
+#define MEM_512B			(0x000200)=0A=
+#define MEM_1KB			(0x000400)=0A=
+#define MEM_2KB			(0x000800)=0A=
+#define MEM_4KB			(0x001000)=0A=
+#define MEM_8KB			(0x002000)=0A=
+#define MEM_16KB			(0x004000)=0A=
+#define MEM_32KB			(0x008000)=0A=
+#define MEM_64KB			(0x010000)=0A=
+#define MEM_128KB		(0x020000)=0A=
+#define MEM_256KB		(0x040000)=0A=
+#define MEM_512KB		(0x080000)=0A=
+#define MEM_1MB			(0x100000)=0A=
+#define MEM_2MB			(0x200000)=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=0A=
+#define MEM_8KB_ORDER           1=0A=
+#define MEM_16KB_ORDER          2=0A=
+#define MEM_32KB_ORDER          3=0A=
+#define MEM_64KB_ORDER          4=0A=
+#define MEM_128KB_ORDER         5=0A=
+#define MEM_256KB_ORDER         6=0A=
+#define MEM_512KB_ORDER         7=0A=
+#define MEM_1MB_ORDER           8=0A=
+#define MEM_2MB_ORDER           9=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0A=
+#define EXTENSION_MEM		MEM_64KB_ORDER=0A=
+#define EXTENSION_MEM_LEN	MEM_64KB=0A=
+#define WORKINGTABLE_MEM_LEN	(MEM_32KB + MEM_16KB)=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0A=
+#define SCSIOP_INQUIRY		0x12=0A=
+#define SCSIOP_REQUEST_SENSE	0x03=0A=
+#define SCSIOP_READ_CAPACITY	0x25=0A=
+#define SCSIOP_MODE_SENSE	0x1A	//MODE SENSE (6)=0A=
+#define SCSIOP_MODE_SENSE10	0x5A	//MODE SENSE (10)=0A=
+#define SCSIOP_MEDIUM_REMOVAL	0x1E=0A=
+#define SCSIOP_MODE_SELECT	0x15	//MODE Select (6)=0A=
+#define SCSIOP_MODE_SELECT10	0x55	//MODE Select (10)=0A=
+#define SCSIOP_TEST_UNIT_READY	0x00=0A=
+#define SCSIOP_START_STOP_UNIT	0x1B=0A=
+#define SCSIOP_SEEK6		0x0B=0A=
+#define SCSIOP_SEEK		0x2B	//SEEK(10)=0A=
+#define SCSIOP_VERIFY		0x2F=0A=
+#define SCSIOP_READ6		0x08	//READ(6)	=0A=
+#define SCSIOP_READ10		0x28	//READ(10)=0A=
+#define SCSIOP_READ12		0xA8	//READ(12)=0A=
+#define SCSIOP_READ16		0x88	//READ(16)=0A=
+#define SCSIOP_WRITE6		0x0A	//WRITE(6)=0A=
+#define SCSIOP_WRITE10		0x2A	//WRITE(10)=0A=
+#define SCSIOP_WRITE12		0xAA	//WRITE(12)=0A=
+#define SCSIOP_WRITE16		0x8A	//WRITE(16)=0A=
+#define SCSIOP_SYNC_CACHE	0x35=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0A=
+#define IDE_READ_PIO		0x20=0A=
+#define IDE_READ_PIO_EXT		0x24=0A=
+#define IDE_READ_DMA		0xC8=0A=
+#define IDE_READ_DMA_EXT		0x25=0A=
+#define IDE_NCQ_READ		0x60=0A=
+#define IDE_WRITE_PIO		0x30=0A=
+#define IDE_WRITE_PIO_EXT	0x34=0A=
+#define IDE_WRITE_DMA		0xCA=0A=
+#define IDE_WRITE_DMA_EXT	0x35=0A=
+#define IDE_NCQ_WRITE		0x61=0A=
+#define IDE_VERIFY		0x40=0A=
+#define IDE_VERIFY_EXT		0x42=0A=
+#define IDE_SEEK			0x70=0A=
+#define IDE_FLUSH_CACHE		0xE7=0A=
+#define IDE_FLUSH_CACHE_EXT	0xEA=0A=
+#define ATAPI_READ_CD		0xBE=0A=
+#define ATAPI_WRITE_CONTINUE	0xE1=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=0A=
+#define STATUS_RESET		(DID_RESET << 16)		// 0x00080000=0A=
+#define STATUS_GOOD		(DID_OK << 16)		// 0x00000000=0A=
+#define STATUS_BUSY		(DID_BUS_BUSY << 16)	// 0x00020000=0A=
+#define STATUS_NO_DEVICE		(DID_BAD_TARGET << 16)	// 0x00040000=0A=
+#define STATUS_CHECK_CONDITION	0x02=0A=
+#define STATUS_PENDING		0xFFF1=0A=
+//;=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+#define ATP8620_DEVID		0x000D=0A=
+#define DRIVER_NAME		"atp8620"=0A=
+#if __LITTLE_ENDIAN=0A=
+#define ADAPTER_INFORMATION	"ACARD ATP8620 PCI/PCI-X SATA Adapter =
+Driver(LE)"=0A=
+#else=0A=
+#define ADAPTER_INFORMATION	"ACARD ATP8620 PCI/PCI-X SATA Adapter =
+Driver(BE)"=0A=
+#endif=0A=
+#define ADAPTER_NAME		"atp8620"=0A=
+#define PROC_INFORMATION		"ACARD ATP8620 Driver"=0A=
+#define PROC_NAME		"atp8620"                   // folder name in =
+/proc/scsi/=0A=
+#define Scsi_Cmnd struct scsi_cmnd=0A=
+#define SCSI_DRV_TEMPLATE 					\=0A=
+{								\=0A=
+	.module			=3D THIS_MODULE,			\=0A=
+	.name			=3D ADAPTER_NAME		,	\=0A=
+	.proc_name		=3D PROC_NAME,			\=0A=
+	.proc_info		=3D adapter_proc_info,		\=0A=
+	.info			=3D adapter_info,			\=0A=
+	.bios_param		=3D adapter_biosparam,		\=0A=
+	.queuecommand		=3D adapter_queuecommand,		\=0A=
+	.eh_abort_handler		=3D NULL,				\=0A=
+	.eh_host_reset_handler	=3D adapter_reset,			\=0A=
+	.can_queue		=3D MAX_QUEUE_SUPPORT,		\=0A=
+	.this_id			=3D 16,				\=0A=
+	.sg_tablesize		=3D MAX_SCATTER,			\=0A=
+	.cmd_per_lun		=3D MAX_CMDLUN,			\=0A=
+	.use_clustering		=3D ENABLE_CLUSTERING,		\=0A=
+	.max_sectors		=3D MAX_XFER_SECTORS		\=0A=
+}=0A=
+#define PCI_DEVICE_ID_TABLE 					\=0A=
+{								\=0A=
+	{ PCI_DEVICE(PCI_VENDOR_ID_ARTOP, ATP8620_DEVID)	},	\=0A=
+}=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+#if __LITTLE_ENDIAN=0A=
+typedef struct _U64C=0A=
+{=0A=
+	u8		U64C_L_LL;=0A=
+	u8		U64C_L_LH;=0A=
+	u8		U64C_L_HL;=0A=
+	u8		U64C_L_HH;=0A=
+	u8		U64C_H_LL;=0A=
+	u8		U64C_H_LH;=0A=
+	u8		U64C_H_HL;=0A=
+	u8		U64C_H_HH;=0A=
+}T_U64C,*P_U64C;=0A=
+typedef struct _U64I=0A=
+{=0A=
+	u16		U64I_LL;=0A=
+	u16		U64I_LH;=0A=
+	u16		U64I_HL;=0A=
+	u16		U64I_HH;=0A=
+}T_U64I,*P_U64I;=0A=
+typedef struct _U64L=0A=
+{=0A=
+	u32		U64L_L;=0A=
+	u32		U64L_H;=0A=
+}T_U64L,*P_U64L;=0A=
+#else=0A=
+typedef struct _U64C=0A=
+{=0A=
+	u8		U64C_H_HH;=0A=
+	u8		U64C_H_HL;=0A=
+	u8		U64C_H_LH;=0A=
+	u8		U64C_H_LL;=0A=
+	u8		U64C_L_HH;=0A=
+	u8		U64C_L_HL;=0A=
+	u8		U64C_L_LH;=0A=
+	u8		U64C_L_LL;=0A=
+}T_U64C,*P_U64C;=0A=
+typedef struct _U64I=0A=
+{=0A=
+	u16		U64I_HH;=0A=
+	u16		U64I_HL;=0A=
+	u16		U64I_LH;=0A=
+	u16		U64I_LL;=0A=
+}T_U64I,*P_U64I;=0A=
+typedef struct _U64L=0A=
+{=0A=
+	u32		U64L_H;=0A=
+	u32		U64L_L;=0A=
+}T_U64L,*P_U64L;=0A=
+#endif=0A=
+typedef union _U64=0A=
+{=0A=
+	T_U64L		U64L;=0A=
+	T_U64I		U64I;=0A=
+	T_U64C		U64C;=0A=
+} T_U64,*P_U64;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _MailBox =0A=
+{=0A=
+	unsigned int	BufAddress;=0A=
+	unsigned int	BufAddressU;=0A=
+	unsigned int	Reserved;=0A=
+	unsigned int	DataLength;=0A=
+} T_MailBox,*P_MailBox;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _Host2DeviceFIS=0A=
+{=0A=
+	unsigned char	FIS_Type;=0A=
+#if __LITTLE_ENDIAN=0A=
+	unsigned char	PortMultiplier:4;=0A=
+	unsigned char	FG_Reserved:3;=0A=
+	unsigned char	FIS_Flag:1;=0A=
+#else=0A=
+	unsigned char	FIS_Flag:1;=0A=
+	unsigned char	FG_Reserved:3;=0A=
+	unsigned char	PortMultiplier:4;=0A=
+#endif=0A=
+	unsigned char	Command;=0A=
+	unsigned char	P1x1;=0A=
+	unsigned char	P1x3;=0A=
+	unsigned char	P1x4;=0A=
+	unsigned char	P1x5;=0A=
+	unsigned char	P1x6;=0A=
+	unsigned char	P1x3Exp;=0A=
+	unsigned char	P1x4Exp;=0A=
+	unsigned char	P1x5Exp;=0A=
+	unsigned char	P1x1Exp;=0A=
+	unsigned char	P1x2;=0A=
+	unsigned char	P1x2Exp;=0A=
+	unsigned char	Reserved1;=0A=
+	unsigned char	P3x6;=0A=
+	unsigned int	Reserved2[12];=0A=
+}T_Host2DeviceFIS,*P_Host2DeviceFIS;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _CommandTable=0A=
+{=0A=
+	T_Host2DeviceFIS	CommandFIS;		// 64  bytes=0A=
+	unsigned char	AtapiCommnad[32];		// 32  bytes=0A=
+	unsigned char	Reserved[32];		// 64  bytes=0A=
+	T_MailBox	MailBox[24];		// 384 bytes=0A=
+}T_CommandTable,*P_CommandTable;			// 512 bytes=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _CommandHead=0A=
+{=0A=
+#if __LITTLE_ENDIAN=0A=
+	u8		CommandFISLen:5;=0A=
+	u8		AtapiPioFIS:1;=0A=
+	u8		ReadWrite:1;=0A=
+	u8		PreFetchAble:1;=0A=
+	u8		Reset:1;=0A=
+	u8		Bist:1;=0A=
+	u8		ClearBusy:1;=0A=
+	u8		Reserved0	:1;=0A=
+	u8		PortMultiplier:4;=0A=
+#else	=0A=
+	u8		PreFetchAble:1;=0A=
+	u8		ReadWrite:1;=0A=
+	u8		AtapiPioFIS:1;=0A=
+	u8		CommandFISLen:5;=0A=
+	u8		PortMultiplier:4;=0A=
+	u8		Reserved0:1;=0A=
+	u8		ClearBusy:1;=0A=
+	u8		Bist:1;=0A=
+	u8		Reset:1;=0A=
+#endif	=0A=
+	u16		PRDTL;=0A=
+	u32		PRD_ByteCount;=0A=
+	u32		CommandTablePtr;=0A=
+	u32		CommandTablePtrU;=0A=
+	u32		Reserved1[4];=0A=
+}T_CommandHead,*P_CommandHead;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _CommandPtr=0A=
+{=0A=
+	P_CommandHead	pCommandHead;=0A=
+	P_CommandTable	pCommandTable;=0A=
+	dma_addr_t	pDmaCommandTable;=0A=
+}T_CommandPtr,*P_CommandPtr;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _DmaSetupFIS=0A=
+{=0A=
+	unsigned char	FIS_Type;=0A=
+	unsigned char	FIS_Flag;=0A=
+	unsigned short	Reserved0;=0A=
+	unsigned int	DmaBufferIdentifierL;=0A=
+	unsigned int	DmaBufferIdentifierH;=0A=
+	unsigned int	Reserved1;=0A=
+	unsigned int	DmaBufferOffset;=0A=
+	unsigned int	DmaTransferCount;=0A=
+	unsigned int	Reserved2;=0A=
+} T_DmaSetupFIS,*P_DmaSetupFIS;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _PioSetupFIS=0A=
+{=0A=
+	unsigned char	FIS_Type;=0A=
+	unsigned char	FIS_Flag;=0A=
+	unsigned char	Status;=0A=
+	unsigned char	Error;=0A=
+	unsigned char	P1x3;=0A=
+	unsigned char	P1x4;=0A=
+	unsigned char	P1x5;=0A=
+	unsigned char	P1x6;=0A=
+	unsigned char	P1x3Exp;=0A=
+	unsigned char	P1x4Exp;=0A=
+	unsigned char	P1x5Exp;=0A=
+	unsigned char	Reserved0;=0A=
+	unsigned char	P1x2;=0A=
+	unsigned char	P1x2Exp;=0A=
+	unsigned char	Reserved1;=0A=
+	unsigned char	E_Status;=0A=
+	unsigned short	TransferCount;=0A=
+	unsigned short	Reserved2;=0A=
+} T_PioSetupFIS,*P_PioSetupFIS;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _Device2Host=0A=
+{=0A=
+	unsigned char	FIS_Type;=0A=
+	unsigned char	FIS_Flag;=0A=
+	unsigned char	Status;=0A=
+	unsigned char	Error;=0A=
+	unsigned char	P1x3;=0A=
+	unsigned char	P1x4;=0A=
+	unsigned char	P1x5;=0A=
+	unsigned char	P1x6;=0A=
+	unsigned char	P1x3Exp;=0A=
+	unsigned char	P1x4Exp;=0A=
+	unsigned char	P1x5Exp;=0A=
+	unsigned char	Reserved0;=0A=
+	unsigned char	P1x2;=0A=
+	unsigned char	P1x2Exp;=0A=
+	unsigned short	Reserved1;=0A=
+	unsigned int	Reserved2;=0A=
+}T_Device2Host,*P_Device2Host;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _SetDeviceBitsFIS=0A=
+{=0A=
+	unsigned char	FIS_Type;=0A=
+	unsigned char	PortMultiplier:4;=0A=
+	unsigned char	FG_Interrupt:4;=0A=
+	unsigned char	Status;=0A=
+	unsigned char	Error;=0A=
+	unsigned int	CompleteMap;=0A=
+}T_SetDeviceBitsFIS,*P_SetDeviceBitsFIS;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=0A=
+typedef struct _ReciveFIS=0A=
+{=0A=
+	T_DmaSetupFIS	DmaSetupFIS;		//  28 bytes=0A=
+	unsigned int	Reserved0;		//   4 bytes=0A=
+	T_PioSetupFIS	PioSetupFIS;		//  20 bytes=0A=
+	unsigned int	Reserved1[3];		//  12 bytes=0A=
+	T_Device2Host	Device2HostFIS;		//  20bytes=0A=
+	unsigned int	Reserved2;		//   4 bytes=0A=
+	T_SetDeviceBitsFIS SetDeviceBitsFIS;	//   8 bytes=0A=
+	unsigned char	Reserved3[32];		//  32 bytes=0A=
+} T_ReciveFIS,*P_ReciveFIS;				// 128 bytes //256 bytes=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+typedef struct _WorkingTable=0A=
+{=0A=
+	void		*pNextTable;=0A=
+	void		*pPrevTable;=0A=
+	void		*pDevice;=0A=
+	Scsi_Cmnd 	*pWorkingScsiCmd;=0A=
+	unsigned long	IoTagID;=0A=
+	P_MailBox	pMailBox;=0A=
+	unsigned int	LmailBox;=0A=
+	unsigned int	LmailBoxX;=0A=
+	unsigned int	pDmaSingleMapAddr;=0A=
+	unsigned int	sg_num;=0A=
+	unsigned int	PriorityLevel;=0A=
+	T_U64		StartLBA;=0A=
+	T_U64		TransferLen;=0A=
+	T_U64		StartLBAOrg;=0A=
+	T_U64		TransferLenOrg;=0A=
+	unsigned char	FG_TableActive:1;=0A=
+	unsigned char	FG_DmaToDevice:1;=0A=
+	unsigned char	FG_DoIoByDMA:1;=0A=
+	unsigned char	FG_Reserved:5;=0A=
+	unsigned char	TagID;=0A=
+	unsigned char	SenseKey;=0A=
+	unsigned char	SenseAsc;=0A=
+	unsigned char	SenseAscQ;=0A=
+	unsigned char	XferCmd;=0A=
+	unsigned char	Reserved1;=0A=
+	unsigned char	Reserved2;=0A=
+	// FOLLOWING IS FOR CDROM =
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=0A=
+	unsigned char	*pDataBufPtr;=0A=
+	unsigned long	DataCounter;=0A=
+	unsigned long	sg_offset;=0A=
+	unsigned long	sg_data_offset;=0A=
+	unsigned char	DataBuffer[932];=0A=
+	unsigned char	OrgCmnd[16];=0A=
+	void		*pOrgRequesrBuff;=0A=
+	unsigned long	pOrgRequestBuffLen;=0A=
+	unsigned long	Length;=0A=
+	unsigned long	use_sg;=0A=
+} T_WorkingTable,*P_WorkingTable;// this size should be equal to 4n bytes=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+typedef struct _Channel=0A=
+{=0A=
+	=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+	unsigned int	MaxDeviceCount:4;=0A=
+	unsigned int	FG_PortMultiplier:1;=0A=
+	unsigned int	FG_StopIO:1;=0A=
+	unsigned int	FG_SataChannel:1;=0A=
+	unsigned int	FG_Reserved:23;=0A=
+	unsigned int	FG_ErrD2H:1;=0A=
+	unsigned int	FG_ErrSDB:1;=0A=
+	=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+	unsigned int	IdePortP1XX;=0A=
+	unsigned int	IdePortPSFF;=0A=
+	unsigned int	IdePortP3XX;=0A=
+	unsigned int	IdeRegPrdTable;=0A=
+	unsigned int	IdeRegSpeed;=0A=
+	P_WorkingTable	pCurRequest;=0A=
+	=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+	unsigned int	BaseIoPort;=0A=
+	P_ReciveFIS	pReciveFIS;=0A=
+	T_CommandPtr	CommandPtr;=0A=
+	P_CommandPtr	pCommandPtr;=0A=
+	P_WorkingTable	pPendingIO;=0A=
+	P_WorkingTable	pExecuteIO[MAX_COMMAND_QUEUE_CH];=0A=
+	unsigned char	QueueCount;=0A=
+	unsigned char	QueueStartTag;=0A=
+	unsigned char	ChannelOrder;=0A=
+	unsigned char	FG_ErrPMx;=0A=
+} T_Channel,*P_Channel;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+typedef struct _DeviceInfo=0A=
+{=0A=
+	unsigned char	FG_DeviceInstall:1;=0A=
+	unsigned char	FG_Support48Bits:1;=0A=
+	unsigned char	FG_QueueSupported:1;=0A=
+	unsigned char	FG_SerialATA:1;=0A=
+	unsigned char	FG_AtapiDevice:1;=0A=
+	unsigned char	FG_DiscDevice:1;=0A=
+	unsigned char	FG_OnSataChannel:1;=0A=
+	unsigned char	FG_InternalError:1;=0A=
+	unsigned char	HD_V1X6;=0A=
+	unsigned char	MultiBlk;=0A=
+	unsigned char	PIOxferclk;=0A=
+	unsigned char	PIO_Mode;=0A=
+	unsigned char	DMAxferclk;=0A=
+	unsigned char	DMA_Mode;=0A=
+	unsigned char	FG_IdeExcept;=0A=
+	unsigned char	SenseKey;=0A=
+	unsigned char	SenseAsc;=0A=
+	unsigned char	SenseAscQ;=0A=
+	unsigned char	FG_PMId:4;=0A=
+	unsigned char	FG_Reserved1:4;=0A=
+	unsigned char	MaxQueueDepth;=0A=
+	unsigned char	QueueCount;=0A=
+	unsigned char	Reserved0;=0A=
+	unsigned char	Reserved1;=0A=
+	unsigned short	A0Wait;=0A=
+	unsigned short	DeviceBlockSize;=0A=
+	T_U64		Capacity;=0A=
+//	unsigned int	Capacity_L;=0A=
+//	unsigned int	Capacity_H;=0A=
+	P_Channel	pChannel;=0A=
+	unsigned char	ModelName[40];=0A=
+	unsigned char	FirmWareRev[8];=0A=
+	unsigned char	SerialNo[20];=0A=
+} T_DeviceInfo,*P_DeviceInfo;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+typedef struct _HW_DEVICE_EXTENSION =0A=
+{=0A=
+	unsigned short	VendorID;=0A=
+	unsigned short	DeviceID;=0A=
+	unsigned short	SubVendorID;=0A=
+	unsigned short	SubDeviceID;=0A=
+	unsigned char	ChipRevision;=0A=
+	unsigned char	IrqNum;=0A=
+	unsigned int	BaseIoPort0;=0A=
+	unsigned int	BaseIoPort1;=0A=
+	unsigned int	BaseIoPort2;=0A=
+	spinlock_t 	spin_lock;=0A=
+	struct Scsi_Host *pScsiHost;=0A=
+	struct pci_dev	*pPciDev;=0A=
+	struct timer_list AdapterTimer;=0A=
+	=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+	T_Channel	IdeChannel;=0A=
+	T_Channel	SataChannel[MAX_SATA_CHANNEL];=0A=
+	T_DeviceInfo	DeviceInfo[(MAX_SATA_CHANNEL * MAX_SATA_HDD) + 2];=0A=
+	=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+	P_WorkingTable	pWorkingTablePool;=0A=
+	unsigned char	*pSataChCmdTable[2];=0A=
+	dma_addr_t	pDmaSataChCmdTable[2];=0A=
+	unsigned char	*pUncachedExtension;	//Cmd =
+Head+RcvFIS+IdeMailBox+IdentifyBuff=0A=
+	dma_addr_t	pDmaUncachedExtension;=0A=
+	unsigned char	*pIdentifyBuffer;=0A=
+	dma_addr_t	pDmaIdentifyBuffer;=0A=
+	P_MailBox	pIdeMailBox;=0A=
+	dma_addr_t	pDmaIdeMailBox;=0A=
+	unsigned int	IoTagID;=0A=
+	unsigned int	IoCounter;=0A=
+	unsigned char	FG_TimerStop;=0A=
+	unsigned char	FG_ExtensionAllocate;=0A=
+	unsigned char	Reserved1;=0A=
+	unsigned char	Reserved2;=0A=
+} HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+typedef struct _IdentifyATADevice =0A=
+{				// WORD=0A=
+   unsigned short	ConfigBitInfo;	// 00=0A=
+   unsigned short	CylinderNo;	// 01=0A=
+   unsigned short	Reserved0;	// 02=0A=
+   unsigned short	HeadNo;		// 03=0A=
+   unsigned short	Reserved1;	// 04=0A=
+   unsigned short	Reserved2;	// 05=0A=
+   unsigned short	SectorNo;	// 06=0A=
+   unsigned short	Reserved3;	// 07=0A=
+   unsigned short	Reserved4;	// 08=0A=
+   unsigned short	Reserved5;	// 09=0A=
+   unsigned char	SerialNo[20];	// 10-19=0A=
+   unsigned short	Reserved6;	// 20=0A=
+   unsigned short	Reserved7;	// 21=0A=
+   unsigned short	Reserved8;	// 22=0A=
+   unsigned char	FirmWareRev[8];	// 23-26=0A=
+   unsigned char	ModelName[40];	// 27-46=0A=
+   unsigned char	MultipleBlk;	// 47(LOW BYTE)=0A=
+   unsigned char	Reserved9;	// 47(HIGH BYTE =3D 0x80)=0A=
+   unsigned short	ReservedA;	// 48=0A=
+   unsigned short	Capability;	// 49=0A=
+   unsigned short	Security;	// 50=0A=
+   unsigned char	ReservedB;	// 51(LOW BYTE)=0A=
+   unsigned char	PIOMode;		// 51(HIGH BYTE)=0A=
+   unsigned char	ReservedC;		// 52(LOW BYTE)=0A=
+   unsigned char	DMAMode;		// 52(HIGH BYTE)=0A=
+   unsigned short	FG_ValidMap;		// 53=0A=
+//   USHORT FG_Valid5458:1;	// 53=0A=
+//   USHORT FG_Valid6470:1;=0A=
+//   USHORT FG_Valid88: 1;=0A=
+//   USHORT FG_Vendor: 13;=0A=
+   unsigned short	Logical_CHS[3];		// 54 - 56=0A=
+   unsigned short	SectorCapacity0;	// 57=0A=
+   unsigned short	SectorCapacity1;		// 58=0A=
+   unsigned short	CurrRWMultiCommand;	// 59=0A=
+   unsigned int		TotalLBA;		// 60 - 61=0A=
+   unsigned char	SingleWordDMASupport;	// 62 (LOW BYTE)=0A=
+   unsigned char	SingleWordDMAActive;	// 62 (HIGH BYTE)=0A=
+   unsigned char	MultiWordDMASupport;	// 63 (LOW BYTE)	=0A=
+   unsigned char	MultiWordDMAActive;	// 63 (HIGH BYTE)=0A=
+   unsigned char	AdvancePIOSupport;	// 64 (LOW BYTE)=0A=
+   unsigned char	ReservedD;		// 64 (HIGH BYTE)=0A=
+   unsigned short	MinMDMATransCycle;	// 65=0A=
+   unsigned short	ReCmdMinMDMATransCycle;	// 66=0A=
+   unsigned short	ReservedE;		// 67=0A=
+   unsigned short	MinPioTransCycle;	// 68=0A=
+   unsigned short	ResveredF[6];		// 69-74=0A=
+   unsigned short	QueueDepth;		// 75=0A=
+#if __LITTLE_ENDIAN			// 76=0A=
+   unsigned short	FG_Reserved76_0:1;=0A=
+   unsigned short	FG_SATA1_support:1;=0A=
+   unsigned short	FG_SATA2_support:1;=0A=
+   unsigned short	FG_Reserved76_47:5;=0A=
+   unsigned short	FG_NcqSupport:1;=0A=
+   unsigned short	FG_Reserved76_9F:7;=0A=
+#else=0A=
+   unsigned char	FG_Reserved76_9F:7;=0A=
+   unsigned char	FG_NcqSupport:1;=0A=
+   unsigned char	FG_Reserved76_47:5;=0A=
+   unsigned char	FG_SATA2_support:1;=0A=
+   unsigned char	FG_SATA1_support:1;=0A=
+   unsigned char	FG_Reserved76_0:1;=0A=
+#endif=0A=
+   unsigned short	ReservedG[6];		// 77-82=0A=
+   unsigned short	Word83;			// 83=0A=
+   unsigned short	ReservedH[4];		// 84-87=0A=
+   unsigned short	UltraModeMap;		// 88=0A=
+   unsigned short	ReservedI[4];		// 89 - 92=0A=
+   unsigned short	Word93;			// 93=0A=
+//   USHORT Word93BitIgnore : 13;	// 93 bit 0  - bit 12=0A=
+//   USHORT Cable80pin:1;		// 93 bit 13 80 PDIG-=0A=
+//   USHORT Word93Remain:2;	// 93 bit 14 - bit 15=0A=
+   unsigned short	ReservedJ[6];		// 94 - 99=0A=
+   unsigned int		LBA_48bits_Low;	// 100 - 101=0A=
+   unsigned int		LBA_48bits_High;	// 102 - 103=0A=
+   unsigned short	ReservedK[200];		// 104 - 255=0A=
+} UIdentify, *PUIdentify;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+typedef struct _UINQUIRYDATA {=0A=
+   unsigned char DeviceType;=0A=
+   unsigned char RemovableFlag;//bit7 removedable=0A=
+   unsigned char VersionInfo;  // bit0-2:ANSI version,bit3-5:ECMA =
+version,bit6-7:ISO version=0A=
+   unsigned char ResponseDataFormat;=0A=
+   unsigned char AdditionalLength;=0A=
+   unsigned char Reserved[2];=0A=
+   unsigned char Flag;  //bit0:SoftReset,bit1:Commnad Queue,bit5:wide =
+16bits,bit6:wide 32bits =0A=
+   unsigned char VendorId[8];=0A=
+   unsigned char ProductId[16];=0A=
+   unsigned char ProductRevisionLevel[4];=0A=
+   unsigned char VendorSpecific[20];=0A=
+   unsigned char Reserved3[40];=0A=
+} UINQUIRYDATA, *PUINQUIRYDATA;=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+static int AllocateExtensionMemory(PHW_DEVICE_EXTENSION =
+pHwDeviceExtension);=0A=
+static void ReleaseExtensionMemory(PHW_DEVICE_EXTENSION =
+pHwDeviceExtension);=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+static unsigned char SendIdentifyCmd2IDE(P_DeviceInfo pDeviceInfo,void =
+*pBuffer,unsigned char IdentifyCmd);=0A=
+static void SetPIOfeature(P_DeviceInfo pHardDiskInfo,PUIdentify =
+pIdentifyBuff,unsigned char MAXMODE);=0A=
+static void GetUltraMode(P_DeviceInfo pHardDiskInfo,unsigned char =
+UltraMap);=0A=
+static void SetUltra(P_DeviceInfo pHardDiskInfo,unsigned char MAXMODE);=0A=
+static void SetUltrafeature(P_DeviceInfo pHardDiskInfo,PUIdentify =
+pIdentifyBuff,unsigned char MAXMODE);=0A=
+static void SetDMAfeature(P_DeviceInfo pHardDiskInfo,PUIdentify =
+PidentifyBuff,unsigned char MAXMODE);=0A=
+static void SetChipIo(P_DeviceInfo pHardDiskInfo);=0A=
+static void ScanATA(PHW_DEVICE_EXTENSION DeviceExtension,P_DeviceInfo =
+pHardDiskInfo);=0A=
+static void ExecuteIdeATA(PHW_DEVICE_EXTENSION DeviceExtension,P_Channel =
+pIdeChannel);=0A=
+static void HardDiskInterrupt(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_Channel pIdeChannel);=0A=
+static void ScanATAPI(PHW_DEVICE_EXTENSION DeviceExtension,P_DeviceInfo =
+pHardDiskInfo);=0A=
+static void ExecuteIdeATAPI(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_Channel pIdeChannel);=0A=
+static void DoPioATAPIXfer(P_WorkingTable pWorkingTable);=0A=
+static void DoDmaATAPIXfer(P_WorkingTable pWorkingTable);=0A=
+static void CdRomInterrupt(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_Channel pIdeChannel);=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+static int SoftwareReset(P_Channel pSataChannel,unsigned char PMx);=0A=
+static int PMxReset(P_Channel pSataChannel,unsigned char PMx);=0A=
+static void PortMultiplierEnumerate(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_Channel pSataChannel,P_DeviceInfo pDeviceInfo);=0A=
+static void SendIdentifyCommand(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_DeviceInfo pDeviceInfo,int PMx,unsigned char IdenCmd);=0A=
+static void ExecuteSataATA(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_WorkingTable pWorkingTable);=0A=
+static void ExecuteSataATAPI(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_WorkingTable pWorkingTable);=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+static void BuildPrdTable(PHW_DEVICE_EXTENSION =
+DeviceExtension,P_WorkingTable pWorkingTable,P_MailBox pMailBox);=0A=
+static P_WorkingTable AllocateWorkingTable(PHW_DEVICE_EXTENSION =
+DeviceExtension);=0A=
+static void ReleaseWorkingTable(P_WorkingTable pWorkingTable);=0A=
+static void ChannelIoHook(P_WorkingTable pWorkingTable);=0A=
+static void ChannelIoRemove(P_WorkingTable pWorkingTable);=0A=
+static void ConvertCommandATA(P_WorkingTable pWorkingTable);=0A=
+static void ConvertCmdATAPI(P_WorkingTable pWorkingTable);=0A=
+static void RestoreCmdATAPI(P_WorkingTable pWorkingTable);=0A=
+static void ConvertSenseKey(P_Channel pChannel,P_WorkingTable =
+pWorkingTable,unsigned char status);=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+static void AddU64(P_U64 Src64_1,P_U64 Src64_2,P_U64 Dest64);=0A=
+static int  CmpU64(P_U64 Src64_1,P_U64 Src64_2);=0A=
+static void mDelay(int interval);=0A=
+static void Debug80Port(unsigned char code,int delaytime);=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+//=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=0A=
+
+------=_NextPart_000_00B2_01C81B11.F9D10C00--
+
