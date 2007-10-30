@@ -1,222 +1,100 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
-Date: Mon, 29 Oct 2007 21:36:11 -0500
-Message-ID: <1193711771.3383.150.camel@localhost.localdomain>
-References: <471FEB81.80103@verizon.net>
-	 <1193502827.3281.9.camel@localhost.localdomain>
-	 <47239DAD.4020005@verizon.net>
-	 <1193581594.3333.4.camel@localhost.localdomain>
-	 <47252B18.6060504@verizon.net>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ibmvscsi: Prevent IO during partner login
+Date: Tue, 30 Oct 2007 11:37:07 -0500
+Message-ID: <20071030163707.GA29228@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:44981 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752486AbXJ3CgV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 29 Oct 2007 22:36:21 -0400
-In-Reply-To: <47252B18.6060504@verizon.net>
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:36247 "EHLO e3.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750953AbXJ3QhU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Oct 2007 12:37:20 -0400
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id l9UGbHHU008898
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 12:37:17 -0400
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id l9UGbHZ2466896
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 12:37:17 -0400
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id l9UGbGWw001070
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 12:37:16 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anthony Ewell <amewell@verizon.net>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: James.Bottomley@steeleye.com
+Cc: santil@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-Please don't drop the cc lists.  There are others who probably have more
-informed opinions than I do who won't get to comment if they don't see
-it.
+By setting the request_limit in send_srp_login to 1 we allowed login
+requests to be sent to the server adapter.  If this was not an initial
+login, but was a login after a disconnect with the server, other I/O
+requests could attempt to be processed before the login occured.  These
+I/O requests would fail, sometimes resulting in filesystems getting
+marked read-only.
 
-On Sun, 2007-10-28 at 17:36 -0700, Anthony Ewell wrote:
-> James Bottomley wrote:
-> > On Sat, 2007-10-27 at 13:21 -0700, Anthony Ewell wrote:
-> >> James Bottomley wrote:
-> >>> On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
-> >>>> Hi All,
-> >>>>
-> >>>>     If you all would not mind a post from the general
-> >>>> public Linux user, after doing a complete disk wipe
-> >>>> of CentOS 4 and installing CentOS5, my system is preceived
-> >>>> to be 3 times slower.
-> >>>>
-> >>>>      To troubleshooting this, I made a post on CentOS's
-> >>>> bugzilla:  http://bugs.centos.org/view.php?id=2382
-> >>>>
-> >>>>      Would some of the experts on this group mind
-> >>>> looking at the bug to evaluate the possibility
-> >>>> that it is being caused by the underlying scsi
-> >>>> driver?   The post contains a dmesg from "Computer C".
-> >>>> (Yes, I am getting a bit desperate.)
-> >>> There's still too little information in the bug report to tell much of
-> >>> anything.  The dmesg doesn't indicate any anomaly with the megaraid
-> >>> (although the LSI people might be able to tell better).  However, it
-> >>> also doesn't contain a trace of the tape drive.
-> >>>
-> >>> Best guess would be a slow down in the megaraid driver.  Can you try
-> >>> doing a speed test on it?  (hdparm -t should suffice).
-> >>>
-> >>> James
-> >>
-> >> Hi James,
-> >>
-> >> The other guy reporting the problem
-> >>  
-> >> http://www.centos.org/modules/newbb/viewtopic.php?topic_id=10659&start=0#forumpost34209
-> >> is not using a MegaRAID card.  He is using 3ware9508 Raid Controllers.
-> >> He is also using a different processor (amd vs xeon) and a different
-> >> chipset (Intel Greenwood vs nVidia)
-> >>
-> >> I also spoke to Neela Kolli (Mega RAID maintainer) and he said he'd
-> >> never heard of the problem.  Here are some tests (including dhparm)
-> >> that I sent to Neela (he never wrote back).
-> >>
-> >> I have also checked with Stellen over at the "dump"
-> >> list and he has not seen the problem (yet).
-> >>
-> >> The problem occurs when backing up to a two different types
-> >> of tape drives and to an eSata drive.
-> >>
-> >> When I am running a "dump" on computer C, gnome-system-monitor
-> >> shows my two cores running at only about 10 to 20% and
-> >> switching back and forth (one at 0% the other at 20% for
-> >> about 5 seconds, then switching positions)
-> >>
-> >> On Computer C (Cent OS 5), when typing in Word Pro (a windows word 
-> >> processor) in Parallels, I can watch myself type.  Computer B
-> >> (CentOS 4.4, now 4.5) has the same version of Parallels
-> >> installed on it (Parallels-2.2.2112-lin.i386) that computer C
-> >> (CentOS 5) has. The perceived speed difference is about a factor
-> >> of three (you can not watch yourself type).
-> >>
-> >> All the "Low Level" test I run seem to come out the same between
-> >> Cent OS 4.4 and 5.  Very frustrating!  It is almost like some
-> >> system monitor component is looking at everything and
-> >> slowing things down.  If this was Windows, I'd go straight
-> >> to the Anti Virus as the culprit.  (Does SE Linux do such
-> >> things?)
-> >>
-> >> Are there any performance tests I can run for you?
-> >>
-> >> Thank you for letting me ramble, this problem is
-> >> really frustrating.  I am afraid to any additional CentOS5
-> >> server out there and CentOS 4.x is so terribly out of
-> >> date.
-> >>
-> >> -T
-> >>
-> >> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >> Tests I sent to Neela:
-> >>
-> >> CentOS 5 (2.6.18-8.1.8.el5, Sata150-4):
-> >>
-> >> #grep -i bogomips /var/log/dmesg
-> >> Calibrating delay using timer specific routine.. 4001.91 BogoMIPS 
-> >> (lpj=2000959)
-> >> Calibrating delay using timer specific routine.. 3999.58 BogoMIPS 
-> >> (lpj=1999791)
-> >> Total of 2 processors activated (8001.50 BogoMIPS).
-> >>
-> >>
-> >> #/sbin/hdparm -t /dev/sda
-> >> /dev/sda:
-> >>   Timing buffered disk reads:  236 MB in  3.01 seconds =  78.53 MB/sec
-> >>
-> >>
-> >> #/sbin/hdparm -t /dev/sdb
-> >> /dev/sdb:
-> >>   Timing buffered disk reads:  182 MB in  3.01 seconds =  60.37 MB/sec
-> >>
-> >>
-> >> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >> CentOS 4.4 (linux rescue 2.6.9-42.EL, IDE):
-> >>
-> >> #cat /proc/cpuinfo
-> >> bogomips	: 4002.92
-> >>
-> >> #/sbin/hdparm -t /dev/sda
-> >> /dev/sda:
-> >>   Timing buffered disk reads:  216 MB in  3.01 seconds =  71.87 MB/sec
-> >>
-> >> #/sbin/hdparm -t /dev/sdb
-> >> /dev/sdb:
-> >>   Timing buffered disk reads:  184 MB in  3.01 seconds =  61.18 MB/sec
-> > 
-> > That pretty much shows, if anything, that transfer speed improved
-> > from .9 to .18.
-> > 
-> >> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >> CentOS 5 (2.6.18-8.1.3.el5, Sata300-4):
-> >> #grep -i bogomips /var/log/dmesg
-> >> Calibrating delay using timer specific routine.. 4001.92 BogoMIPS 
-> >> (lpj=2000960)
-> >> Calibrating delay using timer specific routine.. 3999.58 BogoMIPS 
-> >> (lpj=1999794)
-> >> Total of 2 processors activated (8001.50 BogoMIPS).
-> >>
-> >> #/sbin/hdparm -t /dev/sda
-> >> /dev/sda:
-> >>   Timing buffered disk reads:  214 MB in  3.02 seconds =  70.86 MB/sec
-> >>
-> >>
-> >> ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-> >> CentOS 5  (2.6.18-10.1.3.el5, Sata300-4):
-> >>
-> >> eSata:  dump -0a -z -f /dev/nul winxp.hdd
-> >>    DUMP: Volume 1 took 0:04:04
-> >>    DUMP: Volume 1 transfer rate: 4247 kB/s
-> >>    DUMP: Volume 1 1567020kB uncompressed, 1036385kB compressed, 1.513:1
-> >>
-> >> eSata:  dump -0a -f /dev/nul winxp.hdd  (no compression)
-> >>    DUMP: Volume 1 1036420 blocks (1012.13MB)
-> >>    DUMP: Volume 1 took 0:02:09
-> >>    DUMP: Volume 1 transfer rate: 8034 kB/s
-> >>
-> >>
-> >> 150-4:  dump -0a -z -f /dev/nul winxp.hdd
-> >>    DUMP: Volume 1 took 0:04:05
-> >>    DUMP: Volume 1 transfer rate: 4230 kB/s
-> >>    DUMP: Volume 1 1573150kB uncompressed, 1036383kB compressed, 1.518:1
-> >>
-> >> 150-4:  dump -0a -f /dev/nul winxp.hdd  (no compression)
-> >>    DUMP: Volume 1 1036420 blocks (1012.13MB)
-> >>    DUMP: Volume 1 took 0:02:05
-> >>    DUMP: Volume 1 transfer rate: 8291 kB/s
-> > 
-> > I think this is beginning to point to problems with dump.  What are the
-> > corresponding figures for dump under 2.6.9 (or are the two sets of
-> > figures centos5 followed by centos4)?
-> > 
-> > James
-> > 
-> 
-> Computer C:
-> backup drive: eSATA
-> hard drive: RAID SATA-150-4
-> 
-> CentOS 4.4, 1:05 hours, approx 52 GB backup file 13,333 kBytes/sec
-> CentOS 5.0, 3:16 hours, approx 43 GB backup file 3,656 kBytes/sec
-> Note: 3.6 times slower
-> 
-> Hi James,
-> 
->      The above shows the dump speed difference between CentOS 4.4 and
-> CentOS 5.
-> 
->      I suspected dump at first, until I noticed everything else
-> was about 3 times slower too, such as Parallels, etc.  Open
-> Office 2.3 (linux version) opens about 3 times slower.
-> 
->      Are there any tests you know of to shake out who is
-> slowing the works down?
+To address this we can set the request_limit to 0 while doing the login
+and add an exception where login requests, along with task management
+events, are always passed to the server.
 
-Yes, could you do backup write tests without dump in the process (as in
-just do a straight dd from /dev/zero to the devices in centos 4 and 5).
-If there's no difference in that, it's some scheduling or filesystem
-issue with dump, I'd expect.
+There is a case where the request_limit had already reached 0 would result
+in all events being sent rather than returning SCSI_MLQUEUE_HOST_BUSY; this
+has also been fixed by this patch.
 
->      When I get a chance, I am going to run a dump from my
-> CentOS 5 install DVD in rescue mode (linux rescue).  This
-> to make sure no high level driver is slowing things
-> down.  I will let you know what shows up.
+Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 
-James
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c |   19 ++++++++++++++-----
+ 1 file changed, 14 insertions(+), 5 deletions(-)
 
-
+Index: b/drivers/scsi/ibmvscsi/ibmvscsi.c
+===================================================================
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -556,7 +556,7 @@ static int ibmvscsi_send_srp_event(struc
+ 				   unsigned long timeout)
+ {
+ 	u64 *crq_as_u64 = (u64 *) &evt_struct->crq;
+-	int request_status;
++	int request_status = 0;
+ 	int rc;
+ 
+ 	/* If we have exhausted our request limit, just fail this request,
+@@ -574,6 +574,13 @@ static int ibmvscsi_send_srp_event(struc
+ 		if (request_status < -1)
+ 			goto send_error;
+ 		/* Otherwise, we may have run out of requests. */
++		/* If request limit was 0 when we started the adapter is in the
++		 * process of performing a login with the server adapter, or
++		 * we may have run out of requests.
++		 */
++		else if (request_status == -1 &&
++		         evt_struct->iu.srp.login_req.opcode != SRP_LOGIN_REQ)
++			goto send_busy;
+ 		/* Abort and reset calls should make it through.
+ 		 * Nothing except abort and reset should use the last two
+ 		 * slots unless we had two or less to begin with.
+@@ -633,7 +640,8 @@ static int ibmvscsi_send_srp_event(struc
+ 	unmap_cmd_data(&evt_struct->iu.srp.cmd, evt_struct, hostdata->dev);
+ 
+ 	free_event_struct(&hostdata->pool, evt_struct);
+-	atomic_inc(&hostdata->request_limit);
++	if (request_status != -1)
++		atomic_inc(&hostdata->request_limit);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+  send_error:
+@@ -927,10 +935,11 @@ static int send_srp_login(struct ibmvscs
+ 	login->req_buf_fmt = SRP_BUF_FORMAT_DIRECT | SRP_BUF_FORMAT_INDIRECT;
+ 	
+ 	spin_lock_irqsave(hostdata->host->host_lock, flags);
+-	/* Start out with a request limit of 1, since this is negotiated in
+-	 * the login request we are just sending
++	/* Start out with a request limit of 0, since this is negotiated in
++	 * the login request we are just sending and login requests always
++	 * get sent by the driver regardless of request_limit.
+ 	 */
+-	atomic_set(&hostdata->request_limit, 1);
++	atomic_set(&hostdata->request_limit, 0);
+ 
+ 	rc = ibmvscsi_send_srp_event(evt_struct, hostdata, init_timeout * 2);
+ 	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
