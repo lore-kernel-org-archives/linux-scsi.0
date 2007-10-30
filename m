@@ -1,145 +1,41 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: forced reset override
-Date: Tue, 30 Oct 2007 15:50:49 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F95601@otce2k301.adaptec.com>
-References: <bug-9133-10286@http.bugzilla.kernel.org/><20071008104741.5a0ecebf.akpm@linux-foundation.org><AE4F746F2AECFC4DA4AADD66A1DFEF01EE6699@otce2k301.adaptec.com> <20071008153027.10fd15df.akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH 2/2] Remove dma_coherent_mem interface
+Date: Tue, 30 Oct 2007 15:26:31 -0500
+Message-ID: <1193775991.3321.108.camel@localhost.localdomain>
+References: <1193773405-15799-1-git-send-email-matthew@wil.cx>
+	 <1193773405-15799-2-git-send-email-matthew@wil.cx>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C81B2E.2E0F5669"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:37104 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753712AbXJ3Tu5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 15:50:57 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 59A0C215147
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 12:50:53 -0700 (PDT)
-Content-class: urn:content-classes:message
+Received: from hancock.steeleye.com ([71.30.118.248]:60178 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757695AbXJ3U0e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 16:26:34 -0400
+In-Reply-To: <1193773405-15799-2-git-send-email-matthew@wil.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-arch@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, linux-scsi@vger.kernel.org, jejb@steeleye.com, Matthew Wilcox <willy@linux.intel.com>
 
-This is a multi-part message in MIME format.
+On Tue, 2007-10-30 at 15:43 -0400, Matthew Wilcox wrote:
+> This interface only had one user (and two implementations).
+> It complicates other work, so remove it.
 
-------_=_NextPart_001_01C81B2E.2E0F5669
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Its design was basically to facilitate the use of bus remote memory.
+There's a long thread somewhere discussing this with the ARM people.
+They had some type of SoC implementation that needed to allocate local
+memory for device descriptors.  The Q720 is pretty much the same way, so
+I used it to build the implementation when I created it for the ARM
+people.  This is the original thread:
 
-Some of our vendors have requested that our adapters ignore the hardware
-reset attempts during recovery and have enforced this with changes in
-Adapter Firmware. Some of our customers have requested the option to be
-able to reset the adapter under adverse adapter failure, we even had a
-few defects reported here considering it a regression that the Adapter
-could not be reset. This patch addresses this dichotomy. The user can
-force the adapter to be reset if it supports the IOP_RESET_ALWAYS
-command, in cases where the adapter has been programmed to ignore the
-reset, by setting the aacraid.check_reset parameter to a value of -1.
+http://marc.info/?t=108757862100001
 
-The driver will not reset an Adapter that does not support the reset
-command(s).
+They said they were implementing this system, so I've no idea what
+happened.  However, what are the problems the API is causing?  it seems
+useful, so there should be a preference in its favour of existence
+unless it's causing a problem.
 
-This patch also fixes and cleans up some of the logic associated with
-resetting the adapter.
+James
 
-This attached patch is against current scsi-misc-2.6.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c  |    8 ++++----
- drivers/scsi/aacraid/commsup.c |   13 +++++++------
- drivers/scsi/aacraid/linit.c   |    7 +++++--
- drivers/scsi/aacraid/rx.c      |    4 +++-
- 4 files changed, 19 insertions(+), 13 deletions(-)
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C81B2E.2E0F5669
-Content-Type: application/octet-stream;
-	name="aacraid_forced_reset.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_forced_reset.patch
-Content-Disposition: attachment;
-	filename="aacraid_forced_reset.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDct
-MTAtMzAgMTU6Mjk6MzUuNDE3MjQ1NzMyIC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDctMTAtMzAgMTU6NDI6MzAuNjI5MjA4OTMwIC0wNDAwCkBAIC0xNzksNyAr
-MTc5LDcgQEAKIAogaW50IGFhY19jaGVja19yZXNldCA9IDE7CiBtb2R1bGVfcGFyYW1fbmFtZWQo
-Y2hlY2tfcmVzZXQsIGFhY19jaGVja19yZXNldCwgaW50LCBTX0lSVUdPfFNfSVdVU1IpOwotTU9E
-VUxFX1BBUk1fREVTQyhhYWNfY2hlY2tfcmVzZXQsICJJZiBhZGFwdGVyIGZhaWxzIGhlYWx0aCBj
-aGVjaywgcmVzZXQgdGhlIGFkYXB0ZXIuIik7CitNT0RVTEVfUEFSTV9ERVNDKGFhY19jaGVja19y
-ZXNldCwgIklmIGFkYXB0ZXIgZmFpbHMgaGVhbHRoIGNoZWNrLCByZXNldCB0aGUgYWRhcHRlci4g
-YSB2YWx1ZSBvZiAtMSBmb3JjZXMgdGhlIHJlc2V0IHRvIGFkYXB0ZXJzIHByb2dyYW1tZWQgdG8g
-aWdub3JlIGl0LiIpOwogCiBpbnQgZXhwb3NlX3BoeXNpY2FscyA9IC0xOwogbW9kdWxlX3BhcmFt
-KGV4cG9zZV9waHlzaWNhbHMsIGludCwgU19JUlVHT3xTX0lXVVNSKTsKQEAgLTEzMTYsOSArMTMx
-Niw5IEBACiAJCQkgIChpbnQpc2l6ZW9mKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uVnBk
-SW5mby5Uc2lkKSwKIAkJCSAgZGV2LT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5mby5WcGRJbmZvLlRz
-aWQpOwogCQl9Ci0JCWlmICghYWFjX2NoZWNrX3Jlc2V0IHx8CisJCWlmICghYWFjX2NoZWNrX3Jl
-c2V0IHx8ICgoYWFjX2NoZWNrX3Jlc2V0ICE9IDEpICYmCiAJCSAgKGRldi0+c3VwcGxlbWVudF9h
-ZGFwdGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgotCQkgIGxlMzJfdG9fY3B1KEFBQ19PUFRJ
-T05fSUdOT1JFX1JFU0VUKSkpIHsKKwkJICBsZTMyX3RvX2NwdShBQUNfT1BUSU9OX0lHTk9SRV9S
-RVNFVCkpKSkgewogCQkJcHJpbnRrKEtFUk5fSU5GTyAiJXMlZDogUmVzZXQgQWRhcHRlciBJZ25v
-cmVkXG4iLAogCQkJICBkZXYtPm5hbWUsIGRldi0+aWQpOwogCQl9CkBAIC0xODExLDcgKzE4MTEs
-NyBAQAogCWlmIChhY3RpdmUpCiAJCXJldHVybiBTQ1NJX01MUVVFVUVfREVWSUNFX0JVU1k7CiAK
-LQlhYWMgPSAoc3RydWN0IGFhY19kZXYgKilzY3NpY21kLT5kZXZpY2UtPmhvc3QtPmhvc3RkYXRh
-OworCWFhYyA9IChzdHJ1Y3QgYWFjX2RldiAqKXNkZXYtPmhvc3QtPmhvc3RkYXRhOwogCWlmIChh
-YWMtPmluX3Jlc2V0KQogCQlyZXR1cm4gU0NTSV9NTFFVRVVFX0hPU1RfQlVTWTsKIApkaWZmIC1y
-dSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2NvbW1zdXAuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJMjAwNy0xMC0z
-MCAxNToyOTozNS40MTkyNDU0NzkgLTA0MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29t
-bXN1cC5jCTIwMDctMTAtMzAgMTU6MzQ6MDQuOTg5MTU2NTEyIC0wNDAwCkBAIC0xMjE3LDEyICsx
-MjE3LDEzIEBACiAJfQogCiAJLyogUXVpZXNjZSBidWlsZCwgZmx1c2ggY2FjaGUsIHdyaXRlIHRo
-cm91Z2ggbW9kZSAqLwotCWFhY19zZW5kX3NodXRkb3duKGFhYyk7CisJaWYgKGZvcmNlZCA8IDIp
-CisJCWFhY19zZW5kX3NodXRkb3duKGFhYyk7CiAJc3Bpbl9sb2NrX2lycXNhdmUoaG9zdC0+aG9z
-dF9sb2NrLCBmbGFndik7Ci0JcmV0dmFsID0gX2FhY19yZXNldF9hZGFwdGVyKGFhYywgZm9yY2Vk
-KTsKKwlyZXR2YWwgPSBfYWFjX3Jlc2V0X2FkYXB0ZXIoYWFjLCBmb3JjZWQgPyBmb3JjZWQgOiAo
-KGFhY19jaGVja19yZXNldCAhPSAwKSAmJiAoYWFjX2NoZWNrX3Jlc2V0ICE9IDEpKSk7CiAJc3Bp
-bl91bmxvY2tfaXJxcmVzdG9yZShob3N0LT5ob3N0X2xvY2ssIGZsYWd2KTsKIAotCWlmIChyZXR2
-YWwgPT0gLUVOT0RFVikgeworCWlmICgoZm9yY2VkIDwgMikgJiYgKHJldHZhbCA9PSAtRU5PREVW
-KSkgewogCQkvKiBVbndpbmQgYWFjX3NlbmRfc2h1dGRvd24oKSBJT1BfUkVTRVQgdW5zdXBwb3J0
-ZWQvZGlzYWJsZWQgKi8KIAkJc3RydWN0IGZpYiAqIGZpYmN0eCA9IGFhY19maWJfYWxsb2MoYWFj
-KTsKIAkJaWYgKGZpYmN0eCkgewpAQCAtMTM3MiwxNCArMTM3MywxNCBAQAogCiAJcHJpbnRrKEtF
-Uk5fRVJSICIlczogSG9zdCBhZGFwdGVyIEJMSU5LIExFRCAweCV4XG4iLCBhYWMtPm5hbWUsIEJs
-aW5rTEVEKTsKIAotCWlmICghYWFjX2NoZWNrX3Jlc2V0IHx8CisJaWYgKCFhYWNfY2hlY2tfcmVz
-ZXQgfHwgKChhYWNfY2hlY2tfcmVzZXQgIT0gMSkgJiYKIAkJKGFhYy0+c3VwcGxlbWVudF9hZGFw
-dGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgotCQkJbGUzMl90b19jcHUoQUFDX09QVElPTl9J
-R05PUkVfUkVTRVQpKSkKKwkJCWxlMzJfdG9fY3B1KEFBQ19PUFRJT05fSUdOT1JFX1JFU0VUKSkp
-KQogCQlnb3RvIG91dDsKIAlob3N0ID0gYWFjLT5zY3NpX2hvc3RfcHRyOwogCWlmIChhYWMtPnRo
-cmVhZC0+cGlkICE9IGN1cnJlbnQtPnBpZCkKIAkJc3Bpbl9sb2NrX2lycXNhdmUoaG9zdC0+aG9z
-dF9sb2NrLCBmbGFndik7Ci0JQmxpbmtMRUQgPSBfYWFjX3Jlc2V0X2FkYXB0ZXIoYWFjLCAwKTsK
-KwlCbGlua0xFRCA9IF9hYWNfcmVzZXRfYWRhcHRlcihhYWMsIGFhY19jaGVja19yZXNldCAhPSAx
-KTsKIAlpZiAoYWFjLT50aHJlYWQtPnBpZCAhPSBjdXJyZW50LT5waWQpCiAJCXNwaW5fdW5sb2Nr
-X2lycXJlc3RvcmUoaG9zdC0+aG9zdF9sb2NrLCBmbGFndik7CiAJcmV0dXJuIEJsaW5rTEVEOwpk
-aWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMgYi9kcml2ZXJzL3Njc2kvYWFj
-cmFpZC9saW5pdC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMJMjAwNy0xMC0z
-MCAxNToyOTozNS40MjAyNDUzNTIgLTA0MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGlu
-aXQuYwkyMDA3LTEwLTMwIDE1OjM0OjA0Ljk5MDE1NjM4NSAtMDQwMApAQCAtNTkwLDggKzU5MCwx
-MSBAQAogCSAqIHN1cHBvcnQgYSByZWdpc3RlciwgaW5zdGVhZCBvZiBhIGNvbW1hbmRlZCwgcmVz
-ZXQuCiAJICovCiAJaWYgKChhYWMtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlN1cHBvcnRlZE9w
-dGlvbnMyICYKLQkgIGxlMzJfdG9fY3B1KEFBQ19PUFRJT05fTVVfUkVTRVR8QUFDX09QVElPTl9J
-R05PUkVfUkVTRVQpKSA9PQotCSAgbGUzMl90b19jcHUoQUFDX09QVElPTl9NVV9SRVNFVCkpCisJ
-ICAgbGUzMl90b19jcHUoQUFDX09QVElPTl9NVV9SRVNFVCkpICYmCisJICBhYWNfY2hlY2tfcmVz
-ZXQgJiYKKwkgICgoYWFjX2NoZWNrX3Jlc2V0ICE9IDEpIHx8CisJICAgKGFhYy0+c3VwcGxlbWVu
-dF9hZGFwdGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgorCSAgICBsZTMyX3RvX2NwdShBQUNf
-T1BUSU9OX0lHTk9SRV9SRVNFVCkpKSkKIAkJYWFjX3Jlc2V0X2FkYXB0ZXIoYWFjLCAyKTsgLyog
-QnlwYXNzIHdhaXQgZm9yIGNvbW1hbmQgcXVpZXNjZSAqLwogCXJldHVybiBTVUNDRVNTOyAvKiBD
-YXVzZSBhbiBpbW1lZGlhdGUgcmV0cnkgb2YgdGhlIGNvbW1hbmQgd2l0aCBhIHRlbiBzZWNvbmQg
-ZGVsYXkgYWZ0ZXIgc3VjY2Vzc2Z1bCB0dXIgKi8KIH0KZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9yeC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvcnguYwotLS0gYS9kcml2ZXJzL3Nj
-c2kvYWFjcmFpZC9yeC5jCTIwMDctMTAtMzAgMTU6Mjk6MzUuNDIxMjQ1MjI2IC0wNDAwCisrKyBi
-L2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMJMjAwNy0xMC0zMCAxNTozNDowNC45OTExNTYyNTkg
-LTA0MDAKQEAgLTU0OSw3ICs1NDksOSBAQAogCWRldi0+T0lNUiA9IHN0YXR1cyA9IHJ4X3JlYWRi
-IChkZXYsIE1Vbml0Lk9JTVIpOwogCWlmICgoKChzdGF0dXMgJiAweDBjKSAhPSAweDBjKSB8fCBh
-YWNfcmVzZXRfZGV2aWNlcyB8fCByZXNldF9kZXZpY2VzKSAmJgogCSAgIWFhY19yeF9yZXN0YXJ0
-X2FkYXB0ZXIoZGV2LCAwKSkKLQkJKytyZXN0YXJ0OworCQkvKiBNYWtlIHN1cmUgdGhlIEhhcmR3
-YXJlIEZJRk8gaXMgZW1wdHkgKi8KKwkJd2hpbGUgKCgrK3Jlc3RhcnQgPCA1MTIpICYmCisJCSAg
-KHJ4X3JlYWRsKGRldiwgTVVuaXQuT3V0Ym91bmRRdWV1ZSkgIT0gMHhGRkZGRkZGRkwpKTsKIAkv
-KgogCSAqCUNoZWNrIHRvIHNlZSBpZiB0aGUgYm9hcmQgcGFuaWMnZCB3aGlsZSBib290aW5nLgog
-CSAqLwo=
-
-------_=_NextPart_001_01C81B2E.2E0F5669--
