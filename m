@@ -1,39 +1,63 @@
-From: Denys Vlasenko <vda.linux@googlemail.com>
-Subject: Re: [GIT PATCH] final SCSI pieces for the merge window
-Date: Tue, 30 Oct 2007 13:00:03 +0000
-Message-ID: <200710301300.03996.vda.linux@googlemail.com>
-References: <471E6313.1040704@garzik.org> <1193232490.3396.10.camel@localhost.localdomain> <20071024142729.GZ27248@parisc-linux.org>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC 0/3] [SCSI/libata] libata EH conversion for ipr SAS
+Date: Tue, 30 Oct 2007 10:04:49 -0400
+Message-ID: <47273A01.6010604@garzik.org>
+References: <47263F85.70908@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.187]:37459 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752419AbXJ3NAN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 09:00:13 -0400
-Received: by fk-out-0910.google.com with SMTP id z23so1894579fkz
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 06:00:12 -0700 (PDT)
-In-Reply-To: <20071024142729.GZ27248@parisc-linux.org>
-Content-Disposition: inline
+Received: from srv5.dvmed.net ([207.36.208.214]:33142 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752249AbXJ3OEx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 30 Oct 2007 10:04:53 -0400
+In-Reply-To: <47263F85.70908@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, David Miller <davem@davemloft.net>, jeff@garzik.org, akpm@linux-foundation.org, torvalds@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
 
-On Wednesday 24 October 2007 15:27, Matthew Wilcox wrote:
-> On Wed, Oct 24, 2007 at 09:28:10AM -0400, James Bottomley wrote:
-> > OK, so it's no secret that I'm the last of the subsystem maintainers
-> > whose day job isn't working on the linux kernel.  If you want a full
-> > time person, who did you have in mind?
+Brian King wrote:
+> The following three patches convert ipr to use the new libata EH APIs.
+> In the process of doing this, I first looked into implementing this
+> in a similar manner to how libata SAS is done today, which is hooking
+> into target_alloc/target_destroy to allocate/delete sata ports. While
+> I was able to get this working after writing my own eh_strategy_handler,
+> I was doubtful this was the best long term solution. One problem with this
+> implementation I didn't solve was the fact that libata now invokes EH
+> for each and every error received. For some devices, such as optical
+> devices, each not ready response received during a media reload would
+> result in all the attached SAS devices getting quiesced as well.
 > 
-> I'm willing to take on the role of scsi git-monkey.  Alternatively, we
-> could split the scsi maintainer role the same way that Dave and Jeff
-> do for net where Dave handles the core and Jeff handles the drivers.
-> Or we can negotiate some other arrangement.
+> My second approach is the attached patch set. In this series I have
+> created a new libata API which can be used by SAS LLDDs. It introduces
+> an ata_sas_rphy device object which is created/destroyed by the following API:
+> 
+> ata_sas_rphy_alloc
+> ata_sas_rphy_add
+> ata_sas_rphy_delete
+> 
+> When using this API in ipr, I made ipr's scsi_host the parent device of the
+> SATA rphy. The SATA rphy is then the parent of the allocated scsi_hosts. This
+> means that each SATA rphy in the SAS topology will have its own scsi_host, making
+> SAS *much* more like all the SATA LLDDs in how it uses libata.
+> 
+> The only issue I ran into with this implementation is that since each SATA
+> port has its own scsi_host, the adapter cannot rely on scsi core to manage
+> any LLDD or adapter imposed queue depth. To solve this I added some code to
+> ipr. Longer term, block layer queue groups might be another way to do this.
+> 
+> I'm still polishing this up, but it is up and running and seems to work with
+> what testing I've done so far.
 
-That would be great. Maybe my aic7xxx debloating patches
-which were submitted four times already (IIRC)
-will be looked at at last.
---
-vda
+Like I said on IRC... thanks for taking care of this!  After this we are 
+down to three old-EH users:  libsas, sata_qstor (patch exists, waiting 
+on testing) and sata_sx4 (patch exists, waiting on testing).
+
+I'll take a good look in the next day or so.  Overall the coupling 
+between SAS (ipr and libsas) and libata definitely needs some thought.
+
+	Jeff
+
+
+
