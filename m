@@ -1,93 +1,45 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: PATCH [2/8] scsi: megaraid_sas - add module param fast_load
-Date: Tue, 30 Oct 2007 17:36:45 +0000
-Message-ID: <20071030173645.GA16455@infradead.org>
-References: <1191253611.5850.8.camel@dhcp-75-534.se.lsil.com>
+From: Cornelia Huck <cornelia.huck@de.ibm.com>
+Subject: Re: [PATCH] sysfs: add filter function to groups
+Date: Tue, 30 Oct 2007 09:55:08 +0100
+Message-ID: <20071030095508.00a24b8f@gondolin.boeblingen.de.ibm.com>
+References: <1193671019.3383.13.camel@localhost.localdomain>
+	<1193676852.2655.21.camel@lov.site>
+	<1193677071.3383.56.camel@localhost.localdomain>
+	<20071029181814.25410e00@gondolin.boeblingen.de.ibm.com>
+	<1193678646.3383.76.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:51324 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752155AbXJ3Rgs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 13:36:48 -0400
-Content-Disposition: inline
-In-Reply-To: <1191253611.5850.8.camel@dhcp-75-534.se.lsil.com>
+Received: from mtagate7.uk.ibm.com ([195.212.29.140]:65223 "EHLO
+	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751826AbXJ3I4B (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 04:56:01 -0400
+In-Reply-To: <1193678646.3383.76.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bo yang <bo.yang@lsi.com>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, Sumant.patro@lsi.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, Oct 01, 2007 at 11:46:51AM -0400, bo yang wrote:
-> +/*
-> + * Fast driver load option, skip scanning for physical devices during
-> + * load.  This would result in physical devices being skipped during
-> + * driver load time. These can be later added though,
-> + * using /proc/scsi/scsi
-> + */
+On Mon, 29 Oct 2007 12:24:06 -0500,
+James Bottomley <James.Bottomley@SteelEye.com> wrote:
 
-/proc/scsi/scsi is deprecated, so please don't recommend it here.
-The proper way is the scan attribute of the scsi host.
+> > Can you determine which subset of the attributes you want just before
+> > actually creating the group? Then you could do something like:
+> > 
+> > create_group(grp, kobj)
+> > {
+> > 	grp->update_creation_mask(kobj);
+> > 	actually_create_attrs();
+> > }
+> 
+> That's actually what we currently do (at least in hand coded form) in
+> the current transport classes.  However, it leads to one separate group
+> for each attached class.  With the filter approach, we only need one
+> constructed group for every transport class.
 
-> +static unsigned int fast_load;
-> +module_param_named(fast_load, fast_load, int, 0);
-> +MODULE_PARM_DESC(fast_load,
-> +	"megasas: Faster loading of the driver, skips physical devices! "\
-> +	"(default = 0)");
-
-This should show up in sysfs.
-
-> +static struct megasas_instance *megasas_lookup_instance(u16 host_no)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i < megasas_mgmt_info.max_index; i++) {
-> +		if ((megasas_mgmt_info.instance[i]) &&
-> +			(megasas_mgmt_info.instance[i]->host->host_no
-> +			== host_no))
-
-no need for the braces here.  This should be:
-
-		if (megasas_mgmt_info.instance[i] &&
-		    megasas_mgmt_info.instance[i]->host->host_no == host_no)
-
-> +static int megasas_slave_alloc(struct scsi_device *sdev)
-> +{
-> +	struct megasas_instance *instance;
-> +	int tmp_fastload = fast_load;
-> +
-> +	instance = megasas_lookup_instance(sdev->host->host_no);
-> +
-> +	if (tmp_fastload && sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
-> +		if ((sdev->id == MEGASAS_MAX_DEV_PER_CHANNEL -1) &&
-> +			(sdev->channel == MEGASAS_MAX_PD_CHANNELS - 1)) {
-> +
-> +		/*
-> +		 * If fast load option was set and scan for last device is
-> +		 * over, reset the fast_load flag so that during a possible
-> +		 * next scan, devices can be made available
-> +		 */
-> +			fast_load = 0;
-> +		}
-> +		return -ENXIO;
-> +	}
-> +
-> +	return 0;
-> +}
-
-This is a rather complicated and fragile way to implement this feature.
-
-I'd recomment to change the call to scsi_scan_host in megasas_io_attach
-to something like:
-
-	if (fast_load) {
-		int channel;
-
-		for (channel = 0; channel < MEGASAS_MAX_PD_CHANNELS;
-		     channel++) {
-			scsi_scan_host_selected(host, channel, SCAN_WILD_CARD,
-						SCAN_WILD_CARD, 0);
-		}
-	} else {
-		scsi_scan_host(host);
-	}
-
+I meant doing it in the core. You still have one group for all cases,
+but immediately before creating the attributes, the core checks back
+which ones it should create. (Of course, that doesn't solve your
+problems if you dynamically want to change availability of attributes
+later on. You would need a different mechanism for that.)
