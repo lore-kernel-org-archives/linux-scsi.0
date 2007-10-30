@@ -1,63 +1,64 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [RFC 0/3] [SCSI/libata] libata EH conversion for ipr SAS
-Date: Tue, 30 Oct 2007 10:04:49 -0400
-Message-ID: <47273A01.6010604@garzik.org>
-References: <47263F85.70908@linux.vnet.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: Questions about scsi.c
+Date: Tue, 30 Oct 2007 09:43:29 -0500
+Message-ID: <1193755409.3321.19.camel@localhost.localdomain>
+References: <200710250606.03301.rob@landley.net>
+	 <200710251325.37586.rob@landley.net>
+	 <20071025103241.546b35ec.rdunlap@xenotime.net>
+	 <200710251640.35758.rob@landley.net>
+	 <20071025134926.4d209584.rdunlap@xenotime.net> <472724EA.3050502@pobox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:33142 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752249AbXJ3OEx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 30 Oct 2007 10:04:53 -0400
-In-Reply-To: <47263F85.70908@linux.vnet.ibm.com>
+Received: from hancock.steeleye.com ([71.30.118.248]:46165 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752236AbXJ3Onk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 10:43:40 -0400
+In-Reply-To: <472724EA.3050502@pobox.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: brking@linux.vnet.ibm.com
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>
+To: Jeff Garzik <jgarzik@pobox.com>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, Rob Landley <rob@landley.net>, linux-scsi@vger.kernel.org
 
-Brian King wrote:
-> The following three patches convert ipr to use the new libata EH APIs.
-> In the process of doing this, I first looked into implementing this
-> in a similar manner to how libata SAS is done today, which is hooking
-> into target_alloc/target_destroy to allocate/delete sata ports. While
-> I was able to get this working after writing my own eh_strategy_handler,
-> I was doubtful this was the best long term solution. One problem with this
-> implementation I didn't solve was the fact that libata now invokes EH
-> for each and every error received. For some devices, such as optical
-> devices, each not ready response received during a media reload would
-> result in all the attached SAS devices getting quiesced as well.
+On Tue, 2007-10-30 at 08:34 -0400, Jeff Garzik wrote:
+> Randy Dunlap wrote:
+> > On Thu, 25 Oct 2007 16:40:35 -0500 Rob Landley wrote:
+> > 
+> >> On Thursday 25 October 2007 12:32:41 pm Randy Dunlap wrote:
+> >>>> Entirely possible I'm doing something wrong:
+> >>>>
+> >>>>    <sect1 id="scsi_device.h">
+> >>>>       <title>include/scsi/scsi_device.h</title>
+> >>>>       <para>
+> >>>>       </para>
+> >>>> !Einclude/scsi/scsi_device.h
+> >>>>     </sect1>
+> >>> !E is for exported symbols and that file has none.
+> >>> USe !I instead.
+> >> So how do I handle a case like drivers/ata/libata-core.c which has 
+> >> EXPORT_SYMBOL() calls for functions that live in (and are documented in) 
+> >> other files, such as ata_scsi_ioctl() in drivers/ata/libata-scsi.c?
+> > 
+> > I don't see ata_scsi_ioctl() documented at all.  Are you looking at
+> > a newer tree than I am?  (i'm using 2.6.24-rc1)
+> > 
+> > Long-term answer is that we prefer EXPORT_SYMBOL() to be used
+> > just under the function that is being exported.  In this case,
+> > the maintainer may be disagreeing with that.  [cc-ed]
+> > 
+> > Short-term answer is to use !Isource_filename_where_kernel_doc_is
+> > as though it's not EXPORTed.  I think.
 > 
-> My second approach is the attached patch set. In this series I have
-> created a new libata API which can be used by SAS LLDDs. It introduces
-> an ata_sas_rphy device object which is created/destroyed by the following API:
-> 
-> ata_sas_rphy_alloc
-> ata_sas_rphy_add
-> ata_sas_rphy_delete
-> 
-> When using this API in ipr, I made ipr's scsi_host the parent device of the
-> SATA rphy. The SATA rphy is then the parent of the allocated scsi_hosts. This
-> means that each SATA rphy in the SAS topology will have its own scsi_host, making
-> SAS *much* more like all the SATA LLDDs in how it uses libata.
-> 
-> The only issue I ran into with this implementation is that since each SATA
-> port has its own scsi_host, the adapter cannot rely on scsi core to manage
-> any LLDD or adapter imposed queue depth. To solve this I added some code to
-> ipr. Longer term, block layer queue groups might be another way to do this.
-> 
-> I'm still polishing this up, but it is up and running and seems to work with
-> what testing I've done so far.
+> Yeah I tended to prefer that all exports be in one place, rather than 
+> scattered around and difficult to evaluate en masse :)
 
-Like I said on IRC... thanks for taking care of this!  After this we are 
-down to three old-EH users:  libsas, sata_qstor (patch exists, waiting 
-on testing) and sata_sx4 (patch exists, waiting on testing).
+My personal preference (and how I code) is export at the bottom of the
+function.  However, it's one of those stylistic things that I'm happy to
+have people code however they want (either everything at the bottom of
+the file or all exports at the bottom of the exported function) as long
+as they follow the current style of whatever file they're patching.
 
-I'll take a good look in the next day or so.  Overall the coupling 
-between SAS (ipr and libsas) and libata definitely needs some thought.
-
-	Jeff
-
+James
 
 
