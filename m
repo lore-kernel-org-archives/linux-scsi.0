@@ -1,60 +1,54 @@
 From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: BUG in: Driver core: convert block from raw kobjects to core
-	devices (fwd)
-Date: Wed, 31 Oct 2007 12:07:49 -0500
-Message-ID: <1193850469.3411.66.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0710311238090.6022-100000@iolanthe.rowland.org>
+Subject: RE: [PATCH 1/8] scsi: megaraid_sas - add hibernation support
+Date: Wed, 31 Oct 2007 12:12:24 -0500
+Message-ID: <1193850744.3411.69.camel@localhost.localdomain>
+References: <1191253256.5850.4.camel@dhcp-75-534.se.lsil.com>
+	 <9738BCBE884FDB42801FAD8A7769C265010A0A09@NAMAIL1.ad.lsil.com>
+	 <1193764692.3321.88.camel@localhost.localdomain>
+	 <9738BCBE884FDB42801FAD8A7769C265010A0A11@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:45129 "EHLO
+Received: from hancock.steeleye.com ([71.30.118.248]:45130 "EHLO
 	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756150AbXJaRM1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 13:12:27 -0400
-In-Reply-To: <Pine.LNX.4.44L0.0710311238090.6022-100000@iolanthe.rowland.org>
+	with ESMTP id S1756881AbXJaRMa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 13:12:30 -0400
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C265010A0A11@NAMAIL1.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-On Wed, 2007-10-31 at 12:44 -0400, Alan Stern wrote:
-> On Wed, 31 Oct 2007, James Bottomley wrote:
-> 
-> > OK, light beginning to go on now.
-> > 
-> > The problem is that you've fallen into the conceptual trap we tried very
-> > hard to avoid in the initial go around of joining SCSI upper layer
-> > drivers to gendisks.  That's why no gendisk references are held by the
-> > mid-layer, only by the entities that represent the objects created by
-> > upper layer drivers.
-> > 
-> > Doesn't this circularity now exist for everything?  Every device that
-> > creates a queue has a reference to the queue, every queue has a
-> > reference to its attached gendisk and now every gendisk has a reference
-> > to the device creating the queue?  This doesn't look to be a SCSI
-> > specific problem.
-> 
-> It probably isn't.  I haven't looked at other subsystems but the 
-> scenario you described could well be the common case.
-> 
-> Dropping a kobject's reference to its parent when the kobject is
-> removed rather than when it is deleted will solve all these problems.  
-> The queue's reference to the gendisk and the gendisk's reference to the
-> device will both be dropped when the device is unregistered, allowing
-> the device and gendisk to be released.  When the device is released it
-> can then drop its reference to the queue, allowing the queue to be
-> released.
-> 
-> In other words, reverting that 4-year-old patch would fix everything.  
-> I'd still like to get your acknowledgement for my patch, posted here:
-> 
-> 	http://marc.info/?l=linux-scsi&m=119368368904151&w=2
+On Wed, 2007-10-31 at 07:25 -0600, Yang, Bo wrote:
+> James,
+> I did respond to Randy earlier. 
 
-It sounds plausible, but I'm not really up to speed on all the changes
-going on in sysfs at the moment, so it would be dangerous to rely on
-what I think sounds reasonable.
+Sorry, I couldn't find it in the archive when I looked ... although the
+scsi reflector seems to be missing quite a few of your emails for some
+reason.
+
+> About the module params being added : 
+> 
+> The fast_load parameter is for the user to decide at driver load time
+> if (s)he wants to skip scan of devices in PD channels. 
+> 
+> After driver is loaded the user cannot be permitted to modify this
+> value. If the user needs to see the devices in the PD channels, (s)he
+> may initiate a scan via sysfs/proc based on the kernel being used.
+> Once the user has done the scan, the fast_load value does not have any
+> significance and thus not exposed for reading.
+> 
+> cmd_per_lun & max_sectors are also intended to be provided by user
+> only at driver load time. In the current implementation both these do
+> appear as read-only values under host# in sysfs. The current design is
+> not to allow these values to be modified on the fly. 
+
+fastload sounds reasonable.  cmd_per_lun and max_sectors could
+reasonably be altered at runtime ... just execute and unbind and rebind
+operation to make them take effect.
 
 James
+
 
 
