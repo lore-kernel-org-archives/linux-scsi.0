@@ -1,82 +1,58 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: thread stop patch
-Date: Wed, 31 Oct 2007 16:40:37 -0400
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F9584B@otce2k301.adaptec.com>
-References: <bug-9133-10286@http.bugzilla.kernel.org/><20071008104741.5a0ecebf.akpm@linux-foundation.org><AE4F746F2AECFC4DA4AADD66A1DFEF01EE6699@otce2k301.adaptec.com> <20071008153027.10fd15df.akpm@linux-foundation.org>  <AE4F746F2AECFC4DA4AADD66A1DFEF01F95601@otce2k301.adaptec.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: DMA API Re: Remove dma_coherent_mem interface
+Date: Wed, 31 Oct 2007 15:34:47 -0600
+Message-ID: <20071031213447.GF15111@parisc-linux.org>
+References: <1193864605.25899.253.camel@wirenth>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C81BFE.4B3914F6"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:39691 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754495AbXJaUki (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 16:40:38 -0400
-Received: from otce2k301.adaptec.com (otce2k301.adaptec.com [10.12.1.97])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 42EF5218246
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Oct 2007 13:40:38 -0700 (PDT)
-Content-class: urn:content-classes:message
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01F95601@otce2k301.adaptec.com>
+Received: from palinux.external.hp.com ([192.25.206.14]:58314 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754085AbXJaVet (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 17:34:49 -0400
+Content-Disposition: inline
+In-Reply-To: <1193864605.25899.253.camel@wirenth>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: ian <spyro@f2s.com>
+Cc: linux-arch@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, linux-scsi@vger.kernel.org, jejb@steeleye.com, kernel-discuss@handhelds.org
 
-This is a multi-part message in MIME format.
+On Wed, Oct 31, 2007 at 09:03:24PM +0000, ian wrote:
+> There was a recent patch to remove the coherent memory interface from
+> the DMA API.
+> 
+> I'd like to ask that this not happen - there are several users of this
+> code in the handhelds.org tree, which we hope will merge into mainline.
+> this code is _essential_ to allow support of these devices.
+> 
+> Removing this from mainline will only increase the hh.org delta which we
+> are working hard to reduce, and there is no other realistic way to
+> support these devices.
 
-------_=_NextPart_001_01C81BFE.4B3914F6
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+It's been three years since this API was introduced, and the only
+*merged* user is the one that James wrote.  Now it's in the way of some
+performance improvements I want to make.  I can't possibly go round every
+little platform tree looking for users -- you need to get your drivers
+into mainline.  Yes, it's not necessarily a quick process, but equally,
+you've had three years.
 
-Got a panic in the threading code on an older kernel when the Adapter
-failed to load properly and driver shut down apparently before any
-threading had started, can not dupe. Expect that this may be relevant in
-the latest kernel, but not sure. This patch does no harm, and should
-alleviate the possibility of this panic.
+Now, what driver is it that's going to consume this coherent memory?
+Does it use the dma_pool interface, or does it use dma_alloc_coherent
+directly?  If the latter, I can retain the dma_declare_coherent_memory
+interface.  If the former, then we have to come to a decision between
+supporting some drivers that are so unimportant that they haven't been
+merged in three years and making a performance win for drivers that are
+used every day.
 
-This attached patch is against current scsi-misc-2.6.
+Admittedly, I haven't finished the work to make dma_pool use slub, thus
+I don't know what the performance win will turn out to be.  It may not
+be significant, so it would be an easy decision to keep the interface.
+But if the decision is going to be to keep the interface despite the
+lack of users and no matter what the performance win, then I don't need
+to finish this work.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments (inline gets damaged, use attachment).
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/linit.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff -ru a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
---- a/drivers/scsi/aacraid/linit.c	2007-10-31 16:32:10.394394185
--0400
-+++ b/drivers/scsi/aacraid/linit.c	2007-10-31 16:32:17.740458222
--0400
-@@ -959,7 +959,8 @@
-=20
- static void __aac_shutdown(struct aac_dev * aac)
- {
--	kthread_stop(aac->thread);
-+	if (aac->aif_thread)
-+		kthread_stop(aac->thread);
- 	aac_send_shutdown(aac);
- 	aac_adapter_disable_int(aac);
- 	free_irq(aac->pdev->irq, aac);
-
-Sincerely -- Mark Salyzyn
-
-------_=_NextPart_001_01C81BFE.4B3914F6
-Content-Type: application/octet-stream;
-	name="aacraid_thread_stop.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_thread_stop.patch
-Content-Disposition: attachment;
-	filename="aacraid_thread_stop.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDctMTAt
-MzEgMTY6MzI6MTAuMzk0Mzk0MTg1IC0wNDAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
-bml0LmMJMjAwNy0xMC0zMSAxNjozMjoxNy43NDA0NTgyMjIgLTA0MDAKQEAgLTk1OSw3ICs5NTks
-OCBAQAogCiBzdGF0aWMgdm9pZCBfX2FhY19zaHV0ZG93bihzdHJ1Y3QgYWFjX2RldiAqIGFhYykK
-IHsKLQlrdGhyZWFkX3N0b3AoYWFjLT50aHJlYWQpOworCWlmIChhYWMtPmFpZl90aHJlYWQpCisJ
-CWt0aHJlYWRfc3RvcChhYWMtPnRocmVhZCk7CiAJYWFjX3NlbmRfc2h1dGRvd24oYWFjKTsKIAlh
-YWNfYWRhcHRlcl9kaXNhYmxlX2ludChhYWMpOwogCWZyZWVfaXJxKGFhYy0+cGRldi0+aXJxLCBh
-YWMpOwo=
-
-------_=_NextPart_001_01C81BFE.4B3914F6--
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
