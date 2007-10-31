@@ -1,89 +1,150 @@
-From: "Kay Sievers" <kay.sievers@vrfy.org>
-Subject: Re: [PATCH] sysfs: add filter function to groups
-Date: Wed, 31 Oct 2007 03:01:56 +0100
-Message-ID: <3ae72650710301901r5cda1fb7i5e31fd9b7f8855de@mail.gmail.com>
-References: <1193671019.3383.13.camel@localhost.localdomain>
-	 <1193676852.2655.21.camel@lov.site>
-	 <1193677071.3383.56.camel@localhost.localdomain>
-	 <47261F50.3050901@s5r6.in-berlin.de>
-	 <1193768743.3321.91.camel@localhost.localdomain>
-	 <20071031004011.GA8309@jupiter.solarsys.private>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH RESEND] SCSI not showing tray status correctly
+Date: Tue, 30 Oct 2007 22:32:03 -0500
+Message-ID: <1193801523.3321.138.camel@localhost.localdomain>
+References: <20071027225830.585C8657DB@smtp.gentoo.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:21589 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752536AbXJaCB5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 22:01:57 -0400
-Received: by wa-out-1112.google.com with SMTP id v27so2730334wah
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Oct 2007 19:01:56 -0700 (PDT)
-In-Reply-To: <20071031004011.GA8309@jupiter.solarsys.private>
-Content-Disposition: inline
+Received: from hancock.steeleye.com ([71.30.118.248]:33639 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752113AbXJaDcG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Oct 2007 23:32:06 -0400
+In-Reply-To: <20071027225830.585C8657DB@smtp.gentoo.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Mark M. Hoffman" <mhoffman@lightlink.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Maarten Bressers <mbres@gentoo.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, axboe@kernel.dk, tasio@hierro.tasio.net, dsd@gentoo.org
 
-On Oct 31, 2007 1:40 AM, Mark M. Hoffman <mhoffman@lightlink.com> wrote:
-> * James Bottomley <James.Bottomley@SteelEye.com> [2007-10-30 13:25:43 -0500]:
-> > On Mon, 2007-10-29 at 18:58 +0100, Stefan Richter wrote:
-> > > James Bottomley wrote:
-> > > >> >  struct attribute_group {
-> > > >> >        const char              *name;
-> > > >> > +      int                     (*filter_show)(struct kobject *, int);
-> > >
-> > > > Actually, it returns a true/false value indicating whether the given
-> > > > attribute should be displayed.
-> > >
-> > > How about this:
-> > >
-> > >     int (*is_visible)(...);
+On Sat, 2007-10-27 at 22:58 +0000, Maarten Bressers wrote:
+> > This patch is too simplistic.  ide-cd.c:ide_cdrom_drive_status() looks
+> > to be a reasonable implementation.  However, the worry is that
+> > GET_EVENT_NOTIFICATION is a MMC command; devices not conforming to MMC
+> > won't support it.  In theory, they should just return ILLEGAL_REQUEST,
+> > but USB devices have been known to crash when given commands they don't
+> > understand.  How widely tested has this been (if it's been in Gentoo
+> > since 2004, then it's probably widely tested enough)?
 > >
-> > OK, so is this latest revision acceptable to everyone?
->
-> I've just been hacking around in this area a bit, for a completely different
-> reason: there are literally 1000's of attributes in drivers/hwmon/*.c that
-> really want to be const, but which cannot be due to the current API.  I was
-> about to propose some patches that move in a different direction...
+> > James
+> >
+> This patch hasn't been tested at all, I'm sorry if I gave you that
+> impression, it isn't in Gentoo's patches, it's just been brought to our
+> attention in the bug I linked too.
+> 
+> I created another patch, based on your recommendations, and with a lot of
+> help from Daniel Drake (dsd@gentoo.org), that's included below. Some
+> changes are made to test_unit_ready() to be able to pass the sense data
+> to sr_drive_status(). Currently, sr_do_ioctl() swallows this data and
+> makes its own interpretations of sense codes, which isn't what we want
+> here.
+> 
+> Is this what you had in mind? Do you think the possible problems with
+> USB drives that you mentioned will prevent this patch from going in? 
+> The patch has only been compile tested right now, we can do some real
+> testing later, for now I'd just like to get your feedback on it.
 
-That isn't related to "dynamic attributes", right?
+In general it looks good ... I suppose the only way to test it is to
+stick it in and see what happens.  However, there are a few rough edges.
 
-> IMHO the fundamental problem is struct attribute_group itself.  This structure
-> is nothing but a convenience for packaging the arguments to sysfs_create_group
-> and sysfs_remove_group.
+> Maarten
+> 
+> ---
+> 
+> --- a/drivers/scsi/sr_ioctl.c	2007-10-26 22:40:41.000000000 +0200
+> +++ b/drivers/scsi/sr_ioctl.c	2007-10-27 23:56:16.000000000 +0200
+> @@ -275,16 +275,21 @@ int sr_do_ioctl(Scsi_CD *cd, struct pack
+>  /* ---------------------------------------------------------------------- */
+>  /* interface to cdrom.c                                                   */
+>  
+> -static int test_unit_ready(Scsi_CD *cd)
+> +static int test_unit_ready(Scsi_CD *cd, struct request_sense *sense)
+>  {
+> -	struct packet_command cgc;
+> +	struct scsi_device *SDev = cd->device;
+> +	unsigned char cmd[CDROM_PACKET_SIZE] = { GPCMD_TEST_UNIT_READY };
+> +	int result;
+>  
+> -	memset(&cgc, 0, sizeof(struct packet_command));
+> -	cgc.cmd[0] = GPCMD_TEST_UNIT_READY;
+> -	cgc.quiet = 1;
+> -	cgc.data_direction = DMA_NONE;
+> -	cgc.timeout = IOCTL_TIMEOUT;
+> -	return sr_do_ioctl(cd, &cgc);
+> +	if (!scsi_block_when_processing_errors(SDev))
+> +		return -ENODEV;
+> +
+> +	memset(sense, 0, sizeof(*sense));
+> +	result = scsi_execute(SDev, cmd, DMA_NONE,
+> +			      NULL, 0, (char *)sense,
+> +			      IOCTL_TIMEOUT, IOCTL_RETRIES, 0);
+> +
+> +	return driver_byte(result);
 
-That "problem" is actually a good thing. If you look at the change
-rate of the internal kernel API, it saves us so much trouble. Like in
-this case, James can just add a callback without caring about any
-(almost :)) of the current users.
+This bit isn't quite right ... this will return true if there's a
+collected sense code and false otherwise (so it returns 0 on failure
+that doesn't produce any sense information).
 
-> Those functions should take the contents of that
-> struct as direct arguments.
+>  }
+>  
+>  int sr_tray_move(struct cdrom_device_info *cdi, int pos)
+> @@ -310,14 +315,41 @@ int sr_lock_door(struct cdrom_device_inf
+>  
+>  int sr_drive_status(struct cdrom_device_info *cdi, int slot)
+>  {
+> +	struct request_sense sense;
+> +	struct media_event_desc med;
+> +
+>  	if (CDSL_CURRENT != slot) {
+>  		/* we have no changer support */
+>  		return -EINVAL;
+>  	}
+> -	if (0 == test_unit_ready(cdi->handle))
+> +	if ((0 == test_unit_ready(cdi->handle, &sense)) || 
+> +	    sense.sense_key == UNIT_ATTENTION)
 
-I think we should move in the opposite direction. You are right, it
-isn't neccessarily pretty, but having encapsulations like this saves
-us a lot of trouble while interacting with so many other people and
-extending API's all the time. It's a trade, and it's a good one, if
-you need to maintain code that has so many callers, and  so many
-architectures, you can't even check that you don't break them.
+Unit attention won't necessarily mean the media is OK ... unit attention
+can mean the media or tray status has changed.
 
-> I haven't finished the patch series to implement
-> this, but since I noticed your patch I thought I'd better speak up now.  Here's
-> the first... the idea is to eventually deprecate sysfs_[create|remove]_group()
-> altogether.
+>  		return CDS_DISC_OK;
+>  
+> -	return CDS_TRAY_OPEN;
+> +	if (!cdrom_get_media_event(cdi, &med)) {
+> +		if (med.media_present)
+> +			return CDS_DISC_OK;
+> +		else if (med.door_open)
+> +			return CDS_TRAY_OPEN;
+> +		else
+> +			return CDS_NO_DISC;
+> +	}
+> +
+> +	if (sense.sense_key == NOT_READY && sense.asc == 0x04 && sense.ascq == 0x04)
 
-Again, I don't think, that we want to get rid of the struct container
-housing all the parameters and beeing open for future extensions
-without changing all the callers.
+Actually, all asc 0x4 codes are some type of in progress operation,
+format doesn't necessarily have to be treated specially.
 
->     The current declaration of struct attribute_group prevents long lists of
->     attributes from being marked const.  Ideally, the second argument to the
->     sysfs_create_group() and sysfs_remove_group() functions would be marked "deep"
->     const, but C has no such construct.  This patch provides a parallel set of
->     functions with the desired decoration.
+> +		return CDS_DISC_OK;
+> +
+> +	/*
+> +	 * If not using Mt Fuji extended media tray reports,
+> +	 * just return TRAY_OPEN since ATAPI doesn't provide
+> +	 * any other way to detect this...
+> +	 */
+> +	if (sense.sense_key == NOT_READY) {
+> +		if (sense.asc == 0x3a && sense.ascq == 1)
+> +			return CDS_NO_DISC;
+> +		else
+> +			return CDS_TRAY_OPEN;
 
-What do we get out of this constification compared to the current code?
+This is also a bit odd.  asc 0x3a ascq 0x2 definitely means tray open,
+but there are a lot of other not ready conditions that don't mean this.
 
-Thanks,
-Kay
+> +	}
+> +	return CDS_DRIVE_NOT_READY;
+>  }
+>  
+>  int sr_disk_status(struct cdrom_device_info *cdi)
+
+James
+
+
