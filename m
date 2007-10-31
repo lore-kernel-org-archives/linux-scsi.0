@@ -1,48 +1,71 @@
-From: Cornelia Huck <cornelia.huck@de.ibm.com>
-Subject: Re: [PATCH] sysfs: add filter function to groups
-Date: Wed, 31 Oct 2007 13:19:47 +0100
-Message-ID: <20071031131947.35a521c9@gondolin.boeblingen.de.ibm.com>
-References: <1193671019.3383.13.camel@localhost.localdomain>
-	<1193676852.2655.21.camel@lov.site>
-	<1193677071.3383.56.camel@localhost.localdomain>
-	<47261F50.3050901@s5r6.in-berlin.de>
-	<1193768743.3321.91.camel@localhost.localdomain>
-	<20071031035506.GH14910@kroah.com>
-	<20071031104103.13e07d8f@gondolin.boeblingen.de.ibm.com>
-	<47285063.1040508@s5r6.in-berlin.de>
-	<20071031112039.0b067ce3@gondolin.boeblingen.de.ibm.com>
-	<47285AF0.1010900@s5r6.in-berlin.de>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH] aacraid: don't assign cpu_to_le32(constant) to u8
+Date: Wed, 31 Oct 2007 09:53:42 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F956F5@otce2k301.adaptec.com>
+References: <20071031150216.88cecc21.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.uk.ibm.com ([195.212.29.140]:16254 "EHLO
-	mtagate7.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758780AbXJaMUj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 08:20:39 -0400
-In-Reply-To: <47285AF0.1010900@s5r6.in-berlin.de>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:55000 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751996AbXJaNyE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 09:54:04 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071031150216.88cecc21.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Greg KH <greg@kroah.com>, James Bottomley <James.Bottomley@SteelEye.com>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Wed, 31 Oct 2007 11:37:36 +0100,
-Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+ACK
 
-> > mask_out() would also imply that the common use case is to have all
-> > attributes in the group created and that you need to take action to
-> > have an attribute not created.
+Sincerely -- Mark Salyzyn
+
+> -----Original Message-----
+> From: Stephen Rothwell [mailto:sfr@canb.auug.org.au] 
+> Sent: Wednesday, October 31, 2007 12:02 AM
+> To: AACRAID
+> Cc: linux-scsi@vger.kernel.org; LKML
+> Subject: [PATCH] aacraid: don't assign cpu_to_le32(constant) to u8
 > 
-> Here you have a point.  But James has a point too when he says:
-> | We basically want to show capability by which file is present.
-
-Currently, if you register an attribute group, all of the attributes
-will show up. I find it more intuitive to have to block some attributes
-explicitely if I want to have more control, but the original logic is
-fine with me as well, if most people prefer that :)
-
-> Anyway, /if/ the reverse logic is preferred, it shouldn't be called
-> "mask_out()" but rather "is_masked()" or "is_hidden()" or the like.
-
-Sure. is_masked() would be fine.
-
+> Noticed on PowerPC allmod config build:
+> 
+> drivers/scsi/aacraid/commsup.c:1342: warning: large integer 
+> implicitly truncated to unsigned type
+> drivers/scsi/aacraid/commsup.c:1343: warning: large integer 
+> implicitly truncated to unsigned type
+> drivers/scsi/aacraid/commsup.c:1344: warning: large integer 
+> implicitly truncated to unsigned type
+> 
+> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> ---
+>  drivers/scsi/aacraid/commsup.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> -- 
+> Cheers,
+> Stephen Rothwell                    sfr@canb.auug.org.au
+> 
+> diff --git a/drivers/scsi/aacraid/commsup.c 
+> b/drivers/scsi/aacraid/commsup.c
+> index 240a0bb..b9682a8 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -1339,9 +1339,9 @@ int aac_check_health(struct aac_dev * aac)
+>  			aif = (struct aac_aifcmd *)hw_fib->data;
+>  			aif->command = cpu_to_le32(AifCmdEventNotify);
+>  		 	aif->seqnum = cpu_to_le32(0xFFFFFFFF);
+> -		 	aif->data[0] = cpu_to_le32(AifEnExpEvent);
+> -			aif->data[1] = cpu_to_le32(AifExeFirmwarePanic);
+> -		 	aif->data[2] = cpu_to_le32(AifHighPriority);
+> +		 	aif->data[0] = AifEnExpEvent;
+> +			aif->data[1] = AifExeFirmwarePanic;
+> +		 	aif->data[2] = AifHighPriority;
+>  			aif->data[3] = cpu_to_le32(BlinkLED);
+>  
+>  			/*
+> -- 
+> 1.5.3.4
+> 
