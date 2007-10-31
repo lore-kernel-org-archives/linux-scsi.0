@@ -1,122 +1,126 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] megaraid: Dell CERC ATA100/4ch support revisited
-Date: Wed, 31 Oct 2007 14:59:29 +0100
-Message-ID: <47288A41.8010809@suse.de>
+From: James Bottomley <James.Bottomley@SteelEye.com>
+Subject: Re: [PATCH] sysfs: add filter function to groups
+Date: Wed, 31 Oct 2007 09:38:04 -0500
+Message-ID: <1193841484.3411.8.camel@localhost.localdomain>
+References: <1193671019.3383.13.camel@localhost.localdomain>
+	 <1193676852.2655.21.camel@lov.site>
+	 <1193677071.3383.56.camel@localhost.localdomain>
+	 <47261F50.3050901@s5r6.in-berlin.de>
+	 <1193768743.3321.91.camel@localhost.localdomain>
+	 <20071031035506.GH14910@kroah.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000904060906030301080805"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43364 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753653AbXJaN7d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Oct 2007 09:59:33 -0400
+Received: from hancock.steeleye.com ([71.30.118.248]:40802 "EHLO
+	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756551AbXJaOiH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 10:38:07 -0400
+In-Reply-To: <20071031035506.GH14910@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: Greg KH <greg@kroah.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Kay Sievers <kay.sievers@vrfy.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------000904060906030301080805
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
+On Tue, 2007-10-30 at 20:55 -0700, Greg KH wrote:
+> OSame problem here, if grp->is_visible is not set, sysfs_add_file() would
+> never be called, right?
+> 
+> Other than the logic problem (I think), I have no issue with this idea
+> at all.  Care to redo this so it works?
 
-Hi all,
+It's a fair cop govenor ... new patch attached.
 
-I finally managed to track down the outstanding Del CERC issue.
-Problem is the megaraid_mbox does not find any devices with
-firmware levels >= 6.62. And telling users to downgrade their
-BIOS is not always an option. So here's the problem:
+James
 
-Megaraid F/W implements a feature called 'random deletion'.
-Appearently it's used for delete logical volumes on the fly
-(don't ask me for details, I've no idea).
-So, for handling this they shift the target IDs for the
-logical channels by 0x80.
-Only the legacy megaraid driver shifts the ID only for
-I/O commands, whereas the megaraid_mbox driver shifts
-the ID for _all_ commands.
-This results in the INQUIRY command being sent to the
-wrong channel, where it doesn't detect any devices.
-Not surprisingly, really.
-
-So as I don't have a clue which behavior is the correct
-one we should take the safe route and just disable this
-feature if an offending firmware is found.
-
-Maybe Sumant can shed some light here. But at least we
-now know the reason behind this incompability.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------000904060906030301080805
-Content-Type: text/plain;
- name="megaraid_mbox-dell-cerc-support"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="megaraid_mbox-dell-cerc-support"
-
-From: Hannes Reinecke <hare@suse.de>
-Subject: Dell CERC support for megaraid_mbox
-
-Newer Dell CERC firmware (>= 6.62) implement a random deletion
-handling compatible with the legacy megaraid driver.
-The legacy handling shifted the target ID by 0x80 only for I/O
-commands (READ/WRITE/etc), whereas megaraid_mbox shifts the
-target ID always if random deletion is supported.
-The resulted in megaraid_mbox sending an INQUIRY to the wrong
-channel, and not finding any devices, obviously.
-
-So we disable the random deletion support if the offending
-firmware is found.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index c6a53dc..8c84049 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3172,6 +3172,23 @@ megaraid_mbox_support_random_del(adapter_t *adapter)
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 
-+	/*
-+	 * Newer firmware on Dell CERC expect a different
-+	 * random deletion handling, so disable it.
-+	 */
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+	    (adapter->fw_version[0] > '6' ||
-+	     (adapter->fw_version[0] == '6' &&
-+	      adapter->fw_version[2] > '6') ||
-+	     (adapter->fw_version[0] == '6'
-+	      && adapter->fw_version[2] == '6'
-+	      && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
-+		return 0;
-+	}
- 
- 	mbox = (mbox_t *)raw_mbox;
- 
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.h b/drivers/scsi/megaraid/megaraid_mbox.h
-index 626459d..c1d86d9 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.h
-+++ b/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
+---
+Index: BUILD-2.6/fs/sysfs/group.c
+===================================================================
+--- BUILD-2.6.orig/fs/sysfs/group.c	2007-10-28 17:27:04.000000000 -0500
++++ BUILD-2.6/fs/sysfs/group.c	2007-10-31 09:29:14.000000000 -0500
+@@ -16,25 +16,31 @@
+ #include "sysfs.h"
  
  
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
+-static void remove_files(struct sysfs_dirent *dir_sd,
++static void remove_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
+ 			 const struct attribute_group *grp)
+ {
+ 	struct attribute *const* attr;
++	int i;
+ 
+-	for (attr = grp->attrs; *attr; attr++)
+-		sysfs_hash_and_remove(dir_sd, (*attr)->name);
++	for (i = 0, attr = grp->attrs; *attr; i++, attr++)
++		if (!grp->is_visible ||
++		    grp->is_visible(kobj, *attr, i))
++			sysfs_hash_and_remove(dir_sd, (*attr)->name);
+ }
+ 
+-static int create_files(struct sysfs_dirent *dir_sd,
++static int create_files(struct sysfs_dirent *dir_sd, struct kobject *kobj,
+ 			const struct attribute_group *grp)
+ {
+ 	struct attribute *const* attr;
+-	int error = 0;
++	int error = 0, i;
+ 
+-	for (attr = grp->attrs; *attr && !error; attr++)
+-		error = sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
++	for (i = 0, attr = grp->attrs; *attr && !error; i++, attr++)
++		if (!grp->is_visible ||
++		    grp->is_visible(kobj, *attr, i))
++			error |=
++				sysfs_add_file(dir_sd, *attr, SYSFS_KOBJ_ATTR);
+ 	if (error)
+-		remove_files(dir_sd, grp);
++		remove_files(dir_sd, kobj, grp);
+ 	return error;
+ }
+ 
+@@ -54,7 +60,7 @@ int sysfs_create_group(struct kobject * 
+ 	} else
+ 		sd = kobj->sd;
+ 	sysfs_get(sd);
+-	error = create_files(sd, grp);
++	error = create_files(sd, kobj, grp);
+ 	if (error) {
+ 		if (grp->name)
+ 			sysfs_remove_subdir(sd);
+@@ -75,7 +81,7 @@ void sysfs_remove_group(struct kobject *
+ 	} else
+ 		sd = sysfs_get(dir_sd);
+ 
+-	remove_files(sd, grp);
++	remove_files(sd, kobj, grp);
+ 	if (grp->name)
+ 		sysfs_remove_subdir(sd);
+ 
+Index: BUILD-2.6/include/linux/sysfs.h
+===================================================================
+--- BUILD-2.6.orig/include/linux/sysfs.h	2007-10-28 17:20:06.000000000 -0500
++++ BUILD-2.6/include/linux/sysfs.h	2007-10-30 13:24:06.000000000 -0500
+@@ -32,6 +32,8 @@ struct attribute {
+ 
+ struct attribute_group {
+ 	const char		*name;
++	int			(*is_visible)(struct kobject *,
++					      struct attribute *, int);
+ 	struct attribute	**attrs;
+ };
+ 
+Index: BUILD-2.6/kernel/params.c
+===================================================================
+--- BUILD-2.6.orig/kernel/params.c	2007-10-29 01:18:43.000000000 -0500
++++ BUILD-2.6/kernel/params.c	2007-10-29 01:18:49.000000000 -0500
+@@ -472,7 +472,7 @@ param_sysfs_setup(struct module_kobject 
+ 			sizeof(mp->grp.attrs[0]));
+ 	size[1] = (valid_attrs + 1) * sizeof(mp->grp.attrs[0]);
+ 
+-	mp = kmalloc(size[0] + size[1], GFP_KERNEL);
++	mp = kzalloc(size[0] + size[1], GFP_KERNEL);
+ 	if (!mp)
+ 		return ERR_PTR(-ENOMEM);
+ 
 
---------------000904060906030301080805--
+
