@@ -1,108 +1,113 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: BUG in: Driver core: convert block from raw kobjects to core
-	devices (fwd)
-Date: Wed, 31 Oct 2007 11:46:30 +0100
-Message-ID: <1193827590.2423.42.camel@lov.site>
-References: <Pine.LNX.4.44L0.0710291434370.11432-100000@iolanthe.rowland.org>
-	 <1193685197.2321.9.camel@lov.site>  <20071031042531.GB16426@kroah.com>
+From: "Mark M. Hoffman" <mhoffman@lightlink.com>
+Subject: Re: [PATCH] sysfs: add filter function to groups
+Date: Wed, 31 Oct 2007 07:28:21 -0400
+Message-ID: <20071031112821.GB8309@jupiter.solarsys.private>
+References: <1193671019.3383.13.camel@localhost.localdomain> <1193676852.2655.21.camel@lov.site> <1193677071.3383.56.camel@localhost.localdomain> <47261F50.3050901@s5r6.in-berlin.de> <1193768743.3321.91.camel@localhost.localdomain> <20071031004011.GA8309@jupiter.solarsys.private> <3ae72650710301901r5cda1fb7i5e31fd9b7f8855de@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.171]:55869 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753165AbXJaKoV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 06:44:21 -0400
-In-Reply-To: <20071031042531.GB16426@kroah.com>
+Received: from emerald.lightlink.com ([205.232.34.14]:24732 "EHLO
+	emerald.lightlink.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756152AbXJaL2q (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Oct 2007 07:28:46 -0400
+Content-Disposition: inline
+In-Reply-To: <3ae72650710301901r5cda1fb7i5e31fd9b7f8855de@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, James Bottomley <James.Bottomley@SteelEye.com>, Hannes Reinecke <hare@suse.de>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>, Greg KH <greg@kroah.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Tue, 2007-10-30 at 21:25 -0700, Greg KH wrote:
-> On Mon, Oct 29, 2007 at 08:13:17PM +0100, Kay Sievers wrote:
-> > On Mon, 2007-10-29 at 14:47 -0400, Alan Stern wrote:
-> > > On Mon, 29 Oct 2007, James Bottomley wrote:
-> > > 
-> > > > I'm not sure if we can do this patch.  If you kill a device, you see
-> > > > there's a processing state in scsi_prep_fn() for SDEV_DEL, which has a
-> > > > printk message I see quite often when I unplug devices while they're
-> > > > operating.
-> > > > 
-> > > > If you NULL out and free the request queue immediately after setting
-> > > > SDEV_DEL, without allowing the devices and filesystems to finish, are
-> > > > you sure we're not going to get a null deref on sdev->request_queue?
-> > > 
-> > > Let's get at this another way.  The patch below probably should be 
-> > > applied in any case.  It's essentially a reversion of this patch from 
-> > > 2003:
-> > > 
-> > > http://git.kernel.org/?p=linux/kernel/git/tglx/history.git;a=commit;h=10921a8f1305b8ec97794941db78b825db5839bc
-> > > 
-> > > which was written to compensate for problems in the SCSI stack.  The
-> > > idea was to avoid releasing a kobject before all its children were
-> > > released.  However as far as I can see, in general we should be able to
-> > > release a kobject as soon as all its children are removed and its
-> > > refcount drops to 0, without waiting for the children to be released.  
-> > > To put it another way, once a child is removed from visibility it
-> > > should not try (or need) to access its parent at all.  If it has to
-> > > then it should take an explicit reference to the parent.
-> > > 
-> > > Since the SCSI stack is now in much better shape, there doesn't seem to 
-> > > be any reason to keep the old code.  Do you agree that the patch below 
-> > > is worth merging?  I submitted it to Greg some time ago, but he didn't 
-> > > want to accept it without some assurance that it is now safe.
-> > > 
-> > > It would fix the problem Kay and saw with the circular references, 
-> > > because the references would all get dropped when the scsi_device is 
-> > > removed instead of waiting for a release that will never come.
-> > 
-> > It indeed fixes my problem. And it sounds you are right, the "fix" from
-> > 2003 is probably just a paper-over for a missing explicit reference that
-> > time.
-> > 
-> > I'm all for giving the reversion a try, and add explicit parent get/put
-> > if needed somewhere. If, for some reason, that will not happen, I'll
-> > need to do something like this in the block patch, which will then be a
-> > "fix for the paper-over solution for an unknown bug". :)
-> > 
-> > 
-> > --- a/fs/partitions/check.c
-> > +++ b/fs/partitions/check.c
-> > ...
-> > +       device_del(&disk->dev);
-> > +
-> > +       /*
-> > +        * disconnect from parent device, so the parent can clean up
-> > +        * without waiting for us to clean up
-> > +        *
-> > +        * the driver core took this reference while we added ourself as
-> > +        * a child of the parent device
-> > +        */
-> > +       parent = disk->dev.kobj.parent;
+Hi Kay:
+
+* Kay Sievers <kay.sievers@vrfy.org> [2007-10-31 03:01:56 +0100]:
+> On Oct 31, 2007 1:40 AM, Mark M. Hoffman <mhoffman@lightlink.com> wrote:
+> > * James Bottomley <James.Bottomley@SteelEye.com> [2007-10-30 13:25:43 -0500]:
+> > > On Mon, 2007-10-29 at 18:58 +0100, Stefan Richter wrote:
+> > > > James Bottomley wrote:
+> > > > >> >  struct attribute_group {
+> > > > >> >        const char              *name;
+> > > > >> > +      int                     (*filter_show)(struct kobject *, int);
+> > > >
+> > > > > Actually, it returns a true/false value indicating whether the given
+> > > > > attribute should be displayed.
+> > > >
+> > > > How about this:
+> > > >
+> > > >     int (*is_visible)(...);
+> > >
+> > > OK, so is this latest revision acceptable to everyone?
+> >
+> > I've just been hacking around in this area a bit, for a completely different
+> > reason: there are literally 1000's of attributes in drivers/hwmon/*.c that
+> > really want to be const, but which cannot be due to the current API.  I was
+> > about to propose some patches that move in a different direction...
 > 
-> Save off the parent before calling device_del() otherwise it could be a
-> stale pointer, right?
+> That isn't related to "dynamic attributes", right?
 
-I still hold a ref, the one I drop a few lines later. It should be safe.
+Right, it's not.  That phrase was coined by the previous maintainer, Jean, to
+describe a specific mechanism which makes for smaller code in drivers/hwmon.
 
-> > +       disk->dev.kobj.parent = NULL;
-> > +       disk->dev.parent = NULL;
-> > +       kobject_put(parent);
+> > IMHO the fundamental problem is struct attribute_group itself.  This structure
+> > is nothing but a convenience for packaging the arguments to sysfs_create_group
+> > and sysfs_remove_group.
 > 
-> No, that's just wrong, if this is needed, something else really is
-> broken, and I don't think it's the driver core...
+> That "problem" is actually a good thing. If you look at the change
+> rate of the internal kernel API, it saves us so much trouble. Like in
+> this case, James can just add a callback without caring about any
+> (almost :)) of the current users.
 
-It's just a kobject_orphan() function. We need to break the circiular
-reference somewhere, one of the objects in the circle has to clean up,
-to allow the others to clean up. The objects are properly deleted, but
-all final references are only dropped on cleanup. The kobject_orphan()
-here is just what Alan's patch is doing for the whole core.
+Given my patch, he could also just add sysfs_create_attr_group_filtered(...).
+This would affect current users even less than what you suggest because it
+wouldn't bloat the struct that they all use.
 
-With the current logic, if you have any parent referencing a child, the
-core will deadlock, and never reach any cleanup funtion, right? That's
-the loop I need to break here.
+> > Those functions should take the contents of that
+> > struct as direct arguments.
+> 
+> I think we should move in the opposite direction. You are right, it
+> isn't neccessarily pretty, but having encapsulations like this saves
+> us a lot of trouble while interacting with so many other people and
+> extending API's all the time. It's a trade, and it's a good one, if
+> you need to maintain code that has so many callers, and  so many
+> architectures, you can't even check that you don't break them.
 
-Thanks,
-Kay
+Again, I don't see how it is better to bloat a struct with many users instead
+of just adding a function for the few that need the extra functionality.  My
+patch also requires 0 change for everyone else.
+
+> > I haven't finished the patch series to implement
+> > this, but since I noticed your patch I thought I'd better speak up now.  Here's
+> > the first... the idea is to eventually deprecate sysfs_[create|remove]_group()
+> > altogether.
+> 
+> Again, I don't think, that we want to get rid of the struct container
+> housing all the parameters and beeing open for future extensions
+> without changing all the callers.
+
+BTW: I hope you're not resisting based on the prospect of deprecating those
+two functions.  I don't really have time to push such a huge patch either.
+It wouldn't hurt just to keep them.
+
+> >     The current declaration of struct attribute_group prevents long lists of
+> >     attributes from being marked const.  Ideally, the second argument to the
+> >     sysfs_create_group() and sysfs_remove_group() functions would be marked "deep"
+> >     const, but C has no such construct.  This patch provides a parallel set of
+> >     functions with the desired decoration.
+> 
+> What do we get out of this constification compared to the current code?
+
+Conceptual correctness, for one, but also it allows hwmon drivers to move as
+much as 1K each out of the data section and into text.  This is useful for the
+embedded XIP scenario.
+
+And please don't underestimate conceptual correctness: at least hwmon (and
+probably many other users) really *rely* on the core not to modify the contents
+of struct attribute_group (specifically, the data to which its members point).
+
+Without the proper const qualifiers, this is not externally guaranteed.
+
+Regards,
+
+-- 
+Mark M. Hoffman
+mhoffman@lightlink.com
 
