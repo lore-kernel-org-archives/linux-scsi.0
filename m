@@ -1,52 +1,59 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: [PATCH] add DID_REQUEUE string to scsi_show_result host table
-Date: Wed, 31 Oct 2007 20:59:56 -0500
-Message-ID: <1193882396.3710.6.camel@max>
+From: Stephen Rothwell <sfr@canb.auug.org.au>
+Subject: [PATCHv2] aacraid: don't assign cpu_to_le32(constant) to u8
+Date: Thu, 1 Nov 2007 17:32:21 +1100
+Message-ID: <20071101173221.2e1fea42.sfr@canb.auug.org.au>
+References: <20071031150216.88cecc21.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:50759 "EHLO mx1.redhat.com"
+Received: from chilli.pcug.org.au ([203.10.76.44]:47085 "EHLO smtps.tip.net.au"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752352AbXKAB77 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 31 Oct 2007 21:59:59 -0400
-Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
-	by mx1.redhat.com (8.13.8/8.13.1) with ESMTP id lA11xwtq007636
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Oct 2007 21:59:58 -0400
-Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
-	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lA11xvnK006994
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Oct 2007 21:59:57 -0400
-Received: from [10.11.14.213] (vpn-14-213.rdu.redhat.com [10.11.14.213])
-	by pobox.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lA11xu4A011081
-	for <linux-scsi@vger.kernel.org>; Wed, 31 Oct 2007 21:59:57 -0400
+	id S1751810AbXKAGcV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 1 Nov 2007 02:32:21 -0400
+In-Reply-To: <20071031150216.88cecc21.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: aacraid@adaptec.com
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-I was working on patches which add new transport error values, when I
-noticed that DID_REQUEUE was not in the hostbyte_table. I do not think
-there is any way to hit the code path where scsi_show_result is called
-and where you return DID_REQUEUE, because DID_REQUEUE causes scsi-ml to
-always requeue the command. However, for completeness and because I want
-to one day send a patch that tries to add new host bytes values, I am
-sending this patch.
+Noticed on PowerPC allmod config build:
 
-Please apply when you get a chance. It is not critical.
+drivers/scsi/aacraid/commsup.c:1342: warning: large integer implicitly truncated to unsigned type
+drivers/scsi/aacraid/commsup.c:1343: warning: large integer implicitly truncated to unsigned type
+drivers/scsi/aacraid/commsup.c:1344: warning: large integer implicitly truncated to unsigned type
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+Also fix some whitespace on the changed lines.
 
+Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+---
+ drivers/scsi/aacraid/commsup.c |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
---- linux-2.6.23/drivers/scsi/constants.c.orig	2007-10-31 20:49:47.000000000 -0500
-+++ linux-2.6.23/drivers/scsi/constants.c	2007-10-31 20:50:14.000000000 -0500
-@@ -1355,7 +1355,7 @@ EXPORT_SYMBOL(scsi_print_sense);
- static const char * const hostbyte_table[]={
- "DID_OK", "DID_NO_CONNECT", "DID_BUS_BUSY", "DID_TIME_OUT", "DID_BAD_TARGET",
- "DID_ABORT", "DID_PARITY", "DID_ERROR", "DID_RESET", "DID_BAD_INTR",
--"DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY"};
-+"DID_PASSTHROUGH", "DID_SOFT_ERROR", "DID_IMM_RETRY", "DID_REQUEUE"};
- #define NUM_HOSTBYTE_STRS ARRAY_SIZE(hostbyte_table)
+This version just fixes a couple of whitespace anomolies on the lines I
+changed.
+
+-- 
+Cheers,
+Stephen Rothwell                    sfr@canb.auug.org.au
+
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 240a0bb..3c2dbc0 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1339,9 +1339,9 @@ int aac_check_health(struct aac_dev * aac)
+ 			aif = (struct aac_aifcmd *)hw_fib->data;
+ 			aif->command = cpu_to_le32(AifCmdEventNotify);
+ 		 	aif->seqnum = cpu_to_le32(0xFFFFFFFF);
+-		 	aif->data[0] = cpu_to_le32(AifEnExpEvent);
+-			aif->data[1] = cpu_to_le32(AifExeFirmwarePanic);
+-		 	aif->data[2] = cpu_to_le32(AifHighPriority);
++			aif->data[0] = AifEnExpEvent;
++			aif->data[1] = AifExeFirmwarePanic;
++			aif->data[2] = AifHighPriority;
+ 			aif->data[3] = cpu_to_le32(BlinkLED);
  
- static const char * const driverbyte_table[]={
-
-
+ 			/*
+-- 
+1.5.3.4
 
