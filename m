@@ -1,31 +1,77 @@
-From: Paul Mundt <lethal@linux-sh.org>
-Subject: Re: DMA API Re: Remove dma_coherent_mem interface
-Date: Thu, 1 Nov 2007 19:07:17 +0900
-Message-ID: <20071101100717.GA26906@linux-sh.org>
-References: <1193864605.25899.253.camel@wirenth> <20071031213447.GF15111@parisc-linux.org> <1193910526.25899.278.camel@wirenth>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCHv2] aacraid: don't assign cpu_to_le32(constant) to u8
+Date: Thu, 1 Nov 2007 09:11:32 -0400
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F958B9@otce2k301.adaptec.com>
+References: <20071031150216.88cecc21.sfr@canb.auug.org.au> <20071101173221.2e1fea42.sfr@canb.auug.org.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pip15.gyao.ne.jp ([61.122.117.253]:19291 "EHLO mx.gate01.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1756306AbXKAKH5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 1 Nov 2007 06:07:57 -0400
-Content-Disposition: inline
-In-Reply-To: <1193910526.25899.278.camel@wirenth>
+Received: from ts.adaptec.com ([162.62.93.58]:55103 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753525AbXKANLX convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Nov 2007 09:11:23 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <20071101173221.2e1fea42.sfr@canb.auug.org.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ian <spyro@f2s.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-arch@vger.kernel.org, tglx@linutronix.de, mingo@redhat.com, hpa@zytor.com, linux-scsi@vger.kernel.org, jejb@steeleye.com, kernel-discuss@handhelds.org
+To: Stephen Rothwell <sfr@canb.auug.org.au>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-On Thu, Nov 01, 2007 at 09:48:46AM +0000, ian wrote:
-> On Wed, 2007-10-31 at 15:34 -0600, Matthew Wilcox wrote:
-> >   It may not be significant, so it would be an easy decision to keep
-> >   the interface.  But if the decision is going to be to keep the
-> >   interface despite the lack of users and no matter what the
-> >   performance win, then I don't need to finish this work.
+ACK v2
+
+Sincerely -- Mark Salyzyn
+
+> -----Original Message-----
+> From: Stephen Rothwell [mailto:sfr@canb.auug.org.au] 
+> Sent: Thursday, November 01, 2007 2:32 AM
+> To: AACRAID
+> Cc: linux-scsi@vger.kernel.org; LKML
+> Subject: [PATCHv2] aacraid: don't assign cpu_to_le32(constant) to u8
 > 
-> I dont mind what the interface is as long as we can support devices that
-> can only DMA from their own local RAM as described above...
+> Noticed on PowerPC allmod config build:
 > 
-Indeed. The SH case for OHCI on MFDs is the same. So that's at least 2
-users.
+> drivers/scsi/aacraid/commsup.c:1342: warning: large integer 
+> implicitly truncated to unsigned type
+> drivers/scsi/aacraid/commsup.c:1343: warning: large integer 
+> implicitly truncated to unsigned type
+> drivers/scsi/aacraid/commsup.c:1344: warning: large integer 
+> implicitly truncated to unsigned type
+> 
+> Also fix some whitespace on the changed lines.
+> 
+> Signed-off-by: Stephen Rothwell <sfr@canb.auug.org.au>
+> ---
+>  drivers/scsi/aacraid/commsup.c |    6 +++---
+>  1 files changed, 3 insertions(+), 3 deletions(-)
+> 
+> This version just fixes a couple of whitespace anomolies on 
+> the lines I
+> changed.
+> 
+> -- 
+> Cheers,
+> Stephen Rothwell                    sfr@canb.auug.org.au
+> 
+> diff --git a/drivers/scsi/aacraid/commsup.c 
+> b/drivers/scsi/aacraid/commsup.c
+> index 240a0bb..3c2dbc0 100644
+> --- a/drivers/scsi/aacraid/commsup.c
+> +++ b/drivers/scsi/aacraid/commsup.c
+> @@ -1339,9 +1339,9 @@ int aac_check_health(struct aac_dev * aac)
+>  			aif = (struct aac_aifcmd *)hw_fib->data;
+>  			aif->command = cpu_to_le32(AifCmdEventNotify);
+>  		 	aif->seqnum = cpu_to_le32(0xFFFFFFFF);
+> -		 	aif->data[0] = cpu_to_le32(AifEnExpEvent);
+> -			aif->data[1] = cpu_to_le32(AifExeFirmwarePanic);
+> -		 	aif->data[2] = cpu_to_le32(AifHighPriority);
+> +			aif->data[0] = AifEnExpEvent;
+> +			aif->data[1] = AifExeFirmwarePanic;
+> +			aif->data[2] = AifHighPriority;
+>  			aif->data[3] = cpu_to_le32(BlinkLED);
+>  
+>  			/*
+> -- 
+> 1.5.3.4
+> 
