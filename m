@@ -1,51 +1,32 @@
-From: Benny Halevy <bhalevy@panasas.com>
-Subject: Re: [PATCH 2/4] block layer varlen-cdb
-Date: Fri, 02 Nov 2007 08:32:12 +0200
-Message-ID: <472AC46C.2050707@panasas.com>
-References: <472A12D6.805@panasas.com> <472A1552.6030700@panasas.com> <20071101184000.GM15111@parisc-linux.org>
+From: <Shyam_Iyer@Dell.com>
+Subject: RE: [PATCH 1/1] [Bugme-new] [Bug 9133] New: aacraid driver fails withDell PowerEdge Expandable RAID Controller 3/Di
+Date: Fri, 2 Nov 2007 15:42:10 +0530
+Message-ID: <46A00B48CC54E4468EF6911F877AC4CAE2AAB7@blrx3m10.blr.amer.dell.com>
+References: <bug-9133-10286@http.bugzilla.kernel.org/><20071008104741.5a0ecebf.akpm@linux-foundation.org><AE4F746F2AECFC4DA4AADD66A1DFEF01EE6699@otce2k301.adaptec.com><20071008153027.10fd15df.akpm@linux-foundation.org> <AE4F746F2AECFC4DA4AADD66A1DFEF01F955E1@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18390 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751251AbXKBGfJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Nov 2007 02:35:09 -0400
-In-Reply-To: <20071101184000.GM15111@parisc-linux.org>
+Received: from ausc60ps301.us.dell.com ([143.166.148.206]:40004 "EHLO
+	ausc60ps301.us.dell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750981AbXKBKWA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Nov 2007 06:22:00 -0400
+Content-class: urn:content-classes:message
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01F955E1@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Pete Wyckoff <pw@osc.edu>
+To: mark_salyzyn@adaptec.com, linux-scsi@vger.kernel.org
+Cc: hawk@pld-linux.org, akpm@linux-foundation.org
 
-On Nov. 01, 2007, 20:40 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
-> On Thu, Nov 01, 2007 at 08:05:06PM +0200, Boaz Harrosh wrote:
->> @@ -287,8 +287,13 @@ struct request {
->>  	/*
->>  	 * when request is used as a packet command carrier
->>  	 */
->> -	unsigned int cmd_len;
->> +	unsigned short cmd_len;
->> +	unsigned short varlen_cdb_len;  /* length of varlen_cdb buffer */
->>  	unsigned char cmd[BLK_MAX_CDB];
->> +	unsigned char *varlen_cdb;      /* an optional variable-length cdb.
->> +	                                 * points to a user buffer that must be
->> +	                                 * valid until end of request
->> +	                                 */
->>  
-> 
-> Try this instead:
-> 
->  	unsigned int cmd_len;
-> -	unsigned char cmd[BLK_MAX_CDB];
-> +	unsigned char _cmd[BLK_MAX_CDB];
-> +	unsigned char *cmd;
-> 
-> Then initialise cmd to the address of _cmd.  If you need to override it
-> later (ie patch 3), you can.
-> 
 
-I agree this is probably the cleanest implementation but when Boaz and I
-initially discussed this approach he convinced me that LL block devices assume
-that req->cmd_len <= BLK_MAX_CDB and it is unsafe at the moment to expose them
-potentially larger commands.
+>As reported in http://bugzilla.kernel.org/show_bug.cgi?id=9133 it was
+discovered that the PERC line of controllers lacked a key 64 bit
+ScatterGather 
+>capable SCSI pass-through function. The adapters are still capable of
+64 bit ScatterGather I/O commands, but these two can not be mixed. 
 
+Can't this be implemented? Now, we are imposing a performance hit on
+consumers investing on more that 4G memory. 
+
+-Shyam
