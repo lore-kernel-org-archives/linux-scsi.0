@@ -1,34 +1,108 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 15/15] Add Documentation/DocBook/scsi_midlayer.tmpl and
-	add to Makefile.
-Date: Fri, 02 Nov 2007 21:28:40 -0500
-Message-ID: <1194056920.3407.97.camel@localhost.localdomain>
-References: <200710262318.01021.rob@landley.net>
-	 <20071026230557.2ac5f9c8.rdunlap@xenotime.net>
-	 <200710290512.11549.rob@landley.net>
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
+Subject: Re: [PATCH] zfcp: add some internal zfcp adapter statistics
+Date: Sat, 3 Nov 2007 10:17:22 +0100
+Message-ID: <20071103091722.GA7807@osiris.boeblingen.de.ibm.com>
+References: <200710311133.52090.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:50203 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753619AbXKCChx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Nov 2007 22:37:53 -0400
-In-Reply-To: <200710290512.11549.rob@landley.net>
+Received: from mtagate2.de.ibm.com ([195.212.29.151]:50327 "EHLO
+	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753558AbXKCJRY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 3 Nov 2007 05:17:24 -0400
+Content-Disposition: inline
+In-Reply-To: <200710311133.52090.swen@vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Landley <rob@landley.net>
-Cc: Randy Dunlap <rdunlap@xenotime.net>, linux-scsi@vger.kernel.org
+To: Swen Schillig <swen@vnet.ibm.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, Linux on 390 Port <LINUX-390@vm.marist.edu>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Mon, 2007-10-29 at 05:12 -0500, Rob Landley wrote:
-> Updated drivers/scsi/* patch attached.
+> +static void zfcp_fsf_req_latency(struct zfcp_fsf_req *fsf_req)
+> +{
+> +	struct fsf_qual_latency_info *lat_inf;
+> +	struct zfcp_unit *unit;
+> +
+> +	lat_inf = &fsf_req->qtcb->prefix.prot_status_qual.latency_info;
+> +	unit = fsf_req->unit;
+> +
+> +	switch (fsf_req->qtcb->bottom.io.data_direction) {
+> +	case FSF_DATADIR_READ:
+> +		unit->latencies.read.channel += lat_inf->channel_lat;
+> +		unit->latencies.read.fabric += lat_inf->fabric_lat;
+> +		unit->latencies.read.counter++;
+> +		break;
+> +	case FSF_DATADIR_WRITE:
+> +		unit->latencies.write.channel += lat_inf->channel_lat;
+> +		unit->latencies.write.fabric += lat_inf->fabric_lat;
+> +		unit->latencies.write.counter++;
+> +		break;
+> +	case FSF_DATADIR_CMND:
+> +		unit->latencies.cmd.channel += lat_inf->channel_lat;
+> +		unit->latencies.cmd.fabric += lat_inf->fabric_lat;
+> +		unit->latencies.cmd.counter++;
+> +		break;
+> +	}
+> +}
 
-This looks good; could you redo it, adding the missing scsi docbook tmpl
-file and add a change log and signed off by in the manner listed in
-Documentation/SubmittingPatches and it can go in.
+These statistics are concurrently updated from several cpus without
+any locking. That looks like a bug.
 
-Thanks,
+> +zfcp_sysfs_unit_##_name##_latency_show(struct device *dev,		\
+> +				       struct device_attribute *attr,	\
+> +				       char *buf) {			\
+> +	struct scsi_device *sdev = to_scsi_device(dev);			\
+> +	struct zfcp_unit *unit = sdev->hostdata;			\
+> +	struct zfcp_latencies *lat = &unit->latencies;			\
+> +	struct zfcp_adapter *adapter = unit->port->adapter;		\
+> +									\
+> +	return sprintf(buf, "%u %u %u\n",				\
+> +		       lat->_name.fabric * adapter->timer_ticks / 1000, \
+> +		       lat->_name.channel * adapter->timer_ticks / 1000,\
+> +		       lat->_name.counter);				\
 
-James
+In addition they can be read concurrently from userspace without any
+locking... Since you put several values together in the output I assume
+this is supposed to be some sort of snapshot, which it currently isn't.
 
+> +static int
+> +zfcp_sysfs_adapter_ex_config(struct class_device *cdev,
+> +			     struct fsf_qtcb_bottom_config **qtcb_config)
+> +{
+> +	struct Scsi_Host *scsi_host = class_to_shost(cdev);
+> +	struct zfcp_adapter *adapter = (struct zfcp_adapter *)
+> +						scsi_host->hostdata[0];
+> +
+> +	if (!(adapter->adapter_features & FSF_FEATURE_MEASUREMENT_DATA)) {
+> +		ZFCP_LOG_NORMAL("error: Enhanced measurement feature not "
+> +				"supported");
+> +		return -EOPNOTSUPP;
+> +	}
+> +
+> +	*qtcb_config = kzalloc(sizeof(struct fsf_qtcb_bottom_config),
+> +			       GFP_KERNEL);
+> +	if (!*qtcb_config)
+> +		return -ENOMEM;
+> +
+> +	return zfcp_fsf_exchange_config_data_sync(adapter, *qtcb_config);
+> +}
+> +
+> +static ssize_t
+> +zfcp_sysfs_adapter_request_show(struct class_device *cdev, char *buf)
+> +{
+> +	struct fsf_qtcb_bottom_config *qtcb_config;
+> +	int retval;
+> +
+> +	retval = zfcp_sysfs_adapter_ex_config(cdev, &qtcb_config);
+> +
+> +	if (!retval)
+> +		retval = sprintf(buf, "%lu %lu %lu\n",
+> +				 qtcb_config->stat_info.input_req,
+> +				 qtcb_config->stat_info.output_req,
+> +				 qtcb_config->stat_info.control_req);
+> +
+> +	kfree(qtcb_config);
+> +	return retval;
+> +}
 
+You're going to call kfree with some random value if the adapter doesn't
+support the measurement data feature.
