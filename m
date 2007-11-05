@@ -1,51 +1,44 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: [git patches] Add and use media change notification
-Date: Sun, 4 Nov 2007 18:00:15 -0800 (PST)
-Message-ID: <alpine.LFD.0.999.0711041755120.15101@woody.linux-foundation.org>
-References: <20071104150711.GA29087@havoc.gtf.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Drivers accessors latest version
+Date: Mon, 05 Nov 2007 11:09:29 +0200
+Message-ID: <472EDDC9.6020109@panasas.com>
+References: <47276EB9.7070603@panasas.com> <1194118892.4230.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:50430 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753139AbXKECA0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Nov 2007 21:00:26 -0500
-In-Reply-To: <20071104150711.GA29087@havoc.gtf.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:32071 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753451AbXKEJJd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2007 04:09:33 -0500
+In-Reply-To: <1194118892.4230.1.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-
-
-On Sun, 4 Nov 2007, Jeff Garzik wrote:
+On Sat, Nov 03 2007 at 21:41 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 > 
-> The end to CD-ROM polling...  newer SATA ATAPI hardware will emit
-> 'asynchronous notification' events when media is changed.  This adds
-> support.
+> This one has a clear merge bug:
+> 
+> index 2597209..bc63349 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> <snip> 
+> So could you fix it up correctly, please (and just email the patch, I
+> think it's the only problem commit).
+> 
+> Thanks,
+> 
+> James
+> 
 
-I *really* didn't want to pull this.
+Sorry about that. I saw it and fixed it in git tree, (rebase),
+anticipating a branch pull. But since you had to cherry-pick them 
+by number you fetched the older patches. There is also a fix needed 
+for wd7000.c, the one you have will not compile.
 
-Not only is it after the -rc1 period, but I also think you pushed this ina 
-really offensive manner, and I don't like how you and James have made this 
-whole thing personal. You guys need to sort it out, and there is no way 
-you can blame James for all your troubles, since I've heard the same kind 
-of complaints about every single maintainer out there (including you) 
-about some driver or other infrastructure issue.
+I will send both patches as reply to this mail.
 
-So I'm unhappy about pulling this.
-
-That said, I did finally decide to just pull it. Partly because the 
-concept apparently has been in -mm for a while anyway (even if the final 
-patch has not - but the patch itself isn't that large, I'd worry more 
-about thngs like certain hardware simply not doing things right), but 
-mostly because I hate it when others hold up driver features, and I 
-decided that in this case this really is something that is better done 
-earlier rather than later, to get exposure as soon as possible.
-
-But I really think you need to lay off James, and help him rather than 
-make every single complaint a big flame-war!
-
-Please, Jeff?
-
-		Linus
+Again sorry
+Boaz
