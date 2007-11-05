@@ -1,62 +1,93 @@
 From: swen@vnet.ibm.com
-Subject: [patch 1/6] zfcp: Remove unnecessary eh_bus_reset_handler callback
-Date: Mon, 05 Nov 2007 12:37:43 +0100
-Message-ID: <20071105114527.162310000@vnet.ibm.com>
+Subject: [patch 5/6] zfcp: Fix deadlock when adding invalid LUN
+Date: Mon, 05 Nov 2007 12:37:47 +0100
+Message-ID: <20071105114627.467128000@vnet.ibm.com>
 References: <20071105113742.233391000@vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([195.212.29.135]:10329 "EHLO
-	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753551AbXKELqB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2007 06:46:01 -0500
-Content-Disposition: inline; filename=800-zfcp-callback.diff
+Received: from mtagate8.de.ibm.com ([195.212.29.157]:18161 "EHLO
+	mtagate8.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754799AbXKELqg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2007 06:46:36 -0500
+Content-Disposition: inline; filename=805-zfcp-deadlock.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org, Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org, Christof Schmitt <christof.schmitt@de.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>
 
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-The callback function used by zfcp always returns success,
-which is an indication for the SCSI midlayer to stop error
-handling. Remove the bus_reset callback, since the same
-function will be called via the host_reset callback.
+When adding an invalid LUN, there is a deadlock between the add
+via scsi_scan_target and the slave_destroy handler: The handler
+waits for the scan to complete, but for an invalid unit,
+scsi_scan_target directly calls the slave_destroy handler.
+
+Fix the deadlock by removing the wait in the slave_destroy
+handler, it was not necessary anyway.
 
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_scsi.c |    5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_aux.c  |    2 --
+ drivers/s390/scsi/zfcp_def.h  |    4 ----
+ drivers/s390/scsi/zfcp_erp.c  |    1 -
+ drivers/s390/scsi/zfcp_scsi.c |    3 ---
+ 4 files changed, 10 deletions(-)
 
+Index: scsi-misc/drivers/s390/scsi/zfcp_aux.c
+===================================================================
+--- scsi-misc.orig/drivers/s390/scsi/zfcp_aux.c
++++ scsi-misc/drivers/s390/scsi/zfcp_aux.c
+@@ -844,8 +844,6 @@ zfcp_unit_enqueue(struct zfcp_port *port
+ 	unit->sysfs_device.release = zfcp_sysfs_unit_release;
+ 	dev_set_drvdata(&unit->sysfs_device, unit);
+ 
+-	init_waitqueue_head(&unit->scsi_scan_wq);
+-
+ 	/* mark unit unusable as long as sysfs registration is not complete */
+ 	atomic_set_mask(ZFCP_STATUS_COMMON_REMOVE, &unit->status);
+ 
+Index: scsi-misc/drivers/s390/scsi/zfcp_def.h
+===================================================================
+--- scsi-misc.orig/drivers/s390/scsi/zfcp_def.h
++++ scsi-misc/drivers/s390/scsi/zfcp_def.h
+@@ -982,10 +982,6 @@ struct zfcp_unit {
+         struct scsi_device     *device;        /* scsi device struct pointer */
+ 	struct zfcp_erp_action erp_action;     /* pending error recovery */
+         atomic_t               erp_counter;
+-	wait_queue_head_t      scsi_scan_wq;   /* can be used to wait until
+-						  all scsi_scan_target
+-						  requests have been
+-						  completed. */
+ };
+ 
+ /* FSF request */
+Index: scsi-misc/drivers/s390/scsi/zfcp_erp.c
+===================================================================
+--- scsi-misc.orig/drivers/s390/scsi/zfcp_erp.c
++++ scsi-misc/drivers/s390/scsi/zfcp_erp.c
+@@ -1609,7 +1609,6 @@ static void zfcp_erp_scsi_scan(struct wo
+ 	scsi_scan_target(&rport->dev, 0, rport->scsi_target_id,
+ 			 unit->scsi_lun, 0);
+ 	atomic_clear_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING, &unit->status);
+-	wake_up(&unit->scsi_scan_wq);
+ 	zfcp_unit_put(unit);
+ 	kfree(p);
+ }
 Index: scsi-misc/drivers/s390/scsi/zfcp_scsi.c
 ===================================================================
 --- scsi-misc.orig/drivers/s390/scsi/zfcp_scsi.c
 +++ scsi-misc/drivers/s390/scsi/zfcp_scsi.c
-@@ -51,7 +51,6 @@ struct zfcp_data zfcp_data = {
- 		.queuecommand		= zfcp_scsi_queuecommand,
- 		.eh_abort_handler	= zfcp_scsi_eh_abort_handler,
- 		.eh_device_reset_handler = zfcp_scsi_eh_device_reset_handler,
--		.eh_bus_reset_handler	= zfcp_scsi_eh_host_reset_handler,
- 		.eh_host_reset_handler	= zfcp_scsi_eh_host_reset_handler,
- 		.can_queue		= 4096,
- 		.this_id		= -1,
-@@ -542,7 +541,7 @@ zfcp_task_management_function(struct zfc
- }
+@@ -180,9 +180,6 @@ static void zfcp_scsi_slave_destroy(stru
  
- /**
-- * zfcp_scsi_eh_host_reset_handler - handler for host and bus reset
-+ * zfcp_scsi_eh_host_reset_handler - handler for host reset
-  */
- static int zfcp_scsi_eh_host_reset_handler(struct scsi_cmnd *scpnt)
- {
-@@ -552,7 +551,7 @@ static int zfcp_scsi_eh_host_reset_handl
- 	unit = (struct zfcp_unit*) scpnt->device->hostdata;
- 	adapter = unit->port->adapter;
- 
--	ZFCP_LOG_NORMAL("host/bus reset because of problems with "
-+	ZFCP_LOG_NORMAL("host reset because of problems with "
- 			"unit 0x%016Lx\n", unit->fcp_lun);
- 
- 	zfcp_erp_adapter_reopen(adapter, 0);
+ 	if (unit) {
+ 		zfcp_erp_wait(unit->port->adapter);
+-		wait_event(unit->scsi_scan_wq,
+-			   atomic_test_mask(ZFCP_STATUS_UNIT_SCSI_WORK_PENDING,
+-					    &unit->status) == 0);
+ 		atomic_clear_mask(ZFCP_STATUS_UNIT_REGISTERED, &unit->status);
+ 		sdpnt->hostdata = NULL;
+ 		unit->device = NULL;
 
 -- 
