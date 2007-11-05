@@ -1,36 +1,69 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: Re: [PATCH] zfcp: add some internal zfcp adapter statistics
-Date: Mon, 5 Nov 2007 12:35:32 +0100
-Message-ID: <200711051235.32482.swen@vnet.ibm.com>
-References: <200710311133.52090.swen@vnet.ibm.com> <20071103091722.GA7807@osiris.boeblingen.de.ibm.com> <20071103094058.GA25134@osiris.boeblingen.de.ibm.com>
+From: swen@vnet.ibm.com
+Subject: [patch 0/6] zfcp: updates, fixing a variety of oddities
+Date: Mon, 05 Nov 2007 12:37:42 +0100
+Message-ID: <20071105113742.233391000@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756028AbXKELfs@vger.kernel.org>
-In-Reply-To: <20071103094058.GA25134@osiris.boeblingen.de.ibm.com>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Heiko Carstens <heiko.carstens@de.ibm.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, linux-scsi@vger.kernel.org, Linux on 390 Port <LINUX-390@vm.marist.edu>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:41977 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750786AbXKELp2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Nov 2007 06:45:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-s390@vger.kernel.org
 
-On Saturday 03 November 2007 10:40, Heiko Carstens wrote:
-> > > +	if (!(adapter->adapter_features & FSF_FEATURE_MEASUREMENT_DATA)) {
-> > > +		ZFCP_LOG_NORMAL("error: Enhanced measurement feature not "
-> > > +				"supported");
-> > > +		return -EOPNOTSUPP;
-> > > +	}
-> 
-> Btw. any user can flood the console with these messages if the adapter
-> doesn't support the feature. That can be considered a denial of service
-> attack. Please just return -EOPNOTSUPP and don't print anything on the
-> console.
-> 
-I can see your point but I think you're a bit too extreme in your assessment on a simple console
-message (with almost no processing behind it). If someone really wants to "flood" the console with messages they 
-go other and possibly easier ways to achieve the same thing, how about "logger" !
+--=20
+patch 1/6: Remove unnecessary eh_bus_reset_handler callsback
+           The callback function used by zfcp always returns success,
+           which is an indication for the SCSI midlayer to stop error
+           handling. Remove the bus_reset callback, since the same
+           function will be called via the host_reset callback.
 
-But since it seems to bother you a lot, I will remove the message.
+patch 2/6: Use also port and adapter to identify unit in messages
+           Add the appropriate messages.
 
-Cheers Swen
+patch 3/6: Specify waiting times in ERP in seconds
+           It is not necessary to use jiffies or milliseconds to specif=
+y
+           waiting times that last a couple of seconds.
+
+patch 4/6: Remove SCSI devices when removing adapter
+           The common I/O layer can call remove a handler to inform zfc=
+p
+           that a device disappeared. The handler zfcp_ccw_remove then
+           removes all unit, port and the adapter data structures. Remo=
+ving
+           the units requires that the SCSI devices are removed first.
+
+
+patch 5/6: Fix deadlock when adding invalid LUN
+           When adding an invalid LUN, there is a deadlock between the =
+add
+           via scsi_scan_target and the slave_destroy handler: The hand=
+ler
+           waits for the scan to complete, but for an invalid unit,
+           scsi_scan_target directly calls the slave_destroy handler.
+           Fix the deadlock by removing the wait in the slave_destroy
+           handler, it was not necessary anyway.
+
+patch 6/6: Reduce flood on HBA trace
+           Remove tracing for request with a "qualifier" field set in t=
+he
+           response. =C2=A0The protocol status qualifier now contains m=
+easurement
+           data for "good" commands, so this check would trace every re=
+sponse
+           by default.
+           The fix is to simply remove the "qual" tracing: The response=
+s with an
+           interesting status are also traced as "ferr" or "perr" and a=
+ll
+           responses can be traced as "norm" with a higher trace level.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
