@@ -1,72 +1,51 @@
-From: Anthony Ewell <amewell@verizon.net>
-Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
-Date: Sun, 04 Nov 2007 15:16:16 -0800
-Message-ID: <472E52C0.4080604@verizon.net>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [git patches] Add and use media change notification
+Date: Sun, 4 Nov 2007 18:00:15 -0800 (PST)
+Message-ID: <alpine.LFD.0.999.0711041755120.15101@woody.linux-foundation.org>
+References: <20071104150711.GA29087@havoc.gtf.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vms040pub.verizon.net ([206.46.252.40]:35051 "EHLO
-	vms040pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752045AbXKDWQh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Nov 2007 17:16:37 -0500
-Received: from rn1.rent-a-nerd.local ([72.75.170.182])
- by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
- 3 2006)) with ESMTPA id <0JR0000K45V5OR57@vms040.mailsrvcs.net> for
- linux-scsi@vger.kernel.org; Sun, 04 Nov 2007 16:16:18 -0600 (CST)
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:50430 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753139AbXKECA0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 4 Nov 2007 21:00:26 -0500
+In-Reply-To: <20071104150711.GA29087@havoc.gtf.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bo.yang@lsi.com, James Bottomley <James.Bottomley@SteelEye.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>, Mark Harvey <mark_harvey@symantec.com>
-
-James Bottomley wrote:
-> Please don't drop the cc lists.  There are others who probably have more
-> informed opinions than I do who won't get to comment if they don't see
-> it.
->
-> On Sun, 2007-10-28 at 17:36 -0700, Anthony Ewell wrote:
->> James Bottomley wrote:
->>> On Sat, 2007-10-27 at 13:21 -0700, Anthony Ewell wrote:
->>>> James Bottomley wrote:
->>>>> On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
->>>>>> Hi All,
->>>>>>
->>>>>>     If you all would not mind a post from the general
->>>>>> public Linux user, after doing a complete disk wipe
->>>>>> of CentOS 4 and installing CentOS5, my system is preceived
->>>>>> to be 3 times slower.
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-ide@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
 
-Did some test from my install CD/DVD's in "rescue mode" on
-Computer C.  I used the same backup script (dump) that
-I use in normal boot mode.  I stopped the backup
-after dump gave the first estimate of time:
 
-    "dump" CentOS5 install DVD in rescue mode:
-         transfer rate 4422 KB/s, estimated  finish 4:10
+On Sun, 4 Nov 2007, Jeff Garzik wrote:
+> 
+> The end to CD-ROM polling...  newer SATA ATAPI hardware will emit
+> 'asynchronous notification' events when media is changed.  This adds
+> support.
 
-    "dump" CentOS4.4 (2.6.9-42.EL) install CD in rescue mode:
-         transfer rate 8468 KB/s, estimated  finish 2:09
+I *really* didn't want to pull this.
 
-I also got a "dmesg" from computer B, as requested by Sumant.
-Computer B: VXA-3, CentOS 4.5 , SATA-150-4
+Not only is it after the -rc1 period, but I also think you pushed this ina 
+really offensive manner, and I don't like how you and James have made this 
+whole thing personal. You guys need to sort it out, and there is no way 
+you can blame James for all your troubles, since I've heard the same kind 
+of complaints about every single maintainer out there (including you) 
+about some driver or other infrastructure issue.
 
--T
+So I'm unhappy about pulling this.
 
-Hi All,
+That said, I did finally decide to just pull it. Partly because the 
+concept apparently has been in -mm for a while anyway (even if the final 
+patch has not - but the patch itself isn't that large, I'd worry more 
+about thngs like certain hardware simply not doing things right), but 
+mostly because I hate it when others hold up driver features, and I 
+decided that in this case this really is something that is better done 
+earlier rather than later, to get exposure as soon as possible.
 
-I also tested using the System Rescue CD from
-         http://www.sysresccd.org.
+But I really think you need to lay off James, and help him rather than 
+make every single complaint a big flame-war!
 
-I used the same backup script (dump) that I use in normal
-boot mode. I stopped the backup after dump gave the first
-estimate of time:
+Please, Jeff?
 
-    "dump" System Rescue CD (Kernel 2.6.22.9):
-         transfer rate 4370 KB/s, estimated finish 4:15
-
-So, I would say, the problem is not confined to CentOS 5,
-but goes all the way up to the 2.6.22.9 kernel.  I hope
-this is a good clue.
-
--T
+		Linus
