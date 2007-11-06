@@ -1,259 +1,130 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] gdth: scp timeout clean up
-Date: Tue, 06 Nov 2007 09:54:15 +0200
-Message-ID: <47301DA7.8000202@panasas.com>
-References: <20071106065439.GA30397@us.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] Do not requeue requests if FAILFAST is set
+Date: Tue, 06 Nov 2007 09:23:40 +0100
+Message-ID: <4730248C.2030901@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed;
+ boundary="------------010005030001040609000002"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:1526 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750825AbXKFH6c (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Nov 2007 02:58:32 -0500
-In-Reply-To: <20071106065439.GA30397@us.ibm.com>
+Received: from cantor2.suse.de ([195.135.220.15]:56026 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751320AbXKFIXm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Nov 2007 03:23:42 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: malahal@us.ibm.com
-Cc: linux-scsi@vger.kernel.org, Achim_Leubner@adaptec.com, jens.axboe@oracle.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-On Tue, Nov 06 2007 at 8:54 +0200, malahal@us.ibm.com wrote:
-> gdth driver is modified NOT to use scp->eh_timeout. Now, it has
-> eh_timed_out (gdth_timed_out) to handle command timeouts for locked
-> I/O's. Have not tested as I don't have needed hardware! Patch is
-> against 2.6.23-mm1.
-> 
-> Thank you Matthew Wilcox for your input on the IRC channel.
-> 
-> Signed-off-by: Malahal Naineni <malahal@us.ibm.com>
-> 
-> diff -r dbb45a1edd2a drivers/scsi/gdth.c
-> --- a/drivers/scsi/gdth.c	Mon Nov 05 21:32:26 2007 -0800
-> +++ b/drivers/scsi/gdth.c	Mon Nov 05 21:54:27 2007 -0800
-> @@ -2056,22 +2056,12 @@ static void gdth_putq(gdth_ha_str *ha, S
->      register Scsi_Cmnd *pscp;
->      register Scsi_Cmnd *nscp;
->      ulong flags;
-> -    unchar b, t;
->  
->      TRACE(("gdth_putq() priority %d\n",priority));
->      spin_lock_irqsave(&ha->smp_lock, flags);
->  
->      if (!cmndinfo->internal_command) {
->          cmndinfo->priority = priority;
-> -        b = scp->device->channel;
-> -        t = scp->device->id;
-> -        if (priority >= DEFAULT_PRI) {
-> -            if ((b != ha->virt_bus && ha->raw[BUS_L2P(ha,b)].lock) ||
-> -                (b==ha->virt_bus && t<MAX_HDRIVES && ha->hdr[t].lock)) {
-> -                TRACE2(("gdth_putq(): locked IO ->update_timeout()\n"));
-> -                cmndinfo->timeout = gdth_update_timeout(scp, 0);
-> -            }
-> -        }
->      }
->  
->      if (ha->req_first==NULL) {
-> @@ -2359,7 +2349,7 @@ static void gdth_copy_internal_data(gdth
->  {
->      ushort cpcount,i, max_sg = gdth_sg_count(scp);
->      ushort cpsum,cpnow;
-> -    struct scatterlist *sl, *sg;
-> +    struct scatterlist *sl;
->      char *address;
->  
->      cpcount = min_t(ushort, count, gdth_bufflen(scp));
-> @@ -3938,6 +3928,38 @@ static const char *gdth_info(struct Scsi
->      return ((const char *)ha->binfo.type_string);
->  }
->  
-> +static enum scsi_eh_timer_return gdth_timed_out(struct scsi_cmnd *scp)
-> +{
-> +	gdth_ha_str *ha = shost_priv(scp->device->host);
-> +	struct gdth_cmndinfo *cmndinfo = gdth_get_cmndinfo(ha);
+This is a multi-part message in MIME format.
+--------------010005030001040609000002
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 8bit
 
-a gdth_get_cmndinfo(ha) is for allocating a new cmndinfo out of free
-cmndinfo list, and must be paired by a call to gdth_put_cmndinfo(ha).
-And usually you want to put it on scp->host_scribble, other wise it will
-be lost. 
-To get the cmndinfo associated with a scsi_cmnd use gdth_cmnd_priv(scp) 
+Hi James,
 
-> +	unchar b, t;
-> +	ulong flags;
-> +	enum scsi_eh_timer_return retval = EH_NOT_HANDLED;
-> +
-> +	TRACE(("%s() cmd 0x%x\n", scp->cmnd[0], __FUNCTION__));
-> +	b = scp->device->channel;
-> +	t = scp->device->id;
-> +
-> +	/*
-> +	 * We don't really honor the command timeout, but we try to
-> +	 * honor 6 times of the actual command timeout! So reset the
-> +	 * timer if this is less than 6th timeout on this command!
-> +	 */
-> +	if (++cmndinfo->timeout_count < 6)
-> +		retval = EH_RESET_TIMER;
-> +
-> +	/* Reset the timeout if it is locked IO */
-> +	spin_lock_irqsave(&ha->smp_lock, flags);
-> +	if ((b != ha->virt_bus && ha->raw[BUS_L2P(ha, b)].lock) ||
-> +	    (b == ha->virt_bus && t < MAX_HDRIVES && ha->hdr[t].lock)) {
-> +		TRACE2(("%s(): locked IO, reset timeout\n", __FUNCTION__));
-> +		retval = EH_RESET_TIMER;
-> +	}
-> +	spin_unlock_irqrestore(&ha->smp_lock, flags);
-> +
-> +	return retval;
-> +}
-> +
->  static int gdth_eh_bus_reset(Scsi_Cmnd *scp)
->  {
->      gdth_ha_str *ha = shost_priv(scp->device->host);
-> @@ -4031,7 +4053,7 @@ static int gdth_queuecommand(struct scsi
->      BUG_ON(!cmndinfo);
->  
->      scp->scsi_done = done;
-> -    gdth_update_timeout(scp, scp->timeout_per_command * 6);
-> +    cmndinfo->timeout_count = 0;
->      cmndinfo->priority = DEFAULT_PRI;
->  
->      gdth_set_bufflen(scp, scsi_bufflen(scp));
-> @@ -4137,12 +4159,10 @@ static int ioc_lockdrv(void __user *arg)
->              ha->hdr[j].lock = 1;
->              spin_unlock_irqrestore(&ha->smp_lock, flags);
->              gdth_wait_completion(ha, ha->bus_cnt, j);
-> -            gdth_stop_timeout(ha, ha->bus_cnt, j);
->          } else {
->              spin_lock_irqsave(&ha->smp_lock, flags);
->              ha->hdr[j].lock = 0;
->              spin_unlock_irqrestore(&ha->smp_lock, flags);
-> -            gdth_start_timeout(ha, ha->bus_cnt, j);
->              gdth_next(ha);
->          }
->      } 
-> @@ -4582,14 +4602,12 @@ static int gdth_ioctl(struct inode *inod
->                  spin_unlock_irqrestore(&ha->smp_lock, flags);
->                  for (j = 0; j < ha->tid_cnt; ++j) {
->                      gdth_wait_completion(ha, i, j);
-> -                    gdth_stop_timeout(ha, i, j);
->                  }
->              } else {
->                  spin_lock_irqsave(&ha->smp_lock, flags);
->                  ha->raw[i].lock = 0;
->                  spin_unlock_irqrestore(&ha->smp_lock, flags);
->                  for (j = 0; j < ha->tid_cnt; ++j) {
-> -                    gdth_start_timeout(ha, i, j);
->                      gdth_next(ha);
->                  }
->              }
-> @@ -4724,6 +4742,7 @@ static struct scsi_host_template gdth_te
->          .slave_configure        = gdth_slave_configure,
->          .bios_param             = gdth_bios_param,
->          .proc_info              = gdth_proc_info,
-> +	.eh_timed_out		= gdth_timed_out,
->          .proc_name              = "gdth",
->          .can_queue              = GDTH_MAXCMDS,
->          .this_id                = -1,
-> diff -r dbb45a1edd2a drivers/scsi/gdth.h
-> --- a/drivers/scsi/gdth.h	Mon Nov 05 21:32:26 2007 -0800
-> +++ b/drivers/scsi/gdth.h	Mon Nov 05 21:55:15 2007 -0800
-> @@ -917,7 +917,7 @@ typedef struct {
->          int internal_command;                   /* don't call scsi_done */
->          dma_addr_t sense_paddr;                 /* sense dma-addr */
->          unchar priority;
-> -        int timeout;
-> +	int timeout_count;			/* # of timeout calls */
->          volatile int wait_for_completion;
->          ushort status;
->          ulong32 info;
-> diff -r dbb45a1edd2a drivers/scsi/gdth_proc.c
-> --- a/drivers/scsi/gdth_proc.c	Mon Nov 05 21:32:26 2007 -0800
-> +++ b/drivers/scsi/gdth_proc.c	Mon Nov 05 21:32:31 2007 -0800
-> @@ -750,69 +750,3 @@ static void gdth_wait_completion(gdth_ha
->      }
->      spin_unlock_irqrestore(&ha->smp_lock, flags);
->  }
-> -
-> -static void gdth_stop_timeout(gdth_ha_str *ha, int busnum, int id)
-> -{
-> -    ulong flags;
-> -    Scsi_Cmnd *scp;
-> -    unchar b, t;
-> -
-> -    spin_lock_irqsave(&ha->smp_lock, flags);
-> -
-> -    for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
-> -        struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
-> -        if (!cmndinfo->internal_command) {
-> -            b = scp->device->channel;
-> -            t = scp->device->id;
-> -            if (t == (unchar)id && b == (unchar)busnum) {
-> -                TRACE2(("gdth_stop_timeout(): update_timeout()\n"));
-> -                cmndinfo->timeout = gdth_update_timeout(scp, 0);
-> -            }
-> -        }
-> -    }
-> -    spin_unlock_irqrestore(&ha->smp_lock, flags);
-> -}
-> -
-> -static void gdth_start_timeout(gdth_ha_str *ha, int busnum, int id)
-> -{
-> -    ulong flags;
-> -    Scsi_Cmnd *scp;
-> -    unchar b, t;
-> -
-> -    spin_lock_irqsave(&ha->smp_lock, flags);
-> -
-> -    for (scp = ha->req_first; scp; scp = (Scsi_Cmnd *)scp->SCp.ptr) {
-> -        struct gdth_cmndinfo *cmndinfo = gdth_cmnd_priv(scp);
-> -        if (!cmndinfo->internal_command) {
-> -            b = scp->device->channel;
-> -            t = scp->device->id;
-> -            if (t == (unchar)id && b == (unchar)busnum) {
-> -                TRACE2(("gdth_start_timeout(): update_timeout()\n"));
-> -                gdth_update_timeout(scp, cmndinfo->timeout);
-> -            }
-> -        }
-> -    }
-> -    spin_unlock_irqrestore(&ha->smp_lock, flags);
-> -}
-> -
-> -static int gdth_update_timeout(Scsi_Cmnd *scp, int timeout)
-> -{
-> -    int oldto;
-> -
-> -    oldto = scp->timeout_per_command;
-> -    scp->timeout_per_command = timeout;
-> -
-> -    if (timeout == 0) {
-> -        del_timer(&scp->eh_timeout);
-> -        scp->eh_timeout.data = (unsigned long) NULL;
-> -        scp->eh_timeout.expires = 0;
-> -    } else {
-> -        if (scp->eh_timeout.data != (unsigned long) NULL) 
-> -            del_timer(&scp->eh_timeout);
-> -        scp->eh_timeout.data = (unsigned long) scp;
-> -        scp->eh_timeout.expires = jiffies + timeout;
-> -        add_timer(&scp->eh_timeout);
-> -    }
-> -
-> -    return oldto;
-> -}
-> diff -r dbb45a1edd2a drivers/scsi/gdth_proc.h
-> --- a/drivers/scsi/gdth_proc.h	Mon Nov 05 21:32:26 2007 -0800
-> +++ b/drivers/scsi/gdth_proc.h	Mon Nov 05 21:32:31 2007 -0800
-> @@ -20,9 +20,6 @@ static char *gdth_ioctl_alloc(gdth_ha_st
->                                ulong64 *paddr);
->  static void gdth_ioctl_free(gdth_ha_str *ha, int size, char *buf, ulong64 paddr);
->  static void gdth_wait_completion(gdth_ha_str *ha, int busnum, int id);
-> -static void gdth_stop_timeout(gdth_ha_str *ha, int busnum, int id);
-> -static void gdth_start_timeout(gdth_ha_str *ha, int busnum, int id);
-> -static int gdth_update_timeout(Scsi_Cmnd *scp, int timeout);
->  
->  #endif
->  
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+the FAILFAST flag is currently not honored in scsi_request_fn().
+So if scsi_dispatch_cmd() returns an error or the queue is not
+ready, the request will always be requeued regardless of the
+FAILFAST setting.
+This can result in a delayed fallback for multipathing, as
+these requests will only be catched once the timeout expires.
 
-Boaz
+This patch avoids requeuing if the FAILFAST flag is set, and
+terminates the request immediately.
+
+Comments et al welcome.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Markus Rex, HRB 16746 (AG Nürnberg)
+
+--------------010005030001040609000002
+Content-Type: text/plain;
+ name="scsi-kill-failfast-requests"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="scsi-kill-failfast-requests"
+
+Do not requeue requests if REQ_FAILFAST is set
+
+Any requests with the REQ_FAILFAST flag set should not be requeued
+to the requeust queue, but rather terminated directly.
+Otherwise the multipath failover will stall until the command
+timeout triggers.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 277f1b6..a12d2f1 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1200,6 +1200,11 @@ static int scsi_prep_fn(struct request_queue *q, struct request *req)
+ 			 */
+ 			if (!(req->cmd_flags & REQ_PREEMPT))
+ 				ret = BLKPREP_DEFER;
++			/*
++			 * Return failfast requests immediately
++			 */
++			if (req->cmd_flags & REQ_FAILFAST)
++				ret = BLKPREP_KILL;
+ 			break;
+ 		default:
+ 			/*
+@@ -1327,6 +1332,17 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 	return 1;
+ }
+ 
++static void __scsi_kill_request(struct request *req)
++{
++	struct scsi_cmnd *cmd = req->special;
++	struct scsi_device *sdev = cmd->device;
++
++	cmd->result = DID_NO_CONNECT << 16;
++	atomic_inc(&cmd->device->iorequest_cnt);
++	sdev->device_busy--;
++	__scsi_done(cmd);
++}
++
+ /*
+  * Kill a request for a dead device
+  */
+@@ -1440,8 +1456,16 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
++			break;
++
++		if (!scsi_dev_queue_ready(q, sdev)) {
++			if (req->cmd_flags & REQ_FAILFAST) {
++				scsi_kill_request(req, q);
++				continue;
++			}
+ 			break;
++		}
+ 
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			sdev_printk(KERN_ERR, sdev,
+@@ -1522,8 +1546,12 @@ static void scsi_request_fn(struct request_queue *q)
+ 	 * later time.
+ 	 */
+ 	spin_lock_irq(q->queue_lock);
+-	blk_requeue_request(q, req);
+-	sdev->device_busy--;
++	if (unlikely(req->cmd_flags & REQ_FAILFAST))
++		__scsi_kill_request(req);
++	else {
++		blk_requeue_request(q, req);
++		sdev->device_busy--;
++	}
+ 	if(sdev->device_busy == 0)
+ 		blk_plug_device(q);
+  out:
+
+--------------010005030001040609000002--
