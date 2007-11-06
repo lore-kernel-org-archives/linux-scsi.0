@@ -1,105 +1,45 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: FW: [PATCH 1/8] scsi: megaraid_sas - add hibernation support
-Date: Tue, 6 Nov 2007 11:38:12 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501CA1B91@NAMAIL1.ad.lsil.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [0/3] Last 3 patches for bidi support
+Date: Tue, 06 Nov 2007 20:38:33 +0200
+Message-ID: <4730B4A9.80809@panasas.com>
+References: <4730ACAA.2060007@panasas.com> <4730B18C.20505@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:37314 "EHLO mail0.lsil.com"
+Received: from sa8.bezeqint.net ([192.115.104.22]:42633 "EHLO sa8.bezeqint.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756575AbXKFSiO convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Nov 2007 13:38:14 -0500
-Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id lA6Ia2fL022408
-	for <linux-scsi@vger.kernel.org>; Tue, 6 Nov 2007 10:36:02 -0800 (PST)
-Received: from namail.ad.lsil.com (namail.co.lsil.com [172.21.36.18])
-	by milmhbs0.lsil.com (8.12.11/8.12.11) with ESMTP id lA6IcHLt027123
-	for <linux-scsi@vger.kernel.org>; Tue, 6 Nov 2007 10:38:17 -0800
-Content-class: urn:content-classes:message
+	id S1755217AbXKFSip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 6 Nov 2007 13:38:45 -0500
+In-Reply-To: <4730B18C.20505@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, Pete Wyckoff <pw@osc.edu>, Benny Halevy <bhalevy@panasas.com>
 
-Re-Sending:
+On Tue, Nov 06 2007 at 20:25 +0200, Mike Christie <michaelc@cs.wisc.edu> wrote:
+> Boaz Harrosh wrote:
+>> [1]
+>> I propose a small change to scsi_tgt_lib.c that will make
+>> tgt completely neutral to the scsi_data_buffer patch. And will
+>> make it all that more ready for bidi, too. TOMO is this OK?
+>>
+>> (Can you do without the GFP_KERNEL allocation flag? It could
+>> make the code a bit more simple)
+>>
+> 
+> GFP_KERNEL is nice for the target layer because it can sleep in that 
+> path you changed and it and does not have the "cannot write out pages 
+> because it may come back to the same device issues" like an initiator does.
+> 
+> If we ever changed to a softirq instead of the work queue then we would 
+> not need the flag since it would have to GFP_ATOMIC, but I am not sure 
+> if we have plans to do that anytime soon.
 
-James, 
+Yes I understand that, hence the GFP_KERNEL was kept intact in my patch.
+But I was thinking perhaps it was possible to sleep outside, if
+the return value was BLKPREP_DEFER, the way the block layer sleeps,
+just not in allocation stage.
 
-The current feature request is to allow the user to change "cmd_per_lun"
-and "max_sectors" only during the driver loading time. I agree with you
-it is very good feature to provide option to modify these during run
-time. In future this may be done as required/requested for. But as you
-may see, there are more changes included in the patch submission.  We
-really need this submission be accepted and then we can start to submit
-the next set of changes. 
+Boaz
 
-Thanks & Regards,
-
-Bo Yang
-
-From: Yang, Bo 
-Sent: Thursday, November 01, 2007 3:17 PM
-To: James Bottomley
-Cc: linux-scsi@vger.kernel.org; akpm@osdl.org;
-linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
-Subject: RE: [PATCH 1/8] scsi: megaraid_sas - add hibernation support
-
-James, 
-
-The current feature request is to allow the user to change "cmd_per_lun"
-and "max_sectors" only during the driver loading time. I agree with you
-it is very good feature to provide option to modify these during run
-time. In future this may be done as required/requested for. But as you
-may see, there are more changes included in the patch submission.  We
-really need this submission be accepted and then we can start to submit
-the next set of changes. 
-
-Thanks & Regards,
-
-Bo Yang
-
- 
-
- 
-
-From: James Bottomley [mailto:James.Bottomley@SteelEye.com]
-Sent: Wed 10/31/2007 11:12 AM
-To: Yang, Bo
-Cc: linux-scsi@vger.kernel.org; akpm@osdl.org;
-linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
-Subject: RE: [PATCH 1/8] scsi: megaraid_sas - add hibernation support
-
-On Wed, 2007-10-31 at 07:25 -0600, Yang, Bo wrote:
-> James,
-> I did respond to Randy earlier.
-
-Sorry, I couldn't find it in the archive when I looked ... although the
-scsi reflector seems to be missing quite a few of your emails for some
-reason.
-
-> About the module params being added :
->
-> The fast_load parameter is for the user to decide at driver load time
-> if (s)he wants to skip scan of devices in PD channels.
->
-> After driver is loaded the user cannot be permitted to modify this
-> value. If the user needs to see the devices in the PD channels, (s)he
-> may initiate a scan via sysfs/proc based on the kernel being used.
-> Once the user has done the scan, the fast_load value does not have any
-> significance and thus not exposed for reading.
->
-> cmd_per_lun & max_sectors are also intended to be provided by user
-> only at driver load time. In the current implementation both these do
-> appear as read-only values under host# in sysfs. The current design is
-> not to allow these values to be modified on the fly.
-
-fastload sounds reasonable.  cmd_per_lun and max_sectors could
-reasonably be altered at runtime ... just execute and unbind and rebind
-operation to make them take effect.
-
-James
-
-
-
- 
