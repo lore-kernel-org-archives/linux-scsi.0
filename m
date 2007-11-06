@@ -1,51 +1,41 @@
-From: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Subject: Re: [PATCH] SCSI: Use is_power_of_2() macro for simplicity.
-Date: Tue, 6 Nov 2007 11:09:51 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711061107480.21836@localhost.localdomain>
-References: <Pine.LNX.4.64.0711061019450.9041@localhost.localdomain>
- <20071106153012.GG4113@parisc-linux.org>
+From: malahal@us.ibm.com
+Subject: Re: [PATCH] gdth: scp timeout clean up
+Date: Tue, 6 Nov 2007 08:18:26 -0800
+Message-ID: <20071106161826.GA1660@us.ibm.com>
+References: <20071106065439.GA30397@us.ibm.com> <47301DA7.8000202@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from astoria.ccjclearline.com ([64.235.106.9]:48242 "EHLO
-	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753320AbXKFQLq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Nov 2007 11:11:46 -0500
-In-Reply-To: <20071106153012.GG4113@parisc-linux.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:44981 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848AbXKFQSh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Nov 2007 11:18:37 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id lA6GIXLO023505
+	for <linux-scsi@vger.kernel.org>; Tue, 6 Nov 2007 11:18:33 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id lA6GIWu8109520
+	for <linux-scsi@vger.kernel.org>; Tue, 6 Nov 2007 09:18:32 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lA6GIUU1006099
+	for <linux-scsi@vger.kernel.org>; Tue, 6 Nov 2007 09:18:31 -0700
+Content-Disposition: inline
+In-Reply-To: <47301DA7.8000202@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi@vger.kernel.org, Achim_Leubner@adaptec.com, jens.axboe@oracle.com
 
-On Tue, 6 Nov 2007, Matthew Wilcox wrote:
+Boaz Harrosh [bharrosh@panasas.com] wrote:
+> > +static enum scsi_eh_timer_return gdth_timed_out(struct scsi_cmnd *scp)
+> > +{
+> > +	gdth_ha_str *ha = shost_priv(scp->device->host);
+> > +	struct gdth_cmndinfo *cmndinfo = gdth_get_cmndinfo(ha);
+> 
+> a gdth_get_cmndinfo(ha) is for allocating a new cmndinfo out of free
+> cmndinfo list, and must be paired by a call to gdth_put_cmndinfo(ha).
+> And usually you want to put it on scp->host_scribble, other wise it will
+> be lost. 
+> To get the cmndinfo associated with a scsi_cmnd use gdth_cmnd_priv(scp) 
 
-> On Tue, Nov 06, 2007 at 10:20:46AM -0500, Robert P. J. Day wrote:
-> > @@ -1656,7 +1657,7 @@ static inline int reconnect_target(struct NCR_ESP *esp, struct ESP_regs *eregs)
-> >  	if(!(it & me))
-> >  		return -1;
-> >  	it &= ~me;
-> > -	if(it & (it - 1))
-> > +	if(!is_power_of_2(it))
-> >  		return -1;
->
-> Non-equivalent transform.  Probably a bug.
->
-> >  		bits &= ~esp->scsi_id_mask;
-> > -		if (!bits || (bits & (bits - 1)))
-> > +		if (!is_power_of_2(bits))
-> >  			goto do_reset;
->
-> Non-equivalent transform.  Definitely a bug.
-
-ok, that one i'm curious about.  how is that not an equivalent
-transform?  am i missing something painfully obvious?
-
-rday
--- 
-========================================================================
-Robert P. J. Day
-Linux Consulting, Training and Annoying Kernel Pedantry
-Waterloo, Ontario, CANADA
-
-http://crashcourse.ca
-========================================================================
+Thank you very much. It should be gdth_cmnd_priv(scp). I will fix it.
