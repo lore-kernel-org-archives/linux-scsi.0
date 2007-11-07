@@ -1,63 +1,114 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: usage of max_sectors in scsi_host_template
-Date: Wed, 07 Nov 2007 14:24:04 -0600
-Message-ID: <47321EE4.5000400@cs.wisc.edu>
-References: <47304E70.9090005@Voltaire.COM> <4730B359.8020806@s5r6.in-berlin.de> <4731CFE1.1070904@Voltaire.COM>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH] [SCSI] sym53c8xx: fix setflag user command to control disconnects
+Date: Wed, 07 Nov 2007 15:37:47 -0500
+Message-ID: <4732221B.1000104@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46275 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753429AbXKGUYY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Nov 2007 15:24:24 -0500
-In-Reply-To: <4731CFE1.1070904@Voltaire.COM>
+Received: from host06.cybernetics.com ([206.246.200.22]:2266 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754025AbXKGUho (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 15:37:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: open-iscsi@googlegroups.com
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-Erez Zilber wrote:
-> Stefan Richter wrote:
->> Erez Zilber wrote:
->>> I'm not sure that I understand the meaning of max_sectors in
->>> scsi_host_template.
->> Did you have a look at scsi_mid_low_api.txt?
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/scsi/scsi_mid_low_api.txt;h=6f70f2b9327e1f0db7bc05bdbf2d6ce3b2fcbdcf#l1232
->>
-> 
-> I will go over it. Thanks for the link.
-> 
->>> Is it the maximum data length of a single SCSI command?
->> Yes.
->>
->>> Is it in bytes?
->> No, it is in units of 512 bytes.
->>
->>> What's the size of a sector?
->> "Usually" 512 bytes according to above doc.  Always 512 bytes from the
->> point of view of block/ll_rw_blk.c::blk_queue_max_sectors().
->> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=block/ll_rw_blk.c;h=75c98d58f4ddf7252e2717e0924b9d6a8925b4e5#l590
->>
-> 
-> So, ll_rw_blk actually uses the max_sectors value to chop requests 
+This patch fixes the sym53c8xx "setflag" user command to control
+disconnect privilege, which has been broken for a long time.
 
-Well, there is q->max_sectors and q->max_hw_sectors. In current kernels 
-q->max_hw_sectors is scsi_host_template->max_sectors. And q->max_sectors 
-is sort of a block layer limit to make sure commands to not get too big.
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+---
+
+NOTE regarding the following change:
+
+ 	can_disconnect = (cp->tag != NO_TAG) ||
+-		(lp && (lp->curr_flags & SYM_DISC_ENABLED));
++		(lp && (tp->usrflags & SYM_DISC_ENABLED));
+
+In 2.4 kernels, lp == NULL when scanning for devices, and allowing
+disconnect when lp == NULL would confuse the code that handles
+reselection.  So with 2.4 kernels, the check for lp != NULL had to be
+left in even if lp wasn't being dereferenced.  In 2.6 kernels,
+lp != NULL when scanning for devices.  In fact, I didn't encounter any
+cases where lp == NULL during my testing with 2.6 kernels, so the check
+for lp != NULL may be superfluous now.  However, the same check is
+performed in other places in the same function, so I left it in to be
+safe.
+
+diff -urpN linux-2.6.24-rc2/drivers/scsi/sym53c8xx_2/sym_glue.c linux-2.6.24-rc2-sym2/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- linux-2.6.24-rc2/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-11-07 15:05:22.000000000 -0500
++++ linux-2.6.24-rc2-sym2/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-11-07 15:06:41.000000000 -0500
+@@ -785,11 +785,6 @@ static int sym53c8xx_slave_configure(str
+ 	int reqtags, depth_to_use;
+ 
+ 	/*
+-	 *  Get user flags.
+-	 */
+-	lp->curr_flags = lp->user_flags;
+-
+-	/*
+ 	 *  Select queue depth from driver setup.
+ 	 *  Donnot use more than configured by user.
+ 	 *  Use at least 2.
+@@ -937,7 +932,9 @@ static void sym_exec_user_command (struc
+ 				OUTB(np, nc_istat, SIGP|SEM);
+ 				break;
+ 			case UC_SETFLAG:
+-				tp->usrflags = uc->data;
++				tp->usrflags =
++					(tp->usrflags & ~SYM_DISC_ENABLED) |
++					uc->data;
+ 				break;
+ 			}
+ 		}
+@@ -1098,6 +1095,7 @@ printk("sym_user_command: data=%ld\n", u
+ 		break;
+ #endif /* SYM_LINUX_DEBUG_CONTROL_SUPPORT */
+ 	case UC_SETFLAG:
++		uc->data = SYM_DISC_ENABLED;
+ 		while (len > 0) {
+ 			SKIP_SPACES(ptr, len);
+ 			if	((arg_len = is_keyword(ptr, len, "no_disc")))
+diff -urpN linux-2.6.24-rc2/drivers/scsi/sym53c8xx_2/sym_hipd.c linux-2.6.24-rc2-sym2/drivers/scsi/sym53c8xx_2/sym_hipd.c
+--- linux-2.6.24-rc2/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-11-07 15:05:22.000000000 -0500
++++ linux-2.6.24-rc2-sym2/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-11-07 15:06:41.000000000 -0500
+@@ -4984,11 +4984,6 @@ struct sym_lcb *sym_alloc_lcb (struct sy
+ 	 */
+ 	lp->head.resel_sa = cpu_to_scr(SCRIPTB_BA(np, resel_bad_lun));
+ 
+-	/*
+-	 *  Set user capabilities.
+-	 */
+-	lp->user_flags = tp->usrflags & (SYM_DISC_ENABLED | SYM_TAGS_ENABLED);
+-
+ #ifdef SYM_OPT_HANDLE_DEVICE_QUEUEING
+ 	/*
+ 	 *  Initialize device queueing.
+@@ -5077,7 +5072,7 @@ int sym_queue_scsiio(struct sym_hcb *np,
+ 	lp = sym_lp(tp, sdev->lun);
+ 
+ 	can_disconnect = (cp->tag != NO_TAG) ||
+-		(lp && (lp->curr_flags & SYM_DISC_ENABLED));
++		(lp && (tp->usrflags & SYM_DISC_ENABLED));
+ 
+ 	msgptr = cp->scsi_smsg;
+ 	msglen = 0;
+diff -urpN linux-2.6.24-rc2/drivers/scsi/sym53c8xx_2/sym_hipd.h linux-2.6.24-rc2-sym2/drivers/scsi/sym53c8xx_2/sym_hipd.h
+--- linux-2.6.24-rc2/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-11-07 15:05:22.000000000 -0500
++++ linux-2.6.24-rc2-sym2/drivers/scsi/sym53c8xx_2/sym_hipd.h	2007-11-07 15:06:41.000000000 -0500
+@@ -536,12 +536,6 @@ struct sym_lcb {
+ 	 *  Set when we want to clear all tasks.
+ 	 */
+ 	u_char to_clear;
+-
+-	/*
+-	 *  Capabilities.
+-	 */
+-	u_char	user_flags;
+-	u_char	curr_flags;
+ };
+ 
+ /*
 
 
-> larger than max_sectors. Am I right? If yes, I have a problem:
-> 
-> I'm running sgp_dd (on RHAS 4 up4 - kernel version is 2.6.9), so it 
-> calls scsi-ml directly (without going through ll_rw_blk). I ran it with 
-> the following parameters:
-
-RHEL4's sg.c does not take into account q->max_sectors or q->max_hw_sectors.
-
-In later kernels like in RHEL5 (probably upstream 2.6.16+), sg.c and 
-st.c goes through llw_rw_blkc and obeys the sector limit. For pass 
-through like sg and block layer sg, the scsi command is limited by 
-q->max_hw_sectors which like I said above is 
-scsi_host_template->max_sectors. And normal FS commands are limited by 
-min(q->max_hw_sectors, q->max_sectors).
