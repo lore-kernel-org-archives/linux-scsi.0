@@ -1,114 +1,9592 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: don't assign cpu_to_le32(int) to u8
-Date: Wed, 7 Nov 2007 10:58:12 -0500
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
-References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au> <jefxzqqeha.fsf@sykes.suse.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH ver2] Remove of old NCR53C9x/esp family of drivers
+Date: Wed, 07 Nov 2007 19:01:35 +0200
+Message-ID: <4731EF6F.4060704@panasas.com>
+References: <471787FF.5080904@panasas.com> <20071018162954.GA23632@infradead.org> <Pine.LNX.4.64N.0710181733010.4701@blysk.ds.pg.gda.pl> <4731AD56.40206@panasas.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="----_=_NextPart_001_01C82157.000DDF72"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:52084 "EHLO mail-gw3.adaptec.com"
+Received: from sa8.bezeqint.net ([192.115.104.22]:50116 "EHLO sa8.bezeqint.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754083AbXKGP6O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Nov 2007 10:58:14 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <jefxzqqeha.fsf@sykes.suse.de>
+	id S1754682AbXKGRBw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 7 Nov 2007 12:01:52 -0500
+In-Reply-To: <4731AD56.40206@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andreas Schwab <schwab@suse.de>, Stephen Rothwell <sfr@canb.auug.org.au>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Maciej W. Rozycki" <macro@linux-mips.org>, Christoph Hellwig <hch@infradead.org>, "David S. Miller" <davem@davemloft.net>, James Bottomley <James.Bottomley@SteelEye.com>, zippel@lin
 
-This is a multi-part message in MIME format.
+On Wed, Nov 07 2007 at 14:19 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+>  As recommended by Christoph Hellwig. There is no use
+>  of fixing these drivers, since there is a much simpler
+>  and modern esp infrastructure with David Miller's esp_scsi.
+>  Most of these (mk68) are already broken in other ways.
+> 
+>   - Remove all driver files dependent on NCR53C9x.c
+I forgot one file sorry, here it is again:
 
-------_=_NextPart_001_01C82157.000DDF72
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+---------------
 
-Good point, thanks. The intent of the management applications
-utilization of this AIF report is to observe the LSB of the value of
-integer value in BlinkLED. The actions of the cpu_to_le32 actually
-breaks this and reports the wrong content in swapped architectures.
+>From 9ed58af5b0736226a3f836b872fc55118d6b8ee8 Mon Sep 17 00:00:00 2001
+From: Boaz Harrosh <bharrosh@panasas.com>
+Date: Wed, 7 Nov 2007 18:46:57 +0200
+Subject: [PATCH] Remove of old NCR53C9x/esp family of drivers
 
-This attached follow-up patch is against current scsi-misc-2.6 *after*
-the application of the 'don't assign cpu_to_le32(constant) to u8' patch
-submitted by Stephen Rothwell which has already been taken by the -mm
-tree. Inspection of other areas of the aacraid driver came up blank for
-similar style bugs.
+ As recommended by Christoph Hellwig. There is no use
+ of Fixing these drivers, since there is a much simpler
+ and modern esp infrastructure with David Miller's esp_scsi
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's
-handling of patch attachments (inline gets damaged, use attachment).
+  - Remove all driver files dependent on NCR53C9x.c
+	deleted:    drivers/scsi/NCR53C9x.c
+	deleted:    drivers/scsi/NCR53C9x.h
+	deleted:    drivers/scsi/blz1230.c
+	deleted:    drivers/scsi/blz2060.c
+	deleted:    drivers/scsi/cyberstorm.c
+	deleted:    drivers/scsi/cyberstormII.c
+	deleted:    drivers/scsi/dec_esp.c
+	deleted:    drivers/scsi/fastlane.c
+	deleted:    drivers/scsi/mac_esp.c
+	deleted:    drivers/scsi/mca_53c9x.c
+	deleted:    drivers/scsi/oktagon_esp.c
+	deleted:    drivers/scsi/oktagon_io.S
+	deleted:    drivers/scsi/sun3x_esp.c
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+  - Remove above list from drivers/scsi/Kconfig && drivers/scsi/Makefile
 
- drivers/scsi/aacraid/commsup.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/Kconfig        |   85 -
+ drivers/scsi/Makefile       |   11 -
+ drivers/scsi/NCR53C9x.c     | 3654 -------------------------------------------
+ drivers/scsi/NCR53C9x.h     |  668 --------
+ drivers/scsi/blz1230.c      |  353 -----
+ drivers/scsi/blz2060.c      |  306 ----
+ drivers/scsi/cyberstorm.c   |  377 -----
+ drivers/scsi/cyberstormII.c |  314 ----
+ drivers/scsi/dec_esp.c      |  687 --------
+ drivers/scsi/fastlane.c     |  421 -----
+ drivers/scsi/mac_esp.c      |  751 ---------
+ drivers/scsi/mca_53c9x.c    |  520 ------
+ drivers/scsi/oktagon_esp.c  |  606 -------
+ drivers/scsi/oktagon_io.S   |  194 ---
+ drivers/scsi/sun3x_esp.c    |  392 -----
+ 15 files changed, 0 insertions(+), 9339 deletions(-)
+ delete mode 100644 drivers/scsi/NCR53C9x.c
+ delete mode 100644 drivers/scsi/NCR53C9x.h
+ delete mode 100644 drivers/scsi/blz1230.c
+ delete mode 100644 drivers/scsi/blz2060.c
+ delete mode 100644 drivers/scsi/cyberstorm.c
+ delete mode 100644 drivers/scsi/cyberstormII.c
+ delete mode 100644 drivers/scsi/dec_esp.c
+ delete mode 100644 drivers/scsi/fastlane.c
+ delete mode 100644 drivers/scsi/mac_esp.c
+ delete mode 100644 drivers/scsi/mca_53c9x.c
+ delete mode 100644 drivers/scsi/oktagon_esp.c
+ delete mode 100644 drivers/scsi/oktagon_io.S
+ delete mode 100644 drivers/scsi/sun3x_esp.c
 
-diff -ru a/drivers/scsi/aacraid/commsup.c
-b/drivers/scsi/aacraid/commsup.c
---- a/drivers/scsi/aacraid/commsup.c    2007-11-07 10:35:16.603727464
--0500
-+++ b/drivers/scsi/aacraid/commsup.c    2007-11-07 10:37:50.540311107
--0500
-@@ -1342,7 +1342,7 @@
-                        aif->data[0] =3D AifEnExpEvent;
-                        aif->data[1] =3D AifExeFirmwarePanic;
-                        aif->data[2] =3D AifHighPriority;
--                       aif->data[3] =3D cpu_to_le32(BlinkLED);
-+                       aif->data[3] =3D BlinkLED;
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 6e39fa6..e3c8231 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -350,13 +350,6 @@ config SGIWD93_SCSI
+ 	  If you have a Western Digital WD93 SCSI controller on
+ 	  an SGI MIPS system, say Y.  Otherwise, say N.
+ 
+-config SCSI_DECNCR
+-	tristate "DEC NCR53C94 Scsi Driver"
+-	depends on MACH_DECSTATION && SCSI && TC
+-	help
+-	  Say Y here to support the NCR53C94 SCSI controller chips on IOASIC
+-	  based TURBOchannel DECstations and TURBOchannel PMAZ-A cards.
+-
+ config SCSI_DECSII
+ 	tristate "DEC SII Scsi Driver"
+ 	depends on MACH_DECSTATION && SCSI && 32BIT
+@@ -1263,17 +1256,6 @@ config SCSI_NCR53C8XX_NO_DISCONNECT
+ 	  not allow targets to disconnect is not reasonable if there is more
+ 	  than 1 device on a SCSI bus. The normal answer therefore is N.
+ 
+-config SCSI_MCA_53C9X
+-	tristate "NCR MCA 53C9x SCSI support"
+-	depends on MCA_LEGACY && SCSI && BROKEN_ON_SMP
+-	help
+-	  Some MicroChannel machines, notably the NCR 35xx line, use a SCSI
+-	  controller based on the NCR 53C94.  This driver will allow use of
+-	  the controller on the 3550, and very possibly others.
+-
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called mca_53c9x.
+-
+ config SCSI_PAS16
+ 	tristate "PAS16 SCSI support"
+ 	depends on ISA && SCSI
+@@ -1600,45 +1582,6 @@ config GVP11_SCSI
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called gvp11.
+ 
+-config CYBERSTORM_SCSI
+-	tristate "CyberStorm SCSI support"
+-	depends on ZORRO && SCSI
+-	help
+-	  If you have an Amiga with an original (MkI) Phase5 Cyberstorm
+-	  accelerator board and the optional Cyberstorm SCSI controller,
+-	  answer Y. Otherwise, say N.
+-
+-config CYBERSTORMII_SCSI
+-	tristate "CyberStorm Mk II SCSI support"
+-	depends on ZORRO && SCSI
+-	help
+-	  If you have an Amiga with a Phase5 Cyberstorm MkII accelerator board
+-	  and the optional Cyberstorm SCSI controller, say Y. Otherwise,
+-	  answer N.
+-
+-config BLZ2060_SCSI
+-	tristate "Blizzard 2060 SCSI support"
+-	depends on ZORRO && SCSI
+-	help
+-	  If you have an Amiga with a Phase5 Blizzard 2060 accelerator board
+-	  and want to use the onboard SCSI controller, say Y. Otherwise,
+-	  answer N.
+-
+-config BLZ1230_SCSI
+-	tristate "Blizzard 1230IV/1260 SCSI support"
+-	depends on ZORRO && SCSI
+-	help
+-	  If you have an Amiga 1200 with a Phase5 Blizzard 1230IV or Blizzard
+-	  1260 accelerator, and the optional SCSI module, say Y. Otherwise,
+-	  say N.
+-
+-config FASTLANE_SCSI
+-	tristate "Fastlane SCSI support"
+-	depends on ZORRO && SCSI
+-	help
+-	  If you have the Phase5 Fastlane Z3 SCSI controller, or plan to use
+-	  one in the near future, say Y to this question. Otherwise, say N.
+-
+ config SCSI_A4000T
+ 	tristate "A4000T NCR53c710 SCSI support (EXPERIMENTAL)"
+ 	depends on AMIGA && SCSI && EXPERIMENTAL
+@@ -1666,15 +1609,6 @@ config SCSI_ZORRO7XX
+ 	      accelerator card for the Amiga 1200,
+ 	    - the SCSI controller on the GVP Turbo 040/060 accelerator.
+ 
+-config OKTAGON_SCSI
+-	tristate "BSC Oktagon SCSI support (EXPERIMENTAL)"
+-	depends on ZORRO && SCSI && EXPERIMENTAL
+-	help
+-	  If you have the BSC Oktagon SCSI disk controller for the Amiga, say
+-	  Y to this question.  If you're in doubt about whether you have one,
+-	  see the picture at
+-	  <http://amiga.resource.cx/exp/search.pl?product=oktagon>.
+-
+ config ATARI_SCSI
+ 	tristate "Atari native SCSI support"
+ 	depends on ATARI && SCSI
+@@ -1727,18 +1661,6 @@ config MAC_SCSI
+ 	  SCSI-HOWTO, available from
+ 	  <http://www.tldp.org/docs.html#howto>.
+ 
+-config SCSI_MAC_ESP
+-	tristate "Macintosh NCR53c9[46] SCSI"
+-	depends on MAC && SCSI
+-	help
+-	  This is the NCR 53c9x SCSI controller found on most of the 68040
+-	  based Macintoshes.  If you have one of these say Y and read the
+-	  SCSI-HOWTO, available from
+-	  <http://www.tldp.org/docs.html#howto>.
+-
+-	  To compile this driver as a module, choose M here: the
+-	  module will be called mac_esp.
+-
+ config MVME147_SCSI
+ 	bool "WD33C93 SCSI driver for MVME147"
+ 	depends on MVME147 && SCSI=y
+@@ -1776,13 +1698,6 @@ config SUN3_SCSI
+ 	  General Linux information on the Sun 3 series (now discontinued)
+ 	  is at <http://www.angelfire.com/ca2/tech68k/sun3.html>.
+ 
+-config SUN3X_ESP
+-	bool "Sun3x ESP SCSI"
+-	depends on SUN3X && SCSI=y
+-	help
+-	  The ESP was an on-board SCSI controller used on Sun 3/80
+-	  machines.  Say Y here to compile in support for it.
+-
+ config SCSI_SUNESP
+ 	tristate "Sparc ESP Scsi Driver"
+ 	depends on SBUS && SCSI
+diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
+index b5441f5..363773e 100644
+--- a/drivers/scsi/Makefile
++++ b/drivers/scsi/Makefile
+@@ -44,15 +44,8 @@ obj-$(CONFIG_A2091_SCSI)	+= a2091.o	wd33c93.o
+ obj-$(CONFIG_GVP11_SCSI)	+= gvp11.o	wd33c93.o
+ obj-$(CONFIG_MVME147_SCSI)	+= mvme147.o	wd33c93.o
+ obj-$(CONFIG_SGIWD93_SCSI)	+= sgiwd93.o	wd33c93.o
+-obj-$(CONFIG_CYBERSTORM_SCSI)	+= NCR53C9x.o	cyberstorm.o
+-obj-$(CONFIG_CYBERSTORMII_SCSI)	+= NCR53C9x.o	cyberstormII.o
+-obj-$(CONFIG_BLZ2060_SCSI)	+= NCR53C9x.o	blz2060.o
+-obj-$(CONFIG_BLZ1230_SCSI)	+= NCR53C9x.o	blz1230.o
+-obj-$(CONFIG_FASTLANE_SCSI)	+= NCR53C9x.o	fastlane.o
+-obj-$(CONFIG_OKTAGON_SCSI)	+= NCR53C9x.o	oktagon_esp_mod.o
+ obj-$(CONFIG_ATARI_SCSI)	+= atari_scsi.o
+ obj-$(CONFIG_MAC_SCSI)		+= mac_scsi.o
+-obj-$(CONFIG_SCSI_MAC_ESP)	+= mac_esp.o	NCR53C9x.o
+ obj-$(CONFIG_SUN3_SCSI)		+= sun3_scsi.o  sun3_scsi_vme.o
+ obj-$(CONFIG_MVME16x_SCSI)	+= 53c700.o	mvme16x_scsi.o
+ obj-$(CONFIG_BVME6000_SCSI)	+= 53c700.o	bvme6000_scsi.o
+@@ -95,7 +88,6 @@ obj-$(CONFIG_SCSI_SYM53C8XX_2)	+= sym53c8xx_2/
+ obj-$(CONFIG_SCSI_ZALON)	+= zalon7xx.o
+ obj-$(CONFIG_SCSI_EATA_PIO)	+= eata_pio.o
+ obj-$(CONFIG_SCSI_7000FASST)	+= wd7000.o
+-obj-$(CONFIG_SCSI_MCA_53C9X)	+= NCR53C9x.o	mca_53c9x.o
+ obj-$(CONFIG_SCSI_IBMMCA)	+= ibmmca.o
+ obj-$(CONFIG_SCSI_EATA)		+= eata.o
+ obj-$(CONFIG_SCSI_DC395x)	+= dc395x.o
+@@ -112,13 +104,11 @@ obj-$(CONFIG_SCSI_QLOGICPTI)	+= qlogicpti.o
+ obj-$(CONFIG_BLK_DEV_IDESCSI)	+= ide-scsi.o
+ obj-$(CONFIG_SCSI_MESH)		+= mesh.o
+ obj-$(CONFIG_SCSI_MAC53C94)	+= mac53c94.o
+-obj-$(CONFIG_SCSI_DECNCR)	+= NCR53C9x.o	dec_esp.o
+ obj-$(CONFIG_BLK_DEV_3W_XXXX_RAID) += 3w-xxxx.o
+ obj-$(CONFIG_SCSI_3W_9XXX)	+= 3w-9xxx.o
+ obj-$(CONFIG_SCSI_PPA)		+= ppa.o
+ obj-$(CONFIG_SCSI_IMM)		+= imm.o
+ obj-$(CONFIG_JAZZ_ESP)		+= esp_scsi.o	jazz_esp.o
+-obj-$(CONFIG_SUN3X_ESP)		+= NCR53C9x.o	sun3x_esp.o
+ obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
+ obj-$(CONFIG_SCSI_SNI_53C710)	+= 53c700.o sni_53c710.o
+ obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
+@@ -162,7 +152,6 @@ ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
+ CFLAGS_ncr53c8xx.o	:= $(ncr53c8xx-flags-y) $(ncr53c8xx-flags-m)
+ zalon7xx-objs	:= zalon.o ncr53c8xx.o
+ NCR_Q720_mod-objs	:= NCR_Q720.o ncr53c8xx.o
+-oktagon_esp_mod-objs	:= oktagon_esp.o oktagon_io.o
+ 
+ # Files generated that shall be removed upon make clean
+ clean-files :=	53c700_d.h 53c700_u.h
+diff --git a/drivers/scsi/NCR53C9x.c b/drivers/scsi/NCR53C9x.c
+deleted file mode 100644
+index 5b0efc9..0000000
+--- a/drivers/scsi/NCR53C9x.c
++++ /dev/null
+@@ -1,3654 +0,0 @@
+-/* NCR53C9x.c:  Generic SCSI driver code for NCR53C9x chips.
+- *
+- * Originally esp.c : EnhancedScsiProcessor Sun SCSI driver code.
+- *
+- * Copyright (C) 1995, 1998 David S. Miller (davem@caip.rutgers.edu)
+- *
+- * Most DMA dependencies put in driver specific files by 
+- * Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * Set up to use esp_read/esp_write (preprocessor macros in NCR53c9x.h) by
+- * Tymm Twillman (tymm@coe.missouri.edu)
+- */
+-
+-/* TODO:
+- *
+- * 1) Maybe disable parity checking in config register one for SCSI1
+- *    targets.  (Gilmore says parity error on the SBus can lock up
+- *    old sun4c's)
+- * 2) Add support for DMA2 pipelining.
+- * 3) Add tagged queueing.
+- * 4) Maybe change use of "esp" to something more "NCR"'ish.
+- */
+-
+-#include <linux/module.h>
+-
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/interrupt.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/init.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <asm/system.h>
+-#include <asm/ptrace.h>
+-#include <asm/pgtable.h>
+-#include <asm/io.h>
+-#include <asm/irq.h>
+-
+-/* Command phase enumeration. */
+-enum {
+-	not_issued    = 0x00,  /* Still in the issue_SC queue.          */
+-
+-	/* Various forms of selecting a target. */
+-#define in_slct_mask    0x10
+-	in_slct_norm  = 0x10,  /* ESP is arbitrating, normal selection  */
+-	in_slct_stop  = 0x11,  /* ESP will select, then stop with IRQ   */
+-	in_slct_msg   = 0x12,  /* select, then send a message           */
+-	in_slct_tag   = 0x13,  /* select and send tagged queue msg      */
+-	in_slct_sneg  = 0x14,  /* select and acquire sync capabilities  */
+-
+-	/* Any post selection activity. */
+-#define in_phases_mask  0x20
+-	in_datain     = 0x20,  /* Data is transferring from the bus     */
+-	in_dataout    = 0x21,  /* Data is transferring to the bus       */
+-	in_data_done  = 0x22,  /* Last DMA data operation done (maybe)  */
+-	in_msgin      = 0x23,  /* Eating message from target            */
+-	in_msgincont  = 0x24,  /* Eating more msg bytes from target     */
+-	in_msgindone  = 0x25,  /* Decide what to do with what we got    */
+-	in_msgout     = 0x26,  /* Sending message to target             */
+-	in_msgoutdone = 0x27,  /* Done sending msg out                  */
+-	in_cmdbegin   = 0x28,  /* Sending cmd after abnormal selection  */
+-	in_cmdend     = 0x29,  /* Done sending slow cmd                 */
+-	in_status     = 0x2a,  /* Was in status phase, finishing cmd    */
+-	in_freeing    = 0x2b,  /* freeing the bus for cmd cmplt or disc */
+-	in_the_dark   = 0x2c,  /* Don't know what bus phase we are in   */
+-
+-	/* Special states, ie. not normal bus transitions... */
+-#define in_spec_mask    0x80
+-	in_abortone   = 0x80,  /* Aborting one command currently        */
+-	in_abortall   = 0x81,  /* Blowing away all commands we have     */
+-	in_resetdev   = 0x82,  /* SCSI target reset in progress         */
+-	in_resetbus   = 0x83,  /* SCSI bus reset in progress            */
+-	in_tgterror   = 0x84,  /* Target did something stupid           */
+-};
+-
+-enum {
+-	/* Zero has special meaning, see skipahead[12]. */
+-/*0*/	do_never,
+-
+-/*1*/	do_phase_determine,
+-/*2*/	do_reset_bus,
+-/*3*/	do_reset_complete,
+-/*4*/	do_work_bus,
+-/*5*/	do_intr_end
+-};
+-
+-/* The master ring of all esp hosts we are managing in this driver. */
+-static struct NCR_ESP *espchain;
+-int nesps = 0, esps_in_use = 0, esps_running = 0;
+-EXPORT_SYMBOL(nesps);
+-EXPORT_SYMBOL(esps_running);
+-
+-irqreturn_t esp_intr(int irq, void *dev_id);
+-
+-/* Debugging routines */
+-static struct esp_cmdstrings {
+-	unchar cmdchar;
+-	char *text;
+-} esp_cmd_strings[] = {
+-	/* Miscellaneous */
+-	{ ESP_CMD_NULL, "ESP_NOP", },
+-	{ ESP_CMD_FLUSH, "FIFO_FLUSH", },
+-	{ ESP_CMD_RC, "RSTESP", },
+-	{ ESP_CMD_RS, "RSTSCSI", },
+-	/* Disconnected State Group */
+-	{ ESP_CMD_RSEL, "RESLCTSEQ", },
+-	{ ESP_CMD_SEL, "SLCTNATN", },
+-	{ ESP_CMD_SELA, "SLCTATN", },
+-	{ ESP_CMD_SELAS, "SLCTATNSTOP", },
+-	{ ESP_CMD_ESEL, "ENSLCTRESEL", },
+-	{ ESP_CMD_DSEL, "DISSELRESEL", },
+-	{ ESP_CMD_SA3, "SLCTATN3", },
+-	{ ESP_CMD_RSEL3, "RESLCTSEQ", },
+-	/* Target State Group */
+-	{ ESP_CMD_SMSG, "SNDMSG", },
+-	{ ESP_CMD_SSTAT, "SNDSTATUS", },
+-	{ ESP_CMD_SDATA, "SNDDATA", },
+-	{ ESP_CMD_DSEQ, "DISCSEQ", },
+-	{ ESP_CMD_TSEQ, "TERMSEQ", },
+-	{ ESP_CMD_TCCSEQ, "TRGTCMDCOMPSEQ", },
+-	{ ESP_CMD_DCNCT, "DISC", },
+-	{ ESP_CMD_RMSG, "RCVMSG", },
+-	{ ESP_CMD_RCMD, "RCVCMD", },
+-	{ ESP_CMD_RDATA, "RCVDATA", },
+-	{ ESP_CMD_RCSEQ, "RCVCMDSEQ", },
+-	/* Initiator State Group */
+-	{ ESP_CMD_TI, "TRANSINFO", },
+-	{ ESP_CMD_ICCSEQ, "INICMDSEQCOMP", },
+-	{ ESP_CMD_MOK, "MSGACCEPTED", },
+-	{ ESP_CMD_TPAD, "TPAD", },
+-	{ ESP_CMD_SATN, "SATN", },
+-	{ ESP_CMD_RATN, "RATN", },
+-};
+-#define NUM_ESP_COMMANDS  ((sizeof(esp_cmd_strings)) / (sizeof(struct esp_cmdstrings)))
+-
+-/* Print textual representation of an ESP command */
+-static inline void esp_print_cmd(unchar espcmd)
+-{
+-	unchar dma_bit = espcmd & ESP_CMD_DMA;
+-	int i;
+-
+-	espcmd &= ~dma_bit;
+-	for(i=0; i<NUM_ESP_COMMANDS; i++)
+-		if(esp_cmd_strings[i].cmdchar == espcmd)
+-			break;
+-	if(i==NUM_ESP_COMMANDS)
+-		printk("ESP_Unknown");
+-	else
+-		printk("%s%s", esp_cmd_strings[i].text,
+-		       ((dma_bit) ? "+DMA" : ""));
+-}
+-
+-/* Print the status register's value */
+-static inline void esp_print_statreg(unchar statreg)
+-{
+-	unchar phase;
+-
+-	printk("STATUS<");
+-	phase = statreg & ESP_STAT_PMASK;
+-	printk("%s,", (phase == ESP_DOP ? "DATA-OUT" :
+-		       (phase == ESP_DIP ? "DATA-IN" :
+-			(phase == ESP_CMDP ? "COMMAND" :
+-			 (phase == ESP_STATP ? "STATUS" :
+-			  (phase == ESP_MOP ? "MSG-OUT" :
+-			   (phase == ESP_MIP ? "MSG_IN" :
+-			    "unknown")))))));
+-	if(statreg & ESP_STAT_TDONE)
+-		printk("TRANS_DONE,");
+-	if(statreg & ESP_STAT_TCNT)
+-		printk("TCOUNT_ZERO,");
+-	if(statreg & ESP_STAT_PERR)
+-		printk("P_ERROR,");
+-	if(statreg & ESP_STAT_SPAM)
+-		printk("SPAM,");
+-	if(statreg & ESP_STAT_INTR)
+-		printk("IRQ,");
+-	printk(">");
+-}
+-
+-/* Print the interrupt register's value */
+-static inline void esp_print_ireg(unchar intreg)
+-{
+-	printk("INTREG< ");
+-	if(intreg & ESP_INTR_S)
+-		printk("SLCT_NATN ");
+-	if(intreg & ESP_INTR_SATN)
+-		printk("SLCT_ATN ");
+-	if(intreg & ESP_INTR_RSEL)
+-		printk("RSLCT ");
+-	if(intreg & ESP_INTR_FDONE)
+-		printk("FDONE ");
+-	if(intreg & ESP_INTR_BSERV)
+-		printk("BSERV ");
+-	if(intreg & ESP_INTR_DC)
+-		printk("DISCNCT ");
+-	if(intreg & ESP_INTR_IC)
+-		printk("ILL_CMD ");
+-	if(intreg & ESP_INTR_SR)
+-		printk("SCSI_BUS_RESET ");
+-	printk(">");
+-}
+-
+-/* Print the sequence step registers contents */
+-static inline void esp_print_seqreg(unchar stepreg)
+-{
+-	stepreg &= ESP_STEP_VBITS;
+-	printk("STEP<%s>",
+-	       (stepreg == ESP_STEP_ASEL ? "SLCT_ARB_CMPLT" :
+-		(stepreg == ESP_STEP_SID ? "1BYTE_MSG_SENT" :
+-		 (stepreg == ESP_STEP_NCMD ? "NOT_IN_CMD_PHASE" :
+-		  (stepreg == ESP_STEP_PPC ? "CMD_BYTES_LOST" :
+-		   (stepreg == ESP_STEP_FINI4 ? "CMD_SENT_OK" :
+-		    "UNKNOWN"))))));
+-}
+-
+-static char *phase_string(int phase)
+-{
+-	switch(phase) {
+-	case not_issued:
+-		return "UNISSUED";
+-	case in_slct_norm:
+-		return "SLCTNORM";
+-	case in_slct_stop:
+-		return "SLCTSTOP";
+-	case in_slct_msg:
+-		return "SLCTMSG";
+-	case in_slct_tag:
+-		return "SLCTTAG";
+-	case in_slct_sneg:
+-		return "SLCTSNEG";
+-	case in_datain:
+-		return "DATAIN";
+-	case in_dataout:
+-		return "DATAOUT";
+-	case in_data_done:
+-		return "DATADONE";
+-	case in_msgin:
+-		return "MSGIN";
+-	case in_msgincont:
+-		return "MSGINCONT";
+-	case in_msgindone:
+-		return "MSGINDONE";
+-	case in_msgout:
+-		return "MSGOUT";
+-	case in_msgoutdone:
+-		return "MSGOUTDONE";
+-	case in_cmdbegin:
+-		return "CMDBEGIN";
+-	case in_cmdend:
+-		return "CMDEND";
+-	case in_status:
+-		return "STATUS";
+-	case in_freeing:
+-		return "FREEING";
+-	case in_the_dark:
+-		return "CLUELESS";
+-	case in_abortone:
+-		return "ABORTONE";
+-	case in_abortall:
+-		return "ABORTALL";
+-	case in_resetdev:
+-		return "RESETDEV";
+-	case in_resetbus:
+-		return "RESETBUS";
+-	case in_tgterror:
+-		return "TGTERROR";
+-	default:
+-		return "UNKNOWN";
+-	};
+-}
+-
+-#ifdef DEBUG_STATE_MACHINE
+-static inline void esp_advance_phase(Scsi_Cmnd *s, int newphase)
+-{
+-	ESPLOG(("<%s>", phase_string(newphase)));
+-	s->SCp.sent_command = s->SCp.phase;
+-	s->SCp.phase = newphase;
+-}
+-#else
+-#define esp_advance_phase(__s, __newphase) \
+-	(__s)->SCp.sent_command = (__s)->SCp.phase; \
+-	(__s)->SCp.phase = (__newphase);
+-#endif
+-
+-#ifdef DEBUG_ESP_CMDS
+-static inline void esp_cmd(struct NCR_ESP *esp, struct ESP_regs *eregs,
+-			   unchar cmd)
+-{
+-	esp->espcmdlog[esp->espcmdent] = cmd;
+-	esp->espcmdent = (esp->espcmdent + 1) & 31;
+-	esp_write(eregs->esp_cmnd, cmd);
+-}
+-#else
+-#define esp_cmd(__esp, __eregs, __cmd)	esp_write((__eregs)->esp_cmnd, (__cmd))
+-#endif
+-
+-/* How we use the various Linux SCSI data structures for operation.
+- *
+- * struct scsi_cmnd:
+- *
+- *   We keep track of the syncronous capabilities of a target
+- *   in the device member, using sync_min_period and
+- *   sync_max_offset.  These are the values we directly write
+- *   into the ESP registers while running a command.  If offset
+- *   is zero the ESP will use asynchronous transfers.
+- *   If the borken flag is set we assume we shouldn't even bother
+- *   trying to negotiate for synchronous transfer as this target
+- *   is really stupid.  If we notice the target is dropping the
+- *   bus, and we have been allowing it to disconnect, we clear
+- *   the disconnect flag.
+- */
+-
+-/* Manipulation of the ESP command queues.  Thanks to the aha152x driver
+- * and its author, Juergen E. Fischer, for the methods used here.
+- * Note that these are per-ESP queues, not global queues like
+- * the aha152x driver uses.
+- */
+-static inline void append_SC(Scsi_Cmnd **SC, Scsi_Cmnd *new_SC)
+-{
+-	Scsi_Cmnd *end;
+-
+-	new_SC->host_scribble = (unsigned char *) NULL;
+-	if(!*SC)
+-		*SC = new_SC;
+-	else {
+-		for(end=*SC;end->host_scribble;end=(Scsi_Cmnd *)end->host_scribble)
+-			;
+-		end->host_scribble = (unsigned char *) new_SC;
+-	}
+-}
+-
+-static inline void prepend_SC(Scsi_Cmnd **SC, Scsi_Cmnd *new_SC)
+-{
+-	new_SC->host_scribble = (unsigned char *) *SC;
+-	*SC = new_SC;
+-}
+-
+-static inline Scsi_Cmnd *remove_first_SC(Scsi_Cmnd **SC)
+-{
+-	Scsi_Cmnd *ptr;
+-
+-	ptr = *SC;
+-	if(ptr)
+-		*SC = (Scsi_Cmnd *) (*SC)->host_scribble;
+-	return ptr;
+-}
+-
+-static inline Scsi_Cmnd *remove_SC(Scsi_Cmnd **SC, int target, int lun)
+-{
+-	Scsi_Cmnd *ptr, *prev;
+-
+-	for(ptr = *SC, prev = NULL;
+-	    ptr && ((ptr->device->id != target) || (ptr->device->lun != lun));
+-	    prev = ptr, ptr = (Scsi_Cmnd *) ptr->host_scribble)
+-		;
+-	if(ptr) {
+-		if(prev)
+-			prev->host_scribble=ptr->host_scribble;
+-		else
+-			*SC=(Scsi_Cmnd *)ptr->host_scribble;
+-	}
+-	return ptr;
+-}
+-
+-/* Resetting various pieces of the ESP scsi driver chipset */
+-
+-/* Reset the ESP chip, _not_ the SCSI bus. */
+-static void esp_reset_esp(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	int family_code, version, i;
+-	volatile int trash;
+-
+-	/* Now reset the ESP chip */
+-	esp_cmd(esp, eregs, ESP_CMD_RC);
+-	esp_cmd(esp, eregs, ESP_CMD_NULL | ESP_CMD_DMA);
+-	if(esp->erev == fast)
+-		esp_write(eregs->esp_cfg2, ESP_CONFIG2_FENAB);
+-	esp_cmd(esp, eregs, ESP_CMD_NULL | ESP_CMD_DMA);
+-
+-	/* This is the only point at which it is reliable to read
+-	 * the ID-code for a fast ESP chip variant.
+-	 */
+-	esp->max_period = ((35 * esp->ccycle) / 1000);
+-	if(esp->erev == fast) {
+-		char *erev2string[] = {
+-			"Emulex FAS236",
+-			"Emulex FPESP100A",
+-			"fast",
+-			"QLogic FAS366",
+-			"Emulex FAS216",
+-			"Symbios Logic 53CF9x-2",
+-			"unknown!"
+-		};
+-			
+-		version = esp_read(eregs->esp_uid);
+-		family_code = (version & 0xf8) >> 3;
+-		if(family_code == 0x02) {
+-		        if ((version & 7) == 2)
+-			        esp->erev = fas216;	
+-                        else
+-			        esp->erev = fas236;
+-		} else if(family_code == 0x0a)
+-			esp->erev = fas366; /* Version is usually '5'. */
+-		else if(family_code == 0x00) {
+-			if ((version & 7) == 2)
+-				esp->erev = fas100a; /* NCR53C9X */
+-			else
+-				esp->erev = espunknown;
+-		} else if(family_code == 0x14) {
+-			if ((version & 7) == 2)
+-				esp->erev = fsc;
+-		        else
+-				esp->erev = espunknown;
+-		} else if(family_code == 0x00) {
+-			if ((version & 7) == 2)
+-				esp->erev = fas100a; /* NCR53C9X */
+-			else
+-				esp->erev = espunknown;
+-		} else
+-			esp->erev = espunknown;
+-		ESPLOG(("esp%d: FAST chip is %s (family=%d, version=%d)\n",
+-			esp->esp_id, erev2string[esp->erev - fas236],
+-			family_code, (version & 7)));
+-
+-		esp->min_period = ((4 * esp->ccycle) / 1000);
+-	} else {
+-		esp->min_period = ((5 * esp->ccycle) / 1000);
+-	}
+-
+-	/* Reload the configuration registers */
+-	esp_write(eregs->esp_cfact, esp->cfact);
+-	esp->prev_stp = 0;
+-	esp_write(eregs->esp_stp, 0);
+-	esp->prev_soff = 0;
+-	esp_write(eregs->esp_soff, 0);
+-	esp_write(eregs->esp_timeo, esp->neg_defp);
+-	esp->max_period = (esp->max_period + 3)>>2;
+-	esp->min_period = (esp->min_period + 3)>>2;
+-
+-	esp_write(eregs->esp_cfg1, esp->config1);
+-	switch(esp->erev) {
+-	case esp100:
+-		/* nothing to do */
+-		break;
+-	case esp100a:
+-		esp_write(eregs->esp_cfg2, esp->config2);
+-		break;
+-	case esp236:
+-		/* Slow 236 */
+-		esp_write(eregs->esp_cfg2, esp->config2);
+-		esp->prev_cfg3 = esp->config3[0];
+-		esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-		break;
+-	case fas366:
+-		panic("esp: FAS366 support not present, please notify "
+-		      "jongk@cs.utwente.nl");
+-		break;
+-	case fas216:
+-	case fas236:
+-	case fsc:
+-		/* Fast ESP variants */
+-		esp_write(eregs->esp_cfg2, esp->config2);
+-		for(i=0; i<8; i++)
+-			esp->config3[i] |= ESP_CONFIG3_FCLK;
+-		esp->prev_cfg3 = esp->config3[0];
+-		esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-		if(esp->diff)
+-			esp->radelay = 0;
+-		else
+-			esp->radelay = 16;
+-		/* Different timeout constant for these chips */
+-		esp->neg_defp =
+-			FSC_NEG_DEFP(esp->cfreq,
+-				     (esp->cfact == ESP_CCF_F0 ?
+-				      ESP_CCF_F7 + 1 : esp->cfact));
+-		esp_write(eregs->esp_timeo, esp->neg_defp);
+-		/* Enable Active Negotiation if possible */
+-		if((esp->erev == fsc) && !esp->diff)
+-			esp_write(eregs->esp_cfg4, ESP_CONFIG4_EAN);
+-		break;
+-	case fas100a:
+-		/* Fast 100a */
+-		esp_write(eregs->esp_cfg2, esp->config2);
+-		for(i=0; i<8; i++)
+-			esp->config3[i] |= ESP_CONFIG3_FCLOCK;
+-		esp->prev_cfg3 = esp->config3[0];
+-		esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-		esp->radelay = 32;
+-		break;
+-	default:
+-		panic("esp: what could it be... I wonder...");
+-		break;
+-	};
+-
+-	/* Eat any bitrot in the chip */
+-	trash = esp_read(eregs->esp_intrpt);
+-	udelay(100);
+-}
+-
+-/* This places the ESP into a known state at boot time. */
+-void esp_bootup_reset(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	volatile unchar trash;
+-
+-	/* Reset the DMA */
+-	if(esp->dma_reset)
+-		esp->dma_reset(esp);
+-
+-	/* Reset the ESP */
+-	esp_reset_esp(esp, eregs);
+-
+-	/* Reset the SCSI bus, but tell ESP not to generate an irq */
+-	esp_write(eregs->esp_cfg1, (esp_read(eregs->esp_cfg1) | ESP_CONFIG1_SRRDISAB));
+-	esp_cmd(esp, eregs, ESP_CMD_RS);
+-	udelay(400);
+-	esp_write(eregs->esp_cfg1, esp->config1);
+-
+-	/* Eat any bitrot in the chip and we are done... */
+-	trash = esp_read(eregs->esp_intrpt);
+-}
+-EXPORT_SYMBOL(esp_bootup_reset);
+-
+-/* Allocate structure and insert basic data such as SCSI chip frequency
+- * data and a pointer to the device
+- */
+-struct NCR_ESP* esp_allocate(struct scsi_host_template *tpnt, void *esp_dev,
+-			     int hotplug)
+-{
+-	struct NCR_ESP *esp, *elink;
+-	struct Scsi_Host *esp_host;
+-
+-	if (hotplug)
+-		esp_host = scsi_host_alloc(tpnt, sizeof(struct NCR_ESP));
+-	else
+-		esp_host = scsi_register(tpnt, sizeof(struct NCR_ESP));
+-	if(!esp_host)
+-		panic("Cannot register ESP SCSI host");
+-	esp = (struct NCR_ESP *) esp_host->hostdata;
+-	if(!esp)
+-		panic("No esp in hostdata");
+-	esp->ehost = esp_host;
+-	esp->edev = esp_dev;
+-	esp->esp_id = nesps++;
+-
+-	/* Set bitshift value (only used on Amiga with multiple ESPs) */
+-	esp->shift = 2;
+-
+-	/* Put into the chain of esp chips detected */
+-	if(espchain) {
+-		elink = espchain;
+-		while(elink->next) elink = elink->next;
+-		elink->next = esp;
+-	} else {
+-		espchain = esp;
+-	}
+-	esp->next = NULL;
+-
+-	return esp;
+-}
+-
+-void esp_deallocate(struct NCR_ESP *esp)
+-{
+-	struct NCR_ESP *elink;
+-
+-	if(espchain == esp) {
+-		espchain = NULL;
+-	} else {
+-		for(elink = espchain; elink && (elink->next != esp); elink = elink->next);
+-		if(elink) 
+-			elink->next = esp->next;
+-	}
+-	nesps--;
+-}
+-
+-/* Complete initialization of ESP structure and device
+- * Caller must have initialized appropriate parts of the ESP structure
+- * between the call to esp_allocate and this function.
+- */
+-void esp_initialize(struct NCR_ESP *esp)
+-{
+-	struct ESP_regs *eregs = esp->eregs;
+-	unsigned int fmhz;
+-	unchar ccf;
+-	int i;
+-	
+-	/* Check out the clock properties of the chip. */
+-
+-	/* This is getting messy but it has to be done
+-	 * correctly or else you get weird behavior all
+-	 * over the place.  We are trying to basically
+-	 * figure out three pieces of information.
+-	 *
+-	 * a) Clock Conversion Factor
+-	 *
+-	 *    This is a representation of the input
+-	 *    crystal clock frequency going into the
+-	 *    ESP on this machine.  Any operation whose
+-	 *    timing is longer than 400ns depends on this
+-	 *    value being correct.  For example, you'll
+-	 *    get blips for arbitration/selection during
+-	 *    high load or with multiple targets if this
+-	 *    is not set correctly.
+-	 *
+-	 * b) Selection Time-Out
+-	 *
+-	 *    The ESP isn't very bright and will arbitrate
+-	 *    for the bus and try to select a target
+-	 *    forever if you let it.  This value tells
+-	 *    the ESP when it has taken too long to
+-	 *    negotiate and that it should interrupt
+-	 *    the CPU so we can see what happened.
+-	 *    The value is computed as follows (from
+-	 *    NCR/Symbios chip docs).
+-	 *
+-	 *          (Time Out Period) *  (Input Clock)
+-	 *    STO = ----------------------------------
+-	 *          (8192) * (Clock Conversion Factor)
+-	 *
+-	 *    You usually want the time out period to be
+-	 *    around 250ms, I think we'll set it a little
+-	 *    bit higher to account for fully loaded SCSI
+-	 *    bus's and slow devices that don't respond so
+-	 *    quickly to selection attempts. (yeah, I know
+-	 *    this is out of spec. but there is a lot of
+-	 *    buggy pieces of firmware out there so bite me)
+-	 *
+-	 * c) Imperical constants for synchronous offset
+-	 *    and transfer period register values
+-	 *
+-	 *    This entails the smallest and largest sync
+-	 *    period we could ever handle on this ESP.
+-	 */
+-	
+-	fmhz = esp->cfreq;
+-
+-	if(fmhz <= (5000000))
+-		ccf = 0;
+-	else
+-		ccf = (((5000000 - 1) + (fmhz))/(5000000));
+-	if(!ccf || ccf > 8) {
+-		/* If we can't find anything reasonable,
+-		 * just assume 20MHZ.  This is the clock
+-		 * frequency of the older sun4c's where I've
+-		 * been unable to find the clock-frequency
+-		 * PROM property.  All other machines provide
+-		 * useful values it seems.
+-		 */
+-		ccf = ESP_CCF_F4;
+-		fmhz = (20000000);
+-	}
+-	if(ccf==(ESP_CCF_F7+1))
+-		esp->cfact = ESP_CCF_F0;
+-	else if(ccf == ESP_CCF_NEVER)
+-		esp->cfact = ESP_CCF_F2;
+-	else
+-		esp->cfact = ccf;
+-	esp->cfreq = fmhz;
+-	esp->ccycle = ESP_MHZ_TO_CYCLE(fmhz);
+-	esp->ctick = ESP_TICK(ccf, esp->ccycle);
+-	esp->neg_defp = ESP_NEG_DEFP(fmhz, ccf);
+-	esp->sync_defp = SYNC_DEFP_SLOW;
+-
+-	printk("SCSI ID %d Clk %dMHz CCF=%d TOut %d ",
+-	       esp->scsi_id, (esp->cfreq / 1000000),
+-	       ccf, (int) esp->neg_defp);
+-
+-	/* Fill in ehost data */
+-	esp->ehost->base = (unsigned long)eregs;
+-	esp->ehost->this_id = esp->scsi_id;
+-	esp->ehost->irq = esp->irq;
+-
+-	/* SCSI id mask */
+-	esp->scsi_id_mask = (1 << esp->scsi_id);
+-
+-	/* Probe the revision of this esp */
+-	esp->config1 = (ESP_CONFIG1_PENABLE | (esp->scsi_id & 7));
+-	esp->config2 = (ESP_CONFIG2_SCSI2ENAB | ESP_CONFIG2_REGPARITY);
+-	esp_write(eregs->esp_cfg2, esp->config2);
+-	if((esp_read(eregs->esp_cfg2) & ~(ESP_CONFIG2_MAGIC)) !=
+-	   (ESP_CONFIG2_SCSI2ENAB | ESP_CONFIG2_REGPARITY)) {
+-		printk("NCR53C90(esp100)\n");
+-		esp->erev = esp100;
+-	} else {
+-		esp->config2 = 0;
+-		esp_write(eregs->esp_cfg2, 0);
+-		esp_write(eregs->esp_cfg3, 5);
+-		if(esp_read(eregs->esp_cfg3) != 5) {
+-			printk("NCR53C90A(esp100a)\n");
+-			esp->erev = esp100a;
+-		} else {
+-			int target;
+-
+-			for(target=0; target<8; target++)
+-				esp->config3[target] = 0;
+-			esp->prev_cfg3 = 0;
+-			esp_write(eregs->esp_cfg3, 0);
+-			if(ccf > ESP_CCF_F5) {
+-				printk("NCR53C9XF(espfast)\n");
+-				esp->erev = fast;
+-				esp->sync_defp = SYNC_DEFP_FAST;
+-			} else {
+-				printk("NCR53C9x(esp236)\n");
+-				esp->erev = esp236;
+-			}
+-		}
+-	}				
+-
+-	/* Initialize the command queues */
+-	esp->current_SC = NULL;
+-	esp->disconnected_SC = NULL;
+-	esp->issue_SC = NULL;
+-
+-	/* Clear the state machines. */
+-	esp->targets_present = 0;
+-	esp->resetting_bus = 0;
+-	esp->snip = 0;
+-
+-	init_waitqueue_head(&esp->reset_queue);
+-
+-	esp->fas_premature_intr_workaround = 0;
+-	for(i = 0; i < 32; i++)
+-		esp->espcmdlog[i] = 0;
+-	esp->espcmdent = 0;
+-	for(i = 0; i < 16; i++) {
+-		esp->cur_msgout[i] = 0;
+-		esp->cur_msgin[i] = 0;
+-	}
+-	esp->prevmsgout = esp->prevmsgin = 0;
+-	esp->msgout_len = esp->msgin_len = 0;
+-
+-	/* Clear the one behind caches to hold unmatchable values. */
+-	esp->prev_soff = esp->prev_stp = esp->prev_cfg3 = 0xff;
+-
+-	/* Reset the thing before we try anything... */
+-	esp_bootup_reset(esp, eregs);
+-
+-	esps_in_use++;
+-}
+-
+-/* The info function will return whatever useful
+- * information the developer sees fit.  If not provided, then
+- * the name field will be used instead.
+- */
+-const char *esp_info(struct Scsi_Host *host)
+-{
+-	struct NCR_ESP *esp;
+-
+-	esp = (struct NCR_ESP *) host->hostdata;
+-	switch(esp->erev) {
+-	case esp100:
+-		return "ESP100 (NCR53C90)";
+-	case esp100a:
+-		return "ESP100A (NCR53C90A)";
+-	case esp236:
+-		return "ESP236 (NCR53C9x)";
+-	case fas216:
+-		return "Emulex FAS216";
+-	case fas236:
+-		return "Emulex FAS236";
+-	case fas366:
+-		return "QLogic FAS366";
+-	case fas100a:
+-		return "FPESP100A";
+-	case fsc:
+-		return "Symbios Logic 53CF9x-2";
+-	default:
+-		panic("Bogon ESP revision");
+-	};
+-}
+-EXPORT_SYMBOL(esp_info);
+-
+-/* From Wolfgang Stanglmeier's NCR scsi driver. */
+-struct info_str
+-{
+-	char *buffer;
+-	int length;
+-	int offset;
+-	int pos;
+-};
+-
+-static void copy_mem_info(struct info_str *info, char *data, int len)
+-{
+-	if (info->pos + len > info->length)
+-		len = info->length - info->pos;
+-
+-	if (info->pos + len < info->offset) {
+-		info->pos += len;
+-		return;
+-	}
+-	if (info->pos < info->offset) {
+-		data += (info->offset - info->pos);
+-		len  -= (info->offset - info->pos);
+-	}
+-
+-	if (len > 0) {
+-		memcpy(info->buffer + info->pos, data, len);
+-		info->pos += len;
+-	}
+-}
+-
+-static int copy_info(struct info_str *info, char *fmt, ...)
+-{
+-	va_list args;
+-	char buf[81];
+-	int len;
+-
+-	va_start(args, fmt);
+-	len = vsprintf(buf, fmt, args);
+-	va_end(args);
+-
+-	copy_mem_info(info, buf, len);
+-	return len;
+-}
+-
+-static int esp_host_info(struct NCR_ESP *esp, char *ptr, off_t offset, int len)
+-{
+-	struct scsi_device *sdev;
+-	struct info_str info;
+-	int i;
+-
+-	info.buffer	= ptr;
+-	info.length	= len;
+-	info.offset	= offset;
+-	info.pos	= 0;
+-
+-	copy_info(&info, "ESP Host Adapter:\n");
+-	copy_info(&info, "\tESP Model\t\t");
+-	switch(esp->erev) {
+-	case esp100:
+-		copy_info(&info, "ESP100 (NCR53C90)\n");
+-		break;
+-	case esp100a:
+-		copy_info(&info, "ESP100A (NCR53C90A)\n");
+-		break;
+-	case esp236:
+-		copy_info(&info, "ESP236 (NCR53C9x)\n");
+-		break;
+-	case fas216:
+-		copy_info(&info, "Emulex FAS216\n");
+-		break;
+-	case fas236:
+-		copy_info(&info, "Emulex FAS236\n");
+-		break;
+-	case fas100a:
+-		copy_info(&info, "FPESP100A\n");
+-		break;
+-	case fast:
+-		copy_info(&info, "Generic FAST\n");
+-		break;
+-	case fas366:
+-		copy_info(&info, "QLogic FAS366\n");
+-		break;
+-	case fsc:
+-		copy_info(&info, "Symbios Logic 53C9x-2\n");
+-		break;
+-	case espunknown:
+-	default:
+-		copy_info(&info, "Unknown!\n");
+-		break;
+-	};
+-	copy_info(&info, "\tLive Targets\t\t[ ");
+-	for(i = 0; i < 15; i++) {
+-		if(esp->targets_present & (1 << i))
+-			copy_info(&info, "%d ", i);
+-	}
+-	copy_info(&info, "]\n\n");
+-	
+-	/* Now describe the state of each existing target. */
+-	copy_info(&info, "Target #\tconfig3\t\tSync Capabilities\tDisconnect\n");
+-
+-	shost_for_each_device(sdev, esp->ehost) {
+-		struct esp_device *esp_dev = sdev->hostdata;
+-		uint id = sdev->id;
+-
+-		if (!(esp->targets_present & (1 << id)))
+-			continue;
+-
+-		copy_info(&info, "%d\t\t", id);
+-		copy_info(&info, "%08lx\t", esp->config3[id]);
+-		copy_info(&info, "[%02lx,%02lx]\t\t\t",
+-			esp_dev->sync_max_offset,
+-			esp_dev->sync_min_period);
+-		copy_info(&info, "%s\n", esp_dev->disconnect ? "yes" : "no");
+-	}
+-
+-	return info.pos > info.offset? info.pos - info.offset : 0;
+-}
+-
+-/* ESP proc filesystem code. */
+-int esp_proc_info(struct Scsi_Host *shost, char *buffer, char **start, off_t offset, int length,
+-		  int inout)
+-{
+-	struct NCR_ESP *esp = (struct NCR_ESP *)shost->hostdata;
+-
+-	if(inout)
+-		return -EINVAL; /* not yet */
+-	if(start)
+-		*start = buffer;
+-	return esp_host_info(esp, buffer, offset, length);
+-}
+-EXPORT_SYMBOL(esp_proc_info);
+-
+-static void esp_get_dmabufs(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	if(sp->use_sg == 0) {
+-		sp->SCp.this_residual = sp->request_bufflen;
+-		sp->SCp.buffer = (struct scatterlist *) sp->request_buffer;
+-		sp->SCp.buffers_residual = 0;
+-		if (esp->dma_mmu_get_scsi_one)
+-			esp->dma_mmu_get_scsi_one(esp, sp);
+-		else
+-			sp->SCp.ptr =
+-				(char *) virt_to_phys(sp->request_buffer);
+-	} else {
+-		sp->SCp.buffer = (struct scatterlist *) sp->request_buffer;
+-		sp->SCp.buffers_residual = sp->use_sg - 1;
+-		sp->SCp.this_residual = sp->SCp.buffer->length;
+-		if (esp->dma_mmu_get_scsi_sgl)
+-			esp->dma_mmu_get_scsi_sgl(esp, sp);
+-		else
+-			sp->SCp.ptr =
+-				(char *) virt_to_phys(sg_virt(sp->SCp.buffer));
+-	}
+-}
+-
+-static void esp_release_dmabufs(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	if(sp->use_sg == 0) {
+-		if (esp->dma_mmu_release_scsi_one)
+-			esp->dma_mmu_release_scsi_one(esp, sp);
+-	} else {
+-		if (esp->dma_mmu_release_scsi_sgl)
+-			esp->dma_mmu_release_scsi_sgl(esp, sp);
+-	}
+-}
+-
+-static void esp_restore_pointers(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	struct esp_pointers *ep = &esp->data_pointers[scmd_id(sp)];
+-
+-	sp->SCp.ptr = ep->saved_ptr;
+-	sp->SCp.buffer = ep->saved_buffer;
+-	sp->SCp.this_residual = ep->saved_this_residual;
+-	sp->SCp.buffers_residual = ep->saved_buffers_residual;
+-}
+-
+-static void esp_save_pointers(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	struct esp_pointers *ep = &esp->data_pointers[scmd_id(sp)];
+-
+-	ep->saved_ptr = sp->SCp.ptr;
+-	ep->saved_buffer = sp->SCp.buffer;
+-	ep->saved_this_residual = sp->SCp.this_residual;
+-	ep->saved_buffers_residual = sp->SCp.buffers_residual;
+-}
+-
+-/* Some rules:
+- *
+- *   1) Never ever panic while something is live on the bus.
+- *      If there is to be any chance of syncing the disks this
+- *      rule is to be obeyed.
+- *
+- *   2) Any target that causes a foul condition will no longer
+- *      have synchronous transfers done to it, no questions
+- *      asked.
+- *
+- *   3) Keep register accesses to a minimum.  Think about some
+- *      day when we have Xbus machines this is running on and
+- *      the ESP chip is on the other end of the machine on a
+- *      different board from the cpu where this is running.
+- */
+-
+-/* Fire off a command.  We assume the bus is free and that the only
+- * case where we could see an interrupt is where we have disconnected
+- * commands active and they are trying to reselect us.
+- */
+-static inline void esp_check_cmd(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	switch(sp->cmd_len) {
+-	case 6:
+-	case 10:
+-	case 12:
+-		esp->esp_slowcmd = 0;
+-		break;
+-
+-	default:
+-		esp->esp_slowcmd = 1;
+-		esp->esp_scmdleft = sp->cmd_len;
+-		esp->esp_scmdp = &sp->cmnd[0];
+-		break;
+-	};
+-}
+-
+-static inline void build_sync_nego_msg(struct NCR_ESP *esp, int period, int offset)
+-{
+-	esp->cur_msgout[0] = EXTENDED_MESSAGE;
+-	esp->cur_msgout[1] = 3;
+-	esp->cur_msgout[2] = EXTENDED_SDTR;
+-	esp->cur_msgout[3] = period;
+-	esp->cur_msgout[4] = offset;
+-	esp->msgout_len = 5;
+-}
+-
+-static void esp_exec_cmd(struct NCR_ESP *esp)
+-{
+-	struct ESP_regs *eregs = esp->eregs;
+-	struct esp_device *esp_dev;
+-	Scsi_Cmnd *SCptr;
+-	struct scsi_device *SDptr;
+-	volatile unchar *cmdp = esp->esp_command;
+-	unsigned char the_esp_command;
+-	int lun, target;
+-	int i;
+-
+-	/* Hold off if we have disconnected commands and
+-	 * an IRQ is showing...
+-	 */
+-	if(esp->disconnected_SC && esp->dma_irq_p(esp))
+-		return;
+-
+-	/* Grab first member of the issue queue. */
+-	SCptr = esp->current_SC = remove_first_SC(&esp->issue_SC);
+-
+-	/* Safe to panic here because current_SC is null. */
+-	if(!SCptr)
+-		panic("esp: esp_exec_cmd and issue queue is NULL");
+-
+-	SDptr = SCptr->device;
+-	esp_dev = SDptr->hostdata;
+-	lun = SCptr->device->lun;
+-	target = SCptr->device->id;
+-
+-	esp->snip = 0;
+-	esp->msgout_len = 0;
+-
+-	/* Send it out whole, or piece by piece?   The ESP
+-	 * only knows how to automatically send out 6, 10,
+-	 * and 12 byte commands.  I used to think that the
+-	 * Linux SCSI code would never throw anything other
+-	 * than that to us, but then again there is the
+-	 * SCSI generic driver which can send us anything.
+-	 */
+-	esp_check_cmd(esp, SCptr);
+-
+-	/* If arbitration/selection is successful, the ESP will leave
+-	 * ATN asserted, causing the target to go into message out
+-	 * phase.  The ESP will feed the target the identify and then
+-	 * the target can only legally go to one of command,
+-	 * datain/out, status, or message in phase, or stay in message
+-	 * out phase (should we be trying to send a sync negotiation
+-	 * message after the identify).  It is not allowed to drop
+-	 * BSY, but some buggy targets do and we check for this
+-	 * condition in the selection complete code.  Most of the time
+-	 * we'll make the command bytes available to the ESP and it
+-	 * will not interrupt us until it finishes command phase, we
+-	 * cannot do this for command sizes the ESP does not
+-	 * understand and in this case we'll get interrupted right
+-	 * when the target goes into command phase.
+-	 *
+-	 * It is absolutely _illegal_ in the presence of SCSI-2 devices
+-	 * to use the ESP select w/o ATN command.  When SCSI-2 devices are
+-	 * present on the bus we _must_ always go straight to message out
+-	 * phase with an identify message for the target.  Being that
+-	 * selection attempts in SCSI-1 w/o ATN was an option, doing SCSI-2
+-	 * selections should not confuse SCSI-1 we hope.
+-	 */
+-
+-	if(esp_dev->sync) {
+-		/* this targets sync is known */
+-#ifdef CONFIG_SCSI_MAC_ESP
+-do_sync_known:
+-#endif
+-		if(esp_dev->disconnect)
+-			*cmdp++ = IDENTIFY(1, lun);
+-		else
+-			*cmdp++ = IDENTIFY(0, lun);
+-
+-		if(esp->esp_slowcmd) {
+-			the_esp_command = (ESP_CMD_SELAS | ESP_CMD_DMA);
+-			esp_advance_phase(SCptr, in_slct_stop);
+-		} else {
+-			the_esp_command = (ESP_CMD_SELA | ESP_CMD_DMA);
+-			esp_advance_phase(SCptr, in_slct_norm);
+-		}
+-	} else if(!(esp->targets_present & (1<<target)) || !(esp_dev->disconnect)) {
+-		/* After the bootup SCSI code sends both the
+-		 * TEST_UNIT_READY and INQUIRY commands we want
+-		 * to at least attempt allowing the device to
+-		 * disconnect.
+-		 */
+-		ESPMISC(("esp: Selecting device for first time. target=%d "
+-			 "lun=%d\n", target, SCptr->device->lun));
+-		if(!SDptr->borken && !esp_dev->disconnect)
+-			esp_dev->disconnect = 1;
+-
+-		*cmdp++ = IDENTIFY(0, lun);
+-		esp->prevmsgout = NOP;
+-		esp_advance_phase(SCptr, in_slct_norm);
+-		the_esp_command = (ESP_CMD_SELA | ESP_CMD_DMA);
+-
+-		/* Take no chances... */
+-		esp_dev->sync_max_offset = 0;
+-		esp_dev->sync_min_period = 0;
+-	} else {
+-		int toshiba_cdrom_hwbug_wkaround = 0;
+-
+-#ifdef CONFIG_SCSI_MAC_ESP
+-		/* Never allow synchronous transfers (disconnect OK) on
+-		 * Macintosh. Well, maybe later when we figured out how to 
+-		 * do DMA on the machines that support it ...
+-		 */
+-		esp_dev->disconnect = 1;
+-		esp_dev->sync_max_offset = 0;
+-		esp_dev->sync_min_period = 0;
+-		esp_dev->sync = 1;
+-		esp->snip = 0;
+-		goto do_sync_known;
+-#endif
+-		/* We've talked to this guy before,
+-		 * but never negotiated.  Let's try
+-		 * sync negotiation.
+-		 */
+-		if(!SDptr->borken) {
+-			if((SDptr->type == TYPE_ROM) &&
+-			   (!strncmp(SDptr->vendor, "TOSHIBA", 7))) {
+-				/* Nice try sucker... */
+-				ESPMISC(("esp%d: Disabling sync for buggy "
+-					 "Toshiba CDROM.\n", esp->esp_id));
+-				toshiba_cdrom_hwbug_wkaround = 1;
+-				build_sync_nego_msg(esp, 0, 0);
+-			} else {
+-				build_sync_nego_msg(esp, esp->sync_defp, 15);
+-			}
+-		} else {
+-			build_sync_nego_msg(esp, 0, 0);
+-		}
+-		esp_dev->sync = 1;
+-		esp->snip = 1;
+-
+-		/* A fix for broken SCSI1 targets, when they disconnect
+-		 * they lock up the bus and confuse ESP.  So disallow
+-		 * disconnects for SCSI1 targets for now until we
+-		 * find a better fix.
+-		 *
+-		 * Addendum: This is funny, I figured out what was going
+-		 *           on.  The blotzed SCSI1 target would disconnect,
+-		 *           one of the other SCSI2 targets or both would be
+-		 *           disconnected as well.  The SCSI1 target would
+-		 *           stay disconnected long enough that we start
+-		 *           up a command on one of the SCSI2 targets.  As
+-		 *           the ESP is arbitrating for the bus the SCSI1
+-		 *           target begins to arbitrate as well to reselect
+-		 *           the ESP.  The SCSI1 target refuses to drop it's
+-		 *           ID bit on the data bus even though the ESP is
+-		 *           at ID 7 and is the obvious winner for any
+-		 *           arbitration.  The ESP is a poor sport and refuses
+-		 *           to lose arbitration, it will continue indefinitely
+-		 *           trying to arbitrate for the bus and can only be
+-		 *           stopped via a chip reset or SCSI bus reset.
+-		 *           Therefore _no_ disconnects for SCSI1 targets
+-		 *           thank you very much. ;-)
+-		 */
+-		if(((SDptr->scsi_level < 3) && (SDptr->type != TYPE_TAPE)) ||
+-		   toshiba_cdrom_hwbug_wkaround || SDptr->borken) {
+-			ESPMISC((KERN_INFO "esp%d: Disabling DISCONNECT for target %d "
+-				 "lun %d\n", esp->esp_id, SCptr->device->id, SCptr->device->lun));
+-			esp_dev->disconnect = 0;
+-			*cmdp++ = IDENTIFY(0, lun);
+-		} else {
+-			*cmdp++ = IDENTIFY(1, lun);
+-		}
+-
+-		/* ESP fifo is only so big...
+-		 * Make this look like a slow command.
+-		 */
+-		esp->esp_slowcmd = 1;
+-		esp->esp_scmdleft = SCptr->cmd_len;
+-		esp->esp_scmdp = &SCptr->cmnd[0];
+-
+-		the_esp_command = (ESP_CMD_SELAS | ESP_CMD_DMA);
+-		esp_advance_phase(SCptr, in_slct_msg);
+-	}
+-
+-	if(!esp->esp_slowcmd)
+-		for(i = 0; i < SCptr->cmd_len; i++)
+-			*cmdp++ = SCptr->cmnd[i];
+-
+-	esp_write(eregs->esp_busid, (target & 7));
+-	if (esp->prev_soff != esp_dev->sync_max_offset ||
+-	    esp->prev_stp  != esp_dev->sync_min_period ||
+-	    (esp->erev > esp100a &&
+-	     esp->prev_cfg3 != esp->config3[target])) {
+-		esp->prev_soff = esp_dev->sync_max_offset;
+-		esp_write(eregs->esp_soff, esp->prev_soff);
+-		esp->prev_stp = esp_dev->sync_min_period;
+-		esp_write(eregs->esp_stp, esp->prev_stp); 
+-		if(esp->erev > esp100a) {
+-			esp->prev_cfg3 = esp->config3[target];
+-			esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-		}
+-	}
+-	i = (cmdp - esp->esp_command);
+-
+-	/* Set up the DMA and ESP counters */
+-	if(esp->do_pio_cmds){
+-		int j = 0;
+-
+-		/* 
+-		 * XXX MSch:
+-		 *
+-		 * It seems this is required, at least to clean up
+-		 * after failed commands when using PIO mode ...
+-		 */
+-		esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-
+-		for(;j<i;j++)
+-			esp_write(eregs->esp_fdata, esp->esp_command[j]);
+-		the_esp_command &= ~ESP_CMD_DMA;
+-
+-		/* Tell ESP to "go". */
+-		esp_cmd(esp, eregs, the_esp_command);
+-	} else {
+-		/* Set up the ESP counters */
+-		esp_write(eregs->esp_tclow, i);
+-		esp_write(eregs->esp_tcmed, 0);
+-		esp->dma_init_write(esp, esp->esp_command_dvma, i);
+-
+-		/* Tell ESP to "go". */
+-		esp_cmd(esp, eregs, the_esp_command);
+-	}
+-}
+-
+-/* Queue a SCSI command delivered from the mid-level Linux SCSI code. */
+-int esp_queue(Scsi_Cmnd *SCpnt, void (*done)(Scsi_Cmnd *))
+-{
+-	struct NCR_ESP *esp;
+-
+-	/* Set up func ptr and initial driver cmd-phase. */
+-	SCpnt->scsi_done = done;
+-	SCpnt->SCp.phase = not_issued;
+-
+-	esp = (struct NCR_ESP *) SCpnt->device->host->hostdata;
+-
+-	if(esp->dma_led_on)
+-		esp->dma_led_on(esp);
+-
+-	/* We use the scratch area. */
+-	ESPQUEUE(("esp_queue: target=%d lun=%d ", SCpnt->device->id, SCpnt->lun));
+-	ESPDISC(("N<%02x,%02x>", SCpnt->device->id, SCpnt->lun));
+-
+-	esp_get_dmabufs(esp, SCpnt);
+-	esp_save_pointers(esp, SCpnt); /* FIXME for tag queueing */
+-
+-	SCpnt->SCp.Status           = CHECK_CONDITION;
+-	SCpnt->SCp.Message          = 0xff;
+-	SCpnt->SCp.sent_command     = 0;
+-
+-	/* Place into our queue. */
+-	if(SCpnt->cmnd[0] == REQUEST_SENSE) {
+-		ESPQUEUE(("RQSENSE\n"));
+-		prepend_SC(&esp->issue_SC, SCpnt);
+-	} else {
+-		ESPQUEUE(("\n"));
+-		append_SC(&esp->issue_SC, SCpnt);
+-	}
+-
+-	/* Run it now if we can. */
+-	if(!esp->current_SC && !esp->resetting_bus)
+-		esp_exec_cmd(esp);
+-
+-	return 0;
+-}
+-
+-/* Dump driver state. */
+-static void esp_dump_cmd(Scsi_Cmnd *SCptr)
+-{
+-	ESPLOG(("[tgt<%02x> lun<%02x> "
+-		"pphase<%s> cphase<%s>]",
+-		SCptr->device->id, SCptr->device->lun,
+-		phase_string(SCptr->SCp.sent_command),
+-		phase_string(SCptr->SCp.phase)));
+-}
+-
+-static void esp_dump_state(struct NCR_ESP *esp, 
+-			   struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-#ifdef DEBUG_ESP_CMDS
+-	int i;
+-#endif
+-
+-	ESPLOG(("esp%d: dumping state\n", esp->esp_id));
+-	
+-	/* Print DMA status */
+-	esp->dma_dump_state(esp);
+-
+-	ESPLOG(("esp%d: SW [sreg<%02x> sstep<%02x> ireg<%02x>]\n",
+-		esp->esp_id, esp->sreg, esp->seqreg, esp->ireg));
+-	ESPLOG(("esp%d: HW reread [sreg<%02x> sstep<%02x> ireg<%02x>]\n",
+-		esp->esp_id, esp_read(eregs->esp_status), esp_read(eregs->esp_sstep),
+-		esp_read(eregs->esp_intrpt)));
+-#ifdef DEBUG_ESP_CMDS
+-	printk("esp%d: last ESP cmds [", esp->esp_id);
+-	i = (esp->espcmdent - 1) & 31;
+-	printk("<");
+-	esp_print_cmd(esp->espcmdlog[i]);
+-	printk(">");
+-	i = (i - 1) & 31;
+-	printk("<");
+-	esp_print_cmd(esp->espcmdlog[i]);
+-	printk(">");
+-	i = (i - 1) & 31;
+-	printk("<");
+-	esp_print_cmd(esp->espcmdlog[i]);
+-	printk(">");
+-	i = (i - 1) & 31;
+-	printk("<");
+-	esp_print_cmd(esp->espcmdlog[i]);
+-	printk(">");
+-	printk("]\n");
+-#endif /* (DEBUG_ESP_CMDS) */
+-
+-	if(SCptr) {
+-		ESPLOG(("esp%d: current command ", esp->esp_id));
+-		esp_dump_cmd(SCptr);
+-	}
+-	ESPLOG(("\n"));
+-	SCptr = esp->disconnected_SC;
+-	ESPLOG(("esp%d: disconnected ", esp->esp_id));
+-	while(SCptr) {
+-		esp_dump_cmd(SCptr);
+-		SCptr = (Scsi_Cmnd *) SCptr->host_scribble;
+-	}
+-	ESPLOG(("\n"));
+-}
+-
+-/* Abort a command.  The host_lock is acquired by caller. */
+-int esp_abort(Scsi_Cmnd *SCptr)
+-{
+-	struct NCR_ESP *esp = (struct NCR_ESP *) SCptr->device->host->hostdata;
+-	struct ESP_regs *eregs = esp->eregs;
+-	int don;
+-
+-	ESPLOG(("esp%d: Aborting command\n", esp->esp_id));
+-	esp_dump_state(esp, eregs);
+-
+-	/* Wheee, if this is the current command on the bus, the
+-	 * best we can do is assert ATN and wait for msgout phase.
+-	 * This should even fix a hung SCSI bus when we lose state
+-	 * in the driver and timeout because the eventual phase change
+-	 * will cause the ESP to (eventually) give an interrupt.
+-	 */
+-	if(esp->current_SC == SCptr) {
+-		esp->cur_msgout[0] = ABORT;
+-		esp->msgout_len = 1;
+-		esp->msgout_ctr = 0;
+-		esp_cmd(esp, eregs, ESP_CMD_SATN);
+-		return SUCCESS;
+-	}
+-
+-	/* If it is still in the issue queue then we can safely
+-	 * call the completion routine and report abort success.
+-	 */
+-	don = esp->dma_ports_p(esp);
+-	if(don) {
+-		esp->dma_ints_off(esp);
+-		synchronize_irq(esp->irq);
+-	}
+-	if(esp->issue_SC) {
+-		Scsi_Cmnd **prev, *this;
+-		for(prev = (&esp->issue_SC), this = esp->issue_SC;
+-		    this;
+-		    prev = (Scsi_Cmnd **) &(this->host_scribble),
+-		    this = (Scsi_Cmnd *) this->host_scribble) {
+-			if(this == SCptr) {
+-				*prev = (Scsi_Cmnd *) this->host_scribble;
+-				this->host_scribble = NULL;
+-				esp_release_dmabufs(esp, this);
+-				this->result = DID_ABORT << 16;
+-				this->scsi_done(this);
+-				if(don)
+-					esp->dma_ints_on(esp);
+-				return SUCCESS;
+-			}
+-		}
+-	}
+-
+-	/* Yuck, the command to abort is disconnected, it is not
+-	 * worth trying to abort it now if something else is live
+-	 * on the bus at this time.  So, we let the SCSI code wait
+-	 * a little bit and try again later.
+-	 */
+-	if(esp->current_SC) {
+-		if(don)
+-			esp->dma_ints_on(esp);
+-		return FAILED;
+-	}
+-
+-	/* It's disconnected, we have to reconnect to re-establish
+-	 * the nexus and tell the device to abort.  However, we really
+-	 * cannot 'reconnect' per se.  Don't try to be fancy, just
+-	 * indicate failure, which causes our caller to reset the whole
+-	 * bus.
+-	 */
+-
+-	if(don)
+-		esp->dma_ints_on(esp);
+-	return FAILED;
+-}
+-
+-/* We've sent ESP_CMD_RS to the ESP, the interrupt had just
+- * arrived indicating the end of the SCSI bus reset.  Our job
+- * is to clean out the command queues and begin re-execution
+- * of SCSI commands once more.
+- */
+-static int esp_finish_reset(struct NCR_ESP *esp,
+-			    struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *sp = esp->current_SC;
+-
+-	/* Clean up currently executing command, if any. */
+-	if (sp != NULL) {
+-		esp_release_dmabufs(esp, sp);
+-		sp->result = (DID_RESET << 16);
+-		sp->scsi_done(sp);
+-		esp->current_SC = NULL;
+-	}
+-
+-	/* Clean up disconnected queue, they have been invalidated
+-	 * by the bus reset.
+-	 */
+-	if (esp->disconnected_SC) {
+-		while((sp = remove_first_SC(&esp->disconnected_SC)) != NULL) {
+-			esp_release_dmabufs(esp, sp);
+-			sp->result = (DID_RESET << 16);
+-			sp->scsi_done(sp);
+-		}
+-	}
+-
+-	/* SCSI bus reset is complete. */
+-	esp->resetting_bus = 0;
+-	wake_up(&esp->reset_queue);
+-
+-	/* Ok, now it is safe to get commands going once more. */
+-	if(esp->issue_SC)
+-		esp_exec_cmd(esp);
+-
+-	return do_intr_end;
+-}
+-
+-static int esp_do_resetbus(struct NCR_ESP *esp,
+-			   struct ESP_regs *eregs)
+-{
+-	ESPLOG(("esp%d: Resetting scsi bus\n", esp->esp_id));
+-	esp->resetting_bus = 1;
+-	esp_cmd(esp, eregs, ESP_CMD_RS);
+-
+-	return do_intr_end;
+-}
+-
+-/* Reset ESP chip, reset hanging bus, then kill active and
+- * disconnected commands for targets without soft reset.
+- *
+- * The host_lock is acquired by caller.
+- */
+-int esp_reset(Scsi_Cmnd *SCptr)
+-{
+-	struct NCR_ESP *esp = (struct NCR_ESP *) SCptr->device->host->hostdata;
+-
+-	spin_lock_irq(esp->ehost->host_lock);
+-	(void) esp_do_resetbus(esp, esp->eregs);
+-	spin_unlock_irq(esp->ehost->host_lock);
+-
+-	wait_event(esp->reset_queue, (esp->resetting_bus == 0));
+-
+-	return SUCCESS;
+-}
+-
+-/* Internal ESP done function. */
+-static void esp_done(struct NCR_ESP *esp, int error)
+-{
+-	Scsi_Cmnd *done_SC;
+-
+-	if(esp->current_SC) {
+-		done_SC = esp->current_SC;
+-		esp->current_SC = NULL;
+-		esp_release_dmabufs(esp, done_SC);
+-		done_SC->result = error;
+-		done_SC->scsi_done(done_SC);
+-
+-		/* Bus is free, issue any commands in the queue. */
+-		if(esp->issue_SC && !esp->current_SC)
+-			esp_exec_cmd(esp);
+-	} else {
+-		/* Panic is safe as current_SC is null so we may still
+-		 * be able to accept more commands to sync disk buffers.
+-		 */
+-		ESPLOG(("panicing\n"));
+-		panic("esp: done() called with NULL esp->current_SC");
+-	}
+-}
+-
+-/* Wheee, ESP interrupt engine. */  
+-
+-/* Forward declarations. */
+-static int esp_do_phase_determine(struct NCR_ESP *esp, 
+-				  struct ESP_regs *eregs);
+-static int esp_do_data_finale(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-static int esp_select_complete(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-static int esp_do_status(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-static int esp_do_msgin(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-static int esp_do_msgindone(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-static int esp_do_msgout(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-static int esp_do_cmdbegin(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-
+-#define sreg_datainp(__sreg)  (((__sreg) & ESP_STAT_PMASK) == ESP_DIP)
+-#define sreg_dataoutp(__sreg) (((__sreg) & ESP_STAT_PMASK) == ESP_DOP)
+-
+-/* We try to avoid some interrupts by jumping ahead and see if the ESP
+- * has gotten far enough yet.  Hence the following.
+- */
+-static inline int skipahead1(struct NCR_ESP *esp, struct ESP_regs *eregs,
+-			     Scsi_Cmnd *scp, int prev_phase, int new_phase)
+-{
+-	if(scp->SCp.sent_command != prev_phase)
+-		return 0;
+-
+-	if(esp->dma_irq_p(esp)) {
+-		/* Yes, we are able to save an interrupt. */
+-		esp->sreg = (esp_read(eregs->esp_status) & ~(ESP_STAT_INTR));
+-		esp->ireg = esp_read(eregs->esp_intrpt);
+-		if(!(esp->ireg & ESP_INTR_SR))
+-			return 0;
+-		else
+-			return do_reset_complete;
+-	}
+-	/* Ho hum, target is taking forever... */
+-	scp->SCp.sent_command = new_phase; /* so we don't recurse... */
+-	return do_intr_end;
+-}
+-
+-static inline int skipahead2(struct NCR_ESP *esp,
+-			     struct ESP_regs *eregs,
+-			     Scsi_Cmnd *scp, int prev_phase1, int prev_phase2,
+-			     int new_phase)
+-{
+-	if(scp->SCp.sent_command != prev_phase1 &&
+-	   scp->SCp.sent_command != prev_phase2)
+-		return 0;
+-	if(esp->dma_irq_p(esp)) {
+-		/* Yes, we are able to save an interrupt. */
+-		esp->sreg = (esp_read(eregs->esp_status) & ~(ESP_STAT_INTR));
+-		esp->ireg = esp_read(eregs->esp_intrpt);
+-		if(!(esp->ireg & ESP_INTR_SR))
+-			return 0;
+-		else
+-			return do_reset_complete;
+-	}
+-	/* Ho hum, target is taking forever... */
+-	scp->SCp.sent_command = new_phase; /* so we don't recurse... */
+-	return do_intr_end;
+-}
+-
+-/* Misc. esp helper macros. */
+-#define esp_setcount(__eregs, __cnt) \
+-	esp_write((__eregs)->esp_tclow, ((__cnt) & 0xff)); \
+-	esp_write((__eregs)->esp_tcmed, (((__cnt) >> 8) & 0xff))
+-
+-#define esp_getcount(__eregs) \
+-	((esp_read((__eregs)->esp_tclow)&0xff) | \
+-	 ((esp_read((__eregs)->esp_tcmed)&0xff) << 8))
+-
+-#define fcount(__esp, __eregs) \
+-	(esp_read((__eregs)->esp_fflags) & ESP_FF_FBYTES)
+-
+-#define fnzero(__esp, __eregs) \
+-	(esp_read((__eregs)->esp_fflags) & ESP_FF_ONOTZERO)
+-
+-/* XXX speculative nops unnecessary when continuing amidst a data phase
+- * XXX even on esp100!!!  another case of flooding the bus with I/O reg
+- * XXX writes...
+- */
+-#define esp_maybe_nop(__esp, __eregs) \
+-	if((__esp)->erev == esp100) \
+-		esp_cmd((__esp), (__eregs), ESP_CMD_NULL)
+-
+-#define sreg_to_dataphase(__sreg) \
+-	((((__sreg) & ESP_STAT_PMASK) == ESP_DOP) ? in_dataout : in_datain)
+-
+-/* The ESP100 when in synchronous data phase, can mistake a long final
+- * REQ pulse from the target as an extra byte, it places whatever is on
+- * the data lines into the fifo.  For now, we will assume when this
+- * happens that the target is a bit quirky and we don't want to
+- * be talking synchronously to it anyways.  Regardless, we need to
+- * tell the ESP to eat the extraneous byte so that we can proceed
+- * to the next phase.
+- */
+-static inline int esp100_sync_hwbug(struct NCR_ESP *esp, struct ESP_regs *eregs,
+-				    Scsi_Cmnd *sp, int fifocnt)
+-{
+-	/* Do not touch this piece of code. */
+-	if((!(esp->erev == esp100)) ||
+-	   (!(sreg_datainp((esp->sreg = esp_read(eregs->esp_status))) && !fifocnt) &&
+-	    !(sreg_dataoutp(esp->sreg) && !fnzero(esp, eregs)))) {
+-		if(sp->SCp.phase == in_dataout)
+-			esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-		return 0;
+-	} else {
+-		/* Async mode for this guy. */
+-		build_sync_nego_msg(esp, 0, 0);
+-
+-		/* Ack the bogus byte, but set ATN first. */
+-		esp_cmd(esp, eregs, ESP_CMD_SATN);
+-		esp_cmd(esp, eregs, ESP_CMD_MOK);
+-		return 1;
+-	}
+-}
+-
+-/* This closes the window during a selection with a reselect pending, because
+- * we use DMA for the selection process the FIFO should hold the correct
+- * contents if we get reselected during this process.  So we just need to
+- * ack the possible illegal cmd interrupt pending on the esp100.
+- */
+-static inline int esp100_reconnect_hwbug(struct NCR_ESP *esp,
+-					 struct ESP_regs *eregs)
+-{
+-	volatile unchar junk;
+-
+-	if(esp->erev != esp100)
+-		return 0;
+-	junk = esp_read(eregs->esp_intrpt);
+-
+-	if(junk & ESP_INTR_SR)
+-		return 1;
+-	return 0;
+-}
+-
+-/* This verifies the BUSID bits during a reselection so that we know which
+- * target is talking to us.
+- */
+-static inline int reconnect_target(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	int it, me = esp->scsi_id_mask, targ = 0;
+-
+-	if(2 != fcount(esp, eregs))
+-		return -1;
+-	it = esp_read(eregs->esp_fdata);
+-	if(!(it & me))
+-		return -1;
+-	it &= ~me;
+-	if(it & (it - 1))
+-		return -1;
+-	while(!(it & 1))
+-		targ++, it >>= 1;
+-	return targ;
+-}
+-
+-/* This verifies the identify from the target so that we know which lun is
+- * being reconnected.
+- */
+-static inline int reconnect_lun(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	int lun;
+-
+-	if((esp->sreg & ESP_STAT_PMASK) != ESP_MIP)
+-		return -1;
+-	lun = esp_read(eregs->esp_fdata);
+-
+-	/* Yes, you read this correctly.  We report lun of zero
+-	 * if we see parity error.  ESP reports parity error for
+-	 * the lun byte, and this is the only way to hope to recover
+-	 * because the target is connected.
+-	 */
+-	if(esp->sreg & ESP_STAT_PERR)
+-		return 0;
+-
+-	/* Check for illegal bits being set in the lun. */
+-	if((lun & 0x40) || !(lun & 0x80))
+-		return -1;
+-
+-	return lun & 7;
+-}
+-
+-/* This puts the driver in a state where it can revitalize a command that
+- * is being continued due to reselection.
+- */
+-static inline void esp_connect(struct NCR_ESP *esp, struct ESP_regs *eregs,
+-			       Scsi_Cmnd *sp)
+-{
+-	struct scsi_device *dp = sp->device;
+-	struct esp_device *esp_dev = dp->hostdata;
+-
+-	if(esp->prev_soff  != esp_dev->sync_max_offset ||
+-	   esp->prev_stp   != esp_dev->sync_min_period ||
+-	   (esp->erev > esp100a &&
+-	    esp->prev_cfg3 != esp->config3[scmd_id(sp)])) {
+-		esp->prev_soff = esp_dev->sync_max_offset;
+-		esp_write(eregs->esp_soff, esp->prev_soff);
+-		esp->prev_stp = esp_dev->sync_min_period;
+-		esp_write(eregs->esp_stp, esp->prev_stp);
+-		if(esp->erev > esp100a) {
+-			esp->prev_cfg3 = esp->config3[scmd_id(sp)];
+-			esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-		} 
+-	}
+-	esp->current_SC = sp;
+-}
+-
+-/* This will place the current working command back into the issue queue
+- * if we are to receive a reselection amidst a selection attempt.
+- */
+-static inline void esp_reconnect(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	if(!esp->disconnected_SC)
+-		ESPLOG(("esp%d: Weird, being reselected but disconnected "
+-			"command queue is empty.\n", esp->esp_id));
+-	esp->snip = 0;
+-	esp->current_SC = NULL;
+-	sp->SCp.phase = not_issued;
+-	append_SC(&esp->issue_SC, sp);
+-}
+-
+-/* Begin message in phase. */
+-static int esp_do_msgin(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-	esp_maybe_nop(esp, eregs);
+-	esp_cmd(esp, eregs, ESP_CMD_TI);
+-	esp->msgin_len = 1;
+-	esp->msgin_ctr = 0;
+-	esp_advance_phase(esp->current_SC, in_msgindone);
+-	return do_work_bus;
+-}
+-
+-static inline void advance_sg(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	++sp->SCp.buffer;
+-	--sp->SCp.buffers_residual;
+-	sp->SCp.this_residual = sp->SCp.buffer->length;
+-	if (esp->dma_advance_sg)
+-		esp->dma_advance_sg (sp);
+-	else
+-		sp->SCp.ptr = (char *) virt_to_phys(sg_virt(sp->SCp.buffer));
+-
+-}
+-
+-/* Please note that the way I've coded these routines is that I _always_
+- * check for a disconnect during any and all information transfer
+- * phases.  The SCSI standard states that the target _can_ cause a BUS
+- * FREE condition by dropping all MSG/CD/IO/BSY signals.  Also note
+- * that during information transfer phases the target controls every
+- * change in phase, the only thing the initiator can do is "ask" for
+- * a message out phase by driving ATN true.  The target can, and sometimes
+- * will, completely ignore this request so we cannot assume anything when
+- * we try to force a message out phase to abort/reset a target.  Most of
+- * the time the target will eventually be nice and go to message out, so
+- * we may have to hold on to our state about what we want to tell the target
+- * for some period of time.
+- */
+-
+-/* I think I have things working here correctly.  Even partial transfers
+- * within a buffer or sub-buffer should not upset us at all no matter
+- * how bad the target and/or ESP fucks things up.
+- */
+-static int esp_do_data(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	int thisphase, hmuch;
+-
+-	ESPDATA(("esp_do_data: "));
+-	esp_maybe_nop(esp, eregs);
+-	thisphase = sreg_to_dataphase(esp->sreg);
+-	esp_advance_phase(SCptr, thisphase);
+-	ESPDATA(("newphase<%s> ", (thisphase == in_datain) ? "DATAIN" : "DATAOUT"));
+-	hmuch = esp->dma_can_transfer(esp, SCptr);
+-
+-	/*
+-	 * XXX MSch: cater for PIO transfer here; PIO used if hmuch == 0
+-	 */
+-	if (hmuch) {	/* DMA */
+-		/*
+-		 * DMA
+-		 */
+-		ESPDATA(("hmuch<%d> ", hmuch));
+-		esp->current_transfer_size = hmuch;
+-		esp_setcount(eregs, (esp->fas_premature_intr_workaround ?
+-				     (hmuch + 0x40) : hmuch));
+-		esp->dma_setup(esp, (__u32)((unsigned long)SCptr->SCp.ptr), 
+-			       hmuch, (thisphase == in_datain));
+-		ESPDATA(("DMA|TI --> do_intr_end\n"));
+-		esp_cmd(esp, eregs, ESP_CMD_DMA | ESP_CMD_TI);
+-		return do_intr_end;
+-		/*
+-		 * end DMA
+-		 */
+-	} else {
+-		/*
+-		 * PIO
+-		 */
+-		int oldphase, i = 0; /* or where we left off last time ?? esp->current_data ?? */
+-		int fifocnt = 0;
+-		unsigned char *p = phys_to_virt((unsigned long)SCptr->SCp.ptr);
+-
+-		oldphase = esp_read(eregs->esp_status) & ESP_STAT_PMASK;
+-
+-		/*
+-		 * polled transfer; ugly, can we make this happen in a DRQ 
+-		 * interrupt handler ??
+-		 * requires keeping track of state information in host or 
+-		 * command struct!
+-		 * Problem: I've never seen a DRQ happen on Mac, not even
+-		 * with ESP_CMD_DMA ...
+-		 */
+-
+-		/* figure out how much needs to be transferred */
+-		hmuch = SCptr->SCp.this_residual;
+-		ESPDATA(("hmuch<%d> pio ", hmuch));
+-		esp->current_transfer_size = hmuch;
+-
+-		/* tell the ESP ... */
+-		esp_setcount(eregs, hmuch);
+-
+-		/* loop */
+-		while (hmuch) {
+-			int j, fifo_stuck = 0, newphase;
+-			unsigned long timeout;
+-#if 0
+-			unsigned long flags;
+-#endif
+-#if 0
+-			if ( i % 10 )
+-				ESPDATA(("\r"));
+-			else
+-				ESPDATA(( /*"\n"*/ "\r"));
+-#endif
+-#if 0
+-			local_irq_save(flags);
+-#endif
+-			if(thisphase == in_datain) {
+-				/* 'go' ... */ 
+-				esp_cmd(esp, eregs, ESP_CMD_TI);
+-
+-				/* wait for data */
+-				timeout = 1000000;
+-				while (!((esp->sreg=esp_read(eregs->esp_status)) & ESP_STAT_INTR) && --timeout)
+-					udelay(2);
+-				if (timeout == 0)
+-					printk("DRQ datain timeout! \n");
+-
+-				newphase = esp->sreg & ESP_STAT_PMASK;
+-
+-				/* see how much we got ... */
+-				fifocnt = (esp_read(eregs->esp_fflags) & ESP_FF_FBYTES);
+-
+-				if (!fifocnt)
+-					fifo_stuck++;
+-				else
+-					fifo_stuck = 0;
+-
+-				ESPDATA(("\rgot %d st %x ph %x", fifocnt, esp->sreg, newphase));
+-
+-				/* read fifo */
+-				for(j=0;j<fifocnt;j++)
+-					p[i++] = esp_read(eregs->esp_fdata);
+-
+-				ESPDATA(("(%d) ", i));
+-
+-				/* how many to go ?? */
+-				hmuch -= fifocnt;
+-
+-				/* break if status phase !! */
+-				if(newphase == ESP_STATP) {
+-					/* clear int. */
+-					esp->ireg = esp_read(eregs->esp_intrpt);
+-					break;
+-				}
+-			} else {
+-#define MAX_FIFO 8
+-				/* how much will fit ? */
+-				int this_count = MAX_FIFO - fifocnt;
+-				if (this_count > hmuch)
+-					this_count = hmuch;
+-
+-				/* fill fifo */
+-				for(j=0;j<this_count;j++)
+-					esp_write(eregs->esp_fdata, p[i++]);
+-
+-				/* how many left if this goes out ?? */
+-				hmuch -= this_count;
+-
+-				/* 'go' ... */ 
+-				esp_cmd(esp, eregs, ESP_CMD_TI);
+-
+-				/* wait for 'got it' */
+-				timeout = 1000000;
+-				while (!((esp->sreg=esp_read(eregs->esp_status)) & ESP_STAT_INTR) && --timeout)
+-					udelay(2);
+-				if (timeout == 0)
+-					printk("DRQ dataout timeout!  \n");
+-
+-				newphase = esp->sreg & ESP_STAT_PMASK;
+-
+-				/* need to check how much was sent ?? */
+-				fifocnt = (esp_read(eregs->esp_fflags) & ESP_FF_FBYTES);
+-
+-				ESPDATA(("\rsent %d st %x ph %x", this_count - fifocnt, esp->sreg, newphase));
+-
+-				ESPDATA(("(%d) ", i));
+-
+-				/* break if status phase !! */
+-				if(newphase == ESP_STATP) {
+-					/* clear int. */
+-					esp->ireg = esp_read(eregs->esp_intrpt);
+-					break;
+-				}
+-
+-			}
+-
+-			/* clear int. */
+-			esp->ireg = esp_read(eregs->esp_intrpt);
+-
+-			ESPDATA(("ir %x ... ", esp->ireg));
+-
+-			if (hmuch == 0)
+-				ESPDATA(("done! \n"));
+-
+-#if 0
+-			local_irq_restore(flags);
+-#endif
+-
+-			/* check new bus phase */
+-			if (newphase != oldphase && i < esp->current_transfer_size) {
+-				/* something happened; disconnect ?? */
+-				ESPDATA(("phase change, dropped out with %d done ... ", i));
+-				break;
+-			}
+-
+-			/* check int. status */
+-			if (esp->ireg & ESP_INTR_DC) {
+-				/* disconnect */
+-				ESPDATA(("disconnect; %d transferred ... ", i));
+-				break;
+-			} else if (esp->ireg & ESP_INTR_FDONE) {
+-				/* function done */
+-				ESPDATA(("function done; %d transferred ... ", i));
+-				break;
+-			}
+-
+-			/* XXX fixme: bail out on stall */
+-			if (fifo_stuck > 10) {
+-				/* we're stuck */
+-				ESPDATA(("fifo stall; %d transferred ... ", i));
+-				break;
+-			}
+-		}
+-
+-		ESPDATA(("\n"));
+-		/* check successful completion ?? */
+-
+-		if (thisphase == in_dataout)
+-			hmuch += fifocnt; /* stuck?? adjust data pointer ...*/
+-
+-		/* tell do_data_finale how much was transferred */
+-		esp->current_transfer_size -= hmuch;
+-
+-		/* still not completely sure on this one ... */		
+-		return /*do_intr_end*/ do_work_bus /*do_phase_determine*/ ;
+-
+-		/*
+-		 * end PIO
+-		 */
+-	}
+-	return do_intr_end;
+-}
+-
+-/* See how successful the data transfer was. */
+-static int esp_do_data_finale(struct NCR_ESP *esp,
+-			      struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	struct esp_device *esp_dev = SCptr->device->hostdata;
+-	int bogus_data = 0, bytes_sent = 0, fifocnt, ecount = 0;
+-
+-	if(esp->dma_led_off)
+-		esp->dma_led_off(esp);
+-
+-	ESPDATA(("esp_do_data_finale: "));
+-
+-	if(SCptr->SCp.phase == in_datain) {
+-		if(esp->sreg & ESP_STAT_PERR) {
+-			/* Yuck, parity error.  The ESP asserts ATN
+-			 * so that we can go to message out phase
+-			 * immediately and inform the target that
+-			 * something bad happened.
+-			 */
+-			ESPLOG(("esp%d: data bad parity detected.\n",
+-				esp->esp_id));
+-			esp->cur_msgout[0] = INITIATOR_ERROR;
+-			esp->msgout_len = 1;
+-		}
+-		if(esp->dma_drain)
+-			esp->dma_drain(esp);
+-	}
+-	if(esp->dma_invalidate)
+-		esp->dma_invalidate(esp);
+-
+-	/* This could happen for the above parity error case. */
+-	if(!(esp->ireg == ESP_INTR_BSERV)) {
+-		/* Please go to msgout phase, please please please... */
+-		ESPLOG(("esp%d: !BSERV after data, probably to msgout\n",
+-			esp->esp_id));
+-		return esp_do_phase_determine(esp, eregs);
+-	}	
+-
+-	/* Check for partial transfers and other horrible events. */
+-	fifocnt = (esp_read(eregs->esp_fflags) & ESP_FF_FBYTES);
+-	ecount = esp_getcount(eregs);
+-	if(esp->fas_premature_intr_workaround)
+-		ecount -= 0x40;
+-	bytes_sent = esp->current_transfer_size;
+-
+-	ESPDATA(("trans_sz=%d, ", bytes_sent));
+-	if(!(esp->sreg & ESP_STAT_TCNT))
+-		bytes_sent -= ecount;
+-	if(SCptr->SCp.phase == in_dataout)
+-		bytes_sent -= fifocnt;
+-
+-	ESPDATA(("bytes_sent=%d (ecount=%d, fifocnt=%d), ", bytes_sent,
+-		 ecount, fifocnt));
+-
+-	/* If we were in synchronous mode, check for peculiarities. */
+-	if(esp_dev->sync_max_offset)
+-		bogus_data = esp100_sync_hwbug(esp, eregs, SCptr, fifocnt);
+-	else
+-		esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-
+-	/* Until we are sure of what has happened, we are certainly
+-	 * in the dark.
+-	 */
+-	esp_advance_phase(SCptr, in_the_dark);
+-
+-	/* Check for premature interrupt condition. Can happen on FAS2x6
+-	 * chips. QLogic recommends a workaround by overprogramming the
+-	 * transfer counters, but this makes doing scatter-gather impossible.
+-	 * Until there is a way to disable scatter-gather for a single target,
+-	 * and not only for the entire host adapter as it is now, the workaround
+-	 * is way to expensive performance wise.
+-	 * Instead, it turns out that when this happens the target has disconnected
+-	 * already but it doesn't show in the interrupt register. Compensate for
+-	 * that here to try and avoid a SCSI bus reset.
+-	 */
+-	if(!esp->fas_premature_intr_workaround && (fifocnt == 1) &&
+-	   sreg_dataoutp(esp->sreg)) {
+-		ESPLOG(("esp%d: Premature interrupt, enabling workaround\n",
+-			esp->esp_id));
+-#if 0
+-		/* Disable scatter-gather operations, they are not possible
+-		 * when using this workaround.
+-		 */
+-		esp->ehost->sg_tablesize = 0;
+-		esp->ehost->use_clustering = ENABLE_CLUSTERING;
+-		esp->fas_premature_intr_workaround = 1;
+-		bytes_sent = 0;
+-		if(SCptr->use_sg) {
+-			ESPLOG(("esp%d: Aborting scatter-gather operation\n",
+-				esp->esp_id));
+-			esp->cur_msgout[0] = ABORT;
+-			esp->msgout_len = 1;
+-			esp->msgout_ctr = 0;
+-			esp_cmd(esp, eregs, ESP_CMD_SATN);
+-			esp_setcount(eregs, 0xffff);
+-			esp_cmd(esp, eregs, ESP_CMD_NULL);
+-			esp_cmd(esp, eregs, ESP_CMD_TPAD | ESP_CMD_DMA);
+-			return do_intr_end;
+-		}
+-#else
+-		/* Just set the disconnected bit. That's what appears to
+-		 * happen anyway. The state machine will pick it up when
+-		 * we return.
+-		 */
+-		esp->ireg |= ESP_INTR_DC;
+-#endif
+-        }
+-
+-	if(bytes_sent < 0) {
+-		/* I've seen this happen due to lost state in this
+-		 * driver.  No idea why it happened, but allowing
+-		 * this value to be negative caused things to
+-		 * lock up.  This allows greater chance of recovery.
+-		 * In fact every time I've seen this, it has been
+-		 * a driver bug without question.
+-		 */
+-		ESPLOG(("esp%d: yieee, bytes_sent < 0!\n", esp->esp_id));
+-		ESPLOG(("esp%d: csz=%d fifocount=%d ecount=%d\n",
+-			esp->esp_id,
+-			esp->current_transfer_size, fifocnt, ecount));
+-		ESPLOG(("esp%d: use_sg=%d ptr=%p this_residual=%d\n",
+-			esp->esp_id,
+-			SCptr->use_sg, SCptr->SCp.ptr, SCptr->SCp.this_residual));
+-		ESPLOG(("esp%d: Forcing async for target %d\n", esp->esp_id, 
+-			SCptr->device->id));
+-		SCptr->device->borken = 1;
+-		esp_dev->sync = 0;
+-		bytes_sent = 0;
+-	}
+-
+-	/* Update the state of our transfer. */
+-	SCptr->SCp.ptr += bytes_sent;
+-	SCptr->SCp.this_residual -= bytes_sent;
+-	if(SCptr->SCp.this_residual < 0) {
+-		/* shit */
+-		ESPLOG(("esp%d: Data transfer overrun.\n", esp->esp_id));
+-		SCptr->SCp.this_residual = 0;
+-	}
+-
+-	/* Maybe continue. */
+-	if(!bogus_data) {
+-		ESPDATA(("!bogus_data, "));
+-		/* NO MATTER WHAT, we advance the scatterlist,
+-		 * if the target should decide to disconnect
+-		 * in between scatter chunks (which is common)
+-		 * we could die horribly!  I used to have the sg
+-		 * advance occur only if we are going back into
+-		 * (or are staying in) a data phase, you can
+-		 * imagine the hell I went through trying to
+-		 * figure this out.
+-		 */
+-		if(!SCptr->SCp.this_residual && SCptr->SCp.buffers_residual)
+-			advance_sg(esp, SCptr);
+-#ifdef DEBUG_ESP_DATA
+-		if(sreg_datainp(esp->sreg) || sreg_dataoutp(esp->sreg)) {
+-			ESPDATA(("to more data\n"));
+-		} else {
+-			ESPDATA(("to new phase\n"));
+-		}
+-#endif
+-		return esp_do_phase_determine(esp, eregs);
+-	}
+-	/* Bogus data, just wait for next interrupt. */
+-	ESPLOG(("esp%d: bogus_data during end of data phase\n",
+-		esp->esp_id));
+-	return do_intr_end;
+-}
+-
+-/* We received a non-good status return at the end of
+- * running a SCSI command.  This is used to decide if
+- * we should clear our synchronous transfer state for
+- * such a device when that happens.
+- *
+- * The idea is that when spinning up a disk or rewinding
+- * a tape, we don't want to go into a loop re-negotiating
+- * synchronous capabilities over and over.
+- */
+-static int esp_should_clear_sync(Scsi_Cmnd *sp)
+-{
+-	unchar cmd = sp->cmnd[0];
+-
+-	/* These cases are for spinning up a disk and
+-	 * waiting for that spinup to complete.
+-	 */
+-	if(cmd == START_STOP)
+-		return 0;
+-
+-	if(cmd == TEST_UNIT_READY)
+-		return 0;
+-
+-	/* One more special case for SCSI tape drives,
+-	 * this is what is used to probe the device for
+-	 * completion of a rewind or tape load operation.
+-	 */
+-	if(sp->device->type == TYPE_TAPE && cmd == MODE_SENSE)
+-		return 0;
+-
+-	return 1;
+-}
+-
+-/* Either a command is completing or a target is dropping off the bus
+- * to continue the command in the background so we can do other work.
+- */
+-static int esp_do_freebus(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	int rval;
+-
+-	rval = skipahead2(esp, eregs, SCptr, in_status, in_msgindone, in_freeing);
+-	if(rval)
+-		return rval;
+-
+-	if(esp->ireg != ESP_INTR_DC) {
+-		ESPLOG(("esp%d: Target will not disconnect\n", esp->esp_id));
+-		return do_reset_bus; /* target will not drop BSY... */
+-	}
+-	esp->msgout_len = 0;
+-	esp->prevmsgout = NOP;
+-	if(esp->prevmsgin == COMMAND_COMPLETE) {
+-		struct esp_device *esp_dev = SCptr->device->hostdata;
+-		/* Normal end of nexus. */
+-		if(esp->disconnected_SC)
+-			esp_cmd(esp, eregs, ESP_CMD_ESEL);
+-
+-		if(SCptr->SCp.Status != GOOD &&
+-		   SCptr->SCp.Status != CONDITION_GOOD &&
+-		   ((1<<scmd_id(SCptr)) & esp->targets_present) &&
+-		   esp_dev->sync && esp_dev->sync_max_offset) {
+-			/* SCSI standard says that the synchronous capabilities
+-			 * should be renegotiated at this point.  Most likely
+-			 * we are about to request sense from this target
+-			 * in which case we want to avoid using sync
+-			 * transfers until we are sure of the current target
+-			 * state.
+-			 */
+-			ESPMISC(("esp: Status <%d> for target %d lun %d\n",
+-				 SCptr->SCp.Status, SCptr->device->id, SCptr->device->lun));
+-
+-			/* But don't do this when spinning up a disk at
+-			 * boot time while we poll for completion as it
+-			 * fills up the console with messages.  Also, tapes
+-			 * can report not ready many times right after
+-			 * loading up a tape.
+-			 */
+-			if(esp_should_clear_sync(SCptr) != 0)
+-				esp_dev->sync = 0;
+-		}
+-		ESPDISC(("F<%02x,%02x>", SCptr->device->id, SCptr->device->lun));
+-		esp_done(esp, ((SCptr->SCp.Status & 0xff) |
+-			       ((SCptr->SCp.Message & 0xff)<<8) |
+-			       (DID_OK << 16)));
+-	} else if(esp->prevmsgin == DISCONNECT) {
+-		/* Normal disconnect. */
+-		esp_cmd(esp, eregs, ESP_CMD_ESEL);
+-		ESPDISC(("D<%02x,%02x>", SCptr->device->id, SCptr->device->lun));
+-		append_SC(&esp->disconnected_SC, SCptr);
+-		esp->current_SC = NULL;
+-		if(esp->issue_SC)
+-			esp_exec_cmd(esp);
+-	} else {
+-		/* Driver bug, we do not expect a disconnect here
+-		 * and should not have advanced the state engine
+-		 * to in_freeing.
+-		 */
+-		ESPLOG(("esp%d: last msg not disc and not cmd cmplt.\n",
+-			esp->esp_id));
+-		return do_reset_bus;
+-	}
+-	return do_intr_end;
+-}
+-
+-/* When a reselect occurs, and we cannot find the command to
+- * reconnect to in our queues, we do this.
+- */
+-static int esp_bad_reconnect(struct NCR_ESP *esp)
+-{
+-	Scsi_Cmnd *sp;
+-
+-	ESPLOG(("esp%d: Eieeee, reconnecting unknown command!\n",
+-		esp->esp_id));
+-	ESPLOG(("QUEUE DUMP\n"));
+-	sp = esp->issue_SC;
+-	ESPLOG(("esp%d: issue_SC[", esp->esp_id));
+-	while(sp) {
+-		ESPLOG(("<%02x,%02x>", sp->device->id, sp->device->lun));
+-		sp = (Scsi_Cmnd *) sp->host_scribble;
+-	}
+-	ESPLOG(("]\n"));
+-	sp = esp->current_SC;
+-	ESPLOG(("esp%d: current_SC[", esp->esp_id));
+-	while(sp) {
+-		ESPLOG(("<%02x,%02x>", sp->device->id, sp->device->lun));
+-		sp = (Scsi_Cmnd *) sp->host_scribble;
+-	}
+-	ESPLOG(("]\n"));
+-	sp = esp->disconnected_SC;
+-	ESPLOG(("esp%d: disconnected_SC[", esp->esp_id));
+-	while(sp) {
+-		ESPLOG(("<%02x,%02x>", sp->device->id, sp->device->lun));
+-		sp = (Scsi_Cmnd *) sp->host_scribble;
+-	}
+-	ESPLOG(("]\n"));
+-	return do_reset_bus;
+-}
+-
+-/* Do the needy when a target tries to reconnect to us. */
+-static int esp_do_reconnect(struct NCR_ESP *esp, 
+-			    struct ESP_regs *eregs)
+-{
+-	int lun, target;
+-	Scsi_Cmnd *SCptr;
+-
+-	/* Check for all bogus conditions first. */
+-	target = reconnect_target(esp, eregs);
+-	if(target < 0) {
+-		ESPDISC(("bad bus bits\n"));
+-		return do_reset_bus;
+-	}
+-	lun = reconnect_lun(esp, eregs);
+-	if(lun < 0) {
+-		ESPDISC(("target=%2x, bad identify msg\n", target));
+-		return do_reset_bus;
+-	}
+-
+-	/* Things look ok... */
+-	ESPDISC(("R<%02x,%02x>", target, lun));
+-
+-	esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-	if(esp100_reconnect_hwbug(esp, eregs))
+-		return do_reset_bus;
+-	esp_cmd(esp, eregs, ESP_CMD_NULL);
+-
+-	SCptr = remove_SC(&esp->disconnected_SC, (unchar) target, (unchar) lun);
+-	if(!SCptr)
+-		return esp_bad_reconnect(esp);
+-
+-	esp_connect(esp, eregs, SCptr);
+-	esp_cmd(esp, eregs, ESP_CMD_MOK);
+-
+-	/* Reconnect implies a restore pointers operation. */
+-	esp_restore_pointers(esp, SCptr);
+-
+-	esp->snip = 0;
+-	esp_advance_phase(SCptr, in_the_dark);
+-	return do_intr_end;
+-}
+-
+-/* End of NEXUS (hopefully), pick up status + message byte then leave if
+- * all goes well.
+- */
+-static int esp_do_status(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	int intr, rval;
+-
+-	rval = skipahead1(esp, eregs, SCptr, in_the_dark, in_status);
+-	if(rval)
+-		return rval;
+-
+-	intr = esp->ireg;
+-	ESPSTAT(("esp_do_status: "));
+-	if(intr != ESP_INTR_DC) {
+-		int message_out = 0; /* for parity problems */
+-
+-		/* Ack the message. */
+-		ESPSTAT(("ack msg, "));
+-		esp_cmd(esp, eregs, ESP_CMD_MOK);
+-
+-		if(esp->dma_poll)
+-			esp->dma_poll(esp, (unsigned char *) esp->esp_command);
+-
+-		ESPSTAT(("got something, "));
+-		/* ESP chimes in with one of
+-		 *
+-		 * 1) function done interrupt:
+-		 *	both status and message in bytes
+-		 *	are available
+-		 *
+-		 * 2) bus service interrupt:
+-		 *	only status byte was acquired
+-		 *
+-		 * 3) Anything else:
+-		 *	can't happen, but we test for it
+-		 *	anyways
+-		 *
+-		 * ALSO: If bad parity was detected on either
+-		 *       the status _or_ the message byte then
+-		 *       the ESP has asserted ATN on the bus
+-		 *       and we must therefore wait for the
+-		 *       next phase change.
+-		 */
+-		if(intr & ESP_INTR_FDONE) {
+-			/* We got it all, hallejulia. */
+-			ESPSTAT(("got both, "));
+-			SCptr->SCp.Status = esp->esp_command[0];
+-			SCptr->SCp.Message = esp->esp_command[1];
+-			esp->prevmsgin = SCptr->SCp.Message;
+-			esp->cur_msgin[0] = SCptr->SCp.Message;
+-			if(esp->sreg & ESP_STAT_PERR) {
+-				/* There was bad parity for the
+-				 * message byte, the status byte
+-				 * was ok.
+-				 */
+-				message_out = MSG_PARITY_ERROR;
+-			}
+-		} else if(intr == ESP_INTR_BSERV) {
+-			/* Only got status byte. */
+-			ESPLOG(("esp%d: got status only, ", esp->esp_id));
+-			if(!(esp->sreg & ESP_STAT_PERR)) {
+-				SCptr->SCp.Status = esp->esp_command[0];
+-				SCptr->SCp.Message = 0xff;
+-			} else {
+-				/* The status byte had bad parity.
+-				 * we leave the scsi_pointer Status
+-				 * field alone as we set it to a default
+-				 * of CHECK_CONDITION in esp_queue.
+-				 */
+-				message_out = INITIATOR_ERROR;
+-			}
+-		} else {
+-			/* This shouldn't happen ever. */
+-			ESPSTAT(("got bolixed\n"));
+-			esp_advance_phase(SCptr, in_the_dark);
+-			return esp_do_phase_determine(esp, eregs);
+-		}
+-
+-		if(!message_out) {
+-			ESPSTAT(("status=%2x msg=%2x, ", SCptr->SCp.Status,
+-				SCptr->SCp.Message));
+-			if(SCptr->SCp.Message == COMMAND_COMPLETE) {
+-				ESPSTAT(("and was COMMAND_COMPLETE\n"));
+-				esp_advance_phase(SCptr, in_freeing);
+-				return esp_do_freebus(esp, eregs);
+-			} else {
+-				ESPLOG(("esp%d: and _not_ COMMAND_COMPLETE\n",
+-					esp->esp_id));
+-				esp->msgin_len = esp->msgin_ctr = 1;
+-				esp_advance_phase(SCptr, in_msgindone);
+-				return esp_do_msgindone(esp, eregs);
+-			}
+-		} else {
+-			/* With luck we'll be able to let the target
+-			 * know that bad parity happened, it will know
+-			 * which byte caused the problems and send it
+-			 * again.  For the case where the status byte
+-			 * receives bad parity, I do not believe most
+-			 * targets recover very well.  We'll see.
+-			 */
+-			ESPLOG(("esp%d: bad parity somewhere mout=%2x\n",
+-				esp->esp_id, message_out));
+-			esp->cur_msgout[0] = message_out;
+-			esp->msgout_len = esp->msgout_ctr = 1;
+-			esp_advance_phase(SCptr, in_the_dark);
+-			return esp_do_phase_determine(esp, eregs);
+-		}
+-	} else {
+-		/* If we disconnect now, all hell breaks loose. */
+-		ESPLOG(("esp%d: whoops, disconnect\n", esp->esp_id));
+-		esp_advance_phase(SCptr, in_the_dark);
+-		return esp_do_phase_determine(esp, eregs);
+-	}
+-}
+-
+-static int esp_enter_status(struct NCR_ESP *esp,
+-			    struct ESP_regs *eregs)
+-{
+-	unchar thecmd = ESP_CMD_ICCSEQ;
+-
+-	esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-
+-	if(esp->do_pio_cmds) {
+-		esp_advance_phase(esp->current_SC, in_status);
+-		esp_cmd(esp, eregs, thecmd);
+-		while(!(esp_read(esp->eregs->esp_status) & ESP_STAT_INTR));
+-		esp->esp_command[0] = esp_read(eregs->esp_fdata);
+-                while(!(esp_read(esp->eregs->esp_status) & ESP_STAT_INTR));
+-                esp->esp_command[1] = esp_read(eregs->esp_fdata);
+-	} else {
+-		esp->esp_command[0] = esp->esp_command[1] = 0xff;
+-		esp_write(eregs->esp_tclow, 2);
+-		esp_write(eregs->esp_tcmed, 0);
+-		esp->dma_init_read(esp, esp->esp_command_dvma, 2);
+-		thecmd |= ESP_CMD_DMA;
+-		esp_cmd(esp, eregs, thecmd);
+-		esp_advance_phase(esp->current_SC, in_status);
+-	}
+-
+-	return esp_do_status(esp, eregs);
+-}
+-
+-static int esp_disconnect_amidst_phases(struct NCR_ESP *esp,
+-					struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *sp = esp->current_SC;
+-	struct esp_device *esp_dev = sp->device->hostdata;
+-
+-	/* This means real problems if we see this
+-	 * here.  Unless we were actually trying
+-	 * to force the device to abort/reset.
+-	 */
+-	ESPLOG(("esp%d: Disconnect amidst phases, ", esp->esp_id));
+-	ESPLOG(("pphase<%s> cphase<%s>, ",
+-		phase_string(sp->SCp.phase),
+-		phase_string(sp->SCp.sent_command)));
+-
+-	if(esp->disconnected_SC)
+-		esp_cmd(esp, eregs, ESP_CMD_ESEL);
+-
+-	switch(esp->cur_msgout[0]) {
+-	default:
+-		/* We didn't expect this to happen at all. */
+-		ESPLOG(("device is bolixed\n"));
+-		esp_advance_phase(sp, in_tgterror);
+-		esp_done(esp, (DID_ERROR << 16));
+-		break;
+-
+-	case BUS_DEVICE_RESET:
+-		ESPLOG(("device reset successful\n"));
+-		esp_dev->sync_max_offset = 0;
+-		esp_dev->sync_min_period = 0;
+-		esp_dev->sync = 0;
+-		esp_advance_phase(sp, in_resetdev);
+-		esp_done(esp, (DID_RESET << 16));
+-		break;
+-
+-	case ABORT:
+-		ESPLOG(("device abort successful\n"));
+-		esp_advance_phase(sp, in_abortone);
+-		esp_done(esp, (DID_ABORT << 16));
+-		break;
+-
+-	};
+-	return do_intr_end;
+-}
+-
+-static int esp_enter_msgout(struct NCR_ESP *esp,
+-			    struct ESP_regs *eregs)
+-{
+-	esp_advance_phase(esp->current_SC, in_msgout);
+-	return esp_do_msgout(esp, eregs);
+-}
+-
+-static int esp_enter_msgin(struct NCR_ESP *esp,
+-			   struct ESP_regs *eregs)
+-{
+-	esp_advance_phase(esp->current_SC, in_msgin);
+-	return esp_do_msgin(esp, eregs);
+-}
+-
+-static int esp_enter_cmd(struct NCR_ESP *esp,
+-			 struct ESP_regs *eregs)
+-{
+-	esp_advance_phase(esp->current_SC, in_cmdbegin);
+-	return esp_do_cmdbegin(esp, eregs);
+-}
+-
+-static int esp_enter_badphase(struct NCR_ESP *esp,
+-			      struct ESP_regs *eregs)
+-{
+-	ESPLOG(("esp%d: Bizarre bus phase %2x.\n", esp->esp_id,
+-		esp->sreg & ESP_STAT_PMASK));
+-	return do_reset_bus;
+-}
+-
+-typedef int (*espfunc_t)(struct NCR_ESP *,
+-			 struct ESP_regs *);
+-
+-static espfunc_t phase_vector[] = {
+-	esp_do_data,		/* ESP_DOP */
+-	esp_do_data,		/* ESP_DIP */
+-	esp_enter_cmd,		/* ESP_CMDP */
+-	esp_enter_status,	/* ESP_STATP */
+-	esp_enter_badphase,	/* ESP_STAT_PMSG */
+-	esp_enter_badphase,	/* ESP_STAT_PMSG | ESP_STAT_PIO */
+-	esp_enter_msgout,	/* ESP_MOP */
+-	esp_enter_msgin,	/* ESP_MIP */
+-};
+-
+-/* The target has control of the bus and we have to see where it has
+- * taken us.
+- */
+-static int esp_do_phase_determine(struct NCR_ESP *esp,
+-				  struct ESP_regs *eregs)
+-{
+-	if ((esp->ireg & ESP_INTR_DC) != 0)
+-		return esp_disconnect_amidst_phases(esp, eregs);
+-	return phase_vector[esp->sreg & ESP_STAT_PMASK](esp, eregs);
+-}
+-
+-/* First interrupt after exec'ing a cmd comes here. */
+-static int esp_select_complete(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	struct esp_device *esp_dev = SCptr->device->hostdata;
+-	int cmd_bytes_sent, fcnt;
+-
+-	fcnt = (esp_read(eregs->esp_fflags) & ESP_FF_FBYTES);
+-	cmd_bytes_sent = esp->dma_bytes_sent(esp, fcnt);
+-	if(esp->dma_invalidate)
+-		esp->dma_invalidate(esp);
+-
+-	/* Let's check to see if a reselect happened
+-	 * while we we're trying to select.  This must
+-	 * be checked first.
+-	 */
+-	if(esp->ireg == (ESP_INTR_RSEL | ESP_INTR_FDONE)) {
+-		esp_reconnect(esp, SCptr);
+-		return esp_do_reconnect(esp, eregs);
+-	}
+-
+-	/* Looks like things worked, we should see a bus service &
+-	 * a function complete interrupt at this point.  Note we
+-	 * are doing a direct comparison because we don't want to
+-	 * be fooled into thinking selection was successful if
+-	 * ESP_INTR_DC is set, see below.
+-	 */
+-	if(esp->ireg == (ESP_INTR_FDONE | ESP_INTR_BSERV)) {
+-		/* target speaks... */
+-		esp->targets_present |= (1<<scmd_id(SCptr));
+-
+-		/* What if the target ignores the sdtr? */
+-		if(esp->snip)
+-			esp_dev->sync = 1;
+-
+-		/* See how far, if at all, we got in getting
+-		 * the information out to the target.
+-		 */
+-		switch(esp->seqreg) {
+-		default:
+-
+-		case ESP_STEP_ASEL:
+-			/* Arbitration won, target selected, but
+-			 * we are in some phase which is not command
+-			 * phase nor is it message out phase.
+-			 *
+-			 * XXX We've confused the target, obviously.
+-			 * XXX So clear it's state, but we also end
+-			 * XXX up clearing everyone elses.  That isn't
+-			 * XXX so nice.  I'd like to just reset this
+-			 * XXX target, but if I cannot even get it's
+-			 * XXX attention and finish selection to talk
+-			 * XXX to it, there is not much more I can do.
+-			 * XXX If we have a loaded bus we're going to
+-			 * XXX spend the next second or so renegotiating
+-			 * XXX for synchronous transfers.
+-			 */
+-			ESPLOG(("esp%d: STEP_ASEL for tgt %d\n",
+-				esp->esp_id, SCptr->device->id));
+-
+-		case ESP_STEP_SID:
+-			/* Arbitration won, target selected, went
+-			 * to message out phase, sent one message
+-			 * byte, then we stopped.  ATN is asserted
+-			 * on the SCSI bus and the target is still
+-			 * there hanging on.  This is a legal
+-			 * sequence step if we gave the ESP a select
+-			 * and stop command.
+-			 *
+-			 * XXX See above, I could set the borken flag
+-			 * XXX in the device struct and retry the
+-			 * XXX command.  But would that help for
+-			 * XXX tagged capable targets?
+-			 */
+-
+-		case ESP_STEP_NCMD:
+-			/* Arbitration won, target selected, maybe
+-			 * sent the one message byte in message out
+-			 * phase, but we did not go to command phase
+-			 * in the end.  Actually, we could have sent
+-			 * only some of the message bytes if we tried
+-			 * to send out the entire identify and tag
+-			 * message using ESP_CMD_SA3.
+-			 */
+-			cmd_bytes_sent = 0;
+-			break;
+-
+-		case ESP_STEP_PPC:
+-			/* No, not the powerPC pinhead.  Arbitration
+-			 * won, all message bytes sent if we went to
+-			 * message out phase, went to command phase
+-			 * but only part of the command was sent.
+-			 *
+-			 * XXX I've seen this, but usually in conjunction
+-			 * XXX with a gross error which appears to have
+-			 * XXX occurred between the time I told the
+-			 * XXX ESP to arbitrate and when I got the
+-			 * XXX interrupt.  Could I have misloaded the
+-			 * XXX command bytes into the fifo?  Actually,
+-			 * XXX I most likely missed a phase, and therefore
+-			 * XXX went into never never land and didn't even
+-			 * XXX know it.  That was the old driver though.
+-			 * XXX What is even more peculiar is that the ESP
+-			 * XXX showed the proper function complete and
+-			 * XXX bus service bits in the interrupt register.
+-			 */
+-
+-		case ESP_STEP_FINI4:
+-		case ESP_STEP_FINI5:
+-		case ESP_STEP_FINI6:
+-		case ESP_STEP_FINI7:
+-			/* Account for the identify message */
+-			if(SCptr->SCp.phase == in_slct_norm)
+-				cmd_bytes_sent -= 1;
+-		};
+-		esp_cmd(esp, eregs, ESP_CMD_NULL);
+-
+-		/* Be careful, we could really get fucked during synchronous
+-		 * data transfers if we try to flush the fifo now.
+-		 */
+-		if(!fcnt && /* Fifo is empty and... */
+-		   /* either we are not doing synchronous transfers or... */
+-		   (!esp_dev->sync_max_offset ||
+-		    /* We are not going into data in phase. */
+-		    ((esp->sreg & ESP_STAT_PMASK) != ESP_DIP)))
+-			esp_cmd(esp, eregs, ESP_CMD_FLUSH); /* flush is safe */
+-
+-		/* See how far we got if this is not a slow command. */
+-		if(!esp->esp_slowcmd) {
+-			if(cmd_bytes_sent < 0)
+-				cmd_bytes_sent = 0;
+-			if(cmd_bytes_sent != SCptr->cmd_len) {
+-				/* Crapola, mark it as a slowcmd
+-				 * so that we have some chance of
+-				 * keeping the command alive with
+-				 * good luck.
+-				 *
+-				 * XXX Actually, if we didn't send it all
+-				 * XXX this means either we didn't set things
+-				 * XXX up properly (driver bug) or the target
+-				 * XXX or the ESP detected parity on one of
+-				 * XXX the command bytes.  This makes much
+-				 * XXX more sense, and therefore this code
+-				 * XXX should be changed to send out a
+-				 * XXX parity error message or if the status
+-				 * XXX register shows no parity error then
+-				 * XXX just expect the target to bring the
+-				 * XXX bus into message in phase so that it
+-				 * XXX can send us the parity error message.
+-				 * XXX SCSI sucks...
+-				 */
+-				esp->esp_slowcmd = 1;
+-				esp->esp_scmdp = &(SCptr->cmnd[cmd_bytes_sent]);
+-				esp->esp_scmdleft = (SCptr->cmd_len - cmd_bytes_sent);
+-			}
+-		}
+-
+-		/* Now figure out where we went. */
+-		esp_advance_phase(SCptr, in_the_dark);
+-		return esp_do_phase_determine(esp, eregs);
+-	}
+-
+-	/* Did the target even make it? */
+-	if(esp->ireg == ESP_INTR_DC) {
+-		/* wheee... nobody there or they didn't like
+-		 * what we told it to do, clean up.
+-		 */
+-
+-		/* If anyone is off the bus, but working on
+-		 * a command in the background for us, tell
+-		 * the ESP to listen for them.
+-		 */
+-		if(esp->disconnected_SC)
+-			esp_cmd(esp, eregs, ESP_CMD_ESEL);
+-
+-		if(((1<<SCptr->device->id) & esp->targets_present) &&
+-		   esp->seqreg && esp->cur_msgout[0] == EXTENDED_MESSAGE &&
+-		   (SCptr->SCp.phase == in_slct_msg ||
+-		    SCptr->SCp.phase == in_slct_stop)) {
+-			/* shit */
+-			esp->snip = 0;
+-			ESPLOG(("esp%d: Failed synchronous negotiation for target %d "
+-				"lun %d\n", esp->esp_id, SCptr->device->id, SCptr->device->lun));
+-			esp_dev->sync_max_offset = 0;
+-			esp_dev->sync_min_period = 0;
+-			esp_dev->sync = 1; /* so we don't negotiate again */
+-
+-			/* Run the command again, this time though we
+-			 * won't try to negotiate for synchronous transfers.
+-			 *
+-			 * XXX I'd like to do something like send an
+-			 * XXX INITIATOR_ERROR or ABORT message to the
+-			 * XXX target to tell it, "Sorry I confused you,
+-			 * XXX please come back and I will be nicer next
+-			 * XXX time".  But that requires having the target
+-			 * XXX on the bus, and it has dropped BSY on us.
+-			 */
+-			esp->current_SC = NULL;
+-			esp_advance_phase(SCptr, not_issued);
+-			prepend_SC(&esp->issue_SC, SCptr);
+-			esp_exec_cmd(esp);
+-			return do_intr_end;
+-		}
+-
+-		/* Ok, this is normal, this is what we see during boot
+-		 * or whenever when we are scanning the bus for targets.
+-		 * But first make sure that is really what is happening.
+-		 */
+-		if(((1<<SCptr->device->id) & esp->targets_present)) {
+-			ESPLOG(("esp%d: Warning, live target %d not responding to "
+-				"selection.\n", esp->esp_id, SCptr->device->id));
+-
+-			/* This _CAN_ happen.  The SCSI standard states that
+-			 * the target is to _not_ respond to selection if
+-			 * _it_ detects bad parity on the bus for any reason.
+-			 * Therefore, we assume that if we've talked successfully
+-			 * to this target before, bad parity is the problem.
+-			 */
+-			esp_done(esp, (DID_PARITY << 16));
+-		} else {
+-			/* Else, there really isn't anyone there. */
+-			ESPMISC(("esp: selection failure, maybe nobody there?\n"));
+-			ESPMISC(("esp: target %d lun %d\n",
+-				 SCptr->device->id, SCptr->device->lun));
+-			esp_done(esp, (DID_BAD_TARGET << 16));
+-		}
+-		return do_intr_end;
+-	}
+-
+-
+-	ESPLOG(("esp%d: Selection failure.\n", esp->esp_id));
+-	printk("esp%d: Currently -- ", esp->esp_id);
+-	esp_print_ireg(esp->ireg);
+-	printk(" ");
+-	esp_print_statreg(esp->sreg);
+-	printk(" ");
+-	esp_print_seqreg(esp->seqreg);
+-	printk("\n");
+-	printk("esp%d: New -- ", esp->esp_id);
+-	esp->sreg = esp_read(eregs->esp_status);
+-	esp->seqreg = esp_read(eregs->esp_sstep);
+-	esp->ireg = esp_read(eregs->esp_intrpt);
+-	esp_print_ireg(esp->ireg);
+-	printk(" ");
+-	esp_print_statreg(esp->sreg);
+-	printk(" ");
+-	esp_print_seqreg(esp->seqreg);
+-	printk("\n");
+-	ESPLOG(("esp%d: resetting bus\n", esp->esp_id));
+-	return do_reset_bus; /* ugh... */
+-}
+-
+-/* Continue reading bytes for msgin phase. */
+-static int esp_do_msgincont(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	if(esp->ireg & ESP_INTR_BSERV) {
+-		/* in the right phase too? */
+-		if((esp->sreg & ESP_STAT_PMASK) == ESP_MIP) {
+-			/* phew... */
+-			esp_cmd(esp, eregs, ESP_CMD_TI);
+-			esp_advance_phase(esp->current_SC, in_msgindone);
+-			return do_intr_end;
+-		}
+-
+-		/* We changed phase but ESP shows bus service,
+-		 * in this case it is most likely that we, the
+-		 * hacker who has been up for 20hrs straight
+-		 * staring at the screen, drowned in coffee
+-		 * smelling like retched cigarette ashes
+-		 * have miscoded something..... so, try to
+-		 * recover as best we can.
+-		 */
+-		ESPLOG(("esp%d: message in mis-carriage.\n", esp->esp_id));
+-	}
+-	esp_advance_phase(esp->current_SC, in_the_dark);
+-	return do_phase_determine;
+-}
+-
+-static int check_singlebyte_msg(struct NCR_ESP *esp,
+-				struct ESP_regs *eregs)
+-{
+-	esp->prevmsgin = esp->cur_msgin[0];
+-	if(esp->cur_msgin[0] & 0x80) {
+-		/* wheee... */
+-		ESPLOG(("esp%d: target sends identify amidst phases\n",
+-			esp->esp_id));
+-		esp_advance_phase(esp->current_SC, in_the_dark);
+-		return 0;
+-	} else if(((esp->cur_msgin[0] & 0xf0) == 0x20) ||
+-		  (esp->cur_msgin[0] == EXTENDED_MESSAGE)) {
+-		esp->msgin_len = 2;
+-		esp_advance_phase(esp->current_SC, in_msgincont);
+-		return 0;
+-	}
+-	esp_advance_phase(esp->current_SC, in_the_dark);
+-	switch(esp->cur_msgin[0]) {
+-	default:
+-		/* We don't want to hear about it. */
+-		ESPLOG(("esp%d: msg %02x which we don't know about\n", esp->esp_id,
+-			esp->cur_msgin[0]));
+-		return MESSAGE_REJECT;
+-
+-	case NOP:
+-		ESPLOG(("esp%d: target %d sends a nop\n", esp->esp_id,
+-			esp->current_SC->device->id));
+-		return 0;
+-
+-	case RESTORE_POINTERS:
+-		/* In this case we might also have to backup the
+-		 * "slow command" pointer.  It is rare to get such
+-		 * a save/restore pointer sequence so early in the
+-		 * bus transition sequences, but cover it.
+-		 */
+-		if(esp->esp_slowcmd) {
+-			esp->esp_scmdleft = esp->current_SC->cmd_len;
+-			esp->esp_scmdp = &esp->current_SC->cmnd[0];
+-		}
+-		esp_restore_pointers(esp, esp->current_SC);
+-		return 0;
+-
+-	case SAVE_POINTERS:
+-		esp_save_pointers(esp, esp->current_SC);
+-		return 0;
+-
+-	case COMMAND_COMPLETE:
+-	case DISCONNECT:
+-		/* Freeing the bus, let it go. */
+-		esp->current_SC->SCp.phase = in_freeing;
+-		return 0;
+-
+-	case MESSAGE_REJECT:
+-		ESPMISC(("msg reject, "));
+-		if(esp->prevmsgout == EXTENDED_MESSAGE) {
+-			struct esp_device *esp_dev = esp->current_SC->device->hostdata;
+-
+-			/* Doesn't look like this target can
+-			 * do synchronous or WIDE transfers.
+-			 */
+-			ESPSDTR(("got reject, was trying nego, clearing sync/WIDE\n"));
+-			esp_dev->sync = 1;
+-			esp_dev->wide = 1;
+-			esp_dev->sync_min_period = 0;
+-			esp_dev->sync_max_offset = 0;
+-			return 0;
+-		} else {
+-			ESPMISC(("not sync nego, sending ABORT\n"));
+-			return ABORT;
+-		}
+-	};
+-}
+-
+-/* Target negotiates for synchronous transfers before we do, this
+- * is legal although very strange.  What is even funnier is that
+- * the SCSI2 standard specifically recommends against targets doing
+- * this because so many initiators cannot cope with this occurring.
+- */
+-static int target_with_ants_in_pants(struct NCR_ESP *esp,
+-				     Scsi_Cmnd *SCptr,
+-				     struct esp_device *esp_dev)
+-{
+-	if(esp_dev->sync || SCptr->device->borken) {
+-		/* sorry, no can do */
+-		ESPSDTR(("forcing to async, "));
+-		build_sync_nego_msg(esp, 0, 0);
+-		esp_dev->sync = 1;
+-		esp->snip = 1;
+-		ESPLOG(("esp%d: hoping for msgout\n", esp->esp_id));
+-		esp_advance_phase(SCptr, in_the_dark);
+-		return EXTENDED_MESSAGE;
+-	}
+-
+-	/* Ok, we'll check them out... */
+-	return 0;
+-}
+-
+-static void sync_report(struct NCR_ESP *esp)
+-{
+-	int msg3, msg4;
+-	char *type;
+-
+-	msg3 = esp->cur_msgin[3];
+-	msg4 = esp->cur_msgin[4];
+-	if(msg4) {
+-		int hz = 1000000000 / (msg3 * 4);
+-		int integer = hz / 1000000;
+-		int fraction = (hz - (integer * 1000000)) / 10000;
+-		if((msg3 * 4) < 200) {
+-			type = "FAST";
+-		} else {
+-			type = "synchronous";
+-		}
+-
+-		/* Do not transform this back into one big printk
+-		 * again, it triggers a bug in our sparc64-gcc272
+-		 * sibling call optimization.  -DaveM
+-		 */
+-		ESPLOG((KERN_INFO "esp%d: target %d ",
+-			esp->esp_id, esp->current_SC->device->id));
+-		ESPLOG(("[period %dns offset %d %d.%02dMHz ",
+-			(int) msg3 * 4, (int) msg4,
+-			integer, fraction));
+-		ESPLOG(("%s SCSI%s]\n", type,
+-			(((msg3 * 4) < 200) ? "-II" : "")));
+-	} else {
+-		ESPLOG((KERN_INFO "esp%d: target %d asynchronous\n",
+-			esp->esp_id, esp->current_SC->device->id));
+-	}
+-}
+-
+-static int check_multibyte_msg(struct NCR_ESP *esp,
+-			       struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	struct esp_device *esp_dev = SCptr->device->hostdata;
+-	unchar regval = 0;
+-	int message_out = 0;
+-
+-	ESPSDTR(("chk multibyte msg: "));
+-	if(esp->cur_msgin[2] == EXTENDED_SDTR) {
+-		int period = esp->cur_msgin[3];
+-		int offset = esp->cur_msgin[4];
+-
+-		ESPSDTR(("is sync nego response, "));
+-		if(!esp->snip) {
+-			int rval;
+-
+-			/* Target negotiates first! */
+-			ESPSDTR(("target jumps the gun, "));
+-			message_out = EXTENDED_MESSAGE; /* we must respond */
+-			rval = target_with_ants_in_pants(esp, SCptr, esp_dev);
+-			if(rval)
+-				return rval;
+-		}
+-
+-		ESPSDTR(("examining sdtr, "));
+-
+-		/* Offset cannot be larger than ESP fifo size. */
+-		if(offset > 15) {
+-			ESPSDTR(("offset too big %2x, ", offset));
+-			offset = 15;
+-			ESPSDTR(("sending back new offset\n"));
+-			build_sync_nego_msg(esp, period, offset);
+-			return EXTENDED_MESSAGE;
+-		}
+-
+-		if(offset && period > esp->max_period) {
+-			/* Yeee, async for this slow device. */
+-			ESPSDTR(("period too long %2x, ", period));
+-			build_sync_nego_msg(esp, 0, 0);
+-			ESPSDTR(("hoping for msgout\n"));
+-			esp_advance_phase(esp->current_SC, in_the_dark);
+-			return EXTENDED_MESSAGE;
+-		} else if (offset && period < esp->min_period) {
+-			ESPSDTR(("period too short %2x, ", period));
+-			period = esp->min_period;
+-			if(esp->erev > esp236)
+-				regval = 4;
+-			else
+-				regval = 5;
+-		} else if(offset) {
+-			int tmp;
+-
+-			ESPSDTR(("period is ok, "));
+-			tmp = esp->ccycle / 1000;
+-			regval = (((period << 2) + tmp - 1) / tmp);
+-			if(regval && (esp->erev > esp236)) {
+-				if(period >= 50)
+-					regval--;
+-			}
+-		}
+-
+-		if(offset) {
+-			unchar bit;
+-
+-			esp_dev->sync_min_period = (regval & 0x1f);
+-			esp_dev->sync_max_offset = (offset | esp->radelay);
+-			if(esp->erev > esp236) {
+-				if(esp->erev == fas100a)
+-					bit = ESP_CONFIG3_FAST;
+-				else
+-					bit = ESP_CONFIG3_FSCSI;
+-				if(period < 50)
+-					esp->config3[SCptr->device->id] |= bit;
+-				else
+-					esp->config3[SCptr->device->id] &= ~bit;
+-				esp->prev_cfg3 = esp->config3[SCptr->device->id];
+-				esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-			}
+-			esp->prev_soff = esp_dev->sync_min_period;
+-			esp_write(eregs->esp_soff, esp->prev_soff);
+-			esp->prev_stp = esp_dev->sync_max_offset;
+-			esp_write(eregs->esp_stp, esp->prev_stp);
+-
+-			ESPSDTR(("soff=%2x stp=%2x cfg3=%2x\n",
+-				esp_dev->sync_max_offset,
+-				esp_dev->sync_min_period,
+-				esp->config3[scmd_id(SCptr)]));
+-
+-			esp->snip = 0;
+-		} else if(esp_dev->sync_max_offset) {
+-			unchar bit;
+-
+-			/* back to async mode */
+-			ESPSDTR(("unaccaptable sync nego, forcing async\n"));
+-			esp_dev->sync_max_offset = 0;
+-			esp_dev->sync_min_period = 0;
+-			esp->prev_soff = 0;
+-			esp_write(eregs->esp_soff, 0);
+-			esp->prev_stp = 0;
+-			esp_write(eregs->esp_stp, 0);
+-			if(esp->erev > esp236) {
+-				if(esp->erev == fas100a)
+-					bit = ESP_CONFIG3_FAST;
+-				else
+-					bit = ESP_CONFIG3_FSCSI;
+-				esp->config3[SCptr->device->id] &= ~bit;
+-				esp->prev_cfg3 = esp->config3[SCptr->device->id];
+-				esp_write(eregs->esp_cfg3, esp->prev_cfg3);
+-			}
+-		}
+-
+-		sync_report(esp);
+-
+-		ESPSDTR(("chk multibyte msg: sync is known, "));
+-		esp_dev->sync = 1;
+-
+-		if(message_out) {
+-			ESPLOG(("esp%d: sending sdtr back, hoping for msgout\n",
+-				esp->esp_id));
+-			build_sync_nego_msg(esp, period, offset);
+-			esp_advance_phase(SCptr, in_the_dark);
+-			return EXTENDED_MESSAGE;
+-		}
+-
+-		ESPSDTR(("returning zero\n"));
+-		esp_advance_phase(SCptr, in_the_dark); /* ...or else! */
+-		return 0;
+-	} else if(esp->cur_msgin[2] == EXTENDED_WDTR) {
+-		ESPLOG(("esp%d: AIEEE wide msg received\n", esp->esp_id));
+-		message_out = MESSAGE_REJECT;
+-	} else if(esp->cur_msgin[2] == EXTENDED_MODIFY_DATA_POINTER) {
+-		ESPLOG(("esp%d: rejecting modify data ptr msg\n", esp->esp_id));
+-		message_out = MESSAGE_REJECT;
+-	}
+-	esp_advance_phase(SCptr, in_the_dark);
+-	return message_out;
+-}
+-
+-static int esp_do_msgindone(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	int message_out = 0, it = 0, rval;
+-
+-	rval = skipahead1(esp, eregs, SCptr, in_msgin, in_msgindone);
+-	if(rval)
+-		return rval;
+-	if(SCptr->SCp.sent_command != in_status) {
+-		if(!(esp->ireg & ESP_INTR_DC)) {
+-			if(esp->msgin_len && (esp->sreg & ESP_STAT_PERR)) {
+-				message_out = MSG_PARITY_ERROR;
+-				esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-			} else if((it = (esp_read(eregs->esp_fflags) & ESP_FF_FBYTES))!=1) {
+-				/* We certainly dropped the ball somewhere. */
+-				message_out = INITIATOR_ERROR;
+-				esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-			} else if(!esp->msgin_len) {
+-				it = esp_read(eregs->esp_fdata);
+-				esp_advance_phase(SCptr, in_msgincont);
+-			} else {
+-				/* it is ok and we want it */
+-				it = esp->cur_msgin[esp->msgin_ctr] =
+-					esp_read(eregs->esp_fdata);
+-				esp->msgin_ctr++;
+-			}
+-		} else {
+-			esp_advance_phase(SCptr, in_the_dark);
+-			return do_work_bus;
+-		}
+-	} else {
+-		it = esp->cur_msgin[0];
+-	}
+-	if(!message_out && esp->msgin_len) {
+-		if(esp->msgin_ctr < esp->msgin_len) {
+-			esp_advance_phase(SCptr, in_msgincont);
+-		} else if(esp->msgin_len == 1) {
+-			message_out = check_singlebyte_msg(esp, eregs);
+-		} else if(esp->msgin_len == 2) {
+-			if(esp->cur_msgin[0] == EXTENDED_MESSAGE) {
+-				if((it+2) >= 15) {
+-					message_out = MESSAGE_REJECT;
+-				} else {
+-					esp->msgin_len = (it + 2);
+-					esp_advance_phase(SCptr, in_msgincont);
+-				}
+-			} else {
+-				message_out = MESSAGE_REJECT; /* foo on you */
+-			}
+-		} else {
+-			message_out = check_multibyte_msg(esp, eregs);
+-		}
+-	}
+-	if(message_out < 0) {
+-		return -message_out;
+-	} else if(message_out) {
+-		if(((message_out != 1) &&
+-		    ((message_out < 0x20) || (message_out & 0x80))))
+-			esp->msgout_len = 1;
+-		esp->cur_msgout[0] = message_out;
+-		esp_cmd(esp, eregs, ESP_CMD_SATN);
+-		esp_advance_phase(SCptr, in_the_dark);
+-		esp->msgin_len = 0;
+-	}
+-	esp->sreg = esp_read(eregs->esp_status);
+-	esp->sreg &= ~(ESP_STAT_INTR);
+-	if((esp->sreg & (ESP_STAT_PMSG|ESP_STAT_PCD)) == (ESP_STAT_PMSG|ESP_STAT_PCD))
+-		esp_cmd(esp, eregs, ESP_CMD_MOK);
+-	if((SCptr->SCp.sent_command == in_msgindone) &&
+-	    (SCptr->SCp.phase == in_freeing))
+-		return esp_do_freebus(esp, eregs);
+-	return do_intr_end;
+-}
+-
+-static int esp_do_cmdbegin(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	unsigned char tmp;
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-
+-	esp_advance_phase(SCptr, in_cmdend);
+-	esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-	tmp = *esp->esp_scmdp++;
+-	esp->esp_scmdleft--;
+-	esp_write(eregs->esp_fdata, tmp);
+-	esp_cmd(esp, eregs, ESP_CMD_TI);
+-	return do_intr_end;
+-}
+-
+-static int esp_do_cmddone(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	esp_cmd(esp, eregs, ESP_CMD_NULL);
+-	if(esp->ireg & ESP_INTR_BSERV) {
+-		esp_advance_phase(esp->current_SC, in_the_dark);
+-		return esp_do_phase_determine(esp, eregs);
+-	}
+-	ESPLOG(("esp%d: in do_cmddone() but didn't get BSERV interrupt.\n",
+-		esp->esp_id));
+-	return do_reset_bus;
+-}
+-
+-static int esp_do_msgout(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-	switch(esp->msgout_len) {
+-	case 1:
+-		esp_write(eregs->esp_fdata, esp->cur_msgout[0]);
+-		esp_cmd(esp, eregs, ESP_CMD_TI);
+-		break;
+-
+-	case 2:
+-		if(esp->do_pio_cmds){
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[0]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[1]);
+-			esp_cmd(esp, eregs, ESP_CMD_TI);
+-		} else {
+-			esp->esp_command[0] = esp->cur_msgout[0];
+-			esp->esp_command[1] = esp->cur_msgout[1];
+-			esp->dma_setup(esp, esp->esp_command_dvma, 2, 0);
+-			esp_setcount(eregs, 2);
+-			esp_cmd(esp, eregs, ESP_CMD_DMA | ESP_CMD_TI);
+-		}
+-		break;
+-
+-	case 4:
+-		esp->snip = 1;
+-		if(esp->do_pio_cmds){
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[0]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[1]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[2]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[3]);
+-			esp_cmd(esp, eregs, ESP_CMD_TI);
+-		} else {
+-			esp->esp_command[0] = esp->cur_msgout[0];
+-			esp->esp_command[1] = esp->cur_msgout[1];
+-			esp->esp_command[2] = esp->cur_msgout[2];
+-			esp->esp_command[3] = esp->cur_msgout[3];
+-			esp->dma_setup(esp, esp->esp_command_dvma, 4, 0);
+-			esp_setcount(eregs, 4);
+-			esp_cmd(esp, eregs, ESP_CMD_DMA | ESP_CMD_TI);
+-		}
+-		break;
+-
+-	case 5:
+-		esp->snip = 1;
+-		if(esp->do_pio_cmds){
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[0]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[1]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[2]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[3]);
+-			esp_write(eregs->esp_fdata, esp->cur_msgout[4]);
+-			esp_cmd(esp, eregs, ESP_CMD_TI);
+-		} else {
+-			esp->esp_command[0] = esp->cur_msgout[0];
+-			esp->esp_command[1] = esp->cur_msgout[1];
+-			esp->esp_command[2] = esp->cur_msgout[2];
+-			esp->esp_command[3] = esp->cur_msgout[3];
+-			esp->esp_command[4] = esp->cur_msgout[4];
+-			esp->dma_setup(esp, esp->esp_command_dvma, 5, 0);
+-			esp_setcount(eregs, 5);
+-			esp_cmd(esp, eregs, ESP_CMD_DMA | ESP_CMD_TI);
+-		}
+-		break;
+-
+-	default:
+-		/* whoops */
+-		ESPMISC(("bogus msgout sending NOP\n"));
+-		esp->cur_msgout[0] = NOP;
+-		esp_write(eregs->esp_fdata, esp->cur_msgout[0]);
+-		esp->msgout_len = 1;
+-		esp_cmd(esp, eregs, ESP_CMD_TI);
+-		break;
+-	}
+-	esp_advance_phase(esp->current_SC, in_msgoutdone);
+-	return do_intr_end;
+-}
+-
+-static int esp_do_msgoutdone(struct NCR_ESP *esp, 
+-			     struct ESP_regs *eregs)
+-{
+-	if((esp->msgout_len > 1) && esp->dma_barrier)
+-		esp->dma_barrier(esp);
+-
+-	if(!(esp->ireg & ESP_INTR_DC)) {
+-		esp_cmd(esp, eregs, ESP_CMD_NULL);
+-		switch(esp->sreg & ESP_STAT_PMASK) {
+-		case ESP_MOP:
+-			/* whoops, parity error */
+-			ESPLOG(("esp%d: still in msgout, parity error assumed\n",
+-				esp->esp_id));
+-			if(esp->msgout_len > 1)
+-				esp_cmd(esp, eregs, ESP_CMD_SATN);
+-			esp_advance_phase(esp->current_SC, in_msgout);
+-			return do_work_bus;
+-
+-		case ESP_DIP:
+-			break;
+-
+-		default:
+-			if(!fcount(esp, eregs) &&
+-			   !(((struct esp_device *)esp->current_SC->device->hostdata)->sync_max_offset))
+-				esp_cmd(esp, eregs, ESP_CMD_FLUSH);
+-			break;
+-
+-		};
+-	}
+-
+-	/* If we sent out a synchronous negotiation message, update
+-	 * our state.
+-	 */
+-	if(esp->cur_msgout[2] == EXTENDED_MESSAGE &&
+-	   esp->cur_msgout[4] == EXTENDED_SDTR) {
+-		esp->snip = 1; /* anal retentiveness... */
+-	}
+-
+-	esp->prevmsgout = esp->cur_msgout[0];
+-	esp->msgout_len = 0;
+-	esp_advance_phase(esp->current_SC, in_the_dark);
+-	return esp_do_phase_determine(esp, eregs);
+-}
+-
+-static int esp_bus_unexpected(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	ESPLOG(("esp%d: command in weird state %2x\n",
+-		esp->esp_id, esp->current_SC->SCp.phase));
+-	return do_reset_bus;
+-}
+-
+-static espfunc_t bus_vector[] = {
+-	esp_do_data_finale,
+-	esp_do_data_finale,
+-	esp_bus_unexpected,
+-	esp_do_msgin,
+-	esp_do_msgincont,
+-	esp_do_msgindone,
+-	esp_do_msgout,
+-	esp_do_msgoutdone,
+-	esp_do_cmdbegin,
+-	esp_do_cmddone,
+-	esp_do_status,
+-	esp_do_freebus,
+-	esp_do_phase_determine,
+-	esp_bus_unexpected,
+-	esp_bus_unexpected,
+-	esp_bus_unexpected,
+-};
+-
+-/* This is the second tier in our dual-level SCSI state machine. */
+-static int esp_work_bus(struct NCR_ESP *esp, struct ESP_regs *eregs)
+-{
+-	Scsi_Cmnd *SCptr = esp->current_SC;
+-	unsigned int phase;
+-
+-	ESPBUS(("esp_work_bus: "));
+-	if(!SCptr) {
+-		ESPBUS(("reconnect\n"));
+-		return esp_do_reconnect(esp, eregs);
+-	}
+-	phase = SCptr->SCp.phase;
+-	if ((phase & 0xf0) == in_phases_mask)
+-		return bus_vector[(phase & 0x0f)](esp, eregs);
+-	else if((phase & 0xf0) == in_slct_mask)
+-		return esp_select_complete(esp, eregs);
+-	else
+-		return esp_bus_unexpected(esp, eregs);
+-}
+-
+-static espfunc_t isvc_vector[] = {
+-	NULL,
+-	esp_do_phase_determine,
+-	esp_do_resetbus,
+-	esp_finish_reset,
+-	esp_work_bus
+-};
+-
+-/* Main interrupt handler for an esp adapter. */
+-void esp_handle(struct NCR_ESP *esp)
+-{
+-	struct ESP_regs *eregs;
+-	Scsi_Cmnd *SCptr;
+-	int what_next = do_intr_end;
+-	eregs = esp->eregs;
+-	SCptr = esp->current_SC;
+-
+-	if(esp->dma_irq_entry)
+-		esp->dma_irq_entry(esp);
+-
+-	/* Check for errors. */
+-	esp->sreg = esp_read(eregs->esp_status);
+-	esp->sreg &= (~ESP_STAT_INTR);
+-	esp->seqreg = (esp_read(eregs->esp_sstep) & ESP_STEP_VBITS);
+-	esp->ireg = esp_read(eregs->esp_intrpt);   /* Unlatch intr and stat regs */
+-	ESPIRQ(("handle_irq: [sreg<%02x> sstep<%02x> ireg<%02x>]\n",
+-		esp->sreg, esp->seqreg, esp->ireg));
+-	if(esp->sreg & (ESP_STAT_SPAM)) {
+-		/* Gross error, could be due to one of:
+-		 *
+-		 * - top of fifo overwritten, could be because
+-		 *   we tried to do a synchronous transfer with
+-		 *   an offset greater than ESP fifo size
+-		 *
+-		 * - top of command register overwritten
+-		 *
+-		 * - DMA setup to go in one direction, SCSI
+-		 *   bus points in the other, whoops
+-		 *
+-		 * - weird phase change during asynchronous
+-		 *   data phase while we are initiator
+-		 */
+-		ESPLOG(("esp%d: Gross error sreg=%2x\n", esp->esp_id, esp->sreg));
+-
+-		/* If a command is live on the bus we cannot safely
+-		 * reset the bus, so we'll just let the pieces fall
+-		 * where they may.  Here we are hoping that the
+-		 * target will be able to cleanly go away soon
+-		 * so we can safely reset things.
+-		 */
+-		if(!SCptr) {
+-			ESPLOG(("esp%d: No current cmd during gross error, "
+-				"resetting bus\n", esp->esp_id));
+-			what_next = do_reset_bus;
+-			goto state_machine;
+-		}
+-	}
+-
+-	/* No current cmd is only valid at this point when there are
+-	 * commands off the bus or we are trying a reset.
+-	 */
+-	if(!SCptr && !esp->disconnected_SC && !(esp->ireg & ESP_INTR_SR)) {
+-		/* Panic is safe, since current_SC is null. */
+-		ESPLOG(("esp%d: no command in esp_handle()\n", esp->esp_id));
+-		panic("esp_handle: current_SC == penguin within interrupt!");
+-	}
+-
+-	if(esp->ireg & (ESP_INTR_IC)) {
+-		/* Illegal command fed to ESP.  Outside of obvious
+-		 * software bugs that could cause this, there is
+-		 * a condition with ESP100 where we can confuse the
+-		 * ESP into an erroneous illegal command interrupt
+-		 * because it does not scrape the FIFO properly
+-		 * for reselection.  See esp100_reconnect_hwbug()
+-		 * to see how we try very hard to avoid this.
+-		 */
+-		ESPLOG(("esp%d: invalid command\n", esp->esp_id));
+-
+-		esp_dump_state(esp, eregs);
+-
+-		if(SCptr) {
+-			/* Devices with very buggy firmware can drop BSY
+-			 * during a scatter list interrupt when using sync
+-			 * mode transfers.  We continue the transfer as
+-			 * expected, the target drops the bus, the ESP
+-			 * gets confused, and we get a illegal command
+-			 * interrupt because the bus is in the disconnected
+-			 * state now and ESP_CMD_TI is only allowed when
+-			 * a nexus is alive on the bus.
+-			 */
+-			ESPLOG(("esp%d: Forcing async and disabling disconnect for "
+-				"target %d\n", esp->esp_id, SCptr->device->id));
+-			SCptr->device->borken = 1; /* foo on you */
+-		}
+-
+-		what_next = do_reset_bus;
+-	} else if(!(esp->ireg & ~(ESP_INTR_FDONE | ESP_INTR_BSERV | ESP_INTR_DC))) {
+-		int phase;
+-
+-		if(SCptr) {
+-			phase = SCptr->SCp.phase;
+-			if(phase & in_phases_mask) {
+-				what_next = esp_work_bus(esp, eregs);
+-			} else if(phase & in_slct_mask) {
+-				what_next = esp_select_complete(esp, eregs);
+-			} else {
+-				ESPLOG(("esp%d: interrupt for no good reason...\n",
+-					esp->esp_id));
+-				what_next = do_intr_end;
+-			}
+-		} else {
+-			ESPLOG(("esp%d: BSERV or FDONE or DC while SCptr==NULL\n",
+-				esp->esp_id));
+-			what_next = do_reset_bus;
+-		}
+-	} else if(esp->ireg & ESP_INTR_SR) {
+-		ESPLOG(("esp%d: SCSI bus reset interrupt\n", esp->esp_id));
+-		what_next = do_reset_complete;
+-	} else if(esp->ireg & (ESP_INTR_S | ESP_INTR_SATN)) {
+-		ESPLOG(("esp%d: AIEEE we have been selected by another initiator!\n",
+-			esp->esp_id));
+-		what_next = do_reset_bus;
+-	} else if(esp->ireg & ESP_INTR_RSEL) {
+-		if(!SCptr) {
+-			/* This is ok. */
+-			what_next = esp_do_reconnect(esp, eregs);
+-		} else if(SCptr->SCp.phase & in_slct_mask) {
+-			/* Only selection code knows how to clean
+-			 * up properly.
+-			 */
+-			ESPDISC(("Reselected during selection attempt\n"));
+-			what_next = esp_select_complete(esp, eregs);
+-		} else {
+-			ESPLOG(("esp%d: Reselected while bus is busy\n",
+-				esp->esp_id));
+-			what_next = do_reset_bus;
+-		}
+-	}
+-
+-	/* This is tier-one in our dual level SCSI state machine. */
+-state_machine:
+-	while(what_next != do_intr_end) {
+-		if (what_next >= do_phase_determine &&
+-		    what_next < do_intr_end)
+-			what_next = isvc_vector[what_next](esp, eregs);
+-		else {
+-			/* state is completely lost ;-( */
+-			ESPLOG(("esp%d: interrupt engine loses state, resetting bus\n",
+-				esp->esp_id));
+-			what_next = do_reset_bus;
+-		}
+-	}
+-	if(esp->dma_irq_exit)
+-		esp->dma_irq_exit(esp);
+-}
+-EXPORT_SYMBOL(esp_handle);
+-
+-#ifndef CONFIG_SMP
+-irqreturn_t esp_intr(int irq, void *dev_id)
+-{
+-	struct NCR_ESP *esp;
+-	unsigned long flags;
+-	int again;
+-	struct Scsi_Host *dev = dev_id;
+-
+-	/* Handle all ESP interrupts showing at this IRQ level. */
+-	spin_lock_irqsave(dev->host_lock, flags);
+-repeat:
+-	again = 0;
+-	for_each_esp(esp) {
+-#ifndef __mips__	    
+-		if(((esp)->irq & 0xff) == irq) {
+-#endif		    
+-			if(esp->dma_irq_p(esp)) {
+-				again = 1;
+-
+-				esp->dma_ints_off(esp);
+-
+-				ESPIRQ(("I%d(", esp->esp_id));
+-				esp_handle(esp);
+-				ESPIRQ((")"));
+-
+-				esp->dma_ints_on(esp);
+-			}
+-#ifndef __mips__		    
+-		}
+-#endif	    
+-	}
+-	if(again)
+-		goto repeat;
+-	spin_unlock_irqrestore(dev->host_lock, flags);
+-	return IRQ_HANDLED;
+-}
+-#else
+-/* For SMP we only service one ESP on the list list at our IRQ level! */
+-irqreturn_t esp_intr(int irq, void *dev_id)
+-{
+-	struct NCR_ESP *esp;
+-	unsigned long flags;
+-	struct Scsi_Host *dev = dev_id;
+-	
+-	/* Handle all ESP interrupts showing at this IRQ level. */
+-	spin_lock_irqsave(dev->host_lock, flags);
+-	for_each_esp(esp) {
+-		if(((esp)->irq & 0xf) == irq) {
+-			if(esp->dma_irq_p(esp)) {
+-				esp->dma_ints_off(esp);
+-
+-				ESPIRQ(("I[%d:%d](",
+-					smp_processor_id(), esp->esp_id));
+-				esp_handle(esp);
+-				ESPIRQ((")"));
+-
+-				esp->dma_ints_on(esp);
+-				goto out;
+-			}
+-		}
+-	}
+-out:
+-	spin_unlock_irqrestore(dev->host_lock, flags);
+-	return IRQ_HANDLED;
+-}
+-#endif
+-
+-int esp_slave_alloc(struct scsi_device *SDptr)
+-{
+-	struct esp_device *esp_dev =
+-		kzalloc(sizeof(struct esp_device), GFP_ATOMIC);
+-
+-	if (!esp_dev)
+-		return -ENOMEM;
+-	SDptr->hostdata = esp_dev;
+-	return 0;
+-}
+-
+-void esp_slave_destroy(struct scsi_device *SDptr)
+-{
+-	struct NCR_ESP *esp = (struct NCR_ESP *) SDptr->host->hostdata;
+-
+-	esp->targets_present &= ~(1 << sdev_id(SDptr));
+-	kfree(SDptr->hostdata);
+-	SDptr->hostdata = NULL;
+-}
+-
+-#ifdef MODULE
+-int init_module(void) { return 0; }
+-void cleanup_module(void) {}
+-void esp_release(void)
+-{
+-	esps_in_use--;
+-	esps_running = esps_in_use;
+-}
+-EXPORT_SYMBOL(esp_release);
+-#endif
+-
+-EXPORT_SYMBOL(esp_abort);
+-EXPORT_SYMBOL(esp_allocate);
+-EXPORT_SYMBOL(esp_deallocate);
+-EXPORT_SYMBOL(esp_initialize);
+-EXPORT_SYMBOL(esp_intr);
+-EXPORT_SYMBOL(esp_queue);
+-EXPORT_SYMBOL(esp_reset);
+-EXPORT_SYMBOL(esp_slave_alloc);
+-EXPORT_SYMBOL(esp_slave_destroy);
+-EXPORT_SYMBOL(esps_in_use);
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/NCR53C9x.h b/drivers/scsi/NCR53C9x.h
+deleted file mode 100644
+index d85cb73..0000000
+--- a/drivers/scsi/NCR53C9x.h
++++ /dev/null
+@@ -1,668 +0,0 @@
+-/* NCR53C9x.c:  Defines and structures for the NCR53C9x generic driver.
+- *
+- * Originaly esp.h:  Defines and structures for the Sparc ESP 
+- *                   (Enhanced SCSI Processor) driver under Linux.
+- *
+- * Copyright (C) 1995 David S. Miller (davem@caip.rutgers.edu)
+- *
+- * Generalization by Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * More generalization (for i386 stuff) by Tymm Twillman (tymm@computer.org)
+- */
+-
+-#ifndef NCR53C9X_H
+-#define NCR53C9X_H
+-
+-#include <linux/interrupt.h>
+-
+-/* djweis for mac driver */
+-#if defined(CONFIG_MAC)
+-#define PAD_SIZE 15
+-#else
+-#define PAD_SIZE 3
+-#endif
+-
+-/* Handle multiple hostadapters on Amiga
+- * generally PAD_SIZE = 3
+- * but there is one exception: Oktagon (PAD_SIZE = 1) */
+-#if defined(CONFIG_OKTAGON_SCSI) || defined(CONFIG_OKTAGON_SCSI_MODULE)
+-#undef PAD_SIZE
+-#if defined(CONFIG_BLZ1230_SCSI) || defined(CONFIG_BLZ1230_SCSI_MODULE) || \
+-    defined(CONFIG_BLZ2060_SCSI) || defined(CONFIG_BLZ2060_SCSI_MODULE) || \
+-    defined(CONFIG_CYBERSTORM_SCSI) || defined(CONFIG_CYBERSTORM_SCSI_MODULE) || \
+-    defined(CONFIG_CYBERSTORMII_SCSI) || defined(CONFIG_CYBERSTORMII_SCSI_MODULE) || \
+-    defined(CONFIG_FASTLANE_SCSI) || defined(CONFIG_FASTLANE_SCSI_MODULE)
+-#define MULTIPLE_PAD_SIZES
+-#else
+-#define PAD_SIZE 1
+-#endif
+-#endif
+-
+-/* Macros for debugging messages */
+-
+-#define DEBUG_ESP
+-/* #define DEBUG_ESP_DATA */
+-/* #define DEBUG_ESP_QUEUE */
+-/* #define DEBUG_ESP_DISCONNECT */
+-/* #define DEBUG_ESP_STATUS */
+-/* #define DEBUG_ESP_PHASES */
+-/* #define DEBUG_ESP_WORKBUS */
+-/* #define DEBUG_STATE_MACHINE */
+-/* #define DEBUG_ESP_CMDS */
+-/* #define DEBUG_ESP_IRQS */
+-/* #define DEBUG_SDTR */
+-/* #define DEBUG_ESP_SG */
+-
+-/* Use the following to sprinkle debugging messages in a way which
+- * suits you if combinations of the above become too verbose when
+- * trying to track down a specific problem.
+- */
+-/* #define DEBUG_ESP_MISC */
+-
+-#if defined(DEBUG_ESP)
+-#define ESPLOG(foo)  printk foo
+-#else
+-#define ESPLOG(foo)
+-#endif /* (DEBUG_ESP) */
+-
+-#if defined(DEBUG_ESP_DATA)
+-#define ESPDATA(foo)  printk foo
+-#else
+-#define ESPDATA(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_QUEUE)
+-#define ESPQUEUE(foo)  printk foo
+-#else
+-#define ESPQUEUE(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_DISCONNECT)
+-#define ESPDISC(foo)  printk foo
+-#else
+-#define ESPDISC(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_STATUS)
+-#define ESPSTAT(foo)  printk foo
+-#else
+-#define ESPSTAT(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_PHASES)
+-#define ESPPHASE(foo)  printk foo
+-#else
+-#define ESPPHASE(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_WORKBUS)
+-#define ESPBUS(foo)  printk foo
+-#else
+-#define ESPBUS(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_IRQS)
+-#define ESPIRQ(foo)  printk foo
+-#else
+-#define ESPIRQ(foo)
+-#endif
+-
+-#if defined(DEBUG_SDTR)
+-#define ESPSDTR(foo)  printk foo
+-#else
+-#define ESPSDTR(foo)
+-#endif
+-
+-#if defined(DEBUG_ESP_MISC)
+-#define ESPMISC(foo)  printk foo
+-#else
+-#define ESPMISC(foo)
+-#endif
+-
+-/*
+- * padding for register structure
+- */
+-#ifdef CONFIG_JAZZ_ESP
+-#define EREGS_PAD(n)
+-#else
+-#ifndef MULTIPLE_PAD_SIZES
+-#define EREGS_PAD(n)    unchar n[PAD_SIZE];
+-#endif
+-#endif
+-
+-/* The ESP SCSI controllers have their register sets in three
+- * "classes":
+- *
+- * 1) Registers which are both read and write.
+- * 2) Registers which are read only.
+- * 3) Registers which are write only.
+- *
+- * Yet, they all live within the same IO space.
+- */
+-
+-#if !defined(__i386__) && !defined(__x86_64__)
+-
+-#ifndef MULTIPLE_PAD_SIZES
+-
+-#ifdef CONFIG_CPU_HAS_WB
+-#include <asm/wbflush.h>
+-#define esp_write(__reg, __val) do{(__reg) = (__val); wbflush();} while(0)
+-#else
+-#define esp_write(__reg, __val) ((__reg) = (__val))
+-#endif
+-#define esp_read(__reg) (__reg)
+-
+-struct ESP_regs {
+-                                /* Access    Description              Offset */
+-    volatile unchar esp_tclow;  /* rw  Low bits of the transfer count 0x00   */
+-                                EREGS_PAD(tlpad1);
+-    volatile unchar esp_tcmed;  /* rw  Mid bits of the transfer count 0x04   */
+-                                EREGS_PAD(fdpad);
+-    volatile unchar esp_fdata;  /* rw  FIFO data bits                 0x08   */
+-                                EREGS_PAD(cbpad);
+-    volatile unchar esp_cmnd;   /* rw  SCSI command bits              0x0c   */
+-                                EREGS_PAD(stpad);
+-    volatile unchar esp_status; /* ro  ESP status register            0x10   */
+-#define esp_busid   esp_status  /* wo  Bus ID for select/reselect     0x10   */
+-                                EREGS_PAD(irqpd);
+-    volatile unchar esp_intrpt; /* ro  Kind of interrupt              0x14   */
+-#define esp_timeo   esp_intrpt  /* wo  Timeout value for select/resel 0x14   */
+-                                EREGS_PAD(sspad);
+-    volatile unchar esp_sstep;  /* ro  Sequence step register         0x18   */
+-#define esp_stp     esp_sstep   /* wo  Transfer period per sync       0x18   */
+-                                EREGS_PAD(ffpad);
+-    volatile unchar esp_fflags; /* ro  Bits of current FIFO info      0x1c   */
+-#define esp_soff    esp_fflags  /* wo  Sync offset                    0x1c   */
+-                                EREGS_PAD(cf1pd);
+-    volatile unchar esp_cfg1;   /* rw  First configuration register   0x20   */
+-                                EREGS_PAD(cfpad);
+-    volatile unchar esp_cfact;  /* wo  Clock conversion factor        0x24   */
+-                                EREGS_PAD(ctpad);
+-    volatile unchar esp_ctest;  /* wo  Chip test register             0x28   */
+-                                EREGS_PAD(cf2pd);
+-    volatile unchar esp_cfg2;   /* rw  Second configuration register  0x2c   */
+-                                EREGS_PAD(cf3pd);
+-
+-    /* The following is only found on the 53C9X series SCSI chips */
+-    volatile unchar esp_cfg3;   /* rw  Third configuration register   0x30  */
+-                                EREGS_PAD(cf4pd);
+-    volatile unchar esp_cfg4;   /* rw  Fourth configuration register  0x34  */
+-                                EREGS_PAD(thpd);
+-    /* The following is found on all chips except the NCR53C90 (ESP100) */
+-    volatile unchar esp_tchi;   /* rw  High bits of transfer count    0x38  */
+-#define esp_uid     esp_tchi    /* ro  Unique ID code                 0x38  */
+-                                EREGS_PAD(fgpad);    
+-    volatile unchar esp_fgrnd;  /* rw  Data base for fifo             0x3c  */
+-};
+-
+-#else /* MULTIPLE_PAD_SIZES */
+-
+-#define esp_write(__reg, __val) (*(__reg) = (__val))
+-#define esp_read(__reg) (*(__reg))
+-
+-struct ESP_regs {
+-    unsigned char io_addr[64]; /* dummy */
+-                                                 /* Access    Description              Offset */
+-#define esp_tclow   io_addr                      /* rw  Low bits of the transfer count 0x00   */
+-#define esp_tcmed   io_addr + (1<<(esp->shift))  /* rw  Mid bits of the transfer count 0x04   */
+-#define esp_fdata   io_addr + (2<<(esp->shift))  /* rw  FIFO data bits                 0x08   */
+-#define esp_cmnd    io_addr + (3<<(esp->shift))  /* rw  SCSI command bits              0x0c   */
+-#define esp_status  io_addr + (4<<(esp->shift))  /* ro  ESP status register            0x10   */
+-#define esp_busid   esp_status                   /* wo  Bus ID for select/reselect     0x10   */
+-#define esp_intrpt  io_addr + (5<<(esp->shift))  /* ro  Kind of interrupt              0x14   */
+-#define esp_timeo   esp_intrpt                   /* wo  Timeout value for select/resel 0x14   */
+-#define esp_sstep   io_addr + (6<<(esp->shift))  /* ro  Sequence step register         0x18   */
+-#define esp_stp     esp_sstep                    /* wo  Transfer period per sync       0x18   */
+-#define esp_fflags  io_addr + (7<<(esp->shift))  /* ro  Bits of current FIFO info      0x1c   */
+-#define esp_soff    esp_fflags                   /* wo  Sync offset                    0x1c   */
+-#define esp_cfg1    io_addr + (8<<(esp->shift))  /* rw  First configuration register   0x20   */
+-#define esp_cfact   io_addr + (9<<(esp->shift))  /* wo  Clock conversion factor        0x24   */
+-#define esp_ctest   io_addr + (10<<(esp->shift)) /* wo  Chip test register             0x28   */
+-#define esp_cfg2    io_addr + (11<<(esp->shift)) /* rw  Second configuration register  0x2c   */
+-
+-    /* The following is only found on the 53C9X series SCSI chips */
+-#define esp_cfg3    io_addr + (12<<(esp->shift)) /* rw  Third configuration register   0x30  */
+-#define esp_cfg4    io_addr + (13<<(esp->shift)) /* rw  Fourth configuration register  0x34  */
+-
+-    /* The following is found on all chips except the NCR53C90 (ESP100) */
+-#define esp_tchi    io_addr + (14<<(esp->shift)) /* rw  High bits of transfer count    0x38  */
+-#define esp_uid     esp_tchi                     /* ro  Unique ID code                 0x38  */
+-#define esp_fgrnd   io_addr + (15<<(esp->shift)) /* rw  Data base for fifo             0x3c  */
+-};
+-
+-#endif
+-
+-#else /* !defined(__i386__) && !defined(__x86_64__) */
+-
+-#define esp_write(__reg, __val) outb((__val), (__reg))
+-#define esp_read(__reg) inb((__reg))
+-
+-struct ESP_regs {
+-    unsigned int io_addr;
+-                                 /* Access    Description              Offset */
+-#define esp_tclow   io_addr      /* rw  Low bits of the transfer count 0x00   */
+-#define esp_tcmed   io_addr + 1  /* rw  Mid bits of the transfer count 0x04   */
+-#define esp_fdata   io_addr + 2  /* rw  FIFO data bits                 0x08   */
+-#define esp_cmnd    io_addr + 3  /* rw  SCSI command bits              0x0c   */
+-#define esp_status  io_addr + 4  /* ro  ESP status register            0x10   */
+-#define esp_busid   esp_status   /* wo  Bus ID for select/reselect     0x10   */
+-#define esp_intrpt  io_addr + 5  /* ro  Kind of interrupt              0x14   */
+-#define esp_timeo   esp_intrpt   /* wo  Timeout value for select/resel 0x14   */
+-#define esp_sstep   io_addr + 6  /* ro  Sequence step register         0x18   */
+-#define esp_stp     esp_sstep    /* wo  Transfer period per sync       0x18   */
+-#define esp_fflags  io_addr + 7  /* ro  Bits of current FIFO info      0x1c   */
+-#define esp_soff    esp_fflags   /* wo  Sync offset                    0x1c   */
+-#define esp_cfg1    io_addr + 8  /* rw  First configuration register   0x20   */
+-#define esp_cfact   io_addr + 9  /* wo  Clock conversion factor        0x24   */
+-#define esp_ctest   io_addr + 10 /* wo  Chip test register             0x28   */
+-#define esp_cfg2    io_addr + 11 /* rw  Second configuration register  0x2c   */
+-
+-    /* The following is only found on the 53C9X series SCSI chips */
+-#define esp_cfg3    io_addr + 12 /* rw  Third configuration register   0x30  */
+-#define esp_cfg4    io_addr + 13 /* rw  Fourth configuration register  0x34  */
+-
+-    /* The following is found on all chips except the NCR53C90 (ESP100) */
+-#define esp_tchi    io_addr + 14 /* rw  High bits of transfer count    0x38  */
+-#define esp_uid     esp_tchi     /* ro  Unique ID code                 0x38  */
+-#define esp_fgrnd   io_addr + 15 /* rw  Data base for fifo             0x3c  */
+-};
+-
+-#endif /* !defined(__i386__) && !defined(__x86_64__) */
+-
+-/* Various revisions of the ESP board. */
+-enum esp_rev {
+-  esp100     = 0x00,  /* NCR53C90 - very broken */
+-  esp100a    = 0x01,  /* NCR53C90A */
+-  esp236     = 0x02,
+-  fas236     = 0x03,
+-  fas100a    = 0x04,
+-  fast       = 0x05,
+-  fas366     = 0x06,
+-  fas216     = 0x07,
+-  fsc        = 0x08,  /* SYM53C94-2 */
+-  espunknown = 0x09
+-};
+-
+-/* We allocate one of these for each scsi device and attach it to
+- * SDptr->hostdata for use in the driver
+- */
+-struct esp_device {
+-  unsigned char sync_min_period;
+-  unsigned char sync_max_offset;
+-  unsigned sync:1;
+-  unsigned wide:1;
+-  unsigned disconnect:1;
+-};
+-
+-/* We get one of these for each ESP probed. */
+-struct NCR_ESP {
+-  struct NCR_ESP *next;                   /* Next ESP on probed or NULL */
+-  struct ESP_regs *eregs;	          /* All esp registers */
+-  int dma;                                /* Who I do transfers with. */
+-  void *dregs;		  		  /* And his registers. */
+-  struct Scsi_Host *ehost;                /* Backpointer to SCSI Host */
+-
+-  void *edev;        		          /* Pointer to controller base/SBus */
+-  int esp_id;                             /* Unique per-ESP ID number */
+-
+-  /* ESP Configuration Registers */
+-  unsigned char config1;                  /* Copy of the 1st config register */
+-  unsigned char config2;                  /* Copy of the 2nd config register */
+-  unsigned char config3[16];              /* Copy of the 3rd config register */
+-
+-  /* The current command we are sending to the ESP chip.  This esp_command
+-   * ptr needs to be mapped in DVMA area so we can send commands and read
+-   * from the ESP fifo without burning precious CPU cycles.  Programmed I/O
+-   * sucks when we have the DVMA to do it for us.  The ESP is stupid and will
+-   * only send out 6, 10, and 12 byte SCSI commands, others we need to send
+-   * one byte at a time.  esp_slowcmd being set says that we are doing one
+-   * of the command types ESP doesn't understand, esp_scmdp keeps track of
+-   * which byte we are sending, esp_scmdleft says how many bytes to go.
+-   */
+-  volatile unchar *esp_command;           /* Location of command (CPU view)  */
+-  __u32            esp_command_dvma;      /* Location of command (DVMA view) */
+-  unsigned char esp_clen;                 /* Length of this command */
+-  unsigned char esp_slowcmd;
+-  unsigned char *esp_scmdp;
+-  unsigned char esp_scmdleft;
+-
+-  /* The following are used to determine the cause of an IRQ. Upon every
+-   * IRQ entry we synchronize these with the hardware registers.
+-   */
+-  unchar ireg;                            /* Copy of ESP interrupt register */
+-  unchar sreg;                            /* Same for ESP status register */
+-  unchar seqreg;                          /* The ESP sequence register */
+-
+-  /* The following is set when a premature interrupt condition is detected
+-   * in some FAS revisions.
+-   */
+-  unchar fas_premature_intr_workaround;
+-
+-  /* To save register writes to the ESP, which can be expensive, we
+-   * keep track of the previous value that various registers had for
+-   * the last target we connected to.  If they are the same for the
+-   * current target, we skip the register writes as they are not needed.
+-   */
+-  unchar prev_soff, prev_stp, prev_cfg3;
+-
+-  /* For each target we keep track of save/restore data
+-   * pointer information.  This needs to be updated majorly
+-   * when we add support for tagged queueing.  -DaveM
+-   */
+-  struct esp_pointers {
+-	  char *saved_ptr;
+-	  struct scatterlist *saved_buffer;
+-	  int saved_this_residual;
+-	  int saved_buffers_residual;
+-  } data_pointers[16] /*XXX [MAX_TAGS_PER_TARGET]*/;
+-
+-  /* Clock periods, frequencies, synchronization, etc. */
+-  unsigned int cfreq;                    /* Clock frequency in HZ */
+-  unsigned int cfact;                    /* Clock conversion factor */
+-  unsigned int ccycle;                   /* One ESP clock cycle */
+-  unsigned int ctick;                    /* One ESP clock time */
+-  unsigned int radelay;                  /* FAST chip req/ack delay */
+-  unsigned int neg_defp;                 /* Default negotiation period */
+-  unsigned int sync_defp;                /* Default sync transfer period */
+-  unsigned int max_period;               /* longest our period can be */
+-  unsigned int min_period;               /* shortest period we can withstand */
+-  /* For slow to medium speed input clock rates we shoot for 5mb/s,
+-   * but for high input clock rates we try to do 10mb/s although I
+-   * don't think a transfer can even run that fast with an ESP even
+-   * with DMA2 scatter gather pipelining.
+-   */
+-#define SYNC_DEFP_SLOW            0x32   /* 5mb/s  */
+-#define SYNC_DEFP_FAST            0x19   /* 10mb/s */
+-
+-  unsigned int snip;                      /* Sync. negotiation in progress */
+-  unsigned int wnip;                      /* WIDE negotiation in progress */
+-  unsigned int targets_present;           /* targets spoken to before */
+-
+-  int current_transfer_size;              /* Set at beginning of data dma */
+-
+-  unchar espcmdlog[32];                   /* Log of current esp cmds sent. */
+-  unchar espcmdent;                       /* Current entry in esp cmd log. */
+-
+-  /* Misc. info about this ESP */
+-  enum esp_rev erev;                      /* ESP revision */
+-  int irq;                                /* IRQ for this ESP */
+-  int scsi_id;                            /* Who am I as initiator? */
+-  int scsi_id_mask;                       /* Bitmask of 'me'. */
+-  int diff;                               /* Differential SCSI bus? */
+-  int slot;                               /* Slot the adapter occupies */
+-
+-  /* Our command queues, only one cmd lives in the current_SC queue. */
+-  Scsi_Cmnd *issue_SC;           /* Commands to be issued */
+-  Scsi_Cmnd *current_SC;         /* Who is currently working the bus */
+-  Scsi_Cmnd *disconnected_SC;    /* Commands disconnected from the bus */
+-
+-  /* Message goo */
+-  unchar cur_msgout[16];
+-  unchar cur_msgin[16];
+-  unchar prevmsgout, prevmsgin;
+-  unchar msgout_len, msgin_len;
+-  unchar msgout_ctr, msgin_ctr;
+-
+-  /* States that we cannot keep in the per cmd structure because they
+-   * cannot be assosciated with any specific command.
+-   */
+-  unchar resetting_bus;
+-  wait_queue_head_t reset_queue;
+-
+-  unchar do_pio_cmds;		/* Do command transfer with pio */
+-
+-  /* How much bits do we have to shift the registers */
+-  unsigned char shift;
+-
+-  /* Functions handling DMA
+-   */ 
+-  /* Required functions */
+-  int  (*dma_bytes_sent)(struct NCR_ESP *, int);
+-  int  (*dma_can_transfer)(struct NCR_ESP *, Scsi_Cmnd *);
+-  void (*dma_dump_state)(struct NCR_ESP *);
+-  void (*dma_init_read)(struct NCR_ESP *, __u32, int);
+-  void (*dma_init_write)(struct NCR_ESP *, __u32, int);
+-  void (*dma_ints_off)(struct NCR_ESP *);
+-  void (*dma_ints_on)(struct NCR_ESP *);
+-  int  (*dma_irq_p)(struct NCR_ESP *);
+-  int  (*dma_ports_p)(struct NCR_ESP *);
+-  void (*dma_setup)(struct NCR_ESP *, __u32, int, int);
+-
+-  /* Optional functions (i.e. may be initialized to 0) */
+-  void (*dma_barrier)(struct NCR_ESP *);
+-  void (*dma_drain)(struct NCR_ESP *);
+-  void (*dma_invalidate)(struct NCR_ESP *);
+-  void (*dma_irq_entry)(struct NCR_ESP *);
+-  void (*dma_irq_exit)(struct NCR_ESP *);
+-  void (*dma_led_off)(struct NCR_ESP *);
+-  void (*dma_led_on)(struct NCR_ESP *);
+-  void (*dma_poll)(struct NCR_ESP *, unsigned char *);
+-  void (*dma_reset)(struct NCR_ESP *);
+-    
+-  /* Optional virtual DMA functions */
+-  void (*dma_mmu_get_scsi_one)(struct NCR_ESP *, Scsi_Cmnd *);
+-  void (*dma_mmu_get_scsi_sgl)(struct NCR_ESP *, Scsi_Cmnd *);
+-  void (*dma_mmu_release_scsi_one)(struct NCR_ESP *, Scsi_Cmnd *);
+-  void (*dma_mmu_release_scsi_sgl)(struct NCR_ESP *, Scsi_Cmnd *);
+-  void (*dma_advance_sg)(Scsi_Cmnd *);
+-};
+-
+-/* Bitfield meanings for the above registers. */
+-
+-/* ESP config reg 1, read-write, found on all ESP chips */
+-#define ESP_CONFIG1_ID        0x07             /* My BUS ID bits */
+-#define ESP_CONFIG1_CHTEST    0x08             /* Enable ESP chip tests */
+-#define ESP_CONFIG1_PENABLE   0x10             /* Enable parity checks */
+-#define ESP_CONFIG1_PARTEST   0x20             /* Parity test mode enabled? */
+-#define ESP_CONFIG1_SRRDISAB  0x40             /* Disable SCSI reset reports */
+-#define ESP_CONFIG1_SLCABLE   0x80             /* Enable slow cable mode */
+-
+-/* ESP config reg 2, read-write, found only on esp100a+esp200+esp236+fsc chips */
+-#define ESP_CONFIG2_DMAPARITY 0x01             /* enable DMA Parity (200,236,fsc) */
+-#define ESP_CONFIG2_REGPARITY 0x02             /* enable reg Parity (200,236,fsc) */
+-#define ESP_CONFIG2_BADPARITY 0x04             /* Bad parity target abort  */
+-#define ESP_CONFIG2_SCSI2ENAB 0x08             /* Enable SCSI-2 features (tmode only) */
+-#define ESP_CONFIG2_HI        0x10             /* High Impedance DREQ ???  */
+-#define ESP_CONFIG2_HMEFENAB  0x10             /* HME features enable */
+-#define ESP_CONFIG2_BCM       0x20             /* Enable byte-ctrl (236,fsc)   */
+-#define ESP_CONFIG2_FENAB     0x40             /* Enable features (fas100,esp216,fsc)      */
+-#define ESP_CONFIG2_SPL       0x40             /* Enable status-phase latch (esp236)   */
+-#define ESP_CONFIG2_RFB       0x80             /* Reserve FIFO byte (fsc) */
+-#define ESP_CONFIG2_MAGIC     0xe0             /* Invalid bits... */
+-
+-/* ESP config register 3 read-write, found only esp236+fas236+fas100a+fsc chips */
+-#define ESP_CONFIG3_FCLOCK    0x01             /* FAST SCSI clock rate (esp100a/fas366) */
+-#define ESP_CONFIG3_TEM       0x01             /* Enable thresh-8 mode (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_FAST      0x02             /* Enable FAST SCSI     (esp100a) */
+-#define ESP_CONFIG3_ADMA      0x02             /* Enable alternate-dma (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_TENB      0x04             /* group2 SCSI2 support (esp100a) */
+-#define ESP_CONFIG3_SRB       0x04             /* Save residual byte   (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_TMS       0x08             /* Three-byte msg's ok  (esp100a) */
+-#define ESP_CONFIG3_FCLK      0x08             /* Fast SCSI clock rate (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_IDMSG     0x10             /* ID message checking  (esp100a) */
+-#define ESP_CONFIG3_FSCSI     0x10             /* Enable FAST SCSI     (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_GTM       0x20             /* group2 SCSI2 support (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_TBMS      0x40             /* Three-byte msg's ok  (esp/fas236/fsc)  */
+-#define ESP_CONFIG3_IMS       0x80             /* ID msg chk'ng        (esp/fas236/fsc)  */
+-
+-/* ESP config register 4 read-write, found only on fsc chips */
+-#define ESP_CONFIG4_BBTE      0x01             /* Back-to-Back transfer enable */
+-#define ESP_CONFIG4_TEST      0x02             /* Transfer counter test mode */
+-#define ESP_CONFIG4_EAN       0x04             /* Enable Active Negotiation */
+-
+-/* ESP command register read-write */
+-/* Group 1 commands:  These may be sent at any point in time to the ESP
+- *                    chip.  None of them can generate interrupts 'cept
+- *                    the "SCSI bus reset" command if you have not disabled
+- *                    SCSI reset interrupts in the config1 ESP register.
+- */
+-#define ESP_CMD_NULL          0x00             /* Null command, ie. a nop */
+-#define ESP_CMD_FLUSH         0x01             /* FIFO Flush */
+-#define ESP_CMD_RC            0x02             /* Chip reset */
+-#define ESP_CMD_RS            0x03             /* SCSI bus reset */
+-
+-/* Group 2 commands:  ESP must be an initiator and connected to a target
+- *                    for these commands to work.
+- */
+-#define ESP_CMD_TI            0x10             /* Transfer Information */
+-#define ESP_CMD_ICCSEQ        0x11             /* Initiator cmd complete sequence */
+-#define ESP_CMD_MOK           0x12             /* Message okie-dokie */
+-#define ESP_CMD_TPAD          0x18             /* Transfer Pad */
+-#define ESP_CMD_SATN          0x1a             /* Set ATN */
+-#define ESP_CMD_RATN          0x1b             /* De-assert ATN */
+-
+-/* Group 3 commands:  ESP must be in the MSGOUT or MSGIN state and be connected
+- *                    to a target as the initiator for these commands to work.
+- */
+-#define ESP_CMD_SMSG          0x20             /* Send message */
+-#define ESP_CMD_SSTAT         0x21             /* Send status */
+-#define ESP_CMD_SDATA         0x22             /* Send data */
+-#define ESP_CMD_DSEQ          0x23             /* Discontinue Sequence */
+-#define ESP_CMD_TSEQ          0x24             /* Terminate Sequence */
+-#define ESP_CMD_TCCSEQ        0x25             /* Target cmd cmplt sequence */
+-#define ESP_CMD_DCNCT         0x27             /* Disconnect */
+-#define ESP_CMD_RMSG          0x28             /* Receive Message */
+-#define ESP_CMD_RCMD          0x29             /* Receive Command */
+-#define ESP_CMD_RDATA         0x2a             /* Receive Data */
+-#define ESP_CMD_RCSEQ         0x2b             /* Receive cmd sequence */
+-
+-/* Group 4 commands:  The ESP must be in the disconnected state and must
+- *                    not be connected to any targets as initiator for
+- *                    these commands to work.
+- */
+-#define ESP_CMD_RSEL          0x40             /* Reselect */
+-#define ESP_CMD_SEL           0x41             /* Select w/o ATN */
+-#define ESP_CMD_SELA          0x42             /* Select w/ATN */
+-#define ESP_CMD_SELAS         0x43             /* Select w/ATN & STOP */
+-#define ESP_CMD_ESEL          0x44             /* Enable selection */
+-#define ESP_CMD_DSEL          0x45             /* Disable selections */
+-#define ESP_CMD_SA3           0x46             /* Select w/ATN3 */
+-#define ESP_CMD_RSEL3         0x47             /* Reselect3 */
+-
+-/* This bit enables the ESP's DMA */
+-#define ESP_CMD_DMA           0x80             /* Do DMA? */
+-
+-/* ESP status register read-only */
+-#define ESP_STAT_PIO          0x01             /* IO phase bit */
+-#define ESP_STAT_PCD          0x02             /* CD phase bit */
+-#define ESP_STAT_PMSG         0x04             /* MSG phase bit */
+-#define ESP_STAT_PMASK        0x07             /* Mask of phase bits */
+-#define ESP_STAT_TDONE        0x08             /* Transfer Completed */
+-#define ESP_STAT_TCNT         0x10             /* Transfer Counter Is Zero */
+-#define ESP_STAT_PERR         0x20             /* Parity error */
+-#define ESP_STAT_SPAM         0x40             /* Real bad error */
+-/* This indicates the 'interrupt pending' condition, it is a reserved
+- * bit on old revs of the ESP (ESP100, ESP100A, FAS100A).
+- */
+-#define ESP_STAT_INTR         0x80             /* Interrupt */
+-
+-/* The status register can be masked with ESP_STAT_PMASK and compared
+- * with the following values to determine the current phase the ESP
+- * (at least thinks it) is in.  For our purposes we also add our own
+- * software 'done' bit for our phase management engine.
+- */
+-#define ESP_DOP   (0)                                       /* Data Out  */
+-#define ESP_DIP   (ESP_STAT_PIO)                            /* Data In   */
+-#define ESP_CMDP  (ESP_STAT_PCD)                            /* Command   */
+-#define ESP_STATP (ESP_STAT_PCD|ESP_STAT_PIO)               /* Status    */
+-#define ESP_MOP   (ESP_STAT_PMSG|ESP_STAT_PCD)              /* Message Out */
+-#define ESP_MIP   (ESP_STAT_PMSG|ESP_STAT_PCD|ESP_STAT_PIO) /* Message In */
+-
+-/* ESP interrupt register read-only */
+-#define ESP_INTR_S            0x01             /* Select w/o ATN */
+-#define ESP_INTR_SATN         0x02             /* Select w/ATN */
+-#define ESP_INTR_RSEL         0x04             /* Reselected */
+-#define ESP_INTR_FDONE        0x08             /* Function done */
+-#define ESP_INTR_BSERV        0x10             /* Bus service */
+-#define ESP_INTR_DC           0x20             /* Disconnect */
+-#define ESP_INTR_IC           0x40             /* Illegal command given */
+-#define ESP_INTR_SR           0x80             /* SCSI bus reset detected */
+-
+-/* Interrupt status macros */
+-#define ESP_SRESET_IRQ(esp)  ((esp)->intreg & (ESP_INTR_SR))
+-#define ESP_ILLCMD_IRQ(esp)  ((esp)->intreg & (ESP_INTR_IC))
+-#define ESP_SELECT_WITH_ATN_IRQ(esp)     ((esp)->intreg & (ESP_INTR_SATN))
+-#define ESP_SELECT_WITHOUT_ATN_IRQ(esp)  ((esp)->intreg & (ESP_INTR_S))
+-#define ESP_SELECTION_IRQ(esp)  ((ESP_SELECT_WITH_ATN_IRQ(esp)) ||         \
+-				 (ESP_SELECT_WITHOUT_ATN_IRQ(esp)))
+-#define ESP_RESELECTION_IRQ(esp)         ((esp)->intreg & (ESP_INTR_RSEL))
+-
+-/* ESP sequence step register read-only */
+-#define ESP_STEP_VBITS        0x07             /* Valid bits */
+-#define ESP_STEP_ASEL         0x00             /* Selection&Arbitrate cmplt */
+-#define ESP_STEP_SID          0x01             /* One msg byte sent */
+-#define ESP_STEP_NCMD         0x02             /* Was not in command phase */
+-#define ESP_STEP_PPC          0x03             /* Early phase chg caused cmnd
+-                                                * bytes to be lost
+-                                                */
+-#define ESP_STEP_FINI4        0x04             /* Command was sent ok */
+-
+-/* Ho hum, some ESP's set the step register to this as well... */
+-#define ESP_STEP_FINI5        0x05
+-#define ESP_STEP_FINI6        0x06
+-#define ESP_STEP_FINI7        0x07
+-#define ESP_STEP_SOM          0x08             /* Synchronous Offset Max */
+-
+-/* ESP chip-test register read-write */
+-#define ESP_TEST_TARG         0x01             /* Target test mode */
+-#define ESP_TEST_INI          0x02             /* Initiator test mode */
+-#define ESP_TEST_TS           0x04             /* Tristate test mode */
+-
+-/* ESP unique ID register read-only, found on fas236+fas100a+fsc only */
+-#define ESP_UID_F100A         0x00             /* FAS100A  */
+-#define ESP_UID_F236          0x02             /* FAS236   */
+-#define ESP_UID_FSC           0xa2             /* NCR53CF9x-2  */
+-#define ESP_UID_REV           0x07             /* ESP revision */
+-#define ESP_UID_FAM           0xf8             /* ESP family   */
+-
+-/* ESP fifo flags register read-only */
+-/* Note that the following implies a 16 byte FIFO on the ESP. */
+-#define ESP_FF_FBYTES         0x1f             /* Num bytes in FIFO */
+-#define ESP_FF_ONOTZERO       0x20             /* offset ctr not zero (esp100,fsc) */
+-#define ESP_FF_SSTEP          0xe0             /* Sequence step */
+-
+-/* ESP clock conversion factor register write-only */
+-#define ESP_CCF_F0            0x00             /* 35.01MHz - 40MHz */
+-#define ESP_CCF_NEVER         0x01             /* Set it to this and die */
+-#define ESP_CCF_F2            0x02             /* 10MHz */
+-#define ESP_CCF_F3            0x03             /* 10.01MHz - 15MHz */
+-#define ESP_CCF_F4            0x04             /* 15.01MHz - 20MHz */
+-#define ESP_CCF_F5            0x05             /* 20.01MHz - 25MHz */
+-#define ESP_CCF_F6            0x06             /* 25.01MHz - 30MHz */
+-#define ESP_CCF_F7            0x07             /* 30.01MHz - 35MHz */
+-
+-#define ESP_BUS_TIMEOUT        275             /* In milli-seconds */
+-#define ESP_TIMEO_CONST       8192
+-#define FSC_TIMEO_CONST       7668
+-#define ESP_NEG_DEFP(mhz, cfact) \
+-        ((ESP_BUS_TIMEOUT * ((mhz) / 1000)) / (8192 * (cfact)))
+-#define FSC_NEG_DEFP(mhz, cfact) \
+-        ((ESP_BUS_TIMEOUT * ((mhz) / 1000)) / (7668 * (cfact)))
+-#define ESP_MHZ_TO_CYCLE(mhertz)  ((1000000000) / ((mhertz) / 1000))
+-#define ESP_TICK(ccf, cycle)  ((7682 * (ccf) * (cycle) / 1000))
+-
+-
+-/* UGLY, UGLY, UGLY! */
+-extern int nesps, esps_in_use, esps_running;
+-
+-/* For our interrupt engine. */
+-#define for_each_esp(esp) \
+-        for((esp) = espchain; (esp); (esp) = (esp)->next)
+-
+-
+-/* External functions */
+-extern void esp_bootup_reset(struct NCR_ESP *esp, struct ESP_regs *eregs);
+-extern struct NCR_ESP *esp_allocate(struct scsi_host_template *, void *, int);
+-extern void esp_deallocate(struct NCR_ESP *);
+-extern void esp_release(void);
+-extern void esp_initialize(struct NCR_ESP *);
+-extern irqreturn_t esp_intr(int, void *);
+-extern const char *esp_info(struct Scsi_Host *);
+-extern int esp_queue(Scsi_Cmnd *, void (*done)(Scsi_Cmnd *));
+-extern int esp_abort(Scsi_Cmnd *);
+-extern int esp_reset(Scsi_Cmnd *);
+-extern int esp_proc_info(struct Scsi_Host *shost, char *buffer, char **start, off_t offset, int length,
+-			 int inout);
+-extern int esp_slave_alloc(struct scsi_device *);
+-extern void esp_slave_destroy(struct scsi_device *);
+-#endif /* !(NCR53C9X_H) */
+diff --git a/drivers/scsi/blz1230.c b/drivers/scsi/blz1230.c
+deleted file mode 100644
+index 23f7c24..0000000
+--- a/drivers/scsi/blz1230.c
++++ /dev/null
+@@ -1,353 +0,0 @@
+-/* blz1230.c: Driver for Blizzard 1230 SCSI IV Controller.
+- *
+- * Copyright (C) 1996 Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * This driver is based on the CyberStorm driver, hence the occasional
+- * reference to CyberStorm.
+- */
+-
+-/* TODO:
+- *
+- * 1) Figure out how to make a cleaner merge with the sparc driver with regard
+- *    to the caches and the Sparc MMU mapping.
+- * 2) Make as few routines required outside the generic driver. A lot of the
+- *    routines in this file used to be inline!
+- */
+-
+-#include <linux/module.h>
+-
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <linux/zorro.h>
+-#include <asm/irq.h>
+-#include <asm/amigaints.h>
+-#include <asm/amigahw.h>
+-
+-#include <asm/pgtable.h>
+-
+-#define MKIV 1
+-
+-/* The controller registers can be found in the Z2 config area at these
+- * offsets:
+- */
+-#define BLZ1230_ESP_ADDR 0x8000
+-#define BLZ1230_DMA_ADDR 0x10000
+-#define BLZ1230II_ESP_ADDR 0x10000
+-#define BLZ1230II_DMA_ADDR 0x10021
+-
+-
+-/* The Blizzard 1230 DMA interface
+- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- * Only two things can be programmed in the Blizzard DMA:
+- *  1) The data direction is controlled by the status of bit 31 (1 = write)
+- *  2) The source/dest address (word aligned, shifted one right) in bits 30-0
+- *
+- * Program DMA by first latching the highest byte of the address/direction
+- * (i.e. bits 31-24 of the long word constructed as described in steps 1+2
+- * above). Then write each byte of the address/direction (starting with the
+- * top byte, working down) to the DMA address register.
+- *
+- * Figure out interrupt status by reading the ESP status byte.
+- */
+-struct blz1230_dma_registers {
+-	volatile unsigned char dma_addr; 	/* DMA address      [0x0000] */
+-	unsigned char dmapad2[0x7fff];
+-	volatile unsigned char dma_latch; 	/* DMA latch        [0x8000] */
+-};
+-
+-struct blz1230II_dma_registers {
+-	volatile unsigned char dma_addr; 	/* DMA address      [0x0000] */
+-	unsigned char dmapad2[0xf];
+-	volatile unsigned char dma_latch; 	/* DMA latch        [0x0010] */
+-};
+-
+-#define BLZ1230_DMA_WRITE 0x80000000
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are transferred to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-/***************************************************************** Detection */
+-int __init blz1230_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct zorro_dev *z = NULL;
+-	unsigned long address;
+-	struct ESP_regs *eregs;
+-	unsigned long board;
+-
+-#if MKIV
+-#define REAL_BLZ1230_ID		ZORRO_PROD_PHASE5_BLIZZARD_1230_IV_1260
+-#define REAL_BLZ1230_ESP_ADDR	BLZ1230_ESP_ADDR
+-#define REAL_BLZ1230_DMA_ADDR	BLZ1230_DMA_ADDR
+-#else
+-#define REAL_BLZ1230_ID		ZORRO_PROD_PHASE5_BLIZZARD_1230_II_FASTLANE_Z3_CYBERSCSI_CYBERSTORM060
+-#define REAL_BLZ1230_ESP_ADDR	BLZ1230II_ESP_ADDR
+-#define REAL_BLZ1230_DMA_ADDR	BLZ1230II_DMA_ADDR
+-#endif
+-
+-	if ((z = zorro_find_device(REAL_BLZ1230_ID, z))) {
+-	    board = z->resource.start;
+-	    if (request_mem_region(board+REAL_BLZ1230_ESP_ADDR,
+-				   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		/* Do some magic to figure out if the blizzard is
+-		 * equipped with a SCSI controller
+-		 */
+-		address = ZTWO_VADDR(board);
+-		eregs = (struct ESP_regs *)(address + REAL_BLZ1230_ESP_ADDR);
+-		esp = esp_allocate(tpnt, (void *)board + REAL_BLZ1230_ESP_ADDR,
+-				   0);
+-
+-		esp_write(eregs->esp_cfg1, (ESP_CONFIG1_PENABLE | 7));
+-		udelay(5);
+-		if(esp_read(eregs->esp_cfg1) != (ESP_CONFIG1_PENABLE | 7))
+-			goto err_out;
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = 0;
+-		esp->dma_invalidate = 0;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = 0;
+-		esp->dma_led_on = 0;
+-		esp->dma_led_off = 0;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-
+-		/* SCSI chip speed */
+-		esp->cfreq = 40000000;
+-
+-		/* The DMA registers on the Blizzard are mapped
+-		 * relative to the device (i.e. in the same Zorro
+-		 * I/O block).
+-		 */
+-		esp->dregs = (void *)(address + REAL_BLZ1230_DMA_ADDR);
+-	
+-		/* ESP register base */
+-		esp->eregs = eregs;
+-
+-		/* Set the command buffer */
+-		esp->esp_command = cmd_buffer;
+-		esp->esp_command_dvma = virt_to_bus((void *)cmd_buffer);
+-
+-		esp->irq = IRQ_AMIGA_PORTS;
+-		esp->slot = board+REAL_BLZ1230_ESP_ADDR;
+-		if (request_irq(IRQ_AMIGA_PORTS, esp_intr, IRQF_SHARED,
+-				 "Blizzard 1230 SCSI IV", esp->ehost))
+-			goto err_out;
+-
+-		/* Figure out our scsi ID on the bus */
+-		esp->scsi_id = 7;
+-		
+-		/* We don't have a differential SCSI-bus. */
+-		esp->diff = 0;
+-
+-		esp_initialize(esp);
+-
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-		return esps_in_use;
+-	    }
+-	}
+-	return 0;
+- 
+- err_out:
+-	scsi_unregister(esp->ehost);
+-	esp_deallocate(esp);
+-	release_mem_region(board+REAL_BLZ1230_ESP_ADDR,
+-			   sizeof(struct ESP_regs));
+-	return 0;
+-}
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Since the Blizzard DMA is fully dedicated to the ESP chip,
+-	 * the number of bytes sent (to the ESP chip) equals the number
+-	 * of bytes in the FIFO - there is no buffering in the DMA controller.
+-	 * XXXX Do I read this right? It is from host to ESP, right?
+-	 */
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	/* I don't think there's any limit on the Blizzard DMA. So we use what
+-	 * the ESP chip can handle (24 bit).
+-	 */
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > 0x1000000)
+-		sz = 0x1000000;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	ESPLOG(("intreq:<%04x>, intena:<%04x>\n",
+-		amiga_custom.intreqr, amiga_custom.intenar));
+-}
+-
+-void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-#if MKIV
+-	struct blz1230_dma_registers *dregs = 
+-		(struct blz1230_dma_registers *) (esp->dregs);
+-#else
+-	struct blz1230II_dma_registers *dregs = 
+-		(struct blz1230II_dma_registers *) (esp->dregs);
+-#endif
+-
+-	cache_clear(addr, length);
+-
+-	addr >>= 1;
+-	addr &= ~(BLZ1230_DMA_WRITE);
+-
+-	/* First set latch */
+-	dregs->dma_latch = (addr >> 24) & 0xff;
+-
+-	/* Then pump the address to the DMA address register */
+-#if MKIV
+-	dregs->dma_addr = (addr >> 24) & 0xff;
+-#endif
+-	dregs->dma_addr = (addr >> 16) & 0xff;
+-	dregs->dma_addr = (addr >>  8) & 0xff;
+-	dregs->dma_addr = (addr      ) & 0xff;
+-}
+-
+-void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-#if MKIV
+-	struct blz1230_dma_registers *dregs = 
+-		(struct blz1230_dma_registers *) (esp->dregs);
+-#else
+-	struct blz1230II_dma_registers *dregs = 
+-		(struct blz1230II_dma_registers *) (esp->dregs);
+-#endif
+-
+-	cache_push(addr, length);
+-
+-	addr >>= 1;
+-	addr |= BLZ1230_DMA_WRITE;
+-
+-	/* First set latch */
+-	dregs->dma_latch = (addr >> 24) & 0xff;
+-
+-	/* Then pump the address to the DMA address register */
+-#if MKIV
+-	dregs->dma_addr = (addr >> 24) & 0xff;
+-#endif
+-	dregs->dma_addr = (addr >> 16) & 0xff;
+-	dregs->dma_addr = (addr >>  8) & 0xff;
+-	dregs->dma_addr = (addr      ) & 0xff;
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	return (esp_read(esp->eregs->esp_status) & ESP_STAT_INTR);
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return ((amiga_custom.intenar) & IF_PORTS);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	/* On the Sparc, DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if(write){
+-		dma_init_read(esp, addr, count);
+-	} else {
+-		dma_init_write(esp, addr, count);
+-	}
+-}
+-
+-#define HOSTS_C
+-
+-int blz1230_esp_release(struct Scsi_Host *instance)
+-{
+-#ifdef MODULE
+-	unsigned long address = (unsigned long)((struct NCR_ESP *)instance->hostdata)->edev;
+-	esp_deallocate((struct NCR_ESP *)instance->hostdata);
+-	esp_release();
+-	release_mem_region(address, sizeof(struct ESP_regs));
+-	free_irq(IRQ_AMIGA_PORTS, esp_intr);
+-#endif
+-	return 1;
+-}
+-
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "esp-blz1230",
+-	.proc_info		= esp_proc_info,
+-	.name			= "Blizzard1230 SCSI IV",
+-	.detect			= blz1230_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= blz1230_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= ENABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/blz2060.c b/drivers/scsi/blz2060.c
+deleted file mode 100644
+index b6203ec..0000000
+--- a/drivers/scsi/blz2060.c
++++ /dev/null
+@@ -1,306 +0,0 @@
+-/* blz2060.c: Driver for Blizzard 2060 SCSI Controller.
+- *
+- * Copyright (C) 1996 Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * This driver is based on the CyberStorm driver, hence the occasional
+- * reference to CyberStorm.
+- */
+-
+-/* TODO:
+- *
+- * 1) Figure out how to make a cleaner merge with the sparc driver with regard
+- *    to the caches and the Sparc MMU mapping.
+- * 2) Make as few routines required outside the generic driver. A lot of the
+- *    routines in this file used to be inline!
+- */
+-
+-#include <linux/module.h>
+-
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <linux/zorro.h>
+-#include <asm/irq.h>
+-#include <asm/amigaints.h>
+-#include <asm/amigahw.h>
+-
+-#include <asm/pgtable.h>
+-
+-/* The controller registers can be found in the Z2 config area at these
+- * offsets:
+- */
+-#define BLZ2060_ESP_ADDR 0x1ff00
+-#define BLZ2060_DMA_ADDR 0x1ffe0
+-
+-
+-/* The Blizzard 2060 DMA interface
+- * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+- * Only two things can be programmed in the Blizzard DMA:
+- *  1) The data direction is controlled by the status of bit 31 (1 = write)
+- *  2) The source/dest address (word aligned, shifted one right) in bits 30-0
+- *
+- * Figure out interrupt status by reading the ESP status byte.
+- */
+-struct blz2060_dma_registers {
+-	volatile unsigned char dma_led_ctrl;	/* DMA led control   [0x000] */
+-	unsigned char dmapad1[0x0f];
+-	volatile unsigned char dma_addr0; 	/* DMA address (MSB) [0x010] */
+-	unsigned char dmapad2[0x03];
+-	volatile unsigned char dma_addr1; 	/* DMA address       [0x014] */
+-	unsigned char dmapad3[0x03];
+-	volatile unsigned char dma_addr2; 	/* DMA address       [0x018] */
+-	unsigned char dmapad4[0x03];
+-	volatile unsigned char dma_addr3; 	/* DMA address (LSB) [0x01c] */
+-};
+-
+-#define BLZ2060_DMA_WRITE 0x80000000
+-
+-/* DMA control bits */
+-#define BLZ2060_DMA_LED    0x02		/* HD led control 1 = off */
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static void dma_led_off(struct NCR_ESP *esp);
+-static void dma_led_on(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are transferred to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-/***************************************************************** Detection */
+-int __init blz2060_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct zorro_dev *z = NULL;
+-	unsigned long address;
+-
+-	if ((z = zorro_find_device(ZORRO_PROD_PHASE5_BLIZZARD_2060, z))) {
+-	    unsigned long board = z->resource.start;
+-	    if (request_mem_region(board+BLZ2060_ESP_ADDR,
+-				   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		esp = esp_allocate(tpnt, (void *)board + BLZ2060_ESP_ADDR, 0);
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = 0;
+-		esp->dma_invalidate = 0;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = 0;
+-		esp->dma_led_on = &dma_led_on;
+-		esp->dma_led_off = &dma_led_off;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-
+-		/* SCSI chip speed */
+-		esp->cfreq = 40000000;
+-
+-		/* The DMA registers on the Blizzard are mapped
+-		 * relative to the device (i.e. in the same Zorro
+-		 * I/O block).
+-		 */
+-		address = (unsigned long)ZTWO_VADDR(board);
+-		esp->dregs = (void *)(address + BLZ2060_DMA_ADDR);
+-
+-		/* ESP register base */
+-		esp->eregs = (struct ESP_regs *)(address + BLZ2060_ESP_ADDR);
+-		
+-		/* Set the command buffer */
+-		esp->esp_command = cmd_buffer;
+-		esp->esp_command_dvma = virt_to_bus((void *)cmd_buffer);
+-
+-		esp->irq = IRQ_AMIGA_PORTS;
+-		request_irq(IRQ_AMIGA_PORTS, esp_intr, IRQF_SHARED,
+-			    "Blizzard 2060 SCSI", esp->ehost);
+-
+-		/* Figure out our scsi ID on the bus */
+-		esp->scsi_id = 7;
+-		
+-		/* We don't have a differential SCSI-bus. */
+-		esp->diff = 0;
+-
+-		esp_initialize(esp);
+-
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-		return esps_in_use;
+-	    }
+-	}
+-	return 0;
+-}
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Since the Blizzard DMA is fully dedicated to the ESP chip,
+-	 * the number of bytes sent (to the ESP chip) equals the number
+-	 * of bytes in the FIFO - there is no buffering in the DMA controller.
+-	 * XXXX Do I read this right? It is from host to ESP, right?
+-	 */
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	/* I don't think there's any limit on the Blizzard DMA. So we use what
+-	 * the ESP chip can handle (24 bit).
+-	 */
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > 0x1000000)
+-		sz = 0x1000000;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	ESPLOG(("intreq:<%04x>, intena:<%04x>\n",
+-		amiga_custom.intreqr, amiga_custom.intenar));
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct blz2060_dma_registers *dregs = 
+-		(struct blz2060_dma_registers *) (esp->dregs);
+-
+-	cache_clear(addr, length);
+-
+-	addr >>= 1;
+-	addr &= ~(BLZ2060_DMA_WRITE);
+-	dregs->dma_addr3 = (addr      ) & 0xff;
+-	dregs->dma_addr2 = (addr >>  8) & 0xff;
+-	dregs->dma_addr1 = (addr >> 16) & 0xff;
+-	dregs->dma_addr0 = (addr >> 24) & 0xff;
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct blz2060_dma_registers *dregs = 
+-		(struct blz2060_dma_registers *) (esp->dregs);
+-
+-	cache_push(addr, length);
+-
+-	addr >>= 1;
+-	addr |= BLZ2060_DMA_WRITE;
+-	dregs->dma_addr3 = (addr      ) & 0xff;
+-	dregs->dma_addr2 = (addr >>  8) & 0xff;
+-	dregs->dma_addr1 = (addr >> 16) & 0xff;
+-	dregs->dma_addr0 = (addr >> 24) & 0xff;
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	return (esp_read(esp->eregs->esp_status) & ESP_STAT_INTR);
+-}
+-
+-static void dma_led_off(struct NCR_ESP *esp)
+-{
+-	((struct blz2060_dma_registers *) (esp->dregs))->dma_led_ctrl =
+-		BLZ2060_DMA_LED;
+-}
+-
+-static void dma_led_on(struct NCR_ESP *esp)
+-{
+-	((struct blz2060_dma_registers *) (esp->dregs))->dma_led_ctrl = 0;
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return ((amiga_custom.intenar) & IF_PORTS);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	/* On the Sparc, DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if(write){
+-		dma_init_read(esp, addr, count);
+-	} else {
+-		dma_init_write(esp, addr, count);
+-	}
+-}
+-
+-#define HOSTS_C
+-
+-int blz2060_esp_release(struct Scsi_Host *instance)
+-{
+-#ifdef MODULE
+-	unsigned long address = (unsigned long)((struct NCR_ESP *)instance->hostdata)->edev;
+-
+-	esp_deallocate((struct NCR_ESP *)instance->hostdata);
+-	esp_release();
+-	release_mem_region(address, sizeof(struct ESP_regs));
+-	free_irq(IRQ_AMIGA_PORTS, esp_intr);
+-#endif
+-	return 1;
+-}
+-
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "esp-blz2060",
+-	.proc_info		= esp_proc_info,
+-	.name			= "Blizzard2060 SCSI",
+-	.detect			= blz2060_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= blz2060_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= ENABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/cyberstorm.c b/drivers/scsi/cyberstorm.c
+deleted file mode 100644
+index c6b98a4..0000000
+--- a/drivers/scsi/cyberstorm.c
++++ /dev/null
+@@ -1,377 +0,0 @@
+-/* cyberstorm.c: Driver for CyberStorm SCSI Controller.
+- *
+- * Copyright (C) 1996 Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * The CyberStorm SCSI driver is based on David S. Miller's ESP driver
+- * for the Sparc computers. 
+- * 
+- * This work was made possible by Phase5 who willingly (and most generously)
+- * supported me with hardware and all the information I needed.
+- */
+-
+-/* TODO:
+- *
+- * 1) Figure out how to make a cleaner merge with the sparc driver with regard
+- *    to the caches and the Sparc MMU mapping.
+- * 2) Make as few routines required outside the generic driver. A lot of the
+- *    routines in this file used to be inline!
+- */
+-
+-#include <linux/module.h>
+-
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <linux/zorro.h>
+-#include <asm/irq.h>
+-#include <asm/amigaints.h>
+-#include <asm/amigahw.h>
+-
+-#include <asm/pgtable.h>
+-
+-/* The controller registers can be found in the Z2 config area at these
+- * offsets:
+- */
+-#define CYBER_ESP_ADDR 0xf400
+-#define CYBER_DMA_ADDR 0xf800
+-
+-
+-/* The CyberStorm DMA interface */
+-struct cyber_dma_registers {
+-	volatile unsigned char dma_addr0;	/* DMA address (MSB) [0x000] */
+-	unsigned char dmapad1[1];
+-	volatile unsigned char dma_addr1;	/* DMA address       [0x002] */
+-	unsigned char dmapad2[1];
+-	volatile unsigned char dma_addr2;	/* DMA address       [0x004] */
+-	unsigned char dmapad3[1];
+-	volatile unsigned char dma_addr3;	/* DMA address (LSB) [0x006] */
+-	unsigned char dmapad4[0x3fb];
+-	volatile unsigned char cond_reg;        /* DMA cond    (ro)  [0x402] */
+-#define ctrl_reg  cond_reg			/* DMA control (wo)  [0x402] */
+-};
+-
+-/* DMA control bits */
+-#define CYBER_DMA_LED    0x80	/* HD led control 1 = on */
+-#define CYBER_DMA_WRITE  0x40	/* DMA direction. 1 = write */
+-#define CYBER_DMA_Z3     0x20	/* 16 (Z2) or 32 (CHIP/Z3) bit DMA transfer */
+-
+-/* DMA status bits */
+-#define CYBER_DMA_HNDL_INTR 0x80	/* DMA IRQ pending? */
+-
+-/* The bits below appears to be Phase5 Debug bits only; they were not
+- * described by Phase5 so using them may seem a bit stupid...
+- */
+-#define CYBER_HOST_ID 0x02	/* If set, host ID should be 7, otherwise
+-				 * it should be 6.
+-				 */
+-#define CYBER_SLOW_CABLE 0x08	/* If *not* set, assume SLOW_CABLE */
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static void dma_led_off(struct NCR_ESP *esp);
+-static void dma_led_on(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-
+-static unsigned char ctrl_data = 0;	/* Keep backup of the stuff written
+-				 * to ctrl_reg. Always write a copy
+-				 * to this register when writing to
+-				 * the hardware register!
+-				 */
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are transferred to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-/***************************************************************** Detection */
+-int __init cyber_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct zorro_dev *z = NULL;
+-	unsigned long address;
+-
+-	while ((z = zorro_find_device(ZORRO_WILDCARD, z))) {
+-	    unsigned long board = z->resource.start;
+-	    if ((z->id == ZORRO_PROD_PHASE5_BLIZZARD_1220_CYBERSTORM ||
+-		 z->id == ZORRO_PROD_PHASE5_BLIZZARD_1230_II_FASTLANE_Z3_CYBERSCSI_CYBERSTORM060) &&
+-		request_mem_region(board+CYBER_ESP_ADDR,
+-		    		   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		/* Figure out if this is a CyberStorm or really a 
+-		 * Fastlane/Blizzard Mk II by looking at the board size.
+-		 * CyberStorm maps 64kB
+-		 * (ZORRO_PROD_PHASE5_BLIZZARD_1220_CYBERSTORM does anyway)
+-		 */
+-		if(z->resource.end-board != 0xffff) {
+-			release_mem_region(board+CYBER_ESP_ADDR,
+-					   sizeof(struct ESP_regs));
+-			return 0;
+-		}
+-		esp = esp_allocate(tpnt, (void *)board + CYBER_ESP_ADDR, 0);
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = 0;
+-		esp->dma_invalidate = 0;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = 0;
+-		esp->dma_led_on = &dma_led_on;
+-		esp->dma_led_off = &dma_led_off;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-
+-		/* SCSI chip speed */
+-		esp->cfreq = 40000000;
+-
+-		/* The DMA registers on the CyberStorm are mapped
+-		 * relative to the device (i.e. in the same Zorro
+-		 * I/O block).
+-		 */
+-		address = (unsigned long)ZTWO_VADDR(board);
+-		esp->dregs = (void *)(address + CYBER_DMA_ADDR);
+-
+-		/* ESP register base */
+-		esp->eregs = (struct ESP_regs *)(address + CYBER_ESP_ADDR);
+-		
+-		/* Set the command buffer */
+-		esp->esp_command = cmd_buffer;
+-		esp->esp_command_dvma = virt_to_bus((void *)cmd_buffer);
+-
+-		esp->irq = IRQ_AMIGA_PORTS;
+-		request_irq(IRQ_AMIGA_PORTS, esp_intr, IRQF_SHARED,
+-			    "CyberStorm SCSI", esp->ehost);
+-		/* Figure out our scsi ID on the bus */
+-		/* The DMA cond flag contains a hardcoded jumper bit
+-		 * which can be used to select host number 6 or 7.
+-		 * However, even though it may change, we use a hardcoded
+-		 * value of 7.
+-		 */
+-		esp->scsi_id = 7;
+-		
+-		/* We don't have a differential SCSI-bus. */
+-		esp->diff = 0;
+-
+-		esp_initialize(esp);
+-
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-		return esps_in_use;
+-	    }
+-	}
+-	return 0;
+-}
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Since the CyberStorm DMA is fully dedicated to the ESP chip,
+-	 * the number of bytes sent (to the ESP chip) equals the number
+-	 * of bytes in the FIFO - there is no buffering in the DMA controller.
+-	 * XXXX Do I read this right? It is from host to ESP, right?
+-	 */
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	/* I don't think there's any limit on the CyberDMA. So we use what
+-	 * the ESP chip can handle (24 bit).
+-	 */
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > 0x1000000)
+-		sz = 0x1000000;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	ESPLOG(("esp%d: dma -- cond_reg<%02x>\n",
+-		esp->esp_id, ((struct cyber_dma_registers *)
+-			      (esp->dregs))->cond_reg));
+-	ESPLOG(("intreq:<%04x>, intena:<%04x>\n",
+-		amiga_custom.intreqr, amiga_custom.intenar));
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct cyber_dma_registers *dregs = 
+-		(struct cyber_dma_registers *) esp->dregs;
+-
+-	cache_clear(addr, length);
+-
+-	addr &= ~(1);
+-	dregs->dma_addr0 = (addr >> 24) & 0xff;
+-	dregs->dma_addr1 = (addr >> 16) & 0xff;
+-	dregs->dma_addr2 = (addr >>  8) & 0xff;
+-	dregs->dma_addr3 = (addr      ) & 0xff;
+-	ctrl_data &= ~(CYBER_DMA_WRITE);
+-
+-	/* Check if physical address is outside Z2 space and of
+-	 * block length/block aligned in memory. If this is the
+-	 * case, enable 32 bit transfer. In all other cases, fall back
+-	 * to 16 bit transfer.
+-	 * Obviously 32 bit transfer should be enabled if the DMA address
+-	 * and length are 32 bit aligned. However, this leads to some
+-	 * strange behavior. Even 64 bit aligned addr/length fails.
+-	 * Until I've found a reason for this, 32 bit transfer is only
+-	 * used for full-block transfers (1kB).
+-	 *							-jskov
+-	 */
+-#if 0
+-	if((addr & 0x3fc) || length & 0x3ff || ((addr > 0x200000) &&
+-						(addr < 0xff0000)))
+-		ctrl_data &= ~(CYBER_DMA_Z3);	/* Z2, do 16 bit DMA */
+-	else
+-		ctrl_data |= CYBER_DMA_Z3; /* CHIP/Z3, do 32 bit DMA */
+-#else
+-	ctrl_data &= ~(CYBER_DMA_Z3);	/* Z2, do 16 bit DMA */
+-#endif
+-	dregs->ctrl_reg = ctrl_data;
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct cyber_dma_registers *dregs = 
+-		(struct cyber_dma_registers *) esp->dregs;
+-
+-	cache_push(addr, length);
+-
+-	addr |= 1;
+-	dregs->dma_addr0 = (addr >> 24) & 0xff;
+-	dregs->dma_addr1 = (addr >> 16) & 0xff;
+-	dregs->dma_addr2 = (addr >>  8) & 0xff;
+-	dregs->dma_addr3 = (addr      ) & 0xff;
+-	ctrl_data |= CYBER_DMA_WRITE;
+-
+-	/* See comment above */
+-#if 0
+-	if((addr & 0x3fc) || length & 0x3ff || ((addr > 0x200000) &&
+-						(addr < 0xff0000)))
+-		ctrl_data &= ~(CYBER_DMA_Z3);	/* Z2, do 16 bit DMA */
+-	else
+-		ctrl_data |= CYBER_DMA_Z3; /* CHIP/Z3, do 32 bit DMA */
+-#else
+-	ctrl_data &= ~(CYBER_DMA_Z3);	/* Z2, do 16 bit DMA */
+-#endif
+-	dregs->ctrl_reg = ctrl_data;
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	/* It's important to check the DMA IRQ bit in the correct way! */
+-	return ((esp_read(esp->eregs->esp_status) & ESP_STAT_INTR) &&
+-		((((struct cyber_dma_registers *)(esp->dregs))->cond_reg) &
+-		 CYBER_DMA_HNDL_INTR));
+-}
+-
+-static void dma_led_off(struct NCR_ESP *esp)
+-{
+-	ctrl_data &= ~CYBER_DMA_LED;
+-	((struct cyber_dma_registers *)(esp->dregs))->ctrl_reg = ctrl_data;
+-}
+-
+-static void dma_led_on(struct NCR_ESP *esp)
+-{
+-	ctrl_data |= CYBER_DMA_LED;
+-	((struct cyber_dma_registers *)(esp->dregs))->ctrl_reg = ctrl_data;
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return ((amiga_custom.intenar) & IF_PORTS);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	/* On the Sparc, DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if(write){
+-		dma_init_read(esp, addr, count);
+-	} else {
+-		dma_init_write(esp, addr, count);
+-	}
+-}
+-
+-#define HOSTS_C
+-
+-int cyber_esp_release(struct Scsi_Host *instance)
+-{
+-#ifdef MODULE
+-	unsigned long address = (unsigned long)((struct NCR_ESP *)instance->hostdata)->edev;
+-
+-	esp_deallocate((struct NCR_ESP *)instance->hostdata);
+-	esp_release();
+-	release_mem_region(address, sizeof(struct ESP_regs));
+-	free_irq(IRQ_AMIGA_PORTS, esp_intr);
+-#endif
+-	return 1;
+-}
+-
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "esp-cyberstorm",
+-	.proc_info		= esp_proc_info,
+-	.name			= "CyberStorm SCSI",
+-	.detect			= cyber_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= cyber_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= ENABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/cyberstormII.c b/drivers/scsi/cyberstormII.c
+deleted file mode 100644
+index e336e85..0000000
+--- a/drivers/scsi/cyberstormII.c
++++ /dev/null
+@@ -1,314 +0,0 @@
+-/* cyberstormII.c: Driver for CyberStorm SCSI Mk II
+- *
+- * Copyright (C) 1996 Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * This driver is based on cyberstorm.c
+- */
+-
+-/* TODO:
+- *
+- * 1) Figure out how to make a cleaner merge with the sparc driver with regard
+- *    to the caches and the Sparc MMU mapping.
+- * 2) Make as few routines required outside the generic driver. A lot of the
+- *    routines in this file used to be inline!
+- */
+-
+-#include <linux/module.h>
+-
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <linux/zorro.h>
+-#include <asm/irq.h>
+-#include <asm/amigaints.h>
+-#include <asm/amigahw.h>
+-
+-#include <asm/pgtable.h>
+-
+-/* The controller registers can be found in the Z2 config area at these
+- * offsets:
+- */
+-#define CYBERII_ESP_ADDR 0x1ff03
+-#define CYBERII_DMA_ADDR 0x1ff43
+-
+-
+-/* The CyberStorm II DMA interface */
+-struct cyberII_dma_registers {
+-	volatile unsigned char cond_reg;        /* DMA cond    (ro)  [0x000] */
+-#define ctrl_reg  cond_reg			/* DMA control (wo)  [0x000] */
+-	unsigned char dmapad4[0x3f];
+-	volatile unsigned char dma_addr0;	/* DMA address (MSB) [0x040] */
+-	unsigned char dmapad1[3];
+-	volatile unsigned char dma_addr1;	/* DMA address       [0x044] */
+-	unsigned char dmapad2[3];
+-	volatile unsigned char dma_addr2;	/* DMA address       [0x048] */
+-	unsigned char dmapad3[3];
+-	volatile unsigned char dma_addr3;	/* DMA address (LSB) [0x04c] */
+-};
+-
+-/* DMA control bits */
+-#define CYBERII_DMA_LED    0x02	/* HD led control 1 = on */
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static void dma_led_off(struct NCR_ESP *esp);
+-static void dma_led_on(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are transferred to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-/***************************************************************** Detection */
+-int __init cyberII_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct zorro_dev *z = NULL;
+-	unsigned long address;
+-	struct ESP_regs *eregs;
+-
+-	if ((z = zorro_find_device(ZORRO_PROD_PHASE5_CYBERSTORM_MK_II, z))) {
+-	    unsigned long board = z->resource.start;
+-	    if (request_mem_region(board+CYBERII_ESP_ADDR,
+-				   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		/* Do some magic to figure out if the CyberStorm Mk II
+-		 * is equipped with a SCSI controller
+-		 */
+-		address = (unsigned long)ZTWO_VADDR(board);
+-		eregs = (struct ESP_regs *)(address + CYBERII_ESP_ADDR);
+-
+-		esp = esp_allocate(tpnt, (void *)board + CYBERII_ESP_ADDR, 0);
+-
+-		esp_write(eregs->esp_cfg1, (ESP_CONFIG1_PENABLE | 7));
+-		udelay(5);
+-		if(esp_read(eregs->esp_cfg1) != (ESP_CONFIG1_PENABLE | 7)) {
+-			esp_deallocate(esp);
+-			scsi_unregister(esp->ehost);
+-			release_mem_region(board+CYBERII_ESP_ADDR,
+-					   sizeof(struct ESP_regs));
+-			return 0; /* Bail out if address did not hold data */
+-		}
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = 0;
+-		esp->dma_invalidate = 0;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = 0;
+-		esp->dma_led_on = &dma_led_on;
+-		esp->dma_led_off = &dma_led_off;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-
+-		/* SCSI chip speed */
+-		esp->cfreq = 40000000;
+-
+-		/* The DMA registers on the CyberStorm are mapped
+-		 * relative to the device (i.e. in the same Zorro
+-		 * I/O block).
+-		 */
+-		esp->dregs = (void *)(address + CYBERII_DMA_ADDR);
+-
+-		/* ESP register base */
+-		esp->eregs = eregs;
+-		
+-		/* Set the command buffer */
+-		esp->esp_command = cmd_buffer;
+-		esp->esp_command_dvma = virt_to_bus((void *)cmd_buffer);
+-
+-		esp->irq = IRQ_AMIGA_PORTS;
+-		request_irq(IRQ_AMIGA_PORTS, esp_intr, IRQF_SHARED,
+-			    "CyberStorm SCSI Mk II", esp->ehost);
+-
+-		/* Figure out our scsi ID on the bus */
+-		esp->scsi_id = 7;
+-		
+-		/* We don't have a differential SCSI-bus. */
+-		esp->diff = 0;
+-
+-		esp_initialize(esp);
+-
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-		return esps_in_use;
+-	    }
+-	}
+-	return 0;
+-}
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Since the CyberStorm DMA is fully dedicated to the ESP chip,
+-	 * the number of bytes sent (to the ESP chip) equals the number
+-	 * of bytes in the FIFO - there is no buffering in the DMA controller.
+-	 * XXXX Do I read this right? It is from host to ESP, right?
+-	 */
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	/* I don't think there's any limit on the CyberDMA. So we use what
+-	 * the ESP chip can handle (24 bit).
+-	 */
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > 0x1000000)
+-		sz = 0x1000000;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	ESPLOG(("esp%d: dma -- cond_reg<%02x>\n",
+-		esp->esp_id, ((struct cyberII_dma_registers *)
+-			      (esp->dregs))->cond_reg));
+-	ESPLOG(("intreq:<%04x>, intena:<%04x>\n",
+-		amiga_custom.intreqr, amiga_custom.intenar));
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct cyberII_dma_registers *dregs = 
+-		(struct cyberII_dma_registers *) esp->dregs;
+-
+-	cache_clear(addr, length);
+-
+-	addr &= ~(1);
+-	dregs->dma_addr0 = (addr >> 24) & 0xff;
+-	dregs->dma_addr1 = (addr >> 16) & 0xff;
+-	dregs->dma_addr2 = (addr >>  8) & 0xff;
+-	dregs->dma_addr3 = (addr      ) & 0xff;
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct cyberII_dma_registers *dregs = 
+-		(struct cyberII_dma_registers *) esp->dregs;
+-
+-	cache_push(addr, length);
+-
+-	addr |= 1;
+-	dregs->dma_addr0 = (addr >> 24) & 0xff;
+-	dregs->dma_addr1 = (addr >> 16) & 0xff;
+-	dregs->dma_addr2 = (addr >>  8) & 0xff;
+-	dregs->dma_addr3 = (addr      ) & 0xff;
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	/* It's important to check the DMA IRQ bit in the correct way! */
+-	return (esp_read(esp->eregs->esp_status) & ESP_STAT_INTR);
+-}
+-
+-static void dma_led_off(struct NCR_ESP *esp)
+-{
+-	((struct cyberII_dma_registers *)(esp->dregs))->ctrl_reg &= ~CYBERII_DMA_LED;
+-}
+-
+-static void dma_led_on(struct NCR_ESP *esp)
+-{
+-	((struct cyberII_dma_registers *)(esp->dregs))->ctrl_reg |= CYBERII_DMA_LED;
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return ((amiga_custom.intenar) & IF_PORTS);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	/* On the Sparc, DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if(write){
+-		dma_init_read(esp, addr, count);
+-	} else {
+-		dma_init_write(esp, addr, count);
+-	}
+-}
+-
+-#define HOSTS_C
+-
+-int cyberII_esp_release(struct Scsi_Host *instance)
+-{
+-#ifdef MODULE
+-	unsigned long address = (unsigned long)((struct NCR_ESP *)instance->hostdata)->edev;
+-
+-	esp_deallocate((struct NCR_ESP *)instance->hostdata); 
+-	esp_release();
+-	release_mem_region(address, sizeof(struct ESP_regs));
+-	free_irq(IRQ_AMIGA_PORTS, esp_intr);
+-#endif
+-	return 1;
+-}
+-
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "esp-cyberstormII",
+-	.proc_info		= esp_proc_info,
+-	.name			= "CyberStorm Mk II SCSI",
+-	.detect			= cyberII_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= cyberII_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= ENABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/dec_esp.c b/drivers/scsi/dec_esp.c
+deleted file mode 100644
+index d42ad66..0000000
+--- a/drivers/scsi/dec_esp.c
++++ /dev/null
+@@ -1,687 +0,0 @@
+-/*
+- * dec_esp.c: Driver for SCSI chips on IOASIC based TURBOchannel DECstations
+- *            and TURBOchannel PMAZ-A cards
+- *
+- * TURBOchannel changes by Harald Koerfgen
+- * PMAZ-A support by David Airlie
+- *
+- * based on jazz_esp.c:
+- * Copyright (C) 1997 Thomas Bogendoerfer (tsbogend@alpha.franken.de)
+- *
+- * jazz_esp is based on David S. Miller's ESP driver and cyber_esp
+- *
+- * 20000819 - Small PMAZ-AA fixes by Florian Lohoff <flo@rfc822.org>
+- *            Be warned the PMAZ-AA works currently as a single card.
+- *            Dont try to put multiple cards in one machine - They are
+- *            both detected but it may crash under high load garbling your
+- *            data.
+- * 20001005	- Initialization fixes for 2.4.0-test9
+- * 			  Florian Lohoff <flo@rfc822.org>
+- *
+- *	Copyright (C) 2002, 2003, 2005, 2006  Maciej W. Rozycki
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/spinlock.h>
+-#include <linux/stat.h>
+-#include <linux/tc.h>
+-
+-#include <asm/dma.h>
+-#include <asm/irq.h>
+-#include <asm/pgtable.h>
+-#include <asm/system.h>
+-
+-#include <asm/dec/interrupts.h>
+-#include <asm/dec/ioasic.h>
+-#include <asm/dec/ioasic_addrs.h>
+-#include <asm/dec/ioasic_ints.h>
+-#include <asm/dec/machtype.h>
+-#include <asm/dec/system.h>
+-
+-#define DEC_SCSI_SREG 0
+-#define DEC_SCSI_DMAREG 0x40000
+-#define DEC_SCSI_SRAM 0x80000
+-#define DEC_SCSI_DIAG 0xC0000
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static void dma_drain(struct NCR_ESP *esp);
+-static int  dma_can_transfer(struct NCR_ESP *esp, struct scsi_cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, u32 vaddress, int length);
+-static void dma_init_write(struct NCR_ESP *esp, u32 vaddress, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, u32 addr, int count, int write);
+-static void dma_mmu_get_scsi_one(struct NCR_ESP *esp, struct scsi_cmnd * sp);
+-static void dma_mmu_get_scsi_sgl(struct NCR_ESP *esp, struct scsi_cmnd * sp);
+-static void dma_advance_sg(struct scsi_cmnd * sp);
+-
+-static void pmaz_dma_drain(struct NCR_ESP *esp);
+-static void pmaz_dma_init_read(struct NCR_ESP *esp, u32 vaddress, int length);
+-static void pmaz_dma_init_write(struct NCR_ESP *esp, u32 vaddress, int length);
+-static void pmaz_dma_ints_off(struct NCR_ESP *esp);
+-static void pmaz_dma_ints_on(struct NCR_ESP *esp);
+-static void pmaz_dma_setup(struct NCR_ESP *esp, u32 addr, int count, int write);
+-static void pmaz_dma_mmu_get_scsi_one(struct NCR_ESP *esp, struct scsi_cmnd * sp);
+-
+-#define TC_ESP_RAM_SIZE 0x20000
+-#define ESP_TGT_DMA_SIZE ((TC_ESP_RAM_SIZE/7) & ~(sizeof(int)-1))
+-#define ESP_NCMD 7
+-
+-#define TC_ESP_DMAR_MASK  0x1ffff
+-#define TC_ESP_DMAR_WRITE 0x80000000
+-#define TC_ESP_DMA_ADDR(x) ((unsigned)(x) & TC_ESP_DMAR_MASK)
+-
+-u32 esp_virt_buffer;
+-int scsi_current_length;
+-
+-volatile unsigned char cmd_buffer[16];
+-volatile unsigned char pmaz_cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are trasfered to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-static irqreturn_t scsi_dma_merr_int(int, void *);
+-static irqreturn_t scsi_dma_err_int(int, void *);
+-static irqreturn_t scsi_dma_int(int, void *);
+-
+-static struct scsi_host_template dec_esp_template = {
+-	.module			= THIS_MODULE,
+-	.name			= "NCR53C94",
+-	.info			= esp_info,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.proc_info		= esp_proc_info,
+-	.proc_name		= "dec_esp",
+-	.can_queue		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= DISABLE_CLUSTERING,
+-};
+-
+-static struct NCR_ESP *dec_esp_platform;
+-
+-/***************************************************************** Detection */
+-static int dec_esp_platform_probe(void)
+-{
+-	struct NCR_ESP *esp;
+-	int err = 0;
+-
+-	if (IOASIC) {
+-		esp = esp_allocate(&dec_esp_template, NULL, 1);
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = &dma_drain;
+-		esp->dma_invalidate = 0;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = 0;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-		esp->dma_led_off = 0;
+-		esp->dma_led_on = 0;
+-
+-		/* virtual DMA functions */
+-		esp->dma_mmu_get_scsi_one = &dma_mmu_get_scsi_one;
+-		esp->dma_mmu_get_scsi_sgl = &dma_mmu_get_scsi_sgl;
+-		esp->dma_mmu_release_scsi_one = 0;
+-		esp->dma_mmu_release_scsi_sgl = 0;
+-		esp->dma_advance_sg = &dma_advance_sg;
+-
+-
+-		/* SCSI chip speed */
+-		esp->cfreq = 25000000;
+-
+-		esp->dregs = 0;
+-
+-		/* ESP register base */
+-		esp->eregs = (void *)CKSEG1ADDR(dec_kn_slot_base +
+-						IOASIC_SCSI);
+-
+-		/* Set the command buffer */
+-		esp->esp_command = (volatile unsigned char *) cmd_buffer;
+-
+-		/* get virtual dma address for command buffer */
+-		esp->esp_command_dvma = virt_to_phys(cmd_buffer);
+-
+-		esp->irq = dec_interrupt[DEC_IRQ_ASC];
+-
+-		esp->scsi_id = 7;
+-
+-		/* Check for differential SCSI-bus */
+-		esp->diff = 0;
+-
+-		err = request_irq(esp->irq, esp_intr, IRQF_DISABLED,
+-				  "ncr53c94", esp->ehost);
+-		if (err)
+-			goto err_alloc;
+-		err = request_irq(dec_interrupt[DEC_IRQ_ASC_MERR],
+-				  scsi_dma_merr_int, IRQF_DISABLED,
+-				  "ncr53c94 error", esp->ehost);
+-		if (err)
+-			goto err_irq;
+-		err = request_irq(dec_interrupt[DEC_IRQ_ASC_ERR],
+-				  scsi_dma_err_int, IRQF_DISABLED,
+-				  "ncr53c94 overrun", esp->ehost);
+-		if (err)
+-			goto err_irq_merr;
+-		err = request_irq(dec_interrupt[DEC_IRQ_ASC_DMA], scsi_dma_int,
+-				  IRQF_DISABLED, "ncr53c94 dma", esp->ehost);
+-		if (err)
+-			goto err_irq_err;
+-
+-		esp_initialize(esp);
+-
+-		err = scsi_add_host(esp->ehost, NULL);
+-		if (err) {
+-			printk(KERN_ERR "ESP: Unable to register adapter\n");
+-			goto err_irq_dma;
+-		}
+-
+-		scsi_scan_host(esp->ehost);
+-
+-		dec_esp_platform = esp;
+-	}
+-
+-	return 0;
+-
+-err_irq_dma:
+-	free_irq(dec_interrupt[DEC_IRQ_ASC_DMA], esp->ehost);
+-err_irq_err:
+-	free_irq(dec_interrupt[DEC_IRQ_ASC_ERR], esp->ehost);
+-err_irq_merr:
+-	free_irq(dec_interrupt[DEC_IRQ_ASC_MERR], esp->ehost);
+-err_irq:
+-	free_irq(esp->irq, esp->ehost);
+-err_alloc:
+-	esp_deallocate(esp);
+-	scsi_host_put(esp->ehost);
+-	return err;
+-}
+-
+-static int __init dec_esp_probe(struct device *dev)
+-{
+-	struct NCR_ESP *esp;
+-	resource_size_t start, len;
+-	int err;
+-
+-	esp = esp_allocate(&dec_esp_template,  NULL, 1);
+-
+-	dev_set_drvdata(dev, esp);
+-
+-	start = to_tc_dev(dev)->resource.start;
+-	len = to_tc_dev(dev)->resource.end - start + 1;
+-
+-	if (!request_mem_region(start, len, dev->bus_id)) {
+-		printk(KERN_ERR "%s: Unable to reserve MMIO resource\n",
+-		       dev->bus_id);
+-		err = -EBUSY;
+-		goto err_alloc;
+-	}
+-
+-	/* Store base addr into esp struct.  */
+-	esp->slot = start;
+-
+-	esp->dregs = 0;
+-	esp->eregs = (void *)CKSEG1ADDR(start + DEC_SCSI_SREG);
+-	esp->do_pio_cmds = 1;
+-
+-	/* Set the command buffer.  */
+-	esp->esp_command = (volatile unsigned char *)pmaz_cmd_buffer;
+-
+-	/* Get virtual dma address for command buffer.  */
+-	esp->esp_command_dvma = virt_to_phys(pmaz_cmd_buffer);
+-
+-	esp->cfreq = tc_get_speed(to_tc_dev(dev)->bus);
+-
+-	esp->irq = to_tc_dev(dev)->interrupt;
+-
+-	/* Required functions.  */
+-	esp->dma_bytes_sent = &dma_bytes_sent;
+-	esp->dma_can_transfer = &dma_can_transfer;
+-	esp->dma_dump_state = &dma_dump_state;
+-	esp->dma_init_read = &pmaz_dma_init_read;
+-	esp->dma_init_write = &pmaz_dma_init_write;
+-	esp->dma_ints_off = &pmaz_dma_ints_off;
+-	esp->dma_ints_on = &pmaz_dma_ints_on;
+-	esp->dma_irq_p = &dma_irq_p;
+-	esp->dma_ports_p = &dma_ports_p;
+-	esp->dma_setup = &pmaz_dma_setup;
+-
+-	/* Optional functions.  */
+-	esp->dma_barrier = 0;
+-	esp->dma_drain = &pmaz_dma_drain;
+-	esp->dma_invalidate = 0;
+-	esp->dma_irq_entry = 0;
+-	esp->dma_irq_exit = 0;
+-	esp->dma_poll = 0;
+-	esp->dma_reset = 0;
+-	esp->dma_led_off = 0;
+-	esp->dma_led_on = 0;
+-
+-	esp->dma_mmu_get_scsi_one = pmaz_dma_mmu_get_scsi_one;
+-	esp->dma_mmu_get_scsi_sgl = 0;
+-	esp->dma_mmu_release_scsi_one = 0;
+-	esp->dma_mmu_release_scsi_sgl = 0;
+-	esp->dma_advance_sg = 0;
+-
+-	err = request_irq(esp->irq, esp_intr, IRQF_DISABLED, "PMAZ_AA",
+-			  esp->ehost);
+-	if (err) {
+-		printk(KERN_ERR "%s: Unable to get IRQ %d\n",
+-		       dev->bus_id, esp->irq);
+-		goto err_resource;
+-	}
+-
+-	esp->scsi_id = 7;
+-	esp->diff = 0;
+-	esp_initialize(esp);
+-
+-	err = scsi_add_host(esp->ehost, dev);
+-	if (err) {
+-		printk(KERN_ERR "%s: Unable to register adapter\n",
+-		       dev->bus_id);
+-		goto err_irq;
+-	}
+-
+-	scsi_scan_host(esp->ehost);
+-
+-	return 0;
+-
+-err_irq:
+-	free_irq(esp->irq, esp->ehost);
+-
+-err_resource:
+-	release_mem_region(start, len);
+-
+-err_alloc:
+-	esp_deallocate(esp);
+-	scsi_host_put(esp->ehost);
+-	return err;
+-}
+-
+-static void __exit dec_esp_platform_remove(void)
+-{
+-	struct NCR_ESP *esp = dec_esp_platform;
+-
+-	free_irq(esp->irq, esp->ehost);
+-	esp_deallocate(esp);
+-	scsi_host_put(esp->ehost);
+-	dec_esp_platform = NULL;
+-}
+-
+-static void __exit dec_esp_remove(struct device *dev)
+-{
+-	struct NCR_ESP *esp = dev_get_drvdata(dev);
+-
+-	free_irq(esp->irq, esp->ehost);
+-	esp_deallocate(esp);
+-	scsi_host_put(esp->ehost);
+-}
+-
+-
+-/************************************************************* DMA Functions */
+-static irqreturn_t scsi_dma_merr_int(int irq, void *dev_id)
+-{
+-	printk("Got unexpected SCSI DMA Interrupt! < ");
+-	printk("SCSI_DMA_MEMRDERR ");
+-	printk(">\n");
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static irqreturn_t scsi_dma_err_int(int irq, void *dev_id)
+-{
+-	/* empty */
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static irqreturn_t scsi_dma_int(int irq, void *dev_id)
+-{
+-	u32 scsi_next_ptr;
+-
+-	scsi_next_ptr = ioasic_read(IO_REG_SCSI_DMA_P);
+-
+-	/* next page */
+-	scsi_next_ptr = (((scsi_next_ptr >> 3) + PAGE_SIZE) & PAGE_MASK) << 3;
+-	ioasic_write(IO_REG_SCSI_DMA_BP, scsi_next_ptr);
+-	fast_iob();
+-
+-	return IRQ_HANDLED;
+-}
+-
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	return fifo_count;
+-}
+-
+-static void dma_drain(struct NCR_ESP *esp)
+-{
+-	u32 nw, data0, data1, scsi_data_ptr;
+-	u16 *p;
+-
+-	nw = ioasic_read(IO_REG_SCSI_SCR);
+-
+-	/*
+-	 * Is there something in the dma buffers left?
+-	 */
+-	if (nw) {
+-		scsi_data_ptr = ioasic_read(IO_REG_SCSI_DMA_P) >> 3;
+-		p = phys_to_virt(scsi_data_ptr);
+-		switch (nw) {
+-		case 1:
+-			data0 = ioasic_read(IO_REG_SCSI_SDR0);
+-			p[0] = data0 & 0xffff;
+-			break;
+-		case 2:
+-			data0 = ioasic_read(IO_REG_SCSI_SDR0);
+-			p[0] = data0 & 0xffff;
+-			p[1] = (data0 >> 16) & 0xffff;
+-			break;
+-		case 3:
+-			data0 = ioasic_read(IO_REG_SCSI_SDR0);
+-			data1 = ioasic_read(IO_REG_SCSI_SDR1);
+-			p[0] = data0 & 0xffff;
+-			p[1] = (data0 >> 16) & 0xffff;
+-			p[2] = data1 & 0xffff;
+-			break;
+-		default:
+-			printk("Strange: %d words in dma buffer left\n", nw);
+-			break;
+-		}
+-	}
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, struct scsi_cmnd * sp)
+-{
+-	return sp->SCp.this_residual;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, u32 vaddress, int length)
+-{
+-	u32 scsi_next_ptr, ioasic_ssr;
+-	unsigned long flags;
+-
+-	if (vaddress & 3)
+-		panic("dec_esp.c: unable to handle partial word transfers, yet...");
+-
+-	dma_cache_wback_inv((unsigned long) phys_to_virt(vaddress), length);
+-
+-	spin_lock_irqsave(&ioasic_ssr_lock, flags);
+-
+-	fast_mb();
+-	ioasic_ssr = ioasic_read(IO_REG_SSR);
+-
+-	ioasic_ssr &= ~IO_SSR_SCSI_DMA_EN;
+-	ioasic_write(IO_REG_SSR, ioasic_ssr);
+-
+-	fast_wmb();
+-	ioasic_write(IO_REG_SCSI_SCR, 0);
+-	ioasic_write(IO_REG_SCSI_DMA_P, vaddress << 3);
+-
+-	/* prepare for next page */
+-	scsi_next_ptr = ((vaddress + PAGE_SIZE) & PAGE_MASK) << 3;
+-	ioasic_write(IO_REG_SCSI_DMA_BP, scsi_next_ptr);
+-
+-	ioasic_ssr |= (IO_SSR_SCSI_DMA_DIR | IO_SSR_SCSI_DMA_EN);
+-	fast_wmb();
+-	ioasic_write(IO_REG_SSR, ioasic_ssr);
+-
+-	fast_iob();
+-	spin_unlock_irqrestore(&ioasic_ssr_lock, flags);
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, u32 vaddress, int length)
+-{
+-	u32 scsi_next_ptr, ioasic_ssr;
+-	unsigned long flags;
+-
+-	if (vaddress & 3)
+-		panic("dec_esp.c: unable to handle partial word transfers, yet...");
+-
+-	dma_cache_wback_inv((unsigned long) phys_to_virt(vaddress), length);
+-
+-	spin_lock_irqsave(&ioasic_ssr_lock, flags);
+-
+-	fast_mb();
+-	ioasic_ssr = ioasic_read(IO_REG_SSR);
+-
+-	ioasic_ssr &= ~(IO_SSR_SCSI_DMA_DIR | IO_SSR_SCSI_DMA_EN);
+-	ioasic_write(IO_REG_SSR, ioasic_ssr);
+-
+-	fast_wmb();
+-	ioasic_write(IO_REG_SCSI_SCR, 0);
+-	ioasic_write(IO_REG_SCSI_DMA_P, vaddress << 3);
+-
+-	/* prepare for next page */
+-	scsi_next_ptr = ((vaddress + PAGE_SIZE) & PAGE_MASK) << 3;
+-	ioasic_write(IO_REG_SCSI_DMA_BP, scsi_next_ptr);
+-
+-	ioasic_ssr |= IO_SSR_SCSI_DMA_EN;
+-	fast_wmb();
+-	ioasic_write(IO_REG_SSR, ioasic_ssr);
+-
+-	fast_iob();
+-	spin_unlock_irqrestore(&ioasic_ssr_lock, flags);
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(dec_interrupt[DEC_IRQ_ASC_DMA]);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(dec_interrupt[DEC_IRQ_ASC_DMA]);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	return (esp->eregs->esp_status & ESP_STAT_INTR);
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	/*
+-	 * FIXME: what's this good for?
+-	 */
+-	return 1;
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, u32 addr, int count, int write)
+-{
+-	/*
+-	 * DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if (write)
+-		dma_init_read(esp, addr, count);
+-	else
+-		dma_init_write(esp, addr, count);
+-}
+-
+-static void dma_mmu_get_scsi_one(struct NCR_ESP *esp, struct scsi_cmnd * sp)
+-{
+-	sp->SCp.ptr = (char *)virt_to_phys(sp->request_buffer);
+-}
+-
+-static void dma_mmu_get_scsi_sgl(struct NCR_ESP *esp, struct scsi_cmnd * sp)
+-{
+-	int sz = sp->SCp.buffers_residual;
+-	struct scatterlist *sg = sp->SCp.buffer;
+-
+-	while (sz >= 0) {
+-		sg[sz].dma_address = page_to_phys(sg[sz].page) + sg[sz].offset;
+-		sz--;
+-	}
+-	sp->SCp.ptr = (char *)(sp->SCp.buffer->dma_address);
+-}
+-
+-static void dma_advance_sg(struct scsi_cmnd * sp)
+-{
+-	sp->SCp.ptr = (char *)(sp->SCp.buffer->dma_address);
+-}
+-
+-static void pmaz_dma_drain(struct NCR_ESP *esp)
+-{
+-	memcpy(phys_to_virt(esp_virt_buffer),
+-	       (void *)CKSEG1ADDR(esp->slot + DEC_SCSI_SRAM +
+-				  ESP_TGT_DMA_SIZE),
+-	       scsi_current_length);
+-}
+-
+-static void pmaz_dma_init_read(struct NCR_ESP *esp, u32 vaddress, int length)
+-{
+-	volatile u32 *dmareg =
+-		(volatile u32 *)CKSEG1ADDR(esp->slot + DEC_SCSI_DMAREG);
+-
+-	if (length > ESP_TGT_DMA_SIZE)
+-		length = ESP_TGT_DMA_SIZE;
+-
+-	*dmareg = TC_ESP_DMA_ADDR(ESP_TGT_DMA_SIZE);
+-
+-	iob();
+-
+-	esp_virt_buffer = vaddress;
+-	scsi_current_length = length;
+-}
+-
+-static void pmaz_dma_init_write(struct NCR_ESP *esp, u32 vaddress, int length)
+-{
+-	volatile u32 *dmareg =
+-		(volatile u32 *)CKSEG1ADDR(esp->slot + DEC_SCSI_DMAREG);
+-
+-	memcpy((void *)CKSEG1ADDR(esp->slot + DEC_SCSI_SRAM +
+-				  ESP_TGT_DMA_SIZE),
+-	       phys_to_virt(vaddress), length);
+-
+-	wmb();
+-	*dmareg = TC_ESP_DMAR_WRITE | TC_ESP_DMA_ADDR(ESP_TGT_DMA_SIZE);
+-
+-	iob();
+-}
+-
+-static void pmaz_dma_ints_off(struct NCR_ESP *esp)
+-{
+-}
+-
+-static void pmaz_dma_ints_on(struct NCR_ESP *esp)
+-{
+-}
+-
+-static void pmaz_dma_setup(struct NCR_ESP *esp, u32 addr, int count, int write)
+-{
+-	/*
+-	 * DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if (write)
+-		pmaz_dma_init_read(esp, addr, count);
+-	else
+-		pmaz_dma_init_write(esp, addr, count);
+-}
+-
+-static void pmaz_dma_mmu_get_scsi_one(struct NCR_ESP *esp, struct scsi_cmnd * sp)
+-{
+-	sp->SCp.ptr = (char *)virt_to_phys(sp->request_buffer);
+-}
+-
+-
+-#ifdef CONFIG_TC
+-static int __init dec_esp_tc_probe(struct device *dev);
+-static int __exit dec_esp_tc_remove(struct device *dev);
+-
+-static const struct tc_device_id dec_esp_tc_table[] = {
+-        { "DEC     ", "PMAZ-AA " },
+-        { }
+-};
+-MODULE_DEVICE_TABLE(tc, dec_esp_tc_table);
+-
+-static struct tc_driver dec_esp_tc_driver = {
+-        .id_table       = dec_esp_tc_table,
+-        .driver         = {
+-                .name   = "dec_esp",
+-                .bus    = &tc_bus_type,
+-                .probe  = dec_esp_tc_probe,
+-                .remove = __exit_p(dec_esp_tc_remove),
+-        },
+-};
+-
+-static int __init dec_esp_tc_probe(struct device *dev)
+-{
+-	int status = dec_esp_probe(dev);
+-	if (!status)
+-		get_device(dev);
+-	return status;
+-}
+-
+-static int __exit dec_esp_tc_remove(struct device *dev)
+-{
+-	put_device(dev);
+-	dec_esp_remove(dev);
+-	return 0;
+-}
+-#endif
+-
+-static int __init dec_esp_init(void)
+-{
+-	int status;
+-
+-	status = tc_register_driver(&dec_esp_tc_driver);
+-	if (!status)
+-		dec_esp_platform_probe();
+-
+-	if (nesps) {
+-		pr_info("ESP: Total of %d ESP hosts found, "
+-			"%d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-	}
+-
+-	return status;
+-}
+-
+-static void __exit dec_esp_exit(void)
+-{
+-	dec_esp_platform_remove();
+-	tc_unregister_driver(&dec_esp_tc_driver);
+-}
+-
+-
+-module_init(dec_esp_init);
+-module_exit(dec_esp_exit);
+diff --git a/drivers/scsi/fastlane.c b/drivers/scsi/fastlane.c
+deleted file mode 100644
+index 4266a21..0000000
+--- a/drivers/scsi/fastlane.c
++++ /dev/null
+@@ -1,421 +0,0 @@
+-/* fastlane.c: Driver for Phase5's Fastlane SCSI Controller.
+- *
+- * Copyright (C) 1996 Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * This driver is based on the CyberStorm driver, hence the occasional
+- * reference to CyberStorm.
+- *
+- * Betatesting & crucial adjustments by
+- *        Patrik Rak (prak3264@ss1000.ms.mff.cuni.cz)
+- *
+- */
+-
+-/* TODO:
+- *
+- * o According to the doc from laire, it is required to reset the DMA when
+- *   the transfer is done. ATM we reset DMA just before every new 
+- *   dma_init_(read|write).
+- *
+- * 1) Figure out how to make a cleaner merge with the sparc driver with regard
+- *    to the caches and the Sparc MMU mapping.
+- * 2) Make as few routines required outside the generic driver. A lot of the
+- *    routines in this file used to be inline!
+- */
+-
+-#include <linux/module.h>
+-
+-#include <linux/init.h>
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <linux/zorro.h>
+-#include <asm/irq.h>
+-
+-#include <asm/amigaints.h>
+-#include <asm/amigahw.h>
+-
+-#include <asm/pgtable.h>
+-
+-/* Such day has just come... */
+-#if 0
+-/* Let this defined unless you really need to enable DMA IRQ one day */
+-#define NODMAIRQ
+-#endif
+-
+-/* The controller registers can be found in the Z2 config area at these
+- * offsets:
+- */
+-#define FASTLANE_ESP_ADDR 0x1000001
+-#define FASTLANE_DMA_ADDR 0x1000041
+-
+-
+-/* The Fastlane DMA interface */
+-struct fastlane_dma_registers {
+-	volatile unsigned char cond_reg;	/* DMA status  (ro) [0x0000] */
+-#define ctrl_reg  cond_reg			/* DMA control (wo) [0x0000] */
+-	unsigned char dmapad1[0x3f];
+-	volatile unsigned char clear_strobe;    /* DMA clear   (wo) [0x0040] */
+-};
+-
+-
+-/* DMA status bits */
+-#define FASTLANE_DMA_MINT  0x80
+-#define FASTLANE_DMA_IACT  0x40
+-#define FASTLANE_DMA_CREQ  0x20
+-
+-/* DMA control bits */
+-#define FASTLANE_DMA_FCODE 0xa0
+-#define FASTLANE_DMA_MASK  0xf3
+-#define FASTLANE_DMA_LED   0x10	/* HD led control 1 = on */
+-#define FASTLANE_DMA_WRITE 0x08 /* 1 = write */
+-#define FASTLANE_DMA_ENABLE 0x04 /* Enable DMA */
+-#define FASTLANE_DMA_EDI   0x02	/* Enable DMA IRQ ? */
+-#define FASTLANE_DMA_ESI   0x01	/* Enable SCSI IRQ */
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 vaddr, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static void dma_irq_exit(struct NCR_ESP *esp);
+-static void dma_led_off(struct NCR_ESP *esp);
+-static void dma_led_on(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-
+-static unsigned char ctrl_data = 0;	/* Keep backup of the stuff written
+-				 * to ctrl_reg. Always write a copy
+-				 * to this register when writing to
+-				 * the hardware register!
+-				 */
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are transferred to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-static inline void dma_clear(struct NCR_ESP *esp)
+-{
+-	struct fastlane_dma_registers *dregs =
+-		(struct fastlane_dma_registers *) (esp->dregs);
+-	unsigned long *t;
+-
+-	ctrl_data = (ctrl_data & FASTLANE_DMA_MASK);
+-	dregs->ctrl_reg = ctrl_data;
+-
+-	t = (unsigned long *)(esp->edev);
+-
+-	dregs->clear_strobe = 0;
+-	*t = 0 ;
+-}
+-
+-/***************************************************************** Detection */
+-int __init fastlane_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct zorro_dev *z = NULL;
+-	unsigned long address;
+-
+-	if ((z = zorro_find_device(ZORRO_PROD_PHASE5_BLIZZARD_1230_II_FASTLANE_Z3_CYBERSCSI_CYBERSTORM060, z))) {
+-	    unsigned long board = z->resource.start;
+-	    if (request_mem_region(board+FASTLANE_ESP_ADDR,
+-				   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		/* Check if this is really a fastlane controller. The problem
+-		 * is that also the cyberstorm and blizzard controllers use
+-		 * this ID value. Fortunately only Fastlane maps in Z3 space
+-		 */
+-		if (board < 0x1000000) {
+-			goto err_release;
+-		}
+-		esp = esp_allocate(tpnt, (void *)board + FASTLANE_ESP_ADDR, 0);
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = 0;
+-		esp->dma_invalidate = 0;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = &dma_irq_exit;
+-		esp->dma_led_on = &dma_led_on;
+-		esp->dma_led_off = &dma_led_off;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-
+-		/* Initialize the portBits (enable IRQs) */
+-		ctrl_data = (FASTLANE_DMA_FCODE |
+-#ifndef NODMAIRQ
+-			     FASTLANE_DMA_EDI |
+-#endif
+-			     FASTLANE_DMA_ESI);
+-			
+-
+-		/* SCSI chip clock */
+-		esp->cfreq = 40000000;
+-
+-
+-		/* Map the physical address space into virtual kernel space */
+-		address = (unsigned long)
+-			z_ioremap(board, z->resource.end-board+1);
+-
+-		if(!address){
+-			printk("Could not remap Fastlane controller memory!");
+-			goto err_unregister;
+-		}
+-
+-
+-		/* The DMA registers on the Fastlane are mapped
+-		 * relative to the device (i.e. in the same Zorro
+-		 * I/O block).
+-		 */
+-		esp->dregs = (void *)(address + FASTLANE_DMA_ADDR);
+-
+-		/* ESP register base */
+-		esp->eregs = (struct ESP_regs *)(address + FASTLANE_ESP_ADDR);
+-
+-		/* Board base */
+-		esp->edev = (void *) address;
+-		
+-		/* Set the command buffer */
+-		esp->esp_command = cmd_buffer;
+-		esp->esp_command_dvma = virt_to_bus((void *)cmd_buffer);
+-
+-		esp->irq = IRQ_AMIGA_PORTS;
+-		esp->slot = board+FASTLANE_ESP_ADDR;
+-		if (request_irq(IRQ_AMIGA_PORTS, esp_intr, IRQF_SHARED,
+-				"Fastlane SCSI", esp->ehost)) {
+-			printk(KERN_WARNING "Fastlane: Could not get IRQ%d, aborting.\n", IRQ_AMIGA_PORTS);
+-			goto err_unmap;
+-		}			
+-
+-		/* Controller ID */
+-		esp->scsi_id = 7;
+-		
+-		/* We don't have a differential SCSI-bus. */
+-		esp->diff = 0;
+-
+-		dma_clear(esp);
+-		esp_initialize(esp);
+-
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps, esps_in_use);
+-		esps_running = esps_in_use;
+-		return esps_in_use;
+-	    }
+-	}
+-	return 0;
+-
+- err_unmap:
+-	z_iounmap((void *)address);
+- err_unregister:
+-	scsi_unregister (esp->ehost);
+- err_release:
+-	release_mem_region(z->resource.start+FASTLANE_ESP_ADDR,
+-			   sizeof(struct ESP_regs));
+-	return 0;
+-}
+-
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Since the Fastlane DMA is fully dedicated to the ESP chip,
+-	 * the number of bytes sent (to the ESP chip) equals the number
+-	 * of bytes in the FIFO - there is no buffering in the DMA controller.
+-	 * XXXX Do I read this right? It is from host to ESP, right?
+-	 */
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > 0xfffc)
+-		sz = 0xfffc;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	ESPLOG(("esp%d: dma -- cond_reg<%02x>\n",
+-		esp->esp_id, ((struct fastlane_dma_registers *)
+-			      (esp->dregs))->cond_reg));
+-	ESPLOG(("intreq:<%04x>, intena:<%04x>\n",
+-		amiga_custom.intreqr, amiga_custom.intenar));
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct fastlane_dma_registers *dregs = 
+-		(struct fastlane_dma_registers *) (esp->dregs);
+-	unsigned long *t;
+-	
+-	cache_clear(addr, length);
+-
+-	dma_clear(esp);
+-
+-	t = (unsigned long *)((addr & 0x00ffffff) + esp->edev);
+-
+-	dregs->clear_strobe = 0;
+-	*t = addr;
+-
+-	ctrl_data = (ctrl_data & FASTLANE_DMA_MASK) | FASTLANE_DMA_ENABLE;
+-	dregs->ctrl_reg = ctrl_data;
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	struct fastlane_dma_registers *dregs = 
+-		(struct fastlane_dma_registers *) (esp->dregs);
+-	unsigned long *t;
+-
+-	cache_push(addr, length);
+-
+-	dma_clear(esp);
+-
+-	t = (unsigned long *)((addr & 0x00ffffff) + (esp->edev));
+-
+-	dregs->clear_strobe = 0;
+-	*t = addr;
+-
+-	ctrl_data = ((ctrl_data & FASTLANE_DMA_MASK) | 
+-		     FASTLANE_DMA_ENABLE |
+-		     FASTLANE_DMA_WRITE);
+-	dregs->ctrl_reg = ctrl_data;
+-}
+-
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-static void dma_irq_exit(struct NCR_ESP *esp)
+-{
+-	struct fastlane_dma_registers *dregs = 
+-		(struct fastlane_dma_registers *) (esp->dregs);
+-
+-	dregs->ctrl_reg = ctrl_data & ~(FASTLANE_DMA_EDI|FASTLANE_DMA_ESI);
+-#ifdef __mc68000__
+-	nop();
+-#endif
+-	dregs->ctrl_reg = ctrl_data;
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	struct fastlane_dma_registers *dregs = 
+-		(struct fastlane_dma_registers *) (esp->dregs);
+-	unsigned char dma_status;
+-
+-	dma_status = dregs->cond_reg;
+-
+-	if(dma_status & FASTLANE_DMA_IACT)
+-		return 0;	/* not our IRQ */
+-
+-	/* Return non-zero if ESP requested IRQ */
+-	return (
+-#ifndef NODMAIRQ
+-	   (dma_status & FASTLANE_DMA_CREQ) &&
+-#endif
+-	   (!(dma_status & FASTLANE_DMA_MINT)) &&
+-	   (esp_read(((struct ESP_regs *) (esp->eregs))->esp_status) & ESP_STAT_INTR));
+-}
+-
+-static void dma_led_off(struct NCR_ESP *esp)
+-{
+-	ctrl_data &= ~FASTLANE_DMA_LED;
+-	((struct fastlane_dma_registers *)(esp->dregs))->ctrl_reg = ctrl_data;
+-}
+-
+-static void dma_led_on(struct NCR_ESP *esp)
+-{
+-	ctrl_data |= FASTLANE_DMA_LED;
+-	((struct fastlane_dma_registers *)(esp->dregs))->ctrl_reg = ctrl_data;
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return ((amiga_custom.intenar) & IF_PORTS);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	/* On the Sparc, DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if(write){
+-		dma_init_read(esp, addr, count);
+-	} else {
+-		dma_init_write(esp, addr, count);
+-	}
+-}
+-
+-#define HOSTS_C
+-
+-int fastlane_esp_release(struct Scsi_Host *instance)
+-{
+-#ifdef MODULE
+-	unsigned long address = (unsigned long)((struct NCR_ESP *)instance->hostdata)->edev;
+-	esp_deallocate((struct NCR_ESP *)instance->hostdata);
+-	esp_release();
+-	release_mem_region(address, sizeof(struct ESP_regs));
+-	free_irq(IRQ_AMIGA_PORTS, esp_intr);
+-#endif
+-	return 1;
+-}
+-
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "esp-fastlane",
+-	.proc_info		= esp_proc_info,
+-	.name			= "Fastlane SCSI",
+-	.detect			= fastlane_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= fastlane_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= ENABLE_CLUSTERING
+-};
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/mac_esp.c b/drivers/scsi/mac_esp.c
+deleted file mode 100644
+index bcb4902..0000000
+--- a/drivers/scsi/mac_esp.c
++++ /dev/null
+@@ -1,751 +0,0 @@
+-/*
+- * 68k mac 53c9[46] scsi driver
+- *
+- * copyright (c) 1998, David Weis weisd3458@uni.edu
+- *
+- * debugging on Quadra 800 and 660AV Michael Schmitz, Dave Kilzer 7/98
+- *
+- * based loosely on cyber_esp.c
+- */
+-
+-/* these are unused for now */
+-#define myreadl(addr) (*(volatile unsigned int *) (addr))
+-#define mywritel(b, addr) ((*(volatile unsigned int *) (addr)) = (b))
+-
+-
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/ctype.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/init.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <asm/io.h>
+-
+-#include <asm/setup.h>
+-#include <asm/irq.h>
+-#include <asm/macints.h>
+-#include <asm/machw.h>
+-#include <asm/mac_via.h>
+-
+-#include <asm/pgtable.h>
+-
+-#include <asm/macintosh.h>
+-
+-/* #define DEBUG_MAC_ESP */
+-
+-extern void esp_handle(struct NCR_ESP *esp);
+-extern void mac_esp_intr(int irq, void *dev_id);
+-
+-static int  dma_bytes_sent(struct NCR_ESP * esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP * esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP * esp);
+-static void dma_init_read(struct NCR_ESP * esp, char * vaddress, int length);
+-static void dma_init_write(struct NCR_ESP * esp, char * vaddress, int length);
+-static void dma_ints_off(struct NCR_ESP * esp);
+-static void dma_ints_on(struct NCR_ESP * esp);
+-static int  dma_irq_p(struct NCR_ESP * esp);
+-static int  dma_irq_p_quick(struct NCR_ESP * esp);
+-static void dma_led_off(struct NCR_ESP * esp);
+-static void dma_led_on(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP * esp, __u32 addr, int count, int write);
+-static void dma_setup_quick(struct NCR_ESP * esp, __u32 addr, int count, int write);
+-
+-static int esp_dafb_dma_irq_p(struct NCR_ESP * espdev);
+-static int esp_iosb_dma_irq_p(struct NCR_ESP * espdev);
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are transferred to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-static int esp_initialized = 0;
+-
+-static int setup_num_esps = -1;
+-static int setup_disconnect = -1;
+-static int setup_nosync = -1;
+-static int setup_can_queue = -1;
+-static int setup_cmd_per_lun = -1;
+-static int setup_sg_tablesize = -1;
+-#ifdef SUPPORT_TAGS
+-static int setup_use_tagged_queuing = -1;
+-#endif
+-static int setup_hostid = -1;
+-
+-/*
+- * Experimental ESP inthandler; check macints.c to make sure dev_id is 
+- * set up properly!
+- */
+-
+-void mac_esp_intr(int irq, void *dev_id)
+-{
+-	struct NCR_ESP *esp = (struct NCR_ESP *) dev_id;
+-	int irq_p = 0;
+-
+-	/* Handle the one ESP interrupt showing at this IRQ level. */
+-	if(((esp)->irq & 0xff) == irq) {
+-	/*
+-	 * Debug ..
+-	 */
+-		irq_p = esp->dma_irq_p(esp);
+-	 	printk("mac_esp: irq_p %x current %p disconnected %p\n",
+-	 		irq_p, esp->current_SC, esp->disconnected_SC);
+-	 		
+-		/*
+-		 * Mac: if we're here, it's an ESP interrupt for sure!
+-		 */
+-		if((esp->current_SC || esp->disconnected_SC)) {
+-			esp->dma_ints_off(esp);
+-
+-			ESPIRQ(("I%d(", esp->esp_id));
+-			esp_handle(esp);
+-			ESPIRQ((")"));
+-
+-			esp->dma_ints_on(esp);
+-		}
+-	}
+-}
+-
+-/*
+- * Debug hooks; use for playing with the interrupt flag testing and interrupt
+- * acknowledge on the various machines
+- */
+-
+-void scsi_esp_polled(int irq, void *dev_id)
+-{
+-	if (esp_initialized == 0)
+-		return;
+-
+-	mac_esp_intr(irq, dev_id);
+-}
+-
+-void fake_intr(int irq, void *dev_id)
+-{
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: got irq\n");
+-#endif
+-
+-	mac_esp_intr(irq, dev_id);
+-}
+-
+-irqreturn_t fake_drq(int irq, void *dev_id)
+-{
+-	printk("mac_esp: got drq\n");
+-	return IRQ_HANDLED;
+-}
+-
+-#define DRIVER_SETUP
+-
+-/*
+- * Function : mac_esp_setup(char *str)
+- *
+- * Purpose : booter command line initialization of the overrides array,
+- *
+- * Inputs : str - parameters, separated by commas.
+- *
+- * Currently unused in the new driver; need to add settable parameters to the 
+- * detect function.
+- *
+- */
+-
+-static int __init mac_esp_setup(char *str) {
+-#ifdef DRIVER_SETUP
+-	/* Format of mac53c9x parameter is:
+-	 *   mac53c9x=<num_esps>,<disconnect>,<nosync>,<can_queue>,<cmd_per_lun>,<sg_tablesize>,<hostid>,<use_tags>
+-	 * Negative values mean don't change.
+-	 */
+-	
+-	char *this_opt;
+-	long opt;
+-
+-	this_opt = strsep (&str, ",");
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-
+-		if (opt >= 0 && opt <= 2)
+-			setup_num_esps = opt;
+-		else if (opt > 2)
+-			printk( "mac_esp_setup: invalid number of hosts %ld !\n", opt );
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-	
+-		if (opt > 0)
+-			setup_disconnect = opt;
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-
+-		if (opt >= 0)
+-			setup_nosync = opt;
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-
+-		if (opt > 0)
+-			setup_can_queue = opt;
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-
+-		if (opt > 0)
+-			setup_cmd_per_lun = opt;
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-
+-		if (opt >= 0) {
+-			setup_sg_tablesize = opt;
+-			/* Must be <= SG_ALL (255) */
+-			if (setup_sg_tablesize > SG_ALL)
+-				setup_sg_tablesize = SG_ALL;
+-		}
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-
+-		/* Must be between 0 and 7 */
+-		if (opt >= 0 && opt <= 7)
+-			setup_hostid = opt;
+-		else if (opt > 7)
+-			printk( "mac_esp_setup: invalid host ID %ld !\n", opt);
+-
+-		this_opt = strsep (&str, ",");
+-	}
+-#ifdef SUPPORT_TAGS
+-	if(this_opt) {
+-		opt = simple_strtol( this_opt, NULL, 0 );
+-		if (opt >= 0)
+-			setup_use_tagged_queuing = !!opt;
+-	}
+-#endif
+-#endif
+-	return 1; 
+-}
+-
+-__setup("mac53c9x=", mac_esp_setup);
+-
+-
+-/*
+- * ESP address 'detection'
+- */
+-
+-unsigned long get_base(int chip_num)
+-{
+-	/*
+-	 * using the chip_num and mac model, figure out where the
+-	 * chips are mapped
+-	 */
+-
+-	unsigned long io_base = 0x50f00000;
+-	unsigned int second_offset = 0x402;
+-	unsigned long scsi_loc = 0;
+-
+-	switch (macintosh_config->scsi_type) {
+-
+-	/* 950, 900, 700 */
+-	case MAC_SCSI_QUADRA2:
+-		scsi_loc =  io_base + 0xf000 + ((chip_num == 0) ? 0 : second_offset);
+-		break;
+-
+-	/* av's */
+-	case MAC_SCSI_QUADRA3:
+-		scsi_loc = io_base + 0x18000 + ((chip_num == 0) ? 0 : second_offset);
+-		break;
+-
+-	/* most quadra/centris models are like this */	
+-	case MAC_SCSI_QUADRA:
+-		scsi_loc = io_base + 0x10000;
+-		break;
+-
+-	default:
+-		printk("mac_esp: get_base: hit default!\n");
+-		scsi_loc = io_base + 0x10000;
+-		break;
+-
+-	} /* switch */
+-
+-	printk("mac_esp: io base at 0x%lx\n", scsi_loc);
+-
+-	return scsi_loc;
+-}
+-
+-/*
+- * Model dependent ESP setup
+- */
+-
+-int mac_esp_detect(struct scsi_host_template * tpnt)
+-{
+-	int quick = 0;
+-	int chipnum, chipspresent = 0;
+-#if 0
+-	unsigned long timeout;
+-#endif
+-
+-	if (esp_initialized > 0)
+-		return -ENODEV;
+-
+-	/* what do we have in this machine... */
+-	if (MACHW_PRESENT(MAC_SCSI_96)) {
+-		chipspresent ++;
+-	}
+-
+-	if (MACHW_PRESENT(MAC_SCSI_96_2)) {
+-		chipspresent ++;
+-	}
+-
+-	/* number of ESPs present ? */
+-	if (setup_num_esps >= 0) {
+-	  if (chipspresent >= setup_num_esps)
+-	    chipspresent = setup_num_esps;
+-	  else
+-	    printk("mac_esp_detect: num_hosts detected %d setup %d \n",
+-		   chipspresent, setup_num_esps);
+-	}
+-
+-	/* TODO: add disconnect / nosync flags */
+-
+-	/* setup variables */
+-	tpnt->can_queue =
+-	  (setup_can_queue > 0) ? setup_can_queue : 7;
+-	tpnt->cmd_per_lun =
+-	  (setup_cmd_per_lun > 0) ? setup_cmd_per_lun : 1;
+-	tpnt->sg_tablesize = 
+-	  (setup_sg_tablesize >= 0) ? setup_sg_tablesize : SG_ALL;
+-
+-	if (setup_hostid >= 0)
+-	  tpnt->this_id = setup_hostid;
+-	else {
+-	  /* use 7 as default */
+-	  tpnt->this_id = 7;
+-	}
+-
+-#ifdef SUPPORT_TAGS
+-	if (setup_use_tagged_queuing < 0)
+-		setup_use_tagged_queuing = DEFAULT_USE_TAGGED_QUEUING;
+-#endif
+-
+-	for (chipnum = 0; chipnum < chipspresent; chipnum ++) {
+-		struct NCR_ESP * esp;
+-
+-		esp = esp_allocate(tpnt, NULL, 0);
+-		esp->eregs = (struct ESP_regs *) get_base(chipnum);
+-
+-		esp->dma_irq_p = &esp_dafb_dma_irq_p;
+-		if (chipnum == 0) {
+-
+-			if (macintosh_config->scsi_type == MAC_SCSI_QUADRA) {
+-				/* most machines except those below :-) */
+-				quick = 1;
+-				esp->dma_irq_p = &esp_iosb_dma_irq_p;
+-			} else if (macintosh_config->scsi_type == MAC_SCSI_QUADRA3) {
+-				/* mostly av's */
+-				quick = 0;
+-			} else {
+-				/* q950, 900, 700 */
+-				quick = 1;
+-				out_be32(0xf9800024, 0x1d1);
+-				esp->dregs = (void *) 0xf9800024;
+-			}
+-
+-		} else { /* chipnum */
+-
+-			quick = 1;
+-			out_be32(0xf9800028, 0x1d1);
+-			esp->dregs = (void *) 0xf9800028;
+-
+-		} /* chipnum == 0 */
+-
+-		/* use pio for command bytes; pio for message/data: TBI */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Set the command buffer */
+-		esp->esp_command = (volatile unsigned char*) cmd_buffer;
+-		esp->esp_command_dvma = (__u32) cmd_buffer;
+-
+-		/* various functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = NULL;
+-		esp->dma_init_write = NULL;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-
+-		esp->dma_ports_p = &dma_ports_p;
+-
+-
+-		/* Optional functions */
+-		esp->dma_barrier = NULL;
+-		esp->dma_drain = NULL;
+-		esp->dma_invalidate = NULL;
+-		esp->dma_irq_entry = NULL;
+-		esp->dma_irq_exit = NULL;
+-		esp->dma_led_on = NULL;
+-		esp->dma_led_off = NULL;
+-		esp->dma_poll = NULL;
+-		esp->dma_reset = NULL;
+-
+-		/* SCSI chip speed */
+-		/* below esp->cfreq = 40000000; */
+-
+-
+-		if (quick) {
+-			/* 'quick' means there's handshake glue logic like in the 5380 case */
+-			esp->dma_setup = &dma_setup_quick;
+-		} else {
+-			esp->dma_setup = &dma_setup;
+-		}
+-
+-		if (chipnum == 0) {
+-
+-			esp->irq = IRQ_MAC_SCSI;
+-
+-			request_irq(IRQ_MAC_SCSI, esp_intr, 0, "Mac ESP SCSI", esp->ehost);
+-#if 0	/* conflicts with IOP ADB */
+-			request_irq(IRQ_MAC_SCSIDRQ, fake_drq, 0, "Mac ESP DRQ", esp->ehost);
+-#endif
+-
+-			if (macintosh_config->scsi_type == MAC_SCSI_QUADRA) {
+-				esp->cfreq = 16500000;
+-			} else {
+-				esp->cfreq = 25000000;
+-			}
+-
+-
+-		} else { /* chipnum == 1 */
+-
+-			esp->irq = IRQ_MAC_SCSIDRQ;
+-#if 0	/* conflicts with IOP ADB */
+-			request_irq(IRQ_MAC_SCSIDRQ, esp_intr, 0, "Mac ESP SCSI 2", esp->ehost);
+-#endif
+-
+-			esp->cfreq = 25000000;
+-
+-		}
+-
+-		if (quick) {
+-			printk("esp: using quick version\n");
+-		}
+-
+-		printk("esp: addr at 0x%p\n", esp->eregs);
+-
+-		esp->scsi_id = 7;
+-		esp->diff = 0;
+-
+-		esp_initialize(esp);
+-
+-	} /* for chipnum */
+-
+-	if (chipspresent)
+-		printk("\nmac_esp: %d esp controllers found\n", chipspresent);
+-
+-	esp_initialized = chipspresent;
+-
+-	return chipspresent;
+-}
+-
+-static int mac_esp_release(struct Scsi_Host *shost)
+-{
+-	if (shost->irq)
+-		free_irq(shost->irq, NULL);
+-	if (shost->io_port && shost->n_io_port)
+-		release_region(shost->io_port, shost->n_io_port);
+-	scsi_unregister(shost);
+-	return 0;
+-}
+-
+-/*
+- * I've been wondering what this is supposed to do, for some time. Talking 
+- * to Allen Briggs: These machines have an extra register someplace where the
+- * DRQ pin of the ESP can be monitored. That isn't useful for determining 
+- * anything else (such as reselect interrupt or other magic) though. 
+- * Maybe make the semantics should be changed like 
+- * if (esp->current_SC)
+- *	... check DRQ flag ...
+- * else 
+- *	... disconnected, check pending VIA interrupt ...
+- *
+- * There's a problem with using the dabf flag or mac_irq_pending() here: both
+- * seem to return 1 even though no interrupt is currently pending, resulting
+- * in esp_exec_cmd() holding off the next command, and possibly infinite loops
+- * in esp_intr(). 
+- * Short term fix: just use esp_status & ESP_STAT_INTR here, as long as we
+- * use simple PIO. The DRQ status will be important when implementing pseudo
+- * DMA mode (set up ESP transfer count, return, do a batch of bytes in PIO or 
+- * 'hardware handshake' mode upon DRQ).
+- * If you plan on changing this (i.e. to save the esp_status register access in 
+- * favor of a VIA register access or a shadow register for the IFR), make sure
+- * to try a debug version of this first to monitor what registers would be a good
+- * indicator of the ESP interrupt.
+- */
+-
+-static int esp_dafb_dma_irq_p(struct NCR_ESP * esp)
+-{
+-	unsigned int ret;
+-	int sreg = esp_read(esp->eregs->esp_status);
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: esp_dafb_dma_irq_p dafb %d irq %d\n", 
+-		readl(esp->dregs), mac_irq_pending(IRQ_MAC_SCSI));
+-#endif
+-
+-	sreg &= ESP_STAT_INTR;
+-
+-	/*
+-	 * maybe working; this is essentially what's used for iosb_dma_irq_p
+-	 */
+-	if (sreg)
+-		return 1;
+-	else
+-		return 0;
+-
+-	/*
+-	 * didn't work ...
+-	 */
+-#if 0
+-	if (esp->current_SC)
+-		ret = readl(esp->dregs) & 0x200;
+-	else if (esp->disconnected_SC)
+-		ret = 1; /* sreg ?? */
+-	else
+-		ret = mac_irq_pending(IRQ_MAC_SCSI);
+-
+-	return(ret);
+-#endif
+-
+-}
+-
+-/*
+- * See above: testing mac_irq_pending always returned 8 (SCSI IRQ) regardless 
+- * of the actual ESP status.
+- */
+-
+-static int esp_iosb_dma_irq_p(struct NCR_ESP * esp)
+-{
+-	int ret  = mac_irq_pending(IRQ_MAC_SCSI) || mac_irq_pending(IRQ_MAC_SCSIDRQ);
+-	int sreg = esp_read(esp->eregs->esp_status);
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_irq_p drq %d irq %d sreg %x curr %p disc %p\n", 
+-		mac_irq_pending(IRQ_MAC_SCSIDRQ), mac_irq_pending(IRQ_MAC_SCSI), 
+-		sreg, esp->current_SC, esp->disconnected_SC);
+-#endif
+-
+-	sreg &= ESP_STAT_INTR;
+-
+-	if (sreg)
+-		return (sreg);
+-	else
+-		return 0;
+-}
+-
+-/*
+- * This seems to be OK for PIO at least ... usually 0 after PIO.
+- */
+-
+-static int dma_bytes_sent(struct NCR_ESP * esp, int fifo_count)
+-{
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma bytes sent = %x\n", fifo_count);
+-#endif
+-
+-	return fifo_count;
+-}
+-
+-/*
+- * dma_can_transfer is used to switch between DMA and PIO, if DMA (pseudo)
+- * is ever implemented. Returning 0 here will use PIO.
+- */
+-
+-static int dma_can_transfer(struct NCR_ESP * esp, Scsi_Cmnd * sp)
+-{
+-	unsigned long sz = sp->SCp.this_residual;
+-#if 0	/* no DMA yet; make conditional */
+-	if (sz > 0x10000000) {
+-		sz = 0x10000000;
+-	}
+-	printk("mac_esp: dma can transfer = 0lx%x\n", sz);
+-#else
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: pio to transfer = %ld\n", sz);
+-#endif
+-
+-	sz = 0;
+-#endif
+-	return sz;
+-}
+-
+-/*
+- * Not yet ...
+- */
+-
+-static void dma_dump_state(struct NCR_ESP * esp)
+-{
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_dump_state: called\n");
+-#endif
+-#if 0
+-	ESPLOG(("esp%d: dma -- cond_reg<%02x>\n",
+-		esp->esp_id, ((struct mac_dma_registers *)
+-		(esp->dregs))->cond_reg));
+-#endif
+-}
+-
+-/*
+- * DMA setup: should be used to set up the ESP transfer count for pseudo
+- * DMA transfers; need a DRQ transfer function to do the actual transfer
+- */
+-
+-static void dma_init_read(struct NCR_ESP * esp, char * vaddress, int length)
+-{
+-	printk("mac_esp: dma_init_read\n");
+-}
+-
+-
+-static void dma_init_write(struct NCR_ESP * esp, char * vaddress, int length)
+-{
+-	printk("mac_esp: dma_init_write\n");
+-}
+-
+-
+-static void dma_ints_off(struct NCR_ESP * esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-
+-static void dma_ints_on(struct NCR_ESP * esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-/*
+- * generic dma_irq_p(), unused
+- */
+-
+-static int dma_irq_p(struct NCR_ESP * esp)
+-{
+-	int i = esp_read(esp->eregs->esp_status);
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_irq_p status %d\n", i);
+-#endif
+-
+-	return (i & ESP_STAT_INTR);
+-}
+-
+-static int dma_irq_p_quick(struct NCR_ESP * esp)
+-{
+-	/*
+-	 * Copied from iosb_dma_irq_p()
+-	 */
+-	int ret  = mac_irq_pending(IRQ_MAC_SCSI) || mac_irq_pending(IRQ_MAC_SCSIDRQ);
+-	int sreg = esp_read(esp->eregs->esp_status);
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_irq_p drq %d irq %d sreg %x curr %p disc %p\n", 
+-		mac_irq_pending(IRQ_MAC_SCSIDRQ), mac_irq_pending(IRQ_MAC_SCSI), 
+-		sreg, esp->current_SC, esp->disconnected_SC);
+-#endif
+-
+-	sreg &= ESP_STAT_INTR;
+-
+-	if (sreg)
+-		return (sreg);
+-	else
+-		return 0;
+-
+-}
+-
+-static void dma_led_off(struct NCR_ESP * esp)
+-{
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_led_off: called\n");
+-#endif
+-}
+-
+-
+-static void dma_led_on(struct NCR_ESP * esp)
+-{
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_led_on: called\n");
+-#endif
+-}
+-
+-
+-static int dma_ports_p(struct NCR_ESP * esp)
+-{
+-	return 0;
+-}
+-
+-
+-static void dma_setup(struct NCR_ESP * esp, __u32 addr, int count, int write)
+-{
+-
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_setup\n");
+-#endif
+-
+-	if (write) {
+-		dma_init_read(esp, (char *) addr, count);
+-	} else {
+-		dma_init_write(esp, (char *) addr, count);
+-	}
+-}
+-
+-
+-static void dma_setup_quick(struct NCR_ESP * esp, __u32 addr, int count, int write)
+-{
+-#ifdef DEBUG_MAC_ESP
+-	printk("mac_esp: dma_setup_quick\n");
+-#endif
+-}
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "mac_esp",
+-	.name			= "Mac 53C9x SCSI",
+-	.detect			= mac_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= mac_esp_release,
+-	.info			= esp_info,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= DISABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/mca_53c9x.c b/drivers/scsi/mca_53c9x.c
+deleted file mode 100644
+index d693d0f..0000000
+--- a/drivers/scsi/mca_53c9x.c
++++ /dev/null
+@@ -1,520 +0,0 @@
+-/* mca_53c9x.c: Driver for the SCSI adapter found on NCR 35xx
+- *  (and maybe some other) Microchannel machines
+- *
+- * Code taken mostly from Cyberstorm SCSI drivers
+- *   Copyright (C) 1996 Jesper Skov (jskov@cygnus.co.uk)
+- *
+- * Hacked to work with the NCR MCA stuff by Tymm Twillman (tymm@computer.org)
+- *
+- * The CyberStorm SCSI driver (and this driver) is based on David S. Miller's
+- *   ESP driver  * for the Sparc computers. 
+- * 
+- * Special thanks to Ken Stewart at Symbios (LSI) for helping with info on
+- *  the 86C01.  I was on the brink of going ga-ga...
+- *
+- * Also thanks to Jesper Skov for helping me with info on how the Amiga
+- *  does things...
+- */
+-
+-/*
+- * This is currently only set up to use one 53c9x card at a time; it could be 
+- *  changed fairly easily to detect/use more than one, but I'm not too sure how
+- *  many cards that use the 53c9x on MCA systems there are (if, in fact, there
+- *  are cards that use them, other than the one built into some NCR systems)...
+- *  If anyone requests this, I'll throw it in, otherwise it's not worth the
+- *  effort.
+- */
+-
+-/*
+- * Info on the 86C01 MCA interface chip at the bottom, if you care enough to
+- *  look.
+- */
+-
+-#include <linux/delay.h>
+-#include <linux/interrupt.h>
+-#include <linux/kernel.h>
+-#include <linux/mca.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/mca-legacy.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <asm/dma.h>
+-#include <asm/irq.h>
+-#include <asm/mca_dma.h>
+-#include <asm/pgtable.h>
+-
+-/*
+- * From ibmmca.c (IBM scsi controller card driver) -- used for turning PS2 disk
+- *  activity LED on and off
+- */
+-
+-#define PS2_SYS_CTR	0x92
+-
+-/* Ports the ncr's 53c94 can be put at; indexed by pos register value */
+-
+-#define MCA_53C9X_IO_PORTS {                             \
+-                         0x0000, 0x0240, 0x0340, 0x0400, \
+-	                 0x0420, 0x3240, 0x8240, 0xA240, \
+-	                }
+-			
+-/*
+- * Supposedly there were some cards put together with the 'c9x and 86c01.  If
+- *   they have different ID's from the ones on the 3500 series machines, 
+- *   you can add them here and hopefully things will work out.
+- */
+-			
+-#define MCA_53C9X_IDS {          \
+-                         0x7F4C, \
+-			 0x0000, \
+-                        }
+-
+-static int  dma_bytes_sent(struct NCR_ESP *, int);
+-static int  dma_can_transfer(struct NCR_ESP *, Scsi_Cmnd *);
+-static void dma_dump_state(struct NCR_ESP *);
+-static void dma_init_read(struct NCR_ESP *, __u32, int);
+-static void dma_init_write(struct NCR_ESP *, __u32, int);
+-static void dma_ints_off(struct NCR_ESP *);
+-static void dma_ints_on(struct NCR_ESP *);
+-static int  dma_irq_p(struct NCR_ESP *);
+-static int  dma_ports_p(struct NCR_ESP *);
+-static void dma_setup(struct NCR_ESP *, __u32, int, int);
+-static void dma_led_on(struct NCR_ESP *);
+-static void dma_led_off(struct NCR_ESP *);
+-
+-/* This is where all commands are put before they are trasfered to the 
+- *  53c9x via PIO.
+- */
+-
+-static volatile unsigned char cmd_buffer[16];
+-
+-/*
+- * We keep the structure that is used to access the registers on the 53c9x
+- *  here.
+- */
+-
+-static struct ESP_regs eregs;
+-
+-/***************************************************************** Detection */
+-static int mca_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	static int io_port_by_pos[] = MCA_53C9X_IO_PORTS;
+-	int mca_53c9x_ids[] = MCA_53C9X_IDS;
+-	int *id_to_check = mca_53c9x_ids;
+-	int slot;
+-	int pos[3];
+-	unsigned int tmp_io_addr;
+-	unsigned char tmp_byte;
+-
+-
+-	if (!MCA_bus)
+-		return 0;
+-
+-	while (*id_to_check) { 
+-		if ((slot = mca_find_adapter(*id_to_check, 0)) !=
+-		  MCA_NOTFOUND) 
+-		{
+-			esp = esp_allocate(tpnt, NULL, 0);
+-
+-			pos[0] = mca_read_stored_pos(slot, 2);
+-			pos[1] = mca_read_stored_pos(slot, 3);
+-			pos[2] = mca_read_stored_pos(slot, 4);
+-
+-			esp->eregs = &eregs;
+-
+-			/*
+-			 * IO port base is given in the first (non-ID) pos
+-			 *  register, like so:
+-			 *
+-			 *  Bits 3  2  1       IO base
+-			 * ----------------------------
+-			 *       0  0  0       <disabled>
+-			 *       0  0  1       0x0240
+-			 *       0  1  0       0x0340
+-			 *       0  1  1       0x0400
+-			 *       1  0  0       0x0420
+-			 *       1  0  1       0x3240
+-			 *       1  1  0       0x8240
+-			 *       1  1  1       0xA240
+-			 */
+-
+-			tmp_io_addr =
+-			  io_port_by_pos[(pos[0] & 0x0E) >> 1];
+-
+-			esp->eregs->io_addr = tmp_io_addr + 0x10;
+-
+-      			if (esp->eregs->io_addr == 0x0000) { 
+-        			printk("Adapter is disabled.\n");
+-				break;
+-			}
+-
+-			/*
+-			 * IRQ is specified in bits 4 and 5:
+-			 *
+-			 *  Bits  4  5        IRQ
+-			 * -----------------------
+-			 *        0  0         3
+-			 *        0  1         5
+-			 *        1  0         7
+-			 *        1  1         9
+-			 */
+-
+-      			esp->irq = ((pos[0] & 0x30) >> 3) + 3;
+-
+-			/*
+-			 * DMA channel is in the low 3 bits of the second
+-			 *  POS register
+-			 */
+-
+-			esp->dma = pos[1] & 7;
+-			esp->slot = slot;
+-
+-			if (request_irq(esp->irq, esp_intr, 0,
+-			 "NCR 53c9x SCSI", esp->ehost))
+-			{
+-				printk("Unable to request IRQ %d.\n", esp->irq);
+-				esp_deallocate(esp);
+-				scsi_unregister(esp->ehost);
+-				return 0;
+-			}
+-
+- 			if (request_dma(esp->dma, "NCR 53c9x SCSI")) {
+-				printk("Unable to request DMA channel %d.\n",
+-				 esp->dma);
+-				free_irq(esp->irq, esp_intr);
+-				esp_deallocate(esp);
+-				scsi_unregister(esp->ehost);
+-				return 0;
+-			}
+-
+-			request_region(tmp_io_addr, 32, "NCR 53c9x SCSI");
+-
+-			/*
+-			 * 86C01 handles DMA, IO mode, from address
+-			 *  (base + 0x0a)
+-			 */
+-
+-			mca_disable_dma(esp->dma);
+-			mca_set_dma_io(esp->dma, tmp_io_addr + 0x0a);
+-			mca_enable_dma(esp->dma);
+- 
+-			/* Tell the 86C01 to give us interrupts */
+-
+-			tmp_byte = inb(tmp_io_addr + 0x02) | 0x40;
+-			outb(tmp_byte, tmp_io_addr + 0x02); 
+-
+-			/*
+-			 * Scsi ID -- general purpose register, hi
+-			 *  2 bits; add 4 to this number to get the
+-			 *  ID
+-			 */
+-
+-			esp->scsi_id = ((pos[2] & 0xC0) >> 6) + 4;
+-
+-			/* Do command transfer with programmed I/O */
+-
+-			esp->do_pio_cmds = 1;
+-
+-			/* Required functions */
+-
+-			esp->dma_bytes_sent = &dma_bytes_sent;
+-			esp->dma_can_transfer = &dma_can_transfer;
+-			esp->dma_dump_state = &dma_dump_state;
+-			esp->dma_init_read = &dma_init_read;
+-			esp->dma_init_write = &dma_init_write;
+-			esp->dma_ints_off = &dma_ints_off;
+-			esp->dma_ints_on = &dma_ints_on;
+-			esp->dma_irq_p = &dma_irq_p;
+-			esp->dma_ports_p = &dma_ports_p;
+-			esp->dma_setup = &dma_setup;
+-
+-			/* Optional functions */
+-
+-			esp->dma_barrier = NULL;
+-			esp->dma_drain = NULL;
+-			esp->dma_invalidate = NULL;
+-			esp->dma_irq_entry = NULL;
+-			esp->dma_irq_exit = NULL;
+-			esp->dma_led_on = dma_led_on;
+-			esp->dma_led_off = dma_led_off;
+-			esp->dma_poll = NULL;
+-			esp->dma_reset = NULL;
+-
+-			/* Set the command buffer */
+-
+-			esp->esp_command = (volatile unsigned char*)
+-			  cmd_buffer;
+-	 		esp->esp_command_dvma = isa_virt_to_bus(cmd_buffer);
+-
+-			/* SCSI chip speed */
+-
+-			esp->cfreq = 25000000;
+-
+-			/* Differential SCSI? I think not. */
+-
+-			esp->diff = 0;
+-
+-			esp_initialize(esp);
+-
+-      			printk(" Adapter found in slot %2d: io port 0x%x "
+-			  "irq %d dma channel %d\n", slot + 1, tmp_io_addr,
+-			   esp->irq, esp->dma);
+-
+-			mca_set_adapter_name(slot, "NCR 53C9X SCSI Adapter");
+-			mca_mark_as_used(slot);
+-
+-			break;
+-		}
+-    
+-		id_to_check++;
+-	}
+-
+-	return esps_in_use;
+-}
+-
+-
+-/******************************************************************* Release */
+-
+-static int mca_esp_release(struct Scsi_Host *host)
+-{
+-	struct NCR_ESP *esp = (struct NCR_ESP *)host->hostdata;
+-	unsigned char tmp_byte;
+-
+-	esp_deallocate(esp);
+-	/*
+-	 * Tell the 86C01 to stop sending interrupts
+-	 */
+-
+-	tmp_byte = inb(esp->eregs->io_addr - 0x0E);
+-	tmp_byte &= ~0x40;
+-	outb(tmp_byte, esp->eregs->io_addr - 0x0E);
+-
+-	free_irq(esp->irq, esp_intr);
+-	free_dma(esp->dma);
+-
+-	mca_mark_as_unused(esp->slot);
+-
+-	return 0;
+-}
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Ask the 53c9x.  It knows. */
+-
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	/* 
+-	 * The MCA dma channels can only do up to 128K bytes at a time.
+-         *  (16 bit mode)
+-	 */
+-
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > 0x20000)
+-		sz = 0x20000;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	/*
+-	 * Doesn't quite match up to the other drivers, but we do what we
+-	 *  can.
+-	 */
+-
+-	ESPLOG(("esp%d: dma channel <%d>\n", esp->esp_id, esp->dma));
+-	ESPLOG(("bytes left to dma: %d\n", mca_get_dma_residue(esp->dma)));
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	unsigned long flags;
+-
+-
+-	save_flags(flags);
+-	cli();
+-
+-	mca_disable_dma(esp->dma);
+-	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_16 |
+-	  MCA_DMA_MODE_IO);
+-	mca_set_dma_addr(esp->dma, addr);
+-	mca_set_dma_count(esp->dma, length / 2); /* !!! */
+-	mca_enable_dma(esp->dma);
+-
+-	restore_flags(flags);
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 addr, int length)
+-{
+-	unsigned long flags;
+-
+-
+-	save_flags(flags);
+-	cli();
+-
+-	mca_disable_dma(esp->dma);
+-	mca_set_dma_mode(esp->dma, MCA_DMA_MODE_XFER | MCA_DMA_MODE_WRITE |
+-	  MCA_DMA_MODE_16 | MCA_DMA_MODE_IO);
+-	mca_set_dma_addr(esp->dma, addr);
+-	mca_set_dma_count(esp->dma, length / 2); /* !!! */
+-	mca_enable_dma(esp->dma);
+-
+-	restore_flags(flags);
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	/*
+-	 * Tell the 'C01 to shut up.  All interrupts are routed through it.
+-	 */
+-
+-	outb(inb(esp->eregs->io_addr - 0x0E) & ~0x40,
+-	 esp->eregs->io_addr - 0x0E);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	/*
+-	 * Ok.  You can speak again.
+-	 */
+-
+-	outb(inb(esp->eregs->io_addr - 0x0E) | 0x40,
+-	 esp->eregs->io_addr - 0x0E);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	/*
+-	 * DaveM says that this should return a "yes" if there is an interrupt
+-	 *  or a DMA error occurred.  I copied the Amiga driver's semantics,
+-	 *  though, because it seems to work and we can't really tell if
+-	 *  a DMA error happened.  This gives the "yes" if the scsi chip
+-	 *  is sending an interrupt and no DMA activity is taking place
+-	 */
+-
+-	return (!(inb(esp->eregs->io_addr - 0x04) & 1) &&
+-	 !(inb(esp->eregs->io_addr - 0x04) & 2) ); 
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	/*
+-	 * Check to see if interrupts are enabled on the 'C01 (in case abort
+-	 *  is entered multiple times, so we only do the abort once)
+-	 */
+-
+-	return (inb(esp->eregs->io_addr - 0x0E) & 0x40) ? 1:0;
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	if(write){
+-		dma_init_write(esp, addr, count);
+-	} else {
+-		dma_init_read(esp, addr, count);
+-	}
+-}
+-
+-/*
+- * These will not play nicely with other disk controllers that try to use the
+- *  disk active LED... but what can you do?  Don't answer that.
+- *
+- * Stolen shamelessly from ibmmca.c -- IBM Microchannel SCSI adapter driver
+- *
+- */
+-
+-static void dma_led_on(struct NCR_ESP *esp)
+-{
+-	outb(inb(PS2_SYS_CTR) | 0xc0, PS2_SYS_CTR);
+-}
+-
+-static void dma_led_off(struct NCR_ESP *esp)
+-{
+-	outb(inb(PS2_SYS_CTR) & 0x3f, PS2_SYS_CTR);
+-}
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "mca_53c9x",
+-	.name			= "NCR 53c9x SCSI",
+-	.detect			= mca_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= mca_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.unchecked_isa_dma	= 1,
+-	.use_clustering		= DISABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-/*
+- * OK, here's the goods I promised.  The NCR 86C01 is an MCA interface chip 
+- *  that handles enabling/diabling IRQ, dma interfacing, IO port selection
+- *  and other fun stuff.  It takes up 16 addresses, and the chip it is
+- *  connnected to gets the following 16.  Registers are as follows:
+- *
+- * Offsets 0-1 : Card ID
+- *
+- * Offset    2 : Mode enable register --
+- *                Bit    7 : Data Word width (1 = 16, 0 = 8)
+- *		  Bit    6 : IRQ enable (1 = enabled)
+- *                Bits 5,4 : IRQ select
+- *                              0  0 : IRQ 3
+- *			        0  1 : IRQ 5
+- * 				1  0 : IRQ 7
+- *  				1  1 : IRQ 9
+- *                Bits 3-1 : Base Address
+- *                           0  0  0 : <disabled>
+- * 			     0  0  1 : 0x0240
+- *    			     0  1  0 : 0x0340
+- *     			     0  1  1 : 0x0400
+- * 			     1  0  0 : 0x0420
+- * 			     1  0  1 : 0x3240
+- * 			     1  1  0 : 0x8240
+- * 			     1  1  1 : 0xA240
+- *		  Bit    0 : Card enable (1 = enabled)
+- *
+- * Offset    3 : DMA control register --
+- *                Bit    7 : DMA enable (1 = enabled)
+- *                Bits 6,5 : Preemt Count Select (transfers to complete after
+- *                            'C01 has been preempted on MCA bus)
+- *                              0  0 : 0
+- *                              0  1 : 1
+- *                              1  0 : 3
+- *                              1  1 : 7
+- *  (all these wacky numbers; I'm sure there's a reason somewhere)
+- *                Bit    4 : Fairness enable (1 = fair bus priority)
+- *                Bits 3-0 : Arbitration level (0-15 consecutive)
+- * 
+- * Offset    4 : General purpose register
+- *                Bits 7-3 : User definable (here, 7,6 are SCSI ID)
+- *                Bits 2-0 : reserved
+- *
+- * Offset   10 : DMA decode register (used for IO based DMA; also can do
+- *                PIO through this port)
+- *
+- * Offset   12 : Status
+- *                Bits 7-2 : reserved
+- *                Bit    1 : DMA pending (1 = pending)
+- *                Bit    0 : IRQ pending (0 = pending)
+- *
+- * Exciting, huh?  
+- *
+- */                
+diff --git a/drivers/scsi/oktagon_esp.c b/drivers/scsi/oktagon_esp.c
+deleted file mode 100644
+index 8e5eadb..0000000
+--- a/drivers/scsi/oktagon_esp.c
++++ /dev/null
+@@ -1,606 +0,0 @@
+-/*
+- * Oktagon_esp.c -- Driver for bsc Oktagon
+- *
+- * Written by Carsten Pluntke 1998
+- *
+- * Based on cyber_esp.c
+- */
+-
+-
+-#if defined(CONFIG_AMIGA) || defined(CONFIG_APUS)
+-#define USE_BOTTOM_HALF
+-#endif
+-
+-#include <linux/module.h>
+-
+-#include <linux/kernel.h>
+-#include <linux/delay.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/reboot.h>
+-#include <asm/system.h>
+-#include <asm/ptrace.h>
+-#include <asm/pgtable.h>
+-
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <linux/zorro.h>
+-#include <asm/irq.h>
+-#include <asm/amigaints.h>
+-#include <asm/amigahw.h>
+-
+-#ifdef USE_BOTTOM_HALF
+-#include <linux/workqueue.h>
+-#include <linux/interrupt.h>
+-#endif
+-
+-/* The controller registers can be found in the Z2 config area at these
+- * offsets:
+- */
+-#define OKTAGON_ESP_ADDR 0x03000
+-#define OKTAGON_DMA_ADDR 0x01000
+-
+-
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 vaddress, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 vaddress, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static void dma_led_off(struct NCR_ESP *esp);
+-static void dma_led_on(struct NCR_ESP *esp);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-
+-static void dma_irq_exit(struct NCR_ESP *esp);
+-static void dma_invalidate(struct NCR_ESP *esp);
+-
+-static void dma_mmu_get_scsi_one(struct NCR_ESP *,Scsi_Cmnd *);
+-static void dma_mmu_get_scsi_sgl(struct NCR_ESP *,Scsi_Cmnd *);
+-static void dma_mmu_release_scsi_one(struct NCR_ESP *,Scsi_Cmnd *);
+-static void dma_mmu_release_scsi_sgl(struct NCR_ESP *,Scsi_Cmnd *);
+-static void dma_advance_sg(Scsi_Cmnd *);
+-static int  oktagon_notify_reboot(struct notifier_block *this, unsigned long code, void *x);
+-
+-#ifdef USE_BOTTOM_HALF
+-static void dma_commit(struct work_struct *unused);
+-
+-long oktag_to_io(long *paddr, long *addr, long len);
+-long oktag_from_io(long *addr, long *paddr, long len);
+-
+-static DECLARE_WORK(tq_fake_dma, dma_commit);
+-
+-#define DMA_MAXTRANSFER 0x8000
+-
+-#else
+-
+-/*
+- * No bottom half. Use transfer directly from IRQ. Find a narrow path
+- * between too much IRQ overhead and clogging the IRQ for too long.
+- */
+-
+-#define DMA_MAXTRANSFER 0x1000
+-
+-#endif
+-
+-static struct notifier_block oktagon_notifier = { 
+-	oktagon_notify_reboot,
+-	NULL,
+-	0
+-};
+-
+-static long *paddress;
+-static long *address;
+-static long len;
+-static long dma_on;
+-static int direction;
+-static struct NCR_ESP *current_esp;
+-
+-
+-static volatile unsigned char cmd_buffer[16];
+-				/* This is where all commands are put
+-				 * before they are trasfered to the ESP chip
+-				 * via PIO.
+-				 */
+-
+-/***************************************************************** Detection */
+-int oktagon_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct zorro_dev *z = NULL;
+-	unsigned long address;
+-	struct ESP_regs *eregs;
+-
+-	while ((z = zorro_find_device(ZORRO_PROD_BSC_OKTAGON_2008, z))) {
+-	    unsigned long board = z->resource.start;
+-	    if (request_mem_region(board+OKTAGON_ESP_ADDR,
+-				   sizeof(struct ESP_regs), "NCR53C9x")) {
+-		/*
+-		 * It is a SCSI controller.
+-		 * Hardwire Host adapter to SCSI ID 7
+-		 */
+-		
+-		address = (unsigned long)ZTWO_VADDR(board);
+-		eregs = (struct ESP_regs *)(address + OKTAGON_ESP_ADDR);
+-
+-		/* This line was 5 lines lower */
+-		esp = esp_allocate(tpnt, (void *)board + OKTAGON_ESP_ADDR, 0);
+-
+-		/* we have to shift the registers only one bit for oktagon */
+-		esp->shift = 1;
+-
+-		esp_write(eregs->esp_cfg1, (ESP_CONFIG1_PENABLE | 7));
+-		udelay(5);
+-		if (esp_read(eregs->esp_cfg1) != (ESP_CONFIG1_PENABLE | 7))
+-			return 0; /* Bail out if address did not hold data */
+-
+-		/* Do command transfer with programmed I/O */
+-		esp->do_pio_cmds = 1;
+-
+-		/* Required functions */
+-		esp->dma_bytes_sent = &dma_bytes_sent;
+-		esp->dma_can_transfer = &dma_can_transfer;
+-		esp->dma_dump_state = &dma_dump_state;
+-		esp->dma_init_read = &dma_init_read;
+-		esp->dma_init_write = &dma_init_write;
+-		esp->dma_ints_off = &dma_ints_off;
+-		esp->dma_ints_on = &dma_ints_on;
+-		esp->dma_irq_p = &dma_irq_p;
+-		esp->dma_ports_p = &dma_ports_p;
+-		esp->dma_setup = &dma_setup;
+-
+-		/* Optional functions */
+-		esp->dma_barrier = 0;
+-		esp->dma_drain = 0;
+-		esp->dma_invalidate = &dma_invalidate;
+-		esp->dma_irq_entry = 0;
+-		esp->dma_irq_exit = &dma_irq_exit;
+-		esp->dma_led_on = &dma_led_on;
+-		esp->dma_led_off = &dma_led_off;
+-		esp->dma_poll = 0;
+-		esp->dma_reset = 0;
+-
+-		esp->dma_mmu_get_scsi_one = &dma_mmu_get_scsi_one;
+-		esp->dma_mmu_get_scsi_sgl = &dma_mmu_get_scsi_sgl;
+-		esp->dma_mmu_release_scsi_one = &dma_mmu_release_scsi_one;
+-		esp->dma_mmu_release_scsi_sgl = &dma_mmu_release_scsi_sgl;
+-		esp->dma_advance_sg = &dma_advance_sg;
+-
+-		/* SCSI chip speed */
+-		/* Looking at the quartz of the SCSI board... */
+-		esp->cfreq = 25000000;
+-
+-		/* The DMA registers on the CyberStorm are mapped
+-		 * relative to the device (i.e. in the same Zorro
+-		 * I/O block).
+-		 */
+-		esp->dregs = (void *)(address + OKTAGON_DMA_ADDR);
+-
+-		paddress = (long *) esp->dregs;
+-
+-		/* ESP register base */
+-		esp->eregs = eregs;
+-		
+-		/* Set the command buffer */
+-		esp->esp_command = (volatile unsigned char*) cmd_buffer;
+-
+-		/* Yes, the virtual address. See below. */
+-		esp->esp_command_dvma = (__u32) cmd_buffer;
+-
+-		esp->irq = IRQ_AMIGA_PORTS;
+-		request_irq(IRQ_AMIGA_PORTS, esp_intr, IRQF_SHARED,
+-			    "BSC Oktagon SCSI", esp->ehost);
+-
+-		/* Figure out our scsi ID on the bus */
+-		esp->scsi_id = 7;
+-		
+-		/* We don't have a differential SCSI-bus. */
+-		esp->diff = 0;
+-
+-		esp_initialize(esp);
+-
+-		printk("ESP_Oktagon Driver 1.1"
+-#ifdef USE_BOTTOM_HALF
+-		       " [BOTTOM_HALF]"
+-#else
+-		       " [IRQ]"
+-#endif
+-		       " registered.\n");
+-		printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps,esps_in_use);
+-		esps_running = esps_in_use;
+-		current_esp = esp;
+-		register_reboot_notifier(&oktagon_notifier);
+-		return esps_in_use;
+-	    }
+-	}
+-	return 0;
+-}
+-
+-
+-/*
+- * On certain configurations the SCSI equipment gets confused on reboot,
+- * so we have to reset it then.
+- */
+-
+-static int
+-oktagon_notify_reboot(struct notifier_block *this, unsigned long code, void *x)
+-{
+-  struct NCR_ESP *esp;
+-  
+-  if((code == SYS_DOWN || code == SYS_HALT) && (esp = current_esp))
+-   {
+-    esp_bootup_reset(esp,esp->eregs);
+-    udelay(500); /* Settle time. Maybe unnecessary. */
+-   }
+-  return NOTIFY_DONE;
+-}
+-    
+-
+-	
+-#ifdef USE_BOTTOM_HALF
+-
+-
+-/*
+- * The bsc Oktagon controller has no real DMA, so we have to do the 'DMA
+- * transfer' in the interrupt (Yikes!) or use a bottom half to not to clutter
+- * IRQ's for longer-than-good.
+- *
+- * FIXME
+- * BIG PROBLEM: 'len' is usually the buffer length, not the expected length
+- * of the data. So DMA may finish prematurely, further reads lead to
+- * 'machine check' on APUS systems (don't know about m68k systems, AmigaOS
+- * deliberately ignores the bus faults) and a normal copy-loop can't
+- * be exited prematurely just at the right moment by the dma_invalidate IRQ.
+- * So do it the hard way, write an own copier in assembler and
+- * catch the exception.
+- *                                     -- Carsten
+- */
+- 
+- 
+-static void dma_commit(struct work_struct *unused)
+-{
+-    long wait,len2,pos;
+-    struct NCR_ESP *esp;
+-
+-    ESPDATA(("Transfer: %ld bytes, Address 0x%08lX, Direction: %d\n",
+-         len,(long) address,direction));
+-    dma_ints_off(current_esp);
+-
+-    pos = 0;
+-    wait = 1;
+-    if(direction) /* write? (memory to device) */
+-     {
+-      while(len > 0)
+-       {
+-        len2 = oktag_to_io(paddress, address+pos, len);
+-	if(!len2)
+-	 {
+-	  if(wait > 1000)
+-	   {
+-	    printk("Expedited DMA exit (writing) %ld\n",len);
+-	    break;
+-	   }
+-	  mdelay(wait);
+-	  wait *= 2;
+-	 }
+-	pos += len2;
+-	len -= len2*sizeof(long);
+-       }
+-     } else {
+-      while(len > 0)
+-       {
+-        len2 = oktag_from_io(address+pos, paddress, len);
+-	if(!len2)
+-	 {
+-	  if(wait > 1000)
+-	   {
+-	    printk("Expedited DMA exit (reading) %ld\n",len);
+-	    break;
+-	   }
+-	  mdelay(wait);
+-	  wait *= 2;
+-	 }
+-	pos += len2;
+-	len -= len2*sizeof(long);
+-       }
+-     }
+-
+-    /* to make esp->shift work */
+-    esp=current_esp;
+-
+-#if 0
+-    len2 = (esp_read(current_esp->eregs->esp_tclow) & 0xff) |
+-           ((esp_read(current_esp->eregs->esp_tcmed) & 0xff) << 8);
+-
+-    /*
+-     * Uh uh. If you see this, len and transfer count registers were out of
+-     * sync. That means really serious trouble.
+-     */
+-
+-    if(len2)
+-      printk("Eeeek!! Transfer count still %ld!\n",len2);
+-#endif
+-
+-    /*
+-     * Normally we just need to exit and wait for the interrupt to come.
+-     * But at least one device (my Microtek ScanMaker 630) regularly mis-
+-     * calculates the bytes it should send which is really ugly because
+-     * it locks up the SCSI bus if not accounted for.
+-     */
+-
+-    if(!(esp_read(current_esp->eregs->esp_status) & ESP_STAT_INTR))
+-     {
+-      long len = 100;
+-      long trash[10];
+-
+-      /*
+-       * Interrupt bit was not set. Either the device is just plain lazy
+-       * so we give it a 10 ms chance or...
+-       */
+-      while(len-- && (!(esp_read(current_esp->eregs->esp_status) & ESP_STAT_INTR)))
+-        udelay(100);
+-
+-
+-      if(!(esp_read(current_esp->eregs->esp_status) & ESP_STAT_INTR))
+-       {
+-        /*
+-	 * So we think that the transfer count is out of sync. Since we
+-	 * have all we want we are happy and can ditch the trash.
+-	 */
+-	 
+-        len = DMA_MAXTRANSFER;
+-
+-        while(len-- && (!(esp_read(current_esp->eregs->esp_status) & ESP_STAT_INTR)))
+-          oktag_from_io(trash,paddress,2);
+-
+-        if(!(esp_read(current_esp->eregs->esp_status) & ESP_STAT_INTR))
+-         {
+-          /*
+-           * Things really have gone wrong. If we leave the system in that
+-           * state, the SCSI bus is locked forever. I hope that this will
+-           * turn the system in a more or less running state.
+-           */
+-          printk("Device is bolixed, trying bus reset...\n");
+-	  esp_bootup_reset(current_esp,current_esp->eregs);
+-         }
+-       }
+-     }
+-
+-    ESPDATA(("Transfer_finale: do_data_finale should come\n"));
+-
+-    len = 0;
+-    dma_on = 0;
+-    dma_ints_on(current_esp);
+-}
+-
+-#endif
+-
+-/************************************************************* DMA Functions */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	/* Since the CyberStorm DMA is fully dedicated to the ESP chip,
+-	 * the number of bytes sent (to the ESP chip) equals the number
+-	 * of bytes in the FIFO - there is no buffering in the DMA controller.
+-	 * XXXX Do I read this right? It is from host to ESP, right?
+-	 */
+-	return fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	unsigned long sz = sp->SCp.this_residual;
+-	if(sz > DMA_MAXTRANSFER)
+-		sz = DMA_MAXTRANSFER;
+-	return sz;
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-}
+-
+-/*
+- * What the f$@& is this?
+- *
+- * Some SCSI devices (like my Microtek ScanMaker 630 scanner) want to transfer
+- * more data than requested. How much? Dunno. So ditch the bogus data into
+- * the sink, hoping the device will advance to the next phase sooner or later.
+- *
+- *                         -- Carsten
+- */
+-
+-static long oktag_eva_buffer[16]; /* The data sink */
+-
+-static void oktag_check_dma(void)
+-{
+-  struct NCR_ESP *esp;
+-
+-  esp=current_esp;
+-  if(!len)
+-   {
+-    address = oktag_eva_buffer;
+-    len = 2;
+-    /* esp_do_data sets them to zero like len */
+-    esp_write(current_esp->eregs->esp_tclow,2);
+-    esp_write(current_esp->eregs->esp_tcmed,0);
+-   }
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 vaddress, int length)
+-{
+-	/* Zorro is noncached, everything else done using processor. */
+-	/* cache_clear(addr, length); */
+-	
+-	if(dma_on)
+-	  panic("dma_init_read while dma process is initialized/running!\n");
+-	direction = 0;
+-	address = (long *) vaddress;
+-	current_esp = esp;
+-	len = length;
+-	oktag_check_dma();
+-        dma_on = 1;
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 vaddress, int length)
+-{
+-	/* cache_push(addr, length); */
+-
+-	if(dma_on)
+-	  panic("dma_init_write while dma process is initialized/running!\n");
+-	direction = 1;
+-	address = (long *) vaddress;
+-	current_esp = esp;
+-	len = length;
+-	oktag_check_dma();
+-	dma_on = 1;
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	disable_irq(esp->irq);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	enable_irq(esp->irq);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	/* It's important to check the DMA IRQ bit in the correct way! */
+-	return (esp_read(esp->eregs->esp_status) & ESP_STAT_INTR);
+-}
+-
+-static void dma_led_off(struct NCR_ESP *esp)
+-{
+-}
+-
+-static void dma_led_on(struct NCR_ESP *esp)
+-{
+-}
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return ((amiga_custom.intenar) & IF_PORTS);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	/* On the Sparc, DMA_ST_WRITE means "move data from device to memory"
+-	 * so when (write) is true, it actually means READ!
+-	 */
+-	if(write){
+-		dma_init_read(esp, addr, count);
+-	} else {
+-		dma_init_write(esp, addr, count);
+-	}
+-}
+-
+-/*
+- * IRQ entry when DMA transfer is ready to be started
+- */
+-
+-static void dma_irq_exit(struct NCR_ESP *esp)
+-{
+-#ifdef USE_BOTTOM_HALF
+-	if(dma_on)
+-	 {
+-	  schedule_work(&tq_fake_dma);
+-	 }
+-#else
+-	while(len && !dma_irq_p(esp))
+-	 {
+-	  if(direction)
+-	    *paddress = *address++;
+-	   else
+-	    *address++ = *paddress;
+-	  len -= (sizeof(long));
+-	 }
+-	len = 0;
+-        dma_on = 0;
+-#endif
+-}
+-
+-/*
+- * IRQ entry when DMA has just finished
+- */
+-
+-static void dma_invalidate(struct NCR_ESP *esp)
+-{
+-}
+-
+-/*
+- * Since the processor does the data transfer we have to use the custom
+- * mmu interface to pass the virtual address, not the physical.
+- */
+-
+-void dma_mmu_get_scsi_one(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-        sp->SCp.ptr =
+-                sp->request_buffer;
+-}
+-
+-void dma_mmu_get_scsi_sgl(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-        sp->SCp.ptr = sg_virt(sp->SCp.buffer);
+-}
+-
+-void dma_mmu_release_scsi_one(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-}
+-
+-void dma_mmu_release_scsi_sgl(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-}
+-
+-void dma_advance_sg(Scsi_Cmnd *sp)
+-{
+-	sp->SCp.ptr = sg_virt(sp->SCp.buffer);
+-}
+-
+-
+-#define HOSTS_C
+-
+-int oktagon_esp_release(struct Scsi_Host *instance)
+-{
+-#ifdef MODULE
+-	unsigned long address = (unsigned long)((struct NCR_ESP *)instance->hostdata)->edev;
+-	esp_release();
+-	release_mem_region(address, sizeof(struct ESP_regs));
+-	free_irq(IRQ_AMIGA_PORTS, esp_intr);
+-	unregister_reboot_notifier(&oktagon_notifier);
+-#endif
+-	return 1;
+-}
+-
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "esp-oktagon",
+-	.proc_info		= &esp_proc_info,
+-	.name			= "BSC Oktagon SCSI",
+-	.detect			= oktagon_esp_detect,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.release		= oktagon_esp_release,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= ENABLE_CLUSTERING
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/oktagon_io.S b/drivers/scsi/oktagon_io.S
+deleted file mode 100644
+index 8a7340b..0000000
+--- a/drivers/scsi/oktagon_io.S
++++ /dev/null
+@@ -1,194 +0,0 @@
+-/* -*- mode: asm -*-
+- * Due to problems while transferring data I've put these routines as assembly
+- * code.
+- * Since I'm no PPC assembler guru, the code is just the assembler version of
+-
+-int oktag_to_io(long *paddr,long *addr,long len)
+-{
+-  long *addr2 = addr;
+-  for(len=(len+sizeof(long)-1)/sizeof(long);len--;)
+-    *paddr = *addr2++;
+-  return addr2 - addr;
+-}
+-
+-int oktag_from_io(long *addr,long *paddr,long len)
+-{
+-  long *addr2 = addr;
+-  for(len=(len+sizeof(long)-1)/sizeof(long);len--;)
+-    *addr2++ = *paddr;
+-  return addr2 - addr;
+-}
+-
+- * assembled using gcc -O2 -S, with two exception catch points where data
+- * is moved to/from the IO register.
+- */
+-
+-
+-#ifdef CONFIG_APUS
+-
+-	.file	"oktagon_io.c"
+-
+-gcc2_compiled.:
+-/*
+-	.section ".text"
+-*/
+-	.align 2
+-	.globl oktag_to_io
+-	.type	 oktag_to_io,@function
+-oktag_to_io:
+-	addi 5,5,3
+-	srwi 5,5,2
+-	cmpwi 1,5,0
+-	mr 9,3
+-	mr 3,4
+-	addi 5,5,-1
+-	bc 12,6,.L3
+-.L5:
+-	cmpwi 1,5,0
+-	lwz 0,0(3)
+-	addi 3,3,4
+-	addi 5,5,-1
+-exp1:	stw 0,0(9)
+-	bc 4,6,.L5
+-.L3:
+-ret1:	subf 3,4,3
+-	srawi 3,3,2
+-	blr
+-.Lfe1:
+-	.size	 oktag_to_io,.Lfe1-oktag_to_io
+-	.align 2
+-	.globl oktag_from_io
+-	.type	 oktag_from_io,@function
+-oktag_from_io:
+-	addi 5,5,3
+-	srwi 5,5,2
+-	cmpwi 1,5,0
+-	mr 9,3
+-	addi 5,5,-1
+-	bc 12,6,.L9
+-.L11:
+-	cmpwi 1,5,0
+-exp2:	lwz 0,0(4)
+-	addi 5,5,-1
+-	stw 0,0(3)
+-	addi 3,3,4
+-	bc 4,6,.L11
+-.L9:
+-ret2:	subf 3,9,3
+-	srawi 3,3,2
+-	blr
+-.Lfe2:
+-	.size	 oktag_from_io,.Lfe2-oktag_from_io
+-	.ident	"GCC: (GNU) egcs-2.90.29 980515 (egcs-1.0.3 release)"
+-
+-/*
+- * Exception table.
+- * Second longword shows where to jump when an exception at the addr the first
+- * longword is pointing to is caught.
+- */
+-
+-.section __ex_table,"a"
+-	.align	2
+-oktagon_except:
+-	.long	exp1,ret1
+-	.long	exp2,ret2
+-
+-#else
+-
+-/*
+-The code which follows is for 680x0 based assembler and is meant for
+-Linux/m68k. It was created by cross compiling the code using the
+-instructions given above. I then added the four labels used in the
+-exception handler table at the bottom of this file.
+-- Kevin <kcozens@interlog.com>
+-*/
+-
+-#ifdef CONFIG_AMIGA
+-
+-	.file	"oktagon_io.c"
+-	.version	"01.01"
+-gcc2_compiled.:
+-.text
+-	.align 	2
+-.globl oktag_to_io
+-	.type	 oktag_to_io,@function
+-oktag_to_io:
+-	link.w %a6,#0
+-	move.l %d2,-(%sp)
+-	move.l 8(%a6),%a1
+-	move.l 12(%a6),%d1
+-	move.l %d1,%a0
+-	move.l 16(%a6),%d0
+-	addq.l #3,%d0
+-	lsr.l #2,%d0
+-	subq.l #1,%d0
+-	moveq.l #-1,%d2
+-	cmp.l %d0,%d2
+-	jbeq .L3
+-.L5:
+-exp1:
+-	move.l (%a0)+,(%a1)
+-	dbra %d0,.L5
+-	clr.w %d0
+-	subq.l #1,%d0
+-	jbcc .L5
+-.L3:
+-ret1:
+-	move.l %a0,%d0
+-	sub.l %d1,%d0
+-	asr.l #2,%d0
+-	move.l -4(%a6),%d2
+-	unlk %a6
+-	rts
+-
+-.Lfe1:
+-	.size	 oktag_to_io,.Lfe1-oktag_to_io
+-	.align 	2
+-.globl oktag_from_io
+-	.type	 oktag_from_io,@function
+-oktag_from_io:
+-	link.w %a6,#0
+-	move.l %d2,-(%sp)
+-	move.l 8(%a6),%d1
+-	move.l 12(%a6),%a1
+-	move.l %d1,%a0
+-	move.l 16(%a6),%d0
+-	addq.l #3,%d0
+-	lsr.l #2,%d0
+-	subq.l #1,%d0
+-	moveq.l #-1,%d2
+-	cmp.l %d0,%d2
+-	jbeq .L9
+-.L11:
+-exp2:
+-	move.l (%a1),(%a0)+
+-	dbra %d0,.L11
+-	clr.w %d0
+-	subq.l #1,%d0
+-	jbcc .L11
+-.L9:
+-ret2:
+-	move.l %a0,%d0
+-	sub.l %d1,%d0
+-	asr.l #2,%d0
+-	move.l -4(%a6),%d2
+-	unlk %a6
+-	rts
+-.Lfe2:
+-	.size	 oktag_from_io,.Lfe2-oktag_from_io
+-	.ident	"GCC: (GNU) 2.7.2.1"
+-
+-/*
+- * Exception table.
+- * Second longword shows where to jump when an exception at the addr the first
+- * longword is pointing to is caught.
+- */
+-
+-.section __ex_table,"a"
+-	.align	2
+-oktagon_except:
+-	.long	exp1,ret1
+-	.long	exp2,ret2
+-
+-#endif
+-#endif
+diff --git a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
+deleted file mode 100644
+index 1bc4190..0000000
+--- a/drivers/scsi/sun3x_esp.c
++++ /dev/null
+@@ -1,392 +0,0 @@
+-/* sun3x_esp.c:  EnhancedScsiProcessor Sun3x SCSI driver code.
+- *
+- * (C) 1999 Thomas Bogendoerfer (tsbogend@alpha.franken.de)
+- *
+- * Based on David S. Miller's esp driver
+- */
+-
+-#include <linux/kernel.h>
+-#include <linux/types.h>
+-#include <linux/string.h>
+-#include <linux/slab.h>
+-#include <linux/blkdev.h>
+-#include <linux/proc_fs.h>
+-#include <linux/stat.h>
+-#include <linux/delay.h>
+-#include <linux/interrupt.h>
+-
+-#include "scsi.h"
+-#include <scsi/scsi_host.h>
+-#include "NCR53C9x.h"
+-
+-#include <asm/sun3x.h>
+-#include <asm/dvma.h>
+-#include <asm/irq.h>
+-
+-static void dma_barrier(struct NCR_ESP *esp);
+-static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
+-static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_drain(struct NCR_ESP *esp);
+-static void dma_invalidate(struct NCR_ESP *esp);
+-static void dma_dump_state(struct NCR_ESP *esp);
+-static void dma_init_read(struct NCR_ESP *esp, __u32 vaddress, int length);
+-static void dma_init_write(struct NCR_ESP *esp, __u32 vaddress, int length);
+-static void dma_ints_off(struct NCR_ESP *esp);
+-static void dma_ints_on(struct NCR_ESP *esp);
+-static int  dma_irq_p(struct NCR_ESP *esp);
+-static void dma_poll(struct NCR_ESP *esp, unsigned char *vaddr);
+-static int  dma_ports_p(struct NCR_ESP *esp);
+-static void dma_reset(struct NCR_ESP *esp);
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
+-static void dma_mmu_get_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_mmu_get_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_mmu_release_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_mmu_release_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp);
+-static void dma_advance_sg (Scsi_Cmnd *sp);
+-
+-/* Detecting ESP chips on the machine.  This is the simple and easy
+- * version.
+- */
+-int sun3x_esp_detect(struct scsi_host_template *tpnt)
+-{
+-	struct NCR_ESP *esp;
+-	struct ConfigDev *esp_dev;
+-
+-	esp_dev = 0;
+-	esp = esp_allocate(tpnt, esp_dev, 0);
+-
+-	/* Do command transfer with DMA */
+-	esp->do_pio_cmds = 0;
+-
+-	/* Required functions */
+-	esp->dma_bytes_sent = &dma_bytes_sent;
+-	esp->dma_can_transfer = &dma_can_transfer;
+-	esp->dma_dump_state = &dma_dump_state;
+-	esp->dma_init_read = &dma_init_read;
+-	esp->dma_init_write = &dma_init_write;
+-	esp->dma_ints_off = &dma_ints_off;
+-	esp->dma_ints_on = &dma_ints_on;
+-	esp->dma_irq_p = &dma_irq_p;
+-	esp->dma_ports_p = &dma_ports_p;
+-	esp->dma_setup = &dma_setup;
+-
+-	/* Optional functions */
+-	esp->dma_barrier = &dma_barrier;
+-	esp->dma_invalidate = &dma_invalidate;
+-	esp->dma_drain = &dma_drain;
+-	esp->dma_irq_entry = 0;
+-	esp->dma_irq_exit = 0;
+-	esp->dma_led_on = 0;
+-	esp->dma_led_off = 0;
+-	esp->dma_poll = &dma_poll;
+-	esp->dma_reset = &dma_reset;
+-
+-        /* virtual DMA functions */
+-        esp->dma_mmu_get_scsi_one = &dma_mmu_get_scsi_one;
+-        esp->dma_mmu_get_scsi_sgl = &dma_mmu_get_scsi_sgl;
+-        esp->dma_mmu_release_scsi_one = &dma_mmu_release_scsi_one;
+-        esp->dma_mmu_release_scsi_sgl = &dma_mmu_release_scsi_sgl;
+-        esp->dma_advance_sg = &dma_advance_sg;
+-	    
+-	/* SCSI chip speed */
+-	esp->cfreq = 20000000;
+-	esp->eregs = (struct ESP_regs *)(SUN3X_ESP_BASE);
+-	esp->dregs = (void *)SUN3X_ESP_DMA;
+-
+-	esp->esp_command = (volatile unsigned char *)dvma_malloc(DVMA_PAGE_SIZE);
+-	esp->esp_command_dvma = dvma_vtob((unsigned long)esp->esp_command);
+-
+-	esp->irq = 2;
+-	if (request_irq(esp->irq, esp_intr, IRQF_DISABLED,
+-			"SUN3X SCSI", esp->ehost)) {
+-		esp_deallocate(esp);
+-		return 0;
+-	}
+-
+-	esp->scsi_id = 7;
+-	esp->diff = 0;
+-
+-	esp_initialize(esp);
+-
+- 	/* for reasons beyond my knowledge (and which should likely be fixed)
+- 	   sync mode doesn't work on a 3/80 at 5mhz.  but it does at 4. */
+- 	esp->sync_defp = 0x3f;
+-
+-	printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps,
+-	       esps_in_use);
+-	esps_running = esps_in_use;
+-	return esps_in_use;
+-}
+-
+-static void dma_do_drain(struct NCR_ESP *esp)
+-{
+- 	struct sparc_dma_registers *dregs =
+- 		(struct sparc_dma_registers *) esp->dregs;
+- 	
+- 	int count = 500000;
+- 
+- 	while((dregs->cond_reg & DMA_PEND_READ) && (--count > 0)) 
+- 		udelay(1);
+- 
+- 	if(!count) {
+- 		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
+- 	}
+- 
+- 	dregs->cond_reg |= DMA_FIFO_STDRAIN;
+- 	
+- 	count = 500000;
+- 
+- 	while((dregs->cond_reg & DMA_FIFO_ISDRAIN) && (--count > 0)) 
+- 		udelay(1);
+- 
+- 	if(!count) {
+- 		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
+- 	}
+- 
+-}
+- 
+-static void dma_barrier(struct NCR_ESP *esp)
+-{
+-  	struct sparc_dma_registers *dregs =
+-  		(struct sparc_dma_registers *) esp->dregs;
+- 	int count = 500000;
+-  
+- 	while((dregs->cond_reg & DMA_PEND_READ) && (--count > 0))
+-  		udelay(1);
+- 
+- 	if(!count) {
+- 		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
+- 	}
+- 
+-  	dregs->cond_reg &= ~(DMA_ENABLE);
+-}
+-
+-/* This uses various DMA csr fields and the fifo flags count value to
+- * determine how many bytes were successfully sent/received by the ESP.
+- */
+-static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
+-{
+-	struct sparc_dma_registers *dregs = 
+-		(struct sparc_dma_registers *) esp->dregs;
+-
+-	int rval = dregs->st_addr - esp->esp_command_dvma;
+-
+-	return rval - fifo_count;
+-}
+-
+-static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-	return sp->SCp.this_residual;
+-}
+-
+-static void dma_drain(struct NCR_ESP *esp)
+-{
+-	struct sparc_dma_registers *dregs =
+-		(struct sparc_dma_registers *) esp->dregs;
+-	int count = 500000;
+-
+-	if(dregs->cond_reg & DMA_FIFO_ISDRAIN) {
+-		dregs->cond_reg |= DMA_FIFO_STDRAIN;
+-		while((dregs->cond_reg & DMA_FIFO_ISDRAIN) && (--count > 0))
+-			udelay(1);
+-		if(!count) {
+-			printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
+-		}
+-
+-	}
+-}
+-
+-static void dma_invalidate(struct NCR_ESP *esp)
+-{
+-	struct sparc_dma_registers *dregs =
+-		(struct sparc_dma_registers *) esp->dregs;
+-
+-	__u32 tmp;
+-	int count = 500000;
+-
+-	while(((tmp = dregs->cond_reg) & DMA_PEND_READ) && (--count > 0)) 
+-		udelay(1);
+-
+-	if(!count) {
+-		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
+-	}
+-
+-	dregs->cond_reg = tmp | DMA_FIFO_INV;
+-	dregs->cond_reg &= ~DMA_FIFO_INV;
+-
+-}
+-
+-static void dma_dump_state(struct NCR_ESP *esp)
+-{
+-	struct sparc_dma_registers *dregs =
+-		(struct sparc_dma_registers *) esp->dregs;
+-
+-	ESPLOG(("esp%d: dma -- cond_reg<%08lx> addr<%08lx>\n",
+-		esp->esp_id, dregs->cond_reg, dregs->st_addr));
+-}
+-
+-static void dma_init_read(struct NCR_ESP *esp, __u32 vaddress, int length)
+-{
+-	struct sparc_dma_registers *dregs = 
+-		(struct sparc_dma_registers *) esp->dregs;
+-
+-	dregs->st_addr = vaddress;
+-	dregs->cond_reg |= (DMA_ST_WRITE | DMA_ENABLE);
+-}
+-
+-static void dma_init_write(struct NCR_ESP *esp, __u32 vaddress, int length)
+-{
+-	struct sparc_dma_registers *dregs = 
+-		(struct sparc_dma_registers *) esp->dregs;
+-
+-	/* Set up the DMA counters */
+-
+-	dregs->st_addr = vaddress;
+-	dregs->cond_reg = ((dregs->cond_reg & ~(DMA_ST_WRITE)) | DMA_ENABLE);
+-}
+-
+-static void dma_ints_off(struct NCR_ESP *esp)
+-{
+-	DMA_INTSOFF((struct sparc_dma_registers *) esp->dregs);
+-}
+-
+-static void dma_ints_on(struct NCR_ESP *esp)
+-{
+-	DMA_INTSON((struct sparc_dma_registers *) esp->dregs);
+-}
+-
+-static int dma_irq_p(struct NCR_ESP *esp)
+-{
+-	return DMA_IRQ_P((struct sparc_dma_registers *) esp->dregs);
+-}
+-
+-static void dma_poll(struct NCR_ESP *esp, unsigned char *vaddr)
+-{
+-	int count = 50;
+-	dma_do_drain(esp);
+-
+-	/* Wait till the first bits settle. */
+-	while((*(volatile unsigned char *)vaddr == 0xff) && (--count > 0))
+-		udelay(1);
+-
+-	if(!count) {
+-//		printk("%s:%d timeout expire (data %02x)\n", __FILE__, __LINE__,
+-//		       esp_read(esp->eregs->esp_fdata));
+-		//mach_halt();
+-		vaddr[0] = esp_read(esp->eregs->esp_fdata);
+-		vaddr[1] = esp_read(esp->eregs->esp_fdata);
+-	}
+-
+-}	
+-
+-static int dma_ports_p(struct NCR_ESP *esp)
+-{
+-	return (((struct sparc_dma_registers *) esp->dregs)->cond_reg 
+-			& DMA_INT_ENAB);
+-}
+-
+-/* Resetting various pieces of the ESP scsi driver chipset/buses. */
+-static void dma_reset(struct NCR_ESP *esp)
+-{
+-	struct sparc_dma_registers *dregs =
+-		(struct sparc_dma_registers *)esp->dregs;
+-
+-	/* Punt the DVMA into a known state. */
+-	dregs->cond_reg |= DMA_RST_SCSI;
+-	dregs->cond_reg &= ~(DMA_RST_SCSI);
+-	DMA_INTSON(dregs);
+-}
+-
+-static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
+-{
+-	struct sparc_dma_registers *dregs = 
+-		(struct sparc_dma_registers *) esp->dregs;
+-	unsigned long nreg = dregs->cond_reg;
+-
+-//	printk("dma_setup %c addr %08x cnt %08x\n",
+-//	       write ? 'W' : 'R', addr, count);
+-
+-	dma_do_drain(esp);
+-
+-	if(write)
+-		nreg |= DMA_ST_WRITE;
+-	else {
+-		nreg &= ~(DMA_ST_WRITE);
+-	}
+-		
+-	nreg |= DMA_ENABLE;
+-	dregs->cond_reg = nreg;
+-	dregs->st_addr = addr;
+-}
+-
+-static void dma_mmu_get_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-    sp->SCp.have_data_in = dvma_map((unsigned long)sp->SCp.buffer,
+-				       sp->SCp.this_residual);
+-    sp->SCp.ptr = (char *)((unsigned long)sp->SCp.have_data_in);
+-}
+-
+-static void dma_mmu_get_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-    int sz = sp->SCp.buffers_residual;
+-    struct scatterlist *sg = sp->SCp.buffer;
+-
+-    while (sz >= 0) {
+-	    sg[sz].dma_address = dvma_map((unsigned long)sg_virt(&sg[sz]),
+-					  sg[sz].length);
+-	    sz--;
+-    }
+-    sp->SCp.ptr=(char *)((unsigned long)sp->SCp.buffer->dma_address);
+-}
+-
+-static void dma_mmu_release_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-    dvma_unmap((char *)sp->SCp.have_data_in);
+-}
+-
+-static void dma_mmu_release_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp)
+-{
+-    int sz = sp->use_sg - 1;
+-    struct scatterlist *sg = (struct scatterlist *)sp->request_buffer;
+-                        
+-    while(sz >= 0) {
+-        dvma_unmap((char *)sg[sz].dma_address);
+-        sz--;
+-    }
+-}
+-
+-static void dma_advance_sg (Scsi_Cmnd *sp)
+-{
+-    sp->SCp.ptr = (char *)((unsigned long)sp->SCp.buffer->dma_address);
+-}
+-
+-static int sun3x_esp_release(struct Scsi_Host *instance)
+-{
+-	/* this code does not support being compiled as a module */	 
+-	return 1;
+-
+-}
+-
+-static struct scsi_host_template driver_template = {
+-	.proc_name		= "sun3x_esp",
+-	.proc_info		= &esp_proc_info,
+-	.name			= "Sun ESP 100/100a/200",
+-	.detect			= sun3x_esp_detect,
+-	.release                = sun3x_esp_release,
+-	.slave_alloc		= esp_slave_alloc,
+-	.slave_destroy		= esp_slave_destroy,
+-	.info			= esp_info,
+-	.queuecommand		= esp_queue,
+-	.eh_abort_handler	= esp_abort,
+-	.eh_bus_reset_handler	= esp_reset,
+-	.can_queue		= 7,
+-	.this_id		= 7,
+-	.sg_tablesize		= SG_ALL,
+-	.cmd_per_lun		= 1,
+-	.use_clustering		= DISABLE_CLUSTERING,
+-};
+-
+-
+-#include "scsi_module.c"
+-
+-MODULE_LICENSE("GPL");
+-- 
+1.5.3.1
 
-                        /*
-                         * Put the FIB onto the
-
-Sincerely -- Mark Salyzyn
-
-> -----Original Message-----
-> From: Andreas Schwab [mailto:schwab@suse.de]=20
-> Sent: Thursday, November 01, 2007 9:31 AM
-> To: Stephen Rothwell
-> Cc: AACRAID; linux-scsi@vger.kernel.org; LKML
-> Subject: Re: [PATCHv2] aacraid: don't assign=20
-> cpu_to_le32(constant) to u8
->=20
-> Stephen Rothwell <sfr@canb.auug.org.au> writes:
->=20
-> > diff --git a/drivers/scsi/aacraid/commsup.c=20
-> b/drivers/scsi/aacraid/commsup.c
-> > index 240a0bb..3c2dbc0 100644
-> > --- a/drivers/scsi/aacraid/commsup.c
-> > +++ b/drivers/scsi/aacraid/commsup.c
-> > @@ -1339,9 +1339,9 @@ int aac_check_health(struct aac_dev * aac)
-> >  			aif =3D (struct aac_aifcmd *)hw_fib->data;
-> >  			aif->command =3D cpu_to_le32(AifCmdEventNotify);
-> >  		 	aif->seqnum =3D cpu_to_le32(0xFFFFFFFF);
-> > -		 	aif->data[0] =3D cpu_to_le32(AifEnExpEvent);
-> > -			aif->data[1] =3D cpu_to_le32(AifExeFirmwarePanic);
-> > -		 	aif->data[2] =3D cpu_to_le32(AifHighPriority);
-> > +			aif->data[0] =3D AifEnExpEvent;
-> > +			aif->data[1] =3D AifExeFirmwarePanic;
-> > +			aif->data[2] =3D AifHighPriority;
-> >  			aif->data[3] =3D cpu_to_le32(BlinkLED);
->=20
-> What about the last line?
->=20
-> Andreas.
-
-------_=_NextPart_001_01C82157.000DDF72
-Content-Type: application/octet-stream;
-	name="aacraid_BlinkLED.patch"
-Content-Transfer-Encoding: base64
-Content-Description: aacraid_BlinkLED.patch
-Content-Disposition: attachment;
-	filename="aacraid_BlinkLED.patch"
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMgYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9jb21tc3VwLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIw
-MDctMTEtMDcgMTA6MzU6MTYuNjAzNzI3NDY0IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2NvbW1zdXAuYwkyMDA3LTExLTA3IDEwOjM3OjUwLjU0MDMxMTEwNyAtMDUwMApAQCAtMTM0
-Miw3ICsxMzQyLDcgQEAKIAkJCWFpZi0+ZGF0YVswXSA9IEFpZkVuRXhwRXZlbnQ7CiAJCQlhaWYt
-PmRhdGFbMV0gPSBBaWZFeGVGaXJtd2FyZVBhbmljOwogCQkJYWlmLT5kYXRhWzJdID0gQWlmSGln
-aFByaW9yaXR5OwotCQkJYWlmLT5kYXRhWzNdID0gY3B1X3RvX2xlMzIoQmxpbmtMRUQpOworCQkJ
-YWlmLT5kYXRhWzNdID0gQmxpbmtMRUQ7CiAKIAkJCS8qCiAJCQkgKiBQdXQgdGhlIEZJQiBvbnRv
-IHRoZQo=
-
-------_=_NextPart_001_01C82157.000DDF72--
