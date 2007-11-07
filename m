@@ -1,29 +1,110 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH] SCSI: Use is_power_of_2() macro for simplicity.
-Date: Wed, 07 Nov 2007 14:59:25 -0600
-Message-ID: <4732272D.8070507@cs.wisc.edu>
-References: <Pine.LNX.4.64.0711061019450.9041@localhost.localdomain>
+From: Anthony Ewell <amewell@verizon.net>
+Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
+Date: Wed, 07 Nov 2007 13:31:55 -0800
+Message-ID: <47322ECB.1010707@verizon.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46359 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754418AbXKGU7g (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Nov 2007 15:59:36 -0500
-In-Reply-To: <Pine.LNX.4.64.0711061019450.9041@localhost.localdomain>
+Received: from vms040pub.verizon.net ([206.46.252.40]:44954 "EHLO
+	vms040pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753487AbXKGVb5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 16:31:57 -0500
+Received: from rn1.rent-a-nerd.local ([72.75.165.8])
+ by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
+ 3 2006)) with ESMTPA id <0JR50021XNT81ZW3@vms040.mailsrvcs.net> for
+ linux-scsi@vger.kernel.org; Wed, 07 Nov 2007 15:31:57 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Robert P. J. Day" <rpjday@crashcourse.ca>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: bo.yang@lsi.com, James Bottomley <James.Bottomley@SteelEye.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>, Mark Harvey <mark_harvey@symantec.com>
 
-Robert P. J. Day wrote:
-> Signed-off-by: Robert P. J. Day <rpjday@crashcourse.ca>
+> James Bottomley wrote:
+>> Please don't drop the cc lists.  There are others who probably have more
+>> informed opinions than I do who won't get to comment if they don't see
+>> it.
+>>
+>> On Sun, 2007-10-28 at 17:36 -0700, Anthony Ewell wrote:
+>>> James Bottomley wrote:
+>>>> On Sat, 2007-10-27 at 13:21 -0700, Anthony Ewell wrote:
+>>>>> James Bottomley wrote:
+>>>>>> On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
+>>>>>>> Hi All,
+>>>>>>>
+>>>>>>>     If you all would not mind a post from the general
+>>>>>>> public Linux user, after doing a complete disk wipe
+>>>>>>> of CentOS 4 and installing CentOS5, my system is preceived
+>>>>>>> to be 3 times slower.
 > 
-> ---
+> 
+> Did some test from my install CD/DVD's in "rescue mode" on
+> Computer C.  I used the same backup script (dump) that
+> I use in normal boot mode.  I stopped the backup
+> after dump gave the first estimate of time:
+> 
+>    "dump" CentOS5 install DVD in rescue mode:
+>         transfer rate 4422 KB/s, estimated  finish 4:10
+> 
+>    "dump" CentOS4.4 (2.6.9-42.EL) install CD in rescue mode:
+>         transfer rate 8468 KB/s, estimated  finish 2:09
+> 
+> I also got a "dmesg" from computer B, as requested by Sumant.
+> Computer B: VXA-3, CentOS 4.5 , SATA-150-4
+> 
+> -T
+> 
+> Hi All,
+> 
+> I also tested using the System Rescue CD from
+>         http://www.sysresccd.org.
+> 
+> I used the same backup script (dump) that I use in normal
+> boot mode. I stopped the backup after dump gave the first
+> estimate of time:
+> 
+>    "dump" System Rescue CD (Kernel 2.6.22.9):
+>         transfer rate 4370 KB/s, estimated finish 4:15
+> 
+> So, I would say, the problem is not confined to CentOS 5,
+> but goes all the way up to the 2.6.22.9 kernel.  I hope
+> this is a good clue.
+> 
+> -T
 
-Thanks for the iscsi bits. We have the libiscsi part from 
-vignesh.babu@wipro.com queued for 2.6.25. And the iscsi_tcp parts you 
-are patching over are broken and I am going to fix that for 2.6.25. We 
-only support 1 r2t right now so we cannot hit the bug where if userspace 
-negotiated X r2ts we have to use X r2ts we cannot round up.
+
+Hi All,
+
+     I ran a "bonnie++" on computer C, but have no idea what I am 
+looking at:
+
+#bonnie++
+
+Writing with putc()...done
+Writing intelligently...done
+Rewriting...done
+Reading with getc()...done
+Reading intelligently...done
+start 'em...done...done...done...
+Create files in sequential order...done.
+Stat files in sequential order...done.
+Delete files in sequential order...done.
+Create files in random order...done.
+Stat files in random order...done.
+Delete files in random order...done.
+Version  1.03       ------Sequential Output------ --Sequential Input- 
+--Random-
+                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
+--Seeks--
+Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
+/sec %CP
+rn1.foo. 4G 32240  68 40951   9 24177   5 46265  86 71005   9 179.5   0
+                     ------Sequential Create------ --------Random 
+Create--------
+                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
+-Delete--
+               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
+/sec %CP
+                  16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ 
++++++ +++
+rn1.rent-a-nerd.local,4G,32240,68,40951,9,24177,5,46265,86,71005,9,179.5,0,16,++
++++,+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++
