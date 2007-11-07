@@ -1,29 +1,38 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] gdth: scp timeout clean up (try #2)
-Date: Wed, 7 Nov 2007 17:35:40 +0000
-Message-ID: <20071107173540.GC25560@infradead.org>
-References: <20071106065439.GA30397@us.ibm.com> <47301DA7.8000202@panasas.com> <20071106223453.GA5668@us.ibm.com>
+Subject: Re: PATCH [2/8] scsi: megaraid_sas - add module param fast_load
+Date: Wed, 7 Nov 2007 17:39:39 +0000
+Message-ID: <20071107173939.GD25560@infradead.org>
+References: <20071030173645.GA16455@infradead.org> <9738BCBE884FDB42801FAD8A7769C26501CA1BB0@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:53856 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:53905 "EHLO
 	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753323AbXKGRfl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 12:35:41 -0500
+	with ESMTP id S1754318AbXKGRjm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 12:39:42 -0500
 Content-Disposition: inline
-In-Reply-To: <20071106223453.GA5668@us.ibm.com>
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501CA1BB0@NAMAIL1.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi@vger.kernel.org, Achim_Leubner@adaptec.com, jens.axboe@oracle.com
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org
 
-On Tue, Nov 06, 2007 at 02:34:53PM -0800, malahal@us.ibm.com wrote:
-> gdth driver is modified NOT to use scp->eh_timeout. Now, it has
-> eh_timed_out (gdth_timed_out) to handle command timeouts for locked
-> I/O's. Have not tested as I don't have needed hardware! Patch is
-> against 2.6.23-mm1.
+On Tue, Nov 06, 2007 at 12:04:31PM -0700, Yang, Bo wrote:
+> I see that scsi_scan_host_selected is in scsi_priv.h and currently is
+> not used by any other driver. The scsi_priv.h is not part of the include
+> dir (/include/scsi). One of the major Linux distro's don't even include
+> this file in /usr/src/kernels. Also it looks like at this time this
+> function may not be available (not exported?) for driver modules to use.
+> Even if I include scsi_priv.h I get "unknown symbol" for this function
+> while loading.
 
-Looks good to me except for some tiny whitespace damage in the
-host template.
+Yes, it would have to be exported and moved to a public header.
 
-It would be really useful if we could get some gdth devices for testing..
+> May be in the long run we can solve all these issues to call
+> scsi_scan_host_selected. However, the current implementation works fine
+> and has been tested by LSI and others. This implementation doesn't break
+> any protocol nor does it adversely affect any driver functionality.
 
+Your implementation adds state to scanning that could easily break and
+makes the driver complex for things that don't belong into a driver,
+so there's a clear NACK for this from me.
