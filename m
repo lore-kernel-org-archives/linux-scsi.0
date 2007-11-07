@@ -1,73 +1,56 @@
-From: Erez Zilber <erezz@Voltaire.COM>
-Subject: Re: usage of max_sectors in scsi_host_template
-Date: Wed, 07 Nov 2007 16:46:57 +0200
-Message-ID: <4731CFE1.1070904@Voltaire.COM>
-References: <47304E70.9090005@Voltaire.COM> <4730B359.8020806@s5r6.in-berlin.de>
+From: James Pearson <james-p@moving-picture.com>
+Subject: LTO-3 read performance issues
+Date: Wed, 07 Nov 2007 15:18:05 +0000
+Message-ID: <4731D72D.5000404@moving-picture.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fwil.voltaire.com ([193.47.165.2]:19868 "EHLO exil.voltaire.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753376AbXKGOq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 7 Nov 2007 09:46:59 -0500
-In-Reply-To: <4730B359.8020806@s5r6.in-berlin.de>
+Received: from mpc-26.sohonet.co.uk ([193.203.82.251]:57580 "EHLO
+	moving-picture.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753934AbXKGPuW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 10:50:22 -0500
+Received: from minion.mpc.local ([172.16.11.112] helo=moving-picture.com)
+	by moving-picture.com with esmtp (Exim 4.43)
+	id 1IpmfN-0005zD-NM
+	for linux-scsi@vger.kernel.org; Wed, 07 Nov 2007 15:18:05 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: linux-scsi@vger.kernel.org
 
-Stefan Richter wrote:
->
-> Erez Zilber wrote:
-> > I'm not sure that I understand the meaning of max_sectors in
-> > scsi_host_template.
->
-> Did you have a look at scsi_mid_low_api.txt?
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=Documentation/scsi/scsi_mid_low_api.txt;h=6f70f2b9327e1f0db7bc05bdbf2d6ce3b2fcbdcf#l1232
->
+I have two LTO-3 (QUANTUM ULTRIUM 3) drives attached to a dual Adaptec 
+U160 controller (one per SCSI host) on a Dell PE2850 running a RHEL4 
+based kernel (2.6.9 based).
 
-I will go over it. Thanks for the link.
+I'm trying to read (with tar) LTO-3 tapes written on another system 
+(possibly an SGI IRIX box), but I'm getting extremely variable read 
+rates - from a few Kb/s to tens of Mb/s - while reading the same tape
 
-> > Is it the maximum data length of a single SCSI command?
->
-> Yes.
->
-> > Is it in bytes?
->
-> No, it is in units of 512 bytes.
->
-> > What's the size of a sector?
->
-> "Usually" 512 bytes according to above doc.  Always 512 bytes from the
-> point of view of block/ll_rw_blk.c::blk_queue_max_sectors().
-> http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=blob;f=block/ll_rw_blk.c;h=75c98d58f4ddf7252e2717e0924b9d6a8925b4e5#l590
->
+After a bit of trial and error, it looks like the tapes have been 
+written in variable block mode with a block size of 16Kb
 
-So, ll_rw_blk actually uses the max_sectors value to chop requests 
-larger than max_sectors. Am I right? If yes, I have a problem:
+To list the tapes, I need to set the block size to 0 (mt setblk 0) and run:
 
-I'm running sgp_dd (on RHAS 4 up4 - kernel version is 2.6.9), so it 
-calls scsi-ml directly (without going through ll_rw_blk). I ran it with 
-the following parameters:
+tar tvfb $TAPE 32
 
-sgp_dd bs=512 of=/dev/null if=/dev/sg1 bpt=2048 thr=4 time=1 count=100k 
-deb=9
+Running strace on the tar process shows that it does a number of 
+read()'s then 'sticks' on a read() for a number of seconds, and then 
+does a burst of read()'s - the number of reads it does in these bursts 
+and the time if waits on a particular read vary.
 
-I see that a single 1MB command is generated. Here's the debug info from 
-sgp_dd:
+My guess this is something to do the drive having to repositioning the 
+tape between reads and breaking the tape streaming ...
 
-sgp_dd: if=/dev/sg1 skip=0 of=/dev/null seek=0 count=102400
-Start of loop, count=102400, in_num_sect=0, out_num_sect=0
-Starting worker thread k=0
-sg_start_io: SCSI READ, blk=0 num_blks=2048
-Read (10) [28 00 00 00 00 00 00 08 00 00 ]
-dir=-3, len=1048576, dxfrp=0x2a9558a000, cmd_len=10
+I get the same issue on both drives with different tapes from the same 
+source.
 
-Now, the low-level driver below scsi-ml is open-iscsi over iSER. 
-max_sectors is set to 1024 (i.e. 512 kB). Still, the iSER driver 
-receives a 1MB command. I guess that the max_sectors value is never 
-used. Am I right?
+I am using the default st module options and not doing anything other 
+than using 'mt setblk 0'.
 
-Thanks,
-Erez
+Is there anything I can do to get a decent, sustained read rate from 
+these tapes?
+
+Thanks
+
+James Pearson
+
