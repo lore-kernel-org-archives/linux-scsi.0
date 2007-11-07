@@ -1,55 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] Add Documentation/DocBook/scsi_midlayer.tmpl and
-	update kerneldoc comments and Makefile.
-Date: Tue, 06 Nov 2007 22:47:20 -0800
-Message-ID: <1194418040.3545.31.camel@localhost.localdomain>
-References: <200710262318.01021.rob@landley.net>
-	 <200710290512.11549.rob@landley.net>
-	 <1194056920.3407.97.camel@localhost.localdomain>
-	 <200711031330.39906.rob@landley.net>
-	 <20071104100252.c3e08c71.rdunlap@xenotime.net>
+From: "Robert P. J. Day" <rpjday@crashcourse.ca>
+Subject: Re: [PATCH] SCSI: Use is_power_of_2() macro for simplicity.
+Date: Wed, 7 Nov 2007 04:49:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.64.0711070447280.25961@localhost.localdomain>
+References: <Pine.LNX.4.64.0711061019450.9041@localhost.localdomain>
+ <20071106153012.GG4113@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:56356 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755707AbXKGGrY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 01:47:24 -0500
-In-Reply-To: <20071104100252.c3e08c71.rdunlap@xenotime.net>
+Received: from astoria.ccjclearline.com ([64.235.106.9]:56932 "EHLO
+	astoria.ccjclearline.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752357AbXKGJv0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 04:51:26 -0500
+In-Reply-To: <20071106153012.GG4113@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <rdunlap@xenotime.net>
-Cc: Rob Landley <rob@landley.net>, linux-scsi@vger.kernel.org, "Stephen M.Cameron" <steve.cameron@hp.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Sun, 2007-11-04 at 10:02 -0800, Randy Dunlap wrote:
-> On Sat, 3 Nov 2007 13:30:39 -0500 Rob Landley wrote:
-> 
-> > From: Rob Landley <rob@landley.net>
-> > 
-> > Add Documentation/DocBook/scsi_midlayer.tmpl, add to Makefile, and update
-> > lots of kerneldoc comments in drivers/scsi/*.
-> > 
-> > Updated with comments from Stefan Richter, Stephen M. Cameron,
-> >  James Bottomley and Randy Dunlap.
-> > 
-> > Signed-off-by: Rob Landley <rob@landley.net>
-> > ---
-> > 
-> >  Documentation/DocBook/Makefile           |    2 
-> >  Documentation/DocBook/scsi_midlayer.tmpl |  409 +++++++++++++++++++++
-> 
-> 
-> My only concern with this ATM is its name (SCSI midlayer), but
-> chapter 2 is SCSI upper layer, chap 3 is SCSI midlayer, and
-> chap 4 is SCSI low-level interfaces.
-> 
-> Chapters 2 & 4 are mostly stubs or todo list, which is OK, but if
-> those chapters remain in this docbook, it looks like the docbook
-> name should be changed (maybe later).
+On Tue, 6 Nov 2007, Matthew Wilcox wrote:
 
-How about just scsi.tmpl then?
+> On Tue, Nov 06, 2007 at 10:20:46AM -0500, Robert P. J. Day wrote:
+> > @@ -1656,7 +1657,7 @@ static inline int reconnect_target(struct NCR_ESP *esp, struct ESP_regs *eregs)
+> >  	if(!(it & me))
+> >  		return -1;
+> >  	it &= ~me;
+> > -	if(it & (it - 1))
+> > +	if(!is_power_of_2(it))
+> >  		return -1;
+>
+> Non-equivalent transform.  Probably a bug.
+>
+> >  		bits &= ~esp->scsi_id_mask;
+> > -		if (!bits || (bits & (bits - 1)))
+> > +		if (!is_power_of_2(bits))
+> >  			goto do_reset;
+>
+> Non-equivalent transform.  Definitely a bug.
+>
+> >  		iscsi_set_param(cls_conn, param, buf, buflen);
+> > -		if (session->max_r2t & (session->max_r2t - 1))
+> > +		if (!is_power_of_2(session->max_r2t))
+> >  			session->max_r2t = roundup_pow_of_two(session->max_r2t);
+>
+> Non-equivalent transform.  Not sure if it's a bug or not.
+>
+> >
+> > -	if (cmds_max < 2 || (cmds_max & (cmds_max - 1)) ||
+> > +	if (cmds_max < 2 || !is_power_of_2(cmds_max) ||
+> >  	    cmds_max >= ISCSI_MGMT_ITT_OFFSET) {
+>
+> This one's OK.
 
-James
+so, of the above, which can safely be rewritten using
+"[!]is_power_of_2"?  and, for now, let's leave out the ones that would
+semantically make more sense to be testing for single-bitness -- i'll
+try to sneak in a macro like that in the next merge window.
 
+rday
 
+-- 
+========================================================================
+Robert P. J. Day
+Linux Consulting, Training and Annoying Kernel Pedantry
+Waterloo, Ontario, CANADA
+
+http://crashcourse.ca
+========================================================================
