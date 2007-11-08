@@ -1,34 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] [SCSI] sym53c8xx: fix setflag user command to control disconnects
-Date: Thu, 8 Nov 2007 18:14:21 +0000
-Message-ID: <20071108181421.GB7824@infradead.org>
-References: <4732221B.1000104@cybernetics.com> <1194544034.4018.6.camel@localhost.localdomain> <47335135.6010103@cybernetics.com>
+From: Rob Landley <rob@landley.net>
+Subject: Re: [PATCH] Add Documentation/DocBook/scsi_midlayer.tmpl and update kerneldoc comments and Makefile.
+Date: Thu, 8 Nov 2007 14:19:41 -0600
+Message-ID: <200711081419.41759.rob@landley.net>
+References: <200710262318.01021.rob@landley.net> <20071104100252.c3e08c71.rdunlap@xenotime.net> <1194418040.3545.31.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46499 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762328AbXKHSO0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2007 13:14:26 -0500
+Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:55157
+	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1761980AbXKHUUS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2007 15:20:18 -0500
+In-Reply-To: <1194418040.3545.31.camel@localhost.localdomain>
 Content-Disposition: inline
-In-Reply-To: <47335135.6010103@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Randy Dunlap <rdunlap@xenotime.net>, linux-scsi@vger.kernel.org, "Stephen M.Cameron" <steve.cameron@hp.com>, Stefan Richter <stefanr@s5r6.in-berlin.de>
 
-On Thu, Nov 08, 2007 at 01:11:01PM -0500, Tony Battersby wrote:
-> HBA is inside an embedded device sold by my company, and customers can
-> attach their own SCSI devices to it.  There is one type of SCSI device
-> that we support which doesn't work with disconnect privilege enabled, so
-> my code running in the embedded device needs to be able to
-> enable/disable disconnect privilege dynamically based on whether or not
-> the customer has attached this specific broken device.
-> 
-> It would be nice to have a generic way to control it.  That would save
-> me the bother of sending my patch to control disconnect privilege for
-> LSI MPT Fusion Ultra320 HBAs via mptctl.  ;-)
+On Wednesday 07 November 2007 00:47:20 James Bottomley wrote:
+> On Sun, 2007-11-04 at 10:02 -0800, Randy Dunlap wrote:
+> > My only concern with this ATM is its name (SCSI midlayer), but
+> > chapter 2 is SCSI upper layer, chap 3 is SCSI midlayer, and
+> > chap 4 is SCSI low-level interfaces.
+> >
+> > Chapters 2 & 4 are mostly stubs or todo list, which is OK, but if
+> > those chapters remain in this docbook, it looks like the docbook
+> > name should be changed (maybe later).
+>
+> How about just scsi.tmpl then?
 
-Yes, the embedded space is a good enough reason to implement it in the
-SPI transport class.  And I think we should take that as an opportunity
-to kill the sym2 /proc support or at least the write support.
+I have no attachment to a specific name.  Call it what you like. :)
+
+Rob
+-- 
+"One of my most productive days was throwing away 1000 lines of code."
+  - Ken Thompson.
