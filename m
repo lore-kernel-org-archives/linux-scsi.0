@@ -1,74 +1,56 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 1/3] scsi_tgt_lib: Use scsi_init_io instead of
- scsi_alloc_sgtable
-Date: Thu, 8 Nov 2007 23:20:33 +0900
-Message-ID: <20071108232245C.tomof@acm.org>
-References: <4732C9B8.6050204@panasas.com>
-	<20071108220325R.tomof@acm.org>
-	<473316D1.2020603@panasas.com>
+From: James Pearson <james-p@moving-picture.com>
+Subject: Re: LTO-3 read performance issues
+Date: Thu, 08 Nov 2007 15:10:07 +0000
+Message-ID: <473326CF.8060102@moving-picture.com>
+References: <4731D72D.5000404@moving-picture.com> <alpine.LSU.0.9999.0711072022370.7663@kai.makisara.local>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:53311 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757866AbXKHOVX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Nov 2007 09:21:23 -0500
-In-Reply-To: <473316D1.2020603@panasas.com>
+Received: from mpc-26.sohonet.co.uk ([193.203.82.251]:37115 "EHLO
+	moving-picture.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752087AbXKHPKJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2007 10:10:09 -0500
+In-Reply-To: <alpine.LSU.0.9999.0711072022370.7663@kai.makisara.local>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: tomof@acm.org, James.Bottomley@SteelEye.com, bhalevy@panasas.com, fujita.tomonori@lab.ntt.co.jp, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, pw@osc.edu
+To: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 08 Nov 2007 16:01:53 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+Kai Makisara wrote:
+>>
+>>I am using the default st module options and not doing anything other than
+>>using 'mt setblk 0'.
+>>
+>>Is there anything I can do to get a decent, sustained read rate from these
+>>tapes?
+>>
+> 
+> If your system can process the data fast enough and the tape blocks are of 
+> the same size, you can try using fixed block mode and buffered transfers. 
+> This allows the driver to use larger SCSI reads. You have to load the st 
+> module with parameter buffer_kbs=xxx, where xxx is, for instance, 1024 (1 
+> MB buffer). You also have to disable direct i/o with the module parameter
+> try_direct_io=0 (otherwise buffered transfers are disabled).
 
-> On Thu, Nov 08 2007 at 15:04 +0200, FUJITA Tomonori <tomof@acm.org> wrote:
-> > On Thu, 08 Nov 2007 10:32:56 +0200
-> > Benny Halevy <bhalevy@panasas.com> wrote:
-> > 
-> >> On Nov. 08, 2007, 5:13 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> >>> On Tue, 06 Nov 2007 20:16:19 +0200
-> >>> Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >>>
-> >>>>   - If we export scsi_init_io()/scsi_release_buffers() instead of
-> >>>>     scsi_{alloc,free}_sgtable() from scsi_lib than tgt code is
-> >>>>     much more insulated from scsi_lib changes. As a bonus it will
-> >>>>     also gain bidi capability when it comes.
-> >>>>
-> >>>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> >>> Looks good for me except for this:
-> >>>
-> >>> ./scripts/checkpatch.pl ~/Mail/kernel/scsi/28814
-> >>> ERROR: use tabs not spaces
-> >>> #101: FILE: drivers/scsi/scsi_lib.c:741:
-> >>> +                                              gfp_t gfp_mask)$
-> >> Come on Tomo, tabs should be used for nesting, not for decoration.
-> >> This way no matter what's your tab expansion setup is the
-> >> code will look correct and will make sense.  The number of space
-> > 
-> > I've never heard about that rule. I use tabs and minimum spaces for
-> > decoration.
-> > 
-> > But it's just about the style. The patch is fine by me if you like to
-> > use only spaces there.
-> > 
-> > Thanks,
-> Thanks Tomo, I'm resending with the way you like it. You are
-> the maintainer and you should be comfortable with the code.
+Thanks, I tried that, but it makes no difference. I also tried 
+increasing the buffer_kbs size by doubling it a few times, but that made 
+no difference either
 
-Actually, checkpatch complains about scsi_lib part. You don't need my
-ACK on that part.
+I have now found out that the tapes were written on an SGI system - 
+using a fixed block device and the default options to tar. However, I 
+have to either use 'mt setblk 0' or 'mt setblk 16384' to read anything 
+from these tapes.
+
+Just to check that nothing is wrong with my system, I can read an LTO-3 
+tape previously written on my system, using the default options to tar 
+and the st module - and I get over 40Mb/s on reads, compared with about 
+400Kb/s I'm getting with these problematic tapes ...
+
+Is there anything else I can do to read these tapes at a decent speed?
+
+Thanks
+
+James Pearson
 
 
-> I do need your Signed-off-by on this. Since you are the maintainer.
-> Do you want that we push this through James, or through your tree?
-
-Acked-by instead of Signed-off-by, I guess.
-
-ACK on target mode portion. You can directly send it to James.
-
-Oh, one more trivial stuff. Can you use 'tgt: hoge' subject? We
-usually use that style for target mode though it doesn't matter much.
-
-Thanks,
