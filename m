@@ -1,71 +1,207 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/4] sr/sd: Remove dead code
-Date: Thu, 08 Nov 2007 18:56:13 +0200
-Message-ID: <47333FAD.2030503@panasas.com>
+Subject: [PATCH 2/4] tgt: Use scsi_init_io instead of scsi_alloc_sgtable
+Date: Thu, 08 Nov 2007 18:57:46 +0200
+Message-ID: <4733400A.6050503@panasas.com>
 References: <4730ACAA.2060007@panasas.com> <47333E2A.7020307@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa15.bezeqint.net ([192.115.104.30]:42338 "EHLO
-	sa15.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755715AbXKHQ4T (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2007 11:56:19 -0500
+Received: from sa3.bezeqint.net ([192.115.104.17]:51908 "EHLO sa3.bezeqint.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759389AbXKHQ56 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 8 Nov 2007 11:57:58 -0500
 In-Reply-To: <47333E2A.7020307@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 Cc: Pete Wyckoff <pw@osc.edu>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@osdl.org>
 
 
-  if (rq_data_dir() == WRITE) else if() else chain had an extra
-  "else" since the if() is on a value of 1 bit.
-
-  Also with a bidi request, rq_data_dir() == WRITE
-  and blk_bidi_rq() == true.
+  - If we export scsi_init_io()/scsi_release_buffers() instead of
+    scsi_{alloc,free}_sgtable() from scsi_lib than tgt code is
+    much more insulated from scsi_lib changes. As a bonus it will
+    also gain bidi capability when it comes.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/sd.c |    5 +----
- drivers/scsi/sr.c |    5 +----
- 2 files changed, 2 insertions(+), 8 deletions(-)
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 18343a6..f1ec2bd 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -445,12 +445,9 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 		}
- 		SCpnt->cmnd[0] = WRITE_6;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
--	} else if (rq_data_dir(rq) == READ) {
-+	} else {
- 		SCpnt->cmnd[0] = READ_6;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
--		goto out;
+---
+ drivers/scsi/scsi_lib.c     |   21 ++++++++++-----------
+ drivers/scsi/scsi_tgt_lib.c |   34 +++++-----------------------------
+ include/scsi/scsi_cmnd.h    |    4 ++--
+ 3 files changed, 17 insertions(+), 42 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0e81e4c..6d8ea69 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -737,7 +737,8 @@ static inline unsigned int scsi_sgtable_index(unsigned short nents)
+ 	return index;
+ }
+ 
+-struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++static struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd,
++								gfp_t gfp_mask)
+ {
+ 	struct scsi_host_sg_pool *sgp;
+ 	struct scatterlist *sgl, *prev, *ret;
+@@ -823,9 +824,7 @@ enomem:
+ 	return NULL;
+ }
+ 
+-EXPORT_SYMBOL(scsi_alloc_sgtable);
+-
+-void scsi_free_sgtable(struct scsi_cmnd *cmd)
++static void scsi_free_sgtable(struct scsi_cmnd *cmd)
+ {
+ 	struct scatterlist *sgl = cmd->request_buffer;
+ 	struct scsi_host_sg_pool *sgp;
+@@ -871,8 +870,6 @@ void scsi_free_sgtable(struct scsi_cmnd *cmd)
+ 	mempool_free(sgl, sgp->pool);
+ }
+ 
+-EXPORT_SYMBOL(scsi_free_sgtable);
+-
+ /*
+  * Function:    scsi_release_buffers()
+  *
+@@ -890,7 +887,7 @@ EXPORT_SYMBOL(scsi_free_sgtable);
+  *		the scatter-gather table, and potentially any bounce
+  *		buffers.
+  */
+-static void scsi_release_buffers(struct scsi_cmnd *cmd)
++void scsi_release_buffers(struct scsi_cmnd *cmd)
+ {
+ 	if (cmd->use_sg)
+ 		scsi_free_sgtable(cmd);
+@@ -902,6 +899,7 @@ static void scsi_release_buffers(struct scsi_cmnd *cmd)
+ 	cmd->request_buffer = NULL;
+ 	cmd->request_bufflen = 0;
+ }
++EXPORT_SYMBOL(scsi_release_buffers);
+ 
+ /*
+  * Function:    scsi_io_completion()
+@@ -1104,7 +1102,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+  *		BLKPREP_DEFER if the failure is retryable
+  *		BLKPREP_KILL if the failure is fatal
+  */
+-static int scsi_init_io(struct scsi_cmnd *cmd)
++int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ {
+ 	struct request     *req = cmd->request;
+ 	int		   count;
+@@ -1119,7 +1117,7 @@ static int scsi_init_io(struct scsi_cmnd *cmd)
+ 	/*
+ 	 * If sg table allocation fails, requeue request later.
+ 	 */
+-	cmd->request_buffer = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
++	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
+ 	if (unlikely(!cmd->request_buffer)) {
+ 		scsi_unprep_request(req);
+ 		return BLKPREP_DEFER;
+@@ -1148,6 +1146,7 @@ static int scsi_init_io(struct scsi_cmnd *cmd)
+ 
+ 	return BLKPREP_KILL;
+ }
++EXPORT_SYMBOL(scsi_init_io);
+ 
+ static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
+ 		struct request *req)
+@@ -1193,7 +1192,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+ 
+ 		BUG_ON(!req->nr_phys_segments);
+ 
+-		ret = scsi_init_io(cmd);
++		ret = scsi_init_io(cmd, GFP_ATOMIC);
+ 		if (unlikely(ret))
+ 			return ret;
+ 	} else {
+@@ -1244,7 +1243,7 @@ int scsi_setup_fs_cmnd(struct scsi_device *sdev, struct request *req)
+ 	if (unlikely(!cmd))
+ 		return BLKPREP_DEFER;
+ 
+-	return scsi_init_io(cmd);
++	return scsi_init_io(cmd, GFP_ATOMIC);
+ }
+ EXPORT_SYMBOL(scsi_setup_fs_cmnd);
+ 
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index deea3cd..5fd5fca 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -331,8 +331,7 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
+ 
+ 	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
+ 
+-	if (scsi_sglist(cmd))
+-		scsi_free_sgtable(cmd);
++	scsi_release_buffers(cmd);
+ 
+ 	queue_work(scsi_tgtd, &tcmd->work);
+ }
+@@ -353,31 +352,6 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
+ 	return 0;
+ }
+ 
+-static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+-{
+-	struct request *rq = cmd->request;
+-	int count;
+-
+-	cmd->use_sg = rq->nr_phys_segments;
+-	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
+-	if (!cmd->request_buffer)
+-		return -ENOMEM;
+-
+-	cmd->request_bufflen = rq->data_len;
+-
+-	dprintk("cmd %p cnt %d %lu\n", cmd, scsi_sg_count(cmd),
+-		rq_data_dir(rq));
+-	count = blk_rq_map_sg(rq->q, rq, scsi_sglist(cmd));
+-	if (likely(count <= scsi_sg_count(cmd))) {
+-		cmd->use_sg = count;
+-		return 0;
+-	}
+-
+-	eprintk("cmd %p cnt %d\n", cmd, scsi_sg_count(cmd));
+-	scsi_free_sgtable(cmd);
+-	return -EINVAL;
+-}
+-
+ /* TODO: test this crap and replace bio_map_user with new interface maybe */
+ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
+ 			       unsigned long uaddr, unsigned int len, int rw)
+@@ -403,9 +377,11 @@ static int scsi_map_user_pages(struct scsi_tgt_cmd *tcmd, struct scsi_cmnd *cmd,
  	}
  
- 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 7702681..a72ae85 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -365,12 +365,9 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
- 		SCpnt->cmnd[0] = WRITE_10;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
-  	 	cd->cdi.media_written = 1;
--	} else if (rq_data_dir(rq) == READ) {
-+	} else {
- 		SCpnt->cmnd[0] = READ_10;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		blk_dump_rq_flags(rq, "Unknown sr command");
--		goto out;
- 	}
+ 	tcmd->bio = rq->bio;
+-	err = scsi_tgt_init_cmd(cmd, GFP_KERNEL);
+-	if (err)
++	err = scsi_init_io(cmd, GFP_KERNEL);
++	if (err) {
++		scsi_release_buffers(cmd);
+ 		goto unmap_rq;
++	}
  
- 	{
+ 	return 0;
+ 
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 3f47e52..a7be605 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -128,8 +128,8 @@ extern void *scsi_kmap_atomic_sg(struct scatterlist *sg, int sg_count,
+ 				 size_t *offset, size_t *len);
+ extern void scsi_kunmap_atomic_sg(void *virt);
+ 
+-extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
+-extern void scsi_free_sgtable(struct scsi_cmnd *);
++extern int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask);
++extern void scsi_release_buffers(struct scsi_cmnd *cmd);
+ 
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
 -- 
 1.5.3.1
 
