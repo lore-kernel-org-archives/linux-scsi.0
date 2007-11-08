@@ -1,376 +1,273 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 4/4] SCSI: bidi support
-Date: Thu, 08 Nov 2007 19:03:18 +0200
-Message-ID: <47334156.8050105@panasas.com>
-References: <4730ACAA.2060007@panasas.com> <47333E2A.7020307@panasas.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 1/1] aacraid: don't assign cpu_to_le32(int) to u8
+Date: Thu, 8 Nov 2007 17:27:47 +0000
+Message-ID: <20071108172747.GA4054@infradead.org>
+References: <jefxzqqeha.fsf@sykes.suse.de> <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com> <20071107173307.GB25560@infradead.org> <AE4F746F2AECFC4DA4AADD66A1DFEF01F95F54@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa8.bezeqint.net ([192.115.104.22]:43830 "EHLO sa8.bezeqint.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759078AbXKHRDZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Nov 2007 12:03:25 -0500
-In-Reply-To: <47333E2A.7020307@panasas.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:53331 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759437AbXKHR1z (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2007 12:27:55 -0500
+Content-Disposition: inline
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01F95F54@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Pete Wyckoff <pw@osc.edu>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@osdl.org>
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Andreas Schwab <schwab@suse.de>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+
+On Wed, Nov 07, 2007 at 01:51:44PM -0500, Salyzyn, Mark wrote:
+> Christoph Hellwig [mailto:hch@infradead.org] sez:
+> > Did anyone run the driver through sparse to see if we have 
+> > more issues like this?
+> 
+> There are some warnings from sparse, none like this one. I will deal
+> with the warnings ...
+
+Actually there are a lot of endianess warnings, fortunately most of them
+harmless.  The patch below fixes all of them up (including the ones in
+the patch I replied to), except for aac_init_adapter which is really odd
+and I don't know what to do.
 
 
-  At the block level bidi request uses req->next_rq pointer for a second
-  bidi_read request.
-  At Scsi-midlayer a second scsi_data_buffer structure is used for the
-  bidi_read part. This bidi scsi_data_buffer is put on
-  request->next_rq->special. Struct scsi_cmnd is not changed.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-  - Define scsi_bidi_cmnd() to return true if it is a bidi request and a
-    second sgtable was allocated.
-
-  - Define scsi_in()/scsi_out() to return the in or out scsi_data_buffer
-    from this command This API is to isolate users from the mechanics of
-    bidi.
-
-  - Define scsi_end_bidi_request() to do what scsi_end_request() does but
-    for a bidi request. This is necessary because bidi commands are a bit
-    tricky here. (See comments in body)
-
-  - scsi_release_buffers() will also release the bidi_read scsi_data_buffer
-
-  - scsi_io_completion() on bidi commands will now call
-    scsi_end_bidi_request() and return.
-
-  - The previous work done in scsi_init_io() is now done in a new
-    scsi_init_sgtable() (which is 99% identical to old scsi_init_io())
-    The new scsi_init_io() will call the above twice if needed also for
-    the bidi_read command. Only at this point is a command bidi.
-
-  - In scsi_error.c at scsi_eh_prep/restore_cmnd() make sure bidi-lld is not
-    confused by a get-sense command that looks like bidi. This is done
-    by puting NULL at request->next_rq, and restoring.
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/scsi_error.c |    3 +
- drivers/scsi/scsi_lib.c   |  154 ++++++++++++++++++++++++++++++++++++---------
- include/scsi/scsi_cmnd.h  |   23 +++++++-
- include/scsi/scsi_eh.h    |    1 +
- 4 files changed, 149 insertions(+), 32 deletions(-)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 9daa983..13b6802 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -618,9 +618,11 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
- 	memcpy(ses->cmnd, scmd->cmnd, sizeof(scmd->cmnd));
- 	ses->data_direction = scmd->sc_data_direction;
- 	ses->sdb = scmd->sdb;
-+	ses->next_rq = scmd->request->next_rq;
- 	ses->result = scmd->result;
+Index: linux-2.6/drivers/scsi/aacraid/aachba.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/aachba.c	2007-11-08 17:09:50.000000000 +0100
++++ linux-2.6/drivers/scsi/aacraid/aachba.c	2007-11-08 17:14:43.000000000 +0100
+@@ -981,7 +981,7 @@
+ 	aac_fib_init(fib);
+ 	readcmd = (struct aac_read *) fib_data(fib);
+ 	readcmd->command = cpu_to_le32(VM_CtBlockRead);
+-	readcmd->cid = cpu_to_le16(scmd_id(cmd));
++	readcmd->cid = cpu_to_le32(scmd_id(cmd));
+ 	readcmd->block = cpu_to_le32((u32)(lba&0xffffffff));
+ 	readcmd->count = cpu_to_le32(count * 512);
  
- 	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
-+	scmd->request->next_rq = NULL;
- 
- 	if (sense_bytes) {
- 		scmd->sdb.length = min_t(unsigned,
-@@ -673,6 +675,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
- 	memcpy(scmd->cmnd, ses->cmnd, sizeof(scmd->cmnd));
- 	scmd->sc_data_direction = ses->data_direction;
- 	scmd->sdb = ses->sdb;
-+	scmd->request->next_rq = ses->next_rq;
- 	scmd->result = ses->result;
- }
- EXPORT_SYMBOL(scsi_eh_restore_cmnd);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index edfd8d8..1ed6c6b 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -64,6 +64,8 @@ static struct scsi_host_sg_pool scsi_sg_pools[] = {
- };
- #undef SP
- 
-+static struct kmem_cache *scsi_bidi_sdb_cache;
-+
- static void scsi_run_queue(struct request_queue *q);
- 
- /*
-@@ -625,6 +627,28 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
- 		scsi_run_queue(sdev->request_queue);
- }
- 
-+static void scsi_finalize_request(struct scsi_cmnd *cmd, int uptodate)
-+{
-+	struct request_queue *q = cmd->device->request_queue;
-+	struct request *req = cmd->request;
-+	unsigned long flags;
-+
-+	add_disk_randomness(req->rq_disk);
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	if (blk_rq_tagged(req))
-+		blk_queue_end_tag(q, req);
-+
-+	end_that_request_last(req, uptodate);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	/*
-+	 * This will goose the queue request function at the end, so we don't
-+	 * need to worry about launching another command.
-+	 */
-+	scsi_next_command(cmd);
-+}
-+
- /*
-  * Function:    scsi_end_request()
-  *
-@@ -652,7 +676,6 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int uptodate,
- {
- 	struct request_queue *q = cmd->device->request_queue;
- 	struct request *req = cmd->request;
--	unsigned long flags;
- 
- 	/*
- 	 * If there are blocks left over at the end, set up the command
-@@ -681,19 +704,7 @@ static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int uptodate,
+@@ -1072,7 +1072,7 @@
+ 	aac_fib_init(fib);
+ 	writecmd = (struct aac_write *) fib_data(fib);
+ 	writecmd->command = cpu_to_le32(VM_CtBlockWrite);
+-	writecmd->cid = cpu_to_le16(scmd_id(cmd));
++	writecmd->cid = cpu_to_le32(scmd_id(cmd));
+ 	writecmd->block = cpu_to_le32((u32)(lba&0xffffffff));
+ 	writecmd->count = cpu_to_le32(count * 512);
+ 	writecmd->sg.count = cpu_to_le32(1);
+@@ -1306,8 +1306,8 @@
+ 			  dev->supplement_adapter_info.VpdInfo.Tsid);
  		}
- 	}
+ 		if (!aac_check_reset ||
+-		  (dev->supplement_adapter_info.SupportedOptions2 &
+-		  le32_to_cpu(AAC_OPTION_IGNORE_RESET))) {
++		    (dev->supplement_adapter_info.SupportedOptions2 &
++		     cpu_to_le32(AAC_OPTION_IGNORE_RESET))) {
+ 			printk(KERN_INFO "%s%d: Reset Adapter Ignored\n",
+ 			  dev->name, dev->id);
+ 		}
+Index: linux-2.6/drivers/scsi/aacraid/commsup.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/commsup.c	2007-11-08 17:09:50.000000000 +0100
++++ linux-2.6/drivers/scsi/aacraid/commsup.c	2007-11-08 17:14:43.000000000 +0100
+@@ -796,13 +796,13 @@
+ 	 */
+ 	switch (le32_to_cpu(aifcmd->command)) {
+ 	case AifCmdDriverNotify:
+-		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
++		switch (le32_to_cpu(((__le32 *)aifcmd->data)[0])) {
+ 		/*
+ 		 *	Morph or Expand complete
+ 		 */
+ 		case AifDenMorphComplete:
+ 		case AifDenVolumeExtendComplete:
+-			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			container = le32_to_cpu(((__le32 *)aifcmd->data)[1]);
+ 			if (container >= dev->maximum_num_containers)
+ 				break;
  
--	add_disk_randomness(req->rq_disk);
--
--	spin_lock_irqsave(q->queue_lock, flags);
--	if (blk_rq_tagged(req))
--		blk_queue_end_tag(q, req);
--	end_that_request_last(req, uptodate);
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	/*
--	 * This will goose the queue request function at the end, so we don't
--	 * need to worry about launching another command.
--	 */
--	scsi_next_command(cmd);
-+	scsi_finalize_request(cmd, uptodate);
- 	return NULL;
- }
+@@ -835,25 +835,25 @@
+ 			if (container >= dev->maximum_num_containers)
+ 				break;
+ 			if ((dev->fsa_dev[container].config_waiting_on ==
+-			    le32_to_cpu(*(u32 *)aifcmd->data)) &&
++			    le32_to_cpu(*(__le32 *)aifcmd->data)) &&
+ 			 time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT))
+ 				dev->fsa_dev[container].config_waiting_on = 0;
+ 		} else for (container = 0;
+ 		    container < dev->maximum_num_containers; ++container) {
+ 			if ((dev->fsa_dev[container].config_waiting_on ==
+-			    le32_to_cpu(*(u32 *)aifcmd->data)) &&
++			    le32_to_cpu(*(__le32 *)aifcmd->data)) &&
+ 			 time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT))
+ 				dev->fsa_dev[container].config_waiting_on = 0;
+ 		}
+ 		break;
  
-@@ -892,10 +903,47 @@ void scsi_release_buffers(struct scsi_cmnd *cmd)
- 		scsi_free_sgtable(&cmd->sdb);
+ 	case AifCmdEventNotify:
+-		switch (le32_to_cpu(((u32 *)aifcmd->data)[0])) {
++		switch (le32_to_cpu(((__le32 *)aifcmd->data)[0])) {
+ 		/*
+ 		 *	Add an Array.
+ 		 */
+ 		case AifEnAddContainer:
+-			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			container = le32_to_cpu(((__le32 *)aifcmd->data)[1]);
+ 			if (container >= dev->maximum_num_containers)
+ 				break;
+ 			dev->fsa_dev[container].config_needed = ADD;
+@@ -866,7 +866,7 @@
+ 		 *	Delete an Array.
+ 		 */
+ 		case AifEnDeleteContainer:
+-			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			container = le32_to_cpu(((__le32 *)aifcmd->data)[1]);
+ 			if (container >= dev->maximum_num_containers)
+ 				break;
+ 			dev->fsa_dev[container].config_needed = DELETE;
+@@ -880,7 +880,7 @@
+ 		 * waiting on something else, setup to wait on a Config Change.
+ 		 */
+ 		case AifEnContainerChange:
+-			container = le32_to_cpu(((u32 *)aifcmd->data)[1]);
++			container = le32_to_cpu(((__le32 *)aifcmd->data)[1]);
+ 			if (container >= dev->maximum_num_containers)
+ 				break;
+ 			if (dev->fsa_dev[container].config_waiting_on &&
+@@ -905,13 +905,13 @@
+ 			if (container >= dev->maximum_num_containers)
+ 				break;
+ 			if ((dev->fsa_dev[container].config_waiting_on ==
+-			    le32_to_cpu(*(u32 *)aifcmd->data)) &&
++			    le32_to_cpu(*(__le32 *)aifcmd->data)) &&
+ 			 time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT))
+ 				dev->fsa_dev[container].config_waiting_on = 0;
+ 		} else for (container = 0;
+ 		    container < dev->maximum_num_containers; ++container) {
+ 			if ((dev->fsa_dev[container].config_waiting_on ==
+-			    le32_to_cpu(*(u32 *)aifcmd->data)) &&
++			    le32_to_cpu(*(__le32 *)aifcmd->data)) &&
+ 			 time_before(jiffies, dev->fsa_dev[container].config_waiting_stamp + AIF_SNIFF_TIMEOUT))
+ 				dev->fsa_dev[container].config_waiting_on = 0;
+ 		}
+@@ -926,9 +926,9 @@
+ 		 * wait for a container change.
+ 		 */
  
- 	memset(&cmd->sdb, 0, sizeof(cmd->sdb));
-+
-+	if (scsi_bidi_cmnd(cmd)) {
-+		struct scsi_data_buffer *bidi_sdb =
-+			cmd->request->next_rq->special;
-+		scsi_free_sgtable(bidi_sdb);
-+		kmem_cache_free(scsi_bidi_sdb_cache, bidi_sdb);
-+		cmd->request->next_rq->special = NULL;
-+	}
- }
- EXPORT_SYMBOL(scsi_release_buffers);
- 
- /*
-+ * Bidi commands Must be complete as a whole, both sides at once.
-+ * If part of the bytes were written and lld returned
-+ * scsi_in()->resid and/or scsi_out()->resid this information will be left
-+ * in req->data_len and req->next_rq->data_len. The upper-layer driver can
-+ * decide what to do with this information.
-+ */
-+void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-+{
-+	struct request *req = cmd->request;
-+
-+	end_that_request_chunk(req, 1, req->data_len);
-+	req->data_len = scsi_out(cmd)->resid;
-+
-+	end_that_request_chunk(req->next_rq, 1, req->next_rq->data_len);
-+	req->next_rq->data_len = scsi_in(cmd)->resid;
-+
-+	scsi_release_buffers(cmd);
-+
-+	/*
-+	 *FIXME: If ll_rw_blk.c is changed to also put_request(req->next_rq)
-+	 *       in end_that_request_last() then this WARN_ON must be removed.
-+	 *       for now, upper-driver must have registered an end_io.
-+	 */
-+	WARN_ON(!req->end_io);
-+
-+	scsi_finalize_request(cmd, 1);
-+}
-+
-+/*
-  * Function:    scsi_io_completion()
-  *
-  * Purpose:     Completion processing for block device I/O requests.
-@@ -956,9 +1004,15 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 				req->sense_len = len;
+-		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
+-		 && ((((u32 *)aifcmd->data)[6] == ((u32 *)aifcmd->data)[5])
+-		  || (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsSuccess)))) {
++		if (((__le32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero) &&
++		    (((__le32 *)aifcmd->data)[6] == ((__le32 *)aifcmd->data)[5] ||
++		     ((__le32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsSuccess))) {
+ 			for (container = 0;
+ 			    container < dev->maximum_num_containers;
+ 			    ++container) {
+@@ -943,9 +943,9 @@
+ 					jiffies;
  			}
  		}
-+		if (scsi_bidi_cmnd(cmd)) {
-+			/* will also release_buffers */
-+			scsi_end_bidi_request(cmd);
-+			return;
-+		}
- 		req->data_len = scsi_get_resid(cmd);
- 	}
+-		if ((((u32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero))
+-		 && (((u32 *)aifcmd->data)[6] == 0)
+-		 && (((u32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsRunning))) {
++		if (((__le32 *)aifcmd->data)[1] == cpu_to_le32(AifJobCtrZero) &&
++		    ((__le32 *)aifcmd->data)[6] == 0 &&
++		    ((__le32 *)aifcmd->data)[4] == cpu_to_le32(AifJobStsRunning)) {
+ 			for (container = 0;
+ 			    container < dev->maximum_num_containers;
+ 			    ++container) {
+@@ -1339,10 +1339,10 @@
+ 			aif = (struct aac_aifcmd *)hw_fib->data;
+ 			aif->command = cpu_to_le32(AifCmdEventNotify);
+ 		 	aif->seqnum = cpu_to_le32(0xFFFFFFFF);
+-		 	aif->data[0] = cpu_to_le32(AifEnExpEvent);
+-			aif->data[1] = cpu_to_le32(AifExeFirmwarePanic);
+-		 	aif->data[2] = cpu_to_le32(AifHighPriority);
+-			aif->data[3] = cpu_to_le32(BlinkLED);
++		 	aif->data[0] = AifEnExpEvent;
++			aif->data[1] = AifExeFirmwarePanic;
++		 	aif->data[2] = AifHighPriority;
++			aif->data[3] = BlinkLED;
  
-+	BUG_ON(blk_bidi_rq(req)); /* bidi not support for !blk_pc_request yet */
- 	scsi_release_buffers(cmd);
+ 			/*
+ 			 * Put the FIB onto the
+@@ -1373,8 +1373,8 @@
+ 	printk(KERN_ERR "%s: Host adapter BLINK LED 0x%x\n", aac->name, BlinkLED);
  
- 	/*
-@@ -1084,25 +1138,12 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	scsi_end_request(cmd, 0, this_count, !result);
- }
+ 	if (!aac_check_reset ||
+-		(aac->supplement_adapter_info.SupportedOptions2 &
+-			le32_to_cpu(AAC_OPTION_IGNORE_RESET)))
++	    (aac->supplement_adapter_info.SupportedOptions2 &
++	     cpu_to_le32(AAC_OPTION_IGNORE_RESET)))
+ 		goto out;
+ 	host = aac->scsi_host_ptr;
+ 	if (aac->thread->pid != current->pid)
+@@ -1655,11 +1655,11 @@
+ 				struct fib *fibptr;
  
--/*
-- * Function:    scsi_init_io()
-- *
-- * Purpose:     SCSI I/O initialize function.
-- *
-- * Arguments:   cmd   - Command descriptor we wish to initialize
-- *
-- * Returns:     0 on success
-- *		BLKPREP_DEFER if the failure is retryable
-- *		BLKPREP_KILL if the failure is fatal
-- */
--int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb,
-+								 gfp_t gfp_mask)
+ 				if ((fibptr = aac_fib_alloc(dev))) {
+-					u32 * info;
++					__le32 *info;
+ 
+ 					aac_fib_init(fibptr);
+ 
+-					info = (u32 *) fib_data(fibptr);
++					info = (__le32 *) fib_data(fibptr);
+ 					if (now.tv_usec > 500000)
+ 						++now.tv_sec;
+ 
+Index: linux-2.6/drivers/scsi/aacraid/dpcsup.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/dpcsup.c	2007-11-08 17:09:50.000000000 +0100
++++ linux-2.6/drivers/scsi/aacraid/dpcsup.c	2007-11-08 17:14:43.000000000 +0100
+@@ -229,11 +229,9 @@
+  *	all QE there are and wake up all the waiters before exiting.
+  */
+ 
+-unsigned int aac_intr_normal(struct aac_dev * dev, u32 Index)
++unsigned int aac_intr_normal(struct aac_dev * dev, u32 index)
  {
--	struct request     *req = cmd->request;
--	int		   count;
--	struct scsi_data_buffer *sdb = &cmd->sdb;
-+	int count;
- 
- 	if (scsi_alloc_sgtable(sdb, req->nr_phys_segments, gfp_mask)) {
--		scsi_unprep_request(req);
- 		return BLKPREP_DEFER;
- 	}
- 
-@@ -1126,9 +1167,52 @@ int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
- 	printk(KERN_ERR "counted %d, received %d\n", count, sdb->sg_count);
- 	printk(KERN_ERR "req nr_sec %lu, cur_nr_sec %u\n", req->nr_sectors,
- 			req->current_nr_sectors);
+-	u32 index = le32_to_cpu(Index);
 -
- 	return BLKPREP_KILL;
+-	dprintk((KERN_INFO "aac_intr_normal(%p,%x)\n", dev, Index));
++	dprintk((KERN_INFO "aac_intr_normal(%p,%x)\n", dev, index));
+ 	if ((index & 0x00000002L)) {
+ 		struct hw_fib * hw_fib;
+ 		struct fib * fib;
+@@ -301,7 +299,7 @@
+ 
+ 		if (hwfib->header.Command == cpu_to_le16(NuFileSystem))
+ 		{
+-			u32 *pstatus = (u32 *)hwfib->data;
++			__le32 *pstatus = (__le32 *)hwfib->data;
+ 			if (*pstatus & cpu_to_le32(0xffff0000))
+ 				*pstatus = cpu_to_le32(ST_OK);
+ 		}
+Index: linux-2.6/drivers/scsi/aacraid/linit.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/linit.c	2007-11-08 17:09:50.000000000 +0100
++++ linux-2.6/drivers/scsi/aacraid/linit.c	2007-11-08 17:14:43.000000000 +0100
+@@ -584,8 +584,8 @@
+ 	 * support a register, instead of a commanded, reset.
+ 	 */
+ 	if ((aac->supplement_adapter_info.SupportedOptions2 &
+-	  le32_to_cpu(AAC_OPTION_MU_RESET|AAC_OPTION_IGNORE_RESET)) ==
+-	  le32_to_cpu(AAC_OPTION_MU_RESET))
++	     cpu_to_le32(AAC_OPTION_MU_RESET|AAC_OPTION_IGNORE_RESET)) ==
++	     cpu_to_le32(AAC_OPTION_MU_RESET))
+ 		aac_reset_adapter(aac, 2); /* Bypass wait for command quiesce */
+ 	return SUCCESS; /* Cause an immediate retry of the command with a ten second delay after successful tur */
  }
-+
-+/*
-+ * Function:    scsi_init_io()
-+ *
-+ * Purpose:     SCSI I/O initialize function.
-+ *
-+ * Arguments:   cmd   - Command descriptor we wish to initialize
-+ *
-+ * Returns:     0 on success
-+ *		BLKPREP_DEFER if the failure is retryable
-+ *		BLKPREP_KILL if the failure is fatal
-+ */
-+int scsi_init_io(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+{
-+	int error = scsi_init_sgtable(cmd->request, &cmd->sdb, gfp_mask);
-+	if (error)
-+		goto err_exit;
-+
-+	if (blk_bidi_rq(cmd->request)) {
-+		struct scsi_data_buffer *bidi_sdb = kmem_cache_zalloc(
-+			scsi_bidi_sdb_cache, GFP_ATOMIC);
-+		if (!bidi_sdb) {
-+			error = BLKPREP_DEFER;
-+			goto err_exit;
-+		}
-+
-+		cmd->request->next_rq->special = bidi_sdb;
-+		error = scsi_init_sgtable(cmd->request->next_rq, bidi_sdb,
-+								    GFP_ATOMIC);
-+		if (error)
-+			goto err_exit;
-+	}
-+
-+	return BLKPREP_OK ;
-+
-+err_exit:
-+	scsi_release_buffers(cmd);
-+	if (error == BLKPREP_KILL)
-+		scsi_put_command(cmd);
-+	else /* BLKPREP_DEFER */
-+		scsi_unprep_request(cmd->request);
-+
-+	return error;
-+}
- EXPORT_SYMBOL(scsi_init_io);
+Index: linux-2.6/drivers/scsi/aacraid/rx.c
+===================================================================
+--- linux-2.6.orig/drivers/scsi/aacraid/rx.c	2007-11-08 17:09:50.000000000 +0100
++++ linux-2.6/drivers/scsi/aacraid/rx.c	2007-11-08 17:14:43.000000000 +0100
+@@ -465,7 +465,7 @@
+ 	u32 var;
  
- static struct scsi_cmnd *scsi_get_cmd_from_req(struct scsi_device *sdev,
-@@ -1738,6 +1822,14 @@ int __init scsi_init_queue(void)
- 		return -ENOMEM;
- 	}
- 
-+	scsi_bidi_sdb_cache = kmem_cache_create("scsi_bidi_sdb",
-+					sizeof(struct scsi_data_buffer),
-+					0, 0, NULL);
-+	if (!scsi_bidi_sdb_cache) {
-+		printk(KERN_ERR "SCSI: can't init scsi bidi sdb cache\n");
-+		return -ENOMEM;
-+	}
-+
- 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
- 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
- 		int size = sgp->size * sizeof(struct scatterlist);
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-index 887a12a..cd2851a 100644
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -2,12 +2,12 @@
- #define _SCSI_SCSI_CMND_H
- 
- #include <linux/dma-mapping.h>
-+#include <linux/blkdev.h>
- #include <linux/list.h>
- #include <linux/types.h>
- #include <linux/timer.h>
- #include <linux/scatterlist.h>
- 
--struct request;
- struct scatterlist;
- struct Scsi_Host;
- struct scsi_device;
-@@ -162,4 +162,25 @@ static inline int scsi_get_resid(struct scsi_cmnd *cmd)
- #define scsi_for_each_sg(cmd, sg, nseg, __i)			\
- 	for_each_sg(scsi_sglist(cmd), sg, nseg, __i)
- 
-+static inline int scsi_bidi_cmnd(struct scsi_cmnd *cmd)
-+{
-+	return blk_bidi_rq(cmd->request) &&
-+		(cmd->request->next_rq->special != NULL);
-+}
-+
-+static inline struct scsi_data_buffer *scsi_in(struct scsi_cmnd *cmd)
-+{
-+	WARN_ON((cmd->sc_data_direction != DMA_FROM_DEVICE) &&
-+							!scsi_bidi_cmnd(cmd));
-+	return scsi_bidi_cmnd(cmd) ?
-+		cmd->request->next_rq->special : &cmd->sdb;
-+}
-+
-+static inline struct scsi_data_buffer *scsi_out(struct scsi_cmnd *cmd)
-+{
-+	WARN_ON((cmd->sc_data_direction != DMA_TO_DEVICE) &&
-+							!scsi_bidi_cmnd(cmd));
-+	return &cmd->sdb;
-+}
-+
- #endif /* _SCSI_SCSI_CMND_H */
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 1e08be1..25071d5 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -74,6 +74,7 @@ struct scsi_eh_save {
- 	unsigned char cmd_len;
- 	unsigned char cmnd[MAX_COMMAND_SIZE];
- 	struct scsi_data_buffer sdb;
-+	struct request *next_rq;
- 
- 	/* new command support */
- 	struct scatterlist sense_sgl;
--- 
-1.5.3.1
-
-
+ 	if (!(dev->supplement_adapter_info.SupportedOptions2 &
+-	  le32_to_cpu(AAC_OPTION_MU_RESET)) || (bled >= 0) || (bled == -2)) {
++	    cpu_to_le32(AAC_OPTION_MU_RESET)) || (bled >= 0) || (bled == -2)) {
+ 		if (bled)
+ 			printk(KERN_ERR "%s%d: adapter kernel panic'd %x.\n",
+ 				dev->name, dev->id, bled);
