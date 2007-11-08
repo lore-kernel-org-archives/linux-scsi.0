@@ -1,72 +1,72 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [0/4 ver2] Last 3 patches for bidi support
-Date: Thu, 08 Nov 2007 18:49:46 +0200
-Message-ID: <47333E2A.7020307@panasas.com>
-References: <4730ACAA.2060007@panasas.com>
+Subject: [PATCH 1/4] sr/sd: Remove dead code
+Date: Thu, 08 Nov 2007 18:56:13 +0200
+Message-ID: <47333FAD.2030503@panasas.com>
+References: <4730ACAA.2060007@panasas.com> <47333E2A.7020307@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sa9.bezeqint.net ([192.115.104.23]:44376 "EHLO sa9.bezeqint.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759002AbXKHQt5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 8 Nov 2007 11:49:57 -0500
-In-Reply-To: <4730ACAA.2060007@panasas.com>
+Received: from sa15.bezeqint.net ([192.115.104.30]:42338 "EHLO
+	sa15.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755715AbXKHQ4T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Nov 2007 11:56:19 -0500
+In-Reply-To: <47333E2A.7020307@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Cc: Pete Wyckoff <pw@osc.edu>, Benny Halevy <bhalevy@panasas.com>, Andrew Morton <akpm@osdl.org>
 
-On Tue, Nov 06 2007 at 20:04 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> [1]
-> I propose a small change to scsi_tgt_lib.c that will make
-> tgt completely neutral to the scsi_data_buffer patch. And will
-> make it all that more ready for bidi, too. TOMO is this OK?
-> 
-> (Can you do without the GFP_KERNEL allocation flag? It could
-> make the code a bit more simple)
-> 
-> [2]
-> scsi_data_buffer patch. 
-> As requested by TOMO the all patch is squashed into one, 600 
-> and some lines. TOMO if it makes you happy, OK, here it is.
-> 
-> There is one hunk from libsrp.c that I really hate. and from what 
-> I understand of the code, only the "request_bufflen =" is really used, 
-> All users of "request_buffer = addr" pass NULL, as far as I can see.
-> If you would like to make me happy, and it is at all possible, please 
-> clean it.
-> 
-> [3]
-> Once scsi_data_buffer is in, then scsi bidi support can be applied. 
-> (Block bidi was already merged 3 kernels ago). It makes no changes
-> to scsi_cmnd and only adds some, not-at-all-dangerous, code to scsi_lib.
-> So I don't see any reason to wait. please all review.
-> 
-> If ACKed by all parties and applied for inclusion for 2.6.25, 
-> then they will have a long time to sit in MM and collect
-> compilation breakage reports from ARCHs we never compiled.
-> 
-> I wish these make everybody happy this time
-> 
-> Boaz Harrosh
-> 
 
-Version 2, fixed as of Tomo's comments. Thanks Tomo.
+  if (rq_data_dir() == WRITE) else if() else chain had an extra
+  "else" since the if() is on a value of 1 bit.
 
-[0]
-   Remove dead code from sd.c & sr.c. It was conceived by programmers
-   in the passed that rq_data_dir() could perhaps be expanded to 2 bits
-   and return READ/WRITE/BIDI. But we have decided long ago that a bidi
-   request is when blk_bidi_rq() == true, and in that case 
-   rq_data_dir() == WRITE. So now we can be sure of what the compiler knew
-   for a long time. (The future is already here)
+  Also with a bidi request, rq_data_dir() == WRITE
+  and blk_bidi_rq() == true.
 
-[1] [2] [3]
-See above
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/sd.c |    5 +----
+ drivers/scsi/sr.c |    5 +----
+ 2 files changed, 2 insertions(+), 8 deletions(-)
 
-I must insist again they should have time to sit in -mm. 
-For posible compilation breakage of other ARCHs.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 18343a6..f1ec2bd 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -445,12 +445,9 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 		}
+ 		SCpnt->cmnd[0] = WRITE_6;
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
+-	} else if (rq_data_dir(rq) == READ) {
++	} else {
+ 		SCpnt->cmnd[0] = READ_6;
+ 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+-	} else {
+-		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
+-		goto out;
+ 	}
+ 
+ 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 7702681..a72ae85 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -365,12 +365,9 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+ 		SCpnt->cmnd[0] = WRITE_10;
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
+  	 	cd->cdi.media_written = 1;
+-	} else if (rq_data_dir(rq) == READ) {
++	} else {
+ 		SCpnt->cmnd[0] = READ_10;
+ 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+-	} else {
+-		blk_dump_rq_flags(rq, "Unknown sr command");
+-		goto out;
+ 	}
+ 
+ 	{
+-- 
+1.5.3.1
 
-Boaz
 
