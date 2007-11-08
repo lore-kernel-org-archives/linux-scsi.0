@@ -1,110 +1,50 @@
-From: Anthony Ewell <amewell@verizon.net>
-Subject: Re: slow after upgrade to CentOS 5 (RHEL5)
-Date: Wed, 07 Nov 2007 13:31:55 -0800
-Message-ID: <47322ECB.1010707@verizon.net>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [0/3] Last 3 patches for bidi support
+Date: Thu, 08 Nov 2007 12:13:13 +0900
+Message-ID: <20071108121313D.fujita.tomonori@lab.ntt.co.jp>
+References: <4730ACAA.2060007@panasas.com>
+	<4730B18C.20505@cs.wisc.edu>
+	<4730B4A9.80809@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vms040pub.verizon.net ([206.46.252.40]:44954 "EHLO
-	vms040pub.verizon.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753487AbXKGVb5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 16:31:57 -0500
-Received: from rn1.rent-a-nerd.local ([72.75.165.8])
- by vms040.mailsrvcs.net (Sun Java System Messaging Server 6.2-6.01 (built Apr
- 3 2006)) with ESMTPA id <0JR50021XNT81ZW3@vms040.mailsrvcs.net> for
- linux-scsi@vger.kernel.org; Wed, 07 Nov 2007 15:31:57 -0600 (CST)
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:38026 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750818AbXKHDVr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Nov 2007 22:21:47 -0500
+In-Reply-To: <4730B4A9.80809@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bo.yang@lsi.com, James Bottomley <James.Bottomley@SteelEye.com>, "Patro, Sumant" <Sumant.Patro@lsi.com>, Mark Harvey <mark_harvey@symantec.com>
+To: bharrosh@panasas.com
+Cc: michaelc@cs.wisc.edu, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, pw@osc.edu, bhalevy@panasas.com
 
-> James Bottomley wrote:
->> Please don't drop the cc lists.  There are others who probably have more
->> informed opinions than I do who won't get to comment if they don't see
->> it.
->>
->> On Sun, 2007-10-28 at 17:36 -0700, Anthony Ewell wrote:
->>> James Bottomley wrote:
->>>> On Sat, 2007-10-27 at 13:21 -0700, Anthony Ewell wrote:
->>>>> James Bottomley wrote:
->>>>>> On Wed, 2007-10-24 at 18:04 -0700, Anthony Ewell wrote:
->>>>>>> Hi All,
->>>>>>>
->>>>>>>     If you all would not mind a post from the general
->>>>>>> public Linux user, after doing a complete disk wipe
->>>>>>> of CentOS 4 and installing CentOS5, my system is preceived
->>>>>>> to be 3 times slower.
-> 
-> 
-> Did some test from my install CD/DVD's in "rescue mode" on
-> Computer C.  I used the same backup script (dump) that
-> I use in normal boot mode.  I stopped the backup
-> after dump gave the first estimate of time:
-> 
->    "dump" CentOS5 install DVD in rescue mode:
->         transfer rate 4422 KB/s, estimated  finish 4:10
-> 
->    "dump" CentOS4.4 (2.6.9-42.EL) install CD in rescue mode:
->         transfer rate 8468 KB/s, estimated  finish 2:09
-> 
-> I also got a "dmesg" from computer B, as requested by Sumant.
-> Computer B: VXA-3, CentOS 4.5 , SATA-150-4
-> 
-> -T
-> 
-> Hi All,
-> 
-> I also tested using the System Rescue CD from
->         http://www.sysresccd.org.
-> 
-> I used the same backup script (dump) that I use in normal
-> boot mode. I stopped the backup after dump gave the first
-> estimate of time:
-> 
->    "dump" System Rescue CD (Kernel 2.6.22.9):
->         transfer rate 4370 KB/s, estimated finish 4:15
-> 
-> So, I would say, the problem is not confined to CentOS 5,
-> but goes all the way up to the 2.6.22.9 kernel.  I hope
-> this is a good clue.
-> 
-> -T
+On Tue, 06 Nov 2007 20:38:33 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
+> On Tue, Nov 06 2007 at 20:25 +0200, Mike Christie <michaelc@cs.wisc.edu> wrote:
+> > Boaz Harrosh wrote:
+> >> [1]
+> >> I propose a small change to scsi_tgt_lib.c that will make
+> >> tgt completely neutral to the scsi_data_buffer patch. And will
+> >> make it all that more ready for bidi, too. TOMO is this OK?
+> >>
+> >> (Can you do without the GFP_KERNEL allocation flag? It could
+> >> make the code a bit more simple)
+> >>
+> > 
+> > GFP_KERNEL is nice for the target layer because it can sleep in that 
+> > path you changed and it and does not have the "cannot write out pages 
+> > because it may come back to the same device issues" like an initiator does.
+> > 
+> > If we ever changed to a softirq instead of the work queue then we would 
+> > not need the flag since it would have to GFP_ATOMIC, but I am not sure 
+> > if we have plans to do that anytime soon.
+> 
+> Yes I understand that, hence the GFP_KERNEL was kept intact in my patch.
+> But I was thinking perhaps it was possible to sleep outside, if
+> the return value was BLKPREP_DEFER, the way the block layer sleeps,
+> just not in allocation stage.
 
-Hi All,
-
-     I ran a "bonnie++" on computer C, but have no idea what I am 
-looking at:
-
-#bonnie++
-
-Writing with putc()...done
-Writing intelligently...done
-Rewriting...done
-Reading with getc()...done
-Reading intelligently...done
-start 'em...done...done...done...
-Create files in sequential order...done.
-Stat files in sequential order...done.
-Delete files in sequential order...done.
-Create files in random order...done.
-Stat files in random order...done.
-Delete files in random order...done.
-Version  1.03       ------Sequential Output------ --Sequential Input- 
---Random-
-                     -Per Chr- --Block-- -Rewrite- -Per Chr- --Block-- 
---Seeks--
-Machine        Size K/sec %CP K/sec %CP K/sec %CP K/sec %CP K/sec %CP 
-/sec %CP
-rn1.foo. 4G 32240  68 40951   9 24177   5 46265  86 71005   9 179.5   0
-                     ------Sequential Create------ --------Random 
-Create--------
-                     -Create-- --Read--- -Delete-- -Create-- --Read--- 
--Delete--
-               files  /sec %CP  /sec %CP  /sec %CP  /sec %CP  /sec %CP 
-/sec %CP
-                  16 +++++ +++ +++++ +++ +++++ +++ +++++ +++ +++++ +++ 
-+++++ +++
-rn1.rent-a-nerd.local,4G,32240,68,40951,9,24177,5,46265,86,71005,9,179.5,0,16,++
-+++,+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++,+++++,+++
+The block layer is designed to handle that case but target drivers are
+not.
