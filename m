@@ -1,104 +1,60 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 4/4] SCSI: bidi support
-Date: Fri, 09 Nov 2007 16:15:58 -0500 (EST)
-Message-ID: <20071109.161558.39152463.k-ueda@ct.jp.nec.com>
-References: <4730ACAA.2060007@panasas.com>
-	<47333E2A.7020307@panasas.com>
-	<47334156.8050105@panasas.com>
+From: bo yang <bo.yang@lsi.com>
+Subject: [PATCH 3/6] scsi: megaraid_sas - using unsigned long for
+	sense_buff ptr
+Date: Fri, 09 Nov 2007 04:28:47 -0500
+Message-ID: <1194600527.6297.4.camel@dhcp-75-884.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47111 "EHLO mx1.redhat.com"
+Received: from mail0.lsil.com ([147.145.40.20]:35661 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751385AbXKIVQz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 9 Nov 2007 16:16:55 -0500
-In-Reply-To: <47334156.8050105@panasas.com>
+	id S1751385AbXKIVXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Nov 2007 16:23:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, pw@osc.edu, bhalevy@panasas.com, akpm@osdl.org, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, Bo.yang@lsi.com, Sumant.patro@lsi.com
 
-Hi Boaz,
+MegaRAID utilities expect sense_buff to be of type unsigned long.
 
-On Thu, 08 Nov 2007 19:03:18 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
->   At the block level bidi request uses req->next_rq pointer for a second
->   bidi_read request.
->   At Scsi-midlayer a second scsi_data_buffer structure is used for the
->   bidi_read part. This bidi scsi_data_buffer is put on
->   request->next_rq->special. Struct scsi_cmnd is not changed.
-> 
->   - Define scsi_bidi_cmnd() to return true if it is a bidi request and a
->     second sgtable was allocated.
-> 
->   - Define scsi_in()/scsi_out() to return the in or out scsi_data_buffer
->     from this command This API is to isolate users from the mechanics of
->     bidi.
-> 
->   - Define scsi_end_bidi_request() to do what scsi_end_request() does but
->     for a bidi request. This is necessary because bidi commands are a bit
->     tricky here. (See comments in body)
-<snip>
->  /*
-> + * Bidi commands Must be complete as a whole, both sides at once.
-> + * If part of the bytes were written and lld returned
-> + * scsi_in()->resid and/or scsi_out()->resid this information will be left
-> + * in req->data_len and req->next_rq->data_len. The upper-layer driver can
-> + * decide what to do with this information.
-> + */
-> +void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-> +{
-> +	struct request *req = cmd->request;
-> +
-> +	end_that_request_chunk(req, 1, req->data_len);
-> +	req->data_len = scsi_out(cmd)->resid;
-> +
-> +	end_that_request_chunk(req->next_rq, 1, req->next_rq->data_len);
-> +	req->next_rq->data_len = scsi_in(cmd)->resid;
-> +
-> +	scsi_release_buffers(cmd);
-> +
-> +	/*
-> +	 *FIXME: If ll_rw_blk.c is changed to also put_request(req->next_rq)
-> +	 *       in end_that_request_last() then this WARN_ON must be removed.
-> +	 *       for now, upper-driver must have registered an end_io.
-> +	 */
-> +	WARN_ON(!req->end_io);
-> +
-> +	scsi_finalize_request(cmd, 1);
-> +}
+Signed-off-by: Bo Yang <bo.yang@lsi.com>
 
-I'm trying to refine the request completion interface between
-device drivers and the block-layer.
-(http://marc.info/?l=linux-kernel&m=118953696504819&w=2)
+---
+ drivers/scsi/megaraid/megaraid_sas.c |   13 ++++++++-----
+ 1 files changed, 8 insertions(+), 5 deletions(-)
 
-For that work, I wish to keep the space between
-end_that_request_chunk() and end_that_request_last() simpler
-as much as possible so that they can be converted to the interface
-easily.
-So I'd like to ask you whether 3 reorderings below cause problem
-for you.
-  1. reorder end_that_request_chunk() calls for req and req->next_rq
-  2. set data_len before end_that_request_chunk() calls
-  3. call scsi_release_buffer() after scsi_finalize_request()
+diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c	2007-11-07 02:28:21.206651976 -0500
++++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c	2007-11-07 02:29:11.219048936 -0500
+@@ -2824,6 +2824,7 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
+ 	void *sense = NULL;
+ 	dma_addr_t sense_handle;
+ 	u32 *sense_ptr;
++	unsigned long *sense_buff;
+ 
+ 	memset(kbuff_arr, 0, sizeof(kbuff_arr));
+ 
+@@ -2928,14 +2929,16 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
+ 	 */
+ 	if (ioc->sense_len) {
+ 		/*
+-		 * sense_ptr points to the location that has the user
++		 * sense_buff points to the location that has the user
+ 		 * sense buffer address
+ 		 */
+-		sense_ptr = (u32 *) ((unsigned long)ioc->frame.raw +
+-				     ioc->sense_off);
++		sense_buff = (unsigned long *) ((unsigned long)ioc->frame.raw +
++								ioc->sense_off);
+ 
+-		if (copy_to_user((void __user *)((unsigned long)(*sense_ptr)),
+-				 sense, ioc->sense_len)) {
++		if (copy_to_user((void __user *)(unsigned long)(*sense_buff),
++				sense, ioc->sense_len)) {
++			printk(KERN_ERR "megasas: Failed to copy out to user "
++					"sense data\n");
+ 			error = -EFAULT;
+ 			goto out;
+ 		}
 
-void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-{
-	struct request *req = cmd->request;
-	unsigned int dlen = req->data_len;
-	unsigned int next_dlen = req->next_rq->data_len;
-
-	req->data_len = scsi_out(cmd)->resid;
-	req->next_rq->data_len = scsi_in(cmd)->resid;
-
-	end_that_request_chunk(req->next_rq, 1, next_dlen);
-	end_that_request_chunk(req, 1, dlen);
-
-	scsi_finalize_request(cmd, 1);
-	scsi_release_buffers(cmd);
-}
-
-If they are no problem, I could easily convert it to the new interface.
-
-Thanks,
-Kiyoshi Ueda
