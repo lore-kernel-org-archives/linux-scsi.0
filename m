@@ -1,193 +1,159 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: Re: [PATCH alternative] [SCSI] aic7xxx: Fix warnings with
- CONFIG_PM=n
-Date: Fri, 9 Nov 2007 08:17:51 -0800
-Message-ID: <20071109081751.9438e82d.randy.dunlap@oracle.com>
-References: <4733A715.70008@oracle.com>
-	<1194594944-14277-1-git-send-email-frank@lichtenheld.de>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/1] ibmvscsi: requeue while CRQ closed
+Date: Fri, 09 Nov 2007 11:35:36 -0600
+Message-ID: <47349A68.4020001@linux.vnet.ibm.com>
+References: <20071109151600.GA16255@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:38656 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751171AbXKIQS6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Nov 2007 11:18:58 -0500
-In-Reply-To: <1194594944-14277-1-git-send-email-frank@lichtenheld.de>
+Received: from e5.ny.us.ibm.com ([32.97.182.145]:41803 "EHLO e5.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753864AbXKIRga (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 9 Nov 2007 12:36:30 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id lA9HaQYM027650
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Nov 2007 12:36:26 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.5) with ESMTP id lA9HaQl3127424
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Nov 2007 12:36:26 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lA9HaPO0007974
+	for <linux-scsi@vger.kernel.org>; Fri, 9 Nov 2007 12:36:26 -0500
+In-Reply-To: <20071109151600.GA16255@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Frank Lichtenheld <frank@lichtenheld.de>
-Cc: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+To: Robert Jennings <rcj@linux.vnet.ibm.com>
+Cc: James.Bottomley@steeleye.com, santil@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-On Fri,  9 Nov 2007 08:55:44 +0100 Frank Lichtenheld wrote:
+James,
 
-> Fixes the following warnings:
->   CC [M]  drivers/scsi/aic7xxx/aic79xx_osm_pci.o
-> drivers/scsi/aic7xxx/aic79xx_osm_pci.c:101: warning: =E2=80=98ahd_lin=
-ux_pci_dev_suspend=E2=80=99 defined but not used
-> drivers/scsi/aic7xxx/aic79xx_osm_pci.c:121: warning: =E2=80=98ahd_lin=
-ux_pci_dev_resume=E2=80=99 defined but not used
->=20
->   CC [M]  drivers/scsi/aic7xxx/aic7xxx_osm_pci.o
-> drivers/scsi/aic7xxx/aic7xxx_osm_pci.c:148: warning: =E2=80=98ahc_lin=
-ux_pci_dev_suspend=E2=80=99 defined but not used
-> drivers/scsi/aic7xxx/aic7xxx_osm_pci.c:166: warning: =E2=80=98ahc_lin=
-ux_pci_dev_resume=E2=80=99 defined but not used
->=20
-> Reorder code as suggested by Randy Dunlap to minimize
-> needed #ifdefs
->=20
-> Cc: Randy Dunlap <randy.dunlap@oracle.com>
-> Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
+Hold off on pulling this in. The patch is currently being reworked to
+fix a problem.
 
-Thanks.
+Thanks,
 
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
+-Brian
 
-with one nit:
-
-Warning: trailing whitespace in line 174 of drivers/scsi/aic7xxx/aic7xx=
-x_osm_pci.c
-Warning: trailing whitespace in lines 131,132 of drivers/scsi/aic7xxx/a=
-ic79xx_osm_pci.c
-
+Robert Jennings wrote:
+> CRQ send errors that return with H_CLOSED should return with
+> SCSI_MLQUEUE_HOST_BUSY until firmware alerts the client of a CRQ
+> transport event.  The transport event will either reinitialize and
+> requeue the requests, or fail and return IO with DID_ERROR.
+> 
+> To avoid failing the eh_* functions while re-attaching to the server
+> adapter this will retry for a period of time while ibmvscsi_send_srp_event
+> returns SCSI_MLQUEUE_HOST_BUSY.
+> 
+> Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> 
 > ---
->  drivers/scsi/aic7xxx/aic79xx_osm_pci.c |   25 +++++++++++++---------=
----
->  drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   25 +++++++++++++---------=
----
->  2 files changed, 26 insertions(+), 24 deletions(-)
->=20
->  > But "ideally" the functions would be defined before the           =
-      =20
->  > struct pci_driver data, so the prototypes for them could be remove=
-d.
->=20
->  Hmm, I'm a bit sceptical about the reordering, but here you go.
->  Choose whatever you like.
->=20
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/ai=
-c7xxx/aic79xx_osm_pci.c
-> index 66f0259..f6dbd3e 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-> @@ -50,8 +50,6 @@ static int	ahd_linux_pci_reserve_io_regions(struct =
-ahd_softc *ahd,
->  static int	ahd_linux_pci_reserve_mem_region(struct ahd_softc *ahd,
->  						 u_long *bus_addr,
->  						 uint8_t __iomem **maddr);
-> -static int	ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_messag=
-e_t mesg);
-> -static int	ahd_linux_pci_dev_resume(struct pci_dev *pdev);
->  static void	ahd_linux_pci_dev_remove(struct pci_dev *pdev);
-> =20
->  /* Define the macro locally since it's different for different class=
- of chips.
-> @@ -85,17 +83,7 @@ static struct pci_device_id ahd_linux_pci_id_table=
-[] =3D {
-> =20
->  MODULE_DEVICE_TABLE(pci, ahd_linux_pci_id_table);
-> =20
-> -static struct pci_driver aic79xx_pci_driver =3D {
-> -	.name		=3D "aic79xx",
-> -	.probe		=3D ahd_linux_pci_dev_probe,
->  #ifdef CONFIG_PM
-> -	.suspend	=3D ahd_linux_pci_dev_suspend,
-> -	.resume		=3D ahd_linux_pci_dev_resume,
-> -#endif
-> -	.remove		=3D ahd_linux_pci_dev_remove,
-> -	.id_table	=3D ahd_linux_pci_id_table
-> -};
-> -
->  static int
->  ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg)
->  {
-> @@ -139,6 +127,19 @@ ahd_linux_pci_dev_resume(struct pci_dev *pdev)
-> =20
->  	return rc;
->  }
-> +#else
-> +#define ahd_linux_pci_dev_suspend     NULL                          =
-                                                                       =
-               =20
-> +#define ahd_linux_pci_dev_resume      NULL=20
-> +#endif
+>  drivers/scsi/ibmvscsi/ibmvscsi.c |   59 ++++++++++++++++++++++++++++++++-------
+>  1 file changed, 48 insertions(+), 11 deletions(-)
+> 
+> Index: linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c
+> ===================================================================
+> --- linux-2.6.orig/drivers/scsi/ibmvscsi/ibmvscsi.c	2007-11-09 08:53:02.000000000 -0600
+> +++ linux-2.6/drivers/scsi/ibmvscsi/ibmvscsi.c	2007-11-09 08:53:36.000000000 -0600
+> @@ -629,6 +629,16 @@
+>  		list_del(&evt_struct->list);
+>  		del_timer(&evt_struct->timer);
+> 
+> +		/* If send_crq returns H_CLOSED, return SCSI_MLQUEUE_HOST_BUSY.
+> +		 * Firmware will send a CRQ with a transport event (0xFF) to
+> +		 * tell this client what has happened to the transport.  This
+> +		 * will be handled in ibmvscsi_handle_crq()
+> +		 */
+> +		if (rc == H_CLOSED) {
+> +			dev_warn(hostdata->dev, "send warning. "
+> +			         "Receive queue closed, will retry.\n");
+> +			goto send_busy;
+> +		}
+>  		dev_err(hostdata->dev, "send error %d\n", rc);
+>  		atomic_inc(&hostdata->request_limit);
+>  		goto send_error;
+> @@ -976,6 +986,7 @@
+>  	int rsp_rc;
+>  	unsigned long flags;
+>  	u16 lun = lun_from_dev(cmd->device);
+> +	unsigned long wait_switch = 0;
+> 
+>  	/* First, find this command in our sent list so we can figure
+>  	 * out the correct tag
+> @@ -1019,15 +1030,30 @@
+>  		    tsk_mgmt->lun, tsk_mgmt->task_tag);
+> 
+>  	evt->sync_srp = &srp_rsp;
+> -	init_completion(&evt->comp);
+> -	rsp_rc = ibmvscsi_send_srp_event(evt, hostdata, init_timeout * 2);
+> -	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
 > +
-> +static struct pci_driver aic79xx_pci_driver =3D {
-> +	.name		=3D "aic79xx",
-> +	.probe		=3D ahd_linux_pci_dev_probe,
-> +	.suspend	=3D ahd_linux_pci_dev_suspend,
-> +	.resume		=3D ahd_linux_pci_dev_resume,
-> +	.remove		=3D ahd_linux_pci_dev_remove,
-> +	.id_table	=3D ahd_linux_pci_id_table
-> +};
-> =20
->  static void
->  ahd_linux_pci_dev_remove(struct pci_dev *pdev)
-> diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/ai=
-c7xxx/aic7xxx_osm_pci.c
-> index 4488946..ab53189 100644
-> --- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-> +++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-> @@ -49,8 +49,6 @@ static int	ahc_linux_pci_reserve_io_region(struct a=
-hc_softc *ahc,
->  static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
->  						 u_long *bus_addr,
->  						 uint8_t __iomem **maddr);
-> -static int	ahc_linux_pci_dev_suspend(struct pci_dev *pdev, pm_messag=
-e_t mesg);
-> -static int	ahc_linux_pci_dev_resume(struct pci_dev *pdev);
->  static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
-> =20
->  /* Define the macro locally since it's different for different class=
- of chips.
-> @@ -132,17 +130,7 @@ static struct pci_device_id ahc_linux_pci_id_tab=
-le[] =3D {
-> =20
->  MODULE_DEVICE_TABLE(pci, ahc_linux_pci_id_table);
-> =20
-> -static struct pci_driver aic7xxx_pci_driver =3D {
-> -	.name		=3D "aic7xxx",
-> -	.probe		=3D ahc_linux_pci_dev_probe,
->  #ifdef CONFIG_PM
-> -	.suspend	=3D ahc_linux_pci_dev_suspend,
-> -	.resume		=3D ahc_linux_pci_dev_resume,
-> -#endif
-> -	.remove		=3D ahc_linux_pci_dev_remove,
-> -	.id_table	=3D ahc_linux_pci_id_table
-> -};
-> -
->  static int
->  ahc_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg)
->  {
-> @@ -182,6 +170,19 @@ ahc_linux_pci_dev_resume(struct pci_dev *pdev)
-> =20
->  	return (ahc_resume(ahc));
->  }
-> +#else
-> +#define ahc_linux_pci_dev_suspend     NULL                          =
-                                                                       =
-              =20
-> +#define ahc_linux_pci_dev_resume      NULL
-> +#endif
+> +	wait_switch = jiffies + (init_timeout * HZ);
+> +	do {
+> +		init_completion(&evt->comp);
+> +		rsp_rc = ibmvscsi_send_srp_event(evt, hostdata, init_timeout * 2);
 > +
-> +static struct pci_driver aic7xxx_pci_driver =3D {
-> +	.name		=3D "aic7xxx",
-> +	.probe		=3D ahc_linux_pci_dev_probe,
-> +	.suspend	=3D ahc_linux_pci_dev_suspend,
-> +	.resume		=3D ahc_linux_pci_dev_resume,
-> +	.remove		=3D ahc_linux_pci_dev_remove,
-> +	.id_table	=3D ahc_linux_pci_id_table
-> +};
-> =20
->  static void
->  ahc_linux_pci_dev_remove(struct pci_dev *pdev)
-> --=20
+> +		if (rsp_rc != SCSI_MLQUEUE_HOST_BUSY)
+> +			break;
+> +
+> +		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+> +		msleep(10);
+> +		spin_lock_irqsave(hostdata->host->host_lock, flags);
+> +	} while (time_before(jiffies, wait_switch));
+> +
+>  	if (rsp_rc != 0) {
+> +		free_event_struct(&found_evt->hostdata->pool, found_evt);
+> +		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+>  		sdev_printk(KERN_ERR, cmd->device,
+>  			    "failed to send abort() event. rc=%d\n", rsp_rc);
+>  		return FAILED;
+>  	}
+> 
+> +	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+> +
+>  	wait_for_completion(&evt->comp);
+> 
+>  	/* make sure we got a good response */
+> @@ -1099,6 +1125,7 @@
+>  	int rsp_rc;
+>  	unsigned long flags;
+>  	u16 lun = lun_from_dev(cmd->device);
+> +	unsigned long wait_switch = 0;
+> 
+>  	spin_lock_irqsave(hostdata->host->host_lock, flags);
+>  	evt = get_event_struct(&hostdata->pool);
+> @@ -1125,9 +1152,20 @@
+>  		    tsk_mgmt->lun);
+> 
+>  	evt->sync_srp = &srp_rsp;
+> -	init_completion(&evt->comp);
+> -	rsp_rc = ibmvscsi_send_srp_event(evt, hostdata, init_timeout * 2);
+> -	spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+> +
+> +	wait_switch = jiffies + (init_timeout * HZ);
+> +	do {
+> +		init_completion(&evt->comp);
+> +		rsp_rc = ibmvscsi_send_srp_event(evt, hostdata, init_timeout * 2);
+> +		spin_unlock_irqrestore(hostdata->host->host_lock, flags);
+> +
+> +		if (rsp_rc != SCSI_MLQUEUE_HOST_BUSY)
+> +			break;
+> +
+> +		msleep(10);
+> +		spin_lock_irqsave(hostdata->host->host_lock, flags);
+> +	} while (time_before(jiffies, wait_switch));
+> +
+>  	if (rsp_rc != 0) {
+>  		sdev_printk(KERN_ERR, cmd->device,
+>  			    "failed to send reset event. rc=%d\n", rsp_rc);
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
----
-~Randy
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Brian King
+Linux on Power Virtualization
+IBM Linux Technology Center
