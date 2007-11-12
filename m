@@ -1,172 +1,89 @@
-From: Frank Lichtenheld <frank@lichtenheld.de>
-Subject: [PATCH] [SCSI] aic7xxx: Fix warnings with CONFIG_PM=n
-Date: Mon, 12 Nov 2007 11:23:48 +0100
-Message-ID: <1194863028-22074-1-git-send-email-frank@lichtenheld.de>
-References: <20071109081751.9438e82d.randy.dunlap@oracle.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH] scsi: move single_lun flag from scsi_device to scsi_target
+Date: Mon, 12 Nov 2007 10:00:44 -0500
+Message-ID: <47386A9C.6050207@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from v32413.1blu.de ([88.84.155.73]:49059 "EHLO mail.lenk.info"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755130AbXKLK0Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 12 Nov 2007 05:26:16 -0500
-In-Reply-To: <20071109081751.9438e82d.randy.dunlap@oracle.com>
+Received: from host06.cybernetics.com ([206.246.200.22]:2394 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1750947AbXKLPAp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Nov 2007 10:00:45 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>, linux-scsi@vger.kernel.org, Frank Lichtenheld <frank@lichtenheld.de>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-=46ixes the following warnings:
-  CC [M]  drivers/scsi/aic7xxx/aic79xx_osm_pci.o
-drivers/scsi/aic7xxx/aic79xx_osm_pci.c:101: warning: =E2=80=98ahd_linux=
-_pci_dev_suspend=E2=80=99 defined but not used
-drivers/scsi/aic7xxx/aic79xx_osm_pci.c:121: warning: =E2=80=98ahd_linux=
-_pci_dev_resume=E2=80=99 defined but not used
+Some SCSI tape medium changers that need the BLIST_SINGLELUN flag have
+the medium changer at one LUN and the tape drive at a different LUN.
+The inquiry string of the tape drive may be different from that of the
+medium changer.  In order for single_lun to be effective, every
+scsi_device under a given scsi_target must have it set.  This means that
+there needs to be a blacklist entry for BOTH the medium changer AND the
+tape drive, which is impractical because some medium changers may be
+paired with a variety of different tape drive models.  It makes more
+sense to put the single_lun flag in scsi_target instead of scsi_device,
+which causes every device at a given target ID to inherit the single_lun
+flag from one LUN.  This makes it possible to blacklist just the medium
+changer and not the tape drive.
 
-  CC [M]  drivers/scsi/aic7xxx/aic7xxx_osm_pci.o
-drivers/scsi/aic7xxx/aic7xxx_osm_pci.c:148: warning: =E2=80=98ahc_linux=
-_pci_dev_suspend=E2=80=99 defined but not used
-drivers/scsi/aic7xxx/aic7xxx_osm_pci.c:166: warning: =E2=80=98ahc_linux=
-_pci_dev_resume=E2=80=99 defined but not used
-
-Reorder code as suggested by Randy Dunlap to minimize
-needed #ifdefs
-
-Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Frank Lichtenheld <frank@lichtenheld.de>
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
- drivers/scsi/aic7xxx/aic79xx_osm_pci.c |   25 +++++++++++++-----------=
--
- drivers/scsi/aic7xxx/aic7xxx_osm_pci.c |   25 +++++++++++++-----------=
--
- 2 files changed, 26 insertions(+), 24 deletions(-)
+diff -urpN linux-2.6.24-rc2-vanilla/drivers/scsi/scsi_lib.c linux-2.6.24-rc2/drivers/scsi/scsi_lib.c
+--- linux-2.6.24-rc2-vanilla/drivers/scsi/scsi_lib.c	2007-11-09 16:48:57.000000000 -0500
++++ linux-2.6.24-rc2/drivers/scsi/scsi_lib.c	2007-11-09 16:54:27.000000000 -0500
+@@ -524,7 +524,7 @@ static void scsi_run_queue(struct reques
+ 	struct Scsi_Host *shost = sdev->host;
+ 	unsigned long flags;
+ 
+-	if (sdev->single_lun)
++	if (scsi_target(sdev)->single_lun)
+ 		scsi_single_lun_run(sdev);
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+@@ -1557,7 +1557,7 @@ static void scsi_request_fn(struct reque
+ 
+ 		if (!scsi_host_queue_ready(q, shost, sdev))
+ 			goto not_ready;
+-		if (sdev->single_lun) {
++		if (scsi_target(sdev)->single_lun) {
+ 			if (scsi_target(sdev)->starget_sdev_user &&
+ 			    scsi_target(sdev)->starget_sdev_user != sdev)
+ 				goto not_ready;
+diff -urpN linux-2.6.24-rc2-vanilla/drivers/scsi/scsi_scan.c linux-2.6.24-rc2/drivers/scsi/scsi_scan.c
+--- linux-2.6.24-rc2-vanilla/drivers/scsi/scsi_scan.c	2007-11-09 16:48:57.000000000 -0500
++++ linux-2.6.24-rc2/drivers/scsi/scsi_scan.c	2007-11-09 16:55:59.000000000 -0500
+@@ -863,7 +863,7 @@ static int scsi_add_lun(struct scsi_devi
+ 		sdev->no_start_on_add = 1;
+ 
+ 	if (*bflags & BLIST_SINGLELUN)
+-		sdev->single_lun = 1;
++		scsi_target(sdev)->single_lun = 1;
+ 
+ 	sdev->use_10_for_rw = 1;
+ 
+diff -urpN linux-2.6.24-rc2-vanilla/include/scsi/scsi_device.h linux-2.6.24-rc2/include/scsi/scsi_device.h
+--- linux-2.6.24-rc2-vanilla/include/scsi/scsi_device.h	2007-11-09 16:49:05.000000000 -0500
++++ linux-2.6.24-rc2/include/scsi/scsi_device.h	2007-11-09 16:53:43.000000000 -0500
+@@ -122,9 +122,6 @@ struct scsi_device {
+ 	unsigned tagged_supported:1;	/* Supports SCSI-II tagged queuing */
+ 	unsigned simple_tags:1;	/* simple queue tag messages are enabled */
+ 	unsigned ordered_tags:1;/* ordered queue tag messages are enabled */
+-	unsigned single_lun:1;	/* Indicates we should only allow I/O to
+-				 * one of the luns for the device at a 
+-				 * time. */
+ 	unsigned was_reset:1;	/* There was a bus reset on the bus for 
+ 				 * this device */
+ 	unsigned expecting_cc_ua:1; /* Expecting a CHECK_CONDITION/UNIT_ATTN
+@@ -202,6 +199,9 @@ struct scsi_target {
+ 	unsigned int		id; /* target id ... replace
+ 				     * scsi_device.id eventually */
+ 	unsigned int		create:1; /* signal that it needs to be added */
++	unsigned int		single_lun:1;	/* Indicates we should only
++						 * allow I/O to one of the luns
++						 * for the device at a time. */
+ 	unsigned int		pdt_1f_for_no_lun;	/* PDT = 0x1f */
+ 						/* means no lun present */
+ 
 
-  > with one nit:
-  > Warning: trailing whitespace in line 174 of drivers/scsi/aic7xxx/ai=
-c7xxx_osm_pci.c
-  > Warning: trailing whitespace in lines 131,132 of drivers/scsi/aic7x=
-xx/aic79xx_osm_pci.c
 
-  fixed
-
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7=
-xxx/aic79xx_osm_pci.c
-index 66f0259..2b7c9a9 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
-@@ -50,8 +50,6 @@ static int	ahd_linux_pci_reserve_io_regions(struct ah=
-d_softc *ahd,
- static int	ahd_linux_pci_reserve_mem_region(struct ahd_softc *ahd,
- 						 u_long *bus_addr,
- 						 uint8_t __iomem **maddr);
--static int	ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_=
-t mesg);
--static int	ahd_linux_pci_dev_resume(struct pci_dev *pdev);
- static void	ahd_linux_pci_dev_remove(struct pci_dev *pdev);
-=20
- /* Define the macro locally since it's different for different class o=
-f chips.
-@@ -85,17 +83,7 @@ static struct pci_device_id ahd_linux_pci_id_table[]=
- =3D {
-=20
- MODULE_DEVICE_TABLE(pci, ahd_linux_pci_id_table);
-=20
--static struct pci_driver aic79xx_pci_driver =3D {
--	.name		=3D "aic79xx",
--	.probe		=3D ahd_linux_pci_dev_probe,
- #ifdef CONFIG_PM
--	.suspend	=3D ahd_linux_pci_dev_suspend,
--	.resume		=3D ahd_linux_pci_dev_resume,
--#endif
--	.remove		=3D ahd_linux_pci_dev_remove,
--	.id_table	=3D ahd_linux_pci_id_table
--};
--
- static int
- ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
-@@ -139,6 +127,19 @@ ahd_linux_pci_dev_resume(struct pci_dev *pdev)
-=20
- 	return rc;
- }
-+#else
-+#define ahd_linux_pci_dev_suspend     NULL
-+#define ahd_linux_pci_dev_resume      NULL
-+#endif
-+
-+static struct pci_driver aic79xx_pci_driver =3D {
-+	.name		=3D "aic79xx",
-+	.probe		=3D ahd_linux_pci_dev_probe,
-+	.suspend	=3D ahd_linux_pci_dev_suspend,
-+	.resume		=3D ahd_linux_pci_dev_resume,
-+	.remove		=3D ahd_linux_pci_dev_remove,
-+	.id_table	=3D ahd_linux_pci_id_table
-+};
-=20
- static void
- ahd_linux_pci_dev_remove(struct pci_dev *pdev)
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c b/drivers/scsi/aic7=
-xxx/aic7xxx_osm_pci.c
-index 4488946..d10553e 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm_pci.c
-@@ -49,8 +49,6 @@ static int	ahc_linux_pci_reserve_io_region(struct ahc=
-_softc *ahc,
- static int	ahc_linux_pci_reserve_mem_region(struct ahc_softc *ahc,
- 						 u_long *bus_addr,
- 						 uint8_t __iomem **maddr);
--static int	ahc_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_=
-t mesg);
--static int	ahc_linux_pci_dev_resume(struct pci_dev *pdev);
- static void	ahc_linux_pci_dev_remove(struct pci_dev *pdev);
-=20
- /* Define the macro locally since it's different for different class o=
-f chips.
-@@ -132,17 +130,7 @@ static struct pci_device_id ahc_linux_pci_id_table=
-[] =3D {
-=20
- MODULE_DEVICE_TABLE(pci, ahc_linux_pci_id_table);
-=20
--static struct pci_driver aic7xxx_pci_driver =3D {
--	.name		=3D "aic7xxx",
--	.probe		=3D ahc_linux_pci_dev_probe,
- #ifdef CONFIG_PM
--	.suspend	=3D ahc_linux_pci_dev_suspend,
--	.resume		=3D ahc_linux_pci_dev_resume,
--#endif
--	.remove		=3D ahc_linux_pci_dev_remove,
--	.id_table	=3D ahc_linux_pci_id_table
--};
--
- static int
- ahc_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg)
- {
-@@ -182,6 +170,19 @@ ahc_linux_pci_dev_resume(struct pci_dev *pdev)
-=20
- 	return (ahc_resume(ahc));
- }
-+#else
-+#define ahc_linux_pci_dev_suspend     NULL
-+#define ahc_linux_pci_dev_resume      NULL
-+#endif
-+
-+static struct pci_driver aic7xxx_pci_driver =3D {
-+	.name		=3D "aic7xxx",
-+	.probe		=3D ahc_linux_pci_dev_probe,
-+	.suspend	=3D ahc_linux_pci_dev_suspend,
-+	.resume		=3D ahc_linux_pci_dev_resume,
-+	.remove		=3D ahc_linux_pci_dev_remove,
-+	.id_table	=3D ahc_linux_pci_id_table
-+};
-=20
- static void
- ahc_linux_pci_dev_remove(struct pci_dev *pdev)
---=20
-1.5.3.4
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
