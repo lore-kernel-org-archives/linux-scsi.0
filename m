@@ -1,46 +1,80 @@
-From: "Chris Friesen" <cfriesen@nortel.com>
-Subject: how to handle QUEUE_FULL/SAM_STAT_TASK_SET_FULL in userspace?
-Date: Mon, 12 Nov 2007 13:54:38 -0600
-Message-ID: <4738AF7E.1060307@nortel.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 4/4] SCSI: bidi support
+Date: Mon, 12 Nov 2007 14:52:40 -0500 (EST)
+Message-ID: <20071112.145240.48534067.k-ueda@ct.jp.nec.com>
+References: <47334156.8050105@panasas.com>
+	<20071109.161558.39152463.k-ueda@ct.jp.nec.com>
+	<47383020.8010108@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zcars04f.nortel.com ([47.129.242.57]:48788 "EHLO
-	zcars04f.nortel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751407AbXKLURG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Nov 2007 15:17:06 -0500
+Received: from mx1.redhat.com ([66.187.233.31]:35000 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751609AbXKLUZY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Nov 2007 15:25:24 -0500
+In-Reply-To: <47383020.8010108@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, dgilbert@interlog.com, James.Bottomley@SteelEye.com, Eric.Moore@lsi.com, DL-MPTFusionLinux@lsi.com
+To: bharrosh@panasas.com
+Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, pw@osc.edu, bhalevy@panasas.com, akpm@osdl.org, j-nomura@ce.jp.nec.com, k-ueda@ct.jp.nec.com
 
-Hi,
+Hi Boaz,
 
-I asked this question on the list last Friday and haven't seen any 
-replies, so I thought I'd ask again and broaden the receiver list a bit.
+On Mon, 12 Nov 2007 12:51:12 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > I'm trying to refine the request completion interface between
+> > device drivers and the block-layer.
+> > (http://marc.info/?l=linux-kernel&m=118953696504819&w=2)
+> > 
+> > For that work, I wish to keep the space between
+> > end_that_request_chunk() and end_that_request_last() simpler
+> > as much as possible so that they can be converted to the interface
+> > easily.
+> > So I'd like to ask you whether 3 reorderings below cause problem
+> > for you.
+> >   1. reorder end_that_request_chunk() calls for req and req->next_rq
+> >   2. set data_len before end_that_request_chunk() calls
+> >   3. call scsi_release_buffer() after scsi_finalize_request()
+> > 
+> > void scsi_end_bidi_request(struct scsi_cmnd *cmd)
+> > {
+> > 	struct request *req = cmd->request;
+> > 	unsigned int dlen = req->data_len;
+> > 	unsigned int next_dlen = req->next_rq->data_len;
+> > 
+> > 	req->data_len = scsi_out(cmd)->resid;
+> > 	req->next_rq->data_len = scsi_in(cmd)->resid;
+> > 
+> > 	end_that_request_chunk(req->next_rq, 1, next_dlen);
+> > 	end_that_request_chunk(req, 1, dlen);
+> > 
+> > 	scsi_finalize_request(cmd, 1);
+> > 	scsi_release_buffers(cmd);
+> > }
+> > 
+> > If they are no problem, I could easily convert it to the new interface.
+>
+> 1. If req->data_len is not affected by end_that_request_chunk() than sure.
+> 2. Please note that "end_that_request_chunk(req->next_rq, 1, next_dlen);"
+>    *must* not be paired with a call to end_that_request_last().
+>    It is not a "Queued" request and will break the system. This is
+>    the "bidi trick". So end_that_request_chunk() must be exported still.
+> 3. scsi_release_buffers(cmd) must stay where it is, and certainly before 
+>    scsi_finalize_request() which does a put_command.
+> 4. If you are already touching block-layer. I would be happy if you add a
+>    blk_end_request_bidi(struct request *, int write_resid, int read_resid,
+>    error ...) ;
+>    That will release both request and request->next_rq, completely and set
+>    resid for ULDs. Then scsi_end_bidi_request() can be removed.
+> 
+> I would prefer to leave the code as it is for now and change it to what ever
+> it needs to be in your patchset.
+> But if you insist What I would suggest is below: (Minus the comments)
 
-We have x86-based hardware with dual LSI 53c1030 devices.  We have a few 
-apps that issue SCSI requests on sg device nodes.  The requests are 
-generally related to the health of the disks (ie, LOG_SENSE, 
-REQUEST_SENSE, TEST_UNIT_READY, MODE_SENSE_10, that sort of thing).
+Thank you for detailed answer and looking the blk_end_request().
+I'll consider how to convert based on your answer.
 
-We recently moved from 2.6.10 to 2.6.14 and now we're seeing occasional 
-QUEUE_FULL/SAM_STAT_TASK_SET_FULL errors being returned to userspace. 
-These didn't ever show up in 2.6.10.
-
-So...are these errors expected?  If so, why are they only showing up now?
-
-Is there any way to get rid of the errors?  Should the scsi midlayer be 
-handling retries for these or is it up to userspace because we're using 
-the ioctl() interface?
-
-Is there a "correct" way to handle them in userspace?  Should we delay 
-then retry the command?  How long should the app delay, how many retries 
-should it attempt before giving up?
-
-I'm at a loss here, and I'm having a hard time finding any concrete 
-information on the expected behaviour.
+Leaving the code for now is OK to me.
 
 Thanks,
-
-Chris
+Kiyoshi Ueda
