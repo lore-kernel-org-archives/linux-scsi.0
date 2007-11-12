@@ -1,54 +1,52 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] cciss: use upper_32_bits() macro to eliminate warnings
-Date: Sun, 11 Nov 2007 20:59:47 -0800
-Message-ID: <20071111205947.de9091e8.randy.dunlap@oracle.com>
+From: Jon Masters <jcm@redhat.com>
+Subject: Re: [PATCH 4/6] scsi: megaraid_sas - call cmd completion from reset
+Date: Mon, 12 Nov 2007 01:40:40 -0500
+Message-ID: <1194849640.5946.61.camel@perihelion>
+References: <1194600944.6297.8.camel@dhcp-75-884.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rgminet01.oracle.com ([148.87.113.118]:37728 "EHLO
-	rgminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750736AbXKLFBe (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Nov 2007 00:01:34 -0500
+Received: from mx1.redhat.com ([66.187.233.31]:60668 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752597AbXKLGk4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 12 Nov 2007 01:40:56 -0500
+In-Reply-To: <1194600944.6297.8.camel@dhcp-75-884.se.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>, akpm <akpm@linux-foundation.org>
-Cc: mike.miller@hp.com, iss_storagedev@hp.com
+To: bo yang <bo.yang@lsi.com>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, Sumant.patro@lsi.com
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
 
-Use upper_32_bits(x) macro to handle shifts that may be >= the width of
-the data type.
+On Fri, 2007-11-09 at 04:35 -0500, bo yang wrote:
+> Driver will call cmd completion routine from Reset path without waiting for cmd completion from isr context.
 
-drivers/block/cciss.c: In function 'do_cciss_request':
-drivers/block/cciss.c:2655: warning: right shift count >= width of type
-drivers/block/cciss.c:2656: warning: right shift count >= width of type
-drivers/block/cciss.c:2657: warning: right shift count >= width of type
-drivers/block/cciss.c:2658: warning: right shift count >= width of type
+Thanks. I'm going to take a look at this, as well as the other recent 2
+patches for a couple of test kernels we have that are based on the -RT
+patchset. We are seeing occasional problems with megasas (so far only
+exhibited on specific systems based upon the PERC 5 cards) when:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/block/cciss.c |   10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+* Using an -RT kernel.
+* Lots of outstanding IO.
 
---- linux-2.6.24-rc2-git2.orig/drivers/block/cciss.c
-+++ linux-2.6.24-rc2-git2/drivers/block/cciss.c
-@@ -2650,12 +2650,14 @@ static void do_cciss_request(struct requ
- 			c->Request.CDB[8] = creq->nr_sectors & 0xff;
- 			c->Request.CDB[9] = c->Request.CDB[11] = c->Request.CDB[12] = 0;
- 		} else {
-+			u32 upper32 = upper_32_bits(start_blk);
-+
- 			c->Request.CDBLen = 16;
- 			c->Request.CDB[1]= 0;
--			c->Request.CDB[2]= (start_blk >> 56) & 0xff;	//MSB
--			c->Request.CDB[3]= (start_blk >> 48) & 0xff;
--			c->Request.CDB[4]= (start_blk >> 40) & 0xff;
--			c->Request.CDB[5]= (start_blk >> 32) & 0xff;
-+			c->Request.CDB[2]= (upper32 >> 24) & 0xff;	//MSB
-+			c->Request.CDB[3]= (upper32 >> 16) & 0xff;
-+			c->Request.CDB[4]= (upper32 >>  8) & 0xff;
-+			c->Request.CDB[5]= upper32 & 0xff;
- 			c->Request.CDB[6]= (start_blk >> 24) & 0xff;
- 			c->Request.CDB[7]= (start_blk >> 16) & 0xff;
- 			c->Request.CDB[8]= (start_blk >>  8) & 0xff;
+My analysis suggests that this happens because the -RT patch changes
+tasklet behavior such that we won't run nearly as quickly as in vanilla
+Linux, and we might end up with a lot more IO cmds outstanding with the
+FW before we get around to dequeing them. I think there exists (but I
+haven't proved it yet) a timing problem in that driver.
+
+In a 2.6.21 test kernel we have, there's an inconsistency wrt. upstream
+changes that happened at that time - James and Christoph were racing
+wrt. oneanother and the use of the additional (optional) scsi host
+callback that sas happens to use to handle io throttling. In later
+kernels, this behavior almost seems to be working - I backported this to
+2.6.21 and can see the throttle function get called a few times before
+we finally go out to lunch. I'm planning to finish debugging tomorrow.
+
+This is an FYI really, just to say that I'm actively poking at megasas
+at the moment. I would also love to hear from yourself, and anyone else
+who is (or who has) test[ing|ed] these ongoing patches on -RT.
+
+Jon.
+
+
