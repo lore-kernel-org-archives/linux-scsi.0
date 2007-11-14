@@ -1,102 +1,135 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH] MegaRAID SAS: Convert aen_mutex to the mutex API
-Date: Wed, 14 Nov 2007 12:47:40 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501CE4C87@NAMAIL1.ad.lsil.com>
-References: <20071027074846.GQ9824@traven>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH] Add missing $(obj) to aic7xxx makefile
+Date: Wed, 14 Nov 2007 21:30:46 +0100
+Message-ID: <20071114203046.GA10669@uranus.ravnborg.org>
+References: <1193398273.8993.8.camel@grianne>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:47956 "EHLO mail0.lsil.com"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:52151 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751690AbXKNTr6 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Nov 2007 14:47:58 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20071027074846.GQ9824@traven>
+	id S1754176AbXKNU3I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 14 Nov 2007 15:29:08 -0500
+Content-Disposition: inline
+In-Reply-To: <1193398273.8993.8.camel@grianne>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
+To: Vegard Nossum <vegard.nossum@gmail.com>
+Cc: linux-scsi@vger.kernel.org
 
-ACK
+Hi Vegard.
 
-Thanks.
+I had to modify the patch to make it actually work
+reliable with "make drivers/scsi/ -j".
+I have applied the below to kbuild.git.
 
-Bo Yang 
+linux-scsi cc'ed - please let me know if you prefer
+to take it via scsi tree.
 
------Original Message-----
-From: Matthias Kaehlcke [mailto:matthias.kaehlcke@gmail.com] 
-Sent: Saturday, October 27, 2007 3:49 AM
-To: DL-MegaRAID Linux; linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org; Andrew Morton
-Subject: [PATCH] MegaRAID SAS: Convert aen_mutex to the mutex API
+	Sam
 
-MegaRAID SAS: Convert aen_mutex to the mutex API
+commit c102f89b1e35c793a3483c67bce6b28a9adb7f2f
+Author: Vegard Nossum <vegard.nossum@gmail.com>
+Date:   Fri Oct 26 13:31:13 2007 +0200
 
-Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+    aic7(3*x): fix firmware build
+    
+    This patch adds the proper $(obj) and $(src) prefixes to dependency
+    rules in aic7xxx makefile. Without this patch, there is a remote
+    possibility that parallel make with a different output directory can
+    fail.
+    
+    Also changed the deprecated EXTRA_CFLAGS construct to ccflags-y syntax.
+    
+    Fixed up patch to survive "make drivers/scsi/ -j"
+    with BUILD_FIRMWARE enable. /Sam
+    
+    Signed-off-by: Vegard Nossum <vegard.nossum@gmail.com>
+    Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
+    Cc: linux-scsi@vger.kernel.org
 
---
-
-index e3c5c52..3ad379f 100644
---- a/drivers/scsi/megaraid/megaraid_sas.c
-+++ b/drivers/scsi/megaraid/megaraid_sas.c
-@@ -31,6 +31,7 @@
- #include <linux/moduleparam.h>
- #include <linux/module.h>
- #include <linux/spinlock.h>
-+#include <linux/mutex.h>
- #include <linux/interrupt.h>
- #include <linux/delay.h>
- #include <linux/uio.h>
-@@ -2358,7 +2359,7 @@ megasas_probe_one(struct pci_dev *pdev, const
-struct pci_device_id *id)
+diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
+index 9a6ce19..6b3aee3 100644
+--- a/drivers/scsi/aic7xxx/Makefile
++++ b/drivers/scsi/aic7xxx/Makefile
+@@ -33,11 +33,10 @@ aic79xx-y					+= aic79xx_osm.o	\
+ 						   aic79xx_proc.o	\
+ 						   aic79xx_osm_pci.o
  
- 	spin_lock_init(&instance->cmd_pool_lock);
+-EXTRA_CFLAGS += -Idrivers/scsi
++ccflags-y += -Idrivers/scsi
+ ifdef WARNINGS_BECOME_ERRORS
+-EXTRA_CFLAGS += -Werror
++ccflags-y += -Werror
+ endif
+-#EXTRA_CFLAGS += -g
  
--	sema_init(&instance->aen_mutex, 1);
-+	mutex_init(&instance->aen_mutex);
- 	sema_init(&instance->ioctl_sem, MEGASAS_INT_CMDS);
+ # Files generated that shall be removed upon make clean
+ clean-files := aic7xxx_seq.h aic7xxx_reg.h aic7xxx_reg_print.c
+@@ -47,52 +46,42 @@ clean-files += aic79xx_seq.h aic79xx_reg.h aic79xx_reg_print.c
  
- 	/*
-@@ -2874,10 +2875,10 @@ static int megasas_mgmt_ioctl_aen(struct file
-*file, unsigned long arg)
- 	if (!instance)
- 		return -ENODEV;
+ $(obj)/aic7xxx_core.o: $(obj)/aic7xxx_seq.h
+ $(obj)/aic79xx_core.o: $(obj)/aic79xx_seq.h
+-$(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
+-$(obj)/aic7xxx_reg_print.c: $(src)/aic7xxx_reg_print.c_shipped
  
--	down(&instance->aen_mutex);
-+	mutex_lock(&instance->aen_mutex);
- 	error = megasas_register_aen(instance, aen.seq_num,
- 				     aen.class_locale_word);
--	up(&instance->aen_mutex);
-+	mutex_unlock(&instance->aen_mutex);
- 	return error;
- }
+-$(addprefix $(obj)/,$(aic7xxx-y)): $(obj)/aic7xxx_reg.h
+-$(addprefix $(obj)/,$(aic79xx-y)): $(obj)/aic79xx_reg.h
++$(addprefix $(obj)/,$(aic7xxx-y)): $(obj)/aic7xxx_seq.h
++$(addprefix $(obj)/,$(aic79xx-y)): $(obj)/aic79xx_seq.h
  
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h
-b/drivers/scsi/megaraid/megaraid_sas.h
-index 4dffc91..08c74c9 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1089,7 +1089,7 @@ struct megasas_instance {
- 	struct megasas_evt_detail *evt_detail;
- 	dma_addr_t evt_detail_h;
- 	struct megasas_cmd *aen_cmd;
--	struct semaphore aen_mutex;
-+	struct mutex aen_mutex;
- 	struct semaphore ioctl_sem;
+-aic7xxx-gen-$(CONFIG_AIC7XXX_BUILD_FIRMWARE)	:= $(obj)/aic7xxx_seq.h \
+-						   $(obj)/aic7xxx_reg.h
++aic7xxx-gen-$(CONFIG_AIC7XXX_BUILD_FIRMWARE)	:= $(obj)/aic7xxx_reg.h
+ aic7xxx-gen-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT)	+= $(obj)/aic7xxx_reg_print.c
  
- 	struct Scsi_Host *host;
-
---
-Matthias Kaehlcke
-Linux Application Developer
-Barcelona
-
-    Tant qu'il y aura sur terre des hommes pour qui existe un concept
-    d' 'honneur national', la menace d'une nouvelle guerre subsistera.
-                              (B. Traven)
-                                                                 .''`.
-    using free software / Debian GNU/Linux | http://debian.org  : :'  :
-                                                                `. `'`
-gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
+ aicasm-7xxx-opts-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT) := \
+ 	-p $(obj)/aic7xxx_reg_print.c -i aic7xxx_osm.h
+ 
+ ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
+-# Create a dependency chain in generated files
+-# to avoid concurrent invocations of the single
+-# rule that builds them all.
+-aic7xxx_seq.h: aic7xxx_reg.h
+-ifeq ($(CONFIG_AIC7XXX_REG_PRETTY_PRINT),y)
+-aic7xxx_reg.h: aic7xxx_reg_print.c
+-endif
+-$(aic7xxx-gen-y): $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
++$(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
+ 	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic7xxx_reg.h \
+ 			      $(aicasm-7xxx-opts-y) -o $(obj)/aic7xxx_seq.h \
+ 			      $(src)/aic7xxx.seq
++
++$(aic7xxx-gen-y): $(obj)/aic7xxx_seq.h
++else
++$(obj)/aic7xxx_reg_print.c: $(src)/aic7xxx_reg_print.c_shipped
+ endif
+ 
+-aic79xx-gen-$(CONFIG_AIC79XX_BUILD_FIRMWARE)	:= $(obj)/aic79xx_seq.h \
+-						   $(obj)/aic79xx_reg.h
++aic79xx-gen-$(CONFIG_AIC79XX_BUILD_FIRMWARE)	:= $(obj)/aic79xx_reg.h
+ aic79xx-gen-$(CONFIG_AIC79XX_REG_PRETTY_PRINT)	+= $(obj)/aic79xx_reg_print.c
+ 
+ aicasm-79xx-opts-$(CONFIG_AIC79XX_REG_PRETTY_PRINT) := \
+ 	-p $(obj)/aic79xx_reg_print.c -i aic79xx_osm.h
+ 
+ ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
+-# Create a dependency chain in generated files
+-# to avoid concurrent invocations of the single
+-# rule that builds them all.
+-aic79xx_seq.h: aic79xx_reg.h
+-ifeq ($(CONFIG_AIC79XX_REG_PRETTY_PRINT),y)
+-aic79xx_reg.h: aic79xx_reg_print.c
+-endif
+-$(aic79xx-gen-y): $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
++$(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
+ 	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic79xx_reg.h \
+ 			      $(aicasm-79xx-opts-y) -o $(obj)/aic79xx_seq.h \
+ 			      $(src)/aic79xx.seq
++
++$(aic79xx-gen-y): $(obj)/aic79xx_seq.h
++else
++$(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
+ endif
+ 
+ $(obj)/aicasm/aicasm: $(src)/aicasm/*.[chyl]
