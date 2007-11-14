@@ -1,71 +1,56 @@
-From: Tore Anderson <tore@linpro.no>
-Subject: Re: Disabling dev_loss_tmo?
-Date: Wed, 14 Nov 2007 16:38:58 +0100
-Message-ID: <473B1692.8050606@linpro.no>
-References: <47396A5B.5040001@linpro.no> <4739CE69.3040602@emulex.com> <473AAD88.307@linpro.no> <473B0644.3090403@emulex.com>
+From: "Chris Friesen" <cfriesen@nortel.com>
+Subject: Re: how to handle QUEUE_FULL/SAM_STAT_TASK_SET_FULL in userspace?
+Date: Wed, 14 Nov 2007 11:23:19 -0600
+Message-ID: <473B2F07.8060908@nortel.com>
+References: <664A4EBB07F29743873A87CF62C26D70B34152@NAMAIL4.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailhub.linpro.no ([213.236.139.167]:48999 "EHLO
-	mailhub.linpro.no" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758464AbXKNPjB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Nov 2007 10:39:01 -0500
-In-Reply-To: <473B0644.3090403@emulex.com>
+Received: from zrtps0kp.nortel.com ([47.140.192.56]:51847 "EHLO
+	zrtps0kp.nortel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751237AbXKNRXa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Nov 2007 12:23:30 -0500
+In-Reply-To: <664A4EBB07F29743873A87CF62C26D70B34152@NAMAIL4.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com
-Cc: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, Michael Reed <mdr@sgi.com>, Christoph Hellwig <hch@infradead.org>, MLOEHR@de.ibm.com
+To: "Moore, Eric" <Eric.Moore@lsi.com>
+Cc: "Stephens, Larry" <Larry.Stephens@lsi.com>, linux-scsi@vger.kernel.org, dgilbert@interlog.com, James.Bottomley@SteelEye.com, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
 
-* James Smart
+Moore, Eric wrote:
 
-> Please don't shoot the messenger. I was trying to summarize the
-> evolution of FC into the kernel, highlight that the DM team knew of
-> the issue, had higher-priority issues, and that it applies to more
-> than FC.  Having experienced first-hand this method of getting work
-> done, I certainly don't promote it as a productive way of doing
-> things.
+> QUEUE_FULL and SAM_STAT_TASK_SET_FULL are not errors.
 
-Sorry, didn't mean to shoot you!  ;-)  I mean "you" in the plural sense=
-;
-=C2=AByou SCSI people=C2=BB - got the impression there is some kind of =
-disdain
-towards the DM team (which would indeed be a counter-productive way of
-getting things done).  Not my intention to offend anyone, and if I did
-anyway I apologise.
+I consider them errors in the same way that ENOMEM or ENOBUFS (or even 
+EAGAIN) are errors.  "There is a shortage of resources and the command 
+could not be completed, please try again later."
 
-It's just frusterating when things don't work...
+Also, the behaviour has changed from 2.6.10 with the 3.01.18 fusion 
+driver, to 2.6.14 with the 3.02.57 fusion driver.
 
-> I'm highlighting that - ok today, we get FC working, but then the
-> user puts DM on something else, like iSCSI or SAS/whatever, then it
-> too breaks - and that's ok ?
+With 2.6.10 our user app never saw SAM_STAT_TASK_SET_FULL.  I suspect it 
+is due to the fact that it's using a queue size of 7, while in 2.6.14 
+it's using a queue size of 32 or 64.
 
-Of course the best would be if it worked perfectly with all transports,
-and leaving things broken is of course not OK.  In my strictly pragmati=
-c
-opinion, though, having a functional DM+FC combo and and half-functiona=
-l
-DM+<anything else> combos is better than having _only_ half-functional
-combos.
+Which kernel version is behaving properly?
 
-> Using this analogy, to resolve the reuse-after-free issues, we simply
-> would have used the dont-tear-down patches to avoid teardown bugs,=20
-> like what the distros did.  This too is a bad approach. Things need
-> to get fixed where things need to get fixed.  We can add the FC
-> patch, but DM still needs to get fixed.
+I've asked seagate what the queue size should be for that hardware, but 
+haven't heard back yet.
 
-Best would to have DM-multipath handle the disconnects gracefully, of
-course.  But since it doesn't appear to be happening anytime soon:  A
-workaround provided by the transport layer would be very welcome!  I
-don't use iSCSI or SAS with DM so I don't know if such a workaround is
-wanted there too, but with FC it is necessary.  Even if it is a bad
-approach it is much better than nothing, the way I see it.
+> SAM_STAT_TASK_SET_FULL returned for the target that handle the number of
+> commands, and QUEUE_FULL returned from hba firmware meaning its can't
+> handle the number of commands.  Translated, the commands are retried by
+> scsiml.    I probably should be calling scsi_track_queue_full which
+> would be throttling the command back, however I'm not sure whether it
+> matters.
 
-Regards
---=20
-Tore Anderson
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+We have a userspace app calling ioctl(...SG_IO...) on /dev/sdX and 
+occasionally getting a status of SAM_STAT_TASK_SET_FULL.  I may be 
+misreading the code, but it doesn't appear that the midlayer is retrying 
+these commands.
+
+If the queue length in 2.6.14 is correct then how do I handle that 
+status code?  Maybe delay a bit then retry a few times?  How much delay? 
+   How many retries?
+
+Chris
