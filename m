@@ -1,31 +1,49 @@
-From: "Moore, Eric" <Eric.Moore@lsi.com>
-Subject: RE: how to handle QUEUE_FULL/SAM_STAT_TASK_SET_FULL in userspace?
-Date: Thu, 15 Nov 2007 12:59:29 -0700
-Message-ID: <664A4EBB07F29743873A87CF62C26D70B345BE@NAMAIL4.ad.lsil.com>
-References: <473CA173.7080902@emulex.com>
+From: Roel Kluin <12o3l@tiscali.nl>
+Subject: [PATCH] priority fix in do_abort(); drivers/scsi/{atari,sun3}_NCR5380.c
+Date: Thu, 15 Nov 2007 21:13:46 +0100
+Message-ID: <473CA87A.9000906@tiscali.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:64685 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758529AbXKOT7t convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 14:59:49 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <473CA173.7080902@emulex.com>
+Received: from smtp-out1.tiscali.nl ([195.241.79.176]:45319 "EHLO
+	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753139AbXKOUNw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 15:13:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Smart@Emulex.Com, Chris Friesen <cfriesen@nortel.com>
-Cc: "Stephens, Larry" <Larry.Stephens@lsi.com>, linux-scsi@vger.kernel.org, dgilbert@interlog.com, James.Bottomley@SteelEye.com, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org
 
-On  Thursday, November 15, 2007 12:44 PM, James Smart wrote:
-> The midlayer doesn't do this automatically. The LLDD has to note the
-> QUEUE_FULL/TASK_SET_FULL status, then call scsi_adjust_queue_depth()
-> to manipulate things. And this gets really hairy to decrease 
-> load, then
-> ramp back up.
-> 
+This patch was not tested.
+--
+SR_REQ is defined 0x20, but bitanding has no effect because '!' has a higher
+priority than '&'
 
-yeah I need to do that, but the customer should do it via sysfs, as I
-previously noted, he is on 2.6.14 kernel.
+Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
+---
+diff --git a/drivers/scsi/atari_NCR5380.c b/drivers/scsi/atari_NCR5380.c
+index 03dbe60..5696588 100644
+--- a/drivers/scsi/atari_NCR5380.c
++++ b/drivers/scsi/atari_NCR5380.c
+@@ -1870,7 +1870,7 @@ static int do_abort(struct Scsi_Host *host)
+ 	 * the target sees, so we just handshake.
+ 	 */
+ 
+-	while (!(tmp = NCR5380_read(STATUS_REG)) & SR_REQ)
++	while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ))
+ 		;
+ 
+ 	NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
+diff --git a/drivers/scsi/sun3_NCR5380.c b/drivers/scsi/sun3_NCR5380.c
+index 98e3fe1..19852c5 100644
+--- a/drivers/scsi/sun3_NCR5380.c
++++ b/drivers/scsi/sun3_NCR5380.c
+@@ -1864,7 +1864,7 @@ static int do_abort (struct Scsi_Host *host)
+      * the target sees, so we just handshake.
+      */
+     
+-    while (!(tmp = NCR5380_read(STATUS_REG)) & SR_REQ);
++    while (!((tmp = NCR5380_read(STATUS_REG)) & SR_REQ));
+ 
+     NCR5380_write(TARGET_COMMAND_REG, PHASE_SR_TO_TCR(tmp));
+ 
