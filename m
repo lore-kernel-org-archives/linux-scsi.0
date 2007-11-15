@@ -1,75 +1,99 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: how to handle QUEUE_FULL/SAM_STAT_TASK_SET_FULL in userspace?
-Date: Thu, 15 Nov 2007 14:43:47 -0500
-Message-ID: <473CA173.7080902@emulex.com>
-References: <664A4EBB07F29743873A87CF62C26D70B3443F@NAMAIL4.ad.lsil.com> <473C997A.90404@nortel.com>
-Reply-To: James.Smart@Emulex.Com
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH] [SCSI] sym53c8xx: increase sg_tablesize for	larger	data
+ transfers
+Date: Thu, 15 Nov 2007 14:57:09 -0500
+Message-ID: <473CA495.20408@cybernetics.com>
+References: <473C6084.2040700@cybernetics.com>	 <1195143006.3407.20.camel@localhost.localdomain>	 <473C7606.7050608@cybernetics.com> <1195145875.3407.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:39882 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752362AbXKOToO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 14:44:14 -0500
-In-Reply-To: <473C997A.90404@nortel.com>
+Received: from host06.cybernetics.com ([206.246.200.22]:4870 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752463AbXKOT5G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 14:57:06 -0500
+In-Reply-To: <1195145875.3407.24.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chris Friesen <cfriesen@nortel.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, "Stephens, Larry" <Larry.Stephens@lsi.com>, linux-scsi@vger.kernel.org, dgilbert@interlog.com, James.Bottomley@SteelEye.com, DL-MPT Fusion Linux <DL-MPTFusionLinux@lsi.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
+James Bottomley wrote:
+> On Thu, 2007-11-15 at 11:38 -0500, Tony Battersby wrote:
+>   
+>> James Bottomley wrote:
+>>     
+>>> On Thu, 2007-11-15 at 10:06 -0500, Tony Battersby wrote:
+>>>   
+>>>       
+>>>> This patch increases the sg_tablesize for sym53c8xx from 96 to 128,
+>>>> which enables commands to transfer larger amounts of data (e.g. 512 KB
+>>>> instead of 384 KB, assuming 4 KB non-adjacent pages).
+>>>>
+>>>> In the current design of sym53c8xx, SYM_CONF_MAX_SG must be set low
+>>>> enough so that (sym_fw1.a_size <= PAGE_SIZE) && (sym_fw2.a_size <=
+>>>> PAGE_SIZE).  With SYM_CONF_MAX_SG == 128, sym_fw1.a_size == 3940 and
+>>>> sym_fw2.a_size == 3576 (plus or minus a few bytes depending on other
+>>>> configuration options).  The a_size values increase by 16 for every
+>>>> additional sg vector, so SYM_CONF_MAX_SG cannot be set much higher than
+>>>> 128 without making more intrusive changes.
+>>>>     
+>>>>         
+>>> This has been suggested before.  I thought the problem was there were
+>>> some cards of the 875 ilk that choke on a sg table larger than 96?  If I
+>>> recall the conversation correctly, the claim was made, but no-one
+>>> managed to turn up the errata that showed it.
+>>>
+>>> James
+>>>
+>>>
+>>>   
+>>>       
+>> I will try to get ahold of some 875's to test.
+>>     
+>
+> Thanks ... even if there's a problem, we can take your hard coded update
+> and dynamically (probably via PCI ID) lower the host->sg_tablesize for
+> the problem cards at probe time, so they'll never see the longer list.
+>
+> James
+>
+>
+>
+>   
+I tested three 53c875 HBAs and didn't find any problems.  However, I
+don't have every chip variation ever manufactured to test, so I suppose
+there still might be a chip that doesn't work.  These are the chips I
+was able to test (in addition to the 53c1010-66):
 
+HBA: 53c875 single-port HVD 40 MB/s
+PCI ID: PCI_VENDOR_ID_LSI_LOGIC (0x1000) PCI_DEVICE_ID_NCR_53C875
+(0x000f) revision 04
 
-Chris Friesen wrote:
-> Moore, Eric wrote:
-> 
->> You already figured out the problem, I don't understand why your asking
->> if the kernel verison is behaving properly.   You said between those
->> driver versions the device queue depth increased from 32 to 64, and that
->> is exactly what happened.   The reason for the increase is some customer
->> ask for the increase queue_depth which helps with performance. We are
->> not going to decrease it back.
-> 
-> My impression is that the per-device queue is supposed to be decreased 
-> at runtime to match the actual size that the hardware can handle.  In 
-> the earlier version we're seeing the queue set to 7 at runtime, while 
-> the more recent version is showing a queue depth of 32 or 64 and is 
-> giving QUEUE_FULL errors to the userspace apps.
+HBA: 53c876 dual-port HVD 40 MB/s
+PCI ID: PCI_VENDOR_ID_LSI_LOGIC (0x1000) PCI_DEVICE_ID_NCR_53C875
+(0x000f) revision 14
 
-The midlayer doesn't do this automatically. The LLDD has to note the
-QUEUE_FULL/TASK_SET_FULL status, then call scsi_adjust_queue_depth()
-to manipulate things. And this gets really hairy to decrease load, then
-ramp back up.
+Test:
+write/read/compare with constantly-changing random data
+512 KB (128 scatter-gather vectors) per CDB
+(128 sg vectors / CDB verified by printk("%u\n", cmd->use_sg) from
+sym53c8xx_queue_command())
+test length: 10 GB
 
-> I just wanted to make sure that 2.6.14 was working correctly (ie, this 
-> wasn't a bug that has been fixed in a more recent version).
-> 
->> SAM_STAT_TASK_SET_FULL in /usr/src/linux/scsi/scsi.h, is the same as
->> QUEUE_FULL.  If you look in scsi_error.c searching for QUEUE_FULL, you
->> will see that it will translate to ADD_TO_MLQUEUE, which means it will
->> reposted to the request queue.
-> 
-> I don't know the scsi code very well, so maybe I'm missing something 
-> obvious here.  If so, I apologize.
-> 
-> Our userspace apps are getting a status of TASK_SET_FULL on completion 
-> of an ioctl() call.
+How do you want to handle this?  Increase sg_tablesize for all chips
+(tested or not), or just those chips that have been verified to work? 
+Add a module parameter to use a smaller sg_tablesize if someone
+encounters a problem?  Personally, I would be content with increasing it
+just on the modern Ultra2 and Ultra3 HBAs (895 and later).
 
-If you're using sgio, you will always be susceptible to getting these
-statuses, even if the driver adjusts queue depth.
+Incidentally, it should also be possible to make fw->a_size independent
+of SYM_CONF_MAX_SG by having SCRIPTS perform a loop with a counter
+register instead of having a separate SCR_CHMOV_TBL command for every sg
+vector.  This would make sg_tablesize > 128 possible.  I know that this
+technique works on 875, 876, 895, 896, and 1010 because I wrote a
+target-mode driver that does it.  However, making that change is a bit
+more complicated than I had in mind.
 
-> Does this status mean that the command needs to be retried by the 
-> userspace app, that it has already been retried by the lower levels and 
-> is now completed, or something else entirely?
+Tony
 
-The status means you can retry again, hoping that the queue is not as
-busy at that time. The recommendation is that you delay 1 or more seconds
-before attempting again. But, even that is a general recommendation.
-SAM-4 gives some basic guidance on how long to delay before the retry
-(see table 26).
-
-It would be bad form for the lower levels or driver to retry the command.
-Some commands are not retryable without affecting device state. Since you
-use sgio, it's up to you to retry.
-
--- james s
