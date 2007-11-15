@@ -1,50 +1,40 @@
-From: Andy Whitcroft <apw@shadowen.org>
-Subject: Re: 2.6.24-rc2-mm1 -- QLogics ISP1020 gone missing
-Date: Thu, 15 Nov 2007 10:50:15 +0000
-Message-ID: <20071115105015.GC2513@shadowen.org>
-References: <20071113175906.497a1a6a.akpm@linux-foundation.org>
+From: Martin Peschke <mp3@de.ibm.com>
+Subject: [Patch 0/2] zfcp: bug fixes for error recovery
+Date: Thu, 15 Nov 2007 13:57:03 +0100
+Message-ID: <1195131423.16786.31.camel@dix>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hellhawk.shadowen.org ([80.68.90.175]:4649 "EHLO
-	hellhawk.shadowen.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757726AbXKOKuW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 05:50:22 -0500
-Content-Disposition: inline
-In-Reply-To: <20071113175906.497a1a6a.akpm@linux-foundation.org>
+Received: from mtagate3.de.ibm.com ([195.212.29.152]:54212 "EHLO
+	mtagate3.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756690AbXKOM5F (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 07:57:05 -0500
+Received: from d12nrmr1607.megacenter.de.ibm.com (d12nrmr1607.megacenter.de.ibm.com [9.149.167.49])
+	by mtagate3.de.ibm.com (8.13.8/8.13.8) with ESMTP id lAFCv4Js136436
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Nov 2007 12:57:04 GMT
+Received: from d12av03.megacenter.de.ibm.com (d12av03.megacenter.de.ibm.com [9.149.165.213])
+	by d12nrmr1607.megacenter.de.ibm.com (8.13.8/8.13.8/NCO v8.6) with ESMTP id lAFCv4cd1671412
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Nov 2007 13:57:04 +0100
+Received: from d12av03.megacenter.de.ibm.com (loopback [127.0.0.1])
+	by d12av03.megacenter.de.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lAFCv3ZJ022695
+	for <linux-scsi@vger.kernel.org>; Thu, 15 Nov 2007 13:57:04 +0100
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-driver@qlogic.com, Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Swen Schillig <swen@vnet.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>
 
-All of our machines with QLogics ISP1020 cards seem to have lost them on
-boot with 2.6.24-rc1-mm1+hotfixes.
+I am posting 2 bug fixes which are required for the zfcp error recovery
+to work correctly. It takes some error injection tests to strain the
+zfcp error recovery to the extend which triggers both bugs. The bugs are
+related to recovery actions which need to be dismissed because some
+stronger action has been requested. We have verified both patches
+running our error injection tests. Patches are against 2.6.24-rc2-git5.
+Please apply.
 
-# lspci
-0000:00:0a.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide
-SCSI (rev 05)
+[Patch 1/2] zfcp: fix dismissal of error recovery actions
+[Patch 2/2] zfcp: fix cleanup of dismissed error recovery actions
 
-# lspci -n
-0000:00:0a.0 0100: 1077:1020 (rev 05)
+Signed-off-by: Martin Peschke <mp3@de.ibm.com>
+Acked-by: Swen Schillig <swen@vnet.ibm.com>
 
-# lspci -v -v
-0000:00:0a.0 SCSI storage controller: QLogic Corp. ISP1020 Fast-wide SCSI (rev 05)
-        Subsystem: QLogic Corp.: Unknown device 0000
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV+ VGASnoop- ParErr- Stepping- SERR+ FastB2B-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR-
-        Latency: 248, Cache Line Size: 0x08 (32 bytes)
-        Interrupt: pin A routed to IRQ 23
-        Region 0: I/O ports at fc00 [size=256]
-        Region 1: Memory at fa000000 (32-bit, non-prefetchable) [size=4K]
-
-These devices are normally reported as below, which I note is not as a
-1020?
-
-qla1280: QLA1040 found on PCI bus 0, dev 10
-scsi(0:0): Resetting SCSI BUS
-scsi0 : QLogic QLA1040 PCI to SCSI Host Adapter
-	Firmware version:  7.65.06, Driver version 3.26
-
-There is nothing major around in the area so I am somewhat bemused.
-
--apw
