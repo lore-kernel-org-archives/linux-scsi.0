@@ -1,44 +1,96 @@
-From: "Martin Weiss" <mweiss@novell.com>
-Subject: Data corruption with i2o with XEN kernel using PAE or 64bit
-Date: Thu, 15 Nov 2007 02:27:28 -0700
-Message-ID: <473C1F10.2254.001C.1@novell.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH rebased] tgt: fix build when dprintk is defined
+Date: Thu, 15 Nov 2007 11:37:30 +0200
+Message-ID: <473C135A.9070301@panasas.com>
+References: <20071114165236.54f93155.randy.dunlap@oracle.com> <473C0CC7.6090306@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sinclair.provo.novell.com ([137.65.248.137]:31734 "EHLO
-	sinclair.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751715AbXKOJ24 convert rfc822-to-8bit (ORCPT
-	<smtp;groupwise-linux-scsi@vger.kernel.org:1:1>);
-	Thu, 15 Nov 2007 04:28:56 -0500
-Content-Disposition: inline
+Received: from sa10.bezeqint.net ([192.115.104.24]:57610 "EHLO
+	sa10.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756421AbXKOJhj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 04:37:39 -0500
+In-Reply-To: <473C0CC7.6090306@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: michaelc@cs.wisc.edu, scsi <linux-scsi@vger.kernel.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-Hi,
+From: Randy Dunlap <rdunlap@xenotime.net>
 
-not sure if this list is the right way to look for help - but lets give it a try ;-).
+Fix scsi_tgt_lib build when dprintk is defined:
 
-I am running openSuSE with Kernel  2.6.22.12-0.1-xen #1 SMP 2007/11/06 23:05:18 UTC x86_64 x86_64 x86_64 GNU/Linux.
-The RAID Controller I am using is Adaptec 2400A with four 400GB HDDs as RAID5.
+drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_cmd_destroy':
+drivers/scsi/scsi_tgt_lib.c:183: warning: format '%lu' expects type 'long unsigned int', but argument 6 has type 'unsigned int'
+drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_cmd_done':
+drivers/scsi/scsi_tgt_lib.c:330: warning: format '%lu' expects type 'long unsigned int', but argument 5 has type 'unsigned int'
+drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_transfer_response':
+drivers/scsi/scsi_tgt_lib.c:345: warning: format '%lu' expects type 'long unsigned int', but argument 5 has type 'unsigned int'
+drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_init_cmd':
+drivers/scsi/scsi_tgt_lib.c:368: warning: format '%lu' expects type 'long unsigned int', but argument 6 has type 'unsigned int'
+drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_kspace_exec':
+drivers/scsi/scsi_tgt_lib.c:499: warning: format '%lu' expects type 'long unsigned int', but argument 9 has type 'unsigned int'
+drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_kspace_it_nexus_rsp':
+drivers/scsi/scsi_tgt_lib.c:620: error: 'mid' undeclared (first use in this function)
+drivers/scsi/scsi_tgt_lib.c:620: error: (Each undeclared identifier is reported only once
+drivers/scsi/scsi_tgt_lib.c:620: error: for each function it appears in.)
+make[2]: *** [drivers/scsi/scsi_tgt_lib.o] Error 1
 
-In the past I was running standard 32bit kernels without any problems..
-Now I moved on to 64bit and I have two problems:
+Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+---
+ drivers/scsi/scsi_tgt_lib.c |   10 +++++-----
+ 1 files changed, 5 insertions(+), 5 deletions(-)
 
-1. If I have more then 3999MB in the system - no partitions can be read. A workaround was to set mem=3999M as boot parameter. But now I have 8 GB memory and I want to use it.
-If I compile the i2o_block without 64bit support - I can also read the partitions without the workaround. --> It would be much better to have a real fix for this..
-
-2. I have large size files on the device >11 GB (XEN domUs). When I do a md5sum on that files (while the domU is not started) - I get different results for each try (the file stays the same) !
-This is really critical because it looks as if there is a data corruption problem on 64bit systems with the i2o_core or i2o_block.
-
-After some more testing - even with SLES 10 SP1 - I found out, that the second problem exists with all XEN kernels except the standard 32Bit kernel without PAE !
-If I do not use a kernel with XEN support - I do not have the problem !
-
-So it seems there is a bug when using XEN together with i2o.
-
-Now I have the question - how can I get this problem fixed ?
-
-Thanks in advance,
-Martin
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+index 5fd5fca..fad03a4 100644
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -180,7 +180,7 @@ static void scsi_tgt_cmd_destroy(struct work_struct *work)
+ 		container_of(work, struct scsi_tgt_cmd, work);
+ 	struct scsi_cmnd *cmd = tcmd->rq->special;
+ 
+-	dprintk("cmd %p %d %lu\n", cmd, cmd->sc_data_direction,
++	dprintk("cmd %p %d %u\n", cmd, cmd->sc_data_direction,
+ 		rq_data_dir(cmd->request));
+ 	scsi_unmap_user_pages(tcmd);
+ 	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
+@@ -327,7 +327,7 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
+ 
+-	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
++	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
+ 
+ 	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
+ 
+@@ -341,7 +341,7 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
+ 	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
+ 	int err;
+ 
+-	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
++	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
+ 
+ 	err = shost->hostt->transfer_response(cmd, scsi_tgt_cmd_done);
+ 	switch (err) {
+@@ -473,7 +473,7 @@ int scsi_tgt_kspace_exec(int host_no, u64 itn_id, int result, u64 tag,
+ 	}
+ 	cmd = rq->special;
+ 
+-	dprintk("cmd %p scb %x result %d len %d bufflen %u %lu %x\n",
++	dprintk("cmd %p scb %x result %d len %d bufflen %u %u %x\n",
+ 		cmd, cmd->cmnd[0], result, len, cmd->request_bufflen,
+ 		rq_data_dir(rq), cmd->cmnd[0]);
+ 
+@@ -594,7 +594,7 @@ int scsi_tgt_kspace_it_nexus_rsp(int host_no, u64 itn_id, int result)
+ 	struct Scsi_Host *shost;
+ 	int err = -EINVAL;
+ 
+-	dprintk("%d %d %llx\n", host_no, result, (unsigned long long) mid);
++	dprintk("%d %d\n", host_no, result);
+ 
+ 	shost = scsi_host_lookup(host_no);
+ 	if (IS_ERR(shost)) {
+-- 
+1.5.3.1
 
