@@ -1,38 +1,105 @@
-From: Rob Landley <rob@landley.net>
-Subject: Re: [PATCH] scsi: docbook and kernel-doc updates
-Date: Thu, 15 Nov 2007 21:23:44 -0600
-Message-ID: <200711152123.45358.rob@landley.net>
-References: <200710262318.01021.rob@landley.net> <200711081419.41759.rob@landley.net> <20071115154230.28295485.randy.dunlap@oracle.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH rebased ver2] tgt: fix build when dprintk is defined
+Date: Fri, 16 Nov 2007 18:45:28 +0900
+Message-ID: <20071116184528T.fujita.tomonori@lab.ntt.co.jp>
+References: <473C0CC7.6090306@panasas.com>
+	<473C135A.9070301@panasas.com>
+	<473C1715.70204@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-71-162-243-5.phlapa.fios.verizon.net ([71.162.243.5]:35205
-	"EHLO grelber.thyrsus.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753422AbXKPD0u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Nov 2007 22:26:50 -0500
-In-Reply-To: <20071115154230.28295485.randy.dunlap@oracle.com>
-Content-Disposition: inline
+Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:40047 "EHLO
+	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755014AbXKPJvM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Nov 2007 04:51:12 -0500
+In-Reply-To: <473C1715.70204@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>
+To: bharrosh@panasas.com
+Cc: randy.dunlap@oracle.com, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Thursday 15 November 2007 17:42:30 Randy Dunlap wrote:
-> From: Randy Dunlap <randy.dunlap@oracle.com>
->
-> - Change title to remove "Mid-Layer" since the doc is about all of the
-> SCSI layers.
-> - Use "SCSI" instead of "scsi" in docbook text.
-> - Use "*/" to end kernel-doc notation blocks.
-> - A few other minor typo fixes.
->
-> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+On Thu, 15 Nov 2007 11:53:25 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Acked-by: Rob Landley <rob@landley.net>
+> From: Randy Dunlap <rdunlap@xenotime.net>
+> 
+> Fix scsi_tgt_lib build when dprintk is defined:
+> Also fix accessors problem when dprintk is defined
+> 
+> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_cmd_destroy':
+> drivers/scsi/scsi_tgt_lib.c:183: warning: format '%lu' expects type 'long unsigned int', but argument 6 has type 'unsigned int'
+> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_cmd_done':
+> drivers/scsi/scsi_tgt_lib.c:330: warning: format '%lu' expects type 'long unsigned int', but argument 5 has type 'unsigned int'
+> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_transfer_response':
+> drivers/scsi/scsi_tgt_lib.c:345: warning: format '%lu' expects type 'long unsigned int', but argument 5 has type 'unsigned int'
+> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_init_cmd':
+> drivers/scsi/scsi_tgt_lib.c:368: warning: format '%lu' expects type 'long unsigned int', but argument 6 has type 'unsigned int'
+> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_kspace_exec':
+> drivers/scsi/scsi_tgt_lib.c:499: warning: format '%lu' expects type 'long unsigned int', but argument 9 has type 'unsigned int'
+> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_kspace_it_nexus_rsp':
+> drivers/scsi/scsi_tgt_lib.c:620: error: 'mid' undeclared (first use in this function)
+> drivers/scsi/scsi_tgt_lib.c:620: error: (Each undeclared identifier is reported only once
+> drivers/scsi/scsi_tgt_lib.c:620: error: for each function it appears in.)
+> make[2]: *** [drivers/scsi/scsi_tgt_lib.o] Error 1
+> 
+> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/scsi_tgt_lib.c |   12 ++++++------
+>  1 files changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+> index 5fd5fca..746f1a1 100644
+> --- a/drivers/scsi/scsi_tgt_lib.c
+> +++ b/drivers/scsi/scsi_tgt_lib.c
+> @@ -180,7 +180,7 @@ static void scsi_tgt_cmd_destroy(struct work_struct *work)
+>  		container_of(work, struct scsi_tgt_cmd, work);
+>  	struct scsi_cmnd *cmd = tcmd->rq->special;
+>  
+> -	dprintk("cmd %p %d %lu\n", cmd, cmd->sc_data_direction,
+> +	dprintk("cmd %p %d %u\n", cmd, cmd->sc_data_direction,
+>  		rq_data_dir(cmd->request));
+>  	scsi_unmap_user_pages(tcmd);
+>  	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
+> @@ -327,7 +327,7 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
+>  {
+>  	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
+>  
+> -	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
+> +	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
+>  
+>  	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
+>  
+> @@ -341,7 +341,7 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
+>  	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
+>  	int err;
+>  
+> -	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
+> +	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
+>  
+>  	err = shost->hostt->transfer_response(cmd, scsi_tgt_cmd_done);
+>  	switch (err) {
+> @@ -473,8 +473,8 @@ int scsi_tgt_kspace_exec(int host_no, u64 itn_id, int result, u64 tag,
+>  	}
+>  	cmd = rq->special;
+>  
+> -	dprintk("cmd %p scb %x result %d len %d bufflen %u %lu %x\n",
+> -		cmd, cmd->cmnd[0], result, len, cmd->request_bufflen,
+> +	dprintk("cmd %p scb %x result %d len %d bufflen %u %u %x\n",
+> +		cmd, cmd->cmnd[0], result, len, scsi_bufflen(cmd),
+>  		rq_data_dir(rq), cmd->cmnd[0]);
+>  
+>  	if (result == TASK_ABORTED) {
+> @@ -594,7 +594,7 @@ int scsi_tgt_kspace_it_nexus_rsp(int host_no, u64 itn_id, int result)
+>  	struct Scsi_Host *shost;
+>  	int err = -EINVAL;
+>  
+> -	dprintk("%d %d %llx\n", host_no, result, (unsigned long long) mid);
+> +	dprintk("%d %d\n", host_no, result);
 
-Rob
--- 
-"One of my most productive days was throwing away 1000 lines of code."
-  - Ken Thompson.
+'mid' is a typo. I wanted to do:
+
+	dprintk("%d %d %llx\n", host_no, result, (unsigned long long)itn_id);
+
+The rest looks ok. Thanks,
