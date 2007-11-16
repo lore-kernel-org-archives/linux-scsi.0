@@ -1,105 +1,95 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH rebased ver2] tgt: fix build when dprintk is defined
-Date: Fri, 16 Nov 2007 18:45:28 +0900
-Message-ID: <20071116184528T.fujita.tomonori@lab.ntt.co.jp>
-References: <473C0CC7.6090306@panasas.com>
-	<473C135A.9070301@panasas.com>
-	<473C1715.70204@panasas.com>
+From: Arne Redlich <arne.redlich@xiranet.com>
+Subject: Re: [PATCH 2/3] multipath: Add new SPC-3 ALUA hardware
+	handler
+Date: Fri, 16 Nov 2007 11:25:38 +0100
+Message-ID: <8764021o7x.fsf@confield.dd.xiranet.com>
+References: <20071115091634.4568D347401@pentland.suse.de>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama5.ecl.ntt.co.jp ([129.60.39.102]:40047 "EHLO
-	tama5.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755014AbXKPJvM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Nov 2007 04:51:12 -0500
-In-Reply-To: <473C1715.70204@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20071115091634.4568D347401@pentland.suse.de> (Hannes Reinecke's
+	message of "Thu\, 15 Nov 2007 10\:16\:34 +0100")
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: michaelc@cs.wisc.edu, dm-devel@redhat.com, Alasdair Kergon <agk@redhat.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: randy.dunlap@oracle.com, James.Bottomley@SteelEye.com, michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Thu, 15 Nov 2007 11:53:25 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+Hi Hannes,
 
-> From: Randy Dunlap <rdunlap@xenotime.net>
-> 
-> Fix scsi_tgt_lib build when dprintk is defined:
-> Also fix accessors problem when dprintk is defined
-> 
-> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_cmd_destroy':
-> drivers/scsi/scsi_tgt_lib.c:183: warning: format '%lu' expects type 'long unsigned int', but argument 6 has type 'unsigned int'
-> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_cmd_done':
-> drivers/scsi/scsi_tgt_lib.c:330: warning: format '%lu' expects type 'long unsigned int', but argument 5 has type 'unsigned int'
-> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_transfer_response':
-> drivers/scsi/scsi_tgt_lib.c:345: warning: format '%lu' expects type 'long unsigned int', but argument 5 has type 'unsigned int'
-> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_init_cmd':
-> drivers/scsi/scsi_tgt_lib.c:368: warning: format '%lu' expects type 'long unsigned int', but argument 6 has type 'unsigned int'
-> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_kspace_exec':
-> drivers/scsi/scsi_tgt_lib.c:499: warning: format '%lu' expects type 'long unsigned int', but argument 9 has type 'unsigned int'
-> drivers/scsi/scsi_tgt_lib.c: In function 'scsi_tgt_kspace_it_nexus_rsp':
-> drivers/scsi/scsi_tgt_lib.c:620: error: 'mid' undeclared (first use in this function)
-> drivers/scsi/scsi_tgt_lib.c:620: error: (Each undeclared identifier is reported only once
-> drivers/scsi/scsi_tgt_lib.c:620: error: for each function it appears in.)
-> make[2]: *** [drivers/scsi/scsi_tgt_lib.o] Error 1
-> 
-> Signed-off-by: Randy Dunlap <rdunlap@xenotime.net>
-> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-> ---
->  drivers/scsi/scsi_tgt_lib.c |   12 ++++++------
->  1 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
-> index 5fd5fca..746f1a1 100644
-> --- a/drivers/scsi/scsi_tgt_lib.c
-> +++ b/drivers/scsi/scsi_tgt_lib.c
-> @@ -180,7 +180,7 @@ static void scsi_tgt_cmd_destroy(struct work_struct *work)
->  		container_of(work, struct scsi_tgt_cmd, work);
->  	struct scsi_cmnd *cmd = tcmd->rq->special;
->  
-> -	dprintk("cmd %p %d %lu\n", cmd, cmd->sc_data_direction,
-> +	dprintk("cmd %p %d %u\n", cmd, cmd->sc_data_direction,
->  		rq_data_dir(cmd->request));
->  	scsi_unmap_user_pages(tcmd);
->  	scsi_host_put_command(scsi_tgt_cmd_to_host(cmd), cmd);
-> @@ -327,7 +327,7 @@ static void scsi_tgt_cmd_done(struct scsi_cmnd *cmd)
->  {
->  	struct scsi_tgt_cmd *tcmd = cmd->request->end_io_data;
->  
-> -	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
-> +	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
->  
->  	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
->  
-> @@ -341,7 +341,7 @@ static int scsi_tgt_transfer_response(struct scsi_cmnd *cmd)
->  	struct Scsi_Host *shost = scsi_tgt_cmd_to_host(cmd);
->  	int err;
->  
-> -	dprintk("cmd %p %lu\n", cmd, rq_data_dir(cmd->request));
-> +	dprintk("cmd %p %u\n", cmd, rq_data_dir(cmd->request));
->  
->  	err = shost->hostt->transfer_response(cmd, scsi_tgt_cmd_done);
->  	switch (err) {
-> @@ -473,8 +473,8 @@ int scsi_tgt_kspace_exec(int host_no, u64 itn_id, int result, u64 tag,
->  	}
->  	cmd = rq->special;
->  
-> -	dprintk("cmd %p scb %x result %d len %d bufflen %u %lu %x\n",
-> -		cmd, cmd->cmnd[0], result, len, cmd->request_bufflen,
-> +	dprintk("cmd %p scb %x result %d len %d bufflen %u %u %x\n",
-> +		cmd, cmd->cmnd[0], result, len, scsi_bufflen(cmd),
->  		rq_data_dir(rq), cmd->cmnd[0]);
->  
->  	if (result == TASK_ABORTED) {
-> @@ -594,7 +594,7 @@ int scsi_tgt_kspace_it_nexus_rsp(int host_no, u64 itn_id, int result)
->  	struct Scsi_Host *shost;
->  	int err = -EINVAL;
->  
-> -	dprintk("%d %d %llx\n", host_no, result, (unsigned long long) mid);
-> +	dprintk("%d %d\n", host_no, result);
+hare@suse.de (Hannes Reinecke) writes:
 
-'mid' is a typo. I wanted to do:
+> This adds a new SPC-3 ALUA hardware handler for multipathing.
+>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-	dprintk("%d %d %llx\n", host_no, result, (unsigned long long)itn_id);
+<snip>
 
-The rest looks ok. Thanks,
+> +#define TPGS_STATE_OPTIMIZED		0x0
+> +#define TPGS_STATE_NONOPTIMIZED		0x1
+> +#define TPGS_STATE_STANDBY		0x2
+> +#define TPGS_STATE_UNAVAILABLE		0x3
+> +#define TPGS_STATE_OFFLINE		0xe
+
+SPC-3 (at least the draft, rev 23 I'm looking at) doesn't know an
+'Offline' state - I think it's a SPC-4 feature. So maybe 'Unavailable'
+should be interpreted as path failure as well / instead?
+
+<snip>
+
+> +/*
+> + * SET TARGET GROUP STATES endio handler
+> + *
+> + * We only have to test here if we should resubmit the command;
+> + * any other error is assumed as a failure.
+> + * Maybe we should analyze the sensebuffer here, too.
+> + */
+> +static void stpg_endio(struct request *req, int error)
+> +{
+> +	struct hw_handler *hwh = req->end_io_data;
+> +	struct alua_handler *h = hwh->context;
+> +
+> +	switch(host_byte(error)) {
+> +	case DID_BUS_BUSY:
+> +		if (!h->retry)
+> +			break;
+> +		h->retry--;
+> +	case DID_REQUEUE:
+> +	case DID_IMM_RETRY:
+> +		dm_enqueue_hw_workq(hwh);
+> +		goto done;
+> +	}
+> +
+> +	if (had_failures(req, error)) {
+> +		if (h->tpgs & TPGS_MODE_IMPLICIT) {
+> +			/* Ignore errors; the array will figure it out */
+> +			DMWARN("%s: stpg failed %x, disabling explicit mode",
+> +			       h->path->dev->name, error);
+> +			h->tpgs &= ~TPGS_MODE_EXPLICIT;
+> +			dm_enqueue_hw_workq(hwh);
+> +		} else {
+> +			DMWARN("%s: stpg failed %x, disable path",
+> +			       h->path->dev->name, error);
+> +			dm_pg_init_complete(h->path, MP_FAIL_PATH);
+> +		}
+> +	} else {
+> +		DMWARN("%s: port group %02x new state %c",
+> +		       h->path->dev->name, h->group_id,
+> +		       print_alua_state(h->state) );
+> +		dm_pg_init_complete(h->path, 0);
+
+Hmmm, maybe I'm just missing something so CMIIW, but I think the PG
+state should be retrieved once more before finally calling
+dm_pg_init_complete(), because the target might return the STPG command
+before the transition has completed (SPC-3, 6.31). This could confuse
+application clients?
+
+Arne
