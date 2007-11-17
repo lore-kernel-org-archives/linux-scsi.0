@@ -1,37 +1,39 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: RE: [PATCH 1/6] scsi: megaraid_sas - add hibernation support
-Date: Fri, 16 Nov 2007 16:18:25 -0600
-Message-ID: <1195251505.3407.30.camel@localhost.localdomain>
-References: <9738BCBE884FDB42801FAD8A7769C26501CE50E4@NAMAIL1.ad.lsil.com>
+From: "Fajun Chen" <fajunchen@gmail.com>
+Subject: Process Scheduling Issue using sg/libata
+Date: Fri, 16 Nov 2007 17:49:28 -0700
+Message-ID: <8202f4270711161649v75d06d35kd1d56e36d272a883@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:45067 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751164AbXKPWSd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Nov 2007 17:18:33 -0500
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501CE50E4@NAMAIL1.ad.lsil.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: linux-scsi@vger.kernel.org, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>
 
-On Fri, 2007-11-16 at 14:31 -0700, Yang, Bo wrote:
-> James,
-> 
-> Do you have get any feedback for those patches?  Based on those patches
-> be added to the scsi_misc tree, we have more patches need to submit.
-> Please let me know.
+Hi All,
 
-Well, the last one had a large amount of whitespace cleanup to do:
+I use sg/libata and ata pass through for read/writes. Linux 2.6.18-rc2
+and libata version 2.00 are loaded on ARM XScale board.  Under heavy
+cpu load (e.g. when blocks per transfer/sector count is set to 1),
+I've observed that the test application can suck cpu away for long
+time (more than 20 seconds) and other processes including high
+priority shell can not get the time slice to run.  What's interesting
+is that if the application is under heavy IO load (e.g. when blocks
+per transfer/sector count is set to 256),  the problem goes away. I
+also tested with open source code sg_utils and got the same result, so
+this is not a problem specific to my user-space application.
 
-Warning: trailing whitespace in lines
-4,9,15,29,34,38,40,46,58,64,77,83,104,108,113,121,125,128,134,137,138 of
-Documentation/scsi/ChangeLog.megaraid_sas
+Since user preemption is checked when the kernel is about to return to
+user-space from a system call,  process scheduler should be invoked
+after each system call. Something seems to be broken here.  I found a
+similar issue below:
+http://marc.info/?l=linux-arm-kernel&m=103121214521819&w=2
+But that turns out to be an issue with MTD/JFFS2 drivers, which are
+not used in my system.
 
-So it took me a while to clean it up.
+Has anyone experienced similar issues with sg/libata? Any information
+would be greatly appreciated.
 
-James
-
-
+Thanks,
+Fajun
