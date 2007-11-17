@@ -1,97 +1,119 @@
-From: "Fajun Chen" <fajunchen@gmail.com>
-Subject: Re: Process Scheduling Issue using sg/libata
-Date: Sat, 17 Nov 2007 00:20:36 -0700
-Message-ID: <8202f4270711162320s2eb1d48dwb1430f4a779809a9@mail.gmail.com>
-References: <8202f4270711161649v75d06d35kd1d56e36d272a883@mail.gmail.com>
-	 <473E6E62.9090309@rtr.ca>
+From: "Grzegorz Nosek" <grzegorz.nosek@gmail.com>
+Subject: Hotplugging U160 disks on a Fast-40 sym53c8xx
+Date: Sat, 17 Nov 2007 15:09:08 +0100
+Message-ID: <121a28810711170609k18f5476fwc3064c9f60682a46@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:25993 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751529AbXKQHUh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Nov 2007 02:20:37 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so78506wra
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Nov 2007 23:20:36 -0800 (PST)
-In-Reply-To: <473E6E62.9090309@rtr.ca>
+Received: from nf-out-0910.google.com ([64.233.182.190]:38009 "EHLO
+	nf-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1759418AbXKQOJK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 17 Nov 2007 09:09:10 -0500
+Received: by nf-out-0910.google.com with SMTP id g13so1041636nfb
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Nov 2007 06:09:09 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+To: linux-scsi@vger.kernel.org
 
-On 11/16/07, Mark Lord <liml@rtr.ca> wrote:
-> Fajun Chen wrote:
-> > Hi All,
-> >
-> > I use sg/libata and ata pass through for read/writes. Linux 2.6.18-rc2
-> > and libata version 2.00 are loaded on ARM XScale board.  Under heavy
-> > cpu load (e.g. when blocks per transfer/sector count is set to 1),
-> > I've observed that the test application can suck cpu away for long
-> > time (more than 20 seconds) and other processes including high
-> > priority shell can not get the time slice to run.  What's interesting
-> > is that if the application is under heavy IO load (e.g. when blocks
-> > per transfer/sector count is set to 256),  the problem goes away. I
-> > also tested with open source code sg_utils and got the same result, so
-> > this is not a problem specific to my user-space application.
-> ..
->
-> Post the relevant code here, and then we'll be able to better understand
-> and explain it to you.
->
-> For example, if the code is using ATA opcodes 0x20, 0x21, 0x24,
-> 0x30, 0x31, 0x34, 0x29, 0x39, 0xc4 or 0xc5 (any of the R/W PIO ops),
-> then this behaviour does not surprise me in the least.  Fully expected
-> and difficult to avoid.
->
+Hi all,
 
-This problem also happens with R/W DMA ops. Below are simplified code snippets:
-    // Open one sg device for read
-      if ((sg_fd  = open(dev_name, O_RDWR))<0)
-      {
-          ...
-      }
-      read_buffer = (U8 *)mmap(NULL, buf_sz, PROT_READ | PROT_WRITE,
-                             MAP_SHARED, sg_fd, 0);
+I have a problem with hotplugging hard disks to an old Compaq ProLiant
+360 with the following SCSI controllers:
 
-    // Open the same sg device for write
-      if ((sg_fd_wr = open(dev_name, O_RDWR))<0)
-      {
-         ...
-      }
-      write_buffer = (U8 *)mmap(NULL, buf_sz, PROT_READ | PROT_WRITE,
-                             MAP_SHARED, sg_fd_wr, 0);
+00:01.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1510 (rev 02)
+00:01.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1510 (rev 02)
 
-      sg_io_hdr_t io_hdr;
+(without the SmartArray stuff), working fine with the sym53c8xx
+driver. The disks are in hotswap bays.
 
-      memset(&io_hdr, 0, sizeof(sg_io_hdr_t));
+The following scenario works for some of the drives I tested (a Compaq
+18GB Fast-40 drive that came with the server and an antique 4GB WDC),
+but fails with a U160 36GB SEAGATE (model SX336704LC, firmware BC13).
 
-      io_hdr.interface_id = 'S';
-      io_hdr.mx_sb_len    = sizeof(sense_buffer);
-      io_hdr.sbp          = sense_buffer;
-      io_hdr.dxfer_len    = dxfer_len;
-      io_hdr.cmd_len      = cmd_len;
-      io_hdr.cmdp         = cmdp;    // ATA pass through command block
-      io_hdr.timeout      = cmd_tmo * 1000;       // In millisecs
-      io_hdr.pack_id = id;  // Read/write counter for now
-      io_hdr.iovec_count=0;   // scatter gather elements, 0=not being used
+1. Boot with two drives (can be seen in lsscsi et al.)
+2. scsi-spin -w -d /dev/sdb (disk spins down)
+3. scsiadd -r 1 0 1 0 (the other disk is at  1 0 0 0)
+4. Remove the disk from the bay, wait a few seconds, insert it again.
 
-      if (direction == 1)
-      {
-        io_hdr.dxfer_direction = SG_DXFER_TO_DEV;
-        io_hdr.flags |= SG_FLAG_MMAP_IO;
-        status = ioctl(sg_fd_wr, SG_IO, &io_hdr);
-      }
-      else
-      {
-        io_hdr.dxfer_direction = SG_DXFER_FROM_DEV;
-        io_hdr.flags |= SG_FLAG_MMAP_IO;
-        status = ioctl(sg_fd, SG_IO, &io_hdr);
-      }
-      ...
-Mmaped IO is a moot point here since this problem is also observed
-when using direct IO.
+Up to this point everything works fine.
 
-Thanks,
-Fajun
+5. scsiadd -s 1
+
+Here is where the problem starts. The old disks are detected normally,
+spin up and can be seen, mounted etc. The U160 disk just makes the
+activity LED blink briefly and nothing else happens (i.e. I'm left
+with just one disk). dmesg says nothing.
+
+It works fine with the Seagate unless I physically remove it from the
+bay and insert it again (disconnecting from the controller).
+
+I tried a 2.6.18-5 kernel from Debian etch, another 2.6.18.something
+from the Insert Live CD and a home-built 2.6.20.14
+
+Is this a known problem? Can anything be done to the
+disk/controller/whatever for the bus scan to work after boot? If you
+need any more information, feel free to ask.
+
+Please keep me CC'd as I'm not subscribed.
+
+Best regards,
+ Grzegorz Nosek
+
+PS. A dmesg fragment from the boot process:
+
+[    3.299410] sym0: <1510d> rev 0x2 at pci 0000:00:01.0 irq 3
+[    3.301595] sym0: No NVRAM, ID 7, Fast-40, LVD, parity checking
+[    3.308215] sym0: SCSI BUS has been reset.
+[    3.308305] scsi0 : sym-2.2.3
+[   10.711471] sym1: <1510d> rev 0x2 at pci 0000:00:01.1 irq 10
+[   10.713617] sym1: No NVRAM, ID 7, Fast-40, LVD, parity checking
+[   10.720232] sym1: SCSI BUS has been reset.
+[   10.720315] scsi1 : sym-2.2.3
+[   13.714494] scsi 1:0:0:0: Direct-Access     SEAGATE  SX336704LC
+  BC13 PQ: 0 ANSI: 3
+[   13.714628]  target1:0:0: tagged command queuing enabled, command
+queue depth 16.
+[   13.714761]  target1:0:0: Beginning Domain Validation
+[   13.715111]  target1:0:0: asynchronous
+[   13.720460]  target1:0:0: wide asynchronous
+[   13.722697]  target1:0:0: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+[   13.725598]  target1:0:0: Domain Validation skipping write tests
+[   13.725678]  target1:0:0: Ending Domain Validation
+[   13.728281] scsi 1:0:1:0: Direct-Access     SEAGATE  SX336704LC
+  BC13 PQ: 0 ANSI: 3
+[   13.728405]  target1:0:1: tagged command queuing enabled, command
+queue depth 16.
+[   13.728536]  target1:0:1: Beginning Domain Validation
+[   13.728875]  target1:0:1: asynchronous
+[   13.734173]  target1:0:1: wide asynchronous
+[   13.736407]  target1:0:1: FAST-40 WIDE SCSI 80.0 MB/s ST (25 ns, offset 31)
+[   13.739337]  target1:0:1: Domain Validation skipping write tests
+[   13.739419]  target1:0:1: Ending Domain Validation
+[   17.608744] SCSI device sda: 71132960 512-byte hdwr sectors (36420 MB)
+[   17.610405] sda: Write Protect is off
+[   17.610492] sda: Mode Sense: cb 00 10 08
+[   17.612136] SCSI device sda: write cache: disabled, read cache:
+enabled, supports DPO and FUA
+[   17.613208] SCSI device sda: 71132960 512-byte hdwr sectors (36420 MB)
+[   17.614874] sda: Write Protect is off
+[   17.614950] sda: Mode Sense: cb 00 10 08
+[   17.616578] SCSI device sda: write cache: disabled, read cache:
+enabled, supports DPO and FUA
+[   17.616704]  sda: sda1
+[   17.627500] sd 1:0:0:0: Attached scsi disk sda
+[   17.629152] SCSI device sdb: 71132960 512-byte hdwr sectors (36420 MB)
+[   17.630812] sdb: Write Protect is off
+[   17.630888] sdb: Mode Sense: cb 00 10 08
+[   17.632528] SCSI device sdb: write cache: disabled, read cache:
+enabled, supports DPO and FUA
+[   17.633623] SCSI device sdb: 71132960 512-byte hdwr sectors (36420 MB)
+[   17.635293] sdb: Write Protect is off
+[   17.635371] sdb: Mode Sense: cb 00 10 08
+[   17.637018] SCSI device sdb: write cache: disabled, read cache:
+enabled, supports DPO and FUA
+[   17.637142]  sdb: sdb1
+[   17.643063] sd 1:0:1:0: Attached scsi disk sdb
+[   17.643264] sd 1:0:0:0: Attached scsi generic sg0 type 0
+[   17.643394] sd 1:0:1:0: Attached scsi generic sg1 type 0
