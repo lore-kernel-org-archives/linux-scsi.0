@@ -1,33 +1,35 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: SCSI dynamic power management
-Date: Mon, 19 Nov 2007 11:00:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0711191057200.4806-100000@iolanthe.rowland.org>
-References: <4741AFEA.8000408@emulex.com>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: SCSI dynamic power management
+Date: Mon, 19 Nov 2007 11:14:57 -0500
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01FEAB02@otce2k301.adaptec.com>
+References: <20071119154650.GC12494@parisc-linux.org> <Pine.LNX.4.44L0.0711191054360.4806-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:49509 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753529AbXKSQAZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 11:00:25 -0500
-In-Reply-To: <4741AFEA.8000408@emulex.com>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:45897 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752378AbXKSQO7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 11:14:59 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <Pine.LNX.4.44L0.0711191054360.4806-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>, Matthew Wilcox <matthew@wil.cx>
+Cc: Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, 19 Nov 2007, James Smart wrote:
+Alan Stern sez:
+> Sure.  But that won't do any good if the requests get held on 
+> the queue
+> (or failed immediately) because the disk is supposedly "suspended".
+> Somehow those requests have to be allowed to proceed while all others 
+> are forced to wait (or to fail).
 
-> Also, don't forget that you need to sequence spin-up. A jbod tower with
-> multiple drives all spinning up concurrently can overload the power
-> supply. Most towers avoid this at power-on by having drive jumpers
-> sequence the drives. This is a hard nut to crack as it requires some
-> notion of physical packaging. When I worked on this in the past, the
-> only reasonable approach was to sequence based on target id.
+Not a failure. Not ready is reported back in a check condition on a
+media based request, a spin-up request is issued, then a subsequent loop
+sits there probing every second with a Test Unit ready to wait for the
+drive to spin back up. There is ample time provided in this path for the
+drive to spin-up.
 
-What happens during an ordinary system resume?  Don't the drives all 
-get spun-up concurrently then?  Or does the sd_start_stop_device() 
-routine wait until the disk is fully spun-up before returning?
-
-Alan Stern
-
+Sincerely -- Mark Salyzyn
