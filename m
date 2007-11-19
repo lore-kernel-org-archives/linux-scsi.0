@@ -1,63 +1,39 @@
-From: "S. J. van Harmelen" <svh@dds.nl>
-Subject: Re: [PATCH 0/3] Workqueue framework and ALUA hardware
-	handler
-Date: Mon, 19 Nov 2007 08:51:56 +0100
-Message-ID: <1195458716.5873.1.camel@sanderbal>
-References: <473C0DD0.7080702@suse.de>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: SCSI breakage on non-cache coherent architectures
+Date: Mon, 19 Nov 2007 00:38:02 -0800 (PST)
+Message-ID: <20071119.003802.100741794.davem@davemloft.net>
+References: <1195450523.7022.37.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <473C0DD0.7080702@suse.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: device-mapper development <dm-devel@redhat.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, SCSI Mailing List <linux-scsi@vger.kernel.org>, Alasdair G Kergon <agk@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52024
+	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
+	by vger.kernel.org with ESMTP id S1752206AbXKSIiC (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Nov 2007 03:38:02 -0500
+In-Reply-To: <1195450523.7022.37.camel@pasglop>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: benh@kernel.crashing.org
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-Hi Hannes,
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Date: Mon, 19 Nov 2007 16:35:23 +1100
 
-Can you tell me when these patches get in the kernel? Is that going to
-be 2.6.24.x or can we expect them before that?
-
-Sander
-
-
-
-On Thu, 2007-11-15 at 10:13 +0100, Hannes Reinecke wrote:
-> Hi all,
+> I'm not sure what is the best way to fix that. Internally, I've done
+> some test whacking some ____cacheline_aligned in the scsi_cmnd data
+> structure to verify I no longer get random SLAB corruption when using my
+> USB but that significantly bloats the size of the structure on archs
+> such as ppc64 that don't need it and have a large cache line size.
 > 
-> this patchset adds some more abstraction to the multipath
-> hardware handlers.
-> - A generic workqueue framework is added, which allows the
->   hardware handler to submit failover commands independent
->   from multipath I/O.
-> - The exsting RDAC hardware handler is converted to use that
->   framework
-> - A new SPC-3 ALUA hardware handler is added, using that
->   framework
-> - A controller abstraction is added to the framework, which
->   allows for command throttling based on the used controller.
-> - The RDAC hardware handler is modified to use the new
->   controller framework.
+> Unfortunately, I don't think there's any existing Kconfig symbol or arch
+> provided #define to tell us that we are on a non-coherent arch afaik
+> that could be used to make that conditional.
 > 
-> This patchset superseded my previous implementation of the
-> SPC-3 ALUA handler.
-> Next plans are to update the table definitions and multipath-tools
-> to allow for a passing of the controller ID from userland; ALUA
-> doesn't specify for any controller information, so we have to
-> do this by hand based on prior knowledge of the storage array.
-> 
-> As per normal, comments etc welcome.
-> 
-> Cheers,
-> 
-> Hannes
+> Another option would be to kmalloc the buffer (wasn't it the case before
+> btw ?) but I suppose some people will scream at the idea due to how the
+> command pools are done...
+
+You could make a ____dma_cacheline_aligned and use that.
+It seems pretty reasonable.
