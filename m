@@ -1,37 +1,42 @@
-From: Matthew Wilcox <matthew@wil.cx>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: SCSI dynamic power management
-Date: Mon, 19 Nov 2007 08:46:50 -0700
-Message-ID: <20071119154650.GC12494@parisc-linux.org>
-References: <Pine.LNX.4.44L0.0711191028400.4806-100000@iolanthe.rowland.org>
+Date: Mon, 19 Nov 2007 10:57:17 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0711191054360.4806-100000@iolanthe.rowland.org>
+References: <20071119154650.GC12494@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:57710 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753744AbXKSPqv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 10:46:51 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.0711191028400.4806-100000@iolanthe.rowland.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35061 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754716AbXKSP5S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 10:57:18 -0500
+In-Reply-To: <20071119154650.GC12494@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: Matthew Wilcox <matthew@wil.cx>
 Cc: Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 19, 2007 at 10:36:19AM -0500, Alan Stern wrote:
-> These are conflicting requirements.  How can we send the START-STOP 
-> UNIT commands to spin the disk up/down through the request queue while 
-> delaying or failing all others?
+On Mon, 19 Nov 2007, Matthew Wilcox wrote:
 
-You can insert commands at the head of a request queue.
+> On Mon, Nov 19, 2007 at 10:36:19AM -0500, Alan Stern wrote:
+> > These are conflicting requirements.  How can we send the START-STOP 
+> > UNIT commands to spin the disk up/down through the request queue while 
+> > delaying or failing all others?
+> 
+> You can insert commands at the head of a request queue.
 
-> What happens if one of the 
-> START-STOP UNIT commands encounters a problem and the error handler 
-> needs to send some commands of its own?
+Sure.  But that won't do any good if the requests get held on the queue
+(or failed immediately) because the disk is supposedly "suspended".
+Somehow those requests have to be allowed to proceed while all others 
+are forced to wait (or to fail).
 
-It'll do a reset and recover through the normal paths?
+> > What happens if one of the 
+> > START-STOP UNIT commands encounters a problem and the error handler 
+> > needs to send some commands of its own?
+> 
+> It'll do a reset and recover through the normal paths?
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+Not if those normal paths can't send commands through to the device.
+
+Alan Stern
+
