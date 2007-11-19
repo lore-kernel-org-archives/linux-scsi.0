@@ -1,63 +1,65 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: Process Scheduling Issue using sg/libata
-Date: Tue, 20 Nov 2007 01:51:12 +0900
-Message-ID: <4741BF00.7020906@gmail.com>
-References: <8202f4270711161649v75d06d35kd1d56e36d272a883@mail.gmail.com>	 <473E6E62.9090309@rtr.ca>	 <8202f4270711162320s2eb1d48dwb1430f4a779809a9@mail.gmail.com>	 <473F15E1.5030601@rtr.ca>	 <8202f4270711171120nddf24a8m8d1ece8c41b6c1ab@mail.gmail.com>	 <473F4724.6010107@rtr.ca>	 <8202f4270711172248x5d7abb0aq7a6e1bf2dad44e5e@mail.gmail.com>	 <47404CFC.7050405@rtr.ca>	 <8202f4270711181114w67632260la995daf65f507313@mail.gmail.com>	 <47409872.3060500@rtr.ca> <8202f4270711181429x13782fc4x4db3568607f7f23e@mail.gmail.com> <4740C59F.50709@rtr.ca> <4741BC6F.3010100@katalix.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: RE: SCSI dynamic power management
+Date: Mon, 19 Nov 2007 10:53:02 -0600
+Message-ID: <1195491182.3283.17.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0711191130330.4806-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.188]:47034 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753397AbXKSQvS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 11:51:18 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1470369rvb
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Nov 2007 08:51:18 -0800 (PST)
-In-Reply-To: <4741BC6F.3010100@katalix.com>
+Received: from accolon.hansenpartnership.com ([64.109.89.108]:33299 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753401AbXKSQxJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Nov 2007 11:53:09 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0711191130330.4806-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Chapman <jchapman@katalix.com>
-Cc: Mark Lord <liml@rtr.ca>, Fajun Chen <fajunchen@gmail.com>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-James Chapman wrote:
-> Mark Lord wrote:
->> One way to deal with it in an embedded device, is to force the
->> application that's generating the I/O to self-throttle.
->> Or modify the device driver to self-throttle.
+
+On Mon, 2007-11-19 at 11:46 -0500, Alan Stern wrote:
+> On Mon, 19 Nov 2007, Salyzyn, Mark wrote:
 > 
-> Does disk access have to be so interrupt driven? Could disk interrupt
-> handling be done in a softirq/kthread like the networking guys deal with
-> network device interrupts? This would prevent the system from
-> live-locking when it is being bombarded with disk IO events. It doesn't
-> seem right that the disk IO subsystem can cause interrupt live-lock on
-> relatively slow CPUs...
+> > Alan Stern sez:
+> > > Sure.  But that won't do any good if the requests get held on 
+> > > the queue
+> > > (or failed immediately) because the disk is supposedly "suspended".
+> > > Somehow those requests have to be allowed to proceed while all others 
+> > > are forced to wait (or to fail).
+> > 
+> > Not a failure. Not ready is reported back in a check condition on a
+> > media based request, a spin-up request is issued, then a subsequent loop
+> > sits there probing every second with a Test Unit ready to wait for the
+> > drive to spin back up. There is ample time provided in this path for the
+> > drive to spin-up.
 > 
->> You may want to find an embedded Linux consultant to help out
->> with this situation if it's beyond your expertise.
+> You're talking about what the stack does now, but I'm talking about 
+> what it will do once the dynamic power management code is in place.  
+> Commands won't even get sent to the low-level driver, never mind coming 
+> back with a check condition status.
 > 
-> Check out the rtlinux patch, which pushes all interrupt handling out to
-> per-cpu kernel threads (irqd). The kernel scheduler then regains control
-> of what runs when.
+> Here's how it will work: scsi_prep_state_check() will see that the
+> device is in a suspended state (probably a substate of SDEV_QUIESCE).  
+> The return value will depend on the type of suspend:
 > 
-> Another option is to change your ATA driver to do interrupt processing
-> at task level using a workqueue or similar.
+> 	For manual suspend or system suspend, the routine simply 
+> 	returns BLKPREP_KILL.
+> 
+> 	For autosuspend, the routine will submit a workqueue request
+> 	to autoresume the device and will return BLKPREP_DEFER.
+> 
+> The trick is somehow to allow the START-STOP UNIT commands get past 
+> this filter.  Is this what the REQ_PREEMPT flag is intended for?
 
-SFF ATA controllers are peculiar in that...
+Um, that model is pretty host centric ... we wouldn't be able to use
+that for power management of shared devices like SAS/SATA devices in an
+expander or FC devices.  The basic problem with power management of
+external devices (whether shared or not) is that it's not just what the
+host did to them, it's also what the environment or administrator did to
+them.
 
-1. it doesn't have reliable IRQ pending bit.
+James
 
-2. it doesn't have reliable IRQ mask bit.
 
-3. some controllers tank the machine completely if status or data
-register is accessed differently than the chip likes.
-
-So, it's not like we're all dickheads.  We know it's good to take those
-out of irq handler.  The hardware just isn't very forgiving and I bet
-you'll get obscure machine lockups if the RT kernel arbitrarily pushes
-ATA PIO data transfers into kernel threads.
-
-I think doing what IDE has been doing (disabling IRQ from interrupt
-controller) is the way to go.
-
--- 
-tejun
