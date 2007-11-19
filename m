@@ -1,41 +1,49 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: SCSI dynamic power management
-Date: Mon, 19 Nov 2007 14:48:56 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0711191446440.3129-100000@iolanthe.rowland.org>
-References: <20071119191849.GF12494@parisc-linux.org>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: SCSI breakage on non-cache coherent architectures
+Date: Tue, 20 Nov 2007 06:51:14 +1100
+Message-ID: <1195501874.6539.5.camel@pasglop>
+References: <1195450523.7022.37.camel@pasglop>
+	 <20071119.003802.100741794.davem@davemloft.net>
+Reply-To: benh@kernel.crashing.org
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:42416 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750820AbXKSTs5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 14:48:57 -0500
-In-Reply-To: <20071119191849.GF12494@parisc-linux.org>
+Received: from gate.crashing.org ([63.228.1.57]:59760 "EHLO gate.crashing.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750920AbXKSTvp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Nov 2007 14:51:45 -0500
+In-Reply-To: <20071119.003802.100741794.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
+To: David Miller <davem@davemloft.net>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-On Mon, 19 Nov 2007, Matthew Wilcox wrote:
 
-> On Mon, Nov 19, 2007 at 02:16:12PM -0500, Alan Stern wrote:
-> > Regarding this thread's original question, the best idea I've come up
-> > with so far is to store an extra flag in the scsi_device structure
-> > indicating that a suspend or resume transition is underway.  When the
-> > flag is set, commands with REQ_PREEMPT would be accepted.  If the
-> > device is "suspended" and the flag is clear, then commands would be
-> > delayed or killed in the prep function regardless of REQ_PREEMPT.  This 
-> > scheme could potentially let unwanted commands go through, but I 
-> > haven't been able to think of anything more suitable.
+On Mon, 2007-11-19 at 00:38 -0800, David Miller wrote:
+> From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> Date: Mon, 19 Nov 2007 16:35:23 +1100
 > 
-> You could allow only START_STOP and TUR to go through?
+> > I'm not sure what is the best way to fix that. Internally, I've done
+> > some test whacking some ____cacheline_aligned in the scsi_cmnd data
+> > structure to verify I no longer get random SLAB corruption when using my
+> > USB but that significantly bloats the size of the structure on archs
+> > such as ppc64 that don't need it and have a large cache line size.
+> > 
+> > Unfortunately, I don't think there's any existing Kconfig symbol or arch
+> > provided #define to tell us that we are on a non-coherent arch afaik
+> > that could be used to make that conditional.
+> > 
+> > Another option would be to kmalloc the buffer (wasn't it the case before
+> > btw ?) but I suppose some people will scream at the idea due to how the
+> > command pools are done...
+> 
+> You could make a ____dma_cacheline_aligned and use that.
+> It seems pretty reasonable.
 
-That's a pretty good idea...
+I was thinking about that. What archs would need it ? arm, mips, what
+else ?
 
-There will be other problems to sort out.  For example, if someone is 
-using a SCSI cdrom drive to play an audio CD, it will appear to the 
-system that the drive is idle because no commands will flow.  But that 
-sort of thing can be handled later.
-
-Alan Stern
+Cheers,
+Ben.
 
