@@ -1,37 +1,63 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Tue, 20 Nov 2007 06:55:16 +1100
-Message-ID: <1195502116.6970.5.camel@pasglop>
-References: <1195450523.7022.37.camel@pasglop>
-	 <20071119123240.GA12494@parisc-linux.org>
-	 <1195484964.3283.4.camel@localhost.localdomain>
-Reply-To: benh@kernel.crashing.org
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 9405] New: iSCSI does not implement ordering
+ guarantees required by e.g. journaling filesystems
+Date: Mon, 19 Nov 2007 12:50:40 -0800
+Message-ID: <20071119125040.9f6eb1e2.akpm@linux-foundation.org>
+References: <bug-9405-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:33169 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751496AbXKSTza (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Nov 2007 14:55:30 -0500
-In-Reply-To: <1195484964.3283.4.camel@localhost.localdomain>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:55822 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751551AbXKSUun (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 19 Nov 2007 15:50:43 -0500
+In-Reply-To: <bug-9405-10286@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <matthew@wil.cx>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
+To: linux-scsi@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, bart.vanassche@gmail.com
 
+On Mon, 19 Nov 2007 05:44:01 -0800 (PST)
+bugme-daemon@bugzilla.kernel.org wrote:
 
-> I'd like to be rid of it inside the command for various reasons:  every
-> command has one of these, and they're expensive in the allocation (at 96
-> bytes).  There's no reason we have to allocate and free that amount of
-> space with every command.  In theory, the number of these is bounded at
-> the queue depth, in practice, there's usually only one, and this DMA
-> alignment issue does requires most drivers to double copy.
+> http://bugzilla.kernel.org/show_bug.cgi?id=9405
+> 
+>            Summary: iSCSI does not implement ordering guarantees required by
+>                     e.g. journaling filesystems
+>            Product: IO/Storage
+>            Version: 2.5
+>      KernelVersion: 2.6.23.1
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: high
+>           Priority: P1
+>          Component: SCSI
+>         AssignedTo: io_scsi@kernel-bugs.osdl.org
+>         ReportedBy: bart.vanassche@gmail.com
+> 
+> 
+> Most recent kernel where this bug did not occur: (new issue)
+> Distribution: any
+> Hardware Environment: (does not apply)
+> Software Environment: (does not apply) 
+> Problem Description: The sd (SCSI disk) driver ignores block device barriers
+> (REQ_HARDBARRIER). The iSCSI code in the kernel sends all iSCSI commands with
+> flag ISCSI_ATTR_SIMPLE to the iSCSI target. This means that the target may
+> reorder these commands. Since a.o. correct operation of journaling filesystems
+> depends on being able to enforce the order of certain block write operations,
+> not enforcing write ordering is a bug. This can be solved by either adding
+> support for REQ_HARDBARRIER in the sd device or by replacing ISCSI_ATTR_SIMPLE
+> by ISCSI_ATTR_ORDERED.
+> 
+> Steps to reproduce: Source reading of drivers/scsi/sd.c and
+> drivers/scsi/libiscsi.c.
+> 
+> References: SCSI Architecture Model - 3, paragraph 8.6
+> (http://www.t10.org/ftp/t10/drafts/sam3/sam3r14.pdf).
+> 
 
-Do you have a plan for short term here ? I'd like something fixed
-for .25, so I may have to introduce a __dma_aligned macro of some sort
-to deal with that in the meantime...
-
-Ben.
-
-
+(does iscsi have a maintainer?)
