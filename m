@@ -1,29 +1,63 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [patch 16/26] hptiop: avoid buffer overflow when returning sense data
-Date: Mon, 19 Nov 2007 11:38:35 -0700
-Message-ID: <20071119183835.GE12494@parisc-linux.org>
-References: <20071119181438.617190424@mini.kroah.org> <20071119181912.GQ15425@kroah.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: RE: SCSI dynamic power management
+Date: Mon, 19 Nov 2007 14:16:12 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0711191405160.3005-100000@iolanthe.rowland.org>
+References: <1195491182.3283.17.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1753436AbXKSSit@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20071119181912.GQ15425@kroah.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-kernel@vger.kernel.org, stable@kernel.org, James.Bottomley@steeleye.com, Justin Forbes <jmforbes@linuxtx.org>, Zwane Mwaikambo <zwane@arm.linux.org.uk>, Theodore Ts'o <tytso@mit.edu>, Randy Dunlap <rdunlap@xenotime.net>, Dave Jones <davej@redhat.com>, Chuck Wolber <chuckw@quantumlinux.com>, Chris Wedgwood <reviews@ml.cw.f00f.org>, Michael Krufky <mkrufky@linuxtv.org>, Chuck Ebbert <cebbert@redhat.com>, Domenico Andreoli <cavokz@gmail.com>, torvalds@linux-foundation.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, linux@highpoint-tech.com, linux-scsi@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:35342 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751053AbXKSTQN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 14:16:13 -0500
+In-Reply-To: <1195491182.3283.17.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 19, 2007 at 10:19:12AM -0800, Greg Kroah-Hartman wrote:
+On Mon, 19 Nov 2007, James Bottomley wrote:
+
+> > Here's how it will work: scsi_prep_state_check() will see that the
+> > device is in a suspended state (probably a substate of SDEV_QUIESCE).  
+> > The return value will depend on the type of suspend:
+> > 
+> > 	For manual suspend or system suspend, the routine simply 
+> > 	returns BLKPREP_KILL.
+> > 
+> > 	For autosuspend, the routine will submit a workqueue request
+> > 	to autoresume the device and will return BLKPREP_DEFER.
+> > 
+> > The trick is somehow to allow the START-STOP UNIT commands get past 
+> > this filter.  Is this what the REQ_PREEMPT flag is intended for?
 > 
-> 2.6.22-stable review patch.  If anyone has any objections, please let us
-> know.
+> Um, that model is pretty host centric ... we wouldn't be able to use
+> that for power management of shared devices like SAS/SATA devices in an
+> expander or FC devices.  The basic problem with power management of
+> external devices (whether shared or not) is that it's not just what the
+> host did to them, it's also what the environment or administrator did to
+> them.
 
-Makes sense to backport this.
+Well, think of this as "idle-device" management rather than power 
+management.
 
-Acked-by: Matthew Wilcox <willy@linux.intel.com>
+It's no more host-centric than the existing code in sd_suspend().  
+When I mentioned sending START-STOP UNIT commands above, that was a bit
+sloppy.  What the code would actually do is call the high-level
+driver's suspend method, which would then send the appropriate commands
+to the device.  (Or maybe the code would simply call scsi_bus_suspend.)  
+If sending START-STOP UNIT during a suspend is host-centric then
+sd_suspend() is already guilty.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+Regarding this thread's original question, the best idea I've come up
+with so far is to store an extra flag in the scsi_device structure
+indicating that a suspend or resume transition is underway.  When the
+flag is set, commands with REQ_PREEMPT would be accepted.  If the
+device is "suspended" and the flag is clear, then commands would be
+delayed or killed in the prep function regardless of REQ_PREEMPT.  This 
+scheme could potentially let unwanted commands go through, but I 
+haven't been able to think of anything more suitable.
+
+Alan Stern
+
