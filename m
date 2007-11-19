@@ -1,39 +1,41 @@
-From: David Miller <davem@davemloft.net>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Mon, 19 Nov 2007 00:38:02 -0800 (PST)
-Message-ID: <20071119.003802.100741794.davem@davemloft.net>
+Date: Mon, 19 Nov 2007 05:32:40 -0700
+Message-ID: <20071119123240.GA12494@parisc-linux.org>
 References: <1195450523.7022.37.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:52024
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1752206AbXKSIiC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Nov 2007 03:38:02 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:49617 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbXKSMcn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 07:32:43 -0500
+Content-Disposition: inline
 In-Reply-To: <1195450523.7022.37.camel@pasglop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: benh@kernel.crashing.org
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
 
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Date: Mon, 19 Nov 2007 16:35:23 +1100
+On Mon, Nov 19, 2007 at 04:35:23PM +1100, Benjamin Herrenschmidt wrote:
+> The other one I'm hitting now is that the SCSI layer nowadays embeds the
 
-> I'm not sure what is the best way to fix that. Internally, I've done
-> some test whacking some ____cacheline_aligned in the scsi_cmnd data
-> structure to verify I no longer get random SLAB corruption when using my
-> USB but that significantly bloats the size of the structure on archs
-> such as ppc64 that don't need it and have a large cache line size.
-> 
-> Unfortunately, I don't think there's any existing Kconfig symbol or arch
-> provided #define to tell us that we are on a non-coherent arch afaik
-> that could be used to make that conditional.
-> 
-> Another option would be to kmalloc the buffer (wasn't it the case before
-> btw ?) but I suppose some people will scream at the idea due to how the
-> command pools are done...
+'nowadays'?  It has always been so.
 
-You could make a ____dma_cacheline_aligned and use that.
-It seems pretty reasonable.
+> sense_buffer inside the scsi_cmnd structure without any kind of
+> alignment whatsoever. I've been hitting irregulary is a crash on SCSI command
+> completion that seems to be related to corruption of the "request"
+> pointer in struct scsi_cmnd and I think it might be the cause.
+> I'm now trying to setup a proper repro-case.
+
+What other drivers do is DMA to their own allocation and then memcpy to
+the sense buffer.
+
+There is a movement to allocate the sense data as its own sg list, but
+I don't think that patch has even been posted yet.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
