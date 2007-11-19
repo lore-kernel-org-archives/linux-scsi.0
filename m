@@ -1,50 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Mon, 19 Nov 2007 09:09:24 -0600
-Message-ID: <1195484964.3283.4.camel@localhost.localdomain>
-References: <1195450523.7022.37.camel@pasglop>
-	 <20071119123240.GA12494@parisc-linux.org>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: SCSI dynamic power management
+Date: Mon, 19 Nov 2007 10:36:19 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0711191028400.4806-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:48603 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753898AbXKSPJa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 19 Nov 2007 10:09:30 -0500
-In-Reply-To: <20071119123240.GA12494@parisc-linux.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:44841 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754158AbXKSPgU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 10:36:20 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Linux Kernel list <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>
+To: Oliver Neukum <oliver@neukum.name>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>
 
+Oliver (or anybody else):
 
-On Mon, 2007-11-19 at 05:32 -0700, Matthew Wilcox wrote:
-> On Mon, Nov 19, 2007 at 04:35:23PM +1100, Benjamin Herrenschmidt wrote:
-> > The other one I'm hitting now is that the SCSI layer nowadays embeds the
-> 
-> 'nowadays'?  It has always been so.
-> 
-> > sense_buffer inside the scsi_cmnd structure without any kind of
-> > alignment whatsoever. I've been hitting irregulary is a crash on SCSI command
-> > completion that seems to be related to corruption of the "request"
-> > pointer in struct scsi_cmnd and I think it might be the cause.
-> > I'm now trying to setup a proper repro-case.
-> 
-> What other drivers do is DMA to their own allocation and then memcpy to
-> the sense buffer.
-> 
-> There is a movement to allocate the sense data as its own sg list, but
-> I don't think that patch has even been posted yet.
+Adding dynamic (AKA runtime) power management to the SCSI core is
+looking a little difficult.  (Actually, since as far as I know the SCSI
+specification takes no heed of power management, perhaps this should be
+called "idle-device management".)
 
-I'd like to be rid of it inside the command for various reasons:  every
-command has one of these, and they're expensive in the allocation (at 96
-bytes).  There's no reason we have to allocate and free that amount of
-space with every command.  In theory, the number of these is bounded at
-the queue depth, in practice, there's usually only one, and this DMA
-alignment issue does requires most drivers to double copy.
+Imagine a SCSI disk has been idle long enough that we want to spin it
+down.  When I/O requests do start to arrive later on, we want to delay
+them in the request queue until the disk has a chance to spin back up.  
+Or even to fail them, if the user has done a "manual" suspend.
 
-James
+These are conflicting requirements.  How can we send the START-STOP 
+UNIT commands to spin the disk up/down through the request queue while 
+delaying or failing all others?  What happens if one of the 
+START-STOP UNIT commands encounters a problem and the error handler 
+needs to send some commands of its own?
 
+Any suggestions or ideas are welcome.
+
+Alan Stern
 
