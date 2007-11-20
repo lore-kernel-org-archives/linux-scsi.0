@@ -1,67 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Tue, 20 Nov 2007 08:36:02 -0600
-Message-ID: <1195569362.3131.3.camel@localhost.localdomain>
-References: <1195450523.7022.37.camel@pasglop>
-	 <20071119.003802.100741794.davem@davemloft.net>
-	 <1195501874.6539.5.camel@pasglop>  <20071120082927.GA8856@alpha.franken.de>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: SCSI dynamic power management
+Date: Tue, 20 Nov 2007 09:38:09 -0500
+Message-ID: <4742F151.9020602@torque.net>
+References: <Pine.LNX.4.44L0.0711191028400.4806-100000@iolanthe.rowland.org>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:40784 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752101AbXKTOgM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 09:36:12 -0500
-In-Reply-To: <20071120082927.GA8856@alpha.franken.de>
+Received: from pentafluge.infradead.org ([213.146.154.40]:39354 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754627AbXKTOiw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 09:38:52 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0711191028400.4806-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-
-On Tue, 2007-11-20 at 09:29 +0100, Thomas Bogendoerfer wrote:
-> On Tue, Nov 20, 2007 at 06:51:14AM +1100, Benjamin Herrenschmidt wrote:
-> > 
-> > On Mon, 2007-11-19 at 00:38 -0800, David Miller wrote:
-> > > From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > > Date: Mon, 19 Nov 2007 16:35:23 +1100
-> > > 
-> > > > I'm not sure what is the best way to fix that. Internally, I've done
-> > > > some test whacking some ____cacheline_aligned in the scsi_cmnd data
-> > > > structure to verify I no longer get random SLAB corruption when using my
-> > > > USB but that significantly bloats the size of the structure on archs
-> > > > such as ppc64 that don't need it and have a large cache line size.
-> > > > 
-> > > > Unfortunately, I don't think there's any existing Kconfig symbol or arch
-> > > > provided #define to tell us that we are on a non-coherent arch afaik
-> > > > that could be used to make that conditional.
-> > > > 
-> > > > Another option would be to kmalloc the buffer (wasn't it the case before
-> > > > btw ?) but I suppose some people will scream at the idea due to how the
-> > > > command pools are done...
-> > > 
-> > > You could make a ____dma_cacheline_aligned and use that.
-> > > It seems pretty reasonable.
-> > 
-> > I was thinking about that. What archs would need it ? arm, mips, what
-> > else ?
+Alan Stern wrote:
+> Oliver (or anybody else):
 > 
-> older parisc
+> Adding dynamic (AKA runtime) power management to the SCSI core is
+> looking a little difficult.  (Actually, since as far as I know the SCSI
+> specification takes no heed of power management, perhaps this should be
+> called "idle-device management".)
+> 
+> Imagine a SCSI disk has been idle long enough that we want to spin it
+> down.  When I/O requests do start to arrive later on, we want to delay
+> them in the request queue until the disk has a chance to spin back up.  
+> Or even to fail them, if the user has done a "manual" suspend.
+> 
+> These are conflicting requirements.  How can we send the START-STOP 
+> UNIT commands to spin the disk up/down through the request queue while 
+> delaying or failing all others?  What happens if one of the 
+> START-STOP UNIT commands encounters a problem and the error handler 
+> needs to send some commands of its own?
+> 
+> Any suggestions or ideas are welcome.
 
-Actually, we already established on IRC that the lasi700 driver doesn't
-need this, principally because the parisc architecture doesn't do an
-invalidate for DMA_FROM_DEVICE but a flush and invalidate
-(architecturally, if you read our manuals, even pdc is entitled to write
-back dirty lines, so it's not clear there's actually an invalidate
-instruction we can use).   This is also one possible temporary fix for
-the other architectures if we can't get a different method to work
-nicely.
+There should have always been at least two types of "block":
+   a) block media access commands
+   b) block all commands because the transport has told us
+      (or we know that we are about to remove some component)
+      that commands cannot be delivered to the device (logical
+      unit)
 
-James
+For case a) all SCSI commands apart from those that explicitly
+access the media (e.g. READ, WRITE, VERIFY) should be sent to
+the device. Some commands, such as MODE SENSE, may fail since
+they might depend on data held on the media. Such failures
+will be fast with appropriate sense_key/asc/ascq codes returned.
 
 
-James
+IMO if a transport tells us that a SCSI device (i.e. target
+device and/or logical unit) is accessible and the SCSI subsystem
+stops us sending an INQUIRY to that device then the SCSI
+subsystem is broken.
 
+Doug Gilbert
 
