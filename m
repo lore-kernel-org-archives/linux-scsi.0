@@ -1,65 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: SCSI dynamic power management
-Date: Tue, 20 Nov 2007 14:03:24 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0711201350310.2906-100000@iolanthe.rowland.org>
-References: <1195575333.3131.37.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: SCSI breakage on non-cache coherent architectures
+Date: Tue, 20 Nov 2007 13:35:23 -0600
+Message-ID: <1195587324.17601.1.camel@localhost.localdomain>
+References: <1195501874.6539.5.camel@pasglop>
+	 <20071119.143115.251022325.davem@davemloft.net>
+	 <1195518864.6970.23.camel@pasglop>
+	 <20071119.164611.64664648.davem@davemloft.net>  <ada8x4ty8e1.fsf@cisco.com>
+	 <1195528497.6970.35.camel@pasglop>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:54890 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757751AbXKTTD0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 14:03:26 -0500
-In-Reply-To: <1195575333.3131.37.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([64.109.89.108]:41363 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756407AbXKTTf3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Nov 2007 14:35:29 -0500
+In-Reply-To: <1195528497.6970.35.camel@pasglop>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Oliver Neukum <oliver@neukum.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
+To: benh@kernel.crashing.org
+Cc: David Miller <davem@davemloft.net>, Roland Dreier <rdreier@cisco.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-On Tue, 20 Nov 2007, James Bottomley wrote:
 
-> > The main point I'm aiming for is to have the midlayer to inform the LLD 
-> > when all the devices on a particular bus are "idle".
-> 
-> This is the wrong assumption ... the mid layer would provide an API to
-> inform the transport.  Transport and host are separate things.  an 8
-> port SAS card could suspend a single phy and device while still
-> processing the others.  So what it sounds like you need is a transport
-> API saying a given device has been suspended or is requested to be
-> resumed?  What than means for the host would be transport class policy,
-> I think.
+On Tue, 2007-11-20 at 14:14 +1100, Benjamin Herrenschmidt wrote:
+> FYI, Here's what I have for the SCSI change. I haven't updated drivers
+> to care for the new return code though, help appreciated with that as I
+> don't know much about these drivers.
 
-Okay.  I know little about the intricacies of these newer, more exotic
-transports; I'm pretty firmly rooted in the old SPI technology.
+It looks to me like the return problem could be solved by passing in the
+buffer to be used for sense; that way we can allocate it in hostdata at
+init time for all the drivers and scsi_error can allocate and free a
+page using GFP_KERNEL.
 
-Anyway, yes, I want an API to inform the transport and/or host adapter 
-driver that either a given device or all devices on a bus has been 
-suspended or requests to be resumed.  For an 8-port SAS card the driver 
-might want to know about each individual device; for a plain old SPI 
-card the driver would care only about the entire bus.
+James
 
-> A little ... I think your wake on command idea above is policy rather
-> than actual implementation ... so it would probably have to be
-> selectable (either error or wake).
-
-Yes.  That is already part of the USB dynamic PM implementation, and I
-would copy it for the SCSI implementation.  There is a sysfs file
-(/sys/devices/.../power/level) to which the user can write three
-possible values:
-
-	"on" means the device is permanently at full power;
-
-	"auto" means the device is subject to autosuspend after
-	an idle-timeout (the timeout value is stored in a separate
-	sysfs file) with autoresume at the next I/O request;
-
-	"suspend" means the device is permanently suspended
-	and I/O requests will fail immediately.
-
-My intention was to add a couple of method pointers to the SCSI
-host_template structure, one for suspend notifications and one for
-resume notifications.  Do you think this is the right way to do it, or
-is something more complex called for?
-
-Alan Stern
 
