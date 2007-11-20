@@ -1,25 +1,23 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH 2/3] cciss: add support for blktrace
-Date: Mon, 19 Nov 2007 23:55:56 -0800
-Message-ID: <20071119235556.ea14e2c5.akpm@linux-foundation.org>
+Date: Tue, 20 Nov 2007 09:32:25 +0100
+Message-ID: <20071120083225.GB5695@kernel.dk>
 References: <20071119220717.GB4660@roadking.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:32864 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758013AbXKTH4J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 02:56:09 -0500
+Received: from brick.kernel.dk ([87.55.233.238]:12675 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755923AbXKTIfN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Nov 2007 03:35:13 -0500
+Content-Disposition: inline
 In-Reply-To: <20071119220717.GB4660@roadking.cca.cpqcorp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Mike Miller <mike.miller@hp.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, 19 Nov 2007 16:07:17 -0600 Mike Miller <mike.miller@hp.com> wrote:
-
+On Mon, Nov 19 2007, Mike Miller wrote:
 > Patch 2 of 3
 > This patch adds support for the blktrace utility. Please consider this for
 > inclusion. Seems there was already a call to blk_add_trace. This patch adds
@@ -39,10 +37,7 @@ On Mon, 19 Nov 2007 16:07:17 -0600 Mike Miller <mike.miller@hp.com> wrote:
 > +#ifdef CONFIG_BLK_DEV_IO_TRACE
 > +#include <linux/blktrace_api.h>
 > +#endif /* CONFIG_BLK_DEV_IO_TRACE */
-
-The ifdefs shouldn't be needed here.  If they are needed, blktrace_api.h needs
-fixing.
-
+> +
 >  #include <linux/dma-mapping.h>
 >  #include <linux/blkdev.h>
 >  #include <linux/genhd.h>
@@ -56,6 +51,8 @@ fixing.
 >  	blk_complete_request(cmd->rq);
 >  }
 
-Add if you remove the first set of ifdefs, these ifdefs can also be
-removed.
+Puzzled by this patch... What is it trying to achieve?
+
+-- 
+Jens Axboe
 
