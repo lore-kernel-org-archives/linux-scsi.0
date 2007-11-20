@@ -1,7 +1,7 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 42/59] drivers/scsi/lpfc: Add missing "space"
-Date: Mon, 19 Nov 2007 17:48:34 -0800
-Message-ID: <0d5c0d474aaeba86c0899848a6eb16ef92d308bc.1195454436.git.joe__44522.8806500838$1195524405$gmane$org@perches.com>
+Subject: [PATCH 43/59] drivers/scsi/qla4xxx: Add missing "space"
+Date: Mon, 19 Nov 2007 17:48:35 -0800
+Message-ID: <769fa1b17e5b66a91e59e7c5899b6747b39b5731.1195454436.git.joe__38176.771955523$1195524408$gmane$org@perches.com>
 References: 1234567
  <1195523331-15303-1-git-send-email-joe@perches.com>
  <1195523331-15303-2-git-send-email-joe@perches.com>
@@ -45,48 +45,58 @@ References: 1234567
  <1195523331-15303-40-git-send-email-joe@perches.com>
  <1195523331-15303-41-git-send-email-joe@perches.com>
  <1195523331-15303-42-git-send-email-joe@perches.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761380AbXKTCEd@vger.kernel.org>
-In-Reply-To: <1195523331-15303-42-git-send-email-joe@perches.com>
-Message-Id: <0d5c0d474aaeba86c0899848a6eb16ef92d308bc.1195454436.git.joe@perches.com>
+ <1195523331-15303-43-git-send-email-joe@perches.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761084AbXKTCEs@vger.kernel.org>
+In-Reply-To: <1195523331-15303-43-git-send-email-joe@perches.com>
+Message-Id: <769fa1b17e5b66a91e59e7c5899b6747b39b5731.1195454436.git.joe@perches.com>
 In-Reply-To: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
 References: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, James Smart <james.smart@emulex.com>, linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c |    2 +-
- drivers/scsi/lpfc/lpfc_ct.c   |    2 +-
- 2 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla4xxx/ql4_init.c |    2 +-
+ drivers/scsi/qla4xxx/ql4_os.c   |    4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 80a1121..d9d6791 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -1182,7 +1182,7 @@ lpfc_nodev_tmo_set(struct lpfc_vport *vport, int val)
- 	}
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
- 			 "0403 lpfc_nodev_tmo attribute cannot be set to"
--			 "%d, allowed range is [%d, %d]\n",
-+			 " %d, allowed range is [%d, %d]\n",
- 			 val, LPFC_MIN_DEVLOSS_TMO, LPFC_MAX_DEVLOSS_TMO);
- 	return -EINVAL;
- }
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index c701e4d..88b39d5 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -473,7 +473,7 @@ lpfc_ns_rsp(struct lpfc_vport *vport, struct lpfc_dmabuf *mp, uint32_t Size)
- 							KERN_INFO,
- 							LOG_DISCOVERY,
- 							"0238 Process "
--							"x%x NameServer Rsp"
-+							"x%x NameServer Rsp "
- 							"Data: x%x x%x x%x\n",
- 							Did, ndlp->nlp_flag,
- 							vport->fc_flag,
+diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
+index d692c71..ab619a8 100644
+--- a/drivers/scsi/qla4xxx/ql4_init.c
++++ b/drivers/scsi/qla4xxx/ql4_init.c
+@@ -1184,7 +1184,7 @@ int qla4xxx_initialize_adapter(struct scsi_qla_host *ha,
+ 		 */
+ 		status = qla4xxx_initialize_ddb_list(ha);
+ 		if (status == QLA_ERROR) {
+-			DEBUG2(printk("%s(%ld) Error occurred during build"
++			DEBUG2(printk("%s(%ld) Error occurred during build "
+ 				      "ddb list\n", __func__, ha->host_no));
+ 			goto exit_init_hba;
+ 		}
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 89460d2..7aa64ca 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -1016,7 +1016,7 @@ static void qla4xxx_do_dpc(struct work_struct *work)
+ 	struct ddb_entry *ddb_entry, *dtemp;
+ 	int status = QLA_ERROR;
+ 
+-	DEBUG2(printk("scsi%ld: %s: DPC handler waking up."
++	DEBUG2(printk("scsi%ld: %s: DPC handler waking up. "
+ 		"flags = 0x%08lx, dpc_flags = 0x%08lx ctrl_stat = 0x%08x\n",
+ 		ha->host_no, __func__, ha->flags, ha->dpc_flags,
+ 		readw(&ha->reg->ctrl_status)));
+@@ -1563,7 +1563,7 @@ static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+ 		   cmd->device->channel, cmd->device->id, cmd->device->lun);
+ 
+ 	DEBUG2(printk(KERN_INFO
+-		      "scsi%ld: DEVICE_RESET cmd=%p jiffies = 0x%lx, to=%x,"
++		      "scsi%ld: DEVICE_RESET cmd=%p jiffies = 0x%lx, to=%x, "
+ 		      "dpc_flags=%lx, status=%x allowed=%d\n", ha->host_no,
+ 		      cmd, jiffies, cmd->timeout_per_command / HZ,
+ 		      ha->dpc_flags, cmd->result, cmd->allowed));
 -- 
 1.5.3.5.652.gf192c
