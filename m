@@ -1,85 +1,64 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: RE: SCSI dynamic power management
-Date: Tue, 20 Nov 2007 08:53:07 -0600
-Message-ID: <1195570387.3131.12.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0711191405160.3005-100000@iolanthe.rowland.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Bugme-new] [Bug 9405] New: iSCSI does not implement ordering
+ guarantees required by e.g. journaling filesystems
+Date: Tue, 20 Nov 2007 18:04:43 +0300
+Message-ID: <4742F78B.8010004@vlnb.net>
+References: <bug-9405-10286@http.bugzilla.kernel.org/>	 <20071119125040.9f6eb1e2.akpm@linux-foundation.org>	 <1195505766.3963.1.camel@localhost.localdomain>	 <4741FE89.4020307@cs.wisc.edu> <1195507720.3963.4.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:46362 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1758160AbXKTOxK (ORCPT
+Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:56056 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754940AbXKTPE4 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 09:53:10 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0711191405160.3005-100000@iolanthe.rowland.org>
+	Tue, 20 Nov 2007 10:04:56 -0500
+In-Reply-To: <1195507720.3963.4.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, bart.vanassche@gmail.com
 
-
-On Mon, 2007-11-19 at 14:16 -0500, Alan Stern wrote:
-> On Mon, 19 Nov 2007, James Bottomley wrote:
+James Bottomley wrote:
+>>>And please close this as invalid.  FS ordering guarantees in linux
+>>>aren't done via ordered tags.
+>>
+>>I had a related question. I was working on the attached patch for soe 
+>>other testing (patch made against scsi-rc-fixes, but is not stable so do 
+>>not apply), which does the scsi_populate_tag_msg conversion from MSG_* 
+>>to ISCSI_ATTR and sets the proper iscsi bits.
+>>
+>>If I do this patch where I call scsi_activate_tcq on a device and that 
+>>concertsion, does this require that my driver not reorder commands? I 
+>>was just a little worried on some of the error handling paths where we 
+>>requeue commands to the mid layer.
 > 
-> > > Here's how it will work: scsi_prep_state_check() will see that the
-> > > device is in a suspended state (probably a substate of SDEV_QUIESCE).  
-> > > The return value will depend on the type of suspend:
-> > > 
-> > > 	For manual suspend or system suspend, the routine simply 
-> > > 	returns BLKPREP_KILL.
-> > > 
-> > > 	For autosuspend, the routine will submit a workqueue request
-> > > 	to autoresume the device and will return BLKPREP_DEFER.
-> > > 
-> > > The trick is somehow to allow the START-STOP UNIT commands get past 
-> > > this filter.  Is this what the REQ_PREEMPT flag is intended for?
-> > 
-> > Um, that model is pretty host centric ... we wouldn't be able to use
-> > that for power management of shared devices like SAS/SATA devices in an
-> > expander or FC devices.  The basic problem with power management of
-> > external devices (whether shared or not) is that it's not just what the
-> > host did to them, it's also what the environment or administrator did to
-> > them.
-> 
-> Well, think of this as "idle-device" management rather than power 
-> management.
+> Right, there's no way of guaranteeing that commands aren't reordered in
+> the error path (or even the queue full submission path) which is why we
+> don't use ordered tags to enforce barriers.
 
-Sure ... but surely that's a subset of proper power management?
+May I make your answer more precise? SCSI for non-caching and 
+write-through caching devices provides a way to guarantee order of 
+commands on the error path via ACA and UA_INTLCK facilities, if they are 
+supported by device. For write-back caching devices it's different, 
+because cache may reorder commands after they are reported as completed 
+to the initiator as well as there is a possibility for deferred errors.
 
-> It's no more host-centric than the existing code in sd_suspend().  
-> When I mentioned sending START-STOP UNIT commands above, that was a bit
-> sloppy.  What the code would actually do is call the high-level
-> driver's suspend method, which would then send the appropriate commands
-> to the device.  (Or maybe the code would simply call scsi_bus_suspend.)  
-> If sending START-STOP UNIT during a suspend is host-centric then
-> sd_suspend() is already guilty.
+So, there is no way to guarantee commands order in case of errors, 
+because Linux doesn't implement that.
 
-Ah, but if you look, sd_suspend by default doesn't do anything ... it
-has to be enabled on a per device basis by the manage_start_stop
-attribute ... that's precisely because we can't have the sd ULD idling a
-SAN device when others are trying to use it.
+BTW, there is still something wrong in the SCSI/block/FS layers error 
+processing. Playing with my SCSI target I've noticed that if it returns 
+pretty valid TASK ABORTED status for some SCSI command, FS on initiator 
+(ext3) immediately gets corrupted and journal replay on remount doesn't 
+repair it, only manual e2fsck helps. So, apparently:
 
-> Regarding this thread's original question, the best idea I've come up
-> with so far is to store an extra flag in the scsi_device structure
-> indicating that a suspend or resume transition is underway.  When the
-> flag is set, commands with REQ_PREEMPT would be accepted.  If the
-> device is "suspended" and the flag is clear, then commands would be
-> delayed or killed in the prep function regardless of REQ_PREEMPT.  This 
-> scheme could potentially let unwanted commands go through, but I 
-> haven't been able to think of anything more suitable.
+1. SCSI ML handles well not all status codes, which it should.
 
-I don't understand why you want to do this.  Power management is a
-layered issue on SCSI, divided (as always) into host, device and
-transport.  The idle you're talking about is a pure device thing, so it
-can be managed by the ULD (and currently is).  When a unit is stopped,
-it automatically returns correct NOT_READY sense to most commands.  The
-sd_done post processing could decide to wake the device and retry or
-return an error without ever troubling the mid layer or even block for
-anything.    All the hooks are already in sd, why does this now need to
-go into block (unless there's some longer scheme for incorporating the
-transport and other elements into this?)
+2. Block/FS levels (sometimes) don't handle I/O errors well enough 
+without corrupting file systems.
 
-James
+I don't have time for further investigations, but, if somebody prepare a 
+patch to fix that, I'm willing to assist in testing.
 
-
+Vlad
