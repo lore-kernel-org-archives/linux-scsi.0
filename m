@@ -1,63 +1,42 @@
-From: Jonathan McDowell <noodles@earth.li>
-Subject: Re: [PATCH] Unify sysfs filenames for firmware version
-Date: Tue, 20 Nov 2007 12:02:16 -0800
-Message-ID: <20071120200212.GI31112@earth.li>
-References: <20071120133824.GD31112@earth.li> <47430CCE.50701@emulex.com> <20071120171454.GH31112@earth.li> <AE4F746F2AECFC4DA4AADD66A1DFEF01FEAC9B@otce2k301.adaptec.com>
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: SCSI breakage on non-cache coherent architectures
+Date: Tue, 20 Nov 2007 12:05:17 -0800
+Message-ID: <adaabp8wuma.fsf@cisco.com>
+References: <1195450523.7022.37.camel@pasglop>
+	<20071119.003802.100741794.davem@davemloft.net>
+	<1195501874.6539.5.camel@pasglop>
+	<20071120082927.GA8856@alpha.franken.de>
+	<1195569362.3131.3.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from the.earth.li ([193.201.200.66]:35750 "EHLO the.earth.li"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758368AbXKTUCV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 15:02:21 -0500
-Content-Disposition: inline
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01FEAC9B@otce2k301.adaptec.com>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:10479 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751688AbXKTUFa (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 15:05:30 -0500
+In-Reply-To: <1195569362.3131.3.camel@localhost.localdomain> (James Bottomley's message of "Tue, 20 Nov 2007 08:36:02 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Cc: James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Matt_Domsch@dell.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-On Tue, Nov 20, 2007 at 12:49:49PM -0500, Salyzyn, Mark wrote:
-> Jonathan McDowell sez:
-> > On Tue, Nov 20, 2007 at 11:35:26AM -0500, James Smart wrote:
-> > > The hearburn I have with these patches is that you are changing
-> > > driver-specific attributes, not common ones as enforced/requested
-> > > by a subsystem. As such, you are breaking a management interface
-> > > for existing tools/scripts.
-> > Yes, that's true. Though at present we have the heartburn that
-> > anyone wanting to write a script to pull out firmware revisions has
-> > to know exactly where every driver stores this information.
-> 
-> The aacraid cards, which uses hba_monitor_version, hba_kernel_version
-> and hba_bios_version for each piece does not fit into the single
-> 'firmware revision' common ideal and were noticeably missing from this
-> patch set.
+ > Actually, we already established on IRC that the lasi700 driver doesn't
+ > need this, principally because the parisc architecture doesn't do an
+ > invalidate for DMA_FROM_DEVICE but a flush and invalidate
+ > (architecturally, if you read our manuals, even pdc is entitled to write
+ > back dirty lines, so it's not clear there's actually an invalidate
+ > instruction we can use).   This is also one possible temporary fix for
+ > the other architectures if we can't get a different method to work
+ > nicely.
 
-I mainly looked for mentions of "firmware" to try and work out which
-drivers were exporting this information in a single file. While I've
-used the aacraid cards in the past I think I agree with you that no 1 of
-those 3 pieces of information represents the firmware. Perhaps it could
-export a triplet though?
+I think doing a writeback and invalidate is a very fragile way to deal
+with DMA into the middle of a data structure.  It may work OK for now,
+but you have to make sure forever into the future that no codepath
+anywhere else ever touches the cacheline that you're DMAing into while
+the DMA is pending.  It just leaves a hidden trap that is too easy to
+step on, because the architectures that get pretty much all testing
+all have cache-coherent DMA.
 
-> Fortunately (?), Adaptec has not bought into using sysfs for their
-> management applications to pull these pieces and continues to pick
-> them up directly by issuing ioctl pass-through calls to the card's
-> firmware, so we have some leeway to change them to mold to a
-> developing standard.  The fact that sysfs is a developing standard
-> will confirm the management application folks reasoning for shying
-> away from sysfs ;-/
+Reviving my ancient __dma_buffer patch seems far preferable to me.
 
-Management stuff always seems to be tied to a single card. It's one of
-the things that puts me off hardware RAID. It would really rock if we
-could get as much as possible exported in the same fashion across cards,
-rather than having to cope with each individually (though I accept that
-accessing all details/features will probably always require some custom
-card knowledge).
-
-Do the management folks actually have some ideas about what sort of
-interface they'd like in sysfs?
-
-J.
-
--- 
-If I save time, when do I get it back?
+ - R.
