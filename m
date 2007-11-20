@@ -1,45 +1,39 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [PATCH] Unify sysfs filenames for firmware version
-Date: Tue, 20 Nov 2007 12:49:49 -0500
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01FEAC9B@otce2k301.adaptec.com>
-References: <20071120133824.GD31112@earth.li> <47430CCE.50701@emulex.com> <20071120171454.GH31112@earth.li>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [Bugme-new] [Bug 9405] New: iSCSI does not implement ordering guarantees required by e.g. journaling filesystems
+Date: Tue, 20 Nov 2007 10:52:39 -0700
+Message-ID: <20071120175239.GI12494@parisc-linux.org>
+References: <1195505766.3963.1.camel@localhost.localdomain> <4741FE89.4020307@cs.wisc.edu> <1195507720.3963.4.camel@localhost.localdomain> <4742F78B.8010004@vlnb.net> <1195572482.3131.28.camel@localhost.localdomain> <4743082D.7030302@vlnb.net> <1195577040.3131.48.camel@localhost.localdomain> <47431697.3080901@vlnb.net> <1195579841.3131.60.camel@localhost.localdomain> <47431D28.9020708@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:50696 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755497AbXKTRtv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 12:49:51 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20071120171454.GH31112@earth.li>
+Received: from palinux.external.hp.com ([192.25.206.14]:39715 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757646AbXKTRwk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 12:52:40 -0500
+Content-Disposition: inline
+In-Reply-To: <47431D28.9020708@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jonathan McDowell <noodles@earth.li>, James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Matt_Domsch@dell.com
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, bart.vanassche@gmail.com
 
-Jonathan McDowell sez:
-> On Tue, Nov 20, 2007 at 11:35:26AM -0500, James Smart wrote:
-> > The hearburn I have with these patches is that you are changing
-> > driver-specific attributes, not common ones as 
-> > enforced/requested by a
-> > subsystem. As such, you are breaking a management interface for
-> > existing tools/scripts.
-> Yes, that's true. Though at present we have the heartburn that anyone
-> wanting to write a script to pull out firmware revisions has to know
-> exactly where every driver stores this information.
+On Tue, Nov 20, 2007 at 08:45:12PM +0300, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> >We handle TASK ABORTED as well as we can (by failing it).  For better
+> >handling set TAS=0 and we'll handle the individual cases according to
+> >the sense codes.
+> 
+> So, should I consider your words as you think that it's perfectly fine 
+> to corrupt file system for devices with TAS=1? Absolutely legal devices, 
+> repeat. Hence, in your opinion, no further investigation should be done?
 
-The aacraid cards, which uses hba_monitor_version, hba_kernel_version
-and hba_bios_version for each piece does not fit into the single
-'firmware revision' common ideal and were noticeably missing from this
-patch set.
+I don't know how you manage to read his words this way.  I understand
+him to mean that the SCSI subsystem is doing the best in can under the
+somewhat misconfigured circumstances, and the problem lies in the FS not
+handling errors correctly.
 
-Fortunately (?), Adaptec has not bought into using sysfs for their
-management applications to pull these pieces and continues to pick them
-up directly by issuing ioctl pass-through calls to the card's firmware,
-so we have some leeway to change them to mold to a developing standard.
-The fact that sysfs is a developing standard will confirm the management
-application folks reasoning for shying away from sysfs ;-/
-
-Sincerely -- Mark Salyzyn
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
