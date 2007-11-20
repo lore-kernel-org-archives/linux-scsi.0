@@ -1,39 +1,97 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: SCSI dynamic power management
-Date: Tue, 20 Nov 2007 09:21:59 -0600
-Message-ID: <1195572119.3131.21.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0711191405160.3005-100000@iolanthe.rowland.org>
-	 <1195570387.3131.12.camel@localhost.localdomain>
-	 <200711201607.06317.oliver@neukum.org>
+Subject: Re: [Bugme-new] [Bug 9405] New: iSCSI does not implement ordering
+	guarantees required by e.g. journaling filesystems
+Date: Tue, 20 Nov 2007 09:28:02 -0600
+Message-ID: <1195572482.3131.28.camel@localhost.localdomain>
+References: <bug-9405-10286@http.bugzilla.kernel.org/>
+	 <20071119125040.9f6eb1e2.akpm@linux-foundation.org>
+	 <1195505766.3963.1.camel@localhost.localdomain>
+	 <4741FE89.4020307@cs.wisc.edu>
+	 <1195507720.3963.4.camel@localhost.localdomain> <4742F78B.8010004@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([64.109.89.108]:42127 "EHLO
+Received: from accolon.hansenpartnership.com ([64.109.89.108]:42263 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1760293AbXKTPWF (ORCPT
+	by vger.kernel.org with ESMTP id S1752076AbXKTP2J (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 10:22:05 -0500
-In-Reply-To: <200711201607.06317.oliver@neukum.org>
+	Tue, 20 Nov 2007 10:28:09 -0500
+In-Reply-To: <4742F78B.8010004@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Alan Stern <stern@rowland.harvard.edu>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, bart.vanassche@gmail.com
 
 
-On Tue, 2007-11-20 at 16:07 +0100, Oliver Neukum wrote:
-> Am Dienstag 20 November 2007 schrieb James Bottomley:
-> > I don't understand why you want to do this.  Power management is a
-> > layered issue on SCSI, divided (as always) into host, device and
-> > transport.  The idle you're talking about is a pure device thing, so it
-> > can be managed by the ULD (and currently is).  When a unit is stopped,
+On Tue, 2007-11-20 at 18:04 +0300, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> >>>And please close this as invalid.  FS ordering guarantees in linux
+> >>>aren't done via ordered tags.
+> >>
+> >>I had a related question. I was working on the attached patch for soe 
+> >>other testing (patch made against scsi-rc-fixes, but is not stable so do 
+> >>not apply), which does the scsi_populate_tag_msg conversion from MSG_* 
+> >>to ISCSI_ATTR and sets the proper iscsi bits.
+> >>
+> >>If I do this patch where I call scsi_activate_tcq on a device and that 
+> >>concertsion, does this require that my driver not reorder commands? I 
+> >>was just a little worried on some of the error handling paths where we 
+> >>requeue commands to the mid layer.
+> > 
+> > Right, there's no way of guaranteeing that commands aren't reordered in
+> > the error path (or even the queue full submission path) which is why we
+> > don't use ordered tags to enforce barriers.
 > 
-> The lower layers don't know how to correctly suspend a device. sd_suspend()
-> may know how to do it. It would also mean the LLD having to detect idleness.
+> May I make your answer more precise? SCSI for non-caching and 
+> write-through caching devices provides a way to guarantee order of 
+> commands on the error path via ACA and UA_INTLCK facilities, if they are 
+> supported by device. For write-back caching devices it's different, 
+> because cache may reorder commands after they are reported as completed 
+> to the initiator as well as there is a possibility for deferred errors.
 
-You really mean you want to involve the transport as well, right?  So
-ipso facto this is more than simple idleness management.  Thus, you
-really need to look into the full solution (host, transport and ULD).
+Yes, I know this.  The problem is that because we can't rely on the
+ordering guarantees in *every* situation, it's unsafe to rely on them
+for barrier support (the case you most need them is the one where the
+guarantees have likely failed).  Thus, linux fs on SCSI implement
+barriers by waiting for completions.  The only case we could implement
+flush barriers in SCSI, as they do in IDE is in the single outstanding
+command case where we don't have any reordering to worry about (i.e.
+queue depth of one).
+
+> So, there is no way to guarantee commands order in case of errors, 
+> because Linux doesn't implement that.
+> 
+> BTW, there is still something wrong in the SCSI/block/FS layers error 
+> processing. Playing with my SCSI target I've noticed that if it returns 
+> pretty valid TASK ABORTED status for some SCSI command, FS on initiator 
+> (ext3) immediately gets corrupted and journal replay on remount doesn't 
+> repair it, only manual e2fsck helps. So, apparently:
+> 
+> 1. SCSI ML handles well not all status codes, which it should.
+
+It certainly handles TASK ABORTED.
+
+> 2. Block/FS levels (sometimes) don't handle I/O errors well enough 
+> without corrupting file systems.
+
+I'm not sure your conclusions necessarily follow your data.  What was
+the reason for the TASK ABORTED (I'd guess QErr settings, right)?
+
+Journals can fail to recover in cases where the underlying medium is
+corrupted.  If TASK ABORTED was because of QErr, what was the original
+failure?
+
+Also, what was going on in the system (and what device was this ...
+iSCSI I guess) ... I assume nothing powered down, so it's not a caching
+problem (and that, since you seem to be using TCQ you do have your
+caches set to write through).
+
+> I don't have time for further investigations, but, if somebody prepare a 
+> patch to fix that, I'm willing to assist in testing.
+
+We'll need a bit more data to identify an actual root cause for this
+problem before anyone can prepare a patch to fix it.
 
 James
 
