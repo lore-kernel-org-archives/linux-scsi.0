@@ -1,48 +1,60 @@
-From: Oliver Neukum <oliver@neukum.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: SCSI dynamic power management
-Date: Tue, 20 Nov 2007 16:36:30 +0100
-Message-ID: <200711201636.30767.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0711191405160.3005-100000@iolanthe.rowland.org> <200711201607.06317.oliver@neukum.org> <1195572119.3131.21.camel@localhost.localdomain>
+Date: Tue, 20 Nov 2007 09:42:02 -0600
+Message-ID: <1195573322.3131.31.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0711191405160.3005-100000@iolanthe.rowland.org>
+	 <200711201607.06317.oliver@neukum.org>
+	 <1195572119.3131.21.camel@localhost.localdomain>
+	 <200711201636.30767.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out001.kontent.com ([81.88.40.215]:47051 "EHLO
-	smtp-out001.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757494AbXKTPge (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 10:36:34 -0500
-In-Reply-To: <1195572119.3131.21.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([64.109.89.108]:42768 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755409AbXKTPmI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Nov 2007 10:42:08 -0500
+In-Reply-To: <200711201636.30767.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
+To: Oliver Neukum <oliver@neukum.org>
 Cc: Alan Stern <stern@rowland.harvard.edu>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-Am Dienstag 20 November 2007 schrieb James Bottomley:
-> 
-> On Tue, 2007-11-20 at 16:07 +0100, Oliver Neukum wrote:
-> > Am Dienstag 20 November 2007 schrieb James Bottomley:
-> > > I don't understand why you want to do this.  Power management is a
-> > > layered issue on SCSI, divided (as always) into host, device and
-> > > transport.  The idle you're talking about is a pure device thing, so it
-> > > can be managed by the ULD (and currently is).  When a unit is stopped,
+
+On Tue, 2007-11-20 at 16:36 +0100, Oliver Neukum wrote:
+> Am Dienstag 20 November 2007 schrieb James Bottomley:
 > > 
-> > The lower layers don't know how to correctly suspend a device. sd_suspend()
-> > may know how to do it. It would also mean the LLD having to detect idleness.
+> > On Tue, 2007-11-20 at 16:07 +0100, Oliver Neukum wrote:
+> > > Am Dienstag 20 November 2007 schrieb James Bottomley:
+> > > > I don't understand why you want to do this.  Power management is a
+> > > > layered issue on SCSI, divided (as always) into host, device and
+> > > > transport.  The idle you're talking about is a pure device thing, so it
+> > > > can be managed by the ULD (and currently is).  When a unit is stopped,
+> > > 
+> > > The lower layers don't know how to correctly suspend a device. sd_suspend()
+> > > may know how to do it. It would also mean the LLD having to detect idleness.
+> > 
+> > You really mean you want to involve the transport as well, right?  So
 > 
-> You really mean you want to involve the transport as well, right?  So
+> Yes, we cannot avoid that. Some device drop their caches unless they are
+> flushed.
 
-Yes, we cannot avoid that. Some device drop their caches unless they are
-flushed.
+So that would be fixed by having the ULD send a flush before START STOP
+UNIT?
 
-> ipso facto this is more than simple idleness management.  Thus, you
-> really need to look into the full solution (host, transport and ULD).
+> > ipso facto this is more than simple idleness management.  Thus, you
+> > really need to look into the full solution (host, transport and ULD).
+> 
+> Only detecting idleness without doing anything with that knowledge would
+> be pointless :-)
+> What is the right kind of sequence?
 
-Only detecting idleness without doing anything with that knowledge would
-be pointless :-)
-What is the right kind of sequence?
+I don't really know ... I don't have a clear idea of what you're trying
+to do.  I know Alan said it was something simple, but from what you're
+saying it sounds like you need a full blown power management
+infrastructure in all three places.
 
-	Regards
-		Oliver
+James
+
 
