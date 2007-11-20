@@ -1,52 +1,43 @@
-From: tsbogend@alpha.franken.de (Thomas Bogendoerfer)
-Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Tue, 20 Nov 2007 09:29:28 +0100
-Message-ID: <20071120082927.GA8856@alpha.franken.de>
-References: <1195450523.7022.37.camel@pasglop> <20071119.003802.100741794.davem@davemloft.net> <1195501874.6539.5.camel@pasglop>
+From: Alistair John Strachan <alistair@devzero.co.uk>
+Subject: Re: [PATCH 44/59] drivers/scsi: Add missing "space"
+Date: Tue, 20 Nov 2007 10:39:44 +0000
+Message-ID: <200711201039.45321.alistair@devzero.co.uk>
+References: <1195523627-15389-1-git-send-email-joe@perches.com> <1195523627-15389-2-git-send-email-joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elvis.franken.de ([193.175.24.41]:36457 "EHLO elvis.franken.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755675AbXKTJjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 04:39:11 -0500
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758446AbXKTKkl@vger.kernel.org>
+In-Reply-To: <1195523627-15389-2-git-send-email-joe@perches.com>
 Content-Disposition: inline
-In-Reply-To: <1195501874.6539.5.camel@pasglop>
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, Ali Akcaagac <aliakc@web.de>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Jamie Lenehan <lenehan@twibble.org>, Oliver Neukum <oliver@neukum.name>, dc395x@twibble.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Cc: David Miller <davem@davemloft.net>, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
-On Tue, Nov 20, 2007 at 06:51:14AM +1100, Benjamin Herrenschmidt wrote:
-> 
-> On Mon, 2007-11-19 at 00:38 -0800, David Miller wrote:
-> > From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> > Date: Mon, 19 Nov 2007 16:35:23 +1100
-> > 
-> > > I'm not sure what is the best way to fix that. Internally, I've done
-> > > some test whacking some ____cacheline_aligned in the scsi_cmnd data
-> > > structure to verify I no longer get random SLAB corruption when using my
-> > > USB but that significantly bloats the size of the structure on archs
-> > > such as ppc64 that don't need it and have a large cache line size.
-> > > 
-> > > Unfortunately, I don't think there's any existing Kconfig symbol or arch
-> > > provided #define to tell us that we are on a non-coherent arch afaik
-> > > that could be used to make that conditional.
-> > > 
-> > > Another option would be to kmalloc the buffer (wasn't it the case before
-> > > btw ?) but I suppose some people will scream at the idea due to how the
-> > > command pools are done...
-> > 
-> > You could make a ____dma_cacheline_aligned and use that.
-> > It seems pretty reasonable.
-> 
-> I was thinking about that. What archs would need it ? arm, mips, what
-> else ?
+On Tuesday 20 November 2007 01:53:31 Joe Perches wrote:
+> diff --git a/drivers/scsi/NCR_D700.c b/drivers/scsi/NCR_D700.c
+> index 9e64b21..99403a6 100644
+> --- a/drivers/scsi/NCR_D700.c
+> +++ b/drivers/scsi/NCR_D700.c
+> @@ -182,7 +182,7 @@ NCR_D700_probe_one(struct NCR_D700_private *p, int
+> siop, int irq,
+>
+>  	hostdata = kzalloc(sizeof(*hostdata), GFP_KERNEL);
+>  	if (!hostdata) {
+> -		printk(KERN_ERR "NCR D700: SIOP%d: Failed to allocate host"
+> +		printk(KERN_ERR "NCR D700: SIOP%d: Failed to allocate host "
+>  		       "data, detatching\n", siop);
+>  		return -ENOMEM;
+>  	}
 
-older parisc
+If you're going to sneak in unrelated spelling/grammar changes, you might as 
+well do it unilaterally.
 
-Thomas.
+"detached" please.
 
 -- 
-Crap can work. Given enough thrust pigs will fly, but it's not necessary a
-good idea.                                                [ RFC1925, 2.3 ]
+Cheers,
+Alistair.
+
+137/1 Warrender Park Road, Edinburgh, UK.
