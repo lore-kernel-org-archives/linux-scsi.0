@@ -1,7 +1,7 @@
 From: Joe Perches <joe@perches.com>
-Subject: [PATCH 41/59] drivers/scsi/aic94xx: Add missing "space"
-Date: Mon, 19 Nov 2007 17:48:33 -0800
-Message-ID: <6cd7c30e31d1e1a732eeb7f08636afa5061d5f44.1195454436.git.joe__15189.8854332559$1195524259$gmane$org@perches.com>
+Subject: [PATCH 40/59] drivers/scsi/aic7xxx: Add missing "space"
+Date: Mon, 19 Nov 2007 17:48:32 -0800
+Message-ID: <f9ffd78f5eb1f49e89fc578611de786ae7b9ac87.1195454436.git.joe__34332.7967836105$1195524405$gmane$org@perches.com>
 References: 1234567
  <1195523331-15303-1-git-send-email-joe@perches.com>
  <1195523331-15303-2-git-send-email-joe@perches.com>
@@ -43,37 +43,48 @@ References: 1234567
  <1195523331-15303-38-git-send-email-joe@perches.com>
  <1195523331-15303-39-git-send-email-joe@perches.com>
  <1195523331-15303-40-git-send-email-joe@perches.com>
- <1195523331-15303-41-git-send-email-joe@perches.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761278AbXKTCDs@vger.kernel.org>
-In-Reply-To: <1195523331-15303-41-git-send-email-joe@perches.com>
-Message-Id: <6cd7c30e31d1e1a732eeb7f08636afa5061d5f44.1195454436.git.joe@perches.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761218AbXKTCEJ@vger.kernel.org>
+In-Reply-To: <1195523331-15303-40-git-send-email-joe@perches.com>
+Message-Id: <f9ffd78f5eb1f49e89fc578611de786ae7b9ac87.1195454436.git.joe@perches.com>
 In-Reply-To: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
 References: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+Cc: Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
 Signed-off-by: Joe Perches <joe@perches.com>
 ---
- drivers/scsi/aic94xx/aic94xx_sds.c |    4 ++--
- 1 files changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/aic7xxx/aic79xx_osm.c     |    2 +-
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_sds.c b/drivers/scsi/aic94xx/aic94xx_sds.c
-index 06509bf..f45f0b9 100644
---- a/drivers/scsi/aic94xx/aic94xx_sds.c
-+++ b/drivers/scsi/aic94xx/aic94xx_sds.c
-@@ -325,8 +325,8 @@ asd_hwi_check_ocm_access (struct asd_ha_struct *asd_ha)
- 			goto out;
- 		}
- 
--		printk(KERN_INFO "OCM is not initialized by BIOS,"
--		       "reinitialize it and ignore it, current IntrptStatus"
-+		printk(KERN_INFO "OCM is not initialized by BIOS, "
-+		       "reinitialize it and ignore it, current IntrptStatus "
- 		       "is 0x%x\n", v);
- 
- 		if (v)
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 2d02040..581ac18 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -338,7 +338,7 @@ MODULE_PARM_DESC(aic79xx,
+ "	amplitude:<int>		Set the signal amplitude (0-7).\n"
+ "	seltime:<int>		Selection Timeout:\n"
+ "				(0/256ms,1/128ms,2/64ms,3/32ms)\n"
+-"	slowcrc			Turn on the SLOWCRC bit (Rev B only)\n"		 
++"	slowcrc			Turn on the SLOWCRC bit (Rev B only)\n"
+ "\n"
+ "	Sample /etc/modprobe.conf line:\n"
+ "		Enable verbose logging\n"
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 66f0259..8ec99e2 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -374,7 +374,7 @@ ahd_pci_map_registers(struct ahd_softc *ahd)
+ 			ahd->bshs[1].ioport = base2;
+ 			command |= PCIM_CMD_PORTEN;
+ 		} else {
+-			printf("aic79xx: PCI%d:%d:%d IO regions 0x%lx and 0x%lx"
++			printf("aic79xx: PCI%d:%d:%d IO regions 0x%lx and 0x%lx "
+ 			       "unavailable. Cannot map device.\n",
+ 			       ahd_get_pci_bus(ahd->dev_softc),
+ 			       ahd_get_pci_slot(ahd->dev_softc),
 -- 
 1.5.3.5.652.gf192c
