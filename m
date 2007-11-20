@@ -1,55 +1,81 @@
-From: Jonathan McDowell <noodles@earth.li>
-Subject: Re: [PATCH] Unify sysfs filenames for firmware version
-Date: Tue, 20 Nov 2007 09:14:55 -0800
-Message-ID: <20071120171454.GH31112@earth.li>
-References: <20071120133824.GD31112@earth.li> <47430CCE.50701@emulex.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: [Bugme-new] [Bug 9405] New: iSCSI does not implement ordering
+ guarantees required by e.g. journaling filesystems
+Date: Tue, 20 Nov 2007 20:17:11 +0300
+Message-ID: <47431697.3080901@vlnb.net>
+References: <bug-9405-10286@http.bugzilla.kernel.org/>	 <20071119125040.9f6eb1e2.akpm@linux-foundation.org>	 <1195505766.3963.1.camel@localhost.localdomain>	 <4741FE89.4020307@cs.wisc.edu>	 <1195507720.3963.4.camel@localhost.localdomain> <4742F78B.8010004@vlnb.net>	 <1195572482.3131.28.camel@localhost.localdomain>	 <4743082D.7030302@vlnb.net> <1195577040.3131.48.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from the.earth.li ([193.201.200.66]:42147 "EHLO the.earth.li"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754496AbXKTRO5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 12:14:57 -0500
-Content-Disposition: inline
-In-Reply-To: <47430CCE.50701@emulex.com>
+Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:50491 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1755466AbXKTRRe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Nov 2007 12:17:34 -0500
+In-Reply-To: <1195577040.3131.48.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Matt_Domsch@dell.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, bart.vanassche@gmail.com
 
-On Tue, Nov 20, 2007 at 11:35:26AM -0500, James Smart wrote:
-> The hearburn I have with these patches is that you are changing
-> driver-specific attributes, not common ones as enforced/requested by a
-> subsystem. As such, you are breaking a management interface for
-> existing tools/scripts.
-
-Yes, that's true. Though at present we have the heartburn that anyone
-wanting to write a script to pull out firmware revisions has to know
-exactly where every driver stores this information.
-
-> There's been a long-standing request to create common device
-> attributes, such as fw_version, but I don't think they ever made it
-> into the kernel. Not only would the names be consistent, but the
-> location would be consistent as well.
+James Bottomley wrote:
+> On Tue, 2007-11-20 at 19:15 +0300, Vladislav Bolkhovitin wrote:
 > 
-> I'd rather you took on that work, than proceed with these patches.
+>>James Bottomley wrote:
+>>
+>>>I'm not sure your conclusions necessarily follow your data.  What was
+>>>the reason for the TASK ABORTED (I'd guess QErr settings, right)?
+>>
+>>It was my desire/curiosity during tests of SCST (http://scst.sf.net), 
+>>when it working with several initiators with different transports over 
+>>the same set of devices, each of them having with TAS bit in the control 
+>>mode page set. According to SAM, in this case TASK ABORTED status can be 
+>>returned at any time, similarly to QUEUE FULL, i.e. IMHO such command 
+>>just should be retried. But QUEUE FULL status handled well, but TASK 
+>>ABORTED leads to filesystem corruption.
+> 
+> So this is with a soft target implementation ... so it could be an
+> ordering issue inside the target that's causing the filesystem
+> corruption on error.
 
-Do you have a pointer to previous discussion about this? A central
-device attribute does make more sense. It'd be nice to have uniform
-access to details like the driver version as well.
- 
-> Jonathan McDowell wrote:
-> >Looking around sysfs in an attempt to pull out SCSI card firmware
-> >versions I found 5 different filenames used to store the information.
-> >Only one, fw_version, was used more than once. The patch below changes
-> >the other drivers to use this filename too.
-> >
-> >I suspect the same applies to other subsystem drivers as well. I'll look
-> >at them assuming this patch is well received.
+Target offers no ordering guarantees for SIMPLE commands and frankly 
+says that to initiator via QUEUE ALGORITHM MODIFIER value 1 in the 
+control mode page. As we know, initiator doesn't use ORDERED tags (and 
+it really doesn't use them according to the logs), so if it's an 
+ordering issue, it's at the initiator's side.
 
-J.
+> if you specifically set TAS=1 you're giving up the right to know what
+> caused the command termination.  With insufficient information, it's
+> really unsafe to simply retry, which is why the mid layer just returns
+> TASK ABORTED as an error.  If you set TAS=0 we'll get a check
+> condition/unit attention explaining what happened (usually commands
+> cleared by another initiator) and we'll explicitly do the right thing
+> based on the sense data.
 
--- 
-You have a tendency to feel you are superior to most computers.
-This .sig brought to you by the letter U and the number 25
-Product of the Republic of HuggieTag
+But having TAS=1 is legal, right? So it should be handled well. If 
+TAS=0, TASK ABORTED can't be returned, it would be illegal. So, TASK 
+ABORTED status can only be returned with TAS=1.
+
+> One of my test suites has an initiator which randomly spits errors.
+> I've yet to see it cause an error that an ext3 journal can't recover
+> from.  So, if there's a genuine problem we need a nice test case to pass
+> to the filesystem people.
+
+If you need a clear testcase (IMHO, in this case it isn't needed, 
+because it's clear without it), I can prepare a patch for SCST to 
+randomly return TASK ABORTED status.
+
+You can get the latest version of SCST and the target drivers using SVN:
+
+$ svn co https://scst.svn.sourceforge.net/svnroot/scst
+
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+
