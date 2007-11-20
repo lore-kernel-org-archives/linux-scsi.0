@@ -1,94 +1,65 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: [Bugme-new] [Bug 9405] New: iSCSI does not implement ordering
- guarantees required by e.g. journaling filesystems
-Date: Tue, 20 Nov 2007 21:22:16 +0300
-Message-ID: <474325D8.1080105@vlnb.net>
-References: <bug-9405-10286@http.bugzilla.kernel.org/>	 <20071119125040.9f6eb1e2.akpm@linux-foundation.org>	 <1195505766.3963.1.camel@localhost.localdomain>	 <4741FE89.4020307@cs.wisc.edu>	 <1195507720.3963.4.camel@localhost.localdomain> <4742F78B.8010004@vlnb.net>	 <1195572482.3131.28.camel@localhost.localdomain>	 <4743082D.7030302@vlnb.net>	 <1195577040.3131.48.camel@localhost.localdomain>	 <47431697.3080901@vlnb.net>	 <1195579841.3131.60.camel@localhost.localdomain>	 <47431D28.9020708@vlnb.net> <1195581426.3131.75.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: SCSI dynamic power management
+Date: Tue, 20 Nov 2007 14:03:24 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0711201350310.2906-100000@iolanthe.rowland.org>
+References: <1195575333.3131.37.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:46171 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755204AbXKTS2q (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 13:28:46 -0500
-In-Reply-To: <1195581426.3131.75.camel@localhost.localdomain>
+Received: from iolanthe.rowland.org ([192.131.102.54]:54890 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1757751AbXKTTD0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 14:03:26 -0500
+In-Reply-To: <1195575333.3131.37.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org, bart.vanassche@gmail.com
+Cc: Oliver Neukum <oliver@neukum.org>, "Salyzyn, Mark" <mark_salyzyn@adaptec.com>, Matthew Wilcox <matthew@wil.cx>, Oliver Neukum <oliver@neukum.name>, SCSI development list <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
->>>>>>>I'm not sure your conclusions necessarily follow your data.  What was
->>>>>>>the reason for the TASK ABORTED (I'd guess QErr settings, right)?
->>>>>>
->>>>>>It was my desire/curiosity during tests of SCST (http://scst.sf.net), 
->>>>>>when it working with several initiators with different transports over 
->>>>>>the same set of devices, each of them having with TAS bit in the control 
->>>>>>mode page set. According to SAM, in this case TASK ABORTED status can be 
->>>>>>returned at any time, similarly to QUEUE FULL, i.e. IMHO such command 
->>>>>>just should be retried. But QUEUE FULL status handled well, but TASK 
->>>>>>ABORTED leads to filesystem corruption.
->>>>>
->>>>>So this is with a soft target implementation ... so it could be an
->>>>>ordering issue inside the target that's causing the filesystem
->>>>>corruption on error.
->>>>
->>>>Target offers no ordering guarantees for SIMPLE commands and frankly 
->>>>says that to initiator via QUEUE ALGORITHM MODIFIER value 1 in the 
->>>>control mode page. As we know, initiator doesn't use ORDERED tags (and 
->>>>it really doesn't use them according to the logs), so if it's an 
->>>>ordering issue, it's at the initiator's side.
->>>>
->>>>>if you specifically set TAS=1 you're giving up the right to know what
->>>>>caused the command termination.  With insufficient information, it's
->>>>>really unsafe to simply retry, which is why the mid layer just returns
->>>>>TASK ABORTED as an error.  If you set TAS=0 we'll get a check
->>>>>condition/unit attention explaining what happened (usually commands
->>>>>cleared by another initiator) and we'll explicitly do the right thing
->>>>>based on the sense data.
->>>>
->>>>But having TAS=1 is legal, right? So it should be handled well. If 
->>>>TAS=0, TASK ABORTED can't be returned, it would be illegal. So, TASK 
->>>>ABORTED status can only be returned with TAS=1.
->>>
->>>Driving with your handbrake on is legal too ... that doesn't mean you
->>>should do it ... and it certainly doesn't give you a legitimate
->>>complaint against the manufacturer of your car for excessive brake pad
->>>wear.
->>>
->>>We handle TASK ABORTED as well as we can (by failing it).  For better
->>>handling set TAS=0 and we'll handle the individual cases according to
->>>the sense codes.
->>
->>So, should I consider your words as you think that it's perfectly fine 
->>to corrupt file system for devices with TAS=1? Absolutely legal devices, 
->>repeat. Hence, in your opinion, no further investigation should be done?
-> 
-> Logic wouldn't support such a conclusion.
+On Tue, 20 Nov 2007, James Bottomley wrote:
 
-Sorry, lately I've got too many "I won't bother, this is your problem" 
-style answers
+> > The main point I'm aiming for is to have the midlayer to inform the LLD 
+> > when all the devices on a particular bus are "idle".
+> 
+> This is the wrong assumption ... the mid layer would provide an API to
+> inform the transport.  Transport and host are separate things.  an 8
+> port SAS card could suspend a single phy and device while still
+> processing the others.  So what it sounds like you need is a transport
+> API saying a given device has been suspended or is requested to be
+> resumed?  What than means for the host would be transport class policy,
+> I think.
 
-> You have intertwined two issues
-> 
->      1. How should the mid layer handle TASK ABORTED.  I think we've
->         reached the point where returning I/O error is the best we can
->         do, but if TAS=0 we could have used the sense data to do better.
->      2. Should a request I/O error cause corruption in ext3 that can't
->         be recovered by a journal replay. I think the answer here is
->         no, so there needs to be an easily reproducible test case to
->         pass to the filesystem people.
+Okay.  I know little about the intricacies of these newer, more exotic
+transports; I'm pretty firmly rooted in the old SPI technology.
 
-OK, I see you point. As I already wrote, I can assist only in testing here.
+Anyway, yes, I want an API to inform the transport and/or host adapter 
+driver that either a given device or all devices on a bus has been 
+suspended or requests to be resumed.  For an 8-port SAS card the driver 
+might want to know about each individual device; for a plain old SPI 
+card the driver would care only about the entire bus.
 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> A little ... I think your wake on command idea above is policy rather
+> than actual implementation ... so it would probably have to be
+> selectable (either error or wake).
+
+Yes.  That is already part of the USB dynamic PM implementation, and I
+would copy it for the SCSI implementation.  There is a sysfs file
+(/sys/devices/.../power/level) to which the user can write three
+possible values:
+
+	"on" means the device is permanently at full power;
+
+	"auto" means the device is subject to autosuspend after
+	an idle-timeout (the timeout value is stored in a separate
+	sysfs file) with autoresume at the next I/O request;
+
+	"suspend" means the device is permanently suspended
+	and I/O requests will fail immediately.
+
+My intention was to add a couple of method pointers to the SCSI
+host_template structure, one for suspend notifications and one for
+resume notifications.  Do you think this is the right way to do it, or
+is something more complex called for?
+
+Alan Stern
 
