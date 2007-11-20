@@ -1,55 +1,46 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Wed, 21 Nov 2007 09:39:03 +1100
-Message-ID: <1195598343.6970.50.camel@pasglop>
-References: <1195450523.7022.37.camel@pasglop>
-	 <20071119.003802.100741794.davem@davemloft.net>
-	 <1195501874.6539.5.camel@pasglop> <20071120082927.GA8856@alpha.franken.de>
-	 <1195569362.3131.3.camel@localhost.localdomain> <adaabp8wuma.fsf@cisco.com>
-	 <1195593015.17601.10.camel@localhost.localdomain>
-Reply-To: benh@kernel.crashing.org
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: [PATCH] Unify sysfs filenames for firmware version
+Date: Tue, 20 Nov 2007 22:30:03 +0000
+Message-ID: <20071120223003.70b9e37d@the-village.bc.nu>
+References: <20071120133824.GD31112@earth.li>
+	<47430CCE.50701@emulex.com>
+	<20071120171454.GH31112@earth.li>
+	<AE4F746F2AECFC4DA4AADD66A1DFEF01FEAC9B@otce2k301.adaptec.com>
+	<20071120200212.GI31112@earth.li>
+	<AE4F746F2AECFC4DA4AADD66A1DFEF01FEAD01@otce2k301.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:60801 "EHLO gate.crashing.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758634AbXKTWjo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 20 Nov 2007 17:39:44 -0500
-In-Reply-To: <1195593015.17601.10.camel@localhost.localdomain>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45820 "EHLO
+	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1758651AbXKTWsJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 17:48:09 -0500
+In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01FEAD01@otce2k301.adaptec.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Roland Dreier <rdreier@cisco.com>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
+To: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Cc: Jonathan McDowell <noodles@earth.li>, James Smart <James.Smart@Emulex.Com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Kroah-Hartman <gregkh@suse.de>, Matt_Domsch@dell.com
 
+> > Management stuff always seems to be tied to a single card. It's one of
+> > the things that puts me off hardware RAID.
+> 
+> There are 113 cards this driver works for in concert. Maybe my tail
+> feathers are showing ;->
 
-On Tue, 2007-11-20 at 15:10 -0600, James Bottomley wrote:
-> We're talking about trying to fix this for 2.4; which is already at
-> -rc3 ... Is an entire arch change for dma alignment really a merge
-> candidate at this stage?
+You might want to mention the card firmware in question run on 3 or 4
+entirely different processors too
 
-Well, as I said before... it's a matter of what seems to be the less
-likely to break something right ?
+> > Do the management folks actually have some ideas about what sort of
+> > interface they'd like in sysfs?
+> 
+> Simple answer:
+> 	No
+> 
+> Detailed answer (I digress):
 
-On one side,  I'm doing surgery on code I barely know, the scsi error
-handling, and now it seems I also have to fixup a handful of drivers
-that aren't the most obvious pieces of code around.
+Linuxy answer:
 
-On the other side, Roland proposal is basically just adding a macro that
-can be empty for everybody but a handful of archs, and stick it onto one
-field in one structure...
+Something like netlink
 
-The later has about 0 chances to actually break something or cause a
-regression. I wouldn't say that about the former.
-
-Now, I will see if I manage to fixup the NCR drivers to pass a
-pre-allocated buffer (USB storage I think can pass NULL as it's not
-calling prep in atomic context). But then, it complicates the matter
-because that means "restore" will have to know whether prep allocated
-the buffer or not, thus more fields to add to the save struct, it's
-getting messy, unless we decide -all- callers are responsible for the
-buffer allocation (hrm... maybe the best approach).
-
-Ben.
-
-
+Alan
