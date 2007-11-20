@@ -1,137 +1,63 @@
-From: Joe Perches <joe@perches.com>
-Subject: [PATCH 44/59] drivers/scsi: Add missing "space"
-Date: Mon, 19 Nov 2007 17:53:31 -0800
-Message-ID: <adb8f5a3245d3e618c861f99db3acd43362c92c7.1195454436.git.joe__46398.4242328026$1195524552$gmane$org@perches.com>
-References: 1234567
- <1195523627-15389-1-git-send-email-joe@perches.com>
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761611AbXKTCGy@vger.kernel.org>
-In-Reply-To: <1195523627-15389-1-git-send-email-joe@perches.com>
-Message-Id: <adb8f5a3245d3e618c861f99db3acd43362c92c7.1195454436.git.joe@perches.com>
-In-Reply-To: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
-References: <ee1678e1bc8b80b7ae420059fffc7241486ea91a.1195454434.git.joe@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Ali Akcaagac <aliakc@web.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Jamie Lenehan <lenehan@twibble.org>, Oliver Neukum <oliver@neukum.name>, dc395x@twibble.org, linux-scsi@vger.kernel.org
+From: Roland Dreier <rdreier@cisco.com>
+Subject: Re: SCSI breakage on non-cache coherent architectures
+Date: Mon, 19 Nov 2007 18:10:14 -0800
+Message-ID: <ada8x4ty8e1.fsf@cisco.com>
+References: <1195501874.6539.5.camel@pasglop>
+	<20071119.143115.251022325.davem@davemloft.net>
+	<1195518864.6970.23.camel@pasglop>
+	<20071119.164611.64664648.davem@davemloft.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sj-iport-6.cisco.com ([171.71.176.117]:56912 "EHLO
+	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760625AbXKTCKW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Nov 2007 21:10:22 -0500
+In-Reply-To: <20071119.164611.64664648.davem@davemloft.net> (David Miller's message of "Mon, 19 Nov 2007 16:46:11 -0800 (PST)")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: benh@kernel.crashing.org, James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
 
+ > 2) Add the __dma_cacheline_aligned tag.
+ > 
+ > But note that with #2 it could get quite ugly because the
+ > alignment and size both have a minimum that needs to be
+ > enforced, not just the alignment alone.  So either:
+ > 
+ > struct foo {
+ > 	unsigned int other_unrelated_stuff;
+ > 
+ > 	struct object dma_thing __dma_cacheline_aligned;
+ > 
+ > 	unsigned int more_nondma_stuff __dma_cacheline_aligned;
+ > };
+ > 
+ > or:
+ > 
+ > struct foo {
+ > 	unsigned int other_unrelated_stuff;
+ > 
+ > 	union {
+ > 		struct object dma_thing __dma_cacheline_aligned;
+ > 		char __pad[(sizeof(object) + DMA_CACHELINE_SIZE &
+ > 			   ~DMA_CACHELINE_SIZE)];
+ > 	} u;
+ > 
+ > 	unsigned int more_nondma_stuff __dma_cacheline_aligned;
+ > };
 
-Signed-off-by: Joe Perches <joe@perches.com>
----
- drivers/scsi/NCR_D700.c    |    2 +-
- drivers/scsi/aic7xxx_old.c |    2 +-
- drivers/scsi/dc395x.c      |    2 +-
- drivers/scsi/hosts.c       |    2 +-
- drivers/scsi/iscsi_tcp.c   |    6 +++---
- drivers/scsi/scsi_proc.c   |    2 +-
- drivers/scsi/scsi_scan.c   |    2 +-
- 7 files changed, 9 insertions(+), 9 deletions(-)
+I wrapped this ugliness up inside the macro back in what I posted in
+2002 (http://lkml.org/lkml/2002/6/12/234):
 
-diff --git a/drivers/scsi/NCR_D700.c b/drivers/scsi/NCR_D700.c
-index 9e64b21..99403a6 100644
---- a/drivers/scsi/NCR_D700.c
-+++ b/drivers/scsi/NCR_D700.c
-@@ -182,7 +182,7 @@ NCR_D700_probe_one(struct NCR_D700_private *p, int siop, int irq,
- 
- 	hostdata = kzalloc(sizeof(*hostdata), GFP_KERNEL);
- 	if (!hostdata) {
--		printk(KERN_ERR "NCR D700: SIOP%d: Failed to allocate host"
-+		printk(KERN_ERR "NCR D700: SIOP%d: Failed to allocate host "
- 		       "data, detatching\n", siop);
- 		return -ENOMEM;
- 	}
-diff --git a/drivers/scsi/aic7xxx_old.c b/drivers/scsi/aic7xxx_old.c
-index 8f8db5f..c79a452 100644
---- a/drivers/scsi/aic7xxx_old.c
-+++ b/drivers/scsi/aic7xxx_old.c
-@@ -3716,7 +3716,7 @@ aic7xxx_pci_intr(struct aic7xxx_host *p)
-   pci_read_config_byte(p->pdev, PCI_STATUS + 1, &status1);
- 
-   if ( (status1 & DPE) && (aic7xxx_verbose & VERBOSE_MINOR_ERROR) )
--    printk(WARN_LEAD "Data Parity Error during PCI address or PCI write"
-+    printk(WARN_LEAD "Data Parity Error during PCI address or PCI write "
-       "phase.\n", p->host_no, -1, -1, -1);
-   if ( (status1 & SSE) && (aic7xxx_verbose & VERBOSE_MINOR_ERROR) )
-     printk(WARN_LEAD "Signal System Error Detected\n", p->host_no,
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index a9def6e..f98747c 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -1520,7 +1520,7 @@ static u8 start_scsi(struct AdapterCtlBlk* acb, struct DeviceCtlBlk* dcb,
- 	}
- #endif
- 	if (acb->active_dcb) {
--		dprintkl(KERN_DEBUG, "start_scsi: (pid#%li) Attempt to start a"
-+		dprintkl(KERN_DEBUG, "start_scsi: (pid#%li) Attempt to start a "
- 			"command while another command (pid#%li) is active.",
- 			srb->cmd->serial_number,
- 			acb->active_dcb->active_srb ?
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 24271a8..b53f681 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -141,7 +141,7 @@ int scsi_host_set_state(struct Scsi_Host *shost, enum scsi_host_state state)
-  illegal:
- 	SCSI_LOG_ERROR_RECOVERY(1,
- 				shost_printk(KERN_ERR, shost,
--					     "Illegal host state transition"
-+					     "Invalid host state transition "
- 					     "%s->%s\n",
- 					     scsi_host_state_name(oldstate),
- 					     scsi_host_state_name(state)));
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 4bcf916..2e0d9a1 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -389,7 +389,7 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 	}
- 
- 	if (r2t->data_length > session->max_burst)
--		debug_scsi("invalid R2T with data len %u and max burst %u."
-+		debug_scsi("invalid R2T with data len %u and max burst %u. "
- 			   "Attempting to execute request.\n",
- 			    r2t->data_length, session->max_burst);
- 
-@@ -900,13 +900,13 @@ more:
- 
- 		memcpy(&recv_digest, conn->data, sizeof(uint32_t));
- 		if (recv_digest != tcp_conn->in.datadgst) {
--			debug_tcp("iscsi_tcp: data digest error!"
-+			debug_tcp("iscsi_tcp: data digest error! "
- 				  "0x%x != 0x%x\n", recv_digest,
- 				  tcp_conn->in.datadgst);
- 			iscsi_conn_failure(conn, ISCSI_ERR_DATA_DGST);
- 			return 0;
- 		} else {
--			debug_tcp("iscsi_tcp: data digest match!"
-+			debug_tcp("iscsi_tcp: data digest match! "
- 				  "0x%x == 0x%x\n", recv_digest,
- 				  tcp_conn->in.datadgst);
- 			tcp_conn->in_progress = IN_PROGRESS_WAIT_HEADER;
-diff --git a/drivers/scsi/scsi_proc.c b/drivers/scsi/scsi_proc.c
-index bb6f051..781dc85 100644
---- a/drivers/scsi/scsi_proc.c
-+++ b/drivers/scsi/scsi_proc.c
-@@ -123,7 +123,7 @@ void scsi_proc_host_add(struct Scsi_Host *shost)
- 	p = create_proc_read_entry(name, S_IFREG | S_IRUGO | S_IWUSR,
- 			sht->proc_dir, proc_scsi_read, shost);
- 	if (!p) {
--		printk(KERN_ERR "%s: Failed to register host %d in"
-+		printk(KERN_ERR "%s: Failed to register host %d in "
- 		       "%s\n", __FUNCTION__, shost->host_no,
- 		       sht->proc_name);
- 		return;
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 40ea71c..e0a47ed 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1124,7 +1124,7 @@ static void scsi_sequential_lun_scan(struct scsi_target *starget,
- 	unsigned int sparse_lun, lun, max_dev_lun;
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
- 
--	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sequential scan of"
-+	SCSI_LOG_SCAN_BUS(3, printk(KERN_INFO "scsi scan: Sequential scan of "
- 				    "%s\n", starget->dev.bus_id));
- 
- 	max_dev_lun = min(max_scsi_luns, shost->max_lun);
--- 
-1.5.3.5.652.gf192c
+#define __dma_buffer __dma_buffer_line(__LINE__)
+#define __dma_buffer_line(line) __dma_buffer_expand_line(line)
+#define __dma_buffer_expand_line(line) \
+	__attribute__ ((aligned(L1_CACHE_BYTES))); \
+	char __dma_pad_ ## line [0] __attribute__ ((aligned(L1_CACHE_BYTES)))
+
+then you just need to tag the actual member like:
+
+	char foo[3] __dma_buffer;
+
+ - R.
