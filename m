@@ -1,114 +1,381 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/23] MegaRAID driver management char device moved to misc
-Date: Wed, 21 Nov 2007 15:12:24 -0800
-Message-ID: <200711212312.lALNCOCj014139@imap1.linux-foundation.org>
+Subject: [patch 22/23] scsi/qla2xxx/: possible cleanups
+Date: Wed, 21 Nov 2007 15:12:33 -0800
+Message-ID: <200711212312.lALNCYVd014169@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:39462 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42824 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754685AbXKUXRO (ORCPT
+	by vger.kernel.org with ESMTP id S1754817AbXKUXRW (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Nov 2007 18:17:14 -0500
+	Wed, 21 Nov 2007 18:17:22 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, thomas@horsten.com, Neela.Kolli@engenio.com, Seokmann.Ju@lsil.com, thomas.horsten@gmail.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, andrew.vasquez@qlogic.com
 
-From: Thomas Horsten <thomas@horsten.com>
+From: Adrian Bunk <bunk@kernel.org>
 
-The MegaRAID driver's common management module (megaraid_mm.c) creates a
-char device used by the management tool "megarc" from LSI Logic (and
-possibly other management tools).
+- make the following needlessly global code static:
+  - qla_attr.c: qla24xx_vport_delete()
+  - qla_attr.c: qla24xx_vport_disable()
+  - qla_mid.c: qla24xx_allocate_vp_id()
+  - qla_mid.c: qla24xx_find_vhost_by_name()
+  - qla_mid.c: qla2x00_do_dpc_vp()
+  - qla_os.c: struct qla2x00_driver_template
+  - qla_os.c: qla2x00_stop_timer()
+  - qla_os.c: qla2x00_mem_alloc()
+  - qla_os.c: qla2x00_mem_free()
+  - qla_sup.c: qla2x00_lock_nvram_access()
+  - qla_sup.c: qla2x00_unlock_nvram_access()
+  - qla_sup.c: qla2x00_get_nvram_word()
+  - qla_sup.c: qla2x00_write_nvram_word()
+- #if 0 the following unused global functions:
+  - qla_dbg.c: qla2x00_dump_pkt()
+  - qla_mbx.c: qla2x00_system_error()
+  - qla_mbx.c: qla2x00_get_serdes_params()
+  - qla_mbx.c: qla2x00_get_idma_speed()
+  - qla_mbx.c: qla24xx_get_vp_database()
+  - qla_mbx.c: qla24xx_get_vp_entry()
+- qla_os.c: remove some unneeded function prototypes
 
-In 2.6 with udev, this device doesn't get created because it is not
-registered in sysfs.
-
-I first fixed this by registering a class "megaraid_mm", but realized that
-this should probably be moved to misc devices, instead of taking up a char
-major.  This is because only 1 device is used, even if there are multiple
-adapters - the minor is never used (the adapter info is in the ioctl block
-sent to the driver, not detected based on the minor number as one might
-think).  So it is a complete waste to have an entire major taken by this.
-
-So it now uses a misc device which I named "megadev0" (the name that megarc
-expects), and has a dynamic minor (previoulsy a dynamic major was used).
-
-I have tested this on my own system with the megarc tool, and it works just
-as fine as before (only now the device gets created correctly by udev).
-
-Cc: <thomas.horsten@gmail.com>
-Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
-Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mm.c |   20 +++++++++++++-------
- drivers/scsi/megaraid/megaraid_mm.h |    1 +
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c |    6 +++---
+ drivers/scsi/qla2xxx/qla_dbg.c  |    2 ++
+ drivers/scsi/qla2xxx/qla_gbl.h  |   25 -------------------------
+ drivers/scsi/qla2xxx/qla_mbx.c  |   10 ++++++++++
+ drivers/scsi/qla2xxx/qla_mid.c  |    6 +++---
+ drivers/scsi/qla2xxx/qla_os.c   |   20 ++++++--------------
+ drivers/scsi/qla2xxx/qla_sup.c  |    8 ++++----
+ 7 files changed, 28 insertions(+), 49 deletions(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_mm.c~megaraid-driver-management-char-device-moved-to-misc drivers/scsi/megaraid/megaraid_mm.c
---- a/drivers/scsi/megaraid/megaraid_mm.c~megaraid-driver-management-char-device-moved-to-misc
-+++ a/drivers/scsi/megaraid/megaraid_mm.c
-@@ -59,7 +59,6 @@ EXPORT_SYMBOL(mraid_mm_register_adp);
- EXPORT_SYMBOL(mraid_mm_unregister_adp);
- EXPORT_SYMBOL(mraid_mm_adapter_app_handle);
+diff -puN drivers/scsi/qla2xxx/qla_attr.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_attr.c
+--- a/drivers/scsi/qla2xxx/qla_attr.c~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_attr.c
+@@ -9,7 +9,7 @@
+ #include <linux/kthread.h>
+ #include <linux/vmalloc.h>
  
--static int majorno;
- static uint32_t drvr_ver	= 0x02200207;
+-int qla24xx_vport_disable(struct fc_vport *, bool);
++static int qla24xx_vport_disable(struct fc_vport *, bool);
  
- static int adapters_count_g;
-@@ -76,6 +75,12 @@ static const struct file_operations lsi_
- 	.owner	= THIS_MODULE,
- };
+ /* SYSFS attributes --------------------------------------------------------- */
  
-+static struct miscdevice megaraid_mm_dev = {
-+	.minor	= MISC_DYNAMIC_MINOR,
-+	.name   = "megadev0",
-+	.fops   = &lsi_fops,
-+};
-+
- /**
-  * mraid_mm_open - open routine for char node interface
-  * @inode	: unused
-@@ -1184,15 +1189,16 @@ mraid_mm_teardown_dma_pools(mraid_mmadp_
- static int __init
- mraid_mm_init(void)
- {
-+	int err;
-+
- 	// Announce the driver version
- 	con_log(CL_ANN, (KERN_INFO "megaraid cmm: %s %s\n",
- 		LSI_COMMON_MOD_VERSION, LSI_COMMON_MOD_EXT_VERSION));
- 
--	majorno = register_chrdev(0, "megadev", &lsi_fops);
--
--	if (majorno < 0) {
--		con_log(CL_ANN, ("megaraid cmm: cannot get major\n"));
--		return majorno;
-+	err = misc_register(&megaraid_mm_dev);
-+	if (err < 0) {
-+		con_log(CL_ANN, ("megaraid cmm: cannot register misc device\n"));
-+		return err;
- 	}
- 
- 	init_waitqueue_head(&wait_q);
-@@ -1230,7 +1236,7 @@ mraid_mm_exit(void)
- {
- 	con_log(CL_DLEVEL1 , ("exiting common mod\n"));
- 
--	unregister_chrdev(majorno, "megadev");
-+	misc_deregister(&megaraid_mm_dev);
+@@ -1113,7 +1113,7 @@ vport_create_failed_2:
+ 	return FC_VPORT_FAILED;
  }
  
- module_init(mraid_mm_init);
-diff -puN drivers/scsi/megaraid/megaraid_mm.h~megaraid-driver-management-char-device-moved-to-misc drivers/scsi/megaraid/megaraid_mm.h
---- a/drivers/scsi/megaraid/megaraid_mm.h~megaraid-driver-management-char-device-moved-to-misc
-+++ a/drivers/scsi/megaraid/megaraid_mm.h
-@@ -22,6 +22,7 @@
- #include <linux/moduleparam.h>
- #include <linux/pci.h>
- #include <linux/list.h>
-+#include <linux/miscdevice.h>
+-int
++static int
+ qla24xx_vport_delete(struct fc_vport *fc_vport)
+ {
+ 	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
+@@ -1146,7 +1146,7 @@ qla24xx_vport_delete(struct fc_vport *fc
+ 	return 0;
+ }
  
- #include "mbox_defs.h"
- #include "megaraid_ioctl.h"
+-int
++static int
+ qla24xx_vport_disable(struct fc_vport *fc_vport, bool disable)
+ {
+ 	scsi_qla_host_t *vha = fc_vport->dd_data;
+diff -puN drivers/scsi/qla2xxx/qla_dbg.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_dbg.c
+--- a/drivers/scsi/qla2xxx/qla_dbg.c~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_dbg.c
+@@ -1428,6 +1428,7 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd 
+ 	printk("  sp flags=0x%x\n", sp->flags);
+ }
+ 
++#if 0
+ void
+ qla2x00_dump_pkt(void *pkt)
+ {
+@@ -1442,6 +1443,7 @@ qla2x00_dump_pkt(void *pkt)
+ 	}
+ 	printk("\n");
+ }
++#endif  /*  0  */
+ 
+ #if defined(QL_DEBUG_ROUTINES)
+ /*
+diff -puN drivers/scsi/qla2xxx/qla_gbl.h~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_gbl.h
+--- a/drivers/scsi/qla2xxx/qla_gbl.h~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -68,30 +68,20 @@ extern int num_hosts;
+ /*
+  * Global Functions in qla_mid.c source file.
+  */
+-extern struct scsi_host_template qla2x00_driver_template;
+ extern struct scsi_host_template qla24xx_driver_template;
+ extern struct scsi_transport_template *qla2xxx_transport_vport_template;
+-extern uint8_t qla2x00_mem_alloc(scsi_qla_host_t *);
+ extern void qla2x00_timer(scsi_qla_host_t *);
+ extern void qla2x00_start_timer(scsi_qla_host_t *, void *, unsigned long);
+-extern void qla2x00_stop_timer(scsi_qla_host_t *);
+-extern uint32_t qla24xx_allocate_vp_id(scsi_qla_host_t *);
+ extern void qla24xx_deallocate_vp_id(scsi_qla_host_t *);
+ extern int qla24xx_disable_vp (scsi_qla_host_t *);
+ extern int qla24xx_enable_vp (scsi_qla_host_t *);
+-extern void qla2x00_mem_free(scsi_qla_host_t *);
+ extern int qla24xx_control_vp(scsi_qla_host_t *, int );
+ extern int qla24xx_modify_vp_config(scsi_qla_host_t *);
+ extern int qla2x00_send_change_request(scsi_qla_host_t *, uint16_t, uint16_t);
+ extern void qla2x00_vp_stop_timer(scsi_qla_host_t *);
+ extern int qla24xx_configure_vhba (scsi_qla_host_t *);
+-extern int qla24xx_get_vp_entry(scsi_qla_host_t *, uint16_t, int);
+-extern int qla24xx_get_vp_database(scsi_qla_host_t *, uint16_t);
+-extern int qla2x00_do_dpc_vp(scsi_qla_host_t *);
+ extern void qla24xx_report_id_acquisition(scsi_qla_host_t *,
+     struct vp_rpt_id_entry_24xx *);
+-extern scsi_qla_host_t * qla24xx_find_vhost_by_name(scsi_qla_host_t *,
+-    uint8_t *);
+ extern void qla2x00_do_dpc_all_vps(scsi_qla_host_t *);
+ extern int qla24xx_vport_create_req_sanity_check(struct fc_vport *);
+ extern scsi_qla_host_t * qla24xx_create_vhost(struct fc_vport *);
+@@ -113,7 +103,6 @@ extern void qla2xxx_wake_dpc(scsi_qla_ho
+ extern void qla2x00_alert_all_vps(scsi_qla_host_t *, uint16_t *);
+ extern void qla2x00_async_event(scsi_qla_host_t *, uint16_t *);
+ extern void qla2x00_vp_abort_isp(scsi_qla_host_t *);
+-extern int qla24xx_vport_delete(struct fc_vport *);
+ 
+ /*
+  * Global Function Prototypes in qla_iocb.c source file.
+@@ -231,12 +220,6 @@ qla24xx_get_isp_stats(scsi_qla_host_t *,
+ extern int qla24xx_abort_command(scsi_qla_host_t *, srb_t *);
+ extern int qla24xx_abort_target(fc_port_t *);
+ 
+-extern int qla2x00_system_error(scsi_qla_host_t *);
+-
+-extern int
+-qla2x00_get_serdes_params(scsi_qla_host_t *, uint16_t *, uint16_t *,
+-    uint16_t *);
+-
+ extern int
+ qla2x00_set_serdes_params(scsi_qla_host_t *, uint16_t, uint16_t, uint16_t);
+ 
+@@ -250,9 +233,6 @@ extern int
+ qla2x00_read_sfp(scsi_qla_host_t *, dma_addr_t, uint16_t, uint16_t, uint16_t);
+ 
+ extern int
+-qla2x00_get_idma_speed(scsi_qla_host_t *, uint16_t, uint16_t *, uint16_t *);
+-
+-extern int
+ qla2x00_set_idma_speed(scsi_qla_host_t *, uint16_t, uint16_t, uint16_t *);
+ 
+ /*
+@@ -270,11 +250,7 @@ extern void qla2x00_free_irqs(scsi_qla_h
+ /*
+  * Global Function Prototypes in qla_sup.c source file.
+  */
+-extern void qla2x00_lock_nvram_access(scsi_qla_host_t *);
+-extern void qla2x00_unlock_nvram_access(scsi_qla_host_t *);
+ extern void qla2x00_release_nvram_protection(scsi_qla_host_t *);
+-extern uint16_t qla2x00_get_nvram_word(scsi_qla_host_t *, uint32_t);
+-extern void qla2x00_write_nvram_word(scsi_qla_host_t *, uint32_t, uint16_t);
+ extern uint32_t *qla24xx_read_flash_data(scsi_qla_host_t *, uint32_t *,
+     uint32_t, uint32_t);
+ extern uint8_t *qla2x00_read_nvram_data(scsi_qla_host_t *, uint8_t *, uint32_t,
+@@ -321,7 +297,6 @@ extern void qla25xx_fw_dump(scsi_qla_hos
+ extern void qla2x00_dump_regs(scsi_qla_host_t *);
+ extern void qla2x00_dump_buffer(uint8_t *, uint32_t);
+ extern void qla2x00_print_scsi_cmd(struct scsi_cmnd *);
+-extern void qla2x00_dump_pkt(void *);
+ 
+ /*
+  * Global Function Prototypes in qla_gs.c source file.
+diff -puN drivers/scsi/qla2xxx/qla_mbx.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_mbx.c
+--- a/drivers/scsi/qla2xxx/qla_mbx.c~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -2331,6 +2331,8 @@ atarget_done:
+ 	return rval;
+ }
+ 
++#if 0
++
+ int
+ qla2x00_system_error(scsi_qla_host_t *ha)
+ {
+@@ -2402,6 +2404,8 @@ qla2x00_get_serdes_params(scsi_qla_host_
+ 	return rval;
+ }
+ 
++#endif  /*  0  */
++
+ /**
+  * qla2x00_set_serdes_params() -
+  * @ha: HA context
+@@ -2548,6 +2552,7 @@ qla2x00_read_sfp(scsi_qla_host_t *ha, dm
+ 	return rval;
+ }
+ 
++#if 0
+ int
+ qla2x00_get_idma_speed(scsi_qla_host_t *ha, uint16_t loop_id,
+     uint16_t *port_speed, uint16_t *mb)
+@@ -2590,6 +2595,7 @@ qla2x00_get_idma_speed(scsi_qla_host_t *
+ 
+ 	return rval;
+ }
++#endif  /*  0  */
+ 
+ int
+ qla2x00_set_idma_speed(scsi_qla_host_t *ha, uint16_t loop_id,
+@@ -2634,6 +2640,8 @@ qla2x00_set_idma_speed(scsi_qla_host_t *
+ 	return rval;
+ }
+ 
++#if 0
++
+ /*
+  * qla24xx_get_vp_database
+  *	Get the VP's database for all configured ports.
+@@ -2724,6 +2732,8 @@ qla24xx_get_vp_entry(scsi_qla_host_t *ha
+ 	return rval;
+ }
+ 
++#endif  /*  0  */
++
+ void
+ qla24xx_report_id_acquisition(scsi_qla_host_t *ha,
+ 	struct vp_rpt_id_entry_24xx *rptid_entry)
+diff -puN drivers/scsi/qla2xxx/qla_mid.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_mid.c
+--- a/drivers/scsi/qla2xxx/qla_mid.c~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_mid.c
+@@ -39,7 +39,7 @@ qla2x00_vp_stop_timer(scsi_qla_host_t *v
+ 	}
+ }
+ 
+-uint32_t
++static uint32_t
+ qla24xx_allocate_vp_id(scsi_qla_host_t *vha)
+ {
+ 	uint32_t vp_id;
+@@ -77,7 +77,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t
+ 	up(&ha->vport_sem);
+ }
+ 
+-scsi_qla_host_t *
++static scsi_qla_host_t *
+ qla24xx_find_vhost_by_name(scsi_qla_host_t *ha, uint8_t *port_name)
+ {
+ 	scsi_qla_host_t *vha;
+@@ -265,7 +265,7 @@ qla2x00_vp_abort_isp(scsi_qla_host_t *vh
+ 	qla24xx_enable_vp(vha);
+ }
+ 
+-int
++static int
+ qla2x00_do_dpc_vp(scsi_qla_host_t *vha)
+ {
+ 	if (test_and_clear_bit(VP_IDX_ACQUIRED, &vha->vp_flags)) {
+diff -puN drivers/scsi/qla2xxx/qla_os.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_os.c
+--- a/drivers/scsi/qla2xxx/qla_os.c~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_os.c
+@@ -111,7 +111,7 @@ static int qla2x00_device_reset(scsi_qla
+ static int qla2x00_change_queue_depth(struct scsi_device *, int);
+ static int qla2x00_change_queue_type(struct scsi_device *, int);
+ 
+-struct scsi_host_template qla2x00_driver_template = {
++static struct scsi_host_template qla2x00_driver_template = {
+ 	.module			= THIS_MODULE,
+ 	.name			= QLA2XXX_DRIVER_NAME,
+ 	.queuecommand		= qla2x00_queuecommand,
+@@ -179,13 +179,6 @@ struct scsi_transport_template *qla2xxx_
+  * Timer routines
+  */
+ 
+-void qla2x00_timer(scsi_qla_host_t *);
+-
+-__inline__ void qla2x00_start_timer(scsi_qla_host_t *,
+-    void *, unsigned long);
+-static __inline__ void qla2x00_restart_timer(scsi_qla_host_t *, unsigned long);
+-__inline__ void qla2x00_stop_timer(scsi_qla_host_t *);
+-
+ __inline__ void
+ qla2x00_start_timer(scsi_qla_host_t *ha, void *func, unsigned long interval)
+ {
+@@ -203,7 +196,7 @@ qla2x00_restart_timer(scsi_qla_host_t *h
+ 	mod_timer(&ha->timer, jiffies + interval * HZ);
+ }
+ 
+-__inline__ void
++static __inline__ void
+ qla2x00_stop_timer(scsi_qla_host_t *ha)
+ {
+ 	del_timer_sync(&ha->timer);
+@@ -214,12 +207,11 @@ static int qla2x00_do_dpc(void *data);
+ 
+ static void qla2x00_rst_aen(scsi_qla_host_t *);
+ 
+-uint8_t qla2x00_mem_alloc(scsi_qla_host_t *);
+-void qla2x00_mem_free(scsi_qla_host_t *ha);
++static uint8_t qla2x00_mem_alloc(scsi_qla_host_t *);
++static void qla2x00_mem_free(scsi_qla_host_t *ha);
+ static int qla2x00_allocate_sp_pool( scsi_qla_host_t *ha);
+ static void qla2x00_free_sp_pool(scsi_qla_host_t *ha);
+ static void qla2x00_sp_free_dma(scsi_qla_host_t *, srb_t *);
+-void qla2x00_sp_compl(scsi_qla_host_t *ha, srb_t *);
+ 
+ /* -------------------------------------------------------------------------- */
+ 
+@@ -2016,7 +2008,7 @@ qla2x00_mark_all_devices_lost(scsi_qla_h
+ *      0  = success.
+ *      1  = failure.
+ */
+-uint8_t
++static uint8_t
+ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+ {
+ 	char	name[16];
+@@ -2213,7 +2205,7 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
+ * Input:
+ *      ha = adapter block pointer.
+ */
+-void
++static void
+ qla2x00_mem_free(scsi_qla_host_t *ha)
+ {
+ 	struct list_head	*fcpl, *fcptemp;
+diff -puN drivers/scsi/qla2xxx/qla_sup.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_sup.c
+--- a/drivers/scsi/qla2xxx/qla_sup.c~scsi-qla2xxx-possible-cleanups
++++ a/drivers/scsi/qla2xxx/qla_sup.c
+@@ -22,7 +22,7 @@ static void qla2x00_nv_write(scsi_qla_ho
+  * qla2x00_lock_nvram_access() -
+  * @ha: HA context
+  */
+-void
++static void
+ qla2x00_lock_nvram_access(scsi_qla_host_t *ha)
+ {
+ 	uint16_t data;
+@@ -55,7 +55,7 @@ qla2x00_lock_nvram_access(scsi_qla_host_
+  * qla2x00_unlock_nvram_access() -
+  * @ha: HA context
+  */
+-void
++static void
+ qla2x00_unlock_nvram_access(scsi_qla_host_t *ha)
+ {
+ 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
+@@ -74,7 +74,7 @@ qla2x00_unlock_nvram_access(scsi_qla_hos
+  *
+  * Returns the word read from nvram @addr.
+  */
+-uint16_t
++static uint16_t
+ qla2x00_get_nvram_word(scsi_qla_host_t *ha, uint32_t addr)
+ {
+ 	uint16_t	data;
+@@ -93,7 +93,7 @@ qla2x00_get_nvram_word(scsi_qla_host_t *
+  * @addr: Address in NVRAM to write
+  * @data: word to program
+  */
+-void
++static void
+ qla2x00_write_nvram_word(scsi_qla_host_t *ha, uint32_t addr, uint16_t data)
+ {
+ 	int count;
 _
