@@ -1,80 +1,47 @@
 From: akpm@linux-foundation.org
-Subject: [patch 01/23] git-scsi-misc gdth fix
-Date: Wed, 21 Nov 2007 15:12:14 -0800
-Message-ID: <200711212312.lALNCEP0014105@imap1.linux-foundation.org>
+Subject: [patch 02/23] nsp32_restart_autoscsi(): remove error check
+Date: Wed, 21 Nov 2007 15:12:15 -0800
+Message-ID: <200711212312.lALNCFLO014108@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:37074 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:60470 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753008AbXKUXM6 (ORCPT
+	by vger.kernel.org with ESMTP id S1753554AbXKUXNF (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Nov 2007 18:12:58 -0500
+	Wed, 21 Nov 2007 18:13:05 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, James.Bottomley@steeleye.com, davemilter@gmail.com
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@stusta.de, yokota@netlab.is.tsukuba.ac.jp
 
-From: James Bottomley <James.Bottomley@SteelEye.com>
+From: Adrian Bunk <bunk@stusta.de>
 
-On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
-> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
->
-> > I build linux-2.6.23-mm1 and try to boot it using qemu,
-> > and it crashed with trace like this:
-> > do_page_fault
-> > error_code
-> > lock_acquire
-> > _spin_lock_irqsave
-> > gdth_timeout
-> > run_timer_softirq
-> > __do_softirq
-> > do_softirq
-> >
-> > I have screenshot, but have no idea, is it legal to include it, if I
-> > sent copy to lkml.
-> > config of kernel in attachment,
-> > I apply all three patches from hot-fixes.
-> >
->
-> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
->
-> It would appear that gdth_timeout() is passing a bad pointer into
-> spin_lock_irqsave().
+The Coverity checker noted that we'll anyway Oops later when we ran into
+this condition - and the error check didn't prevent that.
 
-There's a bug in the gdth rework in that the instance can be deleted
-from the list before the actual timer is stopped.  This can be worked
-around I think by the following patch; although we really should be
-stopping the timer from firing when the list goes empty.
+Considering that the error condition shouldn't be possible, and we are
+not able to handle it easily, this patch simply removes the pointless
+error check.
 
-
-James said:
-
-This is almost certainly the wrong fix for real hardware.  Although it
-kills the timer when the list goes empty, nothing will ever restart it
-when the list fills again.
-
-Boaz, since you touched all of this, you get to fix it.  The correct fix
-will be to control the timer along with the actual list instead of at
-entry/exit time.  If you're not going to add this empty check to the
-timer routine, make sure you use del_timer_sync() before removing the
-last element from the list.
-
-
+Signed-off-by: Adrian Bunk <bunk@stusta.de>
+Cc: <yokota@netlab.is.tsukuba.ac.jp>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/gdth.c |    3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/nsp32.c |    4 ----
+ 1 file changed, 4 deletions(-)
 
-diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
---- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
-+++ a/drivers/scsi/gdth.c
-@@ -3793,6 +3793,9 @@ static void gdth_timeout(ulong data)
-     gdth_ha_str *ha;
-     ulong flags;
+diff -puN drivers/scsi/nsp32.c~nsp32_restart_autoscsi-remove-error-check drivers/scsi/nsp32.c
+--- a/drivers/scsi/nsp32.c~nsp32_restart_autoscsi-remove-error-check
++++ a/drivers/scsi/nsp32.c
+@@ -1906,10 +1906,6 @@ static void nsp32_restart_autoscsi(struc
  
-+    if (list_empty(&gdth_instances))
-+	return;
-+
-     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
-     spin_lock_irqsave(&ha->smp_lock, flags);
+ 	nsp32_dbg(NSP32_DEBUG_RESTART, "enter");
  
+-	if (data->cur_target == NULL || data->cur_lunt == NULL) {
+-		nsp32_msg(KERN_ERR, "Target or Lun is invalid");
+-	}
+-
+ 	/*
+ 	 * set SYNC_REG
+ 	 * Don't set BM_START_ADR before setting this register.
 _
