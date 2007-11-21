@@ -1,42 +1,101 @@
-From: Roland Dreier <rdreier@cisco.com>
-Subject: Re: SCSI breakage on non-cache coherent architectures
-Date: Tue, 20 Nov 2007 12:05:17 -0800
-Message-ID: <adaabp8wuma.fsf@cisco.com>
-References: <1195450523.7022.37.camel@pasglop>
-	<20071119.003802.100741794.davem@davemloft.net>
-	<1195501874.6539.5.camel@pasglop>
-	<20071120082927.GA8856@alpha.franken.de>
-	<1195569362.3131.3.camel@localhost.localdomain>
+From: bo yang <bo.yang@lsi.com>
+Subject: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB cmds
+	with sense info
+Date: Wed, 21 Nov 2007 08:40:56 +0000
+Message-ID: <1195634456.5855.9.camel@dhcp-75-884.se.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sj-iport-6.cisco.com ([171.71.176.117]:10479 "EHLO
-	sj-iport-6.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751688AbXKTUFa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Nov 2007 15:05:30 -0500
-In-Reply-To: <1195569362.3131.3.camel@localhost.localdomain> (James Bottomley's message of "Tue, 20 Nov 2007 08:36:02 -0600")
+Received: from mail0.lsil.com ([147.145.40.20]:53919 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751404AbXKTUgP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 20 Nov 2007 15:36:15 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Thomas Bogendoerfer <tsbogend@alpha.franken.de>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, David Miller <davem@davemloft.net>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk
+To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, Bo.yang@lsi.com, Sumant.patro@lsi.com, neela.kolli@lsi.com
 
- > Actually, we already established on IRC that the lasi700 driver doesn't
- > need this, principally because the parisc architecture doesn't do an
- > invalidate for DMA_FROM_DEVICE but a flush and invalidate
- > (architecturally, if you read our manuals, even pdc is entitled to write
- > back dirty lines, so it's not clear there's actually an invalidate
- > instruction we can use).   This is also one possible temporary fix for
- > the other architectures if we can't get a different method to work
- > nicely.
+Sense buffer ptr data type in the ioctl path is reverted back to u32 *
+for x86 and x86_64 as in previous versions of driver. For IA64 it will
+be unsigned long *. Compile time flag added for ia64 for this.
 
-I think doing a writeback and invalidate is a very fragile way to deal
-with DMA into the middle of a data structure.  It may work OK for now,
-but you have to make sure forever into the future that no codepath
-anywhere else ever touches the cacheline that you're DMAing into while
-the DMA is pending.  It just leaves a hidden trap that is too easy to
-step on, because the architectures that get pretty much all testing
-all have cache-coherent DMA.
+Signed-off-by: Bo Yang <bo.yang@lsi.com>
 
-Reviving my ancient __dma_buffer patch seems far preferable to me.
+---
+Documentation/scsi/ChangeLog.megaraid_sas |   15 +++++++++++++++
+drivers/scsi/megaraid/megaraid_sas.c      |   14 ++++++++++----
+drivers/scsi/megaraid/megaraid_sas.h      |    6 +++---
+ 3 files changed, 28 insertions(+), 7 deletions(-)
 
- - R.
+diff -rupN linux-2.6.22_orig/Documentation/scsi/ChangeLog.megaraid_sas linux-2.6.22_new/Documentation/scsi/ChangeLog.megaraid_sas
+--- linux-2.6.22_orig/Documentation/scsi/ChangeLog.megaraid_sas	2007-11-20 17:50:13.000000000 -0500
++++ linux-2.6.22_new/Documentation/scsi/ChangeLog.megaraid_sas	2007-11-20 21:37:16.000000000 -0500
+@@ -1,3 +1,18 @@
++1 Release Date    : Thur. Nov. 19 16:30:43 PST 2007 -
++			(emaild-id:megaraidlinux@lsi.com)
++			Sumant Patro
++			Bo Yang
++
++2 Current Version : 00.00.03.17-RC1
++3 Older Version   : 00.00.03.16
++
++1. Fix random failure of DCDB cmds with sense info.
++
++Fix: 	sense buffer ptr data type in the ioctl path is reverted back
++	to u32 * for x86, x86_64 as in previous versions of driver.
++	For IA64 it will be unsigned long *. Compile time flag added
++	for ia64 for this.
++
+ 1 Release Date    : Thur. Nov. 07 16:30:43 PST 2007 -
+ 			(emaild-id:megaraidlinux@lsi.com)
+ 			Sumant Patro
+diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
+--- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c	2007-11-20 17:50:13.000000000 -0500
++++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c	2007-11-20 17:50:13.000000000 -0500
+@@ -10,7 +10,7 @@
+  *	   2 of the License, or (at your option) any later version.
+  *
+  * FILE		: megaraid_sas.c
+- * Version	: v00.00.03.16-rc1
++ * Version	: v00.00.03.17-rc1
+  *
+  * Authors:
+  *	(email-id : megaraidlinux@lsi.com)
+@@ -3020,10 +3020,16 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
+ 		 * sense buffer address
+ 		 */
+ 		sense_buff = (unsigned long *) ((unsigned long)ioc->frame.raw +
+-								ioc->sense_off);
+-
+-		if (copy_to_user((void __user *)(unsigned long)(*sense_buff),
++					ioc->sense_off);
++		sense_ptr = (u32 *) ((unsigned long)ioc->frame.raw +
++					ioc->sense_off);
++#if defined(__ia64__)
++		if (copy_to_user((void __user *)((unsigned long)(*sense_buff)),
++				sense, ioc->sense_len)) {
++#else
++		if (copy_to_user((void __user *)((unsigned long)(*sense_ptr)),
+ 				sense, ioc->sense_len)) {
++#endif
+ 			printk(KERN_ERR "megasas: Failed to copy out to user "
+ 					"sense data\n");
+ 			error = -EFAULT;
+diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
+--- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h	2007-11-20 17:50:13.000000000 -0500
++++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h	2007-11-20 17:50:13.000000000 -0500
+@@ -18,9 +18,9 @@
+ /*
+  * MegaRAID SAS Driver meta data
+  */
+-#define MEGASAS_VERSION				"00.00.03.16-rc1"
+-#define MEGASAS_RELDATE				"Nov. 07, 2007"
+-#define MEGASAS_EXT_VERSION			"Thu. Nov. 07 10:09:32 PDT 2007"
++#define MEGASAS_VERSION				"00.00.03.17-rc1"
++#define MEGASAS_RELDATE				"Nov. 19, 2007"
++#define MEGASAS_EXT_VERSION			"Mon. Nov. 19 10:09:32 PDT 2007"
+ 
+ /*
+  * Device IDs
+
