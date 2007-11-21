@@ -1,68 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 11/23] ips: handle scsi_add_host() failure, and other err cleanups
-Date: Wed, 21 Nov 2007 15:12:23 -0800
-Message-ID: <200711212312.lALNCNYm014136@imap1.linux-foundation.org>
+Subject: [patch 16/23] SCSI/NCR5380: minor irq handler cleanups
+Date: Wed, 21 Nov 2007 15:12:28 -0800
+Message-ID: <200711212312.lALNCSl3014151@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36609 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:50555 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754817AbXKUXRm (ORCPT
+	by vger.kernel.org with ESMTP id S1754866AbXKUXRf (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Nov 2007 18:17:42 -0500
+	Wed, 21 Nov 2007 18:17:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, jgarzik@redhat.com, mark_salyzyn@adaptec.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, jgarzik@redhat.com
 
 From: Jeff Garzik <jeff@garzik.org>
 
+* remove unnecessary cast
+
+* remove unnecessary use of 'irq' function arg
+
 Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
-Acked-by: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/ips.c |   18 +++++++++++++-----
- 1 file changed, 13 insertions(+), 5 deletions(-)
+ drivers/scsi/NCR5380.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/ips.c~ips-handle-scsi_add_host-failure-and-other-err-cleanups drivers/scsi/ips.c
---- a/drivers/scsi/ips.c~ips-handle-scsi_add_host-failure-and-other-err-cleanups
-+++ a/drivers/scsi/ips.c
-@@ -6837,13 +6837,10 @@ ips_register_scsi(int index)
- 	if (request_irq(ha->pcidev->irq, do_ipsintr, IRQF_SHARED, ips_name, ha)) {
- 		IPS_PRINTK(KERN_WARNING, ha->pcidev,
- 			   "Unable to install interrupt handler\n");
--		scsi_host_put(sh);
--		return -1;
-+		goto err_out_sh;
- 	}
+diff -puN drivers/scsi/NCR5380.c~scsi-ncr5380-minor-irq-handler-cleanups drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~scsi-ncr5380-minor-irq-handler-cleanups
++++ a/drivers/scsi/NCR5380.c
+@@ -1157,16 +1157,17 @@ static void NCR5380_main(struct work_str
+  *	Locks: takes the needed instance locks
+  */
  
- 	kfree(oldha);
--	ips_sh[index] = sh;
--	ips_ha[index] = ha;
+-static irqreturn_t NCR5380_intr(int irq, void *dev_id) 
++static irqreturn_t NCR5380_intr(int dummy, void *dev_id)
+ {
+ 	NCR5380_local_declare();
+-	struct Scsi_Host *instance = (struct Scsi_Host *)dev_id;
++	struct Scsi_Host *instance = dev_id;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 	int done;
+ 	unsigned char basr;
+ 	unsigned long flags;
  
- 	/* Store away needed values for later use */
- 	sh->unique_id = (ha->io_addr) ? ha->io_addr : ha->mem_addr;
-@@ -6859,10 +6856,21 @@ ips_register_scsi(int index)
- 	sh->max_channel = ha->nbus - 1;
- 	sh->can_queue = ha->max_cmds - 1;
+-	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n", irq));
++	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n",
++		instance->irq));
  
--	scsi_add_host(sh, NULL);
-+	if (scsi_add_host(sh, &ha->pcidev->dev))
-+		goto err_out;
-+
-+	ips_sh[index] = sh;
-+	ips_ha[index] = ha;
-+
- 	scsi_scan_host(sh);
- 
- 	return 0;
-+
-+err_out:
-+	free_irq(ha->pcidev->irq, ha);
-+err_out_sh:
-+	scsi_host_put(sh);
-+	return -1;
- }
- 
- /*---------------------------------------------------------------------------*/
+ 	do {
+ 		done = 1;
 _
