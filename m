@@ -1,65 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/23] aic94: fix section mismatches
-Date: Wed, 21 Nov 2007 15:12:29 -0800
-Message-ID: <200711212312.lALNCTrX014157@imap1.linux-foundation.org>
+Subject: [patch 23/23] Dell CERC support for megaraid_mbox
+Date: Wed, 21 Nov 2007 15:12:34 -0800
+Message-ID: <200711212312.lALNCZWD014192@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:60048 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:51230 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754787AbXKUXRE (ORCPT
+	by vger.kernel.org with ESMTP id S1754557AbXKUXRE (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 21 Nov 2007 18:17:04 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hare@suse.de, James.Bottomley@steeleye.com, Sumant.Patro@lsi.com
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Hannes Reinecke <hare@suse.de>
 
-Fix section mismatch warning:
+Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
+compatible with the legacy megaraid driver.  The legacy handling shifted
+the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
+megaraid_mbox shifts the target ID always if random deletion is supported. 
+The resulted in megaraid_mbox sending an INQUIRY to the wrong channel, and
+not finding any devices, obviously.
 
-WARNING: vmlinux.o(.init.text+0x23be6): Section mismatch: reference to .exit.text:asd_unmap_ha (between 'asd_pci_probe' and 'qla4xxx_module_init')
-+
-WARNING: vmlinux.o(.text+0x1ec8a8): Section mismatch: reference to .exit.text:as
-d_unmap_ioport (between 'asd_unmap_ha' and 'asd_remove_dev_attrs')
-WARNING: vmlinux.o(.text+0x1ec8b1): Section mismatch: reference to .exit.text:as
-d_unmap_memio (between 'asd_unmap_ha' and 'asd_remove_dev_attrs')
+So we disable the random deletion support if the offending firmware is
+found.
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/aic94xx/aic94xx_init.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.h |    1 +
+ 2 files changed, 18 insertions(+)
 
-diff -puN drivers/scsi/aic94xx/aic94xx_init.c~aic94-fix-section-mismatches drivers/scsi/aic94xx/aic94xx_init.c
---- a/drivers/scsi/aic94xx/aic94xx_init.c~aic94-fix-section-mismatches
-+++ a/drivers/scsi/aic94xx/aic94xx_init.c
-@@ -136,7 +136,7 @@ Err:
- 	return err;
- }
+diff -puN drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.c
+--- a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox
++++ a/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3169,6 +3169,23 @@ megaraid_mbox_support_random_del(adapter
+ 	uint8_t		raw_mbox[sizeof(mbox_t)];
+ 	int		rval;
  
--static void __devexit asd_unmap_memio(struct asd_ha_struct *asd_ha)
-+static void asd_unmap_memio(struct asd_ha_struct *asd_ha)
- {
- 	struct asd_ha_addrspace *io_handle;
++	/*
++	 * Newer firmware on Dell CERC expect a different
++	 * random deletion handling, so disable it.
++	 */
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++	    (adapter->fw_version[0] > '6' ||
++	     (adapter->fw_version[0] == '6' &&
++	      adapter->fw_version[2] > '6') ||
++	     (adapter->fw_version[0] == '6'
++	      && adapter->fw_version[2] == '6'
++	      && adapter->fw_version[3] > '1'))) {
++		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
++		return 0;
++	}
  
-@@ -173,7 +173,7 @@ static int __devinit asd_map_ioport(stru
- 	return err;
- }
+ 	mbox = (mbox_t *)raw_mbox;
  
--static void __devexit asd_unmap_ioport(struct asd_ha_struct *asd_ha)
-+static void asd_unmap_ioport(struct asd_ha_struct *asd_ha)
- {
- 	pci_release_region(asd_ha->pcidev, PCI_IOBAR_OFFSET);
- }
-@@ -210,7 +210,7 @@ Err:
- 	return err;
- }
+diff -puN drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.h
+--- a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox
++++ a/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
  
--static void __devexit asd_unmap_ha(struct asd_ha_struct *asd_ha)
-+static void asd_unmap_ha(struct asd_ha_struct *asd_ha)
- {
- 	if (asd_ha->iospace)
- 		asd_unmap_ioport(asd_ha);
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
 _
