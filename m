@@ -1,77 +1,55 @@
 From: akpm@linux-foundation.org
-Subject: [patch 23/23] Dell CERC support for megaraid_mbox
-Date: Wed, 21 Nov 2007 15:12:34 -0800
-Message-ID: <200711212312.lALNCZWD014192@imap1.linux-foundation.org>
+Subject: [patch 21/23] scsi/advansys.c: make 3 functions static
+Date: Wed, 21 Nov 2007 15:12:33 -0800
+Message-ID: <200711212312.lALNCXwW014166@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:51230 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33284 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754557AbXKUXRE (ORCPT
+	by vger.kernel.org with ESMTP id S1754622AbXKUXRG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 21 Nov 2007 18:17:04 -0500
+	Wed, 21 Nov 2007 18:17:06 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hare@suse.de, James.Bottomley@steeleye.com, Sumant.Patro@lsi.com
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+From: Adrian Bunk <bunk@kernel.org>
 
-Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
-compatible with the legacy megaraid driver.  The legacy handling shifted
-the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
-megaraid_mbox shifts the target ID always if random deletion is supported. 
-The resulted in megaraid_mbox sending an INQUIRY to the wrong channel, and
-not finding any devices, obviously.
-
-So we disable the random deletion support if the offending firmware is
-found.
-
-Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
- drivers/scsi/megaraid/megaraid_mbox.h |    1 +
- 2 files changed, 18 insertions(+)
+ drivers/scsi/advansys.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.c
---- a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox
-+++ a/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -3169,6 +3169,23 @@ megaraid_mbox_support_random_del(adapter
- 	uint8_t		raw_mbox[sizeof(mbox_t)];
- 	int		rval;
- 
-+	/*
-+	 * Newer firmware on Dell CERC expect a different
-+	 * random deletion handling, so disable it.
-+	 */
-+	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
-+	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
-+	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
-+	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
-+	    (adapter->fw_version[0] > '6' ||
-+	     (adapter->fw_version[0] == '6' &&
-+	      adapter->fw_version[2] > '6') ||
-+	     (adapter->fw_version[0] == '6'
-+	      && adapter->fw_version[2] == '6'
-+	      && adapter->fw_version[3] > '1'))) {
-+		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
-+		return 0;
-+	}
- 
- 	mbox = (mbox_t *)raw_mbox;
- 
-diff -puN drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.h
---- a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox
-+++ a/drivers/scsi/megaraid/megaraid_mbox.h
-@@ -88,6 +88,7 @@
- #define PCI_SUBSYS_ID_PERC3_QC				0x0471
- #define PCI_SUBSYS_ID_PERC3_DC				0x0493
- #define PCI_SUBSYS_ID_PERC3_SC				0x0475
-+#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
- 
- 
- #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
+diff -puN drivers/scsi/advansys.c~scsi-advansysc-make-3-functions-static drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c~scsi-advansysc-make-3-functions-static
++++ a/drivers/scsi/advansys.c
+@@ -12261,7 +12261,7 @@ static ushort __devinit AdvReadEEPWord(A
+ /*
+  * Write the EEPROM from 'cfg_buf'.
+  */
+-void __devinit
++static void __devinit
+ AdvSet3550EEPConfig(AdvPortAddr iop_base, ADVEEP_3550_CONFIG *cfg_buf)
+ {
+ 	ushort *wbuf;
+@@ -12328,7 +12328,7 @@ AdvSet3550EEPConfig(AdvPortAddr iop_base
+ /*
+  * Write the EEPROM from 'cfg_buf'.
+  */
+-void __devinit
++static void __devinit
+ AdvSet38C0800EEPConfig(AdvPortAddr iop_base, ADVEEP_38C0800_CONFIG *cfg_buf)
+ {
+ 	ushort *wbuf;
+@@ -12395,7 +12395,7 @@ AdvSet38C0800EEPConfig(AdvPortAddr iop_b
+ /*
+  * Write the EEPROM from 'cfg_buf'.
+  */
+-void __devinit
++static void __devinit
+ AdvSet38C1600EEPConfig(AdvPortAddr iop_base, ADVEEP_38C1600_CONFIG *cfg_buf)
+ {
+ 	ushort *wbuf;
 _
