@@ -1,29 +1,43 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH v3 2/2][BNX2]: Add iSCSI support to BNX2 devices.
-Date: Wed, 21 Nov 2007 14:17:22 -0500
-Message-ID: <47448442.7040308@emulex.com>
-References: <1188599815.5176.12.camel@dell> <46DEF69D.3090901@redhat.com> <1189027622.19638.42.camel@dhcp-10-13-106-205.broadcom.com> <46E1CF4B.9080407@cs.wisc.edu> <1195670296.8767.9.camel@dhcp-10-13-106-205.broadcom.com>
-Reply-To: James.Smart@Emulex.Com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1195670296.8767.9.camel@dhcp-10-13-106-205.broadcom.com>
-Sender: netdev-owner@vger.kernel.org
-To: Anil Veerabhadrappa <anilgv@broadcom.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Mike Christie <mchristi@redhat.com>, Michael Chan <mchan@broadcom.com>, davem@davemloft.net, netdev@vger.kernel.org, open-iscsi@googlegroups.com, talm@broadcom.com, lusinsky@broadcom.com, uri@broadcom.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
+From: akpm@linux-foundation.org
+Subject: [patch 06/23] kill warnings in mptbase.h on parisc64
+Date: Wed, 21 Nov 2007 15:12:19 -0800
+Message-ID: <200711212312.lALNCJDA014121@imap1.linux-foundation.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:59892 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752935AbXKUXM4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Nov 2007 18:12:56 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James.Bottomley@steeleye.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kyle@mcmartin.ca, Eric.Moore@lsil.com
 
+From: Kyle McMartin <kyle@mcmartin.ca>
 
-Anil Veerabhadrappa wrote:
-> It's a chicken & egg issue to put "port mapper" sysfs entry in scsi host
-> attributes. Application won't see sysfs unless initiator creates an
-> iSCSI session and driver can't create an iSCSI session without a tcp
-> port. I was wondering if there is a better way than using IOCTL in this
-> situation?
+Verified all the arches necessary select the CONFIG_64BIT symbol.  This
+also kills the warning (since it was using the 32-bit case) on parisc64 and
+mips64.
 
-Agree, and IMHO, is why the scsi_host should have been bound to the ISID
-or something similar (e.g. the initiator "port" that can have 1 or more
-sessions), and the session bound to the scsi_target under the scsi_host.
+Signed-off-by: Kyle McMartin <kyle@mcmartin.ca>
+Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
 
--- james s
+ drivers/message/fusion/mptbase.h |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff -puN drivers/message/fusion/mptbase.h~kill-warnings-in-mptbaseh-on-parisc64 drivers/message/fusion/mptbase.h
+--- a/drivers/message/fusion/mptbase.h~kill-warnings-in-mptbaseh-on-parisc64
++++ a/drivers/message/fusion/mptbase.h
+@@ -922,7 +922,7 @@ extern struct proc_dir_entry	*mpt_proc_r
+ /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
+ #endif		/* } __KERNEL__ */
+ 
+-#if defined(__alpha__) || defined(__sparc_v9__) || defined(__ia64__) || defined(__x86_64__) || defined(__powerpc__)
++#ifdef CONFIG_64BIT
+ #define CAST_U32_TO_PTR(x)	((void *)(u64)x)
+ #define CAST_PTR_TO_U32(x)	((u32)(u64)x)
+ #else
+_
