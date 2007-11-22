@@ -1,38 +1,64 @@
-From: Ken Witherow <ken@krwtech.com>
-Subject: [patch] advansys: fix timestamp for 64 bit
-Date: Wed, 21 Nov 2007 18:15:53 -0500 (EST)
-Message-ID: <Pine.LNX.4.64.0711211743050.27096@death.krwtech.com>
-Reply-To: Ken Witherow <ken@krwtech.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH -mm 4/4] call dma_set_seg_boundary in __scsi_alloc_queue
+Date: Thu, 22 Nov 2007 11:43:35 +0900
+Message-ID: <20071122114218Q.tomof@acm.org>
+References: <522edb7703e4a70374b0c689cd7bae659fb0908b.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII; format=flowed
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cpe-72-225-45-7.rochester.res.rr.com ([72.225.45.7]:51090 "EHLO
-	death.krwtech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752836AbXKUXid (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 21 Nov 2007 18:38:33 -0500
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:50993 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752072AbXKVCoE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 21 Nov 2007 21:44:04 -0500
+In-Reply-To: <522edb7703e4a70374b0c689cd7bae659fb0908b.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: akpm@linux-foundation.org, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, greg@kroah.com, jeff@garzik.org, fujita.tomonori@lab.ntt.co.jp
 
-Timestamp assertion compares int and unsigned long. Fails on 64 bit 
-machines where unsigned long is 8 bytes instead of 4. Promote int (from 
-scsi_cmnd.this_residual) to unsigned long (jiffies) so it is a proper 
-comparison on both 32 bit and 64 bit architectures.
+This is a one-line patch to add the following to __scsi_alloc_queue():
 
-Tested on AMD64
+dma_set_seg_boundary(dev, shost->dma_boundary);
 
-Signed-off-by: Ken Witherow <ken@krwtech.com>
+This is the simplest approach but the result looks odd,
+__scsi_alloc_queue() does:
 
+blk_queue_segment_boundary(q, shost->dma_boundary);
+dma_set_seg_boundary(dev, shost->dma_boundary);
+blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
 
---- linux-2.6.23-gentoo-r2/drivers/scsi/advansys.c.orig	2007-11-21 02:33:00.000000000 -0500
-+++ linux-2.6.23-gentoo-r1/drivers/scsi/advansys.c	2007-11-21 17:37:56.000000000 -0500
-@@ -3497,7 +3497,7 @@ typedef struct scsi_cmnd REQ, *REQP;
-       * If the request time stamp is less than the system time stamp, then \
-       * maybe the system time stamp wrapped. Set the request time to zero.\
-       */ \
--    if (REQPTIME(reqp) <= REQTIMESTAMP()) { \
-+    if ((unsigned long) REQPTIME(reqp) <= REQTIMESTAMP()) { \
-          REQPTIME(reqp) = REQTIMESTAMP() - REQPTIME(reqp); \
-      } else { \
-          /* Indicate an error occurred with the assertion. */ \
+I think that it would be better to set up segment boundary in the same
+way as we did for the maximum segment size. That is, removing
+shost->dma_boundary and LLDs call pci_set_dma_seg_boundary (or its
+friends).
+
+Then __scsi_alloc_queue() can set up both limits in the same way:
+
+blk_queue_segment_boundary(q, dma_get_seg_boundary(dev));
+blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+
+killing dma_boundary in scsi_host_template needs a large patch for
+libata (dma_boundary is used by only libata and sym53c8xx). I'll send
+a patch to do that if it is acceptable. James and Jeff?
+
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_lib.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 733176d..2a15a3b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1767,6 +1767,7 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+ 	blk_queue_max_sectors(q, shost->max_sectors);
+ 	blk_queue_bounce_limit(q, scsi_calculate_bounce_limit(shost));
+ 	blk_queue_segment_boundary(q, shost->dma_boundary);
++	dma_set_seg_boundary(dev, shost->dma_boundary);
+ 
+ 	blk_queue_max_segment_size(q, dma_get_max_seg_size(dev));
+ 
+-- 
+1.5.3.4
+
