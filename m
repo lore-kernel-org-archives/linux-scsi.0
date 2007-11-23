@@ -1,130 +1,78 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
-Date: Fri, 23 Nov 2007 12:38:05 +0100
-Message-ID: <4746BB9D.2030508@suse.de>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	<4744A6F2.4030302@free.fr> <20071121144116.c932727b.akpm@linux-foundation.org> <4746814F.80502@free.fr> <4746866B.5070207@suse.de>
+From: Swen Schillig <swen@vnet.ibm.com>
+Subject: [PATCH] zfcp: fix use after free bug
+Date: Fri, 23 Nov 2007 15:04:02 +0100
+Message-ID: <200711231504.03315.swen@vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------090908090105070907070609"
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4746866B.5070207@suse.de>
-Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Laurent Riffard <laurent.riffard@free.fr>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
-This is a multi-part message in MIME format.
---------------090908090105070907070609
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 8bit
-
-Hannes Reinecke wrote:
-> Laurent Riffard wrote:
->> Le 21.11.2007 23:41, Andrew Morton a écrit :
->>> On Wed, 21 Nov 2007 22:45:22 +0100
->>> Laurent Riffard <laurent.riffard@free.fr> wrote:
->>>
->>>> Le 21.11.2007 05:45, Andrew Morton a écrit :
->>>>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.24-rc3/2.6.24-rc3-mm1/
->>>> Hello, 
->>>>
->>>> My system hangs shortly after I logged in Gnome desktop. SysRq-W shows
->>>> that a bunch of task are blocked in "D" state, they seem to wait for
->>>> some I/O completion. I can try to hand-copy some data if requested.
->>>>
->>>> I found these messages in dmesg:
->>>>
->>>> ~$ grep -C2 end_request dmesg-2.6.24-rc3-mm1 
->>>> EXT3-fs: mounted filesystem with ordered data mode.
->>>> sd 0:0:0:0: [sda] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
->>>> end_request: I/O error, dev sda, sector 16460
->>>> ReiserFS: sda7: found reiserfs format "3.6" with standard journal
->>>> ReiserFS: sda7: using ordered data mode
->>>> --
->>>> ReiserFS: sda7: Using r5 hash to sort names
->>>> sd 0:0:1:0: [sdb] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
->>>> end_request: I/O error, dev sdb, sector 19632
->>>> sd 0:0:1:0: [sdb] Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK,SUGGEST_OK
->>>> end_request: I/O error, dev sdb, sector 40037363
->>>> Adding 1048568k swap on /dev/mapper/vglinux1-lvswap.  Priority:-1 extents:1 across:1048568k
->>>> lp0: using parport0 (interrupt-driven).
->>>>
->>>> These errors occur *only* with 2.6.24-rc3-mm1, they are 100% reproducible.
->>>> 2.6.24-rc3 and 2.6.24-rc2-mm1 are fine.
->>>>
->>>> Maybe something is broken in pata_via driver ?
->>>>
->>> Could be - libata-reimplement-ata_acpi_cbl_80wire-using-ata_acpi_gtm_xfermask.patch
->>> and pata_amd-pata_via-de-couple-programming-of-pio-mwdma-and-udma-timings.patch
->>> touch pata_via.c.
->> None of the above...
->>
->> I did a bisection, it spotted git-scsi-misc.patch. 
->> I just run 2.6.24-rc3-mm1 + revert-git-scsi-misc.patch, and it works fine.
->>
->> I guess commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0 "[SCSI] Do not 
->> requeue requests if REQ_FAILFAST is set" is the real culprit. The other 
->> commits are touching documentation or drivers I don't use. I'll try 
->> to revert only this one this evening.
->>
-> Hmm. Weird. I'll have a look into it. Apparently I'll be returning an error where
-> I shouldn't. Checking ...
-> 
-Ok, found it. We are blocking even special commands (ie requests with PREEMPT not set)
-when FAILFAST is set. Which is clearly wrong. The attached patch fixes this.
-
-James, please apply.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Markus Rex, HRB 16746 (AG Nürnberg)
-
---------------090908090105070907070609
 Content-Type: text/plain;
- name="scsi-misc-fix-spi-validation"
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="scsi-misc-fix-spi-validation"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mtagate4.de.ibm.com ([195.212.29.153]:2467 "EHLO
+	mtagate4.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752525AbXKWOEG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Nov 2007 09:04:06 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>
 
-Fix SPI Domain validation
+From: Heiko Carstens <heiko.carstens@de.ibm.com>
 
-This fixes a thinko of the FAILFAST handling: when we get
-a request with FAILFAST set, we still have to evaluate the
-PREEMPT flag to decide if this request should be passed through.
+zfcp_erp_strategy_check_fsfreq() checks if it is safe to access the
+fsf_req associated with the erp_action that gets passed. To test if
+it is safe it accesses the fsf_req in order to get its index into
+the hash list. This is broken since the fsf_req might be freed already
+and the read index has no meaning. It could lead to memory corruption.
+Fix this by introducing a new zfcp_reqlist_find_safe() method which
+just checks if addresses are equal. This is slower, but only gets
+called in case of error recovery.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
+Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
+Signed-off-by: Swen Schillig <swen@vnet.ibm.com>
+---
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 13e7e09..9ec1566 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1284,13 +1284,15 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
- 			/*
- 			 * If the devices is blocked we defer normal commands.
- 			 */
--			if (!(req->cmd_flags & REQ_PREEMPT))
--				ret = BLKPREP_DEFER;
--			/*
--			 * Return failfast requests immediately
--			 */
--			if (req->cmd_flags & REQ_FAILFAST)
--				ret = BLKPREP_KILL;
-+			if (!(req->cmd_flags & REQ_PREEMPT)) {
-+				/*
-+				 * Return failfast requests immediately
-+				 */
-+				if (req->cmd_flags & REQ_FAILFAST)
-+					ret = BLKPREP_KILL;
-+				else
-+					ret = BLKPREP_DEFER;
-+			}
- 			break;
- 		default:
- 			/*
+ drivers/s390/scsi/zfcp_def.h |   14 ++++++++++++++
+ drivers/s390/scsi/zfcp_erp.c |    3 ++-
+ 2 files changed, 16 insertions(+), 1 deletion(-)
 
---------------090908090105070907070609--
+Index: SHIP_OCT2005/drivers/s390/scsi/zfcp_def.h
+===================================================================
+--- SHIP_OCT2005.orig/drivers/s390/scsi/zfcp_def.h
++++ SHIP_OCT2005/drivers/s390/scsi/zfcp_def.h
+@@ -1210,6 +1210,20 @@ zfcp_reqlist_find(struct zfcp_adapter *a
+ 	return NULL;
+ }
+ 
++static inline struct zfcp_fsf_req *
++zfcp_reqlist_find_safe(struct zfcp_adapter *adapter, struct zfcp_fsf_req *req)
++{
++	struct zfcp_fsf_req *request;
++	unsigned int idx;
++
++	for (idx = 0; idx < REQUEST_LIST_SIZE; idx++) {
++		list_for_each_entry(request, &adapter->req_list[idx], list)
++			if (request == req)
++				return request;
++	}
++	return NULL;
++}
++
+ /*
+  *  functions needed for reference/usage counting
+  */
+Index: SHIP_OCT2005/drivers/s390/scsi/zfcp_erp.c
+===================================================================
+--- SHIP_OCT2005.orig/drivers/s390/scsi/zfcp_erp.c
++++ SHIP_OCT2005/drivers/s390/scsi/zfcp_erp.c
+@@ -837,7 +837,8 @@ zfcp_erp_strategy_check_fsfreq(struct zf
+ 	if (erp_action->fsf_req) {
+ 		/* take lock to ensure that request is not deleted meanwhile */
+ 		spin_lock(&adapter->req_list_lock);
+-		if (zfcp_reqlist_find(adapter, erp_action->fsf_req->req_id)) {
++		if (zfcp_reqlist_find_safe(adapter, erp_action->fsf_req) &&
++		    erp_action->fsf_req->erp_action == erp_action) {
+ 			/* fsf_req still exists */
+ 			debug_text_event(adapter->erp_dbf, 3, "a_ca_req");
+  			debug_event(adapter->erp_dbf, 3, &erp_action->fsf_req,
