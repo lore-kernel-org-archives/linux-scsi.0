@@ -1,99 +1,60 @@
-From: Laurent Riffard <laurent.riffard@free.fr>
-Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
-Date: Fri, 23 Nov 2007 18:52:28 +0100
-Message-ID: <4747135C.60205@free.fr>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	<4744A6F2.4030302@free.fr> <20071121144116.c932727b.akpm@linux-foundation.org> <4746814F.80502@free.fr> <4746866B.5070207@suse.de> <4746BB9D.2030508@suse.de>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [RFC 0/3] [SCSI/libata] libata EH conversion for ipr SAS
+Date: Fri, 23 Nov 2007 20:06:41 -0500
+Message-ID: <47477921.6030209@garzik.org>
+References: <47263F85.70908@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4746BB9D.2030508@suse.de>
+In-Reply-To: <47263F85.70908@linux.vnet.ibm.com>
 Sender: linux-ide-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
+To: brking@linux.vnet.ibm.com
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@SteelEye.com>, Tejun Heo <htejun@gmail.com>, "Darrick J. Wong" <djwong@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Le 23.11.2007 12:38, Hannes Reinecke a =E9crit :
-> Hannes Reinecke wrote:
->> Laurent Riffard wrote:
->>> Le 21.11.2007 23:41, Andrew Morton a =E9crit :
->>>> On Wed, 21 Nov 2007 22:45:22 +0100
->>>> Laurent Riffard <laurent.riffard@free.fr> wrote:
->>>>
->>>>> Le 21.11.2007 05:45, Andrew Morton a =E9crit :
->>>>>> ftp://ftp.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.=
-6.24-rc3/2.6.24-rc3-mm1/
->>>>> Hello,=20
->>>>>
->>>>> My system hangs shortly after I logged in Gnome desktop. SysRq-W =
-shows
->>>>> that a bunch of task are blocked in "D" state, they seem to wait =
-for
->>>>> some I/O completion. I can try to hand-copy some data if requeste=
-d.
->>>>>
->>>>> I found these messages in dmesg:
->>>>>
->>>>> ~$ grep -C2 end_request dmesg-2.6.24-rc3-mm1=20
->>>>> EXT3-fs: mounted filesystem with ordered data mode.
->>>>> sd 0:0:0:0: [sda] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
->>>>> end_request: I/O error, dev sda, sector 16460
->>>>> ReiserFS: sda7: found reiserfs format "3.6" with standard journal
->>>>> ReiserFS: sda7: using ordered data mode
->>>>> --
->>>>> ReiserFS: sda7: Using r5 hash to sort names
->>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
->>>>> end_request: I/O error, dev sdb, sector 19632
->>>>> sd 0:0:1:0: [sdb] Result: hostbyte=3DDID_NO_CONNECT driverbyte=3D=
-DRIVER_OK,SUGGEST_OK
->>>>> end_request: I/O error, dev sdb, sector 40037363
->>>>> Adding 1048568k swap on /dev/mapper/vglinux1-lvswap.  Priority:-1=
- extents:1 across:1048568k
->>>>> lp0: using parport0 (interrupt-driven).
->>>>>
->>>>> These errors occur *only* with 2.6.24-rc3-mm1, they are 100% repr=
-oducible.
->>>>> 2.6.24-rc3 and 2.6.24-rc2-mm1 are fine.
->>>>>
->>>>> Maybe something is broken in pata_via driver ?
->>>>>
->>>> Could be - libata-reimplement-ata_acpi_cbl_80wire-using-ata_acpi_g=
-tm_xfermask.patch
->>>> and pata_amd-pata_via-de-couple-programming-of-pio-mwdma-and-udma-=
-timings.patch
->>>> touch pata_via.c.
->>> None of the above...
->>>
->>> I did a bisection, it spotted git-scsi-misc.patch.=20
->>> I just run 2.6.24-rc3-mm1 + revert-git-scsi-misc.patch, and it work=
-s fine.
->>>
->>> I guess commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0 "[SCSI] Do =
-not=20
->>> requeue requests if REQ_FAILFAST is set" is the real culprit. The o=
-ther=20
->>> commits are touching documentation or drivers I don't use. I'll try=
-=20
->>> to revert only this one this evening.
+Brian King wrote:
+> The following three patches convert ipr to use the new libata EH APIs.
+> In the process of doing this, I first looked into implementing this
+> in a similar manner to how libata SAS is done today, which is hooking
+> into target_alloc/target_destroy to allocate/delete sata ports. While
+> I was able to get this working after writing my own eh_strategy_handler,
+> I was doubtful this was the best long term solution. One problem with this
+> implementation I didn't solve was the fact that libata now invokes EH
+> for each and every error received. For some devices, such as optical
+> devices, each not ready response received during a media reload would
+> result in all the attached SAS devices getting quiesced as well.
+> 
+> My second approach is the attached patch set. In this series I have
+> created a new libata API which can be used by SAS LLDDs. It introduces
+> an ata_sas_rphy device object which is created/destroyed by the following API:
+> 
+> ata_sas_rphy_alloc
+> ata_sas_rphy_add
+> ata_sas_rphy_delete
+> 
+> When using this API in ipr, I made ipr's scsi_host the parent device of the
+> SATA rphy. The SATA rphy is then the parent of the allocated scsi_hosts. This
+> means that each SATA rphy in the SAS topology will have its own scsi_host, making
+> SAS *much* more like all the SATA LLDDs in how it uses libata.
+> 
+> The only issue I ran into with this implementation is that since each SATA
+> port has its own scsi_host, the adapter cannot rely on scsi core to manage
+> any LLDD or adapter imposed queue depth. To solve this I added some code to
+> ipr. Longer term, block layer queue groups might be another way to do this.
+> 
+> I'm still polishing this up, but it is up and running and seems to work with
+> what testing I've done so far.
 
-I can confirm : reverting commit 8655a546c83fc43f0a73416bbd126d02de7ad6=
-c0=20
-does fix the problem.
+I'm generally happy with this, though I am curious what Tejun thinks as 
+well.
 
->> Hmm. Weird. I'll have a look into it. Apparently I'll be returning a=
-n error where
->> I shouldn't. Checking ...
->>
-> Ok, found it. We are blocking even special commands (ie requests with=
- PREEMPT not set)
-> when FAILFAST is set. Which is clearly wrong. The attached patch fixe=
-s this.
+Once everybody is happy, I think we should collect libata ACKs and then 
+push this via the SCSI maintainership route.  That would libsas work in 
+parallel, with perhaps in situ tweaks and fixes as the implementation is 
+fleshed out.
 
-Sorry, it's not enough. 2.6.24-rc3-mm1 + your patch still hangs with I/=
-O errors.
+	Jeff
 
---=20
-laurent
+
 
