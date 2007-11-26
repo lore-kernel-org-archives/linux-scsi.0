@@ -1,61 +1,84 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] scsi/qla2xxx/qla_os.c section fix
-Date: Sun, 25 Nov 2007 23:05:03 +0100
-Message-ID: <20071125220503.GF18284@stusta.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+From: Denis Cheng <crquan@gmail.com>
+Subject: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
+Date: Mon, 26 Nov 2007 15:16:13 +0800
+Message-ID: <1196061373-6394-1-git-send-email-crquan@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:36074 "EHLO
-	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1758326AbXKYWFP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Nov 2007 17:05:15 -0500
-Content-Disposition: inline
+Received: from wa-out-1112.google.com ([209.85.146.179]:23396 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752831AbXKZHOj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2007 02:14:39 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so631989wah
+        for <linux-scsi@vger.kernel.org>; Sun, 25 Nov 2007 23:14:38 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-driver@qlogic.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-qla2x00_remove_one() mustn't be __devexit since it's called from 
-qla2xxx_pci_error_detected().
+these utilities implemented in lib/hexdump.c are more handy, please use this.
 
-This patch fixes the following section mismatch:
-
-<--  snip  -->
-
-...
-WARNING: vmlinux.o(.text+0x2a4462): Section mismatch: reference to .exit.text:qla2x00_remove_one (between 'qla2xxx_pci_error_detected' and 'qla2x00_stop_timer')
-...
-
-<--  snip  -->
-
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-
+Cc: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Denis Cheng <crquan@gmail.com>
 ---
+there are still much other private hexdump implementations in the source,
+which reinvent the wheel, we can find them through:
 
- drivers/scsi/qla2xxx/qla_os.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+  $ grep -RsIn hexdump <kernel-src>
+  ...
 
-764ebbed3c09f765963c20a3a326cf651685a81a 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index a5bcf1f..8ecc047 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1831,7 +1831,7 @@ probe_out:
- 	return ret;
+ drivers/scsi/ide-scsi.c |   18 ++++--------------
+ 1 files changed, 4 insertions(+), 14 deletions(-)
+
+diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
+index 8d0244c..8f3fc1d 100644
+--- a/drivers/scsi/ide-scsi.c
++++ b/drivers/scsi/ide-scsi.c
+@@ -242,16 +242,6 @@ static void idescsi_output_buffers (ide_drive_t *drive, idescsi_pc_t *pc, unsign
+ 	}
  }
  
--static void __devexit
-+static void
- qla2x00_remove_one(struct pci_dev *pdev)
+-static void hexdump(u8 *x, int len)
+-{
+-	int i;
+-
+-	printk("[ ");
+-	for (i = 0; i < len; i++)
+-		printk("%x ", x[i]);
+-	printk("]\n");
+-}
+-
+ static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_command)
  {
- 	scsi_qla_host_t *ha;
-@@ -2965,7 +2965,7 @@ static struct pci_driver qla2xxx_pci_driver = {
- 	},
- 	.id_table	= qla2xxx_pci_tbl,
- 	.probe		= qla2x00_probe_one,
--	.remove		= __devexit_p(qla2x00_remove_one),
-+	.remove		= qla2x00_remove_one,
- 	.err_handler	= &qla2xxx_err_handler,
- };
+ 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
+@@ -282,7 +272,7 @@ static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_co
+ 	pc->scsi_cmd = ((idescsi_pc_t *) failed_command->special)->scsi_cmd;
+ 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
+ 		printk ("ide-scsi: %s: queue cmd = ", drive->name);
+-		hexdump(pc->c, 6);
++		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 6, 1);
+ 	}
+ 	rq->rq_disk = scsi->disk;
+ 	return ide_do_drive_cmd(drive, rq, ide_preempt);
+@@ -337,7 +327,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
+ 		idescsi_pc_t *opc = (idescsi_pc_t *) rq->buffer;
+ 		if (log) {
+ 			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, opc->scsi_cmd->serial_number);
+-			hexdump(pc->buffer,16);
++			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->buffer, 16, 1);
+ 		}
+ 		memcpy((void *) opc->scsi_cmd->sense_buffer, pc->buffer, SCSI_SENSE_BUFFERSIZE);
+ 		kfree(pc->buffer);
+@@ -816,10 +806,10 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
  
+ 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
+ 		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
+-		hexdump(cmd->cmnd, cmd->cmd_len);
++		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, cmd->cmnd, cmd->cmd_len, 1);
+ 		if (memcmp(pc->c, cmd->cmnd, cmd->cmd_len)) {
+ 			printk ("ide-scsi: %s: que %lu, tsl = ", drive->name, cmd->serial_number);
+-			hexdump(pc->c, 12);
++			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 12, 1);
+ 		}
+ 	}
+ 
+-- 
+1.5.3.5
 
