@@ -1,74 +1,72 @@
-From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
-Subject: RE: [patch 20/23] aacraid driver fails with Dell PowerEdge Expandable RAID Controller 3/Di
-Date: Mon, 26 Nov 2007 09:12:07 -0500
-Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01FEAE54@otce2k301.adaptec.com>
-References: <200711212312.lALNCVWt014163@imap1.linux-foundation.org> <E1IwbCB-0002Ft-M9@n2o.xs4all.nl>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [Linux-usb-users] Read errors on Flash Drive Transcend TS1GJF2A
+Date: Mon, 26 Nov 2007 10:35:27 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0711261034090.4250-100000@iolanthe.rowland.org>
+References: <op.t2a0x7tige0nj0@smtp.mail.yandex.ru>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:38764 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751346AbXKZOMK convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2007 09:12:10 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <E1IwbCB-0002Ft-M9@n2o.xs4all.nl>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40372 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751730AbXKZPf2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2007 10:35:28 -0500
+In-Reply-To: <op.t2a0x7tige0nj0@smtp.mail.yandex.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Miquel van Smoorenburg <mikevs@xs4all.net>, akpm@linux-foundation.org
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <ltuikov@yahoo.com>
+Cc: RTE <raszilki@yandex.ru>, SCSI development list <linux-scsi@vger.kernel.org>
 
-> From: Miquel van Smoorenburg [mailto:mikevs@xs4all.net] 
-> >+static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
-> >+{
-> >+	if ((sizeof(dma_addr_t) > 4) &&
-> >+	 (num_physpages > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
-> >+	 (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
-> >+		return FAILED;
-> >+	return aac_scsi_32(fib, cmd);
-> >+}
-> 
-> I saw the same thing in the 64-bit dpt_i2o driver, but I
+Not all devices correctly report the error-causing LBA in the
+Information field of their sense data -- even when they set the Valid
+bit.  This patch (as1019) makes sd much more cautious about accepting
+the reported LBA.  If the value isn't within the range of blocks
+accessed during the I/O operation it is rejected, and instead the
+driver will try looking at the residue field (which currently it
+ignores completely).
 
-Yes, scratch and sniff, caught me :-}
+This fixes a data-corruption bug reported here:
 
-> wonder, shouldn't this be something like:
-> 
-> #include <linux/bootmem.h>
-> 
->        if ((sizeof(dma_addr_t) > 4) &&
->         (max_pfn > (0xFFFFFFFFULL >> PAGE_SHIFT)) &&
->         (fib->dev->adapter_info.options & AAC_OPT_SGMAP_HOST64))
-> 
-> e.g. use max_pfn instead of num_physpages ?
+	http://marc.info/?t=118745764700005&r=1&w=2
 
-Yes, it would be more correct for the moment, save for the fact that it
-is marked for deletion:
+Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+CC: Luben Tuikov <ltuikov@yahoo.com>
 
-         * This doesn't seem to be used by the Linux memory manager any
-         * more, but is used by ll_rw_block.  If we can get rid of it,
-we
-         * also get rid of some of the stuff above as well.
-		. . .
-	  max_pfn = . . .
+---
 
-and unfortunately architecture issues abound with all memory limit
-variable :-(
+This patch should be considered for inclusion in 2.6.24.  The bug in
+question has always existed, as far as I know, but before 2.6.18 it was
+masked by a different bug.
 
-in arch/arm/mm/init.c:
+This doesn't use the new SCSI accessors.  In the development trees
+I've seen, those accessors haven't yet been imported into sd.c.  If
+the patch needs to be rebased, please let me know where to find the
+current sd source.
 
-         * Note: max_low_pfn and max_pfn reflect the number of _pages_
-in
-         * the system, not the maximum PFN.
+Presumably sr should use the same algorithm.  That's grist for another
+patch.
 
-Reminder: If this automated solution represented in this patch, however
-flawed with any memory limit variable, is too hacky and not acceptable
-for inclusion, the workaround for the existing drivers and PERC users in
-64 bit populated architectures continues to be to manually set
-aacraid.dacmode=0 in the failing configurations.
 
-What variable tells us the maximum physical memory address, is correct
-in all architectures and is going to stick around? 
+Index: usb-2.6/drivers/scsi/sd.c
+===================================================================
+--- usb-2.6.orig/drivers/scsi/sd.c
++++ usb-2.6/drivers/scsi/sd.c
+@@ -968,7 +968,17 @@ static int sd_done(struct scsi_cmnd *SCp
+ 		/* This computation should always be done in terms of
+ 		 * the resolution of the device's medium.
+ 		 */
+-		good_bytes = (bad_lba - start_lba)*SCpnt->device->sector_size;
++		if (start_lba <= bad_lba && bad_lba < start_lba +
++				(xfer_size / SCpnt->device->sector_size))
++			good_bytes = SCpnt->device->sector_size *
++					(unsigned int) (bad_lba - start_lba);
++
++		/* If the bad_lba value is no good, maybe the residue value
++		 * is better.
++		 */
++		else if (SCpnt->resid > 0 && SCpnt->resid < xfer_size)
++			good_bytes = (xfer_size - SCpnt->resid) &
++					(- SCpnt->device->sector_size);
+ 		break;
+ 	case RECOVERED_ERROR:
+ 	case NO_SENSE:
 
-Sincerely -- Mark Salyzyn
