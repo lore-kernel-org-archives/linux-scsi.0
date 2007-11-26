@@ -1,69 +1,31 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: reservation conflicts
-Date: Mon, 26 Nov 2007 13:45:56 +0100
-Message-ID: <fief64$g9d$1@ger.gmane.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
+Date: Mon, 26 Nov 2007 06:25:13 -0700
+Message-ID: <20071126132513.GA3230@parisc-linux.org>
+References: <1196061373-6394-1-git-send-email-crquan@gmail.com> <1196062867.8948.25.camel@localhost> <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from main.gmane.org ([80.91.229.2]:42374 "EHLO ciao.gmane.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752882AbXKZMuF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 26 Nov 2007 07:50:05 -0500
-Received: from root by ciao.gmane.org with local (Exim 4.43)
-	id 1IwdPW-0000N7-6X
-	for linux-scsi@vger.kernel.org; Mon, 26 Nov 2007 12:50:02 +0000
-Received: from ns1.q-leap.de ([153.94.51.193])
-        by main.gmane.org with esmtp (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Nov 2007 12:50:02 +0000
-Received: from bs by ns1.q-leap.de with local (Gmexim 0.1 (Debian))
-        id 1AlnuQ-0007hv-00
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Nov 2007 12:50:02 +0000
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <91b13c310711260037o7af4b11dt389bb209a075c25a@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: rae l <crquan@gmail.com>
+Cc: Joe Perches <joe@perches.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, Nov 26, 2007 at 04:37:50PM +0800, rae l wrote:
+> I know this is different from the original hexdump in ide-scsi.c, I
+> just want to tell someone that there's a good implementation of
+> hexdump in kernel.h, and I think the default KERN_DEBUG and
+> print_hex_dump is more informative and has better output. However,
+> anyone want more precise control on debug message could make her/his
+> improvements with print_hex_dump.
 
-we have to deal here with troublesome Infortrend devices. These units do
-have 2 independent scsi channels, which are unfortunately not so
-independent as they should be.
-Now we have two different systems (lets say OSS-1 and OSS-2) connected to
-each of the scsi-channels and both channels are serving different
-partitions on the infortrend-raid units. So in principal whatever happens
-on one channel should not effect the other channel.
-Unfortunately, if one system (e.g. OSS-2) is rebooted while the other
-(OSS-1) is doing i/o, it will cause trouble on the system doing i/o. These
-problems are "task aborts", "reservation conflicts", etc.
+using KERN_DEBUG is wrong -- this is part of a line, so you need to use
+KERN_NONE or simply "".
 
-I don't know how to solve the other problems yet, but i/o errors on
-reservation conflicts can be easily prevented using this trivial patch:
-
---- linux-2.6.22.orig/drivers/scsi/scsi_error.c 2007-11-26
-13:26:58.000000000 +0100
-+++ linux-2.6.22/drivers/scsi/scsi_error.c      2007-11-26 13:27:26.000000000
-+0100
-@@ -1321,7 +1321,7 @@ int scsi_decide_disposition(struct scsi_
-        case RESERVATION_CONFLICT:
-                sdev_printk(KERN_INFO, scmd->device,
-                            "reservation conflict\n");
--               return SUCCESS; /* causes immediate i/o error */
-+               return ADD_TO_MLQUEUE;
-        default:
-                return FAILED;
-        }
-
-
-Now I would like to understand why a reservation conflict always does end in
-an i/o error?
-Almost the same applies to all the other problems we have with these
-Infortrend boxes, in 99.999% of the time the boxes work fine, only
-sometimes they suffer from hickup, which usually solves itself after a few
-seconds. If we could just suspend i/o for that time, 99% of our problems
-would be solved.
-
-
-Cheers,
-Bernd
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
