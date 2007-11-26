@@ -1,84 +1,73 @@
-From: Denis Cheng <crquan@gmail.com>
-Subject: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
-Date: Mon, 26 Nov 2007 15:16:13 +0800
-Message-ID: <1196061373-6394-1-git-send-email-crquan@gmail.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.179]:23396 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752831AbXKZHOj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Nov 2007 02:14:39 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so631989wah
-        for <linux-scsi@vger.kernel.org>; Sun, 25 Nov 2007 23:14:38 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: 2.6.24-rc3-mm1: I/O error, system hangs
+Date: Mon, 26 Nov 2007 08:54:26 +0100
+Message-ID: <20071126075426.GC11261@ochil.suse.de>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <4744A6F2.4030302@free.fr> <20071121144116.c932727b.akpm@linux-foundation.org> <4746814F.80502@free.fr> <4746866B.5070207@suse.de> <4746BB9D.2030508@suse.de> <1195926253.3195.16.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1195926253.3195.16.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Laurent Riffard <laurent.riffard@free.fr>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-these utilities implemented in lib/hexdump.c are more handy, please use this.
+On Sat, Nov 24, 2007 at 07:44:13PM +0200, James Bottomley wrote:
+> Probing intermittent failures in Domain Validation, even with the fix=
+es
+> applied leads me to the conclusion that there are further problems wi=
+th
+> this commit:
+>=20
+> commit fc5eb4facedbd6d7117905e775cee1975f894e79
+> Author: Hannes Reinecke <hare@suse.de>
+> Date:   Tue Nov 6 09:23:40 2007 +0100
+>=20
+>     [SCSI] Do not requeue requests if REQ_FAILFAST is set
+> =20
+> The essence of the problems is that you're causing REQ_FAILFAST to
+> terminate commands with error on requeuing conditions, some of which =
+are
+> relatively common on most SCSI devices.  While this may be the correc=
+t
+> behaviour for multi-path, it's certainly wrong for the previously
+> understood meaning of REQ_FAILFAST, which was don't retry on error,
+> which is why domain validation and other applications use it to contr=
+ol
+> error handling, but don't expect to get failures for a simple requeue
+> are now spitting errors.
+>=20
+> I honestly can't see that, even for the multi-path case, returning an
+> error when we're over queue depth is the correct thing to do (it may =
+not
+> matter to something like a symmetrix, but an array that has a non-zer=
+o
+> cost associated with a path change, like a CPQ HSV or the AVT
+> controllers, will show fairly large slow downs if you do this).  Even=
+ if
+> this is the desired behaviour (and I think that's a policy issue),
+> DID_NO_CONNECT is almost certainly the wrong error to be sending back=
+=2E
+>=20
+> This patch fixes up domain validation to work again correctly, howeve=
+r,
+> I really think it's just a bandaid.  Do you want to rethink the above
+> commit?
+>=20
+Given the amounted error, yes, I'll have to.
+But we still face the initial problem that requeued requests will be
+stuck in the queue forever (ie until the timeout catches it), causing
+failover to be painfully slow.
 
-Cc: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Denis Cheng <crquan@gmail.com>
----
-there are still much other private hexdump implementations in the source,
-which reinvent the wheel, we can find them through:
+Anyway, I'll think it over.
 
-  $ grep -RsIn hexdump <kernel-src>
-  ...
+Cheers,
 
- drivers/scsi/ide-scsi.c |   18 ++++--------------
- 1 files changed, 4 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/ide-scsi.c b/drivers/scsi/ide-scsi.c
-index 8d0244c..8f3fc1d 100644
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -242,16 +242,6 @@ static void idescsi_output_buffers (ide_drive_t *drive, idescsi_pc_t *pc, unsign
- 	}
- }
- 
--static void hexdump(u8 *x, int len)
--{
--	int i;
--
--	printk("[ ");
--	for (i = 0; i < len; i++)
--		printk("%x ", x[i]);
--	printk("]\n");
--}
--
- static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_command)
- {
- 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
-@@ -282,7 +272,7 @@ static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_co
- 	pc->scsi_cmd = ((idescsi_pc_t *) failed_command->special)->scsi_cmd;
- 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
- 		printk ("ide-scsi: %s: queue cmd = ", drive->name);
--		hexdump(pc->c, 6);
-+		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 6, 1);
- 	}
- 	rq->rq_disk = scsi->disk;
- 	return ide_do_drive_cmd(drive, rq, ide_preempt);
-@@ -337,7 +327,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
- 		idescsi_pc_t *opc = (idescsi_pc_t *) rq->buffer;
- 		if (log) {
- 			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, opc->scsi_cmd->serial_number);
--			hexdump(pc->buffer,16);
-+			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->buffer, 16, 1);
- 		}
- 		memcpy((void *) opc->scsi_cmd->sense_buffer, pc->buffer, SCSI_SENSE_BUFFERSIZE);
- 		kfree(pc->buffer);
-@@ -816,10 +806,10 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
- 
- 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
- 		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
--		hexdump(cmd->cmnd, cmd->cmd_len);
-+		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, cmd->cmnd, cmd->cmd_len, 1);
- 		if (memcmp(pc->c, cmd->cmnd, cmd->cmd_len)) {
- 			printk ("ide-scsi: %s: que %lu, tsl = ", drive->name, cmd->serial_number);
--			hexdump(pc->c, 12);
-+			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 12, 1);
- 		}
- 	}
- 
--- 
-1.5.3.5
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=EF=BF=BDrnberg
+GF: Markus Rex, HRB 16746 (AG N=EF=BF=BDrnberg)
