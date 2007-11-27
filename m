@@ -1,53 +1,170 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Recent sym53c8xx patches
-Date: Tue, 27 Nov 2007 09:51:56 -0500
-Message-ID: <474C2F0C.6030303@cybernetics.com>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB cmds with sense info
+Date: Tue, 27 Nov 2007 08:19:09 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501D337D4@NAMAIL1.ad.lsil.com>
+References: <20071120204202.GJ12494@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host06.cybernetics.com ([206.246.200.22]:2699 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758833AbXK0Ov5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2007 09:51:57 -0500
+Received: from mail0.lsil.com ([147.145.40.20]:63110 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755769AbXK0PT6 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2007 10:19:58 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20071120204202.GJ12494@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, jejb@kernel.org, hch@infradead.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-Hello,
+Matthew,
 
-I am sending this message to check up on the merge status of my recent
-sym53c8xx patches to make sure they aren't forgotten.  Matthew Wilcox,
-could you give an ack/nak for these merge requests?  Also, please let me
-know if I need to do anything else (such as resending later) to make
-sure these patches get merged.
+Thanks for your review.
 
-[PATCH] [SCSI] sym53c8xx: fix free_irq() regression in 2.6.24
-http://marc.info/?t=119438263300007&r=1&w=4
-Regression fix.  Should be merged in 2.6.24.  OK'ed by Christoph Hellwig.
+We have a 32 bit application(s) (megaraid utility) that is used in both
+x86 and x86_64.
+For ia64, the application is built in ia64 environment.
 
-[PATCH] [SCSI] sym53c8xx: fix resid calculation
-http://marc.info/?l=linux-scsi&m=119438360705773&w=4
-Bug fix.  I would like it to be merged in 2.6.24.  No replies to initial
-message.
+The sense_ptr picked up from the ioc->frame.raw is a 32-bit value from
+the application. When we make it "unsigned long*" it picks up a 64-bit
+value & the copy_to_user fails. Without this fix the issue is seen in
+x86_64 kernels. But for ia64 it is an unsigned long * value (8 bytes)
+and so we need a compile time flag.
+ 
+Regards,
 
-[PATCH] [SCSI] sym53c8xx: don't flood syslog with negotiation messages
-http://marc.info/?l=linux-scsi&m=119446914818689&w=4
-More an annoyance fix than a bug fix.  Probably safe to merge for
-2.6.24, but could wait for 2.6.25 if someone objects.  No replies to
-initial message.
+Bo Yang
 
-[PATCH] [SCSI] sym53c8xx: fix setflag user command to control disconnects
-http://marc.info/?l=linux-scsi&m=119446790116497&w=4
-Fix for long-broken not-widely-used feature.  Can be dropped if the
-disconnect attribute will be added to the SPI transport class in the
-near future.  Is anyone working on this BTW?
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx] 
+Sent: Tuesday, November 20, 2007 3:42 PM
+To: Yang, Bo
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
+akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
+Subject: Re: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
+cmds with sense info
 
-[PATCH] [SCSI] sym53c8xx: increase sg_tablesize for larger data transfers
-http://marc.info/?l=linux-scsi&m=119513922112712&w=4
-Enhancement.  On hold for the moment due to speculation that it may
-break some 875 chips.
+On Wed, Nov 21, 2007 at 08:40:56AM +0000, bo yang wrote:
+> Sense buffer ptr data type in the ioctl path is reverted back to u32 *
 
-Thanks,
-Tony Battersby
+> for x86 and x86_64 as in previous versions of driver. For IA64 it will
 
+> be unsigned long *. Compile time flag added for ia64 for this.
+
+This changelog tells us what you're doing, but not why you're doing it.
+Why is it that ia64 is different from x86 and x86_64?  What should other
+architectures be doing?  This patch really doesn't make any sense to me
+at all; it should be doing the exact same thing on all three
+architectures.
+
+> Signed-off-by: Bo Yang <bo.yang@lsi.com>
+> 
+> ---
+> Documentation/scsi/ChangeLog.megaraid_sas |   15 +++++++++++++++
+> drivers/scsi/megaraid/megaraid_sas.c      |   14 ++++++++++----
+> drivers/scsi/megaraid/megaraid_sas.h      |    6 +++---
+>  3 files changed, 28 insertions(+), 7 deletions(-)
+> 
+> diff -rupN linux-2.6.22_orig/Documentation/scsi/ChangeLog.megaraid_sas
+linux-2.6.22_new/Documentation/scsi/ChangeLog.megaraid_sas
+> --- linux-2.6.22_orig/Documentation/scsi/ChangeLog.megaraid_sas
+2007-11-20 17:50:13.000000000 -0500
+> +++ linux-2.6.22_new/Documentation/scsi/ChangeLog.megaraid_sas
+2007-11-20 21:37:16.000000000 -0500
+> @@ -1,3 +1,18 @@
+> +1 Release Date    : Thur. Nov. 19 16:30:43 PST 2007 -
+> +			(emaild-id:megaraidlinux@lsi.com)
+> +			Sumant Patro
+> +			Bo Yang
+> +
+> +2 Current Version : 00.00.03.17-RC1
+> +3 Older Version   : 00.00.03.16
+> +
+> +1. Fix random failure of DCDB cmds with sense info.
+> +
+> +Fix: 	sense buffer ptr data type in the ioctl path is reverted
+back
+> +	to u32 * for x86, x86_64 as in previous versions of driver.
+> +	For IA64 it will be unsigned long *. Compile time flag added
+> +	for ia64 for this.
+> +
+>  1 Release Date    : Thur. Nov. 07 16:30:43 PST 2007 -
+>  			(emaild-id:megaraidlinux@lsi.com)
+>  			Sumant Patro
+> diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c
+linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
+> --- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c
+2007-11-20 17:50:13.000000000 -0500
+> +++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
+2007-11-20 17:50:13.000000000 -0500
+> @@ -10,7 +10,7 @@
+>   *	   2 of the License, or (at your option) any later version.
+>   *
+>   * FILE		: megaraid_sas.c
+> - * Version	: v00.00.03.16-rc1
+> + * Version	: v00.00.03.17-rc1
+>   *
+>   * Authors:
+>   *	(email-id : megaraidlinux@lsi.com)
+> @@ -3020,10 +3020,16 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
+>  		 * sense buffer address
+>  		 */
+>  		sense_buff = (unsigned long *) ((unsigned
+long)ioc->frame.raw +
+> -
+ioc->sense_off);
+> -
+> -		if (copy_to_user((void __user *)(unsigned
+long)(*sense_buff),
+> +					ioc->sense_off);
+> +		sense_ptr = (u32 *) ((unsigned long)ioc->frame.raw +
+> +					ioc->sense_off);
+> +#if defined(__ia64__)
+> +		if (copy_to_user((void __user *)((unsigned
+long)(*sense_buff)),
+> +				sense, ioc->sense_len)) {
+> +#else
+> +		if (copy_to_user((void __user *)((unsigned
+long)(*sense_ptr)),
+>  				sense, ioc->sense_len)) {
+> +#endif
+>  			printk(KERN_ERR "megasas: Failed to copy out to
+user "
+>  					"sense data\n");
+>  			error = -EFAULT;
+> diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h
+linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
+> --- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h
+2007-11-20 17:50:13.000000000 -0500
+> +++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
+2007-11-20 17:50:13.000000000 -0500
+> @@ -18,9 +18,9 @@
+>  /*
+>   * MegaRAID SAS Driver meta data
+>   */
+> -#define MEGASAS_VERSION
+"00.00.03.16-rc1"
+> -#define MEGASAS_RELDATE				"Nov. 07, 2007"
+> -#define MEGASAS_EXT_VERSION			"Thu. Nov. 07 10:09:32
+PDT 2007"
+> +#define MEGASAS_VERSION
+"00.00.03.17-rc1"
+> +#define MEGASAS_RELDATE				"Nov. 19, 2007"
+> +#define MEGASAS_EXT_VERSION			"Mon. Nov. 19 10:09:32
+PDT 2007"
+>  
+>  /*
+>   * Device IDs
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+> in the body of a message to majordomo@vger.kernel.org More majordomo 
+> info at  http://vger.kernel.org/majordomo-info.html
+
+--
+Intel are signing my paycheques ... these opinions are still mine "Bill,
+look, we understand that you're interested in selling us this operating
+system, but compare it to ours.  We can't possibly take such a
+retrograde step."
