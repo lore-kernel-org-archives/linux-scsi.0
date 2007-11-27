@@ -1,32 +1,39 @@
-From: tsbogend@alpha.franken.de (Thomas Bogendoerfer)
-Subject: Re: [PATCH] SGIWD93: use cached memory access to make driver work on IP28
-Date: Wed, 28 Nov 2007 00:36:57 +0100
-Message-ID: <20071127233657.GA32469@alpha.franken.de>
-References: <20071126223921.A566CC2B26@solo.franken.de> <Pine.LNX.4.58.0711272348360.407@Indigo2.Peter>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Open-FCoE on linux-scsi
+Date: Tue, 27 Nov 2007 15:40:05 -0800
+Message-ID: <10A7D0016239E24092DEF05CCC582E43028A671C@fmsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elvis.franken.de ([193.175.24.41]:33038 "EHLO elvis.franken.de"
+Received: from mga09.intel.com ([134.134.136.24]:31259 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757186AbXK0XhI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Nov 2007 18:37:08 -0500
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.58.0711272348360.407@Indigo2.Peter>
+	id S1757015AbXK0Xk4 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2007 18:40:56 -0500
+Content-class: urn:content-classes:message
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: peter fuerst <post@pfrst.de>
-Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
+To: linux-scsi@vger.kernel.org, "Love, Robert W" <robert.w.love@intel.com>
+Cc: "Zou, Yi" <yi.zou@intel.com>, "Leech, Christopher" <christopher.leech@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>
 
-On Wed, Nov 28, 2007 at 12:00:39AM +0100, peter fuerst wrote:
-> unlike with sgiseeq.c, in sgiwd93.c there's no need to bloat the hpc_chunk
-> and only a single dma_cache_sync-call is necessary in fill_hpc_entries and
-> init_hpc_chain respectively.
+Hello SCSI mailing list,
 
-funny I realized that a couple of minutes ago. A kernel with this
-changes booted ok. I'll post an updated driver tomorrow.
+	I'd just like to introduce ourselves a bit before we get
+started. My name is Robert Love and I'm joined by a team of engineers
+including Vasu Dev, Chris Leech and Yi Zou. We are committed to
+maintaining the Open-FCoE project. Aside from Intel engineers we expect
+engineers from other companies to contribute to Open-FCoE. 
 
-Thomas.
+	Our goal is to get the initiator code upstream. We have a lot of
+working code but recognize that we're early in this project's
+development. We're looking for direction from you, the experts, on what
+this project should grow into.
 
--- 
-Crap can work. Given enough thrust pigs will fly, but it's not necessary a
-good idea.                                                [ RFC1925, 2.3 ]
+	My concern is that we're going to bombard the SCSI list, but
+upon James' recommendation we'll start on your list and if it's too much
+move to our own list. 
+
+Thanks,
+
+//Rob
