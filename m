@@ -1,159 +1,128 @@
-From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
-Subject: Re: [PATCH 2/2] ide-scsi: use print_hex_dump from <linux/kernel.h>
-Date: Tue, 27 Nov 2007 22:02:37 +0100
-Message-ID: <200711272202.37410.bzolnier@gmail.com>
-References: <1196061373-6394-1-git-send-email-crquan@gmail.com> <20071127013119.d12b7791.akpm@linux-foundation.org> <200711272134.18527.bzolnier@gmail.com>
+From: peter fuerst <post@pfrst.de>
+Subject: Re: [PATCH] SGIWD93: use cached memory access to make driver work
+ on IP28
+Date: Wed, 28 Nov 2007 00:00:39 +0100 (CET)
+Message-ID: <Pine.LNX.4.58.0711272348360.407@Indigo2.Peter>
+References: <20071126223921.A566CC2B26@solo.franken.de>
+Reply-To: post@pfrst.de
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ug-out-1314.google.com ([66.249.92.172]:22756 "EHLO
-	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756793AbXK0U5w (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2007 15:57:52 -0500
-Received: by ug-out-1314.google.com with SMTP id z38so1336392ugc
-        for <linux-scsi@vger.kernel.org>; Tue, 27 Nov 2007 12:57:51 -0800 (PST)
-In-Reply-To: <200711272134.18527.bzolnier@gmail.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <20071126223921.A566CC2B26@solo.franken.de>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Denis Cheng <crquan@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Randy Dunlap <randy.dunlap@oracle.com>
 
-On Tuesday 27 November 2007, Bartlomiej Zolnierkiewicz wrote:
-> On Tuesday 27 November 2007, Andrew Morton wrote:
-> > On Mon, 26 Nov 2007 15:16:13 +0800 Denis Cheng <crquan@gmail.com> wrote:
-> > 
-> > > these utilities implemented in lib/hexdump.c are more handy, please use this.
-> > > 
-> > > ...
-> > >
-> > > --- a/drivers/scsi/ide-scsi.c
-> > > +++ b/drivers/scsi/ide-scsi.c
-> > > @@ -242,16 +242,6 @@ static void idescsi_output_buffers (ide_drive_t *drive, idescsi_pc_t *pc, unsign
-> > >  	}
-> > >  }
-> > >  
-> > > -static void hexdump(u8 *x, int len)
-> > > -{
-> > > -	int i;
-> > > -
-> > > -	printk("[ ");
-> > > -	for (i = 0; i < len; i++)
-> > > -		printk("%x ", x[i]);
-> > > -	printk("]\n");
-> > > -}
-> > > -
-> > >  static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_command)
-> > >  {
-> > >  	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
-> > > @@ -282,7 +272,7 @@ static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_co
-> > >  	pc->scsi_cmd = ((idescsi_pc_t *) failed_command->special)->scsi_cmd;
-> > >  	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
-> > >  		printk ("ide-scsi: %s: queue cmd = ", drive->name);
-> > > -		hexdump(pc->c, 6);
-> > > +		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 6, 1);
-> > >  	}
-> > >  	rq->rq_disk = scsi->disk;
-> > >  	return ide_do_drive_cmd(drive, rq, ide_preempt);
-> > > @@ -337,7 +327,7 @@ static int idescsi_end_request (ide_drive_t *drive, int uptodate, int nrsecs)
-> > >  		idescsi_pc_t *opc = (idescsi_pc_t *) rq->buffer;
-> > >  		if (log) {
-> > >  			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, 
-> opc->scsi_cmd->serial_number);
-> > > -			hexdump(pc->buffer,16);
-> > > +			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->buffer, 16, 1);
-> > >  		}
-> > >  		memcpy((void *) opc->scsi_cmd->sense_buffer, pc->buffer, SCSI_SENSE_BUFFERSIZE);
-> > >  		kfree(pc->buffer);
-> > > @@ -816,10 +806,10 @@ static int idescsi_queue (struct scsi_cmnd *cmd,
-> > >  
-> > >  	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
-> > >  		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
-> > > -		hexdump(cmd->cmnd, cmd->cmd_len);
-> > > +		print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, cmd->cmnd, cmd->cmd_len, 1);
-> > >  		if (memcmp(pc->c, cmd->cmnd, cmd->cmd_len)) {
-> > >  			printk ("ide-scsi: %s: que %lu, tsl = ", drive->name, cmd->serial_number);
-> > > -			hexdump(pc->c, 12);
-> > > +			print_hex_dump(KERN_DEBUG, "", DUMP_PREFIX_OFFSET, 16, 1, pc->c, 12, 1);
-> > >  		}
-> > >  	}
-> > >  
-> 
-> I applied the patch with a couple of fixes:
-> - s/KERN_DEBUG/KERN_CONT/ as pointed out by Randy
-> - s/DUMP_PREFIX_OFFSET/DUMP_PREFIX_NONE/
-> - don't include ASCII dump
-> - respect 80-columns limit
-> 
-> > Would you believe that this patch (which removes code) actually increases
-> > drivers/scsi/ide-scsi.o .text by 75 bytes?
-> 
-> Yeah, it somehow shrank down to +58 bytes after fixes but this is still bad.
 
-Heh, incremental (since I pushed the previous one to Linus already)
-patch which cuts 85 bytes from ide-scsi...
 
-[PATCH] ide-scsi: add ide_scsi_hex_dump() helper
+Hello Thomas,
 
-Cc: Andrew Morton <akpm@linux-foundation.org>
-Cc: Denis Cheng <crquan@gmail.com>
-Cc: Randy Dunlap <randy.dunlap@oracle.com>
-Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+unlike with sgiseeq.c, in sgiwd93.c there's no need to bloat the hpc_chunk
+and only a single dma_cache_sync-call is necessary in fill_hpc_entries and
+init_hpc_chain respectively.
+
+kind regards
+
+peter
+
+
+On Mon, 26 Nov 2007, Thomas Bogendoerfer wrote:
+
+> Date: Mon, 26 Nov 2007 18:41:15 +0100
+> From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> To: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org
+> Cc: ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
+> Subject: [PATCH] SGIWD93: use cached memory access to make driver work on
+>     IP28
+>
+> Following patch is 2.6.25 material needed to get SGI IP28 machines
+> supported.
+>
+> Thomas.
+>
+> SGI IP28 machines would need special treatment (enable adding addtional
+> wait states) when accessing memory uncached. To avoid this pain I
+> changed the driver to use only cached access to memory.
+>
+> Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+> ---
+>  drivers/scsi/sgiwd93.c |   68 ++++++++++++++++++++++++++++++-----------------
+>  1 files changed, 43 insertions(+), 25 deletions(-)
+>
+> ...
+
+
+
+
+
+Signed-off-by: peter fuerst <post@pfrst.de>
 ---
- drivers/scsi/ide-scsi.c |   17 +++++++++--------
- 1 file changed, 9 insertions(+), 8 deletions(-)
+diff -up a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
+--- a/drivers/scsi/sgiwd93.c
++++ b/drivers/scsi/sgiwd93.c
+@@ -42,15 +42,13 @@ struct ip22_hostdata {
 
-Index: b/drivers/scsi/ide-scsi.c
-===================================================================
---- a/drivers/scsi/ide-scsi.c
-+++ b/drivers/scsi/ide-scsi.c
-@@ -242,6 +242,11 @@ static void idescsi_output_buffers (ide_
- 	}
+ struct hpc_chunk {
+ 	struct hpc_dma_desc desc;
+-	u32 _padding[128/4 - 3];	/* align to biggest cache line size */
++	u32 _padding;
+ };
+
+ /* space for hpc dma descriptors */
+-#define HPC_DMA_SIZE   (4 * PAGE_SIZE)
++#define HPC_DMA_SIZE   PAGE_SIZE
+
+ /* we only need to sync the dma descriptor */
+-#define DMA_HPC_SYNC(dev, hcp, dir) \
+-	dma_cache_sync(dev, hcp, sizeof(struct hpc_dma_desc), dir)
+
+ #define DMA_DIR(d)   ((d == DATA_OUT_DIR) ? DMA_TO_DEVICE : DMA_FROM_DEVICE)
+
+@@ -73,6 +71,7 @@ void fill_hpc_entries(void *dev, struct
+ 	void *addr = cmd->SCp.ptr;
+ 	dma_addr_t physaddr;
+ 	unsigned long count;
++	struct hpc_chunk *hcpstart = hcp;
+
+ 	physaddr = dma_map_single(dev, addr, len, DMA_DIR(datainp));
+ 	cmd->SCp.dma_handle = physaddr;
+@@ -85,7 +84,6 @@ void fill_hpc_entries(void *dev, struct
+ 		count = len > 8192 ? 8192 : len;
+ 		hcp->desc.pbuf = physaddr;
+ 		hcp->desc.cntinfo = count;
+-		DMA_HPC_SYNC(dev, hcp, DMA_TO_DEVICE);
+ 		hcp++;
+ 		len -= count;
+ 		physaddr += count;
+@@ -98,7 +96,7 @@ void fill_hpc_entries(void *dev, struct
+ 	 */
+ 	hcp->desc.pbuf = 0;
+ 	hcp->desc.cntinfo = HPCDMA_EOX;
+-	DMA_HPC_SYNC(dev, hcp, DMA_TO_DEVICE);
++	dma_cache_sync(dev, hcpstart, sizeof(*hcp)*(1+hcp-hcpstart), DMA_TO_DEVICE);
  }
- 
-+static void ide_scsi_hex_dump(u8 *data, int len)
-+{
-+	print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1, data, len, 0);
-+}
-+
- static int idescsi_check_condition(ide_drive_t *drive, struct request *failed_command)
- {
- 	idescsi_scsi_t *scsi = drive_to_idescsi(drive);
-@@ -272,8 +277,7 @@ static int idescsi_check_condition(ide_d
- 	pc->scsi_cmd = ((idescsi_pc_t *) failed_command->special)->scsi_cmd;
- 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
- 		printk ("ide-scsi: %s: queue cmd = ", drive->name);
--		print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1, pc->c,
--			       6, 0);
-+		ide_scsi_hex_dump(pc->c, 6);
- 	}
- 	rq->rq_disk = scsi->disk;
- 	return ide_do_drive_cmd(drive, rq, ide_preempt);
-@@ -328,8 +332,7 @@ static int idescsi_end_request (ide_driv
- 		idescsi_pc_t *opc = (idescsi_pc_t *) rq->buffer;
- 		if (log) {
- 			printk ("ide-scsi: %s: wrap up check %lu, rst = ", drive->name, 
-opc->scsi_cmd->serial_number);
--			print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1,
--				       pc->buffer, 16, 0);
-+			ide_scsi_hex_dump(pc->buffer, 16);
- 		}
- 		memcpy((void *) opc->scsi_cmd->sense_buffer, pc->buffer, SCSI_SENSE_BUFFERSIZE);
- 		kfree(pc->buffer);
-@@ -808,12 +811,10 @@ static int idescsi_queue (struct scsi_cm
- 
- 	if (test_bit(IDESCSI_LOG_CMD, &scsi->log)) {
- 		printk ("ide-scsi: %s: que %lu, cmd = ", drive->name, cmd->serial_number);
--		print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1,
--			       cmd->cmnd, cmd->cmd_len, 0);
-+		ide_scsi_hex_dump(cmd->cmnd, cmd->cmd_len);
- 		if (memcmp(pc->c, cmd->cmnd, cmd->cmd_len)) {
- 			printk ("ide-scsi: %s: que %lu, tsl = ", drive->name, cmd->serial_number);
--			print_hex_dump(KERN_CONT, "", DUMP_PREFIX_NONE, 16, 1,
--				       pc->c, 12, 0);
-+			ide_scsi_hex_dump(pc->c, 12);
- 		}
- 	}
- 
+
+ static int dma_setup(struct scsi_cmnd *cmd, int datainp)
+@@ -181,18 +179,17 @@ static inline void init_hpc_chain(void *
+ 	unsigned long start, end;
+
+ 	start = (unsigned long) hcp;
+-	end = start + (4 * PAGE_SIZE);
++	end = start + HPC_DMA_SIZE;
+ 	while (start < end) {
+ 		hcp->desc.pnext = (u32) (dma + sizeof(struct hpc_chunk));
+ 		hcp->desc.cntinfo = HPCDMA_EOX;
+-		DMA_HPC_SYNC(dev, hcp, DMA_TO_DEVICE);
+ 		hcp++;
+ 		dma += sizeof(struct hpc_chunk);
+ 		start += sizeof(struct hpc_chunk);
+ 	};
+ 	hcp--;
+ 	hcp->desc.pnext = hdata->dma;
+-	DMA_HPC_SYNC(dev, hcp, DMA_TO_DEVICE);
++	dma_cache_sync(dev, hdata->cpu, HPC_DMA_SIZE, DMA_TO_DEVICE);
+ }
+
+ static int sgiwd93_bus_reset(struct scsi_cmnd *cmd)
