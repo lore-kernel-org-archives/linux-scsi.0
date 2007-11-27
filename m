@@ -1,54 +1,34 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] SGIWD93: use cached memory access to make driver work
- on IP28
-Date: Tue, 27 Nov 2007 09:28:14 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0711270927370.22167@anakin>
-References: <20071126223921.A566CC2B26@solo.franken.de>
+From: tsbogend@alpha.franken.de (Thomas Bogendoerfer)
+Subject: Re: [PATCH] SGIWD93: use cached memory access to make driver work on IP28
+Date: Tue, 27 Nov 2007 10:01:39 +0100
+Message-ID: <20071127090139.GA6933@alpha.franken.de>
+References: <20071126223921.A566CC2B26@solo.franken.de> <Pine.LNX.4.64.0711270927370.22167@anakin>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hoboe2bl1.telenet-ops.be ([195.130.137.73]:36492 "EHLO
-	hoboe2bl1.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751070AbXK0I2R (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2007 03:28:17 -0500
-In-Reply-To: <20071126223921.A566CC2B26@solo.franken.de>
+Received: from elvis.franken.de ([193.175.24.41]:41953 "EHLO elvis.franken.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751559AbXK0JNN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Nov 2007 04:13:13 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.64.0711270927370.22167@anakin>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+To: Geert Uytterhoeven <geert@linux-m68k.org>
 Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
 
-On Mon, 26 Nov 2007, Thomas Bogendoerfer wrote:
-> --- a/drivers/scsi/sgiwd93.c
-> +++ b/drivers/scsi/sgiwd93.c
-> @@ -33,19 +33,27 @@
->  
->  struct ip22_hostdata {
->  	struct WD33C93_hostdata wh;
-> -	struct hpc_data {
-> -		dma_addr_t      dma;
-> -		void		*cpu;
-> -	} hd;
-> +	dma_addr_t dma;
-> +	void *cpu;
-> +	void *dev;
->  };
->  
->  #define host_to_hostdata(host) ((struct ip22_hostdata *)((host)->hostdata))
->  
->  struct hpc_chunk {
->  	struct hpc_dma_desc desc;
-> -	u32 _padding;	/* align to quadword boundary */
-> +	u32 _padding[128/4 - 3];	/* align to biggest cache line size */
-                     ^^^^^^^^^
-(128 - sizeof(struct hpc_dma_desc))/4?
+On Tue, Nov 27, 2007 at 09:28:14AM +0100, Geert Uytterhoeven wrote:
+> >  struct hpc_chunk {
+> >  	struct hpc_dma_desc desc;
+> > -	u32 _padding;	/* align to quadword boundary */
+> > +	u32 _padding[128/4 - 3];	/* align to biggest cache line size */
+>                      ^^^^^^^^^
+> (128 - sizeof(struct hpc_dma_desc))/4?
 
-Gr{oetje,eeting}s,
+yes, that's safer. Thank you.
 
-						Geert
+Thomas.
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-							    -- Linus Torvalds
+-- 
+Crap can work. Given enough thrust pigs will fly, but it's not necessary a
+good idea.                                                [ RFC1925, 2.3 ]
