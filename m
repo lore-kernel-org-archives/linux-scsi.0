@@ -1,107 +1,99 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [Bugme-new] [Bug 9462] New: Adaptec AHA-7850 with MOD drive:
- Hard lockup with new Adaptec driver
-Date: Tue, 27 Nov 2007 10:26:25 -0800
-Message-ID: <20071127102625.afdd49e8.akpm@linux-foundation.org>
-References: <bug-9462-10286@http.bugzilla.kernel.org/>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: [ANNOUNCE] Open-FCoE - Fibre Channel over Ethernet Project
+Date: Tue, 27 Nov 2007 10:49:11 -0800
+Message-ID: <10A7D0016239E24092DEF05CCC582E43028A636B@fmsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:34297 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755919AbXK0S0e (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 27 Nov 2007 13:26:34 -0500
-In-Reply-To: <bug-9462-10286@http.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <netdev-owner@vger.kernel.org>
+Content-class: urn:content-classes:message
+Sender: netdev-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>
+Cc: devel@open-fcoe.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Rob Love <robert.w.love@linux.intel.com>, "Love, Robert W" <robert.w.love@intel.com>, "Leech, Christopher" <christopher.leech@intel.com>, "Zou, Yi" <yi.zou@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>, james.bottomley@hansenpartnership.com, davem@davemloft.net, jeff@garzik.org, "Kok, Auke-jan H" <auke-jan.h.kok@intel.com>, "Ronciak, John" <john.ronciak@intel.com>, "Van De Ven, Arjan" <arjan.van.de.ven@intel.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bugme-daemon@bugzilla.kernel.org, wagner@tik.ee.ethz.ch
+
+Hello Linux Community,
+
+    I'd like to introduce a new Open Source project named Open-FCoE.
+FCoE is the acronym for Fibre Channel over Ethernet, which is the
+encapsulation of Fibre Channel frames within Ethernet packets. FCoE will
+allow systems with an Ethernet adapter and a Fibre Channel Forwarder to
+login to a Fibre Channel fabric (the FCF is a "gateway" that bridges the
+LAN and the SAN). That fabric login was previously reserved exclusively
+for Fibre Channel HBAs. This technology reduces complexity in the data
+center by aiding network convergence. It is targeted for 10Gps Ethernet
+NICs but will work on any Ethernet NIC supporting pause frames. Our code
+base provides a Fibre Channel protocol processing module as well as an
+Ethernet based transport module. The Open-FC module acts as a LLD for
+SCSI and the Open-FCoE transport uses net_device to send and receive
+packets.
+
+    We've set up a "web home" for this project at www.Open-FCoE.org. Its
+purpose is to support development and users; it's very light on content
+right now. 
+
+    We have a lot of code and it will take time for us to harden and
+improve upon it. We're still early in development but are making this
+code available as soon as possible so that our project's development can
+truly be open.
 
 
-(switched to email - please respond via emailed reply-to-all, not via the
-bugzilla web interface)
+This is our code's organization as it is today.
 
-On Tue, 27 Nov 2007 07:11:02 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
+1) git://open-fcoe.org/openfc/open-fcoe-upstream.git
+      
+      This repository is based on the SCSI 2.6.24 bug fix tree. Two
+patches are applied to add our code and resolve any compatibility
+problems between our code and 2.6.24.
 
-> http://bugzilla.kernel.org/show_bug.cgi?id=9462
-> 
->            Summary: Adaptec AHA-7850 with MOD drive: Hard lockup with new
->                     Adaptec driver
->            Product: IO/Storage
->            Version: 2.5
->      KernelVersion: 2.6.22.14
->           Platform: All
->         OS/Version: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: high
->           Priority: P1
->          Component: SCSI
->         AssignedTo: io_scsi@kernel-bugs.osdl.org
->         ReportedBy: wagner@tik.ee.ethz.ch
-> 
-> 
-> Most recent kernel where this bug did not occur: Works with the old Adaptec
-> driver. Had lockups with 2.6.18.8 as well, with the new driver. 
-> 
-> Distribution: Debian etch
-> 
-> Hardware Environment: Epox 8kta+, Athlon 800 MHz, 768MB RAM
-> 
-> Output form lspci:
-> 00:00.0 Host bridge: VIA Technologies, Inc. VT8363/8365 [KT133/KM133] (rev 02)
-> 00:01.0 PCI bridge: VIA Technologies, Inc. VT8363/8365 [KT133/KM133 AGP]
-> 00:07.0 ISA bridge: VIA Technologies, Inc. VT82C686 [Apollo Super South] (rev
-> 22)
-> 00:07.1 IDE interface: VIA Technologies, Inc.
-> VT82C586A/B/VT82C686/A/B/VT823x/A/C PIPC Bus Master IDE (rev 10)
-> 00:07.2 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-> Controller (rev 10)
-> 00:07.3 USB Controller: VIA Technologies, Inc. VT82xxxxx UHCI USB 1.1
-> Controller (rev 10)
-> 00:07.4 Bridge: VIA Technologies, Inc. VT82C686 [Apollo Super ACPI] (rev 30)
-> 00:09.0 Ethernet controller: D-Link System Inc DL2000-based Gigabit Ethernet
-> (rev 0c)
-> 00:0a.0 USB Controller: NEC Corporation USB (rev 43)
-> 00:0a.1 USB Controller: NEC Corporation USB (rev 43)
-> 00:0a.2 USB Controller: NEC Corporation USB 2.0 (rev 04)
-> 00:0b.0 Mass storage controller: Promise Technology, Inc. PDC20518/PDC40518
-> (SATAII 150 TX4) (rev 02)
-> 00:0c.0 SCSI storage controller: Adaptec AHA-7850 (rev 03)
-> 00:0d.0 Ethernet controller: Realtek Semiconductor Co., Ltd.
-> RTL-8139/8139C/8139C+ (rev 10)
-> 01:00.0 VGA compatible controller: nVidia Corporation NV11 [GeForce2 MX/MX 400]
-> (rev a1)
-> 
-> 
-> Software Environment: Tried cp, dd_rescue and cat for copy. No difference.
-> 
-> Problem Description: When writing to the filesystem on the MOD, the computer
-> locks completely as far as I can tell, no responses to ping, no log-entries
-> (this is a headless server) MOD not writing and only a hard reset helps. The
-> target filesystem had (after recovery with e2fsck) 22MB on it in one try and
-> 350MB in another one. I guess there is some race condition or other randomized
-> process at work. MOD size is 600MB.
-> 
-> 
-> 
-> Steps to reproduce:
-> Insert MOD, mount it, write to it, see lockup happen.
-> Observed with new dribver in 2.6.18.8 and 2.6.22.14. Also happens with TCQ
-> disabled.
-> 
-> I should add that MODs are slow. The writing process blocks for 10-20 seconds
-> frequently for disk flushes. This is normal and expected. 
-> 
-> Maybe a warning should be added to the new drivr and the old one should be kept
-> for the time being.
-> 
-> If there are some tests I can run for you, please let me know.
-> 
+2) git://open-fcoe.org/openfc/open-fcoe.git
 
-I guess this doesn't really count as a regression, as the new driver has
-never worked.  I assume that the old driver continues to work OK and that
-there is no plan to remove it?
+       This repository contains our user space tools. It also contains
+an out-of-kernel Makefile that allows a user to build the kernel modules
+within this layout. Pulling our kernel code from open-fcoe-upstream into
+this code base and then tarring it up provides an easily distributable
+package.
 
+3) git://open-fcoe.org/openfc/open-fcoe-misc.git
+
+       This repository contains our SW target code. The SW target allows
+someone to connect two systems back-to-back and run FCoE traffic from
+one to another. Currently our target uses SCST which is not upstream.
+This is causing us a problem because the target shares code with the
+initiator.  Since the initiator is building with 2.6.24 and SCST isn't
+we're in a bind.  A priority of ours will be to get the target back to a
+better shape as it's our primary development tool.
+
+
+We also have a lot of things to fix. Here are our initial concerns,
+
+1) Kernel/Userspace interaction needs direction. Currently we're using
+ioctls, which are no longer desirable. We're planning to change the
+implementation to netlink. Also, some non-data path code will probably
+need to move to user space. Open-iSCSI has spent a lot of time on its
+kernel to user interaction; we will likely borrow from that model as
+much as we can.
+
+2) SW Target and its integration with the kernel.
+
+3) Reduction of code, removal of unnecessary abstraction.
+
+4) Non-GPL code. We're currently using a BSD queue.h and some CRC code
+from BSD as well. We need to convert this code to use kernel code.
+
+5) Documentation. Our basic documentation needs some help so people can
+use the initiator and target easily.
+
+
+We have a mailing list established on our website, but believe that the
+community will want us to discuss this technology on the SCSI mailing
+list. That is where we plan to start discussing this code.
+
+We're looking forward to building a strong community around this
+technology and code base. We're eager to start coding and improving our
+code with any other community contributors!
+
+
+Robert Love
+Open-FCoE.org
