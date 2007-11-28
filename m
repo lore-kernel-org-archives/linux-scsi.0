@@ -1,43 +1,214 @@
-From: Chris Leech <christopher.leech@intel.com>
-Subject: Re: [ANNOUNCE] Open-FCoE - Fibre Channel over Ethernet Project
-Date: Wed, 28 Nov 2007 09:53:52 -0800
-Message-ID: <474DAB30.20703@intel.com>
-References: <10A7D0016239E24092DEF05CCC582E43028A636B@fmsmsx411.amr.corp.intel.com> <20071128074426.GA30468@infradead.org>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB cmds with sense info
+Date: Wed, 28 Nov 2007 12:08:37 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501D33B5B@NAMAIL1.ad.lsil.com>
+References: <20071127153252.GC3230@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20071128074426.GA30468@infradead.org>
-Sender: netdev-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Love, Robert W" <robert.w.love@intel.com>, linux-scsi@vger.kernel.org, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>, devel@open-fcoe.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Rob Love <robert.w.love@linux.intel.com>, "Zou, Yi" <yi.zou@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>, james.bottomley@hansenpartnership.com, davem@davemloft.net, jeff@garzik.org, "Kok, Auke-jan H" <auke-jan.h.kok@intel.com>, "Ronciak, John" <john.ronciak@intel.com>, "Van De Ven, Arjan" <arjan.van.de.ven@intel.com>, Mike Christie <michaelc@cs.wisc.edu>
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:54476 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755075AbXK1TJD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2007 14:09:03 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20071127153252.GC3230@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-Christoph Hellwig wrote:
-> I just did a very quick glance over the tree.  Some extremly highlevel
-> comments to start with before actually starting the source review:
+Matthew,
 
-Thanks for taking a look Christoph
+Yes, as I mentioned, our applications are built in 32-bit environment
+(except for ia64).
+We may see a different behavior if we build it in 64-bit for x86-64. 
 
->  - why do you need your own libcrc?  lib/crc32.c has a crc32_le
+Regards.
 
-We shouldn't, but we may want to add a CRC and copy routine.
+Bo Yang
 
->  - libsa should go.  Much of it is just wrappers of kernel functions
->    that should be used directly.  Other like that hash, even or state
->    helpers might either be opencoded in the caller or made completely
->    generic in lib/.  Probably the former but we'll have to see.
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx] 
+Sent: Tuesday, November 27, 2007 10:33 AM
+To: Yang, Bo
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
+akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
+Subject: Re: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
+cmds with sense info
 
-Yes, and along with it the last use of the BSD TAILQ macros.  Just 
-before Rob set up the open repos I finished converting most of those to 
-list_head, the only one left is in the sa_event mechanism.  Rather than 
-convert it I'd like to replace the use of sa_event with notifier call 
-chains.  I just need to finish auditing the use to make sure the 
-differences won't cause unexpected problems.
+On Tue, Nov 27, 2007 at 08:19:09AM -0700, Yang, Bo wrote:
+> Matthew,
+> 
+> Thanks for your review.
+> 
+> We have a 32 bit application(s) (megaraid utility) that is used in 
+> both
+> x86 and x86_64.
+> For ia64, the application is built in ia64 environment.
 
-After than and unwrapping kernel functions, I think the only thing left 
-before completly removing libsa is to open code the state machines.
+Are you saying the application is built 32-bit for x86-64?
+Is it true that, if this application were built 64-bit for x86-64, you
+would have the same situation as with ia64?
 
-Similarly I think net_types.h need to go.
+> The sense_ptr picked up from the ioc->frame.raw is a 32-bit value from
 
-- Chris
+> the application. When we make it "unsigned long*" it picks up a 64-bit
+
+> value & the copy_to_user fails. Without this fix the issue is seen in
+> x86_64 kernels. But for ia64 it is an unsigned long * value (8 bytes) 
+> and so we need a compile time flag.
+>  
+> Regards,
+> 
+> Bo Yang
+> 
+> -----Original Message-----
+> From: Matthew Wilcox [mailto:matthew@wil.cx]
+> Sent: Tuesday, November 20, 2007 3:42 PM
+> To: Yang, Bo
+> Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com; 
+> akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, 
+> Neela
+> Subject: Re: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of 
+> DCDB cmds with sense info
+> 
+> On Wed, Nov 21, 2007 at 08:40:56AM +0000, bo yang wrote:
+> > Sense buffer ptr data type in the ioctl path is reverted back to u32
+
+> > *
+> 
+> > for x86 and x86_64 as in previous versions of driver. For IA64 it 
+> > will
+> 
+> > be unsigned long *. Compile time flag added for ia64 for this.
+> 
+> This changelog tells us what you're doing, but not why you're doing
+it.
+> Why is it that ia64 is different from x86 and x86_64?  What should 
+> other architectures be doing?  This patch really doesn't make any 
+> sense to me at all; it should be doing the exact same thing on all 
+> three architectures.
+> 
+> > Signed-off-by: Bo Yang <bo.yang@lsi.com>
+> > 
+> > ---
+> > Documentation/scsi/ChangeLog.megaraid_sas |   15 +++++++++++++++
+> > drivers/scsi/megaraid/megaraid_sas.c      |   14 ++++++++++----
+> > drivers/scsi/megaraid/megaraid_sas.h      |    6 +++---
+> >  3 files changed, 28 insertions(+), 7 deletions(-)
+> > 
+> > diff -rupN 
+> > linux-2.6.22_orig/Documentation/scsi/ChangeLog.megaraid_sas
+> linux-2.6.22_new/Documentation/scsi/ChangeLog.megaraid_sas
+> > --- linux-2.6.22_orig/Documentation/scsi/ChangeLog.megaraid_sas
+> 2007-11-20 17:50:13.000000000 -0500
+> > +++ linux-2.6.22_new/Documentation/scsi/ChangeLog.megaraid_sas
+> 2007-11-20 21:37:16.000000000 -0500
+> > @@ -1,3 +1,18 @@
+> > +1 Release Date    : Thur. Nov. 19 16:30:43 PST 2007 -
+> > +			(emaild-id:megaraidlinux@lsi.com)
+> > +			Sumant Patro
+> > +			Bo Yang
+> > +
+> > +2 Current Version : 00.00.03.17-RC1
+> > +3 Older Version   : 00.00.03.16
+> > +
+> > +1. Fix random failure of DCDB cmds with sense info.
+> > +
+> > +Fix: 	sense buffer ptr data type in the ioctl path is reverted
+> back
+> > +	to u32 * for x86, x86_64 as in previous versions of driver.
+> > +	For IA64 it will be unsigned long *. Compile time flag added
+> > +	for ia64 for this.
+> > +
+> >  1 Release Date    : Thur. Nov. 07 16:30:43 PST 2007 -
+> >  			(emaild-id:megaraidlinux@lsi.com)
+> >  			Sumant Patro
+> > diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c
+> linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
+> > --- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.c
+> 2007-11-20 17:50:13.000000000 -0500
+> > +++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.c
+> 2007-11-20 17:50:13.000000000 -0500
+> > @@ -10,7 +10,7 @@
+> >   *	   2 of the License, or (at your option) any later version.
+> >   *
+> >   * FILE		: megaraid_sas.c
+> > - * Version	: v00.00.03.16-rc1
+> > + * Version	: v00.00.03.17-rc1
+> >   *
+> >   * Authors:
+> >   *	(email-id : megaraidlinux@lsi.com)
+> > @@ -3020,10 +3020,16 @@ megasas_mgmt_fw_ioctl(struct megasas_ins
+> >  		 * sense buffer address
+> >  		 */
+> >  		sense_buff = (unsigned long *) ((unsigned
+> long)ioc->frame.raw +
+> > -
+> ioc->sense_off);
+> > -
+> > -		if (copy_to_user((void __user *)(unsigned
+> long)(*sense_buff),
+> > +					ioc->sense_off);
+> > +		sense_ptr = (u32 *) ((unsigned long)ioc->frame.raw +
+> > +					ioc->sense_off);
+> > +#if defined(__ia64__)
+> > +		if (copy_to_user((void __user *)((unsigned
+> long)(*sense_buff)),
+> > +				sense, ioc->sense_len)) {
+> > +#else
+> > +		if (copy_to_user((void __user *)((unsigned
+> long)(*sense_ptr)),
+> >  				sense, ioc->sense_len)) {
+> > +#endif
+> >  			printk(KERN_ERR "megasas: Failed to copy out to
+> user "
+> >  					"sense data\n");
+> >  			error = -EFAULT;
+> > diff -rupN linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h
+> linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
+> > --- linux-2.6.22_orig/drivers/scsi/megaraid/megaraid_sas.h
+> 2007-11-20 17:50:13.000000000 -0500
+> > +++ linux-2.6.22_new/drivers/scsi/megaraid/megaraid_sas.h
+> 2007-11-20 17:50:13.000000000 -0500
+> > @@ -18,9 +18,9 @@
+> >  /*
+> >   * MegaRAID SAS Driver meta data
+> >   */
+> > -#define MEGASAS_VERSION
+> "00.00.03.16-rc1"
+> > -#define MEGASAS_RELDATE				"Nov. 07, 2007"
+> > -#define MEGASAS_EXT_VERSION			"Thu. Nov. 07
+10:09:32
+> PDT 2007"
+> > +#define MEGASAS_VERSION
+> "00.00.03.17-rc1"
+> > +#define MEGASAS_RELDATE				"Nov. 19, 2007"
+> > +#define MEGASAS_EXT_VERSION			"Mon. Nov. 19
+10:09:32
+> PDT 2007"
+> >  
+> >  /*
+> >   * Device IDs
+> > 
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe
+linux-scsi" 
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+
+> > info at  http://vger.kernel.org/majordomo-info.html
+> 
+> --
+> Intel are signing my paycheques ... these opinions are still mine 
+> "Bill, look, we understand that you're interested in selling us this 
+> operating system, but compare it to ours.  We can't possibly take such
+
+> a retrograde step."
+
+--
+Intel are signing my paycheques ... these opinions are still mine "Bill,
+look, we understand that you're interested in selling us this operating
+system, but compare it to ours.  We can't possibly take such a
+retrograde step."
