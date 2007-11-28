@@ -1,42 +1,35 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: 2.6.24-rc3-mm2: Result: hostbyte=0x01
- driverbyte=0x00\nend_request: I/O error
-Date: Wed, 28 Nov 2007 22:12:38 +0000
-Message-ID: <20071128221238.4a5ee8bb@the-village.bc.nu>
-References: <20071128034140.648383f0.akpm@linux-foundation.org>
-	<20071128200130.GA13361@martell.zuzino.mipt.ru>
-	<20071128134036.417b3def.akpm@linux-foundation.org>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: 2.6.24-rc3-mm2: Result: hostbyte=0x01 driverbyte=0x00\nend_request: I/O error
+Date: Wed, 28 Nov 2007 16:14:21 -0700
+Message-ID: <20071128231421.GB2584@parisc-linux.org>
+References: <20071128034140.648383f0.akpm@linux-foundation.org> <20071128200130.GA13361@martell.zuzino.mipt.ru> <20071128134036.417b3def.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:60143 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757621AbXK1WQI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2007 17:16:08 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:39094 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756316AbXK1XOW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2007 18:14:22 -0500
+Content-Disposition: inline
 In-Reply-To: <20071128134036.417b3def.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
 Cc: Alexey Dobriyan <adobriyan@gmail.com>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> > [  225.378426] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.378659] end_request: I/O error, dev sdb, sector 141295703
-> > [  225.390133] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.391988] end_request: I/O error, dev sdb, sector 141295703
-> > [  225.392463] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.392625] end_request: I/O error, dev sdb, sector 141295703
-> > [  225.392999] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.393161] end_request: I/O error, dev sdb, sector 141295703
-> > [  225.393571] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.393731] end_request: I/O error, dev sdb, sector 141295703
-> > [  225.394382] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.394544] end_request: I/O error, dev sdb, sector 141295703
-> > [  225.395247] sd 2:0:1:0: [sdb] Result: hostbyte=0x01 driverbyte=0x00
-> > [  225.395412] end_request: I/O error, dev sdb, sector 141295703
+On Wed, Nov 28, 2007 at 01:40:36PM -0800, Andrew Morton wrote:
+> On Wed, 28 Nov 2007 23:01:31 +0300
+> Alexey Dobriyan <adobriyan@gmail.com> wrote:
 > 
-> I don't know whether this failure was a scsi thing or an ata thing?
+> > Reliably spams dmesg with end_request() horrors. This happens when git
+> > starts checking out linux tree to fresh ext2 partition. Disk is several
+> > month old and there were no prolems with, say, 2.6.24-rc3:
 
-The ATA layer would print diagnostics if it failed the command so I'm a
-bit baffled by the report. It looks like the SCSI mid layer rejected it
-before we even got it ?
+Could you try reverting 6f5391c283d7fdcf24bf40786ea79061919d1e1d and see
+if the problem still exists?
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
