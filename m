@@ -1,45 +1,43 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [PATCH] SGIWD93: use cached memory access to make driver work
-	on IP28
-Date: Wed, 28 Nov 2007 09:50:09 +0000
-Message-ID: <20071128095009.GA11063@linux-mips.org>
-References: <20071126223921.A566CC2B26@solo.franken.de>
+From: Chris Leech <christopher.leech@intel.com>
+Subject: Re: [ANNOUNCE] Open-FCoE - Fibre Channel over Ethernet Project
+Date: Wed, 28 Nov 2007 09:53:52 -0800
+Message-ID: <474DAB30.20703@intel.com>
+References: <10A7D0016239E24092DEF05CCC582E43028A636B@fmsmsx411.amr.corp.intel.com> <20071128074426.GA30468@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([194.74.144.162]:59146 "EHLO
-	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755041AbXK1O1i (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2007 09:27:38 -0500
-Received: from localhost.localdomain ([127.0.0.1]:53228 "EHLO
-	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
-	id S20030845AbXK1O1h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Nov 2007 14:27:37 +0000
-Content-Disposition: inline
-In-Reply-To: <20071126223921.A566CC2B26@solo.franken.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20071128074426.GA30468@infradead.org>
+Sender: netdev-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Love, Robert W" <robert.w.love@intel.com>, linux-scsi@vger.kernel.org, "Waskiewicz Jr, Peter P" <peter.p.waskiewicz.jr@intel.com>, devel@open-fcoe.org, linux-kernel@vger.kernel.org, netdev@vger.kernel.org, Rob Love <robert.w.love@linux.intel.com>, "Zou, Yi" <yi.zou@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>, james.bottomley@hansenpartnership.com, davem@davemloft.net, jeff@garzik.org, "Kok, Auke-jan H" <auke-jan.h.kok@intel.com>, "Ronciak, John" <john.ronciak@intel.com>, "Van De Ven, Arjan" <arjan.van.de.ven@intel.com>, Mike Christie <michaelc@cs.wisc.edu>
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, James.Bottomley@HansenPartnership.com
 
-On Mon, Nov 26, 2007 at 06:41:15PM +0100, Thomas Bogendoerfer wrote:
+Christoph Hellwig wrote:
+> I just did a very quick glance over the tree.  Some extremly highlevel
+> comments to start with before actually starting the source review:
 
-> Following patch is 2.6.25 material needed to get SGI IP28 machines
-> supported.
-> 
-> Thomas.
-> 
-> SGI IP28 machines would need special treatment (enable adding addtional
-> wait states) when accessing memory uncached. To avoid this pain I
-> changed the driver to use only cached access to memory.
-> 
-> Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Thanks for taking a look Christoph
 
-Same comment as for SGISEEQ: IP28 is clearly a maximum weirdo beast.
-Technically the patch looks fine it's just a few stilistic issues such as
-there no reason for DMA_SYNC_DESC_CPU and DMA_SYNC_DESC_DEV being macros
-so why not using inlines.
+>  - why do you need your own libcrc?  lib/crc32.c has a crc32_le
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+We shouldn't, but we may want to add a CRC and copy routine.
 
-  Ralf
+>  - libsa should go.  Much of it is just wrappers of kernel functions
+>    that should be used directly.  Other like that hash, even or state
+>    helpers might either be opencoded in the caller or made completely
+>    generic in lib/.  Probably the former but we'll have to see.
+
+Yes, and along with it the last use of the BSD TAILQ macros.  Just 
+before Rob set up the open repos I finished converting most of those to 
+list_head, the only one left is in the sa_event mechanism.  Rather than 
+convert it I'd like to replace the use of sa_event with notifier call 
+chains.  I just need to finish auditing the use to make sure the 
+differences won't cause unexpected problems.
+
+After than and unwrapping kernel functions, I think the only thing left 
+before completly removing libsa is to open code the state machines.
+
+Similarly I think net_types.h need to go.
+
+- Chris
