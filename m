@@ -1,53 +1,61 @@
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: RE: Open-FCoE on linux-scsi
-Date: Tue, 27 Nov 2007 16:29:15 -0800
-Message-ID: <10A7D0016239E24092DEF05CCC582E43028DF9B1@fmsmsx411.amr.corp.intel.com>
-References: <10A7D0016239E24092DEF05CCC582E43028A671C@fmsmsx411.amr.corp.intel.com> <20071128091948H.fujita.tomonori@lab.ntt.co.jp>
+From: "Anil Veerabhadrappa" <anilgv@broadcom.com>
+Subject: Re: [PATCH v3 2/2][BNX2]: Add iSCSI support to BNX2 devices.
+Date: Tue, 27 Nov 2007 16:44:51 -0800
+Message-ID: <1196210691.5980.20.camel@dhcp-10-13-106-220.broadcom.com>
+References: <1188599815.5176.12.camel@dell>
+ <46DEF69D.3090901@redhat.com>
+ <1189027622.19638.42.camel@dhcp-10-13-106-205.broadcom.com>
+ <46E1CF4B.9080407@cs.wisc.edu>
+ <1195670296.8767.9.camel@dhcp-10-13-106-205.broadcom.com>
+ <474B99E8.8070402@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:18024 "EHLO mga03.intel.com"
+Received: from mms3.broadcom.com ([216.31.210.19]:3473 "EHLO MMS3.broadcom.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753969AbXK1A3S convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Nov 2007 19:29:18 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20071128091948H.fujita.tomonori@lab.ntt.co.jp>
+	id S1758185AbXK1ArA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 27 Nov 2007 19:47:00 -0500
+In-Reply-To: <474B99E8.8070402@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linux-scsi@vger.kernel.org, "Zou, Yi" <yi.zou@intel.com>, "Leech, Christopher" <christopher.leech@intel.com>, "Dev, Vasu" <vasu.dev@intel.com>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <mchristi@redhat.com>, Michael Chan <mchan@broadcom.com>, davem@davemloft.net, netdev@vger.kernel.org, open-iscsi@googlegroups.com, talm@broadcom.com, lusinsky@broadcom.com, uri@broadcom.com, SCSI Mailing List <linux-scsi@vger.kernel.org>
 
->On Tue, 27 Nov 2007 15:40:05 -0800
->"Love, Robert W" <robert.w.love@intel.com> wrote:
->
->> Hello SCSI mailing list,
->>
->> 	I'd just like to introduce ourselves a bit before we get
->> started. My name is Robert Love and I'm joined by a team of engineers
->> including Vasu Dev, Chris Leech and Yi Zou. We are committed to
->> maintaining the Open-FCoE project. Aside from Intel engineers we
-expect
->> engineers from other companies to contribute to Open-FCoE.
->>
->> 	Our goal is to get the initiator code upstream. We have a lot of
->> working code but recognize that we're early in this project's
->> development. We're looking for direction from you, the experts, on
-what
->> this project should grow into.
->
->A quick start guide to setup initiator and target and connect them is
->available?
 
-Yeah, there's a page in our wiki. It's mentioned the first post on
-www.Open-FCoE.org. Here's a direct link-
-http://www.open-fcoe.org/openfc/wiki/index.php/Quickstart. Unfortunately
-it's a bit rocky to get everything working even with the quickstart, I'm
-working on improving that right now.
+> >> Which ones were they exactly? I think JamesB wanted only common 
+> >> transport values in the transport class. If it is driver specific then 
+> >> it should go on the host or target or device with the scsi_host_template 
+> >> attrs.
+> >>
+> > 
+> > It's a chicken & egg issue to put "port mapper" sysfs entry in scsi host
+> > attributes. Application won't see sysfs unless initiator creates an
+> 
+> Sorry for the late response. I was on vacation.
+> 
+> That is only with how you coded it today. I asked you to do something 
+> like qla4xxx where the session and host are not so closely bound.
 
->-
->To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-in
->the body of a message to majordomo@vger.kernel.org
->More majordomo info at  http://vger.kernel.org/majordomo-info.html
+bnx2i is still using scsi host per iscsi session model, we plan to
+migrate to scsi host per device model pretty soon. Previously you
+indicated that you are working on this port, can you please share the
+code? We will build on your work and bring this to closure.
+
+
+> 
+> > iSCSI session and driver can't create an iSCSI session without a tcp
+> 
+> That is not right with how things are today even. The iscsi_session 
+> struct can be created before the tcp connection. This was done because 
+> we thought we were going to have to use only sysfs for all setup and 
+> management (we ended up netlink and sysfs though).
+
+You are right, software is flexible enough to allow creation of
+session/connection and endpoint independently but so far user daemon
+creates TCP endpoint before iSCSI session and bind them all together.
+Any changes to this scheme will not be compatible with existing
+distributions
+
+
+
