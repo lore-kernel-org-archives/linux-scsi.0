@@ -1,155 +1,122 @@
 From: "Patro, Sumant" <Sumant.Patro@lsi.com>
-Subject: RE: [patch 12/23] MegaRAID driver management char device moved to misc
-Date: Wed, 28 Nov 2007 14:45:01 -0700
-Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229D9040F@NAMAIL2.ad.lsil.com>
-References: <200711212312.lALNCOCj014139@imap1.linux-foundation.org>
+Subject: RE: [patch 23/23] Dell CERC support for megaraid_mbox
+Date: Wed, 28 Nov 2007 14:57:55 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229D90414@NAMAIL2.ad.lsil.com>
+References: <200711212312.lALNCZWD014192@imap1.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:35005 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:35876 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757246AbXK1VqS convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2007 16:46:18 -0500
+	id S1755693AbXK1V6S convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Nov 2007 16:58:18 -0500
 Content-class: urn:content-classes:message
-In-Reply-To: <200711212312.lALNCOCj014139@imap1.linux-foundation.org>
+In-Reply-To: <200711212312.lALNCZWD014192@imap1.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org, James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, thomas@horsten.com, "Kolli, Neela" <Neela.Kolli@lsi.com>, Seokmann.Ju@lsil.com, thomas.horsten@gmail.com
+To: akpm@linux-foundation.org, hare@suse.de
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, "Kolli, Neela" <Neela.Kolli@lsi.com>, "Yang, Bo" <Bo.Yang@lsi.com>
 
-ACK.
+Hannes,
+	
+	Thanks for the patch and the details on the issue.
+	With this patch we will be blocking a feature that is now being
+used by the users with the legacy driver. The applications may still
+allow random delete and that could create more issue if we just block
+it/change the required behavior from the driver. As now we know the
+possible reason on the issue, I will see if I can come up with a
+implementation that will allow the random delete feature and still make
+the LDs available.
 
-Thanks Thomas.
+	So, for now I don't want this patch to be added. Will submit a
+separate patch to address the issue.
 
 Regards,
 
-Sumant 
+Sumant
 
 -----Original Message-----
-From: linux-scsi-owner@vger.kernel.org
-[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of
-akpm@linux-foundation.org
-Sent: Wednesday, November 21, 2007 3:12 PM
+From: akpm@linux-foundation.org [mailto:akpm@linux-foundation.org] 
+Sent: Wednesday, November 21, 2007 3:13 PM
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org;
-thomas@horsten.com; Kolli, Neela; Seokmann.Ju@lsil.com;
-thomas.horsten@gmail.com
-Subject: [patch 12/23] MegaRAID driver management char device moved to
-misc
+Cc: linux-scsi@vger.kernel.org; akpm@linux-foundation.org; hare@suse.de;
+James.Bottomley@steeleye.com; Patro, Sumant
+Subject: [patch 23/23] Dell CERC support for megaraid_mbox
 
-From: Thomas Horsten <thomas@horsten.com>
+From: Hannes Reinecke <hare@suse.de>
 
-The MegaRAID driver's common management module (megaraid_mm.c) creates a
-char device used by the management tool "megarc" from LSI Logic (and
-possibly other management tools).
+Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
+compatible with the legacy megaraid driver.  The legacy handling shifted
+the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
+megaraid_mbox shifts the target ID always if random deletion is
+supported. 
+The resulted in megaraid_mbox sending an INQUIRY to the wrong channel,
+and not finding any devices, obviously.
 
-In 2.6 with udev, this device doesn't get created because it is not
-registered in sysfs.
+So we disable the random deletion support if the offending firmware is
+found.
 
-I first fixed this by registering a class "megaraid_mm", but realized
-that this should probably be moved to misc devices, instead of taking up
-a char major.  This is because only 1 device is used, even if there are
-multiple adapters - the minor is never used (the adapter info is in the
-ioctl block sent to the driver, not detected based on the minor number
-as one might think).  So it is a complete waste to have an entire major
-taken by this.
+Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
 
-So it now uses a misc device which I named "megadev0" (the name that
-megarc expects), and has a dynamic minor (previoulsy a dynamic major was
-used).
-
-I have tested this on my own system with the megarc tool, and it works
-just as fine as before (only now the device gets created correctly by
-udev).
-
-Cc: <thomas.horsten@gmail.com>
-Cc: Neela Syam Kolli <Neela.Kolli@engenio.com>
-Cc: "Ju, Seokmann" <Seokmann.Ju@lsil.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/megaraid/megaraid_mm.c |   20 +++++++++++++-------
- drivers/scsi/megaraid/megaraid_mm.h |    1 +
- 2 files changed, 14 insertions(+), 7 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.h |    1 +
+ 2 files changed, 18 insertions(+)
 
 diff -puN
-drivers/scsi/megaraid/megaraid_mm.c~megaraid-driver-management-char-devi
-ce-moved-to-misc drivers/scsi/megaraid/megaraid_mm.c
+drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbo
+x drivers/scsi/megaraid/megaraid_mbox.c
 ---
-a/drivers/scsi/megaraid/megaraid_mm.c~megaraid-driver-management-char-de
-vice-moved-to-misc
-+++ a/drivers/scsi/megaraid/megaraid_mm.c
-@@ -59,7 +59,6 @@ EXPORT_SYMBOL(mraid_mm_register_adp);
- EXPORT_SYMBOL(mraid_mm_unregister_adp);
- EXPORT_SYMBOL(mraid_mm_adapter_app_handle);
+a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_m
+box
++++ a/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3169,6 +3169,23 @@ megaraid_mbox_support_random_del(adapter
+ 	uint8_t		raw_mbox[sizeof(mbox_t)];
+ 	int		rval;
  
--static int majorno;
- static uint32_t drvr_ver	= 0x02200207;
++	/*
++	 * Newer firmware on Dell CERC expect a different
++	 * random deletion handling, so disable it.
++	 */
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++	    adapter->pdev->subsystem_device ==
+PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++	    (adapter->fw_version[0] > '6' ||
++	     (adapter->fw_version[0] == '6' &&
++	      adapter->fw_version[2] > '6') ||
++	     (adapter->fw_version[0] == '6'
++	      && adapter->fw_version[2] == '6'
++	      && adapter->fw_version[3] > '1'))) {
++		con_log(CL_DLEVEL1, ("megaraid: disable random
+deletion\n"));
++		return 0;
++	}
  
- static int adapters_count_g;
-@@ -76,6 +75,12 @@ static const struct file_operations lsi_
- 	.owner	= THIS_MODULE,
- };
+ 	mbox = (mbox_t *)raw_mbox;
  
-+static struct miscdevice megaraid_mm_dev = {
-+	.minor	= MISC_DYNAMIC_MINOR,
-+	.name   = "megadev0",
-+	.fops   = &lsi_fops,
-+};
-+
- /**
-  * mraid_mm_open - open routine for char node interface
-  * @inode	: unused
-@@ -1184,15 +1189,16 @@ mraid_mm_teardown_dma_pools(mraid_mmadp_
- static int __init
- mraid_mm_init(void)
- {
-+	int err;
-+
- 	// Announce the driver version
- 	con_log(CL_ANN, (KERN_INFO "megaraid cmm: %s %s\n",
- 		LSI_COMMON_MOD_VERSION, LSI_COMMON_MOD_EXT_VERSION));
- 
--	majorno = register_chrdev(0, "megadev", &lsi_fops);
--
--	if (majorno < 0) {
--		con_log(CL_ANN, ("megaraid cmm: cannot get major\n"));
--		return majorno;
-+	err = misc_register(&megaraid_mm_dev);
-+	if (err < 0) {
-+		con_log(CL_ANN, ("megaraid cmm: cannot register misc
-device\n"));
-+		return err;
- 	}
- 
- 	init_waitqueue_head(&wait_q);
-@@ -1230,7 +1236,7 @@ mraid_mm_exit(void)  {
- 	con_log(CL_DLEVEL1 , ("exiting common mod\n"));
- 
--	unregister_chrdev(majorno, "megadev");
-+	misc_deregister(&megaraid_mm_dev);
- }
- 
- module_init(mraid_mm_init);
 diff -puN
-drivers/scsi/megaraid/megaraid_mm.h~megaraid-driver-management-char-devi
-ce-moved-to-misc drivers/scsi/megaraid/megaraid_mm.h
+drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbo
+x drivers/scsi/megaraid/megaraid_mbox.h
 ---
-a/drivers/scsi/megaraid/megaraid_mm.h~megaraid-driver-management-char-de
-vice-moved-to-misc
-+++ a/drivers/scsi/megaraid/megaraid_mm.h
-@@ -22,6 +22,7 @@
- #include <linux/moduleparam.h>
- #include <linux/pci.h>
- #include <linux/list.h>
-+#include <linux/miscdevice.h>
+a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_m
+box
++++ a/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
  
- #include "mbox_defs.h"
- #include "megaraid_ioctl.h"
+ 
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for
+kernel
 _
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-the body of a message to majordomo@vger.kernel.org More majordomo info
-at  http://vger.kernel.org/majordomo-info.html
