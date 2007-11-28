@@ -1,212 +1,104 @@
-From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Subject: [UPDATED PATCH] SGIWD93: use cached memory access to make driver work on IP28
-Date: Mon, 26 Nov 2007 18:41:15 +0100
-Message-ID: <20071128111855.ACA09C2B31@solo.franken.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elvis.franken.de ([193.175.24.41]:45909 "EHLO elvis.franken.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756767AbXK1LTB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 28 Nov 2007 06:19:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
+Date: Wed, 28 Nov 2007 12:47:19 +0530
+Message-ID: <474D15FF.5080508@linux.vnet.ibm.com>
+References: <474D0AAC.5010005@linux.vnet.ibm.com>
+	<20071127225328.9e3f3827.akpm@linux-foundation.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org>
+In-Reply-To: <20071127225328.9e3f3827.akpm@linux-foundation.org>
+List-Unsubscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=unsubscribe>
+List-Archive: <http://ozlabs.org/pipermail/linuxppc-dev>
+List-Post: <mailto:linuxppc-dev@ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@ozlabs.org?subject=help>
+List-Subscribe: <https://ozlabs.org/mailman/listinfo/linuxppc-dev>,
+	<mailto:linuxppc-dev-request@ozlabs.org?subject=subscribe>
+Sender: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+Errors-To: linuxppc-dev-bounces+glppd-linuxppc64-dev=m.gmane.org@ozlabs.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, linuxppc-dev@ozlabs.org, Balbir Singh <balbir@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org
-Cc: ralf@linux-mips.org, James.Bottomley@HansenPartnership.com
 
-Changes to last version:
-- no additional padding of hpc descriptor
-- one dma_cache_sync after hpc descriptors are setup is enough
+Andrew Morton wrote:
+> On Wed, 28 Nov 2007 11:59:00 +0530 Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
+> 
+>> Hi,
+> 
+> (cc linux-scsi, for sym53c8xx)
+> 
+>> Soft lockup is detected while bootup with 2.6.24-rc3-git2 on powerbox
+> 
+> I assume this is a post-2.6.23 regression?
+> 
+>> BUG: soft lockup - CPU#1 stuck for 11s! [insmod:375]
+>> NIP: c00000000002f02c LR: d0000000001414fc CTR: c00000000002f018
+>> REGS: c00000077cbef0b0 TRAP: 0901   Not tainted  (2.6.24-rc3-git2-autotest)
+>> MSR: 8000000000009032 <EE,ME,IR,DR>  CR: 24022088  XER: 00000000
+>> TASK = c00000077cbd8000[375] 'insmod' THREAD: c00000077cbec000 CPU: 1
+>> GPR00: d0000000001414fc c00000077cbef330 c00000000052b930 d000080080002014 
+>> GPR04: d00008008000202c 0000000000000000 c00000077ca1cb00 d00000000014ce54 
+>> GPR08: c00000077ca1c63c 0000000000000000 000000000000002a c00000000002f018 
+>> GPR12: d000000000143610 c000000000473d00 
+>> NIP [c00000000002f02c] .ioread8+0x14/0x60
+>> LR [d0000000001414fc] .sym_hcb_attach+0x1188/0x1378 [sym53c8xx]
+>> Call Trace:
+>> [c00000077cbef330] [c00000077cbef3c0] 0xc00000077cbef3c0 (unreliable)
+>> [c00000077cbef3a0] [d0000000001414fc] .sym_hcb_attach+0x1188/0x1378 [sym53c8xx]
+>> [c00000077cbef470] [d0000000001395f8] .sym2_probe+0x700/0x99c [sym53c8xx]
+>> [c00000077cbef710] [c0000000001bc118] .pci_device_probe+0x124/0x1b0
+>> [c00000077cbef7b0] [c000000000221138] .driver_probe_device+0x144/0x20c
+>> [c00000077cbef850] [c000000000221450] .__driver_attach+0xcc/0x154
+>> [c00000077cbef8e0] [c00000000021ff94] .bus_for_each_dev+0x7c/0xd4
+>> [c00000077cbef9a0] [c000000000220e9c] .driver_attach+0x28/0x40
+>> [c00000077cbefa20] [c0000000002204d8] .bus_add_driver+0x90/0x228
+>> [c00000077cbefac0] [c000000000221858] .driver_register+0x94/0xb0
+>> [c00000077cbefb40] [c0000000001bc430] .__pci_register_driver+0x6c/0xcc
+>> [c00000077cbefbe0] [d000000000143428] .sym2_init+0x108/0x15b0 [sym53c8xx]
+>> [c00000077cbefc80] [c00000000008ce80] .sys_init_module+0x17c4/0x1958
+>> [c00000077cbefe30] [c00000000000872c] syscall_exit+0x0/0x40
+>> Instruction dump:
+>> 60000000 786b0420 38210070 7d635b78 e8010010 7c0803a6 4e800020 7c0802a6 
+>> f8010010 f821ff91 7c0004ac 89230000 <0c090000> 4c00012c 79290620 2f8900ff 
+> 
+> I see no obvious lockup sites near the end of sym_hcb_attach().  Maybe it's
+> being called lots of times from a higher level..  Do the traces all look
+> the same?
 
-Thomas.
+Hi Andrew,
 
-SGI IP28 machines would need special treatment (enable adding addtional
-wait states) when accessing memory uncached. To avoid this pain I
-changed the driver to use only cached access to memory.
+I see this call trace twice and both looks similar and on another reboot
+the following trace is seen twice in different cpu
 
-Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
----
+BUG: soft lockup detected on CPU#3!
+Call Trace:
+[C00000003FEDEDA0] [C000000000010220] .show_stack+0x68/0x1b0 (unreliable)
+[C00000003FEDEE40] [C0000000000A061C] .softlockup_tick+0xf0/0x13c
+[C00000003FEDEEF0] [C000000000072E2C] .run_local_timers+0x1c/0x30
+[C00000003FEDEF70] [C000000000022FA0] .timer_interrupt+0xa8/0x488
+[C00000003FEDF050] [C0000000000034EC] decrementer_common+0xec/0x100
+--- Exception: 901 at .ioread8+0x14/0x60
+    LR = .sym_hcb_attach+0x1194/0x1384 [sym53c8xx]
+[C00000003FEDF340] [D0000000002B3BC0] 0xd0000000002b3bc0 (unreliable)
+[C00000003FEDF3B0] [D00000000029A3C0] .sym_hcb_attach+0x1194/0x1384 [sym53c8xx]
+[C00000003FEDF480] [D000000000291D30] .sym2_probe+0x75c/0x9f8 [sym53c8xx]
+[C00000003FEDF710] [C0000000001B65A4] .pci_device_probe+0x13c/0x1dc
+[C00000003FEDF7D0] [C000000000219A0C] .driver_probe_device+0xa0/0x15c
+[C00000003FEDF870] [C000000000219C64] .__driver_attach+0xb4/0x138
+[C00000003FEDF900] [C00000000021913C] .bus_for_each_dev+0x7c/0xd4
+[C00000003FEDF9C0] [C0000000002198B0] .driver_attach+0x28/0x40
+[C00000003FEDFA40] [C000000000218BA4] .bus_add_driver+0x98/0x18c
+[C00000003FEDFAE0] [C00000000021A064] .driver_register+0xa8/0xc4
+[C00000003FEDFB60] [C0000000001B68AC] .__pci_register_driver+0x5c/0xa4
+[C00000003FEDFBF0] [D00000000029C204] .sym2_init+0x104/0x1550 [sym53c8xx]
+[C00000003FEDFC90] [C00000000008D1F4] .sys_init_module+0x1764/0x1998
+[C00000003FEDFE30] [C00000000000869C] syscall_exit+0x0/0x40
 
 
-
-
- drivers/scsi/sgiwd93.c |   64 +++++++++++++++++++++++++++++------------------
- 1 files changed, 39 insertions(+), 25 deletions(-)
-
-diff --git a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
-index eef8275..e64ddee 100644
---- a/drivers/scsi/sgiwd93.c
-+++ b/drivers/scsi/sgiwd93.c
-@@ -33,10 +33,9 @@
- 
- struct ip22_hostdata {
- 	struct WD33C93_hostdata wh;
--	struct hpc_data {
--		dma_addr_t      dma;
--		void		*cpu;
--	} hd;
-+	dma_addr_t dma;
-+	void *cpu;
-+	void *dev;
- };
- 
- #define host_to_hostdata(host) ((struct ip22_hostdata *)((host)->hostdata))
-@@ -46,6 +45,11 @@ struct hpc_chunk {
- 	u32 _padding;	/* align to quadword boundary */
- };
- 
-+/* space for hpc dma descriptors */
-+#define HPC_DMA_SIZE   PAGE_SIZE
-+
-+#define DMA_DIR(d)   ((d == DATA_OUT_DIR) ? DMA_TO_DEVICE : DMA_FROM_DEVICE)
-+
- static irqreturn_t sgiwd93_intr(int irq, void *dev_id)
- {
- 	struct Scsi_Host * host = dev_id;
-@@ -59,15 +63,17 @@ static irqreturn_t sgiwd93_intr(int irq, void *dev_id)
- }
- 
- static inline
--void fill_hpc_entries(struct hpc_chunk *hcp, struct scsi_cmnd *cmd, int datainp)
-+void fill_hpc_entries(struct ip22_hostdata *hd, struct scsi_cmnd *cmd, int din)
- {
- 	unsigned long len = cmd->SCp.this_residual;
- 	void *addr = cmd->SCp.ptr;
- 	dma_addr_t physaddr;
- 	unsigned long count;
-+	struct hpc_chunk *hcp;
- 
--	physaddr = dma_map_single(NULL, addr, len, cmd->sc_data_direction);
-+	physaddr = dma_map_single(hd->dev, addr, len, DMA_DIR(din));
- 	cmd->SCp.dma_handle = physaddr;
-+	hcp = hd->cpu;
- 
- 	while (len) {
- 		/*
-@@ -89,6 +95,9 @@ void fill_hpc_entries(struct hpc_chunk *hcp, struct scsi_cmnd *cmd, int datainp)
- 	 */
- 	hcp->desc.pbuf = 0;
- 	hcp->desc.cntinfo = HPCDMA_EOX;
-+	dma_cache_sync(hd->dev, hd->cpu,
-+		       (unsigned long)(hcp + 1) - (unsigned long)hd->cpu,
-+		       DMA_TO_DEVICE);
- }
- 
- static int dma_setup(struct scsi_cmnd *cmd, int datainp)
-@@ -96,9 +105,8 @@ static int dma_setup(struct scsi_cmnd *cmd, int datainp)
- 	struct ip22_hostdata *hdata = host_to_hostdata(cmd->device->host);
- 	struct hpc3_scsiregs *hregs =
- 		(struct hpc3_scsiregs *) cmd->device->host->base;
--	struct hpc_chunk *hcp = (struct hpc_chunk *) hdata->hd.cpu;
- 
--	pr_debug("dma_setup: datainp<%d> hcp<%p> ", datainp, hcp);
-+	pr_debug("dma_setup: datainp<%d> hcp<%p> ", datainp, hdata->cpu);
- 
- 	hdata->wh.dma_dir = datainp;
- 
-@@ -111,12 +119,12 @@ static int dma_setup(struct scsi_cmnd *cmd, int datainp)
- 	if (cmd->SCp.ptr == NULL || cmd->SCp.this_residual == 0)
- 		return 1;
- 
--	fill_hpc_entries(hcp, cmd, datainp);
-+	fill_hpc_entries(hdata, cmd, datainp);
- 
- 	pr_debug(" HPCGO\n");
- 
- 	/* Start up the HPC. */
--	hregs->ndptr = hdata->hd.dma;
-+	hregs->ndptr = hdata->dma;
- 	if (datainp)
- 		hregs->ctrl = HPC3_SCTRL_ACTIVE;
- 	else
-@@ -134,6 +142,9 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
- 	if (!SCpnt)
- 		return;
- 
-+	if (SCpnt->SCp.ptr == NULL || SCpnt->SCp.this_residual == 0)
-+		return;
-+
- 	hregs = (struct hpc3_scsiregs *) SCpnt->device->host->base;
- 
- 	pr_debug("dma_stop: status<%d> ", status);
-@@ -145,8 +156,9 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
- 			barrier();
- 	}
- 	hregs->ctrl = 0;
--	dma_unmap_single(NULL, SCpnt->SCp.dma_handle, SCpnt->SCp.this_residual,
--	                 SCpnt->sc_data_direction);
-+	dma_unmap_single(hdata->dev, SCpnt->SCp.dma_handle,
-+			 SCpnt->SCp.this_residual,
-+			 DMA_DIR(hdata->wh.dma_dir));
- 
- 	pr_debug("\n");
- }
-@@ -160,22 +172,23 @@ void sgiwd93_reset(unsigned long base)
- 	hregs->ctrl = 0;
- }
- 
--static inline void init_hpc_chain(struct hpc_data *hd)
-+static inline void init_hpc_chain(void *dev, struct ip22_hostdata *hdata)
- {
--	struct hpc_chunk *hcp = (struct hpc_chunk *) hd->cpu;
--	struct hpc_chunk *dma = (struct hpc_chunk *) hd->dma;
-+	struct hpc_chunk *hcp = (struct hpc_chunk *)hdata->cpu;
-+	dma_addr_t dma = hdata->dma;
- 	unsigned long start, end;
- 
- 	start = (unsigned long) hcp;
--	end = start + PAGE_SIZE;
-+	end = start + HPC_DMA_SIZE;
- 	while (start < end) {
--		hcp->desc.pnext = (u32) (dma + 1);
-+		hcp->desc.pnext = (u32) (dma + sizeof(struct hpc_chunk));
- 		hcp->desc.cntinfo = HPCDMA_EOX;
--		hcp++; dma++;
-+		hcp++;
-+		dma += sizeof(struct hpc_chunk);
- 		start += sizeof(struct hpc_chunk);
- 	};
- 	hcp--;
--	hcp->desc.pnext = hd->dma;
-+	hcp->desc.pnext = hdata->dma;
- }
- 
- static int sgiwd93_bus_reset(struct scsi_cmnd *cmd)
-@@ -234,16 +247,17 @@ static int __init sgiwd93_probe(struct platform_device *pdev)
- 	host->irq = irq;
- 
- 	hdata = host_to_hostdata(host);
--	hdata->hd.cpu = dma_alloc_coherent(&pdev->dev, PAGE_SIZE,
--	                                   &hdata->hd.dma, GFP_KERNEL);
--	if (!hdata->hd.cpu) {
-+	hdata->dev = &pdev->dev;
-+	hdata->cpu = dma_alloc_noncoherent(&pdev->dev, HPC_DMA_SIZE,
-+					   &hdata->dma, GFP_KERNEL);
-+	if (!hdata->cpu) {
- 		printk(KERN_WARNING "sgiwd93: Could not allocate memory for "
- 		       "host %d buffer.\n", unit);
- 		err = -ENOMEM;
- 		goto out_put;
- 	}
- 
--	init_hpc_chain(&hdata->hd);
-+	init_hpc_chain(&pdev->dev, hdata);
- 
- 	regs.SASR = wdregs + 3;
- 	regs.SCMD = wdregs + 7;
-@@ -273,7 +287,7 @@ static int __init sgiwd93_probe(struct platform_device *pdev)
- out_irq:
- 	free_irq(irq, host);
- out_free:
--	dma_free_coherent(NULL, PAGE_SIZE, hdata->hd.cpu, hdata->hd.dma);
-+	dma_free_noncoherent(NULL, HPC_DMA_SIZE, hdata->cpu, hdata->dma);
- out_put:
- 	scsi_host_put(host);
- out:
-@@ -289,7 +303,7 @@ static void __exit sgiwd93_remove(struct platform_device *pdev)
- 
- 	scsi_remove_host(host);
- 	free_irq(pd->irq, host);
--	dma_free_coherent(&pdev->dev, PAGE_SIZE, hdata->hd.cpu, hdata->hd.dma);
-+	dma_free_noncoherent(&pdev->dev, HPC_DMA_SIZE, hdata->cpu, hdata->dma);
- 	scsi_host_put(host);
- }
- 
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
