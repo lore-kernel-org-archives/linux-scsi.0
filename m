@@ -1,102 +1,64 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2_check_page: bad entry in
- directory) (fwd)
-Date: Fri, 30 Nov 2007 02:09:52 +0900
-Message-ID: <20071130021226T.tomof@acm.org>
-References: <20071129130319.GA2642@atrey.karlin.mff.cuni.cz>
-	<20071129235813Y.tomof@acm.org>
-	<20071129164557.GD30957@1und1.de>
+From: "Yang, Bo" <Bo.Yang@lsi.com>
+Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB cmds with sense info
+Date: Thu, 29 Nov 2007 11:24:00 -0700
+Message-ID: <9738BCBE884FDB42801FAD8A7769C26501D33D61@NAMAIL1.ad.lsil.com>
+References: <20071128192703.GA2584@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1763297AbXK2RK6@vger.kernel.org>
-In-Reply-To: <20071129164557.GD30957@1und1.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: anders.henke@1und1.de
-Cc: tomof@acm.org, jack@ucw.cz, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:56331 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761017AbXK2SYV convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 13:24:21 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20071128192703.GA2584@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
 
-On Thu, 29 Nov 2007 17:45:57 +0100
-Anders Henke <anders.henke@1und1.de> wrote:
 
-> On Nov 29 2007, FUJITA Tomonori wrote:
-> > On Thu, 29 Nov 2007 14:03:19 +0100
-> > Jan Kara <jack@ucw.cz> wrote:
-> > 
-> > >   Adding relevant people and lists to CC...
-> > > 
-> > > 									Honza
-> > > 
-> > > ----- Forwarded message from Anders Henke <anders.henke@1und1.de> -----
-> > > 
-> > > Date:	Thu, 29 Nov 2007 13:31:50 +0100
-> > > From: Anders Henke <anders.henke@1und1.de>
-> > > To: linux-kernel@vger.kernel.org
-> > > Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2_check_page: bad entry in directory)
-> > > User-Agent: Mutt/1.5.13 (2006-08-11)
-> > > 
-> > > On November 28 2007, Anders Henke wrote:
-> > > > As "everything is reported as being zero" is quite odd an Jan took a
-> > > > guess that it might be block-layer or driver-related, I've assumed
-> > > > that the driver is responsible for this; just out of the curiousity, 
-> > > > I've manually replaced the dpt_i2o driver by the 2.6.19 one by copying 
-> > > > driver/scsi/dpt_i2o.c driver/scsi/dpti.h and driver/scsi/dpt/ into a 
-> > > > vanilla 2.6.23.1. kernel; using this kernel fixed the issue for me.
-> > > > 
-> > > > I haven't yet fine-tested from which kernel release on the dpt_i2o driver 
-> > > > behaves like this and spews out zeroed blocks when trying to mount
-> > > > the rootfs. Maybe this is just some timing issue.
-> > > 
-> > > I've started the fine-tests and can say so far that dpt_i2o from 
-> > > 2.6.22 is still fine. Test is simple:
-> > > 
-> > > anders@ista:/usr/src/linux-2.6.22/drivers/scsi/dpt$ cp -r dpt/ dpt_i2o.c dpti.h /usr/src/linux-2.6.23.1/drivers/scsi/
-> > > 
-> > > ... recompile the kernel, reboot: works.
-> > > 
-> > > 2.6.22 and 2.6.23 differ in terms of the dpt_i2o driver by two different
-> > > patch sets:
-> > > -one 2 Kb small set of patches from 2.6.22 to 2.6.22-rc1
-> > > -one 7 Kb set of patches from 2.6.23-rc2 to 2.6.23-rc3
-> > > -one 162 Kb set of patches from 2.6.23-rc9 to 2.6.23-rc10.
-> > > 
-> > > When applying the 2.6.23-rc1-based driver to "my" 2.6.31.1 kernel,
-> > > the "zero blocks"-symptom show up, so it's the "lucky" situation
-> > > that the smallest patch actually seams to be the broken one.
-> > > 
-> > > According to the 2.6.23-rc1 short-form changelog, there is
-> > > one major edit on the dpt_i2o driver:
-> > > 
-> > > FUJITA Tomonori 
-> > > 
-> > >       [SCSI] dpt_i2o: convert to use the data buffer accessors
-> > > 
-> > > Stephen Rothwell 
-> > >       dpt_i2o depends on virt_to_bus
-> > > 
-> > > Fujita, would you please take a look at this?
-> > 
-> > Sorry about the bug. Can you try this?
-> > 
-> > 
-> > diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
-> > index 8258506..1255b26 100644
-> > --- a/drivers/scsi/dpt_i2o.c
-> > +++ b/drivers/scsi/dpt_i2o.c
-> > @@ -3295,7 +3295,7 @@ static struct scsi_host_template adpt_template = {
-> >  	.this_id		= 7,
-> >  	.cmd_per_lun		= 1,
-> >  	.use_clustering		= ENABLE_CLUSTERING,
-> > -	.use_sg_chaining	= ENABLE_SG_CHAINING,
-> > +	.use_sg_chaining	= DISABLE_SG_CHAINING,
-> >  };
-> >  
-> >  static s32 adpt_scsi_register(adpt_hba* pHba)
+Matthew,
+
+I think my last email confused you. Here are the points for submitting
+this patch:
+
+1. It is only to add the ia64 support to our driver.  This is why we add
+the ia64 flag.
+
+2. We did not change the implementation for x86 and x86_64.  The
+implementation for them with u32 * is there from day one.
+
+3. What I wanted to convey in my previous mail is that if one uses a 64
+bit application (s)he may need to test for all functionality again.	
+
+Regards.
+
+Bo Yang
+
+-----Original Message-----
+From: Matthew Wilcox [mailto:matthew@wil.cx] 
+Sent: Wednesday, November 28, 2007 2:27 PM
+To: Yang, Bo
+Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
+akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
+Subject: Re: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
+cmds with sense info
+
+On Wed, Nov 28, 2007 at 12:08:37PM -0700, Yang, Bo wrote:
+> Matthew,
 > 
-> The structure to patch does look different and doesn't include an
-> tag "use_sg_chaining":
+> Yes, as I mentioned, our applications are built in 32-bit environment 
+> (except for ia64).
+> We may see a different behavior if we build it in 64-bit for x86-64. 
 
-Sorry, I misread your bug report. If you use 2.6.23, the sg chaining
-is unrelated.
+Then this patch isn't acceptable.  You need to find a way which works
+for both 32-bit and 64-bit applications.
 
-What architecture do you use?
+--
+Intel are signing my paycheques ... these opinions are still mine "Bill,
+look, we understand that you're interested in selling us this operating
+system, but compare it to ours.  We can't possibly take such a
+retrograde step."
