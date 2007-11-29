@@ -1,169 +1,89 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: [patch] SCSI: early detection of medium not present, updated
-Date: Thu, 29 Nov 2007 15:18:42 -0800
-Message-ID: <20071129151842.44c05b18.akpm@linux-foundation.org>
+From: Joe Eykholt <fcoe@eykholt.com>
+Subject: [Open-FCoE] [PATCH] If expecting pre-T11 frames, a T11 frame caused
+ a data fault.
+Date: Thu, 29 Nov 2007 15:21:11 -0800
+Message-ID: <474F4967.60204@eykholt.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:53714 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1763182AbXK2XUo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 29 Nov 2007 18:20:44 -0500
+Received: from eykholt.com ([72.52.117.41]:41405 "HELO eykholt.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S934173AbXK2Xfc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Nov 2007 18:35:32 -0500
+Received: from 67.91.200.194 ([67.91.200.194]) by eykholt.com for <linux-scsi@vger.kernel.org>; Thu, 29 Nov 2007 15:21:00 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <htejun@gmail.com>, Je
+To: linux-scsi@vger.kernel.org
 
+From: Joe Eykholt <joe@eykholt.com>
+Date: Mon, 26 Nov 2007 18:51:01 -0800
+If expecting pre-T11 frames, a T11 frame caused a data fault.
 
-Guys, I have this marked as needed-in-2.6.24?
+This is because the T11 frames have zeros where the old length/SOF
+field was, and a length of less than the size of the FC header was
+not checked for.
 
-
-
-
-
-From: Alan Stern <stern@rowland.harvard.edu>
-
-Taken from http://bugzilla.kernel.org/show_bug.cgi?id=8904
-
-An updated (by Albert, I assume) version of the fourteen-month-old patch here:
-
-http://marc.info/?l=linux-kernel&m=115412002912837&w=2
-
-Apparently fixes the bug described at
-http://bugzilla.kernel.org/show_bug.cgi?id=8904
-
-Needs some TLC.  Perhaps urgently.
-
-Cc: Albert Lee <albertcc@tw.ibm.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Also limit length error messages to 5 frames (per-CPU actually).
 ---
+ drivers/scsi/ofc/fcoe/fcoe_dev.c |   23 +++++++++++++++--------
+ 1 files changed, 15 insertions(+), 8 deletions(-)
 
- drivers/scsi/scsi_ioctl.c  |    2 +-
- drivers/scsi/scsi_lib.c    |   20 ++++++++++++++++++--
- drivers/scsi/sd.c          |    2 +-
- drivers/scsi/sr.c          |   15 +++++++++------
- include/scsi/scsi_device.h |    2 +-
- 5 files changed, 30 insertions(+), 11 deletions(-)
+diff --git a/drivers/scsi/ofc/fcoe/fcoe_dev.c b/drivers/scsi/ofc/fcoe/fcoe_dev.c
+index df652b6..f5b5eed 100644
+--- a/drivers/scsi/ofc/fcoe/fcoe_dev.c
++++ b/drivers/scsi/ofc/fcoe/fcoe_dev.c
+@@ -485,8 +485,9 @@ int fcoe_percpu_receive_thread(void *arg)
 
-diff -puN drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_ioctl.c
---- a/drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/scsi_ioctl.c
-@@ -244,7 +244,7 @@ int scsi_ioctl(struct scsi_device *sdev,
- 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
- 	case SCSI_IOCTL_TEST_UNIT_READY:
- 		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
--					    NORMAL_RETRIES);
-+					    NORMAL_RETRIES, NULL);
- 	case SCSI_IOCTL_START_UNIT:
- 		scsi_cmd[0] = START_STOP;
- 		scsi_cmd[1] = 0;
-diff -puN drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/scsi_lib.c
-@@ -2010,15 +2010,26 @@ scsi_mode_sense(struct scsi_device *sdev
- }
- EXPORT_SYMBOL(scsi_mode_sense);
- 
-+/**
-+ *	scsi_test_unit_ready - test if unit is ready
-+ *	@sdev:	scsi device to change the state of.
-+ *	@timeout: command timeout
-+ *	@retries: number of retries before failing
-+ *	@media_maybe_present: 1 if media maybe present or not.
-+ *		              0 if media not present.
-+ *
-+ *	Returns zero if unsuccessful or an error if TUR failed.
-+ **/
- int
--scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries)
-+scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries, int *media_maybe_present)
- {
- 	char cmd[] = {
- 		TEST_UNIT_READY, 0, 0, 0, 0, 0,
- 	};
- 	struct scsi_sense_hdr sshdr;
- 	int result;
--	
-+	int maybe_present = 1;
-+
- 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
- 				  timeout, retries);
- 
-@@ -2027,10 +2038,15 @@ scsi_test_unit_ready(struct scsi_device 
- 		if ((scsi_sense_valid(&sshdr)) &&
- 		    ((sshdr.sense_key == UNIT_ATTENTION) ||
- 		     (sshdr.sense_key == NOT_READY))) {
-+			if (sshdr.asc == 0x3A)
-+				maybe_present = 0;
- 			sdev->changed = 1;
- 			result = 0;
- 		}
- 	}
-+
-+	if (media_maybe_present)
-+		*media_maybe_present = maybe_present;
- 	return result;
- }
- EXPORT_SYMBOL(scsi_test_unit_ready);
-diff -puN drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sd.c
---- a/drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/sd.c
-@@ -767,7 +767,7 @@ static int sd_media_changed(struct gendi
- 	retval = -ENODEV;
- 
- 	if (scsi_block_when_processing_errors(sdp))
--		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES);
-+		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
- 
- 	/*
- 	 * Unable to test, unit probably not ready.   This usually
-diff -puN drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sr.c
---- a/drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated
-+++ a/drivers/scsi/sr.c
-@@ -179,18 +179,21 @@ static int sr_media_change(struct cdrom_
- {
- 	struct scsi_cd *cd = cdi->handle;
- 	int retval;
-+	int media_maybe_present;
- 
- 	if (CDSL_CURRENT != slot) {
- 		/* no changer support */
- 		return -EINVAL;
- 	}
- 
--	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES);
--	if (retval) {
--		/* Unable to test, unit probably not ready.  This usually
--		 * means there is no disc in the drive.  Mark as changed,
--		 * and we will figure it out later once the drive is
--		 * available again.  */
-+	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
-+				      &media_maybe_present);
-+	if (retval || !media_maybe_present) {
-+		/* Media not present or unable to test, unit probably not
-+		 * ready. This usually means there is no disc in the drive.
-+		 * Mark as changed, and we will figure it out later once
-+		 * the drive is available again.
-+		 */
- 		cd->device->changed = 1;
- 		/* This will force a flush, if called from check_disk_change */
- 		retval = 1;
-diff -puN include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated include/scsi/scsi_device.h
---- a/include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated
-+++ a/include/scsi/scsi_device.h
-@@ -292,7 +292,7 @@ extern int scsi_mode_select(struct scsi_
- 			    struct scsi_mode_data *data,
- 			    struct scsi_sense_hdr *);
- extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
--				int retries);
-+				int retries, int *media_maybe_present);
- extern int scsi_device_set_state(struct scsi_device *sdev,
- 				 enum scsi_device_state state);
- extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
-_
+                        hp = (struct fcoe_hdr *)skb->data;
+                        if (unlikely(FC_FCOE_DECAPS_VER(hp) != FC_FCOE_VER)) {
+-                               SA_LOG("unknown FCoE version %x",
+-                                      FC_FCOE_DECAPS_VER(hp));
++                               if (stats->ErrorFrames < 5)
++                                       SA_LOG("unknown FCoE version %x",
++                                              FC_FCOE_DECAPS_VER(hp));
+                                stats->ErrorFrames++;
+                                kfree_skb(skb);
+                                continue;
+@@ -505,20 +506,25 @@ int fcoe_percpu_receive_thread(void *arg)
+                        skb_pull(skb, sizeof(*fchp));
+                        fr_len = FC_FCOE_DECAPS_LEN(len);
+                        fr_len = fr_len * FCOE_WORD_TO_BYTE;
++                       if (unlikely(fr_len < sizeof (struct fc_frame_header) +
++                           sizeof (cp->fcoe_crc32))) {
++                               if (stats->ErrorFrames < 5)
++                                       SA_LOG("length error: len_sof %x", len);
++                               stats->ErrorFrames++;
++                               kfree_skb(skb);
++                               continue;
++                       }
+                        sof = FC_FCOE_DECAPS_SOF(len);
+                        fr_len -= sizeof(cp->fcoe_crc32);
+                        tlen = sizeof(struct fcoe_crc_eof_old);
+                }
 
+                if (skb_is_nonlinear(skb))
+-#if LINUX_VERSION_CODE < KERNEL_VERSION(2,6,18)
+-                       skb_linearize(skb, GFP_KERNEL); /* not ideal */
+-#else
+                        skb_linearize(skb);     /* not ideal */
+-#endif
+                if (unlikely(fr_len + tlen > skb->len)) {
+-                       SA_LOG("short frame fr_len %x skb->len %x\n",
+-                              fr_len + tlen, skb->len);
++                       if (stats->ErrorFrames < 5)
++                               SA_LOG("length error fr_len 0x%x skb->len 0x%x",
++                                      fr_len + tlen, skb->len);
+                        stats->ErrorFrames++;
+                        kfree_skb(skb);
+                        continue;
+@@ -540,6 +546,7 @@ int fcoe_percpu_receive_thread(void *arg)
+                 * and it'll be more cache-efficient.
+                 */
+                fh = fc_frame_header_get(fp);
++               ASSERT(fh);
+                if (fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA &&
+                    fh->fh_type == FC_TYPE_FCP) {
+                        fp->fr_flags |= FCPHF_CRC_UNCHECKED;
+--
+1.5.3.6
