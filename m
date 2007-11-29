@@ -1,179 +1,365 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
-Date: Thu, 29 Nov 2007 14:43:44 +0530
-Message-ID: <474E82C8.8090207@linux.vnet.ibm.com>
-References: <474D0AAC.5010005@linux.vnet.ibm.com> <20071127225328.9e3f3827.akpm@linux-foundation.org> <474D15FF.5080508@linux.vnet.ibm.com> <20071127232552.ad16e95c.akpm@linux-foundation.org> <474E5CAC.9000108@linux.vnet.ibm.com> <20071129003533.54b4b20e.akpm@linux-foundation.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: 2.6.24-rc3-mm2: Result: hostbyte=0x01 driverbyte=0x00\nend_request:
+ I/O error
+Date: Thu, 29 Nov 2007 11:33:23 +0200
+Message-ID: <474E8763.1020908@panasas.com>
+References: <20071128034140.648383f0.akpm@linux-foundation.org>	<20071128200130.GA13361@martell.zuzino.mipt.ru>	<20071128134036.417b3def.akpm@linux-foundation.org>	<20071128231421.GB2584@parisc-linux.org> <20071128153636.2ac3ef9f.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from E23SMTP05.au.ibm.com ([202.81.18.174]:33792 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754503AbXK2JOY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 04:14:24 -0500
-In-Reply-To: <20071129003533.54b4b20e.akpm@linux-foundation.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:14686 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756508AbXK2Jdk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 04:33:40 -0500
+In-Reply-To: <20071128153636.2ac3ef9f.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, linuxppc-dev@ozlabs.org, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Matthew Wilcox <willy@debian.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, adobriyan@gmail.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Andrew Morton wrote:
-> On Thu, 29 Nov 2007 12:01:08 +0530 Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
+On Thu, Nov 29 2007 at 1:36 +0200, Andrew Morton <akpm@linux-foundation.org> wrote:
+> On Wed, 28 Nov 2007 16:14:21 -0700
+> Matthew Wilcox <matthew@wil.cx> wrote:
 > 
->> Andrew Morton wrote:
->>> On Wed, 28 Nov 2007 12:47:19 +0530 Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
+>> On Wed, Nov 28, 2007 at 01:40:36PM -0800, Andrew Morton wrote:
+>>> On Wed, 28 Nov 2007 23:01:31 +0300
+>>> Alexey Dobriyan <adobriyan@gmail.com> wrote:
 >>>
->>>> Andrew Morton wrote:
->>>>> On Wed, 28 Nov 2007 11:59:00 +0530 Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
->>>>>
->>>>>> Hi,
->>>>> (cc linux-scsi, for sym53c8xx)
->>>>>
->>>>>> Soft lockup is detected while bootup with 2.6.24-rc3-git2 on powerbox
->>>>> I assume this is a post-2.6.23 regression?
->>>>>
->>>>>> BUG: soft lockup - CPU#1 stuck for 11s! [insmod:375]
->>>>>> NIP: c00000000002f02c LR: d0000000001414fc CTR: c00000000002f018
->>>>>> REGS: c00000077cbef0b0 TRAP: 0901   Not tainted  (2.6.24-rc3-git2-autotest)
->>>>>> MSR: 8000000000009032 <EE,ME,IR,DR>  CR: 24022088  XER: 00000000
->>>>>> TASK = c00000077cbd8000[375] 'insmod' THREAD: c00000077cbec000 CPU: 1
->>>>>> GPR00: d0000000001414fc c00000077cbef330 c00000000052b930 d000080080002014 
->>>>>> GPR04: d00008008000202c 0000000000000000 c00000077ca1cb00 d00000000014ce54 
->>>>>> GPR08: c00000077ca1c63c 0000000000000000 000000000000002a c00000000002f018 
->>>>>> GPR12: d000000000143610 c000000000473d00 
->>>>>> NIP [c00000000002f02c] .ioread8+0x14/0x60
->>>>>> LR [d0000000001414fc] .sym_hcb_attach+0x1188/0x1378 [sym53c8xx]
->>>>>> Call Trace:
->>>>>> [c00000077cbef330] [c00000077cbef3c0] 0xc00000077cbef3c0 (unreliable)
->>>>>> [c00000077cbef3a0] [d0000000001414fc] .sym_hcb_attach+0x1188/0x1378 [sym53c8xx]
->>>>>> [c00000077cbef470] [d0000000001395f8] .sym2_probe+0x700/0x99c [sym53c8xx]
->>>>>> [c00000077cbef710] [c0000000001bc118] .pci_device_probe+0x124/0x1b0
->>>>>> [c00000077cbef7b0] [c000000000221138] .driver_probe_device+0x144/0x20c
->>>>>> [c00000077cbef850] [c000000000221450] .__driver_attach+0xcc/0x154
->>>>>> [c00000077cbef8e0] [c00000000021ff94] .bus_for_each_dev+0x7c/0xd4
->>>>>> [c00000077cbef9a0] [c000000000220e9c] .driver_attach+0x28/0x40
->>>>>> [c00000077cbefa20] [c0000000002204d8] .bus_add_driver+0x90/0x228
->>>>>> [c00000077cbefac0] [c000000000221858] .driver_register+0x94/0xb0
->>>>>> [c00000077cbefb40] [c0000000001bc430] .__pci_register_driver+0x6c/0xcc
->>>>>> [c00000077cbefbe0] [d000000000143428] .sym2_init+0x108/0x15b0 [sym53c8xx]
->>>>>> [c00000077cbefc80] [c00000000008ce80] .sys_init_module+0x17c4/0x1958
->>>>>> [c00000077cbefe30] [c00000000000872c] syscall_exit+0x0/0x40
->>>>>> Instruction dump:
->>>>>> 60000000 786b0420 38210070 7d635b78 e8010010 7c0803a6 4e800020 7c0802a6 
->>>>>> f8010010 f821ff91 7c0004ac 89230000 <0c090000> 4c00012c 79290620 2f8900ff 
->>>>> I see no obvious lockup sites near the end of sym_hcb_attach().  Maybe it's
->>>>> being called lots of times from a higher level..  Do the traces all look
->>>>> the same?
->>>> Hi Andrew,
->>>>
->>>> I see this call trace twice and both looks similar and on another reboot
->>>> the following trace is seen twice in different cpu
->>>>
->>>> BUG: soft lockup detected on CPU#3!
->>>> Call Trace:
->>>> [C00000003FEDEDA0] [C000000000010220] .show_stack+0x68/0x1b0 (unreliable)
->>>> [C00000003FEDEE40] [C0000000000A061C] .softlockup_tick+0xf0/0x13c
->>>> [C00000003FEDEEF0] [C000000000072E2C] .run_local_timers+0x1c/0x30
->>>> [C00000003FEDEF70] [C000000000022FA0] .timer_interrupt+0xa8/0x488
->>>> [C00000003FEDF050] [C0000000000034EC] decrementer_common+0xec/0x100
->>>> --- Exception: 901 at .ioread8+0x14/0x60
->>>>     LR = .sym_hcb_attach+0x1194/0x1384 [sym53c8xx]
->>>> [C00000003FEDF340] [D0000000002B3BC0] 0xd0000000002b3bc0 (unreliable)
->>>> [C00000003FEDF3B0] [D00000000029A3C0] .sym_hcb_attach+0x1194/0x1384 [sym53c8xx]
->>>> [C00000003FEDF480] [D000000000291D30] .sym2_probe+0x75c/0x9f8 [sym53c8xx]
->>>> [C00000003FEDF710] [C0000000001B65A4] .pci_device_probe+0x13c/0x1dc
->>>> [C00000003FEDF7D0] [C000000000219A0C] .driver_probe_device+0xa0/0x15c
->>>> [C00000003FEDF870] [C000000000219C64] .__driver_attach+0xb4/0x138
->>>> [C00000003FEDF900] [C00000000021913C] .bus_for_each_dev+0x7c/0xd4
->>>> [C00000003FEDF9C0] [C0000000002198B0] .driver_attach+0x28/0x40
->>>> [C00000003FEDFA40] [C000000000218BA4] .bus_add_driver+0x98/0x18c
->>>> [C00000003FEDFAE0] [C00000000021A064] .driver_register+0xa8/0xc4
->>>> [C00000003FEDFB60] [C0000000001B68AC] .__pci_register_driver+0x5c/0xa4
->>>> [C00000003FEDFBF0] [D00000000029C204] .sym2_init+0x104/0x1550 [sym53c8xx]
->>>> [C00000003FEDFC90] [C00000000008D1F4] .sys_init_module+0x1764/0x1998
->>>> [C00000003FEDFE30] [C00000000000869C] syscall_exit+0x0/0x40
->>>>
->>> hm, odd.
->>>
->>> Can you look up sym_hcb_attach+0x1194/0x1384 in gdb?  Something like
->>>
->> Hi Andrew,
->>
->> I tried with 2.6.24-rc3-git3 and got the following trace
->>
->> BUG: soft lockup - CPU#2 stuck for 11s! [insmod:375]
->> NIP: c00000000002f02c LR: d0000000001414fc CTR: c00000000002f018
->> REGS: c00000077ca3b0b0 TRAP: 0901   Not tainted  (2.6.24-rc3-git3-autokern1)
->> MSR: 8000000000009032 <EE,ME,IR,DR>  CR: 24022088  XER: 00000000
->> TASK = c00000077cc58000[375] 'insmod' THREAD: c00000077ca38000 CPU: 2
->> GPR00: d0000000001414fc c00000077ca3b330 c00000000052b880 d000080080002014 
->> GPR04: d00008008000202c 0000000000000000 c00000077c82eb00 d00000000014ce54 
->> GPR08: c00000077c82e63c 0000000000000000 000000000000002a c00000000002f018 
->> GPR12: d000000000143610 c000000000473f80 
->> NIP [c00000000002f02c] .ioread8+0x14/0x60
->> LR [d0000000001414fc] .sym_hcb_attach+0x1188/0x1378 [sym53c8xx]
->>
->> Call Trace:
->> [c00000077ca3b330] [c00000077ca3b3c0] 0xc00000077ca3b3c0 (unreliable)
->> [c00000077ca3b3a0] [d0000000001414fc] .sym_hcb_attach+0x1188/0x1378 [sym53c8xx]
->> [c00000077ca3b470] [d0000000001395f8] .sym2_probe+0x700/0x99c [sym53c8xx]
->> [c00000077ca3b710] [c0000000001bc098] .pci_device_probe+0x124/0x1b0
->> [c00000077ca3b7b0] [c0000000002210c4] .driver_probe_device+0x144/0x20c
->> [c00000077ca3b850] [c0000000002213dc] .__driver_attach+0xcc/0x154
->> [c00000077ca3b8e0] [c00000000021ff20] .bus_for_each_dev+0x7c/0xd4
->> [c00000077ca3b9a0] [c000000000220e28] .driver_attach+0x28/0x40
->> [c00000077ca3ba20] [c000000000220464] .bus_add_driver+0x90/0x228
->> [c00000077ca3bac0] [c0000000002217e4] .driver_register+0x94/0xb0
->> [c00000077ca3bb40] [c0000000001bc3b0] .__pci_register_driver+0x6c/0xcc
->> [c00000077ca3bbe0] [d000000000143428] .sym2_init+0x108/0x15b0 [sym53c8xx]
->> [c00000077ca3bc80] [c00000000008ce80] .sys_init_module+0x17c4/0x1958
->> [c00000077ca3be30] [c00000000000872c] syscall_exit+0x0/0x40
->>
->> Instruction dump:
->> 60000000 786b0420 38210070 7d635b78 e8010010 7c0803a6 4e800020 7c0802a6
->> f8010010 f821ff91 7c0004ac 89230000 <0c090000> 4c00012c 79290620 2f8900ff
->>
->> The gdb list the following for the above trace
->>
->> 0xa4fc is in sym_hcb_attach (drivers/scsi/sym53c8xx_2/sym_hipd.c:1041).
->> 1036            OUTL_DSP(np, pc);
->> 1037            /*
->> 1038             *  Wait 'til done (with timeout)
->> 1039             */
->> 1040            for (i=0; i<SYM_SNOOP_TIMEOUT; i++)
->> 1041                    if (INB(np, nc_istat) & (INTF|SIP|DIP))
->> 1042                            break;
->> 1043            if (i>=SYM_SNOOP_TIMEOUT) {
->> 1044                    printf ("CACHE TEST FAILED: timeout.\n");
->> 1045                    return (0x20);
+>>>> Reliably spams dmesg with end_request() horrors. This happens when git
+>>>> starts checking out linux tree to fresh ext2 partition. Disk is several
+>>>> month old and there were no prolems with, say, 2.6.24-rc3:
+>> Could you try reverting 6f5391c283d7fdcf24bf40786ea79061919d1e1d and see
+>> if the problem still exists?
 >>
 > 
-> doh, I missed that.
+> That's not completely trivial..
 > 
-> #define SYM_SNOOP_TIMEOUT (10000000)
+> I did a hand-made revert against 2.6.24-rc3-mm2 (below) but some other patch
+> in there causes:
 > 
-> ten million is close enough to infinity for me to assume that we broke the
-> driver and that's never going to terminate.
+> drivers/scsi/scsi_lib.c: In function 'scsi_blk_pc_done':
+> drivers/scsi/scsi_lib.c:1251: error: 'struct scsi_cmnd' has no member named 'request_bufflen'
 > 
-> otoh, if that's true you should have got the "CACHE TEST FAILED: timeout"
-> message.  Did you?  And does the driver actually work OK after this?
+That would be the bidi patches. You need to use scsi_bufflen(cmd) instead of
+cmd->request_bufflen. (See below)
+Do you need that I send a patch?
 
-Yes, i got that message
-
-CACHE TEST FAILED: timeout.
-sym1: CACHE INCORRECTLY CONFIGURED.
-sym1: giving up ...
-
-and the file system stress passes.
- 
-> If it is indeed expected that a ~10 second stall in there is correct
-> behaviour then all we need to do is do make that loop a bit smarter (10,000
-> msleep(1)'s, for example).
 > 
+> --- a/drivers/scsi/scsi.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/drivers/scsi/scsi.c
+> @@ -59,7 +59,6 @@
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_dbg.h>
+>  #include <scsi/scsi_device.h>
+> -#include <scsi/scsi_driver.h>
+>  #include <scsi/scsi_eh.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_tcq.h>
+> @@ -379,8 +378,9 @@ void scsi_log_send(struct scsi_cmnd *cmd
+>  			scsi_print_command(cmd);
+>  			if (level > 3) {
+>  				printk(KERN_INFO "buffer = 0x%p, bufflen = %d,"
+> -				       " queuecommand 0x%p\n",
+> +				       " done = 0x%p, queuecommand 0x%p\n",
+>  					scsi_sglist(cmd), scsi_bufflen(cmd),
+> +					cmd->done,
+>  					cmd->device->host->hostt->queuecommand);
+>  
+>  			}
+> @@ -667,12 +667,6 @@ void __scsi_done(struct scsi_cmnd *cmd)
+>  	blk_complete_request(rq);
+>  }
+>  
+> -/* Move this to a header if it becomes more generally useful */
+> -static struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+> -{
+> -	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+> -}
+> -
+>  /**
+>   * scsi_finish_command - cleanup and pass command back to upper layer
+>   * @cmd: the command
+> @@ -685,8 +679,6 @@ void scsi_finish_command(struct scsi_cmn
+>  {
+>  	struct scsi_device *sdev = cmd->device;
+>  	struct Scsi_Host *shost = sdev->host;
+> -	struct scsi_driver *drv;
+> -	unsigned int good_bytes;
+>  
+>  	scsi_device_unbusy(sdev);
+>  
+> @@ -712,13 +704,7 @@ void scsi_finish_command(struct scsi_cmn
+>  				"Notifying upper driver of completion "
+>  				"(result %x)\n", cmd->result));
+>  
+> -	good_bytes = scsi_bufflen(cmd);
+> -        if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
+> -		drv = scsi_cmd_to_driver(cmd);
+> -		if (drv->done)
+> -			good_bytes = drv->done(cmd);
+> -	}
+> -	scsi_io_completion(cmd, good_bytes);
+> +	cmd->done(cmd);
+>  }
+>  EXPORT_SYMBOL(scsi_finish_command);
+>  
+> diff -puN drivers/scsi/scsi_error.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d drivers/scsi/scsi_error.c
+> --- a/drivers/scsi/scsi_error.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/drivers/scsi/scsi_error.c
+> @@ -1697,6 +1697,7 @@ scsi_reset_provider(struct scsi_device *
+>      
+>  	scmd->scsi_done		= scsi_reset_provider_done_command;
+>  	memset(&scmd->sdb, 0, sizeof(scmd->sdb));
+> +	scmd->done			= NULL;
+>  
+>  	scmd->cmd_len			= 0;
+>  
+> diff -puN drivers/scsi/scsi_lib.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d drivers/scsi/scsi_lib.c
+> --- a/drivers/scsi/scsi_lib.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/drivers/scsi/scsi_lib.c
+> @@ -944,6 +944,7 @@ void scsi_end_bidi_request(struct scsi_c
+>  
+>  	scsi_finalize_request(cmd, 1);
+>  }
+> +EXPORT_SYMBOL(scsi_io_completion);
+>  
+>  /*
+>   * Function:    scsi_io_completion()
+> @@ -1238,6 +1239,18 @@ static struct scsi_cmnd *scsi_get_cmd_fr
+>  	return cmd;
+>  }
+>  
+> +static void scsi_blk_pc_done(struct scsi_cmnd *cmd)
+> +{
+> +	BUG_ON(!blk_pc_request(cmd->request));
+> +	/*
+> +	 * This will complete the whole command with uptodate=1 so
+> +	 * as far as the block layer is concerned the command completed
+> +	 * successfully. Since this is a REQ_BLOCK_PC command the
+> +	 * caller should check the request's errors value
+> +	 */
+> +	scsi_io_completion(cmd, cmd->request_bufflen);
++	scsi_io_completion(cmd, scsi_bufflen(cmd));
 
-
--- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+> +}
+> +
+>  int scsi_setup_blk_pc_cmnd(struct scsi_device *sdev, struct request *req)
+>  {
+>  	struct scsi_cmnd *cmd;
+> @@ -1285,6 +1298,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
+>  	cmd->transfersize = req->data_len;
+>  	cmd->allowed = req->retries;
+>  	cmd->timeout_per_command = req->timeout;
+> +	cmd->done = scsi_blk_pc_done;
+>  	return BLKPREP_OK;
+>  }
+>  EXPORT_SYMBOL(scsi_setup_blk_pc_cmnd);
+> diff -puN drivers/scsi/scsi_priv.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d drivers/scsi/scsi_priv.h
+> --- a/drivers/scsi/scsi_priv.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/drivers/scsi/scsi_priv.h
+> @@ -68,7 +68,6 @@ extern int scsi_maybe_unblock_host(struc
+>  extern void scsi_device_unbusy(struct scsi_device *sdev);
+>  extern int scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+>  extern void scsi_next_command(struct scsi_cmnd *cmd);
+> -extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+>  extern void scsi_run_host_queues(struct Scsi_Host *shost);
+>  extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+>  extern void scsi_free_queue(struct request_queue *q);
+> diff -puN drivers/scsi/sd.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d drivers/scsi/sd.c
+> --- a/drivers/scsi/sd.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/drivers/scsi/sd.c
+> @@ -86,19 +86,6 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
+>  MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
+>  MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
+>  
+> -static int  sd_revalidate_disk(struct gendisk *);
+> -static int  sd_probe(struct device *);
+> -static int  sd_remove(struct device *);
+> -static void sd_shutdown(struct device *);
+> -static int sd_suspend(struct device *, pm_message_t state);
+> -static int sd_resume(struct device *);
+> -static void sd_rescan(struct device *);
+> -static int sd_done(struct scsi_cmnd *);
+> -static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+> -static void scsi_disk_release(struct class_device *cdev);
+> -static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+> -static void sd_print_result(struct scsi_disk *, int);
+> -
+>  static DEFINE_IDR(sd_index_idr);
+>  static DEFINE_SPINLOCK(sd_index_lock);
+>  
+> @@ -253,7 +240,6 @@ static struct scsi_driver sd_template = 
+>  		.shutdown	= sd_shutdown,
+>  	},
+>  	.rescan			= sd_rescan,
+> -	.done			= sd_done,
+>  };
+>  
+>  /*
+> @@ -520,6 +506,12 @@ static int sd_prep_fn(struct request_que
+>  	SCpnt->timeout_per_command = timeout;
+>  
+>  	/*
+> +	 * This is the completion routine we use.  This is matched in terms
+> +	 * of capability to this function.
+> +	 */
+> +	SCpnt->done = sd_rw_intr;
+> +
+> +	/*
+>  	 * This indicates that the command is ready from our end to be
+>  	 * queued.
+>  	 */
+> @@ -898,13 +890,13 @@ static struct block_device_operations sd
+>  };
+>  
+>  /**
+> - *	sd_done - bottom half handler: called when the lower level
+> + *	sd_rw_intr - bottom half handler: called when the lower level
+>   *	driver has completed (successfully or otherwise) a scsi command.
+>   *	@SCpnt: mid-level's per command structure.
+>   *
+>   *	Note: potentially run from within an ISR. Must not block.
+>   **/
+> -static int sd_done(struct scsi_cmnd *SCpnt)
+> +static void sd_rw_intr(struct scsi_cmnd * SCpnt)
+>  {
+>  	int result = SCpnt->result;
+>  	unsigned int xfer_size = scsi_bufflen(SCpnt);
+> @@ -925,7 +917,7 @@ static int sd_done(struct scsi_cmnd *SCp
+>  	SCSI_LOG_HLCOMPLETE(1, scsi_print_result(SCpnt));
+>  	if (sense_valid) {
+>  		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
+> -						   "sd_done: sb[respc,sk,asc,"
+> +						   "sd_rw_intr: sb[respc,sk,asc,"
+>  						   "ascq]=%x,%x,%x,%x\n",
+>  						   sshdr.response_code,
+>  						   sshdr.sense_key, sshdr.asc,
+> @@ -997,7 +989,7 @@ static int sd_done(struct scsi_cmnd *SCp
+>  		break;
+>  	}
+>   out:
+> -	return good_bytes;
+> +	scsi_io_completion(SCpnt, good_bytes);
+>  }
+>  
+>  static int media_not_present(struct scsi_disk *sdkp,
+> diff -puN drivers/scsi/sr.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d drivers/scsi/sr.c
+> --- a/drivers/scsi/sr.c~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/drivers/scsi/sr.c
+> @@ -78,7 +78,6 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_WORM);
+>  
+>  static int sr_probe(struct device *);
+>  static int sr_remove(struct device *);
+> -static int sr_done(struct scsi_cmnd *);
+>  
+>  static struct scsi_driver sr_template = {
+>  	.owner			= THIS_MODULE,
+> @@ -87,7 +86,6 @@ static struct scsi_driver sr_template = 
+>  		.probe		= sr_probe,
+>  		.remove		= sr_remove,
+>  	},
+> -	.done			= sr_done,
+>  };
+>  
+>  static unsigned long sr_index_bits[SR_DISKS / BITS_PER_LONG];
+> @@ -221,12 +219,12 @@ out:
+>  }
+>   
+>  /*
+> - * sr_done is the interrupt routine for the device driver.
+> + * rw_intr is the interrupt routine for the device driver.
+>   *
+> - * It will be notified on the end of a SCSI read / write, and will take one
+> + * It will be notified on the end of a SCSI read / write, and will take on
+>   * of several actions based on success or failure.
+>   */
+> -static int sr_done(struct scsi_cmnd *SCpnt)
+> +static void rw_intr(struct scsi_cmnd * SCpnt)
+>  {
+>  	int result = SCpnt->result;
+>  	int this_count = scsi_bufflen(SCpnt);
+> @@ -299,7 +297,12 @@ static int sr_done(struct scsi_cmnd *SCp
+>  		}
+>  	}
+>  
+> -	return good_bytes;
+> +	/*
+> +	 * This calls the generic completion function, now that we know
+> +	 * how many actual sectors finished, and how many sectors we need
+> +	 * to say have failed.
+> +	 */
+> +	scsi_io_completion(SCpnt, good_bytes);
+>  }
+>  
+>  static int sr_prep_fn(struct request_queue *q, struct request *rq)
+> @@ -434,6 +437,12 @@ static int sr_prep_fn(struct request_que
+>  	SCpnt->timeout_per_command = timeout;
+>  
+>  	/*
+> +	 * This is the completion routine we use.  This is matched in terms
+> +	 * of capability to this function.
+> +	 */
+> +	SCpnt->done = rw_intr;
+> +
+> +	/*
+>  	 * This indicates that the command is ready from our end to be
+>  	 * queued.
+>  	 */
+> diff -puN include/scsi/scsi_cmnd.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d include/scsi/scsi_cmnd.h
+> --- a/include/scsi/scsi_cmnd.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/include/scsi/scsi_cmnd.h
+> @@ -41,6 +41,7 @@ struct scsi_cmnd {
+>  	struct list_head list;  /* scsi_cmnd participates in queue lists */
+>  	struct list_head eh_entry; /* entry for the host eh_cmd_q */
+>  	int eh_eflags;		/* Used by error handlr */
+> +	void (*done) (struct scsi_cmnd *);	/* Mid-level done function */
+>  
+>  	/*
+>  	 * A SCSI Command is assigned a nonzero serial_number before passed
+> @@ -121,6 +122,7 @@ extern struct scsi_cmnd *__scsi_get_comm
+>  extern void scsi_put_command(struct scsi_cmnd *);
+>  extern void __scsi_put_command(struct Scsi_Host *, struct scsi_cmnd *,
+>  			       struct device *);
+> +extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+>  extern void scsi_finish_command(struct scsi_cmnd *cmd);
+>  extern void scsi_req_abort_cmd(struct scsi_cmnd *cmd);
+>  
+> diff -puN include/scsi/scsi_driver.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d include/scsi/scsi_driver.h
+> --- a/include/scsi/scsi_driver.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/include/scsi/scsi_driver.h
+> @@ -15,7 +15,6 @@ struct scsi_driver {
+>  	struct device_driver	gendrv;
+>  
+>  	void (*rescan)(struct device *);
+> -	int (*done)(struct scsi_cmnd *);
+>  };
+>  #define to_scsi_driver(drv) \
+>  	container_of((drv), struct scsi_driver, gendrv)
+> diff -puN include/scsi/sd.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d include/scsi/sd.h
+> --- a/include/scsi/sd.h~revert-6f5391c283d7fdcf24bf40786ea79061919d1e1d
+> +++ a/include/scsi/sd.h
+> @@ -48,6 +48,19 @@ struct scsi_disk {
+>  };
+>  #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,cdev)
+>  
+> +static int  sd_revalidate_disk(struct gendisk *disk);
+> +static void sd_rw_intr(struct scsi_cmnd * SCpnt);
+> +static int  sd_probe(struct device *);
+> +static int  sd_remove(struct device *);
+> +static void sd_shutdown(struct device *dev);
+> +static int sd_suspend(struct device *dev, pm_message_t state);
+> +static int sd_resume(struct device *dev);
+> +static void sd_rescan(struct device *);
+> +static void sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer);
+> +static void scsi_disk_release(struct class_device *cdev);
+> +static void sd_print_sense_hdr(struct scsi_disk *, struct scsi_sense_hdr *);
+> +static void sd_print_result(struct scsi_disk *, int);
+> +
+>  #define sd_printk(prefix, sdsk, fmt, a...)				\
+>          (sdsk)->disk ?							\
+>  	sdev_printk(prefix, (sdsk)->device, "[%s] " fmt,		\
+> _
+> 
+> -
+Boaz
