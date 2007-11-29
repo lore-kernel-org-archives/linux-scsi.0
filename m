@@ -1,64 +1,169 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB cmds with sense info
-Date: Thu, 29 Nov 2007 11:24:00 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501D33D61@NAMAIL1.ad.lsil.com>
-References: <20071128192703.GA2584@parisc-linux.org>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: [patch] SCSI: early detection of medium not present, updated
+Date: Thu, 29 Nov 2007 15:18:42 -0800
+Message-ID: <20071129151842.44c05b18.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:56331 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761017AbXK2SYV convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 13:24:21 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20071128192703.GA2584@parisc-linux.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53714 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1763182AbXK2XUo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 29 Nov 2007 18:20:44 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@SteelEye.com, akpm@osdl.org, linux-kernel@vger.kernel.org, "Patro, Sumant" <Sumant.Patro@lsi.com>, "Kolli, Neela" <Neela.Kolli@lsi.com>
+To: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Tejun Heo <htejun@gmail.com>, Je
 
 
-Matthew,
+Guys, I have this marked as needed-in-2.6.24?
 
-I think my last email confused you. Here are the points for submitting
-this patch:
 
-1. It is only to add the ia64 support to our driver.  This is why we add
-the ia64 flag.
 
-2. We did not change the implementation for x86 and x86_64.  The
-implementation for them with u32 * is there from day one.
 
-3. What I wanted to convey in my previous mail is that if one uses a 64
-bit application (s)he may need to test for all functionality again.	
 
-Regards.
+From: Alan Stern <stern@rowland.harvard.edu>
 
-Bo Yang
+Taken from http://bugzilla.kernel.org/show_bug.cgi?id=8904
 
------Original Message-----
-From: Matthew Wilcox [mailto:matthew@wil.cx] 
-Sent: Wednesday, November 28, 2007 2:27 PM
-To: Yang, Bo
-Cc: linux-scsi@vger.kernel.org; James.Bottomley@SteelEye.com;
-akpm@osdl.org; linux-kernel@vger.kernel.org; Patro, Sumant; Kolli, Neela
-Subject: Re: [PATCH 1/1] scsi: megaraid_sas - Fix random failure of DCDB
-cmds with sense info
+An updated (by Albert, I assume) version of the fourteen-month-old patch here:
 
-On Wed, Nov 28, 2007 at 12:08:37PM -0700, Yang, Bo wrote:
-> Matthew,
-> 
-> Yes, as I mentioned, our applications are built in 32-bit environment 
-> (except for ia64).
-> We may see a different behavior if we build it in 64-bit for x86-64. 
+http://marc.info/?l=linux-kernel&m=115412002912837&w=2
 
-Then this patch isn't acceptable.  You need to find a way which works
-for both 32-bit and 64-bit applications.
+Apparently fixes the bug described at
+http://bugzilla.kernel.org/show_bug.cgi?id=8904
 
---
-Intel are signing my paycheques ... these opinions are still mine "Bill,
-look, we understand that you're interested in selling us this operating
-system, but compare it to ours.  We can't possibly take such a
-retrograde step."
+Needs some TLC.  Perhaps urgently.
+
+Cc: Albert Lee <albertcc@tw.ibm.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@steeleye.com>
+Cc: Tejun Heo <htejun@gmail.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+---
+
+ drivers/scsi/scsi_ioctl.c  |    2 +-
+ drivers/scsi/scsi_lib.c    |   20 ++++++++++++++++++--
+ drivers/scsi/sd.c          |    2 +-
+ drivers/scsi/sr.c          |   15 +++++++++------
+ include/scsi/scsi_device.h |    2 +-
+ 5 files changed, 30 insertions(+), 11 deletions(-)
+
+diff -puN drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_ioctl.c
+--- a/drivers/scsi/scsi_ioctl.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/scsi_ioctl.c
+@@ -244,7 +244,7 @@ int scsi_ioctl(struct scsi_device *sdev,
+ 		return scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
+ 	case SCSI_IOCTL_TEST_UNIT_READY:
+ 		return scsi_test_unit_ready(sdev, IOCTL_NORMAL_TIMEOUT,
+-					    NORMAL_RETRIES);
++					    NORMAL_RETRIES, NULL);
+ 	case SCSI_IOCTL_START_UNIT:
+ 		scsi_cmd[0] = START_STOP;
+ 		scsi_cmd[1] = 0;
+diff -puN drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/scsi_lib.c
+@@ -2010,15 +2010,26 @@ scsi_mode_sense(struct scsi_device *sdev
+ }
+ EXPORT_SYMBOL(scsi_mode_sense);
+ 
++/**
++ *	scsi_test_unit_ready - test if unit is ready
++ *	@sdev:	scsi device to change the state of.
++ *	@timeout: command timeout
++ *	@retries: number of retries before failing
++ *	@media_maybe_present: 1 if media maybe present or not.
++ *		              0 if media not present.
++ *
++ *	Returns zero if unsuccessful or an error if TUR failed.
++ **/
+ int
+-scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries)
++scsi_test_unit_ready(struct scsi_device *sdev, int timeout, int retries, int *media_maybe_present)
+ {
+ 	char cmd[] = {
+ 		TEST_UNIT_READY, 0, 0, 0, 0, 0,
+ 	};
+ 	struct scsi_sense_hdr sshdr;
+ 	int result;
+-	
++	int maybe_present = 1;
++
+ 	result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
+ 				  timeout, retries);
+ 
+@@ -2027,10 +2038,15 @@ scsi_test_unit_ready(struct scsi_device 
+ 		if ((scsi_sense_valid(&sshdr)) &&
+ 		    ((sshdr.sense_key == UNIT_ATTENTION) ||
+ 		     (sshdr.sense_key == NOT_READY))) {
++			if (sshdr.asc == 0x3A)
++				maybe_present = 0;
+ 			sdev->changed = 1;
+ 			result = 0;
+ 		}
+ 	}
++
++	if (media_maybe_present)
++		*media_maybe_present = maybe_present;
+ 	return result;
+ }
+ EXPORT_SYMBOL(scsi_test_unit_ready);
+diff -puN drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sd.c
+--- a/drivers/scsi/sd.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/sd.c
+@@ -767,7 +767,7 @@ static int sd_media_changed(struct gendi
+ 	retval = -ENODEV;
+ 
+ 	if (scsi_block_when_processing_errors(sdp))
+-		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES);
++		retval = scsi_test_unit_ready(sdp, SD_TIMEOUT, SD_MAX_RETRIES, NULL);
+ 
+ 	/*
+ 	 * Unable to test, unit probably not ready.   This usually
+diff -puN drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated drivers/scsi/sr.c
+--- a/drivers/scsi/sr.c~scsi-early-detection-of-medium-not-present-updated
++++ a/drivers/scsi/sr.c
+@@ -179,18 +179,21 @@ static int sr_media_change(struct cdrom_
+ {
+ 	struct scsi_cd *cd = cdi->handle;
+ 	int retval;
++	int media_maybe_present;
+ 
+ 	if (CDSL_CURRENT != slot) {
+ 		/* no changer support */
+ 		return -EINVAL;
+ 	}
+ 
+-	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES);
+-	if (retval) {
+-		/* Unable to test, unit probably not ready.  This usually
+-		 * means there is no disc in the drive.  Mark as changed,
+-		 * and we will figure it out later once the drive is
+-		 * available again.  */
++	retval = scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES,
++				      &media_maybe_present);
++	if (retval || !media_maybe_present) {
++		/* Media not present or unable to test, unit probably not
++		 * ready. This usually means there is no disc in the drive.
++		 * Mark as changed, and we will figure it out later once
++		 * the drive is available again.
++		 */
+ 		cd->device->changed = 1;
+ 		/* This will force a flush, if called from check_disk_change */
+ 		retval = 1;
+diff -puN include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated include/scsi/scsi_device.h
+--- a/include/scsi/scsi_device.h~scsi-early-detection-of-medium-not-present-updated
++++ a/include/scsi/scsi_device.h
+@@ -292,7 +292,7 @@ extern int scsi_mode_select(struct scsi_
+ 			    struct scsi_mode_data *data,
+ 			    struct scsi_sense_hdr *);
+ extern int scsi_test_unit_ready(struct scsi_device *sdev, int timeout,
+-				int retries);
++				int retries, int *media_maybe_present);
+ extern int scsi_device_set_state(struct scsi_device *sdev,
+ 				 enum scsi_device_state state);
+ extern struct scsi_event *sdev_evt_alloc(enum scsi_device_event evt_type,
+_
+
