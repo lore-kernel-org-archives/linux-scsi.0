@@ -1,8 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 03/28] blk_end_request: changing block layer core
-	(take 3)
-Date: Fri, 30 Nov 2007 18:25:24 -0500 (EST)
-Message-ID: <20071130.182524.45176489.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 04/28] blk_end_request: changing arm (take 3)
+Date: Fri, 30 Nov 2007 18:25:52 -0500 (EST)
+Message-ID: <20071130.182552.105434070.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -21,94 +20,46 @@ To: jens.axboe@oracle.com, bharrosh@panasas.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts core parts of block layer to use blk_end_request().
-
-'dequeue' argument was originally introduced for end_dequeued_request(),
-where no attempt should be made to dequeue the request as it's already
-dequeued.
-However, it's not necessary as it can be checked with
-list_empty(&rq->queuelist).
-(Dequeued request has empty list and queued request doesn't.)
-
-As a result of this patch, end_queued_request() and
-end_dequeued_request() become identical.  Later patch will merge
-and rename them and change users of those functions.
+This patch converts arm to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- block/ll_rw_blk.c |   25 ++++++++++---------------
- 1 files changed, 10 insertions(+), 15 deletions(-)
 
-Index: 2.6.24-rc3-mm2/block/ll_rw_blk.c
+ arch/arm/plat-omap/mailbox.c |    9 ++++++---
+ 1 files changed, 6 insertions(+), 3 deletions(-)
+
+Index: 2.6.24-rc3-mm2/arch/arm/plat-omap/mailbox.c
 ===================================================================
---- 2.6.24-rc3-mm2.orig/block/ll_rw_blk.c
-+++ 2.6.24-rc3-mm2/block/ll_rw_blk.c
-@@ -368,8 +368,8 @@ void blk_ordered_complete_seq(struct req
- 	q->ordseq = 0;
- 	rq = q->orig_bar_rq;
+--- 2.6.24-rc3-mm2.orig/arch/arm/plat-omap/mailbox.c
++++ 2.6.24-rc3-mm2/arch/arm/plat-omap/mailbox.c
+@@ -117,7 +117,8 @@ static void mbox_tx_work(struct work_str
  
--	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
--	end_that_request_last(rq, uptodate);
-+	if (__blk_end_request(rq, uptodate, blk_rq_bytes(rq)))
-+		BUG();
+ 		spin_lock(q->queue_lock);
+ 		blkdev_dequeue_request(rq);
+-		end_that_request_last(rq, 0);
++		if (__blk_end_request(rq, 0, 0))
++			BUG();
+ 		spin_unlock(q->queue_lock);
+ 	}
  }
+@@ -151,7 +152,8 @@ static void mbox_rx_work(struct work_str
  
- static void pre_flush_end_io(struct request *rq, int error)
-@@ -486,9 +486,9 @@ int blk_do_ordered(struct request_queue 
- 			 * ORDERED_NONE while this request is on it.
- 			 */
- 			blkdev_dequeue_request(rq);
--			end_that_request_first(rq, -EOPNOTSUPP,
--					       rq->hard_nr_sectors);
--			end_that_request_last(rq, -EOPNOTSUPP);
-+			if (__blk_end_request(rq, -EOPNOTSUPP,
-+					      blk_rq_bytes(rq)))
-+				BUG();
- 			*rqp = NULL;
- 			return 0;
- 		}
-@@ -3691,14 +3691,9 @@ void end_that_request_last(struct reques
- EXPORT_SYMBOL(end_that_request_last);
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blkdev_dequeue_request(rq);
+-		end_that_request_last(rq, 0);
++		if (__blk_end_request(rq, 0, 0))
++			BUG();
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
  
- static inline void __end_request(struct request *rq, int uptodate,
--				 unsigned int nr_bytes, int dequeue)
-+				 unsigned int nr_bytes)
- {
--	if (!end_that_request_chunk(rq, uptodate, nr_bytes)) {
--		if (dequeue)
--			blkdev_dequeue_request(rq);
--		add_disk_randomness(rq->rq_disk);
--		end_that_request_last(rq, uptodate);
--	}
-+	__blk_end_request(rq, uptodate, nr_bytes);
- }
+ 		mbox->rxq->callback((void *)msg);
+@@ -265,7 +267,8 @@ omap_mbox_read(struct device *dev, struc
  
- /**
-@@ -3741,7 +3736,7 @@ EXPORT_SYMBOL_GPL(blk_rq_cur_bytes);
-  **/
- void end_queued_request(struct request *rq, int uptodate)
- {
--	__end_request(rq, uptodate, blk_rq_bytes(rq), 1);
-+	__end_request(rq, uptodate, blk_rq_bytes(rq));
- }
- EXPORT_SYMBOL(end_queued_request);
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blkdev_dequeue_request(rq);
+-		end_that_request_last(rq, 0);
++		if (__blk_end_request(rq, 0, 0))
++			BUG();
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
  
-@@ -3758,7 +3753,7 @@ EXPORT_SYMBOL(end_queued_request);
-  **/
- void end_dequeued_request(struct request *rq, int uptodate)
- {
--	__end_request(rq, uptodate, blk_rq_bytes(rq), 0);
-+	__end_request(rq, uptodate, blk_rq_bytes(rq));
- }
- EXPORT_SYMBOL(end_dequeued_request);
- 
-@@ -3784,7 +3779,7 @@ EXPORT_SYMBOL(end_dequeued_request);
-  **/
- void end_request(struct request *req, int uptodate)
- {
--	__end_request(req, uptodate, req->hard_cur_sectors << 9, 1);
-+	__end_request(req, uptodate, req->hard_cur_sectors << 9);
- }
- EXPORT_SYMBOL(end_request);
- 
+ 		if (unlikely(mbox_seq_test(mbox, *p))) {
