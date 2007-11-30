@@ -1,48 +1,55 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [patch] SCSI: early detection of medium not present, updated
-Date: Thu, 29 Nov 2007 22:26:49 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0711292213500.12541-100000@netrider.rowland.org>
-References: <20071129151842.44c05b18.akpm@linux-foundation.org>
+From: Kyle McMartin <kyle@mcmartin.ca>
+Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
+Date: Fri, 30 Nov 2007 01:39:29 -0500
+Message-ID: <20071130063929.GD2754@fattire.cabal.ca>
+References: <474D0AAC.5010005@linux.vnet.ibm.com> <20071127225328.9e3f3827.akpm@linux-foundation.org> <474D15FF.5080508@linux.vnet.ibm.com> <20071127232552.ad16e95c.akpm@linux-foundation.org> <474E5CAC.9000108@linux.vnet.ibm.com> <20071129003533.54b4b20e.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:3100 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S934923AbXK3Ddb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 22:33:31 -0500
-In-Reply-To: <20071129151842.44c05b18.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S932435AbXK3Gjn@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20071129003533.54b4b20e.akpm@linux-foundation.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Joe Reid <joereid@gmail.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>, Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, LKML <linux-kernel@vger.kernel.org>, linuxppc-dev@ozlabs.org, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Matthew Wilcox <willy@debian.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 29 Nov 2007, Andrew Morton wrote:
-
-> Guys, I have this marked as needed-in-2.6.24?
-
-> From: Alan Stern <stern@rowland.harvard.edu>
+On Thu, Nov 29, 2007 at 12:35:33AM -0800, Andrew Morton wrote:
+> ten million is close enough to infinity for me to assume that we broke the
+> driver and that's never going to terminate.
 > 
-> Taken from http://bugzilla.kernel.org/show_bug.cgi?id=8904
-> 
-> An updated (by Albert, I assume) version of the fourteen-month-old patch here:
-> 
-> http://marc.info/?l=linux-kernel&m=115412002912837&w=2
-> 
-> Apparently fixes the bug described at
-> http://bugzilla.kernel.org/show_bug.cgi?id=8904
-> 
-> Needs some TLC.  Perhaps urgently.
 
-As far as I'm concerned there's no harm in leaving it until 2.6.25; my
-original version was only a slight performance optimization to prevent
-excessive querying when the answer is known beforehand.  In fact this
-version of the patch includes only a portion of my original submission.  
-The part in sd.c that exits the retry loop early when there's no medium
-is missing.
+how about this? doesn't break things on my pa8800:
 
-But if this really does fix bug #8904 then it should go in sooner.  
-The question is, does it fix the bug?  The report mentions only a small 
-amount of testing.
-
-Alan Stern
-
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+index 463f119..ef01cb1 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+@@ -1037,10 +1037,13 @@ restart_test:
+ 	/*
+ 	 *  Wait 'til done (with timeout)
+ 	 */
+-	for (i=0; i<SYM_SNOOP_TIMEOUT; i++)
++	do {	
+ 		if (INB(np, nc_istat) & (INTF|SIP|DIP))
+ 			break;
+-	if (i>=SYM_SNOOP_TIMEOUT) {
++		msleep(10);
++	} while (i++ < SYM_SNOOP_TIMEOUT);
++
++	if (i >= SYM_SNOOP_TIMEOUT) {
+ 		printf ("CACHE TEST FAILED: timeout.\n");
+ 		return (0x20);
+ 	}
+diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+index ad07880..85c483b 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
++++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+@@ -339,7 +339,7 @@
+ /*
+  *  Misc.
+  */
+-#define SYM_SNOOP_TIMEOUT (10000000)
++#define SYM_SNOOP_TIMEOUT (1000)
+ #define BUS_8_BIT	0
+ #define BUS_16_BIT	1
+ 
