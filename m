@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 22/28] blk_end_request: changing cciss (take 3)
-Date: Fri, 30 Nov 2007 18:33:21 -0500 (EST)
-Message-ID: <20071130.183321.57154855.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 23/28] blk_end_request: changing cpqarray (take 3)
+Date: Fri, 30 Nov 2007 18:33:38 -0500 (EST)
+Message-ID: <20071130.183338.107679989.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,10 +20,10 @@ To: jens.axboe@oracle.com, bharrosh@panasas.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts cciss to use blk_end_request().
+This patch converts cpqarray to use blk_end_request().
 
-cciss is a little bit different from "normal" drivers.
-cciss directly calls bio_endio() and disk_stat_add()
+cpqarray is a little bit different from "normal" drivers.
+cpqarray directly calls bio_endio() and disk_stat_add()
 when completing request.  But those can be replaced with
 __end_that_request_first().
 After the replacement, request completion procedures of
@@ -32,42 +32,52 @@ those drivers become like the following:
     o add_disk_randomness()
     o end_that_request_last()
 This can be converted to blk_end_request() by following
-the rule (a) mentioned in the patch subject
+the rule (b) mentioned in the patch subject
 "[PATCH 01/28] blk_end_request: add new request completion interface".
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/cciss.c |   25 +++----------------------
- 1 files changed, 3 insertions(+), 22 deletions(-)
+ drivers/block/cpqarray.c |   27 ++-------------------------
+ 1 files changed, 2 insertions(+), 25 deletions(-)
 
-Index: 2.6.24-rc3-mm2/drivers/block/cciss.c
+Index: 2.6.24-rc3-mm2/drivers/block/cpqarray.c
 ===================================================================
---- 2.6.24-rc3-mm2.orig/drivers/block/cciss.c
-+++ 2.6.24-rc3-mm2/drivers/block/cciss.c
-@@ -1187,17 +1187,6 @@ static int cciss_ioctl(struct inode *ino
+--- 2.6.24-rc3-mm2.orig/drivers/block/cpqarray.c
++++ 2.6.24-rc3-mm2/drivers/block/cpqarray.c
+@@ -167,7 +167,6 @@ static void start_io(ctlr_info_t *h);
+ 
+ static inline void addQ(cmdlist_t **Qptr, cmdlist_t *c);
+ static inline cmdlist_t *removeQ(cmdlist_t **Qptr, cmdlist_t *c);
+-static inline void complete_buffers(struct bio *bio, int ok);
+ static inline void complete_command(cmdlist_t *cmd, int timeout);
+ 
+ static irqreturn_t do_ida_intr(int irq, void *dev_id);
+@@ -980,19 +979,6 @@ static void start_io(ctlr_info_t *h)
  	}
  }
  
--static inline void complete_buffers(struct bio *bio, int status)
+-static inline void complete_buffers(struct bio *bio, int ok)
 -{
--	while (bio) {
--		struct bio *xbh = bio->bi_next;
+-	struct bio *xbh;
 -
+-	while (bio) {
+-		xbh = bio->bi_next;
 -		bio->bi_next = NULL;
--		bio_endio(bio, status ? 0 : -EIO);
+-		
+-		bio_endio(bio, ok ? 0 : -EIO);
+-
 -		bio = xbh;
 -	}
 -}
--
- static void cciss_check_queues(ctlr_info_t *h)
- {
- 	int start_queue = h->next_to_run;
-@@ -1263,21 +1252,14 @@ static void cciss_softirq_done(struct re
- 		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
- 	}
+ /*
+  * Mark all buffers that cmd was responsible for
+  */
+@@ -1030,18 +1016,9 @@ static inline void complete_command(cmdl
+                 pci_unmap_page(hba[cmd->ctlr]->pci_dev, cmd->req.sg[i].addr,
+ 				cmd->req.sg[i].size, ddir);
  
--	complete_buffers(rq->bio, (rq->errors == 0));
+-	complete_buffers(rq->bio, ok);
 -
 -	if (blk_fs_request(rq)) {
 -		const int rw = rq_data_dir(rq);
@@ -75,24 +85,12 @@ Index: 2.6.24-rc3-mm2/drivers/block/cciss.c
 -		disk_stat_add(rq->rq_disk, sectors[rw], rq->nr_sectors);
 -	}
 -
- #ifdef CCISS_DEBUG
- 	printk("Done with %p\n", rq);
- #endif				/* CCISS_DEBUG */
- 
 -	add_disk_randomness(rq->rq_disk);
-+	if (blk_end_request(rq, (rq->errors == 0), blk_rq_bytes(rq)))
+-
+ 	DBGPX(printk("Done with %p\n", rq););
+-	end_that_request_last(rq, ok ? 1 : -EIO);
++	if (__blk_end_request(rq, ok, blk_rq_bytes(rq)))
 +		BUG();
-+
- 	spin_lock_irqsave(&h->lock, flags);
--	end_that_request_last(rq, (rq->errors == 0));
- 	cmd_free(h, cmd, 1);
- 	cciss_check_queues(h);
- 	spin_unlock_irqrestore(&h->lock, flags);
-@@ -2544,7 +2526,6 @@ after_error_processing:
- 	}
- 	cmd->rq->data_len = 0;
- 	cmd->rq->completion_data = cmd;
--	blk_add_trace_rq(cmd->rq->q, cmd->rq, BLK_TA_COMPLETE);
- 	blk_complete_request(cmd->rq);
  }
  
+ /*
