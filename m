@@ -1,25 +1,25 @@
-From: Tejun Heo <htejun@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [patch] SCSI: early detection of medium not present, updated
-Date: Fri, 30 Nov 2007 09:04:45 +0900
-Message-ID: <474F539D.8000206@gmail.com>
+Date: Thu, 29 Nov 2007 22:26:49 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0711292213500.12541-100000@netrider.rowland.org>
 References: <20071129151842.44c05b18.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.182]:56284 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763601AbXK3AE5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 19:04:57 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so2454164wah
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Nov 2007 16:04:52 -0800 (PST)
+Received: from netrider.rowland.org ([192.131.102.5]:3100 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S934923AbXK3Ddb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Nov 2007 22:33:31 -0500
 In-Reply-To: <20071129151842.44c05b18.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James Bottomley <James.Bottomley@steeleye.com>, linux-scsi@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Alan Stern <stern@rowland.harvard.edu>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Joe Reid <joereid@gmail.com>, James Bottomley <James.Bottomley@steeleye.com>, SCSI development list <linux-scsi@vger.kernel.org>, Albert Lee <albertcc@tw.ibm.com>, Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
 
-Andrew Morton wrote:
+On Thu, 29 Nov 2007, Andrew Morton wrote:
+
+> Guys, I have this marked as needed-in-2.6.24?
+
 > From: Alan Stern <stern@rowland.harvard.edu>
 > 
 > Taken from http://bugzilla.kernel.org/show_bug.cgi?id=8904
@@ -32,17 +32,17 @@ Andrew Morton wrote:
 > http://bugzilla.kernel.org/show_bug.cgi?id=8904
 > 
 > Needs some TLC.  Perhaps urgently.
-> 
-> Cc: Albert Lee <albertcc@tw.ibm.com>
-> Cc: Alan Stern <stern@rowland.harvard.edu>
-> Cc: James Bottomley <James.Bottomley@steeleye.com>
-> Cc: Tejun Heo <htejun@gmail.com>
-> Cc: Jens Axboe <jens.axboe@oracle.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 
-I think I did it last time but...
+As far as I'm concerned there's no harm in leaving it until 2.6.25; my
+original version was only a slight performance optimization to prevent
+excessive querying when the answer is known beforehand.  In fact this
+version of the patch includes only a portion of my original submission.  
+The part in sd.c that exits the retry loop early when there's no medium
+is missing.
 
-Acked-by: Tejun Heo <htejun@gmail.com>
+But if this really does fix bug #8904 then it should go in sooner.  
+The question is, does it fix the bug?  The report mentions only a small 
+amount of testing.
 
--- 
-tejun
+Alan Stern
+
