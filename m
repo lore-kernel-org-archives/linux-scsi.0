@@ -1,8 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 02/28] blk_end_request: add/export functions to
- get request size (take 3)
-Date: Fri, 30 Nov 2007 18:24:58 -0500 (EST)
-Message-ID: <20071130.182458.75427007.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 03/28] blk_end_request: changing block layer core
+	(take 3)
+Date: Fri, 30 Nov 2007 18:25:24 -0500 (EST)
+Message-ID: <20071130.182524.45176489.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -21,89 +21,94 @@ To: jens.axboe@oracle.com, bharrosh@panasas.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds/exports functions to get the size of request in bytes.
-They are useful because blk_end_request() takes bytes
-as a completed I/O size instead of sectors.
+This patch converts core parts of block layer to use blk_end_request().
+
+'dequeue' argument was originally introduced for end_dequeued_request(),
+where no attempt should be made to dequeue the request as it's already
+dequeued.
+However, it's not necessary as it can be checked with
+list_empty(&rq->queuelist).
+(Dequeued request has empty list and queued request doesn't.)
+
+As a result of this patch, end_queued_request() and
+end_dequeued_request() become identical.  Later patch will merge
+and rename them and change users of those functions.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- block/ll_rw_blk.c      |   25 ++++++++++++++++++++++---
- include/linux/blkdev.h |    8 ++++++++
- 2 files changed, 30 insertions(+), 3 deletions(-)
+ block/ll_rw_blk.c |   25 ++++++++++---------------
+ 1 files changed, 10 insertions(+), 15 deletions(-)
 
-Index: 2.6.24-rc3-mm2/include/linux/blkdev.h
-===================================================================
---- 2.6.24-rc3-mm2.orig/include/linux/blkdev.h
-+++ 2.6.24-rc3-mm2/include/linux/blkdev.h
-@@ -736,6 +736,14 @@ extern void end_dequeued_request(struct 
- extern void blk_complete_request(struct request *);
- 
- /*
-+ * blk_end_request() takes bytes instead of sectors as a complete size.
-+ * blk_rq_bytes() returns bytes left to complete in the entire request.
-+ * blk_rq_cur_bytes() returns bytes left to complete in the current segment.
-+ */
-+extern unsigned int blk_rq_bytes(struct request *rq);
-+extern unsigned int blk_rq_cur_bytes(struct request *rq);
-+
-+/*
-  * end_that_request_first/chunk() takes an uptodate argument. we account
-  * any value <= as an io error. 0 means -EIO for compatability reasons,
-  * any other < 0 value is the direct error type. An uptodate value of
 Index: 2.6.24-rc3-mm2/block/ll_rw_blk.c
 ===================================================================
 --- 2.6.24-rc3-mm2.orig/block/ll_rw_blk.c
 +++ 2.6.24-rc3-mm2/block/ll_rw_blk.c
-@@ -3701,13 +3701,32 @@ static inline void __end_request(struct 
- 	}
+@@ -368,8 +368,8 @@ void blk_ordered_complete_seq(struct req
+ 	q->ordseq = 0;
+ 	rq = q->orig_bar_rq;
+ 
+-	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
+-	end_that_request_last(rq, uptodate);
++	if (__blk_end_request(rq, uptodate, blk_rq_bytes(rq)))
++		BUG();
  }
  
--static unsigned int rq_byte_size(struct request *rq)
-+/**
-+ * blk_rq_bytes - Returns bytes left to complete in the entire request
-+ **/
-+unsigned int blk_rq_bytes(struct request *rq)
+ static void pre_flush_end_io(struct request *rq, int error)
+@@ -486,9 +486,9 @@ int blk_do_ordered(struct request_queue 
+ 			 * ORDERED_NONE while this request is on it.
+ 			 */
+ 			blkdev_dequeue_request(rq);
+-			end_that_request_first(rq, -EOPNOTSUPP,
+-					       rq->hard_nr_sectors);
+-			end_that_request_last(rq, -EOPNOTSUPP);
++			if (__blk_end_request(rq, -EOPNOTSUPP,
++					      blk_rq_bytes(rq)))
++				BUG();
+ 			*rqp = NULL;
+ 			return 0;
+ 		}
+@@ -3691,14 +3691,9 @@ void end_that_request_last(struct reques
+ EXPORT_SYMBOL(end_that_request_last);
+ 
+ static inline void __end_request(struct request *rq, int uptodate,
+-				 unsigned int nr_bytes, int dequeue)
++				 unsigned int nr_bytes)
  {
- 	if (blk_fs_request(rq))
- 		return rq->hard_nr_sectors << 9;
- 
- 	return rq->data_len;
+-	if (!end_that_request_chunk(rq, uptodate, nr_bytes)) {
+-		if (dequeue)
+-			blkdev_dequeue_request(rq);
+-		add_disk_randomness(rq->rq_disk);
+-		end_that_request_last(rq, uptodate);
+-	}
++	__blk_end_request(rq, uptodate, nr_bytes);
  }
-+EXPORT_SYMBOL_GPL(blk_rq_bytes);
-+
-+/**
-+ * blk_rq_cur_bytes - Returns bytes left to complete in the current segment
-+ **/
-+unsigned int blk_rq_cur_bytes(struct request *rq)
-+{
-+	if (blk_fs_request(rq))
-+		return rq->current_nr_sectors << 9;
-+
-+	if (rq->bio)
-+		return rq->bio->bi_size;
-+
-+	return rq->data_len;
-+}
-+EXPORT_SYMBOL_GPL(blk_rq_cur_bytes);
  
  /**
-  * end_queued_request - end all I/O on a queued request
-@@ -3722,7 +3741,7 @@ static unsigned int rq_byte_size(struct 
+@@ -3741,7 +3736,7 @@ EXPORT_SYMBOL_GPL(blk_rq_cur_bytes);
   **/
  void end_queued_request(struct request *rq, int uptodate)
  {
--	__end_request(rq, uptodate, rq_byte_size(rq), 1);
-+	__end_request(rq, uptodate, blk_rq_bytes(rq), 1);
+-	__end_request(rq, uptodate, blk_rq_bytes(rq), 1);
++	__end_request(rq, uptodate, blk_rq_bytes(rq));
  }
  EXPORT_SYMBOL(end_queued_request);
  
-@@ -3739,7 +3758,7 @@ EXPORT_SYMBOL(end_queued_request);
+@@ -3758,7 +3753,7 @@ EXPORT_SYMBOL(end_queued_request);
   **/
  void end_dequeued_request(struct request *rq, int uptodate)
  {
--	__end_request(rq, uptodate, rq_byte_size(rq), 0);
-+	__end_request(rq, uptodate, blk_rq_bytes(rq), 0);
+-	__end_request(rq, uptodate, blk_rq_bytes(rq), 0);
++	__end_request(rq, uptodate, blk_rq_bytes(rq));
  }
  EXPORT_SYMBOL(end_dequeued_request);
+ 
+@@ -3784,7 +3779,7 @@ EXPORT_SYMBOL(end_dequeued_request);
+  **/
+ void end_request(struct request *req, int uptodate)
+ {
+-	__end_request(req, uptodate, req->hard_cur_sectors << 9, 1);
++	__end_request(req, uptodate, req->hard_cur_sectors << 9);
+ }
+ EXPORT_SYMBOL(end_request);
  
