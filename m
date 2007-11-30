@@ -1,7 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 13/28] blk_end_request: changing viodasd (take 3)
-Date: Fri, 30 Nov 2007 18:30:13 -0500 (EST)
-Message-ID: <20071130.183013.107945133.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 14/28] blk_end_request: changing xen-blkfront
+	(take 3)
+Date: Fri, 30 Nov 2007 18:30:34 -0500 (EST)
+Message-ID: <20071130.183034.17868470.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,27 +21,28 @@ To: jens.axboe@oracle.com, bharrosh@panasas.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts viodasd to use blk_end_request().
+This patch converts xen-blkfront to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/viodasd.c |    5 +----
- 1 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/block/xen-blkfront.c |    5 ++---
+ 1 files changed, 2 insertions(+), 3 deletions(-)
 
-Index: 2.6.24-rc3-mm2/drivers/block/viodasd.c
+Index: 2.6.24-rc3-mm2/drivers/block/xen-blkfront.c
 ===================================================================
---- 2.6.24-rc3-mm2.orig/drivers/block/viodasd.c
-+++ 2.6.24-rc3-mm2/drivers/block/viodasd.c
-@@ -232,10 +232,7 @@ static struct block_device_operations vi
- static void viodasd_end_request(struct request *req, int uptodate,
- 		int num_sectors)
- {
--	if (end_that_request_first(req, uptodate, num_sectors))
--		return;
--	add_disk_randomness(req->rq_disk);
--	end_that_request_last(req, uptodate);
-+	__blk_end_request(req, uptodate, num_sectors << 9);
- }
+--- 2.6.24-rc3-mm2.orig/drivers/block/xen-blkfront.c
++++ 2.6.24-rc3-mm2/drivers/block/xen-blkfront.c
+@@ -494,10 +494,9 @@ static irqreturn_t blkif_interrupt(int i
+ 				dev_dbg(&info->xbdev->dev, "Bad return from blkdev data "
+ 					"request: %x\n", bret->status);
  
- /*
+-			ret = end_that_request_first(req, uptodate,
+-				req->hard_nr_sectors);
++			ret = __blk_end_request(req, uptodate,
++						blk_rq_bytes(req));
+ 			BUG_ON(ret);
+-			end_that_request_last(req, uptodate);
+ 			break;
+ 		default:
+ 			BUG();
