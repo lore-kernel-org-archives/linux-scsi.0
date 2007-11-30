@@ -1,102 +1,39 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: LIO-VM Demo Images available for download!
-Date: Fri, 30 Nov 2007 07:03:14 -0800
-Message-ID: <1196434994.7468.22.camel@haakon2.linux-iscsi.org>
+From: Joe Eykholt <fcoe@eykholt.com>
+Subject: [OpenFCoE] [PATCH] Add a missing spin_unlock() found when a BLS frame
+ was mis-delivered.
+Date: Fri, 30 Nov 2007 10:35:32 -0800
+Message-ID: <475057F4.9020509@eykholt.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp123.sbc.mail.sp1.yahoo.com ([69.147.64.96]:31558 "HELO
-	smtp123.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S932808AbXK3PDQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Nov 2007 10:03:16 -0500
+Received: from eykholt.com ([72.52.117.41]:43577 "HELO eykholt.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+	id S1753905AbXK3SfX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Nov 2007 13:35:23 -0500
+Received: from 67.91.200.194 ([67.91.200.194]) by eykholt.com for <linux-scsi@vger.kernel.org>; Fri, 30 Nov 2007 10:35:21 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: LKML <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, iet-dev <iscsitarget-devel@lists.sourceforge.net>
+To: linux-scsi@vger.kernel.org
 
-Grettings all,
+Add a missing spin_unlock() found when a BLS frame was mis-delivered.
 
-It is my great honor to announce that the LIO-VM Target images are now
-online and available for download:
+---
+ drivers/scsi/ofc/openfc/openfc_scsi.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-http://linux-iscsi.org/builds/LIO-VM/vmware/
+diff --git a/drivers/scsi/ofc/openfc/openfc_scsi.c b/drivers/scsi/ofc/openfc/openfc_scsi.c
+index 86e6895..5fa0ad6 100644
+--- a/drivers/scsi/ofc/openfc/openfc_scsi.c
++++ b/drivers/scsi/ofc/openfc/openfc_scsi.c
+@@ -548,6 +548,8 @@ void openfc_scsi_abort_iocontext(struct fc_scsi_pkt *fsp)
+                fsp->status_code = OPENFC_ERROR;
+                fsp->io_status = (SUGGEST_RETRY << 24);
+                (*fsp->done) (fsp);
++       } else {
++               spin_unlock(&qp->scsi_pkt_lock);
+        }
+ }
 
-and the wiki entry (which is basically the README now) is also online:
-
-http://linux-iscsi.org/index.php/LIO-VM
-
-Please check the wiki for the complete release information.  Here are
-the bullets from the README.
-
-Have Fun!!! :-)
-
---nab
-
------------------------------------------------------------------------
-
-Introduction:
-
-The LIO-VM Storage Engine demo is a set of  VMware compatible virtual
-machine images that contains a self-configuring iSCSI storage engine
-that runs on with a very large and diverse amount of PC storage
-software and hardware.  When the LIO-VM image boots, the host local
-storage hardware that is made available to the guest is exported as
-iSCSI target ports, and made available to both local and remote
-iSCSI Initiator clients.
-
-Note that the iSCSI target is configured to allow _ALL_ iSCSI Initiators
-to access _ALL_ iSCSI Target Ports across all available iSCSI Network
-Portals.  By default, the storage devices with filesystems will be
-exported as READ-ONLY to prevent multiple accesses by non-cluster
-filesystems.  Support for production R/W configurations of this demo are
-in the works, please stay tuned to the site and lists for more
-information as this unfolds.  Also, if you really know what you are
-doing when it comes to non cluster filesystem + RW access, please see
-section IX) below.
-
-I) The .vmx LIO-VM images:
-
-        There are two VMware Workstation 6.x/Fusion compatible image 
-	available:
-
-        Debian Etch 4 i386: (2.6.18-5-686)
-        JeOS / Ubuntu 7.10 i386: (2.6.22-14-virtual)
-
-II) What are the host OS requirements to run the LIO-VM Demo?
-
-        Any i386 or x86_64 Linux v2.6 host that can run VMware
-	Workstation 6.
-        Any Apple Mac-tel hardware that can run VMware Fusion.
-        Any XP or NT compatible host that can run VMware Workstation 6.
-
-III) What has been tested?
-
-        The LIO-VM has been successfully run on Linux v2.6, MacOSX 
-	Leopard, and WinXP/NT.
-
-        USB connected flash and SATA/PATA devices.
-        Internal SATA DVD and External SATA HD drives
-        External USB DVD/HD devices are also supported.
-
-IV) What should work?
-
-        All USB Direct-Access (flash, USB external PATA/SATA disk 
-	drives)
-        All USB optical drives (CD, DVD, HD/DVD and BD)
-        All PATA/SATA disk drives
-        All PATA/SATA optical drives (CD, DVD, HD/DVD and BD)
-        All PSCSI / FC / SAS hardware with correct host OS drivers.
-
-        Basically, if it works locally, and you can bring it into the 
-	guest,  you can export it.
-
-V) Why are there two images?
-
-        The Debian image has a work around to allow optical devices to 
-	work properly.  Other than this difference, the two images 
-	should function as identical for other devices, host OS storage 
-	driver requirements not withstanding.  See VI) for more 
-	information.
-
-
+--
+1.5.3.6
