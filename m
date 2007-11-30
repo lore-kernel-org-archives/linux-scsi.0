@@ -1,40 +1,51 @@
 From: Joe Eykholt <fcoe@eykholt.com>
-Subject: [OpenFCoE] [PATCH] Don't deliver BLS frames to the fast path.
-Date: Fri, 30 Nov 2007 10:37:28 -0800
-Message-ID: <47505868.20504@eykholt.com>
+Subject: [OpenFCoE] [PATCH] fcoe_create() fails without destroying the kmem
+ slab.
+Date: Fri, 30 Nov 2007 10:38:48 -0800
+Message-ID: <475058B8.3040209@eykholt.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eykholt.com ([72.52.117.41]:51912 "HELO eykholt.com"
+Received: from eykholt.com ([72.52.117.41]:42612 "HELO eykholt.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1760527AbXK3ShV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 30 Nov 2007 13:37:21 -0500
-Received: from 67.91.200.194 ([67.91.200.194]) by eykholt.com for <linux-scsi@vger.kernel.org>; Fri, 30 Nov 2007 10:37:17 -0800
+	id S1761558AbXK3Sii (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 30 Nov 2007 13:38:38 -0500
+Received: from 67.91.200.194 ([67.91.200.194]) by eykholt.com for <linux-scsi@vger.kernel.org>; Fri, 30 Nov 2007 10:38:37 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Don't deliver BLS frames to the fast path.
+fcoe_create() fails without destroying the kmem slab.
 
+This causes the next create to panic.
+The destroy should be done in openfc_put_dev.
 ---
- drivers/scsi/ofc/libfc/fc_local_port.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/ofc/openfc/openfc_if.c |    5 +----
+ 1 files changed, 1 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/ofc/libfc/fc_local_port.c b/drivers/scsi/ofc/libfc/fc_local_port.c
-index 55de5d3..66a1d47 100644
---- a/drivers/scsi/ofc/libfc/fc_local_port.c
-+++ b/drivers/scsi/ofc/libfc/fc_local_port.c
-@@ -1607,7 +1607,8 @@ void fc_local_port_recv(struct fc_local_port *lp, struct fc_frame *fp)
-                /* fall through */
-        case FC_EOF_N:
-                mp = lp->fl_vf->vf_exch_mgr;
--               if ((f_ctl & (FC_FC_EX_CTX | FC_FC_SEQ_CTX)) == FC_FC_EX_CTX) {
-+               if ((f_ctl & (FC_FC_EX_CTX | FC_FC_SEQ_CTX)) == FC_FC_EX_CTX &&
-+                   fh->fh_type != FC_TYPE_BLS) {
-                        fc_exch_recv_seq_resp(mp, fp);
-                } else if (f_ctl & FC_FC_SEQ_CTX) {
-                        fc_exch_recv_resp(mp, fp);
+diff --git a/drivers/scsi/ofc/openfc/openfc_if.c b/drivers/scsi/ofc/openfc/openfc_if.c
+index 0d9c370..6f9a276 100644
+--- a/drivers/scsi/ofc/openfc/openfc_if.c
++++ b/drivers/scsi/ofc/openfc/openfc_if.c
+@@ -1115,7 +1115,6 @@ void openfc_unregister(struct fcdev *dev)
+        fc_remove_host(openfcp->host);
+        scsi_remove_host(openfcp->host);
+        fcs_destroy(openfcp->fcs_state);
+-       openfc_destroy_scsi_slab(openfcp);
+ }
+ EXPORT_SYMBOL(openfc_unregister);
+
+@@ -1127,9 +1126,7 @@ void openfc_put_dev(struct fcdev *dev)
+ {
+        struct openfc_softc *openfcp = openfc_get_softc(dev);
+
+-       /*
+-        * put back the scsi host structure
+-        */
++       openfc_destroy_scsi_slab(openfcp);
+        scsi_host_put(openfcp->host);
+ }
+ EXPORT_SYMBOL(openfc_put_dev);
 --
 1.5.3.6
-
