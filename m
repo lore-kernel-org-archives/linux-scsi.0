@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 08/28] blk_end_request: changing nbd (take 3)
-Date: Fri, 30 Nov 2007 18:27:54 -0500 (EST)
-Message-ID: <20071130.182754.63993899.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 09/28] blk_end_request: changing ps3disk (take 3)
+Date: Fri, 30 Nov 2007 18:28:10 -0500 (EST)
+Message-ID: <20071130.182810.98558485.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,26 +20,28 @@ To: jens.axboe@oracle.com, bharrosh@panasas.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts nbd to use blk_end_request().
+This patch converts ps3disk to use blk_end_request().
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/nbd.c |    4 +---
- 1 files changed, 1 insertion(+), 3 deletions(-)
+ drivers/block/ps3disk.c |    6 +-----
+ 1 files changed, 1 insertion(+), 5 deletions(-)
 
-Index: 2.6.24-rc3-mm2/drivers/block/nbd.c
+Index: 2.6.24-rc3-mm2/drivers/block/ps3disk.c
 ===================================================================
---- 2.6.24-rc3-mm2.orig/drivers/block/nbd.c
-+++ 2.6.24-rc3-mm2/drivers/block/nbd.c
-@@ -108,9 +108,7 @@ static void nbd_end_request(struct reque
- 			req, uptodate? "done": "failed");
+--- 2.6.24-rc3-mm2.orig/drivers/block/ps3disk.c
++++ 2.6.24-rc3-mm2/drivers/block/ps3disk.c
+@@ -280,11 +280,7 @@ static irqreturn_t ps3disk_interrupt(int
+ 	}
  
- 	spin_lock_irqsave(q->queue_lock, flags);
--	if (!end_that_request_first(req, uptodate, req->nr_sectors)) {
+ 	spin_lock(&priv->lock);
+-	if (!end_that_request_first(req, uptodate, num_sectors)) {
+-		add_disk_randomness(req->rq_disk);
+-		blkdev_dequeue_request(req);
 -		end_that_request_last(req, uptodate);
 -	}
-+	__blk_end_request(req, uptodate, req->nr_sectors << 9);
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- }
- 
++	__blk_end_request(req, uptodate, num_sectors << 9);
+ 	priv->req = NULL;
+ 	ps3disk_do_request(dev, priv->queue);
+ 	spin_unlock(&priv->lock);
