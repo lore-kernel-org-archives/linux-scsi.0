@@ -1,54 +1,95 @@
-From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
-Subject: Re: aic94xx or libsas crash on X7DB3 supermicro with enclosure and sata drives
-Date: Mon, 3 Dec 2007 21:06:44 +0100
-Message-ID: <200712032106.44176.kb@sysmikro.com.pl>
-References: <200711301022.08001.kb@sysmikro.com.pl> <200712031709.54168.kb@sysmikro.com.pl> <20071203193652.GB7066@tree.beaverton.ibm.com>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
+Date: Mon, 3 Dec 2007 13:11:50 -0800
+Message-ID: <20071203131150.bb6f2e0b.akpm@linux-foundation.org>
+References: <474D0AAC.5010005@linux.vnet.ibm.com>
+	<20071127225328.9e3f3827.akpm@linux-foundation.org>
+	<474D15FF.5080508@linux.vnet.ibm.com>
+	<20071127232552.ad16e95c.akpm@linux-foundation.org>
+	<474E5CAC.9000108@linux.vnet.ibm.com>
+	<20071129003533.54b4b20e.akpm@linux-foundation.org>
+	<20071130063929.GD2754@fattire.cabal.ca>
+	<20071129230047.1b482562.akpm@linux-foundation.org>
+	<20071129230204.8698f47e.akpm@linux-foundation.org>
+	<474FBB86.5000004@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from v007470.home.net.pl ([212.85.125.104]:50803 "HELO
-	v007470.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752279AbXLCUHA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2007 15:07:00 -0500
-In-Reply-To: <20071203193652.GB7066@tree.beaverton.ibm.com>
-Content-Disposition: inline
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:33528 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750730AbXLCVNI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2007 16:13:08 -0500
+In-Reply-To: <474FBB86.5000004@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, vst@vlnb.net, Alexis Bruemmer <alexisb@us.ibm.com>
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: kyle@mcmartin.ca, linux-kernel@vger.kernel.org, linuxppc-dev@ozlabs.org, apw@shadowen.org, balbir@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, rjw@sisk.pl, willy@debian.org
 
-Hi Darrick,
+On Fri, 30 Nov 2007 12:58:06 +0530
+Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
 
-On Monday 03 December 2007 20:36, Darrick J. Wong wrote:
-> On Mon, Dec 03, 2007 at 05:09:54PM +0100, Krzysztof B??aszkowski wrote:
-> > I noticed also another failure when i removed a drive. The event was not
-> > notified by anything (ie the block device and corresponding sg were
-> > registered) so i run dd on this truly "virtual" drive.
-> >
-> > dd reached D state (as well as scsi_wq) . i think it shouldn't happen no
-> > matter it was AIC failure or LSI expander failure.
->
-> "It's wireless!" ;)
+> Andrew Morton wrote:
+> > On Thu, 29 Nov 2007 23:00:47 -0800 Andrew Morton <akpm@linux-foundation.org> wrote:
+> > 
+> >> On Fri, 30 Nov 2007 01:39:29 -0500 Kyle McMartin <kyle@mcmartin.ca> wrote:
+> >>
+> >>> On Thu, Nov 29, 2007 at 12:35:33AM -0800, Andrew Morton wrote:
+> >>>> ten million is close enough to infinity for me to assume that we broke the
+> >>>> driver and that's never going to terminate.
+> >>>>
+> >>> how about this? doesn't break things on my pa8800:
+> >>>
+> >>> diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.c b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> >>> index 463f119..ef01cb1 100644
+> >>> --- a/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> >>> +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.c
+> >>> @@ -1037,10 +1037,13 @@ restart_test:
+> >>>  	/*
+> >>>  	 *  Wait 'til done (with timeout)
+> >>>  	 */
+> >>> -	for (i=0; i<SYM_SNOOP_TIMEOUT; i++)
+> >>> +	do {	
+> >>>  		if (INB(np, nc_istat) & (INTF|SIP|DIP))
+> >>>  			break;
+> >>> -	if (i>=SYM_SNOOP_TIMEOUT) {
+> >>> +		msleep(10);
+> >>> +	} while (i++ < SYM_SNOOP_TIMEOUT);
+> >>> +
+> >>> +	if (i >= SYM_SNOOP_TIMEOUT) {
+> >>>  		printf ("CACHE TEST FAILED: timeout.\n");
+> >>>  		return (0x20);
+> >>>  	}
+> >>> diff --git a/drivers/scsi/sym53c8xx_2/sym_hipd.h b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+> >>> index ad07880..85c483b 100644
+> >>> --- a/drivers/scsi/sym53c8xx_2/sym_hipd.h
+> >>> +++ b/drivers/scsi/sym53c8xx_2/sym_hipd.h
+> >>> @@ -339,7 +339,7 @@
+> >>>  /*
+> >>>   *  Misc.
+> >>>   */
+> >>> -#define SYM_SNOOP_TIMEOUT (10000000)
+> >>> +#define SYM_SNOOP_TIMEOUT (1000)
+> >>>  #define BUS_8_BIT	0
+> >>>  #define BUS_16_BIT	1
+> >>>  
+> >> That might be the fix, but do we know what we're actually fixing?  afaik
+> >> 2.6.24-rc3 doesn't get this timeout, 2.6.24-rc3-mm2 does get it and we
+> >> don't know why?
+> >>
+> > 
+> > <looks at Subject:>
+> > 
+> > <Checks that Rafael was cc'ed>
+> > 
+> > So 2.6.24-rc3 was OK and 2.6.24-rc3-git2 is not?
+> 
+> Yes, the 2.6.24-rc3 was Ok and this is seen from 2.6.24-rc3-git2/3/4.
+> 
 
-yep :) and energy from positive thinking spins disk's plates ;) 
+There are effectively no drivers/scsi/ changes after 2.6.24-rc3 and we
+don't (I believe) have a clue what caused this regression.
 
->
-> Seriously, though, it's a good idea to tell the kernel that you're
-> about to unplug a disk before actually doing it:
->
-> echo 1 > /sys/block/sdX/device/delete
->
-> This way, the kernel can tell the disk to flush its caches long before
-> power actually gets removed.  Otherwise, the device removal code can
-> get hung up just like you observed, and whatever's in the write cache
-> may or may not actually get written to the media.
->
+Can you please do a bisection search on this?
 
-imagine just raining Monday and someone who put hand on the drive thus he had 
-to reboot whole box.
-
-Thanks,
-Krzysztof
-> --D
+Thanks.
