@@ -1,48 +1,38 @@
-From: Krzysztof =?utf-8?q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
-Subject: Re: aic94xx or libsas crash on X7DB3 supermicro with enclosure and sata drives
-Date: Mon, 3 Dec 2007 16:11:14 +0100
-Message-ID: <200712031611.14744.kb@sysmikro.com.pl>
-References: <200711301022.08001.kb@sysmikro.com.pl> <20071130213313.GA7066@tree.beaverton.ibm.com>
+From: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+Subject: Re: [PATCH 26/28] blk_end_request: changing ide-cd (take 3)
+Date: Mon, 03 Dec 2007 18:55:48 +0300
+Message-ID: <47542704.2030602@ru.mvista.com>
+References: <20071130.183447.82055860.k-ueda@ct.jp.nec.com> <200712012342.52134.bzolnier@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from v007470.home.net.pl ([212.85.125.104]:52910 "HELO
-	v007470.home.net.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1750717AbXLCPLS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 3 Dec 2007 10:11:18 -0500
-In-Reply-To: <20071130213313.GA7066@tree.beaverton.ibm.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200712012342.52134.bzolnier@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: linux-scsi@vger.kernel.org, vst@vlnb.net, Alexis Bruemmer <alexisb@us.ibm.com>
 
-On Friday 30 November 2007 22:33, Darrick J. Wong wrote:
-> On Fri, Nov 30, 2007 at 10:22:07AM +0100, Krzysztof B??aszkowski wrote:
-> > Hello all,
-> >
-> > I noticed this according to syslog. furthermore if aic94xx is connected
-> > to single sata drive only then there is no crash but device is not
-> > recognized too. (mysterious: "ERROR: Unidentified device type 5").
->
-> There's been a substantial amount of bugfixes (as well as SATA support)
-> that went into the aic94xx/libsas code between .22 and .23; could you
-> please give that a try?
+Bartlomiej Zolnierkiewicz wrote:
 
-thank you. I've tried 2.6.23.9 and it seems to work okay and indeed there were 
-made many changes some of them by you.
+> [PATCH] ide-cd: remove dead post_transform_command()
 
->
-> Also, what kind of devices are attached when the system crashes?  From
-> that stack trace it looks like the software thought there was a SATA
-> disk attached to an expander...?
+> post_transform_command() call in cdrom_newpc_intr() has no effect because
+> it is done after the request has already been fully completed (rq->bio and
+> rq->data are always NULL).  It was verified to be true regardless whether
+> INQUIRY command is using DMA or PIO to transfer data (by using modified
+> Tejun Heo's test-shortsg.c utility and adding a few printk()-s to ide-cd).
 
-yes, i connected aic to the expander (LSISASX28) which was loaded with 16 
-drives.
+> This was uncovered thanks to the "blk_end_request: full I/O completion
+> handler (take 3)" patch series from Kiyoshi Ueda.
 
-Best regards,
-Krzysztof
->
-> --D
+> Cc: jens.axboe@oracle.com
+> Cc: bharrosh@panasas.com
+> Cc: Kiyoshi Ueda <k-ueda@ct.jp.nec.com
+> Cc: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> Cc: Tejun Heo <htejun@gmail.com>
+> Signed-off-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+
+Acked-by: Sergei Shtylyov <sshtylyov@ru.mvista.com>
+
+MBR, Sergei
