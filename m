@@ -1,233 +1,61 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 27/28] blk_end_request: changing scsi
- mid-layer for bidi (take 3)
-Date: Tue, 04 Dec 2007 15:39:12 +0200
-Message-ID: <47555880.9070902@panasas.com>
-References: <20071130.183512.120442861.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: [PATCH 26/28] blk_end_request: changing ide-cd (take 3)
+Date: Tue, 4 Dec 2007 14:46:51 +0100
+Message-ID: <200712041446.52249.bzolnier@gmail.com>
+References: <20071130.183447.82055860.k-ueda@ct.jp.nec.com> <200712012342.52134.bzolnier@gmail.com> <20071203.175212.52162634.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071130.183512.120442861.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ug-out-1314.google.com ([66.249.92.168]:48749 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754709AbXLDNzU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 08:55:20 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so77824ugc
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Dec 2007 05:55:17 -0800 (PST)
+In-Reply-To: <20071203.175212.52162634.k-ueda@ct.jp.nec.com>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Cc: jens.axboe@oracle.com, bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
 
-On Sat, Dec 01 2007 at 1:35 +0200, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> This patch converts bidi of scsi mid-layer to use blk_end_request().
+
+Hi,
+
+On Monday 03 December 2007, Kiyoshi Ueda wrote:
+
+[...]
+
+> Thank you for the comments.
+> I rebased my patch on top of 2.6.24-rc3-mm2 + the patch to remove
+> post_transform_command().
 > 
-> rq->next_rq represents a pair of bidi requests.
-> (There are no other use of 'next_rq' of struct request.)
-> For both requests in the pair, end_that_request_chunk() should be
-> called before end_that_request_last() is called for one of them.
-> Since the calls to end_that_request_first()/chunk() and
-> end_that_request_last() are packaged into blk_end_request(),
-> the handling of next_rq completion has to be moved into
-> blk_end_request(), too.
+> As a result, one callback function for DMA mode has been removed.
+> What do you think about the patch below?
 > 
-> Bidi sets its specific value to rq->data_len before the request is
-> completed so that upper-layer can read it.
-> This setting must be between end_that_request_chunk() and
-> end_that_request_last(), because rq->data_len may be used
-> in end_that_request_chunk() by blk_trace and so on.
-> To satisfy the requirement, use blk_end_request_callback() which
-> is added in PATCH 25 only for the tricky drivers.
 > 
-> If bidi didn't reuse rq->data_len and added new members to request
-> for the specific value, it could set before end_that_request_chunk()
-> and use the standard blk_end_request() like below.
 > 
-> void scsi_end_bidi_request(struct scsi_cmnd *cmd)
-> {
-> 	struct request *req = cmd->request;
+> Subject: [PATCH 26/28] blk_end_request: changing ide-cd (take 3)
 > 
-> 	rq->resid = scsi_out(cmd)->resid;
-> 	rq->next_rq->resid = scsi_in(cmd)->resid;
 > 
-> 	if (blk_end_request(req, 1, req->data_len))
-> 		BUG();
+> This patch converts ide-cd (cdrom_newpc_intr()) to use blk_end_request
+> interfaces.
 > 
-> 	scsi_release_buffers(cmd);
-> 	scsi_next_command(cmd);
-> }
+> In PIO mode, ide-cd (cdrom_newpc_intr()) needs to defer
+> end_that_request_last() until the device clears DRQ_STAT and raises
+> an interrupt after end_that_request_first().
+> So blk_end_request() has to return without completing request
+> even if no leftover in the request.
+> 
+> ide-cd uses blk_end_request_callback() and a dummy callback function,
+> which just returns value '1', to tell blk_end_request_callback()
+> about that.
 > 
 > Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 > Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> ---
->  block/ll_rw_blk.c       |   18 +++++++++++++
->  drivers/scsi/scsi_lib.c |   66 ++++++++++++++++++++++++------------------------
->  2 files changed, 52 insertions(+), 32 deletions(-)
-> 
-> Index: 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- 2.6.24-rc3-mm2.orig/drivers/scsi/scsi_lib.c
-> +++ 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-> @@ -629,28 +629,6 @@ void scsi_run_host_queues(struct Scsi_Ho
->  		scsi_run_queue(sdev->request_queue);
->  }
->  
-> -static void scsi_finalize_request(struct scsi_cmnd *cmd, int uptodate)
-> -{
-> -	struct request_queue *q = cmd->device->request_queue;
-> -	struct request *req = cmd->request;
-> -	unsigned long flags;
-> -
-> -	add_disk_randomness(req->rq_disk);
-> -
-> -	spin_lock_irqsave(q->queue_lock, flags);
-> -	if (blk_rq_tagged(req))
-> -		blk_queue_end_tag(q, req);
-> -
-> -	end_that_request_last(req, uptodate);
-> -	spin_unlock_irqrestore(q->queue_lock, flags);
-> -
-> -	/*
-> -	 * This will goose the queue request function at the end, so we don't
-> -	 * need to worry about launching another command.
-> -	 */
-> -	scsi_next_command(cmd);
-> -}
-> -
->  /*
->   * Function:    scsi_end_request()
->   *
-> @@ -921,6 +899,20 @@ void scsi_release_buffers(struct scsi_cm
->  EXPORT_SYMBOL(scsi_release_buffers);
->  
->  /*
-> + * Called from blk_end_request_callback() after all DATA in rq and its next_rq
-> + * are completed before rq is completed/freed.
-> + */
-> +static int scsi_end_bidi_request_cb(struct request *rq)
-> +{
-> +	struct scsi_cmnd *cmd = rq->special;
-> +
-> +	rq->data_len = scsi_out(cmd)->resid;
-> +	rq->next_rq->data_len = scsi_in(cmd)->resid;
-> +
-> +	return 0;
-> +}
-> +
-> +/*
->   * Bidi commands Must be complete as a whole, both sides at once.
->   * If part of the bytes were written and lld returned
->   * scsi_in()->resid and/or scsi_out()->resid this information will be left
-> @@ -931,22 +923,32 @@ void scsi_end_bidi_request(struct scsi_c
->  {
->  	struct request *req = cmd->request;
->  
-> -	end_that_request_chunk(req, 1, req->data_len);
-> -	req->data_len = scsi_out(cmd)->resid;
-> -
-> -	end_that_request_chunk(req->next_rq, 1, req->next_rq->data_len);
-> -	req->next_rq->data_len = scsi_in(cmd)->resid;
-> -
-> -	scsi_release_buffers(cmd);
-> -
->  	/*
->  	 *FIXME: If ll_rw_blk.c is changed to also put_request(req->next_rq)
-> -	 *       in end_that_request_last() then this WARN_ON must be removed.
-> +	 *       in blk_end_request() then this WARN_ON must be removed.
->  	 *       for now, upper-driver must have registered an end_io.
->  	 */
->  	WARN_ON(!req->end_io);
->  
-> -	scsi_finalize_request(cmd, 1);
-> +	/*
-> +	 * blk_end_request() family take care of data completion of next_rq.
-> +	 *
-> +	 * req->data_len and req->next_rq->data_len must be set after
-> +	 * all data are completed, since they may be referenced during
-> +	 * the data completion process.
-> +	 * So use the callback feature of blk_end_request() here.
-> +	 *
-> +	 * NOTE: If bidi doesn't reuse the data_len field for upper-layer's
-> +	 *       reference (e.g. adds new members for it to struct request),
-> +	 *       we can use the standard blk_end_request() interface here.
-> +	 */
-> +	if (blk_end_request_callback(req, 1, req->data_len,
-> +				     scsi_end_bidi_request_cb))
-> +		/* req has not been completed */
-> +		BUG();
-> +
-> +	scsi_release_buffers(cmd);
-> +	scsi_next_command(cmd);
->  }
->  
->  /*
-> Index: 2.6.24-rc3-mm2/block/ll_rw_blk.c
-> ===================================================================
-> --- 2.6.24-rc3-mm2.orig/block/ll_rw_blk.c
-> +++ 2.6.24-rc3-mm2/block/ll_rw_blk.c
-> @@ -3817,6 +3817,12 @@ int blk_end_request(struct request *rq, 
->  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
->  		if (__end_that_request_first(rq, uptodate, nr_bytes))
->  			return 1;
-> +
-> +		/* Bidi request must be completed as a whole */
-> +		if (blk_bidi_rq(rq) &&
-> +		    __end_that_request_first(rq->next_rq, uptodate,
-> +					     blk_rq_bytes(rq->next_rq)))
-> +			return 1;
->  	}
->  
->  	add_disk_randomness(rq->rq_disk);
-> @@ -3840,6 +3846,12 @@ int __blk_end_request(struct request *rq
->  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
->  		if (__end_that_request_first(rq, uptodate, nr_bytes))
->  			return 1;
-> +
-> +		/* Bidi request must be completed as a whole */
-> +		if (blk_bidi_rq(rq) &&
-> +		    __end_that_request_first(rq->next_rq, uptodate,
-> +					     blk_rq_bytes(rq->next_rq)))
-> +			return 1;
->  	}
->  
->  	add_disk_randomness(rq->rq_disk);
-> @@ -3884,6 +3896,12 @@ int blk_end_request_callback(struct requ
->  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
->  		if (__end_that_request_first(rq, uptodate, nr_bytes))
->  			return 1;
-> +
-> +		/* Bidi request must be completed as a whole */
-> +		if (blk_bidi_rq(rq) &&
-> +		    __end_that_request_first(rq->next_rq, uptodate,
-> +					     blk_rq_bytes(rq->next_rq)))
-> +			return 1;
->  	}
->  
->  	/* Special feature for tricky drivers */
 
-rq->data_len = scsi_out(cmd)->resid is Not Just a problem of bidi
-it is a General problem of scsi residual handling, and user code.
+Looks good, thanks!
 
-Even today before any bidi. at scsi_lib.c at scsi_io_completion()
-we do req->data_len = scsi_get_resid(cmd);
-( or: req->data_len = cmd->resid; depends which version you look)
-And then call scsi_end_request() which calls __end_that_request_first/last
-So it is assumed even today that req->data_len is not touched by
-__end_that_request_first/last unless __end_that_request_first returned
-that there is more work to do and the command is resubmitted in which
-case the resid information is discarded.
-
-So if the regular resid handling is acceptable - Set req->data_len
-before the call to __end_that_request_first/last, or blk_end_request()
-in your case, then here goes your second client of the _callback and
-it can be removed.
-But if it is found that req->data_len is touched and the resid information
-gets lost, than it should be fixed for the common uni-io case, by - for example
-- pass resid to the blk_end_request() function.
-(So in any way the _callback can go)
-
-Boaz
+Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
