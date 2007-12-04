@@ -1,78 +1,43 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: Recent sym53c8xx patches
-Date: Tue, 04 Dec 2007 09:38:33 -0500
-Message-ID: <47556669.5000203@cybernetics.com>
-References: <474C2F0C.6030303@cybernetics.com>
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
+Date: Tue, 04 Dec 2007 20:27:41 +0530
+Message-ID: <47556AE5.8010708@linux.vnet.ibm.com>
+References: <474D0AAC.5010005@linux.vnet.ibm.com> <20071127225328.9e3f3827.akpm@linux-foundation.org> <474D15FF.5080508@linux.vnet.ibm.com> <20071127232552.ad16e95c.akpm@linux-foundation.org> <474E5CAC.9000108@linux.vnet.ibm.com> <20071129003533.54b4b20e.akpm@linux-foundation.org> <20071130063929.GD2754@fattire.cabal.ca> <20071129230047.1b482562.akpm@linux-foundation.org> <20071129230204.8698f47e.akpm@linux-foundation.org> <474FBB86.5000004@linux.vnet.ibm.com> <20071204122005.GA27286@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host06.cybernetics.com ([206.246.200.22]:4472 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754818AbXLDOik (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 09:38:40 -0500
-In-Reply-To: <474C2F0C.6030303@cybernetics.com>
+Received: from E23SMTP05.au.ibm.com ([202.81.18.174]:42773 "EHLO
+	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753270AbXLDO6M (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 09:58:12 -0500
+In-Reply-To: <20071204122005.GA27286@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, jejb@kernel.org, hch@infradead.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Kyle McMartin <kyle@mcmartin.ca>, LKML <linux-kernel@vger.kernel.org>, linuxppc-dev@ozlabs.org, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Matthew Wilcox <willy@debian.org>
 
-Tony Battersby wrote:
-> Hello,
->
-> I am sending this message to check up on the merge status of my recent
-> sym53c8xx patches to make sure they aren't forgotten.  Matthew Wilcox,
-> could you give an ack/nak for these merge requests?  Also, please let me
-> know if I need to do anything else (such as resending later) to make
-> sure these patches get merged.
->
-> [PATCH] [SCSI] sym53c8xx: fix free_irq() regression in 2.6.24
-> http://marc.info/?t=119438263300007&r=1&w=4
-> Regression fix.  Should be merged in 2.6.24.  OK'ed by Christoph Hellwig.
->
-> [PATCH] [SCSI] sym53c8xx: fix resid calculation
-> http://marc.info/?l=linux-scsi&m=119438360705773&w=4
-> Bug fix.  I would like it to be merged in 2.6.24.  No replies to initial
-> message.
->
-> [PATCH] [SCSI] sym53c8xx: don't flood syslog with negotiation messages
-> http://marc.info/?l=linux-scsi&m=119446914818689&w=4
-> More an annoyance fix than a bug fix.  Probably safe to merge for
-> 2.6.24, but could wait for 2.6.25 if someone objects.  No replies to
-> initial message.
->
-> [PATCH] [SCSI] sym53c8xx: fix setflag user command to control disconnects
-> http://marc.info/?l=linux-scsi&m=119446790116497&w=4
-> Fix for long-broken not-widely-used feature.  Can be dropped if the
-> disconnect attribute will be added to the SPI transport class in the
-> near future.  Is anyone working on this BTW?
->
-> [PATCH] [SCSI] sym53c8xx: increase sg_tablesize for larger data transfers
-> http://marc.info/?l=linux-scsi&m=119513922112712&w=4
-> Enhancement.  On hold for the moment due to speculation that it may
-> break some 875 chips.
->
-> Thanks,
-> Tony Battersby
->
->
->   
-I have waited a week, and I still have not received any replies from
-Matthew.  I do however see that he has sent other messages to other
-people, so I don't believe that he is offline.  At this point I am
-beginning to wonder if he is receiving my messages at all.  I can't
-imagine that I did anything offensive; perhaps a well-meaning junk mail
-rule just doesn't like me for some reason.
+Ingo Molnar wrote:
+> * Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
+> 
+>>> So 2.6.24-rc3 was OK and 2.6.24-rc3-git2 is not?
+>> Yes, the 2.6.24-rc3 was Ok and this is seen from 2.6.24-rc3-git2/3/4.
+> 
+> just to make sure: this is a real lockup and failed bootup (or device 
+> init), not just a message, right?
+> 
+> 	Ingo
+> --
 
-James, would you be willing to apply any of these patches without an
-explicit ack from Matthew (the sym53c8xx maintainer)?  And could someone
-else please try contacting Matthew to see what's up?
+Hi Ingo,
 
-Side note: I have been operating under the assumption that patches
-against a driver should be acked by the maintainer of that driver before
-being merged.  If that is not the case, then Matthew's reply isn't
-really that important, and I apologize for nagging.
+This softlockup is seen in the 2.6.24-rc4 either and looks like a message because 
+this is seen while running tbench and machine continues running other test's after 
+the softlockup messages and some times seen with the bootup, but the machines reaches the 
+login prompt and able to continue running tests.
 
-Thanks,
-Tony Battersby
-Cybernetics
-
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
