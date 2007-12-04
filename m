@@ -1,46 +1,49 @@
-From: rct@gherkin.frus.com (Bob Tracy)
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Tue, 4 Dec 2007 09:36:40 -0600 (CST)
-Message-ID: <20071204153641.2938DDBA2@gherkin.frus.com>
-References: <20071204121618.GA26132@elte.hu>
+From: Steven Pratt <slpratt@austin.ibm.com>
+Subject: MPTSAS Driver and scatter gather lists
+Date: Tue, 04 Dec 2007 09:45:04 -0600
+Message-ID: <47557600.5040902@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:56457 "EHLO gherkin.frus.com"
+Received: from e4.ny.us.ibm.com ([32.97.182.144]:44456 "EHLO e4.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753151AbXLDPgx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:36:53 -0500
-In-Reply-To: <20071204121618.GA26132@elte.hu> "from Ingo Molnar at Dec 4, 2007
- 01:16:18 pm"
+	id S1753694AbXLDPpB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 10:45:01 -0500
+Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
+	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id lB4Fj0eF017097
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
+Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
+	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lB4Fj0Rs446314
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
+Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lB4Fj0nW023472
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
+Received: from [9.41.47.41] (dyn9414741.austin.ibm.com [9.41.47.41])
+	by d01av04.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id lB4Fj07p023406
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Michael Cree <mcree@orcon.net.nz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
+To: linux-scsi@vger.kernel.org
 
-Ingo Molnar wrote:
-> once you are done with the download of the initial cloned git repository 
-> (which is 200MB+), all the bisection steps will be local and you'll be 
-> only limited by kernel rebuild speed and by bootup and testing speed, 
-> not by network bandwidth.
+I was doing some performance comparisons between the aic94xx sas adapter 
+and the mptsas (lsi1078 chip) and saw that performance was slightly 
+lower on lsi using the same drive. One thing I noticed the mptsas driver 
+was only setting sg_tablesize to 40 which restricts the maximum size of 
+the IO to 160kb.  This is inefficient and so I changed it to 255 (max 
+value) for testing purposes.  The results were not what I expected.  
+While CPU efficiency was improved at the larger block sizes (like I had 
+hopped), there were drastic improvements at small (<16k) block sizes 
+which is completely surprising).  So I decided to see where all the time 
+was being spent.  When doing oprofile, loss of idle ticks was confusing 
+things so I booted with idle=poll, and magically the original mptsas 
+driver now performs like the modified version at the small block sizes.
+My suspicion is that we have some some sleep delay which is minimized by 
+going into poll mode, but I have no idea why changing the sg_tablesize 
+gives the same results regardless of poll mode.  I should reiterate that 
+I am not talking about small difference. This is 2x performance at 1/3 cpu.
 
-ACK.  Have tested two kernels in the past 24 hours, and the third is
-building as I type this.  The builds seem to be taking about 3 hours
-each.  First two tests good, so the offending commit is somewhere in
-the last 25% (roughly) of the changes between -rc2 and -rc3: git says
-82 revisions left to test.  Might have this painted into a corner in
-the next day or so.  I'll try to be quick about it, since -rc4 is out.
+Also, is there any reason we can't increase sg_tablesize for mptsas?
 
-> ( once you have the cloned repository i'd suggest for you to keep it - 
->   that way you can track susequent kernels via "git-pull" and it uses a 
->   very network-efficient delta protocol. )
-
-Will do...  I'm in the fortunate position of having enough disk space
-on my Alpha that I can maintain multiple trees for this kind of effort.
-
--- 
-------------------------------------------------------------------------
-Bob Tracy          |  "They couldn't hit an elephant at this dist- "
-rct@frus.com       |   - Last words of Union General John Sedgwick,
-                   |  Battle of Spotsylvania Court House, U.S. Civil War
-------------------------------------------------------------------------
+Any thoughts or experiments to try are welcome.
+Steve
