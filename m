@@ -1,54 +1,30 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH 00/28] blk_end_request: full I/O completion handler
-	(take 3)
-Date: Tue, 4 Dec 2007 13:16:23 +0100
-Message-ID: <20071204121623.GQ23294@kernel.dk>
-References: <20071130.182351.115904044.k-ueda@ct.jp.nec.com>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
+Date: Tue, 4 Dec 2007 13:20:06 +0100
+Message-ID: <20071204122005.GA27286@elte.hu>
+References: <474D0AAC.5010005@linux.vnet.ibm.com> <20071127225328.9e3f3827.akpm@linux-foundation.org> <474D15FF.5080508@linux.vnet.ibm.com> <20071127232552.ad16e95c.akpm@linux-foundation.org> <474E5CAC.9000108@linux.vnet.ibm.com> <20071129003533.54b4b20e.akpm@linux-foundation.org> <20071130063929.GD2754@fattire.cabal.ca> <20071129230047.1b482562.akpm@linux-foundation.org> <20071129230204.8698f47e.akpm@linux-foundation.org> <474FBB86.5000004@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:20764 "EHLO kernel.dk"
+Received: from mx3.mail.elte.hu ([157.181.1.138]:58723 "EHLO mx3.mail.elte.hu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752177AbXLDMSd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 07:18:33 -0500
+	id S1752608AbXLDMUa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 07:20:30 -0500
 Content-Disposition: inline
-In-Reply-To: <20071130.182351.115904044.k-ueda@ct.jp.nec.com>
+In-Reply-To: <474FBB86.5000004@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: bharrosh@panasas.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+To: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Kyle McMartin <kyle@mcmartin.ca>, LKML <linux-kernel@vger.kernel.org>, linuxppc-dev@ozlabs.org, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Matthew Wilcox <willy@debian.org>
 
-On Fri, Nov 30 2007, Kiyoshi Ueda wrote:
-> Hello Jens,
+
+* Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
+
+> > So 2.6.24-rc3 was OK and 2.6.24-rc3-git2 is not?
 > 
-> The following is the updated patch-set for blk_end_request().
-> Changes since the last version are only minor updates to catch up
-> with the base kernel changes.
-> Do you agree the implementation of blk_end_request()?
-> If there's no problem, could you merge it to your tree?
-> Or does it have to be merged to -mm tree first?
-> 
-> 
-> Boaz,
-> Could you review the newly added PATCH 27 which converts the bidi part,
-> and give me your comments?
-> It uses blk_end_request_callback() in PATCH 25, which was only for
-> the tricky ide-cd driver.
-> If bidi added a 'resid' member to struct request instead of reusing
-> 'data_len' for the other purpose, it could use the standard
-> blk_end_request() instead.
-> 
-> ------------------ Changes from the previous post ---------------------
-> Changes between take2 and take3:
->   o Rebased on top of 2.6.24-rc3-mm2
+> Yes, the 2.6.24-rc3 was Ok and this is seen from 2.6.24-rc3-git2/3/4.
 
-OK, so this means that I can't apply it unfortunately. It depends on
-other patches in -mm (bidi).
+just to make sure: this is a real lockup and failed bootup (or device 
+init), not just a message, right?
 
-SCSI sits on block, so the best approach imho is to base this patchset
-on mainline so I can include the block bits.
-
-
--- 
-Jens Axboe
-
+	Ingo
