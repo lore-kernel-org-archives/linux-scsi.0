@@ -1,118 +1,133 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 01/28] blk_end_request: add new request
- completion interface (take 3)
-Date: Tue, 04 Dec 2007 16:38:52 -0500 (EST)
-Message-ID: <20071204.163852.59650214.k-ueda@ct.jp.nec.com>
-References: <20071130.182422.18574732.k-ueda@ct.jp.nec.com>
-	<47555C90.2080609@panasas.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: [PATCH] libsas: Don't issue commands to devices that have been
+	hot-removed.
+Date: Tue, 4 Dec 2007 14:35:16 -0800
+Message-ID: <20071204223516.GA6767@tree.beaverton.ibm.com>
+References: <200711301022.08001.kb@sysmikro.com.pl> <200712031709.54168.kb@sysmikro.com.pl> <20071203193652.GB7066@tree.beaverton.ibm.com> <200712032106.44176.kb@sysmikro.com.pl>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <47555C90.2080609@panasas.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bharrosh@panasas.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e34.co.us.ibm.com ([32.97.110.152]:47799 "EHLO
+	e34.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754656AbXLDWfS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 17:35:18 -0500
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e34.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id lB4MZIPw032077
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 17:35:18 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lB4MZHS0129034
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 15:35:17 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lB4MZHAl016077
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 15:35:17 -0700
+Content-Disposition: inline
+In-Reply-To: <200712032106.44176.kb@sysmikro.com.pl>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Krzysztof =?utf-8?Q?B=C5=82aszkowski?= <kb@sysmikro.com.pl>
+Cc: linux-scsi@vger.kernel.org, vst@vlnb.net, Alexis Bruemmer <alexisb@us.ibm.com>
 
-Hi Boaz,
+Hrm... does this patch help?  You'll get a bunch of ATA/SAS disk errors
+printed to the screen if you yank the disk, but at least libsas won't
+get stuck waiting for the cache-flush commands to time out.
+---
+sd will get hung up issuing commands to flush write cache if a SAS device
+is unplugged without warning.  Change libsas to reject commands to domain
+devices that have already gone away.
 
-On Tue, 04 Dec 2007 15:56:32 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > +int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
-> > +{
-> > +	struct request_queue *q = rq->q;
-> > +	unsigned long flags = 0UL;
-> > +
-> > +	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-> > +		if (__end_that_request_first(rq, uptodate, nr_bytes))
-> > +			return 1;
-> > +	}
-> > +
-> > +	add_disk_randomness(rq->rq_disk);
-> > +
-> > +	spin_lock_irqsave(q->queue_lock, flags);
-> > +	complete_request(rq, uptodate);
-> > +	spin_unlock_irqrestore(q->queue_lock, flags);
-> > +
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL_GPL(blk_end_request);
-> > +
-> > +/**
-> > + * __blk_end_request - Helper function for drivers to complete the request.
-> > + *
-> > + * Description:
-> > + *     Must be called with queue lock held unlike blk_end_request().
-> > + **/
-> > +int __blk_end_request(struct request *rq, int uptodate, int nr_bytes)
-> > +{
-> > +	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-> > +		if (__end_that_request_first(rq, uptodate, nr_bytes))
-> > +			return 1;
-> > +	}
-> > +
-> > +	add_disk_randomness(rq->rq_disk);
-> > +
-> > +	complete_request(rq, uptodate);
-> > +
-> > +	return 0;
-> > +}
-> > +EXPORT_SYMBOL_GPL(__blk_end_request);
-> 
-> I don't like it that you have two Identical but slightly different
-> implementations  I wish you would do an internal-with-flags
-> implementation and then API ones can call the internal one. Or maybe
-> just hold the spin_lock just a bit longer and have one call the other.
-> To prove my case see how hard it is to add new code like with
-> the bidi patch, where you need to add exact same code in 3 places.
-> (OK only 2 places actually, if _callback is gone)
+Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+---
 
-As for the internal-with-flags implementation, I once proposed
-something like below but it was rejected by Jens.
-(http://marc.info/?l=linux-kernel&m=118880584720600&w=2)
-----------------------------------------------------------------------
-static int internal_function(rq, needlock)
-{
-	end_that_request_chunk(rq);
+ drivers/scsi/libsas/sas_ata.c       |    4 ++++
+ drivers/scsi/libsas/sas_expander.c  |    3 +++
+ drivers/scsi/libsas/sas_port.c      |    2 ++
+ drivers/scsi/libsas/sas_scsi_host.c |    7 +++++++
+ include/scsi/libsas.h               |    1 +
+ 5 files changed, 17 insertions(+), 0 deletions(-)
 
-	if (needlock)
-		spin_lock_irqsave();
-	end_that_request_last(rq);
-	if (needlock)
-		spin_unlock_irqrestore();
-}
-
-int blk_end_request(rq)
-{
-	return internal_function(rq, 1);
-}
-
-int __blk_end_request(rq)
-{
-	return internal_function(rq, 0);
-}
-----------------------------------------------------------------------
-
-
-As for the holding-queue-lock-longer implementation,
-end_that_request_chunk() completes bios in the request and it can
-reaches filesystem layer and may take time.
-I guess many drivers like scsi are calling end_that_request_chunk()
-without queue's lock because of the reason above.
-
-I'll try to remove the duplication again by another patch-set
-after blk_end_request interfaces are merged.
-So I would like to leave the duplication for now.
-Is it acceptable for you?
-
-Thanks,
-Kiyoshi Ueda
+diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+index 0829b55..f5e5213 100644
+--- a/drivers/scsi/libsas/sas_ata.c
++++ b/drivers/scsi/libsas/sas_ata.c
+@@ -161,6 +161,10 @@ static unsigned int sas_ata_qc_issue(struct ata_queued_cmd *qc)
+ 	unsigned int num = 0;
+ 	unsigned int xfer = 0;
+ 
++	/* If the device fell off, no sense in issuing commands */
++	if (dev->gone)
++		return AC_ERR_SYSTEM;
++
+ 	task = sas_alloc_task(GFP_ATOMIC);
+ 	if (!task)
+ 		return AC_ERR_SYSTEM;
+diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
+index 27674fe..4ba4d2a 100644
+--- a/drivers/scsi/libsas/sas_expander.c
++++ b/drivers/scsi/libsas/sas_expander.c
+@@ -1680,6 +1680,7 @@ static void sas_unregister_ex_tree(struct domain_device *dev)
+ 	struct domain_device *child, *n;
+ 
+ 	list_for_each_entry_safe(child, n, &ex->children, siblings) {
++		child->gone = 1;
+ 		if (child->dev_type == EDGE_DEV ||
+ 		    child->dev_type == FANOUT_DEV)
+ 			sas_unregister_ex_tree(child);
+@@ -1699,6 +1700,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+ 	list_for_each_entry_safe(child, n, &ex_dev->children, siblings) {
+ 		if (SAS_ADDR(child->sas_addr) ==
+ 		    SAS_ADDR(phy->attached_sas_addr)) {
++			child->gone = 1;
+ 			if (child->dev_type == EDGE_DEV ||
+ 			    child->dev_type == FANOUT_DEV)
+ 				sas_unregister_ex_tree(child);
+@@ -1707,6 +1709,7 @@ static void sas_unregister_devs_sas_addr(struct domain_device *parent,
+ 			break;
+ 		}
+ 	}
++	parent->gone = 1;
+ 	sas_disable_routing(parent, phy->attached_sas_addr);
+ 	memset(phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+ 	sas_port_delete_phy(phy->port, phy->phy);
+diff --git a/drivers/scsi/libsas/sas_port.c b/drivers/scsi/libsas/sas_port.c
+index b6f0243..2e82097 100644
+--- a/drivers/scsi/libsas/sas_port.c
++++ b/drivers/scsi/libsas/sas_port.c
+@@ -144,6 +144,8 @@ void sas_deform_port(struct asd_sas_phy *phy)
+ 		port->port_dev->pathways--;
+ 
+ 	if (port->num_phys == 1) {
++		if (port->port_dev)
++			port->port_dev->gone = 1;
+ 		sas_unregister_domain_devices(port);
+ 		sas_port_delete(port->port);
+ 		port->port = NULL;
+diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+index c29ba47..61d2679 100644
+--- a/drivers/scsi/libsas/sas_scsi_host.c
++++ b/drivers/scsi/libsas/sas_scsi_host.c
+@@ -228,6 +228,13 @@ int sas_queuecommand(struct scsi_cmnd *cmd,
+ 			goto out;
+ 		}
+ 
++		/* If the device fell off, no sense in issuing commands */
++		if (dev->gone) {
++			cmd->result = DID_BAD_TARGET << 16;
++			scsi_done(cmd);
++			goto out;
++		}
++
+ 		res = -ENOMEM;
+ 		task = sas_create_task(cmd, dev, GFP_ATOMIC);
+ 		if (!task)
+diff --git a/include/scsi/libsas.h b/include/scsi/libsas.h
+index 8ad7465..73c5b15 100644
+--- a/include/scsi/libsas.h
++++ b/include/scsi/libsas.h
+@@ -207,6 +207,7 @@ struct domain_device {
+         };
+ 
+         void *lldd_dev;
++	int gone;
+ };
+ 
+ struct sas_discovery_event {
