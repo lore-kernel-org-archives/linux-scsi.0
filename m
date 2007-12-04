@@ -1,142 +1,73 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: aic7-triple x build fixed in kbuild.git
-Date: Tue, 4 Dec 2007 22:33:01 +0100
-Message-ID: <20071204213301.GA32214@uranus.ravnborg.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 01/28] blk_end_request: add new request
+ completion interface (take 3)
+Date: Tue, 04 Dec 2007 16:37:49 -0500 (EST)
+Message-ID: <20071204.163749.39152828.k-ueda@ct.jp.nec.com>
+References: <20071130.182422.18574732.k-ueda@ct.jp.nec.com>
+	<47555C90.2080609@panasas.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:43353 "EHLO pasmtpB.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754764AbXLDVbO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 16:31:14 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <47555C90.2080609@panasas.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: bharrosh@panasas.com, jens.axboe@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Vegard Nossum <vegard.nossum@gmail.com>, linux-scsi@vger.kernel.org
 
-akpm reported that:
-make mrproper
-make allmodconfig
-make drivers/scsi/aic7xxx/
+Hi Boaz and Jens,
 
-were broken in recent kbuild.git - and as a logical consequence
-removed kbuild.git from his -mm lineup.
+On Tue, 04 Dec 2007 15:56:32 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > +/**
+> > + * blk_end_request - Helper function for drivers to complete the request.
+> > + * @rq:       the request being processed
+> > + * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
+> > + * @nr_bytes: number of bytes to complete
+> > + *
+> > + * Description:
+> > + *     Ends I/O on a number of bytes attached to @rq.
+> > + *     If @rq has leftover, sets it up for the next range of segments.
+> > + *
+> > + * Return:
+> > + *     0 - we are done with this request
+> > + *     1 - still buffers pending for this request
+> > + **/
+> > +int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
+> 
+> I always hated that uptodate boolean with possible negative error value.
+> I guess it was done for backward compatibility of then users of 
+> end_that_request_first(). But since you are introducing a new API then
+> this is not the case. Just have regular status int where 0 means ALL_OK
+> and negative value means error code. 
+> Just my $0.02.
 
-I have now fixed it (stupid bug I made) and pushed out
-a fresh kbuild.git tree.
+Thank you for the comment.
+I think it's quite reasonable.
+By doing that, we don't need end_io_error() anymore.
 
-As previously announced I am not very active in kbuild land the next
-couple of weeks so I may be slow if there is any comments.
 
-The fixed commit is included below.
+Jens,
+What do you think?
+If you agree with the interface change above, I would prefer to
+separate the patch-set from blk_end_request patch-set like below:
+    o blk_end_request: remove end_that_request_*
+    o change interface of 'uptodate' in blk_end_request to 'error'
+It makes the purpose of blk_end_request patch-set clear
+(and also, each patch of device drivers could be smaller).
+But, it doubles your merging work.  So if you would like to get
+the changes at once, I'll merge them into blk_end_request patch-set.
+ 
+As for the patch inclusion, do you push the driver changes to Linus
+all at once?  Or should I ask each maintainer to take the patch?
 
-	Sam
-
-commit 63b7c4e77e9204407ee8a5d5243ba9c502550252
-Author: Vegard Nossum <vegard.nossum@gmail.com>
-Date:   Fri Oct 26 13:31:13 2007 +0200
-
-    aic7(3*x): fix firmware build
-    
-    This patch adds the proper $(obj) and $(src) prefixes to dependency
-    rules in aic7xxx makefile. Without this patch, there is a remote
-    possibility that parallel make with a different output directory can
-    fail.
-    
-    Also changed the deprecated EXTRA_CFLAGS construct to ccflags-y syntax.
-    
-    Fixed up patch to survive "make drivers/scsi/ -j"
-    with BUILD_FIRMWARE enable. /Sam
-    
-    Signed-off-by: Vegard Nossum <vegard.nossum@gmail.com>
-    Signed-off-by: Sam Ravnborg <sam@ravnborg.org>
-    Cc: linux-scsi@vger.kernel.org
-
-diff --git a/drivers/scsi/aic7xxx/Makefile b/drivers/scsi/aic7xxx/Makefile
-index 9a6ce19..e4f70c5 100644
---- a/drivers/scsi/aic7xxx/Makefile
-+++ b/drivers/scsi/aic7xxx/Makefile
-@@ -33,11 +33,10 @@ aic79xx-y					+= aic79xx_osm.o	\
- 						   aic79xx_proc.o	\
- 						   aic79xx_osm_pci.o
- 
--EXTRA_CFLAGS += -Idrivers/scsi
-+ccflags-y += -Idrivers/scsi
- ifdef WARNINGS_BECOME_ERRORS
--EXTRA_CFLAGS += -Werror
-+ccflags-y += -Werror
- endif
--#EXTRA_CFLAGS += -g
- 
- # Files generated that shall be removed upon make clean
- clean-files := aic7xxx_seq.h aic7xxx_reg.h aic7xxx_reg_print.c
-@@ -46,53 +45,45 @@ clean-files += aic79xx_seq.h aic79xx_reg.h aic79xx_reg_print.c
- # Dependencies for generated files need to be listed explicitly
- 
- $(obj)/aic7xxx_core.o: $(obj)/aic7xxx_seq.h
-+$(obj)/aic7xxx_core.o: $(obj)/aic7xxx_reg.h
- $(obj)/aic79xx_core.o: $(obj)/aic79xx_seq.h
--$(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
--$(obj)/aic7xxx_reg_print.c: $(src)/aic7xxx_reg_print.c_shipped
-+$(obj)/aic79xx_core.o: $(obj)/aic79xx_reg.h
- 
--$(addprefix $(obj)/,$(aic7xxx-y)): $(obj)/aic7xxx_reg.h
--$(addprefix $(obj)/,$(aic79xx-y)): $(obj)/aic79xx_reg.h
-+$(addprefix $(obj)/,$(aic7xxx-y)): $(obj)/aic7xxx_seq.h
-+$(addprefix $(obj)/,$(aic79xx-y)): $(obj)/aic79xx_seq.h
- 
--aic7xxx-gen-$(CONFIG_AIC7XXX_BUILD_FIRMWARE)	:= $(obj)/aic7xxx_seq.h \
--						   $(obj)/aic7xxx_reg.h
-+aic7xxx-gen-$(CONFIG_AIC7XXX_BUILD_FIRMWARE)	:= $(obj)/aic7xxx_reg.h
- aic7xxx-gen-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT)	+= $(obj)/aic7xxx_reg_print.c
- 
- aicasm-7xxx-opts-$(CONFIG_AIC7XXX_REG_PRETTY_PRINT) := \
- 	-p $(obj)/aic7xxx_reg_print.c -i aic7xxx_osm.h
- 
- ifeq ($(CONFIG_AIC7XXX_BUILD_FIRMWARE),y)
--# Create a dependency chain in generated files
--# to avoid concurrent invocations of the single
--# rule that builds them all.
--aic7xxx_seq.h: aic7xxx_reg.h
--ifeq ($(CONFIG_AIC7XXX_REG_PRETTY_PRINT),y)
--aic7xxx_reg.h: aic7xxx_reg_print.c
--endif
--$(aic7xxx-gen-y): $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
-+$(obj)/aic7xxx_seq.h: $(src)/aic7xxx.seq $(src)/aic7xxx.reg $(obj)/aicasm/aicasm
- 	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic7xxx_reg.h \
- 			      $(aicasm-7xxx-opts-y) -o $(obj)/aic7xxx_seq.h \
- 			      $(src)/aic7xxx.seq
-+
-+$(aic7xxx-gen-y): $(obj)/aic7xxx_seq.h
-+else
-+$(obj)/aic7xxx_reg_print.c: $(src)/aic7xxx_reg_print.c_shipped
- endif
- 
--aic79xx-gen-$(CONFIG_AIC79XX_BUILD_FIRMWARE)	:= $(obj)/aic79xx_seq.h \
--						   $(obj)/aic79xx_reg.h
-+aic79xx-gen-$(CONFIG_AIC79XX_BUILD_FIRMWARE)	:= $(obj)/aic79xx_reg.h
- aic79xx-gen-$(CONFIG_AIC79XX_REG_PRETTY_PRINT)	+= $(obj)/aic79xx_reg_print.c
- 
- aicasm-79xx-opts-$(CONFIG_AIC79XX_REG_PRETTY_PRINT) := \
- 	-p $(obj)/aic79xx_reg_print.c -i aic79xx_osm.h
- 
- ifeq ($(CONFIG_AIC79XX_BUILD_FIRMWARE),y)
--# Create a dependency chain in generated files
--# to avoid concurrent invocations of the single
--# rule that builds them all.
--aic79xx_seq.h: aic79xx_reg.h
--ifeq ($(CONFIG_AIC79XX_REG_PRETTY_PRINT),y)
--aic79xx_reg.h: aic79xx_reg_print.c
--endif
--$(aic79xx-gen-y): $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
-+$(obj)/aic79xx_seq.h: $(src)/aic79xx.seq $(src)/aic79xx.reg $(obj)/aicasm/aicasm
- 	$(obj)/aicasm/aicasm -I$(src) -r $(obj)/aic79xx_reg.h \
- 			      $(aicasm-79xx-opts-y) -o $(obj)/aic79xx_seq.h \
- 			      $(src)/aic79xx.seq
-+
-+$(aic79xx-gen-y): $(obj)/aic79xx_seq.h
-+else
-+$(obj)/aic79xx_reg_print.c: $(src)/aic79xx_reg_print.c_shipped
- endif
- 
- $(obj)/aicasm/aicasm: $(src)/aicasm/*.[chyl]
+Thanks,
+Kiyoshi Ueda
