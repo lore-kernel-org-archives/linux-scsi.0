@@ -1,49 +1,102 @@
-From: Steven Pratt <slpratt@austin.ibm.com>
-Subject: MPTSAS Driver and scatter gather lists
-Date: Tue, 04 Dec 2007 09:45:04 -0600
-Message-ID: <47557600.5040902@austin.ibm.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [Linux-usb-users] Read errors on Flash Drive Transcend TS1GJF2A
+Date: Tue, 04 Dec 2007 19:35:37 +0200
+Message-ID: <47558FE9.4090400@panasas.com>
+References: <Pine.LNX.4.44L0.0711261034090.4250-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:44456 "EHLO e4.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753694AbXLDPpB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 10:45:01 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e4.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id lB4Fj0eF017097
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lB4Fj0Rs446314
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lB4Fj0nW023472
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
-Received: from [9.41.47.41] (dyn9414741.austin.ibm.com [9.41.47.41])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.12.11) with ESMTP id lB4Fj07p023406
-	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 10:45:00 -0500
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:56348 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbXLDRf4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 12:35:56 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0711261034090.4250-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <ltuikov@yahoo.com>, RTE <raszilki@yandex.ru>, SCSI development list <linux-scsi@vger.kernel.org>
 
-I was doing some performance comparisons between the aic94xx sas adapter 
-and the mptsas (lsi1078 chip) and saw that performance was slightly 
-lower on lsi using the same drive. One thing I noticed the mptsas driver 
-was only setting sg_tablesize to 40 which restricts the maximum size of 
-the IO to 160kb.  This is inefficient and so I changed it to 255 (max 
-value) for testing purposes.  The results were not what I expected.  
-While CPU efficiency was improved at the larger block sizes (like I had 
-hopped), there were drastic improvements at small (<16k) block sizes 
-which is completely surprising).  So I decided to see where all the time 
-was being spent.  When doing oprofile, loss of idle ticks was confusing 
-things so I booted with idle=poll, and magically the original mptsas 
-driver now performs like the modified version at the small block sizes.
-My suspicion is that we have some some sleep delay which is minimized by 
-going into poll mode, but I have no idea why changing the sg_tablesize 
-gives the same results regardless of poll mode.  I should reiterate that 
-I am not talking about small difference. This is 2x performance at 1/3 cpu.
+On Mon, Nov 26 2007 at 17:35 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
+> Not all devices correctly report the error-causing LBA in the
+> Information field of their sense data -- even when they set the Valid
+> bit.  This patch (as1019) makes sd much more cautious about accepting
+> the reported LBA.  If the value isn't within the range of blocks
+> accessed during the I/O operation it is rejected, and instead the
+> driver will try looking at the residue field (which currently it
+> ignores completely).
+> 
+> This fixes a data-corruption bug reported here:
+> 
+> 	http://marc.info/?t=118745764700005&r=1&w=2
+> 
+> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
+> CC: Luben Tuikov <ltuikov@yahoo.com>
+> 
+> ---
+> 
+> This patch should be considered for inclusion in 2.6.24.  The bug in
+> question has always existed, as far as I know, but before 2.6.18 it was
+> masked by a different bug.
+> 
+> This doesn't use the new SCSI accessors.  In the development trees
+> I've seen, those accessors haven't yet been imported into sd.c.  If
+> the patch needs to be rebased, please let me know where to find the
+> current sd source.
+> 
+> Presumably sr should use the same algorithm.  That's grist for another
+> patch.
+> 
+> 
+> Index: usb-2.6/drivers/scsi/sd.c
+> ===================================================================
+> --- usb-2.6.orig/drivers/scsi/sd.c
+> +++ usb-2.6/drivers/scsi/sd.c
+> @@ -968,7 +968,17 @@ static int sd_done(struct scsi_cmnd *SCp
+>  		/* This computation should always be done in terms of
+>  		 * the resolution of the device's medium.
+>  		 */
+> -		good_bytes = (bad_lba - start_lba)*SCpnt->device->sector_size;
+> +		if (start_lba <= bad_lba && bad_lba < start_lba +
+> +				(xfer_size / SCpnt->device->sector_size))
+> +			good_bytes = SCpnt->device->sector_size *
+> +					(unsigned int) (bad_lba - start_lba);
+> +
+> +		/* If the bad_lba value is no good, maybe the residue value
+> +		 * is better.
+> +		 */
+> +		else if (SCpnt->resid > 0 && SCpnt->resid < xfer_size)
+> +			good_bytes = (xfer_size - SCpnt->resid) &
+> +					(- SCpnt->device->sector_size);
+>  		break;
+>  	case RECOVERED_ERROR:
+>  	case NO_SENSE:
+> 
+> -
 
-Also, is there any reason we can't increase sg_tablesize for mptsas?
+perhaps below hunk should be added to your patch.
 
-Any thoughts or experiments to try are welcome.
-Steve
+Was it decided when this data corruption bugfix is
+merged.
+
+Also in sr.c. It does the range check but it might
+enjoy the resid handling as well.
+
+---------
+ drivers/scsi/scsi.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 796c0bd..1a576bc 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -714,6 +714,8 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 
+ 	good_bytes = cmd->request_bufflen;
+         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++		if ( cmd->resid > 0 && cmd->resid < good_bytes)
++				good_bytes -= cmd->resid;
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
+ 			good_bytes = drv->done(cmd);
+
