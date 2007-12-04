@@ -1,67 +1,30 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 24/28] blk_end_request: changing ide normal
- caller (take 3)
-Date: Tue, 04 Dec 2007 13:04:41 -0500 (EST)
-Message-ID: <20071204.130441.41629552.k-ueda@ct.jp.nec.com>
-References: <200712012353.05187.bzolnier@gmail.com>
-	<20071203.181252.58460084.k-ueda@ct.jp.nec.com>
-	<200712041447.00238.bzolnier@gmail.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Moore, Eric" <Eric.Moore@lsi.com>
+Subject: RE: MPTSAS Driver and scatter gather lists
+Date: Tue, 4 Dec 2007 12:58:04 -0700
+Message-ID: <664A4EBB07F29743873A87CF62C26D70BA6CA6@NAMAIL4.ad.lsil.com>
+References: <47557600.5040902@austin.ibm.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <200712041447.00238.bzolnier@gmail.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: bzolnier@gmail.com
-Cc: linux-scsi@vger.kernel.org, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail0.lsil.com ([147.145.40.20]:58987 "EHLO mail0.lsil.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751565AbXLDT6M convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 14:58:12 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <47557600.5040902@austin.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Steven Pratt <slpratt@austin.ibm.com>, linux-scsi@vger.kernel.org
 
-Hi Bartlomiej,
+On Tuesday, December 04, 2007 8:45 AM,  Steven Pratt wrote:
+> 
+> Also, is there any reason we can't increase sg_tablesize for mptsas?
+> 
 
-On Tue, 4 Dec 2007 14:47:00 +0100, Bartlomiej Zolnierkiewicz wrote:
-> > > Hmmm, this seems to change the old behavior (the request should
-> > > be dequeued from the queue only if 'dequeue' variable is set)
-> > > and AFAIR some error handling code (in ide-cd?) depends on the
-> > > old behavior so please revisit this patch.
-> > 
-> > blk_end_request() takes care of the dequeue like below,
-> > so I think no problem.  (Please see PATCH 01)
-> > 
-> > > +	/* rq->queuelist of dequeued request should be list_empty() */
-> > > +	if (!list_empty(&rq->queuelist))
-> > > +		blkdev_dequeue_request(rq);
-> > 
-> > In the case of ide-cd,
-> >   o 'dequeue' variable is 1 only when the request is still linked
-> >     to the queue (i.e. rq->queuelist is not empty)
-> >   o 'dequeue' variable is 0 only when the request has already been
-> >     removed from the queue (i.e. rq->queuelist is empty)
-> > So blk_end_request() can handle it correctly.
-> 
-> It would be helpful to add the above explanation to a patch description.
-> 
-> > If there are any drivers which don't want dequeue the queued request,
-> > the code above would not work.
-> > But, as far as I investigated, I have never seen such a requirement
-> > in device drivers.
-> > 
-> > Do you think that ide may still gets a problem for the 'dequeue'?
-> 
-> Everything seems to be fine now.
-> 
-> Acked-by: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+The default 128, set in Kconfig (look at FUSION_MAX_SGE).    It only set
+to 40 when that is not defined.  What is in your kernel .config, e.g
+look for CONFIG_FUSION_MAX_SGE.
 
-Thank you for the check.
-OK, I'll add the explanation about the 'dequeue' to patch description.
-
-Thanks,
-Kiyoshi Ueda
+Eric
