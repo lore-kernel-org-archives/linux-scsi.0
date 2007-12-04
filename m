@@ -1,43 +1,46 @@
-From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
-Subject: Re: [BUG] 2.6.24-rc3-git2 softlockup detected
-Date: Tue, 04 Dec 2007 20:27:41 +0530
-Message-ID: <47556AE5.8010708@linux.vnet.ibm.com>
-References: <474D0AAC.5010005@linux.vnet.ibm.com> <20071127225328.9e3f3827.akpm@linux-foundation.org> <474D15FF.5080508@linux.vnet.ibm.com> <20071127232552.ad16e95c.akpm@linux-foundation.org> <474E5CAC.9000108@linux.vnet.ibm.com> <20071129003533.54b4b20e.akpm@linux-foundation.org> <20071130063929.GD2754@fattire.cabal.ca> <20071129230047.1b482562.akpm@linux-foundation.org> <20071129230204.8698f47e.akpm@linux-foundation.org> <474FBB86.5000004@linux.vnet.ibm.com> <20071204122005.GA27286@elte.hu>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
+Date: Tue, 4 Dec 2007 09:36:40 -0600 (CST)
+Message-ID: <20071204153641.2938DDBA2@gherkin.frus.com>
+References: <20071204121618.GA26132@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from E23SMTP05.au.ibm.com ([202.81.18.174]:42773 "EHLO
-	e23smtp05.au.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753270AbXLDO6M (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 09:58:12 -0500
-In-Reply-To: <20071204122005.GA27286@elte.hu>
+Received: from gherkin.frus.com ([192.158.254.49]:56457 "EHLO gherkin.frus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753151AbXLDPgx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 10:36:53 -0500
+In-Reply-To: <20071204121618.GA26132@elte.hu> "from Ingo Molnar at Dec 4, 2007
+ 01:16:18 pm"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ingo Molnar <mingo@elte.hu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Kyle McMartin <kyle@mcmartin.ca>, LKML <linux-kernel@vger.kernel.org>, linuxppc-dev@ozlabs.org, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Rafael J. Wysocki" <rjw@sisk.pl>, Matthew Wilcox <willy@debian.org>
+Cc: Michael Cree <mcree@orcon.net.nz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
 
 Ingo Molnar wrote:
-> * Kamalesh Babulal <kamalesh@linux.vnet.ibm.com> wrote:
-> 
->>> So 2.6.24-rc3 was OK and 2.6.24-rc3-git2 is not?
->> Yes, the 2.6.24-rc3 was Ok and this is seen from 2.6.24-rc3-git2/3/4.
-> 
-> just to make sure: this is a real lockup and failed bootup (or device 
-> init), not just a message, right?
-> 
-> 	Ingo
-> --
+> once you are done with the download of the initial cloned git repository 
+> (which is 200MB+), all the bisection steps will be local and you'll be 
+> only limited by kernel rebuild speed and by bootup and testing speed, 
+> not by network bandwidth.
 
-Hi Ingo,
+ACK.  Have tested two kernels in the past 24 hours, and the third is
+building as I type this.  The builds seem to be taking about 3 hours
+each.  First two tests good, so the offending commit is somewhere in
+the last 25% (roughly) of the changes between -rc2 and -rc3: git says
+82 revisions left to test.  Might have this painted into a corner in
+the next day or so.  I'll try to be quick about it, since -rc4 is out.
 
-This softlockup is seen in the 2.6.24-rc4 either and looks like a message because 
-this is seen while running tbench and machine continues running other test's after 
-the softlockup messages and some times seen with the bootup, but the machines reaches the 
-login prompt and able to continue running tests.
+> ( once you have the cloned repository i'd suggest for you to keep it - 
+>   that way you can track susequent kernels via "git-pull" and it uses a 
+>   very network-efficient delta protocol. )
+
+Will do...  I'm in the fortunate position of having enough disk space
+on my Alpha that I can maintain multiple trees for this kind of effort.
 
 -- 
-Thanks & Regards,
-Kamalesh Babulal,
-Linux Technology Center,
-IBM, ISTL.
+------------------------------------------------------------------------
+Bob Tracy          |  "They couldn't hit an elephant at this dist- "
+rct@frus.com       |   - Last words of Union General John Sedgwick,
+                   |  Battle of Spotsylvania Court House, U.S. Civil War
+------------------------------------------------------------------------
