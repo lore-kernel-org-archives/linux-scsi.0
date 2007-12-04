@@ -1,102 +1,55 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [Linux-usb-users] Read errors on Flash Drive Transcend TS1GJF2A
-Date: Tue, 04 Dec 2007 19:35:37 +0200
-Message-ID: <47558FE9.4090400@panasas.com>
-References: <Pine.LNX.4.44L0.0711261034090.4250-100000@iolanthe.rowland.org>
+Date: Tue, 4 Dec 2007 13:03:12 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0712041254590.13516-100000@iolanthe.rowland.org>
+References: <47558FE9.4090400@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:56348 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751211AbXLDRf4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 12:35:56 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0711261034090.4250-100000@iolanthe.rowland.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:53244 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750954AbXLDSDN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Dec 2007 13:03:13 -0500
+In-Reply-To: <47558FE9.4090400@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Luben Tuikov <ltuikov@yahoo.com>, RTE <raszilki@yandex.ru>, SCSI development list <linux-scsi@vger.kernel.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, RTE <raszilki@yandex.ru>, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Mon, Nov 26 2007 at 17:35 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
-> Not all devices correctly report the error-causing LBA in the
-> Information field of their sense data -- even when they set the Valid
-> bit.  This patch (as1019) makes sd much more cautious about accepting
-> the reported LBA.  If the value isn't within the range of blocks
-> accessed during the I/O operation it is rejected, and instead the
-> driver will try looking at the residue field (which currently it
-> ignores completely).
-> 
-> This fixes a data-corruption bug reported here:
-> 
-> 	http://marc.info/?t=118745764700005&r=1&w=2
-> 
-> Signed-off-by: Alan Stern <stern@rowland.harvard.edu>
-> CC: Luben Tuikov <ltuikov@yahoo.com>
-> 
-> ---
-> 
-> This patch should be considered for inclusion in 2.6.24.  The bug in
-> question has always existed, as far as I know, but before 2.6.18 it was
-> masked by a different bug.
-> 
-> This doesn't use the new SCSI accessors.  In the development trees
-> I've seen, those accessors haven't yet been imported into sd.c.  If
-> the patch needs to be rebased, please let me know where to find the
-> current sd source.
-> 
-> Presumably sr should use the same algorithm.  That's grist for another
-> patch.
-> 
-> 
-> Index: usb-2.6/drivers/scsi/sd.c
-> ===================================================================
-> --- usb-2.6.orig/drivers/scsi/sd.c
-> +++ usb-2.6/drivers/scsi/sd.c
-> @@ -968,7 +968,17 @@ static int sd_done(struct scsi_cmnd *SCp
->  		/* This computation should always be done in terms of
->  		 * the resolution of the device's medium.
->  		 */
-> -		good_bytes = (bad_lba - start_lba)*SCpnt->device->sector_size;
-> +		if (start_lba <= bad_lba && bad_lba < start_lba +
-> +				(xfer_size / SCpnt->device->sector_size))
-> +			good_bytes = SCpnt->device->sector_size *
-> +					(unsigned int) (bad_lba - start_lba);
-> +
-> +		/* If the bad_lba value is no good, maybe the residue value
-> +		 * is better.
-> +		 */
-> +		else if (SCpnt->resid > 0 && SCpnt->resid < xfer_size)
-> +			good_bytes = (xfer_size - SCpnt->resid) &
-> +					(- SCpnt->device->sector_size);
->  		break;
->  	case RECOVERED_ERROR:
->  	case NO_SENSE:
-> 
-> -
+On Tue, 4 Dec 2007, Boaz Harrosh wrote:
 
-perhaps below hunk should be added to your patch.
+> perhaps below hunk should be added to your patch.
 
-Was it decided when this data corruption bugfix is
-merged.
+It looks like a good idea.
 
-Also in sr.c. It does the range check but it might
-enjoy the resid handling as well.
+> Was it decided when this data corruption bugfix is
+> merged.
 
----------
- drivers/scsi/scsi.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
+I don't know -- I haven't heard anything back from James.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 796c0bd..1a576bc 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -714,6 +714,8 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
- 
- 	good_bytes = cmd->request_bufflen;
-         if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
-+		if ( cmd->resid > 0 && cmd->resid < good_bytes)
-+				good_bytes -= cmd->resid;
- 		drv = scsi_cmd_to_driver(cmd);
- 		if (drv->done)
- 			good_bytes = drv->done(cmd);
+> Also in sr.c. It does the range check but it might
+> enjoy the resid handling as well.
+
+I think the range checking in sr.c is completely wrong.  The code
+doesn't check carefully to see that the error sector lies within the
+range of sectors being accessed; there's a possibility of overflow if
+the capacity is larger than 2**31 bytes.  Also this line in particular
+makes no sense:
+
+		error_sector &= ~(block_sectors - 1);
+
+Like you said, using the residue value too wouldn't hurt.
+
+Furthermore the check for the Valid bit is done wrongly:
+
+		if (!(SCpnt->sense_buffer[0] & 0x90))
+
+This will never be true because of the earlier test:
+
+        if (driver_byte(result) != 0 &&         /* An error occurred */
+            (SCpnt->sense_buffer[0] & 0x7f) == 0x70) { /* Sense current */
+
+It probably should test against 0x80 instead of 0x90.
+
+Alan Stern
 
