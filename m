@@ -1,63 +1,44 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libsas: Don't issue commands to devices that have been
- hot-removed.
-Date: Tue, 04 Dec 2007 18:40:54 -0500
-Message-ID: <4755E586.2030401@garzik.org>
-References: <200711301022.08001.kb@sysmikro.com.pl> <200712031709.54168.kb@sysmikro.com.pl> <20071203193652.GB7066@tree.beaverton.ibm.com> <200712032106.44176.kb@sysmikro.com.pl> <20071204223516.GA6767@tree.beaverton.ibm.com> <4755D941.2060903@garzik.org> <20071204231727.GB6767@tree.beaverton.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: iscsi update for 2.6.25
+Date: Tue,  4 Dec 2007 18:42:14 -0600
+Message-ID: <11968153574025-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:57960 "EHLO mail.dvmed.net"
+Received: from mx1.redhat.com ([66.187.233.31]:42497 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750969AbXLDXlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 18:41:03 -0500
-In-Reply-To: <20071204231727.GB6767@tree.beaverton.ibm.com>
+	id S1750813AbXLEAmr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 19:42:47 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.1) with ESMTP id lB50gk28011401
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 19:42:46 -0500
+Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lB50gk11023681
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 19:42:46 -0500
+Received: from localhost.localdomain (vpn-14-127.rdu.redhat.com [10.11.14.127])
+	by pobox.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lB50ghqO005879
+	for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 19:42:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Darrick J. Wong" <djwong@us.ibm.com>
-Cc: =?UTF-8?B?S3J6eXN6dG9mIELFgmFzemtvd3NraQ==?= <kb@sysmikro.com.pl>, linux-scsi@vger.kernel.org, vst@vlnb.net, Alexis Bruemmer <alexisb@us.ibm.com>
+To: linux-scsi@vger.kernel.org
 
-Darrick J. Wong wrote:
-> On Tue, Dec 04, 2007 at 05:48:33PM -0500, Jeff Garzik wrote:
-> 
->> As an aside, issues like this really really imply a need to move libsas 
->> away from the old libata EH stuff (like brking did with ipr, in patches).
-> 
-> Hm... does the new libata EH handle the case of "device was
-> unplugged, don't bother trying to send any more commands"?
-> 
-> In general, I agree that sas-ata should adopt the new EH.
-> Unfortunately, I believe the old way of sas-ata configuring ATA ports is
-> somehow not compatible with the new EH stuff and causes a crash during
-> the device probe with my patch to move sas-ata to the new EH.  If I
-> apply the patch that migrates sas-ata to use brking's latest ata-sas
-> configuration mechanism (the one that creates real ata_hosts), I see
-> (a) lots and lots of ATA hosts getting created (one per ATA port;
-> possibly undesirable if you've a SAS topology with a lot of SATA disks)
-> and (b) NCQ disks don't seem to work if you unplug the disk and plug
-> it back in (unless NCQ is disabled entirely).  Jeff, by any chance have
-> you tried plugging SATA devices into your SAS controllers?
+This patchset was made over scsi-rc-fixes (it also applies to Linus's git
+tree). It will not apply over scsi-misc, because there are some patches
+which went into scsi-rc-fixes/2.6.24-rc4 and scsi-misc has not been updated
+for the scsi-rc-fixes patches.
 
-aic94xx yes, bcm and mv no.
+Sorry for the bigger than normal update. There are patches from Olaf and
+Boaz which do the following:
 
-Will take a look though...
-
-
-> James Bottomley wondered if it would be easier to have sas-ata call only
-> into the parts of libata that convert SCSI commands to ATA taskfiles,
-> though I'm unsure how many wormy cans that would open.
-
-You want more than that.
-
-You want to make sure libata is the place for knowledge about weird ATA 
-devices, SATA quirks, ATA device error handling (to be distinguished 
-from ATA /link/ error handling), and other areas.
-
-That stuff shouldn't be duplicated, and you /really/ do not want to 
-re-learn all those lessons all over again ;-)
-
-	Jeff
-
+- Rewrite iscsi_tcp data path (from Olaf), so we do not have two ulgy
+abstractions for the send and recv path. Now we have one nice iscsi_segment
+struct that works for both paths.
+- Add basic iscsi spec handling we will need for Bidi support (from Boaz).
+This does not add bidi support. It just adds code that is common.
+- Device reset support. Some clustering software needed at least
+device reset support, so I cleaned up that code and added device
+logical unit reset support. I will add warm target reset support
+later.
+- Lots of fixes for things like shutdown, r2t leaks, and lots of clean
+up from Olaf.
+- sg chaining support.
 
 
