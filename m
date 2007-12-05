@@ -1,100 +1,54 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 03/23] Prettify resid handling and some extra checks
-Date: Tue,  4 Dec 2007 18:42:17 -0600
-Message-ID: <11968153713324-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 12/23] iscsi_tcp: update the website URL
+Date: Tue,  4 Dec 2007 18:42:26 -0600
+Message-ID: <11968153812001-git-send-email-michaelc@cs.wisc.edu>
 References: <11968153574025-git-send-email-michaelc@cs.wisc.edu>
  <119681536472-git-send-email-michaelc@cs.wisc.edu>
  <11968153663560-git-send-email-michaelc@cs.wisc.edu>
+ <11968153713324-git-send-email-michaelc@cs.wisc.edu>
+ <11968153753743-git-send-email-michaelc@cs.wisc.edu>
+ <11968153751098-git-send-email-michaelc@cs.wisc.edu>
+ <1196815376111-git-send-email-michaelc@cs.wisc.edu>
+ <1196815377131-git-send-email-michaelc@cs.wisc.edu>
+ <11968153781126-git-send-email-michaelc@cs.wisc.edu>
+ <1196815378769-git-send-email-michaelc@cs.wisc.edu>
+ <11968153791438-git-send-email-michaelc@cs.wisc.edu>
+ <11968153801823-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42723 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:42722 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751362AbXLEAn0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 19:43:26 -0500
-In-Reply-To: <11968153663560-git-send-email-michaelc@cs.wisc.edu>
+	id S1751297AbXLEAnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 19:43:21 -0500
+In-Reply-To: <11968153801823-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <tomof@acm.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+From: FUJITA Tomonori <tomof@acm.org>
 
-from Boaz Harrosh:
-  - Check to see that OVERFLOW is not negative indicating
-    a bug.
-  - Unify handling of UNDERFLOW and OVERFLOW to the same
-    code.
-  - Also handle BIDI_OVERFLOW.
+Use open-iscsi.org instead of linux-iscsi.sf.net, which hasn't been
+updated for ages.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/iscsi_tcp.c |   16 +++++++---------
- drivers/scsi/libiscsi.c  |   12 +++++++-----
- 2 files changed, 14 insertions(+), 14 deletions(-)
+ drivers/scsi/Kconfig |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 1b540e0..fd88777 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -507,22 +507,20 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 	}
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index a6676be..ab965f5 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -341,7 +341,7 @@ config ISCSI_TCP
+ 	 The userspace component needed to initialize the driver, documentation,
+ 	 and sample configuration files can be found here:
  
- 	if (rhdr->flags & ISCSI_FLAG_DATA_STATUS) {
-+		sc->result = (DID_OK << 16) | rhdr->cmd_status;
- 		conn->exp_statsn = be32_to_cpu(rhdr->statsn) + 1;
--		if (rhdr->flags & ISCSI_FLAG_DATA_UNDERFLOW) {
-+		if (rhdr->flags & (ISCSI_FLAG_DATA_UNDERFLOW |
-+		                   ISCSI_FLAG_DATA_OVERFLOW)) {
- 			int res_count = be32_to_cpu(rhdr->residual_count);
+-	 http://linux-iscsi.sf.net
++	 http://open-iscsi.org
  
- 			if (res_count > 0 &&
--			    res_count <= scsi_bufflen(sc)) {
-+			    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
-+			     res_count <= scsi_bufflen(sc)))
- 				scsi_set_resid(sc, res_count);
--				sc->result = (DID_OK << 16) | rhdr->cmd_status;
--			} else
-+			else
- 				sc->result = (DID_BAD_TARGET << 16) |
- 					rhdr->cmd_status;
--		} else if (rhdr->flags & ISCSI_FLAG_DATA_OVERFLOW) {
--			scsi_set_resid(sc, be32_to_cpu(rhdr->residual_count));
--			sc->result = (DID_OK << 16) | rhdr->cmd_status;
--		} else
--			sc->result = (DID_OK << 16) | rhdr->cmd_status;
-+		}
- 	}
- 
- 	conn->datain_pdus_cnt++;
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 176458f..0beb4c6 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -291,17 +291,19 @@ invalid_datalen:
- 			   min_t(uint16_t, senselen, SCSI_SENSE_BUFFERSIZE));
- 	}
- 
--	if (rhdr->flags & ISCSI_FLAG_CMD_UNDERFLOW) {
-+	if (rhdr->flags & (ISCSI_FLAG_CMD_UNDERFLOW |
-+	                   ISCSI_FLAG_CMD_OVERFLOW)) {
- 		int res_count = be32_to_cpu(rhdr->residual_count);
- 
--		if (res_count > 0 && res_count <= scsi_bufflen(sc))
-+		if (res_count > 0 &&
-+		    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
-+		     res_count <= scsi_bufflen(sc)))
- 			scsi_set_resid(sc, res_count);
- 		else
- 			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
--	} else if (rhdr->flags & ISCSI_FLAG_CMD_BIDI_UNDERFLOW)
-+	} else if (rhdr->flags & (ISCSI_FLAG_CMD_BIDI_UNDERFLOW |
-+	                          ISCSI_FLAG_CMD_BIDI_OVERFLOW))
- 		sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
--	else if (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW)
--		scsi_set_resid(sc, be32_to_cpu(rhdr->residual_count));
- 
- out:
- 	debug_scsi("done [sc %lx res %d itt 0x%x]\n",
+ config SGIWD93_SCSI
+ 	tristate "SGI WD93C93 SCSI Driver"
 -- 
 1.5.1.2
 
