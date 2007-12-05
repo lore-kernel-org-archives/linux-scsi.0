@@ -1,34 +1,31 @@
-From: Lee Schermerhorn <Lee.Schermerhorn@hp.com>
-Subject: BUG 2.6.24-rc4-mm1 -- Boot still hangs w/ async scsi scan
-Date: Wed, 05 Dec 2007 11:36:39 -0500
-Message-ID: <1196872599.5346.8.camel@localhost>
+From: rct@gherkin.frus.com (Bob Tracy)
+Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
+Date: Wed, 5 Dec 2007 11:30:32 -0600 (CST)
+Message-ID: <20071205173032.8257ADBA2@gherkin.frus.com>
+References: <20071204121618.GA26132@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g4t0014.houston.hp.com ([15.201.24.17]:24867 "EHLO
-	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751478AbXLEQrD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 11:47:03 -0500
+Received: from gherkin.frus.com ([192.158.254.49]:47000 "EHLO gherkin.frus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750954AbXLERaj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 5 Dec 2007 12:30:39 -0500
+In-Reply-To: <20071204121618.GA26132@elte.hu> "from Ingo Molnar at Dec 4, 2007
+ 01:16:18 pm"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@steeleye.com, Eric.Moore@lsi.com
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Michael Cree <mcree@orcon.net.nz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
 
-As reported here:
+Current progress: 11 revisions left to test.  The current partial
+"git bisect log" is available per Ingo's suggestion on bugzilla.
 
-	http://marc.info/?l=linux-scsi&m=119645761124683&w=4
+http://bugzilla.kernel.org/show_bug.cgi?id=9457
 
-against 24-rc3-mm2, I'm still seeing the hang on my HP ia64 NUMA
-platform under 24-rc4-mm1 with async scsi scan enabled.  I'm still
-seeing the message  "mptspi: ioc#: mpt_config failed" when it hangs. 
-
-I can boot by disabling async scan.  However, I've also noticed some
-disks attached via one of the "mpt" adapters ["scsi8" in console long in
-message linked above] going "off-line" during stress tests.  This was
-under 24-rc3-mm2.  Haven't got that far yet with 24-rc4-mm1.
-
-Regards,
-Lee
-
-
+-- 
+------------------------------------------------------------------------
+Bob Tracy          |  "They couldn't hit an elephant at this dist- "
+rct@frus.com       |   - Last words of Union General John Sedgwick,
+                   |  Battle of Spotsylvania Court House, U.S. Civil War
+------------------------------------------------------------------------
