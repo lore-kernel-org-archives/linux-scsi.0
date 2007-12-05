@@ -1,34 +1,34 @@
-From: Joe Eykholt <fcoe@eykholt.com>
-Subject: Re: [OpenFCoE PATCH] If expecting pre-T11 frames, a T11 frame	caused
- a data fault.
-Date: Wed, 05 Dec 2007 08:42:01 -0800
-Message-ID: <4756D4D9.70608@eykholt.com>
-References: <20071205005214.26211.62814.stgit@mink.he.net> <20071205135543.GA2174@infradead.org>
+From: Lee Schermerhorn <Lee.Schermerhorn@hp.com>
+Subject: BUG 2.6.24-rc4-mm1 -- Boot still hangs w/ async scsi scan
+Date: Wed, 05 Dec 2007 11:36:39 -0500
+Message-ID: <1196872599.5346.8.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eykholt.com ([72.52.117.41]:46824 "HELO eykholt.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751716AbXLEQlw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Dec 2007 11:41:52 -0500
-Received: from 67.91.200.194 ([67.91.200.194]) by eykholt.com for <linux-scsi@vger.kernel.org>; Wed, 5 Dec 2007 08:41:50 -0800
-In-Reply-To: <20071205135543.GA2174@infradead.org>
+Received: from g4t0014.houston.hp.com ([15.201.24.17]:24867 "EHLO
+	g4t0014.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478AbXLEQrD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 11:47:03 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@steeleye.com, Eric.Moore@lsi.com
 
-Christoph Hellwig wrote:
-> Just wondering:
-> 
->>From my quick reading of the code these pre-T11 frames are basically
-> a different frame-level protocol.  Given that T11 has standardized
-> on a different one what's the rationale for supporting the old frames?
+As reported here:
 
-There is still some use in lab environments of the old frame format, and
-it would greatly help if we could keep it working for now.  Eventually,
-in a year or so, it could be removed completely.  It seems to be a small
-amount of code and in a loadable module besides.
+	http://marc.info/?l=linux-scsi&m=119645761124683&w=4
 
-	Joe
+against 24-rc3-mm2, I'm still seeing the hang on my HP ia64 NUMA
+platform under 24-rc4-mm1 with async scsi scan enabled.  I'm still
+seeing the message  "mptspi: ioc#: mpt_config failed" when it hangs. 
+
+I can boot by disabling async scan.  However, I've also noticed some
+disks attached via one of the "mpt" adapters ["scsi8" in console long in
+message linked above] going "off-line" during stress tests.  This was
+under 24-rc3-mm2.  Haven't got that far yet with 24-rc4-mm1.
+
+Regards,
+Lee
+
+
