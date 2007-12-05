@@ -1,58 +1,112 @@
-From: "Sean Rendell" <rendell@nortel.com>
-Subject: Re: stex driver - kernel panics
-Date: Wed, 05 Dec 2007 18:00:30 -0500
-Message-ID: <47572D8E.8040302@nortel.com>
-References: <47571259.9060608@nortel.com> <200712052249.20782.eike-kernel@sf-tec.de>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: 2.6.24-rc4-mm1: hostbyte=0x01 driverbyte=0x00 (now bisected)
+Date: Thu, 6 Dec 2007 02:41:54 +0300
+Message-ID: <20071205234154.GA4041@martell.zuzino.mipt.ru>
+References: <20071204211701.994dfce6.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from zcars04e.nortel.com ([47.129.242.56]:43705 "EHLO
-	zcars04e.nortel.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752722AbXLEXK4 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 18:10:56 -0500
-In-Reply-To: <200712052249.20782.eike-kernel@sf-tec.de>
+Received: from ug-out-1314.google.com ([66.249.92.168]:20563 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751478AbXLEXmB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 18:42:01 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so595145ugc
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Dec 2007 15:41:59 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20071204211701.994dfce6.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rolf Eike Beer <eike-kernel@sf-tec.de>
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, hare@suse.de
+Cc: linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
------BEGIN PGP SIGNED MESSAGE-----
-Hash: SHA1
+>  git-scsi-misc.patch
 
-Rolf Eike Beer wrote:
-> 
-> gdb stex.o
-> l *stex_mu_intr+0x10e
-> 
-> That will give you the exact line that failed
-> 
-> Greeting,
-> 
-> Eike
+Apologies for not looking into the problem earlier. See
+http://marc.info/?t=119628022300005&r=1&w=2
+"2.6.24-rc3-mm2: Result: hostbyte=0x01 driverbyte=0x00\nend_request: I/O error"
+for previous installment.
 
+I've bisected it to the following patch in git-scsi-misc branch.
+Revert on top of 2.6.24-rc4-mm1 also helps.
 
+commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0
+Author: Hannes Reinecke <hare@suse.de>
+Date:   Tue Nov 6 09:23:40 2007 +0100
 
-Well I get this:
+    [SCSI] Do not requeue requests if REQ_FAILFAST is set
+    
+    Any requests with the REQ_FAILFAST flag set should not be requeued
+    to the requeust queue, but rather terminated directly.
+    Otherwise the multipath failover will stall until the command
+    timeout triggers.
+    
+    Signed-off-by: Hannes Reinecke <hare@suse.de>
+    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
-raidology:~# gdb stex.o
-...
-(gdb) l *stex_mu_intr+0x10e
-No symbol table is loaded.  Use the "file" command.
-
-
-I think its due to no kernel debugging info.  I'll recompile with "CONFIG_DEBUG_KERNEL" set and see what happens.
-
-Won't the recompile make the previous procedure addresses invalid?
-
-cya
-Sean
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (MingW32)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFHVy2NdnDJ8yyauXcRAuNGAJ9qIRhBcHEEK6tn7HhUq9pnaA/ovQCcDLGY
-eLSL9wCctTNBa9MfjSYEphw=
-=nUpC
------END PGP SIGNATURE-----
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0f44bdb..0da0dd0 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1286,6 +1286,11 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+ 			 */
+ 			if (!(req->cmd_flags & REQ_PREEMPT))
+ 				ret = BLKPREP_DEFER;
++			/*
++			 * Return failfast requests immediately
++			 */
++			if (req->cmd_flags & REQ_FAILFAST)
++				ret = BLKPREP_KILL;
+ 			break;
+ 		default:
+ 			/*
+@@ -1414,6 +1419,17 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 	return 1;
+ }
+ 
++static void __scsi_kill_request(struct request *req)
++{
++	struct scsi_cmnd *cmd = req->special;
++	struct scsi_device *sdev = cmd->device;
++
++	cmd->result = DID_NO_CONNECT << 16;
++	atomic_inc(&cmd->device->iorequest_cnt);
++	sdev->device_busy--;
++	__scsi_done(cmd);
++}
++
+ /*
+  * Kill a request for a dead device
+  */
+@@ -1527,8 +1543,16 @@ static void scsi_request_fn(struct request_queue *q)
+ 		 * accept it.
+ 		 */
+ 		req = elv_next_request(q);
+-		if (!req || !scsi_dev_queue_ready(q, sdev))
++		if (!req)
++			break;
++
++		if (!scsi_dev_queue_ready(q, sdev)) {
++			if (req->cmd_flags & REQ_FAILFAST) {
++				scsi_kill_request(req, q);
++				continue;
++			}
+ 			break;
++		}
+ 
+ 		if (unlikely(!scsi_device_online(sdev))) {
+ 			sdev_printk(KERN_ERR, sdev,
+@@ -1609,8 +1633,12 @@ static void scsi_request_fn(struct request_queue *q)
+ 	 * later time.
+ 	 */
+ 	spin_lock_irq(q->queue_lock);
+-	blk_requeue_request(q, req);
+-	sdev->device_busy--;
++	if (unlikely(req->cmd_flags & REQ_FAILFAST))
++		__scsi_kill_request(req);
++	else {
++		blk_requeue_request(q, req);
++		sdev->device_busy--;
++	}
+ 	if(sdev->device_busy == 0)
+ 		blk_plug_device(q);
+  out:
