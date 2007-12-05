@@ -1,207 +1,279 @@
 From: Joe Eykholt <fcoe@eykholt.com>
-Subject: [OpenFCoE PATCH] [PATCH] Performance improvement,
-	combine received data copy with CRC.
-Date: Tue, 04 Dec 2007 16:52:24 -0800
-Message-ID: <20071205005224.26269.68039.stgit@mink.he.net>
+Subject: [OpenFCoE PATCH] Don't use netdev for FCoE if pause is not correctly
+	set, even for VLANs.
+Date: Tue, 04 Dec 2007 16:52:33 -0800
+Message-ID: <20071205005233.26330.76264.stgit@mink.he.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eykholt.com ([72.52.117.41]:50095 "HELO eykholt.com"
+Received: from eykholt.com ([72.52.117.41]:54875 "HELO eykholt.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1751279AbXLEAw0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 19:52:26 -0500
-Received: from mink.he.net ([127.0.0.1]) by eykholt.com for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 16:52:24 -0800
+	id S1751467AbXLEAwe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 19:52:34 -0500
+Received: from mink.he.net ([127.0.0.1]) by eykholt.com for <linux-scsi@vger.kernel.org>; Tue, 4 Dec 2007 16:52:33 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-[PATCH] Performance improvement, combine received data copy with CRC.
+Don't use netdev for FCoE if pause is not correctly set, even for VLANs.
 
+This modifies the previous tests to require that the underlying net-dev
+supports the ethtool get_pauseparam operation.
 
+NICs that are 10/100/1000 must have pause autonegotiation turned on.
+All NICs must have RX and TX pause on.  If not, they are treated as if
+there is no link.
 
 Signed-off-by: Joe Eykholt <fcoe@eykholt.com>
 
 ---
- drivers/scsi/ofc/openfc/openfc_scsi.c |  130 +++++++++++++++++++++++----------
- 1 files changed, 90 insertions(+), 40 deletions(-)
+ drivers/scsi/ofc/fcoe/fcoe_def.h |    1 
+ drivers/scsi/ofc/fcoe/fcoe_if.c  |   90 ++++++++++++++++++++++----------------
+ drivers/scsi/ofc/fcoe/fcoeinit.c |   66 ++++++++--------------------
+ 3 files changed, 71 insertions(+), 86 deletions(-)
 
-diff --git a/drivers/scsi/ofc/openfc/openfc_scsi.c b/drivers/scsi/ofc/openfc/openfc_scsi.c
-index 5fa0ad6..b5fc393 100644
---- a/drivers/scsi/ofc/openfc/openfc_scsi.c
-+++ b/drivers/scsi/ofc/openfc/openfc_scsi.c
-@@ -62,7 +62,6 @@ static void openfc_tm_done(struct fc_seq *, struct fc_frame *, void *);
- static void openfc_scsi_error(enum fc_event, void *);
- static int openfc_abort_internal(struct fcdev *, struct fc_scsi_pkt *,
- 				 struct fc_frame *);
--int openfc_cp_to_user(struct fc_scsi_pkt *, uint, void *, int);
- void openfc_scsi_cleanup(struct fc_scsi_pkt *);
- static void openfc_timeout_error(struct fc_scsi_pkt *);
- void openfc_scsi_rec_rcv(struct fc_seq *, struct fc_frame *, void *);
-@@ -102,9 +101,13 @@ static void openfc_scsi_recv_data(struct fc_scsi_pkt *fsp, struct fc_frame *fp)
- 	struct fcoe_dev_stats *sp;
- 	struct fc_frame_header *fh;
- 	size_t offset;
-+	u32 crc;
-+	u32 copy_len = 0;
- 	size_t len;
- 	void *buf;
- 
-+	if (!sc->request_buffer)
-+		return;			/* XXX possible? */
- 	fh = fc_frame_header_get(fp);
- 	offset = net32_get(&fh->fh_parm_offset);
- 	len = fp->fr_len - sizeof(*fh);
-@@ -115,13 +118,8 @@ static void openfc_scsi_recv_data(struct fc_scsi_pkt *fsp, struct fc_frame *fp)
- 		 * this should never happen
- 		 */
- 		if ((fp->fr_flags & FCPHF_CRC_UNCHECKED) &&
--		    fc_frame_crc_check(fp)) {
--			sp = openfcp->fd.dev_stats[smp_processor_id()];
--			sp->ErrorFrames++;
--			if (sp->InvalidCRCCount++ < 5)
--				SA_LOG("CRC error on data frame");
--			return;	/* just ignore the frame */
--		}
-+		    fc_frame_crc_check(fp))
-+			goto crc_err;
- 		if (openfc_debug) {
- 			SA_LOG("data received past end.	 "
- 			       "len %zx offset %zx "
-@@ -130,42 +128,95 @@ static void openfc_scsi_recv_data(struct fc_scsi_pkt *fsp, struct fc_frame *fp)
- 		openfc_scsi_retry(fsp);
- 		return;
- 	}
--
--	/*
--	 * Eventually, do scatter/gather buffer system to avoid
--	 * this copy.  A NULL buffer means we discard the data.
--	 */
-+	crc = 0;
- 	if (sc->use_sg) {
--		len = openfc_cp_to_user(fsp, offset, buf, len);
--		ASSERT_NOTIMPL(len > 0);
--	} else if (sc->request_buffer != NULL) {
--		__memcpy((void *)sc->request_buffer + offset, buf, len);
--	}
-+		struct scatterlist *sg;
-+		struct scatterlist *sg_limit;
-+		size_t remaining, sg_bytes;
-+		size_t off;
-+		void *page_addr;
- 
--	/*
--	 * If the lower layer didn't do the CRC check, do it here.
--	 * This is the only type of frame the transport might not check.
--	 * Eventually we could do the CRC calculation during the copy above.
--	 */
--	if ((fp->fr_flags & FCPHF_CRC_UNCHECKED) && fc_frame_crc_check(fp)) {
--		sp = openfcp->fd.dev_stats[smp_processor_id()];
--		sp->ErrorFrames++;
--		if (sp->InvalidCRCCount++ < 5)
--			SA_LOG("CRC error on data frame");
-+		if (fp->fr_flags & FCPHF_CRC_UNCHECKED)
-+			crc = crc32_sb8_64_bit(~0, (u8 *) fh, sizeof(*fh));
- 
--		/*
--		 * Assume the frame is total garbage.
--		 * We may have copied it over the good part of the buffer.
--		 * If so, we need to retry the entire operation.
--		 * Otherwise, ignore it.
--		 */
--		if (offset < fsp->xfer_len)
--			openfc_scsi_retry(fsp);
--		return;
--	}
-+		sg = (struct scatterlist *)sc->request_buffer;
-+		sg_limit = sg + sc->use_sg;
-+		remaining = len;
- 
--	fsp->xfer_len += len;
-+		while (remaining > 0 && sg < sg_limit) {
-+			if (offset >= sg->length) {
-+				offset -= sg->length;
-+				sg++;
-+				continue;
-+			}
-+			sg_bytes = min(remaining, sg->length - offset);
- 
-+			/*
-+			 * The scatterlist item may be bigger than PAGE_SIZE,
-+			 * but we are limited to mapping PAGE_SIZE at a time.
-+			 */
-+			off = offset + sg->offset;
-+			sg_bytes = min(sg_bytes,
-+				       (PAGE_SIZE - (off & ~PAGE_MASK)));
-+			page_addr = kmap_atomic(sg_page(sg) +
-+						(off >> PAGE_SHIFT),
-+						KM_SOFTIRQ0);
-+			if (!page_addr)
-+				break;		/* XXX panic? */
-+
-+			if (fsp->state != OPENFC_SRB_ABORT_PENDING) {
-+				if (fp->fr_flags & FCPHF_CRC_UNCHECKED) {
-+					crc = crc32_copy(crc,
-+							 (char *)page_addr +
-+							 (off & ~PAGE_MASK),
-+							 buf, sg_bytes);
-+				} else {
-+					__memcpy((char *)page_addr +
-+						 (off & ~PAGE_MASK),
-+						 buf, sg_bytes);
-+				}
-+			}
-+			kunmap_atomic(page_addr, KM_SOFTIRQ0);
-+			buf += sg_bytes;
-+			offset += sg_bytes;
-+			remaining -= sg_bytes;
-+			copy_len += sg_bytes;
-+		}
-+		if (fp->fr_flags & FCPHF_CRC_UNCHECKED)
-+			goto crc_check;
-+	} else if (fp->fr_flags & FCPHF_CRC_UNCHECKED) {
-+		crc = crc32_sb8_64_bit(~0, (u8 *)fh, sizeof(*fh));
-+		crc = crc32_copy(crc, (void *)sc->request_buffer + offset,
-+				 buf, len);
-+		copy_len = len;
-+crc_check:
-+		buf = fc_frame_payload_get(fp, 0);
-+		if (len % 4) {
-+			crc = crc32_sb8_64_bit(crc, buf + len, 4 - (len % 4));
-+			len += 4 - (len % 4);
-+		}
-+		if (~crc != le32_to_cpu(*(__le32 *)(buf + len))) {
-+crc_err:
-+			sp = openfcp->fd.dev_stats[smp_processor_id()];
-+			sp->ErrorFrames++;
-+			if (sp->InvalidCRCCount++ < 5)
-+				SA_LOG("CRC error on data frame");
-+			/*
-+			 * Assume the frame is total garbage.
-+			 * We may have copied it over the good part
-+			 * of the buffer.
-+			 * If so, we need to retry the entire operation.
-+			 * Otherwise, ignore it.
-+			 */
-+			if (offset < fsp->xfer_len)
-+				openfc_scsi_retry(fsp);
-+			return;
-+		}
-+	} else {
-+		__memcpy((void *)sc->request_buffer + offset, buf, len);
-+		copy_len = len;
-+	}
-+	fsp->xfer_len += copy_len;
- 	if (fsp->xfer_len == fsp->data_len)
- 		fsp->state = OPENFC_SRB_WAIT_FOR_STATUS;
- }
-@@ -317,7 +368,6 @@ static void openfc_scsi_send_data(struct fc_scsi_pkt *fsp, struct fc_seq *sp,
- 
- 	if (fsp->xfer_len == fsp->data_len)
- 		fsp->state = OPENFC_SRB_WAIT_FOR_STATUS;
--	return;
+diff --git a/drivers/scsi/ofc/fcoe/fcoe_def.h b/drivers/scsi/ofc/fcoe/fcoe_def.h
+index 0c71dc7..6550c73 100644
+--- a/drivers/scsi/ofc/fcoe/fcoe_def.h
++++ b/drivers/scsi/ofc/fcoe/fcoe_def.h
+@@ -109,6 +109,7 @@ int		fcoe_create_interface(struct fcoe_info *, void *);
+ int		fcoe_xmit(struct fcdev *, struct fc_frame *);
+ int		fcoe_rcv(struct sk_buff *, struct net_device *,
+ 			 struct packet_type *, struct net_device *);
++int		fcoe_link_ok(struct fcdev *);
+ struct fc_frame *fcoe_frame_alloc(size_t);
+ void fcoe_put_dev(struct fcdev *dev);
+ struct fcoe_softc *fcoe_find_fcdev(char *);
+diff --git a/drivers/scsi/ofc/fcoe/fcoe_if.c b/drivers/scsi/ofc/fcoe/fcoe_if.c
+index d87ede1..fd3c7a7 100644
+--- a/drivers/scsi/ofc/fcoe/fcoe_if.c
++++ b/drivers/scsi/ofc/fcoe/fcoe_if.c
+@@ -160,6 +160,48 @@ int fcoe_destroy_interface(struct fcdev *fd)
  }
  
  /*
++ * Return non-zero if link is OK for use by FCoE.
++ * Any permanently-disqualifying conditions have been previously checked.
++ * This checks pause settings, which can change with link.
++ * This also updates the speed setting, which may change with link for 100/1000.
++ */
++int fcoe_link_ok(struct fcdev *fdev)
++{
++	struct fcoe_softc *fc = (struct fcoe_softc *)fdev->drv_priv;
++	struct net_device *dev = fc->real_dev;
++	struct ethtool_pauseparam pause = { ETHTOOL_GPAUSEPARAM };
++	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
++	int rc = 0;
++
++	if ((dev->flags & IFF_UP) && netif_carrier_ok(dev)) {
++		dev->ethtool_ops->get_pauseparam(dev, &pause);
++		if (dev->ethtool_ops->get_settings) {
++			dev->ethtool_ops->get_settings(dev, &ecmd);
++			fdev->fd_speed_support &=
++			    ~(OFC_SPEED_1GBIT | OFC_SPEED_10GBIT);
++			if (ecmd.supported & (SUPPORTED_1000baseT_Half |
++					      SUPPORTED_1000baseT_Full))
++				fdev->fd_speed_support |= OFC_SPEED_1GBIT;
++			if (ecmd.supported & SUPPORTED_10000baseT_Full)
++				fdev->fd_speed_support |= OFC_SPEED_10GBIT;
++			if (ecmd.speed == SPEED_1000)
++				fdev->fd_speed = OFC_SPEED_1GBIT;
++			if (ecmd.speed == SPEED_10000)
++				fdev->fd_speed = OFC_SPEED_10GBIT;
++
++			/*
++			 * for 10 G (and faster), ignore autoneg requirement.
++			 */
++			if (ecmd.speed >= SPEED_10000)
++				pause.autoneg = 1;
++		}
++		if (pause.autoneg && pause.tx_pause && pause.rx_pause)
++			rc = 1;
++	}
++	return rc;
++}
++
++/*
+  * This function creates the fcoe interface
+  * create struct fcdev which is a shared structure between opefc
+  * and transport level protocol.
+@@ -171,8 +213,6 @@ int fcoe_create_interface(struct fcoe_info *fci, void *ptr)
+ 	struct fcoe_cfg *cfg = ptr;
+ 	struct fcoe_softc *fc;
+ 	struct fcoe_dev_stats *p;
+-	struct ethtool_pauseparam pauseparam = { ETHTOOL_GPAUSEPARAM };
+-	struct ethtool_cmd ecmd = { ETHTOOL_GSET };
+ 	int rc = 0;
+ 	int i;
+ #ifdef HAVE_SET_RX_MODE
+@@ -207,12 +247,6 @@ int fcoe_create_interface(struct fcoe_info *fci, void *ptr)
+ 		goto out;
+ 	}
+ 
+-	fdev->fd_link_status = TRANS_LINK_DOWN;
+-	if ((fc->real_dev->flags & IFF_UP) != 0 &&
+-	    netif_carrier_ok(fc->real_dev)) {
+-		fdev->fd_link_status = TRANS_LINK_UP;
+-	}
+-
+ 	/*
+ 	 * Do not support for bonding device
+ 	 */
+@@ -224,38 +258,16 @@ int fcoe_create_interface(struct fcoe_info *fci, void *ptr)
+ 	}
+ 
+ 	/*
+-	 * if it is not a vlan driver then do more check */
+-	if (!(fc->real_dev->priv_flags & IFF_802_1Q_VLAN)) {
+-
+-		if (!fc->real_dev->ethtool_ops) {
+-			rc = -EOPNOTSUPP;
+-			goto out;
+-		}
+-		if (!fc->real_dev->ethtool_ops->get_pauseparam) {
+-			rc = -EOPNOTSUPP;
+-			goto out;
+-		}
+-		fc->real_dev->ethtool_ops->get_pauseparam(fc->real_dev,
+-							  &pauseparam);
+-		if (!pauseparam.rx_pause || !pauseparam.tx_pause) {
+-			rc = -EOPNOTSUPP;
+-			goto out;
+-		}
+-		if (fc->real_dev->ethtool_ops->get_settings) {
+-			fc->real_dev->ethtool_ops->get_settings(fc->real_dev,
+-								&ecmd);
+-			if (ecmd.
+-			    supported & (SUPPORTED_1000baseT_Half |
+-					 SUPPORTED_1000baseT_Full))
+-				fdev->fd_speed_support |= OFC_SPEED_1GBIT;
+-			if (ecmd.supported & SUPPORTED_10000baseT_Full)
+-				fdev->fd_speed_support |= OFC_SPEED_10GBIT;
+-			if (ecmd.speed == SPEED_1000)
+-				fdev->fd_speed = OFC_SPEED_1GBIT;
+-			if (ecmd.speed == SPEED_10000)
+-				fdev->fd_speed = OFC_SPEED_10GBIT;
+-		}
++	 * Require support for get_pauseparam ethtool op.
++	 */
++	if (!fc->real_dev->ethtool_ops ||
++	    !fc->real_dev->ethtool_ops->get_pauseparam) {
++		rc = -EOPNOTSUPP;
++		goto out;
+ 	}
++	fdev->fd_link_status = TRANS_LINK_DOWN;
++	if (fcoe_link_ok(fdev))
++		fdev->fd_link_status = TRANS_LINK_UP;
+ 
+ 	if (fc->real_dev->features & NETIF_F_SG)
+ 		fdev->capabilities = TRANS_C_SG;
+diff --git a/drivers/scsi/ofc/fcoe/fcoeinit.c b/drivers/scsi/ofc/fcoe/fcoeinit.c
+index 182a9b1..3b80946 100644
+--- a/drivers/scsi/ofc/fcoe/fcoeinit.c
++++ b/drivers/scsi/ofc/fcoe/fcoeinit.c
+@@ -170,7 +170,6 @@ static void fcoe_dev_cleanup(void)
+  * This function is called by the ethernet driver
+  * this is called in case of link change event
+  */
+-
+ static int fcoe_device_notification(struct notifier_block *notifier,
+ 				    ulong event, void *ptr)
+ {
+@@ -179,7 +178,7 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 	struct fcdev *fc_dev = NULL;
+ 	struct fcoe_dev_stats *stats;
+ 	struct fcoe_info *fci = &fcoei;
+-	struct ethtool_pauseparam pauseparam = { ETHTOOL_GPAUSEPARAM };
++	int new_status;
+ 	int rc;
+ 
+ 	read_lock(&fci->fcoe_hostlist_lock);
+@@ -190,67 +189,40 @@ static int fcoe_device_notification(struct notifier_block *notifier,
+ 		}
+ 	}
+ 	read_unlock(&fci->fcoe_hostlist_lock);
+-
+ 	if (fc_dev == NULL) {
+ 		rc = NOTIFY_DONE;
+ 		goto out;
+ 	}
++	new_status = fc_dev->fd_link_status;
+ 	switch (event) {
+ 	case NETDEV_DOWN:
+-		fc_dev->fd_link_status = TRANS_LINK_DOWN;
+-		/* notify upper layer about link down */
+-		openfc_linkdown(fc_dev);
+-		stats = fc_dev->dev_stats[smp_processor_id()];
+-		stats->LinkFailureCount++;
+-		fcoe_clean_pending_queue(fc_dev);
+-		rc = NOTIFY_OK;
++	case NETDEV_GOING_DOWN:
++		new_status = TRANS_LINK_DOWN;
+ 		break;
+ 	case NETDEV_UP:
+-		fc_dev->fd_link_status = TRANS_LINK_UP;
+-		/* notify upper layer about link up */
+-		if (netif_carrier_ok(real_dev)) {
+-			if ((real_dev->priv_flags & IFF_802_1Q_VLAN) == 0) {
+-				real_dev->ethtool_ops->get_pauseparam(fc->
+-								      real_dev,
+-								      &pauseparam);
+-				if (!pauseparam.rx_pause
+-				    || !pauseparam.tx_pause) {
+-					rc = NOTIFY_OK;
+-					goto out;
+-				}
+-			}
+-			openfc_linkup(fc_dev);
+-		}
+-		rc = NOTIFY_OK;
+-		break;
+ 	case NETDEV_CHANGE:
+-		if (netif_carrier_ok(real_dev)) {
+-			if ((real_dev->priv_flags & IFF_802_1Q_VLAN) == 0) {
+-				real_dev->ethtool_ops->get_pauseparam(fc->
+-								      real_dev,
+-								      &pauseparam);
+-				if (!pauseparam.rx_pause
+-				    || !pauseparam.tx_pause) {
+-					rc = NOTIFY_OK;
+-					goto out;
+-				}
+-			}
+-			if (fc->real_dev->flags & IFF_UP)
+-				openfc_linkup(fc_dev);
+-		} else {
+-			openfc_linkdown(fc_dev);
+-			fcoe_clean_pending_queue(fc_dev);
+-		}
+-		rc = NOTIFY_OK;
++		new_status = TRANS_LINK_DOWN;
++		if (fcoe_link_ok(fc_dev))
++			new_status = TRANS_LINK_UP;
+ 		break;
+ 	case NETDEV_REGISTER:
+-	case NETDEV_GOING_DOWN:
+ 		rc = NOTIFY_OK;
+ 		break;
+ 	default:
+-		SA_LOG("unknow event %d call", event);
++		SA_LOG("unknown event %d call", event);
+ 		rc = NOTIFY_OK;
+ 	}
++	if (fc_dev->fd_link_status != new_status) {
++		fc_dev->fd_link_status = new_status;
++		if (new_status == TRANS_LINK_UP) {
++			openfc_linkup(fc_dev);
++		} else {
++			stats = fc_dev->dev_stats[smp_processor_id()];
++			stats->LinkFailureCount++;
++			openfc_linkdown(fc_dev);
++			fcoe_clean_pending_queue(fc_dev);
++		}
++	}
+ out:
+ 	return rc;
+ }
 
 
