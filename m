@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 22/23] libiscsi: use is_power_of_2
-Date: Tue,  4 Dec 2007 18:42:36 -0600
-Message-ID: <11968153894148-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 18/23] iscsi_tcp: drop session when itt does not match any command
+Date: Tue,  4 Dec 2007 18:42:32 -0600
+Message-ID: <11968153873372-git-send-email-michaelc@cs.wisc.edu>
 References: <11968153574025-git-send-email-michaelc@cs.wisc.edu>
  <119681536472-git-send-email-michaelc@cs.wisc.edu>
  <11968153663560-git-send-email-michaelc@cs.wisc.edu>
@@ -20,54 +20,47 @@ References: <11968153574025-git-send-email-michaelc@cs.wisc.edu>
  <11968153842186-git-send-email-michaelc@cs.wisc.edu>
  <11968153853971-git-send-email-michaelc@cs.wisc.edu>
  <1196815386656-git-send-email-michaelc@cs.wisc.edu>
- <11968153873372-git-send-email-michaelc@cs.wisc.edu>
- <11968153871693-git-send-email-michaelc@cs.wisc.edu>
- <11968153883385-git-send-email-michaelc@cs.wisc.edu>
- <1196815389832-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42714 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:42680 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751071AbXLEAnP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 19:43:15 -0500
-In-Reply-To: <1196815389832-git-send-email-michaelc@cs.wisc.edu>
+	id S1751296AbXLEAnM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 19:43:12 -0500
+In-Reply-To: <1196815386656-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, vignesh babu <vignesh.babu@wipro.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-Patch from vignesh babu <vignesh.babu@wipro.com>:
+A target should never send us a itt that does not match a running
+task. If it does we do not really know what is coming down after the header,
+unless we evaluate the hdr and do some guessing sometimes. However,
+even if we know what is coming we probably do not have buffers for it or we
+cannot respond (if it is a r2t for example), so just drop the session.
 
-Replacing n & (n - 1) for power of 2 check by is_power_of_2(n)
-
-Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/iscsi_tcp.c |    6 +-----
+ 1 files changed, 1 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 6573223..553168a 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -24,6 +24,7 @@
- #include <linux/types.h>
- #include <linux/kfifo.h>
- #include <linux/delay.h>
-+#include <linux/log2.h>
- #include <asm/unaligned.h>
- #include <net/tcp.h>
- #include <scsi/scsi_cmnd.h>
-@@ -1700,7 +1701,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
- 		qdepth = ISCSI_DEF_CMD_PER_LUN;
- 	}
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index ecba606..65df908 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -755,11 +755,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 	opcode = hdr->opcode & ISCSI_OPCODE_MASK;
+ 	/* verify itt (itt encoding: age+cid+itt) */
+ 	rc = iscsi_verify_itt(conn, hdr, &itt);
+-	if (rc == ISCSI_ERR_NO_SCSI_CMD) {
+-		/* XXX: what does this do? */
+-		tcp_conn->in.datalen = 0; /* force drop */
+-		return 0;
+-	} else if (rc)
++	if (rc)
+ 		return rc;
  
--	if (cmds_max < 2 || (cmds_max & (cmds_max - 1)) ||
-+	if (!is_power_of_2(cmds_max) ||
- 	    cmds_max >= ISCSI_MGMT_ITT_OFFSET) {
- 		if (cmds_max != 0)
- 			printk(KERN_ERR "iscsi: invalid can_queue of %d. "
+ 	debug_tcp("opcode 0x%x ahslen %d datalen %d\n",
 -- 
 1.5.1.2
 
