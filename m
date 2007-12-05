@@ -1,59 +1,114 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: [patch] SCSI: early detection of medium not present, updated
-Date: Wed, 05 Dec 2007 18:06:32 +0200
-Message-ID: <1196870792.11927.21.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0712021458120.4185-100000@netrider.rowland.org>
+From: "Maciej W. Rozycki" <macro@linux-mips.org>
+Subject: [PATCH] esp_scsi: Fix reset cleanup spinlock recursion
+Date: Wed, 5 Dec 2007 16:10:54 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64N.0712051529470.5943@blysk.ds.pg.gda.pl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:33384 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750862AbXLEQGi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 11:06:38 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0712021458120.4185-100000@netrider.rowland.org>
+Received: from cerber.ds.pg.gda.pl ([153.19.208.18]:52267 "EHLO
+	cerber.ds.pg.gda.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751216AbXLEQLH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 11:11:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
+To: James.Bottomley@SteelEye.com, "David S. Miller" <davem@davemloft.net>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+ The esp_reset_cleanup() function is called with the host lock held and 
+invokes starget_for_each_device() which wants to take it too.  Here is a 
+fix along the lines of shost_for_each_device()/__shost_for_each_device() 
+adding a __starget_for_each_device() counterpart which assumes the lock 
+has already been taken.
 
-On Sun, 2007-12-02 at 15:02 -0500, Alan Stern wrote:
-> On Sun, 2 Dec 2007, James Bottomley wrote:
-> 
-> > Actually, the night train is a good place to do coding.  I know this
-> > compiles, but could someone check it out?  It's the form I think we
-> > should do, since the ASC/ASCQ codes for esoteric conditions which we
-> > might eventually check for are different for CDs and removable discs.
-> 
-> This part is puzzling:
-> 
-> > +	/* try to eat the UNIT_ATTENTION if there are enough retries */
-> > +	do {
-> > +		result = scsi_execute_req(sdev, cmd, DMA_NONE, NULL, 0, sshdr,
-> > +					  timeout, retries);
-> > +	} while ((driver_byte(result) & DRIVER_SENSE) &&
-> > +		 sshdr && sshdr->sense_key == UNIT_ATTENTION &&
-> > +		 --retries);
-> 
-> For one thing, you've using retries to control both an outer loop and 
-> an inner loop -- meaning the total number of attempts could be on the 
-> order of retries**2.
+ Eventually, I think the driver should get modified so that more work is 
+done as a softirq rather than in the interrupt context, but for now it 
+fixes a bug that causes the spinlock debugger to fire.
 
-Sort of; however, there should only really be one cc/ua before the TUR
-goes through.  Also, TUR produces almost no conditions that would be
-retryable in scsi_decide_disposition() and the scsi_execute sends it
-down with REQ_FAILFAST anyway, so it's really not used much.
+ While at it, it fixes a small number of cosmetic problems with 
+starget_for_each_device() too.
 
-> For another, why do you want to swallow a UNIT_ATTENTION?  Shouldn't 
-> that be up to the code calling scsi_test_unit_ready()?
+Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
+---
+ Checked with checkpatch.pl and at the run time.  Please apply.
 
-No, that's a bug in the old code.  UA doesn't necessarily mean there's a
-media change.  It could be asserted for a whole host of reasons.  Until
-we get proper UA signalling, we need to resend the TUR so we get the
-correct media status and discard the UA (Even if the device is asserting
-UA for media change reasons, it will still give the correct sense code
-response to the following TUR).
+  Maciej
 
-James
-
+patch-mips-2.6.23-rc5-20070904-esp_scsi-reset-3
+diff -up --recursive --new-file linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/esp_scsi.c linux-mips-2.6.23-rc5-20070904/drivers/scsi/esp_scsi.c
+--- linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/esp_scsi.c	2007-10-23 14:07:38.000000000 +0000
++++ linux-mips-2.6.23-rc5-20070904/drivers/scsi/esp_scsi.c	2007-11-26 01:01:10.000000000 +0000
+@@ -2028,8 +2028,8 @@ static void esp_reset_cleanup(struct esp
+ 		tp->flags |= ESP_TGT_CHECK_NEGO;
+ 
+ 		if (tp->starget)
+-			starget_for_each_device(tp->starget, NULL,
+-						esp_clear_hold);
++			__starget_for_each_device(tp->starget, NULL,
++						  esp_clear_hold);
+ 	}
+ 	esp->flags &= ~ESP_FLAG_RESETTING;
+ }
+diff -up --recursive --new-file linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/scsi.c linux-mips-2.6.23-rc5-20070904/drivers/scsi/scsi.c
+--- linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/scsi.c	2007-09-04 04:55:44.000000000 +0000
++++ linux-mips-2.6.23-rc5-20070904/drivers/scsi/scsi.c	2007-12-05 16:00:40.000000000 +0000
+@@ -886,11 +886,11 @@ EXPORT_SYMBOL(__scsi_iterate_devices);
+  * starget_for_each_device  -  helper to walk all devices of a target
+  * @starget:	target whose devices we want to iterate over.
+  *
+- * This traverses over each devices of @shost.  The devices have
++ * This traverses over each device of @starget.  The devices have
+  * a reference that must be released by scsi_host_put when breaking
+  * out of the loop.
+  */
+-void starget_for_each_device(struct scsi_target *starget, void * data,
++void starget_for_each_device(struct scsi_target *starget, void *data,
+ 		     void (*fn)(struct scsi_device *, void *))
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+@@ -905,6 +905,33 @@ void starget_for_each_device(struct scsi
+ EXPORT_SYMBOL(starget_for_each_device);
+ 
+ /**
++ * __starget_for_each_device  -  helper to walk all devices of a target
++ *				 (UNLOCKED)
++ * @starget:	target whose devices we want to iterate over.
++ *
++ * This traverses over each device of @starget.  It does _not_
++ * take a reference on the scsi_device, so the whole loop must be
++ * protected by shost->host_lock.
++ *
++ * Note:  The only reason why drivers would want to use this is because
++ * they need to access the device list in irq context.  Otherwise you
++ * really want to use starget_for_each_device instead.
++ **/
++void __starget_for_each_device(struct scsi_target *starget, void *data,
++			       void (*fn)(struct scsi_device *, void *))
++{
++	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
++	struct scsi_device *sdev;
++
++	__shost_for_each_device(sdev, shost) {
++		if ((sdev->channel == starget->channel) &&
++		    (sdev->id == starget->id))
++			fn(sdev, data);
++	}
++}
++EXPORT_SYMBOL(__starget_for_each_device);
++
++/**
+  * __scsi_device_lookup_by_target - find a device given the target (UNLOCKED)
+  * @starget:	SCSI target pointer
+  * @lun:	SCSI Logical Unit Number
+diff -up --recursive --new-file linux-mips-2.6.23-rc5-20070904.macro/include/scsi/scsi_device.h linux-mips-2.6.23-rc5-20070904/include/scsi/scsi_device.h
+--- linux-mips-2.6.23-rc5-20070904.macro/include/scsi/scsi_device.h	2007-09-04 04:56:21.000000000 +0000
++++ linux-mips-2.6.23-rc5-20070904/include/scsi/scsi_device.h	2007-11-26 01:00:57.000000000 +0000
+@@ -222,6 +222,9 @@ extern struct scsi_device *__scsi_device
+ 							  uint);
+ extern void starget_for_each_device(struct scsi_target *, void *,
+ 		     void (*fn)(struct scsi_device *, void *));
++extern void __starget_for_each_device(struct scsi_target *, void *,
++				      void (*fn)(struct scsi_device *,
++						 void *));
+ 
+ /* only exposed to implement shost_for_each_device */
+ extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
