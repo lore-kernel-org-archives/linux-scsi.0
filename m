@@ -1,51 +1,26 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: need help to suspend a device
-Date: Wed, 5 Dec 2007 14:43:31 +0100
-Message-ID: <200712051443.32176.bs@q-leap.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [OpenFCoE PATCH] If expecting pre-T11 frames, a T11 frame
+	caused a data fault.
+Date: Wed, 5 Dec 2007 13:55:43 +0000
+Message-ID: <20071205135543.GA2174@infradead.org>
+References: <20071205005214.26211.62814.stgit@mink.he.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:35692 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751095AbXLENnd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 5 Dec 2007 08:43:33 -0500
+Received: from pentafluge.infradead.org ([213.146.154.40]:52251 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751125AbXLENzp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 08:55:45 -0500
 Content-Disposition: inline
+In-Reply-To: <20071205005214.26211.62814.stgit@mink.he.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
+To: Joe Eykholt <fcoe@eykholt.com>
+Cc: linux-scsi@vger.kernel.org
 
-Hi,
+Just wondering:
 
-I need some help with device suspending or something similar to this.
+>From my quick reading of the code these pre-T11 frames are basically
+a different frame-level protocol.  Given that T11 has standardized
+on a different one what's the rationale for supporting the old frames?
 
-Problem description: We have many many Infortrend sata-to-scsi-raid systems 
-here, connected to several server systems with LSI2230 HBAs.
-Now the problem is, that these Infortrend boxes sometimes suffer from some 
-kind of hick-up, sometimes due to the reboot of second server connected to 
-the very same Infortrend box and sometimes just for no obvious reason. 
-
-As far I can presently see it, the best would be to suspend any i/o, commands, 
-etc to the troublesome box for about 30s to 60s and just wait and then to 
-repeat the last command.
-However, presently the scsi-layer/driver will immediately begin a domain 
-validation and then do a scsi-reset. Unfortunately this will cause even more 
-trouble. Sometimes this works, in more cases it will end in an i/o error and 
-in most cases these domain validations and scsi-resets will go into an 
-endless loop and eventually the Infortrend raids will be so confused that 
-their scsi-controller will crash.
-
-I'm already looking for some hours through the scsi and mpt functions, but so 
-far didn't find a good way to put commands to a scsi-device to sleep for some 
-time.
-
-Any hints and suggestions are highly appreciated.
-
-
-Thanks in advance,
-Bernd
-
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
