@@ -1,114 +1,87 @@
-From: "Maciej W. Rozycki" <macro@linux-mips.org>
-Subject: [PATCH] esp_scsi: Fix reset cleanup spinlock recursion
-Date: Wed, 5 Dec 2007 16:10:54 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64N.0712051529470.5943@blysk.ds.pg.gda.pl>
+From: Robert Jennings <rcj@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ibmvscsi: retry on H_DROPPED during send_crq
+Date: Wed, 5 Dec 2007 10:24:51 -0600
+Message-ID: <20071205162451.GA9995@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cerber.ds.pg.gda.pl ([153.19.208.18]:52267 "EHLO
-	cerber.ds.pg.gda.pl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751216AbXLEQLH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 11:11:07 -0500
+Received: from e35.co.us.ibm.com ([32.97.110.153]:57383 "EHLO
+	e35.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751519AbXLEQZT (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Dec 2007 11:25:19 -0500
+Received: from d03relay03.boulder.ibm.com (d03relay03.boulder.ibm.com [9.17.195.228])
+	by e35.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id lB5GPIH9009303
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Dec 2007 11:25:18 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay03.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lB5GPGC5200198
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Dec 2007 09:25:17 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lB5GPEku009074
+	for <linux-scsi@vger.kernel.org>; Wed, 5 Dec 2007 09:25:15 -0700
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@SteelEye.com, "David S. Miller" <davem@davemloft.net>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, santil@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
- The esp_reset_cleanup() function is called with the host lock held and 
-invokes starget_for_each_device() which wants to take it too.  Here is a 
-fix along the lines of shost_for_each_device()/__shost_for_each_device() 
-adding a __starget_for_each_device() counterpart which assumes the lock 
-has already been taken.
+Currently the vscsi client driver responds to the case where H_SEND_CRQ
+returns H_DROPPED by returning DID_ERROR.  If the server CRQ is full,
+either from mismanaging the request_limit or problems on the server,
+we should return SCSI_MLQUEUE_HOST_BUSY instead.
 
- Eventually, I think the driver should get modified so that more work is 
-done as a softirq rather than in the interrupt context, but for now it 
-fixes a bug that causes the spinlock debugger to fire.
+The places where we are calling send_srp_login are not checking the
+return code.  We could get H_DROPPED or H_CLOSED and in that case we
+should reset and retry.
 
- While at it, it fixes a small number of cosmetic problems with 
-starget_for_each_device() too.
+Signed-off-by: Robert Jennings <rcj@linux.vnet.ibm.com>
 
-Signed-off-by: Maciej W. Rozycki <macro@linux-mips.org>
 ---
- Checked with checkpatch.pl and at the run time.  Please apply.
+ drivers/scsi/ibmvscsi/ibmvscsi.c |   19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
 
-  Maciej
-
-patch-mips-2.6.23-rc5-20070904-esp_scsi-reset-3
-diff -up --recursive --new-file linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/esp_scsi.c linux-mips-2.6.23-rc5-20070904/drivers/scsi/esp_scsi.c
---- linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/esp_scsi.c	2007-10-23 14:07:38.000000000 +0000
-+++ linux-mips-2.6.23-rc5-20070904/drivers/scsi/esp_scsi.c	2007-11-26 01:01:10.000000000 +0000
-@@ -2028,8 +2028,8 @@ static void esp_reset_cleanup(struct esp
- 		tp->flags |= ESP_TGT_CHECK_NEGO;
+Index: b/drivers/scsi/ibmvscsi/ibmvscsi.c
+===================================================================
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -629,14 +629,15 @@ static int ibmvscsi_send_srp_event(struc
+ 		list_del(&evt_struct->list);
+ 		del_timer(&evt_struct->timer);
  
- 		if (tp->starget)
--			starget_for_each_device(tp->starget, NULL,
--						esp_clear_hold);
-+			__starget_for_each_device(tp->starget, NULL,
-+						  esp_clear_hold);
- 	}
- 	esp->flags &= ~ESP_FLAG_RESETTING;
- }
-diff -up --recursive --new-file linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/scsi.c linux-mips-2.6.23-rc5-20070904/drivers/scsi/scsi.c
---- linux-mips-2.6.23-rc5-20070904.macro/drivers/scsi/scsi.c	2007-09-04 04:55:44.000000000 +0000
-+++ linux-mips-2.6.23-rc5-20070904/drivers/scsi/scsi.c	2007-12-05 16:00:40.000000000 +0000
-@@ -886,11 +886,11 @@ EXPORT_SYMBOL(__scsi_iterate_devices);
-  * starget_for_each_device  -  helper to walk all devices of a target
-  * @starget:	target whose devices we want to iterate over.
-  *
-- * This traverses over each devices of @shost.  The devices have
-+ * This traverses over each device of @starget.  The devices have
-  * a reference that must be released by scsi_host_put when breaking
-  * out of the loop.
-  */
--void starget_for_each_device(struct scsi_target *starget, void * data,
-+void starget_for_each_device(struct scsi_target *starget, void *data,
- 		     void (*fn)(struct scsi_device *, void *))
- {
- 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-@@ -905,6 +905,33 @@ void starget_for_each_device(struct scsi
- EXPORT_SYMBOL(starget_for_each_device);
+-		/* If send_crq returns H_CLOSED, return SCSI_MLQUEUE_HOST_BUSY.
+-		 * Firmware will send a CRQ with a transport event (0xFF) to
+-		 * tell this client what has happened to the transport.  This
+-		 * will be handled in ibmvscsi_handle_crq()
++		/* If send_crq returns H_CLOSED or H_DROPPED, return
++		 * SCSI_MLQUEUE_HOST_BUSY.  Firmware will send a CRQ with
++		 * a transport event (0xFF) to tell this client what has
++		 * happened to the transport.  This  will be handled in
++		 * ibmvscsi_handle_crq().
+ 		 */
+-		if (rc == H_CLOSED) {
++		if (rc == H_CLOSED || rc == H_DROPPED) {
+ 			dev_warn(hostdata->dev, "send warning. "
+-			         "Receive queue closed, will retry.\n");
++			         "Receive queue unavailable, will retry.\n");
+ 			goto send_busy;
+ 		}
+ 		dev_err(hostdata->dev, "send error %d\n", rc);
+@@ -1270,7 +1271,8 @@ void ibmvscsi_handle_crq(struct viosrp_c
+ 			if ((rc = ibmvscsi_ops->send_crq(hostdata,
+ 							 0xC002000000000000LL, 0)) == 0) {
+ 				/* Now login */
+-				send_srp_login(hostdata);
++				if (send_srp_login(hostdata))
++					ibmvscsi_reset_host(hostdata);
+ 			} else {
+ 				dev_err(hostdata->dev, "Unable to send init rsp. rc=%ld\n", rc);
+ 			}
+@@ -1280,7 +1282,8 @@ void ibmvscsi_handle_crq(struct viosrp_c
+ 			dev_info(hostdata->dev, "partner initialization complete\n");
  
- /**
-+ * __starget_for_each_device  -  helper to walk all devices of a target
-+ *				 (UNLOCKED)
-+ * @starget:	target whose devices we want to iterate over.
-+ *
-+ * This traverses over each device of @starget.  It does _not_
-+ * take a reference on the scsi_device, so the whole loop must be
-+ * protected by shost->host_lock.
-+ *
-+ * Note:  The only reason why drivers would want to use this is because
-+ * they need to access the device list in irq context.  Otherwise you
-+ * really want to use starget_for_each_device instead.
-+ **/
-+void __starget_for_each_device(struct scsi_target *starget, void *data,
-+			       void (*fn)(struct scsi_device *, void *))
-+{
-+	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
-+	struct scsi_device *sdev;
-+
-+	__shost_for_each_device(sdev, shost) {
-+		if ((sdev->channel == starget->channel) &&
-+		    (sdev->id == starget->id))
-+			fn(sdev, data);
-+	}
-+}
-+EXPORT_SYMBOL(__starget_for_each_device);
-+
-+/**
-  * __scsi_device_lookup_by_target - find a device given the target (UNLOCKED)
-  * @starget:	SCSI target pointer
-  * @lun:	SCSI Logical Unit Number
-diff -up --recursive --new-file linux-mips-2.6.23-rc5-20070904.macro/include/scsi/scsi_device.h linux-mips-2.6.23-rc5-20070904/include/scsi/scsi_device.h
---- linux-mips-2.6.23-rc5-20070904.macro/include/scsi/scsi_device.h	2007-09-04 04:56:21.000000000 +0000
-+++ linux-mips-2.6.23-rc5-20070904/include/scsi/scsi_device.h	2007-11-26 01:00:57.000000000 +0000
-@@ -222,6 +222,9 @@ extern struct scsi_device *__scsi_device
- 							  uint);
- extern void starget_for_each_device(struct scsi_target *, void *,
- 		     void (*fn)(struct scsi_device *, void *));
-+extern void __starget_for_each_device(struct scsi_target *, void *,
-+				      void (*fn)(struct scsi_device *,
-+						 void *));
- 
- /* only exposed to implement shost_for_each_device */
- extern struct scsi_device *__scsi_iterate_devices(struct Scsi_Host *,
+ 			/* Now login */
+-			send_srp_login(hostdata);
++			if (send_srp_login(hostdata))
++				ibmvscsi_reset_host(hostdata);
+ 			break;
+ 		default:
+ 			dev_err(hostdata->dev, "unknown crq message type: %d\n", crq->format);
