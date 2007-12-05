@@ -1,66 +1,94 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 05/23] iser patching for AHS support
-Date: Tue,  4 Dec 2007 18:42:19 -0600
-Message-ID: <11968153751098-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 20/23] iscsi_tcp: enable sg chaining
+Date: Tue,  4 Dec 2007 18:42:34 -0600
+Message-ID: <11968153883385-git-send-email-michaelc@cs.wisc.edu>
 References: <11968153574025-git-send-email-michaelc@cs.wisc.edu>
  <119681536472-git-send-email-michaelc@cs.wisc.edu>
  <11968153663560-git-send-email-michaelc@cs.wisc.edu>
  <11968153713324-git-send-email-michaelc@cs.wisc.edu>
  <11968153753743-git-send-email-michaelc@cs.wisc.edu>
+ <11968153751098-git-send-email-michaelc@cs.wisc.edu>
+ <1196815376111-git-send-email-michaelc@cs.wisc.edu>
+ <1196815377131-git-send-email-michaelc@cs.wisc.edu>
+ <11968153781126-git-send-email-michaelc@cs.wisc.edu>
+ <1196815378769-git-send-email-michaelc@cs.wisc.edu>
+ <11968153791438-git-send-email-michaelc@cs.wisc.edu>
+ <11968153801823-git-send-email-michaelc@cs.wisc.edu>
+ <11968153812001-git-send-email-michaelc@cs.wisc.edu>
+ <1196815382808-git-send-email-michaelc@cs.wisc.edu>
+ <11968153831244-git-send-email-michaelc@cs.wisc.edu>
+ <11968153842186-git-send-email-michaelc@cs.wisc.edu>
+ <11968153853971-git-send-email-michaelc@cs.wisc.edu>
+ <1196815386656-git-send-email-michaelc@cs.wisc.edu>
+ <11968153873372-git-send-email-michaelc@cs.wisc.edu>
+ <11968153871693-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:42728 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:42695 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751360AbXLEAng (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 4 Dec 2007 19:43:36 -0500
-In-Reply-To: <11968153753743-git-send-email-michaelc@cs.wisc.edu>
+	id S1750996AbXLEAnN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 4 Dec 2007 19:43:13 -0500
+In-Reply-To: <11968153871693-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-from Boaz Harrosh <boazharrosh@gmail.com>
+The previous patches converted iscsi_tcp to support sg chaining.
+This patch sets the proper flags and sets sg_table size to
+4096. This allows fs io to be capped at max_sectors, but passthrough
+IO to be limited by some other part of the kernel.
 
-  - The default initialization of hdr_max is the minimum -
-    sizeof(struct iscsi_cmd) - Once this patch goes into iser the default
-    initialization at libiscsi can be removed.
-  - This is not yet full support for AHSs at iser end. But it should be easy.
-    Just allocate more space at iser_desc right after iscsi_hdr. Than
-    at transmission time use ctask->hdr_len to retrieve the total
-    size of all iscsi pdu headers. See previous patch at iscsi_tcp.[ch]
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/infiniband/ulp/iser/iscsi_iser.c |    1 +
- drivers/scsi/libiscsi.c                  |    1 -
- 2 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/iscsi_tcp.c |    5 +++--
+ drivers/scsi/iscsi_tcp.h |    3 ---
+ 2 files changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index 2eadb6d..a2622f4 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -400,6 +400,7 @@ iscsi_iser_session_create(struct iscsi_transport *iscsit,
- 		ctask      = session->cmds[i];
- 		iser_ctask = ctask->dd_data;
- 		ctask->hdr = (struct iscsi_cmd *)&iser_ctask->desc.iscsi_header;
-+		ctask->hdr_max = sizeof(iser_ctask->desc.iscsi_header);
- 	}
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 65df908..84c4a50 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -1928,13 +1928,14 @@ static struct scsi_host_template iscsi_sht = {
+ 	.queuecommand           = iscsi_queuecommand,
+ 	.change_queue_depth	= iscsi_change_queue_depth,
+ 	.can_queue		= ISCSI_DEF_XMIT_CMDS_MAX - 1,
+-	.sg_tablesize		= ISCSI_SG_TABLESIZE,
++	.sg_tablesize		= 4096,
+ 	.max_sectors		= 0xFFFF,
+ 	.cmd_per_lun		= ISCSI_DEF_CMD_PER_LUN,
+ 	.eh_abort_handler       = iscsi_eh_abort,
+ 	.eh_device_reset_handler= iscsi_eh_device_reset,
+ 	.eh_host_reset_handler	= iscsi_eh_host_reset,
+ 	.use_clustering         = DISABLE_CLUSTERING,
++	.use_sg_chaining	= ENABLE_SG_CHAINING,
+ 	.slave_configure        = iscsi_tcp_slave_configure,
+ 	.proc_name		= "iscsi_tcp",
+ 	.this_id		= -1,
+@@ -1974,7 +1975,7 @@ static struct iscsi_transport iscsi_tcp_transport = {
+ 	.host_template		= &iscsi_sht,
+ 	.conndata_size		= sizeof(struct iscsi_conn),
+ 	.max_conn		= 1,
+-	.max_cmd_len		= ISCSI_TCP_MAX_CMD_LEN,
++	.max_cmd_len		= 16,
+ 	/* session management */
+ 	.create_session		= iscsi_tcp_session_create,
+ 	.destroy_session	= iscsi_tcp_session_destroy,
+diff --git a/drivers/scsi/iscsi_tcp.h b/drivers/scsi/iscsi_tcp.h
+index 893cd2e..ed0b991 100644
+--- a/drivers/scsi/iscsi_tcp.h
++++ b/drivers/scsi/iscsi_tcp.h
+@@ -24,9 +24,6 @@
  
- 	for (i = 0; i < session->mgmtpool_max; i++) {
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 0d7914f..5936586 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1570,7 +1570,6 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
- 		if (cmd_task_size)
- 			ctask->dd_data = &ctask[1];
- 		ctask->itt = cmd_i;
--		ctask->hdr_max = sizeof(struct iscsi_cmd);
- 		INIT_LIST_HEAD(&ctask->running);
- 	}
+ #include <scsi/libiscsi.h>
  
+-#define ISCSI_SG_TABLESIZE		SG_ALL
+-#define ISCSI_TCP_MAX_CMD_LEN		16
+-
+ struct crypto_hash;
+ struct socket;
+ struct iscsi_tcp_conn;
 -- 
 1.5.1.2
 
