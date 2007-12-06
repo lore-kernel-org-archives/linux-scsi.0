@@ -1,76 +1,146 @@
-From: Lee Schermerhorn <Lee.Schermerhorn@hp.com>
-Subject: Re: BUG 2.6.24-rc4-mm1 -- Boot still hangs w/ async scsi scan
-Date: Thu, 06 Dec 2007 14:01:02 -0500
-Message-ID: <1196967663.5293.36.camel@localhost>
-References: <1196872599.5346.8.camel@localhost>
-	 <20071205132043.a80853d9.akpm@linux-foundation.org>
-	 <1196964862.5293.34.camel@localhost>
-	 <20071206103531.ea74d4bc.akpm@linux-foundation.org>
+From: Alexey Dobriyan <adobriyan@gmail.com>
+Subject: Re: 2.6.24-rc4-mm1: hostbyte=0x01 driverbyte=0x00 (now bisected)
+Date: Thu, 6 Dec 2007 22:19:50 +0300
+Message-ID: <20071206191950.GA1951@martell.zuzino.mipt.ru>
+References: <20071204211701.994dfce6.akpm@linux-foundation.org> <20071205234154.GA4041@martell.zuzino.mipt.ru> <4757AA3D.4060003@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g5t0009.atlanta.hp.com ([15.192.0.46]:48631 "EHLO
-	g5t0009.atlanta.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752118AbXLFTAl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2007 14:00:41 -0500
-In-Reply-To: <20071206103531.ea74d4bc.akpm@linux-foundation.org>
+Received: from ug-out-1314.google.com ([66.249.92.169]:62968 "EHLO
+	ug-out-1314.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753958AbXLFTT5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2007 14:19:57 -0500
+Received: by ug-out-1314.google.com with SMTP id z38so768186ugc
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Dec 2007 11:19:56 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <4757AA3D.4060003@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: linux-scsi@vger.kernel.org, James.Bottomley@steeleye.com, Eric.Moore@lsi.com, Eric Whitney <eric.whitney@hp.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org
 
-On Thu, 2007-12-06 at 10:35 -0800, Andrew Morton wrote:
-> On Thu, 06 Dec 2007 13:14:22 -0500 Lee Schermerhorn <Lee.Schermerhorn@hp.com> wrote:
-> 
-> > On Wed, 2007-12-05 at 13:20 -0800, Andrew Morton wrote:
-> > > On Wed, 05 Dec 2007 11:36:39 -0500
-> > > Lee Schermerhorn <Lee.Schermerhorn@hp.com> wrote:
-> > > 
-> > > > As reported here:
-> > > > 
-> > > > 	http://marc.info/?l=linux-scsi&m=119645761124683&w=4
-> > > > 
-> > > > against 24-rc3-mm2, I'm still seeing the hang on my HP ia64 NUMA
-> > > > platform under 24-rc4-mm1 with async scsi scan enabled.  I'm still
-> > > > seeing the message  "mptspi: ioc#: mpt_config failed" when it hangs. 
-> > > > 
-> > > > I can boot by disabling async scan.  However, I've also noticed some
-> > > > disks attached via one of the "mpt" adapters ["scsi8" in console long in
-> > > > message linked above] going "off-line" during stress tests.  This was
-> > > > under 24-rc3-mm2.  Haven't got that far yet with 24-rc4-mm1.
-> > > > 
-> > > 
-> > > Is ther any way of tricking you into
-> > > http://www.zip.com.au/~akpm/linux/patches/stuff/bisecting-mm-trees.txt?
-> > > 
-> > > Obvious culprits to start with would be git-scsi-misc and maybe
-> > > scsi-early-detection-of-medium-not-present-updated.patch.  But there are
-> > > only 20-odd scsi patches in there.
+On Thu, Dec 06, 2007 at 08:52:29AM +0100, Hannes Reinecke wrote:
+> Alexey Dobriyan wrote:
+> >>  git-scsi-misc.patch
 > > 
-> > The reported hang occurs after pushing the git-scsi-misc patch.
-> 
-> OK, thanks.
-> 
-> >  I'm
-> > looking into it now, but it's rather large and I'm a neophyte in this
-> > area.  If James can point me at a broken-out quilt series for this
-> > patch, I'd be willing to try to bisect that--
-> 
-> I doubt if such a thing exists.
-> 
-> > assuming that it IS
-> > bisectable.
-> 
-> Often git trees are not bisectable.  But they should be.
-> 
-> Your best bet is to do a git-bisect on
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> 
-> http://www.kernel.org/doc/local/git-quick.html
-> 
+> > Apologies for not looking into the problem earlier. See
+> > http://marc.info/?t=119628022300005&r=1&w=2
+> > "2.6.24-rc3-mm2: Result: hostbyte=0x01 driverbyte=0x00\nend_request: I/O error"
+> > for previous installment.
+> > 
+> > I've bisected it to the following patch in git-scsi-misc branch.
+> > Revert on top of 2.6.24-rc4-mm1 also helps.
+> > 
+> > commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0
+> > Author: Hannes Reinecke <hare@suse.de>
+> > Date:   Tue Nov 6 09:23:40 2007 +0100
+> > 
+> >     [SCSI] Do not requeue requests if REQ_FAILFAST is set
+> >     
+> >     Any requests with the REQ_FAILFAST flag set should not be requeued
+> >     to the requeust queue, but rather terminated directly.
+> >     Otherwise the multipath failover will stall until the command
+> >     timeout triggers.
+> >     
+> >     Signed-off-by: Hannes Reinecke <hare@suse.de>
+> >     Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > 
+> > diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> > index 0f44bdb..0da0dd0 100644
+> > --- a/drivers/scsi/scsi_lib.c
+> > +++ b/drivers/scsi/scsi_lib.c
+> > @@ -1286,6 +1286,11 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+> >  			 */
+> >  			if (!(req->cmd_flags & REQ_PREEMPT))
+> >  				ret = BLKPREP_DEFER;
+> > +			/*
+> > +			 * Return failfast requests immediately
+> > +			 */
+> > +			if (req->cmd_flags & REQ_FAILFAST)
+> > +				ret = BLKPREP_KILL;
+> >  			break;
+> >  		default:
+> >  			/*
+> > @@ -1414,6 +1419,17 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+> >  	return 1;
+> >  }
+> >  
+> > +static void __scsi_kill_request(struct request *req)
+> > +{
+> > +	struct scsi_cmnd *cmd = req->special;
+> > +	struct scsi_device *sdev = cmd->device;
+> > +
+> > +	cmd->result = DID_NO_CONNECT << 16;
+> > +	atomic_inc(&cmd->device->iorequest_cnt);
+> > +	sdev->device_busy--;
+> > +	__scsi_done(cmd);
+> > +}
+> > +
+> >  /*
+> >   * Kill a request for a dead device
+> >   */
+> > @@ -1527,8 +1543,16 @@ static void scsi_request_fn(struct request_queue *q)
+> >  		 * accept it.
+> >  		 */
+> >  		req = elv_next_request(q);
+> > -		if (!req || !scsi_dev_queue_ready(q, sdev))
+> > +		if (!req)
+> > +			break;
+> > +
+> > +		if (!scsi_dev_queue_ready(q, sdev)) {
+> > +			if (req->cmd_flags & REQ_FAILFAST) {
+> > +				scsi_kill_request(req, q);
+> > +				continue;
+> > +			}
+> >  			break;
+> > +		}
+> >  
+> >  		if (unlikely(!scsi_device_online(sdev))) {
+> >  			sdev_printk(KERN_ERR, sdev,
+> > @@ -1609,8 +1633,12 @@ static void scsi_request_fn(struct request_queue *q)
+> >  	 * later time.
+> >  	 */
+> >  	spin_lock_irq(q->queue_lock);
+> > -	blk_requeue_request(q, req);
+> > -	sdev->device_busy--;
+> > +	if (unlikely(req->cmd_flags & REQ_FAILFAST))
+> > +		__scsi_kill_request(req);
+> > +	else {
+> > +		blk_requeue_request(q, req);
+> > +		sdev->device_busy--;
+> > +	}
+> >  	if(sdev->device_busy == 0)
+> >  		blk_plug_device(q);
+> >   out:
+> Yeah, sorry. That patch was bad. Please use the attached one instead.
+> Andrew, can you replace them?
 
-Ah, well... Can't promise that will happen any time soon...
+Instead? It won't apply. And it doesn't help on top of git-scsi.
+It helps if 3 hunks involving __scsi_kill_request() are ducked.
 
-Lee
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -1284,13 +1284,15 @@ int scsi_prep_state_check(struct scsi_device *sdev, struct request *req)
+>  			/*
+>  			 * If the devices is blocked we defer normal commands.
+>  			 */
+> -			if (!(req->cmd_flags & REQ_PREEMPT))
+> -				ret = BLKPREP_DEFER;
+> -			/*
+> -			 * Return failfast requests immediately
+> -			 */
+> -			if (req->cmd_flags & REQ_FAILFAST)
+> -				ret = BLKPREP_KILL;
+> +			if (!(req->cmd_flags & REQ_PREEMPT)) {
+> +				/*
+> +				 * Return failfast requests immediately
+> +				 */
+> +				if (req->cmd_flags & REQ_FAILFAST)
+> +					ret = BLKPREP_KILL;
+> +				else
+> +					ret = BLKPREP_DEFER;
+> +			}
+>  			break;
+>  		default:
+>  			/*
 
