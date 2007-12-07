@@ -1,56 +1,50 @@
-From: Kay Sievers <kay.sievers@vrfy.org>
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Fri, 07 Dec 2007 22:19:43 +0100
-Message-ID: <1197062383.5483.46.camel@lov.site>
-References: <20071207145526.B561CDBA2@gherkin.frus.com>
-	 <4759B06F.60108@orcon.net.nz>
+From: Nick Warne <nick@ukfsn.org>
+Subject: Re: scsi_wait_scan Kconfig option
+Date: Fri, 7 Dec 2007 21:31:09 +0000
+Message-ID: <20071207213109.5a7a23fc@linuxamd.linicks.net>
+References: <20071207193953.0c544044@linuxamd.linicks.net>
+	<20071207194756.GB28914@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.183]:59861 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753463AbXLGVUO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2007 16:20:14 -0500
-In-Reply-To: <4759B06F.60108@orcon.net.nz>
+Received: from s2.ukfsn.org ([217.158.120.143]:41833 "EHLO mail.ukfsn.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753108AbXLGVbd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2007 16:31:33 -0500
+In-Reply-To: <20071207194756.GB28914@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Cree <mcree@orcon.net.nz>
-Cc: Bob Tracy <rct@frus.com>, Andrew Morton <akpm@linux-foundation.org>, mingo@elte.hu, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, greg@kroah.com
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, 2007-12-08 at 09:43 +1300, Michael Cree wrote:
-> Bob Tracy wrote:
-> > That was quick :-).  Backing out the sysctl_check.c diff gives me a
-> > working kernel.  Beats the #$%@! out of me how/why, though.
-> > 
-> > Michael Cree: could you try backing out the diff below from your
-> > 2.6.24-rc3 tree and see if things are now working for you?
+Hi Matthew,
+
+On Fri, 7 Dec 2007 12:47:56 -0700
+Matthew Wilcox <matthew@wil.cx> wrote:
+
+> On Fri, Dec 07, 2007 at 07:39:53PM +0000, Nick Warne wrote:
+> > I try not to build a modular kernel, but only have modules ON due to
+> > nVidia (sigh).  So I was semi-surprised when I saw the
+> > scsi_wait_scan module being built again, yet NO WHERE in menuconfig
+> > is it present to turn OFF.  Even if I hand edit .config, make puts
+> > it back again...
 > 
-> Yes (conference is now over).  I backed out the sysctl_check patch from 
-> 2.6.24-rc3 and, indeed, got a working kernel.
-> 
-> The working kernel (was probably 2.6.24-rc3 less sysctl_check patch, but 
-> might have been a 2.6.23 variant) has the following in /sys/block
+> You have modules on ... which means you might decide to load a scsi
+> driver as a module.  Maybe one that isn't part of the source tree.
+> The scsi_wait_scan module is only 1500 bytes.  Apart from a sense of
+> ideological purity (odd in someone who chooses to use nVidia rather
+> than, say, nv or nouveau), this really isn't a problem.
 
-> alpha:~# grep . /sys/block/sda/*/dev
-> /sys/block/sda/sda1/dev:8:1
-> /sys/block/sda/sda2/dev:8:2
-> /sys/block/sda/sda3/dev:8:3
-> /sys/block/sda/sda4/dev:8:4
-> /sys/block/sda/sda5/dev:8:5
-> 
-> I failed to spot any difference (other than the formatting of the dates) 
-> between the two!
+Alas the card I have isn't supported, but that debate isn't for here.
 
-Yeah, that looks all fine.
+OK, I only have SCSI set for USB storage etc.  I find it strange that
+this one and only option in the whole of Kconfig builds a module, and
+yet, even though I know I will never need it, I can't stop it.
 
-What distro is that, and what's the udev version?
+Surely if people build their own kernels, they should know (and) be
+allowed to configure such options?
 
-You are booting your kernel with an initramfs?
-
-Is the udev daemon (still) running while it fails?
-
-If you run /sbin/udevtrigger, do the nodes appear?
-
-Kay
-
+Nick 
+-- 
+Free Software Foundation Associate Member 5508
