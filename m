@@ -1,42 +1,45 @@
-From: Joe Eykholt <fcoe@eykholt.com>
-Subject: Re: [OpenFCoE PATCH] [PATCH] Performance improvement,	combine received
- data copy with CRC.
-Date: Thu, 06 Dec 2007 17:29:10 -0800
-Message-ID: <4758A1E6.6010903@eykholt.com>
-References: <20071205005224.26269.68039.stgit@mink.he.net> <47589D5A.10501@linux.intel.com>
+From: "Gabriele Gorla" <gorlik@penguintown.net>
+Subject: [PATCH 2.6.23] 3w-xxxx: Fix bad unaligned accesses on alpha SMP
+Date: Thu, 6 Dec 2007 18:07:01 -0800 (PST)
+Message-ID: <15555.216.228.112.21.1196993221.squirrel@penguintown.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from eykholt.com ([72.52.117.41]:36846 "HELO eykholt.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-	id S1752877AbXLGB27 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Dec 2007 20:28:59 -0500
-Received: from 67.91.200.194 ([67.91.200.194]) by eykholt.com for <linux-scsi@vger.kernel.org>; Thu, 6 Dec 2007 17:28:58 -0800
-In-Reply-To: <47589D5A.10501@linux.intel.com>
+Received: from [69.3.150.202] ([69.3.150.202]:43779 "EHLO
+	alpha.penguintown.net" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752319AbXLGCuJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2007 21:50:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rob Love <robert.w.love@linux.intel.com>
-Cc: linux-scsi@vger.kernel.org
+To: linuxraid@amcc.com
+Cc: linux-scsi@vger.kernel.org, aradford@gmail.com
 
-Rob Love wrote:
-> Joe Eykholt wrote:
->> [PATCH] Performance improvement, combine received data copy with CRC.
->>   
-> Shouldn't we remove  openfc_cp_to_user() if we're moving that
-> functionality into openfc_scsi_recv_data()? 
+disable packing of the TAG_TW_Device_Extension
+structure to prevent kernel unaligned accesses when
+accessing the spinlock inside the ioctl_wqueue structure.
+Fixes smartmontools kernel panic on alpha SMP
 
-Yes.  That was an oversight.  I did intend to remove it.
-Do you want a new patch for that or will you take care of it?
+Signed-off-by: Gabriele Gorla <gorlik@yahoo.com>
+---
 
-	Joe
+--- linux-2.6.23/drivers/scsi/3w-xxxx.h 2007-10-09 13:31:38.000000000 -0700
++++ linux-2.6.23a/drivers/scsi/3w-xxxx.h 2007-12-06 17:46:05.000000000 -0800
+@@ -392,6 +392,8 @@
+        unsigned char padding[12];
+ } TW_Passthru;
 
-> I don't see anything calling
-> it anymore. My guess is that your leaving it in there for future usage,
-> but my argument would be to remove it since it's not being used and then
-> add it back if needed in the future.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
++#pragma pack()
++
+ typedef struct TAG_TW_Device_Extension {
+        u32             base_addr;
+        unsigned long           *alignment_virtual_address[TW_Q_LENGTH];
+@@ -430,6 +432,4 @@
+        wait_queue_head_t       ioctl_wqueue;
+ } TW_Device_Extension;
+
+-#pragma pack()
+-
+ #endif /* _3W_XXXX_H */
+
+
