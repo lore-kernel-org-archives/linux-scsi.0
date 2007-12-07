@@ -1,45 +1,72 @@
-From: "Gabriele Gorla" <gorlik@penguintown.net>
-Subject: [PATCH 2.6.23] 3w-xxxx: Fix bad unaligned accesses on alpha SMP
-Date: Thu, 6 Dec 2007 18:07:01 -0800 (PST)
-Message-ID: <15555.216.228.112.21.1196993221.squirrel@penguintown.net>
+From: rct@frus.com (Bob Tracy)
+Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
+Date: Thu, 6 Dec 2007 23:07:08 -0600 (CST)
+Message-ID: <20071207050709.110D2DBA2@gherkin.frus.com>
+References: <20071206163305.c3587675.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [69.3.150.202] ([69.3.150.202]:43779 "EHLO
-	alpha.penguintown.net" rhost-flags-FAIL-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1752319AbXLGCuJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2007 21:50:09 -0500
+Received: from gherkin.frus.com ([192.158.254.49]:58887 "EHLO gherkin.frus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750722AbXLGFHM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2007 00:07:12 -0500
+In-Reply-To: <20071206163305.c3587675.akpm@linux-foundation.org>
+ "from Andrew Morton at Dec 6, 2007 04:33:05 pm"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linuxraid@amcc.com
-Cc: linux-scsi@vger.kernel.org, aradford@gmail.com
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Bob Tracy <rct@frus.com>, mingo@elte.hu, mcree@orcon.net.nz, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, greg@kroah.com
 
-disable packing of the TAG_TW_Device_Extension
-structure to prevent kernel unaligned accesses when
-accessing the spinlock inside the ioctl_wqueue structure.
-Fixes smartmontools kernel panic on alpha SMP
+Andrew Morton wrote:
+> commit 6f37ac793d6ba7b35d338f791974166f67fdd9ba
+> Merge: 2f1f53b... d90bf5a...
+> Author: Linus Torvalds <torvalds@woody.linux-foundation.org>
+> Date:   Wed Nov 14 18:51:48 2007 -0800
+> 
+>     Merge branch 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/n
+>     
+>     * 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/net-2.6:
+>       [NET]: rt_check_expire() can take a long time, add a cond_resched()
+>       [ISDN] sc: Really, really fix warning
+>       [ISDN] sc: Fix sndpkt to have the correct number of arguments
+>       [TCP] FRTO: Clear frto_highmark only after process_frto that uses it
+>       [NET]: Remove notifier block from chain when register_netdevice_notifier f
+>       [FS_ENET]: Fix module build.
+>       [TCP]: Make sure write_queue_from does not begin with NULL ptr
+>       [TCP]: Fix size calculation in sk_stream_alloc_pskb
+>       [S2IO]: Fixed memory leak when MSI-X vector allocation fails
+>       [BONDING]: Fix resource use after free
+>       [SYSCTL]: Fix warning for token-ring from sysctl checker
+>       [NET] random : secure_tcp_sequence_number should not assume CONFIG_KTIME_S
+>       [IWLWIFI]: Not correctly dealing with hotunplug.
+>       [TCP] FRTO: Plug potential LOST-bit leak
+>       [TCP] FRTO: Limit snd_cwnd if TCP was application limited
+>       [E1000]: Fix schedule while atomic when called from mii-tool.
+>       [NETX]: Fix build failure added by 2.6.24 statistics cleanup.
+>       [EP93xx_ETH]: Build fix after 2.6.24 NAPI changes.
+>       [PKT_SCHED]: Check subqueue status before calling hard_start_xmit
+> 
+> I'm struggling to see how any of those could have broken block device
+> mounting on alpha.  Are you sure you bisected right?
 
-Signed-off-by: Gabriele Gorla <gorlik@yahoo.com>
----
+Based on what's in that commit, it *does* appear something went wrong
+with bisection.  If the implicated commit is the next one in time
+sequence relative to
 
---- linux-2.6.23/drivers/scsi/3w-xxxx.h 2007-10-09 13:31:38.000000000 -0700
-+++ linux-2.6.23a/drivers/scsi/3w-xxxx.h 2007-12-06 17:46:05.000000000 -0800
-@@ -392,6 +392,8 @@
-        unsigned char padding[12];
- } TW_Passthru;
+# good: [2f1f53bdc6531696934f6ee7bbdfa2ab4f4f62a3] CRISv10 fasttimer: Scrap INLINE and name timeval_cmp better
 
-+#pragma pack()
-+
- typedef struct TAG_TW_Device_Extension {
-        u32             base_addr;
-        unsigned long           *alignment_virtual_address[TW_Q_LENGTH];
-@@ -430,6 +432,4 @@
-        wait_queue_head_t       ioctl_wqueue;
- } TW_Device_Extension;
+then the test of whether I bisected correctly is as simple as applying
+the commit and seeing if things break, because I'm running on the
+kernel corresponding to 2f1f53bdc6531696934f6ee7bbdfa2ab4f4f62a3 right
+now.  Let me give that a try and I'll report back.  Worst case, I'll
+have to start over and write off the past four days...
 
--#pragma pack()
--
- #endif /* _3W_XXXX_H */
+Sorry about this...
 
-
+-- 
+------------------------------------------------------------------------
+Bob Tracy          |  "They couldn't hit an elephant at this dist- "
+rct@frus.com       |   - Last words of Union General John Sedgwick,
+                   |  Battle of Spotsylvania Court House, U.S. Civil War
+------------------------------------------------------------------------
