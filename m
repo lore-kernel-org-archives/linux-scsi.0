@@ -1,59 +1,89 @@
-From: rct@frus.com (Bob Tracy)
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Thu, 6 Dec 2007 18:16:12 -0600 (CST)
-Message-ID: <20071207001612.39E36DBA2@gherkin.frus.com>
-References: <20071204121618.GA26132@elte.hu>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: everything in wait_for_completion, what is my system doing?
+Date: Thu, 6 Dec 2007 17:09:11 -0800
+Message-ID: <20071206170911.4060cd1c.akpm@linux-foundation.org>
+References: <200712052144.54399.bs@q-leap.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:37233 "EHLO gherkin.frus.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752639AbXLGAjy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Dec 2007 19:39:54 -0500
-In-Reply-To: <20071204121618.GA26132@elte.hu> "from Ingo Molnar at Dec 4, 2007
- 01:16:18 pm"
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:49048 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752217AbXLGBJX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2007 20:09:23 -0500
+In-Reply-To: <200712052144.54399.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ingo Molnar <mingo@elte.hu>
-Cc: Michael Cree <mcree@orcon.net.nz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
+To: Bernd Schubert <bs@q-leap.de>
+Cc: linux-kernel@vger.kernel.org, bernd-schubert@gmx.de, linux-scsi@vger.kernel.org
 
-OK.  Finally have this thing painted into a corner: git has identified
-6f37ac793d6ba7b35d338f791974166f67fdd9ba as the first bad commit.
+On Wed, 5 Dec 2007 21:44:54 +0100
+Bernd Schubert <bs@q-leap.de> wrote:
 
->From "git bisect log", this corresponds to 
+> after scsi-recovery a system here went into some kind lock-up, everything 
+> seems to be in wait_for_completion(). Please see the attached 
+> blocked_states.txt and all_states.txt files.
+> This is 2.6.22.12, I can easily find out the line numbers if required.
+> 
+> Any help is highly appreciated.
+> 
+> 
 
-# bad: [6f37ac793d6ba7b35d338f791974166f67fdd9ba] Merge branch 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/net-2.6
+Please cc linux-scsi on scsi-related reports.
 
-Here's the full log:
+> 
+> 
+> [blocked_states.txt  text/plain (20.5KB)]
+> [generate break]
+> [ 1818.566436] SysRq : Show Blocked State
+> [ 1818.570260]
+> [ 1818.570261]                                  free                        sibling
+> [ 1818.579253]   task                 PC        stack   pid father child younger older
+> [ 1818.586987] events/7      D 00000155dd642280     0    26      2 (L-TLB)
+> [ 1818.593747]  ffff81012b529ac0 0000000000000046 0000000000000000 ffff810128280d18
+> [ 1818.601321]  ffff8100ba2376f8 ffff81012b689630 ffff81012aff76b0 000000078023e215
+> [ 1818.608870]  000000010003ca14 0000000000000000 ffff810001065400 0000000780430c13
+> [ 1818.616222] Call Trace:
+> [ 1818.618925]  [<ffffffff804ececb>] io_schedule+0x28/0x36
+> [ 1818.624207]  [<ffffffff8036e517>] get_request_wait+0x104/0x158
+> [ 1818.630112]  [<ffffffff8036e5a1>] blk_get_request+0x36/0x6b
+> [ 1818.635755]  [<ffffffff8042f5cb>] scsi_execute+0x51/0x129
+> [ 1818.641240]  [<ffffffff880cc11b>] :scsi_transport_spi:spi_execute+0x87/0xf8
+> [ 1818.648271]  [<ffffffff880cd5ae>] :scsi_transport_spi:spi_dv_device_echo_buffer+0x181/0x27d
+> [ 1818.656739]  [<ffffffff880cd801>] :scsi_transport_spi:spi_dv_retrain+0x4e/0x240
+> [ 1818.664139]  [<ffffffff880ce008>] :scsi_transport_spi:spi_dv_device+0x615/0x69c
+> [ 1818.671542]  [<ffffffff880f16d1>] :mptspi:mptspi_dv_device+0xb3/0x14b
+> [ 1818.678042]  [<ffffffff880f27d3>] :mptspi:mptspi_dv_renegotiate_work+0xcb/0xef
+> [ 1818.685348]  [<ffffffff80245bb8>] run_workqueue+0x8e/0x120
+> [ 1818.690905]  [<ffffffff80245d50>] worker_thread+0x106/0x117
+> [ 1818.696540]  [<ffffffff80249672>] kthread+0x4b/0x82
+> [ 1818.701474]  [<ffffffff8020ab28>] child_rip+0xa/0x12
+> [ 1818.706495]
+> [ 1818.708022] unionfs-fuse- D 000001a76ef63463     0  1119      1 (NOTLB)
+> [ 1818.714764]  ffff810129765988 0000000000000082 0000000000000000 ffffffff80337e22
+> [ 1818.722329]  ffff8101297658c8 ffff81012b652f20 ffff810129eec810 0000000600000000
+> [ 1818.729895]  000000010005204e 0000000000000000 ffff81000105c400 0000000680337c3e
+> [ 1818.737249] Call Trace:
+> [ 1818.739953]  [<ffffffff804ecfba>] schedule_timeout+0x8a/0xb6
+> [ 1818.745673]  [<ffffffff804ecf01>] io_schedule_timeout+0x28/0x36
+> [ 1818.751664]  [<ffffffff8026fba7>] congestion_wait+0x9d/0xc2
+> [ 1818.757300]  [<ffffffff80269b24>] balance_dirty_pages_ratelimited_nr+0x196/0x22f
+> [ 1818.764781]  [<ffffffff80265a3f>] generic_file_buffered_write+0x52a/0x60d
+> [ 1818.771641]  [<ffffffff80266210>] __generic_file_aio_write_nolock+0x45a/0x491
+> [ 1818.778852]  [<ffffffff802662a8>] generic_file_aio_write+0x61/0xc1
+> [ 1818.785101]  [<ffffffff8032eb94>] nfs_file_write+0x138/0x1b7
+> [ 1818.790822]  [<ffffffff8028d222>] do_sync_write+0xcc/0x112
+> [ 1818.796372]  [<ffffffff8028d32b>] vfs_write+0xc3/0x165
+> [ 1818.801575]  [<ffffffff8028d5df>] sys_pwrite64+0x68/0x96
+> [ 1818.806959]  [<ffffffff80209d0e>] system_call+0x7e/0x83
+> [ 1818.812250]  [<00002b4eeec3ea73>]
+>
+> [snippage]
+>
 
-git-bisect start
-# good: [9aae299f7fd1888ea3a195cfe0edef17bb647415] Linux 2.6.24-rc2
-git-bisect good 9aae299f7fd1888ea3a195cfe0edef17bb647415
-# bad: [f05092637dc0d9a3f2249c9b283b973e6e96b7d2] Linux 2.6.24-rc3
-git-bisect bad f05092637dc0d9a3f2249c9b283b973e6e96b7d2
-# good: [e6a5c27f3b0fef72e528fc35e343af4b2db790ff] Merge branch 'for-linus' of git://git.kernel.org/pub/scm/linux/kernel/git/avi/kvm
-git-bisect good e6a5c27f3b0fef72e528fc35e343af4b2db790ff
-# good: [42614fcde7bfdcbe43a7b17035c167dfebc354dd] vmstat: fix section mismatch warning
-git-bisect good 42614fcde7bfdcbe43a7b17035c167dfebc354dd
-# bad: [a052f4473603765eb6b4c19754689977601dc1d1] Merge git://git.kernel.org/pub/scm/linux/kernel/git/sam/x86
-git-bisect bad a052f4473603765eb6b4c19754689977601dc1d1
-# good: [d8e5219f9f5ca7518eb820db9f3d287a1d46fcf5] CRISv10 improve and bugfix fasttimer
-git-bisect good d8e5219f9f5ca7518eb820db9f3d287a1d46fcf5
-# good: [d90bf5a976793edfa88d3bb2393f0231eb8ce1e5] [NET]: rt_check_expire() can take a long time, add a cond_resched()
-git-bisect good d90bf5a976793edfa88d3bb2393f0231eb8ce1e5
-# good: [2a113281f5cd2febbab21a93c8943f8d3eece4d3] kconfig: use $K64BIT to set 64BIT with all*config targets
-git-bisect good 2a113281f5cd2febbab21a93c8943f8d3eece4d3
-# good: [2e2cd8bad6e03ceea73495ee6d557044213d95de] CRISv10 memset library add lineendings to asm
-git-bisect good 2e2cd8bad6e03ceea73495ee6d557044213d95de
-# bad: [6f37ac793d6ba7b35d338f791974166f67fdd9ba] Merge branch 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/net-2.6
-git-bisect bad 6f37ac793d6ba7b35d338f791974166f67fdd9ba
-# good: [2f1f53bdc6531696934f6ee7bbdfa2ab4f4f62a3] CRISv10 fasttimer: Scrap INLINE and name timeval_cmp better
-git-bisect good 2f1f53bdc6531696934f6ee7bbdfa2ab4f4f62a3
+Possibly your device driver had conniptions and stopped generating
+completion interrupts.
 
--- 
-------------------------------------------------------------------------
-Bob Tracy          |  "They couldn't hit an elephant at this dist- "
-rct@frus.com       |   - Last words of Union General John Sedgwick,
-                   |  Battle of Spotsylvania Court House, U.S. Civil War
-------------------------------------------------------------------------
+Which driver is in use?
+
+I don't suppose it is repeatable.
