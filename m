@@ -1,34 +1,33 @@
-From: "Rafael J. Wysocki" <rjw@sisk.pl>
+From: Andrew Morton <akpm@linux-foundation.org>
 Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Fri, 7 Dec 2007 01:44:55 +0100
-Message-ID: <200712070144.56009.rjw@sisk.pl>
-References: <20071207001612.39E36DBA2@gherkin.frus.com>
+Date: Thu, 6 Dec 2007 16:33:05 -0800
+Message-ID: <20071206163305.c3587675.akpm@linux-foundation.org>
+References: <20071204121618.GA26132@elte.hu>
+	<20071207001612.39E36DBA2@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ogre.sisk.pl ([217.79.144.158]:60731 "EHLO ogre.sisk.pl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753168AbXLGA0E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 6 Dec 2007 19:26:04 -0500
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:44867 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752807AbXLGAfD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Dec 2007 19:35:03 -0500
 In-Reply-To: <20071207001612.39E36DBA2@gherkin.frus.com>
-Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bob Tracy <rct@frus.com>
-Cc: Ingo Molnar <mingo@elte.hu>, Michael Cree <mcree@orcon.net.nz>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, Kay Sievers <kay.sievers@vrfy.org>, Greg KH <greg@kroah.com>
+Cc: mingo@elte.hu, mcree@orcon.net.nz, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, greg@kroah.com
 
-On Friday, 7 of December 2007, Bob Tracy wrote:
+On Thu, 6 Dec 2007 18:16:12 -0600 (CST)
+rct@frus.com (Bob Tracy) wrote:
+
 > OK.  Finally have this thing painted into a corner: git has identified
 > 6f37ac793d6ba7b35d338f791974166f67fdd9ba as the first bad commit.
 > 
-> From "git bisect log", this corresponds to 
+> >From "git bisect log", this corresponds to 
 > 
 > # bad: [6f37ac793d6ba7b35d338f791974166f67fdd9ba] Merge branch 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/net-2.6
-
-Something's gone wrong, as this commit doesn't modify code.
-
+> 
 > Here's the full log:
 > 
 > git-bisect start
@@ -54,3 +53,35 @@ Something's gone wrong, as this commit doesn't modify code.
 > git-bisect bad 6f37ac793d6ba7b35d338f791974166f67fdd9ba
 > # good: [2f1f53bdc6531696934f6ee7bbdfa2ab4f4f62a3] CRISv10 fasttimer: Scrap INLINE and name timeval_cmp better
 > git-bisect good 2f1f53bdc6531696934f6ee7bbdfa2ab4f4f62a3
+
+commit 6f37ac793d6ba7b35d338f791974166f67fdd9ba
+Merge: 2f1f53b... d90bf5a...
+Author: Linus Torvalds <torvalds@woody.linux-foundation.org>
+Date:   Wed Nov 14 18:51:48 2007 -0800
+
+    Merge branch 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/n
+    
+    * 'master' of master.kernel.org:/pub/scm/linux/kernel/git/davem/net-2.6:
+      [NET]: rt_check_expire() can take a long time, add a cond_resched()
+      [ISDN] sc: Really, really fix warning
+      [ISDN] sc: Fix sndpkt to have the correct number of arguments
+      [TCP] FRTO: Clear frto_highmark only after process_frto that uses it
+      [NET]: Remove notifier block from chain when register_netdevice_notifier f
+      [FS_ENET]: Fix module build.
+      [TCP]: Make sure write_queue_from does not begin with NULL ptr
+      [TCP]: Fix size calculation in sk_stream_alloc_pskb
+      [S2IO]: Fixed memory leak when MSI-X vector allocation fails
+      [BONDING]: Fix resource use after free
+      [SYSCTL]: Fix warning for token-ring from sysctl checker
+      [NET] random : secure_tcp_sequence_number should not assume CONFIG_KTIME_S
+      [IWLWIFI]: Not correctly dealing with hotunplug.
+      [TCP] FRTO: Plug potential LOST-bit leak
+      [TCP] FRTO: Limit snd_cwnd if TCP was application limited
+      [E1000]: Fix schedule while atomic when called from mii-tool.
+      [NETX]: Fix build failure added by 2.6.24 statistics cleanup.
+      [EP93xx_ETH]: Build fix after 2.6.24 NAPI changes.
+      [PKT_SCHED]: Check subqueue status before calling hard_start_xmit
+
+I'm struggling to see how any of those could have broken block device
+mounting on alpha.  Are you sure you bisected right?
+
