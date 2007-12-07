@@ -1,60 +1,45 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Fri, 7 Dec 2007 16:05:49 +0100
-Message-ID: <20071207150549.GA24254@elte.hu>
-References: <20071207022646.373c92f5.akpm@linux-foundation.org> <20071207145526.B561CDBA2@gherkin.frus.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [patch] SCSI: early detection of medium not present, updated
+Date: Fri, 7 Dec 2007 10:51:37 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0712071049580.4209-100000@iolanthe.rowland.org>
+References: <1196870792.11927.21.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:34493 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751219AbXLGPGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 7 Dec 2007 10:06:22 -0500
-Content-Disposition: inline
-In-Reply-To: <20071207145526.B561CDBA2@gherkin.frus.com>
+Received: from iolanthe.rowland.org ([192.131.102.54]:34080 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1750749AbXLGPvi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2007 10:51:38 -0500
+In-Reply-To: <1196870792.11927.21.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Tracy <rct@frus.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, mcree@orcon.net.nz, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, greg@kroah.com
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, Albert Lee <albertcc@tw.ibm.com>, Tejun Heo <htejun@gmail.com>, Jens Axboe <jens.axboe@oracle.com>
 
+On Wed, 5 Dec 2007, James Bottomley wrote:
 
-* Bob Tracy <rct@frus.com> wrote:
+> > For one thing, you've using retries to control both an outer loop and 
+> > an inner loop -- meaning the total number of attempts could be on the 
+> > order of retries**2.
+> 
+> Sort of; however, there should only really be one cc/ua before the TUR
+> goes through.  Also, TUR produces almost no conditions that would be
+> retryable in scsi_decide_disposition() and the scsi_execute sends it
+> down with REQ_FAILFAST anyway, so it's really not used much.
+> 
+> > For another, why do you want to swallow a UNIT_ATTENTION?  Shouldn't 
+> > that be up to the code calling scsi_test_unit_ready()?
+> 
+> No, that's a bug in the old code.  UA doesn't necessarily mean there's a
+> media change.  It could be asserted for a whole host of reasons.  Until
+> we get proper UA signalling, we need to resend the TUR so we get the
+> correct media status and discard the UA (Even if the device is asserting
+> UA for media change reasons, it will still give the correct sense code
+> response to the following TUR).
 
-> > Current state of the source tree is the 6f37ac... version, so I'll 
-> > start backing out the above diffs in related groups and continue 
-> > until I've got a working kernel.  For lack of an obvious target, 
-> > I'll start with the seemingly innocuous change to sysctl_check.c.  
-> > I'll report back when I've got something.
-> 
-> That was quick :-).  Backing out the sysctl_check.c diff gives me a 
-> working kernel.  Beats the #$%@! out of me how/why, though.
-> 
-> Michael Cree: could you try backing out the diff below from your 
-> 2.6.24-rc3 tree and see if things are now working for you?
-> 
-> Here's "uname -a", just to confirm (maybe) I'm running on what I say 
-> works:
-> 
-> Linux smirkin 2.6.24-rc2-g6f37ac79-dirty #2 Fri Dec 7 08:03:12 CST 2007 alpha
-> 
-> Here's the diff I backed out (patch -R).  It's short...
-> 
-> diff --git a/kernel/sysctl_check.c b/kernel/sysctl_check.c
-> index 5a2f2b2..4abc6d2 100644
-> --- a/kernel/sysctl_check.c
-> +++ b/kernel/sysctl_check.c
-> @@ -738,7 +738,7 @@ static struct trans_ctl_table trans_net_table[] = {
->  	{ NET_ROSE,		"rose",		trans_net_rose_table },
->  	{ NET_IPV6,		"ipv6",		trans_net_ipv6_table },
->  	{ NET_X25,		"x25",		trans_net_x25_table },
-> -	{ NET_TR,		"tr",		trans_net_tr_table },
-> +	{ NET_TR,		"token-ring",	trans_net_tr_table },
->  	{ NET_DECNET,		"decnet",	trans_net_decnet_table },
->  	/*  NET_ECONET not used */
->  	{ NET_SCTP,		"sctp",		trans_net_sctp_table },
+Well then, the patch appears good.  I haven't been able to test it 
+because it's based against a source tree I haven't got.  Can you 
+provide an equivalent patch against 2.6.24-rc4?
 
-reverting this makes the kernel image shorter by 8 bytes - so perhaps 
-some alignment issue somewhere? Or something gets overflown? Does any of 
-this get actually used by your bootup?
+Alan Stern
 
-	Ingo
