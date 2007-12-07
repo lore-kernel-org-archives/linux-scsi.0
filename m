@@ -1,232 +1,170 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 27/28] blk_end_request: changing scsi
- mid-layer for bidi (take 3)
-Date: Sun, 09 Dec 2007 11:43:31 +0200
-Message-ID: <475BB8C3.9040700@panasas.com>
-References: <47555880.9070902@panasas.com>	<20071205.192611.08317167.k-ueda@ct.jp.nec.com>	<4757BFDC.6090502@panasas.com>
-	<20071206.144417.41628995.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
+Subject: [PATCH] qla2xxx driver: convert mbx_intr_sem to completion
+Date: Fri, 7 Dec 2007 16:06:35 +0100
+Message-ID: <20071207150635.GG480@traven>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071206.144417.41628995.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.riseup.net ([204.13.164.18]:54717 "EHLO mx1.riseup.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750925AbXLIMq1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 9 Dec 2007 07:46:27 -0500
+Received: from tern.riseup.net (unknown [10.0.1.12])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "tern.riseup.net", Issuer "CA Cert Signing Authority" (verified OK))
+	by mx1.riseup.net (Postfix) with ESMTP id 382D0570509
+	for <linux-scsi@vger.kernel.org>; Sun,  9 Dec 2007 04:25:30 -0800 (PST)
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-driver@qlogic.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>
 
-On Thu, Dec 06 2007 at 21:44 +0200, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> Hi Boaz, Jens,
-> 
-> On Thu, 06 Dec 2007 11:24:44 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
->>> Index: 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-<snip>
->> No I don't like it. The only client left for blk_end_request_callback()
->> is bidi,
-> 
-> ide-cd (cdrom_newpc_intr) is another client.
-> So I can't drop blk_end_request_callback() even if bidi doesn't use it.
-> 
-It looks like all is needed for the ide-cd case is a flag that says
-"don't complete the request". And the call-back is not actually used.
-(Inspecting the last: [PATCH 26/28] blk_end_request: changing ide-cd (take 3))
-The same exact flag could also help the bidi case. Perhaps have an API
-for that?
+QLA2XXX driver: convert the semaphore mbx_intr_sem to a completion
 
-<snip>
-> 
-> Index: 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-> ===================================================================
-> --- 2.6.24-rc3-mm2.orig/drivers/scsi/scsi_lib.c
-> +++ 2.6.24-rc3-mm2/drivers/scsi/scsi_lib.c
-> @@ -629,28 +629,6 @@ void scsi_run_host_queues(struct Scsi_Ho
->  		scsi_run_queue(sdev->request_queue);
->  }
->  
-> -static void scsi_finalize_request(struct scsi_cmnd *cmd, int uptodate)
-> -{
-> -	struct request_queue *q = cmd->device->request_queue;
-> -	struct request *req = cmd->request;
-> -	unsigned long flags;
-> -
-> -	add_disk_randomness(req->rq_disk);
-> -
-> -	spin_lock_irqsave(q->queue_lock, flags);
-> -	if (blk_rq_tagged(req))
-> -		blk_queue_end_tag(q, req);
-> -
-> -	end_that_request_last(req, uptodate);
-> -	spin_unlock_irqrestore(q->queue_lock, flags);
-> -
-> -	/*
-> -	 * This will goose the queue request function at the end, so we don't
-> -	 * need to worry about launching another command.
-> -	 */
-> -	scsi_next_command(cmd);
-> -}
-> -
->  /*
->   * Function:    scsi_end_request()
->   *
-> @@ -930,23 +908,25 @@ EXPORT_SYMBOL(scsi_release_buffers);
->  void scsi_end_bidi_request(struct scsi_cmnd *cmd)
->  {
->  	struct request *req = cmd->request;
-> +	unsigned int dlen = req->data_len;
-> +	unsigned int next_dlen = req->next_rq->data_len;
->  
-> -	end_that_request_chunk(req, 1, req->data_len);
->  	req->data_len = scsi_out(cmd)->resid;
-> -
-> -	end_that_request_chunk(req->next_rq, 1, req->next_rq->data_len);
->  	req->next_rq->data_len = scsi_in(cmd)->resid;
->  
-> -	scsi_release_buffers(cmd);
-> -
->  	/*
->  	 *FIXME: If ll_rw_blk.c is changed to also put_request(req->next_rq)
-> -	 *       in end_that_request_last() then this WARN_ON must be removed.
-> +	 *       in blk_end_bidi_request() then this WARN_ON must be removed.
->  	 *       for now, upper-driver must have registered an end_io.
->  	 */
->  	WARN_ON(!req->end_io);
->  
-> -	scsi_finalize_request(cmd, 1);
-> +	if (blk_end_bidi_request(req, 1, dlen, next_dlen))
-> +		/* req has not been completed */
-> +		BUG();
-> +
-> +	scsi_release_buffers(cmd);
-> +	scsi_next_command(cmd);
->  }
->  
->  /*
-> Index: 2.6.24-rc3-mm2/block/ll_rw_blk.c
-> ===================================================================
-> --- 2.6.24-rc3-mm2.orig/block/ll_rw_blk.c
-> +++ 2.6.24-rc3-mm2/block/ll_rw_blk.c
-> @@ -3792,24 +3792,17 @@ static void complete_request(struct requ
->  	if (!list_empty(&rq->queuelist))
->  		blkdev_dequeue_request(rq);
->  
-> +	if (blk_bidi_rq(rq) && !rq->end_io)
-> +		__blk_put_request(rq->next_rq->q, rq->next_rq);
-> +
->  	end_that_request_last(rq, uptodate);
->  }
->  
-> -/**
-> - * blk_end_request - Helper function for drivers to complete the request.
-> - * @rq:       the request being processed
-> - * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-> - * @nr_bytes: number of bytes to complete
-> - *
-> - * Description:
-> - *     Ends I/O on a number of bytes attached to @rq.
-> - *     If @rq has leftover, sets it up for the next range of segments.
-> - *
-> - * Return:
-> - *     0 - we are done with this request
-> - *     1 - still buffers pending for this request
-> - **/
-> -int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
-> +/*
-> + * Internal function
-> + */
-> +static int blk_end_io(struct request *rq, int uptodate, int nr_bytes,
-> +		      int bidi_bytes, int (drv_callback)(struct request *))
->  {
->  	struct request_queue *q = rq->q;
->  	unsigned long flags = 0UL;
-> @@ -3817,8 +3810,17 @@ int blk_end_request(struct request *rq, 
->  	if (blk_fs_request(rq) || blk_pc_request(rq)) {
->  		if (__end_that_request_first(rq, uptodate, nr_bytes))
->  			return 1;
-> +
-> +		/* Bidi request must be completed as a whole */
-> +		if (blk_bidi_rq(rq) &&
-> +		    __end_that_request_first(rq->next_rq, uptodate, bidi_bytes))
-> +			return 1;
->  	}
->  
-> +	/* Special feature for tricky drivers */
-> +	if (drv_callback && drv_callback(rq))
-> +		return 1;
-> +
->  	add_disk_randomness(rq->rq_disk);
->  
->  	spin_lock_irqsave(q->queue_lock, flags);
-> @@ -3827,6 +3829,32 @@ int blk_end_request(struct request *rq, 
->  
->  	return 0;
->  }
-> +
-> +int blk_end_bidi_request(struct request *rq, int uptodate, int nr_bytes,
-> +			 int bidi_bytes)
-> +{
-> +	return blk_end_io(rq, uptodate, nr_bytes, bidi_bytes, NULL);
-> +}
-> +EXPORT_SYMBOL_GPL(blk_end_bidi_request);
-> +
-> +/**
-> + * blk_end_request - Helper function for drivers to complete the request.
-> + * @rq:       the request being processed
-> + * @uptodate: 1 for success, 0 for I/O error, < 0 for specific error
-> + * @nr_bytes: number of bytes to complete
-> + *
-> + * Description:
-> + *     Ends I/O on a number of bytes attached to @rq.
-> + *     If @rq has leftover, sets it up for the next range of segments.
-> + *
-> + * Return:
-> + *     0 - we are done with this request
-> + *     1 - still buffers pending for this request
-> + **/
-> +int blk_end_request(struct request *rq, int uptodate, int nr_bytes)
-> +{
-> +	return blk_end_io(rq, uptodate, nr_bytes, 0, NULL);
-> +}
->  EXPORT_SYMBOL_GPL(blk_end_request);
->  
+Signed-off-by: Matthias Kaehlcke <matthias.kaehlcke@gmail.com>
 
-All above looks fine, thanks.
+--
 
->  /**
-> @@ -3878,25 +3906,7 @@ EXPORT_SYMBOL_GPL(__blk_end_request);
->  int blk_end_request_callback(struct request *rq, int uptodate, int nr_bytes,
->  			     int (drv_callback)(struct request *))
->  {
-> -	struct request_queue *q = rq->q;
-> -	unsigned long flags = 0UL;
-> -
-> -	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-> -		if (__end_that_request_first(rq, uptodate, nr_bytes))
-> -			return 1;
-> -	}
-> -
-> -	/* Special feature for tricky drivers */
-> -	if (drv_callback && drv_callback(rq))
-> -		return 1;
-> -
-> -	add_disk_randomness(rq->rq_disk);
-> -
-> -	spin_lock_irqsave(q->queue_lock, flags);
-> -	complete_request(rq, uptodate);
-> -	spin_unlock_irqrestore(q->queue_lock, flags);
-> -
-> -	return 0;
-> +	return blk_end_io(rq, uptodate, nr_bytes, 0, drv_callback);
->  }
->  EXPORT_SYMBOL_GPL(blk_end_request_callback);
->  
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 04e8cbc..ae3b3f4 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2418,7 +2418,7 @@ typedef struct scsi_qla_host {
+ 
+ 	struct semaphore mbx_cmd_sem;	/* Serialialize mbx access */
+ 	struct semaphore vport_sem;	/* Virtual port synchronization */
+-	struct semaphore mbx_intr_sem;  /* Used for completion notification */
++	struct completion mbx_intr_cmp;	/* Used for completion notification */
+ 
+ 	uint32_t	mbx_flags;
+ #define  MBX_IN_PROGRESS	BIT_0
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 1104bd2..4c2868d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -104,7 +104,7 @@ qla2100_intr_handler(int irq, void *dev_id)
+ 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
+ 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
+ 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
+-		up(&ha->mbx_intr_sem);
++		complete(&ha->mbx_intr_cmp);
+ 	}
+ 
+ 	return (IRQ_HANDLED);
+@@ -216,7 +216,7 @@ qla2300_intr_handler(int irq, void *dev_id)
+ 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
+ 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
+ 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
+-		up(&ha->mbx_intr_sem);
++		complete(&ha->mbx_intr_cmp);
+ 	}
+ 
+ 	return (IRQ_HANDLED);
+@@ -1621,7 +1621,7 @@ qla24xx_intr_handler(int irq, void *dev_id)
+ 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
+ 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
+ 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
+-		up(&ha->mbx_intr_sem);
++		complete(&ha->mbx_intr_cmp);
+ 	}
+ 
+ 	return IRQ_HANDLED;
+@@ -1758,7 +1758,7 @@ qla24xx_msix_default(int irq, void *dev_id)
+ 	if (test_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags) &&
+ 	    (status & MBX_INTERRUPT) && ha->flags.mbox_int) {
+ 		set_bit(MBX_INTERRUPT, &ha->mbx_cmd_flags);
+-		up(&ha->mbx_intr_sem);
++		complete(&ha->mbx_intr_cmp);
+ 	}
+ 
+ 	return IRQ_HANDLED;
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index ccd662a..115600e 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -9,17 +9,17 @@
+ #include <linux/delay.h>
+ 
+ static void
+-qla2x00_mbx_sem_timeout(unsigned long data)
++qla2x00_mbx_cmp_timeout(unsigned long data)
+ {
+-	struct semaphore	*sem_ptr = (struct semaphore *)data;
++	struct completion	*cmp_ptr = (struct completion *)data;
+ 
+-	DEBUG11(printk("qla2x00_sem_timeout: entered.\n"));
++	DEBUG11(printk("qla2x00_mbx_cmp_timeout: entered.\n"));
+ 
+-	if (sem_ptr != NULL) {
+-		up(sem_ptr);
++	if (cmp_ptr != NULL) {
++		complete(cmp_ptr);
+ 	}
+ 
+-	DEBUG11(printk("qla2x00_mbx_sem_timeout: exiting.\n"));
++	DEBUG11(printk("qla2x00_mbx_cmp_timeout: exiting.\n"));
+ }
+ 
+ /*
+@@ -140,10 +140,10 @@ qla2x00_mailbox_command(scsi_qla_host_t *pvha, mbx_cmd_t *mcp)
+ 		    __func__, ha->host_no));
+ 
+ 		init_timer(&tmp_intr_timer);
+-		tmp_intr_timer.data = (unsigned long)&ha->mbx_intr_sem;
++		tmp_intr_timer.data = (unsigned long)&ha->mbx_intr_cmp;
+ 		tmp_intr_timer.expires = jiffies + mcp->tov * HZ;
+ 		tmp_intr_timer.function =
+-		    (void (*)(unsigned long))qla2x00_mbx_sem_timeout;
++		    (void (*)(unsigned long))qla2x00_mbx_cmp_timeout;
+ 
+ 		DEBUG11(printk("%s(%ld): Adding timer.\n", __func__,
+ 		    ha->host_no));
+@@ -163,7 +163,7 @@ qla2x00_mailbox_command(scsi_qla_host_t *pvha, mbx_cmd_t *mcp)
+ 		/* Wait for either the timer to expire
+ 		 * or the mbox completion interrupt
+ 		 */
+-		down(&ha->mbx_intr_sem);
++		wait_for_completion(&ha->mbx_intr_cmp);
+ 
+ 		DEBUG11(printk("%s(%ld): waking up. time=0x%lx\n", __func__,
+ 		    ha->host_no, jiffies));
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 821ee74..102b765 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -413,7 +413,7 @@ qla24xx_create_vhost(struct fc_vport *fc_vport)
+ 	vha->mgmt_svr_loop_id = 10 + vha->vp_idx;
+ 
+ 	init_MUTEX(&vha->mbx_cmd_sem);
+-	init_MUTEX_LOCKED(&vha->mbx_intr_sem);
++	init_completion(&vha->mbx_intr_cmp);
+ 
+ 	INIT_LIST_HEAD(&vha->list);
+ 	INIT_LIST_HEAD(&vha->fcports);
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index a5bcf1f..64379a2 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1703,7 +1703,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	init_MUTEX(&ha->mbx_cmd_sem);
+ 	init_MUTEX(&ha->vport_sem);
+-	init_MUTEX_LOCKED(&ha->mbx_intr_sem);
++	init_completion(&ha->mbx_intr_cmp);
+ 
+ 	INIT_LIST_HEAD(&ha->list);
+ 	INIT_LIST_HEAD(&ha->fcports);
 
-Boaz
+-- 
+Matthias Kaehlcke
+Linux Application Developer
+Barcelona
+
+              You can't separate peace from freedom because no
+               one can be at peace unless he has his freedom
+                              (Malcolm X)
+                                                                 .''`.
+    using free software / Debian GNU/Linux | http://debian.org  : :'  :
+                                                                `. `'`
+gpg --keyserver pgp.mit.edu --recv-keys 47D8E5D4                  `-
