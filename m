@@ -1,101 +1,60 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH -mm 6/6] kill __clear_bit_string and find_next_zero_string
-Date: Fri, 7 Dec 2007 23:56:44 +0900
-Message-ID: <20071207235728V.tomof@acm.org>
-References: <21710c4b9cd6848e70e29949dfb54894e9aabbe6.tomof@acm.org>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
+Date: Fri, 7 Dec 2007 16:05:49 +0100
+Message-ID: <20071207150549.GA24254@elte.hu>
+References: <20071207022646.373c92f5.akpm@linux-foundation.org> <20071207145526.B561CDBA2@gherkin.frus.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756389AbXLGO7Y@vger.kernel.org>
-In-Reply-To: <21710c4b9cd6848e70e29949dfb54894e9aabbe6.tomof@acm.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: akpm@linux-foundation.org, tglx@linutronix.de, mingo@elte.hu, muli@il.ibm.com, fujita.tomonori@lab.ntt.co.jp
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx3.mail.elte.hu ([157.181.1.138]:34493 "EHLO mx3.mail.elte.hu"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751219AbXLGPGW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2007 10:06:22 -0500
+Content-Disposition: inline
+In-Reply-To: <20071207145526.B561CDBA2@gherkin.frus.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bob Tracy <rct@frus.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, mcree@orcon.net.nz, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, kay.sievers@vrfy.org, greg@kroah.com
 
-This kills unused __clear_bit_string and find_next_zero_string (they
-were used by only gart and calgary IOMMUs).
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- arch/x86/lib/Makefile_64    |    2 +-
- arch/x86/lib/bitstr_64.c    |   28 ----------------------------
- include/asm-x86/bitops_64.h |   16 ----------------
- 3 files changed, 1 insertions(+), 45 deletions(-)
- delete mode 100644 arch/x86/lib/bitstr_64.c
+* Bob Tracy <rct@frus.com> wrote:
 
-diff --git a/arch/x86/lib/Makefile_64 b/arch/x86/lib/Makefile_64
-index bbabad3..1b72bda 100644
---- a/arch/x86/lib/Makefile_64
-+++ b/arch/x86/lib/Makefile_64
-@@ -9,5 +9,5 @@ obj-$(CONFIG_SMP)	+= msr-on-cpu.o
- 
- lib-y := csum-partial_64.o csum-copy_64.o csum-wrappers_64.o delay_64.o \
- 	usercopy_64.o getuser_64.o putuser_64.o  \
--	thunk_64.o clear_page_64.o copy_page_64.o bitstr_64.o bitops_64.o
-+	thunk_64.o clear_page_64.o copy_page_64.o bitops_64.o
- lib-y += memcpy_64.o memmove_64.o memset_64.o copy_user_64.o rwlock_64.o copy_user_nocache_64.o
-diff --git a/arch/x86/lib/bitstr_64.c b/arch/x86/lib/bitstr_64.c
-deleted file mode 100644
-index 7445caf..0000000
---- a/arch/x86/lib/bitstr_64.c
-+++ /dev/null
-@@ -1,28 +0,0 @@
--#include <linux/module.h>
--#include <linux/bitops.h>
--
--/* Find string of zero bits in a bitmap */ 
--unsigned long 
--find_next_zero_string(unsigned long *bitmap, long start, long nbits, int len)
--{ 
--	unsigned long n, end, i; 	
--
-- again:
--	n = find_next_zero_bit(bitmap, nbits, start);
--	if (n == -1) 
--		return -1;
--	
--	/* could test bitsliced, but it's hardly worth it */
--	end = n+len;
--	if (end > nbits)
--		return -1; 
--	for (i = n+1; i < end; i++) { 
--		if (test_bit(i, bitmap)) {  
--			start = i+1; 
--			goto again; 
--		} 
--	}
--	return n;
--}
--
--EXPORT_SYMBOL(find_next_zero_string);
-diff --git a/include/asm-x86/bitops_64.h b/include/asm-x86/bitops_64.h
-index 48adbf5..aaf1519 100644
---- a/include/asm-x86/bitops_64.h
-+++ b/include/asm-x86/bitops_64.h
-@@ -37,12 +37,6 @@ static inline long __scanbit(unsigned long val, unsigned long max)
-   ((off)+(__scanbit(~(((*(unsigned long *)addr)) >> (off)),(size)-(off)))) : \
- 	find_next_zero_bit(addr,size,off)))
- 
--/* 
-- * Find string of zero bits in a bitmap. -1 when not found.
-- */ 
--extern unsigned long 
--find_next_zero_string(unsigned long *bitmap, long start, long nbits, int len);
--
- static inline void set_bit_string(unsigned long *bitmap, unsigned long i, 
- 				  int len) 
- { 
-@@ -53,16 +47,6 @@ static inline void set_bit_string(unsigned long *bitmap, unsigned long i,
- 	}
- } 
- 
--static inline void __clear_bit_string(unsigned long *bitmap, unsigned long i, 
--				    int len) 
--{ 
--	unsigned long end = i + len; 
--	while (i < end) {
--		__clear_bit(i, bitmap); 
--		i++;
--	}
--} 
+> > Current state of the source tree is the 6f37ac... version, so I'll 
+> > start backing out the above diffs in related groups and continue 
+> > until I've got a working kernel.  For lack of an obvious target, 
+> > I'll start with the seemingly innocuous change to sysctl_check.c.  
+> > I'll report back when I've got something.
+> 
+> That was quick :-).  Backing out the sysctl_check.c diff gives me a 
+> working kernel.  Beats the #$%@! out of me how/why, though.
+> 
+> Michael Cree: could you try backing out the diff below from your 
+> 2.6.24-rc3 tree and see if things are now working for you?
+> 
+> Here's "uname -a", just to confirm (maybe) I'm running on what I say 
+> works:
+> 
+> Linux smirkin 2.6.24-rc2-g6f37ac79-dirty #2 Fri Dec 7 08:03:12 CST 2007 alpha
+> 
+> Here's the diff I backed out (patch -R).  It's short...
+> 
+> diff --git a/kernel/sysctl_check.c b/kernel/sysctl_check.c
+> index 5a2f2b2..4abc6d2 100644
+> --- a/kernel/sysctl_check.c
+> +++ b/kernel/sysctl_check.c
+> @@ -738,7 +738,7 @@ static struct trans_ctl_table trans_net_table[] = {
+>  	{ NET_ROSE,		"rose",		trans_net_rose_table },
+>  	{ NET_IPV6,		"ipv6",		trans_net_ipv6_table },
+>  	{ NET_X25,		"x25",		trans_net_x25_table },
+> -	{ NET_TR,		"tr",		trans_net_tr_table },
+> +	{ NET_TR,		"token-ring",	trans_net_tr_table },
+>  	{ NET_DECNET,		"decnet",	trans_net_decnet_table },
+>  	/*  NET_ECONET not used */
+>  	{ NET_SCTP,		"sctp",		trans_net_sctp_table },
+
+reverting this makes the kernel image shorter by 8 bytes - so perhaps 
+some alignment issue somewhere? Or something gets overflown? Does any of 
+this get actually used by your bootup?
+
+	Ingo
