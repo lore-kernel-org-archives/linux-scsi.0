@@ -1,38 +1,39 @@
-From: Ralf Baechle <ralf@linux-mips.org>
-Subject: Re: [UPDATED PATCH] SGIWD93: use cached memory access to make
-	driver work on IP28
-Date: Sat, 8 Dec 2007 16:04:49 +0000
-Message-ID: <20071208160449.GA3361@linux-mips.org>
-References: <20071202103309.6A926C2EB4@solo.franken.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: scsi_wait_scan Kconfig option
+Date: Sat, 08 Dec 2007 22:21:11 +0100
+Message-ID: <475B0AC7.2030408@s5r6.in-berlin.de>
+References: <20071207191242.71a9cc3e@linuxamd.linicks.net>	<475A9810.4070104@anagramm.de> <20071208162122.7e77601e@linuxamd.linicks.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ftp.linux-mips.org ([194.74.144.162]:40948 "EHLO
-	ftp.linux-mips.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751332AbXLHSb2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 13:31:28 -0500
-Received: from localhost.localdomain ([127.0.0.1]:47253 "EHLO
-	dl5rb.ham-radio-op.net") by ftp.linux-mips.org with ESMTP
-	id S20026996AbXLHSb0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 8 Dec 2007 18:31:26 +0000
-Content-Disposition: inline
-In-Reply-To: <20071202103309.6A926C2EB4@solo.franken.de>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:48074 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751796AbXLHVVW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 16:21:22 -0500
+In-Reply-To: <20071208162122.7e77601e@linuxamd.linicks.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Cc: linux-scsi@vger.kernel.org, linux-mips@linux-mips.org, James.Bottomley@HansenPartnership.com
+To: Nick Warne <nick@ukfsn.org>
+Cc: Clemens Koller <clemens.koller@anagramm.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-On Sun, Dec 02, 2007 at 11:33:09AM +0100, Thomas Bogendoerfer wrote:
+> Clemens Koller <clemens.koller@anagramm.de> wrote:
+>> Nick Warne schrieb:
+>>> I am bringing this up again - primarily as I forgot about it after
+>>> patching my build tree ages ago:
+>>>
+>>> http://lkml.org/lkml/2007/10/27/68
 
-> SGI IP28 machines would need special treatment (enable adding addtional
-> wait states) when accessing memory uncached. To avoid this pain I
-> changed the driver to use only cached access to memory.
-> 
-> Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+>> Please see the patch I sent some days ago, which does the very
+>> same thing: http://marc.info/?l=linux-kernel&m=119677244318528&w=2
 
-Acked-by: Ralf Baechle <ralf@linux-mips.org>
+Besides, in order for scsi_wait_scan to work, drivers need to support it
+explicitly, don't they?  If so, simply kill the "default m" from config
+SCSI_WAIT_SCAN and let any driver which is integrated with it select it.
 
-The machine really is as insane as Thomas makes it sound.  Actually even
-more so.
-
-  Ralf
+(Not that I'm a friend of select, but here is a case where it won't hurt
+too much.)
+-- 
+Stefan Richter
+-=====-=-=== ==-- -=---
+http://arcgraph.de/sr/
