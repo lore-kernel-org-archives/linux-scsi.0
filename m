@@ -1,68 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Recent sym53c8xx patches
-Date: Fri, 07 Dec 2007 20:45:37 -0600
-Message-ID: <1197081937.4911.2.camel@localhost.localdomain>
-References: <474C2F0C.6030303@cybernetics.com>
+From: rct@frus.com (Bob Tracy)
+Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
+Date: Fri, 7 Dec 2007 22:53:25 -0600 (CST)
+Message-ID: <20071208045325.7C8F1DBA2@gherkin.frus.com>
+References: <1197062383.5483.46.camel@lov.site>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-76-243-235-52.dsl.chcgil.sbcglobal.net ([76.243.235.52]:56683
-	"EHLO accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751638AbXLHCxW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Dec 2007 21:53:22 -0500
-In-Reply-To: <474C2F0C.6030303@cybernetics.com>
+Received: from gherkin.frus.com ([192.158.254.49]:40798 "EHLO gherkin.frus.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751935AbXLHExk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 7 Dec 2007 23:53:40 -0500
+In-Reply-To: <1197062383.5483.46.camel@lov.site> "from Kay Sievers at Dec 7,
+ 2007 10:19:43 pm"
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>, jejb@kernel.org, hch@infradead.org
+To: Kay Sievers <kay.sievers@vrfy.org>
+Cc: Michael Cree <mcree@orcon.net.nz>, Bob Tracy <rct@frus.com>, Andrew Morton <akpm@linux-foundation.org>, mingo@elte.hu, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, greg@kroah.com
 
+Kay Sievers wrote:
+> Is the udev daemon (still) running while it fails?
 
-On Tue, 2007-11-27 at 09:51 -0500, Tony Battersby wrote:
-> Hello,
-> 
-> I am sending this message to check up on the merge status of my recent
-> sym53c8xx patches to make sure they aren't forgotten.  Matthew Wilcox,
-> could you give an ack/nak for these merge requests?  Also, please let me
-> know if I need to do anything else (such as resending later) to make
-> sure these patches get merged.
-> 
-> [PATCH] [SCSI] sym53c8xx: fix free_irq() regression in 2.6.24
-> http://marc.info/?t=119438263300007&r=1&w=4
-> Regression fix.  Should be merged in 2.6.24.  OK'ed by Christoph Hellwig.
-> 
-> [PATCH] [SCSI] sym53c8xx: fix resid calculation
-> http://marc.info/?l=linux-scsi&m=119438360705773&w=4
-> Bug fix.  I would like it to be merged in 2.6.24.  No replies to initial
-> message.
+Yes.
 
-These two I have flagged for inclusion.
+> If you run /sbin/udevtrigger, do the nodes appear?
 
-> [PATCH] [SCSI] sym53c8xx: don't flood syslog with negotiation messages
-> http://marc.info/?l=linux-scsi&m=119446914818689&w=4
-> More an annoyance fix than a bug fix.  Probably safe to merge for
-> 2.6.24, but could wait for 2.6.25 if someone objects.  No replies to
-> initial message.
+No.  Exit status is 0, and there are no errors.  Everything looks
+fine under /sys/block, and there doesn't seem to be a problem with
+/proc/devices either.
 
-This one I'd like to wait on maintainer feedback
-
-> [PATCH] [SCSI] sym53c8xx: fix setflag user command to control disconnects
-> http://marc.info/?l=linux-scsi&m=119446790116497&w=4
-> Fix for long-broken not-widely-used feature.  Can be dropped if the
-> disconnect attribute will be added to the SPI transport class in the
-> near future.  Is anyone working on this BTW?
-
-This one, I was sort of expecting, since you want the feature that you'd
-add it to the transport class ...
-
-> [PATCH] [SCSI] sym53c8xx: increase sg_tablesize for larger data transfers
-> http://marc.info/?l=linux-scsi&m=119513922112712&w=4
-> Enhancement.  On hold for the moment due to speculation that it may
-> break some 875 chips.
-
-I'd like more feedback, but sometimes the best way of testing things
-like this is to stick it in the field and see if it breaks something.
-
-James
-
-
+-- 
+------------------------------------------------------------------------
+Bob Tracy          |  "They couldn't hit an elephant at this dist- "
+rct@frus.com       |   - Last words of Union General John Sedgwick,
+                   |  Battle of Spotsylvania Court House, U.S. Civil War
+------------------------------------------------------------------------
