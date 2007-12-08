@@ -1,39 +1,31 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: scsi_wait_scan Kconfig option
-Date: Sat, 08 Dec 2007 22:21:11 +0100
-Message-ID: <475B0AC7.2030408@s5r6.in-berlin.de>
-References: <20071207191242.71a9cc3e@linuxamd.linicks.net>	<475A9810.4070104@anagramm.de> <20071208162122.7e77601e@linuxamd.linicks.net>
+Date: Sat, 8 Dec 2007 15:16:52 -0700
+Message-ID: <20071208221652.GA1159@parisc-linux.org>
+References: <20071207191242.71a9cc3e@linuxamd.linicks.net> <475A9810.4070104@anagramm.de> <20071208162122.7e77601e@linuxamd.linicks.net> <475B0AC7.2030408@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:48074 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751796AbXLHVVW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 16:21:22 -0500
-In-Reply-To: <20071208162122.7e77601e@linuxamd.linicks.net>
+Received: from palinux.external.hp.com ([192.25.206.14]:52817 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752884AbXLHWQy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 17:16:54 -0500
+Content-Disposition: inline
+In-Reply-To: <475B0AC7.2030408@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nick Warne <nick@ukfsn.org>
-Cc: Clemens Koller <clemens.koller@anagramm.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Nick Warne <nick@ukfsn.org>, Clemens Koller <clemens.koller@anagramm.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-> Clemens Koller <clemens.koller@anagramm.de> wrote:
->> Nick Warne schrieb:
->>> I am bringing this up again - primarily as I forgot about it after
->>> patching my build tree ages ago:
->>>
->>> http://lkml.org/lkml/2007/10/27/68
+On Sat, Dec 08, 2007 at 10:21:11PM +0100, Stefan Richter wrote:
+> Besides, in order for scsi_wait_scan to work, drivers need to support it
+> explicitly, don't they?  If so, simply kill the "default m" from config
+> SCSI_WAIT_SCAN and let any driver which is integrated with it select it.
 
->> Please see the patch I sent some days ago, which does the very
->> same thing: http://marc.info/?l=linux-kernel&m=119677244318528&w=2
+No.  All drivers which call scsi_scan_host() support it.
 
-Besides, in order for scsi_wait_scan to work, drivers need to support it
-explicitly, don't they?  If so, simply kill the "default m" from config
-SCSI_WAIT_SCAN and let any driver which is integrated with it select it.
-
-(Not that I'm a friend of select, but here is a case where it won't hurt
-too much.)
 -- 
-Stefan Richter
--=====-=-=== ==-- -=---
-http://arcgraph.de/sr/
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
