@@ -1,31 +1,54 @@
-From: rct@frus.com (Bob Tracy)
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Fri, 7 Dec 2007 23:05:17 -0600 (CST)
-Message-ID: <20071208050517.EC35EDBA2@gherkin.frus.com>
-References: <1197062383.5483.46.camel@lov.site>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755336AbXLHFFb@vger.kernel.org>
-In-Reply-To: <1197062383.5483.46.camel@lov.site> "from Kay Sievers at Dec 7,
- 2007 10:19:43 pm"
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kay Sievers <kay.sievers@vrfy.org>
-Cc: Michael Cree <mcree@orcon.net.nz>, Bob Tracy <rct@frus.com>, Andrew Morton <akpm@linux-foundation.org>, mingo@elte.hu, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, greg@kroah.com
+From: Denis Cheng <crquan@gmail.com>
+Subject: [PATCH] 3W RAID drivers: memset not needed in probe
+Date: Sat,  8 Dec 2007 23:40:59 +0800
+Message-ID: <1197128459-14014-1-git-send-email-crquan@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.187]:7523 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752652AbXLHPld (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 10:41:33 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1062884rvb
+        for <linux-scsi@vger.kernel.org>; Sat, 08 Dec 2007 07:41:32 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adam Radford <linuxraid@amcc.com>
+Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 
-Kay Sievers wrote:
-> Is the udev daemon (still) running while it fails?
+the memory return from scsi_host_alloc is alloced by kzalloc,
+which is already zero initilized, so memset not needed.
 
-Yes, and there's something else I forgot to mention that may be
-significant...  For the bad case, in addition to udevd, "ps -ef"
-shows a "sh -e /lib/udev/net.agent" running with a PPID of 1.  This
-process doesn't exit until I reboot.  If this is normal under the
-circumstances, please disregard.
+Signed-off-by: Denis Cheng <crquan@gmail.com>
+---
+ drivers/scsi/3w-9xxx.c |    2 --
+ drivers/scsi/3w-xxxx.c |    2 --
+ 2 files changed, 0 insertions(+), 4 deletions(-)
 
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index afb262b..cb28511 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -2028,8 +2028,6 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
+ 	}
+ 	tw_dev = (TW_Device_Extension *)host->hostdata;
+ 
+-	memset(tw_dev, 0, sizeof(TW_Device_Extension));
+-
+ 	/* Save values to device extension */
+ 	tw_dev->host = host;
+ 	tw_dev->tw_pci_dev = pdev;
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 59716eb..a8c12d7 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -2295,8 +2295,6 @@ static int __devinit tw_probe(struct pci_dev *pdev, const struct pci_device_id *
+ 	}
+ 	tw_dev = (TW_Device_Extension *)host->hostdata;
+ 
+-	memset(tw_dev, 0, sizeof(TW_Device_Extension));
+-
+ 	/* Save values to device extension */
+ 	tw_dev->host = host;
+ 	tw_dev->tw_pci_dev = pdev;
 -- 
-------------------------------------------------------------------------
-Bob Tracy          |  "They couldn't hit an elephant at this dist- "
-rct@frus.com       |   - Last words of Union General John Sedgwick,
-                   |  Battle of Spotsylvania Court House, U.S. Civil War
-------------------------------------------------------------------------
+1.5.3.4
+
