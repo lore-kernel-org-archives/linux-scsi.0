@@ -1,54 +1,33 @@
-From: Denis Cheng <crquan@gmail.com>
-Subject: [PATCH] 3W RAID drivers: memset not needed in probe
-Date: Sat,  8 Dec 2007 23:40:59 +0800
-Message-ID: <1197128459-14014-1-git-send-email-crquan@gmail.com>
+From: Kay Sievers <kay.sievers@vrfy.org>
+Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
+Date: Sat, 08 Dec 2007 16:48:32 +0100
+Message-ID: <1197128912.5483.51.camel@lov.site>
+References: <20071208050517.EC35EDBA2@gherkin.frus.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.187]:7523 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752652AbXLHPld (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 10:41:33 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so1062884rvb
-        for <linux-scsi@vger.kernel.org>; Sat, 08 Dec 2007 07:41:32 -0800 (PST)
+Received: from moutng.kundenserver.de ([212.227.126.179]:51508 "EHLO
+	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757583AbXLHPte (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Dec 2007 10:49:34 -0500
+In-Reply-To: <20071208050517.EC35EDBA2@gherkin.frus.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adam Radford <linuxraid@amcc.com>
-Cc: linux-scsi@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: Bob Tracy <rct@frus.com>
+Cc: Michael Cree <mcree@orcon.net.nz>, Andrew Morton <akpm@linux-foundation.org>, mingo@elte.hu, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, ink@jurassic.park.msu.ru, linux-scsi@vger.kernel.org, greg@kroah.com
 
-the memory return from scsi_host_alloc is alloced by kzalloc,
-which is already zero initilized, so memset not needed.
+On Fri, 2007-12-07 at 23:05 -0600, Bob Tracy wrote:
+> Kay Sievers wrote:
+> > Is the udev daemon (still) running while it fails?
+> 
+> Yes, and there's something else I forgot to mention that may be
+> significant...  For the bad case, in addition to udevd, "ps -ef"
+> shows a "sh -e /lib/udev/net.agent" running with a PPID of 1.  This
+> process doesn't exit until I reboot.  If this is normal under the
+> circumstances, please disregard.
 
-Signed-off-by: Denis Cheng <crquan@gmail.com>
----
- drivers/scsi/3w-9xxx.c |    2 --
- drivers/scsi/3w-xxxx.c |    2 --
- 2 files changed, 0 insertions(+), 4 deletions(-)
+Does SysRq-T show where it hangs?
 
-diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-index afb262b..cb28511 100644
---- a/drivers/scsi/3w-9xxx.c
-+++ b/drivers/scsi/3w-9xxx.c
-@@ -2028,8 +2028,6 @@ static int __devinit twa_probe(struct pci_dev *pdev, const struct pci_device_id
- 	}
- 	tw_dev = (TW_Device_Extension *)host->hostdata;
- 
--	memset(tw_dev, 0, sizeof(TW_Device_Extension));
--
- 	/* Save values to device extension */
- 	tw_dev->host = host;
- 	tw_dev->tw_pci_dev = pdev;
-diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-index 59716eb..a8c12d7 100644
---- a/drivers/scsi/3w-xxxx.c
-+++ b/drivers/scsi/3w-xxxx.c
-@@ -2295,8 +2295,6 @@ static int __devinit tw_probe(struct pci_dev *pdev, const struct pci_device_id *
- 	}
- 	tw_dev = (TW_Device_Extension *)host->hostdata;
- 
--	memset(tw_dev, 0, sizeof(TW_Device_Extension));
--
- 	/* Save values to device extension */
- 	tw_dev->host = host;
- 	tw_dev->tw_pci_dev = pdev;
--- 
-1.5.3.4
+Kay
 
