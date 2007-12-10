@@ -1,39 +1,40 @@
 From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH][SCSI] hptiop: add more adapter models and other fixes
-Date: Mon, 10 Dec 2007 09:50:30 -0700
-Message-ID: <20071210165030.GB26334@parisc-linux.org>
-References: <200712101354.53575.linux@highpoint-tech.com>
+Subject: Re: [PATCH acs_ame scsi driver 000 of 1] Introduction
+Date: Mon, 10 Dec 2007 09:55:48 -0700
+Message-ID: <20071210165548.GC26334@parisc-linux.org>
+References: <87d84fba0712092003h3eb90344o89f9b0bc9c65fdb7@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:59798 "EHLO
+Received: from palinux.external.hp.com ([192.25.206.14]:41222 "EHLO
 	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753485AbXLJQuc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2007 11:50:32 -0500
+	with ESMTP id S1753881AbXLJQzt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2007 11:55:49 -0500
 Content-Disposition: inline
-In-Reply-To: <200712101354.53575.linux@highpoint-tech.com>
+In-Reply-To: <87d84fba0712092003h3eb90344o89f9b0bc9c65fdb7@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: HighPoint Linux Team <linux@highpoint-tech.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com
+To: chang jeff <recalljeffchang@gmail.com>
+Cc: akpm@linux-foundation.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Mon, Dec 10, 2007 at 01:54:53PM +0800, HighPoint Linux Team wrote:
-> Most code changes were made to support adapters based on Marvell IOP, plus some
-> other fixes.
+On Mon, Dec 10, 2007 at 12:03:18PM +0800, chang jeff wrote:
+> Dear Sir,
 > 
-> - add more PCI device IDs
-> - support for adapters based on Marvell IOP
+> Following is patche for scsi driver in 2.6.23.9 what should get into
+> 2.6.23.9-final if possible.
+> 
+> First refines a newly created scsi driver
+> (/[kernel-version]/driver/scsi/acs_ame).
+> 
+> Thanks,
+> JeffChang.
 
-Are you sure it's a good idea to do this?  This patch is 1200 lines long
-... the same size as the existing driver:
+Hi Jeff,
 
-$ wc drivers/scsi/hptiop.*
-  947  2273 24531 drivers/scsi/hptiop.c
-  256   612  6175 drivers/scsi/hptiop.h
-  1203  2885 30706 total
-
-That suggests to me there's not much commonality between the two drivers,
-and you'd be better off adding a second driver for the 4xxx cards.
+You don't seem to have attached the driver ... maybe you sent a second
+email that hasn't arrived yet?  I see Andrew sent a mail (possibly to
+one of your colleagues?) that explains that he doesn't personally take
+scsi driver patches: http://lkml.org/lkml/2007/8/30/7
 
 -- 
 Intel are signing my paycheques ... these opinions are still mine
