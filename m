@@ -1,38 +1,42 @@
-From: rct@frus.com (Bob Tracy)
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Mon, 10 Dec 2007 09:08:53 -0600 (CST)
-Message-ID: <20071210150853.DEE18DBA2@gherkin.frus.com>
-References: <20071209210729.A20635@jurassic.park.msu.ru>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH][SCSI] hptiop: add more adapter models and other fixes
+Date: Mon, 10 Dec 2007 09:50:30 -0700
+Message-ID: <20071210165030.GB26334@parisc-linux.org>
+References: <200712101354.53575.linux@highpoint-tech.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gherkin.frus.com ([192.158.254.49]:51057 "EHLO gherkin.frus.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751229AbXLJPI6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Dec 2007 10:08:58 -0500
-In-Reply-To: <20071209210729.A20635@jurassic.park.msu.ru> "from Ivan Kokshaysky
- at Dec 9, 2007 09:07:29 pm"
+Received: from palinux.external.hp.com ([192.25.206.14]:59798 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753485AbXLJQuc (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Dec 2007 11:50:32 -0500
+Content-Disposition: inline
+In-Reply-To: <200712101354.53575.linux@highpoint-tech.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Cc: Bob Tracy <rct@frus.com>, Michael Cree <mcree@orcon.net.nz>, Kay Sievers <kay.sievers@vrfy.org>, Andrew Morton <akpm@linux-foundation.org>, mingo@elte.hu, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, linux-scsi@vger.kernel.org, greg@kroah.com
+To: HighPoint Linux Team <linux@highpoint-tech.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Ivan Kokshaysky wrote:
-> On Sat, Dec 08, 2007 at 10:19:39PM -0600, Bob Tracy wrote:
-> > I *do* have CONFIG_MAGIC_SYSRQ set.  Anyone care to bet whether my
-> > machine starts working again if I disable it?  Sheesh...
+On Mon, Dec 10, 2007 at 01:54:53PM +0800, HighPoint Linux Team wrote:
+> Most code changes were made to support adapters based on Marvell IOP, plus some
+> other fixes.
 > 
-> Incredible...
-> 
-> Toggling CONFIG_MAGIC_SYSRQ works for me too, so I'm finally able
-> to reproduce the problem (which is the main positive result so far ;-)
-> 
-> There are lots of possible reasons why this happens, but at the
-> moment I honestly have no idea.
-> For now I have reassigned the bug #9457 to myself and will gradually hack
-> into udev...
+> - add more PCI device IDs
+> - support for adapters based on Marvell IOP
 
-Thanks...  Let me know if there's anything useful I can do to help.
+Are you sure it's a good idea to do this?  This patch is 1200 lines long
+... the same size as the existing driver:
 
---Bob T.
+$ wc drivers/scsi/hptiop.*
+  947  2273 24531 drivers/scsi/hptiop.c
+  256   612  6175 drivers/scsi/hptiop.h
+  1203  2885 30706 total
+
+That suggests to me there's not much commonality between the two drivers,
+and you'd be better off adding a second driver for the 4xxx cards.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
