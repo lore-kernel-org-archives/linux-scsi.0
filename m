@@ -1,34 +1,30 @@
-From: Ivan Kokshaysky <ink@jurassic.park.msu.ru>
-Subject: Re: [BUG] 2.6.23-rc3 can't see sd partitions on Alpha
-Date: Sun, 9 Dec 2007 21:07:29 +0300
-Message-ID: <20071209210729.A20635@jurassic.park.msu.ru>
-References: <475B3C23.6010304@orcon.net.nz> <20071209041939.7DE6FDBA2@gherkin.frus.com>
+From: "chang jeff" <recalljeffchang@gmail.com>
+Subject: [PATCH acs_ame scsi driver 000 of 1] Introduction
+Date: Mon, 10 Dec 2007 12:03:18 +0800
+Message-ID: <87d84fba0712092003h3eb90344o89f9b0bc9c65fdb7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from jurassic.park.msu.ru ([195.208.223.243]:36717 "EHLO
-	jurassic.park.msu.ru" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751500AbXLISbr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Dec 2007 13:31:47 -0500
+Received: from py-out-1112.google.com ([64.233.166.180]:58535 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751336AbXLJEDU (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Dec 2007 23:03:20 -0500
+Received: by py-out-1112.google.com with SMTP id u77so3333632pyb
+        for <linux-scsi@vger.kernel.org>; Sun, 09 Dec 2007 20:03:19 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <20071209041939.7DE6FDBA2@gherkin.frus.com>; from rct@frus.com on Sat, Dec 08, 2007 at 10:19:39PM -0600
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bob Tracy <rct@frus.com>
-Cc: Michael Cree <mcree@orcon.net.nz>, Kay Sievers <kay.sievers@vrfy.org>, Andrew Morton <akpm@linux-foundation.org>, mingo@elte.hu, linux-kernel@vger.kernel.org, rjw@sisk.pl, rth@twiddle.net, linux-scsi@vger.kernel.org, greg@kroah.com
+To: akpm@linux-foundation.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Sat, Dec 08, 2007 at 10:19:39PM -0600, Bob Tracy wrote:
-> I *do* have CONFIG_MAGIC_SYSRQ set.  Anyone care to bet whether my
-> machine starts working again if I disable it?  Sheesh...
+Dear Sir,
 
-Incredible...
+Following is patche for scsi driver in 2.6.23.9 what should get into
+2.6.23.9-final if possible.
 
-Toggling CONFIG_MAGIC_SYSRQ works for me too, so I'm finally able
-to reproduce the problem (which is the main positive result so far ;-)
+First refines a newly created scsi driver
+(/[kernel-version]/driver/scsi/acs_ame).
 
-There are lots of possible reasons why this happens, but at the
-moment I honestly have no idea.
-For now I have reassigned the bug #9457 to myself and will gradually hack
-into udev...
-
-Ivan.
+Thanks,
+JeffChang.
