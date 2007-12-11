@@ -1,8 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 14/30] blk_end_request: changing xen-blkfront
-	(take 4)
-Date: Tue, 11 Dec 2007 17:47:36 -0500 (EST)
-Message-ID: <20071211.174736.88347027.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 15/30] blk_end_request: changing viocd (take 4)
+Date: Tue, 11 Dec 2007 17:47:52 -0500 (EST)
+Message-ID: <20071211.174752.76777839.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -18,57 +17,71 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: jeremy@xensource.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
+Cc: linux-scsi@vger.kernel.org, sfr@canb.auug.org.au, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts xen-blkfront to use blk_end_request interfaces.
+This patch converts viocd to use blk_end_request interfaces.
 Related 'uptodate' arguments are converted to 'error'.
 
-Cc: Jeremy Fitzhardinge <jeremy@xensource.com>
+As a result, the interface of internal function, viocd_end_request(),
+is changed.
+
+Cc: Stephen Rothwell <sfr@canb.auug.org.au>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/xen-blkfront.c |   10 ++++------
- 1 files changed, 4 insertions(+), 6 deletions(-)
+ drivers/cdrom/viocd.c |   15 ++++++---------
+ 1 files changed, 6 insertions(+), 9 deletions(-)
 
-Index: 2.6.24-rc4/drivers/block/xen-blkfront.c
+Index: 2.6.24-rc4/drivers/cdrom/viocd.c
 ===================================================================
---- 2.6.24-rc4.orig/drivers/block/xen-blkfront.c
-+++ 2.6.24-rc4/drivers/block/xen-blkfront.c
-@@ -452,7 +452,7 @@ static irqreturn_t blkif_interrupt(int i
- 	RING_IDX i, rp;
- 	unsigned long flags;
- 	struct blkfront_info *info = (struct blkfront_info *)dev_id;
--	int uptodate;
-+	int error;
+--- 2.6.24-rc4.orig/drivers/cdrom/viocd.c
++++ 2.6.24-rc4/drivers/cdrom/viocd.c
+@@ -289,7 +289,7 @@ static int send_request(struct request *
+ 	return 0;
+ }
  
- 	spin_lock_irqsave(&blkif_io_lock, flags);
+-static void viocd_end_request(struct request *req, int uptodate)
++static void viocd_end_request(struct request *req, int error)
+ {
+ 	int nsectors = req->hard_nr_sectors;
  
-@@ -477,13 +477,13 @@ static irqreturn_t blkif_interrupt(int i
+@@ -302,11 +302,8 @@ static void viocd_end_request(struct req
+ 	if (!nsectors)
+ 		nsectors = 1;
  
- 		add_id_to_freelist(info, id);
+-	if (end_that_request_first(req, uptodate, nsectors))
++	if (__blk_end_request(req, error, nsectors << 9))
+ 		BUG();
+-	add_disk_randomness(req->rq_disk);
+-	blkdev_dequeue_request(req);
+-	end_that_request_last(req, uptodate);
+ }
  
--		uptodate = (bret->status == BLKIF_RSP_OKAY);
-+		error = (bret->status == BLKIF_RSP_OKAY) ? 0 : -EIO;
- 		switch (bret->operation) {
- 		case BLKIF_OP_WRITE_BARRIER:
- 			if (unlikely(bret->status == BLKIF_RSP_EOPNOTSUPP)) {
- 				printk(KERN_WARNING "blkfront: %s: write barrier op failed\n",
- 				       info->gd->disk_name);
--				uptodate = -EOPNOTSUPP;
-+				error = -EOPNOTSUPP;
- 				info->feature_barrier = 0;
- 				xlvbd_barrier(info);
- 			}
-@@ -494,10 +494,8 @@ static irqreturn_t blkif_interrupt(int i
- 				dev_dbg(&info->xbdev->dev, "Bad return from blkdev data "
- 					"request: %x\n", bret->status);
+ static int rwreq;
+@@ -317,11 +314,11 @@ static void do_viocd_request(struct requ
  
--			ret = end_that_request_first(req, uptodate,
--				req->hard_nr_sectors);
-+			ret = __blk_end_request(req, error, blk_rq_bytes(req));
- 			BUG_ON(ret);
--			end_that_request_last(req, uptodate);
- 			break;
- 		default:
- 			BUG();
+ 	while ((rwreq == 0) && ((req = elv_next_request(q)) != NULL)) {
+ 		if (!blk_fs_request(req))
+-			viocd_end_request(req, 0);
++			viocd_end_request(req, -EIO);
+ 		else if (send_request(req) < 0) {
+ 			printk(VIOCD_KERN_WARNING
+ 					"unable to send message to OS/400!");
+-			viocd_end_request(req, 0);
++			viocd_end_request(req, -EIO);
+ 		} else
+ 			rwreq++;
+ 	}
+@@ -532,9 +529,9 @@ return_complete:
+ 					"with rc %d:0x%04X: %s\n",
+ 					req, event->xRc,
+ 					bevent->sub_result, err->msg);
+-			viocd_end_request(req, 0);
++			viocd_end_request(req, -EIO);
+ 		} else
+-			viocd_end_request(req, 1);
++			viocd_end_request(req, 0);
+ 
+ 		/* restart handling of incoming requests */
+ 		spin_unlock_irqrestore(&viocd_reqlock, flags);
