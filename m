@@ -1,54 +1,47 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2_check_page: bad entry in
-	directory) (fwd)
-Date: Tue, 11 Dec 2007 22:53:03 +0100
-Message-ID: <1197409983.6288.9.camel@localhost.localdomain>
-References: <20071129130319.GA2642@atrey.karlin.mff.cuni.cz>
-	 <20071129235813Y.tomof@acm.org> <20071129164557.GD30957@1und1.de>
-	 <20071130021226T.tomof@acm.org>  <20071130103450.GC7697@1und1.de>
-	 <1197384034.19679.13.camel@n2o.xs4all.nl>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: scsi/lpfc/lpfc_attr.c: bogus code
+Date: Tue, 11 Dec 2007 23:20:55 +0100
+Message-ID: <20071211222055.GE14204@stusta.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr1.xs4all.nl ([194.109.24.21]:2069 "EHLO
-	smtp-vbr1.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750834AbXLKVwx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Dec 2007 16:52:53 -0500
-In-Reply-To: <1197384034.19679.13.camel@n2o.xs4all.nl>
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:38479 "EHLO
+	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755806AbXLKWU4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Dec 2007 17:20:56 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anders Henke <anders.henke@1und1.de>
-Cc: FUJITA Tomonori <tomof@acm.org>, matthew@wil.cx, jack@ucw.cz, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, miquels@cistron.nl
+To: James Smart <James.Smart@emulex.com>, James Bottomley <James.Bottomley@SteelEye.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, 2007-12-11 at 15:40 +0100, Miquel van Smoorenburg wrote:
-> I just noticed the same bug when I tried to update a 2.6.18 server to
-> 2.6.23.9 .. also tried 2.6.24-rc4. The symptom I'm seeing is that init
-> segfaults, or can't be found .. anyway, driver/fs errors.
-> 
-> In the kernel config, under "processor type and features", I disabled
-> "64GB memory" support (changed to 4GB) and I also disabled "64 bit
-> Memory and IO resources" and the problem went away. Do you by any chance
-> happen to have those features enabled ?
-> 
-> The dpt_i2o driver is not 64-bit clean, it happens to work with
-> PAE/64-bit dma in earlier kernels but that might be by chance. Perhaps
-> the different initialization ordering exposes the problem.
-> 
-> I got the 64-bit dpt_i2o driver from Adaptec some time ago, and I have
-> added 64-bit support to the 2.6.23.1 dpt_i2o driver based on that
-> driver. I intended to submit it for 2.6.25 or so ... if I have some time
-> later today or tomorrow I'll try that next to see if that makes a
-> difference.
+Commit 2e0fef85e098f6794956b8b80b111179fbb4cbb7 added the folowing code 
+to drivers/scsi/lpfc/lpfc_attr.c that was most likely not intended to be 
+dead code:
 
-I just recompiled 2.6.23.9 with the 64 bit patch for dpt_i2o and now it
-boots just fine.
+<--  snip  -->
 
-The patch is here:
-http://www.miquels.cistron.nl/linux/dpt_i2o-64bit-2.6.23.patch
+...
+lpfc_state_show(struct class_device *cdev, char *buf)
+{
+...
+                switch (vport->port_state) {
+                        len += snprintf(buf + len, PAGE_SIZE-len,
+                                        "initializing\n");
+                        break;
+...
 
-It's not the final version - it needs a few cleanups before it can be
-submitted, but perhaps you can test if it also works for you.
+<--  snip  -->
 
-Mike.
+Spotted by the GNU C compiler version 3.3.
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
 
