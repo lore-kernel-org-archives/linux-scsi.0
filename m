@@ -1,8 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 01/30] blk_end_request: add new request completion
- interface (take 4)
-Date: Tue, 11 Dec 2007 17:40:30 -0500 (EST)
-Message-ID: <20071211.174030.10291764.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 02/30] blk_end_request: add/export functions to
+ get request size (take 4)
+Date: Tue, 11 Dec 2007 17:41:17 -0500 (EST)
+Message-ID: <20071211.174117.32341968.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -21,193 +21,89 @@ To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds 2 new interfaces for request completion:
-  o blk_end_request()   : called without queue lock
-  o __blk_end_request() : called with queue lock held
-
-blk_end_request takes 'error' as an argument instead of 'uptodate',
-which current end_that_request_* take.
-The meanings of values are below and the value is used when bio is
-completed.
-    0 : success
-  < 0 : error
-
-Some device drivers call some generic functions below between
-end_that_request_{first/chunk} and end_that_request_last().
-  o add_disk_randomness()
-  o blk_queue_end_tag()
-  o blkdev_dequeue_request()
-These are called in the blk_end_request interfaces as a part of
-generic request completion.
-So all device drivers become to call above functions.
-To decide whether to call blkdev_dequeue_request(), blk_end_request
-uses list_empty(&rq->queuelist) (blk_queued_rq() macro is added for it).
-So drivers must re-initialize it using list_init() or so before calling
-blk_end_request if drivers use it for its specific purpose.
-(Currently, there is no driver which completes request without
- re-initializing the queuelist after used it.  So rq->queuelist
- can be used for the purpose above.)
-
-"Normal" drivers can be converted to use blk_end_request()
-in a standard way shown below.
-
- a) end_that_request_{chunk/first}
-    spin_lock_irqsave()
-    (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
-    end_that_request_last()
-    spin_unlock_irqrestore()
-    => blk_end_request()
-
- b) spin_lock_irqsave()
-    end_that_request_{chunk/first}
-    (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
-    end_that_request_last()
-    spin_unlock_irqrestore()
-    => spin_lock_irqsave()
-       __blk_end_request()
-       spin_unlock_irqsave()
-
- c) spin_lock_irqsave()
-    (add_disk_randomness(), blk_queue_end_tag(), blkdev_dequeue_request())
-    end_that_request_last()
-    spin_unlock_irqrestore()
-    => blk_end_request()   or   spin_lock_irqsave()
-                                __blk_end_request()
-                                spin_unlock_irqrestore()
+This patch adds/exports functions to get the size of request in bytes.
+They are useful because blk_end_request interfaces take bytes
+as a completed I/O size instead of sectors.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- block/ll_rw_blk.c      |   96 +++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    4 ++
- 2 files changed, 100 insertions(+)
+ block/ll_rw_blk.c      |   25 ++++++++++++++++++++++---
+ include/linux/blkdev.h |    8 ++++++++
+ 2 files changed, 30 insertions(+), 3 deletions(-)
 
-Index: 2.6.24-rc4/block/ll_rw_blk.c
-===================================================================
---- 2.6.24-rc4.orig/block/ll_rw_blk.c
-+++ 2.6.24-rc4/block/ll_rw_blk.c
-@@ -3769,6 +3769,102 @@ void end_request(struct request *req, in
- }
- EXPORT_SYMBOL(end_request);
- 
-+static void complete_request(struct request *rq, int error)
-+{
-+	/*
-+	 * REMOVEME: This conversion is transitional and will be removed
-+	 *           when old end_that_request_* are unexported.
-+	 */
-+	int uptodate = 1;
-+	if (error)
-+		uptodate = (error == -EIO) ? 0 : error;
-+
-+	if (blk_rq_tagged(rq))
-+		blk_queue_end_tag(rq->q, rq);
-+
-+	if (blk_queued_rq(rq))
-+		blkdev_dequeue_request(rq);
-+
-+	end_that_request_last(rq, uptodate);
-+}
-+
-+/**
-+ * blk_end_request - Helper function for drivers to complete the request.
-+ * @rq:       the request being processed
-+ * @error:    0 for success, < 0 for error
-+ * @nr_bytes: number of bytes to complete
-+ *
-+ * Description:
-+ *     Ends I/O on a number of bytes attached to @rq.
-+ *     If @rq has leftover, sets it up for the next range of segments.
-+ *
-+ * Return:
-+ *     0 - we are done with this request
-+ *     1 - still buffers pending for this request
-+ **/
-+int blk_end_request(struct request *rq, int error, int nr_bytes)
-+{
-+	struct request_queue *q = rq->q;
-+	unsigned long flags = 0UL;
-+	/*
-+	 * REMOVEME: This conversion is transitional and will be removed
-+	 *           when old end_that_request_* are unexported.
-+	 */
-+	int uptodate = 1;
-+	if (error)
-+		uptodate = (error == -EIO) ? 0 : error;
-+
-+	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-+		if (__end_that_request_first(rq, uptodate, nr_bytes))
-+			return 1;
-+	}
-+
-+	add_disk_randomness(rq->rq_disk);
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	complete_request(rq, error);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(blk_end_request);
-+
-+/**
-+ * __blk_end_request - Helper function for drivers to complete the request.
-+ * @rq:       the request being processed
-+ * @error:    0 for success, < 0 for error
-+ * @nr_bytes: number of bytes to complete
-+ *
-+ * Description:
-+ *     Must be called with queue lock held unlike blk_end_request().
-+ *
-+ * Return:
-+ *     0 - we are done with this request
-+ *     1 - still buffers pending for this request
-+ **/
-+int __blk_end_request(struct request *rq, int error, int nr_bytes)
-+{
-+	/*
-+	 * REMOVEME: This conversion is transitional and will be removed
-+	 *           when old end_that_request_* are unexported.
-+	 */
-+	int uptodate = 1;
-+	if (error)
-+		uptodate = (error == -EIO) ? 0 : error;
-+
-+	if (blk_fs_request(rq) || blk_pc_request(rq)) {
-+		if (__end_that_request_first(rq, uptodate, nr_bytes))
-+			return 1;
-+	}
-+
-+	add_disk_randomness(rq->rq_disk);
-+
-+	complete_request(rq, error);
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(__blk_end_request);
-+
- static void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
- 			    struct bio *bio)
- {
 Index: 2.6.24-rc4/include/linux/blkdev.h
 ===================================================================
 --- 2.6.24-rc4.orig/include/linux/blkdev.h
 +++ 2.6.24-rc4/include/linux/blkdev.h
-@@ -539,6 +539,8 @@ enum {
- #define blk_fua_rq(rq)		((rq)->cmd_flags & REQ_FUA)
- #define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
- #define blk_empty_barrier(rq)	(blk_barrier_rq(rq) && blk_fs_request(rq) && !(rq)->hard_nr_sectors)
-+/* rq->queuelist of dequeued request must be list_empty() */
-+#define blk_queued_rq(rq)	(!list_empty(&(rq)->queuelist))
+@@ -739,6 +739,14 @@ extern void end_dequeued_request(struct 
+ extern void blk_complete_request(struct request *);
  
- #define list_entry_rq(ptr)	list_entry((ptr), struct request, queuelist)
+ /*
++ * blk_end_request() takes bytes instead of sectors as a complete size.
++ * blk_rq_bytes() returns bytes left to complete in the entire request.
++ * blk_rq_cur_bytes() returns bytes left to complete in the current segment.
++ */
++extern unsigned int blk_rq_bytes(struct request *rq);
++extern unsigned int blk_rq_cur_bytes(struct request *rq);
++
++/*
+  * end_that_request_first/chunk() takes an uptodate argument. we account
+  * any value <= as an io error. 0 means -EIO for compatability reasons,
+  * any other < 0 value is the direct error type. An uptodate value of
+Index: 2.6.24-rc4/block/ll_rw_blk.c
+===================================================================
+--- 2.6.24-rc4.orig/block/ll_rw_blk.c
++++ 2.6.24-rc4/block/ll_rw_blk.c
+@@ -3701,13 +3701,32 @@ static inline void __end_request(struct 
+ 	}
+ }
  
-@@ -726,6 +728,8 @@ static inline void blk_run_address_space
-  * for parts of the original function. This prevents
-  * code duplication in drivers.
-  */
-+extern int blk_end_request(struct request *rq, int error, int nr_bytes);
-+extern int __blk_end_request(struct request *rq, int error, int nr_bytes);
- extern int end_that_request_first(struct request *, int, int);
- extern int end_that_request_chunk(struct request *, int, int);
- extern void end_that_request_last(struct request *, int);
+-static unsigned int rq_byte_size(struct request *rq)
++/**
++ * blk_rq_bytes - Returns bytes left to complete in the entire request
++ **/
++unsigned int blk_rq_bytes(struct request *rq)
+ {
+ 	if (blk_fs_request(rq))
+ 		return rq->hard_nr_sectors << 9;
+ 
+ 	return rq->data_len;
+ }
++EXPORT_SYMBOL_GPL(blk_rq_bytes);
++
++/**
++ * blk_rq_cur_bytes - Returns bytes left to complete in the current segment
++ **/
++unsigned int blk_rq_cur_bytes(struct request *rq)
++{
++	if (blk_fs_request(rq))
++		return rq->current_nr_sectors << 9;
++
++	if (rq->bio)
++		return rq->bio->bi_size;
++
++	return rq->data_len;
++}
++EXPORT_SYMBOL_GPL(blk_rq_cur_bytes);
+ 
+ /**
+  * end_queued_request - end all I/O on a queued request
+@@ -3722,7 +3741,7 @@ static unsigned int rq_byte_size(struct 
+  **/
+ void end_queued_request(struct request *rq, int uptodate)
+ {
+-	__end_request(rq, uptodate, rq_byte_size(rq), 1);
++	__end_request(rq, uptodate, blk_rq_bytes(rq), 1);
+ }
+ EXPORT_SYMBOL(end_queued_request);
+ 
+@@ -3739,7 +3758,7 @@ EXPORT_SYMBOL(end_queued_request);
+  **/
+ void end_dequeued_request(struct request *rq, int uptodate)
+ {
+-	__end_request(rq, uptodate, rq_byte_size(rq), 0);
++	__end_request(rq, uptodate, blk_rq_bytes(rq), 0);
+ }
+ EXPORT_SYMBOL(end_dequeued_request);
+ 
