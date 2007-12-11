@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 06/30] blk_end_request: changing DAC960 (take 4)
-Date: Tue, 11 Dec 2007 17:43:15 -0500 (EST)
-Message-ID: <20071211.174315.57154895.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 07/30] blk_end_request: changing floppy (take 4)
+Date: Tue, 11 Dec 2007 17:43:40 -0500 (EST)
+Message-ID: <20071211.174340.107680113.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -20,38 +20,64 @@ To: jens.axboe@oracle.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts DAC960 to use blk_end_request interfaces.
-Related 'UpToDate' arguments are converted to 'Error'.
+This patch converts floppy to use blk_end_request interfaces.
+Related 'uptodate' arguments are converted to 'error'.
+
+As a result, the interface of internal function, floppy_end_request(),
+is changed.
 
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/DAC960.c |   11 ++---------
- 1 files changed, 2 insertions(+), 9 deletions(-)
+ drivers/block/floppy.c |   16 +++++++---------
+ 1 files changed, 7 insertions(+), 9 deletions(-)
 
-Index: 2.6.24-rc4/drivers/block/DAC960.c
+Index: 2.6.24-rc4/drivers/block/floppy.c
 ===================================================================
---- 2.6.24-rc4.orig/drivers/block/DAC960.c
-+++ 2.6.24-rc4/drivers/block/DAC960.c
-@@ -3455,19 +3455,12 @@ static inline bool DAC960_ProcessComplet
- 						 bool SuccessfulIO)
+--- 2.6.24-rc4.orig/drivers/block/floppy.c
++++ 2.6.24-rc4/drivers/block/floppy.c
+@@ -2287,21 +2287,19 @@ static int do_format(int drive, struct f
+  * =============================
+  */
+ 
+-static void floppy_end_request(struct request *req, int uptodate)
++static void floppy_end_request(struct request *req, int error)
  {
- 	struct request *Request = Command->Request;
--	int UpToDate;
--
--	UpToDate = 0;
--	if (SuccessfulIO)
--		UpToDate = 1;
-+	int Error = SuccessfulIO ? 0 : -EIO;
+ 	unsigned int nr_sectors = current_count_sectors;
++	unsigned int drive = (unsigned int)req->rq_disk->private_data;
  
- 	pci_unmap_sg(Command->Controller->PCIDevice, Command->cmd_sglist,
- 		Command->SegmentCount, Command->DmaDirection);
+ 	/* current_count_sectors can be zero if transfer failed */
+-	if (!uptodate)
++	if (error)
+ 		nr_sectors = req->current_nr_sectors;
+-	if (end_that_request_first(req, uptodate, nr_sectors))
++	if (__blk_end_request(req, error, nr_sectors << 9))
+ 		return;
+-	add_disk_randomness(req->rq_disk);
+-	floppy_off((long)req->rq_disk->private_data);
+-	blkdev_dequeue_request(req);
+-	end_that_request_last(req, uptodate);
  
--	 if (!end_that_request_first(Request, UpToDate, Command->BlockCount)) {
--		add_disk_randomness(Request->rq_disk);
-- 	 	end_that_request_last(Request, UpToDate);
--
-+	 if (!__blk_end_request(Request, Error, Command->BlockCount << 9)) {
- 		if (Command->Completion) {
- 			complete(Command->Completion);
- 			Command->Completion = NULL;
+ 	/* We're done with the request */
++	floppy_off(drive);
+ 	current_req = NULL;
+ }
+ 
+@@ -2332,7 +2330,7 @@ static void request_done(int uptodate)
+ 
+ 		/* unlock chained buffers */
+ 		spin_lock_irqsave(q->queue_lock, flags);
+-		floppy_end_request(req, 1);
++		floppy_end_request(req, 0);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+ 	} else {
+ 		if (rq_data_dir(req) == WRITE) {
+@@ -2346,7 +2344,7 @@ static void request_done(int uptodate)
+ 			DRWE->last_error_generation = DRS->generation;
+ 		}
+ 		spin_lock_irqsave(q->queue_lock, flags);
+-		floppy_end_request(req, 0);
++		floppy_end_request(req, -EIO);
+ 		spin_unlock_irqrestore(q->queue_lock, flags);
+ 	}
+ }
