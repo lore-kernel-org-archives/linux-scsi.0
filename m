@@ -1,37 +1,45 @@
 From: Adrian Bunk <bunk@kernel.org>
-Subject: [2.6 patch] scsi/megaraid.c: __devexit annotation
-Date: Tue, 11 Dec 2007 23:23:31 +0100
-Message-ID: <20071211222331.GW14204@stusta.de>
+Subject: [2.6 patch] drivers/scsi/advansys.c section fix
+Date: Tue, 11 Dec 2007 23:23:53 +0100
+Message-ID: <20071211222353.GZ14204@stusta.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emailhub.stusta.mhn.de ([141.84.69.5]:38538 "EHLO
+Received: from mailout.stusta.mhn.de ([141.84.69.5]:38550 "EHLO
 	mailhub.stusta.mhn.de" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756033AbXLKWXa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Dec 2007 17:23:30 -0500
+	with ESMTP id S1757306AbXLKWXx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Dec 2007 17:23:53 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, James.Bottomley@HansenPartnership.com
+To: matthew@wil.cx, James.Bottomley@HansenPartnership.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-megaraid_remove_one() can become __devexit.
+This patch fixes the following section mismatch with CONFIG_HOTPLUG=n:
+
+<--  snip  -->
+
+...
+WARNING: vmlinux.o(.exit.text+0xcf8a): Section mismatch: reference to .init.data:_asc_def_iop_base (between 'advansys_isa_remove' and 'exit_this_scsi_driver')
+...
+
+<--  snip  -->
 
 Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
 ---
-b7d71f38d1c1aa66311e862b58f36aa34c888f98 
-diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c
-index 66c6520..765c24d 100644
---- a/drivers/scsi/megaraid.c
-+++ b/drivers/scsi/megaraid.c
-@@ -4889,7 +4889,7 @@ __megaraid_shutdown(adapter_t *adapter)
- 		mdelay(1000);
- }
+e81cac11f9efe882a89708c298fa6268375b0221 
+diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
+index 9dd3952..38a1ee2 100644
+--- a/drivers/scsi/advansys.c
++++ b/drivers/scsi/advansys.c
+@@ -13906,7 +13906,7 @@ static int advansys_release(struct Scsi_Host *shost)
  
--static void
-+static void __devexit
- megaraid_remove_one(struct pci_dev *pdev)
- {
- 	struct Scsi_Host *host = pci_get_drvdata(pdev);
+ #define ASC_IOADR_TABLE_MAX_IX  11
+ 
+-static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] __devinitdata = {
++static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] = {
+ 	0x100, 0x0110, 0x120, 0x0130, 0x140, 0x0150, 0x0190,
+ 	0x0210, 0x0230, 0x0250, 0x0330
+ };
 
