@@ -1,75 +1,70 @@
-From: Steven Pratt <slpratt@austin.ibm.com>
-Subject: Re: MPTSAS Driver and scatter gather lists
-Date: Tue, 11 Dec 2007 08:59:57 -0600
-Message-ID: <475EA5ED.3070603@austin.ibm.com>
-References: <47557600.5040902@austin.ibm.com> <ac8af0be0712110018s647b0d04o5dc96dbe318a9759@mail.gmail.com>
+From: Miquel van Smoorenburg <miquels@cistron.nl>
+Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2_check_page: bad entry in
+	directory) (fwd)
+Date: Tue, 11 Dec 2007 15:40:34 +0100
+Message-ID: <1197384034.19679.13.camel@n2o.xs4all.nl>
+References: <20071129130319.GA2642@atrey.karlin.mff.cuni.cz>
+	 <20071129235813Y.tomof@acm.org> <20071129164557.GD30957@1und1.de>
+	 <20071130021226T.tomof@acm.org>  <20071130103450.GC7697@1und1.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e3.ny.us.ibm.com ([32.97.182.143]:36607 "EHLO e3.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751577AbXLKPAS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Dec 2007 10:00:18 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id lBBExwrZ009579
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:59:58 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lBBExw2i101976
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:59:58 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lBBExw3R013836
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:59:58 -0500
-In-Reply-To: <ac8af0be0712110018s647b0d04o5dc96dbe318a9759@mail.gmail.com>
+Received: from smtp-vbr9.xs4all.nl ([194.109.24.29]:3808 "EHLO
+	smtp-vbr9.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752299AbXLKPCn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Dec 2007 10:02:43 -0500
+In-Reply-To: <20071130103450.GC7697@1und1.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhao Forrest <forrest.zhao@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Anders Henke <anders.henke@1und1.de>
+Cc: FUJITA Tomonori <tomof@acm.org>, matthew@wil.cx, jack@ucw.cz, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, miquels@cistron.nl
 
-Zhao Forrest wrote:
-> Steve,
-> Do you use a 10k RPM SAS hard drive? Could you share that what test
-> tools(or test cases) are you using to do the block IO test? We have a
-> LSI SAS1068E chip and 10k RPM SAS hard drive in our lab. I'll find
-> some time to reproduce the issue and do some investigation.
+On Fri, 2007-11-30 at 11:34 +0100, Anders Henke wrote:
+> Am 30.11.2007 schrieb FUJITA Tomonori:
+> > > > > According to the 2.6.23-rc1 short-form changelog, there is
+> > > > > one major edit on the dpt_i2o driver:
+> > > > > 
+> > > > > FUJITA Tomonori 
+> > > > > 
+> > > > >       [SCSI] dpt_i2o: convert to use the data buffer accessors
+> > > > > 
+> > > > > Stephen Rothwell 
+> > > > >       dpt_i2o depends on virt_to_bus
+> > > > > 
+> > > > > Fujita, would you please take a look at this?
+> > > > 
 >
->   
-I've been using 10k and 15k drives (although these particular tests were 
-from 15k).  I've been mostly using an internal IO tool, but this is 
-easily reproducible with dd using the iflag=direct to force ODIRECT. 
+> In between, I've ruled out that the static assignment isn't
+> source of the problem.  And due to some manually made "make clean" which 
+> didn't clean enough, I've also pointed out the wrong patch - sorry,
+> Fujita, definitely the right one which breaks my boxes is the dpt_i2o patch 
+> from 2.6.23-rc2 to 2.6.23-rc3 (7 kb in Size) from Matthew Wilcox.
+> 
+> commit 55d9fcf57ba5ec427544fca7abc335cf3da78160
+> Author: Matthew Wilcox <matthew@wil.cx>
+> Date:   Mon Jul 30 15:19:18 2007 -0600
+> 
+>     [SCSI] dpt_i2o: convert to SCSI hotplug model
 
-Steve
+I just noticed the same bug when I tried to update a 2.6.18 server to
+2.6.23.9 .. also tried 2.6.24-rc4. The symptom I'm seeing is that init
+segfaults, or can't be found .. anyway, driver/fs errors.
 
-> Thanks,
-> Forrest
->
-> On 12/4/07, Steven Pratt <slpratt@austin.ibm.com> wrote:
->   
->> I was doing some performance comparisons between the aic94xx sas adapter
->> and the mptsas (lsi1078 chip) and saw that performance was slightly
->> lower on lsi using the same drive. One thing I noticed the mptsas driver
->> was only setting sg_tablesize to 40 which restricts the maximum size of
->> the IO to 160kb.  This is inefficient and so I changed it to 255 (max
->> value) for testing purposes.  The results were not what I expected.
->> While CPU efficiency was improved at the larger block sizes (like I had
->> hopped), there were drastic improvements at small (<16k) block sizes
->> which is completely surprising).  So I decided to see where all the time
->> was being spent.  When doing oprofile, loss of idle ticks was confusing
->> things so I booted with idle=poll, and magically the original mptsas
->> driver now performs like the modified version at the small block sizes.
->> My suspicion is that we have some some sleep delay which is minimized by
->> going into poll mode, but I have no idea why changing the sg_tablesize
->> gives the same results regardless of poll mode.  I should reiterate that
->> I am not talking about small difference. This is 2x performance at 1/3 cpu.
->>
->> Also, is there any reason we can't increase sg_tablesize for mptsas?
->>
->> Any thoughts or experiments to try are welcome.
->> Steve
->> -
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->>     
+In the kernel config, under "processor type and features", I disabled
+"64GB memory" support (changed to 4GB) and I also disabled "64 bit
+Memory and IO resources" and the problem went away. Do you by any chance
+happen to have those features enabled ?
+
+The dpt_i2o driver is not 64-bit clean, it happens to work with
+PAE/64-bit dma in earlier kernels but that might be by chance. Perhaps
+the different initialization ordering exposes the problem.
+
+I got the 64-bit dpt_i2o driver from Adaptec some time ago, and I have
+added 64-bit support to the 2.6.23.1 dpt_i2o driver based on that
+driver. I intended to submit it for 2.6.25 or so ... if I have some time
+later today or tomorrow I'll try that next to see if that makes a
+difference.
+
+Mike.
 
