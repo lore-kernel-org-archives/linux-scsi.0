@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 17/30] blk_end_request: changing mmc (take 4)
-Date: Tue, 11 Dec 2007 17:48:29 -0500 (EST)
-Message-ID: <20071211.174829.80034187.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 19/30] blk_end_request: changing ide-scsi (take 4)
+Date: Tue, 11 Dec 2007 17:49:29 -0500 (EST)
+Message-ID: <20071211.174929.129777486.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -17,85 +17,42 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, drzeus-mmc@drzeus.cx
+Cc: bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts mmc to use blk_end_request interfaces.
+This patch converts ide-scsi to use blk_end_request interfaces.
 Related 'uptodate' arguments are converted to 'error'.
 
-Cc: Pierre Ossman <drzeus-mmc@drzeus.cx>
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/mmc/card/block.c |   24 +++++-------------------
- drivers/mmc/card/queue.c |    4 ++--
- 2 files changed, 7 insertions(+), 21 deletions(-)
+ drivers/scsi/ide-scsi.c |    8 ++++----
+ 1 files changed, 4 insertions(+), 4 deletions(-)
 
-Index: 2.6.24-rc4/drivers/mmc/card/block.c
+Index: 2.6.24-rc4/drivers/scsi/ide-scsi.c
 ===================================================================
---- 2.6.24-rc4.orig/drivers/mmc/card/block.c
-+++ 2.6.24-rc4/drivers/mmc/card/block.c
-@@ -348,15 +348,7 @@ static int mmc_blk_issue_rq(struct mmc_q
- 		 * A block was successfully transferred.
- 		 */
- 		spin_lock_irq(&md->lock);
--		ret = end_that_request_chunk(req, 1, brq.data.bytes_xfered);
--		if (!ret) {
--			/*
--			 * The whole request completed successfully.
--			 */
--			add_disk_randomness(req->rq_disk);
--			blkdev_dequeue_request(req);
--			end_that_request_last(req, 1);
--		}
-+		ret = __blk_end_request(req, 0, brq.data.bytes_xfered);
- 		spin_unlock_irq(&md->lock);
- 	} while (ret);
- 
-@@ -386,27 +378,21 @@ static int mmc_blk_issue_rq(struct mmc_q
- 			else
- 				bytes = blocks << 9;
- 			spin_lock_irq(&md->lock);
--			ret = end_that_request_chunk(req, 1, bytes);
-+			ret = __blk_end_request(req, 0, bytes);
- 			spin_unlock_irq(&md->lock);
- 		}
- 	} else if (rq_data_dir(req) != READ &&
- 		   (card->host->caps & MMC_CAP_MULTIWRITE)) {
- 		spin_lock_irq(&md->lock);
--		ret = end_that_request_chunk(req, 1, brq.data.bytes_xfered);
-+		ret = __blk_end_request(req, 0, brq.data.bytes_xfered);
- 		spin_unlock_irq(&md->lock);
+--- 2.6.24-rc4.orig/drivers/scsi/ide-scsi.c
++++ 2.6.24-rc4/drivers/scsi/ide-scsi.c
+@@ -921,8 +921,8 @@ static int idescsi_eh_reset (struct scsi
  	}
  
- 	mmc_release_host(card->host);
- 
- 	spin_lock_irq(&md->lock);
--	while (ret) {
--		ret = end_that_request_chunk(req, 0,
--				req->current_nr_sectors << 9);
--	}
--
--	add_disk_randomness(req->rq_disk);
+ 	/* kill current request */
 -	blkdev_dequeue_request(req);
 -	end_that_request_last(req, 0);
-+	while (ret)
-+		ret = __blk_end_request(req, -EIO, blk_rq_cur_bytes(req));
- 	spin_unlock_irq(&md->lock);
++	if (__blk_end_request(req, -EIO, 0))
++		BUG();
+ 	if (blk_sense_request(req))
+ 		kfree(scsi->pc->buffer);
+ 	kfree(scsi->pc);
+@@ -931,8 +931,8 @@ static int idescsi_eh_reset (struct scsi
  
- 	return 0;
-Index: 2.6.24-rc4/drivers/mmc/card/queue.c
-===================================================================
---- 2.6.24-rc4.orig/drivers/mmc/card/queue.c
-+++ 2.6.24-rc4/drivers/mmc/card/queue.c
-@@ -94,8 +94,8 @@ static void mmc_request(struct request_q
- 		printk(KERN_ERR "MMC: killing requests for dead queue\n");
- 		while ((req = elv_next_request(q)) != NULL) {
- 			do {
--				ret = end_that_request_chunk(req, 0,
--					req->current_nr_sectors << 9);
-+				ret = __blk_end_request(req, -EIO,
-+							blk_rq_cur_bytes(req));
- 			} while (ret);
- 		}
- 		return;
+ 	/* now nuke the drive queue */
+ 	while ((req = elv_next_request(drive->queue))) {
+-		blkdev_dequeue_request(req);
+-		end_that_request_last(req, 0);
++		if (__blk_end_request(req, -EIO, 0))
++			BUG();
+ 	}
+ 
+ 	HWGROUP(drive)->rq = NULL;
