@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 04/30] blk_end_request: changing arm (take 4)
-Date: Tue, 11 Dec 2007 17:42:27 -0500 (EST)
-Message-ID: <20071211.174227.66055336.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 05/30] blk_end_request: changing um (take 4)
+Date: Tue, 11 Dec 2007 17:42:53 -0500 (EST)
+Message-ID: <20071211.174253.106440139.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -17,69 +17,56 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, toshihiro.kobayashi@nokia.com, Hiroshi.DOYU@nokia.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
+Cc: linux-scsi@vger.kernel.org, jdike@karaya.com, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts arm's OMAP mailbox driver to use
-blk_end_request interfaces.
+This patch converts um to use blk_end_request interfaces.
+Related 'uptodate' arguments are converted to 'error'.
 
-If the original code was converted literally, blk_end_request would
-be called with '-EIO' because end_that_request_last() were called
-with '0' (i.e. failure).
-But I think these '0's are bugs in the original code because it's
-unlikely that all requests are treated as failure.
-(The bugs should have no effect unless these requests have an end_io
- callback.)
+As a result, the interface of internal function, ubd_end_request(),
+is changed.
 
-So I changed them to pass '0' (i.e. success) to blk_end_request.
-
-Cc: Toshihiro Kobayashi <toshihiro.kobayashi@nokia.com>
-Cc: Hiroshi DOYU <Hiroshi.DOYU@nokia.com>
+Cc: Jeff Dike <jdike@karaya.com>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
+ arch/um/drivers/ubd_kern.c |   16 ++++------------
+ 1 files changed, 4 insertions(+), 12 deletions(-)
 
- arch/arm/plat-omap/mailbox.c |   16 ++++++----------
- 1 files changed, 6 insertions(+), 10 deletions(-)
-
-Index: 2.6.24-rc4/arch/arm/plat-omap/mailbox.c
+Index: 2.6.24-rc4/arch/um/drivers/ubd_kern.c
 ===================================================================
---- 2.6.24-rc4.orig/arch/arm/plat-omap/mailbox.c
-+++ 2.6.24-rc4/arch/arm/plat-omap/mailbox.c
-@@ -116,8 +116,8 @@ static void mbox_tx_work(struct work_str
- 		}
+--- 2.6.24-rc4.orig/arch/um/drivers/ubd_kern.c
++++ 2.6.24-rc4/arch/um/drivers/ubd_kern.c
+@@ -475,17 +475,9 @@ static void do_ubd_request(struct reques
+ /* Only changed by ubd_init, which is an initcall. */
+ int thread_fd = -1;
  
- 		spin_lock(q->queue_lock);
--		blkdev_dequeue_request(rq);
--		end_that_request_last(rq, 0);
-+		if (__blk_end_request(rq, 0, 0))
-+			BUG();
- 		spin_unlock(q->queue_lock);
- 	}
+-static void ubd_end_request(struct request *req, int bytes, int uptodate)
++static void ubd_end_request(struct request *req, int bytes, int error)
+ {
+-	if (!end_that_request_first(req, uptodate, bytes >> 9)) {
+-		struct ubd *dev = req->rq_disk->private_data;
+-		unsigned long flags;
+-
+-		add_disk_randomness(req->rq_disk);
+-		spin_lock_irqsave(&dev->lock, flags);
+-		end_that_request_last(req, uptodate);
+-		spin_unlock_irqrestore(&dev->lock, flags);
+-	}
++	blk_end_request(req, error, bytes);
  }
-@@ -149,10 +149,8 @@ static void mbox_rx_work(struct work_str
  
- 		msg = (mbox_msg_t) rq->data;
- 
--		spin_lock_irqsave(q->queue_lock, flags);
--		blkdev_dequeue_request(rq);
--		end_that_request_last(rq, 0);
--		spin_unlock_irqrestore(q->queue_lock, flags);
-+		if (blk_end_request(rq, 0, 0))
-+			BUG();
- 
- 		mbox->rxq->callback((void *)msg);
+ /* Callable only from interrupt context - otherwise you need to do
+@@ -493,10 +485,10 @@ static void ubd_end_request(struct reque
+ static inline void ubd_finish(struct request *req, int bytes)
+ {
+ 	if(bytes < 0){
+-		ubd_end_request(req, 0, 0);
++		ubd_end_request(req, 0, -EIO);
+ 		return;
  	}
-@@ -263,10 +261,8 @@ omap_mbox_read(struct device *dev, struc
+-	ubd_end_request(req, bytes, 1);
++	ubd_end_request(req, bytes, 0);
+ }
  
- 		*p = (mbox_msg_t) rq->data;
- 
--		spin_lock_irqsave(q->queue_lock, flags);
--		blkdev_dequeue_request(rq);
--		end_that_request_last(rq, 0);
--		spin_unlock_irqrestore(q->queue_lock, flags);
-+		if (blk_end_request(rq, 0, 0))
-+			BUG();
- 
- 		if (unlikely(mbox_seq_test(mbox, *p))) {
- 			pr_info("mbox: Illegal seq bit!(%08x) ignored\n", *p);
+ static LIST_HEAD(restart);
