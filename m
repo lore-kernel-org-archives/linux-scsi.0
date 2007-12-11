@@ -1,7 +1,8 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 22/30] blk_end_request: changing cpqarray (take 4)
-Date: Tue, 11 Dec 2007 17:50:21 -0500 (EST)
-Message-ID: <20071211.175021.39666150.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 23/30] blk_end_request: changing ide normal
+	caller (take 4)
+Date: Tue, 11 Dec 2007 17:50:41 -0500 (EST)
+Message-ID: <20071211.175041.15586071.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -17,111 +18,123 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: mike.miller@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
+Cc: bzolnier@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts cpqarray to use blk_end_request interfaces.
-Related 'ok' arguments are converted to 'error'.
+This patch converts "normal" parts of ide to use blk_end_request
+interfaces.  Related 'uptodate' arguments are converted to 'error'.
 
-cpqarray is a little bit different from "normal" drivers.
-cpqarray directly calls bio_endio() and disk_stat_add()
-when completing request.  But those can be replaced with
-__end_that_request_first().
-After the replacement, request completion procedures of
-those drivers become like the following:
-    o end_that_request_first()
-    o add_disk_randomness()
-    o end_that_request_last()
-This can be converted to __blk_end_request() by following
-the rule (b) mentioned in the patch subject
-"[PATCH 01/30] blk_end_request: add new request completion interface".
+The conversion of 'uptodate' to 'error' is done only for the internal
+function, __ide_end_request().
+ide_end_request() was not changed since it's exported and used
+by many ide drivers.
 
-Cc: Mike Miller <mike.miller@hp.com>
+
+With this patch, blkdev_dequeue_request() in __ide_end_request() is
+moved to blk_end_request, since blk_end_request takes care of
+dequeueing request like below:
+
+	if (!list_empty(&rq->queuelist))
+		blkdev_dequeue_request(rq);
+
+In the case of ide,
+  o 'dequeue' variable of __ide_end_request() is 1 only when the request
+    is still linked to the queue (i.e. rq->queuelist is not empty)
+  o 'dequeue' variable of __ide_end_request() is 0 only when the request
+    has already been removed from the queue (i.e. rq->queuelist is empty)
+So blk_end_request can handle it correctly although ide always run
+thought the code above.
+
+Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/cpqarray.c |   36 +++++++-----------------------------
- 1 files changed, 7 insertions(+), 29 deletions(-)
+ drivers/ide/ide-cd.c |    6 +++---
+ drivers/ide/ide-io.c |   25 ++++++++++++-------------
+ 2 files changed, 15 insertions(+), 16 deletions(-)
 
-Index: 2.6.24-rc4/drivers/block/cpqarray.c
+Index: 2.6.24-rc4/drivers/ide/ide-cd.c
 ===================================================================
---- 2.6.24-rc4.orig/drivers/block/cpqarray.c
-+++ 2.6.24-rc4/drivers/block/cpqarray.c
-@@ -167,7 +167,6 @@ static void start_io(ctlr_info_t *h);
- 
- static inline void addQ(cmdlist_t **Qptr, cmdlist_t *c);
- static inline cmdlist_t *removeQ(cmdlist_t **Qptr, cmdlist_t *c);
--static inline void complete_buffers(struct bio *bio, int ok);
- static inline void complete_command(cmdlist_t *cmd, int timeout);
- 
- static irqreturn_t do_ida_intr(int irq, void *dev_id);
-@@ -980,26 +979,13 @@ static void start_io(ctlr_info_t *h)
- 	}
- }
- 
--static inline void complete_buffers(struct bio *bio, int ok)
--{
--	struct bio *xbh;
--
--	while (bio) {
--		xbh = bio->bi_next;
--		bio->bi_next = NULL;
--		
--		bio_endio(bio, ok ? 0 : -EIO);
--
--		bio = xbh;
--	}
--}
- /*
-  * Mark all buffers that cmd was responsible for
-  */
- static inline void complete_command(cmdlist_t *cmd, int timeout)
+--- 2.6.24-rc4.orig/drivers/ide/ide-cd.c
++++ 2.6.24-rc4/drivers/ide/ide-cd.c
+@@ -655,9 +655,9 @@ static void cdrom_end_request (ide_drive
+ 					BUG();
+ 			} else {
+ 				spin_lock_irqsave(&ide_lock, flags);
+-				end_that_request_chunk(failed, 0,
+-							failed->data_len);
+-				end_that_request_last(failed, 0);
++				if (__blk_end_request(failed, -EIO,
++						      failed->data_len))
++					BUG();
+ 				spin_unlock_irqrestore(&ide_lock, flags);
+ 			}
+ 		} else
+Index: 2.6.24-rc4/drivers/ide/ide-io.c
+===================================================================
+--- 2.6.24-rc4.orig/drivers/ide/ide-io.c
++++ 2.6.24-rc4/drivers/ide/ide-io.c
+@@ -58,15 +58,19 @@ static int __ide_end_request(ide_drive_t
+ 			     int uptodate, unsigned int nr_bytes, int dequeue)
  {
- 	struct request *rq = cmd->rq;
--	int ok=1;
+ 	int ret = 1;
 +	int error = 0;
- 	int i, ddir;
++
++	if (uptodate <= 0)
++		error = uptodate ? uptodate : -EIO;
  
- 	if (cmd->req.hdr.rcode & RCODE_NONFATAL &&
-@@ -1011,16 +997,17 @@ static inline void complete_command(cmdl
- 	if (cmd->req.hdr.rcode & RCODE_FATAL) {
- 		printk(KERN_WARNING "Fatal error on ida/c%dd%d\n",
- 				cmd->ctlr, cmd->hdr.unit);
--		ok = 0;
-+		error = -EIO;
- 	}
- 	if (cmd->req.hdr.rcode & RCODE_INVREQ) {
- 				printk(KERN_WARNING "Invalid request on ida/c%dd%d = (cmd=%x sect=%d cnt=%d sg=%d ret=%x)\n",
- 				cmd->ctlr, cmd->hdr.unit, cmd->req.hdr.cmd,
- 				cmd->req.hdr.blk, cmd->req.hdr.blk_cnt,
- 				cmd->req.hdr.sg_cnt, cmd->req.hdr.rcode);
--		ok = 0;	
-+		error = -EIO;
- 	}
--	if (timeout) ok = 0;
-+	if (timeout)
-+		error = -EIO;
- 	/* unmap the DMA mapping for all the scatter gather elements */
- 	if (cmd->req.hdr.cmd == IDA_READ)
- 		ddir = PCI_DMA_FROMDEVICE;
-@@ -1030,18 +1017,9 @@ static inline void complete_command(cmdl
-                 pci_unmap_page(hba[cmd->ctlr]->pci_dev, cmd->req.sg[i].addr,
- 				cmd->req.sg[i].size, ddir);
+ 	/*
+ 	 * if failfast is set on a request, override number of sectors and
+ 	 * complete the whole request right now
+ 	 */
+-	if (blk_noretry_request(rq) && end_io_error(uptodate))
++	if (blk_noretry_request(rq) && error)
+ 		nr_bytes = rq->hard_nr_sectors << 9;
  
--	complete_buffers(rq->bio, ok);
--
--	if (blk_fs_request(rq)) {
--		const int rw = rq_data_dir(rq);
--
--		disk_stat_add(rq->rq_disk, sectors[rw], rq->nr_sectors);
--	}
--
--	add_disk_randomness(rq->rq_disk);
--
- 	DBGPX(printk("Done with %p\n", rq););
--	end_that_request_last(rq, ok ? 1 : -EIO);
-+	if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
+-	if (!blk_fs_request(rq) && end_io_error(uptodate) && !rq->errors)
++	if (!blk_fs_request(rq) && error && !rq->errors)
+ 		rq->errors = -EIO;
+ 
+ 	/*
+@@ -78,14 +82,9 @@ static int __ide_end_request(ide_drive_t
+ 		HWGROUP(drive)->hwif->ide_dma_on(drive);
+ 	}
+ 
+-	if (!end_that_request_chunk(rq, uptodate, nr_bytes)) {
+-		add_disk_randomness(rq->rq_disk);
+-		if (dequeue) {
+-			if (!list_empty(&rq->queuelist))
+-				blkdev_dequeue_request(rq);
++	if (!__blk_end_request(rq, error, nr_bytes)) {
++		if (dequeue)
+ 			HWGROUP(drive)->rq = NULL;
+-		}
+-		end_that_request_last(rq, uptodate);
+ 		ret = 0;
+ 	}
+ 
+@@ -292,9 +291,9 @@ static void ide_complete_pm_request (ide
+ 		drive->blocked = 0;
+ 		blk_start_queue(drive->queue);
+ 	}
+-	blkdev_dequeue_request(rq);
+ 	HWGROUP(drive)->rq = NULL;
+-	end_that_request_last(rq, 1);
++	if (__blk_end_request(rq, 0, 0))
 +		BUG();
+ 	spin_unlock_irqrestore(&ide_lock, flags);
  }
  
- /*
+@@ -391,10 +390,10 @@ void ide_end_drive_cmd (ide_drive_t *dri
+ 	}
+ 
+ 	spin_lock_irqsave(&ide_lock, flags);
+-	blkdev_dequeue_request(rq);
+ 	HWGROUP(drive)->rq = NULL;
+ 	rq->errors = err;
+-	end_that_request_last(rq, !rq->errors);
++	if (__blk_end_request(rq, (rq->errors ? -EIO : 0), 0))
++		BUG();
+ 	spin_unlock_irqrestore(&ide_lock, flags);
+ }
+ 
