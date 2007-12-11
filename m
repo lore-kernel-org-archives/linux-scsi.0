@@ -1,105 +1,44 @@
-From: Yi Zou <yi.zou@intel.com>
-Subject: [PATCH] OpenFCoE: additional patch for using scatterlist in 2.6.24.
-Date: Mon, 10 Dec 2007 17:27:57 -0800
-Message-ID: <20071211012714.27651.69486.stgit@yzou2-DESK.jf.intel.com>
+From: HighPoint Linux Team <linux@highpoint-tech.com>
+Subject: Re: [PATCH][SCSI] hptiop: add more adapter models and other fixes
+Date: Tue, 11 Dec 2007 11:07:37 +0800
+Message-ID: <475DFEF9.6060006@highpoint-tech.com>
+References: <200712101354.53575.linux@highpoint-tech.com> <20071210165030.GB26334@parisc-linux.org>
+Reply-To: linux@highpoint-tech.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:32631 "EHLO mga02.intel.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751502AbXLKB27 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 10 Dec 2007 20:28:59 -0500
+Received: from smtp105.biz.mail.mud.yahoo.com ([68.142.200.253]:37529 "HELO
+	smtp105.biz.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751669AbXLKDHg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 10 Dec 2007 22:07:36 -0500
+In-Reply-To: <20071210165030.GB26334@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James.Bottomley@SteelEye.com
 
-Use sg_next() to walk the list instead of doing sg++ and sg_limit.
+Matthew Wilcox wrote:
+ >> - add more PCI device IDs
+ >> - support for adapters based on Marvell IOP
+ >
+ > Are you sure it's a good idea to do this?  This patch is 1200 lines long
+ > ... the same size as the existing driver:
+ >
+ > $ wc drivers/scsi/hptiop.*
+ >   947  2273 24531 drivers/scsi/hptiop.c
+ >   256   612  6175 drivers/scsi/hptiop.h
+ >   1203  2885 30706 total
+ >
+ > That suggests to me there's not much commonality between the two drivers,
+ > and you'd be better off adding a second driver for the 4xxx cards
 
-Signed-off-by: Yi Zou <yi.zou@intel.com>
----
+The new adapter implementation adds to the driver about 300 lines of
+code (some lines in the original driver was changed slightly to accommodate
+the difference). It is only different from the original models on the
+messaging interface, and still shares same firmware command block
+structures and work flow.
 
- drivers/scsi/ofc/openfc/openfc_scsi.c |   25 +++++++++++++------------
- 1 files changed, 13 insertions(+), 12 deletions(-)
+HighPoint Linux Team
 
-diff --git a/drivers/scsi/ofc/openfc/openfc_scsi.c b/drivers/scsi/ofc/openfc/openfc_scsi.c
-index 86e6895..031d32d 100644
---- a/drivers/scsi/ofc/openfc/openfc_scsi.c
-+++ b/drivers/scsi/ofc/openfc/openfc_scsi.c
-@@ -181,7 +181,7 @@ static void openfc_scsi_send_data(struct fc_scsi_pkt *fsp, struct fc_seq *sp,
- 	struct scsi_cmnd *sc;
- 	struct scatterlist *fsg;
- 	struct scatterlist *sg;
--	struct scatterlist *sg_limit;
-+	u_int nsg;
- 	struct scatterlist local_sg;
- 	struct fc_frame *fp = NULL;
- 	struct openfc_softc *openfcp = fsp->openfcp;
-@@ -226,12 +226,12 @@ static void openfc_scsi_send_data(struct fc_scsi_pkt *fsp, struct fc_seq *sp,
- 	sc = fsp->cmd;
- 	if (sc->use_sg) {
- 		sg = (struct scatterlist *)sc->request_buffer;
--		sg_limit = sg + sc->use_sg;
-+		nsg = sc->use_sg;
- 	} else {
- 		/* this should not happen */
- 		sg_init_one(&local_sg, sc->request_buffer, sc->request_bufflen);
- 		sg = &local_sg;
--		sg_limit = sg + 1;
-+		nsg = 1;
- 	}
- 	remaining = len;
- 	frame_offset = offset;
-@@ -242,10 +242,11 @@ static void openfc_scsi_send_data(struct fc_scsi_pkt *fsp, struct fc_seq *sp,
- 	if (page_count(sg_page(sg)) == 0)
- 		using_sg = 0;
- 
--	while (remaining > 0 && sg < sg_limit) {
-+	while (remaining > 0 && nsg > 0) {
- 		if (offset >= sg->length) {
- 			offset -= sg->length;
--			sg++;
-+			sg = sg_next(sg);
-+			nsg--;
- 			continue;
- 		}
- 		if (!fp) {
-@@ -270,9 +271,8 @@ static void openfc_scsi_send_data(struct fc_scsi_pkt *fsp, struct fc_seq *sp,
- 			 */
- 			ASSERT(fp->fr_sg_len < FC_FRAME_SG_LEN);
- 			fsg = &fp->fr_sg[fp->fr_sg_len++];
--			fsg->page_link = sg->page_link;
--			fsg->offset = sg->offset + offset;
--			fsg->length = sg_bytes;
-+			sg_set_page(fsg, sg_page(sg), sg->offset + offset,
-+				    sg_bytes);
- 		} else {
- 			u_int off = offset + sg->offset;
- 
-@@ -762,7 +762,7 @@ static void openfc_scsi_error(enum fc_event event, void *fsp_arg)
- int openfc_cp_to_user(struct fc_scsi_pkt *fsp, uint offset, void *buf, int len)
- {
- 	struct scatterlist *sg;
--	struct scatterlist *sg_limit;
-+	u_int nsg;
- 	u_int32_t remaining, sg_bytes;
- 	u_int32_t copy_len = 0;
- 	u_int off;
-@@ -772,13 +772,14 @@ int openfc_cp_to_user(struct fc_scsi_pkt *fsp, uint offset, void *buf, int len)
- 	sc = fsp->cmd;
- 
- 	sg = (struct scatterlist *)sc->request_buffer;
--	sg_limit = sg + sc->use_sg;
-+	nsg = sc->use_sg;
- 	remaining = len;
- 
--	while (remaining > 0 && sg < sg_limit) {
-+	while (remaining > 0 && nsg > 0) {
- 		if (offset >= sg->length) {
- 			offset -= sg->length;
--			sg++;
-+			sg = sg_next(sg);
-+			nsg--;
- 			continue;
- 		}
- 		sg_bytes = min(remaining, sg->length - offset);
