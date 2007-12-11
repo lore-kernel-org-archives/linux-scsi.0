@@ -1,8 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 26/30] blk_end_request: add bidi completion
- interface (take 4)
-Date: Tue, 11 Dec 2007 17:51:46 -0500 (EST)
-Message-ID: <20071211.175146.50591362.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 27/30] blk_end_request: changing scsi (take 4)
+Date: Tue, 11 Dec 2007 17:52:09 -0500 (EST)
+Message-ID: <20071211.175209.10128473.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -18,138 +17,133 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, bharrosh@panasas.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch adds a variant of the interface, blk_end_bidi_request(),
-which completes a bidi request.
+This patch converts scsi mid-layer to use blk_end_request interfaces.
+Related 'uptodate' arguments are converted to 'error'.
 
-Bidi request must be completed as a whole, both rq and rq->next_rq
-at once.  So the interface has 2 arguments for completion size.
+As a result, the interface of internal function, scsi_end_request(),
+is changed.
 
-As for ->end_io, only rq->end_io is called (rq->next_rq->end_io is not
-called).  So if special completion handling is needed, the handler
-must be set to rq->end_io.
-And the handler must take care of freeing next_rq too, since
-the interface doesn't care of it if rq->end_io is not NULL.
-
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Cc: Boaz Harrosh <bharrosh@panasas.com>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- block/ll_rw_blk.c      |   40 +++++++++++++++++++++++++++++++++++-----
- include/linux/blkdev.h |    2 ++
- 2 files changed, 37 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_lib.c |   31 +++++++++++--------------------
+ 1 files changed, 11 insertions(+), 20 deletions(-)
 
-Index: 2.6.24-rc4/block/ll_rw_blk.c
+Index: 2.6.24-rc4/drivers/scsi/scsi_lib.c
 ===================================================================
---- 2.6.24-rc4.orig/block/ll_rw_blk.c
-+++ 2.6.24-rc4/block/ll_rw_blk.c
-@@ -3799,6 +3799,9 @@ static void complete_request(struct requ
- 	if (blk_queued_rq(rq))
- 		blkdev_dequeue_request(rq);
- 
-+	if (blk_bidi_rq(rq) && !rq->end_io)
-+		__blk_put_request(rq->next_rq->q, rq->next_rq);
-+
- 	end_that_request_last(rq, uptodate);
- }
- 
-@@ -3806,14 +3809,15 @@ static void complete_request(struct requ
-  * blk_end_io - Generic end_io function to complete a request.
-  * @rq:           the request being processed
-  * @error:        0 for success, < 0 for error
-- * @nr_bytes:     number of bytes to complete
-+ * @nr_bytes:     number of bytes to complete @rq
-+ * @bidi_bytes:   number of bytes to complete @rq->next_rq
-  * @drv_callback: function called between completion of bios in the request
-  *                and completion of the request.
-  *                If the callback returns non 0, this helper returns without
-  *                completion of the request.
+--- 2.6.24-rc4.orig/drivers/scsi/scsi_lib.c
++++ 2.6.24-rc4/drivers/scsi/scsi_lib.c
+@@ -632,7 +632,7 @@ void scsi_run_host_queues(struct Scsi_Ho
+  *		of upper level post-processing and scsi_io_completion).
   *
-  * Description:
-- *     Ends I/O on a number of bytes attached to @rq.
-+ *     Ends I/O on a number of bytes attached to @rq and @rq->next_rq.
-  *     If @rq has leftover, sets it up for the next range of segments.
+  * Arguments:   cmd	 - command that is complete.
+- *              uptodate - 1 if I/O indicates success, <= 0 for I/O error.
++ *              error    - 0 if I/O indicates success, < 0 for I/O error.
+  *              bytes    - number of bytes of completed I/O
+  *		requeue  - indicates whether we should requeue leftovers.
   *
-  * Return:
-@@ -3821,7 +3825,7 @@ static void complete_request(struct requ
-  *     1 - this request is not freed yet, it still has pending buffers.
-  **/
- static int blk_end_io(struct request *rq, int error, int nr_bytes,
--		      int (drv_callback)(struct request *))
-+		      int bidi_bytes, int (drv_callback)(struct request *))
+@@ -647,26 +647,25 @@ void scsi_run_host_queues(struct Scsi_Ho
+  *		at some point during this call.
+  * Notes:	If cmd was requeued, upon return it will be a stale pointer.
+  */
+-static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int uptodate,
++static struct scsi_cmnd *scsi_end_request(struct scsi_cmnd *cmd, int error,
+ 					  int bytes, int requeue)
  {
- 	struct request_queue *q = rq->q;
- 	unsigned long flags = 0UL;
-@@ -3836,6 +3840,11 @@ static int blk_end_io(struct request *rq
- 	if (blk_fs_request(rq) || blk_pc_request(rq)) {
- 		if (__end_that_request_first(rq, uptodate, nr_bytes))
- 			return 1;
-+
-+		/* Bidi request must be completed as a whole */
-+		if (blk_bidi_rq(rq) &&
-+		    __end_that_request_first(rq->next_rq, uptodate, bidi_bytes))
-+			return 1;
+ 	struct request_queue *q = cmd->device->request_queue;
+ 	struct request *req = cmd->request;
+-	unsigned long flags;
+ 
+ 	/*
+ 	 * If there are blocks left over at the end, set up the command
+ 	 * to queue the remainder of them.
+ 	 */
+-	if (end_that_request_chunk(req, uptodate, bytes)) {
++	if (blk_end_request(req, error, bytes)) {
+ 		int leftover = (req->hard_nr_sectors << 9);
+ 
+ 		if (blk_pc_request(req))
+ 			leftover = req->data_len;
+ 
+ 		/* kill remainder if no retrys */
+-		if (!uptodate && blk_noretry_request(req))
+-			end_that_request_chunk(req, 0, leftover);
++		if (error && blk_noretry_request(req))
++			blk_end_request(req, error, leftover);
+ 		else {
+ 			if (requeue) {
+ 				/*
+@@ -681,14 +680,6 @@ static struct scsi_cmnd *scsi_end_reques
+ 		}
  	}
  
- 	/* Special feature for tricky drivers */
-@@ -3867,7 +3876,7 @@ static int blk_end_io(struct request *rq
-  **/
- int blk_end_request(struct request *rq, int error, int nr_bytes)
- {
--	return blk_end_io(rq, error, nr_bytes, NULL);
-+	return blk_end_io(rq, error, nr_bytes, 0, NULL);
+-	add_disk_randomness(req->rq_disk);
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	if (blk_rq_tagged(req))
+-		blk_queue_end_tag(q, req);
+-	end_that_request_last(req, uptodate);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+-
+ 	/*
+ 	 * This will goose the queue request function at the end, so we don't
+ 	 * need to worry about launching another command.
+@@ -985,7 +976,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 	 * are leftovers and there is some kind of error
+ 	 * (result != 0), retry the rest.
+ 	 */
+-	if (scsi_end_request(cmd, 1, good_bytes, result == 0) == NULL)
++	if (scsi_end_request(cmd, 0, good_bytes, result == 0) == NULL)
+ 		return;
+ 
+ 	/* good_bytes = 0, or (inclusive) there were leftovers and
+@@ -999,7 +990,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 				 * and quietly refuse further access.
+ 				 */
+ 				cmd->device->changed = 1;
+-				scsi_end_request(cmd, 0, this_count, 1);
++				scsi_end_request(cmd, -EIO, this_count, 1);
+ 				return;
+ 			} else {
+ 				/* Must have been a power glitch, or a
+@@ -1031,7 +1022,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 				scsi_requeue_command(q, cmd);
+ 				return;
+ 			} else {
+-				scsi_end_request(cmd, 0, this_count, 1);
++				scsi_end_request(cmd, -EIO, this_count, 1);
+ 				return;
+ 			}
+ 			break;
+@@ -1059,7 +1050,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 							 "Device not ready",
+ 							 &sshdr);
+ 
+-			scsi_end_request(cmd, 0, this_count, 1);
++			scsi_end_request(cmd, -EIO, this_count, 1);
+ 			return;
+ 		case VOLUME_OVERFLOW:
+ 			if (!(req->cmd_flags & REQ_QUIET)) {
+@@ -1069,7 +1060,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 				scsi_print_sense("", cmd);
+ 			}
+ 			/* See SSC3rXX or current. */
+-			scsi_end_request(cmd, 0, this_count, 1);
++			scsi_end_request(cmd, -EIO, this_count, 1);
+ 			return;
+ 		default:
+ 			break;
+@@ -1090,7 +1081,7 @@ void scsi_io_completion(struct scsi_cmnd
+ 				scsi_print_sense("", cmd);
+ 		}
+ 	}
+-	scsi_end_request(cmd, 0, this_count, !result);
++	scsi_end_request(cmd, -EIO, this_count, !result);
  }
- EXPORT_SYMBOL_GPL(blk_end_request);
  
-@@ -3908,6 +3917,27 @@ int __blk_end_request(struct request *rq
- EXPORT_SYMBOL_GPL(__blk_end_request);
- 
- /**
-+ * blk_end_bidi_request - Helper function for drivers to complete bidi request.
-+ * @rq:         the bidi request being processed
-+ * @error:      0 for success, < 0 for error
-+ * @nr_bytes:   number of bytes to complete @rq
-+ * @bidi_bytes: number of bytes to complete @rq->next_rq
-+ *
-+ * Description:
-+ *     Ends I/O on a number of bytes attached to @rq and @rq->next_rq.
-+ *
-+ * Return:
-+ *     0 - we are done with this request
-+ *     1 - still buffers pending for this request
-+ **/
-+int blk_end_bidi_request(struct request *rq, int error, int nr_bytes,
-+			 int bidi_bytes)
-+{
-+	return blk_end_io(rq, error, nr_bytes, bidi_bytes, NULL);
-+}
-+EXPORT_SYMBOL_GPL(blk_end_bidi_request);
-+
-+/**
-  * blk_end_request_callback - Special helper function for tricky drivers
-  * @rq:           the request being processed
-  * @error:        0 for success, < 0 for error
-@@ -3935,7 +3965,7 @@ EXPORT_SYMBOL_GPL(__blk_end_request);
- int blk_end_request_callback(struct request *rq, int error, int nr_bytes,
- 			     int (drv_callback)(struct request *))
- {
--	return blk_end_io(rq, error, nr_bytes, drv_callback);
-+	return blk_end_io(rq, error, nr_bytes, 0, drv_callback);
- }
- EXPORT_SYMBOL_GPL(blk_end_request_callback);
- 
-Index: 2.6.24-rc4/include/linux/blkdev.h
-===================================================================
---- 2.6.24-rc4.orig/include/linux/blkdev.h
-+++ 2.6.24-rc4/include/linux/blkdev.h
-@@ -730,6 +730,8 @@ static inline void blk_run_address_space
-  */
- extern int blk_end_request(struct request *rq, int error, int nr_bytes);
- extern int __blk_end_request(struct request *rq, int error, int nr_bytes);
-+extern int blk_end_bidi_request(struct request *rq, int error, int nr_bytes,
-+				int bidi_bytes);
- extern int end_that_request_first(struct request *, int, int);
- extern int end_that_request_chunk(struct request *, int, int);
- extern void end_that_request_last(struct request *, int);
+ /*
