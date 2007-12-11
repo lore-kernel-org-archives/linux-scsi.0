@@ -1,25 +1,25 @@
 From: Steven Pratt <slpratt@austin.ibm.com>
 Subject: Re: MPTSAS Driver and scatter gather lists
-Date: Tue, 11 Dec 2007 08:49:56 -0600
-Message-ID: <475EA394.2080504@austin.ibm.com>
+Date: Tue, 11 Dec 2007 08:59:57 -0600
+Message-ID: <475EA5ED.3070603@austin.ibm.com>
 References: <47557600.5040902@austin.ibm.com> <ac8af0be0712110018s647b0d04o5dc96dbe318a9759@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:34207 "EHLO e6.ny.us.ibm.com"
+Received: from e3.ny.us.ibm.com ([32.97.182.143]:36607 "EHLO e3.ny.us.ibm.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751007AbXLKOuc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Dec 2007 09:50:32 -0500
+	id S1751577AbXLKPAS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Dec 2007 10:00:18 -0500
 Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id lBBEq0aT028137
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:52:00 -0500
-Received: from d01av04.pok.ibm.com (d01av04.pok.ibm.com [9.56.224.64])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lBBEoHfv140158
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:50:17 -0500
-Received: from d01av04.pok.ibm.com (loopback [127.0.0.1])
-	by d01av04.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lBBEoGPB020779
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:50:17 -0500
+	by e3.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id lBBExwrZ009579
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:59:58 -0500
+Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id lBBExw2i101976
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:59:58 -0500
+Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
+	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id lBBExw3R013836
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 09:59:58 -0500
 In-Reply-To: <ac8af0be0712110018s647b0d04o5dc96dbe318a9759@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -32,6 +32,7 @@ Zhao Forrest wrote:
 > tools(or test cases) are you using to do the block IO test? We have a
 > LSI SAS1068E chip and 10k RPM SAS hard drive in our lab. I'll find
 > some time to reproduce the issue and do some investigation.
+>
 >   
 I've been using 10k and 15k drives (although these particular tests were 
 from 15k).  I've been mostly using an internal IO tool, but this is 
