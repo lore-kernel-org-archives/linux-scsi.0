@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 20/30] blk_end_request: changing xsysace (take 4)
-Date: Tue, 11 Dec 2007 17:49:46 -0500 (EST)
-Message-ID: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 21/30] blk_end_request: changing cciss (take 4)
+Date: Tue, 11 Dec 2007 17:50:03 -0500 (EST)
+Message-ID: <20071211.175003.10249786.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -17,51 +17,84 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com
+Cc: mike.miller@hp.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts xsysace to use blk_end_request interfaces.
+This patch converts cciss to use blk_end_request interfaces.
 Related 'uptodate' arguments are converted to 'error'.
 
-xsysace is a little bit different from "normal" drivers.
-xsysace driver has a state machine in it.
-It calls end_that_request_first() and end_that_request_last()
-from different states. (ACE_FSM_STATE_REQ_TRANSFER and
-ACE_FSM_STATE_REQ_COMPLETE, respectively.)
+cciss is a little bit different from "normal" drivers.
+cciss directly calls bio_endio() and disk_stat_add()
+when completing request.  But those can be replaced with
+__end_that_request_first().
+After the replacement, request completion procedures of
+those drivers become like the following:
+    o end_that_request_first()
+    o add_disk_randomness()
+    o end_that_request_last()
+This can be converted to blk_end_request() by following
+the rule (a) mentioned in the patch subject
+"[PATCH 01/30] blk_end_request: add new request completion interface".
 
-However, those states are consecutive and without any interruption
-inbetween.
-So we can just follow the standard conversion rule (b) mentioned in
-the patch subject "[PATCH 01/30] blk_end_request: add new request
-completion interface".
-
-Cc: Grant Likely <grant.likely@secretlab.ca>
+Cc: Mike Miller <mike.miller@hp.com>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/xsysace.c |    5 +----
- 1 files changed, 1 insertion(+), 4 deletions(-)
+ drivers/block/cciss.c |   25 +++----------------------
+ 1 files changed, 3 insertions(+), 22 deletions(-)
 
-Index: 2.6.24-rc4/drivers/block/xsysace.c
+Index: 2.6.24-rc4/drivers/block/cciss.c
 ===================================================================
---- 2.6.24-rc4.orig/drivers/block/xsysace.c
-+++ 2.6.24-rc4/drivers/block/xsysace.c
-@@ -703,7 +703,7 @@ static void ace_fsm_dostate(struct ace_d
+--- 2.6.24-rc4.orig/drivers/block/cciss.c
++++ 2.6.24-rc4/drivers/block/cciss.c
+@@ -1187,17 +1187,6 @@ static int cciss_ioctl(struct inode *ino
+ 	}
+ }
  
- 		/* bio finished; is there another one? */
- 		i = ace->req->current_nr_sectors;
--		if (end_that_request_first(ace->req, 1, i)) {
-+		if (__blk_end_request(ace->req, 0, i)) {
- 			/* dev_dbg(ace->dev, "next block; h=%li c=%i\n",
- 			 *      ace->req->hard_nr_sectors,
- 			 *      ace->req->current_nr_sectors);
-@@ -718,9 +718,6 @@ static void ace_fsm_dostate(struct ace_d
- 		break;
+-static inline void complete_buffers(struct bio *bio, int status)
+-{
+-	while (bio) {
+-		struct bio *xbh = bio->bi_next;
+-
+-		bio->bi_next = NULL;
+-		bio_endio(bio, status ? 0 : -EIO);
+-		bio = xbh;
+-	}
+-}
+-
+ static void cciss_check_queues(ctlr_info_t *h)
+ {
+ 	int start_queue = h->next_to_run;
+@@ -1263,21 +1252,14 @@ static void cciss_softirq_done(struct re
+ 		pci_unmap_page(h->pdev, temp64.val, cmd->SG[i].Len, ddir);
+ 	}
  
- 	case ACE_FSM_STATE_REQ_COMPLETE:
--		/* Complete the block request */
--		blkdev_dequeue_request(ace->req);
--		end_that_request_last(ace->req, 1);
- 		ace->req = NULL;
+-	complete_buffers(rq->bio, (rq->errors == 0));
+-
+-	if (blk_fs_request(rq)) {
+-		const int rw = rq_data_dir(rq);
+-
+-		disk_stat_add(rq->rq_disk, sectors[rw], rq->nr_sectors);
+-	}
+-
+ #ifdef CCISS_DEBUG
+ 	printk("Done with %p\n", rq);
+ #endif				/* CCISS_DEBUG */
  
- 		/* Finished request; go to idle state */
+-	add_disk_randomness(rq->rq_disk);
++	if (blk_end_request(rq, (rq->errors == 0) ? 0 : -EIO, blk_rq_bytes(rq)))
++		BUG();
++
+ 	spin_lock_irqsave(&h->lock, flags);
+-	end_that_request_last(rq, (rq->errors == 0));
+ 	cmd_free(h, cmd, 1);
+ 	cciss_check_queues(h);
+ 	spin_unlock_irqrestore(&h->lock, flags);
+@@ -2544,7 +2526,6 @@ after_error_processing:
+ 	}
+ 	cmd->rq->data_len = 0;
+ 	cmd->rq->completion_data = cmd;
+-	blk_add_trace_rq(cmd->rq->q, cmd->rq, BLK_TA_COMPLETE);
+ 	blk_complete_request(cmd->rq);
+ }
+ 
