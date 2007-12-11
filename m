@@ -1,7 +1,7 @@
 From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: [PATCH 09/30] blk_end_request: changing ps3disk (take 4)
-Date: Tue, 11 Dec 2007 17:44:39 -0500 (EST)
-Message-ID: <20071211.174439.107256463.k-ueda@ct.jp.nec.com>
+Subject: [PATCH 10/30] blk_end_request: changing sunvdc (take 4)
+Date: Tue, 11 Dec 2007 17:45:04 -0500 (EST)
+Message-ID: <20071211.174504.82055916.k-ueda@ct.jp.nec.com>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
@@ -17,55 +17,56 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
 To: jens.axboe@oracle.com
-Cc: geoffrey.levand@am.sony.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, Geert.Uytterhoeven@sonycom.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, davem@davemloft.net
 List-Id: linux-scsi@vger.kernel.org
 
-This patch converts ps3disk to use blk_end_request interfaces.
+This patch converts sunvdc to use blk_end_request interfaces.
 Related 'uptodate' arguments are converted to 'error'.
 
-Cc: Geoff Levand <geoffrey.levand@am.sony.com>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+As a result, the interface of internal function, vdc_end_request(),
+is changed.
+
+Cc: David S. Miller <davem@davemloft.net>
 Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
 Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
 ---
- drivers/block/ps3disk.c |   12 ++++--------
- 1 files changed, 4 insertions(+), 8 deletions(-)
+ drivers/block/sunvdc.c |   11 ++++-------
+ 1 files changed, 4 insertions(+), 7 deletions(-)
 
-Index: 2.6.24-rc4/drivers/block/ps3disk.c
+Index: 2.6.24-rc4/drivers/block/sunvdc.c
 ===================================================================
---- 2.6.24-rc4.orig/drivers/block/ps3disk.c
-+++ 2.6.24-rc4/drivers/block/ps3disk.c
-@@ -229,7 +229,7 @@ static irqreturn_t ps3disk_interrupt(int
- 	struct ps3_storage_device *dev = data;
- 	struct ps3disk_private *priv;
- 	struct request *req;
--	int res, read, uptodate;
-+	int res, read, error;
- 	u64 tag, status;
- 	unsigned long num_sectors;
- 	const char *op;
-@@ -270,21 +270,17 @@ static irqreturn_t ps3disk_interrupt(int
- 	if (status) {
- 		dev_dbg(&dev->sbd.core, "%s:%u: %s failed 0x%lx\n", __func__,
- 			__LINE__, op, status);
--		uptodate = 0;
-+		error = -EIO;
- 	} else {
- 		dev_dbg(&dev->sbd.core, "%s:%u: %s completed\n", __func__,
- 			__LINE__, op);
--		uptodate = 1;
-+		error = 0;
- 		if (read)
- 			ps3disk_scatter_gather(dev, req, 0);
- 	}
+--- 2.6.24-rc4.orig/drivers/block/sunvdc.c
++++ 2.6.24-rc4/drivers/block/sunvdc.c
+@@ -212,12 +212,9 @@ static void vdc_end_special(struct vdc_p
+ 	vdc_finish(&port->vio, -err, WAITING_FOR_GEN_CMD);
+ }
  
- 	spin_lock(&priv->lock);
--	if (!end_that_request_first(req, uptodate, num_sectors)) {
--		add_disk_randomness(req->rq_disk);
--		blkdev_dequeue_request(req);
--		end_that_request_last(req, uptodate);
--	}
+-static void vdc_end_request(struct request *req, int uptodate, int num_sectors)
++static void vdc_end_request(struct request *req, int error, int num_sectors)
+ {
+-	if (end_that_request_first(req, uptodate, num_sectors))
+-		return;
+-	add_disk_randomness(req->rq_disk);
+-	end_that_request_last(req, uptodate);
 +	__blk_end_request(req, error, num_sectors << 9);
- 	priv->req = NULL;
- 	ps3disk_do_request(dev, priv->queue);
- 	spin_unlock(&priv->lock);
+ }
+ 
+ static void vdc_end_one(struct vdc_port *port, struct vio_dring_state *dr,
+@@ -242,7 +239,7 @@ static void vdc_end_one(struct vdc_port 
+ 
+ 	rqe->req = NULL;
+ 
+-	vdc_end_request(req, !desc->status, desc->size >> 9);
++	vdc_end_request(req, (desc->status ? -EIO : 0), desc->size >> 9);
+ 
+ 	if (blk_queue_stopped(port->disk->queue))
+ 		blk_start_queue(port->disk->queue);
+@@ -456,7 +453,7 @@ static void do_vdc_request(struct reques
+ 
+ 		blkdev_dequeue_request(req);
+ 		if (__send_request(req) < 0)
+-			vdc_end_request(req, 0, req->hard_nr_sectors);
++			vdc_end_request(req, -EIO, req->hard_nr_sectors);
+ 	}
+ }
+ 
