@@ -1,49 +1,41 @@
-From: "Grant Likely" <grant.likely@secretlab.ca>
-Subject: Re: [PATCH 20/30] blk_end_request: changing xsysace (take 4)
-Date: Tue, 11 Dec 2007 15:59:25 -0700
-Message-ID: <fa686aa40712111459k28a9bd96r484d8d9317c11671@mail.gmail.com>
-References: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
+From: Pete Zaitcev <zaitcev@redhat.com>
+Subject: Re: [PATCH 12/30] blk_end_request: changing ub (take 4)
+Date: Tue, 11 Dec 2007 15:48:03 -0800
+Message-ID: <20071211154803.58beb681.zaitcev@redhat.com>
+References: <20071211.174647.75757994.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from an-out-0708.google.com ([209.85.132.242]:57589 "EHLO
-	an-out-0708.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751735AbXLKW70 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Dec 2007 17:59:26 -0500
-Received: by an-out-0708.google.com with SMTP id d31so525445and
-        for <linux-scsi@vger.kernel.org>; Tue, 11 Dec 2007 14:59:25 -0800 (PST)
-In-Reply-To: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20071211.174647.75757994.k-ueda@ct.jp.nec.com>
+Sender: linux-ide-owner@vger.kernel.org
 To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com, zaitcev@redhat.com
+List-Id: linux-scsi@vger.kernel.org
 
-On 12/11/07, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> This patch converts xsysace to use blk_end_request interfaces.
-> Related 'uptodate' arguments are converted to 'error'.
->
-> xsysace is a little bit different from "normal" drivers.
-> xsysace driver has a state machine in it.
-> It calls end_that_request_first() and end_that_request_last()
-> from different states. (ACE_FSM_STATE_REQ_TRANSFER and
-> ACE_FSM_STATE_REQ_COMPLETE, respectively.)
->
-> However, those states are consecutive and without any interruption
-> inbetween.
-> So we can just follow the standard conversion rule (b) mentioned in
-> the patch subject "[PATCH 01/30] blk_end_request: add new request
-> completion interface".
->
-> Cc: Grant Likely <grant.likely@secretlab.ca>
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+On Tue, 11 Dec 2007 17:46:47 -0500 (EST), Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
 
-Acked-by: Grant Likely <grant.likely@secretlab.ca>
+>  	if (scsi_status == 0) {
+> -		uptodate = 1;
+> +		error = 0;
+>  	} else {
+> -		uptodate = 0;
+> +		error = -EIO;
+>  		rq->errors = scsi_status;
+>  	}
+> -	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
+> -	end_that_request_last(rq, uptodate);
+> +	if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
+> +		BUG();
 
--- 
-Grant Likely, B.Sc., P.Eng.
-Secret Lab Technologies Ltd.
-grant.likely@secretlab.ca
-(403) 399-0195
+Acked-by: Pete Zaitcev <zaitcev@redhat.com>
+
+I follow the discussion, actually, and wanted to ask someone to look
+closer if it's appropriate to use __blk_end_request() here.
+My understanding was, blk_end_request() is the same thing, only
+takes the queue lock. But then, should I refactor ub so that it
+calls __blk_end_request if request function ends with an error
+and blk_end_request if the end-of-IO even is processed? If not,
+and the above is sufficient, why have blk_end_request at all?
+
+-- Pete
