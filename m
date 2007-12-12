@@ -1,34 +1,38 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH acs_ame scsi driver 000 of 1] Introduction
-Date: Tue, 11 Dec 2007 17:15:15 -0800
-Message-ID: <20071211171515.87f741dd.akpm@linux-foundation.org>
-References: <87d84fba0712092003h3eb90344o89f9b0bc9c65fdb7@mail.gmail.com>
-	<20071210165548.GC26334@parisc-linux.org>
-	<20071211162408.54544ec3.akpm@linux-foundation.org>
-	<20071211164541.a8043800.randy.dunlap@oracle.com>
-	<20071211170148.6c0283f8.akpm@linux-foundation.org>
+From: Dave Jones <davej@redhat.com>
+Subject: fix cciss locking bug.
+Date: Tue, 11 Dec 2007 22:44:18 -0500
+Message-ID: <20071212034418.GA25644@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:43550 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753954AbXLLBPc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 11 Dec 2007 20:15:32 -0500
-In-Reply-To: <20071211170148.6c0283f8.akpm@linux-foundation.org>
+Received: from mx1.redhat.com ([66.187.233.31]:53729 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751574AbXLLDo2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 11 Dec 2007 22:44:28 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: randy.dunlap@oracle.com, matthew@wil.cx, recalljeffchang@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Mike Miller <mike.miller@hp.com>
 
-On Tue, 11 Dec 2007 17:01:48 -0800
-Andrew Morton <akpm@linux-foundation.org> wrote:
+do_cciss_intr takes the controller lock on entry,
+and if something goes wrong, it calls fail_all_cmds
+which tries to take the same lock.
 
-> More hm.  It was from "recalljeffchang@gmail.com" which perhaps means that
-> some attempt to recall it was made.  Oh well.
+Signed-off-by: Dave Jones <davej@redhat.com>
 
-argh.  recalljeffchang@gmail.com really is our Jeff's email address.  And I
-went and cc'ed jeffchang@gmail.com on my reply, only that person is an
-innocent civilian.  Bad me.  Please remove jeffchang@gmail.com from any
-replies.  Thanks.
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 7d70496..1c57583 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -2756,6 +2756,7 @@ static irqreturn_t do_cciss_intr(int irq, void *dev_id)
+ 					printk(KERN_WARNING
+ 					       "cciss: controller cciss%d failed, stopping.\n",
+ 					       h->ctlr);
++					spin_unlock_irqrestore(CCISS_LOCK(h->ctlr), flags);
+ 					fail_all_cmds(h->ctlr);
+ 					return IRQ_HANDLED;
+ 				}
 
+-- 
+http://www.codemonkey.org.uk
