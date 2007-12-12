@@ -1,65 +1,72 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi device recovery
-Date: Wed, 12 Dec 2007 10:59:36 -0500
-Message-ID: <1197475177.4203.29.camel@localhost.localdomain>
-References: <200712121354.14474.bs@q-leap.de>
-	 <20071212133927.GI26334@parisc-linux.org> <200712121536.10665.bs@q-leap.de>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] REQ-flags to/from BIO-flags bugfix
+Date: Wed, 12 Dec 2007 18:06:45 +0200
+Message-ID: <47600715.9000303@panasas.com>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <47462F3C.3040700@googlemail.com> <20071122201250.f957e280.akpm@linux-foundation.org> <47466B5D.90607@googlemail.com> <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain> <475FB316.6040804@panasas.com> <475FBFEE.9010009@panasas.com> <20071212151813.GJ26334@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-76-243-235-52.dsl.chcgil.sbcglobal.net ([76.243.235.52]:40151
-	"EHLO accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752382AbXLLP7n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2007 10:59:43 -0500
-In-Reply-To: <200712121536.10665.bs@q-leap.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1758441AbXLLQI0@vger.kernel.org>
+In-Reply-To: <20071212151813.GJ26334@parisc-linux.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Bernd Schubert <bs@q-leap.de>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-
-On Wed, 2007-12-12 at 15:36 +0100, Bernd Schubert wrote:
-> On Wednesday 12 December 2007 14:39:27 Matthew Wilcox wrote:
-> > On Wed, Dec 12, 2007 at 01:54:14PM +0100, Bernd Schubert wrote:
-> > > below is a patch introducing device recovery, trying to prevent i/o
-> > > errors when a DID_NO_CONNECT or SOFT_ERROR does happen.
-> >
-> > Why doesn't the regular scsi_eh do what you need?
+On Wed, Dec 12 2007 at 17:18 +0200, Matthew Wilcox <matthew@wil.cx> wrote:
+> On Wed, Dec 12, 2007 at 01:03:10PM +0200, Boaz Harrosh wrote:
+>>  - BIO flags bio->bi_rw and REQ flags req->cmd_flags no longer match.
+>>    Remove comments and do a proper translation between the 2 systems.
 > 
-> First of all, it is presently simply not called when the two errors above do 
-> happen. This could be changed, of course.
+> I'd rather see them resynchronised ... in a way that makes it obvious
+> that they should be desynced again:
+> 
+> I don't know whether BIO_RW_BARRIER is __REQ_SOFTBARRIER or
+> __REQ_HARDBARRIER, so I didn't include that in this patch.  There also
+> doesn't seem to be a __REQ equivalent to BIO_RW_AHEAD, but we can do
+> the other four bits (and leave gaps for those two).
+> 
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index d18ee67..6aef34b 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -167,11 +167,13 @@ enum {
+>  };
+>  
+>  /*
+> - * request type modified bits. first three bits match BIO_RW* bits, important
+> + * request type modified bits.  Don't change without looking at bi_rw flags
+>   */
+>  enum rq_flag_bits {
+> -	__REQ_RW,		/* not set, read. set, write */
+> -	__REQ_FAILFAST,		/* no low level driver retries */
+> +	__REQ_RW = BIO_RW,	/* not set, read. set, write */
+> +	__REQ_FAILFAST = BIO_RW_FAILFAST, /* no low level driver retries */
+> +	__REQ_RW_SYNC = BIO_RW_SYNC,	/* request is sync (O_DIRECT) */
+> +	__REQ_RW_META = BIO_RW_META,	/* metadata io request */
+>  	__REQ_SORTED,		/* elevator knows about this request */
+>  	__REQ_SOFTBARRIER,	/* may not be passed by ioscheduler */
+>  	__REQ_HARDBARRIER,	/* may not be passed by drive either */
+> @@ -185,9 +187,7 @@ enum rq_flag_bits {
+>  	__REQ_QUIET,		/* don't worry about errors */
+>  	__REQ_PREEMPT,		/* set for "ide_preempt" requests */
+>  	__REQ_ORDERED_COLOR,	/* is before or after barrier */
+> -	__REQ_RW_SYNC,		/* request is sync (O_DIRECT) */
+>  	__REQ_ALLOCED,		/* request came from our alloc pool */
+> -	__REQ_RW_META,		/* metadata io request */
+>  	__REQ_NR_BITS,		/* stops here */
+>  };
+>  
+> 
+Thats not enough You still need to fix code in ll_rw_blk(), I would
+define a rq_flags_bio_match_mask = 0xf for that. 
+(and also add what Jens called "needed" with the
+BIO_RW_AHEAD selects REQ_FAILFAST.)
 
-Erm, I think you'll find the error handler does activate on
-DID_SOFT_ERROR.  It causes a retry via the eh.  DID_NO_CONNECT is an
-immediate error with no eh intervention because it means that the target
-went away.  Handling this as a retryable error isn't an option because
-it will interfere with hotplug.
+And I still don't understand why, for example, "Domain Validation" fails
+with the original patch. What sets BIO_RW_FAILFAST and than panics
+on Errors?
+(All I see is this flag set in dm/multipath.c & dm-mpath.c)
 
-> Secondly, I think scsi_eh is in most cases doing too much. We are fighting 
-> with flaky Infortrend boxes here, and scsi_eh sometimes manages to crash 
-> their scsi channels. In most cases it is sufficient to stall any io to the 
-> device and then to resume.
-
-But that's basically the default behaviour of the error handler (stall
-then resume).
-
-> For most scsi devices one probably doesn't need a suspend time or it can be 
-> very small, this still needs to become configurable via sysfs.
-
-You mean a wait time beyond what the error handler currently does
-(basically it waits for the quiesce, begins error handling and then
-sends a test unit ready when it finishes before restarting).
-
-> Thirdly, scsi_eh doesn't give up, in most cases, when the scsi channel of a 
-> Infortrend box crashed, it tried forever to recover.
-> To improve this is still on my todo list.
-
-Could you send traces for this.  I thought the error handler had been
-fixed over the last few years always to terminate.  If there's a case
-where it doesn't, this needs fixing.
-
-James
-
+Boaz
 
