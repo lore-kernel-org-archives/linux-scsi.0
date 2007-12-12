@@ -1,42 +1,80 @@
-From: Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2 check page: bad entry in
- directory) (fwd)
-Date: Wed, 12 Dec 2007 03:38:08 -0800
-Message-ID: <20071212033808.6fb92139.akpm@linux-foundation.org>
-References: <20071212105841.GN6770@1und1.de>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: 2.6.24-rc3-mm1
+Date: Wed, 12 Dec 2007 12:36:25 +0100
+Message-ID: <20071212113625.GA22544@kernel.dk>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <47462F3C.3040700@googlemail.com> <20071122201250.f957e280.akpm@linux-foundation.org> <47466B5D.90607@googlemail.com> <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain> <475FB316.6040804@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:50073 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754773AbXLLLim (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 12 Dec 2007 06:38:42 -0500
-In-Reply-To: <20071212105841.GN6770@1und1.de>
+Received: from brick.kernel.dk ([87.55.233.238]:27221 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750856AbXLLLju (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2007 06:39:50 -0500
+Content-Disposition: inline
+In-Reply-To: <475FB316.6040804@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anders Henke <anders.henke@1und1.de>
-Cc: miquels@cistron.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, matthew@wil.cx, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Wed, 12 Dec 2007 11:58:41 +0100 Anders Henke <anders.henke@1und1.de> wrote:
-
-> Hi,
+On Wed, Dec 12 2007, Boaz Harrosh wrote:
+> On Tue, Dec 11 2007 at 18:33 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > On Mon, 2007-11-26 at 22:15 -0800, Andrew Morton wrote:
+> >> OK, thanks.  I'll assume that James and Hannes have this in hand (or will
+> >> have, by mid-week) and I won't do anything here.
+> > 
+> > Just to confirm what I think I'm going to be doing:  rebasing the
+> > scsi-misc tree to remove this commit:
+> > 
+> > commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0
+> > Author: Hannes Reinecke <hare@suse.de>
+> > Date:   Tue Nov 6 09:23:40 2007 +0100
+> > 
+> >     [SCSI] Do not requeue requests if REQ_FAILFAST is set
+> > 
+> > And its allied fix ups:
+> > 
+> > commit 983289045faa96fba8841d3c51b98bb8623d9504
+> > Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Date:   Sat Nov 24 19:47:25 2007 +0200
+> > 
+> >     [SCSI] fix up REQ_FASTFAIL not to fail when state is QUIESCE
+> > 
+> > commit 9dd15a13b332e9f5c8ee752b1ccd9b84cb5bdf17
+> > Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > Date:   Sat Nov 24 19:55:53 2007 +0200
+> > 
+> >     [SCSI] fix domain validation to work again
+> > 
+> > James
+> > 
 > 
-> I'd like to let you now that my boxes are running a 32-bit kernel, so
-> the 64-bit-uncleanliness shouldn't apply to my boxes; however,
+> The problems caused by this patch where nagging me at the back of my head
+> from the begging. Why should we fail on a check of FAIL_FAST in all kind
+> of weird places like boots, when the only place that should ever set the 
+> flag should be one of the multi-path drivers. finally it struck me:
 > 
-> http://www.miquels.cistron.nl/linux/dpt_i2o-64bit-2.6.23.patch
+> It might be a bug in ll_rw_blk at blk_rq_bio_prep() there is this:
 > 
-> fixed the issue on my testbox.
+> static void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+> 			    struct bio *bio)
+> {
+> 	/* first two bits are identical in rq->cmd_flags and bio->bi_rw */
+> 	rq->cmd_flags |= (bio->bi_rw & 3);
+> 	...
 > 
-> I took a clean 2.6.23, applied patch, recompiled the kernel, reboot: works.
+> Now this is no longer true and is a bug.
+> Second bit of bio->bi_rw defined in bio.h is:
+> #define BIO_RW_AHEAD	1
+> but
+> Second bit of rq->cmd_flags is __REQ_FAILFAST
+> 
+> so maybe we are getting FAILFAST in the wrong places?
 
-What a huge patch :(
+But that's actually on purpose, though the comment is pretty much crap.
+We don't want to be retrying readahead requests, those should always
+just be tossable.
 
-We already reverted the offening patch so I assume that 2.6.24-rc5 is
-working for you?
-
-I guess we need to look at restoring "dpt_i2o: convert to SCSI hotplug
-model" and then absorbing what Miquel has done there.
+-- 
+Jens Axboe
 
