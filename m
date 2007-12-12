@@ -1,46 +1,65 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] REQ-flags to/from BIO-flags bugfix
-Date: Wed, 12 Dec 2007 08:54:07 -0700
-Message-ID: <20071212155407.GK26334@parisc-linux.org>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <47462F3C.3040700@googlemail.com> <20071122201250.f957e280.akpm@linux-foundation.org> <47466B5D.90607@googlemail.com> <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain> <475FB316.6040804@panasas.com> <475FBFEE.9010009@panasas.com> <20071212151813.GJ26334@parisc-linux.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi device recovery
+Date: Wed, 12 Dec 2007 10:59:36 -0500
+Message-ID: <1197475177.4203.29.camel@localhost.localdomain>
+References: <200712121354.14474.bs@q-leap.de>
+	 <20071212133927.GI26334@parisc-linux.org> <200712121536.10665.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:47802 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758665AbXLLPyI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 10:54:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20071212151813.GJ26334@parisc-linux.org>
+Received: from adsl-76-243-235-52.dsl.chcgil.sbcglobal.net ([76.243.235.52]:40151
+	"EHLO accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752382AbXLLP7n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 12 Dec 2007 10:59:43 -0500
+In-Reply-To: <200712121536.10665.bs@q-leap.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: Bernd Schubert <bs@q-leap.de>
+Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org
 
-On Wed, Dec 12, 2007 at 08:18:14AM -0700, Matthew Wilcox wrote:
-> I don't know whether BIO_RW_BARRIER is __REQ_SOFTBARRIER or
-> __REQ_HARDBARRIER, so I didn't include that in this patch.  There also
-> doesn't seem to be a __REQ equivalent to BIO_RW_AHEAD, but we can do
-> the other four bits (and leave gaps for those two).
 
-Hm.  BIO_RW_AHEAD seems unused:
+On Wed, 2007-12-12 at 15:36 +0100, Bernd Schubert wrote:
+> On Wednesday 12 December 2007 14:39:27 Matthew Wilcox wrote:
+> > On Wed, Dec 12, 2007 at 01:54:14PM +0100, Bernd Schubert wrote:
+> > > below is a patch introducing device recovery, trying to prevent i/o
+> > > errors when a DID_NO_CONNECT or SOFT_ERROR does happen.
+> >
+> > Why doesn't the regular scsi_eh do what you need?
+> 
+> First of all, it is presently simply not called when the two errors above do 
+> happen. This could be changed, of course.
 
-willy@honeydew:~/kernel/linux-2.6$ grep -r BIO_RW_AHEAD *
-block/blktrace.c:       (((rw) & (1 << BIO_RW_AHEAD)) << (2 - BIO_RW_AHEAD))
-include/linux/bio.h:#define BIO_RW_AHEAD        1
-include/linux/bio.h:#define bio_rw_ahead(bio)   ((bio)->bi_rw & (1 << BIO_RW_AHEAD))
-willy@honeydew:~/kernel/linux-2.6$ grep -r bio_rw_ahead *
-block/ll_rw_blk.c:      if (bio_rw_ahead(bio) || bio_failfast(bio))
-drivers/md/dm-mpath.c:  if ((error == -EWOULDBLOCK) && bio_rw_ahead(bio))
-drivers/md/multipath.c: else if (!bio_rw_ahead(bio)) {
-include/linux/bio.h:#define bio_rw_ahead(bio)   ((bio)->bi_rw & (1 << BIO_RW_AHEAD))
+Erm, I think you'll find the error handler does activate on
+DID_SOFT_ERROR.  It causes a retry via the eh.  DID_NO_CONNECT is an
+immediate error with no eh intervention because it means that the target
+went away.  Handling this as a retryable error isn't an option because
+it will interfere with hotplug.
 
-BIO_RW_BARRIER seems to be __REQ_HARDBARRIER, but we set it
-explicitly in init_request_from_bio().  We could probably simplify
-init_request_from_bio() with the patch in the previous message.
+> Secondly, I think scsi_eh is in most cases doing too much. We are fighting 
+> with flaky Infortrend boxes here, and scsi_eh sometimes manages to crash 
+> their scsi channels. In most cases it is sufficient to stall any io to the 
+> device and then to resume.
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+But that's basically the default behaviour of the error handler (stall
+then resume).
+
+> For most scsi devices one probably doesn't need a suspend time or it can be 
+> very small, this still needs to become configurable via sysfs.
+
+You mean a wait time beyond what the error handler currently does
+(basically it waits for the quiesce, begins error handling and then
+sends a test unit ready when it finishes before restarting).
+
+> Thirdly, scsi_eh doesn't give up, in most cases, when the scsi channel of a 
+> Infortrend box crashed, it tried forever to recover.
+> To improve this is still on my todo list.
+
+Could you send traces for this.  I thought the error handler had been
+fixed over the last few years always to terminate.  If there's a case
+where it doesn't, this needs fixing.
+
+James
+
+
