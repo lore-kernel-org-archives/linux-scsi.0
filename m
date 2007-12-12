@@ -1,80 +1,77 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 20/30] blk_end_request: changing xsysace
-	(take 4)
-Date: Wed, 12 Dec 2007 11:09:12 +0200
-Message-ID: <475FA538.7000609@panasas.com>
-References: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+Subject: Re: 2.6.24-rc3-mm1
+Date: Wed, 12 Dec 2007 12:08:22 +0200
+Message-ID: <475FB316.6040804@panasas.com>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	 <47462F3C.3040700@googlemail.com>	 <20071122201250.f957e280.akpm@linux-foundation.org>	 <47466B5D.90607@googlemail.com>	 <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:12605 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1757584AbXLLKJB (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 05:09:01 -0500
+In-Reply-To: <1197390783.3812.19.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Kiyoshi Ueda wrote:
-> This patch converts xsysace to use blk_end_request interfaces.
-> Related 'uptodate' arguments are converted to 'error'.
+On Tue, Dec 11 2007 at 18:33 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Mon, 2007-11-26 at 22:15 -0800, Andrew Morton wrote:
+>> OK, thanks.  I'll assume that James and Hannes have this in hand (or will
+>> have, by mid-week) and I won't do anything here.
 > 
-> xsysace is a little bit different from "normal" drivers.
-> xsysace driver has a state machine in it.
-> It calls end_that_request_first() and end_that_request_last()
-> from different states. (ACE_FSM_STATE_REQ_TRANSFER and
-> ACE_FSM_STATE_REQ_COMPLETE, respectively.)
+> Just to confirm what I think I'm going to be doing:  rebasing the
+> scsi-misc tree to remove this commit:
 > 
-> However, those states are consecutive and without any interruption
-> inbetween.
-> So we can just follow the standard conversion rule (b) mentioned in
-> the patch subject "[PATCH 01/30] blk_end_request: add new request
-> completion interface".
+> commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0
+> Author: Hannes Reinecke <hare@suse.de>
+> Date:   Tue Nov 6 09:23:40 2007 +0100
 > 
-> Cc: Grant Likely <grant.likely@secretlab.ca>
-> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
-> ---
->  drivers/block/xsysace.c |    5 +----
->  1 files changed, 1 insertion(+), 4 deletions(-)
+>     [SCSI] Do not requeue requests if REQ_FAILFAST is set
 > 
-> Index: 2.6.24-rc4/drivers/block/xsysace.c
-> ===================================================================
-> --- 2.6.24-rc4.orig/drivers/block/xsysace.c
-> +++ 2.6.24-rc4/drivers/block/xsysace.c
-> @@ -703,7 +703,7 @@ static void ace_fsm_dostate(struct ace_d
->  
->  		/* bio finished; is there another one? */
->  		i = ace->req->current_nr_sectors;
-> -		if (end_that_request_first(ace->req, 1, i)) {
-> +		if (__blk_end_request(ace->req, 0, i)) {
-end_that_request_first() took sectors __blk_end_request() now takes
-bytes
+> And its allied fix ups:
+> 
+> commit 983289045faa96fba8841d3c51b98bb8623d9504
+> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Date:   Sat Nov 24 19:47:25 2007 +0200
+> 
+>     [SCSI] fix up REQ_FASTFAIL not to fail when state is QUIESCE
+> 
+> commit 9dd15a13b332e9f5c8ee752b1ccd9b84cb5bdf17
+> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Date:   Sat Nov 24 19:55:53 2007 +0200
+> 
+>     [SCSI] fix domain validation to work again
+> 
+> James
+> 
 
->  			/* dev_dbg(ace->dev, "next block; h=%li c=%i\n",
->  			 *      ace->req->hard_nr_sectors,
->  			 *      ace->req->current_nr_sectors);
-> @@ -718,9 +718,6 @@ static void ace_fsm_dostate(struct ace_d
->  		break;
->  
->  	case ACE_FSM_STATE_REQ_COMPLETE:
-> -		/* Complete the block request */
-> -		blkdev_dequeue_request(ace->req);
-> -		end_that_request_last(ace->req, 1);
->  		ace->req = NULL;
->  
->  		/* Finished request; go to idle state */
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+The problems caused by this patch where nagging me at the back of my head
+from the begging. Why should we fail on a check of FAIL_FAST in all kind
+of weird places like boots, when the only place that should ever set the 
+flag should be one of the multi-path drivers. finally it struck me:
+
+It might be a bug in ll_rw_blk at blk_rq_bio_prep() there is this:
+
+static void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
+			    struct bio *bio)
+{
+	/* first two bits are identical in rq->cmd_flags and bio->bi_rw */
+	rq->cmd_flags |= (bio->bi_rw & 3);
+	...
+
+Now this is no longer true and is a bug.
+Second bit of bio->bi_rw defined in bio.h is:
+#define BIO_RW_AHEAD	1
+but
+Second bit of rq->cmd_flags is __REQ_FAILFAST
+
+so maybe we are getting FAILFAST in the wrong places?
+
+(I will look for an old patch I sent a year ago that fixes
+this bug)
 
 Boaz
+ 
