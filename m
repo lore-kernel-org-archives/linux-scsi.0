@@ -1,38 +1,124 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] REQ-flags to/from BIO-flags bugfix
-Date: Wed, 12 Dec 2007 09:33:38 -0700
-Message-ID: <20071212163337.GL26334@parisc-linux.org>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <47462F3C.3040700@googlemail.com> <20071122201250.f957e280.akpm@linux-foundation.org> <47466B5D.90607@googlemail.com> <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain> <475FB316.6040804@panasas.com> <475FBFEE.9010009@panasas.com> <20071212151813.GJ26334@parisc-linux.org> <47600715.9000303@panasas.com>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 20/30] blk_end_request: changing xsysace
+	(take 4)
+Date: Wed, 12 Dec 2007 12:06:48 -0500 (EST)
+Message-ID: <20071212.120648.71084437.k-ueda@ct.jp.nec.com>
+References: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>
+	<475FA538.7000609@panasas.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1759246AbXLLQdy@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47600715.9000303@panasas.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <475FA538.7000609@panasas.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: jens.axboe@oracle.com, bharrosh@panasas.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Dec 12, 2007 at 06:06:45PM +0200, Boaz Harrosh wrote:
-> Thats not enough You still need to fix code in ll_rw_blk(), I would
-> define a rq_flags_bio_match_mask = 0xf for that. 
-> (and also add what Jens called "needed" with the
-> BIO_RW_AHEAD selects REQ_FAILFAST.)
+Hi,
 
-Yes, I appreciate it's not enough; that's why I didn't sign-off on it.
+On Wed, 12 Dec 2007 11:09:12 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
+> > Index: 2.6.24-rc4/drivers/block/xsysace.c
+> > ===================================================================
+> > --- 2.6.24-rc4.orig/drivers/block/xsysace.c
+> > +++ 2.6.24-rc4/drivers/block/xsysace.c
+> > @@ -703,7 +703,7 @@ static void ace_fsm_dostate(struct ace_d
+> >  
+> >  		/* bio finished; is there another one? */
+> >  		i = ace->req->current_nr_sectors;
+> > -		if (end_that_request_first(ace->req, 1, i)) {
+> > +		if (__blk_end_request(ace->req, 0, i)) {
+>
+> end_that_request_first() took sectors __blk_end_request() now takes
+> bytes
 
-Nobody currently sets BIO_RW_AHEAD, so I don't understand why we need to
-do anything ;-)
+Thank you for pointing it out!  And I'm very sorry for the bug.
+I have checked all conversions between sectors and bytes through
+all patches again, and I found no other miss conversions.
 
-> And I still don't understand why, for example, "Domain Validation" fails
-> with the original patch. What sets BIO_RW_FAILFAST and than panics
-> on Errors?
-> (All I see is this flag set in dm/multipath.c & dm-mpath.c)
+Below is the revised patch for xsysace.
 
-No idea ...
+Thanks,
+Kiyoshi Ueda
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+
+Subject: [PATCH 20/30] blk_end_request: changing xsysace (take 4)
+
+This patch converts xsysace to use blk_end_request interfaces.
+Related 'uptodate' arguments are converted to 'error'.
+
+xsysace is a little bit different from "normal" drivers.
+xsysace driver has a state machine in it.
+It calls end_that_request_first() and end_that_request_last()
+from different states. (ACE_FSM_STATE_REQ_TRANSFER and
+ACE_FSM_STATE_REQ_COMPLETE, respectively.)
+
+However, those states are consecutive and without any interruption
+inbetween.
+So we can just follow the standard conversion rule (b) mentioned in
+the patch subject "[PATCH 01/30] blk_end_request: add new request
+completion interface".
+
+
+In ace_fsm_dostate(), the variable 'i' was used only for passing
+sector size of the request to end_that_request_first().
+So I removed it and changed the code to pass the size in bytes
+directly to __blk_end_request().
+
+Cc: Grant Likely <grant.likely@secretlab.ca>
+Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+---
+ drivers/block/xsysace.c |    9 ++-------
+ 1 files changed, 2 insertions(+), 7 deletions(-)
+
+Index: 2.6.24-rc4/drivers/block/xsysace.c
+===================================================================
+--- 2.6.24-rc4.orig/drivers/block/xsysace.c
++++ 2.6.24-rc4/drivers/block/xsysace.c
+@@ -483,7 +483,6 @@ static void ace_fsm_dostate(struct ace_d
+ 	u32 status;
+ 	u16 val;
+ 	int count;
+-	int i;
+ 
+ #if defined(DEBUG)
+ 	dev_dbg(ace->dev, "fsm_state=%i, id_req_count=%i\n",
+@@ -688,7 +687,6 @@ static void ace_fsm_dostate(struct ace_d
+ 		}
+ 
+ 		/* Transfer the next buffer */
+-		i = 16;
+ 		if (ace->fsm_task == ACE_TASK_WRITE)
+ 			ace->reg_ops->dataout(ace);
+ 		else
+@@ -702,8 +700,8 @@ static void ace_fsm_dostate(struct ace_d
+ 		}
+ 
+ 		/* bio finished; is there another one? */
+-		i = ace->req->current_nr_sectors;
+-		if (end_that_request_first(ace->req, 1, i)) {
++		if (__blk_end_request(ace->req, 0,
++				      blk_rq_cur_bytes(ace->req))) {
+ 			/* dev_dbg(ace->dev, "next block; h=%li c=%i\n",
+ 			 *      ace->req->hard_nr_sectors,
+ 			 *      ace->req->current_nr_sectors);
+@@ -718,9 +716,6 @@ static void ace_fsm_dostate(struct ace_d
+ 		break;
+ 
+ 	case ACE_FSM_STATE_REQ_COMPLETE:
+-		/* Complete the block request */
+-		blkdev_dequeue_request(ace->req);
+-		end_that_request_last(ace->req, 1);
+ 		ace->req = NULL;
+ 
+ 		/* Finished request; go to idle state */
