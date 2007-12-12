@@ -1,77 +1,44 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: 2.6.24-rc3-mm1
-Date: Wed, 12 Dec 2007 12:08:22 +0200
-Message-ID: <475FB316.6040804@panasas.com>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	 <47462F3C.3040700@googlemail.com>	 <20071122201250.f957e280.akpm@linux-foundation.org>	 <47466B5D.90607@googlemail.com>	 <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain>
+From: Anders Henke <anders.henke@1und1.de>
+Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2 check page: bad entry in directory) (fwd)
+Date: Wed, 12 Dec 2007 11:58:41 +0100
+Message-ID: <20071212105841.GN6770@1und1.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:12605 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1757584AbXLLKJB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 05:09:01 -0500
-In-Reply-To: <1197390783.3812.19.camel@localhost.localdomain>
+Received: from mxintern.schlund.de ([212.227.126.201]:61535 "EHLO
+	mxintern.schlund.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755071AbXLLLAF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 06:00:05 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: miquels@cistron.nl, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, matthew@wil.cx, akpm@linux-foundation.org
 
-On Tue, Dec 11 2007 at 18:33 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Mon, 2007-11-26 at 22:15 -0800, Andrew Morton wrote:
->> OK, thanks.  I'll assume that James and Hannes have this in hand (or will
->> have, by mid-week) and I won't do anything here.
-> 
-> Just to confirm what I think I'm going to be doing:  rebasing the
-> scsi-misc tree to remove this commit:
-> 
-> commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0
-> Author: Hannes Reinecke <hare@suse.de>
-> Date:   Tue Nov 6 09:23:40 2007 +0100
-> 
->     [SCSI] Do not requeue requests if REQ_FAILFAST is set
-> 
-> And its allied fix ups:
-> 
-> commit 983289045faa96fba8841d3c51b98bb8623d9504
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Sat Nov 24 19:47:25 2007 +0200
-> 
->     [SCSI] fix up REQ_FASTFAIL not to fail when state is QUIESCE
-> 
-> commit 9dd15a13b332e9f5c8ee752b1ccd9b84cb5bdf17
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Sat Nov 24 19:55:53 2007 +0200
-> 
->     [SCSI] fix domain validation to work again
-> 
-> James
-> 
+Hi,
 
-The problems caused by this patch where nagging me at the back of my head
-from the begging. Why should we fail on a check of FAIL_FAST in all kind
-of weird places like boots, when the only place that should ever set the 
-flag should be one of the multi-path drivers. finally it struck me:
+I'd like to let you now that my boxes are running a 32-bit kernel, so
+the 64-bit-uncleanliness shouldn't apply to my boxes; however,
 
-It might be a bug in ll_rw_blk at blk_rq_bio_prep() there is this:
+http://www.miquels.cistron.nl/linux/dpt_i2o-64bit-2.6.23.patch
 
-static void blk_rq_bio_prep(struct request_queue *q, struct request *rq,
-			    struct bio *bio)
-{
-	/* first two bits are identical in rq->cmd_flags and bio->bi_rw */
-	rq->cmd_flags |= (bio->bi_rw & 3);
-	...
+fixed the issue on my testbox.
 
-Now this is no longer true and is a bug.
-Second bit of bio->bi_rw defined in bio.h is:
-#define BIO_RW_AHEAD	1
-but
-Second bit of rq->cmd_flags is __REQ_FAILFAST
+I took a clean 2.6.23, applied patch, recompiled the kernel, reboot: works.
 
-so maybe we are getting FAILFAST in the wrong places?
 
-(I will look for an old patch I sent a year ago that fixes
-this bug)
 
-Boaz
- 
+Regards,
+
+Anders
+
+PS: Sorry for breaking the threading, I'm not a regular subscriber to
+linux-kernel and haven't received Miguel's message by mail.
+-- 
+1&1 Internet AG              System Design
+Brauerstrasse 48             v://49.721.91374.50
+D-76135 Karlsruhe            f://49.721.91374.225
+
+Amtsgericht Montabaur HRB 6484
+Vorstand: Henning Ahlert, Ralph Dommermuth, Matthias Ehrlich, Andreas Gauger,
+Thomas Gottschlich, Matthias Greve, Robert Hoffmann, Norbert Lang, Achim Weiss
+Aufsichtsratsvorsitzender: Michael Scheeren
