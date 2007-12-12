@@ -1,58 +1,110 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 20/30] blk_end_request: changing xsysace
-	(take 4)
-Date: Wed, 12 Dec 2007 20:12:27 +0200
-Message-ID: <4760248B.6010904@panasas.com>
-References: <20071211.174946.85815368.k-ueda@ct.jp.nec.com>	<475FA538.7000609@panasas.com>
-	<20071212.120648.71084437.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 21/30] blk_end_request: changing cciss (take 4)
+Date: Wed, 12 Dec 2007 19:06:29 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE15718F11@G6W0268.americas.hpqcorp.net>
+References: <20071211.175003.10249786.k-ueda@ct.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071212.120648.71084437.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, grant.likely@secretlab.ca, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20071211.175003.10249786.k-ueda@ct.jp.nec.com>
+Content-Language: en-US
+Sender: linux-ide-owner@vger.kernel.org
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, "jens.axboe@oracle.com" <jens.axboe@oracle.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Dec 12 2007 at 19:06 +0200, Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> Hi,
-> 
-> On Wed, 12 Dec 2007 11:09:12 +0200, Boaz Harrosh <bharrosh@panasas.com> wrote:
->>> Index: 2.6.24-rc4/drivers/block/xsysace.c
->>> ===================================================================
->>> --- 2.6.24-rc4.orig/drivers/block/xsysace.c
->>> +++ 2.6.24-rc4/drivers/block/xsysace.c
->>> @@ -703,7 +703,7 @@ static void ace_fsm_dostate(struct ace_d
->>>  
->>>  		/* bio finished; is there another one? */
->>>  		i = ace->req->current_nr_sectors;
->>> -		if (end_that_request_first(ace->req, 1, i)) {
->>> +		if (__blk_end_request(ace->req, 0, i)) {
->> end_that_request_first() took sectors __blk_end_request() now takes
->> bytes
-> 
-> Thank you for pointing it out!  And I'm very sorry for the bug.
-> I have checked all conversions between sectors and bytes through
-> all patches again, and I found no other miss conversions.
-> 
-> Below is the revised patch for xsysace.
-> 
-> Thanks,
-> Kiyoshi Ueda
-> 
-> 
-NP, I know how it is, after you rebased your work for the 
-"who's counting" times, you become blind. You need fresh
-eyes to look at it. Thanks for doing all this.
 
-Boaz
+
+> -----Original Message-----
+> From: Kiyoshi Ueda [mailto:k-ueda@ct.jp.nec.com]
+> Sent: Tuesday, December 11, 2007 4:50 PM
+> To: jens.axboe@oracle.com
+> Cc: linux-kernel@vger.kernel.org; linux-scsi@vger.kernel.org;
+> linux-ide@vger.kernel.org; dm-devel@redhat.com;
+> j-nomura@ce.jp.nec.com; k-ueda@ct.jp.nec.com; Miller, Mike (OS Dev)
+> Subject: [PATCH 21/30] blk_end_request: changing cciss (take 4)
+>
+> This patch converts cciss to use blk_end_request interfaces.
+> Related 'uptodate' arguments are converted to 'error'.
+>
+> cciss is a little bit different from "normal" drivers.
+> cciss directly calls bio_endio() and disk_stat_add() when
+> completing request.  But those can be replaced with
+> __end_that_request_first().
+> After the replacement, request completion procedures of those
+> drivers become like the following:
+>     o end_that_request_first()
+>     o add_disk_randomness()
+>     o end_that_request_last()
+> This can be converted to blk_end_request() by following the
+> rule (a) mentioned in the patch subject "[PATCH 01/30]
+> blk_end_request: add new request completion interface".
+>
+> Cc: Mike Miller <mike.miller@hp.com>
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+
+Acked-by: Mike Miller <mike.miller@hp.com>
+
+> ---
+>  drivers/block/cciss.c |   25 +++----------------------
+>  1 files changed, 3 insertions(+), 22 deletions(-)
+>
+> Index: 2.6.24-rc4/drivers/block/cciss.c
+> ===================================================================
+> --- 2.6.24-rc4.orig/drivers/block/cciss.c
+> +++ 2.6.24-rc4/drivers/block/cciss.c
+> @@ -1187,17 +1187,6 @@ static int cciss_ioctl(struct inode *ino
+>         }
+>  }
+>
+> -static inline void complete_buffers(struct bio *bio, int status) -{
+> -       while (bio) {
+> -               struct bio *xbh = bio->bi_next;
+> -
+> -               bio->bi_next = NULL;
+> -               bio_endio(bio, status ? 0 : -EIO);
+> -               bio = xbh;
+> -       }
+> -}
+> -
+>  static void cciss_check_queues(ctlr_info_t *h)  {
+>         int start_queue = h->next_to_run; @@ -1263,21
+> +1252,14 @@ static void cciss_softirq_done(struct re
+>                 pci_unmap_page(h->pdev, temp64.val,
+> cmd->SG[i].Len, ddir);
+>         }
+>
+> -       complete_buffers(rq->bio, (rq->errors == 0));
+> -
+> -       if (blk_fs_request(rq)) {
+> -               const int rw = rq_data_dir(rq);
+> -
+> -               disk_stat_add(rq->rq_disk, sectors[rw],
+> rq->nr_sectors);
+> -       }
+> -
+>  #ifdef CCISS_DEBUG
+>         printk("Done with %p\n", rq);
+>  #endif                         /* CCISS_DEBUG */
+>
+> -       add_disk_randomness(rq->rq_disk);
+> +       if (blk_end_request(rq, (rq->errors == 0) ? 0 : -EIO,
+> blk_rq_bytes(rq)))
+> +               BUG();
+> +
+>         spin_lock_irqsave(&h->lock, flags);
+> -       end_that_request_last(rq, (rq->errors == 0));
+>         cmd_free(h, cmd, 1);
+>         cciss_check_queues(h);
+>         spin_unlock_irqrestore(&h->lock, flags); @@ -2544,7
+> +2526,6 @@ after_error_processing:
+>         }
+>         cmd->rq->data_len = 0;
+>         cmd->rq->completion_data = cmd;
+> -       blk_add_trace_rq(cmd->rq->q, cmd->rq, BLK_TA_COMPLETE);
+>         blk_complete_request(cmd->rq);
+>  }
+>
+>
