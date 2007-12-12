@@ -1,68 +1,114 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] REQ-flags to/from BIO-flags bugfix
-Date: Wed, 12 Dec 2007 08:18:14 -0700
-Message-ID: <20071212151813.GJ26334@parisc-linux.org>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <47462F3C.3040700@googlemail.com> <20071122201250.f957e280.akpm@linux-foundation.org> <47466B5D.90607@googlemail.com> <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain> <475FB316.6040804@panasas.com> <475FBFEE.9010009@panasas.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 21/30] blk_end_request: changing cciss (take
+	4)
+Date: Wed, 12 Dec 2007 15:25:10 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE15718B35@G6W0268.americas.hpqcorp.net>
+References: <20071211.175003.10249786.k-ueda@ct.jp.nec.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:51954 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751307AbXLLPSQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 10:18:16 -0500
-Content-Disposition: inline
-In-Reply-To: <475FBFEE.9010009@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20071211.175003.10249786.k-ueda@ct.jp.nec.com>
+Content-Language: en-US
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>, "jens.axboe@oracle.com" <jens.axboe@oracle.com>
+Cc: "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-On Wed, Dec 12, 2007 at 01:03:10PM +0200, Boaz Harrosh wrote:
->  - BIO flags bio->bi_rw and REQ flags req->cmd_flags no longer match.
->    Remove comments and do a proper translation between the 2 systems.
+>
+> This patch converts cciss to use blk_end_request interfaces.
+> Related 'uptodate' arguments are converted to 'error'.
+>
+> cciss is a little bit different from "normal" drivers.
+> cciss directly calls bio_endio() and disk_stat_add() when
+> completing request.  But those can be replaced with
+> __end_that_request_first().
+> After the replacement, request completion procedures of those
+> drivers become like the following:
+>     o end_that_request_first()
+>     o add_disk_randomness()
+>     o end_that_request_last()
+> This can be converted to blk_end_request() by following the
+> rule (a) mentioned in the patch subject "[PATCH 01/30]
+> blk_end_request: add new request completion interface".
+>
+> Cc: Mike Miller <mike.miller@hp.com>
+> Signed-off-by: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+> Signed-off-by: Jun'ichi Nomura <j-nomura@ce.jp.nec.com>
+> ---
+>  drivers/block/cciss.c |   25 +++----------------------
+>  1 files changed, 3 insertions(+), 22 deletions(-)
+>
+> Index: 2.6.24-rc4/drivers/block/cciss.c
+> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+> --- 2.6.24-rc4.orig/drivers/block/cciss.c
+> +++ 2.6.24-rc4/drivers/block/cciss.c
+> @@ -1187,17 +1187,6 @@ static int cciss_ioctl(struct inode *ino
+>         }
+>  }
+>
+> -static inline void complete_buffers(struct bio *bio, int status) -{
+> -       while (bio) {
+> -               struct bio *xbh =3D bio->bi_next;
+> -
+> -               bio->bi_next =3D NULL;
+> -               bio_endio(bio, status ? 0 : -EIO);
+> -               bio =3D xbh;
+> -       }
+> -}
+> -
+>  static void cciss_check_queues(ctlr_info_t *h)  {
+>         int start_queue =3D h->next_to_run; @@ -1263,21
+> +1252,14 @@ static void cciss_softirq_done(struct re
+>                 pci_unmap_page(h->pdev, temp64.val,
+> cmd->SG[i].Len, ddir);
+>         }
+>
+> -       complete_buffers(rq->bio, (rq->errors =3D=3D 0));
+> -
+> -       if (blk_fs_request(rq)) {
+> -               const int rw =3D rq_data_dir(rq);
+> -
+> -               disk_stat_add(rq->rq_disk, sectors[rw],
+> rq->nr_sectors);
+> -       }
+> -
+>  #ifdef CCISS_DEBUG
+>         printk("Done with %p\n", rq);
+>  #endif                         /* CCISS_DEBUG */
+>
+> -       add_disk_randomness(rq->rq_disk);
+> +       if (blk_end_request(rq, (rq->errors =3D=3D 0) ? 0 : -EIO,
+> blk_rq_bytes(rq)))
+> +               BUG();
+> +
+>         spin_lock_irqsave(&h->lock, flags);
+> -       end_that_request_last(rq, (rq->errors =3D=3D 0));
+>         cmd_free(h, cmd, 1);
+>         cciss_check_queues(h);
+>         spin_unlock_irqrestore(&h->lock, flags); @@ -2544,7
+> +2526,6 @@ after_error_processing:
+>         }
+>         cmd->rq->data_len =3D 0;
+>         cmd->rq->completion_data =3D cmd;
+> -       blk_add_trace_rq(cmd->rq->q, cmd->rq, BLK_TA_COMPLETE);
 
-I'd rather see them resynchronised ... in a way that makes it obvious
-that they should be desynced again:
+Why is this removed?
 
-I don't know whether BIO_RW_BARRIER is __REQ_SOFTBARRIER or
-__REQ_HARDBARRIER, so I didn't include that in this patch.  There also
-doesn't seem to be a __REQ equivalent to BIO_RW_AHEAD, but we can do
-the other four bits (and leave gaps for those two).
+-- mikem
 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d18ee67..6aef34b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -167,11 +167,13 @@ enum {
- };
- 
- /*
-- * request type modified bits. first three bits match BIO_RW* bits, important
-+ * request type modified bits.  Don't change without looking at bi_rw flags
-  */
- enum rq_flag_bits {
--	__REQ_RW,		/* not set, read. set, write */
--	__REQ_FAILFAST,		/* no low level driver retries */
-+	__REQ_RW = BIO_RW,	/* not set, read. set, write */
-+	__REQ_FAILFAST = BIO_RW_FAILFAST, /* no low level driver retries */
-+	__REQ_RW_SYNC = BIO_RW_SYNC,	/* request is sync (O_DIRECT) */
-+	__REQ_RW_META = BIO_RW_META,	/* metadata io request */
- 	__REQ_SORTED,		/* elevator knows about this request */
- 	__REQ_SOFTBARRIER,	/* may not be passed by ioscheduler */
- 	__REQ_HARDBARRIER,	/* may not be passed by drive either */
-@@ -185,9 +187,7 @@ enum rq_flag_bits {
- 	__REQ_QUIET,		/* don't worry about errors */
- 	__REQ_PREEMPT,		/* set for "ide_preempt" requests */
- 	__REQ_ORDERED_COLOR,	/* is before or after barrier */
--	__REQ_RW_SYNC,		/* request is sync (O_DIRECT) */
- 	__REQ_ALLOCED,		/* request came from our alloc pool */
--	__REQ_RW_META,		/* metadata io request */
- 	__REQ_NR_BITS,		/* stops here */
- };
- 
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+>         blk_complete_request(cmd->rq);
+>  }
+>
+>
