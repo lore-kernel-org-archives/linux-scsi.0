@@ -1,83 +1,43 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: Re: broken dpt_i2o in 2.6.23 (was: ext2 check page: bad entry in
-	directory) (fwd)
-Date: Wed, 12 Dec 2007 14:07:59 +0100
-Message-ID: <1197464879.20796.15.camel@n2o.xs4all.nl>
-References: <20071212105841.GN6770@1und1.de>
-	 <20071212033808.6fb92139.akpm@linux-foundation.org>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: broken dpt_i2o in 2.6.23 (was: ext2_check_page: bad entry indirectory) (fwd)
+Date: Wed, 12 Dec 2007 08:25:10 -0500
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF0101052210@otce2k301.adaptec.com>
+References: <20071129130319.GA2642@atrey.karlin.mff.cuni.cz> <20071129235813Y.tomof@acm.org> <20071129164557.GD30957@1und1.de> <20071130021226T.tomof@acm.org>  <20071130103450.GC7697@1und1.de> <1197384034.19679.13.camel@n2o.xs4all.nl> <1197409983.6288.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-4P8+dsHXux8CM93aqNY6"
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr10.xs4all.nl ([194.109.24.30]:1220 "EHLO
-	smtp-vbr10.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752851AbXLLNIg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 08:08:36 -0500
-In-Reply-To: <20071212033808.6fb92139.akpm@linux-foundation.org>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:49483 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751941AbXLLN1l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 08:27:41 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <1197409983.6288.9.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anders Henke <anders.henke@1und1.de>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, matthew@wil.cx, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+To: Miquel van Smoorenburg <miquels@cistron.nl>, Anders Henke <anders.henke@1und1.de>
+Cc: FUJITA Tomonori <tomof@acm.org>, matthew@wil.cx, jack@ucw.cz, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
+ACK, patch looks good. Thanks for composing this patch. Glad to hear of
+successful test results.
 
---=-4P8+dsHXux8CM93aqNY6
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Sincerely -- Mark Salyzyn
 
-On Wed, 2007-12-12 at 03:38 -0800, Andrew Morton wrote:
-> On Wed, 12 Dec 2007 11:58:41 +0100 Anders Henke <anders.henke@1und1.de> wrote:
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Miquel 
+> van Smoorenburg
+. . .
 > 
-> > Hi,
-> > 
-> > I'd like to let you now that my boxes are running a 32-bit kernel, so
-> > the 64-bit-uncleanliness shouldn't apply to my boxes; however,
-> > 
-> > http://www.miquels.cistron.nl/linux/dpt_i2o-64bit-2.6.23.patch
-> > 
-> > fixed the issue on my testbox.
-> > 
-> > I took a clean 2.6.23, applied patch, recompiled the kernel, reboot: works.
+> I just recompiled 2.6.23.9 with the 64 bit patch for dpt_i2o 
+> and now it
+> boots just fine.
 > 
-> What a huge patch :(
+> The patch is here:
+> http://www.miquels.cistron.nl/linux/dpt_i2o-64bit-2.6.23.patch
 > 
-> We already reverted the offening patch so I assume that 2.6.24-rc5 is
-> working for you?
+> It's not the final version - it needs a few cleanups before it can be
+> submitted, but perhaps you can test if it also works for you.
 > 
-> I guess we need to look at restoring "dpt_i2o: convert to SCSI hotplug
-> model" and then absorbing what Miquel has done there.
-
-This was just a patch I had lying around, if it worked it would confirm
-my suspicion, which it has.
-
-The minimal patch which is suitable for 2.6.23-stable and 2.6.24 would
-be the attached one-liner. The "dpt_i2o: convert to SCSI hotplug model"
-patch could be restored then.
-
-(if the list eats the attachment, it's also available here:
-http://www.miquels.cistron.nl/linux/linux-2.6.23+24-dpt_i2o-dma64.patch 
-)
-
-Anders, does this one-liner patch work for you ?
-
-Mike.
-
---=-4P8+dsHXux8CM93aqNY6
-Content-Disposition: attachment; filename=linux-2.6.23+24-dpt_i2o-dma64.patch
-Content-Type: text/x-patch; name=linux-2.6.23+24-dpt_i2o-dma64.patch; charset=ISO-8859-15
-Content-Transfer-Encoding: 7bit
-
-diff -ruN linux-2.6.23.9.orig/drivers/scsi/dpt_i2o.c linux-2.6.23.9/drivers/scsi/dpt_i2o.c
---- linux-2.6.23.9.orig/drivers/scsi/dpt_i2o.c	2007-11-26 18:51:43.000000000 +0100
-+++ linux-2.6.23.9/drivers/scsi/dpt_i2o.c	2007-12-12 13:21:05.000000000 +0100
-@@ -905,8 +905,7 @@
- 	}
- 
- 	pci_set_master(pDev);
--	if (pci_set_dma_mask(pDev, DMA_64BIT_MASK) &&
--	    pci_set_dma_mask(pDev, DMA_32BIT_MASK))
-+	if (pci_set_dma_mask(pDev, DMA_32BIT_MASK))
- 		return -EINVAL;
- 
- 	base_addr0_phys = pci_resource_start(pDev,0);
-
---=-4P8+dsHXux8CM93aqNY6--
-
+> Mike.
