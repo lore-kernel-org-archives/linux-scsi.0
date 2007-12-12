@@ -1,28 +1,50 @@
-From: Jeff Dike <jdike@addtoit.com>
-Subject: Re: [PATCH 05/30] blk_end_request: changing um (take 4)
-Date: Wed, 12 Dec 2007 15:55:51 -0500
-Message-ID: <20071212205551.GC9244@c2.user-mode-linux.org>
-References: <20071211.174253.106440139.k-ueda@ct.jp.nec.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: scsi/lpfc/lpfc_attr.c: bogus code
+Date: Wed, 12 Dec 2007 17:00:29 -0500
+Message-ID: <476059FD.2070300@emulex.com>
+References: <20071211222055.GE14204@stusta.de>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1761356AbXLLU55@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20071211.174253.106440139.k-ueda@ct.jp.nec.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, j-nomura@ce.jp.nec.com
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emulex.emulex.com ([138.239.112.1]:60482 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751744AbXLLWBM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Dec 2007 17:01:12 -0500
+In-Reply-To: <20071211222055.GE14204@stusta.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Tue, Dec 11, 2007 at 05:42:53PM -0500, Kiyoshi Ueda wrote:
-> This patch converts um to use blk_end_request interfaces.
-> Related 'uptodate' arguments are converted to 'error'.
+This has already been fixed. It's in our 8.2.3 patches, which were merged into
+James's scsi-misc-2.6 tree at the beginning of November, and targeted for 2.6.25.
+
+-- james s
+
+
+Adrian Bunk wrote:
+> Commit 2e0fef85e098f6794956b8b80b111179fbb4cbb7 added the folowing code 
+> to drivers/scsi/lpfc/lpfc_attr.c that was most likely not intended to be 
+> dead code:
 > 
-> As a result, the interface of internal function, ubd_end_request(),
-> is changed.
-
-Looks OK to me...
-
-		Jeff
-
--- 
-Work email - jdike at linux dot intel dot com
+> <--  snip  -->
+> 
+> ...
+> lpfc_state_show(struct class_device *cdev, char *buf)
+> {
+> ...
+>                 switch (vport->port_state) {
+>                         len += snprintf(buf + len, PAGE_SIZE-len,
+>                                         "initializing\n");
+>                         break;
+> ...
+> 
+> <--  snip  -->
+> 
+> Spotted by the GNU C compiler version 3.3.
+> 
+> cu
+> Adrian
+> 
