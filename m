@@ -1,41 +1,44 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 11:42:21 -0700
-Message-ID: <20071213184221.GP26334@parisc-linux.org>
-References: <47617B92.6020908@rtr.ca> <47617C07.3020501@rtr.ca>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <47617C07.3020501@rtr.ca>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mark Lord <lkml@rtr.ca>
-Cc: Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@steeleye.com>
+From: michaelc@cs.wisc.edu
+Subject: RESEND: iscsi update for 2.6.25
+Date: Thu, 13 Dec 2007 12:43:19 -0600
+Message-ID: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:46932 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756047AbXLMSns (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Dec 2007 13:43:48 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.1) with ESMTP id lBDIhmHE005433
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Dec 2007 13:43:48 -0500
+Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lBDIhlWx017947
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Dec 2007 13:43:47 -0500
+Received: from localhost.localdomain (vpn-15-132.rdu.redhat.com [10.11.15.132])
+	by pobox.corp.redhat.com (8.13.1/8.13.1) with ESMTP id lBDIhicA022285
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Dec 2007 13:43:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Dec 13, 2007 at 01:37:59PM -0500, Mark Lord wrote:
-> The problem is, the block layer *never* sends an SG entry larger than 8192 
-> bytes,
-> and even that size is exceptionally rare.  Nearly all I/O segments are 4096 
-> bytes,
-> so I never see a single I/O larger than 512KB (128 * 4096).
-> 
-> If I patch various parts of block and SCSI, this limit doesn't budge,
-> but when I change the hardware PRD limit in libata, it scales by exactly
-> whatever I set the new value to.  This tells me that adjacent I/O segments
-> are not being combined.
-> 
-> I thought that QUEUE_FLAG_CLUSTER (aka. SCSI host .use_clustering=1) should
-> result in adjacent single pages being combined into larger physical 
-> segments?
+Between the time I made my last patchset and when James rebased
+scsi-misc a patch to scsi_transport_iscsi.c got merged and that
+broke my patchset. This is a resend of the patchset, but rebased
+against scsi-misc.
 
-I was recently debugging a driver and noticed that consecutive pages in
-an sg list are in the reverse order.  ie first you get page 918, then
-917, 916, 915, 914, etc.  I vaguely remember James having patches to
-correct this, but maybe they weren't merged?
+Sorry for the bigger than normal update. There are patches from Olaf and
+Boaz which do the following:
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+- Rewrite iscsi_tcp data path (from Olaf), so we do not have two ulgy
+abstractions for the send and recv path. Now we have one nice iscsi_segment
+struct that works for both paths.
+- Add basic iscsi spec handling we will need for Bidi support (from Boaz).
+This does not add bidi support. It just adds code that is common.
+- Device reset support. Some clustering software needed at least
+device reset support, so I cleaned up that code and added device
+logical unit reset support. I will add warm target reset support
+later.
+- Lots of fixes for things like shutdown, r2t leaks, and lots of clean
+up from Olaf.
+- sg chaining support.
+
+
