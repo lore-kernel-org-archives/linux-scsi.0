@@ -1,68 +1,59 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH] sr/sd: Remove simple dead code
-Date: Thu, 13 Dec 2007 13:34:05 +0200
-Message-ID: <476118AD.80407@panasas.com>
+Subject: [0/3 ver2] Last 3 patches for bidi support
+Date: Thu, 13 Dec 2007 13:37:27 +0200
+Message-ID: <47611977.5080702@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11591 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751692AbXLMLeK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2007 06:34:10 -0500
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:58875 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751137AbXLMLl6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2007 06:41:58 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@SteelEye.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>, Russell King <rmk@arm.linux.org.uk>, Christo
 
+James hi.
 
-  if (rq_data_dir() == WRITE) else if() else chain had an extra
-  "else" since the if() is on a value of 1 bit.
+Bidi patches just broke again, by a patch that fixes
+some to-be-dead code. (scsi: BUG_ON() impossible condition)
 
-  Also with a bidi request rq_data_dir() == WRITE
-  and blk_bidi_rq() == true.
+Could it not just be accepted into the tree now.
+It sat in -mm tree with no reports of breakage or 
+complains. What are we waiting for? the way I
+see it there is nothing holding it back, it's
+not even dangerous anymore.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/sd.c |    5 +----
- drivers/scsi/sr.c |    5 +----
- 2 files changed, 2 insertions(+), 8 deletions(-)
+You need Arm's accessors patch from scsi-pending
+Russell King <rmk@arm.linux.org.uk>
+Please send an Acked-by for this patch
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 212f6bc..e6d85b0 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -445,12 +445,9 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
- 		}
- 		SCpnt->cmnd[0] = WRITE_6;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
--	} else if (rq_data_dir(rq) == READ) {
-+	} else {
- 		SCpnt->cmnd[0] = READ_6;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
--		goto out;
- 	}
- 
- 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index 896be4a..7128d15 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -372,12 +372,9 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
- 		SCpnt->cmnd[0] = WRITE_10;
- 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
-  	 	cd->cdi.media_written = 1;
--	} else if (rq_data_dir(rq) == READ) {
-+	} else {
- 		SCpnt->cmnd[0] = READ_10;
- 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
--	} else {
--		blk_dump_rq_flags(rq, "Unknown sr command");
--		goto out;
- 	}
- 
- 	{
--- 
-1.5.3.3
+and the patch that removes the old esp drivers
+(http://www.spinics.net/lists/linux-scsi/msg20914.html)
 
+Christoph Hellwig <hch@infradead.org>
+David S. Miller <davem@davemloft.net>
+Maciej W. Rozycki <macro@linux-mips.org>
+
+Please send an Ack-by or Recommended-by to the removal
+of these old esp drivers.
+
+And the 3 patches (based on scsi-misc)
+[1] tgt: Use scsi_init_io instead of scsi_alloc_sgtable
+  Was Ack-by the maintainer of tgt. Please accept independent
+  of the other 2.
+
+[2] scsi: scsi_data_buffer
+  The move to scsi_data_buffer. From here on any
+  unconverted driver will not compile.
+
+[3] scsi: bidi support
+  Actual very simple really.
+
+All parties involved, send your reservations if any NOW.
+Else James please put it in.
+
+Andrew could they be included back into -mm tree?
+
+Boaz
