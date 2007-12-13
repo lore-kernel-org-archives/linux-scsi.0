@@ -1,18 +1,18 @@
 From: Mark Lord <lkml@rtr.ca>
 Subject: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 13:36:02 -0500
-Message-ID: <47617B92.6020908@rtr.ca>
+Date: Thu, 13 Dec 2007 13:37:59 -0500
+Message-ID: <47617C07.3020501@rtr.ca>
+References: <47617B92.6020908@rtr.ca>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rtr.ca ([76.10.145.34]:2060 "EHLO mail.rtr.ca"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753036AbXLMSgD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 13:36:03 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <47617B92.6020908@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@suse.de>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+
+(resending with corrected email address for Jens)
 
 Jens,
 
