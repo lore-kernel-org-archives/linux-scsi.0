@@ -1,54 +1,66 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 13:46:03 -0500
-Message-ID: <1197571563.3154.41.camel@localhost.localdomain>
-References: <47617B92.6020908@rtr.ca> <47617C07.3020501@rtr.ca>
-	 <20071213184221.GP26334@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 05/24] iser patching for AHS support
+Date: Thu, 13 Dec 2007 12:43:24 -0600
+Message-ID: <11975714333916-git-send-email-michaelc@cs.wisc.edu>
+References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
+ <1197571428957-git-send-email-michaelc@cs.wisc.edu>
+ <11975714291290-git-send-email-michaelc@cs.wisc.edu>
+ <11975714303190-git-send-email-michaelc@cs.wisc.edu>
+ <11975714323427-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:49766 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1763351AbXLMSqG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2007 13:46:06 -0500
-In-Reply-To: <20071213184221.GP26334@parisc-linux.org>
+Received: from mx1.redhat.com ([66.187.233.31]:54080 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1762105AbXLMSqf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Dec 2007 13:46:35 -0500
+In-Reply-To: <11975714323427-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Mark Lord <lkml@rtr.ca>, Jens Axboe <axboe@kernel.dk>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Boaz Harrosh <bharrosh@panasas.com>
 
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-On Thu, 2007-12-13 at 11:42 -0700, Matthew Wilcox wrote:
-> On Thu, Dec 13, 2007 at 01:37:59PM -0500, Mark Lord wrote:
-> > The problem is, the block layer *never* sends an SG entry larger than 8192 
-> > bytes,
-> > and even that size is exceptionally rare.  Nearly all I/O segments are 4096 
-> > bytes,
-> > so I never see a single I/O larger than 512KB (128 * 4096).
-> > 
-> > If I patch various parts of block and SCSI, this limit doesn't budge,
-> > but when I change the hardware PRD limit in libata, it scales by exactly
-> > whatever I set the new value to.  This tells me that adjacent I/O segments
-> > are not being combined.
-> > 
-> > I thought that QUEUE_FLAG_CLUSTER (aka. SCSI host .use_clustering=1) should
-> > result in adjacent single pages being combined into larger physical 
-> > segments?
-> 
-> I was recently debugging a driver and noticed that consecutive pages in
-> an sg list are in the reverse order.  ie first you get page 918, then
-> 917, 916, 915, 914, etc.  I vaguely remember James having patches to
-> correct this, but maybe they weren't merged?
+from Boaz Harrosh <boazharrosh@gmail.com>
 
-Yes, they were ... it was actually Bill Irwin's patch.  The old problem
-was that we fault allocations in reverse order (because we were taking
-from the end of the zone list).  I can't remember when his patches went
-in, but it was several years ago.  After they did, I was getting a 33%
-chance of physical merging (as opposed to zero before).  Probably
-someone redid the vm or the zones without understanding this and we've
-gone back to the original position.
+  - The default initialization of hdr_max is the minimum -
+    sizeof(struct iscsi_cmd) - Once this patch goes into iser the default
+    initialization at libiscsi can be removed.
+  - This is not yet full support for AHSs at iser end. But it should be easy.
+    Just allocate more space at iser_desc right after iscsi_hdr. Than
+    at transmission time use ctask->hdr_len to retrieve the total
+    size of all iscsi pdu headers. See previous patch at iscsi_tcp.[ch]
 
-James
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    1 +
+ drivers/scsi/libiscsi.c                  |    1 -
+ 2 files changed, 1 insertions(+), 1 deletions(-)
 
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index 2eadb6d..a2622f4 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -400,6 +400,7 @@ iscsi_iser_session_create(struct iscsi_transport *iscsit,
+ 		ctask      = session->cmds[i];
+ 		iser_ctask = ctask->dd_data;
+ 		ctask->hdr = (struct iscsi_cmd *)&iser_ctask->desc.iscsi_header;
++		ctask->hdr_max = sizeof(iser_ctask->desc.iscsi_header);
+ 	}
+ 
+ 	for (i = 0; i < session->mgmtpool_max; i++) {
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 0d7914f..5936586 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -1570,7 +1570,6 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
+ 		if (cmd_task_size)
+ 			ctask->dd_data = &ctask[1];
+ 		ctask->itt = cmd_i;
+-		ctask->hdr_max = sizeof(struct iscsi_cmd);
+ 		INIT_LIST_HEAD(&ctask->running);
+ 	}
+ 
+-- 
+1.5.1.2
 
