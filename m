@@ -1,58 +1,62 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: [PATCH 12/30] blk_end_request: changing ub (take 4)
-Date: Thu, 13 Dec 2007 13:59:16 -0800
-Message-ID: <20071213135916.27ebe3f9.zaitcev@redhat.com>
-References: <20071211.174647.75757994.k-ueda@ct.jp.nec.com>
-	<20071211154803.58beb681.zaitcev@redhat.com>
-	<20071212.153815.39152138.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: VM allocates pages in reverse order again
+Date: Thu, 13 Dec 2007 15:02:30 -0700
+Message-ID: <20071213220230.GR26334@parisc-linux.org>
+References: <4761821F.3050602@rtr.ca> <20071213192633.GD10104@kernel.dk> <4761883A.7050908@rtr.ca> <476188C4.9030802@rtr.ca> <20071213193937.GG10104@kernel.dk> <47618B0B.8020203@rtr.ca> <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk> <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071212.153815.39152138.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, zaitcev@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20071213200958.GK10104@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <jens.axboe@oracle.com>, linux-mm@kvack.org
+Cc: Mark Lord <liml@rtr.ca>, Mark Lord <lkml@rtr.ca>, IDE/ATA development list <linux-ide@vger.kernel.org>, Linux Kernel <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 12 Dec 2007 15:38:15 -0500 (EST), Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
-> On Tue, 11 Dec 2007 15:48:03 -0800, Pete Zaitcev <zaitcev@redhat.com> wrote:
+On Thu, Dec 13, 2007 at 09:09:59PM +0100, Jens Axboe wrote:
+> > >diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+> > >index e30b1a4..1e34b6f 100644
+> > >--- a/block/ll_rw_blk.c
+> > >+++ b/block/ll_rw_blk.c
+> > >@@ -1349,6 +1351,8 @@ new_segment:
+> > > 				sg = sg_next(sg);
+> > > 			}
+> > > 
+> > >+			if (bvprv && (page_address(bvprv->bv_page) + 
+> > >bvprv->bv_len == page_address(bvec->bv_page)))
+> > >+				printk("missed merge\n");
+> > > 			sg_set_page(sg, bvec->bv_page, nbytes, 
+> > > 			bvec->bv_offset);
+> > > 			nsegs++;
+> > > 		}
+> > >
+> > ..
+> > 
+> > Yeah, the first part is similar to my own hack.
+> > 
+> > For testing, try "dd if=/dev/sda of=/dev/null bs=4096k".
+> > That *really* should end up using contiguous pages on most systems.
+> > 
+> > I figured out the git thing, and am now building some in-between kernels to 
+> > try.
+> 
+> OK, it's a vm issue, I have tens of thousand "backward" pages after a
+> boot - IOW, bvec->bv_page is the page before bvprv->bv_page, not
+> reverse. So it looks like that bug got reintroduced.
 
-> > > -	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
-> > > -	end_that_request_last(rq, uptodate);
-> > > +	if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
-> > > +		BUG();
+Perhaps we should ask the -mm folks if they happen to have an idea what
+caused it ...
 
-> > My understanding was, blk_end_request() is the same thing, only
-> > takes the queue lock. But then, should I refactor ub so that it
-> > calls __blk_end_request if request function ends with an error
-> > and blk_end_request if the end-of-IO even is processed?
+Background: we're seeing pages allocated in reverse order after boot.
+This causes IO performance problems on machines without IOMMUs as we
+can't merge pages when they're allocated in the wrong order.  This is
+something that went wrong between 2.6.23 and 2.6.24-rc5.
 
-> I'm using __blk_end_request() here and I think it's sufficient, because:
->   o end_that_request_last() must be called with the queue lock held
->   o ub_end_rq() calls end_that_request_last() without taking
->     the queue lock in itself.
->     So the queue lock must have been taken outside ub_end_rq().
+Bill Irwin had a patch that fixed this; it was merged months ago, but
+the effects of it seem to have been undone.
 
-> But, if ub is calling end_that_request_last() without the queue lock,
-> it is a bug in the original code and we should use blk_end_request()
-> to fix that.
-
-So, I have to rewrite ub to split the paths after all, right?
-Let's do this then: I'll wait until your patch gets to Linus and
-then update it with the split. The reason is, I need the whole
-enchilada applied and I don't want to bother tracking iterations
-and all the little segments (of which you already have 30).
-Until then, ub will have a race by using your original small patch.
-
-Best wishes,
--- Pete
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
