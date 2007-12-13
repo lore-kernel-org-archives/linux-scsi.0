@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 24/24] iscsi class: bump version
-Date: Thu, 13 Dec 2007 12:43:43 -0600
-Message-ID: <1197571458603-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 17/24] iscsi_tcp: stop leaking r2t_info's when the incoming R2T is bad
+Date: Thu, 13 Dec 2007 12:43:36 -0600
+Message-ID: <1197571447387-git-send-email-michaelc@cs.wisc.edu>
 References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
  <1197571428957-git-send-email-michaelc@cs.wisc.edu>
  <11975714291290-git-send-email-michaelc@cs.wisc.edu>
@@ -19,46 +19,61 @@ References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
  <1197571442630-git-send-email-michaelc@cs.wisc.edu>
  <11975714441250-git-send-email-michaelc@cs.wisc.edu>
  <1197571445685-git-send-email-michaelc@cs.wisc.edu>
- <1197571447387-git-send-email-michaelc@cs.wisc.edu>
- <1197571448857-git-send-email-michaelc@cs.wisc.edu>
- <11975714503562-git-send-email-michaelc@cs.wisc.edu>
- <1197571451503-git-send-email-michaelc@cs.wisc.edu>
- <1197571453148-git-send-email-michaelc@cs.wisc.edu>
- <11975714543562-git-send-email-michaelc@cs.wisc.edu>
- <11975714563205-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47181 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47193 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759538AbXLMSoV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 13:44:21 -0500
-In-Reply-To: <11975714563205-git-send-email-michaelc@cs.wisc.edu>
+	id S1759628AbXLMSoj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Dec 2007 13:44:39 -0500
+In-Reply-To: <1197571445685-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>, Olaf Kirch <olaf.kirch@oracle.com>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-Update version.
+from olaf.kirch@oracle.com:
 
+iscsi_r2t_rsp checks the incoming R2T for sanity, and if it
+thinks it's fishy, it will drop it silently. In this case, we
+leaked an r2t_info object. If we do this often enough, we run
+into a BUG_ON some time later.
+
+Removed r2t wrappers and update patch by Mike Christie
+
+Signed-off-by: Olaf Kirch <olaf.kirch@oracle.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/scsi_transport_iscsi.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
+ drivers/scsi/iscsi_tcp.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index 3585599..ef0e742 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -33,7 +33,7 @@
- #define ISCSI_SESSION_ATTRS 18
- #define ISCSI_CONN_ATTRS 11
- #define ISCSI_HOST_ATTRS 4
--#define ISCSI_TRANSPORT_VERSION "2.0-724"
-+#define ISCSI_TRANSPORT_VERSION "2.0-867"
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 7212fe9..ecba606 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -658,6 +658,8 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 	r2t->data_length = be32_to_cpu(rhdr->data_length);
+ 	if (r2t->data_length == 0) {
+ 		printk(KERN_ERR "iscsi_tcp: invalid R2T with zero data len\n");
++		__kfifo_put(tcp_ctask->r2tpool.queue, (void*)&r2t,
++			    sizeof(void*));
+ 		spin_unlock(&session->lock);
+ 		return ISCSI_ERR_DATALEN;
+ 	}
+@@ -669,10 +671,12 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
  
- struct iscsi_internal {
- 	int daemon_pid;
+ 	r2t->data_offset = be32_to_cpu(rhdr->data_offset);
+ 	if (r2t->data_offset + r2t->data_length > scsi_bufflen(ctask->sc)) {
+-		spin_unlock(&session->lock);
+ 		printk(KERN_ERR "iscsi_tcp: invalid R2T with data len %u at "
+ 		       "offset %u and total length %d\n", r2t->data_length,
+ 		       r2t->data_offset, scsi_bufflen(ctask->sc));
++		__kfifo_put(tcp_ctask->r2tpool.queue, (void*)&r2t,
++			    sizeof(void*));
++		spin_unlock(&session->lock);
+ 		return ISCSI_ERR_DATALEN;
+ 	}
+ 
 -- 
 1.5.1.2
 
