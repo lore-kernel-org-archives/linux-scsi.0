@@ -1,45 +1,50 @@
-From: Andrew Morton <akpm@linux-foundation.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Thu, 13 Dec 2007 14:02:07 -0800
-Message-ID: <20071213140207.111f94e2.akpm@linux-foundation.org>
+Date: Thu, 13 Dec 2007 17:15:06 -0500
+Message-ID: <1197584106.3154.55.camel@localhost.localdomain>
 References: <20071213185326.GQ26334@parisc-linux.org>
-	<4761821F.3050602@rtr.ca>
-	<20071213192633.GD10104@kernel.dk>
-	<4761883A.7050908@rtr.ca>
-	<476188C4.9030802@rtr.ca>
-	<20071213193937.GG10104@kernel.dk>
-	<47618B0B.8020203@rtr.ca>
-	<20071213195350.GH10104@kernel.dk>
-	<20071213200219.GI10104@kernel.dk>
-	<476190BE.9010405@rtr.ca>
-	<20071213200958.GK10104@kernel.dk>
+	 <4761821F.3050602@rtr.ca> <20071213192633.GD10104@kernel.dk>
+	 <4761883A.7050908@rtr.ca> <476188C4.9030802@rtr.ca>
+	 <20071213193937.GG10104@kernel.dk> <47618B0B.8020203@rtr.ca>
+	 <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk>
+	 <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk>
+	 <20071213140207.111f94e2.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20071213200958.GK10104@kernel.dk>
+In-Reply-To: <20071213140207.111f94e2.akpm@linux-foundation.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: Jens Axboe <jens.axboe@oracle.com>
-Cc: liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Mel Gorman <mel@csn.ul.ie>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Jens Axboe <jens.axboe@oracle.com>, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Mel Gorman <mel@csn.ul.ie>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 13 Dec 2007 21:09:59 +0100
-Jens Axboe <jens.axboe@oracle.com> wrote:
 
->
-> OK, it's a vm issue,
+On Thu, 2007-12-13 at 14:02 -0800, Andrew Morton wrote:
+> On Thu, 13 Dec 2007 21:09:59 +0100
+> Jens Axboe <jens.axboe@oracle.com> wrote:
+> 
+> >
+> > OK, it's a vm issue,
+> 
+> cc linux-mm and probable culprit.
+> 
+> >  I have tens of thousand "backward" pages after a
+> > boot - IOW, bvec->bv_page is the page before bvprv->bv_page, not
+> > reverse. So it looks like that bug got reintroduced.
+> 
+> Bill Irwin fixed this a couple of years back: changed the page allocator so
+> that it mostly hands out pages in ascending physical-address order.
+> 
+> I guess we broke that, quite possibly in Mel's page allocator rework.
+> 
+> It would help if you could provide us with a simple recipe for
+> demonstrating this problem, please.
 
-cc linux-mm and probable culprit.
+The simple way seems to be to malloc a large area, touch every page and
+then look at the physical pages assigned ... they now mostly seem to be
+descending in physical address.
 
->  I have tens of thousand "backward" pages after a
-> boot - IOW, bvec->bv_page is the page before bvprv->bv_page, not
-> reverse. So it looks like that bug got reintroduced.
+James
 
-Bill Irwin fixed this a couple of years back: changed the page allocator so
-that it mostly hands out pages in ascending physical-address order.
-
-I guess we broke that, quite possibly in Mel's page allocator rework.
-
-It would help if you could provide us with a simple recipe for
-demonstrating this problem, please.
 
