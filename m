@@ -1,46 +1,68 @@
-From: Miquel van Smoorenburg <miquels@cistron.nl>
-Subject: [PATCH] dpt_i2o: don't set DMA_64BIT_MASK [was: Re: [stable] broken dpt_i2o in 2.6.23 (was: ext2 check page: bad entry in directory) (fwd)]
-Date: Thu, 13 Dec 2007 11:11:44 +0100
-Message-ID: <20071213101144.GA61767@xs4all.net>
-References: <20071212105841.GN6770@1und1.de> <20071212033808.6fb92139.akpm@linux-foundation.org> <1197464879.20796.15.camel@n2o.xs4all.nl> <20071212134342.GR6770@1und1.de> <20071212111629.9a4f7f73.akpm@linux-foundation.org> <1197489294.4203.40.camel@localhost.localdomain> <20071212221627.GA16474@kroah.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH] sr/sd: Remove simple dead code
+Date: Thu, 13 Dec 2007 13:34:05 +0200
+Message-ID: <476118AD.80407@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr10.xs4all.nl ([194.109.24.30]:3963 "EHLO
-	smtp-vbr10.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751328AbXLMKNI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2007 05:13:08 -0500
-Content-Disposition: inline
-In-Reply-To: <20071212221627.GA16474@kroah.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11591 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751692AbXLMLeK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2007 06:34:10 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Miquel van Smoorenburg <miquels@cistron.nl>, linux-scsi@vger.kernel.org, matthew@wil.cx, linux-kernel@vger.kernel.org, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Anders Henke <anders.henke@1und1.de>, stable@kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-According to Greg KH:
-> So, what should be added to 2.6.23-stable then?  And, can I get a real
-> changelog entry for it?
 
-This is suitable for both 2.6.23.x and 2.6.24-rc5 :
+  if (rq_data_dir() == WRITE) else if() else chain had an extra
+  "else" since the if() is on a value of 1 bit.
 
-linux-2.6-dpt_i2o-no-dma64.patch
+  Also with a bidi request rq_data_dir() == WRITE
+  and blk_bidi_rq() == true.
 
-The dpt_i2o driver can't handle 64 bit DMA addresses, so do not
-let it set pci_set_dma_mask(pDev, DMA_64BIT_MASK) .
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/sd.c |    5 +----
+ drivers/scsi/sr.c |    5 +----
+ 2 files changed, 2 insertions(+), 8 deletions(-)
 
-Signed-off-by: Miquel van Smoorenburg <miquels@cistron.nl>
-
-diff -ruN linux-2.6.23.9.orig/drivers/scsi/dpt_i2o.c linux-2.6.23.9/drivers/scsi/dpt_i2o.c
---- linux-2.6.23.9.orig/drivers/scsi/dpt_i2o.c	2007-11-26 18:51:43.000000000 +0100
-+++ linux-2.6.23.9/drivers/scsi/dpt_i2o.c	2007-12-12 13:21:05.000000000 +0100
-@@ -905,8 +905,7 @@
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 212f6bc..e6d85b0 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -445,12 +445,9 @@ static int sd_prep_fn(struct request_queue *q, struct request *rq)
+ 		}
+ 		SCpnt->cmnd[0] = WRITE_6;
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
+-	} else if (rq_data_dir(rq) == READ) {
++	} else {
+ 		SCpnt->cmnd[0] = READ_6;
+ 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+-	} else {
+-		scmd_printk(KERN_ERR, SCpnt, "Unknown command %x\n", rq->cmd_flags);
+-		goto out;
  	}
  
- 	pci_set_master(pDev);
--	if (pci_set_dma_mask(pDev, DMA_64BIT_MASK) &&
--	    pci_set_dma_mask(pDev, DMA_32BIT_MASK))
-+	if (pci_set_dma_mask(pDev, DMA_32BIT_MASK))
- 		return -EINVAL;
+ 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt,
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index 896be4a..7128d15 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -372,12 +372,9 @@ static int sr_prep_fn(struct request_queue *q, struct request *rq)
+ 		SCpnt->cmnd[0] = WRITE_10;
+ 		SCpnt->sc_data_direction = DMA_TO_DEVICE;
+  	 	cd->cdi.media_written = 1;
+-	} else if (rq_data_dir(rq) == READ) {
++	} else {
+ 		SCpnt->cmnd[0] = READ_10;
+ 		SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+-	} else {
+-		blk_dump_rq_flags(rq, "Unknown sr command");
+-		goto out;
+ 	}
  
- 	base_addr0_phys = pci_resource_start(pDev,0);
+ 	{
+-- 
+1.5.3.3
 
