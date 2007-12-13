@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 12/24] iscsi_tcp: update the website URL
-Date: Thu, 13 Dec 2007 12:43:31 -0600
-Message-ID: <11975714404116-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 24/24] iscsi class: bump version
+Date: Thu, 13 Dec 2007 12:43:43 -0600
+Message-ID: <1197571458603-git-send-email-michaelc@cs.wisc.edu>
 References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
  <1197571428957-git-send-email-michaelc@cs.wisc.edu>
  <11975714291290-git-send-email-michaelc@cs.wisc.edu>
@@ -14,41 +14,51 @@ References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
  <11975714363904-git-send-email-michaelc@cs.wisc.edu>
  <11975714372848-git-send-email-michaelc@cs.wisc.edu>
  <11975714382641-git-send-email-michaelc@cs.wisc.edu>
+ <11975714404116-git-send-email-michaelc@cs.wisc.edu>
+ <11975714413336-git-send-email-michaelc@cs.wisc.edu>
+ <1197571442630-git-send-email-michaelc@cs.wisc.edu>
+ <11975714441250-git-send-email-michaelc@cs.wisc.edu>
+ <1197571445685-git-send-email-michaelc@cs.wisc.edu>
+ <1197571447387-git-send-email-michaelc@cs.wisc.edu>
+ <1197571448857-git-send-email-michaelc@cs.wisc.edu>
+ <11975714503562-git-send-email-michaelc@cs.wisc.edu>
+ <1197571451503-git-send-email-michaelc@cs.wisc.edu>
+ <1197571453148-git-send-email-michaelc@cs.wisc.edu>
+ <11975714543562-git-send-email-michaelc@cs.wisc.edu>
+ <11975714563205-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47132 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47181 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759613AbXLMSoO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 13:44:14 -0500
-In-Reply-To: <11975714382641-git-send-email-michaelc@cs.wisc.edu>
+	id S1759538AbXLMSoV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Dec 2007 13:44:21 -0500
+In-Reply-To: <11975714563205-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: FUJITA Tomonori <tomof@acm.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: FUJITA Tomonori <tomof@acm.org>
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-Use open-iscsi.org instead of linux-iscsi.sf.net, which hasn't been
-updated for ages.
+Update version.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/Kconfig |    2 +-
+ drivers/scsi/scsi_transport_iscsi.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index becbb09..4c7e99f 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -341,7 +341,7 @@ config ISCSI_TCP
- 	 The userspace component needed to initialize the driver, documentation,
- 	 and sample configuration files can be found here:
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 3585599..ef0e742 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -33,7 +33,7 @@
+ #define ISCSI_SESSION_ATTRS 18
+ #define ISCSI_CONN_ATTRS 11
+ #define ISCSI_HOST_ATTRS 4
+-#define ISCSI_TRANSPORT_VERSION "2.0-724"
++#define ISCSI_TRANSPORT_VERSION "2.0-867"
  
--	 http://linux-iscsi.sf.net
-+	 http://open-iscsi.org
- 
- config SGIWD93_SCSI
- 	tristate "SGI WD93C93 SCSI Driver"
+ struct iscsi_internal {
+ 	int daemon_pid;
 -- 
 1.5.1.2
 
