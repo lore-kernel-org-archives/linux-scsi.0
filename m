@@ -1,7 +1,7 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 22/24] libiscsi: use is_power_of_2
-Date: Thu, 13 Dec 2007 12:43:41 -0600
-Message-ID: <11975714543562-git-send-email-michaelc@cs.wisc.edu>
+Subject: [PATCH 15/24] Drop host lock in queuecommand
+Date: Thu, 13 Dec 2007 12:43:34 -0600
+Message-ID: <11975714441250-git-send-email-michaelc@cs.wisc.edu>
 References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
  <1197571428957-git-send-email-michaelc@cs.wisc.edu>
  <11975714291290-git-send-email-michaelc@cs.wisc.edu>
@@ -17,57 +17,63 @@ References: <11975714233983-git-send-email-michaelc@cs.wisc.edu>
  <11975714404116-git-send-email-michaelc@cs.wisc.edu>
  <11975714413336-git-send-email-michaelc@cs.wisc.edu>
  <1197571442630-git-send-email-michaelc@cs.wisc.edu>
- <11975714441250-git-send-email-michaelc@cs.wisc.edu>
- <1197571445685-git-send-email-michaelc@cs.wisc.edu>
- <1197571447387-git-send-email-michaelc@cs.wisc.edu>
- <1197571448857-git-send-email-michaelc@cs.wisc.edu>
- <11975714503562-git-send-email-michaelc@cs.wisc.edu>
- <1197571451503-git-send-email-michaelc@cs.wisc.edu>
- <1197571453148-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:47160 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:47075 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760067AbXLMSoT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 13:44:19 -0500
-In-Reply-To: <1197571453148-git-send-email-michaelc@cs.wisc.edu>
+	id S1759461AbXLMSoI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 13 Dec 2007 13:44:08 -0500
+In-Reply-To: <1197571442630-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>, vignesh babu <vignesh.babu@wipro.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
 From: Mike Christie <michaelc@cs.wisc.edu>
 
-Patch from vignesh babu <vignesh.babu@wipro.com>:
+The driver does not need the host lock in queuecommand so drop it.
 
-Replacing n & (n - 1) for power of 2 check by is_power_of_2(n)
-
-Signed-off-by: vignesh babu <vignesh.babu@wipro.com>
 Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
 ---
- drivers/scsi/libiscsi.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ drivers/scsi/libiscsi.c |    6 +++++-
+ 1 files changed, 5 insertions(+), 1 deletions(-)
 
 diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 6573223..553168a 100644
+index 4461317..b0bc8c3 100644
 --- a/drivers/scsi/libiscsi.c
 +++ b/drivers/scsi/libiscsi.c
-@@ -24,6 +24,7 @@
- #include <linux/types.h>
- #include <linux/kfifo.h>
- #include <linux/delay.h>
-+#include <linux/log2.h>
- #include <asm/unaligned.h>
- #include <net/tcp.h>
- #include <scsi/scsi_cmnd.h>
-@@ -1700,7 +1701,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
- 		qdepth = ISCSI_DEF_CMD_PER_LUN;
- 	}
+@@ -1010,8 +1010,9 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	sc->SCp.ptr = NULL;
  
--	if (cmds_max < 2 || (cmds_max & (cmds_max - 1)) ||
-+	if (!is_power_of_2(cmds_max) ||
- 	    cmds_max >= ISCSI_MGMT_ITT_OFFSET) {
- 		if (cmds_max != 0)
- 			printk(KERN_ERR "iscsi: invalid can_queue of %d. "
+ 	host = sc->device->host;
+-	session = iscsi_hostdata(host->hostdata);
++	spin_unlock(host->host_lock);
+ 
++	session = iscsi_hostdata(host->hostdata);
+ 	spin_lock(&session->lock);
+ 
+ 	/*
+@@ -1077,11 +1078,13 @@ int iscsi_queuecommand(struct scsi_cmnd *sc, void (*done)(struct scsi_cmnd *))
+ 	spin_unlock(&session->lock);
+ 
+ 	scsi_queue_work(host, &conn->xmitwork);
++	spin_lock(host->host_lock);
+ 	return 0;
+ 
+ reject:
+ 	spin_unlock(&session->lock);
+ 	debug_scsi("cmd 0x%x rejected (%d)\n", sc->cmnd[0], reason);
++	spin_lock(host->host_lock);
+ 	return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ fault:
+@@ -1091,6 +1094,7 @@ fault:
+ 	sc->result = (DID_NO_CONNECT << 16);
+ 	scsi_set_resid(sc, scsi_bufflen(sc));
+ 	sc->scsi_done(sc);
++	spin_lock(host->host_lock);
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(iscsi_queuecommand);
 -- 
 1.5.1.2
 
