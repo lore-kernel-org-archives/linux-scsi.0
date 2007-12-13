@@ -1,69 +1,186 @@
-From: David Chinner <dgc@sgi.com>
-Subject: Re: [PATCH] REQ-flags to/from BIO-flags bugfix
-Date: Thu, 13 Dec 2007 16:36:21 +1100
-Message-ID: <20071213053621.GC4396912@sgi.com>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org> <47462F3C.3040700@googlemail.com> <20071122201250.f957e280.akpm@linux-foundation.org> <47466B5D.90607@googlemail.com> <20071126221509.8f437b61.akpm@linux-foundation.org> <1197390783.3812.19.camel@localhost.localdomain> <475FB316.6040804@panasas.com> <475FBFEE.9010009@panasas.com> <20071212151813.GJ26334@parisc-linux.org> <20071212155407.GK26334@parisc-linux.org>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
+Subject: [RFC] blktrace interface for sg devices
+Date: Thu, 13 Dec 2007 10:09:48 +0100
+Message-ID: <20071213090946.GA32110@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.sgi.com ([192.48.171.30]:36101 "EHLO relay.sgi.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750821AbXLMFqF (ORCPT
-	<rfc822;@relay.sgi.com:linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 00:46:05 -0500
+Received: from mtagate4.uk.ibm.com ([195.212.29.137]:22933 "EHLO
+	mtagate4.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751993AbXLMJJx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Dec 2007 04:09:53 -0500
 Content-Disposition: inline
-In-Reply-To: <20071212155407.GK26334@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Jens Axboe <jens.axboe@oracle.com>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+To: linux-scsi@vger.kernel.org, linux-btrace@vger.kernel.org
 
-On Wed, Dec 12, 2007 at 08:54:07AM -0700, Matthew Wilcox wrote:
-> On Wed, Dec 12, 2007 at 08:18:14AM -0700, Matthew Wilcox wrote:
-> > I don't know whether BIO_RW_BARRIER is __REQ_SOFTBARRIER or
-> > __REQ_HARDBARRIER, so I didn't include that in this patch.  There also
-> > doesn't seem to be a __REQ equivalent to BIO_RW_AHEAD, but we can do
-> > the other four bits (and leave gaps for those two).
-> 
-> Hm.  BIO_RW_AHEAD seems unused:
-> 
-> willy@honeydew:~/kernel/linux-2.6$ grep -r BIO_RW_AHEAD *
-> block/blktrace.c:       (((rw) & (1 << BIO_RW_AHEAD)) << (2 - BIO_RW_AHEAD))
-> include/linux/bio.h:#define BIO_RW_AHEAD        1
-> include/linux/bio.h:#define bio_rw_ahead(bio)   ((bio)->bi_rw & (1 << BIO_RW_AHEAD))
-> willy@honeydew:~/kernel/linux-2.6$ grep -r bio_rw_ahead *
-> block/ll_rw_blk.c:      if (bio_rw_ahead(bio) || bio_failfast(bio))
-> drivers/md/dm-mpath.c:  if ((error == -EWOULDBLOCK) && bio_rw_ahead(bio))
-> drivers/md/multipath.c: else if (!bio_rw_ahead(bio)) {
-> include/linux/bio.h:#define bio_rw_ahead(bio)   ((bio)->bi_rw & (1 << BIO_RW_AHEAD))
+I am referring to the discussion of introducing statistics in the SCSI
+layer and the conclusion that blktrace already provides the data:
+http://lkml.org/lkml/2006/10/21/72
+http://lkml.org/lkml/2006/11/2/141
 
-That would say to me that READA is not hooked up correctly. i.e:
+While blktrace works fine for disk devices, it currently does not
+provide data for non-disk devices like tape drives. To close this gap,
+i am looking for a way to get the same trace data also from other SCSI
+devices.
 
-#define READ 0
-#define WRITE 1
-#define READA 2         /* read-ahead  - don't block if no resources */
-#define SWRITE 3        /* for ll_rw_block() - wait for buffer lock */
-#define READ_SYNC       (READ | (1 << BIO_RW_SYNC))
-#define READ_META       (READ | (1 << BIO_RW_META))
-#define WRITE_SYNC      (WRITE | (1 << BIO_RW_SYNC))
-#define WRITE_BARRIER   ((1 << BIO_RW) | (1 << BIO_RW_BARRIER))
+Since the SCSI layer internally uses the same request queuest for all
+devices and the queues already use the blktrace interface, the main
+missing part is the interface to enable the tracing for all SCSI
+devices.
 
-i.e. it should be:
+Attached is a patch that adds the ioctl interface for blktrace to the
+sg generic scsi interface. This already allows to get some trace data
+for SCSI tape drives, although i have to do more testing.
 
-#define READA		(1 << BIO_RW_AHEAD)
+For testing, any sg device file can be passed to blktrace, e.g.:
+# blktrace -d /dev/sg1 -o - | blkparse -i -
 
-Right?
+I am seeking input in this approach: Is this approach worth pursuing
+to enable blktrace to trace SCSI tape drives? Would there be a better
+approach to get this trace data?
 
-FWIW, dm does this:
+Christof Schmitt
 
-		if (bio_rw(bio) != READA)
+---
+ block/blktrace.c       |   19 +++++++++++--------
+ drivers/scsi/sg.c      |   12 ++++++++++++
+ include/linux/blkdev.h |   10 ++++++++++
+ 3 files changed, 33 insertions(+), 8 deletions(-)
 
-Which really should be if (bio_rw_ahead(bio)).....
-
-Cheers,
-
-Dave.
--- 
-Dave Chinner
-Principal Engineer
-SGI Australian Software Group
+--- a/block/blktrace.c	2007-12-13 08:48:23.000000000 +0100
++++ b/block/blktrace.c	2007-12-13 08:48:25.000000000 +0100
+@@ -231,7 +231,7 @@ static void blk_trace_cleanup(struct blk
+ 	kfree(bt);
+ }
+ 
+-static int blk_trace_remove(struct request_queue *q)
++int blk_trace_remove(struct request_queue *q)
+ {
+ 	struct blk_trace *bt;
+ 
+@@ -245,6 +245,7 @@ static int blk_trace_remove(struct reque
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(blk_trace_remove);
+ 
+ static int blk_dropped_open(struct inode *inode, struct file *filp)
+ {
+@@ -312,13 +313,11 @@ static struct rchan_callbacks blk_relay_
+ /*
+  * Setup everything required to start tracing
+  */
+-static int blk_trace_setup(struct request_queue *q, struct block_device *bdev,
+-			   char __user *arg)
++int blk_trace_setup(struct request_queue *q, char *name, dev_t dev, char __user *arg)
+ {
+ 	struct blk_user_trace_setup buts;
+ 	struct blk_trace *old_bt, *bt = NULL;
+ 	struct dentry *dir = NULL;
+-	char b[BDEVNAME_SIZE];
+ 	int ret, i;
+ 
+ 	if (copy_from_user(&buts, arg, sizeof(buts)))
+@@ -327,7 +326,7 @@ static int blk_trace_setup(struct reques
+ 	if (!buts.buf_size || !buts.buf_nr)
+ 		return -EINVAL;
+ 
+-	strcpy(buts.name, bdevname(bdev, b));
++	strcpy(buts.name, name);
+ 
+ 	/*
+ 	 * some device names have larger paths - convert the slashes
+@@ -355,7 +354,7 @@ static int blk_trace_setup(struct reques
+ 		goto err;
+ 
+ 	bt->dir = dir;
+-	bt->dev = bdev->bd_dev;
++	bt->dev = dev;
+ 	atomic_set(&bt->dropped, 0);
+ 
+ 	ret = -EIO;
+@@ -400,8 +399,9 @@ err:
+ 	}
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(blk_trace_setup);
+ 
+-static int blk_trace_startstop(struct request_queue *q, int start)
++int blk_trace_startstop(struct request_queue *q, int start)
+ {
+ 	struct blk_trace *bt;
+ 	int ret;
+@@ -434,6 +434,7 @@ static int blk_trace_startstop(struct re
+ 
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(blk_trace_startstop);
+ 
+ /**
+  * blk_trace_ioctl: - handle the ioctls associated with tracing
+@@ -446,6 +447,7 @@ int blk_trace_ioctl(struct block_device 
+ {
+ 	struct request_queue *q;
+ 	int ret, start = 0;
++	char b[BDEVNAME_SIZE];
+ 
+ 	q = bdev_get_queue(bdev);
+ 	if (!q)
+@@ -455,7 +457,8 @@ int blk_trace_ioctl(struct block_device 
+ 
+ 	switch (cmd) {
+ 	case BLKTRACESETUP:
+-		ret = blk_trace_setup(q, bdev, arg);
++		strcpy(b, bdevname(bdev, b));
++		ret = blk_trace_setup(q, b, bdev->bd_dev, arg);
+ 		break;
+ 	case BLKTRACESTART:
+ 		start = 1;
+--- a/drivers/scsi/sg.c	2007-12-13 08:48:23.000000000 +0100
++++ b/drivers/scsi/sg.c	2007-12-13 08:48:25.000000000 +0100
+@@ -55,6 +55,8 @@ static int sg_version_num = 30534;	/* 2 
+ #include <scsi/scsi_ioctl.h>
+ #include <scsi/sg.h>
+ 
++#include <linux/blktrace_api.h>
++
+ #include "scsi_logging.h"
+ 
+ #ifdef CONFIG_SCSI_PROC_FS
+@@ -1066,6 +1068,16 @@ sg_ioctl(struct inode *inode, struct fil
+ 	case BLKSECTGET:
+ 		return put_user(sdp->device->request_queue->max_sectors * 512,
+ 				ip);
++	case BLKTRACESETUP:
++	{
++		return blk_trace_setup(sdp->device->request_queue , sdp->device->sdev_gendev.bus_id, &sdp->device->sdev_gendev, arg);
++	}
++	case BLKTRACESTART:
++		return blk_trace_startstop(sdp->device->request_queue, 1);
++	case BLKTRACESTOP:
++		return blk_trace_startstop(sdp->device->request_queue, 0);
++	case BLKTRACETEARDOWN:
++		return blk_trace_remove(sdp->device->request_queue);
+ 	default:
+ 		if (read_only)
+ 			return -EPERM;	/* don't know so take safe approach */
+--- a/include/linux/blkdev.h	2007-12-13 08:48:23.000000000 +0100
++++ b/include/linux/blkdev.h	2007-12-13 08:48:25.000000000 +0100
+@@ -747,6 +747,16 @@ static inline void blkdev_dequeue_reques
+ 	elv_dequeue_request(req->q, req);
+ }
+ 
++#ifdef CONFIG_BLK_DEV_IO_TRACE
++extern int blk_trace_setup(request_queue_t *q,  char * name, dev_t dev, char __user *arg);
++extern int blk_trace_startstop(request_queue_t *q, int start);
++extern int blk_trace_remove(request_queue_t *q);
++#else
++#define blk_trace_setup(q, name, dev, arg) do { } while(0)
++#define blk_trace_startstop(q, start) do { } while(0)
++#define blk_trace_remove(q) do { } while(0)
++#endif
++
+ /*
+  * Access functions for manipulating queue properties
+  */
