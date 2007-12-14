@@ -1,57 +1,69 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch 18/30] scsi/qla2xxx/: possible cleanups
-Date: Fri, 14 Dec 2007 07:37:24 -0800
-Message-ID: <20071214153723.GC1823@plap3.qlogic.org>
-References: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org>
+From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
+Subject: Re: [PATCH 12/30] blk_end_request: changing ub (take 4)
+Date: Fri, 14 Dec 2007 12:04:54 -0500 (EST)
+Message-ID: <20071214.120454.39153297.k-ueda@ct.jp.nec.com>
+References: <20071211154803.58beb681.zaitcev@redhat.com>
+	<20071212.153815.39152138.k-ueda@ct.jp.nec.com>
+	<20071213135916.27ebe3f9.zaitcev@redhat.com>
+Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:27896 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751633AbXLNPh1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Dec 2007 10:37:27 -0500
-Content-Disposition: inline
-In-Reply-To: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20071213135916.27ebe3f9.zaitcev@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: zaitcev@redhat.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: akpm@linux-foundation.org
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@kernel.org
 
-On Thu, 13 Dec 2007, akpm@linux-foundation.org wrote:
+Hi Pete,
 
-> From: Adrian Bunk <bunk@kernel.org>
+On Thu, 13 Dec 2007 13:59:16 -0800, Pete Zaitcev <zaitcev@redhat.com> wrote:
+> > > > -	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
+> > > > -	end_that_request_last(rq, uptodate);
+> > > > +	if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
+> > > > +		BUG();
+> > >
+> > > My understanding was, blk_end_request() is the same thing, only
+> > > takes the queue lock. But then, should I refactor ub so that it
+> > > calls __blk_end_request if request function ends with an error
+> > > and blk_end_request if the end-of-IO even is processed?
+> >
+> > I'm using __blk_end_request() here and I think it's sufficient, because:
+> >   o end_that_request_last() must be called with the queue lock held
+> >   o ub_end_rq() calls end_that_request_last() without taking
+> >     the queue lock in itself.
+> >     So the queue lock must have been taken outside ub_end_rq().
+> >
+> > But, if ub is calling end_that_request_last() without the queue lock,
+> > it is a bug in the original code and we should use blk_end_request()
+> > to fix that.
 > 
-> - make the following needlessly global code static:
->   - qla_attr.c: qla24xx_vport_delete()
->   - qla_attr.c: qla24xx_vport_disable()
->   - qla_mid.c: qla24xx_allocate_vp_id()
->   - qla_mid.c: qla24xx_find_vhost_by_name()
->   - qla_mid.c: qla2x00_do_dpc_vp()
->   - qla_os.c: struct qla2x00_driver_template
->   - qla_os.c: qla2x00_stop_timer()
->   - qla_os.c: qla2x00_mem_alloc()
->   - qla_os.c: qla2x00_mem_free()
->   - qla_sup.c: qla2x00_lock_nvram_access()
->   - qla_sup.c: qla2x00_unlock_nvram_access()
->   - qla_sup.c: qla2x00_get_nvram_word()
->   - qla_sup.c: qla2x00_write_nvram_word()
-> - #if 0 the following unused global functions:
->   - qla_dbg.c: qla2x00_dump_pkt()
->   - qla_mbx.c: qla2x00_system_error()
->   - qla_mbx.c: qla2x00_get_serdes_params()
->   - qla_mbx.c: qla2x00_get_idma_speed()
->   - qla_mbx.c: qla24xx_get_vp_database()
->   - qla_mbx.c: qla24xx_get_vp_entry()
-> - qla_os.c: remove some unneeded function prototypes
-> 
-> Signed-off-by: Adrian Bunk <bunk@kernel.org>
-> Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
-> Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+> So, I have to rewrite ub to split the paths after all, right?
+> Let's do this then: I'll wait until your patch gets to Linus and
+> then update it with the split. The reason is, I need the whole
+> enchilada applied and I don't want to bother tracking iterations
+> and all the little segments (of which you already have 30).
+> Until then, ub will have a race by using your original small patch.
 
-Andrew,
+No.
+Are you doubting that the current ub code has the problem, aren't you?
+My patch shouldn't introduce a NEW problem to ub.
 
-Could you drop this patch from your queue.  I'll carry it in my tree
-(along with additional code removals) for 2.6.25 submission.
+I have investigated all code paths which call ub_end_rq() in ub.c,
+and confirmed that ub_end_rq() is always called with the queue lock
+held.  (sc->lock is registered as a queue lock.)
+
+So there is no such race in the current ub code.
+You don't need to rewrite ub.
 
 Thanks,
-Andrew Vasquez
+Kiyoshi Ueda
