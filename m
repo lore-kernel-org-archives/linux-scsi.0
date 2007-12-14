@@ -1,54 +1,43 @@
 From: akpm@linux-foundation.org
-Subject: [patch 12/30] SCSI/NCR5380: minor irq handler cleanups
-Date: Thu, 13 Dec 2007 16:14:14 -0800
-Message-ID: <200712140014.lBE0EF3V026203@imap1.linux-foundation.org>
+Subject: [patch 13/30] advansys: fix section mismatch warning
+Date: Thu, 13 Dec 2007 16:14:15 -0800
+Message-ID: <200712140014.lBE0EF0m026206@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:36549 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:54240 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933453AbXLNAP2 (ORCPT
+	by vger.kernel.org with ESMTP id S932659AbXLNAP1 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:15:28 -0500
+	Thu, 13 Dec 2007 19:15:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, jgarzik@redhat.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, willy@debian.org
 
-From: Jeff Garzik <jeff@garzik.org>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-* remove unnecessary cast
+Fix section mismatch warning:
 
-* remove unnecessary use of 'irq' function arg
+WARNING: vmlinux.o(.exit.text+0x152a): Section mismatch: reference to .init.data:_asc_def_iop_base (between 'advansys_isa_remove' and 'advansys_exit')
 
-Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: Matthew Wilcox <willy@debian.org>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/NCR5380.c |    7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
+ drivers/scsi/advansys.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff -puN drivers/scsi/NCR5380.c~scsi-ncr5380-minor-irq-handler-cleanups drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c~scsi-ncr5380-minor-irq-handler-cleanups
-+++ a/drivers/scsi/NCR5380.c
-@@ -1157,16 +1157,17 @@ static void NCR5380_main(struct work_str
-  *	Locks: takes the needed instance locks
-  */
+diff -puN drivers/scsi/advansys.c~advansys-fix-section-mismatch-warning drivers/scsi/advansys.c
+--- a/drivers/scsi/advansys.c~advansys-fix-section-mismatch-warning
++++ a/drivers/scsi/advansys.c
+@@ -13906,7 +13906,7 @@ static int advansys_release(struct Scsi_
  
--static irqreturn_t NCR5380_intr(int irq, void *dev_id) 
-+static irqreturn_t NCR5380_intr(int dummy, void *dev_id)
- {
- 	NCR5380_local_declare();
--	struct Scsi_Host *instance = (struct Scsi_Host *)dev_id;
-+	struct Scsi_Host *instance = dev_id;
- 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
- 	int done;
- 	unsigned char basr;
- 	unsigned long flags;
+ #define ASC_IOADR_TABLE_MAX_IX  11
  
--	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n", irq));
-+	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n",
-+		instance->irq));
- 
- 	do {
- 		done = 1;
+-static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] __devinitdata = {
++static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] = {
+ 	0x100, 0x0110, 0x120, 0x0130, 0x140, 0x0150, 0x0190,
+ 	0x0210, 0x0230, 0x0250, 0x0330
+ };
 _
