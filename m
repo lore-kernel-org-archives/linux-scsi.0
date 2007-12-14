@@ -1,45 +1,58 @@
-From: Bernd Schubert <bs@q-leap.de>
-Subject: Re: [PATCH] scsi device recovery
-Date: Fri, 14 Dec 2007 13:28:48 +0100
-Message-ID: <200712141328.49196.bs@q-leap.de>
-References: <200712121354.14474.bs@q-leap.de> <200712141304.12490.bs@q-leap.de> <20071214122255.GU26334@parisc-linux.org>
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Fri, 14 Dec 2007 08:57:20 -0500
+Message-ID: <47628BC0.7020506@rtr.ca>
+References: <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk> <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <20071214115038.GB11046@csn.ul.ie>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:39931 "EHLO mail.q-leap.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752801AbXLNM2v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 14 Dec 2007 07:28:51 -0500
-In-Reply-To: <20071214122255.GU26334@parisc-linux.org>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20071214115038.GB11046@csn.ul.ie>
+Sender: linux-ide-owner@vger.kernel.org
+To: Mel Gorman <mel@csn.ul.ie>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, "Moore, Eric" <Eric.Moore@lsi.com>
 
-On Friday 14 December 2007 13:22:55 Matthew Wilcox wrote:
-> On Fri, Dec 14, 2007 at 01:04:12PM +0100, Bernd Schubert wrote:
-> > PS: Do you have some links to scsi and SPI specs?
->
-> The final versions are available for a fee from ANSI.  However,
-> you can download the final draft versions for free from
-> http://www.t10.org/drafts.htm  You probably want:
->
-> http://www.t10.org/ftp/t10/drafts/sam3/sam3r14.pdf (SCSI Architecture)
-> http://www.t10.org/ftp/t10/drafts/spi5/spi5r06.pdf (Parallel SCSI)
-> http://www.t10.org/ftp/t10/drafts/sdv/sdv-r08b.pdf (Domain Validation)
-> http://www.t10.org/ftp/t10/drafts/spc3/spc3r23.pdf (Primary Commands)
-> http://www.t10.org/ftp/t10/drafts/sbc2/sbc2r16.pdf (Block Commands)
->
-> I sometimes find it easier to look at SCSI-2 to find
-> things which haven't changed in the last fourteen years:
-> http://www.t10.org/ftp/t10/drafts/s2/s2-r10l.pdf
+Mel Gorman wrote:
+> On (13/12/07 16:37), Andrew Morton didst pronounce:
+>> On Thu, 13 Dec 2007 19:30:00 -0500
+>> Mark Lord <liml@rtr.ca> wrote:
+>>
+>>> Here's the commit that causes the regression:
+>>>
+>>> ...
+>>>
+>>> --- a/mm/page_alloc.c
+>>> +++ b/mm/page_alloc.c
+>>> @@ -760,7 +760,8 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
+>>>  		struct page *page = __rmqueue(zone, order, migratetype);
+>>>  		if (unlikely(page == NULL))
+>>>  			break;
+>>> -		list_add_tail(&page->lru, list);
+>>> +		list_add(&page->lru, list);
+>> well that looks fishy.
+>>
+> 
+> The reasoning behind the change was the first page encountered on the list
+> by the caller would have a matching migratetype. I failed to take into
+> account the physical ordering of pages returned. I'm setting up to run some
+> performance benchmarks of the candidate fix merged into the -mm tree to see
+> if the search shows up or not. I'm testing against 2.6.25-rc5 but it'll
+> take a few hours to complete.
+..
 
-Thanks a lot!!!
+Thanks, Mel.  This is all with CONFIG_SLAB=y, by the way.
+
+Note that it did appear to behave better with CONFIG_SLUB=y when I accidently
+used that .config on my 4GB machine here.  Physical segments of 4-10 pages
+happended much more common than with CONFIG_SLAB=y on my 3GB machine
+Slightly "apples and oranges" there, I know, but at least both were x86-32.  :)
+
+So I would expect CONFIG_SLAB to be well off with this patch under most (all?)
+conditions, but dunno about CONFIG_SLUB.
+
+Cheers
 
 
--- 
-Bernd Schubert
-Q-Leap Networks GmbH
+
+
