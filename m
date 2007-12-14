@@ -1,36 +1,42 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] fix page_alloc for larger I/O segments (improved)
-Date: Fri, 14 Dec 2007 11:13:40 -0700
-Message-ID: <20071214181339.GW26334@parisc-linux.org>
-References: <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <4761D160.7060603@rtr.ca> <4761D279.6050500@rtr.ca> <20071214174236.GA28613@csn.ul.ie>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch 18/30] scsi/qla2xxx/: possible cleanups
+Date: Fri, 14 Dec 2007 10:20:04 -0800
+Message-ID: <20071214182004.GG1823@plap3.qlogic.org>
+References: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org> <20071214153723.GC1823@plap3.qlogic.org> <20071214095559.5d4dd818.akpm@linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48372 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754088AbXLNSNm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Dec 2007 13:13:42 -0500
+Received: from avexch1.qlogic.com ([198.70.193.115]:58913 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750920AbXLNSUI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Dec 2007 13:20:08 -0500
 Content-Disposition: inline
-In-Reply-To: <20071214174236.GA28613@csn.ul.ie>
+In-Reply-To: <20071214095559.5d4dd818.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@kernel.org
 
-On Fri, Dec 14, 2007 at 05:42:37PM +0000, Mel Gorman wrote:
-> Regrettably this interferes with anti-fragmentation because the "next" page
-> on the list on return from rmqueue_bulk is not guaranteed to be of the right
-> mobility type. I fixed it as an additional patch but it adds additional cost
-> that should not be necessary and it's visible in microbenchmark results on
-> at least one machine.
+On Fri, 14 Dec 2007, Andrew Morton wrote:
 
-Is this patch to be preferred to the one Andrew Morton posted to do
-list_for_each_entry_reverse?
+> > Could you drop this patch from your queue.  I'll carry it in my tree
+> > (along with additional code removals) for 2.6.25 submission.
+> > 
+> 
+> I'll normally carry patches until they turn up in a subsystem tree or
+> mainline and will drop them then.  To minimise potential of lossage..
+> 
+> Is your tree publically accessible?
 
-I'll send it to our DB team to see if this improves our numbers at all.
+It is, though, not widely publicized:
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+	git://avgit01.qlogic.com/qla2xxx-upstream
+
+The repo is torndown and rebased on frequent a basis, and is meant to
+provide a snapshot of where qla2xxx is at any given time.  Currently
+it's comprised of linux-2.6.git with scsi-misc-2.6.git merged and a
+dozen or so patches queued for the next merge window (2.6.25).
+
+As it stands now, qla2xxx updates are still submitted via patches to
+linux-scsi, rather than asking for any type of 'merge' to
+scsi-misc-2.6.git be performed.
