@@ -1,43 +1,50 @@
 From: akpm@linux-foundation.org
-Subject: [patch 04/30] kill warnings in mptbase.h on parisc64
-Date: Thu, 13 Dec 2007 16:14:06 -0800
-Message-ID: <200712140014.lBE0E6tX026177@imap1.linux-foundation.org>
+Subject: [patch 03/30] initio: fix conflict when loading driver
+Date: Thu, 13 Dec 2007 16:14:05 -0800
+Message-ID: <200712140014.lBE0E5oj026174@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:33386 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:48986 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762465AbXLNAON (ORCPT
+	by vger.kernel.org with ESMTP id S1762797AbXLNAOx (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:14:13 -0500
+	Thu, 13 Dec 2007 19:14:53 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, kyle@mcmartin.ca, Eric.Moore@lsil.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, simps05192@yahoo.com
 
-From: Kyle McMartin <kyle@mcmartin.ca>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
 
-Verified all the arches necessary select the CONFIG_64BIT symbol.  This
-also kills the warning (since it was using the 32-bit case) on parisc64 and
-mips64.
+> I have a scanner connected to a Initio INI-950 SCSI card and I recently
+> upgraded from SuSE 10.2 to 10.3.  The new kernel doesn't see any of my
+> devices.  I get the following in /var/log/messages:
+>
+> ACPI: PCI Interrupt 0000:00:0a.0[A] -> GSI 17 (level, low) -> IRQ 16
+> initio: I/O port range 0x0 is busy.
+> ACPI: PCI interrupt for device 0000:00:0a.0 disabled
 
-Signed-off-by: Kyle McMartin <kyle@mcmartin.ca>
-Cc: "Moore, Eric Dean" <Eric.Moore@lsil.com>
+Humm not a collision - thats a bug in the driver updating.  Looks like the
+changes I made and combined with Christoph's lost a line somewhere when I
+was merging it all.  Try the following
+
+Signed-off-by: Alan Cox <alan@redhat.com>
+Cc: Scott Simpson <simps05192@yahoo.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptbase.h |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/initio.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-diff -puN drivers/message/fusion/mptbase.h~kill-warnings-in-mptbaseh-on-parisc64 drivers/message/fusion/mptbase.h
---- a/drivers/message/fusion/mptbase.h~kill-warnings-in-mptbaseh-on-parisc64
-+++ a/drivers/message/fusion/mptbase.h
-@@ -922,7 +922,7 @@ extern struct proc_dir_entry	*mpt_proc_r
- /*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
- #endif		/* } __KERNEL__ */
+diff -puN drivers/scsi/initio.c~initio-fix-conflict-when-loading-driver drivers/scsi/initio.c
+--- a/drivers/scsi/initio.c~initio-fix-conflict-when-loading-driver
++++ a/drivers/scsi/initio.c
+@@ -2867,6 +2867,7 @@ static int initio_probe_one(struct pci_d
+ 	}
+ 	host = (struct initio_host *)shost->hostdata;
+ 	memset(host, 0, sizeof(struct initio_host));
++	host->addr = pci_resource_start(pdev, 0);
  
--#if defined(__alpha__) || defined(__sparc_v9__) || defined(__ia64__) || defined(__x86_64__) || defined(__powerpc__)
-+#ifdef CONFIG_64BIT
- #define CAST_U32_TO_PTR(x)	((void *)(u64)x)
- #define CAST_PTR_TO_U32(x)	((u32)(u64)x)
- #else
+ 	if (!request_region(host->addr, 256, "i91u")) {
+ 		printk(KERN_WARNING "initio: I/O port range 0x%x is busy.\n", host->addr);
 _
