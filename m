@@ -1,89 +1,77 @@
 From: akpm@linux-foundation.org
-Subject: [patch 22/30] sg: nopage
-Date: Thu, 13 Dec 2007 16:14:24 -0800
-Message-ID: <200712140014.lBE0EOqf026242@imap1.linux-foundation.org>
+Subject: [patch 19/30] Dell CERC support for megaraid_mbox
+Date: Thu, 13 Dec 2007 16:14:22 -0800
+Message-ID: <200712140014.lBE0EM7F026231@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:54415 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:59478 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755520AbXLNAXY (ORCPT
+	by vger.kernel.org with ESMTP id S1757974AbXLNAXu (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:23:24 -0500
+	Thu, 13 Dec 2007 19:23:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, npiggin@suse.de, dougg@torque.net
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, hare@suse.de, James.Bottomley@steeleye.com, Sumant.Patro@lsi.com
 
-From: Nick Piggin <npiggin@suse.de>
+From: Hannes Reinecke <hare@suse.de>
 
-Convert SG from nopage to fault.
+Newer Dell CERC firmware (>= 6.62) implement a random deletion handling
+compatible with the legacy megaraid driver.  The legacy handling shifted
+the target ID by 0x80 only for I/O commands (READ/WRITE/etc), whereas
+megaraid_mbox shifts the target ID always if random deletion is supported. 
+The resulted in megaraid_mbox sending an INQUIRY to the wrong channel, and
+not finding any devices, obviously.
 
-Signed-off-by: Nick Piggin <npiggin@suse.de>
-Cc: Douglas Gilbert <dougg@torque.net>
-Cc: James Bottomley <James.Bottomley@steeleye.com>
+So we disable the random deletion support if the offending firmware is
+found.
+
+Addresses http://bugzilla.kernel.org/show_bug.cgi?id=6695
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Cc: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sg.c |   23 +++++++++++------------
- 1 file changed, 11 insertions(+), 12 deletions(-)
+ drivers/scsi/megaraid/megaraid_mbox.c |   17 +++++++++++++++++
+ drivers/scsi/megaraid/megaraid_mbox.h |    1 +
+ 2 files changed, 18 insertions(+)
 
-diff -puN drivers/scsi/sg.c~sg-nopage drivers/scsi/sg.c
---- a/drivers/scsi/sg.c~sg-nopage
-+++ a/drivers/scsi/sg.c
-@@ -1144,23 +1144,22 @@ sg_fasync(int fd, struct file *filp, int
- 	return (retval < 0) ? retval : 0;
- }
+diff -puN drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.c
+--- a/drivers/scsi/megaraid/megaraid_mbox.c~dell-cerc-support-for-megaraid_mbox
++++ a/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -3169,6 +3169,23 @@ megaraid_mbox_support_random_del(adapter
+ 	uint8_t		raw_mbox[sizeof(mbox_t)];
+ 	int		rval;
  
--static struct page *
--sg_vma_nopage(struct vm_area_struct *vma, unsigned long addr, int *type)
-+static int
-+sg_vma_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
- {
- 	Sg_fd *sfp;
--	struct page *page = NOPAGE_SIGBUS;
- 	unsigned long offset, len, sa;
- 	Sg_scatter_hold *rsv_schp;
- 	struct scatterlist *sg;
- 	int k;
++	/*
++	 * Newer firmware on Dell CERC expect a different
++	 * random deletion handling, so disable it.
++	 */
++	if (adapter->pdev->vendor == PCI_VENDOR_ID_AMI &&
++	    adapter->pdev->device == PCI_DEVICE_ID_AMI_MEGARAID3 &&
++	    adapter->pdev->subsystem_vendor == PCI_VENDOR_ID_DELL &&
++	    adapter->pdev->subsystem_device == PCI_SUBSYS_ID_CERC_ATA100_4CH &&
++	    (adapter->fw_version[0] > '6' ||
++	     (adapter->fw_version[0] == '6' &&
++	      adapter->fw_version[2] > '6') ||
++	     (adapter->fw_version[0] == '6'
++	      && adapter->fw_version[2] == '6'
++	      && adapter->fw_version[3] > '1'))) {
++		con_log(CL_DLEVEL1, ("megaraid: disable random deletion\n"));
++		return 0;
++	}
  
- 	if ((NULL == vma) || (!(sfp = (Sg_fd *) vma->vm_private_data)))
--		return page;
-+		return VM_FAULT_SIGBUS;
- 	rsv_schp = &sfp->reserve;
--	offset = addr - vma->vm_start;
-+	offset = vmf->pgoff << PAGE_SHIFT;
- 	if (offset >= rsv_schp->bufflen)
--		return page;
--	SCSI_LOG_TIMEOUT(3, printk("sg_vma_nopage: offset=%lu, scatg=%d\n",
-+		return VM_FAULT_SIGBUS;
-+	SCSI_LOG_TIMEOUT(3, printk("sg_vma_fault: offset=%lu, scatg=%d\n",
- 				   offset, rsv_schp->k_use_sg));
- 	sg = rsv_schp->buffer;
- 	sa = vma->vm_start;
-@@ -1169,21 +1168,21 @@ sg_vma_nopage(struct vm_area_struct *vma
- 		len = vma->vm_end - sa;
- 		len = (len < sg->length) ? len : sg->length;
- 		if (offset < len) {
-+			struct page *page;
- 			page = virt_to_page(page_address(sg_page(sg)) + offset);
- 			get_page(page);	/* increment page count */
--			break;
-+			vmf->page = page;
-+			return 0; /* success */
- 		}
- 		sa += len;
- 		offset -= len;
- 	}
+ 	mbox = (mbox_t *)raw_mbox;
  
--	if (type)
--		*type = VM_FAULT_MINOR;
--	return page;
-+	return VM_FAULT_SIGBUS;
- }
+diff -puN drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox drivers/scsi/megaraid/megaraid_mbox.h
+--- a/drivers/scsi/megaraid/megaraid_mbox.h~dell-cerc-support-for-megaraid_mbox
++++ a/drivers/scsi/megaraid/megaraid_mbox.h
+@@ -88,6 +88,7 @@
+ #define PCI_SUBSYS_ID_PERC3_QC				0x0471
+ #define PCI_SUBSYS_ID_PERC3_DC				0x0493
+ #define PCI_SUBSYS_ID_PERC3_SC				0x0475
++#define PCI_SUBSYS_ID_CERC_ATA100_4CH			0x0511
  
- static struct vm_operations_struct sg_mmap_vm_ops = {
--	.nopage = sg_vma_nopage,
-+	.fault = sg_vma_fault,
- };
  
- static int
+ #define MBOX_MAX_SCSI_CMDS	128	// number of cmds reserved for kernel
 _
