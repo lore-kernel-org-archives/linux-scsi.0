@@ -1,69 +1,80 @@
-From: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Subject: Re: [PATCH 12/30] blk_end_request: changing ub (take 4)
-Date: Fri, 14 Dec 2007 12:04:54 -0500 (EST)
-Message-ID: <20071214.120454.39153297.k-ueda@ct.jp.nec.com>
-References: <20071211154803.58beb681.zaitcev@redhat.com>
-	<20071212.153815.39152138.k-ueda@ct.jp.nec.com>
-	<20071213135916.27ebe3f9.zaitcev@redhat.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: [PATCH] fix page_alloc for larger I/O segments (improved)
+Date: Fri, 14 Dec 2007 17:42:37 +0000
+Message-ID: <20071214174236.GA28613@csn.ul.ie>
+References: <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <4761D160.7060603@rtr.ca> <4761D279.6050500@rtr.ca>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071213135916.27ebe3f9.zaitcev@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: zaitcev@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, jens.axboe@oracle.com
+Content-Type: text/plain; charset=iso-8859-15
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755971AbXLNRm7@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4761D279.6050500@rtr.ca>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mark Lord <liml@rtr.ca>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Pete,
-
-On Thu, 13 Dec 2007 13:59:16 -0800, Pete Zaitcev <zaitcev@redhat.com> wrote:
-> > > > -	end_that_request_first(rq, uptodate, rq->hard_nr_sectors);
-> > > > -	end_that_request_last(rq, uptodate);
-> > > > +	if (__blk_end_request(rq, error, blk_rq_bytes(rq)))
-> > > > +		BUG();
-> > >
-> > > My understanding was, blk_end_request() is the same thing, only
-> > > takes the queue lock. But then, should I refactor ub so that it
-> > > calls __blk_end_request if request function ends with an error
-> > > and blk_end_request if the end-of-IO even is processed?
-> >
-> > I'm using __blk_end_request() here and I think it's sufficient, because:
-> >   o end_that_request_last() must be called with the queue lock held
-> >   o ub_end_rq() calls end_that_request_last() without taking
-> >     the queue lock in itself.
-> >     So the queue lock must have been taken outside ub_end_rq().
-> >
-> > But, if ub is calling end_that_request_last() without the queue lock,
-> > it is a bug in the original code and we should use blk_end_request()
-> > to fix that.
+On (13/12/07 19:46), Mark Lord didst pronounce:
 > 
-> So, I have to rewrite ub to split the paths after all, right?
-> Let's do this then: I'll wait until your patch gets to Linus and
-> then update it with the split. The reason is, I need the whole
-> enchilada applied and I don't want to bother tracking iterations
-> and all the little segments (of which you already have 30).
-> Until then, ub will have a race by using your original small patch.
+> "Improved version", more similar to the 2.6.23 code:
+> 
+> Fix page allocator to give better chance of larger contiguous segments 
+> (again).
+> 
+> Signed-off-by: Mark Lord <mlord@pobox.com
 
-No.
-Are you doubting that the current ub code has the problem, aren't you?
-My patch shouldn't introduce a NEW problem to ub.
+Regrettably this interferes with anti-fragmentation because the "next" page
+on the list on return from rmqueue_bulk is not guaranteed to be of the right
+mobility type. I fixed it as an additional patch but it adds additional cost
+that should not be necessary and it's visible in microbenchmark results on
+at least one machine.
 
-I have investigated all code paths which call ub_end_rq() in ub.c,
-and confirmed that ub_end_rq() is always called with the queue lock
-held.  (sc->lock is registered as a queue lock.)
+The following patch should fix the page ordering problem without incurring an
+additional cost or interfering with anti-fragmentation. However, I haven't
+anything in place yet to verify that the physical page ordering is correct
+but it makes sense. Can you verify it fixes the problem please?
 
-So there is no such race in the current ub code.
-You don't need to rewrite ub.
+It'll still be some time before I have a full set of performance results
+but initially at least, this fix seems to avoid any impact.
 
-Thanks,
-Kiyoshi Ueda
+======
+Subject: Fix page allocation for larger I/O segments
+
+In some cases the IO subsystem is able to merge requests if the pages are
+adjacent in physical memory. This was achieved in the allocator by having
+expand() return pages in physically contiguous order in situations were
+a large buddy was split. However, list-based anti-fragmentation changed
+the order pages were returned in to avoid searching in buffered_rmqueue()
+for a page of the appropriate migrate type.
+
+This patch restores behaviour of rmqueue_bulk() preserving the physical order
+of pages returned by the allocator without incurring increased search costs for
+anti-fragmentation.
+
+Signed-off-by: Mel Gorman <mel@csn.ul.ie>
+--- 
+ page_alloc.c |   11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff -rup -X /usr/src/patchset-0.6/bin//dontdiff linux-2.6.24-rc5-clean/mm/page_alloc.c linux-2.6.24-rc5-giveback-physorder-listmove/mm/page_alloc.c
+--- linux-2.6.24-rc5-clean/mm/page_alloc.c	2007-12-14 11:55:13.000000000 +0000
++++ linux-2.6.24-rc5-giveback-physorder-listmove/mm/page_alloc.c	2007-12-14 15:33:12.000000000 +0000
+@@ -847,8 +847,19 @@ static int rmqueue_bulk(struct zone *zon
+ 		struct page *page = __rmqueue(zone, order, migratetype);
+ 		if (unlikely(page == NULL))
+ 			break;
++
++		/*
++		 * Split buddy pages returned by expand() are received here
++		 * in physical page order. The page is added to the callers and
++		 * list and the list head then moves forward. From the callers
++		 * perspective, the linked list is ordered by page number in
++		 * some conditions. This is useful for IO devices that can
++		 * merge IO requests if the physical pages are ordered
++		 * properly.
++		 */
+ 		list_add(&page->lru, list);
+ 		set_page_private(page, migratetype);
++		list = &page->lru;
+ 	}
+ 	spin_unlock(&zone->lock);
+ 	return i;
