@@ -1,157 +1,166 @@
-From: akpm@linux-foundation.org
-Subject: [patch 28/30] scsi: arm: convert to accessors and !use_sg cleanup
-Date: Thu, 13 Dec 2007 16:14:30 -0800
-Message-ID: <200712140014.lBE0EVmn026265@imap1.linux-foundation.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:39398 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S933312AbXLNA3g (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:29:36 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mark Lord <liml@rtr.ca>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Thu, 13 Dec 2007 19:30:00 -0500
+Message-ID: <4761CE88.9070406@rtr.ca>
+References: <20071213185326.GQ26334@parisc-linux.org>	<4761821F.3050602@rtr.ca>	<20071213192633.GD10104@kernel.dk>	<4761883A.7050908@rtr.ca>	<476188C4.9030802@rtr.ca>	<20071213193937.GG10104@kernel.dk>	<47618B0B.8020203@rtr.ca>	<20071213195350.GH10104@kernel.dk>	<20071213200219.GI10104@kernel.dk>	<476190BE.9010405@rtr.ca>	<20071213200958.GK10104@kernel.dk>	<20071213140207.111f94e2.akpm@linux-foundation.org>	<1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4761C8E4.2010900@rtr.ca>
+Sender: linux-ide-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, jens.axboe@oracle.com, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, mel@csn.ul.ie
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bharrosh@panasas.com, James.Bottomley@HansenPartnership.com, rmk@arm.linux.org.uk
 
-From: Boaz Harrosh <bharrosh@panasas.com>
+Mark Lord wrote:
+> Mark Lord wrote:
+>> Mark Lord wrote:
+>>> Andrew Morton wrote:
+>>>> On Thu, 13 Dec 2007 17:15:06 -0500
+>>>> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+>>>>
+>>>>> On Thu, 2007-12-13 at 14:02 -0800, Andrew Morton wrote:
+>>>>>> On Thu, 13 Dec 2007 21:09:59 +0100
+>>>>>> Jens Axboe <jens.axboe@oracle.com> wrote:
+>>>>>>
+>>>>>>> OK, it's a vm issue,
+>>>>>> cc linux-mm and probable culprit.
+>>>>>>
+>>>>>>>  I have tens of thousand "backward" pages after a
+>>>>>>> boot - IOW, bvec->bv_page is the page before bvprv->bv_page, not
+>>>>>>> reverse. So it looks like that bug got reintroduced.
+>>>>>> Bill Irwin fixed this a couple of years back: changed the page 
+>>>>>> allocator so
+>>>>>> that it mostly hands out pages in ascending physical-address order.
+>>>>>>
+>>>>>> I guess we broke that, quite possibly in Mel's page allocator rework.
+>>>>>>
+>>>>>> It would help if you could provide us with a simple recipe for
+>>>>>> demonstrating this problem, please.
+>>>>> The simple way seems to be to malloc a large area, touch every page 
+>>>>> and
+>>>>> then look at the physical pages assigned ... they now mostly seem 
+>>>>> to be
+>>>>> descending in physical address.
+>>>>>
+>>>>
+>>>> OIC.  -mm's /proc/pid/pagemap can be used to get the pfn's...
+>>> ..
+>>>
+>>> I'm actually running the treadmill right now (have been for many 
+>>> hours, actually,
+>>> to bisect it to a specific commit.
+>>>
+>>> Thought I was almost done, and then noticed that git-bisect doesn't keep
+>>> the Makefile VERSION lines the same, so I was actually running the wrong
+>>> kernel after the first few times.. duh.
+>>>
+>>> Wrote a script to fix it now.
+>> ..
+>>
+>> Well, that was a waste of three hours.
+> ..
+> 
+> Ahh.. it seems to be sensitive to one/both of these:
+> 
+> CONFIG_HIGHMEM64G=y with 4GB RAM:  not so bad, frequently does 20KB - 
+> 48KB segments.
+> CONFIG_HIGHMEM4G=y  with 2GB RAM:  very severe, rarely does more than 
+> 8KB segments.
+> CONFIG_HIGHMEM4G=y  with 3GB RAM:  very severe, rarely does more than 
+> 8KB segments.
+> 
+> So if you want to reproduce this on a large memory machine, use 
+> "mem=2GB" for starters.
+..
 
- - convert to accessors and !use_sg cleanup
+Here's the commit that causes the regression:
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Russell King <rmk@arm.linux.org.uk>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+535131e6925b4a95f321148ad7293f496e0e58d7 Choose pages from the per-cpu list based on migration type
+
+
+From: Mel Gorman <mel@csn.ul.ie>
+Date: Tue, 16 Oct 2007 08:25:49 +0000 (-0700)
+Subject: Choose pages from the per-cpu list based on migration type
+X-Git-Tag: v2.6.24-rc1~1141
+X-Git-Url: http://git.kernel.org/?p=linux%2Fkernel%2Fgit%2Ftorvalds%2Flinux-2.6.git;a=commitdiff_plain;h=535131e6925b4a95f321148ad7293f496e0e58d7;hp=b2a0ac8875a0a3b9f0739b60526f8c5977d2200f
+
+Choose pages from the per-cpu list based on migration type
+
+The freelists for each migrate type can slowly become polluted due to the
+per-cpu list.  Consider what happens when the following happens
+
+1. A 2^(MAX_ORDER-1) list is reserved for __GFP_MOVABLE pages
+2. An order-0 page is allocated from the newly reserved block
+3. The page is freed and placed on the per-cpu list
+4. alloc_page() is called with GFP_KERNEL as the gfp_mask
+5. The per-cpu list is used to satisfy the allocation
+
+This results in a kernel page is in the middle of a migratable region. This
+patch prevents this leak occuring by storing the MIGRATE_ type of the page in
+page->private. On allocate, a page will only be returned of the desired type,
+else more pages will be allocated. This may temporarily allow a per-cpu list
+to go over the pcp->high limit but it'll be corrected on the next free. Care
+is taken to preserve the hotness of pages recently freed.
+
+The additional code is not measurably slower for the workloads we've tested.
+
+Signed-off-by: Mel Gorman <mel@csn.ul.ie>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
 ---
 
- drivers/scsi/arm/acornscsi.c |   14 ++++++-------
- drivers/scsi/arm/scsi.h      |   34 ++++++++++-----------------------
- 2 files changed, 18 insertions(+), 30 deletions(-)
-
-diff -puN drivers/scsi/arm/acornscsi.c~scsi-pending-arm-convert-to-accessors drivers/scsi/arm/acornscsi.c
---- a/drivers/scsi/arm/acornscsi.c~scsi-pending-arm-convert-to-accessors
-+++ a/drivers/scsi/arm/acornscsi.c
-@@ -1790,7 +1790,7 @@ int acornscsi_starttransfer(AS_Host *hos
- 	return 0;
-     }
- 
--    residual = host->SCpnt->request_bufflen - host->scsi.SCp.scsi_xferred;
-+    residual = scsi_bufflen(host->SCpnt) - host->scsi.SCp.scsi_xferred;
- 
-     sbic_arm_write(host->scsi.io_port, SBIC_SYNCHTRANSFER, host->device[host->SCpnt->device->id].sync_xfer);
-     sbic_arm_writenext(host->scsi.io_port, residual >> 16);
-@@ -2270,7 +2270,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *h
- 	case 0x4b:			/* -> PHASE_STATUSIN				*/
- 	case 0x8b:			/* -> PHASE_STATUSIN				*/
- 	    /* DATA IN -> STATUS */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_readstatusbyte(host);
-@@ -2281,7 +2281,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *h
- 	case 0x4e:			/* -> PHASE_MSGOUT				*/
- 	case 0x8e:			/* -> PHASE_MSGOUT				*/
- 	    /* DATA IN -> MESSAGE OUT */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_sendmessage(host);
-@@ -2291,7 +2291,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *h
- 	case 0x4f:			/* message in					*/
- 	case 0x8f:			/* message in					*/
- 	    /* DATA IN -> MESSAGE IN */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_message(host);	/* -> PHASE_MSGIN, PHASE_DISCONNECT		*/
-@@ -2319,7 +2319,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *h
- 	case 0x4b:			/* -> PHASE_STATUSIN				*/
- 	case 0x8b:			/* -> PHASE_STATUSIN				*/
- 	    /* DATA OUT -> STATUS */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-@@ -2331,7 +2331,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *h
- 	case 0x4e:			/* -> PHASE_MSGOUT				*/
- 	case 0x8e:			/* -> PHASE_MSGOUT				*/
- 	    /* DATA OUT -> MESSAGE OUT */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-@@ -2342,7 +2342,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *h
- 	case 0x4f:			/* message in					*/
- 	case 0x8f:			/* message in					*/
- 	    /* DATA OUT -> MESSAGE IN */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-diff -puN drivers/scsi/arm/scsi.h~scsi-pending-arm-convert-to-accessors drivers/scsi/arm/scsi.h
---- a/drivers/scsi/arm/scsi.h~scsi-pending-arm-convert-to-accessors
-+++ a/drivers/scsi/arm/scsi.h
-@@ -68,46 +68,34 @@ static inline void init_SCp(struct scsi_
- {
- 	memset(&SCpnt->SCp, 0, sizeof(struct scsi_pointer));
- 
--	if (SCpnt->use_sg) {
-+	if (scsi_bufflen(SCpnt)) {
- 		unsigned long len = 0;
- 		int buf;
- 
--		SCpnt->SCp.buffer = (struct scatterlist *) SCpnt->request_buffer;
--		SCpnt->SCp.buffers_residual = SCpnt->use_sg - 1;
-+		SCpnt->SCp.buffer = scsi_sglist(SCpnt);
-+		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
- 		SCpnt->SCp.ptr = sg_virt(SCpnt->SCp.buffer);
- 		SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
--		SCpnt->SCp.phase = SCpnt->request_bufflen;
-+		SCpnt->SCp.phase = scsi_bufflen(SCpnt);
- 
- #ifdef BELT_AND_BRACES
- 		/*
- 		 * Calculate correct buffer length.  Some commands
--		 * come in with the wrong request_bufflen.
-+		 * come in with the wrong scsi_bufflen.
- 		 */
- 		for (buf = 0; buf <= SCpnt->SCp.buffers_residual; buf++)
- 			len += SCpnt->SCp.buffer[buf].length;
- 
--		if (SCpnt->request_bufflen != len)
-+		if (scsi_bufflen(SCpnt) != len) {
-+			WARN_ON(1);
- 			printk(KERN_WARNING "scsi%d.%c: bad request buffer "
- 			       "length %d, should be %ld\n", SCpnt->device->host->host_no,
--			       '0' + SCpnt->device->id, SCpnt->request_bufflen, len);
--		SCpnt->request_bufflen = len;
-+			       '0' + SCpnt->device->id, scsi_bufflen(SCpnt), len);
-+		}
- #endif
- 	} else {
--		SCpnt->SCp.ptr = (unsigned char *)SCpnt->request_buffer;
--		SCpnt->SCp.this_residual = SCpnt->request_bufflen;
--		SCpnt->SCp.phase = SCpnt->request_bufflen;
--	}
--
--	/*
--	 * If the upper SCSI layers pass a buffer, but zero length,
--	 * we aren't interested in the buffer pointer.
--	 */
--	if (SCpnt->SCp.this_residual == 0 && SCpnt->SCp.ptr) {
--#if 0 //def BELT_AND_BRACES
--		printk(KERN_WARNING "scsi%d.%c: zero length buffer passed for "
--		       "command ", SCpnt->host->host_no, '0' + SCpnt->target);
--		__scsi_print_command(SCpnt->cmnd);
--#endif
- 		SCpnt->SCp.ptr = NULL;
-+		SCpnt->SCp.this_residual = 0;
-+		SCpnt->SCp.phase = 0;
+diff --git a/mm/page_alloc.c b/mm/page_alloc.c
+index d54ecf4..e3e726b 100644
+--- a/mm/page_alloc.c
++++ b/mm/page_alloc.c
+@@ -760,7 +760,8 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
+ 		struct page *page = __rmqueue(zone, order, migratetype);
+ 		if (unlikely(page == NULL))
+ 			break;
+-		list_add_tail(&page->lru, list);
++		list_add(&page->lru, list);
++		set_page_private(page, migratetype);
  	}
- }
-_
+ 	spin_unlock(&zone->lock);
+ 	return i;
+@@ -887,6 +888,7 @@ static void fastcall free_hot_cold_page(struct page *page, int cold)
+ 	local_irq_save(flags);
+ 	__count_vm_event(PGFREE);
+ 	list_add(&page->lru, &pcp->list);
++	set_page_private(page, get_pageblock_migratetype(page));
+ 	pcp->count++;
+ 	if (pcp->count >= pcp->high) {
+ 		free_pages_bulk(zone, pcp->batch, &pcp->list, 0);
+@@ -951,9 +953,27 @@ again:
+ 			if (unlikely(!pcp->count))
+ 				goto failed;
+ 		}
+-		page = list_entry(pcp->list.next, struct page, lru);
+-		list_del(&page->lru);
+-		pcp->count--;
++		/* Find a page of the appropriate migrate type */
++		list_for_each_entry(page, &pcp->list, lru) {
++			if (page_private(page) == migratetype) {
++				list_del(&page->lru);
++				pcp->count--;
++				break;
++			}
++		}
++
++		/*
++		 * Check if a page of the appropriate migrate type
++		 * was found. If not, allocate more to the pcp list
++		 */
++		if (&page->lru == &pcp->list) {
++			pcp->count += rmqueue_bulk(zone, 0,
++					pcp->batch, &pcp->list, migratetype);
++			page = list_entry(pcp->list.next, struct page, lru);
++			VM_BUG_ON(page_private(page) != migratetype);
++			list_del(&page->lru);
++			pcp->count--;
++		}
+ 	} else {
+ 		spin_lock_irqsave(&zone->lock, flags);
+ 		page = __rmqueue(zone, order, migratetype);
