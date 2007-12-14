@@ -1,381 +1,171 @@
 From: akpm@linux-foundation.org
-Subject: [patch 18/30] scsi/qla2xxx/: possible cleanups
-Date: Thu, 13 Dec 2007 16:14:21 -0800
-Message-ID: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org>
+Subject: [patch 30/30] libsas: convert ATA bridge to use new EH
+Date: Thu, 13 Dec 2007 16:14:33 -0800
+Message-ID: <200712140014.lBE0EXq1026273@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:44300 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:39544 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1759795AbXLNAYf (ORCPT
+	by vger.kernel.org with ESMTP id S1761642AbXLNAYg (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:24:35 -0500
+	Thu, 13 Dec 2007 19:24:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, bunk@kernel.org, andrew.vasquez@qlogic.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, djwong@us.ibm.com, jeff@garzik.org
 
-From: Adrian Bunk <bunk@kernel.org>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
 
-- make the following needlessly global code static:
-  - qla_attr.c: qla24xx_vport_delete()
-  - qla_attr.c: qla24xx_vport_disable()
-  - qla_mid.c: qla24xx_allocate_vp_id()
-  - qla_mid.c: qla24xx_find_vhost_by_name()
-  - qla_mid.c: qla2x00_do_dpc_vp()
-  - qla_os.c: struct qla2x00_driver_template
-  - qla_os.c: qla2x00_stop_timer()
-  - qla_os.c: qla2x00_mem_alloc()
-  - qla_os.c: qla2x00_mem_free()
-  - qla_sup.c: qla2x00_lock_nvram_access()
-  - qla_sup.c: qla2x00_unlock_nvram_access()
-  - qla_sup.c: qla2x00_get_nvram_word()
-  - qla_sup.c: qla2x00_write_nvram_word()
-- #if 0 the following unused global functions:
-  - qla_dbg.c: qla2x00_dump_pkt()
-  - qla_mbx.c: qla2x00_system_error()
-  - qla_mbx.c: qla2x00_get_serdes_params()
-  - qla_mbx.c: qla2x00_get_idma_speed()
-  - qla_mbx.c: qla24xx_get_vp_database()
-  - qla_mbx.c: qla24xx_get_vp_entry()
-- qla_os.c: remove some unneeded function prototypes
+Migrate the sas_ata bridge to use the new libata EH strategy, and
+finally implement correct software reset.
 
-Signed-off-by: Adrian Bunk <bunk@kernel.org>
-Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+WARNING WARNING WARNING!  This patch is for experimental use only; it is
+nowhere near complete!  Especially the sas_ata_freeze() function.  This
+patch may eat your data and kill your trees.
+
+jgarzik: If an ATA command was in-progress at the time of a port freeze,
+can complete after thawing?  (Does that even make sense?)
+
+[akpm@linux-foundation.org: coding-style fixes]
+Comments-requested-by: Darrick J. Wong <djwong@us.ibm.com>
+Cc: Jeff Garzik <jeff@garzik.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/qla2xxx/qla_attr.c |    6 +++---
- drivers/scsi/qla2xxx/qla_dbg.c  |    2 ++
- drivers/scsi/qla2xxx/qla_gbl.h  |   25 -------------------------
- drivers/scsi/qla2xxx/qla_mbx.c  |   10 ++++++++++
- drivers/scsi/qla2xxx/qla_mid.c  |    6 +++---
- drivers/scsi/qla2xxx/qla_os.c   |   20 ++++++--------------
- drivers/scsi/qla2xxx/qla_sup.c  |    8 ++++----
- 7 files changed, 28 insertions(+), 49 deletions(-)
+ drivers/scsi/libsas/sas_ata.c |   86 ++++++++++++++++++++++++++------
+ 1 file changed, 71 insertions(+), 15 deletions(-)
 
-diff -puN drivers/scsi/qla2xxx/qla_attr.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_attr.c
---- a/drivers/scsi/qla2xxx/qla_attr.c~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_attr.c
-@@ -9,7 +9,7 @@
- #include <linux/kthread.h>
- #include <linux/vmalloc.h>
+diff -puN drivers/scsi/libsas/sas_ata.c~libsas-convert-ata-bridge-to-use-new-eh drivers/scsi/libsas/sas_ata.c
+--- a/drivers/scsi/libsas/sas_ata.c~libsas-convert-ata-bridge-to-use-new-eh
++++ a/drivers/scsi/libsas/sas_ata.c
+@@ -35,6 +35,8 @@
+ #include "../scsi_transport_api.h"
+ #include <scsi/scsi_eh.h>
  
--int qla24xx_vport_disable(struct fc_vport *, bool);
-+static int qla24xx_vport_disable(struct fc_vport *, bool);
- 
- /* SYSFS attributes --------------------------------------------------------- */
- 
-@@ -1113,7 +1113,7 @@ vport_create_failed_2:
- 	return FC_VPORT_FAILED;
++static int sas_issue_ata_srst(struct domain_device *dev);
++
+ static enum ata_completion_errors sas_to_ata_err(struct task_status_struct *ts)
+ {
+ 	/* Cheesy attempt to translate SAS errors into ATA.  Hah! */
+@@ -233,37 +235,58 @@ static u8 sas_ata_check_status(struct at
+ 	return dev->sata_dev.tf.command;
  }
  
--int
-+static int
- qla24xx_vport_delete(struct fc_vport *fc_vport)
+-static void sas_ata_phy_reset(struct ata_port *ap)
++static void sas_ata_freeze(struct ata_port *ap)
  {
- 	scsi_qla_host_t *ha = shost_priv(fc_vport->shost);
-@@ -1146,7 +1146,7 @@ qla24xx_vport_delete(struct fc_vport *fc
- 	return 0;
- }
+-	struct domain_device *dev = ap->private_data;
+-	struct sas_internal *i =
+-		to_sas_internal(dev->port->ha->core.shost->transportt);
+-	int res = 0;
++	/* reroute qc_done for all qc's on this port to a dumb free func */
++	/* i wonder if we can get away with throwing out anything that
++	 * completes in this time frame, or if we must find the commands
++	 * that are in progress and cancel only those? */
++	printk(KERN_ERR "%s: STUB\n", __FUNCTION__);
++}
  
--int
-+static int
- qla24xx_vport_disable(struct fc_vport *fc_vport, bool disable)
- {
- 	scsi_qla_host_t *vha = fc_vport->dd_data;
-diff -puN drivers/scsi/qla2xxx/qla_dbg.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_dbg.c
---- a/drivers/scsi/qla2xxx/qla_dbg.c~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_dbg.c
-@@ -1428,6 +1428,7 @@ qla2x00_print_scsi_cmd(struct scsi_cmnd 
- 	printk("  sp flags=0x%x\n", sp->flags);
- }
+-	if (i->dft->lldd_I_T_nexus_reset)
+-		res = i->dft->lldd_I_T_nexus_reset(dev);
++static void sas_ata_thaw(struct ata_port *ap)
++{
++	/* empty */
++	printk(KERN_ERR "%s: STUB\n", __FUNCTION__);
++}
  
-+#if 0
- void
- qla2x00_dump_pkt(void *pkt)
- {
-@@ -1442,6 +1443,7 @@ qla2x00_dump_pkt(void *pkt)
+-	if (res)
+-		SAS_DPRINTK("%s: Unable to reset I T nexus?\n", __FUNCTION__);
++static int sas_ata_soft_reset(struct ata_link *link, unsigned int *classes,
++			       unsigned long deadline)
++{
++	struct ata_port *ap = link->ap;
++	struct domain_device *dev = ap->private_data;
++	int res;
+ 
++	/* Send SRST to device */
++	res = sas_issue_ata_srst(dev);
++	printk(KERN_ERR "srst 0 returns %d\n", res);
++
++	/* Set new device type */
+ 	switch (dev->sata_dev.command_set) {
+ 		case ATA_COMMAND_SET:
+ 			SAS_DPRINTK("%s: Found ATA device.\n", __FUNCTION__);
+-			ap->link.device[0].class = ATA_DEV_ATA;
++			*classes = ATA_DEV_ATA;
+ 			break;
+ 		case ATAPI_COMMAND_SET:
+ 			SAS_DPRINTK("%s: Found ATAPI device.\n", __FUNCTION__);
+-			ap->link.device[0].class = ATA_DEV_ATAPI;
++			*classes = ATA_DEV_ATAPI;
+ 			break;
+ 		default:
+ 			SAS_DPRINTK("%s: Unknown SATA command set: %d.\n",
+ 				    __FUNCTION__,
+ 				    dev->sata_dev.command_set);
+-			ap->link.device[0].class = ATA_DEV_UNKNOWN;
+-			break;
++			*classes = ATA_DEV_UNKNOWN;
++		break;
  	}
- 	printk("\n");
- }
-+#endif  /*  0  */
  
- #if defined(QL_DEBUG_ROUTINES)
- /*
-diff -puN drivers/scsi/qla2xxx/qla_gbl.h~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_gbl.h
---- a/drivers/scsi/qla2xxx/qla_gbl.h~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -68,30 +68,20 @@ extern int num_hosts;
- /*
-  * Global Functions in qla_mid.c source file.
-  */
--extern struct scsi_host_template qla2x00_driver_template;
- extern struct scsi_host_template qla24xx_driver_template;
- extern struct scsi_transport_template *qla2xxx_transport_vport_template;
--extern uint8_t qla2x00_mem_alloc(scsi_qla_host_t *);
- extern void qla2x00_timer(scsi_qla_host_t *);
- extern void qla2x00_start_timer(scsi_qla_host_t *, void *, unsigned long);
--extern void qla2x00_stop_timer(scsi_qla_host_t *);
--extern uint32_t qla24xx_allocate_vp_id(scsi_qla_host_t *);
- extern void qla24xx_deallocate_vp_id(scsi_qla_host_t *);
- extern int qla24xx_disable_vp (scsi_qla_host_t *);
- extern int qla24xx_enable_vp (scsi_qla_host_t *);
--extern void qla2x00_mem_free(scsi_qla_host_t *);
- extern int qla24xx_control_vp(scsi_qla_host_t *, int );
- extern int qla24xx_modify_vp_config(scsi_qla_host_t *);
- extern int qla2x00_send_change_request(scsi_qla_host_t *, uint16_t, uint16_t);
- extern void qla2x00_vp_stop_timer(scsi_qla_host_t *);
- extern int qla24xx_configure_vhba (scsi_qla_host_t *);
--extern int qla24xx_get_vp_entry(scsi_qla_host_t *, uint16_t, int);
--extern int qla24xx_get_vp_database(scsi_qla_host_t *, uint16_t);
--extern int qla2x00_do_dpc_vp(scsi_qla_host_t *);
- extern void qla24xx_report_id_acquisition(scsi_qla_host_t *,
-     struct vp_rpt_id_entry_24xx *);
--extern scsi_qla_host_t * qla24xx_find_vhost_by_name(scsi_qla_host_t *,
--    uint8_t *);
- extern void qla2x00_do_dpc_all_vps(scsi_qla_host_t *);
- extern int qla24xx_vport_create_req_sanity_check(struct fc_vport *);
- extern scsi_qla_host_t * qla24xx_create_vhost(struct fc_vport *);
-@@ -113,7 +103,6 @@ extern void qla2xxx_wake_dpc(scsi_qla_ho
- extern void qla2x00_alert_all_vps(scsi_qla_host_t *, uint16_t *);
- extern void qla2x00_async_event(scsi_qla_host_t *, uint16_t *);
- extern void qla2x00_vp_abort_isp(scsi_qla_host_t *);
--extern int qla24xx_vport_delete(struct fc_vport *);
- 
- /*
-  * Global Function Prototypes in qla_iocb.c source file.
-@@ -231,12 +220,6 @@ qla24xx_get_isp_stats(scsi_qla_host_t *,
- extern int qla24xx_abort_command(scsi_qla_host_t *, srb_t *);
- extern int qla24xx_abort_target(fc_port_t *);
- 
--extern int qla2x00_system_error(scsi_qla_host_t *);
--
--extern int
--qla2x00_get_serdes_params(scsi_qla_host_t *, uint16_t *, uint16_t *,
--    uint16_t *);
--
- extern int
- qla2x00_set_serdes_params(scsi_qla_host_t *, uint16_t, uint16_t, uint16_t);
- 
-@@ -250,9 +233,6 @@ extern int
- qla2x00_read_sfp(scsi_qla_host_t *, dma_addr_t, uint16_t, uint16_t, uint16_t);
- 
- extern int
--qla2x00_get_idma_speed(scsi_qla_host_t *, uint16_t, uint16_t *, uint16_t *);
--
--extern int
- qla2x00_set_idma_speed(scsi_qla_host_t *, uint16_t, uint16_t, uint16_t *);
- 
- /*
-@@ -270,11 +250,7 @@ extern void qla2x00_free_irqs(scsi_qla_h
- /*
-  * Global Function Prototypes in qla_sup.c source file.
-  */
--extern void qla2x00_lock_nvram_access(scsi_qla_host_t *);
--extern void qla2x00_unlock_nvram_access(scsi_qla_host_t *);
- extern void qla2x00_release_nvram_protection(scsi_qla_host_t *);
--extern uint16_t qla2x00_get_nvram_word(scsi_qla_host_t *, uint32_t);
--extern void qla2x00_write_nvram_word(scsi_qla_host_t *, uint32_t, uint16_t);
- extern uint32_t *qla24xx_read_flash_data(scsi_qla_host_t *, uint32_t *,
-     uint32_t, uint32_t);
- extern uint8_t *qla2x00_read_nvram_data(scsi_qla_host_t *, uint8_t *, uint32_t,
-@@ -321,7 +297,6 @@ extern void qla25xx_fw_dump(scsi_qla_hos
- extern void qla2x00_dump_regs(scsi_qla_host_t *);
- extern void qla2x00_dump_buffer(uint8_t *, uint32_t);
- extern void qla2x00_print_scsi_cmd(struct scsi_cmnd *);
--extern void qla2x00_dump_pkt(void *);
- 
- /*
-  * Global Function Prototypes in qla_gs.c source file.
-diff -puN drivers/scsi/qla2xxx/qla_mbx.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_mbx.c
---- a/drivers/scsi/qla2xxx/qla_mbx.c~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -2331,6 +2331,8 @@ atarget_done:
- 	return rval;
- }
- 
-+#if 0
+-	ap->cbl = ATA_CBL_SATA;
++	/* FIXME: What if SRST fails? */
++	return 0;
++}
 +
- int
- qla2x00_system_error(scsi_qla_host_t *ha)
- {
-@@ -2402,6 +2404,8 @@ qla2x00_get_serdes_params(scsi_qla_host_
- 	return rval;
++static void sas_ata_error_handler(struct ata_port *ap)
++{
++	ata_do_eh(ap, NULL, sas_ata_soft_reset, NULL, NULL);
++	/* uh... hopefully there's no commands left in here? */
  }
  
-+#endif  /*  0  */
+ static void sas_ata_post_internal(struct ata_queued_cmd *qc)
+@@ -353,7 +376,9 @@ static struct ata_port_operations sas_sa
+ 	.check_status		= sas_ata_check_status,
+ 	.check_altstatus	= sas_ata_check_status,
+ 	.dev_select		= ata_noop_dev_select,
+-	.phy_reset		= sas_ata_phy_reset,
++	.error_handler		= sas_ata_error_handler,
++	.freeze			= sas_ata_freeze,
++	.thaw			= sas_ata_thaw,
+ 	.post_internal_cmd	= sas_ata_post_internal,
+ 	.tf_read		= sas_ata_tf_read,
+ 	.qc_prep		= ata_noop_qc_prep,
+@@ -658,6 +683,37 @@ out:
+ 	return res;
+ }
+ 
++static int sas_issue_ata_srst(struct domain_device *dev)
++{
++	int res = 0;
++	struct sas_task *task;
++	struct dev_to_host_fis *d2h_fis = (struct dev_to_host_fis *)
++		&dev->frame_rcvd[0];
 +
- /**
-  * qla2x00_set_serdes_params() -
-  * @ha: HA context
-@@ -2548,6 +2552,7 @@ qla2x00_read_sfp(scsi_qla_host_t *ha, dm
- 	return rval;
- }
- 
-+#if 0
- int
- qla2x00_get_idma_speed(scsi_qla_host_t *ha, uint16_t loop_id,
-     uint16_t *port_speed, uint16_t *mb)
-@@ -2590,6 +2595,7 @@ qla2x00_get_idma_speed(scsi_qla_host_t *
- 
- 	return rval;
- }
-+#endif  /*  0  */
- 
- int
- qla2x00_set_idma_speed(scsi_qla_host_t *ha, uint16_t loop_id,
-@@ -2634,6 +2640,8 @@ qla2x00_set_idma_speed(scsi_qla_host_t *
- 	return rval;
- }
- 
-+#if 0
++	res = -ENOMEM;
++	task = sas_alloc_task(GFP_KERNEL);
++	if (!task)
++		goto out;
 +
- /*
-  * qla24xx_get_vp_database
-  *	Get the VP's database for all configured ports.
-@@ -2724,6 +2732,8 @@ qla24xx_get_vp_entry(scsi_qla_host_t *ha
- 	return rval;
- }
- 
-+#endif  /*  0  */
++	task->dev = dev;
 +
- void
- qla24xx_report_id_acquisition(scsi_qla_host_t *ha,
- 	struct vp_rpt_id_entry_24xx *rptid_entry)
-diff -puN drivers/scsi/qla2xxx/qla_mid.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_mid.c
---- a/drivers/scsi/qla2xxx/qla_mid.c~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_mid.c
-@@ -39,7 +39,7 @@ qla2x00_vp_stop_timer(scsi_qla_host_t *v
- 	}
- }
- 
--uint32_t
-+static uint32_t
- qla24xx_allocate_vp_id(scsi_qla_host_t *vha)
++	task->ata_task.fis.fis_type = 0x27;
++	/* FIXME: What's a good dummy command? */
++	task->ata_task.fis.command = ATA_CMD_CHK_POWER;
++	task->ata_task.fis.features = 0;
++	task->ata_task.fis.control = ATA_SRST;
++	task->ata_task.fis.device = d2h_fis->device;
++	task->ata_task.retry_count = 1;
++	task->ata_task.device_control_reg_update = 1;
++
++	res = sas_execute_task(task, NULL, 0, DMA_NONE);
++
++	sas_free_task(task);
++out:
++
++	return res;
++}
++
+ static void sas_sata_propagate_sas_addr(struct domain_device *dev)
  {
- 	uint32_t vp_id;
-@@ -77,7 +77,7 @@ qla24xx_deallocate_vp_id(scsi_qla_host_t
- 	up(&ha->vport_sem);
- }
- 
--scsi_qla_host_t *
-+static scsi_qla_host_t *
- qla24xx_find_vhost_by_name(scsi_qla_host_t *ha, uint8_t *port_name)
- {
- 	scsi_qla_host_t *vha;
-@@ -265,7 +265,7 @@ qla2x00_vp_abort_isp(scsi_qla_host_t *vh
- 	qla24xx_enable_vp(vha);
- }
- 
--int
-+static int
- qla2x00_do_dpc_vp(scsi_qla_host_t *vha)
- {
- 	if (test_and_clear_bit(VP_IDX_ACQUIRED, &vha->vp_flags)) {
-diff -puN drivers/scsi/qla2xxx/qla_os.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_os.c
---- a/drivers/scsi/qla2xxx/qla_os.c~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_os.c
-@@ -111,7 +111,7 @@ static int qla2x00_device_reset(scsi_qla
- static int qla2x00_change_queue_depth(struct scsi_device *, int);
- static int qla2x00_change_queue_type(struct scsi_device *, int);
- 
--struct scsi_host_template qla2x00_driver_template = {
-+static struct scsi_host_template qla2x00_driver_template = {
- 	.module			= THIS_MODULE,
- 	.name			= QLA2XXX_DRIVER_NAME,
- 	.queuecommand		= qla2x00_queuecommand,
-@@ -179,13 +179,6 @@ struct scsi_transport_template *qla2xxx_
-  * Timer routines
-  */
- 
--void qla2x00_timer(scsi_qla_host_t *);
--
--__inline__ void qla2x00_start_timer(scsi_qla_host_t *,
--    void *, unsigned long);
--static __inline__ void qla2x00_restart_timer(scsi_qla_host_t *, unsigned long);
--__inline__ void qla2x00_stop_timer(scsi_qla_host_t *);
--
- __inline__ void
- qla2x00_start_timer(scsi_qla_host_t *ha, void *func, unsigned long interval)
- {
-@@ -203,7 +196,7 @@ qla2x00_restart_timer(scsi_qla_host_t *h
- 	mod_timer(&ha->timer, jiffies + interval * HZ);
- }
- 
--__inline__ void
-+static __inline__ void
- qla2x00_stop_timer(scsi_qla_host_t *ha)
- {
- 	del_timer_sync(&ha->timer);
-@@ -214,12 +207,11 @@ static int qla2x00_do_dpc(void *data);
- 
- static void qla2x00_rst_aen(scsi_qla_host_t *);
- 
--uint8_t qla2x00_mem_alloc(scsi_qla_host_t *);
--void qla2x00_mem_free(scsi_qla_host_t *ha);
-+static uint8_t qla2x00_mem_alloc(scsi_qla_host_t *);
-+static void qla2x00_mem_free(scsi_qla_host_t *ha);
- static int qla2x00_allocate_sp_pool( scsi_qla_host_t *ha);
- static void qla2x00_free_sp_pool(scsi_qla_host_t *ha);
- static void qla2x00_sp_free_dma(scsi_qla_host_t *, srb_t *);
--void qla2x00_sp_compl(scsi_qla_host_t *ha, srb_t *);
- 
- /* -------------------------------------------------------------------------- */
- 
-@@ -2016,7 +2008,7 @@ qla2x00_mark_all_devices_lost(scsi_qla_h
- *      0  = success.
- *      1  = failure.
- */
--uint8_t
-+static uint8_t
- qla2x00_mem_alloc(scsi_qla_host_t *ha)
- {
- 	char	name[16];
-@@ -2213,7 +2205,7 @@ qla2x00_mem_alloc(scsi_qla_host_t *ha)
- * Input:
- *      ha = adapter block pointer.
- */
--void
-+static void
- qla2x00_mem_free(scsi_qla_host_t *ha)
- {
- 	struct list_head	*fcpl, *fcptemp;
-diff -puN drivers/scsi/qla2xxx/qla_sup.c~scsi-qla2xxx-possible-cleanups drivers/scsi/qla2xxx/qla_sup.c
---- a/drivers/scsi/qla2xxx/qla_sup.c~scsi-qla2xxx-possible-cleanups
-+++ a/drivers/scsi/qla2xxx/qla_sup.c
-@@ -22,7 +22,7 @@ static void qla2x00_nv_write(scsi_qla_ho
-  * qla2x00_lock_nvram_access() -
-  * @ha: HA context
-  */
--void
-+static void
- qla2x00_lock_nvram_access(scsi_qla_host_t *ha)
- {
- 	uint16_t data;
-@@ -55,7 +55,7 @@ qla2x00_lock_nvram_access(scsi_qla_host_
-  * qla2x00_unlock_nvram_access() -
-  * @ha: HA context
-  */
--void
-+static void
- qla2x00_unlock_nvram_access(scsi_qla_host_t *ha)
- {
- 	struct device_reg_2xxx __iomem *reg = &ha->iobase->isp;
-@@ -74,7 +74,7 @@ qla2x00_unlock_nvram_access(scsi_qla_hos
-  *
-  * Returns the word read from nvram @addr.
-  */
--uint16_t
-+static uint16_t
- qla2x00_get_nvram_word(scsi_qla_host_t *ha, uint32_t addr)
- {
- 	uint16_t	data;
-@@ -93,7 +93,7 @@ qla2x00_get_nvram_word(scsi_qla_host_t *
-  * @addr: Address in NVRAM to write
-  * @data: word to program
-  */
--void
-+static void
- qla2x00_write_nvram_word(scsi_qla_host_t *ha, uint32_t addr, uint16_t data)
- {
- 	int count;
+ 	unsigned long flags;
 _
