@@ -1,52 +1,80 @@
 From: akpm@linux-foundation.org
-Subject: [patch 02/30] mptbase: reset ioc initiator during PCI resume
-Date: Thu, 13 Dec 2007 16:14:04 -0800
-Message-ID: <200712140014.lBE0E4l6026171@imap1.linux-foundation.org>
+Subject: [patch 01/30] git-scsi-misc gdth fix
+Date: Thu, 13 Dec 2007 16:14:03 -0800
+Message-ID: <200712140014.lBE0E3Rp026168@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:42583 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:45887 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S935118AbXLNAO3 (ORCPT
+	by vger.kernel.org with ESMTP id S1752477AbXLNAOH (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:14:29 -0500
+	Thu, 13 Dec 2007 19:14:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, djwong@us.ibm.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, James.Bottomley@steeleye.com, davemilter@gmail.com
 
-From: "Darrick J. Wong" <djwong@us.ibm.com>
+From: James Bottomley <James.Bottomley@SteelEye.com>
 
-It appears that the LSI SAS 1064E chip needs to be reset after a
-suspend/resume cycle before the driver attempts further communications with
-the chip.  Without this patch, resuming the chip results in this error
-message being printed repeatedly and no more disk I/O.
+On Sun, 2007-10-14 at 12:21 -0700, Andrew Morton wrote:
+> On Sun, 14 Oct 2007 22:45:47 +0400 "Dave Milter" <davemilter@gmail.com> wrote:
+>
+> > I build linux-2.6.23-mm1 and try to boot it using qemu,
+> > and it crashed with trace like this:
+> > do_page_fault
+> > error_code
+> > lock_acquire
+> > _spin_lock_irqsave
+> > gdth_timeout
+> > run_timer_softirq
+> > __do_softirq
+> > do_softirq
+> >
+> > I have screenshot, but have no idea, is it legal to include it, if I
+> > sent copy to lkml.
+> > config of kernel in attachment,
+> > I apply all three patches from hot-fixes.
+> >
+>
+> The screenshot is here:  http://userweb.kernel.org/~akpm/crash.png
+>
+> It would appear that gdth_timeout() is passing a bad pointer into
+> spin_lock_irqsave().
 
-mptbase: ioc0: ERROR - Invalid IOC facts reply, msgLength=0 offsetof=6!
+There's a bug in the gdth rework in that the instance can be deleted
+from the list before the actual timer is stopped.  This can be worked
+around I think by the following patch; although we really should be
+stopping the timer from firing when the list goes empty.
 
-So far it seems to fix suspend/resume on all the MPT Fusion cards I have
-(SAS and U320 SCSI) but since I don't know the internals of that chip I
-can't say for sure if this is a proper fix.
 
-Signed-off-by: Darrick J. Wong <djwong@us.ibm.com>
+James said:
+
+This is almost certainly the wrong fix for real hardware.  Although it
+kills the timer when the list goes empty, nothing will ever restart it
+when the list fills again.
+
+Boaz, since you touched all of this, you get to fix it.  The correct fix
+will be to control the timer along with the actual list instead of at
+entry/exit time.  If you're not going to add this empty check to the
+timer routine, make sure you use del_timer_sync() before removing the
+last element from the list.
+
+
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/message/fusion/mptbase.c |    6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/gdth.c |    3 +++
+ 1 file changed, 3 insertions(+)
 
-diff -puN drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume drivers/message/fusion/mptbase.c
---- a/drivers/message/fusion/mptbase.c~mptbase-reset-ioc-initiator-during-pci-resume
-+++ a/drivers/message/fusion/mptbase.c
-@@ -1829,6 +1829,12 @@ mpt_resume(struct pci_dev *pdev)
- 		(mpt_GetIocState(ioc, 1) >> MPI_IOC_STATE_SHIFT),
- 		CHIPREG_READ32(&ioc->chip->Doorbell));
+diff -puN drivers/scsi/gdth.c~git-scsi-misc-gdth-fix drivers/scsi/gdth.c
+--- a/drivers/scsi/gdth.c~git-scsi-misc-gdth-fix
++++ a/drivers/scsi/gdth.c
+@@ -3793,6 +3793,9 @@ static void gdth_timeout(ulong data)
+     gdth_ha_str *ha;
+     ulong flags;
  
-+	/* put ioc into READY_STATE */
-+	if(SendIocReset(ioc, MPI_FUNCTION_IOC_MESSAGE_UNIT_RESET, CAN_SLEEP)) {
-+		printk(MYIOC_s_ERR_FMT
-+		"pci-resume:  IOC msg unit reset failed!\n", ioc->name);
-+	}
++    if (list_empty(&gdth_instances))
++	return;
 +
- 	/* bring ioc to operational state */
- 	if ((recovery_state = mpt_do_ioc_recovery(ioc,
- 	    MPT_HOSTEVENT_IOC_RECOVER, CAN_SLEEP)) != 0) {
+     ha = list_first_entry(&gdth_instances, gdth_ha_str, list);
+     spin_lock_irqsave(&ha->smp_lock, flags);
+ 
 _
