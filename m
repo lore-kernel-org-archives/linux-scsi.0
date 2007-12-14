@@ -1,52 +1,54 @@
 From: akpm@linux-foundation.org
-Subject: [patch 15/30] sym2: fix section mismatch warning
-Date: Thu, 13 Dec 2007 16:14:17 -0800
-Message-ID: <200712140014.lBE0EHWd026213@imap1.linux-foundation.org>
+Subject: [patch 12/30] SCSI/NCR5380: minor irq handler cleanups
+Date: Thu, 13 Dec 2007 16:14:14 -0800
+Message-ID: <200712140014.lBE0EF3V026203@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:43898 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:36549 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762950AbXLNAQH (ORCPT
+	by vger.kernel.org with ESMTP id S933453AbXLNAP2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:16:07 -0500
+	Thu, 13 Dec 2007 19:15:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com, willy@debian.org
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, jeff@garzik.org, jgarzik@redhat.com
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+From: Jeff Garzik <jeff@garzik.org>
 
-Fix section mismatch warning:
+* remove unnecessary cast
 
-WARNING: vmlinux.o(.text+0x1ff3a2): Section mismatch: reference to .exit.text:sym2_remove (between 'sym2_io_error_detected' and 'sym_xpt_done')
+* remove unnecessary use of 'irq' function arg
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Signed-off-by: Jeff Garzik <jgarzik@redhat.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
-Cc: Matthew Wilcox <willy@debian.org>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/sym53c8xx_2/sym_glue.c |    4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/NCR5380.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/sym53c8xx_2/sym_glue.c~sym2-fix-section-mismatch-warning drivers/scsi/sym53c8xx_2/sym_glue.c
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c~sym2-fix-section-mismatch-warning
-+++ a/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -1744,7 +1744,7 @@ static int __devinit sym2_probe(struct p
- 	return -ENODEV;
- }
+diff -puN drivers/scsi/NCR5380.c~scsi-ncr5380-minor-irq-handler-cleanups drivers/scsi/NCR5380.c
+--- a/drivers/scsi/NCR5380.c~scsi-ncr5380-minor-irq-handler-cleanups
++++ a/drivers/scsi/NCR5380.c
+@@ -1157,16 +1157,17 @@ static void NCR5380_main(struct work_str
+  *	Locks: takes the needed instance locks
+  */
  
--static void __devexit sym2_remove(struct pci_dev *pdev)
-+static void sym2_remove(struct pci_dev *pdev)
+-static irqreturn_t NCR5380_intr(int irq, void *dev_id) 
++static irqreturn_t NCR5380_intr(int dummy, void *dev_id)
  {
- 	struct Scsi_Host *shost = pci_get_drvdata(pdev);
+ 	NCR5380_local_declare();
+-	struct Scsi_Host *instance = (struct Scsi_Host *)dev_id;
++	struct Scsi_Host *instance = dev_id;
+ 	struct NCR5380_hostdata *hostdata = (struct NCR5380_hostdata *) instance->hostdata;
+ 	int done;
+ 	unsigned char basr;
+ 	unsigned long flags;
  
-@@ -2056,7 +2056,7 @@ static struct pci_driver sym2_driver = {
- 	.name		= NAME53C8XX,
- 	.id_table	= sym2_id_table,
- 	.probe		= sym2_probe,
--	.remove		= __devexit_p(sym2_remove),
-+	.remove		= sym2_remove,
- 	.err_handler 	= &sym2_err_handler,
- };
+-	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n", irq));
++	dprintk(NDEBUG_INTR, ("scsi : NCR5380 irq %d triggered\n",
++		instance->irq));
  
+ 	do {
+ 		done = 1;
 _
