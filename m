@@ -1,38 +1,50 @@
-From: Pete Zaitcev <zaitcev@redhat.com>
-Subject: Re: [PATCH 12/30] blk_end_request: changing ub (take 4)
-Date: Fri, 14 Dec 2007 11:49:38 -0800
-Message-ID: <20071214114938.b87883af.zaitcev@redhat.com>
-References: <20071211154803.58beb681.zaitcev@redhat.com>
-	<20071212.153815.39152138.k-ueda@ct.jp.nec.com>
-	<20071213135916.27ebe3f9.zaitcev@redhat.com>
-	<20071214.120454.39153297.k-ueda@ct.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH] [SCSI] sym53c8xx: fix "irq X: nobody cared" regression in
+ 2.6.24
+Date: Fri, 14 Dec 2007 15:45:16 -0500
+Message-ID: <4762EB5C.9080100@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20071214.120454.39153297.k-ueda@ct.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Kiyoshi Ueda <k-ueda@ct.jp.nec.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, dm-devel@redhat.com, zaitcev@redhat.com, jens.axboe@oracle.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from host06.cybernetics.com ([206.246.200.22]:3960 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752057AbXLNUpD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Dec 2007 15:45:03 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On Fri, 14 Dec 2007 12:04:54 -0500 (EST), Kiyoshi Ueda <k-ueda@ct.jp.nec.com> wrote:
+The patch described by the following excerpt from ChangeLog-2.6.24-rc1
+eventually causes a "irq X: nobody cared" error after a while:
 
-> I have investigated all code paths which call ub_end_rq() in ub.c,
-> and confirmed that ub_end_rq() is always called with the queue lock
-> held.  (sc->lock is registered as a queue lock.)
+commit 99c9e0a1d6cfe1ba1169a7a81435ee85bc00e4a1
+Author: Matthew Wilcox <matthew@wil.cx>
+Date:   Fri Oct 5 15:55:12 2007 -0400
 
-Thanks for reminding me about blk_init_queue, I forgot. Sorry for the
-confusion.
+    [SCSI] sym53c8xx: Make interrupt handler capable of returning IRQ_NONE
 
-Greetings,
--- Pete
+After this happens, the kernel disables the IRQ, causing the SCSI card
+to stop working until the next reboot.  The problem is caused by the
+interrupt handler returning IRQ_NONE instead of IRQ_HANDLED after
+handling an interrupt-on-the-fly (INTF) condition.  The following patch
+fixes the problem.
+
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+---
+
+James, please queue for scsi-rc-fixes-2.6.  Thanks!
+
+--- linux-2.6.24-rc5-git3/drivers/scsi/sym53c8xx_2/sym_hipd.c.orig	2007-12-14 15:07:09.000000000 -0500
++++ linux-2.6.24-rc5-git3/drivers/scsi/sym53c8xx_2/sym_hipd.c	2007-12-14 15:07:31.000000000 -0500
+@@ -2791,7 +2791,7 @@ irqreturn_t sym_interrupt(struct Scsi_Ho
+ 	istat = INB(np, nc_istat);
+ 	if (istat & INTF) {
+ 		OUTB(np, nc_istat, (istat & SIGP) | INTF | np->istat_sem);
+-		istat = INB(np, nc_istat);		/* DUMMY READ */
++		istat |= INB(np, nc_istat);		/* DUMMY READ */
+ 		if (DEBUG_FLAGS & DEBUG_TINY) printf ("F ");
+ 		sym_wakeup_done(np);
+ 	}
+
+
