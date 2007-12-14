@@ -1,50 +1,65 @@
 From: akpm@linux-foundation.org
-Subject: [patch 03/30] initio: fix conflict when loading driver
-Date: Thu, 13 Dec 2007 16:14:05 -0800
-Message-ID: <200712140014.lBE0E5oj026174@imap1.linux-foundation.org>
+Subject: [patch 14/30] aic94: fix section mismatches
+Date: Thu, 13 Dec 2007 16:14:16 -0800
+Message-ID: <200712140014.lBE0EGoL026210@imap1.linux-foundation.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:48986 "EHLO
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:47738 "EHLO
 	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1762797AbXLNAOx (ORCPT
+	by vger.kernel.org with ESMTP id S934286AbXLNAO5 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 13 Dec 2007 19:14:53 -0500
+	Thu, 13 Dec 2007 19:14:57 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@steeleye.com
-Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, alan@lxorguk.ukuu.org.uk, alan@redhat.com, simps05192@yahoo.com
+Cc: linux-scsi@vger.kernel.org, akpm@linux-foundation.org, randy.dunlap@oracle.com
 
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+From: Randy Dunlap <randy.dunlap@oracle.com>
 
-> I have a scanner connected to a Initio INI-950 SCSI card and I recently
-> upgraded from SuSE 10.2 to 10.3.  The new kernel doesn't see any of my
-> devices.  I get the following in /var/log/messages:
->
-> ACPI: PCI Interrupt 0000:00:0a.0[A] -> GSI 17 (level, low) -> IRQ 16
-> initio: I/O port range 0x0 is busy.
-> ACPI: PCI interrupt for device 0000:00:0a.0 disabled
+Fix section mismatch warning:
 
-Humm not a collision - thats a bug in the driver updating.  Looks like the
-changes I made and combined with Christoph's lost a line somewhere when I
-was merging it all.  Try the following
+WARNING: vmlinux.o(.init.text+0x23be6): Section mismatch: reference to .exit.text:asd_unmap_ha (between 'asd_pci_probe' and 'qla4xxx_module_init')
++
+WARNING: vmlinux.o(.text+0x1ec8a8): Section mismatch: reference to .exit.text:as
+d_unmap_ioport (between 'asd_unmap_ha' and 'asd_remove_dev_attrs')
+WARNING: vmlinux.o(.text+0x1ec8b1): Section mismatch: reference to .exit.text:as
+d_unmap_memio (between 'asd_unmap_ha' and 'asd_remove_dev_attrs')
 
-Signed-off-by: Alan Cox <alan@redhat.com>
-Cc: Scott Simpson <simps05192@yahoo.com>
+Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 Cc: James Bottomley <James.Bottomley@steeleye.com>
 Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 ---
 
- drivers/scsi/initio.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/aic94xx/aic94xx_init.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff -puN drivers/scsi/initio.c~initio-fix-conflict-when-loading-driver drivers/scsi/initio.c
---- a/drivers/scsi/initio.c~initio-fix-conflict-when-loading-driver
-+++ a/drivers/scsi/initio.c
-@@ -2867,6 +2867,7 @@ static int initio_probe_one(struct pci_d
- 	}
- 	host = (struct initio_host *)shost->hostdata;
- 	memset(host, 0, sizeof(struct initio_host));
-+	host->addr = pci_resource_start(pdev, 0);
+diff -puN drivers/scsi/aic94xx/aic94xx_init.c~aic94-fix-section-mismatches drivers/scsi/aic94xx/aic94xx_init.c
+--- a/drivers/scsi/aic94xx/aic94xx_init.c~aic94-fix-section-mismatches
++++ a/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -136,7 +136,7 @@ Err:
+ 	return err;
+ }
  
- 	if (!request_region(host->addr, 256, "i91u")) {
- 		printk(KERN_WARNING "initio: I/O port range 0x%x is busy.\n", host->addr);
+-static void __devexit asd_unmap_memio(struct asd_ha_struct *asd_ha)
++static void asd_unmap_memio(struct asd_ha_struct *asd_ha)
+ {
+ 	struct asd_ha_addrspace *io_handle;
+ 
+@@ -173,7 +173,7 @@ static int __devinit asd_map_ioport(stru
+ 	return err;
+ }
+ 
+-static void __devexit asd_unmap_ioport(struct asd_ha_struct *asd_ha)
++static void asd_unmap_ioport(struct asd_ha_struct *asd_ha)
+ {
+ 	pci_release_region(asd_ha->pcidev, PCI_IOBAR_OFFSET);
+ }
+@@ -210,7 +210,7 @@ Err:
+ 	return err;
+ }
+ 
+-static void __devexit asd_unmap_ha(struct asd_ha_struct *asd_ha)
++static void asd_unmap_ha(struct asd_ha_struct *asd_ha)
+ {
+ 	if (asd_ha->iospace)
+ 		asd_unmap_ioport(asd_ha);
 _
