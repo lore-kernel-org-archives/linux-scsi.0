@@ -1,80 +1,64 @@
-From: Mel Gorman <mel@csn.ul.ie>
-Subject: Re: [PATCH] fix page_alloc for larger I/O segments (improved)
-Date: Fri, 14 Dec 2007 17:42:37 +0000
-Message-ID: <20071214174236.GA28613@csn.ul.ie>
-References: <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <4761D160.7060603@rtr.ca> <4761D279.6050500@rtr.ca>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [patch 18/30] scsi/qla2xxx/: possible cleanups
+Date: Fri, 14 Dec 2007 09:55:59 -0800
+Message-ID: <20071214095559.5d4dd818.akpm@linux-foundation.org>
+References: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org>
+	<20071214153723.GC1823@plap3.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755971AbXLNRm7@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4761D279.6050500@rtr.ca>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, matthew@wil.cx, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:42426 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S932333AbXLNR4S (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 14 Dec 2007 12:56:18 -0500
+In-Reply-To: <20071214153723.GC1823@plap3.qlogic.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@kernel.org
 
-On (13/12/07 19:46), Mark Lord didst pronounce:
+On Fri, 14 Dec 2007 07:37:24 -0800 Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+
+> On Thu, 13 Dec 2007, akpm@linux-foundation.org wrote:
 > 
-> "Improved version", more similar to the 2.6.23 code:
+> > From: Adrian Bunk <bunk@kernel.org>
+> > 
+> > - make the following needlessly global code static:
+> >   - qla_attr.c: qla24xx_vport_delete()
+> >   - qla_attr.c: qla24xx_vport_disable()
+> >   - qla_mid.c: qla24xx_allocate_vp_id()
+> >   - qla_mid.c: qla24xx_find_vhost_by_name()
+> >   - qla_mid.c: qla2x00_do_dpc_vp()
+> >   - qla_os.c: struct qla2x00_driver_template
+> >   - qla_os.c: qla2x00_stop_timer()
+> >   - qla_os.c: qla2x00_mem_alloc()
+> >   - qla_os.c: qla2x00_mem_free()
+> >   - qla_sup.c: qla2x00_lock_nvram_access()
+> >   - qla_sup.c: qla2x00_unlock_nvram_access()
+> >   - qla_sup.c: qla2x00_get_nvram_word()
+> >   - qla_sup.c: qla2x00_write_nvram_word()
+> > - #if 0 the following unused global functions:
+> >   - qla_dbg.c: qla2x00_dump_pkt()
+> >   - qla_mbx.c: qla2x00_system_error()
+> >   - qla_mbx.c: qla2x00_get_serdes_params()
+> >   - qla_mbx.c: qla2x00_get_idma_speed()
+> >   - qla_mbx.c: qla24xx_get_vp_database()
+> >   - qla_mbx.c: qla24xx_get_vp_entry()
+> > - qla_os.c: remove some unneeded function prototypes
+> > 
+> > Signed-off-by: Adrian Bunk <bunk@kernel.org>
+> > Cc: Andrew Vasquez <andrew.vasquez@qlogic.com>
+> > Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
 > 
-> Fix page allocator to give better chance of larger contiguous segments 
-> (again).
+> Andrew,
 > 
-> Signed-off-by: Mark Lord <mlord@pobox.com
+> Could you drop this patch from your queue.  I'll carry it in my tree
+> (along with additional code removals) for 2.6.25 submission.
+> 
 
-Regrettably this interferes with anti-fragmentation because the "next" page
-on the list on return from rmqueue_bulk is not guaranteed to be of the right
-mobility type. I fixed it as an additional patch but it adds additional cost
-that should not be necessary and it's visible in microbenchmark results on
-at least one machine.
+I'll normally carry patches until they turn up in a subsystem tree or
+mainline and will drop them then.  To minimise potential of lossage..
 
-The following patch should fix the page ordering problem without incurring an
-additional cost or interfering with anti-fragmentation. However, I haven't
-anything in place yet to verify that the physical page ordering is correct
-but it makes sense. Can you verify it fixes the problem please?
-
-It'll still be some time before I have a full set of performance results
-but initially at least, this fix seems to avoid any impact.
-
-======
-Subject: Fix page allocation for larger I/O segments
-
-In some cases the IO subsystem is able to merge requests if the pages are
-adjacent in physical memory. This was achieved in the allocator by having
-expand() return pages in physically contiguous order in situations were
-a large buddy was split. However, list-based anti-fragmentation changed
-the order pages were returned in to avoid searching in buffered_rmqueue()
-for a page of the appropriate migrate type.
-
-This patch restores behaviour of rmqueue_bulk() preserving the physical order
-of pages returned by the allocator without incurring increased search costs for
-anti-fragmentation.
-
-Signed-off-by: Mel Gorman <mel@csn.ul.ie>
---- 
- page_alloc.c |   11 +++++++++++
- 1 file changed, 11 insertions(+)
-
-diff -rup -X /usr/src/patchset-0.6/bin//dontdiff linux-2.6.24-rc5-clean/mm/page_alloc.c linux-2.6.24-rc5-giveback-physorder-listmove/mm/page_alloc.c
---- linux-2.6.24-rc5-clean/mm/page_alloc.c	2007-12-14 11:55:13.000000000 +0000
-+++ linux-2.6.24-rc5-giveback-physorder-listmove/mm/page_alloc.c	2007-12-14 15:33:12.000000000 +0000
-@@ -847,8 +847,19 @@ static int rmqueue_bulk(struct zone *zon
- 		struct page *page = __rmqueue(zone, order, migratetype);
- 		if (unlikely(page == NULL))
- 			break;
-+
-+		/*
-+		 * Split buddy pages returned by expand() are received here
-+		 * in physical page order. The page is added to the callers and
-+		 * list and the list head then moves forward. From the callers
-+		 * perspective, the linked list is ordered by page number in
-+		 * some conditions. This is useful for IO devices that can
-+		 * merge IO requests if the physical pages are ordered
-+		 * properly.
-+		 */
- 		list_add(&page->lru, list);
- 		set_page_private(page, migratetype);
-+		list = &page->lru;
- 	}
- 	spin_unlock(&zone->lock);
- 	return i;
+Is your tree publically accessible?
