@@ -1,55 +1,69 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH] bsg: fix SG_IO error path
-Date: Sat, 15 Dec 2007 14:50:49 +0900
-Message-ID: <20071215145326S.tomof@acm.org>
+From: Matt Mackall <mpm@selenic.com>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Fri, 14 Dec 2007 23:55:50 -0600
+Message-ID: <20071215055550.GN19691@waste.org>
+References: <47618B0B.8020203@rtr.ca> <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk> <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk> <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <20071215010940.GB28613@csn.ul.ie> <20071214180206.e0325503.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:47699 "EHLO mo11.iij4u.or.jp"
+Received: from waste.org ([66.93.16.53]:48826 "EHLO waste.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751431AbXLOFvB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 15 Dec 2007 00:51:01 -0500
+	id S1750800AbXLOF6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 15 Dec 2007 00:58:17 -0500
+Content-Disposition: inline
+In-Reply-To: <20071214180206.e0325503.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: Mel Gorman <mel@csn.ul.ie>, James Bottomley <James.Bottomley@HansenPartnership.com>, jens.axboe@oracle.com, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-bsg SG_IO needs to return -EFAULT for the response field in struct
-sg_io_v4.
+On Fri, Dec 14, 2007 at 06:02:06PM -0800, Andrew Morton wrote:
+> On Sat, 15 Dec 2007 01:09:41 +0000 Mel Gorman <mel@csn.ul.ie> wrote:
+> 
+> > On (13/12/07 14:29), Andrew Morton didst pronounce:
+> > > > The simple way seems to be to malloc a large area, touch every page and
+> > > > then look at the physical pages assigned ... they now mostly seem to be
+> > > > descending in physical address.
+> > > > 
+> > > 
+> > > OIC.  -mm's /proc/pid/pagemap can be used to get the pfn's...
+> > > 
+> > 
+> > I tried using pagemap to verify the patch but it triggered BUG_ON
+> > checks. Perhaps I am using the interface wrong but I would still not
+> > expect it to break in this fashion. I tried 2.6.24-rc4-mm1, 2.6.24-rc5-mm1,
+> > 2.6.24-rc5 with just the maps4 patches applied and 2.6.23 with maps4 patches
+> > applied. Each time I get errors like this;
+> > 
+> > [   90.108315] BUG: sleeping function called from invalid context at include/asm/uaccess_32.h:457
+> > [   90.211227] in_atomic():1, irqs_disabled():0
+> > [   90.262251] no locks held by showcontiguous/2814.
+> > [   90.318475] Pid: 2814, comm: showcontiguous Not tainted 2.6.24-rc5 #1
+> > [   90.395344]  [<c010522a>] show_trace_log_lvl+0x1a/0x30
+> > [   90.456948]  [<c0105bb2>] show_trace+0x12/0x20
+> > [   90.510173]  [<c0105eee>] dump_stack+0x6e/0x80
+> > [   90.563409]  [<c01205b3>] __might_sleep+0xc3/0xe0
+> > [   90.619765]  [<c02264fd>] copy_to_user+0x3d/0x60
+> > [   90.675153]  [<c01b3e9c>] add_to_pagemap+0x5c/0x80
+> > [   90.732513]  [<c01b43e8>] pagemap_pte_range+0x68/0xb0
+> > [   90.793010]  [<c0175ed2>] walk_page_range+0x112/0x210
+> > [   90.853482]  [<c01b47c6>] pagemap_read+0x176/0x220
+> > [   90.910863]  [<c0182dc4>] vfs_read+0x94/0x150
+> > [   90.963058]  [<c01832fd>] sys_read+0x3d/0x70
+> > [   91.014219]  [<c0104262>] syscall_call+0x7/0xb
+> > 
+> > ...
+> >
+> > Just using cp to read the file is enough to cause problems but I included
+> > a very basic program below that produces the BUG_ON checks. Is this a known
+> > issue or am I using the interface incorrectly?
+> 
+> I'd say you're using it correctly but you've found a hitherto unknown bug. 
+> On i386 highmem machines with CONFIG_HIGHPTE (at least) pte_offset_map()
+> takes kmap_atomic(), so pagemap_pte_range() can't do copy_to_user() as it
+> presently does.
 
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- block/bsg.c |    5 +++--
- 1 files changed, 3 insertions(+), 2 deletions(-)
+Damn, I coulda sworn I fixed that.
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 8e181ab..7781e63 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -877,6 +877,7 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 		struct request *rq;
- 		struct bio *bio, *bidi_bio = NULL;
- 		struct sg_io_v4 hdr;
-+		int ret;
- 
- 		if (copy_from_user(&hdr, uarg, sizeof(hdr)))
- 			return -EFAULT;
-@@ -889,12 +890,12 @@ static long bsg_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- 		if (rq->next_rq)
- 			bidi_bio = rq->next_rq->bio;
- 		blk_execute_rq(bd->queue, NULL, rq, 0);
--		blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio);
-+		ret = blk_complete_sgv4_hdr_rq(rq, &hdr, bio, bidi_bio);
- 
- 		if (copy_to_user(uarg, &hdr, sizeof(hdr)))
- 			return -EFAULT;
- 
--		return 0;
-+		return ret;
- 	}
- 	/*
- 	 * block device ioctls
 -- 
-1.5.3.4
-
+Mathematics is the supreme nostalgia of our time.
