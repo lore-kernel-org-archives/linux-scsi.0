@@ -1,313 +1,121 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 07/24] arm: scsi convert to accessors and !use_sg	cleanup
-Date: Sun, 16 Dec 2007 17:28:33 +0200
-Message-ID: <47654421.1030704@panasas.com>
-References: <46E6F92D.2090409@panasas.com> <46E72AE7.4030507@panasas.com>	 <20070912074205.GB2653@flint.arm.linux.org.uk>	 <46EFE8FF.3010907@panasas.com> <1197678458.3154.119.camel@localhost.localdomain>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH] ieee1394: sbp2: raise default transfer size limit
+Date: Sun, 16 Dec 2007 17:31:26 +0100 (CET)
+Message-ID: <tkrat.0751d80793eb2892@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; CHARSET=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:19161 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751093AbXLPPeg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Dec 2007 10:34:36 -0500
-In-Reply-To: <1197678458.3154.119.camel@localhost.localdomain>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:45974 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760378AbXLPQbh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Dec 2007 11:31:37 -0500
+Content-Disposition: INLINE
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Russell King <rmk@arm.linux.org.uk>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Alan Stern <stern@rowland.harvard.edu>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, Jeff Garzik <jeff@garzik.org>, "David S. Miller" <davem@davemloft.net>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, YOKOTA Hiroshi <yokota@netlab.is.tsukuba.ac.jp>, linux-scsi <linux-scsi@vger.kernel.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, Mark Fortescue <mark@mtfhpc.demon.co.uk>, linux-arm <linux-arm@vger.kernel.org>
+To: linux1394-devel@lists.sourceforge.net
+Cc: linux-scsi@vger.kernel.org
 
-On Sat, Dec 15 2007 at 2:27 +0200, James Bottomley <James.Bottomley@SteelEye.com> wrote:
-> On Tue, 2007-09-18 at 17:04 +0200, Boaz Harrosh wrote:
->> On Wed, Sep 12 2007 at 10:42 +0300, Russell King <rmk@arm.linux.org.uk> wrote:
->>> On Wed, Sep 12, 2007 at 02:55:19AM +0300, Boaz Harrosh wrote:
->>>> -		if (SCpnt->request_bufflen != len)
->>>> +		if (scsi_bufflen(SCpnt) != len) {
->>>> +			WARN_ON(1);
->>> NAK.  The call trace generally doesn't provide any additional information
->>> on the cause of the error.
->>>
->> In my opinion this can not happen any more. If it does, I want to see that
->> it is not through the regular scsi-ml .queuecommand mechanism.
->> But if you insist than sure I will remove it.
->>
->>>>  			printk(KERN_WARNING "scsi%d.%c: bad request buffer "
->>>>  			       "length %d, should be %ld\n", SCpnt->device->host->host_no,
->>>> -			       '0' + SCpnt->device->id, SCpnt->request_bufflen, len);
->>>> -		SCpnt->request_bufflen = len;
->>>> +			       '0' + SCpnt->device->id, scsi_bufflen(SCpnt), len);
->>>> +		}
->>>>  #endif
->>>>  	} else {
->>>> -		SCpnt->SCp.ptr = (unsigned char *)SCpnt->request_buffer;
->>>> -		SCpnt->SCp.this_residual = SCpnt->request_bufflen;
->>>> -		SCpnt->SCp.phase = SCpnt->request_bufflen;
->>>> -	}
->>>> -
->>>> -	/*
->>>> -	 * If the upper SCSI layers pass a buffer, but zero length,
->>>> -	 * we aren't interested in the buffer pointer.
->>>> -	 */
->>>> -	if (SCpnt->SCp.this_residual == 0 && SCpnt->SCp.ptr) {
->>>> -#if 0 //def BELT_AND_BRACES
->>>> -		printk(KERN_WARNING "scsi%d.%c: zero length buffer passed for "
->>>> -		       "command ", SCpnt->host->host_no, '0' + SCpnt->target);
->>>> -		__scsi_print_command(SCpnt->cmnd);
->>>> -#endif
->>>>  		SCpnt->SCp.ptr = NULL;
->>>> +		SCpnt->SCp.this_residual = 0;
->>>> +		SCpnt->SCp.phase = 0;
->>>>  	}
->>>>  }
->>> Also NAK.  This was added due to bad behaviour of the SCSI layer and
->>> was found to be necessary.
->>>
->> No! This check is no longer Relevant. The master if() is on bufflen() now,
->> and only than do we ever set SCp.ptr. The else will always set both to Zero.
->> (Which is what you want)
->>
->> In any way this check is done in scsi-ml, and since 2.6.18 only scsi-ml
->> can allocate and issue commands. All other sources of commands where removed.
->> All upper layers issue requests now.
-> 
-> Russell, could you respond to this, please?  Boaz's points seem valid to
-> me and this conversion must be done soon otherwise these drivers will
-> break.
-> 
-> James
-> 
-> 
+This patch speeds up sbp2 a little bit --- but more importantly, it
+brings the behavior of sbp2 and fw-sbp2 closer to each other.  Like
+fw-sbp2, sbp2 now does not limit the size of single transfers to 255
+sectors anymore, unless told so by a blacklist flag or by module load
+parameters.
 
-Reinspecting this code in view of the overall arm-scsi, I conclude that arm
-is CURRENTLY BROKEN in 2.6.24-rcx tree. With or without this patch.
+Only very old bridge chips have been known to need the 255 sectors
+limit, and we have got one such chip in our hardwired blacklist.  There
+certainly is a danger that more bridges need that limit; but I prefer to
+have this issue present in both fw-sbp2 and sbp2 rather than just one of
+them.
 
-Resubmitted in this mail is the sg-safe version of this patch. Maybe
-with the bug fixes it will finally be acknowledged by the arm people.
+An OXUF922 with 400GB 7200RPM disk on an S400 controller is sped up by
+this patch from 22.9 to 23.5 MB/s according to hdparm.  The same effect
+could be achieved before by setting a higher max_sectors module
+parameter.  On buses which use 1394b beta mode, sbp2 and fw-sbp2 will
+now achieve virtually the same bandwidth.  Fw-sbp2 only remains faster
+on 1394a buses due to fw-core's gap count optimization.
 
-The reason it is currently broken is because of copy_SCp_to_sg() which I did not previously
-touched. It is broken both on the account of the wrong assumption about the sg-list 
-coming from scsi at SCp.buffer, and because inspecting the code, the sg-list pointed 
-to by destination sg is later passed to a DMA mapper and it is not initialized properly.
-These and more are fixed in the new patch.
-
-After the new patch, arm drivers are not yet safe for chaining. But the 
-arm-scsi-mid-layer is. Meaning, good behaving arm drivers will no longer 
-suffer from bugs at the mid-level.
-
-Russell or any other arm person. Please first see if this compiles at all, as I do
-not have a cross compiler set up, and please check that this code works.
-(Should apply on top of Linus latest)
-
-------
->From f02d6f44c9043258f8aa63c7dfe56c9a67db3fcf Mon Sep 17 00:00:00 2001
-From: Boaz Harrosh <bharrosh@panasas.com>
-Date: Sun, 9 Sep 2007 21:31:21 +0300
-Subject: [PATCH] [SCSI] arm:  sg bugfixes and convert to accessors
-
- - convert to accessors and !use_sg cleanup
- - fix for sg_chaining bugs
-
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Russell King <rmk@arm.linux.org.uk>
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
 ---
- drivers/scsi/arm/acornscsi.c |   14 +++---
- drivers/scsi/arm/scsi.h      |   86 ++++++++++++++++++++++++-----------------
- 2 files changed, 57 insertions(+), 43 deletions(-)
+ drivers/ieee1394/sbp2.c |   26 +++++++++++++++-----------
+ drivers/ieee1394/sbp2.h |    1 -
+ 2 files changed, 15 insertions(+), 12 deletions(-)
 
-diff --git a/drivers/scsi/arm/acornscsi.c b/drivers/scsi/arm/acornscsi.c
-index eceacf6..3bedf24 100644
---- a/drivers/scsi/arm/acornscsi.c
-+++ b/drivers/scsi/arm/acornscsi.c
-@@ -1790,7 +1790,7 @@ int acornscsi_starttransfer(AS_Host *host)
- 	return 0;
-     }
- 
--    residual = host->SCpnt->request_bufflen - host->scsi.SCp.scsi_xferred;
-+    residual = scsi_bufflen(host->SCpnt) - host->scsi.SCp.scsi_xferred;
- 
-     sbic_arm_write(host->scsi.io_port, SBIC_SYNCHTRANSFER, host->device[host->SCpnt->device->id].sync_xfer);
-     sbic_arm_writenext(host->scsi.io_port, residual >> 16);
-@@ -2270,7 +2270,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4b:			/* -> PHASE_STATUSIN				*/
- 	case 0x8b:			/* -> PHASE_STATUSIN				*/
- 	    /* DATA IN -> STATUS */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_readstatusbyte(host);
-@@ -2281,7 +2281,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4e:			/* -> PHASE_MSGOUT				*/
- 	case 0x8e:			/* -> PHASE_MSGOUT				*/
- 	    /* DATA IN -> MESSAGE OUT */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_sendmessage(host);
-@@ -2291,7 +2291,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4f:			/* message in					*/
- 	case 0x8f:			/* message in					*/
- 	    /* DATA IN -> MESSAGE IN */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_message(host);	/* -> PHASE_MSGIN, PHASE_DISCONNECT		*/
-@@ -2319,7 +2319,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4b:			/* -> PHASE_STATUSIN				*/
- 	case 0x8b:			/* -> PHASE_STATUSIN				*/
- 	    /* DATA OUT -> STATUS */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-@@ -2331,7 +2331,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4e:			/* -> PHASE_MSGOUT				*/
- 	case 0x8e:			/* -> PHASE_MSGOUT				*/
- 	    /* DATA OUT -> MESSAGE OUT */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-@@ -2342,7 +2342,7 @@ intr_ret_t acornscsi_sbicintr(AS_Host *host, int in_irq)
- 	case 0x4f:			/* message in					*/
- 	case 0x8f:			/* message in					*/
- 	    /* DATA OUT -> MESSAGE IN */
--	    host->scsi.SCp.scsi_xferred = host->SCpnt->request_bufflen -
-+	    host->scsi.SCp.scsi_xferred = scsi_bufflen(host->SCpnt) -
- 					  acornscsi_sbic_xfcount(host);
- 	    acornscsi_dma_stop(host);
- 	    acornscsi_dma_adjust(host);
-diff --git a/drivers/scsi/arm/scsi.h b/drivers/scsi/arm/scsi.h
-index bb6550e..ce7d3d3 100644
---- a/drivers/scsi/arm/scsi.h
-+++ b/drivers/scsi/arm/scsi.h
-@@ -18,17 +18,32 @@
-  * The scatter-gather list handling.  This contains all
-  * the yucky stuff that needs to be fixed properly.
+Index: linux/drivers/ieee1394/sbp2.c
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.c
++++ linux/drivers/ieee1394/sbp2.c
+@@ -51,6 +51,7 @@
+  * Grep for inline FIXME comments below.
   */
-+
-+/*
-+ * copy_SCp_to_sg() Assumes contiguous allocation at @sg of at-most @max
-+ * entries of uninitialized memory. SCp is from scsi-ml and has a valid
-+ * (possibly chained) sg-list
-+ */
- static inline int copy_SCp_to_sg(struct scatterlist *sg, struct scsi_pointer *SCp, int max)
- {
- 	int bufs = SCp->buffers_residual;
  
-+	/* FIXME: It should be easy for drivers to loop on copy_SCp_to_sg().
-+	 * and to remove this BUG_ON. Use min() in-its-place
-+	 */
- 	BUG_ON(bufs + 1 > max);
++#include <linux/blkdev.h>
+ #include <linux/compiler.h>
+ #include <linux/delay.h>
+ #include <linux/device.h>
+@@ -127,17 +128,21 @@ MODULE_PARM_DESC(serialize_io, "Serializ
+ 		 "(default = Y, faster but buggy = N)");
  
- 	sg_set_buf(sg, SCp->ptr, SCp->this_residual);
+ /*
+- * Bump up max_sectors if you'd like to support very large sized
+- * transfers. Please note that some older sbp2 bridge chips are broken for
+- * transfers greater or equal to 128KB.  Default is a value of 255
+- * sectors, or just under 128KB (at 512 byte sector size). I can note that
+- * the Oxsemi sbp2 chipsets have no problems supporting very large
+- * transfer sizes.
++ * Adjust max_sectors if you'd like to influence how many sectors each SCSI
++ * command can transfer at most. Please note that some older SBP-2 bridge
++ * chips are broken for transfers greater or equal to 128KB, therefore
++ * max_sectors used to be a safe 255 sectors for many years. We now have a
++ * default of 0 here which means that we let the SCSI stack choose a limit.
++ *
++ * The SBP2_WORKAROUND_128K_MAX_TRANS flag, if set either in the workarounds
++ * module parameter or in the sbp2_workarounds_table[], will override the
++ * value of max_sectors. We should use sbp2_workarounds_table[] to cover any
++ * bridge chip which becomes known to need the 255 sectors limit.
+  */
+-static int sbp2_max_sectors = SBP2_MAX_SECTORS;
++static int sbp2_max_sectors;
+ module_param_named(max_sectors, sbp2_max_sectors, int, 0444);
+ MODULE_PARM_DESC(max_sectors, "Change max sectors per I/O supported "
+-		 "(default = " __stringify(SBP2_MAX_SECTORS) ")");
++		 "(default = 0 = use SCSI stack's default)");
  
--	if (bufs)
--		memcpy(sg + 1, SCp->buffer + 1,
--		       sizeof(struct scatterlist) * bufs);
-+	if (bufs) {
-+		struct scatterlist *src_sg;
-+		unsigned i;
-+
-+		for_each_sg(sg_next(SCp->buffer), src_sg, bufs, i)
-+			*(++sg) = *src_sg;
-+		sg_mark_end(sg);
-+	}
-+
- 	return bufs + 1;
+ /*
+  * Exclusive login to sbp2 device? In most cases, the sbp2 driver should
+@@ -1980,6 +1985,8 @@ static int sbp2scsi_slave_configure(stru
+ 		sdev->skip_ms_page_8 = 1;
+ 	if (lu->workarounds & SBP2_WORKAROUND_FIX_CAPACITY)
+ 		sdev->fix_capacity = 1;
++	if (lu->workarounds & SBP2_WORKAROUND_128K_MAX_TRANS)
++		blk_queue_max_sectors(sdev->request_queue, 128 * 1024 / 512);
+ 	return 0;
  }
  
-@@ -36,7 +51,7 @@ static inline int next_SCp(struct scsi_pointer *SCp)
- {
- 	int ret = SCp->buffers_residual;
- 	if (ret) {
--		SCp->buffer++;
-+		SCp->buffer = sg_next(SCp->buffer);
- 		SCp->buffers_residual--;
- 		SCp->ptr = sg_virt(SCp->buffer);
- 		SCp->this_residual = SCp->buffer->length;
-@@ -68,46 +83,45 @@ static inline void init_SCp(struct scsi_cmnd *SCpnt)
- {
- 	memset(&SCpnt->SCp, 0, sizeof(struct scsi_pointer));
- 
--	if (SCpnt->use_sg) {
-+	if (scsi_bufflen(SCpnt)) {
- 		unsigned long len = 0;
--		int buf;
- 
--		SCpnt->SCp.buffer = (struct scatterlist *) SCpnt->request_buffer;
--		SCpnt->SCp.buffers_residual = SCpnt->use_sg - 1;
-+		SCpnt->SCp.buffer = scsi_sglist(SCpnt);
-+		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
- 		SCpnt->SCp.ptr = sg_virt(SCpnt->SCp.buffer);
- 		SCpnt->SCp.this_residual = SCpnt->SCp.buffer->length;
--		SCpnt->SCp.phase = SCpnt->request_bufflen;
-+		SCpnt->SCp.phase = scsi_bufflen(SCpnt);
- 
- #ifdef BELT_AND_BRACES
--		/*
--		 * Calculate correct buffer length.  Some commands
--		 * come in with the wrong request_bufflen.
--		 */
--		for (buf = 0; buf <= SCpnt->SCp.buffers_residual; buf++)
--			len += SCpnt->SCp.buffer[buf].length;
--
--		if (SCpnt->request_bufflen != len)
--			printk(KERN_WARNING "scsi%d.%c: bad request buffer "
--			       "length %d, should be %ld\n", SCpnt->device->host->host_no,
--			       '0' + SCpnt->device->id, SCpnt->request_bufflen, len);
--		SCpnt->request_bufflen = len;
-+		{	/*
-+			 * Calculate correct buffer length.  Some commands
-+			 * come in with the wrong scsi_bufflen.
-+			 */
-+			struct scatterlist *sg;
-+			unsigned i, sg_count = scsi_sg_count(SCpnt);
-+
-+			scsi_for_each_sg(SCpnt, sg, sg_count, i)
-+				len += sg->length;
-+
-+			if (scsi_bufflen(SCpnt) != len) {
-+				printk(KERN_WARNING
-+				       "scsi%d.%c: bad request buffer "
-+				       "length %d, should be %ld\n",
-+					SCpnt->device->host->host_no,
-+					'0' + SCpnt->device->id,
-+					scsi_bufflen(SCpnt), len);
-+				/*
-+				 * FIXME: Totaly naive fixup. We should abort
-+				 * with error
-+				 */
-+				SCpnt->SCp.phase =
-+					min(len, scsi_bufflen(SCpnt));
-+			}
-+		}
- #endif
- 	} else {
--		SCpnt->SCp.ptr = (unsigned char *)SCpnt->request_buffer;
--		SCpnt->SCp.this_residual = SCpnt->request_bufflen;
--		SCpnt->SCp.phase = SCpnt->request_bufflen;
--	}
--
--	/*
--	 * If the upper SCSI layers pass a buffer, but zero length,
--	 * we aren't interested in the buffer pointer.
--	 */
--	if (SCpnt->SCp.this_residual == 0 && SCpnt->SCp.ptr) {
--#if 0 //def BELT_AND_BRACES
--		printk(KERN_WARNING "scsi%d.%c: zero length buffer passed for "
--		       "command ", SCpnt->host->host_no, '0' + SCpnt->target);
--		__scsi_print_command(SCpnt->cmnd);
--#endif
- 		SCpnt->SCp.ptr = NULL;
-+		SCpnt->SCp.this_residual = 0;
-+		SCpnt->SCp.phase = 0;
+@@ -2086,9 +2093,6 @@ static int sbp2_module_init(void)
+ 		sbp2_shost_template.cmd_per_lun = 1;
  	}
- }
+ 
+-	if (sbp2_default_workarounds & SBP2_WORKAROUND_128K_MAX_TRANS &&
+-	    (sbp2_max_sectors * 512) > (128 * 1024))
+-		sbp2_max_sectors = 128 * 1024 / 512;
+ 	sbp2_shost_template.max_sectors = sbp2_max_sectors;
+ 
+ 	hpsb_register_highlevel(&sbp2_highlevel);
+Index: linux/drivers/ieee1394/sbp2.h
+===================================================================
+--- linux.orig/drivers/ieee1394/sbp2.h
++++ linux/drivers/ieee1394/sbp2.h
+@@ -222,7 +222,6 @@ struct sbp2_status_block {
+  */
+ 
+ #define SBP2_MAX_SG_ELEMENT_LENGTH		0xf000
+-#define SBP2_MAX_SECTORS			255
+ /* There is no real limitation of the queue depth (i.e. length of the linked
+  * list of command ORBs) at the target. The chosen depth is merely an
+  * implementation detail of the sbp2 driver. */
+
 -- 
-1.5.3.3
+Stefan Richter
+-=====-=-=== ==-- =----
+http://arcgraph.de/sr/
 
