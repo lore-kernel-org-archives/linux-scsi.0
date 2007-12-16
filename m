@@ -1,121 +1,152 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: [PATCH] ieee1394: sbp2: raise default transfer size limit
-Date: Sun, 16 Dec 2007 17:31:26 +0100 (CET)
-Message-ID: <tkrat.0751d80793eb2892@s5r6.in-berlin.de>
+From: Mel Gorman <mel@csn.ul.ie>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Sun, 16 Dec 2007 21:55:20 +0000
+Message-ID: <20071216215519.GA7710@csn.ul.ie>
+References: <47618B0B.8020203@rtr.ca> <20071213195350.GH10104@kernel.dk> <20071213200219.GI10104@kernel.dk> <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk> <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <20071215010940.GB28613@csn.ul.ie> <20071214180206.e0325503.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; CHARSET=us-ascii
+Content-Type: text/plain; charset=iso-8859-15
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:45974 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760378AbXLPQbh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 16 Dec 2007 11:31:37 -0500
-Content-Disposition: INLINE
+Received: from gir.skynet.ie ([193.1.99.77]:47871 "EHLO gir.skynet.ie"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1763211AbXLPVz0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 16 Dec 2007 16:55:26 -0500
+Content-Disposition: inline
+In-Reply-To: <20071214180206.e0325503.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux1394-devel@lists.sourceforge.net
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, jens.axboe@oracle.com, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Matt Mackall <mpm@selenic.com>
 
-This patch speeds up sbp2 a little bit --- but more importantly, it
-brings the behavior of sbp2 and fw-sbp2 closer to each other.  Like
-fw-sbp2, sbp2 now does not limit the size of single transfers to 255
-sectors anymore, unless told so by a blacklist flag or by module load
-parameters.
+> > Just using cp to read the file is enough to cause problems but I included
+> > a very basic program below that produces the BUG_ON checks. Is this a known
+> > issue or am I using the interface incorrectly?
+> 
+> I'd say you're using it correctly but you've found a hitherto unknown bug. 
+> On i386 highmem machines with CONFIG_HIGHPTE (at least) pte_offset_map()
+> takes kmap_atomic(), so pagemap_pte_range() can't do copy_to_user() as it
+> presently does.
+> 
+> Drat.
+> 
+> Still, that shouldn't really disrupt the testing which you're doing.  You
+> could disable CONFIG_HIGHPTE to shut it up.
+> 
 
-Only very old bridge chips have been known to need the 255 sectors
-limit, and we have got one such chip in our hardwired blacklist.  There
-certainly is a danger that more bridges need that limit; but I prefer to
-have this issue present in both fw-sbp2 and sbp2 rather than just one of
-them.
+Yes, that did the trick. Using pagemap, it was trivial to show that the
+2.6.24-rc5-mm1 kernel was placing pages in reverse physical order like
+the following output shows
 
-An OXUF922 with 400GB 7200RPM disk on an S400 controller is sped up by
-this patch from 22.9 to 23.5 MB/s according to hdparm.  The same effect
-could be achieved before by setting a higher max_sectors module
-parameter.  On buses which use 1394b beta mode, sbp2 and fw-sbp2 will
-now achieve virtually the same bandwidth.  Fw-sbp2 only remains faster
-on 1394a buses due to fw-core's gap count optimization.
+b:  32763 v:   753091 p:    65559 . 65558 contig: 1
+b:  32764 v:   753092 p:    65558 . 65557 contig: 1
+b:  32765 v:   753093 p:    65557 . 65556 contig: 1
+b:  32766 v:   753094 p:    65556 . 65555 contig: 1
+b:  32767 v:   753095 p:    65555 . 65555 contig: 1
 
-Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
----
- drivers/ieee1394/sbp2.c |   26 +++++++++++++++-----------
- drivers/ieee1394/sbp2.h |    1 -
- 2 files changed, 15 insertions(+), 12 deletions(-)
+p: is the PFN of the page v: is the page offset within an anonymous
+mapping and b: is the number of non-contiguous blocks in the anonymous
+mapping. With the patch applied, it looks more like;
 
-Index: linux/drivers/ieee1394/sbp2.c
-===================================================================
---- linux.orig/drivers/ieee1394/sbp2.c
-+++ linux/drivers/ieee1394/sbp2.c
-@@ -51,6 +51,7 @@
-  * Grep for inline FIXME comments below.
-  */
- 
-+#include <linux/blkdev.h>
- #include <linux/compiler.h>
- #include <linux/delay.h>
- #include <linux/device.h>
-@@ -127,17 +128,21 @@ MODULE_PARM_DESC(serialize_io, "Serializ
- 		 "(default = Y, faster but buggy = N)");
- 
- /*
-- * Bump up max_sectors if you'd like to support very large sized
-- * transfers. Please note that some older sbp2 bridge chips are broken for
-- * transfers greater or equal to 128KB.  Default is a value of 255
-- * sectors, or just under 128KB (at 512 byte sector size). I can note that
-- * the Oxsemi sbp2 chipsets have no problems supporting very large
-- * transfer sizes.
-+ * Adjust max_sectors if you'd like to influence how many sectors each SCSI
-+ * command can transfer at most. Please note that some older SBP-2 bridge
-+ * chips are broken for transfers greater or equal to 128KB, therefore
-+ * max_sectors used to be a safe 255 sectors for many years. We now have a
-+ * default of 0 here which means that we let the SCSI stack choose a limit.
-+ *
-+ * The SBP2_WORKAROUND_128K_MAX_TRANS flag, if set either in the workarounds
-+ * module parameter or in the sbp2_workarounds_table[], will override the
-+ * value of max_sectors. We should use sbp2_workarounds_table[] to cover any
-+ * bridge chip which becomes known to need the 255 sectors limit.
-  */
--static int sbp2_max_sectors = SBP2_MAX_SECTORS;
-+static int sbp2_max_sectors;
- module_param_named(max_sectors, sbp2_max_sectors, int, 0444);
- MODULE_PARM_DESC(max_sectors, "Change max sectors per I/O supported "
--		 "(default = " __stringify(SBP2_MAX_SECTORS) ")");
-+		 "(default = 0 = use SCSI stack's default)");
- 
- /*
-  * Exclusive login to sbp2 device? In most cases, the sbp2 driver should
-@@ -1980,6 +1985,8 @@ static int sbp2scsi_slave_configure(stru
- 		sdev->skip_ms_page_8 = 1;
- 	if (lu->workarounds & SBP2_WORKAROUND_FIX_CAPACITY)
- 		sdev->fix_capacity = 1;
-+	if (lu->workarounds & SBP2_WORKAROUND_128K_MAX_TRANS)
-+		blk_queue_max_sectors(sdev->request_queue, 128 * 1024 / 512);
- 	return 0;
- }
- 
-@@ -2086,9 +2093,6 @@ static int sbp2_module_init(void)
- 		sbp2_shost_template.cmd_per_lun = 1;
- 	}
- 
--	if (sbp2_default_workarounds & SBP2_WORKAROUND_128K_MAX_TRANS &&
--	    (sbp2_max_sectors * 512) > (128 * 1024))
--		sbp2_max_sectors = 128 * 1024 / 512;
- 	sbp2_shost_template.max_sectors = sbp2_max_sectors;
- 
- 	hpsb_register_highlevel(&sbp2_highlevel);
-Index: linux/drivers/ieee1394/sbp2.h
-===================================================================
---- linux.orig/drivers/ieee1394/sbp2.h
-+++ linux/drivers/ieee1394/sbp2.h
-@@ -222,7 +222,6 @@ struct sbp2_status_block {
-  */
- 
- #define SBP2_MAX_SG_ELEMENT_LENGTH		0xf000
--#define SBP2_MAX_SECTORS			255
- /* There is no real limitation of the queue depth (i.e. length of the linked
-  * list of command ORBs) at the target. The chosen depth is merely an
-  * implementation detail of the sbp2 driver. */
+b:   1232 v:   752964 p:    58944 ................ 87328 contig: 15
+b:   1233 v:   752980 p:    87328 ................ 91200 contig: 15
+b:   1234 v:   752996 p:    91200 ................ 40272 contig: 15
+b:   1235 v:   753012 p:    40272 ................ 85664 contig: 15
+b:   1236 v:   753028 p:    85664 ................ 87312 contig: 15
 
+so mappings are using contiguous pages again. This was the final test
+program I used in case it's of any interest.
+
+Thanks
+
+/*
+ * showcontiguous.c
+ *
+ * Use the /proc/pid/pagemap interface to give an indication of how contiguous
+ * physical memory is in an anonymous virtual memory mapping
+ */
+#include <stdio.h>
+#include <sys/mman.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <linux/types.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#define MAPSIZE (128*1048576)
+#define PM_ENTRY_BYTES sizeof(__u64)
+
+int main(int argc, char **argv)
+{
+	int pagemap_fd;
+	unsigned long *anonmapping;
+	__u64 pagemap_entry = 0ULL;
+
+	unsigned long vpfn, ppfn, ppfn_last;
+	int block_number = 0;
+	int contig_count = 1;
+	size_t mmap_offset;
+	int pagesize = getpagesize();
+
+	if (sizeof(pagemap_entry) < PM_ENTRY_BYTES) {
+		printf("ERROR: Failed assumption on size of pagemap_entry\n");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Open the pagemap interface */
+	pagemap_fd = open("/proc/self/pagemap", O_RDONLY);
+	if (pagemap_fd == -1) {
+		perror("fopen");
+		exit(EXIT_FAILURE);
+	}
+
+	/* Create an anonymous mapping */
+	anonmapping = mmap(NULL, MAPSIZE,
+			PROT_READ|PROT_WRITE,
+			MAP_PRIVATE|MAP_ANONYMOUS|MAP_POPULATE,
+			-1, 0);
+	if (anonmapping == MAP_FAILED) {
+		perror("mmap");
+		exit(1);
+	}
+
+	/* Work out the VPN the mapping is at and seek to it in pagemap */
+	vpfn = ((unsigned long)anonmapping) / pagesize;
+	mmap_offset = lseek(pagemap_fd, vpfn * PM_ENTRY_BYTES, SEEK_SET);
+	if (mmap_offset == -1) {
+		perror("fseek");
+		exit(EXIT_FAILURE);
+	}
+	ppfn_last = 0;
+
+	/* Read the PFN of each page in the mapping */
+	for (mmap_offset = 0; mmap_offset < MAPSIZE; mmap_offset += pagesize) {
+		vpfn = ((unsigned long)anonmapping + mmap_offset) / pagesize;
+
+		if (read(pagemap_fd, &pagemap_entry, PM_ENTRY_BYTES) == 0) {
+			perror("fread");
+			exit(EXIT_FAILURE);
+		}
+
+		ppfn = (unsigned long)pagemap_entry;
+		if (ppfn == ppfn_last + 1) {
+			printf(".");
+			contig_count++;
+		} else {
+			printf(" %lu contig: %d\nb: %6d v: %8lu p: %8lu .",
+				ppfn, contig_count,
+				block_number, vpfn, ppfn);
+			contig_count = 1;
+			block_number++;
+		}
+		ppfn_last = ppfn;
+	}
+	printf(" %lu config: %d\n", ppfn, contig_count);
+
+	close(pagemap_fd);
+	munmap(anonmapping, MAPSIZE);
+	exit(EXIT_SUCCESS);
+}
 -- 
-Stefan Richter
--=====-=-=== ==-- =----
-http://arcgraph.de/sr/
-
+Mel Gorman
+Part-time Phd Student                          Linux Technology Center
+University of Limerick                         IBM Dublin Software Lab
