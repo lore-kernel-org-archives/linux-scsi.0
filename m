@@ -1,32 +1,30 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Mon, 17 Dec 2007 13:05:23 +0000
-Message-ID: <20071217130523.7e9c88bb@the-village.bc.nu>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
-	<20071217031841.f483e5ac.akpm@linux-foundation.org>
+From: Sven Rudolph <Sven_Rudolph@drewag.de>
+Subject: Re: FC-LTO4 tape drive: Sense Key : Illegal Request
+Date: Mon, 17 Dec 2007 15:00:55 +0100
+Message-ID: <xfksl214e08.fsf@uxkm53.drewag.de>
+References: <xfk63z5ci9w.fsf@uxkm53.drewag.de> <475F0D54.4090000@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:45549 "EHLO
-	the-village.bc.nu" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754279AbXLQNMV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2007 08:12:21 -0500
-In-Reply-To: <20071217031841.f483e5ac.akpm@linux-foundation.org>
+Received: from miranda.drewag.de ([212.111.238.29]:32774 "EHLO
+	miranda.drewag.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753509AbXLQOAz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2007 09:00:55 -0500
+In-Reply-To: <475F0D54.4090000@emulex.com> (James Smart's message of "Tue,
+ 11 Dec 2007 17:21:08 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Filippos Papadopoulos <psybases@gmail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: linux-scsi@vger.kernel.org
 
-> initio doesn't seem to have a maintainer...
-> 
-> Are you able to identify any earlier kernel which worked OK?
-> 
-> Maybe it's a new device?  If you can get the `lspci -vvxx' output
-> for that device we can take a look.
+James Smart <James.Smart@Emulex.Com> writes:
 
-If I remember rightly the fixes for this went into the scsi tree a couple
-of months ago. The patch is in the -mm tree as well. No idea why its
-gotten stuck as an obvious one liner.
+> This sounds like the recent lpfc bug found on the LTO-3 or LTO-4. The lpfc
+> driver had messed up tag handling (a long time bug).  The patch was posted
+> at http://marc.info/?l=linux-scsi&m=119367024313743&w=2
+> and has been pulled into scsi-rc-fixes, and I believe will be in 2.6.24.
 
-Alan
+I use the patch with 2.6.23.8 and it works now. Thank you!
+
+	Sven 
+
