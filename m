@@ -1,62 +1,41 @@
-From: James Bottomley <James.Bottomley@SteelEye.com>
-Subject: Re: 2.6.24-rc5: tape drive not responding
-Date: Mon, 17 Dec 2007 15:52:28 -0600
-Message-ID: <1197928348.3204.14.camel@localhost.localdomain>
-References: <18277.52079.718004.969358@stoffel.org>
-	 <20071217112551H.fujita.tomonori@lab.ntt.co.jp>
-	 <20071217031510.c3d500fd.akpm@linux-foundation.org>
-	 <18278.55130.471797.398922@stoffel.org>
-	 <18278.58314.892734.490418@stoffel.org>
-	 <20071217134344.3f024461.akpm@linux-foundation.org>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH] drivers/scsi/: Spelling fixes
+Date: Mon, 17 Dec 2007 13:56:50 -0800
+Message-ID: <20071217215650.GQ8520@plap3.qlogic.org>
+References: <5703e57f925f31fc0eb38873bd7f10fc44f99cb4.1197918893.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hancock.steeleye.com ([71.30.118.248]:49271 "EHLO
-	hancock.sc.steeleye.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753225AbXLQVwb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2007 16:52:31 -0500
-In-Reply-To: <20071217134344.3f024461.akpm@linux-foundation.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:43084 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755454AbXLQV4x (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2007 16:56:53 -0500
+Content-Disposition: inline
+In-Reply-To: <5703e57f925f31fc0eb38873bd7f10fc44f99cb4.1197918893.git.joe@perches.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: John Stoffel <john@stoffel.org>, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
+To: Joe Perches <joe@perches.com>
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Andrew Vasquez <linux-driver@qlogic.com>, Brian King <brking@us.ibm.com>, Dave Jeffery <ipslinux@adaptec.com>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, James Smart <james.smart@emulex.com>, Mike Christie <michaelc@cs.wisc.edu>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
 
+On Mon, 17 Dec 2007, Joe Perches wrote:
 
-On Mon, 2007-12-17 at 13:43 -0800, Andrew Morton wrote:
-> On Mon, 17 Dec 2007 16:02:02 -0500
-> "John Stoffel" <john@stoffel.org> wrote:
-> 
-> > 
-> > Just to confirm, the propsed patch to st.c fixes the issue with
-> > 2.6.24-rc5 as well at 2.6.24-rc5-mm1 with access to my DLT tape
-> > drives.
-> 
-> err, what patch to st.c?
+> Signed-off-by: Joe Perches <joe@perches.com>
+> ---
+>  drivers/scsi/NCR53C9x.h               |    2 +-
+>  drivers/scsi/aic7xxx/aic79xx_inline.h |    2 +-
+>  drivers/scsi/aic7xxx/aic79xx_osm.c    |    2 +-
+>  drivers/scsi/aic7xxx/aic79xx_pci.c    |    4 ++--
+>  drivers/scsi/aic7xxx/aic7xxx_inline.h |    2 +-
+>  drivers/scsi/aic7xxx/aic7xxx_osm.c    |    2 +-
+>  drivers/scsi/ipr.c                    |    2 +-
+>  drivers/scsi/ips.c                    |    2 +-
+>  drivers/scsi/iscsi_tcp.c              |    4 ++--
+>  drivers/scsi/lpfc/lpfc.h              |    2 +-
+>  drivers/scsi/lpfc/lpfc_mbox.c         |    2 +-
+>  drivers/scsi/megaraid/megaraid_mbox.c |   10 +++++-----
+>  drivers/scsi/psi240i.c                |    2 +-
+>  drivers/scsi/qla2xxx/qla_gs.c         |    2 +-
 
-That's this one:
+qla2xxx bits:
 
-http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=acdd0b1c371b2fbb4b6110a51ba69cb0af9e6f45
-
-> So it seems that 2.6.24 (and presumably 2.6.23?) need
-
-Not 2.6.23 .. the scatterlist changes causing the st problems are local
-to 2.6.24.
-
-> 1: Alan's "initio: fix conflict when loading driver" (currently stocuk
->    in git-scsi-misc)
-
-Yes, I'm moving this into scsi-rc-fixes
-
-> 2: Boaz's "initio: initio_build_scb() fix" (my name for it)
-
-And applying this ... although I'd still appreciate confirmation from
-someone that the initio driver works after this.
-
-> 3: The mystery st.c fix.
-> 
-> yes?
-
-James
-
-
+Acked-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
