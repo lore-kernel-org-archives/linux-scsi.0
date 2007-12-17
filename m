@@ -1,186 +1,92 @@
-From: "John Stoffel" <john@stoffel.org>
-Subject: Re: 2.6.24-rc5: tape drive not responding
-Date: Mon, 17 Dec 2007 13:57:37 -0500
-Message-ID: <18278.50849.879162.723545@stoffel.org>
-References: <18277.52079.718004.969358@stoffel.org>
-	<20071217112551H.fujita.tomonori@lab.ntt.co.jp>
-	<20071217031510.c3d500fd.akpm@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760959AbXLQS6m@vger.kernel.org>
-In-Reply-To: <20071217031510.c3d500fd.akpm@linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, john@stoffel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] drivers/message/: Spelling fixes
+Date: Mon, 17 Dec 2007 11:30:42 -0800
+Message-ID: <1197919875-5288-43-git-send-email-joe@perches.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from DSL022.labridge.com ([206.117.136.22]:3056 "EHLO perches.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1761485AbXLQTcG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 17 Dec 2007 14:32:06 -0500
+Message-Id: <5703e57f925f31fc0eb38873bd7f10fc44f99cb4.1197918891.git.joe@perches.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Andrew Morton <akpm@linux-foundation.org>, MPT Fusion Linux Team <DL-MPTFusionLinux@lsi.com>, linux-scsi@vger.kernel.org, support@lsi.com
 
->>>>> "Andrew" == Andrew Morton <akpm@linux-foundation.org> writes:
 
-Andrew> On Mon, 17 Dec 2007 11:25:51 +0900 FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->> On Sun, 16 Dec 2007 20:05:51 -0500
->> "John Stoffel" <john@stoffel.org> wrote:
->> 
->> > [  215.007701] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.008145] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.008678] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.009122] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.009598] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.010042] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.010516] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.010959] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.011403] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  215.011850] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > .
->> > .
->> > .
->> > [  232.954629] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  233.035902] scsi 3:0:3:0: DEVICE RESET operation started
->> > [  233.099514] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > .
->> > .
->> > .
->> > 
->> > These repeat for about 15 seconds or so.  They're really annoying and
->> > I'd love to see some sort of rate limiting put in here.  The messages
->> > and end with:
->> > .
->> > .
->> > .
->> > [  238.084175] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  238.165887] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  238.247157] scsi 3:0:3:0: DEVICE RESET operation timed-out.
->> > [  238.313892] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  238.395192] scsi 3:0:3:0: BUS RESET operation started
->> > [  238.455690] sym1: SCSI parity error detected: SCR1=1 DBC=11000028 SBCL=ae
->> > [  238.539216] sym1: SCSI BUS reset detected.
->> > [  238.592552] sym1: SCSI BUS has been reset.
->> > [  238.641576] scsi 3:0:3:0: BUS RESET operation complete.
->> > [  248.700373]  target3:0:3: wide asynchronous
->> > [  248.752026]  target3:0:3: Wide Transfers Fail
->> > [  248.805220]  target3:0:3: FAST-10 SCSI 10.0 MB/s ST (100 ns, offset 15)
->> > [  248.886729]  target3:0:3: Domain Validation skipping write tests
->> > [  248.958666]  target3:0:3: Ending Domain Validation
->> > [  252.264086] scsi 3:0:0:0: Attached scsi generic sg2 type 8
->> > [  252.331257] st 3:0:2:0: Attached scsi tape st0
->> > [  252.384549] st 3:0:2:0: st0: try direct i/o: yes (alignment 512 B)
->> > [  252.458875] st 3:0:2:0: Attached scsi generic sg3 type 1
->> > [  252.523963] st 3:0:3:0: Attached scsi tape st1
->> > [  252.577184] st 3:0:3:0: st1: try direct i/o: yes (alignment 512 B)
->> > [  252.651484] st 3:0:3:0: Attached scsi generic sg4 type 1
->> > 
->> > 
->> > I've also got an ATL P1000 SCSI tape library hooked up to this same
->> > controller and port, and I can manipulate it properly using the 'mtx'
->> > program pointed to the /dev/changer alias, which points to the correct
->> > /dev/sg# device.
->> > 
->> > Here's my /proc/scsi/scsi output, as you can see, I've got a bunch of
->> > devices on this system:
->> > 
->> > # cat /proc/scsi/scsi 
->> > Attached devices:
->> > Host: scsi0 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: COMPAQ   Model: HC01841729       Rev: 3208
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 02
->> > Host: scsi0 Channel: 00 Id: 01 Lun: 00
->> >   Vendor: COMPAQ   Model: BD018222CA       Rev: B016
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 02
->> > Host: scsi3 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: ATL      Model: P1000    6220051 Rev: 1.20
->> >   Type:   Medium Changer                   ANSI  SCSI revision: 02
->> > Host: scsi3 Channel: 00 Id: 02 Lun: 00
->> >   Vendor: QUANTUM  Model: DLT7000          Rev: 2565
->> >   Type:   Sequential-Access                ANSI  SCSI revision: 02
->> > Host: scsi3 Channel: 00 Id: 03 Lun: 00
->> >   Vendor: QUANTUM  Model: DLT7000          Rev: 2565
->> >   Type:   Sequential-Access                ANSI  SCSI revision: 02
->> > Host: scsi4 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: SAMSUNG  Model: CDRW/DVD SM-352B Rev: T806
->> >   Type:   CD-ROM                           ANSI  SCSI revision: 05
->> > Host: scsi6 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: ATA      Model: ST3320620AS      Rev: 3.AA
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 05
->> > Host: scsi7 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: ATA      Model: WDC WD3200AAKS-0 Rev: 12.0
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 05
->> > Host: scsi10 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: ATA      Model: WDC WD1200JB-00C Rev: 17.0
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 05
->> > Host: scsi11 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: ATA      Model: WDC WD1200JB-00E Rev: 15.0
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 05
->> > Host: scsi12 Channel: 00 Id: 00 Lun: 00
->> >   Vendor: Generic  Model: STORAGE DEVICE   Rev: 0001
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 00
->> > Host: scsi12 Channel: 00 Id: 00 Lun: 01
->> >   Vendor: Generic  Model: STORAGE DEVICE   Rev: 0001
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 00
->> > Host: scsi12 Channel: 00 Id: 00 Lun: 02
->> >   Vendor: Generic  Model: STORAGE DEVICE   Rev: 0001
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 00
->> > Host: scsi12 Channel: 00 Id: 00 Lun: 03
->> >   Vendor: Generic  Model: STORAGE DEVICE   Rev: 0001
->> >   Type:   Direct-Access                    ANSI  SCSI revision: 00
->> > 
->> > 
->> > When I try to access my tape devices, I get the following:
->> > 
->> >     # mt -f /dev/st0 status
->> >     /dev/st0: Device or resource busy
->> > 
->> > But lsof doesn't show any other processes accessing this device, and
->> > I've stopped my backup software since it keeps hanging on tape device
->> > access.
->> > 
->> > Here's the output of dmesg where I get the OOPS:
->> > 
->> > [  273.382057] sd 12:0:0:3: Attached scsi generic sg13 type 0
->> > [  276.244872] ------------[ cut here ]------------
->> > [  276.300215] kernel BUG at include/linux/scatterlist.h:59!
->> > [  276.364873] invalid opcode: 0000 [#1] SMP 
->> > [  276.414346] Modules linked in:
->> > [  276.451148] 
->> > [  276.469036] Pid: 1824, comm: stinit Not tainted (2.6.24-rc5 #2)
->> > [  276.539940] EIP: 0060:[<c0343c30>] EFLAGS: 00010213 CPU: 0
->> > [  276.605651] EIP is at st_do_scsi+0x2e0/0x340
->> > [  276.656788] EAX: 00000000 EBX: 00000000 ECX: c16ef780 EDX: f7c4f050
->> > [  276.731847] ESI: f7c4f7d0 EDI: 00001000 EBP: f7c4f000 ESP: f712bdf8
->> > [  276.806904]  DS: 007b ES: 007b FS: 00d8 GS: 0033 SS: 0068
->> > [  276.871568] Process stinit (pid: 1824, ti=f712b000 task=f750a030 task.ti=f712b000)
->> > [  276.960139] Stack: 00000003 f7c4f050 00000000 00000000 00d59f80 00000000 f776fe20 c03468a0 
->> > [  277.062012]        000000d0 f712be9c f7d2a000 f776fe20 f7d2a018 00000000 00000006 f712be9c 
->> > [  277.163890]        f7d2a000 f712beac f7c4f000 c0345790 00000006 00000002 000dbba0 00000000 
->> > [  277.265771] Call Trace:
->> > [  277.297383]  [<c03468a0>] st_sleep_done+0x0/0x70
->> > [  277.352894]  [<c0345790>] check_tape+0x510/0x640
->> > [  277.408414]  [<c0346cfb>] st_open+0x18b/0x220
->> > [  277.460803]  [<c01707e0>] exact_match+0x0/0x10
->> > [  277.514237]  [<c0346b70>] st_open+0x0/0x220
->> > [  277.564553]  [<c0170ebf>] chrdev_open+0x9f/0x190
->> > [  277.620069]  [<c0170e20>] chrdev_open+0x0/0x190
->> > [  277.674543]  [<c016c86f>] __dentry_open+0xaf/0x1b0
->> > [  277.732136]  [<c016ca25>] nameidata_to_filp+0x35/0x40
->> > [  277.792847]  [<c016ca7b>] do_filp_open+0x4b/0x60
->> > [  277.848364]  [<c016c732>] get_unused_fd_flags+0x52/0xd0
->> > [  277.911153]  [<c016cadc>] do_sys_open+0x4c/0xe0
->> > [  277.965629]  [<c016cbac>] sys_open+0x1c/0x20
->> 
->> I think that you need the following patch for the scatterlist problem:
->> 
->> http://marc.info/?l=linux-scsi&m=119770154127770&w=2
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ drivers/message/fusion/mptctl.c   |    8 ++++----
+ drivers/message/fusion/mptscsih.c |    2 +-
+ drivers/message/i2o/iop.c         |    2 +-
+ 3 files changed, 6 insertions(+), 6 deletions(-)
 
-Andrew> err, you sent that patch to John a day earlier too.
+diff --git a/drivers/message/fusion/mptctl.c b/drivers/message/fusion/mptctl.c
+index 6029509..e630b50 100644
+--- a/drivers/message/fusion/mptctl.c
++++ b/drivers/message/fusion/mptctl.c
+@@ -1708,7 +1708,7 @@ mptctl_replace_fw (unsigned long arg)
+  *
+  * Outputs:	None.
+  * Return:	0 if successful
+- *		-EBUSY  if previous command timout and IOC reset is not complete.
++ *		-EBUSY  if previous command timeout and IOC reset is not complete.
+  *		-EFAULT if data unavailable
+  *		-ENODEV if no such device/adapter
+  *		-ETIME	if timer expires
+@@ -1748,7 +1748,7 @@ mptctl_mpt_command (unsigned long arg)
+  *
+  * Outputs:	None.
+  * Return:	0 if successful
+- *		-EBUSY  if previous command timout and IOC reset is not complete.
++ *		-EBUSY  if previous command timeout and IOC reset is not complete.
+  *		-EFAULT if data unavailable
+  *		-ENODEV if no such device/adapter
+  *		-ETIME	if timer expires
+@@ -2316,7 +2316,7 @@ done_free_mem:
+  * Outputs:	None.
+  * Return:	0 if successful
+  *		-EFAULT if data unavailable
+- *		-EBUSY  if previous command timout and IOC reset is not complete.
++ *		-EBUSY  if previous command timeout and IOC reset is not complete.
+  *		-ENODEV if no such device/adapter
+  *		-ETIME	if timer expires
+  *		-ENOMEM if memory allocation error
+@@ -2553,7 +2553,7 @@ mptctl_hp_hostinfo(unsigned long arg, unsigned int data_size)
+  * Outputs:	None.
+  * Return:	0 if successful
+  *		-EFAULT if data unavailable
+- *		-EBUSY  if previous command timout and IOC reset is not complete.
++ *		-EBUSY  if previous command timeout and IOC reset is not complete.
+  *		-ENODEV if no such device/adapter
+  *		-ETIME	if timer expires
+  *		-ENOMEM if memory allocation error
+diff --git a/drivers/message/fusion/mptscsih.c b/drivers/message/fusion/mptscsih.c
+index 626bb3c..7d3d2de 100644
+--- a/drivers/message/fusion/mptscsih.c
++++ b/drivers/message/fusion/mptscsih.c
+@@ -1736,7 +1736,7 @@ mptscsih_IssueTaskMgmt(MPT_SCSI_HOST *hd, u8 type, u8 channel, u8 id, int lun, i
+  fail_out:
+ 
+ 	/*
+-	 * Free task managment mf, and corresponding tm flags
++	 * Free task management mf, and corresponding tm flags
+ 	 */
+ 	mpt_free_msg_frame(ioc, mf);
+ 	hd->tmPending = 0;
+diff --git a/drivers/message/i2o/iop.c b/drivers/message/i2o/iop.c
+index 7814a06..da715e1 100644
+--- a/drivers/message/i2o/iop.c
++++ b/drivers/message/i2o/iop.c
+@@ -916,7 +916,7 @@ static int i2o_parse_hrt(struct i2o_controller *c)
+  *	status block. The status block could then be accessed through
+  *	c->status_block.
+  *
+- *	Returns 0 on sucess or negative error code on failure.
++ *	Returns 0 on success or negative error code on failure.
+  */
+ int i2o_status_get(struct i2o_controller *c)
+ {
+-- 
+1.5.3.7.949.g2221a6
 
-Andrew> John, can you please apply, test and report?
-
-I didn't see the reply for some reason.  I'm applying the patch now to
-2.6.24-rc5-mm1 and I'll reboot and test.  My git bisection has been a
-failure too, since I found a situation where I thought what was a bad
-kernel now works.  
-
-Sigh... might be an issue with Bacula interactions, since I've now
-turned it off on startup for testing.
-
-More in a bit.
-John
