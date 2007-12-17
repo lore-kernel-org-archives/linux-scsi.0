@@ -1,44 +1,84 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH] drivers/scsi/: Spelling fixes
-Date: Mon, 17 Dec 2007 17:05:41 -0500
-Message-ID: <4766F2B5.9010105@emulex.com>
-References: <5703e57f925f31fc0eb38873bd7f10fc44f99cb4.1197918893.git.joe@perches.com> <20071217215650.GQ8520@plap3.qlogic.org>
-Reply-To: James.Smart@Emulex.Com
+From: Randy Dunlap <randy.dunlap@oracle.com>
+Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
+Date: Mon, 17 Dec 2007 11:24:57 -0800
+Message-ID: <20071217112457.d7940c63.randy.dunlap@oracle.com>
+References: <47618B0B.8020203@rtr.ca>
+	<20071213195350.GH10104@kernel.dk>
+	<20071213200219.GI10104@kernel.dk>
+	<476190BE.9010405@rtr.ca>
+	<20071213200958.GK10104@kernel.dk>
+	<20071213140207.111f94e2.akpm@linux-foundation.org>
+	<1197584106.3154.55.camel@localhost.localdomain>
+	<20071213142935.47ff19d9.akpm@linux-foundation.org>
+	<20071215010940.GB28613@csn.ul.ie>
+	<20071214180206.e0325503.akpm@linux-foundation.org>
+	<20071216215519.GA7710@csn.ul.ie>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:39153 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755628AbXLQWFy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2007 17:05:54 -0500
-In-Reply-To: <20071217215650.GQ8520@plap3.qlogic.org>
+Received: from agminet01.oracle.com ([141.146.126.228]:58107 "EHLO
+	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754131AbXLQWYx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Dec 2007 17:24:53 -0500
+In-Reply-To: <20071216215519.GA7710@csn.ul.ie>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Cc: Joe Perches <joe@perches.com>, linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Andrew Vasquez <linux-driver@qlogic.com>, Brian King <brking@us.ibm.com>, Dave Jeffery <ipslinux@adaptec.com>, Hannes Reinecke <hare@suse.de>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Mike Christie <michaelc@cs.wisc.edu>, Neela Syam Kolli <megaraidlinux@lsi.com>, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com
+To: Mel Gorman <mel@csn.ul.ie>
+Cc: Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, jens.axboe@oracle.com, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org, Matt Mackall <mpm@selenic.com>
 
+On Sun, 16 Dec 2007 21:55:20 +0000 Mel Gorman wrote:
 
-On Mon, 17 Dec 2007, Joe Perches wrote:
+> > > Just using cp to read the file is enough to cause problems but I included
+> > > a very basic program below that produces the BUG_ON checks. Is this a known
+> > > issue or am I using the interface incorrectly?
+> > 
+> > I'd say you're using it correctly but you've found a hitherto unknown bug. 
+> > On i386 highmem machines with CONFIG_HIGHPTE (at least) pte_offset_map()
+> > takes kmap_atomic(), so pagemap_pte_range() can't do copy_to_user() as it
+> > presently does.
+> > 
+> > Drat.
+> > 
+> > Still, that shouldn't really disrupt the testing which you're doing.  You
+> > could disable CONFIG_HIGHPTE to shut it up.
+> > 
+> 
+> Yes, that did the trick. Using pagemap, it was trivial to show that the
+> 2.6.24-rc5-mm1 kernel was placing pages in reverse physical order like
+> the following output shows
+> 
+> b:  32763 v:   753091 p:    65559 . 65558 contig: 1
+> b:  32764 v:   753092 p:    65558 . 65557 contig: 1
+> b:  32765 v:   753093 p:    65557 . 65556 contig: 1
+> b:  32766 v:   753094 p:    65556 . 65555 contig: 1
+> b:  32767 v:   753095 p:    65555 . 65555 contig: 1
+> 
+> p: is the PFN of the page v: is the page offset within an anonymous
+> mapping and b: is the number of non-contiguous blocks in the anonymous
+> mapping. With the patch applied, it looks more like;
+> 
+> b:   1232 v:   752964 p:    58944 ................ 87328 contig: 15
+> b:   1233 v:   752980 p:    87328 ................ 91200 contig: 15
+> b:   1234 v:   752996 p:    91200 ................ 40272 contig: 15
+> b:   1235 v:   753012 p:    40272 ................ 85664 contig: 15
+> b:   1236 v:   753028 p:    85664 ................ 87312 contig: 15
+> 
+> so mappings are using contiguous pages again. This was the final test
+> program I used in case it's of any interest.
+> 
+> Thanks
+> 
+> /*
+>  * showcontiguous.c
+>  *
+>  * Use the /proc/pid/pagemap interface to give an indication of how contiguous
+>  * physical memory is in an anonymous virtual memory mapping
+>  */
 
-> Signed-off-by: Joe Perches <joe@perches.com>
-> ---
->  drivers/scsi/NCR53C9x.h               |    2 +-
->  drivers/scsi/aic7xxx/aic79xx_inline.h |    2 +-
->  drivers/scsi/aic7xxx/aic79xx_osm.c    |    2 +-
->  drivers/scsi/aic7xxx/aic79xx_pci.c    |    4 ++--
->  drivers/scsi/aic7xxx/aic7xxx_inline.h |    2 +-
->  drivers/scsi/aic7xxx/aic7xxx_osm.c    |    2 +-
->  drivers/scsi/ipr.c                    |    2 +-
->  drivers/scsi/ips.c                    |    2 +-
->  drivers/scsi/iscsi_tcp.c              |    4 ++--
->  drivers/scsi/lpfc/lpfc.h              |    2 +-
->  drivers/scsi/lpfc/lpfc_mbox.c         |    2 +-
->  drivers/scsi/megaraid/megaraid_mbox.c |   10 +++++-----
->  drivers/scsi/psi240i.c                |    2 +-
->  drivers/scsi/qla2xxx/qla_gs.c         |    2 +-
+Matt,
+Did you ever make your python pagemap scripts available?
+If not, would you?
 
-For the lpfc bits:
-
-Acked-by: James Smart <james.smart@emulex.com>
-
+---
+~Randy
