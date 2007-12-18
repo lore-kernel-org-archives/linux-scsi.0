@@ -1,49 +1,50 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] MAINTAINERS: remove Adam Fritzler, update his email
-	address in other sources
-Date: Tue, 18 Dec 2007 08:40:59 -0800
-Message-ID: <1197996060.4891.39.camel@localhost>
-References: <1197951126.4891.13.camel@localhost>
-	 <20071217202800.1c898441.akpm@linux-foundation.org>
-	 <1197953283.4891.24.camel@localhost>
-	 <20071218134128.GB5785@parisc-linux.org>
+From: Kai Makisara <Kai.Makisara@kolumbus.fi>
+Subject: Re: 2.6.24-rc5: tape drive not responding
+Date: Tue, 18 Dec 2007 22:18:10 +0200 (EET)
+Message-ID: <alpine.LSU.0.999999.0712182207570.5289@kai.makisara.local>
+References: <18277.52079.718004.969358@stoffel.org>  <20071217112551H.fujita.tomonori@lab.ntt.co.jp>  <20071217031510.c3d500fd.akpm@linux-foundation.org>  <18278.55130.471797.398922@stoffel.org>  <18278.58314.892734.490418@stoffel.org>
+ <20071217134344.3f024461.akpm@linux-foundation.org> <1197928348.3204.14.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20071218134128.GB5785@parisc-linux.org>
-Sender: netdev-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, Adam Fritzler <mid@zigamorph.net>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Mike Phillips <mikep@linuxtr.net>, Philip Blundell <philb@gnu.org>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Adrian Bunk <bunk@stusta.de>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from emh03.mail.saunalahti.fi ([62.142.5.109]:35073 "EHLO
+	emh03.mail.saunalahti.fi" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752162AbXLRU1v (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2007 15:27:51 -0500
+In-Reply-To: <1197928348.3204.14.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, John Stoffel <john@stoffel.org>, fujita.tomonori@lab.ntt.co.jp, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
 
-On Tue, 2007-12-18 at 06:43 -0700, Matthew Wilcox wrote:
-> On Mon, Dec 17, 2007 at 08:48:03PM -0800, Joe Perches wrote:
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index 9507b42..690f172 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -3758,13 +3758,6 @@ W:	http://www.kernel.org/pub/linux/kernel/people/bunk/trivial/
-> >  T:	git kernel.org:/pub/scm/linux/kernel/git/bunk/trivial.git
-> >  S:	Maintained
-> >  
-> > -TMS380 TOKEN-RING NETWORK DRIVER
-> > -P:	Adam Fritzler
-> > -M:	mid@auk.cx
-> > -L:	linux-tr@linuxtr.net
-> > -W:	http://www.auk.cx/tms380tr/
-> > -S:	Maintained
+On Mon, 17 Dec 2007, James Bottomley wrote:
+
 > 
-> That's pretty unfriendly.  Presumably the linux-tr list is still active
-> and would still help people with that driver.  So how about:
+> On Mon, 2007-12-17 at 13:43 -0800, Andrew Morton wrote:
+> > On Mon, 17 Dec 2007 16:02:02 -0500
+> > "John Stoffel" <john@stoffel.org> wrote:
+> > 
+> > > 
+> > > Just to confirm, the propsed patch to st.c fixes the issue with
+> > > 2.6.24-rc5 as well at 2.6.24-rc5-mm1 with access to my DLT tape
+> > > drives.
+> > 
+> > err, what patch to st.c?
+> 
+> That's this one:
+> 
+> http://git.kernel.org/?p=linux/kernel/git/jejb/scsi-misc-2.6.git;a=commit;h=acdd0b1c371b2fbb4b6110a51ba69cb0af9e6f45
+> 
+I have done some tests. Firstly, I did not see the BUG with 2.6.24-rc5. 
+Looking at include/linux/scatterlist.h suggested that CONFIG_DEBUG_SG has 
+something to do with this. When enabled SG debugging, I also saw the BUG. 
+Adding this patch solved the problem.
 
-The linux-tr list is at least broken, more likely dead.
-Subscribe requests to majordomo@linuxtr.net bounce.
+You can add
 
-from: http://www.linuxtr.net/index.html
+Acked-by: Kai Makisara <Kai.Makisara@kolumbus.fi>
 
-There is a known problem with the mailing list at the moment. If you
-have a query you can contact me directly at mike_phillips@urscorp.com.
+if you want. This fix should be included in 2.6.24.
 
-
-
+-- 
+Kai
