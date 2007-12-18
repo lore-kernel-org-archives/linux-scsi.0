@@ -1,41 +1,49 @@
-From: Arjan van de Ven <arjan@infradead.org>
+From: Joe Perches <joe@perches.com>
 Subject: Re: [PATCH] MAINTAINERS: remove Adam Fritzler, update his email
- address in other sources
-Date: Tue, 18 Dec 2007 07:13:00 -0800
-Message-ID: <20071218071300.7acdb2b0@laptopd505.fenrus.org>
+	address in other sources
+Date: Tue, 18 Dec 2007 08:40:59 -0800
+Message-ID: <1197996060.4891.39.camel@localhost>
 References: <1197951126.4891.13.camel@localhost>
-	<20071217202800.1c898441.akpm@linux-foundation.org>
+	 <20071217202800.1c898441.akpm@linux-foundation.org>
+	 <1197953283.4891.24.camel@localhost>
+	 <20071218134128.GB5785@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:37834 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755728AbXLRPN2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2007 10:13:28 -0500
-In-Reply-To: <20071217202800.1c898441.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20071218134128.GB5785@parisc-linux.org>
+Sender: netdev-owner@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andrew Morton <akpm@linux-foundation.org>, linux-kernel <linux-kernel@vger.kernel.org>, Adam Fritzler <mid@zigamorph.net>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Mike Phillips <mikep@linuxtr.net>, Philip Blundell <philb@gnu.org>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Adrian Bunk <bunk@stusta.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Joe Perches <joe@perches.com>, linux-kernel <linux-kernel@vger.kernel.org>, Adam Fritzler <mid@zigamorph.net>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Mike Phillips <mikep@linuxtr.net>, Philip Blundell <philb@gnu.org>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Adrian Bunk <bunk@stusta.de>
 
-On Mon, 17 Dec 2007 20:28:00 -0800
-Andrew Morton <akpm@linux-foundation.org> wrote:
+On Tue, 2007-12-18 at 06:43 -0700, Matthew Wilcox wrote:
+> On Mon, Dec 17, 2007 at 08:48:03PM -0800, Joe Perches wrote:
+> > diff --git a/MAINTAINERS b/MAINTAINERS
+> > index 9507b42..690f172 100644
+> > --- a/MAINTAINERS
+> > +++ b/MAINTAINERS
+> > @@ -3758,13 +3758,6 @@ W:	http://www.kernel.org/pub/linux/kernel/people/bunk/trivial/
+> >  T:	git kernel.org:/pub/scm/linux/kernel/git/bunk/trivial.git
+> >  S:	Maintained
+> >  
+> > -TMS380 TOKEN-RING NETWORK DRIVER
+> > -P:	Adam Fritzler
+> > -M:	mid@auk.cx
+> > -L:	linux-tr@linuxtr.net
+> > -W:	http://www.auk.cx/tms380tr/
+> > -S:	Maintained
 > 
-> 
-> btw, I cheerfully skipped all your spelling-fixes patches.  Some will
-> have stuck via subsystem maintainers but I have a secret "no spelling
-> fixes unless they're end-user-visible" policy.  That means I'll take
-> spelling fixes only if they're in printks or in Documentation/*.
-> This is a little defense mechanism to avoid getting buried in
-> micropatches.
-> 
+> That's pretty unfriendly.  Presumably the linux-tr list is still active
+> and would still help people with that driver.  So how about:
 
-for something more productive.. add an aspell/ispell hook to checkpatch.pl ;-)
+The linux-tr list is at least broken, more likely dead.
+Subscribe requests to majordomo@linuxtr.net bounce.
+
+from: http://www.linuxtr.net/index.html
+
+There is a known problem with the mailing list at the moment. If you
+have a query you can contact me directly at mike_phillips@urscorp.com.
 
 
 
--- 
-If you want to reach me at my work email, use arjan@linux.intel.com
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
