@@ -1,40 +1,65 @@
-From: "Mulyadi Santosa" <mulyadi.santosa@gmail.com>
-Subject: Re: In which case EWOULDBLOCK is set while a write operation
-Date: Tue, 18 Dec 2007 19:46:11 +0700
-Message-ID: <f284c33d0712180446m462ed181x1e19ef16112b8d53@mail.gmail.com>
-References: <200712180553.lBI5rQgD004427@arlmail.patni.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCHSET 0/3] varlen extended and vendor-specific cdbs
+Date: Tue, 18 Dec 2007 15:33:50 +0200
+Message-ID: <4767CC3E.8000309@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from el-out-1112.google.com ([209.85.162.176]:43765 "EHLO
-	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754425AbXLRMqN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2007 07:46:13 -0500
-Received: by el-out-1112.google.com with SMTP id v27so447291ele.23
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Dec 2007 04:46:12 -0800 (PST)
-In-Reply-To: <200712180553.lBI5rQgD004427@arlmail.patni.com>
-Content-Disposition: inline
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:20624 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1753720AbXLRNfL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2007 08:35:11 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Saquib Imam <saquib.imam@patni.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Benny Halevy <bhalevy@panasas.com>, Matthew Wilcox <matthew@wil.cx>
 
-Hi..
+Submitted is a patchset for adding support for variable-length, extended, and 
+vendor specific CDBs. It should now cover the entire range of the
+SCSI standard.
 
-> In which case EWOULDBLOCK / EAGAIN is set while a write operation ?
+They are based on scsi-misc + the submitted bidi patches.
 
-i think it will happen if you use O_NONBLOCK but writing operation
-itself will clearly block (for numerous reasons e.g block needs to be
-allocated first and so on).
+Difference from last time, is at struct request. I did a smallish
+hack to save the extra pointer space. The pointer now shares it's
+space with the request->cmd, as they are mutual exclusive. The
+flag to switch between them is when cmd_len == 0 and varlen_cdb_len != 0
+I've added 2 accessors to hide the mess. I think this approach
+should be safe. I can easily go back to the separate pointer,
+but I figured a little hack is better then a bloat.
 
-> Can any one give detailed processing of a write operation for a file system
-> with journaling , like EXT3 File System.
+This is on top of the size shrink to struct scsi_cmnd gained
+in the first patch. We save upto 12 bytes on 32 bit ARCHs
 
-better grab book like Understanding the Linux kernel 3rd edition or
-Linux Device Driver 3rd edition. It is explained quite extensively
-there.
+So over all, this cleans things up, and add fixtures with out
+any extra cost.
 
-regards,
+[1/4] Let scsi_cmnd->cmnd use request->cmd buffer
+  Here I let scsi_cmnd->cmnd point to the space allocated by
+  request->cmd, instead of copying the data. The scsi_cmnd->cmd_len
+  is guaranteed to contain the right length of the command.
+  I have tried to go over every single place in the kernel that uses
+  scsi_cmnd->cmnd and make sure it looks sane. Surprisingly to me,
+  that was not at all bad. I hope I did not miss anything.
 
-Mulyadi.
+  I've tested on an x86_64 machine booting from a sata disk and
+  ran the iscsi regression tests as well as my bidi and varlen tests
+  on top of the complete patchset and all tests passed.
+
+[2/4] block layer varlen-cd
+   Here I added an option to use a user supplied buffer for an arbitrary
+   large command. Buffer must be kept valid until execution of request
+   ends. The pointer to the buffer shares it's space with the fixed
+   length command, so the size of struct request does not change.
+
+[3/4] scsi: varlen extended and vendor-specific cdbs
+  Adds support for variable length, extended, and vendor-specific
+  cdbs at the scsi mid-layer.
+
+I will send a patch to iscsi once the pending iscsi patchset gets
+committed into scsi-misc.
+
+Boaz
+
+
