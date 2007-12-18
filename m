@@ -1,56 +1,40 @@
-From: Swen Schillig <swen@vnet.ibm.com>
-Subject: [PATCH] MAINTAINERS: zfcp
-Date: Tue, 18 Dec 2007 11:16:14 +0100
-Message-ID: <200712181116.14381.swen@vnet.ibm.com>
+From: "Mulyadi Santosa" <mulyadi.santosa@gmail.com>
+Subject: Re: In which case EWOULDBLOCK is set while a write operation
+Date: Tue, 18 Dec 2007 19:46:11 +0700
+Message-ID: <f284c33d0712180446m462ed181x1e19ef16112b8d53@mail.gmail.com>
+References: <200712180553.lBI5rQgD004427@arlmail.patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.de.ibm.com ([195.212.29.151]:60406 "EHLO
-	mtagate2.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752694AbXLRKQP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2007 05:16:15 -0500
+Received: from el-out-1112.google.com ([209.85.162.176]:43765 "EHLO
+	el-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754425AbXLRMqN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Dec 2007 07:46:13 -0500
+Received: by el-out-1112.google.com with SMTP id v27so447291ele.23
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Dec 2007 04:46:12 -0800 (PST)
+In-Reply-To: <200712180553.lBI5rQgD004427@arlmail.patni.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Christof Schmitt <christof.schmitt@de.ibm.com>, Martin Peschke <mp3@de.ibm.com>
+To: Saquib Imam <saquib.imam@patni.com>
+Cc: linux-scsi@vger.kernel.org
 
-James
+Hi..
 
-we are planning a major rewrite of the zfcp driver, 
-meaning that a lot of patches will hit the mailing-list in the near future.
+> In which case EWOULDBLOCK / EAGAIN is set while a write operation ?
 
-Since I can't support this additional work-load along with my other 
-responsibilities we are shifting the maintainership to
-Christof Schmitt as the maintainer and
-Martin Peschke as the co-maintainer.
+i think it will happen if you use O_NONBLOCK but writing operation
+itself will clearly block (for numerous reasons e.g block needs to be
+allocated first and so on).
 
-Please support the two in providing us a new and more stable
-zfcp environment.
+> Can any one give detailed processing of a write operation for a file system
+> with journaling , like EXT3 File System.
 
-Thanks
-Swen
+better grab book like Understanding the Linux kernel 3rd edition or
+Linux Device Driver 3rd edition. It is explained quite extensively
+there.
 
----
- MAINTAINERS |    6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+regards,
 
-Index: scsi-misc/MAINTAINERS
-===================================================================
---- scsi-misc.orig/MAINTAINERS
-+++ scsi-misc/MAINTAINERS
-@@ -3246,8 +3246,10 @@ W:	http://www.ibm.com/developerworks/lin
- S:	Supported
- 
- S390 ZFCP DRIVER
--P:	Swen Schillig
--M:	swen@vnet.ibm.com
-+P:	Christof Schmitt
-+M:	christof.schmitt@de.ibm.com
-+P:	Martin Peschke
-+M:	mp3@de.ibm.com
- M:	linux390@de.ibm.com
- L:	linux-s390@vger.kernel.org
- W:	http://www.ibm.com/developerworks/linux/linux390/
+Mulyadi.
