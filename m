@@ -1,85 +1,207 @@
-From: Matt Mackall <mpm@selenic.com>
-Subject: Re: QUEUE_FLAG_CLUSTER: not working in 2.6.24 ?
-Date: Mon, 17 Dec 2007 20:42:04 -0600
-Message-ID: <20071218024204.GR19691@waste.org>
-References: <20071213200219.GI10104@kernel.dk> <476190BE.9010405@rtr.ca> <20071213200958.GK10104@kernel.dk> <20071213140207.111f94e2.akpm@linux-foundation.org> <1197584106.3154.55.camel@localhost.localdomain> <20071213142935.47ff19d9.akpm@linux-foundation.org> <20071215010940.GB28613@csn.ul.ie> <20071214180206.e0325503.akpm@linux-foundation.org> <20071216215519.GA7710@csn.ul.ie> <20071217112457.d7940c63.randy.dunlap@oracle.com>
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH] MAINTAINERS: remove Adam Fritzler, update his email
+	address in other sources
+Date: Mon, 17 Dec 2007 20:12:06 -0800
+Message-ID: <1197951126.4891.13.camel@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from waste.org ([66.93.16.53]:36929 "EHLO waste.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758046AbXLRCog (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 17 Dec 2007 21:44:36 -0500
-Content-Disposition: inline
-In-Reply-To: <20071217112457.d7940c63.randy.dunlap@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: linux-kernel <linux-kernel@vger.kernel.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Adam Fritzler <mid@zigamorph.net>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, Jeff Garzik <jgarzik@pobox.com>, Mike Phillips <mikep@linuxtr.net>, Philip Blundell <philb@gnu.org>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: Mel Gorman <mel@csn.ul.ie>, Andrew Morton <akpm@linux-foundation.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, jens.axboe@oracle.com, liml@rtr.ca, lkml@rtr.ca, matthew@wil.cx, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
 
-On Mon, Dec 17, 2007 at 11:24:57AM -0800, Randy Dunlap wrote:
-> On Sun, 16 Dec 2007 21:55:20 +0000 Mel Gorman wrote:
-> 
-> > > > Just using cp to read the file is enough to cause problems but I included
-> > > > a very basic program below that produces the BUG_ON checks. Is this a known
-> > > > issue or am I using the interface incorrectly?
-> > > 
-> > > I'd say you're using it correctly but you've found a hitherto unknown bug. 
-> > > On i386 highmem machines with CONFIG_HIGHPTE (at least) pte_offset_map()
-> > > takes kmap_atomic(), so pagemap_pte_range() can't do copy_to_user() as it
-> > > presently does.
-> > > 
-> > > Drat.
-> > > 
-> > > Still, that shouldn't really disrupt the testing which you're doing.  You
-> > > could disable CONFIG_HIGHPTE to shut it up.
-> > > 
-> > 
-> > Yes, that did the trick. Using pagemap, it was trivial to show that the
-> > 2.6.24-rc5-mm1 kernel was placing pages in reverse physical order like
-> > the following output shows
-> > 
-> > b:  32763 v:   753091 p:    65559 . 65558 contig: 1
-> > b:  32764 v:   753092 p:    65558 . 65557 contig: 1
-> > b:  32765 v:   753093 p:    65557 . 65556 contig: 1
-> > b:  32766 v:   753094 p:    65556 . 65555 contig: 1
-> > b:  32767 v:   753095 p:    65555 . 65555 contig: 1
-> > 
-> > p: is the PFN of the page v: is the page offset within an anonymous
-> > mapping and b: is the number of non-contiguous blocks in the anonymous
-> > mapping. With the patch applied, it looks more like;
-> > 
-> > b:   1232 v:   752964 p:    58944 ................ 87328 contig: 15
-> > b:   1233 v:   752980 p:    87328 ................ 91200 contig: 15
-> > b:   1234 v:   752996 p:    91200 ................ 40272 contig: 15
-> > b:   1235 v:   753012 p:    40272 ................ 85664 contig: 15
-> > b:   1236 v:   753028 p:    85664 ................ 87312 contig: 15
-> > 
-> > so mappings are using contiguous pages again. This was the final test
-> > program I used in case it's of any interest.
-> > 
-> > Thanks
-> > 
-> > /*
-> >  * showcontiguous.c
-> >  *
-> >  * Use the /proc/pid/pagemap interface to give an indication of how contiguous
-> >  * physical memory is in an anonymous virtual memory mapping
-> >  */
-> 
-> Matt,
-> Did you ever make your python pagemap scripts available?
-> If not, would you?
+Adam isn't a maintainer anymore.
+His old email address bounces.
+Update to new email address.
 
-There's a collection of them at http://selenic.com/repo/pagemap.
-They're largely proof of concept, and I'm not sure I finished adapting
-them all to the final 64-bit interface.
+On Mon, Dec 17, 2007 at 01:03:48PM -0800, Joe Perches wrote:
+> > You seem to have an old email address in the
+> > linux-kernel MAINTAINERS file.
+> > Should it be deleted or changed?
+On Mon, 2007-12-17 at 19:27 -0800, Adam Fritzler wrote:
+> I am no longer actively involved. If you can mark me as a former point
+> of contact, that's fine, or you can just delete the entry. My name is
+> still in the source, but with the old address. It'd great if the
+> address in source was updated.
 
-As it happens, the above regression I actually spotted immediately by
-doing a simple hexdump on my very first test of the interface - lots
-of pfns counting backwards. Mentioned it a few times to various people
-in the cc: list and on lkml but never got around to tracking it down
-myself..
+Signed-off-by: Joe Perches <joe@perches.com>
+---
+ MAINTAINERS                      |    7 -------
+ drivers/net/eexpress.c           |    2 +-
+ drivers/net/tokenring/abyss.c    |    2 +-
+ drivers/net/tokenring/abyss.h    |    2 +-
+ drivers/net/tokenring/madgemc.c  |    2 +-
+ drivers/net/tokenring/madgemc.h  |    2 +-
+ drivers/net/tokenring/proteon.c  |    2 +-
+ drivers/net/tokenring/skisa.c    |    2 +-
+ drivers/net/tokenring/tms380tr.c |    2 +-
+ drivers/net/tokenring/tms380tr.h |    2 +-
+ drivers/net/tokenring/tmspci.c   |    2 +-
+ drivers/scsi/aha1542.c           |    2 +-
+ 12 files changed, 11 insertions(+), 18 deletions(-)
 
--- 
-Mathematics is the supreme nostalgia of our time.
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 9507b42..690f172 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3758,13 +3758,6 @@ W:	http://www.kernel.org/pub/linux/kernel/people/bunk/trivial/
+ T:	git kernel.org:/pub/scm/linux/kernel/git/bunk/trivial.git
+ S:	Maintained
+ 
+-TMS380 TOKEN-RING NETWORK DRIVER
+-P:	Adam Fritzler
+-M:	mid@auk.cx
+-L:	linux-tr@linuxtr.net
+-W:	http://www.auk.cx/tms380tr/
+-S:	Maintained
+-
+ TULIP NETWORK DRIVER
+ L:	tulip-users@lists.sourceforge.net
+ W:	http://sourceforge.net/projects/tulip/
+diff --git a/drivers/net/eexpress.c b/drivers/net/eexpress.c
+index 70509ed..46c3c99 100644
+--- a/drivers/net/eexpress.c
++++ b/drivers/net/eexpress.c
+@@ -9,7 +9,7 @@
+  * Many modifications, and currently maintained, by
+  *  Philip Blundell <philb@gnu.org>
+  * Added the Compaq LTE  Alan Cox <alan@redhat.com>
+- * Added MCA support Adam Fritzler <mid@auk.cx>
++ * Added MCA support Adam Fritzler <mid@zigamorph.net>
+  *
+  * Note - this driver is experimental still - it has problems on faster
+  * machines. Someone needs to sit down and go through it line by line with
+diff --git a/drivers/net/tokenring/abyss.c b/drivers/net/tokenring/abyss.c
+index 124cfd4..be60792 100644
+--- a/drivers/net/tokenring/abyss.c
++++ b/drivers/net/tokenring/abyss.c
+@@ -10,7 +10,7 @@
+  *      - Madge Smart 16/4 PCI Mk2
+  *
+  *  Maintainer(s):
+- *    AF	Adam Fritzler		mid@auk.cx
++ *    AF	Adam Fritzler		mid@zigamorph.net
+  *
+  *  Modification History:
+  *	30-Dec-99	AF	Split off from the tms380tr driver.
+diff --git a/drivers/net/tokenring/abyss.h b/drivers/net/tokenring/abyss.h
+index 0ee6e4f..93376e1 100644
+--- a/drivers/net/tokenring/abyss.h
++++ b/drivers/net/tokenring/abyss.h
+@@ -2,7 +2,7 @@
+  * abyss.h: Header for the abyss tms380tr module
+  *
+  * Authors:
+- * - Adam Fritzler <mid@auk.cx>
++ * - Adam Fritzler <mid@zigamorph.net>
+  */
+ 
+ #ifndef __LINUX_MADGETR_H
+diff --git a/drivers/net/tokenring/madgemc.c b/drivers/net/tokenring/madgemc.c
+index 5a41513..b7c819f 100644
+--- a/drivers/net/tokenring/madgemc.c
++++ b/drivers/net/tokenring/madgemc.c
+@@ -11,7 +11,7 @@
+  *	- Madge Smart 16/4 Ringnode MC32 (??)
+  *
+  *  Maintainer(s):
+- *    AF	Adam Fritzler		mid@auk.cx
++ *    AF	Adam Fritzler		mid@zigamorph.net
+  *
+  *  Modification History:
+  *	16-Jan-00	AF	Created
+diff --git a/drivers/net/tokenring/madgemc.h b/drivers/net/tokenring/madgemc.h
+index 2dd8222..b368e59 100644
+--- a/drivers/net/tokenring/madgemc.h
++++ b/drivers/net/tokenring/madgemc.h
+@@ -2,7 +2,7 @@
+  * madgemc.h: Header for the madgemc tms380tr module
+  *
+  * Authors:
+- * - Adam Fritzler <mid@auk.cx>
++ * - Adam Fritzler <mid@zigamorph.net>
+  */
+ 
+ #ifndef __LINUX_MADGEMC_H
+diff --git a/drivers/net/tokenring/proteon.c b/drivers/net/tokenring/proteon.c
+index ca6b659..8fece14 100644
+--- a/drivers/net/tokenring/proteon.c
++++ b/drivers/net/tokenring/proteon.c
+@@ -12,7 +12,7 @@
+  *	- Proteon 1392, 1392+
+  *
+  *  Maintainer(s):
+- *    AF        Adam Fritzler           mid@auk.cx
++ *    AF        Adam Fritzler           mid@zigamorph.net
+  *    JF	Jochen Friedrich	jochen@scram.de
+  *
+  *  Modification History:
+diff --git a/drivers/net/tokenring/skisa.c b/drivers/net/tokenring/skisa.c
+index 32e8d5a..74eae3c 100644
+--- a/drivers/net/tokenring/skisa.c
++++ b/drivers/net/tokenring/skisa.c
+@@ -13,7 +13,7 @@
+  *	- SysKonnect TR4/16(+) ISA	(SK-4190)
+  *
+  *  Maintainer(s):
+- *    AF        Adam Fritzler           mid@auk.cx
++ *    AF        Adam Fritzler           mid@zigamorph.net
+  *    JF	Jochen Friedrich	jochen@scram.de
+  *
+  *  Modification History:
+diff --git a/drivers/net/tokenring/tms380tr.c b/drivers/net/tokenring/tms380tr.c
+index d5fa36d..5daec2b 100644
+--- a/drivers/net/tokenring/tms380tr.c
++++ b/drivers/net/tokenring/tms380tr.c
+@@ -30,7 +30,7 @@
+  *  Maintainer(s):
+  *    JS	Jay Schulist		jschlst@samba.org
+  *    CG	Christoph Goos		cgoos@syskonnect.de
+- *    AF	Adam Fritzler		mid@auk.cx
++ *    AF	Adam Fritzler		mid@zigamorph.net
+  *    MLP       Mike Phillips           phillim@amtrak.com
+  *    JF	Jochen Friedrich	jochen@scram.de
+  *     
+diff --git a/drivers/net/tokenring/tms380tr.h b/drivers/net/tokenring/tms380tr.h
+index 7daf74e..7697b17 100644
+--- a/drivers/net/tokenring/tms380tr.h
++++ b/drivers/net/tokenring/tms380tr.h
+@@ -3,7 +3,7 @@
+  *
+  * Authors:
+  * - Christoph Goos <cgoos@syskonnect.de>
+- * - Adam Fritzler <mid@auk.cx>
++ * - Adam Fritzler <mid@zigamorph.net>
+  */
+ 
+ #ifndef __LINUX_TMS380TR_H
+diff --git a/drivers/net/tokenring/tmspci.c b/drivers/net/tokenring/tmspci.c
+index 1c18f78..a24153c 100644
+--- a/drivers/net/tokenring/tmspci.c
++++ b/drivers/net/tokenring/tmspci.c
+@@ -14,7 +14,7 @@
+  *      - 3Com 3C339 Token Link Velocity
+  *
+  *  Maintainer(s):
+- *    AF	Adam Fritzler		mid@auk.cx
++ *    AF	Adam Fritzler		mid@zigamorph.net
+  *
+  *  Modification History:
+  *	30-Dec-99	AF	Split off from the tms380tr driver.
+diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
+index bbcc2c5..3aa978b 100644
+--- a/drivers/scsi/aha1542.c
++++ b/drivers/scsi/aha1542.c
+@@ -21,7 +21,7 @@
+  *  Modified by Chris Faulhaber <jedgar@fxp.org>
+  *        Added module command-line options
+  *        19-Jul-99
+- *  Modified by Adam Fritzler <mid@auk.cx>
++ *  Modified by Adam Fritzler <mid@zigamorph.net>
+  *        Added proper detection of the AHA-1640 (MCA version of AHA-1540)
+  */
+ 
+
+
