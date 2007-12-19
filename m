@@ -1,57 +1,44 @@
-From: Erik Mouw <mouw@nl.linux.org>
-Subject: Re: In which case EWOULDBLOCK is set while a write operation
-Date: Wed, 19 Dec 2007 18:13:26 +0100
-Message-ID: <20071219171326.GC15327@gateway.home>
-References: <200712180553.lBI5rQgD004427@arlmail.patni.com>
+From: Jens Axboe <jens.axboe@oracle.com>
+Subject: Re: [rfc][patch 1/3] block: non-atomic queue_flags prep
+Date: Wed, 19 Dec 2007 19:13:37 +0100
+Message-ID: <20071219181336.GC10470@kernel.dk>
+References: <20071215054315.GA30335@wotan.suse.de> <20071218074439.GB31964@kernel.dk> <20071218081350.GA32114@wotan.suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="c3bfwLpm8qysLVxt"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr4.xs4all.nl ([194.109.24.24]:4394 "EHLO
-	smtp-vbr4.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751088AbXLSR0n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Dec 2007 12:26:43 -0500
+Received: from brick.kernel.dk ([87.55.233.238]:7528 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752630AbXLSSNl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 19 Dec 2007 13:13:41 -0500
 Content-Disposition: inline
-In-Reply-To: <200712180553.lBI5rQgD004427@arlmail.patni.com>
+In-Reply-To: <20071218081350.GA32114@wotan.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Saquib Imam <saquib.imam@patni.com>
-Cc: linux-scsi@vger.kernel.org
+To: Nick Piggin <npiggin@suse.de>
+Cc: linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
 
+On Tue, Dec 18 2007, Nick Piggin wrote:
+> On Tue, Dec 18, 2007 at 08:44:40AM +0100, Jens Axboe wrote:
+> > On Sat, Dec 15 2007, Nick Piggin wrote:
+> > > Hi,
+> > > 
+> > > This is just an idea I had, which might make request processing a little
+> > > bit cheaper depending on queue behaviour. For example if it is getting plugged
+> > > unplugged frequently (as I think is the case for some database workloads),
+> > > then we might save one or two atomic operations per request.
+> > > 
+> > > Anyway, I'm not completely sure if I have ensured all queue_flags users are
+> > > safe (I think md may need a bit of help). But overall it seems quite doable.
+> > 
+> > Looks ok to me, I'll throw it into the testing mix. Thanks Nick!
+> 
+> OK... actually if you are expecting it to be widely tested, can you change
+> the BUG_ONs in queue_flag_set / queue_flag_clear into WARN_ON?
+> 
+> That way it's less likely to take down people's systems...
 
---c3bfwLpm8qysLVxt
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Agree, will do so.
 
-On Tue, Dec 18, 2007 at 11:27:49AM +0530, Saquib Imam wrote:
-> In which case EWOULDBLOCK / EAGAIN is set while a write operation ?
+-- 
+Jens Axboe
 
-=46rom write(2):
-
-ERRORS
-       EAGAIN Non-blocking  I/O  has  been  selected  using O_NONBLOCK and =
-the
-              write would block.
-
-
-Erik
-
---=20
-They're all fools. Don't worry. Darwin may be slow, but he'll
-eventually get them. -- Matthew Lammers in alt.sysadmin.recovery
-
---c3bfwLpm8qysLVxt
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-
-iD8DBQFHaVE2/PlVHJtIto0RArPWAJ9bodofGhlrEPRUnoHj5GmJh0VhlwCcDuqa
-6pyyGswXMP4k+JIB2Q4LJlI=
-=mR8P
------END PGP SIGNATURE-----
-
---c3bfwLpm8qysLVxt--
