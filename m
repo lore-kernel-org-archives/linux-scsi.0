@@ -1,40 +1,57 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Wed, 19 Dec 2007 10:05:42 -0700
-Message-ID: <20071219170542.GC26272@parisc-linux.org>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com> <20071217031841.f483e5ac.akpm@linux-foundation.org> <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com> <47666904.8060605@panasas.com> <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com> <20071219132918.GB26272@parisc-linux.org> <1198083040.5487.14.camel@localhost.localdomain>
+From: Erik Mouw <mouw@nl.linux.org>
+Subject: Re: In which case EWOULDBLOCK is set while a write operation
+Date: Wed, 19 Dec 2007 18:13:26 +0100
+Message-ID: <20071219171326.GC15327@gateway.home>
+References: <200712180553.lBI5rQgD004427@arlmail.patni.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1757132AbXLSRFz@vger.kernel.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="c3bfwLpm8qysLVxt"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-vbr4.xs4all.nl ([194.109.24.24]:4394 "EHLO
+	smtp-vbr4.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751088AbXLSR0n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Dec 2007 12:26:43 -0500
 Content-Disposition: inline
-In-Reply-To: <1198083040.5487.14.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Filippos Papadopoulos <psybases@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+In-Reply-To: <200712180553.lBI5rQgD004427@arlmail.patni.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Saquib Imam <saquib.imam@patni.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Dec 19, 2007 at 10:50:40AM -0600, James Bottomley wrote:
-> So, to get the best of both worlds, file a bugzilla and note the bugid.
-> Then email a complete report to the relevant list, but add [BUG <bugid>]
-> to the subject line and cc bugme-daemon@bugzilla.kernel.org  If you do
-> this, bugzilla will keep track of the entire discussion as it progresses
-> and allow those who track bugs through bugzilla to get a pretty accurate
-> idea of the status.  You should never need to touch bugzilla again once
-> the initial bug report is filed: all future information flow is via the
-> mailing lists.
 
-The problem is that it appears to the casual observer as if they can
-then add information to the bug through the web interface.  But that
-information will never be forwarded to the mailing list.  Unless there's
-a way of marking bugs as 'unchangable through the web interface' or 'all
-messages appended to this bug need to be forwarded', Bugzilla just
-doesn't fit our needs.
+--c3bfwLpm8qysLVxt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-The Debian BTS fits our way of working much better.  Perhaps somebody
-should investigate a migration.
+On Tue, Dec 18, 2007 at 11:27:49AM +0530, Saquib Imam wrote:
+> In which case EWOULDBLOCK / EAGAIN is set while a write operation ?
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+=46rom write(2):
+
+ERRORS
+       EAGAIN Non-blocking  I/O  has  been  selected  using O_NONBLOCK and =
+the
+              write would block.
+
+
+Erik
+
+--=20
+They're all fools. Don't worry. Darwin may be slow, but he'll
+eventually get them. -- Matthew Lammers in alt.sysadmin.recovery
+
+--c3bfwLpm8qysLVxt
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: Digital signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.6 (GNU/Linux)
+
+iD8DBQFHaVE2/PlVHJtIto0RArPWAJ9bodofGhlrEPRUnoHj5GmJh0VhlwCcDuqa
+6pyyGswXMP4k+JIB2Q4LJlI=
+=mR8P
+-----END PGP SIGNATURE-----
+
+--c3bfwLpm8qysLVxt--
