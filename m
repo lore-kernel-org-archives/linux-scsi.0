@@ -1,119 +1,113 @@
 From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH 3/7] sg_ring: blk_rq_map_sg_ring as a counterpart to blk_rq_map_sg.
-Date: Wed, 19 Dec 2007 18:33:46 +1100
-Message-ID: <200712191833.46615.rusty@rustcorp.com.au>
-References: <200712191731.26512.rusty@rustcorp.com.au> <200712191733.15409.rusty@rustcorp.com.au> <200712191831.07804.rusty@rustcorp.com.au>
+Subject: [PATCH 4/7] sg_ring: dma_map_sg_ring() helper
+Date: Wed, 19 Dec 2007 18:34:42 +1100
+Message-ID: <200712191834.42457.rusty@rustcorp.com.au>
+References: <200712191731.26512.rusty@rustcorp.com.au> <200712191831.07804.rusty@rustcorp.com.au> <200712191833.46615.rusty@rustcorp.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200712191831.07804.rusty@rustcorp.com.au>
+In-Reply-To: <200712191833.46615.rusty@rustcorp.com.au>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-blk_rq_map_sg_ring as a counterpart to blk_rq_map_sg.
-
-Obvious counterpart to blk_rq_map_sg.
+Obvious counterpart to dma_map_sg.  Note that this is arch-independent
+code; sg_rings are backwards compatible with simple sg arrays.
 
 Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
 ---
- block/ll_rw_blk.c      |   55 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    1 +
- 2 files changed, 56 insertions(+), 0 deletions(-)
+ drivers/base/dma-mapping.c  |   13 +++++++++++++
+ include/linux/dma-mapping.h |    4 ++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
 
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -31,6 +31,7 @@
- #include <linux/blktrace_api.h>
- #include <linux/fault-inject.h>
- #include <linux/scatterlist.h>
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <linux/dma-mapping.h>
 +#include <linux/sg_ring.h>
  
  /*
-  * for max sense size
-@@ -1364,6 +1365,68 @@ new_segment:
- 
- EXPORT_SYMBOL(blk_rq_map_sg);
+  * Managed DMA API
+@@ -162,6 +163,59 @@ void dmam_free_noncoherent(struct device
+ }
+ EXPORT_SYMBOL(dmam_free_noncoherent);
  
 +/**
-+ * blk_rq_map_sg_ring - map a request to a scatterlist ring.
-+ * @q: the request queue this request applies to.
-+ * @rq: the request to map
-+ * @sg: the sg_ring to populate.
++ * dma_map_sg_ring - Map an entire sg ring
++ * @dev: Device to free noncoherent memory for
++ * @sg: The sg_ring
++ * @direction: DMA_TO_DEVICE, DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
 + *
-+ * There must be enough elements in the sg_ring(s) to map the request.
++ * This returns -ENOMEM if mapping fails.  It's not clear that telling you
++ * it failed is useful though.
 + */
-+void blk_rq_map_sg_ring(struct request_queue *q, struct request *rq,
-+			struct sg_ring *sg)
++int dma_map_sg_ring(struct device *dev, struct sg_ring *sg,
++		     enum dma_data_direction direction)
 +{
-+	struct bio_vec *bvec, *bvprv;
-+	struct req_iterator iter;
-+	int i, cluster;
-+	struct sg_ring *head = sg;
-+	struct scatterlist *sgprv;
++	struct sg_ring *i;
++	unsigned int num;
 +
-+	i = 0;
-+	cluster = q->queue_flags & (1 << QUEUE_FLAG_CLUSTER);
++	for (i = sg; i; i = sg_ring_next(i, sg)) {
++		BUG_ON(i->num > i->max);
++		num = dma_map_sg(dev, i->sg, i->num, direction);
++		if (num == 0 && i->num != 0)
++			goto unmap;
++	}
++	return 0;
 +
-+	/*
-+	 * for each bio in rq
-+	 */
-+	bvprv = NULL;
-+	sgprv = NULL;
-+	rq_for_each_segment(bvec, rq, iter) {
-+		int nbytes = bvec->bv_len;
++unmap:
++	while (sg) {
++		dma_unmap_sg(dev, sg->sg, sg->num, direction);
++		sg = sg_ring_next(sg, i);
++	}
++	return -ENOMEM;
 +
-+		if (bvprv && cluster) {
-+			if (sgprv->length + nbytes > q->max_segment_size)
-+				goto new_segment;
++}
++EXPORT_SYMBOL(dma_map_sg_ring);
 +
-+			if (!BIOVEC_PHYS_MERGEABLE(bvprv, bvec))
-+				goto new_segment;
-+			if (!BIOVEC_SEG_BOUNDARY(q, bvprv, bvec))
-+				goto new_segment;
++/**
++ * dma_unmap_sg_ring - Unmap an entire sg ring
++ * @dev: Device to free noncoherent memory for
++ * @sg: The sg_ring
++ * @direction: DMA_TO_DEVICE, DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
++ *
++ * Call after dma_map_sg_ring() succeeds.
++ */
++void dma_unmap_sg_ring(struct device *dev, struct sg_ring *sg,
++		       enum dma_data_direction direction)
++{
++	struct sg_ring *i;
 +
-+			sgprv->length += nbytes;
-+		} else {
-+new_segment:
-+			sg_set_page(sg->sg + i, bvec->bv_page, nbytes,
-+				    bvec->bv_offset);
-+			sgprv = sg->sg + i;
-+			if (++i == sg->max) {
-+				sg->num = i;
-+				sg = sg_ring_next(sg, head);
-+				i = 0;
-+			}
-+		}
-+		bvprv = bvec;
-+	} /* segments in rq */
-+
-+	/* If we were still working on an sg_ring, set the number and
-+	 * clear any following sg_rings. */
-+	if (sg) {
-+		sg->num = i;
-+		for (sg = sg_ring_next(sg,head); sg; sg = sg_ring_next(sg,head))
-+			sg->num = 0;
++	for (i = sg; i; i = sg_ring_next(i, sg)) {
++		BUG_ON(i->num > i->max);
++		dma_unmap_sg(dev, i->sg, i->num, direction);
 +	}
 +}
-+EXPORT_SYMBOL(blk_rq_map_sg_ring);
++EXPORT_SYMBOL(dma_unmap_sg_ring);
++
+ #ifdef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+ 
+ static void dmam_coherent_decl_release(struct device *dev, void *res)
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -87,6 +87,12 @@ dma_mark_declared_memory_occupied(struct
+ }
+ #endif
+ 
++struct sg_ring;
++extern int dma_map_sg_ring(struct device *dev, struct sg_ring *sg,
++			   enum dma_data_direction direction);
++extern void dma_unmap_sg_ring(struct device *dev, struct sg_ring *sg,
++			      enum dma_data_direction direction);
 +
  /*
-  * the standard queue merge functions, can be overridden with device
-  * specific ones if so desired
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -777,6 +777,8 @@ extern void blk_ordered_complete_seq(str
- extern void blk_ordered_complete_seq(struct request_queue *, unsigned, int);
- 
- extern int blk_rq_map_sg(struct request_queue *, struct request *, struct scatterlist *);
-+struct sg_ring;
-+extern void blk_rq_map_sg_ring(struct request_queue *, struct request *, struct sg_ring *);
- extern void blk_dump_rq_flags(struct request *, char *);
- extern void generic_unplug_device(struct request_queue *);
- extern void __generic_unplug_device(struct request_queue *);
+  * Managed DMA API
+  */
