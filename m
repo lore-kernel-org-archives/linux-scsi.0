@@ -1,481 +1,212 @@
 From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH 5/7] sg_ring: Convert core scsi code to sg_ring.
-Date: Wed, 19 Dec 2007 18:36:06 +1100
-Message-ID: <200712191836.06769.rusty@rustcorp.com.au>
-References: <200712191731.26512.rusty@rustcorp.com.au> <200712191833.46615.rusty@rustcorp.com.au> <200712191834.42457.rusty@rustcorp.com.au>
+Subject: [PATCH 6/7] sg_ring: libata simplification
+Date: Wed, 19 Dec 2007 18:37:04 +1100
+Message-ID: <200712191837.04697.rusty@rustcorp.com.au>
+References: <200712191731.26512.rusty@rustcorp.com.au> <200712191834.42457.rusty@rustcorp.com.au> <200712191836.06769.rusty@rustcorp.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200712191834.42457.rusty@rustcorp.com.au>
+In-Reply-To: <200712191836.06769.rusty@rustcorp.com.au>
 Content-Disposition: inline
 Sender: linux-ide-owner@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-If nothing else, the simplification of this logic shows why I prefer
-sg_ring over scatterlist chaining.
+[This patch has been obsoleted: Tejun has a more complete one, but
+it's not in mainline yet, so this serves to make the next patch
+apply].
+
+libata separates the single buffer case from the scatterlist case
+internally.  It's not clear that this is necessary.
+
+Remove the ATA_QCFLAG_SINGLE flag, and buf_virt pointer, and always
+initialize qc->nbytes in ata_sg_init().
+
+It's possible that the ATA_QCFLAG_SG and ATA_QCFLAG_DMAMAP flags could
+be entirely removed, and we could use whether qc->__sg is NULL or not.
 
 Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
 
-diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
---- a/drivers/block/cciss_scsi.c
-+++ b/drivers/block/cciss_scsi.c
-@@ -1191,28 +1191,28 @@ cciss_scatter_gather(struct pci_dev *pde
- 		struct scsi_cmnd *cmd)
- {
- 	unsigned int len;
--	struct scatterlist *sg;
-+	struct sg_ring *sg;
- 	__u64 addr64;
--	int use_sg, i;
-+	int count = 0, i;
- 
--	BUG_ON(scsi_sg_count(cmd) > MAXSGENTRIES);
+diff -r 8b1075c7ad47 drivers/ata/libata-core.c
+--- a/drivers/ata/libata-core.c	Tue Nov 13 21:00:47 2007 +1100
++++ b/drivers/ata/libata-core.c	Wed Nov 14 15:31:07 2007 +1100
+@@ -1648,16 +1648,8 @@ unsigned ata_exec_internal_sg(struct ata
+ 		memcpy(qc->cdb, cdb, ATAPI_CDB_LEN);
+ 	qc->flags |= ATA_QCFLAG_RESULT_TF;
+ 	qc->dma_dir = dma_dir;
+-	if (dma_dir != DMA_NONE) {
+-		unsigned int i, buflen = 0;
+-		struct scatterlist *sg;
 -
--	use_sg = scsi_dma_map(cmd);
--	if (use_sg) {	/* not too many addrs? */
--		scsi_for_each_sg(cmd, sg, use_sg, i) {
--			addr64 = (__u64) sg_dma_address(sg);
--			len  = sg_dma_len(sg);
-+	if (scsi_dma_map(cmd) >= 0) {	/* not too many addrs? */
-+		sg_ring_for_each(scsi_sgring(cmd), sg, i) {
-+			addr64 = (__u64) sg_dma_address(&sg->sg[i]);
-+			len  = sg_dma_len(&sg->sg[i]);
- 			cp->SG[i].Addr.lower =
- 				(__u32) (addr64 & (__u64) 0x00000000FFFFFFFF);
- 			cp->SG[i].Addr.upper =
- 				(__u32) ((addr64 >> 32) & (__u64) 0x00000000FFFFFFFF);
- 			cp->SG[i].Len = len;
- 			cp->SG[i].Ext = 0;  // we are not chaining
-+			count++;
+-		for_each_sg(sgl, sg, n_elem, i)
+-			buflen += sg->length;
+-
++	if (dma_dir != DMA_NONE)
+ 		ata_sg_init(qc, sgl, n_elem);
+-		qc->nbytes = buflen;
+-	}
+ 
+ 	qc->private_data = &wait;
+ 	qc->complete_fn = ata_qc_complete_internal;
+@@ -4543,9 +4535,6 @@ void ata_sg_clean(struct ata_queued_cmd 
+ 	WARN_ON(!(qc->flags & ATA_QCFLAG_DMAMAP));
+ 	WARN_ON(sg == NULL);
+ 
+-	if (qc->flags & ATA_QCFLAG_SINGLE)
+-		WARN_ON(qc->n_elem > 1);
+-
+ 	VPRINTK("unmapping %u sg elements\n", qc->n_elem);
+ 
+ 	/* if we padded the buffer out to 32-bit bound, and data
+@@ -4566,16 +4555,6 @@ void ata_sg_clean(struct ata_queued_cmd 
+ 			memcpy(addr + psg->offset, pad_buf, qc->pad_len);
+ 			kunmap_atomic(addr, KM_IRQ0);
  		}
+-	} else {
+-		if (qc->n_elem)
+-			dma_unmap_single(ap->dev,
+-				sg_dma_address(&sg[0]), sg_dma_len(&sg[0]),
+-				dir);
+-		/* restore sg */
+-		sg->length += qc->pad_len;
+-		if (pad_buf)
+-			memcpy(qc->buf_virt + sg->length - qc->pad_len,
+-			       pad_buf, qc->pad_len);
  	}
  
--	cp->Header.SGList = (__u8) use_sg;   /* no. SGs contig in this cmd */
--	cp->Header.SGTotal = (__u16) use_sg; /* total sgs in this cmd list */
-+	cp->Header.SGList = (__u8) count;   /* no. SGs contig in this cmd */
-+	cp->Header.SGTotal = (__u16) count; /* total sgs in this cmd list */
-+
-+	BUG_ON(count > MAXSGENTRIES);
- 	return;
- }
+ 	qc->flags &= ~ATA_QCFLAG_DMAMAP;
+@@ -4807,16 +4786,8 @@ void ata_noop_qc_prep(struct ata_queued_
  
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -619,18 +619,17 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd 
- 	ses->data_direction = scmd->sc_data_direction;
- 	ses->bufflen = scmd->request_bufflen;
- 	ses->buffer = scmd->request_buffer;
--	ses->use_sg = scmd->use_sg;
- 	ses->resid = scmd->resid;
- 	ses->result = scmd->result;
- 
- 	if (sense_bytes) {
- 		scmd->request_bufflen = min_t(unsigned,
- 		                       sizeof(scmd->sense_buffer), sense_bytes);
--		sg_init_one(&ses->sense_sgl, scmd->sense_buffer,
--		                                       scmd->request_bufflen);
--		scmd->request_buffer = &ses->sense_sgl;
-+
-+		sg_ring_single(&ses->sense_sg.ring, scmd->sense_buffer,
-+			       scmd->request_bufflen);
-+		scmd->request_buffer = &ses->sense_sg;
- 		scmd->sc_data_direction = DMA_FROM_DEVICE;
--		scmd->use_sg = 1;
- 		memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
- 		scmd->cmnd[0] = REQUEST_SENSE;
- 		scmd->cmnd[4] = scmd->request_bufflen;
-@@ -639,7 +638,6 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd 
- 		scmd->request_buffer = NULL;
- 		scmd->request_bufflen = 0;
- 		scmd->sc_data_direction = DMA_NONE;
--		scmd->use_sg = 0;
- 		if (cmnd) {
- 			memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
- 			memcpy(scmd->cmnd, cmnd, cmnd_size);
-@@ -678,7 +676,6 @@ void scsi_eh_restore_cmnd(struct scsi_cm
- 	scmd->sc_data_direction = ses->data_direction;
- 	scmd->request_bufflen = ses->bufflen;
- 	scmd->request_buffer = ses->buffer;
--	scmd->use_sg = ses->use_sg;
- 	scmd->resid = ses->resid;
- 	scmd->result = ses->result;
- }
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -17,7 +17,7 @@
- #include <linux/pci.h>
- #include <linux/delay.h>
- #include <linux/hardirq.h>
--#include <linux/scatterlist.h>
-+#include <linux/sg_ring.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -737,21 +737,31 @@ static inline unsigned int scsi_sgtable_
- 	return index;
- }
- 
--struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+static void free_sgring(struct sg_ring *sg)
+ void ata_sg_init_one(struct ata_queued_cmd *qc, void *buf, unsigned int buflen)
  {
- 	struct scsi_host_sg_pool *sgp;
--	struct scatterlist *sgl, *prev, *ret;
-+
-+	sgp = scsi_sg_pools + scsi_sgtable_index(sg->max);
-+
-+	mempool_free(sg, sgp->pool);
-+}
-+
-+struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *cmd, unsigned int num,
-+				  gfp_t gfp_mask)
-+{
-+	struct scsi_host_sg_pool *sgp;
-+	struct sg_ring *sg, *ret;
- 	unsigned int index;
- 	int this, left;
- 
--	BUG_ON(!cmd->use_sg);
-+	BUG_ON(!num);
- 
--	left = cmd->use_sg;
--	ret = prev = NULL;
-+	left = num;
-+	ret = NULL;
- 	do {
- 		this = left;
- 		if (this > SCSI_MAX_SG_SEGMENTS) {
--			this = SCSI_MAX_SG_SEGMENTS - 1;
-+			this = SCSI_MAX_SG_SEGMENTS;
- 			index = SG_MEMPOOL_NR - 1;
- 		} else
- 			index = scsi_sgtable_index(this);
-@@ -760,32 +770,20 @@ struct scatterlist *scsi_alloc_sgtable(s
- 
- 		sgp = scsi_sg_pools + index;
- 
--		sgl = mempool_alloc(sgp->pool, gfp_mask);
--		if (unlikely(!sgl))
-+		sg = mempool_alloc(sgp->pool, gfp_mask);
-+		if (unlikely(!sg))
- 			goto enomem;
- 
--		sg_init_table(sgl, sgp->size);
-+		sg_ring_init(sg, sgp->size);
- 
- 		/*
--		 * first loop through, set initial index and return value
-+		 * first loop through, set return value, otherwise
-+		 * attach this to the tail.
- 		 */
- 		if (!ret)
--			ret = sgl;
+-	qc->flags |= ATA_QCFLAG_SINGLE;
 -
--		/*
--		 * chain previous sglist, if any. we know the previous
--		 * sglist must be the biggest one, or we would not have
--		 * ended up doing another loop.
--		 */
--		if (prev)
--			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
+-	qc->__sg = &qc->sgent;
+-	qc->n_elem = 1;
+-	qc->orig_n_elem = 1;
+-	qc->buf_virt = buf;
+-	qc->nbytes = buflen;
+-	qc->cursg = qc->__sg;
 -
--		/*
--		 * if we have nothing left, mark the last segment as
--		 * end-of-list
--		 */
--		if (!left)
--			sg_mark_end(&sgl[this - 1]);
-+			ret = sg;
-+		else
-+			list_add_tail(&sg->list, &ret->list);
- 
- 		/*
- 		 * don't allow subsequent mempool allocs to sleep, it would
-@@ -793,85 +791,28 @@ struct scatterlist *scsi_alloc_sgtable(s
- 		 */
- 		gfp_mask &= ~__GFP_WAIT;
- 		gfp_mask |= __GFP_HIGH;
--		prev = sgl;
- 	} while (left);
- 
--	/*
--	 * ->use_sg may get modified after dma mapping has potentially
--	 * shrunk the number of segments, so keep a copy of it for free.
--	 */
--	cmd->__use_sg = cmd->use_sg;
- 	return ret;
- enomem:
- 	if (ret) {
--		/*
--		 * Free entries chained off ret. Since we were trying to
--		 * allocate another sglist, we know that all entries are of
--		 * the max size.
--		 */
--		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
--		prev = ret;
--		ret = &ret[SCSI_MAX_SG_SEGMENTS - 1];
--
--		while ((sgl = sg_chain_ptr(ret)) != NULL) {
--			ret = &sgl[SCSI_MAX_SG_SEGMENTS - 1];
--			mempool_free(sgl, sgp->pool);
--		}
--
--		mempool_free(prev, sgp->pool);
-+		while (!list_empty(&ret->list))
-+			free_sgring(sg_ring_next(ret));
-+		free_sgring(ret);
- 	}
- 	return NULL;
+ 	sg_init_one(&qc->sgent, buf, buflen);
++	ata_sg_init(qc, &qc->sgent, 1);
  }
-+EXPORT_SYMBOL(scsi_alloc_sgring);
  
--EXPORT_SYMBOL(scsi_alloc_sgtable);
-+void scsi_free_sgring(struct scsi_cmnd *cmd)
-+{
-+	struct sg_ring *sg = cmd->request_buffer;
- 
--void scsi_free_sgtable(struct scsi_cmnd *cmd)
+ /**
+@@ -4841,75 +4813,13 @@ void ata_sg_init(struct ata_queued_cmd *
+ 	qc->n_elem = n_elem;
+ 	qc->orig_n_elem = n_elem;
+ 	qc->cursg = qc->__sg;
+-}
+-
+-/**
+- *	ata_sg_setup_one - DMA-map the memory buffer associated with a command.
+- *	@qc: Command with memory buffer to be mapped.
+- *
+- *	DMA-map the memory buffer associated with queued_cmd @qc.
+- *
+- *	LOCKING:
+- *	spin_lock_irqsave(host lock)
+- *
+- *	RETURNS:
+- *	Zero on success, negative on error.
+- */
+-
+-static int ata_sg_setup_one(struct ata_queued_cmd *qc)
 -{
--	struct scatterlist *sgl = cmd->request_buffer;
--	struct scsi_host_sg_pool *sgp;
+-	struct ata_port *ap = qc->ap;
+-	int dir = qc->dma_dir;
+-	struct scatterlist *sg = qc->__sg;
+-	dma_addr_t dma_address;
+-	int trim_sg = 0;
 -
--	/*
--	 * if this is the biggest size sglist, check if we have
--	 * chained parts we need to free
--	 */
--	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
--		unsigned short this, left;
--		struct scatterlist *next;
--		unsigned int index;
+-	/* we must lengthen transfers to end on a 32-bit boundary */
+-	qc->pad_len = sg->length & 3;
+-	if (qc->pad_len) {
+-		void *pad_buf = ap->pad + (qc->tag * ATA_DMA_PAD_SZ);
+-		struct scatterlist *psg = &qc->pad_sgent;
 -
--		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
--		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
--		while (left && next) {
--			sgl = next;
--			this = left;
--			if (this > SCSI_MAX_SG_SEGMENTS) {
--				this = SCSI_MAX_SG_SEGMENTS - 1;
--				index = SG_MEMPOOL_NR - 1;
--			} else
--				index = scsi_sgtable_index(this);
+-		WARN_ON(qc->dev->class != ATA_DEV_ATAPI);
 -
--			left -= this;
+-		memset(pad_buf, 0, ATA_DMA_PAD_SZ);
 -
--			sgp = scsi_sg_pools + index;
+-		if (qc->tf.flags & ATA_TFLAG_WRITE)
+-			memcpy(pad_buf, qc->buf_virt + sg->length - qc->pad_len,
+-			       qc->pad_len);
 -
--			if (left)
--				next = sg_chain_ptr(&sgl[sgp->size - 1]);
+-		sg_dma_address(psg) = ap->pad_dma + (qc->tag * ATA_DMA_PAD_SZ);
+-		sg_dma_len(psg) = ATA_DMA_PAD_SZ;
+-		/* trim sg */
+-		sg->length -= qc->pad_len;
+-		if (sg->length == 0)
+-			trim_sg = 1;
 -
--			mempool_free(sgl, sgp->pool);
--		}
+-		DPRINTK("padding done, sg->length=%u pad_len=%u\n",
+-			sg->length, qc->pad_len);
+-	}
 -
--		/*
--		 * Restore original, will be freed below
--		 */
--		sgl = cmd->request_buffer;
--		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
--	} else
--		sgp = scsi_sg_pools + scsi_sgtable_index(cmd->__use_sg);
+-	if (trim_sg) {
+-		qc->n_elem--;
+-		goto skip_map;
+-	}
 -
--	mempool_free(sgl, sgp->pool);
-+	while (!list_empty(&sg->list))
-+		free_sgring(sg_ring_next(sg));
-+	free_sgring(sg);
- }
+-	dma_address = dma_map_single(ap->dev, qc->buf_virt,
+-				     sg->length, dir);
+-	if (dma_mapping_error(dma_address)) {
+-		/* restore sg */
+-		sg->length += qc->pad_len;
+-		return -1;
+-	}
 -
--EXPORT_SYMBOL(scsi_free_sgtable);
-+EXPORT_SYMBOL(scsi_free_sgring);
- 
- /*
-  * Function:    scsi_release_buffers()
-@@ -892,8 +833,8 @@ EXPORT_SYMBOL(scsi_free_sgtable);
-  */
- static void scsi_release_buffers(struct scsi_cmnd *cmd)
- {
--	if (cmd->use_sg)
--		scsi_free_sgtable(cmd);
-+	if (cmd->request_buffer)
-+		scsi_free_sgring(cmd);
- 
- 	/*
- 	 * Zero these out.  They now point to freed memory, and it is
-@@ -1106,20 +1047,20 @@ static int scsi_init_io(struct scsi_cmnd
- static int scsi_init_io(struct scsi_cmnd *cmd)
- {
- 	struct request     *req = cmd->request;
--	int		   count;
- 
- 	/*
- 	 * We used to not use scatter-gather for single segment request,
- 	 * but now we do (it makes highmem I/O easier to support without
- 	 * kmapping pages)
- 	 */
--	cmd->use_sg = req->nr_phys_segments;
- 
- 	/*
- 	 * If sg table allocation fails, requeue request later.
- 	 */
--	cmd->request_buffer = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
-+	cmd->request_buffer = scsi_alloc_sgring(cmd, req->nr_phys_segments,
-+						GFP_ATOMIC);
- 	if (unlikely(!cmd->request_buffer)) {
-+		BUG();
- 		scsi_unprep_request(req);
- 		return BLKPREP_DEFER;
- 	}
-@@ -1134,9 +1075,7 @@ static int scsi_init_io(struct scsi_cmnd
- 	 * Next, walk the list, and fill in the addresses and sizes of
- 	 * each segment.
- 	 */
--	count = blk_rq_map_sg(req->q, req, cmd->request_buffer);
--	BUG_ON(count > cmd->use_sg);
--	cmd->use_sg = count;
-+	blk_rq_map_sg_ring(req->q, req, cmd->request_buffer);
- 	return BLKPREP_OK;
+-	sg_dma_address(sg) = dma_address;
+-	sg_dma_len(sg) = sg->length;
+-
+-skip_map:
+-	DPRINTK("mapped buffer of %d bytes for %s\n", sg_dma_len(sg),
+-		qc->tf.flags & ATA_TFLAG_WRITE ? "write" : "read");
+-
+-	return 0;
++
++	qc->nbytes = 0;
++	while (n_elem) {
++		qc->nbytes += sg->length;
++		n_elem--;
++		sg = sg_next(sg);
++	}
  }
  
-@@ -1193,7 +1132,6 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
+ /**
+@@ -6028,9 +5938,6 @@ void ata_qc_issue(struct ata_queued_cmd 
+ 	if (ata_should_dma_map(qc)) {
+ 		if (qc->flags & ATA_QCFLAG_SG) {
+ 			if (ata_sg_setup(qc))
+-				goto sg_err;
+-		} else if (qc->flags & ATA_QCFLAG_SINGLE) {
+-			if (ata_sg_setup_one(qc))
+ 				goto sg_err;
+ 		}
+ 	} else {
+diff -r 8b1075c7ad47 include/linux/libata.h
+--- a/include/linux/libata.h	Tue Nov 13 21:00:47 2007 +1100
++++ b/include/linux/libata.h	Wed Nov 14 15:31:07 2007 +1100
+@@ -216,8 +216,7 @@ enum {
+ 	/* struct ata_queued_cmd flags */
+ 	ATA_QCFLAG_ACTIVE	= (1 << 0), /* cmd not yet ack'd to scsi lyer */
+ 	ATA_QCFLAG_SG		= (1 << 1), /* have s/g table? */
+-	ATA_QCFLAG_SINGLE	= (1 << 2), /* no s/g, just a single buffer */
+-	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG | ATA_QCFLAG_SINGLE,
++	ATA_QCFLAG_DMAMAP	= ATA_QCFLAG_SG,
+ 	ATA_QCFLAG_IO		= (1 << 3), /* standard IO command */
+ 	ATA_QCFLAG_RESULT_TF	= (1 << 4), /* result TF requested */
+ 	ATA_QCFLAG_CLEAR_EXCL	= (1 << 5), /* clear excl_link on completion */
+@@ -459,7 +458,6 @@ struct ata_queued_cmd {
  
- 		cmd->request_bufflen = 0;
- 		cmd->request_buffer = NULL;
--		cmd->use_sg = 0;
- 		req->buffer = NULL;
- 	}
+ 	struct scatterlist	sgent;
+ 	struct scatterlist	pad_sgent;
+-	void			*buf_virt;
  
-@@ -1751,7 +1689,7 @@ int __init scsi_init_queue(void)
- 
- 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
- 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
--		int size = sgp->size * sizeof(struct scatterlist);
-+		int size = sizeof(struct sg_ring) + sgp->size * sizeof(struct scatterlist);
- 
- 		sgp->slab = kmem_cache_create(sgp->name, size, 0,
- 				SLAB_HWCACHE_ALIGN, NULL);
-diff --git a/drivers/scsi/scsi_lib_dma.c b/drivers/scsi/scsi_lib_dma.c
---- a/drivers/scsi/scsi_lib_dma.c
-+++ b/drivers/scsi/scsi_lib_dma.c
-@@ -15,22 +15,17 @@
-  * scsi_dma_map - perform DMA mapping against command's sg lists
-  * @cmd:	scsi command
-  *
-- * Returns the number of sg lists actually used, zero if the sg lists
-- * is NULL, or -ENOMEM if the mapping failed.
-+ * Returns -ENOMEM if the mapping failed.
-  */
- int scsi_dma_map(struct scsi_cmnd *cmd)
- {
--	int nseg = 0;
--
--	if (scsi_sg_count(cmd)) {
-+	if (scsi_sgring(cmd)) {
- 		struct device *dev = cmd->device->host->shost_gendev.parent;
- 
--		nseg = dma_map_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
--				  cmd->sc_data_direction);
--		if (unlikely(!nseg))
--			return -ENOMEM;
-+		return dma_map_sg_ring(dev, scsi_sgring(cmd),
-+				       cmd->sc_data_direction);
- 	}
--	return nseg;
-+	return 0;
- }
- EXPORT_SYMBOL(scsi_dma_map);
- 
-@@ -40,11 +35,10 @@ EXPORT_SYMBOL(scsi_dma_map);
-  */
- void scsi_dma_unmap(struct scsi_cmnd *cmd)
- {
--	if (scsi_sg_count(cmd)) {
-+	if (scsi_sgring(cmd)) {
- 		struct device *dev = cmd->device->host->shost_gendev.parent;
- 
--		dma_unmap_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
--			     cmd->sc_data_direction);
-+		dma_unmap_sg_ring(dev, scsi_sgring(cmd),cmd->sc_data_direction);
- 	}
- }
- EXPORT_SYMBOL(scsi_dma_unmap);
-diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
---- a/drivers/scsi/scsi_tgt_lib.c
-+++ b/drivers/scsi/scsi_tgt_lib.c
-@@ -358,15 +358,15 @@ static int scsi_tgt_init_cmd(struct scsi
- 	struct request *rq = cmd->request;
- 	int count;
- 
--	cmd->use_sg = rq->nr_phys_segments;
--	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
-+	cmd->request_buffer = scsi_alloc_sgring(cmd, rq->nr_phys_segments,
-+						gfp_mask);
- 	if (!cmd->request_buffer)
- 		return -ENOMEM;
- 
- 	cmd->request_bufflen = rq->data_len;
- 
- 	dprintk("cmd %p cnt %d %lu\n", cmd, cmd->use_sg, rq_data_dir(rq));
--	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
-+	count = blk_rq_map_sg_ring(rq->q, rq, cmd->request_buffer);
- 	BUG_ON(count > cmd->use_sg);
- 	cmd->use_sg = count;
- 	return 0;
-diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
---- a/include/scsi/scsi_cmnd.h
-+++ b/include/scsi/scsi_cmnd.h
-@@ -66,10 +66,6 @@ struct scsi_cmnd {
- 
- 	struct timer_list eh_timeout;	/* Used to time out the command. */
- 	void *request_buffer;		/* Actual requested buffer */
--
--	/* These elements define the operation we ultimately want to perform */
--	unsigned short use_sg;	/* Number of pieces of scatter-gather */
--	unsigned short __use_sg;
- 
- 	unsigned underflow;	/* Return error if less than
- 				   this amount is transferred */
-@@ -128,14 +124,13 @@ extern void *scsi_kmap_atomic_sg(struct 
- 				 size_t *offset, size_t *len);
- extern void scsi_kunmap_atomic_sg(void *virt);
- 
--extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
--extern void scsi_free_sgtable(struct scsi_cmnd *);
-+extern struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *, unsigned, gfp_t);
-+extern void scsi_free_sgring(struct scsi_cmnd *);
- 
- extern int scsi_dma_map(struct scsi_cmnd *cmd);
- extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
- 
--#define scsi_sg_count(cmd) ((cmd)->use_sg)
--#define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
-+#define scsi_sgring(cmd) ((struct sg_ring *)(cmd)->request_buffer)
- #define scsi_bufflen(cmd) ((cmd)->request_bufflen)
- 
- static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -1,7 +1,7 @@
- #ifndef _SCSI_SCSI_EH_H
- #define _SCSI_SCSI_EH_H
- 
--#include <linux/scatterlist.h>
-+#include <linux/sg_ring.h>
- 
- #include <scsi/scsi_cmnd.h>
- struct scsi_device;
-@@ -75,10 +75,9 @@ struct scsi_eh_save {
- 
- 	void *buffer;
- 	unsigned bufflen;
--	unsigned short use_sg;
- 	int resid;
- 
--	struct scatterlist sense_sgl;
-+	DECLARE_SG_RING(sense_sg, 1);
- };
- 
- extern void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd,
+ 	/* DO NOT iterate over __sg manually, use ata_for_each_sg() */
+ 	struct scatterlist	*__sg;
