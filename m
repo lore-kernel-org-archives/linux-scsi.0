@@ -1,78 +1,77 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 6/6] zfcp: Hold queue lock when checking port/unit handle for task management cmd
-Date: Thu, 20 Dec 2007 12:30:27 +0100
-Message-ID: <20071220113235.684212000@de.ibm.com>
-References: <20071220113021.955597000@de.ibm.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 0/5] sg_ring for scsi
+Date: Thu, 20 Dec 2007 15:55:09 +0200
+Message-ID: <476A743D.2080506@panasas.com>
+References: <200712201645.19035.rusty@rustcorp.com.au> <20071220160741K.fujita.tomonori@lab.ntt.co.jp> <200712201853.48643.rusty@rustcorp.com.au> <20071220075814.GH13958@kernel.dk>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate7.de.ibm.com ([195.212.29.156]:20734 "EHLO
-	mtagate7.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755075AbXLTLci (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 06:32:38 -0500
-Content-Disposition: inline; filename=812-zfcp-lock4.diff
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:34273 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752510AbXLTN5K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 08:57:10 -0500
+In-Reply-To: <20071220075814.GH13958@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Christof Schmitt <christof.schmitt@de.ibm.com>, Martin Peschke <mp3@de.ibm.com>
+To: Jens Axboe <jens.axboe@oracle.com>Jens Axboe <jens.axboe@oracle.com>, James Bottomley <James.Bottomley@SteelEye.com>, Andrew Morton <akpm@linux-foundation.org>
+Cc: Rusty Russell <rusty@rustcorp.com.au>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dougg@torque.net
 
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On Thu, Dec 20 2007 at 9:58 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
+> On Thu, Dec 20 2007, Rusty Russell wrote:
+>> On Thursday 20 December 2007 18:07:41 FUJITA Tomonori wrote:
+>>> On Thu, 20 Dec 2007 16:45:18 +1100
+>>>
+>>> Rusty Russell <rusty@rustcorp.com.au> wrote:
+>>>> OK, some fixes since last time, as I wade through more SCSI drivers. 
+>>>> Some drivers use "use_sg" as a flag to know whether the request_buffer is
+>>>> a scatterlist: I don't need the counter, but I still need the flag, so I
+>>>> fixed that in a more intuitive way (an explicit ->sg pointer in the cmd).
+>>> use_sg and the request_buffer will be removed shortly.
+>>>
+>>> http://marc.info/?l=linux-scsi&m=119754650614813&w=2
+>> Thanks!  Is there a git tree somewhere with these changes?
+>>
+>>> I think that we tried the similar idea before, scsi_sgtable, but we
+>>> seem to settle in the current simple approach.
+>> Yes, a scsi-specific solution is a bad idea: other people use sg.  
+>> Manipulating the magic chains is horrible; it looks simple to the places 
+>> which simply want to iterate through it, but it's awful for code which wants 
+>> to create them.
+> 
+> The current code looks like that to minimize impact on 2.6.24, see this
+> branch:
+> 
+> http://git.kernel.dk/?p=linux-2.6-block.git;a=shortlog;h=sg
+> 
+> for how it folds into lib/sg.c and the magic disappears from SCSI.
+> Rusty, nobody claimed the sg code in 2.6.24 is perfect. I like to get
+> things incrementally there.
+> 
+Dear Jens.
 
-We need to hold the queue-lock when checking whether we still have a valid
-unit/port handle for the task management command, i.e whether we can issue this
-request for this unit/port. If the error recovery is about to close this
-unit/port, then it competes for the queue-lock. If the close request issued by
-the error recovery wins, then it is guaranteed that this unit/port has been
-blocked for other requests.
+Is this code scheduled for 2.6.25? I cannot find it in mm tree.
 
-Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
-Signed-off-by: Martin Peschke <mp3@de.ibm.com>
----
+Because above code conflicts with the scsi_data_buffer patch,
+that is in mm tree and I hope will get accepted into 2.6.25.
+Now the concepts are not at all conflicting, only that they
+both bang in the same places.
+(And by the way it does not apply on scsi-misc either.
+And it did not compile in your tree, a missing bit in 
+ide-scsi.c)
 
- drivers/s390/scsi/zfcp_fsf.c |   26 +++++++++-----------------
- 1 file changed, 9 insertions(+), 17 deletions(-)
+I have rebase and fixed your code on top of scsi_data_buffer patchset.
+Please review. (Patchset posted as reply to this mail)
 
---- a/drivers/s390/scsi/zfcp_fsf.c	2007-12-20 11:19:01.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_fsf.c	2007-12-20 11:19:19.000000000 +0100
-@@ -3774,6 +3774,10 @@ zfcp_fsf_send_fcp_command_task_managemen
- 		goto out;
- 	}
- 
-+	if (unlikely(!atomic_test_mask(ZFCP_STATUS_COMMON_UNBLOCKED,
-+			&unit->status)))
-+		goto unit_blocked;
-+
- 	/*
- 	 * Used to decide on proper handler in the return path,
- 	 * could be either zfcp_fsf_send_fcp_command_task_handler or
-@@ -3807,25 +3811,13 @@ zfcp_fsf_send_fcp_command_task_managemen
- 
- 	zfcp_fsf_start_timer(fsf_req, ZFCP_SCSI_ER_TIMEOUT);
- 	retval = zfcp_fsf_req_send(fsf_req);
--	if (retval) {
--		ZFCP_LOG_INFO("error: Could not send an FCP-command (task "
--			      "management) on adapter %s, port 0x%016Lx for "
--			      "unit LUN 0x%016Lx\n",
--			      zfcp_get_busid_by_adapter(adapter),
--			      unit->port->wwpn,
--			      unit->fcp_lun);
--		zfcp_fsf_req_free(fsf_req);
--		fsf_req = NULL;
-+	if (!retval)
- 		goto out;
--	}
- 
--	ZFCP_LOG_TRACE("Send FCP Command (task management function) initiated "
--		       "(adapter %s, port 0x%016Lx, unit 0x%016Lx, "
--		       "tm_flags=0x%x)\n",
--		       zfcp_get_busid_by_adapter(adapter),
--		       unit->port->wwpn,
--		       unit->fcp_lun,
--		       tm_flags);
-+ unit_blocked:
-+	zfcp_fsf_req_free(fsf_req);
-+	fsf_req = NULL;
-+
-  out:
- 	write_unlock_irqrestore(&adapter->request_queue.queue_lock, lock_flags);
- 	return fsf_req;
+They are totaly untested, based on -mm tree.
+We should decide the order of these patches and rebase
+accordingly.
 
--- 
+AND ...
+Please send, to-be-included-in-next-kernel patches to Morton. 
+This way we can account for them. Also I do not see Ack-by: 
+of the scsi maintainer in the scsi bits of your patches.
+Is it not a costume to Ack-on bits that belong to other maintainers, 
+even for maintainers?
+
+Boaz
