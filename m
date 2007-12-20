@@ -1,34 +1,34 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 0/5] sg_ring for scsi
-Date: Thu, 20 Dec 2007 16:07:41 +0900
-Message-ID: <20071220160741K.fujita.tomonori@lab.ntt.co.jp>
-References: <200712201645.19035.rusty@rustcorp.com.au>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Strange code in initio.c?
+Date: Thu, 20 Dec 2007 18:22:54 +1100
+Message-ID: <200712201822.54806.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:46036 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753510AbXLTHIK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 02:08:10 -0500
-In-Reply-To: <200712201645.19035.rusty@rustcorp.com.au>
+Received: from ozlabs.org ([203.10.76.45]:48837 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750851AbXLTHXB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Dec 2007 02:23:01 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rusty@rustcorp.com.au
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: linux-scsi@vger.kernel.org
 
-On Thu, 20 Dec 2007 16:45:18 +1100
-Rusty Russell <rusty@rustcorp.com.au> wrote:
+Hi Alan,
 
-> OK, some fixes since last time, as I wade through more SCSI drivers.  Some 
-> drivers use "use_sg" as a flag to know whether the request_buffer is a 
-> scatterlist: I don't need the counter, but I still need the flag, so I fixed 
-> that in a more intuitive way (an explicit ->sg pointer in the cmd).
+	Was looking through initio.c to convert it to sg_ring, and noticed this code:
 
-use_sg and the request_buffer will be removed shortly.
+initio_build_scb() around 2616:
+		sg = &cblk->sglist[0];
+		scsi_for_each_sg(cmnd, sglist, cblk->sglen, i) {
+			sg->data = cpu_to_le32((u32)sg_dma_address(sglist));
+			total_len += sg->len = cpu_to_le32((u32)sg_dma_len(sglist));
+		}
 
-http://marc.info/?l=linux-scsi&m=119754650614813&w=2
+Note how sg is never incremented... seems wrong to me.
 
-
-I think that we tried the similar idea before, scsi_sgtable, but we
-seem to settle in the current simple approach.
+Cheers,
+Rusty.
