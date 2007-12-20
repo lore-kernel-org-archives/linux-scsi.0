@@ -1,74 +1,74 @@
 From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: [patch 1/6] zfcp: fix use after free bug.
-Date: Thu, 20 Dec 2007 12:30:22 +0100
-Message-ID: <20071220113231.840700000@de.ibm.com>
+Subject: [patch 3/6] zfcp: Hold queue lock when checking port/unit handle for abort command
+Date: Thu, 20 Dec 2007 12:30:24 +0100
+Message-ID: <20071220113233.502622000@de.ibm.com>
 References: <20071220113021.955597000@de.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate5.de.ibm.com ([195.212.29.154]:58181 "EHLO
+Received: from mtagate5.de.ibm.com ([195.212.29.154]:58184 "EHLO
 	mtagate5.de.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755075AbXLTLce (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 06:32:34 -0500
-Content-Disposition: inline; filename=807-zfcp-kfree.diff
+	with ESMTP id S1755689AbXLTLcg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 06:32:36 -0500
+Content-Disposition: inline; filename=809-zfcp-lock1.diff
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Heiko Carstens <heiko.carstens@de.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Christof Schmitt <christof.schmitt@de.ibm.com>, Martin Peschke <mp3@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Christof Schmitt <christof.schmitt@de.ibm.com>, Martin Peschke <mp3@de.ibm.com>
 
-From: Heiko Carstens <heiko.carstens@de.ibm.com>
+From: Christof Schmitt <christof.schmitt@de.ibm.com>
 
-zfcp_erp_strategy_check_fsfreq() checks if it is safe to access the
-fsf_req associated with the erp_action that gets passed. To test if
-it is safe it accesses the fsf_req in order to get its index into
-the hash list. This is broken since the fsf_req might be freed already
-and the read index has no meaning. It could lead to memory corruption.
-Fix this by introducing a new zfcp_reqlist_find_safe() method which
-just checks if addresses are equal. This is slower, but only gets
-called in case of error recovery.
+We need to hold the queue-lock when checking whether we still have a valid
+unit/port handle for the abort command, i.e whether we can issue this request
+for this unit/port. If the error recovery is about to close this unit/port,
+then it competes for the queue-lock. If the close request issued by the error
+recovery wins, then it is guaranteed that this unit/port has been blocked for
+other requests.
 
-Signed-off-by: Heiko Carstens <heiko.carstens@de.ibm.com>
-Signed-off-by: Martin Schwidefsky <schwidefsky@de.ibm.com>
 Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
 Signed-off-by: Martin Peschke <mp3@de.ibm.com>
 ---
 
- drivers/s390/scsi/zfcp_def.h |   14 ++++++++++++++
- drivers/s390/scsi/zfcp_erp.c |    3 ++-
- 2 files changed, 16 insertions(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_fsf.c |   21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
---- a/drivers/s390/scsi/zfcp_def.h	2007-12-20 11:15:10.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_def.h	2007-12-20 11:17:46.000000000 +0100
-@@ -1123,6 +1123,20 @@ zfcp_reqlist_find(struct zfcp_adapter *a
- 	return NULL;
- }
+--- a/drivers/s390/scsi/zfcp_fsf.c	2007-12-20 11:18:03.000000000 +0100
++++ b/drivers/s390/scsi/zfcp_fsf.c	2007-12-20 11:18:23.000000000 +0100
+@@ -1116,6 +1116,10 @@ zfcp_fsf_abort_fcp_command(unsigned long
+ 		goto out;
+ 	}
  
-+static inline struct zfcp_fsf_req *
-+zfcp_reqlist_find_safe(struct zfcp_adapter *adapter, struct zfcp_fsf_req *req)
-+{
-+	struct zfcp_fsf_req *request;
-+	unsigned int idx;
++	if (unlikely(!atomic_test_mask(ZFCP_STATUS_COMMON_UNBLOCKED,
++			&unit->status)))
++		goto unit_blocked;
 +
-+	for (idx = 0; idx < REQUEST_LIST_SIZE; idx++) {
-+		list_for_each_entry(request, &adapter->req_list[idx], list)
-+			if (request == req)
-+				return request;
-+	}
-+	return NULL;
-+}
+ 	sbale = zfcp_qdio_sbale_req(fsf_req, fsf_req->sbal_curr, 0);
+         sbale[0].flags |= SBAL_FLAGS0_TYPE_READ;
+         sbale[1].flags |= SBAL_FLAGS_LAST_ENTRY;
+@@ -1131,22 +1135,13 @@ zfcp_fsf_abort_fcp_command(unsigned long
+ 
+ 	zfcp_fsf_start_timer(fsf_req, ZFCP_SCSI_ER_TIMEOUT);
+ 	retval = zfcp_fsf_req_send(fsf_req);
+-	if (retval) {
+-		ZFCP_LOG_INFO("error: Failed to send abort command request "
+-			      "on adapter %s, port 0x%016Lx, unit 0x%016Lx\n",
+-			      zfcp_get_busid_by_adapter(adapter),
+-			      unit->port->wwpn, unit->fcp_lun);
++	if (!retval)
++		goto out;
 +
- /*
-  *  functions needed for reference/usage counting
-  */
---- a/drivers/s390/scsi/zfcp_erp.c	2007-12-20 11:15:10.000000000 +0100
-+++ b/drivers/s390/scsi/zfcp_erp.c	2007-12-20 11:17:46.000000000 +0100
-@@ -846,7 +846,8 @@ zfcp_erp_strategy_check_fsfreq(struct zf
- 	if (erp_action->fsf_req) {
- 		/* take lock to ensure that request is not deleted meanwhile */
- 		spin_lock(&adapter->req_list_lock);
--		if (zfcp_reqlist_find(adapter, erp_action->fsf_req->req_id)) {
-+		if (zfcp_reqlist_find_safe(adapter, erp_action->fsf_req) &&
-+		    erp_action->fsf_req->erp_action == erp_action) {
- 			/* fsf_req still exists */
- 			debug_text_event(adapter->erp_dbf, 3, "a_ca_req");
- 			debug_event(adapter->erp_dbf, 3, &erp_action->fsf_req,
++ unit_blocked:
+ 		zfcp_fsf_req_free(fsf_req);
+ 		fsf_req = NULL;
+-		goto out;
+-	}
+ 
+-	ZFCP_LOG_DEBUG("Abort FCP Command request initiated "
+-		       "(adapter%s, port d_id=0x%06x, "
+-		       "unit x%016Lx, old_req_id=0x%lx)\n",
+-		       zfcp_get_busid_by_adapter(adapter),
+-		       unit->port->d_id,
+-		       unit->fcp_lun, old_req_id);
+  out:
+ 	write_unlock_irqrestore(&adapter->request_queue.queue_lock, lock_flags);
+ 	return fsf_req;
 
 -- 
