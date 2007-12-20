@@ -1,23 +1,25 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 Subject: Re: Strange code in initio.c?
-Date: Thu, 20 Dec 2007 09:26:44 +0200
-Message-ID: <476A1934.5060808@panasas.com>
+Date: Thu, 20 Dec 2007 16:27:24 +0900
+Message-ID: <20071220162724R.fujita.tomonori@lab.ntt.co.jp>
 References: <200712201822.54806.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:24006 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1750875AbXLTH07 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 02:26:59 -0500
+Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:48557 "EHLO
+	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751190AbXLTH1u (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Dec 2007 02:27:50 -0500
 In-Reply-To: <200712201822.54806.rusty@rustcorp.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org
+To: rusty@rustcorp.com.au
+Cc: alan@lxorguk.ukuu.org.uk, linux-scsi@vger.kernel.org
 
-On Thu, Dec 20 2007 at 9:22 +0200, Rusty Russell <rusty@rustcorp.com.au> wrote:
+On Thu, 20 Dec 2007 18:22:54 +1100
+Rusty Russell <rusty@rustcorp.com.au> wrote:
+
 > Hi Alan,
 > 
 > 	Was looking through initio.c to convert it to sg_ring, and noticed this code:
@@ -30,13 +32,7 @@ On Thu, Dec 20 2007 at 9:22 +0200, Rusty Russell <rusty@rustcorp.com.au> wrote:
 > 		}
 > 
 > Note how sg is never incremented... seems wrong to me.
-> 
-> Cheers,
-> Rusty.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Already in scsi-rc-fixes.
-It seems your not using scsi-misc-2.6 git tree for all this.
 
+It was fixed.
+
+http://git.kernel.org/?p=linux/kernel/git/torvalds/linux-2.6.git;a=commit;h=a169e63740779f62a9a5ddf0aa61091a393a03c5
