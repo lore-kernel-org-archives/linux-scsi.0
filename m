@@ -1,54 +1,62 @@
-From: "Julian Calaby" <julian.calaby@gmail.com>
-Subject: Re: [PATCH] SMP request handlers need to update resid
-Date: Thu, 20 Dec 2007 14:23:32 +1100
-Message-ID: <646765f40712191923t660e1ae2v5a47a3b0a7541400@mail.gmail.com>
-References: <20071220114436Z.fujita.tomonori@lab.ntt.co.jp>
-	 <646765f40712191913m6b98b024jdfeb58191a01f63d@mail.gmail.com>
-	 <20071220122008T.fujita.tomonori@lab.ntt.co.jp>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: smp_utils 0.93 beta, adds sgv4 interface
+Date: Wed, 19 Dec 2007 23:46:35 -0500
+Message-ID: <4769F3AB.6050405@torque.net>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from py-out-1112.google.com ([64.233.166.180]:13447 "EHLO
-	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753649AbXLTDXd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Dec 2007 22:23:33 -0500
-Received: by py-out-1112.google.com with SMTP id u77so5535791pyb.16
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Dec 2007 19:23:32 -0800 (PST)
-In-Reply-To: <20071220122008T.fujita.tomonori@lab.ntt.co.jp>
-Content-Disposition: inline
+Received: from pentafluge.infradead.org ([213.146.154.40]:50055 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753759AbXLTEqj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Dec 2007 23:46:39 -0500
+Received: from ip-191.61.99.216.dsl-cust.ca.inter.net ([216.99.61.191] helo=rink.bingwo.ca)
+	by pentafluge.infradead.org with esmtpsa (Exim 4.68 #1 (Red Hat Linux))
+	id 1J5DIs-0007FI-5j
+	for linux-scsi@vger.kernel.org; Thu, 20 Dec 2007 04:46:38 +0000
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@hansenpartnership.com, dougg@torque.net, Eric.Moore@lsi.com, linux-scsi@vger.kernel.org, tomof@acm.org
+To: linux-scsi@vger.kernel.org
 
-On Dec 20, 2007 2:20 PM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
->
-> On Thu, 20 Dec 2007 14:13:15 +1100
-> "Julian Calaby" <julian.calaby@gmail.com> wrote:
->
-> > On Dec 20, 2007 1:44 PM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > > --- a/drivers/message/fusion/mptsas.c
-> > > +++ b/drivers/message/fusion/mptsas.c
-> > > @@ -1343,6 +1343,8 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
-> > >                 smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
-> > >                 memcpy(req->sense, smprep, sizeof(*smprep));
-> > >                 req->sense_len = sizeof(*smprep);
-> > > +               req->data_len = 0;
-> > > +               rsp->data_len -= smprep->ResponseDataLength;
-> >
-> > Would
-> >
-> > +               rsp->data_len = -smprep->ResponseDataLength;
-> >
-> > not work?
+smp_utils is a package of command line utilities for invoking
+SMP functions to monitor and manage SAS expanders. SMP is the
+Serial Attached SCSI (SAS) Management Protocol (SMP). A SAS Host
+Bus Adapter (HBA) includes a SMP initiator (along with a SSP and
+STP initiator). A SAS expander contains a SMP target.
 
-Oh <deity>! I'm totally blind! they're completely different variables! Argh!
+Previous versions have supported two interfaces: the "mptctl"
+pass through used by MPT Fusion SAS HBAs and the "smp_portal"
+sysfs attribute pass through used by Luben's aic94xx driver.
 
-Sorry for the noise,
+This beta adds preliminary support for an interface based on
+the scsi generic version 4 ("sgv4") interface. It works, apart
+from a few shortcomings, with the MPT Fusion SAS driver found
+in lk 2.6.24-rc4 . My aic94xx based hardware refuses to
+work with the mainline driver (but works with Luben's
+driver) so I'm unable to test it with the "sgv4" interface. I
+would be grateful if someone would test it and tell me how it
+fairs. Since the sgv4 interface essentially talks to the
+linux SAS transport layer, other SAS HBAs may work as well.
 
--- 
+For an overview and examples of smp_utils see:
+http://www.torque.net/sg/smp_utils.html
+A tarball can be found in table 2.
 
-Julian Calaby
+Version 0.93 ChangeLog:
+Changelog for smp_utils-0.93 [20071211]
+  - sgv4: add new interface
+  - smp_phy_control: sync with sas2r10
+  - smp_rep_phy_sata: affiliation contexts, added sas2r08
+  - smp_discover: add '--list' option for attribute=value output
+  - smp_rep_general: sync with sas2r09..12
+  - smp_discover, smp_discover_list: sync with sas2r09..12
+    - warn if expander's SAS address is different from requested
+  - add smp_rep_exp_route_tbl utility
+  - rename this file from CHANGELOG to ChangeLog
+  - place code in subversion repository
+  - move smp_lib.h into include directory
+  - move man pages into doc directory
 
-Email: julian.calaby@gmail.com
+
+Doug Gilbert
