@@ -1,33 +1,55 @@
-From: David Miller <davem@davemloft.net>
+From: Jens Axboe <jens.axboe@oracle.com>
 Subject: Re: [PATCH 0/5] sg_ring for scsi
-Date: Wed, 19 Dec 2007 23:58:07 -0800 (PST)
-Message-ID: <20071219.235807.173273479.davem@davemloft.net>
-References: <200712201645.19035.rusty@rustcorp.com.au>
-	<20071220160741K.fujita.tomonori@lab.ntt.co.jp>
-	<200712201853.48643.rusty@rustcorp.com.au>
+Date: Thu, 20 Dec 2007 08:58:14 +0100
+Message-ID: <20071220075814.GH13958@kernel.dk>
+References: <200712201645.19035.rusty@rustcorp.com.au> <20071220160741K.fujita.tomonori@lab.ntt.co.jp> <200712201853.48643.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 74-93-104-97-Washington.hfc.comcastbusiness.net ([74.93.104.97]:49956
-	"EHLO sunset.davemloft.net" rhost-flags-OK-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750746AbXLTH6O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 20 Dec 2007 02:58:14 -0500
+Received: from brick.kernel.dk ([87.55.233.238]:15418 "EHLO kernel.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754380AbXLTICz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Dec 2007 03:02:55 -0500
+Content-Disposition: inline
 In-Reply-To: <200712201853.48643.rusty@rustcorp.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: rusty@rustcorp.com.au
-Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dougg@torque.net
 
-From: Rusty Russell <rusty@rustcorp.com.au>
-Date: Thu, 20 Dec 2007 18:53:48 +1100
+On Thu, Dec 20 2007, Rusty Russell wrote:
+> On Thursday 20 December 2007 18:07:41 FUJITA Tomonori wrote:
+> > On Thu, 20 Dec 2007 16:45:18 +1100
+> >
+> > Rusty Russell <rusty@rustcorp.com.au> wrote:
+> > > OK, some fixes since last time, as I wade through more SCSI drivers. 
+> > > Some drivers use "use_sg" as a flag to know whether the request_buffer is
+> > > a scatterlist: I don't need the counter, but I still need the flag, so I
+> > > fixed that in a more intuitive way (an explicit ->sg pointer in the cmd).
+> >
+> > use_sg and the request_buffer will be removed shortly.
+> >
+> > http://marc.info/?l=linux-scsi&m=119754650614813&w=2
+> 
+> Thanks!  Is there a git tree somewhere with these changes?
+> 
+> > I think that we tried the similar idea before, scsi_sgtable, but we
+> > seem to settle in the current simple approach.
+> 
+> Yes, a scsi-specific solution is a bad idea: other people use sg.  
+> Manipulating the magic chains is horrible; it looks simple to the places 
+> which simply want to iterate through it, but it's awful for code which wants 
+> to create them.
 
-> Manipulating the magic chains is horrible; it looks simple to the
-> places which simply want to iterate through it, but it's awful for
-> code which wants to create them.
+The current code looks like that to minimize impact on 2.6.24, see this
+branch:
 
-I'm not saying complexity is inherent in this stuff, but
-assuming that it is the complexity should live as far away
-from the minions (the iterators in this case).  Therefore,
-the creators is the right spot for the hard stuff.
+http://git.kernel.dk/?p=linux-2.6-block.git;a=shortlog;h=sg
+
+for how it folds into lib/sg.c and the magic disappears from SCSI.
+Rusty, nobody claimed the sg code in 2.6.24 is perfect. I like to get
+things incrementally there.
+
+-- 
+Jens Axboe
+
