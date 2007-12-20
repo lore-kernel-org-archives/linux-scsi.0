@@ -1,26 +1,170 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH] fix page_alloc for larger I/O segments (improved)
-Date: Thu, 20 Dec 2007 15:37:28 -0700
-Message-ID: <20071220223728.GM29690@parisc-linux.org>
-References: <20071213142935.47ff19d9.akpm@linux-foundation.org> <4761B32A.3070201@rtr.ca> <4761BCB4.1060601@rtr.ca> <4761C8E4.2010900@rtr.ca> <4761CE88.9070406@rtr.ca> <20071213163726.3bb601fa.akpm@linux-foundation.org> <4761D160.7060603@rtr.ca> <4761D279.6050500@rtr.ca> <20071214174236.GA28613@csn.ul.ie> <20071214181339.GW26334@parisc-linux.org>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 2/5] dma_map_sg_ring() helper
+Date: Fri, 21 Dec 2007 09:58:56 +1100
+Message-ID: <200712210958.56994.rusty@rustcorp.com.au>
+References: <200712201648.58480.rusty@rustcorp.com.au> <20071220160631S.fujita.tomonori@lab.ntt.co.jp> <20071219.234244.148945256.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([203.10.76.45]:58506 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752783AbXLTW7A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 20 Dec 2007 17:59:00 -0500
+In-Reply-To: <20071219.234244.148945256.davem@davemloft.net>
 Content-Disposition: inline
-In-Reply-To: <20071214181339.GW26334@parisc-linux.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Mel Gorman <mel@csn.ul.ie>
-Cc: Mark Lord <liml@rtr.ca>, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@HansenPartnership.com, jens.axboe@oracle.com, lkml@rtr.ca, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-mm@kvack.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: David Miller <davem@davemloft.net>
+Cc: fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com
 
-On Fri, Dec 14, 2007 at 11:13:40AM -0700, Matthew Wilcox wrote:
-> I'll send it to our DB team to see if this improves our numbers at all.
+On Thursday 20 December 2007 18:42:44 David Miller wrote:
+> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Date: Thu, 20 Dec 2007 16:06:31 +0900
+>
+> > On Thu, 20 Dec 2007 16:49:30 +1100
+> >
+> > Rusty Russell <rusty@rustcorp.com.au> wrote:
+> > > +/**
+> > > + * dma_map_sg_ring - Map an entire sg ring
+> > > + * @dev: Device to free noncoherent memory for
+> > > + * @sg: The sg_ring
+> > > + * @direction: DMA_TO_DEVICE, DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
+> > > + *
+> > > + * This returns -ENOMEM if mapping fails.  It's not clear that telling
+> > > you + * it failed is useful though.
+> > > + */
+> > > +int dma_map_sg_ring(struct device *dev, struct sg_ring *sg,
+> > > +		     enum dma_data_direction direction)
+> > > +{
+> > > +	struct sg_ring *i;
+> > > +	unsigned int num;
+> > > +
+> > > +	for (i = sg; i; i = sg_ring_next(i, sg)) {
+> > > +		BUG_ON(i->num > i->max);
+> > > +		num = dma_map_sg(dev, i->sg, i->num, direction);
+> > > +		if (num == 0 && i->num != 0)
+> > > +			goto unmap;
+> > > +	}
+> > > +	return 0;
+> >
+> > I don't think that this works for IOMMUs that could merge sg entries.
+>
+> Right, it won't work at all.
+>
+> The caller has to be told how many DMA entries it really did use to
+> compose the mapping, and there has to be a way to properly iterate
+> over them.  The assumption that the IOMMU will map the SG entries
+> 1-to-1 is invalid.
 
-It does, by approximately 0.67%.  This is about double the margin of
-error, and a significant improvement.  Thanks!
+Good catch.  Indeed, what's missing is one line:
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+	i->num = num;
+
+Of course, an arch-specific version of this could merge between sg_rings,
+too, but that's an optimization.
+
+Thanks,
+Rusty.
+
+dma_map_sg_ring() helper
+
+Obvious counterpart to dma_map_sg.  Note that this is arch-independent
+code; sg_rings are backwards compatible with simple sg arrays.
+
+Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
+---
+ drivers/base/dma-mapping.c  |   13 +++++++++++++
+ include/linux/dma-mapping.h |    4 ++++
+ 2 files changed, 17 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/base/dma-mapping.c b/drivers/base/dma-mapping.c
+--- a/drivers/base/dma-mapping.c
++++ b/drivers/base/dma-mapping.c
+@@ -8,6 +8,7 @@
+  */
+ 
+ #include <linux/dma-mapping.h>
++#include <linux/sg_ring.h>
+ 
+ /*
+  * Managed DMA API
+@@ -162,6 +163,60 @@ void dmam_free_noncoherent(struct device
+ }
+ EXPORT_SYMBOL(dmam_free_noncoherent);
+ 
++/**
++ * dma_map_sg_ring - Map an entire sg ring
++ * @dev: Device to free noncoherent memory for
++ * @sg: The sg_ring
++ * @direction: DMA_TO_DEVICE, DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
++ *
++ * This returns -ENOMEM if mapping fails.  It's not clear that telling you
++ * it failed is useful though.
++ */
++int dma_map_sg_ring(struct device *dev, struct sg_ring *sg,
++		     enum dma_data_direction direction)
++{
++	struct sg_ring *i;
++	unsigned int num;
++
++	for (i = sg; i; i = sg_ring_next(i, sg)) {
++		BUG_ON(i->num > i->max);
++		num = dma_map_sg(dev, i->sg, i->num, direction);
++		if (num == 0 && i->num != 0)
++			goto unmap;
++		i->num = num;
++	}
++	return 0;
++
++unmap:
++	while (sg) {
++		dma_unmap_sg(dev, sg->sg, sg->num, direction);
++		sg = sg_ring_next(sg, i);
++	}
++	return -ENOMEM;
++
++}
++EXPORT_SYMBOL(dma_map_sg_ring);
++
++/**
++ * dma_unmap_sg_ring - Unmap an entire sg ring
++ * @dev: Device to free noncoherent memory for
++ * @sg: The sg_ring
++ * @direction: DMA_TO_DEVICE, DMA_FROM_DEVICE or DMA_BIDIRECTIONAL.
++ *
++ * Call after dma_map_sg_ring() succeeds.
++ */
++void dma_unmap_sg_ring(struct device *dev, struct sg_ring *sg,
++		       enum dma_data_direction direction)
++{
++	struct sg_ring *i;
++
++	for (i = sg; i; i = sg_ring_next(i, sg)) {
++		BUG_ON(i->num > i->max);
++		dma_unmap_sg(dev, i->sg, i->num, direction);
++	}
++}
++EXPORT_SYMBOL(dma_unmap_sg_ring);
++
+ #ifdef ARCH_HAS_DMA_DECLARE_COHERENT_MEMORY
+ 
+ static void dmam_coherent_decl_release(struct device *dev, void *res)
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -87,6 +87,12 @@ dma_mark_declared_memory_occupied(struct
+ }
+ #endif
+ 
++struct sg_ring;
++extern int dma_map_sg_ring(struct device *dev, struct sg_ring *sg,
++			   enum dma_data_direction direction);
++extern void dma_unmap_sg_ring(struct device *dev, struct sg_ring *sg,
++			      enum dma_data_direction direction);
++
+ /*
+  * Managed DMA API
+  */
+
