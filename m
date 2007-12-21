@@ -1,51 +1,38 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: [patch 18/30] scsi/qla2xxx/: possible cleanups
-Date: Fri, 21 Dec 2007 10:50:42 -0800
-Message-ID: <20071221185042.GC14400@plap3.qlogic.org>
-References: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org> <20071214153723.GC1823@plap3.qlogic.org> <20071214095559.5d4dd818.akpm@linux-foundation.org> <20071214182004.GG1823@plap3.qlogic.org> <20071221024646.43013267.akpm@linux-foundation.org>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Fri, 21 Dec 2007 14:30:58 -0500
+Message-ID: <476C1472.1040103@redhat.com>
+References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>	 <20071217031841.f483e5ac.akpm@linux-foundation.org>	 <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>	 <47666904.8060605@panasas.com> <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:44606 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751905AbXLUSuq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Dec 2007 13:50:46 -0500
-Content-Disposition: inline
-In-Reply-To: <20071221024646.43013267.akpm@linux-foundation.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755528AbXLUTbf@vger.kernel.org>
+In-Reply-To: <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Filippos Papadopoulos <psybases@gmail.com>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@kernel.org
 
-On Fri, 21 Dec 2007, Andrew Morton wrote:
-> On Fri, 14 Dec 2007 10:20:04 -0800 Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
-> > It is, though, not widely publicized:
-> > 
-> > 	git://avgit01.qlogic.com/qla2xxx-upstream
-> >
-> > The repo is torndown and rebased on frequent a basis, and is meant to
-> > provide a snapshot of where qla2xxx is at any given time.  Currently
-> > it's comprised of linux-2.6.git with scsi-misc-2.6.git merged and a
-> > dozen or so patches queued for the next merge window (2.6.25).
+On 12/19/2007 03:48 AM, Filippos Papadopoulos wrote:
+> On Dec 17, 2007 2:18 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+>> I have found one problem. Please try patch [2] below and report.
+>> If it still fails try to enable debugging by setting with patch [1]
+>> these values at top of drivers/scsi/initio.c. And send dmsgs.
+>>
+>> Boaz
+>>
 > 
-> That should be OK.  Sometimes ugly things can happen if James syncs with
-> Linus and you don't: when I ask git to generate the james->you diff, it
-> will generate a patch which reverts the Linus changes which are in James's
-> tree but which aren't in yours.  I have an alternative pull-git-trees
-> script which tries to fix that but not very successfully.
 > 
-> But whatever, we'll see.
+> I tried patch[2] (addition of   sg++)  at 2.6.24-rc5-mm1 but the
+> system hangs after some seconds when the initio driver loads.
+> I will try patch[1] next week to see what happens.
 > 
-> One slight problem though:
+> Would it be better to open a bug report at bugzilla?
 > 
-> fatal: Unable to look up avgit01.qlogic.com (port 9418) (Name or service not known)
-> 
-> I think I might need to be akpm@qlogic.com to get at that?
 
-Hmm, my mistake, turns out the external name is git.qlogic.com.  This
-worked for me from an external line.
+There is also a Fedora bug report against 2.6.23. The user has
+applied commit e9e42faf47255274a1ed0b9bf1c46118023ec5fa from
+2.6.24-rc plus the two additional fixes under discussion and it
+hangs for him too.
 
-	$ git clone git://git.qlogic.com/qla2xxx-upstream
-
-Thanks,
-AV
+https://bugzilla.redhat.com/show_bug.cgi?id=390531
