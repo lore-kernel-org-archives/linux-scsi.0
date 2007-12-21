@@ -1,96 +1,51 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: smp_utils 0.93 beta, adds sgv4 interface
-Date: Fri, 21 Dec 2007 11:00:01 -0600
-Message-ID: <1198256401.3130.18.camel@localhost.localdomain>
-References: <4769F3AB.6050405@torque.net>
-	 <1198176382.7309.11.camel@localhost.localdomain>
-	 <476BD755.2030705@torque.net>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [patch 18/30] scsi/qla2xxx/: possible cleanups
+Date: Fri, 21 Dec 2007 10:50:42 -0800
+Message-ID: <20071221185042.GC14400@plap3.qlogic.org>
+References: <200712140014.lBE0ELSg026228@imap1.linux-foundation.org> <20071214153723.GC1823@plap3.qlogic.org> <20071214095559.5d4dd818.akpm@linux-foundation.org> <20071214182004.GG1823@plap3.qlogic.org> <20071221024646.43013267.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [76.243.235.52] ([76.243.235.52]:36030 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1750736AbXLURAT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Dec 2007 12:00:19 -0500
-In-Reply-To: <476BD755.2030705@torque.net>
+Received: from avexch1.qlogic.com ([198.70.193.115]:44606 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751905AbXLUSuq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Dec 2007 13:50:46 -0500
+Content-Disposition: inline
+In-Reply-To: <20071221024646.43013267.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: dougg@torque.net
-Cc: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: James.Bottomley@steeleye.com, linux-scsi@vger.kernel.org, bunk@kernel.org
 
-On Fri, 2007-12-21 at 10:10 -0500, Douglas Gilbert wrote:
-> James Bottomley wrote:
-> > On Wed, 2007-12-19 at 23:46 -0500, Douglas Gilbert wrote:
-> >> smp_utils is a package of command line utilities for invoking
-> >> SMP functions to monitor and manage SAS expanders. SMP is the
-> >> Serial Attached SCSI (SAS) Management Protocol (SMP). A SAS Host
-> >> Bus Adapter (HBA) includes a SMP initiator (along with a SSP and
-> >> STP initiator). A SAS expander contains a SMP target.
-> >>
-> >> Previous versions have supported two interfaces: the "mptctl"
-> >> pass through used by MPT Fusion SAS HBAs and the "smp_portal"
-> >> sysfs attribute pass through used by Luben's aic94xx driver.
-> >>
-> >> This beta adds preliminary support for an interface based on
-> >> the scsi generic version 4 ("sgv4") interface. It works, apart
-> >> from a few shortcomings, with the MPT Fusion SAS driver found
-> >> in lk 2.6.24-rc4 . My aic94xx based hardware refuses to
-> >> work with the mainline driver (but works with Luben's
-> >> driver) so I'm unable to test it with the "sgv4" interface. I
-> >> would be grateful if someone would test it and tell me how it
-> >> fairs. Since the sgv4 interface essentially talks to the
-> >> linux SAS transport layer, other SAS HBAs may work as well.
+On Fri, 21 Dec 2007, Andrew Morton wrote:
+> On Fri, 14 Dec 2007 10:20:04 -0800 Andrew Vasquez <andrew.vasquez@qlogic.com> wrote:
+> > It is, though, not widely publicized:
 > > 
-> > I'm pleased to report that it works just fine for me with my aic94xx
-> > setup and the sgv4 interface and a couple of LSI expanders (which,
-> > unfortunately don't take all the commands ... it looks like you're using
-> > the SAS2.0 set).
+> > 	git://avgit01.qlogic.com/qla2xxx-upstream
+> >
+> > The repo is torndown and rebased on frequent a basis, and is meant to
+> > provide a snapshot of where qla2xxx is at any given time.  Currently
+> > it's comprised of linux-2.6.git with scsi-misc-2.6.git merged and a
+> > dozen or so patches queued for the next merge window (2.6.25).
 > 
-> Good.
-> Yes, I am tracking the SAS-2 drafts but they do keep backward
-> compatibility with SAS-1.1 and SAS-1 . See the COVERAGE file
-> in the smp_utils tarball.
-> I'm not aware that LSI have released any SAS-2 expanders.
-> When manufacturers start talking about zoning in their
-> expanders they should be supporting at least some of the extra
-> SAS-2 expander functionality.
-
-Yes ... I've no idea when (if) I'll get SAS-2 expanders.
-
-> > I'll also plug in my mpt1068 and see if I can get it to function through
-> > the sgv4 interface as well.
-> > 
-> > One of the things which might be useful would be for SAS hosts to
-> > respond to SMP requests so they could also be managed with these tools.
-> > To do this, we'd have to put a SMP interpreter for them inside the
-> > transport class, probably just for a minimal set of SMP frames ... what
-> > do people think about this?
+> That should be OK.  Sometimes ugly things can happen if James syncs with
+> Linus and you don't: when I ask git to generate the james->you diff, it
+> will generate a patch which reverts the Linus changes which are in James's
+> tree but which aren't in yours.  I have an alternative pull-git-trees
+> script which tries to fix that but not very successfully.
 > 
-> The MPT Fusion SAS HBAs already supports a virtual SMP target
-> on the HBA itself. Try:
->    smp_rep_manufacturer /sys/class/bsg/sas_host4
-> where sas_host4 is a MPT SAS HBA. This virtual SMP target is not
-> visible to other devices in the same SAS domain.
+> But whatever, we'll see.
 > 
-> I believe this allows access to the sideband signals (SGPIO)
-> on a wide internal cable. Some enclosure management chips
-> (e.g. MG9072) offer SES-2 target functionality on a SGPIO
-> interface. So are you proposing that other SAS HBAs (e.g. aic94xx)
-> should add code to their drivers so that the SMP READ and WRITE
-> GPIO REGISTER functions control those SGPIO sideband signals on
-> a wide internal connector? Or did you have something else in mind ...
+> One slight problem though:
+> 
+> fatal: Unable to look up avgit01.qlogic.com (port 9418) (Name or service not known)
+> 
+> I think I might need to be akpm@qlogic.com to get at that?
 
-The way I was planning to implement it was to stick an SMP interpreter
-in libsas (sort of like the way the fusion does it by using the firmware
-page) and make it translate to the existing phy functions.  However, as
-best as I can discover (at least according to the docs I have) the
-aic94xx has no external SGPIO bus (although perhaps someone with better
-documentation knows better?), so support would only be over an expander
-link (that also means we have no SGPIO support in libsas itself,
-either).
+Hmm, my mistake, turns out the external name is git.qlogic.com.  This
+worked for me from an external line.
 
-James
+	$ git clone git://git.qlogic.com/qla2xxx-upstream
 
-
+Thanks,
+AV
