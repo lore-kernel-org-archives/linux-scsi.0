@@ -1,55 +1,56 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/2] scsi error: add target reset eh handler
-Date: Fri, 21 Dec 2007 15:36:14 -0600
-Message-ID: <1198272974.3130.70.camel@localhost.localdomain>
-References: <1198037469664-git-send-email-michaelc@cs.wisc.edu>
-	 <1198037477766-git-send-email-michaelc@cs.wisc.edu>
+From: Chuck Ebbert <cebbert@redhat.com>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Fri, 21 Dec 2007 17:43:03 -0500
+Message-ID: <476C4177.3030902@redhat.com>
+References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>	 <20071217031841.f483e5ac.akpm@linux-foundation.org>	 <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>	 <47666904.8060605@panasas.com>	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>	 <476C1472.1040103@redhat.com> <1198271036.3130.60.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [76.243.235.52] ([76.243.235.52]:38861 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1751973AbXLUVg0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Dec 2007 16:36:26 -0500
-In-Reply-To: <1198037477766-git-send-email-michaelc@cs.wisc.edu>
+Received: from mx1.redhat.com ([66.187.233.31]:54614 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756043AbXLUWnl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 21 Dec 2007 17:43:41 -0500
+In-Reply-To: <1198271036.3130.60.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Filippos Papadopoulos <psybases@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-On Tue, 2007-12-18 at 22:11 -0600, michaelc@cs.wisc.edu wrote:
-> From: Mike Christie <michaelc@cs.wisc.edu>
+On 12/21/2007 04:03 PM, James Bottomley wrote:
+> On Fri, 2007-12-21 at 14:30 -0500, Chuck Ebbert wrote:
+>> On 12/19/2007 03:48 AM, Filippos Papadopoulos wrote:
+>>> On Dec 17, 2007 2:18 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
+>>>> I have found one problem. Please try patch [2] below and report.
+>>>> If it still fails try to enable debugging by setting with patch [1]
+>>>> these values at top of drivers/scsi/initio.c. And send dmsgs.
+>>>>
+>>>> Boaz
+>>>>
+>>>
+>>> I tried patch[2] (addition of   sg++)  at 2.6.24-rc5-mm1 but the
+>>> system hangs after some seconds when the initio driver loads.
+>>> I will try patch[1] next week to see what happens.
+>>>
+>>> Would it be better to open a bug report at bugzilla?
+>>>
+>> There is also a Fedora bug report against 2.6.23. The user has
+>> applied commit e9e42faf47255274a1ed0b9bf1c46118023ec5fa from
+>> 2.6.24-rc plus the two additional fixes under discussion and it
+>> hangs for him too.
+>>
+>> https://bugzilla.redhat.com/show_bug.cgi?id=390531
 > 
-> Drivers like qla4xxx and bnx2i (and it looks like some fcp drivers too),
-> want to be able to send a lun reset in the eh device handler and then a
-> target reset in some other handler. The old linux-iscsi driver, which did
-> the host per session like open-iscsi did the target reset in the host reset,
-> because the scsi command accounting that scsi_error.c does worked out
-> nicely for software iscsi, but does not work for hardware iscsi well.
+> It really sounds like there's some problem applying the patches.  The
+> consistent report throughout is this one:
 > 
-> This patch adds a eh_target_reset_handler any driver can use to send
-> a target reset.
+> initio: I/O port range 0x0 is busy.
 > 
-> The next patch will hook qla4xxx into it, and patches for iscsi_tcp/iser
-> and bnx2i will follow later when bnx2i is closer to getting merged.
+> Which should be fixed by 99f1f534922a2f2251ba05b14657a1c62882a80e.  I
+> didn't actually find that in the bug thread anywhere, but maybe I missed
+> it?
+> 
 
-We sort of have a mapping problem here.  In the old ways of the error
-handler, since it was based on SPI and SCSI-2, when it said "device
-reset" what it actually meant was target reset, since that was the only
-message the SPI bus could send.  It was only in the later SCSI-3
-standard that a LUN reset came along.  So, most resent implementations
-(even FC ones) send a target reset for this function.
-
-So ... where I'm going is that I'm not averse to adding a target reset
-(it has been suggested before), but then we'll have to clean up a lot of
-other drivers.  Alternatively, you could just plumb target reset in to
-the qla2xxx where device reset now is.
-
-What do people think?
-
-James
-
-
+The "I/O port 0" bug just prints the message and the system continues
+to run. It's only after that is fixed that the system just hangs on
+boot shortly after loading the driver.
