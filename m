@@ -1,68 +1,269 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Fri, 21 Dec 2007 15:03:56 -0600
-Message-ID: <1198271036.3130.60.camel@localhost.localdomain>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
-	 <20071217031841.f483e5ac.akpm@linux-foundation.org>
-	 <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>
-	 <47666904.8060605@panasas.com>
-	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
-	 <476C1472.1040103@redhat.com>
+From: "David Somayajulu" <david.somayajulu@qlogic.com>
+Subject: RE: [PATCH 2/2] qla4xxx: Add target reset functionality
+Date: Fri, 21 Dec 2007 13:26:02 -0800
+Message-ID: <0BB3E5E7462EEA4295BC02D49691DC070119CECD@AVEXCH1.qlogic.org>
+References: <11980374792817-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [76.243.235.52] ([76.243.235.52]:48731 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-FAIL-FAIL-OK-OK)
-	by vger.kernel.org with ESMTP id S1753476AbXLUVER (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 21 Dec 2007 16:04:17 -0500
-In-Reply-To: <476C1472.1040103@redhat.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:14166 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753848AbXLUV1l convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Dec 2007 16:27:41 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <11980374792817-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Filippos Papadopoulos <psybases@gmail.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
 
-On Fri, 2007-12-21 at 14:30 -0500, Chuck Ebbert wrote:
-> On 12/19/2007 03:48 AM, Filippos Papadopoulos wrote:
-> > On Dec 17, 2007 2:18 PM, Boaz Harrosh <bharrosh@panasas.com> wrote:
-> >> I have found one problem. Please try patch [2] below and report.
-> >> If it still fails try to enable debugging by setting with patch [1]
-> >> these values at top of drivers/scsi/initio.c. And send dmsgs.
-> >>
-> >> Boaz
-> >>
-> > 
-> > 
-> > I tried patch[2] (addition of   sg++)  at 2.6.24-rc5-mm1 but the
-> > system hangs after some seconds when the initio driver loads.
-> > I will try patch[1] next week to see what happens.
-> > 
-> > Would it be better to open a bug report at bugzilla?
-> > 
+Mike Christie <michaelc@cs.wisc.edu> wrote:
+
+> This patch adds target reset functionalty.
 > 
-> There is also a Fedora bug report against 2.6.23. The user has
-> applied commit e9e42faf47255274a1ed0b9bf1c46118023ec5fa from
-> 2.6.24-rc plus the two additional fixes under discussion and it
-> hangs for him too.
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>  drivers/scsi/qla4xxx/ql4_fw.h   |    1 +
+>  drivers/scsi/qla4xxx/ql4_glbl.h |    2 +
+>  drivers/scsi/qla4xxx/ql4_mbx.c  |   39 ++++++++++++++++++++
+>  drivers/scsi/qla4xxx/ql4_os.c   |   74 
+> ++++++++++++++++++++++++++++++++++-----
+>  4 files changed, 107 insertions(+), 9 deletions(-)
 > 
-> https://bugzilla.redhat.com/show_bug.cgi?id=390531
+> diff --git a/drivers/scsi/qla4xxx/ql4_fw.h 
+> b/drivers/scsi/qla4xxx/ql4_fw.h
+> index fe415ec..ed8ee66 100644
+> --- a/drivers/scsi/qla4xxx/ql4_fw.h
+> +++ b/drivers/scsi/qla4xxx/ql4_fw.h
+> @@ -216,6 +216,7 @@ union external_hw_config_reg {
+>  #define MBOX_CMD_ABOUT_FW			0x0009
+>  #define MBOX_CMD_PING				0x000B
+>  #define MBOX_CMD_LUN_RESET			0x0016
+> +#define MBOX_CMD_TARGET_WARM_RESET		0x0017
+>  #define MBOX_CMD_GET_MANAGEMENT_DATA		0x001E
+>  #define MBOX_CMD_GET_FW_STATUS			0x001F
+>  #define MBOX_CMD_SET_ISNS_SERVICE		0x0021
+> diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h 
+> b/drivers/scsi/qla4xxx/ql4_glbl.h
+> index a3608e0..b403a17 100644
+> --- a/drivers/scsi/qla4xxx/ql4_glbl.h
+> +++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+> @@ -27,6 +27,8 @@ int qla4xxx_relogin_device(struct 
+> scsi_qla_host * ha,
+>  			   struct ddb_entry * ddb_entry);
+>  int qla4xxx_reset_lun(struct scsi_qla_host * ha, struct 
+> ddb_entry * ddb_entry,
+>  		      int lun);
+> +int qla4xxx_reset_target(struct scsi_qla_host * ha,
+> +			 struct ddb_entry * ddb_entry);
+>  int qla4xxx_get_flash(struct scsi_qla_host * ha, dma_addr_t dma_addr,
+>  		      uint32_t offset, uint32_t len);
+>  int qla4xxx_get_firmware_status(struct scsi_qla_host * ha);
+> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c 
+> b/drivers/scsi/qla4xxx/ql4_mbx.c
+> index 35cd73c..c577d79 100644
+> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+> @@ -713,6 +713,45 @@ int qla4xxx_reset_lun(struct 
+> scsi_qla_host * ha, struct ddb_entry * ddb_entry,
+>  	return status;
+>  }
+>  
+> +/**
+> + * qla4xxx_reset_target - issues target Reset
+> + * @ha: Pointer to host adapter structure.
+> + * @db_entry: Pointer to device database entry
+> + * @un_entry: Pointer to lun entry structure
+> + *
+> + * This routine performs a TARGET RESET on the specified target.
+> + * The caller must ensure that the ddb_entry pointers
+> + * are valid before calling this routine.
+> + **/
+> +int qla4xxx_reset_target(struct scsi_qla_host *ha,
+> +			 struct ddb_entry *ddb_entry)
+> +{
+> +	uint32_t mbox_cmd[MBOX_REG_COUNT];
+> +	uint32_t mbox_sts[MBOX_REG_COUNT];
+> +	int status = QLA_SUCCESS;
+> +
+> +	DEBUG2(printk("scsi%ld:%d: target reset issued\n", ha->host_no,
+> +		      ddb_entry->os_target_id));
+> +
+> +	/*
+> +	 * Send target reset command to ISP, so that the ISP 
+> will return all
+> +	 * outstanding requests with RESET status
+> +	 */
+> +	memset(&mbox_cmd, 0, sizeof(mbox_cmd));
+> +	memset(&mbox_sts, 0, sizeof(mbox_sts));
+> +
+> +	mbox_cmd[0] = MBOX_CMD_TARGET_WARM_RESET;
+> +	mbox_cmd[1] = ddb_entry->fw_ddb_index;
+> +	mbox_cmd[5] = 0x01;	/* Immediate Command Enable */
+> +
+> +	qla4xxx_mailbox_command(ha, MBOX_REG_COUNT, 1, &mbox_cmd[0],
+> +				&mbox_sts[0]);
+> +	if (mbox_sts[0] != MBOX_STS_COMMAND_COMPLETE &&
+> +	    mbox_sts[0] != MBOX_STS_COMMAND_ERROR)
+> +		status = QLA_ERROR;
+> +
+> +	return status;
+> +}
+>  
+>  int qla4xxx_get_flash(struct scsi_qla_host * ha, dma_addr_t dma_addr,
+>  		      uint32_t offset, uint32_t len)
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c 
+> b/drivers/scsi/qla4xxx/ql4_os.c
+> index f55b9f7..05e6991 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -73,6 +73,7 @@ static void 
+> qla4xxx_recovery_timedout(struct iscsi_cls_session *session);
+>  static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
+>  				void (*done) (struct scsi_cmnd *));
+>  static int qla4xxx_eh_device_reset(struct scsi_cmnd *cmd);
+> +static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd);
+>  static int qla4xxx_eh_host_reset(struct scsi_cmnd *cmd);
+>  static int qla4xxx_slave_alloc(struct scsi_device *device);
+>  static int qla4xxx_slave_configure(struct scsi_device *device);
+> @@ -85,6 +86,7 @@ static struct scsi_host_template 
+> qla4xxx_driver_template = {
+>  	.queuecommand		= qla4xxx_queuecommand,
+>  
+>  	.eh_device_reset_handler = qla4xxx_eh_device_reset,
+> +	.eh_target_reset_handler = qla4xxx_eh_target_reset,
+>  	.eh_host_reset_handler	= qla4xxx_eh_host_reset,
+>  
+>  	.slave_configure	= qla4xxx_slave_configure,
+> @@ -1506,7 +1508,7 @@ static int 
+> qla4xxx_wait_for_hba_online(struct scsi_qla_host *ha)
+>  }
+>  
+>  /**
+> - * qla4xxx_eh_wait_for_active_target_commands - wait for 
+> active cmds to finish.
+> + * qla4xxx_eh_wait_for_commands - wait for active cmds to finish.
+>   * @ha: pointer to to HBA
+>   * @t: target id
+>   * @l: lun id
+> @@ -1514,20 +1516,22 @@ static int 
+> qla4xxx_wait_for_hba_online(struct scsi_qla_host *ha)
+>   * This function waits for all outstanding commands to a lun 
+> to complete. It
+>   * returns 0 if all pending commands are returned and 1 otherwise.
+>   **/
+> -static int qla4xxx_eh_wait_for_active_target_commands(struct 
+> scsi_qla_host *ha,
+> -						 int t, int l)
+> +static int qla4xxx_eh_wait_for_commands(struct scsi_qla_host *ha,
+> +					struct scsi_target *stgt,
+> +					struct scsi_device *sdev)
+>  {
+>  	int cnt;
+>  	int status = 0;
+>  	struct scsi_cmnd *cmd;
+>  
+>  	/*
+> -	 * Waiting for all commands for the designated target 
+> in the active
+> -	 * array
+> +	 * Waiting for all commands for the designated target or dev
+> +	 * in the active array
+>  	 */
+>  	for (cnt = 0; cnt < ha->host->can_queue; cnt++) {
+>  		cmd = scsi_host_find_tag(ha->host, cnt);
+> -		if (cmd && cmd->device->id == t && 
+> cmd->device->lun == l) {
+> +		if (cmd && stgt == scsi_target(cmd->device) &&
+> +		    (!sdev || sdev == cmd->device)) {
+>  			if (!qla4xxx_eh_wait_on_command(ha, cmd)) {
+>  				status++;
+>  				break;
+> @@ -1580,9 +1584,8 @@ static int 
+> qla4xxx_eh_device_reset(struct scsi_cmnd *cmd)
+>  	 * for the device.
+>  	 */
+>  	if (cmd->device->host->shost_state == SHOST_RECOVERY) {
+> -		if (qla4xxx_eh_wait_for_active_target_commands(ha,
+> -							  
+> cmd->device->id,
+> -							  
+> cmd->device->lun)){
+> +		if (qla4xxx_eh_wait_for_commands(ha, 
+> scsi_target(cmd->device),
+> +						 cmd->device)) {
+>  			dev_info(&ha->pdev->dev,
+>  				   "DEVICE RESET FAILED - waiting for "
+>  				   "commands.\n");
+> @@ -1603,6 +1606,59 @@ eh_dev_reset_done:
+>  }
+>  
+>  /**
+> + * qla4xxx_eh_target_reset - callback for target reset.
+> + * @cmd: Pointer to Linux's SCSI command structure
+> + *
+> + * This routine is called by the Linux OS to reset the target.
+> + **/
+> +static int qla4xxx_eh_target_reset(struct scsi_cmnd *cmd)
+> +{
+> +	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
+> +	struct ddb_entry *ddb_entry = cmd->device->hostdata;
+> +	int stat;
+> +
+> +	if (!ddb_entry)
+> +		return FAILED;
+> +
+> +	starget_printk(KERN_INFO, scsi_target(cmd->device),
+> +		       "WARM TARGET RESET ISSUED.\n");
+> +
+> +	DEBUG2(printk(KERN_INFO
+> +		      "scsi%ld: TARGET_DEVICE_RESET cmd=%p 
+> jiffies = 0x%lx, "
+> +		      "to=%x,dpc_flags=%lx, status=%x allowed=%d\n",
+> +		      ha->host_no, cmd, jiffies, 
+> cmd->timeout_per_command / HZ,
+> +		      ha->dpc_flags, cmd->result, cmd->allowed));
+> +
+> +	stat = qla4xxx_reset_target(ha, ddb_entry);
+> +	if (stat != QLA_SUCCESS) {
+> +		starget_printk(KERN_INFO, scsi_target(cmd->device),
+> +			       "WARM TARGET RESET FAILED.\n");
+> +		return FAILED;
+> +	}
+> +
+> +	/* Send marker. */
+> +	ha->marker_needed = 1;
+> +
+> +	/*
+> +	 * If we are coming down the EH path, wait for all 
+> commands to complete
+> +	 * for the target
+> +	 */
+> +	if (cmd->device->host->shost_state == SHOST_RECOVERY) {
+> +		if (qla4xxx_eh_wait_for_commands(ha, 
+> scsi_target(cmd->device),
+> +						 NULL)) {
+> +			starget_printk(KERN_INFO, 
+> scsi_target(cmd->device),
+> +				       "WARM TARGET DEVICE 
+> RESET FAILED - "
+> +				       "waiting for commands.\n");
+> +			return FAILED;
+> +		}
+> +	}
+> +
+> +	starget_printk(KERN_INFO, scsi_target(cmd->device),
+> +		       "WARM TARGET RESET SUCCEEDED.\n");
+> +	return SUCCESS;
+> +}
+> +
+> +/**
+>   * qla4xxx_eh_host_reset - kernel callback
+>   * @cmd: Pointer to Linux's SCSI command structure
+>   *
+> -- 
+> 1.5.1.2
 
-It really sounds like there's some problem applying the patches.  The
-consistent report throughout is this one:
-
-initio: I/O port range 0x0 is busy.
-
-Which should be fixed by 99f1f534922a2f2251ba05b14657a1c62882a80e.  I
-didn't actually find that in the bug thread anywhere, but maybe I missed
-it?
-
-James
-
-
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Acked-by: David Somayajulu <david.somayajulu@qlogic.com>
