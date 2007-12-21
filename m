@@ -1,26 +1,34 @@
 From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 0/5] sg_ring for scsi
-Date: Fri, 21 Dec 2007 20:13:07 +0800
-Message-ID: <E1J5gkV-0000Ig-00@gondolin.me.apana.org.au>
-References: <200712211013.38511.rusty@rustcorp.com.au>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rhun.apana.org.au ([64.62.148.172]:4513 "EHLO
-	arnor.apana.org.au" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1756448AbXLUMNW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Dec 2007 07:13:22 -0500
-In-Reply-To: <200712211013.38511.rusty@rustcorp.com.au>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [PATCH 1/3] SG: Move functions to lib/scatterlist.c and add sg chaining allocator helpers
+Date: Fri, 21 Dec 2007 20:15:36 +0800
+Message-ID: <E1J5gmu-0000JP-00@gondolin.me.apana.org.au>
+References: <476A7566.2040802@panasas.com>
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762281AbXLUMQW@vger.kernel.org>
+In-Reply-To: <476A7566.2040802@panasas.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: jens.axboe@oracle.com, James.Bottomley@steeleye.com, akpm@linux-foundation.org, rusty@rustcorp.com.au, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dougg@torque.net
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: davem@davemloft.net, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
 
-Rusty Russell <rusty@rustcorp.com.au> wrote:
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 >
-> 2) It allows others to manipulate sg chains, which couldn't be done before
->   (eg. the ATA code which wants to append a padding element).
+> diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+> index 416e000..c3ca848 100644
+> --- a/include/linux/scatterlist.h
+> +++ b/include/linux/scatterlist.h
+> @@ -7,6 +7,12 @@
+> #include <linux/string.h>
+> #include <asm/io.h>
+> 
+> +struct sg_table {
+> +       struct scatterlist *sgl;        /* the list */
+> +       unsigned int nents;             /* number of mapped entries */
+> +       unsigned int orig_nents;        /* original size of list */
+> +};
 
-Yes chaining at the end is very useful for the crypto layer as
-well.
+If we're making massive changes like this, let's do it properly
+as Rusty has demonstrated so that we support back-chaining as
+well as frong-chaining.
 
 Thanks,
 -- 
