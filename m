@@ -1,13 +1,13 @@
 From: Pete Wyckoff <pw@osc.edu>
-Subject: [PATCH 3/5] bsg: accept varlen commands
-Date: Sat, 22 Dec 2007 15:35:18 -0500
-Message-ID: <20071222203633.02DE3900CD9@quasar.osc.edu>
+Subject: [PATCH 1/5] iscsi: extended cdb support
+Date: Sat, 22 Dec 2007 15:35:10 -0500
+Message-ID: <20071222203631.23C8A900CD4@quasar.osc.edu>
 References: <20071222201558.GA25063@osc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:53900 "EHLO quasar.osc.edu"
+Received: from quasar.osc.edu ([192.148.249.15]:53892 "EHLO quasar.osc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753130AbXLVUgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Dec 2007 15:36:33 -0500
+	id S1753084AbXLVUgc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 22 Dec 2007 15:36:32 -0500
 In-Reply-To: <20071222201558.GA25063@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -16,88 +16,144 @@ Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracl
 
 [Resend, date was in ancient history.]
 
-Accept variable length SCSI commands through BSG.
+From: Boaz Harrosh <bharrosh@panasas.com>
 
+  Once varlen cdbs are supported by the block and scsi-ml layers
+  we can apply this patch to support extended CDBs in iscsi.
+
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 Signed-off-by: Pete Wyckoff <pw@osc.edu>
 ---
- block/bsg.c |   34 +++++++++++++++++++++++++---------
- 1 files changed, 25 insertions(+), 9 deletions(-)
+ drivers/scsi/iscsi_tcp.c   |    2 +-
+ drivers/scsi/libiscsi.c    |   56 ++++++++++++++++++++++++++++++++++++++++----
+ include/scsi/iscsi_proto.h |    6 +++-
+ 3 files changed, 56 insertions(+), 8 deletions(-)
 
-diff --git a/block/bsg.c b/block/bsg.c
-index 8e181ab..0d9364d 100644
---- a/block/bsg.c
-+++ b/block/bsg.c
-@@ -175,14 +175,29 @@ unlock:
- static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 				struct sg_io_v4 *hdr, int has_write_perm)
- {
--	memset(rq->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
--
--	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
--			   hdr->request_len))
--		return -EFAULT;
-+	void __user *buf = (void __user *)(unsigned long) hdr->request;
-+	int len = hdr->request_len;
-+	unsigned char *cmd;
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index e5be5fd..9fde5ce 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -1973,7 +1973,7 @@ static struct iscsi_transport iscsi_tcp_transport = {
+ 	.host_template		= &iscsi_sht,
+ 	.conndata_size		= sizeof(struct iscsi_conn),
+ 	.max_conn		= 1,
+-	.max_cmd_len		= 16,
++	.max_cmd_len		= SCSI_MAX_VARLEN_CDB_SIZE,
+ 	/* session management */
+ 	.create_session		= iscsi_tcp_session_create,
+ 	.destroy_session	= iscsi_tcp_session_destroy,
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 553168a..94a8046 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -137,6 +137,45 @@ static int iscsi_add_hdr(struct iscsi_cmd_task *ctask, unsigned len)
+ 	return 0;
+ }
+ 
++/*
++ * make an extended cdb AHS
++ */
++static int iscsi_prep_ecdb_ahs(struct iscsi_cmd_task *ctask)
++{
++	struct scsi_cmnd *cmd = ctask->sc;
++	unsigned rlen, pad_len;
++	unsigned short ahslength;
++	struct iscsi_ecdb_ahdr *ecdb_ahdr;
++	int rc;
 +
-+	if (len > BLK_MAX_CDB) {
-+		rq->cmd_len = 0;
-+		rq->varlen_cdb_len = len;
-+		rq->varlen_cdb = kmalloc(len, GFP_KERNEL);
-+		if (rq->varlen_cdb == NULL)
-+			return -ENOMEM;
-+		if (copy_from_user(rq->varlen_cdb, buf, len))
-+			return -EFAULT;
-+		cmd = &rq->varlen_cdb[0];
-+	} else {
-+		rq->cmd_len = len;
-+		memset(rq->cmd, 0, BLK_MAX_CDB);  /* for ATAPI */
-+		if (copy_from_user(rq->cmd, buf, len))
-+			return -EFAULT;
-+		cmd = &rq->cmd[0];
++	ecdb_ahdr = iscsi_next_hdr(ctask);
++	rlen = cmd->cmd_len - ISCSI_CDB_SIZE;
++
++	BUG_ON(rlen > sizeof(ecdb_ahdr->ecdb));
++	ahslength = rlen + sizeof(ecdb_ahdr->reserved);
++
++	pad_len = iscsi_padding(rlen);
++
++	rc = iscsi_add_hdr(ctask, sizeof(ecdb_ahdr->ahslength) +
++			   sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
++	if (rc)
++		return rc;
++
++	if (pad_len)
++		memset(&ecdb_ahdr->ecdb[rlen], 0, pad_len);
++
++	ecdb_ahdr->ahslength = cpu_to_be16(ahslength);
++	ecdb_ahdr->ahstype = ISCSI_AHSTYPE_CDB;
++	ecdb_ahdr->reserved = 0;
++	memcpy(ecdb_ahdr->ecdb, cmd->cmnd + ISCSI_CDB_SIZE, rlen);
++
++	debug_scsi("iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
++		"rlen %d pad_len %d ahs_length %d iscsi_headers_size %u\n",
++		cmd->cmd_len, rlen, pad_len, ahslength, ctask->hdr_len);
++
++	return 0;
++}
++
+ /**
+  * iscsi_prep_scsi_cmd_pdu - prep iscsi scsi cmd pdu
+  * @ctask: iscsi cmd task
+@@ -150,7 +189,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
+ 	struct iscsi_session *session = conn->session;
+ 	struct iscsi_cmd *hdr = ctask->hdr;
+ 	struct scsi_cmnd *sc = ctask->sc;
+-	unsigned hdrlength;
++	unsigned hdrlength, cmd_len;
+ 	int rc;
+ 
+ 	ctask->hdr_len = 0;
+@@ -165,10 +204,17 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
+ 	hdr->cmdsn = cpu_to_be32(session->cmdsn);
+ 	session->cmdsn++;
+ 	hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
+-	memcpy(hdr->cdb, sc->cmnd, sc->cmd_len);
+-	if (sc->cmd_len < MAX_COMMAND_SIZE)
+-		memset(&hdr->cdb[sc->cmd_len], 0,
+-			MAX_COMMAND_SIZE - sc->cmd_len);
++	cmd_len = sc->cmd_len;
++	if (cmd_len < ISCSI_CDB_SIZE)
++		memset(&hdr->cdb[cmd_len], 0,
++			ISCSI_CDB_SIZE - cmd_len);
++	else if (cmd_len > ISCSI_CDB_SIZE) {
++		rc = iscsi_prep_ecdb_ahs(ctask);
++		if (rc)
++			return rc;
++		cmd_len = ISCSI_CDB_SIZE;
 +	}
++	memcpy(hdr->cdb, sc->cmnd, cmd_len);
  
- 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
--		if (blk_verify_command(rq->cmd, has_write_perm))
-+		if (blk_verify_command(cmd, has_write_perm))
- 			return -EPERM;
- 	} else if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
-@@ -190,7 +205,6 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 	/*
- 	 * fill in request structure
- 	 */
--	rq->cmd_len = hdr->request_len;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
+ 	ctask->imm_count = 0;
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index 318a909..8c591ac 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -112,6 +112,7 @@ struct iscsi_ahs_hdr {
  
- 	rq->timeout = (hdr->timeout * HZ) / 1000;
-@@ -212,8 +226,6 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
+ #define ISCSI_AHSTYPE_CDB		1
+ #define ISCSI_AHSTYPE_RLENGTH		2
++#define ISCSI_CDB_SIZE			16
  
- 	if (hdr->guard != 'Q')
- 		return -EINVAL;
--	if (hdr->request_len > BLK_MAX_CDB)
--		return -EINVAL;
- 	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
- 	    hdr->din_xfer_len > (q->max_sectors << 9))
- 		return -EIO;
-@@ -302,6 +314,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
- 	}
- 	return rq;
- out:
-+	if (rq->varlen_cdb_len)
-+		kfree(rq->varlen_cdb);
- 	blk_put_request(rq);
- 	if (next_rq) {
- 		blk_rq_unmap_user(next_rq->bio);
-@@ -446,6 +460,8 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 		hdr->dout_resid = rq->data_len;
+ /* iSCSI PDU Header */
+ struct iscsi_cmd {
+@@ -125,7 +126,7 @@ struct iscsi_cmd {
+ 	__be32 data_length;
+ 	__be32 cmdsn;
+ 	__be32 exp_statsn;
+-	uint8_t cdb[16];	/* SCSI Command Block */
++	uint8_t cdb[ISCSI_CDB_SIZE];	/* SCSI Command Block */
+ 	/* Additional Data (Command Dependent) */
+ };
  
- 	blk_rq_unmap_user(bio);
-+	if (rq->varlen_cdb_len)
-+		kfree(rq->varlen_cdb);
- 	blk_put_request(rq);
+@@ -154,7 +155,8 @@ struct iscsi_ecdb_ahdr {
+ 	__be16 ahslength;	/* CDB length - 15, including reserved byte */
+ 	uint8_t ahstype;
+ 	uint8_t reserved;
+-	uint8_t ecdb[260 - 16];	/* 4-byte aligned extended CDB spillover */
++	/* 4-byte aligned extended CDB spillover */
++	uint8_t ecdb[260 - ISCSI_CDB_SIZE];
+ };
  
- 	return ret;
+ /* SCSI Response Header */
 -- 
 1.5.3.6
 
