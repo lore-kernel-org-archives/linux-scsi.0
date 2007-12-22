@@ -1,12 +1,12 @@
 From: Pete Wyckoff <pw@osc.edu>
-Subject: [PATCH 3/5] bsg: accept varlen commands
-Date: Thu, 21 Jun 2007 14:04:20 -0400
-Message-ID: <20071222201958.94668900CDC@quasar.osc.edu>
+Subject: [PATCH 4/5] bsg: bidi fix
+Date: Sat, 22 Dec 2007 15:10:12 -0500
+Message-ID: <20071222202000.1D79D900CE0@quasar.osc.edu>
 References: <20071222201558.GA25063@osc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:53852 "EHLO quasar.osc.edu"
+Received: from quasar.osc.edu ([192.148.249.15]:53853 "EHLO quasar.osc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753123AbXLVUcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753130AbXLVUcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Sat, 22 Dec 2007 15:32:05 -0500
 In-Reply-To: <20071222201558.GA25063@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,88 +14,26 @@ List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-Accept variable length SCSI commands through BSG.
+Fixes for bsg to handle bidirectional commands.  The next_rq part
+of a bidi command must be marked REQ_TYPE_BLOCK_PC for scsi_init_sgtable.
 
 Signed-off-by: Pete Wyckoff <pw@osc.edu>
 ---
- block/bsg.c |   34 +++++++++++++++++++++++++---------
- 1 files changed, 25 insertions(+), 9 deletions(-)
+ block/bsg.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
 diff --git a/block/bsg.c b/block/bsg.c
-index 8e181ab..0d9364d 100644
+index 0d9364d..fc3a024 100644
 --- a/block/bsg.c
 +++ b/block/bsg.c
-@@ -175,14 +175,29 @@ unlock:
- static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 				struct sg_io_v4 *hdr, int has_write_perm)
- {
--	memset(rq->cmd, 0, BLK_MAX_CDB); /* ATAPI hates garbage after CDB */
--
--	if (copy_from_user(rq->cmd, (void *)(unsigned long)hdr->request,
--			   hdr->request_len))
--		return -EFAULT;
-+	void __user *buf = (void __user *)(unsigned long) hdr->request;
-+	int len = hdr->request_len;
-+	unsigned char *cmd;
-+
-+	if (len > BLK_MAX_CDB) {
-+		rq->cmd_len = 0;
-+		rq->varlen_cdb_len = len;
-+		rq->varlen_cdb = kmalloc(len, GFP_KERNEL);
-+		if (rq->varlen_cdb == NULL)
-+			return -ENOMEM;
-+		if (copy_from_user(rq->varlen_cdb, buf, len))
-+			return -EFAULT;
-+		cmd = &rq->varlen_cdb[0];
-+	} else {
-+		rq->cmd_len = len;
-+		memset(rq->cmd, 0, BLK_MAX_CDB);  /* for ATAPI */
-+		if (copy_from_user(rq->cmd, buf, len))
-+			return -EFAULT;
-+		cmd = &rq->cmd[0];
-+	}
+@@ -291,6 +291,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
+ 			goto out;
+ 		}
+ 		rq->next_rq = next_rq;
++		next_rq->cmd_type = REQ_TYPE_BLOCK_PC;
  
- 	if (hdr->subprotocol == BSG_SUB_PROTOCOL_SCSI_CMD) {
--		if (blk_verify_command(rq->cmd, has_write_perm))
-+		if (blk_verify_command(cmd, has_write_perm))
- 			return -EPERM;
- 	} else if (!capable(CAP_SYS_RAWIO))
- 		return -EPERM;
-@@ -190,7 +205,6 @@ static int blk_fill_sgv4_hdr_rq(struct request_queue *q, struct request *rq,
- 	/*
- 	 * fill in request structure
- 	 */
--	rq->cmd_len = hdr->request_len;
- 	rq->cmd_type = REQ_TYPE_BLOCK_PC;
- 
- 	rq->timeout = (hdr->timeout * HZ) / 1000;
-@@ -212,8 +226,6 @@ bsg_validate_sgv4_hdr(struct request_queue *q, struct sg_io_v4 *hdr, int *rw)
- 
- 	if (hdr->guard != 'Q')
- 		return -EINVAL;
--	if (hdr->request_len > BLK_MAX_CDB)
--		return -EINVAL;
- 	if (hdr->dout_xfer_len > (q->max_sectors << 9) ||
- 	    hdr->din_xfer_len > (q->max_sectors << 9))
- 		return -EIO;
-@@ -302,6 +314,8 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
- 	}
- 	return rq;
- out:
-+	if (rq->varlen_cdb_len)
-+		kfree(rq->varlen_cdb);
- 	blk_put_request(rq);
- 	if (next_rq) {
- 		blk_rq_unmap_user(next_rq->bio);
-@@ -446,6 +460,8 @@ static int blk_complete_sgv4_hdr_rq(struct request *rq, struct sg_io_v4 *hdr,
- 		hdr->dout_resid = rq->data_len;
- 
- 	blk_rq_unmap_user(bio);
-+	if (rq->varlen_cdb_len)
-+		kfree(rq->varlen_cdb);
- 	blk_put_request(rq);
- 
- 	return ret;
+ 		dxferp = (void*)(unsigned long)hdr->din_xferp;
+ 		ret =  blk_rq_map_user(q, next_rq, dxferp, hdr->din_xfer_len);
 -- 
 1.5.3.6
 
