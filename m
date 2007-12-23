@@ -1,159 +1,112 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: [PATCH 1/5] iscsi: extended cdb support
-Date: Sat, 22 Dec 2007 15:35:10 -0500
-Message-ID: <20071222203631.23C8A900CD4@quasar.osc.edu>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: bidi, varlen, bsg success report
+Date: Sun, 23 Dec 2007 11:50:06 +0200
+Message-ID: <476E2F4E.2010204@panasas.com>
 References: <20071222201558.GA25063@osc.edu>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:53892 "EHLO quasar.osc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753084AbXLVUgc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 22 Dec 2007 15:36:32 -0500
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:33833 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751840AbXLWJvb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Dec 2007 04:51:31 -0500
 In-Reply-To: <20071222201558.GA25063@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
+To: Pete Wyckoff <pw@osc.edu>
 Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
 
-[Resend, date was in ancient history.]
+On Sat, Dec 22 2007 at 22:15 +0200, Pete Wyckoff <pw@osc.edu> wrote:
+> I spent the last couple of days rebasing my working set of kernel
+> patches from 2.6.22-rc5 to 2.6.24-rc6.  I want to use the BSG
+> interface from userspace to submit variable-length bidirectional
+> SCSI commands to targets via iSCSI TCP.
+> 
+> Many thanks to all the work with scsi data accessors and iscsi that
+> makes this much easier, and to Boaz for continuing to maintain
+> patches.  Here's what I needed to do to make it work.
+> 
+> Start with linus-2.6.24-rc6.
+> Merge scsi-misc.
+> Apply the following outstanding patches from Boaz:
+> 
+> bidi
+>     scsi: scsi_data_buffer
+>     http://marc.info/?l=linux-scsi&m=119754650614813&w=2
+> 
+>     scsi: bidi support
+>     http://marc.info/?l=linux-scsi&m=119754667915055&w=2
+> 
+> varlen
+>     [PATCH 1/3] Let scsi_cmnd->cmnd use request->cmd buffer
+>     http://marc.info/?l=linux-scsi&m=119798523823750&w=2
+> 
+>     [PATCH 2/2] block layer varlen-cdb
+>     http://marc.info/?l=linux-scsi&m=119798548624218&w=2
+> 
+>     [PATCH 3/3] scsi: varlen extended and vendor-specific cdbs
+>     http://marc.info/?l=linux-scsi&m=119798563924476&w=2
+> 
+> Then a few more, two modified from earlier Boaz patches, and three
+> new ones by me, mainly to make bsg work.  They follow.
+> 
+> 1. iscsi: extended cdb support
+> Adapted from Boaz
+> http://marc.info/?l=linux-scsi&m=119394074127857&w=2
+> 
+> 2. iscsi: bidi support
+> Adapted from two old Boaz patches that can be found in this git:
+> http://www.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=commitdiff;h=b5a97649eadb9434acbc4170a8aebd962af6d960
+> http://www.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=commitdiff;h=cf3d4684a22bde6787f2eccee66d7b0ee9c9182c
+> 
+> 3. bsg: accept varlen commands
+> 
+> 4. bsg: bidi fix
+> 
+> 5. iscsi tcp: bidi capable
+> 
+> Suggestions:  Boaz is probably the best qualified to shepherd his
+> outstanding five patches plus the two others I mention above (#1,
+> #2).  The first bsg patch (#3) won't apply without the varlen
+> patches.  The last two (#4, #5) are harmless and can go in now, but
+> won't matter until the bidi patches are in.  Comments on these
+> welcome.
+> 
+> Hope this is helpful.  I'm definitely looking forward to seeing
+> all this merged into mainline eventually.
+> 
+> 		-- Pete
+> -
+Dear peter.
 
-From: Boaz Harrosh <bharrosh@panasas.com>
+This is grate to know. I know from passed experience that code
+might work well for your own set of tests, but otherwise hide bugs.
 
-  Once varlen cdbs are supported by the block and scsi-ml layers
-  we can apply this patch to support extended CDBs in iscsi.
+Please forgive me about the iSCSI patches, I have an updated set
+here in my trees, but I have not posted them, because I thought
+that no one cares, but me.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
-Signed-off-by: Pete Wyckoff <pw@osc.edu>
----
- drivers/scsi/iscsi_tcp.c   |    2 +-
- drivers/scsi/libiscsi.c    |   56 ++++++++++++++++++++++++++++++++++++++++----
- include/scsi/iscsi_proto.h |    6 +++-
- 3 files changed, 56 insertions(+), 8 deletions(-)
+I did not yet get any principle OK about the varlen API. that
+is - scsi_cmnd->cmnd changes to a pointer that points to either
+a static buffer at request or a dynamic buffer at ULD - Because
+if this principle is accepted, than please Note that the patch
+"iscsi: extended cdb support" can be applied now, before the actual
+cleanups and implementation are applied.
+I attributed the complete silence treatment from both block and scsi 
+maintainers, to the holiday session. I hope they come with renewed 
+strength next year ;)
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index e5be5fd..9fde5ce 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1973,7 +1973,7 @@ static struct iscsi_transport iscsi_tcp_transport = {
- 	.host_template		= &iscsi_sht,
- 	.conndata_size		= sizeof(struct iscsi_conn),
- 	.max_conn		= 1,
--	.max_cmd_len		= 16,
-+	.max_cmd_len		= SCSI_MAX_VARLEN_CDB_SIZE,
- 	/* session management */
- 	.create_session		= iscsi_tcp_session_create,
- 	.destroy_session	= iscsi_tcp_session_destroy,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 553168a..94a8046 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -137,6 +137,45 @@ static int iscsi_add_hdr(struct iscsi_cmd_task *ctask, unsigned len)
- 	return 0;
- }
- 
-+/*
-+ * make an extended cdb AHS
-+ */
-+static int iscsi_prep_ecdb_ahs(struct iscsi_cmd_task *ctask)
-+{
-+	struct scsi_cmnd *cmd = ctask->sc;
-+	unsigned rlen, pad_len;
-+	unsigned short ahslength;
-+	struct iscsi_ecdb_ahdr *ecdb_ahdr;
-+	int rc;
-+
-+	ecdb_ahdr = iscsi_next_hdr(ctask);
-+	rlen = cmd->cmd_len - ISCSI_CDB_SIZE;
-+
-+	BUG_ON(rlen > sizeof(ecdb_ahdr->ecdb));
-+	ahslength = rlen + sizeof(ecdb_ahdr->reserved);
-+
-+	pad_len = iscsi_padding(rlen);
-+
-+	rc = iscsi_add_hdr(ctask, sizeof(ecdb_ahdr->ahslength) +
-+			   sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
-+	if (rc)
-+		return rc;
-+
-+	if (pad_len)
-+		memset(&ecdb_ahdr->ecdb[rlen], 0, pad_len);
-+
-+	ecdb_ahdr->ahslength = cpu_to_be16(ahslength);
-+	ecdb_ahdr->ahstype = ISCSI_AHSTYPE_CDB;
-+	ecdb_ahdr->reserved = 0;
-+	memcpy(ecdb_ahdr->ecdb, cmd->cmnd + ISCSI_CDB_SIZE, rlen);
-+
-+	debug_scsi("iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
-+		"rlen %d pad_len %d ahs_length %d iscsi_headers_size %u\n",
-+		cmd->cmd_len, rlen, pad_len, ahslength, ctask->hdr_len);
-+
-+	return 0;
-+}
-+
- /**
-  * iscsi_prep_scsi_cmd_pdu - prep iscsi scsi cmd pdu
-  * @ctask: iscsi cmd task
-@@ -150,7 +189,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 	struct iscsi_session *session = conn->session;
- 	struct iscsi_cmd *hdr = ctask->hdr;
- 	struct scsi_cmnd *sc = ctask->sc;
--	unsigned hdrlength;
-+	unsigned hdrlength, cmd_len;
- 	int rc;
- 
- 	ctask->hdr_len = 0;
-@@ -165,10 +204,17 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 	hdr->cmdsn = cpu_to_be32(session->cmdsn);
- 	session->cmdsn++;
- 	hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
--	memcpy(hdr->cdb, sc->cmnd, sc->cmd_len);
--	if (sc->cmd_len < MAX_COMMAND_SIZE)
--		memset(&hdr->cdb[sc->cmd_len], 0,
--			MAX_COMMAND_SIZE - sc->cmd_len);
-+	cmd_len = sc->cmd_len;
-+	if (cmd_len < ISCSI_CDB_SIZE)
-+		memset(&hdr->cdb[cmd_len], 0,
-+			ISCSI_CDB_SIZE - cmd_len);
-+	else if (cmd_len > ISCSI_CDB_SIZE) {
-+		rc = iscsi_prep_ecdb_ahs(ctask);
-+		if (rc)
-+			return rc;
-+		cmd_len = ISCSI_CDB_SIZE;
-+	}
-+	memcpy(hdr->cdb, sc->cmnd, cmd_len);
- 
- 	ctask->imm_count = 0;
- 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
-diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
-index 318a909..8c591ac 100644
---- a/include/scsi/iscsi_proto.h
-+++ b/include/scsi/iscsi_proto.h
-@@ -112,6 +112,7 @@ struct iscsi_ahs_hdr {
- 
- #define ISCSI_AHSTYPE_CDB		1
- #define ISCSI_AHSTYPE_RLENGTH		2
-+#define ISCSI_CDB_SIZE			16
- 
- /* iSCSI PDU Header */
- struct iscsi_cmd {
-@@ -125,7 +126,7 @@ struct iscsi_cmd {
- 	__be32 data_length;
- 	__be32 cmdsn;
- 	__be32 exp_statsn;
--	uint8_t cdb[16];	/* SCSI Command Block */
-+	uint8_t cdb[ISCSI_CDB_SIZE];	/* SCSI Command Block */
- 	/* Additional Data (Command Dependent) */
- };
- 
-@@ -154,7 +155,8 @@ struct iscsi_ecdb_ahdr {
- 	__be16 ahslength;	/* CDB length - 15, including reserved byte */
- 	uint8_t ahstype;
- 	uint8_t reserved;
--	uint8_t ecdb[260 - 16];	/* 4-byte aligned extended CDB spillover */
-+	/* 4-byte aligned extended CDB spillover */
-+	uint8_t ecdb[260 - ISCSI_CDB_SIZE];
- };
- 
- /* SCSI Response Header */
--- 
-1.5.3.6
+I will compare our iscsi patches and put a freshen set at:
+git://git.bhalevy.com/open-osd osd_dev
+or on the web
+http://git.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=summary
+(give me until the end of today)
+
+I have inspected your other patches, and they all look good.
+I will include them in above git.
+
+Happy holidays
+Boaz
+
 
