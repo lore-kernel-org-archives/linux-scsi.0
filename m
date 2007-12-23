@@ -1,112 +1,103 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: bidi, varlen, bsg success report
-Date: Sun, 23 Dec 2007 11:50:06 +0200
-Message-ID: <476E2F4E.2010204@panasas.com>
-References: <20071222201558.GA25063@osc.edu>
+Subject: Re: [PATCH 2/2] scsi: Use new __dma_buffer to align sense buffer
+ in scsi_cmnd
+Date: Sun, 23 Dec 2007 13:09:05 +0200
+Message-ID: <476E41D1.50606@panasas.com>
+References: <20071221023011.4C4BADDDFA@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:33833 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751840AbXLWJvb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Dec 2007 04:51:31 -0500
-In-Reply-To: <20071222201558.GA25063@osc.edu>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:18034 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1750850AbXLWLOn (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Dec 2007 06:14:43 -0500
+In-Reply-To: <20071221023011.4C4BADDDFA@ozlabs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: James Bottomley <James.Bottomley@SteelEye.com>, Jens Axboe <jens.axboe@oracle.com>, Mike Christie <michaelc@cs.wisc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, james.bottomley@steeleye.com
+Cc: linux-kernel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, rdreier@cisco.com, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk, davem@davemloft.net, ralf@linux-mips.org, Christoph Hellwig <hch@infradead.org>
 
-On Sat, Dec 22 2007 at 22:15 +0200, Pete Wyckoff <pw@osc.edu> wrote:
-> I spent the last couple of days rebasing my working set of kernel
-> patches from 2.6.22-rc5 to 2.6.24-rc6.  I want to use the BSG
-> interface from userspace to submit variable-length bidirectional
-> SCSI commands to targets via iSCSI TCP.
+On Fri, Dec 21 2007 at 4:30 +0200, Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
+> The sense buffer ins scsi_cmnd can nowadays be DMA'ed into directly
+> by some low level drivers (that typically happens with USB mass
+> storage).
 > 
-> Many thanks to all the work with scsi data accessors and iscsi that
-> makes this much easier, and to Boaz for continuing to maintain
-> patches.  Here's what I needed to do to make it work.
+> This is a problem on non cache coherent architectures such as
+> embedded PowerPCs where the sense buffer can share cache lines with
+> other structure members, which leads to various forms of corruption.
 > 
-> Start with linus-2.6.24-rc6.
-> Merge scsi-misc.
-> Apply the following outstanding patches from Boaz:
+> This uses the newly defined __dma_buffer annotation to enforce that
+> on such platforms, the sense_buffer is contained within its own
+> cache line. This has no effect on cache coherent architectures.
 > 
-> bidi
->     scsi: scsi_data_buffer
->     http://marc.info/?l=linux-scsi&m=119754650614813&w=2
+> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+> ---
 > 
->     scsi: bidi support
->     http://marc.info/?l=linux-scsi&m=119754667915055&w=2
+>  include/scsi/scsi_cmnd.h |    2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> varlen
->     [PATCH 1/3] Let scsi_cmnd->cmnd use request->cmd buffer
->     http://marc.info/?l=linux-scsi&m=119798523823750&w=2
-> 
->     [PATCH 2/2] block layer varlen-cdb
->     http://marc.info/?l=linux-scsi&m=119798548624218&w=2
-> 
->     [PATCH 3/3] scsi: varlen extended and vendor-specific cdbs
->     http://marc.info/?l=linux-scsi&m=119798563924476&w=2
-> 
-> Then a few more, two modified from earlier Boaz patches, and three
-> new ones by me, mainly to make bsg work.  They follow.
-> 
-> 1. iscsi: extended cdb support
-> Adapted from Boaz
-> http://marc.info/?l=linux-scsi&m=119394074127857&w=2
-> 
-> 2. iscsi: bidi support
-> Adapted from two old Boaz patches that can be found in this git:
-> http://www.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=commitdiff;h=b5a97649eadb9434acbc4170a8aebd962af6d960
-> http://www.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=commitdiff;h=cf3d4684a22bde6787f2eccee66d7b0ee9c9182c
-> 
-> 3. bsg: accept varlen commands
-> 
-> 4. bsg: bidi fix
-> 
-> 5. iscsi tcp: bidi capable
-> 
-> Suggestions:  Boaz is probably the best qualified to shepherd his
-> outstanding five patches plus the two others I mention above (#1,
-> #2).  The first bsg patch (#3) won't apply without the varlen
-> patches.  The last two (#4, #5) are harmless and can go in now, but
-> won't matter until the bidi patches are in.  Comments on these
-> welcome.
-> 
-> Hope this is helpful.  I'm definitely looking forward to seeing
-> all this merged into mainline eventually.
-> 
-> 		-- Pete
-> -
-Dear peter.
+> --- linux-merge.orig/include/scsi/scsi_cmnd.h	2007-12-21 13:07:14.000000000 +1100
+> +++ linux-merge/include/scsi/scsi_cmnd.h	2007-12-21 13:07:29.000000000 +1100
+> @@ -88,7 +88,7 @@ struct scsi_cmnd {
+>  				   	   working on */
+>  
+>  #define SCSI_SENSE_BUFFERSIZE 	96
+> -	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
+> +	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE] __dma_buffer;
+>  				/* obtained by REQUEST SENSE when
+>  				 * CHECK CONDITION is received on original
+>  				 * command (auto-sense) */
 
-This is grate to know. I know from passed experience that code
-might work well for your own set of tests, but otherwise hide bugs.
+This has the potential of leaving a big fat ugly hole in the middle of 
+scsi_cmnd. I would suggest of *just* moving the sense_buffer array to be
+the *first member* of struct scsi_cmnd. The command itself is already cache
+aligned, allocated by the proper flags to it's slab. And put a fat comment
+near it's definition.
 
-Please forgive me about the iSCSI patches, I have an updated set
-here in my trees, but I have not posted them, because I thought
-that no one cares, but me.
+This is until a proper fix is sent. I have in my Q a proposition for a 
+more prominent solution, which I will send next month. Do to short comings
+in the sense handling and optimizations, but should definitely cover this
+problem.
 
-I did not yet get any principle OK about the varlen API. that
-is - scsi_cmnd->cmnd changes to a pointer that points to either
-a static buffer at request or a dynamic buffer at ULD - Because
-if this principle is accepted, than please Note that the patch
-"iscsi: extended cdb support" can be applied now, before the actual
-cleanups and implementation are applied.
-I attributed the complete silence treatment from both block and scsi 
-maintainers, to the holiday session. I hope they come with renewed 
-strength next year ;)
+The code should have time to be discussed and tested, so it is only 2.6.26
+material. For the duration of the 2.6.25 kernel we can live with a reorder
+of scsi_cmnd members, if it solves such a grave bug for some ARCHs.
 
-I will compare our iscsi patches and put a freshen set at:
-git://git.bhalevy.com/open-osd osd_dev
-or on the web
-http://git.bhalevy.com/git/gitweb.cgi?p=open-osd/.git;a=summary
-(give me until the end of today)
-
-I have inspected your other patches, and they all look good.
-I will include them in above git.
-
-Happy holidays
 Boaz
+----
+[RFD below]
+My proposed solution will be has follows:
 
+ 1. Since the scsi protocol mandates an immediate REQUEST_SENSE after an error
+    in effect the Q is frozen until the REQUEST_SENSE command returns.
 
+ 2. The scsi-ml needs the sense buffer for its normal operation, independent 
+    from the ULD's request of the sence_buffer or not at request->sense. But
+    in effect, 90% of all scsi-requests come with ULD's allocated buffer for
+    sense, that is copied to, on command completion.
+
+ 3. 99% of all commands complete successfully, so if an optimization is 
+    proposed for the successful case, sacrificing a few cycles for the error
+    case than thats a good thing.
+
+ My suggestion is to have a per Q, driver-overridable, sense buffer that is 
+ DMAed/written to by drivers. At the end of the REQUEST_SENSE command one
+ of 2 things will be done. Either copy the sense to the ULD's supplied buffer,
+ or if not available, allocate one from a dedicated mem_cache pool.
+ 
+ So we are completely saving 92 bytes from scsi_cmnd by replacing the buffer
+ with a pointer. We can always read the sense into a per Q buffer. And 10% of
+ %1 of the times we will need to allocate a sense buffer from a dedicated mem_cache
+ I would say thats a nice optimization.
+
+ The changes to scsi_error/scsi_cmnd and friends, is pretty strait forward. But
+ it depends on a conversion of 4/5 drivers to the new scsi_eh API for 
+ REQUEST_SENSE. I have only converted these drivers that interfered with the accessors
+ effort + 1 other places. But there are a few more places that are not converted.
+ Once done. The implementation can easily change with no affect on drivers.
+
+ The reason I've started with this work is because the SCSI standard permits up
+ to 260 bytes of sense, which you guest right, is needed by the OSD command set.
+
+Boaz
