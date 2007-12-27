@@ -1,54 +1,54 @@
-From: Balbir Singh <balbir@linux.vnet.ibm.com>
-Subject: Re: SCSI errors on powerpc with 2.6.24-rc6-mm1
-Date: Thu, 27 Dec 2007 11:15:37 +0530
-Message-ID: <47733C01.1080002@linux.vnet.ibm.com>
-References: <20071224044850.GA11449@linux.vnet.ibm.com> <20071227121108L.fujita.tomonori@lab.ntt.co.jp> <47732C41.7000003@linux.vnet.ibm.com> <20071227134335O.fujita.tomonori@lab.ntt.co.jp>
-Reply-To: balbir@linux.vnet.ibm.com
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 0/5] sg_ring for scsi
+Date: Thu, 27 Dec 2007 22:52:26 +1100
+Message-ID: <200712272252.27273.rusty@rustcorp.com.au>
+References: <200712211426.47896.rusty@rustcorp.com.au> <200712261127.41088.rusty@rustcorp.com.au> <20071227110927Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e4.ny.us.ibm.com ([32.97.182.144]:37213 "EHLO e4.ny.us.ibm.com"
+Received: from ozlabs.org ([203.10.76.45]:34465 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750845AbXL0Fpy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Dec 2007 00:45:54 -0500
-In-Reply-To: <20071227134335O.fujita.tomonori@lab.ntt.co.jp>
+	id S1751953AbXL0Lwq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 27 Dec 2007 06:52:46 -0500
+In-Reply-To: <20071227110927Q.fujita.tomonori@lab.ntt.co.jp>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: linuxppc-dev@ozlabs.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
 
-FUJITA Tomonori wrote:
-> On Thu, 27 Dec 2007 10:08:25 +0530
-> Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
-> 
->> FUJITA Tomonori wrote:
->>> On Mon, 24 Dec 2007 10:18:50 +0530
->>> Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
->>>
->> [snip]
->>
->>> I might break the IOMMU code. Can you reproduce it easily? If so,
->>> reverting my IOMMU patches (I've attached a patch to revert them) fix
->>> the problem?
->> [snip]
->>
->>
->> Yes, this patch fixes the problem for me.
-> 
-> Thanks, so you can reproduce it easily, right?
-> 
+On Thursday 27 December 2007 13:09:27 FUJITA Tomonori wrote:
+> On Wed, 26 Dec 2007 11:27:40 +1100
+>
+> Rusty Russell <rusty@rustcorp.com.au> wrote:
+> > There are many signs through the code that it needs a great deal of
+> > work: what is the purpose of sg_break? Why does the code check if
+> > kmap_atomic fails?
+>
+> sg_break is a workaround for the hardware restrictions, I think.
 
-Yes, quite easily
+Well, scb->breakup does that, can't see what scb->sg_break is for...  May have 
+to wade through git history to understand it.
 
-> The problem is that I don't want to revert these changes. I'll see
-> how these changes cause the problem shortly.
+> > ===
+> > Convert the ips SCSI driver to sg_ring.
+> >
+> > Slightly non-trivial conversion, will need testing.
+>
+> As I said, I don't think that converting SCSI drivers to sg_ring (with
+> lots of non-trivial work) provides any benefits. Surely, sg_ring
+> enables us to modify sg lists but SCSI drivers don't need the
+> feature. What SCSI drivers needs is just a efficient way to get the
+> next sg entry (they use 'sg++' in the past and sg_next now).
 
-I'll try and find some bandwidth to review/test the patches and help you
-figure out the right solution.
+Sure, iteration over a two-level structure is a little more tricky, but it's 
+pretty trivial for most drivers.
 
--- 
-	Warm Regards,
-	Balbir Singh
-	Linux Technology Center
-	IBM, ISTL
+Indeed, I think that it's probably better to have an explicitly different 
+interface for sg_ring, and keep the current interface for small sg arrays.  
+That would provide a nicer changeover.
+
+I'll prototype something and see what it's like...
+Rusty.
