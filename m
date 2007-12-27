@@ -1,53 +1,42 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH 7/7] sg_ring: convert core ATA code to sg_ring.
-Date: Thu, 27 Dec 2007 13:21:39 +0900
-Message-ID: <47732853.3010208@gmail.com>
-References: <200712191731.26512.rusty@rustcorp.com.au> <200712191838.27363.rusty@rustcorp.com.au> <47721294.7030401@gmail.com> <200712271124.31511.rusty@rustcorp.com.au>
+From: Balbir Singh <balbir@linux.vnet.ibm.com>
+Subject: Re: SCSI errors on powerpc with 2.6.24-rc6-mm1
+Date: Thu, 27 Dec 2007 10:08:25 +0530
+Message-ID: <47732C41.7000003@linux.vnet.ibm.com>
+References: <20071224044850.GA11449@linux.vnet.ibm.com> <20071227121108L.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: balbir@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <200712271124.31511.rusty@rustcorp.com.au>
-Sender: linux-ide-owner@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:39698 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752151AbXL0Eii (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Dec 2007 23:38:38 -0500
+In-Reply-To: <20071227121108L.fujita.tomonori@lab.ntt.co.jp>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linuxppc-dev@ozlabs.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hello, Rusty.
-
-Rusty Russell wrote:
-> On Wednesday 26 December 2007 19:36:36 Tejun Heo wrote:
->> It would be better to build upon sg chaining as we already have it.  I
->> think it can be made much easier with a bit more safe guards,
->> generalization and some helpers.
+FUJITA Tomonori wrote:
+> On Mon, 24 Dec 2007 10:18:50 +0530
+> Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
 > 
->     I did this work to replace sg chaining.  The current chaining code gives 
-> us longer sgs, and (if used carefully) the ability to append in some 
-> circumstances.  But it's clumsy, and we can do better.  This is my attempt.
+[snip]
 
-Ah.. okay.  That makes sense then.  I fully agree that sg chaining as it
-currently stands is pretty ugly to use.  Appending extra entries
-requires reserving one extra space in the sg list to be appended to
-accommodate the last entry of the original list, which will be used for
-chaining now.  Also, it's quite brittle in that information can get out
-of sync easily (there's no one API for sg list manipulation, things have
-to be done manually).
-
->     I understand that people are experiencing whiplash from the idea of 
-> another change just after the sg chaining changes which have already gone in.  
 > 
->     At the very least, I think I'll have to come up with a better transition 
-> plan for SCSI drivers, rather than trying to convert them all at once... In 
-> theory, sg chaining can be done through the sg ring arrays, but that's pretty 
-> horrible.
+> I might break the IOMMU code. Can you reproduce it easily? If so,
+> reverting my IOMMU patches (I've attached a patch to revert them) fix
+> the problem?
 
-I don't necessarily think large one time conversion is bad.  They're
-necessary at times and make sense when they can increase long term
-maintainability of the code.  One thing I'm concerned about is the
-mixture of sg chaining and sg ring.  It would be best if we can agree on
-conversion plan (or sg chaining extension plan).
+[snip]
 
-Thanks.
+
+Yes, this patch fixes the problem for me.
+Tested-by: Balbir Singh <balbir@linux.vnet.ibm.com>
 
 -- 
-tejun
+	Warm Regards,
+	Balbir Singh
+	Linux Technology Center
+	IBM, ISTL
