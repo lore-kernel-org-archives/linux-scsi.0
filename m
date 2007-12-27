@@ -1,54 +1,38 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 0/5] sg_ring for scsi
-Date: Thu, 27 Dec 2007 22:52:26 +1100
-Message-ID: <200712272252.27273.rusty@rustcorp.com.au>
-References: <200712211426.47896.rusty@rustcorp.com.au> <200712261127.41088.rusty@rustcorp.com.au> <20071227110927Q.fujita.tomonori@lab.ntt.co.jp>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH 1/3] cciss: export more attributes to sysfs (repost)
+Date: Thu, 27 Dec 2007 23:55:43 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE15A296AD@G6W0268.americas.hpqcorp.net>
+References: <20071214221744.GA32019@roadking.usa.hp.com>
+ <20071221151647.ac8f864c.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:34465 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751953AbXL0Lwq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 27 Dec 2007 06:52:46 -0500
-In-Reply-To: <20071227110927Q.fujita.tomonori@lab.ntt.co.jp>
-Content-Disposition: inline
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:29675 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752685AbXL0X4y convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Dec 2007 18:56:54 -0500
+In-Reply-To: <20071221151647.ac8f864c.akpm@linux-foundation.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "jens.axboe@oracle.com" <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thursday 27 December 2007 13:09:27 FUJITA Tomonori wrote:
-> On Wed, 26 Dec 2007 11:27:40 +1100
 >
-> Rusty Russell <rusty@rustcorp.com.au> wrote:
-> > There are many signs through the code that it needs a great deal of
-> > work: what is the purpose of sg_break? Why does the code check if
-> > kmap_atomic fails?
+> Mike, what's going on?  I definitely told you last time I
+> looked at this patch that it is a bug to call
+> sysfs_remove_group() under spinlock, because
+> sysfs_remove_group() takes sleeping locks.  Yet here it is again.
 >
-> sg_break is a workaround for the hardware restrictions, I think.
-
-Well, scb->breakup does that, can't see what scb->sg_break is for...  May have 
-to wade through git history to understand it.
-
-> > ===
-> > Convert the ips SCSI driver to sg_ring.
-> >
-> > Slightly non-trivial conversion, will need testing.
+> Maybe you lost my email.  It is here:
+> http://lkml.org/lkml/2007/11/20/77
 >
-> As I said, I don't think that converting SCSI drivers to sg_ring (with
-> lots of non-trivial work) provides any benefits. Surely, sg_ring
-> enables us to modify sg lists but SCSI drivers don't need the
-> feature. What SCSI drivers needs is just a efficient way to get the
-> next sg entry (they use 'sg++' in the past and sg_next now).
+>
+> Also please see http://lkml.org/lkml/2007/11/20/79
+>
 
-Sure, iteration over a two-level structure is a little more tricky, but it's 
-pretty trivial for most drivers.
+Andrew,
+My apologies. Obviously I did not read your email closely. When I return from vacation I will address these issues.
 
-Indeed, I think that it's probably better to have an explicitly different 
-interface for sg_ring, and keep the current interface for small sg arrays.  
-That would provide a nicer changeover.
-
-I'll prototype something and see what it's like...
-Rusty.
+-- mikem
