@@ -1,42 +1,65 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 7/7] sg_ring: convert core ATA code to sg_ring.
-Date: Thu, 27 Dec 2007 11:24:31 +1100
-Message-ID: <200712271124.31511.rusty@rustcorp.com.au>
-References: <200712191731.26512.rusty@rustcorp.com.au> <200712191838.27363.rusty@rustcorp.com.au> <47721294.7030401@gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH 0/5] sg_ring for scsi
+Date: Thu, 27 Dec 2007 11:09:27 +0900
+Message-ID: <20071227110927Q.fujita.tomonori@lab.ntt.co.jp>
+References: <200712211426.47896.rusty@rustcorp.com.au>
+	<20071221133746B.fujita.tomonori@lab.ntt.co.jp>
+	<200712261127.41088.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:50949 "EHLO ozlabs.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751453AbXL0AYv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 26 Dec 2007 19:24:51 -0500
-In-Reply-To: <47721294.7030401@gmail.com>
-Content-Disposition: inline
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:34314 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751716AbXL0CLI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Dec 2007 21:11:08 -0500
+In-Reply-To: <200712261127.41088.rusty@rustcorp.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: rusty@rustcorp.com.au
+Cc: fujita.tomonori@lab.ntt.co.jp, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jens.axboe@oracle.com, dougg@torque.net
 
-On Wednesday 26 December 2007 19:36:36 Tejun Heo wrote:
-> It would be better to build upon sg chaining as we already have it.  I
-> think it can be made much easier with a bit more safe guards,
-> generalization and some helpers.
+On Wed, 26 Dec 2007 11:27:40 +1100
+Rusty Russell <rusty@rustcorp.com.au> wrote:
 
-Hi Tejun,
+> On Friday 21 December 2007 15:37:46 FUJITA Tomonori wrote:
+> > Some scsi drivers like ips access to sglist in a tricky way.
+> 
+> Indeed.  I fail to see how this code works, in fact:
+> 
+> drivers/scsi/ips.c:ips_queue() line 1101
+> 
+> 	if (ips_is_passthru(SC)) {
+> 
+> 		ips_copp_wait_item_t *scratch;
+> 
+> 		/* A Reset IOCTL is only sent by the boot CD in extreme cases.           */
+> 		/* There can never be any system activity ( network or disk ), but check */
+> 		/* anyway just as a good practice.                                       */
+> 		pt = (ips_passthru_t *) scsi_sglist(SC);
+> 		if ((pt->CoppCP.cmd.reset.op_code == IPS_CMD_RESET_CHANNEL) &&
+> 		    (pt->CoppCP.cmd.reset.adapter_flag == 1)) {
+> 
+> Casting the scsi_sglist(SC) (which ips_is_passthrough treated as a
+> scatterlist) to an ips_passthrough_t seems completely bogus.  It looks like
+> it wants to access the region mapped by the scatterlist.
 
-    I did this work to replace sg chaining.  The current chaining code gives 
-us longer sgs, and (if used carefully) the ability to append in some 
-circumstances.  But it's clumsy, and we can do better.  This is my attempt.
+Yeah, it seems to be broken.
 
-    I understand that people are experiencing whiplash from the idea of 
-another change just after the sg chaining changes which have already gone in.  
+> There are many signs through the code that it needs a great deal of
+> work: what is the purpose of sg_break? Why does the code check if kmap_atomic
+> fails?
 
-    At the very least, I think I'll have to come up with a better transition 
-plan for SCSI drivers, rather than trying to convert them all at once... In 
-theory, sg chaining can be done through the sg ring arrays, but that's pretty 
-horrible.
+sg_break is a workaround for the hardware restrictions, I think.
 
-Cheers,
-Rusty.
+
+> ===
+> Convert the ips SCSI driver to sg_ring.
+> 
+> Slightly non-trivial conversion, will need testing.
+
+As I said, I don't think that converting SCSI drivers to sg_ring (with
+lots of non-trivial work) provides any benefits. Surely, sg_ring
+enables us to modify sg lists but SCSI drivers don't need the
+feature. What SCSI drivers needs is just a efficient way to get the
+next sg entry (they use 'sg++' in the past and sg_next now).
