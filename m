@@ -1,50 +1,53 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: Open-FCoE on linux-scsi
-Date: Sat, 29 Dec 2007 04:11:29 +0900
-Message-ID: <200712281911.lBSJBWnB020367@mbox.iij4u.or.jp>
-References: <10A7D0016239E24092DEF05CCC582E43028A671C@fmsmsx411.amr.corp.intel.com>
+From: "Patro, Sumant" <Sumant.Patro@lsi.com>
+Subject: RE: [2.6 patch] scsi/megaraid.c: __devexit annotation
+Date: Fri, 28 Dec 2007 13:20:32 -0700
+Message-ID: <0631C836DBF79F42B5A60C8C8D4E8229E022DA@NAMAIL2.ad.lsil.com>
+References: <20071211222331.GW14204@stusta.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:54386 "EHLO mo10.iij4u.or.jp"
+Received: from mail0.lsil.com ([147.145.40.20]:63998 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751430AbXL1TLo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Dec 2007 14:11:44 -0500
-In-Reply-To: <10A7D0016239E24092DEF05CCC582E43028A671C@fmsmsx411.amr.corp.intel.com>
+	id S1751997AbXL1UU7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Dec 2007 15:20:59 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20071211222331.GW14204@stusta.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: robert.w.love@intel.com
-Cc: linux-scsi@vger.kernel.org, yi.zou@intel.com, christopher.leech@intel.com, vasu.dev@intel.com, fujita.tomonori@lab.ntt.co.jp
+To: Adrian Bunk <bunk@kernel.org>, DL-MegaRAID Linux <megaraidlinux@lsi.com>, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: "Love, Robert W" <robert.w.love@intel.com>
-Subject: Open-FCoE on linux-scsi
-Date: Tue, 27 Nov 2007 15:40:05 -0800
+Ack.
 
-> Hello SCSI mailing list,
-> 
-> 	I'd just like to introduce ourselves a bit before we get
-> started. My name is Robert Love and I'm joined by a team of engineers
-> including Vasu Dev, Chris Leech and Yi Zou. We are committed to
-> maintaining the Open-FCoE project. Aside from Intel engineers we expect
-> engineers from other companies to contribute to Open-FCoE. 
-> 
-> 	Our goal is to get the initiator code upstream. We have a lot of
-> working code but recognize that we're early in this project's
-> development. We're looking for direction from you, the experts, on what
-> this project should grow into.
+Regards,
 
-I've just added a new fcoe target driver to tgt:
+Sumant 
 
-http://stgt.berlios.de/
+-----Original Message-----
+From: Adrian Bunk [mailto:bunk@kernel.org] 
+Sent: Tuesday, December 11, 2007 2:24 PM
+To: DL-MegaRAID Linux; James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+Subject: [2.6 patch] scsi/megaraid.c: __devexit annotation
 
-The driver runs in user space unlike your target mode driver (I just
-modified your FCoE code to run it in user space).
+megaraid_remove_one() can become __devexit.
 
-The initiator driver succeeded to log in a target, see logical units,
-and perform some I/Os. It's still very unstable but it would be
-useful for FCoE developers.
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
 
+---
+b7d71f38d1c1aa66311e862b58f36aa34c888f98
+diff --git a/drivers/scsi/megaraid.c b/drivers/scsi/megaraid.c index
+66c6520..765c24d 100644
+--- a/drivers/scsi/megaraid.c
++++ b/drivers/scsi/megaraid.c
+@@ -4889,7 +4889,7 @@ __megaraid_shutdown(adapter_t *adapter)
+ 		mdelay(1000);
+ }
+ 
+-static void
++static void __devexit
+ megaraid_remove_one(struct pci_dev *pdev)  {
+ 	struct Scsi_Host *host = pci_get_drvdata(pdev);
 
-I would like to help you push the Open-FCoE initiator to mainline
-too. What are on your todo list and what you guys working on now?
