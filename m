@@ -1,38 +1,97 @@
-From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
-Subject: RE: [PATCH 1/3] cciss: export more attributes to sysfs (repost)
-Date: Thu, 27 Dec 2007 23:55:43 +0000
-Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE15A296AD@G6W0268.americas.hpqcorp.net>
-References: <20071214221744.GA32019@roadking.usa.hp.com>
- <20071221151647.ac8f864c.akpm@linux-foundation.org>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: SCSI errors on powerpc with 2.6.24-rc6-mm1
+Date: Fri, 28 Dec 2007 14:30:43 +0900
+Message-ID: <20071228143043U.fujita.tomonori@lab.ntt.co.jp>
+References: <47732C41.7000003@linux.vnet.ibm.com>
+	<20071227134335O.fujita.tomonori@lab.ntt.co.jp>
+	<47733C01.1080002@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from g1t0028.austin.hp.com ([15.216.28.35]:29675 "EHLO
-	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752685AbXL0X4y convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Dec 2007 18:56:54 -0500
-In-Reply-To: <20071221151647.ac8f864c.akpm@linux-foundation.org>
-Content-Language: en-US
+Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:41322 "EHLO
+	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750958AbXL1Fbb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Dec 2007 00:31:31 -0500
+In-Reply-To: <47733C01.1080002@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "jens.axboe@oracle.com" <jens.axboe@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: balbir@linux.vnet.ibm.com
+Cc: fujita.tomonori@lab.ntt.co.jp, linuxppc-dev@ozlabs.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
->
-> Mike, what's going on?  I definitely told you last time I
-> looked at this patch that it is a bug to call
-> sysfs_remove_group() under spinlock, because
-> sysfs_remove_group() takes sleeping locks.  Yet here it is again.
->
-> Maybe you lost my email.  It is here:
-> http://lkml.org/lkml/2007/11/20/77
->
->
-> Also please see http://lkml.org/lkml/2007/11/20/79
->
+On Thu, 27 Dec 2007 11:15:37 +0530
+Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
 
-Andrew,
-My apologies. Obviously I did not read your email closely. When I return from vacation I will address these issues.
+> FUJITA Tomonori wrote:
+> > On Thu, 27 Dec 2007 10:08:25 +0530
+> > Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
+> > 
+> >> FUJITA Tomonori wrote:
+> >>> On Mon, 24 Dec 2007 10:18:50 +0530
+> >>> Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
+> >>>
+> >> [snip]
+> >>
+> >>> I might break the IOMMU code. Can you reproduce it easily? If so,
+> >>> reverting my IOMMU patches (I've attached a patch to revert them) fix
+> >>> the problem?
+> >> [snip]
+> >>
+> >>
+> >> Yes, this patch fixes the problem for me.
+> > 
+> > Thanks, so you can reproduce it easily, right?
+> > 
+> 
+> Yes, quite easily
+> 
+> > The problem is that I don't want to revert these changes. I'll see
+> > how these changes cause the problem shortly.
+> 
+> I'll try and find some bandwidth to review/test the patches and help you
+> figure out the right solution.
 
--- mikem
+Thanks,
+
+Can you try this?
+
+
+diff --git a/lib/iommu-helper.c b/lib/iommu-helper.c
+index e7d8544..495575a 100644
+--- a/lib/iommu-helper.c
++++ b/lib/iommu-helper.c
+@@ -8,15 +8,20 @@
+ static unsigned long find_next_zero_area(unsigned long *map,
+ 					 unsigned long size,
+ 					 unsigned long start,
+-					 unsigned int nr)
++					 unsigned int nr,
++					 unsigned long align_mask)
+ {
+ 	unsigned long index, end, i;
+ again:
+ 	index = find_next_zero_bit(map, size, start);
++
++	/* Align allocation */
++	index = (index + align_mask) & ~align_mask;
++
+ 	end = index + nr;
+-	if (end > size)
++	if (end >= size)
+ 		return -1;
+-	for (i = index + 1; i < end; i++) {
++	for (i = index; i < end; i++) {
+ 		if (test_bit(i, map)) {
+ 			start = i+1;
+ 			goto again;
+@@ -50,9 +55,8 @@ unsigned long iommu_area_alloc(unsigned long *map, unsigned long size,
+ {
+ 	unsigned long index;
+ again:
+-	index = find_next_zero_area(map, size, start, nr);
++	index = find_next_zero_area(map, size, start, nr, align_mask);
+ 	if (index != -1) {
+-		index = (index + align_mask) & ~align_mask;
+ 		if (is_span_boundary(index, nr, shift, boundary_size)) {
+ 			/* we could do more effectively */
+ 			start = index + 1;
