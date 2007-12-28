@@ -1,76 +1,50 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: SCSI errors on powerpc with 2.6.24-rc6-mm1
-Date: Fri, 28 Dec 2007 16:48:33 +0900
-Message-ID: <20071228165115O.tomof@acm.org>
-References: <47733C01.1080002@linux.vnet.ibm.com>
-	<20071228143043U.fujita.tomonori@lab.ntt.co.jp>
-	<4774A74B.3000105@linux.vnet.ibm.com>
+Subject: Re: Open-FCoE on linux-scsi
+Date: Sat, 29 Dec 2007 04:11:29 +0900
+Message-ID: <200712281911.lBSJBWnB020367@mbox.iij4u.or.jp>
+References: <10A7D0016239E24092DEF05CCC582E43028A671C@fmsmsx411.amr.corp.intel.com>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:53987 "EHLO mo11.iij4u.or.jp"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:54386 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751652AbXL1H7S (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 28 Dec 2007 02:59:18 -0500
-In-Reply-To: <4774A74B.3000105@linux.vnet.ibm.com>
+	id S1751430AbXL1TLo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 28 Dec 2007 14:11:44 -0500
+In-Reply-To: <10A7D0016239E24092DEF05CCC582E43028A671C@fmsmsx411.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: balbir@linux.vnet.ibm.com
-Cc: fujita.tomonori@lab.ntt.co.jp, linuxppc-dev@ozlabs.org, akpm@linux-foundation.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: robert.w.love@intel.com
+Cc: linux-scsi@vger.kernel.org, yi.zou@intel.com, christopher.leech@intel.com, vasu.dev@intel.com, fujita.tomonori@lab.ntt.co.jp
 
-On Fri, 28 Dec 2007 13:05:39 +0530
-Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: Open-FCoE on linux-scsi
+Date: Tue, 27 Nov 2007 15:40:05 -0800
 
-> FUJITA Tomonori wrote:
-> [snip]
-> > Thanks,
-> > 
-> > Can you try this?
-> > 
-> > 
-> > diff --git a/lib/iommu-helper.c b/lib/iommu-helper.c
-> > index e7d8544..495575a 100644
-> > --- a/lib/iommu-helper.c
-> > +++ b/lib/iommu-helper.c
-> > @@ -8,15 +8,20 @@
-> >  static unsigned long find_next_zero_area(unsigned long *map,
-> >  					 unsigned long size,
-> >  					 unsigned long start,
-> > -					 unsigned int nr)
-> > +					 unsigned int nr,
-> > +					 unsigned long align_mask)
-> >  {
-> >  	unsigned long index, end, i;
-> >  again:
-> >  	index = find_next_zero_bit(map, size, start);
-> > +
-> > +	/* Align allocation */
-> > +	index = (index + align_mask) & ~align_mask;
-> > +
-> >  	end = index + nr;
-> > -	if (end > size)
-> > +	if (end >= size)
-> >  		return -1;
-> > -	for (i = index + 1; i < end; i++) {
-> > +	for (i = index; i < end; i++) {
-> >  		if (test_bit(i, map)) {
-> >  			start = i+1;
-> >  			goto again;
-> > @@ -50,9 +55,8 @@ unsigned long iommu_area_alloc(unsigned long *map, unsigned long size,
-> >  {
-> >  	unsigned long index;
-> >  again:
-> > -	index = find_next_zero_area(map, size, start, nr);
-> > +	index = find_next_zero_area(map, size, start, nr, align_mask);
-> >  	if (index != -1) {
-> > -		index = (index + align_mask) & ~align_mask;
-> >  		if (is_span_boundary(index, nr, shift, boundary_size)) {
-> >  			/* we could do more effectively */
-> >  			start = index + 1;
+> Hello SCSI mailing list,
 > 
-> This on top of -mm? Or on top of the reverted iommu patch.
+> 	I'd just like to introduce ourselves a bit before we get
+> started. My name is Robert Love and I'm joined by a team of engineers
+> including Vasu Dev, Chris Leech and Yi Zou. We are committed to
+> maintaining the Open-FCoE project. Aside from Intel engineers we expect
+> engineers from other companies to contribute to Open-FCoE. 
+> 
+> 	Our goal is to get the initiator code upstream. We have a lot of
+> working code but recognize that we're early in this project's
+> development. We're looking for direction from you, the experts, on what
+> this project should grow into.
 
-Oops, it's for -mm.
+I've just added a new fcoe target driver to tgt:
 
-Thanks,
+http://stgt.berlios.de/
+
+The driver runs in user space unlike your target mode driver (I just
+modified your FCoE code to run it in user space).
+
+The initiator driver succeeded to log in a target, see logical units,
+and perform some I/Os. It's still very unstable but it would be
+useful for FCoE developers.
+
+
+I would like to help you push the Open-FCoE initiator to mainline
+too. What are on your todo list and what you guys working on now?
