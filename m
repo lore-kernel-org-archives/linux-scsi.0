@@ -1,41 +1,59 @@
-From: "Miquel van Smoorenburg" <miquels@cistron.nl>
-Subject: Re: Adaptec 2410SA, aacraid, managment
-Date: 30 Dec 2007 10:27:56 GMT
-Message-ID: <477772ac$0$85790$e4fe514c@news.xs4all.nl>
-References: <47758245.8070408@nectarine.info>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: Maybe Sorry for that but where should i write .)
+Date: Sun, 30 Dec 2007 13:53:28 +0200
+Message-ID: <477786B8.9040000@panasas.com>
+References: <4775A7D8.6000001@trollprod.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-vbr16.xs4all.nl ([194.109.24.36]:1930 "EHLO
-	smtp-vbr16.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751599AbXL3Kll (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Dec 2007 05:41:41 -0500
-Received: from post.news.xs4all.nl (post.news.xs4all.nl [194.109.133.244])
-	by smtp-vbr16.xs4all.nl (8.13.8/8.13.8) with ESMTP id lBUARvHq082016
-	for <linux-scsi@vger.kernel.org>; Sun, 30 Dec 2007 11:27:57 +0100 (CET)
-	(envelope-from mailnull@post.news.xs4all.nl)
-Received: from post.news.xs4all.nl (localhost [127.0.0.1])
-	by post.news.xs4all.nl (8.13.8/8.13.8) with ESMTP id lBUARv2d027111
-	for <linux-scsi@vger.kernel.org>; Sun, 30 Dec 2007 11:27:57 +0100 (CET)
-	(envelope-from mailnull@post.news.xs4all.nl)
-In-Reply-To: <47758245.8070408@nectarine.info>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:12152 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1751122AbXL3Lxl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Dec 2007 06:53:41 -0500
+In-Reply-To: <4775A7D8.6000001@trollprod.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: thanatos <thanatos@trollprod.org>
+Cc: teheo@novell.com, linux-scsi <linux-scsi@vger.kernel.org>
 
-In article <47758245.8070408@nectarine.info>,
-Giacomo Di Ciocco  <admin@nectarine.info> wrote:
->Hello subscribers,
->theres any utility to query/manage controller status/features ?
->
->I'm using this card for a Raid 10 array made of four 300GB sata disks, 
->on a debian sarge with kernel 2.6.19.1-grsec. It runs on a dual opteron 
->Tyan GT24 transport and operates principally as mail and web server.
+On Sat, Dec 29 2007 at 3:50 +0200, thanatos <thanatos@trollprod.org> wrote:
+> I got a sata controller  ignitio
+> 
+>  00:11.0 SATA controller: Initio Corporation INI-1623 PCI SATA-II 
+> Controller (rev 02) (prog-if 00 [Vendor specific])
+>         Subsystem: Initio Corporation INI-1623 PCI SATA-II Controller
+>         Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 11
+>         I/O ports at dc00 [size=256]
+>         I/O ports at d800 [size=256]
+>         I/O ports at d400 [size=256]
+>         I/O ports at d000 [size=256]
+>         I/O ports at cc00 [size=256]
+>         Memory at cffff000 (32-bit, non-prefetchable) [size=4K]
+>         Expansion ROM at cff80000 [disabled] [size=256K]
+>         Capabilities: [dc] Power Management version 2
+> 
+> 
+> and an "no yet usable" 320 hdd, cause of lba48
+> 
+> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+> ata3.00: HPA unlocked: 625142448 -> 625142448, native 18446744072354982576
+> ata3.00: ATA-8: SAMSUNG HD321KJ, CP100-12, max UDMA7
+> ata3.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 0/32)
+> ata3.00: ERROR: This driver doesn't support LBA48 yet and may cause
+>                 data corruption on such devices.  Disabling.
+> ata3.00: disabled
+> 
+> i'm still on kernel 2.6.22. i had look on changelog 2.6.23 and even 
+> 2.6.24 nothing for that, is theyre a roadmap ?
+> 
+> so if i could help in any way testing patch. i'm theyre
 
-You can download the 'storage manager' software from the adaptec
-site. It includes GUI and CLI (arcconf) tools.
+cc: the linux-scsi mailing list.
 
-http://linux.adaptec.com/2007/11/15/how-to-monitor-the-status-of-arrays-in-ubuntu-710/
+Personally I have nothing to do with this driver, I only sent a fix
+for a patch in 2.6.23
 
-Mike.
+Boaz
+
+
