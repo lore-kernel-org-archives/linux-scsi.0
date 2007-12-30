@@ -1,100 +1,41 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH] libsas: don't treat underrun as an error on SMP tasks
-Date: Sun, 30 Dec 2007 19:34:52 +0900
-Message-ID: <20071230192209S.tomof@acm.org>
-References: <1198950594.3264.36.camel@localhost.localdomain>
+From: "Miquel van Smoorenburg" <miquels@cistron.nl>
+Subject: Re: Adaptec 2410SA, aacraid, managment
+Date: 30 Dec 2007 10:27:56 GMT
+Message-ID: <477772ac$0$85790$e4fe514c@news.xs4all.nl>
+References: <47758245.8070408@nectarine.info>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:51100 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751467AbXL3KfE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 30 Dec 2007 05:35:04 -0500
-In-Reply-To: <1198950594.3264.36.camel@localhost.localdomain>
+Received: from smtp-vbr16.xs4all.nl ([194.109.24.36]:1930 "EHLO
+	smtp-vbr16.xs4all.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751599AbXL3Kll (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Dec 2007 05:41:41 -0500
+Received: from post.news.xs4all.nl (post.news.xs4all.nl [194.109.133.244])
+	by smtp-vbr16.xs4all.nl (8.13.8/8.13.8) with ESMTP id lBUARvHq082016
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Dec 2007 11:27:57 +0100 (CET)
+	(envelope-from mailnull@post.news.xs4all.nl)
+Received: from post.news.xs4all.nl (localhost [127.0.0.1])
+	by post.news.xs4all.nl (8.13.8/8.13.8) with ESMTP id lBUARv2d027111
+	for <linux-scsi@vger.kernel.org>; Sun, 30 Dec 2007 11:27:57 +0100 (CET)
+	(envelope-from mailnull@post.news.xs4all.nl)
+In-Reply-To: <47758245.8070408@nectarine.info>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com, fujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
 
-On Sat, 29 Dec 2007 11:49:53 -0600
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+In article <47758245.8070408@nectarine.info>,
+Giacomo Di Ciocco  <admin@nectarine.info> wrote:
+>Hello subscribers,
+>theres any utility to query/manage controller status/features ?
+>
+>I'm using this card for a Raid 10 array made of four 300GB sata disks, 
+>on a debian sarge with kernel 2.6.19.1-grsec. It runs on a dual opteron 
+>Tyan GT24 transport and operates principally as mail and web server.
 
-> All SMP tasks sent through bsg generate messages like:
-> 
-> sas: smp_execute_task: task to dev 500605b000001450 response: 0x0 status 0x81
-> 
-> Three times (because the task gets retried).  Firstly, don't retry
-> either overrun or underrun (the data buffer isn't going to change size)
-> and secondly, just report the underrun but don't set an error for it.
-> This is necessary so bsg can report back the residual.
-> 
-> James
-> 
-> diff --git a/drivers/scsi/libsas/sas_expander.c b/drivers/scsi/libsas/sas_expander.c
-> index 76555b1..1578059 100644
-> --- a/drivers/scsi/libsas/sas_expander.c
-> +++ b/drivers/scsi/libsas/sas_expander.c
-> @@ -109,6 +109,16 @@ static int smp_execute_task(struct domain_device *dev, void *req, int req_size,
->  		    task->task_status.stat == SAM_GOOD) {
->  			res = 0;
->  			break;
-> +		} if (task->task_status.resp == SAS_TASK_COMPLETE &&
-> +		      task->task_status.stat == SAS_DATA_UNDERRUN) {
-> +			/* no error, but return the number of bytes of
-> +			 * underrun */
-> +			res = task->task_status.residual;
-> +			break;
-> +		} if (task->task_status.resp == SAS_TASK_COMPLETE &&
-> +		      task->task_status.stat == SAS_DATA_OVERRUN) {
-> +			res = -EMSGSIZE;
-> +			break;
->  		} else {
->  			SAS_DPRINTK("%s: task to dev %016llx response: 0x%x "
->  				    "status 0x%x\n", __FUNCTION__,
-> @@ -1924,6 +1934,11 @@ int sas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
->  
->  	ret = smp_execute_task(dev, bio_data(req->bio), req->data_len,
->  			       bio_data(rsp->bio), rsp->data_len);
-> +	if (ret > 0) {
-> +		/* positive number is the untransferred residual */
-> +		rsp->data_len = ret;
-> +		ret = 0;
-> +	}
+You can download the 'storage manager' software from the adaptec
+site. It includes GUI and CLI (arcconf) tools.
 
-Would be better to update dout_resid too (on sucess, we can set
-req->data_len to zero, I think)?
+http://linux.adaptec.com/2007/11/15/how-to-monitor-the-status-of-arrays-in-ubuntu-710/
 
-Here's a patch to do the same thing for mpt sas, an updated version
-of:
-
-http://marc.info/?l=linux-scsi&m=119811872823947&w=2
-
---
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] mpt fusion: mptsas_smp_handler updates resid
-
-This patch fixes mptsas_smp_handler to update both din_resid or
-dout_resid on success. bsg can report back the residual.
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
----
- drivers/message/fusion/mptsas.c |    2 ++
- 1 files changed, 2 insertions(+), 0 deletions(-)
-
-diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
-index e4c94f9..f77b329 100644
---- a/drivers/message/fusion/mptsas.c
-+++ b/drivers/message/fusion/mptsas.c
-@@ -1343,6 +1343,8 @@ static int mptsas_smp_handler(struct Scsi_Host *shost, struct sas_rphy *rphy,
- 		smprep = (SmpPassthroughReply_t *)ioc->sas_mgmt.reply;
- 		memcpy(req->sense, smprep, sizeof(*smprep));
- 		req->sense_len = sizeof(*smprep);
-+		req->data_len = 0;
-+		rsp->data_len -= smprep->ResponseDataLength;
- 	} else {
- 		printk(MYIOC_s_ERR_FMT "%s: smp passthru reply failed to be returned\n",
- 		    ioc->name, __FUNCTION__);
--- 
-1.5.3.4
-
+Mike.
