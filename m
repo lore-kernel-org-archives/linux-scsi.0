@@ -1,40 +1,37 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: SCSI errors on powerpc with 2.6.24-rc6-mm1
-Date: Tue, 1 Jan 2008 01:11:33 +0900
-Message-ID: <20080101011452P.tomof@acm.org>
-References: <4774A74B.3000105@linux.vnet.ibm.com>
-	<20071228165115O.tomof@acm.org>
-	<4778E037.6000001@linux.vnet.ibm.com>
+From: Rob Love <robert.w.love@intel.com>
+Subject: [PATCH] [FCoE] Don't panic if session is null in fc_sess_seq_alloc(),
+	just return null.
+Date: Mon, 31 Dec 2007 10:19:48 -0800
+Message-ID: <20071231181948.28443.42615.stgit@fritz>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:39132 "EHLO mo11.iij4u.or.jp"
+Received: from mga02.intel.com ([134.134.136.20]:31966 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754956AbXLaQoD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Dec 2007 11:44:03 -0500
-In-Reply-To: <4778E037.6000001@linux.vnet.ibm.com>
+	id S1751095AbXLaSaS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Dec 2007 13:30:18 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: balbir@linux.vnet.ibm.com, akpm@linux-foundation.org
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: linux-scsi@vger.kernel.org
 
-On Mon, 31 Dec 2007 17:57:35 +0530
-Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
+Signed-off-by: Rob Love <robert.w.love@intel.com>
+---
 
-> FUJITA Tomonori wrote:
-> > 
-> > Oops, it's for -mm.
-> > 
-> 
-> Hi,
-> 
-> I just tested this patch and it works fine for me so far.
-> 
-> Tested-by: Balbir Singh <balbir@linux.vnet.ibm.com>
+ drivers/scsi/ofc/libfc/fc_sess.c |    2 ++
+ 1 files changed, 2 insertions(+), 0 deletions(-)
 
-Thanks!
+diff --git a/drivers/scsi/ofc/libfc/fc_sess.c b/drivers/scsi/ofc/libfc/fc_sess.c
+index 34cc2b0..8ac6811 100644
+--- a/drivers/scsi/ofc/libfc/fc_sess.c
++++ b/drivers/scsi/ofc/libfc/fc_sess.c
+@@ -665,6 +665,8 @@ struct fc_seq *fc_sess_seq_alloc(struct fc_sess *sess,
+ 	struct fc_exch *ep;
+ 	struct fc_local_port *lp;
+ 
++	if (!sess)
++		return NULL;
+ 	lp = sess->fs_local_port;
+ 	sp = fc_seq_start_exch(lp->fl_vf->vf_exch_mgr,
+ 			       recv, errh, arg, sess->fs_local_fid,
 
-I sent an updated patch including this fix several hours ago:
-
-http://ozlabs.org/pipermail/linuxppc-dev/2007-December/048997.html
