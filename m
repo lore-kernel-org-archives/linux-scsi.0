@@ -1,81 +1,131 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 1/2] block: Introduce new blk_queue_update_dma_alignment
-	interface
-Date: Mon, 31 Dec 2007 16:37:00 -0600
-Message-ID: <1199140621.3110.20.camel@localhost.localdomain>
+Subject: [PATCH 2/2] relax scsi dma alignment
+Date: Mon, 31 Dec 2007 16:43:25 -0600
+Message-ID: <1199141005.3110.27.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38720 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:42304 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751036AbXLaWhK (ORCPT
+	by vger.kernel.org with ESMTP id S1751042AbXLaWne (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 31 Dec 2007 17:37:10 -0500
+	Mon, 31 Dec 2007 17:43:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <Jens.Axboe@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Kristian Hoegsberg <krh@bitplanet.net>
 
-The purpose of this is to allow stacked alignment settings, with the
-ultimate queue alignment being set to the largest alignment requirement
-in the stack.
+This patch relaxes the default SCSI DMA alignment from 512 bytes to 4
+bytes.  I remember from previous discussions that usb and firewire have
+sector size alignment requirements, so I upped their alignments in the
+respective slave allocs.
 
-The reason for this is so that the SCSI mid-layer can relax the default
-alignment requirements (which are basically causing a lot of superfluous
-copying to go on in the SG_IO interface) while allowing transports,
-devices or HBAs to add stricter limits if they need them.
+The reason for doing this is so that we don't get such a huge amount of
+copy overhead in bio_copy_user() for udev.  (basically all inquiries it
+issues can now be directly mapped).
 
 Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
 
 ---
 
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 8b91994..8097bf0 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -760,6 +760,30 @@ void blk_queue_dma_alignment(struct request_queue *q, int mask)
- EXPORT_SYMBOL(blk_queue_dma_alignment);
+This patch depends on the prior patch:
+
+block: Introduce new blk_queue_update_dma_alignment interface
+
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 571fba5..db627a4 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -824,6 +824,9 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+ 	 * requests.
+ 	 */
+ 	sdev->max_device_blocked = 1;
++
++	/* set the min alignment */
++	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_MASK);
+ }
+ 
+ static void ata_scsi_dev_config(struct scsi_device *sdev,
+@@ -868,7 +871,7 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
+ 	if (dev)
+ 		ata_scsi_dev_config(sdev, dev);
+ 
+-	return 0;	/* scsi layer doesn't check return value, sigh */
++	return 0;
+ }
  
  /**
-+ * blk_queue_update_dma_alignment - update dma length and memory alignment
-+ * @q:     the request queue for the device
-+ * @mask:  alignment mask
-+ *
-+ * description:
-+ *    update required memory and length aligment for direct dma transactions.
-+ *    If the requested alignment is larger than the current alignment, then
-+ *    the current queue alignment is updated to the new value, otherwise it 
-+ *    is left alone.  The design of this is to allow multiple objects
-+ *    (driver, device, transport etc) to set their respective
-+ *    alignments without having them interfere.
-+ *
-+ **/
-+void blk_queue_update_dma_alignment(struct request_queue *q, int mask)
-+{
-+	BUG_ON(mask > PAGE_SIZE);
+diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
+index 624ff3e..c2169d2 100644
+--- a/drivers/firewire/fw-sbp2.c
++++ b/drivers/firewire/fw-sbp2.c
+@@ -1238,6 +1238,12 @@ static int sbp2_scsi_slave_alloc(struct scsi_device *sdev)
+ 
+ 	sdev->allow_restart = 1;
+ 
++	/*
++	 * Update the dma alignment (minimum alignment requirements for
++	 * start and end of DMA transfers) to be a sector
++	 */
++	blk_queue_update_dma_alignment(sdev->request_queue, 511);
 +
-+	if (mask > q->dma_alignment)
-+		q->dma_alignment = mask;
-+}
+ 	if (lu->tgt->workarounds & SBP2_WORKAROUND_INQUIRY_36)
+ 		sdev->inquiry_len = 36;
+ 
+diff --git a/drivers/ieee1394/sbp2.c b/drivers/ieee1394/sbp2.c
+index b83d254..1eda11a 100644
+--- a/drivers/ieee1394/sbp2.c
++++ b/drivers/ieee1394/sbp2.c
+@@ -1963,6 +1963,12 @@ static int sbp2scsi_slave_alloc(struct scsi_device *sdev)
+ 	lu->sdev = sdev;
+ 	sdev->allow_restart = 1;
+ 
++	/*
++	 * Update the dma alignment (minimum alignment requirements for
++	 * start and end of DMA transfers) to be a sector
++	 */
++	blk_queue_update_dma_alignment(sdev->request_queue, 511);
 +
-+EXPORT_SYMBOL(blk_queue_update_dma_alignment);
+ 	if (lu->workarounds & SBP2_WORKAROUND_INQUIRY_36)
+ 		sdev->inquiry_len = 36;
+ 	return 0;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d1a4671..0aa5296 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1667,6 +1667,14 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+ 
+ 	if (!shost->use_clustering)
+ 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
 +
-+/**
-  * blk_queue_find_tag - find a request by its tag and queue
-  * @q:	 The request queue for the device
-  * @tag: The tag of the request
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index d18ee67..81e99e5 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -766,6 +766,7 @@ extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
- extern void blk_queue_dma_alignment(struct request_queue *, int);
-+extern void blk_queue_update_dma_alignment(struct request_queue *, int);
- extern void blk_queue_softirq_done(struct request_queue *, softirq_done_fn *);
- extern struct backing_dev_info *blk_get_backing_dev_info(struct block_device *bdev);
- extern int blk_queue_ordered(struct request_queue *, unsigned, prepare_flush_fn *);
++	/*
++	 * set a reasonable default alignment on word boundaries: the
++	 * host and device may alter it using
++	 * blk_queue_update_dma_alignment() later.
++	 */
++	blk_queue_dma_alignment(q, 0x03);
++
+ 	return q;
+ }
+ EXPORT_SYMBOL(__scsi_alloc_queue);
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 7c9593b..39c03f9 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -82,6 +82,12 @@ static int slave_alloc (struct scsi_device *sdev)
+ 	sdev->inquiry_len = 36;
+ 
+ 	/*
++	 * Update the dma alignment (minimum alignment requirements for
++	 * start and end of DMA transfers) to be a sector
++	 */
++	blk_queue_update_dma_alignment(sdev->request_queue, 511);
++
++	/*
+ 	 * The UFI spec treates the Peripheral Qualifier bits in an
+ 	 * INQUIRY result as reserved and requires devices to set them
+ 	 * to 0.  However the SCSI spec requires these bits to be set
 
 
