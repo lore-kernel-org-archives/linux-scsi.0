@@ -1,60 +1,54 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
- of	that provided by the block layer
-Date: Mon, 31 Dec 2007 17:56:20 -0500
-Message-ID: <47797394.8020807@garzik.org>
-References: <1199138168.3110.12.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 2/2] relax scsi dma alignment
+Date: Mon, 31 Dec 2007 17:57:00 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0712311754240.11410-100000@iolanthe.rowland.org>
+References: <1199141005.3110.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1199138168.3110.12.camel@localhost.localdomain>
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:39515 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751085AbXLaW5D (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Dec 2007 17:57:03 -0500
+In-Reply-To: <1199141005.3110.27.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Kristian Hoegsberg <krh@bitplanet.net>
 
-James Bottomley wrote:
-> ATA requires that all DMA transfers begin and end on word boundaries.
-> Because of this, a large amount of machinery grew up in ide to adjust
-> scatterlists on this basis.  However, as of 2.5, the block layer has a
-> dma_alignment variable which ensures both the beginning and length of a
-> DMA transfer are aligned on the dma_alignment boundary.  Although the
-> block layer does adjust the beginning of the transfer to ensure this
-> happens, it doesn't actually adjust the length, it merely makes sure
-> that space is allocated for transfers beyond the declared length.  The
-> upshot of this is that scatterlists may be padded to any size between
-> the actual length and the length adjusted to the dma_alignment safely
-> knowing that memory is allocated in this region.
+On Mon, 31 Dec 2007, James Bottomley wrote:
+
+> This patch relaxes the default SCSI DMA alignment from 512 bytes to 4
+> bytes.  I remember from previous discussions that usb and firewire have
+> sector size alignment requirements, so I upped their alignments in the
+> respective slave allocs.
 > 
-> Right at the moment, SCSI takes the default dma_aligment which is on a
-> 512 byte boundary.  Note that this aligment only applies to transfers
-> coming in from user space.  However, since all kernel allocations are
-> automatically aligned on a minimum of 32 byte boundaries, it is safe to
-> adjust them in this manner as well.
-> 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> This also fixes a current panic in libsas with SATAPI devices.  I was
-> trying to trace a bad interaction between the libata padding and the new
-> sglist code which was the root cause, and ended up concluding that the
-> whole libata padding thing was redundant.
-> 
-> In a future improvement, I think we can relax SCSI dma_alignemnt (it's
-> causing almost every user space command to be copied instead of directly
-> passed through) and allow devices and transports to build up their own
-> requirements instead.
+> The reason for doing this is so that we don't get such a huge amount of
+> copy overhead in bio_copy_user() for udev.  (basically all inquiries it
+> issues can now be directly mapped).
 
-Initial read:  ACK, with thanks.  I'll queue this into libata#upstream, 
-unless you have other suggestions.
+...
 
-This is definitely the sort of thing that low-level drivers (and their 
-helper libs, e.g. libata) should not need to do.
+> diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+> index 7c9593b..39c03f9 100644
+> --- a/drivers/usb/storage/scsiglue.c
+> +++ b/drivers/usb/storage/scsiglue.c
+> @@ -82,6 +82,12 @@ static int slave_alloc (struct scsi_device *sdev)
+>  	sdev->inquiry_len = 36;
+>  
+>  	/*
+> +	 * Update the dma alignment (minimum alignment requirements for
+> +	 * start and end of DMA transfers) to be a sector
+> +	 */
+> +	blk_queue_update_dma_alignment(sdev->request_queue, 511);
+> +
+> +	/*
+>  	 * The UFI spec treates the Peripheral Qualifier bits in an
+>  	 * INQUIRY result as reserved and requires devices to set them
+>  	 * to 0.  However the SCSI spec requires these bits to be set
 
-	Jeff
+It would be better to move the existing code from the start of
+slave_configure() up into slave_alloc().  Otherwise it's fine.
 
-
-
+Alan Stern
 
