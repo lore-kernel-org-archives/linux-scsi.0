@@ -1,65 +1,40 @@
-From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: Bad escriptions in Kconfig
-Date: Mon, 31 Dec 2007 11:34:58 -0500
-Message-ID: <47791A32.1020405@torque.net>
-References: <alpine.LSU.0.999.0712311313050.3761@be1.lrz> <477907DB.8030406@torque.net> <20071231154731.GY11638@parisc-linux.org>
-Reply-To: dougg@torque.net
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: SCSI errors on powerpc with 2.6.24-rc6-mm1
+Date: Tue, 1 Jan 2008 01:11:33 +0900
+Message-ID: <20080101011452P.tomof@acm.org>
+References: <4774A74B.3000105@linux.vnet.ibm.com>
+	<20071228165115O.tomof@acm.org>
+	<4778E037.6000001@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46816 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756134AbXLaQfm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Dec 2007 11:35:42 -0500
-In-Reply-To: <20071231154731.GY11638@parisc-linux.org>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:39132 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754956AbXLaQoD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 31 Dec 2007 11:44:03 -0500
+In-Reply-To: <4778E037.6000001@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Bodo Eggert <7eggert@gmx.de>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+To: balbir@linux.vnet.ibm.com, akpm@linux-foundation.org
+Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, linuxppc-dev@ozlabs.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
 
-Matthew Wilcox wrote:
-> On Mon, Dec 31, 2007 at 10:16:43AM -0500, Douglas Gilbert wrote:
->> Bodo Eggert wrote:
->>> ---
->>> SCSI target support (SCSI_TGT) [N/m/y/?] (NEW) ?
->>>
->>> If you want to use SCSI target mode drivers enable this option.
->>> If you choose M, the module will be called scsi_tgt.
->>> ---
->>>
->>> What TF is a SCSI target mode, what is a target mode driver?
->> Heard of google :-)
->>
->> For explanations of SCSI (and other storage) terminology
->> reference could be made to SAM-3 or SAM-4 drafts (because
->> the real standards cost money) at www.t10.org .
->>
->> Perhaps many other subsections in the kernel could have
->> similar references.
+On Mon, 31 Dec 2007 17:57:35 +0530
+Balbir Singh <balbir@linux.vnet.ibm.com> wrote:
+
+> FUJITA Tomonori wrote:
+> > 
+> > Oops, it's for -mm.
+> > 
 > 
-> I think that's an appalling idea.  Someone's trying to configure their
-> kernel, not research hundreds of new ideas on the internet.  Here's a
-> better description:
+> Hi,
 > 
-> 	help
-> 	  The SCSI target code allows your computer to appear as a SCSI
-> 	  device.  This is useful in a SAN or NAS environment where you
-> 	  want other computers to be able to treat this computer as a disc.
+> I just tested this patch and it works fine for me so far.
 > 
-> 	  To compile this driver as a module, choose M here: the module
-> 	  will be called scsi_tgt.
+> Tested-by: Balbir Singh <balbir@linux.vnet.ibm.com>
 
-Appalling or not, it is more accurate to define a SCSI target
-properly than equate it to a direct access logical unit (i.e.
-a disk). IMO the designers of that driver and associated
-applications made exactly the same mistake which they are now
-fixing. That driver is also transport specific with support
-for iSCSI and iSER. Try writing a SPI, FC or SAS target driver
-for scsi_tgt (I failed with SAS).
+Thanks!
 
-It could also be noted that if the reader doesn't understand
-the description they can most likely say 'N'.
+I sent an updated patch including this fix several hours ago:
 
-Doug Gilbert
-
+http://ozlabs.org/pipermail/linuxppc-dev/2007-December/048997.html
