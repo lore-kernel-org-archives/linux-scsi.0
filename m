@@ -1,163 +1,81 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Pete Wyckoff <pw@osc.edu>
 Subject: Re: [PATCH 2/2] relax scsi dma alignment
-Date: Tue, 01 Jan 2008 10:00:10 -0600
-Message-ID: <1199203210.3252.2.camel@localhost.localdomain>
-References: <Pine.LNX.4.44L0.0712311754240.11410-100000@iolanthe.rowland.org>
+Date: Tue, 1 Jan 2008 11:08:59 -0500
+Message-ID: <20080101160859.GA482@osc.edu>
+References: <1199141005.3110.27.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50521 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752038AbYAAQAR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jan 2008 11:00:17 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0712311754240.11410-100000@iolanthe.rowland.org>
+Received: from marge.padd.com ([66.127.62.138]:54513 "EHLO marge.padd.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754925AbYAAQUE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 1 Jan 2008 11:20:04 -0500
+Content-Disposition: inline
+In-Reply-To: <1199141005.3110.27.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Kristian Hoegsberg <krh@bitplanet.net>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Kristian Hoegsberg <krh@bitplanet.net>
 
-On Mon, 2007-12-31 at 17:57 -0500, Alan Stern wrote:
-> On Mon, 31 Dec 2007, James Bottomley wrote:
-> > --- a/drivers/usb/storage/scsiglue.c
-> > +++ b/drivers/usb/storage/scsiglue.c
-> > @@ -82,6 +82,12 @@ static int slave_alloc (struct scsi_device *sdev)
-> >  	sdev->inquiry_len = 36;
-> >  
-> >  	/*
-> > +	 * Update the dma alignment (minimum alignment requirements for
-> > +	 * start and end of DMA transfers) to be a sector
-> > +	 */
-> > +	blk_queue_update_dma_alignment(sdev->request_queue, 511);
-> > +
-> > +	/*
-> >  	 * The UFI spec treates the Peripheral Qualifier bits in an
-> >  	 * INQUIRY result as reserved and requires devices to set them
-> >  	 * to 0.  However the SCSI spec requires these bits to be set
+James.Bottomley@HansenPartnership.com wrote on Mon, 31 Dec 2007 16:43 -0600:
+> This patch relaxes the default SCSI DMA alignment from 512 bytes to 4
+> bytes.  I remember from previous discussions that usb and firewire have
+> sector size alignment requirements, so I upped their alignments in the
+> respective slave allocs.
 > 
-> It would be better to move the existing code from the start of
-> slave_configure() up into slave_alloc().  Otherwise it's fine.
+> The reason for doing this is so that we don't get such a huge amount of
+> copy overhead in bio_copy_user() for udev.  (basically all inquiries it
+> issues can now be directly mapped).
 
-Um, yes, you're right, I didn't notice there was an existing one ... I
-just assumed you were relying on the SCSI default.
+Great change.  Here's another patch.  It allows a queue
+dma_alignment of 0 bytes, for drivers that can move data
+at byte granularity.
 
-Here's an updated patch.
+Two drivers try to turn off DMA alignment restrictions by
+setting the dma_alignment to zero:
 
-James
+    drivers/scsi/iscsi_tcp.c: blk_queue_dma_alignment(sdev->request_queue, 0);
+    drivers/scsi/scsi_tgt_lib.c: blk_queue_dma_alignment(q, 0);
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index fed5308..25c9470 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -824,6 +824,9 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
- 	 * requests.
- 	 */
- 	sdev->max_device_blocked = 1;
-+
-+	/* set the min alignment */
-+	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_MASK);
- }
+But they end up doing copies due to the way that queue_dma_alignment()
+returns 511 in this case.
+
+		-- Pete
+
+---
+
+>From 90ee6d61ad71a024815eee2b416edb40c6b01256 Mon Sep 17 00:00:00 2001
+From: Pete Wyckoff <pw@osc.edu>
+Date: Tue, 1 Jan 2008 10:23:02 -0500
+Subject: [PATCH] block: allow queue dma_alignment of zero
+
+Let queue_dma_alignment return 0 if it was specifically set to 0.
+This permits devices with no particular alignment restrictions to
+use arbitrary user space buffers without copying.
+
+Signed-off-by: Pete Wyckoff <pw@osc.edu>
+---
+ include/linux/blkdev.h |    7 +------
+ 1 files changed, 1 insertions(+), 6 deletions(-)
+
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index aa3090c..eea31c2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -860,12 +860,7 @@ static inline int bdev_hardsect_size(struct block_device *bdev)
  
- static void ata_scsi_dev_config(struct scsi_device *sdev,
-@@ -868,7 +871,7 @@ int ata_scsi_slave_config(struct scsi_device *sdev)
- 	if (dev)
- 		ata_scsi_dev_config(sdev, dev);
- 
--	return 0;	/* scsi layer doesn't check return value, sigh */
-+	return 0;
- }
- 
- /**
-diff --git a/drivers/firewire/fw-sbp2.c b/drivers/firewire/fw-sbp2.c
-index 624ff3e..c2169d2 100644
---- a/drivers/firewire/fw-sbp2.c
-+++ b/drivers/firewire/fw-sbp2.c
-@@ -1238,6 +1238,12 @@ static int sbp2_scsi_slave_alloc(struct scsi_device *sdev)
- 
- 	sdev->allow_restart = 1;
- 
-+	/*
-+	 * Update the dma alignment (minimum alignment requirements for
-+	 * start and end of DMA transfers) to be a sector
-+	 */
-+	blk_queue_update_dma_alignment(sdev->request_queue, 511);
-+
- 	if (lu->tgt->workarounds & SBP2_WORKAROUND_INQUIRY_36)
- 		sdev->inquiry_len = 36;
- 
-diff --git a/drivers/ieee1394/sbp2.c b/drivers/ieee1394/sbp2.c
-index b83d254..1eda11a 100644
---- a/drivers/ieee1394/sbp2.c
-+++ b/drivers/ieee1394/sbp2.c
-@@ -1963,6 +1963,12 @@ static int sbp2scsi_slave_alloc(struct scsi_device *sdev)
- 	lu->sdev = sdev;
- 	sdev->allow_restart = 1;
- 
-+	/*
-+	 * Update the dma alignment (minimum alignment requirements for
-+	 * start and end of DMA transfers) to be a sector
-+	 */
-+	blk_queue_update_dma_alignment(sdev->request_queue, 511);
-+
- 	if (lu->workarounds & SBP2_WORKAROUND_INQUIRY_36)
- 		sdev->inquiry_len = 36;
- 	return 0;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index d1a4671..0aa5296 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1667,6 +1667,14 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
- 
- 	if (!shost->use_clustering)
- 		clear_bit(QUEUE_FLAG_CLUSTER, &q->queue_flags);
-+
-+	/*
-+	 * set a reasonable default alignment on word boundaries: the
-+	 * host and device may alter it using
-+	 * blk_queue_update_dma_alignment() later.
-+	 */
-+	blk_queue_dma_alignment(q, 0x03);
-+
- 	return q;
- }
- EXPORT_SYMBOL(__scsi_alloc_queue);
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 7c9593b..dd8b13e 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -81,6 +81,16 @@ static int slave_alloc (struct scsi_device *sdev)
- 	 */
- 	sdev->inquiry_len = 36;
- 
-+	/* Scatter-gather buffers (all but the last) must have a length
-+	 * divisible by the bulk maxpacket size.  Otherwise a data packet
-+	 * would end up being short, causing a premature end to the data
-+	 * transfer.  Since high-speed bulk pipes have a maxpacket size
-+	 * of 512, we'll use that as the scsi device queue's DMA alignment
-+	 * mask.  Guaranteeing proper alignment of the first buffer will
-+	 * have the desired effect because, except at the beginning and
-+	 * the end, scatter-gather buffers follow page boundaries. */
-+	blk_queue_update_dma_alignment(sdev->request_queue, (512 - 1));
-+
- 	/*
- 	 * The UFI spec treates the Peripheral Qualifier bits in an
- 	 * INQUIRY result as reserved and requires devices to set them
-@@ -100,16 +110,6 @@ static int slave_configure(struct scsi_device *sdev)
+ static inline int queue_dma_alignment(struct request_queue *q)
  {
- 	struct us_data *us = host_to_us(sdev->host);
- 
--	/* Scatter-gather buffers (all but the last) must have a length
--	 * divisible by the bulk maxpacket size.  Otherwise a data packet
--	 * would end up being short, causing a premature end to the data
--	 * transfer.  Since high-speed bulk pipes have a maxpacket size
--	 * of 512, we'll use that as the scsi device queue's DMA alignment
--	 * mask.  Guaranteeing proper alignment of the first buffer will
--	 * have the desired effect because, except at the beginning and
--	 * the end, scatter-gather buffers follow page boundaries. */
--	blk_queue_dma_alignment(sdev->request_queue, (512 - 1));
+-	int retval = 511;
 -
- 	/* Many devices have trouble transfering more than 32KB at a time,
- 	 * while others have trouble with more than 64K. At this time we
- 	 * are limiting both to 32K (64 sectores).
-
+-	if (q && q->dma_alignment)
+-		retval = q->dma_alignment;
+-
+-	return retval;
++	return q ? q->dma_alignment : 511;
+ }
+ 
+ /* assumes size > 256 */
+-- 
+1.5.3.6
 
