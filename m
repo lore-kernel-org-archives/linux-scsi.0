@@ -1,115 +1,173 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH 2/2] relax scsi dma alignment
-Date: Tue, 1 Jan 2008 12:15:29 -0500
-Message-ID: <20080101171529.GA545@osc.edu>
-References: <1199141005.3110.27.camel@localhost.localdomain> <20080101160859.GA482@osc.edu> <1199204821.3252.7.camel@localhost.localdomain>
+From: "=?ISO-8859-1?Q?Oliver_Pinter_(Pint=E9r_Oliv=E9r)?="
+	<oliver.pntr@gmail.com>
+Subject: Fwd: [05/06] [typo fix] Documentation/scsi/ChangeLog.lpfc
+Date: Wed, 2 Jan 2008 00:31:40 +0100
+Message-ID: <6101e8c40801011531h6a9bad18h867257c7d55e9ec9@mail.gmail.com>
+References: <6101e8c40712300520n6f30efbbg2121ee6162bca1ab@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/mixed;
+	boundary="----=_Part_22300_14987436.1199230300870"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:42428 "EHLO marge.padd.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753864AbYAARPb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 1 Jan 2008 12:15:31 -0500
-Content-Disposition: inline
-In-Reply-To: <1199204821.3252.7.camel@localhost.localdomain>
+Received: from fg-out-1718.google.com ([72.14.220.157]:55805 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752861AbYAAXbl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jan 2008 18:31:41 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so3012940fga.17
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Jan 2008 15:31:40 -0800 (PST)
+In-Reply-To: <6101e8c40712300520n6f30efbbg2121ee6162bca1ab@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Alan Stern <stern@rowland.harvard.edu>, Kristian Hoegsberg <krh@bitplanet.net>, Jens Axboe <Jens.Axboe@oracle.com>
+To: linux-scsi@vger.kernel.org
+Cc: =?ISO-8859-1?Q?Pint=E9r_Oliv=E9r?= <oliver.pntr@gmail.com>, Randy Dunlap <randy.dunlap@oracle.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 
-James.Bottomley@HansenPartnership.com wrote on Tue, 01 Jan 2008 10:27 -0600:
-> On Tue, 2008-01-01 at 11:08 -0500, Pete Wyckoff wrote:
-> > James.Bottomley@HansenPartnership.com wrote on Mon, 31 Dec 2007 16:43 -0600:
-> > > This patch relaxes the default SCSI DMA alignment from 512 bytes to 4
-> > > bytes.  I remember from previous discussions that usb and firewire have
-> > > sector size alignment requirements, so I upped their alignments in the
-> > > respective slave allocs.
-> > > 
-> > > The reason for doing this is so that we don't get such a huge amount of
-> > > copy overhead in bio_copy_user() for udev.  (basically all inquiries it
-> > > issues can now be directly mapped).
-> > 
-> > Great change.  Here's another patch.  It allows a queue
-> > dma_alignment of 0 bytes, for drivers that can move data
-> > at byte granularity.
-> > 
-> > Two drivers try to turn off DMA alignment restrictions by
-> > setting the dma_alignment to zero:
-> > 
-> >     drivers/scsi/iscsi_tcp.c: blk_queue_dma_alignment(sdev->request_queue, 0);
-> >     drivers/scsi/scsi_tgt_lib.c: blk_queue_dma_alignment(q, 0);
-> > 
-> > But they end up doing copies due to the way that queue_dma_alignment()
-> > returns 511 in this case.
-[..]
-> > From 90ee6d61ad71a024815eee2b416edb40c6b01256 Mon Sep 17 00:00:00 2001
-> > From: Pete Wyckoff <pw@osc.edu>
-> > Date: Tue, 1 Jan 2008 10:23:02 -0500
-> > Subject: [PATCH] block: allow queue dma_alignment of zero
-> > 
-> > Let queue_dma_alignment return 0 if it was specifically set to 0.
-> > This permits devices with no particular alignment restrictions to
-> > use arbitrary user space buffers without copying.
-> > 
-> > Signed-off-by: Pete Wyckoff <pw@osc.edu>
-> > ---
-> >  include/linux/blkdev.h |    7 +------
-> >  1 files changed, 1 insertions(+), 6 deletions(-)
-> > 
-> > diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> > index aa3090c..eea31c2 100644
-> > --- a/include/linux/blkdev.h
-> > +++ b/include/linux/blkdev.h
-> > @@ -860,12 +860,7 @@ static inline int bdev_hardsect_size(struct block_device *bdev)
-> >  
-> >  static inline int queue_dma_alignment(struct request_queue *q)
-> >  {
-> > -	int retval = 511;
-> > -
-> > -	if (q && q->dma_alignment)
-> > -		retval = q->dma_alignment;
-> > -
-> > -	return retval;
-> > +	return q ? q->dma_alignment : 511;
-> >  }
-> >  
-> >  /* assumes size > 256 */
-> 
-> This is certainly a possible patch.  What assurance do you have that it
-> doesn't upset block devices who set zero assuming they get the default
-> alignment?
+------=_Part_22300_14987436.1199230300870
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
 
-Code inspection of the initialization and use of this field.  I hope
-anybody who sees a mistake here will point it out.
+---------- Forwarded message ----------
+From: "Oliver Pinter (Pint=E9r Oliv=E9r)" <oliver.pntr@gmail.com>
+Date: Sun, 30 Dec 2007 14:20:20 +0100
+Subject: [05/06] [typo fix] Documentation/scsi/ChangeLog.lpfc
+To: linux-kernel@vger.kernel.org
 
-1. Initialization
-
-Most users call blk_init_queue{,_node} to alloc and initialize a new
-request_queue.  This leads to initialization of dma_alignment to 511
-in blk_queue_make_request().
-
-The rest of the callers use blk_alloc_queue{,_node}.  Most of those
-call blk_queue_make_request() with a custom make_request_fn a few
-lines later, similarly causing dma_alignment to be initialized to
-non-zero.  The loop and pktcdvd drivers require a bit of reading to
-convince oneself, but also can be seen to call
-blk_queue_make_request() before using the queue.
-
-2. Use of blk_queue_dma_alignment() to set, queue_dma_alignment() and
-   ->dma_alignment to get
-
-Inspection of the 20-odd spots that match "dma_alignment" shows that
-none of them set zero to expect the default.
+--=20
+Thanks,
+Oliver
 
 
-Definitely a valid concern, but it seems to be a safe change, at
-least for in-tree users.  Do you think a new request_queue flag for
-zero-aware drivers and a WARN_ON that checks for zero and !zero_aware
-would be worthwhile?
 
-Without this change, we can go as low as two-byte alignment on
-buffer start and length by setting dma_alignment to 1, but will do a
-full copy if (buffer&1) or (length&1).
+--=20
+Thanks,
+Oliver
 
-		-- Pete
+------=_Part_22300_14987436.1199230300870
+Content-Type: text/x-diff; name=05.patch
+Content-Transfer-Encoding: base64
+X-Attachment-Id: file0
+Content-Disposition: attachment; filename=05.patch
 
+Y29tbWl0IDEzNWMwZDFjNzExYTRkNDIzMTYyZDc1YTc3MWQwMTVmNzliMjNjZmQKQXV0aG9yOiBP
+bGl2ZXIgUGludGVyIDxvbGl2ZXIucG50ckBnbWFpbC5jb20+CkNvbW1pdDogT2xpdmVyIFBpbnRl
+ciA8b2xpdmVyLnBudHJAZ21haWwuY29tPgoKICAgIFt0eXBvIGZpeF0gRG9jdW1lbnRhdGlvbi9z
+Y3NpL0NoYW5nZUxvZy5scGZjCiAgICAKICAgIHR5cG8gZml4IGluIERvY3VtZW50YXRpb24vc2Nz
+aS9DaGFuZ2VMb2cubHBmYwogICAgZm9vLWRlc3RvcnkgLT4gZm9vLWRlc3Ryb3kgJiYgd2hpdGVz
+cGFjZSBjbGVhbnVwCiAgICAKICAgIFNpZ25lZC1vZmYtYnk6IE9saXZlciBQaW50ZXIgPG9saXZl
+ci5wbnRyQGdtYWlsLmNvbT4KCmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdl
+TG9nLmxwZmMgYi9Eb2N1bWVudGF0aW9uL3Njc2kvQ2hhbmdlTG9nLmxwZmMKaW5kZXggYWUzZjk2
+Mi4uZDUzODA0NiAxMDA2NDQKLS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpL0NoYW5nZUxvZy5scGZj
+CisrKyBiL0RvY3VtZW50YXRpb24vc2NzaS9DaGFuZ2VMb2cubHBmYwpAQCAtNDUzLDcgKzQ1Myw3
+IEBAIENoYW5nZXMgZnJvbSAyMDA0MTIwNyB0byAyMDA0MTIxMwogCSAgcmV0dXJuaW5nLiAgRml4
+ZXMgc29tZSBwYW5pY3MgaW4gaW9jYiBjb21wbGV0aW9uIGNvZGUgcGF0aC4KIAogQ2hhbmdlcyBm
+cm9tIDIwMDQxMTMwIHRvIDIwMDQxMjA3Ci0JCisKIAkqIENoYW5nZWQgdmVyc2lvbiBudW1iZXIg
+dG8gOC4wLjE2CiAJKiBIdW5nIGR0IHNlc3Npb24gZml4LiAgV2hlbiB0aGUgbWlkbGF5ZXIgY2Fs
+bHMgdG8gYWJvcnQgYSBzY3NpCiAJICBjb21tYW5kLCBtYWtlIHN1cmUgdGhlIGRyaXZlciBkb2Vz
+IG5vdCBjb21wbGV0ZSBwb3N0LWFib3J0CkBAIC00ODEsNyArNDgxLDcgQEAgQ2hhbmdlcyBmcm9t
+IDIwMDQxMTIzIHRvIDIwMDQxMTMwCiAJICByZXNlcnZhdGlvbiBjb25mbGljdHMsIGV0YwogCiBD
+aGFuZ2VzIGZyb20gMjAwNDEwMTggdG8gMjAwNDExMjMKLQkKKwogCSogQ2hhbmdlZCB2ZXJzaW9u
+IG51bWJlciB0byA4LjAuMTQKIAkqIEFkZGVkIG5ldyBmdW5jdGlvbiAiaXRlcmF0b3IiIGxwZmNf
+c2xpX25leHRfaW9jYl9zbG90KCkgd2hpY2gKIAkgIHJldHVybnMgcG9pbnRlciB0byBpb2NiIGVu
+dHJ5IGF0IGNtZGlkeCBpZiBxdWV1ZSBpcyBub3QgZnVsbC4KQEAgLTkwNiwxNSArOTA2LDE1IEBA
+IENoYW5nZXMgZnJvbSAyMDA0MDgxMCB0byAyMDA0MDgyMwogCSAgWmVwaHlyKSBzdXBwb3J0CiAK
+IENoYW5nZXMgZnJvbSAyMDA0MDczMCB0byAyMDA0MDgxMAotCQorCiAJKiBDaGFuZ2VkIHZlcnNp
+b24gbnVtYmVyIHRvIDguMC45CiAJKiBSZW1vdmVkIHBlciBIQkEgZHJpdmVyIGxvY2suICBEcml2
+ZXIgbm93IHVzZXMgdGhlIGhvc3QtPmhvc3RfbG9jawogCSogUmVzdG9yZWQgc3VwcG9ydCBmb3Ig
+dGhlIDIuNi41IGtlcm5lbCBmb3IgdGhvc2UgbGludXggZGlzdHJpYnV0aW9ucwogCSAgc2hpcHBl
+ZCB3aXRoIHRoZSAyLjYuNSBrZXJuZWwuCiAJKiBBcHBsaWVkIHBhdGNoIGZyb20gQ2hyaXN0b3Bo
+IEhlbGx3aWcgKGhjaEBpbmZyYWRlYWQub3JnKSBhcyBmb2xsb3dzCi0JICAiW1BBVENIXSB1c2Ug
+c2NzaSBob3N0IHByaXZhdGUgZGF0YSBpbiAtPnByb2NfaW5mby4gIAorCSAgIltQQVRDSF0gdXNl
+IHNjc2kgaG9zdCBwcml2YXRlIGRhdGEgaW4gLT5wcm9jX2luZm8uCiAJKiBBcHBsaWVkIHBhdGNo
+IGZyb20gQ2hyaXN0b3BoIEhlbGx3aWcgKGhjaEBpbmZyYWRlYWQub3JnKSBhcyBmb2xsb3dzCi0J
+ICAiUmU6IFtFbXVsZXhdIFJlYWR5IGZvciBuZXh0IHJvdW5kLiAgVGhpcyBwYXRjaCBjbGVhbnMg
+dXAgdGhlIG1lbW9yeSAKKwkgICJSZTogW0VtdWxleF0gUmVhZHkgZm9yIG5leHQgcm91bmQuICBU
+aGlzIHBhdGNoIGNsZWFucyB1cCB0aGUgbWVtb3J5CiAJICBhbGxvY2F0aW9uIHJvdXRpbmVzIGEg
+bGl0dGxlIGFuZCBmaXhlcyBhIG1pc3NpbmcgbWVtcG9vbF9kZXN0cm95IGFuZAogCSAgc29tZSBt
+aXNzaW5nIGVycm9yIGhhbmRsaW5nLiIKIAkqIENoYW5nZWQgcG9pbnRlcnMgYXNzaWdubWVudHMg
+ZnJvbSAwIHRvIE5VTEwuCkBAIC05MjIsNyArOTIyLDcgQEAgQ2hhbmdlcyBmcm9tIDIwMDQwNzMw
+IHRvIDIwMDQwODEwCiAJICBlbnRyeSBwb2ludHMgdGhhdCBjYXVzZWQga2VybmVsIHRvIE9vcHMg
+b3IgaGFuZy4KIAkqIEFkZGVkIGZpeGVzIHRvIHRhcmdldGxlc3MgaG9zdHMgdGhhdCBjYXVzZWQg
+bW9kcHJvYmUgYW5kIGluc21vZCB0byBoYW5nLgogCSogT25nb2luZyBjbGVhbnVwIHRvIG1hbnkg
+ZmlsZXMKLQkgIAorCiBDaGFuZ2VzIGZyb20gMjAwNDA3MjMgdG8gMjAwNDA3MzAKIAogCSogQ2hh
+bmdlZCB2ZXJzaW9uIG51bWJlciB0byA4LjAuOApAQCAtMTI2Myw3ICsxMjYzLDcgQEAgQ2hhbmdl
+cyBmcm9tIDIwMDQwNTE1IHRvIDIwMDQwNTI2CiAJKiBTd2l0Y2ggZnJvbSB1c2luZyBpbnRlcm5h
+bCBidXMvaWQvbHVuIHRvIHNpbWlsYXIgZGF0YSBmcm9tCiAJICBzY3NpX2RldmljZSBzdHJ1Y3R1
+cmUuCiAJKiBFbGltaW5hdGUgb25lLWxpbmUgZnVuY3Rpb24gbHBmY19maW5kX3RhcmdldCgpCi0J
+KiBBZGRlZCBzbGF2ZV9hbGxvYywgc2xhdmVfZGVzdG9yeQorCSogQWRkZWQgc2xhdmVfYWxsb2Ms
+IHNsYXZlX2Rlc3Ryb3kKIAkqIGxwZmNfc2NzaV9jbWRfc3RhcnQgY2FuIG5vdyBhY3F1aXJlIGx1
+biBwb2ludGVyIGZyb20KIAkgIHNjc2lfZGV2aWNlLT5ob3N0ZGF0YSwgd2hpY2ggaXMgc2V0dXAg
+aW4gc2xhdmVfYWxsb2MuCiAJKiBFbGltaW5hdGUgdW5uZWNlc3NhcnkgY2hlY2tpbmcgb24gZXZl
+cnkgY21kIGp1c3QgdG8gc2VlIGlmIHdlCkBAIC0xMjc4LDcgKzEyNzgsNyBAQCBDaGFuZ2VzIGZy
+b20gMjAwNDA1MDcgdG8gMjAwNDA1MTUKIAkqIEZpeGVkIGNyYXNoIG9uIGRyaXZlciBybW1vZCBh
+ZnRlciBlcnJvciBpbmplY3Rpb24gdGVzdHMgYW5kCiAJICBscGZjX3Rhc2tsZXQgZGVhZGxvY2su
+CiAJKiBNb2RpZmllZCBscGZjLmNvbmYgdG8gcmVtb3ZlIGxpbWl0IG9uIG51bWJlciBvZiBzdXBw
+b3J0IGhvc3RzCi0JKiBSZW1vdmVkIEhCQUFQSSAKKwkqIFJlbW92ZWQgSEJBQVBJCiAJKiBSZW1v
+dmVkIGR1cGxpY2F0aW9uIG9mIFNDU0kgb3Bjb2RlcyBmcm9tIGxwZmNfZmNwLmggdGhhdCBhcmUK
+IAkgIGF2YWlsYWJsZSBpbiBzY3NpL3Njc2kuaAogCSogUmV3b3JrIG1vZHVsZV9wYXJhbSB1c2Fn
+ZQpAQCAtMTQ5Myw3ICsxNDkzLDcgQEAgQ2hhbmdlcyBmcm9tIDIwMDQwNDAyIHRvIDIwMDQwNDA5
+CiAJKiBNb3ZlIGxwZmNfc3RhdHMgYW5kIEhCQUVWVF90IHN0cnVjdHVyZXMgZnJvbSBscGZjX2hi
+YS5oIHRvCiAJICBscGZjLmgKIAkqIFJlbW92ZSBscGZjX2hiYS5oCi0JKiBSZW1vdmUgZHVwbGlj
+YXRlIHJjIGRlZmluaXRpb25zIGZyb20gCisJKiBSZW1vdmUgZHVwbGljYXRlIHJjIGRlZmluaXRp
+b25zIGZyb20KIAkqIFJlbW92ZWQgY29kZSB3aGljaCB1c2VkIG5leHQgcG9pbnRlciB0byBzdG9y
+ZSBtYm94IHN0cnVjdHVyZS4KIAkqIENsZWFuZWQgdXAgbGlzdCBpdGVyYXRpb25zLgogCSogUmVt
+b3ZlZCBub24gbGlzdCBtYW5pcHVsYXRpb24gb2YgdGhlIG5leHQgcG9pbnRlcnMuCkBAIC0xNTI3
+LDcgKzE1MjcsNyBAQCBDaGFuZ2VzIGZyb20gMjAwNDAzMjYgdG8gMjAwNDA0MDIKIAkqIEZpeCBm
+b3IgbG9hZCBlcnJvciBpbiBkaXNjb3ZlcnkKIAkqIFJlbW92ZSBsb29wX2NudCB2YXJpYWJsZSBm
+cm9tIGxwZmNfcmN2X3Bsb2dpX3VudXNlZF9ub2RlLgogCSogUmVtb3ZlIG5sZS4gcmVmZXJlbmNl
+LgotICAgICAgICAqIFJlbW92ZSBzdXBwb3J0IGZvciBidWlsZGluZyAyLjQgZHJpdmVycworCSog
+UmVtb3ZlIHN1cHBvcnQgZm9yIGJ1aWxkaW5nIDIuNCBkcml2ZXJzCiAJKiBSZW1vdmUgZWx4X3V0
+aWwuaCBhbmQgcmVwbGFjZSBlbHhfZGlzYy5oIHdpdGggbHBmY19kaXNjLmgKIAkqIEltcGxlbWVu
+dGVkIHRoZSBMaW51eCBsaXN0IG1hY3JvcyBpbiB0aGUgZGlzY292ZXJ5IGNvZGUuCiAJICBBbHNv
+IG1vdmVkIGVseF9kaXNjLmggY29udGVudHMgaW50byBscGZjX2Rpc2MuaApAQCAtMTU2NCw3ICsx
+NTY0LDcgQEAgQ2hhbmdlcyBmcm9tIDIwMDQwMzI2IHRvIDIwMDQwNDAyCiAJKiBJZmRlZiBTY2hl
+ZHVsZXIgc3BlY2lmaWMgcm91dGluZXMKIAkqIFJlbW92ZWQgZm9sbG93aW5nIHVudW5zZWQgaW9j
+bHQnczogRUxYX1JFQURfSU9DQgogCSAgRUxYX1JFQURfTUVNU0VHIEVMWF9SRUFEX0JJTkZPIEVM
+WF9SRUFEX0VJTlZBTCBFTFhfUkVBRF9MSEJBCi0JICBFTFhfUkVBRF9MWEhCQSBFTFhfU0VUIEVM
+WF9EQkcgTFBGQ19UUkFDRSAKKwkgIEVMWF9SRUFEX0xYSEJBIEVMWF9TRVQgRUxYX0RCRyBMUEZD
+X1RSQUNFCiAJKiBSZW1vdmVkIHZhcmlhYmxlIGZjX2RiZ19mbGcKIAkqIEZpeGVkIGEgYnVnIHdo
+ZXJlIEhCQV9RX0RFUFRIIHdhcyBzZXQgaW5jb3JyZWN0bHkgZm9yCiAJICAzLWRpZ2l0IEhCQXMu
+ICBBbHNvIGNoYW5nZWQgY2FuX3F1ZXVlIHNvIG1pZGxheWVyIHdpbGwgb25seQpAQCAtMTU3NSw3
+ICsxNTc1LDcgQEAgQ2hhbmdlcyBmcm9tIDIwMDQwMzI2IHRvIDIwMDQwNDAyCiAJICBtYm94LCBp
+b2NiLCBuZGxwLCBiaW5kCiAJKiBXcmFwcGVkICcjaW5jbHVkZSA8ZWx4X3NjaGVkLmg+JyBpbiAn
+I2lmZGVmIFVTRV9TQ0hFRFVMRVInLgogCSogRml4ZWQgJ21ha2UgY2xlYW4nIHRhcmdldC4KLSAg
+ICAgICAgKiBCdWlsZCBub3cgaWdub3JlcyBlbHhfc2NoZWQubywgYW5kIGluY2x1ZGVzIGxwZmNf
+c3lzZnMuby4KKwkqIEJ1aWxkIG5vdyBpZ25vcmVzIGVseF9zY2hlZC5vLCBhbmQgaW5jbHVkZXMg
+bHBmY19zeXNmcy5vLgogCSogV3JhcHBlZCBscGZuZGQubyB0YXJnZXQgaW4gQlVJTERfSVBGQyBp
+ZmRlZi4KIAkqIFJlbW92ZWQgZWx4X29zLmggaW5jbHVzaW9uIGluIGltcGxlbWVudGF0aW9uIGZp
+bGVzLgogCSogUmVtb3ZlZCBFTFhfT1NfSU9fdCBkYXRhIHN0cnVjdHVyZSBhbmQgcHV0IGRhdGEg
+ZGlyZWN0aW9uCkBAIC0xNjI4LDcgKzE2MjgsNyBAQCBDaGFuZ2VzIGZyb20gMjAwNDAzMjYgdG8g
+MjAwNDA0MDIKIAkqIE1hZGUgY2hhbmdlcyB0byBjb21waWxlIHdpdGhvdXQgSVBGQyBzdXBwb3J0
+IGZvciB0aGUgZGVmYXVsdAogCSAgYnVpbGQuICBBZGRlZCBpZmRlZiBJUEZDIGZvciBhbGwgbHBm
+Y19pcC5oIGluY2x1ZGVzLgogCSogUGF0Y2hlZCBlbHhfZnJlZV9zY3NpX2J1ZgotICAJKiBSZW1v
+dmVkIGVseF9zY2hlZC5vIGZyb20gMi42IGRlcGVuZGVuY2llcworCSogUmVtb3ZlZCBlbHhfc2No
+ZWQubyBmcm9tIDIuNiBkZXBlbmRlbmNpZXMKIAkqIFJld29ya2VkIGxwZmNfcGNpbWFwLgogCSog
+VXNlIExpbnV4IHN3YXAgbWFjcm9zIHRvIHJlcGxhY2UgRUxYIHN3YXBwaW5nIG1hY3JvcwogCSAg
+KFNXQVBfU0hPUlQsIFNXQVBfTE9ORywgU1dBUF9EQVRBLCBTV0FQX0RBVEExNiwKQEAgLTE2NDAs
+MTEgKzE2NDAsMTEgQEAgQ2hhbmdlcyBmcm9tIDIwMDQwMzI2IHRvIDIwMDQwNDAyCiAJICBkZWZp
+bmVzIGZyb20gZWx4X2h3LmggYW5kIHJlbW92ZWQgdGhlIHNwaW5sb2NrX3QgbG9ja3MgdGhhdAog
+CSAgYXJlIG5vIGxvbmdlciB1c2VkIGluIGVseC5oCiAJKiBlbHhfaW9kb25lKCkgbm93IHVzZXMg
+c3lzdGVtIHRpbWVyLgotICAJKiBlbHhfcWZ1bGxfcmV0cnkoKSBub3cgdXNlcyBzeXN0ZW0gdGlt
+ZXIuCisJKiBlbHhfcWZ1bGxfcmV0cnkoKSBub3cgdXNlcyBzeXN0ZW0gdGltZXIuCiAJKiBscGZj
+X3B1dF9idWYoKSwgbHBmY19pcF94cmlfdGltZW91dCgpIGFuZAogCSAgbHBmY19pcF90aW1lb3V0
+X2hhbmRsZXIoKSBub3cgdXNlIHN5c3RlbSB0aW1lci4KIAkqIGxwZmNfZmRtaV90bW8oKSBhbmQg
+bHBmY19xdGhyb3R0bGVfdXAoKSBub3cgdXNlIHN5c3RlbQotICAgICAgICAgIHRpbWVyLgorCSAg
+dGltZXIuCiAJKiBSZW1vdmVkIG51bV9idWZzIGFuZCBudW1faW9jYnMgY29uZmlndXJhdGlvbiBw
+YXJhbWV0ZXJzLgogCSogRml4ZWQgYSBtZW1vcnkgY29ycnVwdGlvbiBidWcuIFRoaXMgd2FzIGNh
+dXNlZCBieSBhIG1lbW9yeQogCSAgd3JpdGUgdG8gbmRscCBzdHJ1Y3R1cmUgZnJvbSBscGZjX2Nt
+cGxfZWxzX2FjYyBmdW5jdGlvbi4KQEAgLTE2NzgsNyArMTY3OCw3IEBAIENoYW5nZXMgZnJvbSAy
+MDA0MDMyNiB0byAyMDA0MDQwMgogCSogUmVtb3ZlIHNvbWUgdW5uZWNlc3NhcnkgI2luY2x1ZGVz
+IGluIGxwZmNMSU5VWGZjcC5jCiAJKiBSZW1vdmUgdW5uY2Vzc2FyeSAjaW5jbHVkZXMgaW4gZWx4
+TElOVVhmY3AuYwogCSogTWlub3IgZm9ybWF0dGluZyBjbGVhbnVwcyBpbiBNYWtlZmlsZSB0byBh
+dm9pZCBzb21lCi0gICAgICAgICAgbGluZXdyYXBwaW5nLgorCSAgbGluZXdyYXBwaW5nLgogCSog
+UmVtb3ZlZCB1bnVzZWQgZWx4X21lbV9wb29sIGRhdGEgc3RydWN0dXJlLgogCSogUmVtb3ZlIHNl
+dmVyYWwgdW5uZWNlc3NhcnkgI2luY2x1ZGVzLgogCSogTW92aW5nIGZpeCBmb3IgbWVtb3J5IGxl
+YWsgaW4gaW9jdGwgbGlwIGFyZWEgdG8gc3lzZnMncyBsaXAuCkBAIC0xNjk0LDcgKzE2OTQsNyBA
+QCBDaGFuZ2VzIGZyb20gMjAwNDAzMjYgdG8gMjAwNDA0MDIKIAkqIEFkZCBQQ0lfREVWSUNFX0lE
+X0ZJUkVGTFkgZm9yIExQNjAwMAogCSogRml4ZWQga25vd24gaXNzdWVzIGluIDIwMDQwMzI2OiBk
+cml2ZXIgY3Jhc2hlcyBvbiBybW1vZCBpbgogCSAgYm90aCAyLjQgYW5kIDIuNiBrZXJuZWxzCi0J
+CisKIAogQ2hhbmdlcyBmcm9tIDIwMDQwMzE5IHRvIDIwMDQwMzI2CiAKQEAgLTE3OTYsNyArMTc5
+Niw3IEBAIENoYW5nZXMgZnJvbSAyMDA0MDMxOSB0byAyMDA0MDMyNgogCSogUmVtb3ZlZCB1c2Fn
+ZSBvZiBhbGwgbWVtb3J5IHBvb2xzLgogCiBDaGFuZ2VzIGZyb20gMjAwNDAzMTIgdG8gMjAwNDAz
+MTkKLQkKKwogCSogVXNlIGRldl93YXJuIGluc3RlYWQgb2YgcHJpbnRrIGZvciAyLjYga2VybmVs
+cwogCSogQ29ycmVjdCBJb2NicSBjb21wbGV0aW9uIHJvdXRpbmUgZm9yIDIuNiBrZXJuZWwgY2Fz
+ZQogCSogQ2hhbmdlIHZvaWQgKnBPU0NtZCB0byBTY3NpX1NtbmQgKnBDbWQK
+------=_Part_22300_14987436.1199230300870--
