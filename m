@@ -1,105 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] scsi_sysfs: restore prep_fn when ULD is removed
-Date: Wed, 02 Jan 2008 11:14:30 -0600
-Message-ID: <1199294070.3258.37.camel@localhost.localdomain>
-References: <bug-9674-10286@http.bugzilla.kernel.org/>
-	 <20080101181026.38298e13.akpm@linux-foundation.org>
-	 <1199244283.3252.13.camel@localhost.localdomain>
-	 <20080102154951.GA8976@osc.edu>
-	 <1199291625.3258.21.camel@localhost.localdomain>
+From: Bernd Schubert <bs@q-leap.de>
+Subject: reproducible DV to the wrong device (fusion)
+Date: Wed, 2 Jan 2008 19:51:56 +0100
+Message-ID: <200801021951.57233.bs@q-leap.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:52834 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750899AbYABROj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jan 2008 12:14:39 -0500
-In-Reply-To: <1199291625.3258.21.camel@localhost.localdomain>
+Received: from ns1.q-leap.de ([153.94.51.193]:37118 "EHLO mail.q-leap.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751596AbYABSv6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jan 2008 13:51:58 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "Rafael J. Wysocki" <rjw@sisk.pl>, Pierre Ossman <drzeus@drzeus.cx>, Jens Axboe <jens.axboe@oracle.com>, bugme-daemon@bugzilla.kernel.org, gentuu@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org, mpt_linux_developer@lsi.com
 
-A recent bug report:
+Hi,
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9674
+I complained about this before, but always got ignored. Please not this time. 
+I can presently reliably reproduce it as often as I want. 
+Pretty please, I can't keep this state forever, since the system is presently 
+going into production.
 
-Was caused because the ULDs now set their own prep functions, but don't
-necessarily reset the prep function back to the SCSI default when they
-are removed.  This leads to panics if commands are sent to the device
-after the module is removed because the prep_fn is still pointing to the
-old module code.  The fix for this is to implement a bus remove method
-that resets the prep_fn pointer correctly before calling the driver
-specific prep_fn.
+As far as I can remotely see, IOC0 and IOC1 are on the same dualport LSI22320 
+card. The device on IOC0 is probably not properly connected, probably a cable 
+problem. When I just tried to add the device on IOC0, the device on IOC1 got 
+a domain validation command. Presently both devices are idle otherwise.
 
-James
+On IOC0 there is 2:0:4:0 and on IOC1 there is 3:0:13:0 and 3:0:14:0.
 
-----
-
-P.S. The patch in the bug report is slightly wrong.  It doesn't include
-the piece to call the ULD specific remove function.
-
-Index: BUILD-2.6/drivers/scsi/scsi_lib.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_lib.c	2008-01-01 10:13:33.000000000 -0600
-+++ BUILD-2.6/drivers/scsi/scsi_lib.c	2008-01-02 10:17:51.000000000 -0600
-@@ -1324,7 +1324,7 @@ int scsi_prep_return(struct request_queu
- }
- EXPORT_SYMBOL(scsi_prep_return);
- 
--static int scsi_prep_fn(struct request_queue *q, struct request *req)
-+int scsi_prep_fn(struct request_queue *q, struct request *req)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	int ret = BLKPREP_KILL;
-Index: BUILD-2.6/drivers/scsi/scsi_priv.h
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_priv.h	2007-11-03 09:08:46.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/scsi_priv.h	2008-01-02 10:20:09.000000000 -0600
-@@ -74,6 +74,9 @@ extern struct request_queue *scsi_alloc_
- extern void scsi_free_queue(struct request_queue *q);
- extern int scsi_init_queue(void);
- extern void scsi_exit_queue(void);
-+struct request_queue;
-+struct request;
-+extern int scsi_prep_fn(struct request_queue *, struct request *);
- 
- /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
-Index: BUILD-2.6/drivers/scsi/scsi_sysfs.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/scsi_sysfs.c	2007-11-03 10:08:02.000000000 -0500
-+++ BUILD-2.6/drivers/scsi/scsi_sysfs.c	2008-01-02 10:58:17.000000000 -0600
-@@ -373,12 +373,29 @@ static int scsi_bus_resume(struct device
- 	return err;
- }
- 
-+static int scsi_bus_remove(struct device *dev)
-+{
-+	struct device_driver *drv = dev->driver;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int err = 0;
-+
-+	/* reset the prep_fn back to the default since the
-+	 * driver may have altered it and it's being removed */
-+	blk_queue_prep_rq(sdev->request_queue, scsi_prep_fn);
-+
-+	if (drv && drv->remove)
-+		err = drv->remove(dev);
-+
-+	return 0;
-+}
-+
- struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- 	.uevent		= scsi_bus_uevent,
- 	.suspend	= scsi_bus_suspend,
- 	.resume		= scsi_bus_resume,
-+	.remove		= scsi_bus_remove,
- };
- 
- int scsi_sysfs_register(void)
+pfs1n14-m:~# /tmp/scsiadd -a 2 0 4 0
 
 
+[ 2595.405276] scsi 2:0:4:0: Activating scsi error recovery
+[ 2595.405711] mptbase: ioc0: LogInfo(0x11010400): F/W: bug! MID not found
+[ 2595.417828] Starting device recovery 5
+[ 2595.668030] mptbase: ioc0: LogInfo(0x11010400): F/W: bug! MID not found
+[ 2595.675024] scsi 2:0:4:0: Sending BDR 0xffff810128195920
+[ 2595.680618] scsi 2:0:4:0: trying device reset
+[ 2595.685230] mptscsih: ioc0: attempting target reset! (sc=ffff810128cbc500)
+[ 2595.692280] scsi 2:0:4:0: CDB: Inquiry: 12 00 00 00 24 00
+[ 2596.826218] mptbase: ioc0: LogInfo(0x11010400): F/W: bug! MID not found
+[ 2597.089427] mptscsih: ioc0: Issue of TaskMgmt failed!
+[ 2597.094766] mptscsih: ioc0: target reset: FAILED (sc=ffff810128cbc500)
+[ 2597.101605] Sending BRST chan: 0
+[ 2597.104982] scsi 2:0:4:0: trying bus reset
+[ 2597.109306] mptscsih: ioc0: attempting bus reset! (sc=ffff810128cbc500)
+[ 2597.116271] scsi 2:0:4:0: CDB: Inquiry: 12 00 00 00 24 00
+[ 2598.511931] mptscsih: ioc0: bus reset: SUCCESS (sc=ffff810128cbc500)
+[ 2608.513834] scsi 2:0:4:0: trying host reset
+[ 2608.514187] mptbase: ioc0: LogInfo(0x11010400): F/W: bug! MID not found
+[ 2608.525197] mptscsih: ioc0: Attempting host reset! (sc=ffff810128cbc500)
+[ 2608.532246] mptbase: Initiating ioc0 recovery
+[ 2620.952389]  target2:0:4: asynchronous
+[ 2620.956405]  target3:0:12: Beginning Domain Validation
+[ 2620.987547]  target3:0:12: Ending Domain Validation
+[ 2620.992714]  target3:0:12: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS PCOMP 
+(6.25 ns, offset 127)
+[ 2621.001863]  target3:0:13: Beginning Domain Validation
+[ 2621.032982]  target3:0:13: Ending Domain Validation
+[ 2621.037978]  target3:0:13: FAST-160 WIDE SCSI 320.0 MB/s DT IU QAS PCOMP 
+(6.25 ns, offset 127)
+[ 2630.946215] scsi 2:0:4:0: scsi: Device offlined - not ready after error 
+recovery
+[ 2630.946608] mptbase: ioc0: LogInfo(0x11010400): F/W: bug! MID not found
+
+
+I already tried "echo -1 >/proc/sys/dev/scsi/logging_level", but this doesn't 
+reveal anything.
+
+
+Please, we really need to fix this, as this is really troublesome in 
+production situation. Some hints for further debugging should be suffienct 
+for now.
+
+
+Thanks,
+Bernd
+
+-- 
+Bernd Schubert
+Q-Leap Networks GmbH
