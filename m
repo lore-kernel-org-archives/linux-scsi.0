@@ -1,48 +1,62 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bugme-new] [Bug 9674] New: Oops during rmmod'ing modeuls
-	sdhci, sr_mod, ricoh_mmc, mmc_core
-Date: Tue, 01 Jan 2008 21:24:43 -0600
-Message-ID: <1199244283.3252.13.camel@localhost.localdomain>
-References: <bug-9674-10286@http.bugzilla.kernel.org/>
-	 <20080101181026.38298e13.akpm@linux-foundation.org>
+From: Andi Kleen <ak@suse.de>
+Subject: [PATCH] Only print SCSI data direction warning once for a command
+Date: Wed, 2 Jan 2008 07:03:01 +0100
+Message-ID: <200801020703.01180.ak@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51394 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753648AbYABDYu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Jan 2008 22:24:50 -0500
-In-Reply-To: <20080101181026.38298e13.akpm@linux-foundation.org>
+Received: from cantor2.suse.de ([195.135.220.15]:45602 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754773AbYABGDF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jan 2008 01:03:05 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Rafael J. Wysocki" <rjw@sisk.pl>, Pierre Ossman <drzeus@drzeus.cx>, Jens Axboe <jens.axboe@oracle.com>, bugme-daemon@bugzilla.kernel.org, gentuu@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
 
-On Tue, 2008-01-01 at 18:10 -0800, Andrew Morton wrote:
-> On Tue,  1 Jan 2008 14:55:45 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
-> 
-> > http://bugzilla.kernel.org/show_bug.cgi?id=9674
-> > 
-> >            Summary: Oops during rmmod'ing modeuls sdhci, sr_mod, ricoh_mmc,
-> >                     mmc_core
-> 
-> Guys, this is a very recent regression.  Could you please take a look, see
-> if it's due to mmc, block or scsi changes?
+When I use cdparanoia my logs get spammed a lot by
 
-There's not a lot of information to go on.  The stack trace looks bogus,
-so I guess the kernel is compiled without a frame pointer.  However, it
-does look like the initial insertion of sr_mod is going through and it
-generates a command which gets into scsi_request_fn and then indirects
-through a bogus queueucommand pointer.
+printk: 464 messages suppressed.
+sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
+   program cdparanoia not setting count and/or reply_len properly
+printk: 1078 messages suppressed.
 
-What's the actual underlying device the cdrom is attached to?
+and many more of those. With this patch the message is only printed once
+for a command in a row.
 
-There's no real changes to SCSI in this area from 2.6.24-rc4 ...
-however, the reinsertion is suggestive, it's like the removal is
-retriggering a module request for some reason.
+Signed-off-by: Andi Kleen <ak@suse.de>
 
-James
+---
+ drivers/scsi/sg.c |    8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-
+Index: linux/drivers/scsi/sg.c
+===================================================================
+--- linux.orig/drivers/scsi/sg.c
++++ linux/drivers/scsi/sg.c
+@@ -602,8 +602,9 @@ sg_write(struct file *filp, const char _
+ 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
+ 	 * is a non-zero input_size, so emit a warning.
+ 	 */
+-	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV)
+-		if (printk_ratelimit())
++	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
++		static char cmd[TASK_COMM_LEN];
++		if (printk_ratelimit() && strcmp(current->comm, cmd)) {
+ 			printk(KERN_WARNING
+ 			       "sg_write: data in/out %d/%d bytes for SCSI command 0x%x--"
+ 			       "guessing data in;\n" KERN_WARNING "   "
+@@ -611,6 +612,9 @@ sg_write(struct file *filp, const char _
+ 			       old_hdr.reply_len - (int)SZ_SG_HEADER,
+ 			       input_size, (unsigned int) cmnd[0],
+ 			       current->comm);
++			strcpy(cmd, current->comm);
++		}
++	}
+ 	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
+ 	return (k < 0) ? k : count;
+ }
