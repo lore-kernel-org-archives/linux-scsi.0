@@ -1,62 +1,60 @@
-From: Andi Kleen <ak@suse.de>
-Subject: [PATCH] Only print SCSI data direction warning once for a command
-Date: Wed, 2 Jan 2008 07:03:01 +0100
-Message-ID: <200801020703.01180.ak@suse.de>
+From: Tejun Heo <teheo@novell.com>
+Subject: Re: Maybe Sorry for that but where should i write .)
+Date: Wed, 02 Jan 2008 16:14:26 +0900
+Message-ID: <477B39D2.6030201@novell.com>
+References: <4775A7D8.6000001@trollprod.org> <477786B8.9040000@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor2.suse.de ([195.135.220.15]:45602 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754773AbYABGDF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jan 2008 01:03:05 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <477786B8.9040000@panasas.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: thanatos <thanatos@trollprod.org>, linux-scsi <linux-scsi@vger.kernel.org>, IDE/ATA development list <linux-ide@vger.kernel.org>, Alan Cox <alan@lxorguk.ukuu.org.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
+Boaz Harrosh wrote:
+> On Sat, Dec 29 2007 at 3:50 +0200, thanatos <thanatos@trollprod.org> wrote:
+>> I got a sata controller  ignitio
+>>
+>>  00:11.0 SATA controller: Initio Corporation INI-1623 PCI SATA-II 
+>> Controller (rev 02) (prog-if 00 [Vendor specific])
+>>         Subsystem: Initio Corporation INI-1623 PCI SATA-II Controller
+>>         Flags: bus master, 66MHz, medium devsel, latency 64, IRQ 11
+>>         I/O ports at dc00 [size=256]
+>>         I/O ports at d800 [size=256]
+>>         I/O ports at d400 [size=256]
+>>         I/O ports at d000 [size=256]
+>>         I/O ports at cc00 [size=256]
+>>         Memory at cffff000 (32-bit, non-prefetchable) [size=4K]
+>>         Expansion ROM at cff80000 [disabled] [size=256K]
+>>         Capabilities: [dc] Power Management version 2
+>>
+>>
+>> and an "no yet usable" 320 hdd, cause of lba48
+>>
+>> ata3: SATA link up 1.5 Gbps (SStatus 113 SControl 300)
+>> ata3.00: HPA unlocked: 625142448 -> 625142448, native 18446744072354982576
+>> ata3.00: ATA-8: SAMSUNG HD321KJ, CP100-12, max UDMA7
+>> ata3.00: 625142448 sectors, multi 0: LBA48 NCQ (depth 0/32)
+>> ata3.00: ERROR: This driver doesn't support LBA48 yet and may cause
+>>                 data corruption on such devices.  Disabling.
+>> ata3.00: disabled
+>>
+>> i'm still on kernel 2.6.22. i had look on changelog 2.6.23 and even 
+>> 2.6.24 nothing for that, is theyre a roadmap ?
+>>
+>> so if i could help in any way testing patch. i'm theyre
+> 
+> cc: the linux-scsi mailing list.
+> 
+> Personally I have nothing to do with this driver, I only sent a fix
+> for a patch in 2.6.23
 
-When I use cdparanoia my logs get spammed a lot by
+Actually, the correct mailing list is linux-ide.  Alan Cox began working
+on the driver.  Cc'ing both.
 
-printk: 464 messages suppressed.
-sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
-   program cdparanoia not setting count and/or reply_len properly
-printk: 1078 messages suppressed.
+Thanks.
 
-and many more of those. With this patch the message is only printed once
-for a command in a row.
-
-Signed-off-by: Andi Kleen <ak@suse.de>
-
----
- drivers/scsi/sg.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-Index: linux/drivers/scsi/sg.c
-===================================================================
---- linux.orig/drivers/scsi/sg.c
-+++ linux/drivers/scsi/sg.c
-@@ -602,8 +602,9 @@ sg_write(struct file *filp, const char _
- 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
- 	 * is a non-zero input_size, so emit a warning.
- 	 */
--	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV)
--		if (printk_ratelimit())
-+	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
-+		static char cmd[TASK_COMM_LEN];
-+		if (printk_ratelimit() && strcmp(current->comm, cmd)) {
- 			printk(KERN_WARNING
- 			       "sg_write: data in/out %d/%d bytes for SCSI command 0x%x--"
- 			       "guessing data in;\n" KERN_WARNING "   "
-@@ -611,6 +612,9 @@ sg_write(struct file *filp, const char _
- 			       old_hdr.reply_len - (int)SZ_SG_HEADER,
- 			       input_size, (unsigned int) cmnd[0],
- 			       current->comm);
-+			strcpy(cmd, current->comm);
-+		}
-+	}
- 	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
- 	return (k < 0) ? k : count;
- }
+-- 
+tejun
