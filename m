@@ -1,20 +1,23 @@
 From: Bernd Schubert <bs@q-leap.de>
 Subject: reproducible DV to the wrong device (fusion)
-Date: Wed, 2 Jan 2008 19:51:56 +0100
-Message-ID: <200801021951.57233.bs@q-leap.de>
+Date: Wed, 2 Jan 2008 19:54:09 +0100
+Message-ID: <200801021954.10073.bs@q-leap.de>
 Mime-Version: 1.0
 Content-Type: text/plain;
-  charset="us-ascii"
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns1.q-leap.de ([153.94.51.193]:37118 "EHLO mail.q-leap.de"
+Received: from ns1.q-leap.de ([153.94.51.193]:37139 "EHLO mail.q-leap.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751596AbYABSv6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 2 Jan 2008 13:51:58 -0500
+	id S1754541AbYABSyL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jan 2008 13:54:11 -0500
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, mpt_linux_developer@lsi.com
+To: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com, "Moore, Eric" <Eric.Moore@lsi.com>
+
+(Sorry sent again, since I used the wrong lsi developer list. Also forgot to 
+say this is with 2.6.22).
 
 Hi,
 
