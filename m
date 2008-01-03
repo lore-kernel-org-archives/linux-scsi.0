@@ -1,61 +1,120 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: advansys broken (at least) on ARM and MIPS
-Date: Thu, 03 Jan 2008 09:21:07 -0600
-Message-ID: <1199373667.3122.6.camel@localhost.localdomain>
-References: <20080103074353.GD22470@deprecation.cyrius.com>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH 1/2] replace sizeof sense_buffer with
+ SCSI_SENSE_BUFFERSIZE
+Date: Fri, 4 Jan 2008 00:34:55 +0900
+Message-ID: <20080104003806E.tomof@acm.org>
+References: <5dc13e4823ec8c254e5164a51249f05983fa00c2.tomof@acm.org>
+	<20080103135905X.tomof@acm.org>
+	<477CF8B7.90908@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60978 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751408AbYACPVR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 10:21:17 -0500
-In-Reply-To: <20080103074353.GD22470@deprecation.cyrius.com>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:50367 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752204AbYACPip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jan 2008 10:38:45 -0500
+In-Reply-To: <477CF8B7.90908@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Michlmayr <tbm@cyrius.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
+To: bharrosh@panasas.com
+Cc: tomof@acm.org, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, benh@kernel.crashing.org, fujita.tomonori@lab.ntt.co.jpfujita.tomonori@lab.ntt.co.jp
+
+On Thu, 03 Jan 2008 17:01:11 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
+
+> On Thu, Jan 03 2008 at 6:56 +0200, FUJITA Tomonori <tomof@acm.org> wrote:
+> > To remove sense_buffer array in scsi_cmnd structure, this replaces
+> > sizeof sense_buffer with SCSI_SENSE_BUFFERSIZE in several LLDs.
+> > 
+> > Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> > ---
+> >  drivers/ata/libata-scsi.c           |    4 ++--
+> >  drivers/message/fusion/mptscsih.c   |    2 +-
+> >  drivers/message/i2o/i2o_scsi.c      |    2 +-
+> >  drivers/scsi/53c700.c               |   11 ++++++-----
+> >  drivers/scsi/BusLogic.c             |    2 +-
+> >  drivers/scsi/aacraid/aachba.c       |   12 ++++++------
+> >  drivers/scsi/advansys.c             |   14 +++++++-------
+> >  drivers/scsi/aha1542.c              |    4 ++--
+> >  drivers/scsi/aha1740.c              |    2 +-
+> >  drivers/scsi/aic7xxx/aic79xx_osm.c  |    6 +++---
+> >  drivers/scsi/aic7xxx/aic7xxx_osm.c  |    6 +++---
+> >  drivers/scsi/aic7xxx_old.c          |   12 ++++++------
+> >  drivers/scsi/arcmsr/arcmsr_hba.c    |    6 +++---
+> >  drivers/scsi/arm/fas216.c           |   10 +++++-----
+> >  drivers/scsi/dc395x.c               |   16 +++++++---------
+> >  drivers/scsi/dpt_i2o.c              |    2 +-
+> >  drivers/scsi/eata.c                 |    4 ++--
+> >  drivers/scsi/eata_pio.c             |    2 +-
+> >  drivers/scsi/hptiop.c               |    2 +-
+> >  drivers/scsi/ips.c                  |   10 ++++------
+> >  drivers/scsi/ncr53c8xx.c            |    2 +-
+> >  drivers/scsi/qla1280.c              |    4 ++--
+> >  drivers/scsi/qla2xxx/qla_isr.c      |   12 ++++++------
+> >  drivers/scsi/qlogicpti.c            |    2 +-
+> >  drivers/scsi/scsi_error.c           |    6 +++---
+> >  drivers/scsi/scsi_lib.c             |    2 +-
+> >  drivers/scsi/sym53c8xx_2/sym_glue.c |    5 ++---
+> >  drivers/scsi/tmscsim.c              |    6 +++---
+> >  drivers/scsi/u14-34f.c              |    4 ++--
+> >  drivers/scsi/ultrastor.c            |    2 +-
+> >  30 files changed, 85 insertions(+), 89 deletions(-)
+> > 
+> 
+> <snip>
+> 
+> > diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
+> > index fb5f202..3bf186e 100644
+> > --- a/drivers/scsi/arm/fas216.c
+> > +++ b/drivers/scsi/arm/fas216.c
+> > @@ -2009,7 +2009,7 @@ static void fas216_rq_sns_done(FAS216_Info *info, struct scsi_cmnd *SCpnt,
+> >  		 * have valid data in the sense buffer that could
+> >  		 * confuse the higher levels.
+> >  		 */
+> > -		memset(SCpnt->sense_buffer, 0, sizeof(SCpnt->sense_buffer));
+> > +		memset(SCpnt->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
+> >  //printk("scsi%d.%c: sense buffer: ", info->host->host_no, '0' + SCpnt->device->id);
+> >  //{ int i; for (i = 0; i < 32; i++) printk("%02x ", SCpnt->sense_buffer[i]); printk("\n"); }
+> >  	/*
+> > @@ -2108,16 +2108,16 @@ request_sense:
+> >  	memset(SCpnt->cmnd, 0, sizeof (SCpnt->cmnd));
+> >  	SCpnt->cmnd[0] = REQUEST_SENSE;
+> >  	SCpnt->cmnd[1] = SCpnt->device->lun << 5;
+> > -	SCpnt->cmnd[4] = sizeof(SCpnt->sense_buffer);
+> > +	SCpnt->cmnd[4] = SCSI_SENSE_BUFFERSIZE;
+> >  	SCpnt->cmd_len = COMMAND_SIZE(SCpnt->cmnd[0]);
+> >  	SCpnt->SCp.buffer = NULL;
+> >  	SCpnt->SCp.buffers_residual = 0;
+> >  	SCpnt->SCp.ptr = (char *)SCpnt->sense_buffer;
+> > -	SCpnt->SCp.this_residual = sizeof(SCpnt->sense_buffer);
+> > -	SCpnt->SCp.phase = sizeof(SCpnt->sense_buffer);
+> > +	SCpnt->SCp.this_residual = SCSI_SENSE_BUFFERSIZE;
+> > +	SCpnt->SCp.phase = SCSI_SENSE_BUFFERSIZE;
+> >  	SCpnt->SCp.Message = 0;
+> >  	SCpnt->SCp.Status = 0;
+> > -	SCpnt->request_bufflen = sizeof(SCpnt->sense_buffer);
+> > +	SCpnt->request_bufflen = SCSI_SENSE_BUFFERSIZE;
+> >  	SCpnt->sc_data_direction = DMA_FROM_DEVICE;
+> >  	SCpnt->use_sg = 0;
+> >  	SCpnt->tag = 0;
+> 
+> Tomo hi.
+> 
+> This driver has a patch in scsi-pending that removes exactly all
+> this code. And converts it to the new scsi_error API.
+
+Yeah, I know that.
 
 
-On Thu, 2008-01-03 at 08:43 +0100, Martin Michlmayr wrote:
-> Commit 9d511a4b29de6764931343d03e493f2e04df0271 removed the "depends
-> on BROKEN || X86_32" line from advansys' Kconfig entry.  I'm not sure
-> that was such a great idea - the module doesn't compile at least on
-> ARM and MIPS:
->=20
-> ARM:
->=20
->   CC [M]  drivers/scsi/advansys.o
-> drivers/scsi/advansys.c:71:2: warning: #warning this driver is still =
-not properly converted to the DMA
->  API
-> drivers/scsi/advansys.c: In function =E2=80=98AdvBuildCarrierFreelist=
-=E2=80=99:
-> drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99 =
-is deprecated (declared at include/asm/memory.h:1
-> 92)
-> drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99 =
-is deprecated (declared at include/asm/memory.h:1
-> 92)
-> drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99 =
-is deprecated (declared at include/asm/memory.h:1
-> 92)
-> ...
-> drivers/scsi/advansys.c: In function =E2=80=98advansys_get_sense_buff=
-er_dma=E2=80=99:
-> drivers/scsi/advansys.c:9885: error: implicit declaration of function=
- =E2=80=98dma_cache_sync=E2=80=99
+> You have caught me in the middle of sweeping the entire tree,
+> converting all these drivers, to code like the patch 
+> to fas216.c. This is exactly what is needed to satisfy
+> the condition you stated, "is needed for farther cleanup".
+> (Though I admit this was done on a low priority, as I'm
+> busy with other stuff)
 
-That error doesn't look to tbe the fault of the driver.
-dma_cache_sync() is a piece of the DMA API it looks like ARM doesn't
-implement?
-
-James
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Well, this is not a patch for cleanups. This is a 'grep and replace'
+style patch, which tries not to do anything clever. I just want to
+solve this DMA issue with minimum changes. I'll post an updated patch
+if James merges your the conversion patch first.
