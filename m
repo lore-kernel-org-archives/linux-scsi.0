@@ -1,71 +1,68 @@
-From: Martin Michlmayr <tbm@cyrius.com>
-Subject: Re: advansys broken (at least) on ARM and MIPS
-Date: Thu, 3 Jan 2008 16:55:49 +0100
-Message-ID: <20080103155549.GA29400@deprecation.cyrius.com>
-References: <20080103074353.GD22470@deprecation.cyrius.com> <1199373667.3122.6.camel@localhost.localdomain>
+From: "Salyzyn, Mark" <mark_salyzyn@adaptec.com>
+Subject: RE: [PATCH 1/2] replace sizeof sense_buffer with SCSI_SENSE_BUFFERSIZE
+Date: Thu, 3 Jan 2008 11:10:04 -0500
+Message-ID: <AE4F746F2AECFC4DA4AADD66A1DFEF01010A4697@otce2k301.adaptec.com>
+References: <5dc13e4823ec8c254e5164a51249f05983fa00c2.tomof@acm.org> <20080103135905X.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sorrow.cyrius.com ([65.19.161.204]:2621 "EHLO sorrow.cyrius.com"
+Received: from ts.adaptec.com ([162.62.93.58]:43541 "EHLO mail-gw3.adaptec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752156AbYACP4N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jan 2008 10:56:13 -0500
-Content-Disposition: inline
-In-Reply-To: <1199373667.3122.6.camel@localhost.localdomain>
+	id S1752217AbYACQKG convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 11:10:06 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <20080103135905X.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, Russell King <rmk@arm.linux.org.uk>
+To: FUJITA Tomonori <tomof@acm.org>, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, benh@kernel.crashing.org, fujita.tomonori@lab.ntt.co.jp
 
-Adding Russell King to CC who can hopefully answer James' question
-below.
+ACK on aacraid/ips/dpt_i2o bits. Inspected others, this patch IS inert.
 
-* James Bottomley <James.Bottomley@HansenPartnership.com> [2008-01-03 0=
-9:21]:
-> On Thu, 2008-01-03 at 08:43 +0100, Martin Michlmayr wrote:
-> > Commit 9d511a4b29de6764931343d03e493f2e04df0271 removed the "depend=
-s
-> > on BROKEN || X86_32" line from advansys' Kconfig entry.  I'm not su=
-re
-> > that was such a great idea - the module doesn't compile at least on
-> > ARM and MIPS:
-> >=20
-> > ARM:
-> >=20
-> >   CC [M]  drivers/scsi/advansys.o
-> > drivers/scsi/advansys.c:71:2: warning: #warning this driver is stil=
-l not properly converted to the DMA
-> >  API
-> > drivers/scsi/advansys.c: In function =E2=80=98AdvBuildCarrierFreeli=
-st=E2=80=99:
-> > drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99=
- is deprecated (declared at include/asm/memory.h:1
-> > 92)
-> > drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99=
- is deprecated (declared at include/asm/memory.h:1
-> > 92)
-> > drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99=
- is deprecated (declared at include/asm/memory.h:1
-> > 92)
-> > ...
-> > drivers/scsi/advansys.c: In function =E2=80=98advansys_get_sense_bu=
-ffer_dma=E2=80=99:
-> > drivers/scsi/advansys.c:9885: error: implicit declaration of functi=
-on =E2=80=98dma_cache_sync=E2=80=99
->=20
-> That error doesn't look to tbe the fault of the driver.
-> dma_cache_sync() is a piece of the DMA API it looks like ARM doesn't
-> implement?
->=20
-> James
->=20
+NitMeBeingStupidAndAddingARiderToTheBill: I know it was a grep/replace.
+If you need to respin because of Boaz and do not mind, do not hesitate
+to optimize (?) and instead do:
 
---=20
-Martin Michlmayr
-http://www.cyrius.com/
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index 70f48a1..c6380c0 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -2298,7 +2298,6 @@ static s32 adpt_i2o_to_scsi(void __iomem *reply,
+struct scsi_cmnd* cmd)
+ 		// copy over the request sense data if it was a check
+ 		// condition status
+-		if(dev_status == 0x02 /*CHECK_CONDITION*/) {
+-			u32 len = sizeof(cmd->sense_buffer);
+-			len = (len > 40) ?  40 : len;
++		if (dev_status == 0x02 /*CHECK_CONDITION*/) {
++			u32 len = (SCSI_SENSE_BUFFERSIZE > 40) ?  40 :
+SCSI_SENSE_BUFFERSIZE;
+ 			// Copy over the sense data
+ 			memcpy_fromio(cmd->sense_buffer, (reply+28) ,
+len);
+
+Sincerely -- Mark Salyzyn
+ 
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org 
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of FUJITA Tomonori
+> Sent: Wednesday, January 02, 2008 11:57 PM
+> To: James.Bottomley@HansenPartnership.com
+> Cc: linux-scsi@vger.kernel.org; benh@kernel.crashing.org; 
+> fujita.tomonori@lab.ntt.co.jp
+> Subject: [PATCH 1/2] replace sizeof sense_buffer with 
+> SCSI_SENSE_BUFFERSIZE
+> 
+> To remove sense_buffer array in scsi_cmnd structure, this replaces
+> sizeof sense_buffer with SCSI_SENSE_BUFFERSIZE in several LLDs.
+> 
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+. . .
+>  drivers/scsi/aacraid/aachba.c       |   12 ++++++------
+. . .
+>  drivers/scsi/dpt_i2o.c              |    2 +-
+. . .
+>  drivers/scsi/ips.c                  |   10 ++++------
