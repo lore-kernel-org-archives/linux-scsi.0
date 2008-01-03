@@ -1,121 +1,47 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PATCH] SCSI bug fix for 2.6.24-rc6
-Date: Wed, 02 Jan 2008 19:55:05 -0600
-Message-ID: <1199325305.3258.103.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH 0/2] fix the sense buffer DMA issue
+Date: Thu, 3 Jan 2008 13:56:35 +0900
+Message-ID: <5dc13e4823ec8c254e5164a51249f05983fa00c2.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:58088 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753378AbYACBzR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Jan 2008 20:55:17 -0500
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:38930 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755811AbYACE4q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 2 Jan 2008 23:56:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, benh@kernel.crashing.org, fujita.tomonori@lab.ntt.co.jp
 
-This is the bug fix for
+This patchset is to solve the sense buffer DMA issue:
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9674
+http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg12632.html
 
-It's available here:
+It's not good to fatten up scsi_cmnd so instead this allocates
+sense_buffer dynamically with GFP_DMA.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+We don't always need sense_buffer per scsi_cmnd but some LLDs assume
+that scsi_cmnd:sense_buffer is always available (e.g, some do
+dma_mapping for sense_buffer). So allocating sense_buffer only when
+necessary is the best option but needs many changes to LLDs.
 
-I've just attached it below as well.
+We need to solve the sense buffer DMA issue now (since critical for
+some architectures) so this patchset tries to solve it with minimum
+changes though in the long run, we need more changes to sense_buffer
+handling.
 
-James
+This removes static array sense_buffer in scsi_cmnd and dynamically
+allocates sense_buffer with GFP_DMA.
 
----
+scsi_add_host allocates as many buffers as
+scsi_host->can_queue. __scsi_get_command attaches sense_buffer to a
+scsi_cmnd and __scsi_put_command detaches the sense_buffer from it. So
+LLDs should work as before though we need one minor change, replacing
+sizeof sense_buffer in some LLDs with SCSI_SENSE_BUFFERSIZE.
 
->From 751bf4d7865e4ced406be93b04c7436d866d3684 Mon Sep 17 00:00:00 2001
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Wed, 2 Jan 2008 11:14:30 -0600
-Subject: [SCSI] scsi_sysfs: restore prep_fn when ULD is removed
-
-A recent bug report:
-
-http://bugzilla.kernel.org/show_bug.cgi?id=9674
-
-Was caused because the ULDs now set their own prep functions, but
-don't necessarily reset the prep function back to the SCSI default
-when they are removed.  This leads to panics if commands are sent to
-the device after the module is removed because the prep_fn is still
-pointing to the old module code.  The fix for this is to implement a
-bus remove method that resets the prep_fn pointer correctly before
-calling the ULD specific driver remove method.
-
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/scsi_lib.c   |    2 +-
- drivers/scsi/scsi_priv.h  |    3 +++
- drivers/scsi/scsi_sysfs.c |   17 +++++++++++++++++
- 3 files changed, 21 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0e81e4c..a9ac5b1 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1332,7 +1332,7 @@ int scsi_prep_return(struct request_queue *q, struct request *req, int ret)
- }
- EXPORT_SYMBOL(scsi_prep_return);
- 
--static int scsi_prep_fn(struct request_queue *q, struct request *req)
-+int scsi_prep_fn(struct request_queue *q, struct request *req)
- {
- 	struct scsi_device *sdev = q->queuedata;
- 	int ret = BLKPREP_KILL;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index eff0059..3f34e93 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -74,6 +74,9 @@ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
- extern void scsi_free_queue(struct request_queue *q);
- extern int scsi_init_queue(void);
- extern void scsi_exit_queue(void);
-+struct request_queue;
-+struct request;
-+extern int scsi_prep_fn(struct request_queue *, struct request *);
- 
- /* scsi_proc.c */
- #ifdef CONFIG_SCSI_PROC_FS
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index f374fdc..00b3866 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -373,12 +373,29 @@ static int scsi_bus_resume(struct device * dev)
- 	return err;
- }
- 
-+static int scsi_bus_remove(struct device *dev)
-+{
-+	struct device_driver *drv = dev->driver;
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	int err = 0;
-+
-+	/* reset the prep_fn back to the default since the
-+	 * driver may have altered it and it's being removed */
-+	blk_queue_prep_rq(sdev->request_queue, scsi_prep_fn);
-+
-+	if (drv && drv->remove)
-+		err = drv->remove(dev);
-+
-+	return 0;
-+}
-+
- struct bus_type scsi_bus_type = {
-         .name		= "scsi",
-         .match		= scsi_bus_match,
- 	.uevent		= scsi_bus_uevent,
- 	.suspend	= scsi_bus_suspend,
- 	.resume		= scsi_bus_resume,
-+	.remove		= scsi_bus_remove,
- };
- 
- int scsi_sysfs_register(void)
--- 
-1.5.3.6
-
-
-
+There is a small possibility that a host need more sense buffers than
+can_queue. The failure of the buffer allocation works just like the
+failure of scsi_cmnd allocation. So everything should work as before
+(the block layer takes care about it).
