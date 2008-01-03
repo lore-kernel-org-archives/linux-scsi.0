@@ -1,34 +1,61 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 0/1] Remove of old NCR53C9x/esp family of drivers
-Date: Thu, 03 Jan 2008 17:17:43 +0200
-Message-ID: <477CFC97.2010201@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: advansys broken (at least) on ARM and MIPS
+Date: Thu, 03 Jan 2008 09:21:07 -0600
+Message-ID: <1199373667.3122.6.camel@localhost.localdomain>
+References: <20080103074353.GD22470@deprecation.cyrius.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31722 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1752176AbYACPSN (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 10:18:13 -0500
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:60978 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751408AbYACPVR (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 10:21:17 -0500
+In-Reply-To: <20080103074353.GD22470@deprecation.cyrius.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, "David S. Miller" <davem@davemloft.net>, Linux/m68k
-
-James 
-  Could you at least put the following patch in scsi-pending
-so it can attract some acknowledgment, and retract futile
-attempts from people at coding these drivers.
-(And also git is better than me in maintaining it synced)
-
-Christoph Hellwig!
-  I need your Recommended-by: on this. I had my regular
-convert-to-accessors, and because of your recommendation
-I'm pushing this removal. And I keep doing it again and again
-because a removal patch is a conflict-to-any by definition.
+To: Martin Michlmayr <tbm@cyrius.com>
+Cc: Matthew Wilcox <willy@linux.intel.com>, linux-scsi@vger.kernel.org, Ralf Baechle <ralf@linux-mips.org>
 
 
-David S. Miller & Maciej W. Rozycki
-  Please add a comment in favor of this move. And a few words for
-the few users left for this hardware.
+On Thu, 2008-01-03 at 08:43 +0100, Martin Michlmayr wrote:
+> Commit 9d511a4b29de6764931343d03e493f2e04df0271 removed the "depends
+> on BROKEN || X86_32" line from advansys' Kconfig entry.  I'm not sure
+> that was such a great idea - the module doesn't compile at least on
+> ARM and MIPS:
+>=20
+> ARM:
+>=20
+>   CC [M]  drivers/scsi/advansys.o
+> drivers/scsi/advansys.c:71:2: warning: #warning this driver is still =
+not properly converted to the DMA
+>  API
+> drivers/scsi/advansys.c: In function =E2=80=98AdvBuildCarrierFreelist=
+=E2=80=99:
+> drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99 =
+is deprecated (declared at include/asm/memory.h:1
+> 92)
+> drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99 =
+is deprecated (declared at include/asm/memory.h:1
+> 92)
+> drivers/scsi/advansys.c:6486: warning: =E2=80=98virt_to_bus=E2=80=99 =
+is deprecated (declared at include/asm/memory.h:1
+> 92)
+> ...
+> drivers/scsi/advansys.c: In function =E2=80=98advansys_get_sense_buff=
+er_dma=E2=80=99:
+> drivers/scsi/advansys.c:9885: error: implicit declaration of function=
+ =E2=80=98dma_cache_sync=E2=80=99
 
-Boaz
+That error doesn't look to tbe the fault of the driver.
+dma_cache_sync() is a piece of the DMA API it looks like ARM doesn't
+implement?
+
+James
+
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
