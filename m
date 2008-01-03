@@ -1,98 +1,34 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
-	of	that provided by the block layer
-Date: Thu, 03 Jan 2008 09:12:31 -0600
-Message-ID: <1199373151.3122.3.camel@localhost.localdomain>
-References: <1199138168.3110.12.camel@localhost.localdomain>
-	 <20080103170148K.tomof@acm.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 0/1] Remove of old NCR53C9x/esp family of drivers
+Date: Thu, 03 Jan 2008 17:17:43 +0200
+Message-ID: <477CFC97.2010201@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <20080103170148K.tomof@acm.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Jens.Axboe@oracle.com, fujita.tomonori@lab.ntt.co.jp, jeff@garzik.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:31722 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752176AbYACPSN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 10:18:13 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@SteelEye.com>, Christoph Hellwig <hch@infradead.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, "David S. Miller" <davem@davemloft.net>, Linux/m68k
+
+James 
+  Could you at least put the following patch in scsi-pending
+so it can attract some acknowledgment, and retract futile
+attempts from people at coding these drivers.
+(And also git is better than me in maintaining it synced)
+
+Christoph Hellwig!
+  I need your Recommended-by: on this. I had my regular
+convert-to-accessors, and because of your recommendation
+I'm pushing this removal. And I keep doing it again and again
+because a removal patch is a conflict-to-any by definition.
 
 
-On Thu, 2008-01-03 at 16:58 +0900, FUJITA Tomonori wrote:
-> On Mon, 31 Dec 2007 15:56:08 -0600
-> James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > @@ -1080,24 +1073,15 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
-> >  static inline struct scatterlist *
-> >  ata_qc_first_sg(struct ata_queued_cmd *qc)
-> >  {
-> > -	qc->n_iter = 0;
-> >  	if (qc->n_elem)
-> >  		return qc->__sg;
-> > -	if (qc->pad_len)
-> > -		return &qc->pad_sgent;
-> >  	return NULL;
-> >  }
-> >  
-> >  static inline struct scatterlist *
-> >  ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
-> >  {
-> > -	if (sg == &qc->pad_sgent)
-> > -		return NULL;
-> > -	if (++qc->n_iter < qc->n_elem)
-> > -		return sg_next(sg);
-> > -	if (qc->pad_len)
-> > -		return &qc->pad_sgent;
-> > -	return NULL;
-> > +	return sg_next(sg);
-> >  }
-> >  
-> >  #define ata_for_each_sg(sg, qc) \
-> 
-> How about removing ata_qc_first_sg and ata_qc_next_sg completely?
-> 
-> Now we can just replace ata_qc_next_sg with sg_next. qc->__sg seems to
-> be always initialized to NULL so we can remove ata_qc_first_sg too.
+David S. Miller & Maciej W. Rozycki
+  Please add a comment in favor of this move. And a few words for
+the few users left for this hardware.
 
-Sure ... I assumed (without actually looking) that the inlines were
-there because they were an API used throughout the drivers.  Actually,
-grep tells me they're only used in the ata_for_each_sg macro, so this
-patch looks good.
-
-Thanks,
-
-James
-
-> diff --git a/include/linux/libata.h b/include/linux/libata.h
-> index 4f6404c..2774882 100644
-> --- a/include/linux/libata.h
-> +++ b/include/linux/libata.h
-> @@ -1054,25 +1054,8 @@ extern void ata_port_pbar_desc(struct ata_port *ap, int bar, ssize_t offset,
->  			       const char *name);
->  #endif
->  
-> -/*
-> - * qc helpers
-> - */
-> -static inline struct scatterlist *
-> -ata_qc_first_sg(struct ata_queued_cmd *qc)
-> -{
-> -	if (qc->n_elem)
-> -		return qc->__sg;
-> -	return NULL;
-> -}
-> -
-> -static inline struct scatterlist *
-> -ata_qc_next_sg(struct scatterlist *sg, struct ata_queued_cmd *qc)
-> -{
-> -	return sg_next(sg);
-> -}
-> -
->  #define ata_for_each_sg(sg, qc) \
-> -	for (sg = ata_qc_first_sg(qc); sg; sg = ata_qc_next_sg(sg, qc))
-> +	for (sg = qc->__sg; sg; sg = sg_next(sg))
->  
->  static inline unsigned int ata_tag_valid(unsigned int tag)
->  {
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
+Boaz
