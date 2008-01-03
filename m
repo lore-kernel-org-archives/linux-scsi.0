@@ -1,493 +1,666 @@
 From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH 2/3] usb_storage: usb_stor_bulk_transfer_sg cleanup
-Date: Thu, 3 Jan 2008 19:54:32 +1100
-Message-ID: <200801031954.33083.rusty@rustcorp.com.au>
-References: <200801031800.02537.rusty@rustcorp.com.au> <200801031950.12090.rusty@rustcorp.com.au>
+Subject: [PATCH 3/3] scsi: convert core to sg_ring
+Date: Thu, 3 Jan 2008 19:55:46 +1100
+Message-ID: <200801031955.46239.rusty@rustcorp.com.au>
+References: <200801031800.02537.rusty@rustcorp.com.au> <200801031950.12090.rusty@rustcorp.com.au> <200801031954.33083.rusty@rustcorp.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:59359 "EHLO ozlabs.org"
+Received: from ozlabs.org ([203.10.76.45]:59393 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753757AbYACIzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jan 2008 03:55:05 -0500
-In-Reply-To: <200801031950.12090.rusty@rustcorp.com.au>
+	id S1755203AbYACI4D (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jan 2008 03:56:03 -0500
+In-Reply-To: <200801031954.33083.rusty@rustcorp.com.au>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 
-usb_stor_bulk_transfer_sg() assumes buf is a scatterlist array if
-use_sg is non-NULL.  Change it to an explicit sg arg, instead, to
-allow the callers to change to scsi_sglist().
+A 'struct sg_ring *sg' element is added to struct scsi_cmd, and the
+use_sg and __use_sg fields are removed.  If this field is null,
+request_buffer point to the data (as was previously indicated by
+use_sg == 0).
+
+To ease transition, scsi_sglist() is now a backwards-compat routine
+which chains the sg_ring entries so they can be iterated using
+sg_next().  Once all the drivers which actually want to use chained
+sgs are converted to sg_ring, the remaining drivers can revert to
+using simple sg arrays.
+
+The backwards-compat conversion is placed under an (always-on) config
+option (CONFIG_SCSI_SG_CHAIN).
 
 Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
+---
+ drivers/scsi/Kconfig        |    6 +
+ drivers/scsi/scsi_error.c   |   15 +--
+ drivers/scsi/scsi_lib.c     |  219 +++++++++++++++++++++-----------------------
+ drivers/scsi/scsi_lib_dma.c |   27 ++---
+ drivers/scsi/scsi_tgt_lib.c |   17 +--
+ include/scsi/scsi_cmnd.h    |   38 +++++--
+ include/scsi/scsi_eh.h      |    6 -
+ 7 files changed, 170 insertions(+), 158 deletions(-)
 
-diff -r 09247461cfda drivers/usb/storage/freecom.c
---- a/drivers/usb/storage/freecom.c	Thu Jan 03 19:30:25 2008 +1100
-+++ b/drivers/usb/storage/freecom.c	Thu Jan 03 19:51:09 2008 +1100
-@@ -133,7 +133,7 @@ freecom_readdata (struct scsi_cmnd *srb,
- 	/* Now transfer all of our blocks. */
- 	US_DEBUGP("Start of read\n");
- 	result = usb_stor_bulk_transfer_sg(us, ipipe, srb->request_buffer,
--			count, srb->use_sg, &srb->resid);
-+			count, scsi_sglist(srb), scsi_sg_count(srb), &srb->resid);
- 	US_DEBUGP("freecom_readdata done!\n");
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -29,6 +29,12 @@ config SCSI
  
- 	if (result > USB_STOR_XFER_SHORT)
-@@ -167,7 +167,7 @@ freecom_writedata (struct scsi_cmnd *srb
- 	/* Now transfer all of our blocks. */
- 	US_DEBUGP("Start of write\n");
- 	result = usb_stor_bulk_transfer_sg(us, opipe, srb->request_buffer,
--			count, srb->use_sg, &srb->resid);
-+			count, scsi_sglist(srb), scsi_sg_count(srb), &srb->resid);
+ 	  However, do not compile this as a module if your root file system
+ 	  (the one containing the directory /) is located on a SCSI device.
++
++config SCSI_SG_CHAIN
++	bool
++	default y
++	---help---
++	  Support sg chaining for older SCSI drivers.
  
- 	US_DEBUGP("freecom_writedata done!\n");
- 	if (result > USB_STOR_XFER_SHORT)
-diff -r 09247461cfda drivers/usb/storage/sddr09.c
---- a/drivers/usb/storage/sddr09.c	Thu Jan 03 19:30:25 2008 +1100
-+++ b/drivers/usb/storage/sddr09.c	Thu Jan 03 19:51:09 2008 +1100
-@@ -355,7 +355,7 @@ static int
- static int
- sddr09_readX(struct us_data *us, int x, unsigned long fromaddress,
- 	     int nr_of_pages, int bulklen, unsigned char *buf,
--	     int use_sg) {
-+	     struct scatterlist *sg, int use_sg) {
+ config SCSI_DMA
+ 	bool
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -617,20 +617,21 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd 
+ 	ses->cmd_len = scmd->cmd_len;
+ 	memcpy(ses->cmnd, scmd->cmnd, sizeof(scmd->cmnd));
+ 	ses->data_direction = scmd->sc_data_direction;
++	ses->sg = scmd->sg;
+ 	ses->bufflen = scmd->request_bufflen;
+ 	ses->buffer = scmd->request_buffer;
+-	ses->use_sg = scmd->use_sg;
+ 	ses->resid = scmd->resid;
+ 	ses->result = scmd->result;
  
- 	unsigned char *command = us->iobuf;
- 	int result;
-@@ -382,7 +382,7 @@ sddr09_readX(struct us_data *us, int x, 
- 	}
+ 	if (sense_bytes) {
+ 		scmd->request_bufflen = min_t(unsigned,
+ 		                       sizeof(scmd->sense_buffer), sense_bytes);
+-		sg_init_one(&ses->sense_sgl, scmd->sense_buffer,
+-		                                       scmd->request_bufflen);
+-		scmd->request_buffer = &ses->sense_sgl;
++
++		sg_ring_single(&ses->sense_sg.ring, scmd->sense_buffer,
++			       scmd->request_bufflen);
++		scmd->sg = &ses->sense_sg.ring;
++		scmd->request_buffer = NULL;
+ 		scmd->sc_data_direction = DMA_FROM_DEVICE;
+-		scmd->use_sg = 1;
+ 		memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
+ 		scmd->cmnd[0] = REQUEST_SENSE;
+ 		scmd->cmnd[4] = scmd->request_bufflen;
+@@ -639,7 +640,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd 
+ 		scmd->request_buffer = NULL;
+ 		scmd->request_bufflen = 0;
+ 		scmd->sc_data_direction = DMA_NONE;
+-		scmd->use_sg = 0;
++		scmd->sg = NULL;
+ 		if (cmnd) {
+ 			memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
+ 			memcpy(scmd->cmnd, cmnd, cmnd_size);
+@@ -678,7 +679,7 @@ void scsi_eh_restore_cmnd(struct scsi_cm
+ 	scmd->sc_data_direction = ses->data_direction;
+ 	scmd->request_bufflen = ses->bufflen;
+ 	scmd->request_buffer = ses->buffer;
+-	scmd->use_sg = ses->use_sg;
++	scmd->sg = ses->sg;
+ 	scmd->resid = ses->resid;
+ 	scmd->result = ses->result;
+ }
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -17,7 +17,7 @@
+ #include <linux/pci.h>
+ #include <linux/delay.h>
+ #include <linux/hardirq.h>
+-#include <linux/scatterlist.h>
++#include <linux/sg_ring.h>
  
- 	result = usb_stor_bulk_transfer_sg(us, us->recv_bulk_pipe,
--				       buf, bulklen, use_sg, NULL);
-+					   buf, bulklen, sg, use_sg, NULL);
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -34,12 +34,20 @@
+ #define SG_MEMPOOL_NR		ARRAY_SIZE(scsi_sg_pools)
+ #define SG_MEMPOOL_SIZE		2
  
- 	if (result != USB_STOR_XFER_GOOD) {
- 		US_DEBUGP("Result for bulk_transfer in sddr09_read2%d %d\n",
-@@ -403,12 +403,13 @@ sddr09_readX(struct us_data *us, int x, 
++/* If we support old-style SG chaining, we need an extra sg element to overwrite
++ * with the chain's next pointer. */
++#ifdef CONFIG_SCSI_SG_CHAIN
++#define SCSI_SG_PAD 1
++#else
++#define SCSI_SG_PAD 0
++#endif
++
+ /*
+  * The maximum number of SG segments that we will put inside a scatterlist
+  * (unless chaining is used). Should ideally fit inside a single page, to
+  * avoid a higher order allocation.
   */
- static int
- sddr09_read20(struct us_data *us, unsigned long fromaddress,
--	      int nr_of_pages, int pageshift, unsigned char *buf, int use_sg) {
-+	      int nr_of_pages, int pageshift, unsigned char *buf,
-+	      struct scatterlist *sg, int use_sg) {
- 	int bulklen = nr_of_pages << pageshift;
+-#define SCSI_MAX_SG_SEGMENTS	128
++#define SCSI_MAX_SG_SEGMENTS	(128 - SCSI_SG_PAD)
  
- 	/* The last 8 bits of fromaddress are ignored. */
- 	return sddr09_readX(us, 0, fromaddress, nr_of_pages, bulklen,
--			    buf, use_sg);
-+			    buf, sg, use_sg);
- }
- 
- /*
-@@ -426,11 +427,12 @@ sddr09_read20(struct us_data *us, unsign
-  */
- static int
- sddr09_read21(struct us_data *us, unsigned long fromaddress,
--	      int count, int controlshift, unsigned char *buf, int use_sg) {
-+	      int count, int controlshift, unsigned char *buf,
-+	      struct scatterlist *sg, int use_sg) {
- 
- 	int bulklen = (count << controlshift);
- 	return sddr09_readX(us, 1, fromaddress, count, bulklen,
--			    buf, use_sg);
-+			    buf, sg, use_sg);
- }
- 
- /*
-@@ -444,13 +446,14 @@ sddr09_read21(struct us_data *us, unsign
-  */
- static int
- sddr09_read22(struct us_data *us, unsigned long fromaddress,
--	      int nr_of_pages, int pageshift, unsigned char *buf, int use_sg) {
-+	      int nr_of_pages, int pageshift, unsigned char *buf,
-+	      struct scatterlist *sg, int use_sg) {
- 
- 	int bulklen = (nr_of_pages << pageshift) + (nr_of_pages << CONTROL_SHIFT);
- 	US_DEBUGP("sddr09_read22: reading %d pages, %d bytes\n",
- 		  nr_of_pages, bulklen);
- 	return sddr09_readX(us, 2, fromaddress, nr_of_pages, bulklen,
--			    buf, use_sg);
-+			    buf, sg, use_sg);
- }
- 
- #if 0
-@@ -538,7 +541,8 @@ static int
- static int
- sddr09_writeX(struct us_data *us,
- 	      unsigned long Waddress, unsigned long Eaddress,
--	      int nr_of_pages, int bulklen, unsigned char *buf, int use_sg) {
-+	      int nr_of_pages, int bulklen, unsigned char *buf,
-+	      struct scatterlist *sg, int use_sg) {
- 
- 	unsigned char *command = us->iobuf;
- 	int result;
-@@ -568,7 +572,7 @@ sddr09_writeX(struct us_data *us,
- 	}
- 
- 	result = usb_stor_bulk_transfer_sg(us, us->send_bulk_pipe,
--				       buf, bulklen, use_sg, NULL);
-+				       buf, bulklen, sg, use_sg, NULL);
- 
- 	if (result != USB_STOR_XFER_GOOD) {
- 		US_DEBUGP("Result for bulk_transfer in sddr09_writeX %d\n",
-@@ -582,10 +586,10 @@ static int
- static int
- sddr09_write_inplace(struct us_data *us, unsigned long address,
- 		     int nr_of_pages, int pageshift, unsigned char *buf,
--		     int use_sg) {
-+		     struct scatterlist *sg, int use_sg) {
- 	int bulklen = (nr_of_pages << pageshift) + (nr_of_pages << CONTROL_SHIFT);
- 	return sddr09_writeX(us, address, address, nr_of_pages, bulklen,
--			     buf, use_sg);
-+			     buf, sg, use_sg);
- }
- 
- #if 0
-@@ -772,7 +776,7 @@ sddr09_read_data(struct us_data *us,
- 				info->pageshift;
- 
- 			result = sddr09_read20(us, address>>1,
--					pages, info->pageshift, buffer, 0);
-+					pages, info->pageshift, buffer, NULL, 0);
- 			if (result)
- 				break;
- 		}
-@@ -858,7 +862,7 @@ sddr09_write_lba(struct us_data *us, uns
- 	/* read old contents */
- 	address = (pba << (info->pageshift + info->blockshift));
- 	result = sddr09_read22(us, address>>1, info->blocksize,
--			       info->pageshift, blockbuffer, 0);
-+			       info->pageshift, blockbuffer, NULL, 0);
- 	if (result)
- 		return result;
- 
-@@ -898,7 +902,7 @@ sddr09_write_lba(struct us_data *us, uns
- 	US_DEBUGP("Rewrite PBA %d (LBA %d)\n", pba, lba);
- 
- 	result = sddr09_write_inplace(us, address>>1, info->blocksize,
--				      info->pageshift, blockbuffer, 0);
-+				      info->pageshift, blockbuffer, NULL, 0);
- 
- 	US_DEBUGP("sddr09_write_inplace returns %d\n", result);
- 
-@@ -1014,13 +1018,14 @@ sddr09_read_control(struct us_data *us,
- 		unsigned long address,
- 		unsigned int blocks,
- 		unsigned char *content,
-+		struct scatterlist *sg,
- 		int use_sg) {
- 
- 	US_DEBUGP("Read control address %lu, blocks %d\n",
- 		address, blocks);
- 
- 	return sddr09_read21(us, address, blocks,
--			     CONTROL_SHIFT, content, use_sg);
-+			     CONTROL_SHIFT, content, sg, use_sg);
- }
- 
- /*
-@@ -1220,7 +1225,7 @@ sddr09_read_map(struct us_data *us) {
- 			result = sddr09_read_control(
- 				us, address>>1,
- 				min(alloc_blocks, numblocks - i),
--				buffer, 0);
-+				buffer, NULL, 0);
- 			if (result) {
- 				result = -1;
- 				goto done;
-@@ -1639,7 +1644,8 @@ int sddr09_transport(struct scsi_cmnd *s
- 		result = usb_stor_bulk_transfer_sg(us, pipe,
- 					srb->request_buffer,
- 					srb->request_bufflen,
--					srb->use_sg, &srb->resid);
-+					scsi_sglist(srb), scsi_sg_count(srb),
-+					&srb->resid);
- 
- 		return (result == USB_STOR_XFER_GOOD ?
- 			USB_STOR_TRANSPORT_GOOD : USB_STOR_TRANSPORT_ERROR);
-diff -r 09247461cfda drivers/usb/storage/shuttle_usbat.c
---- a/drivers/usb/storage/shuttle_usbat.c	Thu Jan 03 19:30:25 2008 +1100
-+++ b/drivers/usb/storage/shuttle_usbat.c	Thu Jan 03 19:51:09 2008 +1100
-@@ -132,13 +132,14 @@ static int usbat_bulk_read(struct us_dat
- static int usbat_bulk_read(struct us_data *us,
- 			   unsigned char *data,
- 			   unsigned int len,
-+			   struct scatterlist *sg,
- 			   int use_sg)
+ struct scsi_host_sg_pool {
+ 	size_t		size;
+@@ -707,7 +715,7 @@ static inline unsigned int scsi_sgtable_
  {
- 	if (len == 0)
- 		return USB_STOR_XFER_GOOD;
+ 	unsigned int index;
  
- 	US_DEBUGP("usbat_bulk_read: len = %d\n", len);
--	return usb_stor_bulk_transfer_sg(us, us->recv_bulk_pipe, data, len, use_sg, NULL);
-+	return usb_stor_bulk_transfer_sg(us, us->recv_bulk_pipe, data, len, sg, use_sg, NULL);
+-	switch (nents) {
++	switch (nents + SCSI_SG_PAD) {
+ 	case 1 ... 8:
+ 		index = 0;
+ 		break;
+@@ -737,21 +745,41 @@ static inline unsigned int scsi_sgtable_
+ 	return index;
  }
  
- /*
-@@ -147,13 +148,14 @@ static int usbat_bulk_write(struct us_da
- static int usbat_bulk_write(struct us_data *us,
- 			    unsigned char *data,
- 			    unsigned int len,
-+			    struct scatterlist *sg,
- 			    int use_sg)
+-struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++static void free_sgring(struct sg_ring *head)
  {
- 	if (len == 0)
- 		return USB_STOR_XFER_GOOD;
+ 	struct scsi_host_sg_pool *sgp;
+-	struct scatterlist *sgl, *prev, *ret;
++	struct sg_ring *sg, *n;
++
++	/* Free any other entries in the ring. */
++	list_for_each_entry_safe(sg, n, &head->list, list) {
++		list_del(&sg->list);
++		sgp = scsi_sg_pools + scsi_sgtable_index(sg->max);
++		mempool_free(sg, sgp->pool);
++	}
++
++	/* Now free the head of the ring. */
++	BUG_ON(!list_empty(&head->list));
++
++	sgp = scsi_sg_pools + scsi_sgtable_index(head->max);
++	mempool_free(head, sgp->pool);
++}
++
++struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *cmd, unsigned int num,
++				  gfp_t gfp_mask)
++{
++	struct scsi_host_sg_pool *sgp;
++	struct sg_ring *sg, *ret;
+ 	unsigned int index;
+ 	int this, left;
  
- 	US_DEBUGP("usbat_bulk_write:  len = %d\n", len);
--	return usb_stor_bulk_transfer_sg(us, us->send_bulk_pipe, data, len, use_sg, NULL);
-+	return usb_stor_bulk_transfer_sg(us, us->send_bulk_pipe, data, len, sg, use_sg, NULL);
- }
+-	BUG_ON(!cmd->use_sg);
++	BUG_ON(!num);
  
- /*
-@@ -316,6 +318,7 @@ static int usbat_read_block(struct us_da
- static int usbat_read_block(struct us_data *us,
- 			    unsigned char *content,
- 			    unsigned short len,
-+			    struct scatterlist *sg,
- 			    int use_sg)
- {
- 	int result;
-@@ -337,7 +340,7 @@ static int usbat_read_block(struct us_da
- 	if (result != USB_STOR_XFER_GOOD)
- 		return USB_STOR_TRANSPORT_ERROR;
+-	left = cmd->use_sg;
+-	ret = prev = NULL;
++	left = num;
++	ret = NULL;
+ 	do {
+ 		this = left;
+ 		if (this > SCSI_MAX_SG_SEGMENTS) {
+-			this = SCSI_MAX_SG_SEGMENTS - 1;
++			this = SCSI_MAX_SG_SEGMENTS;
+ 			index = SG_MEMPOOL_NR - 1;
+ 		} else
+ 			index = scsi_sgtable_index(this);
+@@ -760,32 +788,20 @@ struct scatterlist *scsi_alloc_sgtable(s
  
--	result = usbat_bulk_read(us, content, len, use_sg);
-+	result = usbat_bulk_read(us, content, len, sg, use_sg);
- 	return (result == USB_STOR_XFER_GOOD ?
- 			USB_STOR_TRANSPORT_GOOD : USB_STOR_TRANSPORT_ERROR);
- }
-@@ -350,6 +353,7 @@ static int usbat_write_block(struct us_d
- 			     unsigned char *content,
- 			     unsigned short len,
- 			     int minutes,
-+			     struct scatterlist *sg,
- 			     int use_sg)
- {
- 	int result;
-@@ -372,7 +376,7 @@ static int usbat_write_block(struct us_d
- 	if (result != USB_STOR_XFER_GOOD)
- 		return USB_STOR_TRANSPORT_ERROR;
+ 		sgp = scsi_sg_pools + index;
  
--	result = usbat_bulk_write(us, content, len, use_sg);
-+	result = usbat_bulk_write(us, content, len, sg, use_sg);
- 	if (result != USB_STOR_XFER_GOOD)
- 		return USB_STOR_TRANSPORT_ERROR;
+-		sgl = mempool_alloc(sgp->pool, gfp_mask);
+-		if (unlikely(!sgl))
++		sg = mempool_alloc(sgp->pool, gfp_mask);
++		if (unlikely(!sg))
+ 			goto enomem;
  
-@@ -394,6 +398,7 @@ static int usbat_hp8200e_rw_block_test(s
- 				       int direction,
- 				       unsigned char *content,
- 				       unsigned short len,
-+				       struct scatterlist *sg,
- 				       int use_sg,
- 				       int minutes)
- {
-@@ -465,14 +470,15 @@ static int usbat_hp8200e_rw_block_test(s
- 				data[1+(j<<1)] = data_out[j];
- 			}
- 
--			result = usbat_bulk_write(us, data, num_registers*2, 0);
-+			result = usbat_bulk_write(us, data, num_registers*2,
-+						  NULL, 0);
- 			if (result != USB_STOR_XFER_GOOD)
- 				return USB_STOR_TRANSPORT_ERROR;
- 
- 		}
- 
- 		result = usb_stor_bulk_transfer_sg(us,
--			pipe, content, len, use_sg, NULL);
-+			pipe, content, len, sg, use_sg, NULL);
+-		sg_init_table(sgl, sgp->size);
++		sg_ring_init(sg, sgp->size - SCSI_SG_PAD);
  
  		/*
- 		 * If we get a stall on the bulk download, we'll retry
-@@ -583,7 +589,7 @@ static int usbat_multiple_write(struct u
- 	}
+-		 * first loop through, set initial index and return value
++		 * first loop through, set return value, otherwise
++		 * attach this to the tail.
+ 		 */
+ 		if (!ret)
+-			ret = sgl;
+-
+-		/*
+-		 * chain previous sglist, if any. we know the previous
+-		 * sglist must be the biggest one, or we would not have
+-		 * ended up doing another loop.
+-		 */
+-		if (prev)
+-			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
+-
+-		/*
+-		 * if we have nothing left, mark the last segment as
+-		 * end-of-list
+-		 */
+-		if (!left)
+-			sg_mark_end(&sgl[this - 1]);
++			ret = sg;
++		else
++			list_add_tail(&sg->list, &ret->list);
  
- 	/* Send the data */
--	result = usbat_bulk_write(us, data, num_registers*2, 0);
-+	result = usbat_bulk_write(us, data, num_registers*2, NULL,0);
- 	if (result != USB_STOR_XFER_GOOD)
- 		return USB_STOR_TRANSPORT_ERROR;
+ 		/*
+ 		 * don't allow subsequent mempool allocs to sleep, it would
+@@ -793,85 +809,21 @@ struct scatterlist *scsi_alloc_sgtable(s
+ 		 */
+ 		gfp_mask &= ~__GFP_WAIT;
+ 		gfp_mask |= __GFP_HIGH;
+-		prev = sgl;
+ 	} while (left);
  
-@@ -608,6 +614,7 @@ static int usbat_read_blocks(struct us_d
- static int usbat_read_blocks(struct us_data *us,
- 			     unsigned char *buffer,
- 			     int len,
-+			     struct scatterlist *sg,
- 			     int use_sg)
+-	/*
+-	 * ->use_sg may get modified after dma mapping has potentially
+-	 * shrunk the number of segments, so keep a copy of it for free.
+-	 */
+-	cmd->__use_sg = cmd->use_sg;
+ 	return ret;
+ enomem:
+-	if (ret) {
+-		/*
+-		 * Free entries chained off ret. Since we were trying to
+-		 * allocate another sglist, we know that all entries are of
+-		 * the max size.
+-		 */
+-		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
+-		prev = ret;
+-		ret = &ret[SCSI_MAX_SG_SEGMENTS - 1];
+-
+-		while ((sgl = sg_chain_ptr(ret)) != NULL) {
+-			ret = &sgl[SCSI_MAX_SG_SEGMENTS - 1];
+-			mempool_free(sgl, sgp->pool);
+-		}
+-
+-		mempool_free(prev, sgp->pool);
+-	}
++	if (ret)
++		free_sgring(ret);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(scsi_alloc_sgring);
+ 
+-EXPORT_SYMBOL(scsi_alloc_sgtable);
+-
+-void scsi_free_sgtable(struct scsi_cmnd *cmd)
++void scsi_free_sgring(struct scsi_cmnd *cmd)
  {
- 	int result;
-@@ -628,7 +635,7 @@ static int usbat_read_blocks(struct us_d
- 		return USB_STOR_TRANSPORT_FAILED;
- 	
- 	/* Read the blocks we just asked for */
--	result = usbat_bulk_read(us, buffer, len, use_sg);
-+	result = usbat_bulk_read(us, buffer, len, sg, use_sg);
- 	if (result != USB_STOR_XFER_GOOD)
- 		return USB_STOR_TRANSPORT_FAILED;
+-	struct scatterlist *sgl = cmd->request_buffer;
+-	struct scsi_host_sg_pool *sgp;
+-
+-	/*
+-	 * if this is the biggest size sglist, check if we have
+-	 * chained parts we need to free
+-	 */
+-	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
+-		unsigned short this, left;
+-		struct scatterlist *next;
+-		unsigned int index;
+-
+-		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
+-		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
+-		while (left && next) {
+-			sgl = next;
+-			this = left;
+-			if (this > SCSI_MAX_SG_SEGMENTS) {
+-				this = SCSI_MAX_SG_SEGMENTS - 1;
+-				index = SG_MEMPOOL_NR - 1;
+-			} else
+-				index = scsi_sgtable_index(this);
+-
+-			left -= this;
+-
+-			sgp = scsi_sg_pools + index;
+-
+-			if (left)
+-				next = sg_chain_ptr(&sgl[sgp->size - 1]);
+-
+-			mempool_free(sgl, sgp->pool);
+-		}
+-
+-		/*
+-		 * Restore original, will be freed below
+-		 */
+-		sgl = cmd->request_buffer;
+-		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
+-	} else
+-		sgp = scsi_sg_pools + scsi_sgtable_index(cmd->__use_sg);
+-
+-	mempool_free(sgl, sgp->pool);
++	free_sgring(cmd->sg);
+ }
+-
+-EXPORT_SYMBOL(scsi_free_sgtable);
++EXPORT_SYMBOL(scsi_free_sgring);
  
-@@ -650,6 +657,7 @@ static int usbat_write_blocks(struct us_
- static int usbat_write_blocks(struct us_data *us,
- 							  unsigned char *buffer,
- 			      int len,
-+			      struct scatterlist *sg,
- 			      int use_sg)
- {
- 	int result;
-@@ -670,7 +678,7 @@ static int usbat_write_blocks(struct us_
- 		return USB_STOR_TRANSPORT_FAILED;
- 	
- 	/* Write the data */
--	result = usbat_bulk_write(us, buffer, len, use_sg);
-+	result = usbat_bulk_write(us, buffer, len, sg, use_sg);
- 	if (result != USB_STOR_XFER_GOOD)
- 		return USB_STOR_TRANSPORT_FAILED;
- 
-@@ -955,7 +963,7 @@ static int usbat_flash_get_sector_count(
- 	msleep(100);
- 
- 	/* Read the device identification data */
--	rc = usbat_read_block(us, reply, 512, 0);
-+	rc = usbat_read_block(us, reply, 512, NULL, 0);
- 	if (rc != USB_STOR_TRANSPORT_GOOD)
- 		goto leave;
- 
-@@ -1040,7 +1048,7 @@ static int usbat_flash_read_data(struct 
- 			goto leave;
- 
- 		/* Read the data we just requested */
--		result = usbat_read_blocks(us, buffer, len, 0);
-+		result = usbat_read_blocks(us, buffer, len, NULL, 0);
- 		if (result != USB_STOR_TRANSPORT_GOOD)
- 			goto leave;
-   	 
-@@ -1135,7 +1143,7 @@ static int usbat_flash_write_data(struct
- 			goto leave;
- 
- 		/* Write the data */
--		result = usbat_write_blocks(us, buffer, len, 0);
-+		result = usbat_write_blocks(us, buffer, len, NULL, 0);
- 		if (result != USB_STOR_TRANSPORT_GOOD)
- 			goto leave;
- 
-@@ -1178,7 +1186,8 @@ static int usbat_hp8200e_handle_read10(s
- 			(USBAT_QUAL_FCQ | USBAT_QUAL_ALQ),
- 			DMA_FROM_DEVICE,
- 			srb->request_buffer, 
--			srb->request_bufflen, srb->use_sg, 1);
-+		        srb->request_bufflen,
-+			scsi_sglist(srb), scsi_sg_count(srb), 1);
- 
- 		return result;
- 	}
-@@ -1247,7 +1256,7 @@ static int usbat_hp8200e_handle_read10(s
- 			(USBAT_QUAL_FCQ | USBAT_QUAL_ALQ),
- 			DMA_FROM_DEVICE,
- 			buffer,
--			len, 0, 1);
-+			len, NULL, 0, 1);
- 
- 		if (result != USB_STOR_TRANSPORT_GOOD)
- 			break;
-@@ -1473,7 +1482,7 @@ static int usbat_hp8200e_transport(struc
- 			(USBAT_QUAL_FCQ | USBAT_QUAL_ALQ),
- 			DMA_TO_DEVICE,
- 			srb->request_buffer, 
--			len, srb->use_sg, 10);
-+			len, scsi_sglist(srb), scsi_sg_count(srb), 10);
- 
- 		if (result == USB_STOR_TRANSPORT_GOOD) {
- 			transferred += len;
-@@ -1512,7 +1521,7 @@ static int usbat_hp8200e_transport(struc
- 
- 	if ((result = usbat_write_block(us,
- 			USBAT_ATA, srb->cmnd, 12,
--				(srb->cmnd[0]==GPCMD_BLANK ? 75 : 10), 0) !=
-+				(srb->cmnd[0]==GPCMD_BLANK ? 75 : 10), NULL, 0) !=
- 			     USB_STOR_TRANSPORT_GOOD)) {
- 		return result;
- 	}
-@@ -1540,11 +1549,12 @@ static int usbat_hp8200e_transport(struc
- 			len = *status;
- 
- 
--		result = usbat_read_block(us, srb->request_buffer, len, srb->use_sg);
-+		result = usbat_read_block(us, srb->request_buffer, len,
-+		       	 		  scsi_sglist(srb), scsi_sg_count(srb));
- 
- 		/* Debug-print the first 32 bytes of the transfer */
- 
--		if (!srb->use_sg) {
-+		if (!scsi_sg_count(srb)) {
- 			string[0] = 0;
- 			for (i=0; i<len && i<32; i++) {
- 				sprintf(string+strlen(string), "%02X ",
-diff -r 09247461cfda drivers/usb/storage/transport.c
---- a/drivers/usb/storage/transport.c	Thu Jan 03 19:30:25 2008 +1100
-+++ b/drivers/usb/storage/transport.c	Thu Jan 03 19:51:09 2008 +1100
-@@ -468,7 +468,8 @@ static int usb_stor_bulk_transfer_sglist
-  * scatter-gather or not, and acts appropriately.
+ /*
+  * Function:    scsi_release_buffers()
+@@ -892,13 +844,14 @@ EXPORT_SYMBOL(scsi_free_sgtable);
   */
- int usb_stor_bulk_transfer_sg(struct us_data* us, unsigned int pipe,
--		void *buf, unsigned int length_left, int use_sg, int *residual)
-+			      void *buf, unsigned int length_left,
-+			      struct scatterlist *sg, int use_sg, int *residual)
+ static void scsi_release_buffers(struct scsi_cmnd *cmd)
  {
- 	int result;
- 	unsigned int partial;
-@@ -477,7 +478,7 @@ int usb_stor_bulk_transfer_sg(struct us_
- 	if (use_sg) {
- 		/* use the usb core scatter-gather primitives */
- 		result = usb_stor_bulk_transfer_sglist(us, pipe,
--				(struct scatterlist *) buf, use_sg,
-+				sg, use_sg,
- 				length_left, &partial);
- 		length_left -= partial;
- 	} else {
-@@ -739,7 +740,8 @@ int usb_stor_CBI_transport(struct scsi_c
- 				us->recv_bulk_pipe : us->send_bulk_pipe;
- 		result = usb_stor_bulk_transfer_sg(us, pipe,
- 					srb->request_buffer, transfer_length,
--					srb->use_sg, &srb->resid);
-+					scsi_sglist(srb), scsi_sg_count(srb),
-+					&srb->resid);
- 		US_DEBUGP("CBI data stage result is 0x%x\n", result);
+-	if (cmd->use_sg)
+-		scsi_free_sgtable(cmd);
++	if (cmd->sg)
++		scsi_free_sgring(cmd);
  
- 		/* if we stalled the data transfer it means command failed */
-@@ -838,7 +840,8 @@ int usb_stor_CB_transport(struct scsi_cm
- 				us->recv_bulk_pipe : us->send_bulk_pipe;
- 		result = usb_stor_bulk_transfer_sg(us, pipe,
- 					srb->request_buffer, transfer_length,
--					srb->use_sg, &srb->resid);
-+					scsi_sglist(srb), scsi_sg_count(srb),
-+					&srb->resid);
- 		US_DEBUGP("CB data stage result is 0x%x\n", result);
+ 	/*
+ 	 * Zero these out.  They now point to freed memory, and it is
+ 	 * dangerous to hang onto the pointers.
+ 	 */
++	cmd->sg = NULL;
+ 	cmd->request_buffer = NULL;
+ 	cmd->request_bufflen = 0;
+ }
+@@ -976,7 +929,10 @@ void scsi_io_completion(struct scsi_cmnd
+ 	SCSI_LOG_HLCOMPLETE(1, printk("%ld sectors total, "
+ 				      "%d bytes done.\n",
+ 				      req->nr_sectors, good_bytes));
+-	SCSI_LOG_HLCOMPLETE(1, printk("use_sg is %d\n", cmd->use_sg));
++	SCSI_LOG_HLCOMPLETE(1, printk("sg elems %d%s\n",
++				      cmd->sg ? cmd->sg->num : 0,
++				      cmd->sg && !list_empty(&cmd->sg->list) ?
++				      "+" : ""));
  
- 		/* if we stalled the data transfer it means command failed */
-@@ -957,7 +960,8 @@ int usb_stor_Bulk_transport(struct scsi_
- 				us->recv_bulk_pipe : us->send_bulk_pipe;
- 		result = usb_stor_bulk_transfer_sg(us, pipe,
- 					srb->request_buffer, transfer_length,
--					srb->use_sg, &srb->resid);
-+					scsi_sglist(srb), scsi_sg_count(srb),
-+					&srb->resid);
- 		US_DEBUGP("Bulk data transfer result 0x%x\n", result);
- 		if (result == USB_STOR_XFER_ERROR)
- 			return USB_STOR_TRANSPORT_ERROR;
-diff -r 09247461cfda drivers/usb/storage/transport.h
---- a/drivers/usb/storage/transport.h	Thu Jan 03 19:30:25 2008 +1100
-+++ b/drivers/usb/storage/transport.h	Thu Jan 03 19:51:09 2008 +1100
-@@ -138,7 +138,8 @@ extern int usb_stor_bulk_transfer_buf(st
- extern int usb_stor_bulk_transfer_buf(struct us_data *us, unsigned int pipe,
- 		void *buf, unsigned int length, unsigned int *act_len);
- extern int usb_stor_bulk_transfer_sg(struct us_data *us, unsigned int pipe,
--		void *buf, unsigned int length, int use_sg, int *residual);
-+		void *buf, unsigned int length, struct scatterlist *sg,
-+		int use_sg, int *residual);
+ 	if (clear_errors)
+ 		req->errors = 0;
+@@ -1107,20 +1063,20 @@ static int scsi_init_io(struct scsi_cmnd
+ static int scsi_init_io(struct scsi_cmnd *cmd)
+ {
+ 	struct request     *req = cmd->request;
+-	int		   count;
  
- extern int usb_stor_port_reset(struct us_data *us);
- #endif
+ 	/*
+ 	 * We used to not use scatter-gather for single segment request,
+ 	 * but now we do (it makes highmem I/O easier to support without
+ 	 * kmapping pages)
+ 	 */
+-	cmd->use_sg = req->nr_phys_segments;
+ 
++	cmd->request_buffer = NULL;
+ 	/*
+ 	 * If sg table allocation fails, requeue request later.
+ 	 */
+-	cmd->request_buffer = scsi_alloc_sgtable(cmd, GFP_ATOMIC);
+-	if (unlikely(!cmd->request_buffer)) {
++	cmd->sg = scsi_alloc_sgring(cmd, req->nr_phys_segments, GFP_ATOMIC);
++	if (unlikely(!cmd->sg)) {
++		BUG();
+ 		scsi_unprep_request(req);
+ 		return BLKPREP_DEFER;
+ 	}
+@@ -1135,9 +1091,7 @@ static int scsi_init_io(struct scsi_cmnd
+ 	 * Next, walk the list, and fill in the addresses and sizes of
+ 	 * each segment.
+ 	 */
+-	count = blk_rq_map_sg(req->q, req, cmd->request_buffer);
+-	BUG_ON(count > cmd->use_sg);
+-	cmd->use_sg = count;
++	blk_rq_map_sg_ring(req->q, req, cmd->sg);
+ 	return BLKPREP_OK;
+ }
+ 
+@@ -1206,7 +1160,7 @@ int scsi_setup_blk_pc_cmnd(struct scsi_d
+ 
+ 		cmd->request_bufflen = 0;
+ 		cmd->request_buffer = NULL;
+-		cmd->use_sg = 0;
++		cmd->sg = NULL;
+ 		req->buffer = NULL;
+ 	}
+ 
+@@ -1765,7 +1719,7 @@ int __init scsi_init_queue(void)
+ 
+ 	for (i = 0; i < SG_MEMPOOL_NR; i++) {
+ 		struct scsi_host_sg_pool *sgp = scsi_sg_pools + i;
+-		int size = sgp->size * sizeof(struct scatterlist);
++		int size = sizeof(struct sg_ring) + sgp->size * sizeof(struct scatterlist);
+ 
+ 		sgp->slab = kmem_cache_create(sgp->name, size, 0,
+ 				SLAB_HWCACHE_ALIGN, NULL);
+@@ -2523,3 +2477,46 @@ void scsi_kunmap_atomic_sg(void *virt)
+ 	kunmap_atomic(virt, KM_BIO_SRC_IRQ);
+ }
+ EXPORT_SYMBOL(scsi_kunmap_atomic_sg);
++
++#ifdef CONFIG_SCSI_SG_CHAIN
++int scsi_sg_count(struct scsi_cmnd *cmd)
++{
++	return sg_ring_num(cmd->sg);
++}
++EXPORT_SYMBOL(scsi_sg_count);
++
++struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd)
++{
++	struct sg_ring *sg;
++	struct scatterlist *last = NULL;
++
++	if (!cmd->sg)
++		return NULL;
++
++	/* Convert to a chained sg. */
++	for (sg = cmd->sg; sg; sg = sg_ring_next(sg, cmd->sg)) {
++		unsigned int i;
++
++		/* We currently don't set up any 0-len sg rings, but
++		 * let's handle it anyway. */
++		if (!sg->num)
++			continue;
++
++		if (last)
++			last[1].page_link = ((unsigned long)&sg->sg[0] | 0x01);
++
++		/* Clear any end or chain bits. */
++		for (i = 0; i < sg->num; i++)
++			sg->sg[i].page_link &= ~0x3;
++		last = &sg->sg[sg->num - 1];
++	}
++
++	/* End marker */
++	last->page_link |= 0x02;
++
++	/* Assumes first one isn't empty. */
++	return &cmd->sg->sg[0];
++}
++EXPORT_SYMBOL(scsi_sglist);
++	
++#endif /* CONFIG_SCSI_SG_CHAIN */
+diff --git a/drivers/scsi/scsi_lib_dma.c b/drivers/scsi/scsi_lib_dma.c
+--- a/drivers/scsi/scsi_lib_dma.c
++++ b/drivers/scsi/scsi_lib_dma.c
+@@ -5,6 +5,7 @@
+ #include <linux/blkdev.h>
+ #include <linux/device.h>
+ #include <linux/kernel.h>
++#include <linux/sg_ring.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -15,22 +16,21 @@
+  * scsi_dma_map - perform DMA mapping against command's sg lists
+  * @cmd:	scsi command
+  *
+- * Returns the number of sg lists actually used, zero if the sg lists
+- * is NULL, or -ENOMEM if the mapping failed.
++ * Returns -ENOMEM if the mapping failed, or the number of elements mapped
++ * (ie. sg_ring_num(cmd->sg)).
+  */
+ int scsi_dma_map(struct scsi_cmnd *cmd)
+ {
+-	int nseg = 0;
++	if (cmd->sg) {
++		struct device *dev = cmd->device->host->shost_gendev.parent;
++		int err;
+ 
+-	if (scsi_sg_count(cmd)) {
+-		struct device *dev = cmd->device->host->shost_gendev.parent;
+-
+-		nseg = dma_map_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
+-				  cmd->sc_data_direction);
+-		if (unlikely(!nseg))
+-			return -ENOMEM;
++		err = dma_map_sg_ring(dev, cmd->sg, cmd->sc_data_direction);
++		if (err)
++			return err;
++		return sg_ring_num(cmd->sg);
+ 	}
+-	return nseg;
++	return 0;
+ }
+ EXPORT_SYMBOL(scsi_dma_map);
+ 
+@@ -40,11 +40,10 @@ EXPORT_SYMBOL(scsi_dma_map);
+  */
+ void scsi_dma_unmap(struct scsi_cmnd *cmd)
+ {
+-	if (scsi_sg_count(cmd)) {
++	if (cmd->sg) {
+ 		struct device *dev = cmd->device->host->shost_gendev.parent;
+ 
+-		dma_unmap_sg(dev, scsi_sglist(cmd), scsi_sg_count(cmd),
+-			     cmd->sc_data_direction);
++		dma_unmap_sg_ring(dev, cmd->sg, cmd->sc_data_direction);
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_dma_unmap);
+diff --git a/drivers/scsi/scsi_tgt_lib.c b/drivers/scsi/scsi_tgt_lib.c
+--- a/drivers/scsi/scsi_tgt_lib.c
++++ b/drivers/scsi/scsi_tgt_lib.c
+@@ -331,8 +331,8 @@ static void scsi_tgt_cmd_done(struct scs
+ 
+ 	scsi_tgt_uspace_send_status(cmd, tcmd->itn_id, tcmd->tag);
+ 
+-	if (cmd->request_buffer)
+-		scsi_free_sgtable(cmd);
++	if (cmd->sg)
++		scsi_free_sgring(cmd);
+ 
+ 	queue_work(scsi_tgtd, &tcmd->work);
+ }
+@@ -356,19 +356,15 @@ static int scsi_tgt_init_cmd(struct scsi
+ static int scsi_tgt_init_cmd(struct scsi_cmnd *cmd, gfp_t gfp_mask)
+ {
+ 	struct request *rq = cmd->request;
+-	int count;
+ 
+-	cmd->use_sg = rq->nr_phys_segments;
+-	cmd->request_buffer = scsi_alloc_sgtable(cmd, gfp_mask);
+-	if (!cmd->request_buffer)
++	cmd->sg = scsi_alloc_sgring(cmd, rq->nr_phys_segments, gfp_mask);
++	if (!cmd->sg)
+ 		return -ENOMEM;
+-
++	cmd->request_buffer = NULL;
+ 	cmd->request_bufflen = rq->data_len;
+ 
+-	dprintk("cmd %p cnt %d %lu\n", cmd, cmd->use_sg, rq_data_dir(rq));
+-	count = blk_rq_map_sg(rq->q, rq, cmd->request_buffer);
+-	BUG_ON(count > cmd->use_sg);
+-	cmd->use_sg = count;
++	dprintk("cmd %p cnt %d %lu\n", cmd, rq->nr_phys_segments, rq_data_dir(rq));
++	blk_rq_map_sg_ring(rq->q, rq, cmd->request_buffer);
+ 	return 0;
+ }
+ 
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -5,7 +5,7 @@
+ #include <linux/list.h>
+ #include <linux/types.h>
+ #include <linux/timer.h>
+-#include <linux/scatterlist.h>
++#include <linux/sg_ring.h>
+ 
+ struct request;
+ struct scatterlist;
+@@ -17,8 +17,12 @@ struct scsi_pointer {
+ struct scsi_pointer {
+ 	char *ptr;		/* data pointer */
+ 	int this_residual;	/* left in this buffer */
++#ifdef CONFIG_SCSI_SG_CHAIN
+ 	struct scatterlist *buffer;	/* which buffer */
+ 	int buffers_residual;	/* how many buffers left */
++#endif
++	struct sg_ring *sg;	/* which buffer ring */
++	int buffers_offset;	/* how many buffers of this sg already used */
+ 
+         dma_addr_t dma_handle;
+ 
+@@ -66,11 +70,8 @@ struct scsi_cmnd {
+ 	unsigned request_bufflen;	/* Actual request size */
+ 
+ 	struct timer_list eh_timeout;	/* Used to time out the command. */
+-	void *request_buffer;		/* Actual requested buffer */
+-
+-	/* These elements define the operation we ultimately want to perform */
+-	unsigned short use_sg;	/* Number of pieces of scatter-gather */
+-	unsigned short __use_sg;
++	struct sg_ring *sg;	/* if it's a scatter-gather, otherwise... */
++	void *request_buffer;	/* Actual requested buffer */
+ 
+ 	unsigned underflow;	/* Return error if less than
+ 				   this amount is transferred */
+@@ -130,14 +131,28 @@ extern void *scsi_kmap_atomic_sg(struct 
+ 				 size_t *offset, size_t *len);
+ extern void scsi_kunmap_atomic_sg(void *virt);
+ 
+-extern struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *, gfp_t);
+-extern void scsi_free_sgtable(struct scsi_cmnd *);
++extern struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *, unsigned, gfp_t);
++extern void scsi_free_sgring(struct scsi_cmnd *);
+ 
+ extern int scsi_dma_map(struct scsi_cmnd *cmd);
+ extern void scsi_dma_unmap(struct scsi_cmnd *cmd);
+ 
+-#define scsi_sg_count(cmd) ((cmd)->use_sg)
+-#define scsi_sglist(cmd) ((struct scatterlist *)(cmd)->request_buffer)
++#ifdef CONFIG_SCSI_SG_CHAIN
++/* Deprecated: use sg_ring_num(cmd->sg) */
++extern int scsi_sg_count(struct scsi_cmnd *cmd);
++
++/* Deprecated: this routine converts the sg_ring into an sg chain:
++ * modern drivers should use cmd->sg directly. */
++extern struct scatterlist *scsi_sglist(struct scsi_cmnd *cmd);
++
++/* Deprecated: the modern way is to use sg_ring_for_each(cmd->sg,
++ * sgring, i): sgring->sg[i] is the current element.  Note that i does
++ * not always increase (it goes back to 0 when sgring is iterated). */
++#define scsi_for_each_sg(cmd, sg, nseg, __i)			\
++	for_each_sg(scsi_sglist(cmd), sg, nseg, __i)
++
++#endif /* CONFIG_SCSI_SG_CHAIN */
++
+ #define scsi_bufflen(cmd) ((cmd)->request_bufflen)
+ 
+ static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
+@@ -150,7 +165,4 @@ static inline int scsi_get_resid(struct 
+ 	return cmd->resid;
+ }
+ 
+-#define scsi_for_each_sg(cmd, sg, nseg, __i)			\
+-	for_each_sg(scsi_sglist(cmd), sg, nseg, __i)
+-
+ #endif /* _SCSI_SCSI_CMND_H */
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -1,7 +1,7 @@
+ #ifndef _SCSI_SCSI_EH_H
+ #define _SCSI_SCSI_EH_H
+ 
+-#include <linux/scatterlist.h>
++#include <linux/sg_ring.h>
+ 
+ #include <scsi/scsi_cmnd.h>
+ struct scsi_device;
+@@ -75,10 +75,10 @@ struct scsi_eh_save {
+ 
+ 	void *buffer;
+ 	unsigned bufflen;
+-	unsigned short use_sg;
++	struct sg_ring *sg;
+ 	int resid;
+ 
+-	struct scatterlist sense_sgl;
++	DECLARE_SG_RING(sense_sg, 1);
+ };
+ 
+ extern void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd,
