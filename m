@@ -1,527 +1,493 @@
 From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: [PATCH 1/3] scsi: Convert everyone to scsi_sglist and scsi_sg_count
-Date: Thu, 3 Jan 2008 19:50:11 +1100
-Message-ID: <200801031950.12090.rusty@rustcorp.com.au>
-References: <200801031800.02537.rusty@rustcorp.com.au>
+Subject: [PATCH 2/3] usb_storage: usb_stor_bulk_transfer_sg cleanup
+Date: Thu, 3 Jan 2008 19:54:32 +1100
+Message-ID: <200801031954.33083.rusty@rustcorp.com.au>
+References: <200801031800.02537.rusty@rustcorp.com.au> <200801031950.12090.rusty@rustcorp.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain;
   charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ozlabs.org ([203.10.76.45]:54362 "EHLO ozlabs.org"
+Received: from ozlabs.org ([203.10.76.45]:59359 "EHLO ozlabs.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754594AbYACIua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 3 Jan 2008 03:50:30 -0500
-In-Reply-To: <200801031800.02537.rusty@rustcorp.com.au>
+	id S1753757AbYACIzF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 3 Jan 2008 03:55:05 -0500
+In-Reply-To: <200801031950.12090.rusty@rustcorp.com.au>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
 Cc: linux-scsi@vger.kernel.org
 
-This patch simply converts direct uses of ->use_sg and ->request_buffer to
-use the wrapper macros.  This removes the assumption that the sg list is
-overloaded on request_buffer, and that there's an explicit use_sg field.
-
-The ->request_buffer assumption is explicit in scsi_debug.c's paranoid
-checking, so that code had to be shuffled a little.
+usb_stor_bulk_transfer_sg() assumes buf is a scatterlist array if
+use_sg is non-NULL.  Change it to an explicit sg arg, instead, to
+allow the callers to change to scsi_sglist().
 
 Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
----
- drivers/scsi/NCR5380.c       |    6 +++---
- drivers/scsi/NCR53C9x.c      |    6 +++---
- drivers/scsi/aha1542.c       |   14 +++++++-------
- drivers/scsi/atari_NCR5380.c |    2 +-
- drivers/scsi/atp870u.c       |   22 +++++++++++-----------
- drivers/scsi/eata_pio.c      |    6 +++---
- drivers/scsi/fd_mcs.c        |    6 +++---
- drivers/scsi/imm.c           |    5 ++---
- drivers/scsi/in2000.c        |    6 +++---
- drivers/scsi/libsrp.c        |   12 ++++++------
- drivers/scsi/pcmcia/nsp_cs.c |    8 ++++----
- drivers/scsi/ppa.c           |    4 ++--
- drivers/scsi/qlogicpti.c     |   12 ++++++------
- drivers/scsi/scsi_debug.c    |   14 +++++++-------
- drivers/scsi/seagate.c       |    4 ++--
- drivers/scsi/sr.c            |    6 +++---
- drivers/scsi/sun3_NCR5380.c  |    6 +++---
- drivers/scsi/sun3x_esp.c     |    4 ++--
- drivers/scsi/wd33c93.c       |    6 +++---
- 21 files changed, 77 insertions(+), 76 deletions(-)
 
-diff -r 297d045c5da1 drivers/scsi/NCR5380.c
---- a/drivers/scsi/NCR5380.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/NCR5380.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -295,9 +295,9 @@ static __inline__ void initialize_SCp(Sc
- 	 * various queues are valid.
- 	 */
+diff -r 09247461cfda drivers/usb/storage/freecom.c
+--- a/drivers/usb/storage/freecom.c	Thu Jan 03 19:30:25 2008 +1100
++++ b/drivers/usb/storage/freecom.c	Thu Jan 03 19:51:09 2008 +1100
+@@ -133,7 +133,7 @@ freecom_readdata (struct scsi_cmnd *srb,
+ 	/* Now transfer all of our blocks. */
+ 	US_DEBUGP("Start of read\n");
+ 	result = usb_stor_bulk_transfer_sg(us, ipipe, srb->request_buffer,
+-			count, srb->use_sg, &srb->resid);
++			count, scsi_sglist(srb), scsi_sg_count(srb), &srb->resid);
+ 	US_DEBUGP("freecom_readdata done!\n");
  
--	if (cmd->use_sg) {
--		cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
--		cmd->SCp.buffers_residual = cmd->use_sg - 1;
-+	if (scsi_sg_count(cmd)) {
-+		cmd->SCp.buffer = scsi_sglist(cmd);
-+		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 	} else {
-diff -r 297d045c5da1 drivers/scsi/NCR53C9x.c
---- a/drivers/scsi/NCR53C9x.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/NCR53C9x.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -910,7 +910,7 @@ EXPORT_SYMBOL(esp_proc_info);
+ 	if (result > USB_STOR_XFER_SHORT)
+@@ -167,7 +167,7 @@ freecom_writedata (struct scsi_cmnd *srb
+ 	/* Now transfer all of our blocks. */
+ 	US_DEBUGP("Start of write\n");
+ 	result = usb_stor_bulk_transfer_sg(us, opipe, srb->request_buffer,
+-			count, srb->use_sg, &srb->resid);
++			count, scsi_sglist(srb), scsi_sg_count(srb), &srb->resid);
  
- static void esp_get_dmabufs(struct NCR_ESP *esp, Scsi_Cmnd *sp)
- {
--	if(sp->use_sg == 0) {
-+	if(scsi_sg_count(sp) == 0) {
- 		sp->SCp.this_residual = sp->request_bufflen;
- 		sp->SCp.buffer = (struct scatterlist *) sp->request_buffer;
- 		sp->SCp.buffers_residual = 0;
-@@ -920,8 +920,8 @@ static void esp_get_dmabufs(struct NCR_E
- 			sp->SCp.ptr =
- 				(char *) virt_to_phys(sp->request_buffer);
- 	} else {
--		sp->SCp.buffer = (struct scatterlist *) sp->request_buffer;
--		sp->SCp.buffers_residual = sp->use_sg - 1;
-+		sp->SCp.buffer = scsi_sglist(sp->request_buffer);
-+		sp->SCp.buffers_residual = scsi_sg_count(sp) - 1;
- 		sp->SCp.this_residual = sp->SCp.buffer->length;
- 		if (esp->dma_mmu_get_scsi_sgl)
- 			esp->dma_mmu_get_scsi_sgl(esp, sp);
-diff -r 297d045c5da1 drivers/scsi/aha1542.c
---- a/drivers/scsi/aha1542.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/aha1542.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -689,7 +689,7 @@ static int aha1542_queuecommand(Scsi_Cmn
+ 	US_DEBUGP("freecom_writedata done!\n");
+ 	if (result > USB_STOR_XFER_SHORT)
+diff -r 09247461cfda drivers/usb/storage/sddr09.c
+--- a/drivers/usb/storage/sddr09.c	Thu Jan 03 19:30:25 2008 +1100
++++ b/drivers/usb/storage/sddr09.c	Thu Jan 03 19:51:09 2008 +1100
+@@ -355,7 +355,7 @@ static int
+ static int
+ sddr09_readX(struct us_data *us, int x, unsigned long fromaddress,
+ 	     int nr_of_pages, int bulklen, unsigned char *buf,
+-	     int use_sg) {
++	     struct scatterlist *sg, int use_sg) {
  
- 	memcpy(ccb[mbo].cdb, cmd, ccb[mbo].cdblen);
- 
--	if (SCpnt->use_sg) {
-+	if (scsi_sg_count(SCpnt)) {
- 		struct scatterlist *sg;
- 		struct chain *cptr;
- #ifdef DEBUG
-@@ -704,12 +704,12 @@ static int aha1542_queuecommand(Scsi_Cmn
- 			HOSTDATA(SCpnt->device->host)->SCint[mbo] = NULL;
- 			return SCSI_MLQUEUE_HOST_BUSY;
- 		}
--		scsi_for_each_sg(SCpnt, sg, SCpnt->use_sg, i) {
--			if (sg->length == 0 || SCpnt->use_sg > 16 ||
-+		scsi_for_each_sg(SCpnt, sg, scsi_sg_count(SCpnt), i) {
-+			if (sg->length == 0 || scsi_sg_count(SCpnt) > 16 ||
- 			    (((int) sg->offset) & 1) || (sg->length & 1)) {
- 				unsigned char *ptr;
--				printk(KERN_CRIT "Bad segment list supplied to aha1542.c (%d, %d)\n", SCpnt->use_sg, i);
--				scsi_for_each_sg(SCpnt, sg, SCpnt->use_sg, i) {
-+				printk(KERN_CRIT "Bad segment list supplied to aha1542.c (%d, %d)\n", scsi_sg_count(SCpnt), i);
-+				scsi_for_each_sg(SCpnt, sg, scsi_sg_count(SCpnt), i) {
- 					printk(KERN_CRIT "%d: %p %d\n", i,
- 					       sg_virt(sg), sg->length);
- 				};
-@@ -721,10 +721,10 @@ static int aha1542_queuecommand(Scsi_Cmn
- 			};
- 			any2scsi(cptr[i].dataptr, SCSI_SG_PA(sg));
- 			if (SCSI_SG_PA(sg) + sg->length - 1 > ISA_DMA_THRESHOLD)
--				BAD_SG_DMA(SCpnt, sg, SCpnt->use_sg, i);
-+				BAD_SG_DMA(SCpnt, sg, scsi_sg_count(SCpnt), i);
- 			any2scsi(cptr[i].datalen, sg->length);
- 		};
--		any2scsi(ccb[mbo].datalen, SCpnt->use_sg * sizeof(struct chain));
-+		any2scsi(ccb[mbo].datalen, scsi_sg_count(SCpnt) * sizeof(struct chain));
- 		any2scsi(ccb[mbo].dataptr, SCSI_BUF_PA(cptr));
- #ifdef DEBUG
- 		printk("cptr %x: ", cptr);
-diff -r 297d045c5da1 drivers/scsi/atari_NCR5380.c
---- a/drivers/scsi/atari_NCR5380.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/atari_NCR5380.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -512,7 +512,7 @@ static inline void initialize_SCp(Scsi_C
- 	 */
- 
- 	if (cmd->use_sg) {
--		cmd->SCp.buffer = (struct scatterlist *)cmd->request_buffer;
-+		cmd->SCp.buffer = scsi_sglist(cmd->request_buffer);
- 		cmd->SCp.buffers_residual = cmd->use_sg - 1;
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
-diff -r 297d045c5da1 drivers/scsi/atp870u.c
---- a/drivers/scsi/atp870u.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/atp870u.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -471,10 +471,10 @@ go_42:
- 			/*
- 			 *	Complete the command
- 			 */
--			if (workreq->use_sg) {
-+			if (scsi_sg_count(workreq)) {
- 				pci_unmap_sg(dev->pdev,
--					(struct scatterlist *)workreq->request_buffer,
--					workreq->use_sg,
-+					scsi_sglist(workreq->request_buffer),
-+					scsi_sg_count(workreq), 
- 					workreq->sc_data_direction);
- 			} else if (workreq->request_bufflen &&
- 					workreq->sc_data_direction != DMA_NONE) {
-@@ -855,18 +855,18 @@ oktosend:
- 	/*
- 	 *	Figure out the transfer size
- 	 */
--	if (workreq->use_sg) {
-+	if (scsi_sg_count(workreq)) {
- #ifdef ED_DBGP
- 		printk("Using SGL\n");
- #endif		
- 		l = 0;
- 		
--		sgpnt = (struct scatterlist *) workreq->request_buffer;
--		sg_count = pci_map_sg(dev->pdev, sgpnt, workreq->use_sg,
-+		sgpnt = scsi_sglist(workreq);
-+		sg_count = pci_map_sg(dev->pdev, sgpnt, scsi_sg_count(workreq),
- 	   			workreq->sc_data_direction);		
- 		
--		for (i = 0; i < workreq->use_sg; i++) {
--			if (sgpnt[i].length == 0 || workreq->use_sg > ATP870U_SCATTER) {
-+		for (i = 0; i < scsi_sg_count(workreq); i++) {
-+			if (sgpnt[i].length == 0 || scsi_sg_count(workreq) > ATP870U_SCATTER) {
- 				panic("Foooooooood fight!");
- 			}
- 			l += sgpnt[i].length;
-@@ -938,10 +938,10 @@ oktosend:
- 	 *	a linear chain.
- 	 */
- 
--	if (workreq->use_sg) {
--		sgpnt = (struct scatterlist *) workreq->request_buffer;
-+	if (scsi_sg_count(workreq)) {
-+		sgpnt = scsi_sglist(workreq->request_buffer);
- 		i = 0;
--		for (j = 0; j < workreq->use_sg; j++) {
-+		for (j = 0; j < scsi_sg_count(workreq); j++) {
- 			bttl = sg_dma_address(&sgpnt[j]);
- 			l=sg_dma_len(&sgpnt[j]);
- #ifdef ED_DBGP		
-diff -r 297d045c5da1 drivers/scsi/eata_pio.c
---- a/drivers/scsi/eata_pio.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/eata_pio.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -402,14 +402,14 @@ static int eata_pio_queue(struct scsi_cm
- 	cp->cmd = cmd;
- 	cmd->host_scribble = (char *) &hd->ccb[y];
- 
--	if (cmd->use_sg == 0) {
-+	if (scsi_sg_count(cmd) == 0) {
- 		cmd->SCp.buffers_residual = 1;
- 		cmd->SCp.ptr = cmd->request_buffer;
- 		cmd->SCp.this_residual = cmd->request_bufflen;
- 		cmd->SCp.buffer = NULL;
- 	} else {
--		cmd->SCp.buffer = cmd->request_buffer;
--		cmd->SCp.buffers_residual = cmd->use_sg;
-+		cmd->SCp.buffer = scsi_sglist(cmd);
-+		cmd->SCp.buffers_residual = scsi_sg_count(cmd);
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
+ 	unsigned char *command = us->iobuf;
+ 	int result;
+@@ -382,7 +382,7 @@ sddr09_readX(struct us_data *us, int x, 
  	}
-diff -r 297d045c5da1 drivers/scsi/fd_mcs.c
---- a/drivers/scsi/fd_mcs.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/fd_mcs.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -1107,11 +1107,11 @@ static int fd_mcs_queue(Scsi_Cmnd * SCpn
  
- 	/* Initialize static data */
+ 	result = usb_stor_bulk_transfer_sg(us, us->recv_bulk_pipe,
+-				       buf, bulklen, use_sg, NULL);
++					   buf, bulklen, sg, use_sg, NULL);
  
--	if (current_SC->use_sg) {
--		current_SC->SCp.buffer = (struct scatterlist *) current_SC->request_buffer;
-+	if (scsi_sg_count(current_SC)) {
-+		current_SC->SCp.buffer = scsi_sglist(current_SC->request_buffer);
- 		current_SC->SCp.ptr = sg_virt(current_SC->SCp.buffer);
- 		current_SC->SCp.this_residual = current_SC->SCp.buffer->length;
--		current_SC->SCp.buffers_residual = current_SC->use_sg - 1;
-+		current_SC->SCp.buffers_residual = scsi_sg_count(current_SC) - 1;
- 	} else {
- 		current_SC->SCp.ptr = (char *) current_SC->request_buffer;
- 		current_SC->SCp.this_residual = current_SC->request_bufflen;
-diff -r 297d045c5da1 drivers/scsi/imm.c
---- a/drivers/scsi/imm.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/imm.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -837,10 +837,9 @@ static int imm_engine(imm_struct *dev, s
- 
- 		/* Phase 4 - Setup scatter/gather buffers */
- 	case 4:
--		if (cmd->use_sg) {
-+		if (scsi_sg_count(cmd)) {
- 			/* if many buffers are available, start filling the first */
--			cmd->SCp.buffer =
--			    (struct scatterlist *) cmd->request_buffer;
-+			cmd->SCp.buffer = scsi_sglist(cmd);
- 			cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 			cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		} else {
-diff -r 297d045c5da1 drivers/scsi/in2000.c
---- a/drivers/scsi/in2000.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/in2000.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -369,9 +369,9 @@ static int in2000_queuecommand(Scsi_Cmnd
-  *  - SCp.phase records this command's SRCID_ER bit setting
+ 	if (result != USB_STOR_XFER_GOOD) {
+ 		US_DEBUGP("Result for bulk_transfer in sddr09_read2%d %d\n",
+@@ -403,12 +403,13 @@ sddr09_readX(struct us_data *us, int x, 
   */
+ static int
+ sddr09_read20(struct us_data *us, unsigned long fromaddress,
+-	      int nr_of_pages, int pageshift, unsigned char *buf, int use_sg) {
++	      int nr_of_pages, int pageshift, unsigned char *buf,
++	      struct scatterlist *sg, int use_sg) {
+ 	int bulklen = nr_of_pages << pageshift;
  
--	if (cmd->use_sg) {
--		cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
--		cmd->SCp.buffers_residual = cmd->use_sg - 1;
-+	if (scsi_sg_count(cmd)) {
-+		cmd->SCp.buffer = scsi_sglist(cmd->request_buffer);
-+		cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 	} else {
-diff -r 297d045c5da1 drivers/scsi/libsrp.c
---- a/drivers/scsi/libsrp.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/libsrp.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -192,15 +192,15 @@ static int srp_direct_data(struct scsi_c
+ 	/* The last 8 bits of fromaddress are ignored. */
+ 	return sddr09_readX(us, 0, fromaddress, nr_of_pages, bulklen,
+-			    buf, use_sg);
++			    buf, sg, use_sg);
+ }
  
- 	if (dma_map) {
- 		iue = (struct iu_entry *) sc->SCp.ptr;
--		sg = sc->request_buffer;
-+		sg = scsi_sglist(sc);
+ /*
+@@ -426,11 +427,12 @@ sddr09_read20(struct us_data *us, unsign
+  */
+ static int
+ sddr09_read21(struct us_data *us, unsigned long fromaddress,
+-	      int count, int controlshift, unsigned char *buf, int use_sg) {
++	      int count, int controlshift, unsigned char *buf,
++	      struct scatterlist *sg, int use_sg) {
  
- 		dprintk("%p %u %u %d\n", iue, sc->request_bufflen,
- 			md->len, sc->use_sg);
+ 	int bulklen = (count << controlshift);
+ 	return sddr09_readX(us, 1, fromaddress, count, bulklen,
+-			    buf, use_sg);
++			    buf, sg, use_sg);
+ }
  
--		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg,
-+		nsg = dma_map_sg(iue->target->dev, sg, scsi_sg_count(sc),
- 				 DMA_BIDIRECTIONAL);
- 		if (!nsg) {
--			printk("fail to map %p %d\n", iue, sc->use_sg);
-+			printk("fail to map %p %d\n", iue, scsi_sg_count(sc));
- 			return 0;
- 		}
- 		len = min(sc->request_bufflen, md->len);
-@@ -229,7 +229,7 @@ static int srp_indirect_data(struct scsi
+ /*
+@@ -444,13 +446,14 @@ sddr09_read21(struct us_data *us, unsign
+  */
+ static int
+ sddr09_read22(struct us_data *us, unsigned long fromaddress,
+-	      int nr_of_pages, int pageshift, unsigned char *buf, int use_sg) {
++	      int nr_of_pages, int pageshift, unsigned char *buf,
++	      struct scatterlist *sg, int use_sg) {
  
- 	if (dma_map || ext_desc) {
- 		iue = (struct iu_entry *) sc->SCp.ptr;
--		sg = sc->request_buffer;
-+		sg = scsi_sglist(sc);
+ 	int bulklen = (nr_of_pages << pageshift) + (nr_of_pages << CONTROL_SHIFT);
+ 	US_DEBUGP("sddr09_read22: reading %d pages, %d bytes\n",
+ 		  nr_of_pages, bulklen);
+ 	return sddr09_readX(us, 2, fromaddress, nr_of_pages, bulklen,
+-			    buf, use_sg);
++			    buf, sg, use_sg);
+ }
  
- 		dprintk("%p %u %u %d %d\n",
- 			iue, sc->request_bufflen, id->len,
-@@ -268,9 +268,9 @@ static int srp_indirect_data(struct scsi
+ #if 0
+@@ -538,7 +541,8 @@ static int
+ static int
+ sddr09_writeX(struct us_data *us,
+ 	      unsigned long Waddress, unsigned long Eaddress,
+-	      int nr_of_pages, int bulklen, unsigned char *buf, int use_sg) {
++	      int nr_of_pages, int bulklen, unsigned char *buf,
++	      struct scatterlist *sg, int use_sg) {
  
- rdma:
- 	if (dma_map) {
--		nsg = dma_map_sg(iue->target->dev, sg, sc->use_sg, DMA_BIDIRECTIONAL);
-+		nsg = dma_map_sg(iue->target->dev, sg, scsi_sg_count(sc), DMA_BIDIRECTIONAL);
- 		if (!nsg) {
--			eprintk("fail to map %p %d\n", iue, sc->use_sg);
-+			eprintk("fail to map %p %d\n", iue, scsi_sg_count(sc));
- 			err = -EIO;
- 			goto free_mem;
- 		}
-diff -r 297d045c5da1 drivers/scsi/pcmcia/nsp_cs.c
---- a/drivers/scsi/pcmcia/nsp_cs.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/pcmcia/nsp_cs.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -233,11 +233,11 @@ static int nsp_queuecommand(struct scsi_
- 	   SCp.buffer		: next buffer
- 	   SCp.buffers_residual : left buffers in list
- 	   SCp.phase		: current state of the command */
--	if (SCpnt->use_sg) {
--		SCpnt->SCp.buffer	    = (struct scatterlist *) SCpnt->request_buffer;
-+	if (scsi_sg_count(SCpnt)) {
-+		SCpnt->SCp.buffer	    = scsi_sglist(SCpnt);
- 		SCpnt->SCp.ptr		    = BUFFER_ADDR;
- 		SCpnt->SCp.this_residual    = SCpnt->SCp.buffer->length;
--		SCpnt->SCp.buffers_residual = SCpnt->use_sg - 1;
-+		SCpnt->SCp.buffers_residual = scsi_sg_count(SCpnt) - 1;
- 	} else {
- 		SCpnt->SCp.ptr		    = (char *) SCpnt->request_buffer;
- 		SCpnt->SCp.this_residual    = SCpnt->request_bufflen;
-@@ -911,7 +911,7 @@ static int nsp_nexus(struct scsi_cmnd *S
- 	nsp_index_write(base, SYNCREG,	sync->SyncRegister);
- 	nsp_index_write(base, ACKWIDTH, sync->AckWidth);
- 
--	if (SCpnt->use_sg    == 0        ||
-+	if (scsi_sg_count(SCpnt) == 0    ||
- 	    SCpnt->resid % 4 != 0        ||
- 	    SCpnt->resid     <= PAGE_SIZE ) {
- 		data->TransferMode = MODE_IO8;
-diff -r 297d045c5da1 drivers/scsi/ppa.c
---- a/drivers/scsi/ppa.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/ppa.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -750,9 +750,9 @@ static int ppa_engine(ppa_struct *dev, s
- 		cmd->SCp.phase++;
- 
- 	case 4:		/* Phase 4 - Setup scatter/gather buffers */
--		if (cmd->use_sg) {
-+		if (scsi_sg_count(cmd)) {
- 			/* if many buffers are available, start filling the first */
--			cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
-+			cmd->SCp.buffer = scsi_sglist(cmd);
- 			cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 			cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		} else {
-diff -r 297d045c5da1 drivers/scsi/qlogicpti.c
---- a/drivers/scsi/qlogicpti.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/qlogicpti.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -871,11 +871,11 @@ static inline int load_cmd(struct scsi_c
- 	struct scatterlist *sg, *s;
- 	int i, n;
- 
--	if (Cmnd->use_sg) {
-+	if (scsi_sg_count(Cmnd)) {
- 		int sg_count;
- 
--		sg = (struct scatterlist *) Cmnd->request_buffer;
--		sg_count = sbus_map_sg(qpti->sdev, sg, Cmnd->use_sg, Cmnd->sc_data_direction);
-+		sg = scsi_sglist(Cmnd);
-+		sg_count = sbus_map_sg(qpti->sdev, sg, scsi_sg_count(Cmnd), Cmnd->sc_data_direction);
- 
- 		ds = cmd->dataseg;
- 		cmd->segment_cnt = sg_count;
-@@ -1159,10 +1159,10 @@ static struct scsi_cmnd *qlogicpti_intr_
- 		else
- 			Cmnd->result = DID_ERROR << 16;
- 
--		if (Cmnd->use_sg) {
-+		if (scsi_sg_count(Cmnd)) {
- 			sbus_unmap_sg(qpti->sdev,
--				      (struct scatterlist *)Cmnd->request_buffer,
--				      Cmnd->use_sg,
-+				      scsi_sglist(Cmnd->request_buffer),
-+				      scsi_sg_count(Cmnd),
- 				      Cmnd->sc_data_direction);
- 		} else if (Cmnd->request_bufflen) {
- 			sbus_unmap_single(qpti->sdev,
-diff -r 297d045c5da1 drivers/scsi/scsi_debug.c
---- a/drivers/scsi/scsi_debug.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/scsi_debug.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -605,12 +605,10 @@ static int fill_from_dev_buffer(struct s
- 
- 	if (0 == scp->request_bufflen)
- 		return 0;
--	if (NULL == scp->request_buffer)
--		return (DID_ERROR << 16);
- 	if (! ((scp->sc_data_direction == DMA_BIDIRECTIONAL) ||
- 	      (scp->sc_data_direction == DMA_FROM_DEVICE)))
- 		return (DID_ERROR << 16);
--	if (0 == scp->use_sg) {
-+	if (0 == scsi_sg_count(scp)) {
- 		req_len = scp->request_bufflen;
- 		act_len = (req_len < arr_len) ? req_len : arr_len;
- 		memcpy(scp->request_buffer, arr, act_len);
-@@ -620,9 +618,11 @@ static int fill_from_dev_buffer(struct s
- 			scp->resid = req_len - act_len;
- 		return 0;
+ 	unsigned char *command = us->iobuf;
+ 	int result;
+@@ -568,7 +572,7 @@ sddr09_writeX(struct us_data *us,
  	}
-+	if (!scsi_sglist(scp))
-+		return (DID_ERROR << 16);
- 	active = 1;
- 	req_len = act_len = 0;
--	scsi_for_each_sg(scp, sg, scp->use_sg, k) {
-+	scsi_for_each_sg(scp, sg, scsi_sg_count(scp), k) {
- 		if (active) {
- 			kaddr = (unsigned char *)
- 				kmap_atomic(sg_page(sg), KM_USER0);
-@@ -658,12 +658,12 @@ static int fetch_to_dev_buffer(struct sc
  
- 	if (0 == scp->request_bufflen)
- 		return 0;
--	if (NULL == scp->request_buffer)
-+	if (NULL == scsi_sglist(scp))
- 		return -1;
- 	if (! ((scp->sc_data_direction == DMA_BIDIRECTIONAL) ||
- 	      (scp->sc_data_direction == DMA_TO_DEVICE)))
- 		return -1;
--	if (0 == scp->use_sg) {
-+	if (0 == scsi_sg_count(scp)) {
- 		req_len = scp->request_bufflen;
- 		len = (req_len < max_arr_len) ? req_len : max_arr_len;
- 		memcpy(arr, scp->request_buffer, len);
-@@ -671,7 +671,7 @@ static int fetch_to_dev_buffer(struct sc
- 	}
- 	sg = scsi_sglist(scp);
- 	req_len = fin = 0;
--	for (k = 0; k < scp->use_sg; ++k, sg = sg_next(sg)) {
-+	for (k = 0; k < scsi_sg_count(scp); ++k, sg = sg_next(sg)) {
- 		kaddr = (unsigned char *)kmap_atomic(sg_page(sg), KM_USER0);
- 		if (NULL == kaddr)
- 			return -1;
-diff -r 297d045c5da1 drivers/scsi/seagate.c
---- a/drivers/scsi/seagate.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/seagate.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -991,7 +991,7 @@ connect_loop:
+ 	result = usb_stor_bulk_transfer_sg(us, us->send_bulk_pipe,
+-				       buf, bulklen, use_sg, NULL);
++				       buf, bulklen, sg, use_sg, NULL);
  
- 		/* Establish current pointers.  Take into account scatter / gather */
+ 	if (result != USB_STOR_XFER_GOOD) {
+ 		US_DEBUGP("Result for bulk_transfer in sddr09_writeX %d\n",
+@@ -582,10 +586,10 @@ static int
+ static int
+ sddr09_write_inplace(struct us_data *us, unsigned long address,
+ 		     int nr_of_pages, int pageshift, unsigned char *buf,
+-		     int use_sg) {
++		     struct scatterlist *sg, int use_sg) {
+ 	int bulklen = (nr_of_pages << pageshift) + (nr_of_pages << CONTROL_SHIFT);
+ 	return sddr09_writeX(us, address, address, nr_of_pages, bulklen,
+-			     buf, use_sg);
++			     buf, sg, use_sg);
+ }
  
--		if ((nobuffs = SCint->use_sg)) {
-+		if ((nobuffs = scsi_sg_count(SCint))) {
- #if (DEBUG & DEBUG_SG)
- 			{
- 				int i;
-@@ -1004,7 +1004,7 @@ connect_loop:
+ #if 0
+@@ -772,7 +776,7 @@ sddr09_read_data(struct us_data *us,
+ 				info->pageshift;
+ 
+ 			result = sddr09_read20(us, address>>1,
+-					pages, info->pageshift, buffer, 0);
++					pages, info->pageshift, buffer, NULL, 0);
+ 			if (result)
+ 				break;
+ 		}
+@@ -858,7 +862,7 @@ sddr09_write_lba(struct us_data *us, uns
+ 	/* read old contents */
+ 	address = (pba << (info->pageshift + info->blockshift));
+ 	result = sddr09_read22(us, address>>1, info->blocksize,
+-			       info->pageshift, blockbuffer, 0);
++			       info->pageshift, blockbuffer, NULL, 0);
+ 	if (result)
+ 		return result;
+ 
+@@ -898,7 +902,7 @@ sddr09_write_lba(struct us_data *us, uns
+ 	US_DEBUGP("Rewrite PBA %d (LBA %d)\n", pba, lba);
+ 
+ 	result = sddr09_write_inplace(us, address>>1, info->blocksize,
+-				      info->pageshift, blockbuffer, 0);
++				      info->pageshift, blockbuffer, NULL, 0);
+ 
+ 	US_DEBUGP("sddr09_write_inplace returns %d\n", result);
+ 
+@@ -1014,13 +1018,14 @@ sddr09_read_control(struct us_data *us,
+ 		unsigned long address,
+ 		unsigned int blocks,
+ 		unsigned char *content,
++		struct scatterlist *sg,
+ 		int use_sg) {
+ 
+ 	US_DEBUGP("Read control address %lu, blocks %d\n",
+ 		address, blocks);
+ 
+ 	return sddr09_read21(us, address, blocks,
+-			     CONTROL_SHIFT, content, use_sg);
++			     CONTROL_SHIFT, content, sg, use_sg);
+ }
+ 
+ /*
+@@ -1220,7 +1225,7 @@ sddr09_read_map(struct us_data *us) {
+ 			result = sddr09_read_control(
+ 				us, address>>1,
+ 				min(alloc_blocks, numblocks - i),
+-				buffer, 0);
++				buffer, NULL, 0);
+ 			if (result) {
+ 				result = -1;
+ 				goto done;
+@@ -1639,7 +1644,8 @@ int sddr09_transport(struct scsi_cmnd *s
+ 		result = usb_stor_bulk_transfer_sg(us, pipe,
+ 					srb->request_buffer,
+ 					srb->request_bufflen,
+-					srb->use_sg, &srb->resid);
++					scsi_sglist(srb), scsi_sg_count(srb),
++					&srb->resid);
+ 
+ 		return (result == USB_STOR_XFER_GOOD ?
+ 			USB_STOR_TRANSPORT_GOOD : USB_STOR_TRANSPORT_ERROR);
+diff -r 09247461cfda drivers/usb/storage/shuttle_usbat.c
+--- a/drivers/usb/storage/shuttle_usbat.c	Thu Jan 03 19:30:25 2008 +1100
++++ b/drivers/usb/storage/shuttle_usbat.c	Thu Jan 03 19:51:09 2008 +1100
+@@ -132,13 +132,14 @@ static int usbat_bulk_read(struct us_dat
+ static int usbat_bulk_read(struct us_data *us,
+ 			   unsigned char *data,
+ 			   unsigned int len,
++			   struct scatterlist *sg,
+ 			   int use_sg)
+ {
+ 	if (len == 0)
+ 		return USB_STOR_XFER_GOOD;
+ 
+ 	US_DEBUGP("usbat_bulk_read: len = %d\n", len);
+-	return usb_stor_bulk_transfer_sg(us, us->recv_bulk_pipe, data, len, use_sg, NULL);
++	return usb_stor_bulk_transfer_sg(us, us->recv_bulk_pipe, data, len, sg, use_sg, NULL);
+ }
+ 
+ /*
+@@ -147,13 +148,14 @@ static int usbat_bulk_write(struct us_da
+ static int usbat_bulk_write(struct us_data *us,
+ 			    unsigned char *data,
+ 			    unsigned int len,
++			    struct scatterlist *sg,
+ 			    int use_sg)
+ {
+ 	if (len == 0)
+ 		return USB_STOR_XFER_GOOD;
+ 
+ 	US_DEBUGP("usbat_bulk_write:  len = %d\n", len);
+-	return usb_stor_bulk_transfer_sg(us, us->send_bulk_pipe, data, len, use_sg, NULL);
++	return usb_stor_bulk_transfer_sg(us, us->send_bulk_pipe, data, len, sg, use_sg, NULL);
+ }
+ 
+ /*
+@@ -316,6 +318,7 @@ static int usbat_read_block(struct us_da
+ static int usbat_read_block(struct us_data *us,
+ 			    unsigned char *content,
+ 			    unsigned short len,
++			    struct scatterlist *sg,
+ 			    int use_sg)
+ {
+ 	int result;
+@@ -337,7 +340,7 @@ static int usbat_read_block(struct us_da
+ 	if (result != USB_STOR_XFER_GOOD)
+ 		return USB_STOR_TRANSPORT_ERROR;
+ 
+-	result = usbat_bulk_read(us, content, len, use_sg);
++	result = usbat_bulk_read(us, content, len, sg, use_sg);
+ 	return (result == USB_STOR_XFER_GOOD ?
+ 			USB_STOR_TRANSPORT_GOOD : USB_STOR_TRANSPORT_ERROR);
+ }
+@@ -350,6 +353,7 @@ static int usbat_write_block(struct us_d
+ 			     unsigned char *content,
+ 			     unsigned short len,
+ 			     int minutes,
++			     struct scatterlist *sg,
+ 			     int use_sg)
+ {
+ 	int result;
+@@ -372,7 +376,7 @@ static int usbat_write_block(struct us_d
+ 	if (result != USB_STOR_XFER_GOOD)
+ 		return USB_STOR_TRANSPORT_ERROR;
+ 
+-	result = usbat_bulk_write(us, content, len, use_sg);
++	result = usbat_bulk_write(us, content, len, sg, use_sg);
+ 	if (result != USB_STOR_XFER_GOOD)
+ 		return USB_STOR_TRANSPORT_ERROR;
+ 
+@@ -394,6 +398,7 @@ static int usbat_hp8200e_rw_block_test(s
+ 				       int direction,
+ 				       unsigned char *content,
+ 				       unsigned short len,
++				       struct scatterlist *sg,
+ 				       int use_sg,
+ 				       int minutes)
+ {
+@@ -465,14 +470,15 @@ static int usbat_hp8200e_rw_block_test(s
+ 				data[1+(j<<1)] = data_out[j];
  			}
+ 
+-			result = usbat_bulk_write(us, data, num_registers*2, 0);
++			result = usbat_bulk_write(us, data, num_registers*2,
++						  NULL, 0);
+ 			if (result != USB_STOR_XFER_GOOD)
+ 				return USB_STOR_TRANSPORT_ERROR;
+ 
+ 		}
+ 
+ 		result = usb_stor_bulk_transfer_sg(us,
+-			pipe, content, len, use_sg, NULL);
++			pipe, content, len, sg, use_sg, NULL);
+ 
+ 		/*
+ 		 * If we get a stall on the bulk download, we'll retry
+@@ -583,7 +589,7 @@ static int usbat_multiple_write(struct u
+ 	}
+ 
+ 	/* Send the data */
+-	result = usbat_bulk_write(us, data, num_registers*2, 0);
++	result = usbat_bulk_write(us, data, num_registers*2, NULL,0);
+ 	if (result != USB_STOR_XFER_GOOD)
+ 		return USB_STOR_TRANSPORT_ERROR;
+ 
+@@ -608,6 +614,7 @@ static int usbat_read_blocks(struct us_d
+ static int usbat_read_blocks(struct us_data *us,
+ 			     unsigned char *buffer,
+ 			     int len,
++			     struct scatterlist *sg,
+ 			     int use_sg)
+ {
+ 	int result;
+@@ -628,7 +635,7 @@ static int usbat_read_blocks(struct us_d
+ 		return USB_STOR_TRANSPORT_FAILED;
+ 	
+ 	/* Read the blocks we just asked for */
+-	result = usbat_bulk_read(us, buffer, len, use_sg);
++	result = usbat_bulk_read(us, buffer, len, sg, use_sg);
+ 	if (result != USB_STOR_XFER_GOOD)
+ 		return USB_STOR_TRANSPORT_FAILED;
+ 
+@@ -650,6 +657,7 @@ static int usbat_write_blocks(struct us_
+ static int usbat_write_blocks(struct us_data *us,
+ 							  unsigned char *buffer,
+ 			      int len,
++			      struct scatterlist *sg,
+ 			      int use_sg)
+ {
+ 	int result;
+@@ -670,7 +678,7 @@ static int usbat_write_blocks(struct us_
+ 		return USB_STOR_TRANSPORT_FAILED;
+ 	
+ 	/* Write the data */
+-	result = usbat_bulk_write(us, buffer, len, use_sg);
++	result = usbat_bulk_write(us, buffer, len, sg, use_sg);
+ 	if (result != USB_STOR_XFER_GOOD)
+ 		return USB_STOR_TRANSPORT_FAILED;
+ 
+@@ -955,7 +963,7 @@ static int usbat_flash_get_sector_count(
+ 	msleep(100);
+ 
+ 	/* Read the device identification data */
+-	rc = usbat_read_block(us, reply, 512, 0);
++	rc = usbat_read_block(us, reply, 512, NULL, 0);
+ 	if (rc != USB_STOR_TRANSPORT_GOOD)
+ 		goto leave;
+ 
+@@ -1040,7 +1048,7 @@ static int usbat_flash_read_data(struct 
+ 			goto leave;
+ 
+ 		/* Read the data we just requested */
+-		result = usbat_read_blocks(us, buffer, len, 0);
++		result = usbat_read_blocks(us, buffer, len, NULL, 0);
+ 		if (result != USB_STOR_TRANSPORT_GOOD)
+ 			goto leave;
+   	 
+@@ -1135,7 +1143,7 @@ static int usbat_flash_write_data(struct
+ 			goto leave;
+ 
+ 		/* Write the data */
+-		result = usbat_write_blocks(us, buffer, len, 0);
++		result = usbat_write_blocks(us, buffer, len, NULL, 0);
+ 		if (result != USB_STOR_TRANSPORT_GOOD)
+ 			goto leave;
+ 
+@@ -1178,7 +1186,8 @@ static int usbat_hp8200e_handle_read10(s
+ 			(USBAT_QUAL_FCQ | USBAT_QUAL_ALQ),
+ 			DMA_FROM_DEVICE,
+ 			srb->request_buffer, 
+-			srb->request_bufflen, srb->use_sg, 1);
++		        srb->request_bufflen,
++			scsi_sglist(srb), scsi_sg_count(srb), 1);
+ 
+ 		return result;
+ 	}
+@@ -1247,7 +1256,7 @@ static int usbat_hp8200e_handle_read10(s
+ 			(USBAT_QUAL_FCQ | USBAT_QUAL_ALQ),
+ 			DMA_FROM_DEVICE,
+ 			buffer,
+-			len, 0, 1);
++			len, NULL, 0, 1);
+ 
+ 		if (result != USB_STOR_TRANSPORT_GOOD)
+ 			break;
+@@ -1473,7 +1482,7 @@ static int usbat_hp8200e_transport(struc
+ 			(USBAT_QUAL_FCQ | USBAT_QUAL_ALQ),
+ 			DMA_TO_DEVICE,
+ 			srb->request_buffer, 
+-			len, srb->use_sg, 10);
++			len, scsi_sglist(srb), scsi_sg_count(srb), 10);
+ 
+ 		if (result == USB_STOR_TRANSPORT_GOOD) {
+ 			transferred += len;
+@@ -1512,7 +1521,7 @@ static int usbat_hp8200e_transport(struc
+ 
+ 	if ((result = usbat_write_block(us,
+ 			USBAT_ATA, srb->cmnd, 12,
+-				(srb->cmnd[0]==GPCMD_BLANK ? 75 : 10), 0) !=
++				(srb->cmnd[0]==GPCMD_BLANK ? 75 : 10), NULL, 0) !=
+ 			     USB_STOR_TRANSPORT_GOOD)) {
+ 		return result;
+ 	}
+@@ -1540,11 +1549,12 @@ static int usbat_hp8200e_transport(struc
+ 			len = *status;
+ 
+ 
+-		result = usbat_read_block(us, srb->request_buffer, len, srb->use_sg);
++		result = usbat_read_block(us, srb->request_buffer, len,
++		       	 		  scsi_sglist(srb), scsi_sg_count(srb));
+ 
+ 		/* Debug-print the first 32 bytes of the transfer */
+ 
+-		if (!srb->use_sg) {
++		if (!scsi_sg_count(srb)) {
+ 			string[0] = 0;
+ 			for (i=0; i<len && i<32; i++) {
+ 				sprintf(string+strlen(string), "%02X ",
+diff -r 09247461cfda drivers/usb/storage/transport.c
+--- a/drivers/usb/storage/transport.c	Thu Jan 03 19:30:25 2008 +1100
++++ b/drivers/usb/storage/transport.c	Thu Jan 03 19:51:09 2008 +1100
+@@ -468,7 +468,8 @@ static int usb_stor_bulk_transfer_sglist
+  * scatter-gather or not, and acts appropriately.
+  */
+ int usb_stor_bulk_transfer_sg(struct us_data* us, unsigned int pipe,
+-		void *buf, unsigned int length_left, int use_sg, int *residual)
++			      void *buf, unsigned int length_left,
++			      struct scatterlist *sg, int use_sg, int *residual)
+ {
+ 	int result;
+ 	unsigned int partial;
+@@ -477,7 +478,7 @@ int usb_stor_bulk_transfer_sg(struct us_
+ 	if (use_sg) {
+ 		/* use the usb core scatter-gather primitives */
+ 		result = usb_stor_bulk_transfer_sglist(us, pipe,
+-				(struct scatterlist *) buf, use_sg,
++				sg, use_sg,
+ 				length_left, &partial);
+ 		length_left -= partial;
+ 	} else {
+@@ -739,7 +740,8 @@ int usb_stor_CBI_transport(struct scsi_c
+ 				us->recv_bulk_pipe : us->send_bulk_pipe;
+ 		result = usb_stor_bulk_transfer_sg(us, pipe,
+ 					srb->request_buffer, transfer_length,
+-					srb->use_sg, &srb->resid);
++					scsi_sglist(srb), scsi_sg_count(srb),
++					&srb->resid);
+ 		US_DEBUGP("CBI data stage result is 0x%x\n", result);
+ 
+ 		/* if we stalled the data transfer it means command failed */
+@@ -838,7 +840,8 @@ int usb_stor_CB_transport(struct scsi_cm
+ 				us->recv_bulk_pipe : us->send_bulk_pipe;
+ 		result = usb_stor_bulk_transfer_sg(us, pipe,
+ 					srb->request_buffer, transfer_length,
+-					srb->use_sg, &srb->resid);
++					scsi_sglist(srb), scsi_sg_count(srb),
++					&srb->resid);
+ 		US_DEBUGP("CB data stage result is 0x%x\n", result);
+ 
+ 		/* if we stalled the data transfer it means command failed */
+@@ -957,7 +960,8 @@ int usb_stor_Bulk_transport(struct scsi_
+ 				us->recv_bulk_pipe : us->send_bulk_pipe;
+ 		result = usb_stor_bulk_transfer_sg(us, pipe,
+ 					srb->request_buffer, transfer_length,
+-					srb->use_sg, &srb->resid);
++					scsi_sglist(srb), scsi_sg_count(srb),
++					&srb->resid);
+ 		US_DEBUGP("Bulk data transfer result 0x%x\n", result);
+ 		if (result == USB_STOR_XFER_ERROR)
+ 			return USB_STOR_TRANSPORT_ERROR;
+diff -r 09247461cfda drivers/usb/storage/transport.h
+--- a/drivers/usb/storage/transport.h	Thu Jan 03 19:30:25 2008 +1100
++++ b/drivers/usb/storage/transport.h	Thu Jan 03 19:51:09 2008 +1100
+@@ -138,7 +138,8 @@ extern int usb_stor_bulk_transfer_buf(st
+ extern int usb_stor_bulk_transfer_buf(struct us_data *us, unsigned int pipe,
+ 		void *buf, unsigned int length, unsigned int *act_len);
+ extern int usb_stor_bulk_transfer_sg(struct us_data *us, unsigned int pipe,
+-		void *buf, unsigned int length, int use_sg, int *residual);
++		void *buf, unsigned int length, struct scatterlist *sg,
++		int use_sg, int *residual);
+ 
+ extern int usb_stor_port_reset(struct us_data *us);
  #endif
- 
--			buffer = (struct scatterlist *) SCint->request_buffer;
-+			buffer = scsi_sglist(SCint->request_buffer);
- 			len = buffer->length;
- 			data = sg_virt(buffer);
- 		} else {
-diff -r 297d045c5da1 drivers/scsi/sr.c
---- a/drivers/scsi/sr.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/sr.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -366,12 +366,12 @@ static int sr_prep_fn(struct request_que
- 	}
- 
- 	{
--		struct scatterlist *sg = SCpnt->request_buffer;
-+		struct scatterlist *sg = scsi_sglist(SCpnt);
- 		int i, size = 0;
--		for (i = 0; i < SCpnt->use_sg; i++)
-+		for (i = 0; i < scsi_sg_count(SCpnt); i++)
- 			size += sg[i].length;
- 
--		if (size != SCpnt->request_bufflen && SCpnt->use_sg) {
-+		if (size != SCpnt->request_bufflen && scsi_sg_count(SCpnt)) {
- 			scmd_printk(KERN_ERR, SCpnt,
- 				"mismatch count %d, bytes %d\n",
- 				size, SCpnt->request_bufflen);
-diff -r 297d045c5da1 drivers/scsi/sun3_NCR5380.c
---- a/drivers/scsi/sun3_NCR5380.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/sun3_NCR5380.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -515,9 +515,9 @@ static __inline__ void initialize_SCp(st
-      * various queues are valid.
-      */
- 
--    if (cmd->use_sg) {
--	cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
--	cmd->SCp.buffers_residual = cmd->use_sg - 1;
-+    if (scsi_sg_count(cmd)) {
-+	cmd->SCp.buffer = scsi_sglist(cmd);
-+	cmd->SCp.buffers_residual = scsi_sg_count(cmd) - 1;
- 	cmd->SCp.ptr = (char *) SGADDR(cmd->SCp.buffer);
- 	cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 
-diff -r 297d045c5da1 drivers/scsi/sun3x_esp.c
---- a/drivers/scsi/sun3x_esp.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/sun3x_esp.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -346,8 +346,8 @@ static void dma_mmu_release_scsi_one (st
- 
- static void dma_mmu_release_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp)
- {
--    int sz = sp->use_sg - 1;
--    struct scatterlist *sg = (struct scatterlist *)sp->request_buffer;
-+    int sz = scsi_sg_count(sp) - 1;
-+    struct scatterlist *sg = scsi_sglist(sp);
-                         
-     while(sz >= 0) {
-         dvma_unmap((char *)sg[sz].dma_address);
-diff -r 297d045c5da1 drivers/scsi/wd33c93.c
---- a/drivers/scsi/wd33c93.c	Wed Jan 02 17:18:59 2008 +1100
-+++ b/drivers/scsi/wd33c93.c	Wed Jan 02 18:00:10 2008 +1100
-@@ -407,9 +407,9 @@ wd33c93_queuecommand(struct scsi_cmnd *c
-  *  - SCp.phase records this command's SRCID_ER bit setting
-  */
- 
--	if (cmd->use_sg) {
--		cmd->SCp.buffer = (struct scatterlist *) cmd->request_buffer;
--		cmd->SCp.buffers_residual = cmd->use_sg - 1;
-+	if (scsi_sgcount(cmd)) {
-+		cmd->SCp.buffer = scsi_sg_list(cmd);
-+		cmd->SCp.buffers_residual = scsi_sgcount(cmd) - 1;
- 		cmd->SCp.ptr = sg_virt(cmd->SCp.buffer);
- 		cmd->SCp.this_residual = cmd->SCp.buffer->length;
- 	} else {
