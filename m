@@ -1,47 +1,41 @@
-From: Dave Young <hidave.darkstar@gmail.com>
-Subject: [PATCH 6/7] scsi : convert semaphore to mutex in struct class
-Date: Thu, 3 Jan 2008 14:01:00 +0800
-Message-ID: <20080103060100.GG4885@darkstar.te-china.tietoenator.com>
+From: Jarek Poplawski <jarkao2@gmail.com>
+Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
+Date: Thu, 3 Jan 2008 08:06:09 +0100
+Message-ID: <20080103070609.GA1677@ff.dom.local>
+References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.156]:50722 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752381AbYACF50 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 00:57:26 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so3307467fga.17
-        for <linux-scsi@vger.kernel.org>; Wed, 02 Jan 2008 21:57:25 -0800 (PST)
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756430AbYACHA2@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dave Young <hidave.darkstar@gmail.com>
+Cc: gregkh@suse.de, stern@rowland.harvard.edu, peterz@infradead.org, david-b@pacbell.net, davem@davemloft.net, krh@redhat.com, stefanr@s5r6.in-berlin.de, dbrownell@users.sourceforge.net, James.Bottomley@HansenPartnership.com, a.zummo@towertech.it, cbou@mail.ru, dwmw2@infradead.org, khali@linux-fr.org, i2c@lm-sensors.org, linux1394-devel@lists.sourceforge.net, spi-devel-general@lists.sourceforge.net, linux-scsi@vger.kernel.org, rtc-linux@googlegroups.com, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Use mutex instead of semaphore in struct class.
+On Thu, Jan 03, 2008 at 01:50:20PM +0800, Dave Young wrote:
+> Convert semaphore to mutex in struct class.
+...
+> One lockdep warning detected as following, thus use mutex_lock_nested with SINGLE_DEPTH_NESTING in class_device_add
+> 
+> Jan  3 10:45:15 darkstar kernel: =============================================
+> Jan  3 10:45:15 darkstar kernel: [ INFO: possible recursive locking detected ]
+> Jan  3 10:45:15 darkstar kernel: 2.6.24-rc6-mm1-mutex #1
+> Jan  3 10:45:15 darkstar kernel: ---------------------------------------------
+...
+> If there's anything missed please help to point out, thanks.
 
-Signed-off-by: Dave Young <hidave.darkstar@gmail.com> 
----
-drivers/scsi/hosts.c |    4 ++--
-1 file changed, 2 insertions(+), 2 deletions(-)
+Dave, IMHO it's not 'the right' way to do it: from this and earlier
+discussions it seems there could be many more warnings like this one;
+lockdep simply always turns itself off after first one. So, merging
+your patches like this would effectively turn off lockdep for all
+other places as well, maybe for a long time.
 
-diff -upr linux/drivers/scsi/hosts.c linux.new/drivers/scsi/hosts.c
---- linux/drivers/scsi/hosts.c	2007-12-28 10:45:46.000000000 +0800
-+++ linux.new/drivers/scsi/hosts.c	2007-12-28 10:46:19.000000000 +0800
-@@ -441,7 +441,7 @@ struct Scsi_Host *scsi_host_lookup(unsig
- 	struct class_device *cdev;
- 	struct Scsi_Host *shost = ERR_PTR(-ENXIO), *p;
- 
--	down(&class->sem);
-+	mutex_lock(&class->mutex);
- 	list_for_each_entry(cdev, &class->children, node) {
- 		p = class_to_shost(cdev);
- 		if (p->host_no == hostnum) {
-@@ -449,7 +449,7 @@ struct Scsi_Host *scsi_host_lookup(unsig
- 			break;
- 		}
- 	}
--	up(&class->sem);
-+	mutex_unlock(&class->mutex);
- 
- 	return shost;
- }
+I'd suggest to try first to do it with some wrappers around mutexes,
+which simply omit lockdep verification, and later try to replace them
+one by one, after checking and testing there are no such warnings
+anymore (which would often need some additional annotations about
+nesting and probably some changes in lockdep too).
+
+Thanks,
+Jarek P.
