@@ -1,63 +1,59 @@
-From: "Filippos Papadopoulos" <psybases@gmail.com>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Fri, 4 Jan 2008 02:18:38 +0200
-Message-ID: <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
-	 <20071217031841.f483e5ac.akpm@linux-foundation.org>
-	 <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>
-	 <47666904.8060605@panasas.com>
-	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
-	 <476C1472.1040103@redhat.com>
-	 <1198271036.3130.60.camel@localhost.localdomain>
-	 <476C4177.3030902@redhat.com>
-	 <1198277391.3130.73.camel@localhost.localdomain>
+From: Dave Dillow <dillowda@ornl.gov>
+Subject: [ofa-general] [2.6.24-rc BUGFIX] SRP transport: only remove our own
+	entries
+Date: Thu, 03 Jan 2008 21:34:49 -0500
+Message-ID: <1199414089.3636.7.camel@obelisk.thedillows.org>
+References: <20080103173330T.tomof@acm.org>
+	<1199390957.7561.33.camel@lap75545.ornl.gov>
+	<1199393485.7561.51.camel@lap75545.ornl.gov>
+	<20080104094722F.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.236]:16106 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751849AbYADASk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 19:18:40 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1301197nze.1
-        for <linux-scsi@vger.kernel.org>; Thu, 03 Jan 2008 16:18:39 -0800 (PST)
-In-Reply-To: <1198277391.3130.73.camel@localhost.localdomain>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <general-bounces@lists.openfabrics.org>
+In-Reply-To: <20080104094722F.fujita.tomonori@lab.ntt.co.jp>
+List-Unsubscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=unsubscribe>
+List-Archive: <http://lists.openfabrics.org/pipermail/general>
+List-Post: <mailto:general@lists.openfabrics.org>
+List-Help: <mailto:general-request@lists.openfabrics.org?subject=help>
+List-Subscribe: <http://lists.openfabrics.org/cgi-bin/mailman/listinfo/general>,
+	<mailto:general-request@lists.openfabrics.org?subject=subscribe>
+Sender: general-bounces@lists.openfabrics.org
+Errors-To: general-bounces@lists.openfabrics.org
 To: linux-scsi@vger.kernel.org
-Cc: Chuck Ebbert <cebbert@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, rdreier@cisco.com, tomof@acm.org, linux-kernel@vger.kernel.org, general@lists.openfabrics.org
+List-Id: linux-scsi@vger.kernel.org
 
-First of all let me wish a happy new year.
-I come back from the vacations and i compiled the initio driver with
+The SCSI SRP transport class currently iterates over all children
+devices of the host that is being removed in srp_remove_host(). However,
+not all of those children were created by the SRP transport, and
+removing them will cause corruption and an oops when their creator tries
+to remove them.
 
-#define DEBUG_INTERRUPT 1
-#define DEBUG_QUEUE     1
-#define DEBUG_STATE     1
-#define INT_DISC        1
+Signed-off-by: David Dillow <dillowda@ornl.gov>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+On Fri, 2008-01-04 at 09:47 +0900, FUJITA Tomonori wrote:
+> On Thu, 03 Jan 2008 15:51:25 -0500
+> I think that this is the root problem and the patch fixes it in the
+> right way. Please send this patch to linux-scsi@vger.kernel.org and a
+> patch to move srp_remove_host before scsi_remove_host in
+> srp_remove_one to Roland.
+> 
+> Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-I used the sources from 2.6.24-rc6-git9 kernel. At kernel boot time the initio
-driver prints the following:
-
-" scsi: Initio INI-9X00U/UW SCSI device driver
-Find scb at c0c00000
-Append pend scb c0c00000;"
-
-After 3 seconds the whole system freezes there and i have to reboot.
-
-
-
-P.S  here is the info from 'lspci -vv' running 2.6.16.13 kernel:
-
-"00:08.0 SCSI storage controller: Initio Corporation 360P (rev 02)
-        Subsystem: Unknown device 9292:0202
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium
->TAbort- <TAbort- <MAbort- >SERR- <PERR-
-        Latency: 32, Cache Line Size 08
-        Interrupt: pin A routed to IRQ 11
-        Region 0: I/O ports at d000 [size=256]
-        Region 1: Memory at ef000000 (32-bit, non-prefetchable) [size=4K]
-        [virtual] Expansion ROM at 50000000 [disabled] [size=128K]
-"
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index 44a340b..65c584d 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -265,7 +265,8 @@ EXPORT_SYMBOL_GPL(srp_rport_del);
+ 
+ static int do_srp_rport_del(struct device *dev, void *data)
+ {
+-	srp_rport_del(dev_to_rport(dev));
++	if (scsi_is_srp_rport(dev))
++		srp_rport_del(dev_to_rport(dev));
+ 	return 0;
+ }
+ 
