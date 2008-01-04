@@ -1,37 +1,70 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Open-FCoE on linux-scsi
-Date: Fri, 04 Jan 2008 14:19:14 -0600
-Message-ID: <477E94C2.3050106@cs.wisc.edu>
-References: <10A7D0016239E24092DEF05CCC582E4302BB68C8@fmsmsx411.amr.corp.intel.com>	<200801031035.m03AZYcJ012171@mbox.iij4u.or.jp>	<10A7D0016239E24092DEF05CCC582E4302BB789B@fmsmsx411.amr.corp.intel.com> <20080104225015Z.tomof@acm.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PATCH] another SCSI critical bug fix for 2.6.24-rc6
+Date: Fri, 04 Jan 2008 15:45:17 -0600
+Message-ID: <1199483117.17877.90.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:46376 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752947AbYADUTd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 4 Jan 2008 15:19:33 -0500
-In-Reply-To: <20080104225015Z.tomof@acm.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:45700 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753865AbYADVpX (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jan 2008 16:45:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: robert.w.love@intel.com, yi.zou@intel.com, christopher.leech@intel.com, vasu.dev@intel.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-FUJITA Tomonori wrote:
->> Understood, but open-iscsi doesn't have the layering scheme that we do.
->> Since we're providing a Fibre Channel protocol processing layer that
->> different transport types can register with I think the generic name is
->> appropriate. Anyway, I don't think anyone here is terribly stuck on the
->> name; it's not a high priority at this time.
-> 
-> open-iscsi provides the proper abstraction. It can handles different
-> transport types, tcp and RDMA (iSER). It supports software iSCSI
-> drivers and HW iSCSI HBAs drivers. They are done via iscsi transport
-> class (and libiscsi).
+They just keep coming out of the woodwork, sorry.  This one's in the
+SCSI over RDMA Protocol transport class, so it's causing SCSI over
+infiniband installations to oops on shutdown.  I'm told that their are
+now nearly as many SCSI over IB users as their are voyager users, so,
+since it's nearly mainstream, we need to fix the problem urgently ...
 
-I think I hinted to this offlist, but the bnx2i branch in my iscsi git 
-tree is best to look at for this. The upstream stuff is best the model 
-where we support only HW iscsi hbas drivers (all offload) and SW iscsi 
-drivers (all software). The bnx2i branch modifies the class and lib so 
-it also supports a model in between the two, so pretty much everything 
-is covered.
+The patch is available here:
+
+master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+
+I've just attached it below as well.
+
+James
+
+---
+
+>From 911833440b498e3e4fe2f12c1ae2bd44400c7004 Mon Sep 17 00:00:00 2001
+From: Dave Dillow <dillowda@ornl.gov>
+Date: Thu, 3 Jan 2008 21:34:49 -0500
+Subject: [SCSI] SRP transport: only remove our own entries
+
+The SCSI SRP transport class currently iterates over all children
+devices of the host that is being removed in srp_remove_host(). However,
+not all of those children were created by the SRP transport, and
+removing them will cause corruption and an oops when their creator tries
+to remove them.
+
+Signed-off-by: David Dillow <dillowda@ornl.gov>
+Acked-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/scsi_transport_srp.c |    3 ++-
+ 1 files changed, 2 insertions(+), 1 deletions(-)
+
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index 44a340b..65c584d 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -265,7 +265,8 @@ EXPORT_SYMBOL_GPL(srp_rport_del);
+ 
+ static int do_srp_rport_del(struct device *dev, void *data)
+ {
+-	srp_rport_del(dev_to_rport(dev));
++	if (scsi_is_srp_rport(dev))
++		srp_rport_del(dev_to_rport(dev));
+ 	return 0;
+ }
+ 
+-- 
+1.5.3.7
+
+
+
