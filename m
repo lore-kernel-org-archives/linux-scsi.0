@@ -1,62 +1,63 @@
-From: Michael Schmitz <schmitz@onyx.biophys.uni-duesseldorf.de>
-Subject: Re: [PATCH 1/1] Remove of old NCR53C9x/esp family of drivers
-Date: Thu, 03 Jan 2008 20:46:46 +0100 (CET)
-Message-ID: <Pine.LNX.4.44.0801032037180.26840-100000@onyx.biophys.uni-duesseldorf.de>
-References: <1199387992.3122.31.camel@localhost.localdomain>
+From: "Filippos Papadopoulos" <psybases@gmail.com>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Fri, 4 Jan 2008 02:18:38 +0200
+Message-ID: <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
+References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
+	 <20071217031841.f483e5ac.akpm@linux-foundation.org>
+	 <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>
+	 <47666904.8060605@panasas.com>
+	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
+	 <476C1472.1040103@redhat.com>
+	 <1198271036.3130.60.camel@localhost.localdomain>
+	 <476C4177.3030902@redhat.com>
+	 <1198277391.3130.73.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.rz.uni-duesseldorf.de ([134.99.128.30]:46702 "EHLO
-	mail.rz.uni-duesseldorf.de" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752408AbYACXkO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 18:40:14 -0500
-In-reply-to: <1199387992.3122.31.camel@localhost.localdomain>
+Received: from nz-out-0506.google.com ([64.233.162.236]:16106 "EHLO
+	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751849AbYADASk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Jan 2008 19:18:40 -0500
+Received: by nz-out-0506.google.com with SMTP id s18so1301197nze.1
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Jan 2008 16:18:39 -0800 (PST)
+In-Reply-To: <1198277391.3130.73.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@infradead.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Chuck Ebbert <cebbert@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 
-Hi all,
+First of all let me wish a happy new year.
+I come back from the vacations and i compiled the initio driver with
 
-> > Anybody who can look into converting the m68k NCR53C9x drivers and has
-> > hardware to test (some of) them? I don't think we can afford losing one
-> > third of our SCSI drivers...
+#define DEBUG_INTERRUPT 1
+#define DEBUG_QUEUE     1
+#define DEBUG_STATE     1
+#define INT_DISC        1
 
-I can look into converting some (having worked on the m68k Mac ESP driver
-in the past - I do recall the Mac driver needs special hacks so it won't
-be the easiest one to convert). I have no hardware to test these on,
-however.
+I used the sources from 2.6.24-rc6-git9 kernel. At kernel boot time the initio
+driver prints the following:
 
-> > You can use the following as guidance:
-> >
-> > commit 5ff263667798946abc15314eae3f341345877d7a
-> > Author: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-> > Date:   Tue May 22 17:03:44 2007 -0700
-> >
-> >     [SCSI] jazz_esp: Converted to use esp_core.
-> >
-> > 	    Use new esp_scsi for JAZZ SCSI host adapter driver
+" scsi: Initio INI-9X00U/UW SCSI device driver
+Find scb at c0c00000
+Append pend scb c0c00000;"
 
-Hasn't this come up before on linux-m68k? Someone asked me for information
-when converting the Mac driver, I think. That could be a good start.
-
-> I can also offer help to anyone who tries this.  It's also a good
-> opportunity to let die drivers that have no committed users.
-
-I'll contact you about this, then.
-
-> Just to be clear on why we're doing this:  the NCR53C9x driver on which
-> these are all based is in a pretty horrendous state of repair.  The
-> esp_scsi one is much nicer, actually nicely tested and has a host of
-> features the old driver didn't.  However, the principle driving force is
-> the conversion of the SCSI subsystem to the sg_list accessors.  esp_scsi
-> is already coverted.  NCR53C9x looks like a nasty job.  Thus, the moment
-> the conversion patch goes in, all your drivers will break.  However,
-
-Hmm, does that also affect another of the m68k drivers, the 5380 one? More
-headache for me...
-
-	Michael
+After 3 seconds the whole system freezes there and i have to reboot.
 
 
+
+P.S  here is the info from 'lspci -vv' running 2.6.16.13 kernel:
+
+"00:08.0 SCSI storage controller: Initio Corporation 360P (rev 02)
+        Subsystem: Unknown device 9292:0202
+        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop-
+ParErr- Stepping- SERR- FastB2B-
+        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium
+>TAbort- <TAbort- <MAbort- >SERR- <PERR-
+        Latency: 32, Cache Line Size 08
+        Interrupt: pin A routed to IRQ 11
+        Region 0: I/O ports at d000 [size=256]
+        Region 1: Memory at ef000000 (32-bit, non-prefetchable) [size=4K]
+        [virtual] Expansion ROM at 50000000 [disabled] [size=128K]
+"
