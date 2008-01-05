@@ -1,61 +1,72 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
-Date: Sat, 05 Jan 2008 09:31:12 -0600
-Message-ID: <1199547072.3399.15.camel@localhost.localdomain>
-References: <200712191731.26512.rusty@rustcorp.com.au>
+Subject: [PATCH] add missing transport configure points for target and host
+Date: Sat, 05 Jan 2008 09:38:30 -0600
+Message-ID: <1199547510.3399.18.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:55084 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:49897 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753738AbYAEPbT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jan 2008 10:31:19 -0500
-In-Reply-To: <200712191731.26512.rusty@rustcorp.com.au>
+	by vger.kernel.org with ESMTP id S1753877AbYAEPif (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jan 2008 10:38:35 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 554D289FB
+	for <linux-scsi@vger.kernel.org>; Sat,  5 Jan 2008 09:38:32 -0600 (CST)
+Received: from accolon.hansenpartnership.com ([127.0.0.1])
+	by localhost (redscar.il.steeleye.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id xuJEzR6wIYns for <linux-scsi@vger.kernel.org>;
+	Sat,  5 Jan 2008 09:38:31 -0600 (CST)
+Received: from [153.66.150.222] (mulgrave-w.int.hansenpartnership.com [153.66.150.222])
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 418F48593
+	for <linux-scsi@vger.kernel.org>; Sat,  5 Jan 2008 09:38:31 -0600 (CST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-
-On Wed, 2007-12-19 at 17:31 +1100, Rusty Russell wrote:
-> This patch series is the start of my attempt to simplify and make explicit
-> the chained scatterlist logic.
-> 
-> It's not complete: my SATA box boots and seems happy, but all the other
-> users of SCSI need to be updated and checked.  But I've gotten far enough
-> to believe it's worth persuing.
-
-Sorry for the delay in looking at this, I was busy with Holidays and
-things.
-
-When I compare sg_ring with the current sg_chain (and later sg_table)
-implementations, I'm actually struck by how similar they are.
-
-The other thing I note is that the problem you're claiming to solve with
-sg_ring (the ability to add extra scatterlists to the front or the back
-of an existing one) is already solved with sg_chain, so the only real
-advantage of sg_ring was that it contains explicit counts, which
-sg_table (in -mm) also introduces.
-
-The other differences are that sg_ring only allows adding at the front
-or back of an existing sg_ring, it doesn't allow splicing at any point
-like sg_chain does, so I'd say it's less functional (not that I actually
-want anyone ever to do this, of course ...)
-
-The final point is that sg_ring requires a two level traversal:  ring
-list then scatterlist, whereas sg_chain only requires a single level
-traversal.  I grant that we can abstract out the traversal into
-something that would make users think they're only doing a single level,
-but I don't see what the extra level really buys us.
-
-The above analysis seems to suggest that sg_chain is simpler and has
-more functionality than sg_ring, unless I've missed anything?
-
-The only thing missing from sg_chain perhaps is an accessor function
-that does the splicing, which I can easily construct if you want to try
-it out in virtio.
+While trying to convert the SPI transport class to attribute groups, I
+discovered that we don't actually have any transport configure points
+for either the target or the host.  This patch adds these missing
+transport class triggers.  The host one is simply done after the add,
+the target one tries to be more clever and add it after devices may have
+been placed on the target (so the device configure will have set up the
+target parameters).
 
 James
+
+---
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index ada72af..1dc165a 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1489,6 +1489,7 @@ struct scsi_device *__scsi_add_device(struct Scsi_Host *shost, uint channel,
+ 	if (scsi_host_scan_allowed(shost))
+ 		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
+ 	mutex_unlock(&shost->scan_mutex);
++	transport_configure_device(&starget->dev);
+ 	scsi_target_reap(starget);
+ 	put_device(&starget->dev);
+ 
+@@ -1569,6 +1570,7 @@ static void __scsi_scan_target(struct device *parent, unsigned int channel,
+  out_reap:
+ 	/* now determine if the target has any children at all
+ 	 * and if not, nuke it */
++	transport_configure_device(&starget->dev);
+ 	scsi_target_reap(starget);
+ 
+ 	put_device(&starget->dev);
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 00b3866..ed83cdb 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1018,6 +1018,7 @@ int scsi_sysfs_add_host(struct Scsi_Host *shost)
+ 	}
+ 
+ 	transport_register_device(&shost->shost_gendev);
++	transport_configure_device(&shost->shost_gendev);
+ 	return 0;
+ }
+ 
 
 
