@@ -1,36 +1,37 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: Open-FCoE on linux-scsi
-Date: Sat, 05 Jan 2008 01:21:28 +0100
-Message-ID: <477ECD88.6090802@s5r6.in-berlin.de>
-References: <200801031035.m03AZYcJ012171@mbox.iij4u.or.jp><10A7D0016239E24092DEF05CCC582E4302BB789B@fmsmsx411.amr.corp.intel.com><477E1C69.9010203@s5r6.in-berlin.de> <20080104205938U.fujita.tomonori@lab.ntt.co.jp> <08FE5CC30C9A3F41BF819A502CF7BF6E029FF0B8@fmsmsx411.amr.corp.intel.com> <477EC411.9040703@s5r6.in-berlin.de> <477ECAD4.8010809@s5r6.in-berlin.de>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: [PATCH] bsg : Add support for io vectors in bsg
+Date: Sat, 05 Jan 2008 14:01:19 +0900
+Message-ID: <200801050501.m0551LFB030667@mbox.iij4u.or.jp>
+References: <Pine.LNX.4.64.0801042137350.7836@localhost>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:33378 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753140AbYAEAVk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 4 Jan 2008 19:21:40 -0500
-In-Reply-To: <477ECAD4.8010809@s5r6.in-berlin.de>
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:60334 "EHLO mo11.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750766AbYAEFB3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Jan 2008 00:01:29 -0500
+In-Reply-To: <Pine.LNX.4.64.0801042137350.7836@localhost>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Dev, Vasu" <vasu.dev@intel.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, "Love, Robert W" <robert.w.love@intel.com>, tomof@acm.org, "Zou, Yi" <yi.zou@intel.com>, "Leech, Christopher" <christopher.leech@intel.com>, linux-scsi@vger.kernel.org
+To: deepakrc@gmail.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-Stefan Richter wrote:
-> The interconnect layer could be split further:
-> SCSI command set layer -- SCSI core -- SCSI transport layer (FCP) --
-> Fibre Channel core -- Fibre Channel card drivers, FCoE drivers.
+From: Deepak Colluru <deepakrc@gmail.com>
+Subject: [PATCH] bsg : Add support for io vectors in bsg
+Date: Fri, 4 Jan 2008 21:47:34 +0530 (IST)
+
+> From: Deepak Colluru <deepakrc@gmail.com>
 > 
-> But this would only really make sense if anybody would implement
-> additional FC-4 drivers besides FCP, e.g. RFC 2625, which would also sit
-> on top of Fibre Channel core.
+> Add support for io vectors in bsg.
+> 
+> Signed-off-by: Deepak Colluru <deepakrc@gmail.com>
+> ---
+>   bsg.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++++---
+>   1 file changed, 49 insertions(+), 3 deletions(-)
 
-PS: There is already an RFC 2625 implementation in Linux, but only for
-LSIFC9xx.
+Thanks, but I have to NACK this.
 
-PPS: RFC 2625 is superseded by RFC 4338.
--- 
-Stefan Richter
--=====-==--- ---= --=-=
-http://arcgraph.de/sr/
+You can find the discussion about bsg io vector support and a similar
+patch in linux-scsi archive. I have no plan to support it since it
+needs the compat hack.
