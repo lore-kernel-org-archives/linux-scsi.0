@@ -1,127 +1,124 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: Open-FCoE on linux-scsi
-Date: Sun, 6 Jan 2008 13:14:28 +0900
-Message-ID: <20080106131732H.tomof@acm.org>
-References: <20080104205938U.fujita.tomonori@lab.ntt.co.jp>
+Subject: RE: Open-FCoE on linux-scsi
+Date: Sun, 6 Jan 2008 13:27:05 +0900
+Message-ID: <20080106133002J.tomof@acm.org>
+References: <477E1C69.9010203@s5r6.in-berlin.de>
+	<20080104205938U.fujita.tomonori@lab.ntt.co.jp>
 	<08FE5CC30C9A3F41BF819A502CF7BF6E029FF0B8@fmsmsx411.amr.corp.intel.com>
-	<477EC411.9040703@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:41459 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:45762 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755274AbYAFEOz convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jan 2008 23:14:55 -0500
-In-Reply-To: <477EC411.9040703@s5r6.in-berlin.de>
+	id S1753748AbYAFE1a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Jan 2008 23:27:30 -0500
+In-Reply-To: <08FE5CC30C9A3F41BF819A502CF7BF6E029FF0B8@fmsmsx411.amr.corp.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: stefanr@s5r6.in-berlin.de
-Cc: vasu.dev@intel.com, fujita.tomonori@lab.ntt.co.jp, robert.w.love@intel.com, tomof@acm.org, yi.zou@intel.com, christopher.leech@intel.com, linux-scsi@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: vasu.dev@intel.com
+Cc: fujita.tomonori@lab.ntt.co.jp, stefanr@s5r6.in-berlin.de, robert.w.love@intel.com, tomof@acm.org, yi.zou@intel.com, christopher.leech@intel.com, linux-scsi@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
 
-On Sat, 05 Jan 2008 00:41:05 +0100
-Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
+On Fri, 4 Jan 2008 14:07:28 -0800
+"Dev, Vasu" <vasu.dev@intel.com> wrote:
 
-> Dev, Vasu wrote:
-> [FUJITA Tomonori wrote:]
-> >> Agreed. My FCoE initiator design would be something like:
+> 
 > >>
-> >> scsi-ml
-> >> fcoe initiator driver
-> >> libfcoe
-> >> fc_transport_class (inclusing fcoe support)
+> >> _If_ there will indeed be dedicated FCoE HBAs in the future, the
+> >> following stack could exist in addition to the one above:
 > >>
-> >> And FCoE HBA LLDs work like:
-> >>
-> >> scsi-ml
-> >> FCoE HBA LLDs (some of them might use libfcoe)
-> >> fc_transport_class (inclusing fcoe support)
->=20
-> Wouldn't it make more sense to think of fc_transport_class as a FCP
-> layer, sitting between scsi-ml and the various FC interconnect driver=
-s
-> (among them Openfc and maybe more FCoE drivers)?  I.e. you have SCSI
-> command set layer -- SCSI core -- SCSI transport layer -- interconnec=
-t
-> layer.=B9
+> >>   - SCSI core,
+> >>     scsi_transport_fc
+> >>   - FCoE HBA driver(s)
+> >
+> >Agreed. My FCoE initiator design would be something like:
+> >
+> >scsi-ml
+> >fcoe initiator driver
+> >libfcoe
+> >fc_transport_class (inclusing fcoe support)
+> >
+> >And FCoE HBA LLDs work like:
+> >
+> >scsi-ml
+> >FCoE HBA LLDs (some of them might use libfcoe)
+> >fc_transport_class (inclusing fcoe support)
+> >
+> >
+> >That's the way that other transport classes do, I think. For me, the
+> >current code tries to invent another fc class. For example, the code
+> >newly defines:
+> >
+> >struct fc_remote_port {
+> >	struct list_head rp_list;	/* list under fc_virt_fab */
+> >	struct fc_virt_fab *rp_vf;	/* virtual fabric */
+> >	fc_wwn_t	rp_port_wwn;	/* remote port world wide name
+> */
+> >	fc_wwn_t	rp_node_wwn;	/* remote node world wide name
+> */
+> >	fc_fid_t	rp_fid;		/* F_ID for remote_port if known
+> */
+> >	atomic_t	rp_refcnt;	/* reference count */
+> >	u_int		rp_disc_ver;	/* discovery instance */
+> >	u_int		rp_io_limit;	/* limit on outstanding I/Os */
+> >	u_int		rp_io_count;	/* count of outstanding I/Os */
+> >	u_int		rp_fcp_parm; 	/* remote FCP service parameters
+> */
+> >	u_int		rp_local_fcp_parm; /* local FCP service
+> parameters */
+> >	void		*rp_client_priv; /* HBA driver private data */
+> >	void		*rp_fcs_priv;	/* FCS driver private data */
+> >	struct sa_event_list *rp_events; /* event list */
+> >	struct sa_hash_link rp_fid_hash_link;
+> >	struct sa_hash_link rp_wwpn_hash_link;
+> >
+> >	/*
+> >	 * For now, there's just one session per remote port.
+> >	 * Eventually, for multipathing, there will be more.
+> >	 */
+> >	u_char		rp_sess_ready;	/* session ready to be used */
+> >	struct fc_sess	*rp_sess;	/* session */
+> >	void		*dns_lookup;	/* private dns lookup */
+> >	int		dns_lookup_count; /* number of attempted lookups
+> */
+> >};
+> >
+> >/*
+> > * remote ports are created and looked up by WWPN.
+> > */
+> >struct fc_remote_port *fc_remote_port_create(struct fc_virt_fab *,
+> fc_wwn_t);
+> >struct fc_remote_port *fc_remote_port_lookup(struct fc_virt_fab *,
+> >					     fc_fid_t, fc_wwn_t wwpn);
+> >struct fc_remote_port *fc_remote_port_lookup_create(struct fc_virt_fab
+> *,
+> >						    fc_fid_t,
+> >						    fc_wwn_t wwpn,
+> >						    fc_wwn_t wwnn);
+> >
+> >
+> >The FCoE LLD needs to exploit the exsting struct fc_rport and APIs.
+> 
+> The openfc is software implementation of FC services such as FC login
+> and target discovery and it is already using/exploiting  existing fc
+> transport class including fc_rport struct. You can see openfc using
+> fc_rport in openfc_queuecommand() and using fc transport API
+> fc_port_remote_add() for fc_rport.
 
-Oops, I should have depicted:
-
-scsi-ml
-fc_transport_class (inclusing fcoe support)
-=46CoE HBA LLDs (some of them might use libfcoe)
-
-As you pointed out, that's the correct layering from the perspective
-of SCSI architecture. I put FCoE HBA LLDs over fc_transport_class just
-because LLDs directly interact with scsi-ml to perform the main work,
-queuecommand/done (as you explained in 1).
+You just calls fc_remote_port_add. I don't think that reinventing the
+whole rport management like reference counting doesn't mean exploiting
+the exsting struct fc_rport and APIs.
 
 
-> I am not familiar with FCP/ FCoE/ FC-DA et al, but I guess the FCoE
-> support in the FCP transport layer should then go to the extent of
-> target discovery, login, lifetime management and representation of
-> remote ports and so on as far as it pertains to FCP (the SCSI transpo=
-rt
-> protocol, FC-4 layer) independently of the interconnect (FC-3...FC-0
-> layers).=B2
->=20
-> [...]
-> >> The FCoE LLD needs to exploit the exsting struct fc_rport and APIs=
-=2E
-> >=20
-> > The openfc is software implementation of FC services such as FC log=
-in
-> > and target discovery and it is already using/exploiting  existing f=
-c
-> > transport class including fc_rport struct. You can see openfc using
-> > fc_rport in openfc_queuecommand() and using fc transport API
-> > fc_port_remote_add() for fc_rport.
->=20
-> Hence, aren't there interconnect independent parts of target discover=
-y
-> and login which should be implemented in fc_transport_class?  The
-> interconnect dependent parts would then live in LLD methods to be
-> provided in struct fc_function_template.
+> The fcoe module is just a first example of possible openfc transport but
+> openfc can be used with other transports or HW HBAs also.
+> 
+> The openfc does provide generic transport interface using fcdev which is
+> currently used by FCoE module.
+> 
+> One can certainly implement partly or fully  openfc and fcoe modules in
+> FCoE HBA.
 
-Agreed. Then FCoE helper functions that aren't useful for all the FCoE
-LLDs would go libfcoe like iscsi class does (and sas class also does,
-I guess).
-
-
-> I.e. not only make full use of the API of fc_transport_class, also th=
-ink
-> about changing the API _if_ necessary to become a more useful
-> implementation of the interface below FC-4.
->=20
-> -------
-> =B9) The transport classes are of course not layers in such a sense t=
-hat
-> they would completely hide SCSI core from interconnect drivers.  They
-> don't really have to; they nevertheless live at a higher level of
-> abstraction than LLDs and a lower level of abstraction than SCSI core=
-=2E
->=20
-> (One obvious example that SCSI core is less hidden than it possibly
-> could be can be seen by the struct fc_function_template methods havin=
-g
-> struct scsi_target * and struct Scsi_Host * arguments, instead of str=
-uct
-> fc_xyz * arguments.)
->=20
-> =B2) I'm using the term interconnect from the SCSI perspective, not f=
-rom
-> the FC perspective.
-> --=20
-> Stefan Richter
-> -=3D=3D=3D=3D=3D-=3D=3D--- ---=3D --=3D-=3D
-> http://arcgraph.de/sr/
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"=
- in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+As pointed out in other mails, I believe that the similar job has done
+in other transport classes using scsi transport class infrastructure
+and the FCoE needs to follow the existing examples.
