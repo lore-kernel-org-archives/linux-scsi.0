@@ -1,30 +1,38 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: Open-FCoE on linux-scsi
-Date: Sun, 6 Jan 2008 10:28:36 +0900
-Message-ID: <20080106103138Q.tomof@acm.org>
-References: <10A7D0016239E24092DEF05CCC582E4302BB68C8@fmsmsx411.amr.corp.intel.com>
-	<200801031035.m03AZYcJ012171@mbox.iij4u.or.jp>
-	<477FCD8C.2040404@vlnb.net>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+From: Richard Knutsson <ricknu-0@student.ltu.se>
+Subject: [PATCH  0/33][SCSI] Arrange for removal of 'scsi_typedefs.h'
+Date: Sun, 6 Jan 2008 04:02:50 +0100 (MET)
+Message-ID: <20080106030250.30002.96493.sendpatchset@thinktank.campus.ltu.se>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:59012 "EHLO mo10.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752951AbYAFB2r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 5 Jan 2008 20:28:47 -0500
-In-Reply-To: <477FCD8C.2040404@vlnb.net>
+Received: from gepetto.dc.ltu.se ([130.240.42.40]:53840 "EHLO
+	gepetto.dc.ltu.se" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752396AbYAFDDH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jan 2008 22:03:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vst@vlnb.net
-Cc: tomof@acm.org, robert.w.love@intel.com, yi.zou@intel.com, christopher.leech@intel.com, vasu.dev@intel.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jpfujita.tomonori@lab.ntt.co.jp
+To: James.Bottomley@SteelEye.com
+Cc: kernel-janitors@vger.kernel.org, trivial@kernel.org, linux-scsi@vger.kernel.org, Richard Knutsson <ricknu-0@student.ltu.se>
 
-On Sat, 05 Jan 2008 21:33:48 +0300
-Vladislav Bolkhovitin <vst@vlnb.net> wrote:
+Hi all
 
-> Thus, I believe, that partial user space, partial kernel space approach 
-> for building SCSI targets is the move in the wrong direction, because it 
-> brings practically nothing, but costs a lot.
+drivers/scsi/scsi_typedefs.h is about ready to be removed, only the
+'struct scsi_cmnd' typedef Scsi_Cmnd is left.
+This set converts all the Scsi_Cmnd's, except in:
+Changelogs
+Documentation/scsi/scsi_mid_low_api.txt
 
-We have not discussed such topic. FCoE target can be implemented fully
-in user space if I understand correctly.
+So if all these gets merged, in one form or the other, we can:
+un'include scsi_typedefs.h from drivers/scsi/scsi.h
+fix the text in Documentation/scsi/scsi_mid_low_api.txt
+(finally) remove the file in question
+
+
+Left the "over 80 characters wide"-warnings alone, until requested otherwise.
+
+Am not subscribed on linux-scsi@vger.kernel.org, so if replying, please Cc: me.
+
+Yours,
+Richard Knutsson
+
+PS
+If someone know of a tool to chain-mail patches and still be able to customize
+the mail-addresses between them, please let me know.
