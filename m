@@ -1,40 +1,30 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: An MCA ESP driver
-Date: Sat, 5 Jan 2008 14:53:32 -0700
-Message-ID: <20080105215331.GK20473@parisc-linux.org>
-References: <20070806232458.GC9732@parisc-linux.org> <20070807.002604.78735512.davem@davemloft.net> <20070815172600.GF16277@parisc-linux.org> <20070815.145551.78731552.davem@davemloft.net> <1199567892.3399.32.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: Open-FCoE on linux-scsi
+Date: Sun, 6 Jan 2008 10:28:36 +0900
+Message-ID: <20080106103138Q.tomof@acm.org>
+References: <10A7D0016239E24092DEF05CCC582E4302BB68C8@fmsmsx411.amr.corp.intel.com>
+	<200801031035.m03AZYcJ012171@mbox.iij4u.or.jp>
+	<477FCD8C.2040404@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:42749 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756653AbYAEVxd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Jan 2008 16:53:33 -0500
-Content-Disposition: inline
-In-Reply-To: <1199567892.3399.32.camel@localhost.localdomain>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:59012 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752951AbYAFB2r (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 5 Jan 2008 20:28:47 -0500
+In-Reply-To: <477FCD8C.2040404@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org
+To: vst@vlnb.net
+Cc: tomof@acm.org, robert.w.love@intel.com, yi.zou@intel.com, christopher.leech@intel.com, vasu.dev@intel.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jpfujita.tomonori@lab.ntt.co.jp
 
-On Sat, Jan 05, 2008 at 03:18:12PM -0600, James Bottomley wrote:
-> Just a check up on this:  Matthew were you ever going to complete the
-> mca_94x conversion?  It's quite topical because it would be another
-> example driver for the m68k people to look at.
-> 
-> If not, I can probably complete the bits you haven't yet done, but it
-> would be nice to know.
+On Sat, 05 Jan 2008 21:33:48 +0300
+Vladislav Bolkhovitin <vst@vlnb.net> wrote:
 
-I wasn't planning on completing the conversion, no.  I don't have the
-hardware myself, so can't test it.  I started working on it when I was
-between jobs, and once I found gainful employment, the amount of free
-time I have to hack on obscure hardware that I don't have declined to
-nil ;-)
+> Thus, I believe, that partial user space, partial kernel space approach 
+> for building SCSI targets is the move in the wrong direction, because it 
+> brings practically nothing, but costs a lot.
 
-Thanks for volunteering to complete the conversion.
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+We have not discussed such topic. FCoE target can be implemented fully
+in user space if I understand correctly.
