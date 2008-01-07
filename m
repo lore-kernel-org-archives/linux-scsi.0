@@ -1,36 +1,58 @@
-From: Herbert Xu <herbert@gondor.apana.org.au>
-Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
-Date: Mon, 07 Jan 2008 23:17:12 +1100
-Message-ID: <E1JBqum-0006wC-00@gondolin.me.apana.org.au>
-References: <4781E6BB.2010900@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4781E6BB.2010900@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: rusty@rustcorp.com.au, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
+Date: Mon, 07 Jan 2008 14:23:33 +0100
+Message-ID: <478227D5.8050402@s5r6.in-berlin.de>
+References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
+	<20080107020944.GA3637@darkstar.te-china.tietoenator.com>
+	<20080107084528.GA8365@suse.de>
+	<200801070101.15168.david-b@pacbell.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <200801070101.15168.david-b@pacbell.net>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: David Brownell <david-b@pacbell.net>
+Cc: a.zummo@towertech.it, dbrownell@users.sourceforge.net, Dave Young <hidave.darkstar@gmail.com>, linux-scsi@vger.kernel.org, cbou@mail.ru, peterz@infradead.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, krh@redhat.com, stern@rowland.harvard.edu, rtc-linux@googlegroups.com, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-Tejun Heo <htejun@gmail.com> wrote:
->
-> /me agrees.  As long as this can be made sane using one unified
-> interface, I don't care whether it's sg_ring, table or dish.
+David Brownell wrote:
+> On Monday 07 January 2008, Greg KH wrote:
+>> Most of the non-driver core code should be converted to not use the
+>> lock in the class at all.  They should use a local lock instead.
+> =
 
-Give us sg_annulus :)
+> Or better yet, that yet-to-be-written class_for_each_instance()
+> iterator ... :)
 
-On a more serious note, having played with SG chaining for a couple
-of years in the crypto layer, I must say Rusty's proposal is a great
-improvement for me.  The reason is that if the crypto layer gets an
-SG list from its user, it is not at liberty to just modify it.  As
-such chaining at the end is cumbersome with the current interface
-because we have to duplicate the whole list in order to add just a
-single block at the end.
+By far most of the usages of class.semaphore or class.mutex in drivers
+are to protect the class.devices list.  The only=B9 right thing to do
+there is to keep using the class.{semaphore,mutex}.  The more elegant
+variation of this would be David's class_for_each_instance() iterator
+which would allow us to hide the locking details from the drivers.
 
-While with sg_ring we could just put the original list along with the
-new one in a new list.
+-------
+=B9)  Well, another correct thing to do would be to not take any locks or
+mutexes in the driver core but instead let the drivers do the necessary
+serialization between calls like class_device_add() and the likes and
+list iterations.  But this would complicate the API because of the
+additional locking requirements, and hence would invariably result in
+buggy usages of the API.
+-- =
 
-Cheers,
--- 
-Visit Openswan at http://www.openswan.org/
-Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
-Home Page: http://gondor.apana.org.au/~herbert/
-PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
+Stefan Richter
+-=3D=3D=3D=3D=3D-=3D=3D--- ---=3D --=3D=3D=3D
+http://arcgraph.de/sr/
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2005.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
