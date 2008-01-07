@@ -1,63 +1,108 @@
-From: Jarek Poplawski <jarkao2@gmail.com>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Mon, 7 Jan 2008 15:00:14 +0100
-Message-ID: <20080107140014.GA2961@ff.dom.local>
-References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
-	<20080107020944.GA3637@darkstar.te-china.tietoenator.com>
-	<20080107084528.GA8365@suse.de>
-	<200801070101.15168.david-b@pacbell.net>
-	<478227D5.8050402@s5r6.in-berlin.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Multipath failover handling (Was: Re: 2.6.24-rc3-mm1)
+Date: Mon, 07 Jan 2008 15:05:43 +0100
+Message-ID: <478231B7.7080508@suse.de>
+References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	 <47462F3C.3040700@googlemail.com>	 <20071122201250.f957e280.akpm@linux-foundation.org>	 <47466B5D.90607@googlemail.com>	 <20071126221509.8f437b61.akpm@linux-foundation.org>	 <1197390783.3812.19.camel@localhost.localdomain> <47624649.3040209@suse.de> <1197642405.3154.71.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <478227D5.8050402@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James.Bottomley@hansenpartnership.com, dbrownell@users.sourceforge.net, Dave Young <hidave.darkstar@gmail.com>, linux-scsi@vger.kernel.org, a.zummo@towertech.it, peterz@infradead.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, David Brownell <david-b@pacbell.net>, krh@redhat.com, stern@rowland.harvard.edu, cbou@mail.ru, rtc-linux@googlegroups.com, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ns2.suse.de ([195.135.220.15]:55814 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751364AbYAGOFp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 7 Jan 2008 09:05:45 -0500
+In-Reply-To: <1197642405.3154.71.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Mon, Jan 07, 2008 at 02:23:33PM +0100, Stefan Richter wrote:
-> David Brownell wrote:
-> > On Monday 07 January 2008, Greg KH wrote:
-> >> Most of the non-driver core code should be converted to not use the
-> >> lock in the class at all.  They should use a local lock instead.
-> > 
-> > Or better yet, that yet-to-be-written class_for_each_instance()
-> > iterator ... :)
-> 
-> By far most of the usages of class.semaphore or class.mutex in drivers
-> are to protect the class.devices list.  The only? right thing to do
-> there is to keep using the class.{semaphore,mutex}.  The more elegant
-> variation of this would be David's class_for_each_instance() iterator
-> which would allow us to hide the locking details from the drivers.
-> 
-> -------
-> ?)  Well, another correct thing to do would be to not take any locks or
-> mutexes in the driver core but instead let the drivers do the necessary
-> serialization between calls like class_device_add() and the likes and
-> list iterations.  But this would complicate the API because of the
-> additional locking requirements, and hence would invariably result in
-> buggy usages of the API.
-> -- 
+James Bottomley wrote:
+> On Fri, 2007-12-14 at 10:00 +0100, Hannes Reinecke wrote:
+>> James Bottomley wrote:
+>>> On Mon, 2007-11-26 at 22:15 -0800, Andrew Morton wrote:
+>>>> OK, thanks.  I'll assume that James and Hannes have this in hand (=
+or will
+>>>> have, by mid-week) and I won't do anything here.
+>>> Just to confirm what I think I'm going to be doing:  rebasing the
+>>> scsi-misc tree to remove this commit:
+>>>
+>>> commit 8655a546c83fc43f0a73416bbd126d02de7ad6c0
+>>> Author: Hannes Reinecke <hare@suse.de>
+>>> Date:   Tue Nov 6 09:23:40 2007 +0100
+>>>
+>>>     [SCSI] Do not requeue requests if REQ_FAILFAST is set
+>>>
+>>> And its allied fix ups:
+>>>
+>>> commit 983289045faa96fba8841d3c51b98bb8623d9504
+>>> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+>>> Date:   Sat Nov 24 19:47:25 2007 +0200
+>>>
+>>>     [SCSI] fix up REQ_FASTFAIL not to fail when state is QUIESCE
+>>>
+>>> commit 9dd15a13b332e9f5c8ee752b1ccd9b84cb5bdf17
+>>> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
+>>> Date:   Sat Nov 24 19:55:53 2007 +0200
+>>>
+>>>     [SCSI] fix domain validation to work again
+>>>
+>>> James
+>>>
+>>>
+>> Or just apply my latest patch (cf Undo __scsi_kill_request).
+>> The main point is that we shouldn't retry requests
+>> with FAILFAST set when the queue is blocked. AFAICS
+>> only FC and iSCSI transports set the queue to blocked,
+>> and use this to indicate a loss of connection. So any
+>> retry with queue blocked is futile.
+>=20
+> I still don't think this is the right approach.
+>=20
+> For link up/down events, those are direct pathing events and should b=
+e
+> signalled along a kernel notifier, not by mucking with the SCSI state
+> machine.
+Of course they will be signalled. And eventually we should patch up
+mutltipath-tools to read the exising events from the uevent socket.
+But even with that patch there is a quite largish window during
+which IOs will be sent to the blocked device, and hence will be
+stuck in the request queue until the timer expires.
 
-I hope I'm wrong, but IMHO it should be safer not to mix such changes,
-so do the mutexes first or delay them until the end. Otherwise some
-false blaming seems almost inevitable.
+> However, there's still devloss_tmo to consider ... even in
+> multipath, I don't think you want to signal path failure until
+> devloss_tmo has fired otherwise you'll get too many transient up/down
+> events which damage performance if the array has an expensive failove=
+r
+> model.
+>=20
+Yes. But currently we have a very high failover latency as we always ha=
+ve
+to wait for the requeued commands to time-out.
+Hence we're damaging performance on arrays with inexpensive failover.
 
-Regards,
-Jarek P.
+> The other problem is what to do with in-flight commands at the time t=
+he
+> link went down.  With your current patch, they're still stuck until t=
+hey
+> time out ... surely there needs to be some type of recovery mechanism
+> for these?
+>=20
+Well, the in-flight commands are owned by the HBA driver, which should
+have the proper code to terminate / return those commands with the
+appriopriate codes. They will then be rescheduled and will be caught
+like 'normal' IO requests.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+Cheers,
+
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
