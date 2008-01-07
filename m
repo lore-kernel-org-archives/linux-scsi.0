@@ -1,59 +1,36 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Mon, 7 Jan 2008 18:00:36 +0800
-Message-ID: <a8e1da0801070200l6a8630f2td27f2f0b993cd4da@mail.gmail.com>
-References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
-	<478120D9.5090404@s5r6.in-berlin.de>
-	<20080107020944.GA3637@darkstar.te-china.tietoenator.com>
-	<20080107084528.GA8365@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080107084528.GA8365@suse.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Greg KH <gregkh@suse.de>
-Cc: James.Bottomley@hansenpartnership.com, dbrownell@users.sourceforge.net, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, a.zummo@towertech.it, peterz@infradead.org, cbou@mail.ru, linux-kernel@vger.kernel.org, david-b@pacbell.net, krh@redhat.com, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
+From: Herbert Xu <herbert@gondor.apana.org.au>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Mon, 07 Jan 2008 23:17:12 +1100
+Message-ID: <E1JBqum-0006wC-00@gondolin.me.apana.org.au>
+References: <4781E6BB.2010900@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4781E6BB.2010900@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: rusty@rustcorp.com.au, James.Bottomley@hansenpartnership.com, jens.axboe@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Jan 7, 2008 4:45 PM, Greg KH <gregkh@suse.de> wrote:
-> On Mon, Jan 07, 2008 at 10:09:44AM +0800, Dave Young wrote:
-> >
-> > Thanks for your comment, I rewrite it for 2.6.24-rc7 as a all-in-one
-> > patch, please see following. Drop i2c maintainer and list in cc
-> > because there's no changes about i2c in this patch:
-> >
-> > Convert semaphore to mutex in struct class
+Tejun Heo <htejun@gmail.com> wrote:
 >
-> Most of the non-driver core code should be converted to not use the
-> lock in the class at all.  They should use a local lock instead.
->
-> So how about a patch series that removes the usage of the current
-> semaphore from the different drivers, and then, a single patch that
-> converts the semaphore to mutex in the class code, it should not touch
-> anything outside of the drivers/base/ directory (not including the
-> driver.h file.)
->
-> Sound reasonable?
+> /me agrees.  As long as this can be made sane using one unified
+> interface, I don't care whether it's sg_ring, table or dish.
 
-looks like a better aproach, let me take a look ...
+Give us sg_annulus :)
 
->
-> thanks,
->
-> greg k-h
->
+On a more serious note, having played with SG chaining for a couple
+of years in the crypto layer, I must say Rusty's proposal is a great
+improvement for me.  The reason is that if the crypto layer gets an
+SG list from its user, it is not at liberty to just modify it.  As
+such chaining at the end is cumbersome with the current interface
+because we have to duplicate the whole list in order to add just a
+single block at the end.
 
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+While with sg_ring we could just put the original list along with the
+new one in a new list.
+
+Cheers,
+-- 
+Visit Openswan at http://www.openswan.org/
+Email: Herbert Xu ~{PmV>HI~} <herbert@gondor.apana.org.au>
+Home Page: http://gondor.apana.org.au/~herbert/
+PGP Key: http://gondor.apana.org.au/~herbert/pubkey.txt
