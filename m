@@ -1,54 +1,38 @@
-From: Greg KH <gregkh@suse.de>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Mon, 7 Jan 2008 07:44:04 -0800
-Message-ID: <20080107154404.GA10880@suse.de>
-References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
-	<20080107020944.GA3637@darkstar.te-china.tietoenator.com>
-	<20080107084528.GA8365@suse.de>
-	<200801070101.15168.david-b@pacbell.net>
-	<478227D5.8050402@s5r6.in-berlin.de>
+Date: Mon, 07 Jan 2008 17:36:32 +0100
+Message-ID: <47825510.7050306@s5r6.in-berlin.de>
+References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com> <20080107020944.GA3637@darkstar.te-china.tietoenator.com> <20080107084528.GA8365@suse.de> <200801070101.15168.david-b@pacbell.net> <478227D5.8050402@s5r6.in-berlin.de> <20080107140014.GA2961@ff.dom.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <478227D5.8050402@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James.Bottomley@hansenpartnership.com, dbrownell@users.sourceforge.net, Dave Young <hidave.darkstar@gmail.com>, linux-scsi@vger.kernel.org, a.zummo@towertech.it, peterz@infradead.org, cbou@mail.ru, linux-kernel@vger.kernel.org, David Brownell <david-b@pacbell.net>, krh@redhat.com, stern@rowland.harvard.edu, rtc-linux@googlegroups.com, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:55132 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755916AbYAGQhb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jan 2008 11:37:31 -0500
+In-Reply-To: <20080107140014.GA2961@ff.dom.local>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jarek Poplawski <jarkao2@gmail.com>
+Cc: David Brownell <david-b@pacbell.net>, Greg KH <gregkh@suse.de>, Dave Young <hidave.darkstar@gmail.com>, stern@rowland.harvard.edu, peterz@infradead.org, davem@davemloft.net, krh@redhat.com, dbrownell@users.sourceforge.net, James.Bottomley@hansenpartnership.com, a.zummo@towertech.it, cbou@mail.ru, dwmw2@infradead.org, linux1394-devel@lists.sourceforge.net, spi-devel-general@lists.sourceforge.net, linux-scsi@vger.kernel.org, rtc-linux@googlegroups.com, linux-kernel@vger.kernel.org
 
-On Mon, Jan 07, 2008 at 02:23:33PM +0100, Stefan Richter wrote:
-> David Brownell wrote:
-> > On Monday 07 January 2008, Greg KH wrote:
-> >> Most of the non-driver core code should be converted to not use the
-> >> lock in the class at all.  They should use a local lock instead.
-> > 
-> > Or better yet, that yet-to-be-written class_for_each_instance()
-> > iterator ... :)
-> 
-> By far most of the usages of class.semaphore or class.mutex in drivers
-> are to protect the class.devices list.  The only? right thing to do
-> there is to keep using the class.{semaphore,mutex}.  The more elegant
-> variation of this would be David's class_for_each_instance() iterator
-> which would allow us to hide the locking details from the drivers.
+Jarek Poplawski wrote:
+>> David Brownell wrote:
+>> > On Monday 07 January 2008, Greg KH wrote:
+>> >> Most of the non-driver core code should be converted to not use the
+>> >> lock in the class at all.  They should use a local lock instead.
+>> > 
+>> > Or better yet, that yet-to-be-written class_for_each_instance()
+>> > iterator ... :)
+...
+> I hope I'm wrong, but IMHO it should be safer not to mix such changes,
+> so do the mutexes first or delay them until the end. Otherwise some
+> false blaming seems almost inevitable.
 
-If such functionality is needed, fine, I have no objection to that
-change to move the locking logic into the driver core.
-
-thanks,
-
-greg k-h
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2005.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+I agree.  Sem2mutex conversion should not be mixed with API conversion,
+even if one or both seem trivial.
+-- 
+Stefan Richter
+-=====-==--- ---= --===
+http://arcgraph.de/sr/
