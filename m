@@ -1,81 +1,160 @@
-From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: Multipath failover handling (Was: Re: 2.6.24-rc3-mm1)
-Date: Mon, 07 Jan 2008 12:24:35 -0600
-Message-ID: <47826E63.9070008@cs.wisc.edu>
-References: <20071120204525.ff27ac98.akpm@linux-foundation.org>	 <47462F3C.3040700@googlemail.com>	 <20071122201250.f957e280.akpm@linux-foundation.org>	 <47466B5D.90607@googlemail.com>	 <20071126221509.8f437b61.akpm@linux-foundation.org>	 <1197390783.3812.19.camel@localhost.localdomain> <47624649.3040209@suse.de>	 <1197642405.3154.71.camel@localhost.localdomain> <478231B7.7080508@suse.de> <1199728667.3126.32.camel@localhost.localdomain>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: [RFC] Autosuspend for usb-storage (based on SCSI dynamic PM)
+Date: Mon, 7 Jan 2008 14:42:26 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801071438110.6739-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sabe.cs.wisc.edu ([128.105.6.20]:50137 "EHLO sabe.cs.wisc.edu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754430AbYAGSZG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 7 Jan 2008 13:25:06 -0500
-In-Reply-To: <1199728667.3126.32.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux-pm mailing list <linux-pm-cunTk1MwBs9QetFLy7KEm3xJsTq8ys+cHZ5vskTnxNA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Hannes Reinecke <hare@suse.de>, Andrew Morton <akpm@linux-foundation.org>, Gabriel C <nix.or.die@googlemail.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
->>> However, there's still devloss_tmo to consider ... even in
->>> multipath, I don't think you want to signal path failure until
->>> devloss_tmo has fired otherwise you'll get too many transient up/down
->>> events which damage performance if the array has an expensive failover
->>> model.
->>>
->> Yes. But currently we have a very high failover latency as we always have
->> to wait for the requeued commands to time-out.
->> Hence we're damaging performance on arrays with inexpensive failover.
-> 
-> If it's a either/or choice between the two that's showing our current
-> approach to multi-path is broken.
-> 
->>> The other problem is what to do with in-flight commands at the time the
->>> link went down.  With your current patch, they're still stuck until they
->>> time out ... surely there needs to be some type of recovery mechanism
->>> for these?
->>>
->> Well, the in-flight commands are owned by the HBA driver, which should
->> have the proper code to terminate / return those commands with the
->> appriopriate codes. They will then be rescheduled and will be caught
->> like 'normal' IO requests.
-> 
-> But my point is that if a driver goes blocked, those commands will be
-> forced to wait the blocked timeout anyway, so your proposed patch does
-> nothing to improve the case for dm anyway ... you only avoid commands
-> stuck when a device goes blocked if by chance its request queue was
-> empty.
+This patch implements autosuspend and autoresume for usb-storage.  It 
+is based on the SCSI Dynamic PM patch just posted on linux-scsi and 
+linux-pm.
+
+Note: For testing, you will have to set the power/level attribute (and 
+possibly also power/autosuspend) for both the SCSI device and the USB 
+device.
+
+Alan Stern
 
 
-How about my patches to use new transport error values and make the 
-iscsi and fc behave the same.
 
-The problem I think Hannes and I are both trying to solve is this:
+Index: usb-2.6/drivers/usb/storage/usb.c
+===================================================================
+--- usb-2.6.orig/drivers/usb/storage/usb.c
++++ usb-2.6/drivers/usb/storage/usb.c
+@@ -184,16 +184,14 @@ static int storage_suspend(struct usb_in
+ {
+ 	struct us_data *us = usb_get_intfdata(iface);
+ 
++	US_DEBUGP("%s\n", __FUNCTION__);
++
+ 	/* Wait until no command is running */
+ 	mutex_lock(&us->dev_mutex);
+ 
+-	US_DEBUGP("%s\n", __FUNCTION__);
+ 	if (us->suspend_resume_hook)
+ 		(us->suspend_resume_hook)(us, US_SUSPEND);
+ 
+-	/* When runtime PM is working, we'll set a flag to indicate
+-	 * whether we should autoresume when a SCSI request arrives. */
+-
+ 	mutex_unlock(&us->dev_mutex);
+ 	return 0;
+ }
+@@ -202,13 +200,10 @@ static int storage_resume(struct usb_int
+ {
+ 	struct us_data *us = usb_get_intfdata(iface);
+ 
+-	mutex_lock(&us->dev_mutex);
+-
+ 	US_DEBUGP("%s\n", __FUNCTION__);
+ 	if (us->suspend_resume_hook)
+ 		(us->suspend_resume_hook)(us, US_RESUME);
+ 
+-	mutex_unlock(&us->dev_mutex);
+ 	return 0;
+ }
+ 
+@@ -928,6 +923,7 @@ static int usb_stor_scan_thread(void * _
+ 		/* Should we unbind if no devices were detected? */
+ 	}
+ 
++	usb_autopm_put_interface(us->pusb_intf);
+ 	complete_and_exit(&us->scanning_done, 0);
+ }
+ 
+@@ -957,6 +953,9 @@ static int storage_probe(struct usb_inte
+ 		return -ENOMEM;
+ 	}
+ 
++	/* Don't autosuspend until the SCSI core tells us */
++	usb_autopm_get_interface(intf);
++
+ 	/*
+ 	 * Allow 16-byte CDBs and thus > 2TB
+ 	 */
+@@ -1017,6 +1016,7 @@ static int storage_probe(struct usb_inte
+ 		goto BadDevice;
+ 	}
+ 
++	usb_autopm_get_interface(intf); /* dropped in the scanning thread */
+ 	wake_up_process(th);
+ 
+ 	return 0;
+@@ -1054,6 +1054,7 @@ static struct usb_driver usb_storage_dri
+ 	.pre_reset =	storage_pre_reset,
+ 	.post_reset =	storage_post_reset,
+ 	.id_table =	storage_usb_ids,
++	.supports_autosuspend = 1,
+ };
+ 
+ static int __init usb_stor_init(void)
+Index: usb-2.6/drivers/usb/storage/scsiglue.c
+===================================================================
+--- usb-2.6.orig/drivers/usb/storage/scsiglue.c
++++ usb-2.6/drivers/usb/storage/scsiglue.c
+@@ -295,10 +295,15 @@ static int device_reset(struct scsi_cmnd
+ 
+ 	US_DEBUGP("%s called\n", __FUNCTION__);
+ 
+-	/* lock the device pointers and do the reset */
+-	mutex_lock(&(us->dev_mutex));
+-	result = us->transport_reset(us);
+-	mutex_unlock(&us->dev_mutex);
++	result = usb_autopm_get_interface(us->pusb_intf);
++	if (result == 0) {
++
++		/* lock the device pointers and do the reset */
++		mutex_lock(&(us->dev_mutex));
++		result = us->transport_reset(us);
++		mutex_unlock(&us->dev_mutex);
++		usb_autopm_put_interface(us->pusb_intf);
++	}
+ 
+ 	return result < 0 ? FAILED : SUCCESS;
+ }
+@@ -341,6 +346,24 @@ void usb_stor_report_bus_reset(struct us
+ 	scsi_unlock(host);
+ }
+ 
++/* The host and its devices are all idle so we can autosuspend */
++static int autosuspend(struct Scsi_Host *host)
++{
++	struct us_data *us = host_to_us(host);
++
++	usb_autopm_put_interface(us->pusb_intf);
++	return 0;
++}
++
++/* The host needs to be autoresumed */
++static int autoresume(struct Scsi_Host *host)
++{
++	struct us_data *us = host_to_us(host);
++
++	return usb_autopm_get_interface(us->pusb_intf);
++}
++
++
+ /***********************************************************************
+  * /proc/scsi/ functions
+  ***********************************************************************/
+@@ -467,6 +490,10 @@ struct scsi_host_template usb_stor_host_
+ 	.eh_device_reset_handler =	device_reset,
+ 	.eh_bus_reset_handler =		bus_reset,
+ 
++	/* dynamic power management */
++	.autosuspend =			autosuspend,
++	.autoresume =			autoresume,
++
+ 	/* queue commands only, only one command per LUN */
+ 	.can_queue =			1,
+ 	.cmd_per_lun =			1,
 
-1. We do not want to wait for dev_loss_tmo seconds for failover.
 
-2. The FC drivers can hook into fast_io_fail_tmo related callouts and 
-with that set that tmo to a very low value like a couple of seconds if 
-they are using multipath, so failovers are fast. However, there is a bug 
-with where when the fast_io_fail_tmo fires requests that made it to the 
-driver get failed and returned to the multipath layer, but commands in 
-the blocked request queue are stuck in there until dev_loss_tmo fires.
-
-With my patches here (need to be rediffed and for FC I need to handle 
-JamesS's comments about not using a new field for the fast_fail_timeout 
-state bit):
-
-http://marc.info/?l=linux-scsi&m=117399843216280&w=2
-http://marc.info/?l=linux-scsi&m=117399544112073&w=2
-http://marc.info/?l=linux-scsi&m=117399844316771&w=2
-http://marc.info/?l=linux-scsi&m=117400203324693&w=2
-http://marc.info/?l=linux-scsi&m=117400203324690&w=2
-
-For FC we can use the fast_io_fail_tmo for fast failovers, and commands 
-will not get stuck in a blocked queue for dev_loss_tmo seconds because 
-when the fast_io_fail_tmo fires the target's queues are unblocked and 
-fc_remote_port_chkready() ready kicks in (iSCSI does the same with the 
-patches in the links). And with the patches if multipath-tools is 
-sending its path testing IO it will get a DID_TRANSPORT_* error code 
-that it can use to make a decent path failing decision with.
+-
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
