@@ -1,66 +1,45 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] use dynamically allocated sense buffer
-Date: Mon, 07 Jan 2008 15:37:10 +0900
-Message-ID: <20080107153710W.fujita.tomonori@lab.ntt.co.jp>
-References: <5dc13e4823ec8c254e5164a51249f05983fa00c2.tomof@acm.org>
-	<20080103135907G.tomof@acm.org>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Mon, 07 Jan 2008 15:37:41 +0900
+Message-ID: <4781C8B5.6050207@gmail.com>
+References: <200712191731.26512.rusty@rustcorp.com.au> <200801071538.58875.rusty@rustcorp.com.au> <4781B234.7070805@gmail.com> <200801071628.11381.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:32838 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753765AbYAGGhs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jan 2008 01:37:48 -0500
-In-Reply-To: <20080103135907G.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <200801071628.11381.rusty@rustcorp.com.au>
+Sender: linux-ide-owner@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tomof@acm.org
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, benh@kernel.crashing.org, fujita.tomonori@lab.ntt.co.jp
 
-On Thu, 3 Jan 2008 13:56:37 +0900
-FUJITA Tomonori <tomof@acm.org> wrote:
-
-> This removes static array sense_buffer in scsi_cmnd and uses
-> dynamically allocated sense_buffer (with GFP_DMA).
+Rusty Russell wrote:
+> On Monday 07 January 2008 16:01:40 Tejun Heo wrote:
+>>> But we hit the same problems:
+>>>
+>>> 1) sg_chain loses information.  The clever chain packaging makes reading
+>>> easy, but manipulation is severely limited.  You can append to your own
+>>> chains by padding, but not someone elses.  This works for SCSI, but what
+>>> about the rest of us?  And don't even think of joining mapped chains: it
+>>> will almost work.
+>> You can append by allocating one more element on the chain to be
+>> appended and moving the last element of the first chain to it while
+>> using the last element for chaining.
 > 
-> scsi_add_host allocates as many buffers as
-> scsi_host->can_queue. __scsi_get_command attaches sense_buffer to a
-> scsi_cmnd and __scsi_put_command detaches the sense_buffer from it.
+> Hi Tejun,
 > 
-> There is a small possibility that a host need more sense buffers than
-> can_queue. The failure of the buffer allocation works just like the
-> failure of scsi_cmnd allocation. So everything should work as before.
-> 
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/hosts.c     |   10 ++++++-
->  drivers/scsi/scsi.c      |   67 +++++++++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/scsi_priv.h |    2 +
->  include/scsi/scsi_cmnd.h |    2 +-
->  include/scsi/scsi_host.h |    3 ++
->  5 files changed, 81 insertions(+), 3 deletions(-)
+>    Nice try!  Even ignoring the ugliness of undoing such an operation if the 
+> caller doesn't expect you to mangle their chains, consider a one-element sg 
+> array. :(
 
-On IRC, James told me that allocating the sense buffer in the critical
-path could affet the performance. So I did some tests.
+Heh heh, that can be dealt with by skipping the first chain if the first
+chain is empty after chaining.  Please take a look at
+ata_sg_setup_extra() in the following.
 
-I use scsi_debug with fake_rw=1. So I didn't perform any real I/Os.
+http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=32dde5bbc75ed53e89ac17040da2cd0621a37161;hb=c8847e473a4a2844244784226eb362be10d52ce9
 
+That said, yeah, it's seriously ugly.  Restoring the original sg is ugly
+too.  I definitely agree that we need some improvements here.
 
-- Sequential reads
-
-scsi-misc :             479.56666666666666 MB/s
-scsi-misc + the patch : 453.52333333333331 MB/s
-
-- Sequential writes
-
-scsi-misc :             441.64333333333337 MB/s
-scsi-misc + the patch : 420.30333333333334 MB/s
-
-
-I also tried an approach to use pre-allocated buffers instead of
-mempool, but I got only around 460 MB/s with sequential reads.
-
-Seems that short-term approaches don't work well though we might not
-see the notable effects with real I/Os. I guess that it would be
-better to work on a long-term approach now than adding a workaround.
+-- 
+tejun
