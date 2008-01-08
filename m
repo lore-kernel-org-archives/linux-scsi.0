@@ -1,35 +1,63 @@
-From: Oliver Neukum <oliver@neukum.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [RFC] Implementation of SCSI dynamic power management
-Date: Tue, 8 Jan 2008 16:10:48 +0100
-Message-ID: <200801081610.48901.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0801081004400.2643-100000@iolanthe.rowland.org>
+Date: Tue, 8 Jan 2008 10:12:52 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801081006580.2643-100000@iolanthe.rowland.org>
+References: <200801081512.55746.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out002.kontent.com ([81.88.40.216]:51496 "EHLO
-	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754697AbYAHPK0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 10:10:26 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0801081004400.2643-100000@iolanthe.rowland.org>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:48485 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1751343AbYAHPMx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 10:12:53 -0500
+In-Reply-To: <200801081512.55746.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: Oliver Neukum <oliver@neukum.org>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-Am Dienstag, 8. Januar 2008 16:06:53 schrieb Alan Stern:
-> Eventually parts of the autosuspend mechanism will go there. =A0But f=
-irst
-> I thought we should have a proof-of-concept version working for at
-> least two different subsystems (such as SCSI and USB), so that we can
-> understand what should go into the generic layer and what should stay
-> out.
+On Tue, 8 Jan 2008, Oliver Neukum wrote:
 
-=46ine by me.
+> Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
+> > =A0/**
+> > + *=A0=A0=A0=A0=A0autoresume - perform dynamic (runtime) host resum=
+e
+> > + *=A0=A0=A0=A0=A0@shp: host to resume
+> > + *
+> > + *=A0=A0=A0=A0=A0Resume (return to an operational power level) the=
+ specified host.
+> > + *=A0=A0=A0=A0=A0Return 0 if the resume was successful, otherwise =
+a negative
+> > + *=A0=A0=A0=A0=A0error code.
+> > + *
+> > + *=A0=A0=A0=A0=A0Locks: struct Scsi_Host::pm_mutex held throughout=
+ the call.
+> > + *
+> > + *=A0=A0=A0=A0=A0Calling context: process
+> > + *
+> > + *=A0=A0=A0=A0=A0Notes: If the host is not currently suspended, th=
+is method does
+> > + *=A0=A0=A0=A0=A0need to do anything.
+> > + *
+> > + *=A0=A0=A0=A0=A0Optionally defined in: LLD
+> > + **/
+> > + =A0 =A0int autoresume(struct Scsi_Host *shp)
+> > +
+>=20
+> This seems to be a bit misleading. It seems to me that you must cance=
+l
+> any outstanding request to autosuspend from other layers.
 
-	Regards
-		Oliver
+How about something more like this:
+
+*	Resume (return to an operational power level) the specified host,
+*	and prevent autosuspends from other software layers until the
+*	template autosuspend method has been called again.
+*	Return 0 if the resume was successful, otherwise a negative
+*	error code.
+
+Alan Stern
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
