@@ -1,328 +1,88 @@
-From: Rusty Russell <rusty@rustcorp.com.au>
-Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
-Date: Tue, 8 Jan 2008 11:39:13 +1100
-Message-ID: <200801081139.14748.rusty@rustcorp.com.au>
-References: <200712191731.26512.rusty@rustcorp.com.au> <200801071538.58875.rusty@rustcorp.com.au> <1199720904.3126.24.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [RFC] Implementation of SCSI dynamic power management
+Date: Mon, 7 Jan 2008 22:56:03 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801072235110.30331-100000@netrider.rowland.org>
+References: <200801072306.56227.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1199720904.3126.24.camel@localhost.localdomain>
-Content-Disposition: inline
-Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from netrider.rowland.org ([192.131.102.5]:1542 "HELO
+	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1753748AbYAHD4G (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jan 2008 22:56:06 -0500
+In-Reply-To: <200801072306.56227.oliver@neukum.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-On Tuesday 08 January 2008 02:48:23 James Bottomley wrote:
-> We're always open to new APIs (or more powerful and expanded old ones).
-> The way we've been doing the sg_chain conversion is to slide API layers
-> into the drivers so sg_chain becomes a simple API flip when we turn it
-> on.  Unfortunately sg_ring doesn't quite fit nicely into this.
+On Mon, 7 Jan 2008, Oliver Neukum wrote:
 
-Hi James,
+> Am Montag, 7. Januar 2008 22:34:52 schrieb Alan Stern:
+> > On Mon, 7 Jan 2008, Oliver Neukum wrote:
+> > 
+> > > Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
+> > > > When all the devices under a host are suspended, the LLD is informed 
+> > > > (via a new "autosuspend" method in the host template) so that it can
+> > > 
+> > > That is most certainly a mistake.
+> > 
+> > Why?
+> 
+> You'll have to add this method whenever a new subsystem is affected
+> by power management.
 
-   Well, it didn't touch any drivers.  The only ones which needed altering 
-were those which wanted to use large scatter-gather lists.  You think of the 
-subtlety of sg-chain conversion as a feature; it's a bug :)
+Sorry, I don't understand your point.  If you mean that we'll have to
+add autosuspend and autoresume code to every driver that wants to
+support autosuspend, I agree.  There doesn't seem to be any way around
+it.  Note that the code added by the companion usb-storage patch is 
+pretty small.
 
-> > > The other thing I note is that the problem you're claiming to solve
-> > > with sg_ring (the ability to add extra scatterlists to the front or the
-> > > back of an existing one) is already solved with sg_chain, so the only
-> > > real advantage of sg_ring was that it contains explicit counts, which
-> > > sg_table (in -mm) also introduces.
-> >
-> > I just converted virtio using latest Linus for fair comparison
->
-> Erm, but that's not really a fair comparison; you need the sg_table code
-> in
->
-> git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git
->
-> branch sg as well.
+> Besides what are the semantics of this method?
 
-Actually, I think it's a wash.  Now callers need to set up an sg_table as 
-well.  It will save the count_sg() calls though.
+The semantics are simple.  The SCSI midlayer calls the autosuspend
+method when all the host's devices are suspended and the host's usage
+count becomes <= 0 (redundant, since each non-suspended device
+contributes to the usage count).  The midlayer calls the autoresume
+method whenever the host's usage count rises from 0 to 1.
 
-> > , and it's still
-> > pretty ugly.  sg_ring needs more work to de-scsi it.  sg_table is almost
-> > sg_ring except it retains all the chaining warts.
-> >
-> > But we hit the same problems:
-> >
-> > 1) sg_chain loses information.  The clever chain packaging makes reading
-> > easy, but manipulation is severely limited.  You can append to your own
-> > chains by padding, but not someone elses.  This works for SCSI, but what
-> > about the rest of us?  And don't even think of joining mapped chains: it
-> > will almost work.
->
-> OK, but realistically some of your criticisms are way outside of the
-> design intent.  Scatterlists (and now sg_chains) are the way the block
-> subsystem hands pages to its underlying block devices.
+(There are a few exceptions, such as when the host is being removed.  
+We don't have to worry about them now.)
 
-James, scatterlists are used for more than the block subsystem.  I know you're 
-designing for that, but we can do better.
+To put it another way, the autosuspend method tells the LLD that it 
+_may_ autosuspend the host adapter, not that it _must_.  However the 
+autoresume method does mean that the LLD _must_ attempt an immediate 
+autoresume (the attempt is allowed to fail).
 
-    Because a single sg_ring is trivially convertable to and from a 
-scatterlist *, the compatibility story is nice.  You can implement a 
-subsystem (say, the block layer) with sg_ring, and still hand out struct 
-scatterlist arrays for backwards compat: old code won't ask for v. long 
-scatterlist arrays anyway.
+> May suspend() be called after autosuspend() ?
 
-    Now we have sg_chaining, we can actually convert complex sg_rings into sg 
-chains when someone asks, as my most recent patch does.  I think that's one 
-abstraction too many, but it provides a transition path.
+Your question contains a layering violation: The SCSI host template 
+doesn't contain a suspend method.
 
-> There have never until now been any requirements to join already
-> dma_map_sg() converted scatterlists ... that would wreak havoc with the
-> way we reuse the list plus damage the idempotence of map/unmap.  What is
-> the use case you have for this?
+Do you mean to ask whether, for example, a PCI host adapter driver's 
+PCI-suspend method could be called after its SCSI-autosuspend method?  
+In general yes, but it depends on exactly what the autosuspend method 
+does.
 
-(This was, admittedly, a made-up example).
+> If not, will resume() be
+> called or autoresume() ?
 
-> > 2) sg_chain's end marker is only for reading non-dma elements, not for
-> > mapped chains, nor for writing into chains.  Plus it's a duplicate of the
-> > num arg, which is still passed around for efficiency.  (virtio had to
-> > implement count_sg() because I didn't want those two redundant num args).
-> >
-> > 3) By overloading struct scatterlist, it's invisible what code has been
-> > converted to chains, and which hasn't.  Too clever by half!
->
-> No it's not ... that's the whole point.  Code not yet converted to use
-> the API accessors is by definition unable to use chaining.  Code
-> converted to use the accessors by design doesn't care (and so is
-> "converted to chains").
+Let's take USB as a representative example (since it is the _only_
+example at the moment).  The SCSI core will call usb-storage's
+autosuspend method when the SCSI device is suspended.  In turn, the
+method calls usb_autopm_put_interface().  This starts a timer that
+will, after 2 seconds, call usb-storage's suspend method and actually
+suspend the USB port.
 
-But you've overloaded the type: what's the difference between:
-	/* Before conversion */
-	int foo(struct scatterlist *, int);
-And:
-	/* After conversion */
-	int foo(struct scatterlist *, int);
+Or consider what happens during a system resume.  The PM core will
+first resume the USB device, which causes usb-storage's resume method
+to be invoked.  A little later the PM core will resume the SCSI device,
+which is lower in the device tree.  This will cause the SCSI midlayer
+to call usb-storage's autoresume method, which will call
+usb_autopm_get_interface() -- thereby preventing the USB device from
+autosuspending 2 seconds after it was resumed.
 
-You have to wade through the implementation to see the difference: does this 
-function take a "chained scatterlist" or an "array scatterlist"?
+Does that answer your questions?
 
-Then you add insult to injury by implementing sg_chain() *which doesn't handle 
-chained scatterlists!*.
+Alan Stern
 
-> > sg_ring would not have required any change to existing drivers, just
-> > those that want to use long sg lists.  And then it's damn obvious which
-> > are which.
->
-> Which, by definition, would have been pretty much all of them.
-
-But it would have started with none of them, and it would have been done over 
-time.  Eventually we might have had a flag day to remove raw scatterlist 
-arrays.
-
-> > 4) sg_chain missed a chance to combine all the relevent information (max,
-> > num, num_dma and the sg array). sg_table comes close, but you still can't
-> > join them (no max information, and even if there were, what if it's
-> > full?). Unlike sg_ring, it's unlikely to reduce bugs.
->
-> sg_table is sg_chain ... they're incremental extensions of the same body
-> of work.
-
-Yes.
-
-> The only such example of a driver like that I know is the
-> crypto API and now your virtio.  Once we have the actual requirements
-> and then the API, I think the natural data structures will probably drop
-> out.
-
-ATA wants to chain sgs (Tejun cc'd).  It hasn't been practical to chain up 
-until now, but I'd say it's going to be more widely used now it is.
-
-Basically, sg_chain solves one problem: larger sg lists for scsi.  That's 
-fine, but I want to see better use of scatterlists everywhere in the kernel.
-
-sg_chains suck for manipulation, and AFAICT that's inherent.  Here, take a 
-look at the sg_ring conversion of scsi_alloc_sgtable and scsi_free_sgtable 
-and you can see why I'm unhappy with the sg_chain code:
-
-@@ -737,21 +745,41 @@ static inline unsigned int scsi_sgtable_
- 	return index;
- }
- 
--struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
-+static void free_sgring(struct sg_ring *head)
- {
- 	struct scsi_host_sg_pool *sgp;
--	struct scatterlist *sgl, *prev, *ret;
-+	struct sg_ring *sg, *n;
-+
-+	/* Free any other entries in the ring. */
-+	list_for_each_entry_safe(sg, n, &head->list, list) {
-+		list_del(&sg->list);
-+		sgp = scsi_sg_pools + scsi_sgtable_index(sg->max);
-+		mempool_free(sg, sgp->pool);
-+	}
-+
-+	/* Now free the head of the ring. */
-+	BUG_ON(!list_empty(&head->list));
-+
-+	sgp = scsi_sg_pools + scsi_sgtable_index(head->max);
-+	mempool_free(head, sgp->pool);
-+}
-+
-+struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *cmd, unsigned int num,
-+				  gfp_t gfp_mask)
-+{
-+	struct scsi_host_sg_pool *sgp;
-+	struct sg_ring *sg, *ret;
- 	unsigned int index;
- 	int this, left;
- 
--	BUG_ON(!cmd->use_sg);
-+	BUG_ON(!num);
- 
--	left = cmd->use_sg;
--	ret = prev = NULL;
-+	left = num;
-+	ret = NULL;
- 	do {
- 		this = left;
- 		if (this > SCSI_MAX_SG_SEGMENTS) {
--			this = SCSI_MAX_SG_SEGMENTS - 1;
-+			this = SCSI_MAX_SG_SEGMENTS;
- 			index = SG_MEMPOOL_NR - 1;
- 		} else
- 			index = scsi_sgtable_index(this);
-@@ -760,32 +788,20 @@ struct scatterlist *scsi_alloc_sgtable(s
- 
- 		sgp = scsi_sg_pools + index;
- 
--		sgl = mempool_alloc(sgp->pool, gfp_mask);
--		if (unlikely(!sgl))
-+		sg = mempool_alloc(sgp->pool, gfp_mask);
-+		if (unlikely(!sg))
- 			goto enomem;
- 
--		sg_init_table(sgl, sgp->size);
-+		sg_ring_init(sg, sgp->size - SCSI_SG_PAD);
- 
- 		/*
--		 * first loop through, set initial index and return value
-+		 * first loop through, set return value, otherwise
-+		 * attach this to the tail.
- 		 */
- 		if (!ret)
--			ret = sgl;
--
--		/*
--		 * chain previous sglist, if any. we know the previous
--		 * sglist must be the biggest one, or we would not have
--		 * ended up doing another loop.
--		 */
--		if (prev)
--			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
--
--		/*
--		 * if we have nothing left, mark the last segment as
--		 * end-of-list
--		 */
--		if (!left)
--			sg_mark_end(&sgl[this - 1]);
-+			ret = sg;
-+		else
-+			list_add_tail(&sg->list, &ret->list);
- 
- 		/*
- 		 * don't allow subsequent mempool allocs to sleep, it would
-@@ -793,85 +809,21 @@ struct scatterlist *scsi_alloc_sgtable(s
- 		 */
- 		gfp_mask &= ~__GFP_WAIT;
- 		gfp_mask |= __GFP_HIGH;
--		prev = sgl;
- 	} while (left);
- 
--	/*
--	 * ->use_sg may get modified after dma mapping has potentially
--	 * shrunk the number of segments, so keep a copy of it for free.
--	 */
--	cmd->__use_sg = cmd->use_sg;
- 	return ret;
- enomem:
--	if (ret) {
--		/*
--		 * Free entries chained off ret. Since we were trying to
--		 * allocate another sglist, we know that all entries are of
--		 * the max size.
--		 */
--		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
--		prev = ret;
--		ret = &ret[SCSI_MAX_SG_SEGMENTS - 1];
--
--		while ((sgl = sg_chain_ptr(ret)) != NULL) {
--			ret = &sgl[SCSI_MAX_SG_SEGMENTS - 1];
--			mempool_free(sgl, sgp->pool);
--		}
--
--		mempool_free(prev, sgp->pool);
--	}
-+	if (ret)
-+		free_sgring(ret);
- 	return NULL;
- }
-+EXPORT_SYMBOL(scsi_alloc_sgring);
- 
--EXPORT_SYMBOL(scsi_alloc_sgtable);
--
--void scsi_free_sgtable(struct scsi_cmnd *cmd)
-+void scsi_free_sgring(struct scsi_cmnd *cmd)
- {
--	struct scatterlist *sgl = cmd->request_buffer;
--	struct scsi_host_sg_pool *sgp;
--
--	/*
--	 * if this is the biggest size sglist, check if we have
--	 * chained parts we need to free
--	 */
--	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
--		unsigned short this, left;
--		struct scatterlist *next;
--		unsigned int index;
--
--		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
--		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
--		while (left && next) {
--			sgl = next;
--			this = left;
--			if (this > SCSI_MAX_SG_SEGMENTS) {
--				this = SCSI_MAX_SG_SEGMENTS - 1;
--				index = SG_MEMPOOL_NR - 1;
--			} else
--				index = scsi_sgtable_index(this);
--
--			left -= this;
--
--			sgp = scsi_sg_pools + index;
--
--			if (left)
--				next = sg_chain_ptr(&sgl[sgp->size - 1]);
--
--			mempool_free(sgl, sgp->pool);
--		}
--
--		/*
--		 * Restore original, will be freed below
--		 */
--		sgl = cmd->request_buffer;
--		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
--	} else
--		sgp = scsi_sg_pools + scsi_sgtable_index(cmd->__use_sg);
--
--	mempool_free(sgl, sgp->pool);
-+	free_sgring(cmd->sg);
- }
--
--EXPORT_SYMBOL(scsi_free_sgtable);
-+EXPORT_SYMBOL(scsi_free_sgring);
- 
- /*
-  * Function:    scsi_release_buffers()
-
-Hope that clarifies,
-Rusty.
