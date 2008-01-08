@@ -1,81 +1,41 @@
-From: Christof Schmitt <christof.schmitt@de.ibm.com>
-Subject: Re: [RFC] Common header file for FC definitions
-Date: Tue, 8 Jan 2008 17:53:41 +0100
-Message-ID: <20080108165341.GA13926@schmichrtp.de.ibm.com>
-References: <20080108080924.GA6993@schmichrtp.de.ibm.com> <20080108131403.GA9643@infradead.org> <47839AEB.3090003@emulex.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Open-FCoE on linux-scsi
+Date: Tue, 08 Jan 2008 20:38:29 +0300
+Message-ID: <4783B515.1030001@vlnb.net>
+References: <10A7D0016239E24092DEF05CCC582E4302BB68C8@fmsmsx411.amr.corp.intel.com>	<200801031035.m03AZYcJ012171@mbox.iij4u.or.jp>	<477FCD8C.2040404@vlnb.net> <20080106103138Q.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mtagate2.uk.ibm.com ([195.212.29.135]:19466 "EHLO
-	mtagate2.uk.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757988AbYAHQxs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 11:53:48 -0500
-Received: from d06nrmr1407.portsmouth.uk.ibm.com (d06nrmr1407.portsmouth.uk.ibm.com [9.149.38.185])
-	by mtagate2.uk.ibm.com (8.13.8/8.13.8) with ESMTP id m08Grlt7029506
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jan 2008 16:53:47 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (d06av02.portsmouth.uk.ibm.com [9.149.37.228])
-	by d06nrmr1407.portsmouth.uk.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m08GrjMc4788360
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jan 2008 16:53:47 GMT
-Received: from d06av02.portsmouth.uk.ibm.com (loopback [127.0.0.1])
-	by d06av02.portsmouth.uk.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m08Grcpm003958
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jan 2008 16:53:39 GMT
-Content-Disposition: inline
-In-Reply-To: <47839AEB.3090003@emulex.com>
+Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:34470 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1751210AbYAHRiK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 12:38:10 -0500
+In-Reply-To: <20080106103138Q.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <James.Smart@Emulex.Com>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, robert.w.love@intel.com
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: robert.w.love@intel.com, yi.zou@intel.com, christopher.leech@intel.com, vasu.dev@intel.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Tue, Jan 08, 2008 at 10:46:51AM -0500, James Smart wrote:
-> Christoph Hellwig wrote:
-> >On Tue, Jan 08, 2008 at 09:09:36AM +0100, Christof Schmitt wrote:
-> >>zfcp has a couple of definitions to describe the FC protocol. Grepping
-> >>through the complete source tree shows that e.g. the lpfc module makes
-> >>similar private definitions. It think that it would make sense to
-> >>introduce a global header file for FC related definitions that each FC
-> >>driver can use.
-> >>
-> >>The attached patch contains some definitons that i found in zfcp and
-> >>could be reused by other drivers.
-> >>
-> >>What do others think? Would this be useful?
-> >
-> >This is a very good idea.  It might make more sense to have the more or
-> >less complete defintions for the fc protocol in the header.  Robert &
-> >folks have been working on a software fc stack part as the fcoe header
-> >so they might have one to contribute.
+FUJITA Tomonori wrote:
+>>Thus, I believe, that partial user space, partial kernel space approach 
+>>for building SCSI targets is the move in the wrong direction, because it 
+>>brings practically nothing, but costs a lot.
 > 
-> I Agree - A common header for standard FC definitions would be a good thing.
-> 
-> That said, we have to be a little lenient on when drivers convert over to
-> the standard headers as there's likely code change required.
+> We have not discussed such topic. FCoE target can be implemented fully
+> in user space if I understand correctly.
 
-For zfcp, i would like to move the FC specific definitions out of the
-zfcp_def.h header file. My idea would be to introduce a simple header
-file like proposed and to adapt zfcp to use these.  I don't intend to
-write header files for the full FC protocol, since zfcp only uses a
-small part. When other drivers use more definitions, then the
-definitions can be added to the existing file.
+Really? FCoE target doesn't need an FC hardware target? And FCoE isn't 
+sensitive to the packets forwarding latency?
 
-When other drivers want to use the global definitions, they can
-include the global file, but they don't have to.
+For fully in-kernel approach it is possible to make the packets 
+forwarding zero-copy in both directions FC<->Ethernet, which is 
+practically impossible with user space. Modern memory has few GB/s 
+throughput, so guess how much latency data copying will add on 10Gbps 
+speed. Thus, I believe, if performance matters, FCoE should be in 
+kernel, at least hot processing path, when management possibly done in 
+user space as for open-iscsi. But user space/kernel separation should 
+only be done if the additional user space/kernel interface won't 
+complicate things too much.
 
-Would others also be interested in having structs in the global header
-file for FC commands like this?
-
-struct zfcp_ls_adisc {
-	u8		code;
-	u8		field[3];
-	u32		hard_nport_id;
-	u64		wwpn;
-	u64		wwnn;
-	u32		nport_id;
-} __attribute__ ((packed));
-
-This could be renamed to fc_ls_adisc and also be part of the global
-header file. But probably it makes more sense to start simple now and
-think about the common structs later.
-
-Thanks for the comments.
-
-Christof
+Vlad
