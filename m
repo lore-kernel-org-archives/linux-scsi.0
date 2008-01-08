@@ -1,157 +1,43 @@
 From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: big endian issues
-Date: Tue, 8 Jan 2008 12:48:25 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC65D@ADPE2K703.adaptec.com>
+Subject: [PATCH 1/1] aacraid: multiple definition of automatic variable
+ warning.
+Date: Tue, 8 Jan 2008 12:57:50 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC66A@ADPE2K703.adaptec.com>
 References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
  <jefxzqqeha.fsf@sykes.suse.de>
  <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
  <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
  <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
  <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
+ <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:45072 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755681AbYAHUsb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 15:48:31 -0500
+Received: from ts.adaptec.com ([162.62.93.58]:45247 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752032AbYAHU5x convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 15:57:53 -0500
 Received: from ADPE2K702.adaptec.com (adpe2k702.adaptec.com [10.25.8.26])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id C97F3221235
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Jan 2008 12:48:28 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id C2F692210E4
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Jan 2008 12:57:52 -0800 (PST)
+In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-
-Big endian systems issues discovered in the aacraid driver. Somewhat revers=
-es a patch from November 7th of last year that removed swap operations beca=
-use they formerly were being assigned to an u8 array when they should have =
-been assigned to an le32 array.
-
-This patch is largely inert for any little endian processor architecture. I=
-t resolves a bug in delivering the BlinkLED AIF event to registered applica=
-tions when the adapter or associated hardware was reset due to ill health. =
-A rare corner case occurrence, also largely unnoticed by any as it was a ne=
-w (untested!) feature.
+The 'entry' automatic variable was defined at the top and within a block that uses it, removed the definition from the block that uses it. Some cosmetic changes were made while in the same file. This patch should be inert.
 
 This attached patch is against current scsi-misc-2.6.
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments.
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's handling of patch attachments.
 
 Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
- drivers/scsi/aacraid/aachba.c   |    7 +++----
- drivers/scsi/aacraid/aacraid.h  |    6 +++---
- drivers/scsi/aacraid/comminit.c |    4 ++--
- drivers/scsi/aacraid/commsup.c  |   17 ++++++++---------
- drivers/scsi/aacraid/linit.c    |   10 +++++-----
- drivers/scsi/aacraid/rx.c       |    2 +-
- 6 files changed, 22 insertions(+), 24 deletions(-)
+This attached patch is against current scsi-misc-2.6.
+
+ commctrl.c |    9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
 Sincerely -- Mark Salyzyn
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_
-Content-Type: application/octet-stream; name="aacraid_big_endian.patch"
-Content-Description: aacraid_big_endian.patch
-Content-Disposition: attachment; filename="aacraid_big_endian.patch";
-	size=4990; creation-date="Tue, 08 Jan 2008 12:39:35 GMT";
-	modification-date="Tue, 08 Jan 2008 12:39:35 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
-MDEtMDggMTU6MzI6MjguMzI4ODEwOTc5IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDgtMDEtMDggMTU6Mzc6MzUuNjMxMTYzODU4IC0wNTAwCkBAIC0xMzI4LDEw
-ICsxMzI4LDkgQEAKIAkJCSAgKGludClzaXplb2YoZGV2LT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5m
-by5WcGRJbmZvLlRzaWQpLAogCQkJICBkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlZwZElu
-Zm8uVHNpZCk7CiAJCX0KLQkJaWYgKCFhYWNfY2hlY2tfcmVzZXQgfHwKLQkJICAgICgoYWFjX2No
-ZWNrX3Jlc2V0ICE9IDEpICYmCi0JCSAgICAgKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8u
-U3VwcG9ydGVkT3B0aW9uczIgJgotCQkgICAgICBjcHVfdG9fbGUzMihBQUNfT1BUSU9OX0lHTk9S
-RV9SRVNFVCkpKSkgeworCQlpZiAoIWFhY19jaGVja19yZXNldCB8fCAoKGFhY19jaGVja19yZXNl
-dCAhPSAxKSAmJgorCQkgIChkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlN1cHBvcnRlZE9w
-dGlvbnMyICYKKwkJICBBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKSB7CiAJCQlwcmludGsoS0VS
-Tl9JTkZPICIlcyVkOiBSZXNldCBBZGFwdGVyIElnbm9yZWRcbiIsCiAJCQkgIGRldi0+bmFtZSwg
-ZGV2LT5pZCk7CiAJCX0KZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgg
-Yi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3Jh
-aWQvYWFjcmFpZC5oCTIwMDgtMDEtMDggMTU6MzI6MjguMzI4ODEwOTc5IC0wNTAwCisrKyBiL2Ry
-aXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA4LTAxLTA4IDE1OjM3OjM1LjYzMjE2Mzcz
-MiAtMDUwMApAQCAtODY5LDkgKzg2OSw5IEBACiAJX19sZTMyCVN1cHBvcnRlZE9wdGlvbnMyOwog
-CV9fbGUzMglSZXNlcnZlZEdyb3d0aFsxXTsKIH07Ci0jZGVmaW5lIEFBQ19GRUFUVVJFX0ZBTENP
-TgkweDAwMDAwMDEwCi0jZGVmaW5lIEFBQ19PUFRJT05fTVVfUkVTRVQJMHgwMDAwMDAwMQotI2Rl
-ZmluZSBBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVAkweDAwMDAwMDAyCisjZGVmaW5lIEFBQ19GRUFU
-VVJFX0ZBTENPTgljcHVfdG9fbGUzMigweDAwMDAwMDEwKQorI2RlZmluZSBBQUNfT1BUSU9OX01V
-X1JFU0VUCWNwdV90b19sZTMyKDB4MDAwMDAwMDEpCisjZGVmaW5lIEFBQ19PUFRJT05fSUdOT1JF
-X1JFU0VUCWNwdV90b19sZTMyKDB4MDAwMDAwMDIpCiAjZGVmaW5lIEFBQ19TSVNfVkVSU0lPTl9W
-MwkzCiAjZGVmaW5lIEFBQ19TSVNfU0xPVF9VTktOT1dOCTB4RkYKIApkaWZmIC1ydSBhL2RyaXZl
-cnMvc2NzaS9hYWNyYWlkL2NvbW1pbml0LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5p
-dC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1pbml0LmMJMjAwOC0wMS0wOCAxNToz
-MjoyOC4zMjk4MTA4NTMgLTA1MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWluaXQu
-YwkyMDA4LTAxLTA4IDE1OjM3OjM1LjYzMzE2MzYwNyAtMDUwMApAQCAtMzAxLDEwICszMDEsMTAg
-QEAKIAlpZiAoKCFhYWNfYWRhcHRlcl9zeW5jX2NtZChkZXYsIEdFVF9BREFQVEVSX1BST1BFUlRJ
-RVMsCiAJCTAsIDAsIDAsIDAsIDAsIDAsIHN0YXR1cyswLCBzdGF0dXMrMSwgc3RhdHVzKzIsIE5V
-TEwsIE5VTEwpKSAmJgogCSAJCShzdGF0dXNbMF0gPT0gMHgwMDAwMDAwMSkpIHsKLQkJaWYgKHN0
-YXR1c1sxXSAmIEFBQ19PUFRfTkVXX0NPTU1fNjQpCisJCWlmIChzdGF0dXNbMV0gJiBsZTMyX3Rv
-X2NwdShBQUNfT1BUX05FV19DT01NXzY0KSkKIAkJCWRldi0+cmF3X2lvXzY0ID0gMTsKIAkJaWYg
-KGRldi0+YV9vcHMuYWRhcHRlcl9jb21tICYmCi0JCSAgICAoc3RhdHVzWzFdICYgQUFDX09QVF9O
-RVdfQ09NTSkpCisJCSAgICAoc3RhdHVzWzFdICYgbGUzMl90b19jcHUoQUFDX09QVF9ORVdfQ09N
-TSkpKQogCQkJZGV2LT5jb21tX2ludGVyZmFjZSA9IEFBQ19DT01NX01FU1NBR0U7CiAJCWlmICgo
-ZGV2LT5jb21tX2ludGVyZmFjZSA9PSBBQUNfQ09NTV9NRVNTQUdFKSAmJgogCQkgICAgKHN0YXR1
-c1syXSA+IGRldi0+YmFzZV9zaXplKSkgewpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2NvbW1zdXAuYyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYwotLS0gYS9kcml2ZXJz
-L3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJMjAwOC0wMS0wOCAxNTozMjoyOC4zMjk4MTA4NTMgLTA1
-MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIwMDgtMDEtMDggMTU6Mzc6
-MzUuNjM0MTYzNDgxIC0wNTAwCkBAIC0xMzQzLDExICsxMzQzLDExIEBACiAJCQlmaWItPmRhdGEg
-PSBod19maWItPmRhdGE7CiAJCQlhaWYgPSAoc3RydWN0IGFhY19haWZjbWQgKilod19maWItPmRh
-dGE7CiAJCQlhaWYtPmNvbW1hbmQgPSBjcHVfdG9fbGUzMihBaWZDbWRFdmVudE5vdGlmeSk7Ci0J
-CSAJYWlmLT5zZXFudW0gPSBjcHVfdG9fbGUzMigweEZGRkZGRkZGKTsKLQkJCWFpZi0+ZGF0YVsw
-XSA9IEFpZkVuRXhwRXZlbnQ7Ci0JCQlhaWYtPmRhdGFbMV0gPSBBaWZFeGVGaXJtd2FyZVBhbmlj
-OwotCQkJYWlmLT5kYXRhWzJdID0gQWlmSGlnaFByaW9yaXR5OwotCQkJYWlmLT5kYXRhWzNdID0g
-QmxpbmtMRUQ7CisJCQlhaWYtPnNlcW51bSA9IGNwdV90b19sZTMyKDB4RkZGRkZGRkYpOworCQkJ
-KChfX2xlMzIgKilhaWYtPmRhdGEpWzBdID0gY3B1X3RvX2xlMzIoQWlmRW5FeHBFdmVudCk7CisJ
-CQkoKF9fbGUzMiAqKWFpZi0+ZGF0YSlbMV0gPSBjcHVfdG9fbGUzMihBaWZFeGVGaXJtd2FyZVBh
-bmljKTsKKwkJCSgoX19sZTMyICopYWlmLT5kYXRhKVsyXSA9IGNwdV90b19sZTMyKEFpZkhpZ2hQ
-cmlvcml0eSk7CisJCQkoKF9fbGUzMiAqKWFpZi0+ZGF0YSlbM10gPSBjcHVfdG9fbGUzMihCbGlu
-a0xFRCk7CiAKIAkJCS8qCiAJCQkgKiBQdXQgdGhlIEZJQiBvbnRvIHRoZQpAQCAtMTM3NywxMCAr
-MTM3Nyw5IEBACiAKIAlwcmludGsoS0VSTl9FUlIgIiVzOiBIb3N0IGFkYXB0ZXIgQkxJTksgTEVE
-IDB4JXhcbiIsIGFhYy0+bmFtZSwgQmxpbmtMRUQpOwogCi0JaWYgKCFhYWNfY2hlY2tfcmVzZXQg
-fHwKLQkgICAgKChhYWNfY2hlY2tfcmVzZXQgIT0gMSkgJiYKLQkgICAgIChhYWMtPnN1cHBsZW1l
-bnRfYWRhcHRlcl9pbmZvLlN1cHBvcnRlZE9wdGlvbnMyICYKLQkgICAgICBjcHVfdG9fbGUzMihB
-QUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKSkKKwlpZiAoIWFhY19jaGVja19yZXNldCB8fCAoKGFh
-Y19jaGVja19yZXNldCAhPSAxKSAmJgorCQkoYWFjLT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5mby5T
-dXBwb3J0ZWRPcHRpb25zMiAmCisJCQlBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKQogCQlnb3Rv
-IG91dDsKIAlob3N0ID0gYWFjLT5zY3NpX2hvc3RfcHRyOwogCWlmIChhYWMtPnRocmVhZC0+cGlk
-ICE9IGN1cnJlbnQtPnBpZCkKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5j
-IGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFp
-ZC9saW5pdC5jCTIwMDgtMDEtMDggMTU6MzI6MjguMzI5ODEwODUzIC0wNTAwCisrKyBiL2RyaXZl
-cnMvc2NzaS9hYWNyYWlkL2xpbml0LmMJMjAwOC0wMS0wOCAxNTozNzozNS42MzQxNjM0ODEgLTA1
-MDAKQEAgLTYxNCwxMSArNjE0LDExIEBACiAJICogc3VwcG9ydCBhIHJlZ2lzdGVyLCBpbnN0ZWFk
-IG9mIGEgY29tbWFuZGVkLCByZXNldC4KIAkgKi8KIAlpZiAoKGFhYy0+c3VwcGxlbWVudF9hZGFw
-dGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgotCSAgICAgY3B1X3RvX2xlMzIoQUFDX09QVElP
-Tl9NVV9SRVNFVCkpICYmCi0JICAgIGFhY19jaGVja19yZXNldCAmJgotCSAgICAoKGFhY19jaGVj
-a19yZXNldCAhPSAxKSB8fAotCSAgICAgKGFhYy0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uU3Vw
-cG9ydGVkT3B0aW9uczIgJgotCSAgICAgIGNwdV90b19sZTMyKEFBQ19PUFRJT05fSUdOT1JFX1JF
-U0VUKSkpKQorCSAgIEFBQ19PUFRJT05fTVVfUkVTRVQpICYmCisJICBhYWNfY2hlY2tfcmVzZXQg
-JiYKKwkgICgoYWFjX2NoZWNrX3Jlc2V0ICE9IDEpIHx8CisJICAgKGFhYy0+c3VwcGxlbWVudF9h
-ZGFwdGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgorCSAgICBBQUNfT1BUSU9OX0lHTk9SRV9S
-RVNFVCkpKQogCQlhYWNfcmVzZXRfYWRhcHRlcihhYWMsIDIpOyAvKiBCeXBhc3Mgd2FpdCBmb3Ig
-Y29tbWFuZCBxdWllc2NlICovCiAJcmV0dXJuIFNVQ0NFU1M7IC8qIENhdXNlIGFuIGltbWVkaWF0
-ZSByZXRyeSBvZiB0aGUgY29tbWFuZCB3aXRoIGEgdGVuIHNlY29uZCBkZWxheSBhZnRlciBzdWNj
-ZXNzZnVsIHR1ciAqLwogfQpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMgYi9k
-cml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMJ
-MjAwOC0wMS0wOCAxNTozMjoyOC4zMzA4MTA3MjcgLTA1MDAKKysrIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvcnguYwkyMDA4LTAxLTA4IDE1OjM3OjM1LjYzNTE2MzM1NSAtMDUwMApAQCAtNDY1LDcg
-KzQ2NSw3IEBACiAJdTMyIHZhcjsKIAogCWlmICghKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2lu
-Zm8uU3VwcG9ydGVkT3B0aW9uczIgJgotCSAgICBjcHVfdG9fbGUzMihBQUNfT1BUSU9OX01VX1JF
-U0VUKSkgfHwgKGJsZWQgPj0gMCkgfHwgKGJsZWQgPT0gLTIpKSB7CisJICBBQUNfT1BUSU9OX01V
-X1JFU0VUKSB8fCAoYmxlZCA+PSAwKSB8fCAoYmxlZCA9PSAtMikpIHsKIAkJaWYgKGJsZWQpCiAJ
-CQlwcmludGsoS0VSTl9FUlIgIiVzJWQ6IGFkYXB0ZXIga2VybmVsIHBhbmljJ2QgJXguXG4iLAog
-CQkJCWRldi0+bmFtZSwgZGV2LT5pZCwgYmxlZCk7Cg==
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_--
