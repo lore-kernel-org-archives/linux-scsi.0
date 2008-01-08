@@ -1,34 +1,49 @@
-From: Oliver Neukum <oliver@neukum.org>
+From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: [RFC] Implementation of SCSI dynamic power management
-Date: Tue, 8 Jan 2008 16:00:51 +0100
-Message-ID: <200801081600.52518.oliver@neukum.org>
-References: <Pine.LNX.4.44L0.0801071244180.2748-100000@iolanthe.rowland.org>
+Date: Tue, 8 Jan 2008 10:06:53 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801081004400.2643-100000@iolanthe.rowland.org>
+References: <200801081442.09354.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: TEXT/PLAIN; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out001.kontent.com ([81.88.40.215]:56942 "EHLO
-	smtp-out001.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752330AbYAHPAh convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 10:00:37 -0500
-In-Reply-To: <Pine.LNX.4.44L0.0801071244180.2748-100000@iolanthe.rowland.org>
-Content-Disposition: inline
+Received: from iolanthe.rowland.org ([192.131.102.54]:40225 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1754881AbYAHPGy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 10:06:54 -0500
+In-Reply-To: <200801081442.09354.oliver@neukum.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
+To: Oliver Neukum <oliver@neukum.org>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
-> This patch applies to 2.6.24-rc6. =A0Comments and suggestions are=20
-> welcome.
+On Tue, 8 Jan 2008, Oliver Neukum wrote:
 
-What about the SG_IO ioctl() ? It seems to me that you must not autosus=
-pend
-a device after that ioctl() has been used until the file handle is clos=
-ed.
+> Am Dienstag, 8. Januar 2008 04:56:03 schrieb Alan Stern:
+> > > You'll have to add this method whenever a new subsystem is affect=
+ed
+> > > by power management.
+> >=20
+> > Sorry, I don't understand your point. =A0If you mean that we'll hav=
+e to
+> > add autosuspend and autoresume code to every driver that wants to
+> > support autosuspend, I agree. =A0There doesn't seem to be any way a=
+round
+> > it. =A0Note that the code added by the companion usb-storage patch =
+is=20
+> > pretty small.
+>=20
+> OK, you've convinced me.
+> But I'd be happier if you put the notification into the generic devic=
+e code.
 
-	Regards
-		Oliver
+Eventually parts of the autosuspend mechanism will go there.  But first
+I thought we should have a proof-of-concept version working for at
+least two different subsystems (such as SCSI and USB), so that we can
+understand what should go into the generic layer and what should stay
+out.
+
+Alan Stern
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
