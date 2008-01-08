@@ -1,156 +1,49 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: add aacraid.cache parameter to driver to
- control FUA and SYNCHRONIZE_CACHE policy
-Date: Tue, 8 Jan 2008 12:01:07 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC619@ADPE2K703.adaptec.com>
-References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
- <jefxzqqeha.fsf@sykes.suse.de>
- <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
+From: maximilian attems <max@stro.at>
+Subject: Re: Buggy Firewire bridge 'Prolific PL3507'
+Date: Tue, 8 Jan 2008 21:00:46 +0100
+Message-ID: <20080108200046.GV8816@baikonur.stro.at>
+References: <47837E06.5080406@novell.com> <20080108140151.GD16309@parisc-linux.org> <4783B93B.70307@s5r6.in-berlin.de> <1199815847.3534.49.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC619ADPE2K703adaptecc_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:43582 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753047AbYAHUBL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jan 2008 15:01:11 -0500
-Received: from ADPE2K701.adaptec.com (adpe2k701.adaptec.com [10.25.8.25])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id CA628221104
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Jan 2008 12:01:10 -0800 (PST)
-In-Reply-To: <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
-Content-Language: en-US
+Received: from baikonur.stro.at ([213.239.196.228]:51577 "EHLO
+	baikonur.stro.at" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752904AbYAHUCD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 15:02:03 -0500
+Content-Disposition: inline
+In-Reply-To: <1199815847.3534.49.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@novell.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>, David Zeuthen <david@fubar.dk>
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC619ADPE2K703adaptecc_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 08, 2008 at 12:10:47PM -0600, James Bottomley wrote:
+> 
+> Not to hijack the thread, but this is getting to be a broken record.  I
+> was dealing only a few days ago with a camera presenting as a mass
+> storage device that was then crashing and going offline.  I looked at
+> the dmesg trace which showed that the SCSI layer completes its probing
+> successfully, and said it was some other extraneous command issued from
+> user level causing the crash.  Sure enough, stopping hald fixed the
+> camera so it functioned as a mass storage device properly.  The bug
+> report is here:
+> 
+> https://bugs.launchpad.net/ubuntu/+source/hal/+bug/180472
+> 
+> What is the point of having SCSI be so careful in its probing and setup
+> so as not to annoy these devices, and then have hald or another standard
+> component blithely go and wreck the device by issuing unwarranted SCSI
+> commands?
+> 
+> Can we please stop hald from issuing SCSI commands ... we should have
+> the infrastructure in place now that renders this unnecessary ... unless
+> there's still some information it needs that we're not providing?
+> 
+> James
 
-aacraid.cache parameter, Disable Queue Flush commands:
-        bit 0 - Disable FUA in WRITE SCSI commands
-        bit 1 - Disable SYNCHRONIZE_CACHE SCSI command
-        bit 2 - Disable only if Battery not protecting adapter supplied Cac=
-he
+full ack,
+writing over a stupid hsdpa usb modem that stops working with hald crap.
+hald keeps resetting the thingy.
 
-e.g.: aacraid.cache=3D7 will disable the FUA and SYNCHRONIZE_CACHE commands=
- if the adapter has reported that it's cache is battery backed up.
-
-This parameter permits experimentation with tradeoffs between performance a=
-nd caching policy.
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c  |   36 ++++++++++++++++++++++++------------
- drivers/scsi/aacraid/aacraid.h |    2 ++
- drivers/scsi/aacraid/commsup.c |    4 ++++
- 3 files changed, 30 insertions(+), 12 deletions(-)
-
-Sincerely -- Mark Salyzyn
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC619ADPE2K703adaptecc_
-Content-Type: application/octet-stream; name="aacraid_cache_parm.patch"
-Content-Description: aacraid_cache_parm.patch
-Content-Disposition: attachment; filename="aacraid_cache_parm.patch";
-	size=5251; creation-date="Tue, 08 Jan 2008 09:18:05 GMT";
-	modification-date="Tue, 08 Jan 2008 09:18:05 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
-MDEtMDggMTE6NTY6NTEuNDg1MDMzMDkwIC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDgtMDEtMDggMTI6MTc6MDguMjkzODU1MzQyIC0wNTAwCkBAIC0xNDQsNiAr
-MTQ0LDcgQEAKICAqLwkKICAKIHN0YXRpYyBpbnQgbm9uZGFzZCA9IC0xOworc3RhdGljIGludCBh
-YWNfY2FjaGUgPSAwOwogc3RhdGljIGludCBkYWNtb2RlID0gLTE7CiAKIGludCBhYWNfY29tbWl0
-ID0gLTE7CkBAIC0xNTIsNiArMTUzLDggQEAKIAogbW9kdWxlX3BhcmFtKG5vbmRhc2QsIGludCwg
-U19JUlVHT3xTX0lXVVNSKTsKIE1PRFVMRV9QQVJNX0RFU0Mobm9uZGFzZCwgIkNvbnRyb2wgc2Nh
-bm5pbmcgb2YgaGJhIGZvciBub25kYXNkIGRldmljZXMuIDA9b2ZmLCAxPW9uIik7Cittb2R1bGVf
-cGFyYW1fbmFtZWQoY2FjaGUsIGFhY19jYWNoZSwgaW50LCBTX0lSVUdPfFNfSVdVU1IpOworTU9E
-VUxFX1BBUk1fREVTQyhjYWNoZSwgIkRpc2FibGUgUXVldWUgRmx1c2ggY29tbWFuZHM6XG5cdGJp
-dCAwIC0gRGlzYWJsZSBGVUEgaW4gV1JJVEUgU0NTSSBjb21tYW5kc1xuXHRiaXQgMSAtIERpc2Fi
-bGUgU1lOQ0hST05JWkVfQ0FDSEUgU0NTSSBjb21tYW5kXG5cdGJpdCAyIC0gRGlzYWJsZSBvbmx5
-IGlmIEJhdHRlcnkgbm90IHByb3RlY3RpbmcgQ2FjaGUiKTsKIG1vZHVsZV9wYXJhbShkYWNtb2Rl
-LCBpbnQsIFNfSVJVR098U19JV1VTUik7CiBNT0RVTEVfUEFSTV9ERVNDKGRhY21vZGUsICJDb250
-cm9sIHdoZXRoZXIgZG1hIGFkZHJlc3NpbmcgaXMgdXNpbmcgNjQgYml0IERBQy4gMD1vZmYsIDE9
-b24iKTsKIG1vZHVsZV9wYXJhbV9uYW1lZChjb21taXQsIGFhY19jb21taXQsIGludCwgU19JUlVH
-T3xTX0lXVVNSKTsKQEAgLTEwMTMsNyArMTAxNiw4IEBACiAJd3JpdGVjbWQtPmJsb2NrWzFdID0g
-Y3B1X3RvX2xlMzIoKHUzMikoKGxiYSYweGZmZmZmZmZmMDAwMDAwMDBMTCk+PjMyKSk7CiAJd3Jp
-dGVjbWQtPmNvdW50ID0gY3B1X3RvX2xlMzIoY291bnQ8PDkpOwogCXdyaXRlY21kLT5jaWQgPSBj
-cHVfdG9fbGUxNihzY21kX2lkKGNtZCkpOwotCXdyaXRlY21kLT5mbGFncyA9IGZ1YSA/CisJd3Jp
-dGVjbWQtPmZsYWdzID0gKGZ1YSAmJiAoKGFhY19jYWNoZSAmIDUpICE9IDEpICYmCisJICAoKChh
-YWNfY2FjaGUgJiA1KSAhPSA1KSB8fCAhZmliLT5kZXYtPmNhY2hlX3Byb3RlY3RlZCkpID8KIAkJ
-Y3B1X3RvX2xlMTYoSU9fVFlQRV9XUklURXxJT19TVVJFV1JJVEUpIDoKIAkJY3B1X3RvX2xlMTYo
-SU9fVFlQRV9XUklURSk7CiAJd3JpdGVjbWQtPmJwVG90YWwgPSAwOwpAQCAtMTMyNSwxMSArMTMy
-OSwxMSBAQAogCQl9CiAJfQogCisJZGV2LT5jYWNoZV9wcm90ZWN0ZWQgPSAwOwogCWRldi0+bm9u
-ZGFzZF9zdXBwb3J0ID0gMDsKIAlkZXYtPnJhaWRfc2NzaV9tb2RlID0gMDsKLQlpZihkZXYtPmFk
-YXB0ZXJfaW5mby5vcHRpb25zICYgQUFDX09QVF9OT05EQVNEKXsKKwlpZihkZXYtPmFkYXB0ZXJf
-aW5mby5vcHRpb25zICYgQUFDX09QVF9OT05EQVNEKQogCQlkZXYtPm5vbmRhc2Rfc3VwcG9ydCA9
-IDE7Ci0JfQogCiAJLyoKIAkgKiBJZiB0aGUgZmlybXdhcmUgc3VwcG9ydHMgUk9NQiBSQUlEL1ND
-U0kgbW9kZSBhbmQgd2UgYXJlIGN1cnJlbnRseQpAQCAtMTM1MSwxMCArMTM1NSw5IEBACiAJCXBy
-aW50ayhLRVJOX0lORk8gIiVzJWQ6IFJPTUIgUkFJRC9TQ1NJIG1vZGUgZW5hYmxlZFxuIiwKIAkJ
-CQlkZXYtPm5hbWUsIGRldi0+aWQpOwogCQkKLQlpZihub25kYXNkICE9IC0xKSB7ICAKKwlpZiAo
-bm9uZGFzZCAhPSAtMSkKIAkJZGV2LT5ub25kYXNkX3N1cHBvcnQgPSAobm9uZGFzZCE9MCk7Ci0J
-fQotCWlmKGRldi0+bm9uZGFzZF9zdXBwb3J0ICE9IDApeworCWlmKGRldi0+bm9uZGFzZF9zdXBw
-b3J0ICE9IDApIHsKIAkJcHJpbnRrKEtFUk5fSU5GTyAiJXMlZDogTm9uLURBU0Qgc3VwcG9ydCBl
-bmFibGVkLlxuIixkZXYtPm5hbWUsIGRldi0+aWQpOwogCX0KIApAQCAtMjEwNiw3ICsyMTA5LDcg
-QEAKIAkJbW9kZV9idWZbMl0gPSAwOwkvKiBEZXZpY2Utc3BlY2lmaWMgcGFyYW0sCiAJCQkJCSAg
-IGJpdCA4OiAwLzEgPSB3cml0ZSBlbmFibGVkL3Byb3RlY3RlZAogCQkJCQkgICBiaXQgNDogMC8x
-ID0gRlVBIGVuYWJsZWQgKi8KLQkJaWYgKGRldi0+cmF3X2lvX2ludGVyZmFjZSkKKwkJaWYgKGRl
-di0+cmF3X2lvX2ludGVyZmFjZSAmJiAoKGFhY19jYWNoZSAmIDUpICE9IDEpKQogCQkJbW9kZV9i
-dWZbMl0gPSAweDEwOwogCQltb2RlX2J1ZlszXSA9IDA7CS8qIEJsb2NrIGRlc2NyaXB0b3IgbGVu
-Z3RoICovCiAJCWlmICgoKHNjc2ljbWQtPmNtbmRbMl0gJiAweDNmKSA9PSA4KSB8fApAQCAtMjEx
-NCw3ICsyMTE3LDggQEAKIAkJCW1vZGVfYnVmWzBdID0gNjsKIAkJCW1vZGVfYnVmWzRdID0gODsK
-IAkJCW1vZGVfYnVmWzVdID0gMTsKLQkJCW1vZGVfYnVmWzZdID0gMHgwNDsgLyogV0NFICovCisJ
-CQltb2RlX2J1Zls2XSA9ICgoYWFjX2NhY2hlICYgNikgPT0gMikKKwkJCQk/IDAgOiAweDA0OyAv
-KiBXQ0UgKi8KIAkJCW1vZGVfYnVmX2xlbmd0aCA9IDc7CiAJCQlpZiAobW9kZV9idWZfbGVuZ3Ro
-ID4gc2NzaWNtZC0+Y21uZFs0XSkKIAkJCQltb2RlX2J1Zl9sZW5ndGggPSBzY3NpY21kLT5jbW5k
-WzRdOwpAQCAtMjEzNyw3ICsyMTQxLDcgQEAKIAkJbW9kZV9idWZbM10gPSAwOwkvKiBEZXZpY2Ut
-c3BlY2lmaWMgcGFyYW0sCiAJCQkJCSAgIGJpdCA4OiAwLzEgPSB3cml0ZSBlbmFibGVkL3Byb3Rl
-Y3RlZAogCQkJCQkgICBiaXQgNDogMC8xID0gRlVBIGVuYWJsZWQgKi8KLQkJaWYgKGRldi0+cmF3
-X2lvX2ludGVyZmFjZSkKKwkJaWYgKGRldi0+cmF3X2lvX2ludGVyZmFjZSAmJiAoKGFhY19jYWNo
-ZSAmIDUpICE9IDEpKQogCQkJbW9kZV9idWZbM10gPSAweDEwOwogCQltb2RlX2J1Zls0XSA9IDA7
-CS8qIHJlc2VydmVkICovCiAJCW1vZGVfYnVmWzVdID0gMDsJLyogcmVzZXJ2ZWQgKi8KQEAgLTIx
-NDgsNyArMjE1Miw4IEBACiAJCQltb2RlX2J1ZlsxXSA9IDk7CiAJCQltb2RlX2J1Zls4XSA9IDg7
-CiAJCQltb2RlX2J1Zls5XSA9IDE7Ci0JCQltb2RlX2J1ZlsxMF0gPSAweDA0OyAvKiBXQ0UgKi8K
-KwkJCW1vZGVfYnVmWzEwXSA9ICgoYWFjX2NhY2hlICYgNikgPT0gMikKKwkJCQk/IDAgOiAweDA0
-OyAvKiBXQ0UgKi8KIAkJCW1vZGVfYnVmX2xlbmd0aCA9IDExOwogCQkJaWYgKG1vZGVfYnVmX2xl
-bmd0aCA+IHNjc2ljbWQtPmNtbmRbOF0pCiAJCQkJbW9kZV9idWZfbGVuZ3RoID0gc2NzaWNtZC0+
-Y21uZFs4XTsKQEAgLTIyMjQsOSArMjIyOSwxNiBAQAogCQkJcmV0dXJuIGFhY193cml0ZShzY3Np
-Y21kKTsKIAogCQljYXNlIFNZTkNIUk9OSVpFX0NBQ0hFOgorCQkJaWYgKCgoYWFjX2NhY2hlICYg
-NikgPT0gNikgJiYgZGV2LT5jYWNoZV9wcm90ZWN0ZWQpIHsKKwkJCQlzY3NpY21kLT5yZXN1bHQg
-PSBESURfT0sgPDwgMTYgfAorCQkJCQlDT01NQU5EX0NPTVBMRVRFIDw8IDggfCBTQU1fU1RBVF9H
-T09EOworCQkJCXNjc2ljbWQtPnNjc2lfZG9uZShzY3NpY21kKTsKKwkJCQlyZXR1cm4gMDsKKwkJ
-CX0KIAkJCS8qIElzc3VlIEZJQiB0byB0ZWxsIEZpcm13YXJlIHRvIGZsdXNoIGl0J3MgY2FjaGUg
-Ki8KLQkJCXJldHVybiBhYWNfc3luY2hyb25pemUoc2NzaWNtZCk7Ci0JCQkKKwkJCWlmICgoYWFj
-X2NhY2hlICYgNikgIT0gMikKKwkJCQlyZXR1cm4gYWFjX3N5bmNocm9uaXplKHNjc2ljbWQpOwor
-CQkJLyogRkFMTFRIUlUgKi8KIAkJZGVmYXVsdDoKIAkJCS8qCiAJCQkgKglVbmhhbmRsZWQgY29t
-bWFuZHMKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmggYi9kcml2ZXJz
-L3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFp
-ZC5oCTIwMDgtMDEtMDggMTE6NTY6NTEuNDg1MDMzMDkwIC0wNTAwCisrKyBiL2RyaXZlcnMvc2Nz
-aS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA4LTAxLTA4IDEyOjExOjE2Ljg3NjUxNTI1OCAtMDUwMApA
-QCAtMTAxNiw2ICsxMDE2LDcgQEAKIAkgKiBsZXRzIGJyZWFrIHRoZW0gb3V0IHNvIHdlIGRvbid0
-IGhhdmUgdG8gZG8gYW4gQU5EIHRvIGNoZWNrIHRoZW0KIAkgKi8KIAl1OAkJCW5vbmRhc2Rfc3Vw
-cG9ydDsgCisJdTgJCQljYWNoZV9wcm90ZWN0ZWQ7CiAJdTgJCQlkYWNfc3VwcG9ydDsKIAl1OAkJ
-CXJhaWRfc2NzaV9tb2RlOwogCXU4CQkJY29tbV9pbnRlcmZhY2U7CkBAIC0xNzcwLDYgKzE3NzEs
-NyBAQAogI2RlZmluZQkJCUFpZkVuQ29uZmlnQ2hhbmdlCTMJLyogQWRhcHRlciBjb25maWd1cmF0
-aW9uIGNoYW5nZSAqLwogI2RlZmluZQkJCUFpZkVuQ29udGFpbmVyQ2hhbmdlCTQJLyogQ29udGFp
-bmVyIGNvbmZpZ3VyYXRpb24gY2hhbmdlICovCiAjZGVmaW5lCQkJQWlmRW5EZXZpY2VGYWlsdXJl
-CTUJLyogU0NTSSBkZXZpY2UgZmFpbGVkICovCisjZGVmaW5lCQkJQWlmRW5CYXR0ZXJ5RXZlbnQJ
-MTQJLyogQ2hhbmdlIGluIEJhdHRlcnkgU3RhdGUgKi8KICNkZWZpbmUJCQlBaWZFbkFkZENvbnRh
-aW5lcgkxNQkvKiBBIG5ldyBhcnJheSB3YXMgY3JlYXRlZCAqLwogI2RlZmluZQkJCUFpZkVuRGVs
-ZXRlQ29udGFpbmVyCTE2CS8qIEEgY29udGFpbmVyIHdhcyBkZWxldGVkICovCiAjZGVmaW5lCQkJ
-QWlmRW5FeHBFdmVudAkJMjMJLyogRmlybXdhcmUgRXZlbnQgTG9nICovCmRpZmYgLXJ1IGEvZHJp
-dmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1
-cC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYwkyMDA4LTAxLTA4IDExOjU2
-OjUxLjQ4NzAzMjgzOCAtMDUwMAorKysgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJ
-MjAwOC0wMS0wOCAxMjoxMjoxNC45NDcxMzUwODYgLTA1MDAKQEAgLTg0OSw2ICs4NDksMTAgQEAK
-IAogCWNhc2UgQWlmQ21kRXZlbnROb3RpZnk6CiAJCXN3aXRjaCAobGUzMl90b19jcHUoKChfX2xl
-MzIgKilhaWZjbWQtPmRhdGEpWzBdKSkgeworCQljYXNlIEFpZkVuQmF0dGVyeUV2ZW50OgorCQkJ
-ZGV2LT5jYWNoZV9wcm90ZWN0ZWQgPQorCQkJCSgoKF9fbGUzMiAqKWFpZmNtZC0+ZGF0YSlbMV0g
-PT0gY3B1X3RvX2xlMzIoMykpOworCQkJYnJlYWs7CiAJCS8qCiAJCSAqCUFkZCBhbiBBcnJheS4K
-IAkJICovCg==
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC619ADPE2K703adaptecc_--
+-- 
+maks
