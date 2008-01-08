@@ -1,40 +1,69 @@
-From: Alan Stern <stern@rowland.harvard.edu>
+From: Oliver Neukum <oliver@neukum.org>
 Subject: Re: [RFC] Implementation of SCSI dynamic power management
-Date: Tue, 8 Jan 2008 10:16:43 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0801081013090.2643-100000@iolanthe.rowland.org>
-References: <200801081600.52518.oliver@neukum.org>
+Date: Tue, 8 Jan 2008 16:18:06 +0100
+Message-ID: <200801081618.07067.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0801081006580.2643-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=ISO-8859-1
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:47605 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1754075AbYAHPQo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 10:16:44 -0500
-In-Reply-To: <200801081600.52518.oliver@neukum.org>
+Received: from smtp-out001.kontent.com ([81.88.40.215]:50761 "EHLO
+	smtp-out001.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754631AbYAHPRf convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 10:17:35 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0801081006580.2643-100000@iolanthe.rowland.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
+To: Alan Stern <stern@rowland.harvard.edu>
 Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-On Tue, 8 Jan 2008, Oliver Neukum wrote:
-
-> Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
-> > This patch applies to 2.6.24-rc6. =A0Comments and suggestions are=20
-> > welcome.
+Am Dienstag, 8. Januar 2008 16:12:52 schrieb Alan Stern:
+> On Tue, 8 Jan 2008, Oliver Neukum wrote:
 >=20
-> What about the SG_IO ioctl() ? It seems to me that you must not autos=
-uspend
-> a device after that ioctl() has been used until the file handle is cl=
-osed.
+> > Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
+> > > =A0/**
+> > > + *=A0=A0=A0=A0=A0autoresume - perform dynamic (runtime) host res=
+ume
+> > > + *=A0=A0=A0=A0=A0@shp: host to resume
+> > > + *
+> > > + *=A0=A0=A0=A0=A0Resume (return to an operational power level) t=
+he specified host.
+> > > + *=A0=A0=A0=A0=A0Return 0 if the resume was successful, otherwis=
+e a negative
+> > > + *=A0=A0=A0=A0=A0error code.
+> > > + *
+> > > + *=A0=A0=A0=A0=A0Locks: struct Scsi_Host::pm_mutex held througho=
+ut the call.
+> > > + *
+> > > + *=A0=A0=A0=A0=A0Calling context: process
+> > > + *
+> > > + *=A0=A0=A0=A0=A0Notes: If the host is not currently suspended, =
+this method does
+> > > + *=A0=A0=A0=A0=A0need to do anything.
+> > > + *
+> > > + *=A0=A0=A0=A0=A0Optionally defined in: LLD
+> > > + **/
+> > > + =A0 =A0int autoresume(struct Scsi_Host *shp)
+> > > +
+> >=20
+> > This seems to be a bit misleading. It seems to me that you must can=
+cel
+> > any outstanding request to autosuspend from other layers.
+>=20
+> How about something more like this:
+>=20
+> *	Resume (return to an operational power level) the specified host,
+> *	and prevent autosuspends from other software layers until the
+> *	template autosuspend method has been called again.
+> *	Return 0 if the resume was successful, otherwise a negative
+> *	error code.
 
-That's an open problem.  The patch does block autosuspends as long as=20
-an sg file handle is open, but that won't help with ioctl requests=20
-through the block device.
+Much better.
 
-Can you write an additional patch to fix this?
+	Regards
+		Oliver
 
-Alan Stern
 
 -
 To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
