@@ -1,137 +1,157 @@
-From: David Zeuthen <david@fubar.dk>
-Subject: Re: Buggy Firewire bridge 'Prolific PL3507'
-Date: Tue, 08 Jan 2008 15:10:31 -0500
-Message-ID: <1199823031.3264.16.camel@oneill.fubar.dk>
-References: <47837E06.5080406@novell.com>
-	 <20080108140151.GD16309@parisc-linux.org>
-	 <4783B93B.70307@s5r6.in-berlin.de>
-	 <1199815847.3534.49.camel@localhost.localdomain>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: [PATCH 1/1] aacraid: big endian issues
+Date: Tue, 8 Jan 2008 12:48:25 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC65D@ADPE2K703.adaptec.com>
+References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
+ <jefxzqqeha.fsf@sykes.suse.de>
+ <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
+ <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
+ <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
+ <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: multipart/mixed;
+	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 128-177-28-166.ip.openhosting.com ([128.177.28.166]:46498 "EHLO
-	zelenka.fubar.dk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751144AbYAHUlw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 15:41:52 -0500
-In-Reply-To: <1199815847.3534.49.camel@localhost.localdomain>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:45072 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755681AbYAHUsb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 15:48:31 -0500
+Received: from ADPE2K702.adaptec.com (adpe2k702.adaptec.com [10.25.8.26])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id C97F3221235
+	for <linux-scsi@vger.kernel.org>; Tue,  8 Jan 2008 12:48:28 -0800 (PST)
+In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@novell.com>, SCSI Mailing List <linux-scsi@vger.kernel.org>
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, 2008-01-08 at 12:10 -0600, James Bottomley wrote:
-> On Tue, 2008-01-08 at 18:56 +0100, Stefan Richter wrote:
-> > Matthew Wilcox wrote:
-> > > On Tue, Jan 08, 2008 at 02:43:34PM +0100, Hannes Reinecke wrote:
-> > >> I have here a buggy firewire bridge (Prolific PL3507) which requ=
-ires
-> > >> that each 'INQUIRY' command is followed by a 'READ CAPACITY' com=
-mand.
-> > >> Otherwise any read will return invalid data (the payload is prec=
-eded
-> > >> by 36 empty bytes).
-> > >>=20
-> > >> How to fix this? Sure one could add a hack to sbp2.c to always i=
-ssue
-> > >> a READ CAPACITY after INQUIRY, but this somehow feels wrong ...
-> > >=20
-> > > There's only one place in the scsi stack that issues INQUIRY --
-> > > scsi_scan.c [1].  sd is going to issue READ CAPACITY before it is=
-sues
-> > > any READ commands, so I don't see where you're having this proble=
-m.
-> > > Is it with some program issuing INQUIRY through SG_IO or somethin=
-g?
-> >=20
-> > It's hald or something like that.
->=20
-> Not to hijack the thread, but this is getting to be a broken record. =
- I
-> was dealing only a few days ago with a camera presenting as a mass
-> storage device that was then crashing and going offline.  I looked at
-> the dmesg trace which showed that the SCSI layer completes its probin=
-g
-> successfully, and said it was some other extraneous command issued fr=
-om
-> user level causing the crash.  Sure enough, stopping hald fixed the
-> camera so it functioned as a mass storage device properly.  The bug
-> report is here:
->=20
-> https://bugs.launchpad.net/ubuntu/+source/hal/+bug/180472
->=20
-> What is the point of having SCSI be so careful in its probing and set=
-up
-> so as not to annoy these devices, and then have hald or another stand=
-ard
-> component blithely go and wreck the device by issuing unwarranted SCS=
-I
-> commands?
->=20
-> Can we please stop hald from issuing SCSI commands ... we should have
-> the infrastructure in place now that renders this unnecessary ... unl=
-ess
-> there's still some information it needs that we're not providing?
+Big endian systems issues discovered in the aacraid driver. Somewhat revers=
+es a patch from November 7th of last year that removed swap operations beca=
+use they formerly were being assigned to an u8 array when they should have =
+been assigned to an le32 array.
 
-Huh, AFAIK, we only send SCSI commands to optical drives [1] and not
-anything else. For optical drives, we issue these commands to
+This patch is largely inert for any little endian processor architecture. I=
+t resolves a bug in delivering the BlinkLED AIF event to registered applica=
+tions when the adapter or associated hardware was reset due to ill health. =
+A rare corner case occurrence, also largely unnoticed by any as it was a ne=
+w (untested!) feature.
 
- - figure out what discs the drive supports
-   - the kernel knows this and used to export it in a flat file in /pro=
-c
-     that wasn't really helpful
- - get read/write speeds (depends on the media currently inserted IIRC)
- - figure out if a disc is appendable
- - figure out if a disc is rewritable
- - get the capacity of a disc
+This attached patch is against current scsi-misc-2.6.
 
-and perhaps others (don't have the code handy right here but can give
-you a definite list).=20
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
+ling of patch attachments.
 
-(I admit this is a big mess and it would be ideal if the kernel can
-export this information - some of it is somewhat expensive to figure ou=
-t
-so perhaps should only be invoked when reading a sysfs file? I don't
-know).
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
-So it seems like people are experiencing this problem on non-optical
-drives, right?. So, my knee-jerk reaction would be to say that the
-assumption that hald is to blame is wrong since I'm pretty sure we only
-issue SCSI commands for optical drives.=20
+ drivers/scsi/aacraid/aachba.c   |    7 +++----
+ drivers/scsi/aacraid/aacraid.h  |    6 +++---
+ drivers/scsi/aacraid/comminit.c |    4 ++--
+ drivers/scsi/aacraid/commsup.c  |   17 ++++++++---------
+ drivers/scsi/aacraid/linit.c    |   10 +++++-----
+ drivers/scsi/aacraid/rx.c       |    2 +-
+ 6 files changed, 22 insertions(+), 24 deletions(-)
 
-Also, keep in mind that we do a lot of IO to probe for the file system
-on the actual disc including trying to get e.g. the iso9660 file system
-label of the latest session. Maybe this trivial IO is what is causing
-the hiccups?
+Sincerely -- Mark Salyzyn
 
-(Notably udev doesn't do this for optical discs [2] but it does it for
-everything else (e.g. runs /lib/udev/vol_id - the exactly same code hal=
-d
-is using.).=20
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_
+Content-Type: application/octet-stream; name="aacraid_big_endian.patch"
+Content-Description: aacraid_big_endian.patch
+Content-Disposition: attachment; filename="aacraid_big_endian.patch";
+	size=4990; creation-date="Tue, 08 Jan 2008 12:39:35 GMT";
+	modification-date="Tue, 08 Jan 2008 12:39:35 GMT"
+Content-Transfer-Encoding: base64
 
-Perhaps if you can point to what SCSI commands hald are sending it woul=
-d
-be easier to debug. Any other ideas?
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
+MDEtMDggMTU6MzI6MjguMzI4ODEwOTc5IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDgtMDEtMDggMTU6Mzc6MzUuNjMxMTYzODU4IC0wNTAwCkBAIC0xMzI4LDEw
+ICsxMzI4LDkgQEAKIAkJCSAgKGludClzaXplb2YoZGV2LT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5m
+by5WcGRJbmZvLlRzaWQpLAogCQkJICBkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlZwZElu
+Zm8uVHNpZCk7CiAJCX0KLQkJaWYgKCFhYWNfY2hlY2tfcmVzZXQgfHwKLQkJICAgICgoYWFjX2No
+ZWNrX3Jlc2V0ICE9IDEpICYmCi0JCSAgICAgKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8u
+U3VwcG9ydGVkT3B0aW9uczIgJgotCQkgICAgICBjcHVfdG9fbGUzMihBQUNfT1BUSU9OX0lHTk9S
+RV9SRVNFVCkpKSkgeworCQlpZiAoIWFhY19jaGVja19yZXNldCB8fCAoKGFhY19jaGVja19yZXNl
+dCAhPSAxKSAmJgorCQkgIChkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLlN1cHBvcnRlZE9w
+dGlvbnMyICYKKwkJICBBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKSB7CiAJCQlwcmludGsoS0VS
+Tl9JTkZPICIlcyVkOiBSZXNldCBBZGFwdGVyIElnbm9yZWRcbiIsCiAJCQkgIGRldi0+bmFtZSwg
+ZGV2LT5pZCk7CiAJCX0KZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgg
+Yi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3Jh
+aWQvYWFjcmFpZC5oCTIwMDgtMDEtMDggMTU6MzI6MjguMzI4ODEwOTc5IC0wNTAwCisrKyBiL2Ry
+aXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA4LTAxLTA4IDE1OjM3OjM1LjYzMjE2Mzcz
+MiAtMDUwMApAQCAtODY5LDkgKzg2OSw5IEBACiAJX19sZTMyCVN1cHBvcnRlZE9wdGlvbnMyOwog
+CV9fbGUzMglSZXNlcnZlZEdyb3d0aFsxXTsKIH07Ci0jZGVmaW5lIEFBQ19GRUFUVVJFX0ZBTENP
+TgkweDAwMDAwMDEwCi0jZGVmaW5lIEFBQ19PUFRJT05fTVVfUkVTRVQJMHgwMDAwMDAwMQotI2Rl
+ZmluZSBBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVAkweDAwMDAwMDAyCisjZGVmaW5lIEFBQ19GRUFU
+VVJFX0ZBTENPTgljcHVfdG9fbGUzMigweDAwMDAwMDEwKQorI2RlZmluZSBBQUNfT1BUSU9OX01V
+X1JFU0VUCWNwdV90b19sZTMyKDB4MDAwMDAwMDEpCisjZGVmaW5lIEFBQ19PUFRJT05fSUdOT1JF
+X1JFU0VUCWNwdV90b19sZTMyKDB4MDAwMDAwMDIpCiAjZGVmaW5lIEFBQ19TSVNfVkVSU0lPTl9W
+MwkzCiAjZGVmaW5lIEFBQ19TSVNfU0xPVF9VTktOT1dOCTB4RkYKIApkaWZmIC1ydSBhL2RyaXZl
+cnMvc2NzaS9hYWNyYWlkL2NvbW1pbml0LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21taW5p
+dC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1pbml0LmMJMjAwOC0wMS0wOCAxNToz
+MjoyOC4zMjk4MTA4NTMgLTA1MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWluaXQu
+YwkyMDA4LTAxLTA4IDE1OjM3OjM1LjYzMzE2MzYwNyAtMDUwMApAQCAtMzAxLDEwICszMDEsMTAg
+QEAKIAlpZiAoKCFhYWNfYWRhcHRlcl9zeW5jX2NtZChkZXYsIEdFVF9BREFQVEVSX1BST1BFUlRJ
+RVMsCiAJCTAsIDAsIDAsIDAsIDAsIDAsIHN0YXR1cyswLCBzdGF0dXMrMSwgc3RhdHVzKzIsIE5V
+TEwsIE5VTEwpKSAmJgogCSAJCShzdGF0dXNbMF0gPT0gMHgwMDAwMDAwMSkpIHsKLQkJaWYgKHN0
+YXR1c1sxXSAmIEFBQ19PUFRfTkVXX0NPTU1fNjQpCisJCWlmIChzdGF0dXNbMV0gJiBsZTMyX3Rv
+X2NwdShBQUNfT1BUX05FV19DT01NXzY0KSkKIAkJCWRldi0+cmF3X2lvXzY0ID0gMTsKIAkJaWYg
+KGRldi0+YV9vcHMuYWRhcHRlcl9jb21tICYmCi0JCSAgICAoc3RhdHVzWzFdICYgQUFDX09QVF9O
+RVdfQ09NTSkpCisJCSAgICAoc3RhdHVzWzFdICYgbGUzMl90b19jcHUoQUFDX09QVF9ORVdfQ09N
+TSkpKQogCQkJZGV2LT5jb21tX2ludGVyZmFjZSA9IEFBQ19DT01NX01FU1NBR0U7CiAJCWlmICgo
+ZGV2LT5jb21tX2ludGVyZmFjZSA9PSBBQUNfQ09NTV9NRVNTQUdFKSAmJgogCQkgICAgKHN0YXR1
+c1syXSA+IGRldi0+YmFzZV9zaXplKSkgewpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2NvbW1zdXAuYyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYwotLS0gYS9kcml2ZXJz
+L3Njc2kvYWFjcmFpZC9jb21tc3VwLmMJMjAwOC0wMS0wOCAxNTozMjoyOC4zMjk4MTA4NTMgLTA1
+MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIwMDgtMDEtMDggMTU6Mzc6
+MzUuNjM0MTYzNDgxIC0wNTAwCkBAIC0xMzQzLDExICsxMzQzLDExIEBACiAJCQlmaWItPmRhdGEg
+PSBod19maWItPmRhdGE7CiAJCQlhaWYgPSAoc3RydWN0IGFhY19haWZjbWQgKilod19maWItPmRh
+dGE7CiAJCQlhaWYtPmNvbW1hbmQgPSBjcHVfdG9fbGUzMihBaWZDbWRFdmVudE5vdGlmeSk7Ci0J
+CSAJYWlmLT5zZXFudW0gPSBjcHVfdG9fbGUzMigweEZGRkZGRkZGKTsKLQkJCWFpZi0+ZGF0YVsw
+XSA9IEFpZkVuRXhwRXZlbnQ7Ci0JCQlhaWYtPmRhdGFbMV0gPSBBaWZFeGVGaXJtd2FyZVBhbmlj
+OwotCQkJYWlmLT5kYXRhWzJdID0gQWlmSGlnaFByaW9yaXR5OwotCQkJYWlmLT5kYXRhWzNdID0g
+QmxpbmtMRUQ7CisJCQlhaWYtPnNlcW51bSA9IGNwdV90b19sZTMyKDB4RkZGRkZGRkYpOworCQkJ
+KChfX2xlMzIgKilhaWYtPmRhdGEpWzBdID0gY3B1X3RvX2xlMzIoQWlmRW5FeHBFdmVudCk7CisJ
+CQkoKF9fbGUzMiAqKWFpZi0+ZGF0YSlbMV0gPSBjcHVfdG9fbGUzMihBaWZFeGVGaXJtd2FyZVBh
+bmljKTsKKwkJCSgoX19sZTMyICopYWlmLT5kYXRhKVsyXSA9IGNwdV90b19sZTMyKEFpZkhpZ2hQ
+cmlvcml0eSk7CisJCQkoKF9fbGUzMiAqKWFpZi0+ZGF0YSlbM10gPSBjcHVfdG9fbGUzMihCbGlu
+a0xFRCk7CiAKIAkJCS8qCiAJCQkgKiBQdXQgdGhlIEZJQiBvbnRvIHRoZQpAQCAtMTM3NywxMCAr
+MTM3Nyw5IEBACiAKIAlwcmludGsoS0VSTl9FUlIgIiVzOiBIb3N0IGFkYXB0ZXIgQkxJTksgTEVE
+IDB4JXhcbiIsIGFhYy0+bmFtZSwgQmxpbmtMRUQpOwogCi0JaWYgKCFhYWNfY2hlY2tfcmVzZXQg
+fHwKLQkgICAgKChhYWNfY2hlY2tfcmVzZXQgIT0gMSkgJiYKLQkgICAgIChhYWMtPnN1cHBsZW1l
+bnRfYWRhcHRlcl9pbmZvLlN1cHBvcnRlZE9wdGlvbnMyICYKLQkgICAgICBjcHVfdG9fbGUzMihB
+QUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKSkKKwlpZiAoIWFhY19jaGVja19yZXNldCB8fCAoKGFh
+Y19jaGVja19yZXNldCAhPSAxKSAmJgorCQkoYWFjLT5zdXBwbGVtZW50X2FkYXB0ZXJfaW5mby5T
+dXBwb3J0ZWRPcHRpb25zMiAmCisJCQlBQUNfT1BUSU9OX0lHTk9SRV9SRVNFVCkpKQogCQlnb3Rv
+IG91dDsKIAlob3N0ID0gYWFjLT5zY3NpX2hvc3RfcHRyOwogCWlmIChhYWMtPnRocmVhZC0+cGlk
+ICE9IGN1cnJlbnQtPnBpZCkKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5j
+IGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFp
+ZC9saW5pdC5jCTIwMDgtMDEtMDggMTU6MzI6MjguMzI5ODEwODUzIC0wNTAwCisrKyBiL2RyaXZl
+cnMvc2NzaS9hYWNyYWlkL2xpbml0LmMJMjAwOC0wMS0wOCAxNTozNzozNS42MzQxNjM0ODEgLTA1
+MDAKQEAgLTYxNCwxMSArNjE0LDExIEBACiAJICogc3VwcG9ydCBhIHJlZ2lzdGVyLCBpbnN0ZWFk
+IG9mIGEgY29tbWFuZGVkLCByZXNldC4KIAkgKi8KIAlpZiAoKGFhYy0+c3VwcGxlbWVudF9hZGFw
+dGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgotCSAgICAgY3B1X3RvX2xlMzIoQUFDX09QVElP
+Tl9NVV9SRVNFVCkpICYmCi0JICAgIGFhY19jaGVja19yZXNldCAmJgotCSAgICAoKGFhY19jaGVj
+a19yZXNldCAhPSAxKSB8fAotCSAgICAgKGFhYy0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uU3Vw
+cG9ydGVkT3B0aW9uczIgJgotCSAgICAgIGNwdV90b19sZTMyKEFBQ19PUFRJT05fSUdOT1JFX1JF
+U0VUKSkpKQorCSAgIEFBQ19PUFRJT05fTVVfUkVTRVQpICYmCisJICBhYWNfY2hlY2tfcmVzZXQg
+JiYKKwkgICgoYWFjX2NoZWNrX3Jlc2V0ICE9IDEpIHx8CisJICAgKGFhYy0+c3VwcGxlbWVudF9h
+ZGFwdGVyX2luZm8uU3VwcG9ydGVkT3B0aW9uczIgJgorCSAgICBBQUNfT1BUSU9OX0lHTk9SRV9S
+RVNFVCkpKQogCQlhYWNfcmVzZXRfYWRhcHRlcihhYWMsIDIpOyAvKiBCeXBhc3Mgd2FpdCBmb3Ig
+Y29tbWFuZCBxdWllc2NlICovCiAJcmV0dXJuIFNVQ0NFU1M7IC8qIENhdXNlIGFuIGltbWVkaWF0
+ZSByZXRyeSBvZiB0aGUgY29tbWFuZCB3aXRoIGEgdGVuIHNlY29uZCBkZWxheSBhZnRlciBzdWNj
+ZXNzZnVsIHR1ciAqLwogfQpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMgYi9k
+cml2ZXJzL3Njc2kvYWFjcmFpZC9yeC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL3J4LmMJ
+MjAwOC0wMS0wOCAxNTozMjoyOC4zMzA4MTA3MjcgLTA1MDAKKysrIGIvZHJpdmVycy9zY3NpL2Fh
+Y3JhaWQvcnguYwkyMDA4LTAxLTA4IDE1OjM3OjM1LjYzNTE2MzM1NSAtMDUwMApAQCAtNDY1LDcg
+KzQ2NSw3IEBACiAJdTMyIHZhcjsKIAogCWlmICghKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2lu
+Zm8uU3VwcG9ydGVkT3B0aW9uczIgJgotCSAgICBjcHVfdG9fbGUzMihBQUNfT1BUSU9OX01VX1JF
+U0VUKSkgfHwgKGJsZWQgPj0gMCkgfHwgKGJsZWQgPT0gLTIpKSB7CisJICBBQUNfT1BUSU9OX01V
+X1JFU0VUKSB8fCAoYmxlZCA+PSAwKSB8fCAoYmxlZCA9PSAtMikpIHsKIAkJaWYgKGJsZWQpCiAJ
+CQlwcmludGsoS0VSTl9FUlIgIiVzJWQ6IGFkYXB0ZXIga2VybmVsIHBhbmljJ2QgJXguXG4iLAog
+CQkJCWRldi0+bmFtZSwgZGV2LT5pZCwgYmxlZCk7Cg==
 
-Thanks,
-David
-
-[1] : the way we determine a drive is an optical drive on SCSI is by
-checking if=20
-
- /sys/devices/pci0000:00/0000:00:1f.2/host1/target1:0:0/1:0:0:0/type
-
-has the value 5.
-
-[2] : =EF=BB=BFudev doesn't probe optical discs just yet because for so=
-me reason
-sessions/partitions isn't exported by the kernel for this kind of media
-(annoying, but understandable).
-
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC65DADPE2K703adaptecc_--
