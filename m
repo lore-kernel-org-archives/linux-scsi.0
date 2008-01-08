@@ -1,61 +1,35 @@
-From: Evgeniy Dushistov <dushistov@mail.ru>
-Subject: Re: [GIT PATCH] SCSI bug fixes for 2.6.24-rc3
-Date: Tue, 8 Jan 2008 14:15:53 +0300
-Message-ID: <20080108111549.GA30832@rain>
-References: <1195989865.3427.16.camel@localhost.localdomain>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [RFC] Common header file for FC definitions
+Date: Tue, 8 Jan 2008 13:14:03 +0000
+Message-ID: <20080108131403.GA9643@infradead.org>
+References: <20080108080924.GA6993@schmichrtp.de.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1756463AbYAHLQQ@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:38180 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754302AbYAHNOH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 08:14:07 -0500
 Content-Disposition: inline
-In-Reply-To: <1195989865.3427.16.camel@localhost.localdomain>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+In-Reply-To: <20080108080924.GA6993@schmichrtp.de.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christof Schmitt <christof.schmitt@de.ibm.com>
+Cc: linux-scsi@vger.kernel.org, robert.w.love@intel.com
 
-On Sun, Nov 25, 2007 at 01:24:25PM +0200, James Bottomley wrote:
-> This is a bit of a rash of bug fixes.  The qla1280 is actually a bug =
-fix
-> (in spite of the title---it's actually correcting an existing problem
-> with the qla1280 implementation of accessors that broke the current
-> driver).
->=20
+On Tue, Jan 08, 2008 at 09:09:36AM +0100, Christof Schmitt wrote:
+> zfcp has a couple of definitions to describe the FC protocol. Grepping
+> through the complete source tree shows that e.g. the lpfc module makes
+> similar private definitions. It think that it would make sense to
+> introduce a global header file for FC related definitions that each FC
+> driver can use.
+> 
+> The attached patch contains some definitons that i found in zfcp and
+> could be reused by other drivers.
+> 
+> What do others think? Would this be useful?
 
-Recently I build last Linus's git tree, and got:
-=E2=80=98req_cnt=E2=80=99 is used uninitialized in this function,
-and see bellow
-> The patch is available here:
->=20
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.gi=
-t
->=20
-> The short changelog is:
-=2E..
-> Jes Sorensen (1):
->       qla1280: convert to use the data buffer accessors
->=20
-=2E..
->  scsi/qla1280.c         |  387 +++++++++++++++++++++-----------------=
------------
-=2E..
->  	/* Calculate number of entries and segments required. */
-> -	req_cnt =3D 1;
->=20
-
-Initilization of req_cnt was removed, but in this function
-there are places like=20
-req_cnt +=3D (seg_cnt - 4) / 7;
-or
-req_cnt++;
-This is should be so?
-
---=20
-/Evgeniy
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
- in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
+This is a very good idea.  It might make more sense to have the more or
+less complete defintions for the fc protocol in the header.  Robert &
+folks have been working on a software fc stack part as the fcoe header
+so they might have one to contribute.
