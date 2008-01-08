@@ -1,88 +1,92 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [RFC] Implementation of SCSI dynamic power management
-Date: Mon, 7 Jan 2008 22:56:03 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0801072235110.30331-100000@netrider.rowland.org>
-References: <200801072306.56227.oliver@neukum.org>
+From: Krzysztof Helt <krzysztof.h1@poczta.fm>
+Subject: Re: [PATCH] sym8xx_2: kill compilation warning
+Date: Tue, 8 Jan 2008 07:40:34 +0100
+Message-ID: <20080108074034.604f84ee.krzysztof.h1@poczta.fm>
+References: <20080107225619.59621db7.krzysztof.h1@poczta.fm>
+	<1199745575.3126.50.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:1542 "HELO
-	netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1753748AbYAHD4G (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jan 2008 22:56:06 -0500
-In-Reply-To: <200801072306.56227.oliver@neukum.org>
+Received: from smtp35.poczta.interia.pl ([80.48.65.35]:22094 "EHLO
+	smtp4.poczta.interia.pl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755907AbYAHGhY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 01:37:24 -0500
+In-Reply-To: <1199745575.3126.50.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
 
-On Mon, 7 Jan 2008, Oliver Neukum wrote:
+On Mon, 07 Jan 2008 16:39:35 -0600
+James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-> Am Montag, 7. Januar 2008 22:34:52 schrieb Alan Stern:
-> > On Mon, 7 Jan 2008, Oliver Neukum wrote:
-> > 
-> > > Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
-> > > > When all the devices under a host are suspended, the LLD is informed 
-> > > > (via a new "autosuspend" method in the host template) so that it can
-> > > 
-> > > That is most certainly a mistake.
-> > 
-> > Why?
 > 
-> You'll have to add this method whenever a new subsystem is affected
-> by power management.
+> On Mon, 2008-01-07 at 22:56 +0100, Krzysztof Helt wrote:
+> > From: Krzysztof Helt <krzysztof.h1@wp.pl>
+> > 
+> > This patch fixes call to wait_for_completion_timeout()
+> > with NULL argument.
+> 
+> That doesn't seem to be at all what your patch is doing.  I can't see
+> any case in the old code where wait_for_completion_timeout() could be
+> called with a NULL that you fix.  What it seems you are doing is
+> altering the code to eliminate the finished_reset variable.
+> 
 
-Sorry, I don't understand your point.  If you mean that we'll have to
-add autosuspend and autoresume code to every driver that wants to
-support autosuspend, I agree.  There doesn't seem to be any way around
-it.  Note that the code added by the companion usb-storage patch is 
-pretty small.
+I am sorry for the mess. I put the wrong description of the patch.
+Here is the correct one:
+---
 
-> Besides what are the semantics of this method?
+The purpose of the patch is to kill the compilation warning with gcc-4.1.1 on sparc64:
 
-The semantics are simple.  The SCSI midlayer calls the autosuspend
-method when all the host's devices are suspended and the host's usage
-count becomes <= 0 (redundant, since each non-suspended device
-contributes to the usage count).  The midlayer calls the autoresume
-method whenever the host's usage count rises from 0 to 1.
+sym_glue.c: In function sym_eh_handler:
+sym_glue.c:612: warning: io_reset may be used uninitialized in this function
 
-(There are a few exceptions, such as when the host is being removed.  
-We don't have to worry about them now.)
+This patch also eliminates the finished_reset variable.
 
-To put it another way, the autosuspend method tells the LLD that it 
-_may_ autosuspend the host adapter, not that it _must_.  However the 
-autoresume method does mean that the LLD _must_ attempt an immediate 
-autoresume (the attempt is allowed to fail).
+Signed-off-by: Krzysztof Helt <krzysztof.h1@wp.pl>
 
-> May suspend() be called after autosuspend() ?
+---
 
-Your question contains a layering violation: The SCSI host template 
-doesn't contain a suspend method.
+diff -urp linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-10-28 11:11:02.000000000 +0100
++++ linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-10-28 14:25:08.000000000 +0100
+@@ -609,8 +609,7 @@ static int sym_eh_handler(int op, char *
+ 	 */
+ #define WAIT_FOR_PCI_RECOVERY	35
+ 	if (pci_channel_offline(pdev)) {
+-		struct completion *io_reset;
+-		int finished_reset = 0;
++		struct completion *io_reset = NULL;
+ 		init_completion(&eh_done);
+ 		spin_lock_irq(shost->host_lock);
+ 		/* Make sure we didn't race */
+@@ -618,15 +617,12 @@ static int sym_eh_handler(int op, char *
+ 			if (!sym_data->io_reset)
+ 				sym_data->io_reset = &eh_done;
+ 			io_reset = sym_data->io_reset;
+-		} else {
+-			finished_reset = 1;
+ 		}
+ 		spin_unlock_irq(shost->host_lock);
+-		if (!finished_reset)
+-			finished_reset = wait_for_completion_timeout(io_reset,
+-						WAIT_FOR_PCI_RECOVERY*HZ);
+-		if (!finished_reset)
+-			return SCSI_FAILED;
++		if (io_reset &&
++		    !wait_for_completion_timeout(io_reset,
++						 WAIT_FOR_PCI_RECOVERY * HZ))
++				return SCSI_FAILED;
+ 	}
+ 
+ 	spin_lock_irq(shost->host_lock);
 
-Do you mean to ask whether, for example, a PCI host adapter driver's 
-PCI-suspend method could be called after its SCSI-autosuspend method?  
-In general yes, but it depends on exactly what the autosuspend method 
-does.
 
-> If not, will resume() be
-> called or autoresume() ?
 
-Let's take USB as a representative example (since it is the _only_
-example at the moment).  The SCSI core will call usb-storage's
-autosuspend method when the SCSI device is suspended.  In turn, the
-method calls usb_autopm_put_interface().  This starts a timer that
-will, after 2 seconds, call usb-storage's suspend method and actually
-suspend the USB port.
 
-Or consider what happens during a system resume.  The PM core will
-first resume the USB device, which causes usb-storage's resume method
-to be invoked.  A little later the PM core will resume the SCSI device,
-which is lower in the device tree.  This will cause the SCSI midlayer
-to call usb-storage's autoresume method, which will call
-usb_autopm_get_interface() -- thereby preventing the USB device from
-autosuspending 2 seconds after it was resumed.
-
-Does that answer your questions?
-
-Alan Stern
+----------------------------------------------------------------------
+Nadchodzi wojna miedzygalaktyczna! 
+Sprawdz! >>> http://link.interia.pl/f1cc2
 
