@@ -1,142 +1,68 @@
 From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: OS panic after Adapter panic (hardening).
-Date: Tue, 8 Jan 2008 13:26:43 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC690@ADPE2K703.adaptec.com>
-References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
- <jefxzqqeha.fsf@sykes.suse.de>
- <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
+Subject: RE: [PATCH 1/1] aacraid: big endian issues
+Date: Tue, 8 Jan 2008 13:37:59 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC6A3@ADPE2K703.adaptec.com>
+References: <20071031150216.88cecc21.sfr@canb.auug.org.au>
+	 <20071101173221.2e1fea42.sfr@canb.auug.org.au>
+	 <jefxzqqeha.fsf@sykes.suse.de>
+	 <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
+	 <532ABFBDAAC3A34EB12EBA6CEC2838F40DC65D@ADPE2K703.adaptec.com>
+ <da824cf30801081317q68516370x4a46f9eb80583d28@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC690ADPE2K703adaptecc_"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:46015 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750902AbYAHV0v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jan 2008 16:26:51 -0500
-Received: from ADPE2K702.adaptec.com (adpe2k702.adaptec.com [10.25.8.26])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id C7BA72215DE
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Jan 2008 13:26:48 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:46950 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751211AbYAHViC convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 16:38:02 -0500
+In-Reply-To: <da824cf30801081317q68516370x4a46f9eb80583d28@mail.gmail.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: 'Grant Grundler' <grundler@google.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC690ADPE2K703adaptecc_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+I've always assumed that byte swapping of constants would be optimized where a variable would not :-)
 
-In experiments in the lab we managed to trigger an Adapter firmware panic (=
-BlinkLED) coincidentally while several pass-through ioctl command from the =
-management software were outstanding on a bug only present on a class of RA=
-ID Adapters that require a hardware reset rather than a commanded reset. Th=
-e net result was an attempt to time out the management software command as =
-if it came from the SCSI layer resulting in an OS panic.
+I have confirmed in assembler output of the compiler that constant merely become byte reversed constants optimized or no in at least one architectural case. I have *not* confirmed that a variable byte reversal requires processing overhead, as one could possibly expect the compiler to instead optimize by byte reversing the constant when comparing. However, I will guarantee you that if optimization is turned off in the compiler that such an optimization will not take place...
 
-Adapters that use commanded reset, management commands are returned failed =
-by the Adapter correctly. The adapter firmware panic that resulted in this =
-condition was also resolved, and there were no adapters in the field with t=
-his specific firmware bug so we do not expect any field reports. This is a =
-rare or unlikely corner condition, and no reports have ever been forwarded =
-from the field.
-
-This attached patch is against current scsi-misc-2.6.
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aacraid.h |    1 +
- drivers/scsi/aacraid/commsup.c |    4 +++-
- drivers/scsi/aacraid/dpcsup.c  |    4 +++-
- drivers/scsi/aacraid/linit.c   |   19 ++++++++++++++++++-
- 4 files changed, 25 insertions(+), 3 deletions(-)
+I do not think this turns into a readability issue in either case and view this as a simple cosmetic coding precaution much like likely()/unlikely() offers hints to the compiler on code intent...
 
 Sincerely -- Mark Salyzyn
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC690ADPE2K703adaptecc_
-Content-Type: application/octet-stream; name="aacraid_fib_context.patch"
-Content-Description: aacraid_fib_context.patch
-Content-Disposition: attachment; filename="aacraid_fib_context.patch";
-	size=4004; creation-date="Tue, 08 Jan 2008 13:06:51 GMT";
-	modification-date="Tue, 08 Jan 2008 13:06:51 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmggYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCTIw
-MDgtMDEtMDggMTU6NTg6MDkuMjAxNzk1MzY2IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2FhY3JhaWQuaAkyMDA4LTAxLTA4IDE2OjA1OjAwLjE3NTk1NDQ4MCAtMDUwMApAQCAtMTA3
-Myw2ICsxMDczLDcgQEAKIAkoZGV2KS0+YV9vcHMuYWRhcHRlcl9jb21tKGRldiwgY29tbSkKIAog
-I2RlZmluZSBGSUJfQ09OVEVYVF9GTEFHX1RJTUVEX09VVAkJKDB4MDAwMDAwMDEpCisjZGVmaW5l
-IEZJQl9DT05URVhUX0ZMQUcJCQkoMHgwMDAwMDAwMikKIAogLyoKICAqCURlZmluZSB0aGUgY29t
-bWFuZCB2YWx1ZXMKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMgYi9k
-cml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQv
-Y29tbXN1cC5jCTIwMDgtMDEtMDggMTU6NTg6MDkuMjAyNzk1MjQwIC0wNTAwCisrKyBiL2RyaXZl
-cnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYwkyMDA4LTAxLTA4IDE2OjA1OjAwLjE3Njk1NDM1MSAt
-MDUwMApAQCAtMTcxLDYgKzE3MSw3IEBACiAJICoJZWFjaCBJL08KIAkgKi8KIAlmaWJwdHItPmh3
-X2ZpYl92YS0+aGVhZGVyLlhmZXJTdGF0ZSA9IDA7CisJZmlicHRyLT5mbGFncyA9IDA7CiAJZmli
-cHRyLT5jYWxsYmFjayA9IE5VTEw7CiAJZmlicHRyLT5jYWxsYmFja19kYXRhID0gTlVMTDsKIApA
-QCAtNDAyLDYgKzQwMyw3IEBACiAJICoJd2lsbCBoYXZlIGEgZGVidWcgbW9kZSB3aGVyZSB0aGUg
-YWRhcHRlciBjYW4gbm90aWZ5IHRoZSBob3N0CiAJICoJaXQgaGFkIGEgcHJvYmxlbSBhbmQgdGhl
-IGhvc3QgY2FuIGxvZyB0aGF0IGZhY3QuCiAJICovCisJZmlicHRyLT5mbGFncyA9IDA7CiAJaWYg
-KHdhaXQgJiYgIXJlcGx5KSB7CiAJCXJldHVybiAtRUlOVkFMOwogCX0gZWxzZSBpZiAoIXdhaXQg
-JiYgcmVwbHkpIHsKQEAgLTQ1MCwxMCArNDUyLDEwIEBACiAJaWYgKCF3YWl0KSB7CiAJCWZpYnB0
-ci0+Y2FsbGJhY2sgPSBjYWxsYmFjazsKIAkJZmlicHRyLT5jYWxsYmFja19kYXRhID0gY2FsbGJh
-Y2tfZGF0YTsKKwkJZmlicHRyLT5mbGFncyA9IEZJQl9DT05URVhUX0ZMQUc7CiAJfQogCiAJZmli
-cHRyLT5kb25lID0gMDsKLQlmaWJwdHItPmZsYWdzID0gMDsKIAogCUZJQl9DT1VOVEVSX0lOQ1JF
-TUVOVChhYWNfY29uZmlnLkZpYnNTZW50KTsKIApkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2RwY3N1cC5jIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvZHBjc3VwLmMKLS0tIGEvZHJpdmVy
-cy9zY3NpL2FhY3JhaWQvZHBjc3VwLmMJMjAwOC0wMS0wOCAxNTo1ODowOS4yMDI3OTUyNDAgLTA1
-MDAKKysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvZHBjc3VwLmMJMjAwOC0wMS0wOCAxNjowNTow
-MC4xNzY5NTQzNTEgLTA1MDAKQEAgLTEyMCw2ICsxMjAsNyBAQAogCQkJICoJTk9URTogIHdlIGNh
-bm5vdCB0b3VjaCB0aGUgZmliIGFmdGVyIHRoaXMKIAkJCSAqCSAgICBjYWxsLCBiZWNhdXNlIGl0
-IG1heSBoYXZlIGJlZW4gZGVhbGxvY2F0ZWQuCiAJCQkgKi8KKwkJCWZpYi0+ZmxhZ3MgPSAwOwog
-CQkJZmliLT5jYWxsYmFjayhmaWItPmNhbGxiYWNrX2RhdGEsIGZpYik7CiAJCX0gZWxzZSB7CiAJ
-CQl1bnNpZ25lZCBsb25nIGZsYWd2OwpAQCAtMjI5LDcgKzIzMCw3IEBACiAgKglhbGwgUUUgdGhl
-cmUgYXJlIGFuZCB3YWtlIHVwIGFsbCB0aGUgd2FpdGVycyBiZWZvcmUgZXhpdGluZy4KICAqLwog
-Ci11bnNpZ25lZCBpbnQgYWFjX2ludHJfbm9ybWFsKHN0cnVjdCBhYWNfZGV2ICpkZXYsIHUzMiBp
-bmRleCkKK3Vuc2lnbmVkIGludCBhYWNfaW50cl9ub3JtYWwoc3RydWN0IGFhY19kZXYgKiBkZXYs
-IHUzMiBpbmRleCkKIHsKIAlkcHJpbnRrKChLRVJOX0lORk8gImFhY19pbnRyX25vcm1hbCglcCwl
-eClcbiIsIGRldiwgaW5kZXgpKTsKIAlpZiAoKGluZGV4ICYgMHgwMDAwMDAwMkwpKSB7CkBAIC0z
-MTMsNiArMzE0LDcgQEAKIAkJCSAqCU5PVEU6ICB3ZSBjYW5ub3QgdG91Y2ggdGhlIGZpYiBhZnRl
-ciB0aGlzCiAJCQkgKgkgICAgY2FsbCwgYmVjYXVzZSBpdCBtYXkgaGF2ZSBiZWVuIGRlYWxsb2Nh
-dGVkLgogCQkJICovCisJCQlmaWItPmZsYWdzID0gMDsKIAkJCWZpYi0+Y2FsbGJhY2soZmliLT5j
-YWxsYmFja19kYXRhLCBmaWIpOwogCQl9IGVsc2UgewogCQkJdW5zaWduZWQgbG9uZyBmbGFndjsK
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDgtMDEt
-MDggMTU6NTg6MDkuMjAzNzk1MTE0IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
-bml0LmMJMjAwOC0wMS0wOCAxNjowNTowMC4xNzc5NTQyMjIgLTA1MDAKQEAgLTUzNiwxNyArNTM2
-LDMzIEBACiAJCQlicmVhazsKIAljYXNlIElOUVVJUlk6CiAJY2FzZSBSRUFEX0NBUEFDSVRZOgot
-CWNhc2UgVEVTVF9VTklUX1JFQURZOgogCQkvKiBNYXJrIGFzc29jaWF0ZWQgRklCIHRvIG5vdCBj
-b21wbGV0ZSwgZWggaGFuZGxlciBkb2VzIHRoaXMgKi8KIAkJZm9yIChjb3VudCA9IDA7IGNvdW50
-IDwgKGhvc3QtPmNhbl9xdWV1ZSArIEFBQ19OVU1fTUdUX0ZJQik7ICsrY291bnQpIHsKIAkJCXN0
-cnVjdCBmaWIgKiBmaWIgPSAmYWFjLT5maWJzW2NvdW50XTsKIAkJCWlmIChmaWItPmh3X2ZpYl92
-YS0+aGVhZGVyLlhmZXJTdGF0ZSAmJgorCQkJICAoZmliLT5mbGFncyAmIEZJQl9DT05URVhUX0ZM
-QUcpICYmCiAJCQkgIChmaWItPmNhbGxiYWNrX2RhdGEgPT0gY21kKSkgewogCQkJCWZpYi0+Zmxh
-Z3MgfD0gRklCX0NPTlRFWFRfRkxBR19USU1FRF9PVVQ7CiAJCQkJY21kLT5TQ3AucGhhc2UgPSBB
-QUNfT1dORVJfRVJST1JfSEFORExFUjsKIAkJCQlyZXQgPSBTVUNDRVNTOwogCQkJfQogCQl9CisJ
-CWJyZWFrOworCWNhc2UgVEVTVF9VTklUX1JFQURZOgorCQkvKiBNYXJrIGFzc29jaWF0ZWQgRklC
-IHRvIG5vdCBjb21wbGV0ZSwgZWggaGFuZGxlciBkb2VzIHRoaXMgKi8KKwkJZm9yIChjb3VudCA9
-IDA7IGNvdW50IDwgKGhvc3QtPmNhbl9xdWV1ZSArIEFBQ19OVU1fTUdUX0ZJQik7ICsrY291bnQp
-IHsKKwkJCXN0cnVjdCBzY3NpX2NtbmQgKiBjb21tYW5kOworCQkJc3RydWN0IGZpYiAqIGZpYiA9
-ICZhYWMtPmZpYnNbY291bnRdOworCQkJaWYgKChmaWItPmh3X2ZpYl92YS0+aGVhZGVyLlhmZXJT
-dGF0ZSAmIGNwdV90b19sZTMyKEFzeW5jIHwgTm9SZXNwb25zZUV4cGVjdGVkKSkgJiYKKwkJCSAg
-KGZpYi0+ZmxhZ3MgJiBGSUJfQ09OVEVYVF9GTEFHKSAmJgorCQkJICAoKGNvbW1hbmQgPSBmaWIt
-PmNhbGxiYWNrX2RhdGEpKSAmJgorCQkJICAoY29tbWFuZC0+ZGV2aWNlID09IGNtZC0+ZGV2aWNl
-KSkgeworCQkJCWZpYi0+ZmxhZ3MgfD0gRklCX0NPTlRFWFRfRkxBR19USU1FRF9PVVQ7CisJCQkJ
-Y29tbWFuZC0+U0NwLnBoYXNlID0gQUFDX09XTkVSX0VSUk9SX0hBTkRMRVI7CisJCQkJaWYgKGNv
-bW1hbmQgPT0gY21kKQorCQkJCQlyZXQgPSBTVUNDRVNTOworCQkJfQorCQl9CiAJfQogCXJldHVy
-biByZXQ7CiB9CkBAIC01NjksNiArNTg1LDcgQEAKIAlmb3IgKGNvdW50ID0gMDsgY291bnQgPCAo
-aG9zdC0+Y2FuX3F1ZXVlICsgQUFDX05VTV9NR1RfRklCKTsgKytjb3VudCkgewogCQlzdHJ1Y3Qg
-ZmliICogZmliID0gJmFhYy0+Zmlic1tjb3VudF07CiAJCWlmIChmaWItPmh3X2ZpYl92YS0+aGVh
-ZGVyLlhmZXJTdGF0ZSAmJgorCQkgIChmaWItPmZsYWdzICYgRklCX0NPTlRFWFRfRkxBRykgJiYK
-IAkJICAoZmliLT5jYWxsYmFja19kYXRhID09IGNtZCkpIHsKIAkJCWZpYi0+ZmxhZ3MgfD0gRklC
-X0NPTlRFWFRfRkxBR19USU1FRF9PVVQ7CiAJCQljbWQtPlNDcC5waGFzZSA9IEFBQ19PV05FUl9F
-UlJPUl9IQU5ETEVSOwo=
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC690ADPE2K703adaptecc_--
+> -----Original Message-----
+> From: Grant Grundler [mailto:grundler@google.com]
+> Sent: Tuesday, January 08, 2008 4:17 PM
+> To: Salyzyn, Mark
+> Cc: linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/1] aacraid: big endian issues
+>
+> On Jan 8, 2008 12:48 PM, Salyzyn, Mark
+> <Mark_Salyzyn@adaptec.com> wrote:
+> > Big endian systems issues discovered in the aacraid driver.
+>
+> ...
+> --- a/drivers/scsi/aacraid/comminit.c   2008-01-08
+> 15:32:28.329810853 -0500
+> +++ b/drivers/scsi/aacraid/comminit.c   2008-01-08
+> 15:37:35.633163607 -0500
+> @@ -301,10 +301,10 @@
+>         if ((!aac_adapter_sync_cmd(dev, GET_ADAPTER_PROPERTIES,
+>                 0, 0, 0, 0, 0, 0, status+0, status+1,
+> status+2, NULL, NULL)) &&
+>                         (status[0] == 0x00000001)) {
+> -               if (status[1] & AAC_OPT_NEW_COMM_64)
+> +               if (status[1] & le32_to_cpu(AAC_OPT_NEW_COMM_64))
+> ...
+>
+> Why apply le32_to_cpu() to the constant instead of the variable?
+> On systems were le32_to_cpu() is doing something, can gcc or
+> preprocessor optimize the constant?
+> I've always assumed it could not but that might be wrong.
+>
+> thanks,
+> grant
