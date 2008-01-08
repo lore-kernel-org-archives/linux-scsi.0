@@ -1,189 +1,328 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH 2/2] scsi: Use new __dma_buffer to align sense buffer
- in scsi_cmnd
-Date: Tue, 08 Jan 2008 08:32:43 +0900
-Message-ID: <20080108083243E.fujita.tomonori@lab.ntt.co.jp>
-References: <476E41D1.50606@panasas.com>
-	<20080107155332J.fujita.tomonori@lab.ntt.co.jp>
-	<47822850.1030007@panasas.com>
+From: Rusty Russell <rusty@rustcorp.com.au>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Tue, 8 Jan 2008 11:39:13 +1100
+Message-ID: <200801081139.14748.rusty@rustcorp.com.au>
+References: <200712191731.26512.rusty@rustcorp.com.au> <200801071538.58875.rusty@rustcorp.com.au> <1199720904.3126.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:44780 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759872AbYAGXfF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Jan 2008 18:35:05 -0500
-In-Reply-To: <47822850.1030007@panasas.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <1199720904.3126.24.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: bharrosh@panasas.com
-Cc: fujita.tomonori@lab.ntt.co.jp, benh@kernel.crashing.org, james.bottomley@steeleye.com, linux-kernel@vger.kernel.org, akpm@linux-foundation.org, rdreier@cisco.com, linux-scsi@vger.kernel.org, rmk@arm.linux.org.uk, davem@davemloft.net, ralf@linux-mips.org, hch@infradead.org, bhalevy@panasas.com
 
-On Mon, 07 Jan 2008 15:25:36 +0200
-Boaz Harrosh <bharrosh@panasas.com> wrote:
+On Tuesday 08 January 2008 02:48:23 James Bottomley wrote:
+> We're always open to new APIs (or more powerful and expanded old ones).
+> The way we've been doing the sg_chain conversion is to slide API layers
+> into the drivers so sg_chain becomes a simple API flip when we turn it
+> on.  Unfortunately sg_ring doesn't quite fit nicely into this.
 
-> On Mon, Jan 07 2008 at 8:53 +0200, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > On Sun, 23 Dec 2007 13:09:05 +0200
-> > Boaz Harrosh <bharrosh@panasas.com> wrote:
-> > 
-> >> On Fri, Dec 21 2007 at 4:30 +0200, Benjamin Herrenschmidt <benh@kernel.crashing.org> wrote:
-> >>> The sense buffer ins scsi_cmnd can nowadays be DMA'ed into directly
-> >>> by some low level drivers (that typically happens with USB mass
-> >>> storage).
-> >>>
-> >>> This is a problem on non cache coherent architectures such as
-> >>> embedded PowerPCs where the sense buffer can share cache lines with
-> >>> other structure members, which leads to various forms of corruption.
-> >>>
-> >>> This uses the newly defined __dma_buffer annotation to enforce that
-> >>> on such platforms, the sense_buffer is contained within its own
-> >>> cache line. This has no effect on cache coherent architectures.
-> >>>
-> >>> Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-> >>> ---
-> >>>
-> >>>  include/scsi/scsi_cmnd.h |    2 +-
-> >>>  1 file changed, 1 insertion(+), 1 deletion(-)
-> >>>
-> >>> --- linux-merge.orig/include/scsi/scsi_cmnd.h	2007-12-21 13:07:14.000000000 +1100
-> >>> +++ linux-merge/include/scsi/scsi_cmnd.h	2007-12-21 13:07:29.000000000 +1100
-> >>> @@ -88,7 +88,7 @@ struct scsi_cmnd {
-> >>>  				   	   working on */
-> >>>  
-> >>>  #define SCSI_SENSE_BUFFERSIZE 	96
-> >>> -	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE];
-> >>> +	unsigned char sense_buffer[SCSI_SENSE_BUFFERSIZE] __dma_buffer;
-> >>>  				/* obtained by REQUEST SENSE when
-> >>>  				 * CHECK CONDITION is received on original
-> >>>  				 * command (auto-sense) */
-> >> This has the potential of leaving a big fat ugly hole in the middle of 
-> >> scsi_cmnd. I would suggest of *just* moving the sense_buffer array to be
-> >> the *first member* of struct scsi_cmnd. The command itself is already cache
-> >> aligned, allocated by the proper flags to it's slab. And put a fat comment
-> >> near it's definition.
-> >>
-> >> This is until a proper fix is sent. I have in my Q a proposition for a 
-> >> more prominent solution, which I will send next month. Do to short comings
-> >> in the sense handling and optimizations, but should definitely cover this
-> >> problem.
-> >>
-> >> The code should have time to be discussed and tested, so it is only 2.6.26
-> >> material. For the duration of the 2.6.25 kernel we can live with a reorder
-> >> of scsi_cmnd members, if it solves such a grave bug for some ARCHs.
-> >>
-> >> Boaz
-> >> ----
-> >> [RFD below]
-> >> My proposed solution will be has follows:
-> >>
-> >>  1. Since the scsi protocol mandates an immediate REQUEST_SENSE after an error
-> >>     in effect the Q is frozen until the REQUEST_SENSE command returns.
-> >>
-> >>  2. The scsi-ml needs the sense buffer for its normal operation, independent 
-> >>     from the ULD's request of the sence_buffer or not at request->sense. But
-> >>     in effect, 90% of all scsi-requests come with ULD's allocated buffer for
-> >>     sense, that is copied to, on command completion.
-> >>
-> >>  3. 99% of all commands complete successfully, so if an optimization is 
-> >>     proposed for the successful case, sacrificing a few cycles for the error
-> >>     case than thats a good thing.
-> >>
-> >>  My suggestion is to have a per Q, driver-overridable, sense buffer that is 
-> >>  DMAed/written to by drivers. At the end of the REQUEST_SENSE command one
-> >>  of 2 things will be done. Either copy the sense to the ULD's supplied buffer,
-> >>  or if not available, allocate one from a dedicated mem_cache pool.
-> >>  
-> >>  So we are completely saving 92 bytes from scsi_cmnd by replacing the buffer
-> >>  with a pointer. We can always read the sense into a per Q buffer. And 10% of
-> >>  %1 of the times we will need to allocate a sense buffer from a dedicated mem_cache
-> >>  I would say thats a nice optimization.
-> >>
-> >>  The changes to scsi_error/scsi_cmnd and friends, is pretty strait forward. But
-> >>  it depends on a conversion of 4/5 drivers to the new scsi_eh API for 
-> >>  REQUEST_SENSE. I have only converted these drivers that interfered with the accessors
-> >>  effort + 1 other places. But there are a few more places that are not converted.
-> >>  Once done. The implementation can easily change with no affect on drivers.
-> > 
-> > I think that removing the sense_buffer array from scsi_cmnd effects
-> > lots of LLDs. As I wrote in other mail, many LLDs assume that
-> > scsi_cmnd:sense_buffer is always available. Another big task is to
-> > take care about auto sense.
-> > 
-> > Have you already had some patches? I've just started to work on this
-> > and I'd like to push that fix into 2.6.25.
-> 
-> Tomo Hi.
-> Since you ask to push this into 2.6.25, I have ask permission to
-> prioritize this effort, as until now it was on a back burner.
+Hi James,
 
-There are no short-term solusions and seems that __dma_buffer will not
-be merged. It would be better to fix this soon though it's a bit hard
-to fix this before 2.6.25, I think.
+   Well, it didn't touch any drivers.  The only ones which needed altering 
+were those which wanted to use large scatter-gather lists.  You think of the 
+subtlety of sg-chain conversion as a feature; it's a bug :)
 
+> > > The other thing I note is that the problem you're claiming to solve
+> > > with sg_ring (the ability to add extra scatterlists to the front or the
+> > > back of an existing one) is already solved with sg_chain, so the only
+> > > real advantage of sg_ring was that it contains explicit counts, which
+> > > sg_table (in -mm) also introduces.
+> >
+> > I just converted virtio using latest Linus for fair comparison
+>
+> Erm, but that's not really a fair comparison; you need the sg_table code
+> in
+>
+> git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git
+>
+> branch sg as well.
 
-> I have only done 3 drivers up to now. (out of something like 15)
-> 
-> I have seen 4 patterns of "sense" use.
-> 
-> 1. Driver allocated sense that is memcpy'ed in interrupt time to
->    cmnd->sense.
->    The sense is automatically fetched by controller and is
->    usually pre-mapped.
-> 
-> 2. dma-map of cmnd->sense prior to each command. similar to case-1
->    but DMAed directly into cmnd->sense buffer. (AutoSense)
+Actually, I think it's a wash.  Now callers need to set up an sg_table as 
+well.  It will save the count_sg() calls though.
 
-Not all of them are autosense. #2 is not related with autosense.
+> > , and it's still
+> > pretty ugly.  sg_ring needs more work to de-scsi it.  sg_table is almost
+> > sg_ring except it retains all the chaining warts.
+> >
+> > But we hit the same problems:
+> >
+> > 1) sg_chain loses information.  The clever chain packaging makes reading
+> > easy, but manipulation is severely limited.  You can append to your own
+> > chains by padding, but not someone elses.  This works for SCSI, but what
+> > about the rest of us?  And don't even think of joining mapped chains: it
+> > will almost work.
+>
+> OK, but realistically some of your criticisms are way outside of the
+> design intent.  Scatterlists (and now sg_chains) are the way the block
+> subsystem hands pages to its underlying block devices.
 
-I think that the point is that #1 and #2 might use as many sense
-buffers as can_queue. The differences are:
+James, scatterlists are used for more than the block subsystem.  I know you're 
+designing for that, but we can do better.
 
-- For #1, we can attach sense_buffer only when necessary.
+    Because a single sg_ring is trivially convertable to and from a 
+scatterlist *, the compatibility story is nice.  You can implement a 
+subsystem (say, the block layer) with sg_ring, and still hand out struct 
+scatterlist arrays for backwards compat: old code won't ask for v. long 
+scatterlist arrays anyway.
 
-- For #2, we always need to attach sense_buffer before queuecommand.
+    Now we have sg_chaining, we can actually convert complex sg_rings into sg 
+chains when someone asks, as my most recent patch does.  I think that's one 
+abstraction too many, but it provides a transition path.
 
+> There have never until now been any requirements to join already
+> dma_map_sg() converted scatterlists ... that would wreak havoc with the
+> way we reuse the list plus damage the idempotence of map/unmap.  What is
+> the use case you have for this?
 
-> 3. Synchronous request for sense, like the places I sent patches
->    for. Where cmnd is re-used to map the REQUEST_SENSE read.
-> 
-> 4. Do nothing and let scsi_error issue a request sense asynchronously.
-> 
-> What I did until now is, added a new API for case 1 - scsi_eh_cpy_sense(...) ,
-> and 3,4 are covered by the existing (new) APIs. Case-2 is hardest and I'll
-> fix it per-driver-case, like in iscsi it was very easy as it already have
-> a per command structure allocated.
+(This was, admittedly, a made-up example).
 
-> I have not yet converted the scsi midlayer to any new system but my plan
-> is:
-> 
-> Stage 1
-> 1. convert all drivers to some new/old API where:
->    Those drivers with case-2 above, that can DMA_FROM_DEVICE 
->    concurrently into more than one sense buffer, will change 
->    specifically, to pre-allocate a can_queue number of buffers.
+> > 2) sg_chain's end marker is only for reading non-dma elements, not for
+> > mapped chains, nor for writing into chains.  Plus it's a duplicate of the
+> > num arg, which is still passed around for efficiency.  (virtio had to
+> > implement count_sg() because I didn't want those two redundant num args).
+> >
+> > 3) By overloading struct scatterlist, it's invisible what code has been
+> > converted to chains, and which hasn't.  Too clever by half!
+>
+> No it's not ... that's the whole point.  Code not yet converted to use
+> the API accessors is by definition unable to use chaining.  Code
+> converted to use the accessors by design doesn't care (and so is
+> "converted to chains").
 
-scsi-ml needs more sense buffers than can_queue since
-scsi_finish_command uses sense_buffer after calling
-scsi_device_unbusy.
+But you've overloaded the type: what's the difference between:
+	/* Before conversion */
+	int foo(struct scatterlist *, int);
+And:
+	/* After conversion */
+	int foo(struct scatterlist *, int);
 
+You have to wade through the implementation to see the difference: does this 
+function take a "chained scatterlist" or an "array scatterlist"?
 
-> 2. Change mid-layer to:
->   a. Pre-allocate one dma-able sense buffer per Q.
->   b. copy sense out of above, directly into ULD's allocated sense
->      buffer which was put on cmnd->request->sense
->   c. Those very *few* requests that come without ULD allocated
->      sense, allocate one for them out of a mempool.
->      (All regular file-system ULDs allocate a sense buffer)
-> 
-> Stage 2
->  I think I can see a way how to shuffle the mid-layer post-sense processing
->  directly in copy-sense time. So in case ULD did not "request sense" the
->  buffer can be discarded. But I'm not 100% sure about that.
-> 
-> Let me write up a sketch of what I mean which will include 3 drivers
-> that demonstrate above cases, and the mid-layer changes.
-> Then we can discus it and see if it makes sense (;)) to every body.
-> But let me have time until tomorrow night for that.
+Then you add insult to injury by implementing sg_chain() *which doesn't handle 
+chained scatterlists!*.
 
-I see. I'll wait for your patches.
+> > sg_ring would not have required any change to existing drivers, just
+> > those that want to use long sg lists.  And then it's damn obvious which
+> > are which.
+>
+> Which, by definition, would have been pretty much all of them.
+
+But it would have started with none of them, and it would have been done over 
+time.  Eventually we might have had a flag day to remove raw scatterlist 
+arrays.
+
+> > 4) sg_chain missed a chance to combine all the relevent information (max,
+> > num, num_dma and the sg array). sg_table comes close, but you still can't
+> > join them (no max information, and even if there were, what if it's
+> > full?). Unlike sg_ring, it's unlikely to reduce bugs.
+>
+> sg_table is sg_chain ... they're incremental extensions of the same body
+> of work.
+
+Yes.
+
+> The only such example of a driver like that I know is the
+> crypto API and now your virtio.  Once we have the actual requirements
+> and then the API, I think the natural data structures will probably drop
+> out.
+
+ATA wants to chain sgs (Tejun cc'd).  It hasn't been practical to chain up 
+until now, but I'd say it's going to be more widely used now it is.
+
+Basically, sg_chain solves one problem: larger sg lists for scsi.  That's 
+fine, but I want to see better use of scatterlists everywhere in the kernel.
+
+sg_chains suck for manipulation, and AFAICT that's inherent.  Here, take a 
+look at the sg_ring conversion of scsi_alloc_sgtable and scsi_free_sgtable 
+and you can see why I'm unhappy with the sg_chain code:
+
+@@ -737,21 +745,41 @@ static inline unsigned int scsi_sgtable_
+ 	return index;
+ }
+ 
+-struct scatterlist *scsi_alloc_sgtable(struct scsi_cmnd *cmd, gfp_t gfp_mask)
++static void free_sgring(struct sg_ring *head)
+ {
+ 	struct scsi_host_sg_pool *sgp;
+-	struct scatterlist *sgl, *prev, *ret;
++	struct sg_ring *sg, *n;
++
++	/* Free any other entries in the ring. */
++	list_for_each_entry_safe(sg, n, &head->list, list) {
++		list_del(&sg->list);
++		sgp = scsi_sg_pools + scsi_sgtable_index(sg->max);
++		mempool_free(sg, sgp->pool);
++	}
++
++	/* Now free the head of the ring. */
++	BUG_ON(!list_empty(&head->list));
++
++	sgp = scsi_sg_pools + scsi_sgtable_index(head->max);
++	mempool_free(head, sgp->pool);
++}
++
++struct sg_ring *scsi_alloc_sgring(struct scsi_cmnd *cmd, unsigned int num,
++				  gfp_t gfp_mask)
++{
++	struct scsi_host_sg_pool *sgp;
++	struct sg_ring *sg, *ret;
+ 	unsigned int index;
+ 	int this, left;
+ 
+-	BUG_ON(!cmd->use_sg);
++	BUG_ON(!num);
+ 
+-	left = cmd->use_sg;
+-	ret = prev = NULL;
++	left = num;
++	ret = NULL;
+ 	do {
+ 		this = left;
+ 		if (this > SCSI_MAX_SG_SEGMENTS) {
+-			this = SCSI_MAX_SG_SEGMENTS - 1;
++			this = SCSI_MAX_SG_SEGMENTS;
+ 			index = SG_MEMPOOL_NR - 1;
+ 		} else
+ 			index = scsi_sgtable_index(this);
+@@ -760,32 +788,20 @@ struct scatterlist *scsi_alloc_sgtable(s
+ 
+ 		sgp = scsi_sg_pools + index;
+ 
+-		sgl = mempool_alloc(sgp->pool, gfp_mask);
+-		if (unlikely(!sgl))
++		sg = mempool_alloc(sgp->pool, gfp_mask);
++		if (unlikely(!sg))
+ 			goto enomem;
+ 
+-		sg_init_table(sgl, sgp->size);
++		sg_ring_init(sg, sgp->size - SCSI_SG_PAD);
+ 
+ 		/*
+-		 * first loop through, set initial index and return value
++		 * first loop through, set return value, otherwise
++		 * attach this to the tail.
+ 		 */
+ 		if (!ret)
+-			ret = sgl;
+-
+-		/*
+-		 * chain previous sglist, if any. we know the previous
+-		 * sglist must be the biggest one, or we would not have
+-		 * ended up doing another loop.
+-		 */
+-		if (prev)
+-			sg_chain(prev, SCSI_MAX_SG_SEGMENTS, sgl);
+-
+-		/*
+-		 * if we have nothing left, mark the last segment as
+-		 * end-of-list
+-		 */
+-		if (!left)
+-			sg_mark_end(&sgl[this - 1]);
++			ret = sg;
++		else
++			list_add_tail(&sg->list, &ret->list);
+ 
+ 		/*
+ 		 * don't allow subsequent mempool allocs to sleep, it would
+@@ -793,85 +809,21 @@ struct scatterlist *scsi_alloc_sgtable(s
+ 		 */
+ 		gfp_mask &= ~__GFP_WAIT;
+ 		gfp_mask |= __GFP_HIGH;
+-		prev = sgl;
+ 	} while (left);
+ 
+-	/*
+-	 * ->use_sg may get modified after dma mapping has potentially
+-	 * shrunk the number of segments, so keep a copy of it for free.
+-	 */
+-	cmd->__use_sg = cmd->use_sg;
+ 	return ret;
+ enomem:
+-	if (ret) {
+-		/*
+-		 * Free entries chained off ret. Since we were trying to
+-		 * allocate another sglist, we know that all entries are of
+-		 * the max size.
+-		 */
+-		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
+-		prev = ret;
+-		ret = &ret[SCSI_MAX_SG_SEGMENTS - 1];
+-
+-		while ((sgl = sg_chain_ptr(ret)) != NULL) {
+-			ret = &sgl[SCSI_MAX_SG_SEGMENTS - 1];
+-			mempool_free(sgl, sgp->pool);
+-		}
+-
+-		mempool_free(prev, sgp->pool);
+-	}
++	if (ret)
++		free_sgring(ret);
+ 	return NULL;
+ }
++EXPORT_SYMBOL(scsi_alloc_sgring);
+ 
+-EXPORT_SYMBOL(scsi_alloc_sgtable);
+-
+-void scsi_free_sgtable(struct scsi_cmnd *cmd)
++void scsi_free_sgring(struct scsi_cmnd *cmd)
+ {
+-	struct scatterlist *sgl = cmd->request_buffer;
+-	struct scsi_host_sg_pool *sgp;
+-
+-	/*
+-	 * if this is the biggest size sglist, check if we have
+-	 * chained parts we need to free
+-	 */
+-	if (cmd->__use_sg > SCSI_MAX_SG_SEGMENTS) {
+-		unsigned short this, left;
+-		struct scatterlist *next;
+-		unsigned int index;
+-
+-		left = cmd->__use_sg - (SCSI_MAX_SG_SEGMENTS - 1);
+-		next = sg_chain_ptr(&sgl[SCSI_MAX_SG_SEGMENTS - 1]);
+-		while (left && next) {
+-			sgl = next;
+-			this = left;
+-			if (this > SCSI_MAX_SG_SEGMENTS) {
+-				this = SCSI_MAX_SG_SEGMENTS - 1;
+-				index = SG_MEMPOOL_NR - 1;
+-			} else
+-				index = scsi_sgtable_index(this);
+-
+-			left -= this;
+-
+-			sgp = scsi_sg_pools + index;
+-
+-			if (left)
+-				next = sg_chain_ptr(&sgl[sgp->size - 1]);
+-
+-			mempool_free(sgl, sgp->pool);
+-		}
+-
+-		/*
+-		 * Restore original, will be freed below
+-		 */
+-		sgl = cmd->request_buffer;
+-		sgp = scsi_sg_pools + SG_MEMPOOL_NR - 1;
+-	} else
+-		sgp = scsi_sg_pools + scsi_sgtable_index(cmd->__use_sg);
+-
+-	mempool_free(sgl, sgp->pool);
++	free_sgring(cmd->sg);
+ }
+-
+-EXPORT_SYMBOL(scsi_free_sgtable);
++EXPORT_SYMBOL(scsi_free_sgring);
+ 
+ /*
+  * Function:    scsi_release_buffers()
+
+Hope that clarifies,
+Rusty.
