@@ -1,158 +1,84 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: improve queue balancing
-Date: Tue, 8 Jan 2008 14:07:57 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC6C9@ADPE2K703.adaptec.com>
-References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
- <jefxzqqeha.fsf@sykes.suse.de>
- <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE739@ADPE2K703.adaptec.com>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: Re: [PATCH] bsg : Add support for io vectors in bsg
+Date: Tue, 8 Jan 2008 17:09:18 -0500
+Message-ID: <20080108220918.GA9484@osc.edu>
+References: <Pine.LNX.4.64.0801042137350.7836@localhost> <200801050501.m0551LFB030667@mbox.iij4u.or.jp>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC6C9ADPE2K703adaptecc_"
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:48134 "EHLO mail-gw3.adaptec.com"
+Received: from quasar.osc.edu ([192.148.249.15]:45464 "EHLO quasar.osc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751149AbYAHWIB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 8 Jan 2008 17:08:01 -0500
-Received: from ADPE2K701.adaptec.com (adpe2k701.adaptec.com [10.25.8.25])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id BDF702215EC
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Jan 2008 14:08:00 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40FE739@ADPE2K703.adaptec.com>
-Content-Language: en-US
+	id S1751337AbYAHWJT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 8 Jan 2008 17:09:19 -0500
+Content-Disposition: inline
+In-Reply-To: <200801050501.m0551LFB030667@mbox.iij4u.or.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: deepakrc@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC6C9ADPE2K703adaptecc_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+tomof@acm.org wrote on Sat, 05 Jan 2008 14:01 +0900:
+> From: Deepak Colluru <deepakrc@gmail.com>
+> Subject: [PATCH] bsg : Add support for io vectors in bsg
+> Date: Fri, 4 Jan 2008 21:47:34 +0530 (IST)
+> 
+> > From: Deepak Colluru <deepakrc@gmail.com>
+> > 
+> > Add support for io vectors in bsg.
+> > 
+> > Signed-off-by: Deepak Colluru <deepakrc@gmail.com>
+> > ---
+> >   bsg.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++++---
+> >   1 file changed, 49 insertions(+), 3 deletions(-)
+> 
+> Thanks, but I have to NACK this.
+> 
+> You can find the discussion about bsg io vector support and a similar
+> patch in linux-scsi archive. I have no plan to support it since it
+> needs the compat hack.
 
-The adapter queue is divided up equally to all the arrays to prevent comman=
-d starvation to any individual array. On the other hand, physical targets a=
-re only granted a queue depth of one each. The code prior to this patch use=
-d to deal with the incremental discovery of targets, but the driver knows h=
-ow many arrays are present prior to the scan so this knowledge is used to g=
-enerate a better estimate for the queue depth.
+You may recall this is one of the patches I need to use bsg with OSD
+devices.  OSDs overload the SCSI buffer model to put mulitple fields
+in dataout and datain.  Some is user data, but some is more
+logically created by a library.  Memcpying in userspace to wedge all
+the segments into a single buffer is painful, and is required both
+on outgoing and incoming data buffers.
 
-Remove the capability of 'physical=3D0' from preventing access to the class=
- of adapters that have the RAID/SCSI mode of operation since none of the ph=
-ysicals on the SCSI channel are candidates ever for an array.
+There are two approaches to add iovec to bsg.
 
-As always, the user can override this default queue depth policy by making =
-the appropriate adjustments utilizing sysfs.
+1.  Define a new sg_iovec_v4 that uses constant width types.  Both
+    32- and 64-bit userspace would hand arrays of this to the kernel.
 
-This attached patch is against current scsi-misc-2.6.
+    struct sg_v4_iovec {
+	    __u64 iov_base;
+	    __u32 iov_len;
+	    __u32 __pad1;
+    };
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments (inline gets damaged, use attachment).
+    Old patch here:  http://article.gmane.org/gmane.linux.scsi/30461/
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
- drivers/scsi/aacraid/linit.c |   23 +++++++++++++----------
- 1 file changed, 13 insertions(+), 10 deletions(-)
+2.  Do as Deepak has done, using the existing sg_iovec, but then
+    also work around the compat issue.  Old v3 sg_iovec is:
 
---- a/drivers/scsi/aacraid/linit.c      2008-01-08 16:38:32.783320829 -0500
-+++ b/drivers/scsi/aacraid/linit.c      2008-01-08 16:55:07.805050564 -0500
-@@ -401,16 +401,14 @@
+    typedef struct sg_iovec /* same structure as used by readv() Linux system */
+    {                       /* call. It defines one scatter-gather element. */
+	void __user *iov_base;      /* Starting address  */
+	size_t iov_len;             /* Length in bytes  */
+    } sg_iovec_t;
 
- static int aac_slave_configure(struct scsi_device *sdev)
- {
-+       struct aac_dev *aac =3D (struct aac_dev *)sdev->host->hostdata;
-        if ((sdev->type =3D=3D TYPE_DISK) &&
--                       (sdev_channel(sdev) !=3D CONTAINER_CHANNEL)) {
-+                       (sdev_channel(sdev) !=3D CONTAINER_CHANNEL) &&
-+                       (!aac->raid_scsi_mode || (sdev_channel(sdev) !=3D 2=
-))) {
-                if (expose_physicals =3D=3D 0)
-                        return -ENXIO;
--               if (expose_physicals < 0) {
--                       struct aac_dev *aac =3D
--                               (struct aac_dev *)sdev->host->hostdata;
--                       if (!aac->raid_scsi_mode || (sdev_channel(sdev) !=
-=3D 2))
--                               sdev->no_uld_attach =3D 1;
--               }
-+               if (expose_physicals < 0)
-+                       sdev->no_uld_attach =3D 1;
-        }
-        if (sdev->tagged_supported && (sdev->type =3D=3D TYPE_DISK) &&
-                        (sdev_channel(sdev) =3D=3D CONTAINER_CHANNEL)) {
-@@ -419,6 +417,7 @@
-                unsigned num_lsu =3D 0;
-                unsigned num_one =3D 0;
-                unsigned depth;
-+               unsigned cid;
+    Old patch here:  http://article.gmane.org/gmane.linux.scsi/30460/
 
-                /*
-                 * Firmware has an individual device recovery time typicall=
-y
-@@ -426,11 +425,15 @@
-                 */
-                if (sdev->timeout < (45 * HZ))
-                        sdev->timeout =3D 45 * HZ;
-+               for (cid =3D 0; cid < aac->maximum_num_containers; ++cid)
-+                       if (aac->fsa_dev[cid].valid)
-+                               ++num_lsu;
-                __shost_for_each_device(dev, host) {
-                        if (dev->tagged_supported && (dev->type =3D=3D TYPE=
-_DISK) &&
+I took another look at the compat approach, to see if it is feasible
+to keep the compat handling somewhere else, without the use of #ifdef
+CONFIG_COMPAT and size-comparison code inside bsg.c.  I don't see how.
+The use of iovec is within a write operation on a char device.  It's
+not amenable to a compat_sys_ or a .compat_ioctl approach.
 
--                               (sdev_channel(dev) =3D=3D CONTAINER_CHANNEL=
-))
--                               ++num_lsu;
--                       else
-+                               (sdev_channel(dev) =3D=3D CONTAINER_CHANNEL=
-)) {
-+                               if (!aac->fsa_dev[sdev_id(dev)].valid)
-+                                       ++num_lsu;
-+                       } else
-                                ++num_one;
-                }
-                if (num_lsu =3D=3D 0)
+I'm partial to #1 because the use of architecture-independent fields
+matches the rest of struct sg_io_v4.  But if you don't want to have
+another iovec type in the kernel, could we do #2 but just return
+-EINVAL if the need for compat is detected?  I.e. change
+dout_iovec_count to dout_iovec_length and do the math?
 
-Sincerely -- Mark Salyzyn
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC6C9ADPE2K703adaptecc_
-Content-Type: application/octet-stream; name="aacraid_queue_depth.patch"
-Content-Description: aacraid_queue_depth.patch
-Content-Disposition: attachment; filename="aacraid_queue_depth.patch";
-	size=1685; creation-date="Tue, 08 Jan 2008 13:55:42 GMT";
-	modification-date="Tue, 08 Jan 2008 13:55:42 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDgtMDEt
-MDggMTY6Mzg6MzIuNzgzMzIwODI5IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
-bml0LmMJMjAwOC0wMS0wOCAxNjo1NTowNy44MDUwNTA1NjQgLTA1MDAKQEAgLTQwMSwxNiArNDAx
-LDE0IEBACiAKIHN0YXRpYyBpbnQgYWFjX3NsYXZlX2NvbmZpZ3VyZShzdHJ1Y3Qgc2NzaV9kZXZp
-Y2UgKnNkZXYpCiB7CisJc3RydWN0IGFhY19kZXYgKmFhYyA9IChzdHJ1Y3QgYWFjX2RldiAqKXNk
-ZXYtPmhvc3QtPmhvc3RkYXRhOwogCWlmICgoc2Rldi0+dHlwZSA9PSBUWVBFX0RJU0spICYmCi0J
-CQkoc2Rldl9jaGFubmVsKHNkZXYpICE9IENPTlRBSU5FUl9DSEFOTkVMKSkgeworCQkJKHNkZXZf
-Y2hhbm5lbChzZGV2KSAhPSBDT05UQUlORVJfQ0hBTk5FTCkgJiYKKwkJCSghYWFjLT5yYWlkX3Nj
-c2lfbW9kZSB8fCAoc2Rldl9jaGFubmVsKHNkZXYpICE9IDIpKSkgewogCQlpZiAoZXhwb3NlX3Bo
-eXNpY2FscyA9PSAwKQogCQkJcmV0dXJuIC1FTlhJTzsKLQkJaWYgKGV4cG9zZV9waHlzaWNhbHMg
-PCAwKSB7Ci0JCQlzdHJ1Y3QgYWFjX2RldiAqYWFjID0KLQkJCQkoc3RydWN0IGFhY19kZXYgKilz
-ZGV2LT5ob3N0LT5ob3N0ZGF0YTsKLQkJCWlmICghYWFjLT5yYWlkX3Njc2lfbW9kZSB8fCAoc2Rl
-dl9jaGFubmVsKHNkZXYpICE9IDIpKQotCQkJCXNkZXYtPm5vX3VsZF9hdHRhY2ggPSAxOwotCQl9
-CisJCWlmIChleHBvc2VfcGh5c2ljYWxzIDwgMCkKKwkJCXNkZXYtPm5vX3VsZF9hdHRhY2ggPSAx
-OwogCX0KIAlpZiAoc2Rldi0+dGFnZ2VkX3N1cHBvcnRlZCAmJiAoc2Rldi0+dHlwZSA9PSBUWVBF
-X0RJU0spICYmCiAJCQkoc2Rldl9jaGFubmVsKHNkZXYpID09IENPTlRBSU5FUl9DSEFOTkVMKSkg
-ewpAQCAtNDE5LDYgKzQxNyw3IEBACiAJCXVuc2lnbmVkIG51bV9sc3UgPSAwOwogCQl1bnNpZ25l
-ZCBudW1fb25lID0gMDsKIAkJdW5zaWduZWQgZGVwdGg7CisJCXVuc2lnbmVkIGNpZDsKIAogCQkv
-KgogCQkgKiBGaXJtd2FyZSBoYXMgYW4gaW5kaXZpZHVhbCBkZXZpY2UgcmVjb3ZlcnkgdGltZSB0
-eXBpY2FsbHkKQEAgLTQyNiwxMSArNDI1LDE1IEBACiAJCSAqLwogCQlpZiAoc2Rldi0+dGltZW91
-dCA8ICg0NSAqIEhaKSkKIAkJCXNkZXYtPnRpbWVvdXQgPSA0NSAqIEhaOworCQlmb3IgKGNpZCA9
-IDA7IGNpZCA8IGFhYy0+bWF4aW11bV9udW1fY29udGFpbmVyczsgKytjaWQpCisJCQlpZiAoYWFj
-LT5mc2FfZGV2W2NpZF0udmFsaWQpCisJCQkJKytudW1fbHN1OwogCQlfX3Nob3N0X2Zvcl9lYWNo
-X2RldmljZShkZXYsIGhvc3QpIHsKIAkJCWlmIChkZXYtPnRhZ2dlZF9zdXBwb3J0ZWQgJiYgKGRl
-di0+dHlwZSA9PSBUWVBFX0RJU0spICYmCi0JCQkJKHNkZXZfY2hhbm5lbChkZXYpID09IENPTlRB
-SU5FUl9DSEFOTkVMKSkKLQkJCQkrK251bV9sc3U7Ci0JCQllbHNlCisJCQkJKHNkZXZfY2hhbm5l
-bChkZXYpID09IENPTlRBSU5FUl9DSEFOTkVMKSkgeworCQkJCWlmICghYWFjLT5mc2FfZGV2W3Nk
-ZXZfaWQoZGV2KV0udmFsaWQpCisJCQkJCSsrbnVtX2xzdTsKKwkJCX0gZWxzZQogCQkJCSsrbnVt
-X29uZTsKIAkJfQogCQlpZiAobnVtX2xzdSA9PSAwKQo=
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F40DC6C9ADPE2K703adaptecc_--
+		-- Pete
