@@ -1,43 +1,85 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
- of	that provided by the block layer
-Date: Wed, 09 Jan 2008 14:13:50 +0900
-Message-ID: <4784580E.3060000@gmail.com>
-References: <1199138168.3110.12.camel@localhost.localdomain>	 <47842D29.8020509@gmail.com> <1199852673.3534.76.camel@localhost.localdomain>
+From: Dave Young <hidave.darkstar@gmail.com>
+Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
+Date: Wed, 9 Jan 2008 14:13:16 +0800
+Message-ID: <20080109061316.GA3249@darkstar.te-china.tietoenator.com>
+References: <20080107020944.GA3637@darkstar.te-china.tietoenator.com>
+	<20080107084528.GA8365@suse.de>
+	<200801070101.15168.david-b@pacbell.net>
+	<478227D5.8050402@s5r6.in-berlin.de>
+	<20080107154404.GA10880@suse.de>
+	<47825DC1.3090102@s5r6.in-berlin.de>
+	<20080107172009.GA25943@suse.de>
+	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
+	<20080108224837.GA19623@suse.de>
+	<a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.180]:44122 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750813AbYAIFOY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 00:14:24 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so176320wah.23
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2008 21:14:24 -0800 (PST)
-In-Reply-To: <1199852673.3534.76.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: Greg KH <gregkh@suse.de>
+Cc: a.zummo@towertech.it, dbrownell@users.sourceforge.net, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, jarkao2@gmail.com, spi-devel-general@lists.sourceforge.net, David Brownell <david-b@pacbell.net>, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, krh@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 
-James Bottomley wrote:
->>  Also, DMA alignment at
->> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
->> commands with variable length response.  :-(
+On Wed, Jan 09, 2008 at 09:32:48AM +0800, Dave Young wrote:
+> On Jan 9, 2008 6:48 AM, Greg KH <gregkh@suse.de> wrote:
+> > On Tue, Jan 08, 2008 at 03:05:10PM +0800, Dave Young wrote:
+> > > On Jan 8, 2008 1:20 AM, Greg KH <gregkh@suse.de> wrote:
+> > > > On Mon, Jan 07, 2008 at 06:13:37PM +0100, Stefan Richter wrote:
+> > > > > It's already in the driver core to the most part.  It remains to be seen
+> > > > > what is less complicated in the end:  Transparent mutex-protected list
+> > > > > accesses provided by driver core (requires the iterator), or all the
+> > > > > necessary locking done by the drivers themselves (requires some more
+> > > > > lock-taking but perhaps fewer lock instances overall in the drivers, and
+> > > > > respective redefinitions and documentation of the driver core API).
+> > > >
+> > > > I favor changing the driver core api and doing this kind of thing there.
+> > > > It keeps the drivers simpler and should hopefully make their lives
+> > > > easier.
+> > >
+> > > What about this?
+> > >
+> > > #define class_for_each_dev(pos, head, member) \
+> > >         for (mutex_lock(&(container_of(head, struct class, devices))->mutex), po
+> > > s = list_entry((head)->next, typeof(*pos), member); \
+> > >         prefetch(pos->member.next), &pos->member != (head) ? 1 : (mutex_unlock(&
+> > > (container_of(head, struct class, devices))->mutex), 0); \
+> > >         pos = list_entry(pos->member.next, typeof(*pos), member))
+> >
+> I'm wrong, it's same as before indeed.
 > 
-> OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
-> so this drain, I assume is only a word long?  Given the word alignment
-> requirements of ATA doesn't this still mean it's only draining up to the
-> word boundary anyway (so the code is still correct)?
+> > Eeek, just make the thing a function please, where you pass the iterator
+> > function in, like the driver core has (driver_for_each_device)
+> 
+> Ok, so need a new member of knode_class, I will update the patch later.
+> Thanks.
 
-Patch is acked but not merged yet.
+Withdraw my post, sorry :)
 
-http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=commit;h=6cd22a0febc74bebe52d58eb22271b8770892a2d
+For now the mutex patch, I will only use the mutex to lock the devices list and write an iterater function. 
+Most of the iterating is for finding some device in the list, so maybe need a match function just like drivers do?
 
-The full function can be read from the following.  It's
-ata_sg_setup_extra().
+Regards
+dave
+> 
+> >
+> > thanks,
+> >
+> > greg k-h
+> >
 
-http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=d763c072e6cefc724ea24cb68a7adf47b340f054;hb=6cd22a0febc74bebe52d58eb22271b8770892a2d
-
--- 
-tejun
+-------------------------------------------------------------------------
+Check out the new SourceForge.net Marketplace.
+It's the best place to buy or sell services for
+just about anything Open Source.
+http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
