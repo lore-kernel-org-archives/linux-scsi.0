@@ -1,74 +1,62 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Wed, 9 Jan 2008 09:32:48 +0800
-Message-ID: <a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com>
-References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
-	<20080107020944.GA3637@darkstar.te-china.tietoenator.com>
-	<20080107084528.GA8365@suse.de>
-	<200801070101.15168.david-b@pacbell.net>
-	<478227D5.8050402@s5r6.in-berlin.de> <20080107154404.GA10880@suse.de>
-	<47825DC1.3090102@s5r6.in-berlin.de> <20080107172009.GA25943@suse.de>
-	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
-	<20080108224837.GA19623@suse.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
+ of	that provided by the block layer
+Date: Wed, 09 Jan 2008 11:10:49 +0900
+Message-ID: <47842D29.8020509@gmail.com>
+References: <1199138168.3110.12.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080108224837.GA19623@suse.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Greg KH <gregkh@suse.de>
-Cc: a.zummo@towertech.it, dbrownell@users.sourceforge.net, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, jarkao2@gmail.com, spi-devel-general@lists.sourceforge.net, David Brownell <david-b@pacbell.net>, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, krh@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.183]:20577 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751065AbYAICLJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 21:11:09 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so94844wah.23
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2008 18:11:08 -0800 (PST)
+In-Reply-To: <1199138168.3110.12.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 
-On Jan 9, 2008 6:48 AM, Greg KH <gregkh@suse.de> wrote:
-> On Tue, Jan 08, 2008 at 03:05:10PM +0800, Dave Young wrote:
-> > On Jan 8, 2008 1:20 AM, Greg KH <gregkh@suse.de> wrote:
-> > > On Mon, Jan 07, 2008 at 06:13:37PM +0100, Stefan Richter wrote:
-> > > > It's already in the driver core to the most part.  It remains to be seen
-> > > > what is less complicated in the end:  Transparent mutex-protected list
-> > > > accesses provided by driver core (requires the iterator), or all the
-> > > > necessary locking done by the drivers themselves (requires some more
-> > > > lock-taking but perhaps fewer lock instances overall in the drivers, and
-> > > > respective redefinitions and documentation of the driver core API).
-> > >
-> > > I favor changing the driver core api and doing this kind of thing there.
-> > > It keeps the drivers simpler and should hopefully make their lives
-> > > easier.
-> >
-> > What about this?
-> >
-> > #define class_for_each_dev(pos, head, member) \
-> >         for (mutex_lock(&(container_of(head, struct class, devices))->mutex), po
-> > s = list_entry((head)->next, typeof(*pos), member); \
-> >         prefetch(pos->member.next), &pos->member != (head) ? 1 : (mutex_unlock(&
-> > (container_of(head, struct class, devices))->mutex), 0); \
-> >         pos = list_entry(pos->member.next, typeof(*pos), member))
->
-I'm wrong, it's same as before indeed.
+James Bottomley wrote:
+> ATA requires that all DMA transfers begin and end on word boundaries.
+> Because of this, a large amount of machinery grew up in ide to adjust
+> scatterlists on this basis.  However, as of 2.5, the block layer has a
+> dma_alignment variable which ensures both the beginning and length of a
+> DMA transfer are aligned on the dma_alignment boundary.  Although the
+> block layer does adjust the beginning of the transfer to ensure this
+> happens, it doesn't actually adjust the length, it merely makes sure
+> that space is allocated for transfers beyond the declared length.  The
+> upshot of this is that scatterlists may be padded to any size between
+> the actual length and the length adjusted to the dma_alignment safely
+> knowing that memory is allocated in this region.
+> 
+> Right at the moment, SCSI takes the default dma_aligment which is on a
+> 512 byte boundary.  Note that this aligment only applies to transfers
+> coming in from user space.  However, since all kernel allocations are
+> automatically aligned on a minimum of 32 byte boundaries, it is safe to
+> adjust them in this manner as well.
+> 
+> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> 
+> ---
+> 
+> This also fixes a current panic in libsas with SATAPI devices.  I was
+> trying to trace a bad interaction between the libata padding and the new
+> sglist code which was the root cause, and ended up concluding that the
+> whole libata padding thing was redundant.
+> 
+> In a future improvement, I think we can relax SCSI dma_alignemnt (it's
+> causing almost every user space command to be copied instead of directly
+> passed through) and allow devices and transports to build up their own
+> requirements instead.
 
-> Eeek, just make the thing a function please, where you pass the iterator
-> function in, like the driver core has (driver_for_each_device)
+Great but this intersects with currently queued and pending changes for
+libata-dev#upstream and needs to be merged.  Also, DMA alignment at
+block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
+commands with variable length response.  :-(
 
-Ok, so need a new member of knode_class, I will update the patch later.
-Thanks.
-
->
-> thanks,
->
-> greg k-h
->
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+-- 
+tejun
