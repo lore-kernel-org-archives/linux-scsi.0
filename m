@@ -1,41 +1,42 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-pm] Re: [RFC] Implementation of SCSI dynamic power
- management
-Date: Wed, 9 Jan 2008 10:25:27 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0801091022100.4468-100000@iolanthe.rowland.org>
-References: <20080108212430.GB5050@ucw.cz>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Number of devices that SCSI can support
+Date: Wed, 9 Jan 2008 08:36:01 -0700
+Message-ID: <20080109153601.GR16309@parisc-linux.org>
+References: <404714.86520.qm@web43145.mail.sp1.yahoo.com> <20080109022233.GM16309@parisc-linux.org> <1199891152.3493.6.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:40717 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752008AbYAIPZ2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 10:25:28 -0500
-In-Reply-To: <20080108212430.GB5050@ucw.cz>
+Received: from palinux.external.hp.com ([192.25.206.14]:35111 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752381AbYAIPgD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 10:36:03 -0500
+Content-Disposition: inline
+In-Reply-To: <1199891152.3493.6.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Oliver Neukum <oliver@neukum.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Vinay Venkataraghavan <raghavanvinay@yahoo.com>, linux-scsi@vger.kernel.org
 
-On Tue, 8 Jan 2008, Pavel Machek wrote:
-
-> > In fact suspend methods already do take an argument specifying the
-> > reason they were called.  It wouldn't be hard to add a couple of extra 
-> > PM_EVENT_* values for manual suspend and autosuspend.  The problem is 
-> > that resume methods don't take a corresponding argument.
+On Wed, Jan 09, 2008 at 09:05:52AM -0600, James Bottomley wrote:
+> On Tue, 2008-01-08 at 19:22 -0700, Matthew Wilcox wrote:
+> > On Tue, Jan 08, 2008 at 04:55:46PM -0800, Vinay Venkataraghavan wrote:
+> > > Is there a limit on the number of devices that SCSI supports. In other words, I have a QLogic HBA card, and I am connecting to a SAN which has 64 targets. 
+> > 
+> > I've personally had over five hundred LUNs.  You shouldn't be hitting a
+> > limit here.
 > 
-> Well, you could store the value in struct device or something.
+> I believe the largest test that's been run was the old OSDL CGL
+> workgroup ... they went up to 4096.
 > 
-> There's other problem: if autosuspend is != NULL, you know device
-> supports autosuspend.
-> 
-> If you call existing suspend(PMSG_AUTOSUSPEND), and driver does not
-> support it, it will crash and burn.
+> However, LUN support depends on the driver and HBA parameters as well
+> (some choose to have arbitrary limits).
 
-That's right.  The problem doesn't arise in SCSI because there only the
-sd driver supports suspend at all -- and now it supports autosuspend as
-well.  In USB I had to add an extra "supports_autosuspend" bitflag to
-the usb_driver structure.
+I was using a qlogic HBA for my tests, so I don't think this is the
+problem -- although the original poster claims to have 64 targets, and I
+had only one target with 128 luns (attached 4 times).
 
-Alan Stern
-
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
