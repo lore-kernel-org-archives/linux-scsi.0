@@ -1,62 +1,35 @@
-From: Tejun Heo <htejun@gmail.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
- of	that provided by the block layer
-Date: Wed, 09 Jan 2008 11:10:49 +0900
-Message-ID: <47842D29.8020509@gmail.com>
-References: <1199138168.3110.12.camel@localhost.localdomain>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: Number of devices that SCSI can support
+Date: Tue, 8 Jan 2008 19:22:33 -0700
+Message-ID: <20080109022233.GM16309@parisc-linux.org>
+References: <404714.86520.qm@web43145.mail.sp1.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wa-out-1112.google.com ([209.85.146.183]:20577 "EHLO
-	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751065AbYAICLJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 21:11:09 -0500
-Received: by wa-out-1112.google.com with SMTP id v27so94844wah.23
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2008 18:11:08 -0800 (PST)
-In-Reply-To: <1199138168.3110.12.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:58781 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752205AbYAICWe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 21:22:34 -0500
+Content-Disposition: inline
+In-Reply-To: <404714.86520.qm@web43145.mail.sp1.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
+To: Vinay Venkataraghavan <raghavanvinay@yahoo.com>
+Cc: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
-> ATA requires that all DMA transfers begin and end on word boundaries.
-> Because of this, a large amount of machinery grew up in ide to adjust
-> scatterlists on this basis.  However, as of 2.5, the block layer has a
-> dma_alignment variable which ensures both the beginning and length of a
-> DMA transfer are aligned on the dma_alignment boundary.  Although the
-> block layer does adjust the beginning of the transfer to ensure this
-> happens, it doesn't actually adjust the length, it merely makes sure
-> that space is allocated for transfers beyond the declared length.  The
-> upshot of this is that scatterlists may be padded to any size between
-> the actual length and the length adjusted to the dma_alignment safely
-> knowing that memory is allocated in this region.
-> 
-> Right at the moment, SCSI takes the default dma_aligment which is on a
-> 512 byte boundary.  Note that this aligment only applies to transfers
-> coming in from user space.  However, since all kernel allocations are
-> automatically aligned on a minimum of 32 byte boundaries, it is safe to
-> adjust them in this manner as well.
-> 
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-> 
-> ---
-> 
-> This also fixes a current panic in libsas with SATAPI devices.  I was
-> trying to trace a bad interaction between the libata padding and the new
-> sglist code which was the root cause, and ended up concluding that the
-> whole libata padding thing was redundant.
-> 
-> In a future improvement, I think we can relax SCSI dma_alignemnt (it's
-> causing almost every user space command to be copied instead of directly
-> passed through) and allow devices and transports to build up their own
-> requirements instead.
+On Tue, Jan 08, 2008 at 04:55:46PM -0800, Vinay Venkataraghavan wrote:
+> Is there a limit on the number of devices that SCSI supports. In other words, I have a QLogic HBA card, and I am connecting to a SAN which has 64 targets. 
 
-Great but this intersects with currently queued and pending changes for
-libata-dev#upstream and needs to be merged.  Also, DMA alignment at
-block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
-commands with variable length response.  :-(
+I've personally had over five hundred LUNs.  You shouldn't be hitting a
+limit here.
+
+> I am running 2.6.9-42. 
+
+That sounds like a Red Hat Enterprise kernel.  Perhaps you should
+contact them for support?
 
 -- 
-tejun
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
