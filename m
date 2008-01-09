@@ -1,102 +1,69 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: [PATCH 1/1] aacraid: big endian issues
-Date: Tue, 8 Jan 2008 19:57:51 -0800
-Message-ID: <da824cf30801081957w19014917pd03db9b09828acd@mail.gmail.com>
-References: <20071031150216.88cecc21.sfr@canb.auug.org.au>
-	 <20071101173221.2e1fea42.sfr@canb.auug.org.au>
-	 <jefxzqqeha.fsf@sykes.suse.de>
-	 <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F40DC65D@ADPE2K703.adaptec.com>
-	 <da824cf30801081317q68516370x4a46f9eb80583d28@mail.gmail.com>
-	 <532ABFBDAAC3A34EB12EBA6CEC2838F40DC6A3@ADPE2K703.adaptec.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
+	of	that provided by the block layer
+Date: Tue, 08 Jan 2008 22:24:32 -0600
+Message-ID: <1199852673.3534.76.camel@localhost.localdomain>
+References: <1199138168.3110.12.camel@localhost.localdomain>
+	 <47842D29.8020509@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:16640 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751938AbYAID55 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 22:57:57 -0500
-Received: from zps76.corp.google.com (zps76.corp.google.com [172.25.146.76])
-	by smtp-out.google.com with ESMTP id m093vqi0015447
-	for <linux-scsi@vger.kernel.org>; Wed, 9 Jan 2008 03:57:52 GMT
-Received: from rv-out-0910.google.com (rvbk20.prod.google.com [10.140.87.20])
-	by zps76.corp.google.com with ESMTP id m093vpic022630
-	for <linux-scsi@vger.kernel.org>; Tue, 8 Jan 2008 19:57:51 -0800
-Received: by rv-out-0910.google.com with SMTP id k20so77628rvb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2008 19:57:51 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40DC6A3@ADPE2K703.adaptec.com>
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <47842D29.8020509@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Jan 8, 2008 1:37 PM, Salyzyn, Mark <Mark_Salyzyn@adaptec.com> wrote:
-> I've always assumed that byte swapping of constants would be optimized where a variable would not :-)
 
-definitely...I understood that. It just seemed odd usage.
+On Wed, 2008-01-09 at 11:10 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> > ATA requires that all DMA transfers begin and end on word boundaries.
+> > Because of this, a large amount of machinery grew up in ide to adjust
+> > scatterlists on this basis.  However, as of 2.5, the block layer has a
+> > dma_alignment variable which ensures both the beginning and length of a
+> > DMA transfer are aligned on the dma_alignment boundary.  Although the
+> > block layer does adjust the beginning of the transfer to ensure this
+> > happens, it doesn't actually adjust the length, it merely makes sure
+> > that space is allocated for transfers beyond the declared length.  The
+> > upshot of this is that scatterlists may be padded to any size between
+> > the actual length and the length adjusted to the dma_alignment safely
+> > knowing that memory is allocated in this region.
+> > 
+> > Right at the moment, SCSI takes the default dma_aligment which is on a
+> > 512 byte boundary.  Note that this aligment only applies to transfers
+> > coming in from user space.  However, since all kernel allocations are
+> > automatically aligned on a minimum of 32 byte boundaries, it is safe to
+> > adjust them in this manner as well.
+> > 
+> > Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+> > 
+> > ---
+> > 
+> > This also fixes a current panic in libsas with SATAPI devices.  I was
+> > trying to trace a bad interaction between the libata padding and the new
+> > sglist code which was the root cause, and ended up concluding that the
+> > whole libata padding thing was redundant.
+> > 
+> > In a future improvement, I think we can relax SCSI dma_alignemnt (it's
+> > causing almost every user space command to be copied instead of directly
+> > passed through) and allow devices and transports to build up their own
+> > requirements instead.
+> 
+> Great but this intersects with currently queued and pending changes for
+> libata-dev#upstream and needs to be merged. 
 
->
-> I have confirmed in assembler output of the compiler that constant
-> merely become byte reversed constants optimized or no in at least
-> one architectural case.
+That's OK, I can do the merge .. that's what git is for.
 
-Thanks!
-And apologies, I didn't mean to cause you additional work since I
-was just curious.
+>  Also, DMA alignment at
+> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
+> commands with variable length response.  :-(
 
-> I have *not* confirmed that a variable byte reversal requires processing overhead, as one could possibly expect the compiler to instead optimize by byte reversing the constant when comparing. However, I will guarantee you that if optimization is turned off in the compiler that such an optimization will not take place...
+OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
+so this drain, I assume is only a word long?  Given the word alignment
+requirements of ATA doesn't this still mean it's only draining up to the
+word boundary anyway (so the code is still correct)?
 
-:)
+James
 
->
-> I do not think this turns into a readability issue in either case
-> and view this as a simple cosmetic coding precaution much
-> like likely()/unlikely() offers hints to the compiler on code intent...
 
-Agreed - it's not a readability issue.
-
-thanks,
-grant
-
->
-> Sincerely -- Mark Salyzyn
->
->
-> > -----Original Message-----
-> > From: Grant Grundler [mailto:grundler@google.com]
-> > Sent: Tuesday, January 08, 2008 4:17 PM
-> > To: Salyzyn, Mark
-> > Cc: linux-scsi@vger.kernel.org
-> > Subject: Re: [PATCH 1/1] aacraid: big endian issues
-> >
-> > On Jan 8, 2008 12:48 PM, Salyzyn, Mark
-> > <Mark_Salyzyn@adaptec.com> wrote:
-> > > Big endian systems issues discovered in the aacraid driver.
-> >
-> > ...
-> > --- a/drivers/scsi/aacraid/comminit.c   2008-01-08
-> > 15:32:28.329810853 -0500
-> > +++ b/drivers/scsi/aacraid/comminit.c   2008-01-08
-> > 15:37:35.633163607 -0500
-> > @@ -301,10 +301,10 @@
-> >         if ((!aac_adapter_sync_cmd(dev, GET_ADAPTER_PROPERTIES,
-> >                 0, 0, 0, 0, 0, 0, status+0, status+1,
-> > status+2, NULL, NULL)) &&
-> >                         (status[0] == 0x00000001)) {
-> > -               if (status[1] & AAC_OPT_NEW_COMM_64)
-> > +               if (status[1] & le32_to_cpu(AAC_OPT_NEW_COMM_64))
-> > ...
-> >
-> > Why apply le32_to_cpu() to the constant instead of the variable?
-> > On systems were le32_to_cpu() is doing something, can gcc or
-> > preprocessor optimize the constant?
-> > I've always assumed it could not but that might be wrong.
-> >
-> > thanks,
-> > grant
->
