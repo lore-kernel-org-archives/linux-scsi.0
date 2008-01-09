@@ -1,84 +1,134 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Wed, 9 Jan 2008 14:39:23 +0800
-Message-ID: <a8e1da0801082239h198c4d45i5cd7cf183472a166@mail.gmail.com>
-References: <20080107020944.GA3637@darkstar.te-china.tietoenator.com>
-	<478227D5.8050402@s5r6.in-berlin.de> <20080107154404.GA10880@suse.de>
-	<47825DC1.3090102@s5r6.in-berlin.de> <20080107172009.GA25943@suse.de>
-	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
-	<20080108224837.GA19623@suse.de>
-	<a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com>
-	<20080109061316.GA3249@darkstar.te-china.tietoenator.com>
-	<a8e1da0801082237x37d2a56eqee6db19017499dbc@mail.gmail.com>
+From: "Jon Watte" <jwatte@gmail.com>
+Subject: AHCI finds disks; no /dev/sd inodes bound?
+Date: Tue, 8 Jan 2008 23:40:12 -0800
+Message-ID: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <a8e1da0801082237x37d2a56eqee6db19017499dbc@mail.gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from py-out-1112.google.com ([64.233.166.179]:15656 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751097AbYAIHkN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 02:40:13 -0500
+Received: by py-out-1112.google.com with SMTP id u52so236505pyb.10
+        for <linux-scsi@vger.kernel.org>; Tue, 08 Jan 2008 23:40:12 -0800 (PST)
 Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Greg KH <gregkh@suse.de>
-Cc: a.zummo@towertech.it, krh@redhat.com, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, spi-devel-general@lists.sourceforge.net, David Brownell <david-b@pacbell.net>, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Jan 9, 2008 2:37 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
->
-> On Jan 9, 2008 2:13 PM, Dave Young <hidave.darkstar@gmail.com> wrote:
-> >
-> > On Wed, Jan 09, 2008 at 09:32:48AM +0800, Dave Young wrote:
-> > > On Jan 9, 2008 6:48 AM, Greg KH <gregkh@suse.de> wrote:
-> > > > On Tue, Jan 08, 2008 at 03:05:10PM +0800, Dave Young wrote:
-> > > > > On Jan 8, 2008 1:20 AM, Greg KH <gregkh@suse.de> wrote:
-> > > > > > On Mon, Jan 07, 2008 at 06:13:37PM +0100, Stefan Richter wrote:
-> > > > > > > It's already in the driver core to the most part.  It remains to be seen
-> > > > > > > what is less complicated in the end:  Transparent mutex-protected list
-> > > > > > > accesses provided by driver core (requires the iterator), or all the
-> > > > > > > necessary locking done by the drivers themselves (requires some more
-> > > > > > > lock-taking but perhaps fewer lock instances overall in the drivers, and
-> > > > > > > respective redefinitions and documentation of the driver core API).
-> > > > > >
-> > > > > > I favor changing the driver core api and doing this kind of thing there.
-> > > > > > It keeps the drivers simpler and should hopefully make their lives
-> > > > > > easier.
-> > > > >
-> > > > > What about this?
-> > > > >
-> > > > > #define class_for_each_dev(pos, head, member) \
-> > > > >         for (mutex_lock(&(container_of(head, struct class, devices))->mutex), po
-> > > > > s = list_entry((head)->next, typeof(*pos), member); \
-> > > > >         prefetch(pos->member.next), &pos->member != (head) ? 1 : (mutex_unlock(&
-> > > > > (container_of(head, struct class, devices))->mutex), 0); \
-> > > > >         pos = list_entry(pos->member.next, typeof(*pos), member))
-> > > >
-> > > I'm wrong, it's same as before indeed.
-> > >
-> > > > Eeek, just make the thing a function please, where you pass the iterator
-> > > > function in, like the driver core has (driver_for_each_device)
-> > >
-> > > Ok, so need a new member of knode_class, I will update the patch later.
-> > > Thanks.
-> >
-> > Withdraw my post, sorry :)
-> >
-> > For now the mutex patch, I will only use the mutex to lock the devices list and write an iterater function.
-> > Most of the iterating is for finding some device in the list, so maybe need a match function just like drivers do?
-> >
->
-> Drop one more mail address of David Brownell in cc list.
-> Sorry for this, david
->
-gmail web client make me crazy.
+I ran out of PATA ports, and figured I'd use the un-used SATA ports on
+the motherboard of the current machine (Intel G33/ICH9 based) to
+expand storage that has run out again (like storage usually does). I
+shut down the machine, put in the disks, booted up, made sure the BIOS
+said enhanced/AHCI mode, and gave it a spin. Unfortunately, while the
+AHCI system sees the disks, they appear to not get mapped to any block
+devices in /dev, so I can't actually partition and mount them. What am
+I missing, to make the devices bind to (I assume) /dev/sda and
+/dev/sdb, or similar? (They also don't bind to /dev/sgX).
 
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+I've tried to google for this particular problem, but because I'm not
+using a specific distribution, all I'm getting is various information
+about how to write SCSI subsystem modules, or how to use tools when
+the device binding has already happened -- nothing about what makes
+that happen, and what's missing on my machine to make it so. (I'm
+assuming it's something I'm missing in my init scripts here -- but
+that assumption could be wrong, too)
+
+Here is the output from dmesg that has to do with AHCI (before it is
+PATA output; after it is 1394 output).
+
+ahci 0000:00:1f.2: version 2.2
+ACPI: PCI Interrupt 0000:00:1f.2[B] -> GSI 22 (level, low) -> IRQ 19
+ahci 0000:00:1f.2: AHCI 0001.0200 32 slots 4 ports 3 Gbps 0x33 impl SATA mode
+ahci 0000:00:1f.2: flags: 64bit ncq stag pm led clo pmp pio slum part
+PCI: Setting latency timer of device 0000:00:1f.2 to 64
+scsi0 : ahci
+scsi1 : ahci
+scsi2 : ahci
+scsi3 : ahci
+scsi4 : ahci
+scsi5 : ahci
+ata1: SATA max UDMA/133 cmd 0xf8822900 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata2: SATA max UDMA/133 cmd 0xf8822980 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata3: DUMMY
+ata4: DUMMY
+ata5: SATA max UDMA/133 cmd 0xf8822b00 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata6: SATA max UDMA/133 cmd 0xf8822b80 ctl 0x00000000 bmdma 0x00000000 irq 221
+ata1: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata1.00: ATA-7: ST3500630SV, 3.ACH, max UDMA/133
+ata1.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata1.00: configured for UDMA/133
+ata2: SATA link up 3.0 Gbps (SStatus 123 SControl 300)
+ata2.00: ATA-7: WDC WD5000ABYS-01TNA0, 12.01C01, max UDMA/133
+ata2.00: 976773168 sectors, multi 0: LBA48 NCQ (depth 31/32)
+ata2.00: configured for UDMA/133
+ata5: SATA link down (SStatus 0 SControl 300)
+ata6: SATA link down (SStatus 0 SControl 300)
+scsi 0:0:0:0: Direct-Access     ATA      ST3500630SV      3.AC PQ: 0 ANSI: 5
+scsi 1:0:0:0: Direct-Access     ATA      WDC WD5000ABYS-0 12.0 PQ: 0 ANSI: 5
+
+
+Here is the output of # ls -l /sys/bus/scsi/devices
+total 0
+lrwxrwxrwx    1 root     root            0 Jan  8 22:48 0:0:0:0 ->
+../../../devices/pci0000:00/0000:00:1f.2/host0/target0:0:0/0:0:0:0/
+lrwxrwxrwx    1 root     root            0 Jan  8 22:48 1:0:0:0 ->
+../../../devices/pci0000:00/0000:00: 1f.2/host1/target1:0:0/1:0:0:0/
+
+And the output of # ls -l
+/sys/devices/pci0000\:00/0000\:00\:1f.2/host0/target0\:0\:0/0\:0\:0\:0/
+total 0
+lrwxrwxrwx    1 root     root            0 Jan  8 22:48 bus ->
+../../../../../../bus/scsi/
+--w-------    1 root     root         4096 Jan  8 22:48 delete
+-r--r--r--    1 root     root         4096 Jan  8 22:48 device_blocked
+-r--r--r--    1 root     root         4096 Jan  8 22:48 iocounterbits
+-r--r--r--    1 root     root         4096 Jan  8 22:48 iodone_cnt
+-r--r--r--    1 root     root         4096 Jan  8 22:48 ioerr_cnt
+-r--r--r--    1 root     root         4096 Jan  8 22:48 iorequest_cnt
+-r--r--r--    1 root     root         4096 Jan  8 22:48 modalias
+-r--r--r--    1 root     root         4096 Jan  8 22:48 model
+drwxr-xr-x    2 root     root            0 Jan  8 22:28 power/
+-rw-r--r--    1 root     root         4096 Jan  8 22:48 queue_depth
+-r--r--r--    1 root     root         4096 Jan  8 22:48 queue_type
+--w-------    1 root     root         4096 Jan  8 22:48 rescan
+-r--r--r--    1 root     root         4096 Jan  8 22:48 rev
+lrwxrwxrwx    1 root     root            0 Jan  8 22:48
+scsi_device:0:0:0:0 -> ../../../../../../class/scsi_device/0:0:0:0/
+-r--r--r--    1 root     root         4096 Jan  8 22:48 scsi_level
+-rw-r--r--    1 root     root         4096 Jan  8 22:48 state
+lrwxrwxrwx    1 root     root            0 Jan  8 22:48 subsystem ->
+../../../../../../bus/scsi/
+-rw-r--r--    1 root     root         4096 Jan  8 22:48 timeout
+-r--r--r--    1 root     root         4096 Jan  8 22:48 type
+-rw-r--r--    1 root     root         4096 Jan  8 22:48 uevent
+-r--r--r--    1 root     root         4096 Jan  8 22:48 vendor
+
+
+NOTE: there is no "dev" entry for this device, so there's apparently
+no mapped inode in /dev.
+
+I have been running a home server for about 10 years (it started out
+as a Pentium 120). Back then, "distributions" weren't really all that
+fancy. This server has undergone many hardware and software upgrades,
+but only ever the minimum to make it work at each time. Currently,
+it's running kernel 2.6.22, but /dev/ has inodes from the 2.2 or 2.4
+days, and rc scripts are whatever I've cobbled together. There are a
+myriad services on the machine, many of which family and friends
+depend on, and I fear that trying to migrate it all (including a large
+storage array) to some "cooked" distribution would take days and be
+very disruptive.
+
+Any help or pointers to self-help would be appreciated!
+
+Cheers,
+
+                   / h+
+
+--
+Americans might object: there is no way we would sacrifice our living
+standards for the benefit of people in the rest of the world.
+Nevertheless, whether we get there willingly or not, we shall soon
+have lower consumption rates, because our present rates are
+unsustainable.
