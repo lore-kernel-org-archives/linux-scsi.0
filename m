@@ -1,49 +1,45 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: Number of devices that SCSI can support
-Date: Wed, 9 Jan 2008 07:49:33 -0800
-Message-ID: <20080109154933.GC29564@plap3.qlogic.org>
-References: <404714.86520.qm@web43145.mail.sp1.yahoo.com> <20080109022233.GM16309@parisc-linux.org> <1199891152.3493.6.camel@localhost.localdomain> <20080109153601.GR16309@parisc-linux.org>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [RFC] Implementation of SCSI dynamic power management
+Date: Wed, 9 Jan 2008 17:11:32 +0100
+Message-ID: <200801091711.33394.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0801071244180.2748-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:14603 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751260AbYAIPtj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 10:49:39 -0500
+Received: from smtp-out001.kontent.com ([81.88.40.215]:51245 "EHLO
+	smtp-out001.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751149AbYAIQK7 convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 11:10:59 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0801071244180.2748-100000@iolanthe.rowland.org>
 Content-Disposition: inline
-In-Reply-To: <20080109153601.GR16309@parisc-linux.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vinay Venkataraghavan <raghavanvinay@yahoo.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-On Wed, 09 Jan 2008, Matthew Wilcox wrote:
+Am Montag, 7. Januar 2008 20:42:23 schrieb Alan Stern:
+> When all the devices under a host are suspended, the LLD is informed=20
+> (via a new "autosuspend" method in the host template) so that it can=20
+> put the host adapter in a low-power state. =A0Likewise, a new=20
+> "autoresume" method is called when the host adapter needs to return t=
+o=20
+> full power. =A0An implementation of these methods for the usb-storage=
+=20
+> driver will be posted in a followup patch.
 
-> On Wed, Jan 09, 2008 at 09:05:52AM -0600, James Bottomley wrote:
-> > On Tue, 2008-01-08 at 19:22 -0700, Matthew Wilcox wrote:
-> > > On Tue, Jan 08, 2008 at 04:55:46PM -0800, Vinay Venkataraghavan wrote:
-> > > > Is there a limit on the number of devices that SCSI supports. In other words, I have a QLogic HBA card, and I am connecting to a SAN which has 64 targets. 
-> > > 
-> > > I've personally had over five hundred LUNs.  You shouldn't be hitting a
-> > > limit here.
-> > 
-> > I believe the largest test that's been run was the old OSDL CGL
-> > workgroup ... they went up to 4096.
-> > 
-> > However, LUN support depends on the driver and HBA parameters as well
-> > (some choose to have arbitrary limits).
-> 
-> I was using a qlogic HBA for my tests, so I don't think this is the
-> problem -- although the original poster claims to have 64 targets, and I
-> had only one target with 128 luns (attached 4 times).
-> 
-> -- 
-> Intel are signing my paycheques ... these opinions are still mine
-> "Bill, look, we understand that you're interested in selling us this
-> operating system, but compare it to ours.  We can't possibly take such
-> a retrograde step."
+This has an interesting implication. As the storage driver can share
+a device with in principle any other usb driver, we must audit all usb
+drivers if we wish to adopt this patch.
+All a device's interfaces must be resumed when the storage interface
+is resumed. To resume a storage device no memory must be allocated
+because that could deadlock.
 
-Not sure what's going on as well, perhaps some logs could help... But
-the inbox qla2xxx driver in RHEL4 set's an HBA's scsi_host->max_id
-count to 512 (also verified with several test rings), so there
-shouldn't be a problem handling 64 distinct targets (FC ports).
+	Regards
+		Oliver
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
