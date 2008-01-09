@@ -1,75 +1,46 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
 Subject: Re: AHCI finds disks; no /dev/sd inodes bound?
-Date: Thu, 10 Jan 2008 00:03:59 +0100
-Message-ID: <478552DF.1050203@s5r6.in-berlin.de>
-References: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com> <p738x2zosmd.fsf@bingen.suse.de> <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com> <1199899766.3493.20.camel@localhost.localdomain> <20080109174945.GB15346@one.firstfloor.org> <4785138A.4000809@s5r6.in-berlin.de> <4785304A.60109@gmail.com> <20080109205850.GU16309@parisc-linux.org> <47853FA7.9050506@s5r6.in-berlin.de> <20080109222308.GE15612@one.firstfloor.org>
+Date: Thu, 10 Jan 2008 00:16:15 +0100
+Message-ID: <478555BF.1010103@s5r6.in-berlin.de>
+References: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com> <p738x2zosmd.fsf@bingen.suse.de> <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com> <1199899766.3493.20.camel@localhost.localdomain> <20080109174945.GB15346@one.firstfloor.org> <4785138A.4000809@s5r6.in-berlin.de> <4785304A.60109@gmail.com> <20080109205850.GU16309@parisc-linux.org> <47853FA7.9050506@s5r6.in-berlin.de> <20080109222308.GE15612@one.firstfloor.org> <478552DF.1050203@s5r6.in-berlin.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:55387 "EHLO
+Received: from einhorn.in-berlin.de ([192.109.42.8]:55803 "EHLO
 	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751112AbYAIXEL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 18:04:11 -0500
-In-Reply-To: <20080109222308.GE15612@one.firstfloor.org>
+	with ESMTP id S1752750AbYAIXQW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 18:16:22 -0500
+In-Reply-To: <478552DF.1050203@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andi Kleen <andi@firstfloor.org>
 Cc: Matthew Wilcox <matthew@wil.cx>, Jon Watte <jwatte@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-Andi Kleen wrote:
-> On Wed, Jan 09, 2008 at 10:41:59PM +0100, Stefan Richter wrote:
->> However, this further obfuscates the fact that libata uses Linux' SCSI
->> midlayer and highlevel.  Which is a bad thing.  For example, there are
-> 
-> People are not interested in how libata is implemented internally.
-> They just want their SATA interfaces to work.
-> 
-> Kconfig is also not an educational facility or high level
-> design description of the code, but a pragmatic tool to get the job
-> done.
+Stefan Richter wrote:
+> The Kconfig menu layouts, prompts, and help texts are there to inform/
+> "educate"/ guide the user when configuring the build environment, with
+> the goal that he safely and efficiently gets to a working software
+> configuration.
 
-I did not talk about education or design decription.  I did talk about
-appropriately showing what the Kconfig options do.
+It might have been not entirely clear from my earlier postings, but I
+(and others) actually made alternative suggestions how to improve the
+menus.  Namely, split the SCSI menu and get to the following order of
+prompts:
 
-Kconfig is the tool to configure the Linux build environment before
-building the program.
+	"Do you have HDDs?"
+	"(Then you need this option here, except in this and that very
+	special case.)"
 
-In particular, we are talking about how to present the configuration of
-the Linux ATA component, which happens
-  - to have a build-time dependence on the Linux SCSI midlayer and
-  - to be not very useful at runtime if certain Linux SCSI highlevel
-    components aren't present as well.
+	"Do you have an IDE or SATA controller?"
 
-The Kconfig menu layouts, prompts, and help texts are there to inform/
-"educate"/ guide the user when configuring the build environment, with
-the goal that he safely and efficiently gets to a working software
-configuration.
+	"I see your attention is beginning to slip, but let me ask one
+	more thing --- do you have one of those SCSI controllers? No?
+	Thought	so."
 
-If some "internals" of the implementation are not entirely invisible to
-users at run-time, then we should provide information about them.  Or
-change the implementation so that these internals become truly invisible
-at runtime use, if that is preferable, all things considered.
-
-Furthermore, people who use Kconfig are _not_ people who "just want
-their SATA interfaces to work".  These are specifically people who need
-to or want to create an own configuration before build time, for what
-ever reason. /These/ are the people to which the Kconfig menus and texts
-must be tailored for.
-
-People who just want their SATA interfaces to work _and_ cannot or don't
-want to spend time with configuring the kernel build environment can be
-served to.  We give them ready-made .config files or kernels.
-
-
-Or in short:
-
-Setting BLK_DEV_SD=y does not mean "make my disk work".  It means
-"enable building one of the program parts which are necessary to make my
-disk work".  And however hard you try, you can't transform it to truly
-take on the former meaning.  Therefore better stay true to the actual
-meaning.
+No need to use the buggy and conceptually problematic "select" keyword
+anywhere.
 -- 
 Stefan Richter
--=====-==--- ---= -=--=
+-=====-==--- ---= -=-=-
 http://arcgraph.de/sr/
