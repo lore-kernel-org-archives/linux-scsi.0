@@ -1,40 +1,52 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Number of devices that SCSI can support
-Date: Wed, 09 Jan 2008 09:05:52 -0600
-Message-ID: <1199891152.3493.6.camel@localhost.localdomain>
-References: <404714.86520.qm@web43145.mail.sp1.yahoo.com>
-	 <20080109022233.GM16309@parisc-linux.org>
+Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
+	of	that provided by the block layer
+Date: Wed, 09 Jan 2008 09:13:54 -0600
+Message-ID: <1199891634.3493.9.camel@localhost.localdomain>
+References: <1199138168.3110.12.camel@localhost.localdomain>
+	 <47842D29.8020509@gmail.com>
+	 <1199852673.3534.76.camel@localhost.localdomain>
+	 <4784580E.3060000@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35221 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751746AbYAIPF5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 10:05:57 -0500
-In-Reply-To: <20080109022233.GM16309@parisc-linux.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4784580E.3060000@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Vinay Venkataraghavan <raghavanvinay@yahoo.com>, linux-scsi@vger.kernel.org
 
 
-On Tue, 2008-01-08 at 19:22 -0700, Matthew Wilcox wrote:
-> On Tue, Jan 08, 2008 at 04:55:46PM -0800, Vinay Venkataraghavan wrote:
-> > Is there a limit on the number of devices that SCSI supports. In other words, I have a QLogic HBA card, and I am connecting to a SAN which has 64 targets. 
+On Wed, 2008-01-09 at 14:13 +0900, Tejun Heo wrote:
+> James Bottomley wrote:
+> >>  Also, DMA alignment at
+> >> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
+> >> commands with variable length response.  :-(
+> > 
+> > OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
+> > so this drain, I assume is only a word long?  Given the word alignment
+> > requirements of ATA doesn't this still mean it's only draining up to the
+> > word boundary anyway (so the code is still correct)?
 > 
-> I've personally had over five hundred LUNs.  You shouldn't be hitting a
-> limit here.
+> Patch is acked but not merged yet.
+> 
+> http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=commit;h=6cd22a0febc74bebe52d58eb22271b8770892a2d
+> 
+> The full function can be read from the following.  It's
+> ata_sg_setup_extra().
+> 
+> http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=d763c072e6cefc724ea24cb68a7adf47b340f054;hb=6cd22a0febc74bebe52d58eb22271b8770892a2d
 
-I believe the largest test that's been run was the old OSDL CGL
-workgroup ... they went up to 4096.
+OK, but that patch was sent to the mailing list on 4 Jan ... five days
+after this one.  It's a little hard to take unposted patches into
+account ...
 
-However, LUN support depends on the driver and HBA parameters as well
-(some choose to have arbitrary limits).
-
-So, firstly, if the inquiry strings appear (as in you see a scsiX:X:X:64
-and above in dmesg) then I'd look at udev issues.  If the inquiry
-strings don't appear, it's probably a device or driver programmed limit.
+It's a fairly comprehensive merge clash ... where is this drain patch on
+the upstream track?  because currently ipr and aic94xx panic the system
+without the dma padding removal (I just figured -rc6 was a bit late for
+major surgery like this, but I was planning a backport if it stood up in
+2.6.24).
 
 James
 
