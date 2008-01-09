@@ -1,53 +1,41 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] libata: eliminate the home grown dma padding in favour
-	of	that provided by the block layer
-Date: Wed, 09 Jan 2008 09:13:54 -0600
-Message-ID: <1199891634.3493.9.camel@localhost.localdomain>
-References: <1199138168.3110.12.camel@localhost.localdomain>
-	 <47842D29.8020509@gmail.com>
-	 <1199852673.3534.76.camel@localhost.localdomain>
-	 <4784580E.3060000@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [linux-pm] Re: [RFC] Implementation of SCSI dynamic power
+ management
+Date: Wed, 9 Jan 2008 10:25:27 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801091022100.4468-100000@iolanthe.rowland.org>
+References: <20080108212430.GB5050@ucw.cz>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4784580E.3060000@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Jeff Garzik <jeff@garzik.org>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:40717 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1752008AbYAIPZ2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 10:25:28 -0500
+In-Reply-To: <20080108212430.GB5050@ucw.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Oliver Neukum <oliver@neukum.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>, SCSI development list <linux-scsi@vger.kernel.org>
 
+On Tue, 8 Jan 2008, Pavel Machek wrote:
 
-On Wed, 2008-01-09 at 14:13 +0900, Tejun Heo wrote:
-> James Bottomley wrote:
-> >>  Also, DMA alignment at
-> >> block layer isn't enough for ATA.  ATA needs drain buffers for ATAPI
-> >> commands with variable length response.  :-(
-> > 
-> > OK, where is this in the libata code?  The dma_pad size is only 4 bytes,
-> > so this drain, I assume is only a word long?  Given the word alignment
-> > requirements of ATA doesn't this still mean it's only draining up to the
-> > word boundary anyway (so the code is still correct)?
+> > In fact suspend methods already do take an argument specifying the
+> > reason they were called.  It wouldn't be hard to add a couple of extra 
+> > PM_EVENT_* values for manual suspend and autosuspend.  The problem is 
+> > that resume methods don't take a corresponding argument.
 > 
-> Patch is acked but not merged yet.
+> Well, you could store the value in struct device or something.
 > 
-> http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=commit;h=6cd22a0febc74bebe52d58eb22271b8770892a2d
+> There's other problem: if autosuspend is != NULL, you know device
+> supports autosuspend.
 > 
-> The full function can be read from the following.  It's
-> ata_sg_setup_extra().
-> 
-> http://git.kernel.org/?p=linux/kernel/git/tj/libata-dev.git;a=blob;f=drivers/ata/libata-core.c;h=d763c072e6cefc724ea24cb68a7adf47b340f054;hb=6cd22a0febc74bebe52d58eb22271b8770892a2d
+> If you call existing suspend(PMSG_AUTOSUSPEND), and driver does not
+> support it, it will crash and burn.
 
-OK, but that patch was sent to the mailing list on 4 Jan ... five days
-after this one.  It's a little hard to take unposted patches into
-account ...
+That's right.  The problem doesn't arise in SCSI because there only the
+sd driver supports suspend at all -- and now it supports autosuspend as
+well.  In USB I had to add an extra "supports_autosuspend" bitflag to
+the usb_driver structure.
 
-It's a fairly comprehensive merge clash ... where is this drain patch on
-the upstream track?  because currently ipr and aic94xx panic the system
-without the dma padding removal (I just figured -rc6 was a bit late for
-major surgery like this, but I was planning a backport if it stood up in
-2.6.24).
-
-James
-
+Alan Stern
 
