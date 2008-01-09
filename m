@@ -1,46 +1,81 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: AHCI finds disks; no /dev/sd inodes bound?
-Date: Thu, 10 Jan 2008 00:16:15 +0100
-Message-ID: <478555BF.1010103@s5r6.in-berlin.de>
-References: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com> <p738x2zosmd.fsf@bingen.suse.de> <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com> <1199899766.3493.20.camel@localhost.localdomain> <20080109174945.GB15346@one.firstfloor.org> <4785138A.4000809@s5r6.in-berlin.de> <4785304A.60109@gmail.com> <20080109205850.GU16309@parisc-linux.org> <47853FA7.9050506@s5r6.in-berlin.de> <20080109222308.GE15612@one.firstfloor.org> <478552DF.1050203@s5r6.in-berlin.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] sym53_8xx_2: fixes two bugs related to chip reset
+Date: Wed, 09 Jan 2008 17:51:43 -0600
+Message-ID: <1199922703.3493.76.camel@localhost.localdomain>
+References: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from einhorn.in-berlin.de ([192.109.42.8]:55803 "EHLO
-	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752750AbYAIXQW (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 18:16:22 -0500
-In-Reply-To: <478552DF.1050203@s5r6.in-berlin.de>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:35081 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754296AbYAIXvw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 18:51:52 -0500
+In-Reply-To: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: Matthew Wilcox <matthew@wil.cx>, Jon Watte <jwatte@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
+To: Krzysztof Helt <krzysztof.h1@poczta.fm>
+Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
 
-Stefan Richter wrote:
-> The Kconfig menu layouts, prompts, and help texts are there to inform/
-> "educate"/ guide the user when configuring the build environment, with
-> the goal that he safely and efficiently gets to a working software
-> configuration.
 
-It might have been not entirely clear from my earlier postings, but I
-(and others) actually made alternative suggestions how to improve the
-menus.  Namely, split the SCSI menu and get to the following order of
-prompts:
+On Wed, 2008-01-09 at 23:59 +0100, Krzysztof Helt wrote:
+> From: Krzysztof Helt <krzysztof.h1@wp.pl>
+> 
+> This patch fixes two bugs pointed by James Bottomley:
+> 
+>  1. the if (!sym_data->io_reset).  That variable is only ever filled
+>     by a stack based completion.  If we find it non empty it means
+>     this code has been entered twice and we have a severe problem,
+>     so that should just become a BUG_ON(!sym_data->io_reset).
+>  2. sym_data->io_reset should be set to NULL before the routine is
+>     exited otherwise the PCI recovery code could end up completing
+>     what will be a bogus pointer into the stack.
+> 
+> Big thanks to James Bottomley for help with the patch.
+> 
+> Signed-off-by: Krzysztof Helt <krzysztof.h1@w.pl>
 
-	"Do you have HDDs?"
-	"(Then you need this option here, except in this and that very
-	special case.)"
+Well done .. there's actually just one problem remaining:
 
-	"Do you have an IDE or SATA controller?"
+> ---
+> I do not know if I understood correctly all James' tips.
+> 
+> diff -urp linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c
+> --- linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-12-23 20:39:44.000000000 +0100
+> +++ linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-01-09 22:22:30.000000000 +0100
+> @@ -609,22 +609,22 @@ static int sym_eh_handler(int op, char *
+>  	 */
+>  #define WAIT_FOR_PCI_RECOVERY	35
+>  	if (pci_channel_offline(pdev)) {
+> -		struct completion *io_reset;
+>  		int finished_reset = 0;
+>  		init_completion(&eh_done);
+>  		spin_lock_irq(shost->host_lock);
+>  		/* Make sure we didn't race */
+>  		if (pci_channel_offline(pdev)) {
+> -			if (!sym_data->io_reset)
+> -				sym_data->io_reset = &eh_done;
+> -			io_reset = sym_data->io_reset;
+> +			BUG_ON(!sym_data->io_reset);
+> +			sym_data->io_reset = &eh_done;
+>  		} else {
+>  			finished_reset = 1;
+>  		}
+>  		spin_unlock_irq(shost->host_lock);
+>  		if (!finished_reset)
+> -			finished_reset = wait_for_completion_timeout(io_reset,
+> +			finished_reset = wait_for_completion_timeout
+> +						(sym_data->io_reset,
+>  						WAIT_FOR_PCI_RECOVERY*HZ);
+> +		sym_data->io_reset = NULL;
 
-	"I see your attention is beginning to slip, but let me ask one
-	more thing --- do you have one of those SCSI controllers? No?
-	Thought	so."
+This has to be cleared under the host_lock to forestall the (tiny) race
+where the pci recovery code checks the value of sym_data->io_reset, we
+change it to null and then the pci recovery code completes a NULL
+pointer.
 
-No need to use the buggy and conceptually problematic "select" keyword
-anywhere.
--- 
-Stefan Richter
--=====-==--- ---= -=-=-
-http://arcgraph.de/sr/
+Other than this one problem, the code looks fine.
+
+James
+
+
