@@ -1,81 +1,75 @@
-From: Krzysztof Helt <krzysztof.h1@poczta.fm>
-Subject: [PATCH] sym53_8xx_2: fixes two bugs related to chip reset
-Date: Wed, 9 Jan 2008 23:59:44 +0100
-Message-ID: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: AHCI finds disks; no /dev/sd inodes bound?
+Date: Thu, 10 Jan 2008 00:03:59 +0100
+Message-ID: <478552DF.1050203@s5r6.in-berlin.de>
+References: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com> <p738x2zosmd.fsf@bingen.suse.de> <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com> <1199899766.3493.20.camel@localhost.localdomain> <20080109174945.GB15346@one.firstfloor.org> <4785138A.4000809@s5r6.in-berlin.de> <4785304A.60109@gmail.com> <20080109205850.GU16309@parisc-linux.org> <47853FA7.9050506@s5r6.in-berlin.de> <20080109222308.GE15612@one.firstfloor.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp35.poczta.interia.pl ([80.48.65.35]:21878 "EHLO
-	smtp4.poczta.interia.pl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1753363AbYAIW4Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 17:56:24 -0500
+Received: from einhorn.in-berlin.de ([192.109.42.8]:55387 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751112AbYAIXEL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 18:04:11 -0500
+In-Reply-To: <20080109222308.GE15612@one.firstfloor.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: matthew@wil.cx
+To: Andi Kleen <andi@firstfloor.org>
+Cc: Matthew Wilcox <matthew@wil.cx>, Jon Watte <jwatte@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-From: Krzysztof Helt <krzysztof.h1@wp.pl>
+Andi Kleen wrote:
+> On Wed, Jan 09, 2008 at 10:41:59PM +0100, Stefan Richter wrote:
+>> However, this further obfuscates the fact that libata uses Linux' SCSI
+>> midlayer and highlevel.  Which is a bad thing.  For example, there are
+> 
+> People are not interested in how libata is implemented internally.
+> They just want their SATA interfaces to work.
+> 
+> Kconfig is also not an educational facility or high level
+> design description of the code, but a pragmatic tool to get the job
+> done.
 
-This patch fixes two bugs pointed by James Bottomley:
+I did not talk about education or design decription.  I did talk about
+appropriately showing what the Kconfig options do.
 
- 1. the if (!sym_data->io_reset).  That variable is only ever filled
-    by a stack based completion.  If we find it non empty it means
-    this code has been entered twice and we have a severe problem,
-    so that should just become a BUG_ON(!sym_data->io_reset).
- 2. sym_data->io_reset should be set to NULL before the routine is
-    exited otherwise the PCI recovery code could end up completing
-    what will be a bogus pointer into the stack.
+Kconfig is the tool to configure the Linux build environment before
+building the program.
 
-Big thanks to James Bottomley for help with the patch.
+In particular, we are talking about how to present the configuration of
+the Linux ATA component, which happens
+  - to have a build-time dependence on the Linux SCSI midlayer and
+  - to be not very useful at runtime if certain Linux SCSI highlevel
+    components aren't present as well.
 
-Signed-off-by: Krzysztof Helt <krzysztof.h1@w.pl>
+The Kconfig menu layouts, prompts, and help texts are there to inform/
+"educate"/ guide the user when configuring the build environment, with
+the goal that he safely and efficiently gets to a working software
+configuration.
 
----
-I do not know if I understood correctly all James' tips.
+If some "internals" of the implementation are not entirely invisible to
+users at run-time, then we should provide information about them.  Or
+change the implementation so that these internals become truly invisible
+at runtime use, if that is preferable, all things considered.
 
-diff -urp linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c
---- linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-12-23 20:39:44.000000000 +0100
-+++ linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-01-09 22:22:30.000000000 +0100
-@@ -609,22 +609,22 @@ static int sym_eh_handler(int op, char *
- 	 */
- #define WAIT_FOR_PCI_RECOVERY	35
- 	if (pci_channel_offline(pdev)) {
--		struct completion *io_reset;
- 		int finished_reset = 0;
- 		init_completion(&eh_done);
- 		spin_lock_irq(shost->host_lock);
- 		/* Make sure we didn't race */
- 		if (pci_channel_offline(pdev)) {
--			if (!sym_data->io_reset)
--				sym_data->io_reset = &eh_done;
--			io_reset = sym_data->io_reset;
-+			BUG_ON(!sym_data->io_reset);
-+			sym_data->io_reset = &eh_done;
- 		} else {
- 			finished_reset = 1;
- 		}
- 		spin_unlock_irq(shost->host_lock);
- 		if (!finished_reset)
--			finished_reset = wait_for_completion_timeout(io_reset,
-+			finished_reset = wait_for_completion_timeout
-+						(sym_data->io_reset,
- 						WAIT_FOR_PCI_RECOVERY*HZ);
-+		sym_data->io_reset = NULL;
- 		if (!finished_reset)
- 			return SCSI_FAILED;
- 	}
-@@ -1879,7 +1879,6 @@ static void sym2_io_resume(struct pci_de
- 	spin_lock_irq(shost->host_lock);
- 	if (sym_data->io_reset)
- 		complete_all(sym_data->io_reset);
--	sym_data->io_reset = NULL;
- 	spin_unlock_irq(shost->host_lock);
- }
- 
+Furthermore, people who use Kconfig are _not_ people who "just want
+their SATA interfaces to work".  These are specifically people who need
+to or want to create an own configuration before build time, for what
+ever reason. /These/ are the people to which the Kconfig menus and texts
+must be tailored for.
+
+People who just want their SATA interfaces to work _and_ cannot or don't
+want to spend time with configuring the kernel build environment can be
+served to.  We give them ready-made .config files or kernels.
 
 
-----------------------------------------------------------------------
-Sprawdz, ktore komorki sa najmodniejsze!
-Kliknij >>> http://link.interia.pl/f1cd4
+Or in short:
 
+Setting BLK_DEV_SD=y does not mean "make my disk work".  It means
+"enable building one of the program parts which are necessary to make my
+disk work".  And however hard you try, you can't transform it to truly
+take on the former meaning.  Therefore better stay true to the actual
+meaning.
+-- 
+Stefan Richter
+-=====-==--- ---= -=--=
+http://arcgraph.de/sr/
