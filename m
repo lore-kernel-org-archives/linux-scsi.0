@@ -1,116 +1,214 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: Linux scsi / usb-mass-storage and HP printer
-	cardreader bug + fix
-Date: Wed, 9 Jan 2008 14:10:46 -0800
-Message-ID: <20080109221046.GD14375@one-eyed-alien.net>
-References: <47854051.1060307@hhs.nl>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 0/7] sg_ring: a ring of scatterlist arrays
+Date: Wed, 09 Jan 2008 16:10:37 -0600
+Message-ID: <1199916637.3493.72.camel@localhost.localdomain>
+References: <200712191731.26512.rusty@rustcorp.com.au>
+	 <200801071538.58875.rusty@rustcorp.com.au>
+	 <1199720904.3126.24.camel@localhost.localdomain>
+	 <200801081139.14748.rusty@rustcorp.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0934803818=="
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <47854051.1060307@hhs.nl>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Hans de Goede <j.w.r.degoede@hhs.nl>
-Cc: Guillaume Bedot <littletux@zarb.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, fedora-kernel-list@redhat.com
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:46368 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753884AbYAIWKy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 17:10:54 -0500
+In-Reply-To: <200801081139.14748.rusty@rustcorp.com.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rusty Russell <rusty@rustcorp.com.au>
+Cc: Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Tejun Heo <htejun@gmail.com>
 
 
---===============0934803818==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="wLAMOaPNJ0fu1fTG"
-Content-Disposition: inline
+On Tue, 2008-01-08 at 11:39 +1100, Rusty Russell wrote:
+> On Tuesday 08 January 2008 02:48:23 James Bottomley wrote:
+> > We're always open to new APIs (or more powerful and expanded old ones).
+> > The way we've been doing the sg_chain conversion is to slide API layers
+> > into the drivers so sg_chain becomes a simple API flip when we turn it
+> > on.  Unfortunately sg_ring doesn't quite fit nicely into this.
+> 
+> Hi James,
+> 
+>    Well, it didn't touch any drivers.  The only ones which needed altering 
+> were those which wanted to use large scatter-gather lists.  You think of the 
+> subtlety of sg-chain conversion as a feature; it's a bug :)
+
+No, I think of the side effect of hiding scatterlist manipulations
+inside accessors as a feature because it insulates the drivers from the
+details of the implementation.
+
+> > > > The other thing I note is that the problem you're claiming to solve
+> > > > with sg_ring (the ability to add extra scatterlists to the front or the
+> > > > back of an existing one) is already solved with sg_chain, so the only
+> > > > real advantage of sg_ring was that it contains explicit counts, which
+> > > > sg_table (in -mm) also introduces.
+> > >
+> > > I just converted virtio using latest Linus for fair comparison
+> >
+> > Erm, but that's not really a fair comparison; you need the sg_table code
+> > in
+> >
+> > git://git.kernel.org/pub/scm/linux/kernel/git/axboe/linux-2.6-block.git
+> >
+> > branch sg as well.
+> 
+> Actually, I think it's a wash.  Now callers need to set up an sg_table as 
+> well.  It will save the count_sg() calls though.
+> 
+> > > , and it's still
+> > > pretty ugly.  sg_ring needs more work to de-scsi it.  sg_table is almost
+> > > sg_ring except it retains all the chaining warts.
+> > >
+> > > But we hit the same problems:
+> > >
+> > > 1) sg_chain loses information.  The clever chain packaging makes reading
+> > > easy, but manipulation is severely limited.  You can append to your own
+> > > chains by padding, but not someone elses.  This works for SCSI, but what
+> > > about the rest of us?  And don't even think of joining mapped chains: it
+> > > will almost work.
+> >
+> > OK, but realistically some of your criticisms are way outside of the
+> > design intent.  Scatterlists (and now sg_chains) are the way the block
+> > subsystem hands pages to its underlying block devices.
+> 
+> James, scatterlists are used for more than the block subsystem.  I know you're 
+> designing for that, but we can do better.
+> 
+>     Because a single sg_ring is trivially convertable to and from a 
+> scatterlist *, the compatibility story is nice.  You can implement a 
+> subsystem (say, the block layer) with sg_ring, and still hand out struct 
+> scatterlist arrays for backwards compat: old code won't ask for v. long 
+> scatterlist arrays anyway.
+> 
+>     Now we have sg_chaining, we can actually convert complex sg_rings into sg 
+> chains when someone asks, as my most recent patch does.  I think that's one 
+> abstraction too many, but it provides a transition path.
+> 
+> > There have never until now been any requirements to join already
+> > dma_map_sg() converted scatterlists ... that would wreak havoc with the
+> > way we reuse the list plus damage the idempotence of map/unmap.  What is
+> > the use case you have for this?
+> 
+> (This was, admittedly, a made-up example).
+> 
+> > > 2) sg_chain's end marker is only for reading non-dma elements, not for
+> > > mapped chains, nor for writing into chains.  Plus it's a duplicate of the
+> > > num arg, which is still passed around for efficiency.  (virtio had to
+> > > implement count_sg() because I didn't want those two redundant num args).
+> > >
+> > > 3) By overloading struct scatterlist, it's invisible what code has been
+> > > converted to chains, and which hasn't.  Too clever by half!
+> >
+> > No it's not ... that's the whole point.  Code not yet converted to use
+> > the API accessors is by definition unable to use chaining.  Code
+> > converted to use the accessors by design doesn't care (and so is
+> > "converted to chains").
+> 
+> But you've overloaded the type: what's the difference between:
+> 	/* Before conversion */
+> 	int foo(struct scatterlist *, int);
+> And:
+> 	/* After conversion */
+> 	int foo(struct scatterlist *, int);
+> 
+> You have to wade through the implementation to see the difference: does this 
+> function take a "chained scatterlist" or an "array scatterlist"?
+> 
+> Then you add insult to injury by implementing sg_chain() *which doesn't handle 
+> chained scatterlists!*.
+> 
+> > > sg_ring would not have required any change to existing drivers, just
+> > > those that want to use long sg lists.  And then it's damn obvious which
+> > > are which.
+> >
+> > Which, by definition, would have been pretty much all of them.
+> 
+> But it would have started with none of them, and it would have been done over 
+> time.  Eventually we might have had a flag day to remove raw scatterlist 
+> arrays.
+> 
+> > > 4) sg_chain missed a chance to combine all the relevent information (max,
+> > > num, num_dma and the sg array). sg_table comes close, but you still can't
+> > > join them (no max information, and even if there were, what if it's
+> > > full?). Unlike sg_ring, it's unlikely to reduce bugs.
+> >
+> > sg_table is sg_chain ... they're incremental extensions of the same body
+> > of work.
+> 
+> Yes.
+> 
+> > The only such example of a driver like that I know is the
+> > crypto API and now your virtio.  Once we have the actual requirements
+> > and then the API, I think the natural data structures will probably drop
+> > out.
+> 
+> ATA wants to chain sgs (Tejun cc'd).  It hasn't been practical to chain up 
+> until now, but I'd say it's going to be more widely used now it is.
+
+Actually, I think we might be able to solve ATA's problem without ever
+having it manipulate the sg lists, but that's really a different issue.
+
+> Basically, sg_chain solves one problem: larger sg lists for scsi.  That's 
+> fine, but I want to see better use of scatterlists everywhere in the kernel.
+> 
+> sg_chains suck for manipulation, and AFAICT that's inherent.  Here, take a 
+> look at the sg_ring conversion of scsi_alloc_sgtable and scsi_free_sgtable 
+> and you can see why I'm unhappy with the sg_chain code:
+> 
+[...]
+> Hope that clarifies,
+
+Actually, not really.  If I want to continue the competition, I can just
+point out that your sg_ring code is bigger than those corresponding
+segments are after the sg_table conversion of scsi_lib.c ...
+
+However, this is pointless.  We seem to be talking past each other.
+Your sg_ring is an implementation, like sg_table.  What I want to do is
+actually insulate the device drivers (even the drivers that want to
+manipulate sg lists) from the implementation.  The idea being that if
+this is done correctly, we can alter the implementation from sg_table to
+sg_ring to sg_annulus and not have to change any of the driver code.
+
+Since your code introduces new ring handling primitives, it's running
+counter to that grain.  What I'm primarily interested in is what's
+broken about the new accessor API ... why doesn't it work to hide the
+internals of sg_ring?  It seems to me, if I try to do the conversion,
+all that's missing is this problematic two level traversal of primitives
+that sg_ring requires.
+
+However, a lot of the churn seems to be because you want to change the
+fundamental element from a scatterlist entry to a sg_ring.  Worse still,
+we now get exposure of locations of scatterlist elements.  Like this
+conversion for instance:
 
 
---wLAMOaPNJ0fu1fTG
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> -       for (k = 0; k < scp->use_sg; ++k, sg = sg_next(sg)) {
+> -               kaddr = (unsigned char *)kmap_atomic(sg_page(sg), KM_USER0);
+> +       sg_ring_for_each(scp->sg, sg, k) {
+> +               kaddr = (unsigned char *)kmap_atomic(sg_page(&sg->sg[k]),
+> +                                                    KM_USER0);
+>                 if (NULL == kaddr)
+>                         return -1;
+> -               kaddr_off = (unsigned char *)kaddr + sg->offset;
+> -               len = sg->length;
+> +               kaddr_off = (unsigned char *)kaddr + sg->sg[k].offset;
+> +               len = sg->sg[k].length;
 
-On Wed, Jan 09, 2008 at 10:44:49PM +0100, Hans de Goede wrote:
-> First of all sorry for the somewhat massive cross-posting, I've spend a=
-=20
-> significant amount of time hunting down this bug, and so far the response=
-=20
-> has been less the overwhelming.
-=20
-> The cardreader of the multi function printers will "crash" and from that=
-=20
-> moment on no longer communicate in any sane way, if you try to read the=
-=20
-> last sector of an sdcard* in a read that is more then 1 sector, so trying=
-=20
-> to read 8 sectors starting at sector capicity-8 will crash it, as will=20
-> reading 2 sectors starting at sector capicity-2, however reading the last=
-=20
-> sector in a one 1 sector read will succeed! (* xdcards seem to be fine).
+Here, you're re-exposing the internals of how we traverse the lists.
+This is explicitly something the sg_next() and friends designedly get
+rid of.  All drivers want to know is what the next scatterlist entry is,
+not where it comes from.
 
-To continue the history on this.... we over in usb-storage land looked at
-this and think it belongs in the SCSI layer.  We don't like changing
-commands in-flight; it has, historically, caused us all sorts of issues in
-the past.
+>                 if ((req_len + len) > max_arr_len) {
+>                         len = max_arr_len - req_len;
+>                         fin = 1;
 
-Furthermore, this seems like the likely sort of off-by-one bug that can
-affect many types of devices, not just USB.
+I suspect if you re-roll sg_ring to conform to the current accessors,
+you'll find it pretty much fits, but probably looks a lot like sg_table.
+But if it doesn't; if there's something in the accessors that's missing,
+that's what I want to know about.
 
-I'd really like to see this in sd_mod -- I have no objection to requiring
-an HCD to set a flag to indicate that it should be used, if really desired.
-But, it seems to me to be a much easier change to make where the command
-originated rather than in mid-flight.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-P:  Nine more messages in admin.policy.
-M: I know, I'm typing as fast as I can!
-					-- Pitr and Mike
-User Friendly, 11/27/97
-
---wLAMOaPNJ0fu1fTG
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHhUZmHL9iwnUZqnkRAgQ1AKCBL9ym3B9QqC+MlmD/oNoa9FfAOwCgpSJ4
-C96Up3F/YocW3GytmDMheAQ=
-=5sc/
------END PGP SIGNATURE-----
-
---wLAMOaPNJ0fu1fTG--
+James
 
 
---===============0934803818==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
---===============0934803818==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
-
---===============0934803818==--
