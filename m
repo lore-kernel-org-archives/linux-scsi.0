@@ -1,67 +1,97 @@
-From: Greg KH <gregkh@suse.de>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Tue, 8 Jan 2008 14:48:37 -0800
-Message-ID: <20080108224837.GA19623@suse.de>
-References: <20080103055019.GA4885@darkstar.te-china.tietoenator.com>
-	<20080107020944.GA3637@darkstar.te-china.tietoenator.com>
-	<20080107084528.GA8365@suse.de>
-	<200801070101.15168.david-b@pacbell.net>
-	<478227D5.8050402@s5r6.in-berlin.de>
-	<20080107154404.GA10880@suse.de>
-	<47825DC1.3090102@s5r6.in-berlin.de>
-	<20080107172009.GA25943@suse.de>
-	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] bsg : Add support for io vectors in bsg
+Date: Wed, 09 Jan 2008 09:11:18 +0900
+Message-ID: <20080109091118N.fujita.tomonori@lab.ntt.co.jp>
+References: <Pine.LNX.4.64.0801042137350.7836@localhost>
+	<200801050501.m0551LFB030667@mbox.iij4u.or.jp>
+	<20080108220918.GA9484@osc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-Content-Disposition: inline
-In-Reply-To: <a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Dave Young <hidave.darkstar@gmail.com>
-Cc: a.zummo@towertech.it, dbrownell@users.sourceforge.net, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, jarkao2@gmail.com, spi-devel-general@lists.sourceforge.net, David Brownell <david-b@pacbell.net>, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, krh@redhat.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama50.ecl.ntt.co.jp ([129.60.39.147]:45255 "EHLO
+	tama50.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753168AbYAIALd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Jan 2008 19:11:33 -0500
+In-Reply-To: <20080108220918.GA9484@osc.edu>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: pw@osc.edu
+Cc: tomof@acm.org, deepakrc@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Tue, Jan 08, 2008 at 03:05:10PM +0800, Dave Young wrote:
-> On Jan 8, 2008 1:20 AM, Greg KH <gregkh@suse.de> wrote:
-> > On Mon, Jan 07, 2008 at 06:13:37PM +0100, Stefan Richter wrote:
-> > > It's already in the driver core to the most part.  It remains to be seen
-> > > what is less complicated in the end:  Transparent mutex-protected list
-> > > accesses provided by driver core (requires the iterator), or all the
-> > > necessary locking done by the drivers themselves (requires some more
-> > > lock-taking but perhaps fewer lock instances overall in the drivers, and
-> > > respective redefinitions and documentation of the driver core API).
-> >
-> > I favor changing the driver core api and doing this kind of thing there.
-> > It keeps the drivers simpler and should hopefully make their lives
-> > easier.
+On Tue, 8 Jan 2008 17:09:18 -0500
+Pete Wyckoff <pw@osc.edu> wrote:
+
+> tomof@acm.org wrote on Sat, 05 Jan 2008 14:01 +0900:
+> > From: Deepak Colluru <deepakrc@gmail.com>
+> > Subject: [PATCH] bsg : Add support for io vectors in bsg
+> > Date: Fri, 4 Jan 2008 21:47:34 +0530 (IST)
+> > 
+> > > From: Deepak Colluru <deepakrc@gmail.com>
+> > > 
+> > > Add support for io vectors in bsg.
+> > > 
+> > > Signed-off-by: Deepak Colluru <deepakrc@gmail.com>
+> > > ---
+> > >   bsg.c |   52 +++++++++++++++++++++++++++++++++++++++++++++++++---
+> > >   1 file changed, 49 insertions(+), 3 deletions(-)
+> > 
+> > Thanks, but I have to NACK this.
+> > 
+> > You can find the discussion about bsg io vector support and a similar
+> > patch in linux-scsi archive. I have no plan to support it since it
+> > needs the compat hack.
 > 
-> What about this?
+> You may recall this is one of the patches I need to use bsg with OSD
+> devices.  OSDs overload the SCSI buffer model to put mulitple fields
+> in dataout and datain.  Some is user data, but some is more
+> logically created by a library.  Memcpying in userspace to wedge all
+> the segments into a single buffer is painful, and is required both
+> on outgoing and incoming data buffers.
 > 
-> #define class_for_each_dev(pos, head, member) \
->         for (mutex_lock(&(container_of(head, struct class, devices))->mutex), po
-> s = list_entry((head)->next, typeof(*pos), member); \
->         prefetch(pos->member.next), &pos->member != (head) ? 1 : (mutex_unlock(&
-> (container_of(head, struct class, devices))->mutex), 0); \
->         pos = list_entry(pos->member.next, typeof(*pos), member))
+> There are two approaches to add iovec to bsg.
+> 
+> 1.  Define a new sg_iovec_v4 that uses constant width types.  Both
+>     32- and 64-bit userspace would hand arrays of this to the kernel.
+> 
+>     struct sg_v4_iovec {
+> 	    __u64 iov_base;
+> 	    __u32 iov_len;
+> 	    __u32 __pad1;
+>     };
+> 
+>     Old patch here:  http://article.gmane.org/gmane.linux.scsi/30461/
 
-Eeek, just make the thing a function please, where you pass the iterator
-function in, like the driver core has (driver_for_each_device)
+As I said before, I don't think that inventing a new "iovec" is a good
+idea. sgv3 use the common "iovec". In addition, sg_io_v4 can be used
+by other OSes like sg_io_v3.
 
-thanks,
 
-greg k-h
+> 2.  Do as Deepak has done, using the existing sg_iovec, but then
+>     also work around the compat issue.  Old v3 sg_iovec is:
+> 
+>     typedef struct sg_iovec /* same structure as used by readv() Linux system */
+>     {                       /* call. It defines one scatter-gather element. */
+> 	void __user *iov_base;      /* Starting address  */
+> 	size_t iov_len;             /* Length in bytes  */
+>     } sg_iovec_t;
+> 
+>     Old patch here:  http://article.gmane.org/gmane.linux.scsi/30460/
+> 
+> I took another look at the compat approach, to see if it is feasible
+> to keep the compat handling somewhere else, without the use of #ifdef
+> CONFIG_COMPAT and size-comparison code inside bsg.c.  I don't see how.
+> The use of iovec is within a write operation on a char device.  It's
+> not amenable to a compat_sys_ or a .compat_ioctl approach.
+> 
+> I'm partial to #1 because the use of architecture-independent fields
+> matches the rest of struct sg_io_v4.  But if you don't want to have
+> another iovec type in the kernel, could we do #2 but just return
+> -EINVAL if the need for compat is detected?  I.e. change
+> dout_iovec_count to dout_iovec_length and do the math?
 
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+If you are ok with removing the write/read interface and just have
+ioctl, we could can handle comapt stuff like others do. But I think
+that you (OSD people) really want to keep the write/read
+interface. Sorry, I think that there is no workaround to support iovec
+in bsg.
