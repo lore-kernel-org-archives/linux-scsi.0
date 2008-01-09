@@ -1,59 +1,45 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: AHCI finds disks; no /dev/sd inodes bound?
-Date: Wed, 09 Jan 2008 11:29:26 -0600
-Message-ID: <1199899766.3493.20.camel@localhost.localdomain>
-References: <c7bcbd620801082340j46839c22n3081c2f5ad6af0ff@mail.gmail.com>
-	 <p738x2zosmd.fsf@bingen.suse.de>
-	 <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [RFC] Implementation of SCSI dynamic power management
+Date: Wed, 9 Jan 2008 18:31:57 +0100
+Message-ID: <200801091831.58240.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0801091216400.2880-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53242 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751691AbYAIR33 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 12:29:29 -0500
-In-Reply-To: <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com>
+Received: from smtp-out002.kontent.com ([81.88.40.216]:46241 "EHLO
+	smtp-out002.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751575AbYAIRb3 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 12:31:29 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0801091216400.2880-100000@iolanthe.rowland.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jon Watte <jwatte@gmail.com>
-Cc: Andi Kleen <andi@firstfloor.org>, linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
+Am Mittwoch, 9. Januar 2008 18:22:51 schrieb Alan Stern:
+> On Wed, 9 Jan 2008, Oliver Neukum wrote:
+> 
+> > This has an interesting implication. As the storage driver can share
+> > a device with in principle any other usb driver, we must audit all usb
+> > drivers if we wish to adopt this patch.
+> > All a device's interfaces must be resumed when the storage interface
+> > is resumed. To resume a storage device no memory must be allocated
+> > because that could deadlock.
+> 
+> Maybe people shouldn't enable autosuspend for their swap device...
 
-On Wed, 2008-01-09 at 09:21 -0800, Jon Watte wrote:
-> Yes, that turns out to be the case. Thanks for the quick sanity check!
-> I wonder if it's possible to magically turn that on when selecting
-> AHCI support in menuconfig? That way, it'd be harder for someone else
-> to make the same mistake.
+Good advice, but not sufficient to avoid this problem. The vm may write
+out normal dirty cached pages to scsi devices, which affects storage.
 
-We've had several discussions on this.  However, AHCI is used in a lot
-of systems for CD-ROM support only.  The resolution last time was to add
-this to the help text for ATA:
+> What happens during normal system resume if a driver (not just USB!)  
+> needs to allocate memory before the swap device has been resumed?
 
-	  If you want to use a ATA hard disk, ATA tape drive, ATA CD-ROM or
-	  any other ATA device under Linux, say Y and make sure that you know
-	  the name of your ATA host adapter (the card inside your computer
-	  that "speaks" the ATA protocol, also called ATA controller),
-	  because you will be asked for it.
+I have no idea. I guess these code paths have a sync in the suspend path,
+so a lot of clean pages will be available.
 
-	  NOTE: ATA enables basic SCSI support; *however*,
-	  'SCSI disk support', 'SCSI tape support', or
-	  'SCSI CDROM support' may also be needed,
-	  depending on your hardware configuration.
-
-The bottom line is that working out how to configure your own kernel is
-really hard (even I haven't done it from scratch for ages ... I usually
-steal a distro config as the basis for my choices).
-
-> On Jan 9, 2008 8:45 AM, Andi Kleen <andi@firstfloor.org> wrote:
-> > "Jon Watte" <jwatte@gmail.com> writes:
-> > >
-> > > Any help or pointers to self-help would be appreciated!
-> >
-> > The usual mistake is to not enable CONFIG_BLK_DEV_SD
-> >
-> > -Andi
-
-James
-
+	Regards
+		Oliver
 
