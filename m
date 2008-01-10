@@ -1,99 +1,48 @@
-From: Krzysztof Helt <krzysztof.h1@poczta.fm>
-Subject: Re: [PATCH] sym53_8xx_2: fixes two bugs related to chip reset
-Date: Thu, 10 Jan 2008 23:31:18 +0100
-Message-ID: <20080110233118.d2b137ba.krzysztof.h1@poczta.fm>
-References: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
-	<1199922703.3493.76.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+From: Mark Rustad <mrustad@gmail.com>
+Subject: Re: [PATCH] bsg : Add support for io vectors in bsg
+Date: Thu, 10 Jan 2008 16:33:07 -0600
+Message-ID: <622A3567-4665-48DE-8C2C-B9297BBD9A83@gmail.com>
+References: <Pine.LNX.4.64.0801042137350.7836@localhost> <200801050501.m0551LFB030667@mbox.iij4u.or.jp> <20080108220918.GA9484@osc.edu> <20080109091118N.fujita.tomonori@lab.ntt.co.jp> <20080110204325.GC1928@osc.edu> <1199998531.3141.96.camel@localhost.localdomain> <20080110214605.GD1928@osc.edu>
+Mime-Version: 1.0 (Apple Message framework v915)
+Content-Type: text/plain; charset=US-ASCII; format=flowed; delsp=yes
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp35.poczta.interia.pl ([80.48.65.35]:13541 "EHLO
-	smtp4.poczta.interia.pl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754544AbYAJW1u (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 17:27:50 -0500
-In-Reply-To: <1199922703.3493.76.camel@localhost.localdomain>
+Received: from py-out-1112.google.com ([64.233.166.181]:24154 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758196AbYAJWdL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 17:33:11 -0500
+Received: by py-out-1112.google.com with SMTP id u52so1267187pyb.10
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Jan 2008 14:33:10 -0800 (PST)
+In-Reply-To: <20080110214605.GD1928@osc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
+To: Pete Wyckoff <pw@osc.edu>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, deepakrc@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, 09 Jan 2008 17:51:43 -0600
-James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+On Jan 10, 2008, at 3:46 PM, Pete Wyckoff wrote:
 
-> > diff -urp linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c
-> > --- linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-12-23 20:39:44.000000000 +0100
-> > +++ linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-01-09 22:22:30.000000000 +0100
-> > @@ -609,22 +609,22 @@ static int sym_eh_handler(int op, char *
-> >  	 */
-> >  #define WAIT_FOR_PCI_RECOVERY	35
-> >  	if (pci_channel_offline(pdev)) {
-> > -		struct completion *io_reset;
-> >  		int finished_reset = 0;
-> >  		init_completion(&eh_done);
-> >  		spin_lock_irq(shost->host_lock);
-> >  		/* Make sure we didn't race */
-> >  		if (pci_channel_offline(pdev)) {
-> > -			if (!sym_data->io_reset)
-> > -				sym_data->io_reset = &eh_done;
-> > -			io_reset = sym_data->io_reset;
-> > +			BUG_ON(!sym_data->io_reset);
-> > +			sym_data->io_reset = &eh_done;
-> >  		} else {
-> >  			finished_reset = 1;
-> >  		}
-> >  		spin_unlock_irq(shost->host_lock);
-> >  		if (!finished_reset)
-> > -			finished_reset = wait_for_completion_timeout(io_reset,
-> > +			finished_reset = wait_for_completion_timeout
-> > +						(sym_data->io_reset,
-> >  						WAIT_FOR_PCI_RECOVERY*HZ);
-> > +		sym_data->io_reset = NULL;
-> 
-> This has to be cleared under the host_lock to forestall the (tiny) race
-> where the pci recovery code checks the value of sym_data->io_reset, we
-> change it to null and then the pci recovery code completes a NULL
-> pointer.
-> 
+> I'm fine with read/write, except Tomo is against handling iovecs
+> because of the compat complexity with struct iovec being different
+> on 32- vs 64-bit.  There is a standard way to do "compat" ioctl that
+> hides this handling in a different file (not bsg.c), which is the
+> only reason I'm even considering these ioctls.  I don't care about
+> compat setups per se.
 
-It is impossible as the io_reset value is not NULL before and during wait
-completion. The case above would happen only if one thread checked the
-io_reset value (under lock) and it was NULL and before setting it (inside
-locked section) another thread checked the io_reset value (still NULL 
-and also inside locked section = impossible). Otherwise, the BUG_ON() 
-kicked in (the value is already not NULL).
+That is what I was thinking. Is it really necessary to support  
+something like bsg for 32 on 64 bit? Yes, it is a userspace interface,  
+but it isn't the kind of thing that normal user programs would use. It  
+is a new interface for newly-written programs and I would expect those  
+to be native. At least it doesn't strike me as overly-restrictive for  
+that to be the case for this kind of interface.
 
-Another case is if you consider changing the io_reset value after the
-locked section but before wait_for_completion_timeout(). In this case,
-putting spinlock around the io_reset clearing does not change anything.
-There is still a chance of race if the io_reset is cleared after one thread
-leaves the locked section then another one clearing the io_reset (under lock)
-then completion by the first thread happens with NULL pointer.
+> Is there another async I/O mechanism?  Userspace builds the CDBs,
+> just needs some way to drop them in SCSI ML.  BSG is almost perfect
+> for this, but doesn't do iovec, leading to lots of memcpy.
 
-Am I right? I understand that you asked for change like this:
-+  		spin_lock_irq(shost->host_lock);
-+		sym_data->io_reset = NULL;
-+  		spin_unlock_irq(shost->host_lock);
 
-Maybe, better solution is to clear the io_reset field inside the 
-sym2_io_resume() (as it was done)? It would be cleared only
-after the completion and before it is cleared the BUG_ON() guards
-against race. The 2nd race case described above is impossible 
-in such solution.
+Precisely.
 
-However, another version of the patch is needed as the BUG_ON condition
-should be BUG_ON(sym_data->io_reset) and not 
-BUG_ON(!sym_data->io_reset).
-
-So, I wait for your opinion to the lock issue. If you still consider version with
-the change presented above better, I'll add it.
-
-Kind regards,
-Krzysztof
-
-----------------------------------------------------------------------
-Rozdajemy nagrody! 
-
-Sprawdz >> http://link.interia.pl/f1cbf
+-- 
+Mark Rustad, MRustad@gmail.com
 
 
