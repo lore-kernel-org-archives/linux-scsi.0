@@ -1,40 +1,58 @@
 From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] advansys: section mismatch warning
-Date: Thu, 10 Jan 2008 14:32:51 -0800
-Message-ID: <20080110143251.eef8d398.randy.dunlap@oracle.com>
+Subject: [PATCH] megaraid: fix section mismatch
+Date: Thu, 10 Jan 2008 14:33:16 -0800
+Message-ID: <20080110143316.071efbc1.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:63303 "EHLO
+Received: from agminet01.oracle.com ([141.146.126.228]:63414 "EHLO
 	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759322AbYAJWd1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 17:33:27 -0500
+	with ESMTP id S1759075AbYAJWdj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 17:33:39 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <James.Bottomley@HansenPartnership.com>, akpm <akpm@linux-foundation.org>, matthew@wil.cx
+To: megaraidlinux@lsi.com, scsi <linux-scsi@vger.kernel.org>
+Cc: jejb <James.Bottomley@HansenPartnership.com>, akpm <akpm@linux-foundation.org>, samr <sam@ravnborg.org>
 
 From: Randy Dunlap <randy.dunlap@oracle.com>
 
-WARNING: vmlinux.o(.exit.text+0xc5b5): Section mismatch: reference to .init.data:_asc_def_iop_base (between 'advansys_isa_remove' and 'advansys_eisa_remove')
+Change megaraid_pci_driver_g variable name so that it matches the modpost
+whitelist that allows pointers to init text/data.
 
-_asc_def_iop_base is used in both init and exit code, so it cannot be
-marked as __devinitdata.
+WARNING: vmlinux.o(.data+0x1a8e30): Section mismatch: reference to .init.text:megaraid_probe_one (between 'megaraid_pci_driver_g' and 'class_device_attr_megaraid_mbox_app_hndl')
 
 Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 ---
- drivers/scsi/advansys.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_mbox.c |    6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
---- linux-2.6.24-rc7-git1.orig/drivers/scsi/advansys.c
-+++ linux-2.6.24-rc7-git1/drivers/scsi/advansys.c
-@@ -13906,7 +13906,7 @@ static int advansys_release(struct Scsi_
+--- linux-2.6.24-rc7-git1.orig/drivers/scsi/megaraid/megaraid_mbox.c
++++ linux-2.6.24-rc7-git1/drivers/scsi/megaraid/megaraid_mbox.c
+@@ -300,7 +300,7 @@ static struct pci_device_id pci_id_table
+ MODULE_DEVICE_TABLE(pci, pci_id_table_g);
  
- #define ASC_IOADR_TABLE_MAX_IX  11
  
--static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] __devinitdata = {
-+static PortAddr _asc_def_iop_base[ASC_IOADR_TABLE_MAX_IX] = {
- 	0x100, 0x0110, 0x120, 0x0130, 0x140, 0x0150, 0x0190,
- 	0x0210, 0x0230, 0x0250, 0x0330
- };
+-static struct pci_driver megaraid_pci_driver_g = {
++static struct pci_driver megaraid_pci_driver = {
+ 	.name		= "megaraid",
+ 	.id_table	= pci_id_table_g,
+ 	.probe		= megaraid_probe_one,
+@@ -394,7 +394,7 @@ megaraid_init(void)
+ 
+ 
+ 	// register as a PCI hot-plug driver module
+-	rval = pci_register_driver(&megaraid_pci_driver_g);
++	rval = pci_register_driver(&megaraid_pci_driver);
+ 	if (rval < 0) {
+ 		con_log(CL_ANN, (KERN_WARNING
+ 			"megaraid: could not register hotplug support.\n"));
+@@ -415,7 +415,7 @@ megaraid_exit(void)
+ 	con_log(CL_DLEVEL1, (KERN_NOTICE "megaraid: unloading framework\n"));
+ 
+ 	// unregister as PCI hotplug driver
+-	pci_unregister_driver(&megaraid_pci_driver_g);
++	pci_unregister_driver(&megaraid_pci_driver);
+ 
+ 	return;
+ }
