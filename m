@@ -1,23 +1,25 @@
-From: Jens Axboe <jens.axboe@oracle.com>
+From: Oliver Neukum <oliver@neukum.org>
 Subject: Re: memory allocation in sg_io()
-Date: Thu, 10 Jan 2008 14:06:28 +0100
-Message-ID: <20080110130628.GA6258@kernel.dk>
+Date: Thu, 10 Jan 2008 14:19:08 +0100
+Message-ID: <200801101419.09651.oliver@neukum.org>
 References: <200801101333.12293.oliver@neukum.org> <47861815.5090008@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:26966 "EHLO kernel.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752491AbYAJNGb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jan 2008 08:06:31 -0500
-Content-Disposition: inline
+Received: from smtp-out001.kontent.com ([81.88.40.215]:41228 "EHLO
+	smtp-out001.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754606AbYAJNSb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 08:18:31 -0500
 In-Reply-To: <47861815.5090008@panasas.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Oliver Neukum <oliver@neukum.org>, SCSI development list <linux-scsi@vger.kernel.org>
+Cc: axboe@kernel.dk, SCSI development list <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 10 2008, Boaz Harrosh wrote:
+Am Donnerstag, 10. Januar 2008 14:05:25 schrieb Boaz Harrosh:
 > On Thu, Jan 10 2008 at 14:33 +0200, Oliver Neukum <oliver@neukum.org> wrote:
 > > Hi,
 > > 
@@ -41,9 +43,9 @@ On Thu, Jan 10 2008, Boaz Harrosh wrote:
 > Do you mean DMA alignment and cache coherency? I'm working
 > on that for scsi devices.
 
-I'm guessing aligment - so the answer is that 'it cannot get away with
-it'.
+Yes, you are doing DMA on the stack.
 
--- 
-Jens Axboe
+	Regards
+		Oliver
+
 
