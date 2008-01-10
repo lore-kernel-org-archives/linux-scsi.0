@@ -1,67 +1,39 @@
 From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: [patch 1/1] Switch ioctl functions of drivers/scsi/sg.c to unlocked_ioctl
-Date: Thu, 10 Jan 2008 20:21:43 +0100
-Message-ID: <20080110192143.GE747@one.firstfloor.org>
-References: <20080110180529.GA32640@skl-net.de> <1199991298.3141.75.camel@localhost.localdomain> <20080110185944.GA1690@one.firstfloor.org> <20080110190324.GG18741@parisc-linux.org>
+Date: Thu, 10 Jan 2008 20:29:50 +0100
+Message-ID: <20080110192950.GG747@one.firstfloor.org>
+References: <20080110180529.GA32640@skl-net.de> <1199991298.3141.75.camel@localhost.localdomain> <20080110185944.GA1690@one.firstfloor.org> <20080110190748.GA20152@skl-net.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from one.firstfloor.org ([213.235.205.2]:34230 "EHLO
+Received: from one.firstfloor.org ([213.235.205.2]:40133 "EHLO
 	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752770AbYAJTTJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 14:19:09 -0500
+	with ESMTP id S1754781AbYAJT1N (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 14:27:13 -0500
 Content-Disposition: inline
-In-Reply-To: <20080110190324.GG18741@parisc-linux.org>
+In-Reply-To: <20080110190748.GA20152@skl-net.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andre Noll <maan@systemlinux.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Richard Knutsson <ricknu-0@student.ltu.se>
+To: Andre Noll <maan@systemlinux.org>
+Cc: Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Richard Knutsson <ricknu-0@student.ltu.se>
 
-On Thu, Jan 10, 2008 at 12:03:24PM -0700, Matthew Wilcox wrote:
-> On Thu, Jan 10, 2008 at 07:59:44PM +0100, Andi Kleen wrote:
-> > > Really, all this is doing is open coding what the ioctl handler is doing
-> > > anyway, isn't it? in which case, why bother to change it at all?
-> > 
-> > Because once it's open coded it is visible and can then be eliminated.
-> > Does SCSI need the BKL at all?
-> > 
+On Thu, Jan 10, 2008 at 08:07:48PM +0100, Andre Noll wrote:
+> On 19:59, Andi Kleen wrote:
+> 
 > > But perhaps for such a long ioctl handler it would be better to move
 > > the lock/unlock_kernel()s into the individual case ...: statements;
 > > then it could be eliminated step by step.
 > 
-> This style of conversion is going to cause a lot of churn --
-
-If he pushes the lock_kernels() into the cases then not.
-
-But even a few refactorings are not that bad if they result in
-a BKL less SCSI.
-
-> re-architecting this function to be single-exit, then presumably when
-> the lock_kernel calls are pushed further down or eliminated, turning it
-> back into a multiple-exit function.
+> Sure, I can do that if James likes the idea. Since not all case
+> statements need the BKL, we could add it only to those for which it
+> isn't clear that it is unnecessary.
 > 
-> I suggest that for complex ioctl handlers, it be left to the maintainers
+> And this would actually improve something.
 
-Which have had years to convert their drivers, but they mostly didn't
-do it. They need more incentive.
+I still think it would be a good strategy to first add it to all
+(in a essentially nop semantics patch) and then later eliminate
+it from the cases that obviously don't need it. 
 
-> to handle, and handle it properly all at once, rather than a gradual
-> pushdown.
-> 
-> You could argue that unlocked_ioctl has been around for a long time and
-> people haven't made that move yet.  But there's been no pressure before
-
-Yes I argue exactly that.
-
-> now to do so, and I think people would rather convert their own code
-> than have somebody else do it.
-
-Has been proven to not work.
-
-I don't really blame the maintainers too much. The implicit BKL in ioctl
-is actually pretty obscure. But making it explicit will force their
-hand.
-
-So in short I'm sorry, but you're wrong on that.
+But yes eliminating it from all is the long term goal.
 
 -Andi
