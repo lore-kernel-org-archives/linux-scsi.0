@@ -1,68 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Driver 'sd' needs updating
-Date: Thu, 10 Jan 2008 12:27:22 -0600
-Message-ID: <1199989642.3141.66.camel@localhost.localdomain>
-References: <20080110085150.53addacf@linuxamd.linicks.net>
-	 <20080110203845E.fujita.tomonori@lab.ntt.co.jp>
+From: Greg KH <gregkh@suse.de>
+Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
+Date: Thu, 10 Jan 2008 10:39:17 -0800
+Message-ID: <20080110183917.GA20188@suse.de>
+References: <20080107154404.GA10880@suse.de> <47825DC1.3090102@s5r6.in-berlin.de> <20080107172009.GA25943@suse.de> <a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com> <20080108224837.GA19623@suse.de> <a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com> <20080109061316.GA3249@darkstar.te-china.tietoenator.com> <a8e1da0801082237x37d2a56eqee6db19017499dbc@mail.gmail.com> <a8e1da0801082239h198c4d45i5cd7cf183472a166@mail.gmail.com> <20080110094843.GA3014@darkstar.te-china.tietoenator.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53826 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754429AbYAJS10 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jan 2008 13:27:26 -0500
-In-Reply-To: <20080110203845E.fujita.tomonori@lab.ntt.co.jp>
+Received: from mx2.suse.de ([195.135.220.15]:55359 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753887AbYAJSjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jan 2008 13:39:11 -0500
+Content-Disposition: inline
+In-Reply-To: <20080110094843.GA3014@darkstar.te-china.tietoenator.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: nick@ukfsn.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Greg KH <greg@kroah.com>, Kay Sievers <kay.sievers@vrfy.org>
+To: Dave Young <hidave.darkstar@gmail.com>
+Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, James.Bottomley@hansenpartnership.com, linux-scsi@vger.kernel.org, a.zummo@towertech.it, peterz@infradead.org, cbou@mail.ru, linux-kernel@vger.kernel.org, David Brownell <david-b@pacbell.net>, krh@redhat.com, stern@rowland.harvard.edu, rtc-linux@googlegroups.com, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
 
+On Thu, Jan 10, 2008 at 05:48:43PM +0800, Dave Young wrote:
+> The patches are done on my side, please help to check. 
 
-On Thu, 2008-01-10 at 20:38 +0900, FUJITA Tomonori wrote:
-> CC'ed linux-scsi and James,
-> 
-> On Thu, 10 Jan 2008 08:51:50 +0000
-> Nick Warne <nick@ukfsn.org> wrote:
-> 
-> > 
-> > Hi everybody - Happy New Year to you all!
-> > 
-> > OK, updated to git rc7 yesterday - I now see this in syslog:
-> > 
-> >    "Driver 'sd' needs updating - please use bus_type methods"
-> > 
-> > The warning never appeared in RC6, and all google reveals are other
-> > peoples logs that are posted about other issues.
-> > 
-> > Do I need to fix up something here?
-> 
-> No, you don't. It's harmless, a side effect of:
-> 
-> commit 751bf4d7865e4ced406be93b04c7436d866d3684
-> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date:   Wed Jan 2 11:14:30 2008 -0600
-> 
->     [SCSI] scsi_sysfs: restore prep_fn when ULD is removed
-> 
-> 
-> It would be better to silence this warning.
-> 
-> James, we need to reset prep_fn in each ULD? though it's not nice...
+Along with all of the other comments from people, I have a few.
 
-Really not nice ... to the extent that we shouldn't do it.  The reset is
-in exactly the correct place currently.  If we make it a requirement of
-the ULDs its duplication and someone is bound to forget.
+> This is the first one of the series about driver core changes. 
+> If this one is accepted and there's no other problem I will post the others for maintainer's review (they need your comment and help because I don't know well about the specific driver logic).
+> 
+> Thanks a lot in advance.
+> ---
+> 
+> 1. convert class semaphore to mutex.
+> 2. add class iterater functions to encapsulate the detail of class devices/children list iterating :
+> 	class_for_each_device
+> 	class_find_device
+> 	class_for_each_child
+> 	class_find_child
 
-It looks like the problem is the warning in
-base/driver.c:driver_register() apparently it wants an either/or for
-->remove methods (either bus type or driver).  We're actually using the
-bus_type methods, but we also have a driver component, sigh.  I suppose
-what it's wanting is for me to add a scsi_driver type with remove
-methods ... which looks a bit silly since all of the SCSI drivers want
-different remove methods.
+No, please create 1 patch per type-of-change.
 
-James
+So in this case you would have a series of patches:
+	1) add the class iterator functions
+	2-n) convert the existing places in the kernel using the
+	     class->semaphore to use the new iterator functions
+	n+1) convert class semaphore to mutex, which should only touch
+	     the driver core
 
+That way everything builds along the way, and it's easy to understand
+and review.
 
+Oh, and please start a new thread when you create a new patch like this
+so it doesn't get burried in people's inboxes...
+
+thanks,
+
+greg k-h
