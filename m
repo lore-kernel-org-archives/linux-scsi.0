@@ -1,25 +1,25 @@
 From: "nickcheng" <nick.cheng@areca.com.tw>
 Subject: [PATCH] scsi: upstream arcmsr-1.20.00.15
-Date: Thu, 10 Jan 2008 21:21:24 +0800
-Message-ID: <000701c8538b$b2e598d0$8800a8c0@Nick>
+Date: Thu, 10 Jan 2008 21:20:07 +0800
+Message-ID: <000001c8538b$84f88c20$8800a8c0@Nick>
 Reply-To: <nick.cheng@areca.com.tw>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="----=_NextPart_000_0008_01C853CE.C108D8D0"
+	boundary="----=_NextPart_000_0001_01C853CE.931BCC20"
 Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from 60-248-88-209.HINET-IP.hinet.net ([60.248.88.209]:22176 "EHLO
 	areca.com.tw" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1755749AbYAJNdi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jan 2008 08:33:38 -0500
+	id S1755573AbYAJNdk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jan 2008 08:33:40 -0500
 In-Reply-To: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Andrew Morton' <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com, thenzl@redhat.com
+To: 'Andrew Morton' <akpm@linux-foundation.org>, James.Bottomley@SteelEye.com
 Cc: linux-scsi@vger.kernel.org, randy.dunlap@oracle.com
 
 This is a multi-part message in MIME format.
 
-------=_NextPart_000_0008_01C853CE.C108D8D0
+------=_NextPart_000_0001_01C853CE.931BCC20
 Content-Type: text/plain;
 	charset="us-ascii"
 Content-Transfer-Encoding: 7bit
@@ -44,7 +44,7 @@ segments, i.e. Linux XFS over DM-CRYPT. Thanks to Milan Broz's comments
 *** fix the arcmsr_polling_hbb_ccbdone() 
 Signed-off-by: Nick Cheng <nick.cheng@areca.com.tw>
 
-------=_NextPart_000_0008_01C853CE.C108D8D0
+------=_NextPart_000_0001_01C853CE.931BCC20
 Content-Type: application/octet-stream;
 	name="patch4arcmsr"
 Content-Transfer-Encoding: quoted-printable
@@ -450,5 +450,5 @@ arcmsr_pci_slot_reset(struct pci_dev *pdev)=0A=
  	arcmsr_enable_outbound_ints(acb, intmask_org);=0A=
  	acb->acb_flags |=3D ACB_F_IOP_INITED;=0A=
 
-------=_NextPart_000_0008_01C853CE.C108D8D0--
+------=_NextPart_000_0001_01C853CE.931BCC20--
 
