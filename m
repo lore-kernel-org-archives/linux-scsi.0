@@ -1,52 +1,67 @@
-From: Andre Noll <maan@systemlinux.org>
+From: Andi Kleen <andi@firstfloor.org>
 Subject: Re: [patch 1/1] Switch ioctl functions of drivers/scsi/sg.c to unlocked_ioctl
-Date: Thu, 10 Jan 2008 20:07:48 +0100
-Message-ID: <20080110190748.GA20152@skl-net.de>
-References: <20080110180529.GA32640@skl-net.de> <1199991298.3141.75.camel@localhost.localdomain> <20080110185944.GA1690@one.firstfloor.org>
+Date: Thu, 10 Jan 2008 20:21:43 +0100
+Message-ID: <20080110192143.GE747@one.firstfloor.org>
+References: <20080110180529.GA32640@skl-net.de> <1199991298.3141.75.camel@localhost.localdomain> <20080110185944.GA1690@one.firstfloor.org> <20080110190324.GG18741@parisc-linux.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="k+w/mQv8wyuph6w0"
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760272AbYAJTJU@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20080110185944.GA1690@one.firstfloor.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andi Kleen <andi@firstfloor.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Richard Knutsson <ricknu-0@student.ltu.se>
-List-Id: linux-scsi@vger.kernel.org
-
-
---k+w/mQv8wyuph6w0
 Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from one.firstfloor.org ([213.235.205.2]:34230 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752770AbYAJTTJ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 14:19:09 -0500
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20080110190324.GG18741@parisc-linux.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Matthew Wilcox <matthew@wil.cx>
+Cc: Andi Kleen <andi@firstfloor.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andre Noll <maan@systemlinux.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Richard Knutsson <ricknu-0@student.ltu.se>
 
-On 19:59, Andi Kleen wrote:
+On Thu, Jan 10, 2008 at 12:03:24PM -0700, Matthew Wilcox wrote:
+> On Thu, Jan 10, 2008 at 07:59:44PM +0100, Andi Kleen wrote:
+> > > Really, all this is doing is open coding what the ioctl handler is doing
+> > > anyway, isn't it? in which case, why bother to change it at all?
+> > 
+> > Because once it's open coded it is visible and can then be eliminated.
+> > Does SCSI need the BKL at all?
+> > 
+> > But perhaps for such a long ioctl handler it would be better to move
+> > the lock/unlock_kernel()s into the individual case ...: statements;
+> > then it could be eliminated step by step.
+> 
+> This style of conversion is going to cause a lot of churn --
 
-> But perhaps for such a long ioctl handler it would be better to move
-> the lock/unlock_kernel()s into the individual case ...: statements;
-> then it could be eliminated step by step.
+If he pushes the lock_kernels() into the cases then not.
 
-Sure, I can do that if James likes the idea. Since not all case
-statements need the BKL, we could add it only to those for which it
-isn't clear that it is unnecessary.
+But even a few refactorings are not that bad if they result in
+a BKL less SCSI.
 
-And this would actually improve something.
+> re-architecting this function to be single-exit, then presumably when
+> the lock_kernel calls are pushed further down or eliminated, turning it
+> back into a multiple-exit function.
+> 
+> I suggest that for complex ioctl handlers, it be left to the maintainers
 
-Andre
---=20
-The only person who always got his work done by Friday was Robinson Crusoe
+Which have had years to convert their drivers, but they mostly didn't
+do it. They need more incentive.
 
---k+w/mQv8wyuph6w0
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: Digital signature
-Content-Disposition: inline
+> to handle, and handle it properly all at once, rather than a gradual
+> pushdown.
+> 
+> You could argue that unlocked_ioctl has been around for a long time and
+> people haven't made that move yet.  But there's been no pressure before
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.1 (GNU/Linux)
+Yes I argue exactly that.
 
-iD8DBQFHhm0EWto1QDEAkw8RAnHLAKCVzJIQO3qkNpYDADIwByWgXWCKBQCeIHoX
-3jVTY6J2pWn+rpEc/A84rUE=
-=KeEV
------END PGP SIGNATURE-----
+> now to do so, and I think people would rather convert their own code
+> than have somebody else do it.
 
---k+w/mQv8wyuph6w0--
+Has been proven to not work.
+
+I don't really blame the maintainers too much. The implicit BKL in ioctl
+is actually pretty obscure. But making it explicit will force their
+hand.
+
+So in short I'm sorry, but you're wrong on that.
+
+-Andi
