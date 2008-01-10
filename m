@@ -1,82 +1,33 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PATCH] another SCSI bug fix for 2.6.24-rc7
-Date: Thu, 10 Jan 2008 09:35:35 -0600
-Message-ID: <1199979335.3141.34.camel@localhost.localdomain>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
+Date: Thu, 10 Jan 2008 10:41:15 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801101038580.4267-100000@iolanthe.rowland.org>
+References: <20080110094843.GA3014@darkstar.te-china.tietoenator.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:44873 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755785AbYAJPfk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 10 Jan 2008 10:35:40 -0500
+Received: from iolanthe.rowland.org ([192.131.102.54]:41166 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1755186AbYAJPlQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 10:41:16 -0500
+In-Reply-To: <20080110094843.GA3014@darkstar.te-china.tietoenator.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Dave Young <hidave.darkstar@gmail.com>
+Cc: Greg KH <gregkh@suse.de>, Stefan Richter <stefanr@s5r6.in-berlin.de>, James.Bottomley@hansenpartnership.com, SCSI development list <linux-scsi@vger.kernel.org>, a.zummo@towertech.it, peterz@infradead.org, cbou@mail.ru, Kernel development list <linux-kernel@vger.kernel.org>, David Brownell <david-b@pacbell.net>, krh@redhat.com, rtc-linux@googlegroups.com, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
 
-This one's a fatal bug in the qla1280 32 bit descriptor handling, since
-the unitialised req_cnt variable is used to count the number of
-descriptor slots.  It turns out that qla1280 only uses 32 bit
-descriptors on x86 if HIGHMEM isn't enabled, which is why it's taken so
-long to find someone with a configuration that actually saw the problem.
+On Thu, 10 Jan 2008, Dave Young wrote:
 
-The patch is available from:
+> Hi,
+> The patches are done on my side, please help to check. 
+> 
+> This is the first one of the series about driver core changes. 
+> If this one is accepted and there's no other problem I will post the others for maintainer's review (they need your comment and help because I don't know well about the specific driver logic).
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+Before spending too much time on all these conversions, shouldn't you 
+first determine whether they will work with the lockdep checker?  In 
+one of your earlier messages there was a clear indication that they 
+will not.
 
-I've also attached it below for convenience.
-
-James
-
----
-
->From 3a43e69ce50d467ded2f17f6e571e831d3677ab5 Mon Sep 17 00:00:00 2001
-From: FUJITA Tomonori <tomof@acm.org>
-Date: Tue, 8 Jan 2008 23:07:01 +0900
-Subject: [SCSI] qla1280: fix 32 bit segment code
-
-There's an error remaining in the 32 bit descriptor code after the
-conversion to dma accessors:  req_cnt is left uninitialised.
-
-qla1280_32bit_start_scsi gives the following warnings:
-
-drivers/scsi/qla1280.c: In function 'qla1280_32bit_start_scsi':
-drivers/scsi/qla1280.c:3044: warning: unused variable 'dma_handle'
-drivers/scsi/qla1280.c: In function 'qla1280_queuecommand':
-drivers/scsi/qla1280.c:3060: warning: 'req_cnt' is used uninitialized in this function
-drivers/scsi/qla1280.c:3042: note: 'req_cnt' was declared here
-
-Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/qla1280.c |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
-diff --git a/drivers/scsi/qla1280.c b/drivers/scsi/qla1280.c
-index 146d540..2886407 100644
---- a/drivers/scsi/qla1280.c
-+++ b/drivers/scsi/qla1280.c
-@@ -3041,7 +3041,6 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 	int cnt;
- 	int req_cnt;
- 	int seg_cnt;
--	dma_addr_t dma_handle;
- 	u8 dir;
- 
- 	ENTER("qla1280_32bit_start_scsi");
-@@ -3050,6 +3049,7 @@ qla1280_32bit_start_scsi(struct scsi_qla_host *ha, struct srb * sp)
- 		cmd->cmnd[0]);
- 
- 	/* Calculate number of entries and segments required. */
-+	req_cnt = 1;
- 	seg_cnt = scsi_dma_map(cmd);
- 	if (seg_cnt) {
- 		/*
--- 
-1.5.3.7
-
-
-
+Alan Stern
 
