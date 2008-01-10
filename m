@@ -1,81 +1,38 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] sym53_8xx_2: fixes two bugs related to chip reset
-Date: Wed, 09 Jan 2008 17:51:43 -0600
-Message-ID: <1199922703.3493.76.camel@localhost.localdomain>
-References: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
+From: Andi Kleen <andi@firstfloor.org>
+Subject: Re: AHCI finds disks; no /dev/sd inodes bound?
+Date: Thu, 10 Jan 2008 01:38:06 +0100
+Message-ID: <20080110003806.GD18480@one.firstfloor.org>
+References: <p738x2zosmd.fsf@bingen.suse.de> <c7bcbd620801090921w1a784417wc8aa42ecb83d589b@mail.gmail.com> <1199899766.3493.20.camel@localhost.localdomain> <20080109174945.GB15346@one.firstfloor.org> <4785138A.4000809@s5r6.in-berlin.de> <4785304A.60109@gmail.com> <20080109205850.GU16309@parisc-linux.org> <47853FA7.9050506@s5r6.in-berlin.de> <20080109222308.GE15612@one.firstfloor.org> <478552DF.1050203@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:35081 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754296AbYAIXvw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 18:51:52 -0500
-In-Reply-To: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
+Received: from one.firstfloor.org ([213.235.205.2]:51821 "EHLO
+	one.firstfloor.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754626AbYAJAfe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Jan 2008 19:35:34 -0500
+Content-Disposition: inline
+In-Reply-To: <478552DF.1050203@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Krzysztof Helt <krzysztof.h1@poczta.fm>
-Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: Andi Kleen <andi@firstfloor.org>, Matthew Wilcox <matthew@wil.cx>, Jon Watte <jwatte@gmail.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-
-On Wed, 2008-01-09 at 23:59 +0100, Krzysztof Helt wrote:
-> From: Krzysztof Helt <krzysztof.h1@wp.pl>
+On Thu, Jan 10, 2008 at 12:03:59AM +0100, Stefan Richter wrote:
+> Andi Kleen wrote:
+> > On Wed, Jan 09, 2008 at 10:41:59PM +0100, Stefan Richter wrote:
+> >> However, this further obfuscates the fact that libata uses Linux' SCSI
+> >> midlayer and highlevel.  Which is a bad thing.  For example, there are
+> > 
+> > People are not interested in how libata is implemented internally.
+> > They just want their SATA interfaces to work.
+> > 
+> > Kconfig is also not an educational facility or high level
+> > design description of the code, but a pragmatic tool to get the job
+> > done.
 > 
-> This patch fixes two bugs pointed by James Bottomley:
-> 
->  1. the if (!sym_data->io_reset).  That variable is only ever filled
->     by a stack based completion.  If we find it non empty it means
->     this code has been entered twice and we have a severe problem,
->     so that should just become a BUG_ON(!sym_data->io_reset).
->  2. sym_data->io_reset should be set to NULL before the routine is
->     exited otherwise the PCI recovery code could end up completing
->     what will be a bogus pointer into the stack.
-> 
-> Big thanks to James Bottomley for help with the patch.
-> 
-> Signed-off-by: Krzysztof Helt <krzysztof.h1@w.pl>
+> I did not talk about education or design decription.  I did talk about
+> appropriately showing what the Kconfig options do.
 
-Well done .. there's actually just one problem remaining:
+That's "high level design description"
 
-> ---
-> I do not know if I understood correctly all James' tips.
-> 
-> diff -urp linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c
-> --- linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-12-23 20:39:44.000000000 +0100
-> +++ linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-01-09 22:22:30.000000000 +0100
-> @@ -609,22 +609,22 @@ static int sym_eh_handler(int op, char *
->  	 */
->  #define WAIT_FOR_PCI_RECOVERY	35
->  	if (pci_channel_offline(pdev)) {
-> -		struct completion *io_reset;
->  		int finished_reset = 0;
->  		init_completion(&eh_done);
->  		spin_lock_irq(shost->host_lock);
->  		/* Make sure we didn't race */
->  		if (pci_channel_offline(pdev)) {
-> -			if (!sym_data->io_reset)
-> -				sym_data->io_reset = &eh_done;
-> -			io_reset = sym_data->io_reset;
-> +			BUG_ON(!sym_data->io_reset);
-> +			sym_data->io_reset = &eh_done;
->  		} else {
->  			finished_reset = 1;
->  		}
->  		spin_unlock_irq(shost->host_lock);
->  		if (!finished_reset)
-> -			finished_reset = wait_for_completion_timeout(io_reset,
-> +			finished_reset = wait_for_completion_timeout
-> +						(sym_data->io_reset,
->  						WAIT_FOR_PCI_RECOVERY*HZ);
-> +		sym_data->io_reset = NULL;
-
-This has to be cleared under the host_lock to forestall the (tiny) race
-where the pci recovery code checks the value of sym_data->io_reset, we
-change it to null and then the pci recovery code completes a NULL
-pointer.
-
-Other than this one problem, the code looks fine.
-
-James
-
-
+-Andi
