@@ -1,96 +1,44 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Thu, 10 Jan 2008 13:34:48 +0100
-Message-ID: <478610E8.4060602@s5r6.in-berlin.de>
-References: <478227D5.8050402@s5r6.in-berlin.de>
-	<20080107154404.GA10880@suse.de>
-	<47825DC1.3090102@s5r6.in-berlin.de>
-	<20080107172009.GA25943@suse.de>
-	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
-	<20080108224837.GA19623@suse.de>
-	<a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com>
-	<20080109061316.GA3249@darkstar.te-china.tietoenator.com>
-	<a8e1da0801082237x37d2a56eqee6db19017499dbc@mail.gmail.com>
-	<a8e1da0801082239h198c4d45i5cd7cf183472a166@mail.gmail.com>
-	<20080110094843.GA3014@darkstar.te-china.tietoenator.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: memory allocation in sg_io()
+Date: Thu, 10 Jan 2008 15:05:25 +0200
+Message-ID: <47861815.5090008@panasas.com>
+References: <200801101333.12293.oliver@neukum.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080110094843.GA3014@darkstar.te-china.tietoenator.com>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Dave Young <hidave.darkstar@gmail.com>
-Cc: a.zummo@towertech.it, krh@redhat.com, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, David Brownell <david-b@pacbell.net>, stern@rowland.harvard.edu, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:2889 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754040AbYAJNFi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 08:05:38 -0500
+In-Reply-To: <200801101333.12293.oliver@neukum.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oliver@neukum.org>
+Cc: axboe@kernel.dk, SCSI development list <linux-scsi@vger.kernel.org>
 
-Dave Young wrote:
-> This is the first one of the series about driver core changes.
+On Thu, Jan 10 2008 at 14:33 +0200, Oliver Neukum <oliver@neukum.org> wrote:
+> Hi,
+> 
+> could you explain to me why this code can get away with allocating the
+> sense buffer on the stack?
+> 
+> static int sg_io(struct file *file, struct request_queue *q,
+> 		struct gendisk *bd_disk, struct sg_io_hdr *hdr)
+> {
+> 	unsigned long start_time;
+> 	int writing = 0, ret = 0, has_write_perm = 0;
+> 	struct request *rq;
+> 	char sense[SCSI_SENSE_BUFFERSIZE];
+> 
+> 	Regards
+> 		Oliver
+> -
+where? what? do you mean in scsi_ioctl.c?
+why not it's a synchronous call?
+Do you mean 96 bytes is too big?
+Do you mean DMA alignment and cache coherency? I'm working
+on that for scsi devices.
 
-Please always provide kerneldoc comments when you add new API elements;
-here: exported functions.
+Boaz
 
-It's unfortunate that the driver core's API isn't fully documented yet,
-and you shouldn't make it worse.
-
-That's only my personal opinion as one API user though.  But others
-might agree.  Among else, things worth documenting are return values
-after errors, side effects (!), constraints on the calling context if
-there are any special constraints.
-
-I assume you didn't write documentation yet because you need general
-feedback first.
-
-...
-> +struct device *class_find_device(struct class *class, void *data,
-> +				   int (*match)(struct device *, void *))
-> +{
-> +	struct device *dev;
-> +
-> +	if (!class)
-> +		return NULL;
-> +
-> +	mutex_lock(&class->mutex);
-> +	list_for_each_entry(dev, &class->devices, node)
-> +		if (match(dev, data) && get_device(dev))
-> +			break;
-> +	mutex_unlock(&class->mutex);
-> +
-> +	return dev;
-> +}
-
-What is returned if there was no match?
-What if there was a match but get_ failed?
-
-...
-> +struct class_device *class_find_child(struct class *class, void *data,
-> +				   int (*match)(struct class_device *, void *))
-> +{
-...
-> +	mutex_lock(&class->mutex);
-> +	list_for_each_entry(dev, &class->children, node)
-> +		if (match(dev, data) && class_device_get(dev))
-> +			break;
-> +	mutex_unlock(&class->mutex);
-> +
-> +	return dev;
-> +}
-
-Here too?
--- 
-Stefan Richter
--=====-==--- ---= -=-=-
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
