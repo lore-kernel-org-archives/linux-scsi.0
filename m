@@ -1,58 +1,38 @@
-From: Randy Dunlap <randy.dunlap@oracle.com>
-Subject: [PATCH] megaraid: fix section mismatch
-Date: Thu, 10 Jan 2008 14:33:16 -0800
-Message-ID: <20080110143316.071efbc1.randy.dunlap@oracle.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH] qla2xyz: fix section mismatch
+Date: Thu, 10 Jan 2008 14:41:25 -0800
+Message-ID: <20080110224125.GG23535@plap3.qlogic.org>
+References: <20080110143309.4eb516b0.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from agminet01.oracle.com ([141.146.126.228]:63414 "EHLO
-	agminet01.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1759075AbYAJWdj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 17:33:39 -0500
+Received: from avexch1.qlogic.com ([198.70.193.115]:3052 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752402AbYAJWle (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 17:41:34 -0500
+Content-Disposition: inline
+In-Reply-To: <20080110143309.4eb516b0.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: megaraidlinux@lsi.com, scsi <linux-scsi@vger.kernel.org>
-Cc: jejb <James.Bottomley@HansenPartnership.com>, akpm <akpm@linux-foundation.org>, samr <sam@ravnborg.org>
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, linux-driver@qlogic.com, akpm <akpm@linux-foundation.org>, samr <sam@ravnborg.org>
 
-From: Randy Dunlap <randy.dunlap@oracle.com>
+On Thu, 10 Jan 2008, Randy Dunlap wrote:
 
-Change megaraid_pci_driver_g variable name so that it matches the modpost
-whitelist that allows pointers to init text/data.
+> From: Randy Dunlap <randy.dunlap@oracle.com>
+> 
+> Fix section mismatch:  qla2x00_remove_one() should not be __devexit.
+> 
+> WARNING: vmlinux.o(.text+0xb014f5): Section mismatch: reference to .exit.text: (between 'qla2xxx_pci_error_detected' and 'qla2xxx_pci_mmio_enabled')
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 
-WARNING: vmlinux.o(.data+0x1a8e30): Section mismatch: reference to .init.text:megaraid_probe_one (between 'megaraid_pci_driver_g' and 'class_device_attr_megaraid_mbox_app_hndl')
+Adriann B. posted this fix already:
 
-Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
----
- drivers/scsi/megaraid/megaraid_mbox.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+	http://article.gmane.org/gmane.linux.scsi/36387
 
---- linux-2.6.24-rc7-git1.orig/drivers/scsi/megaraid/megaraid_mbox.c
-+++ linux-2.6.24-rc7-git1/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -300,7 +300,7 @@ static struct pci_device_id pci_id_table
- MODULE_DEVICE_TABLE(pci, pci_id_table_g);
- 
- 
--static struct pci_driver megaraid_pci_driver_g = {
-+static struct pci_driver megaraid_pci_driver = {
- 	.name		= "megaraid",
- 	.id_table	= pci_id_table_g,
- 	.probe		= megaraid_probe_one,
-@@ -394,7 +394,7 @@ megaraid_init(void)
- 
- 
- 	// register as a PCI hot-plug driver module
--	rval = pci_register_driver(&megaraid_pci_driver_g);
-+	rval = pci_register_driver(&megaraid_pci_driver);
- 	if (rval < 0) {
- 		con_log(CL_ANN, (KERN_WARNING
- 			"megaraid: could not register hotplug support.\n"));
-@@ -415,7 +415,7 @@ megaraid_exit(void)
- 	con_log(CL_DLEVEL1, (KERN_NOTICE "megaraid: unloading framework\n"));
- 
- 	// unregister as PCI hotplug driver
--	pci_unregister_driver(&megaraid_pci_driver_g);
-+	pci_unregister_driver(&megaraid_pci_driver);
- 
- 	return;
- }
+I was expecting it to be carried in the -mm tree since it was acked:
+
+	http://article.gmane.org/gmane.linux.scsi/36516
+
+I can add it to the patch queue if necessary.
