@@ -1,36 +1,55 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver (draft)
-Date: Thu, 10 Jan 2008 02:21:08 -0500
-Message-ID: <4785C764.3070407@garzik.org>
-References: <6b2481670801092253v666e969doe5ec2bd77e10a87e@mail.gmail.com> <4785C48C.50705@garzik.org>
+From: Oliver Neukum <oliver@neukum.org>
+Subject: Re: [RFC] Implementation of SCSI dynamic power management
+Date: Thu, 10 Jan 2008 10:26:59 +0100
+Message-ID: <200801101027.00269.oliver@neukum.org>
+References: <Pine.LNX.4.44L0.0801091530140.2856-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <4785C48C.50705@garzik.org>
-Sender: linux-ide-owner@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, IDE/ATA development list <linux-ide@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp-out001.kontent.com ([81.88.40.215]:46400 "EHLO
+	smtp-out001.kontent.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753836AbYAJJ0T (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Jan 2008 04:26:19 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0801091530140.2856-100000@iolanthe.rowland.org>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: SCSI development list <linux-scsi@vger.kernel.org>, Linux-pm mailing list <linux-pm@lists.linux-foundation.org>
 
-Jeff Garzik wrote:
-> 1) To make it easier for people to review and test the driver, I would 
-> suggest posting a diff against 2.6.24-rc7 (or 2.6.23), ignoring my 
-> original code.  Thus, it would result in a patch
+Am Mittwoch, 9. Januar 2008 21:36:20 schrieb Alan Stern:
+> On Wed, 9 Jan 2008, Oliver Neukum wrote:
+> 
+> > Am Mittwoch, 9. Januar 2008 18:22:51 schrieb Alan Stern:
+> > > On Wed, 9 Jan 2008, Oliver Neukum wrote:
+> > > 
+> > > > This has an interesting implication. As the storage driver can share
+> > > > a device with in principle any other usb driver, we must audit all usb
+> > > > drivers if we wish to adopt this patch.
+> > > > All a device's interfaces must be resumed when the storage interface
+> > > > is resumed. To resume a storage device no memory must be allocated
+> > > > because that could deadlock.
+> > > 
+> > > Maybe people shouldn't enable autosuspend for their swap device...
+> > 
+> > Good advice, but not sufficient to avoid this problem. The vm may write
+> > out normal dirty cached pages to scsi devices, which affects storage.
+> 
+> For now, I think the best approach is "head-in-the-sand".  There aren't
+> a lot of USB storage devices partnered with other functions at the
+> moment.
 
-Er, that sentence was incomplete.  Continuing...
+Very well with exception of the hub driver.
+ 
+> But it might be a good idea for all USB drivers to use GFP_NOIO in
+> their resume pathways.
 
+Yes, we should make this a requirement for every driver henceforth changed
+to support autosuspend.
 
-Thus it would result in a patch that adds a new file 
-drivers/scsi/mvsas.c to the 2.6.24-rc7 kernel, and modifies 
-drivers/scsi/Makefile and drivers/scsi/Kconfig to enable this new driver.
-
-That is the format that developers and users are most familiar with, 
-when reviewing (and testing) a new driver.
-
-But of course this is a draft, so these guidelines are certainly loose...
-
-	Jeff
-
+	Regards
+		Oliver
 
 
