@@ -1,50 +1,53 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: [PATCH 1/3]: IO resource allocation using pci_request_selected_regions API
-Date: Fri, 11 Jan 2008 09:18:26 -0800
-Message-ID: <da824cf30801110918r782e6045r80363f9b3560308f@mail.gmail.com>
-References: <20080111090330.GA4161@lsil.com>
-	 <20080111092818.GA16566@infradead.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Fri, 11 Jan 2008 11:33:25 -0600
+Message-ID: <1200072805.3286.34.camel@localhost.localdomain>
+References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
+	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
+	 <476C1472.1040103@redhat.com>
+	 <1198271036.3130.60.camel@localhost.localdomain>
+	 <476C4177.3030902@redhat.com>
+	 <1198277391.3130.73.camel@localhost.localdomain>
+	 <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
+	 <1200028577.5337.8.camel@localhost.localdomain>
+	 <9f00bd9d0801110154i3b2f9c1flf076823747950196@mail.gmail.com>
+	 <1200066295.3286.19.camel@localhost.localdomain>
+	 <9f00bd9d0801110844g176acdcdle0331783f82ed866@mail.gmail.com>
+	 <20080111170122.33b16e9a@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.45.13]:15051 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754944AbYAKRSa (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 12:18:30 -0500
-Received: from zps19.corp.google.com (zps19.corp.google.com [172.25.146.19])
-	by smtp-out.google.com with ESMTP id m0BHITYa009006
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 09:18:29 -0800
-Received: from nz-out-0506.google.com (nzdz31.prod.google.com [10.36.152.31])
-	by zps19.corp.google.com with ESMTP id m0BHIFQt010026
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 09:18:28 -0800
-Received: by nz-out-0506.google.com with SMTP id z31so672963nzd.17
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 09:18:26 -0800 (PST)
-In-Reply-To: <20080111092818.GA16566@infradead.org>
-Content-Disposition: inline
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43515 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760731AbYAKRdb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 12:33:31 -0500
+In-Reply-To: <20080111170122.33b16e9a@lxorguk.ukuu.org.uk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Prakash, Sathya" <sathya.prakash@lsi.com>, linux-scsi@vger.kernel.org, eric.moore@lsi.com
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: Filippos Papadopoulos <psybases@gmail.com>, linux-scsi@vger.kernel.org, Chuck Ebbert <cebbert@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 
-On Jan 11, 2008 1:28 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Jan 11, 2008 at 02:33:30PM +0530, Prakash, Sathya wrote:
-> > This patch modifies the IO resource allocation behavior of FUSION driver.
-> > By using the pci_select_bars and pci_request_selected_regions API
-> > The IORESOURCE_IO will be requested only when the driver needs the IO resource.
->
-> Didn't benh or someone else just replace pci_request_selected_regions
-> with a less braindead API?
 
-yes - I just posted links to that:
-http://marc.info/?l=linux-pci&m=119793439127148&w=2
+On Fri, 2008-01-11 at 17:01 +0000, Alan Cox wrote:
+> > Yes it works under 2.6.16.13.  See the beginning of this thread, i
+> > mention there some things about newer versions.
+> 
+> It worked (ish.. it has problems and always has had) before the big
+> updates, and according to my tester after the big update + two patches
+> that escaped somewhere in the process. Unfortunately my tester no longer
+> has the card to dig further.
+> 
+> The 0x0 bug was fixed a while ago but seems to have sat in -mm for a bit.
+> Don't know about further stuff.
 
-grant
+The statement that OpenSuse 10.3, based on 2.6.22.5, also fails
+indicates there may be something else that predates your reorganisation
+at the root of this (depending on whether the vendor kernel contains a
+back port or not).  That's why I want to see what happens on this system
+with a vanilla 2.6.22
 
->
->
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+James
+
+
