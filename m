@@ -1,82 +1,142 @@
-From: "Dave Young" <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Fri, 11 Jan 2008 10:40:57 +0800
-Message-ID: <a8e1da0801101840l244047c4o136ee6d71c8f9c45@mail.gmail.com>
-References: <20080107154404.GA10880@suse.de> <20080107172009.GA25943@suse.de>
-	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
-	<20080108224837.GA19623@suse.de>
-	<a8e1da0801081732i3677245chef1fda1fea65f7cf@mail.gmail.com>
-	<20080109061316.GA3249@darkstar.te-china.tietoenator.com>
-	<a8e1da0801082237x37d2a56eqee6db19017499dbc@mail.gmail.com>
-	<a8e1da0801082239h198c4d45i5cd7cf183472a166@mail.gmail.com>
-	<20080110094843.GA3014@darkstar.te-china.tietoenator.com>
-	<20080110183917.GA20188@suse.de>
+From: Linda Walsh <lkml@tlinx.org>
+Subject: SCSI error: quetion on interpretation/meaning
+Date: Thu, 10 Jan 2008 19:57:22 -0800
+Message-ID: <4786E922.6040209@tlinx.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080110183917.GA20188@suse.de>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Greg KH <gregkh@suse.de>
-Cc: a.zummo@towertech.it, krh@redhat.com, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, spi-devel-general@lists.sourceforge.net, David Brownell <david-b@pacbell.net>, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ishtar.tlinx.org ([64.81.245.74]:58065 "EHLO ishtar.tlinx.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1755855AbYAKD5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 10 Jan 2008 22:57:22 -0500
+Received: from [192.168.3.11] (Athena [192.168.3.11])
+	by ishtar.tlinx.org (8.13.3/8.12.10/SuSE Linux 0.7) with ESMTP id m0B3vMAj005205
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jan 2008 19:57:22 -0800
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Jan 11, 2008 2:39 AM, Greg KH <gregkh@suse.de> wrote:
-> On Thu, Jan 10, 2008 at 05:48:43PM +0800, Dave Young wrote:
-> > The patches are done on my side, please help to check.
->
-> Along with all of the other comments from people, I have a few.
->
-> > This is the first one of the series about driver core changes.
-> > If this one is accepted and there's no other problem I will post the others for maintainer's review (they need your comment and help because I don't know well about the specific driver logic).
-> >
-> > Thanks a lot in advance.
-> > ---
-> >
-> > 1. convert class semaphore to mutex.
-> > 2. add class iterater functions to encapsulate the detail of class devices/children list iterating :
-> >       class_for_each_device
-> >       class_find_device
-> >       class_for_each_child
-> >       class_find_child
->
-> No, please create 1 patch per type-of-change.
->
-> So in this case you would have a series of patches:
->         1) add the class iterator functions
->         2-n) convert the existing places in the kernel using the
->              class->semaphore to use the new iterator functions
->         n+1) convert class semaphore to mutex, which should only touch
->              the driver core
+Got a weird error message (kernel dmesg output below).  Is it likely 
+this type of error could be caused by a loose cable or connector?
+Or is there something else at play here?
+The card is a "Adaptec AHA-2940U2/U2W / 7890/7891" (talking to
+the 1 SCSI disk, sda).
 
-Thanks,  you are quite right. I will do it when I update the patch next time.
+Earlier today, one of the scsi-based partitions went "offline" (these 
+things seem to come in spurts)...
 
->
-> That way everything builds along the way, and it's easy to understand
-> and review.
->
-> Oh, and please start a new thread when you create a new patch like this
-> so it doesn't get burried in people's inboxes...
+Thanks,
+Linda
 
-Will do when the new patch available.
 
->
-> thanks,
->
-> greg k-h
->
+(kernel version=2.6.23.1-SMP)
 
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+scsi0: Unexpected busfree in Message-in phase
+SEQADDR == 0x14a
+sd 0:0:0:0: [sda] Attempting to queue an ABORT message
+CDB: 0x2a 0x0 0x0 0xa 0x4b 0xea 0x0 0x0 0x10 0x0
+scsi0: At time of recovery, card was not paused
+> >>>>>>>>>>>>>>>>> Dump Card State Begins <<<<<<<<<<<<<<<<<
+scsi0: Dumping Card State while idle, at SEQADDR 0x8
+Card was paused
+ACCUM = 0x0, SINDEX = 0x11, DINDEX = 0xe4, ARG_2 = 0x0
+HCNT = 0x0 SCBPTR = 0x19
+SCSISIGI[0x0] ERROR[0x0] SCSIBUSL[0x0] LASTPHASE[0x1]:(P_BUSFREE)
+SCSISEQ[0x12]:(ENAUTOATNP|ENRSELI) SBLKCTL[0xa]:(SELWIDE|SELBUSB)
+SCSIRATE[0x0] SEQCTL[0x10]:(FASTMODE) 
+SEQ_FLAGS[0xc0]:(NO_CDB_SENT|NOT_IDENTIFIED)
+SSTAT0[0x0] SSTAT1[0xa]:(PHASECHG|BUSFREE) SSTAT2[0x0]
+SSTAT3[0x0] SIMODE0[0x8]:(ENSWRAP) 
+SIMODE1[0xa4]:(ENSCSIPERR|ENSCSIRST|ENSELTIMO)
+SXFRCTL0[0x80]:(DFON) DFCNTRL[0x0] 
+DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL)
+STACK: 0x132 0x167 0x10d 0x3
+SCB count = 28
+Kernel NEXTQSCB = 26
+Card NEXTQSCB = 26
+QINFIFO entries:
+Waiting Queue entries:
+Disconnected Queue entries: 21:16
+QOUTFIFO entries:
+Sequencer Free SCB List: 25 17 24 22 18 19 23 15 20 3 13 6 1 14 11 9 16 
+4 12 5 7 10 8 0 2 26 27 28
+ 29 30 31
+Sequencer SCB Info:
+  0 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  1 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  2 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  3 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  4 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  5 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  6 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  7 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  8 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+  9 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 10 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 11 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 12 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 13 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 14 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 15 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 16 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 17 SCB_CONTROL[0x80]:(TARGET_SCB) SCB_SCSIID[0x7] SCB_LUN[0x0]
+SCB_TAG[0xff]
+ 18 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 19 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 20 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 21 SCB_CONTROL[0x64]:(DISCONNECTED|TAG_ENB|DISCENB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0x10]
+ 22 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 23 SCB_CONTROL[0xe0]:(TAG_ENB|DISCENB|TARGET_SCB) SCB_SCSIID[0x7]
+SCB_LUN[0x0] SCB_TAG[0xff]
+ 24 SCB_CONTROL[0x0] SCB_SCSIID[0x7] SCB_LUN[0x0] SCB_TAG[0xff]
+ 25 SCB_CONTROL[0x80]:(TARGET_SCB) SCB_SCSIID[0x7] SCB_LUN[0x0]
+SCB_TAG[0xff]
+ 26 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 27 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 28 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 29 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 30 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+ 31 SCB_CONTROL[0x0] SCB_SCSIID[0xff]:(TWIN_CHNLB|OID|TWIN_TID)
+SCB_LUN[0xff]:(SCB_XFERLEN_ODD|LID) SCB_TAG[0xff]
+Pending list:
+ 16 SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) SCB_SCSIID[0x7]
+SCB_LUN[0x0]
+Kernel Free SCB list: 17 25 21 20 11 23 27 18 19 22 7 14 10 15 13 9 12 2 
+1 5 8 6 4 0 3 24
+
+<<<<<<<<<<<<<<<<< Dump Card State Ends >>>>>>>>>>>>>>>>>>
+(scsi0:A:0:0): Device is disconnected, re-queuing SCB
+Recovery code sleeping
+(scsi0:A:0:0): Abort Tag Message Sent
+(scsi0:A:0:0): SCB 16 - Abort Tag Completed.
+Recovery SCB completes
+Recovery code awake
+aic7xxx_abort returns 0x2002
