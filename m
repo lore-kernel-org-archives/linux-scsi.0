@@ -1,17 +1,17 @@
 From: "Prakash, Sathya" <sathya.prakash@lsi.com>
-Subject: [PATCH 1/3]: IO resource allocation using pci_request_selected_regions API
-Date: Fri, 11 Jan 2008 14:33:30 +0530
-Message-ID: <20080111090330.GA4161@lsil.com>
+Subject: [PATCH 1/3] mpt fusion: IO resource allocation using pci_request_selected_regions API [Resent]
+Date: Fri, 11 Jan 2008 14:37:18 +0530
+Message-ID: <20080111090718.GB4161@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:55840 "EHLO mail0.lsil.com"
+Received: from mail0.lsil.com ([147.145.40.20]:56076 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752625AbYAKJHP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 04:07:15 -0500
+	id S1757355AbYAKJK7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 04:10:59 -0500
 Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
-	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id m0B94Vul007750
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 01:04:31 -0800 (PST)
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id m0B98FAS008099
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 01:08:15 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,7 +19,7 @@ To: linux-scsi@vger.kernel.org
 Cc: eric.moore@lsi.com
 
 This patch modifies the IO resource allocation behavior of FUSION driver. 
-By using the pci_select_bars and pci_request_selected_regions API
+By using the pci_select_bars and pci_request_selected_regions API 
 The IORESOURCE_IO will be requested only when the driver needs the IO resource.
 
 signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
@@ -144,4 +144,3 @@ index d7682e0..4031c15 100644
  	u8			__iomem *memmap;	/* mmap address */
  	struct Scsi_Host	*sh;		/* Scsi Host pointer */
  	SpiCfgData		spi_data;	/* Scsi config. data */
- 
