@@ -1,38 +1,30 @@
 From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [patch 1/1] blktrace: Add blktrace ioctls to SCSI generic devices
-Date: Fri, 11 Jan 2008 10:11:42 +0100
-Message-ID: <20080111091142.GL6258@kernel.dk>
-References: <20080107074556.114594000@de.ibm.com> <20080107074647.784615000@de.ibm.com>
+Subject: Re: [PATCH] cciss: section mismatch
+Date: Fri, 11 Jan 2008 10:13:36 +0100
+Message-ID: <20080111091335.GM6258@kernel.dk>
+References: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:19693 "EHLO kernel.dk"
+Received: from brick.kernel.dk ([87.55.233.238]:23941 "EHLO kernel.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753722AbYAKJLp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 04:11:45 -0500
+	id S1759965AbYAKJNj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 04:13:39 -0500
 Content-Disposition: inline
-In-Reply-To: <20080107074647.784615000@de.ibm.com>
+In-Reply-To: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christof Schmitt <christof.schmitt@de.ibm.com>
-Cc: linux-btrace@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, mike.miller@hp.com, iss_storagedev@hp.com, akpm <akpm@linux-foundation.org>, samr <sam@ravnborg.org>
 
-On Mon, Jan 07 2008, Christof Schmitt wrote:
-> From: Christof Schmitt <christof.schmitt@de.ibm.com>
+On Thu, Jan 10 2008, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Since the SCSI layer uses the request queues from the block layer, blktrace can
-> also be used to trace the requests to all SCSI devices (like SCSI tape drives),
-> not only disks. The only missing part is the ioctl interface to start and stop
-> tracing.
+> Mark cciss_pci_init() as __devinit, to fix section mismatch warning.
 > 
-> This patch adds the SETUP, START, STOP and TEARDOWN ioctls from blktrace to the
-> sg device files. With this change, blktrace can be used for SCSI devices like
-> for disks, e.g.: blktrace -d /dev/sg1 -o - | blkparse -i -
-> 
-> Signed-off-by: Christof Schmitt <christof.schmitt@de.ibm.com>
+> WARNING: vmlinux.o(.text+0x601fc9): Section mismatch: reference to .init.text: (between 'cciss_pci_init' and 'cciss_getgeometry')
 
-Looks fine to me, queued up for 2.6.25.
-
+Thanks Randy, added.
 
 -- 
 Jens Axboe
