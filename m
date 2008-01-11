@@ -1,108 +1,91 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [usb-storage] PATCH:
-	usb-storage-psc1350-v4.patch (was Linux scsi /
-	usb-mass-storage and HP printer cardreader bug + fix)
-Date: Fri, 11 Jan 2008 12:34:24 -0800
-Message-ID: <20080111203424.GE14375@one-eyed-alien.net>
-References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>
-	<4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>
-	<4787CE08.5000304@hhs.nl>
+From: Krzysztof Helt <krzysztof.h1@poczta.fm>
+Subject: Re: [PATCH] sym53_8xx_2: fixes two bugs related to chip reset
+Date: Fri, 11 Jan 2008 21:50:46 +0100
+Message-ID: <20080111215046.6c4a3c80.krzysztof.h1@poczta.fm>
+References: <20080109235944.34333eb6.krzysztof.h1@poczta.fm>
+	<1199922703.3493.76.camel@localhost.localdomain>
+	<20080110233118.d2b137ba.krzysztof.h1@poczta.fm>
+	<1200005221.3141.118.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1006082646=="
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4787CE08.5000304@hhs.nl>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Hans de Goede <j.w.r.degoede@hhs.nl>
-Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, fedora-kernel-list@redhat.com, Boaz Harrosh <bharrosh@panasas.com>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp35.poczta.interia.pl ([80.48.65.35]:26259 "EHLO
+	smtp4.poczta.interia.pl" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1759335AbYAKUrW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 15:47:22 -0500
+In-Reply-To: <1200005221.3141.118.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, matthew@wil.cx
+
+From: Krzysztof Helt <krzysztof.h1@wp.pl>
+
+This patch fixes two bugs pointed by James Bottomley:
+
+ 1. the if (!sym_data->io_reset).  That variable is only ever filled
+    by a stack based completion.  If we find it non empty it means
+    this code has been entered twice and we have a severe problem,
+    so that should just become a BUG_ON(!sym_data->io_reset).
+ 2. sym_data->io_reset should be set to NULL before the routine is
+    exited otherwise the PCI recovery code could end up completing
+    what will be a bogus pointer into the stack.
+
+Big thanks to James Bottomley for help with the patch.
+
+Signed-off-by: Krzysztof Helt <krzysztof.h1@w.pl>
+
+---
+This is the second version with clearing io_reset value
+under lock. I haven't got that it was a race between resume
+and handler functions.
+
+diff -urp linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c
+--- linux-ref/drivers/scsi/sym53c8xx_2/sym_glue.c	2007-12-23 20:39:44.000000000 +0100
++++ linux-new/drivers/scsi/sym53c8xx_2/sym_glue.c	2008-01-10 21:26:32.000000000 +0100
+@@ -609,22 +609,24 @@ static int sym_eh_handler(int op, char *
+ 	 */
+ #define WAIT_FOR_PCI_RECOVERY	35
+ 	if (pci_channel_offline(pdev)) {
+-		struct completion *io_reset;
+ 		int finished_reset = 0;
+ 		init_completion(&eh_done);
+ 		spin_lock_irq(shost->host_lock);
+ 		/* Make sure we didn't race */
+ 		if (pci_channel_offline(pdev)) {
+-			if (!sym_data->io_reset)
+-				sym_data->io_reset = &eh_done;
+-			io_reset = sym_data->io_reset;
++			BUG_ON(!sym_data->io_reset);
++			sym_data->io_reset = &eh_done;
+ 		} else {
+ 			finished_reset = 1;
+ 		}
+ 		spin_unlock_irq(shost->host_lock);
+ 		if (!finished_reset)
+-			finished_reset = wait_for_completion_timeout(io_reset,
++			finished_reset = wait_for_completion_timeout
++						(sym_data->io_reset,
+ 						WAIT_FOR_PCI_RECOVERY*HZ);
++		spin_lock_irq(shost->host_lock);
++		sym_data->io_reset = NULL;
++		spin_unlock_irq(shost->host_lock);
+ 		if (!finished_reset)
+ 			return SCSI_FAILED;
+ 	}
+@@ -1879,7 +1881,6 @@ static void sym2_io_resume(struct pci_de
+ 	spin_lock_irq(shost->host_lock);
+ 	if (sym_data->io_reset)
+ 		complete_all(sym_data->io_reset);
+-	sym_data->io_reset = NULL;
+ 	spin_unlock_irq(shost->host_lock);
+ }
+ 
+
+----------------------------------------------------------------------
+Rozdajemy nagrody! 
+
+Sprawdz >> http://link.interia.pl/f1cbf
 
 
---===============1006082646==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="/2994txjAzEdQwm5"
-Content-Disposition: inline
-
-
---/2994txjAzEdQwm5
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Fri, Jan 11, 2008 at 09:14:00PM +0100, Hans de Goede wrote:
-> Boaz Harrosh wrote:
-> >Yes, you're right. in ULDs it is a much proper way to do this.
-> >
-> >So I guess you'll have to do that special host flag or device
-> >flag, and add a check for it in sd.c. You'll see that sd.c is=20
-> >already doing bufflen truncation at sd_prep_fn(), just add one
-> >more case.
-> >
->=20
-> Done, thanks for the hint. Patch implementing my fix this way attached,=
-=20
-> please apply.
-
-Well, I can't say that I'm really a big fan of matching a multi-interface
-device based on the interface class code, but I don't see a better solution
-that isn't a major coding project.
-
-This approach looks pretty reasonable to me.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-SP: I sell software for Microsoft.  Can you set me free?
-DP: Natural Selection says I shouldn't.
-					-- MS Salesman and Dust Puppy
-User Friendly, 4/2/1998
-
---/2994txjAzEdQwm5
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHh9LQHL9iwnUZqnkRArHpAJ4wzGHh2y7n1yK1B2JunmX5053c+QCgivhT
-x4F0uon24345+Mhaa/3ooVc=
-=H+Dg
------END PGP SIGNATURE-----
-
---/2994txjAzEdQwm5--
-
-
---===============1006082646==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
---===============1006082646==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
-
---===============1006082646==--
