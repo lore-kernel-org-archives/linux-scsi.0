@@ -1,28 +1,32 @@
 From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH] cciss: section mismatch
-Date: Fri, 11 Jan 2008 18:55:08 +0100
-Message-ID: <20080111175508.GE28624@uranus.ravnborg.org>
-References: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
+Subject: Re: [PATCH] qla2xyz: fix section mismatch
+Date: Fri, 11 Jan 2008 18:56:42 +0100
+Message-ID: <20080111175642.GF28624@uranus.ravnborg.org>
+References: <20080110143309.4eb516b0.randy.dunlap@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:49056 "EHLO pasmtpB.tele.dk"
+Received: from pasmtpa.tele.dk ([80.160.77.114]:51568 "EHLO pasmtpA.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1762350AbYAKRzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 12:55:06 -0500
+	id S1760434AbYAKR4h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 12:56:37 -0500
 Content-Disposition: inline
-In-Reply-To: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
+In-Reply-To: <20080110143309.4eb516b0.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: scsi <linux-scsi@vger.kernel.org>, mike.miller@hp.com, iss_storagedev@hp.com, akpm <akpm@linux-foundation.org>, axboe@kernel.dk
+Cc: scsi <linux-scsi@vger.kernel.org>, linux-driver@qlogic.com, akpm <akpm@linux-foundation.org>
 
-On Thu, Jan 10, 2008 at 02:32:35PM -0800, Randy Dunlap wrote:
+On Thu, Jan 10, 2008 at 02:33:09PM -0800, Randy Dunlap wrote:
 > From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Mark cciss_pci_init() as __devinit, to fix section mismatch warning.
+> Fix section mismatch:  qla2x00_remove_one() should not be __devexit.
 > 
-> WARNING: vmlinux.o(.text+0x601fc9): Section mismatch: reference to .init.text: (between 'cciss_pci_init' and 'cciss_getgeometry')
+> WARNING: vmlinux.o(.text+0xb014f5): Section mismatch: reference to .exit.text: (between 'qla2xxx_pci_error_detected' and 'qla2xxx_pci_mmio_enabled')
 > 
 > Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
 Acked-by: Sam Ravnborg <sam@ravnborg.org>
+
+This could oops under the wrong conditions.
+
+	Sam
