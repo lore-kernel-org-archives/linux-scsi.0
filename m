@@ -1,46 +1,38 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [PATCH] Don't blatt first element of prv in sg_chain()
-Date: Fri, 11 Jan 2008 10:15:03 +0100
-Message-ID: <20080111091503.GN6258@kernel.dk>
-References: <200801071538.43371.rusty@rustcorp.com.au>
+From: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Subject: [PATCH 3/3] mpt fusion: Fix for module load error when mptctl and mptsas are loaded in parallel
+Date: Fri, 11 Jan 2008 14:46:30 +0530
+Message-ID: <20080111091630.GD4161@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:23950 "EHLO kernel.dk"
+Received: from mail0.lsil.com ([147.145.40.20]:56686 "EHLO mail0.lsil.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756478AbYAKJPI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 04:15:08 -0500
+	id S1755427AbYAKJUN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 04:20:13 -0500
+Received: from milmhbs0.lsil.com (mhbs.lsil.com [147.145.1.30])
+	by mail0.lsil.com (8.12.11/8.12.11) with ESMTP id m0B9HRt8009141
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 01:17:28 -0800 (PST)
 Content-Disposition: inline
-In-Reply-To: <200801071538.43371.rusty@rustcorp.com.au>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rusty Russell <rusty@rustcorp.com.au>
-Cc: Tejun Heo <htejun@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: eric.moore@lsi.com
 
-On Mon, Jan 07 2008, Rusty Russell wrote:
-> I realize that sg chaining is a ploy to make the rest of the kernel
-> devs feel the pain of the SCSI subsystem.  But this was a little
-> unsubtle.
-> 
-> Signed-off-by: Rusty Russell <rusty@rustcorp.com.au>
-> 
-> diff -r b3aec596b841 include/linux/scatterlist.h
-> --- a/include/linux/scatterlist.h	Mon Jan 07 12:43:56 2008 +1100
-> +++ b/include/linux/scatterlist.h	Mon Jan 07 15:01:51 2008 +1100
-> @@ -188,8 +188,8 @@ static inline void sg_chain(struct scatt
->  	/*
->  	 * offset and length are unused for chain entry.  Clear them.
->  	 */
-> -	prv->offset = 0;
-> -	prv->length = 0;
-> +	prv[prv_nents - 1].offset = 0;
-> +	prv[prv_nents - 1].length = 0;
->  
->  	/*
->  	 * Set lowest bit to indicate a link pointer, and make sure to clear
+This patch fixes a panic at mptctl_probe -> mutex_init if the mptsas and mptcl module are loaded in parallel, this is because IOC is NULL, the fix is in mpt_device_register to call probe only with non-zero IOC pointer.
 
-Dang, I should have caught that. Thanks Rusty...
+signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
+---
 
--- 
-Jens Axboe
-
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index d733438..042bc86 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -729,6 +729,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+ 
+ 	/* call per pci device probe entry point */
+ 	list_for_each_entry(ioc, &ioc_list, list) {
++		if (!pci_get_drvdata(ioc->pcidev))
++			continue;
+ 		id = ioc->pcidev->driver ?
+ 		    ioc->pcidev->driver->id_table : NULL;
+ 		if (dd_cbfunc->probe)
