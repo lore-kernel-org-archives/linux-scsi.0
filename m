@@ -1,59 +1,35 @@
-From: Karen Shaeffer <shaeffer@neuralscape.com>
-Subject: MPT Fusion initialization in 2.6.23.12
-Date: Fri, 11 Jan 2008 06:01:20 -0800
-Message-ID: <20080111140120.GA2116@synapse.neuralscape.com>
+From: "Miller, Mike (OS Dev)" <Mike.Miller@hp.com>
+Subject: RE: [PATCH] cciss: section mismatch
+Date: Fri, 11 Jan 2008 15:14:19 +0000
+Message-ID: <DEE40752C8AF224BB890E455C7B8E0FE19506934@G6W0268.americas.hpqcorp.net>
+References: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from synapse.neuralscape.com ([198.144.200.82]:42768 "EHLO
-	neuralscape.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756887AbYAKObF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 09:31:05 -0500
-Received: from localhost.neuralscape.com ([127.0.0.1] helo=synapse.neuralscape.com)
-	by neuralscape.com with esmtp (Exim 4.61)
-	(envelope-from <shaeffer@synapse.neuralscape.com>)
-	id 1JDKRk-0001KU-P4
-	for linux-scsi@vger.kernel.org; Fri, 11 Jan 2008 06:01:20 -0800
-Received: (from shaeffer@localhost)
-	by synapse.neuralscape.com (8.13.6/8.13.6/Submit) id m0BE1KvN005113
-	for linux-scsi@vger.kernel.org; Fri, 11 Jan 2008 06:01:20 -0800
-Content-Disposition: inline
+Received: from g1t0028.austin.hp.com ([15.216.28.35]:19128 "EHLO
+	g1t0028.austin.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756100AbYAKPPD convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 10:15:03 -0500
+In-Reply-To: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>, scsi <linux-scsi@vger.kernel.org>, ISS StorageDev <iss_storagedev@hp.com>
+Cc: akpm <akpm@linux-foundation.org>, samr <sam@ravnborg.org>, "axboe@kernel.dk" <axboe@kernel.dk>
 
-Hi,
+> --- linux-2.6.24-rc7-git1.orig/drivers/block/cciss.c
+> +++ linux-2.6.24-rc7-git1/drivers/block/cciss.c
+> @@ -2927,7 +2927,7 @@ default_int_mode:
+>         return;
+>  }
+>
+> -static int cciss_pci_init(ctlr_info_t *c, struct pci_dev *pdev)
+> +static int __devinit cciss_pci_init(ctlr_info_t *c, struct pci_dev
+> +*pdev)
+>  {
+>         ushort subsystem_vendor_id, subsystem_device_id, command;
+>         __u32 board_id, scratchpad = 0;
+>
 
-I have this server with an LSI Logic SAS1064 RAID
-enabled Ultra320 SCSI controller on the system board.
-I am running a vanilla 2.6.23.12 kernel. Everything
-runs well, except during the boot I see these logs
-in dmesg and the syslogs.
-
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000001h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000003h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000004h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000005h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000006h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000007h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000008h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000009h
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=0000000Ah
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=0000000Bh
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=0000000Ch
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=0000000Dh
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=0000000Eh
-mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=0000000Fh
-
-I've traced through the mptbase.c code and can see these
-invalid config pages are read from the controller during
-initialization. This doesn't appear to cause any ill
-effects, but I am wondering how to resolve this? Maybe
-a MPT BIOS or MPT firmware upgrade will fix this?
-
-Thanks,
-Karen
--- 
- Karen Shaeffer
- Neuralscape, Palo Alto, Ca. 94306
- shaeffer@neuralscape.com  http://www.neuralscape.com
+Thanks, Randy.
