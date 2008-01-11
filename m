@@ -1,58 +1,175 @@
-From: "Filippos Papadopoulos" <psybases@gmail.com>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Fri, 11 Jan 2008 18:44:23 +0200
-Message-ID: <9f00bd9d0801110844g176acdcdle0331783f82ed866@mail.gmail.com>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
-	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
-	 <476C1472.1040103@redhat.com>
-	 <1198271036.3130.60.camel@localhost.localdomain>
-	 <476C4177.3030902@redhat.com>
-	 <1198277391.3130.73.camel@localhost.localdomain>
-	 <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
-	 <1200028577.5337.8.camel@localhost.localdomain>
-	 <9f00bd9d0801110154i3b2f9c1flf076823747950196@mail.gmail.com>
-	 <1200066295.3286.19.camel@localhost.localdomain>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: [PATCH 1/3] mpt fusion: IO resource allocation using pci_request_selected_regions API [Resent]
+Date: Fri, 11 Jan 2008 08:52:04 -0800
+Message-ID: <da824cf30801110852x439bf24q4e1d7a6bb6b7edad@mail.gmail.com>
+References: <20080111090718.GB4161@lsil.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wx-out-0506.google.com ([66.249.82.233]:17051 "EHLO
-	wx-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755761AbYAKQo0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 11:44:26 -0500
-Received: by wx-out-0506.google.com with SMTP id h31so749621wxd.4
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 08:44:25 -0800 (PST)
-In-Reply-To: <1200066295.3286.19.camel@localhost.localdomain>
+Received: from smtp-out.google.com ([216.239.45.13]:12649 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760233AbYAKQwG (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 11:52:06 -0500
+Received: from zps18.corp.google.com (zps18.corp.google.com [172.25.146.18])
+	by smtp-out.google.com with ESMTP id m0BGq5OQ019149
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 08:52:05 -0800
+Received: from rv-out-0910.google.com (rvbl15.prod.google.com [10.140.88.15])
+	by zps18.corp.google.com with ESMTP id m0BGpU5d008107
+	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 08:52:05 -0800
+Received: by rv-out-0910.google.com with SMTP id l15so1170759rvb.43
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 08:52:04 -0800 (PST)
+In-Reply-To: <20080111090718.GB4161@lsil.com>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, Chuck Ebbert <cebbert@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org, eric.moore@lsi.com
 
-On Jan 11, 2008 5:44 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> >
-> > I havent reported "initio: I/O port range 0x0 is busy."
->
-> Sorry ... we appear to have several reporters of different bugs in this
-> thread.  That message was copied by Chuck Ebbert from a Red Hat
-> bugzilla ... I was assuming it was the same problem.
->
-> > I applied the patch on 2.6.24-rc6-git9 but unfortunatelly same thing happens.
->
-> First off, has this driver ever worked for you in 2.6?  Just booting
-> SLES9 (2.6.5) or RHEL4 (2.6.9) ... or one of their open equivalents to
-> check a really old kernel would be helpful.  If you can get it to work,
-> then we can proceed with a patch reversion regime based on the
-> assumption that the problem is a recent commit.
+On Jan 11, 2008 1:07 AM, Prakash, Sathya <sathya.prakash@lsi.com> wrote:
+> This patch modifies the IO resource allocation behavior of FUSION driver.
+> By using the pci_select_bars and pci_request_selected_regions API
+> The IORESOURCE_IO will be requested only when the driver needs the IO resource.
 
-Yes it works under 2.6.16.13.  See the beginning of this thread, i
-mention there some things about newer versions.
+The plan on linux-pci is to remove and replace pci_select_bars()
+and pci_enable_bars() with pci_enable_device_mmio() and pci_enable_device_io().
+This is because PCI only has two bits in the config space command
+register of each device to enable or disable decoding of either address space
+no control over individual BARs.
+
+See the Dec 2007 linux-pci achives. e.g.:
+    http://marc.info/?l=linux-pci&m=119793439127148&w=2
+and
+    http://marc.info/?l=linux-kernel&m=119848021005444&w=2
+
+cheers,
+grant
 
 >
-> Thanks,
+> signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
+> ---
 >
-> James
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index 52fb216..9476ad2 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -1470,9 +1470,6 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+>         if (mpt_debug_level)
+>                 printk(KERN_INFO MYNAM ": mpt_debug_level=%xh\n", mpt_debug_level);
 >
+> -       if (pci_enable_device(pdev))
+> -               return r;
+> -
+>         ioc = kzalloc(sizeof(MPT_ADAPTER), GFP_ATOMIC);
+>         if (ioc == NULL) {
+>                 printk(KERN_ERR MYNAM ": ERROR - Insufficient memory to add adapter!\n");
+> @@ -1482,6 +1479,20 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+>         ioc->id = mpt_ids++;
+>         sprintf(ioc->name, "ioc%d", ioc->id);
 >
+> +       ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
+> +       if (pci_enable_device_bars(pdev, ioc->bars)) {
+> +               kfree(ioc);
+> +               printk(MYIOC_s_ERR_FMT "pci_enable_device_bars() with MEM "
+> +                   "failed\n",ioc->name);
+> +               return r;
+> +       }
+> +       if (pci_request_selected_regions(pdev, ioc->bars, "mpt")) {
+> +               kfree(ioc);
+> +               printk(MYIOC_s_ERR_FMT "pci_request_selected_regions() with "
+> +                   "MEM failed\n",ioc->name);
+> +               return r;
+> +       }
+> +
+>         dinitprintk(ioc, printk(MYIOC_s_INFO_FMT ": mpt_adapter_install\n", ioc->name));
+>
+>         if (!pci_set_dma_mask(pdev, DMA_64BIT_MASK)) {
+> @@ -1791,6 +1802,7 @@ mpt_suspend(struct pci_dev *pdev, pm_message_t state)
+>         CHIPREG_WRITE32(&ioc->chip->IntStatus, 0);
+>
+>         pci_disable_device(pdev);
+> +       pci_release_selected_regions(pdev, ioc->bars);
+>         pci_set_power_state(pdev, device_state);
+>
+>         return 0;
+> @@ -1807,7 +1819,6 @@ mpt_resume(struct pci_dev *pdev)
+>         MPT_ADAPTER *ioc = pci_get_drvdata(pdev);
+>         u32 device_state = pdev->current_state;
+>         int recovery_state;
+> -       int err;
+>
+>         printk(MYIOC_s_INFO_FMT
+>         "pci-resume: pdev=0x%p, slot=%s, Previous operating state [D%d]\n",
+> @@ -1815,9 +1826,15 @@ mpt_resume(struct pci_dev *pdev)
+>
+>         pci_set_power_state(pdev, 0);
+>         pci_restore_state(pdev);
+> -       err = pci_enable_device(pdev);
+> -       if (err)
+> -               return err;
+> +       if (ioc->facts.Flags & MPI_IOCFACTS_FLAGS_FW_DOWNLOAD_BOOT)
+> +           ioc->bars = pci_select_bars(ioc->pcidev, IORESOURCE_MEM |
+> +           IORESOURCE_IO);
+> +       else
+> +               ioc->bars = pci_select_bars(pdev, IORESOURCE_MEM);
+> +       if (pci_enable_device_bars(pdev, ioc->bars))
+> +               return 0;
+> +       if (pci_request_selected_regions(pdev, ioc->bars, "mpt"))
+> +               return 0;
+>
+>         /* enable interrupts */
+>         CHIPREG_WRITE32(&ioc->chip->IntMask, MPI_HIM_DIM);
+> @@ -1878,6 +1895,7 @@ mpt_signal_reset(u8 index, MPT_ADAPTER *ioc, int reset_phase)
+>   *             -2 if READY but IOCFacts Failed
+>   *             -3 if READY but PrimeIOCFifos Failed
+>   *             -4 if READY but IOCInit Failed
+> + *             -5 if failed to enable_device_bars and/or request_selected_regions
+>   */
+>  static int
+>  mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+> @@ -1976,6 +1994,18 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
+>                 }
+>         }
+>
+> +       if ((ret == 0) && (reason == MPT_HOSTEVENT_IOC_BRINGUP) &&
+> +           (ioc->facts.Flags & MPI_IOCFACTS_FLAGS_FW_DOWNLOAD_BOOT)) {
+> +               pci_release_selected_regions(ioc->pcidev, ioc->bars);
+> +               ioc->bars = pci_select_bars(ioc->pcidev, IORESOURCE_MEM |
+> +                   IORESOURCE_IO);
+> +               if (pci_enable_device_bars(ioc->pcidev, ioc->bars))
+> +                       return -5;
+> +               if (pci_request_selected_regions(ioc->pcidev, ioc->bars,
+> +                       "mpt"))
+> +                       return -5;
+> +       }
+> +
+>         /*
+>          * Device is reset now. It must have de-asserted the interrupt line
+>          * (if it was asserted) and it should be safe to register for the
+> @@ -2385,6 +2415,9 @@ mpt_adapter_dispose(MPT_ADAPTER *ioc)
+>                 ioc->memmap = NULL;
+>         }
+>
+> +       pci_disable_device(ioc->pcidev);
+> +       pci_release_selected_regions(ioc->pcidev, ioc->bars);
+> +
+>  #if defined(CONFIG_MTRR) && 0
+>         if (ioc->mtrr_reg > 0) {
+>                 mtrr_del(ioc->mtrr_reg, 0, 0);
+> diff --git a/drivers/message/fusion/mptbase.h b/drivers/message/fusion/mptbase.h
+> index d7682e0..4031c15 100644
+> --- a/drivers/message/fusion/mptbase.h
+> +++ b/drivers/message/fusion/mptbase.h
+> @@ -629,6 +629,7 @@ typedef struct _MPT_ADAPTER
+>         dma_addr_t              HostPageBuffer_dma;
+>         int                      mtrr_reg;
+>         struct pci_dev          *pcidev;        /* struct pci_dev pointer */
+> +       int                     bars;   /* bitmask of BAR's that must be configured */
+>         u8                      __iomem *memmap;        /* mmap address */
+>         struct Scsi_Host        *sh;            /* Scsi Host pointer */
+>         SpiCfgData              spi_data;       /* Scsi config. data */
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >
