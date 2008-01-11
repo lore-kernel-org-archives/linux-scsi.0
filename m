@@ -1,35 +1,49 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Fri, 11 Jan 2008 18:21:07 +0000
-Message-ID: <20080111182107.08ec03dc@lxorguk.ukuu.org.uk>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
-	<9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>
-	<47666904.8060605@panasas.com>
-	<9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>
-	<476C1472.1040103@redhat.com>
-	<1198271036.3130.60.camel@localhost.localdomain>
-	<476C4177.3030902@redhat.com>
-	<1198277391.3130.73.camel@localhost.localdomain>
-	<9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
-	<1200028577.5337.8.camel@localhost.localdomain>
-	<9f00bd9d0801110154i3b2f9c1flf076823747950196@mail.gmail.com>
-	<1200066295.3286.19.camel@localhost.localdomain>
-	<4787ACF1.7040501@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 3/3] mpt fusion: Fix for module load error when mptctl
+	and mptsas are loaded in parallel
+Date: Fri, 11 Jan 2008 12:26:36 -0600
+Message-ID: <1200075996.3286.46.camel@localhost.localdomain>
+References: <20080111091630.GD4161@lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:57399 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1761482AbYAKSYZ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 13:24:25 -0500
-In-Reply-To: <4787ACF1.7040501@redhat.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:46626 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756729AbYAKS0n (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 13:26:43 -0500
+In-Reply-To: <20080111091630.GD4161@lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chuck Ebbert <cebbert@redhat.com>
-Cc: Filippos Papadopoulos <psybases@gmail.com>, linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>
+To: "Prakash, Sathya" <sathya.prakash@lsi.com>
+Cc: linux-scsi@vger.kernel.org, eric.moore@lsi.com
 
-> Our reporter has applied patches since then and now reports the exact
-> same symptoms that Filippos does. (It just hangs after loading the driver.)
 
-Can you add me to the cc of the Red Hat bug, or give me the #
+On Fri, 2008-01-11 at 14:46 +0530, Prakash, Sathya wrote:
+> This patch fixes a panic at mptctl_probe -> mutex_init if the mptsas and mptcl module are loaded in parallel, this is because IOC is NULL, the fix is in mpt_device_register to call probe only with non-zero IOC pointer.
+> 
+> signed-off-by: Sathya Prakash <sathya.prakash@lsi.com>
+> ---
+> 
+> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+> index d733438..042bc86 100644
+> --- a/drivers/message/fusion/mptbase.c
+> +++ b/drivers/message/fusion/mptbase.c
+> @@ -729,6 +729,8 @@ mpt_device_driver_register(struct mpt_pci_driver * dd_cbfunc, u8 cb_idx)
+>  
+>  	/* call per pci device probe entry point */
+>  	list_for_each_entry(ioc, &ioc_list, list) {
+> +		if (!pci_get_drvdata(ioc->pcidev))
+> +			continue;
+
+This looks rather dubious ... it doesn't fix the race, it just manifests
+differently (and non fatally) by apparently not attaching the mptctl.
+
+Isn't a better fix to set the drvdata earlier in the process, say in
+mpt_attach *before* you add the ioc to the ioc_list?  That way the race
+can never occur in the first place.
+
+James
+
+
