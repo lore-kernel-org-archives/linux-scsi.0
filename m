@@ -1,7 +1,7 @@
 From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: respond to enclosure service events
-Date: Fri, 11 Jan 2008 08:15:01 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F437E440B6@ADPE2K703.adaptec.com>
+Subject: [RFC] aacraid: driver feature flags?
+Date: Fri, 11 Jan 2008 08:41:04 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F437E44117@ADPE2K703.adaptec.com>
 References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
  <jefxzqqeha.fsf@sykes.suse.de>
  <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
@@ -11,160 +11,81 @@ References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea
  <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
  <532ABFBDAAC3A34EB12EBA6CEC2838F40FE739@ADPE2K703.adaptec.com>
  <532ABFBDAAC3A34EB12EBA6CEC2838F40FE73E@ADPE2K703.adaptec.com>
+ <532ABFBDAAC3A34EB12EBA6CEC2838F437E96989@ADPE2K703.adaptec.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E440B6ADPE2K703adapte_"
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:41558 "EHLO mail-gw3.adaptec.com"
+Received: from ts.adaptec.com ([162.62.93.58]:42648 "EHLO mail-gw3.adaptec.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758296AbYAKQPF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 11:15:05 -0500
-Received: from ADPE2K701.adaptec.com (adpe2k701.adaptec.com [10.25.8.25])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 41CB023CEBE
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 08:15:04 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F40FE73E@ADPE2K703.adaptec.com>
+	id S1756936AbYAKQlH convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 11:41:07 -0500
+In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F437E96989@ADPE2K703.adaptec.com>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E440B6ADPE2K703adapte_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'linux-kernel@vger.kernel.org'" <linux-kernel@vger.kernel.org>
 
 Feature enhancement.
 
-Added support to respond to enclosure service events (controller AIFs) to a=
-dd, online or offline physical targets reported to sg. Also added online an=
-d offlining of arrays. Removed an automatic variable definition in a sub bl=
-ock that hid an earlier definition, determined to be inert as the sub-block=
- use did not interfere. Bumped the driver versioning to stamp the addition =
-of this feature.
+Do we have a developing standard on how a driver may report to user tools via sysfs what features are supported or not by the driver? In the following I am proposing a 'flags' entry that will reside in the host controllers tree, with a newline separated list of arbitrary ascii named features that indicate whether the combination of driver and controller has support for said feature. Breaking from the one-line output typical of sysfs entries, newline was added to tailor for grep, or simple gets line by line string match within an application. I added one for a compiler time check for existence of debug print output, one for an optional manifest defined enhanced status reporting in the logs, and one for runtime reporting whether the controller and driver supports arrays larger than 2TB to my
+  example below.
 
-This attached patch is against current scsi-misc-2.6 *after* series of patc=
-hes from past week are applied, as there is some overlap on the aacraid.h f=
-ile.
+Suggestions?
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments.
+This following patch is against current scsi-misc-2.6
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's handling of patch attachments, so one can NOT use the following to patch, it is only present to demonstrate the idea.
 
- drivers/scsi/aacraid/aacraid.h |    5 +-
- drivers/scsi/aacraid/commsup.c |   99 +++++++++++++++++++++++++++++++-----=
------
- 2 files changed, 79 insertions(+), 25 deletions(-)
+ drivers/scsi/aacraid/linit.c |   25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
 
-Sincerely -- Mark Salyzyn
+diff -ru a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+--- a/drivers/scsi/aacraid/linit.c      2008-01-11 11:19:11.378159940 -0500
++++ b/drivers/scsi/aacraid/linit.c      2008-01-11 11:23:19.040145945 -0500
+@@ -788,6 +788,23 @@
+        return len;
+ }
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E440B6ADPE2K703adapte_
-Content-Type: application/octet-stream; name="aacraid_enclosure.patch"
-Content-Description: aacraid_enclosure.patch
-Content-Disposition: attachment; filename="aacraid_enclosure.patch";
-	size=5730; creation-date="Fri, 11 Jan 2008 07:59:55 GMT";
-	modification-date="Fri, 11 Jan 2008 07:59:55 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmggYi9kcml2ZXJzL3Njc2kv
-YWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oCTIw
-MDgtMDEtMTEgMTA6NDg6MjMuOTQ0NzAyNDM1IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNy
-YWlkL2FhY3JhaWQuaAkyMDA4LTAxLTExIDEwOjU4OjU0LjU0NzQ3NTMyMyAtMDUwMApAQCAtMTIs
-NyArMTIsNyBAQAogICotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tKi8KIAogI2lmbmRlZiBBQUNfRFJJVkVS
-X0JVSUxECi0jIGRlZmluZSBBQUNfRFJJVkVSX0JVSUxEIDI0NDkKKyMgZGVmaW5lIEFBQ19EUklW
-RVJfQlVJTEQgMjQ1NAogIyBkZWZpbmUgQUFDX0RSSVZFUl9CUkFOQ0ggIi1tcyIKICNlbmRpZgog
-I2RlZmluZSBNQVhJTVVNX05VTV9DT05UQUlORVJTCTMyCkBAIC0xNzcyLDYgKzE3NzIsOSBAQAog
-I2RlZmluZQkJCUFpZkVuQ29uZmlnQ2hhbmdlCTMJLyogQWRhcHRlciBjb25maWd1cmF0aW9uIGNo
-YW5nZSAqLwogI2RlZmluZQkJCUFpZkVuQ29udGFpbmVyQ2hhbmdlCTQJLyogQ29udGFpbmVyIGNv
-bmZpZ3VyYXRpb24gY2hhbmdlICovCiAjZGVmaW5lCQkJQWlmRW5EZXZpY2VGYWlsdXJlCTUJLyog
-U0NTSSBkZXZpY2UgZmFpbGVkICovCisjZGVmaW5lCQkJQWlmRW5FbmNsb3N1cmVNYW5hZ2VtZW50
-IDEzCS8qIEVNX0RSSVZFXyogKi8KKyNkZWZpbmUJCQkJRU1fRFJJVkVfSU5TRVJUSU9OCTMxCisj
-ZGVmaW5lCQkJCUVNX0RSSVZFX1JFTU9WQUwJMzIKICNkZWZpbmUJCQlBaWZFbkJhdHRlcnlFdmVu
-dAkxNAkvKiBDaGFuZ2UgaW4gQmF0dGVyeSBTdGF0ZSAqLwogI2RlZmluZQkJCUFpZkVuQWRkQ29u
-dGFpbmVyCTE1CS8qIEEgbmV3IGFycmF5IHdhcyBjcmVhdGVkICovCiAjZGVmaW5lCQkJQWlmRW5E
-ZWxldGVDb250YWluZXIJMTYJLyogQSBjb250YWluZXIgd2FzIGRlbGV0ZWQgKi8KZGlmZiAtcnUg
-YS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9j
-b21tc3VwLmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIwMDgtMDEtMTEg
-MTA6NDg6MjMuOTE5NzA1NjE2IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1z
-dXAuYwkyMDA4LTAxLTExIDEwOjU4OjU0LjU0ODQ3NTE5NiAtMDUwMApAQCAtNzc1LDIwICs3NzUs
-MjAgQEAKIHsKIAlzdHJ1Y3QgaHdfZmliICogaHdfZmliID0gZmlicHRyLT5od19maWJfdmE7CiAJ
-c3RydWN0IGFhY19haWZjbWQgKiBhaWZjbWQgPSAoc3RydWN0IGFhY19haWZjbWQgKilod19maWIt
-PmRhdGE7Ci0JdTMyIGNvbnRhaW5lcjsKKwl1MzIgY2hhbm5lbCwgaWQsIGx1biwgY29udGFpbmVy
-OwogCXN0cnVjdCBzY3NpX2RldmljZSAqZGV2aWNlOwogCWVudW0gewogCQlOT1RISU5HLAogCQlE
-RUxFVEUsCiAJCUFERCwKIAkJQ0hBTkdFCi0JfSBkZXZpY2VfY29uZmlnX25lZWRlZDsKKwl9IGRl
-dmljZV9jb25maWdfbmVlZGVkID0gTk9USElORzsKIAogCS8qIFNuaWZmIGZvciBjb250YWluZXIg
-Y2hhbmdlcyAqLwogCiAJaWYgKCFkZXYgfHwgIWRldi0+ZnNhX2RldikKIAkJcmV0dXJuOwotCWNv
-bnRhaW5lciA9ICh1MzIpLTE7CisJY29udGFpbmVyID0gY2hhbm5lbCA9IGlkID0gbHVuID0gKHUz
-MiktMTsKIAogCS8qCiAJICoJV2UgaGF2ZSBzZXQgdGhpcyB1cCB0byB0cnkgYW5kIG1pbmltaXpl
-IHRoZSBudW1iZXIgb2YKQEAgLTkwMSw2ICs5MDEsMzYgQEAKIAkJY2FzZSBBaWZFbkNvbmZpZ0No
-YW5nZToKIAkJCWJyZWFrOwogCisJCWNhc2UgQWlmRW5FbmNsb3N1cmVNYW5hZ2VtZW50OgorCQkJ
-c3dpdGNoIChsZTMyX3RvX2NwdSgoKF9fbGUzMiAqKWFpZmNtZC0+ZGF0YSlbM10pKSB7CisJCQlj
-YXNlIEVNX0RSSVZFX0lOU0VSVElPTjoKKwkJCWNhc2UgRU1fRFJJVkVfUkVNT1ZBTDoKKwkJCQlj
-b250YWluZXIgPSBsZTMyX3RvX2NwdSgKKwkJCQkJKChfX2xlMzIgKilhaWZjbWQtPmRhdGEpWzJd
-KTsKKwkJCQlpZiAoKGNvbnRhaW5lciA+PiAyOCkpCisJCQkJCWJyZWFrOworCQkJCWNoYW5uZWwg
-PSAoY29udGFpbmVyID4+IDI0KSAmIDB4RjsKKwkJCQlpZiAoY2hhbm5lbCA+PSBkZXYtPm1heGlt
-dW1fbnVtX2NoYW5uZWxzKQorCQkJCQlicmVhazsKKwkJCQlpZCA9IGNvbnRhaW5lciAmIDB4RkZG
-RjsKKwkJCQlsdW4gPSAoY29udGFpbmVyID4+IDE2KSAmIDB4RkY7CisJCQkJaWYgKGlkID49IGRl
-di0+bWF4aW11bV9udW1fcGh5c2ljYWxzKSB7CisJCQkJCS8qIGxlZ2FjeSBkZXZfdCA/ICovCisJ
-CQkJCWlmICgoMHgyMDAwIDw9IGlkKSB8fCBsdW4gfHwgY2hhbm5lbCB8fAorCQkJCQkgICgoY2hh
-bm5lbCA9IChpZCA+PiA3KSAmIDB4M0YpID49CisJCQkJCSAgZGV2LT5tYXhpbXVtX251bV9jaGFu
-bmVscykpCisJCQkJCQlicmVhazsKKwkJCQkJbHVuID0gKGlkID4+IDQpICYgNzsKKwkJCQkJaWQg
-Jj0gMHhGOworCQkJCX0KKwkJCQljaGFubmVsID0gYWFjX3BoeXNfdG9fbG9naWNhbChjaGFubmVs
-KTsKKwkJCQlkZXZpY2VfY29uZmlnX25lZWRlZCA9CisJCQkJICAoKChfX2xlMzIgKilhaWZjbWQt
-PmRhdGEpWzNdCisJCQkJICAgID09IGNwdV90b19sZTMyKEVNX0RSSVZFX0lOU0VSVElPTikpID8K
-KwkJCQkgIEFERCA6IERFTEVURTsKKwkJCQlicmVhazsKKwkJCX0KKwkJCWJyZWFrOwogCQl9CiAK
-IAkJLyoKQEAgLTk2OSw3ICs5OTksNyBAQAogCQlicmVhazsKIAl9CiAKLQlkZXZpY2VfY29uZmln
-X25lZWRlZCA9IE5PVEhJTkc7CisJaWYgKGRldmljZV9jb25maWdfbmVlZGVkID09IE5PVEhJTkcp
-CiAJZm9yIChjb250YWluZXIgPSAwOyBjb250YWluZXIgPCBkZXYtPm1heGltdW1fbnVtX2NvbnRh
-aW5lcnM7CiAJICAgICsrY29udGFpbmVyKSB7CiAJCWlmICgoZGV2LT5mc2FfZGV2W2NvbnRhaW5l
-cl0uY29uZmlnX3dhaXRpbmdfb24gPT0gMCkgJiYKQEAgLTk3OCw2ICsxMDA4LDkgQEAKIAkJCWRl
-dmljZV9jb25maWdfbmVlZGVkID0KIAkJCQlkZXYtPmZzYV9kZXZbY29udGFpbmVyXS5jb25maWdf
-bmVlZGVkOwogCQkJZGV2LT5mc2FfZGV2W2NvbnRhaW5lcl0uY29uZmlnX25lZWRlZCA9IE5PVEhJ
-Tkc7CisJCQljaGFubmVsID0gQ09OVEFJTkVSX1RPX0NIQU5ORUwoY29udGFpbmVyKTsKKwkJCWlk
-ID0gQ09OVEFJTkVSX1RPX0lEKGNvbnRhaW5lcik7CisJCQlsdW4gPSBDT05UQUlORVJfVE9fTFVO
-KGNvbnRhaW5lcik7CiAJCQlicmVhazsKIAkJfQogCX0KQEAgLTEwMDEsMzQgKzEwMzQsNTMgQEAK
-IAkvKgogCSAqIGZvcmNlIHJlbG9hZCBvZiBkaXNrIGluZm8gdmlhIGFhY19wcm9iZV9jb250YWlu
-ZXIKIAkgKi8KLQlpZiAoKGRldmljZV9jb25maWdfbmVlZGVkID09IENIQU5HRSkKLQkgJiYgKGRl
-di0+ZnNhX2Rldltjb250YWluZXJdLnZhbGlkID09IDEpKQotCQlkZXYtPmZzYV9kZXZbY29udGFp
-bmVyXS52YWxpZCA9IDI7Ci0JaWYgKChkZXZpY2VfY29uZmlnX25lZWRlZCA9PSBDSEFOR0UpIHx8
-Ci0JCQkoZGV2aWNlX2NvbmZpZ19uZWVkZWQgPT0gQUREKSkKKwlpZiAoKGNoYW5uZWwgPT0gQ09O
-VEFJTkVSX0NIQU5ORUwpICYmCisJICAoZGV2aWNlX2NvbmZpZ19uZWVkZWQgIT0gTk9USElORykp
-IHsKKwkJaWYgKGRldi0+ZnNhX2Rldltjb250YWluZXJdLnZhbGlkID09IDEpCisJCQlkZXYtPmZz
-YV9kZXZbY29udGFpbmVyXS52YWxpZCA9IDI7CiAJCWFhY19wcm9iZV9jb250YWluZXIoZGV2LCBj
-b250YWluZXIpOwotCWRldmljZSA9IHNjc2lfZGV2aWNlX2xvb2t1cChkZXYtPnNjc2lfaG9zdF9w
-dHIsIAotCQlDT05UQUlORVJfVE9fQ0hBTk5FTChjb250YWluZXIpLCAKLQkJQ09OVEFJTkVSX1RP
-X0lEKGNvbnRhaW5lciksIAotCQlDT05UQUlORVJfVE9fTFVOKGNvbnRhaW5lcikpOworCX0KKwlk
-ZXZpY2UgPSBzY3NpX2RldmljZV9sb29rdXAoZGV2LT5zY3NpX2hvc3RfcHRyLCBjaGFubmVsLCBp
-ZCwgbHVuKTsKIAlpZiAoZGV2aWNlKSB7CiAJCXN3aXRjaCAoZGV2aWNlX2NvbmZpZ19uZWVkZWQp
-IHsKIAkJY2FzZSBERUxFVEU6CisJCQlpZiAoc2NzaV9kZXZpY2Vfb25saW5lKGRldmljZSkpIHsK
-KwkJCQlzY3NpX2RldmljZV9zZXRfc3RhdGUoZGV2aWNlLCBTREVWX09GRkxJTkUpOworCQkJCXNk
-ZXZfcHJpbnRrKEtFUk5fSU5GTywgZGV2aWNlLAorCQkJCQkiRGV2aWNlIG9mZmxpbmVkIC0gJXNc
-biIsCisJCQkJCShjaGFubmVsID09IENPTlRBSU5FUl9DSEFOTkVMKSA/CisJCQkJCQkiYXJyYXkg
-ZGVsZXRlZCIgOgorCQkJCQkJImVuY2xvc3VyZSBzZXJ2aWNlcyBldmVudCIpOworCQkJfQorCQkJ
-YnJlYWs7CisJCWNhc2UgQUREOgorCQkJaWYgKCFzY3NpX2RldmljZV9vbmxpbmUoZGV2aWNlKSkg
-eworCQkJCXNkZXZfcHJpbnRrKEtFUk5fSU5GTywgZGV2aWNlLAorCQkJCQkiRGV2aWNlIG9ubGlu
-ZSAtICVzXG4iLAorCQkJCQkoY2hhbm5lbCA9PSBDT05UQUlORVJfQ0hBTk5FTCkgPworCQkJCQkJ
-ImFycmF5IGNyZWF0ZWQiIDoKKwkJCQkJCSJlbmNsb3N1cmUgc2VydmljZXMgZXZlbnQiKTsKKwkJ
-CQlzY3NpX2RldmljZV9zZXRfc3RhdGUoZGV2aWNlLCBTREVWX1JVTk5JTkcpOworCQkJfQorCQkJ
-LyogRkFMTFRIUlUgKi8KIAkJY2FzZSBDSEFOR0U6CisJCQlpZiAoKGNoYW5uZWwgPT0gQ09OVEFJ
-TkVSX0NIQU5ORUwpCisJCQkgJiYgKCFkZXYtPmZzYV9kZXZbY29udGFpbmVyXS52YWxpZCkpIHsK
-KwkJCQlpZiAoIXNjc2lfZGV2aWNlX29ubGluZShkZXZpY2UpKQorCQkJCQlicmVhazsKKwkJCQlz
-Y3NpX2RldmljZV9zZXRfc3RhdGUoZGV2aWNlLCBTREVWX09GRkxJTkUpOworCQkJCXNkZXZfcHJp
-bnRrKEtFUk5fSU5GTywgZGV2aWNlLAorCQkJCQkiRGV2aWNlIG9mZmxpbmVkIC0gJXNcbiIsCisJ
-CQkJCSJhcnJheSBmYWlsZWQiKTsKKwkJCQlicmVhazsKKwkJCX0KIAkJCXNjc2lfcmVzY2FuX2Rl
-dmljZSgmZGV2aWNlLT5zZGV2X2dlbmRldik7Ci0KLQkJZGVmYXVsdDoKLQkJCWJyZWFrOwogCQl9
-CiAJCXNjc2lfZGV2aWNlX3B1dChkZXZpY2UpOworCQlkZXZpY2VfY29uZmlnX25lZWRlZCA9IE5P
-VEhJTkc7CiAJfQotCWlmIChkZXZpY2VfY29uZmlnX25lZWRlZCA9PSBBREQpIHsKLQkJc2NzaV9h
-ZGRfZGV2aWNlKGRldi0+c2NzaV9ob3N0X3B0ciwKLQkJICBDT05UQUlORVJfVE9fQ0hBTk5FTChj
-b250YWluZXIpLAotCQkgIENPTlRBSU5FUl9UT19JRChjb250YWluZXIpLAotCQkgIENPTlRBSU5F
-Ul9UT19MVU4oY29udGFpbmVyKSk7Ci0JfQotCisJaWYgKGRldmljZV9jb25maWdfbmVlZGVkID09
-IEFERCkKKwkJc2NzaV9hZGRfZGV2aWNlKGRldi0+c2NzaV9ob3N0X3B0ciwgY2hhbm5lbCwgaWQs
-IGx1bik7CiB9CiAKIHN0YXRpYyBpbnQgX2FhY19yZXNldF9hZGFwdGVyKHN0cnVjdCBhYWNfZGV2
-ICphYWMsIGludCBmb3JjZWQpCkBAIC0xNDY5LDcgKzE1MjEsNiBAQAogCQkJCSooX19sZTMyICop
-aHdfZmliLT5kYXRhID0gY3B1X3RvX2xlMzIoU1RfT0spOwogCQkJCWFhY19maWJfYWRhcHRlcl9j
-b21wbGV0ZShmaWIsICh1MTYpc2l6ZW9mKHUzMikpOwogCQkJfSBlbHNlIHsKLQkJCQlzdHJ1Y3Qg
-bGlzdF9oZWFkICplbnRyeTsKIAkJCQkvKiBUaGUgdTMyIGhlcmUgaXMgaW1wb3J0YW50IGFuZCBp
-bnRlbmRlZC4gV2UgYXJlIHVzaW5nCiAJCQkJICAgMzJiaXQgd3JhcHBpbmcgdGltZSB0byBmaXQg
-dGhlIGFkYXB0ZXIgZmllbGQgKi8KIAkJCQkgICAK
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E440B6ADPE2K703adapte_--
++static ssize_t aac_show_flags(struct class_device *class_dev, char *buf)
++{
++       int len = 0;
++       struct aac_dev *dev = (struct aac_dev*)class_to_shost(class_dev)->hostdata;
++
++       if (nblank(dprintk(x)))
++               len = snprintf(buf, PAGE_SIZE, "dprintk\n");
++#      ifdef AAC_DETAILED_STATUS_INFO
++               len += snprintf(buf + len, PAGE_SIZE - len,
++                 "AAC_DETAILED_STATUS_INFO\n");
++#      endif
++       if (dev->raw_io_interface && dev->raw_io_64)
++               len += snprintf(buf + len, PAGE_SIZE - len,
++                 "SAI_READ_CAPACITY_16\n");
++       return len;
++}
++
+ static ssize_t aac_show_kernel_version(struct class_device *class_dev,
+                char *buf)
+ {
+@@ -897,6 +914,13 @@
+        },
+        .show = aac_show_vendor,
+ };
++static struct class_device_attribute aac_flags = {
++       .attr = {
++               .name = "flags",
++               .mode = S_IRUGO,
++       },
++       .show = aac_show_flags,
++};
+ static struct class_device_attribute aac_kernel_version = {
+        .attr = {
+                .name = "hba_kernel_version",
+@@ -951,6 +975,7 @@
+ static struct class_device_attribute *aac_attrs[] = {
+        &aac_model,
+        &aac_vendor,
++       &aac_flags,
+        &aac_kernel_version,
+        &aac_monitor_version,
+        &aac_bios_version,
