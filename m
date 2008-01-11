@@ -1,7 +1,7 @@
 From: "Dave Young" <hidave.darkstar@gmail.com>
 Subject: Re: [PATCH 0/7] convert semaphore to mutex in struct class
-Date: Fri, 11 Jan 2008 10:18:24 +0800
-Message-ID: <a8e1da0801101818v748f6481g79ebecaa0c0e7bfd@mail.gmail.com>
+Date: Fri, 11 Jan 2008 10:33:16 +0800
+Message-ID: <a8e1da0801101833j6fd3bb56p6998e6e326858724@mail.gmail.com>
 References: <478227D5.8050402@s5r6.in-berlin.de>
 	<20080107172009.GA25943@suse.de>
 	<a8e1da0801072305x3378c195qeb0bb7027030254c@mail.gmail.com>
@@ -11,12 +11,12 @@ References: <478227D5.8050402@s5r6.in-berlin.de>
 	<a8e1da0801082237x37d2a56eqee6db19017499dbc@mail.gmail.com>
 	<a8e1da0801082239h198c4d45i5cd7cf183472a166@mail.gmail.com>
 	<20080110094843.GA3014@darkstar.te-china.tietoenator.com>
-	<478610E8.4060602@s5r6.in-berlin.de>
+	<20080110142341.71af4dc5@gondolin.boeblingen.de.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <478610E8.4060602@s5r6.in-berlin.de>
+In-Reply-To: <20080110142341.71af4dc5@gondolin.boeblingen.de.ibm.com>
 Content-Disposition: inline
 List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
@@ -27,31 +27,46 @@ List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
 	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
 Sender: linux1394-devel-bounces@lists.sourceforge.net
 Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: a.zummo@towertech.it, krh@redhat.com, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, David Brownell <david-b@pacbell.net>, stern@rowland.harvard.edu, spi-devel-general@lists.sourceforge.net, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
+To: Cornelia Huck <cornelia.huck@de.ibm.com>
+Cc: a.zummo@towertech.it, krh@redhat.com, rtc-linux@googlegroups.com, linux-scsi@vger.kernel.org, peterz@infradead.org, Greg KH <gregkh@suse.de>, linux-kernel@vger.kernel.org, James.Bottomley@hansenpartnership.com, cbou@mail.ru, Stefan Richter <stefanr@s5r6.in-berlin.de>, stern@rowland.harvard.edu, spi-devel-general@lists.sourceforge.net, David Brownell <david-b@pacbell.net>, linux1394-devel@lists.sourceforge.net, dwmw2@infradead.org, davem@davemloft.net, jarkao2@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Jan 10, 2008 8:34 PM, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> Dave Young wrote:
-> > This is the first one of the series about driver core changes.
+On Jan 10, 2008 9:23 PM, Cornelia Huck <cornelia.huck@de.ibm.com> wrote:
+> On Thu, 10 Jan 2008 17:48:43 +0800,
+> Dave Young <hidave.darkstar@gmail.com> wrote:
 >
-> Please always provide kerneldoc comments when you add new API elements;
-> here: exported functions.
+> Please add a kerneldoc comment for each of the new interfaces.
+Will do.
 >
-> It's unfortunate that the driver core's API isn't fully documented yet,
-> and you shouldn't make it worse.
+> > +int class_for_each_device(struct class *class, void *data,
+> > +                        int (*fn)(struct device *, void *))
+> > +{
+> > +     struct device *dev;
+> > +     int error = 0;
+> > +
+> > +     if (!class)
+> > +             return -EINVAL;
+> > +     mutex_lock(&class->mutex);
+> > +     list_for_each_entry(dev, &class->devices, node) {
+> > +             error = fn(dev, data);
 >
-> That's only my personal opinion as one API user though.  But others
-> might agree.  Among else, things worth documenting are return values
-> after errors, side effects (!), constraints on the calling context if
-> there are any special constraints.
->
-> I assume you didn't write documentation yet because you need general
-> feedback first.
+> Hm, the equivalent _for_each_device() functions all elevate the
+> device's refcount while calling fn(). I wonder whether we want this
+> here as well?
 
-Yes, I did not. Thanks for pointing out, I will do.
+Thanks for comment.
+Hm, I'm not sure about this. Greg, what's your opinion?
+
 >
-> ...
+> > +             if (error)
+> > +                     break;
+> > +     }
+> > +     mutex_unlock(&class->mutex);
+> > +
+> > +     return error;
+> > +}
+> > +EXPORT_SYMBOL_GPL(class_for_each_device);
+> > +
 > > +struct device *class_find_device(struct class *class, void *data,
 > > +                                int (*match)(struct device *, void *))
 > > +{
@@ -63,39 +78,74 @@ Yes, I did not. Thanks for pointing out, I will do.
 > > +     mutex_lock(&class->mutex);
 > > +     list_for_each_entry(dev, &class->devices, node)
 > > +             if (match(dev, data) && get_device(dev))
+>
+> First get the reference and then drop it if the match function returns
+> 0 to make this analogous to the other _find_device() functions?
+
+It's just like other _find_device() functions. Are these more get/put
+really needed?
+
+>
 > > +                     break;
 > > +     mutex_unlock(&class->mutex);
 > > +
 > > +     return dev;
 > > +}
+> > +EXPORT_SYMBOL_GPL(class_find_device);
+> > +
+> > +int class_for_each_child(struct class *class, void *data,
+> > +                        int (*fn)(struct class_device *, void *))
 >
-> What is returned if there was no match?
-> What if there was a match but get_ failed?
+> Haven't looked at the callers, but isn't it better to convert them to
+> use struct device instead so we don't need to introduce new
+> class_device api?
 
-Will fix it.
+The drivers/scsi/hosts.c need it.
+
 >
-> ...
+> > +{
+> > +     struct class_device *dev;
+> > +     int error = 0;
+> > +
+> > +     if (!class)
+> > +             return -EINVAL;
+> > +     mutex_lock(&class->mutex);
+> > +     list_for_each_entry(dev, &class->children, node) {
+> > +             error = fn(dev, data);
+>
+> Same comment as above concerning reference counts.
+>
+> > +             if (error)
+> > +                     break;
+> > +     }
+> > +     mutex_unlock(&class->mutex);
+> > +
+> > +     return error;
+> > +}
+> > +EXPORT_SYMBOL_GPL(class_for_each_child);
+> > +
 > > +struct class_device *class_find_child(struct class *class, void *data,
 > > +                                int (*match)(struct class_device *, void *))
 > > +{
-> ...
+> > +     struct class_device *dev;
+> > +
+> > +     if (!class)
+> > +             return NULL;
+> > +
 > > +     mutex_lock(&class->mutex);
 > > +     list_for_each_entry(dev, &class->children, node)
 > > +             if (match(dev, data) && class_device_get(dev))
+>
+> And here.
+>
+>
 > > +                     break;
 > > +     mutex_unlock(&class->mutex);
 > > +
 > > +     return dev;
 > > +}
->
-> Here too?
-
-Will fix it.
->
-> --
-> Stefan Richter
-> -=====-==--- ---= -=-=-
-> http://arcgraph.de/sr/
+> > +EXPORT_SYMBOL_GPL(class_find_child);
+> > +
 >
 
 -------------------------------------------------------------------------
