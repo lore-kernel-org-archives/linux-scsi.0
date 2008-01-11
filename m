@@ -1,37 +1,28 @@
-From: Chuck Ebbert <cebbert@redhat.com>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Fri, 11 Jan 2008 12:52:49 -0500
-Message-ID: <4787ACF1.7040501@redhat.com>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>	 <9f00bd9d0712170341u7fef1fc9pc9986dda1a0475cb@mail.gmail.com>	 <47666904.8060605@panasas.com>	 <9f00bd9d0712190048g60d79ma067ba85b5553459@mail.gmail.com>	 <476C1472.1040103@redhat.com>	 <1198271036.3130.60.camel@localhost.localdomain>	 <476C4177.3030902@redhat.com>	 <1198277391.3130.73.camel@localhost.localdomain>	 <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>	 <1200028577.5337.8.camel@localhost.localdomain>	 <9f00bd9d0801110154i3b2f9c1flf076823747950196@mail.gmail.com> <1200066295.3286.19.camel@localhost.localdomain>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH] cciss: section mismatch
+Date: Fri, 11 Jan 2008 18:55:08 +0100
+Message-ID: <20080111175508.GE28624@uranus.ravnborg.org>
+References: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:60309 "EHLO mx1.redhat.com"
+Received: from pasmtpb.tele.dk ([80.160.77.98]:49056 "EHLO pasmtpB.tele.dk"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760707AbYAKRx0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 12:53:26 -0500
-In-Reply-To: <1200066295.3286.19.camel@localhost.localdomain>
+	id S1762350AbYAKRzG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 11 Jan 2008 12:55:06 -0500
+Content-Disposition: inline
+In-Reply-To: <20080110143235.b65d5f19.randy.dunlap@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Filippos Papadopoulos <psybases@gmail.com>, linux-scsi@vger.kernel.org, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: Randy Dunlap <randy.dunlap@oracle.com>
+Cc: scsi <linux-scsi@vger.kernel.org>, mike.miller@hp.com, iss_storagedev@hp.com, akpm <akpm@linux-foundation.org>, axboe@kernel.dk
 
-On 01/11/2008 10:44 AM, James Bottomley wrote:
->>> This proves the BAR0 to be non zero, but I also take it from your report
->>> that the
->>>
->>> initio: I/O port range 0x0 is busy.
->>>
->>> message is also gone?
->>>
->>
->> I havent reported "initio: I/O port range 0x0 is busy."
+On Thu, Jan 10, 2008 at 02:32:35PM -0800, Randy Dunlap wrote:
+> From: Randy Dunlap <randy.dunlap@oracle.com>
 > 
-> Sorry ... we appear to have several reporters of different bugs in this
-> thread.  That message was copied by Chuck Ebbert from a Red Hat
-> bugzilla ... I was assuming it was the same problem.
+> Mark cciss_pci_init() as __devinit, to fix section mismatch warning.
 > 
-
-Our reporter has applied patches since then and now reports the exact
-same symptoms that Filippos does. (It just hangs after loading the driver.)
+> WARNING: vmlinux.o(.text+0x601fc9): Section mismatch: reference to .init.text: (between 'cciss_pci_init' and 'cciss_getgeometry')
+> 
+> Signed-off-by: Randy Dunlap <randy.dunlap@oracle.com>
+Acked-by: Sam Ravnborg <sam@ravnborg.org>
