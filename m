@@ -1,126 +1,115 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: SMC vendor identification
-Date: Fri, 11 Jan 2008 13:46:24 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F437E44532@ADPE2K703.adaptec.com>
-References: <20071031150216.88cecc21.sfr@canb.auug.org.au><20071101173221.2e1fea42.sfr@canb.auug.org.au>
- <jefxzqqeha.fsf@sykes.suse.de>
- <AE4F746F2AECFC4DA4AADD66A1DFEF01F95EF7@otce2k301.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE734@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE735@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE736@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE738@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE739@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F40FE73E@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F437E96989@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F437E443DE@ADPE2K703.adaptec.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] bsg : Add support for io vectors in bsg
+Date: Fri, 11 Jan 2008 19:16:22 -0500
+Message-ID: <478806D6.3080909@torque.net>
+References: <Pine.LNX.4.64.0801042137350.7836@localhost>	 <200801050501.m0551LFB030667@mbox.iij4u.or.jp>	 <20080108220918.GA9484@osc.edu>	 <20080109091118N.fujita.tomonori@lab.ntt.co.jp>	 <20080110204325.GC1928@osc.edu>	 <1199998531.3141.96.camel@localhost.localdomain>	 <20080110214605.GD1928@osc.edu> <1200002054.3141.103.camel@localhost.localdomain>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E44532ADPE2K703adapte_"
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:52260 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1761119AbYAKVq2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 11 Jan 2008 16:46:28 -0500
-Received: from ADPE2K702.adaptec.com (adpe2k702.adaptec.com [10.25.8.26])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id D9178225106
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jan 2008 13:46:27 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F437E443DE@ADPE2K703.adaptec.com>
-Content-Language: en-US
+Received: from pentafluge.infradead.org ([213.146.154.40]:47726 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752275AbYALAQ7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Jan 2008 19:16:59 -0500
+In-Reply-To: <1200002054.3141.103.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Pete Wyckoff <pw@osc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, deepakrc@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E44532ADPE2K703adapte_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+James Bottomley wrote:
+> On Thu, 2008-01-10 at 16:46 -0500, Pete Wyckoff wrote:
+>> James.Bottomley@HansenPartnership.com wrote on Thu, 10 Jan 2008 14:55 -0600:
+>>> On Thu, 2008-01-10 at 15:43 -0500, Pete Wyckoff wrote:
+>>>> fujita.tomonori@lab.ntt.co.jp wrote on Wed, 09 Jan 2008 09:11 +0900:
+>>>>> On Tue, 8 Jan 2008 17:09:18 -0500
+>>>>> Pete Wyckoff <pw@osc.edu> wrote:
+>>>>>> I took another look at the compat approach, to see if it is feasible
+>>>>>> to keep the compat handling somewhere else, without the use of #ifdef
+>>>>>> CONFIG_COMPAT and size-comparison code inside bsg.c.  I don't see how.
+>>>>>> The use of iovec is within a write operation on a char device.  It's
+>>>>>> not amenable to a compat_sys_ or a .compat_ioctl approach.
+>>>>>>
+>>>>>> I'm partial to #1 because the use of architecture-independent fields
+>>>>>> matches the rest of struct sg_io_v4.  But if you don't want to have
+>>>>>> another iovec type in the kernel, could we do #2 but just return
+>>>>>> -EINVAL if the need for compat is detected?  I.e. change
+>>>>>> dout_iovec_count to dout_iovec_length and do the math?
+>>>>> If you are ok with removing the write/read interface and just have
+>>>>> ioctl, we could can handle comapt stuff like others do. But I think
+>>>>> that you (OSD people) really want to keep the write/read
+>>>>> interface. Sorry, I think that there is no workaround to support iovec
+>>>>> in bsg.
+>>>> I don't care about read/write in particular.  But we do need some
+>>>> way to launch asynchronous SCSI commands, and currently read/write
+>>>> are the only way to do that in bsg.  The reason is to keep multiple
+>>>> spindles busy at the same time.
+>>> Won't multi-threading the ioctl calls achieve the same effect?  Or do
+>>> you trip over BKL there?
+>> There's no BKL on (new) ioctls anymore, at least.  A thread per
+>> device would be feasible perhaps.  But if you want any sort of
+>> pipelining out of the device, esp. in the remote iSCSI case, you
+>> need to have a good number of commands outstanding to each device.
+>> So a thread per command per device.  Typical iSCSI queue depth of
+>> 128 times 16 devices for a small setup is a lot of threads.
+> 
+> I was actually thinking of a thread per outstanding command.
+> 
+>> The pthread/pipe latency overhead is not insignificant for fast
+>> storage networks too.
+>>
+>>>> How about these new ioctls instead of read/write:
+>>>>
+>>>>     SG_IO_SUBMIT - start a new blk_execute_rq_nowait()
+>>>>     SG_IO_TEST   - complete and return a previous req
+>>>>     SG_IO_WAIT   - wait for a req to finish, interruptibly
+>>>>
+>>>> Then old write users will instead do ioctl SUBMIT.  Read users will
+>>>> do TEST for non-blocking fd, or WAIT for blocking.  And SG_IO could
+>>>> be implemented as SUBMIT + WAIT.
+>>>>
+>>>> Then we can do compat_ioctl and convert up iovecs out-of-line before
+>>>> calling the normal functions.
+>>>>
+>>>> Let me know if you want a patch for this.
+>>> Really, the thought of re-inventing yet another async I/O interface
+>>> isn't very appealing.
+>> I'm fine with read/write, except Tomo is against handling iovecs
+>> because of the compat complexity with struct iovec being different
+>> on 32- vs 64-bit.  There is a standard way to do "compat" ioctl that
+>> hides this handling in a different file (not bsg.c), which is the
+>> only reason I'm even considering these ioctls.  I don't care about
+>> compat setups per se.
+>>
+>> Is there another async I/O mechanism?  Userspace builds the CDBs,
+>> just needs some way to drop them in SCSI ML.  BSG is almost perfect
+>> for this, but doesn't do iovec, leading to lots of memcpy.
+> 
+> No, it's just that async interfaces in Linux have a long and fairly
+> unhappy history.
 
-Due to an internal limit associated with the AdapterTypeText field, SMC req=
-uired a product ID that overloaded the combined vendor and product ID. A de=
-cision was made to ship the SMC products without a vendor string dropping t=
-he defacto space that used to delineate vendor and product to boot. To corr=
-ect this, we needed to adjust the code in the driver to parse out the vendo=
-r and product strings for the adapter. We match of 'AOC' in the AdapterType=
-Text, if so we set the vendor to SMC and place the entire AdapterTypeText i=
-nto the product field.
+The sg driver's async interface has been pretty stable for
+a long time. The sync SG_IO ioctl is built on top of the
+async interface. That makes the async interface extremely
+well tested.
 
-This only affects the cosmetic presentation of the Adapter vendor and produ=
-ct in the logs and in sysfs.
+The write()/read() async interface in sg does have one
+problem: when a command is dispatched via a write()
+it would be very useful to get back a tag but that
+violates write()'s second argument: 'const void * buf'.
+That tag could be useful both for identification of the
+response and by task management functions.
 
-This attached patch is against current scsi-misc-2.6.
+I was hoping that the 'flags' field in sgv4 could be used
+to implement the variants:
+     SG_IO_SUBMIT - start a new blk_execute_rq_nowait()
+     SG_IO_TEST   - complete and return a previous req
+     SG_IO_WAIT   - wait for a req to finish, interruptibly
 
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments, use the attachment, not the inline patch.
+that way the existing SG_IO ioctl is sufficient.
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+And if Tomo doesn't want to do it in the bsg driver,
+then it could be done it the sg driver.
 
- drivers/scsi/aacraid/aachba.c |   25 +++++++++++++++----------
- 1 file changed, 15 insertions(+), 10 deletions(-)
-
-diff -ru a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
---- a/drivers/scsi/aacraid/aachba.c     2008-01-11 16:28:15.129189613 -0500
-+++ b/drivers/scsi/aacraid/aachba.c     2008-01-11 16:31:22.032344801 -0500
-@@ -716,16 +716,21 @@
-
-        if (dev->supplement_adapter_info.AdapterTypeText[0]) {
-                char * cp =3D dev->supplement_adapter_info.AdapterTypeText;
--               int c =3D sizeof(str->vid);
--               while (*cp && *cp !=3D ' ' && --c)
--                       ++cp;
--               c =3D *cp;
--               *cp =3D '\0';
--               inqstrcpy (dev->supplement_adapter_info.AdapterTypeText,
--                 str->vid);
--               *cp =3D c;
--               while (*cp && *cp !=3D ' ')
--                       ++cp;
-+               int c;
-+               if ((cp[0] =3D=3D 'A') && (cp[1] =3D=3D 'O') && (cp[2] =3D=
-=3D 'C'))
-+                       inqstrcpy("SMC", str->vid);
-+               else {
-+                       c =3D sizeof(str->vid);
-+                       while (*cp && *cp !=3D ' ' && --c)
-+                               ++cp;
-+                       c =3D *cp;
-+                       *cp =3D '\0';
-+                       inqstrcpy (dev->supplement_adapter_info.AdapterType=
-Text,
-+                         str->vid);
-+                       *cp =3D c;
-+                       while (*cp && *cp !=3D ' ')
-+                               ++cp;
-+               }
-                while (*cp =3D=3D ' ')
-                        ++cp;
-                /* last six chars reserved for vol type */
-
-Sincerely -- Mark Salyzyn
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E44532ADPE2K703adapte_
-Content-Type: application/octet-stream; name="aacraid_SMC_vid.patch"
-Content-Description: aacraid_SMC_vid.patch
-Content-Disposition: attachment; filename="aacraid_SMC_vid.patch"; size=1019;
-	creation-date="Fri, 11 Jan 2008 13:32:19 GMT";
-	modification-date="Fri, 11 Jan 2008 13:32:19 GMT"
-Content-Transfer-Encoding: base64
-
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
-MDEtMTEgMTY6Mjg6MTUuMTI5MTg5NjEzIC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDgtMDEtMTEgMTY6MzE6MjIuMDMyMzQ0ODAxIC0wNTAwCkBAIC03MTYsMTYg
-KzcxNiwyMSBAQAogCiAJaWYgKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uQWRhcHRlclR5
-cGVUZXh0WzBdKSB7CiAJCWNoYXIgKiBjcCA9IGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8u
-QWRhcHRlclR5cGVUZXh0OwotCQlpbnQgYyA9IHNpemVvZihzdHItPnZpZCk7Ci0JCXdoaWxlICgq
-Y3AgJiYgKmNwICE9ICcgJyAmJiAtLWMpCi0JCQkrK2NwOwotCQljID0gKmNwOwotCQkqY3AgPSAn
-XDAnOwotCQlpbnFzdHJjcHkgKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uQWRhcHRlclR5
-cGVUZXh0LAotCQkgIHN0ci0+dmlkKTsgCi0JCSpjcCA9IGM7Ci0JCXdoaWxlICgqY3AgJiYgKmNw
-ICE9ICcgJykKLQkJCSsrY3A7CisJCWludCBjOworCQlpZiAoKGNwWzBdID09ICdBJykgJiYgKGNw
-WzFdID09ICdPJykgJiYgKGNwWzJdID09ICdDJykpCisJCQlpbnFzdHJjcHkoIlNNQyIsIHN0ci0+
-dmlkKTsKKwkJZWxzZSB7CisJCQljID0gc2l6ZW9mKHN0ci0+dmlkKTsKKwkJCXdoaWxlICgqY3Ag
-JiYgKmNwICE9ICcgJyAmJiAtLWMpCisJCQkJKytjcDsKKwkJCWMgPSAqY3A7CisJCQkqY3AgPSAn
-XDAnOworCQkJaW5xc3RyY3B5IChkZXYtPnN1cHBsZW1lbnRfYWRhcHRlcl9pbmZvLkFkYXB0ZXJU
-eXBlVGV4dCwKKwkJCSAgc3RyLT52aWQpOyAKKwkJCSpjcCA9IGM7CisJCQl3aGlsZSAoKmNwICYm
-ICpjcCAhPSAnICcpCisJCQkJKytjcDsKKwkJfQogCQl3aGlsZSAoKmNwID09ICcgJykKIAkJCSsr
-Y3A7CiAJCS8qIGxhc3Qgc2l4IGNoYXJzIHJlc2VydmVkIGZvciB2b2wgdHlwZSAqLwo=
-
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F437E44532ADPE2K703adapte_--
+Doug Gilbert
