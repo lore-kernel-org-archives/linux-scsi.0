@@ -1,82 +1,78 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [Bug 9734] New: I/O error when inserting a second firewire	sata
-	disk
-Date: Sun, 13 Jan 2008 10:06:32 +0100
-Message-ID: <4789D498.5070103@s5r6.in-berlin.de>
-References: <bug-9734-11613@http.bugzilla.kernel.org/>
-	<1200186705.3656.83.camel@localhost.localdomain>
+From: "Filippos Papadopoulos" <psybases@gmail.com>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Sun, 13 Jan 2008 14:28:46 +0200
+Message-ID: <9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
+References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
+	 <1198271036.3130.60.camel@localhost.localdomain>
+	 <476C4177.3030902@redhat.com>
+	 <1198277391.3130.73.camel@localhost.localdomain>
+	 <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
+	 <1200028577.5337.8.camel@localhost.localdomain>
+	 <9f00bd9d0801110154i3b2f9c1flf076823747950196@mail.gmail.com>
+	 <1200066295.3286.19.camel@localhost.localdomain>
+	 <9f00bd9d0801110844g176acdcdle0331783f82ed866@mail.gmail.com>
+	 <1200070903.3286.28.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1200186705.3656.83.camel@localhost.localdomain>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Kristian Hoegsberg <krh@bitplanet.net>, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from wa-out-1112.google.com ([209.85.146.177]:11466 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751274AbYAMM2r (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 13 Jan 2008 07:28:47 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2989637wah.23
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Jan 2008 04:28:46 -0800 (PST)
+In-Reply-To: <1200070903.3286.28.camel@localhost.localdomain>
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, Chuck Ebbert <cebbert@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
 
-James Bottomley wrote:
-> Firewire list cc'd
+On 1/11/08, James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+>
+> On Fri, 2008-01-11 at 18:44 +0200, Filippos Papadopoulos wrote:
+> > On Jan 11, 2008 5:44 PM, James Bottomley
+> > <James.Bottomley@hansenpartnership.com> wrote:
+> > > >
+> > > > I havent reported "initio: I/O port range 0x0 is busy."
+> > >
+> > > Sorry ... we appear to have several reporters of different bugs in this
+> > > thread.  That message was copied by Chuck Ebbert from a Red Hat
+> > > bugzilla ... I was assuming it was the same problem.
+> > >
+> > > > I applied the patch on 2.6.24-rc6-git9 but unfortunatelly same thing happens.
+> > >
+> > > First off, has this driver ever worked for you in 2.6?  Just booting
+> > > SLES9 (2.6.5) or RHEL4 (2.6.9) ... or one of their open equivalents to
+> > > check a really old kernel would be helpful.  If you can get it to work,
+> > > then we can proceed with a patch reversion regime based on the
+> > > assumption that the problem is a recent commit.
+> >
+> > Yes it works under 2.6.16.13.  See the beginning of this thread, i
+> > mention there some things about newer versions.
+>
+> Thanks, actually, I see this:
+>
+> > I tried to install OpenSUSE 10.3 (kernel 2.6.22.5) and the latest
+> > OpenSUSE 11.0 Alpha 0  (kernel 2.6.24-rc4) but although the initio
+> > drivergets loaded during the installation process, yast reports that no hard
+> > disk is found.
+>
+> Could you try with a vanilla 2.6.22 kernel?  The reason for all of this
+> is that 2.6.22 predates Alan's conversion of this driver (which was my
+> 95% candidate for the source of the bug).  I want you to try the vanilla
+> kernel just in case the opensuse one contains a backport.
 
-It's indeed a problem in the firewire stack.
 
-...
->> now we attach another sata disk to the second port of the pci firewire B
->> controller:
->>
->> Jan 12 16:50:49 x3400 kernel: firewire_sbp2: orb reply timed out, rcode=0x11
->> Jan 12 16:50:49 x3400 kernel: sd 11:0:0:0: [sdc] Result: hostbyte=DID_BUS_BUSY
->> driverbyte=DRIVER_OK,SUGGEST_OK
-> 
-> Best I can tell, this is the source of the problem.  The sbp2 driver is
-> replying DID_BUS_BUSY until that gets sorted out, which seems to be
-> never.
+Yes you are right. I compiled the vanilla 2.6.22 and initio driver works.
+Tell me if you want to apply any patch to it.
 
-When something was plugged in or out at the same bus, fw-sbp2 has to
-reconnect == renew the login to each logical unit.  The syslog in the
-report is inconclusive whether that happened or failed.  There should be
-one of
-	"reconnected to ... LUN ... (... retries)"
-or	"failed to reconnect to ..."
-logged eventually.  As long as the reconnect didn't succeed, fw-sbp2
-quits newly enqueued commands with DID_BUS_BUSY.
 
-I need a bit spare time and a way to reproduce this or similar things to
-get to the cause of this.  (I had random reconnect problems with fw-sbp2
-now and then, but not yet 100% reproducible ones like the reporter has.)
-
-The last tested kernel in the report, 2.6.24-rc7, already contains the
-latest and greatest firewire code as far as problem at hand is concerned.
-
-> So, first pass analysis indicates the error to be in the firewire
-> subsystem.  I'm guessing from the message that it's actually
-> drivers/firewire, not drivers iee1934?
-
-Yes.
-
-As a side note, the old sbp2 driver does not quit commands with
-DID_BUS_BUSY between bus reset and reconnect.  Instead it blocks the
-Scsi_Host in order to not receive commands during that time at all.
-
-The time from bus reset to successful reconnect is typically circa a
-second, on bigger buses with lots of protocol activity after bus reset
-perhaps a few seconds.  (Could IMO still be optimized, in both of the
-drivers/ieee1394 and drivers/firewire implementations.)
--- 
-Stefan Richter
--=====-==--- ---= -==-=
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+>
+> Thanks,
+>
+> James
+>
+>
+>
