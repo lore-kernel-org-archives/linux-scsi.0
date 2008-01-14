@@ -1,109 +1,211 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was
-	Linux scsi /	usb-mass-storage and HP printer cardreader bug + fix)
-Date: Mon, 14 Jan 2008 08:03:10 -0800
-Message-ID: <20080114160310.GH14375@one-eyed-alien.net>
-References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>
-	<4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>
-	<4787CE08.5000304@hhs.nl> <1200303645.11301.15.camel@littletux>
-	<478B2F90.7010105@hhs.nl>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] SG: work with the SCSI fixed maximum allocations
+Date: Mon, 14 Jan 2008 10:04:45 -0600
+Message-ID: <1200326685.3159.9.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0611255343=="
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <478B2F90.7010105@hhs.nl>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Hans de Goede <j.w.r.degoede@hhs.nl>
-Cc: Guillaume Bedot <littletux@zarb.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, fedora-kernel-list@redhat.com, Boaz Harrosh <bharrosh@panasas.com>
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:48022 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751341AbYANQEs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jan 2008 11:04:48 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <Jens.Axboe@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
+
+Boaz pointed out that the current sg table code will bug in the SCSI
+index function because it assumes a larger sized allocator that SCSI
+possesses.  This patch fixes the issue.
+
+James
+
+---
+
+>From 258aae00284d61786758d9e740df08cc4b916f96 Mon Sep 17 00:00:00 2001
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Sun, 13 Jan 2008 14:15:28 -0600
+Subject: SG: work with the SCSI fixed maximum allocations
+
+SCSI sg table allocation has a maximum size (of SCSI_MAX_SG_SEGMENTS,
+currently 128) and this will cause a BUG_ON() in SCSI if something
+tries an allocation over it.  This patch adds a size limit to the
+chaining allocator to allow the specification of the maximum
+allocation size for chaining, so we always chain in units of the
+maximum SCSI allocation size.
+
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/scsi_lib.c     |    8 +++++---
+ include/linux/scatterlist.h |    5 +++--
+ lib/scatterlist.c           |   41 +++++++++++++++++++++++++++--------------
+ 3 files changed, 35 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 3c681de..e0f40e6 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -773,16 +773,18 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
+ 
+ 	BUG_ON(!nents);
+ 
+-	ret = __sg_alloc_table(&sdb->table, nents, gfp_mask, scsi_sg_alloc);
++	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
++			       gfp_mask, scsi_sg_alloc);
+ 	if (unlikely(ret))
+-		__sg_free_table(&sdb->table, scsi_sg_free);
++		__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS,
++				scsi_sg_free);
+ 
+ 	return ret;
+ }
+ 
+ static void scsi_free_sgtable(struct scsi_data_buffer *sdb)
+ {
+-	__sg_free_table(&sdb->table, scsi_sg_free);
++	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, scsi_sg_free);
+ }
+ 
+ /*
+diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
+index e9cb103..a3d567a 100644
+--- a/include/linux/scatterlist.h
++++ b/include/linux/scatterlist.h
+@@ -207,9 +207,10 @@ void sg_init_one(struct scatterlist *, const void *, unsigned int);
+ typedef struct scatterlist *(sg_alloc_fn)(unsigned int, gfp_t);
+ typedef void (sg_free_fn)(struct scatterlist *, unsigned int);
+ 
+-void __sg_free_table(struct sg_table *, sg_free_fn *);
++void __sg_free_table(struct sg_table *, unsigned int, sg_free_fn *);
+ void sg_free_table(struct sg_table *);
+-int __sg_alloc_table(struct sg_table *, unsigned int, gfp_t, sg_alloc_fn *);
++int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
++		     sg_alloc_fn *);
+ int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
+ 
+ /*
+diff --git a/lib/scatterlist.c b/lib/scatterlist.c
+index 02aaa27..acca490 100644
+--- a/lib/scatterlist.c
++++ b/lib/scatterlist.c
+@@ -130,13 +130,17 @@ static void sg_kfree(struct scatterlist *sg, unsigned int nents)
+ /**
+  * __sg_free_table - Free a previously mapped sg table
+  * @table:	The sg table header to use
++ * @max_ents:	The maximum number of entries per single scatterlist
+  * @free_fn:	Free function
+  *
+  *  Description:
+- *    Free an sg table previously allocated and setup with __sg_alloc_table().
++ *    Free an sg table previously allocated and setup with
++ *    __sg_alloc_table().  The @max_ents value must be identical to
++ *    that previously used with __sg_alloc_table().
+  *
+  **/
+-void __sg_free_table(struct sg_table *table, sg_free_fn *free_fn)
++void __sg_free_table(struct sg_table *table, unsigned int max_ents,
++		     sg_free_fn *free_fn)
+ {
+ 	struct scatterlist *sgl, *next;
+ 
+@@ -149,14 +153,14 @@ void __sg_free_table(struct sg_table *table, sg_free_fn *free_fn)
+ 		unsigned int sg_size;
+ 
+ 		/*
+-		 * If we have more than SG_MAX_SINGLE_ALLOC segments left,
++		 * If we have more than max_ents segments left,
+ 		 * then assign 'next' to the sg table after the current one.
+ 		 * sg_size is then one less than alloc size, since the last
+ 		 * element is the chain pointer.
+ 		 */
+-		if (alloc_size > SG_MAX_SINGLE_ALLOC) {
+-			next = sg_chain_ptr(&sgl[SG_MAX_SINGLE_ALLOC - 1]);
+-			alloc_size = SG_MAX_SINGLE_ALLOC;
++		if (alloc_size > max_ents) {
++			next = sg_chain_ptr(&sgl[max_ents - 1]);
++			alloc_size = max_ents;
+ 			sg_size = alloc_size - 1;
+ 		} else {
+ 			sg_size = alloc_size;
+@@ -179,7 +183,7 @@ EXPORT_SYMBOL(__sg_free_table);
+  **/
+ void sg_free_table(struct sg_table *table)
+ {
+-	__sg_free_table(table, sg_kfree);
++	__sg_free_table(table, SG_MAX_SINGLE_ALLOC, sg_kfree);
+ }
+ EXPORT_SYMBOL(sg_free_table);
+ 
+@@ -187,22 +191,30 @@ EXPORT_SYMBOL(sg_free_table);
+  * __sg_alloc_table - Allocate and initialize an sg table with given allocator
+  * @table:	The sg table header to use
+  * @nents:	Number of entries in sg list
++ * @max_ents:	The maximum number of entries the allocator returns per call
+  * @gfp_mask:	GFP allocation mask
+  * @alloc_fn:	Allocator to use
+  *
++ * Description:
++ *   This function returns a @table @nents long. The allocator is
++ *   defined to return scatterlist chunks of maximum size @max_ents.
++ *   Thus if @nents is bigger than @max_ents, the scatterlists will be
++ *   chained in units of @max_ents.
++ *
+  * Notes:
+  *   If this function returns non-0 (eg failure), the caller must call
+  *   __sg_free_table() to cleanup any leftover allocations.
+  *
+  **/
+-int __sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask,
++int __sg_alloc_table(struct sg_table *table, unsigned int nents,
++		     unsigned int max_ents, gfp_t gfp_mask,
+ 		     sg_alloc_fn *alloc_fn)
+ {
+ 	struct scatterlist *sg, *prv;
+ 	unsigned int left;
+ 
+ #ifndef ARCH_HAS_SG_CHAIN
+-	BUG_ON(nents > SG_MAX_SINGLE_ALLOC);
++	BUG_ON(nents > max_ents);
+ #endif
+ 
+ 	memset(table, 0, sizeof(*table));
+@@ -212,8 +224,8 @@ int __sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask,
+ 	do {
+ 		unsigned int sg_size, alloc_size = left;
+ 
+-		if (alloc_size > SG_MAX_SINGLE_ALLOC) {
+-			alloc_size = SG_MAX_SINGLE_ALLOC;
++		if (alloc_size > max_ents) {
++			alloc_size = max_ents;
+ 			sg_size = alloc_size - 1;
+ 		} else
+ 			sg_size = alloc_size;
+@@ -232,7 +244,7 @@ int __sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask,
+ 		 * If this is not the first mapping, chain previous part.
+ 		 */
+ 		if (prv)
+-			sg_chain(prv, SG_MAX_SINGLE_ALLOC, sg);
++			sg_chain(prv, max_ents, sg);
+ 		else
+ 			table->sgl = sg;
+ 
+@@ -272,9 +284,10 @@ int sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask)
+ {
+ 	int ret;
+ 
+-	ret = __sg_alloc_table(table, nents, gfp_mask, sg_kmalloc);
++	ret = __sg_alloc_table(table, nents, SG_MAX_SINGLE_ALLOC,
++			       gfp_mask, sg_kmalloc);
+ 	if (unlikely(ret))
+-		__sg_free_table(table, sg_kfree);
++		__sg_free_table(table, SG_MAX_SINGLE_ALLOC, sg_kfree);
+ 
+ 	return ret;
+ }
+-- 
+1.5.3.7
 
 
---===============0611255343==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="DWg365Y4B18r8evw"
-Content-Disposition: inline
 
-
---DWg365Y4B18r8evw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Mon, Jan 14, 2008 at 10:46:56AM +0100, Hans de Goede wrote:
-> Guillaume Bedot wrote:
-> >But it fixes only two models.
-> >Do you think other devices (hp or not) can be impacted ?
-> >There are hundreds of models with card readers only for hp :
-> >http://hplip.sourceforge.net/supported_devices/combined.html
-> >
-> >Will this be possible to use "LAST_SECTOR_BUG" quirk for testing without
-> >recompiling a kernel ?
-> >
->=20
-> This is not possible AFAIK, I've already wrote a blog post about this=20
-> asking for people to test this, but got no responses.
-
-Once the patches are accepted by the SCSI people, one of the things we can
-consider doing is enabling this quirk for all USB devices.  It should be
-pretty harmless to all properly working devices, and the performance hit
-should be pretty minimal.
-
-We may be able to convince the SCSI people to enable it for all devices,
-regardless of HCD.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-What the hell are you?
-					-- Pitr to Dust Puppy=20
-User Friendly, 12/3/1997
-
---DWg365Y4B18r8evw
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHi4e+HL9iwnUZqnkRAl10AJ4rD0jIuqneWfQC/4rUBZBJRNI5kACgnTUB
-bOV7So8UBN5jQLAPP/+i7jY=
-=1teA
------END PGP SIGNATURE-----
-
---DWg365Y4B18r8evw--
-
-
---===============0611255343==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
---===============0611255343==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
-
---===============0611255343==--
