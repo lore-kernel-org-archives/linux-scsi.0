@@ -1,274 +1,204 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/1] aacraid: replace '<?:' with min_t()
-Date: Mon, 14 Jan 2008 07:25:33 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F438AEA974@ADPE2K703.adaptec.com>
-References: <457feffcfc40101ad9884914d8f223cd425ee5b6.tomof@acm.org>
- <a789287f8ac2eef0d95c6cbb08f68c122b5f7ec4.tomof@acm.org>
- <532ABFBDAAC3A34EB12EBA6CEC2838F438AEA880@ADPE2K703.adaptec.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RFC 1/2] block: implement drain buffers
+Date: Mon, 14 Jan 2008 10:01:35 -0600
+Message-ID: <1200326495.3159.7.camel@localhost.localdomain>
+References: <11992723701811-git-send-email-htejun@gmail.com>
+	 <11992723711076-git-send-email-htejun@gmail.com>
+	 <1199986236.3141.51.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEA974ADPE2K703adapte_"
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-gw3.adaptec.com ([162.62.93.58]:54640 "EHLO
-	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750824AbYANPZh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 10:25:37 -0500
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F438AEA880@ADPE2K703.adaptec.com>
-Content-Language: en-US
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:36331 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1750851AbYANQBl (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jan 2008 11:01:41 -0500
+In-Reply-To: <1199986236.3141.51.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
-Cc: "'fujita.tomonori@lab.ntt.co.jp'" <fujita.tomonori@lab.ntt.co.jp>, 'FUJITA Tomonori' <tomof@acm.org>
+To: Tejun Heo <htejun@gmail.com>
+Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEA974ADPE2K703adapte_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Jens pointed out that I need to lower both phys and hw segments in the
+drain set up, so an updated patch is attached.
 
-The promised min_t() cleanup. Purely cosmetic.
+James
 
-This attached patch is against current scsi-misc-2.6 *after* http://marc.in=
-fo/?l=3Dlinux-scsi&m=3D120020681219191&w=3D2 is applied. James, sorry if th=
-is patch is being submitted too early in the pipeline ...
-
-ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments.
-
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
-
- drivers/scsi/aacraid/aachba.c |   40 ++++++++++++++++---------------------=
 ---
- 1 file changed, 16 insertions(+), 24 deletions(-)
 
-Sincerely -- Mark Salyzyn
+>From 7d5cff0af8a2d4017d0b5246aaef33327b053495 Mon Sep 17 00:00:00 2001
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Date: Thu, 10 Jan 2008 11:30:36 -0600
+Subject: block: implement drain buffers
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org
-> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Salyzyn, Mark
-> Sent: Monday, January 14, 2008 8:24 AM
-> To: 'FUJITA Tomonori'; 'James.Bottomley@HansenPartnership.com'
-> Cc: 'linux-scsi@vger.kernel.org'; 'fujita.tomonori@lab.ntt.co.jp'
-> Subject: RE: [PATCH 2/2] replace sizeof sense_buffer with
-> SCSI_SENSE_BUFFERSIZE
->
-> ACK on ips, aacraid and dpt_i2o bits. Cursory inspection of
-> other bits as well. Thanks Fujita, looks good!
->
-> Will do a 'min()' cleanup on aacraid once patch propagates
-> into scsi-misc-2.6
->
-> Sincerely -- Mark Salyzyn
->
-> cur*so*ry - adjective
->         going rapidly over something, without noticing
-> details; hasty; superficial. spedd reeding
->
-> . . .
-> > o This is a 'grep and replace' style patch but cleans up
-> dpt_i2o a bit
-> > as by permission of Mark (I use min macro).
-> >
-> > o The previous version overlooked some sizeof sense_buffer lines in
-> > aacraid and qla4xxx.
-> . . .
-> > diff --git a/drivers/scsi/aacraid/aachba.c
-> > b/drivers/scsi/aacraid/aachba.c
-> > index 62d9516..aadedbd 100644
-> > --- a/drivers/scsi/aacraid/aachba.c
-> > +++ b/drivers/scsi/aacraid/aachba.c
-> > @@ -912,8 +912,8 @@ static int aac_bounds_32(struct aac_dev *
-> > dev, struct scsi_cmnd * cmd, u64 lba)
-> >                             ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0,
-> >                             0, 0);
-> >                 memcpy(cmd->sense_buffer,
-> > &dev->fsa_dev[cid].sense_data,
-> > -                 (sizeof(dev->fsa_dev[cid].sense_data) >
-> > sizeof(cmd->sense_buffer))
-> > -                   ? sizeof(cmd->sense_buffer)
-> > +                 (sizeof(dev->fsa_dev[cid].sense_data) >
-> > SCSI_SENSE_BUFFERSIZE)
-> > +                   ? SCSI_SENSE_BUFFERSIZE
-> >                     : sizeof(dev->fsa_dev[cid].sense_data));
-> >                 cmd->scsi_done(cmd);
-> >                 return 1;
-> > @@ -1525,8 +1525,8 @@ static void io_callback(void *context,
-> > struct fib * fibptr)
-> >
-> > ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0,
-> >                                     0, 0);
-> >                 memcpy(scsicmd->sense_buffer,
-> > &dev->fsa_dev[cid].sense_data,
-> > -                 (sizeof(dev->fsa_dev[cid].sense_data) >
-> > sizeof(scsicmd->sense_buffer))
-> > -                   ? sizeof(scsicmd->sense_buffer)
-> > +                 (sizeof(dev->fsa_dev[cid].sense_data) >
-> > SCSI_SENSE_BUFFERSIZE)
-> > +                   ? SCSI_SENSE_BUFFERSIZE
-> >                     : sizeof(dev->fsa_dev[cid].sense_data));
-> >         }
-> >         aac_fib_complete(fibptr);
-> > @@ -1739,8 +1739,8 @@ static void synchronize_callback(void
-> > *context, struct fib *fibptr)
-> >
-> > ASENCODE_INTERNAL_TARGET_FAILURE, 0, 0,
-> >                                     0, 0);
-> >                 memcpy(cmd->sense_buffer,
-> > &dev->fsa_dev[cid].sense_data,
-> > -                 min(sizeof(dev->fsa_dev[cid].sense_data),
-> > -                         sizeof(cmd->sense_buffer)));
-> > +                      min_t(size_t,
-> > sizeof(dev->fsa_dev[cid].sense_data),
-> > +                            SCSI_SENSE_BUFFERSIZE));
-> >         }
-> >
-> >         aac_fib_complete(fibptr);
-> > @@ -1949,8 +1949,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
-> >                             SENCODE_INVALID_COMMAND,
-> >                             ASENCODE_INVALID_COMMAND, 0, 0, 0, 0);
-> >                 memcpy(scsicmd->sense_buffer,
-> > &dev->fsa_dev[cid].sense_data,
-> > -                 (sizeof(dev->fsa_dev[cid].sense_data) >
-> > sizeof(scsicmd->sense_buffer))
-> > -                   ? sizeof(scsicmd->sense_buffer)
-> > +                 (sizeof(dev->fsa_dev[cid].sense_data) >
-> > SCSI_SENSE_BUFFERSIZE)
-> > +                   ? SCSI_SENSE_BUFFERSIZE
-> >                     : sizeof(dev->fsa_dev[cid].sense_data));
-> >                 scsicmd->scsi_done(scsicmd);
-> >                 return 0;
-> > @@ -2002,8 +2002,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
-> >                                 memcpy(scsicmd->sense_buffer,
-> >                                   &dev->fsa_dev[cid].sense_data,
-> >
-> > (sizeof(dev->fsa_dev[cid].sense_data) >
-> > -                                   sizeof(scsicmd->sense_buffer))
-> > -                                      ?
-> sizeof(scsicmd->sense_buffer)
-> > +                                   SCSI_SENSE_BUFFERSIZE)
-> > +                                      ? SCSI_SENSE_BUFFERSIZE
-> >                                        :
-> > sizeof(dev->fsa_dev[cid].sense_data));
-> >                         }
-> >                         scsicmd->scsi_done(scsicmd);
-> > @@ -2259,8 +2259,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
-> >                                 ILLEGAL_REQUEST,
-> > SENCODE_INVALID_COMMAND,
-> >                                 ASENCODE_INVALID_COMMAND,
-> 0, 0, 0, 0);
-> >                         memcpy(scsicmd->sense_buffer,
-> > &dev->fsa_dev[cid].sense_data,
-> > -
-> > (sizeof(dev->fsa_dev[cid].sense_data) >
-> sizeof(scsicmd->sense_buffer))
-> > -                           ? sizeof(scsicmd->sense_buffer)
-> > +
-> > (sizeof(dev->fsa_dev[cid].sense_data) > SCSI_SENSE_BUFFERSIZE)
-> > +                           ? SCSI_SENSE_BUFFERSIZE
-> >                             : sizeof(dev->fsa_dev[cid].sense_data));
-> >                         scsicmd->scsi_done(scsicmd);
-> >                         return 0;
-> > @@ -2422,8 +2422,8 @@ static void aac_srb_callback(void
-> > *context, struct fib * fibptr)
-> >                 int len;
-> >                 printk(KERN_WARNING "aac_srb_callback: srb
-> > failed, status =3D %d\n", le32_to_cpu(srbreply->status));
-> >                 len =3D (le32_to_cpu(srbreply->sense_data_size) >
-> > -                               sizeof(scsicmd->sense_buffer)) ?
-> > -                               sizeof(scsicmd->sense_buffer) :
-> > +                               SCSI_SENSE_BUFFERSIZE) ?
-> > +                               SCSI_SENSE_BUFFERSIZE :
-> >
-> > le32_to_cpu(srbreply->sense_data_size);
-> >                 scsicmd->result =3D DID_ERROR << 16 |
-> > COMMAND_COMPLETE << 8 | SAM_STAT_CHECK_CONDITION;
-> >                 memcpy(scsicmd->sense_buffer,
-> > srbreply->sense_data, len);
-> > @@ -2528,8 +2528,8 @@ static void aac_srb_callback(void
-> > *context, struct fib * fibptr)
-> >                 int len;
-> >                 scsicmd->result |=3D SAM_STAT_CHECK_CONDITION;
-> >                 len =3D (le32_to_cpu(srbreply->sense_data_size) >
-> > -                               sizeof(scsicmd->sense_buffer)) ?
-> > -                               sizeof(scsicmd->sense_buffer) :
-> > +                               SCSI_SENSE_BUFFERSIZE) ?
-> > +                               SCSI_SENSE_BUFFERSIZE :
-> >
-> > le32_to_cpu(srbreply->sense_data_size);
-> >  #ifdef AAC_DETAILED_STATUS_INFO
-> >                 printk(KERN_WARNING "aac_srb_callback: check
-> > condition, status =3D %d len=3D%d\n",
+These DMA drain buffer implementations in drivers are pretty horrible
+to do in terms of manipulating the scatterlist.  Plus they're being
+done at least in drivers/ide and drivers/ata, so we now have code
+duplication.
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEA974ADPE2K703adapte_
-Content-Type: application/octet-stream; name="aacraid_min.patch"
-Content-Description: aacraid_min.patch
-Content-Disposition: attachment; filename="aacraid_min.patch"; size=3685;
-	creation-date="Mon, 14 Jan 2008 06:58:19 GMT";
-	modification-date="Mon, 14 Jan 2008 06:58:19 GMT"
-Content-Transfer-Encoding: base64
+The one use case for this, as I understand it is AHCI controllers doing
+PIO mode to mmc devices but translating this to DMA at the controller
+level.
 
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
-YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
-MDEtMTQgMDk6NTU6NTIuOTQ0MDU1OTU1IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
-L2FhY2hiYS5jCTIwMDgtMDEtMTQgMDk6NTc6MzkuNTEyNjMxNjcwIC0wNTAwCkBAIC05MTIsOSAr
-OTEyLDggQEAKIAkJCSAgICBBU0VOQ09ERV9JTlRFUk5BTF9UQVJHRVRfRkFJTFVSRSwgMCwgMCwK
-IAkJCSAgICAwLCAwKTsKIAkJbWVtY3B5KGNtZC0+c2Vuc2VfYnVmZmVyLCAmZGV2LT5mc2FfZGV2
-W2NpZF0uc2Vuc2VfZGF0YSwKLQkJICAoc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2Rh
-dGEpID4gU0NTSV9TRU5TRV9CVUZGRVJTSVpFKQotCQkgICAgPyBTQ1NJX1NFTlNFX0JVRkZFUlNJ
-WkUKLQkJICAgIDogc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpKTsKKwkJICAg
-ICAgIG1pbl90KHNpemVfdCwgc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpLAor
-CQkgICAgICAgICAgICAgU0NTSV9TRU5TRV9CVUZGRVJTSVpFKSk7CiAJCWNtZC0+c2NzaV9kb25l
-KGNtZCk7CiAJCXJldHVybiAxOwogCX0KQEAgLTE1MjUsOSArMTUyNCw4IEBACiAJCQkJICAgIEFT
-RU5DT0RFX0lOVEVSTkFMX1RBUkdFVF9GQUlMVVJFLCAwLCAwLAogCQkJCSAgICAwLCAwKTsKIAkJ
-bWVtY3B5KHNjc2ljbWQtPnNlbnNlX2J1ZmZlciwgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2Rh
-dGEsCi0JCSAgKHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSA+IFNDU0lfU0VO
-U0VfQlVGRkVSU0laRSkKLQkJICAgID8gU0NTSV9TRU5TRV9CVUZGRVJTSVpFCi0JCSAgICA6IHNp
-emVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSk7CisJCSAgICAgICBtaW5fdChzaXpl
-X3QsIHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSwKKwkJICAgICAgICAgICAg
-IFNDU0lfU0VOU0VfQlVGRkVSU0laRSkpOwogCX0KIAlhYWNfZmliX2NvbXBsZXRlKGZpYnB0cik7
-CiAJYWFjX2ZpYl9mcmVlKGZpYnB0cik7CkBAIC0xOTQ5LDkgKzE5NDcsOCBAQAogCQkJICAgIFNF
-TkNPREVfSU5WQUxJRF9DT01NQU5ELAogCQkJICAgIEFTRU5DT0RFX0lOVkFMSURfQ09NTUFORCwg
-MCwgMCwgMCwgMCk7CiAJCW1lbWNweShzY3NpY21kLT5zZW5zZV9idWZmZXIsICZkZXYtPmZzYV9k
-ZXZbY2lkXS5zZW5zZV9kYXRhLAotCQkgIChzaXplb2YoZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2Vf
-ZGF0YSkgPiBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpCi0JCSAgICA/IFNDU0lfU0VOU0VfQlVGRkVS
-U0laRQotCQkgICAgOiBzaXplb2YoZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSkpOworCQkg
-ICAgICAgbWluX3Qoc2l6ZV90LCBzaXplb2YoZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSks
-CisJCSAgICAgICAgICAgICBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpKTsKIAkJc2NzaWNtZC0+c2Nz
-aV9kb25lKHNjc2ljbWQpOwogCQlyZXR1cm4gMDsKIAl9CkBAIC0yMDAxLDEwICsxOTk4LDkgQEAK
-IAkJCQkgIEFTRU5DT0RFX05PX1NFTlNFLCAwLCA3LCAyLCAwKTsKIAkJCQltZW1jcHkoc2NzaWNt
-ZC0+c2Vuc2VfYnVmZmVyLAogCQkJCSAgJmRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEsCi0J
-CQkJICAoc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpID4KLQkJCQkgICAgU0NT
-SV9TRU5TRV9CVUZGRVJTSVpFKQotCQkJCSAgICAgICA/IFNDU0lfU0VOU0VfQlVGRkVSU0laRQot
-CQkJCSAgICAgICA6IHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhKSk7CisJCSAg
-CQkgIG1pbl90KHNpemVfdCwKKwkJCQkgICAgICAgIHNpemVvZihkZXYtPmZzYV9kZXZbY2lkXS5z
-ZW5zZV9kYXRhKSwKKwkJCQkgICAgICAgIFNDU0lfU0VOU0VfQlVGRkVSU0laRSkpOwogCQkJfQog
-CQkJc2NzaWNtZC0+c2NzaV9kb25lKHNjc2ljbWQpOwogCQkJcmV0dXJuIDA7CkBAIC0yMjU5LDkg
-KzIyNTUsOSBAQAogCQkJCUlMTEVHQUxfUkVRVUVTVCwgU0VOQ09ERV9JTlZBTElEX0NPTU1BTkQs
-CiAJCQkJQVNFTkNPREVfSU5WQUxJRF9DT01NQU5ELCAwLCAwLCAwLCAwKTsKIAkJCW1lbWNweShz
-Y3NpY21kLT5zZW5zZV9idWZmZXIsICZkZXYtPmZzYV9kZXZbY2lkXS5zZW5zZV9kYXRhLAotCQkJ
-ICAoc2l6ZW9mKGRldi0+ZnNhX2RldltjaWRdLnNlbnNlX2RhdGEpID4gU0NTSV9TRU5TRV9CVUZG
-RVJTSVpFKQotCQkJICAgID8gU0NTSV9TRU5TRV9CVUZGRVJTSVpFCi0JCQkgICAgOiBzaXplb2Yo
-ZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSkpOworCQkJCW1pbl90KHNpemVfdCwKKwkJCQkg
-ICAgICBzaXplb2YoZGV2LT5mc2FfZGV2W2NpZF0uc2Vuc2VfZGF0YSksCisJCQkJICAgICAgU0NT
-SV9TRU5TRV9CVUZGRVJTSVpFKSk7CiAJCQlzY3NpY21kLT5zY3NpX2RvbmUoc2NzaWNtZCk7CiAJ
-CQlyZXR1cm4gMDsKIAl9CkBAIC0yNDIxLDEwICsyNDE3LDggQEAKIAlpZiAobGUzMl90b19jcHUo
-c3JicmVwbHktPnN0YXR1cykgIT0gU1RfT0spewogCQlpbnQgbGVuOwogCQlwcmludGsoS0VSTl9X
-QVJOSU5HICJhYWNfc3JiX2NhbGxiYWNrOiBzcmIgZmFpbGVkLCBzdGF0dXMgPSAlZFxuIiwgbGUz
-Ml90b19jcHUoc3JicmVwbHktPnN0YXR1cykpOwotCQlsZW4gPSAobGUzMl90b19jcHUoc3JicmVw
-bHktPnNlbnNlX2RhdGFfc2l6ZSkgPiAKLQkJCQlTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpID8KLQkJ
-CQlTQ1NJX1NFTlNFX0JVRkZFUlNJWkUgOgotCQkJCWxlMzJfdG9fY3B1KHNyYnJlcGx5LT5zZW5z
-ZV9kYXRhX3NpemUpOworCQlsZW4gPSBtaW5fdCh1MzIsIGxlMzJfdG9fY3B1KHNyYnJlcGx5LT5z
-ZW5zZV9kYXRhX3NpemUpLAorCQkgICAgICAgICAgICBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpOwog
-CQlzY3NpY21kLT5yZXN1bHQgPSBESURfRVJST1IgPDwgMTYgfCBDT01NQU5EX0NPTVBMRVRFIDw8
-IDggfCBTQU1fU1RBVF9DSEVDS19DT05ESVRJT047CiAJCW1lbWNweShzY3NpY21kLT5zZW5zZV9i
-dWZmZXIsIHNyYnJlcGx5LT5zZW5zZV9kYXRhLCBsZW4pOwogCX0KQEAgLTI1MjcsMTAgKzI1MjEs
-OCBAQAogCWlmIChsZTMyX3RvX2NwdShzcmJyZXBseS0+c2NzaV9zdGF0dXMpID09IDB4MDIgKXsg
-IC8vIENoZWNrIENvbmRpdGlvbgogCQlpbnQgbGVuOwogCQlzY3NpY21kLT5yZXN1bHQgfD0gU0FN
-X1NUQVRfQ0hFQ0tfQ09ORElUSU9OOwotCQlsZW4gPSAobGUzMl90b19jcHUoc3JicmVwbHktPnNl
-bnNlX2RhdGFfc2l6ZSkgPiAKLQkJCQlTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpID8KLQkJCQlTQ1NJ
-X1NFTlNFX0JVRkZFUlNJWkUgOgotCQkJCWxlMzJfdG9fY3B1KHNyYnJlcGx5LT5zZW5zZV9kYXRh
-X3NpemUpOworCQlsZW4gPSBtaW5fdCh1MzIsIGxlMzJfdG9fY3B1KHNyYnJlcGx5LT5zZW5zZV9k
-YXRhX3NpemUpLAorCQkgICAgICAgICAgICBTQ1NJX1NFTlNFX0JVRkZFUlNJWkUpOwogI2lmZGVm
-IEFBQ19ERVRBSUxFRF9TVEFUVVNfSU5GTwogCQlwcmludGsoS0VSTl9XQVJOSU5HICJhYWNfc3Ji
-X2NhbGxiYWNrOiBjaGVjayBjb25kaXRpb24sIHN0YXR1cyA9ICVkIGxlbj0lZFxuIiwKIAkJCQkJ
-bGUzMl90b19jcHUoc3JicmVwbHktPnN0YXR1cyksIGxlbik7Cg==
+So, what about adding a callback to the block layer that permits the
+adding of the drain buffer for the problem devices.  The idea is that
+you'd do this in slave_configure after you find one of these devices.
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEA974ADPE2K703adapte_--
+The beauty of doing it in the block layer is that it quietly adds the
+drain buffer to the end of the sg list, so it automatically gets mapped
+(and unmapped) without anything unusual having to be done to the
+scatterlist in driver/scsi or drivers/ata and without any alteration to
+the transfer length.
+
+Jens, could you check I've got the logic of adding and removing the
+sizes correct (anything I've missed that could result in a size leak on
+request processing?) and that you are OK with the basic concept?  I'm
+afraid it's ugly, but it's a lot less ugly than having drivers/ata
+trying to append to the scatterlist.
+
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ block/elevator.c       |   26 ++++++++++++++++++++++++-
+ block/ll_rw_blk.c      |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h |    4 +++
+ 3 files changed, 78 insertions(+), 1 deletions(-)
+
+diff --git a/block/elevator.c b/block/elevator.c
+index e452deb..9897f20 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -743,7 +743,21 @@ struct request *elv_next_request(struct request_queue *q)
+ 			q->boundary_rq = NULL;
+ 		}
+ 
+-		if ((rq->cmd_flags & REQ_DONTPREP) || !q->prep_rq_fn)
++		if (rq->cmd_flags & REQ_DONTPREP)
++			break;
++
++		if (q->dma_drain_size && rq->data_len) {
++			/*
++			 * make sure space for the drain appears we
++			 * know we can do this because max_hw_segments
++			 * has been adjusted to be one fewer than the
++			 * device can handle
++			 */
++			rq->nr_phys_segments++;
++			rq->nr_hw_segments++;
++		}
++
++		if (!q->prep_rq_fn)
+ 			break;
+ 
+ 		ret = q->prep_rq_fn(q, rq);
+@@ -756,6 +770,16 @@ struct request *elv_next_request(struct request_queue *q)
+ 			 * avoid resource deadlock.  REQ_STARTED will
+ 			 * prevent other fs requests from passing this one.
+ 			 */
++			if (q->dma_drain_size && rq->data_len &&
++			    !(rq->cmd_flags & REQ_DONTPREP)) {
++				/*
++				 * remove the space for the drain we added
++				 * so that we don't add it again
++				 */
++				--rq->nr_phys_segments;
++				--rq->nr_hw_segments;
++			}
++
+ 			rq = NULL;
+ 			break;
+ 		} else if (ret == BLKPREP_KILL) {
+diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
+index 14af36c..72f536c 100644
+--- a/block/ll_rw_blk.c
++++ b/block/ll_rw_blk.c
+@@ -726,6 +726,45 @@ void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b)
+ EXPORT_SYMBOL(blk_queue_stack_limits);
+ 
+ /**
++ * blk_queue_dma_drain - Set up a drain buffer for excess dma.
++ *
++ * @q:  the request queue for the device
++ * @buf:	physically contiguous buffer
++ * @size:	size of the buffer in bytes
++ *
++ * Some devices have excess DMA problems and can't simply discard (or
++ * zero fill) the unwanted piece of the transfer.  They have to have a
++ * real area of memory to transfer it into.  The use case for this is
++ * ATAPI devices in DMA mode.  If the packet command causes a transfer
++ * bigger than the transfer size some HBAs will lock up if there
++ * aren't DMA elements to contain the excess transfer.  What this API
++ * does is adjust the queue so that the buf is always appended
++ * silently to the scatterlist.
++ *
++ * Note: This routine adjusts max_hw_segments to make room for
++ * appending the drain buffer.  If you call
++ * blk_queue_max_hw_segments() or blk_queue_max_phys_segments() after
++ * calling this routine, you must set the limit to one fewer than your
++ * device can support otherwise there won't be room for the drain
++ * buffer.
++ */
++int blk_queue_dma_drain(struct request_queue *q, void *buf,
++				unsigned int size)
++{
++	if (q->max_hw_segments < 2 || q->max_phys_segments < 2)
++		return -EINVAL;
++	/* make room for appending the drain */
++	--q->max_hw_segments;
++	--q->max_phys_segments;
++	q->dma_drain_buffer = buf;
++	q->dma_drain_size = size;
++
++	return 0;
++}
++
++EXPORT_SYMBOL_GPL(blk_queue_dma_drain);
++
++/**
+  * blk_queue_segment_boundary - set boundary rules for segment merging
+  * @q:  the request queue for the device
+  * @mask:  the memory boundary mask
+@@ -1379,6 +1418,16 @@ new_segment:
+ 		bvprv = bvec;
+ 	} /* segments in rq */
+ 
++	if (q->dma_drain_size) {
++		sg->page_link &= ~0x02;
++		sg = sg_next(sg);
++		sg_set_page(sg, virt_to_page(q->dma_drain_buffer),
++			    q->dma_drain_size,
++			    ((unsigned long)q->dma_drain_buffer) &
++			    (PAGE_SIZE - 1));
++		nsegs++;
++	}
++
+ 	if (sg)
+ 		sg_mark_end(sg);
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 81e99e5..e8bd5cf 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -431,6 +431,8 @@ struct request_queue
+ 	unsigned int		max_segment_size;
+ 
+ 	unsigned long		seg_boundary_mask;
++	void			*dma_drain_buffer;
++	unsigned int		dma_drain_size;
+ 	unsigned int		dma_alignment;
+ 
+ 	struct blk_queue_tag	*queue_tags;
+@@ -762,6 +764,8 @@ extern void blk_queue_max_hw_segments(struct request_queue *, unsigned short);
+ extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
+ extern void blk_queue_hardsect_size(struct request_queue *, unsigned short);
+ extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
++extern int blk_queue_dma_drain(struct request_queue *q, void *buf,
++			       unsigned int size);
+ extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
+ extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
+ extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
+-- 
+1.5.3.7
+
+
+
