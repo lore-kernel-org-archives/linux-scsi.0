@@ -1,39 +1,44 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 6/10] lpfc 8.2.4 : Add additional sysfs and module	parameters
-Date: Mon, 14 Jan 2008 09:07:25 -0500
-Message-ID: <478B6C9D.5090601@emulex.com>
-References: <1200034389.27954.25.camel@localhost.localdomain> <1200073991.3286.43.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Convert drivers/scsi/ch.c to use unlocked_ioctl
+Date: Mon, 14 Jan 2008 07:18:54 -0700
+Message-ID: <20080114141854.GJ18741@parisc-linux.org>
+References: <1200317533-24643-1-git-send-email-mathieu.segaud@regala.cx>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:48688 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbYANOH3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 09:07:29 -0500
-In-Reply-To: <1200073991.3286.43.camel@localhost.localdomain>
+Received: from palinux.external.hp.com ([192.25.206.14]:34888 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750982AbYANOSz (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 09:18:55 -0500
+Content-Disposition: inline
+In-Reply-To: <1200317533-24643-1-git-send-email-mathieu.segaud@regala.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org
+To: Mathieu Segaud <mathieu.segaud@regala.cx>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-They are - for display purposes. We have yet to make them settable via
-the transport.  I'll look into it, as it does make sense.
+On Mon, Jan 14, 2008 at 02:32:13PM +0100, Mathieu Segaud wrote:
+> +#include <linux/smp_lock.h>
 
--- james s
+You don't add any uses of lock_kernel() and there are none in the
+driver currently.
 
-James Bottomley wrote:
-> On Fri, 2008-01-11 at 01:53 -0500, James Smart wrote:
->> Made link speed and link topology modifiable via sysfs
->> Make scatter gather Segment Count into a module parameter.
->>
->> Signed-off-by: James Smart <James.Smart@emulex.com>
-> 
-> OK ... I put this in, but shouldn't at least the link speed and possibly
-> topology modifications rightly be properties of the transport class?
-> 
-> James
-> 
-> 
-> 
+> -	.owner        = THIS_MODULE,
+> -	.open         = ch_open,
+> -	.release      = ch_release,
+> -	.ioctl        = ch_ioctl,
+> +	.owner          = THIS_MODULE,
+> +	.open           = ch_open,
+> +	.release        = ch_release,
+> +	.unlocked_ioctl = ch_ioctl,
+
+If you're going to do the gratuitous reformatting, at least use tabs
+instead of spaces.
+
+Other than that, should be fine.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
