@@ -1,54 +1,78 @@
-From: Mathieu SEGAUD <mathieu.segaud@regala.cx>
-Subject: Re: [PATCH] Convert drivers/scsi/ch.c to use unlocked_ioctl
-Date: Mon, 14 Jan 2008 15:22:42 +0100
-Message-ID: <87odbotrkd.fsf@barad-dur.regala.cx>
-References: <1200317533-24643-1-git-send-email-mathieu.segaud@regala.cx>
-	<20080114141854.GJ18741@parisc-linux.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1751025AbYANOWx@vger.kernel.org>
-In-Reply-To: <20080114141854.GJ18741@parisc-linux.org> (Matthew Wilcox's message of "Mon\, 14 Jan 2008 07\:18\:54 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Mathieu Segaud <mathieu.segaud@regala.cx>
+Subject: [PATCH] Convert drivers/scsi/ch.c to use unlocked_ioctl
+Date: Mon, 14 Jan 2008 15:31:17 +0100
+Message-ID: <1200321077-26916-1-git-send-email-mathieu.segaud@regala.cx>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bde.crans.org ([138.231.137.76]:45121 "EHLO bde.crans.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751217AbYANObS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jan 2008 09:31:18 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Mathieu Segaud <mathieu.segaud@regala.cx>
 
-Vous m'avez dit r=E9cemment :
+As of now, compat_ioctl already runs without the BKL, whereas ioctl runs
+with the BKL. This patch first converts changer_fops to use a .unlocked_ioctl
+member. It applies the same locking rationale than ch_ioctl_compat() uses
+to ch_ioctl().
 
-> On Mon, Jan 14, 2008 at 02:32:13PM +0100, Mathieu Segaud wrote:
->> +#include <linux/smp_lock.h>
-> You don't add any uses of lock_kernel() and there are none in the
-> driver currently.
+Signed-off-by: Mathieu Segaud <mathieu.segaud@regala.cx>
+---
+ drivers/scsi/ch.c |   18 ++++++++----------
+ 1 files changed, 8 insertions(+), 10 deletions(-)
 
-yep, it was before I noticed the locking semantics of
-ch_ioctl_compat()
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 2311019..389777c 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -92,8 +92,7 @@ static int  ch_probe(struct device *);
+ static int  ch_remove(struct device *);
+ static int  ch_open(struct inode * inode, struct file * filp);
+ static int  ch_release(struct inode * inode, struct file * filp);
+-static int  ch_ioctl(struct inode * inode, struct file * filp,
+-		     unsigned int cmd, unsigned long arg);
++static long ch_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
+ #ifdef CONFIG_COMPAT
+ static long ch_ioctl_compat(struct file * filp,
+ 			    unsigned int cmd, unsigned long arg);
+@@ -130,12 +129,12 @@ static struct scsi_driver ch_template =
+ 
+ static const struct file_operations changer_fops =
+ {
+-	.owner        = THIS_MODULE,
+-	.open         = ch_open,
+-	.release      = ch_release,
+-	.ioctl        = ch_ioctl,
++	.owner			= THIS_MODULE,
++	.open			= ch_open,
++	.release		= ch_release,
++	.unlocked_ioctl	= ch_ioctl,
+ #ifdef CONFIG_COMPAT
+-	.compat_ioctl = ch_ioctl_compat,
++	.compat_ioctl	= ch_ioctl_compat,
+ #endif
+ };
+ 
+@@ -626,7 +625,7 @@ ch_checkrange(scsi_changer *ch, unsigned int type, unsigned int unit)
+ 	return 0;
+ }
+ 
+-static int ch_ioctl(struct inode * inode, struct file * file,
++static long ch_ioctl(struct file *file,
+ 		    unsigned int cmd, unsigned long arg)
+ {
+ 	scsi_changer *ch = file->private_data;
+@@ -887,8 +886,7 @@ static long ch_ioctl_compat(struct file * file,
+ 	case CHIOINITELEM:
+ 	case CHIOSVOLTAG:
+ 		/* compatible */
+-		return ch_ioctl(NULL /* inode, unused */,
+-				file, cmd, arg);
++		return ch_ioctl(file, cmd, arg);
+ 	case CHIOGSTATUS32:
+ 	{
+ 		struct changer_element_status32 ces32;
+-- 
+1.5.3.8
 
->> -	.owner        =3D THIS_MODULE,
->> -	.open         =3D ch_open,
->> -	.release      =3D ch_release,
->> -	.ioctl        =3D ch_ioctl,
->> +	.owner          =3D THIS_MODULE,
->> +	.open           =3D ch_open,
->> +	.release        =3D ch_release,
->> +	.unlocked_ioctl =3D ch_ioctl,
->
-> If you're going to do the gratuitous reformatting, at least use tabs
-> instead of spaces.
-
-thanks, will do
-
-> Other than that, should be fine.
-
-I repost this one
-thanks a lot.
-
---=20
-Mathieu
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-kernel"=
- in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
-Please read the FAQ at  http://www.tux.org/lkml/
