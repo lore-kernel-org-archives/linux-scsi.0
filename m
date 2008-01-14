@@ -1,80 +1,66 @@
-From: Andi Kleen <ak@suse.de>
-Subject: Re: [PATCH] Only print SCSI data direction warning once for a command
-Date: Sun, 13 Jan 2008 17:41:43 +0100
-Message-ID: <200801131741.43173.ak@suse.de>
-References: <200801020703.01180.ak@suse.de> <1200166584.3656.36.camel@localhost.localdomain>
+From: Guillaume Bedot <littletux@zarb.org>
+Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was Linux scsi /
+	usb-mass-storage and HP printer cardreader bug + fix)
+Date: Mon, 14 Jan 2008 10:40:45 +0100
+Message-ID: <1200303645.11301.15.camel@littletux>
+References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>
+	 <4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>
+	 <4787CE08.5000304@hhs.nl>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-15"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cantor.suse.de ([195.135.220.2]:39652 "EHLO mx1.suse.de"
+Received: from ryu.zarb.org ([212.85.153.228]:51778 "EHLO ryu.zarb.org"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750720AbYAMQlr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 13 Jan 2008 11:41:47 -0500
-In-Reply-To: <1200166584.3656.36.camel@localhost.localdomain>
-Content-Disposition: inline
+	id S1752574AbYANJku (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 14 Jan 2008 04:40:50 -0500
+In-Reply-To: <4787CE08.5000304@hhs.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, dougg@torque.net
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, fedora-kernel-list@redhat.com, USB development list <linux-usb-devel@lists.sourceforge.net>, David Brown <usb-storage2@davidb.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
+Hello,
 
-> to the log because they come from printk_ratelimit().  So all you've
-> done is halved the volume of flow to the logs and left a dangling printk
-> suppressed message that keeps spewing, so I don't think the patch even
-> does what you describe it as doing ...  if you reverse the order of the
-> operands in the if() it will ...
+On ven, 2008-01-11 at 21:14 +0100, Hans de Goede wrote:
+> Boaz Harrosh wrote:
+> > Yes, you're right. in ULDs it is a much proper way to do this.
+> >=20
+> > So I guess you'll have to do that special host flag or device
+> > flag, and add a check for it in sd.c. You'll see that sd.c is=20
+> > already doing bufflen truncation at sd_prep_fn(), just add one
+> > more case.
+> >=20
+>=20
+> Done, thanks for the hint. Patch implementing my fix this way attache=
+d, please=20
+> apply.
+>=20
+> Thanks & Regards,
+>=20
+> Hans
+>=20
+I have tested this time with two PSC 1610 printers, and two SD cards,
+the same bug occured without the patch.
+And is fixed with your new patch. =EF=BB=BFGood work !
 
-Here's an updated patch with the reversed order.
+The bug however did not occur with a microSD card in a SD adaptator ?!
 
--Andi
+But it fixes only two models.
+Do you think other devices (hp or not) can be impacted ?
+There are hundreds of models with card readers only for hp :
+http://hplip.sourceforge.net/supported_devices/combined.html
 
----
+Will this be possible to use "LAST_SECTOR_BUG" quirk for testing withou=
+t
+recompiling a kernel ?
 
-Only print SCSI data direction warning once for a command v2
+Best regards,
 
-When I use cdparanoia my logs get spammed a lot by
+Guillaume B.
 
-printk: 464 messages suppressed.
-sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
-   program cdparanoia not setting count and/or reply_len properly
-printk: 1078 messages suppressed.
-
-and many more of those. With this patch the message is only printed once
-for a command in a row.
-
-v1->v2: Prevent rate limit messages too (pointed out by jejb)
-
-Signed-off-by: Andi Kleen <ak@suse.de>
-
----
- drivers/scsi/sg.c |    8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
-
-Index: linux/drivers/scsi/sg.c
-===================================================================
---- linux.orig/drivers/scsi/sg.c
-+++ linux/drivers/scsi/sg.c
-@@ -602,8 +602,9 @@ sg_write(struct file *filp, const char _
- 	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
- 	 * is a non-zero input_size, so emit a warning.
- 	 */
--	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV)
--		if (printk_ratelimit())
-+	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
-+		static char cmd[TASK_COMM_LEN];
-+		if (strcmp(current->comm, cmd) && printk_ratelimit()) {
- 			printk(KERN_WARNING
- 			       "sg_write: data in/out %d/%d bytes for SCSI command 0x%x--"
- 			       "guessing data in;\n" KERN_WARNING "   "
-@@ -611,6 +612,9 @@ sg_write(struct file *filp, const char _
- 			       old_hdr.reply_len - (int)SZ_SG_HEADER,
- 			       input_size, (unsigned int) cmnd[0],
- 			       current->comm);
-+			strcpy(cmd, current->comm);
-+		}
-+	}
- 	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
- 	return (k < 0) ? k : count;
- }
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
