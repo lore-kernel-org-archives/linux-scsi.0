@@ -1,211 +1,133 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] SG: work with the SCSI fixed maximum allocations
-Date: Mon, 14 Jan 2008 10:04:45 -0600
-Message-ID: <1200326685.3159.9.camel@localhost.localdomain>
+From: Pete Wyckoff <pw@osc.edu>
+Subject: Re: [PATCH] bsg : Add support for io vectors in bsg
+Date: Mon, 14 Jan 2008 11:18:28 -0500
+Message-ID: <20080114161828.GA17385@osc.edu>
+References: <Pine.LNX.4.64.0801042137350.7836@localhost> <200801050501.m0551LFB030667@mbox.iij4u.or.jp> <20080108220918.GA9484@osc.edu> <20080109091118N.fujita.tomonori@lab.ntt.co.jp> <20080110204325.GC1928@osc.edu> <1199998531.3141.96.camel@localhost.localdomain> <20080110214605.GD1928@osc.edu> <1200002054.3141.103.camel@localhost.localdomain> <478806D6.3080909@torque.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:48022 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751341AbYANQEs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jan 2008 11:04:48 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755939AbYANQTA@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <478806D6.3080909@torque.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Douglas Gilbert <dougg@torque.net>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, deepakrc@gmail.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <Jens.Axboe@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>
 
-Boaz pointed out that the current sg table code will bug in the SCSI
-index function because it assumes a larger sized allocator that SCSI
-possesses.  This patch fixes the issue.
+dougg@torque.net wrote on Fri, 11 Jan 2008 19:16 -0500:
+> James Bottomley wrote:
+>> On Thu, 2008-01-10 at 16:46 -0500, Pete Wyckoff wrote:
+>>> James.Bottomley@HansenPartnership.com wrote on Thu, 10 Jan 2008 14:55 -0600:
+>>>> On Thu, 2008-01-10 at 15:43 -0500, Pete Wyckoff wrote:
+>>>>> fujita.tomonori@lab.ntt.co.jp wrote on Wed, 09 Jan 2008 09:11 +0900:
+>>>>>> On Tue, 8 Jan 2008 17:09:18 -0500
+>>>>>> Pete Wyckoff <pw@osc.edu> wrote:
+>>>>>>> I took another look at the compat approach, to see if it is feasible
+>>>>>>> to keep the compat handling somewhere else, without the use of #ifdef
+>>>>>>> CONFIG_COMPAT and size-comparison code inside bsg.c.  I don't see how.
+>>>>>>> The use of iovec is within a write operation on a char device.  It's
+>>>>>>> not amenable to a compat_sys_ or a .compat_ioctl approach.
+>>>>>>>
+>>>>>>> I'm partial to #1 because the use of architecture-independent fields
+>>>>>>> matches the rest of struct sg_io_v4.  But if you don't want to have
+>>>>>>> another iovec type in the kernel, could we do #2 but just return
+>>>>>>> -EINVAL if the need for compat is detected?  I.e. change
+>>>>>>> dout_iovec_count to dout_iovec_length and do the math?
+>>>>>> If you are ok with removing the write/read interface and just have
+>>>>>> ioctl, we could can handle comapt stuff like others do. But I think
+>>>>>> that you (OSD people) really want to keep the write/read
+>>>>>> interface. Sorry, I think that there is no workaround to support iovec
+>>>>>> in bsg.
+>>>>> I don't care about read/write in particular.  But we do need some
+>>>>> way to launch asynchronous SCSI commands, and currently read/write
+>>>>> are the only way to do that in bsg.  The reason is to keep multiple
+>>>>> spindles busy at the same time.
+>>>> Won't multi-threading the ioctl calls achieve the same effect?  Or do
+>>>> you trip over BKL there?
+>>> There's no BKL on (new) ioctls anymore, at least.  A thread per
+>>> device would be feasible perhaps.  But if you want any sort of
+>>> pipelining out of the device, esp. in the remote iSCSI case, you
+>>> need to have a good number of commands outstanding to each device.
+>>> So a thread per command per device.  Typical iSCSI queue depth of
+>>> 128 times 16 devices for a small setup is a lot of threads.
+>>
+>> I was actually thinking of a thread per outstanding command.
+>>
+>>> The pthread/pipe latency overhead is not insignificant for fast
+>>> storage networks too.
+>>>
+>>>>> How about these new ioctls instead of read/write:
+>>>>>
+>>>>>     SG_IO_SUBMIT - start a new blk_execute_rq_nowait()
+>>>>>     SG_IO_TEST   - complete and return a previous req
+>>>>>     SG_IO_WAIT   - wait for a req to finish, interruptibly
+>>>>>
+>>>>> Then old write users will instead do ioctl SUBMIT.  Read users will
+>>>>> do TEST for non-blocking fd, or WAIT for blocking.  And SG_IO could
+>>>>> be implemented as SUBMIT + WAIT.
+>>>>>
+>>>>> Then we can do compat_ioctl and convert up iovecs out-of-line before
+>>>>> calling the normal functions.
+>>>>>
+>>>>> Let me know if you want a patch for this.
+>>>> Really, the thought of re-inventing yet another async I/O interface
+>>>> isn't very appealing.
+>>> I'm fine with read/write, except Tomo is against handling iovecs
+>>> because of the compat complexity with struct iovec being different
+>>> on 32- vs 64-bit.  There is a standard way to do "compat" ioctl that
+>>> hides this handling in a different file (not bsg.c), which is the
+>>> only reason I'm even considering these ioctls.  I don't care about
+>>> compat setups per se.
+>>>
+>>> Is there another async I/O mechanism?  Userspace builds the CDBs,
+>>> just needs some way to drop them in SCSI ML.  BSG is almost perfect
+>>> for this, but doesn't do iovec, leading to lots of memcpy.
+>>
+>> No, it's just that async interfaces in Linux have a long and fairly
+>> unhappy history.
+>
+> The sg driver's async interface has been pretty stable for
+> a long time. The sync SG_IO ioctl is built on top of the
+> async interface. That makes the async interface extremely
+> well tested.
+>
+> The write()/read() async interface in sg does have one
+> problem: when a command is dispatched via a write()
+> it would be very useful to get back a tag but that
+> violates write()'s second argument: 'const void * buf'.
+> That tag could be useful both for identification of the
+> response and by task management functions.
+>
+> I was hoping that the 'flags' field in sgv4 could be used
+> to implement the variants:
+>     SG_IO_SUBMIT - start a new blk_execute_rq_nowait()
+>     SG_IO_TEST   - complete and return a previous req
+>     SG_IO_WAIT   - wait for a req to finish, interruptibly
+>
+> that way the existing SG_IO ioctl is sufficient.
+>
+> And if Tomo doesn't want to do it in the bsg driver,
+> then it could be done it the sg driver.
 
-James
+The sg driver already has async via read/write, and it works fine.
+Perhaps someone wants the ioctl versions too, but that's not my main
+goal here.
 
----
+I think that sg doesn't bother with compat iovec handling.  It just
+uses SZ_SG_IOVEC (defined as sizeof(sg_iovec_t)) and doesn't check
+if the userspace iovec happens to be smaller.  Sg does have a compat
+ioctl function; it just doesn't support SG_IO.  So, on 64-bit
+kernel, read/write from 32-bit userspace with iovec will get
+undefined results due to the mis-interpretation of the iovec fields,
+while ioctl from 32-bit will fail with ENOIOCTLCMD (EINVAL to
+userspace).  Doesn't bother me at all, just an observation.  I'd
+love to be able to take a similar approach with bsg: only support
+iovec in 32-32 or 64-64 environments where kernel iovec == user
+iovec.
 
->From 258aae00284d61786758d9e740df08cc4b916f96 Mon Sep 17 00:00:00 2001
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Sun, 13 Jan 2008 14:15:28 -0600
-Subject: SG: work with the SCSI fixed maximum allocations
+I'm not going to patch up sg to add the SG_IO async ioctls.  My
+greedy need requires bidirectional transfers and big CDBs, both of
+which could be hacked into sg_io_hdr_t and sg, but it sure wouldn't
+be pretty.  These were some of the reasons you proposed sgv4 as I
+recall.
 
-SCSI sg table allocation has a maximum size (of SCSI_MAX_SG_SEGMENTS,
-currently 128) and this will cause a BUG_ON() in SCSI if something
-tries an allocation over it.  This patch adds a size limit to the
-chaining allocator to allow the specification of the maximum
-allocation size for chaining, so we always chain in units of the
-maximum SCSI allocation size.
-
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/scsi_lib.c     |    8 +++++---
- include/linux/scatterlist.h |    5 +++--
- lib/scatterlist.c           |   41 +++++++++++++++++++++++++++--------------
- 3 files changed, 35 insertions(+), 19 deletions(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 3c681de..e0f40e6 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -773,16 +773,18 @@ static int scsi_alloc_sgtable(struct scsi_data_buffer *sdb, int nents,
- 
- 	BUG_ON(!nents);
- 
--	ret = __sg_alloc_table(&sdb->table, nents, gfp_mask, scsi_sg_alloc);
-+	ret = __sg_alloc_table(&sdb->table, nents, SCSI_MAX_SG_SEGMENTS,
-+			       gfp_mask, scsi_sg_alloc);
- 	if (unlikely(ret))
--		__sg_free_table(&sdb->table, scsi_sg_free);
-+		__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS,
-+				scsi_sg_free);
- 
- 	return ret;
- }
- 
- static void scsi_free_sgtable(struct scsi_data_buffer *sdb)
- {
--	__sg_free_table(&sdb->table, scsi_sg_free);
-+	__sg_free_table(&sdb->table, SCSI_MAX_SG_SEGMENTS, scsi_sg_free);
- }
- 
- /*
-diff --git a/include/linux/scatterlist.h b/include/linux/scatterlist.h
-index e9cb103..a3d567a 100644
---- a/include/linux/scatterlist.h
-+++ b/include/linux/scatterlist.h
-@@ -207,9 +207,10 @@ void sg_init_one(struct scatterlist *, const void *, unsigned int);
- typedef struct scatterlist *(sg_alloc_fn)(unsigned int, gfp_t);
- typedef void (sg_free_fn)(struct scatterlist *, unsigned int);
- 
--void __sg_free_table(struct sg_table *, sg_free_fn *);
-+void __sg_free_table(struct sg_table *, unsigned int, sg_free_fn *);
- void sg_free_table(struct sg_table *);
--int __sg_alloc_table(struct sg_table *, unsigned int, gfp_t, sg_alloc_fn *);
-+int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int, gfp_t,
-+		     sg_alloc_fn *);
- int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
- 
- /*
-diff --git a/lib/scatterlist.c b/lib/scatterlist.c
-index 02aaa27..acca490 100644
---- a/lib/scatterlist.c
-+++ b/lib/scatterlist.c
-@@ -130,13 +130,17 @@ static void sg_kfree(struct scatterlist *sg, unsigned int nents)
- /**
-  * __sg_free_table - Free a previously mapped sg table
-  * @table:	The sg table header to use
-+ * @max_ents:	The maximum number of entries per single scatterlist
-  * @free_fn:	Free function
-  *
-  *  Description:
-- *    Free an sg table previously allocated and setup with __sg_alloc_table().
-+ *    Free an sg table previously allocated and setup with
-+ *    __sg_alloc_table().  The @max_ents value must be identical to
-+ *    that previously used with __sg_alloc_table().
-  *
-  **/
--void __sg_free_table(struct sg_table *table, sg_free_fn *free_fn)
-+void __sg_free_table(struct sg_table *table, unsigned int max_ents,
-+		     sg_free_fn *free_fn)
- {
- 	struct scatterlist *sgl, *next;
- 
-@@ -149,14 +153,14 @@ void __sg_free_table(struct sg_table *table, sg_free_fn *free_fn)
- 		unsigned int sg_size;
- 
- 		/*
--		 * If we have more than SG_MAX_SINGLE_ALLOC segments left,
-+		 * If we have more than max_ents segments left,
- 		 * then assign 'next' to the sg table after the current one.
- 		 * sg_size is then one less than alloc size, since the last
- 		 * element is the chain pointer.
- 		 */
--		if (alloc_size > SG_MAX_SINGLE_ALLOC) {
--			next = sg_chain_ptr(&sgl[SG_MAX_SINGLE_ALLOC - 1]);
--			alloc_size = SG_MAX_SINGLE_ALLOC;
-+		if (alloc_size > max_ents) {
-+			next = sg_chain_ptr(&sgl[max_ents - 1]);
-+			alloc_size = max_ents;
- 			sg_size = alloc_size - 1;
- 		} else {
- 			sg_size = alloc_size;
-@@ -179,7 +183,7 @@ EXPORT_SYMBOL(__sg_free_table);
-  **/
- void sg_free_table(struct sg_table *table)
- {
--	__sg_free_table(table, sg_kfree);
-+	__sg_free_table(table, SG_MAX_SINGLE_ALLOC, sg_kfree);
- }
- EXPORT_SYMBOL(sg_free_table);
- 
-@@ -187,22 +191,30 @@ EXPORT_SYMBOL(sg_free_table);
-  * __sg_alloc_table - Allocate and initialize an sg table with given allocator
-  * @table:	The sg table header to use
-  * @nents:	Number of entries in sg list
-+ * @max_ents:	The maximum number of entries the allocator returns per call
-  * @gfp_mask:	GFP allocation mask
-  * @alloc_fn:	Allocator to use
-  *
-+ * Description:
-+ *   This function returns a @table @nents long. The allocator is
-+ *   defined to return scatterlist chunks of maximum size @max_ents.
-+ *   Thus if @nents is bigger than @max_ents, the scatterlists will be
-+ *   chained in units of @max_ents.
-+ *
-  * Notes:
-  *   If this function returns non-0 (eg failure), the caller must call
-  *   __sg_free_table() to cleanup any leftover allocations.
-  *
-  **/
--int __sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask,
-+int __sg_alloc_table(struct sg_table *table, unsigned int nents,
-+		     unsigned int max_ents, gfp_t gfp_mask,
- 		     sg_alloc_fn *alloc_fn)
- {
- 	struct scatterlist *sg, *prv;
- 	unsigned int left;
- 
- #ifndef ARCH_HAS_SG_CHAIN
--	BUG_ON(nents > SG_MAX_SINGLE_ALLOC);
-+	BUG_ON(nents > max_ents);
- #endif
- 
- 	memset(table, 0, sizeof(*table));
-@@ -212,8 +224,8 @@ int __sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask,
- 	do {
- 		unsigned int sg_size, alloc_size = left;
- 
--		if (alloc_size > SG_MAX_SINGLE_ALLOC) {
--			alloc_size = SG_MAX_SINGLE_ALLOC;
-+		if (alloc_size > max_ents) {
-+			alloc_size = max_ents;
- 			sg_size = alloc_size - 1;
- 		} else
- 			sg_size = alloc_size;
-@@ -232,7 +244,7 @@ int __sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask,
- 		 * If this is not the first mapping, chain previous part.
- 		 */
- 		if (prv)
--			sg_chain(prv, SG_MAX_SINGLE_ALLOC, sg);
-+			sg_chain(prv, max_ents, sg);
- 		else
- 			table->sgl = sg;
- 
-@@ -272,9 +284,10 @@ int sg_alloc_table(struct sg_table *table, unsigned int nents, gfp_t gfp_mask)
- {
- 	int ret;
- 
--	ret = __sg_alloc_table(table, nents, gfp_mask, sg_kmalloc);
-+	ret = __sg_alloc_table(table, nents, SG_MAX_SINGLE_ALLOC,
-+			       gfp_mask, sg_kmalloc);
- 	if (unlikely(ret))
--		__sg_free_table(table, sg_kfree);
-+		__sg_free_table(table, SG_MAX_SINGLE_ALLOC, sg_kfree);
- 
- 	return ret;
- }
--- 
-1.5.3.7
-
-
-
+		-- Pete
