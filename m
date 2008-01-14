@@ -1,204 +1,109 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [RFC 1/2] block: implement drain buffers
-Date: Mon, 14 Jan 2008 10:01:35 -0600
-Message-ID: <1200326495.3159.7.camel@localhost.localdomain>
-References: <11992723701811-git-send-email-htejun@gmail.com>
-	 <11992723711076-git-send-email-htejun@gmail.com>
-	 <1199986236.3141.51.camel@localhost.localdomain>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was
+	Linux scsi /	usb-mass-storage and HP printer cardreader bug + fix)
+Date: Mon, 14 Jan 2008 08:03:10 -0800
+Message-ID: <20080114160310.GH14375@one-eyed-alien.net>
+References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>
+	<4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>
+	<4787CE08.5000304@hhs.nl> <1200303645.11301.15.camel@littletux>
+	<478B2F90.7010105@hhs.nl>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:36331 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750851AbYANQBl (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jan 2008 11:01:41 -0500
-In-Reply-To: <1199986236.3141.51.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============0611255343=="
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <478B2F90.7010105@hhs.nl>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Cc: Guillaume Bedot <littletux@zarb.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, fedora-kernel-list@redhat.com, Boaz Harrosh <bharrosh@panasas.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: jeff@garzik.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>
-
-Jens pointed out that I need to lower both phys and hw segments in the
-drain set up, so an updated patch is attached.
-
-James
-
----
-
->From 7d5cff0af8a2d4017d0b5246aaef33327b053495 Mon Sep 17 00:00:00 2001
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Thu, 10 Jan 2008 11:30:36 -0600
-Subject: block: implement drain buffers
-
-These DMA drain buffer implementations in drivers are pretty horrible
-to do in terms of manipulating the scatterlist.  Plus they're being
-done at least in drivers/ide and drivers/ata, so we now have code
-duplication.
-
-The one use case for this, as I understand it is AHCI controllers doing
-PIO mode to mmc devices but translating this to DMA at the controller
-level.
-
-So, what about adding a callback to the block layer that permits the
-adding of the drain buffer for the problem devices.  The idea is that
-you'd do this in slave_configure after you find one of these devices.
-
-The beauty of doing it in the block layer is that it quietly adds the
-drain buffer to the end of the sg list, so it automatically gets mapped
-(and unmapped) without anything unusual having to be done to the
-scatterlist in driver/scsi or drivers/ata and without any alteration to
-the transfer length.
-
-Jens, could you check I've got the logic of adding and removing the
-sizes correct (anything I've missed that could result in a size leak on
-request processing?) and that you are OK with the basic concept?  I'm
-afraid it's ugly, but it's a lot less ugly than having drivers/ata
-trying to append to the scatterlist.
-
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- block/elevator.c       |   26 ++++++++++++++++++++++++-
- block/ll_rw_blk.c      |   49 ++++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/blkdev.h |    4 +++
- 3 files changed, 78 insertions(+), 1 deletions(-)
-
-diff --git a/block/elevator.c b/block/elevator.c
-index e452deb..9897f20 100644
---- a/block/elevator.c
-+++ b/block/elevator.c
-@@ -743,7 +743,21 @@ struct request *elv_next_request(struct request_queue *q)
- 			q->boundary_rq = NULL;
- 		}
- 
--		if ((rq->cmd_flags & REQ_DONTPREP) || !q->prep_rq_fn)
-+		if (rq->cmd_flags & REQ_DONTPREP)
-+			break;
-+
-+		if (q->dma_drain_size && rq->data_len) {
-+			/*
-+			 * make sure space for the drain appears we
-+			 * know we can do this because max_hw_segments
-+			 * has been adjusted to be one fewer than the
-+			 * device can handle
-+			 */
-+			rq->nr_phys_segments++;
-+			rq->nr_hw_segments++;
-+		}
-+
-+		if (!q->prep_rq_fn)
- 			break;
- 
- 		ret = q->prep_rq_fn(q, rq);
-@@ -756,6 +770,16 @@ struct request *elv_next_request(struct request_queue *q)
- 			 * avoid resource deadlock.  REQ_STARTED will
- 			 * prevent other fs requests from passing this one.
- 			 */
-+			if (q->dma_drain_size && rq->data_len &&
-+			    !(rq->cmd_flags & REQ_DONTPREP)) {
-+				/*
-+				 * remove the space for the drain we added
-+				 * so that we don't add it again
-+				 */
-+				--rq->nr_phys_segments;
-+				--rq->nr_hw_segments;
-+			}
-+
- 			rq = NULL;
- 			break;
- 		} else if (ret == BLKPREP_KILL) {
-diff --git a/block/ll_rw_blk.c b/block/ll_rw_blk.c
-index 14af36c..72f536c 100644
---- a/block/ll_rw_blk.c
-+++ b/block/ll_rw_blk.c
-@@ -726,6 +726,45 @@ void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b)
- EXPORT_SYMBOL(blk_queue_stack_limits);
- 
- /**
-+ * blk_queue_dma_drain - Set up a drain buffer for excess dma.
-+ *
-+ * @q:  the request queue for the device
-+ * @buf:	physically contiguous buffer
-+ * @size:	size of the buffer in bytes
-+ *
-+ * Some devices have excess DMA problems and can't simply discard (or
-+ * zero fill) the unwanted piece of the transfer.  They have to have a
-+ * real area of memory to transfer it into.  The use case for this is
-+ * ATAPI devices in DMA mode.  If the packet command causes a transfer
-+ * bigger than the transfer size some HBAs will lock up if there
-+ * aren't DMA elements to contain the excess transfer.  What this API
-+ * does is adjust the queue so that the buf is always appended
-+ * silently to the scatterlist.
-+ *
-+ * Note: This routine adjusts max_hw_segments to make room for
-+ * appending the drain buffer.  If you call
-+ * blk_queue_max_hw_segments() or blk_queue_max_phys_segments() after
-+ * calling this routine, you must set the limit to one fewer than your
-+ * device can support otherwise there won't be room for the drain
-+ * buffer.
-+ */
-+int blk_queue_dma_drain(struct request_queue *q, void *buf,
-+				unsigned int size)
-+{
-+	if (q->max_hw_segments < 2 || q->max_phys_segments < 2)
-+		return -EINVAL;
-+	/* make room for appending the drain */
-+	--q->max_hw_segments;
-+	--q->max_phys_segments;
-+	q->dma_drain_buffer = buf;
-+	q->dma_drain_size = size;
-+
-+	return 0;
-+}
-+
-+EXPORT_SYMBOL_GPL(blk_queue_dma_drain);
-+
-+/**
-  * blk_queue_segment_boundary - set boundary rules for segment merging
-  * @q:  the request queue for the device
-  * @mask:  the memory boundary mask
-@@ -1379,6 +1418,16 @@ new_segment:
- 		bvprv = bvec;
- 	} /* segments in rq */
- 
-+	if (q->dma_drain_size) {
-+		sg->page_link &= ~0x02;
-+		sg = sg_next(sg);
-+		sg_set_page(sg, virt_to_page(q->dma_drain_buffer),
-+			    q->dma_drain_size,
-+			    ((unsigned long)q->dma_drain_buffer) &
-+			    (PAGE_SIZE - 1));
-+		nsegs++;
-+	}
-+
- 	if (sg)
- 		sg_mark_end(sg);
- 
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 81e99e5..e8bd5cf 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -431,6 +431,8 @@ struct request_queue
- 	unsigned int		max_segment_size;
- 
- 	unsigned long		seg_boundary_mask;
-+	void			*dma_drain_buffer;
-+	unsigned int		dma_drain_size;
- 	unsigned int		dma_alignment;
- 
- 	struct blk_queue_tag	*queue_tags;
-@@ -762,6 +764,8 @@ extern void blk_queue_max_hw_segments(struct request_queue *, unsigned short);
- extern void blk_queue_max_segment_size(struct request_queue *, unsigned int);
- extern void blk_queue_hardsect_size(struct request_queue *, unsigned short);
- extern void blk_queue_stack_limits(struct request_queue *t, struct request_queue *b);
-+extern int blk_queue_dma_drain(struct request_queue *q, void *buf,
-+			       unsigned int size);
- extern void blk_queue_segment_boundary(struct request_queue *, unsigned long);
- extern void blk_queue_prep_rq(struct request_queue *, prep_rq_fn *pfn);
- extern void blk_queue_merge_bvec(struct request_queue *, merge_bvec_fn *);
--- 
-1.5.3.7
 
 
+--===============0611255343==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="DWg365Y4B18r8evw"
+Content-Disposition: inline
 
+
+--DWg365Y4B18r8evw
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Jan 14, 2008 at 10:46:56AM +0100, Hans de Goede wrote:
+> Guillaume Bedot wrote:
+> >But it fixes only two models.
+> >Do you think other devices (hp or not) can be impacted ?
+> >There are hundreds of models with card readers only for hp :
+> >http://hplip.sourceforge.net/supported_devices/combined.html
+> >
+> >Will this be possible to use "LAST_SECTOR_BUG" quirk for testing without
+> >recompiling a kernel ?
+> >
+>=20
+> This is not possible AFAIK, I've already wrote a blog post about this=20
+> asking for people to test this, but got no responses.
+
+Once the patches are accepted by the SCSI people, one of the things we can
+consider doing is enabling this quirk for all USB devices.  It should be
+pretty harmless to all properly working devices, and the performance hit
+should be pretty minimal.
+
+We may be able to convince the SCSI people to enable it for all devices,
+regardless of HCD.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+What the hell are you?
+					-- Pitr to Dust Puppy=20
+User Friendly, 12/3/1997
+
+--DWg365Y4B18r8evw
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFHi4e+HL9iwnUZqnkRAl10AJ4rD0jIuqneWfQC/4rUBZBJRNI5kACgnTUB
+bOV7So8UBN5jQLAPP/+i7jY=
+=1teA
+-----END PGP SIGNATURE-----
+
+--DWg365Y4B18r8evw--
+
+
+--===============0611255343==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+-------------------------------------------------------------------------
+Check out the new SourceForge.net Marketplace.
+It's the best place to buy or sell services for
+just about anything Open Source.
+http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+--===============0611255343==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+
+--===============0611255343==--
