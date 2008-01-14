@@ -1,58 +1,60 @@
-From: Hans de Goede <j.w.r.degoede@hhs.nl>
-Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was Linux	scsi	/	usb-mass-storage
- and HP printer cardreader bug + fix)
-Date: Mon, 14 Jan 2008 20:27:17 +0100
-Message-ID: <478BB795.4040305@hhs.nl>
-References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>	 <4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>	 <4787CE08.5000304@hhs.nl> <1200303645.11301.15.camel@littletux>	 <478B2F90.7010105@hhs.nl>  <20080114160310.GH14375@one-eyed-alien.net>	 <1200328388.3159.20.camel@localhost.localdomain>  <478BABF0.1040403@hhs.nl> <1200337759.3159.58.camel@localhost.localdomain>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: [PATCH] libsas: fix sense_buffer overrun
+Date: Mon, 14 Jan 2008 11:29:25 -0800
+Message-ID: <20080114192925.GB7118@tree.beaverton.ibm.com>
+References: <20080113022015S.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp6.versatel.nl ([62.58.50.97]:43394 "EHLO smtp6.versatel.nl"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751290AbYANT0B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jan 2008 14:26:01 -0500
-In-Reply-To: <1200337759.3159.58.camel@localhost.localdomain>
+Received: from e31.co.us.ibm.com ([32.97.110.149]:52141 "EHLO
+	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751531AbYANT3e (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 14:29:34 -0500
+Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
+	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m0EJTS7S001837
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jan 2008 14:29:28 -0500
+Received: from d03av01.boulder.ibm.com (d03av01.boulder.ibm.com [9.17.195.167])
+	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m0EJTQxO072328
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jan 2008 12:29:27 -0700
+Received: from d03av01.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av01.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m0EJTQrd022540
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jan 2008 12:29:26 -0700
+Content-Disposition: inline
+In-Reply-To: <20080113022015S.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Guillaume Bedot <littletux@zarb.org>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, fedora-kernel-list@redhat.com, USB development list <linux-usb-devel@lists.sourceforge.net>, David Brown <usb-storage2@davidb.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-James Bottomley wrote:
->>> Plus what is the rq->nr_sectors > sdp->sector_size /
->>> 512 test supposed to be doing?  that being true is supposed to be a
->>> guarantee of the block layer (and if something goes wrong there's a
->>> check for this lower down).
->>>
->> It first is was just:
->> rq->nr_sectors > 1
->>
->> Then I changed it to also do the right thing for 1024 and larger sector disks. 
->> The whole purpose is to not read the last sector in a larger then one sector 
->> read, so the amount of sectors gets reduced by one if (block + rq->nr_sectors 
->> == get_capacity(disk)) but we do want still want to be able to read the last 
->> sector by itself, so we must not reduce the no sectors to be read by one if it 
->> is already one.
+Looks sane to me;
+Acked-by: Darrick J. Wong <djwong@us.ibm.com>
+
+--D
+
+On Sun, Jan 13, 2008 at 02:20:18AM +0900, FUJITA Tomonori wrote:
 > 
-> Yes, I know that.  What I mean is the block subsystem sends reads and
-> writes down in increments of the sector size.  Checking if the current
-> number of pending sectors is greater than the current block size is
-> checking that guarantee.  The current code already has a check in it to
-> see if this guarantee is observed ... you don't need to check it again.
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/scsi/libsas/sas_scsi_host.c |    2 +-
+>  1 files changed, 1 insertions(+), 1 deletions(-)
 > 
-
-I'm not checking for the guarantee, I'm checking that the read > 1 
-realsize_sector, before decrementing the number of _512_bytes_sectors by 
-realsize_sector, this check must be there, as after reading all but the last 
-sector, another request will be send with 1 realsize_sector size, for which
-(block + rq->nr_sectors) == get_capacity(disk) will still hold true, in this 
-case this_count must not be lowered, otherwise this_count will become 0 in this 
-case and the last sector will never get read.
-
-I hope that clarifies why that code is there, if not can you tell how you would 
-want the code to look by just giving the full if statement as it should be, I 
-think we are somehow misunderstanding each other.
-
-Regards,
-
-Hans
+> diff --git a/drivers/scsi/libsas/sas_scsi_host.c b/drivers/scsi/libsas/sas_scsi_host.c
+> index b784089..828fed1 100644
+> --- a/drivers/scsi/libsas/sas_scsi_host.c
+> +++ b/drivers/scsi/libsas/sas_scsi_host.c
+> @@ -108,7 +108,7 @@ static void sas_scsi_task_done(struct sas_task *task)
+>  			break;
+>  		case SAM_CHECK_COND:
+>  			memcpy(sc->sense_buffer, ts->buf,
+> -			       max(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
+> +			       min(SCSI_SENSE_BUFFERSIZE, ts->buf_valid_size));
+>  			stat = SAM_CHECK_COND;
+>  			break;
+>  		default:
+> -- 
+> 1.5.3.4
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
