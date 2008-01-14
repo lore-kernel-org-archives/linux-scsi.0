@@ -1,46 +1,102 @@
-From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was Linux scsi	/	usb-mass-storage
- and HP printer cardreader bug + fix)
-Date: Mon, 14 Jan 2008 19:40:01 +0100
-Message-ID: <478BAC81.2080101@s5r6.in-berlin.de>
-References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>	 <4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>	 <4787CE08.5000304@hhs.nl> <1200303645.11301.15.camel@littletux>	 <478B2F90.7010105@hhs.nl>  <20080114160310.GH14375@one-eyed-alien.net> <1200328388.3159.20.camel@localhost.localdomain>
+From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was
+	Linux scsi /	usb-mass-storage and HP printer cardreader bug + fix)
+Date: Mon, 14 Jan 2008 11:01:05 -0800
+Message-ID: <20080114190105.GJ14375@one-eyed-alien.net>
+References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>
+	<4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>
+	<4787CE08.5000304@hhs.nl> <1200303645.11301.15.camel@littletux>
+	<478B2F90.7010105@hhs.nl>
+	<20080114160310.GH14375@one-eyed-alien.net>
+	<1200328388.3159.20.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1200328388.3159.20.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, Guillaume Bedot <littletux-QFiJtcdG+fw@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, fedora-kernel-list-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, USB development list <linux-usb-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, David Brown <usb-storage2-GijAUarxTbMdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: multipart/mixed; boundary="===============1800451602=="
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <1200328388.3159.20.camel@localhost.localdomain>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Guillaume Bedot <littletux@zarb.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, fedora-kernel-list@redhat.com, Hans de Goede <j.w.r.degoede@hhs.nl>, Boaz Harrosh <bharrosh@panasas.com>
 List-Id: linux-scsi@vger.kernel.org
 
-James Bottomley wrote:
+
+--===============1800451602==
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="l06SQqiZYCi8rTKz"
+Content-Disposition: inline
+
+
+--l06SQqiZYCi8rTKz
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+
+On Mon, Jan 14, 2008 at 10:33:08AM -0600, James Bottomley wrote:
+>=20
 > On Mon, 2008-01-14 at 08:03 -0800, Matthew Dharm wrote:
->> On Mon, Jan 14, 2008 at 10:46:56AM +0100, Hans de Goede wrote:
->> > Guillaume Bedot wrote:
->> > >Will this be possible to use "LAST_SECTOR_BUG" quirk for testing without
->> > >recompiling a kernel ?
->> > 
->> > This is not possible AFAIK, I've already wrote a blog post about this 
->> > asking for people to test this, but got no responses.
->> 
->> Once the patches are accepted by the SCSI people, one of the things we can
->> consider doing is enabling this quirk for all USB devices.
-...
->> We may be able to convince the SCSI people to enable it for all devices,
->> regardless of HCD.
-> 
+> > We may be able to convince the SCSI people to enable it for all devices,
+> > regardless of HCD.
+>=20
 > No ... I'm not particularly keen to have enterprise vendors after my
 > blood ...
 
-Guillaume, you can tell the SCSI core driver at boot time (or module
-insertion time) and/or at runtime to
-  - switch on default quirk flags,
-  - add quirk flags for selected devices per name matching.
+Fair enough.  Tho, we should probably just enable this blindly for all
+usb-storage devices.  Otherwise, this is just going to become an
+unusual_devs.h nightmare.
 
-Alas I don't know of a good documention how to do either of this, and I
-am not familiar enough with the procedure to explain it here.
--- 
-Stefan Richter
--=====-==--- ---= -===-
-http://arcgraph.de/sr/
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+What, are you one of those Microsoft-bashing Linux freaks?
+					-- Customer to Greg
+User Friendly, 2/10/1999
+
+--l06SQqiZYCi8rTKz
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFHi7FxHL9iwnUZqnkRApg2AKCh4mO+Qwu3TXqsT33CYbUsEFQzkgCfTM5l
+KKiYugfESytoWV5Fa9G4pUQ=
+=ZXe8
+-----END PGP SIGNATURE-----
+
+--l06SQqiZYCi8rTKz--
+
+
+--===============1800451602==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+-------------------------------------------------------------------------
+Check out the new SourceForge.net Marketplace.
+It's the best place to buy or sell services for
+just about anything Open Source.
+http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
+--===============1800451602==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
+
+--===============1800451602==--
