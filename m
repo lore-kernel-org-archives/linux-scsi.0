@@ -1,38 +1,51 @@
-From: Bill Adair <adair@gotadsl.co.uk>
-Subject: Forcing use of sd driver on Suse 10.3 (2.6.22)
-Date: Mon, 14 Jan 2008 11:01:54 +0000
-Message-ID: <1200308514.4729.25.camel@desk.ty-rhos-barn>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: RE: [PATCH 1/2] don't zero out sense_buffer in queuecommand
+Date: Mon, 14 Jan 2008 05:14:12 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F438AEA870@ADPE2K703.adaptec.com>
+References: <457feffcfc40101ad9884914d8f223cd425ee5b6.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mk-outboundfilter-3.mail.uk.tiscali.com ([212.74.114.23]:29909
-	"EHLO mk-outboundfilter-3.mail.uk.tiscali.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755100AbYANLLf (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jan 2008 06:11:35 -0500
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:51681 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751046AbYANNOR convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 08:14:17 -0500
+In-Reply-To: <457feffcfc40101ad9884914d8f223cd425ee5b6.tomof@acm.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'FUJITA Tomonori' <tomof@acm.org>, "'James.Bottomley@HansenPartnership.com'" <James.Bottomley@HansenPartnership.com>
+Cc: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>, "'fujita.tomonori@lab.ntt.co.jp'" <fujita.tomonori@lab.ntt.co.jp>
 
-I have a device reported as below. It is a PCMCIA card reader with
-SCSI-2 connections. I know the device can work as a direct access device
-when flash memory is present as I have connected it to an Akai sampler
-which can read the card. I am assuming here the sampler's SCSI stack is
-not very complex and is just ignoring the device type.
+ACK on ips bits.
 
-[2:0:6:0]    process MPL      MC-DISK-E[0]     3.9a  -         /dev/sg2
-[2:0:6:1]    process MPL      MC-DISK-E[0]     3.9a  -         /dev/sg3
-[2:0:6:2]    process MPL      MC-DISK-E[0]     3.9a  -         /dev/sg4
-[2:0:6:3]    process MPL      MC-DISK-E[1]     3.9a  -         /dev/sg5
-[2:0:6:4]    process MPL      MC-DISK-E[1]     3.9a  -         /dev/sg6
-[2:0:6:5]    process MPL      MC-DISK-E[1]     3.9a  -         /dev/sg7
-[2:0:6:6]    process MPL      MC-DISK-E[0]     3.9a  -         /dev/sg8
-[2:0:6:7]    process MPL      MC-DISK-E[0]     3.9a  -         /dev/sg9
-
-Is there any way under Linux of forcing use of the sd driver for a
-device on the bus instead of sg?
-
-TIA 
-Bill
-
+Sincerely -- Mark Salyzyn
+. . .
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index e54d30c..b1b2295 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -2736,8 +2736,6 @@ ips_next(ips_ha_t * ha, int intr)
+>                 SC->result = DID_OK;
+>                 SC->host_scribble = NULL;
+>
+> -               memset(SC->sense_buffer, 0, sizeof
+> (SC->sense_buffer));
+> -
+>                 scb->target_id = SC->device->id;
+>                 scb->lun = SC->device->lun;
+>                 scb->bus = SC->device->channel;
+> @@ -3821,7 +3819,6 @@ ips_send_cmd(ips_ha_t * ha, ips_scb_t * scb)
+>                         /* attempted, a Check Condition
+> occurred, and Sense   */
+>                         /* Data indicating an Invalid CDB
+> OpCode is returned. */
+>                         sp = (char *) scb->scsi_cmd->sense_buffer;
+> -                       memset(sp, 0, sizeof
+> (scb->scsi_cmd->sense_buffer));
+>
+>                         sp[0] = 0x70;   /* Error Code               */
+>                         sp[2] = ILLEGAL_REQUEST;        /*
+> Sense Key 5 Illegal Req. */
+. . .
