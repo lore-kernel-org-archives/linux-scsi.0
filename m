@@ -1,102 +1,93 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: PATCH: usb-storage-psc1350-v4.patch (was
-	Linux scsi /	usb-mass-storage and HP printer cardreader bug + fix)
-Date: Mon, 14 Jan 2008 11:01:05 -0800
-Message-ID: <20080114190105.GJ14375@one-eyed-alien.net>
-References: <47854051.1060307@hhs.nl> <4785F6CD.6050907@panasas.com>
-	<4785F908.3080307@hhs.nl> <47860106.3090509@panasas.com>
-	<4787CE08.5000304@hhs.nl> <1200303645.11301.15.camel@littletux>
-	<478B2F90.7010105@hhs.nl>
-	<20080114160310.GH14375@one-eyed-alien.net>
-	<1200328388.3159.20.camel@localhost.localdomain>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: RE: Checkpatch.pl failure
+Date: Mon, 14 Jan 2008 11:04:40 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F438AEACC7@ADPE2K703.adaptec.com>
+References: <1200325734.3159.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============1800451602=="
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <1200328388.3159.20.camel@localhost.localdomain>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Guillaume Bedot <littletux@zarb.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, fedora-kernel-list@redhat.com, Hans de Goede <j.w.r.degoede@hhs.nl>, Boaz Harrosh <bharrosh@panasas.com>
+Content-Type: multipart/mixed;
+	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEACC7ADPE2K703adapte_"
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754294AbYANTE4@vger.kernel.org>
+In-Reply-To: <1200325734.3159.1.camel@localhost.localdomain>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
+Cc: 'linux-kernel' <linux-kernel@vger.kernel.org>, 'James Bottomley' <James.Bottomley@HansenPartnership.com>, "'jschopp@austin.ibm.com'" <jschopp@austin.ibm.com>, "'apw@shadowen.org'" <apw@shadowen.org>, "'rdunlap@xenotime.net'" <rdunlap@xenotime.net>, 'FUJITA Tomonori' <tomof@acm.org>, "'fujita.tomonori@lab.ntt.co.jp'" <fujita.tomonori@lab.ntt.co.jp>
 List-Id: linux-scsi@vger.kernel.org
 
-
---===============1800451602==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="l06SQqiZYCi8rTKz"
-Content-Disposition: inline
-
-
---l06SQqiZYCi8rTKz
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEACC7ADPE2K703adapte_
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jan 14, 2008 at 10:33:08AM -0600, James Bottomley wrote:
->=20
-> On Mon, 2008-01-14 at 08:03 -0800, Matthew Dharm wrote:
-> > We may be able to convince the SCSI people to enable it for all devices,
-> > regardless of HCD.
->=20
-> No ... I'm not particularly keen to have enterprise vendors after my
-> blood ...
+Suppress one of the bogus checkpatch.pl error, the side-effect of the error=
+ highlighted that this constant should be replaced by an existing manifest.=
+ checkpatch.pl needs to be corrected to accept the comment style to deal wi=
+th the other cases should they ever be touched by future patches. This is a=
+ tangled set of coat hangers, tug on one and never know how complicated of =
+a mess might follow!
 
-Fair enough.  Tho, we should probably just enable this blindly for all
-usb-storage devices.  Otherwise, this is just going to become an
-unusual_devs.h nightmare.
+This attached patch is against current scsi-misc-2.6.
 
-Matt
+ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
+ling of patch attachments, use the attachment, not the inline patch.
 
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
+Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
-What, are you one of those Microsoft-bashing Linux freaks?
-					-- Customer to Greg
-User Friendly, 2/10/1999
+ drivers/scsi/dpt_i2o.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---l06SQqiZYCi8rTKz
-Content-Type: application/pgp-signature
-Content-Disposition: inline
+diff -ru a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+--- a/drivers/scsi/dpt_i2o.c    2008-01-14 13:39:11.086600955 -0500
++++ b/drivers/scsi/dpt_i2o.c    2008-01-14 13:41:44.813246497 -0500
+@@ -2296,7 +2296,7 @@
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
+                // copy over the request sense data if it was a check
+                // condition status
+-               if (dev_status =3D=3D 0x02 /*CHECK_CONDITION*/) {
++               if (dev_status =3D=3D SAM_STAT_CHECK_CONDITION) {
+                        u32 len =3D min(SCSI_SENSE_BUFFERSIZE, 40);
+                        // Copy over the sense data
+                        memcpy_fromio(cmd->sense_buffer, (reply+28) , len);
 
-iD8DBQFHi7FxHL9iwnUZqnkRApg2AKCh4mO+Qwu3TXqsT33CYbUsEFQzkgCfTM5l
-KKiYugfESytoWV5Fa9G4pUQ=
-=ZXe8
------END PGP SIGNATURE-----
+This geek joke brought to you by -- Mark Salyzyn
 
---l06SQqiZYCi8rTKz--
+> -----Original Message-----
+> From: linux-kernel-owner@vger.kernel.org
+> [mailto:linux-kernel-owner@vger.kernel.org] On Behalf Of
+> James Bottomley
+> Sent: Monday, January 14, 2008 10:49 AM
+> To: rdunlap@xenotime.net; apw@shadowen.org; jschopp@austin.ibm.com
+> Cc: linux-kernel
+> Subject: Checkpatch.pl failure
+>
+> This error:
+>
+> ERROR: no space before that close parenthesis ')'
+> #501: FILE: drivers/scsi/dpt_i2o.c:2299:
+> +               if (dev_status =3D=3D 0x02 /*CHECK_CONDITION*/) {
+>
+> Is definitely wrong.  I think it's stripped the comments so now the if
+> looks to have a space before the bracket, but stylistically the
+> complaint it has errored out for is wrong.
+>
+> James
 
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEACC7ADPE2K703adapte_
+Content-Type: application/octet-stream; name="dpt_i2o_CHECK_CONDITION.patch"
+Content-Description: dpt_i2o_CHECK_CONDITION.patch
+Content-Disposition: attachment; filename="dpt_i2o_CHECK_CONDITION.patch";
+	size=525; creation-date="Mon, 14 Jan 2008 10:44:10 GMT";
+	modification-date="Mon, 14 Jan 2008 10:44:10 GMT"
+Content-Transfer-Encoding: base64
 
---===============1800451602==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvZHB0X2kyby5jIGIvZHJpdmVycy9zY3NpL2RwdF9pMm8u
+YwotLS0gYS9kcml2ZXJzL3Njc2kvZHB0X2kyby5jCTIwMDgtMDEtMTQgMTM6Mzk6MTEuMDg2NjAw
+OTU1IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9kcHRfaTJvLmMJMjAwOC0wMS0xNCAxMzo0MTo0
+NC44MTMyNDY0OTcgLTA1MDAKQEAgLTIyOTYsNyArMjI5Niw3IEBACiAKIAkJLy8gY29weSBvdmVy
+IHRoZSByZXF1ZXN0IHNlbnNlIGRhdGEgaWYgaXQgd2FzIGEgY2hlY2sKIAkJLy8gY29uZGl0aW9u
+IHN0YXR1cwotCQlpZiAoZGV2X3N0YXR1cyA9PSAweDAyIC8qQ0hFQ0tfQ09ORElUSU9OKi8pIHsK
+KwkJaWYgKGRldl9zdGF0dXMgPT0gU0FNX1NUQVRfQ0hFQ0tfQ09ORElUSU9OKSB7CiAJCQl1MzIg
+bGVuID0gbWluKFNDU0lfU0VOU0VfQlVGRkVSU0laRSwgNDApOwogCQkJLy8gQ29weSBvdmVyIHRo
+ZSBzZW5zZSBkYXRhCiAJCQltZW1jcHlfZnJvbWlvKGNtZC0+c2Vuc2VfYnVmZmVyLCAocmVwbHkr
+MjgpICwgbGVuKTsK
 
--------------------------------------------------------------------------
-Check out the new SourceForge.net Marketplace.
-It's the best place to buy or sell services for
-just about anything Open Source.
-http://ad.doubleclick.net/clk;164216239;13503038;w?http://sf.net/marketplace
---===============1800451602==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
-
---===============1800451602==--
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F438AEACC7ADPE2K703adapte_--
