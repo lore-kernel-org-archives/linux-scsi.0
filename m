@@ -1,46 +1,30 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: [PATCH] lpfc 8.2.4 fixup: always use stack waitqueue
-Date: Mon, 14 Jan 2008 13:15:56 -0500
-Message-ID: <1200334556.395.1.camel@localhost.localdomain>
-Reply-To: James.Smart@Emulex.Com
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: Forcing use of sd driver on Suse 10.3 (2.6.22)
+Date: Mon, 14 Jan 2008 19:31:42 +0100
+Message-ID: <478BAA8E.7020703@s5r6.in-berlin.de>
+References: <1200308514.4729.25.camel@desk.ty-rhos-barn>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:36922 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750801AbYANSPr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 13:15:47 -0500
-Received: from xbl3.ad.emulex.com (xbl3.ma.emulex.com [138.239.73.12])
-	by emulex.emulex.com (8.13.6/8.13.6) with ESMTP id m0EIFkI7010267
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jan 2008 10:15:46 -0800 (PST)
+Received: from hp3.statik.tu-cottbus.de ([141.43.120.68]:37739 "EHLO
+	hp3.statik.tu-cottbus.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750720AbYANSct (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 13:32:49 -0500
+In-Reply-To: <1200308514.4729.25.camel@desk.ty-rhos-barn>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bill Adair <adair@gotadsl.co.uk>
+Cc: linux-scsi@vger.kernel.org
 
-Found one area that needed to be fixed in the 8.2.4 patches.
+Bill Adair wrote:
+> Is there any way under Linux of forcing use of the sd driver for a
+> device on the bus instead of sg?
 
-Remove incorrect use of #ifdef for an on stack waitqueue. Upstream driver
-always uses DECLARE_WAIT_QUEUE_HEAD_ONSTACK();
-
-Signed-off-by: James Smart <James.Smart@emulex.com>
-
-
-diff -upNr a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
---- a/drivers/scsi/lpfc/lpfc_scsi.c	2008-01-14 13:06:49.000000000 -0500
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c	2008-01-14 13:11:06.000000000 -0500
-@@ -1041,12 +1041,7 @@ lpfc_abort_handler(struct scsi_cmnd *cmn
- 	struct lpfc_scsi_buf *lpfc_cmd;
- 	IOCB_t *cmd, *icmd;
- 	int ret = SUCCESS;
--#ifdef DECLARE_WAIT_QUEUE_HEAD_ONSTACK
- 	DECLARE_WAIT_QUEUE_HEAD_ONSTACK(waitq);
--#else
--	DECLARE_WAIT_QUEUE_HEAD(waitq);
--#endif
--
- 
- 	lpfc_block_error_handler(cmnd);
- 	lpfc_cmd = (struct lpfc_scsi_buf *)cmnd->host_scribble;
-
-
+The INQUIRY data which the SCSI core gets from the device have to
+indicate that the device implements SBC or RBC (is of peripheral device
+type 00h or 0Eh).
+-- 
+Stefan Richter
+-=====-==--- ---= -===-
+http://arcgraph.de/sr/
