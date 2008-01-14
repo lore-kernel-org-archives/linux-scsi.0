@@ -1,78 +1,39 @@
-From: Mathieu Segaud <mathieu.segaud@regala.cx>
-Subject: [PATCH] Convert drivers/scsi/ch.c to use unlocked_ioctl
-Date: Mon, 14 Jan 2008 15:31:17 +0100
-Message-ID: <1200321077-26916-1-git-send-email-mathieu.segaud@regala.cx>
+From: Matthew Wilcox <matthew@wil.cx>
+Subject: Re: [PATCH] Convert drivers/scsi/ch.c to use unlocked_ioctl
+Date: Mon, 14 Jan 2008 07:37:30 -0700
+Message-ID: <20080114143730.GK18741@parisc-linux.org>
+References: <1200321077-26916-1-git-send-email-mathieu.segaud@regala.cx>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bde.crans.org ([138.231.137.76]:45121 "EHLO bde.crans.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751217AbYANObS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 14 Jan 2008 09:31:18 -0500
+Received: from palinux.external.hp.com ([192.25.206.14]:40929 "EHLO
+	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752859AbYANOhf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 09:37:35 -0500
+Content-Disposition: inline
+In-Reply-To: <1200321077-26916-1-git-send-email-mathieu.segaud@regala.cx>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Mathieu Segaud <mathieu.segaud@regala.cx>
+To: Mathieu Segaud <mathieu.segaud@regala.cx>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-As of now, compat_ioctl already runs without the BKL, whereas ioctl runs
-with the BKL. This patch first converts changer_fops to use a .unlocked_ioctl
-member. It applies the same locking rationale than ch_ioctl_compat() uses
-to ch_ioctl().
+On Mon, Jan 14, 2008 at 03:31:17PM +0100, Mathieu Segaud wrote:
+> +	.owner			= THIS_MODULE,
+> +	.open			= ch_open,
+> +	.release		= ch_release,
+> +	.unlocked_ioctl	= ch_ioctl,
 
-Signed-off-by: Mathieu Segaud <mathieu.segaud@regala.cx>
----
- drivers/scsi/ch.c |   18 ++++++++----------
- 1 files changed, 8 insertions(+), 10 deletions(-)
+Do you have a tab setting that's not 8?  You seem to have used one tab
+too many for the first three lines.
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index 2311019..389777c 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -92,8 +92,7 @@ static int  ch_probe(struct device *);
- static int  ch_remove(struct device *);
- static int  ch_open(struct inode * inode, struct file * filp);
- static int  ch_release(struct inode * inode, struct file * filp);
--static int  ch_ioctl(struct inode * inode, struct file * filp,
--		     unsigned int cmd, unsigned long arg);
-+static long ch_ioctl(struct file *filp, unsigned int cmd, unsigned long arg);
- #ifdef CONFIG_COMPAT
- static long ch_ioctl_compat(struct file * filp,
- 			    unsigned int cmd, unsigned long arg);
-@@ -130,12 +129,12 @@ static struct scsi_driver ch_template =
- 
- static const struct file_operations changer_fops =
- {
--	.owner        = THIS_MODULE,
--	.open         = ch_open,
--	.release      = ch_release,
--	.ioctl        = ch_ioctl,
-+	.owner			= THIS_MODULE,
-+	.open			= ch_open,
-+	.release		= ch_release,
-+	.unlocked_ioctl	= ch_ioctl,
- #ifdef CONFIG_COMPAT
--	.compat_ioctl = ch_ioctl_compat,
-+	.compat_ioctl	= ch_ioctl_compat,
- #endif
- };
- 
-@@ -626,7 +625,7 @@ ch_checkrange(scsi_changer *ch, unsigned int type, unsigned int unit)
- 	return 0;
- }
- 
--static int ch_ioctl(struct inode * inode, struct file * file,
-+static long ch_ioctl(struct file *file,
- 		    unsigned int cmd, unsigned long arg)
- {
- 	scsi_changer *ch = file->private_data;
-@@ -887,8 +886,7 @@ static long ch_ioctl_compat(struct file * file,
- 	case CHIOINITELEM:
- 	case CHIOSVOLTAG:
- 		/* compatible */
--		return ch_ioctl(NULL /* inode, unused */,
--				file, cmd, arg);
-+		return ch_ioctl(file, cmd, arg);
- 	case CHIOGSTATUS32:
- 	{
- 		struct changer_element_status32 ces32;
+Please correct that one, and then add my:
+
+Reviewed-by: Matthew Wilcox <willy@linux.intel.com>
+
+Thanks!
+
 -- 
-1.5.3.8
-
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
