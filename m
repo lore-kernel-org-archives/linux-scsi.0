@@ -1,50 +1,64 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: Actually using the sg table/chain code
-Date: Tue, 15 Jan 2008 14:52:00 -0500
-Message-ID: <478D0EE0.4070208@garzik.org>
-References: <1200412337.9273.28.camel@localhost.localdomain>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: [PATCH] firewire: fw-sbp2: prepare for s/g chaining
+Date: Tue, 15 Jan 2008 21:10:50 +0100 (CET)
+Message-ID: <tkrat.dd08f05252acff9a@s5r6.in-berlin.de>
+References: <1200419579.9273.39.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:45002 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751618AbYAOTwD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jan 2008 14:52:03 -0500
-In-Reply-To: <1200412337.9273.28.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <1200419579.9273.39.camel@localhost.localdomain>
+Content-Disposition: INLINE
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <Jens.Axboe@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-James Bottomley wrote:
-> 	if (BLK_DEF_MAX_SECTORS > max_sectors)
-> 		q->max_hw_sectors = q->max_sectors = max_sectors;
->  	else {
-> 		q->max_sectors = BLK_DEF_MAX_SECTORS;
-> 		q->max_hw_sectors = max_sectors;
-> 	}
-> }
-> 
-> So it imposes a maximum possible setting of BLK_DEF_MAX_SECTORS which is
-> defined in blkdev.h to .... 1024, thus also forcing the queue down to
-> 128 scatterlist entries.
-> 
-> Once I raised this limit as well, I was able to transfer over 128
-> scatterlist elements during benchmark test runs of normal I/O (actually
-> kernel compiles seem best, they hit 608 scatterlist entries).
-> 
-> So my question, is there any reason not to raise this limit to something
-> large (like 65536) or even eliminate it altogether?
+Signed-off-by: Stefan Richter <stefanr@s5r6.in-berlin.de>
+---
 
-ISTR a thread long ago, perhaps including Andrea A (as well as Jens), 
-where 1024 sectors was arrived upon as a reasonable balance between 
-tying up gobs of VM memory on a single command (multiplied, then, across 
-N commands), and getting decent per-command throughput.
+Replacement of patch "firewire: fw-sbp2: enable s/g chaining".
 
-Jens probably recalls better than I...  but I'm pretty sure that the 
-1024 limit played into "being nice with the VM" somehow.
-
-	Jeff
+It's the same, minus '+ .use_sg_chaining = ENABLE_SG_CHAINING,' hunk
+to prevent conflicts when James is going to remove .use_sg_chaining.
 
 
+ drivers/firewire/fw-sbp2.c |    7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+Index: linux/drivers/firewire/fw-sbp2.c
+===================================================================
+--- linux.orig/drivers/firewire/fw-sbp2.c
++++ linux/drivers/firewire/fw-sbp2.c
+@@ -1107,9 +1107,9 @@ sbp2_map_scatterlist(struct sbp2_command
+ 	 * elements larger than 65535 bytes, some IOMMUs may merge sg elements
+ 	 * during DMA mapping, and Linux currently doesn't prevent this.
+ 	 */
+-	for (i = 0, j = 0; i < count; i++) {
+-		sg_len = sg_dma_len(sg + i);
+-		sg_addr = sg_dma_address(sg + i);
++	for (i = 0, j = 0; i < count; i++, sg = sg_next(sg)) {
++		sg_len = sg_dma_len(sg);
++		sg_addr = sg_dma_address(sg);
+ 		while (sg_len) {
+ 			/* FIXME: This won't get us out of the pinch. */
+ 			if (unlikely(j >= ARRAY_SIZE(orb->page_table))) {
+
+-- 
+Stefan Richter
+-=====-==--- ---= -====
+http://arcgraph.de/sr/
+
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
