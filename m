@@ -1,93 +1,56 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: panic in sg_add when class_device_create() fails
-Date: Tue, 15 Jan 2008 13:36:42 +0900
-Message-ID: <20080115133642F.fujita.tomonori@lab.ntt.co.jp>
-References: <478BDE18.2010600@sgi.com>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH 1/2] sg: set class_data after success
+Date: Mon, 14 Jan 2008 23:54:48 -0500
+Message-ID: <478C3C98.3080802@torque.net>
+References: <20080115131747L.fujita.tomonori@lab.ntt.co.jp>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:50845 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751348AbYAOEgr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 23:36:47 -0500
-In-Reply-To: <478BDE18.2010600@sgi.com>
+Received: from pentafluge.infradead.org ([213.146.154.40]:46782 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751083AbYAOEzo (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 23:55:44 -0500
+In-Reply-To: <20080115131747L.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mdr@sgi.com
-Cc: linux-scsi@vger.kernel.org, dougg@torque.net, jeremy@sgi.com
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: James.Bottomley@HansenPartnership.com, mdr@sgi.com, linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Mon, 14 Jan 2008 14:11:36 -0800
-Michael Reed <mdr@sgi.com> wrote:
-
-> We're seeing an occasional panic in sg_add() when class_device_create()
-> fails.  It's obvious in the code that it uses the pointer to sg_class_member
-> even though it's invalid.  We do see the "class_device_create failed" message.
+FUJITA Tomonori wrote:
+> If cdev_add fails in sg_add, sg_remove crashes since class_data is
+> bogus.
 > 
->         class_set_devdata(cl_dev, sdp);
->         error = cdev_add(cdev, MKDEV(SCSI_GENERIC_MAJOR, sdp->index), 1);
->         if (error)
->                 goto cdev_add_err;
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> ---
+>  drivers/scsi/sg.c |    3 ++-
+>  1 files changed, 2 insertions(+), 1 deletions(-)
 > 
->         if (sg_sysfs_valid) {
->                 struct class_device * sg_class_member;
-> 
->                 sg_class_member = class_device_create(sg_sysfs_class, NULL,
->                                 MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
->                                 cl_dev->dev, "%s",
->                                 disk->disk_name);
->                 if (IS_ERR(sg_class_member))
->                         printk(KERN_WARNING "sg_add: "
->                                 "class_device_create failed\n");
->                 class_set_devdata(sg_class_member, sdp);
->                                   ^^^^^^^^^^^^^^^^
->                 error = sysfs_create_link(&scsidp->sdev_gendev.kobj,
->                                           &sg_class_member->kobj, "generic");
->                 if (error)
->                         printk(KERN_ERR "sg_add: unable to make symlink "
->                                         "'generic' back to sg%d\n", sdp->index);
->         } else
->                 printk(KERN_WARNING "sg_add: sg_sys Invalid\n");
-> 
-> I'm uncertain of the correct fix.  Perhaps it involves a call to cdev_unmap()? 
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index f1871ea..92b4367 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -1418,7 +1418,6 @@ sg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
+>  		goto out;
+>  	}
+>  
+> -	class_set_devdata(cl_dev, sdp);
+>  	error = cdev_add(cdev, MKDEV(SCSI_GENERIC_MAJOR, sdp->index), 1);
+>  	if (error)
+>  		goto cdev_add_err;
+> @@ -1447,6 +1446,8 @@ sg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
+>  		    "Attached scsi generic sg%d type %d\n", sdp->index,
+>  		    scsidp->type);
+>  
+> +	class_set_devdata(cl_dev, sdp);
+> +
+>  	return 0;
+>  
+>  cdev_add_err:
 
-The following patches work for me:
+Tomo,
+Thanks.
 
-http://marc.info/?l=linux-scsi&m=120037070303939&w=2
-http://marc.info/?l=linux-scsi&m=120037070303941&w=2
-
-
-> I don't have a good way to test a fix as this problem is not easily
-> reproduced.
-
-I used the attached patch (though the fault injection feature can do
-something better, I guess).
-
-
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index 527e2eb..4cdd213 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1424,12 +1424,16 @@ sg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
- 
- 	sdp->cdev = cdev;
- 	if (sg_sysfs_valid) {
-+		static int count = 0;
- 		struct class_device * sg_class_member;
- 
--		sg_class_member = class_device_create(sg_sysfs_class, NULL,
--				MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
--				cl_dev->dev, "%s",
--				disk->disk_name);
-+		if (++count % 2)
-+			sg_class_member = class_device_create(sg_sysfs_class, NULL,
-+							      MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
-+							      cl_dev->dev, "%s",
-+							      disk->disk_name);
-+		else
-+			sg_class_member = ERR_PTR(-ENOMEM);
- 		if (IS_ERR(sg_class_member)) {
- 			printk(KERN_ERR "sg_add: "
- 			       "class_device_create failed\n");
-
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
