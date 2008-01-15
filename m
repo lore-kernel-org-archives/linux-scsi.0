@@ -1,84 +1,60 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Tue, 15 Jan 2008 09:16:06 -0600
-Message-ID: <1200410166.9273.4.camel@localhost.localdomain>
-References: <9f00bd9d0712170139q1397af5fp3c855a2b94726227@mail.gmail.com>
-	 <1198271036.3130.60.camel@localhost.localdomain>
-	 <476C4177.3030902@redhat.com>
-	 <1198277391.3130.73.camel@localhost.localdomain>
-	 <9f00bd9d0801031618l324e9078i56b0679a35e27f69@mail.gmail.com>
-	 <1200028577.5337.8.camel@localhost.localdomain>
-	 <9f00bd9d0801110154i3b2f9c1flf076823747950196@mail.gmail.com>
-	 <1200066295.3286.19.camel@localhost.localdomain>
-	 <9f00bd9d0801110844g176acdcdle0331783f82ed866@mail.gmail.com>
-	 <1200070903.3286.28.camel@localhost.localdomain>
-	 <9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
+Subject: Re: [PATCH v2] use dynamically allocated sense buffer
+Date: Tue, 15 Jan 2008 09:20:57 -0600
+Message-ID: <1200410457.9273.10.camel@localhost.localdomain>
+References: <20080115182342Q.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56235 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:53306 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1750931AbYAOPQN (ORCPT
+	by vger.kernel.org with ESMTP id S1750801AbYAOPU7 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 15 Jan 2008 10:16:13 -0500
-In-Reply-To: <9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
+	Tue, 15 Jan 2008 10:20:59 -0500
+In-Reply-To: <20080115182342Q.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Filippos Papadopoulos <psybases@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Chuck Ebbert <cebbert@redhat.com>, Boaz Harrosh <bharrosh@panasas.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: linux-scsi@vger.kernel.org, tomof@acm.org
 
 
-On Sun, 2008-01-13 at 14:28 +0200, Filippos Papadopoulos wrote:
-> On 1/11/08, James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
-> >
-> > On Fri, 2008-01-11 at 18:44 +0200, Filippos Papadopoulos wrote:
-> > > On Jan 11, 2008 5:44 PM, James Bottomley
-> > > <James.Bottomley@hansenpartnership.com> wrote:
-> > > > >
-> > > > > I havent reported "initio: I/O port range 0x0 is busy."
-> > > >
-> > > > Sorry ... we appear to have several reporters of different bugs in this
-> > > > thread.  That message was copied by Chuck Ebbert from a Red Hat
-> > > > bugzilla ... I was assuming it was the same problem.
-> > > >
-> > > > > I applied the patch on 2.6.24-rc6-git9 but unfortunatelly same thing happens.
-> > > >
-> > > > First off, has this driver ever worked for you in 2.6?  Just booting
-> > > > SLES9 (2.6.5) or RHEL4 (2.6.9) ... or one of their open equivalents to
-> > > > check a really old kernel would be helpful.  If you can get it to work,
-> > > > then we can proceed with a patch reversion regime based on the
-> > > > assumption that the problem is a recent commit.
-> > >
-> > > Yes it works under 2.6.16.13.  See the beginning of this thread, i
-> > > mention there some things about newer versions.
-> >
-> > Thanks, actually, I see this:
-> >
-> > > I tried to install OpenSUSE 10.3 (kernel 2.6.22.5) and the latest
-> > > OpenSUSE 11.0 Alpha 0  (kernel 2.6.24-rc4) but although the initio
-> > > drivergets loaded during the installation process, yast reports that no hard
-> > > disk is found.
-> >
-> > Could you try with a vanilla 2.6.22 kernel?  The reason for all of this
-> > is that 2.6.22 predates Alan's conversion of this driver (which was my
-> > 95% candidate for the source of the bug).  I want you to try the vanilla
-> > kernel just in case the opensuse one contains a backport.
+On Tue, 2008-01-15 at 18:23 +0900, FUJITA Tomonori wrote:
+> This is the second version of
+> 
+> http://marc.info/?l=linux-scsi&m=119933628210006&w=2
+> 
+> I gave up once, but I found that the performance loss is negligible
+> (within 1%) by using kmem_cache_alloc instead of mempool.
+> 
+> I use scsi_debug with fake_rw=1 and disktest (DIO reads with 8
+> threads) again:
+> 
+> scsi-misc (slub)         | 486.9 MB/s  IOPS 124652.9/s
+> dynamic sense buf (slub) | 483.2 MB/s  IOPS 123704.1/s
+> 
+> scsi-misc (slab)         | 467.0 MB/s  IOPS 119544.3/s
+> dynamic sense buf (slab) | 468.7 MB/s  IOPS 119986.0/s
+> 
+> The results are the averages of three runs with a server using two
+> dual-core 1.60 GHz Xeon processors with DDR2 memory.
 > 
 > 
-> Yes you are right. I compiled the vanilla 2.6.22 and initio driver works.
-> Tell me if you want to apply any patch to it.
+> I doubt think that someone will complain about the performance
+> regression due to this patch. In addition, unlike scsi_debug, the real
+> LLDs allocate the own data structure per scsi_cmnd so the performance
+> differences would be smaller (and with the real hard disk overheads).
+> 
+> Here's the full results:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/tomo/sense/results.txt
 
-
-That's good news ... at least we know where the issue lies; now the
-problem comes: there are two candidate patches for this issue: Alan's
-driver update patch and Tomo's accessors patch.  Unfortunately, due to
-merge conflicts the two are pretty hopelessly intertwined.  I think I
-already spotted one bug in the accessor conversion, so I'll look at that
-again.  Alan's also going to acquire an inito board and retest his
-conversions.
-
-I'm afraid it might be a while before we have anything for you to test.
+Heh, that's one of those good news, bad news things.  Certainly good
+news for you.  The bad news for the rest of us is that you just
+implicated mempool in a performance problem  and since they're the core
+of the SCSI scatterlist allocations and sit at the heart of the critical
+path in SCSI, we have a potential performance issue in the whole of
+SCSI.
 
 James
 
