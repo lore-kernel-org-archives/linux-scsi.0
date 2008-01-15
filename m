@@ -1,42 +1,68 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] ieee1394: sbp2: prepare for s/g chaining
-Date: Tue, 15 Jan 2008 21:21:25 +0100
-Message-ID: <478D15C5.1040408@s5r6.in-berlin.de>
-References: <1200419579.9273.39.camel@localhost.localdomain>
-	<tkrat.dd08f05252acff9a@s5r6.in-berlin.de>
-	<tkrat.070bfc631ede4143@s5r6.in-berlin.de>
+From: Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [Bugme-new] [Bug 9752] New: getting "FAULT code" message at
+ startup in mpt fusion scsi driver
+Date: Tue, 15 Jan 2008 12:37:15 -0800
+Message-ID: <20080115123715.d7d8de7e.akpm@linux-foundation.org>
+References: <bug-9752-10286@http.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <tkrat.070bfc631ede4143@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:44314 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752190AbYAOUhd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 15 Jan 2008 15:37:33 -0500
+In-Reply-To: <bug-9752-10286@http.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: bugme-daemon@bugzilla.kernel.org, "Moore, Eric Dean" <Eric.Moore@lsil.com>, cfriesen@nortel.com
 
-Stefan Richter wrote:
->>  drivers/firewire/fw-sbp2.c |    7 ++++---
->>  1 file changed, 4 insertions(+), 3 deletions(-)
+On Tue, 15 Jan 2008 06:30:11 -0800 (PST) bugme-daemon@bugzilla.kernel.org wrote:
 
->  drivers/ieee1394/sbp2.c |    3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-
-Never mind the diffstats.  I forgot to refresh them.
--- 
-Stefan Richter
--=====-==--- ---= -====
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+> http://bugzilla.kernel.org/show_bug.cgi?id=9752
+> 
+>            Summary: getting "FAULT code" message at startup in mpt fusion
+>                     scsi driver
+>            Product: SCSI Drivers
+>            Version: 2.5
+>      KernelVersion: 2.6.14
+>           Platform: All
+>         OS/Version: Linux
+>               Tree: Mainline
+>             Status: NEW
+>           Severity: normal
+>           Priority: P1
+>          Component: Other
+>         AssignedTo: scsi_drivers-other@kernel-bugs.osdl.org
+>         ReportedBy: cfriesen@nortel.com
+> 
+> 
+> Hardware Environment: 32-bit x86, dual Xeon
+> Software Environment: nothing special
+> Problem Description:
+> 
+> On blade startup we're seeing the following message:
+> 
+> Fusion MPT base driver 3.02.55
+> Copyright (c) 1999-2005 LSI Logic Corporation
+> Fusion MPT SAS Host driver 3.02.55
+> mptbase: Initiating ioc0 bringup
+> mptbase: ioc0: WARNING - IOC is in FAULT state!!!
+>             FAULT code = 1804h
+> mptbase: ioc0: ERROR - Failed to come READY after reset! IocState=0
+> mptbase: ioc0 NOT READY WARNING!
+> mptbase: WARNING - ioc0 did not initialize properly! (-1)
+> mptsas: probe of 0000:05:01.0 failed with error -1
+> 
+> 
+> I'm not very knowledgable with SCSI, so can someone tell me whether this is a
+> disk fault or a host fault?  Even better, does anyone know what the specific
+> fault code means or where I could look it up?
+> 
+> 
+> -- 
+> Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+> ------- You are receiving this mail because: -------
+> You are on the CC list for the bug, or are watching someone who is.
