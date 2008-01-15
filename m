@@ -1,82 +1,73 @@
-From: "Grant Grundler" <grundler@google.com>
-Subject: Re: MPT Fusion initialization in 2.6.23.12
-Date: Mon, 14 Jan 2008 16:41:57 -0800
-Message-ID: <da824cf30801141641u7baac682haa1ff06dddc5da99@mail.gmail.com>
-References: <20080111140120.GA2116@synapse.neuralscape.com>
+From: "Love, Robert W" <robert.w.love@intel.com>
+Subject: RE: Open-FCoE on linux-scsi
+Date: Mon, 14 Jan 2008 17:18:15 -0800
+Message-ID: <10A7D0016239E24092DEF05CCC582E4302CFB7F7@fmsmsx411.amr.corp.intel.com>
+References: <200801031035.m03AZYcJ012171@mbox.iij4u.or.jp><10A7D0016239E24092DEF05CCC582E4302BB789B@fmsmsx411.amr.corp.intel.com><477E1C69.9010203@s5r6.in-berlin.de> <20080104205938U.fujita.tomonori@lab.ntt.co.jp> <08FE5CC30C9A3F41BF819A502CF7BF6E029FF0B8@fmsmsx411.amr.corp.intel.com> <477EC411.9040703@s5r6.in-berlin.de> <477ECAD4.8010809@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out.google.com ([216.239.33.17]:32944 "EHLO
-	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751008AbYAOAmJ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 19:42:09 -0500
-Received: from zps38.corp.google.com (zps38.corp.google.com [172.25.146.38])
-	by smtp-out.google.com with ESMTP id m0F0fwD5009888
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jan 2008 00:41:59 GMT
-Received: from py-out-1112.google.com (pyia25.prod.google.com [10.34.253.25])
-	by zps38.corp.google.com with ESMTP id m0F0fvxu009195
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jan 2008 16:41:58 -0800
-Received: by py-out-1112.google.com with SMTP id a25so2905276pyi.11
-        for <linux-scsi@vger.kernel.org>; Mon, 14 Jan 2008 16:41:57 -0800 (PST)
-In-Reply-To: <20080111140120.GA2116@synapse.neuralscape.com>
-Content-Disposition: inline
+Received: from mga02.intel.com ([134.134.136.20]:54731 "EHLO mga02.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751457AbYAOBSs convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 20:18:48 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <477ECAD4.8010809@s5r6.in-berlin.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Karen Shaeffer <shaeffer@neuralscape.com>
-Cc: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>, "Dev, Vasu" <vasu.dev@intel.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, tomof@acm.org, "Zou, Yi" <yi.zou@intel.com>, "Leech, Christopher" <christopher.leech@intel.com>, linux-scsi@vger.kernel.org
 
-On Jan 11, 2008 6:01 AM, Karen Shaeffer <shaeffer@neuralscape.com> wrote:
-> Hi,
+>-----Original Message-----
+>From: Stefan Richter [mailto:stefanr@s5r6.in-berlin.de]
+>Sent: Friday, January 04, 2008 4:10 PM
+>To: Dev, Vasu
+>Cc: FUJITA Tomonori; Love, Robert W; tomof@acm.org; Zou, Yi; Leech,
+>Christopher; linux-scsi@vger.kernel.org
+>Subject: Re: Open-FCoE on linux-scsi
 >
-> I have this server with an LSI Logic SAS1064 RAID
-> enabled Ultra320 SCSI controller on the system board.
-
-Karen,
-The above doesn't make sense to me. How is "SAS 1064 RAID" related to
-"Ultra320 SCSI"?
-This card has both traditional 68-pin VHDLC connector and SAS/SATA connector?
-Is the word "and" missing from the above?
-
-
-> I am running a vanilla 2.6.23.12 kernel. Everything
-> runs well, except during the boot I see these logs
-> in dmesg and the syslogs.
+>Stefan Richter wrote:
+>> I.e. you have SCSI command set layer -- SCSI core -- SCSI transport
+>> layer -- interconnect layer.
 >
-> mptbase: ioc0: IOCStatus(0x0022): Config Page Invalid Page: type=08h, page=00h, action=01h, form=00000001h
+>The interconnect layer could be split further:
+>SCSI command set layer -- SCSI core -- SCSI transport layer (FCP) --
+>Fibre Channel core -- Fibre Channel card drivers, FCoE drivers.
 
-My interpretation of this (and Eric should know this alot better) is
-the host is attempting to
-read (action=01h) this page (type 08h ==
-MPI_CONFIG_PAGETYPE_RAID_VOLUME) and couldn't.
-ie maybe HW RAID isn't configured on the card?
+This is how I see the comparison. ('/' indicates 'or')
 
-Similarly, if this is being reported for a "normal" LSI u320 scsi controller
-which doesn't support RAID, then perhaps the mpt driver should "learn"
-it doesn't need to query this page.
+You suggest						Open-FCoE
+SCSI-ml						SCSI-ml
+scsi_transport_fc.h				scsi_tranport_fc.h
+scsi_transport_fc.c (FC core) / HBA		openfc / HBA
+fcoe / HBA						fcoe / HBA
 
-> I've traced through the mptbase.c code and can see these
-> invalid config pages are read from the controller during
-> initialization.
+>From what I can see the layering is roughly the same with the main
+difference being that we should be using more of (and putting more into)
+scsi_transport_fc.h. Also we should make the FCP implementation (openfc)
+fit in a bit nicer as scsi_transport_fc.c. We're going to look into
+making better use of scsi_transport_fc.h as a first step.
 
-My guess is it's reported as an error because the bhost attempted to
-read them but couldn't.
+I'm a little confused though; in a prior mail it seemed that you were
+clubbing openfc and fcoe together, and at one point Fujita's stack
+showed a libfcoe and fcoe fitting directly under scsi_transport_fc. I
+think the layering is nicer at this point in the thread, where SCSI only
+knows that it's using FC and the SW implementation of FCP knows the
+transport. It's closer to my understanding of Open-iSCSI.
 
-hth,
-grant
+Open-iSCSI						Open-FCoE
+scsi_transport_iscsi.c				scsi_transport_fc.c
+iscsi_tcp.c						fcoe
 
-> This doesn't appear to cause any ill
-> effects, but I am wondering how to resolve this? Maybe
-> a MPT BIOS or MPT firmware upgrade will fix this?
+I'm curious how aware you think scsi_transport_fc.h should be of FCoE?
+
 >
-> Thanks,
-> Karen
-> --
->  Karen Shaeffer
->  Neuralscape, Palo Alto, Ca. 94306
->  shaeffer@neuralscape.com  http://www.neuralscape.com
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+>But this would only really make sense if anybody would implement
+>additional FC-4 drivers besides FCP, e.g. RFC 2625, which would also
+sit
+>on top of Fibre Channel core.
+>--
+>Stefan Richter
+>-=====-==--- ---= --=-=
+>http://arcgraph.de/sr/
