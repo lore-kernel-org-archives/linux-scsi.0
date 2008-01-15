@@ -1,63 +1,70 @@
 From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
-Subject: [RFC] A SCSI fault injection framework using SystemTap.
-Date: Tue, 15 Jan 2008 12:04:09 +0900
-Message-ID: <478C22A9.5000009@ce.jp.nec.com>
+Subject: [BUG] The kernel thread for md RAID1 could cause a md RAID1 array
+ deadlock
+Date: Tue, 15 Jan 2008 12:10:07 +0900
+Message-ID: <478C240F.8070004@ce.jp.nec.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from TYO202.gate.nec.co.jp ([202.32.8.206]:35723 "EHLO
-	tyo202.gate.nec.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751894AbYAODBb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 22:01:31 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+Sender: linux-raid-owner@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+List-Id: linux-scsi@vger.kernel.org
 
 
-I would like to introduce a SCSI fault injection framework using SystemTap.
+This message describes the details about md-RAID1 issue found by
+testing the md RAID1 using the SCSI fault injection framework.
 
-Currently, kernel has Fault-injection framework and Faulty mode for md,
-which can also be used for testing the error handling. But, they could
-only produce fixed type of errors stochastically. In order to simulate
-more realistic scsi disk faults, I have created a  new flexible fault injection
-framework using SystemTap.
+Abstract:
+Both the error handler for md RAID1 and write access request to the md RAID1
+use raid1d kernel thread. The nr_pending flag could cause a race condition
+in raid1d, results in a raid1d deadlock.
 
-The new fault injection framework has the following features:
+Details:
+         error handling                            write operation
+   ------------------------------------------------------------------------------
+    A-1. Issue a read request
 
- 1) The new framework is flexible, easy to change the condition without changing
-    the kernel because actually they are SystemTap scripts.
-    For example, device faults resulting in scsi command timeout, and media
-    faults which could be corrected by writing data to the failed sector
-    could be simulated using this framework.
+    A-2  SCSI error detected
+                                               B-1. make_request() for raid1 starts.
+    A-3. raid1_end_read_request() is called
+         in the interrupt context. It detects
+         read error and wakes up raid1d
+         kernel thread.                        B-2. make_request() calls wait_barrier() to
+                                                    increment nr_pending flag.
+    A-4. raid1d wake up
 
- 2) The new framework generates "pseudo" faults in the SCSI mid-layer.
-    Any upper layer app/driver using the SCSI mid-layer can apply this framework.
+    A-5. raid1d calls freeze_array() and waiting
+         for nr_pending to be decremented.
+         That means stop IO and wait for       B-3. make_request() wakes up raid1d kernel thread
+         everything to go quite.                    to send write request to the lower layer.
 
- 3) The new framework rewrite the status code and sense data for SCSI command and
-    pass it to the upper layer. So the real error handling routine of the upper
-    layer for I/O request can be tested.
+                                               B-4. raid1d wake up (already waken up by A-3)
 
-I have tested the software RAID (md/dm-mirror) using this framework
-and found some bugs.
- e.g.
-  -The kernel thread for md RAID1 could cause a deadlock when the error handler for
-    md RAID1 contends with the write access to the md RAID1 array.
+                   (****  process stalls here because A-5 never ends ****)
 
-  -dm-mirror's redundancy doesn't work. A read error from the disk consisting
-   the array will be directory passed to the userspace, without reading from
-   the other mirror.
-   (It turns out that this issue is a known issue, but the patch is not merged.
-    http://www.kernel.org/pub/linux/kernel/people/agk/patches/2.6/editing/dm-raid1-handle-read-failures.patch)
+    A-6. raid1d calls fix_read_error() to
+         handle read error.                    B-5. raid1d calls generic_make_request() for write request.
 
-There are also some other bugs for error handling routine in the multiple
-fault situation. I will report the details about these bugs later.
+                                               B-6. raid1_end_write_request() is called in the
+                                                    interrupt context when the write access is completed
+                                                    and nr_pending flag is decremented.
+The deadlock mechanism:
+If raid1d waken up by detecting read error (A-4) goes into freeze_array()
+right after make_request() for write request has incremented nr_pending flag(B-2),
+raid1d stalls waiting for nr_pending flag to be decremented (A-5).
+On the other hand, nr_pending flag incremented by make_request() for write request
+will never be decremented because the flag can be decremented after raid1d issues
+generic_make_request() (B-5, B-6) but now raid1d is stopped.
 
-The new framework is tested on Fedora8(i386) running with kernel 2.6.23.12.
-So far, I'm cleaning up the tool set for release, and plan to post it in the near future.
-If you are interested, take a look at it.
-If you have any comments, please let me know.
+This problem could could easily be reproduced with by using the new fault injection framework,
+using "no response from the SCSI device" simulation.
+However, it could also occur if raid1 error handler contends with write
+operation,  but with low probability.
+
+I will report the other problems after I clean up and post the code for
+the scsi fault injection framework.
 
 -- 
 ------------------------------------------------------------------------
