@@ -1,52 +1,84 @@
 From: Douglas Gilbert <dougg@torque.net>
-Subject: Re: [PATCH 2/2] sg: handle class_device_create failure properly
-Date: Mon, 14 Jan 2008 23:55:55 -0500
-Message-ID: <478C3CDB.3020009@torque.net>
-References: <20080115131800Q.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH] Only print SCSI data direction warning once for a command
+Date: Tue, 15 Jan 2008 00:02:57 -0500
+Message-ID: <478C3E81.3020007@torque.net>
+References: <200801020703.01180.ak@suse.de> <1200166584.3656.36.camel@localhost.localdomain> <200801131741.43173.ak@suse.de>
 Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset=iso-8859-15; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:46796 "EHLO
+Received: from pentafluge.infradead.org ([213.146.154.40]:43649 "EHLO
 	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751314AbYAOE4o (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Jan 2008 23:56:44 -0500
-In-Reply-To: <20080115131800Q.fujita.tomonori@lab.ntt.co.jp>
+	with ESMTP id S1751315AbYAOFDq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jan 2008 00:03:46 -0500
+In-Reply-To: <200801131741.43173.ak@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, mdr@sgi.com, linux-scsi@vger.kernel.org, tomof@acm.org
+To: Andi Kleen <ak@suse.de>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> ---
->  drivers/scsi/sg.c |   11 +++++++----
->  1 files changed, 7 insertions(+), 4 deletions(-)
+Andi Kleen wrote:
+>> to the log because they come from printk_ratelimit().  So all you've
+>> done is halved the volume of flow to the logs and left a dangling printk
+>> suppressed message that keeps spewing, so I don't think the patch even
+>> does what you describe it as doing ...  if you reverse the order of the
+>> operands in the if() it will ...
 > 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index 92b4367..527e2eb 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1430,11 +1430,14 @@ sg_add(struct class_device *cl_dev, struct class_interface *cl_intf)
->  				MKDEV(SCSI_GENERIC_MAJOR, sdp->index),
->  				cl_dev->dev, "%s",
->  				disk->disk_name);
-> -		if (IS_ERR(sg_class_member))
-> -			printk(KERN_WARNING "sg_add: "
-> -				"class_device_create failed\n");
-> +		if (IS_ERR(sg_class_member)) {
-> +			printk(KERN_ERR "sg_add: "
-> +			       "class_device_create failed\n");
-> +			error = PTR_ERR(sg_class_member);
-> +			goto cdev_add_err;
+> Here's an updated patch with the reversed order.
+> 
+> -Andi
+> 
+> ---
+> 
+> Only print SCSI data direction warning once for a command v2
+> 
+> When I use cdparanoia my logs get spammed a lot by
+> 
+> printk: 464 messages suppressed.
+> sg_write: data in/out 30576/30576 bytes for SCSI command 0xbe--guessing data in;
+>    program cdparanoia not setting count and/or reply_len properly
+> printk: 1078 messages suppressed.
+> 
+> and many more of those. With this patch the message is only printed once
+> for a command in a row.
+> 
+> v1->v2: Prevent rate limit messages too (pointed out by jejb)
+> 
+> Signed-off-by: Andi Kleen <ak@suse.de>
+> 
+> ---
+>  drivers/scsi/sg.c |    8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> Index: linux/drivers/scsi/sg.c
+> ===================================================================
+> --- linux.orig/drivers/scsi/sg.c
+> +++ linux/drivers/scsi/sg.c
+> @@ -602,8 +602,9 @@ sg_write(struct file *filp, const char _
+>  	 * but is is possible that the app intended SG_DXFER_TO_DEV, because there
+>  	 * is a non-zero input_size, so emit a warning.
+>  	 */
+> -	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV)
+> -		if (printk_ratelimit())
+> +	if (hp->dxfer_direction == SG_DXFER_TO_FROM_DEV) {
+> +		static char cmd[TASK_COMM_LEN];
+> +		if (strcmp(current->comm, cmd) && printk_ratelimit()) {
+>  			printk(KERN_WARNING
+>  			       "sg_write: data in/out %d/%d bytes for SCSI command 0x%x--"
+>  			       "guessing data in;\n" KERN_WARNING "   "
+> @@ -611,6 +612,9 @@ sg_write(struct file *filp, const char _
+>  			       old_hdr.reply_len - (int)SZ_SG_HEADER,
+>  			       input_size, (unsigned int) cmnd[0],
+>  			       current->comm);
+> +			strcpy(cmd, current->comm);
 > +		}
->  		class_set_devdata(sg_class_member, sdp);
-> -		error = sysfs_create_link(&scsidp->sdev_gendev.kobj, 
-> +		error = sysfs_create_link(&scsidp->sdev_gendev.kobj,
->  					  &sg_class_member->kobj, "generic");
->  		if (error)
->  			printk(KERN_ERR "sg_add: unable to make symlink "
+> +	}
+>  	k = sg_common_write(sfp, srp, cmnd, sfp->timeout, blocking);
+>  	return (k < 0) ? k : count;
+>  }
+> 
+> 
 
 Signed-off-by: Douglas Gilbert <dougg@torque.net>
 
