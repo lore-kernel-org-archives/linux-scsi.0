@@ -1,93 +1,68 @@
-From: Karen Shaeffer <shaeffer@neuralscape.com>
-Subject: Re: MPT Fusion initialization in 2.6.23.12
-Date: Wed, 16 Jan 2008 00:50:11 -0800
-Message-ID: <20080116085011.GA5392@synapse.neuralscape.com>
-References: <da824cf30801141641u7baac682haa1ff06dddc5da99@mail.gmail.com> <664A4EBB07F29743873A87CF62C26D70C5D129@NAMAIL4.ad.lsil.com> <20080115163749.GB12884@synapse.neuralscape.com> <da824cf30801150853wbf64e5aj802ae12c96145247@mail.gmail.com>
+From: Benny Halevy <bhalevy@panasas.com>
+Subject: Re: [PATCH v2] use dynamically allocated sense buffer
+Date: Wed, 16 Jan 2008 14:35:50 +0200
+Message-ID: <478DFA26.2020706@panasas.com>
+References: <20080115182342Q.fujita.tomonori@lab.ntt.co.jp> <1200410457.9273.10.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from synapse.neuralscape.com ([198.144.200.82]:43879 "EHLO
-	neuralscape.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751247AbYAPIuO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Jan 2008 03:50:14 -0500
-Content-Disposition: inline
-In-Reply-To: <da824cf30801150853wbf64e5aj802ae12c96145247@mail.gmail.com>
+Received: from sa7.bezeqint.net ([192.115.104.21]:47483 "EHLO sa7.bezeqint.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754258AbYAPNSW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 16 Jan 2008 08:18:22 -0500
+In-Reply-To: <1200410457.9273.10.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: "Moore, Eric" <Eric.Moore@lsi.com>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, tomof@acm.org
 
-On Tue, Jan 15, 2008 at 08:53:05AM -0800, Grant Grundler wrote:
-> On Jan 15, 2008 8:37 AM, Karen Shaeffer <shaeffer@neuralscape.com> wrote:
-> > This is a Sun X4200 M2 Netra server. The LSI SAS1064 "RAID enabled"
-> > Ultra320 SCSI controller supports RAID0, RAID1, and RAID1E modes. The
-> > implementation uses RAID1, so this chip is RAID-enabled.
+On Jan. 15, 2008, 17:20 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> On Tue, 2008-01-15 at 18:23 +0900, FUJITA Tomonori wrote:
+>> This is the second version of
+>>
+>> http://marc.info/?l=linux-scsi&m=119933628210006&w=2
+>>
+>> I gave up once, but I found that the performance loss is negligible
+>> (within 1%) by using kmem_cache_alloc instead of mempool.
+>>
+>> I use scsi_debug with fake_rw=1 and disktest (DIO reads with 8
+>> threads) again:
+>>
+>> scsi-misc (slub)         | 486.9 MB/s  IOPS 124652.9/s
+>> dynamic sense buf (slub) | 483.2 MB/s  IOPS 123704.1/s
+>>
+>> scsi-misc (slab)         | 467.0 MB/s  IOPS 119544.3/s
+>> dynamic sense buf (slab) | 468.7 MB/s  IOPS 119986.0/s
+>>
+>> The results are the averages of three runs with a server using two
+>> dual-core 1.60 GHz Xeon processors with DDR2 memory.
+>>
+>>
+>> I doubt think that someone will complain about the performance
+>> regression due to this patch. In addition, unlike scsi_debug, the real
+>> LLDs allocate the own data structure per scsi_cmnd so the performance
+>> differences would be smaller (and with the real hard disk overheads).
+>>
+>> Here's the full results:
+>>
+>> http://www.kernel.org/pub/linux/kernel/people/tomo/sense/results.txt
 > 
-> http://www.sun.com/servers/netra/x4200/specs.xml says you only have SAS
-> and NOT u320 SCSI (unless an add-on u320 SCSI card is installed).
-> LSI u320 SCSI cards can  support RAID0/1 but HP-UX didn't ship with RAID
-> enabled because of Firmware bugs (which may have been fixed in the mean time).
+> Heh, that's one of those good news, bad news things.  Certainly good
+> news for you.  The bad news for the rest of us is that you just
+> implicated mempool in a performance problem  and since they're the core
+> of the SCSI scatterlist allocations and sit at the heart of the critical
+> path in SCSI, we have a potential performance issue in the whole of
+> SCSI.
+
+Looking at mempool's code this is peculiar as what seems to be its
+critical path for alloc and free looks pretty harmless and lightweight.
+Maybe an extra memory barrier, spin_{,un}lock_* and two extra function call
+(one of them can be eliminated BTW if the order of arguments to the
+mempool_{alloc,free}_t functions were the same as for kmem_cache_{alloc,free}).
+
+Benny
+
 > 
-> If you post "lspci -vt" and/or "lspci" output, it would be clear
-> what's in the box.
+> James
 
-Hi,
-
-~$ lspci -vt
--+-[80]-+-00.0  nVidia Corporation: Unknown device 005e
- |      +-01.0  nVidia Corporation: Unknown device 00d3
- |      +-0a.0  nVidia Corporation: Unknown device 0057
- |      +-0b.0-[81]--
- |      +-0c.0-[82]--
- |      +-0d.0-[83-85]--+-00.0-[85]--
- |      |               \-00.2-[84]--
- |      +-0e.0-[86]--
- |      +-10.0-[87]--
- |      +-10.1  Advanced Micro Devices [AMD]: Unknown device 7459
- |      +-11.0-[8e]--+-01.0  Intel Corp. 82546EB Gigabit Ethernet Controller (Copper)
- |      |            +-01.1  Intel Corp. 82546EB Gigabit Ethernet Controller (Copper)
- |      |            \-02.0  LSI Logic / Symbios Logic: Unknown device 0050
- |      \-11.1  Advanced Micro Devices [AMD]: Unknown device 7459
- \-[00]-+-00.0  nVidia Corporation: Unknown device 005e
-        +-01.0  nVidia Corporation: Unknown device 0051
-        +-01.1  nVidia Corporation: Unknown device 0052
-        +-02.0  nVidia Corporation: Unknown device 005a
-        +-02.1  nVidia Corporation: Unknown device 005b
-        +-06.0  nVidia Corporation: Unknown device 0053
-        +-09.0-[01]----03.0  ATI Technologies Inc Rage XL
-        +-0a.0  nVidia Corporation: Unknown device 0057
-        +-0b.0-[02]--
-        +-0c.0-[03]--
-        +-0d.0-[04-06]--+-00.0-[06]--
-        |               \-00.2-[05]--
-        +-0e.0-[07]--
-        +-18.0  Advanced Micro Devices [AMD] K8 NorthBridge
-        +-18.1  Advanced Micro Devices [AMD] K8 NorthBridge
-        +-18.2  Advanced Micro Devices [AMD] K8 NorthBridge
-        +-18.3  Advanced Micro Devices [AMD] K8 NorthBridge
-        +-19.0  Advanced Micro Devices [AMD] K8 NorthBridge
-        +-19.1  Advanced Micro Devices [AMD] K8 NorthBridge
-        +-19.2  Advanced Micro Devices [AMD] K8 NorthBridge
-        \-19.3  Advanced Micro Devices [AMD] K8 NorthBridge
-
-8e:02.0 SCSI storage controller: LSI Logic / Symbios Logic: Unknown device 0050 (rev 02)
-        Subsystem: LSI Logic / Symbios Logic: Unknown device 3060
-        Flags: bus master, 66Mhz, medium devsel, latency 72, IRQ 18
-        I/O ports at e400 [disabled] [size=256]
-        Memory at fe9bc000 (64-bit, non-prefetchable) [size=16K]
-        Memory at fe9a0000 (64-bit, non-prefetchable) [size=64K]
-        Expansion ROM at fe600000 [disabled] [size=2M]
-        Capabilities: [50] Power Management version 2
-        Capabilities: [98] Message Signalled Interrupts: 64bit+ Queue=0/0 Enable-
-        Capabilities: [68] PCI-X non-bridge device.
-        Capabilities: [b0] #11 [0000]
-
-This is, of course, on the system board. I will be following up
-on this issue soon. I was swamped with other issues today.
-
-Thanks,
-Karen
--- 
- Karen Shaeffer
- Neuralscape, Palo Alto, Ca. 94306
- shaeffer@neuralscape.com  http://www.neuralscape.com
