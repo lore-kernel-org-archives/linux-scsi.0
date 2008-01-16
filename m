@@ -1,74 +1,53 @@
-From: Dave Young <hidave.darkstar@gmail.com>
-Subject: Re: [PATCH 5/7] scsi : use class iteration api
-Date: Wed, 16 Jan 2008 08:51:45 +0800
-Message-ID: <20080116005145.GB2929@darkstar.te-china.tietoenator.com>
-References: <20080112095517.GE2893@darkstar.te-china.tietoenator.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: [PATCH v2] use dynamically allocated sense buffer
+Date: Wed, 16 Jan 2008 10:18:02 +0900
+Message-ID: <20080116101802T.fujita.tomonori@lab.ntt.co.jp>
+References: <478CBBA8.4050202@panasas.com>
+	<20080116000836Y.tomof@acm.org>
+	<478CD4CE.1000703@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fg-out-1718.google.com ([72.14.220.159]:35690 "EHLO
-	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751326AbYAPAse (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jan 2008 19:48:34 -0500
-Received: by fg-out-1718.google.com with SMTP id e21so61748fga.17
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Jan 2008 16:48:32 -0800 (PST)
-Content-Disposition: inline
-In-Reply-To: <20080112095517.GE2893@darkstar.te-china.tietoenator.com>
+Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:34335 "EHLO
+	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753420AbYAPBSy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Jan 2008 20:18:54 -0500
+In-Reply-To: <478CD4CE.1000703@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@hansenpartnership.com
-Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+To: bharrosh@panasas.com
+Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-update the patch with minor return path changes in match function:
+On Tue, 15 Jan 2008 17:44:14 +0200
+Boaz Harrosh <bharrosh@panasas.com> wrote:
 
-Convert to use the class iteration api.
+> > If __scsi_put_command puts a command to shost->free_list, it doesn't
+> > free scmd->sense_buffer since it's the sense_buffer for the backup
+> > sense_buffer. If __scsi_put_command puts a command to
+> > shost->cmd_pool->slab (if shost->free_list isn't empty), it alos puts
+> > its sense_buffer to sense_buffer_slab.
+> 
+> Yes, but these are not necessarily the same commands. Think of this,
 
-Signed-off-by: Dave Young <hidave.darkstar@gmail.com> 
+Ah, sorry, I need to update shost->backup_sense_buffer when
+__scsi_put_command puts a command to the free_list.
 
----
- drivers/scsi/hosts.c |   24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
 
-diff -upr linux/drivers/scsi/hosts.c linux.new/drivers/scsi/hosts.c
---- linux/drivers/scsi/hosts.c	2008-01-16 08:43:35.000000000 +0800
-+++ linux.new/drivers/scsi/hosts.c	2008-01-16 08:43:35.000000000 +0800
-@@ -429,6 +429,15 @@ void scsi_unregister(struct Scsi_Host *s
- }
- EXPORT_SYMBOL(scsi_unregister);
- 
-+static int __scsi_host_match(struct class_device *cdev, void *data)
-+{
-+	struct Scsi_Host *p;
-+	unsigned short *hostnum = (unsigned short *)data;
-+
-+	p = class_to_shost(cdev);
-+	return p->host_no == *hostnum;
-+}
-+
- /**
-  * scsi_host_lookup - get a reference to a Scsi_Host by host no
-  *
-@@ -439,19 +448,12 @@ EXPORT_SYMBOL(scsi_unregister);
-  **/
- struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
- {
--	struct class *class = &shost_class;
- 	struct class_device *cdev;
--	struct Scsi_Host *shost = ERR_PTR(-ENXIO), *p;
-+	struct Scsi_Host *shost = ERR_PTR(-ENXIO);
- 
--	down(&class->sem);
--	list_for_each_entry(cdev, &class->children, node) {
--		p = class_to_shost(cdev);
--		if (p->host_no == hostnum) {
--			shost = scsi_host_get(p);
--			break;
--		}
--	}
--	up(&class->sem);
-+	cdev = class_find_child(&shost_class, &hostnum, __scsi_host_match);
-+	if (cdev)
-+		shost = scsi_host_get(class_to_shost(cdev));
- 
- 	return shost;
- }
+> The run queues have commands in them, a request comes that demands
+> a cmnd, out-of-memory condition causes the spare from free_list cmnd to
+> be issued, and is put at tail of some run queue. Now comes the first
+> done cmnd, it is immediately put to free_list, but it's sense_buffer
+> was from sense_buffer_slab.
+> 
+> I think the solution is simple just immediately allocate the sense_buffer
+> in scsi_setup_command_freelist() and put it on that first free_list command.
+> Then make sure that also the sense_buffer is freed in 
+> scsi_destroy_command_freelist().
+> 
+> This way sense_buffer is always allocated/freed together with cmnd and
+> you don't need the shost->backup_sense_buffer pointer.
+
+Yeah, it's more straightforward. I'll submit an update patch soon.
+
+Thanks,
