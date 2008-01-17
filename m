@@ -1,104 +1,74 @@
-From: Pete Wyckoff <pw-pxmRpbKlMIQ@public.gmane.org>
-Subject: Re: Performance of SCST versus STGT
-Date: Thu, 17 Jan 2008 12:45:42 -0500
-Message-ID: <20080117174542.GC29650@osc.edu>
-References: <e2e108260801170127w2937b2afg9bef324efa945e43@mail.gmail.com>
-	<20080117184052F.fujita.tomonori@lab.ntt.co.jp>
-	<478F246C.4040400@vlnb.net>
-	<20080117190558K.fujita.tomonori@lab.ntt.co.jp>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: Re: [PATCH 2/8] scsi-drivers Don't use SG_ALL as allocation size
+Date: Thu, 17 Jan 2008 09:47:45 -0800
+Message-ID: <20080117174745.GB20186@plap3.qlogic.org>
+References: <478F8435.5000907@panasas.com> <478F85E7.20503@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from avexch1.qlogic.com ([198.70.193.115]:31436 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751548AbYAQRrx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jan 2008 12:47:53 -0500
 Content-Disposition: inline
-In-Reply-To: <20080117190558K.fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
-List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
-Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-To: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Cc: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, vst-d+Crzxg7Rs0@public.gmane.org
+In-Reply-To: <478F85E7.20503@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org wrote on Thu, 17 Jan 2008 19:05 +0900:
-> On Thu, 17 Jan 2008 12:48:28 +0300
-> Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org> wrote:
+On Thu, 17 Jan 2008, Boaz Harrosh wrote:
+
+>   below list of drivers have used SG_ALL as a size to
+>   preallocate maximum possible command's sg-count.
+>   This is no longer possible since the maximum is not
+>   set at compile time but as a run time configuration.
 > 
-> > FUJITA Tomonori wrote:
-> > > On Thu, 17 Jan 2008 10:27:08 +0100
-> > > "Bart Van Assche" <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
-> > > 
-> > > 
-> > >>Hello,
-> > >>
-> > >>I have performed a test to compare the performance of SCST and STGT.
-> > >>Apparently the SCST target implementation performed far better than
-> > >>the STGT target implementation. This makes me wonder whether this is
-> > >>due to the design of SCST or whether STGT's performance can be
-> > >>improved to the level of SCST ?
-> > >>
-> > >>Test performed: read 2 GB of data in blocks of 1 MB from a target (hot
-> > >>cache -- no disk reads were performed, all reads were from the cache).
-> > >>Test command: time dd if=/dev/sde of=/dev/null bs=1M count=2000
-> > >>
-> > >>                              STGT read             SCST read
-> > >>                           performance (MB/s)   performance (MB/s)
-> > >>Ethernet (1 Gb/s network)        77                    89
-> > >>IPoIB (8 Gb/s network)           82                   229
-> > >>SRP (8 Gb/s network)            N/A                   600
-> > >>iSER (8 Gb/s network)            80                   N/A
-> > >>
-> > >>These results show that SCST uses the InfiniBand network very well
-> > >>(effectivity of about 88% via SRP), but that the current STGT version
-> > >>is unable to transfer data faster than 82 MB/s. Does this mean that
-> > >>there is a severe bottleneck  present in the current STGT
-> > >>implementation ?
-> > > 
-> > > 
-> > > I don't know about the details but Pete said that he can achieve more
-> > > than 900MB/s read performance with tgt iSER target using ramdisk.
-> > > 
-> > > http://www.mail-archive.com/stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org/msg00004.html
-> > 
-> > Please don't confuse multithreaded latency insensitive workload with 
-> > single threaded, hence latency sensitive one.
+>   A better schema can be advised with a more dynamic allocation.
+>   Perhaps from a kmem_cache.
 > 
-> Seems that he can get good performance with single threaded workload:
-> 
-> http://www.osc.edu/~pw/papers/wyckoff-iser-snapi07-talk.pdf
-> 
-> But I don't know about the details so let's wait for Pete to comment
-> on this.
+>   Affected drivers/files:
+> 	drivers/scsi/atari_scsi.[ch]
+> 	drivers/scsi/eata_pio.c
+> 	drivers/scsi/ibmvscsi/ibmvscsi.[ch]
+> 	drivers/scsi/mac53c94.c
+> 	drivers/scsi/mesh.c
+> 	drivers/scsi/nsp32.h
+> 	drivers/scsi/qla1280.c
+> 	drivers/scsi/qla2xxx/qla_os.c
+> 	drivers/scsi/qla4xxx/ql4_def.h
+...
 
-Page 16 is pretty straight forward.  One command outstanding from
-the client.  It is an OSD read command.  Data on tmpfs.  500 MB/s is
-pretty easy to get on IB.
+There's no functional change in your patches to qla2xxx and qla4xxx.
+Perhaps a cut-n-paste typo from qla1280.c (which should be capped):
 
-The other graph on page 23 is for block commands.  600 MB/s ish.
-Still single command; so essentially a "latency" test.  Dominated by
-the memcpy time from tmpfs to pinned IB buffer, as per page 24.
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 78d1103..e368f38 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -111,6 +111,8 @@ static int qla2x00_device_reset(scsi_qla_host_t *, fc_port_t *);
+>  static int qla2x00_change_queue_depth(struct scsi_device *, int);
+>  static int qla2x00_change_queue_type(struct scsi_device *, int);
+>  
+> +#define QLA2XXX_MAX_SG 255
+> +
+>  struct scsi_host_template qla2x00_driver_template = {
+>  	.module			= THIS_MODULE,
+>  	.name			= QLA2XXX_DRIVER_NAME,
+> diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+> index accaf69..64cd43b 100644
+> --- a/drivers/scsi/qla4xxx/ql4_def.h
+> +++ b/drivers/scsi/qla4xxx/ql4_def.h
+> @@ -101,6 +101,7 @@
+>  #define MBOX_AEN_REG_COUNT	5
+>  #define MAX_INIT_RETRIES	5
+>  #define IOCB_HIWAT_CUSHION	16
+> +#define QLA_MAX_SG		255
 
-Erez said:
 
-> We didn't run any real performance test with tgt, so I don't have
-> numbers yet. I know that Pete got ~900 MB/sec by hacking sgp_dd, so all
-> data was read/written to the same block (so it was all done in the
-> cache). Pete - am I right?
+I don't forsee any issues with maintaining SG_ALL (~0) usage within
+qla2xxx and qla4xxx, as the number of unused entries on the HBA's
+request-queue shall ultimately be the rate-limiting factor.
 
-Yes (actually just 1 thread in sg_dd).  This is obviously cheating.
-Take the pread time to zero in SCSI Read analysis on page 24 to show
-max theoretical.  It's IB theoretical minus some initiator and stgt
-overheads.
-
-The other way to get more read throughput is to throw multiple
-simultaneous commands at the server.
-
-There's nothing particularly stunning here.  Suspect Bart has
-configuration issues if not even IPoIB will do > 100 MB/s.
-
-		-- Pete
+--
+av
