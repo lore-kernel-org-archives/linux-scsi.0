@@ -1,113 +1,55 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2] use dynamically allocated sense buffer
-Date: Thu, 17 Jan 2008 09:58:11 -0600
-Message-ID: <1200585491.3255.17.camel@localhost.localdomain>
-References: <20080115182342Q.fujita.tomonori@lab.ntt.co.jp>
-	 <1200410457.9273.10.camel@localhost.localdomain>
-	 <478DFA26.2020706@panasas.com>
-	 <20080117181356Z.fujita.tomonori@lab.ntt.co.jp>
+From: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>
+Subject: Re: 2.6.24-rc8-mm1 Build Failure on scsi driver
+Date: Thu, 17 Jan 2008 21:45:39 +0530
+Message-ID: <478F7F2B.9000801@linux.vnet.ibm.com>
+References: <20080117023514.9df393cf.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41041 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751420AbYAQP6Y (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2008 10:58:24 -0500
-In-Reply-To: <20080117181356Z.fujita.tomonori@lab.ntt.co.jp>
+Received: from e28smtp07.in.ibm.com ([59.145.155.7]:47867 "EHLO
+	e28esmtp07.in.ibm.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752028AbYAQQP4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jan 2008 11:15:56 -0500
+In-Reply-To: <20080117023514.9df393cf.akpm@linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: bhalevy@panasas.com, linux-scsi@vger.kernel.org, tomof@acm.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fischer@norbit.de, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>
+
+Hi Andrew,
+
+The kernel build fails with following error
+
+drivers/scsi/aha152x.o: In function `aha152x_host_reset_host':
+/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/aha152x.c:1324: multiple definition of `aha152x_host_reset_host'
+drivers/scsi/pcmcia/built-in.o:/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/aha152x.c:1324: first defined here
+drivers/scsi/aha152x.o: In function `aha152x_release':
+/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/aha152x.c:908: multiple definition of `aha152x_release'
+drivers/scsi/pcmcia/built-in.o:/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/aha152x.c:908: first defined here
+ld: Warning: size of symbol `aha152x_release' changed from 68 in drivers/scsi/pcmcia/built-in.o to 100 in drivers/scsi/aha152x.o
+drivers/scsi/aha152x.o: In function `aha152x_probe_one':
+/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/aha152x.c:772: multiple definition of `aha152x_probe_one'
+drivers/scsi/pcmcia/built-in.o:/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/aha152x.c:772: first defined here
+drivers/scsi/fdomain.o:(.data+0x0): multiple definition of `fdomain_driver_template'
+drivers/scsi/pcmcia/built-in.o:(.data+0x5a0): first defined here
+drivers/scsi/fdomain.o: In function `fdomain_16x0_bus_reset':
+/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/fdomain.c:1568: multiple definition of `fdomain_16x0_bus_reset'
+drivers/scsi/pcmcia/built-in.o:/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/fdomain.c:1568: first defined here
+drivers/scsi/fdomain.o: In function `__fdomain_16x0_detect':
+/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/fdomain.c:894: multiple definition of `__fdomain_16x0_detect'
+drivers/scsi/pcmcia/built-in.o:/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/fdomain.c:894: first defined here
+ld: Warning: size of symbol `__fdomain_16x0_detect' changed from 1206 in drivers/scsi/pcmcia/built-in.o to 1700 in drivers/scsi/fdomain.o
+drivers/scsi/fdomain.o: In function `fdomain_setup':
+/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/fdomain.c:554: multiple definition of `fdomain_setup'
+drivers/scsi/pcmcia/built-in.o:/home/kamalesh/scrap/linux-2.6.24-rc8/drivers/scsi/fdomain.c:554: first defined here
+make[2]: *** [drivers/scsi/built-in.o] Error 1
+make[1]: *** [drivers/scsi] Error 2
+make: *** [drivers] Error 2
 
 
-On Thu, 2008-01-17 at 18:13 +0900, FUJITA Tomonori wrote:
-> On Wed, 16 Jan 2008 14:35:50 +0200
-> Benny Halevy <bhalevy@panasas.com> wrote:
-> 
-> > On Jan. 15, 2008, 17:20 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > > On Tue, 2008-01-15 at 18:23 +0900, FUJITA Tomonori wrote:
-> > >> This is the second version of
-> > >>
-> > >> http://marc.info/?l=linux-scsi&m=119933628210006&w=2
-> > >>
-> > >> I gave up once, but I found that the performance loss is negligible
-> > >> (within 1%) by using kmem_cache_alloc instead of mempool.
-> > >>
-> > >> I use scsi_debug with fake_rw=1 and disktest (DIO reads with 8
-> > >> threads) again:
-> > >>
-> > >> scsi-misc (slub)         | 486.9 MB/s  IOPS 124652.9/s
-> > >> dynamic sense buf (slub) | 483.2 MB/s  IOPS 123704.1/s
-> > >>
-> > >> scsi-misc (slab)         | 467.0 MB/s  IOPS 119544.3/s
-> > >> dynamic sense buf (slab) | 468.7 MB/s  IOPS 119986.0/s
-> > >>
-> > >> The results are the averages of three runs with a server using two
-> > >> dual-core 1.60 GHz Xeon processors with DDR2 memory.
-> > >>
-> > >>
-> > >> I doubt think that someone will complain about the performance
-> > >> regression due to this patch. In addition, unlike scsi_debug, the real
-> > >> LLDs allocate the own data structure per scsi_cmnd so the performance
-> > >> differences would be smaller (and with the real hard disk overheads).
-> > >>
-> > >> Here's the full results:
-> > >>
-> > >> http://www.kernel.org/pub/linux/kernel/people/tomo/sense/results.txt
-> > > 
-> > > Heh, that's one of those good news, bad news things.  Certainly good
-> > > news for you.  The bad news for the rest of us is that you just
-> > > implicated mempool in a performance problem  and since they're the core
-> > > of the SCSI scatterlist allocations and sit at the heart of the critical
-> > > path in SCSI, we have a potential performance issue in the whole of
-> > > SCSI.
-> > 
-> > Looking at mempool's code this is peculiar as what seems to be its
-> > critical path for alloc and free looks pretty harmless and lightweight.
-> > Maybe an extra memory barrier, spin_{,un}lock_* and two extra function call
-> > (one of them can be eliminated BTW if the order of arguments to the
-> > mempool_{alloc,free}_t functions were the same as for kmem_cache_{alloc,free}).
-> 
-> Yeah, so I wondered why the change made a big difference. After more
-> testing, it turned out that mempool is not so slow.
-> 
-> v1 patch reserves as many buffers as can_queue per shost. My test
-> server allocates 1519 sense buffers in total and then needs to
-> allocate more. Seems that it hurts the performance.
-
-I would bet it does.  Mempools aren't a performance enhancer, they're a
-deadlock avoider.  So you don't prefill them with 1519 entries per host,
-you prefill them with at most two so that we can always guarantee
-getting a writeout command down in the event the system is totally out
-of GFP_ATOMIC memory and needs to free something.
-
-Plus, pool allocations of that size will get me hunted down and shot by
-the linux tiny (or other embedded) community.
-
-> I modified v3 patch to allocate unused 1519 sense buffers via
-> kmem_cache_alloc. It achieved 96.2% of the scsi-misc performance (note
-> that v1 patch achieved 94.6% of the scsi-misc).
-> 
-> I modified v3 patch to use mempool to allocate one buffer per host. It
-> achieved 98.3% of the scsi-misc (note that v3 patch achieved 99.3% of
-> the scsi-misc).
-
-This is about the correct thing to do.
-
-> So I could say:
-> 
-> - mempool is only about 1% slower to using kmem_cache directly.
-> 
-> - reserving lots of slabs seems to hurt SLUB performance (I've not dug
-> into it yet).
-> 
-> 
-> The full results and two patches are:
-> 
-> http://www.kernel.org/pub/linux/kernel/people/tomo/sense/
-
-James
-
-
+-- 
+Thanks & Regards,
+Kamalesh Babulal,
+Linux Technology Center,
+IBM, ISTL.
