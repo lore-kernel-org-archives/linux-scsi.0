@@ -1,86 +1,112 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Newer kernel not detecting devices?
-Date: Thu, 17 Jan 2008 09:50:46 -0600
-Message-ID: <1200585047.3255.11.camel@localhost.localdomain>
-References: <20080117143750.tyw8i7497oso0c4w@secure.two-pebbles.com>
+Subject: Re: [PATCH v2] use dynamically allocated sense buffer
+Date: Thu, 17 Jan 2008 09:58:11 -0600
+Message-ID: <1200585491.3255.17.camel@localhost.localdomain>
+References: <20080115182342Q.fujita.tomonori@lab.ntt.co.jp>
+	 <1200410457.9273.10.camel@localhost.localdomain>
+	 <478DFA26.2020706@panasas.com>
+	 <20080117181356Z.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:50502 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:41041 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751294AbYAQPux (ORCPT
+	by vger.kernel.org with ESMTP id S1751420AbYAQP6Y (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2008 10:50:53 -0500
-In-Reply-To: <20080117143750.tyw8i7497oso0c4w@secure.two-pebbles.com>
+	Thu, 17 Jan 2008 10:58:24 -0500
+In-Reply-To: <20080117181356Z.fujita.tomonori@lab.ntt.co.jp>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David <david@fuzzmail.co.uk>
-Cc: linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Cc: bhalevy@panasas.com, linux-scsi@vger.kernel.org, tomof@acm.org
 
 
-On Thu, 2008-01-17 at 14:37 +0000, David wrote:
-> I have here a server with an LSI SCSI card.  On one channel is a tape  
-> changer, on the other an external RAID5 box with a number of disks in.  
->   All worked fine until a recent upgrade and now the disk array is not  
-> recognised.
+On Thu, 2008-01-17 at 18:13 +0900, FUJITA Tomonori wrote:
+> On Wed, 16 Jan 2008 14:35:50 +0200
+> Benny Halevy <bhalevy@panasas.com> wrote:
 > 
-> The disk array is still recognised on machine startup in the SCSI card  
-> output on HBA 1, ID 0, LUN 0.  The tape changer is recognised in the  
-> new install and has the correct devices assigned as before.
+> > On Jan. 15, 2008, 17:20 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+> > > On Tue, 2008-01-15 at 18:23 +0900, FUJITA Tomonori wrote:
+> > >> This is the second version of
+> > >>
+> > >> http://marc.info/?l=linux-scsi&m=119933628210006&w=2
+> > >>
+> > >> I gave up once, but I found that the performance loss is negligible
+> > >> (within 1%) by using kmem_cache_alloc instead of mempool.
+> > >>
+> > >> I use scsi_debug with fake_rw=1 and disktest (DIO reads with 8
+> > >> threads) again:
+> > >>
+> > >> scsi-misc (slub)         | 486.9 MB/s  IOPS 124652.9/s
+> > >> dynamic sense buf (slub) | 483.2 MB/s  IOPS 123704.1/s
+> > >>
+> > >> scsi-misc (slab)         | 467.0 MB/s  IOPS 119544.3/s
+> > >> dynamic sense buf (slab) | 468.7 MB/s  IOPS 119986.0/s
+> > >>
+> > >> The results are the averages of three runs with a server using two
+> > >> dual-core 1.60 GHz Xeon processors with DDR2 memory.
+> > >>
+> > >>
+> > >> I doubt think that someone will complain about the performance
+> > >> regression due to this patch. In addition, unlike scsi_debug, the real
+> > >> LLDs allocate the own data structure per scsi_cmnd so the performance
+> > >> differences would be smaller (and with the real hard disk overheads).
+> > >>
+> > >> Here's the full results:
+> > >>
+> > >> http://www.kernel.org/pub/linux/kernel/people/tomo/sense/results.txt
+> > > 
+> > > Heh, that's one of those good news, bad news things.  Certainly good
+> > > news for you.  The bad news for the rest of us is that you just
+> > > implicated mempool in a performance problem  and since they're the core
+> > > of the SCSI scatterlist allocations and sit at the heart of the critical
+> > > path in SCSI, we have a potential performance issue in the whole of
+> > > SCSI.
+> > 
+> > Looking at mempool's code this is peculiar as what seems to be its
+> > critical path for alloc and free looks pretty harmless and lightweight.
+> > Maybe an extra memory barrier, spin_{,un}lock_* and two extra function call
+> > (one of them can be eliminated BTW if the order of arguments to the
+> > mempool_{alloc,free}_t functions were the same as for kmem_cache_{alloc,free}).
 > 
-> The SCSI card used for the tape changer and disk array is an LSI Logic  
-> card.  The MegaRAID is seperate, a Dell PERC which has the system  
-> disks attached.  However, another PERC was tested instead of the LSI  
-> SCSI card which had the same problem.
+> Yeah, so I wondered why the change made a big difference. After more
+> testing, it turned out that mempool is not so slow.
 > 
-> lspci:
-> 00:02.0 PCI bridge: Intel Corporation E7525/E7520/E7320 PCI Express  
-> Port A (rev 09)
-> 00:04.0 PCI bridge: Intel Corporation E7525/E7520 PCI Express Port B (rev 09)
-> )
-> 02:0c.0 SCSI storage controller: LSI Logic / Symbios Logic 53c1030  
-> PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
-> 02:0c.1 SCSI storage controller: LSI Logic / Symbios Logic 53c1030  
-> PCI-X Fusion-MPT Dual Ultra320 SCSI (rev 07)
-> 02:0e.0 RAID bus controller: Dell PowerEdge Expandable RAID controller  
-> 4 (rev 06)
-> 
-> On the old install, the following is seen:
-> 
-> /proc/scsi/sg/device_strs
-> PE/PV   	1x2 SCSI BP     	1.0
-> MegaRAID	LD 0 RAID1  286G	516A
-> E1600SR 	                	0001 (the disk array)
-> HL-DT-ST	RW/DVD GCC-4243N	A102
+> v1 patch reserves as many buffers as can_queue per shost. My test
+> server allocates 1519 sense buffers in total and then needs to
+> allocate more. Seems that it hurts the performance.
 
-Where is the changer in this?
+I would bet it does.  Mempools aren't a performance enhancer, they're a
+deadlock avoider.  So you don't prefill them with 1519 entries per host,
+you prefill them with at most two so that we can always guarantee
+getting a writeout command down in the event the system is totally out
+of GFP_ATOMIC memory and needs to free something.
 
-> uname -a:
-> Linux ubuntu 2.6.20-15-generic #2 SMP Sun Apr 15 07:36:31 UTC 2007  
-> i686 GNU/Linux
-> 
-> 
-> On the new install:
-> 
-> /proc/scsi/sg/device_strs
-> HL-DT-ST	RW/DVD GCC-4243N	A102
-> PE/PV   	1x2 SCSI BP     	1.0
-> MegaRAID	LD 0 RAID1  286G	516A
-> 
-> uname -a:
-> Linux ubuntu 2.6.22-14-server #1 SMP Sun Oct 14 23:34:23 GMT 2007 i686  
-> GNU/Linux
-> 
-> dmesg output from both builds is attached to this message.
-> 
-> A livecd of the old OS still recognises the disk array as sdb1 correctly.
-> 
-> Is this an issue with modules/options or a problem with the distro  
-> (Ubuntu server)?
+Plus, pool allocations of that size will get me hunted down and shot by
+the linux tiny (or other embedded) community.
 
-A good way to tell that would be to try booting with a vanilla linux
-kernel.  2.6.24-rc8 should do the trick.
+> I modified v3 patch to allocate unused 1519 sense buffers via
+> kmem_cache_alloc. It achieved 96.2% of the scsi-misc performance (note
+> that v1 patch achieved 94.6% of the scsi-misc).
+> 
+> I modified v3 patch to use mempool to allocate one buffer per host. It
+> achieved 98.3% of the scsi-misc (note that v3 patch achieved 99.3% of
+> the scsi-misc).
+
+This is about the correct thing to do.
+
+> So I could say:
+> 
+> - mempool is only about 1% slower to using kmem_cache directly.
+> 
+> - reserving lots of slabs seems to hurt SLUB performance (I've not dug
+> into it yet).
+> 
+> 
+> The full results and two patches are:
+> 
+> http://www.kernel.org/pub/linux/kernel/people/tomo/sense/
 
 James
 
