@@ -1,145 +1,169 @@
 From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: [PATCH 1/2] aacraid: driver features flags
-Date: Thu, 17 Jan 2008 09:24:56 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F43911ED66@ADPE2K703.adaptec.com>
-References: <457feffcfc40101ad9884914d8f223cd425ee5b6.tomof@acm.org>
- <a789287f8ac2eef0d95c6cbb08f68c122b5f7ec4.tomof@acm.org>
- <532ABFBDAAC3A34EB12EBA6CEC2838F438AEA880@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F438E4653A@ADPE2K703.adaptec.com>
- <532ABFBDAAC3A34EB12EBA6CEC2838F439065895@ADPE2K703.adaptec.com>
+Subject: [PATCH 2/2] aacraid: add Voodoo Lite class of cards.
+Date: Thu, 17 Jan 2008 09:25:07 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F43911ED68@ADPE2K703.adaptec.com>
 Mime-Version: 1.0
 Content-Type: multipart/mixed;
-	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED66ADPE2K703adapte_"
+	boundary="_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED68ADPE2K703adapte_"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:36962 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750949AbYAQR1J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 17 Jan 2008 12:27:09 -0500
-Received: from ADPE2K702.adaptec.com (adpe2k702.adaptec.com [10.25.8.26])
-	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id ECEDF24C051
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jan 2008 09:24:58 -0800 (PST)
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F439065895@ADPE2K703.adaptec.com>
+Received: from mail-gw3.adaptec.com ([162.62.93.58]:37075 "EHLO
+	mail-gw3.adaptec.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751710AbYAQR1U (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Jan 2008 12:27:20 -0500
+Received: from ADPE2K701.adaptec.com (adpe2k701.adaptec.com [10.25.8.25])
+	by mail-gw3.adaptec.com (Spam Firewall) with ESMTP id 077CB24C0AB
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jan 2008 09:25:10 -0800 (PST)
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "'linux-scsi@vger.kernel.org'" <linux-scsi@vger.kernel.org>
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED66ADPE2K703adapte_
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED68ADPE2K703adapte_
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 
-Feature enhancement, adding a 'flags' entry that will reside in the host co=
-ntroller's tree, with a newline separated list of arbitrary ascii named fea=
-tures that indicate whether the combination of driver and controller has su=
-pport for said feature. Breaking from the one-line output typical of sysfs =
-entries, newline was added to tailor for grep, or simple gets line by line =
-string match within an application. I added one for a compiler time check f=
-or existence of debug print output, one for an optional manifest defined en=
-hanced status reporting in the logs, and one for runtime reporting whether =
-the controller and driver supports arrays larger than 2TB. Adaptec's storag=
-e management software uses the last flag to determine whether to make avail=
-able the creation of arrays larger than 2TB, otherwise a warning is posted.
+The cards being added are supported in a limited sense already through fami=
+ly matching, but we needed to add some functionality to the driver to expos=
+e selectively the physical drives. These Physical drives are specifically m=
+arked to not be part of any array and thus are declared JBODs (Just a Bunch=
+ Of Drives) for generic SCSI access.
 
-We report that this is the first patch in a set of two, but this one can st=
-and alone without depending on the other. The second patch is the addition =
-of a new adapter type that depend on this patch.
+We report that this is the second patch in a set of two, but merely depends=
+ on the stand-alone functionality of the first patch which adds in that cas=
+e the ability to report a driver feature flag via sysfs. We leverage that f=
+unctionality by reporting that this driver now supports this new JBOD featu=
+re for the controller so that the array management applications may react a=
+ccordingly and guide the user as they manage the controller.
 
-This following patch is against current scsi-misc-2.6
+This following patch is against current scsi-misc-2.6 after the first of th=
+e pair of patches are applied.
 
 ObligatoryDisclaimer: Please accept my condolences regarding Outlook's hand=
-ling of patch attachments, so one can NOT use the following in-line to patc=
-h, please use the attached file.
+ling of patch attachments.
 
 Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
 
- drivers/scsi/aacraid/linit.c |   25 +++++++++++++++++++++++++
- 1 file changed, 25 insertions(+)
-
-diff -ru a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
---- a/drivers/scsi/aacraid/linit.c      2008-01-17 11:45:34.283650215 -0500
-+++ b/drivers/scsi/aacraid/linit.c      2008-01-17 11:56:14.302728941 -0500
-@@ -790,6 +790,23 @@
-        return len;
- }
-
-+static ssize_t aac_show_flags(struct class_device *class_dev, char *buf)
-+{
-+       int len =3D 0;
-+       struct aac_dev *dev =3D (struct aac_dev*)class_to_shost(class_dev)-=
->hostda
-ta;
-+
-+       if (nblank(dprintk(x)))
-+               len =3D snprintf(buf, PAGE_SIZE, "dprintk\n");
-+#ifdef AAC_DETAILED_STATUS_INFO
-+       len +=3D snprintf(buf + len, PAGE_SIZE - len,
-+                       "AAC_DETAILED_STATUS_INFO\n");
-+#endif
-+       if (dev->raw_io_interface && dev->raw_io_64)
-+               len +=3D snprintf(buf + len, PAGE_SIZE - len,
-+                               "SAI_READ_CAPACITY_16\n");
-+       return len;
-+}
-+
- static ssize_t aac_show_kernel_version(struct class_device *class_dev,
-                char *buf)
- {
-@@ -899,6 +916,13 @@
-        },
-        .show =3D aac_show_vendor,
- };
-+static struct class_device_attribute aac_flags =3D {
-+       .attr =3D {
-+               .name =3D "flags",
-+               .mode =3D S_IRUGO,
-+       },
-+       .show =3D aac_show_flags,
-+};
- static struct class_device_attribute aac_kernel_version =3D {
-        .attr =3D {
-                .name =3D "hba_kernel_version",
-@@ -953,6 +977,7 @@
- static struct class_device_attribute *aac_attrs[] =3D {
-        &aac_model,
-        &aac_vendor,
-+       &aac_flags,
-        &aac_kernel_version,
-        &aac_monitor_version,
-        &aac_bios_version,
+ Documentation/scsi/aacraid.txt |    4 ++++
+ drivers/scsi/aacraid/aachba.c  |    5 ++++-
+ drivers/scsi/aacraid/aacraid.h |    6 +++++-
+ drivers/scsi/aacraid/commsup.c |   24 ++++++++++++++++++++++++
+ drivers/scsi/aacraid/linit.c   |   15 +++++++++++----
+ 5 files changed, 48 insertions(+), 6 deletions(-)
 
 Sincerely -- Mark Salyzyn
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED66ADPE2K703adapte_
-Content-Type: application/octet-stream; name="aacraid_sysfs_flags.patch"
-Content-Description: aacraid_sysfs_flags.patch
-Content-Disposition: attachment; filename="aacraid_sysfs_flags.patch";
-	size=1343; creation-date="Thu, 17 Jan 2008 08:57:31 GMT";
-	modification-date="Thu, 17 Jan 2008 08:57:31 GMT"
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED68ADPE2K703adapte_
+Content-Type: application/octet-stream; name="aacraid_voodoo_lite.patch"
+Content-Description: aacraid_voodoo_lite.patch
+Content-Disposition: attachment; filename="aacraid_voodoo_lite.patch";
+	size=5946; creation-date="Thu, 17 Jan 2008 09:13:05 GMT";
+	modification-date="Thu, 17 Jan 2008 09:13:05 GMT"
 Content-Transfer-Encoding: base64
 
-ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvbGluaXQuYwotLS0gYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCTIwMDgtMDEt
-MTcgMTE6NDU6MzQuMjgzNjUwMjE1IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xp
-bml0LmMJMjAwOC0wMS0xNyAxMTo1NjoxNC4zMDI3Mjg5NDEgLTA1MDAKQEAgLTc5MCw2ICs3OTAs
-MjMgQEAKIAlyZXR1cm4gbGVuOwogfQogCitzdGF0aWMgc3NpemVfdCBhYWNfc2hvd19mbGFncyhz
-dHJ1Y3QgY2xhc3NfZGV2aWNlICpjbGFzc19kZXYsIGNoYXIgKmJ1ZikKK3sKKwlpbnQgbGVuID0g
-MDsKKwlzdHJ1Y3QgYWFjX2RldiAqZGV2ID0gKHN0cnVjdCBhYWNfZGV2KiljbGFzc190b19zaG9z
-dChjbGFzc19kZXYpLT5ob3N0ZGF0YTsKKworCWlmIChuYmxhbmsoZHByaW50ayh4KSkpCisJCWxl
-biA9IHNucHJpbnRmKGJ1ZiwgUEFHRV9TSVpFLCAiZHByaW50a1xuIik7CisjaWZkZWYgQUFDX0RF
-VEFJTEVEX1NUQVRVU19JTkZPCisJbGVuICs9IHNucHJpbnRmKGJ1ZiArIGxlbiwgUEFHRV9TSVpF
-IC0gbGVuLAorCQkJIkFBQ19ERVRBSUxFRF9TVEFUVVNfSU5GT1xuIik7CisjZW5kaWYKKwlpZiAo
-ZGV2LT5yYXdfaW9faW50ZXJmYWNlICYmIGRldi0+cmF3X2lvXzY0KQorCQlsZW4gKz0gc25wcmlu
-dGYoYnVmICsgbGVuLCBQQUdFX1NJWkUgLSBsZW4sCisJCQkJIlNBSV9SRUFEX0NBUEFDSVRZXzE2
-XG4iKTsKKwlyZXR1cm4gbGVuOworfQorCiBzdGF0aWMgc3NpemVfdCBhYWNfc2hvd19rZXJuZWxf
-dmVyc2lvbihzdHJ1Y3QgY2xhc3NfZGV2aWNlICpjbGFzc19kZXYsCiAJCWNoYXIgKmJ1ZikKIHsK
-QEAgLTg5OSw2ICs5MTYsMTMgQEAKIAl9LAogCS5zaG93ID0gYWFjX3Nob3dfdmVuZG9yLAogfTsK
-K3N0YXRpYyBzdHJ1Y3QgY2xhc3NfZGV2aWNlX2F0dHJpYnV0ZSBhYWNfZmxhZ3MgPSB7CisJLmF0
-dHIgPSB7CisJCS5uYW1lID0gImZsYWdzIiwKKwkJLm1vZGUgPSBTX0lSVUdPLAorCX0sCisJLnNo
-b3cgPSBhYWNfc2hvd19mbGFncywKK307CiBzdGF0aWMgc3RydWN0IGNsYXNzX2RldmljZV9hdHRy
-aWJ1dGUgYWFjX2tlcm5lbF92ZXJzaW9uID0gewogCS5hdHRyID0gewogCQkubmFtZSA9ICJoYmFf
-a2VybmVsX3ZlcnNpb24iLApAQCAtOTUzLDYgKzk3Nyw3IEBACiBzdGF0aWMgc3RydWN0IGNsYXNz
-X2RldmljZV9hdHRyaWJ1dGUgKmFhY19hdHRyc1tdID0gewogCSZhYWNfbW9kZWwsCiAJJmFhY192
-ZW5kb3IsCisJJmFhY19mbGFncywKIAkmYWFjX2tlcm5lbF92ZXJzaW9uLAogCSZhYWNfbW9uaXRv
-cl92ZXJzaW9uLAogCSZhYWNfYmlvc192ZXJzaW9uLAo=
+ZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNoYmEuYyBiL2RyaXZlcnMvc2NzaS9h
+YWNyYWlkL2FhY2hiYS5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY2hiYS5jCTIwMDgt
+MDEtMTcgMTI6MDM6NDMuMzAwNzk2NzAyIC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2FhY2hiYS5jCTIwMDgtMDEtMTcgMTI6MDg6NDUuNTQ2NzY0NTU5IC0wNTAwCkBAIC0xMzM5LDYg
+KzEzMzksOCBAQAogCX0KIAogCWRldi0+Y2FjaGVfcHJvdGVjdGVkID0gMDsKKwlkZXYtPmpib2Qg
+PSAoKGRldi0+c3VwcGxlbWVudF9hZGFwdGVyX2luZm8uRmVhdHVyZUJpdHMgJgorCQlBQUNfRkVB
+VFVSRV9KQk9EKSAhPSAwKTsKIAlkZXYtPm5vbmRhc2Rfc3VwcG9ydCA9IDA7CiAJZGV2LT5yYWlk
+X3Njc2lfbW9kZSA9IDA7CiAJaWYoZGV2LT5hZGFwdGVyX2luZm8ub3B0aW9ucyAmIEFBQ19PUFRf
+Tk9OREFTRCkKQEAgLTE5MjMsNyArMTkyNSw4IEBACiAJCQkJfQogCQkJfQogCQl9IGVsc2UgeyAg
+LyogY2hlY2sgZm9yIHBoeXNpY2FsIG5vbi1kYXNkIGRldmljZXMgKi8KLQkJCWlmICgoZGV2LT5u
+b25kYXNkX3N1cHBvcnQgPT0gMSkgfHwgZXhwb3NlX3BoeXNpY2FscykgeworCQkJaWYgKGRldi0+
+bm9uZGFzZF9zdXBwb3J0IHx8IGV4cG9zZV9waHlzaWNhbHMgfHwKKwkJCQkJZGV2LT5qYm9kKSB7
+CiAJCQkJaWYgKGRldi0+aW5fcmVzZXQpCiAJCQkJCXJldHVybiAtMTsKIAkJCQlyZXR1cm4gYWFj
+X3NlbmRfc3JiX2ZpYihzY3NpY21kKTsKZGlmZiAtcnUgYS9kcml2ZXJzL3Njc2kvYWFjcmFpZC9h
+YWNyYWlkLmggYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9hYWNyYWlkLmgKLS0tIGEvZHJpdmVycy9z
+Y3NpL2FhY3JhaWQvYWFjcmFpZC5oCTIwMDgtMDEtMTcgMTI6MDM6NDMuMzAxNzk2NTc1IC0wNTAw
+CisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2FhY3JhaWQuaAkyMDA4LTAxLTE3IDEyOjA4OjQ1
+LjU0Nzc2NDQzMyAtMDUwMApAQCAtMTIsNyArMTIsNyBAQAogICotLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+Ki8KIAogI2lmbmRlZiBBQUNfRFJJVkVSX0JVSUxECi0jIGRlZmluZSBBQUNfRFJJVkVSX0JVSUxE
+IDI0NTQKKyMgZGVmaW5lIEFBQ19EUklWRVJfQlVJTEQgMjQ1NQogIyBkZWZpbmUgQUFDX0RSSVZF
+Ul9CUkFOQ0ggIi1tcyIKICNlbmRpZgogI2RlZmluZSBNQVhJTVVNX05VTV9DT05UQUlORVJTCTMy
+CkBAIC04NjYsNiArODY2LDcgQEAKIAlfX2xlMzIJUmVzZXJ2ZWRHcm93dGhbMV07CiB9OwogI2Rl
+ZmluZSBBQUNfRkVBVFVSRV9GQUxDT04JY3B1X3RvX2xlMzIoMHgwMDAwMDAxMCkKKyNkZWZpbmUg
+QUFDX0ZFQVRVUkVfSkJPRAljcHVfdG9fbGUzMigweDA4MDAwMDAwKQogI2RlZmluZSBBQUNfT1BU
+SU9OX01VX1JFU0VUCWNwdV90b19sZTMyKDB4MDAwMDAwMDEpCiAjZGVmaW5lIEFBQ19PUFRJT05f
+SUdOT1JFX1JFU0VUCWNwdV90b19sZTMyKDB4MDAwMDAwMDIpCiAjZGVmaW5lIEFBQ19TSVNfVkVS
+U0lPTl9WMwkzCkBAIC0xMDEyLDYgKzEwMTMsNyBAQAogCSAqIGxldHMgYnJlYWsgdGhlbSBvdXQg
+c28gd2UgZG9uJ3QgaGF2ZSB0byBkbyBhbiBBTkQgdG8gY2hlY2sgdGhlbQogCSAqLwogCXU4CQkJ
+bm9uZGFzZF9zdXBwb3J0OworCXU4CQkJamJvZDsKIAl1OAkJCWNhY2hlX3Byb3RlY3RlZDsKIAl1
+OAkJCWRhY19zdXBwb3J0OwogCXU4CQkJcmFpZF9zY3NpX21vZGU7CkBAIC0xNzc3LDYgKzE3Nzks
+OCBAQAogI2RlZmluZQkJCUFpZkVuRXhwRXZlbnQJCTIzCS8qIEZpcm13YXJlIEV2ZW50IExvZyAq
+LwogI2RlZmluZQkJCUFpZkV4ZUZpcm13YXJlUGFuaWMJMwkvKiBGaXJtd2FyZSBFdmVudCBQYW5p
+YyAqLwogI2RlZmluZQkJCUFpZkhpZ2hQcmlvcml0eQkJMwkvKiBIaWdoZXN0IFByaW9yaXR5IEV2
+ZW50ICovCisjZGVmaW5lCQkJQWlmRW5BZGRKQk9ECQkzMAkvKiBKQk9EIGNyZWF0ZWQgKi8KKyNk
+ZWZpbmUJCQlBaWZFbkRlbGV0ZUpCT0QJCTMxCS8qIEpCT0QgZGVsZXRlZCAqLwogCiAjZGVmaW5l
+CQlBaWZDbWRKb2JQcm9ncmVzcwkyCS8qIFByb2dyZXNzIHJlcG9ydCAqLwogI2RlZmluZQkJCUFp
+ZkpvYkN0clplcm8JMTAxCS8qIEFycmF5IFplcm8gcHJvZ3Jlc3MgKi8KZGlmZiAtcnUgYS9kcml2
+ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3VwLmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tc3Vw
+LmMKLS0tIGEvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbXN1cC5jCTIwMDgtMDEtMTcgMTI6MDM6
+NDMuMzAyNzk2NDQ4IC0wNTAwCisrKyBiL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1zdXAuYwky
+MDA4LTAxLTE3IDEyOjA4OjQ1LjU0OTc2NDE4MiAtMDUwMApAQCAtOTAxLDcgKzkwMSwzMSBAQAog
+CQljYXNlIEFpZkVuQ29uZmlnQ2hhbmdlOgogCQkJYnJlYWs7CiAKKwkJY2FzZSBBaWZFbkFkZEpC
+T0Q6CisJCWNhc2UgQWlmRW5EZWxldGVKQk9EOgorCQkJY29udGFpbmVyID0gbGUzMl90b19jcHUo
+KChfX2xlMzIgKilhaWZjbWQtPmRhdGEpWzFdKTsKKwkJCWlmICgoY29udGFpbmVyID4+IDI4KSkK
+KwkJCQlicmVhazsKKwkJCWNoYW5uZWwgPSAoY29udGFpbmVyID4+IDI0KSAmIDB4RjsKKwkJCWlm
+IChjaGFubmVsID49IGRldi0+bWF4aW11bV9udW1fY2hhbm5lbHMpCisJCQkJYnJlYWs7CisJCQlp
+ZCA9IGNvbnRhaW5lciAmIDB4RkZGRjsKKwkJCWlmIChpZCA+PSBkZXYtPm1heGltdW1fbnVtX3Bo
+eXNpY2FscykKKwkJCQlicmVhazsKKwkJCWx1biA9IChjb250YWluZXIgPj4gMTYpICYgMHhGRjsK
+KwkJCWNoYW5uZWwgPSBhYWNfcGh5c190b19sb2dpY2FsKGNoYW5uZWwpOworCQkJZGV2aWNlX2Nv
+bmZpZ19uZWVkZWQgPQorCQkJICAoKChfX2xlMzIgKilhaWZjbWQtPmRhdGEpWzBdID09CisJCQkg
+ICAgY3B1X3RvX2xlMzIoQWlmRW5BZGRKQk9EKSkgPyBBREQgOiBERUxFVEU7CisJCQlicmVhazsK
+KwogCQljYXNlIEFpZkVuRW5jbG9zdXJlTWFuYWdlbWVudDoKKwkJCS8qCisJCQkgKiBJZiBpbiBK
+Qk9EIG1vZGUsIGF1dG9tYXRpYyBleHBvc3VyZSBvZiBuZXcKKwkJCSAqIHBoeXNpY2FsIHRhcmdl
+dCB0byBiZSBzdXBwcmVzc2VkIHVudGlsIGNvbmZpZ3VyZWQuCisJCQkgKi8KKwkJCWlmIChkZXYt
+Pmpib2QpCisJCQkJYnJlYWs7CiAJCQlzd2l0Y2ggKGxlMzJfdG9fY3B1KCgoX19sZTMyICopYWlm
+Y21kLT5kYXRhKVszXSkpIHsKIAkJCWNhc2UgRU1fRFJJVkVfSU5TRVJUSU9OOgogCQkJY2FzZSBF
+TV9EUklWRV9SRU1PVkFMOgpkaWZmIC1ydSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2xpbml0LmMg
+Yi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9saW5pdC5jCi0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlk
+L2xpbml0LmMJMjAwOC0wMS0xNyAxMjowMzo0My4zMDM3OTYzMjEgLTA1MDAKKysrIGIvZHJpdmVy
+cy9zY3NpL2FhY3JhaWQvbGluaXQuYwkyMDA4LTAxLTE3IDEyOjA4OjQ1LjU1MDc2NDA1NiAtMDUw
+MApAQCAtNDA0LDYgKzQwNCw3IEBACiAJc3RydWN0IGFhY19kZXYgKmFhYyA9IChzdHJ1Y3QgYWFj
+X2RldiAqKXNkZXYtPmhvc3QtPmhvc3RkYXRhOwogCWlmICgoc2Rldi0+dHlwZSA9PSBUWVBFX0RJ
+U0spICYmCiAJCQkoc2Rldl9jaGFubmVsKHNkZXYpICE9IENPTlRBSU5FUl9DSEFOTkVMKSAmJgor
+CQkJKCFhYWMtPmpib2QgfHwgc2Rldi0+aW5xX3BlcmlwaF9xdWFsKSAmJgogCQkJKCFhYWMtPnJh
+aWRfc2NzaV9tb2RlIHx8IChzZGV2X2NoYW5uZWwoc2RldikgIT0gMikpKSB7CiAJCWlmIChleHBv
+c2VfcGh5c2ljYWxzID09IDApCiAJCQlyZXR1cm4gLUVOWElPOwpAQCAtNDExLDcgKzQxMiw4IEBA
+CiAJCQlzZGV2LT5ub191bGRfYXR0YWNoID0gMTsKIAl9CiAJaWYgKHNkZXYtPnRhZ2dlZF9zdXBw
+b3J0ZWQgJiYgKHNkZXYtPnR5cGUgPT0gVFlQRV9ESVNLKSAmJgotCQkJKHNkZXZfY2hhbm5lbChz
+ZGV2KSA9PSBDT05UQUlORVJfQ0hBTk5FTCkpIHsKKwkJCSghYWFjLT5yYWlkX3Njc2lfbW9kZSB8
+fCAoc2Rldl9jaGFubmVsKHNkZXYpICE9IDIpKSAmJgorCQkJIXNkZXYtPm5vX3VsZF9hdHRhY2gp
+IHsKIAkJc3RydWN0IHNjc2lfZGV2aWNlICogZGV2OwogCQlzdHJ1Y3QgU2NzaV9Ib3N0ICpob3N0
+ID0gc2Rldi0+aG9zdDsKIAkJdW5zaWduZWQgbnVtX2xzdSA9IDA7CkBAIC00MzAsOCArNDMyLDEx
+IEBACiAJCQkJKytudW1fbHN1OwogCQlfX3Nob3N0X2Zvcl9lYWNoX2RldmljZShkZXYsIGhvc3Qp
+IHsKIAkJCWlmIChkZXYtPnRhZ2dlZF9zdXBwb3J0ZWQgJiYgKGRldi0+dHlwZSA9PSBUWVBFX0RJ
+U0spICYmCi0JCQkJKHNkZXZfY2hhbm5lbChkZXYpID09IENPTlRBSU5FUl9DSEFOTkVMKSkgewot
+CQkJCWlmICghYWFjLT5mc2FfZGV2W3NkZXZfaWQoZGV2KV0udmFsaWQpCisJCQkJCSghYWFjLT5y
+YWlkX3Njc2lfbW9kZSB8fAorCQkJCQkJKHNkZXZfY2hhbm5lbChzZGV2KSAhPSAyKSkgJiYKKwkJ
+CQkJIWRldi0+bm9fdWxkX2F0dGFjaCkgeworCQkJCWlmICgoc2Rldl9jaGFubmVsKGRldikgIT0g
+Q09OVEFJTkVSX0NIQU5ORUwpCisJCQkJIHx8ICFhYWMtPmZzYV9kZXZbc2Rldl9pZChkZXYpXS52
+YWxpZCkKIAkJCQkJKytudW1fbHN1OwogCQkJfSBlbHNlCiAJCQkJKytudW1fb25lOwpAQCAtODA0
+LDYgKzgwOSw4IEBACiAJaWYgKGRldi0+cmF3X2lvX2ludGVyZmFjZSAmJiBkZXYtPnJhd19pb182
+NCkKIAkJbGVuICs9IHNucHJpbnRmKGJ1ZiArIGxlbiwgUEFHRV9TSVpFIC0gbGVuLAogCQkJCSJT
+QUlfUkVBRF9DQVBBQ0lUWV8xNlxuIik7CisJaWYgKGRldi0+amJvZCkKKwkJbGVuICs9IHNucHJp
+bnRmKGJ1ZiArIGxlbiwgUEFHRV9TSVpFIC0gbGVuLCAiU1VQUE9SVEVEX0pCT0RcbiIpOwogCXJl
+dHVybiBsZW47CiB9CiAKQEAgLTExNTcsNyArMTE2NCw3IEBACiAJICogYWxsIGNvbnRhaW5lcnMg
+YXJlIG9uIHRoZSB2aXJ0dWFsIGNoYW5uZWwgMCAoQ09OVEFJTkVSX0NIQU5ORUwpCiAJICogcGh5
+c2ljYWwgY2hhbm5lbHMgYXJlIGFkZHJlc3MgYnkgdGhlaXIgYWN0dWFsIHBoeXNpY2FsIG51bWJl
+cisxCiAJICovCi0JaWYgKChhYWMtPm5vbmRhc2Rfc3VwcG9ydCA9PSAxKSB8fCBleHBvc2VfcGh5
+c2ljYWxzKQorCWlmIChhYWMtPm5vbmRhc2Rfc3VwcG9ydCB8fCBleHBvc2VfcGh5c2ljYWxzIHx8
+IGFhYy0+amJvZCkKIAkJc2hvc3QtPm1heF9jaGFubmVsID0gYWFjLT5tYXhpbXVtX251bV9jaGFu
+bmVsczsKIAllbHNlCiAJCXNob3N0LT5tYXhfY2hhbm5lbCA9IDA7CmRpZmYgLXJ1IGEvRG9jdW1l
+bnRhdGlvbi9zY3NpL2FhY3JhaWQudHh0IGIvRG9jdW1lbnRhdGlvbi9zY3NpL2FhY3JhaWQudHh0
+Ci0tLSBhL0RvY3VtZW50YXRpb24vc2NzaS9hYWNyYWlkLnR4dAkyMDA4LTAxLTE3IDEyOjAzOjQz
+LjMwNDc5NjE5NCAtMDUwMAorKysgYi9Eb2N1bWVudGF0aW9uL3Njc2kvYWFjcmFpZC50eHQJMjAw
+OC0wMS0xNyAxMjowODo0NS41NTE3NjM5MzAgLTA1MDAKQEAgLTU2LDYgKzU2LDEwIEBACiAJOTAw
+NTowMjg1OjkwMDU6MDJkMQlBZGFwdGVjCTU0MDUgKFZvb2RvbzQwKQogCTkwMDU6MDI4NToxNWQ5
+OjAyZDIJU01DCUFPQy1VU0FTLVM4aS1MUAogCTkwMDU6MDI4NToxNWQ5OjAyZDMJU01DCUFPQy1V
+U0FTLVM4aVItTFAKKwk5MDA1OjAyODU6OTAwNTowMmQ0CUFkYXB0ZWMJMjA0NSAoVm9vZG9vMDQg
+TGl0ZSkKKwk5MDA1OjAyODU6OTAwNTowMmQ1CUFkYXB0ZWMJMjQwNSAoVm9vZG9vNDAgTGl0ZSkK
+Kwk5MDA1OjAyODU6OTAwNTowMmQ2CUFkYXB0ZWMJMjQ0NSAoVm9vZG9vNDQgTGl0ZSkKKwk5MDA1
+OjAyODU6OTAwNTowMmQ3CUFkYXB0ZWMJMjgwNSAoVm9vZG9vODAgTGl0ZSkKIAkxMDExOjAwNDY6
+OTAwNTowMzY0CUFkYXB0ZWMJNTQwMFMgKE11c3RhbmcpCiAJOTAwNTowMjg3OjkwMDU6MDgwMAlB
+ZGFwdGVjCVRoZW1pc3RvIChKdXBpdGVyKQogCTkwMDU6MDIwMDo5MDA1OjAyMDAJQWRhcHRlYwlU
+aGVtaXN0byAoSnVwaXRlcikK
 
---_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED66ADPE2K703adapte_--
+--_002_532ABFBDAAC3A34EB12EBA6CEC2838F43911ED68ADPE2K703adapte_--
