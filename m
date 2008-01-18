@@ -1,20 +1,30 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [Bug 9775]  HOST_MSG_LOOP invalid SCB ff
-Date: Fri, 18 Jan 2008 16:27:47 -0600
-Message-ID: <1200695267.3111.65.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9775] HOST_MSG_LOOP invalid SCB ff
+Date: Fri, 18 Jan 2008 14:28:00 -0800 (PST)
+Message-ID: <20080118222800.2D5AB10806A@picon.linux-foundation.org>
+References: <bug-9775-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:38419 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932501AbYARW1w (ORCPT
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:34407 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762894AbYARW22 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jan 2008 17:27:52 -0500
+	Fri, 18 Jan 2008 17:28:28 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m0IMS0Uf008323
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2008 14:28:01 -0800
+In-Reply-To: <bug-9775-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=9775
+
+
+
+
+
+------- Comment #5 from anonymous@kernel-bugs.osdl.org  2008-01-18 14:27 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 
 > Latest working kernel version:
@@ -69,3 +79,7 @@ this is some handling issue with SCB_LIST_NULL (the value 0xff).
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
