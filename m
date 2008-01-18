@@ -1,45 +1,35 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: Megaraid: Use of outb_p
-Date: Fri, 18 Jan 2008 13:32:12 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501E5FD9C@NAMAIL1.ad.lsil.com>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Megaraid: Use of outb_p
+Date: Fri, 18 Jan 2008 20:38:08 +0000
+Message-ID: <20080118203808.13a38130@lxorguk.ukuu.org.uk>
+References: <9738BCBE884FDB42801FAD8A7769C26501E5FD9C@NAMAIL1.ad.lsil.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:54283 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755886AbYARUc0 convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jan 2008 15:32:26 -0500
-Content-class: urn:content-classes:message
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:53954 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1756881AbYARUju (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jan 2008 15:39:50 -0500
+In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501E5FD9C@NAMAIL1.ad.lsil.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, DL-MegaRAID Linux <megaraidlinux@lsi.com>
+To: "Yang, Bo" <Bo.Yang@lsi.com>
+Cc: linux-scsi@vger.kernel.org, DL-MegaRAID Linux <megaraidlinux@lsi.com>
 
-Alan, 
+On Fri, 18 Jan 2008 13:32:12 -0700
+"Yang, Bo" <Bo.Yang@lsi.com> wrote:
 
-The in/outb_p in MegaRAID scsi driver is used for our old io mapped
-megaraid controller.  There are still some customers are using those old
-controller.  Please keep them.
- 
-Thanks.
- 
-Bo Yang  
+> Alan, 
+> 
+> The in/outb_p in MegaRAID scsi driver is used for our old io mapped
+> megaraid controller.  There are still some customers are using those old
+> controller.  Please keep them.
 
------Original Message-----
-From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
-Sent: Friday, January 18, 2008 7:36 AM
-To: linux-scsi@vger.kernel.org; DL-MegaRAID Linux
-Subject: Megaraid: Use of outb_p
+Do they need the I/O delays. If they need a delay they should use outb
+and a udelay() of the correct length. If they do not need a delay they
+should use outb()
 
+Which is the correct change to make ?
 
-I notice the MegaRAID driver uses outb_p. Can someone at LSI confirm
-that the delays between each I/O are required, and if so how long they
-must be.
-
-I'm trying to sort out the use of in/outb_p and where it is unneccessary
-or used for non ISA devices.
-
-(Please cc me on the reply)
 Alan
-
