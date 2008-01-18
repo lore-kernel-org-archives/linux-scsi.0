@@ -1,67 +1,26 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: Megaraid: Use of outb_p
-Date: Fri, 18 Jan 2008 13:41:13 -0700
-Message-ID: <20080118204113.GF20490@parisc-linux.org>
-References: <9738BCBE884FDB42801FAD8A7769C26501E5FD9C@NAMAIL1.ad.lsil.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: bugme-admin@linux-foundation.org
+Subject: [Kernel Bug Tracker] Your account linux-scsi@vger.kernel.org is being impersonated
+Date: Fri, 18 Jan 2008 14:07:54 -0800 (PST)
+Message-ID: <20080118220754.8FF7F108069@picon.linux-foundation.org>
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:49423 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760227AbYARUlO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Jan 2008 15:41:14 -0500
-Content-Disposition: inline
-In-Reply-To: <9738BCBE884FDB42801FAD8A7769C26501E5FD9C@NAMAIL1.ad.lsil.com>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:56966 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1762092AbYARWI0 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 18 Jan 2008 17:08:26 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m0IM7s0x007189
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jan 2008 14:07:55 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Yang, Bo" <Bo.Yang@lsi.com>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, DL-MegaRAID Linux <megaraidlinux@lsi.com>
+To: linux-scsi@vger.kernel.org
 
-On Fri, Jan 18, 2008 at 01:32:12PM -0700, Yang, Bo wrote:
-> Alan, 
-> 
-> The in/outb_p in MegaRAID scsi driver is used for our old io mapped
-> megaraid controller.  There are still some customers are using those old
-> controller.  Please keep them.
+    Martin J. Bligh <mbligh@mbligh.org> has used the 'sudo' feature to access 
+Kernel Bug Tracker using your account.
 
-Hi Bo,
+    Martin J. Bligh <mbligh@mbligh.org> did not provide a reason for doing this.
 
-I think you've misunderstood the question.  The '_p' versions of
-inb/outb introduce a delay after each access.  The current Linux
-implementation of _p provokes bugs on some chipsets, so Alan is looking
-for alternatives.  Let's ask the question like this:
-
-Replacing outb_p() with outb(); udelay(x);
-How large does 'x' need to be for these megaraid controllers?
-
-> Thanks.
->  
-> Bo Yang  
-> 
-> -----Original Message-----
-> From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk]
-> Sent: Friday, January 18, 2008 7:36 AM
-> To: linux-scsi@vger.kernel.org; DL-MegaRAID Linux
-> Subject: Megaraid: Use of outb_p
-> 
-> 
-> I notice the MegaRAID driver uses outb_p. Can someone at LSI confirm
-> that the delays between each I/O are required, and if so how long they
-> must be.
-> 
-> I'm trying to sort out the use of in/outb_p and where it is unneccessary
-> or used for non ISA devices.
-> 
-> (Please cc me on the reply)
-> Alan
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+    If you feel that this action was inappropiate, please contact 
+bugme-admin@linux-foundation.org.  For more information on this feature, 
+visit <http://bugzilla.kernel.org/page.cgi?id=sudo.html>.
