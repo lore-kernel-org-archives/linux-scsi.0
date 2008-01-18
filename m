@@ -1,54 +1,55 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] SCSI: fix isa/pcmcia compile problem
-Date: Fri, 18 Jan 2008 08:58:35 -0600
-Message-ID: <1200668315.3111.3.camel@localhost.localdomain>
-References: <20080117023514.9df393cf.akpm@linux-foundation.org>
-	 <478F7F2B.9000801@linux.vnet.ibm.com>
-	 <20080117111104.3baa878e.akpm@linux-foundation.org>
-	 <47904927.1040000@linux.vnet.ibm.com>  <47905348.1000709@gmail.com>
+Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver (draft)
+Date: Fri, 18 Jan 2008 11:58:44 -0600
+Message-ID: <1200679124.3111.28.camel@localhost.localdomain>
+References: <6b2481670801092253v666e969doe5ec2bd77e10a87e@mail.gmail.com>
+	 <4785C48C.50705@garzik.org>  <4785C764.3070407@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:47418 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753609AbYARO6m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 18 Jan 2008 09:58:42 -0500
-In-Reply-To: <47905348.1000709@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <4785C764.3070407@garzik.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Ke Wei <kewei.mv@gmail.com>, linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, IDE/ATA development list <linux-ide@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <htejun@gmail.com>
-Cc: Kamalesh Babulal <kamalesh@linux.vnet.ibm.com>, Andrew Morton <akpm@linux-foundation.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, fischer@norbit.de, Andy Whitcroft <apw@shadowen.org>, Balbir Singh <balbir@linux.vnet.ibm.com>, Samuel Ortiz <samuel@sortiz.org>
 
 
-On Fri, 2008-01-18 at 16:20 +0900, Tejun Heo wrote:
-> aha152x.c and fdomain are built twice - once for the isa driver and
-> once for the PCMCIA one.  Through #ifdefs, the compiled codes are
-> slightly different; thus, global symbols need to be given different
-> names depending on which flavor is being built.  This patch adds
-> GLOBAL() macro to aha152x.h and fdomain.h which change the symbol
-> depending on PCMCIA.
+On Thu, 2008-01-10 at 02:21 -0500, Jeff Garzik wrote:
+> Jeff Garzik wrote:
+> > 1) To make it easier for people to review and test the driver, I would 
+> > suggest posting a diff against 2.6.24-rc7 (or 2.6.23), ignoring my 
+> > original code.  Thus, it would result in a patch
 > 
-> This bug has always existed but has been masked by the fact the
-> drivers/scsi/pcmcia used subdir-(y|m) instead of obj-(y|m) which made
-> drivers/scsi/pcmcia/built_in.o not linked into the kernel and thus
-> avoided the duplicate symbols during compilation.
+> Er, that sentence was incomplete.  Continuing...
 > 
-> Signed-off-by: Tejun Heo <htejun@gmail.com>
-> ---
-> Ah... missed that one.  Here's the updated version.
+> 
+> Thus it would result in a patch that adds a new file 
+> drivers/scsi/mvsas.c to the 2.6.24-rc7 kernel, and modifies 
+> drivers/scsi/Makefile and drivers/scsi/Kconfig to enable this new driver.
+> 
+> That is the format that developers and users are most familiar with, 
+> when reviewing (and testing) a new driver.
+> 
+> But of course this is a draft, so these guidelines are certainly loose...
 
-Actually, isn't the better fix just to return to the original behaviour?
+OK, in order to try to expedite this, I've created a mvsas branch in
 
-As you pointed out, using the subdir instead of obj meant that although
-the modules were built, the drivers were never linked into the main
-kernel.  According to the records, this has been the default forever, so
-there can be no-one anywhere relying on these drivers being built in.
-Actually, as old style pcmcia drivers, I'm not sure there's much value
-building them into the kernel anyway.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
 
-So just modify scsi/pcmcia/Kconfig to make them all depend on m.
+I think the first patch (the infrastructure change) is safe to go in
+immediately.  Unfortunately, I can't put the marvell update in because
+the emailed patch is corrupt (it looks like the mailer has added line
+breaks).
+
+Ke, If you can't get your email tool to insert plain text (as a lot of
+microsoft based one's can't), you can add the patch as an attachment; I
+can apply it from that (Although in line plain text is by far the
+preferred method for review if you can do it, we have a bunch of other
+driver writers who have problematic email tools, so we're reasonably
+used to this).
+
+Thanks,
 
 James
 
