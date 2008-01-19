@@ -1,44 +1,37 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/8] firewire: ieee1394: Move away from SG_ALL
-Date: Sat, 19 Jan 2008 09:01:45 -0600
-Message-ID: <1200754905.3136.4.camel@localhost.localdomain>
-References: <478F8435.5000907@panasas.com> <478F854B.2030302@panasas.com>
-	 <478F9596.1020509@s5r6.in-berlin.de>  <4791ADC9.7090207@s5r6.in-berlin.de>
+From: Pavel Machek <pavel@ucw.cz>
+Subject: Re: SCSI power management for AHCI
+Date: Sat, 19 Jan 2008 16:02:35 +0100
+Message-ID: <20080119150235.GH24512@elf.ucw.cz>
+References: <20080115201114.GA7219@elf.ucw.cz> <Pine.LNX.4.44L0.0801161020190.4431-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:60280 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755760AbYASPBv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jan 2008 10:01:51 -0500
-In-Reply-To: <4791ADC9.7090207@s5r6.in-berlin.de>
+Received: from gprs189-60.eurotel.cz ([160.218.189.60]:43626 "EHLO amd.ucw.cz"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754003AbYASPCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 19 Jan 2008 10:02:20 -0500
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0801161020190.4431-100000@iolanthe.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: linux-scsi@vger.kernel.org, linux-pm@lists.linux-foundation.org
 
-
-On Sat, 2008-01-19 at 08:59 +0100, Stefan Richter wrote:
-> Stefan Richter wrote:
-> > My guess is that there won't be conflicts of this with linux1394-2.6.git
-> > anytime soon, so taking it into any other tree should be fine.
+On Wed 2008-01-16 10:21:35, Alan Stern wrote:
+> On Tue, 15 Jan 2008, Pavel Machek wrote:
 > 
-> Wrong, there should already be a (trivial) conflict due to a patch from
-> December.  Another (trivially) conflicting patch was sent to
-> linux1394-devel a few hours ago.  Both patches will land in Linus' tree
-> early during the next merge window.  So either refresh the patch when
-> it's time, or give it to me.  (Whatever, try not to add to akpm's pain.)
+> > Hi!
+> > 
+> > This is my first attempt at ahci autosuspend. It is _very_ hacky at
+> > this moment, I'll seriously need to clean it up. But it seems to work
+> > here.
+> 
+> How does this interact with Link Power Management?  Should there be 
+> a stronger connection between the two?
 
-Actually, I'm already tracking potential conflicts.  The
-linux1394-2.6.git is part of the merge candidate tree I'm building
-nightly.  These patches will go through the (now slightly misnamed)
-scsi-bidi-2.6.git tree.  That one's built on top of all the currently
-conflicting trees, and is scheduled to be the last thing merged in the
-merge window (or at least to wait until the others its built on have
-gone in).
-
-James
-
-
+Link Power Management seems to be hw stuff, and I do not think much
+linking is neccessary.
+									Pavel
+-- 
+(english) http://www.livejournal.com/~pavelmachek
+(cesky, pictures) http://atrey.karlin.mff.cuni.cz/~pavel/picture/horses/blog.html
