@@ -1,71 +1,54 @@
-From: Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>
-Subject: PATCH: usb-storage-set-last-sector-bug-flag.patch
-Date: Sun, 20 Jan 2008 11:27:29 +0100
-Message-ID: <47932211.90105@hhs.nl>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [SCSI] scsi.h: add macro for enclosure bit of inquiry data
+Date: Sun, 20 Jan 2008 09:09:40 -0600
+Message-ID: <1200841780.3105.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
- boundary="------------000200020103020600070803"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, USB development list <linux-usb-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, David Brown <usb-storage2-GijAUarxTbMdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:35325 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753662AbYATPJq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jan 2008 10:09:46 -0500
+Received: from localhost (localhost [127.0.0.1])
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id 7B5788464
+	for <linux-scsi@vger.kernel.org>; Sun, 20 Jan 2008 09:09:42 -0600 (CST)
+Received: from accolon.hansenpartnership.com ([127.0.0.1])
+	by localhost (redscar.int.hansenpartnership.com [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id Cujs-+0GKeeT for <linux-scsi@vger.kernel.org>;
+	Sun, 20 Jan 2008 09:09:41 -0600 (CST)
+Received: from [153.66.150.222] (mulgrave-w.int.hansenpartnership.com [153.66.150.222])
+	by accolon.hansenpartnership.com (Postfix) with ESMTP id E12C88088
+	for <linux-scsi@vger.kernel.org>; Sun, 20 Jan 2008 09:09:40 -0600 (CST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-This is a multi-part message in MIME format.
---------------000200020103020600070803
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+The macro tells us whether the device is (or contains) an enclosure device.
 
-Hi all,
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ include/scsi/scsi_device.h |    4 ++++
+ 1 files changed, 4 insertions(+), 0 deletions(-)
 
-This patch sets the last_sector_bug flag to 1 for all USB disks. This is
-needed to makes the cardreader on various HP multifunction printers work.
-
-Since the performance impact is negible we set this flag for all USB disks to
-avoid an unusual_devs.h nightmare.
-
-Note that this patch depends on:
-PATCH: scsi-sd-last-sector-bug-flag.patch
-
-Which actually adds this flag to the scsi subsystem.
-
-Signed-off-by: Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>
-
-Regards,
-
-Hans
-
---------------000200020103020600070803
-Content-Type: text/x-patch;
- name="usb-storage-set-last-sector-bug-flag.patch"
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline;
- filename="usb-storage-set-last-sector-bug-flag.patch"
-
-This patch sets the last_sector_bug flag to 1 for all USB disks. This is
-needed to makes the cardreader on various HP multifunction printers work.
-
-Since the performance impact is negible we set this flag for all USB disks to
-avoid an unusual_devs.h nightmare.
-
-Note that this patch depends on:
-PATCH: scsi-sd-last-sector-bug-flag.patch
-
-Which actually adds this flag to the scsi subsystem.
-
-Signed-off-by: Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>
---- vanilla-2.6.24-rc7/drivers/usb/storage/scsiglue.c.psc1350	2008-01-11 19:40:31.000000000 +0100
-+++ vanilla-2.6.24-rc7/drivers/usb/storage/scsiglue.c	2008-01-20 11:18:38.000000000 +0100
-@@ -187,6 +187,10 @@ static int slave_configure(struct scsi_d
- 		 * automatically, requiring a START-STOP UNIT command. */
- 		sdev->allow_restart = 1;
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index e0c645a..a262d11 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -386,6 +386,10 @@ static inline int scsi_device_qas(struct scsi_device *sdev)
+ 		return 0;
+ 	return sdev->inquiry[56] & 0x02;
+ }
++static inline int scsi_device_enclosure(struct scsi_device *sdev)
++{
++	return sdev->inquiry[6] & (1<<6);
++}
  
-+		/* Some USB cardreaders have trouble reading an sdcard's last
-+		 * sector in a larger then 1 sector read, since the performance
-+		 * impact is negible we set this flag for all USB disks */
-+		sdev->last_sector_bug = 1;
- 	} else {
- 
- 		/* Non-disk-type devices don't need to blacklist any pages
+ #define MODULE_ALIAS_SCSI_DEVICE(type) \
+ 	MODULE_ALIAS("scsi:t-" __stringify(type) "*")
+-- 
+1.5.3.8
 
---------------000200020103020600070803--
+
+
