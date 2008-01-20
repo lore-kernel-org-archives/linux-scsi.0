@@ -1,39 +1,51 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: PATCH: usb-storage-set-last-sector-bug-flag.patch
-Date: Sun, 20 Jan 2008 16:45:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org>
-References: <20080120205625.GB28842@kroah.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [SCSI] scsi.h: add macro for enclosure bit of inquiry data
+Date: Sun, 20 Jan 2008 17:29:04 -0600
+Message-ID: <1200871744.3105.33.camel@localhost.localdomain>
+References: <1200841780.3105.1.camel@localhost.localdomain>
+	 <4793886F.2070707@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20080120205625.GB28842-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Cc: Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, USB development list <linux-usb-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, David Brown <usb-storage2-GijAUarxTbMdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:35418 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755261AbYATX3K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jan 2008 18:29:10 -0500
+In-Reply-To: <4793886F.2070707@s5r6.in-berlin.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, 20 Jan 2008, Greg KH wrote:
 
-> On Sun, Jan 20, 2008 at 11:27:29AM +0100, Hans de Goede wrote:
-> > Hi all,
-> >
-> > This patch sets the last_sector_bug flag to 1 for all USB disks. This is
-> > needed to makes the cardreader on various HP multifunction printers work.
-> >
-> > Since the performance impact is negible we set this flag for all USB disks 
-> > to avoid an unusual_devs.h nightmare.
+On Sun, 2008-01-20 at 18:44 +0100, Stefan Richter wrote:
+> James Bottomley wrote:
+> > The macro tells us whether the device is (or contains) an enclosure device.
+> ...
+> > +static inline int scsi_device_enclosure(struct scsi_device *sdev)
+> > +{
+> > +	return sdev->inquiry[6] & (1<<6);
+> > +}
 > 
-> Oh great, now my "working just fine" USB devices, which happen to have
-> data in the last sector, suddenly stop working.
+> Perhaps call it scsi_device_is_enclosure() to better reflect the nature
+> of this function.
 > 
-> That's not acceptable :(
+> Or if it is an accessor to inquiry data to you, maybe call it
+> scsi_device_inquiry_encserv() or
+> scsi_device_inquiry_enclosure_services() or
+> sdev_to_inquiry_encserv() or
+> sdev_to_inquiry_enclosure_services().
+> 
+> Alas neither of this fits with the existing similar functions in
+> scsi_device.h which don't have expressive names.
 
-These patches really should not impact existing devices.  If they do
-then something is definitely wrong.
+Right .. that's the problem.  Being potentially clearer in naming but at
+odds with what's currently in the file starts to add to the confusion
+about the other names in there.  I chose the name primarily because it's
+the same form as all the others.
 
-Can you provide detailed logging information showing your problem?  For 
-example, a usbmon trace would be good.  Better yet, a usbmon trace 
-without the patches and a usbmon trace with the patches, for 
-comparison.
+James
 
-Alan Stern
+
