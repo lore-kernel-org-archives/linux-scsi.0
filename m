@@ -1,39 +1,20 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
+From: Grant Grundler <grundler-6jwH94ZQLHl74goWV3ctuw@public.gmane.org>
 Subject: Re: udev hangs USB-storage (HP r707 camera)
-Date: Sat, 19 Jan 2008 20:56:31 -0600
-Message-ID: <1200797791.11214.3.camel@localhost.localdomain>
-References: <20080119174556.GE11553@colo.lackof.org>
-	 <47929B9F.8080607@s5r6.in-berlin.de>
-	 <20080120022829.GG11553@colo.lackof.org>
+Date: Sat, 19 Jan 2008 19:57:08 -0700
+Message-ID: <20080120025708.GH11553@colo.lackof.org>
+References: <20080119174556.GE11553@colo.lackof.org> <47929B9F.8080607@s5r6.in-berlin.de> <20080120022829.GG11553@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:53342 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752830AbYATC4k (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 19 Jan 2008 21:56:40 -0500
-In-Reply-To: <20080120022829.GG11553@colo.lackof.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20080120022829.GG11553-lGaJ6EKWmV+kGg0756fqLw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: Stefan Richter <stefanr@s5r6.in-berlin.de>, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-
-On Sat, 2008-01-19 at 19:28 -0700, Grant Grundler wrote:
-> On Sun, Jan 20, 2008 at 01:53:51AM +0100, Stefan Richter wrote:
-> > Grant Grundler wrote:
-> > >     https://bugs.launchpad.net/ubuntu/+source/hal/+bug/180472
-> > ...
-> > > I have a usbmon trace for 2.6.23.13 (appended) along with dmesg output.
-> > > What I need is someone to interpret this trace, tell me what happened,
-> > > then I can work on tracking down "vol_id"'s role in this mess.
-> > 
-> > You can also enable SCSI command logging.  Perhaps userspace sends a
-> > specific command which offends the device (because The Other OS wouldn't
-> > send that command in this order of sequence).
-> 
+On Sat, Jan 19, 2008 at 07:28:29PM -0700, Grant Grundler wrote:
+...
 > Thanks for reminding me...I had collected strace output of udev and all
 > it's children a few days ago (probably with 2.6.22-14-generic (Ubuntu
 > kernel). I've appended everything for PID 17972 (which is only 12k, full
@@ -48,15 +29,18 @@ On Sat, 2008-01-19 at 19:28 -0700, Grant Grundler wrote:
 > ISTR "reading the last sector" caused problems else where.
 > I'll try to hunt that down.
 
-If this is the problem, it ought to be reproducible without vol_id by
-doing
+That was too easy.
+http://www.cs.helsinki.fi/linux/linux-kernel/2001-23/0960.html
+Is 1K alignment still a problem?
 
-dd bs=512b if=/dev/<dev> of=/dev/null seek=60800 count=1
+Or I have to add the HP r707 to some list per comments from this patch:
+http://www.kernel.org/pub/linux/kernel/people/akpm/patches/2.6/2.6.17-rc2/2.6.17-rc2-mm1/broken-out/git-ieee1394.patch
 
-There is a READ_CAPACITY bug where incompetent usb vendors misread the
-SCSI standard and actually report one sector more than the actual
-capapcity (and crash when this is accessed), but let's verify first.
++ * - fix capacity
++ *   Tell sd_mod to correct the last sector number reported by read_capacity.
++ *   Avoids access beyond actual disk limits on devices with an off-by-one bug.
++ *   Don't use this with devices which don't have this bug.
 
-James
+hunting more...
 
-
+grant
