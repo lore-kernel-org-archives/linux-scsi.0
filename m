@@ -1,51 +1,34 @@
 From: Greg KH <greg@kroah.com>
-Subject: Re: PATCH: scsi-sd-last-sector-bug-flag.patch
-Date: Sun, 20 Jan 2008 12:55:14 -0800
-Message-ID: <20080120205514.GA28842@kroah.com>
-References: <47931E8A.60905@hhs.nl>
+Subject: Re: PATCH: usb-storage-set-last-sector-bug-flag.patch
+Date: Sun, 20 Jan 2008 12:56:25 -0800
+Message-ID: <20080120205625.GB28842@kroah.com>
+References: <47932211.90105@hhs.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:40389 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755075AbYATUzi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Jan 2008 15:55:38 -0500
 Content-Disposition: inline
-In-Reply-To: <47931E8A.60905@hhs.nl>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Hans de Goede <j.w.r.degoede@hhs.nl>
-Cc: Guillaume Bedot <littletux@zarb.org>, USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
+In-Reply-To: <47932211.90105@hhs.nl>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, James Bottomley <James.Bottomley@HansenPartnership.com>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, David Brown <usb-storage2@davidb.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On Sun, Jan 20, 2008 at 11:12:26AM +0100, Hans de Goede wrote:
+On Sun, Jan 20, 2008 at 11:27:29AM +0100, Hans de Goede wrote:
 > Hi all,
 >
-> This patch adds a new scsi_device flag for devices which contain a bug 
-> where
-> the device crashes when the last sector is read in a larger then 1 sector 
-> read.
+> This patch sets the last_sector_bug flag to 1 for all USB disks. This is
+> needed to makes the cardreader on various HP multifunction printers work.
 >
-> This is for example the case with sdcards in the HP PSC1350 printer 
-> cardreader
-> and in the HP PSC1610 printer cardreader.
+> Since the performance impact is negible we set this flag for all USB disks 
+> to avoid an unusual_devs.h nightmare.
 
-Wait, we already handle this in the usb-storage driver, why are you
-putting this in the scsi core now?
+Oh great, now my "working just fine" USB devices, which happen to have
+data in the last sector, suddenly stop working.
 
-confused,
+That's not acceptable :(
 
 greg k-h
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
