@@ -1,64 +1,36 @@
 From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [PATCH] firewire: fw-sbp2: prepare for s/g chaining
-Date: Sat, 19 Jan 2008 22:20:02 +0100
-Message-ID: <47926982.6040805@s5r6.in-berlin.de>
-References: <1200419579.9273.39.camel@localhost.localdomain>	<tkrat.dd08f05252acff9a@s5r6.in-berlin.de>
-	<20080118123341D.fujita.tomonori@lab.ntt.co.jp>
+Subject: Re: udev hangs USB-storage (HP r707 camera)
+Date: Sun, 20 Jan 2008 01:53:51 +0100
+Message-ID: <47929B9F.8080607@s5r6.in-berlin.de>
+References: <20080119174556.GE11553@colo.lackof.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080118123341D.fujita.tomonori@lab.ntt.co.jp>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, linux1394-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from einhorn.in-berlin.de ([192.109.42.8]:48842 "EHLO
+	einhorn.in-berlin.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752199AbYATAx5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 19 Jan 2008 19:53:57 -0500
+In-Reply-To: <20080119174556.GE11553@colo.lackof.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Grant Grundler <grundler@parisc-linux.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-FUJITA Tomonori wrote:
-> On Tue, 15 Jan 2008 21:10:50 +0100 (CET)
-> Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
->> +++ linux/drivers/firewire/fw-sbp2.c
->> @@ -1107,9 +1107,9 @@ sbp2_map_scatterlist(struct sbp2_command
->>  	 * elements larger than 65535 bytes, some IOMMUs may merge sg elements
->>  	 * during DMA mapping, and Linux currently doesn't prevent this.
->>  	 */
-> 
-> On a relate note, I fixed the IOMMU merge issue. The patches have been
-> -mm though I'm not sure whether they will go into v2.6.25. The patches
-> enable you to remove the following workaround if you configure the
-> maximum sg element length.
+Grant Grundler wrote:
+>     https://bugs.launchpad.net/ubuntu/+source/hal/+bug/180472
+...
+> I have a usbmon trace for 2.6.23.13 (appended) along with dmesg output.
+> What I need is someone to interpret this trace, tell me what happened,
+> then I can work on tracking down "vol_id"'s role in this mess.
 
-Thanks, I will keep an eye on it.
-
-> From a quick look, fw-sbp2 uses scsi-ml in a different way so it would
-> be a bit trick to configure the maximum sg element length.
-> 
-> You call dma_map_sg with pci_dev::dev but don't call scsi_add_host
-> with pci_dev::dev.
-> 
-> If you set the maximum sg element length to pci_dev::dev, and then
-> call scsi_add_host with it, the block layer and the IOMMU send you
-> proper size sg elements.
-
-At the moment, the Scsi_Host instances map 1:1 to SBP-2 target
-instances.  I have to think about whether we can map it to FireWire
-controller instances instead.  (Besides, the s/g element length
-limitation is actually a limitation of the SBP-2 protocol, not of
-FireWire PCI cards.)
+You can also enable SCSI command logging.  Perhaps userspace sends a
+specific command which offends the device (because The Other OS wouldn't
+send that command in this order of sequence).
+# echo 9216 > /sys/module/scsi_mod/parameters/scsi_logging_level
+That's what I wrote down on a piece of paper a long time ago; don't ask
+me what it means in detail.  :-)
 -- 
 Stefan Richter
--=====-==--- ---= =--==
+-=====-==--- ---= =-=--
 http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
