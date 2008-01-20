@@ -1,48 +1,66 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: [PATCH v3] use dynamically allocated sense buffer
-Date: Sun, 20 Jan 2008 09:40:11 -0700
-Message-ID: <20080120164010.GC27250@parisc-linux.org>
-References: <20080116133217D.fujita.tomonori@lab.ntt.co.jp>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: PATCH: scsi-sd-last-sector-bug-flag.patch
+Date: Sun, 20 Jan 2008 10:48:15 -0600
+Message-ID: <1200847695.3105.12.camel@localhost.localdomain>
+References: <47931E8A.60905@hhs.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from palinux.external.hp.com ([192.25.206.14]:48190 "EHLO
-	mail.parisc-linux.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754283AbYATQkM (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Jan 2008 11:40:12 -0500
-Content-Disposition: inline
-In-Reply-To: <20080116133217D.fujita.tomonori@lab.ntt.co.jp>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34310 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1754298AbYATQsV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 20 Jan 2008 11:48:21 -0500
+In-Reply-To: <47931E8A.60905@hhs.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Cc: James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, tomof@acm.org
+To: Hans de Goede <j.w.r.degoede@hhs.nl>
+Cc: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Guillaume Bedot <littletux@zarb.org>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, David Brown <usb-storage2@davidb.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On Wed, Jan 16, 2008 at 01:32:17PM +0900, FUJITA Tomonori wrote:
-> This removes static array sense_buffer in scsi_cmnd and uses
-> dynamically allocated sense_buffer (with GFP_DMA).
-> 
-> The reason for doing this is that some architectures need cacheline
-> aligned buffer for DMA:
-> 
-> http://lkml.org/lkml/2007/11/19/2
-> 
-> The problems are that scsi_eh_prep_cmnd puts scsi_cmnd::sense_buffer
-> to sglist and some LLDs directly DMA to scsi_cmnd::sense_buffer. It's
-> necessary to DMA to scsi_cmnd::sense_buffer safely. This patch solves
-> these issues.
-> 
-> __scsi_get_command allocates sense_buffer via kmem_cache_alloc and
-> attaches it to a scsi_cmnd so everything just work as before.
 
-I think this is fine for the moment.
+On Sun, 2008-01-20 at 11:12 +0100, Hans de Goede wrote:
+> Hi all,
+> 
+> This patch adds a new scsi_device flag for devices which contain a bug where
+> the device crashes when the last sector is read in a larger then 1 sector read.
+> 
+> This is for example the case with sdcards in the HP PSC1350 printer cardreader
+> and in the HP PSC1610 printer cardreader.
+> 
+> Signed-off-by: Hans de Goede <j.w.r.degoede@hhs.nl>
 
-Longer-term, I want to allow low-level drivers to allocate the
-sense_buffer themselves so they can DMA directly into it (ie grown-up dma
-mapping, rather than this quaint x86 __GFP_DMA).  This patch doesn't get
-us any closer to that, but it doesn't get us further away from it either.
+This could have done with running through checkpatch.pl:
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+ERROR: trailing whitespace
+#28: FILE: drivers/scsi/sd.c:398:
++^I/* $
+
+ERROR: trailing whitespace
+#32: FILE: drivers/scsi/sd.c:402:
++^Iif (unlikely(sdp->last_sector_bug && $
+
+WARNING: braces {} are not necessary for single statement blocks
+#32: FILE: drivers/scsi/sd.c:402:
++       if (unlikely(sdp->last_sector_bug && 
++           rq->nr_sectors > sdp->sector_size / 512 &&
++           block + this_count == get_capacity(disk))) {
++               this_count -= sdp->sector_size / 512;
++       }
+
+ERROR: use tabs not spaces
+#34: FILE: drivers/scsi/sd.c:404:
++ ^I    block + this_count == get_capacity(disk))) {$
+
+WARNING: line over 80 characters
+#49: FILE: include/scsi/scsi_device.h:142:
++       unsigned last_sector_bug:1;     /* Always read last sector in a
+1 sector read */
+
+total: 3 errors, 2 warnings, 23 lines checked
+
+I've fixed all of these up.
+
+James
+
+
