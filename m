@@ -1,51 +1,84 @@
-From: Mike Anderson <andmike@linux.vnet.ibm.com>
-Subject: Re: sym53c8xx ISTAT1 feature never set
-Date: Mon, 21 Jan 2008 13:24:07 -0800
-Message-ID: <20080121212407.GA14435@linux.vnet.ibm.com>
-References: <20080119174144.GB25398@parisc-linux.org>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Mon, 21 Jan 2008 22:20:37 +0000
+Message-ID: <20080121222037.3d8b46a1@lxorguk.ukuu.org.uk>
+References: <1200070903.3286.28.camel@localhost.localdomain>
+	<9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
+	<1200410166.9273.4.camel@localhost.localdomain>
+	<20080116145916A.fujita.tomonori@lab.ntt.co.jp>
+	<1200495471.3136.1.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e5.ny.us.ibm.com ([32.97.182.145]:44796 "EHLO e5.ny.us.ibm.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754778AbYAUVYM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 21 Jan 2008 16:24:12 -0500
-Received: from d01relay02.pok.ibm.com (d01relay02.pok.ibm.com [9.56.227.234])
-	by e5.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m0LLOBrr002809
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jan 2008 16:24:11 -0500
-Received: from d01av03.pok.ibm.com (d01av03.pok.ibm.com [9.56.224.217])
-	by d01relay02.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m0LLOBoN157892
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jan 2008 16:24:11 -0500
-Received: from d01av03.pok.ibm.com (loopback [127.0.0.1])
-	by d01av03.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m0LLOBkV026556
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jan 2008 16:24:11 -0500
-Content-Disposition: inline
-In-Reply-To: <20080119174144.GB25398@parisc-linux.org>
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50548 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754544AbYAUW1J (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jan 2008 17:27:09 -0500
+In-Reply-To: <1200495471.3136.1.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, psybases@gmail.com, linux-scsi@vger.kernel.org, cebbert@redhat.com, bharrosh@panasas.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 
-Matthew Wilcox <matthew@wil.cx> wrote:
-> The only problem is ... we never set the FE_ISTAT1 bit.  Mike tells me
-> that when he sets it, it makes his error recovery work.
-> 
-> I think we need a patch somewhat along these lines:
-> 
->   {PCI_DEVICE_ID_LSI_53C1010_66, 0xff, "1010-66", 6, 31, 7, 8,
->   FE_WIDE|FE_ULTRA3|FE_QUAD|FE_CACHE_SET|FE_BOF|FE_DFBC|FE_LDSTR|FE_PFEN|
->   FE_RAM|FE_RAM8K|FE_64BIT|FE_DAC|FE_IO256|FE_NOPM|FE_LEDC|FE_66MHZ|FE_CRC|
-> - FE_C10|FE_U3EN}
-> + FE_C10|FE_U3EN|FE_ISTAT1}
+Ok my attempt to get the card failed so we are going to have to do this
+the hard way. See where this patch crashes and what it prints
 
-As you already mentioned we tested setting FE_ISTAT1 for one card. We just
-ran with your patch and it addressed that issue as expected (as this patch
-only enables more cards that we do not have it not that interesting that it
-passed, just wanted to add a "tested" to this thread). I can only hardware
-verify the check above "PCI_DEVICE_ID_LSI_53C1010_66", so that does not
-add much.
+(On top of the other patches)
 
--andmike
---
-Michael Anderson
-andmike@linux.vnet.ibm.com
+diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c linux-2.6.24-rc8-mm1/drivers/scsi/initio.c
+--- linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c	2008-01-19 14:22:43.000000000 +0000
++++ linux-2.6.24-rc8-mm1/drivers/scsi/initio.c	2008-01-21 14:54:48.000000000 +0000
+@@ -2537,10 +2537,12 @@
+ 	struct Scsi_Host *dev = dev_id;
+ 	unsigned long flags;
+ 	int r;
+-	
++
++	printk("ISR\n");	
+ 	spin_lock_irqsave(dev->host_lock, flags);
+ 	r = initio_isr((struct initio_host *)dev->hostdata);
+ 	spin_unlock_irqrestore(dev->host_lock, flags);
++	printk("ISR DONE %d\n", r);
+ 	if (r)
+ 		return IRQ_HANDLED;
+ 	else
+@@ -2643,6 +2645,7 @@
+ 	struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
+ 	struct scsi_ctrl_blk *cmnd;
+ 
++	printk("SCB QUEUE\n");
+ 	cmd->scsi_done = done;
+ 
+ 	cmnd = initio_alloc_scb(host);
+@@ -2650,7 +2653,9 @@
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+ 
+ 	initio_build_scb(host, cmnd, cmd);
++	printk("SCB EXEC\n");
+ 	initio_exec_scb(host, cmnd);
++	printk("SCB EXEC DONE\n");
+ 	return 0;
+ }
+ 
+@@ -2766,6 +2771,8 @@
+ 	struct scsi_cmnd *cmnd;	/* Pointer to SCSI request block */
+ 	struct initio_host *host;
+ 	struct scsi_ctrl_blk *cblk;
++	
++	printk("SCB POST\n");
+ 
+ 	host = (struct initio_host *) host_mem;
+ 	cblk = (struct scsi_ctrl_blk *) cblk_mem;
+@@ -2934,9 +2941,11 @@
+ 
+ 	pci_set_drvdata(pdev, shost);
+ 
++	printk("SAH\n");
+ 	error = scsi_add_host(shost, &pdev->dev);
+ 	if (error)
+ 		goto out_free_irq;
++	printk("SSH\n");
+ 	scsi_scan_host(shost);
+ 	return 0;
+ out_free_irq:
