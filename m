@@ -1,23 +1,23 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Benny Halevy <bhalevy@panasas.com>
 Subject: Re: [PATCH] remove use_sg_chaining
-Date: Mon, 21 Jan 2008 12:31:08 +0200
-Message-ID: <4794746C.6000807@panasas.com>
+Date: Mon, 21 Jan 2008 13:32:33 +0200
+Message-ID: <479482D1.8090904@panasas.com>
 References: <1200419579.9273.39.camel@localhost.localdomain> <47939E9B.9020906@panasas.com> <1200857062.3105.15.camel@localhost.localdomain> <20080120192942.GW6258@kernel.dk> <4793A78A.6000604@panasas.com> <20080120195956.GY6258@kernel.dk> <20080120200117.GZ6258@kernel.dk> <1200862756.3105.26.camel@localhost.localdomain> <479458A1.90009@panasas.com> <20080121093112.GG6258@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:48567 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1758555AbYAUKbc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jan 2008 05:31:32 -0500
+Received: from sa14.bezeqint.net ([192.115.104.29]:46415 "EHLO
+	sa14.bezeqint.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1758700AbYAULcp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jan 2008 06:32:45 -0500
 In-Reply-To: <20080121093112.GG6258@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <jens.axboe@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Mon, Jan 21 2008 at 11:31 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
+On Jan. 21, 2008, 11:31 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
 > On Mon, Jan 21 2008, Boaz Harrosh wrote:
 >> On Sun, Jan 20 2008 at 22:59 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 >>> On Sun, 2008-01-20 at 21:01 +0100, Jens Axboe wrote:
@@ -88,12 +88,12 @@ On Mon, Jan 21 2008 at 11:31 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
 > blocking for BLOCK_PC requests should be fine (is anyone using these for
 > swap?).
 > 
-I was also thinking of a live-lock as opposed to dead-lock, where thousands
-of requests are issued to tens/hundreds of devices all large chained IO, so each
-fails to allocate second order chain segment and all are stuck in a traffic jam.
-Maybe BLKPREP_SGALLOCFAIL could mean wait for normal BLOCK_PC commands and return
-if FAIL_FAST. But I guess we can do that much later, after the picture settles.
-(And some experiments are do)
 
-Thanks Jens
-Boaz
+It could help the OSD I/O module which will produce BLOCK_PC bidi CDBs to get
+feedback in the form of ENOMEM so to throttle down its I/O coalescing sizes
+and generate smaller I/Os in face of memory pressure and then gradually throttle
+up when on success.  If the requests are held back and blocked at the queue
+I'm concerned that could hurt performance under memory pressure by not filling
+up the pipeline as much as we can.
+
+Benny
