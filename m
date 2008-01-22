@@ -1,35 +1,39 @@
-From: Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
 Subject: Re: Performance of SCST versus STGT
-Date: Tue, 22 Jan 2008 14:33:13 +0300
-Message-ID: <4795D479.1080805@vlnb.net>
-References: <20080117174542.GC29650@osc.edu>	<479096D2.8090003@vlnb.net>	<e2e108260801200136g7f17b8a0g89a54cc1d73bbc34@mail.gmail.com>
-	<20080122122657R.fujita.tomonori@lab.ntt.co.jp>
+Date: Tue, 22 Jan 2008 14:33:59 +0300
+Message-ID: <4795D4A7.5000105@vlnb.net>
+References: <e2e108260801170127w2937b2afg9bef324efa945e43@mail.gmail.com>	 <20080117184052F.fujita.tomonori@lab.ntt.co.jp>	 <478F246C.4040400@vlnb.net>	 <20080117190558K.fujita.tomonori@lab.ntt.co.jp>	 <20080117174542.GC29650@osc.edu> <e2e108260801220204k4b914ea1o9b47c0b22c6d098b@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-In-Reply-To: <20080122122657R.fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
-List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
-Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-To: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Cc: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:40257 "EHLO
+	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751141AbYAVLdw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jan 2008 06:33:52 -0500
+In-Reply-To: <e2e108260801220204k4b914ea1o9b47c0b22c6d098b@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Pete Wyckoff <pw@osc.edu>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, stgt-devel@lists.berlios.de, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, James.Bottomley@hansenpartnership.com, erezz@voltaire.com
 
-FUJITA Tomonori wrote:
-> The big problem of stgt iSER is disk I/Os (move data between disk and
-> page cache). We need a proper asynchronous I/O mechanism, however,
-> Linux doesn't provide such and we use a workaround, which incurs large
-> latency. I guess, we cannot solve this until syslets is merged into
-> mainline.
+Bart Van Assche wrote:
+> On Jan 17, 2008 6:45 PM, Pete Wyckoff <pw@osc.edu> wrote:
+> 
+>>There's nothing particularly stunning here.  Suspect Bart has
+>>configuration issues if not even IPoIB will do > 100 MB/s.
+> 
+> 
+> By this time I found out that the BIOS of the test systems (Intel
+> Server Board S5000PAL) set the PCI-e parameter MaxReadReq to 128
+> bytes, which explains the low InfiniBand performance. After changing
+> this parameter to 4096 bytes the InfiniBand throughput was as
+> expected: ib_rdma_bw now reports a
+> bandwidth of 933 MB/s.
 
-Hmm, SCST also doesn't have ability to use asynchronous I/O, but that 
-doesn't prevent it from showing good performance.
+What are the new SRPT/iSER numbers?
 
-Vlad
+> Bart.
+> 
+
