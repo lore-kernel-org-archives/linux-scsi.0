@@ -1,90 +1,102 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
-Date: Tue, 22 Jan 2008 11:29:45 -0600
-Message-ID: <1201022985.3210.24.camel@localhost.localdomain>
-References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
+From: "Filippos Papadopoulos" <psybases@gmail.com>
+Subject: Re: INITIO scsi driver fails to work properly
+Date: Tue, 22 Jan 2008 19:50:37 +0200
+Message-ID: <9f00bd9d0801220950r49de29abl8fbb2495a65c9a10@mail.gmail.com>
+References: <1200070903.3286.28.camel@localhost.localdomain>
+	 <9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
+	 <1200410166.9273.4.camel@localhost.localdomain>
+	 <20080116145916A.fujita.tomonori@lab.ntt.co.jp>
+	 <1200495471.3136.1.camel@localhost.localdomain>
+	 <20080121222037.3d8b46a1@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34904 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1751512AbYAVR3v (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jan 2008 12:29:51 -0500
-In-Reply-To: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
+Received: from wr-out-0506.google.com ([64.233.184.234]:10901 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751929AbYAVRuj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jan 2008 12:50:39 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so936339wra.1
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Jan 2008 09:50:38 -0800 (PST)
+In-Reply-To: <20080121222037.3d8b46a1@lxorguk.ukuu.org.uk>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hugh Dickins <hugh@veritas.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, cebbert@redhat.com, bharrosh@panasas.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 
-Added linux-scsi to the cc.
+I get the following:
+SAH
+SSH
+SCB Q
+SCB EXEC
+SCB EXEC DONE
 
-On Tue, 2008-01-22 at 17:11 +0000, Hugh Dickins wrote:
-> 2.6.24-rc8-mm1 is corrupting.  smartd does some sg_ioctl into its stack,
-> and depending on how its stack randomization worked out, this is liable
-> to end up writing into the adjacent physical page too.  If you're lucky
-> you have highmem, and ioread16_rep oopses on the virtual address beyond
-> what ata_pio_sector's kmap_atomic set up; when you're unlucky, it'll go
-> ahead and corrupt the next page more obscurely.
-> 
-> Bisect led to scsi-misc-2.6.git's 465ff3185e0cb76d46137335a4d21d0d9d3ac8a2
-> [SCSI] relax scsi dma alignment, and the patch below is good for a hot-fix.
-> Though I doubt it'll be the final fix, since it appears to undo the whole
-> point of blk_queue_update_dma_alignment: perhaps libata is at fault to be
-> going through sectory code for unsectory I/O - I wouldn't know.
-> 
-> Signed-off-by: Hugh Dickins <hugh@veritas.com>
-> ---
-> 
->  drivers/ata/libata-scsi.c |    2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> --- 2.6.24-rc8-mm1/drivers/ata/libata-scsi.c	2008-01-17 16:49:47.000000000 +0000
-> +++ linux/drivers/ata/libata-scsi.c	2008-01-22 15:45:40.000000000 +0000
-> @@ -826,7 +826,7 @@ static void ata_scsi_sdev_config(struct 
->  	sdev->max_device_blocked = 1;
->  
->  	/* set the min alignment */
-> -	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
-> +	blk_queue_update_dma_alignment(sdev->request_queue, ATA_SECT_SIZE - 1);
+After ~3 secs the system freezes.
+
+
+
+
+On Jan 22, 2008 12:20 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
+> Ok my attempt to get the card failed so we are going to have to do this
+> the hard way. See where this patch crashes and what it prints
+>
+> (On top of the other patches)
+>
+> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c linux-2.6.24-rc8-mm1/drivers/scsi/initio.c
+> --- linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c  2008-01-19 14:22:43.000000000 +0000
+> +++ linux-2.6.24-rc8-mm1/drivers/scsi/initio.c  2008-01-21 14:54:48.000000000 +0000
+> @@ -2537,10 +2537,12 @@
+>         struct Scsi_Host *dev = dev_id;
+>         unsigned long flags;
+>         int r;
+> -
+> +
+> +       printk("ISR\n");
+>         spin_lock_irqsave(dev->host_lock, flags);
+>         r = initio_isr((struct initio_host *)dev->hostdata);
+>         spin_unlock_irqrestore(dev->host_lock, flags);
+> +       printk("ISR DONE %d\n", r);
+>         if (r)
+>                 return IRQ_HANDLED;
+>         else
+> @@ -2643,6 +2645,7 @@
+>         struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
+>         struct scsi_ctrl_blk *cmnd;
+>
+> +       printk("SCB QUEUE\n");
+>         cmd->scsi_done = done;
+>
+>         cmnd = initio_alloc_scb(host);
+> @@ -2650,7 +2653,9 @@
+>                 return SCSI_MLQUEUE_HOST_BUSY;
+>
+>         initio_build_scb(host, cmnd, cmd);
+> +       printk("SCB EXEC\n");
+>         initio_exec_scb(host, cmnd);
+> +       printk("SCB EXEC DONE\n");
+>         return 0;
 >  }
->  
->  static void ata_scsi_dev_config(struct scsi_device *sdev,
-
-Unfortunately, that's likely not the entire hot fix ... the implication
-is that we have some mapping error in the way we do direct SG_IO.
-
-What the fix you propose does is make it far more likely that block will
-copy, perform I/O then uncopy (almost certain, since most smartd data
-transfers are well under ATA_SECT_SIZE, which is 512).  However,
-implicating a generic path like this implies that we would get the same
-problem for SCSI commands as well, so the correct hot fix is below.
-
-However, I'd like to see if we can track the problem through the SG_IO
-direct path ... how many adjacent page bytes are corrupt?  Just a few or
-a large number (I'm wondering if it's an off by one or off by alignment
-type bug)?
-
-James
-
----
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 4cf902e..13376e9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1673,8 +1673,11 @@ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
- 	 * set a reasonable default alignment on word boundaries: the
- 	 * host and device may alter it using
- 	 * blk_queue_update_dma_alignment() later.
-+	 *
-+	 * FIXME: Corruption showing up in SG_IO leads this to be
-+	 * raised to 511 again.
- 	 */
--	blk_queue_dma_alignment(q, 0x03);
-+	blk_queue_dma_alignment(q, 511);
- 
- 	return q;
- }
-
-
+>
+> @@ -2766,6 +2771,8 @@
+>         struct scsi_cmnd *cmnd; /* Pointer to SCSI request block */
+>         struct initio_host *host;
+>         struct scsi_ctrl_blk *cblk;
+> +
+> +       printk("SCB POST\n");
+>
+>         host = (struct initio_host *) host_mem;
+>         cblk = (struct scsi_ctrl_blk *) cblk_mem;
+> @@ -2934,9 +2941,11 @@
+>
+>         pci_set_drvdata(pdev, shost);
+>
+> +       printk("SAH\n");
+>         error = scsi_add_host(shost, &pdev->dev);
+>         if (error)
+>                 goto out_free_irq;
+> +       printk("SSH\n");
+>         scsi_scan_host(shost);
+>         return 0;
+>  out_free_irq:
+>
