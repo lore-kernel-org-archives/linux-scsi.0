@@ -1,84 +1,68 @@
-From: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Mon, 21 Jan 2008 22:20:37 +0000
-Message-ID: <20080121222037.3d8b46a1@lxorguk.ukuu.org.uk>
-References: <1200070903.3286.28.camel@localhost.localdomain>
-	<9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
-	<1200410166.9273.4.camel@localhost.localdomain>
-	<20080116145916A.fujita.tomonori@lab.ntt.co.jp>
-	<1200495471.3136.1.camel@localhost.localdomain>
+From: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+Subject: Re: Performance of SCST versus STGT
+Date: Tue, 22 Jan 2008 12:26:57 +0900
+Message-ID: <20080122122657R.fujita.tomonori@lab.ntt.co.jp>
+References: <20080117174542.GC29650@osc.edu> <479096D2.8090003@vlnb.net>
+	<e2e108260801200136g7f17b8a0g89a54cc1d73bbc34@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:50548 "EHLO
-	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1754544AbYAUW1J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jan 2008 17:27:09 -0500
-In-Reply-To: <1200495471.3136.1.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+In-Reply-To: <e2e108260801200136g7f17b8a0g89a54cc1d73bbc34-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
+	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
+List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
+	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
+Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+To: bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+Cc: James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, vst-d+Crzxg7Rs0@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, psybases@gmail.com, linux-scsi@vger.kernel.org, cebbert@redhat.com, bharrosh@panasas.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
 
-Ok my attempt to get the card failed so we are going to have to do this
-the hard way. See where this patch crashes and what it prints
+On Sun, 20 Jan 2008 10:36:18 +0100
+"Bart Van Assche" <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 
-(On top of the other patches)
+> On Jan 18, 2008 1:08 PM, Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org> wrote:
+> >
+> > [ ... ]
+> > So, seems I understood your slides correctly: the more valuable data for
+> > our SCST SRP vs STGT iSER comparison should be on page 26 for 1 command
+> > read (~480MB/s, i.e. ~60% from Bart's result on the equivalent hardware).
+> 
+> At least in my tests SCST performed significantly better than STGT.
+> These tests were performed with the currently available
+> implementations of SCST and STGT. Which performance improvements are
 
-diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c linux-2.6.24-rc8-mm1/drivers/scsi/initio.c
---- linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c	2008-01-19 14:22:43.000000000 +0000
-+++ linux-2.6.24-rc8-mm1/drivers/scsi/initio.c	2008-01-21 14:54:48.000000000 +0000
-@@ -2537,10 +2537,12 @@
- 	struct Scsi_Host *dev = dev_id;
- 	unsigned long flags;
- 	int r;
--	
-+
-+	printk("ISR\n");	
- 	spin_lock_irqsave(dev->host_lock, flags);
- 	r = initio_isr((struct initio_host *)dev->hostdata);
- 	spin_unlock_irqrestore(dev->host_lock, flags);
-+	printk("ISR DONE %d\n", r);
- 	if (r)
- 		return IRQ_HANDLED;
- 	else
-@@ -2643,6 +2645,7 @@
- 	struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
- 	struct scsi_ctrl_blk *cmnd;
- 
-+	printk("SCB QUEUE\n");
- 	cmd->scsi_done = done;
- 
- 	cmnd = initio_alloc_scb(host);
-@@ -2650,7 +2653,9 @@
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
- 	initio_build_scb(host, cmnd, cmd);
-+	printk("SCB EXEC\n");
- 	initio_exec_scb(host, cmnd);
-+	printk("SCB EXEC DONE\n");
- 	return 0;
- }
- 
-@@ -2766,6 +2771,8 @@
- 	struct scsi_cmnd *cmnd;	/* Pointer to SCSI request block */
- 	struct initio_host *host;
- 	struct scsi_ctrl_blk *cblk;
-+	
-+	printk("SCB POST\n");
- 
- 	host = (struct initio_host *) host_mem;
- 	cblk = (struct scsi_ctrl_blk *) cblk_mem;
-@@ -2934,9 +2941,11 @@
- 
- 	pci_set_drvdata(pdev, shost);
- 
-+	printk("SAH\n");
- 	error = scsi_add_host(shost, &pdev->dev);
- 	if (error)
- 		goto out_free_irq;
-+	printk("SSH\n");
- 	scsi_scan_host(shost);
- 	return 0;
- out_free_irq:
+First, I recommend you to examine iSER stuff more since it has some
+parameters unlike SRP, which effects the performance, IIRC. At least,
+you could get the iSER performances similar to Pete's.
+
+
+> possible for these projects (e.g. zero-copying), and by how much is it
+> expected that these performance improvements will increase throughput
+> and will decrease latency ?
+
+The major bottleneck about RDMA transfer is registering the buffer
+before transfer. stgt's iSER driver has pre-registered buffers and
+move data between page cache and thsse buffers, and then does RDMA
+transfer.
+
+The big problem of stgt iSER is disk I/Os (move data between disk and
+page cache). We need a proper asynchronous I/O mechanism, however,
+Linux doesn't provide such and we use a workaround, which incurs large
+latency. I guess, we cannot solve this until syslets is merged into
+mainline.
+
+The above approach still needs one memory copy (between the
+pre-registered buffers and page cahce). If we need more performance,
+we have to implement a new caching mechanism using the pre-registered
+buffers instead of just using page cache. AIO with O_DIRECT enables us
+to implement such caching mechanism (we can use eventfd so we don't
+need something like syslets, that is, we can implement such now).
+
+I'm not sure someone will implement such RDMA caching mechanism for
+stgt. Pete and his colleagues implemented stgt iSER driver (thanks!)
+but they are not interested in block I/Os (they are OSD people).
