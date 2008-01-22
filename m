@@ -1,38 +1,43 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Performance of SCST versus STGT
-Date: Tue, 22 Jan 2008 11:04:15 +0100
-Message-ID: <e2e108260801220204k4b914ea1o9b47c0b22c6d098b@mail.gmail.com>
-References: <e2e108260801170127w2937b2afg9bef324efa945e43@mail.gmail.com>
-	 <20080117184052F.fujita.tomonori@lab.ntt.co.jp>
-	 <478F246C.4040400@vlnb.net>
-	 <20080117190558K.fujita.tomonori@lab.ntt.co.jp>
-	 <20080117174542.GC29650@osc.edu>
+From: Erez Zilber <erezz@voltaire.com>
+Subject: [PATCH] IB/iSER: add logical unit reset support
+Date: Tue, 22 Jan 2008 12:06:25 +0200
+Message-ID: <4795C021.6030707@voltaire.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nz-out-0506.google.com ([64.233.162.238]:28387 "EHLO
-	nz-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755048AbYAVKES (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jan 2008 05:04:18 -0500
-Received: by nz-out-0506.google.com with SMTP id s18so1354181nze.1
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Jan 2008 02:04:16 -0800 (PST)
-In-Reply-To: <20080117174542.GC29650@osc.edu>
-Content-Disposition: inline
+Received: from fwil.voltaire.com ([193.47.165.2]:20253 "EHLO exil.voltaire.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1762097AbYAVKG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jan 2008 05:06:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Pete Wyckoff <pw@osc.edu>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, vst@vlnb.net, stgt-devel@lists.berlios.de, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, James.Bottomley@hansenpartnership.com, erezz@voltaire.com
+To: James Bottomley <james.bottomley@steeleye.com>
+Cc: linux-scsi@vger.kernel.org, Roland Dreier <rdreier@cisco.com>, general@lists.openfabrics.org
 
-On Jan 17, 2008 6:45 PM, Pete Wyckoff <pw@osc.edu> wrote:
-> There's nothing particularly stunning here.  Suspect Bart has
-> configuration issues if not even IPoIB will do > 100 MB/s.
+eh_device_reset_handler was already added to scsi_host_template
+in iscsi_tcp, and is now added also for iscsi_iser.
 
-By this time I found out that the BIOS of the test systems (Intel
-Server Board S5000PAL) set the PCI-e parameter MaxReadReq to 128
-bytes, which explains the low InfiniBand performance. After changing
-this parameter to 4096 bytes the InfiniBand throughput was as
-expected: ib_rdma_bw now reports a
-bandwidth of 933 MB/s.
+Signed-off-by: Erez Zilber <erezz@voltaire.com>
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/infiniband/ulp/iser/iscsi_iser.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
 
-Bart.
+diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
+index fd69fb3..4cd0705 100644
+--- a/drivers/infiniband/ulp/iser/iscsi_iser.c
++++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
+@@ -552,6 +552,7 @@ static struct scsi_host_template iscsi_iser_sht = {
+ 	.max_sectors		= 1024,
+ 	.cmd_per_lun            = ISCSI_MAX_CMD_PER_LUN,
+ 	.eh_abort_handler       = iscsi_eh_abort,
++	.eh_device_reset_handler= iscsi_eh_device_reset,
+ 	.eh_host_reset_handler	= iscsi_eh_host_reset,
+ 	.use_clustering         = DISABLE_CLUSTERING,
+ 	.proc_name              = "iscsi_iser",
+-- 
+1.5.3.7
+
+
+
