@@ -1,102 +1,59 @@
-From: "Filippos Papadopoulos" <psybases@gmail.com>
-Subject: Re: INITIO scsi driver fails to work properly
-Date: Tue, 22 Jan 2008 19:50:37 +0200
-Message-ID: <9f00bd9d0801220950r49de29abl8fbb2495a65c9a10@mail.gmail.com>
-References: <1200070903.3286.28.camel@localhost.localdomain>
-	 <9f00bd9d0801130428s5e4c034apf21052b918470f99@mail.gmail.com>
-	 <1200410166.9273.4.camel@localhost.localdomain>
-	 <20080116145916A.fujita.tomonori@lab.ntt.co.jp>
-	 <1200495471.3136.1.camel@localhost.localdomain>
-	 <20080121222037.3d8b46a1@lxorguk.ukuu.org.uk>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Warning: sym53c8xx calls dma_free_coherent() with irqs disabled
+Date: Tue, 22 Jan 2008 13:19:09 -0500
+Message-ID: <4796339D.2010506@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.234]:10901 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751929AbYAVRuj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jan 2008 12:50:39 -0500
-Received: by wr-out-0506.google.com with SMTP id c49so936339wra.1
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Jan 2008 09:50:38 -0800 (PST)
-In-Reply-To: <20080121222037.3d8b46a1@lxorguk.ukuu.org.uk>
-Content-Disposition: inline
+Received: from cybernetics.com ([70.169.137.4]:1796 "EHLO mail.cybernetics.com"
+	rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org with ESMTP
+	id S1751998AbYAVSnd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jan 2008 13:43:33 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, cebbert@redhat.com, bharrosh@panasas.com, akpm@linux-foundation.org, linux-kernel@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Matthew Wilcox <matthew@wil.cx>
 
-I get the following:
-SAH
-SSH
-SCB Q
-SCB EXEC
-SCB EXEC DONE
+When unloading, sym53c8xx calls dma_free_coherent() while holding a
+spinlock (sym53c8xx_lock) with irqs disabled, which produces the
+following warning with 2.6.24:
 
-After ~3 secs the system freezes.
+modprobe sym53c8xx
+modprobe -r sym53c8xx
+sym0: detaching ...
+sym0: resetting chip
+WARNING: at arch/x86/kernel/pci-dma_32.c:66 dma_free_coherent()
+Pid: 682, comm: rmmod Not tainted 2.6.24-rc8-git5 #1
+ [<c0107a05>] dma_free_coherent+0x95/0xa0
+ [<d0942066>] ___free_dma_mem_cluster+0x46/0x70 [sym53c8xx]
+ [<d0941f0d>] __sym_mfree+0x6d/0xc0 [sym53c8xx]
+ [<c010ec6c>] smp_call_function+0x1c/0x20
+ [<c01209c8>] on_each_cpu+0x28/0x40
+ [<d094232e>] __sym_mfree_dma+0x5e/0xb0 [sym53c8xx]
+ [<d093d510>] sym_hcb_free+0x70/0x170 [sym53c8xx]
+ [<d09389dc>] sym_free_resources+0x3c/0x70 [sym53c8xx]
+ [<d093a06c>] sym_detach+0x8c/0xb0 [sym53c8xx]
+ [<d093a0b9>] sym2_remove+0x29/0x50 [sym53c8xx]
+ [<c01d5316>] pci_device_remove+0x16/0x40
+ [<c0223498>] __device_release_driver+0x68/0xb0
+ [<c02239a4>] driver_detach+0xa4/0xb0
+ [<c0222f83>] bus_remove_driver+0x73/0xa0
+ [<c01d549e>] pci_unregister_driver+0xe/0x70
+ [<d0942dd0>] sym2_exit+0x0/0x7d [sym53c8xx]
+ [<d0942dda>] sym2_exit+0xa/0x7d [sym53c8xx]
+ [<c013e51b>] sys_delete_module+0x11b/0x1b0
+ [<c0112dd9>] do_page_fault+0xe9/0x640
+ [<c0154207>] do_munmap+0x197/0x1f0
+ [<c0102a7e>] sysenter_past_esp+0x5f/0x85
+ [<c02f0000>] __lro_proc_segment+0x130/0x300
+ =======================
 
+However, everything does work OK at least on i386; the warning is for
+portability to other archs (ARM and MIPS).  This warning was added in
+2.6.24-rc1, so the message does not appear in 2.6.23, although it is not
+really a regression.  This appears non-trivial to fix, since the
+spinlock protects access to higher-level data structures.
 
+Tony Battersby
+Cybernetics
 
-
-On Jan 22, 2008 12:20 AM, Alan Cox <alan@lxorguk.ukuu.org.uk> wrote:
-> Ok my attempt to get the card failed so we are going to have to do this
-> the hard way. See where this patch crashes and what it prints
->
-> (On top of the other patches)
->
-> diff -u --new-file --recursive --exclude-from /usr/src/exclude linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c linux-2.6.24-rc8-mm1/drivers/scsi/initio.c
-> --- linux.vanilla-2.6.24-rc8-mm1/drivers/scsi/initio.c  2008-01-19 14:22:43.000000000 +0000
-> +++ linux-2.6.24-rc8-mm1/drivers/scsi/initio.c  2008-01-21 14:54:48.000000000 +0000
-> @@ -2537,10 +2537,12 @@
->         struct Scsi_Host *dev = dev_id;
->         unsigned long flags;
->         int r;
-> -
-> +
-> +       printk("ISR\n");
->         spin_lock_irqsave(dev->host_lock, flags);
->         r = initio_isr((struct initio_host *)dev->hostdata);
->         spin_unlock_irqrestore(dev->host_lock, flags);
-> +       printk("ISR DONE %d\n", r);
->         if (r)
->                 return IRQ_HANDLED;
->         else
-> @@ -2643,6 +2645,7 @@
->         struct initio_host *host = (struct initio_host *) cmd->device->host->hostdata;
->         struct scsi_ctrl_blk *cmnd;
->
-> +       printk("SCB QUEUE\n");
->         cmd->scsi_done = done;
->
->         cmnd = initio_alloc_scb(host);
-> @@ -2650,7 +2653,9 @@
->                 return SCSI_MLQUEUE_HOST_BUSY;
->
->         initio_build_scb(host, cmnd, cmd);
-> +       printk("SCB EXEC\n");
->         initio_exec_scb(host, cmnd);
-> +       printk("SCB EXEC DONE\n");
->         return 0;
->  }
->
-> @@ -2766,6 +2771,8 @@
->         struct scsi_cmnd *cmnd; /* Pointer to SCSI request block */
->         struct initio_host *host;
->         struct scsi_ctrl_blk *cblk;
-> +
-> +       printk("SCB POST\n");
->
->         host = (struct initio_host *) host_mem;
->         cblk = (struct scsi_ctrl_blk *) cblk_mem;
-> @@ -2934,9 +2941,11 @@
->
->         pci_set_drvdata(pdev, shost);
->
-> +       printk("SAH\n");
->         error = scsi_add_host(shost, &pdev->dev);
->         if (error)
->                 goto out_free_irq;
-> +       printk("SSH\n");
->         scsi_scan_host(shost);
->         return 0;
->  out_free_irq:
->
