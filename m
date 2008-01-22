@@ -1,50 +1,83 @@
-From: Hugh Dickins <hugh@veritas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
-Date: Tue, 22 Jan 2008 22:59:13 +0000 (GMT)
-Message-ID: <Pine.LNX.4.64.0801222241460.30816@blonde.site>
+Date: Tue, 22 Jan 2008 17:00:25 -0600
+Message-ID: <1201042825.30007.0.camel@localhost.localdomain>
 References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
- <1201022985.3210.24.camel@localhost.localdomain>  <Pine.LNX.4.64.0801221813540.8693@blonde.site>
-  <1201031028.3210.61.camel@localhost.localdomain>
- <Pine.LNX.4.64.0801222009070.16267@blonde.site> <1201039931.3210.96.camel@localhost.localdomain>
+	 <1201022985.3210.24.camel@localhost.localdomain>
+	 <Pine.LNX.4.64.0801221813540.8693@blonde.site>
+	 <1201031028.3210.61.camel@localhost.localdomain>
+	 <479652D2.10800@garzik.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-ide-owner@vger.kernel.org>
-Received: from [172.20.20.139]([172.20.20.139]) (2464 bytes) by megami.veritas.com
-	via sendmail with P:esmtp/R:smart_host/T:smtp
-	(sender: <hugh@veritas.com>)
-	id <m1JHS61-0000ENC@megami.veritas.com>
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jan 2008 14:59:57 -0800 (PST)
-	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
-In-Reply-To: <1201039931.3210.96.camel@localhost.localdomain>
+In-Reply-To: <479652D2.10800@garzik.org>
 Sender: linux-ide-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Hugh Dickins <hugh@veritas.com>, Andrew Morton <akpm@linux-foundation.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 22 Jan 2008, James Bottomley wrote:
+On Tue, 2008-01-22 at 15:32 -0500, Jeff Garzik wrote:
+> James Bottomley wrote:
+> > Actually, I don't think it's a smaller I/O issue.  The SMART protocol
+> > specifically mandates that the transfers for SMART READ DATA and SMART
+> > READ LOG shall be 512 bytes).  However, the pio transfer routine does
+> > seem to be assuming sector alignment as well, which will be where your
+> > problems are coming from.  I think we need to specify sector minimum
+> > alignment for ata (but not atapi, which has its own non sector size pio
+> > routine).  How about the attached?
+> > 
+> > We have to do this for all ATA devices, because they'll likely all
+> > support SMART, and SMART is defined to be a PIO command.
+> > 
+> > James
+> > 
+> > ---
+> > 
+> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> > index 4bb268b..bc5cf6b 100644
+> > --- a/drivers/ata/libata-scsi.c
+> > +++ b/drivers/ata/libata-scsi.c
+> > @@ -824,9 +824,6 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+> >  	 * requests.
+> >  	 */
+> >  	sdev->max_device_blocked = 1;
+> > -
+> > -	/* set the min alignment */
+> > -	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
+> >  }
+> >  
+> >  static void ata_scsi_dev_config(struct scsi_device *sdev,
+> > @@ -842,7 +839,14 @@ static void ata_scsi_dev_config(struct scsi_device *sdev,
+> >  	if (dev->class == ATA_DEV_ATAPI) {
+> >  		struct request_queue *q = sdev->request_queue;
+> >  		blk_queue_max_hw_segments(q, q->max_hw_segments - 1);
+> > -	}
+> > +
+> > +		/* set the min alignment */
+> > +		blk_queue_update_dma_alignment(sdev->request_queue,
+> > +					       ATA_DMA_PAD_SZ - 1);
+> > +	} else
+> > +		/* ATA devices must be sector aligned */
+> > +		blk_queue_update_dma_alignment(sdev->request_queue,
+> > +					       ATA_SECT_SIZE - 1);
+> >  
+> >  	if (dev->flags & ATA_DFLAG_AN)
+> >  		set_bit(SDEV_EVT_MEDIA_CHANGE, sdev->supported_events);
 > 
-> libsas looks to be OK because it specifically kmallocs a 512 byte buffer
-> which should (for off slab data) be 512 byte aligned.
+> 
+> ACK
+> 
+> Unlike ATAPI, ATA is indeed all 512-byte alignment transfers (_not_ 
+> sector size, which may or may not be 512 bytes)
+> 
+> Does this apply to libata?  libata + jejb dma alignment patch?
+> 
+> What tree...
 
-I don't remember the various SLAB and SLOB and SLUB rules offhand:
-I'm not sure it's safe to rely on such alignment on all of them ....
+It's scsi-misc-2.6; the blk_queue_update_dma_alignment() API doesn't
+exist in mainline (yet).
 
-> libata actually
-> has an issue because the usual location for IDENTIFY_DEVICE data is
-> inside a struct ata_device, which is highly unlikely to be correctly
-> aligned.  Fortunately, I think we can only get the bug if we actually
-> cross a page boundary for non contiguous pages in the identify data,
-> which a kernel allocation will never do, so libata should be safe as
-> well.
+James
 
-.... but this would trump it: yes, we don't need 512-byte alignment
-for this, and it is okay to cross a page boundary, just so long as
-the start of the next page really belongs to our buffer not somebody
-else's.
 
-There doesn't seem much likelihood of anyone vmalloc'ing the buffer
-in which that IDENTIFY_DEVICE gets done.  Though this discussion
-does make me wonder whether ata_pio_sector ought to have a BUG_ON
-(and yes, a BUG_ON rather than a WARN_ON) against the possibility.
-
-Hugh
