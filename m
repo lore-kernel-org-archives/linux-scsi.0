@@ -1,51 +1,50 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: Megaraid: Use of outb_p
-Date: Tue, 22 Jan 2008 14:42:37 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501E60225@NAMAIL1.ad.lsil.com>
-References: <20080122213735.GP27250@parisc-linux.org>
+From: Douglas Gilbert <dougg@torque.net>
+Subject: Re: [PATCH] fix /proc/scsi/sg/devices when no SCSI devices
+Date: Tue, 22 Jan 2008 23:11:26 +0100
+Message-ID: <47966A0E.10900@torque.net>
+References: <4796514D.6010908@cybernetics.com>
+Reply-To: dougg@torque.net
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:33519 "EHLO mail0.lsil.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752688AbYAVVmv convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jan 2008 16:42:51 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20080122213735.GP27250@parisc-linux.org>
+Received: from pentafluge.infradead.org ([213.146.154.40]:33887 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751276AbYAVWLe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jan 2008 17:11:34 -0500
+In-Reply-To: <4796514D.6010908@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Wilcox <matthew@wil.cx>
-Cc: Alan Cox <alan@lxorguk.ukuu.org.uk>, linux-scsi@vger.kernel.org, DL-MegaRAID Linux <megaraidlinux@lsi.com>
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: James Bottomley <James.Bottomley@SteelEye.com>, linux-scsi@vger.kernel.org
 
-
-Alan/Matthew,
-
-I will double check and give you back soon.
-
-Regards.
-
-Bo Yang 
-
------Original Message-----
-From: Matthew Wilcox [mailto:matthew@wil.cx] 
-Sent: Tuesday, January 22, 2008 4:38 PM
-To: Yang, Bo
-Cc: Alan Cox; linux-scsi@vger.kernel.org; DL-MegaRAID Linux
-Subject: Re: Megaraid: Use of outb_p
-
-On Tue, Jan 22, 2008 at 02:30:12PM -0700, Yang, Bo wrote:
-> Alan/Matthew,
+Tony Battersby wrote:
+> The patch "[SCSI] sg: use idr to replace static arrays" in 2.6.24-rc1
+> causes a bogus line to appear in /proc/scsi/sg/devices containing
+> "-1 -1 -1 -1 -1 -1 -1 -1 -1" when there are no SCSI devices in the
+> system.  In 2.6.23, /proc/scsi/sg/devices is empty when there are no
+> SCSI devices in the system.  A similar problem exists with
+> /proc/scsi/sg/device_strs.  The following patch restores the behavior
+> of 2.6.23.
 > 
-> I found inb_p/outb_p are defined as inb/outb in kernel src.  So it 
-> should not have problems to change inb_p/outb_p to inb/outb.
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> ---
+> --- linux-2.6.24-rc8-git5/drivers/scsi/sg.c.orig	2008-01-22 15:08:46.000000000 -0500
+> +++ linux-2.6.24-rc8-git5/drivers/scsi/sg.c	2008-01-22 15:09:05.000000000 -0500
+> @@ -2521,7 +2521,7 @@ sg_idr_max_id(int id, void *p, void *dat
+>  static int
+>  sg_last_dev(void)
+>  {
+> -	int k = 0;
+> +	int k = -1;
+>  	unsigned long iflags;
+>  
+>  	read_lock_irqsave(&sg_index_lock, iflags);
+> 
+> 
+> -
 
-That's not true for x86-32.  Please, can you look up the documentation
-for this chip and find out what sort of delay it needs?
+Tony,
+Thanks.
 
---
-Intel are signing my paycheques ... these opinions are still mine "Bill,
-look, we understand that you're interested in selling us this operating
-system, but compare it to ours.  We can't possibly take such a
-retrograde step."
+Signed-off-by: Douglas Gilbert <dougg@torque.net>
