@@ -1,50 +1,46 @@
-From: "Bart Van Assche" <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Performance of SCST versus STGT
-Date: Tue, 22 Jan 2008 08:50:03 +0100
-Message-ID: <e2e108260801212350h7308caccs4be0f519e1e9bb72@mail.gmail.com>
-References: <20080117174542.GC29650@osc.edu> <479096D2.8090003@vlnb.net>
-	<e2e108260801200136g7f17b8a0g89a54cc1d73bbc34@mail.gmail.com>
-	<20080122122657R.fujita.tomonori@lab.ntt.co.jp>
+From: Guillaume Bedot <littletux-QFiJtcdG+fw@public.gmane.org>
+Subject: Re: [usb-storage] PATCH: usb-storage-set-last-sector-bug-flag.patch
+Date: Tue, 22 Jan 2008 09:26:16 +0100
+Message-ID: <1200990376.7006.4.camel@localhost>
+References: <47932211.90105@hhs.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-In-Reply-To: <20080122122657R.fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Content-Disposition: inline
-List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
-List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
-Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-To: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
-Cc: stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47932211.90105-fbo2DhPpy/Q@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>
+Cc: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, USB development list <linux-usb-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Jan 22, 2008 4:26 AM, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org> wrote:
+Hello,
 
-> First, I recommend you to examine iSER stuff more since it has some
-> parameters unlike SRP, which effects the performance, IIRC. At least,
-> you could get the iSER performances similar to Pete's.
+Le dimanche 20 janvier 2008 =C3=A0 11:27 +0100, Hans de Goede a =C3=A9c=
+rit :
+> Hi all,
+>=20
+> This patch sets the last_sector_bug flag to 1 for all USB disks. This=
+ is
+> needed to makes the cardreader on various HP multifunction printers w=
+ork.
+>=20
+> Since the performance impact is negible we set this flag for all USB =
+disks to
+> avoid an unusual_devs.h nightmare.
+>=20
+> Note that this patch depends on:
+> PATCH: scsi-sd-last-sector-bug-flag.patch
+>=20
+> Which actually adds this flag to the scsi subsystem.
+>=20
+> Signed-off-by: Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>
+>=20
+> Regards,
+>=20
+> Hans
 
-Documentation about configuring iSER parameters at the initiator side
-appears to be hard to find. A Google query for (iscsiadm "op update"
-"v iser" -- http://www.google.com/search?q=iscsiadm+%22op+update%22+%22v+iser%22)
-gave only one result:
-http://www.mail-archive.com/stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org/msg00033.html.
-I also found an update of this document:
-http://www.mail-archive.com/stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org/msg00133.html.
+Just a line to say these new patches work for me.
 
-Are you referring to parameters like MaxRecvDataSegmentLength,
-TargetRecvDataSegmentLength, InitiatorRecvDataSegmentLength and
-MaxOutstandingUnexpectedPDUs as explained in RFC 5046
-(http://www.ietf.org/rfc/rfc5046.txt) ?
+Best regards,
 
-It would be interesting for me to know which values Pete had
-configured in his tests, such that I can configure the same values for
-these parameters.
-
-Bart.
+Guillaume B.
