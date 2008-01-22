@@ -1,43 +1,40 @@
-From: Erez Zilber <erezz@voltaire.com>
-Subject: [PATCH] IB/iSER: add logical unit reset support
-Date: Tue, 22 Jan 2008 12:06:25 +0200
-Message-ID: <4795C021.6030707@voltaire.com>
+From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
+Subject: Re: [RFC] A SCSI fault injection framework using SystemTap.
+Date: Tue, 22 Jan 2008 19:26:30 +0900
+Message-ID: <4795C4D6.9010904@ce.jp.nec.com>
+References: <478C22A9.5000009@ce.jp.nec.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-2022-JP
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fwil.voltaire.com ([193.47.165.2]:20253 "EHLO exil.voltaire.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1762097AbYAVKG2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jan 2008 05:06:28 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <478C22A9.5000009@ce.jp.nec.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <james.bottomley@steeleye.com>
-Cc: linux-scsi@vger.kernel.org, Roland Dreier <rdreier@cisco.com>, general@lists.openfabrics.org
 
-eh_device_reset_handler was already added to scsi_host_template
-in iscsi_tcp, and is now added also for iscsi_iser.
 
-Signed-off-by: Erez Zilber <erezz@voltaire.com>
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/infiniband/ulp/iser/iscsi_iser.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+>The new framework is tested on Fedora8(i386) running with kernel 2.6.23.12.
+>So far, I'm cleaning up the tool set for release, and plan to post it in the near future.
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index fd69fb3..4cd0705 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -552,6 +552,7 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.max_sectors		= 1024,
- 	.cmd_per_lun            = ISCSI_MAX_CMD_PER_LUN,
- 	.eh_abort_handler       = iscsi_eh_abort,
-+	.eh_device_reset_handler= iscsi_eh_device_reset,
- 	.eh_host_reset_handler	= iscsi_eh_host_reset,
- 	.use_clustering         = DISABLE_CLUSTERING,
- 	.proc_name              = "iscsi_iser",
+Now it's ready. The scsi fault injection tool is available from the following site.
+https://sourceforge.net/projects/scsifaultinjtst/
+If you have any comments, please let me know.
+
+Additionally, the deadlock problem reproduced also on md RAID10. I think that the
+same reason for RAID1 deadlock reported earlier cause this problem, because
+raid10.c is based on raid1.c.
+> e.g.
+>  -The kernel thread for md RAID1 could cause a deadlock when the error handler for
+>    md RAID1 contends with the write access to the md RAID1 array.
+
+I've reproduced the deadlock on RAID10 using this tool with a small shell script for
+automatically injecting a fault repeatedly. But I can't come up with any good
+idea for the patch to fix this problem so far.
+
 -- 
-1.5.3.7
-
-
+------------------------------------------------------------------------
+Kenichi TANAKA    | Open Source Software Platform Development Division
+                  | Computers Software Operations Unit, NEC Corporation
+                  | k-tanaka@ce.jp.nec.com
 
