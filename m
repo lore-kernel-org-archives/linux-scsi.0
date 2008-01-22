@@ -1,48 +1,72 @@
-From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: Re: [PATCH v3] use dynamically allocated sense buffer
-Date: Tue, 22 Jan 2008 13:21:47 +0900
-Message-ID: <20080122132147F.fujita.tomonori@lab.ntt.co.jp>
-References: <20080120164010.GC27250@parisc-linux.org>
-	<20080121130858G.fujita.tomonori@lab.ntt.co.jp>
-	<20080121043741.GF27250@parisc-linux.org>
+From: Dave Young <hidave.darkstar@gmail.com>
+Subject: [PATCH 5/6] scsi : use class iteration api
+Date: Tue, 22 Jan 2008 14:01:34 +0800
+Message-ID: <20080122060134.GF3066@darkstar.te-china.tietoenator.com>
+References: <20080112095517.GE2893@darkstar.te-china.tietoenator.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:53847 "EHLO
-	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753810AbYAVEWI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Jan 2008 23:22:08 -0500
-In-Reply-To: <20080121043741.GF27250@parisc-linux.org>
+Received: from fg-out-1718.google.com ([72.14.220.155]:54577 "EHLO
+	fg-out-1718.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752217AbYAVGAH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Jan 2008 01:00:07 -0500
+Received: by fg-out-1718.google.com with SMTP id e21so1888563fga.17
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Jan 2008 22:00:06 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <20080112095517.GE2893@darkstar.te-china.tietoenator.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: matthew@wil.cx
-Cc: fujita.tomonori@lab.ntt.co.jp, James.Bottomley@HansenPartnership.com, bharrosh@panasas.com, linux-scsi@vger.kernel.org, tomof@acm.org
+To: James.Bottomley@hansenpartnership.com
+Cc: gregkh@suse.de, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Sun, 20 Jan 2008 21:37:41 -0700
-Matthew Wilcox <matthew@wil.cx> wrote:
+Convert to use the class iteration api.
 
-> On Mon, Jan 21, 2008 at 01:08:58PM +0900, FUJITA Tomonori wrote:
-> > On Sun, 20 Jan 2008 09:40:11 -0700
-> > Matthew Wilcox <matthew@wil.cx> wrote:
-> > > Longer-term, I want to allow low-level drivers to allocate the
-> > > sense_buffer themselves so they can DMA directly into it (ie grown-up dma
-> > > mapping, rather than this quaint x86 __GFP_DMA).  This patch doesn't get
-> > 
-> > Yeah, I think that the approach is one of candidates.
-> > 
-> > If we go with it, I think that the major issue is that LLDs don't know
-> > when they can reclaim sense_buffer from scsi-ml; scsi-ml uses
-> > sense_buffer after scmd->scsi_done.
-> 
-> The midlayer would call a function in the scsi_host_template to free the
-> command.  The sense_buffer would be freed at the same time.
+Signed-off-by: Dave Young <hidave.darkstar@gmail.com> 
 
-Yeah, it would work though I'm a bit concerned about adding another
-phase to the scsi_cmnd interaction between the midlayer and LLDs.
+---
+ drivers/scsi/hosts.c |   24 +++++++++++++-----------
+ 1 file changed, 13 insertions(+), 11 deletions(-)
 
-Another possible option is that putting some sense_buffer information
-to the host template and the midlayer allocates sense buffers for
-LLDs. LLDs can ask for them when it's necessary. One disadvantage of
-this is the many LLDs have sense buffer in their own data structure so
-it's not fit well for these LLDs, I think.
+diff -upr linux/drivers/scsi/hosts.c linux.new/drivers/scsi/hosts.c
+--- linux/drivers/scsi/hosts.c	2008-01-16 08:43:35.000000000 +0800
++++ linux.new/drivers/scsi/hosts.c	2008-01-16 08:43:35.000000000 +0800
+@@ -429,6 +429,15 @@ void scsi_unregister(struct Scsi_Host *s
+ }
+ EXPORT_SYMBOL(scsi_unregister);
+ 
++static int __scsi_host_match(struct class_device *cdev, void *data)
++{
++	struct Scsi_Host *p;
++	unsigned short *hostnum = (unsigned short *)data;
++
++	p = class_to_shost(cdev);
++	return p->host_no == *hostnum;
++}
++
+ /**
+  * scsi_host_lookup - get a reference to a Scsi_Host by host no
+  *
+@@ -439,19 +448,12 @@ EXPORT_SYMBOL(scsi_unregister);
+  **/
+ struct Scsi_Host *scsi_host_lookup(unsigned short hostnum)
+ {
+-	struct class *class = &shost_class;
+ 	struct class_device *cdev;
+-	struct Scsi_Host *shost = ERR_PTR(-ENXIO), *p;
++	struct Scsi_Host *shost = ERR_PTR(-ENXIO);
+ 
+-	down(&class->sem);
+-	list_for_each_entry(cdev, &class->children, node) {
+-		p = class_to_shost(cdev);
+-		if (p->host_no == hostnum) {
+-			shost = scsi_host_get(p);
+-			break;
+-		}
+-	}
+-	up(&class->sem);
++	cdev = class_find_child(&shost_class, &hostnum, __scsi_host_match);
++	if (cdev)
++		shost = scsi_host_get(class_to_shost(cdev));
+ 
+ 	return shost;
+ }
