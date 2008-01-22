@@ -1,56 +1,83 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: [PATCH 0/3] update bidirectional series to sit on top of
- sg_table
-Date: Wed, 23 Jan 2008 01:31:58 +0900
-Message-ID: <20080123012913Z.tomof@acm.org>
-References: <1200107340.3286.79.camel@localhost.localdomain>
+Subject: [PATCH 2/3] scsi_debug: add bidi data transfer support
+Date: Wed, 23 Jan 2008 01:32:00 +0900
+Message-ID: <20080123013109J.tomof@acm.org>
+References: <20080123013012N.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:58048 "EHLO mo11.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:58049 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751829AbYAVQfd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1751667AbYAVQfd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 22 Jan 2008 11:35:33 -0500
-In-Reply-To: <1200107340.3286.79.camel@localhost.localdomain>
+In-Reply-To: <20080123013012N.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com, dougg@torque.net
 Cc: bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp, linux-scsi@vger.kernel.org, Jens.Axboe@oracle.comfujita.tomonori@lab.ntt.co.jp
 
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH 0/3] update bidirectional series to sit on top of sg_table
-Date: Fri, 11 Jan 2008 21:09:00 -0600
+This enables fill_from_dev_buffer and fetch_to_dev_buffer to handle
+bidi commands.
 
-> OK, I suppose in the scheme of things, it's my turn to bear some of the
-> pain.  the SCSI bidirectional series rejects pretty badly with sg_table,
-> and since sg_table has to go in, I rebased the series on top of it.
-> 
-> Additionally, I tidied up the patches to take advantages of some of the
-> features of sg_table.  I killed both use_sg and sg_count in favour of
-> using sg_table.nseg for the count.
-> 
-> Just so you can test all of this to make sure I got it right, you can
-> pull the patch series from
-> 
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-bidi-2.6.git
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/scsi_debug.c |   21 ++++++++++-----------
+ 1 files changed, 10 insertions(+), 11 deletions(-)
 
-I've just started to look at the bidi tree.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 31f7378..d810aa7 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -594,18 +594,18 @@ static int fill_from_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
+ 	int k, req_len, act_len, len, active;
+ 	void * kaddr;
+ 	void * kaddr_off;
+-	struct scatterlist * sg;
++	struct scatterlist *sg;
++	struct scsi_data_buffer *sdb = scsi_in(scp);
+ 
+-	if (0 == scsi_bufflen(scp))
++	if (!sdb->length)
+ 		return 0;
+-	if (NULL == scsi_sglist(scp))
++	if (!sdb->table.sgl)
+ 		return (DID_ERROR << 16);
+-	if (! ((scp->sc_data_direction == DMA_BIDIRECTIONAL) ||
+-	      (scp->sc_data_direction == DMA_FROM_DEVICE)))
++	if (!(scsi_bidi_cmnd(scp) || scp->sc_data_direction == DMA_FROM_DEVICE))
+ 		return (DID_ERROR << 16);
+ 	active = 1;
+ 	req_len = act_len = 0;
+-	scsi_for_each_sg(scp, sg, scsi_sg_count(scp), k) {
++	for_each_sg(sdb->table.sgl, sg, sdb->table.nents, k) {
+ 		if (active) {
+ 			kaddr = (unsigned char *)
+ 				kmap_atomic(sg_page(sg), KM_USER0);
+@@ -623,10 +623,10 @@ static int fill_from_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
+ 		}
+ 		req_len += sg->length;
+ 	}
+-	if (scsi_get_resid(scp))
+-		scsi_set_resid(scp, scsi_get_resid(scp) - act_len);
++	if (sdb->resid)
++		sdb->resid -= act_len;
+ 	else
+-		scsi_set_resid(scp, req_len - act_len);
++		sdb->resid = req_len - act_len;
+ 	return 0;
+ }
+ 
+@@ -643,8 +643,7 @@ static int fetch_to_dev_buffer(struct scsi_cmnd * scp, unsigned char * arr,
+ 		return 0;
+ 	if (NULL == scsi_sglist(scp))
+ 		return -1;
+-	if (! ((scp->sc_data_direction == DMA_BIDIRECTIONAL) ||
+-	      (scp->sc_data_direction == DMA_TO_DEVICE)))
++	if (!(scsi_bidi_cmnd(scp) || scp->sc_data_direction == DMA_TO_DEVICE))
+ 		return -1;
+ 	req_len = fin = 0;
+ 	scsi_for_each_sg(scp, sg, scsi_sg_count(scp), k) {
+-- 
+1.5.3.4
 
-I suppose that only panasas guys have tested the bidi tree with their
-OSD target devices. To test the bidi tree, I added XDWRITEREAD_10
-support to scsi_debug and sgv4_xdwriteread tool to my makeshift bsg
-tool collections:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/tomo/sgv4-tools.git
-
-It just sends XDWRITEREAD_10 commands like this:
-
-tulip:~# sgv4_xdwriteread --length 16384 /sys/class/bsg/1:0:0:0
-driver:0, transport:0, device:0, din_resid: 0, dout_resid: 0
-
-No errors.
-
-I'll send the patchset (over the bidi tree) to add XDWRITEREAD_10
-support to scsi_debug though I'm not sure whether it's worth adding it
-to mainline.
