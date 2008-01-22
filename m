@@ -1,115 +1,72 @@
-From: Adrian Bunk <trivial@kernel.org>
-Subject: [trivial patch] scsi/ultrastor: clean up inline asm warnings (fwd)
-Date: Tue, 22 Jan 2008 20:47:20 +0200
-Message-ID: <20080122184720.GG26556@does.not.exist>
+From: Hugh Dickins <hugh@veritas.com>
+Subject: Re: [PATCH rc8-mm1] hotfix libata-scsi corruption
+Date: Tue, 22 Jan 2008 18:36:18 +0000 (GMT)
+Message-ID: <Pine.LNX.4.64.0801221813540.8693@blonde.site>
+References: <Pine.LNX.4.64.0801221706320.5832@blonde.site>
+ <1201022985.3210.24.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp5.pp.htv.fi ([213.243.153.39]:48796 "EHLO smtp5.pp.htv.fi"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751640AbYAVSsq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jan 2008 13:48:46 -0500
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-ide-owner@vger.kernel.org>
+Received: from [172.20.20.139]([172.20.20.139]) (3420 bytes) by megami.veritas.com
+	via sendmail with P:esmtp/R:smart_host/T:smtp
+	(sender: <hugh@veritas.com>)
+	id <m1JHNzb-0000LnC@megami.veritas.com>
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jan 2008 10:37:03 -0800 (PST)
+	(Smail-3.2.0.101 1997-Dec-17 #15 built 2001-Aug-30)
+In-Reply-To: <1201022985.3210.24.camel@localhost.localdomain>
+Sender: linux-ide-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Jeff Garzik <jeff@garzik.org>, Alan Stern <stern@rowland.harvard.edu>, linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, Frederik Deweerdt <deweerdt@free.fr>
 
-James, can you review and apply this patch?
+On Tue, 22 Jan 2008, James Bottomley wrote:
+> > --- 2.6.24-rc8-mm1/drivers/ata/libata-scsi.c	2008-01-17 16:49:47.000000000 +0000
+> > +++ linux/drivers/ata/libata-scsi.c	2008-01-22 15:45:40.000000000 +0000
+> > @@ -826,7 +826,7 @@ static void ata_scsi_sdev_config(struct 
+> >  	sdev->max_device_blocked = 1;
+> >  
+> >  	/* set the min alignment */
+> > -	blk_queue_update_dma_alignment(sdev->request_queue, ATA_DMA_PAD_SZ - 1);
+> > +	blk_queue_update_dma_alignment(sdev->request_queue, ATA_SECT_SIZE - 1);
+> >  }
+> >  
+> >  static void ata_scsi_dev_config(struct scsi_device *sdev,
+> 
+> Unfortunately, that's likely not the entire hot fix ... the implication
+> is that we have some mapping error in the way we do direct SG_IO.
 
-TIA
-Adrian
+Quite possibly, I'm not sure.
 
+> What the fix you propose does is make it far more likely that block will
+> copy, perform I/O then uncopy (almost certain, since most smartd data
+> transfers are well under ATA_SECT_SIZE, which is 512).  However,
+> implicating a generic path like this implies that we would get the same
+> problem for SCSI commands as well, so the correct hot fix is below.
 
------ Forwarded message from Frederik Deweerdt <deweerdt@free.fr> -----
+I've not noticed any problems from the normal activity of the system,
+only from smartd's sg_ioctl.  My impression was that it's a libata
+issue, because it's going through ata_pio_sector, which does 
 
-Date: Wed, 16 Jan 2008 17:19:08 +0100
-From: Frederik Deweerdt <deweerdt@free.fr>
-To: linux-kernel@vger.kernel.org
-Cc: bunk@kernel.org
-Subject: [trivial patch] scsi/ultrastor: clean up inline asm warnings
+	ap->ops->data_xfer(qc->dev, buf + offset, qc->sect_size, do_write);
 
-Hi,
+referring to sect_size, without considering the possibility of any smaller
+I/O size.  (Me, I don't even know why it's going PIO rather than DMA:
+I'm assuming smartd does things that way, but there's no limit to my
+ignorance here.)
 
-Compiling latest mainline with gcc 4.2.1 spews the following warnings:
+> However, I'd like to see if we can track the problem through the SG_IO
+> direct path ... how many adjacent page bytes are corrupt?  Just a few or
+> a large number (I'm wondering if it's an off by one or off by alignment
+> type bug)?
 
-drivers/scsi/ultrastor.c: In function 'find_and_clear_bit_16':
-drivers/scsi/ultrastor.c:303: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:302: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c: At top level:
-drivers/scsi/ultrastor.c:1202: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:1202: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c: In function 'ultrastor_queuecommand':
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:698: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:302: warning: matching constraint does not allow a register
-drivers/scsi/ultrastor.c:302: warning: matching constraint does not allow a register
+I've assumed it's just the one next page: because ata_pio_sector is
+doing a data_xfer of sect_size ATA_SECT_SIZE 512 to an offset above
+0xe00 in the smartd stack page.  The time I actually saw corruption
+rather than an oops at startup, it was in a tmpfs swap vector page
+running 64-bit kernel, and I didn't examine any further pages (just
+checked the page before and matched it up to smartd's stack, already
+suspecting that).
 
-The following patch fixes it by using the '+' operator on the (*field)
-operand, marking it as read-write to gcc. I diffed the two resulting .s,
-and gcc produced the same code. This was tested with gcc 4.2.1 and gcc 3.4.3
+I don't believe it's an off-by-one at your SCSI end.
 
-$ diff -u drivers/scsi/ultrastor.s{_,}
---- drivers/scsi/ultrastor.s_   2008-01-16 16:40:01.000000000 +0100
-+++ drivers/scsi/ultrastor.s    2008-01-16 16:40:19.000000000 +0100
-@@ -1457,7 +1457,7 @@
-        je      .L268   #,
- #APP
-        xorl %ebp,%ebp  # mscp_index
--0:     bsfw config+20,%bp      # config.mscp_free, mscp_index
-+       0: bsfw config+20,%bp   # config.mscp_free, mscp_index
-        btr %ebp,config+20      # mscp_index, config.mscp_free
-        jnc 0b
- #NO_APP
-@@ -1726,9 +1726,9 @@
-        call    panic   #
-        .size   ultrastor_queuecommand, .-ultrastor_queuecommand
-        .section        .modinfo,"a",@progbits
--       .type   __mod_license1184, @object
--       .size   __mod_license1184, 12
--__mod_license1184:
-+       .type   __mod_license1191, @object
-+       .size   __mod_license1191, 12
-+__mod_license1191:
-        .string "license=GPL"
-        .section        .rodata.str1.1
- .LC27:
-
-
-Regards,
-Frederik
-
-Signed-off-by: Frederik Deweerdt <frederik.deweerdt@gmail.com>
-
-diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
-index 6d1f0ed..93c5a67 100644
---- a/drivers/scsi/ultrastor.c
-+++ b/drivers/scsi/ultrastor.c
-@@ -298,9 +298,16 @@ static inline int find_and_clear_bit_16(unsigned long *field)
- {
-   int rv;
- 
--  if (*field == 0) panic("No free mscp");
--  asm("xorl %0,%0\n0:\tbsfw %1,%w0\n\tbtr %0,%1\n\tjnc 0b"
--      : "=&r" (rv), "=m" (*field) : "1" (*field));
-+  if (*field == 0)
-+    panic("No free mscp");
-+
-+  asm volatile (
-+	"xorl %0,%0\n\t"
-+	"0: bsfw %1,%w0\n\t"
-+	"btr %0,%1\n\t"
-+	"jnc 0b"
-+	: "=&r" (rv), "=m" (*field) :);
-+
-   return rv;
- }
- 
-
------ End forwarded message -----
-
+Hugh
