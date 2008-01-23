@@ -1,79 +1,70 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Wed, 23 Jan 2008 20:11:34 +0300
-Message-ID: <47977546.8090904@vlnb.net>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: PATCH:
+	usb-storage-set-last-sector-bug-flag.patch
+Date: Wed, 23 Jan 2008 10:12:39 -0800
+Message-ID: <20080123181239.GA21836@kroah.com>
+References: <20080120205625.GB28842@kroah.com>
+	<Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:52478 "EHLO
-	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752926AbYAWRLk (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Jan 2008 12:11:40 -0500
-In-Reply-To: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Hans de Goede <j.w.r.degoede@hhs.nl>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, James.Bottomley@hansenpartnership.com, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-Bart Van Assche wrote:
-> As you probably know there is a trend in enterprise computing towards
-> networked storage. This is illustrated by the emergence during the
-> past few years of standards like SRP (SCSI RDMA Protocol), iSCSI
-> (Internet SCSI) and iSER (iSCSI Extensions for RDMA). Two different
-> pieces of software are necessary to make networked storage possible:
-> initiator software and target software. As far as I know there exist
-> three different SCSI target implementations for Linux:
-> - The iSCSI Enterprise Target Daemon (IETD,
-> http://iscsitarget.sourceforge.net/);
-> - The Linux SCSI Target Framework (STGT, http://stgt.berlios.de/);
-> - The Generic SCSI Target Middle Level for Linux project (SCST,
-> http://scst.sourceforge.net/).
-> Since I was wondering which SCSI target software would be best suited
-> for an InfiniBand network, I started evaluating the STGT and SCST SCSI
-> target implementations. Apparently the performance difference between
-> STGT and SCST is small on 100 Mbit/s and 1 Gbit/s Ethernet networks,
-> but the SCST target software outperforms the STGT software on an
-> InfiniBand network. See also the following thread for the details:
-> http://sourceforge.net/mailarchive/forum.php?thread_name=e2e108260801170127w2937b2afg9bef324efa945e43%40mail.gmail.com&forum_name=scst-devel.
+On Sun, Jan 20, 2008 at 04:45:36PM -0500, Alan Stern wrote:
+> On Sun, 20 Jan 2008, Greg KH wrote:
 > 
-> About the design of the SCST software: while one of the goals of the
-> STGT project was to keep the in-kernel code minimal, the SCST project
-> implements the whole SCSI target in kernel space. SCST is implemented
-> as a set of new kernel modules, only minimal changes to the existing
-> kernel are necessary before the SCST kernel modules can be used. This
-> is the same approach that will be followed in the very near future in
-> the OpenSolaris kernel (see also
-> http://opensolaris.org/os/project/comstar/). More information about
-> the design of SCST can be found here:
-> http://scst.sourceforge.net/doc/scst_pg.html.
+> > On Sun, Jan 20, 2008 at 11:27:29AM +0100, Hans de Goede wrote:
+> > > Hi all,
+> > >
+> > > This patch sets the last_sector_bug flag to 1 for all USB disks. This is
+> > > needed to makes the cardreader on various HP multifunction printers work.
+> > >
+> > > Since the performance impact is negible we set this flag for all USB disks 
+> > > to avoid an unusual_devs.h nightmare.
+> > 
+> > Oh great, now my "working just fine" USB devices, which happen to have
+> > data in the last sector, suddenly stop working.
+> > 
+> > That's not acceptable :(
 > 
-> My impression is that both the STGT and SCST projects are well
-> designed, well maintained and have a considerable user base. According
-> to the SCST maintainer (Vladislav Bolkhovitin), SCST is superior to
-> STGT with respect to features, performance, maturity, stability, and
-> number of existing target drivers. Unfortunately the SCST kernel code
-> lives outside the kernel tree, which makes SCST harder to use than
-> STGT.
+> These patches really should not impact existing devices.  If they do
+> then something is definitely wrong.
 > 
-> As an SCST user, I would like to see the SCST kernel code integrated
-> in the mainstream kernel because of its excellent performance on an
-> InfiniBand network. Since the SCST project comprises about 14 KLOC,
-> reviewing the SCST code will take considerable time. Who will do this
-> reviewing work ? And with regard to the comments made by the
-> reviewers: Vladislav, do you have the time to carry out the
-> modifications requested by the reviewers ? I expect a.o. that
-> reviewers will ask to move SCST's configuration pseudofiles from
-> procfs to sysfs.
+> Can you provide detailed logging information showing your problem?  For 
+> example, a usbmon trace would be good.  Better yet, a usbmon trace 
+> without the patches and a usbmon trace with the patches, for 
+> comparison.
 
-Sure, I do, although I personally don't see much sense in such move.
+I don't have a device with such a problem, I just am worried that we are
+now suddenly keeping access from the last sector for devices that
+currently did work just fine.
 
-> Bart Van Assche.
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+If you all guarantee that this will not happen, hey, I'm happy, and I'll
+gladly point all bug reports on to you all :)
 
+thanks,
+
+greg k-h
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
