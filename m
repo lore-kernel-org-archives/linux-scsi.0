@@ -1,112 +1,90 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: [PATCH] [2.6.23.13] udev hangs USB-storage
- (HP r707 camera)
-Date: Wed, 23 Jan 2008 00:50:00 -0800
-Message-ID: <4796FFB8.1030503@ipom.com>
-References: <20080119174556.GE11553@colo.lackof.org>
-	<47929B9F.8080607@s5r6.in-berlin.de>
-	<20080120022829.GG11553@colo.lackof.org>
-	<1200797791.11214.3.camel@localhost.localdomain>
-	<20080120031008.GI11553@colo.lackof.org>
-	<1200802265.11214.8.camel@localhost.localdomain>
-	<20080120052553.GA5452@colo.lackof.org> <4796D02D.8000108@ipom.com>
-	<20080123065556.GB20348@colo.lackof.org>
-	<20080123070229.GC20348@colo.lackof.org>
+From: Joaquim Duran <joaquinduran@adtelecom.es>
+Subject: File operation on removed USB memory stick
+Date: Wed, 23 Jan 2008 11:17:35 +0100
+Message-ID: <4797143F.8000400@adtelecom.es>
+Reply-To: joaquinduran@adtelecom.es
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============0647863592=="
-Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <20080123070229.GC20348@colo.lackof.org>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
-List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
-List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
-	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux-usb-devel-bounces@lists.sourceforge.net
-Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-usb@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from correo11.acens.net ([217.116.0.29]:39741 "EHLO
+	correo11.acens.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751198AbYAWJak (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 04:30:40 -0500
+Received: from unknown (HELO [194.179.62.51]) (joaquinduran.adtelecom.es@[213.98.202.183])
+          (envelope-sender <joaquinduran@adtelecom.es>)
+          by correo11.acens.net (qmail-ldap-1.03) with SMTP
+          for <linux-scsi@vger.kernel.org>; 23 Jan 2008 09:23:58 -0000
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---===============0647863592==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature";
-	boundary="------------enigE245D77024C7E41ECD983C46"
+Dear all,
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enigE245D77024C7E41ECD983C46
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+I'm new to this e-mail list. My name is Joaquim Duran.
 
-Grant Grundler wrote:
-> On Tue, Jan 22, 2008 at 11:55:56PM -0700, Grant Grundler wrote:
-> ...
->>>   http://www.phildev.net/linux/usb-unusualdevs-notes.html
->> In general, a very helpful document! Thanks!
-> ...
->=20
-> I read the rest of the document and explains exactly my confusion.
-> Can you please include that document into Documentation/usb/ ?
-> And then add a reference to the location where the US_SC* and US_PR*
-> constants are defined?
+I've detected a behavior of the SCSI system that could be improved when
+accessing to a removed USB memory stick.
 
-They moved since I wrote that document with the birth of libusual.
+That is, I was playing musing from a mounted USB stick, then I removed
+it while the program was still running. The program stopped with an
+error after few seconds. I checked the message log file and saw that the
+I/O operations to a file of the memory stick were done 3 times before
+notify the fault to the application. The logs:
 
-include/linux/usb_usual.h is where you can find them. I'll try to get aro=
-und
-to updating that doc sometime soon.
+Jan 23 09:36:47 adlab127 sdf: sdf1
+Jan 23 09:36:47 adlab127 sd 2:0:0:0: [sdf] Attached SCSI removable disk
+Jan 23 09:36:47 adlab127 sd 2:0:0:0: Attached scsi generic sg4 type 0
+Jan 23 09:36:47 adlab127 usb-storage: device scan complete
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 127) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 128) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 129) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 130) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 131) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 132) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 133) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 134) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 127) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 128) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 129) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 130) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 131) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 132) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 133) failed
+Jan 23 09:36:47 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:47 adlab127 FAT: Directory bread(block 134) failed
+Jan 23 09:36:58 adlab127 scsi 1:0:0:0: rejecting I/O to dead device
+Jan 23 09:36:58 adlab127 FAT: unable to read inode block for updating
+(i_pos 7582155)
 
---=20
-Phil Dibowitz                             phil@ipom.com
-Open Source software and tech docs        Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
+If the memory stick has been removed, a more severe error could be
+notified to the application avoiding the repetition of the operations.
 
-"Never write it in C if you can do it in 'awk';
- Never do it in 'awk' if 'sed' can handle it;
- Never use 'sed' when 'tr' can do the job;
- Never invoke 'tr' when 'cat' is sufficient;
- Avoid using 'cat' whenever possible" -- Taylor's Laws of Programming
+In general IMHO, the behavior to this situation would be:
 
+1 - Move all cache blocks of the removed memory USB stick to the free list.
 
+2 - Any operation relating to the removed device be notified as a severe
+error avoiding repetitions.
 
---------------enigE245D77024C7E41ECD983C46
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+because if the USB stick is removed in inserted once again it will be
+mounted as a different device that the current one, because as still
+there is files in use, the device could not be unmounted from system.
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
-
-iD8DBQFHlv+4N5XoxaHnMrsRAkqyAJ99HHKMMRKBPs16bbWI9mWhb35iWQCdEPOm
-I6e70LRcaEE6nv40KNZndW8=
-=Ll6Y
------END PGP SIGNATURE-----
-
---------------enigE245D77024C7E41ECD983C46--
-
-
---===============0647863592==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
---===============0647863592==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-linux-usb-devel@lists.sourceforge.net
-To unsubscribe, use the last form field at:
-https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
-
---===============0647863592==--
+Thanks and Best Regards,
+Joaquim Duran
