@@ -1,115 +1,130 @@
-From: Jeff Garzik <jeff@garzik.org>
-Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver
-Date: Wed, 23 Jan 2008 06:41:09 -0500
-Message-ID: <479727D5.8060901@garzik.org>
-References: <20080122151857.GA8680@ubuntu.domain>	 <6b2481670801220724o6c204216qc346020c296f2849@mail.gmail.com>	 <4796BB5A.9090003@garzik.org> <6b2481670801230254i46e65652vb9139e2c136e4ce4@mail.gmail.com>
+From: James Smart <James.Smart@Emulex.Com>
+Subject: Re: [PATCH 2.6.23.14] SCSI : scsi_device_lookup/scsi_device_lookup_by_target
+ return NULL for an existent scsi_device
+Date: Wed, 23 Jan 2008 09:09:43 -0500
+Message-ID: <47974AA7.8030300@emulex.com>
+References: <622408.27957.qm@web53704.mail.re2.yahoo.com>
+Reply-To: James.Smart@Emulex.Com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:46951 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751009AbYAWLlM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Jan 2008 06:41:12 -0500
-In-Reply-To: <6b2481670801230254i46e65652vb9139e2c136e4ce4@mail.gmail.com>
+Received: from emulex.emulex.com ([138.239.112.1]:35029 "EHLO
+	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752016AbYAWOJq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 09:09:46 -0500
+In-Reply-To: <622408.27957.qm@web53704.mail.re2.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ke Wei <kewei.mv@gmail.com>
-Cc: linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com
-
-Ke Wei wrote:
-> Attachment is a patch file for 6440 driver. I will have to spend more
-> time on setting my mail client. Yesterday I used mutt tool. But Look
-> like the problem still exists.
-> I fixed all issues which you mentioned , but
-
-The changes look good, thanks!
-
-In terms of engineering process, I should have been more clear:  when 
-revising your submission, you should make the revisions and then 
-regenerate your original patch.
-
-To use a silly example, if you needed to fix a 1-character typo in a 
-1,000-line patch, you would need to make your revision, re-generate the 
-1,000-line patch, and email that new patch.
-
-So, to move forward, please create one single patch with the latest 
-mvsas, diff'd against the 'mvsas' branch of
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6
-
-I will "ack" that patch (indicate my approval), and unless other 
-objections surface, James will merge your patch into the 'mvsas' branch. 
-  That will get the driver on the road to be included in 2.6.25.
+To: Nagendra Tomar <tomer_iisc@yahoo.com>
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
 
->>> @@ -666,11 +970,53 @@ static int mvs_nvram_read(struct mvs_info *mvi, unsigned
->>> int addr,
->>>  err_out:
->>>        dev_printk(KERN_ERR, &mvi->pdev->dev, "%s", msg);
->>>        return rc;
->>> +#else
->>> +       memcpy(buf, "\x50\x05\x04\x30\x11\xab\x00\x00", 8);
->>> +       return 0;
->>> +#endif
->>
->> what happens if two adapters are used, with the same SAS address?  That
->> causes problems...
->>
->>
-> Our bios can write SAS Address per port when system boot , so I think
-> we don't need read or configure address.
+This sounds like a return to the old behavior, where sdevs in SDEV_DEL
+were ignored. However, it too had lots of bad effects. We'd have to go
+back to the threads over the last 2 years that justified resurrecting
+the sdev. Start looking at threads like :
+http://marc.info/?l=linux-scsi&m=115555788730468&w=2
+http://marc.info/?l=linux-scsi&m=116837744314913&w=2
+http://marc.info/?l=linux-scsi&m=117139230702785&w=2
+http://marc.info/?l=linux-scsi&m=117991046126294&w=2
+Also, there's multiple parts to this - the sdev struct, and the sysfs objects
+and thus namespace associated with the struct, etc.
 
-It is standard Linux policy to reduce or eliminate BIOS dependencies as 
-much as possible.
+So, in my mind, if this reverts to ignoring sdevs in SDEV_DEL, and creates
+a duplicate sdev in SDEV_RUNNING, then it's the wrong patch.  What should
+be considered is where did the resurrection of the sdev go wrong.  I
+remember that Hannes did some updates
+http://marc.info/?l=linux-scsi&m=118215727101887&w=2
+but I don't believe these ever got merged upstream. Perhaps that's a good
+place to start.
 
-This is because there are several common scenarios where BIOS may not 
-run, or otherwise not be available:
-
-* suspend/resume
-* controller hotplug
-* non-x86 PCI platforms such as POWER
-
-Thus, we need the driver to obtain these addresses -- hopefully reading 
-them from a BIOS data table somewhere, if NVRAM is not available.
-
-This is a highly common scenario -- obtaining unique identifying 
-information in the absence of BIOS.
+-- james s
 
 
-
-Similarly, we cannot rely on BIOS to perform any global reset or errata 
-workaround duties for us.  That must be coded into the driver also.
-
-
-> And I reserved hexdump funciton if you don't care. Only debugging.
-
-It is not an important matter, but it would be nice to clean that up 
-eventually.
-
-Also, FWIW, we have a standard method of debug output:
-
-	struct pci_dev *pdev;
-
-	dev_dbg(&pdev->dev, KERN_INFO,
-		"this is debug message number %d", 2);
-
-which will only be compiled into the driver when DEBUG is defined.
-
-
->>> +static int mvs_abort_task(struct sas_task *task)
->>> +{
->>> +       /*FIXME*/
->>> +       MVS_PRINTK("mvs abort task\n");
->>> +       return TMF_RESP_FUNC_COMPLETE;
->>> +}
->> should make an attempt to do something sane here
->>
-> if entering this abort function , I think I must fix the unknown
-> issues instead of here.  But I also will implement next.
-
-Ok, thanks.
-
-	Jeff
-
-
-
+Nagendra Tomar wrote:
+> __scsi_device_lookup and __scsi_device_lookup_by_target do not 
+> check for the sdev_state and hence return scsi_devices with 
+> sdev_state set to SDEV_DEL also. It has the following side effects.
+> 
+> We can have two scsi_devices with the same HBTL queued in 
+> the scsi_host->__devices/scsi_target->devices list, one
+> in the SDEV_DEL state and the other in, say SDEV_RUNNING state. 
+>     If the one in the SDEV_DEL state is before the one in SDEV_RUNNING 
+> state, (which will almost always be the case) the scsi_device_lookup and 
+> scsi_device_lookup_by_target will never find the totally legitimate
+> scsi_device (the one in the SDEV_RUNNING state).
+> 
+> This is because __scsi_device_lookup/__scsi_device_lookup_by_target 
+> always returns the first one in the list (which in our case is the 
+> one with the SDEV_DEL state) and the scsi_device_get() which is called by 
+> scsi_device_lookup/scsi_device_lookup_by_target will return -ENXIO 
+> for this scsi_device, resulting in scsi_device_lookup and 
+> scsi_device_lookup_by_target to return NULL.
+> 
+>         So we _cannot_ lookup a perfectly valid device present in the
+> list of scsi_devices. 
+> 
+>         The right thing to do is to not have __scsi_device_lookup
+> and __scsi_device_lookup_by_target match a device if the scsi_device
+> state is SDEV_DEL. This will also make these functions similar in 
+> behaviour to their scsi_device_lookup/scsi_device_lookup_by_target
+> counterparts, as the comments in the code suggest.
+> 
+>         One way by which we can have two scsi_devices in the list is 
+> as follows.        
+>         Suppose a scsi_device has some outstanding command(s) when 
+> scsi_remove_device is called for it. Due to the extra ref being held
+> by the command in flight, the __scsi_remove_device->put_device call 
+> will not actually free the scsi_device and it will remain in the 
+> scsi_device list albeit in the SDEV_DEL state. Now if we do a 
+> scsi_add_device for the same HBTL, a new device with the same HBTL
+> (this one in SDEV_RUNNING state) gets added to the scsi_device list. 
+>         
+>         Infact if we call scsi_add_device one more time, it happily 
+> goes ahead and tries to add it once more, as 
+> scsi_probe_and_add_lun->scsi_device_lookup_by_target does not return
+> the already existing device. This will though result in the kobject 
+> EEXIST warning dump.
+> 
+>         The patch below solves the problem described here by not
+> returning scsi_devices in SDEV_DEL state, thus allowing scsi_device
+> in SDEV_RUNNING state (if any) to be correctly returned, instead.
+> 
+> 
+> Thanx,
+> Tomar
+> 
+> 
+> Signed-off-by: Nagendra Singh Tomar <nagendra_tomar@adaptec.com>
+> ---
+> 
+> --- linux-2.6.23.14/drivers/scsi/scsi.c.orig	2008-01-23 18:06:02.000000000 +0530
+> +++ linux-2.6.23.14/drivers/scsi/scsi.c	2008-01-23 19:17:35.000000000 +0530
+> @@ -951,7 +951,7 @@ struct scsi_device *__scsi_device_lookup
+>  	struct scsi_device *sdev;
+>  
+>  	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
+> -		if (sdev->lun ==lun)
+> +		if (sdev->lun == lun && sdev->sdev_state != SDEV_DEL)
+>  			return sdev;
+>  	}
+>  
+> @@ -1008,7 +1008,7 @@ struct scsi_device *__scsi_device_lookup
+>  
+>  	list_for_each_entry(sdev, &shost->__devices, siblings) {
+>  		if (sdev->channel == channel && sdev->id == id &&
+> -				sdev->lun ==lun)
+> +			sdev->lun == lun && sdev->sdev_state != SDEV_DEL)
+>  			return sdev;
+>  	}
+> 
+> 
+> 
+>       ___________________________________________________________
+> Support the World Aids Awareness campaign this month with Yahoo! For Good http://uk.promotions.yahoo.com/forgood/
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
