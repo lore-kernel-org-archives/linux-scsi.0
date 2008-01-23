@@ -1,66 +1,110 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: PATCH: usb-storage-set-last-sector-bug-flag.patch
-Date: Wed, 23 Jan 2008 10:50:28 -0800
-Message-ID: <20080123185028.GA23177@kroah.com>
-References: <20080120205625.GB28842@kroah.com> <Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org> <20080123181239.GA21836@kroah.com> <1201113579.3110.64.camel@localhost.localdomain>
+From: "Grant Grundler" <grundler@google.com>
+Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver
+Date: Wed, 23 Jan 2008 11:23:29 -0800
+Message-ID: <da824cf30801231123k68e9fe4cn3d581bf20dcaaa1a@mail.gmail.com>
+References: <20080122151857.GA8680@ubuntu.domain>
+	 <6b2481670801220724o6c204216qc346020c296f2849@mail.gmail.com>
+	 <4796BB5A.9090003@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:53447 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755167AbYAWStu (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 13:49:50 -0500
+Received: from smtp-out.google.com ([216.239.33.17]:14624 "EHLO
+	smtp-out.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750984AbYAWTXm (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 14:23:42 -0500
+Received: from zps77.corp.google.com (zps77.corp.google.com [172.25.146.77])
+	by smtp-out.google.com with ESMTP id m0NJNUru026919
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 19:23:30 GMT
+Received: from rv-out-0910.google.com (rvbl15.prod.google.com [10.140.88.15])
+	by zps77.corp.google.com with ESMTP id m0NJNPG7024952
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 11:23:29 -0800
+Received: by rv-out-0910.google.com with SMTP id l15so2628851rvb.50
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 11:23:29 -0800 (PST)
+In-Reply-To: <4796BB5A.9090003@garzik.org>
 Content-Disposition: inline
-In-Reply-To: <1201113579.3110.64.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Hans de Goede <j.w.r.degoede@hhs.nl>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>, Boaz Harrosh <bharrosh@panasas.com>, USB Storage list <usb-storage@lists.one-eyed-alien.net>, USB development list <linux-usb-devel@lists.sourceforge.net>, David Brown <usb-storage2@davidb.org>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Ke Wei <kewei.mv@gmail.com>, linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com
 
-On Wed, Jan 23, 2008 at 12:39:39PM -0600, James Bottomley wrote:
-> 
-> On Wed, 2008-01-23 at 10:12 -0800, Greg KH wrote:
-> > On Sun, Jan 20, 2008 at 04:45:36PM -0500, Alan Stern wrote:
-> > > On Sun, 20 Jan 2008, Greg KH wrote:
-> > > 
-> > > > On Sun, Jan 20, 2008 at 11:27:29AM +0100, Hans de Goede wrote:
-> > > > > Hi all,
-> > > > >
-> > > > > This patch sets the last_sector_bug flag to 1 for all USB disks. This is
-> > > > > needed to makes the cardreader on various HP multifunction printers work.
-> > > > >
-> > > > > Since the performance impact is negible we set this flag for all USB disks 
-> > > > > to avoid an unusual_devs.h nightmare.
-> > > > 
-> > > > Oh great, now my "working just fine" USB devices, which happen to have
-> > > > data in the last sector, suddenly stop working.
-> > > > 
-> > > > That's not acceptable :(
-> > > 
-> > > These patches really should not impact existing devices.  If they do
-> > > then something is definitely wrong.
-> > > 
-> > > Can you provide detailed logging information showing your problem?  For 
-> > > example, a usbmon trace would be good.  Better yet, a usbmon trace 
-> > > without the patches and a usbmon trace with the patches, for 
-> > > comparison.
-> > 
-> > I don't have a device with such a problem, I just am worried that we are
-> > now suddenly keeping access from the last sector for devices that
-> > currently did work just fine.
-> > 
-> > If you all guarantee that this will not happen, hey, I'm happy, and I'll
-> > gladly point all bug reports on to you all :)
-> 
-> 
-> Hey, you can trust me ... I'm a doctor ...
-> 
-> Would you like me to add your 'Responsibility-disclamed-by:' to the
-> patch ...?
+On Jan 22, 2008 7:58 PM, Jeff Garzik <jeff@garzik.org> wrote:
 
-Heh.
+> > +#define READ_PORT_CONFIG_DATA(i) \
+> > +       ((i > 3)?mr32(P4_CFG_DATA + (i - 4) * 8):mr32(P0_CFG_DATA + i * 8))
+> > +#define WRITE_PORT_CONFIG_DATA(i,tmp) \
+> > +       {if (i > 3)mw32(P4_CFG_DATA + (i - 4) * 8, tmp); \
+> > +       else \
+> > +               mw32(P0_CFG_DATA + i * 8, tmp); }
+> > +#define WRITE_PORT_CONFIG_ADDR(i,tmp) \
+> > +       {if (i > 3)mw32(P4_CFG_ADDR + (i - 4) * 8, tmp); \
+> > +       else \
+> > +               mw32(P0_CFG_ADDR + i * 8, tmp); }
+> > +
+> > +#define READ_PORT_PHY_CONTROL(i) \
+> > +       ((i > 3)?mr32(P4_SER_CTLSTAT + (i - 4) * 4):mr32(P0_SER_CTLSTAT+i * 4))
+> > +#define WRITE_PORT_PHY_CONTROL(i,tmp) \
+> > +       {if (i > 3)mw32(P4_SER_CTLSTAT + (i - 4) * 4, tmp); \
+> > +       else \
+> > +               mw32(P0_SER_CTLSTAT + i * 4, tmp); }
+> > +
+> > +#define READ_PORT_VSR_DATA(i) \
+> > +       ((i > 3)?mr32(P4_VSR_DATA + (i - 4) * 8):mr32(P0_VSR_DATA+i*8))
+> > +#define WRITE_PORT_VSR_DATA(i,tmp) \
+> > +       {if (i > 3)mw32(P4_VSR_DATA + (i - 4) * 8, tmp); \
+> > +       else \
+> > +               mw32(P0_VSR_DATA + i*8, tmp); }
+> > +#define WRITE_PORT_VSR_ADDR(i,tmp) \
+> > +       {if (i > 3)mw32(P4_VSR_ADDR + (i - 4) * 8, tmp); \
+> > +       else \
+> > +               mw32(P0_VSR_ADDR + i * 8, tmp); }
+> > +
+> > +#define READ_PORT_IRQ_STAT(i) \
+> > +       ((i > 3)?mr32(P4_INT_STAT + (i - 4) * 8):mr32(P0_INT_STAT + i * 8))
+> > +#define WRITE_PORT_IRQ_STAT(i,tmp) \
+> > +       {if (i > 3)mw32(P4_INT_STAT + (i-4) * 8, tmp); \
+> > +       else \
+> > +               mw32(P0_INT_STAT + i * 8, tmp); }
+> > +#define READ_PORT_IRQ_MASK(i) \
+> > +       ((i > 3)?mr32(P4_INT_MASK + (i-4) * 8):mr32(P0_INT_MASK+i*8))
+> > +#define WRITE_PORT_IRQ_MASK(i,tmp) \
+> > +       {if (i > 3)mw32(P4_INT_MASK + (i-4) * 8, tmp); \
+> > +       else \
+> > +               mw32(P0_INT_MASK + i * 8, tmp); }
+>
+>
+> make these macros readable, by breaking each C statement into a separate
+> line
 
-As long as you take it through your trees, I inherently disclaim any
-responsibility :)
+I'd prefer these all be written as static functions. Let the compiler do
+the type checking instead of assuming we've got it right. There is no
+performance difference AFAIK.
 
-greg k-h
+>
+>
+>
+>
+> > @@ -260,13 +368,33 @@ enum hw_register_bits {
+> >        PHYEV_RDY_CH            = (1U << 0),    /* phy ready changed state */
+> >
+> >        /* MVS_PCS */
+> > +       PCS_EN_SATA_REG         = (16),         /* Enable SATA Register Set*/
+> > +       PCS_EN_PORT_XMT_START   = (12),         /* Enable Port Transmit*/
+> > +       PCS_EN_PORT_XMT_START2  = (8),          /* For 6480*/
+> >        PCS_SATA_RETRY          = (1U << 8),    /* retry ctl FIS on R_ERR */
+> >        PCS_RSP_RX_EN           = (1U << 7),    /* raw response rx */
+> >        PCS_SELF_CLEAR          = (1U << 5),    /* self-clearing int mode */
+> >        PCS_FIS_RX_EN           = (1U << 4),    /* FIS rx enable */
+
+What's the difference between PCS_FIS_RX_EN and PCS_EN_SATA_REG?
+Grouping them together implies they define bits/commands for the same register.
+
+The three new entries collide with the existing definitions and it's
+not obvious what
+the intended usage is.
+
+Later, jeff pointed out drivers should be using dev_dbg() instead of splattering
+"MVS_PRINTK" alll over the place. I'd like to strongly encourage that.
+
+hth,
+grant
