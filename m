@@ -1,85 +1,213 @@
-From: Stuart Swales <stuart.swales@croftnuisk.co.uk>
-Subject: [PATCH 2.6.24-rc8-git6] initio module hangs on loading fix set
-Date: Wed, 23 Jan 2008 20:00:48 +0000
-Message-ID: <47979CF0.7060104@croftnuisk.co.uk>
+From: Nagendra Tomar <tomer_iisc@yahoo.com>
+Subject: Re: [PATCH 2.6.23.14] SCSI : scsi_device_lookup/scsi_device_lookup_by_target return NULL for an existent scsi_device
+Date: Wed, 23 Jan 2008 14:59:07 -0800 (PST)
+Message-ID: <450760.39028.qm@web53709.mail.re2.yahoo.com>
+References: <47974AA7.8030300@emulex.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from moutng.kundenserver.de ([212.227.126.174]:57125 "EHLO
-	moutng.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751482AbYAWUAy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 15:00:54 -0500
+Received: from web53709.mail.re2.yahoo.com ([206.190.37.30]:36746 "HELO
+	web53709.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751319AbYAWW7I (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 23 Jan 2008 17:59:08 -0500
+In-Reply-To: <47974AA7.8030300@emulex.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James.Smart@Emulex.Com
+Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-I've verified (on my Initio 9100 with a DAT drive) that the 
-2.6.24-rc8-git6 initio module still hangs on loading.
+Hello James,
+             My understanding is that the scsi_device in SDEV_DEL state
+is there in the scsi_host->devices/scsi_target->devices queue, just
+because there is some outstanding command holding a reference to it.
 
-These fixes (other than the printk) are needed to get the module to load 
-ok (and work correctly) with my adapter & tape drive.
+It will need the device when it completes. Apart from this, for all 
+practical purposes the scsi_device is gone from the system. It could
+as well be removed from scsi_host->devices/scsi_target->devices lists
+and be put in some other list, just to hold the scsi_device till
+commands refering to it are completed. 
 
-a) printk cosmetic fix
+The scanning code should not consider these devices to be present 
+in the system. This is correctly handled today, as 
+scsi_device_lookup/scsi_device_lookup_by_target return NULL if there
+is an SDEV_DEL device in the list. 
 
-b) cblk->sglen needs setting for later DMA I/O routines to use
+Since a scsi_device in SDEV_DEL state is "gone" from the system we 
+should not hold any fresh references on to this device. The current
+scsi_device_lookup/scsi_device_lookup_by_target implementation rightly
+ensures that. And since all the sysfs linkages are also removed (in
+__scsi_remove_device->device_del), user space can also not reference 
+this device. All is good till now.
 
-c) host->bios_addr needs setting for debug output correctness
+The problem happens when we try to add a new scsi_device with the same 
+HBTL. Since we consider the device "gone" (as described above) we should
+allow a new scsi_device with the same HBTL to be added (to the 
+scsi_host->devices/scsi_target->devices list). This part is also correctly
+implemented.
+scsi_add_device->...->scsi_probe_and_add_lun->scsi_device_lookup_by_target
+will _not_ return the device present in the SDEV_DEL state and hence the
+scanning will go ahead and try to add a new scsi_device (this one in 
+SDEV_RUNNING state) to the devices lists.
 
-d) semaph & semaph_lock initialisation had got lost since 2.6.22
+All is good even till now.
 
-e) since 2.6.22 the bios data address was truncated to 16 bits (needs 20 
-when shifted left)
+The PROBLEM is, now any scsi_device_lookup call trying to lookup this newly
+added scsi_device, fails. This is because, scsi_device_lookup->__scsi_device_lookup
+returns the first device that it finds in the list, which in this case
+is the one in the SDEV_DEL state. Now the scsi_device_get call that 
+scsi_device_lookup makes to get a reference on that device returns ENXIO
+as the device is in SDEV_DEL state, resulting in scsi_device_lookup to 
+return NULL.
 
-Stuart Swales
+What scsi_device_get does, is right, as we do not want to hold fresh 
+references on scsi_devices in SDEV_DEL state. The problem is because
+of this we fail to lookup the perfectly legitimate device (in SDEV_RUNNING
+state) with the same HBTL sitting in the list.
 
---- linux-2.6.24-rc8-git6/drivers/scsi/initio.c	2008-01-16 
-04:22:48.000000000 +0000
-+++ linux-2.6.24-rc8-git6-sks/drivers/scsi/initio.c	2008-01-23 
-18:52:04.000000000 +0000
-@@ -823,7 +823,7 @@ static void initio_append_busy_scb(struc
-  {
+One of the side effects of this is that the scsi_probe_and_add_lun()
+goes ahead with the scanning and tries to add this existent device. 
+This is the real problem.
 
-  #if DEBUG_QUEUE
--	printk("append busy SCB %o; ", scbp);
-+	printk("append busy SCB %p; ", scbp); /* SKS: not %o */
-  #endif
-  	if (scbp->tagmsg)
-  		host->act_tags[scbp->target]++;
-@@ -2609,6 +2609,7 @@ static void initio_build_scb(struct init
-  		cblk->bufptr = cpu_to_le32((u32)dma_addr);
-  		cmnd->SCp.dma_handle = dma_addr;
+My patch avoids this problem by not breaking from the __scsi_device_lookup
+loop, if the device is in SDEV_DEL state. After all we should not consider
+these devices to be part of the system. This will allow us to 
+find the right scsi_device and this "trying to add an existent device"
+problem will be avoided. 
 
-+		cblk->sglen = nseg; /* SKS: needs setting for DMA routine */
+And also why should scsi_device_lookup and __scsi_device_lookup be 
+different in behaviour. One returns devices in SDEV_DEL state, the other
+doesn't. The comments suggest that they can be used interchangibly, but
+for the locking and the extra reference that the scsi_device_lookup holds.
 
-  		cblk->flags |= SCF_SG;	/* Turn on SG list flag       */
-  		total_len = 0;
-@@ -2869,6 +2870,7 @@ static int initio_probe_one(struct pci_d
-  	host = (struct initio_host *)shost->hostdata;
-  	memset(host, 0, sizeof(struct initio_host));
-  	host->addr = pci_resource_start(pdev, 0);
-+	host->bios_addr = bios_seg; /* SKS: required for debug output */
+This is fixed as a side effect of the patch.
 
-  	if (!request_region(host->addr, 256, "i91u")) {
-  		printk(KERN_WARNING "initio: I/O port range 0x%x is busy.\n", 
-host->addr);
-@@ -2895,6 +2897,8 @@ static int initio_probe_one(struct pci_d
+Comments welcome.
 
-  	host->pci_dev = pdev;
+Thanx,
+Tomar
 
-+	host->semaph = 1; /* SKS */
-+	spin_lock_init(&host->semaph_lock);
-  	host->num_scbs = num_scb;
-  	host->scb = scb;
-  	host->next_pending = scb;
-@@ -2911,7 +2915,7 @@ static int initio_probe_one(struct pci_d
-  	host->last_avail = prev;
-  	spin_lock_init(&host->avail_lock);
 
--	initio_init(host, phys_to_virt(bios_seg << 4));
-+	initio_init(host, phys_to_virt(((u32) bios_seg << 4))); /* SKS: u16 
-would lose bits when shifted left */
 
-  	host->jsstatus0 = 0;
 
+
+--- James Smart <James.Smart@Emulex.Com> wrote:
+
+> 
+> This sounds like a return to the old behavior, where sdevs in SDEV_DEL
+> were ignored. However, it too had lots of bad effects. We'd have to go
+> back to the threads over the last 2 years that justified resurrecting
+> the sdev. Start looking at threads like :
+> http://marc.info/?l=linux-scsi&m=115555788730468&w=2
+> http://marc.info/?l=linux-scsi&m=116837744314913&w=2
+> http://marc.info/?l=linux-scsi&m=117139230702785&w=2
+> http://marc.info/?l=linux-scsi&m=117991046126294&w=2
+> Also, there's multiple parts to this - the sdev struct, and the sysfs objects
+> and thus namespace associated with the struct, etc.
+> 
+> So, in my mind, if this reverts to ignoring sdevs in SDEV_DEL, and creates
+> a duplicate sdev in SDEV_RUNNING, then it's the wrong patch.  What should
+> be considered is where did the resurrection of the sdev go wrong.  I
+> remember that Hannes did some updates
+> http://marc.info/?l=linux-scsi&m=118215727101887&w=2
+> but I don't believe these ever got merged upstream. Perhaps that's a good
+> place to start.
+> 
+> -- james s
+> 
+> 
+> Nagendra Tomar wrote:
+> > __scsi_device_lookup and __scsi_device_lookup_by_target do not 
+> > check for the sdev_state and hence return scsi_devices with 
+> > sdev_state set to SDEV_DEL also. It has the following side effects.
+> > 
+> > We can have two scsi_devices with the same HBTL queued in 
+> > the scsi_host->__devices/scsi_target->devices list, one
+> > in the SDEV_DEL state and the other in, say SDEV_RUNNING state. 
+> >     If the one in the SDEV_DEL state is before the one in SDEV_RUNNING 
+> > state, (which will almost always be the case) the scsi_device_lookup and 
+> > scsi_device_lookup_by_target will never find the totally legitimate
+> > scsi_device (the one in the SDEV_RUNNING state).
+> > 
+> > This is because __scsi_device_lookup/__scsi_device_lookup_by_target 
+> > always returns the first one in the list (which in our case is the 
+> > one with the SDEV_DEL state) and the scsi_device_get() which is called by 
+> > scsi_device_lookup/scsi_device_lookup_by_target will return -ENXIO 
+> > for this scsi_device, resulting in scsi_device_lookup and 
+> > scsi_device_lookup_by_target to return NULL.
+> > 
+> >         So we _cannot_ lookup a perfectly valid device present in the
+> > list of scsi_devices. 
+> > 
+> >         The right thing to do is to not have __scsi_device_lookup
+> > and __scsi_device_lookup_by_target match a device if the scsi_device
+> > state is SDEV_DEL. This will also make these functions similar in 
+> > behaviour to their scsi_device_lookup/scsi_device_lookup_by_target
+> > counterparts, as the comments in the code suggest.
+> > 
+> >         One way by which we can have two scsi_devices in the list is 
+> > as follows.        
+> >         Suppose a scsi_device has some outstanding command(s) when 
+> > scsi_remove_device is called for it. Due to the extra ref being held
+> > by the command in flight, the __scsi_remove_device->put_device call 
+> > will not actually free the scsi_device and it will remain in the 
+> > scsi_device list albeit in the SDEV_DEL state. Now if we do a 
+> > scsi_add_device for the same HBTL, a new device with the same HBTL
+> > (this one in SDEV_RUNNING state) gets added to the scsi_device list. 
+> >         
+> >         Infact if we call scsi_add_device one more time, it happily 
+> > goes ahead and tries to add it once more, as 
+> > scsi_probe_and_add_lun->scsi_device_lookup_by_target does not return
+> > the already existing device. This will though result in the kobject 
+> > EEXIST warning dump.
+> > 
+> >         The patch below solves the problem described here by not
+> > returning scsi_devices in SDEV_DEL state, thus allowing scsi_device
+> > in SDEV_RUNNING state (if any) to be correctly returned, instead.
+> > 
+> > 
+> > Thanx,
+> > Tomar
+> > 
+> > 
+> > Signed-off-by: Nagendra Singh Tomar <nagendra_tomar@adaptec.com>
+> > ---
+> > 
+> > --- linux-2.6.23.14/drivers/scsi/scsi.c.orig	2008-01-23 18:06:02.000000000 +0530
+> > +++ linux-2.6.23.14/drivers/scsi/scsi.c	2008-01-23 19:17:35.000000000 +0530
+> > @@ -951,7 +951,7 @@ struct scsi_device *__scsi_device_lookup
+> >  	struct scsi_device *sdev;
+> >  
+> >  	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
+> > -		if (sdev->lun ==lun)
+> > +		if (sdev->lun == lun && sdev->sdev_state != SDEV_DEL)
+> >  			return sdev;
+> >  	}
+> >  
+> > @@ -1008,7 +1008,7 @@ struct scsi_device *__scsi_device_lookup
+> >  
+> >  	list_for_each_entry(sdev, &shost->__devices, siblings) {
+> >  		if (sdev->channel == channel && sdev->id == id &&
+> > -				sdev->lun ==lun)
+> > +			sdev->lun == lun && sdev->sdev_state != SDEV_DEL)
+> >  			return sdev;
+> >  	}
+> > 
+> > 
+> > 
+> >       ___________________________________________________________
+> > Support the World Aids Awareness campaign this month with Yahoo! For Good
+> http://uk.promotions.yahoo.com/forgood/
+> > -
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> 
+
+
+
+      __________________________________________________________
+Sent from Yahoo! Mail - a smarter inbox http://uk.mail.yahoo.com
 
