@@ -1,189 +1,106 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 09/10] [FCoE] Remove sa_assert files
-Date: Tue, 22 Jan 2008 16:37:41 -0800
-Message-ID: <20080123003741.8469.30213.stgit@fritz>
+Subject: [PATCH 10/10] [FCoE] Removing unused defines
+Date: Tue, 22 Jan 2008 16:37:57 -0800
+Message-ID: <20080123003757.8469.461.stgit@fritz>
 References: <20080123003523.8469.62236.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([143.182.124.21]:13048 "EHLO mga03.intel.com"
+Received: from mga03.intel.com ([143.182.124.21]:9692 "EHLO mga03.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1758277AbYAWAvd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jan 2008 19:51:33 -0500
+	id S1758528AbYAWAvt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jan 2008 19:51:49 -0500
 In-Reply-To: <20080123003523.8469.62236.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+These defines were used with the DEBUG_ASSERT code that has
+been removed.
+
+Removed defines are,
+
+FC_ELS_CSP_LEN
+FC_ELS_CSSP_LEN
+FC_ELS_FLOGI_LEN
+FC_ELS_SPP_LEN
+FC_ELS_RRQ_LEN
+FC_ELS_PRLI_LEN
+FC_ELS_LOGO_LEN
+
 Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/ofc/include/sa_assert.h |   85 ----------------------------------
- drivers/scsi/ofc/libsa/Makefile      |    1 
- drivers/scsi/ofc/libsa/sa_assert.c   |   50 --------------------
- 3 files changed, 0 insertions(+), 136 deletions(-)
- delete mode 100644 drivers/scsi/ofc/include/sa_assert.h
- delete mode 100644 drivers/scsi/ofc/libsa/sa_assert.c
+ drivers/scsi/ofc/include/fc_els.h |   14 --------------
+ 1 files changed, 0 insertions(+), 14 deletions(-)
 
 
-diff --git a/drivers/scsi/ofc/include/sa_assert.h b/drivers/scsi/ofc/include/sa_assert.h
-deleted file mode 100644
-index 16224d7..0000000
---- a/drivers/scsi/ofc/include/sa_assert.h
-+++ /dev/null
-@@ -1,85 +0,0 @@
--/*
-- * Copyright(c) 2007 Intel Corporation. All rights reserved.
-- * 
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms and conditions of the GNU General Public License,
-- * version 2, as published by the Free Software Foundation.
-- * 
-- * This program is distributed in the hope it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- * 
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-- * 
-- * Maintained at www.Open-FCoE.org
-- */
--
--#ifndef _LIBSA_ASSERT_H_
--#define _LIBSA_ASSERT_H_
--
--extern void assert_failed(const char *s, ...)
--    __attribute__ ((format(printf, 1, 2)));
--
--#ifndef UNLIKELY
--#define UNLIKELY(_x) (_x)
--#endif /* UNLIKELY */
--
--/*
-- * ASSERT macros
-- *
-- * ASSERT(expr) - this calls assert_failed() if expr is false.  This variant
-- * is not present in production code or if DEBUG_ASSERTS is not defined.
-- * Be careful not to rely on expr being evaluated.
-- */
--#if defined(DEBUG_ASSERTS)
--#define ASSERT(_x) do {                                                 \
--                if (UNLIKELY(!(_x))) {                                  \
--                        assert_failed("ASSERT FAILED (%s) @ %s:%d\n",   \
--                          "" #_x, __FILE__, __LINE__);                  \
--                }                                                       \
--        } while (0)
--#else
--#define ASSERT(_x)
--#endif /* DEBUG_ASSERTS */
--
--/*
-- * ASSERT_NOTIMPL(expr) - this calls assert_failed() if expr is false.
-- * The implication is that the condition is not handled by the current
-- * implementation, and work should be done eventually to handle this.
-- */
--#define ASSERT_NOTIMPL(_x) do {                                         \
--                if (UNLIKELY(!(_x))) {                                  \
--                        assert_failed("ASSERT (NOT IMPL) (%s) @ %s:%d\n", \
--                          "" #_x, __FILE__, __LINE__);                  \
--                }                                                       \
--        } while (0)
--
--/*
-- * ASSERT_NOTREACHED - this is the same as ASSERT_NOTIMPL(0).
-- */
--#define ASSERT_NOTREACHED do {                                          \
--                assert_failed("ASSERT (NOT REACHED) @ %s:%d\n",         \
--                    __FILE__, __LINE__);                                \
--        } while (0)
--
--/*
-- * ASSERT_BUG(bugno, expr).  This variant is used when a bug number has
-- * been assigned to any one of the other assertion failures.  It is always
-- * present in code.  It gives the bug number which helps locate
-- * documentation and helps prevent duplicate bug filings.
-- */
--#define ASSERT_BUG(_bugNr, _x) do {                                     \
--                if (UNLIKELY(!(_x))) {                                  \
--                        assert_failed("ASSERT (BUG %d) (%s) @ %s:%d\n", \
--                            (_bugNr), #_x, __FILE__, __LINE__);         \
--                }                                                       \
--        } while (0)
--
--#ifndef LIBSA_USE_DANGEROUS_ROUTINES
--#define gets   DONT_USE_gets
--#endif /* LIBSA_USE_DANGEROUS_ROUTINES */
--
--#endif /* _LIBSA_ASSERT_H_ */
-diff --git a/drivers/scsi/ofc/libsa/Makefile b/drivers/scsi/ofc/libsa/Makefile
-index 42b8733..6206b78 100644
---- a/drivers/scsi/ofc/libsa/Makefile
-+++ b/drivers/scsi/ofc/libsa/Makefile
-@@ -5,7 +5,6 @@ EXTRA_CFLAGS += -I$(OFC_DIR)/include
- obj-y += libsa.o
+diff --git a/drivers/scsi/ofc/include/fc_els.h b/drivers/scsi/ofc/include/fc_els.h
+index 6bff73e..502f0c5 100644
+--- a/drivers/scsi/ofc/include/fc_els.h
++++ b/drivers/scsi/ofc/include/fc_els.h
+@@ -232,8 +232,6 @@ struct fc_els_csp {
+ #define	sp_rel_off	sp_u.sp_plogi._sp_rel_off
+ #define	sp_r_a_tov	sp_u.sp_flogi_acc._sp_r_a_tov
  
- libsa-y := \
--	sa_assert.o \
- 	sa_event.o \
- 	sa_hash_kern.o \
- 	sa_timer.o
-diff --git a/drivers/scsi/ofc/libsa/sa_assert.c b/drivers/scsi/ofc/libsa/sa_assert.c
-deleted file mode 100644
-index 0824bb6..0000000
---- a/drivers/scsi/ofc/libsa/sa_assert.c
-+++ /dev/null
-@@ -1,50 +0,0 @@
--/*
-- * Copyright(c) 2007 Intel Corporation. All rights reserved.
-- * 
-- * This program is free software; you can redistribute it and/or modify it
-- * under the terms and conditions of the GNU General Public License,
-- * version 2, as published by the Free Software Foundation.
-- * 
-- * This program is distributed in the hope it will be useful, but WITHOUT
-- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
-- * more details.
-- * 
-- * You should have received a copy of the GNU General Public License along with
-- * this program; if not, write to the Free Software Foundation, Inc.,
-- * 51 Franklin St - Fifth Floor, Boston, MA 02110-1301 USA.
-- * 
-- * Maintained at www.Open-FCoE.org
-- */
+-#define	FC_ELS_CSP_LEN	16	/* expected size of struct */
 -
--#include <linux/autoconf.h>
--#include <linux/module.h>
--#include <linux/kernel.h>
--#include <linux/string.h>
+ #define	FC_SP_BB_DATA_MASK 0xfff /* mask for data field size in sp_bb_data */
+ 
+ /*
+@@ -278,8 +276,6 @@ struct fc_els_cssp {
+ 	u_int8_t	_cp_resv2[2];	/* reserved */
+ };
+ 
+-#define	FC_ELS_CSSP_LEN 16	/* expected size of struct */
 -
--#include "sa_kernel.h"
+ /*
+  * cp_class flags.
+  */
+@@ -314,8 +310,6 @@ struct fc_els_flogi {
+ 	net8_t		fl_vend[16];	/* vendor version level */
+ };
+ 
+-#define	FC_ELS_FLOGI_LEN (7 * 16 + 4)	/* expected size of flogi struct */
 -
--#include "ofc_dbg.h"
--#include "sa_assert.h"
+ /*
+  * Process login service parameter page.
+  */
+@@ -329,8 +323,6 @@ struct fc_els_spp {
+ 	net32_t		spp_params;	/* service parameters */
+ };
+ 
+-#define	FC_ELS_SPP_LEN	    16	/* expected length of struct */
 -
--/*
-- * Size of on-stack line buffers.
-- * These shouldn't be to large for a kernel stack frame.
-- */
--#define OFC_DBG_BUF_LEN  200	/* on-stack line buffer size */
+ /*
+  * spp_flags.
+  */
+@@ -365,8 +357,6 @@ struct fc_els_rrq {
+ 	net16_t		rrq_rx_id;	/* responders exchange ID */
+ };
+ 
+-#define	FC_ELS_RRQ_LEN	    12	/* expected length of struct */
 -
--/*
-- * Assert failures.
-- */
--void assert_failed(const char *format, ...)
--{
--	va_list arg;
--	char buf[OFC_DBG_BUF_LEN];
+ /*
+  * ELS_REC - Read exchange concise.
+  */
+@@ -405,8 +395,6 @@ struct fc_els_prli {
+ 	/* service parameter pages follow */
+ };
+ 
+-#define	FC_ELS_PRLI_LEN     4	/* expected length of struct */
 -
--	va_start(arg, format);
--	vsnprintf(buf, sizeof(buf), format, arg);
--	va_end(arg);
--	panic(buf);
--}
+ /*
+  * ELS_LOGO - process or fabric logout.
+  */
+@@ -418,8 +406,6 @@ struct fc_els_logo {
+ 	net64_t		fl_n_port_wwn;	/* port name */
+ };
+ 
+-#define	FC_ELS_LOGO_LEN     16	/* expected length of struct */
 -
--EXPORT_SYMBOL(assert_failed);
+ /*
+  * ELS_RTV - read timeout value.
+  */
 
