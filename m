@@ -1,115 +1,166 @@
 From: Robert Love <robert.w.love@intel.com>
-Subject: [PATCH 01/10] [FCoE] Changing all ASSERT_NOTIMPL to WARN_ON(1)
-Date: Tue, 22 Jan 2008 16:35:39 -0800
-Message-ID: <20080123003538.8469.24974.stgit@fritz>
+Subject: [PATCH 03/10] [FCoE] Remove DEBUG_ASSERTS statements
+Date: Tue, 22 Jan 2008 16:36:09 -0800
+Message-ID: <20080123003609.8469.13363.stgit@fritz>
 References: <20080123003523.8469.62236.stgit@fritz>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga02.intel.com ([134.134.136.20]:36448 "EHLO mga02.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:24474 "EHLO mga02.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755865AbYAWAta (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 22 Jan 2008 19:49:30 -0500
+	id S1756530AbYAWAuB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 22 Jan 2008 19:50:01 -0500
 In-Reply-To: <20080123003523.8469.62236.stgit@fritz>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Trigger the warning every time the block is encountered.
 
-Signed-off-by: Robert Love <robert.w.love@intel.com>
 ---
 
- drivers/scsi/ofc/libfc/fc_exch.c       |   11 +----------
- drivers/scsi/ofc/libfc/fc_frame.c      |    2 +-
- drivers/scsi/ofc/libfc/fc_local_port.c |    2 +-
- drivers/scsi/ofc/openfc/openfc_scsi.c  |    4 ++--
- 4 files changed, 5 insertions(+), 14 deletions(-)
+ drivers/scsi/ofc/include/fc_els.h |   17 -----------------
+ drivers/scsi/ofc/include/fc_fs.h  |   13 -------------
+ drivers/scsi/ofc/include/fc_gs.h  |   12 ------------
+ drivers/scsi/ofc/libfc/fc_ils.h   |   33 ---------------------------------
+ drivers/scsi/ofc/libfc/fc_sess.c  |   14 --------------
+ 5 files changed, 0 insertions(+), 89 deletions(-)
 
 
-diff --git a/drivers/scsi/ofc/libfc/fc_exch.c b/drivers/scsi/ofc/libfc/fc_exch.c
-index 4a19936..9a5cd98 100644
---- a/drivers/scsi/ofc/libfc/fc_exch.c
-+++ b/drivers/scsi/ofc/libfc/fc_exch.c
-@@ -203,14 +203,6 @@ static int fc_exch_mgr_init(struct fc_exch_mgr *mp, enum fc_class class,
- 	u_int pool_count;
- 	u_int cpu;
+diff --git a/drivers/scsi/ofc/include/fc_els.h b/drivers/scsi/ofc/include/fc_els.h
+index 8ef10c0..6bff73e 100644
+--- a/drivers/scsi/ofc/include/fc_els.h
++++ b/drivers/scsi/ofc/include/fc_els.h
+@@ -808,21 +808,4 @@ enum fc_els_clid_ic {
+ 	ELS_CLID_IC_LIP =	8,	/* receiving LIP */
+ };
  
--	/*
--	 * Check to make sure the declaration of ESB and SSB structures came out
--	 * with the right size and no unexpected padding.
--	 */
--	ASSERT_NOTIMPL(sizeof(struct fc_esb) == FC_ESB_SIZE);
--	ASSERT_NOTIMPL(sizeof(struct fc_ssb) == FC_SSB_SIZE);
--	ASSERT_NOTIMPL(sizeof(struct fc_frame_header) == FC_FRAME_HEADER_LEN);
+-#ifdef DEBUG_ASSERTS
+-/*
+- * Static checks for packet structure sizes.
+- * These catch some obvious errors in structure definitions.
+- * They should generate no code since they can be tested at compile time.
+- */
+-static inline void fc_els_size_checks(void)
+-{
+-	ASSERT_NOTIMPL(sizeof(struct fc_els_csp) == FC_ELS_CSP_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_els_cssp) == FC_ELS_CSSP_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_els_flogi) == FC_ELS_FLOGI_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_els_spp) == FC_ELS_SPP_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_els_prli) == FC_ELS_PRLI_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_els_logo) == FC_ELS_LOGO_LEN);
+-}
+-#endif /* DEBUG_ASSERTS */
 -
- 	mp->em_class = class;
+ #endif /* _FC_ELS_H_ */
+diff --git a/drivers/scsi/ofc/include/fc_fs.h b/drivers/scsi/ofc/include/fc_fs.h
+index 150a711..fdbed64 100644
+--- a/drivers/scsi/ofc/include/fc_fs.h
++++ b/drivers/scsi/ofc/include/fc_fs.h
+@@ -324,17 +324,4 @@ struct fc_data_desc {
  
- 	/*
-@@ -562,7 +554,6 @@ static struct fc_exch *fc_exch_alloc(struct fc_exch_mgr *mp)
+ #define FC_DATA_DESC_LEN    12	/* expected length of structure */
  
- 	spin_lock_bh(&pp->emp_lock);
- 	if (list_empty(&pp->emp_exch_free)) {
--		ASSERT_NOTIMPL(ep);	/* not generally handled */
- 		atomic_inc(&mp->em_stats.ems_error_no_free_exch);
- 		spin_unlock_bh(&pp->emp_lock);
- 	} else {
-@@ -1144,7 +1135,7 @@ static void fc_seq_send_ack(struct fc_seq *sp, const struct fc_frame *rx_fp)
- 	 */
- 	if (fc_sof_needs_ack(rx_fp->fr_sof)) {
- 		fp = fc_frame_alloc(fc_seq_exch(sp)->ex_port, 0);
--		ASSERT_NOTIMPL(fp);
-+		BUG_ON(!fp);
- 		if (!fp)
- 			return;
- 		fc_seq_fill_hdr(sp, fp);
-diff --git a/drivers/scsi/ofc/libfc/fc_frame.c b/drivers/scsi/ofc/libfc/fc_frame.c
-index 056df3d..c609ebd 100644
---- a/drivers/scsi/ofc/libfc/fc_frame.c
-+++ b/drivers/scsi/ofc/libfc/fc_frame.c
-@@ -44,7 +44,7 @@ u_int32_t fc_frame_crc_check(struct fc_frame *fp)
- 	const u_int8_t *bp;
- 	u_int len;
+-#ifdef DEBUG_ASSERTS
+-/*
+- * Static checks for packet structure sizes.
+- * These catch some obvious errors in structure definitions.
+- * This should generate no code.  The check should be true at compile time.
+- */
+-static inline void fc_fs_size_checks(void)
+-{
+-	ASSERT_NOTIMPL(sizeof(struct fc_frame_header) == FC_FRAME_HEADER_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_data_desc) == FC_DATA_DESC_LEN);
+-}
+-#endif /* DEBUG_ASSERTS */
+-
+ #endif /* _FC_FS_H_ */
+diff --git a/drivers/scsi/ofc/include/fc_gs.h b/drivers/scsi/ofc/include/fc_gs.h
+index 2ac3d24..6738535 100644
+--- a/drivers/scsi/ofc/include/fc_gs.h
++++ b/drivers/scsi/ofc/include/fc_gs.h
+@@ -90,16 +90,4 @@ enum fc_ct_explan {
+ 	/* definitions not complete */
+ };
  
--	ASSERT_NOTIMPL(fc_frame_is_linear(fp));
-+	WARN_ON(!fc_frame_is_linear(fp));
- 	fp->fr_flags &= ~FCPHF_CRC_UNCHECKED;
- 	len = (fp->fr_len + 3) & ~3;	/* round up length to include fill */
- 	bp = (const u_int8_t *)fp->fr_hdr;
-diff --git a/drivers/scsi/ofc/libfc/fc_local_port.c b/drivers/scsi/ofc/libfc/fc_local_port.c
-index 311b5e9..cd70c74 100644
---- a/drivers/scsi/ofc/libfc/fc_local_port.c
-+++ b/drivers/scsi/ofc/libfc/fc_local_port.c
-@@ -1329,7 +1329,7 @@ static void fc_local_port_rscn_req(struct fc_seq *sp, struct fc_frame *fp,
- 			if (fc_local_port_debug)
- 				OFC_DBG("RSCN received: rediscovering");
- 			error = fc_disc_targ_restart(lp);
--			ASSERT_NOTIMPL(error == 0);
-+			WARN_ON(error != 0);
- 		} else if (fc_local_port_debug) {
- 			OFC_DBG("RSCN received: not rediscovering. "
- 			       "redisc %d state %d disc_cb %p in_prog %d",
-diff --git a/drivers/scsi/ofc/openfc/openfc_scsi.c b/drivers/scsi/ofc/openfc/openfc_scsi.c
-index cd3afb7..9c7f9bb 100644
---- a/drivers/scsi/ofc/openfc/openfc_scsi.c
-+++ b/drivers/scsi/ofc/openfc/openfc_scsi.c
-@@ -309,7 +309,7 @@ static void openfc_scsi_send_data(struct fc_scsi_pkt *fsp, struct fc_seq *sp,
- 							 tlen);
- 				data = (void *)(fp->fr_hdr + 1);
- 			}
--			ASSERT_NOTIMPL(fp != NULL);	/* XXX */
-+			BUG_ON(!fp);
- 			fc_frame_setup(fp, FC_RCTL_DD_SOL_DATA, FC_TYPE_FCP);
- 			fc_frame_set_offset(fp, frame_offset);
- 		}
-@@ -442,7 +442,7 @@ static void openfc_scsi_rcv(struct fc_seq *sp, struct fc_frame *fp, void *arg)
- 		 */
- 		ASSERT(!(fp->fr_flags & FCPHF_CRC_UNCHECKED));
- 		dd = fc_frame_payload_get(fp, sizeof(*dd));
--		ASSERT_NOTIMPL(dd != NULL);
-+		WARN_ON(!dd);
- 		fsp->state = OPENFC_SRB_IN_DATA_TRANS;
+-#ifdef DEBUG_ASSERTS
+-/*
+- * Static checks for packet structure sizes.
+- * These catch some obvious errors in structure definitions.
+- * These should generate no code since they can be tested at compile time.
+- */
+-static inline void fc_gs_size_checks(void)
+-{
+-	ASSERT_NOTIMPL(sizeof(struct fc_ct_hdr) == FC_CT_HDR_LEN);
+-}
+-#endif /* DEBUG_ASSERTS */
+-
+ #endif /* _FC_GS_H_ */
+diff --git a/drivers/scsi/ofc/libfc/fc_ils.h b/drivers/scsi/ofc/libfc/fc_ils.h
+index 7225ac5..c421df7 100644
+--- a/drivers/scsi/ofc/libfc/fc_ils.h
++++ b/drivers/scsi/ofc/libfc/fc_ils.h
+@@ -521,37 +521,4 @@ struct fc_ils_mrra_resp {
+ #define	FC_MRRR_AVAIL	1		/* resources available */
+ #define	FC_MRRR_UNAV	2		/* resources unavailable */
  
- 		/*
+-#ifdef DEBUG_ASSERTS
+-/*
+- * Static checks for packet structure sizes.
+- * These catch some obvious errors in structure definitions.
+- * This should generate no code.  The check should be true at compile time.
+- */
+-static inline void fc_ils_size_checks(void)
+-{
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_sw_rjt) == FC_ILS_SW_RJT_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_gnf) == FC_ILS_GNF_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_elp_f_params) ==
+-		       FC_ILS_ELP_F_PARAMS_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_elp) == FC_ILS_ELP_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_elp_r_rdy) == FC_ILS_ELP_R_RDY_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_elp_vc_rdy) ==
+-		       FC_ILS_ELP_VC_RDY_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_efp) == FC_ILS_EFP_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_efp_rec) == FC_ILS_EFP_REC_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_mcast_id_rec) ==
+-		       FC_ILS_MCAST_ID_REC_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_dia) == FC_ILS_DIA_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_rdi) == FC_ILS_RDI_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_fspf) == FC_ILS_FSPF_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_hlo) == FC_ILS_HLO_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_lsu) == FC_ILS_LSU_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_lsr) == FC_ILS_LSR_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_link_desc) == FC_LINK_DESC_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_esc) == FC_ILS_ESC_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_mrra) == FC_ILS_MRRA_LEN);
+-	ASSERT_NOTIMPL(sizeof(struct fc_ils_mrra_resp) == FC_ILS_MRRA_RESP_LEN);
+-}
+-#endif /* DEBUG_ASSERTS */
+-
+ #endif /* _FC_ILS_H_ */
+diff --git a/drivers/scsi/ofc/libfc/fc_sess.c b/drivers/scsi/ofc/libfc/fc_sess.c
+index 65204ae..ee08c97 100644
+--- a/drivers/scsi/ofc/libfc/fc_sess.c
++++ b/drivers/scsi/ofc/libfc/fc_sess.c
+@@ -116,20 +116,6 @@ static inline void fc_sess_unlock(struct fc_sess *sess)
+ 	spin_unlock_bh(&sess->fs_lock);
+ }
+ 
+-#ifdef DEBUG_ASSERTS
+-/*
+- * Check whether session is locked.
+- */
+-static inline int fc_sess_locked(const struct fc_sess *sess)
+-{
+-#if defined(CONFIG_SMP) || defined(CONFIG_DEBUG_SPINLOCK)
+-	return spin_is_locked((spinlock_t *) &sess->fs_lock);
+-#else
+-	return 1;
+-#endif /* CONFIG_SMP || CONFIG_DEBUG_SPINLOCK */
+-}
+-#endif /* DEBUG_ASSERTS */
+-
+ /*
+  * Unlock session.
+  * This must handle operations that defer because they can't be done
 
