@@ -1,130 +1,70 @@
-From: James Smart <James.Smart@Emulex.Com>
-Subject: Re: [PATCH 2.6.23.14] SCSI : scsi_device_lookup/scsi_device_lookup_by_target
- return NULL for an existent scsi_device
-Date: Wed, 23 Jan 2008 09:09:43 -0500
-Message-ID: <47974AA7.8030300@emulex.com>
-References: <622408.27957.qm@web53704.mail.re2.yahoo.com>
-Reply-To: James.Smart@Emulex.Com
+From: "Bart Van Assche" <bart.vanassche@gmail.com>
+Subject: Integration of SCST in the mainstream Linux kernel
+Date: Wed, 23 Jan 2008 15:22:00 +0100
+Message-ID: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emulex.emulex.com ([138.239.112.1]:35029 "EHLO
-	emulex.emulex.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752016AbYAWOJq (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 09:09:46 -0500
-In-Reply-To: <622408.27957.qm@web53704.mail.re2.yahoo.com>
+Received: from wr-out-0506.google.com ([64.233.184.229]:48212 "EHLO
+	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751375AbYAWOWD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 09:22:03 -0500
+Received: by wr-out-0506.google.com with SMTP id c49so1133333wra.1
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 06:22:02 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nagendra Tomar <tomer_iisc@yahoo.com>
-Cc: James.Bottomley@SteelEye.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>, James.Bottomley@hansenpartnership.com, FUJITA
+Cc: linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
+As you probably know there is a trend in enterprise computing towards
+networked storage. This is illustrated by the emergence during the
+past few years of standards like SRP (SCSI RDMA Protocol), iSCSI
+(Internet SCSI) and iSER (iSCSI Extensions for RDMA). Two different
+pieces of software are necessary to make networked storage possible:
+initiator software and target software. As far as I know there exist
+three different SCSI target implementations for Linux:
+- The iSCSI Enterprise Target Daemon (IETD,
+http://iscsitarget.sourceforge.net/);
+- The Linux SCSI Target Framework (STGT, http://stgt.berlios.de/);
+- The Generic SCSI Target Middle Level for Linux project (SCST,
+http://scst.sourceforge.net/).
+Since I was wondering which SCSI target software would be best suited
+for an InfiniBand network, I started evaluating the STGT and SCST SCSI
+target implementations. Apparently the performance difference between
+STGT and SCST is small on 100 Mbit/s and 1 Gbit/s Ethernet networks,
+but the SCST target software outperforms the STGT software on an
+InfiniBand network. See also the following thread for the details:
+http://sourceforge.net/mailarchive/forum.php?thread_name=e2e108260801170127w2937b2afg9bef324efa945e43%40mail.gmail.com&forum_name=scst-devel.
 
-This sounds like a return to the old behavior, where sdevs in SDEV_DEL
-were ignored. However, it too had lots of bad effects. We'd have to go
-back to the threads over the last 2 years that justified resurrecting
-the sdev. Start looking at threads like :
-http://marc.info/?l=linux-scsi&m=115555788730468&w=2
-http://marc.info/?l=linux-scsi&m=116837744314913&w=2
-http://marc.info/?l=linux-scsi&m=117139230702785&w=2
-http://marc.info/?l=linux-scsi&m=117991046126294&w=2
-Also, there's multiple parts to this - the sdev struct, and the sysfs objects
-and thus namespace associated with the struct, etc.
+About the design of the SCST software: while one of the goals of the
+STGT project was to keep the in-kernel code minimal, the SCST project
+implements the whole SCSI target in kernel space. SCST is implemented
+as a set of new kernel modules, only minimal changes to the existing
+kernel are necessary before the SCST kernel modules can be used. This
+is the same approach that will be followed in the very near future in
+the OpenSolaris kernel (see also
+http://opensolaris.org/os/project/comstar/). More information about
+the design of SCST can be found here:
+http://scst.sourceforge.net/doc/scst_pg.html.
 
-So, in my mind, if this reverts to ignoring sdevs in SDEV_DEL, and creates
-a duplicate sdev in SDEV_RUNNING, then it's the wrong patch.  What should
-be considered is where did the resurrection of the sdev go wrong.  I
-remember that Hannes did some updates
-http://marc.info/?l=linux-scsi&m=118215727101887&w=2
-but I don't believe these ever got merged upstream. Perhaps that's a good
-place to start.
+My impression is that both the STGT and SCST projects are well
+designed, well maintained and have a considerable user base. According
+to the SCST maintainer (Vladislav Bolkhovitin), SCST is superior to
+STGT with respect to features, performance, maturity, stability, and
+number of existing target drivers. Unfortunately the SCST kernel code
+lives outside the kernel tree, which makes SCST harder to use than
+STGT.
 
--- james s
+As an SCST user, I would like to see the SCST kernel code integrated
+in the mainstream kernel because of its excellent performance on an
+InfiniBand network. Since the SCST project comprises about 14 KLOC,
+reviewing the SCST code will take considerable time. Who will do this
+reviewing work ? And with regard to the comments made by the
+reviewers: Vladislav, do you have the time to carry out the
+modifications requested by the reviewers ? I expect a.o. that
+reviewers will ask to move SCST's configuration pseudofiles from
+procfs to sysfs.
 
-
-Nagendra Tomar wrote:
-> __scsi_device_lookup and __scsi_device_lookup_by_target do not 
-> check for the sdev_state and hence return scsi_devices with 
-> sdev_state set to SDEV_DEL also. It has the following side effects.
-> 
-> We can have two scsi_devices with the same HBTL queued in 
-> the scsi_host->__devices/scsi_target->devices list, one
-> in the SDEV_DEL state and the other in, say SDEV_RUNNING state. 
->     If the one in the SDEV_DEL state is before the one in SDEV_RUNNING 
-> state, (which will almost always be the case) the scsi_device_lookup and 
-> scsi_device_lookup_by_target will never find the totally legitimate
-> scsi_device (the one in the SDEV_RUNNING state).
-> 
-> This is because __scsi_device_lookup/__scsi_device_lookup_by_target 
-> always returns the first one in the list (which in our case is the 
-> one with the SDEV_DEL state) and the scsi_device_get() which is called by 
-> scsi_device_lookup/scsi_device_lookup_by_target will return -ENXIO 
-> for this scsi_device, resulting in scsi_device_lookup and 
-> scsi_device_lookup_by_target to return NULL.
-> 
->         So we _cannot_ lookup a perfectly valid device present in the
-> list of scsi_devices. 
-> 
->         The right thing to do is to not have __scsi_device_lookup
-> and __scsi_device_lookup_by_target match a device if the scsi_device
-> state is SDEV_DEL. This will also make these functions similar in 
-> behaviour to their scsi_device_lookup/scsi_device_lookup_by_target
-> counterparts, as the comments in the code suggest.
-> 
->         One way by which we can have two scsi_devices in the list is 
-> as follows.        
->         Suppose a scsi_device has some outstanding command(s) when 
-> scsi_remove_device is called for it. Due to the extra ref being held
-> by the command in flight, the __scsi_remove_device->put_device call 
-> will not actually free the scsi_device and it will remain in the 
-> scsi_device list albeit in the SDEV_DEL state. Now if we do a 
-> scsi_add_device for the same HBTL, a new device with the same HBTL
-> (this one in SDEV_RUNNING state) gets added to the scsi_device list. 
->         
->         Infact if we call scsi_add_device one more time, it happily 
-> goes ahead and tries to add it once more, as 
-> scsi_probe_and_add_lun->scsi_device_lookup_by_target does not return
-> the already existing device. This will though result in the kobject 
-> EEXIST warning dump.
-> 
->         The patch below solves the problem described here by not
-> returning scsi_devices in SDEV_DEL state, thus allowing scsi_device
-> in SDEV_RUNNING state (if any) to be correctly returned, instead.
-> 
-> 
-> Thanx,
-> Tomar
-> 
-> 
-> Signed-off-by: Nagendra Singh Tomar <nagendra_tomar@adaptec.com>
-> ---
-> 
-> --- linux-2.6.23.14/drivers/scsi/scsi.c.orig	2008-01-23 18:06:02.000000000 +0530
-> +++ linux-2.6.23.14/drivers/scsi/scsi.c	2008-01-23 19:17:35.000000000 +0530
-> @@ -951,7 +951,7 @@ struct scsi_device *__scsi_device_lookup
->  	struct scsi_device *sdev;
->  
->  	list_for_each_entry(sdev, &starget->devices, same_target_siblings) {
-> -		if (sdev->lun ==lun)
-> +		if (sdev->lun == lun && sdev->sdev_state != SDEV_DEL)
->  			return sdev;
->  	}
->  
-> @@ -1008,7 +1008,7 @@ struct scsi_device *__scsi_device_lookup
->  
->  	list_for_each_entry(sdev, &shost->__devices, siblings) {
->  		if (sdev->channel == channel && sdev->id == id &&
-> -				sdev->lun ==lun)
-> +			sdev->lun == lun && sdev->sdev_state != SDEV_DEL)
->  			return sdev;
->  	}
-> 
-> 
-> 
->       ___________________________________________________________
-> Support the World Aids Awareness campaign this month with Yahoo! For Good http://uk.promotions.yahoo.com/forgood/
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Bart Van Assche.
