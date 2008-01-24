@@ -1,47 +1,62 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: qla_sup.c: compilation warning
-Date: Thu, 24 Jan 2008 18:43:33 +0200
-Message-ID: <4798C035.5010000@panasas.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: PATCH:
+	usb-storage-set-last-sector-bug-flag.patch
+Date: Thu, 24 Jan 2008 18:07:00 +0100
+Message-ID: <4798C5B4.1000208@s5r6.in-berlin.de>
+References: <20080120205625.GB28842@kroah.com>
+	<Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org>
+	<20080123181239.GA21836@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:13508 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1755930AbYAXQnj (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jan 2008 11:43:39 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <20080123181239.GA21836@kroah.com>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Greg KH <greg@kroah.com>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Hans de Goede <j.w.r.degoede@hhs.nl>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>, linux-driver@qlogic.com
 
-With gcc 4.1.2 on fedora7 x86_64, cross compiling an i386 kernel i get
-the following compilation warning:
+Greg KH wrote:
+> I just am worried that we are
+> now suddenly keeping access from the last sector for devices that
+> currently did work just fine.
 
-CC [M] drivers/scsi/qla2xxx/qla_sup.o
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c: In function =E2=80=98qla2x00_beacon_blink=E2=80=99:
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c:906: warning: cast to pointer from integer of different size
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c: In function =E2=80=98qla2x00_beacon_on=E2=80=99:
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c:966: warning: cast to pointer from integer of different size
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c: In function =E2=80=98qla2x00_read_flash_byte=E2=80=99:
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c:1247: warning: cast to pointer from integer of different size
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c: In function =E2=80=98qla2x00_write_flash_byte=E2=80=99:
-/usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_su=
-p.c:1307: warning: cast to pointer from integer of different size
+This new workaround doesn't prevent access to the last sector.  It only
+breaks up a multi-sector access which would also reach the last sector
+into several (two? I'm too lazy to look back in the mail thread)
+accesses, in order to access the last sector in a dedicated
+single-sector access.
 
-Perhaps the compiler is right this time ?
-configured with: "make ARCH=3Di386 allmodconfig"
+So that's very differently to the fix-capacity workaround.  The
+fix-capacity workaround manipulates the READ CAPACITY parameter data.
+Therefore the fix-capacity workaround is unsafe for non-buggy devices.
 
-Boaz
+The last-sector-(access-)bug workaround _only_ modifies the command
+stream which is sent to the device.  A dangerous command is replaced by
+equivalent safe commands.  These commands are luckily safe for _all_
+devices, buggy and non-buggy ones.  The only cost of this workaround is
+(1.) the code, (2.) the runtime/ bandwidth/ latency overhead for
+accesses which reach the last sector.
 
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Somebody correct me if I got something wrong.
+-- 
+Stefan Richter
+-=====-==--- ---= ==---
+http://arcgraph.de/sr/
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
