@@ -1,102 +1,224 @@
-From: Robin Humble <robin.humble+stgt-FCV4sgi5zeUQrrorzV6ljw@public.gmane.org>
-Subject: Re: Performance of SCST versus STGT
-Date: Thu, 24 Jan 2008 02:06:16 -0500
-Message-ID: <20080124070616.GA31633@porcupine.cita.utoronto.ca>
-References: <e2e108260801170127w2937b2afg9bef324efa945e43@mail.gmail.com>
-	<20080117184052F.fujita.tomonori@lab.ntt.co.jp>
-	<478F246C.4040400@vlnb.net>
-	<20080117190558K.fujita.tomonori@lab.ntt.co.jp>
-	<20080117174542.GC29650@osc.edu>
-	<e2e108260801220204k4b914ea1o9b47c0b22c6d098b@mail.gmail.com>
-	<4795D4A7.5000105@vlnb.net>
-	<e2e108260801220432l353b1d76xd2707b5e6f336aef@mail.gmail.com>
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/2] ch: fix device minor number management bug
+Date: Thu, 24 Jan 2008 17:24:50 +0900
+Message-ID: <20080124172450N.fujita.tomonori@lab.ntt.co.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <e2e108260801220432l353b1d76xd2707b5e6f336aef-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
-List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
-List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
-	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
-Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
-To: Bart Van Assche <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from tama555.ecl.ntt.co.jp ([129.60.39.106]:59423 "EHLO
+	tama555.ecl.ntt.co.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753241AbYAXIYu (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jan 2008 03:24:50 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: tomof@acm.org
 
-On Tue, Jan 22, 2008 at 01:32:08PM +0100, Bart Van Assche wrote:
->On Jan 22, 2008 12:33 PM, Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org> wrote:
->> What are the new SRPT/iSER numbers?
->You can find the new performance numbers below. These are all numbers for
->reading from the remote buffer cache, no actual disk reads were performed.
->The read tests have been performed with dd, both for a block size of 512
->bytes and of 1 MB. The tests with small block size learn more about latency,
->while the tests with large block size learn more about the maximal possible
->throughput.
->
->.............................................................................................
->.                           .   STGT read     SCST read    .    STGT read      SCST read    .
->.                           .  performance   performance   .   performance    performance   .
->.                           .  (0.5K, MB/s)  (0.5K, MB/s)  .   (1 MB >MB/s)   (1 MB, MB/s)  .
->.............................................................................................
->. Ethernet (1 Gb/s network) .      77             78       .         77            89       .
->. IPoIB    (8 Gb/s network) .     163            185       .        201           239       .
->. iSER     (8 Gb/s network) .     250            N/A       .        360           N/A       .
->. SRP      (8 Gb/s network) .     N/A            421       .        N/A           683       .
->............................................................................................
+Oops, sorry, I sent the patches to linux-kernel...
 
-how are write speeds with SCST SRP?
-for some kernels and tests tgt writes at >2x the read speed.
+=
+From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Subject: [PATCH 1/2] ch: fix device minor number management bug
 
-also I see much higher speeds that what you report in my DDR 4x IB tgt
-testing... which could be taken as inferring that tgt is scaling quite
-nicely on the faster fabric?
-  ib_write_bw of 1473 MB/s
-  ib_read_bw  of 1378 MB/s
+ch_probe uses the total number of ch devices as minor.
 
-iSER to 7G ramfs, x86_64, centos4.6, 2.6.22 kernels, git tgtd,
-initiator end booted with mem=512M, target with 8G ram
+ch_probe:
+	ch->minor = ch_devcount;
+...
+	ch_devcount++;
 
- direct i/o dd
-  write/read  800/751 MB/s
-    dd if=/dev/zero of=/dev/sdc bs=1M count=5000 oflag=direct
-    dd of=/dev/null if=/dev/sdc bs=1M count=5000 iflag=direct
+Then ch_remove decreases ch_devcount:
 
- buffered i/o dd
-  write/read 1109/350 MB/s
-    dd if=/dev/zero of=/dev/sdc bs=1M count=5000
-    dd of=/dev/null if=/dev/sdc bs=1M count=5000
+ch_remove:
+	ch_devcount--;
 
- buffered i/o lmdd
-  write/read  682/438 MB/s
-    lmdd if=internal of=/dev/sdc bs=1M count=5000
-    lmdd of=internal if=/dev/sdc bs=1M count=5000
+If you have two ch devices, sch0 and sch1, and remove sch0,
+ch_devcount is 1. Then if you add another ch device, ch_probe tries to
+create sch1. So you get a warning and fail to create sch1:
 
-which goes to show that a) buffered i/o makes reads suck and writes fly
-b) most benchmarks are unreliable c) at these high speeds you get all
-sorts of weird effects which can easily vary with kernel, OS, ... and
-d) that IMHO really we shouldn't get too caught up in these very
-artificial tests to ramdisks/ram because it's the speed of real
-applications to actual spinning rust that matters.
+Jan 24 16:01:05 nice kernel: sysfs: duplicate filename 'sch1' can not be created
+Jan 24 16:01:05 nice kernel: WARNING: at fs/sysfs/dir.c:424 sysfs_add_one()
+Jan 24 16:01:05 nice kernel: Pid: 2571, comm: iscsid Not tainted 2.6.24-rc7-ga3d2c2e8-dirty #1
+Jan 24 16:01:05 nice kernel:
+Jan 24 16:01:05 nice kernel: Call Trace:
+Jan 24 16:01:05 nice kernel:  [<ffffffff802a22b8>] sysfs_add_one+0x54/0xbd
+Jan 24 16:01:05 nice kernel:  [<ffffffff802a283c>] create_dir+0x4f/0x87
+Jan 24 16:01:05 nice kernel:  [<ffffffff802a28a9>] sysfs_create_dir+0x35/0x4a
+Jan 24 16:01:05 nice kernel:  [<ffffffff803069a1>] kobject_get+0x12/0x17
+Jan 24 16:01:05 nice kernel:  [<ffffffff80306ece>] kobject_add+0xf3/0x1a6
+Jan 24 16:01:05 nice kernel:  [<ffffffff8034252b>] class_device_add+0xaa/0x39d
+Jan 24 16:01:05 nice kernel:  [<ffffffff803428fb>] class_device_create+0xcb/0xfa
+Jan 24 16:01:05 nice kernel:  [<ffffffff80229e09>] printk+0x4e/0x56
+Jan 24 16:01:05 nice kernel:  [<ffffffff802a2054>] sysfs_ilookup_test+0x0/0xf
+Jan 24 16:01:05 nice kernel:  [<ffffffff88022580>] :ch:ch_probe+0xbe/0x61a
 
-having said that, if you know of a way to clock my IB cards down to your
-SDR rates then let me know and I'll be happy to re-run the tests.
+(snip)
 
-cheers,
-robin
+This patch converts ch to use a standard minor number management way,
+idr like sg and bsg.
 
->My conclusion from the above numbers: the performance difference between
->STGT and SCST is small for a Gigabit Ethernet network. The faster the
->network technology, the larger the difference between SCST and STGT.
->
->Bart.
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/ch.c |   71 +++++++++++++++++++++++++++++-----------------------
+ 1 files changed, 40 insertions(+), 31 deletions(-)
 
->_______________________________________________
->Stgt-devel mailing list
->Stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
->https://lists.berlios.de/mailman/listinfo/stgt-devel
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index 765f2fc..2b07014 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -21,6 +21,7 @@
+ #include <linux/compat.h>
+ #include <linux/chio.h>			/* here are all the ioctls */
+ #include <linux/mutex.h>
++#include <linux/idr.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -33,6 +34,7 @@
+ 
+ #define CH_DT_MAX       16
+ #define CH_TYPES        8
++#define CH_MAX_DEVS     128
+ 
+ MODULE_DESCRIPTION("device driver for scsi media changer devices");
+ MODULE_AUTHOR("Gerd Knorr <kraxel@bytesex.org>");
+@@ -113,9 +115,8 @@ typedef struct {
+ 	struct mutex	    lock;
+ } scsi_changer;
+ 
+-static LIST_HEAD(ch_devlist);
+-static DEFINE_SPINLOCK(ch_devlist_lock);
+-static int ch_devcount;
++static DEFINE_IDR(ch_index_idr);
++static DEFINE_SPINLOCK(ch_index_lock);
+ 
+ static struct scsi_driver ch_template =
+ {
+@@ -598,20 +599,17 @@ ch_release(struct inode *inode, struct file *file)
+ static int
+ ch_open(struct inode *inode, struct file *file)
+ {
+-	scsi_changer *tmp, *ch;
++	scsi_changer *ch;
+ 	int minor = iminor(inode);
+ 
+-	spin_lock(&ch_devlist_lock);
+-	ch = NULL;
+-	list_for_each_entry(tmp,&ch_devlist,list) {
+-		if (tmp->minor == minor)
+-			ch = tmp;
+-	}
++	spin_lock(&ch_index_lock);
++	ch = idr_find(&ch_index_idr, minor);
++
+ 	if (NULL == ch || scsi_device_get(ch->device)) {
+-		spin_unlock(&ch_devlist_lock);
++		spin_unlock(&ch_index_lock);
+ 		return -ENXIO;
+ 	}
+-	spin_unlock(&ch_devlist_lock);
++	spin_unlock(&ch_index_lock);
+ 
+ 	file->private_data = ch;
+ 	return 0;
+@@ -914,6 +912,7 @@ static int ch_probe(struct device *dev)
+ {
+ 	struct scsi_device *sd = to_scsi_device(dev);
+ 	struct class_device *class_dev;
++	int minor, ret = -ENOMEM;
+ 	scsi_changer *ch;
+ 
+ 	if (sd->type != TYPE_MEDIUM_CHANGER)
+@@ -923,7 +922,22 @@ static int ch_probe(struct device *dev)
+ 	if (NULL == ch)
+ 		return -ENOMEM;
+ 
+-	ch->minor = ch_devcount;
++	if (!idr_pre_get(&ch_index_idr, GFP_KERNEL))
++		goto free_ch;
++
++	spin_lock(&ch_index_lock);
++	ret = idr_get_new(&ch_index_idr, ch, &minor);
++	spin_unlock(&ch_index_lock);
++
++	if (ret)
++		goto free_ch;
++
++	if (minor > CH_MAX_DEVS) {
++		ret = -ENODEV;
++		goto remove_idr;
++	}
++
++	ch->minor = minor;
+ 	sprintf(ch->name,"ch%d",ch->minor);
+ 
+ 	class_dev = class_device_create(ch_sysfs_class, NULL,
+@@ -932,8 +946,8 @@ static int ch_probe(struct device *dev)
+ 	if (IS_ERR(class_dev)) {
+ 		printk(KERN_WARNING "ch%d: class_device_create failed\n",
+ 		       ch->minor);
+-		kfree(ch);
+-		return PTR_ERR(class_dev);
++		ret = PTR_ERR(class_dev);
++		goto remove_idr;
+ 	}
+ 
+ 	mutex_init(&ch->lock);
+@@ -942,35 +956,29 @@ static int ch_probe(struct device *dev)
+ 	if (init)
+ 		ch_init_elem(ch);
+ 
++	dev_set_drvdata(dev, ch);
+ 	sdev_printk(KERN_INFO, sd, "Attached scsi changer %s\n", ch->name);
+ 
+-	spin_lock(&ch_devlist_lock);
+-	list_add_tail(&ch->list,&ch_devlist);
+-	ch_devcount++;
+-	spin_unlock(&ch_devlist_lock);
+ 	return 0;
++remove_idr:
++	idr_remove(&ch_index_idr, minor);
++free_ch:
++	kfree(ch);
++	return ret;
+ }
+ 
+ static int ch_remove(struct device *dev)
+ {
+-	struct scsi_device *sd = to_scsi_device(dev);
+-	scsi_changer *tmp, *ch;
++	scsi_changer *ch = dev_get_drvdata(dev);
+ 
+-	spin_lock(&ch_devlist_lock);
+-	ch = NULL;
+-	list_for_each_entry(tmp,&ch_devlist,list) {
+-		if (tmp->device == sd)
+-			ch = tmp;
+-	}
+-	BUG_ON(NULL == ch);
+-	list_del(&ch->list);
+-	spin_unlock(&ch_devlist_lock);
++	spin_lock(&ch_index_lock);
++	idr_remove(&ch_index_idr, ch->minor);
++	spin_unlock(&ch_index_lock);
+ 
+ 	class_device_destroy(ch_sysfs_class,
+ 			     MKDEV(SCSI_CHANGER_MAJOR,ch->minor));
+ 	kfree(ch->dt);
+ 	kfree(ch);
+-	ch_devcount--;
+ 	return 0;
+ }
+ 
+@@ -1007,6 +1015,7 @@ static void __exit exit_ch_module(void)
+ 	scsi_unregister_driver(&ch_template.gendrv);
+ 	unregister_chrdev(SCSI_CHANGER_MAJOR, "ch");
+ 	class_destroy(ch_sysfs_class);
++	idr_destroy(&ch_index_idr);
+ }
+ 
+ module_init(init_ch_module);
+-- 
+1.5.3.4
+
