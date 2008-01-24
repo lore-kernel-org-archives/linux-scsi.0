@@ -1,29 +1,66 @@
-From: Stefan Richter <stefanr-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Subject: Re: PATCH: usb-storage-set-last-sector-bug-flag.patch
-Date: Thu, 24 Jan 2008 18:22:57 +0100
-Message-ID: <4798C971.8090008@s5r6.in-berlin.de>
-References: <20080120205625.GB28842@kroah.com> <Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org> <20080123181239.GA21836@kroah.com> <4798C5B4.1000208@s5r6.in-berlin.de>
+From: Greg KH <greg@kroah.com>
+Subject: Re: PATCH:
+	usb-storage-set-last-sector-bug-flag.patch
+Date: Thu, 24 Jan 2008 09:21:58 -0800
+Message-ID: <20080124172158.GC9665@kroah.com>
+References: <20080120205625.GB28842@kroah.com>
+	<Pine.LNX.4.44L0.0801201642460.8504-100000@netrider.rowland.org>
+	<20080123181239.GA21836@kroah.com>
+	<4798C5B4.1000208@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <4798C5B4.1000208-MtYdepGKPcBMYopoZt5u/LNAH6kLmebB@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Hans de Goede <j.w.r.degoede-fbo2DhPpy/Q@public.gmane.org>, Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, USB Storage list <usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org>, USB development list <linux-usb-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org>, David Brown <usb-storage2-GijAUarxTbMdnm+yROfE0A@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-usb-devel-bounces@lists.sourceforge.net>
+Content-Disposition: inline
+In-Reply-To: <4798C5B4.1000208@s5r6.in-berlin.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux-usb-devel>
+List-Post: <mailto:linux-usb-devel@lists.sourceforge.net>
+List-Help: <mailto:linux-usb-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux-usb-devel>,
+	<mailto:linux-usb-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux-usb-devel-bounces@lists.sourceforge.net
+Errors-To: linux-usb-devel-bounces@lists.sourceforge.net
+To: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Cc: USB development list <linux-usb-devel@lists.sourceforge.net>, linux-scsi@vger.kernel.org, USB Storage list <usb-storage@lists.one-eyed-alien.net>, linux-usb@vger.kernel.org, David Brown <usb-storage2@davidb.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, Hans de Goede <j.w.r.degoede@hhs.nl>, Boaz Harrosh <bharrosh@panasas.com>, Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, Jan 24, 2008 at 06:07:00PM +0100, Stefan Richter wrote:
+> Greg KH wrote:
+> > I just am worried that we are
+> > now suddenly keeping access from the last sector for devices that
+> > currently did work just fine.
+> 
+> This new workaround doesn't prevent access to the last sector.  It only
+> breaks up a multi-sector access which would also reach the last sector
+> into several (two? I'm too lazy to look back in the mail thread)
+> accesses, in order to access the last sector in a dedicated
+> single-sector access.
+> 
+> So that's very differently to the fix-capacity workaround.  The
+> fix-capacity workaround manipulates the READ CAPACITY parameter data.
+> Therefore the fix-capacity workaround is unsafe for non-buggy devices.
+> 
 > The last-sector-(access-)bug workaround _only_ modifies the command
 > stream which is sent to the device.  A dangerous command is replaced by
-> equivalent safe commands.
+> equivalent safe commands.  These commands are luckily safe for _all_
+> devices, buggy and non-buggy ones.  The only cost of this workaround is
+> (1.) the code, (2.) the runtime/ bandwidth/ latency overhead for
+> accesses which reach the last sector.
 
-BTW, one thing about this patch set needs to be criticized:
+Ok, thanks for explaining it better.  I have no objection to this change
+anymore.
 
-"last_sector_bug" is a really bad name choice for the new flag.  No
-wonder that it is confused with the (well named) "fix_capacity" flag.
+thanks,
 
-How about "read_last_sector_separately" or something in the way?
--- 
-Stefan Richter
--=====-==--- ---= ==---
-http://arcgraph.de/sr/
+greg k-h
+
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+_______________________________________________
+linux-usb-devel@lists.sourceforge.net
+To unsubscribe, use the last form field at:
+https://lists.sourceforge.net/lists/listinfo/linux-usb-devel
