@@ -1,75 +1,102 @@
-From: Phil Dibowitz <phil@ipom.com>
-Subject: Re: [linux-usb-devel] [PATCH] [2.6.23.13] udev hangs USB-storage
- (HP r707 camera)
-Date: Wed, 23 Jan 2008 21:55:31 -0800
-Message-ID: <47982853.8050606@ipom.com>
-References: <20080119174556.GE11553@colo.lackof.org> <47929B9F.8080607@s5r6.in-berlin.de> <20080120022829.GG11553@colo.lackof.org> <1200797791.11214.3.camel@localhost.localdomain> <20080120031008.GI11553@colo.lackof.org> <1200802265.11214.8.camel@localhost.localdomain> <20080120052553.GA5452@colo.lackof.org> <4796D02D.8000108@ipom.com> <20080123065556.GB20348@colo.lackof.org> <20080123070229.GC20348@colo.lackof.org>
+From: Robin Humble <robin.humble+stgt-FCV4sgi5zeUQrrorzV6ljw@public.gmane.org>
+Subject: Re: Performance of SCST versus STGT
+Date: Thu, 24 Jan 2008 02:06:16 -0500
+Message-ID: <20080124070616.GA31633@porcupine.cita.utoronto.ca>
+References: <e2e108260801170127w2937b2afg9bef324efa945e43@mail.gmail.com>
+	<20080117184052F.fujita.tomonori@lab.ntt.co.jp>
+	<478F246C.4040400@vlnb.net>
+	<20080117190558K.fujita.tomonori@lab.ntt.co.jp>
+	<20080117174542.GC29650@osc.edu>
+	<e2e108260801220204k4b914ea1o9b47c0b22c6d098b@mail.gmail.com>
+	<4795D4A7.5000105@vlnb.net>
+	<e2e108260801220432l353b1d76xd2707b5e6f336aef@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- protocol="application/pgp-signature";
- boundary="------------enig9F3DE2FAFEB58ACA14DD3F85"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.ipom.com ([69.73.131.218]:48740 "EHLO mail.ipom.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752322AbYAXFzn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 24 Jan 2008 00:55:43 -0500
-In-Reply-To: <20080123070229.GC20348@colo.lackof.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <e2e108260801220432l353b1d76xd2707b5e6f336aef-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
+	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
+List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
+	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
+Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+To: Bart Van Assche <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>, stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@parisc-linux.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Alan Stern <stern@rowland.harvard.edu>, linux-usb@vger.kernel.org, linux-usb-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org
 
-This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
---------------enig9F3DE2FAFEB58ACA14DD3F85
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+On Tue, Jan 22, 2008 at 01:32:08PM +0100, Bart Van Assche wrote:
+>On Jan 22, 2008 12:33 PM, Vladislav Bolkhovitin <vst-d+Crzxg7Rs0@public.gmane.org> wrote:
+>> What are the new SRPT/iSER numbers?
+>You can find the new performance numbers below. These are all numbers for
+>reading from the remote buffer cache, no actual disk reads were performed.
+>The read tests have been performed with dd, both for a block size of 512
+>bytes and of 1 MB. The tests with small block size learn more about latency,
+>while the tests with large block size learn more about the maximal possible
+>throughput.
+>
+>.............................................................................................
+>.                           .   STGT read     SCST read    .    STGT read      SCST read    .
+>.                           .  performance   performance   .   performance    performance   .
+>.                           .  (0.5K, MB/s)  (0.5K, MB/s)  .   (1 MB >MB/s)   (1 MB, MB/s)  .
+>.............................................................................................
+>. Ethernet (1 Gb/s network) .      77             78       .         77            89       .
+>. IPoIB    (8 Gb/s network) .     163            185       .        201           239       .
+>. iSER     (8 Gb/s network) .     250            N/A       .        360           N/A       .
+>. SRP      (8 Gb/s network) .     N/A            421       .        N/A           683       .
+>............................................................................................
 
-Grant Grundler wrote:
-> On Tue, Jan 22, 2008 at 11:55:56PM -0700, Grant Grundler wrote:
-> ...
->>>   http://www.phildev.net/linux/usb-unusualdevs-notes.html
->> In general, a very helpful document! Thanks!
-> ...
->=20
-> I read the rest of the document and explains exactly my confusion.
-> Can you please include that document into Documentation/usb/ ?
-> And then add a reference to the location where the US_SC* and US_PR*
-> constants are defined?
+how are write speeds with SCST SRP?
+for some kernels and tests tgt writes at >2x the read speed.
 
-I went back to look at the document - man, it was *way* out of date. I've=
+also I see much higher speeds that what you report in my DDR 4x IB tgt
+testing... which could be taken as inferring that tgt is scaling quite
+nicely on the faster fabric?
+  ib_write_bw of 1473 MB/s
+  ib_read_bw  of 1378 MB/s
 
-updated it and it should be accurate now. It makes no attempt to explain
-libusual, which I should probably add at some point, since it's very tied=
+iSER to 7G ramfs, x86_64, centos4.6, 2.6.22 kernels, git tgtd,
+initiator end booted with mem=512M, target with 8G ram
 
-together with unusual_devs.h now... but for now, I think my updates shoul=
-d
-make things much clearer.
+ direct i/o dd
+  write/read  800/751 MB/s
+    dd if=/dev/zero of=/dev/sdc bs=1M count=5000 oflag=direct
+    dd of=/dev/null if=/dev/sdc bs=1M count=5000 iflag=direct
 
---=20
-Phil Dibowitz                             phil@ipom.com
-Open Source software and tech docs        Insanity Palace of Metallica
-http://www.phildev.net/                   http://www.ipom.com/
+ buffered i/o dd
+  write/read 1109/350 MB/s
+    dd if=/dev/zero of=/dev/sdc bs=1M count=5000
+    dd of=/dev/null if=/dev/sdc bs=1M count=5000
 
-"Never write it in C if you can do it in 'awk';
- Never do it in 'awk' if 'sed' can handle it;
- Never use 'sed' when 'tr' can do the job;
- Never invoke 'tr' when 'cat' is sufficient;
- Avoid using 'cat' whenever possible" -- Taylor's Laws of Programming
+ buffered i/o lmdd
+  write/read  682/438 MB/s
+    lmdd if=internal of=/dev/sdc bs=1M count=5000
+    lmdd of=internal if=/dev/sdc bs=1M count=5000
 
+which goes to show that a) buffered i/o makes reads suck and writes fly
+b) most benchmarks are unreliable c) at these high speeds you get all
+sorts of weird effects which can easily vary with kernel, OS, ... and
+d) that IMHO really we shouldn't get too caught up in these very
+artificial tests to ramdisks/ram because it's the speed of real
+applications to actual spinning rust that matters.
 
+having said that, if you know of a way to clock my IB cards down to your
+SDR rates then let me know and I'll be happy to re-run the tests.
 
---------------enig9F3DE2FAFEB58ACA14DD3F85
-Content-Type: application/pgp-signature; name="signature.asc"
-Content-Description: OpenPGP digital signature
-Content-Disposition: attachment; filename="signature.asc"
+cheers,
+robin
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.6 (GNU/Linux)
-Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+>My conclusion from the above numbers: the performance difference between
+>STGT and SCST is small for a Gigabit Ethernet network. The faster the
+>network technology, the larger the difference between SCST and STGT.
+>
+>Bart.
 
-iD8DBQFHmChTN5XoxaHnMrsRAkzIAKCoDFYkALFX75Ulc2aH50HFnRhluACdFpKf
-ZvUJkInIQHP742Vz5PROsgE=
-=rHCM
------END PGP SIGNATURE-----
-
---------------enig9F3DE2FAFEB58ACA14DD3F85--
+>_______________________________________________
+>Stgt-devel mailing list
+>Stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+>https://lists.berlios.de/mailman/listinfo/stgt-devel
