@@ -1,108 +1,79 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PATCH] SCSI bug fix for 2.6.24-rc8
-Date: Wed, 23 Jan 2008 18:14:24 -0600
-Message-ID: <1201133664.3110.114.camel@localhost.localdomain>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: [PATCH 0/9] scsi_dh: Move dm device handler to SCSI layer
+Date: Wed, 23 Jan 2008 16:30:10 -0800
+Message-ID: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:52703 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752453AbYAXAOg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 23 Jan 2008 19:14:36 -0500
+Received: from e36.co.us.ibm.com ([32.97.110.154]:42016 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752314AbYAXAaN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 23 Jan 2008 19:30:13 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m0O0UDEq000622
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 19:30:13 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m0O0UCLk032216
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 17:30:12 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m0O0UBie028021
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jan 2008 17:30:12 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: andmike@us.ibm.com, michaelc@cs.wisc.edu, Chandra Seetharaman <sekharan@us.ibm.com>, jens.axboe@oracle.com
 
-Hopefully this should resolve the outstanding initio failures.
+Hello,
 
-Patch is available here:
+The set of patches that follow this email facilitate movement of hardware
+handlers from dm layer to SCSI layer.
 
-master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-rc-fixes-2.6.git
+Patches posted along with this email are based off of the patches
+Mike Christie posted on June 09, 2007. The first email Mike posted
+gives the rationale for moving the hardware handler from dm to SCSI.
 
-Full patch attached.
+Patches posted by Mike Christie:
+http://marc.info/?l=linux-scsi&m=118141609715090&w=2
+http://marc.info/?l=linux-scsi&m=118141614418681&w=2
+http://marc.info/?l=linux-scsi&m=118141614501241&w=2
+http://marc.info/?l=linux-scsi&m=118141614303990&w=2
+http://marc.info/?l=linux-scsi&m=118141614425996&w=2
+http://marc.info/?l=linux-scsi&m=118141802719861&w=2
+http://marc.info/?l=linux-scsi&m=118141614331436&w=2
+http://marc.info/?l=linux-scsi&m=118141614421759&w=2
 
-James
+Current set of patches has 3 additional advantages:
+ 1. It is totally compatible with the current multipath tools.
+ 2. Moving from dm hardware handler to SCSI hardware handler is not
+    imposed on the user community. They can use either of those by using
+    either of the modules.
+    dm hardware handler can be depracated slowly.
+ 3. It adds a new device state SDEV_PASSIVE which avoids I/O being sent
+    to the passive side of a multipath device, thereby reducing the device
+    probe time and boot time.
+    Booting a system with 40 luns with 1 active path and 1 inactive path
+    shows the following as the last printk before login prompt.
+    ------------
+    With SCSI HW Handler
+    [  171.702366] Buffer I/O error on device sdbl, logical block 262128
 
----
+    Without SCSI HW Handler
+    [ 1426.772390] end_request: I/O error, dev sdbm, sector 2097136
+    ------------
 
-From: Stuart Swales <stuart.swales@croftnuisk.co.uk>
-Date: Wed, 23 Jan 2008 20:00:48 +0000
-Subject: [SCSI] initio: fix module hangs on loading
+Patches are created on top of 2.6.24-rc8-mm1.
 
-I've verified (on my Initio 9100 with a DAT drive) that the
-2.6.24-rc8-git6 initio module still hangs on loading.
+Testing has been done with a IBM DS4800 storage device, which means the
+infrastructure and the lsi_rdac hardware handler has been tested. Testing
+by someone with the EMC hardware and/or HP hardware would be appreciated.
 
-These fixes (other than the printk) are needed to get the module to load
-ok (and work correctly) with my adapter & tape drive.
+Comments, suggestions solicited.
 
-a) printk cosmetic fix
+Thanks,
 
-b) cblk->sglen needs setting for later DMA I/O routines to use
+chandra
 
-c) host->bios_addr needs setting for debug output correctness
-
-d) semaph & semaph_lock initialisation had got lost since 2.6.22
-
-e) since 2.6.22 the bios data address was truncated to 16 bits (needs 20
-when shifted left)
-
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/initio.c |    8 ++++++--
- 1 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
-index 01bf018..a10a5c7 100644
---- a/drivers/scsi/initio.c
-+++ b/drivers/scsi/initio.c
-@@ -823,7 +823,7 @@ static void initio_append_busy_scb(struct initio_host * host, struct scsi_ctrl_b
- {
- 
- #if DEBUG_QUEUE
--	printk("append busy SCB %o; ", scbp);
-+	printk("append busy SCB %p; ", scbp);
- #endif
- 	if (scbp->tagmsg)
- 		host->act_tags[scbp->target]++;
-@@ -2609,6 +2609,7 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
- 		cblk->bufptr = cpu_to_le32((u32)dma_addr);
- 		cmnd->SCp.dma_handle = dma_addr;
- 
-+		cblk->sglen = nseg;
- 
- 		cblk->flags |= SCF_SG;	/* Turn on SG list flag       */
- 		total_len = 0;
-@@ -2869,6 +2870,7 @@ static int initio_probe_one(struct pci_dev *pdev,
- 	host = (struct initio_host *)shost->hostdata;
- 	memset(host, 0, sizeof(struct initio_host));
- 	host->addr = pci_resource_start(pdev, 0);
-+	host->bios_addr = bios_seg;
- 
- 	if (!request_region(host->addr, 256, "i91u")) {
- 		printk(KERN_WARNING "initio: I/O port range 0x%x is busy.\n", host->addr);
-@@ -2895,6 +2897,8 @@ static int initio_probe_one(struct pci_dev *pdev,
- 
- 	host->pci_dev = pdev;
- 
-+	host->semaph = 1;
-+	spin_lock_init(&host->semaph_lock);
- 	host->num_scbs = num_scb;
- 	host->scb = scb;
- 	host->next_pending = scb;
-@@ -2911,7 +2915,7 @@ static int initio_probe_one(struct pci_dev *pdev,
- 	host->last_avail = prev;
- 	spin_lock_init(&host->avail_lock);
- 
--	initio_init(host, phys_to_virt(bios_seg << 4));
-+	initio_init(host, phys_to_virt(((u32)bios_seg << 4)));
- 
- 	host->jsstatus0 = 0;
- 
 -- 
-1.5.3.7
 
-
-
+----------------------------------------------------------------------
+    Chandra Seetharaman               | Be careful what you choose....
+              - sekharan@us.ibm.com   |      .......you may get it.
+----------------------------------------------------------------------
