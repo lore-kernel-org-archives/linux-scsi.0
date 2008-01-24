@@ -1,182 +1,86 @@
-From: Andrew Vasquez <andrew.vasquez@qlogic.com>
-Subject: Re: qla_sup.c: compilation warning
-Date: Thu, 24 Jan 2008 09:40:53 -0800
-Message-ID: <20080124174053.GF10566@plap3.qlogic.org>
-References: <4798C035.5010000@panasas.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: Unexpected IRQ trap when reloading mptspi with MSI
+Date: Thu, 24 Jan 2008 14:14:08 -0500
+Message-ID: <4798E380.4060004@cybernetics.com>
+References: <4798C61E.1050503@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:25483 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752441AbYAXRkz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jan 2008 12:40:55 -0500
-Content-Disposition: inline
-In-Reply-To: <4798C035.5010000@panasas.com>
+Received: from host64.cybernetics.com ([70.169.137.4]:2408 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1752114AbYAXTOE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Jan 2008 14:14:04 -0500
+In-Reply-To: <4798C61E.1050503@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-driver@qlogic.com, Seokmann Ju <seokmann.ju@qlogic.com>
+To: linux-scsi@vger.kernel.org, Eric.Moore@lsi.com
+Cc: sathya.prakash@lsi.com
 
-On Thu, 24 Jan 2008, Boaz Harrosh wrote:
+Tony Battersby wrote:
+> I get "unexpected IRQ trap at vector dd" when reloading mptspi with MSI
+> enabled.  This seems to happen only on dual-channel HBAs; single-channel
+> HBAs are unaffected.  It looks like the second channel is generating a
+> bogus MSI interrupt while the first channel is being brought up.
+>
+Update:
 
-> With gcc 4.1.2 on fedora7 x86_64, cross compiling an i386 kernel i ge=
-t
-> the following compilation warning:
->=20
-> CC [M] drivers/scsi/qla2xxx/qla_sup.o
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c: In function =E2=80=98qla2x00_beacon_blink=E2=80=99:
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c:906: warning: cast to pointer from integer of different size
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c: In function =E2=80=98qla2x00_beacon_on=E2=80=99:
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c:966: warning: cast to pointer from integer of different size
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c: In function =E2=80=98qla2x00_read_flash_byte=E2=80=99:
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c:1247: warning: cast to pointer from integer of different size
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c: In function =E2=80=98qla2x00_write_flash_byte=E2=80=99:
-> /usr0/export/dev/bharrosh/git/pub/scsi-misc/drivers/scsi/qla2xxx/qla_=
-sup.c:1307: warning: cast to pointer from integer of different size
->=20
-> Perhaps the compiler is right this time ?
-> configured with: "make ARCH=3Di386 allmodconfig"
+With the "IO resource allocation using pci_request_selected_regions API"
+patch (http://marc.info/?l=linux-scsi&m=120004270121533&w=4) applied, I
+get the following output instead:
 
-Hmm, it looks like the conversion to resource_size_t usage
-(3776541d8a46347a4924353a192c6ce4a3d04e2e) requires some additional
-fixups to cleanup the structure-pointer castings used during IO mapped
-accesses to the chip.
+Jan 24 13:38:03 kernel: Fusion MPT base driver 3.04.06
+Jan 24 13:38:03 kernel: Copyright (c) 1999-2007 LSI Corporation
 
-There's only a small number of locations, where the driver uses IO
-mapped accesses to the hardware, the patch below should take care of
-it without introducing to many structural changes to code flow.
+Jan 24 13:38:07 kernel: Fusion MPT SPI Host driver 3.04.06
+Jan 24 13:38:07 kernel: ACPI: PCI Interrupt 0000:03:04.0[A] -> GSI 22
+(level, low) -> IRQ 19
+Jan 24 13:38:07 kernel: mptbase: ioc0: Initiating bringup
+Jan 24 13:38:08 kernel: ioc0: LSI53C1030T A0:
+Capabilities={Initiator,Target}
+Jan 24 13:38:08 kernel: mptbase: ioc0: PCI-MSI enabled
+Jan 24 13:38:08 kernel: scsi0 : ioc0: LSI53C1030T A0, FwRev=01032700h,
+Ports=1, MaxQ=255, IRQ=222
+Jan 24 13:38:13 kernel: ACPI: PCI Interrupt 0000:03:04.1[B] -> GSI 23
+(level, low) -> IRQ 20
+Jan 24 13:38:13 kernel: mptbase: ioc1: Initiating bringup
+Jan 24 13:38:13 kernel: ioc1: LSI53C1030T A0:
+Capabilities={Initiator,Target}
+Jan 24 13:38:13 kernel: mptbase: ioc1: PCI-MSI enabled
+Jan 24 13:38:14 kernel: scsi1 : ioc1: LSI53C1030T A0, FwRev=01032700h,
+Ports=1, MaxQ=255, IRQ=221
 
-Signed-off-by: Andrew Vasquez <andrew.vasquez@qlogic.com>
----
+Jan 24 13:38:39 kernel: ACPI: PCI interrupt for device 0000:03:04.1 disabled
+Jan 24 13:38:39 kernel: ACPI: PCI interrupt for device 0000:03:04.0 disabled
 
-diff --git a/drivers/scsi/qla2xxx/qla_sup.c b/drivers/scsi/qla2xxx/qla_=
-sup.c
-index b68fb73..26822c8 100644
---- a/drivers/scsi/qla2xxx/qla_sup.c
-+++ b/drivers/scsi/qla2xxx/qla_sup.c
-@@ -893,6 +893,8 @@ qla2x00_flip_colors(scsi_qla_host_t *ha, uint16_t *=
-pflags)
- 	}
- }
-=20
-+#define PIO_REG(h, r) ((h)->pio_address + offsetof(struct device_reg_2=
-xxx, r))
-+
- void
- qla2x00_beacon_blink(struct scsi_qla_host *ha)
- {
-@@ -902,15 +904,12 @@ qla2x00_beacon_blink(struct scsi_qla_host *ha)
- 	unsigned long flags;
- 	struct device_reg_2xxx __iomem *reg =3D &ha->iobase->isp;
-=20
--	if (ha->pio_address)
--		reg =3D (struct device_reg_2xxx __iomem *)ha->pio_address;
--
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
-=20
- 	/* Save the Original GPIOE. */
- 	if (ha->pio_address) {
--		gpio_enable =3D RD_REG_WORD_PIO(&reg->gpioe);
--		gpio_data =3D RD_REG_WORD_PIO(&reg->gpiod);
-+		gpio_enable =3D RD_REG_WORD_PIO(PIO_REG(ha, gpioe));
-+		gpio_data =3D RD_REG_WORD_PIO(PIO_REG(ha, gpiod));
- 	} else {
- 		gpio_enable =3D RD_REG_WORD(&reg->gpioe);
- 		gpio_data =3D RD_REG_WORD(&reg->gpiod);
-@@ -920,7 +919,7 @@ qla2x00_beacon_blink(struct scsi_qla_host *ha)
- 	gpio_enable |=3D GPIO_LED_MASK;
-=20
- 	if (ha->pio_address) {
--		WRT_REG_WORD_PIO(&reg->gpioe, gpio_enable);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, gpioe), gpio_enable);
- 	} else {
- 		WRT_REG_WORD(&reg->gpioe, gpio_enable);
- 		RD_REG_WORD(&reg->gpioe);
-@@ -936,7 +935,7 @@ qla2x00_beacon_blink(struct scsi_qla_host *ha)
-=20
- 	/* Set the modified gpio_data values */
- 	if (ha->pio_address) {
--		WRT_REG_WORD_PIO(&reg->gpiod, gpio_data);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, gpiod), gpio_data);
- 	} else {
- 		WRT_REG_WORD(&reg->gpiod, gpio_data);
- 		RD_REG_WORD(&reg->gpiod);
-@@ -962,14 +961,11 @@ qla2x00_beacon_on(struct scsi_qla_host *ha)
- 		return QLA_FUNCTION_FAILED;
- 	}
-=20
--	if (ha->pio_address)
--		reg =3D (struct device_reg_2xxx __iomem *)ha->pio_address;
--
- 	/* Turn off LEDs. */
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	if (ha->pio_address) {
--		gpio_enable =3D RD_REG_WORD_PIO(&reg->gpioe);
--		gpio_data =3D RD_REG_WORD_PIO(&reg->gpiod);
-+		gpio_enable =3D RD_REG_WORD_PIO(PIO_REG(ha, gpioe));
-+		gpio_data =3D RD_REG_WORD_PIO(PIO_REG(ha, gpiod));
- 	} else {
- 		gpio_enable =3D RD_REG_WORD(&reg->gpioe);
- 		gpio_data =3D RD_REG_WORD(&reg->gpiod);
-@@ -978,7 +974,7 @@ qla2x00_beacon_on(struct scsi_qla_host *ha)
-=20
- 	/* Set the modified gpio_enable values. */
- 	if (ha->pio_address) {
--		WRT_REG_WORD_PIO(&reg->gpioe, gpio_enable);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, gpioe), gpio_enable);
- 	} else {
- 		WRT_REG_WORD(&reg->gpioe, gpio_enable);
- 		RD_REG_WORD(&reg->gpioe);
-@@ -987,7 +983,7 @@ qla2x00_beacon_on(struct scsi_qla_host *ha)
- 	/* Clear out previously set LED colour. */
- 	gpio_data &=3D ~GPIO_LED_MASK;
- 	if (ha->pio_address) {
--		WRT_REG_WORD_PIO(&reg->gpiod, gpio_data);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, gpiod), gpio_data);
- 	} else {
- 		WRT_REG_WORD(&reg->gpiod, gpio_data);
- 		RD_REG_WORD(&reg->gpiod);
-@@ -1244,13 +1240,12 @@ qla2x00_read_flash_byte(scsi_qla_host_t *ha, ui=
-nt32_t addr)
- 	if (ha->pio_address) {
- 		uint16_t data2;
-=20
--		reg =3D (struct device_reg_2xxx __iomem *)ha->pio_address;
--		WRT_REG_WORD_PIO(&reg->flash_address, (uint16_t)addr);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, flash_address), (uint16_t)addr);
- 		do {
--			data =3D RD_REG_WORD_PIO(&reg->flash_data);
-+			data =3D RD_REG_WORD_PIO(PIO_REG(ha, flash_data));
- 			barrier();
- 			cpu_relax();
--			data2 =3D RD_REG_WORD_PIO(&reg->flash_data);
-+			data2 =3D RD_REG_WORD_PIO(PIO_REG(ha, flash_data));
- 		} while (data !=3D data2);
- 	} else {
- 		WRT_REG_WORD(&reg->flash_address, (uint16_t)addr);
-@@ -1304,9 +1299,8 @@ qla2x00_write_flash_byte(scsi_qla_host_t *ha, uin=
-t32_t addr, uint8_t data)
-=20
- 	/* Always perform IO mapped accesses to the FLASH registers. */
- 	if (ha->pio_address) {
--		reg =3D (struct device_reg_2xxx __iomem *)ha->pio_address;
--		WRT_REG_WORD_PIO(&reg->flash_address, (uint16_t)addr);
--		WRT_REG_WORD_PIO(&reg->flash_data, (uint16_t)data);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, flash_address), (uint16_t)addr);
-+		WRT_REG_WORD_PIO(PIO_REG(ha, flash_data), (uint16_t)data);
- 	} else {
- 		WRT_REG_WORD(&reg->flash_address, (uint16_t)addr);
- 		RD_REG_WORD(&reg->ctrl_status);		/* PCI Posting. */
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Jan 24 13:38:43 kernel: Fusion MPT SPI Host driver 3.04.06
+Jan 24 13:38:43 kernel: ACPI: PCI Interrupt 0000:03:04.0[A] -> GSI 22
+(level, low) -> IRQ 19
+Jan 24 13:38:43 kernel: mptbase: ioc2: Initiating bringup
+Jan 24 13:38:43 kernel: ioc2: LSI53C1030T A0:
+Capabilities={Initiator,Target}
+Jan 24 13:38:43 kernel: mptbase: ioc2: PCI-MSI enabled
+Jan 24 13:39:03 kernel: mptbase: ioc2: Initiating recovery
+Jan 24 13:39:03 kernel: mptbase: ioc2: WARNING - IOC is in FAULT state!!!
+Jan 24 13:39:03 kernel: mptbase: ioc2: WARNING - FAULT code = 8112h
+Jan 24 13:39:03 kernel: mptbase: ioc2: ERROR - Doorbell ACK timeout
+(count=4999), IntStatus=80000001!
+Jan 24 13:39:03 kernel: mptbase: ioc2: Recovered from IOC FAULT
+Jan 24 13:39:03 kernel: Clocksource tsc unstable (delta = 9373613660 ns)
+Jan 24 13:39:03 kernel: scsi2 : ioc2: LSI53C1030T A0, FwRev=01032700h,
+Ports=1, MaxQ=255, IRQ=222
+Jan 24 13:39:07 kernel: ACPI: PCI Interrupt 0000:03:04.1[B] -> GSI 23
+(level, low) -> IRQ 20
+Jan 24 13:39:07 kernel: mptbase: ioc3: Initiating bringup
+Jan 24 13:39:08 kernel: ioc3: LSI53C1030T A0:
+Capabilities={Initiator,Target}
+Jan 24 13:39:08 kernel: mptbase: ioc3: PCI-MSI enabled
+Jan 24 13:39:08 kernel: scsi3 : ioc3: LSI53C1030T A0, FwRev=01032700h,
+Ports=1, MaxQ=255, IRQ=221
+
+This is much more annoying, since reloading the driver takes an extra 20
+seconds for the IOC recovery.  I believe the difference may be caused by
+the addition of pci_disable_device() to mpt_adapter_dispose().
+
+Tony
+
