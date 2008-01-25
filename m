@@ -1,315 +1,221 @@
-From: alci <alci@mecadu.org>
-Subject: Scsi error : device overrun on Adaptec AIC-7902B
-Date: Thu, 24 Jan 2008 14:37:22 +0100
-Message-ID: <1201181842.10059.3.camel@franck-gusty>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+Subject: [UPDATED PATCH] SGIWD93: use cached memory access to make driver work on IP28
+Date: Fri, 25 Jan 2008 17:32:45 +0100 (CET)
+Message-ID: <20080125163245.2B246C2F89@solo.franken.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from emma.lautre.net ([80.67.160.69]:47735 "EHLO emma.lautre.net"
+Received: from elvis.franken.de ([193.175.24.41]:47296 "EHLO elvis.franken.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754001AbYAYQGo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jan 2008 11:06:44 -0500
+	id S1752891AbYAYQct (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jan 2008 11:32:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com
 
-Hi,
+SGI IP28 machines would need special treatment (enable adding addtional
+wait states) when accessing memory uncached. To avoid this pain I
+changed the driver to use only cached access to memory.
 
-I am experiencing odd error messages on a server and can't sort out if
-it is a software or hardware problem.
+Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
+---
 
-Server is running linux 2.6.22 kernel from Ubuntu server distro
-(2.6.22-14-server) on a bi-AMD64 Opteron machine.
-The SCSI board is listed as follows by lspci :
+Changes to last version:
 
-0a:07.0 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
-        Subsystem: Adaptec Unknown device 005e
-        Flags: bus master, 66MHz, slow devsel, latency 72, IRQ 28
-        I/O ports at 3400 [disabled] [size=256]
-        Memory at df300000 (64-bit, non-prefetchable) [size=8K]
-        I/O ports at 3000 [disabled] [size=256]
-        [virtual] Expansion ROM at c2100000 [disabled] [size=512K]
-        Capabilities: [dc] Power Management version 2
-        Capabilities: [a0] Message Signalled Interrupts: Mask- 64bit+
-Queue=0/1 Enable-
-        Capabilities: [94] PCI-X non-bridge device
+- added Kconfig change to make selection for similair SGI boxes easier
 
-0a:07.1 SCSI storage controller: Adaptec AIC-7902B U320 (rev 10)
-        Subsystem: Adaptec Unknown device 005e
-        Flags: bus master, 66MHz, slow devsel, latency 72, IRQ 29
-        I/O ports at 3c00 [disabled] [size=256]
-        Memory at df302000 (64-bit, non-prefetchable) [size=8K]
-        I/O ports at 3800 [disabled] [size=256]
-        [virtual] Expansion ROM at c2180000 [disabled] [size=512K]
-        Capabilities: [dc] Power Management version 2
-        Capabilities: [a0] Message Signalled Interrupts: Mask- 64bit+
-Queue=0/1 Enable-
-        Capabilities: [94] PCI-X non-bridge device
+ drivers/scsi/Kconfig   |    2 +-
+ drivers/scsi/sgiwd93.c |   64 +++++++++++++++++++++++++++++------------------
+ 2 files changed, 40 insertions(+), 26 deletions(-)
 
-First SCSI chain has 4 Ultra320 harddrives, and second one (scsi5) has 4
-Ultra320 harddrives and a 160 tape reader.
-
-Regularely, we have a bunch of such errors in /var/log/messages (every
-10 minutes or so, when the machine is active, plus a detailed card
-dump) :
-
-Jan 24 12:20:37 pariou kernel: [64896.014316] scsi5: Transmission error
-detected
-Jan 24 12:20:37 pariou kernel: [64896.014347] scsi5: Dumping Card State
-at program address 0x257 Mode 0x0
-Jan 24 12:20:37 pariou kernel: [64896.014651] scsi5: FIFO0 Active,
-LONGJMP == 0x252, SCB 0x7b
-Jan 24 12:20:37 pariou kernel: [64896.014722] scsi5: FIFO1 Free, LONGJMP
-== 0x81f7, SCB 0x62
-Jan 24 12:20:37 pariou kernel: [64896.014808] scsi5: LQISTATE = 0x2b,
-LQOSTATE = 0x0, OPTIONMODE = 0x52
-Jan 24 12:20:37 pariou kernel: [64896.014812] scsi5: OS_SPACE_CNT = 0x20
-MAXCMDCNT = 0x1
-Jan 24 12:20:37 pariou kernel: [64896.014815] scsi5: SAVED_SCSIID = 0x0
-SAVED_LUN = 0x0
-Jan 24 12:20:37 pariou kernel: [64896.014834] scsi5: REG0 == 0x7d60,
-SINDEX = 0x158, DINDEX = 0x10a
-Jan 24 12:20:37 pariou kernel: [64896.014842] scsi5: SCBPTR == 0x7b,
-SCB_NEXT == 0xff00, SCB_NEXT2 == 0x79
-Jan 24 12:20:37 pariou kernel: [64896.015374] scsi5: Returning to Idle
-Loop
-Jan 24 12:20:37 pariou kernel: [64896.015438] scsi5: device overrun
-(status a) on 0:3:0
-
-
-Smartctl on /dev/sdj (scsi5 0:3:0) says : 
-
-smartctl version 5.37 [x86_64-unknown-linux-gnu] Copyright (C) 2002-6
-Bruce Allen
-Home page is http://smartmontools.sourceforge.net/
-
-Device: HITACHI  HUS151436VL3600  Version: S3C0
-Serial number:         J3WE8KLA
-Device type: disk
-Transport protocol: Parallel SCSI (SPI-4)
-Local Time is: Thu Jan 24 13:25:08 2008 CET
-Device supports SMART and is Enabled
-Temperature Warning Enabled
-SMART Health Status: OK
-
-Current Drive Temperature:     40 C
-Drive Trip Temperature:        85 C
-Manufactured in week 08 of year 2006
-Recommended maximum start stop count:  50000 times
-Current start stop count:      105 times
-Elements in grown defect list: 0
-Vendor (Seagate) cache information
-  Blocks sent to initiator = 300818938986496
-
-Error counter log:
-           Errors Corrected by           Total   Correction
-Gigabytes    Total
-               ECC          rereads/    errors   algorithm
-processed    uncorrected
-           fast | delayed   rewrites  corrected  invocations   [10^9
-bytes]  errors
-read:     110325    93424         0    110325        956        340.501
-0
-write:     32845        0         0     32845          0        316.122
-0
-
-Non-medium error count:        0
-No self-tests have been logged
-Long (extended) Self Test duration: 607 seconds [10.1 minutes]
-
-
-But yesterday, we had a worse problem, where half our disks went
-offline, with the following log (one card dump for each of the four
-disks).
-SO, any tip on what might be going wrong ??
-
-Thanks in advance,
-Franck
-
-
-[452353.991582] sd 5:0:1:0: [sdg] Attempting to queue an ABORT
-message:CDB: 0x0 0x0 0x0 0x0 0x0 0x0
-[452353.992109] scsi5: At time of recovery, card was not paused
-[452353.992116] >>>>>>>>>>>>>>>>>> Dump Card State Begins
-<<<<<<<<<<<<<<<<<
-[452353.992118] scsi5: Dumping Card State at program address 0x6 Mode
-0x33
-[452353.992121] Card was paused
-[452353.992123] INTSTAT[0x0] SELOID[0x2] SELID[0x10] 
-[452353.992132] HS_MAILBOX[0x0] INTCTL[0xc0]:(SWTMINTEN|SWTMINTMASK) 
-[452353.992140] SEQINTSTAT[0x0] SAVED_MODE[0x0] 
-[452353.992146] DFFSTAT[0x33]:(CURRFIFO_NONE|FIFO0FREE|FIFO1FREE) 
-[452353.992153] SCSISIGI[0x0]:(P_DATAOUT) SCSIPHASE[0x0] 
-[452353.992160] SCSIBUS[0x0] LASTPHASE[0x1]:(P_DATAOUT|P_BUSFREE) 
-[452353.992168] SCSISEQ0[0x0] SCSISEQ1[0x12]:(ENAUTOATNP|ENRSELI) 
-[452353.992177] SEQCTL0[0x0] SEQINTCTL[0x0] SEQ_FLAGS[0x0] 
-[452353.992186] SEQ_FLAGS2[0x4]:(SELECTOUT_QFROZEN) 
-[452353.992191] QFREEZE_COUNT[0xfd] KERNEL_QFREEZE_COUNT[0xfc] 
-[452353.992200] MK_MESSAGE_SCB[0xff00] MK_MESSAGE_SCSIID[0xff] 
-[452353.992207] SSTAT0[0x0] SSTAT1[0x0] SSTAT2[0x0] 
-[452353.992216] SSTAT3[0x0] PERRDIAG[0x0] SIMODE1[0xa4]:(ENSCSIPERR|
-ENSCSIRST|ENSELTIMO) 
-[452353.992227] LQISTAT0[0x0] LQISTAT1[0x0] LQISTAT2[0x0] 
-[452353.992235] LQOSTAT0[0x0] LQOSTAT1[0x0] LQOSTAT2[0xe1]:(LQOSTOP0|
-LQOPKT) 
-[452353.992251] 
-[452353.992252] SCB Count = 128 CMDS_PENDING = 0 LASTSCB 0x5c CURRSCB
-0x58 NEXTSCB 0xffc0
-[452353.992258] qinstart = 58805 qinfifonext = 58806
-[452353.992260] QINFIFO: 0x52
-[452353.992263] WAITING_TID_QUEUES:
-[452353.992272] Pending list:
-[452353.992275]  82 FIFO_USE[0x0] SCB_CONTROL[0x60]:(TAG_ENB|DISCENB) 
-[452353.992283] SCB_SCSIID[0x2f]:(OID) 
-[452353.992286] Total 1
-[452353.992288] Kernel Free SCB list: 2 86 118 88 3 108 66 23 17 26 93 9
-115 101 50 74 8 85 30 120 4 110 57 7 1 125 65 63 84 116 91 76 56 92 78
-22 77 21 95 123 18 36 44 28 114 126 20 83 122 24 31 19 106 61 48 94 34
-124 80 46 49 62 75 54 70 97 0 99 103 104 60 11 89 79 38 41 53 15 87 51
-43 113 5 52 27 32 90 119 127 58 72 112 55 100 42 105 121 81 14 117 12 59
-96 13 6 47 109 64 69 25 71 35 16 37 67 40 45 102 39 111 33 68 29 10 107
-73 98 
-[452353.992377] Sequencer Complete DMA-inprog list: 
-[452353.992382] Sequencer Complete list: 
-[452353.992386] Sequencer DMA-Up and Complete list: 
-[452353.992390] Sequencer On QFreeze and Complete list: 
-[452353.992400] 
-[452353.992401] 
-[452353.992402] scsi5: FIFO0 Free, LONGJMP == 0x80f7, SCB 0x42
-[452353.992405] SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|
-ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
-[452353.992415] SEQINTSRC[0x40]:(CTXTDONE) DFCNTRL[0x4]:(DIRECTION) 
-[452353.992424] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
-[452353.992431] SG_CACHE_SHADOW[0x2]:(LAST_SEG) 
-[452353.992435] SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] 
-[452353.992443] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) 
-[452353.992456] SHADDR = 0x00, SHCNT = 0x0 HADDR = 0x00, HCNT = 0x0 
-[452353.992469] CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
-[452353.992477] 
-[452353.992478] scsi5: FIFO1 Free, LONGJMP == 0x80f7, SCB 0x1c
-[452353.992481] SEQIMODE[0x3f]:(ENCFG4TCMD|ENCFG4ICMD|ENCFG4TSTAT|
-ENCFG4ISTAT|ENCFG4DATA|ENSAVEPTRS) 
-[452353.992491] SEQINTSRC[0x0] DFCNTRL[0x4]:(DIRECTION) 
-[452353.992499] DFSTATUS[0x89]:(FIFOEMP|HDONE|PRELOAD_AVAIL) 
-[452353.992506] SG_CACHE_SHADOW[0x2]:(LAST_SEG) 
-[452353.992511] SG_STATE[0x0] DFFSXFRCTL[0x0] SOFFCNT[0x0] 
-[452353.992519] MDFFSTAT[0x5]:(FIFOFREE|DLZERO) 
-[452353.992532] SHADDR = 0x00, SHCNT = 0x0 HADDR = 0x00, HCNT = 0x0 
-[452353.992546] CCSGCTL[0x10]:(SG_CACHE_AVAIL) 
-[452353.992550] LQIN: 0x5 0x0 0x0 0x42 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-0x0 0x0 0x2 0x0 0x0 0x0 0x2 0x0 
-[452353.992583] scsi5: LQISTATE = 0x0, LQOSTATE = 0x0, OPTIONMODE = 0x52
-[452353.992588] scsi5: OS_SPACE_CNT = 0x20 MAXCMDCNT = 0x1
-[452353.992593] scsi5: SAVED_SCSIID = 0x0 SAVED_LUN = 0x0
-[452353.992596] 
-[452353.992598] SIMODE0[0xc]:(ENOVERRUN|ENIOERR) 
-[452353.992604] CCSCBCTL[0x0] 
-[452353.992613] scsi5: REG0 == 0x17, SINDEX = 0x1c0, DINDEX = 0x106
-[452353.992621] scsi5: SCBPTR == 0x56, SCB_NEXT == 0xffc0, SCB_NEXT2 ==
-0xff58
-[452353.992629] CDB 2a 0 3 80 0 3a
-[452353.992631] STACK: 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0
-[452353.992652] <<<<<<<<<<<<<<<<< Dump Card State Ends
->>>>>>>>>>>>>>>>>>
-[452353.992664] scsi5:0:1:0: Cmd aborted from QINFIFO
-[452353.992685] sd 5:0:1:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992690] sd 5:0:1:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992693] sd 5:0:2:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992696] sd 5:0:2:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992700] sd 5:0:1:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992703] sd 5:0:1:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992706] sd 5:0:2:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992710] sd 5:0:2:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992713] sd 5:0:4:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992716] sd 5:0:3:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992720] sd 5:0:1:0: scsi: Device offlined - not ready after
-error recovery
-[452353.992755] sd 5:0:1:0: [sdg] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.992760] end_request: I/O error, dev sdg, sector 54857151
-[452353.992767] raid1: Disk failure on sdg1, disabling device. 
-[452353.992768]         Operation continuing on 1 devices
-[452353.992850] sd 5:0:1:0: [sdg] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.992855] end_request: I/O error, dev sdg, sector 54858175
-[452353.992893] sd 5:0:2:0: [sdh] Result: hostbyte=DID_ERROR
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.992899] end_request: I/O error, dev sdh, sector 54858175
-[452353.992903] raid1: Disk failure on sdh1, disabling device. 
-[452353.992905]         Operation continuing on 1 devices
-[452353.992970] sd 5:0:2:0: [sdh] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.992975] end_request: I/O error, dev sdh, sector 54859199
-[452353.993019] sd 5:0:1:0: [sdg] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.993024] end_request: I/O error, dev sdg, sector 54859199
-[452353.993052] sd 5:0:1:0: [sdg] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.993058] end_request: I/O error, dev sdg, sector 54861951
-[452353.993071] sd 5:0:2:0: [sdh] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.993077] end_request: I/O error, dev sdh, sector 54861631
-[452353.993092] sd 5:0:2:0: [sdh] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.993097] end_request: I/O error, dev sdh, sector 54861887
-[452353.993112] sd 5:0:4:0: rejecting I/O to offline device
-[452353.993140] md: super_written gets error=-5, uptodate=0
-[452353.993145] raid1: Disk failure on sdj1, disabling device. 
-[452353.993146]         Operation continuing on 1 devices
-[452353.993184] sd 5:0:4:0: rejecting I/O to offline device
-[452353.993213] raid1: sdj1: rescheduling sector 59701584
-[452353.993242] sd 5:0:3:0: rejecting I/O to offline device
-[452353.993270] md: super_written gets error=-5, uptodate=0
-[452353.993274] raid1: Disk failure on sdi1, disabling device. 
-[452353.993276]         Operation continuing on 1 devices
-[452353.993309] sd 5:0:3:0: rejecting I/O to offline device
-[452353.993336] raid1: sdi1: rescheduling sector 61497840
-[452353.993364] sd 5:0:1:0: [sdg] Result: hostbyte=invalid
-driverbyte=DRIVER_OK,SUGGEST_OK
-[452353.993370] end_request: I/O error, dev sdg, sector 35846227
-[452353.999971] RAID1 conf printout:
-[452353.999977]  --- wd:1 rd:2
-[452353.999981]  disk 0, wo:0, o:1, dev:sdd1
-[452353.999983]  disk 1, wo:1, o:0, dev:sdh1
-[452354.000735] RAID1 conf printout:
-[452354.000737]  --- wd:1 rd:2
-[452354.000739]  disk 0, wo:0, o:1, dev:sde1
-[452354.000741]  disk 1, wo:1, o:0, dev:sdi1
-[452354.001207] RAID1 conf printout:
-[452354.001208]  --- wd:1 rd:2
-[452354.001210]  disk 0, wo:0, o:1, dev:sdc1
-[452354.001212]  disk 1, wo:1, o:0, dev:sdg1
-[452354.003735] RAID1 conf printout:
-[452354.003737]  --- wd:1 rd:2
-[452354.003739]  disk 0, wo:0, o:1, dev:sdf1
-[452354.003742]  disk 1, wo:1, o:0, dev:sdj1
-[452354.021548] RAID1 conf printout:
-[452354.021550]  --- wd:1 rd:2
-[452354.021552]  disk 0, wo:0, o:1, dev:sdd1
-[452354.021558] RAID1 conf printout:
-[452354.021560]  --- wd:1 rd:2
-[452354.021562]  disk 0, wo:0, o:1, dev:sde1
-[452354.021573] RAID1 conf printout:
-[452354.021574]  --- wd:1 rd:2
-[452354.021576]  disk 0, wo:0, o:1, dev:sdc1
-[452354.041521] RAID1 conf printout:
-[452354.041523]  --- wd:1 rd:2
-[452354.041525]  disk 0, wo:0, o:1, dev:sdf1
-[452354.043770] raid1: sde1: redirecting sector 61497840 to another
-mirror
-[452354.069634] raid1: sdf1: redirecting sector 59701584 to another
-mirror
-[454118.258537] md: unbind<sdg1>
-[454118.258545] md: export_rdev(sdg1)
-
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index a6676be..2a071b0 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -345,7 +345,7 @@ config ISCSI_TCP
+ 
+ config SGIWD93_SCSI
+ 	tristate "SGI WD93C93 SCSI Driver"
+-	depends on SGI_IP22 && SCSI
++	depends on SGI_HAS_WD93 && SCSI
+   	help
+ 	  If you have a Western Digital WD93 SCSI controller on
+ 	  an SGI MIPS system, say Y.  Otherwise, say N.
+diff --git a/drivers/scsi/sgiwd93.c b/drivers/scsi/sgiwd93.c
+index eef8275..e64ddee 100644
+--- a/drivers/scsi/sgiwd93.c
++++ b/drivers/scsi/sgiwd93.c
+@@ -33,10 +33,9 @@
+ 
+ struct ip22_hostdata {
+ 	struct WD33C93_hostdata wh;
+-	struct hpc_data {
+-		dma_addr_t      dma;
+-		void		*cpu;
+-	} hd;
++	dma_addr_t dma;
++	void *cpu;
++	void *dev;
+ };
+ 
+ #define host_to_hostdata(host) ((struct ip22_hostdata *)((host)->hostdata))
+@@ -46,6 +45,11 @@ struct hpc_chunk {
+ 	u32 _padding;	/* align to quadword boundary */
+ };
+ 
++/* space for hpc dma descriptors */
++#define HPC_DMA_SIZE   PAGE_SIZE
++
++#define DMA_DIR(d)   ((d == DATA_OUT_DIR) ? DMA_TO_DEVICE : DMA_FROM_DEVICE)
++
+ static irqreturn_t sgiwd93_intr(int irq, void *dev_id)
+ {
+ 	struct Scsi_Host * host = dev_id;
+@@ -59,15 +63,17 @@ static irqreturn_t sgiwd93_intr(int irq, void *dev_id)
+ }
+ 
+ static inline
+-void fill_hpc_entries(struct hpc_chunk *hcp, struct scsi_cmnd *cmd, int datainp)
++void fill_hpc_entries(struct ip22_hostdata *hd, struct scsi_cmnd *cmd, int din)
+ {
+ 	unsigned long len = cmd->SCp.this_residual;
+ 	void *addr = cmd->SCp.ptr;
+ 	dma_addr_t physaddr;
+ 	unsigned long count;
++	struct hpc_chunk *hcp;
+ 
+-	physaddr = dma_map_single(NULL, addr, len, cmd->sc_data_direction);
++	physaddr = dma_map_single(hd->dev, addr, len, DMA_DIR(din));
+ 	cmd->SCp.dma_handle = physaddr;
++	hcp = hd->cpu;
+ 
+ 	while (len) {
+ 		/*
+@@ -89,6 +95,9 @@ void fill_hpc_entries(struct hpc_chunk *hcp, struct scsi_cmnd *cmd, int datainp)
+ 	 */
+ 	hcp->desc.pbuf = 0;
+ 	hcp->desc.cntinfo = HPCDMA_EOX;
++	dma_cache_sync(hd->dev, hd->cpu,
++		       (unsigned long)(hcp + 1) - (unsigned long)hd->cpu,
++		       DMA_TO_DEVICE);
+ }
+ 
+ static int dma_setup(struct scsi_cmnd *cmd, int datainp)
+@@ -96,9 +105,8 @@ static int dma_setup(struct scsi_cmnd *cmd, int datainp)
+ 	struct ip22_hostdata *hdata = host_to_hostdata(cmd->device->host);
+ 	struct hpc3_scsiregs *hregs =
+ 		(struct hpc3_scsiregs *) cmd->device->host->base;
+-	struct hpc_chunk *hcp = (struct hpc_chunk *) hdata->hd.cpu;
+ 
+-	pr_debug("dma_setup: datainp<%d> hcp<%p> ", datainp, hcp);
++	pr_debug("dma_setup: datainp<%d> hcp<%p> ", datainp, hdata->cpu);
+ 
+ 	hdata->wh.dma_dir = datainp;
+ 
+@@ -111,12 +119,12 @@ static int dma_setup(struct scsi_cmnd *cmd, int datainp)
+ 	if (cmd->SCp.ptr == NULL || cmd->SCp.this_residual == 0)
+ 		return 1;
+ 
+-	fill_hpc_entries(hcp, cmd, datainp);
++	fill_hpc_entries(hdata, cmd, datainp);
+ 
+ 	pr_debug(" HPCGO\n");
+ 
+ 	/* Start up the HPC. */
+-	hregs->ndptr = hdata->hd.dma;
++	hregs->ndptr = hdata->dma;
+ 	if (datainp)
+ 		hregs->ctrl = HPC3_SCTRL_ACTIVE;
+ 	else
+@@ -134,6 +142,9 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 	if (!SCpnt)
+ 		return;
+ 
++	if (SCpnt->SCp.ptr == NULL || SCpnt->SCp.this_residual == 0)
++		return;
++
+ 	hregs = (struct hpc3_scsiregs *) SCpnt->device->host->base;
+ 
+ 	pr_debug("dma_stop: status<%d> ", status);
+@@ -145,8 +156,9 @@ static void dma_stop(struct Scsi_Host *instance, struct scsi_cmnd *SCpnt,
+ 			barrier();
+ 	}
+ 	hregs->ctrl = 0;
+-	dma_unmap_single(NULL, SCpnt->SCp.dma_handle, SCpnt->SCp.this_residual,
+-	                 SCpnt->sc_data_direction);
++	dma_unmap_single(hdata->dev, SCpnt->SCp.dma_handle,
++			 SCpnt->SCp.this_residual,
++			 DMA_DIR(hdata->wh.dma_dir));
+ 
+ 	pr_debug("\n");
+ }
+@@ -160,22 +172,23 @@ void sgiwd93_reset(unsigned long base)
+ 	hregs->ctrl = 0;
+ }
+ 
+-static inline void init_hpc_chain(struct hpc_data *hd)
++static inline void init_hpc_chain(void *dev, struct ip22_hostdata *hdata)
+ {
+-	struct hpc_chunk *hcp = (struct hpc_chunk *) hd->cpu;
+-	struct hpc_chunk *dma = (struct hpc_chunk *) hd->dma;
++	struct hpc_chunk *hcp = (struct hpc_chunk *)hdata->cpu;
++	dma_addr_t dma = hdata->dma;
+ 	unsigned long start, end;
+ 
+ 	start = (unsigned long) hcp;
+-	end = start + PAGE_SIZE;
++	end = start + HPC_DMA_SIZE;
+ 	while (start < end) {
+-		hcp->desc.pnext = (u32) (dma + 1);
++		hcp->desc.pnext = (u32) (dma + sizeof(struct hpc_chunk));
+ 		hcp->desc.cntinfo = HPCDMA_EOX;
+-		hcp++; dma++;
++		hcp++;
++		dma += sizeof(struct hpc_chunk);
+ 		start += sizeof(struct hpc_chunk);
+ 	};
+ 	hcp--;
+-	hcp->desc.pnext = hd->dma;
++	hcp->desc.pnext = hdata->dma;
+ }
+ 
+ static int sgiwd93_bus_reset(struct scsi_cmnd *cmd)
+@@ -234,16 +247,17 @@ static int __init sgiwd93_probe(struct platform_device *pdev)
+ 	host->irq = irq;
+ 
+ 	hdata = host_to_hostdata(host);
+-	hdata->hd.cpu = dma_alloc_coherent(&pdev->dev, PAGE_SIZE,
+-	                                   &hdata->hd.dma, GFP_KERNEL);
+-	if (!hdata->hd.cpu) {
++	hdata->dev = &pdev->dev;
++	hdata->cpu = dma_alloc_noncoherent(&pdev->dev, HPC_DMA_SIZE,
++					   &hdata->dma, GFP_KERNEL);
++	if (!hdata->cpu) {
+ 		printk(KERN_WARNING "sgiwd93: Could not allocate memory for "
+ 		       "host %d buffer.\n", unit);
+ 		err = -ENOMEM;
+ 		goto out_put;
+ 	}
+ 
+-	init_hpc_chain(&hdata->hd);
++	init_hpc_chain(&pdev->dev, hdata);
+ 
+ 	regs.SASR = wdregs + 3;
+ 	regs.SCMD = wdregs + 7;
+@@ -273,7 +287,7 @@ static int __init sgiwd93_probe(struct platform_device *pdev)
+ out_irq:
+ 	free_irq(irq, host);
+ out_free:
+-	dma_free_coherent(NULL, PAGE_SIZE, hdata->hd.cpu, hdata->hd.dma);
++	dma_free_noncoherent(NULL, HPC_DMA_SIZE, hdata->cpu, hdata->dma);
+ out_put:
+ 	scsi_host_put(host);
+ out:
+@@ -289,7 +303,7 @@ static void __exit sgiwd93_remove(struct platform_device *pdev)
+ 
+ 	scsi_remove_host(host);
+ 	free_irq(pd->irq, host);
+-	dma_free_coherent(&pdev->dev, PAGE_SIZE, hdata->hd.cpu, hdata->hd.dma);
++	dma_free_noncoherent(&pdev->dev, HPC_DMA_SIZE, hdata->cpu, hdata->dma);
+ 	scsi_host_put(host);
+ }
+ 
