@@ -1,69 +1,106 @@
-From: Jeff Garzik <jeff@garzik.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver
-Date: Fri, 25 Jan 2008 17:12:50 -0500
-Message-ID: <479A5EE2.1010908@garzik.org>
-References: <20080122151857.GA8680@ubuntu.domain>	 <6b2481670801220724o6c204216qc346020c296f2849@mail.gmail.com>	 <4796BB5A.9090003@garzik.org>	 <6b2481670801230254i46e65652vb9139e2c136e4ce4@mail.gmail.com>	 <479727D5.8060901@garzik.org>	 <6b2481670801250843g73ff3a6aydb465a654f53ad9d@mail.gmail.com> <da824cf30801250924i5e8cd5c6pe07215a4298ab8a4@mail.gmail.com>
+Date: Fri, 25 Jan 2008 16:39:29 -0600
+Message-ID: <1201300769.3119.78.camel@localhost.localdomain>
+References: <20080122151857.GA8680@ubuntu.domain>
+	 <6b2481670801220724o6c204216qc346020c296f2849@mail.gmail.com>
+	 <4796BB5A.9090003@garzik.org>
+	 <6b2481670801230254i46e65652vb9139e2c136e4ce4@mail.gmail.com>
+	 <479727D5.8060901@garzik.org>
+	 <6b2481670801250843g73ff3a6aydb465a654f53ad9d@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from srv5.dvmed.net ([207.36.208.214]:54930 "EHLO mail.dvmed.net"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753233AbYAYWMy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jan 2008 17:12:54 -0500
-In-Reply-To: <da824cf30801250924i5e8cd5c6pe07215a4298ab8a4@mail.gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:40525 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753559AbYAYWjg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 25 Jan 2008 17:39:36 -0500
+In-Reply-To: <6b2481670801250843g73ff3a6aydb465a654f53ad9d@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Grant Grundler <grundler@google.com>
-Cc: Ke Wei <kewei.mv@gmail.com>, linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com
 
-Grant Grundler wrote:
-> On Jan 25, 2008 8:43 AM, Ke Wei <kewei.mv@gmail.com> wrote:
->> The attached is Marvell 6440 SAS/SATA driver. I will try to send email
->> by git-send-email.
-> 
-> I know this isn't part of this patch:
->  #define mr32(reg)	readl(regs + MVS_##reg)
->  #define mw32(reg,val)	writel((val), regs + MVS_##reg)
-> 
-> But can "regs" be declared a parameter to the macro?
+On Sat, 2008-01-26 at 00:43 +0800, Ke Wei wrote:
 
-This is a common technique in drivers (especially net drivers), 
-eliminating the redundant-across-the-entire-driver argument passed to 
-each register read or write.  The result is infinitely more readable and 
-compact.
+>  struct mvs_phy {
+>         struct mvs_port         *port;
+>         struct asd_sas_phy      sas_phy;
+> +       struct sas_identify identify;
+> +       __le32          dev_info;
+> +       __le64          dev_sas_addr;
+> +       __le32          att_dev_info;
+> +       __le64          att_dev_sas_addr;
+> +       u32             type;
+> +       __le32          phy_status;
+> +       __le32          irq_status;
+> +       u8              wide_port_phymap;
+> +       u32             frame_rcvd_size;
+> +       u8              frame_rcvd[32];
+>  
+> -       u8                      frame_rcvd[24 + 1024];
+>  };
 
-	val = mr32(IRQ_STAT);
-
-immediately communicates all the necessary information you need.
-
-
-> +	MODE_AUTO_DET_PORT7 = (1U << 15),	/* port0 SAS/SATA autodetect */
-> +	MODE_AUTO_DET_PORT6 = (1U << 14),
-> +	MODE_AUTO_DET_PORT5 = (1U << 13),
-> +	MODE_AUTO_DET_PORT4 = (1U << 12),
-> +	MODE_AUTO_DET_PORT3 = (1U << 11),
-> +	MODE_AUTO_DET_PORT2 = (1U << 10),
-> +	MODE_AUTO_DET_PORT1 = (1U << 9),
-> +	MODE_AUTO_DET_PORT0 = (1U << 8),
-> 
-> These really aren't needed.
-
-Like James noted, without public docs, we don't want to be removing any 
-hardware definitions.
+These __le quantites don't look right ... they're all read in by readl,
+which will convert little endian to CPU anyway.
 
 
-> Have to stop for now...but I'm wonder how this driver ever worked
-> given the number of HW register bits that were changed (assuming
-> they were wrong before this patch). And this driver looks _alot_
-> better than the previous Marvell drivers I've looked at. Please keep
-> up the good work! :)
+> @@ -437,27 +586,55 @@ struct mvs_info {
+>         dma_addr_t              rx_dma;
+>         u32                     rx_cons;        /* RX consumer idx */
+>  
+> -       __le32                  *rx_fis;        /* RX'd FIS area */
+> +       void                    *rx_fis;        /* RX'd FIS area */
 
-Before this patch, the driver did not work.  As I do with all other 
-drivers I write, I write the entire driver from the datasheet before 
-testing anything.
+Now the received FIS, on the other hand, provided you're storing it in
+wire format (which you look to be) *is* little endian data by definition
+in the ATA spec.
 
-	Jeff
 
+> -static void mvs_tag_clear(struct mvs_info *mvi, unsigned int tag)
+> +static void mvs_tag_clear(struct mvs_info *mvi, u32 tag)
+>  {
+> -       mvi->tags[tag / sizeof(unsigned long)] &=
+> -               ~(1UL << (tag % sizeof(unsigned long)));
+> +       mvi->tag_in = (mvi->tag_in + 1) & (MVS_SLOTS - 1);
+> +       mvi->tags[mvi->tag_in] = tag;
+>  }
+>  
+> -static void mvs_tag_set(struct mvs_info *mvi, unsigned int tag)
+> +static void mvs_tag_free(struct mvs_info *mvi, u32 tag)
+>  {
+> -       mvi->tags[tag / sizeof(unsigned long)] |=
+> -               (1UL << (tag % sizeof(unsigned long)));
+> +       mvi->tag_out = (mvi->tag_out - 1) & (MVS_SLOTS - 1);
+>  }
+>  
+> -static bool mvs_tag_test(struct mvs_info *mvi, unsigned int tag)
+> +static int mvs_tag_alloc(struct mvs_info *mvi, u32 *tag_out)
+>  {
+> -       return mvi->tags[tag / sizeof(unsigned long)] &
+> -               (1UL << (tag % sizeof(unsigned long)));
+> +       if (mvi->tag_out != mvi->tag_in) {
+> +               *tag_out = mvi->tags[mvi->tag_out];
+> +               mvi->tag_out = (mvi->tag_out + 1) & (MVS_SLOTS - 1);
+> +               return 0;
+> +       }
+> +       return -EBUSY;
+
+I really don't think you should be doing this.  That single ring governs
+all the potential tag slots for everything in this device.  If you do a
+simple head tail allocation, what can happen is that you get a slow tag
+(attached to a format command, or a tape command) and then the ring head
+will hit the slow tag and the entire device will halt.  I think you need
+a bitmap based allocation algorithm to ensure that if you have a free
+tag anywhere, you'll use it.
+
+If you look at the aic94xx index functions in aic94xx_hwi.h you'll see
+asd_tc_index_get() and asd_tc_index_release() doing exactly what you
+want with the native linux bitmap functions (the aic also uses a single
+issue queue with indexes into it).
+
+James
 
 
