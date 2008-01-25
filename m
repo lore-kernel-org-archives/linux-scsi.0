@@ -1,50 +1,42 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: sd incorrectly reports write cache disabled on cache-capable
-	drives/controllers
-Date: Fri, 25 Jan 2008 15:15:20 -0600
-Message-ID: <1201295720.3119.51.camel@localhost.localdomain>
-References: <200801252159.20858.yallaone@gmail.com>
+Subject: Re: [PATCH] Marvell 6440 SAS/SATA driver
+Date: Fri, 25 Jan 2008 15:27:29 -0600
+Message-ID: <1201296449.3119.59.camel@localhost.localdomain>
+References: <20080122151857.GA8680@ubuntu.domain>
+	 <6b2481670801220724o6c204216qc346020c296f2849@mail.gmail.com>
+	 <4796BB5A.9090003@garzik.org>
+	 <6b2481670801230254i46e65652vb9139e2c136e4ce4@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:56187 "EHLO
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:43035 "EHLO
 	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755602AbYAYVPZ (ORCPT
+	by vger.kernel.org with ESMTP id S1755404AbYAYV1f (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jan 2008 16:15:25 -0500
-In-Reply-To: <200801252159.20858.yallaone@gmail.com>
+	Fri, 25 Jan 2008 16:27:35 -0500
+In-Reply-To: <6b2481670801230254i46e65652vb9139e2c136e4ce4@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Halim Issa <yallaone@gmail.com>
-Cc: linux-scsi@vger.kernel.org
+To: Ke Wei <kewei.mv@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi@vger.kernel.org, kewei@marvell.com, qswang@marvell.com, jfeng@marvell.com, qzhao@marvell.com
 
-On Fri, 2008-01-25 at 21:59 +0100, Halim Issa wrote:
-> This is my first post to any of the vger lists. I have tried to comply with 
-> the list recommendations and be specific while to the point. If anything is 
-> missing, kindly let me know.
-> 
-> I am having trouble getting the scsi-subsystem on an IBM x336 eServer with LSI 
-> Logic53c1030 SCSI RAID controller to recognize the write cache on my 
-> harddrives/controller. It reports:
-> 
-> sd 0:0:0:0: [sda] Write cache: disabled, read cache: enabled, doesn't support 
-> DPO or FUA.
 
-This statement is really simply reporting what the INQUIRY data of the
-device is telling it ... we don't actually massage the data in any way.
+On Wed, 2008-01-23 at 18:54 +0800, Ke Wei wrote:
+> Attachment is a patch file for 6440 driver. I will have to spend more
+> time on setting my mail client. Yesterday I used mutt tool. But Look
+> like the problem still exists.
 
-However ... The INQUIRY strings for this device are:
+By default, unfortunately, I think no email tool nowadays inserts plain
+text ... they all assume you want it nicely formatted with proper line
+breaks.
 
-scsi 0:0:0:0: Direct-Access     LSILOGIC 1030 IM          1000 PQ: 0 ANSI: 2
+There's a guide to inserting plain text patches inline with some email
+tools in the kernel Documentation directory:
 
-So it's basically a RAID-1 volume manufactured by the LSI, not your
-actual device.  The INQUIRY strings returned by such RAID volumes
-usually bear no relation to the underlying devices.
+Documentation/email-clients.txt
 
-The "cache" hear would be referring to the RAID controller cache, not
-the disk cache.  Likewise DPO and FUA refer to what the RAID controller
-can support, not the disk.
+The current attachment is fine for a patch application, Thanks.
 
 James
 
