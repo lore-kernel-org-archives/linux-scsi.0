@@ -1,82 +1,175 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: [PATCH] use the cmd_type of a leading request for
-	scsi_init_sgtable
-Date: Fri, 25 Jan 2008 21:34:10 -0500
-Message-ID: <20080126023410.GA22677@osc.edu>
-References: <20080126095738U.tomof@acm.org> <1201313155.3119.100.camel@localhost.localdomain>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: [PATCH] aic79xx: fix warnings with CONFIG_PM disabled
+Date: Sun, 27 Jan 2008 00:08:18 +0900
+Message-ID: <20080127000740N.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from quasar.osc.edu ([192.148.249.15]:47975 "EHLO quasar.osc.edu"
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:37772 "EHLO mo10.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751103AbYAZCeL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 25 Jan 2008 21:34:11 -0500
-Content-Disposition: inline
-In-Reply-To: <1201313155.3119.100.camel@localhost.localdomain>
+	id S1751410AbYAZPIe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Jan 2008 10:08:34 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: FUJITA Tomonori <tomof@acm.org>, linux-scsi@vger.kernel.org, bharrosh@panasas.com, fujita.tomonori@lab.ntt.co.jp
+To: James.Bottomley@HansenPartnership.com
+Cc: hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-James.Bottomley@HansenPartnership.com wrote on Fri, 25 Jan 2008 20:05 -0600:
-> On Sat, 2008-01-26 at 09:57 +0900, FUJITA Tomonori wrote:
-> > This is against the scsi-bidi tree.
-> > 
-> > We need to use the cmd_type of a leading request for scsi_init_sgtable
-> > to set up scsi_data_buffer:length of a bidi request properly.
-> > 
-> > An alternative approach is setting the cmd_type of a leading request
-> > and its bidi request (*1). But the block layer and scsi-ml don't
-> > expect that the leading request and its sub-requests have the
-> > different command types.
-> > 
-> > Note that scsi_debug's XDWRITEREAD_10 support is fine without this
-> > patch since req->nr_sectors works for it but req->nr_sectors doesn't
-> > work for everyone.
-> > 
-> > (*1)
-> > 
-> > http://www.mail-archive.com/linux-scsi@vger.kernel.org/msg12669.html
-> > 
-> > =
-> > From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> > Subject: [PATCH] use the cmd_type of a leading request for scsi_init_sgtable
-> > 
-> > We need to use the cmd_type of a leading request for scsi_init_sgtable
-> > to set up scsi_data_buffer:length of its bidi request properly.
-> 
-> This seems to be a very convoluted work around for the fact that we
-> forgot to set the cmd_type on the subordinate request.
-> 
-> Wouldn't this be a better fix?
-> 
-> James
-> 
-> ---
-> 
-> diff --git a/block/bsg.c b/block/bsg.c
-> index 69b0a9d..8917c51 100644
-> --- a/block/bsg.c
-> +++ b/block/bsg.c
-> @@ -279,6 +279,7 @@ bsg_map_hdr(struct bsg_device *bd, struct sg_io_v4 *hdr)
->  			goto out;
->  		}
->  		rq->next_rq = next_rq;
-> +		next_rq->cmd_type = rq->cmd_type;
->  
->  		dxferp = (void*)(unsigned long)hdr->din_xferp;
->  		ret =  blk_rq_map_user(q, next_rq, dxferp, hdr->din_xfer_len);
-> 
-> 
+  CC [M]  drivers/scsi/aic7xxx/aic79xx_osm_pci.o
+drivers/scsi/aic7xxx/aic79xx_osm_pci.c:101: warning: 'ahd_linux_pci_dev_suspend' defined but not used
+drivers/scsi/aic7xxx/aic79xx_osm_pci.c:121: warning: 'ahd_linux_pci_dev_resume' defined but not used
 
-Agree.  I did essentially the same thing in:
+This moves aic79xx_pci_driver struct, removes some forward
+declarations, and adds some ifdef CONFIG_PM.
 
-http://marc.info/?l=linux-scsi&m=119835555623270
+Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+---
+ drivers/scsi/aic7xxx/aic79xx.h         |    5 +++-
+ drivers/scsi/aic7xxx/aic79xx_core.c    |    2 +
+ drivers/scsi/aic7xxx/aic79xx_osm_pci.c |   33 +++++++++++--------------------
+ drivers/scsi/aic7xxx/aic79xx_pci.c     |    2 +
+ 4 files changed, 20 insertions(+), 22 deletions(-)
 
-Tomo, you may want to have a look at all the bsg patches I sent back
-in Dec 2007.  Boaz has the minimum required for bidi in his tree.
-There are a few more here too, if you want to see what we need for OSD:
+diff --git a/drivers/scsi/aic7xxx/aic79xx.h b/drivers/scsi/aic7xxx/aic79xx.h
+index ce638aa..2f00467 100644
+--- a/drivers/scsi/aic7xxx/aic79xx.h
++++ b/drivers/scsi/aic7xxx/aic79xx.h
+@@ -1340,8 +1340,10 @@ struct	ahd_pci_identity *ahd_find_pci_device(ahd_dev_softc_t);
+ int			  ahd_pci_config(struct ahd_softc *,
+ 					 struct ahd_pci_identity *);
+ int	ahd_pci_test_register_access(struct ahd_softc *);
++#ifdef CONFIG_PM
+ void	ahd_pci_suspend(struct ahd_softc *);
+ void	ahd_pci_resume(struct ahd_softc *);
++#endif
+ 
+ /************************** SCB and SCB queue management **********************/
+ void		ahd_qinfifo_requeue_tail(struct ahd_softc *ahd,
+@@ -1352,8 +1354,10 @@ struct ahd_softc	*ahd_alloc(void *platform_arg, char *name);
+ int			 ahd_softc_init(struct ahd_softc *);
+ void			 ahd_controller_info(struct ahd_softc *ahd, char *buf);
+ int			 ahd_init(struct ahd_softc *ahd);
++#ifdef CONFIG_PM
+ int			 ahd_suspend(struct ahd_softc *ahd);
+ void			 ahd_resume(struct ahd_softc *ahd);
++#endif
+ int			 ahd_default_config(struct ahd_softc *ahd);
+ int			 ahd_parse_vpddata(struct ahd_softc *ahd,
+ 					   struct vpd_config *vpd);
+@@ -1361,7 +1365,6 @@ int			 ahd_parse_cfgdata(struct ahd_softc *ahd,
+ 					   struct seeprom_config *sc);
+ void			 ahd_intr_enable(struct ahd_softc *ahd, int enable);
+ void			 ahd_pause_and_flushwork(struct ahd_softc *ahd);
+-int			 ahd_suspend(struct ahd_softc *ahd); 
+ void			 ahd_set_unit(struct ahd_softc *, int);
+ void			 ahd_set_name(struct ahd_softc *, char *);
+ struct scb		*ahd_get_scb(struct ahd_softc *ahd, u_int col_idx);
+diff --git a/drivers/scsi/aic7xxx/aic79xx_core.c b/drivers/scsi/aic7xxx/aic79xx_core.c
+index a7dd8cd..ade0fb8 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_core.c
++++ b/drivers/scsi/aic7xxx/aic79xx_core.c
+@@ -7175,6 +7175,7 @@ ahd_pause_and_flushwork(struct ahd_softc *ahd)
+ 	ahd->flags &= ~AHD_ALL_INTERRUPTS;
+ }
+ 
++#ifdef CONFIG_PM
+ int
+ ahd_suspend(struct ahd_softc *ahd)
+ {
+@@ -7197,6 +7198,7 @@ ahd_resume(struct ahd_softc *ahd)
+ 	ahd_intr_enable(ahd, TRUE); 
+ 	ahd_restart(ahd);
+ }
++#endif
+ 
+ /************************** Busy Target Table *********************************/
+ /*
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+index 66f0259..4150c8a 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm_pci.c
+@@ -43,17 +43,6 @@
+ #include "aic79xx_inline.h"
+ #include "aic79xx_pci.h"
+ 
+-static int	ahd_linux_pci_dev_probe(struct pci_dev *pdev,
+-					const struct pci_device_id *ent);
+-static int	ahd_linux_pci_reserve_io_regions(struct ahd_softc *ahd,
+-						 u_long *base, u_long *base2);
+-static int	ahd_linux_pci_reserve_mem_region(struct ahd_softc *ahd,
+-						 u_long *bus_addr,
+-						 uint8_t __iomem **maddr);
+-static int	ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg);
+-static int	ahd_linux_pci_dev_resume(struct pci_dev *pdev);
+-static void	ahd_linux_pci_dev_remove(struct pci_dev *pdev);
+-
+ /* Define the macro locally since it's different for different class of chips.
+  */
+ #define ID(x)            \
+@@ -85,17 +74,7 @@ static struct pci_device_id ahd_linux_pci_id_table[] = {
+ 
+ MODULE_DEVICE_TABLE(pci, ahd_linux_pci_id_table);
+ 
+-static struct pci_driver aic79xx_pci_driver = {
+-	.name		= "aic79xx",
+-	.probe		= ahd_linux_pci_dev_probe,
+ #ifdef CONFIG_PM
+-	.suspend	= ahd_linux_pci_dev_suspend,
+-	.resume		= ahd_linux_pci_dev_resume,
+-#endif
+-	.remove		= ahd_linux_pci_dev_remove,
+-	.id_table	= ahd_linux_pci_id_table
+-};
+-
+ static int
+ ahd_linux_pci_dev_suspend(struct pci_dev *pdev, pm_message_t mesg)
+ {
+@@ -139,6 +118,7 @@ ahd_linux_pci_dev_resume(struct pci_dev *pdev)
+ 
+ 	return rc;
+ }
++#endif
+ 
+ static void
+ ahd_linux_pci_dev_remove(struct pci_dev *pdev)
+@@ -245,6 +225,17 @@ ahd_linux_pci_dev_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	return (0);
+ }
+ 
++static struct pci_driver aic79xx_pci_driver = {
++	.name		= "aic79xx",
++	.probe		= ahd_linux_pci_dev_probe,
++#ifdef CONFIG_PM
++	.suspend	= ahd_linux_pci_dev_suspend,
++	.resume		= ahd_linux_pci_dev_resume,
++#endif
++	.remove		= ahd_linux_pci_dev_remove,
++	.id_table	= ahd_linux_pci_id_table
++};
++
+ int
+ ahd_linux_pci_init(void)
+ {
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+index 7a203a9..df85367 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -389,6 +389,7 @@ ahd_pci_config(struct ahd_softc *ahd, struct ahd_pci_identity *entry)
+ 	return error;
+ }
+ 
++#ifdef CONFIG_PM
+ void
+ ahd_pci_suspend(struct ahd_softc *ahd)
+ {
+@@ -415,6 +416,7 @@ ahd_pci_resume(struct ahd_softc *ahd)
+ 	ahd_pci_write_config(ahd->dev_softc, CSIZE_LATTIME,
+ 			     ahd->suspend_state.pci_state.csize_lattime, /*bytes*/1);
+ }
++#endif
+ 
+ /*
+  * Perform some simple tests that should catch situations where
+-- 
+1.5.3.4
 
-http://git.osc.edu/?p=linux.git;a=summary
-
-		-- Pete
