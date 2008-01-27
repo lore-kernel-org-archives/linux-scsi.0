@@ -1,45 +1,48 @@
 From: FUJITA Tomonori <tomof@acm.org>
-Subject: [PATCH] hptiop: fix sense_buffer
-Date: Sun, 27 Jan 2008 10:22:26 +0900
-Message-ID: <20080127102207D.tomof@acm.org>
+Subject: aic79xx: fix sense_buffer access bug
+Date: Sun, 27 Jan 2008 12:41:09 +0900
+Message-ID: <20080127124023L.tomof@acm.org>
 Mime-Version: 1.0
 Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo10.iij4u.or.jp ([210.138.174.78]:52896 "EHLO mo10.iij4u.or.jp"
+Received: from mo11.iij4u.or.jp ([210.138.174.79]:39744 "EHLO mo11.iij4u.or.jp"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751316AbYA0BWi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 26 Jan 2008 20:22:38 -0500
+	id S1752831AbYA0DlX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 26 Jan 2008 22:41:23 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James.Bottomley@HansenPartnership.com
-Cc: linux@highpoint-tech.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+Cc: hare@suse.de, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-Sorry, there was another place that I overlooked in the sense buffer
-conversion.
+Ah, I overlooked more LLDs...
 
 =
 From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-Subject: [PATCH] hptiop: fix sense_buffer access bug
+Subject: [PATCH] aic79xx: fix sense_buffer access bug
+
+The commit de25deb18016f66dcdede165d07654559bb332bc changed
+scsi_cmnd.sense_buffer from a static array to a dynamically allocated
+buffer. We can't access to sense_buffer in '&cmd->sense_buffer' way.
 
 Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 ---
- drivers/scsi/hptiop.c |    2 +-
+ drivers/scsi/aic7xxx/aic79xx_osm.c |    2 +-
  1 files changed, 1 insertions(+), 1 deletions(-)
 
-diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index e7b2f35..890f44f 100644
---- a/drivers/scsi/hptiop.c
-+++ b/drivers/scsi/hptiop.c
-@@ -573,7 +573,7 @@ static void hptiop_finish_scsi_req(struct hptiop_hba *hba, u32 tag,
- 		scsi_set_resid(scp,
- 			scsi_bufflen(scp) - le32_to_cpu(req->dataxfer_length));
- 		scp->result = SAM_STAT_CHECK_CONDITION;
--		memcpy(&scp->sense_buffer, &req->sg_list,
-+		memcpy(scp->sense_buffer, &req->sg_list,
- 				min_t(size_t, SCSI_SENSE_BUFFERSIZE,
- 					le32_to_cpu(req->dataxfer_length)));
- 		break;
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 0e4708f..3c4efa4 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -1922,7 +1922,7 @@ ahd_linux_queue_cmd_complete(struct ahd_softc *ahd, struct scsi_cmnd *cmd)
+ 				struct scsi_sense_data *sense;
+ 				
+ 				sense = (struct scsi_sense_data *)
+-					&cmd->sense_buffer;
++					cmd->sense_buffer;
+ 				if (sense->extra_len >= 5 &&
+ 				    (sense->add_sense_code == 0x47
+ 				     || sense->add_sense_code == 0x48))
 -- 
 1.5.3.4
 
