@@ -1,113 +1,79 @@
-From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
-Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 07:00:40 -0800
-Message-ID: <20080129150040.GB16080@one-eyed-alien.net>
-References: <20080128204935.GI15220@kernel.dk> <20080128212114.GA15586@kroah.com> <479F18D3.9030709@panasas.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [RFC] aic7xxx - ahc_done check SCB_ACTIVE for tagged transactions
+Date: Tue, 29 Jan 2008 16:18:16 +0100
+Message-ID: <479F43B8.2090902@suse.de>
+References: <20080125181618.GB26158@dhcp-210.hsv.redhat.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:38716
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752322AbYA2PDA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jan 2008 10:03:00 -0500
-Content-Disposition: inline
-In-Reply-To: <479F18D3.9030709@panasas.com>
+Received: from ns2.suse.de ([195.135.220.15]:38177 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753290AbYA2PSS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 10:18:18 -0500
+In-Reply-To: <20080125181618.GB26158@dhcp-210.hsv.redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: David Milburn <dmilburn@redhat.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-
---8GpibOaaTibBMecb
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Jan 29, 2008 at 02:15:15PM +0200, Boaz Harrosh wrote:
-> Greg KH wrote:
-> > On Mon, Jan 28, 2008 at 09:49:35PM +0100, Jens Axboe wrote:
-> >> Hi,
-> >>
-> >> Running latest -git (head 91525300baf162e83e923b09ca286f9205e21522) and
-> >> connecting my cf usb storage device yields and endless stream of:
-> >>
-> >> Initializing USB Mass Storage driver...
-> >> scsi6 : SCSI emulation for USB Mass Storage devices
-> >> usb-storage: device found at 2
-> >> usb-storage: waiting for device to settle before scanning
-> >> usbcore: registered new interface driver usb-storage
-> >> USB Mass Storage support registered.
-> >> scsi 6:0:0:0: Direct-Access     Generic  STORAGE DEVICE   0125 PQ: 0
-> >> ANSI: 0
-> >> sd 6:0:0:0: [sdb] 4001760 512-byte hardware sectors (2049 MB)
-> >> sd 6:0:0:0: [sdb] Write Protect is off
-> >> sd 6:0:0:0: [sdb] Mode Sense: 02 00 00 00
-> >> sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> >> sd 6:0:0:0: [sdb] 4001760 512-byte hardware sectors (2049 MB)
-> >> sd 6:0:0:0: [sdb] Write Protect is off
-> >> sd 6:0:0:0: [sdb] Mode Sense: 02 00 00 00
-> >> sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> >>  sdb: sdb1
-> >> sd 6:0:0:0: [sdb] Attached SCSI removable disk
-> >> sd 6:0:0:0: Attached scsi generic sg1 type 0
-> >> scsi 6:0:0:1: Direct-Access     Generic  STORAGE DEVICE   0125 PQ: 0
-> >> ANSI: 0
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> >> [...]
-> >>
-> >> until I disconnect it. The device doesn't work. Worked fine in 2.6.24.
-> >> I'm attaching boot messages and my .config.
-> >=20
-> > That's a bit wierd, as we haven't added any USB patches to the -git tree
-> > yet after 2.6.24 :)
-> >=20
-> > Could this be caused by some scsi changes perhaps?
-> >=20
-> > thanks,
-> >=20
-> > greg k-h
-> > -
-> Yes it is ;)
+David Milburn wrote:
+> Hannes,
 >=20
-> Jens could you test the patch below? if it works I'll submit a proper
-> patch. Please forgive me for the bug.
+> Does ahc_done need to check the SCB_ACTIVE flag only if the SCB
+> is not in the untagged queue before panic?
 >=20
-> Matthew, Greg, Is there a way to extract from messages the usb storage tr=
-ansport
-> used? I'm guessing it is freecom do to the fact that I find a bug there.
+> If the driver is in error recovery, you may end panic'ing
+> on a TUR that is in the untagged queue.
+>=20
+> Attempting to queue an ABORT message
+> CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+> SCB 3 done'd twice
+>=20
+> This patch is included in Adaptec's 6.3.11 driver on their=20
+> website.
+>=20
+> Thank you,
+> David
+>=20
+> --- scsi-misc-2.6.git/drivers/scsi/aic7xxx/aic7xxx_osm.c.abort
+> +++ scsi-misc-2.6.git/drivers/scsi/aic7xxx/aic7xxx_osm.c
+> @@ -1658,9 +1658,12 @@ ahc_done(struct ahc_softc *ahc, struct s
+>  		untagged_q =3D &(ahc->untagged_queues[target_offset]);
+>  		TAILQ_REMOVE(untagged_q, scb, links.tqe);
+>  		BUG_ON(!TAILQ_EMPTY(untagged_q));
+> -	}
+> -
+> -	if ((scb->flags & SCB_ACTIVE) =3D=3D 0) {
+> +	} else if ((scb->flags & SCB_ACTIVE) =3D=3D 0) {
+> +		/*
+> +		 * Transactions aborted from the untagged queue may
+> +		 * not have been dispatched to the controller, so
+> +		 * only check the SCB_ACTIVE flag for tagged transactions.
+> +		 */
+>  		printf("SCB %d done'd twice\n", scb->hscb->tag);
+>  		ahc_dump_card_state(ahc);
+>  		panic("Stopping for safety");
+>=20
+Yes, this looks correct. The SCB_ACTIVE flag is reset when doing an ahc=
+_scb_free()
+at the very end of ahc_done(). And seeing that we are re-using scbs for=
+ error recovery
+we might indeed end up with an scb with SCB_ACTIVE is set.
 
-The freecom transport is exceptionally rare these days.  It's primary user
-was a device made by a company that went out of business.
+But I'll do some more investigation.
+Do you have any setup to exercise this?
 
-Matt
+Cheers,
 
+Hannes
 --=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-Way to go, lava boy.
-					-- Stef to Greg
-User Friendly, 3/26/1998
-
---8GpibOaaTibBMecb
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHnz+YHL9iwnUZqnkRArAlAJ9nLOVT9sWA9J4GiQUhsvUVICBNEACgjFfJ
-5I6dzkgLDseOyDiPtf5Pf/g=
-=GRnr
------END PGP SIGNATURE-----
-
---8GpibOaaTibBMecb--
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
