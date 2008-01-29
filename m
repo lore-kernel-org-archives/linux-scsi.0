@@ -1,63 +1,86 @@
-From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 17:54:52 +0200
-Message-ID: <479F4C4C.2060203@panasas.com>
-References: <Pine.LNX.4.44L0.0801291032210.4229-100000@iolanthe.rowland.org>
+From: David Milburn <dmilburn@redhat.com>
+Subject: Re: [RFC] aic7xxx - ahc_done check SCB_ACTIVE for tagged transactions
+Date: Tue, 29 Jan 2008 10:11:50 -0600
+Message-ID: <479F5046.4010800@redhat.com>
+References: <20080125181618.GB26158@dhcp-210.hsv.redhat.com> <479F43B8.2090902@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0801291032210.4229-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([66.187.233.31]:56060 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759510AbYA2QCg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 11:02:36 -0500
+In-Reply-To: <479F43B8.2090902@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-On Tue, Jan 29 2008 at 17:36 +0200, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
-> On Tue, 29 Jan 2008, Boaz Harrosh wrote:
+Hannes Reinecke wrote:
+> David Milburn wrote:
 > 
->> --- a/drivers/usb/storage/transport.c
->> +++ b/drivers/usb/storage/transport.c
->> @@ -462,18 +462,24 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
->>   * Common used function. Transfer a complete command
->>   * via usb_stor_bulk_transfer_sglist() above. Set cmnd resid
->>   */
->> -int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
->> -		      struct scsi_cmnd* srb)
->> +int usb_stor_bulk_srb_length(struct us_data* us, unsigned int pipe,
->> +		      struct scsi_cmnd* srb, unsigned length)
->>  {
->>  	unsigned int partial;
->>  	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
->> -				      scsi_sg_count(srb), scsi_bufflen(srb),
->> +				      scsi_sg_count(srb), length,
->>  				      &partial);
->>  
->>  	scsi_set_resid(srb, scsi_bufflen(srb) - partial);
->>  	return result;
->>  }
->>  
->> +int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
->> +		struct scsi_cmnd* srb)
->> +{
->> +	return usb_stor_bulk_srb_length(us, pipe, srb, scsi_bufflen(srb));
->> +}
->> +
+>>Hannes,
+>>
+>>Does ahc_done need to check the SCB_ACTIVE flag only if the SCB
+>>is not in the untagged queue before panic?
+>>
+>>If the driver is in error recovery, you may end panic'ing
+>>on a TUR that is in the untagged queue.
+>>
+>>Attempting to queue an ABORT message
+>>CDB: 0x0 0x0 0x0 0x0 0x0 0x0
+>>SCB 3 done'd twice
+>>
+>>This patch is included in Adaptec's 6.3.11 driver on their 
+>>website.
+>>
+>>Thank you,
+>>David
+>>
+>>--- scsi-misc-2.6.git/drivers/scsi/aic7xxx/aic7xxx_osm.c.abort
+>>+++ scsi-misc-2.6.git/drivers/scsi/aic7xxx/aic7xxx_osm.c
+>>@@ -1658,9 +1658,12 @@ ahc_done(struct ahc_softc *ahc, struct s
+>> 		untagged_q = &(ahc->untagged_queues[target_offset]);
+>> 		TAILQ_REMOVE(untagged_q, scb, links.tqe);
+>> 		BUG_ON(!TAILQ_EMPTY(untagged_q));
+>>-	}
+>>-
+>>-	if ((scb->flags & SCB_ACTIVE) == 0) {
+>>+	} else if ((scb->flags & SCB_ACTIVE) == 0) {
+>>+		/*
+>>+		 * Transactions aborted from the untagged queue may
+>>+		 * not have been dispatched to the controller, so
+>>+		 * only check the SCB_ACTIVE flag for tagged transactions.
+>>+		 */
+>> 		printf("SCB %d done'd twice\n", scb->hscb->tag);
+>> 		ahc_dump_card_state(ahc);
+>> 		panic("Stopping for safety");
+>>
 > 
-> I don't like this patch very much.  Why add another layer of 
-> indirection when the two subroutines do hardly any work?  Leave 
-> usb_stor_bulk_srb() the way it was, and add usb_stor_bulk_srb_length() 
-> as a separate routine that simply calls usb_stor_bulk_transfer_sglist() 
-> and scsi_set_resid().
+> Yes, this looks correct. The SCB_ACTIVE flag is reset when doing an ahc_scb_free()
+> at the very end of ahc_done(). And seeing that we are re-using scbs for error recovery
+> we might indeed end up with an scb with SCB_ACTIVE is set.
 > 
-> BTW, the standard coding style calls for a blank line after the list of 
-> local variables at the start of a function or block.
-> 
-> Alan Stern
-> 
-> -
-Me neither, it's not a proper patch just a shut to try and find the reported
-bug. I will submit a proper bug later.
+> But I'll do some more investigation.
+> Do you have any setup to exercise this?
 
-Thanks for the review, you are right on all accounts
-Boaz
+Hannes,
+
+I don't have a hands on setup, but, I verified the fix
+by providing a rhel4 test kernel to prevent the panic
+above.
+
+James committed to scsi-misc-2.6.git
+
+cddb3e38076639aacf2182e4b164e45ee8bbe6d8
+
+Thanks,
+David
+
+
+> 
+> Cheers,
+> 
+> Hannes
+
