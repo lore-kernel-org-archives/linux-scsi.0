@@ -1,131 +1,91 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
 Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 20:58:19 +0200
-Message-ID: <479F774B.60303@panasas.com>
-References: <Pine.LNX.4.44L0.0801291032210.4229-100000@iolanthe.rowland.org>	 <1201624455.3069.10.camel@localhost.localdomain>	 <479F7009.3020306@panasas.com> <1201632515.3069.28.camel@localhost.localdomain>
+Date: Tue, 29 Jan 2008 21:09:59 +0200
+Message-ID: <479F7A07.8080204@panasas.com>
+References: <20080128204935.GI15220@kernel.dk> <479F32E9.10609@panasas.com> <20080129141108.GV15220@kernel.dk> <200801291531.39825.oliver@neukum.org> <20080129143109.GW15220@kernel.dk> <20080129183910.GI15220@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:1331 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751464AbYA2S7F (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2008 13:59:05 -0500
-In-Reply-To: <1201632515.3069.28.camel@localhost.localdomain>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20080129183910.GI15220-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Alan Stern <stern@rowland.harvard.edu>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 29 2008 at 20:48 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Tue, 2008-01-29 at 20:27 +0200, Boaz Harrosh wrote:
->> On Tue, Jan 29 2008 at 18:34 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
->>> On Tue, 2008-01-29 at 10:36 -0500, Alan Stern wrote:
->>>> On Tue, 29 Jan 2008, Boaz Harrosh wrote:
->>>>
->>>>> --- a/drivers/usb/storage/transport.c
->>>>> +++ b/drivers/usb/storage/transport.c
->>>>> @@ -462,18 +462,24 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
->>>>>   * Common used function. Transfer a complete command
->>>>>   * via usb_stor_bulk_transfer_sglist() above. Set cmnd resid
->>>>>   */
->>>>> -int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
->>>>> -		      struct scsi_cmnd* srb)
->>>>> +int usb_stor_bulk_srb_length(struct us_data* us, unsigned int pipe,
->>>>> +		      struct scsi_cmnd* srb, unsigned length)
->>>>>  {
->>>>>  	unsigned int partial;
->>>>>  	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
->>>>> -				      scsi_sg_count(srb), scsi_bufflen(srb),
->>>>> +				      scsi_sg_count(srb), length,
->>>>>  				      &partial);
->>>>>  
->>>>>  	scsi_set_resid(srb, scsi_bufflen(srb) - partial);
->>>>>  	return result;
->>>>>  }
->>>>>  
->>>>> +int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
->>>>> +		struct scsi_cmnd* srb)
->>>>> +{
->>>>> +	return usb_stor_bulk_srb_length(us, pipe, srb, scsi_bufflen(srb));
->>>>> +}
->>>>> +
->>>> I don't like this patch very much.  Why add another layer of 
->>>> indirection when the two subroutines do hardly any work?  Leave 
->>>> usb_stor_bulk_srb() the way it was, and add usb_stor_bulk_srb_length() 
->>>> as a separate routine that simply calls usb_stor_bulk_transfer_sglist() 
->>>> and scsi_set_resid().
->>>>
->>>> BTW, the standard coding style calls for a blank line after the list of 
->>>> local variables at the start of a function or block.
->>> There's another bug in the transport.c conversion in that the residuals
->>> are updated with bogus data in several error cases, since
->>> usb_stor_bulk_transfer_sglist() only sets the actual length if the urb
->>> is actually sent.
->>>
->>> I'm not sure if this is is the solution to the problem at hand, but it
->>> definitely fixes another bug in the code.
->>>
->>> James
->>>
->>> diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
->>> index d9f4912..bab0858 100644
->>> --- a/drivers/usb/storage/transport.c
->>> +++ b/drivers/usb/storage/transport.c
->>> @@ -465,7 +465,7 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
->>>  int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
->>>  		      struct scsi_cmnd* srb)
->>>  {
->>> -	unsigned int partial;
->>> +	unsigned int partial = scsi_get_resid(srb);
->>>  	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
->>>  				      scsi_sg_count(srb), scsi_bufflen(srb),
->>>  				      &partial);
->>>
->>>
->>> -
->> But then this is weird because it is not what usb_stor_bulk_transfer_sg() is doing
->> which was the one called before.
+On Tue, Jan 29 2008 at 20:39 +0200, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+> On Tue, Jan 29 2008, Jens Axboe wrote:
+>> On Tue, Jan 29 2008, Oliver Neukum wrote:
+>>> Am Dienstag, 29. Januar 2008 15:11:08 schrieb Jens Axboe:
+>>>> On Tue, Jan 29 2008, Boaz Harrosh wrote:
+>>>>> On Tue, Jan 29 2008 at 15:54 +0200, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
+>>>>>> On Tue, Jan 29 2008, Boaz Harrosh wrote:
+>>>>>>> Greg KH wrote:
+>>>  
+>>>>>> No difference, still just a lot of resets.
+>>>>>>
+>>>>> Where you able to figure out which usb storage transport is used?
+>>>>>
+>>>>> in drivers/usb/storage/usb.c you have get_protocol() and get_transport()
+>>>>> functions. I'm not sure if these get stored in sysfs perhaps. This will
+>>>>> pinpoint better where to look. Let me research a bit. 
+>>>> Did the quick'n easy and dumped it. Protocol is 'Transparent SCSI' and
+>>>> transport is 'Bulk'
+>>> You can recompile your kernel with CONFIG_USB_DEBUG and CONFIG_STORAGE_DEBUG
+>>> That should tell the reason for the resets.
+>> Sure, I'll do that. Will post the results tonight.
 > 
-> Um, yes it was.  The original code did this
+> OK, fresh boot with CONFIG_USB_DEBUG and CONFIG_STORAGE_DEBUG. Plugged
+> in the device, waited 10 seconds or so and pulled it out. These are the
+> messages.
 > 
-> sb_stor_bulk_transfer_sg(..., &srp->resid, ...)
+> It all looks good until the MODE_SENSE command, where it only transfers
+> 4 of 192 bytes.
 > 
-> Which was at liberty not to touch resid, which it chose not to do in the
-> error legs.
-> 
-> Your new code does
-> 
-> int partial; <- stack uninitialised
-> sb_stor_bulk_transfer_sglist(..., &partial, ...);
-> scsi_set_resid(srb, scsi_bufflen(srb) - partial);
-> 
-> If the function doesn't touch partial, as it doesn't in the error legs,
-> resid now gets set with rubbish.
-> 
-> Actually, my code is still wrong .. we have to set it to
-> scsi_bufflen(srb) - scsi_resid(srb) so that it comes back the same if
-> left untouched.
-> 
->> I have such a device and I get one reset but then every thing works nice.
->> This is with debug on. I'll try to make it fail.
-> 
-> James
-> 
-> 
-Sorry I still don't see it.
+<snip>
+> usb-storage: Command MODE_SENSE (6 bytes)
+> usb-storage:  1a 00 3f 00 c0 00
+> usb-storage: Bulk Command S 0x43425355 T 0x4 L 192 F 128 Trg 0 LUN 0 CL 6
+> usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+> usb-storage: Status code 0; transferred 31/31
+> usb-storage: -- transfer complete
+> usb-storage: Bulk command transfer result=0
+> usb-storage: usb_stor_bulk_transfer_sglist: xfer 192 bytes, 1 entries
+> usb-storage: Status code -121; transferred 4/192
+> usb-storage: -- short read transfer
+> usb-storage: Bulk data transfer result 0x1
+> usb-storage: Attempting to get CSW...
+<snip>
 
-original code did sb_stor_bulk_transfer_sg(..., &srp->resid, ...)
+I get something similar but better:
+usb-storage: Command MODE_SENSE (6 bytes)
+usb-storage:  1a 00 3f 00 c0 00
+usb-storage: Bulk Command S 0x43425355 T 0x6 L 192 F 128 Trg 0 LUN 0 CL 6
+usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+usb-storage: Status code 0; transferred 31/31
+usb-storage: -- transfer complete
+usb-storage: Bulk command transfer result=0
+usb-storage: usb_stor_bulk_transfer_sglist: xfer 192 bytes, 1 entries
+usb-storage: Status code -121; transferred 36/192
+usb-storage: -- short read transfer
+usb-storage: Bulk data transfer result 0x1
+usb-storage: Attempting to get CSW...
 
-but sb_stor_bulk_transfer_sg does the:
- int partial; <- stack uninitialised
- sb_stor_bulk_transfer_sglist(..., &partial, ...);
+So I get 36 bytes, then code goes on into one reset, and every thing is then
+fine.
 
-and then unconditionally sets *residual = length_left;
-I do not see an "error legs" case in sb_stor_bulk_transfer_sg().
+Could you put us out of our mesery and revert that patch:
+[SCSI] usb: transport - convert to accessors and !use_sg code path removal
+(6d416e6173394defda5933e419e805b696681b7e)
 
-I have just cut and pasted the !use_sg from sb_stor_bulk_transfer_sg names
-and all
+to make sure this is it. I hate to do this to you, but I cannot reproduce the
+failure down here. If it works please send a log with the debugs on perhaps
+we can compare.
 
+You will need to configure out the CONFIG_USB_STORAG_* they will not compile
+you should have only have CONFIG_USB_STORAGE & CONFIG_USB_STORAGE_DEBUG. it should
+support your HW.
+
+
+Thanks Jens
 Boaz
-  
