@@ -1,54 +1,101 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 22:53:12 +0200
-Message-ID: <479F9238.9070307@panasas.com>
-References: <200801291531.39825.oliver@neukum.org>	 <20080129143109.GW15220@kernel.dk> <20080129183910.GI15220@kernel.dk>	 <20080129191024.GO14375@one-eyed-alien.net>	 <1201635195.3069.36.camel@localhost.localdomain>	 <20080129193520.GQ15220@kernel.dk> <20080129194543.GR15220@kernel.dk>	 <479F856C.4090900@panasas.com> <20080129200311.GV15220@kernel.dk>	 <1201637090.3069.38.camel@localhost.localdomain>	 <20080129200651.GW15220@kernel.dk> <1201638257.3069.42.camel@localhost.localdomain>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Tue, 29 Jan 2008 15:42:11 -0500
+Message-ID: <1201639331.3069.58.camel@localhost.localdomain>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:4403 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1751027AbYA2UyL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2008 15:54:11 -0500
-In-Reply-To: <1201638257.3069.42.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:53585 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1758678AbYA2UyZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 15:54:25 -0500
+In-Reply-To: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.org>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Tue, Jan 29 2008 at 22:24 +0200, James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> On Tue, 2008-01-29 at 21:06 +0100, Jens Axboe wrote:
->>> I will ... but it will cause an explosion in the bidirectional tree
->>> again.  I think the bidi updates also fix this.  However, give me time
->>> to rebase and verify.
->> OK thanks, just wanted to make sure that we didn't both expect each
->> other to handle it :-)
-> 
-> Yes, confirm that; I think this is already fixed in scsi-misc-2.6.
-> Could you pull from
-> 
-> master.kernel.org:/pub/scm/linux/kernel/git/jejb/scsi-misc-2.6.git
-> 
-> and verify with your device?
-> 
-> Thanks,
-> 
-> James
-> 
-> 
-I still don't see these changes, I wanted to check, make sure...
-Are there mirrors on the way to here?
+On Wed, 2008-01-23 at 15:22 +0100, Bart Van Assche wrote:
+> As you probably know there is a trend in enterprise computing towards
+> networked storage. This is illustrated by the emergence during the
+> past few years of standards like SRP (SCSI RDMA Protocol), iSCSI
+> (Internet SCSI) and iSER (iSCSI Extensions for RDMA). Two different
+> pieces of software are necessary to make networked storage possible:
+> initiator software and target software. As far as I know there exist
+> three different SCSI target implementations for Linux:
+> - The iSCSI Enterprise Target Daemon (IETD,
+> http://iscsitarget.sourceforge.net/);
+> - The Linux SCSI Target Framework (STGT, http://stgt.berlios.de/);
+> - The Generic SCSI Target Middle Level for Linux project (SCST,
+> http://scst.sourceforge.net/).
+> Since I was wondering which SCSI target software would be best suited
+> for an InfiniBand network, I started evaluating the STGT and SCST SCSI
+> target implementations. Apparently the performance difference between
+> STGT and SCST is small on 100 Mbit/s and 1 Gbit/s Ethernet networks,
+> but the SCST target software outperforms the STGT software on an
+> InfiniBand network. See also the following thread for the details:
+> http://sourceforge.net/mailarchive/forum.php?thread_name=e2e108260801170127w2937b2afg9bef324efa945e43%40mail.gmail.com&forum_name=scst-devel.
 
-James I would like to remind you that one small piece is missing 
-from the bidi tree, as I saw it from here, it's the few patches from
-scsi-pending. Mainly arm will break which is a grate loss.
+That doesn't seem to pull up a thread.  However, I assume it's these
+figures:
 
-I'm going home now, I'll review all the patches tomorrow and compare
-to what I have, to make sure nothing was forgotten. What a waste of a day
-I pulled from Linus this morning apparently minutes before the merge, and
-chased a none existent bug in my tree. Sigh
+.............................................................................................
+.                           .   STGT read     SCST read    .    STGT read      SCST read    .
+.                           .  performance   performance   . performance    performance   .
+.                           .  (0.5K, MB/s)  (0.5K, MB/s)  .   (1 MB, MB/s)   (1 MB, MB/s)  .
+.............................................................................................
+. Ethernet (1 Gb/s network) .      77             78       .        77            89       .
+. IPoIB    (8 Gb/s network) .     163            185       .       201           239       .
+. iSER     (8 Gb/s network) .     250            N/A       .       360           N/A       .
+. SRP      (8 Gb/s network) .     N/A            421       .       N/A           683       .
+.............................................................................................
 
-Bye
-Boaz
+On the comparable figures, which only seem to be IPoIB they're showing a
+13-18% variance, aren't they?  Which isn't an incredible difference.
+
+> About the design of the SCST software: while one of the goals of the
+> STGT project was to keep the in-kernel code minimal, the SCST project
+> implements the whole SCSI target in kernel space. SCST is implemented
+> as a set of new kernel modules, only minimal changes to the existing
+> kernel are necessary before the SCST kernel modules can be used. This
+> is the same approach that will be followed in the very near future in
+> the OpenSolaris kernel (see also
+> http://opensolaris.org/os/project/comstar/). More information about
+> the design of SCST can be found here:
+> http://scst.sourceforge.net/doc/scst_pg.html.
+> 
+> My impression is that both the STGT and SCST projects are well
+> designed, well maintained and have a considerable user base. According
+> to the SCST maintainer (Vladislav Bolkhovitin), SCST is superior to
+> STGT with respect to features, performance, maturity, stability, and
+> number of existing target drivers. Unfortunately the SCST kernel code
+> lives outside the kernel tree, which makes SCST harder to use than
+> STGT.
+> 
+> As an SCST user, I would like to see the SCST kernel code integrated
+> in the mainstream kernel because of its excellent performance on an
+> InfiniBand network. Since the SCST project comprises about 14 KLOC,
+> reviewing the SCST code will take considerable time. Who will do this
+> reviewing work ? And with regard to the comments made by the
+> reviewers: Vladislav, do you have the time to carry out the
+> modifications requested by the reviewers ? I expect a.o. that
+> reviewers will ask to move SCST's configuration pseudofiles from
+> procfs to sysfs.
+
+The two target architectures perform essentially identical functions, so
+there's only really room for one in the kernel.  Right at the moment,
+it's STGT.  Problems in STGT come from the user<->kernel boundary which
+can be mitigated in a variety of ways.  The fact that the figures are
+pretty much comparable on non IB networks shows this.
+
+I really need a whole lot more evidence than at worst a 20% performance
+difference on IB to pull one implementation out and replace it with
+another.  Particularly as there's no real evidence that STGT can't be
+tweaked to recover the 20% even on IB.
+
+James
+
 
