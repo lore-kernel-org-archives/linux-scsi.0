@@ -1,86 +1,78 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: [RFC] aic7xxx - ahc_done check SCB_ACTIVE for tagged transactions
-Date: Tue, 29 Jan 2008 10:11:50 -0600
-Message-ID: <479F5046.4010800@redhat.com>
-References: <20080125181618.GB26158@dhcp-210.hsv.redhat.com> <479F43B8.2090902@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] 2.6.24-git usb reset problems
+Date: Tue, 29 Jan 2008 11:34:15 -0500
+Message-ID: <1201624455.3069.10.camel@localhost.localdomain>
+References: <Pine.LNX.4.44L0.0801291032210.4229-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:56060 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759510AbYA2QCg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jan 2008 11:02:36 -0500
-In-Reply-To: <479F43B8.2090902@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1760633AbYA2Qeq@vger.kernel.org>
+In-Reply-To: <Pine.LNX.4.44L0.0801291032210.4229-100000@iolanthe.rowland.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Boaz Harrosh <bharrosh@panasas.com>, Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
-Hannes Reinecke wrote:
-> David Milburn wrote:
+On Tue, 2008-01-29 at 10:36 -0500, Alan Stern wrote:
+> On Tue, 29 Jan 2008, Boaz Harrosh wrote:
 > 
->>Hannes,
->>
->>Does ahc_done need to check the SCB_ACTIVE flag only if the SCB
->>is not in the untagged queue before panic?
->>
->>If the driver is in error recovery, you may end panic'ing
->>on a TUR that is in the untagged queue.
->>
->>Attempting to queue an ABORT message
->>CDB: 0x0 0x0 0x0 0x0 0x0 0x0
->>SCB 3 done'd twice
->>
->>This patch is included in Adaptec's 6.3.11 driver on their 
->>website.
->>
->>Thank you,
->>David
->>
->>--- scsi-misc-2.6.git/drivers/scsi/aic7xxx/aic7xxx_osm.c.abort
->>+++ scsi-misc-2.6.git/drivers/scsi/aic7xxx/aic7xxx_osm.c
->>@@ -1658,9 +1658,12 @@ ahc_done(struct ahc_softc *ahc, struct s
->> 		untagged_q = &(ahc->untagged_queues[target_offset]);
->> 		TAILQ_REMOVE(untagged_q, scb, links.tqe);
->> 		BUG_ON(!TAILQ_EMPTY(untagged_q));
->>-	}
->>-
->>-	if ((scb->flags & SCB_ACTIVE) == 0) {
->>+	} else if ((scb->flags & SCB_ACTIVE) == 0) {
->>+		/*
->>+		 * Transactions aborted from the untagged queue may
->>+		 * not have been dispatched to the controller, so
->>+		 * only check the SCB_ACTIVE flag for tagged transactions.
->>+		 */
->> 		printf("SCB %d done'd twice\n", scb->hscb->tag);
->> 		ahc_dump_card_state(ahc);
->> 		panic("Stopping for safety");
->>
+> > --- a/drivers/usb/storage/transport.c
+> > +++ b/drivers/usb/storage/transport.c
+> > @@ -462,18 +462,24 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
+> >   * Common used function. Transfer a complete command
+> >   * via usb_stor_bulk_transfer_sglist() above. Set cmnd resid
+> >   */
+> > -int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
+> > -		      struct scsi_cmnd* srb)
+> > +int usb_stor_bulk_srb_length(struct us_data* us, unsigned int pipe,
+> > +		      struct scsi_cmnd* srb, unsigned length)
+> >  {
+> >  	unsigned int partial;
+> >  	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
+> > -				      scsi_sg_count(srb), scsi_bufflen(srb),
+> > +				      scsi_sg_count(srb), length,
+> >  				      &partial);
+> >  
+> >  	scsi_set_resid(srb, scsi_bufflen(srb) - partial);
+> >  	return result;
+> >  }
+> >  
+> > +int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
+> > +		struct scsi_cmnd* srb)
+> > +{
+> > +	return usb_stor_bulk_srb_length(us, pipe, srb, scsi_bufflen(srb));
+> > +}
+> > +
 > 
-> Yes, this looks correct. The SCB_ACTIVE flag is reset when doing an ahc_scb_free()
-> at the very end of ahc_done(). And seeing that we are re-using scbs for error recovery
-> we might indeed end up with an scb with SCB_ACTIVE is set.
+> I don't like this patch very much.  Why add another layer of 
+> indirection when the two subroutines do hardly any work?  Leave 
+> usb_stor_bulk_srb() the way it was, and add usb_stor_bulk_srb_length() 
+> as a separate routine that simply calls usb_stor_bulk_transfer_sglist() 
+> and scsi_set_resid().
 > 
-> But I'll do some more investigation.
-> Do you have any setup to exercise this?
+> BTW, the standard coding style calls for a blank line after the list of 
+> local variables at the start of a function or block.
 
-Hannes,
+There's another bug in the transport.c conversion in that the residuals
+are updated with bogus data in several error cases, since
+usb_stor_bulk_transfer_sglist() only sets the actual length if the urb
+is actually sent.
 
-I don't have a hands on setup, but, I verified the fix
-by providing a rhel4 test kernel to prevent the panic
-above.
+I'm not sure if this is is the solution to the problem at hand, but it
+definitely fixes another bug in the code.
 
-James committed to scsi-misc-2.6.git
+James
 
-cddb3e38076639aacf2182e4b164e45ee8bbe6d8
-
-Thanks,
-David
-
-
-> 
-> Cheers,
-> 
-> Hannes
-
+diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
+index d9f4912..bab0858 100644
+--- a/drivers/usb/storage/transport.c
++++ b/drivers/usb/storage/transport.c
+@@ -465,7 +465,7 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
+ int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
+ 		      struct scsi_cmnd* srb)
+ {
+-	unsigned int partial;
++	unsigned int partial = scsi_get_resid(srb);
+ 	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
+ 				      scsi_sg_count(srb), scsi_bufflen(srb),
+ 				      &partial);
