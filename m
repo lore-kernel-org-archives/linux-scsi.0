@@ -1,70 +1,45 @@
-From: Jens Axboe <jens.axboe@oracle.com>
-Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 08:48:13 +0100
-Message-ID: <20080129074812.GJ15220@kernel.dk>
-References: <20080128204935.GI15220@kernel.dk> <20080128212114.GA15586@kroah.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] aic79xx: fix warnings with CONFIG_PM disabled
+Date: Tue, 29 Jan 2008 10:41:50 +0100
+Message-ID: <479EF4DE.40402@suse.de>
+References: <20080127000740N.tomof@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from brick.kernel.dk ([87.55.233.238]:13353 "EHLO kernel.dk"
+Received: from ns2.suse.de ([195.135.220.15]:51187 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751571AbYA2HsP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jan 2008 02:48:15 -0500
-Content-Disposition: inline
-In-Reply-To: <20080128212114.GA15586@kroah.com>
+	id S1752933AbYA2Jl4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 04:41:56 -0500
+In-Reply-To: <20080127000740N.tomof@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>
-Cc: linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
+To: FUJITA Tomonori <tomof@acm.org>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
 
-On Mon, Jan 28 2008, Greg KH wrote:
-> On Mon, Jan 28, 2008 at 09:49:35PM +0100, Jens Axboe wrote:
-> > Hi,
-> > 
-> > Running latest -git (head 91525300baf162e83e923b09ca286f9205e21522) and
-> > connecting my cf usb storage device yields and endless stream of:
-> > 
-> > Initializing USB Mass Storage driver...
-> > scsi6 : SCSI emulation for USB Mass Storage devices
-> > usb-storage: device found at 2
-> > usb-storage: waiting for device to settle before scanning
-> > usbcore: registered new interface driver usb-storage
-> > USB Mass Storage support registered.
-> > scsi 6:0:0:0: Direct-Access     Generic  STORAGE DEVICE   0125 PQ: 0
-> > ANSI: 0
-> > sd 6:0:0:0: [sdb] 4001760 512-byte hardware sectors (2049 MB)
-> > sd 6:0:0:0: [sdb] Write Protect is off
-> > sd 6:0:0:0: [sdb] Mode Sense: 02 00 00 00
-> > sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> > sd 6:0:0:0: [sdb] 4001760 512-byte hardware sectors (2049 MB)
-> > sd 6:0:0:0: [sdb] Write Protect is off
-> > sd 6:0:0:0: [sdb] Mode Sense: 02 00 00 00
-> > sd 6:0:0:0: [sdb] Assuming drive cache: write through
-> >  sdb: sdb1
-> > sd 6:0:0:0: [sdb] Attached SCSI removable disk
-> > sd 6:0:0:0: Attached scsi generic sg1 type 0
-> > scsi 6:0:0:1: Direct-Access     Generic  STORAGE DEVICE   0125 PQ: 0
-> > ANSI: 0
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
-> > [...]
-> > 
-> > until I disconnect it. The device doesn't work. Worked fine in 2.6.24.
-> > I'm attaching boot messages and my .config.
-> 
-> That's a bit wierd, as we haven't added any USB patches to the -git tree
-> yet after 2.6.24 :)
-> 
-> Could this be caused by some scsi changes perhaps?
+=46UJITA Tomonori wrote:
+>   CC [M]  drivers/scsi/aic7xxx/aic79xx_osm_pci.o
+> drivers/scsi/aic7xxx/aic79xx_osm_pci.c:101: warning: 'ahd_linux_pci_d=
+ev_suspend' defined but not used
+> drivers/scsi/aic7xxx/aic79xx_osm_pci.c:121: warning: 'ahd_linux_pci_d=
+ev_resume' defined but not used
+>=20
+> This moves aic79xx_pci_driver struct, removes some forward
+> declarations, and adds some ifdef CONFIG_PM.
+>=20
+> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-Heh, I guess it could! I'll double check, I reproduced it with two
-distinct boots before posting.
+Cheers,
 
--- 
-Jens Axboe
-
+Hannes
+--=20
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Markus Rex, HRB 16746 (AG N=FCrnberg)
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
