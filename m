@@ -1,48 +1,63 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
 Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 17:50:35 +0200
-Message-ID: <479F4B4B.2020000@panasas.com>
-References: <20080128204935.GI15220@kernel.dk> <479F32E9.10609@panasas.com> <20080129141108.GV15220@kernel.dk> <200801291531.39825.oliver@neukum.org>
+Date: Tue, 29 Jan 2008 17:54:52 +0200
+Message-ID: <479F4C4C.2060203@panasas.com>
+References: <Pine.LNX.4.44L0.0801291032210.4229-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:35288 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1764809AbYA2PvO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2008 10:51:14 -0500
-In-Reply-To: <200801291531.39825.oliver@neukum.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.0801291032210.4229-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oliver@neukum.org>
-Cc: Jens Axboe <jens.axboe@oracle.com>, Greg KH <greg@kroah.com>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 29 2008 at 16:31 +0200, Oliver Neukum <oliver@neukum.org> wrote:
-> Am Dienstag, 29. Januar 2008 15:11:08 schrieb Jens Axboe:
->> On Tue, Jan 29 2008, Boaz Harrosh wrote:
->>> On Tue, Jan 29 2008 at 15:54 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
->>>> On Tue, Jan 29 2008, Boaz Harrosh wrote:
->>>>> Greg KH wrote:
->  
->>>> No difference, still just a lot of resets.
->>>>
->>> Where you able to figure out which usb storage transport is used?
->>>
->>> in drivers/usb/storage/usb.c you have get_protocol() and get_transport()
->>> functions. I'm not sure if these get stored in sysfs perhaps. This will
->>> pinpoint better where to look. Let me research a bit. 
->> Did the quick'n easy and dumped it. Protocol is 'Transparent SCSI' and
->> transport is 'Bulk'
+On Tue, Jan 29 2008 at 17:36 +0200, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
+> On Tue, 29 Jan 2008, Boaz Harrosh wrote:
 > 
-> You can recompile your kernel with CONFIG_USB_DEBUG and CONFIG_STORAGE_DEBUG
-> That should tell the reason for the resets.
+>> --- a/drivers/usb/storage/transport.c
+>> +++ b/drivers/usb/storage/transport.c
+>> @@ -462,18 +462,24 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
+>>   * Common used function. Transfer a complete command
+>>   * via usb_stor_bulk_transfer_sglist() above. Set cmnd resid
+>>   */
+>> -int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
+>> -		      struct scsi_cmnd* srb)
+>> +int usb_stor_bulk_srb_length(struct us_data* us, unsigned int pipe,
+>> +		      struct scsi_cmnd* srb, unsigned length)
+>>  {
+>>  	unsigned int partial;
+>>  	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
+>> -				      scsi_sg_count(srb), scsi_bufflen(srb),
+>> +				      scsi_sg_count(srb), length,
+>>  				      &partial);
+>>  
+>>  	scsi_set_resid(srb, scsi_bufflen(srb) - partial);
+>>  	return result;
+>>  }
+>>  
+>> +int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
+>> +		struct scsi_cmnd* srb)
+>> +{
+>> +	return usb_stor_bulk_srb_length(us, pipe, srb, scsi_bufflen(srb));
+>> +}
+>> +
 > 
-> 	Regards
-> 		Oliver
+> I don't like this patch very much.  Why add another layer of 
+> indirection when the two subroutines do hardly any work?  Leave 
+> usb_stor_bulk_srb() the way it was, and add usb_stor_bulk_srb_length() 
+> as a separate routine that simply calls usb_stor_bulk_transfer_sglist() 
+> and scsi_set_resid().
+> 
+> BTW, the standard coding style calls for a blank line after the list of 
+> local variables at the start of a function or block.
+> 
+> Alan Stern
+> 
 > -
+Me neither, it's not a proper patch just a shut to try and find the reported
+bug. I will submit a proper bug later.
 
-I can not see what it is. Yes CONFIG_USB_STORAGE_DEBUG will help.
-I have a device here that uses the same trasport/protocol I'll
-try to reproduce the failure here.
-
+Thanks for the review, you are right on all accounts
 Boaz
