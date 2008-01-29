@@ -1,40 +1,113 @@
-From: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+From: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
 Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 15:31:10 +0100
-Message-ID: <20080129143109.GW15220@kernel.dk>
-References: <20080128204935.GI15220@kernel.dk> <479F32E9.10609@panasas.com> <20080129141108.GV15220@kernel.dk> <200801291531.39825.oliver@neukum.org>
+Date: Tue, 29 Jan 2008 07:00:40 -0800
+Message-ID: <20080129150040.GB16080@one-eyed-alien.net>
+References: <20080128204935.GI15220@kernel.dk> <20080128212114.GA15586@kroah.com> <479F18D3.9030709@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: multipart/signed; micalg=pgp-sha1;
+	protocol="application/pgp-signature"; boundary="8GpibOaaTibBMecb"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:38716
+	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752322AbYA2PDA (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 10:03:00 -0500
 Content-Disposition: inline
-In-Reply-To: <200801291531.39825.oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>
-Cc: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <479F18D3.9030709@panasas.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: Greg KH <greg@kroah.com>, Jens Axboe <jens.axboe@oracle.com>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 29 2008, Oliver Neukum wrote:
-> Am Dienstag, 29. Januar 2008 15:11:08 schrieb Jens Axboe:
-> > On Tue, Jan 29 2008, Boaz Harrosh wrote:
-> > > On Tue, Jan 29 2008 at 15:54 +0200, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org> wrote:
-> > > > On Tue, Jan 29 2008, Boaz Harrosh wrote:
-> > > >> Greg KH wrote:
->  
-> > > > No difference, still just a lot of resets.
-> > > > 
-> > > Where you able to figure out which usb storage transport is used?
-> > > 
-> > > in drivers/usb/storage/usb.c you have get_protocol() and get_transport()
-> > > functions. I'm not sure if these get stored in sysfs perhaps. This will
-> > > pinpoint better where to look. Let me research a bit. 
-> > 
-> > Did the quick'n easy and dumped it. Protocol is 'Transparent SCSI' and
-> > transport is 'Bulk'
-> 
-> You can recompile your kernel with CONFIG_USB_DEBUG and CONFIG_STORAGE_DEBUG
-> That should tell the reason for the resets.
 
-Sure, I'll do that. Will post the results tonight.
+--8GpibOaaTibBMecb
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
--- 
-Jens Axboe
+On Tue, Jan 29, 2008 at 02:15:15PM +0200, Boaz Harrosh wrote:
+> Greg KH wrote:
+> > On Mon, Jan 28, 2008 at 09:49:35PM +0100, Jens Axboe wrote:
+> >> Hi,
+> >>
+> >> Running latest -git (head 91525300baf162e83e923b09ca286f9205e21522) and
+> >> connecting my cf usb storage device yields and endless stream of:
+> >>
+> >> Initializing USB Mass Storage driver...
+> >> scsi6 : SCSI emulation for USB Mass Storage devices
+> >> usb-storage: device found at 2
+> >> usb-storage: waiting for device to settle before scanning
+> >> usbcore: registered new interface driver usb-storage
+> >> USB Mass Storage support registered.
+> >> scsi 6:0:0:0: Direct-Access     Generic  STORAGE DEVICE   0125 PQ: 0
+> >> ANSI: 0
+> >> sd 6:0:0:0: [sdb] 4001760 512-byte hardware sectors (2049 MB)
+> >> sd 6:0:0:0: [sdb] Write Protect is off
+> >> sd 6:0:0:0: [sdb] Mode Sense: 02 00 00 00
+> >> sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> >> sd 6:0:0:0: [sdb] 4001760 512-byte hardware sectors (2049 MB)
+> >> sd 6:0:0:0: [sdb] Write Protect is off
+> >> sd 6:0:0:0: [sdb] Mode Sense: 02 00 00 00
+> >> sd 6:0:0:0: [sdb] Assuming drive cache: write through
+> >>  sdb: sdb1
+> >> sd 6:0:0:0: [sdb] Attached SCSI removable disk
+> >> sd 6:0:0:0: Attached scsi generic sg1 type 0
+> >> scsi 6:0:0:1: Direct-Access     Generic  STORAGE DEVICE   0125 PQ: 0
+> >> ANSI: 0
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> >> [...]
+> >>
+> >> until I disconnect it. The device doesn't work. Worked fine in 2.6.24.
+> >> I'm attaching boot messages and my .config.
+> >=20
+> > That's a bit wierd, as we haven't added any USB patches to the -git tree
+> > yet after 2.6.24 :)
+> >=20
+> > Could this be caused by some scsi changes perhaps?
+> >=20
+> > thanks,
+> >=20
+> > greg k-h
+> > -
+> Yes it is ;)
+>=20
+> Jens could you test the patch below? if it works I'll submit a proper
+> patch. Please forgive me for the bug.
+>=20
+> Matthew, Greg, Is there a way to extract from messages the usb storage tr=
+ansport
+> used? I'm guessing it is freecom do to the fact that I find a bug there.
+
+The freecom transport is exceptionally rare these days.  It's primary user
+was a device made by a company that went out of business.
+
+Matt
+
+--=20
+Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
+net=20
+Maintainer, Linux USB Mass Storage Driver
+
+Way to go, lava boy.
+					-- Stef to Greg
+User Friendly, 3/26/1998
+
+--8GpibOaaTibBMecb
+Content-Type: application/pgp-signature
+Content-Disposition: inline
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.7 (GNU/Linux)
+
+iD8DBQFHnz+YHL9iwnUZqnkRArAlAJ9nLOVT9sWA9J4GiQUhsvUVICBNEACgjFfJ
+5I6dzkgLDseOyDiPtf5Pf/g=
+=GRnr
+-----END PGP SIGNATURE-----
+
+--8GpibOaaTibBMecb--
