@@ -1,82 +1,102 @@
-From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Tue, 29 Jan 2008 21:28:57 +0200
-Message-ID: <479F7E79.1040301@panasas.com>
-References: <Pine.LNX.4.44L0.0801291032210.4229-100000@iolanthe.rowland.org>	 <1201624455.3069.10.camel@localhost.localdomain>	 <479F7009.3020306@panasas.com>	 <1201632515.3069.28.camel@localhost.localdomain>	 <479F774B.60303@panasas.com> <1201634240.3069.33.camel@localhost.localdomain>
+Date: Tue, 29 Jan 2008 14:33:15 -0500
+Message-ID: <1201635195.3069.36.camel@localhost.localdomain>
+References: <20080128204935.GI15220@kernel.dk> <479F32E9.10609@panasas.com>
+	 <20080129141108.GV15220@kernel.dk> <200801291531.39825.oliver@neukum.org>
+	 <20080129143109.GW15220@kernel.dk> <20080129183910.GI15220@kernel.dk>
+	 <20080129191024.GO14375@one-eyed-alien.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1201634240.3069.33.camel-bi+AKbBUZKY6gyzm1THtWbp2dZbC/Bob@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34696 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752460AbYA2TdY (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 14:33:24 -0500
+In-Reply-To: <20080129191024.GO14375@one-eyed-alien.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Matthew Dharm <mdharm-kernel@one-eyed-alien.net>
+Cc: Jens Axboe <jens.axboe@oracle.com>, Oliver Neukum <oliver@neukum.org>, Boaz Harrosh <bharrosh@panasas.com>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Tue, Jan 29 2008 at 21:17 +0200, James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org> wrote:
-> On Tue, 2008-01-29 at 20:58 +0200, Boaz Harrosh wrote:
->>> Your new code does
->>>
->>> int partial; <- stack uninitialised
->>> sb_stor_bulk_transfer_sglist(..., &partial, ...);
->>> scsi_set_resid(srb, scsi_bufflen(srb) - partial);
->>>
->>> If the function doesn't touch partial, as it doesn't in the error legs,
->>> resid now gets set with rubbish.
->>>
->>> Actually, my code is still wrong .. we have to set it to
->>> scsi_bufflen(srb) - scsi_resid(srb) so that it comes back the same if
->>> left untouched.
->>>
->>>> I have such a device and I get one reset but then every thing works nice.
->>>> This is with debug on. I'll try to make it fail.
->>> James
->>>
->>>
->> Sorry I still don't see it.
->>
->> original code did sb_stor_bulk_transfer_sg(..., &srp->resid, ...)
->>
->> but sb_stor_bulk_transfer_sg does the:
->>  int partial; <- stack uninitialised
->>  sb_stor_bulk_transfer_sglist(..., &partial, ...);
->>
->> and then unconditionally sets *residual = length_left;
->> I do not see an "error legs" case in sb_stor_bulk_transfer_sg().
+On Tue, 2008-01-29 at 11:10 -0800, Matthew Dharm wrote:
+> On Tue, Jan 29, 2008 at 07:39:11PM +0100, Jens Axboe wrote:
+> > On Tue, Jan 29 2008, Jens Axboe wrote:
+> > > On Tue, Jan 29 2008, Oliver Neukum wrote:
+> > > > Am Dienstag, 29. Januar 2008 15:11:08 schrieb Jens Axboe:
+> > > > > On Tue, Jan 29 2008, Boaz Harrosh wrote:
+> > > > > > On Tue, Jan 29 2008 at 15:54 +0200, Jens Axboe <jens.axboe@oracle.com> wrote:
+> > > > > > > On Tue, Jan 29 2008, Boaz Harrosh wrote:
+> > > > > > >> Greg KH wrote:
+> > > >  
+> > > > > > > No difference, still just a lot of resets.
+> > > > > > > 
+> > > > > > Where you able to figure out which usb storage transport is used?
+> > > > > > 
+> > > > > > in drivers/usb/storage/usb.c you have get_protocol() and get_transport()
+> > > > > > functions. I'm not sure if these get stored in sysfs perhaps. This will
+> > > > > > pinpoint better where to look. Let me research a bit. 
+> > > > > 
+> > > > > Did the quick'n easy and dumped it. Protocol is 'Transparent SCSI' and
+> > > > > transport is 'Bulk'
+> > > > 
+> > > > You can recompile your kernel with CONFIG_USB_DEBUG and CONFIG_STORAGE_DEBUG
+> > > > That should tell the reason for the resets.
+> > > 
+> > > Sure, I'll do that. Will post the results tonight.
+> > 
+> > OK, fresh boot with CONFIG_USB_DEBUG and CONFIG_STORAGE_DEBUG. Plugged
+> > in the device, waited 10 seconds or so and pulled it out. These are the
+> > messages.
+> > 
+> > It all looks good until the MODE_SENSE command, where it only transfers
+> > 4 of 192 bytes.
 > 
-> This is really programming 101. This:
+> No, that's not the problem.  This is the problem:
+>  
+> > usb-storage: *** thread awakened.
+> > usb-storage: Command TEST_UNIT_READY (6 bytes)
+> > usb-storage:  00 00 00 00 00 00
+> > usb-storage: Bulk Command S 0x43425355 T 0xd L 0 F 0 Trg 0 LUN 1 CL 6
+> > usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+> > usb-storage: Status code 0; transferred 31/31
+> > usb-storage: -- transfer complete
+> > usb-storage: Bulk command transfer result=0
+> > usb-storage: Attempting to get CSW...
+> > usb-storage: usb_stor_bulk_transfer_buf: xfer 13 bytes
+> > usb-storage: Status code 0; transferred 13/13
+> > usb-storage: -- transfer complete
+> > usb-storage: Bulk status result = 0
+> > usb-storage: Bulk Status S 0x53425355 T 0xd R 0 Stat 0x1
+> > usb-storage: -- transport indicates command failure
+> > usb-storage: Issuing auto-REQUEST_SENSE
+> > usb-storage: Bulk Command S 0x43425355 T 0xe L 18 F 128 Trg 0 LUN 1 CL 6
+> > usb-storage: usb_stor_bulk_transfer_buf: xfer 31 bytes
+> > usb-storage: Status code 0; transferred 31/31
+> > usb-storage: -- transfer complete
+> > usb-storage: Bulk command transfer result=0
+> > usb-storage: usb_stor_bulk_transfer_sglist: xfer 18 bytes, 1 entries
+> > usb-storage: usb_sg_init returned -22
+> > usb-storage: Bulk data transfer result 0x4
+> > usb-storage: -- auto-sense failure
+> > usb-storage: storage_pre_reset
+> > ehci_hcd 0000:00:1d.7: port 1 high speed
+> > ehci_hcd 0000:00:1d.7: GetStatus port 1 status 001005 POWER sig=se0 PE CONNECT
+> > usb 5-1: reset high speed USB device using ehci_hcd and address 2
+> > ehci_hcd 0000:00:1d.7: port 1 high speed
+> > ehci_hcd 0000:00:1d.7: GetStatus port 1 status 001005 POWER sig=se0 PE CONNECT
+> > usb-storage: storage_post_reset
+> > usb-storage: usb_reset_composite_device returns 0
+> > usb-storage: scsi cmd done, result=0x70000
+> > usb-storage: *** thread sleeping.
 > 
-> static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned
-> int pipe,
-> 		struct scatterlist *sg, int num_sg, unsigned int length,
-> 		unsigned int *act_len)
-> {
-> 	int result;
-> 
-> 	/* don't submit s-g requests during abort/disconnect processing */
-> 	if (us->flags & ABORTING_OR_DISCONNECTING)
-> 		return USB_STOR_XFER_ERROR;
-> 
-> The return USB_STOR_XFER_ERROR; is called an error leg.  It returns
-> without updating *act_len thus leaving &partial uninitialised.
-> 
-> James
-> 
-Yes you are right this is a bug, but it is a bug that was there before.
-perhaps the stack is just different now then what it used to be.
+> For some reason, usb_sg_init is boned during auto-sense.
 
-Jens could you please try that:
+OK, that's implicating the scsi_eh_prep_cmnd() in the auto sense
+code ... that was also an update in 2.6.24
 
-diff --git a/drivers/usb/storage/transport.c b/drivers/usb/storage/transport.c
-index d9f4912..b18a5e6 100644
---- a/drivers/usb/storage/transport.c
-+++ b/drivers/usb/storage/transport.c
-@@ -465,7 +465,7 @@ static int usb_stor_bulk_transfer_sglist(struct us_data *us, unsigned int pipe,
- int usb_stor_bulk_srb(struct us_data* us, unsigned int pipe,
- 		      struct scsi_cmnd* srb)
- {
--	unsigned int partial;
-+	unsigned int partial = 0;
- 	int result = usb_stor_bulk_transfer_sglist(us, pipe, scsi_sglist(srb),
- 				      scsi_sg_count(srb), scsi_bufflen(srb),
- 				      &partial);
+James
+
+
