@@ -1,35 +1,48 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: aic79xx: fix sense_buffer access bug
-Date: Tue, 29 Jan 2008 10:43:08 +0100
-Message-ID: <479EF52C.9000408@suse.de>
-References: <20080127124023L.tomof@acm.org>
+Subject: Re: [PATCH 1/1][] Test opcode, not definition in type_check(), drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+Date: Tue, 29 Jan 2008 10:43:48 +0100
+Message-ID: <479EF554.3000601@suse.de>
+References: <479DD422.60006@tiscali.nl>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.suse.de ([195.135.220.2]:47357 "EHLO mx1.suse.de"
+Received: from ns2.suse.de ([195.135.220.15]:51297 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753355AbYA2JnM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 29 Jan 2008 04:43:12 -0500
-In-Reply-To: <20080127124023L.tomof@acm.org>
+	id S1751836AbYA2Jnt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 29 Jan 2008 04:43:49 -0500
+In-Reply-To: <479DD422.60006@tiscali.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, fujita.tomonori@lab.ntt.co.jp
+To: Roel Kluin <12o3l@tiscali.nl>
+Cc: linux-scsi@vger.kernel.org
 
-=46UJITA Tomonori wrote:
-> Ah, I overlooked more LLDs...
+Roel Kluin wrote:
+> drivers/scsi/aic7xxx_old/sequencer.h:130:#define AIC_OP_JZ 0xf
+> --
+> Test opcode, not definition
 >=20
-> =3D
-> From: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
-> Subject: [PATCH] aic79xx: fix sense_buffer access bug
->=20
-> The commit de25deb18016f66dcdede165d07654559bb332bc changed
-> scsi_cmnd.sense_buffer from a static array to a dynamically allocated
-> buffer. We can't access to sense_buffer in '&cmd->sense_buffer' way.
->=20
-> Signed-off-by: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
+> Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
 Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+> ---
+> diff --git a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y b/drivers/scsi=
+/aic7xxx/aicasm/aicasm_gram.y
+> index 6066998..702e2db 100644
+> --- a/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+> +++ b/drivers/scsi/aic7xxx/aicasm/aicasm_gram.y
+> @@ -1837,7 +1837,7 @@ type_check(symbol_t *symbol, expression_t *expr=
+ession, int opcode)
+>  	int and_op;
+> =20
+>  	and_op =3D FALSE;
+> -	if (opcode =3D=3D AIC_OP_AND || opcode =3D=3D AIC_OP_JNZ || AIC_OP_=
+JZ)
+> +	if (opcode =3D=3D AIC_OP_AND || opcode =3D=3D AIC_OP_JNZ || opcode =
+=3D=3D AIC_OP_JZ)
+>  		and_op =3D TRUE;
+> =20
+>  	/*
 
 Cheers,
 
