@@ -1,83 +1,64 @@
-From: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Wed, 30 Jan 2008 11:38:04 +0100
-Message-ID: <20080130103803.GN15220@kernel.dk>
-References: <479F32E9.10609@panasas.com> <20080129141108.GV15220@kernel.dk> <200801291531.39825.oliver@neukum.org> <20080129143109.GW15220@kernel.dk> <20080129183910.GI15220@kernel.dk> <20080129191024.GO14375@one-eyed-alien.net> <1201635195.3069.36.camel@localhost.localdomain> <20080129193520.GQ15220@kernel.dk> <20080129194543.GR15220@kernel.dk> <Pine.LNX.4.64.0801301125350.26562@vixen.sonytel.be>
+From: FUJITA Tomonori <tomof@acm.org>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Wed, 30 Jan 2008 19:56:37 +0900
+Message-ID: <20080130195635T.tomof@acm.org>
+References: <adazluoe2t3.fsf@cisco.com>
+	<20080130083239E.fujita.tomonori@lab.ntt.co.jp>
+	<e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.64.0801301125350.26562-DVqXPGhgXSn9uFGNBm7GzQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Geert Uytterhoeven <Geert.Uytterhoeven-osDt5Q4Chk1BDgjK7y7TUQ@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mo10.iij4u.or.jp ([210.138.174.78]:35040 "EHLO mo10.iij4u.or.jp"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751227AbYA3K5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2008 05:57:00 -0500
+In-Reply-To: <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bart.vanassche@gmail.com
+Cc: fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Wed, Jan 30 2008, Geert Uytterhoeven wrote:
-> On Tue, 29 Jan 2008, Jens Axboe wrote:
-> > On Tue, Jan 29 2008, Jens Axboe wrote:
-> > > On Tue, Jan 29 2008, James Bottomley wrote:
-> > > > On Tue, 2008-01-29 at 11:10 -0800, Matthew Dharm wrote:
-> > > > > For some reason, usb_sg_init is boned during auto-sense.
-> > > > 
-> > > > OK, that's implicating the scsi_eh_prep_cmnd() in the auto sense
-> > > > code ... that was also an update in 2.6.24
-> > > 
-> > > yeah, already found the bug - it's assuming ->request_buffer holds the
-> > > sglist, oops. Preparing a fix.
-> > 
-> > ok here goes, this saves and restores the sg table correctly. it also
-> > fixes the usb bug for me.
+On Wed, 30 Jan 2008 09:38:04 +0100
+"Bart Van Assche" <bart.vanassche@gmail.com> wrote:
+
+> On Jan 30, 2008 12:32 AM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> >
+> > iSER has parameters to limit the maximum size of RDMA (it needs to
+> > repeat RDMA with a poor configuration)?
 > 
-> I can confirm this patch fixes the errors I was seeing with current
-> linux-2.6.git for the USB memory card readers in a Dell TFT connected
-> to a PS3.
+> Please specify which parameters you are referring to. As you know I
 
-James, we need a fix for this pushed asap. So either we should merge the
-below now, or push the bidi patchset that also fixes this. It all
-depends on when you want to merge the bidi patches...
+Sorry, I can't say. I don't know much about iSER. But seems that Pete
+and Robin can get the better I/O performance - line speed ratio with
+STGT.
 
-> > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> > index 547e85a..12770ef 100644
-> > --- a/drivers/scsi/scsi_error.c
-> > +++ b/drivers/scsi/scsi_error.c
-> > @@ -622,13 +622,15 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
-> >  	ses->use_sg = scmd->use_sg;
-> >  	ses->resid = scmd->resid;
-> >  	ses->result = scmd->result;
-> > +	memcpy(&ses->sense_sgl, &scmd->sg_table, sizeof(ses->sense_sgl));
-> >  
-> >  	if (sense_bytes) {
-> >  		scmd->request_bufflen = min_t(unsigned,
-> >  		                       SCSI_SENSE_BUFFERSIZE, sense_bytes);
-> >  		sg_init_one(&ses->sense_sgl, scmd->sense_buffer,
-> >  		                                       scmd->request_bufflen);
-> > -		scmd->request_buffer = &ses->sense_sgl;
-> > +		scmd->sg_table.sgl = &ses->sense_sgl;
-> > +		scmd->sg_table.nents = scmd->sg_table.orig_nents = 1;
-> >  		scmd->sc_data_direction = DMA_FROM_DEVICE;
-> >  		scmd->use_sg = 1;
-> >  		memset(scmd->cmnd, 0, sizeof(scmd->cmnd));
-> > @@ -679,6 +681,7 @@ void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd, struct scsi_eh_save *ses)
-> >  	scmd->request_bufflen = ses->bufflen;
-> >  	scmd->request_buffer = ses->buffer;
-> >  	scmd->use_sg = ses->use_sg;
-> > +	memcpy(&scmd->sg_table, &ses->sg_table, sizeof(scmd->sg_table));
-> >  	scmd->resid = ses->resid;
-> >  	scmd->result = ses->result;
-> >  }
-> > diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-> > index d21b891..d43dc83 100644
-> > --- a/include/scsi/scsi_eh.h
-> > +++ b/include/scsi/scsi_eh.h
-> > @@ -75,6 +75,7 @@ struct scsi_eh_save {
-> >  
-> >  	void *buffer;
-> >  	unsigned bufflen;
-> > +	struct sg_table sg_table;
-> >  	unsigned short use_sg;
-> >  	int resid;
-> >  
+The version of OpenIB might matters too. For example, Pete said that
+STGT reads loses about 100 MB/s for some transfer sizes for some
+transfer sizes due to the OpenIB version difference or other unclear
+reasons.
 
--- 
-Jens Axboe
+http://article.gmane.org/gmane.linux.iscsi.tgt.devel/135
+
+It's fair to say that it takes long time and need lots of knowledge to
+get the maximum performance of SAN, I think.
+
+I think that it would be easier to convince James with the detailed
+analysis (e.g. where does it take so long, like Pete did), not just
+'dd' performance results.
+
+Pushing iSCSI target code into mainline failed four times: IET, SCST,
+STGT (doing I/Os in kernel in the past), and PyX's one (*1). iSCSI
+target code is huge. You said SCST comprises 14,000 lines, but it's
+not iSCSI target code. The SCSI engine code comprises 14,000
+lines. You need another 10,000 lines for the iSCSI driver. Note that
+SCST's iSCSI driver provides only basic iSCSI features. PyX's iSCSI
+target code implemenents more iSCSI features (like MC/S, ERL2, etc)
+and comprises about 60,000 lines and it still lacks some features like
+iSER, bidi, etc.
+
+I think that it's reasonable to say that we need more than 'dd'
+results before pushing about possible more than 60,000 lines to
+mainline.
+
+(*1) http://linux-iscsi.org/
