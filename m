@@ -1,58 +1,44 @@
-From: Sam Ravnborg <sam@ravnborg.org>
+From: Adrian Bunk <bunk@kernel.org>
 Subject: Re: [2.6 patch] scsi/qlogicpti.c section fixes
-Date: Wed, 30 Jan 2008 22:20:11 +0100
-Message-ID: <20080130212011.GA26621@uranus.ravnborg.org>
-References: <20080130200336.GN29368@does.not.exist> <1201726817.3292.84.camel@localhost.localdomain>
+Date: Wed, 30 Jan 2008 23:30:30 +0200
+Message-ID: <20080130213030.GR29368@does.not.exist>
+References: <20080130200336.GN29368@does.not.exist> <1201726817.3292.84.camel@localhost.localdomain> <20080130212011.GA26621@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpb.tele.dk ([80.160.77.98]:41131 "EHLO pasmtpB.tele.dk"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:58367 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757291AbYA3VUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2008 16:20:11 -0500
+	id S1751386AbYA3V34 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2008 16:29:56 -0500
 Content-Disposition: inline
-In-Reply-To: <1201726817.3292.84.camel@localhost.localdomain>
+In-Reply-To: <20080130212011.GA26621@uranus.ravnborg.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Adrian Bunk <bunk@kernel.org>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 30, 2008 at 03:00:16PM -0600, James Bottomley wrote:
-> 
-> On Wed, 2008-01-30 at 22:03 +0200, Adrian Bunk wrote:
-> > This patch fixes the following section mismatches:
-> > 
-> > <--  snip  -->
-> > 
-> > ...
-> > WARNING: drivers/scsi/qlogicpti.o(.devexit.text+0x8): Section mismatch in reference from the function qpti_sbus_remove() to the function .init.text:qpti_chain_del()
-> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x56c): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_map_regs()
-> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x580): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_register_irq()
-> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x594): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_get_scsi_id()
-> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x5b8): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_map_queues()
-> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x780): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_chain_add()
-> > ...
-> 
-> OK, look, this is really getting out of hand.
-We now at last have some infrastructure that does proper consistency
-check of the use of annotation.
-So it is by no means getting out-of-hands..
+On Wed, Jan 30, 2008 at 10:20:11PM +0100, Sam Ravnborg wrote:
+> On Wed, Jan 30, 2008 at 03:00:16PM -0600, James Bottomley wrote:
+>...
+> To my understanding Adrian just fixed a potential oops.
+> You have a driver that surely are thought to be hotplugable -
+> otherwise qpti_sbus_probe() would not have been annotated __devinit.
+> And had it ever been hotplugged then you had called a function in
+> a __init section that was long gone.
+>...
 
-To my understanding Adrian just fixed a potential oops.
-You have a driver that surely are thought to be hotplugable -
-otherwise qpti_sbus_probe() would not have been annotated __devinit.
-And had it ever been hotplugged then you had called a function in
-a __init section that was long gone.
+s/had it ever been hotplugged/had it been hotplugged with a kernel
+                              compiled with gcc 3.2 or 3.3/
 
-> __init is possibly justifiable with a few hundred k savings on boot.
-> __devinit and the rest are surely killable on the grounds they provide
-> little benefit for all the pain they cause.
-For the embedded people a few kb here and there is worth it.
+> 	Sam
 
-> all __exit seems to do is set us up for unreferenced pointers in
-> discarded sections, so could we kill that too?
-Again - savings when we build-in the drivers.
-And without the checks we see 'funny' linker errors on the architectues
-that can continue to add the .exit.text in /DISCARD/
+cu
+Adrian
 
-	Sam
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
