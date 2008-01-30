@@ -1,87 +1,80 @@
-From: "K.Tanaka" <k-tanaka@ce.jp.nec.com>
-Subject: Re: [BUG] The kernel thread for md RAID1 could cause a
- md RAID1 array deadlock
-Date: Wed, 30 Jan 2008 11:02:16 +0900
-Message-ID: <479FDAA8.3030409@ce.jp.nec.com>
-References: <478C240F.8070004@ce.jp.nec.com>
-	<18328.1473.26122.647283@notabene.brown>
-	<47985B37.9000503@ce.jp.nec.com>
-Reply-To: device-mapper development <dm-devel@redhat.com>
+From: Robert Hancock <hancockr@shaw.ca>
+Subject: Re: DMA mapping on SCSI device?
+Date: Tue, 29 Jan 2008 20:00:50 -0600
+Message-ID: <479FDA52.8050204@shaw.ca>
+References: <896139.88121.qm@web31812.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-2022-JP
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <47985B37.9000503@ce.jp.nec.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Neil Brown <neilb@suse.de>
-Cc: linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:63255 "EHLO
+	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752659AbYA3CBb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2008 21:01:31 -0500
+In-reply-to: <896139.88121.qm@web31812.mail.mud.yahoo.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ltuikov@yahoo.com
+Cc: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Hi,
-
->Also, md raid10 seems to have the same problem.
->I will test raid10 applying this patch as well.
-
-Sorry for the late response. I had a trouble with reproducing the problem,
-but it turns out that the 2.6.24 kernel needs the latest (possibly testing)
-version of systemtap-0.6.1-1 to run systemtap for the fault injection tool.
-
-I've reproduced the stall on both raid1 and raid10 using 2.6.24.
-Also I've tested the patch applied to 2.6.24 and confirmed that
-it will fix the stall problem for both cases.
-
-K.Tanaka wrote:
-> Hi,
+Luben Tuikov wrote:
+> --- On Mon, 1/28/08, Robert Hancock <hancockr@shaw.ca> wrote:
+>> The trick is that if an ATAPI device is connected, we (as
+>> far as I'm 
+>> aware) can't use ADMA mode, so we have to switch that
+>> port into legacy 
+>> mode.
 > 
-> Thank you for the patch.
-> I have applied the patch to 2.6.23.14 and it works well.
-> 
-> - In case of 2.6.23.14, the problem is reproduced.
-> - In case of 2.6.23.14 with this patch, raid1 works well so far.
->   The fault injection script continues to run, and it doesn't deadlock.
->   I will keep it running for a while.
-> 
-> Also, md raid10 seems to have the same problem.
-> I will test raid10 applying this patch as well.
-> 
-> 
-> Neil Brown wrote:
->> On Tuesday January 15, k-tanaka@ce.jp.nec.com wrote:
->>> This message describes the details about md-RAID1 issue found by
->>> testing the md RAID1 using the SCSI fault injection framework.
->>>
->>> Abstract:
->>> Both the error handler for md RAID1 and write access request to the md RAID1
->>> use raid1d kernel thread. The nr_pending flag could cause a race condition
->>> in raid1d, results in a raid1d deadlock.
->> Thanks for finding and reporting this.
->>
->> I believe the following patch should fix the deadlock.
->>
->> If you are able to repeat your test and confirm this I would
->> appreciate it.
->>
->> Thanks,
->> NeilBrown
->>
->>
->>
->> Fix deadlock in md/raid1 when handling a read error.
->>
->> When handling a read error, we freeze the array to stop any other
->> IO while attempting to over-write with correct data.
->>
+> Can you double check this with the HW architect of the
+> HW DMA engine of the ASIC?
 
--- 
----------------------------------------------------------
-Kenichi TANAKA    | Open Source Software Platform Development Division
-                  | Computers Software Operations Unit, NEC Corporation
-                  | k-tanaka@ce.jp.nec.com
+Will do so. However, previous statements from NVIDIA fairly clearly 
+indicate that this is the case.
+
+> 
+>> This means it's only capable of 32-bit DMA.
+>> However the other port 
+>> on the controller may be connected to a hard drive and
+>> therefore still 
+>> capable of 64-bit DMA.
+> 
+> If this is indeed the case as you've presented it here,
+> it sounds like a HW shortcoming.  I cannot see how the device
+> type (or protocol) dictate how the DMA engine operates.
+> They live in two different domains.
+
+Well, there is an indirect link. The ADMA interface (which supports 
+64-bit DMA) cannot be used to issue ATAPI commands, so if an ATAPI 
+device is connected we have to go to legacy mode, which supports only 
+32-bit DMA.
+
+I'm not sure why ADMA mode doesn't support ATAPI. The only reason I can 
+think of is that there's issues since ATAPI commands can potentially be 
+of unpredictable transfer size. The "real" ADMA spec that the NVIDIA 
+implementation is loosely based on does have some special "ignore 
+excess" controls that don't seem to be in the NVIDIA version (or at 
+least not to the knowledge I have on this hardware).
+
+And yes, it is a rather unfortunate hardware shortcoming (presuming that 
+it is entirely true).
+
+> 
+>> The ideal solution would be to do mapping against a
+>> different struct 
+>> device for each port, so that we could maintain the proper
+>> DMA mask for 
+>> each of them at all times. However I'm not sure if
+>> that's possible. The 
+>> thought of using the SCSI struct device for DMA mapping was
+>> brought up 
+>> at one point.. any thoughts on that?
+> 
+> The reason for this is that the object that a struct scsi_dev
+> represents has nothing to do with HW DMA engines.
+> 
+> It looks like your current solution is correct and
+> x86_64's blk_queue_bounce_limit needs work.
+> 
+>     Luben
+> 
+> 
