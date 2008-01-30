@@ -1,38 +1,99 @@
-From: "Darrick J. Wong" <djwong@us.ibm.com>
-Subject: Re: aic94xx: failing on high load (another data point)
-Date: Wed, 30 Jan 2008 11:29:47 -0800
-Message-ID: <20080130192947.GA21785@tree.beaverton.ibm.com>
-References: <479FB3ED.3080401@hopnet.net> <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: [2.6 patch] scsi/qlogicpti.c section fixes
+Date: Wed, 30 Jan 2008 22:03:36 +0200
+Message-ID: <20080130200336.GN29368@does.not.exist>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e6.ny.us.ibm.com ([32.97.182.146]:46999 "EHLO e6.ny.us.ibm.com"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:51842 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751165AbYA3T3y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2008 14:29:54 -0500
-Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
-	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m0UJVfY9022151
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 14:31:41 -0500
-Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
-	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m0UJTmCT456228
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 14:29:48 -0500
-Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
-	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m0UJTm8Z006419
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 14:29:48 -0500
+	id S1762908AbYA3UDE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2008 15:03:04 -0500
 Content-Disposition: inline
-In-Reply-To: <47A05896.40900@hopnet.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Keith Hopkins <vger@hopnet.net>
-Cc: Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org
+To: davem@davemloft.net, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Wed, Jan 30, 2008 at 06:59:34PM +0800, Keith Hopkins wrote:
-> 
-> V28.  My controller functions well with a single drive (low-medium load).  Unfortunately, all attempts to get the mirrors in sync fail and usually hang the whole box.
+This patch fixes the following section mismatches:
 
-Adaptec posted a V30 sequencer on their website; does that fix the
-problems?
+<--  snip  -->
 
-http://www.adaptec.com/en-US/speed/scsi/linux/aic94xx-seq-30-1_tar_gz.htm
+...
+WARNING: drivers/scsi/qlogicpti.o(.devexit.text+0x8): Section mismatch in reference from the function qpti_sbus_remove() to the function .init.text:qpti_chain_del()
+WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x56c): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_map_regs()
+WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x580): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_register_irq()
+WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x594): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_get_scsi_id()
+WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x5b8): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_map_queues()
+WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x780): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_chain_add()
+...
 
---D
+<--  snip  -->
+
+Signed-off-by: Adrian Bunk <bunk@kernel.org>
+
+---
+
+ drivers/scsi/qlogicpti.c |   12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
+
+3d89831963c0b6f62b24fc4b9dfe1c10d7f90d1b 
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 65455ab..4a1cf63 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -651,7 +651,7 @@ static int qlogicpti_verify_tmon(struct qlogicpti *qpti)
+ 
+ static irqreturn_t qpti_intr(int irq, void *dev_id);
+ 
+-static void __init qpti_chain_add(struct qlogicpti *qpti)
++static void __devinit qpti_chain_add(struct qlogicpti *qpti)
+ {
+ 	spin_lock_irq(&qptichain_lock);
+ 	if (qptichain != NULL) {
+@@ -667,7 +667,7 @@ static void __init qpti_chain_add(struct qlogicpti *qpti)
+ 	spin_unlock_irq(&qptichain_lock);
+ }
+ 
+-static void __init qpti_chain_del(struct qlogicpti *qpti)
++static void __devexit qpti_chain_del(struct qlogicpti *qpti)
+ {
+ 	spin_lock_irq(&qptichain_lock);
+ 	if (qptichain == qpti) {
+@@ -682,7 +682,7 @@ static void __init qpti_chain_del(struct qlogicpti *qpti)
+ 	spin_unlock_irq(&qptichain_lock);
+ }
+ 
+-static int __init qpti_map_regs(struct qlogicpti *qpti)
++static int __devinit qpti_map_regs(struct qlogicpti *qpti)
+ {
+ 	struct sbus_dev *sdev = qpti->sdev;
+ 
+@@ -705,7 +705,7 @@ static int __init qpti_map_regs(struct qlogicpti *qpti)
+ 	return 0;
+ }
+ 
+-static int __init qpti_register_irq(struct qlogicpti *qpti)
++static int __devinit qpti_register_irq(struct qlogicpti *qpti)
+ {
+ 	struct sbus_dev *sdev = qpti->sdev;
+ 
+@@ -730,7 +730,7 @@ fail:
+ 	return -1;
+ }
+ 
+-static void __init qpti_get_scsi_id(struct qlogicpti *qpti)
++static void __devinit qpti_get_scsi_id(struct qlogicpti *qpti)
+ {
+ 	qpti->scsi_id = prom_getintdefault(qpti->prom_node,
+ 					   "initiator-id",
+@@ -783,7 +783,7 @@ static void qpti_get_clock(struct qlogicpti *qpti)
+ /* The request and response queues must each be aligned
+  * on a page boundary.
+  */
+-static int __init qpti_map_queues(struct qlogicpti *qpti)
++static int __devinit qpti_map_queues(struct qlogicpti *qpti)
+ {
+ 	struct sbus_dev *sdev = qpti->sdev;
+ 
+
