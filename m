@@ -1,53 +1,38 @@
-From: Jens Axboe <jens.axboe-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [BUG] 2.6.24-git usb reset problems
-Date: Wed, 30 Jan 2008 20:07:53 +0100
-Message-ID: <20080130190752.GW15220@kernel.dk>
-References: <20080129143109.GW15220@kernel.dk> <20080129183910.GI15220@kernel.dk> <20080129191024.GO14375@one-eyed-alien.net> <1201635195.3069.36.camel@localhost.localdomain> <20080129193520.GQ15220@kernel.dk> <20080129194543.GR15220@kernel.dk> <Pine.LNX.4.64.0801301125350.26562@vixen.sonytel.be> <20080130103803.GN15220@kernel.dk> <1201703915.3292.1.camel@localhost.localdomain> <20080130180613.GU15220@kernel.dk>
+From: "Darrick J. Wong" <djwong@us.ibm.com>
+Subject: Re: aic94xx: failing on high load (another data point)
+Date: Wed, 30 Jan 2008 11:29:47 -0800
+Message-ID: <20080130192947.GA21785@tree.beaverton.ibm.com>
+References: <479FB3ED.3080401@hopnet.net> <20080130091403.GA14887@alaris.suse.cz> <47A05896.40900@hopnet.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from e6.ny.us.ibm.com ([32.97.182.146]:46999 "EHLO e6.ny.us.ibm.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751165AbYA3T3y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2008 14:29:54 -0500
+Received: from d01relay04.pok.ibm.com (d01relay04.pok.ibm.com [9.56.227.236])
+	by e6.ny.us.ibm.com (8.13.8/8.13.8) with ESMTP id m0UJVfY9022151
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 14:31:41 -0500
+Received: from d01av02.pok.ibm.com (d01av02.pok.ibm.com [9.56.224.216])
+	by d01relay04.pok.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m0UJTmCT456228
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 14:29:48 -0500
+Received: from d01av02.pok.ibm.com (loopback [127.0.0.1])
+	by d01av02.pok.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m0UJTm8Z006419
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 14:29:48 -0500
 Content-Disposition: inline
-In-Reply-To: <20080130180613.GU15220-tSWWG44O7X1aa/9Udqfwiw@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <James.Bottomley-d9PhHud1JfjCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven-osDt5Q4Chk1BDgjK7y7TUQ@public.gmane.org>, Matthew Dharm <mdharm-kernel-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, Oliver Neukum <oliver-GvhC2dPhHPQdnm+yROfE0A@public.gmane.org>, Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>, Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <47A05896.40900@hopnet.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Keith Hopkins <vger@hopnet.net>
+Cc: Jan Sembera <jsembera@suse.cz>, linux-scsi@vger.kernel.org
 
-On Wed, Jan 30 2008, Jens Axboe wrote:
-> On Wed, Jan 30 2008, James Bottomley wrote:
-> > On Wed, 2008-01-30 at 11:38 +0100, Jens Axboe wrote:
-> > > On Wed, Jan 30 2008, Geert Uytterhoeven wrote:
-> > > > On Tue, 29 Jan 2008, Jens Axboe wrote:
-> > > > > On Tue, Jan 29 2008, Jens Axboe wrote:
-> > > > > > On Tue, Jan 29 2008, James Bottomley wrote:
-> > > > > > > On Tue, 2008-01-29 at 11:10 -0800, Matthew Dharm wrote:
-> > > > > > > > For some reason, usb_sg_init is boned during auto-sense.
-> > > > > > > 
-> > > > > > > OK, that's implicating the scsi_eh_prep_cmnd() in the auto sense
-> > > > > > > code ... that was also an update in 2.6.24
-> > > > > > 
-> > > > > > yeah, already found the bug - it's assuming ->request_buffer holds the
-> > > > > > sglist, oops. Preparing a fix.
-> > > > > 
-> > > > > ok here goes, this saves and restores the sg table correctly. it also
-> > > > > fixes the usb bug for me.
-> > > > 
-> > > > I can confirm this patch fixes the errors I was seeing with current
-> > > > linux-2.6.git for the USB memory card readers in a Dell TFT connected
-> > > > to a PS3.
-> > > 
-> > > James, we need a fix for this pushed asap. So either we should merge the
-> > > below now, or push the bidi patchset that also fixes this. It all
-> > > depends on when you want to merge the bidi patches...
-> > 
-> > The SCSI patch set (including the bidirectional pieces) is waiting in
-> > scsi-misc ... just for forms sake, could you confirm that it actually
-> > fixes the problem and I'll push it.
+On Wed, Jan 30, 2008 at 06:59:34PM +0800, Keith Hopkins wrote:
 > 
-> Certainly, I'll give it a spin tonight.
+> V28.  My controller functions well with a single drive (low-medium load).  Unfortunately, all attempts to get the mirrors in sync fail and usually hang the whole box.
 
-Confirmed, pulling your scsi-misc branch into current -git makes the
-problem go away as well.
+Adaptec posted a V30 sequencer on their website; does that fix the
+problems?
 
--- 
-Jens Axboe
+http://www.adaptec.com/en-US/speed/scsi/linux/aic94xx-seq-30-1_tar_gz.htm
+
+--D
