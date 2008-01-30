@@ -1,80 +1,80 @@
-From: Robert Hancock <hancockr@shaw.ca>
-Subject: Re: DMA mapping on SCSI device?
-Date: Tue, 29 Jan 2008 20:00:50 -0600
-Message-ID: <479FDA52.8050204@shaw.ca>
-References: <896139.88121.qm@web31812.mail.mud.yahoo.com>
+From: "Bart Van Assche" <bart.vanassche@gmail.com>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Wed, 30 Jan 2008 09:29:27 +0100
+Message-ID: <e2e108260801300029r1a949353k73b30f1f28db0bc9@mail.gmail.com>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <1201639331.3069.58.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:63255 "EHLO
-	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752659AbYA3CBb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Jan 2008 21:01:31 -0500
-In-reply-to: <896139.88121.qm@web31812.mail.mud.yahoo.com>
+Received: from py-out-1112.google.com ([64.233.166.177]:12953 "EHLO
+	py-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753567AbYA3I3b (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2008 03:29:31 -0500
+Received: by py-out-1112.google.com with SMTP id u52so245959pyb.10
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 00:29:27 -0800 (PST)
+In-Reply-To: <1201639331.3069.58.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ltuikov@yahoo.com
-Cc: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-Luben Tuikov wrote:
-> --- On Mon, 1/28/08, Robert Hancock <hancockr@shaw.ca> wrote:
->> The trick is that if an ATAPI device is connected, we (as
->> far as I'm 
->> aware) can't use ADMA mode, so we have to switch that
->> port into legacy 
->> mode.
-> 
-> Can you double check this with the HW architect of the
-> HW DMA engine of the ASIC?
+On Jan 29, 2008 9:42 PM, James Bottomley
+<James.Bottomley@hansenpartnership.com> wrote:
+> > As an SCST user, I would like to see the SCST kernel code integrated
+> > in the mainstream kernel because of its excellent performance on an
+> > InfiniBand network. Since the SCST project comprises about 14 KLOC,
+> > reviewing the SCST code will take considerable time. Who will do this
+> > reviewing work ? And with regard to the comments made by the
+> > reviewers: Vladislav, do you have the time to carry out the
+> > modifications requested by the reviewers ? I expect a.o. that
+> > reviewers will ask to move SCST's configuration pseudofiles from
+> > procfs to sysfs.
+>
+> The two target architectures perform essentially identical functions, so
+> there's only really room for one in the kernel.  Right at the moment,
+> it's STGT.  Problems in STGT come from the user<->kernel boundary which
+> can be mitigated in a variety of ways.  The fact that the figures are
+> pretty much comparable on non IB networks shows this.
 
-Will do so. However, previous statements from NVIDIA fairly clearly 
-indicate that this is the case.
+Are you saying that users who need an efficient iSCSI implementation
+should switch to OpenSolaris ? The OpenSolaris COMSTAR project involves
+the migration of the existing OpenSolaris iSCSI target daemon from
+userspace to their kernel. The OpenSolaris developers are
+spending time on this because they expect a significant performance
+improvement.
 
-> 
->> This means it's only capable of 32-bit DMA.
->> However the other port 
->> on the controller may be connected to a hard drive and
->> therefore still 
->> capable of 64-bit DMA.
-> 
-> If this is indeed the case as you've presented it here,
-> it sounds like a HW shortcoming.  I cannot see how the device
-> type (or protocol) dictate how the DMA engine operates.
-> They live in two different domains.
+> I really need a whole lot more evidence than at worst a 20% performance
+> difference on IB to pull one implementation out and replace it with
+> another.  Particularly as there's no real evidence that STGT can't be
+> tweaked to recover the 20% even on IB.
 
-Well, there is an indirect link. The ADMA interface (which supports 
-64-bit DMA) cannot be used to issue ATAPI commands, so if an ATAPI 
-device is connected we have to go to legacy mode, which supports only 
-32-bit DMA.
+My measurements on a 1 GB/s InfiniBand network have shown that the current
+SCST implementation is able to read data via direct I/O at a rate of 811 GB/s
+(via SRP) and that the current STGT implementation is able to transfer data at a
+rate of 589 MB/s (via iSER). That's a performance difference of 38%.
 
-I'm not sure why ADMA mode doesn't support ATAPI. The only reason I can 
-think of is that there's issues since ATAPI commands can potentially be 
-of unpredictable transfer size. The "real" ADMA spec that the NVIDIA 
-implementation is loosely based on does have some special "ignore 
-excess" controls that don't seem to be in the NVIDIA version (or at 
-least not to the knowledge I have on this hardware).
+And even more important, the I/O latency of SCST is significantly
+lower than that
+of STGT. This is very important for database workloads -- the I/O pattern caused
+by database software is close to random I/O, and database software needs low
+latency I/O in order to run efficiently.
 
-And yes, it is a rather unfortunate hardware shortcoming (presuming that 
-it is entirely true).
+In the thread with the title "Performance of SCST versus STGT" on the
+SCST-devel /
+STGT-devel mailing lists not only the raw performance numbers were discussed but
+also which further performance improvements are possible. It became clear that
+the SCST performance can be improved further by implementing a well known
+optimization (zero-copy I/O). Fujita Tomonori explained in the same
+thread that it is
+possible to improve the performance of STGT further, but that this would require
+a lot of effort (implementing asynchronous I/O in the kernel and also
+implementing
+a new caching mechanism using pre-registered buffers).
 
-> 
->> The ideal solution would be to do mapping against a
->> different struct 
->> device for each port, so that we could maintain the proper
->> DMA mask for 
->> each of them at all times. However I'm not sure if
->> that's possible. The 
->> thought of using the SCSI struct device for DMA mapping was
->> brought up 
->> at one point.. any thoughts on that?
-> 
-> The reason for this is that the object that a struct scsi_dev
-> represents has nothing to do with HW DMA engines.
-> 
-> It looks like your current solution is correct and
-> x86_64's blk_queue_bounce_limit needs work.
-> 
->     Luben
-> 
-> 
+See also:
+http://sourceforge.net/mailarchive/forum.php?forum_name=scst-devel&viewmonth=200801&viewday=17
+
+Bart Van Assche.
