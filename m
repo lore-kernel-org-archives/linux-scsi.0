@@ -1,50 +1,59 @@
-From: "Yang, Bo" <Bo.Yang@lsi.com>
-Subject: RE: Megaraid: Use of outb_p
-Date: Wed, 30 Jan 2008 15:14:46 -0700
-Message-ID: <9738BCBE884FDB42801FAD8A7769C26501EA0050@NAMAIL1.ad.lsil.com>
-References: <20080123105337.74d460cd@lxorguk.ukuu.org.uk>
+From: Adrian Bunk <bunk@kernel.org>
+Subject: Re: [2.6 patch] scsi/qlogicpti.c section fixes
+Date: Thu, 31 Jan 2008 00:28:59 +0200
+Message-ID: <20080130222858.GS29368@does.not.exist>
+References: <20080130200336.GN29368@does.not.exist> <1201726817.3292.84.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail0.lsil.com ([147.145.40.20]:34535 "EHLO mail0.lsil.com"
+Received: from smtp4.pp.htv.fi ([213.243.153.38]:33302 "EHLO smtp4.pp.htv.fi"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753411AbYA3WPH convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2008 17:15:07 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <20080123105337.74d460cd@lxorguk.ukuu.org.uk>
+	id S1752964AbYA3W2Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2008 17:28:24 -0500
+Content-Disposition: inline
+In-Reply-To: <1201726817.3292.84.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Cox <alan@lxorguk.ukuu.org.uk>
-Cc: Matthew Wilcox <matthew@wil.cx>, linux-scsi@vger.kernel.org, DL-MegaRAID Linux <megaraidlinux@lsi.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Alan,
-
-As you pointed out, there are only 2uS difference on x86 platforms for
-the changes.  Also the inb_p/outb_p are used for the very old megaraid
-scsi controllers.  The src changes should be ok for us.
-
-Regards.
-
-Bo Yang 
-
------Original Message-----
-From: Alan Cox [mailto:alan@lxorguk.ukuu.org.uk] 
-Sent: Wednesday, January 23, 2008 5:54 AM
-To: Yang, Bo
-Cc: Matthew Wilcox; linux-scsi@vger.kernel.org; DL-MegaRAID Linux
-Subject: Re: Megaraid: Use of outb_p
-
-On Tue, 22 Jan 2008 14:30:12 -0700
-"Yang, Bo" <Bo.Yang@lsi.com> wrote:
-
-> Alan/Matthew,
+On Wed, Jan 30, 2008 at 03:00:16PM -0600, James Bottomley wrote:
 > 
-> I found inb_p/outb_p are defined as inb/outb in kernel src.  So it 
-> should not have problems to change inb_p/outb_p to inb/outb.
+> On Wed, 2008-01-30 at 22:03 +0200, Adrian Bunk wrote:
+> > This patch fixes the following section mismatches:
+> > 
+> > <--  snip  -->
+> > 
+> > ...
+> > WARNING: drivers/scsi/qlogicpti.o(.devexit.text+0x8): Section mismatch in reference from the function qpti_sbus_remove() to the function .init.text:qpti_chain_del()
+> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x56c): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_map_regs()
+> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x580): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_register_irq()
+> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x594): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_get_scsi_id()
+> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x5b8): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_map_queues()
+> > WARNING: drivers/scsi/qlogicpti.o(.devinit.text+0x780): Section mismatch in reference from the function qpti_sbus_probe() to the function .init.text:qpti_chain_add()
+> > ...
+> 
+> OK, look, this is really getting out of hand.
+> 
+> __init is possibly justifiable with a few hundred k savings on boot.
+> __devinit and the rest are surely killable on the grounds they provide
+> little benefit for all the pain they cause.
+> 
+> all __exit seems to do is set us up for unreferenced pointers in
+> discarded sections, so could we kill that too?
 
-Only on some platforms. On the x86 platforms the inb_p()/outb_p()
-includes a 2uS delay while inb/outb do not.
+When you are on x86 what you see as "Freeing unused kernel memory: "
+at the end of booting contains both __init and __exit code.
 
-Alan
+> James
+
+cu
+Adrian
+
+-- 
+
+       "Is there not promise of rain?" Ling Tan asked suddenly out
+        of the darkness. There had been need of rain for many days.
+       "Only a promise," Lao Er said.
+                                       Pearl S. Buck - Dragon Seed
+
