@@ -1,73 +1,59 @@
-From: FUJITA Tomonori <tomof@acm.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Wed, 30 Jan 2008 22:54:31 +0900
-Message-ID: <20080130225428S.tomof@acm.org>
-References: <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	<20080130195635T.tomof@acm.org>
-	<e2e108260801300510q94bf9c8g31a0ba9d77c3c0b9@mail.gmail.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [BUG] 2.6.24-git usb reset problems
+Date: Wed, 30 Jan 2008 08:38:35 -0600
+Message-ID: <1201703915.3292.1.camel@localhost.localdomain>
+References: <479F32E9.10609@panasas.com> <20080129141108.GV15220@kernel.dk>
+	 <200801291531.39825.oliver@neukum.org> <20080129143109.GW15220@kernel.dk>
+	 <20080129183910.GI15220@kernel.dk>
+	 <20080129191024.GO14375@one-eyed-alien.net>
+	 <1201635195.3069.36.camel@localhost.localdomain>
+	 <20080129193520.GQ15220@kernel.dk> <20080129194543.GR15220@kernel.dk>
+	 <Pine.LNX.4.64.0801301125350.26562@vixen.sonytel.be>
+	 <20080130103803.GN15220@kernel.dk>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mo11.iij4u.or.jp ([210.138.174.79]:59099 "EHLO mo11.iij4u.or.jp"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752694AbYA3Nyy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 30 Jan 2008 08:54:54 -0500
-In-Reply-To: <e2e108260801300510q94bf9c8g31a0ba9d77c3c0b9@mail.gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:34156 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753164AbYA3Oiw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 30 Jan 2008 09:38:52 -0500
+In-Reply-To: <20080130103803.GN15220@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bart.vanassche@gmail.com
-Cc: tomof@acm.org, fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.orgfujita.tomonori@lab.ntt.co.jp
+To: Jens Axboe <jens.axboe@oracle.com>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Matthew Dharm <mdharm-kernel@one-eyed-alien.net>, Oliver Neukum <oliver@neukum.org>, Boaz Harrosh <bharrosh@panasas.com>, Greg KH <greg@kroah.com>, linux-kernel@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 30 Jan 2008 14:10:47 +0100
-"Bart Van Assche" <bart.vanassche@gmail.com> wrote:
-
-> On Jan 30, 2008 11:56 AM, FUJITA Tomonori <tomof@acm.org> wrote:
-> > On Wed, 30 Jan 2008 09:38:04 +0100
-> > "Bart Van Assche" <bart.vanassche@gmail.com> wrote:
-> > >
-> > > Please specify which parameters you are referring to. As you know I
-> >
-> > Sorry, I can't say. I don't know much about iSER. But seems that Pete
-> > and Robin can get the better I/O performance - line speed ratiwo with
-> > STGT.
+On Wed, 2008-01-30 at 11:38 +0100, Jens Axboe wrote:
+> On Wed, Jan 30 2008, Geert Uytterhoeven wrote:
+> > On Tue, 29 Jan 2008, Jens Axboe wrote:
+> > > On Tue, Jan 29 2008, Jens Axboe wrote:
+> > > > On Tue, Jan 29 2008, James Bottomley wrote:
+> > > > > On Tue, 2008-01-29 at 11:10 -0800, Matthew Dharm wrote:
+> > > > > > For some reason, usb_sg_init is boned during auto-sense.
+> > > > > 
+> > > > > OK, that's implicating the scsi_eh_prep_cmnd() in the auto sense
+> > > > > code ... that was also an update in 2.6.24
+> > > > 
+> > > > yeah, already found the bug - it's assuming ->request_buffer holds the
+> > > > sglist, oops. Preparing a fix.
+> > > 
+> > > ok here goes, this saves and restores the sg table correctly. it also
+> > > fixes the usb bug for me.
+> > 
+> > I can confirm this patch fixes the errors I was seeing with current
+> > linux-2.6.git for the USB memory card readers in a Dell TFT connected
+> > to a PS3.
 > 
-> Robin Humble was using a DDR InfiniBand network, while my tests were
-> performed with an SDR InfiniBand network. Robin's results can't be
-> directly compared to my results.
+> James, we need a fix for this pushed asap. So either we should merge the
+> below now, or push the bidi patchset that also fixes this. It all
+> depends on when you want to merge the bidi patches...
 
-I know that you use different hardware. I used 'ratio' word.
+The SCSI patch set (including the bidirectional pieces) is waiting in
+scsi-misc ... just for forms sake, could you confirm that it actually
+fixes the problem and I'll push it.
 
-
-BTW, you said the performance difference of dio READ is 38% but I
-think it's 27.3 %, though it's still large.
-
-
-> Pete Wyckoff's results
-> (http://www.osc.edu/~pw/papers/wyckoff-iser-snapi07-talk.pdf) are hard
-> to interpret. I have asked Pete which of the numbers in his test can
-> be compared with what I measured, but Pete did not reply.
-> 
-> > The version of OpenIB might matters too. For example, Pete said that
-> > STGT reads loses about 100 MB/s for some transfer sizes for some
-> > transfer sizes due to the OpenIB version difference or other unclear
-> > reasons.
-> >
-> > http://article.gmane.org/gmane.linux.iscsi.tgt.devel/135
-> 
-> Pete wrote about a degradation from 600 MB/s to 500 MB/s for reads
-> with STGT+iSER. In my tests I measured 589 MB/s for reads (direct
-> I/O), which matches with the better result obtained by Pete.
-
-I don't know he used the same benchmark software so I don't think that
-we can compare them.
-
-All I tried to say is the OFED version might has big effect on the
-performance. So you might need to find the best one.
+James
 
 
-> Note: the InfiniBand kernel modules I used were those from the
-> 2.6.22.9 kernel, not from the OFED distribution.
-
-I'm talking about a target machine (I think that Pete was also talking
-about OFED on his target machine). STGT uses OFED libraries, I think.
