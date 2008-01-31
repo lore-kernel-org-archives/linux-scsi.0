@@ -1,69 +1,50 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/1] Remove of old NCR53C9x/esp family of drivers
-Date: Thu, 31 Jan 2008 12:08:06 -0600
-Message-ID: <1201802886.3131.35.camel@localhost.localdomain>
-References: <477CFC97.2010201@panasas.com>  <477D0209.2000609@panasas.com>
-	 <1199384189.3122.22.camel@localhost.localdomain>
-	 <Pine.LNX.4.64.0801032003170.27528@anakin>
-	 <1199686061.31422.2.camel@kars.perseus.home>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 0/3] iscsi bidi & varlen support
+Date: Thu, 31 Jan 2008 20:08:05 +0200
+Message-ID: <47A20E85.6040906@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:41223 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754181AbYAaSI0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 13:08:26 -0500
-In-Reply-To: <1199686061.31422.2.camel@kars.perseus.home>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:38294 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757816AbYAaSJg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 13:09:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kars de Jong <jongk@linux-m68k.org>
-Cc: Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@infradead.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Pete Wyckoff <pw@osc.edu>
+Cc: Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com
 
-On Mon, 2008-01-07 at 07:07 +0100, Kars de Jong wrote:
-> On do, 2008-01-03 at 20:05 +0100, Geert Uytterhoeven wrote:
-> > On Thu, 3 Jan 2008, James Bottomley wrote:
-> > > On Thu, 2008-01-03 at 17:40 +0200, Boaz Harrosh wrote:
-> > > > As recommended by Christoph Hellwig. There is no use
-> > > >  of Fixing these drivers, since there is a much simpler
-> > > >  and modern esp infrastructure with David Miller's esp_scsi
-> > > > 
-> > > >   - Remove all driver files dependent on NCR53C9x.c
-> > > >         deleted:    drivers/scsi/NCR53C9x.c
-> > > >         deleted:    drivers/scsi/NCR53C9x.h
-> > > >         deleted:    drivers/scsi/blz1230.c
-> > > >         deleted:    drivers/scsi/blz2060.c
-> > > >         deleted:    drivers/scsi/cyberstorm.c
-> > > >         deleted:    drivers/scsi/cyberstormII.c
-> > > >         deleted:    drivers/scsi/dec_esp.c
-> > > >         deleted:    drivers/scsi/fastlane.c
-> > > >         deleted:    drivers/scsi/mac_esp.c
-> > > >         deleted:    drivers/scsi/mca_53c9x.c
-> > > >         deleted:    drivers/scsi/oktagon_esp.c
-> > > >         deleted:    drivers/scsi/oktagon_io.S
-> > > >         deleted:    drivers/scsi/sun3x_esp.c
-> > > > 
-> > > >   - Remove above list from drivers/scsi/Kconfig &&
-> > > > drivers/scsi/Makefile
-> > > 
-> > > OK, I'll split this into four pieces for scsi-pending, since there are
-> > > three separate interest groups with signoffs to collect (MCA, m68k and
-> > > alpha) plus the core removal.
-> > 
-> > Anybody who can look into converting the m68k NCR53C9x drivers and has
-> > hardware to test (some of) them? I don't think we can afford losing one
-> > third of our SCSI drivers...
-> 
-> I'll have a look at this. I can only test it on Blizzard 1260 hardware
-> though.
+Cheers after 1.3 years these can go in.
 
-OK, time's up.
+[PATCH 1/3] iscsi: extended cdb support
+   The varlen support is not yet in mainline for
+  block and scsi-ml. But the API for drivers will
+  not change. All LLD need to do is max_command to
+  the it's maximum and be ready for bigger commands.
+  This is what's done here. Once these commands start
+  coming iscsi will be ready for them.
 
-These drivers are now unbuildable in mainline because of the promised
-sg_table updates.  They either get removed, fixed or marked as BROKEN.
-Which is it to be?
+[PATCH 2/3] iscsi: bidi support - libiscsi
+[PATCH 3/3] iscsi: bidi support - iscsi_tcp
+  bidirectional commands support in iscsi.
+  iSER is not yet ready, but it will not break.
+  There is already a mechanism in libiscsi that will
+  return error if bidi commands are sent iSER way.
 
-James
+Pete please send me the iSER bits so we can port them
+to this latest version.
 
+Mike these patches are ontop of iscs branch of the iscsi
+git tree, they will apply but for compilation you will need
+to sync with Linus mainline. The patches are for the in-tree
+iscsi code. I own you the compat patch for the out-off-tree
+code, but this I will only be Sunday.
 
+If we do it fast it might get accepted to 2.6.25 merge window
+
+Everybody is invited to a party at Shila ben-yhuda 52 Tel-Aviv
+9:45 pm. Drinks and wonderful see-food on us :)
+
+Boaz
+ 
