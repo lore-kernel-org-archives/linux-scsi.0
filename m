@@ -1,113 +1,288 @@
-From: michaelc@cs.wisc.edu
-Subject: [PATCH 2/2] iscsi: user per target can_queue
-Date: Thu, 31 Jan 2008 15:36:36 -0600
-Message-ID: <12018153972597-git-send-email-michaelc@cs.wisc.edu>
-References: <1201815396998-git-send-email-michaelc@cs.wisc.edu>
- <1201815396956-git-send-email-michaelc@cs.wisc.edu>
+From: Mike Christie <michaelc@cs.wisc.edu>
+Subject: Re: [PATCH 1/2] scsi-ml: Add helper code so transport classes can
+ control queueing
+Date: Thu, 31 Jan 2008 16:28:06 -0600
+Message-ID: <47A24B76.3030606@cs.wisc.edu>
+References: <1201815396998-git-send-email-michaelc@cs.wisc.edu> <1201815396956-git-send-email-michaelc@cs.wisc.edu>
+Mime-Version: 1.0
+Content-Type: multipart/mixed;
+ boundary="------------010406050100070804000709"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:49419 "EHLO mx1.redhat.com"
+Received: from sabe.cs.wisc.edu ([128.105.6.20]:44467 "EHLO sabe.cs.wisc.edu"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755723AbYAaVgj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 16:36:39 -0500
+	id S933448AbYAaW2N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 17:28:13 -0500
+Received: from [20.15.0.6] (c-75-73-66-60.hsd1.mn.comcast.net [75.73.66.60])
+	(authenticated bits=0)
+	by sabe.cs.wisc.edu (8.13.6/8.13.6) with ESMTP id m0VMSCM2023702
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-SHA bits=256 verify=NO)
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 16:28:12 -0600
 In-Reply-To: <1201815396956-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+This is a multi-part message in MIME format.
+--------------010406050100070804000709
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This hooks iscsi_tcp and libiscsi into the target->can_queue
-code and it has libiscsi use SCSI_MLQUEUE_TARGET_BUSY.
+michaelc@cs.wisc.edu wrote:
+> +static inline int scsi_target_ready(struct scsi_device *sdev)
+> +{
+> +	struct scsi_target *starget = scsi_target(sdev);
+> +
+> +	if (starget->single_lun) {
+> +		if (starget->starget_sdev_user &&
+> +		    starget->starget_sdev_user != sdev)
+> +			return 0;
+> +		starget->starget_sdev_user = sdev;
+> +	}
+> +
+> +	if (starget->can_queue && starget->target_busy >= starget->can_queue)
+> +		return 0;
+> +	if (starget->target_busy == 0 && starget->target_blocked) {
+> +		/*
+> +		 * unblock after target_blocked iterates to zero
+> +		 */
+> +		if (--starget->target_blocked == 0) {
+> +			SCSI_LOG_MLQUEUE(3,
+> +				   starget_printk(KERN_INFO, starget,
+> +				   "unblocking target at zero depth\n"));
+> +		} else {
+> +			blk_plug_device(sdev->request_queue);
+> +			return 0;
+> +		}
+> +	}
+> +	if (starget->target_blocked)
+> +		return 0;
+>
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/infiniband/ulp/iser/iscsi_iser.c |    1 +
- drivers/scsi/iscsi_tcp.c                 |    1 +
- drivers/scsi/libiscsi.c                  |   19 +++++++++++++++++--
- include/scsi/libiscsi.h                  |    1 +
- 4 files changed, 20 insertions(+), 2 deletions(-)
+Sorry old patch. This one can starve devices here. An updated patch is 
+attached.
 
-diff --git a/drivers/infiniband/ulp/iser/iscsi_iser.c b/drivers/infiniband/ulp/iser/iscsi_iser.c
-index be1b9fb..c818707 100644
---- a/drivers/infiniband/ulp/iser/iscsi_iser.c
-+++ b/drivers/infiniband/ulp/iser/iscsi_iser.c
-@@ -552,6 +552,7 @@ static struct scsi_host_template iscsi_iser_sht = {
- 	.sg_tablesize           = ISCSI_ISER_SG_TABLESIZE,
- 	.max_sectors		= 1024,
- 	.cmd_per_lun            = ISCSI_MAX_CMD_PER_LUN,
-+	.slave_alloc		= iscsi_slave_alloc,
- 	.eh_abort_handler       = iscsi_eh_abort,
- 	.eh_device_reset_handler= iscsi_eh_device_reset,
- 	.eh_host_reset_handler	= iscsi_eh_host_reset,
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 8a17867..c63e0e8 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -1936,6 +1936,7 @@ static struct scsi_host_template iscsi_sht = {
- 	.eh_device_reset_handler= iscsi_eh_device_reset,
- 	.eh_host_reset_handler	= iscsi_eh_host_reset,
- 	.use_clustering         = DISABLE_CLUSTERING,
-+	.slave_alloc		= iscsi_slave_alloc,
- 	.slave_configure        = iscsi_tcp_slave_configure,
- 	.proc_name		= "iscsi_tcp",
- 	.this_id		= -1,
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 59f8445..6d6770c 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -1097,7 +1097,7 @@ reject:
- 	spin_unlock(&session->lock);
- 	debug_scsi("cmd 0x%x rejected (%d)\n", sc->cmnd[0], reason);
- 	spin_lock(host->host_lock);
--	return SCSI_MLQUEUE_HOST_BUSY;
-+	return SCSI_MLQUEUE_TARGET_BUSY;
+--------------010406050100070804000709
+Content-Type: text/x-patch;
+ name="tgt-can-queue.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline;
+ filename="tgt-can-queue.patch"
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index b35d194..339760a 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -628,9 +628,12 @@ int scsi_dispatch_cmd(struct scsi_cmnd *cmd)
+ 	if (rtn) {
+ 		if (scsi_delete_timer(cmd)) {
+ 			atomic_inc(&cmd->device->iodone_cnt);
+-			scsi_queue_insert(cmd,
+-					  (rtn == SCSI_MLQUEUE_DEVICE_BUSY) ?
+-					  rtn : SCSI_MLQUEUE_HOST_BUSY);
++
++			if (rtn != SCSI_MLQUEUE_DEVICE_BUSY &&
++			    rtn != SCSI_MLQUEUE_TARGET_BUSY)
++				rtn = SCSI_MLQUEUE_HOST_BUSY;
++
++			scsi_queue_insert(cmd, rtn);
+ 		}
+ 		SCSI_LOG_MLQUEUE(3,
+ 		    printk("queuecommand : request rejected\n"));
+@@ -729,6 +732,7 @@ static struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ void scsi_finish_command(struct scsi_cmnd *cmd)
+ {
+ 	struct scsi_device *sdev = cmd->device;
++	struct scsi_target *starget = scsi_target(sdev);
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scsi_driver *drv;
+ 	unsigned int good_bytes;
+@@ -744,6 +748,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 	 * XXX(hch): What about locking?
+          */
+         shost->host_blocked = 0;
++	starget->target_blocked = 0;
+         sdev->device_blocked = 0;
  
- fault:
- 	spin_unlock(&session->lock);
-@@ -1118,6 +1118,21 @@ int iscsi_change_queue_depth(struct scsi_device *sdev, int depth)
+ 	/*
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b12fb31..9590630 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -114,6 +114,7 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ {
+ 	struct Scsi_Host *host = cmd->device->host;
+ 	struct scsi_device *device = cmd->device;
++	struct scsi_target *starget = scsi_target(device);
+ 	struct request_queue *q = device->request_queue;
+ 	unsigned long flags;
+ 
+@@ -133,10 +134,17 @@ int scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+ 	 * if a command is requeued with no other commands outstanding
+ 	 * either for the device or for the host.
+ 	 */
+-	if (reason == SCSI_MLQUEUE_HOST_BUSY)
+-		host->host_blocked = host->max_host_blocked;
+-	else if (reason == SCSI_MLQUEUE_DEVICE_BUSY)
+-		device->device_blocked = device->max_device_blocked;
++	switch (reason) {
++	case SCSI_MLQUEUE_HOST_BUSY:
++ 		host->host_blocked = host->max_host_blocked;
++		break;
++	case SCSI_MLQUEUE_DEVICE_BUSY:
++ 		device->device_blocked = device->max_device_blocked;
++		break;
++	case SCSI_MLQUEUE_TARGET_BUSY:
++		starget->target_blocked = starget->max_target_blocked;
++		break;
++	}
+ 
+ 	/*
+ 	 * Decrement the counters, since these commands are no longer
+@@ -452,10 +460,12 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ void scsi_device_unbusy(struct scsi_device *sdev)
+ {
+ 	struct Scsi_Host *shost = sdev->host;
++	struct scsi_target *starget = scsi_target(sdev);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+ 	shost->host_busy--;
++	starget->target_busy--;
+ 	if (unlikely(scsi_host_in_recovery(shost) &&
+ 		     (shost->host_failed || shost->host_eh_scheduled)))
+ 		scsi_eh_wakeup(shost);
+@@ -1296,6 +1306,51 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ 	return 1;
  }
- EXPORT_SYMBOL_GPL(iscsi_change_queue_depth);
  
-+int iscsi_slave_alloc(struct scsi_device *sdev)
++
++/*
++ * scsi_target_ready: checks if there we can send commands to target
++ * @sdev: scsi device on starget to check.
++ *
++ * Called with the host lock held.
++ */
++static inline int scsi_target_ready(struct Scsi_Host *shost,
++				    struct scsi_device *sdev)
 +{
 +	struct scsi_target *starget = scsi_target(sdev);
-+	struct iscsi_cls_session *cls_session = starget_to_session(starget);
-+	struct iscsi_session *session;
 +
-+	if (!cls_session || iscsi_session_chkready(cls_session))
-+		return -ENXIO;
++	if (starget->single_lun) {
++		if (starget->starget_sdev_user &&
++		    starget->starget_sdev_user != sdev)
++			return 0;
++		starget->starget_sdev_user = sdev;
++	}
 +
-+	session = class_to_transport_session(cls_session);
-+	starget->can_queue = session->cmds_max;
-+	return 0;
++	if (starget->target_busy == 0 && starget->target_blocked) {
++		/*
++		 * unblock after target_blocked iterates to zero
++		 */
++		if (--starget->target_blocked == 0) {
++			SCSI_LOG_MLQUEUE(3,
++				   starget_printk(KERN_INFO, starget,
++				   "unblocking target at zero depth\n"));
++		} else {
++			blk_plug_device(sdev->request_queue);
++			return 0;
++		}
++	}
++
++	if ((starget->can_queue > 0 &&
++	     starget->target_busy >= starget->can_queue) ||
++	     starget->target_blocked) {
++		if (list_empty(&sdev->starved_entry))
++			list_add_tail(&sdev->starved_entry,
++				      &shost->starved_list);
++		return 0;
++	}
++
++	return 1;
 +}
-+EXPORT_SYMBOL_GPL(iscsi_slave_alloc);
 +
- void iscsi_session_recovery_timedout(struct iscsi_cls_session *cls_session)
- {
- 	struct iscsi_session *session = class_to_transport_session(cls_session);
-@@ -1724,7 +1739,7 @@ iscsi_session_setup(struct iscsi_transport *iscsit,
- 		return NULL;
- 
- 	/* the iscsi layer takes one task for reserve */
--	shost->can_queue = cmds_max - 1;
-+	shost->can_queue = cmds_max;
- 	shost->cmd_per_lun = qdepth;
- 	shost->max_id = 1;
- 	shost->max_channel = 0;
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 7b90b63..3c2bdc4 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -308,6 +308,7 @@ struct iscsi_session {
  /*
-  * scsi host template
-  */
-+extern int iscsi_slave_alloc(struct scsi_device *sdev);
- extern int iscsi_change_queue_depth(struct scsi_device *sdev, int depth);
- extern int iscsi_eh_abort(struct scsi_cmnd *sc);
- extern int iscsi_eh_host_reset(struct scsi_cmnd *sc);
--- 
-1.5.2.1
+  * scsi_host_queue_ready: if we can send requests to shost, return 1 else
+  * return 0. We must end up running the queue again whenever 0 is
+@@ -1343,6 +1398,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ {
+ 	struct scsi_cmnd *cmd = req->special;
+ 	struct scsi_device *sdev = cmd->device;
++	struct scsi_target *starget = scsi_target(sdev);
+ 	struct Scsi_Host *shost = sdev->host;
+ 
+ 	blkdev_dequeue_request(req);
+@@ -1366,6 +1422,7 @@ static void scsi_kill_request(struct request *req, struct request_queue *q)
+ 	spin_unlock(sdev->request_queue->queue_lock);
+ 	spin_lock(shost->host_lock);
+ 	shost->host_busy++;
++	starget->target_busy++;
+ 	spin_unlock(shost->host_lock);
+ 	spin_lock(sdev->request_queue->queue_lock);
+ 
+@@ -1479,14 +1536,13 @@ static void scsi_request_fn(struct request_queue *q)
+ 		}
+ 		spin_lock(shost->host_lock);
+ 
++		if (!scsi_target_ready(shost, sdev))
++			goto not_ready;
++
+ 		if (!scsi_host_queue_ready(q, shost, sdev))
+ 			goto not_ready;
+-		if (scsi_target(sdev)->single_lun) {
+-			if (scsi_target(sdev)->starget_sdev_user &&
+-			    scsi_target(sdev)->starget_sdev_user != sdev)
+-				goto not_ready;
+-			scsi_target(sdev)->starget_sdev_user = sdev;
+-		}
++
++		scsi_target(sdev)->target_busy++;
+ 		shost->host_busy++;
+ 
+ 		/*
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 1dc165a..c9f7b74 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -396,6 +396,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
+ 		shost->host_no, channel, id);
+ 	starget->id = id;
+ 	starget->channel = channel;
++	starget->can_queue = 0;
+ 	INIT_LIST_HEAD(&starget->siblings);
+ 	INIT_LIST_HEAD(&starget->devices);
+ 	starget->state = STARGET_RUNNING;
+diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
+index 8225157..d4b23fc 100644
+--- a/include/scsi/scsi.h
++++ b/include/scsi/scsi.h
+@@ -367,6 +367,7 @@ struct scsi_lun {
+ #define SCSI_MLQUEUE_HOST_BUSY   0x1055
+ #define SCSI_MLQUEUE_DEVICE_BUSY 0x1056
+ #define SCSI_MLQUEUE_EH_RETRY    0x1057
++#define SCSI_MLQUEUE_TARGET_BUSY 0x1058
+ 
+ /*
+  *  Use these to separate status msg and our bytes
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index ab7acbe..f8e4184 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -205,6 +205,16 @@ struct scsi_target {
+ 						 * for the device at a time. */
+ 	unsigned int		pdt_1f_for_no_lun;	/* PDT = 0x1f */
+ 						/* means no lun present */
++	/* commands actually active on LLD. protected by host lock. */
++	unsigned int		target_busy;
++	/*
++	 * LLDs should set this in the slave_alloc host template callout.
++	 * If set to zero then there is not limit.
++	 */
++	unsigned int		can_queue;
++	unsigned int		target_blocked;
++	unsigned int		max_target_blocked;
++#define SCSI_DEFAULT_TARGET_BLOCKED	3
+ 
+ 	char			scsi_level;
+ 	struct execute_work	ew;
 
+--------------010406050100070804000709--
