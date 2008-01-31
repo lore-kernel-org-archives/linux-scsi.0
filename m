@@ -1,90 +1,169 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
- isd200.c
-Date: Thu, 31 Jan 2008 14:34:09 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0801311425540.2502-100000@iolanthe.rowland.org>
-References: <47A21AB6.5060203@panasas.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: michaelc@cs.wisc.edu
+Subject: [PATCH 04/12] iscsi class: add session scanning
+Date: Thu, 31 Jan 2008 13:36:46 -0600
+Message-ID: <12018082162624-git-send-email-michaelc@cs.wisc.edu>
+References: <12018082143359-git-send-email-michaelc@cs.wisc.edu>
+ <12018082142447-git-send-email-michaelc@cs.wisc.edu>
+ <1201808215968-git-send-email-michaelc@cs.wisc.edu>
+ <1201808215955-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:41649 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1752707AbYAaTeL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 14:34:11 -0500
-In-Reply-To: <47A21AB6.5060203@panasas.com>
+Received: from mx1.redhat.com ([66.187.233.31]:46693 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1759445AbYAaTg7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 14:36:59 -0500
+In-Reply-To: <1201808215955-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Mark Glines <mark@glines.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@SteelEye.com>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-On Thu, 31 Jan 2008, Boaz Harrosh wrote:
+From: Mike Christie <michaelc@cs.wisc.edu>
 
-> On Thu, Jan 31 2008 at 19:49 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > On Thu, 31 Jan 2008, Boaz Harrosh wrote:
-> > 
-> >> @@ -228,9 +228,14 @@ void usb_stor_set_xfer_buf(unsigned char *buffer,
-> >>  {
-> >>  	unsigned int offset = 0;
-> >>  	struct scatterlist *sg = NULL;
-> >> +	unsigned int count;
-> >>  
-> >> -	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
-> >> +	count = usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
-> >>  			TO_XFER_BUF);
-> >> -	if (buflen < scsi_bufflen(srb))
-> >> -		scsi_set_resid(srb, scsi_bufflen(srb) - buflen);
-> >> +
-> >> +	/* Check for underflow */
-> >> +	if (buflen > scsi_bufflen(srb))
-> >> +		count = buflen;
-> >> +
-> >> +	scsi_set_resid(srb, scsi_bufflen(srb) - count);
-> >>  }
-> > 
-> > This last "if" statement doesn't look right.  And since you know that
-> > count will never be larger than scsi_bufflen(srb), you don't have to
-> > check for underflow at all.  Just leave out the "if" and call
-> > scsi_set_resid() directly.
-> > 
-> > Alan Stern
-> > 
-> I was thinking about that hard. And I disagree. It could be that we have
-> sg-list length (The total of all sg->length) that does not match
-> scsi_bufflen() - More or less.
+This just adds iscsi session scanning which works like fc rport scanning.
+The future patches will hook the drivers into Mathew Wilcox's async
+scanning infrastructure, so userspace does not have to special case
+iscsi and so userspace does not have to make a extra special case for
+hardware iscsi root scanning.
 
-If that ever happens we'll be in big trouble.  Not just here but in 
-other places as well.
+Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+---
+ drivers/scsi/scsi_transport_iscsi.c |   37 ++++++++++++++++++++++++++++------
+ include/scsi/scsi_transport_iscsi.h |    7 +++--
+ 2 files changed, 34 insertions(+), 10 deletions(-)
 
-> The code in usb_stor_access_xfer_buf() will 
-> now correctly attempt to transfer according to buflen and what ever is available
-> at the passed sg's. Now this can be less or it can be more. SCSI standard defines
-> this as underflow/overflow. When overflow should be reported as negative values.
-> and an error status. (BUT not CHECK_CONDITION)
-
-I don't understand.  How could you ever transfer more data than the 
-requested amount?  The host won't expect to receive it and won't be 
-able to handle it when it arrives.
-
-(Furthmore, the USB mass-storage specification does not permit more 
-data to be transferred than requested.  This fact isn't relevant to our 
-discussion because we're talking about situations where the data was 
-transferred via a non-standard protocol.  But even so...)
-
-> so the code is actualy
-> 	if (buflen > scsi_bufflen(srb))
-> 		scsi_set_resid(srb, scsi_bufflen(srb) - buflen); /* Negative overflow */
-
-Okay, let's assume that both buflen and the sum of the sg-list lengths
-are somehow greater than scsi_bufflen(srb).  You still don't know that
-they are equal to each other.  All you know is that the amount actually
-transferred is stored in count.  Hence the negative overflow value
-should be
-
-	scsi_bufflen(srb) - count
-
-and not
-
-	scsi_bufflen(srb) - bufflen.
-
-Alan Stern
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index f876b0a..af88955 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -128,11 +128,11 @@ static int iscsi_setup_host(struct transport_container *tc, struct device *dev,
+ 	INIT_LIST_HEAD(&ihost->sessions);
+ 	mutex_init(&ihost->mutex);
+ 
+-	snprintf(ihost->unbind_workq_name, KOBJ_NAME_LEN, "iscsi_unbind_%d",
++	snprintf(ihost->scan_workq_name, KOBJ_NAME_LEN, "iscsi_scan_%d",
+ 		shost->host_no);
+-	ihost->unbind_workq = create_singlethread_workqueue(
+-						ihost->unbind_workq_name);
+-	if (!ihost->unbind_workq)
++	ihost->scan_workq = create_singlethread_workqueue(
++						ihost->scan_workq_name);
++	if (!ihost->scan_workq)
+ 		return -ENOMEM;
+ 	return 0;
+ }
+@@ -143,7 +143,7 @@ static int iscsi_remove_host(struct transport_container *tc, struct device *dev,
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct iscsi_host *ihost = shost->shost_data;
+ 
+-	destroy_workqueue(ihost->unbind_workq);
++	destroy_workqueue(ihost->scan_workq);
+ 	return 0;
+ }
+ 
+@@ -302,6 +302,23 @@ static int iscsi_user_scan(struct Scsi_Host *shost, uint channel,
+ 	return 0;
+ }
+ 
++static void iscsi_scan_session(struct work_struct *work)
++{
++	struct iscsi_cls_session *session =
++			container_of(work, struct iscsi_cls_session, scan_work);
++	unsigned long flags;
++
++	spin_lock_irqsave(&session->lock, flags);
++	if (session->state != ISCSI_SESSION_LOGGED_IN) {
++		spin_unlock_irqrestore(&session->lock, flags);
++		return;
++	}
++	spin_unlock_irqrestore(&session->lock, flags);
++
++	scsi_scan_target(&session->dev, 0, session->target_id,
++			 SCAN_WILD_CARD, 1);
++}
++
+ static void session_recovery_timedout(struct work_struct *work)
+ {
+ 	struct iscsi_cls_session *session =
+@@ -340,6 +357,8 @@ void __iscsi_unblock_session(struct iscsi_cls_session *session)
+ 
+ void iscsi_unblock_session(struct iscsi_cls_session *session)
+ {
++	struct Scsi_Host *shost = iscsi_session_to_shost(session);
++	struct iscsi_host *ihost = shost->shost_data;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&session->lock, flags);
+@@ -347,6 +366,7 @@ void iscsi_unblock_session(struct iscsi_cls_session *session)
+ 	spin_unlock_irqrestore(&session->lock, flags);
+ 
+ 	__iscsi_unblock_session(session);
++	queue_work(ihost->scan_workq, &session->scan_work);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_unblock_session);
+ 
+@@ -390,7 +410,7 @@ static int iscsi_unbind_session(struct iscsi_cls_session *session)
+ 	struct Scsi_Host *shost = iscsi_session_to_shost(session);
+ 	struct iscsi_host *ihost = shost->shost_data;
+ 
+-	return queue_work(ihost->unbind_workq, &session->unbind_work);
++	return queue_work(ihost->scan_workq, &session->unbind_work);
+ }
+ 
+ struct iscsi_cls_session *
+@@ -411,6 +431,7 @@ iscsi_alloc_session(struct Scsi_Host *shost,
+ 	INIT_LIST_HEAD(&session->host_list);
+ 	INIT_LIST_HEAD(&session->sess_list);
+ 	INIT_WORK(&session->unbind_work, __iscsi_unbind_session);
++	INIT_WORK(&session->scan_work, iscsi_scan_session);
+ 	spin_lock_init(&session->lock);
+ 
+ 	/* this is released in the dev's release function */
+@@ -530,13 +551,15 @@ void iscsi_remove_session(struct iscsi_cls_session *session)
+ 	spin_unlock_irqrestore(&session->lock, flags);
+ 	__iscsi_unblock_session(session);
+ 	iscsi_unbind_session(session);
++
++	/* flush running scans */
++	flush_workqueue(ihost->scan_workq);
+ 	/*
+ 	 * If the session dropped while removing devices then we need to make
+ 	 * sure it is not blocked
+ 	 */
+ 	if (!cancel_delayed_work(&session->recovery_work))
+ 		flush_workqueue(iscsi_eh_timer_workq);
+-	flush_workqueue(ihost->unbind_workq);
+ 
+ 	/* hw iscsi may not have removed all connections from session */
+ 	err = device_for_each_child(&session->dev, NULL,
+diff --git a/include/scsi/scsi_transport_iscsi.h b/include/scsi/scsi_transport_iscsi.h
+index 0e869d9..1f0ec46 100644
+--- a/include/scsi/scsi_transport_iscsi.h
++++ b/include/scsi/scsi_transport_iscsi.h
+@@ -177,11 +177,12 @@ struct iscsi_cls_session {
+ 	struct list_head host_list;
+ 	struct iscsi_transport *transport;
+ 	spinlock_t lock;
++	struct work_struct scan_work;
++	struct work_struct unbind_work;
+ 
+ 	/* recovery fields */
+ 	int recovery_tmo;
+ 	struct delayed_work recovery_work;
+-	struct work_struct unbind_work;
+ 
+ 	int target_id;
+ 
+@@ -203,8 +204,8 @@ struct iscsi_cls_session {
+ struct iscsi_host {
+ 	struct list_head sessions;
+ 	struct mutex mutex;
+-	struct workqueue_struct *unbind_workq;
+-	char unbind_workq_name[KOBJ_NAME_LEN];
++	struct workqueue_struct *scan_workq;
++	char scan_workq_name[KOBJ_NAME_LEN];
+ };
+ 
+ /*
+-- 
+1.5.2.1
 
