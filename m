@@ -1,74 +1,58 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH] bugfix for an underflow condition in usb storage & isd200.c
-Date: Thu, 31 Jan 2008 20:32:35 +0200
-Message-ID: <47A21443.50402@panasas.com>
-References: <Pine.LNX.4.44L0.0801301807420.17156-100000@iolanthe.rowland.org> <47A1948B.2010402@panasas.com> <20080131070846.4464eb3c@chirp.tahoe> <47A1E6A0.8050500@panasas.com> <47A2033D.2050502@panasas.com> <20080131180051.GA22341@kroah.com>
+From: Sam Ravnborg <sam@ravnborg.org>
+Subject: Re: [PATCH] kill hotplug init/exit section annotations
+Date: Thu, 31 Jan 2008 19:34:25 +0100
+Message-ID: <20080131183425.GA2893@uranus.ravnborg.org>
+References: <20080130212011.GA26621@uranus.ravnborg.org> <1201729295.3292.94.camel@localhost.localdomain> <20080130223219.GT29368@does.not.exist> <20080131074436.GA31966@uranus.ravnborg.org> <1201795051.3131.13.camel@localhost.localdomain> <20080131081120.27505dc0@laptopd505.fenrus.org> <20080131162141.GC19700@cs181133002.pp.htv.fi> <20080131090749.72781689@laptopd505.fenrus.org> <20080131171436.GG19700@cs181133002.pp.htv.fi> <20080131094801.63a048f0@laptopd505.fenrus.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:60405 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1763987AbYAaSdP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 13:33:15 -0500
-In-Reply-To: <20080131180051.GA22341@kroah.com>
+Received: from pasmtpb.tele.dk ([80.160.77.98]:50131 "EHLO pasmtpB.tele.dk"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758606AbYAaSeZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 13:34:25 -0500
+Content-Disposition: inline
+In-Reply-To: <20080131094801.63a048f0@laptopd505.fenrus.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <greg@kroah.com>, Mark Glines <mark@glines.org>
-Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@SteelEye.com>, Alan Stern <stern@rowland.harvard.edu>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Arjan van de Ven <arjan@infradead.org>
+Cc: Adrian Bunk <bunk@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
 
-On Thu, Jan 31 2008 at 20:00 +0200, Greg KH <greg@kroah.com> wrote:
-> On Thu, Jan 31, 2008 at 07:19:57PM +0200, Boaz Harrosh wrote:
->>   scsi_scan is issuing a 36-byte INQUIRY request to llds. isd200 would
->>   volunteer 96 bytes of INQUIRY. This caused an underflow condition in
->>   protocol.c usb_stor_access_xfer_buf(). So first fix is to
->>   usb_stor_access_xfer_buf() to properly handle underflow conditions.
->>   Then usb_stor_set_xfer_buf() should report this condition as a negative
->>   resid. Should we also set cmnd->status in the underflow condition?
->>
->>   Then also isd200.c is fixed to only return the type of INQUIRY && SENSE
->>   the upper layer asked for.
->>
->> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+On Thu, Jan 31, 2008 at 09:48:01AM -0800, Arjan van de Ven wrote:
+> On Thu, 31 Jan 2008 19:14:36 +0200
+> Adrian Bunk <bunk@kernel.org> wrote:
+> > > cpuhotplug is required for suspend/resume.
+> > 
+> > Not on UP computers.
+> > 
 > 
-> As this is a regression and hits 2.6.24, can you send the final version
-> of this patch to the stable@kernel.org address so we can get it into the
-> 2.6.24.y tree?
-> 
-> thanks,
-> 
-> greg k-h
-> -
+> great! someone who still has one of those and uses a kernel without it.
+> Can you look at your system.map and see how many kilobytes you've gained?
+> Eg how many kilobytes are in these sections exactly?
+I have one. A Atmel AT91 board equipped with an 9263.
+So lets take a look at the defconfig build for the evaluation board.
 
-On Thu, Jan 31 2008 at 20:00 +0200, Mark Glines <mark@glines.org> wrote:
->> On Thu, 31 Jan 2008 19:20:26 +0200
->> Hi,
->> 
->> This patch fails to apply to 2.6.24.  What should I apply it to, for
->> testing?  USB Git, or SCSI git or something?
->> 
->> patching file drivers/usb/storage/isd200.c
->> Hunk #1 succeeded at 1238 (offset -23 lines).
->> Hunk #2 succeeded at 1248 (offset -23 lines).
->> Hunk #3 succeeded at 1259 (offset -23 lines).
->> patching file drivers/usb/storage/protocol.c
->> Hunk #1 FAILED at 175.
->> Hunk #2 FAILED at 228.
->> 2 out of 2 hunks FAILED -- saving rejects to file drivers/usb/storage/protocol.c.rej
->> 
->> Thanks,
->> 
->> Mark
-> 
 
-OK, I was confused with what versions this belongs to. This also answers
-my original question of why it happens with my patch, as it did not
-it happened before my patch. My patches only went into the 2.6.25 merge window.
+o-arm/vmlinux.o:     file format elf32-littlearm
 
-So I will need to send 2 Patches. One for stable@kernel.org on top of 2.6.24.
-The second is for mainline, which is the one I sent. Should go threw scsi-misc
-which it is based on.
+  0 .text         001cdefc  00000000  00000000  00000400  2**10
+  2 .init.text    000165e8  00000000  00000000  001ce6c0  2**5
+ 26 .init.data    000032ec  00000000  00000000  002578cc  2**2
 
-patch for 2.6.24 stable@kernel.org on the way
+---
 
-Boaz
+  4 .devinit.text 00001558  00000000  00000000  001e5270  2**2
+  9 .exit.text    00000bc8  00000000  00000000  001e8d2c  2**2
+ 10 .cpuinit.text 00000924  00000000  00000000  001e98f4  2**2
+ 11 .meminit.text 000004cc  00000000  00000000  001ea218  2**2
+ 12 .devexit.text 00000160  00000000  00000000  001ea6e4  2**2
+ 38 .cpuinit.data 00000040  00000000  00000000  0025afc0  2**2
+ 39 .meminit.data 0000000c  00000000  00000000  0025b000  2**2
+
+
+__devinit alone gives a net win of 5464 bytes.
+That is only ~3% of total .text size but this is non-swapable
+memory where everything is worth it.
+And the configuration selected is by no means optimal
+with respect to minimal size.
+
+	Sam
