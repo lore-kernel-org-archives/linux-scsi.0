@@ -1,32 +1,74 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH] kill hotplug init/exit section annotations
-Date: Thu, 31 Jan 2008 19:52:53 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0801311951450.22762@anakin>
-References: <1201729295.3292.94.camel@localhost.localdomain>
- <20080130223219.GT29368@does.not.exist> <20080131074436.GA31966@uranus.ravnborg.org>
- <1201795051.3131.13.camel@localhost.localdomain> <20080131081120.27505dc0@laptopd505.fenrus.org>
- <20080131162141.GC19700@cs181133002.pp.htv.fi> <20080131090749.72781689@laptopd505.fenrus.org>
- <20080131171436.GG19700@cs181133002.pp.htv.fi> <20080131174526.GA2488@puku.stupidest.org>
- <20080131175543.GH19700@cs181133002.pp.htv.fi> <20080131183222.GA3412@puku.stupidest.org>
+Subject: Re: [PATCH 1/1] Remove of old NCR53C9x/esp family of drivers
+Date: Thu, 31 Jan 2008 19:55:22 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0801311953540.22762@anakin>
+References: <477CFC97.2010201@panasas.com>  <477D0209.2000609@panasas.com>
+ <1199384189.3122.22.camel@localhost.localdomain> <Pine.LNX.4.64.0801032003170.27528@anakin>
+ <1199686061.31422.2.camel@kars.perseus.home> <1201802886.3131.35.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1765575AbYAaSxQ@vger.kernel.org>
-In-Reply-To: <20080131183222.GA3412@puku.stupidest.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Adrian Bunk <bunk@kernel.org>, Arjan van de Ven <arjan@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sam Ravnborg <sam@ravnborg.org>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from yergi.telenet-ops.be ([195.130.132.36]:44097 "EHLO
+	yergi.telenet-ops.be" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761436AbYAaS4H (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 13:56:07 -0500
+Received: from edna.telenet-ops.be (unknown [195.130.132.58])
+	by yergi.telenet-ops.be (Postfix) with ESMTP id 4CFAC5CBF44
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 19:56:07 +0100 (CET)
+In-Reply-To: <1201802886.3131.35.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Kars de Jong <jongk@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Boaz Harrosh <bharrosh@panasas.com>, Christoph Hellwig <hch@infradead.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 31 Jan 2008, Chris Wedgwood wrote:
-> On Thu, Jan 31, 2008 at 07:55:43PM +0200, Adrian Bunk wrote:
-> > Who was talking about laptops?
+On Thu, 31 Jan 2008, James Bottomley wrote:
+> On Mon, 2008-01-07 at 07:07 +0100, Kars de Jong wrote:
+> > On do, 2008-01-03 at 20:05 +0100, Geert Uytterhoeven wrote:
+> > > On Thu, 3 Jan 2008, James Bottomley wrote:
+> > > > On Thu, 2008-01-03 at 17:40 +0200, Boaz Harrosh wrote:
+> > > > > As recommended by Christoph Hellwig. There is no use
+> > > > >  of Fixing these drivers, since there is a much simpler
+> > > > >  and modern esp infrastructure with David Miller's esp_scsi
+> > > > > 
+> > > > >   - Remove all driver files dependent on NCR53C9x.c
+> > > > >         deleted:    drivers/scsi/NCR53C9x.c
+> > > > >         deleted:    drivers/scsi/NCR53C9x.h
+> > > > >         deleted:    drivers/scsi/blz1230.c
+> > > > >         deleted:    drivers/scsi/blz2060.c
+> > > > >         deleted:    drivers/scsi/cyberstorm.c
+> > > > >         deleted:    drivers/scsi/cyberstormII.c
+> > > > >         deleted:    drivers/scsi/dec_esp.c
+> > > > >         deleted:    drivers/scsi/fastlane.c
+> > > > >         deleted:    drivers/scsi/mac_esp.c
+> > > > >         deleted:    drivers/scsi/mca_53c9x.c
+> > > > >         deleted:    drivers/scsi/oktagon_esp.c
+> > > > >         deleted:    drivers/scsi/oktagon_io.S
+> > > > >         deleted:    drivers/scsi/sun3x_esp.c
+> > > > > 
+> > > > >   - Remove above list from drivers/scsi/Kconfig &&
+> > > > > drivers/scsi/Makefile
+> > > > 
+> > > > OK, I'll split this into four pieces for scsi-pending, since there are
+> > > > three separate interest groups with signoffs to collect (MCA, m68k and
+> > > > alpha) plus the core removal.
+> > > 
+> > > Anybody who can look into converting the m68k NCR53C9x drivers and has
+> > > hardware to test (some of) them? I don't think we can afford losing one
+> > > third of our SCSI drivers...
+> > 
+> > I'll have a look at this. I can only test it on Blizzard 1260 hardware
+> > though.
 > 
-> If laptops are mostly MP these days, then 'desktops' and 'servers'
-> certainly are --- so pretty much everyone needs CPU hotplug.
+> OK, time's up.
+> 
+> These drivers are now unbuildable in mainline because of the promised
+> sg_table updates.  They either get removed, fixed or marked as BROKEN.
+> Which is it to be?
 
-<irony>
-Thank you for giving an exhaustive list of classes of machines Linux runs on!
-</irony>
+Is git smart enough to follow history between files that get removed and
+readded?
+If yes, I think you can remove them.
+If no, please mark them as BROKEN.
 
 Gr{oetje,eeting}s,
 
