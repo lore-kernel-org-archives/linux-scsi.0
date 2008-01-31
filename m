@@ -1,16 +1,16 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 2/3] iscsi: bidi support - libiscsi
-Date: Thu, 31 Jan 2008 22:29:56 +0200
-Message-ID: <47A22FC4.2020804@panasas.com>
+Subject: [PATCH 3/3] iscsi: bidi support - iscsi_tcp
+Date: Thu, 31 Jan 2008 22:31:56 +0200
+Message-ID: <47A2303C.2080207@panasas.com>
 References: <47A20E85.6040906@panasas.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:51253 "EHLO
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:38006 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754901AbYAaUbB (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 15:31:01 -0500
+	with ESMTP id S1762473AbYAaUcb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 15:32:31 -0500
 In-Reply-To: <47A20E85.6040906@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -18,183 +18,125 @@ To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org
 Cc: Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com
 
 
-  iscsi bidi support at the generic libiscsi level
-  - prepare the additional bidi_read rlength header.
+  bidi support for iscsi_tcp
   - access the right scsi_in() and/or scsi_out() side of things.
-    also for resid.
-  - Handle BIDI underflow overflow from target
+    also for resid
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+ Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/libiscsi.c |   82 ++++++++++++++++++++++++++++++++++++++++------
- 1 files changed, 71 insertions(+), 11 deletions(-)
+ drivers/scsi/iscsi_tcp.c |   31 +++++++++++++++++--------------
+ 1 files changed, 17 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index 498cea3..df81f6f 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -176,6 +176,31 @@ static int iscsi_prep_ecdb_ahs(struct iscsi_cmd_task *ctask)
- 	return 0;
- }
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index ee7acfa..073dea7 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -528,6 +528,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 	struct iscsi_session *session = conn->session;
+ 	struct scsi_cmnd *sc = ctask->sc;
+ 	int datasn = be32_to_cpu(rhdr->datasn);
++	unsigned total_in_length = scsi_in(sc)->length;
  
-+static int iscsi_prep_bidi_ahs(struct iscsi_cmd_task *ctask)
-+{
-+	struct scsi_cmnd *sc = ctask->sc;
-+	struct iscsi_rlength_ahdr *rlen_ahdr;
-+	int rc;
-+
-+	rlen_ahdr = iscsi_next_hdr(ctask);
-+	rc = iscsi_add_hdr(ctask, sizeof(*rlen_ahdr));
-+	if (rc)
-+		return rc;
-+
-+	rlen_ahdr->ahslength =
-+		cpu_to_be16(sizeof(rlen_ahdr->read_length) +
-+			            sizeof(rlen_ahdr->reserved));
-+	rlen_ahdr->ahstype = ISCSI_AHSTYPE_RLENGTH;
-+	rlen_ahdr->reserved = 0;
-+	rlen_ahdr->read_length = cpu_to_be32(scsi_in(sc)->length);
-+
-+	debug_scsi("bidi-in rlen_ahdr->read_length(%d) "
-+		   "rlen_ahdr->ahslength(%d)\n",
-+		   be32_to_cpu(rlen_ahdr->read_length),
-+		   be16_to_cpu(rlen_ahdr->ahslength));
-+	return 0;
-+}
-+
- /**
-  * iscsi_prep_scsi_cmd_pdu - prep iscsi scsi cmd pdu
-  * @ctask: iscsi cmd task
-@@ -200,7 +225,6 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 	hdr->flags = ISCSI_ATTR_SIMPLE;
- 	int_to_scsilun(sc->device->lun, (struct scsi_lun *)hdr->lun);
- 	hdr->itt = build_itt(ctask->itt, session->age);
--	hdr->data_length = cpu_to_be32(scsi_bufflen(sc));
- 	hdr->cmdsn = cpu_to_be32(session->cmdsn);
- 	session->cmdsn++;
- 	hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
-@@ -217,7 +241,15 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 	memcpy(hdr->cdb, sc->cmnd, cmd_len);
+ 	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
+ 	if (tcp_conn->in.datalen == 0)
+@@ -542,10 +543,10 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 	tcp_ctask->exp_datasn++;
  
- 	ctask->imm_count = 0;
-+	if (scsi_bidi_cmnd(sc)) {
-+		hdr->flags |= ISCSI_FLAG_CMD_READ;
-+		rc = iscsi_prep_bidi_ahs(ctask);
-+		if (rc)
-+			return rc;
-+	}
- 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
-+		unsigned out_len = scsi_out(sc)->length;
-+		hdr->data_length = cpu_to_be32(out_len);
- 		hdr->flags |= ISCSI_FLAG_CMD_WRITE;
- 		/*
- 		 * Write counters:
-@@ -238,19 +270,19 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 		ctask->unsol_datasn = 0;
- 
- 		if (session->imm_data_en) {
--			if (scsi_bufflen(sc) >= session->first_burst)
-+			if (out_len >= session->first_burst)
- 				ctask->imm_count = min(session->first_burst,
- 							conn->max_xmit_dlength);
- 			else
--				ctask->imm_count = min(scsi_bufflen(sc),
-+				ctask->imm_count = min(out_len,
- 							conn->max_xmit_dlength);
- 			hton24(hdr->dlength, ctask->imm_count);
- 		} else
- 			zero_data(hdr->dlength);
- 
- 		if (!session->initial_r2t_en) {
--			ctask->unsol_count = min((session->first_burst),
--				(scsi_bufflen(sc))) - ctask->imm_count;
-+			ctask->unsol_count = min(session->first_burst, out_len)
-+							     - ctask->imm_count;
- 			ctask->unsol_offset = ctask->imm_count;
- 		}
- 
-@@ -260,6 +292,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 	} else {
- 		hdr->flags |= ISCSI_FLAG_CMD_FINAL;
- 		zero_data(hdr->dlength);
-+		hdr->data_length = cpu_to_be32(scsi_in(sc)->length);
- 
- 		if (sc->sc_data_direction == DMA_FROM_DEVICE)
- 			hdr->flags |= ISCSI_FLAG_CMD_READ;
-@@ -278,10 +311,12 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
- 		return EIO;
- 
- 	conn->scsicmd_pdus_cnt++;
--	debug_scsi("iscsi prep [%s cid %d sc %p cdb 0x%x itt 0x%x len %d "
--		"cmdsn %d win %d]\n",
--		sc->sc_data_direction == DMA_TO_DEVICE ? "write" : "read",
--		conn->id, sc, sc->cmnd[0], ctask->itt, scsi_bufflen(sc),
-+	debug_scsi("iscsi prep [%s cid %d sc %p cdb 0x%x itt 0x%x "
-+		"len %d bidi_len %d cmdsn %d win %d]\n",
-+		scsi_bidi_cmnd(sc) ? "bidirectional" :
-+		    sc->sc_data_direction == DMA_TO_DEVICE ? "write" : "read",
-+		conn->id, sc, sc->cmnd[0], ctask->itt,
-+		scsi_bufflen(sc), scsi_bidi_cmnd(sc) ? scsi_in(sc)->length : 0,
- 		session->cmdsn, session->max_cmdsn - session->exp_cmdsn + 1);
- 	return 0;
- }
-@@ -344,7 +379,12 @@ static void fail_command(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask,
- 		conn->session->tt->cleanup_cmd_task(conn, ctask);
- 
- 	sc->result = err;
--	scsi_set_resid(sc, scsi_bufflen(sc));
-+	if (!scsi_bidi_cmnd(sc))
-+		scsi_set_resid(sc, scsi_bufflen(sc));
-+	else {
-+		scsi_out(sc)->resid = scsi_out(sc)->length;
-+		scsi_in(sc)->resid = scsi_in(sc)->length;
-+	}
- 	if (conn->ctask == ctask)
- 		conn->ctask = NULL;
- 	/* release ref from queuecommand */
-@@ -479,6 +519,20 @@ invalid_datalen:
- 			   min_t(uint16_t, senselen, SCSI_SENSE_BUFFERSIZE));
+ 	tcp_ctask->data_offset = be32_to_cpu(rhdr->offset);
+-	if (tcp_ctask->data_offset + tcp_conn->in.datalen > scsi_bufflen(sc)) {
++	if (tcp_ctask->data_offset + tcp_conn->in.datalen > total_in_length) {
+ 		debug_tcp("%s: data_offset(%d) + data_len(%d) > total_length_in(%d)\n",
+ 		          __FUNCTION__, tcp_ctask->data_offset,
+-		          tcp_conn->in.datalen, scsi_bufflen(sc));
++		          tcp_conn->in.datalen, total_in_length);
+ 		return ISCSI_ERR_DATA_OFFSET;
  	}
  
-+	if (scsi_bidi_cmnd(sc) &&
-+		(rhdr->flags & (ISCSI_FLAG_CMD_BIDI_UNDERFLOW |
-+					ISCSI_FLAG_CMD_BIDI_OVERFLOW))) {
-+		int res_count = be32_to_cpu(rhdr->bi_residual_count);
-+
-+		if (res_count > 0 &&
-+			(rhdr->flags & ISCSI_FLAG_CMD_BIDI_OVERFLOW ||
-+			res_count <= scsi_in(sc)->length))
-+			scsi_in(sc)->resid = res_count;
-+		else
-+			sc->result =
-+				(DID_BAD_TARGET << 16) | rhdr->cmd_status;
-+	}
-+
- 	if (rhdr->flags & (ISCSI_FLAG_CMD_UNDERFLOW |
- 	                   ISCSI_FLAG_CMD_OVERFLOW)) {
- 		int res_count = be32_to_cpu(rhdr->residual_count);
-@@ -486,6 +540,7 @@ invalid_datalen:
- 		if (res_count > 0 &&
- 		    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
- 		     res_count <= scsi_bufflen(sc)))
-+			/* write side for bidi or uni-io set_resid */
- 			scsi_set_resid(sc, res_count);
- 		else
- 			sc->result = (DID_BAD_TARGET << 16) | rhdr->cmd_status;
-@@ -1149,7 +1204,12 @@ reject:
- fault:
- 	spin_unlock(&session->lock);
- 	debug_scsi("iscsi: cmd 0x%x is not queued (%d)\n", sc->cmnd[0], reason);
--	scsi_set_resid(sc, scsi_bufflen(sc));
-+	if (!scsi_bidi_cmnd(sc))
-+		scsi_set_resid(sc, scsi_bufflen(sc));
-+	else {
-+		scsi_out(sc)->resid = scsi_out(sc)->length;
-+		scsi_in(sc)->resid = scsi_in(sc)->length;
-+	}
- 	sc->scsi_done(sc);
- 	spin_lock(host->host_lock);
- 	return 0;
+@@ -558,8 +559,8 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 
+ 			if (res_count > 0 &&
+ 			    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
+-			     res_count <= scsi_bufflen(sc)))
+-				scsi_set_resid(sc, res_count);
++			     res_count <= total_in_length))
++				scsi_in(sc)->resid = res_count;
+ 			else
+ 				sc->result = (DID_BAD_TARGET << 16) |
+ 					rhdr->cmd_status;
+@@ -670,11 +671,11 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ 			    r2t->data_length, session->max_burst);
+ 
+ 	r2t->data_offset = be32_to_cpu(rhdr->data_offset);
+-	if (r2t->data_offset + r2t->data_length > scsi_bufflen(ctask->sc)) {
++	if (r2t->data_offset + r2t->data_length > scsi_out(ctask->sc)->length) {
+ 		iscsi_conn_printk(KERN_ERR, conn,
+ 				  "invalid R2T with data len %u at offset %u "
+ 				  "and total length %d\n", r2t->data_length,
+-				  r2t->data_offset, scsi_bufflen(ctask->sc));
++				  r2t->data_offset, scsi_out(ctask->sc)->length);
+ 		__kfifo_put(tcp_ctask->r2tpool.queue, (void*)&r2t,
+ 			    sizeof(void*));
+ 		return ISCSI_ERR_DATALEN;
+@@ -771,6 +772,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 		if (tcp_conn->in.datalen) {
+ 			struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+ 			struct hash_desc *rx_hash = NULL;
++			struct scsi_data_buffer *sdb = scsi_in(ctask->sc);
+ 
+ 			/*
+ 			 * Setup copy of Data-In into the Scsi_Cmnd
+@@ -788,8 +790,8 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
+ 				  tcp_ctask->data_offset,
+ 				  tcp_conn->in.datalen);
+ 			return iscsi_segment_seek_sg(&tcp_conn->in.segment,
+-						     scsi_sglist(ctask->sc),
+-						     scsi_sg_count(ctask->sc),
++						     sdb->table.sgl,
++						     sdb->table.nents,
+ 						     tcp_ctask->data_offset,
+ 						     tcp_conn->in.datalen,
+ 						     iscsi_tcp_process_data_in,
+@@ -1332,7 +1334,8 @@ iscsi_tcp_ctask_init(struct iscsi_cmd_task *ctask)
+ 		return 0;
+ 
+ 	/* If we have immediate data, attach a payload */
+-	err = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc), scsi_sg_count(sc),
++	err = iscsi_tcp_send_data_prep(conn, scsi_out(sc)->table.sgl,
++				       scsi_out(sc)->table.nents,
+ 				       0, ctask->imm_count);
+ 	if (err)
+ 		return err;
+@@ -1386,6 +1389,7 @@ iscsi_tcp_ctask_xmit(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
+ {
+ 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
+ 	struct scsi_cmnd *sc = ctask->sc;
++	struct scsi_data_buffer *sdb = scsi_out(sc);
+ 	int rc = 0;
+ 
+ flush:
+@@ -1412,9 +1416,8 @@ flush:
+ 				ctask->itt, tcp_ctask->sent, ctask->data_count);
+ 
+ 		iscsi_tcp_send_hdr_prep(conn, hdr, sizeof(*hdr));
+-		rc = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc),
+-					      scsi_sg_count(sc),
+-					      tcp_ctask->sent,
++		rc = iscsi_tcp_send_data_prep(conn, sdb->table.sgl,
++					      sdb->table.nents, tcp_ctask->sent,
+ 					      ctask->data_count);
+ 		if (rc)
+ 			goto fail;
+@@ -1460,8 +1463,8 @@ flush:
+ 		iscsi_tcp_send_hdr_prep(conn, &r2t->dtask.hdr,
+ 					sizeof(struct iscsi_hdr));
+ 
+-		rc = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc),
+-					      scsi_sg_count(sc),
++		rc = iscsi_tcp_send_data_prep(conn, sdb->table.sgl,
++					      sdb->table.nents,
+ 					      r2t->data_offset + r2t->sent,
+ 					      r2t->data_count);
+ 		if (rc)
 -- 
 1.5.3.3
 
