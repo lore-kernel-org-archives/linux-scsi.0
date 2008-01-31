@@ -1,50 +1,42 @@
-From: Arjan van de Ven <arjan@infradead.org>
-Subject: Re: [PATCH] kill hotplug init/exit section annotations
-Date: Thu, 31 Jan 2008 09:48:01 -0800
-Message-ID: <20080131094801.63a048f0@laptopd505.fenrus.org>
-References: <20080130200336.GN29368@does.not.exist>
-	<1201726817.3292.84.camel@localhost.localdomain>
-	<20080130212011.GA26621@uranus.ravnborg.org>
-	<1201729295.3292.94.camel@localhost.localdomain>
-	<20080130223219.GT29368@does.not.exist>
-	<20080131074436.GA31966@uranus.ravnborg.org>
-	<1201795051.3131.13.camel@localhost.localdomain>
-	<20080131081120.27505dc0@laptopd505.fenrus.org>
-	<20080131162141.GC19700@cs181133002.pp.htv.fi>
-	<20080131090749.72781689@laptopd505.fenrus.org>
-	<20080131171436.GG19700@cs181133002.pp.htv.fi>
+From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
+ isd200.c
+Date: Thu, 31 Jan 2008 12:49:59 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.0801311244430.4373-100000@iolanthe.rowland.org>
+References: <47A2033D.2050502@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pentafluge.infradead.org ([213.146.154.40]:55817 "EHLO
-	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757920AbYAaRs0 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 12:48:26 -0500
-In-Reply-To: <20080131171436.GG19700@cs181133002.pp.htv.fi>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47A2033D.2050502-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Cc: Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Adrian Bunk <bunk@kernel.org>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Sam Ravnborg <sam@ravnborg.org>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
 
-On Thu, 31 Jan 2008 19:14:36 +0200
-Adrian Bunk <bunk@kernel.org> wrote:
-> > cpuhotplug is required for suspend/resume.
-> 
-> Not on UP computers.
-> 
+On Thu, 31 Jan 2008, Boaz Harrosh wrote:
 
-great! someone who still has one of those and uses a kernel without it.
-Can you look at your system.map and see how many kilobytes you've gained?
-Eg how many kilobytes are in these sections exactly?
-(but also subtract any cost due to page aligning this stuff ;-)
+> @@ -228,9 +228,14 @@ void usb_stor_set_xfer_buf(unsigned char *buffer,
+>  {
+>  	unsigned int offset = 0;
+>  	struct scatterlist *sg = NULL;
+> +	unsigned int count;
+>  
+> -	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
+> +	count = usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
+>  			TO_XFER_BUF);
+> -	if (buflen < scsi_bufflen(srb))
+> -		scsi_set_resid(srb, scsi_bufflen(srb) - buflen);
+> +
+> +	/* Check for underflow */
+> +	if (buflen > scsi_bufflen(srb))
+> +		count = buflen;
+> +
+> +	scsi_set_resid(srb, scsi_bufflen(srb) - count);
+>  }
 
-> cu
-> Adrian
-> 
+This last "if" statement doesn't look right.  And since you know that
+count will never be larger than scsi_bufflen(srb), you don't have to
+check for underflow at all.  Just leave out the "if" and call
+scsi_set_resid() directly.
 
-
--- 
-If you want to reach me at my work email, use arjan@linux.intel.com
-For development, discussion and tips for power savings, 
-visit http://www.lesswatts.org
+Alan Stern
