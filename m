@@ -1,74 +1,160 @@
-From: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Subject: Re: [PATCH 2.6.24] bugfix for an overflow condition in usb storage & isd200.c
-Date: Thu, 31 Jan 2008 12:16:16 -0800
-Message-ID: <20080131201616.GS14375@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0801301807420.17156-100000@iolanthe.rowland.org> <47A1948B.2010402@panasas.com> <20080131070846.4464eb3c@chirp.tahoe> <47A1E6A0.8050500@panasas.com> <47A2033D.2050502@panasas.com> <20080131180051.GA22341@kroah.com> <47A22369.80906@panasas.com> <20080131194941.GR14375@one-eyed-alien.net> <47A229FF.4040404@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 1/3] iscsi: extended cdb support
+Date: Thu, 31 Jan 2008 22:25:16 +0200
+Message-ID: <47A22EAC.8030706@panasas.com>
+References: <47A20E85.6040906@panasas.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="OxDG9cJJSSQMUzGF"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from adsl-67-113-118-6.dsl.sndg02.pacbell.net ([67.113.118.6]:44230
-	"EHLO multivac.one-eyed-alien.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1756265AbYAaUUh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 15:20:37 -0500
-Content-Disposition: inline
-In-Reply-To: <47A229FF.4040404@panasas.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:43968 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753473AbYAaU0K (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 15:26:10 -0500
+In-Reply-To: <47A20E85.6040906@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Greg KH <greg@kroah.com>, Mark Glines <mark@glines.org>, James Bottomley <James.Bottomley@SteelEye.com>, Alan Stern <stern@rowland.harvard.edu>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Pete Wyckoff <pw@osc.edu>
+Cc: Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com
 
 
---OxDG9cJJSSQMUzGF
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+  Support for extended CDBs in iscsi.
+  All we need is to check if command spills over 16 bytes then allocate
+  an iscsi-extended-header for the leftovers.
 
-On Thu, Jan 31, 2008 at 10:05:19PM +0200, Boaz Harrosh wrote:
-> On Thu, Jan 31 2008 at 21:49 +0200, Matthew Dharm <mdharm-scsi@one-eyed-a=
-lien.net> wrote:
-> > No.  No no no.
->=20
-> Please re-inspect the code again.
-> There is no device involved here. The code completely emulates this comma=
-nds
-> with a driver made up information. the send_to_device is Zero.
-> (Nothing to bounce)
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/iscsi_tcp.c   |    2 +-
+ drivers/scsi/libiscsi.c    |   56 ++++++++++++++++++++++++++++++++++++++++----
+ include/scsi/iscsi_proto.h |    6 +++-
+ 3 files changed, 56 insertions(+), 8 deletions(-)
 
-Okay, I see what you're doing there, and I can live with that.
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 8a17867..ee7acfa 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -1975,7 +1975,7 @@ static struct iscsi_transport iscsi_tcp_transport = {
+ 	.host_template		= &iscsi_sht,
+ 	.conndata_size		= sizeof(struct iscsi_conn),
+ 	.max_conn		= 1,
+-	.max_cmd_len		= 16,
++	.max_cmd_len		= 260,
+ 	/* session management */
+ 	.create_session		= iscsi_tcp_session_create,
+ 	.destroy_session	= iscsi_tcp_session_destroy,
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index cfffabd..498cea3 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -137,6 +137,45 @@ static int iscsi_add_hdr(struct iscsi_cmd_task *ctask, unsigned len)
+ 	return 0;
+ }
+ 
++/*
++ * make an extended cdb AHS
++ */
++static int iscsi_prep_ecdb_ahs(struct iscsi_cmd_task *ctask)
++{
++	struct scsi_cmnd *cmd = ctask->sc;
++	unsigned rlen, pad_len;
++	unsigned short ahslength;
++	struct iscsi_ecdb_ahdr *ecdb_ahdr;
++	int rc;
++
++	ecdb_ahdr = iscsi_next_hdr(ctask);
++	rlen = cmd->cmd_len - ISCSI_CDB_SIZE;
++
++	BUG_ON(rlen > sizeof(ecdb_ahdr->ecdb));
++	ahslength = rlen + sizeof(ecdb_ahdr->reserved);
++
++	pad_len = iscsi_padding(rlen);
++
++	rc = iscsi_add_hdr(ctask, sizeof(ecdb_ahdr->ahslength) +
++	              sizeof(ecdb_ahdr->ahstype) + ahslength + pad_len);
++	if (rc)
++		return rc;
++
++	if (pad_len)
++		memset(&ecdb_ahdr->ecdb[rlen], 0, pad_len);
++
++	ecdb_ahdr->ahslength = cpu_to_be16(ahslength);
++	ecdb_ahdr->ahstype = ISCSI_AHSTYPE_CDB;
++	ecdb_ahdr->reserved = 0;
++	memcpy(ecdb_ahdr->ecdb, cmd->cmnd + ISCSI_CDB_SIZE, rlen);
++
++	debug_scsi("iscsi_prep_ecdb_ahs: varlen_cdb_len %d "
++		"rlen %d pad_len %d ahs_length %d iscsi_headers_size %u\n",
++		cmd->cmd_len, rlen, pad_len, ahslength, ctask->hdr_len);
++
++	return 0;
++}
++
+ /**
+  * iscsi_prep_scsi_cmd_pdu - prep iscsi scsi cmd pdu
+  * @ctask: iscsi cmd task
+@@ -150,7 +189,7 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
+ 	struct iscsi_session *session = conn->session;
+ 	struct iscsi_cmd *hdr = ctask->hdr;
+ 	struct scsi_cmnd *sc = ctask->sc;
+-	unsigned hdrlength;
++	unsigned hdrlength, cmd_len;
+ 	int rc;
+ 
+ 	ctask->hdr_len = 0;
+@@ -165,10 +204,17 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_cmd_task *ctask)
+ 	hdr->cmdsn = cpu_to_be32(session->cmdsn);
+ 	session->cmdsn++;
+ 	hdr->exp_statsn = cpu_to_be32(conn->exp_statsn);
+-	memcpy(hdr->cdb, sc->cmnd, sc->cmd_len);
+-	if (sc->cmd_len < MAX_COMMAND_SIZE)
+-		memset(&hdr->cdb[sc->cmd_len], 0,
+-			MAX_COMMAND_SIZE - sc->cmd_len);
++	cmd_len = sc->cmd_len;
++	if (cmd_len < ISCSI_CDB_SIZE)
++		memset(&hdr->cdb[cmd_len], 0,
++			ISCSI_CDB_SIZE - cmd_len);
++	else if (cmd_len > ISCSI_CDB_SIZE) {
++		rc = iscsi_prep_ecdb_ahs(ctask);
++		if (rc)
++			return rc;
++		cmd_len = ISCSI_CDB_SIZE;
++	}
++	memcpy(hdr->cdb, sc->cmnd, cmd_len);
+ 
+ 	ctask->imm_count = 0;
+ 	if (sc->sc_data_direction == DMA_TO_DEVICE) {
+diff --git a/include/scsi/iscsi_proto.h b/include/scsi/iscsi_proto.h
+index 5ffec8a..e0593bf 100644
+--- a/include/scsi/iscsi_proto.h
++++ b/include/scsi/iscsi_proto.h
+@@ -112,6 +112,7 @@ struct iscsi_ahs_hdr {
+ 
+ #define ISCSI_AHSTYPE_CDB		1
+ #define ISCSI_AHSTYPE_RLENGTH		2
++#define ISCSI_CDB_SIZE			16
+ 
+ /* iSCSI PDU Header */
+ struct iscsi_cmd {
+@@ -125,7 +126,7 @@ struct iscsi_cmd {
+ 	__be32 data_length;
+ 	__be32 cmdsn;
+ 	__be32 exp_statsn;
+-	uint8_t cdb[16];	/* SCSI Command Block */
++	uint8_t cdb[ISCSI_CDB_SIZE];	/* SCSI Command Block */
+ 	/* Additional Data (Command Dependent) */
+ };
+ 
+@@ -154,7 +155,8 @@ struct iscsi_ecdb_ahdr {
+ 	__be16 ahslength;	/* CDB length - 15, including reserved byte */
+ 	uint8_t ahstype;
+ 	uint8_t reserved;
+-	uint8_t ecdb[260 - 16];	/* 4-byte aligned extended CDB spillover */
++	/* 4-byte aligned extended CDB spillover */
++	uint8_t ecdb[260 - ISCSI_CDB_SIZE];
+ };
+ 
+ /* SCSI Response Header */
+-- 
+1.5.3.3
 
-> The negative resid is returned by iscsi for ages so I would say the scsi-=
-ml
-> is fine with it. But if you want I can reset the resid and mark an overfl=
-ow
-> condition in cmnd->status.
 
-I'd be fine if one of the SCSI guru's would comment on this as being
-acceptable.
-
-Matt
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-Hey Chief.  We've figured out how to save the technical department.  We=20
-need to be committed.
-					-- The Techs
-User Friendly, 1/22/1998
-
---OxDG9cJJSSQMUzGF
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHoiyQHL9iwnUZqnkRAgw1AJ9QfXWlnzm89XKyNNQtrRB1SMWEOACdHzmL
-sRCWAn8TKC9mpXPPJVE0pHs=
-=J0N8
------END PGP SIGNATURE-----
-
---OxDG9cJJSSQMUzGF--
