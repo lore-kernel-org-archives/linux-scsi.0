@@ -1,88 +1,74 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Thu, 31 Jan 2008 10:15:39 -0800
-Message-ID: <1201803339.11265.166.camel@haakon2.linux-iscsi.org>
-References: <adazluoe2t3.fsf@cisco.com>
-	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp>
-	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	 <20080130195635T.tomof@acm.org>
-	 <1201785938.7280.105.camel@haakon2.linux-iscsi.org>
-	 <e2e108260801310634n21473909o5abac021cc889de3@mail.gmail.com>
-	 <47A1EE54.6000005@vlnb.net>
-	 <1201799660.11265.121.camel@haakon2.linux-iscsi.org>
-	 <e2e108260801310940s5a6e963cva6c106a82388065f@mail.gmail.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] bugfix for an underflow condition in usb storage & isd200.c
+Date: Thu, 31 Jan 2008 20:32:35 +0200
+Message-ID: <47A21443.50402@panasas.com>
+References: <Pine.LNX.4.44L0.0801301807420.17156-100000@iolanthe.rowland.org> <47A1948B.2010402@panasas.com> <20080131070846.4464eb3c@chirp.tahoe> <47A1E6A0.8050500@panasas.com> <47A2033D.2050502@panasas.com> <20080131180051.GA22341@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp120.sbc.mail.sp1.yahoo.com ([69.147.64.93]:35442 "HELO
-	smtp120.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753046AbYAaSQH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 13:16:07 -0500
-In-Reply-To: <e2e108260801310940s5a6e963cva6c106a82388065f@mail.gmail.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:60405 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1763987AbYAaSdP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 13:33:15 -0500
+In-Reply-To: <20080131180051.GA22341@kroah.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, FUJITA Tomonori <tomof@acm.org>, fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Greg KH <greg@kroah.com>, Mark Glines <mark@glines.org>
+Cc: Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@SteelEye.com>, Alan Stern <stern@rowland.harvard.edu>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, 2008-01-31 at 18:40 +0100, Bart Van Assche wrote:
-> On Jan 31, 2008 6:14 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
-> > Also, with STGT being a pretty new design which has not undergone alot
-> > of optimization, perhaps profiling both pieces of code against similar
-> > tests would give us a better idea of where userspace bottlenecks reside.
-> > Also, the overhead involved with traditional iSCSI for bulk IO from
-> > kernel / userspace would also be a key concern for a much larger set of
-> > users, as iSER and SRP on IB is a pretty small userbase and will
-> > probably remain small for the near future.
+On Thu, Jan 31 2008 at 20:00 +0200, Greg KH <greg@kroah.com> wrote:
+> On Thu, Jan 31, 2008 at 07:19:57PM +0200, Boaz Harrosh wrote:
+>>   scsi_scan is issuing a 36-byte INQUIRY request to llds. isd200 would
+>>   volunteer 96 bytes of INQUIRY. This caused an underflow condition in
+>>   protocol.c usb_stor_access_xfer_buf(). So first fix is to
+>>   usb_stor_access_xfer_buf() to properly handle underflow conditions.
+>>   Then usb_stor_set_xfer_buf() should report this condition as a negative
+>>   resid. Should we also set cmnd->status in the underflow condition?
+>>
+>>   Then also isd200.c is fixed to only return the type of INQUIRY && SENSE
+>>   the upper layer asked for.
+>>
+>> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 > 
-> Two important trends in data center technology are server
-> consolidation and storage consolidation. A.o. every web hosting
-> company can profit from a fast storage solution. I wouldn't call this
-> a small user base.
+> As this is a regression and hits 2.6.24, can you send the final version
+> of this patch to the stable@kernel.org address so we can get it into the
+> 2.6.24.y tree?
 > 
-> Regarding iSER and SRP on IB: InfiniBand is today the most economic
-> solution for a fast storage network. I do not know which technology
-> will be the most popular for storage consolidation within a few years
-> -- this can be SRP, iSER, IPoIB + SDP, FCoE (Fibre Channel over
-> Ethernet) or maybe yet another technology. No matter which technology
-> becomes the most popular for storage applications, there will be a
-> need for high-performance storage software.
+> thanks,
 > 
+> greg k-h
+> -
 
-I meant small referring to storage on IB fabrics which has usually been
-in the research and national lab settings, with some other vendors
-offering IB as an alternative storage fabric for those who [w,c]ould not
-wait for 10 Gb/sec copper Ethernet and Direct Data Placement to come
-online.  These types of numbers compared to say traditional iSCSI, that
-is getting used all over the place these days in areas I won't bother
-listing here.
-
-As for the future, I am obviously cheering for IP storage fabrics, in
-particular 10 Gb/sec Ethernet and Direct Data Placement in concert with
-iSCSI Extentions for RDMA to give the data center a high performance,
-low latency transport that can do OS independent storage multiplexing
-and recovery across multiple independently developed implementions.
-Also avoiding lock-in from un-interoptable storage transports (espically
-on the high end) that had plauged so many vendors in years past has
-become an real option in the past few years with a IETF defined block
-level storage protocol.  We are actually going on four years since
-RFC-3720 was ratified. (April 2004)
-
-Making the 'enterprise' ethernet switching equipment go from millisecond
-to nanosecond latency in a whole different story that goes beyond my
-area of expertise.  I know there is one startup (Fulcrum Micro) who is
-working on this problem and seems to be making some good progress.
-
---nab
-
-> References:
-> * Michael Feldman, Battle of the Network Fabrics, HPCwire, December
-> 2006, http://www.hpcwire.com/hpc/1145060.html
-> * NetApp, Reducing Data Center Power Consumption Through Efficient
-> Storage, February 2007,
-> http://www.netapp.com/ftp/wp-reducing-datacenter-power-consumption.pdf
-> 
-> Bart Van Assche.
+On Thu, Jan 31 2008 at 20:00 +0200, Mark Glines <mark@glines.org> wrote:
+>> On Thu, 31 Jan 2008 19:20:26 +0200
+>> Hi,
+>> 
+>> This patch fails to apply to 2.6.24.  What should I apply it to, for
+>> testing?  USB Git, or SCSI git or something?
+>> 
+>> patching file drivers/usb/storage/isd200.c
+>> Hunk #1 succeeded at 1238 (offset -23 lines).
+>> Hunk #2 succeeded at 1248 (offset -23 lines).
+>> Hunk #3 succeeded at 1259 (offset -23 lines).
+>> patching file drivers/usb/storage/protocol.c
+>> Hunk #1 FAILED at 175.
+>> Hunk #2 FAILED at 228.
+>> 2 out of 2 hunks FAILED -- saving rejects to file drivers/usb/storage/protocol.c.rej
+>> 
+>> Thanks,
+>> 
+>> Mark
 > 
 
+OK, I was confused with what versions this belongs to. This also answers
+my original question of why it happens with my patch, as it did not
+it happened before my patch. My patches only went into the 2.6.25 merge window.
+
+So I will need to send 2 Patches. One for stable@kernel.org on top of 2.6.24.
+The second is for mainline, which is the one I sent. Should go threw scsi-misc
+which it is based on.
+
+patch for 2.6.24 stable@kernel.org on the way
+
+Boaz
