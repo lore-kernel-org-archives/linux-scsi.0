@@ -1,143 +1,52 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 3/3] iscsi: bidi support - iscsi_tcp
-Date: Thu, 31 Jan 2008 22:31:56 +0200
-Message-ID: <47A2303C.2080207@panasas.com>
-References: <47A20E85.6040906@panasas.com>
+From: Andrew Vasquez <andrew.vasquez@qlogic.com>
+Subject: [PATCH 0/11] qla2xxx: updates/fixes for 2.6.24 [8.02.00-k8].
+Date: Thu, 31 Jan 2008 12:32:16 -0800
+Message-ID: <20080131203216.GB19014@plap3.qlogic.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:38006 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1762473AbYAaUcb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 15:32:31 -0500
-In-Reply-To: <47A20E85.6040906@panasas.com>
+Received: from avexch1.qlogic.com ([198.70.193.115]:8033 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1756833AbYAaUc2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 15:32:28 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>, linux-scsi <linux-scsi@vger.kernel.org>, open-iscsi@googlegroups.com, Pete Wyckoff <pw@osc.edu>
-Cc: Benny Halevy <bhalevy@panasas.com>, Daniel.E.Messinger@seagate.com
+To: Linux SCSI Mailing List <linux-scsi@vger.kernel.org>, James Bottomley <james.bottomley@steeleye.com>
+Cc: Seokmann Ju <seokmann.ju@qlogic.com>, Andrew Vasquez <andrew.vasquez@qlogic.com>
 
+Here's a batch of fixes for 2.6.24.
 
-  bidi support for iscsi_tcp
-  - access the right scsi_in() and/or scsi_out() side of things.
-    also for resid
+Changes include:
 
- Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/iscsi_tcp.c |   31 +++++++++++++++++--------------
- 1 files changed, 17 insertions(+), 14 deletions(-)
+- Correct resource_size_t usages.
+- Add MODULE_FIRMWARE hint for ISP25XX firmware.
+- Cleanup any outstanding SRB resources during shutdown.
+- Clear EFT buffer before firmware reinitialization.
+- Cleanse memory allocation logic during probe.
+- Consolidate RISC-parity enablement codes.
+- Move RISC-interrupt-register modifications to qla2x00_request_irqs().
+- Correct issue where vport-state was not updated during an
+  ISP_ABORT_NEEDED requst.
+- Access the proper 'physical' port in FC-transport callbacks.
+- Correct issue where incorrect init-fw mailbox command was used on
+  non-NPIV capable ISPs.
+- Update version number to 8.02.00-k8.
 
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index ee7acfa..073dea7 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -528,6 +528,7 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 	struct iscsi_session *session = conn->session;
- 	struct scsi_cmnd *sc = ctask->sc;
- 	int datasn = be32_to_cpu(rhdr->datasn);
-+	unsigned total_in_length = scsi_in(sc)->length;
- 
- 	iscsi_update_cmdsn(session, (struct iscsi_nopin*)rhdr);
- 	if (tcp_conn->in.datalen == 0)
-@@ -542,10 +543,10 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 	tcp_ctask->exp_datasn++;
- 
- 	tcp_ctask->data_offset = be32_to_cpu(rhdr->offset);
--	if (tcp_ctask->data_offset + tcp_conn->in.datalen > scsi_bufflen(sc)) {
-+	if (tcp_ctask->data_offset + tcp_conn->in.datalen > total_in_length) {
- 		debug_tcp("%s: data_offset(%d) + data_len(%d) > total_length_in(%d)\n",
- 		          __FUNCTION__, tcp_ctask->data_offset,
--		          tcp_conn->in.datalen, scsi_bufflen(sc));
-+		          tcp_conn->in.datalen, total_in_length);
- 		return ISCSI_ERR_DATA_OFFSET;
- 	}
- 
-@@ -558,8 +559,8 @@ iscsi_data_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 
- 			if (res_count > 0 &&
- 			    (rhdr->flags & ISCSI_FLAG_CMD_OVERFLOW ||
--			     res_count <= scsi_bufflen(sc)))
--				scsi_set_resid(sc, res_count);
-+			     res_count <= total_in_length))
-+				scsi_in(sc)->resid = res_count;
- 			else
- 				sc->result = (DID_BAD_TARGET << 16) |
- 					rhdr->cmd_status;
-@@ -670,11 +671,11 @@ iscsi_r2t_rsp(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- 			    r2t->data_length, session->max_burst);
- 
- 	r2t->data_offset = be32_to_cpu(rhdr->data_offset);
--	if (r2t->data_offset + r2t->data_length > scsi_bufflen(ctask->sc)) {
-+	if (r2t->data_offset + r2t->data_length > scsi_out(ctask->sc)->length) {
- 		iscsi_conn_printk(KERN_ERR, conn,
- 				  "invalid R2T with data len %u at offset %u "
- 				  "and total length %d\n", r2t->data_length,
--				  r2t->data_offset, scsi_bufflen(ctask->sc));
-+				  r2t->data_offset, scsi_out(ctask->sc)->length);
- 		__kfifo_put(tcp_ctask->r2tpool.queue, (void*)&r2t,
- 			    sizeof(void*));
- 		return ISCSI_ERR_DATALEN;
-@@ -771,6 +772,7 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 		if (tcp_conn->in.datalen) {
- 			struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
- 			struct hash_desc *rx_hash = NULL;
-+			struct scsi_data_buffer *sdb = scsi_in(ctask->sc);
- 
- 			/*
- 			 * Setup copy of Data-In into the Scsi_Cmnd
-@@ -788,8 +790,8 @@ iscsi_tcp_hdr_dissect(struct iscsi_conn *conn, struct iscsi_hdr *hdr)
- 				  tcp_ctask->data_offset,
- 				  tcp_conn->in.datalen);
- 			return iscsi_segment_seek_sg(&tcp_conn->in.segment,
--						     scsi_sglist(ctask->sc),
--						     scsi_sg_count(ctask->sc),
-+						     sdb->table.sgl,
-+						     sdb->table.nents,
- 						     tcp_ctask->data_offset,
- 						     tcp_conn->in.datalen,
- 						     iscsi_tcp_process_data_in,
-@@ -1332,7 +1334,8 @@ iscsi_tcp_ctask_init(struct iscsi_cmd_task *ctask)
- 		return 0;
- 
- 	/* If we have immediate data, attach a payload */
--	err = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc), scsi_sg_count(sc),
-+	err = iscsi_tcp_send_data_prep(conn, scsi_out(sc)->table.sgl,
-+				       scsi_out(sc)->table.nents,
- 				       0, ctask->imm_count);
- 	if (err)
- 		return err;
-@@ -1386,6 +1389,7 @@ iscsi_tcp_ctask_xmit(struct iscsi_conn *conn, struct iscsi_cmd_task *ctask)
- {
- 	struct iscsi_tcp_cmd_task *tcp_ctask = ctask->dd_data;
- 	struct scsi_cmnd *sc = ctask->sc;
-+	struct scsi_data_buffer *sdb = scsi_out(sc);
- 	int rc = 0;
- 
- flush:
-@@ -1412,9 +1416,8 @@ flush:
- 				ctask->itt, tcp_ctask->sent, ctask->data_count);
- 
- 		iscsi_tcp_send_hdr_prep(conn, hdr, sizeof(*hdr));
--		rc = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc),
--					      scsi_sg_count(sc),
--					      tcp_ctask->sent,
-+		rc = iscsi_tcp_send_data_prep(conn, sdb->table.sgl,
-+					      sdb->table.nents, tcp_ctask->sent,
- 					      ctask->data_count);
- 		if (rc)
- 			goto fail;
-@@ -1460,8 +1463,8 @@ flush:
- 		iscsi_tcp_send_hdr_prep(conn, &r2t->dtask.hdr,
- 					sizeof(struct iscsi_hdr));
- 
--		rc = iscsi_tcp_send_data_prep(conn, scsi_sglist(sc),
--					      scsi_sg_count(sc),
-+		rc = iscsi_tcp_send_data_prep(conn, sdb->table.sgl,
-+					      sdb->table.nents,
- 					      r2t->data_offset + r2t->sent,
- 					      r2t->data_count);
- 		if (rc)
--- 
-1.5.3.3
+Diffstat:
 
+ drivers/scsi/qla2xxx/qla_attr.c    |   24 ++-
+ drivers/scsi/qla2xxx/qla_def.h     |    2 -
+ drivers/scsi/qla2xxx/qla_gbl.h     |    1 +
+ drivers/scsi/qla2xxx/qla_init.c    |   87 +++------
+ drivers/scsi/qla2xxx/qla_inline.h  |    7 +
+ drivers/scsi/qla2xxx/qla_isr.c     |   27 ++-
+ drivers/scsi/qla2xxx/qla_mbx.c     |    2 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  404 +++++++++++++-----------------------
+ drivers/scsi/qla2xxx/qla_sup.c     |   36 ++--
+ drivers/scsi/qla2xxx/qla_version.h |    2 +-
+ 10 files changed, 233 insertions(+), 359 deletions(-)
 
+Regards,
+Andrew Vasquez
+QLogic Corporation
