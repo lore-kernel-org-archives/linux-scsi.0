@@ -1,58 +1,39 @@
 From: michaelc@cs.wisc.edu
-Subject: [PATCH 03/12] qla4xxx: have qla4xxx use iscsi class session state check ready
-Date: Thu, 31 Jan 2008 13:36:45 -0600
-Message-ID: <1201808215955-git-send-email-michaelc@cs.wisc.edu>
-References: <12018082143359-git-send-email-michaelc@cs.wisc.edu>
- <12018082142447-git-send-email-michaelc@cs.wisc.edu>
- <1201808215968-git-send-email-michaelc@cs.wisc.edu>
+Subject: iscsi update
+Date: Thu, 31 Jan 2008 13:36:42 -0600
+Message-ID: <12018082143359-git-send-email-michaelc@cs.wisc.edu>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([66.187.233.31]:46678 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([66.187.233.31]:46638 "EHLO mx1.redhat.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759231AbYAaTg7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 14:36:59 -0500
-In-Reply-To: <1201808215968-git-send-email-michaelc@cs.wisc.edu>
+	id S1752974AbYAaTg4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 14:36:56 -0500
+Received: from int-mx1.corp.redhat.com (int-mx1.corp.redhat.com [172.16.52.254])
+	by mx1.redhat.com (8.13.8/8.13.8) with ESMTP id m0VJatb5022706
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 14:36:55 -0500
+Received: from pobox.corp.redhat.com (pobox.corp.redhat.com [10.11.255.20])
+	by int-mx1.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m0VJas1N005433
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 14:36:55 -0500
+Received: from localhost.localdomain (vpn-14-144.rdu.redhat.com [10.11.14.144])
+	by pobox.corp.redhat.com (8.13.1/8.13.1) with ESMTP id m0VJasCf018225
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 14:36:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: Mike Christie <michaelc@cs.wisc.edu>
 
-From: Mike Christie <michaelc@cs.wisc.edu>
+The following patches were made over scsi-misc.
 
-This has qla4xxx use the iscsi class's check ready function
-in the queue command function, so all iscsi drivers return the
-same error value for common problems.
+The bugs fixed are:
 
-Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
----
- drivers/scsi/qla4xxx/ql4_os.c |   12 ++++++++++++
- 1 files changed, 12 insertions(+), 0 deletions(-)
+- Have qla4xxx hook into block/unblock code, and use new session
+state to fail/requeue IO during transport problems.
+- Hook qla4xxx into async scanning code. Qla4xxx looks more
+like a normal old scsi card than a iscsi card. There is very
+little iscsi stuff going on in the driver, so it is much
+easier to just have this type of iscsi card work like other
+FC and SPI cards. Currently distros are doing crazy things
+to special case qla4xxx, so you can boot from it.
+- Fix libiscsi nop timer setting, bad printks and
+session age testing.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index a87fb9f..437d169 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -398,9 +398,21 @@ static int qla4xxx_queuecommand(struct scsi_cmnd *cmd,
- {
- 	struct scsi_qla_host *ha = to_qla_host(cmd->device->host);
- 	struct ddb_entry *ddb_entry = cmd->device->hostdata;
-+	struct iscsi_cls_session *sess = ddb_entry->sess;
- 	struct srb *srb;
- 	int rval;
- 
-+	if (!sess) {
-+		cmd->result = DID_IMM_RETRY << 16;
-+		goto qc_fail_command;
-+	}
-+
-+	rval = iscsi_session_chkready(sess);
-+	if (rval) {
-+		cmd->result = rval;
-+		goto qc_fail_command;
-+	}
-+
- 	if (atomic_read(&ddb_entry->state) != DDB_STATE_ONLINE) {
- 		if (atomic_read(&ddb_entry->state) == DDB_STATE_DEAD) {
- 			cmd->result = DID_NO_CONNECT << 16;
--- 
-1.5.2.1
+
 
