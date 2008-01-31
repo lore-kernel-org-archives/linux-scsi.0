@@ -1,232 +1,111 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH] kill hotplug init/exit section annotations
-Date: Thu, 31 Jan 2008 09:57:31 -0600
-Message-ID: <1201795051.3131.13.camel@localhost.localdomain>
-References: <20080130200336.GN29368@does.not.exist>
-	 <1201726817.3292.84.camel@localhost.localdomain>
-	 <20080130212011.GA26621@uranus.ravnborg.org>
-	 <1201729295.3292.94.camel@localhost.localdomain>
-	 <20080130223219.GT29368@does.not.exist>
-	 <20080131074436.GA31966@uranus.ravnborg.org>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [Cbe-oss-dev] [PATCH] ps3rom: sector size should be 512 bytes
+Date: Thu, 31 Jan 2008 08:10:55 -0800
+Message-ID: <1201795855.11265.67.camel@haakon2.linux-iscsi.org>
+References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
+	 <Pine.LNX.4.64.0801311414380.15534@vixen.sonytel.be>
+	 <1201788625.11265.23.camel@haakon2.linux-iscsi.org>
+	 <1201793647.3131.8.camel@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39986 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1764855AbYAaP5i (ORCPT
+Received: from smtp118.sbc.mail.sp1.yahoo.com ([69.147.64.91]:25485 "HELO
+	smtp118.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1756357AbYAaQLX (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 10:57:38 -0500
-In-Reply-To: <20080131074436.GA31966@uranus.ravnborg.org>
+	Thu, 31 Jan 2008 11:11:23 -0500
+In-Reply-To: <1201793647.3131.8.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sam Ravnborg <sam@ravnborg.org>
-Cc: Adrian Bunk <bunk@kernel.org>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Aegis Lin <aegislin@gmail.com>, Masakazu Mokuno <Masakazu_Mokuno@hq.scei.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-No-one seems to see much value in these, and they cause about 90% of our
-problems with __init/__exit markers, so simply eliminate them.  Rather
-than run over the whole tree removing them, this patch #defines them to
-be nops.
+On Thu, 2008-01-31 at 09:34 -0600, James Bottomley wrote:
+> On Thu, 2008-01-31 at 06:10 -0800, Nicholas A. Bellinger wrote:
+> > Greetings Geert and Co,
+> > 
+> > I have a related patch that I have been using with ps3rom.c for some
+> > time that fixes a bug in fs/bio.c that assumes 512 byte sectors for
+> > ATAPI operations.  This bug actually exists for all non 512 byte sector
+> > devices go through this code path (I found it with
+> > scsi_execute_async()), but I first ran into this issue with ps3rom.c
+> > because max_sectors (32) is small enough to trigger the bug assuming 512
+> > byte sectors during typical ATAPI READ_10 ops with iSCSI/HD.  Because
+> > typical max_sector settings for libata and USB are much higher, I have
+> > never ran into this issue outside of ps3rom.c, but the bug exists
+> > nevertheless..
+> > 
+> > The current patch assumes 512 byte sectors, and adds a sector_size
+> > parameter to drivers/scsi/scsi_lib.c:scsi_req_map_sg() to change it for
+> > passed struct request.  I know that some folks talked about killing
+> > scsi_execute_async() and fixing this problem elsewhere, but until then
+> > please consider this patch.  Any input is also appreciated.
+> 
+> My first reaction is really, no; there's no way we should be doing such
+> a nasty layering violation.
+> 
 
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+I don't care for it either, but without this patch (or something
+similar) all SCSI targets that use scsi_execute_async(), for non 512
+byte requests are broken.  This causes a problem when a small max_sector
+is correctly used by the LLD, and trips the check in
+fs/bio.c:__bio_add_page()
 
----
+	if (((bio->bi_size + len) >> 9) > max_sectors)
 
-I'll probably be going after __exit after this one, but it makes sense
-to split them up, since the hotplug annotation removal looks
-uncontroversial, whereas __exit and discard section removal might
-produce more robust debate.  I also think doing the hotplug removal
-gives us 90% of the benefits and removes 90% of the section mismatch
-problems.
+> The block code is set up to work with 512 byte sectors for its internal
+> counts.  Something like this will damage all non-512 byte sector devices
+> (and we do have several of those).
 
-James
+The purpose of the patch was to make none 512 byte sector struct
+scsi_device (2048 byte sector size ATAPI packets received over IP
+storage fabric, and queued into ps3rom.c in this particular case) work
+with scsi_execute_async().  If there is another target mode SCSI
+interface that does not have this problem existing or planned, I have no
+problem moving to that one instead.
 
+> 
+> There are three quantities you need to understand when trying to do
+> something like this
+> 
+>      1. The actual internal block sector size for sector counts.  This
+>         is hard coded to 512
+>      2. The medium sector size.  This is stored in hardsect_size in the
+>         queue.  Block ensures that it always sends down enough 512 byte
+>         sectors to be a multiple of this
+>      3. The block size.  This represents the unit the user of the device
+>         wants to think in terms of (most often for filesystems, the fs
+>         block size). It's stored in various places including the
+>         block_device bd_block_size.
 
-diff --git a/include/asm-generic/vmlinux.lds.h b/include/asm-generic/vmlinux.lds.h
-index f784d2f..5099021 100644
---- a/include/asm-generic/vmlinux.lds.h
-+++ b/include/asm-generic/vmlinux.lds.h
-@@ -9,46 +9,11 @@
- /* Align . to a 8 byte boundary equals to maximum function alignment. */
- #define ALIGN_FUNCTION()  . = ALIGN(8)
- 
--/* The actual configuration determine if the init/exit sections
-- * are handled as text/data or they can be discarded (which
-- * often happens at runtime)
-- */
--#ifdef CONFIG_HOTPLUG
--#define DEV_KEEP(sec)    *(.dev##sec)
--#define DEV_DISCARD(sec)
--#else
--#define DEV_KEEP(sec)
--#define DEV_DISCARD(sec) *(.dev##sec)
--#endif
--
--#ifdef CONFIG_HOTPLUG_CPU
--#define CPU_KEEP(sec)    *(.cpu##sec)
--#define CPU_DISCARD(sec)
--#else
--#define CPU_KEEP(sec)
--#define CPU_DISCARD(sec) *(.cpu##sec)
--#endif
--
--#if defined(CONFIG_MEMORY_HOTPLUG)
--#define MEM_KEEP(sec)    *(.mem##sec)
--#define MEM_DISCARD(sec)
--#else
--#define MEM_KEEP(sec)
--#define MEM_DISCARD(sec) *(.mem##sec)
--#endif
--
--
- /* .data section */
- #define DATA_DATA							\
- 	*(.data)							\
- 	*(.data.init.refok)						\
- 	*(.ref.data)							\
--	DEV_KEEP(init.data)						\
--	DEV_KEEP(exit.data)						\
--	CPU_KEEP(init.data)						\
--	CPU_KEEP(exit.data)						\
--	MEM_KEEP(init.data)						\
--	MEM_KEEP(exit.data)						\
- 	. = ALIGN(8);							\
- 	VMLINUX_SYMBOL(__start___markers) = .;				\
- 	*(__markers)							\
-@@ -171,12 +136,6 @@
- 	/* __*init sections */						\
- 	__init_rodata : AT(ADDR(__init_rodata) - LOAD_OFFSET) {		\
- 		*(.ref.rodata)						\
--		DEV_KEEP(init.rodata)					\
--		DEV_KEEP(exit.rodata)					\
--		CPU_KEEP(init.rodata)					\
--		CPU_KEEP(exit.rodata)					\
--		MEM_KEEP(init.rodata)					\
--		MEM_KEEP(exit.rodata)					\
- 	}								\
- 									\
- 	/* Built-in module parameters. */				\
-@@ -208,12 +167,6 @@
- 		*(.ref.text)						\
- 		*(.text.init.refok)					\
- 		*(.exit.text.refok)					\
--	DEV_KEEP(init.text)						\
--	DEV_KEEP(exit.text)						\
--	CPU_KEEP(init.text)						\
--	CPU_KEEP(exit.text)						\
--	MEM_KEEP(init.text)						\
--	MEM_KEEP(exit.text)
- 
- 
- /* sched.text is aling to function alignment to secure we have same
-@@ -241,33 +194,15 @@
- /* init and exit section handling */
- #define INIT_DATA							\
- 	*(.init.data)							\
--	DEV_DISCARD(init.data)						\
--	DEV_DISCARD(init.rodata)					\
--	CPU_DISCARD(init.data)						\
--	CPU_DISCARD(init.rodata)					\
--	MEM_DISCARD(init.data)						\
--	MEM_DISCARD(init.rodata)
- 
- #define INIT_TEXT							\
- 	*(.init.text)							\
--	DEV_DISCARD(init.text)						\
--	CPU_DISCARD(init.text)						\
--	MEM_DISCARD(init.text)
- 
- #define EXIT_DATA							\
- 	*(.exit.data)							\
--	DEV_DISCARD(exit.data)						\
--	DEV_DISCARD(exit.rodata)					\
--	CPU_DISCARD(exit.data)						\
--	CPU_DISCARD(exit.rodata)					\
--	MEM_DISCARD(exit.data)						\
--	MEM_DISCARD(exit.rodata)
- 
- #define EXIT_TEXT							\
- 	*(.exit.text)							\
--	DEV_DISCARD(exit.text)						\
--	CPU_DISCARD(exit.text)						\
--	MEM_DISCARD(exit.text)
- 
- 		/* DWARF debug sections.
- 		Symbols in the DWARF debugging sections are relative to
-diff --git a/include/linux/init.h b/include/linux/init.h
-index 2efbda0..225bd1c 100644
---- a/include/linux/init.h
-+++ b/include/linux/init.h
-@@ -81,29 +81,28 @@
- 
- #define __exit          __section(.exit.text) __exitused __cold
- 
--/* Used for HOTPLUG */
--#define __devinit        __section(.devinit.text) __cold
--#define __devinitdata    __section(.devinit.data)
--#define __devinitconst   __section(.devinit.rodata)
--#define __devexit        __section(.devexit.text) __exitused __cold
--#define __devexitdata    __section(.devexit.data)
--#define __devexitconst   __section(.devexit.rodata)
--
--/* Used for HOTPLUG_CPU */
--#define __cpuinit        __section(.cpuinit.text) __cold
--#define __cpuinitdata    __section(.cpuinit.data)
--#define __cpuinitconst   __section(.cpuinit.rodata)
--#define __cpuexit        __section(.cpuexit.text) __exitused __cold
--#define __cpuexitdata    __section(.cpuexit.data)
--#define __cpuexitconst   __section(.cpuexit.rodata)
-+/* Legacy: originally used for HOTPLUG */
-+#define __devinit        
-+#define __devinitdata
-+#define __devinitconst
-+#define __devexit
-+#define __devexitdata
-+#define __devexitconst
-+
-+#define __cpuinit
-+#define __cpuinitdata
-+#define __cpuinitconst
-+#define __cpuexit
-+#define __cpuexitdata
-+#define __cpuexitconst
- 
- /* Used for MEMORY_HOTPLUG */
--#define __meminit        __section(.meminit.text) __cold
--#define __meminitdata    __section(.meminit.data)
--#define __meminitconst   __section(.meminit.rodata)
--#define __memexit        __section(.memexit.text) __exitused __cold
--#define __memexitdata    __section(.memexit.data)
--#define __memexitconst   __section(.memexit.rodata)
-+#define __meminit
-+#define __meminitdata
-+#define __meminitconst
-+#define __memexit
-+#define __memexitdata
-+#define __memexitconst
- 
- /* For assembly routines */
- #define __INIT		.section	".init.text","ax"
-@@ -111,14 +110,14 @@
- 
- #define __INITDATA	.section	".init.data","aw"
- 
--#define __DEVINIT        .section	".devinit.text", "ax"
--#define __DEVINITDATA    .section	".devinit.data", "aw"
-+#define __DEVINIT
-+#define __DEVINITDATA
- 
--#define __CPUINIT        .section	".cpuinit.text", "ax"
--#define __CPUINITDATA    .section	".cpuinit.data", "aw"
-+#define __CPUINIT
-+#define __CPUINITDATA
- 
--#define __MEMINIT        .section	".meminit.text", "ax"
--#define __MEMINITDATA    .section	".meminit.data", "aw"
-+#define __MEMINIT
-+#define __MEMINITDATA
- 
- /* silence warnings when references are OK */
- #define __REF            .section       ".ref.text", "ax"
+Yes, the assumption of the two hardcoded locations of 512 byte sectors
+in __bio_add_page() and bio_endio() is where I was orginally running
+into problems. I know you have mentioned that no in-tree drivers
+currently send non 512 byte sector requests into scsi_execute_async(),
+but the issue exists for all current target mode code when going through
+said SCSI target interface.
+
+So what I am hearing is that the conditionals in __bio_add_page() and
+bio_endio() that assume 512 byte sector size should be checking when the
+medium sector size does not match the hardcoded block sector size,  byte
+and use the non 512 sector value for the incoming and completion
+paths..?
+
+> It really sounds like the problem with ps3rom is that hardsect_size
+> isn't being set correctly.  As I understand the problem, from the
+> incredibly cursory insight the emails give, so please correct if wrong,
+> you want the hard sector size to be the CD_FRAMESIZE?
+
+Sorry, to confuse this.  These are two seperate issues.
+
+--nab
+  
+> 
+> James
+> 
+> 
+> 
+
 
 
