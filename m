@@ -1,35 +1,37 @@
-From: Adrian Bunk <bunk@kernel.org>
-Subject: Re: [PATCH] kill hotplug init/exit section annotations
-Date: Thu, 31 Jan 2008 19:55:43 +0200
-Message-ID: <20080131175543.GH19700@cs181133002.pp.htv.fi>
-References: <20080130212011.GA26621@uranus.ravnborg.org> <1201729295.3292.94.camel@localhost.localdomain> <20080130223219.GT29368@does.not.exist> <20080131074436.GA31966@uranus.ravnborg.org> <1201795051.3131.13.camel@localhost.localdomain> <20080131081120.27505dc0@laptopd505.fenrus.org> <20080131162141.GC19700@cs181133002.pp.htv.fi> <20080131090749.72781689@laptopd505.fenrus.org> <20080131171436.GG19700@cs181133002.pp.htv.fi> <20080131174526.GA2488@puku.stupidest.org>
+From: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
+	isd200.c
+Date: Thu, 31 Jan 2008 10:00:51 -0800
+Message-ID: <20080131180051.GA22341@kroah.com>
+References: <Pine.LNX.4.44L0.0801301807420.17156-100000@iolanthe.rowland.org> <47A1948B.2010402@panasas.com> <20080131070846.4464eb3c@chirp.tahoe> <47A1E6A0.8050500@panasas.com> <47A2033D.2050502@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1762070AbYAaRzg@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <20080131174526.GA2488@puku.stupidest.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chris Wedgwood <cw@f00f.org>
-Cc: Arjan van de Ven <arjan@infradead.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Sam Ravnborg <sam@ravnborg.org>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
+In-Reply-To: <47A2033D.2050502-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Cc: Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jan 31, 2008 at 09:45:26AM -0800, Chris Wedgwood wrote:
-> On Thu, Jan 31, 2008 at 07:14:36PM +0200, Adrian Bunk wrote:
+On Thu, Jan 31, 2008 at 07:19:57PM +0200, Boaz Harrosh wrote:
 > 
-> > > cpuhotplug is required for suspend/resume.
-> >
-> > Not on UP computers.
+>   scsi_scan is issuing a 36-byte INQUIRY request to llds. isd200 would
+>   volunteer 96 bytes of INQUIRY. This caused an underflow condition in
+>   protocol.c usb_stor_access_xfer_buf(). So first fix is to
+>   usb_stor_access_xfer_buf() to properly handle underflow conditions.
+>   Then usb_stor_set_xfer_buf() should report this condition as a negative
+>   resid. Should we also set cmnd->status in the underflow condition?
 > 
-> those are less and less common now, most modern laptops are dual core
+>   Then also isd200.c is fixed to only return the type of INQUIRY && SENSE
+>   the upper layer asked for.
+> 
+> Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
 
-Who was talking about laptops?
+As this is a regression and hits 2.6.24, can you send the final version
+of this patch to the stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org address so we can get it into the
+2.6.24.y tree?
 
-cu
-Adrian
+thanks,
 
--- 
-
-       "Is there not promise of rain?" Ling Tan asked suddenly out
-        of the darkness. There had been need of rain for many days.
-       "Only a promise," Lao Er said.
-                                       Pearl S. Buck - Dragon Seed
+greg k-h
