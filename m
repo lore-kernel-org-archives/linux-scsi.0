@@ -1,84 +1,84 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [BUG?] GDTH driver not working after upgrade to 2.6.24
-Date: Thu, 31 Jan 2008 14:35:49 +0200
-Message-ID: <47A1C0A5.7090303@panasas.com>
-References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com> <47A1ABF8.4050408@upb.de>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: Re: [Cbe-oss-dev] [PATCH] ps3rom: sector size should be 512 bytes
+Date: Thu, 31 Jan 2008 14:28:20 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0801311414380.15534@vixen.sonytel.be>
+References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1658879875-1201785373=:15534"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gw-colo-pa.panasas.com ([66.238.117.130]:10838 "EHLO
-	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with ESMTP id S1764437AbYAaMgm (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 07:36:42 -0500
-In-Reply-To: <47A1ABF8.4050408@upb.de>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:58623 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758631AbYAaN2X (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 08:28:23 -0500
+In-Reply-To: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
+Content-ID: <Pine.LNX.4.64.0801311416150.15534@vixen.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-15?Q?Sven_K=F6hler?= <skoehler@upb.de>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
+To: Aegis Lin <aegislin@gmail.com>
+Cc: Masakazu Mokuno <Masakazu_Mokuno@hq.scei.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org
 
-On Thu, Jan 31 2008 at 13:07 +0200, Sven K=F6hler <skoehler@upb.de> wro=
-te:
->> Yes the gdth driver passed an open hart surgery in kernel 2.6.24. Th=
-e bad thing
->> about it is that all three of the Coders that did that did not have =
-any HW to work
->> on. One of them is me. We did cry for tester for a long time but no =
-one came forward.
->=20
-> All i'd like to ask is WHY!?
-> WHY such a big open heart surgery?
-> OK, you have your reasons.
->=20
->> Could you test patches for us? first thing would be to enable debug =
-output patch below.
->=20
-> The machine is still production. It will be replaced by a 64bit syste=
-m=20
-> with an AACRAID card some time in the future. Then, i could maybe tes=
-t=20
-> patches on the old machine. But unfortunatly, it's not my machine. It=
-'s=20
-> just administrated by me. And i don't know, what's exactly is the fut=
-ure=20
-> of it.
->=20
->> If you absolutely need a 2.6.24 kernel, + gdth in a production syste=
-m you could
->> checkout the 2.6.23 driver and compile. The old driver will work the=
- same in 2.6.24.
->> It will not however even compile in 2.6.25-rcx.
->=20
-> I see. Thanks for the hint. Would be an alternative. Actually, i don'=
-t=20
-> need 2.6.24 - but if something security related is fixed, then i'm no=
-t=20
-> able to move on to 2.6.24. And i'm using Gentoo. There's not really a=
-=20
-> kernel maintained by the distribution.
->=20
->> If any one wants to send me a card that uses the gdth driver, I will=
- be very happy
->> to debug this card, and return it once I'm done.
->=20
-> I don't think, it's a seperate card, that i could send you. It's some=
-=20
-> 19" rack server with such a card on-board, i think.
->=20
->=20
-> So it don't see much opportunity for me to test patched and stuff :-(
->=20
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Thanks, Perhaps someone else then.=20
-Anyone with gdth HW that can test patches?
-Your lspci said: "Intel Corporation RAID Controller" Matthew
-is there a gdth card lying around in an Intel lab near you?
+---584349381-1658879875-1201785373=:15534
+Content-Type: TEXT/PLAIN; CHARSET=UTF-8
+Content-Transfer-Encoding: 8BIT
+Content-ID: <Pine.LNX.4.64.0801311416151.15534@vixen.sonytel.be>
 
-James do we need to mark gdth BROKEN for 2.6.24 and higher?
+On Tue, 29 Jan 2008, Aegis Lin wrote:
+> Quite minor patch, but from the context it should be desired
+> that 64KB is available for ATAPI transferrring.
+> (Historically) in SCSI/block layer sector size is defined as
+> 512 during sector-byte calculation. Originally in ps3rom.c
+> CD_FRAMESIZE was used, which makes
+> /sys/block/sr0/queue/max_sectors_kb
+> to be limited to 16KB.
 
-Boaz
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Can I please have a Signed-off-by?
+
+> diff --git a/drivers/scsi/ps3rom.c b/drivers/scsi/ps3rom.c
+> index 17b4a7c..cc7062b 100644
+> --- a/drivers/scsi/ps3rom.c
+> +++ b/drivers/scsi/ps3rom.c
+> @@ -35,7 +35,7 @@
+>  
+>  #define BOUNCE_SIZE			(64*1024)
+>  
+> -#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE / CD_FRAMESIZE)
+> +#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE / 512)
+>  
+>  
+>  struct ps3rom_private {
+
+Indeed, scsi_host_template.max_sectors seems to be just passed to the block
+layer, so it concerns 512-byte sectors.
+
+Furthermore, drivers/cdrom/cdrom.c:cdrom_read_cdda_bpc() seems to handle the
+conversion from raw CD frame sizes to 512-byte sectors, and limit the requested
+number of sectors if needed.
+
+However, I didn't find where it handles conversion from CD data frame sizes to
+512-byte sectors.
+
+Am I missing something?
+
+With kind regards,
+
+Geert Uytterhoeven
+Software Architect
+
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Network and Software Technology Center Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584349381-1658879875-1201785373=:15534--
