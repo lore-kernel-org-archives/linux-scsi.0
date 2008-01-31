@@ -1,70 +1,68 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Cbe-oss-dev] [PATCH] ps3rom: sector size should be 512 bytes
-Date: Thu, 31 Jan 2008 09:34:07 -0600
-Message-ID: <1201793647.3131.8.camel@localhost.localdomain>
-References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
-	 <Pine.LNX.4.64.0801311414380.15534@vixen.sonytel.be>
-	 <1201788625.11265.23.camel@haakon2.linux-iscsi.org>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Thu, 31 Jan 2008 18:50:44 +0300
+Message-ID: <47A1EE54.6000005@vlnb.net>
+References: <adazluoe2t3.fsf@cisco.com>	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp>	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>	 <20080130195635T.tomof@acm.org>	 <1201785938.7280.105.camel@haakon2.linux-iscsi.org> <e2e108260801310634n21473909o5abac021cc889de3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:59011 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753932AbYAaPeQ (ORCPT
+Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:50031 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1756793AbYAaPuv (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 10:34:16 -0500
-In-Reply-To: <1201788625.11265.23.camel@haakon2.linux-iscsi.org>
+	Thu, 31 Jan 2008 10:50:51 -0500
+In-Reply-To: <e2e108260801310634n21473909o5abac021cc889de3@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Aegis Lin <aegislin@gmail.com>, Masakazu Mokuno <Masakazu_Mokuno@hq.scei.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, FUJITA Tomonori <tomof@acm.org>, fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Thu, 2008-01-31 at 06:10 -0800, Nicholas A. Bellinger wrote:
-> Greetings Geert and Co,
+Bart Van Assche wrote:
+> On Jan 31, 2008 2:25 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
 > 
-> I have a related patch that I have been using with ps3rom.c for some
-> time that fixes a bug in fs/bio.c that assumes 512 byte sectors for
-> ATAPI operations.  This bug actually exists for all non 512 byte sector
-> devices go through this code path (I found it with
-> scsi_execute_async()), but I first ran into this issue with ps3rom.c
-> because max_sectors (32) is small enough to trigger the bug assuming 512
-> byte sectors during typical ATAPI READ_10 ops with iSCSI/HD.  Because
-> typical max_sector settings for libata and USB are much higher, I have
-> never ran into this issue outside of ps3rom.c, but the bug exists
-> nevertheless..
+>>Since this particular code is located in a non-data path critical
+>>section, the kernel vs. user discussion is a wash.  If we are talking
+>>about data path, yes, the relevance of DD tests in kernel designs are
+>>suspect :p.  For those IB testers who are interested, perhaps having a
+>>look with disktest from the Linux Test Project would give a better
+>>comparision between the two implementations on a RDMA capable fabric
+>>like IB for best case performance.  I think everyone is interested in
+>>seeing just how much data path overhead exists between userspace and
+>>kernel space in typical and heavy workloads, if if this overhead can be
+>>minimized to make userspace a better option for some of this very
+>>complex code.
 > 
-> The current patch assumes 512 byte sectors, and adds a sector_size
-> parameter to drivers/scsi/scsi_lib.c:scsi_req_map_sg() to change it for
-> passed struct request.  I know that some folks talked about killing
-> scsi_execute_async() and fixing this problem elsewhere, but until then
-> please consider this patch.  Any input is also appreciated.
+> I can run disktest on the same setups I ran dd on. This will take some
+> time however.
 
-My first reaction is really, no; there's no way we should be doing such
-a nasty layering violation.
+Disktest was already referenced in the beginning of the performance 
+comparison thread, but its results are not very interesting if we are 
+going to find out, which implementation is more effective, because in 
+the modes, in which usually people run this utility, it produces latency 
+insensitive workload (multiple threads working in parallel). So, such 
+multithreaded disktests results will be different between STGT and SCST 
+only if STGT's implementation will get target CPU bound. If CPU on the 
+target is powerful enough, even extra busy loops in the STGT or SCST hot 
+path code will change nothing.
 
-The block code is set up to work with 512 byte sectors for its internal
-counts.  Something like this will damage all non-512 byte sector devices
-(and we do have several of those).
+Additionally, multithreaded disktest over RAM disk is a good example of 
+a synthetic benchmark, which has almost no relation with real life 
+workloads. But people like it, because it produces nice looking results.
 
-There are three quantities you need to understand when trying to do
-something like this
+Actually, I don't know what kind of conclusions it is possible to make 
+from disktest's results (maybe only how throughput gets bigger or slower 
+with increasing number of threads?), it's a good stress test tool, but 
+not more.
 
-     1. The actual internal block sector size for sector counts.  This
-        is hard coded to 512
-     2. The medium sector size.  This is stored in hardsect_size in the
-        queue.  Block ensures that it always sends down enough 512 byte
-        sectors to be a multiple of this
-     3. The block size.  This represents the unit the user of the device
-        wants to think in terms of (most often for filesystems, the fs
-        block size). It's stored in various places including the
-        block_device bd_block_size.
-
-It really sounds like the problem with ps3rom is that hardsect_size
-isn't being set correctly.  As I understand the problem, from the
-incredibly cursory insight the emails give, so please correct if wrong,
-you want the hard sector size to be the CD_FRAMESIZE?
-
-James
-
+> Disktest is new to me -- any hints with regard to suitable
+> combinations of command line parameters are welcome. The most recent
+> version I could find on http://ltp.sourceforge.net/ is ltp-20071231.
+> 
+> Bart Van Assche.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
