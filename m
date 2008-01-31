@@ -1,39 +1,48 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [linux-usb-devel] 2.6.24: NULL scatter-gather pointer in
- usb_storage:usb_stor_access_xfer_buf?
-Date: Thu, 31 Jan 2008 11:45:36 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0801311143180.3970-100000@iolanthe.rowland.org>
-References: <47A1E6A0.8050500@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [BUG?] GDTH driver not working after upgrade to 2.6.24
+Date: Thu, 31 Jan 2008 18:52:40 +0200
+Message-ID: <47A1FCD8.6050906@panasas.com>
+References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com> <47A1ABF8.4050408@upb.de> <47A1C0A5.7090303@panasas.com> <Pine.LNX.4.64.0801311736110.4864@fbirervta.pbzchgretzou.qr>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:45015 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757826AbYAaQpi (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 11:45:38 -0500
-In-Reply-To: <47A1E6A0.8050500@panasas.com>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:11141 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S933417AbYAaQw4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 11:52:56 -0500
+In-Reply-To: <Pine.LNX.4.64.0801311736110.4864@fbirervta.pbzchgretzou.qr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: Mark Glines <mark@glines.org>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: Jan Engelhardt <jengelh@computergmbh.de>
+Cc: =?ISO-8859-1?Q?Sven_K=F6hler?= <skoehler@upb.de>, James Bottomley <James.Bottomley@SteelEye.com>, Matthew Wilcox <matthew@wil.cx>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-On Thu, 31 Jan 2008, Boaz Harrosh wrote:
+On Thu, Jan 31 2008 at 18:39 +0200, Jan Engelhardt <jengelh@computergmbh.de> wrote:
+> Hi,
+> 
+> On Jan 31 2008 14:35, Boaz Harrosh wrote:
+>> Thanks, Perhaps someone else then. 
+>> Anyone with gdth HW that can test patches?
+> 
+> Is bisecting down the existing chain and finding the bad commit 
+> sufficient? (I also take new patches.)
+Most certainly. If you are willing, please... I'm looking for someone
+responsive.
 
-> >> Please check the below patch.
-> >>
-> >> one thing that I can see is that the isd200 does an INQUARY transfer
-> >> of sizeof(struct inquiry_data) which is 96 bytes, when scsi_scan.c
-> >> sends an INQUARY with 36 bytes buffer. So we have an underflow in 
-> >> usb_stor_access_xfer_buf().
+first -  enable debug prints (see the original post)
+         and send me the prints.
+second - bisection could be grate yes.
+third - accepting patches and testing could be grate, thanks.
 
-Maybe the isd200 routine should be changed also, so that it doesn't try
-to store too much data in the buffer.
+> 
+>> Your lspci said: "Intel Corporation RAID Controller" Matthew
+>> is there a gdth card lying around in an Intel lab near you?
+>>
+>> James do we need to mark gdth BROKEN for 2.6.24 and higher?
+> 
+> I say revert it for the time being.
 
-> I will send a proper patch to scsi maintainer. Alan is it OK to send this
-> patch threw James's scsi-misc?
+It could be reverted for 2.6.24.x  maintenance releases but for 2.6.25-xxx
+it cannot as it will not compile, and the fix to that is what you see in code.
 
-You should send patches to Matt Dharm, since he is the usb-storage 
-maintainer.
-
-Alan Stern
-
+Boaz
