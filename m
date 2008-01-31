@@ -1,38 +1,40 @@
-From: Matthew Wilcox <matthew@wil.cx>
-Subject: Re: DMA mapping on SCSI device?
-Date: Wed, 30 Jan 2008 22:01:32 -0700
-Message-ID: <20080131050132.GA3836@parisc-linux.org>
-References: <479E6E8C.2090501@shaw.ca> <896139.88121.qm@web31812.mail.mud.yahoo.com>
+From: Andi Kleen <ak@suse.de>
+Subject: Re: Value of __*{init,exit} anotations?
+Date: Thu, 31 Jan 2008 06:42:54 +0100
+Message-ID: <200801310642.54632.ak@suse.de>
+References: <20080130200336.GN29368@does.not.exist> <1201729295.3292.94.camel@localhost.localdomain> <20080130223219.GT29368@does.not.exist>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Type: text/plain;
+  charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cantor.suse.de ([195.135.220.2]:36326 "EHLO mx1.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751321AbYAaFm7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 00:42:59 -0500
+In-Reply-To: <20080130223219.GT29368@does.not.exist>
 Content-Disposition: inline
-In-Reply-To: <896139.88121.qm@web31812.mail.mud.yahoo.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Luben Tuikov <ltuikov@yahoo.com>
-Cc: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Adrian Bunk <bunk@kernel.org>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Sam Ravnborg <sam@ravnborg.org>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
 
-On Tue, Jan 29, 2008 at 02:09:52PM -0800, Luben Tuikov wrote:
-> > The ideal solution would be to do mapping against a
-> > different struct 
-> > device for each port, so that we could maintain the proper
-> > DMA mask for 
-> > each of them at all times. However I'm not sure if
-> > that's possible. The 
-> > thought of using the SCSI struct device for DMA mapping was
-> > brought up 
-> > at one point.. any thoughts on that?
-> 
-> The reason for this is that the object that a struct scsi_dev
-> represents has nothing to do with HW DMA engines.
 
-It really would work, once the few remaining architectures move away
-from asserting that the 'struct device' passed in is a pci device.
-It seems like the best way forward to me.
+> Some people consider it worth it for their memory restricted systems
+> and would like to drive the annotations even further. [1]
 
--- 
-Intel are signing my paycheques ... these opinions are still mine
-"Bill, look, we understand that you're interested in selling us this
-operating system, but compare it to ours.  We can't possibly take such
-a retrograde step."
+They could get much better bang-for-the-buck (as in memory saved
+for amount of work invested) by tackling some the dynamic memory allocation
+pigs.
+
+In general it's a trade off between how much work and patch churn versus
+benefit, and some of the annotations really don't look too good on this
+scale.
+
+> People at linux-arch (Cc'ed) might be better at explaining how often 
+> CONFIG_HOTPLUG gets used in real-life systems and how big the savings 
+> are there.
+
+CONFIG_HOTPLUG is widely used for suspend on multi core systems. 
+
+-Andi
