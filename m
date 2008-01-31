@@ -1,33 +1,62 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Thu, 31 Jan 2008 05:25:38 -0800
-Message-ID: <1201785938.7280.105.camel@haakon2.linux-iscsi.org>
-References: <adazluoe2t3.fsf@cisco.com>
-	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp>
-	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	 <20080130195635T.tomof@acm.org>
+From: "Nicholas A. Bellinger" <nab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Subject: [Fwd: Re: Integration of SCST in the mainstream Linux
+	kernel]
+Date: Thu, 31 Jan 2008 05:34:11 -0800
+Message-ID: <1201786451.11265.1.camel@haakon2.linux-iscsi.org>
+Reply-To: nab-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
 Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="=-eIa5ttMtT9LRDuRFM0mm"
+Return-path: <stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+List-Unsubscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
+	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.berlios.de/pipermail/stgt-devel>
+List-Post: <mailto:stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+List-Help: <mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.berlios.de/mailman/listinfo/stgt-devel>,
+	<mailto:stgt-devel-request-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org?subject=subscribe>
+Sender: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+Errors-To: stgt-devel-bounces-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+To: linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, STGT-Devel <stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org>
+List-Id: linux-scsi@vger.kernel.org
+
+
+--=-eIa5ttMtT9LRDuRFM0mm
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp104.sbc.mail.mud.yahoo.com ([68.142.198.203]:41417 "HELO
-	smtp104.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1755892AbYAaNcs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 08:32:48 -0500
-In-Reply-To: <20080130195635T.tomof@acm.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: bart.vanassche@gmail.com, fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+
+My original email probably got bounced..
+
+--nab
+
+--=-eIa5ttMtT9LRDuRFM0mm
+Content-Disposition: inline
+Content-Description: Forwarded message - Re: Integration of SCST in the
+	mainstream Linux kernel
+Content-Type: message/rfc822
+
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+To: FUJITA Tomonori <tomof-HInyCGIudOg@public.gmane.org>
+Cc: bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org, rdreier-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org,  James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org, torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org,  akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org, vst-d+Crzxg7Rs0@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org,  scst-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+In-Reply-To: <20080130195635T.tomof-HInyCGIudOg@public.gmane.org>
+References: <adazluoe2t3.fsf-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org>
+	 <20080130083239E.fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org>
+	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+	 <20080130195635T.tomof-HInyCGIudOg@public.gmane.org>
+Content-Type: text/plain
+Message-Id: <1201785938.7280.105.camel-Y1+j5t8j3WgjMeEPmliV8E/sVC8ogwMJ@public.gmane.org>
+Mime-Version: 1.0
+X-Mailer: Evolution 2.10.3 
+Date: Thu, 31 Jan 2008 05:25:41 -0800
+Content-Transfer-Encoding: 7bit
 
 Greetings all,
 
 On Wed, 2008-01-30 at 19:56 +0900, FUJITA Tomonori wrote:
 > On Wed, 30 Jan 2008 09:38:04 +0100
-> "Bart Van Assche" <bart.vanassche@gmail.com> wrote:
+> "Bart Van Assche" <bart.vanassche-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org> wrote:
 > 
-> > On Jan 30, 2008 12:32 AM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
+> > On Jan 30, 2008 12:32 AM, FUJITA Tomonori <fujita.tomonori-Zyj7fXuS5i5L9jVzuh4AOg@public.gmane.org> wrote:
 > > >
 > > > iSER has parameters to limit the maximum size of RDMA (it needs to
 > > > repeat RDMA with a poor configuration)?
@@ -136,7 +165,19 @@ complex code.
 --nab
 
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
 
+--=-eIa5ttMtT9LRDuRFM0mm
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
+
+_______________________________________________
+Stgt-devel mailing list
+Stgt-devel-0fE9KPoRgkgATYTw5x5z8w@public.gmane.org
+https://lists.berlios.de/mailman/listinfo/stgt-devel
+
+--=-eIa5ttMtT9LRDuRFM0mm--
