@@ -1,136 +1,86 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [BUG?] GDTH driver not working after upgrade to 2.6.24
-Date: Thu, 31 Jan 2008 12:08:38 +0200
-Message-ID: <47A19E26.30107@panasas.com>
-References: <fnqka6$l46$1@ger.gmane.org>
+From: Halim Issa <yallaone@gmail.com>
+Subject: Re: sd incorrectly reports write cache disabled on cache-capable drives/controllers
+Date: Thu, 31 Jan 2008 11:41:53 +0100
+Message-ID: <200801311141.53367.yallaone@gmail.com>
+References: <200801252159.20858.yallaone@gmail.com> <200801252228.22659.yallaone@gmail.com> <1201296801.3119.63.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain;
+  charset="iso-8859-1"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:56624 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760762AbYAaKIw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 05:08:52 -0500
-In-Reply-To: <fnqka6$l46$1@ger.gmane.org>
+Received: from fk-out-0910.google.com ([209.85.128.190]:32665 "EHLO
+	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760349AbYAaKl7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 05:41:59 -0500
+Received: by fk-out-0910.google.com with SMTP id z23so524162fkz.5
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 02:41:57 -0800 (PST)
+In-Reply-To: <1201296801.3119.63.camel@localhost.localdomain>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?ISO-8859-15?Q?Sven_K=F6hler?= <skoehler@upb.de>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: linux-kernel@vger.kernel.org
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
 
-On Wed, Jan 30 2008 at 21:47 +0200, Sven K=F6hler <skoehler@upb.de> wro=
-te:
-> Hi,
->=20
-> so i have upgraded a system to kernel 2.6.24. After that, it failed t=
-o=20
-> boot with the usual message telling, that the rootfs on device /dev/s=
-da1=20
->   cannot be mounted (a raid1 run by the controller below).
->=20
-> With 2.6.23.12, everything is working fine.
->=20
-> # lspci -v:
->=20
-> 03:01.0 RAID bus controller: Intel Corporation RAID Controller
->          Subsystem: Intel Corporation Unknown device 01db
->          Flags: bus master, 66MHz, slow devsel, latency 64, IRQ 17
->          Memory at ddffc000 (32-bit, prefetchable) [size=3D16K]
->          [virtual] Expansion ROM at deef0000 [disabled] [size=3D32K]
->          Capabilities: [80] Power Management version 2
->=20
-> # GDT-related dmesg output (2.6.23.12):
->=20
-> GDT-HA: Storage RAID Controller Driver. Version: 3.05
-> ACPI: PCI Interrupt 0000:03:01.0[A] -> GSI 24 (level, low) -> IRQ 17
-> GDT-HA: Found 1 PCI Storage RAID Controllers
-> Configuring GDT-PCI HA at 3/1 IRQ 17
-> GDT-HA 0: Name: SRCU42L
-> scsi0 : SRCU42L
-> scsi 0:0:0:0: Direct-Access     Intel    Host Drive  #00       PQ: 0 =
-ANSI: 2
-> scsi 0:2:6:0: Processor         ESG-SHV  SCA HSBP M29     1.06 PQ: 0 =
-ANSI: 2
-> sd 0:0:0:0: [sda] 143299800 512-byte hardware sectors (73369 MB)
-> sd 0:0:0:0: [sda] Assuming Write Enabled
-> sd 0:0:0:0: [sda] Assuming drive cache: write through
-> sd 0:0:0:0: [sda] 143299800 512-byte hardware sectors (73369 MB)
-> sd 0:0:0:0: [sda] Assuming Write Enabled
-> sd 0:0:0:0: [sda] Assuming drive cache: write through
->   sda: sda1 sda2 < sda5 >
-> sd 0:0:0:0: [sda] Attached SCSI disk
->=20
-> # cat /boot/config-2.6.24 |grep GDT
->=20
-> CONFIG_SCSI_GDTH=3Dy
->=20
->=20
->=20
->=20
-> Any ideas?
->=20
-> http://www.kernel.org/diff/diffview.cgi?file=3D%2Fpub%2Flinux%2Fkerne=
-l%2Fv2.6%2Fpatch-2.6.24.bz2=20
-> show huge drivers/scsi/gdth* related changes.
->=20
-> Can't test at the moment. System went production.
->=20
->=20
-> Regards,
->    Sven
->=20
+Hi,
 
-Hi Sven!
+On Friday 25 January 2008 22:33:21 James Bottomley wrote:
+> I don't think it would be correct to assume that there actually is a
+> problem.  Most RAID controllers habitually lie about having a cache in
+> their INQUIRY strings because they don't want to deal with the kernel
+> sending SYNCHRONIZE_CACHE commands down.
 
-CCing to the scsi mailing list.=20
+I just tested this with two various Linux-distributions to verify that that 
+the problem is in the inquiry and is not performance related. Unfortunately 
+it turns out there's a rather huge performance difference.
 
-Yes the gdth driver passed an open hart surgery in kernel 2.6.24. The b=
-ad thing
-about it is that all three of the Coders that did that did not have any=
- HW to work
-on. One of them is me. We did cry for tester for a long time but no one=
- came forward.
+When testing this with CentOS, I not only got the "correct" report from the 
+kernel that write cache enabled (and no warnings about things being 
+disabled), and also saw a three times increase in write performance when 
+testing with dd.
 
-Could you test patches for us? first thing would be to enable debug out=
-put patch below.
+The tests, which are far from scientific, I used the following command:
+Read test: dd if=/dev/sda of=/dev/zero bs=64k count=10000
+Write test: dd if=/dev/zero of/tmp/outfile bs=64k count=10000
 
-If you absolutely need a 2.6.24 kernel, + gdth in a production system y=
-ou could
-checkout the 2.6.23 driver and compile. The old driver will work the sa=
-me in 2.6.24.
-It will not however even compile in 2.6.25-rcx.
+CentOS results:
+dd READ test 1st run: 64.9MB/s
+dd READ test consecutive runs: 2.2 GB/s
+dd WRITE test 1st run: 304 MB/s
+dd WRITE test consecute runs: 329 MB/s
 
-If any one wants to send me a card that uses the gdth driver, I will be=
- very happy
-to debug this card, and return it once I'm done.
+Other distributions, identical kernel config & initrd setup:
+dd READ test 1st run: 65,2MB/s
+dd READ test consecutive runs: 3.1 GB/s
+dd WRITE test 1st run: 129 MB/s
+dd WRITE test consecute runs: 98 MB/s
 
-Boaz
+So to conclude, what I would like to figure out is what LSI Logic / RedHat is 
+doing to get such a dramatic increase in Write performance and if that is in 
+any way associated with their system reporting that the write cache is 
+actually enabled.
 
----
-git-diff --stat -p
- drivers/scsi/gdth.c |    1 +
- 1 files changed, 1 insertions(+), 0 deletions(-)
+Furthermore, I'm highly puzzled to see that the non-RedHat kernels are 
+actually faster than RedHat on cached read access. I've tried this over long 
+periods with various loads and uptimes on the systems, and the test results 
+are quite persistent.
 
-diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-index c825239..eca72c4 100644
---- a/drivers/scsi/gdth.c
-+++ b/drivers/scsi/gdth.c
-@@ -188,6 +188,7 @@ static int __gdth_queuecommand(gdth_ha_str *ha, str=
-uct scsi_cmnd *scp,
- 				struct gdth_cmndinfo *cmndinfo);
- static void gdth_scsi_done(struct scsi_cmnd *scp);
-=20
-+#define DEBUG_GDTH 1
- #ifdef DEBUG_GDTH
- static unchar   DebugState =3D DEBUG_GDTH;
-=20
+Note that on both setups, the mptfusion drivers are loaded as modules from an 
+initrd. No special parameters are passed to these drivers in either setup. I 
+have mirrored the kernel .config between the two, and have also gone through 
+the patches to the 2.6.18 kernel in RedHat that are relevant to mptfusion 
+without finding anything that matches.
 
+I have also tried with the very latest drivers from LSI Logic, just recently 
+released, on both systems, and the performance data remain the same.
 
+I'm sorry to open this issue again as I hoped and believed that it was 
+resolved as per the description above, but since it turns out to be a very 
+real performance difference associated with it, it might be of interest to 
+others as well to get to the bottom of it?
 
+The full dmesg, kernel config and other information is available at
+http://www.hiawata.com/linux/
+(system is still not in production and is therefor available for wild 
+experimentation)
 
-=20
-
--
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Thanks again for your patient and insightful responses
