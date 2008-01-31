@@ -1,77 +1,38 @@
-From: Robert Hancock <hancockr@shaw.ca>
+From: Matthew Wilcox <matthew@wil.cx>
 Subject: Re: DMA mapping on SCSI device?
-Date: Wed, 30 Jan 2008 18:09:27 -0600
-Message-ID: <47A111B7.1070106@shaw.ca>
-References: <896139.88121.qm@web31812.mail.mud.yahoo.com>
- <479FDA52.8050204@shaw.ca> <47A0AC33.1060504@rtr.ca>
+Date: Wed, 30 Jan 2008 22:01:32 -0700
+Message-ID: <20080131050132.GA3836@parisc-linux.org>
+References: <479E6E8C.2090501@shaw.ca> <896139.88121.qm@web31812.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from idcmail-mo1so.shaw.ca ([24.71.223.10]:64796 "EHLO
-	pd4mo1so.prod.shaw.ca" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754371AbYAaAJg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Jan 2008 19:09:36 -0500
-In-reply-to: <47A0AC33.1060504@rtr.ca>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <896139.88121.qm@web31812.mail.mud.yahoo.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Luben Tuikov <ltuikov@yahoo.com>
+Cc: linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, Robert Hancock <hancockr@shaw.ca>
 List-Id: linux-scsi@vger.kernel.org
-To: Mark Lord <liml@rtr.ca>
-Cc: ltuikov@yahoo.com, linux-arch@vger.kernel.org, ide <linux-ide@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org
 
-Mark Lord wrote:
-> Robert Hancock wrote:
->> Luben Tuikov wrote:
->>> --- On Mon, 1/28/08, Robert Hancock <hancockr@shaw.ca> wrote:
->>>> The trick is that if an ATAPI device is connected, we (as
->>>> far as I'm aware) can't use ADMA mode, so we have to switch that
->>>> port into legacy mode.
->>>
->>> Can you double check this with the HW architect of the
->>> HW DMA engine of the ASIC?
->>
->> Will do so. However, previous statements from NVIDIA fairly clearly 
->> indicate that this is the case.
->>
->>>
->>>> This means it's only capable of 32-bit DMA.
->>>> However the other port on the controller may be connected to a hard 
->>>> drive and therefore still capable of 64-bit DMA.
->>>
->>> If this is indeed the case as you've presented it here,
->>> it sounds like a HW shortcoming.  I cannot see how the device
->>> type (or protocol) dictate how the DMA engine operates.
->>> They live in two different domains.
->>
->> Well, there is an indirect link. The ADMA interface (which supports 
->> 64-bit DMA) cannot be used to issue ATAPI commands, so if an ATAPI 
->> device is connected we have to go to legacy mode, which supports only 
->> 32-bit DMA.
->>
->> I'm not sure why ADMA mode doesn't support ATAPI. The only reason I 
->> can think of is that there's issues since ATAPI commands can 
->> potentially be of unpredictable transfer size. The "real" ADMA spec 
->> that the NVIDIA implementation is loosely based on does have some 
->> special "ignore excess" controls that don't seem to be in the NVIDIA 
->> version (or at least not to the knowledge I have on this hardware).
-> ..
+On Tue, Jan 29, 2008 at 02:09:52PM -0800, Luben Tuikov wrote:
+> > The ideal solution would be to do mapping against a
+> > different struct 
+> > device for each port, so that we could maintain the proper
+> > DMA mask for 
+> > each of them at all times. However I'm not sure if
+> > that's possible. The 
+> > thought of using the SCSI struct device for DMA mapping was
+> > brought up 
+> > at one point.. any thoughts on that?
 > 
-> The original Pacific Digital ADMA cores *do* support most ATAPI commands
-> in ADMA mode, including READ_CD, READ_10, etc..  With the caveat that if
-> DSC completion state is required, the driver has to drop out of ADMA
-> and poll for it after the ADMA command completes.
-> 
-> Commands which were not ADMA compatible (eg. MODE_SENSE, 
-> TEST_UNIT_READY, ..)
-> were simply handled with PIO (in the driver) rather than any form of DMA,
-> which is okay because those commands are relatively infrequent.
-> 
-> Note that Pacific Digital "officially" said "no ATAPI" for the ADMA design,
-> but I implemented it regardless (for Linux) and it worked rather well.
-> We could burn DVDs and back-up to tape simultaneously, with the burner
-> and the tape unit sharing a single IDE cable/channel.
+> The reason for this is that the object that a struct scsi_dev
+> represents has nothing to do with HW DMA engines.
 
-I'm told that the ADMA hardware does have some support for issuing ATAPI 
-commands, however according to Allen Martin of NVIDIA, "The ATAPI 
-support in the ADMA hardware had some serious problem that forced us to 
-turn it off in the Windows driver." So it looks like ATAPI in ADMA mode 
-is likely a non-starter.
+It really would work, once the few remaining architectures move away
+from asserting that the 'struct device' passed in is a pci device.
+It seems like the best way forward to me.
+
+-- 
+Intel are signing my paycheques ... these opinions are still mine
+"Bill, look, we understand that you're interested in selling us this
+operating system, but compare it to ours.  We can't possibly take such
+a retrograde step."
