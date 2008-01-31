@@ -1,169 +1,109 @@
-From: Matthew Dharm <mdharm-scsi-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>
-Subject: Re: [PATCH 2.6.24] bugfix for an overflow condition in usb storage & isd200.c
-Date: Thu, 31 Jan 2008 11:49:41 -0800
-Message-ID: <20080131194941.GR14375@one-eyed-alien.net>
-References: <Pine.LNX.4.44L0.0801301807420.17156-100000@iolanthe.rowland.org> <47A1948B.2010402@panasas.com> <20080131070846.4464eb3c@chirp.tahoe> <47A1E6A0.8050500@panasas.com> <47A2033D.2050502@panasas.com> <20080131180051.GA22341@kroah.com> <47A22369.80906@panasas.com>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH] bugfix for an underflow condition in usb storage & isd200.c
+Date: Thu, 31 Jan 2008 21:53:40 +0200
+Message-ID: <47A22744.7010201@panasas.com>
+References: <Pine.LNX.4.44L0.0801311425540.2502-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="THYEXwetZJOK3OLY"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <47A22369.80906-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Cc: Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>, Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:24370 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1763480AbYAaTxv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 14:53:51 -0500
+In-Reply-To: <Pine.LNX.4.44L0.0801311425540.2502-100000@iolanthe.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: Mark Glines <mark@glines.org>, Matthew Dharm <mdharm-usb@one-eyed-alien.net>, James Bottomley <James.Bottomley@SteelEye.com>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
+On Thu, Jan 31 2008 at 21:34 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
+> On Thu, 31 Jan 2008, Boaz Harrosh wrote:
+> 
+>> On Thu, Jan 31 2008 at 19:49 +0200, Alan Stern <stern@rowland.harvard.edu> wrote:
+>>> On Thu, 31 Jan 2008, Boaz Harrosh wrote:
+>>>
+>>>> @@ -228,9 +228,14 @@ void usb_stor_set_xfer_buf(unsigned char *buffer,
+>>>>  {
+>>>>  	unsigned int offset = 0;
+>>>>  	struct scatterlist *sg = NULL;
+>>>> +	unsigned int count;
+>>>>  
+>>>> -	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
+>>>> +	count = usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
+>>>>  			TO_XFER_BUF);
+>>>> -	if (buflen < scsi_bufflen(srb))
+>>>> -		scsi_set_resid(srb, scsi_bufflen(srb) - buflen);
+>>>> +
+>>>> +	/* Check for underflow */
+>>>> +	if (buflen > scsi_bufflen(srb))
+>>>> +		count = buflen;
+>>>> +
+>>>> +	scsi_set_resid(srb, scsi_bufflen(srb) - count);
+>>>>  }
+>>> This last "if" statement doesn't look right.  And since you know that
+>>> count will never be larger than scsi_bufflen(srb), you don't have to
+>>> check for underflow at all.  Just leave out the "if" and call
+>>> scsi_set_resid() directly.
+>>>
+>>> Alan Stern
+>>>
+>> I was thinking about that hard. And I disagree. It could be that we have
+>> sg-list length (The total of all sg->length) that does not match
+>> scsi_bufflen() - More or less.
+> 
+> If that ever happens we'll be in big trouble.  Not just here but in 
+> other places as well.
+Other places is other places, but you cannot put a BUG_ON here for other
+places. This place here should be correct.
 
---THYEXwetZJOK3OLY
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+> 
+>> The code in usb_stor_access_xfer_buf() will 
+>> now correctly attempt to transfer according to buflen and what ever is available
+>> at the passed sg's. Now this can be less or it can be more. SCSI standard defines
+>> this as underflow/overflow. When overflow should be reported as negative values.
+>> and an error status. (BUT not CHECK_CONDITION)
+> 
+> I don't understand.  How could you ever transfer more data than the 
+> requested amount?  The host won't expect to receive it and won't be 
+> able to handle it when it arrives.
+> 
+> (Furthmore, the USB mass-storage specification does not permit more 
+> data to be transferred than requested.  This fact isn't relevant to our 
+> discussion because we're talking about situations where the data was 
+> transferred via a non-standard protocol.  But even so...)
+That's fine then the transfer will abort with an error condition and will
+be handled correctly.
 
-No.  No no no.
+> 
+>> so the code is actualy
+>> 	if (buflen > scsi_bufflen(srb))
+>> 		scsi_set_resid(srb, scsi_bufflen(srb) - buflen); /* Negative overflow */
+> 
+> Okay, let's assume that both buflen and the sum of the sg-list lengths
+> are somehow greater than scsi_bufflen(srb).  You still don't know that
+> they are equal to each other.  All you know is that the amount actually
+> transferred is stored in count.  Hence the negative overflow value
+> should be
+> 
+> 	scsi_bufflen(srb) - count
+> 
+> and not
+> 
+> 	scsi_bufflen(srb) - bufflen.
+> 
+> Alan Stern
+> 
+No, it is possible that sg-length was good and count == bufflen,
+But the CDB contains scsi_bufflen(srb) and this is an overflow
+condition. with your code resid will be Zero.
+Also the standard say that we should return the expected overflow and
+not the actual on-the-wire overflow.
 
-The ISD200 code was written by the ISD200 developers.  I really don't want
-to go mucking about changing what commands actually get send to the ISD200
-parts.  We have no idea if the will reliably accept a 36-byte INQUIRY.
+We could check and truncate beforehand, and mark a flag for overflow
+and set negative resid. But since usb_stor_access_xfer_buf() properly
+handles that and returns, then this form saves cycles for the common 
+case and waists cycles for the very rare BUG case of overflow, but is
+still correct and safe.
 
-Just because it happens to work for a couple of people doesn't mean it
-works in the general case.  Without guidance from In-System, this is a bad
-idea.
-
-The way to deal with this is to do this via bounce buffering.  The two
-commands affected (INQUIRY and MODE_SENSE) are low-performance items.
-Discarding data from the end of them is also perfectly legal per spec.
-
-Also, the entire idea of a negative resid makes my head hurt.  That sort of
-change is in the category of "likely to break something else" which only
-expects positive resid values.
-
-Matt
-
-On Thu, Jan 31, 2008 at 09:37:13PM +0200, Boaz Harrosh wrote:
-> Greg KH <greg-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org> rote:
-> > As this is a regression and hits 2.6.24, can you send the final version
-> > of this patch to the stable-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org address so we can get it into the
-> > 2.6.24.y tree?
-> >=20
-> > thanks,
-> >=20
-> > greg k-h
->=20
-> Mark - This is for you on top of vanila v2.6.24 kernel from Linus.
->=20
-> ---
->=20
->   scsi_scan is issuing a 36-byte INQUIRY request to llds. isd200 would
->   volunteer 96 bytes of INQUIRY. This caused an overflow condition in
->   protocol.c usb_stor_access_xfer_buf(). So first fix is to
->   usb_stor_access_xfer_buf() to properly handle overflow/underflow condit=
-ions.
->   Then usb_stor_set_xfer_buf() should report this condition as a negative
->   resid. Should we also set cmnd->status in the overflow condition?
->=20
->   Then also isd200.c is fixed to only return the type of INQUIRY && SENSE
->   the upper layer asked for.
->=20
-> Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-> ---
->  drivers/usb/storage/isd200.c   |    7 +++++--
->  drivers/usb/storage/protocol.c |   13 +++++++++----
->  2 files changed, 14 insertions(+), 6 deletions(-)
->=20
-> diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
-> index 49ba6c0..8186e93 100644
-> --- a/drivers/usb/storage/isd200.c
-> +++ b/drivers/usb/storage/isd200.c
-> @@ -1238,6 +1238,7 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb=
-, struct us_data *us,
->  	unsigned long lba;
->  	unsigned long blockCount;
->  	unsigned char senseData[8] =3D { 0, 0, 0, 0, 0, 0, 0, 0 };
-> +	unsigned xfer_len;
-> =20
->  	memset(ataCdb, 0, sizeof(union ata_cdb));
-> =20
-> @@ -1247,8 +1248,9 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb=
-, struct us_data *us,
->  		US_DEBUGP("   ATA OUT - INQUIRY\n");
-> =20
->  		/* copy InquiryData */
-> +		xfer_len =3D min(sizeof(info->InquiryData), scsi_bufflen(srb));
->  		usb_stor_set_xfer_buf((unsigned char *) &info->InquiryData,
-> -				sizeof(info->InquiryData), srb);
-> +					xfer_len, srb);
->  		srb->result =3D SAM_STAT_GOOD;
->  		sendToTransport =3D 0;
->  		break;
-> @@ -1257,7 +1259,8 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb=
-, struct us_data *us,
->  		US_DEBUGP("   ATA OUT - SCSIOP_MODE_SENSE\n");
-> =20
->  		/* Initialize the return buffer */
-> -		usb_stor_set_xfer_buf(senseData, sizeof(senseData), srb);
-> +		xfer_len =3D min(sizeof(senseData), scsi_bufflen(srb));
-> +		usb_stor_set_xfer_buf(senseData, xfer_len, srb);
-> =20
->  		if (info->DeviceFlags & DF_MEDIA_STATUS_ENABLED)
->  		{
-> diff --git a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protoco=
-l.c
-> index 889622b..038a284 100644
-> --- a/drivers/usb/storage/protocol.c
-> +++ b/drivers/usb/storage/protocol.c
-> @@ -194,7 +194,7 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *=
-buffer,
->  		 * and the starting offset within the page, and update
->  		 * the *offset and *index values for the next loop. */
->  		cnt =3D 0;
-> -		while (cnt < buflen) {
-> +		while (cnt < buflen && sg) {
->  			struct page *page =3D sg_page(sg) +
->  					((sg->offset + *offset) >> PAGE_SHIFT);
->  			unsigned int poff =3D
-> @@ -248,9 +248,14 @@ void usb_stor_set_xfer_buf(unsigned char *buffer,
->  {
->  	unsigned int offset =3D 0;
->  	struct scatterlist *sg =3D NULL;
-> +	unsigned count;
-> =20
-> -	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
-> +	count =3D usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
->  			TO_XFER_BUF);
-> -	if (buflen < srb->request_bufflen)
-> -		srb->resid =3D srb->request_bufflen - buflen;
-> +
-> +	/* Check for overflow */
-> +	if (buflen > scsi_bufflen(srb))
-> +		count =3D buflen;
-> +
-> +	scsi_set_resid(srb, scsi_bufflen(srb) - count);
->  }
-> --=20
-> 1.5.3.3
->=20
-
---=20
-Matthew Dharm                              Home: mdharm-usb@one-eyed-alien.=
-net=20
-Maintainer, Linux USB Mass Storage Driver
-
-M:  No, Windows doesn't have any nag screens.
-C:  Then what are those blue and white screens I get every day?
-					-- Mike and Cobb
-User Friendly, 1/4/1999
-
---THYEXwetZJOK3OLY
-Content-Type: application/pgp-signature
-Content-Disposition: inline
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.7 (GNU/Linux)
-
-iD8DBQFHoiZVHL9iwnUZqnkRAliXAKCyurTA2gSsEdMjYzYSp9pAbUytjQCeJEEi
-py8RicSNF7XbKsfMw1/YDsE=
-=twRF
------END PGP SIGNATURE-----
-
---THYEXwetZJOK3OLY--
+Boaz
