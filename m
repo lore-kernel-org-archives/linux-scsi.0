@@ -1,68 +1,69 @@
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: Re: [Cbe-oss-dev] [PATCH] ps3rom: sector size should be 512 bytes
-Date: Thu, 31 Jan 2008 19:48:15 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0801311947380.957@vixen.sonytel.be>
-References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
- <Pine.LNX.4.64.0801311414380.15534@vixen.sonytel.be>
- <1201788625.11265.23.camel@haakon2.linux-iscsi.org>
- <1201793647.3131.8.camel@localhost.localdomain> <1201795855.11265.67.camel@haakon2.linux-iscsi.org>
- <1201796764.3131.15.camel@localhost.localdomain>
- <1201800489.11265.134.camel@haakon2.linux-iscsi.org>
- <Pine.LNX.4.64.0801311840230.15534@vixen.sonytel.be>
- <1201802761.3131.32.camel@localhost.localdomain>
+From: Arjan van de Ven <arjan@infradead.org>
+Subject: Re: [PATCH] kill hotplug init/exit section annotations
+Date: Thu, 31 Jan 2008 10:48:11 -0800
+Message-ID: <20080131104811.4c2d558f@laptopd505.fenrus.org>
+References: <20080130212011.GA26621@uranus.ravnborg.org>
+	<1201729295.3292.94.camel@localhost.localdomain>
+	<20080130223219.GT29368@does.not.exist>
+	<20080131074436.GA31966@uranus.ravnborg.org>
+	<1201795051.3131.13.camel@localhost.localdomain>
+	<20080131081120.27505dc0@laptopd505.fenrus.org>
+	<20080131162141.GC19700@cs181133002.pp.htv.fi>
+	<20080131090749.72781689@laptopd505.fenrus.org>
+	<20080131171436.GG19700@cs181133002.pp.htv.fi>
+	<20080131094801.63a048f0@laptopd505.fenrus.org>
+	<20080131183425.GA2893@uranus.ravnborg.org>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-876994926-1201805295=:957"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:62256 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757710AbYAaSsR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 13:48:17 -0500
-In-Reply-To: <1201802761.3131.32.camel@localhost.localdomain>
+Received: from pentafluge.infradead.org ([213.146.154.40]:47997 "EHLO
+	pentafluge.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1761406AbYAaSsi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 13:48:38 -0500
+In-Reply-To: <20080131183425.GA2893@uranus.ravnborg.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Aegis Lin <aegislin@gmail.com>, Masakazu Mokuno <Masakazu_Mokuno@hq.scei.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Sam Ravnborg <sam@ravnborg.org>
+Cc: Adrian Bunk <bunk@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Thu, 31 Jan 2008 19:34:25 +0100
+Sam Ravnborg <sam@ravnborg.org> wrote:
 
----584349381-876994926-1201805295=:957
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-On Thu, 31 Jan 2008, James Bottomley wrote:
-> On Thu, 2008-01-31 at 18:41 +0100, Geert Uytterhoeven wrote:
-> > James, do you have any comment about the first email in this thread, increasing
-> > scsi_host_template.max_sectors?
+> On Thu, Jan 31, 2008 at 09:48:01AM -0800, Arjan van de Ven wrote:
+> > On Thu, 31 Jan 2008 19:14:36 +0200
+> > Adrian Bunk <bunk@kernel.org> wrote:
+> > > > cpuhotplug is required for suspend/resume.
+> > > 
+> > > Not on UP computers.
+> > > 
+> > 
+> > great! someone who still has one of those and uses a kernel without
+> > it. Can you look at your system.map and see how many kilobytes
+> > you've gained? Eg how many kilobytes are in these sections exactly?
+> I have one. A Atmel AT91 board equipped with an 9263.
+> So lets take a look at the defconfig build for the evaluation board.
 > 
-> Assuming your BOUNCE_SIZE is in bytes, and represents your largest
-> transfer, then yes, setting .max_sectors to BOUNCE_SIZE>>9 is exactly
-> the right way of phrasing this, since .max_sectors is counted in units
-> of the internal block sector (or 512 bytes).
+> 
+> o-arm/vmlinux.o:     file format elf32-littlearm
+> 
+>   0 .text         001cdefc  00000000  00000000  00000400  2**10
+>   2 .init.text    000165e8  00000000  00000000  001ce6c0  2**5
+>  26 .init.data    000032ec  00000000  00000000  002578cc  2**2
+> 
+> ---
+> 
+>   4 .devinit.text 00001558  00000000  00000000  001e5270  2**2
+>   9 .exit.text    00000bc8  00000000  00000000  001e8d2c  2**2
+>  10 .cpuinit.text 00000924  00000000  00000000  001e98f4  2**2
+>  11 .meminit.text 000004cc  00000000  00000000  001ea218  2**2
+>  12 .devexit.text 00000160  00000000  00000000  001ea6e4  2**2
+>  38 .cpuinit.data 00000040  00000000  00000000  0025afc0  2**2
+>  39 .meminit.data 0000000c  00000000  00000000  0025b000  2**2
+> 
+> 
+> __devinit alone gives a net win of 5464 bytes.
+> That is only ~3% of total .text size but this is non-swapable
+> memory where everything is worth it.
 
-OK, thanks for the confirmation!
-
-> Were you going to submit a full patch to linux-scsi?
-
-Yes I will.
-
-With kind regards,
-
-Geert Uytterhoeven
-Software Architect
-
-Sony Network and Software Technology Center Europe
-The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
-
-Phone:    +32 (0)2 700 8453
-Fax:      +32 (0)2 700 8622
-E-mail:   Geert.Uytterhoeven@sonycom.com
-Internet: http://www.sony-europe.com/
-
-Sony Network and Software Technology Center Europe
-A division of Sony Service Centre (Europe) N.V.
-Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
-VAT BE 0413.825.160 · RPR Brussels
-Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
----584349381-876994926-1201805295=:957--
+now how much of this is lost again because you have to round the stuff to pagesize?
