@@ -1,71 +1,136 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Thu, 31 Jan 2008 08:48:26 +0100
-Message-ID: <e2e108260801302348h5c139da3r7ec262cd48e956@mail.gmail.com>
-References: <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	 <20080130195635T.tomof@acm.org>
-	 <e2e108260801300510q94bf9c8g31a0ba9d77c3c0b9@mail.gmail.com>
-	 <20080130225428S.tomof@acm.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [BUG?] GDTH driver not working after upgrade to 2.6.24
+Date: Thu, 31 Jan 2008 12:08:38 +0200
+Message-ID: <47A19E26.30107@panasas.com>
+References: <fnqka6$l46$1@ger.gmane.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=ISO-8859-15
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from rv-out-0910.google.com ([209.85.198.184]:18073 "EHLO
-	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755987AbYAaHs1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 02:48:27 -0500
-Received: by rv-out-0910.google.com with SMTP id k20so467584rvb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Jan 2008 23:48:26 -0800 (PST)
-In-Reply-To: <20080130225428S.tomof@acm.org>
-Content-Disposition: inline
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:56624 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1760762AbYAaKIw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 05:08:52 -0500
+In-Reply-To: <fnqka6$l46$1@ger.gmane.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: FUJITA Tomonori <tomof@acm.org>
-Cc: fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: =?ISO-8859-15?Q?Sven_K=F6hler?= <skoehler@upb.de>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel@vger.kernel.org
 
-On Jan 30, 2008 2:54 PM, FUJITA Tomonori <tomof@acm.org> wrote:
-> On Wed, 30 Jan 2008 14:10:47 +0100
-> "Bart Van Assche" <bart.vanassche@gmail.com> wrote:
->
-> > On Jan 30, 2008 11:56 AM, FUJITA Tomonori <tomof@acm.org> wrote:
-> > >
-> > > Sorry, I can't say. I don't know much about iSER. But seems that Pete
-> > > and Robin can get the better I/O performance - line speed ratio with
-> > > STGT.
-> >
-> > Robin Humble was using a DDR InfiniBand network, while my tests were
-> > performed with an SDR InfiniBand network. Robin's results can't be
-> > directly compared to my results.
->
-> I know that you use different hardware. I used 'ratio' word.
+On Wed, Jan 30 2008 at 21:47 +0200, Sven K=F6hler <skoehler@upb.de> wro=
+te:
+> Hi,
+>=20
+> so i have upgraded a system to kernel 2.6.24. After that, it failed t=
+o=20
+> boot with the usual message telling, that the rootfs on device /dev/s=
+da1=20
+>   cannot be mounted (a raid1 run by the controller below).
+>=20
+> With 2.6.23.12, everything is working fine.
+>=20
+> # lspci -v:
+>=20
+> 03:01.0 RAID bus controller: Intel Corporation RAID Controller
+>          Subsystem: Intel Corporation Unknown device 01db
+>          Flags: bus master, 66MHz, slow devsel, latency 64, IRQ 17
+>          Memory at ddffc000 (32-bit, prefetchable) [size=3D16K]
+>          [virtual] Expansion ROM at deef0000 [disabled] [size=3D32K]
+>          Capabilities: [80] Power Management version 2
+>=20
+> # GDT-related dmesg output (2.6.23.12):
+>=20
+> GDT-HA: Storage RAID Controller Driver. Version: 3.05
+> ACPI: PCI Interrupt 0000:03:01.0[A] -> GSI 24 (level, low) -> IRQ 17
+> GDT-HA: Found 1 PCI Storage RAID Controllers
+> Configuring GDT-PCI HA at 3/1 IRQ 17
+> GDT-HA 0: Name: SRCU42L
+> scsi0 : SRCU42L
+> scsi 0:0:0:0: Direct-Access     Intel    Host Drive  #00       PQ: 0 =
+ANSI: 2
+> scsi 0:2:6:0: Processor         ESG-SHV  SCA HSBP M29     1.06 PQ: 0 =
+ANSI: 2
+> sd 0:0:0:0: [sda] 143299800 512-byte hardware sectors (73369 MB)
+> sd 0:0:0:0: [sda] Assuming Write Enabled
+> sd 0:0:0:0: [sda] Assuming drive cache: write through
+> sd 0:0:0:0: [sda] 143299800 512-byte hardware sectors (73369 MB)
+> sd 0:0:0:0: [sda] Assuming Write Enabled
+> sd 0:0:0:0: [sda] Assuming drive cache: write through
+>   sda: sda1 sda2 < sda5 >
+> sd 0:0:0:0: [sda] Attached SCSI disk
+>=20
+> # cat /boot/config-2.6.24 |grep GDT
+>=20
+> CONFIG_SCSI_GDTH=3Dy
+>=20
+>=20
+>=20
+>=20
+> Any ideas?
+>=20
+> http://www.kernel.org/diff/diffview.cgi?file=3D%2Fpub%2Flinux%2Fkerne=
+l%2Fv2.6%2Fpatch-2.6.24.bz2=20
+> show huge drivers/scsi/gdth* related changes.
+>=20
+> Can't test at the moment. System went production.
+>=20
+>=20
+> Regards,
+>    Sven
+>=20
 
-Let's start with summarizing the relevant numbers from Robin's
-measurements and my own measurements.
+Hi Sven!
 
-Maximum bandwidth of the underlying physical medium: 2000 MB/s for a
-DDR 4x InfiniBand network and 1000 MB/s for a SDR 4x InfiniBand
-network.
+CCing to the scsi mailing list.=20
 
-Maximum bandwidth reported by the OFED ib_write_bw test program: 1473
-MB/s for Robin's setup and 933 MB/s for my setup. These numbers match
-published ib_write_bw results (see e.g. figure 11 in
-http://www.usenix.org/events/usenix06/tech/full_papers/liu/liu_html/index.html
-or chapter 7 in
-http://www.voltaire.com/ftp/rocks/HCA-4X0_Linux_GridStack_4.3_Release_Notes_DOC-00171-A00.pdf)
+Yes the gdth driver passed an open hart surgery in kernel 2.6.24. The b=
+ad thing
+about it is that all three of the Coders that did that did not have any=
+ HW to work
+on. One of them is me. We did cry for tester for a long time but no one=
+ came forward.
 
-Throughput measured for communication via STGT + iSER to a remote RAM
-disk via direct I/O with dd: 800 MB/s for writing and 751 MB/s for
-reading in Robin's setup, and 647 MB/s for writing and 589 MB/s for
-reading in my setup.
+Could you test patches for us? first thing would be to enable debug out=
+put patch below.
 
->From this we can compute the I/O-performance to ib_write_bw bandwidth:
-54 % for writing and 51 % for reading in Robin's setup, and 69 % for
-writing and 63 % for reading in my setup. Or a slightly better
-utilization of the bandwidth in my setup than in Robin's setup. This
-is no surprise -- the faster a communication link is, the harder it is
-to use all of the available bandwidth.
+If you absolutely need a 2.6.24 kernel, + gdth in a production system y=
+ou could
+checkout the 2.6.23 driver and compile. The old driver will work the sa=
+me in 2.6.24.
+It will not however even compile in 2.6.25-rcx.
 
-So why did you state that in Robin's tests the I/O performance to line
-speed ratio was better than in my tests ?
+If any one wants to send me a card that uses the gdth driver, I will be=
+ very happy
+to debug this card, and return it once I'm done.
 
-Bart Van Assche.
+Boaz
+
+---
+git-diff --stat -p
+ drivers/scsi/gdth.c |    1 +
+ 1 files changed, 1 insertions(+), 0 deletions(-)
+
+diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
+index c825239..eca72c4 100644
+--- a/drivers/scsi/gdth.c
++++ b/drivers/scsi/gdth.c
+@@ -188,6 +188,7 @@ static int __gdth_queuecommand(gdth_ha_str *ha, str=
+uct scsi_cmnd *scp,
+ 				struct gdth_cmndinfo *cmndinfo);
+ static void gdth_scsi_done(struct scsi_cmnd *scp);
+=20
++#define DEBUG_GDTH 1
+ #ifdef DEBUG_GDTH
+ static unchar   DebugState =3D DEBUG_GDTH;
+=20
+
+
+
+
+=20
+
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
