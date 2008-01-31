@@ -1,86 +1,83 @@
-From: Halim Issa <yallaone@gmail.com>
-Subject: Re: sd incorrectly reports write cache disabled on cache-capable drives/controllers
-Date: Thu, 31 Jan 2008 11:41:53 +0100
-Message-ID: <200801311141.53367.yallaone@gmail.com>
-References: <200801252159.20858.yallaone@gmail.com> <200801252228.22659.yallaone@gmail.com> <1201296801.3119.63.camel@localhost.localdomain>
+From: =?ISO-8859-15?Q?Sven_K=F6hler?= <skoehler@upb.de>
+Subject: Re: [BUG?] GDTH driver not working after upgrade to 2.6.24
+Date: Thu, 31 Jan 2008 12:07:36 +0100
+Message-ID: <47A1ABF8.4050408@upb.de>
+References: <fnqka6$l46$1@ger.gmane.org> <47A19E26.30107@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha1;
+ protocol="application/pgp-signature";
+ boundary="------------enigF2114B8E2DB1F8A50F942FFC"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from fk-out-0910.google.com ([209.85.128.190]:32665 "EHLO
-	fk-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1760349AbYAaKl7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 05:41:59 -0500
-Received: by fk-out-0910.google.com with SMTP id z23so524162fkz.5
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Jan 2008 02:41:57 -0800 (PST)
-In-Reply-To: <1201296801.3119.63.camel@localhost.localdomain>
-Content-Disposition: inline
+Received: from mail.uni-paderborn.de ([131.234.142.9]:5946 "EHLO
+	mail.uni-paderborn.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1762468AbYAaL4t (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 06:56:49 -0500
+In-Reply-To: <47A19E26.30107@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-scsi@vger.kernel.org, DL-MPTFusionLinux@lsi.com
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel@vger.kernel.org
 
-Hi,
+This is an OpenPGP/MIME signed message (RFC 2440 and 3156)
+--------------enigF2114B8E2DB1F8A50F942FFC
+Content-Type: text/plain; charset=ISO-8859-15; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Friday 25 January 2008 22:33:21 James Bottomley wrote:
-> I don't think it would be correct to assume that there actually is a
-> problem.  Most RAID controllers habitually lie about having a cache in
-> their INQUIRY strings because they don't want to deal with the kernel
-> sending SYNCHRONIZE_CACHE commands down.
+> Yes the gdth driver passed an open hart surgery in kernel 2.6.24. The b=
+ad thing
+> about it is that all three of the Coders that did that did not have any=
+ HW to work
+> on. One of them is me. We did cry for tester for a long time but no one=
+ came forward.
 
-I just tested this with two various Linux-distributions to verify that that 
-the problem is in the inquiry and is not performance related. Unfortunately 
-it turns out there's a rather huge performance difference.
+All i'd like to ask is WHY!?
+WHY such a big open heart surgery?
+OK, you have your reasons.
 
-When testing this with CentOS, I not only got the "correct" report from the 
-kernel that write cache enabled (and no warnings about things being 
-disabled), and also saw a three times increase in write performance when 
-testing with dd.
+> Could you test patches for us? first thing would be to enable debug out=
+put patch below.
 
-The tests, which are far from scientific, I used the following command:
-Read test: dd if=/dev/sda of=/dev/zero bs=64k count=10000
-Write test: dd if=/dev/zero of/tmp/outfile bs=64k count=10000
+The machine is still production. It will be replaced by a 64bit system=20
+with an AACRAID card some time in the future. Then, i could maybe test=20
+patches on the old machine. But unfortunatly, it's not my machine. It's=20
+just administrated by me. And i don't know, what's exactly is the future =
 
-CentOS results:
-dd READ test 1st run: 64.9MB/s
-dd READ test consecutive runs: 2.2 GB/s
-dd WRITE test 1st run: 304 MB/s
-dd WRITE test consecute runs: 329 MB/s
+of it.
 
-Other distributions, identical kernel config & initrd setup:
-dd READ test 1st run: 65,2MB/s
-dd READ test consecutive runs: 3.1 GB/s
-dd WRITE test 1st run: 129 MB/s
-dd WRITE test consecute runs: 98 MB/s
+> If you absolutely need a 2.6.24 kernel, + gdth in a production system y=
+ou could
+> checkout the 2.6.23 driver and compile. The old driver will work the sa=
+me in 2.6.24.
+> It will not however even compile in 2.6.25-rcx.
 
-So to conclude, what I would like to figure out is what LSI Logic / RedHat is 
-doing to get such a dramatic increase in Write performance and if that is in 
-any way associated with their system reporting that the write cache is 
-actually enabled.
+I see. Thanks for the hint. Would be an alternative. Actually, i don't=20
+need 2.6.24 - but if something security related is fixed, then i'm not=20
+able to move on to 2.6.24. And i'm using Gentoo. There's not really a=20
+kernel maintained by the distribution.
 
-Furthermore, I'm highly puzzled to see that the non-RedHat kernels are 
-actually faster than RedHat on cached read access. I've tried this over long 
-periods with various loads and uptimes on the systems, and the test results 
-are quite persistent.
+> If any one wants to send me a card that uses the gdth driver, I will be=
+ very happy
+> to debug this card, and return it once I'm done.
 
-Note that on both setups, the mptfusion drivers are loaded as modules from an 
-initrd. No special parameters are passed to these drivers in either setup. I 
-have mirrored the kernel .config between the two, and have also gone through 
-the patches to the 2.6.18 kernel in RedHat that are relevant to mptfusion 
-without finding anything that matches.
+I don't think, it's a seperate card, that i could send you. It's some=20
+19" rack server with such a card on-board, i think.
 
-I have also tried with the very latest drivers from LSI Logic, just recently 
-released, on both systems, and the performance data remain the same.
 
-I'm sorry to open this issue again as I hoped and believed that it was 
-resolved as per the description above, but since it turns out to be a very 
-real performance difference associated with it, it might be of interest to 
-others as well to get to the bottom of it?
+So it don't see much opportunity for me to test patched and stuff :-(
 
-The full dmesg, kernel config and other information is available at
-http://www.hiawata.com/linux/
-(system is still not in production and is therefor available for wild 
-experimentation)
 
-Thanks again for your patient and insightful responses
+--------------enigF2114B8E2DB1F8A50F942FFC
+Content-Type: application/pgp-signature; name="signature.asc"
+Content-Description: OpenPGP digital signature
+Content-Disposition: attachment; filename="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v2.0.7 (GNU/Linux)
+Comment: Using GnuPG with Mozilla - http://enigmail.mozdev.org
+
+iD8DBQFHoav47Ww7FjRBE4ARAo4bAJ9m9mKR+Yko3we+KHQdSFWUXAZkbQCfSDpx
++qtpoe7cL2dE+rbbV9akdbI=
+=EkF4
+-----END PGP SIGNATURE-----
+
+--------------enigF2114B8E2DB1F8A50F942FFC--
