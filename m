@@ -1,67 +1,87 @@
-From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH] bugfix for an underflow condition in usb storage & isd200.c
-Date: Thu, 31 Jan 2008 21:00:06 +0200
-Message-ID: <47A21AB6.5060203@panasas.com>
-References: <Pine.LNX.4.44L0.0801311244430.4373-100000@iolanthe.rowland.org>
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: Re: [PATCH 1/1] Remove of old NCR53C9x/esp family of drivers
+Date: Thu, 31 Jan 2008 21:06:39 +0200
+Message-ID: <47A21C3F.5070400@panasas.com>
+References: <477CFC97.2010201@panasas.com>  <477D0209.2000609@panasas.com> <1199384189.3122.22.camel@localhost.localdomain> <Pine.LNX.4.64.0801032003170.27528@anakin> <1199686061.31422.2.camel@kars.perseus.home> <1201802886.3131.35.camel@localhost.localdomain> <Pine.LNX.4.64.0801311953540.22762@anakin>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.0801311244430.4373-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from gw-colo-pa.panasas.com ([66.238.117.130]:25568 "EHLO
+	cassoulet.panasas.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1760048AbYAaTHK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 31 Jan 2008 14:07:10 -0500
+In-Reply-To: <Pine.LNX.4.64.0801311953540.22762@anakin>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kars de Jong <jongk@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "Maciej W. Rozycki" <macro@linux-mips.org>, "David S. Miller" <davem@davemloft.net>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Thu, Jan 31 2008 at 19:49 +0200, Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org> wrote:
-> On Thu, 31 Jan 2008, Boaz Harrosh wrote:
+On Thu, Jan 31 2008 at 20:55 +0200, Geert Uytterhoeven <geert@linux-m68k.org> wrote:
+> On Thu, 31 Jan 2008, James Bottomley wrote:
+>> On Mon, 2008-01-07 at 07:07 +0100, Kars de Jong wrote:
+>>> On do, 2008-01-03 at 20:05 +0100, Geert Uytterhoeven wrote:
+>>>> On Thu, 3 Jan 2008, James Bottomley wrote:
+>>>>> On Thu, 2008-01-03 at 17:40 +0200, Boaz Harrosh wrote:
+>>>>>> As recommended by Christoph Hellwig. There is no use
+>>>>>>  of Fixing these drivers, since there is a much simpler
+>>>>>>  and modern esp infrastructure with David Miller's esp_scsi
+>>>>>>
+>>>>>>   - Remove all driver files dependent on NCR53C9x.c
+>>>>>>         deleted:    drivers/scsi/NCR53C9x.c
+>>>>>>         deleted:    drivers/scsi/NCR53C9x.h
+>>>>>>         deleted:    drivers/scsi/blz1230.c
+>>>>>>         deleted:    drivers/scsi/blz2060.c
+>>>>>>         deleted:    drivers/scsi/cyberstorm.c
+>>>>>>         deleted:    drivers/scsi/cyberstormII.c
+>>>>>>         deleted:    drivers/scsi/dec_esp.c
+>>>>>>         deleted:    drivers/scsi/fastlane.c
+>>>>>>         deleted:    drivers/scsi/mac_esp.c
+>>>>>>         deleted:    drivers/scsi/mca_53c9x.c
+>>>>>>         deleted:    drivers/scsi/oktagon_esp.c
+>>>>>>         deleted:    drivers/scsi/oktagon_io.S
+>>>>>>         deleted:    drivers/scsi/sun3x_esp.c
+>>>>>>
+>>>>>>   - Remove above list from drivers/scsi/Kconfig &&
+>>>>>> drivers/scsi/Makefile
+>>>>> OK, I'll split this into four pieces for scsi-pending, since there are
+>>>>> three separate interest groups with signoffs to collect (MCA, m68k and
+>>>>> alpha) plus the core removal.
+>>>> Anybody who can look into converting the m68k NCR53C9x drivers and has
+>>>> hardware to test (some of) them? I don't think we can afford losing one
+>>>> third of our SCSI drivers...
+>>> I'll have a look at this. I can only test it on Blizzard 1260 hardware
+>>> though.
+>> OK, time's up.
+>>
+>> These drivers are now unbuildable in mainline because of the promised
+>> sg_table updates.  They either get removed, fixed or marked as BROKEN.
+>> Which is it to be?
 > 
->> @@ -228,9 +228,14 @@ void usb_stor_set_xfer_buf(unsigned char *buffer,
->>  {
->>  	unsigned int offset = 0;
->>  	struct scatterlist *sg = NULL;
->> +	unsigned int count;
->>  
->> -	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
->> +	count = usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
->>  			TO_XFER_BUF);
->> -	if (buflen < scsi_bufflen(srb))
->> -		scsi_set_resid(srb, scsi_bufflen(srb) - buflen);
->> +
->> +	/* Check for underflow */
->> +	if (buflen > scsi_bufflen(srb))
->> +		count = buflen;
->> +
->> +	scsi_set_resid(srb, scsi_bufflen(srb) - count);
->>  }
+> Is git smart enough to follow history between files that get removed and
+> readded?
+> If yes, I think you can remove them.
+> If no, please mark them as BROKEN.
 > 
-> This last "if" statement doesn't look right.  And since you know that
-> count will never be larger than scsi_bufflen(srb), you don't have to
-> check for underflow at all.  Just leave out the "if" and call
-> scsi_set_resid() directly.
+> Gr{oetje,eeting}s,
 > 
-> Alan Stern
+> 						Geert
 > 
-I was thinking about that hard. And I disagree. It could be that we have
-sg-list length (The total of all sg->length) that does not match
-scsi_bufflen() - More or less. The code in usb_stor_access_xfer_buf() will 
-now correctly attempt to transfer according to buflen and what ever is available
-at the passed sg's. Now this can be less or it can be more. SCSI standard defines
-this as underflow/overflow. When overflow should be reported as negative values.
-and an error status. (BUT not CHECK_CONDITION)
+> --
+> Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+> 
+> In personal conversations with technical people, I call myself a hacker. But
+> when I'm talking to journalists I just say "programmer" or something like that.
+> 							    -- Linus Torvalds
+> -
 
-so the code is actualy
-	if (buflen > scsi_bufflen(srb))
-		scsi_set_resid(srb, scsi_bufflen(srb) - buflen); /* Negative overflow */
-	else
-		scsi_set_resid(srb, scsi_bufflen(srb) - count);
+I did submit a fix to all these drivers, but It was said by people that these
+drivers should not be fixed because they have a better alternative with the other
+esp family. And any devices not supported by the other family should be not more
+then a day of work to support. So doing the better job of supporting them in the
+new form is less effort then resurrecting junk code from the graveyard.
 
-So this is actually code equivalent to above. Minus the extra call site.
-
-The SCSI standard does allow these conditions and the system should cope
-and go on. So a BUG_ON() is not accepted, I think.
-
-But, ok, I mixed up with the comment I'll resend. underflow => overflow.
+I say dump it. Christoph ??!
 
 Boaz
  
