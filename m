@@ -1,124 +1,67 @@
-From: Sam Ravnborg <sam@ravnborg.org>
-Subject: Re: [PATCH] kill hotplug init/exit section annotations
-Date: Thu, 31 Jan 2008 20:41:13 +0100
-Message-ID: <20080131194113.GA3925@uranus.ravnborg.org>
-References: <20080130223219.GT29368@does.not.exist> <20080131074436.GA31966@uranus.ravnborg.org> <1201795051.3131.13.camel@localhost.localdomain> <20080131081120.27505dc0@laptopd505.fenrus.org> <20080131162141.GC19700@cs181133002.pp.htv.fi> <20080131090749.72781689@laptopd505.fenrus.org> <20080131171436.GG19700@cs181133002.pp.htv.fi> <20080131094801.63a048f0@laptopd505.fenrus.org> <20080131183425.GA2893@uranus.ravnborg.org> <20080131104811.4c2d558f@laptopd505.fenrus.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [Cbe-oss-dev] [PATCH] ps3rom: sector size should be 512 bytes
+Date: Thu, 31 Jan 2008 13:42:04 -0600
+Message-ID: <1201808524.3131.46.camel@localhost.localdomain>
+References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
+	 <Pine.LNX.4.64.0801311414380.15534@vixen.sonytel.be>
+	 <1201788625.11265.23.camel@haakon2.linux-iscsi.org>
+	 <1201793647.3131.8.camel@localhost.localdomain>
+	 <1201795855.11265.67.camel@haakon2.linux-iscsi.org>
+	 <1201796764.3131.15.camel@localhost.localdomain>
+	 <1201800489.11265.134.camel@haakon2.linux-iscsi.org>
+	 <1201802031.3131.29.camel@localhost.localdomain>
+	 <1201805075.11265.178.camel@haakon2.linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from pasmtpa.tele.dk ([80.160.77.114]:44959 "EHLO pasmtpA.tele.dk"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1757580AbYAaTlO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 14:41:14 -0500
-Content-Disposition: inline
-In-Reply-To: <20080131104811.4c2d558f@laptopd505.fenrus.org>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39016 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1760017AbYAaTmM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 14:42:12 -0500
+In-Reply-To: <1201805075.11265.178.camel@haakon2.linux-iscsi.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arjan van de Ven <arjan@infradead.org>
-Cc: Adrian Bunk <bunk@kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, davem@davemloft.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arch@vger.kernel.org, "Maciej W. Rozycki" <macro@linux-mips.org>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, Aegis Lin <aegislin@gmail.com>, Masakazu Mokuno <Masakazu_Mokuno@hq.scei.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-On Thu, Jan 31, 2008 at 10:48:11AM -0800, Arjan van de Ven wrote:
-> On Thu, 31 Jan 2008 19:34:25 +0100
-> Sam Ravnborg <sam@ravnborg.org> wrote:
+On Thu, 2008-01-31 at 10:44 -0800, Nicholas A. Bellinger wrote:
+> > In short, and to repeat: almost every internal size counter to block is
+> > in units of 512 byte sectors ... that includes capacity, maximum etc ...
+> > 
 > 
-> > On Thu, Jan 31, 2008 at 09:48:01AM -0800, Arjan van de Ven wrote:
-> > > On Thu, 31 Jan 2008 19:14:36 +0200
-> > > Adrian Bunk <bunk@kernel.org> wrote:
-> > > > > cpuhotplug is required for suspend/resume.
-> > > > 
-> > > > Not on UP computers.
-> > > > 
-> > > 
-> > > great! someone who still has one of those and uses a kernel without
-> > > it. Can you look at your system.map and see how many kilobytes
-> > > you've gained? Eg how many kilobytes are in these sections exactly?
-> > I have one. A Atmel AT91 board equipped with an 9263.
-> > So lets take a look at the defconfig build for the evaluation board.
-> > 
-> > 
-> > o-arm/vmlinux.o:     file format elf32-littlearm
-> > 
-> >   0 .text         001cdefc  00000000  00000000  00000400  2**10
-> >   2 .init.text    000165e8  00000000  00000000  001ce6c0  2**5
-> >  26 .init.data    000032ec  00000000  00000000  002578cc  2**2
-> > 
-> > ---
-> > 
-> >   4 .devinit.text 00001558  00000000  00000000  001e5270  2**2
-> >   9 .exit.text    00000bc8  00000000  00000000  001e8d2c  2**2
-> >  10 .cpuinit.text 00000924  00000000  00000000  001e98f4  2**2
-> >  11 .meminit.text 000004cc  00000000  00000000  001ea218  2**2
-> >  12 .devexit.text 00000160  00000000  00000000  001ea6e4  2**2
-> >  38 .cpuinit.data 00000040  00000000  00000000  0025afc0  2**2
-> >  39 .meminit.data 0000000c  00000000  00000000  0025b000  2**2
-> > 
-> > 
-> > __devinit alone gives a net win of 5464 bytes.
-> > That is only ~3% of total .text size but this is non-swapable
-> > memory where everything is worth it.
+> Ok, after reading your followup with Geert I see that this looks like a
+> bug in ps3rom.c assuming 2048 byte sectors to calculate .max_sectors
+> (which was originally set to 32 as I mentioned).  Using the setting
+> BOUNCE_SIZE << 9 where BOUNCE_SIZE is the request size in bytes looks
+> like this will solve the issue.  My misunderstanding was
+> that .max_sectors was allowed to be calcuated in non 512 byte sectors,
+> so please disregard my patch.
 > 
-> now how much of this is lost again because you have to round the stuff to pagesize?
+> Geert, .max_sectors for ps3rom.c using 512 byte sectors ends up being
+> 128, yes.?
+> 
+> James, could we put something in the SCSI docs stating that .max_sectors
+> MUST be calculated against 512 byte sectors..?
 
-Lets take a look in the ARM vmlinux.lds.S file:
-       .text.head : {
-                _stext = .;
-                _sinittext = .;
-                *(.text.head)
-        }
+If that "we" is royal, then certainly you're welcome to submit a patch
+(just get Randy's ack).  However, do take a look at the existing docs
+first.  Certainly the block layer seems to make this very clear:
 
-        .init : {                       /* Init code and data           */
-                        INIT_TEXT
-                _einittext = .;
-                __proc_info_begin = .;
-                        *(.proc.info.init)
-                __proc_info_end = .;
-                __arch_info_begin = .;
-                        *(.arch.info.init)
-                __arch_info_end = .;
-                __tagtable_begin = .;
-                        *(.taglist.init)
-                __tagtable_end = .;
-                . = ALIGN(16);
-                __setup_start = .;
-                        *(.init.setup)
-                __setup_end = .;
-                __early_begin = .;
-                        *(.early_param.init)
-                __early_end = .;
-                __initcall_start = .;
-                        INITCALLS
-                __initcall_end = .;
-                __con_initcall_start = .;
-                        *(.con_initcall.init)
-                __con_initcall_end = .;
-                __security_initcall_start = .;
-                        *(.security_initcall.init)
-                __security_initcall_end = .;
-#ifdef CONFIG_BLK_DEV_INITRD
-                . = ALIGN(32);
-                __initramfs_start = .;
-                        usr/built-in.o(.init.ramfs)
-                __initramfs_end = .;
-#endif
-                . = ALIGN(4096);
-                __per_cpu_start = .;
-                        *(.data.percpu)
-                        *(.data.percpu.shared_aligned)
-                __per_cpu_end = .;
-#ifndef CONFIG_XIP_KERNEL
-                __init_begin = _stext;
-                INIT_DATA
-                . = ALIGN(4096);
-                __init_end = .;
+/**
+ * blk_queue_max_sectors - set max sectors for a request for this queue
+ * @q:  the request queue for the device
+ * @max_sectors:  max sectors in the usual 512b unit
+                              ^^^^^^^^^^^^^^^^^^^^^^
+ *
+ * Description:
+ *    Enables a low level driver to set an upper limit on the size of
+ *    received requests.
+ **/
 
-Everything between _stext and __init_end are freed.
-And we have two PAGESIZE alignmnets here - one for the percpu stuff
-and the other to align the full area that can be freed.
-So there is no special alignment for the __devinit stuff.
+I suspect you just didn't read the docs anyway ... ?
 
-And there is no percpu data on ARM so that area is empty.
-So it is one or two pages extra that are freed up.
+James
 
-	Sam
 
- 
