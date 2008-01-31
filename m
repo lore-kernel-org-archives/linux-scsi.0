@@ -1,126 +1,98 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Thu, 31 Jan 2008 09:14:20 -0800
-Message-ID: <1201799660.11265.121.camel@haakon2.linux-iscsi.org>
-References: <adazluoe2t3.fsf@cisco.com>
-	 <20080130083239E.fujita.tomonori@lab.ntt.co.jp>
-	 <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com>
-	 <20080130195635T.tomof@acm.org>
-	 <1201785938.7280.105.camel@haakon2.linux-iscsi.org>
-	 <e2e108260801310634n21473909o5abac021cc889de3@mail.gmail.com>
-	 <47A1EE54.6000005@vlnb.net>
+From: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH] bugfix for an underflow condition in usb storage & isd200.c
+Date: Thu, 31 Jan 2008 19:19:57 +0200
+Message-ID: <47A2033D.2050502@panasas.com>
+References: <Pine.LNX.4.44L0.0801301807420.17156-100000@iolanthe.rowland.org>	<47A1948B.2010402@panasas.com> <20080131070846.4464eb3c@chirp.tahoe> <47A1E6A0.8050500@panasas.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp122.sbc.mail.sp1.yahoo.com ([69.147.64.95]:31505 "HELO
-	smtp122.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1759461AbYAaROt (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 12:14:49 -0500
-In-Reply-To: <47A1EE54.6000005@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <47A1E6A0.8050500-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mark Glines <mark-6pk7R1svBr8dnm+yROfE0A@public.gmane.org>, Matthew Dharm <mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org>, James Bottomley <James.Bottomley-lYEaACU144FWk0Htik3J/w@public.gmane.org>
+Cc: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, FUJITA Tomonori <tomof@acm.org>, fujita.tomonori@lab.ntt.co.jp, rdreier@cisco.com, James.Bottomley@hansenpartnership.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Thu, 2008-01-31 at 18:50 +0300, Vladislav Bolkhovitin wrote:
-> Bart Van Assche wrote:
-> > On Jan 31, 2008 2:25 PM, Nicholas A. Bellinger <nab@linux-iscsi.org> wrote:
-> > 
-> >>Since this particular code is located in a non-data path critical
-> >>section, the kernel vs. user discussion is a wash.  If we are talking
-> >>about data path, yes, the relevance of DD tests in kernel designs are
-> >>suspect :p.  For those IB testers who are interested, perhaps having a
-> >>look with disktest from the Linux Test Project would give a better
-> >>comparision between the two implementations on a RDMA capable fabric
-> >>like IB for best case performance.  I think everyone is interested in
-> >>seeing just how much data path overhead exists between userspace and
-> >>kernel space in typical and heavy workloads, if if this overhead can be
-> >>minimized to make userspace a better option for some of this very
-> >>complex code.
-> > 
-> > I can run disktest on the same setups I ran dd on. This will take some
-> > time however.
-> 
-> Disktest was already referenced in the beginning of the performance 
-> comparison thread, but its results are not very interesting if we are 
-> going to find out, which implementation is more effective, because in 
-> the modes, in which usually people run this utility, it produces latency 
-> insensitive workload (multiple threads working in parallel). So, such 
-> multithreaded disktests results will be different between STGT and SCST 
-> only if STGT's implementation will get target CPU bound. If CPU on the 
-> target is powerful enough, even extra busy loops in the STGT or SCST hot 
-> path code will change nothing.
-> 
 
-I think the really interesting numbers are the difference for bulk I/O
-between kernel and userspace on both traditional iSCSI and the RDMA
-enabled flavours.  I have not been able to determine anything earth
-shattering from the current run of kernel vs. userspace tests, nor which
-method of implementation for iSER, SRP, and generic Storage Engine are
-'more effective' for that case.  Performance and latency to real storage
-would make alot more sense for the kernel vs. user case.  Also workloads
-against software LVM and Linux MD block devices would be of interest as
-these would be some of the more typical deployments that would be in the
-field, and is what Linux-iSCSI.org uses for our production cluster
-storage today.
+  scsi_scan is issuing a 36-byte INQUIRY request to llds. isd200 would
+  volunteer 96 bytes of INQUIRY. This caused an underflow condition in
+  protocol.c usb_stor_access_xfer_buf(). So first fix is to
+  usb_stor_access_xfer_buf() to properly handle underflow conditions.
+  Then usb_stor_set_xfer_buf() should report this condition as a negative
+  resid. Should we also set cmnd->status in the underflow condition?
 
-Having implemented my own iSCSI and SCSI Target mode Storage Engine
-leads me to believe that putting logic in userspace is probably a good
-idea in the longterm.  If this means putting the entire data IO path
-into userspace for Linux/iSCSI, then there needs to be a good reason why
-this will not not scale to multi-port 10 Gb/sec engines in traditional
-and RDMA mode if we need to take this codepath back into the kernel.
-The end goal is to have the most polished and complete storage engine
-and iSCSI stacks designs go upstream, which is something I think we can
-all agree on.
+  Then also isd200.c is fixed to only return the type of INQUIRY && SENSE
+  the upper layer asked for.
 
-Also, with STGT being a pretty new design which has not undergone alot
-of optimization, perhaps profiling both pieces of code against similar
-tests would give us a better idea of where userspace bottlenecks reside.
-Also, the overhead involved with traditional iSCSI for bulk IO from
-kernel / userspace would also be a key concern for a much larger set of
-users, as iSER and SRP on IB is a pretty small userbase and will
-probably remain small for the near future.
+Signed-off-by: Boaz Harrosh <bharrosh-C4P08NqkoRlBDgjK7y7TUQ@public.gmane.org>
+---
+ drivers/usb/storage/isd200.c   |    7 +++++--
+ drivers/usb/storage/protocol.c |   13 +++++++++----
+ 2 files changed, 14 insertions(+), 6 deletions(-)
 
-> Additionally, multithreaded disktest over RAM disk is a good example of 
-> a synthetic benchmark, which has almost no relation with real life 
-> workloads. But people like it, because it produces nice looking results.
-> 
-
-Yes, people like to claim their stacks are the fastest with RAM disk
-benchmarks.  But hooking up their fast network silicon to existing
-storage hardware and OS storage subsystems and software is where the
-real game is..
-
-> Actually, I don't know what kind of conclusions it is possible to make 
-> from disktest's results (maybe only how throughput gets bigger or slower 
-> with increasing number of threads?), it's a good stress test tool,
-> but 
-> not more.
-> 
-
-Being able to have a best case baseline with disktest for kernel vs.
-user would be of interest for both transport protocol and SCSI Target
-mode Storage Engine profiling.  The first run of tests looked pretty
-bandwith oriented, so disktest works well to determine maximum bandwith.
-Disktest also is nice for getting reads from cache on hardware RAID
-controllers because disktest only generates requests with LBAs from 0 ->
-disktest BLOCKSIZE.
-
---nab
-
-> > Disktest is new to me -- any hints with regard to suitable
-> > combinations of command line parameters are welcome. The most recent
-> > version I could find on http://ltp.sourceforge.net/ is ltp-20071231.
-> > 
-> > Bart Van Assche.
-> > -
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> 
-
+diff --git a/drivers/usb/storage/isd200.c b/drivers/usb/storage/isd200.c
+index 0db4886..4394930 100644
+--- a/drivers/usb/storage/isd200.c
++++ b/drivers/usb/storage/isd200.c
+@@ -1261,6 +1261,7 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb, struct us_data *us,
+ 	unsigned long lba;
+ 	unsigned long blockCount;
+ 	unsigned char senseData[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
++	unsigned xfer_len;
+ 
+ 	memset(ataCdb, 0, sizeof(union ata_cdb));
+ 
+@@ -1270,8 +1271,9 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb, struct us_data *us,
+ 		US_DEBUGP("   ATA OUT - INQUIRY\n");
+ 
+ 		/* copy InquiryData */
++		xfer_len = min(sizeof(info->InquiryData), scsi_bufflen(srb));
+ 		usb_stor_set_xfer_buf((unsigned char *) &info->InquiryData,
+-				sizeof(info->InquiryData), srb);
++					xfer_len, srb);
+ 		srb->result = SAM_STAT_GOOD;
+ 		sendToTransport = 0;
+ 		break;
+@@ -1280,7 +1282,8 @@ static int isd200_scsi_to_ata(struct scsi_cmnd *srb, struct us_data *us,
+ 		US_DEBUGP("   ATA OUT - SCSIOP_MODE_SENSE\n");
+ 
+ 		/* Initialize the return buffer */
+-		usb_stor_set_xfer_buf(senseData, sizeof(senseData), srb);
++		xfer_len = min(sizeof(senseData), scsi_bufflen(srb));
++		usb_stor_set_xfer_buf(senseData, xfer_len, srb);
+ 
+ 		if (info->DeviceFlags & DF_MEDIA_STATUS_ENABLED)
+ 		{
+diff --git a/drivers/usb/storage/protocol.c b/drivers/usb/storage/protocol.c
+index a41ce21..6200f62 100644
+--- a/drivers/usb/storage/protocol.c
++++ b/drivers/usb/storage/protocol.c
+@@ -175,7 +175,7 @@ unsigned int usb_stor_access_xfer_buf(unsigned char *buffer,
+ 		* and the starting offset within the page, and update
+ 		* the *offset and **sgptr values for the next loop. */
+ 	cnt = 0;
+-	while (cnt < buflen) {
++	while (cnt < buflen && sg) {
+ 		struct page *page = sg_page(sg) +
+ 				((sg->offset + *offset) >> PAGE_SHIFT);
+ 		unsigned int poff =
+@@ -228,9 +228,14 @@ void usb_stor_set_xfer_buf(unsigned char *buffer,
+ {
+ 	unsigned int offset = 0;
+ 	struct scatterlist *sg = NULL;
++	unsigned int count;
+ 
+-	usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
++	count = usb_stor_access_xfer_buf(buffer, buflen, srb, &sg, &offset,
+ 			TO_XFER_BUF);
+-	if (buflen < scsi_bufflen(srb))
+-		scsi_set_resid(srb, scsi_bufflen(srb) - buflen);
++
++	/* Check for underflow */
++	if (buflen > scsi_bufflen(srb))
++		count = buflen;
++
++	scsi_set_resid(srb, scsi_bufflen(srb) - count);
+ }
+-- 
+1.5.3.3
