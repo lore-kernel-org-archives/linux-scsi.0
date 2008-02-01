@@ -1,70 +1,44 @@
-From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
-Subject: [PATCH] ps3rom: sector size should be 512 bytes
-Date: Fri, 1 Feb 2008 17:35:13 +0100 (CET)
-Message-ID: <Pine.LNX.4.64.0802011734130.28283@vixen.sonytel.be>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: [PATCH] [SCSI] sd: make error handling more robust (v2)
+Date: Fri, 01 Feb 2008 12:03:27 -0500
+Message-ID: <47A350DF.5020404@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1989583265-1201883713=:28283"
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from vervifontaine.sonytel.be ([80.88.33.193]:41161 "EHLO
-	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754678AbYBAQfQ (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 11:35:16 -0500
+Received: from host64.cybernetics.com ([70.169.137.4]:4502 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1754023AbYBARDV (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 12:03:21 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Aegis Lin <aegislin@gmail.com>, Geoff Levand <geoffrey.levand@am.sony.com>, linux-scsi@vger.kernel.org, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Luben Tuikov <ltuikov@yahoo.com>, "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This patch fixes a problem with some out-of-spec SCSI disks that report
+hardware or medium errors incorrectly.  Without the patch, the kernel
+may silently ignore a failed write command or return corrupted data on a
+failed read command.
 
----584349381-1989583265-1201883713=:28283
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-
-From: Aegis Lin <aegislin@gmail.com>
-
-ps3rom: sector size should be 512 bytes
-
-It should be desired that 64 KiB is available for ATAPI transferrring.
-(Historically) in SCSI/block layer sector size is defined as 512 during
-sector-byte calculation.
-Originally in ps3rom.c CD_FRAMESIZE (2048) was used, which limited
-/sys/block/sr0/queue/max_sectors_kb to 16 KiB (32 sectors).
-
-Signed-off-by: Aegis Lin <aegislin@gmail.com>
-Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
- drivers/scsi/ps3rom.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/scsi/ps3rom.c
-+++ b/drivers/scsi/ps3rom.c
-@@ -35,7 +35,7 @@
- 
- #define BOUNCE_SIZE			(64*1024)
- 
--#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE / CD_FRAMESIZE)
-+#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE >> 9)
- 
- 
- struct ps3rom_private {
+This is a simplified version of the original patch that fixes just the
+problem at hand, without trying to handle other theoretical out-of-spec
+cases.
 
-With kind regards,
+Applies to kernels 2.6.18 - 2.6.24-git10+.
 
-Geert Uytterhoeven
-Software Architect
+--- linux-2.6.24-git10/drivers/scsi/sd.c.orig	2008-02-01 11:24:37.000000000 -0500
++++ linux-2.6.24-git10/drivers/scsi/sd.c	2008-02-01 11:26:12.000000000 -0500
+@@ -990,6 +990,8 @@ static int sd_done(struct scsi_cmnd *SCp
+ 		/* This computation should always be done in terms of
+ 		 * the resolution of the device's medium.
+ 		 */
++		if (bad_lba < start_lba)
++			goto out;
+ 		good_bytes = (bad_lba - start_lba)*SCpnt->device->sector_size;
+ 		break;
+ 	case RECOVERED_ERROR:
 
-Sony Network and Software Technology Center Europe
-The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
 
-Phone:    +32 (0)2 700 8453
-Fax:      +32 (0)2 700 8622
-E-mail:   Geert.Uytterhoeven@sonycom.com
-Internet: http://www.sony-europe.com/
-
-Sony Network and Software Technology Center Europe
-A division of Sony Service Centre (Europe) N.V.
-Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
-VAT BE 0413.825.160 · RPR Brussels
-Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
----584349381-1989583265-1201883713=:28283--
