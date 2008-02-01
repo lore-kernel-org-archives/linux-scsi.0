@@ -1,37 +1,70 @@
-From: Tony Battersby <tonyb@cybernetics.com>
-Subject: Re: [PATCH] [RFC] sd: make error handling more robust
-Date: Fri, 01 Feb 2008 11:15:50 -0500
-Message-ID: <47A345B6.5030206@cybernetics.com>
-References: <387599.14710.qm@web31814.mail.mud.yahoo.com> <830195.4171.qm@web31808.mail.mud.yahoo.com> <532ABFBDAAC3A34EB12EBA6CEC2838F4396ED518@ADPE2K703.adaptec.com>
+From: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Subject: [PATCH] ps3rom: sector size should be 512 bytes
+Date: Fri, 1 Feb 2008 17:35:13 +0100 (CET)
+Message-ID: <Pine.LNX.4.64.0802011734130.28283@vixen.sonytel.be>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: MULTIPART/MIXED; BOUNDARY="-584349381-1989583265-1201883713=:28283"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from host64.cybernetics.com ([70.169.137.4]:1234 "EHLO
-	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
-	with ESMTP id S1751143AbYBAQPp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 11:15:45 -0500
-In-Reply-To: <532ABFBDAAC3A34EB12EBA6CEC2838F4396ED518@ADPE2K703.adaptec.com>
+Received: from vervifontaine.sonytel.be ([80.88.33.193]:41161 "EHLO
+	vervifontaine.sonycom.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1754678AbYBAQfQ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 11:35:16 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@gmail.com>, "ltuikov@yahoo.com" <ltuikov@yahoo.com>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Aegis Lin <aegislin@gmail.com>, Geoff Levand <geoffrey.levand@am.sony.com>, linux-scsi@vger.kernel.org, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>
 
-Salyzyn, Mark wrote:
-> Serendipity, been working an issue for the past week where error reporting from aacraid's HARDWARE_ERROR when an array was marked DEAD in the Adapter was not propagating to MD. The trigger for this investigation was "AACRAID driver broken in 2.6.22.x (and beyond?) [WAS: Re: 2.6.22.16 MD raid1 doesn't mark removed disk faulty, MD thread goes UN]" as authored my Mike Snitzer.
->
-> I had attacked this yesterday by setting the deferred bit (0xF1) rather than invalidating the sense data (0x70) in the LLD (Patch to the aacraid would be forthcoming following some testing). The Valid bit in the SCSI layer sometimes (too many kernels, I am talking generically) throws away all the content and keys of the sense data, at least deferred appears to report that the info does not accompany the sense data.
->
-> The change needs to be SCSI compliant and possibly endure back-porting to other kernels. So where are we going to put this, in each respective LLD (invalidating info, but not the keys), in sd.c (where the bad_lba is calculated) or in scsi_error.c (where the info field is picked up)?
->
-> Sincerely -- Mark Salyzyn
->
->   
-Have you tried setting VALID=1 and DEFERRED=0 (0xF0), with the sense
-information bytes containing the LBA of the first requested sector from
-the read/write CDB?  Note that if you support arrays > 2 TB, you may
-have to use the newer descriptor sense format to return sector numbers
->= 2^32.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Tony
+---584349381-1989583265-1201883713=:28283
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 
+From: Aegis Lin <aegislin@gmail.com>
+
+ps3rom: sector size should be 512 bytes
+
+It should be desired that 64 KiB is available for ATAPI transferrring.
+(Historically) in SCSI/block layer sector size is defined as 512 during
+sector-byte calculation.
+Originally in ps3rom.c CD_FRAMESIZE (2048) was used, which limited
+/sys/block/sr0/queue/max_sectors_kb to 16 KiB (32 sectors).
+
+Signed-off-by: Aegis Lin <aegislin@gmail.com>
+Signed-off-by: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+---
+ drivers/scsi/ps3rom.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+--- a/drivers/scsi/ps3rom.c
++++ b/drivers/scsi/ps3rom.c
+@@ -35,7 +35,7 @@
+ 
+ #define BOUNCE_SIZE			(64*1024)
+ 
+-#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE / CD_FRAMESIZE)
++#define PS3ROM_MAX_SECTORS		(BOUNCE_SIZE >> 9)
+ 
+ 
+ struct ps3rom_private {
+
+With kind regards,
+
+Geert Uytterhoeven
+Software Architect
+
+Sony Network and Software Technology Center Europe
+The Corporate Village · Da Vincilaan 7-D1 · B-1935 Zaventem · Belgium
+
+Phone:    +32 (0)2 700 8453
+Fax:      +32 (0)2 700 8622
+E-mail:   Geert.Uytterhoeven@sonycom.com
+Internet: http://www.sony-europe.com/
+
+Sony Network and Software Technology Center Europe
+A division of Sony Service Centre (Europe) N.V.
+Registered office: Technologielaan 7 · B-1840 Londerzeel · Belgium
+VAT BE 0413.825.160 · RPR Brussels
+Fortis Bank Zaventem · Swift GEBABEBB08A · IBAN BE39001382358619
+---584349381-1989583265-1201883713=:28283--
