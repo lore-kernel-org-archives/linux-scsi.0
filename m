@@ -1,16 +1,16 @@
 From: Mike Christie <michaelc@cs.wisc.edu>
-Subject: Re: [PATCH 4/9] scsi_dh: add skeleton for SCSI Device
-	Handlers
-Date: Fri, 01 Feb 2008 13:53:39 -0600
-Message-ID: <47A378C3.5030207@cs.wisc.edu>
+Subject: Re: [PATCH 3/9] scsi_dh: scsi handling of
+	REQ_LB_OP_TRANSITION
+Date: Fri, 01 Feb 2008 14:00:37 -0600
+Message-ID: <47A37A65.8020500@cs.wisc.edu>
 References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
-	<20080124003115.18871.42778.sendpatchset@localhost.localdomain>
+	<20080124003059.18871.89111.sendpatchset@localhost.localdomain>
 Reply-To: device-mapper development <dm-devel@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20080124003115.18871.42778.sendpatchset@localhost.localdomain>
+In-Reply-To: <20080124003059.18871.89111.sendpatchset@localhost.localdomain>
 List-Unsubscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -25,60 +25,69 @@ Cc: andmike@us.ibm.com, dm-devel@redhat.com, linux-scsi@vger.kernel.org, jens.ax
 List-Id: linux-scsi@vger.kernel.org
 
 Chandra Seetharaman wrote:
->  	 * mainly associated with tapes and returned SUCCESS.
-> Index: linux-2.6.24-rc8/drivers/scsi/scsi_sysfs.c
-> ===================================================================
-> --- linux-2.6.24-rc8.orig/drivers/scsi/scsi_sysfs.c
-> +++ linux-2.6.24-rc8/drivers/scsi/scsi_sysfs.c
-> @@ -951,6 +951,49 @@ int scsi_register_interface(struct class
->  }
->  EXPORT_SYMBOL(scsi_register_interface);
+> @@ -1445,9 +1479,24 @@ static void scsi_kill_request(struct req
+>  static void scsi_softirq_done(struct request *rq)
+>  {
+>  	struct scsi_cmnd *cmd = rq->completion_data;
+> -	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+>  	int disposition;
+> +	struct request_queue *q;
+> +	unsigned long wait_for, flags;
 >  
-> +static int scsi_dh_notifier_add(struct device *dev, void *data)
-> +{
-> +	struct scsi_device_handler *sdev_dh = data;
+> +	if (blk_linux_request(rq)) {
+> +		q = rq->q;
+> +		spin_lock_irqsave(q->queue_lock, flags);
+> +		/*
+> +		 * we always return 1 and the caller should
+> +		 * check rq->errors for the complete status
+> +		 */
+> +		end_that_request_last(rq, 1);
+> +		spin_unlock_irqrestore(q->queue_lock, flags);
+> +		return;
+> +	}
 > +
-> +	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_ADD_DEVICE, dev);
 > +
-> +	return 0;
-> +}
-> +
-> +int scsi_register_device_handler(struct scsi_device_handler *sdev_dh)
-> +{
-> +	int ret;
-> +
-> +	ret = bus_register_notifier(&scsi_bus_type, &sdev_dh->nb);
-> +
-> +	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh, scsi_dh_notifier_add);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(scsi_register_device_handler);
-> +
-> +static int scsi_dh_notifier_remove(struct device *dev, void *data)
-> +{
-> +	struct scsi_device_handler *sdev_dh = data;
-> +
-> +	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_DEL_DEVICE, dev);
-> +
-> +	return 0;
-> +}
-> +
-> +int scsi_unregister_device_handler(struct scsi_device_handler *sdev_dh)
-> +{
-> +	int ret;
-> +
-> +	ret = bus_unregister_notifier(&scsi_bus_type, &sdev_dh->nb);
-> +
-> +	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh,
-> +					scsi_dh_notifier_remove);
-> +
-> +	return ret;
-> +}
-> +EXPORT_SYMBOL(scsi_unregister_device_handler);
-> +
+> +	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
+>  	INIT_LIST_HEAD(&cmd->eh_entry);
+>  
+.....
 
-Did this end up solving the problem I was hitting where when using the 
-other driver model stuff like is used with the SCSI upper layer drivers. 
-The problem where the hw handler module had to be loaded before finding 
-devices and had to be loaded before sd.c?
+> +
+>  /*
+>   * Function:    scsi_request_fn()
+>   *
+> @@ -1519,7 +1612,23 @@ static void scsi_request_fn(struct reque
+>  		 * accept it.
+>  		 */
+>  		req = elv_next_request(q);
+> -		if (!req || !scsi_dev_queue_ready(q, sdev))
+> +		if (!req)
+> +			break;
+> +
+> +		/*
+> +		 * We do not account for linux blk req in the device
+> +		 * or host busy accounting because it is not necessarily
+> +		 * a scsi command that is sent to some object. The lower
+> +		 * level can translate it into a request/scsi_cmnd, if
+> +		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
+> +		 */
+> +		if (blk_linux_request(req)) {
+> +			blkdev_dequeue_request(req);
+> +			scsi_execute_blk_linux_cmd(req);
+> +			continue;
+> +		}
+> +
+> +		if (!scsi_dev_queue_ready(q, sdev))
+>  			break;
+
+I think these two pieces are one of the reasons I have not pushed the 
+patches. I thought the completion and execution pieces here are a little 
+ugly and seem to just wedge themselves in where they want to be.
+
+Is there any way to make the insertion of non-scsi commands more common? 
+Do we have the code for being able to send requests directly to 
+something like a fc rport done? Could we maybe inject these special 
+commands to the hw handler using something similar to how bsg would send 
+non scsi commands to weird objects (objects like rport, sessions, and 
+not devices we traditionally associated with queues like scsi_devices). 
+Just a thought with no code :) that is why the ugly code existed still :)
