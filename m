@@ -1,8 +1,7 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Update SCSI documentation for 512 byte sector requirement with
-	max_sectors
-Date: Thu, 31 Jan 2008 20:38:25 -0800
-Message-ID: <1201840705.11265.197.camel@haakon2.linux-iscsi.org>
+Subject: Re: [Cbe-oss-dev] [PATCH] ps3rom: sector size should be 512 bytes
+Date: Thu, 31 Jan 2008 21:01:21 -0800
+Message-ID: <1201842081.11265.217.camel@haakon2.linux-iscsi.org>
 References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
 	 <Pine.LNX.4.64.0801311414380.15534@vixen.sonytel.be>
 	 <1201788625.11265.23.camel@haakon2.linux-iscsi.org>
@@ -12,87 +11,75 @@ References: <dc3abf350801290318u66474599n2f293832373f3706@mail.gmail.com>
 	 <1201800489.11265.134.camel@haakon2.linux-iscsi.org>
 	 <1201802031.3131.29.camel@localhost.localdomain>
 	 <1201805075.11265.178.camel@haakon2.linux-iscsi.org>
-	 <1201808524.3131.46.camel@localhost.localdomain>
-	 <1201831111.11265.192.camel@haakon2.linux-iscsi.org>
-	 <20080131184622.9d8a5ccd.randy.dunlap@oracle.com>
+	 <Pine.LNX.4.64.0801312013460.957@vixen.sonytel.be>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp115.sbc.mail.sp1.yahoo.com ([69.147.64.88]:30275 "HELO
-	smtp115.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751316AbYBAEiz (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 23:38:55 -0500
-In-Reply-To: <20080131184622.9d8a5ccd.randy.dunlap@oracle.com>
+Received: from smtp109.sbc.mail.mud.yahoo.com ([68.142.198.208]:45325 "HELO
+	smtp109.sbc.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S935327AbYBAFBv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 00:01:51 -0500
+In-Reply-To: <Pine.LNX.4.64.0801312013460.957@vixen.sonytel.be>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Randy Dunlap <randy.dunlap@oracle.com>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@lst.de>
+To: Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Aegis Lin <aegislin@gmail.com>, Masakazu Mokuno <Masakazu_Mokuno@hq.scei.sony.co.jp>, Cell Broadband Engine OSS Development <cbe-oss-dev@ozlabs.org>, linux-scsi@vger.kernel.org, torvalds@linux-foundation.org, akpm@linux-foundation.org, Jens Axboe <jens.axboe@oracle.com>, Christoph Hellwig <hch@lst.de>
 
-On Thu, 2008-01-31 at 18:46 -0800, Randy Dunlap wrote:
-> > Agreed, here is the patch to make this clear within SCSI.  Randy, does
-> > this look OK..?
+On Thu, 2008-01-31 at 20:14 +0100, Geert Uytterhoeven wrote:
+> On Thu, 31 Jan 2008, Nicholas A. Bellinger wrote:
+> > On Thu, 2008-01-31 at 11:53 -0600, James Bottomley wrote:
+> > > On Thu, 2008-01-31 at 09:28 -0800, Nicholas A. Bellinger wrote:
+> > > > The problem case is a SCSI Target Mode engine that receives a 2048 Byte
+> > > > single sector ATAPI READ_10 request from the storage fabric, and uses
+> > > > scsi_execute_async() (the only option >= 2.6.18) to issue said request
+> > > > to the underlying struct scsi_device.  Because the underlying bio code
+> > > > assumes 512 byte only sectors, the check in __bio_add_page() incorrectly
+> > > > determines that max_sectors (max_sectors has to be low, as with 32 from
+> > > > ps3rom.c) has been exceeded, and fails the request back up the stack.
+> > > 
+> > > OK, so this is a totally separate issue from the one you actually posted
+> > > it as a patch to fix?
+> > > 
+> > > the queue max_sectors parameter is also counted in the block internal of
+> > > 512 byte sectors.  If you set it to 32 that means you were only
+> > > expecting 16k of transfers per command maximum.  If that's not right,
+> > > then set the limit correctly.
+> > > 
+> > > In short, and to repeat: almost every internal size counter to block is
+> > > in units of 512 byte sectors ... that includes capacity, maximum etc ...
+> > > 
 > > 
-> > Thanks,
+> > Ok, after reading your followup with Geert I see that this looks like a
+> > bug in ps3rom.c assuming 2048 byte sectors to calculate .max_sectors
+> > (which was originally set to 32 as I mentioned).  Using the setting
+> > BOUNCE_SIZE << 9 where BOUNCE_SIZE is the request size in bytes looks
+> > like this will solve the issue.  My misunderstanding was
+> > that .max_sectors was allowed to be calcuated in non 512 byte sectors,
+> > so please disregard my patch.
 > > 
-> > --nab
-> > 
-> > Signed-off-by: Nicholas A. Bellinger <nab@linux-iscsi.org>
-> > 
-> > diff --git a/Documentation/scsi/scsi_mid_low_api.txt b/Documentation/scsi/scsi_mid_low_api.txt
-> > index 6f70f2b..570f271 100644
-> > --- a/Documentation/scsi/scsi_mid_low_api.txt
-> > +++ b/Documentation/scsi/scsi_mid_low_api.txt
-> > @@ -1244,13 +1244,12 @@ of interest:
-> >      this_id      - scsi id of host (scsi initiator) or -1 if not known
-> >      sg_tablesize - maximum scatter gather elements allowed by host.
-> >                     0 implies scatter gather not supported by host
-> > -    max_sectors  - maximum number of sectors (usually 512 bytes) allowed
-> > -                   in a single SCSI command. The default value of 0 leads
-> > -                   to a setting of SCSI_DEFAULT_MAX_SECTORS (defined in
-> > -                   scsi_host.h) which is currently set to 1024. So for a
-> > -                   disk the maximum transfer size is 512 KB when max_sectors
-> > -                   is not defined. Note that this size may not be sufficient
-> > -                   for disk firmware uploads.
-> > +    max_sectors  - maximum number of 512 bytes sectors allowed in a single
-> > +                   SCSI command. The default value of 0 leads to a setting
-> > +                   of SCSI_DEFAULT_MAX_SECTORS (defined in scsi_host.h) which
-> > +                   is currently set to 1024. So for a disk the maximum transfer
-> > +                   size is 512 KB when max_sectors is not defined. Note that
-> > +                   this size may not be sufficient for disk firmware uploads.
-> >      cmd_per_lun  - maximum number of commands that can be queued on devices
-> >                     controlled by the host. Overridden by LLD calls to
-> >                     scsi_adjust_queue_depth().
-> > diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-> > index 5c58d59..84098e3 100644
-> > --- a/include/scsi/scsi_host.h
-> > +++ b/include/scsi/scsi_host.h
-> > @@ -372,7 +372,10 @@ struct scsi_host_template {
-> >         unsigned short sg_tablesize;
-> >  
-> >         /*
-> > -        * If the host adapter has limitations beside segment count
-> > +        * If the host adapter has limitations beside segment count.
-> > +        * Note that this value MUST be calculated in 512 byte sectors,
-> > +        * even if the attached struct scsi_device->sector_size is expected
-> > +        * to use non 512 byte sectors.
+> > Geert, .max_sectors for ps3rom.c using 512 byte sectors ends up being
+> > 128, yes.?
 > 
-> How about:
-> 	   * to use a sector size other than 512 bytes.
+> Yes.
+> 
+> With kind regards,
+> 
+> Geert Uytterhoeven
+> Software Architect
 > 
 
-Sounds good.
+Great!  I will update my ps3 to the latest 2.6.24 from ps3-linux.git and
+get some new Linux/iSCSI.org Target builds made this weekend once
+ps3rom-use-128-max-sector.patch is committed.
 
-> and
-> Acked-by: Randy Dunlap <randy.dunlap@oracle.com>
-> 
-> 
-> >          */
-> >         unsigned short max_sectors;
-> 
-
-Thanks!
+Also, I will be updating my userspace to FC8 PPC, and would like to get
+a target build for the current stable 2.6.23 PPC64 from the addon CDs.
+I also would not mind providing a ps3rom.ko with said patch for
+interested parties using the default FC-8 Ps3-Linux kernel who are not
+adventurous enough to build their own kernel until the Addon CDs are
+reved again.
 
 --nab
+
 
