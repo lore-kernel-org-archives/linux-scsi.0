@@ -1,71 +1,82 @@
-From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
-Subject: RE: [PATCH] [SCSI] sd: make error handling more robust (v2)
-Date: Fri, 1 Feb 2008 12:47:48 -0800
-Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F43976569D@ADPE2K703.adaptec.com>
-References: <47A350DF.5020404@cybernetics.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+Subject: Re: [PATCH] [RFC] sd: make error handling more robust
+Date: Fri, 01 Feb 2008 16:02:59 -0500
+Message-ID: <47A38903.9010902@cybernetics.com>
+References: <145599.60620.qm@web31808.mail.mud.yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ts.adaptec.com ([162.62.93.58]:54064 "EHLO mail-gw3.adaptec.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1760272AbYBAUru convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 15:47:50 -0500
-In-Reply-To: <47A350DF.5020404@cybernetics.com>
-Content-Language: en-US
+Received: from host64.cybernetics.com ([70.169.137.4]:2671 "EHLO
+	mail.cybernetics.com" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+	with ESMTP id S1756835AbYBAVCx (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 1 Feb 2008 16:02:53 -0500
+In-Reply-To: <145599.60620.qm@web31808.mail.mud.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Luben Tuikov <ltuikov@yahoo.com>, Mike Snitzer <snitzer@gmail.com>, Greg KH <greg@kroah.com>
+To: ltuikov@yahoo.com
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-ACK
+Luben Tuikov wrote:
+> --- On Fri, 2/1/08, Tony Battersby <tonyb@cybernetics.com> wrote:
+>   
+>> Also, I disagree about treating recovered error like
+>> hardware/medium
+>> error.  Recovered error is supposed to mean "the last
+>> command completed
+>> successfully, with some recovery action performed by the
+>> device
+>> server".
+>>     
+>
+> Which then means that you agree with
+> commit 03aba2f7.
+>
+>   
 
-Signed-off-by: Mark Salyzyn <aacraid@adaptec.com>
+I disagree only with this part of the commit:
 
-Mike Snitzer tested this also in conjunction with the aacraid driver and it resolved the error propagation problem he experienced with MD on a 2.6.22.16 kernel, recommend that this also be added to any stabilization for these other kernels. By his permission:
+-                       good_bytes = (error_sector - SCpnt->request->sector) << 9;
+-                       if (good_bytes < 0 || good_bytes >= this_count)
+-                               good_bytes = 0;
 
-Signed-off-by: Mike Snitzer <snitzer@gmail.com>
+So it removed the sanity-check on good_bytes, which broke error handling
+for my out-of-spec RAID.  My patch adds the check back, only doing it
+before the multiplication by the sector size rather than after.  That is
+also why I wanted to add an upper-bound check, to make sure that sd_done
+never returned good_bytes > xfer_size, but no one else agreed with that
+level of paranoia.
 
-Sincerely -- Mark Salyzyn
+> But the definition of RECOVERED ERROR immediately
+> after what you quoted, adds:
+>    "Details may be determined by examining the
+> additional sense bytes and the INFORMATION field."
+>
+>   
 
-> -----Original Message-----
-> From: Tony Battersby [mailto:tonyb@cybernetics.com]
-> Sent: Friday, February 01, 2008 12:03 PM
-> To: linux-scsi@vger.kernel.org; James Bottomley
-> Cc: Luben Tuikov; Salyzyn, Mark
-> Subject: [PATCH] [SCSI] sd: make error handling more robust (v2)
+I guess the question is: if a disk drive returns RECOVERED ERROR with
+info_valid=1 and the sector number in the sense bytes, does that mean
+that the disk completed the command successfully and transferred all the
+data (and is reporting the sector number for information logging
+purposes only), or does it mean that it stopped reading or writing at
+the sector indicated in the sense data?  I can't really say for sure, so
+I will leave the debate to others.
+
+BTW, your patch will result in sd_done returning good_bytes == 0 for the
+case where sense_key == RECOVERED ERROR && info_valid == 0, which I
+think is probably wrong.  In this case I would return good_bytes == 0
+for hardware/medium error and good_bytes == xfer_size for recovered error.
+
+> Thus the patch I sent to you for you to try on
+> your hardware.
 >
-> This patch fixes a problem with some out-of-spec SCSI disks
-> that report
-> hardware or medium errors incorrectly.  Without the patch, the kernel
-> may silently ignore a failed write command or return
-> corrupted data on a
-> failed read command.
->
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> ---
->
-> This is a simplified version of the original patch that fixes just the
-> problem at hand, without trying to handle other theoretical
-> out-of-spec
-> cases.
->
-> Applies to kernels 2.6.18 - 2.6.24-git10+.
->
-> --- linux-2.6.24-git10/drivers/scsi/sd.c.orig   2008-02-01
-> 11:24:37.000000000 -0500
-> +++ linux-2.6.24-git10/drivers/scsi/sd.c        2008-02-01
-> 11:26:12.000000000 -0500
-> @@ -990,6 +990,8 @@ static int sd_done(struct scsi_cmnd *SCp
->                 /* This computation should always be done in terms of
->                  * the resolution of the device's medium.
->                  */
-> +               if (bad_lba < start_lba)
-> +                       goto out;
->                 good_bytes = (bad_lba -
-> start_lba)*SCpnt->device->sector_size;
->                 break;
->         case RECOVERED_ERROR:
->
->
->
+>   
+My hardware isn't returning "recovered error" or "no sense" sense keys;
+I was just trying to improve the handling of these cases while I was
+looking at the function.  Thus, there is no point for me to test your
+full patch.  My problem is now solved with the simplified patch I
+already posted.  If you want to push for the RECOVERED ERROR change,
+then go right ahead with your own patch, but I'm done.
+
+Tony
+
