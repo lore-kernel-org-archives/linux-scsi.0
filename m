@@ -1,681 +1,217 @@
-From: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
-Subject: [PATCH] SUN3X_ESP: converted to esp_scsi.c
-Date: Fri,  1 Feb 2008 00:13:34 +0100 (CET)
-Message-ID: <20080131231334.1D492C3288@solo.franken.de>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] [RFC] sd: make error handling more robust
+Date: Thu, 31 Jan 2008 17:24:54 -0800 (PST)
+Message-ID: <387599.14710.qm@web31814.mail.mud.yahoo.com>
+Reply-To: ltuikov@yahoo.com
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="0-60358531-1201829094=:14710"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from elvis.franken.de ([193.175.24.41]:40816 "EHLO elvis.franken.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755551AbYAaXNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 31 Jan 2008 18:13:37 -0500
+Received: from web31814.mail.mud.yahoo.com ([68.142.206.167]:34522 "HELO
+	web31814.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753696AbYBABbf (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 31 Jan 2008 20:31:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Tony Battersby <tonyb@cybernetics.com>
 
-Converted sun3x_esp driver to use esp_scsi.c
+--0-60358531-1201829094=:14710
+Content-Type: text/plain; charset=us-ascii
 
-Signed-off-by: Thomas Bogendoerfer <tsbogend@alpha.franken.de>
----
+--- On Thu, 1/31/08, Tony Battersby <tonyb@cybernetics.com> wrote:
 
- drivers/scsi/Kconfig     |    1 +
- drivers/scsi/Makefile    |    2 +-
- drivers/scsi/sun3x_esp.c |  546 ++++++++++++++++++++--------------------------
- 3 files changed, 237 insertions(+), 312 deletions(-)
+> From: Tony Battersby <tonyb@cybernetics.com>
+> Subject: [PATCH] [RFC] sd: make error handling more robust
+> To: "James Bottomley" <James.Bottomley@HansenPartnership.com>, "Luben Tuikov" <ltuikov@yahoo.com>, linux-scsi@vger.kernel.org
+> Date: Thursday, January 31, 2008, 1:31 PM
+> I have a RAID that returns a medium error on a read command.
+>  The
+> "information bytes valid" bit is set in the sense
+> data, but the
+> information bytes are zero:
+> 
+> CDB: 28 00 02 B0 62 00 00 00 02 00
+> Status:	02 (CHECK CONDITION)
+> Sense data:
+> F0 00 03 00 | 00 00 00 0A | 00 00 00 00 | 00 00 00 00
+> 00 00
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 14fc7f3..fa86f34 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -1779,6 +1779,7 @@ config SUN3_SCSI
- config SUN3X_ESP
- 	bool "Sun3x ESP SCSI"
- 	depends on SUN3X && SCSI=y
-+	select SCSI_SPI_ATTRS
- 	help
- 	  The ESP was an on-board SCSI controller used on Sun 3/80
- 	  machines.  Say Y here to compile in support for it.
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 93e1428..999327d 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -118,7 +118,7 @@ obj-$(CONFIG_SCSI_3W_9XXX)	+= 3w-9xxx.o
- obj-$(CONFIG_SCSI_PPA)		+= ppa.o
- obj-$(CONFIG_SCSI_IMM)		+= imm.o
- obj-$(CONFIG_JAZZ_ESP)		+= esp_scsi.o	jazz_esp.o
--obj-$(CONFIG_SUN3X_ESP)		+= NCR53C9x.o	sun3x_esp.o
-+obj-$(CONFIG_SUN3X_ESP)		+= esp_scsi.o	sun3x_esp.o
- obj-$(CONFIG_SCSI_LASI700)	+= 53c700.o lasi700.o
- obj-$(CONFIG_SCSI_SNI_53C710)	+= 53c700.o sni_53c710.o
- obj-$(CONFIG_SCSI_NSP32)	+= nsp32.o
-diff --git a/drivers/scsi/sun3x_esp.c b/drivers/scsi/sun3x_esp.c
-index 1bc4190..06152c7 100644
---- a/drivers/scsi/sun3x_esp.c
-+++ b/drivers/scsi/sun3x_esp.c
-@@ -1,392 +1,316 @@
--/* sun3x_esp.c:  EnhancedScsiProcessor Sun3x SCSI driver code.
-+/* sun3x_esp.c: ESP front-end for Sun3x systems.
-  *
-- * (C) 1999 Thomas Bogendoerfer (tsbogend@alpha.franken.de)
-- *
-- * Based on David S. Miller's esp driver
-+ * Copyright (C) 2007,2008 Thomas Bogendoerfer (tsbogend@alpha.franken.de)
-  */
- 
- #include <linux/kernel.h>
- #include <linux/types.h>
--#include <linux/string.h>
--#include <linux/slab.h>
--#include <linux/blkdev.h>
--#include <linux/proc_fs.h>
--#include <linux/stat.h>
- #include <linux/delay.h>
-+#include <linux/module.h>
-+#include <linux/init.h>
-+#include <linux/platform_device.h>
-+#include <linux/dma-mapping.h>
- #include <linux/interrupt.h>
- 
--#include "scsi.h"
--#include <scsi/scsi_host.h>
--#include "NCR53C9x.h"
--
- #include <asm/sun3x.h>
-+#include <asm/io.h>
-+#include <asm/dma.h>
- #include <asm/dvma.h>
--#include <asm/irq.h>
--
--static void dma_barrier(struct NCR_ESP *esp);
--static int  dma_bytes_sent(struct NCR_ESP *esp, int fifo_count);
--static int  dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp);
--static void dma_drain(struct NCR_ESP *esp);
--static void dma_invalidate(struct NCR_ESP *esp);
--static void dma_dump_state(struct NCR_ESP *esp);
--static void dma_init_read(struct NCR_ESP *esp, __u32 vaddress, int length);
--static void dma_init_write(struct NCR_ESP *esp, __u32 vaddress, int length);
--static void dma_ints_off(struct NCR_ESP *esp);
--static void dma_ints_on(struct NCR_ESP *esp);
--static int  dma_irq_p(struct NCR_ESP *esp);
--static void dma_poll(struct NCR_ESP *esp, unsigned char *vaddr);
--static int  dma_ports_p(struct NCR_ESP *esp);
--static void dma_reset(struct NCR_ESP *esp);
--static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write);
--static void dma_mmu_get_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp);
--static void dma_mmu_get_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp);
--static void dma_mmu_release_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp);
--static void dma_mmu_release_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp);
--static void dma_advance_sg (Scsi_Cmnd *sp);
--
--/* Detecting ESP chips on the machine.  This is the simple and easy
-- * version.
-- */
--int sun3x_esp_detect(struct scsi_host_template *tpnt)
--{
--	struct NCR_ESP *esp;
--	struct ConfigDev *esp_dev;
--
--	esp_dev = 0;
--	esp = esp_allocate(tpnt, esp_dev, 0);
--
--	/* Do command transfer with DMA */
--	esp->do_pio_cmds = 0;
--
--	/* Required functions */
--	esp->dma_bytes_sent = &dma_bytes_sent;
--	esp->dma_can_transfer = &dma_can_transfer;
--	esp->dma_dump_state = &dma_dump_state;
--	esp->dma_init_read = &dma_init_read;
--	esp->dma_init_write = &dma_init_write;
--	esp->dma_ints_off = &dma_ints_off;
--	esp->dma_ints_on = &dma_ints_on;
--	esp->dma_irq_p = &dma_irq_p;
--	esp->dma_ports_p = &dma_ports_p;
--	esp->dma_setup = &dma_setup;
--
--	/* Optional functions */
--	esp->dma_barrier = &dma_barrier;
--	esp->dma_invalidate = &dma_invalidate;
--	esp->dma_drain = &dma_drain;
--	esp->dma_irq_entry = 0;
--	esp->dma_irq_exit = 0;
--	esp->dma_led_on = 0;
--	esp->dma_led_off = 0;
--	esp->dma_poll = &dma_poll;
--	esp->dma_reset = &dma_reset;
--
--        /* virtual DMA functions */
--        esp->dma_mmu_get_scsi_one = &dma_mmu_get_scsi_one;
--        esp->dma_mmu_get_scsi_sgl = &dma_mmu_get_scsi_sgl;
--        esp->dma_mmu_release_scsi_one = &dma_mmu_release_scsi_one;
--        esp->dma_mmu_release_scsi_sgl = &dma_mmu_release_scsi_sgl;
--        esp->dma_advance_sg = &dma_advance_sg;
--	    
--	/* SCSI chip speed */
--	esp->cfreq = 20000000;
--	esp->eregs = (struct ESP_regs *)(SUN3X_ESP_BASE);
--	esp->dregs = (void *)SUN3X_ESP_DMA;
- 
--	esp->esp_command = (volatile unsigned char *)dvma_malloc(DVMA_PAGE_SIZE);
--	esp->esp_command_dvma = dvma_vtob((unsigned long)esp->esp_command);
--
--	esp->irq = 2;
--	if (request_irq(esp->irq, esp_intr, IRQF_DISABLED,
--			"SUN3X SCSI", esp->ehost)) {
--		esp_deallocate(esp);
--		return 0;
--	}
-+/* DMA controller reg offsets */
-+#define DMA_CSR		0x00UL	/* rw  DMA control/status register    0x00   */
-+#define DMA_ADDR        0x04UL	/* rw  DMA transfer address register  0x04   */
-+#define DMA_COUNT       0x08UL	/* rw  DMA transfer count register    0x08   */
-+#define DMA_TEST        0x0cUL	/* rw  DMA test/debug register        0x0c   */
- 
--	esp->scsi_id = 7;
--	esp->diff = 0;
-+#include <scsi/scsi_host.h>
- 
--	esp_initialize(esp);
-+#include "esp_scsi.h"
- 
-- 	/* for reasons beyond my knowledge (and which should likely be fixed)
-- 	   sync mode doesn't work on a 3/80 at 5mhz.  but it does at 4. */
-- 	esp->sync_defp = 0x3f;
-+#define DRV_MODULE_NAME		"sun3x_esp"
-+#define PFX DRV_MODULE_NAME	": "
-+#define DRV_VERSION		"1.000"
-+#define DRV_MODULE_RELDATE	"Nov 1, 2007"
- 
--	printk("ESP: Total of %d ESP hosts found, %d actually in use.\n", nesps,
--	       esps_in_use);
--	esps_running = esps_in_use;
--	return esps_in_use;
-+/*
-+ * m68k always assumes readl/writel operate on little endian
-+ * mmio space; this is wrong at least for Sun3x, so we
-+ * need to workaround this until a proper way is found
-+ */
-+#if 0
-+#define dma_read32(REG) \
-+	readl(esp->dma_regs + (REG))
-+#define dma_write32(VAL, REG) \
-+	writel((VAL), esp->dma_regs + (REG))
-+#else
-+#define dma_read32(REG) \
-+	*(volatile u32 *)(esp->dma_regs + (REG))
-+#define dma_write32(VAL, REG) \
-+	do { *(volatile u32 *)(esp->dma_regs + (REG)) = (VAL); } while (0)
-+#endif
-+
-+static void sun3x_esp_write8(struct esp *esp, u8 val, unsigned long reg)
-+{
-+	writeb(val, esp->regs + (reg * 4UL));
- }
- 
--static void dma_do_drain(struct NCR_ESP *esp)
-+static u8 sun3x_esp_read8(struct esp *esp, unsigned long reg)
- {
-- 	struct sparc_dma_registers *dregs =
-- 		(struct sparc_dma_registers *) esp->dregs;
-- 	
-- 	int count = 500000;
-- 
-- 	while((dregs->cond_reg & DMA_PEND_READ) && (--count > 0)) 
-- 		udelay(1);
-- 
-- 	if(!count) {
-- 		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
-- 	}
-- 
-- 	dregs->cond_reg |= DMA_FIFO_STDRAIN;
-- 	
-- 	count = 500000;
-- 
-- 	while((dregs->cond_reg & DMA_FIFO_ISDRAIN) && (--count > 0)) 
-- 		udelay(1);
-- 
-- 	if(!count) {
-- 		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
-- 	}
-- 
-+	return readb(esp->regs + (reg * 4UL));
- }
-- 
--static void dma_barrier(struct NCR_ESP *esp)
-+
-+static dma_addr_t sun3x_esp_map_single(struct esp *esp, void *buf,
-+				      size_t sz, int dir)
- {
--  	struct sparc_dma_registers *dregs =
--  		(struct sparc_dma_registers *) esp->dregs;
-- 	int count = 500000;
--  
-- 	while((dregs->cond_reg & DMA_PEND_READ) && (--count > 0))
--  		udelay(1);
-- 
-- 	if(!count) {
-- 		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
-- 	}
-- 
--  	dregs->cond_reg &= ~(DMA_ENABLE);
-+	return dma_map_single(esp->dev, buf, sz, dir);
- }
- 
--/* This uses various DMA csr fields and the fifo flags count value to
-- * determine how many bytes were successfully sent/received by the ESP.
-- */
--static int dma_bytes_sent(struct NCR_ESP *esp, int fifo_count)
-+static int sun3x_esp_map_sg(struct esp *esp, struct scatterlist *sg,
-+				  int num_sg, int dir)
- {
--	struct sparc_dma_registers *dregs = 
--		(struct sparc_dma_registers *) esp->dregs;
--
--	int rval = dregs->st_addr - esp->esp_command_dvma;
--
--	return rval - fifo_count;
-+	return dma_map_sg(esp->dev, sg, num_sg, dir);
- }
- 
--static int dma_can_transfer(struct NCR_ESP *esp, Scsi_Cmnd *sp)
-+static void sun3x_esp_unmap_single(struct esp *esp, dma_addr_t addr,
-+				  size_t sz, int dir)
- {
--	return sp->SCp.this_residual;
-+	dma_unmap_single(esp->dev, addr, sz, dir);
- }
- 
--static void dma_drain(struct NCR_ESP *esp)
-+static void sun3x_esp_unmap_sg(struct esp *esp, struct scatterlist *sg,
-+			      int num_sg, int dir)
- {
--	struct sparc_dma_registers *dregs =
--		(struct sparc_dma_registers *) esp->dregs;
--	int count = 500000;
--
--	if(dregs->cond_reg & DMA_FIFO_ISDRAIN) {
--		dregs->cond_reg |= DMA_FIFO_STDRAIN;
--		while((dregs->cond_reg & DMA_FIFO_ISDRAIN) && (--count > 0))
--			udelay(1);
--		if(!count) {
--			printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
--		}
--
--	}
-+	dma_unmap_sg(esp->dev, sg, num_sg, dir);
- }
- 
--static void dma_invalidate(struct NCR_ESP *esp)
-+static int sun3x_esp_irq_pending(struct esp *esp)
- {
--	struct sparc_dma_registers *dregs =
--		(struct sparc_dma_registers *) esp->dregs;
--
--	__u32 tmp;
--	int count = 500000;
--
--	while(((tmp = dregs->cond_reg) & DMA_PEND_READ) && (--count > 0)) 
--		udelay(1);
-+	if (dma_read32(DMA_CSR) & (DMA_HNDL_INTR | DMA_HNDL_ERROR))
-+		return 1;
-+	return 0;
-+}
- 
--	if(!count) {
--		printk("%s:%d timeout CSR %08lx\n", __FILE__, __LINE__, dregs->cond_reg);
--	}
-+static void sun3x_esp_reset_dma(struct esp *esp)
-+{
-+	u32 val;
- 
--	dregs->cond_reg = tmp | DMA_FIFO_INV;
--	dregs->cond_reg &= ~DMA_FIFO_INV;
-+	val = dma_read32(DMA_CSR);
-+	dma_write32(val | DMA_RST_SCSI, DMA_CSR);
-+	dma_write32(val & ~DMA_RST_SCSI, DMA_CSR);
- 
-+	/* Enable interrupts.  */
-+	val = dma_read32(DMA_CSR);
-+	dma_write32(val | DMA_INT_ENAB, DMA_CSR);
- }
- 
--static void dma_dump_state(struct NCR_ESP *esp)
-+static void sun3x_esp_dma_drain(struct esp *esp)
- {
--	struct sparc_dma_registers *dregs =
--		(struct sparc_dma_registers *) esp->dregs;
-+	u32 csr;
-+	int lim;
- 
--	ESPLOG(("esp%d: dma -- cond_reg<%08lx> addr<%08lx>\n",
--		esp->esp_id, dregs->cond_reg, dregs->st_addr));
--}
-+	csr = dma_read32(DMA_CSR);
-+	if (!(csr & DMA_FIFO_ISDRAIN))
-+		return;
- 
--static void dma_init_read(struct NCR_ESP *esp, __u32 vaddress, int length)
--{
--	struct sparc_dma_registers *dregs = 
--		(struct sparc_dma_registers *) esp->dregs;
-+	dma_write32(csr | DMA_FIFO_STDRAIN, DMA_CSR);
- 
--	dregs->st_addr = vaddress;
--	dregs->cond_reg |= (DMA_ST_WRITE | DMA_ENABLE);
-+	lim = 1000;
-+	while (dma_read32(DMA_CSR) & DMA_FIFO_ISDRAIN) {
-+		if (--lim == 0) {
-+			printk(KERN_ALERT PFX "esp%d: DMA will not drain!\n",
-+			       esp->host->unique_id);
-+			break;
-+		}
-+		udelay(1);
-+	}
- }
- 
--static void dma_init_write(struct NCR_ESP *esp, __u32 vaddress, int length)
-+static void sun3x_esp_dma_invalidate(struct esp *esp)
- {
--	struct sparc_dma_registers *dregs = 
--		(struct sparc_dma_registers *) esp->dregs;
--
--	/* Set up the DMA counters */
-+	u32 val;
-+	int lim;
-+
-+	lim = 1000;
-+	while ((val = dma_read32(DMA_CSR)) & DMA_PEND_READ) {
-+		if (--lim == 0) {
-+			printk(KERN_ALERT PFX "esp%d: DMA will not "
-+			       "invalidate!\n", esp->host->unique_id);
-+			break;
-+		}
-+		udelay(1);
-+	}
- 
--	dregs->st_addr = vaddress;
--	dregs->cond_reg = ((dregs->cond_reg & ~(DMA_ST_WRITE)) | DMA_ENABLE);
-+	val &= ~(DMA_ENABLE | DMA_ST_WRITE | DMA_BCNT_ENAB);
-+	val |= DMA_FIFO_INV;
-+	dma_write32(val, DMA_CSR);
-+	val &= ~DMA_FIFO_INV;
-+	dma_write32(val, DMA_CSR);
- }
- 
--static void dma_ints_off(struct NCR_ESP *esp)
-+static void sun3x_esp_send_dma_cmd(struct esp *esp, u32 addr, u32 esp_count,
-+				  u32 dma_count, int write, u8 cmd)
- {
--	DMA_INTSOFF((struct sparc_dma_registers *) esp->dregs);
-+	u32 csr;
-+
-+	BUG_ON(!(cmd & ESP_CMD_DMA));
-+
-+	sun3x_esp_write8(esp, (esp_count >> 0) & 0xff, ESP_TCLOW);
-+	sun3x_esp_write8(esp, (esp_count >> 8) & 0xff, ESP_TCMED);
-+	csr = dma_read32(DMA_CSR);
-+	csr |= DMA_ENABLE;
-+	if (write)
-+		csr |= DMA_ST_WRITE;
-+	else
-+		csr &= ~DMA_ST_WRITE;
-+	dma_write32(csr, DMA_CSR);
-+	dma_write32(addr, DMA_ADDR);
-+
-+	scsi_esp_cmd(esp, cmd);
- }
- 
--static void dma_ints_on(struct NCR_ESP *esp)
-+static int sun3x_esp_dma_error(struct esp *esp)
- {
--	DMA_INTSON((struct sparc_dma_registers *) esp->dregs);
--}
-+	u32 csr = dma_read32(DMA_CSR);
- 
--static int dma_irq_p(struct NCR_ESP *esp)
--{
--	return DMA_IRQ_P((struct sparc_dma_registers *) esp->dregs);
-+	if (csr & DMA_HNDL_ERROR)
-+		return 1;
-+
-+	return 0;
- }
- 
--static void dma_poll(struct NCR_ESP *esp, unsigned char *vaddr)
-+static const struct esp_driver_ops sun3x_esp_ops = {
-+	.esp_write8	=	sun3x_esp_write8,
-+	.esp_read8	=	sun3x_esp_read8,
-+	.map_single	=	sun3x_esp_map_single,
-+	.map_sg		=	sun3x_esp_map_sg,
-+	.unmap_single	=	sun3x_esp_unmap_single,
-+	.unmap_sg	=	sun3x_esp_unmap_sg,
-+	.irq_pending	=	sun3x_esp_irq_pending,
-+	.reset_dma	=	sun3x_esp_reset_dma,
-+	.dma_drain	=	sun3x_esp_dma_drain,
-+	.dma_invalidate	=	sun3x_esp_dma_invalidate,
-+	.send_dma_cmd	=	sun3x_esp_send_dma_cmd,
-+	.dma_error	=	sun3x_esp_dma_error,
-+};
-+
-+static int __devinit esp_sun3x_probe(struct platform_device *dev)
- {
--	int count = 50;
--	dma_do_drain(esp);
-+	struct scsi_host_template *tpnt = &scsi_esp_template;
-+	struct Scsi_Host *host;
-+	struct esp *esp;
-+	struct resource *res;
-+	int err = -ENOMEM;
- 
--	/* Wait till the first bits settle. */
--	while((*(volatile unsigned char *)vaddr == 0xff) && (--count > 0))
--		udelay(1);
-+	host = scsi_host_alloc(tpnt, sizeof(struct esp));
-+	if (!host)
-+		goto fail;
- 
--	if(!count) {
--//		printk("%s:%d timeout expire (data %02x)\n", __FILE__, __LINE__,
--//		       esp_read(esp->eregs->esp_fdata));
--		//mach_halt();
--		vaddr[0] = esp_read(esp->eregs->esp_fdata);
--		vaddr[1] = esp_read(esp->eregs->esp_fdata);
--	}
-+	host->max_id = 8;
-+	esp = shost_priv(host);
- 
--}	
-+	esp->host = host;
-+	esp->dev = dev;
-+	esp->ops = &sun3x_esp_ops;
- 
--static int dma_ports_p(struct NCR_ESP *esp)
--{
--	return (((struct sparc_dma_registers *) esp->dregs)->cond_reg 
--			& DMA_INT_ENAB);
--}
-+	res = platform_get_resource(dev, IORESOURCE_MEM, 0);
-+	if (!res && !res->start)
-+		goto fail_unlink;
- 
--/* Resetting various pieces of the ESP scsi driver chipset/buses. */
--static void dma_reset(struct NCR_ESP *esp)
--{
--	struct sparc_dma_registers *dregs =
--		(struct sparc_dma_registers *)esp->dregs;
-+	esp->regs = ioremap_nocache(res->start, 0x20);
-+	if (!esp->regs)
-+		goto fail_unmap_regs;
- 
--	/* Punt the DVMA into a known state. */
--	dregs->cond_reg |= DMA_RST_SCSI;
--	dregs->cond_reg &= ~(DMA_RST_SCSI);
--	DMA_INTSON(dregs);
--}
-+	res = platform_get_resource(dev, IORESOURCE_MEM, 1);
-+	if (!res && !res->start)
-+		goto fail_unmap_regs;
- 
--static void dma_setup(struct NCR_ESP *esp, __u32 addr, int count, int write)
--{
--	struct sparc_dma_registers *dregs = 
--		(struct sparc_dma_registers *) esp->dregs;
--	unsigned long nreg = dregs->cond_reg;
-+	esp->dma_regs = ioremap_nocache(res->start, 0x10);
- 
--//	printk("dma_setup %c addr %08x cnt %08x\n",
--//	       write ? 'W' : 'R', addr, count);
-+	esp->command_block = dma_alloc_coherent(esp->dev, 16,
-+						&esp->command_block_dma,
-+						GFP_KERNEL);
-+	if (!esp->command_block)
-+		goto fail_unmap_regs_dma;
- 
--	dma_do_drain(esp);
-+	host->irq = platform_get_irq(dev, 0);
-+	err = request_irq(host->irq, scsi_esp_intr, IRQF_SHARED,
-+			  "SUN3X ESP", esp);
-+	if (err < 0)
-+		goto fail_unmap_command_block;
- 
--	if(write)
--		nreg |= DMA_ST_WRITE;
--	else {
--		nreg &= ~(DMA_ST_WRITE);
--	}
--		
--	nreg |= DMA_ENABLE;
--	dregs->cond_reg = nreg;
--	dregs->st_addr = addr;
--}
-+	esp->scsi_id = 7;
-+	esp->host->this_id = esp->scsi_id;
-+	esp->scsi_id_mask = (1 << esp->scsi_id);
-+	esp->cfreq = 20000000;
- 
--static void dma_mmu_get_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp)
--{
--    sp->SCp.have_data_in = dvma_map((unsigned long)sp->SCp.buffer,
--				       sp->SCp.this_residual);
--    sp->SCp.ptr = (char *)((unsigned long)sp->SCp.have_data_in);
-+	dev_set_drvdata(&dev->dev, esp);
-+
-+	err = scsi_esp_register(esp, &dev->dev);
-+	if (err)
-+		goto fail_free_irq;
-+
-+	return 0;
-+
-+fail_free_irq:
-+	free_irq(host->irq, esp);
-+fail_unmap_command_block:
-+	dma_free_coherent(esp->dev, 16,
-+			  esp->command_block,
-+			  esp->command_block_dma);
-+fail_unmap_regs_dma:
-+	iounmap(esp->dma_regs);
-+fail_unmap_regs:
-+	iounmap(esp->regs);
-+fail_unlink:
-+	scsi_host_put(host);
-+fail:
-+	return err;
- }
- 
--static void dma_mmu_get_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp)
-+static int __devexit esp_sun3x_remove(struct platform_device *dev)
- {
--    int sz = sp->SCp.buffers_residual;
--    struct scatterlist *sg = sp->SCp.buffer;
--
--    while (sz >= 0) {
--	    sg[sz].dma_address = dvma_map((unsigned long)sg_virt(&sg[sz]),
--					  sg[sz].length);
--	    sz--;
--    }
--    sp->SCp.ptr=(char *)((unsigned long)sp->SCp.buffer->dma_address);
--}
-+	struct esp *esp = dev_get_drvdata(&dev->dev);
-+	unsigned int irq = esp->host->irq;
-+	u32 val;
- 
--static void dma_mmu_release_scsi_one (struct NCR_ESP *esp, Scsi_Cmnd *sp)
--{
--    dvma_unmap((char *)sp->SCp.have_data_in);
--}
-+	scsi_esp_unregister(esp);
- 
--static void dma_mmu_release_scsi_sgl (struct NCR_ESP *esp, Scsi_Cmnd *sp)
--{
--    int sz = sp->use_sg - 1;
--    struct scatterlist *sg = (struct scatterlist *)sp->request_buffer;
--                        
--    while(sz >= 0) {
--        dvma_unmap((char *)sg[sz].dma_address);
--        sz--;
--    }
--}
-+	/* Disable interrupts.  */
-+	val = dma_read32(DMA_CSR);
-+	dma_write32(val & ~DMA_INT_ENAB, DMA_CSR);
- 
--static void dma_advance_sg (Scsi_Cmnd *sp)
--{
--    sp->SCp.ptr = (char *)((unsigned long)sp->SCp.buffer->dma_address);
--}
-+	free_irq(irq, esp);
-+	dma_free_coherent(esp->dev, 16,
-+			  esp->command_block,
-+			  esp->command_block_dma);
- 
--static int sun3x_esp_release(struct Scsi_Host *instance)
--{
--	/* this code does not support being compiled as a module */	 
--	return 1;
-+	scsi_host_put(esp->host);
- 
-+	return 0;
- }
- 
--static struct scsi_host_template driver_template = {
--	.proc_name		= "sun3x_esp",
--	.proc_info		= &esp_proc_info,
--	.name			= "Sun ESP 100/100a/200",
--	.detect			= sun3x_esp_detect,
--	.release                = sun3x_esp_release,
--	.slave_alloc		= esp_slave_alloc,
--	.slave_destroy		= esp_slave_destroy,
--	.info			= esp_info,
--	.queuecommand		= esp_queue,
--	.eh_abort_handler	= esp_abort,
--	.eh_bus_reset_handler	= esp_reset,
--	.can_queue		= 7,
--	.this_id		= 7,
--	.sg_tablesize		= SG_ALL,
--	.cmd_per_lun		= 1,
--	.use_clustering		= DISABLE_CLUSTERING,
-+static struct platform_driver esp_sun3x_driver = {
-+	.probe          = esp_sun3x_probe,
-+	.remove         = __devexit_p(esp_sun3x_remove),
-+	.driver = {
-+		.name   = "sun3x_esp",
-+	},
- };
- 
-+static int __init sun3x_esp_init(void)
-+{
-+	return platform_driver_register(&esp_sun3x_driver);
-+}
- 
--#include "scsi_module.c"
-+static void __exit sun3x_esp_exit(void)
-+{
-+	platform_driver_unregister(&esp_sun3x_driver);
-+}
- 
-+MODULE_DESCRIPTION("Sun3x ESP SCSI driver");
-+MODULE_AUTHOR("Thomas Bogendoerfer (tsbogend@alpha.franken.de)");
- MODULE_LICENSE("GPL");
-+MODULE_VERSION(DRV_VERSION);
-+
-+module_init(sun3x_esp_init);
-+module_exit(sun3x_esp_exit);
+This indicates either a problem with the target
+or the LLDD. VALID should be 0 if the bad LBA is
+invalid.  Now since VALID is 1, bad LBA is considered
+valid, with value of 0.
+
+Bad LBA is always greater than or equal to start LBA,
+i.e.:
+    Bad LBA >= Start LBA.
+The opposite is an impossibility since reading off
+the end of the "platter" doesn't wrap around through
+LBA 0 (which would be crazy).
+
+By having VALID = 1 and Bad LBA = 0, and I'm assuming
+Start LBA > 0 (from the situation you describe),
+then good bytes is non-sensical.  This is NOT due
+to the way sd_done() behaves, but due to the invalid/
+broken sense data returned/emulated by the LU/LLDD.
+
+> For HARDWARE_ERROR/MEDIUM_ERROR, sd_done assumes that the
+> sense
+> information bytes contain the sector in error without
+> sanity-checking
+> the value, so it ends up returning a completely bogus
+> good_bytes value
+> greater than xfer_size.
+
+This is due to the fact that the LU/LLDD returned
+sense data with VALID = 1, and so Bad LBA is assumed
+correct.  This is as per spec. At this moment given
+the situation you describe it seems that the LU/LLDD
+is behaving out of spec.
+
+As to sanity checking, given the inequality above,
+and your peculiar target/LLDD returning broken
+sense data, a sanity check would be the following:
+
+   if (bad_lba < start_lba)
+         goto out;
+
+Added immediately before the computation of
+good_bytes.
+
+> This in turn causes the medium
+> error to be
+> ignored and corrupt data to be returned to the user
+> application.  This
+> problem was introduced by the patch "[SCSI]
+> sd/scsi_lib simplify
+> sd_rw_intr and scsi_io_completion" in 2.6.18-rc1; with
+> kernels 2.6.17
+> and before, the application correctly gets an I/O error
+> instead.  This
+> patch fixes this particular problem by checking that
+> bad_lba falls
+> within a sensible range before using it.
+> 
+> For a read command that returns
+> HARDWARE_ERROR/MEDIUM_ERROR, I also
+> added the ability to calculate the amount of good data
+> returned using
+> the data transfer residual if set by the LLDD.  If the both
+> the sense
+> information bytes and the data transfer residual are valid,
+> then they
+> are used to sanity-check each other.
+> 
+> The following code in sd_done doesn't seem right to me:
+> 
+>        if (driver_byte(result) != DRIVER_SENSE &&
+>            (!sense_valid || sense_deferred))
+>                 goto out;
+> 
+> It would make more sense to use || rather than &&
+> for this test.
+
+That's very easy to verify. Simply negate the
+test and see if what you get makes sense. Case
+in point:
+
+Negate original:
+    if (driver_byte(result) == DRIVER_SENSE ||
+        (sense_valid && sense_defered))
+            Inspect sense.
+
+Negate your proposed change "&&" -> "||":
+    if (driver_byte(result) == DRIVER_SENSE &&
+         (sense_valid || sense_deferred))
+                Inspect sense.
+
+The reason to use the former, rather the latter,
+is that LLDDs don't always set the driver_byte
+in the result, and may only set the status byte.
+E.g. to indicate CHECK CONDITION and then using
+scsi_command_normalize_sense() to find out if
+sense data is present.
+
+>  Even
+> better, this patch moves the check up higher so that the
+> sense buffer
+> isn't even accessed unless driver_byte(result) &
+> DRIVER_SENSE.
+> 
+> Finally, for the case of RECOVERED_ERROR/NO_SENSE, this
+> patch adds a
+> check of the data transfer residual before assuming that
+> the command
+> completed successfully.
+
+You cannot do this for NO SENSE SK.  You can do
+that for RECOVERED ERROR SK. The way to do this
+is to move "case RECOVERED_ERROR:" just above
+"case HARDWARE_ERROR:".
+
+> I would like comments on the following:
+> 
+> sd_done doesn't check the data transfer residual for
+> commands that
+> complete successfully.  In the unlikely case that the drive
+> returns good
+> status without transferring all the data (due to a SCSI bus
+> problem or
+> disk firmware bug), the error won't be detected.  I
+> figured that it was
+> more likely for a LLDD to set resid incorrectly than for
+> this unlikely
+> problem to happen, so I didn't add a check for it. 
+> Agreed?
+> 
+> Is the new is_sd_cmnd_read_or_write() function necessary? 
+> The original
+> code appears to use blk_fs_request(SCpnt->request) to
+> determine if a
+> command is read or write.  Should I drop
+> is_sd_cmnd_read_or_write() and
+> use blk_fs_request() instead, or it it OK like this?
+> 
+> Does anyone object to the new data transfer residual checks
+> for
+> non-read/write commands that return
+> RECOVERED_ERROR/NO_SENSE?  Should I
+> just drop this part of the patch for simplicity?
+
+It seems to me, your patch is really debugging
+a misbehaved device server at the RAID device
+(or misbehaved LLDD).
+
+Try the attached patch and see what you get.
+
+   Luben
+
+--0-60358531-1201829094=:14710
+Content-Type: text/plain; name=UNKNOWN_PARAMETER_VALUE
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="=?utf-8?q?sd.patch.txt?="
+
+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9zZC5jIGIvZHJpdmVycy9zY3Np
+L3NkLmMKaW5kZXggYTY5YjE1NS4uMzgzYTNhOCAxMDA2NDQKLS0tIGEvZHJp
+dmVycy9zY3NpL3NkLmMKKysrIGIvZHJpdmVycy9zY3NpL3NkLmMKQEAgLTkz
+NCw2ICs5MzQsMTAgQEAgc3RhdGljIGludCBzZF9kb25lKHN0cnVjdCBzY3Np
+X2NtbmQgKlNDcG50KQogCQlnb3RvIG91dDsKIAogCXN3aXRjaCAoc3NoZHIu
+c2Vuc2Vfa2V5KSB7CisJY2FzZSBSRUNPVkVSRURfRVJST1I6CisJCXNjc2lf
+cHJpbnRfc2Vuc2UoInNkIiwgU0NwbnQpOworCQlTQ3BudC0+cmVzdWx0ID0g
+MDsKKwkJLyogZmFsbHRocm91Z2ggKi8KIAljYXNlIEhBUkRXQVJFX0VSUk9S
+OgogCWNhc2UgTUVESVVNX0VSUk9SOgogCQlpZiAoIWJsa19mc19yZXF1ZXN0
+KFNDcG50LT5yZXF1ZXN0KSkKQEAgLTk2OCwxNCArOTcyLDE0IEBAIHN0YXRp
+YyBpbnQgc2RfZG9uZShzdHJ1Y3Qgc2NzaV9jbW5kICpTQ3BudCkKIAkJLyog
+VGhpcyBjb21wdXRhdGlvbiBzaG91bGQgYWx3YXlzIGJlIGRvbmUgaW4gdGVy
+bXMgb2YKIAkJICogdGhlIHJlc29sdXRpb24gb2YgdGhlIGRldmljZSdzIG1l
+ZGl1bS4KIAkJICovCisJCWlmIChiYWRfbGJhIDwgc3RhcnRfbGJhKQorCQkJ
+Z290byBvdXQ7CiAJCWdvb2RfYnl0ZXMgPSAoYmFkX2xiYSAtIHN0YXJ0X2xi
+YSkqU0NwbnQtPmRldmljZS0+c2VjdG9yX3NpemU7CiAJCWJyZWFrOwotCWNh
+c2UgUkVDT1ZFUkVEX0VSUk9SOgogCWNhc2UgTk9fU0VOU0U6CiAJCS8qIElu
+Zm9ybSB0aGUgdXNlciwgYnV0IG1ha2Ugc3VyZSB0aGF0IGl0J3Mgbm90IHRy
+ZWF0ZWQKIAkJICogYXMgYSBoYXJkIGVycm9yLgogCQkgKi8KLQkJc2NzaV9w
+cmludF9zZW5zZSgic2QiLCBTQ3BudCk7CiAJCVNDcG50LT5yZXN1bHQgPSAw
+OwogCQltZW1zZXQoU0NwbnQtPnNlbnNlX2J1ZmZlciwgMCwgU0NTSV9TRU5T
+RV9CVUZGRVJTSVpFKTsKIAkJZ29vZF9ieXRlcyA9IHhmZXJfc2l6ZTsK
+
+--0-60358531-1201829094=:14710--
