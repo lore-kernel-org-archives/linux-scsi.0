@@ -1,52 +1,115 @@
-From: Greg KH <greg@kroah.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
 Subject: Re: [PATCH] [SCSI] sd: make error handling more robust (v2)
-Date: Sat, 2 Feb 2008 13:08:23 -0800
-Message-ID: <20080202210823.GA31525@kroah.com>
-References: <47A350DF.5020404@cybernetics.com> <532ABFBDAAC3A34EB12EBA6CEC2838F43976569D@ADPE2K703.adaptec.com> <170fa0d20802011643u600c4386wb801c0490800ea5f@mail.gmail.com> <20080202202438.GB2367@kroah.com> <170fa0d20802021256i224ad638ma96bdb4cbbcbac37@mail.gmail.com>
+Date: Sat, 02 Feb 2008 16:06:23 -0600
+Message-ID: <1201989983.3187.55.camel@localhost.localdomain>
+References: <47A350DF.5020404@cybernetics.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([18.85.46.34]:53472 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754952AbYBBVRg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Feb 2008 16:17:36 -0500
-Content-Disposition: inline
-In-Reply-To: <170fa0d20802021256i224ad638ma96bdb4cbbcbac37@mail.gmail.com>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39904 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752096AbYBBWG1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Feb 2008 17:06:27 -0500
+In-Reply-To: <47A350DF.5020404@cybernetics.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@gmail.com>
-Cc: stable@kernel.org, "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>, Tony Battersby <tonyb@cybernetics.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Luben Tuikov <ltuikov@yahoo.com>
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Luben Tuikov <ltuikov@yahoo.com>, "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
 
-On Sat, Feb 02, 2008 at 03:56:30PM -0500, Mike Snitzer wrote:
-> On Feb 2, 2008 3:24 PM, Greg KH <greg@kroah.com> wrote:
-> > On Fri, Feb 01, 2008 at 07:43:54PM -0500, Mike Snitzer wrote:
-> > > Hi Greg,
-> > >
-> > > Given your recent call for review of the next 2.6.22-stable I'd
-> > > appreciate it if you and the rest of the stable team would strongly
-> > > consider this SCSI IO error propagation fix for inclusion in 2.6.22.17
-> > > (as well as the other stable trees).
-> >
-> > Is the patch in Linus's tree already?
-> >
-> > If so, what git commit id?  That's a requirement to go into the stable
-> > tree...
-> >
-> > If not, we need to wait until it is.
+
+On Fri, 2008-02-01 at 12:03 -0500, Tony Battersby wrote:
+> This patch fixes a problem with some out-of-spec SCSI disks that report
+> hardware or medium errors incorrectly.  Without the patch, the kernel
+> may silently ignore a failed write command or return corrupted data on a
+> failed read command.
 > 
-> Fair enough.  Thanks for the clarification.
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+> ---
 > 
-> That likely leaves us with having James add it to his git tree for
-> Linus (provided he agrees with the change).  Which he and Luben seemed
-> to agree was the reasonable thin layer of protection that would be
-> allowed for such out of spec SCSI devices.
-> 
-> James, how would you like to proceed?  The patch fixes the good_bytes
-> != 0 on HARDWARE_ERROR issue I have been chasing with Mark Salyzyn.
+> This is a simplified version of the original patch that fixes just the
+> problem at hand, without trying to handle other theoretical out-of-spec
+> cases.
 
-After it goes in, can someone notify stable@kernel.org that it went in,
-the git id, and that it should be applied to all older kernel trees?
+Actually, to restore the original check, this is what we want, isn't it?
+Ok, so I also made the sector division logic futureproof for the day we
+have > 4096 sector devices ...
 
-thanks,
+James
 
-greg "drowning in -stable patches" k-h
+---
+
+>From 5ae2e4a8ff095aab5997f17068d3e4212c33f039 Mon Sep 17 00:00:00 2001
+From: Tony Battersby <tonyb@cybernetics.com>
+Date: Fri, 1 Feb 2008 12:03:27 -0500
+Subject: [SCSI] sd: make error handling more robust
+
+This patch fixes a problem with some out-of-spec SCSI disks that report
+hardware or medium errors incorrectly.  Without the patch, the kernel
+may silently ignore a failed write command or return corrupted data on a
+failed read command.
+
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+Cc: Stable Tree <stable@kernel.org>
+Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+---
+ drivers/scsi/sd.c |    5 +++++
+ 1 files changed, 5 insertions(+), 0 deletions(-)
+
+Index: BUILD-2.6/drivers/scsi/sd.c
+===================================================================
+--- BUILD-2.6.orig/drivers/scsi/sd.c	2008-02-02 15:43:20.000000000 -0600
++++ BUILD-2.6/drivers/scsi/sd.c	2008-02-02 16:01:24.000000000 -0600
+@@ -929,6 +929,7 @@
+ 	unsigned int xfer_size = scsi_bufflen(SCpnt);
+  	unsigned int good_bytes = result ? 0 : xfer_size;
+  	u64 start_lba = SCpnt->request->sector;
++	u64 end_lba = SCpnt->request->sector + (xfer_size / 512);
+  	u64 bad_lba;
+ 	struct scsi_sense_hdr sshdr;
+ 	int sense_valid = 0;
+@@ -967,26 +968,23 @@
+ 			goto out;
+ 		if (xfer_size <= SCpnt->device->sector_size)
+ 			goto out;
+-		switch (SCpnt->device->sector_size) {
+-		case 256:
++		if (SCpnt->device->sector_size < 512) {
++			/* only legitimate sector_size here is 256 */
+ 			start_lba <<= 1;
+-			break;
+-		case 512:
+-			break;
+-		case 1024:
+-			start_lba >>= 1;
+-			break;
+-		case 2048:
+-			start_lba >>= 2;
+-			break;
+-		case 4096:
+-			start_lba >>= 3;
+-			break;
+-		default:
+-			/* Print something here with limiting frequency. */
+-			goto out;
+-			break;
++			end_lba <<= 1;
++		} else {
++			/* be careful ... don't want any overflows */
++			u64 factor = SCpnt->device->sector_size / 512;
++			do_div(start_lba, factor);
++			do_div(end_lba, factor);
+ 		}
++
++		if (bad_lba < start_lba  || bad_lba >= end_lba)
++			/* the bad lba was reported incorrectly, we have
++			 * no idea where the error is
++			 */
++			goto out;
++
+ 		/* This computation should always be done in terms of
+ 		 * the resolution of the device's medium.
+ 		 */
+
+
+
