@@ -1,63 +1,45 @@
-From: Pete Wyckoff <pw@osc.edu>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Sat, 2 Feb 2008 10:32:31 -0500
-Message-ID: <20080202153231.GA5601@osc.edu>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com> <1201639331.3069.58.camel@localhost.localdomain> <adazluoe2t3.fsf@cisco.com> <20080130083239E.fujita.tomonori@lab.ntt.co.jp> <e2e108260801300038q10132aafs1dbc6e5400fc47bb@mail.gmail.com> <1201710871.3292.22.camel@localhost.localdomain>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch] pci: pci_enable_device_bars() fix
+Date: Sat, 02 Feb 2008 10:51:13 -0500
+Message-ID: <47A49171.2000003@garzik.org>
+References: <20080201231147.GA18174@suse.de> <20080202111322.GA30767@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from marge.padd.com ([66.127.62.138]:53260 "EHLO marge.padd.com"
+Received: from srv5.dvmed.net ([207.36.208.214]:43859 "EHLO mail.dvmed.net"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756528AbYBBPcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Feb 2008 10:32:42 -0500
-Content-Disposition: inline
-In-Reply-To: <1201710871.3292.22.camel@localhost.localdomain>
+	id S1756303AbYBBPv0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 2 Feb 2008 10:51:26 -0500
+In-Reply-To: <20080202111322.GA30767@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, rdreier@cisco.com, torvalds@linux-foundation.org, akpm@linux-foundation.org, vst@vlnb.net, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, pcihpd-discuss@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>
 
-James.Bottomley@HansenPartnership.com wrote on Wed, 30 Jan 2008 10:34 -0600:
-> On Wed, 2008-01-30 at 09:38 +0100, Bart Van Assche wrote:
-> > On Jan 30, 2008 12:32 AM, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp> wrote:
-> > >
-> > > iSER has parameters to limit the maximum size of RDMA (it needs to
-> > > repeat RDMA with a poor configuration)?
-> > 
-> > Please specify which parameters you are referring to. As you know I
-> > had already repeated my tests with ridiculously high values for the
-> > following iSER parameters: FirstBurstLength, MaxBurstLength and
-> > MaxRecvDataSegmentLength (16 MB, which is more than the 1 MB block
-> > size specified to dd).
-> 
-> the 1Mb block size is a bit of a red herring.  Unless you've
-> specifically increased the max_sector_size and are using an sg_chain
-> converted driver, on x86 the maximum possible transfer accumulation is
-> 0.5MB.
-> 
-> I certainly don't rule out that increasing the transfer size up from
-> 0.5MB might be the way to improve STGT efficiency, since at an 1GB/s
-> theoretical peak, that's roughly 2000 context switches per I/O; however,
-> It doesn't look like you've done anything that will overcome the block
-> layer limitations.
+Ingo Molnar wrote:
+> ===================================================================
+> --- linux.orig/drivers/scsi/lpfc/lpfc_init.c
+> +++ linux/drivers/scsi/lpfc/lpfc_init.c
+> @@ -1894,7 +1894,7 @@ lpfc_pci_probe_one(struct pci_dev *pdev,
+>  	uint16_t iotag;
+>  	int bars = pci_select_bars(pdev, IORESOURCE_MEM);
+>  
+> -	if (pci_enable_device_bars(pdev, bars))
+> +	if (pci_enable_device_io(pdev))
+>  		goto out;
 
-The MRDSL parameter has no effect on iSER, as the RFC describes.
-How to transfer data to satisfy a command is solely up to the
-target.  So you would need both big requests from the client, then
-look at how the target will send the data.
+Look at the line right above it...  AFAICS you want 
+pci_enable_device_mem(), if the mask is selecting IORESOURCE_MEM BARs.
 
-I've only used 512 kB for the RDMA transfer size from the target, as
-it matches the default client size and was enough to get good
-performance out of my IB gear and minimizes resource consumption on
-the target.  It's currently hard-coded as a #define.  There is no
-provision in the protocol for the client to dictate the value.
+Also a CC to linux-scsi and the driver author would be nice, as they are 
+the ones with hardware and can verify.
 
-If others want to spend some effort trying to tune stgt for iSER,
-there are a fair number of comments in the code, including a big one
-that explains this RDMA transfer size issue.  And I'll answer
-informed questions as I can.  But I'm not particularly interested in
-arguing about which implementation is best, or trying to interpret
-bandwidth comparison numbers from poorly designed tests.  It takes
-work to understand these issues.
+This set of changes seemed like 50% guesswork to me, without consulting 
+the authors :(  And unlike many changes, you actually have to know the 
+hardware [or get clues from surrounding code] to make the change.
 
-		-- Pete
+	Jeff
+
+
+
