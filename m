@@ -1,49 +1,37 @@
-From: Ingo Molnar <mingo@elte.hu>
-Subject: Re: [patch] pci: pci_enable_device_bars() fix
-Date: Sat, 2 Feb 2008 20:35:24 +0100
-Message-ID: <20080202193524.GC27927@elte.hu>
-References: <20080201231147.GA18174@suse.de> <20080202111322.GA30767@elte.hu> <47A49171.2000003@garzik.org> <20080202170828.GA12748@elte.hu> <47A4A96D.2040709@garzik.org> <20080202175738.GA26560@elte.hu> <47A4BB3C.6050709@garzik.org>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] [SCSI] sd: make error handling more robust (v2)
+Date: Sat, 2 Feb 2008 12:24:38 -0800
+Message-ID: <20080202202438.GB2367@kroah.com>
+References: <47A350DF.5020404@cybernetics.com> <532ABFBDAAC3A34EB12EBA6CEC2838F43976569D@ADPE2K703.adaptec.com> <170fa0d20802011643u600c4386wb801c0490800ea5f@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3.mail.elte.hu ([157.181.1.138]:49274 "EHLO mx3.mail.elte.hu"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752257AbYBBTfr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 2 Feb 2008 14:35:47 -0500
+Received: from bombadil.infradead.org ([18.85.46.34]:48958 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754599AbYBBUkN (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Feb 2008 15:40:13 -0500
 Content-Disposition: inline
-In-Reply-To: <47A4BB3C.6050709@garzik.org>
+In-Reply-To: <170fa0d20802011643u600c4386wb801c0490800ea5f@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Garzik <jeff@garzik.org>
-Cc: Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, pcihpd-discuss@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Mike Snitzer <snitzer@gmail.com>
+Cc: stable@kernel.org, "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>, Tony Battersby <tonyb@cybernetics.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Luben Tuikov <ltuikov@yahoo.com>
 
+On Fri, Feb 01, 2008 at 07:43:54PM -0500, Mike Snitzer wrote:
+> Hi Greg,
+> 
+> Given your recent call for review of the next 2.6.22-stable I'd
+> appreciate it if you and the rest of the stable team would strongly
+> consider this SCSI IO error propagation fix for inclusion in 2.6.22.17
+> (as well as the other stable trees).
 
-* Jeff Garzik <jeff@garzik.org> wrote:
+Is the patch in Linus's tree already?
 
->> so i'm still totally befuddled why you think that there was anything 
->> particularly wrong or unhelpful about me replying to the specific 
->> pull request that introduced a particular breakage into the kernel. 
->> Had i mailed to lkml with a terse "kernel build broke" message with 
->> just an URL to a config and the build breakage, you could rightfully 
->> have complained that i should have done more to properly direct my 
->> bugreport. But this breakage was about a PCI API change, the pull 
->> request had a PCI mailing list Cc:-ed, why should i have thought that 
->> this needs the attention of any other parties?
->
-> Because the change required knowledge not only of PCI, but of the 
-> hardware in question.  As your patch demonstrated.
->
-> And yes -- the original changes should have been CC'd to interested 
-> parties as well.  I'm still waiting to hear back from Alan or Bart 
-> whether the ATA/IDE changes in that PCI pile actually work...  the 
-> original changeset even noted that relevant parties had not yet been 
-> queried.
+If so, what git commit id?  That's a requirement to go into the stable
+tree...
 
-so please tell me Jeff. If Greg, who is the super-maintainer of your 
-code area, and who deals with your code every day and changes it every 
-minute and hour, simply did not Cc: the SCSI list - how am i, a largely 
-outside party in this matter, supposed to notice that 3 maintainers and 
-3 mailing lists in the Cc: were somehow not enough and that i was 
-supposed to grow the already sizable Cc: list even more?
+If not, we need to wait until it is.
 
-	Ingo
+thanks,
+
+greg k-h
