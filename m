@@ -1,115 +1,82 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] [SCSI] sd: make error handling more robust (v2)
-Date: Sat, 02 Feb 2008 16:06:23 -0600
-Message-ID: <1201989983.3187.55.camel@localhost.localdomain>
-References: <47A350DF.5020404@cybernetics.com>
+From: Stefan Richter <stefanr@s5r6.in-berlin.de>
+Subject: Re: [Bug 9734] New: I/O error when inserting a second firewire	sata
+	disk
+Date: Sun, 03 Feb 2008 03:10:12 +0100
+Message-ID: <47A52284.1080907@s5r6.in-berlin.de>
+References: <bug-9734-11613@http.bugzilla.kernel.org/>
+	<1200186705.3656.83.camel@localhost.localdomain>
+	<4789D498.5070103@s5r6.in-berlin.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39904 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752096AbYBBWG1 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Feb 2008 17:06:27 -0500
-In-Reply-To: <47A350DF.5020404@cybernetics.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
+In-Reply-To: <4789D498.5070103@s5r6.in-berlin.de>
+List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
+List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
+List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
+List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
+List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
+	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
+Sender: linux1394-devel-bounces@lists.sourceforge.net
+Errors-To: linux1394-devel-bounces@lists.sourceforge.net
+To: linux1394-devel@lists.sourceforge.net
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kristian Hoegsberg <krh@bitplanet.net>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tony Battersby <tonyb@cybernetics.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Luben Tuikov <ltuikov@yahoo.com>, "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
 
-
-On Fri, 2008-02-01 at 12:03 -0500, Tony Battersby wrote:
-> This patch fixes a problem with some out-of-spec SCSI disks that report
-> hardware or medium errors incorrectly.  Without the patch, the kernel
-> may silently ignore a failed write command or return corrupted data on a
-> failed read command.
+I wrote on 2008-01-13:
+> James Bottomley wrote:
+>> Firewire list cc'd
+>>> Jan 12 16:50:49 x3400 kernel: firewire_sbp2: orb reply timed out, rcode=0x11
+>>> Jan 12 16:50:49 x3400 kernel: sd 11:0:0:0: [sdc] Result: hostbyte=DID_BUS_BUSY
+>>> driverbyte=DRIVER_OK,SUGGEST_OK
+>> Best I can tell, this is the source of the problem.  The sbp2 driver is
+>> replying DID_BUS_BUSY until that gets sorted out, which seems to be
+>> never.
 > 
-> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-> ---
-> 
-> This is a simplified version of the original patch that fixes just the
-> problem at hand, without trying to handle other theoretical out-of-spec
-> cases.
+> When something was plugged in or out at the same bus, fw-sbp2 has to
+> reconnect == renew the login to each logical unit.  The syslog in the
+> report is inconclusive whether that happened or failed.
 
-Actually, to restore the original check, this is what we want, isn't it?
-Ok, so I also made the sector division logic futureproof for the day we
-have > 4096 sector devices ...
+In any case, there are frequently commands retried or newly enqueued
+while fw-sbp2 waits to get the login renewed.  (And fw-sbp2 continues to
+complete them with DID_BUS_BUSY until the reconnection didn't succeed.
 
-James
+Whoever caused that I/O, e.g. dd like in the reporter's and my own
+tests, will quickly fail.
 
----
+> As a side note, the old sbp2 driver does not quit commands with
+> DID_BUS_BUSY between bus reset and reconnect.  Instead it blocks the
+> Scsi_Host in order to not receive commands during that time at all.
 
->From 5ae2e4a8ff095aab5997f17068d3e4212c33f039 Mon Sep 17 00:00:00 2001
-From: Tony Battersby <tonyb@cybernetics.com>
-Date: Fri, 1 Feb 2008 12:03:27 -0500
-Subject: [SCSI] sd: make error handling more robust
+I experimented with this yesterday.  First I tried
+scsi_internal_device_block() because we
+  - want to block logical units individually if possible,
+  - need to block from within atomic context (softirq context).
+However, this failed miserably with all sorts of lock inversion bug
+backtraces (alleged ones or real ones, I don't know) and with occasional
+kernel lock-ups (so it were probably real lock inversions).  These
+locking issues cannot be solved easily because block layer and scsi_lib
+play nauseating games with their locks.
 
-This patch fixes a problem with some out-of-spec SCSI disks that report
-hardware or medium errors incorrectly.  Without the patch, the kernel
-may silently ignore a failed write command or return corrupted data on a
-failed read command.
+So, I switched over to scsi_block_requests(), i.e. blocking the whole
+host like the old sbp2 driver does.  This doesn't seem to have
+scsi_internal_device_block()'s locking issues.  However, the sbp2 driver
+has one Scsi_Host for each logical unit while the new fw-sbp2 driver
+however has one Scsi_Host for each target.  Hence there are difficulties
+with targets with multiple logical units, but I probably got them sorted
+out now.
 
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-Cc: Stable Tree <stable@kernel.org>
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
----
- drivers/scsi/sd.c |    5 +++++
- 1 files changed, 5 insertions(+), 0 deletions(-)
+There remain frequent problems with reconnection + re-login failures
+though.  These failures don't happen with exactly the same bus topology
+if I don't run I/O during the bus resets.  I have an idea though what to
+try next...
+-- 
+Stefan Richter
+-=====-==--- --=- ---==
+http://arcgraph.de/sr/
 
-Index: BUILD-2.6/drivers/scsi/sd.c
-===================================================================
---- BUILD-2.6.orig/drivers/scsi/sd.c	2008-02-02 15:43:20.000000000 -0600
-+++ BUILD-2.6/drivers/scsi/sd.c	2008-02-02 16:01:24.000000000 -0600
-@@ -929,6 +929,7 @@
- 	unsigned int xfer_size = scsi_bufflen(SCpnt);
-  	unsigned int good_bytes = result ? 0 : xfer_size;
-  	u64 start_lba = SCpnt->request->sector;
-+	u64 end_lba = SCpnt->request->sector + (xfer_size / 512);
-  	u64 bad_lba;
- 	struct scsi_sense_hdr sshdr;
- 	int sense_valid = 0;
-@@ -967,26 +968,23 @@
- 			goto out;
- 		if (xfer_size <= SCpnt->device->sector_size)
- 			goto out;
--		switch (SCpnt->device->sector_size) {
--		case 256:
-+		if (SCpnt->device->sector_size < 512) {
-+			/* only legitimate sector_size here is 256 */
- 			start_lba <<= 1;
--			break;
--		case 512:
--			break;
--		case 1024:
--			start_lba >>= 1;
--			break;
--		case 2048:
--			start_lba >>= 2;
--			break;
--		case 4096:
--			start_lba >>= 3;
--			break;
--		default:
--			/* Print something here with limiting frequency. */
--			goto out;
--			break;
-+			end_lba <<= 1;
-+		} else {
-+			/* be careful ... don't want any overflows */
-+			u64 factor = SCpnt->device->sector_size / 512;
-+			do_div(start_lba, factor);
-+			do_div(end_lba, factor);
- 		}
-+
-+		if (bad_lba < start_lba  || bad_lba >= end_lba)
-+			/* the bad lba was reported incorrectly, we have
-+			 * no idea where the error is
-+			 */
-+			goto out;
-+
- 		/* This computation should always be done in terms of
- 		 * the resolution of the device's medium.
- 		 */
-
-
-
+-------------------------------------------------------------------------
+This SF.net email is sponsored by: Microsoft
+Defy all challenges. Microsoft(R) Visual Studio 2008.
+http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
