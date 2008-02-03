@@ -1,82 +1,49 @@
-From: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Subject: Re: [Bug 9734] New: I/O error when inserting a second firewire	sata
-	disk
-Date: Sun, 03 Feb 2008 03:10:12 +0100
-Message-ID: <47A52284.1080907@s5r6.in-berlin.de>
-References: <bug-9734-11613@http.bugzilla.kernel.org/>
-	<1200186705.3656.83.camel@localhost.localdomain>
-	<4789D498.5070103@s5r6.in-berlin.de>
+From: Tejun Heo <htejun@gmail.com>
+Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
+ padding in favour of that provided by the block layer
+Date: Sun, 03 Feb 2008 12:04:03 +0900
+Message-ID: <47A52F23.70506@gmail.com>
+References: <1199138168.3110.12.camel@localhost.localdomain>	 <1200698057.3111.68.camel@localhost.localdomain>	 <1201894847.3134.59.camel@localhost.localdomain>	 <47A37AF3.3030503@garzik.org> <1201900175.3134.67.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
-Return-path: <linux1394-devel-bounces@lists.sourceforge.net>
-In-Reply-To: <4789D498.5070103@s5r6.in-berlin.de>
-List-Unsubscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=unsubscribe>
-List-Archive: <http://sourceforge.net/mailarchive/forum.php?forum_name=linux1394-devel>
-List-Post: <mailto:linux1394-devel@lists.sourceforge.net>
-List-Help: <mailto:linux1394-devel-request@lists.sourceforge.net?subject=help>
-List-Subscribe: <https://lists.sourceforge.net/lists/listinfo/linux1394-devel>,
-	<mailto:linux1394-devel-request@lists.sourceforge.net?subject=subscribe>
-Sender: linux1394-devel-bounces@lists.sourceforge.net
-Errors-To: linux1394-devel-bounces@lists.sourceforge.net
-To: linux1394-devel@lists.sourceforge.net
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Kristian Hoegsberg <krh@bitplanet.net>, linux-scsi@vger.kernel.org, bugme-daemon@bugzilla.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rv-out-0910.google.com ([209.85.198.187]:11282 "EHLO
+	rv-out-0910.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932693AbYBCDEM (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 2 Feb 2008 22:04:12 -0500
+Received: by rv-out-0910.google.com with SMTP id k20so1143708rvb.1
+        for <linux-scsi@vger.kernel.org>; Sat, 02 Feb 2008 19:04:12 -0800 (PST)
+In-Reply-To: <1201900175.3134.67.camel@localhost.localdomain>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-I wrote on 2008-01-13:
-> James Bottomley wrote:
->> Firewire list cc'd
->>> Jan 12 16:50:49 x3400 kernel: firewire_sbp2: orb reply timed out, rcode=0x11
->>> Jan 12 16:50:49 x3400 kernel: sd 11:0:0:0: [sdc] Result: hostbyte=DID_BUS_BUSY
->>> driverbyte=DRIVER_OK,SUGGEST_OK
->> Best I can tell, this is the source of the problem.  The sbp2 driver is
->> replying DID_BUS_BUSY until that gets sorted out, which seems to be
->> never.
+James Bottomley wrote:
+> On Fri, 2008-02-01 at 15:02 -0500, Jeff Garzik wrote:
+>> James Bottomley wrote:
+>>> Could we please get this in ... I thought I mentioned several times that
+>>> it fixes a fatal oops in both aic94xx and ipr.
+>> Tejun has a persistent objection...  see other email.
 > 
-> When something was plugged in or out at the same bus, fw-sbp2 has to
-> reconnect == renew the login to each logical unit.  The syslog in the
-> report is inconclusive whether that happened or failed.
+> Actually, see other email .. I meant that this patch (eliminate dma
+> padding) is independent of the drain one.
 
-In any case, there are frequently commands retried or newly enqueued
-while fw-sbp2 waits to get the login renewed.  (And fw-sbp2 continues to
-complete them with DID_BUS_BUSY until the reconnection didn't succeed.
+Sorry about the delay.
 
-Whoever caused that I/O, e.g. dd like in the reporter's and my own
-tests, will quickly fail.
+There's a problem here.  For the blk layer dma padding itself, it's okay
+but the problem is that it blocks the pending draining patch without
+supplying usable alternative at the moment.  I agree that the long term
+solution should be in the block layer && I understand that it causes
+problem for SAS controllers but for the moment if we don't include the
+existing draining patch, far more ATAPI devices are affected.  So, it's
+catch-22 situation.
 
-> As a side note, the old sbp2 driver does not quit commands with
-> DID_BUS_BUSY between bus reset and reconnect.  Instead it blocks the
-> Scsi_Host in order to not receive commands during that time at all.
+I think the best solution is to update block layer draining such that it
+can be included together before the merge window closes.  I'll dig into it.
 
-I experimented with this yesterday.  First I tried
-scsi_internal_device_block() because we
-  - want to block logical units individually if possible,
-  - need to block from within atomic context (softirq context).
-However, this failed miserably with all sorts of lock inversion bug
-backtraces (alleged ones or real ones, I don't know) and with occasional
-kernel lock-ups (so it were probably real lock inversions).  These
-locking issues cannot be solved easily because block layer and scsi_lib
-play nauseating games with their locks.
+Thanks.
 
-So, I switched over to scsi_block_requests(), i.e. blocking the whole
-host like the old sbp2 driver does.  This doesn't seem to have
-scsi_internal_device_block()'s locking issues.  However, the sbp2 driver
-has one Scsi_Host for each logical unit while the new fw-sbp2 driver
-however has one Scsi_Host for each target.  Hence there are difficulties
-with targets with multiple logical units, but I probably got them sorted
-out now.
-
-There remain frequent problems with reconnection + re-login failures
-though.  These failures don't happen with exactly the same bus topology
-if I don't run I/O during the bus resets.  I have an idea though what to
-try next...
 -- 
-Stefan Richter
--=====-==--- --=- ---==
-http://arcgraph.de/sr/
-
--------------------------------------------------------------------------
-This SF.net email is sponsored by: Microsoft
-Defy all challenges. Microsoft(R) Visual Studio 2008.
-http://clk.atdmt.com/MRT/go/vse0120000070mrt/direct/01/
+tejun
