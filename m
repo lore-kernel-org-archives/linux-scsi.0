@@ -1,74 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: dmesg spam
-Date: Mon, 04 Feb 2008 14:15:00 -0600
-Message-ID: <1202156101.3096.102.camel@localhost.localdomain>
-References: <20080203143033.cfea0501.akpm@linux-foundation.org>
-	 <200802041524.55700.bzolnier@gmail.com>
-	 <20080204120548.79f3fe57.akpm@linux-foundation.org>
+From: Chandra Seetharaman <sekharan@us.ibm.com>
+Subject: Re: [PATCH 7/9] scsi_dh: Add support for SDEV_PASSIVE
+Date: Mon, 04 Feb 2008 12:15:51 -0800
+Message-ID: <1202156151.13537.14.camel@linuxchandra>
+References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
+	 <20080124003203.18871.52040.sendpatchset@localhost.localdomain>
+	 <1202151498.3096.84.camel@localhost.localdomain>
+Reply-To: sekharan@us.ibm.com
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:34178 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755084AbYBDUPI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 15:15:08 -0500
-In-Reply-To: <20080204120548.79f3fe57.akpm@linux-foundation.org>
+Received: from e36.co.us.ibm.com ([32.97.110.154]:37751 "EHLO
+	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754467AbYBDUP6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 15:15:58 -0500
+Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
+	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m14KFrGU026951
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 15:15:53 -0500
+Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
+	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m14KFr6j194110
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 13:15:53 -0700
+Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
+	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m14KFqio029692
+	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 13:15:53 -0700
+In-Reply-To: <1202151498.3096.84.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>, michaelc@cs.wisc.edu, jens.axboe@oracle.com
 
-On Mon, 2008-02-04 at 12:05 -0800, Andrew Morton wrote:
-> On Mon, 4 Feb 2008 15:24:55 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
-> 
-> > On Sunday 03 February 2008, Andrew Morton wrote:
-> > > 
-> > > With latest -mm, running fc8 I am getting this in the logs,
-> >                            ^^^
-> > => SCSI/libata
+On Mon, 2008-02-04 at 12:58 -0600, James Bottomley wrote:
+> On Wed, 2008-01-23 at 16:32 -0800, Chandra Seetharaman wrote:
+> > Subject: scsi_dh: Add support for SDEV_PASSIVE
 > > 
-> > cc:ing Jeff
+> > From: Chandra Seetharaman <sekharan@us.ibm.com>
 > > 
-> > > once per second.
-> > > 
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
-> > > sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> > This patch adds a new device state SDEV_PASSIVE, to correspond to the
+> > passive side access of an active/passive multipathed device.
 > 
-> Well..  it's coming out of the kernel.  Presumably it's that cdrom polling
-> thing in KDE.  James recently made changes to sr_ioctl.c but I've been
-> buried in more terminal regressions than this one.
+> Really, no; this isn't right.  The state field of a SCSI device is for
+> the SCSI state model.  Passive might be a valid device mapper state, but
 
-You're thinking of this one?
+Hi James,
 
-commit 210ba1d1724f5c4ed87a2ab1a21ca861a915f734
-Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date:   Sat Jan 5 10:39:51 2008 -0600
+It is not the "device mapper state", it is the state of the device
+itself. These devices have active/passive paths, the passive paths will
+be represented by SDEV_PASSIVE device state in SCSI.
 
-    [SCSI] sr: update to follow tray status correctly
-    
-    Based on an original patch from: David Martin <tasio@tasio.net>
- 
-You could try reversing it if you want, but I'm not certain that's the
-problem (the patch only affected sr_do_status, which is a cdrom internal
-thing).
+chandra
+> it's not a valid SCSI state.  If these patches can't work except by
+> mucking with the SCSI state model, there's some layering problem
+> elsewhere that needs sorting out.
+> 
+> James
+> 
+> 
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-- 
 
-The message comes from sr_ioctl.c:sr_do_ioctl().  Which means some user
-level application is poking the drive with a command that's returning
-NOT_READY.  Apparently it will shut up if quiet is set in the packet
-command structure.
-
-It could be the application is getting the wrong idea of the status from
-sr_do_staus() which leads it to send commands which require a medium?
-But we'll need a bit of debugging to determine this.
-
-James
+----------------------------------------------------------------------
+    Chandra Seetharaman               | Be careful what you choose....
+              - sekharan@us.ibm.com   |      .......you may get it.
+----------------------------------------------------------------------
 
 
