@@ -1,61 +1,86 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: Re: [PATCH 4/24][RFC] firewire & ieee1394: Simple convert to new
- scsi_eh_cpy_sense.
-Date: Mon, 04 Feb 2008 19:04:56 +0200
-Message-ID: <47A745B8.8090806@panasas.com>
-References: 47A72A7F.1050301@panasas.com <1202140606-4629-1-git-send-email-bharrosh@panasas.com> <47A73F37.7090704@s5r6.in-berlin.de>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 04 Feb 2008 20:08:55 +0300
+Message-ID: <47A746A7.1050005@vlnb.net>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>	 <1201639331.3069.58.camel@localhost.localdomain>	 <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net> <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=us-ascii; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:36256 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1756905AbYBDRGT (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:06:19 -0500
-In-Reply-To: <47A73F37.7090704@s5r6.in-berlin.de>
+Received: from mail-relay-01.mailcluster.net ([77.221.130.213]:49498 "EHLO
+	mail-relay-01.mailcluster.net" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753487AbYBDRI4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:08:56 -0500
+In-Reply-To: <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Stefan Richter <stefanr@s5r6.in-berlin.de>
-Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: Bart Van Assche <bart.vanassche@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 
-On Mon, Feb 04 2008 at 18:37 +0200, Stefan Richter <stefanr@s5r6.in-berlin.de> wrote:
-> Boaz Harrosh wrote:
->> --- a/drivers/ieee1394/sbp2.c
->> +++ b/drivers/ieee1394/sbp2.c
->> @@ -1672,8 +1673,11 @@ static int sbp2_send_command(struct sbp2_lu *lu, struct scsi_cmnd *SCpnt,
->>   * Translates SBP-2 status into SCSI sense data for check conditions
->>   */
->>  static unsigned int sbp2_status_to_sense_data(unchar *sbp2_status,
->> -					      unchar *sense_data)
->> +					      struct scsi_cmnd *SCpnt)
->>  {
->> +	u8 sense_data[16];
->> +
->> +	memset(sense_data, 0, sizeof(sense_data));
->>  	/* OK, it's pretty ugly... ;-) */
->>  	sense_data[0] = 0x70;
->>  	sense_data[1] = 0x0;
->> @@ -1691,6 +1695,7 @@ static unsigned int sbp2_status_to_sense_data(unchar *sbp2_status,
->>  	sense_data[13] = sbp2_status[11];
->>  	sense_data[14] = sbp2_status[20];
->>  	sense_data[15] = sbp2_status[21];
->> +	scsi_eh_cpy_sense(SCpnt, sense_data, sizeof(sense_data));
->>  
->>  	return sbp2_status[8] & 0x3f;
->>  }
+Bart Van Assche wrote:
+> On Feb 4, 2008 1:27 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
 > 
-> You don't need the memset.
+>>So, James, what is your opinion on the above? Or the overall SCSI target
+>>project simplicity doesn't matter much for you and you think it's fine
+>>to duplicate Linux page cache in the user space to keep the in-kernel
+>>part of the project as small as possible?
 > 
-OK I see what you mean now, they are all used. Thanks.
+> 
+> It's too early to draw conclusions about performance. I'm currently
+> performing more measurements, and the results are not easy to
+> interpret. My plan is to measure the following:
+> * Setup: target with RAM disk of 2 GB as backing storage.
+> * Throughput reported by dd and xdd (direct I/O).
+> * Transfers with dd/xdd in units of 1 KB to 1 GB (the smallest
+> transfer size that can be specified to xdd is 1 KB).
+> * Target SCSI software to be tested: IETD iSCSI via IPoIB, STGT iSCSI
+> via IPoIB, STGT iSER, SCST iSCSI via IPoIB, SCST SRP, LIO iSCSI via
+> IPoIB.
+> 
+> The reason I chose dd/xdd for these tests is that I want to measure
+> the performance of the communication protocols, and that I am assuming
+> that this performance can be modeled by the following formula:
+> (transfer time in s) = (transfer setup latency in s) + (transfer size
+> in MB) / (bandwidth in MB/s).
 
-> Also, here and in drivers/firewire/fw-sbp2.c, the SCSI sense data could
-> AFAICS be rewritten in-place in sbp2_status.  But I don't know if this
-> is a worthwhile optimization; it would reduce readability.
-Right, it's a very unlikely code path. readability is more important
-here.
+It isn't fully correct, you forgot about link latency. More correct one is:
 
-I will fix both places. Maybe I can use also here what Jeff suggested in the
-other mail. We'll see how it goes.
+(transfer time) = (transfer setup latency on both initiator and target, 
+consisting from software processing time, including memory copy, if 
+necessary, and PCI setup/transfer time) + (transfer size)/(bandwidth) + 
+(link latency to deliver request for READs or status for WRITES) + 
+(2*(link latency) to deliver R2T/XFER_READY request in case of WRITEs, 
+if necessary (e.g. iSER for small transfers might not need it, but SRP 
+most likely always needs it)). Also you should note that it's correct 
+only in case of single threaded workloads with one outstanding command 
+at time. For other workloads it depends from how well they manage to 
+keep the "link" full in interval from (transfer size)/(transfer time) to 
+bandwidth.
 
-Boaz
+> Measuring the time needed for transfers
+> with varying block size allows to compute the constants in the above
+> formula via linear regression.
+
+Unfortunately, it isn't so easy, see above.
+
+> One difficulty I already encountered is that the performance of the
+> Linux IPoIB implementation varies a lot under high load
+> (http://bugzilla.kernel.org/show_bug.cgi?id=9883).
+> 
+> Another issue I have to look further into is that dd and xdd report
+> different results for very large block sizes (> 1 MB).
+
+Look at /proc/scsi_tgt/sgv (for SCST) and you will see, which transfer 
+sizes are actually used. Initiators don't like sending big requests and 
+often split them on smaller ones.
+
+Look at this message as well, it might be helpful: 
+http://lkml.org/lkml/2007/5/16/223
+
+> Bart Van Assche.
+> -
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
