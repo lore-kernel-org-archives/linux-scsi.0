@@ -1,69 +1,64 @@
-From: "David Somayajulu" <david.somayajulu@qlogic.com>
-Subject: RE: [PATCH 07/12] qla4xxx: add qla4xxx async scan support
-Date: Mon, 4 Feb 2008 10:22:29 -0800
-Message-ID: <0BB3E5E7462EEA4295BC02D49691DC070120BF1F@AVEXCH1.qlogic.org>
-References: <12018082174157-git-send-email-michaelc@cs.wisc.edu>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 4 Feb 2008 10:29:38 -0800 (PST)
+Message-ID: <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>  <1201639331.3069.58.camel@localhost.localdomain>  <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>  <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
+  <1202144767.3096.38.camel@localhost.localdomain>  <47A7488B.4080000@vlnb.net> <1202145901.3096.49.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:5854 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752369AbYBDSWa convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:22:30 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <12018082174157-git-send-email-michaelc@cs.wisc.edu>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:59387 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753202AbYBDSaO (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:30:14 -0500
+In-Reply-To: <1202145901.3096.49.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-Mike Christie wrote:
-> qla4xxx has the old school startup/probe where it finds 
-> presetup sessions
-> in its flash and then attempts to log into them before 
-> returning from the
-> probe. This however, makes it very simple to add a iscsi 
-> class scan finished
-> helper which the driver can use.
+
+
+On Mon, 4 Feb 2008, James Bottomley wrote:
 > 
-> In future patches Dave or I will rip apart the driver to make it more
-> like qla2xxx, but for now this is a very simple two line patch which
-> fixes the problem of trying to figure out when the initial sessions
-> are done being scanned.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/scsi/qla4xxx/ql4_os.c |    4 +++-
->  1 files changed, 3 insertions(+), 1 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c 
-> b/drivers/scsi/qla4xxx/ql4_os.c
-> index d4dd149..c3c59d7 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -89,6 +89,8 @@ static struct scsi_host_template 
-> qla4xxx_driver_template = {
->  	.slave_alloc		= qla4xxx_slave_alloc,
->  	.slave_destroy		= qla4xxx_slave_destroy,
->  
-> +	.scan_finished		= iscsi_scan_finished,
-> +
->  	.this_id		= -1,
->  	.cmd_per_lun		= 3,
->  	.use_clustering		= ENABLE_CLUSTERING,
-> @@ -1306,7 +1308,7 @@ static int __devinit 
-> qla4xxx_probe_adapter(struct pci_dev *pdev,
->  	       qla4xxx_version_str, ha->pdev->device, 
-> pci_name(ha->pdev),
->  	       ha->host_no, ha->firmware_version[0], 
-> ha->firmware_version[1],
->  	       ha->patch_number, ha->build_number);
-> -
-> +	scsi_scan_host(host);
->  	return 0;
->  
->  remove_host:
-> -- 
-> 1.5.2.1
-Acked by David Somayajulu <david.somayajulu@qlogic.com>
+> The way a user space solution should work is to schedule mmapped I/O
+> from the backing store and then send this mmapped region off for target
+> I/O.
+
+mmap'ing may avoid the copy, but the overhead of a mmap operation is 
+quite often much *bigger* than the overhead of a copy operation.
+
+Please do not advocate the use of mmap() as a way to avoid memory copies. 
+It's not realistic. Even if you can do it with a single "mmap()" system 
+call (which is not at all a given, considering that block devices can 
+easily be much larger than the available virtual memory space), the fact 
+is that page table games along with the fault (and even just TLB miss) 
+overhead is easily more than the cost of copying a page in a nice 
+streaming manner.
+
+Yes, memory is "slow", but dammit, so is mmap().
+
+> You also have to pull tricks with the mmap region in the case of writes 
+> to prevent useless data being read in from the backing store.  However, 
+> none of this involves data copies.
+
+"data copies" is irrelevant. The only thing that matters is performance. 
+And if avoiding data copies is more costly (or even of a similar cost) 
+than the copies themselves would have been, there is absolutely no upside, 
+and only downsides due to extra complexity.
+
+If you want good performance for a service like this, you really generally 
+*do* need to in kernel space. You can play games in user space, but you're 
+fooling yourself if you think you can do as well as doing it in the 
+kernel. And you're *definitely* fooling yourself if you think mmap() 
+solves performance issues. "Zero-copy" does not equate to "fast". Memory 
+speeds may be slower that core CPU speeds, but not infinitely so!
+
+(That said: there *are* alternatives to mmap, like "splice()", that really 
+do potentially solve some issues without the page table and TLB overheads. 
+But while splice() avoids the costs of paging, I strongly suspect it would 
+still have easily measurable latency issues. Switching between user and 
+kernel space multiple times is definitely not going to be free, although 
+it's probably not a huge issue if you have big enough requests).
+
+		Linus
