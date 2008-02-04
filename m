@@ -1,122 +1,89 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 17/24][RFC] BusLogic: Use of scsi_make_sense() API for DMA-able sense buffer
-Date: Mon,  4 Feb 2008 19:25:48 +0200
-Message-ID: <1202145948-5173-1-git-send-email-bharrosh@panasas.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH 1/24][RFC] scsi_eh: Define  new API for sense handling
+Date: Mon, 04 Feb 2008 11:33:28 -0600
+Message-ID: <1202146408.3096.56.camel@localhost.localdomain>
+References: 47A72A7F.1050301@panasas.com  <1202139034-4508-1-git-send-email-bharrosh@panasas.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:59781 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754896AbYBDRbY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:31:24 -0500
-In-Reply-To: 47A72A7F.1050301@panasas.com
-References: 47A72A7F.1050301@panasas.com
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:39600 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1752657AbYBDRdd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:33:33 -0500
+In-Reply-To: <1202139034-4508-1-git-send-email-bharrosh@panasas.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>J
-Cc: Andrew Morton <akpm@linux-foundation.org>
+To: Boaz Harrosh <bharrosh@panasas.com>
+Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
 
-  - Use a pre allocated, DMA mapped, sense buffer at each command,
-    Using the scsi_make_sense() API. And scsi_return_sense() when
-    done.
-  - set .pre_allocate_sense at host template.
+On Mon, 2008-02-04 at 17:30 +0200, Boaz Harrosh wrote:
+> This patch defines a new API for sense handling. All drivers will
+>   be converted to this API, before the sense handling implementation will
+>   change. API is as follows:
+> 
+>     void scsi_eh_cpy_sense(struct scsi_cmnd *cmd, void* sense,
+>         						 unsigned sense_bytes);
+>         To be used by drivers, when they have sense-bits
+>         and wants to send them to upper layer. Max size
+>         need not be a concern, If upper layer does not have
+>         enough space it will be automatically truncated.
+> 
+>     u8 *scsi_make_sense(struct scsi_cmnd *cmd);
+>         To be used by drivers, and scsi-midlayer. Returns a DMA-able
+>         sense buffer. Must be returned by scsi_return_sense(). It should
+>         never fail if .pre_allocate_sense && .sense_buffsize in host
+>         template where properly set.
+>         the buffer is of shost->sense_buffsize long.
+> 
+>     void *scsi_return_sense(struct scsi_cmnd *cmd, u8 *sb);
+>         Frees and returns the sense to the upper layer,
+>         copying only what's necessary.
+> 
+>     void scsi_eh_reset_sense(struct scsi_cmnd *cmd)
+>         Should not be used or necessary.
+> 
+>     const u8 *scsi_sense(struct scsi_cmnd *cmd)
+>         Used by ULDs and for inspecting the returned sense, can not
+>         be modified. It is only valid after a call to
+>         scsi_eh_cpy_sense() or a call to scsi_return_sense(). Before
+>         that it will/should return an empty buffer.
+> 
+>     New members at scsi host template:
+>         .sense_buffsize - if a driver calls scsi_make_sense() or
+>                   scsi_eh_prep_cmnd(), This value should be none
+>                   zero indicating the max sense size, the driver
+>                   supports. In most cases it should be
+>                   SCSI_SENSE_BUFFERSIZE.
+>                   If this value is zero the driver will only call
+>                   scsi_eh_cpy_sense().
+> 
+>         .pre_allocate_sense - if a Driver calls scsi_make_sense()
+>                       in .queuecommand for every cmnd, this
+>                       should be set to true. In which case
+>                       scsi_make_sense() will not fail because
+>                       midlayer will fail the command allocation.
+>                       If the drivers calls scsi_eh_prep_cmnd()
+>                       then sense_buffsize is not Zero but this
+>                       here is set to false.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/BusLogic.c |   24 +++++++++++-------------
- drivers/scsi/BusLogic.h |    1 +
- 2 files changed, 12 insertions(+), 13 deletions(-)
+My initial reaction to this is that you're doing too many contortions to
+ensure something we don't particularly care about:  whether we can
+allocate a sense buffer atomically or not.
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 4d3ebb1..5b076f3 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -42,17 +42,19 @@
- #include <linux/spinlock.h>
- #include <linux/jiffies.h>
- #include <linux/dma-mapping.h>
--#include <scsi/scsicam.h>
- 
- #include <asm/dma.h>
- #include <asm/io.h>
- #include <asm/system.h>
- 
-+#include <scsi/scsicam.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_tcq.h>
-+#include <scsi/scsi_eh.h>
-+
- #include "BusLogic.h"
- #include "FlashPoint.c"
- 
-@@ -309,6 +311,7 @@ static void BusLogic_DeallocateCCB(struct BusLogic_CCB *CCB)
- 	pci_unmap_single(HostAdapter->PCI_Device, CCB->SenseDataPointer,
- 			 CCB->SenseDataLength, PCI_DMA_FROMDEVICE);
- 
-+	scsi_return_sense(CCB->Command, CCB->sense_buffer);
- 	CCB->Command = NULL;
- 	CCB->Status = BusLogic_CCB_Free;
- 	CCB->Next = HostAdapter->Free_CCBs;
-@@ -2627,7 +2630,7 @@ static void BusLogic_ProcessCompletedCCBs(struct BusLogic_HostAdapter *HostAdapt
- 						BusLogic_Notice("\n", HostAdapter);
- 						BusLogic_Notice("Sense ", HostAdapter);
- 						for (i = 0; i < CCB->SenseDataLength; i++)
--							BusLogic_Notice(" %02X", HostAdapter, Command->sense_buffer[i]);
-+							BusLogic_Notice(" %02X", HostAdapter, CCB->sense_buffer[i]);
- 						BusLogic_Notice("\n", HostAdapter);
- 					}
- 				}
-@@ -2816,16 +2819,6 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
- 	int Count;
- 	struct BusLogic_CCB *CCB;
- 	/*
--	   SCSI REQUEST_SENSE commands will be executed automatically by the Host
--	   Adapter for any errors, so they should not be executed explicitly unless
--	   the Sense Data is zero indicating that no error occurred.
--	 */
--	if (CDB[0] == REQUEST_SENSE && Command->sense_buffer[0] != 0) {
--		Command->result = DID_OK << 16;
--		CompletionRoutine(Command);
--		return 0;
--	}
--	/*
- 	   Allocate a CCB from the Host Adapter's free list.  In the unlikely event
- 	   that there are none available and memory allocation fails, wait 1 second
- 	   and try again.  If that fails, the Host Adapter is probably hung so signal
-@@ -2948,7 +2941,10 @@ static int BusLogic_QueueCommand(struct scsi_cmnd *Command, void (*CompletionRou
- 	}
- 	memcpy(CCB->CDB, CDB, CDB_Length);
- 	CCB->SenseDataLength = SCSI_SENSE_BUFFERSIZE;
--	CCB->SenseDataPointer = pci_map_single(HostAdapter->PCI_Device, Command->sense_buffer, CCB->SenseDataLength, PCI_DMA_FROMDEVICE);
-+	CCB->sense_buffer = scsi_make_sense(Command);
-+	CCB->SenseDataPointer = pci_map_single(HostAdapter->PCI_Device,
-+					CCB->sense_buffer, CCB->SenseDataLength,
-+					PCI_DMA_FROMDEVICE);
- 	CCB->Command = Command;
- 	Command->scsi_done = CompletionRoutine;
- 	if (BusLogic_MultiMasterHostAdapterP(HostAdapter)) {
-@@ -3575,6 +3571,8 @@ static struct scsi_host_template Bus_Logic_template = {
- 	.unchecked_isa_dma = 1,
- 	.max_sectors = 128,
- 	.use_clustering = ENABLE_CLUSTERING,
-+	.pre_allocate_sense = 1,
-+	.sense_buffsize = SCSI_SENSE_BUFFERSIZE,
- };
- 
- /*
-diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index bfbfb5c..6e0a131 100644
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -890,6 +890,7 @@ struct BusLogic_CCB {
- 	struct BusLogic_CCB *NextAll;
- 	struct BusLogic_ScatterGatherSegment
- 	 ScatterGatherList[BusLogic_ScatterGatherLimit];
-+	u8 *sense_buffer;
- };
- 
- /*
--- 
-1.5.3.3
+What all this code should be doing is simply allocating the sense buffer
+in scsi_eh_prep_cmnd() using tomo's existing slab (and GFP_ATOMIC) if
+that fails, we need a return from scsi_eh_prep_cmnd() telling us.  At
+that point, the driver should abandon the auto request sense attempt and
+instead just return the CC/UA without the DRIVER_SENSE bit set which
+will trigger the eh to collect the sense for us.
+
+Ideally, doing it this way might mean we could even dump the
+sense_buffer pointer from the command (although I don't see that as
+necessary).
+
+This solves the 99% case without getting into preallocation contortions.
+
+James
+
 
