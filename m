@@ -1,109 +1,139 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 4/9] scsi_dh: add skeleton for SCSI Device Handlers
-Date: Mon, 04 Feb 2008 10:54:40 -0800
-Message-ID: <1202151280.13537.1.camel@linuxchandra>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
-	 <20080124003115.18871.42778.sendpatchset@localhost.localdomain>
-	 <47A378C3.5030207@cs.wisc.edu>
-Reply-To: sekharan@us.ibm.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 04 Feb 2008 12:54:53 -0600
+Message-ID: <1202151293.3096.80.camel@localhost.localdomain>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <1201639331.3069.58.camel@localhost.localdomain>
+	 <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>
+	 <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
+	 <1202144767.3096.38.camel@localhost.localdomain>
+	 <47A7488B.4080000@vlnb.net>
+	 <1202145901.3096.49.camel@localhost.localdomain> <47A751C5.60600@vlnb.net>
+	 <1202149322.3096.66.camel@localhost.localdomain>
+	 <47A75B8A.3020503@vlnb.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e31.co.us.ibm.com ([32.97.110.149]:54923 "EHLO
-	e31.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753798AbYBDSyn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:54:43 -0500
-Received: from d03relay02.boulder.ibm.com (d03relay02.boulder.ibm.com [9.17.195.227])
-	by e31.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m14IsgaX020715
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 13:54:42 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay02.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m14IsgsP215956
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 11:54:42 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m14IsgsV005798
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 11:54:42 -0700
-In-Reply-To: <47A378C3.5030207@cs.wisc.edu>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:36580 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753749AbYBDSzD (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:55:03 -0500
+In-Reply-To: <47A75B8A.3020503@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>, jens.axboe@oracle.com
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-On Fri, 2008-02-01 at 13:53 -0600, Mike Christie wrote:
-> Chandra Seetharaman wrote:
-> >  	 * mainly associated with tapes and returned SUCCESS.
-> > Index: linux-2.6.24-rc8/drivers/scsi/scsi_sysfs.c
-> > ===================================================================
-> > --- linux-2.6.24-rc8.orig/drivers/scsi/scsi_sysfs.c
-> > +++ linux-2.6.24-rc8/drivers/scsi/scsi_sysfs.c
-> > @@ -951,6 +951,49 @@ int scsi_register_interface(struct class
-> >  }
-> >  EXPORT_SYMBOL(scsi_register_interface);
-> >  
-> > +static int scsi_dh_notifier_add(struct device *dev, void *data)
-> > +{
-> > +	struct scsi_device_handler *sdev_dh = data;
-> > +
-> > +	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_ADD_DEVICE, dev);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +int scsi_register_device_handler(struct scsi_device_handler *sdev_dh)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = bus_register_notifier(&scsi_bus_type, &sdev_dh->nb);
-> > +
-> > +	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh, scsi_dh_notifier_add);
-> > +
-> > +	return ret;
-> > +}
-> > +EXPORT_SYMBOL(scsi_register_device_handler);
-> > +
-> > +static int scsi_dh_notifier_remove(struct device *dev, void *data)
-> > +{
-> > +	struct scsi_device_handler *sdev_dh = data;
-> > +
-> > +	sdev_dh->nb.notifier_call(&sdev_dh->nb, BUS_NOTIFY_DEL_DEVICE, dev);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> > +int scsi_unregister_device_handler(struct scsi_device_handler *sdev_dh)
-> > +{
-> > +	int ret;
-> > +
-> > +	ret = bus_unregister_notifier(&scsi_bus_type, &sdev_dh->nb);
-> > +
-> > +	bus_for_each_dev(&scsi_bus_type, NULL, sdev_dh,
-> > +					scsi_dh_notifier_remove);
-> > +
-> > +	return ret;
-> > +}
-> > +EXPORT_SYMBOL(scsi_unregister_device_handler);
-> > +
+On Mon, 2008-02-04 at 21:38 +0300, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> > On Mon, 2008-02-04 at 20:56 +0300, Vladislav Bolkhovitin wrote:
+> > 
+> >>James Bottomley wrote:
+> >>
+> >>>On Mon, 2008-02-04 at 20:16 +0300, Vladislav Bolkhovitin wrote:
+> >>>
+> >>>
+> >>>>James Bottomley wrote:
+> >>>>
+> >>>>
+> >>>>>>>>So, James, what is your opinion on the above? Or the overall SCSI target 
+> >>>>>>>>project simplicity doesn't matter much for you and you think it's fine 
+> >>>>>>>>to duplicate Linux page cache in the user space to keep the in-kernel 
+> >>>>>>>>part of the project as small as possible?
+> >>>>>>>
+> >>>>>>>
+> >>>>>>>The answers were pretty much contained here
+> >>>>>>>
+> >>>>>>>http://marc.info/?l=linux-scsi&m=120164008302435
+> >>>>>>>
+> >>>>>>>and here:
+> >>>>>>>
+> >>>>>>>http://marc.info/?l=linux-scsi&m=120171067107293
+> >>>>>>>
+> >>>>>>>Weren't they?
+> >>>>>>
+> >>>>>>No, sorry, it doesn't look so for me. They are about performance, but 
+> >>>>>>I'm asking about the overall project's architecture, namely about one 
+> >>>>>>part of it: simplicity. Particularly, what do you think about 
+> >>>>>>duplicating Linux page cache in the user space to have zero-copy cached 
+> >>>>>>I/O? Or can you suggest another architectural solution for that problem 
+> >>>>>>in the STGT's approach?
+> >>>>>
+> >>>>>
+> >>>>>Isn't that an advantage of a user space solution?  It simply uses the
+> >>>>>backing store of whatever device supplies the data.  That means it takes
+> >>>>>advantage of the existing mechanisms for caching.
+> >>>>
+> >>>>No, please reread this thread, especially this message: 
+> >>>>http://marc.info/?l=linux-kernel&m=120169189504361&w=2. This is one of 
+> >>>>the advantages of the kernel space implementation. The user space 
+> >>>>implementation has to have data copied between the cache and user space 
+> >>>>buffer, but the kernel space one can use pages in the cache directly, 
+> >>>>without extra copy.
+> >>>
+> >>>
+> >>>Well, you've said it thrice (the bellman cried) but that doesn't make it
+> >>>true.
+> >>>
+> >>>The way a user space solution should work is to schedule mmapped I/O
+> >>>from the backing store and then send this mmapped region off for target
+> >>>I/O.  For reads, the page gather will ensure that the pages are up to
+> >>>date from the backing store to the cache before sending the I/O out.
+> >>>For writes, You actually have to do a msync on the region to get the
+> >>>data secured to the backing store. 
+> >>
+> >>James, have you checked how fast is mmaped I/O if work size > size of 
+> >>RAM? It's several times slower comparing to buffered I/O. It was many 
+> >>times discussed in LKML and, seems, VM people consider it unavoidable. 
+> > 
+> > 
+> > Erm, but if you're using the case of work size > size of RAM, you'll
+> > find buffered I/O won't help because you don't have the memory for
+> > buffers either.
 > 
-> Did this end up solving the problem I was hitting where when using the 
-> other driver model stuff like is used with the SCSI upper layer drivers. 
-> The problem where the hw handler module had to be loaded before finding 
-> devices and had to be loaded before sd.c?
+> James, just check and you will see, buffered I/O is a lot faster.
 
-Yes, As andmike pointed, it is coded and tested.
+So in an out of memory situation the buffers you don't have are a lot
+faster than the pages I don't have?
 
-It works in both cases, module being inserted before sd is probed and
-module inserted after sd.
+> >>So, using mmaped IO isn't an option for high performance. Plus, mmaped 
+> >>IO isn't an option for high reliability requirements, since it doesn't 
+> >>provide a practical way to handle I/O errors.
+> > 
+> > I think you'll find it does ... the page gather returns -EFAULT if
+> > there's an I/O error in the gathered region. 
+> 
+> Err, to whom return? If you try to read from a mmaped page, which can't 
+> be populated due to I/O error, you will get SIGBUS or SIGSEGV, I don't 
+> remember exactly. It's quite tricky to get back to the faulted command 
+> from the signal handler.
+> 
+> Or do you mean mmap(MAP_POPULATE)/munmap() for each command? Do you 
+> think that such mapping/unmapping is good for performance?
+> 
+> > msync does something
+> > similar if there's a write failure.
+> > 
+> >>>You also have to pull tricks with
+> >>>the mmap region in the case of writes to prevent useless data being read
+> >>>in from the backing store.
+> >>
+> >>Can you be more exact and specify what kind of tricks should be done for 
+> >>that?
+> > 
+> > Actually, just avoid touching it seems to do the trick with a recent
+> > kernel.
+> 
+> Hmm, how can one write to an mmaped page and don't touch it?
 
+I meant from user space ... the writes are done inside the kernel.
 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
+However, as Linus has pointed out, this discussion is getting a bit off
+topic.  There's no actual evidence that copy problems are causing any
+performatince issues issues for STGT.  In fact, there's evidence that
+they're not for everything except IB networks.
 
-----------------------------------------------------------------------
-    Chandra Seetharaman               | Be careful what you choose....
-              - sekharan@us.ibm.com   |      .......you may get it.
-----------------------------------------------------------------------
+James
 
 
