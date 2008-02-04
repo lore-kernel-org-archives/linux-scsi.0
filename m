@@ -1,58 +1,42 @@
-From: "Bart Van Assche" <bart.vanassche@gmail.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 4 Feb 2008 14:53:46 +0100
-Message-ID: <e2e108260802040553j2f3bf8c2n9fae132e000990f7@mail.gmail.com>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net>
+From: Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>
+Subject: Re: dmesg spam
+Date: Mon, 4 Feb 2008 15:24:55 +0100
+Message-ID: <200802041524.55700.bzolnier@gmail.com>
+References: <20080203143033.cfea0501.akpm@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain;
+  charset="iso-8859-1"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wr-out-0506.google.com ([64.233.184.226]:39134 "EHLO
-	wr-out-0506.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753221AbYBDNxs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 08:53:48 -0500
-Received: by wr-out-0506.google.com with SMTP id c48so1501093wra.23
-        for <linux-scsi@vger.kernel.org>; Mon, 04 Feb 2008 05:53:47 -0800 (PST)
-In-Reply-To: <47A7049A.9000105@vlnb.net>
+Received: from wa-out-1112.google.com ([209.85.146.182]:42955 "EHLO
+	wa-out-1112.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751526AbYBDOLs (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 09:11:48 -0500
+Received: by wa-out-1112.google.com with SMTP id v27so2963131wah.23
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Feb 2008 06:11:47 -0800 (PST)
+In-Reply-To: <20080203143033.cfea0501.akpm@linux-foundation.org>
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>
 
-On Feb 4, 2008 1:27 PM, Vladislav Bolkhovitin <vst@vlnb.net> wrote:
->
-> So, James, what is your opinion on the above? Or the overall SCSI target
-> project simplicity doesn't matter much for you and you think it's fine
-> to duplicate Linux page cache in the user space to keep the in-kernel
-> part of the project as small as possible?
+On Sunday 03 February 2008, Andrew Morton wrote:
+> 
+> With latest -mm, running fc8 I am getting this in the logs,
+                           ^^^
+=> SCSI/libata
 
-It's too early to draw conclusions about performance. I'm currently
-performing more measurements, and the results are not easy to
-interpret. My plan is to measure the following:
-* Setup: target with RAM disk of 2 GB as backing storage.
-* Throughput reported by dd and xdd (direct I/O).
-* Transfers with dd/xdd in units of 1 KB to 1 GB (the smallest
-transfer size that can be specified to xdd is 1 KB).
-* Target SCSI software to be tested: IETD iSCSI via IPoIB, STGT iSCSI
-via IPoIB, STGT iSER, SCST iSCSI via IPoIB, SCST SRP, LIO iSCSI via
-IPoIB.
+cc:ing Jeff
 
-The reason I chose dd/xdd for these tests is that I want to measure
-the performance of the communication protocols, and that I am assuming
-that this performance can be modeled by the following formula:
-(transfer time in s) = (transfer setup latency in s) + (transfer size
-in MB) / (bandwidth in MB/s). Measuring the time needed for transfers
-with varying block size allows to compute the constants in the above
-formula via linear regression.
-
-One difficulty I already encountered is that the performance of the
-Linux IPoIB implementation varies a lot under high load
-(http://bugzilla.kernel.org/show_bug.cgi?id=9883).
-
-Another issue I have to look further into is that dd and xdd report
-different results for very large block sizes (> 1 MB).
-
-Bart Van Assche.
+> once per second.
+> 
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> sr0: CDROM not ready.  Make sure there is a disc in the drive.
