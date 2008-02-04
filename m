@@ -1,49 +1,95 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 4 Feb 2008 13:24:53 -0800 (PST)
-Message-ID: <alpine.LFD.1.00.0802041317280.3034@hp.linux-foundation.org>
-References: <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net> <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net> <1202144767.3096.38.camel@localhost.localdomain> <47A7488B.4080000@vlnb.net> <1202145901.3096.49.camel@localhost.localdomain>
- <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org> <1202151989.11265.576.camel@haakon2.linux-iscsi.org> <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org> <20080204210121.GF18682@fieldses.org>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: (fwd) Bug#11922: I/O error on blank tapes
+Date: Mon, 04 Feb 2008 15:56:53 -0600
+Message-ID: <1202162213.3096.119.camel@localhost.localdomain>
+References: <20080204142206.GB5532@stro.at>
+	 <20080204212835.GA29286@gollum.tnic>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:41431 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753196AbYBDVZ7 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 16:25:59 -0500
-In-Reply-To: <20080204210121.GF18682@fieldses.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <20080204212835.GA29286@gollum.tnic>
+Sender: linux-ide-owner@vger.kernel.org
+To: petkovbb@gmail.com
+Cc: maximilian attems <max@stro.at>, linux-ide@vger.kernel.org, Stephen Kitt <steve@sk2.org>, bzolnier@gmail.com, linux-scsi <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "J. Bruce Fields" <bfields@fieldses.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
 
-
-On Mon, 4 Feb 2008, J. Bruce Fields wrote:
+On Mon, 2008-02-04 at 22:28 +0100, Borislav Petkov wrote:
+> On Mon, Feb 04, 2008 at 03:22:06PM +0100, maximilian attems wrote:
 > 
-> I'd assumed the move was primarily because of the difficulty of getting
-> correct semantics on a shared filesystem
+> (Added Bart to CC)
+> 
+> > hello borislav,
+> > 
+> > may i forward you that *old* Debian kernel bug,
+> > have seen you working on ide-tape:
+> > http://bugs.debian.org/11922
+> > no we don't carry any ide patches anymore.
+> > 
+> > maybe you've already fixed it in latest?
+> > 
+> > thanks
+> > 
+> > -- 
+> > maks
+> > 
+> > ----- Forwarded message from Stephen Kitt <steve@sk2.org> -----
+> > 
+> > Subject: Bug#11922: I/O error on blank tapes
+> > Date: Sat, 1 Dec 2007 19:06:18 +0100
+> > From: Stephen Kitt <steve@sk2.org>
+> > To: 11922@bugs.debian.org
+> > 
+> > Hi,
+> > 
+> > This does still occur with 2.6.22; with a blank tape in my HP DDS-4 drive:
+> > 
+> > $ tar tzvf /dev/nst0
+> > tar: /dev/nst0: Cannot read: Input/output error
 
-.. not even shared. It was hard to get correct semantics full stop. 
+That's a SCSI tape, not an IDE one.  I cc'd the SCSI list
 
-Which is a traditional problem. The thing is, the kernel always has some 
-internal state, and it's hard to expose all the semantics that the kernel 
-knows about to user space.
+James
 
-So no, performance is not the only reason to move to kernel space. It can 
-easily be things like needing direct access to internal data queues (for a 
-iSCSI target, this could be things like barriers or just tagged commands - 
-yes, you can probably emulate things like that without access to the 
-actual IO queues, but are you sure the semantics will be entirely right?
+> > tar: At beginning of tape, quitting now
+> > tar: Error is not recoverable: exiting now
+> > 
+> > gzip: stdin: unexpected end of file
+> > tar: Child returned status 2
+> > tar: Error exit delayed from previous errors
+> > 
+> > Nothing gets logged anywhere, which fits the original bug description.
+> > 
+> > This is a well-known issue: see for example
+> > http://www.sibbald.com/bacula/html-manual/Bacula_Console.html (search for
+> > "blank tape").
+> > 
+> > Regards,
+> > 
+> > Stephen
+> > 
+> > 
+> > 
+> > -- 
+> > To UNSUBSCRIBE, email to debian-kernel-REQUEST@lists.debian.org
+> > with a subject of "unsubscribe". Trouble? Contact listmaster@lists.debian.org
+> > 
+> > 
+> > ----- End forwarded message -----
+> 
+> Hi Maks,
+> 
+> we're currently in the process of aggressively cleaning up ide-tape. However,
+> this brings (almost) no functional changes to the driver and we haven't looked
+> at any bugs that might exist. Actually, I wanted to probe the community to see
+> whether anyone is using ide-tape at all, and if not, to remove it completely.
+> 
+> Since i don't have the hardware, i'm gonna have to ask you (or Stephen) to wait
+> until all changes have entered mainline and then to try to reproduce the bug again
+> after having enabled debugging (IDETAPE_DEBUG_LOG) and send me the syslog
+> output.
+> 
+> Thanks.
+> 
 
-The kernel/userland boundary is not just a performance boundary, it's an 
-abstraction boundary too, and these kinds of protocols tend to break 
-abstractions. NFS broke it by having "file handles" (which is not 
-something that really exists in user space, and is almost impossible to 
-emulate correctly), and I bet the same thing happens when emulating a SCSI 
-target in user space.
-
-Maybe not. I _rally_ haven't looked into iSCSI, I'm just guessing there 
-would be things like ordering issues.
-
-		Linus
