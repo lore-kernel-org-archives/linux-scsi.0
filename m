@@ -1,57 +1,64 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] bugfix for an underflow condition in usb storage &
- isd200.c
-Date: Mon, 4 Feb 2008 15:05:58 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.0802041500420.5186-100000@iolanthe.rowland.org>
-References: <20080203192316.GF27785@one-eyed-alien.net>
+From: 4news@retesintesi.it
+Subject: Re: [Scst-devel] Integration of SCST in the mainstream Linux kernel
+Date: Mon, 4 Feb 2008 21:06:10 +0100
+Message-ID: <200802042106.11327.4news@retesintesi.it>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com> <1202151989.11265.576.camel@haakon2.linux-iscsi.org> <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:40286 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1757157AbYBDUGA (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 15:06:00 -0500
-In-Reply-To: <20080203192316.GF27785@one-eyed-alien.net>
+Received: from ip-224-2.sn2.eutelia.it ([83.211.224.2]:60437 "EHLO
+	mail.retesintesi.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1754583AbYBDULK convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 15:11:10 -0500
+In-Reply-To: <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Matthew Dharm <mdharm-scsi@one-eyed-alien.net>
-Cc: Boaz Harrosh <bharrosh@panasas.com>, Mark Glines <mark@glines.org>, James Bottomley <James.Bottomley@SteelEye.com>, USB list <linux-usb@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+To: scst-devel@lists.sourceforge.net
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Mike Christie <michaelc@cs.wisc.edu>, Vladislav Bolkhovitin <vst@vlnb.net>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 
-On Sun, 3 Feb 2008, Matthew Dharm wrote:
+On luned=EC 4 febbraio 2008, Linus Torvalds wrote:
+> So from a purely personal standpoint, I'd like to say that I'm not re=
+ally
+> interested in iSCSI (and I don't quite know why I've been cc'd on thi=
+s
+> whole discussion) and think that other approaches are potentially *mu=
+ch*
+> better. So for example, I personally suspect that ATA-over-ethernet i=
+s way
+> better than some crazy SCSI-over-TCP crap, but I'm biased for simple =
+and
+> low-level, and against those crazy SCSI people to begin with.
 
-> But, the modifications to usb_stor_access_xfer_buf() look good -- no
-> request from a sub-driver should be allowed to scribble into memory.  The
-> current code does make the implicit assumption that there is enough
-> storage, and will walk right off the end of the sg list if there isn't.
-> 
-> I'm not sure I like the mods to usb_stor_set_xfer_buf().  Any place we set
-> a status that we know is going to be thrown away is an invitation for a
-> problem later if someone changes the code to preserve that status.  It's a
-> jack-in-the-box, waiting to spring open in our face later.  The limit check
-> (which mirrors the usb_stor_access_xfer_buf modification) and WARN_ON() are
-> probably good.
-> 
-> In a strictly technical sense, the change to protocol.c are sufficient.
-> That is, they will prevent a serious error.  There is a justification tho
-> to fix all of the users of usb_stor_access_buf() to not attempt to use more
-> SCSI buffer than exists.
-> 
-> My opinion is this:  Let's make the protocol.c mods (modulo my comments
-> about setting useless status bits) now.  Then, let's decide if we're going
-> to patch all the other users of the usb_stor_*_xfer_buf() functions as a
-> separate discussion.
+surely aoe is better than iscsi almost on performance because of the le=
+sser=20
+protocol stack:
+iscsi ->  scsi - ip - eth
+aoe -> ata - eth
 
-I think the correct approach is to modify those routines so that they 
-will never overrun the s-g buffer (like Boaz has done), and _document_ 
-this behavior.  Then the callers can feel free to try and transfer as 
-much as they want, knowing that an overrun can't occur.  There won't 
-be any need for a WARN_ON or anything else.
+but surely iscsi is more a standard than aoe and is more actively used =
+by=20
+real-world .
 
-However the interface to usb_stor_access_xfer_buf() will have to change
-slightly.  Right now if it sees that *sgptr is NULL, it assumes this
-means it should start at the beginning of the s-g buffer.  But with 
-Boaz's change, *sgptr == NULL means the transfer has reached the end of 
-the buffer.  So I'll have to go through and audit all the callers.
+Other really useful feature are that:
+- iscsi is capable to move to a ip based san scsi devices by routing th=
+at (=20
+i've some tape changer routed by scst to some system that don't have ot=
+her=20
+way to see a tape).
+- because it work on the ip layer it can be routed between long distanc=
+e , so=20
+having needed bandwidth you can have a really remote block device spoki=
+ng a=20
+standard protocol between non ethereogenus systems.
+- iscsi is now the cheapest san avaible.
 
-Alan Stern
+bye,
+marco.
 
+-
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
