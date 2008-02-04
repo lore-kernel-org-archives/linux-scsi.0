@@ -1,173 +1,65 @@
-From: Vladislav Bolkhovitin <vst@vlnb.net>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 04 Feb 2008 15:27:06 +0300
-Message-ID: <47A7049A.9000105@vlnb.net>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com> <1201639331.3069.58.camel@localhost.localdomain> <47A05CBD.5050803@vlnb.net>
+From: Ingo Molnar <mingo@elte.hu>
+Subject: Re: [patch] pci: pci_enable_device_bars() fix
+Date: Mon, 4 Feb 2008 13:57:36 +0100
+Message-ID: <20080204125736.GA32056@elte.hu>
+References: <20080201231147.GA18174@suse.de> <20080202111322.GA30767@elte.hu> <47A49171.2000003@garzik.org> <20080202170828.GA12748@elte.hu> <47A4A96D.2040709@garzik.org> <20080202175738.GA26560@elte.hu> <47A4BB3C.6050709@garzik.org> <20080202193524.GC27927@elte.hu> <47A4D71F.3060009@garzik.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-relay-02.mailcluster.net ([77.221.130.214]:39910 "EHLO
-	mail-relay-02.mailcluster.net" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752602AbYBDM1J (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 07:27:09 -0500
-In-Reply-To: <47A05CBD.5050803@vlnb.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1754459AbYBDM6U@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <47A4D71F.3060009@garzik.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, pcihpd-discuss@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
-Vladislav Bolkhovitin wrote:
-> James Bottomley wrote:
-> 
->> The two target architectures perform essentially identical functions, so
->> there's only really room for one in the kernel.  Right at the moment,
->> it's STGT.  Problems in STGT come from the user<->kernel boundary which
->> can be mitigated in a variety of ways.  The fact that the figures are
->> pretty much comparable on non IB networks shows this.
->>
->> I really need a whole lot more evidence than at worst a 20% performance
->> difference on IB to pull one implementation out and replace it with
->> another.  Particularly as there's no real evidence that STGT can't be
->> tweaked to recover the 20% even on IB.
-> 
-> 
-> James,
-> 
-> Although the performance difference between STGT and SCST is apparent, 
-> this isn't the only point why SCST is better. I've already written about 
-> it many times in various mailing lists, but let me summarize it one more 
-> time here.
-> 
-> As you know, almost all kernel parts can be done in user space, 
-> including all the drivers, networking, I/O management with block/SCSI 
-> initiator subsystem and disk cache manager. But does it mean that 
-> currently Linux kernel is bad and all the above should be (re)done in 
-> user space instead? I believe, not. Linux isn't a microkernel for very 
-> pragmatic reasons: simplicity and performance. So, additional important 
-> point why SCST is better is simplicity.
-> 
-> For SCSI target, especially with hardware target card, data are came 
-> from kernel and eventually served by kernel, which does actual I/O or 
-> getting/putting data from/to cache. Dividing requests processing between 
-> user and kernel space creates unnecessary interface layer(s) and 
-> effectively makes the requests processing job distributed with all its 
-> complexity and reliability problems. From my point of view, having such 
-> distribution, where user space is master side and kernel is slave is 
-> rather wrong, because:
-> 
-> 1. It makes kernel depend from user program, which services it and 
-> provides for it its routines, while the regular paradigm is the 
-> opposite: kernel services user space applications. As a direct 
-> consequence from it that there is no real protection for the kernel from 
-> faults in the STGT core code without excessive effort, which, no 
-> surprise, wasn't currently done and, seems, is never going to be done. 
-> So, on practice debugging and developing under STGT isn't easier, than 
-> if the whole code was in the kernel space, but, actually, harder (see 
-> below why).
-> 
-> 2. It requires new complicated interface between kernel and user spaces 
-> that creates additional maintenance and debugging headaches, which don't 
-> exist for kernel only code. Linus Torvalds some time ago perfectly 
-> described why it is bad, see http://lkml.org/lkml/2007/4/24/451, 
-> http://lkml.org/lkml/2006/7/1/41 and http://lkml.org/lkml/2007/4/24/364.
-> 
-> 3. It makes for SCSI target impossible to use (at least, on a simple and 
-> sane way) many effective optimizations: zero-copy cached I/O, more 
-> control over read-ahead, device queue unplugging-plugging, etc. One 
-> example of already implemented such features is zero-copy network data 
-> transmission, done in simple 260 lines put_page_callback patch. This 
-> optimization is especially important for the user space gate (scst_user 
-> module), see below for details.
-> 
-> The whole point that development for kernel is harder, than for user 
-> space, is totally nonsense nowadays. It's different, yes, in some ways 
-> more limited, yes, but not harder. For ones who need gdb (I for many 
-> years - don't) kernel has kgdb, plus it also has many not available for 
-> user space or more limited there debug facilities like lockdep, lockup 
-> detection, oprofile, etc. (I don't mention wider choice of more 
-> effectively implemented synchronization primitives and not only them).
-> 
-> For people who need complicated target devices emulation, like, e.g., in 
-> case of VTL (Virtual Tape Library), where there is a need to operate 
-> with large mmap'ed memory areas, SCST provides gateway to the user space 
-> (scst_user module), but, in contrast with STGT, it's done in regular 
-> "kernel - master, user application - slave" paradigm, so it's reliable 
-> and no fault in user space device emulator can break kernel and other 
-> user space applications. Plus, since SCSI target state machine and 
-> memory management are in the kernel, it's very effective and allows only 
-> one kernel-user space switch per SCSI command.
-> 
-> Also, I should note here, that in the current state STGT in many aspects 
-> doesn't fully conform SCSI specifications, especially in area of 
-> management events, like Unit Attentions generation and processing, and 
-> it doesn't look like somebody cares about it. At the same time, SCST 
-> pays big attention to fully conform SCSI specifications, because price 
-> of non-conformance is a possible user's data corruption.
-> 
-> Returning to performance, modern SCSI transports, e.g. InfiniBand, have 
-> as low link latency as 1(!) microsecond. For comparison, the 
-> inter-thread context switch time on a modern system is about the same, 
-> syscall time - about 0.1 microsecond. So, only ten empty syscalls or one 
-> context switch add the same latency as the link. Even 1Gbps Ethernet has 
-> less, than 100 microseconds of round-trip latency.
-> 
-> You, probably, know, that QLogic Fibre Channel target driver for SCST 
-> allows commands being executed either directly from soft IRQ, or from 
-> the corresponding thread. There is a steady 5-7% difference in IOPS 
-> between those modes on 512 bytes reads on nullio using 4Gbps link. So, a 
-> single additional inter-kernel-thread context switch costs 5-7% of IOPS.
-> 
-> Another source of additional unavoidable with the user space approach 
-> latency is data copy to/from cache. With the fully kernel space 
-> approach, cache can be used directly, so no extra copy will be needed. 
-> We can estimate how much latency the data copying adds. On the modern 
-> systems memory copy throughput is less than 2GB/s, so on 20Gbps 
-> InfiniBand link it almost doubles data transfer latency.
-> 
-> So, putting code in the user space you should accept the extra latency 
-> it adds. Many, if not most, real-life workloads more or less latency, 
-> not throughput, bound, so there shouldn't be surprise that single stream 
-> "dd if=/dev/sdX of=/dev/null" on initiator gives too low values. Such 
-> "benchmark" isn't less important and practical, than all the 
-> multithreaded latency insensitive benchmarks, which people like running, 
-> because it does essentially the same as most Linux processes do when 
-> they read data from files.
-> 
-> You may object me that the target's backstorage device(s) latency is a 
-> lot more, than 1 microsecond, but that is relevant only if data are 
-> read/written from/to the actual backstorage media, not from the cache, 
-> even from the backstorage device's cache. Nothing prevents target from 
-> having 8 or even 64GB of cache, so most even random accesses could be 
-> served by it. This is especially important for sync writes.
-> 
-> Thus, why SCST is better:
-> 
-> 1. It is more simple, because it's monolithic, so all its components are 
-> in one place and communicate using direct function calls. Hence, it is 
-> smaller, faster, more reliable and maintainable. Currently it's bigger, 
-> than STGT, just because it supports more features, see (2).
-> 
-> 2. It supports more features: 1 to many pass-through support with all 
-> necessary for it functionality, including support for non-disk SCSI 
-> devices, like tapes, SGV cache, BLOCKIO, where requests converted to 
-> bio's and directly sent to block level (this mode is effective for 
-> random mostly workloads with data set size >> memory size on the 
-> target), etc.
-> 
-> 3. It has better performance and going to have it even better. SCST only 
-> now enters in the phase, where it starts exploiting all advantages of 
-> being in the kernel. Particularly, zero-copy cached I/O is currently 
-> being implemented.
-> 
-> 4. It provides safer and more effective interface to emulate target 
-> devices in the user space via scst_user module.
-> 
-> 5. It much more confirms to SCSI specifications (see above).
 
-So, James, what is your opinion on the above? Or the overall SCSI target 
-project simplicity doesn't matter much for you and you think it's fine 
-to duplicate Linux page cache in the user space to keep the in-kernel 
-part of the project as small as possible?
+* Jeff Garzik <jeff@garzik.org> wrote:
 
-Vlad
+> Ingo Molnar wrote:
+>> so please tell me Jeff. If Greg, who is the super-maintainer of your 
+>> code area, and who deals with your code every day and changes it 
+>> every minute and hour, simply did not Cc: the SCSI list - how am i, a 
+>> largely outside party in this matter, supposed to notice that 3 
+>> maintainers and 3 mailing lists in the Cc: were somehow not enough 
+>> and that i was supposed to grow the already sizable Cc: list even 
+>> more?
+>
+> Because, regardless of the situation, it's both common courtesy and 
+> wise practice to CC relevant driver maintainers, when you touch a 
+> driver.
+>
+> And it's just common sense: Greg simply does not know the intimate 
+> details of every PCI driver.  Nor do I.  Nor you.
+>
+> In the case of lpfc here, we have an active driver maintainer, and an 
+> up-to-date MAINTAINERS entry.  Even if you are too slack to read 
+> MAINTAINERS, 'git log' would have given you the same info.
+>
+> Don't pretend there is some benefit here to ignoring the people that 
+> best know the driver.  I don't buy that; it simply makes no 
+> engineering sense whatsoever.
+
+what you _STILL_ do not realize is the following: you still attribute 
+the lack of Cc:s to some intention of mine. No, it was not my intention. 
+At first glance the Cc: looked large and complete enough in an 
+_existing_ discussion and that's was the end of my (brief) attention 
+regarding the Cc: line. Yes, it would have been a bit better had i 
+noticed the lack of Cc:s in an existing discussion, but i didnt.
+
+[ And it might not surprise you if i observe here that i think this
+  little mishap is further (incidental) proof that having this many
+  mailing list aliases to get the 'guaranteed attention' of maintainers 
+  is just super fragile and does not serve users at all. Even Greg and i 
+  got it wrong accidentally. If _we_ get it wrong, who will get it 
+  right? I see several mis-Cc:ed emails every day and there's over a 
+  1000 unfixed bugs in bugzilla for 2.6 alone. It does not take a genius 
+  to observe that something is fundamentally wrong ;-) That 2.6 works on
+  your or my box is a _very_ poor metric - we both fix bugs on our 
+  systems super fast so we've got a very biased first-hand experience 
+  about the stability and reliability of the kernel. We never really 
+  feel the kind of frustration that testers feel when their mail to lkml 
+  gets ignored. We never really feel the helplessness that comes from 
+  unfixed bugs. ]
+
+	Ingo
