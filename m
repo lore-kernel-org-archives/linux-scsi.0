@@ -1,41 +1,70 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 04 Feb 2008 09:30:15 -0600
-Message-ID: <1202139015.3096.5.camel@localhost.localdomain>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>
+From: Jeff Garzik <jeff@garzik.org>
+Subject: Re: [patch] pci: pci_enable_device_bars() fix
+Date: Mon, 04 Feb 2008 10:30:12 -0500
+Message-ID: <47A72F84.8000203@garzik.org>
+References: <20080201231147.GA18174@suse.de> <20080202111322.GA30767@elte.hu> <47A49171.2000003@garzik.org> <20080202170828.GA12748@elte.hu> <47A4A96D.2040709@garzik.org> <20080202175738.GA26560@elte.hu> <47A4BB3C.6050709@garzik.org> <20080202193524.GC27927@elte.hu> <47A4D71F.3060009@garzik.org> <20080204125736.GA32056@elte.hu>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=ISO-8859-1; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:37468 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753673AbYBDPaV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 10:30:21 -0500
-In-Reply-To: <47A7049A.9000105@vlnb.net>
+Received: from srv5.dvmed.net ([207.36.208.214]:46355 "EHLO mail.dvmed.net"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1756465AbYBDPa4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 4 Feb 2008 10:30:56 -0500
+In-Reply-To: <20080204125736.GA32056@elte.hu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Ingo Molnar <mingo@elte.hu>
+Cc: Greg KH <gregkh@suse.de>, Linus Torvalds <torvalds@osdl.org>, Andrew Morton <akpm@osdl.org>, linux-kernel@vger.kernel.org, linux-pci@atrey.karlin.mff.cuni.cz, pcihpd-discuss@lists.sourceforge.net, linux-scsi <linux-scsi@vger.kernel.org>, James Bottomley <James.Bottomley@HansenPartnership.com>
 
-On Mon, 2008-02-04 at 15:27 +0300, Vladislav Bolkhovitin wrote:
-> Vladislav Bolkhovitin wrote:
-> So, James, what is your opinion on the above? Or the overall SCSI target 
-> project simplicity doesn't matter much for you and you think it's fine 
-> to duplicate Linux page cache in the user space to keep the in-kernel 
-> part of the project as small as possible?
+Ingo Molnar wrote:
+> * Jeff Garzik <jeff@garzik.org> wrote:
+> 
+>> Ingo Molnar wrote:
+>>> so please tell me Jeff. If Greg, who is the super-maintainer of your 
+>>> code area, and who deals with your code every day and changes it 
+>>> every minute and hour, simply did not Cc: the SCSI list - how am i, a 
+>>> largely outside party in this matter, supposed to notice that 3 
+>>> maintainers and 3 mailing lists in the Cc: were somehow not enough 
+>>> and that i was supposed to grow the already sizable Cc: list even 
+>>> more?
+>> Because, regardless of the situation, it's both common courtesy and 
+>> wise practice to CC relevant driver maintainers, when you touch a 
+>> driver.
+>>
+>> And it's just common sense: Greg simply does not know the intimate 
+>> details of every PCI driver.  Nor do I.  Nor you.
+>>
+>> In the case of lpfc here, we have an active driver maintainer, and an 
+>> up-to-date MAINTAINERS entry.  Even if you are too slack to read 
+>> MAINTAINERS, 'git log' would have given you the same info.
+>>
+>> Don't pretend there is some benefit here to ignoring the people that 
+>> best know the driver.  I don't buy that; it simply makes no 
+>> engineering sense whatsoever.
+> 
+> what you _STILL_ do not realize is the following: you still attribute 
+> the lack of Cc:s to some intention of mine. No, it was not my intention. 
 
-The answers were pretty much contained here
+I was never speaking to intent.
 
-http://marc.info/?l=linux-scsi&m=120164008302435
+I was noting that, having been in the kernel community for years, both 
+of you guys should know that you should always CC a driver author, when 
+touching their driver.
 
-and here:
+Even after this thread, I have not even heard a "yes, I agree, I should 
+have CC'd the driver author since they know the most about the driver" 
+from either of you, which is quite disappointing.
 
-http://marc.info/?l=linux-scsi&m=120171067107293
+Instead, I get this long thread in response...
 
-Weren't they?
 
-James
+>   is just super fragile and does not serve users at all. Even Greg and i 
+>   got it wrong accidentally. If _we_ get it wrong, who will get it 
+
+Sure.  But... do you agree the CC list should have included the driver 
+author?  Do you agree that a mistake was made in this case?
+
+	Jeff
 
 
