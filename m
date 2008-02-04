@@ -1,12 +1,12 @@
 From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 18/24][RFC] eata: Use of scsi_make_sense() API for DMA-able sense buffer
-Date: Mon,  4 Feb 2008 19:29:17 +0200
-Message-ID: <1202146157-5199-1-git-send-email-bharrosh@panasas.com>
+Subject: [PATCH 19/24][RFC] initio: Use of scsi_make_sense() API for DMA-able sense buffer
+Date: Mon,  4 Feb 2008 19:33:31 +0200
+Message-ID: <1202146411-5237-1-git-send-email-bharrosh@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:55524 "EHLO
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:55530 "EHLO
 	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752657AbYBDRec (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:34:32 -0500
+	with ESMTP id S1757443AbYBDRiy (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:38:54 -0500
 In-Reply-To: 47A72A7F.1050301@panasas.com
 References: 47A72A7F.1050301@panasas.com
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,94 +17,85 @@ Cc: Andrew Morton <akpm@linux-foundation.org>
   - Use a pre allocated, DMA mapped, sense buffer at each command,
     Using the scsi_make_sense() API. And scsi_return_sense() when
     done.
-  - mark this driver as: "need for a pre allocated sense buffer"
-    at host template.
+  - Set .pre_allocate_sense && .sense_buffsize at host template.
 
 Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
 ---
- drivers/scsi/eata.c |   20 +++++++++++++-------
- 1 files changed, 13 insertions(+), 7 deletions(-)
+ drivers/scsi/initio.c |   12 +++++++++---
+ drivers/scsi/initio.h |    1 +
+ 2 files changed, 10 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
-index 8be3d76..2d9e086 100644
---- a/drivers/scsi/eata.c
-+++ b/drivers/scsi/eata.c
-@@ -501,6 +501,7 @@
+diff --git a/drivers/scsi/initio.c b/drivers/scsi/initio.c
+index 40e9875..b32a145 100644
+--- a/drivers/scsi/initio.c
++++ b/drivers/scsi/initio.c
+@@ -102,6 +102,7 @@
+ #include <scsi/scsi_device.h>
  #include <scsi/scsi_host.h>
  #include <scsi/scsi_tcq.h>
- #include <scsi/scsicam.h>
 +#include <scsi/scsi_eh.h>
  
- static int eata2x_detect(struct scsi_host_template *);
- static int eata2x_release(struct Scsi_Host *);
-@@ -524,6 +525,8 @@ static struct scsi_host_template driver_template = {
- 	.this_id = 7,
- 	.unchecked_isa_dma = 1,
- 	.use_clustering = ENABLE_CLUSTERING,
-+	.pre_allocate_sense = 1,
-+	.sense_buffsize = SCSI_SENSE_BUFFERSIZE,
+ #include "initio.h"
+ 
+@@ -2578,8 +2579,9 @@ static void initio_build_scb(struct initio_host * host, struct scsi_ctrl_blk * c
+ 
+ 	cblk->flags |= SCF_SENSE;	/* Turn on auto request sense   */
+ 
++	cblk->sense_buffer = scsi_make_sense(cmnd);
+ 	/* Map the sense buffer into bus memory */
+-	dma_addr = dma_map_single(&host->pci_dev->dev, cmnd->sense_buffer,
++	dma_addr = dma_map_single(&host->pci_dev->dev, cblk->sense_buffer,
+ 				  SENSE_SIZE, DMA_FROM_DEVICE);
+ 	cblk->senseptr = cpu_to_le32((u32)dma_addr);
+ 	cblk->senselen = cpu_to_le32(SENSE_SIZE);
+@@ -2733,7 +2735,8 @@ static int i91u_biosparam(struct scsi_device *sdev, struct block_device *dev,
+  *	was mapped originally as part of initio_build_scb
+  */
+ 
+-static void i91u_unmap_scb(struct pci_dev *pci_dev, struct scsi_cmnd *cmnd)
++static void i91u_unmap_scb(struct pci_dev *pci_dev, struct scsi_ctrl_blk *cblk,
++							struct scsi_cmnd *cmnd)
+ {
+ 	/* auto sense buffer */
+ 	if (cmnd->SCp.ptr) {
+@@ -2741,6 +2744,7 @@ static void i91u_unmap_scb(struct pci_dev *pci_dev, struct scsi_cmnd *cmnd)
+ 				 (dma_addr_t)((unsigned long)cmnd->SCp.ptr),
+ 				 SENSE_SIZE, DMA_FROM_DEVICE);
+ 		cmnd->SCp.ptr = NULL;
++		scsi_return_sense(cmnd, cblk->sense_buffer);
+ 	}
+ 
+ 	/* request buffer */
+@@ -2817,7 +2821,7 @@ static void i91uSCBPost(u8 * host_mem, u8 * cblk_mem)
+ 
+ 	cmnd->result = cblk->tastat | (cblk->hastat << 16);
+ 	WARN_ON(cmnd == NULL);
+-	i91u_unmap_scb(host->pci_dev, cmnd);
++	i91u_unmap_scb(host->pci_dev, cblk, cmnd);
+ 	cmnd->scsi_done(cmnd);	/* Notify system DONE           */
+ 	initio_release_scb(host, cblk);	/* Release SCB for current channel */
+ }
+@@ -2833,6 +2837,8 @@ static struct scsi_host_template initio_template = {
+ 	.sg_tablesize		= SG_ALL,
+ 	.cmd_per_lun		= 1,
+ 	.use_clustering		= ENABLE_CLUSTERING,
++	.pre_allocate_sense 	= 1,
++	.sense_buffsize 	= SCSI_SENSE_BUFFERSIZE,
  };
  
- #if !defined(__BIG_ENDIAN_BITFIELD) && !defined(__LITTLE_ENDIAN_BITFIELD)
-@@ -801,6 +804,7 @@ struct mscp {
- 	u_int32_t data_address;	/* If sg=0 Data Address, if sg=1 sglist address */
- 	u_int32_t sp_dma_addr;	/* Address where sp is DMA'ed when cp completes */
- 	u_int32_t sense_addr;	/* Address where Sense Data is DMA'ed on error */
-+	u8 *sense_buffer;	/* scsi_{make,return}_sense pointer */
+ static int initio_probe_one(struct pci_dev *pdev,
+diff --git a/drivers/scsi/initio.h b/drivers/scsi/initio.h
+index cb48efa..9e4a79d 100644
+--- a/drivers/scsi/initio.h
++++ b/drivers/scsi/initio.h
+@@ -384,6 +384,7 @@ struct scsi_ctrl_blk {
+ 	void (*post) (u8 *, u8 *);	/*4C POST routine */
+ 	struct scsi_cmnd *srb;	/*50 SRB Pointer */
+ 	struct sg_entry sglist[TOTAL_SG_ENTRY];	/*54 Start of SG list */
++	u8 *sense_buffer;
+ };
  
- 	/* Additional fields begin here. */
- 	struct scsi_cmnd *SCpnt;
-@@ -1619,9 +1623,9 @@ static void map_dma(unsigned int i, struct hostdata *ha)
- 	SCpnt = cpp->SCpnt;
- 	pci_dir = SCpnt->sc_data_direction;
- 
--	if (SCpnt->sense_buffer)
--		cpp->sense_addr =
--		    H2DEV(pci_map_single(ha->pdev, SCpnt->sense_buffer,
-+	cpp->sense_buffer = scsi_make_sense(SCpnt);
-+	cpp->sense_addr =
-+		    H2DEV(pci_map_single(ha->pdev, cpp->sense_buffer,
- 			   SCSI_SENSE_BUFFERSIZE, PCI_DMA_FROMDEVICE));
- 
- 	cpp->sense_len = SCSI_SENSE_BUFFERSIZE;
-@@ -1651,9 +1655,11 @@ static void unmap_dma(unsigned int i, struct hostdata *ha)
- 	SCpnt = cpp->SCpnt;
- 	pci_dir = SCpnt->sc_data_direction;
- 
--	if (DEV2H(cpp->sense_addr))
-+	if (DEV2H(cpp->sense_addr)) {
- 		pci_unmap_single(ha->pdev, DEV2H(cpp->sense_addr),
- 				 DEV2H(cpp->sense_len), PCI_DMA_FROMDEVICE);
-+		scsi_return_sense(SCpnt, cpp->sense_buffer);
-+	}
- 
- 	scsi_dma_unmap(SCpnt);
- 
-@@ -2428,7 +2434,7 @@ static irqreturn_t ihdlr(int irq, struct Scsi_Host *shost)
- 		/* Works around a flaw in scsi.c */
- 		else if (tstatus == CHECK_CONDITION
- 			 && SCpnt->device->type == TYPE_DISK
--			 && (SCpnt->sense_buffer[2] & 0xf) == RECOVERED_ERROR)
-+			 && (cpp->sense_buffer[2] & 0xf) == RECOVERED_ERROR)
- 			status = DID_BUS_BUSY << 16;
- 
- 		else
-@@ -2440,13 +2446,13 @@ static irqreturn_t ihdlr(int irq, struct Scsi_Host *shost)
- 
- 		if (spp->target_status && SCpnt->device->type == TYPE_DISK &&
- 		    (!(tstatus == CHECK_CONDITION && ha->iocount <= 1000 &&
--		       (SCpnt->sense_buffer[2] & 0xf) == NOT_READY)))
-+		       (cpp->sense_buffer[2] & 0xf) == NOT_READY)))
- 			printk("%s: ihdlr, target %d.%d:%d, pid %ld, "
- 			       "target_status 0x%x, sense key 0x%x.\n",
- 			       ha->board_name,
- 			       SCpnt->device->channel, SCpnt->device->id,
- 			       SCpnt->device->lun, SCpnt->serial_number,
--			       spp->target_status, SCpnt->sense_buffer[2]);
-+			       spp->target_status, cpp->sense_buffer[2]);
- 
- 		ha->target_to[SCpnt->device->id][SCpnt->device->channel] = 0;
- 
+ /* Bit Definition for status */
 -- 
 1.5.3.3
 
