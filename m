@@ -1,69 +1,84 @@
-From: Chandra Seetharaman <sekharan@us.ibm.com>
-Subject: Re: [PATCH 7/9] scsi_dh: Add support for SDEV_PASSIVE
-Date: Mon, 04 Feb 2008 12:15:51 -0800
-Message-ID: <1202156151.13537.14.camel@linuxchandra>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
-	 <20080124003203.18871.52040.sendpatchset@localhost.localdomain>
-	 <1202151498.3096.84.camel@localhost.localdomain>
-Reply-To: sekharan@us.ibm.com
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: dmesg spam
+Date: Mon, 04 Feb 2008 14:20:42 -0600
+Message-ID: <1202156442.3096.107.camel@localhost.localdomain>
+References: <20080203143033.cfea0501.akpm@linux-foundation.org>
+	 <200802041524.55700.bzolnier@gmail.com>
+	 <20080204120548.79f3fe57.akpm@linux-foundation.org>
+	 <47A7721C.5020505@garzik.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from e36.co.us.ibm.com ([32.97.110.154]:37751 "EHLO
-	e36.co.us.ibm.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1754467AbYBDUP6 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 15:15:58 -0500
-Received: from d03relay04.boulder.ibm.com (d03relay04.boulder.ibm.com [9.17.195.106])
-	by e36.co.us.ibm.com (8.13.8/8.13.8) with ESMTP id m14KFrGU026951
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 15:15:53 -0500
-Received: from d03av02.boulder.ibm.com (d03av02.boulder.ibm.com [9.17.195.168])
-	by d03relay04.boulder.ibm.com (8.13.8/8.13.8/NCO v8.7) with ESMTP id m14KFr6j194110
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 13:15:53 -0700
-Received: from d03av02.boulder.ibm.com (loopback [127.0.0.1])
-	by d03av02.boulder.ibm.com (8.12.11.20060308/8.13.3) with ESMTP id m14KFqio029692
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 13:15:53 -0700
-In-Reply-To: <1202151498.3096.84.camel@localhost.localdomain>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:44685 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755565AbYBDUUq (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 15:20:46 -0500
+In-Reply-To: <47A7721C.5020505@garzik.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Anderson <andmike@us.ibm.com>, michaelc@cs.wisc.edu, jens.axboe@oracle.com
+To: Jeff Garzik <jeff@garzik.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Bartlomiej Zolnierkiewicz <bzolnier@gmail.com>, linux-scsi@vger.kernel.org, Jens Axboe <jens.axboe@oracle.com>
 
-On Mon, 2008-02-04 at 12:58 -0600, James Bottomley wrote:
-> On Wed, 2008-01-23 at 16:32 -0800, Chandra Seetharaman wrote:
-> > Subject: scsi_dh: Add support for SDEV_PASSIVE
+
+On Mon, 2008-02-04 at 15:14 -0500, Jeff Garzik wrote:
+> Andrew Morton wrote:
+> > On Mon, 4 Feb 2008 15:24:55 +0100 Bartlomiej Zolnierkiewicz <bzolnier@gmail.com> wrote:
 > > 
-> > From: Chandra Seetharaman <sekharan@us.ibm.com>
+> >> On Sunday 03 February 2008, Andrew Morton wrote:
+> >>> With latest -mm, running fc8 I am getting this in the logs,
+> >>                            ^^^
+> >> => SCSI/libata
+> >>
+> >> cc:ing Jeff
+> >>
+> >>> once per second.
+> >>>
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
+> >>> sr0: CDROM not ready.  Make sure there is a disc in the drive.
 > > 
-> > This patch adds a new device state SDEV_PASSIVE, to correspond to the
-> > passive side access of an active/passive multipathed device.
+> > Well..  it's coming out of the kernel.  Presumably it's that cdrom polling
+> > thing in KDE.  James recently made changes to sr_ioctl.c but I've been
+> > buried in more terminal regressions than this one.
 > 
-> Really, no; this isn't right.  The state field of a SCSI device is for
-> the SCSI state model.  Passive might be a valid device mapper state, but
+> I don't see this in upstream...  can you isolate it to a particular git 
+> tree?
 
-Hi James,
+It's here in sr_ioctl.c:
 
-It is not the "device mapper state", it is the state of the device
-itself. These devices have active/passive paths, the passive paths will
-be represented by SDEV_PASSIVE device state in SCSI.
+int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
+{
+[...]
+                case NOT_READY: /* This happens if there is no disc in
+drive */
+[...]
+                        if (!cgc->quiet)
+                                printk(KERN_INFO "%s: CDROM not ready.
+Make sure there is a disc in the drive.\n", cd->cdi.name);
+#ifdef DEBUG
+                        scsi_print_sense_hdr("sr", &sshdr);
+#endif
 
-chandra
-> it's not a valid SCSI state.  If these patches can't work except by
-> mucking with the SCSI state model, there's some layering problem
-> elsewhere that needs sorting out.
+
+> Clearly userland is initiating a once-per-second poll.  That is quite 
+> normal for 99% of CDROMs, which do not support async notification.
 > 
-> James
-> 
-> 
-> -
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
--- 
+> But also clearly that message is printk'd way too much in your case.
 
-----------------------------------------------------------------------
-    Chandra Seetharaman               | Be careful what you choose....
-              - sekharan@us.ibm.com   |      .......you may get it.
-----------------------------------------------------------------------
+I'm not averse to simply nuking the printk ... it's probably valueless
+in a modern kernel, since something dbussy is supposed to tell you to
+put a CD in the drive, not something in the kernel.
+
+I am however interested to see if it's a symptom of something else that
+might be a bigger problem.
+
+James
 
 
