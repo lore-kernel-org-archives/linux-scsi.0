@@ -1,147 +1,106 @@
-From: "David Somayajulu" <david.somayajulu@qlogic.com>
-Subject: RE: [PATCH 02/12] qla4xxx: have qla4xxx directly call iscsi recovery functions
-Date: Mon, 4 Feb 2008 10:21:38 -0800
-Message-ID: <0BB3E5E7462EEA4295BC02D49691DC070120BF1E@AVEXCH1.qlogic.org>
-References: <1201808215968-git-send-email-michaelc@cs.wisc.edu>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 04 Feb 2008 12:22:02 -0600
+Message-ID: <1202149322.3096.66.camel@localhost.localdomain>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <1201639331.3069.58.camel@localhost.localdomain>
+	 <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>
+	 <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
+	 <1202144767.3096.38.camel@localhost.localdomain>
+	 <47A7488B.4080000@vlnb.net>
+	 <1202145901.3096.49.camel@localhost.localdomain>  <47A751C5.60600@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain;
-	charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from avexch1.qlogic.com ([198.70.193.115]:5655 "EHLO
-	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753988AbYBDSVj convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:21:39 -0500
-Content-class: urn:content-classes:message
-In-Reply-To: <1201808215968-git-send-email-michaelc@cs.wisc.edu>
+Received: from accolon.hansenpartnership.com ([76.243.235.52]:46739 "EHLO
+	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1753196AbYBDSWI (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:22:08 -0500
+In-Reply-To: <47A751C5.60600@vlnb.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
+To: Vladislav Bolkhovitin <vst@vlnb.net>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
 
- 
+On Mon, 2008-02-04 at 20:56 +0300, Vladislav Bolkhovitin wrote:
+> James Bottomley wrote:
+> > On Mon, 2008-02-04 at 20:16 +0300, Vladislav Bolkhovitin wrote:
+> > 
+> >>James Bottomley wrote:
+> >>
+> >>>>>>So, James, what is your opinion on the above? Or the overall SCSI target 
+> >>>>>>project simplicity doesn't matter much for you and you think it's fine 
+> >>>>>>to duplicate Linux page cache in the user space to keep the in-kernel 
+> >>>>>>part of the project as small as possible?
+> >>>>>
+> >>>>>
+> >>>>>The answers were pretty much contained here
+> >>>>>
+> >>>>>http://marc.info/?l=linux-scsi&m=120164008302435
+> >>>>>
+> >>>>>and here:
+> >>>>>
+> >>>>>http://marc.info/?l=linux-scsi&m=120171067107293
+> >>>>>
+> >>>>>Weren't they?
+> >>>>
+> >>>>No, sorry, it doesn't look so for me. They are about performance, but 
+> >>>>I'm asking about the overall project's architecture, namely about one 
+> >>>>part of it: simplicity. Particularly, what do you think about 
+> >>>>duplicating Linux page cache in the user space to have zero-copy cached 
+> >>>>I/O? Or can you suggest another architectural solution for that problem 
+> >>>>in the STGT's approach?
+> >>>
+> >>>
+> >>>Isn't that an advantage of a user space solution?  It simply uses the
+> >>>backing store of whatever device supplies the data.  That means it takes
+> >>>advantage of the existing mechanisms for caching.
+> >>
+> >>No, please reread this thread, especially this message: 
+> >>http://marc.info/?l=linux-kernel&m=120169189504361&w=2. This is one of 
+> >>the advantages of the kernel space implementation. The user space 
+> >>implementation has to have data copied between the cache and user space 
+> >>buffer, but the kernel space one can use pages in the cache directly, 
+> >>without extra copy.
+> > 
+> > 
+> > Well, you've said it thrice (the bellman cried) but that doesn't make it
+> > true.
+> > 
+> > The way a user space solution should work is to schedule mmapped I/O
+> > from the backing store and then send this mmapped region off for target
+> > I/O.  For reads, the page gather will ensure that the pages are up to
+> > date from the backing store to the cache before sending the I/O out.
+> > For writes, You actually have to do a msync on the region to get the
+> > data secured to the backing store. 
+> 
+> James, have you checked how fast is mmaped I/O if work size > size of 
+> RAM? It's several times slower comparing to buffered I/O. It was many 
+> times discussed in LKML and, seems, VM people consider it unavoidable. 
 
-Mike Christie wrote:
+Erm, but if you're using the case of work size > size of RAM, you'll
+find buffered I/O won't help because you don't have the memory for
+buffers either.
+
+> So, using mmaped IO isn't an option for high performance. Plus, mmaped 
+> IO isn't an option for high reliability requirements, since it doesn't 
+> provide a practical way to handle I/O errors.
+
+I think you'll find it does ... the page gather returns -EFAULT if
+there's an I/O error in the gathered region.  msync does something
+similar if there's a write failure.
+
+> > You also have to pull tricks with
+> > the mmap region in the case of writes to prevent useless data being read
+> > in from the backing store.
 > 
-> Qla4xxx can just call the iscsi recovery functions directly.
-> There is no need for userspace to do this for qla4xxx, because
-> we do not use the mutex to iterate over devices anymore and 
-> iscsi_block
-> /unblock_session can be called from interrupt context or the 
-> dpc thread.
-> And having userspace do this just creates uneeded headaches 
-> for qla4xxx root
-> situations where the session may experience problems. For example
-> during the kernel shutdown the scsi layer wants to send sync 
-> caches, but at
-> this time userspace is not up (iscsid is not running), so we cannot
-> recover from the problem.
-> 
-> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
-> ---
->  drivers/scsi/qla4xxx/ql4_init.c |    1 +
->  drivers/scsi/qla4xxx/ql4_os.c   |   40 
-> +++-----------------------------------
->  2 files changed, 5 insertions(+), 36 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla4xxx/ql4_init.c 
-> b/drivers/scsi/qla4xxx/ql4_init.c
-> index cbe0a17..03e66cb 100644
-> --- a/drivers/scsi/qla4xxx/ql4_init.c
-> +++ b/drivers/scsi/qla4xxx/ql4_init.c
-> @@ -1306,6 +1306,7 @@ int qla4xxx_process_ddb_changed(struct 
-> scsi_qla_host *ha,
->  		atomic_set(&ddb_entry->relogin_timer, 0);
->  		clear_bit(DF_RELOGIN, &ddb_entry->flags);
->  		clear_bit(DF_NO_RELOGIN, &ddb_entry->flags);
-> +		iscsi_unblock_session(ddb_entry->sess);
->  		iscsi_session_event(ddb_entry->sess,
->  				    ISCSI_KEVENT_CREATE_SESSION);
->  		/*
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c 
-> b/drivers/scsi/qla4xxx/ql4_os.c
-> index 2e2b9fe..a87fb9f 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -63,8 +63,6 @@ static int qla4xxx_sess_get_param(struct 
-> iscsi_cls_session *sess,
->  				  enum iscsi_param param, char *buf);
->  static int qla4xxx_host_get_param(struct Scsi_Host *shost,
->  				  enum iscsi_host_param param, 
-> char *buf);
-> -static void qla4xxx_conn_stop(struct iscsi_cls_conn *conn, int flag);
-> -static int qla4xxx_conn_start(struct iscsi_cls_conn *conn);
->  static void qla4xxx_recovery_timedout(struct 
-> iscsi_cls_session *session);
->  
->  /*
-> @@ -116,8 +114,6 @@ static struct iscsi_transport 
-> qla4xxx_iscsi_transport = {
->  	.get_conn_param		= qla4xxx_conn_get_param,
->  	.get_session_param	= qla4xxx_sess_get_param,
->  	.get_host_param		= qla4xxx_host_get_param,
-> -	.start_conn		= qla4xxx_conn_start,
-> -	.stop_conn		= qla4xxx_conn_stop,
->  	.session_recovery_timedout = qla4xxx_recovery_timedout,
->  };
->  
-> @@ -140,38 +136,6 @@ static void 
-> qla4xxx_recovery_timedout(struct iscsi_cls_session *session)
->  	queue_work(ha->dpc_thread, &ha->dpc_work);
->  }
->  
-> -static int qla4xxx_conn_start(struct iscsi_cls_conn *conn)
-> -{
-> -	struct iscsi_cls_session *session;
-> -	struct ddb_entry *ddb_entry;
-> -
-> -	session = iscsi_dev_to_session(conn->dev.parent);
-> -	ddb_entry = session->dd_data;
-> -
-> -	DEBUG2(printk("scsi%ld: %s: index [%d] starting conn\n",
-> -		      ddb_entry->ha->host_no, __func__,
-> -		      ddb_entry->fw_ddb_index));
-> -	iscsi_unblock_session(session);
-> -	return 0;
-> -}
-> -
-> -static void qla4xxx_conn_stop(struct iscsi_cls_conn *conn, int flag)
-> -{
-> -	struct iscsi_cls_session *session;
-> -	struct ddb_entry *ddb_entry;
-> -
-> -	session = iscsi_dev_to_session(conn->dev.parent);
-> -	ddb_entry = session->dd_data;
-> -
-> -	DEBUG2(printk("scsi%ld: %s: index [%d] stopping conn\n",
-> -		      ddb_entry->ha->host_no, __func__,
-> -		      ddb_entry->fw_ddb_index));
-> -	if (flag == STOP_CONN_RECOVER)
-> -		iscsi_block_session(session);
-> -	else
-> -		printk(KERN_ERR "iscsi: invalid stop flag %d\n", flag);
-> -}
-> -
->  static int qla4xxx_host_get_param(struct Scsi_Host *shost,
->  				  enum iscsi_host_param param, 
-> char *buf)
->  {
-> @@ -308,6 +272,9 @@ int qla4xxx_add_sess(struct ddb_entry *ddb_entry)
->  		DEBUG2(printk(KERN_ERR "Could not add connection.\n"));
->  		return -ENOMEM;
->  	}
-> +
-> +	/* finally ready to go */
-> +	iscsi_unblock_session(ddb_entry->sess);
->  	return 0;
->  }
->  
-> @@ -364,6 +331,7 @@ void qla4xxx_mark_device_missing(struct 
-> scsi_qla_host *ha,
->  	DEBUG3(printk("scsi%d:%d:%d: index [%d] marked MISSING\n",
->  		      ha->host_no, ddb_entry->bus, ddb_entry->target,
->  		      ddb_entry->fw_ddb_index));
-> +	iscsi_block_session(ddb_entry->sess);
->  	iscsi_conn_error(ddb_entry->conn, ISCSI_ERR_CONN_FAILED);
->  }
-Acked by David Somayajulu <david.somayajulu@qlogic.com>
- 
+> Can you be more exact and specify what kind of tricks should be done for 
+> that?
+
+Actually, just avoid touching it seems to do the trick with a recent
+kernel.
+
+James
+
+
