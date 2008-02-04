@@ -1,99 +1,116 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 3/9] scsi_dh: scsi handling of REQ_LB_OP_TRANSITION
-Date: Mon, 04 Feb 2008 13:02:47 -0600
-Message-ID: <1202151767.3096.86.camel@localhost.localdomain>
-References: <20080124003010.18871.84095.sendpatchset@localhost.localdomain>
-	 <20080124003059.18871.89111.sendpatchset@localhost.localdomain>
-	 <47A37A65.8020500@cs.wisc.edu>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 04 Feb 2008 11:06:29 -0800
+Message-ID: <1202151989.11265.576.camel@haakon2.linux-iscsi.org>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	 <1201639331.3069.58.camel@localhost.localdomain>
+	 <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>
+	 <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
+	 <1202144767.3096.38.camel@localhost.localdomain>
+	 <47A7488B.4080000@vlnb.net>
+	 <1202145901.3096.49.camel@localhost.localdomain>
+	 <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:43394 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755179AbYBDTC5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 14:02:57 -0500
-In-Reply-To: <47A37A65.8020500@cs.wisc.edu>
+Received: from smtp117.sbc.mail.sp1.yahoo.com ([69.147.64.90]:34142 "HELO
+	smtp117.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1754478AbYBDTG7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 14:06:59 -0500
+In-Reply-To: <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Chandra Seetharaman <sekharan@us.ibm.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, andmike@us.ibm.com, jens.axboe@oracle.com
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org, Mike Christie <michaelc@cs.wisc.edu>
 
-
-On Fri, 2008-02-01 at 14:00 -0600, Mike Christie wrote:
-> Chandra Seetharaman wrote:
-> > @@ -1445,9 +1479,24 @@ static void scsi_kill_request(struct req
-> >  static void scsi_softirq_done(struct request *rq)
-> >  {
-> >  	struct scsi_cmnd *cmd = rq->completion_data;
-> > -	unsigned long wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-> >  	int disposition;
-> > +	struct request_queue *q;
-> > +	unsigned long wait_for, flags;
-> >  
-> > +	if (blk_linux_request(rq)) {
-> > +		q = rq->q;
-> > +		spin_lock_irqsave(q->queue_lock, flags);
-> > +		/*
-> > +		 * we always return 1 and the caller should
-> > +		 * check rq->errors for the complete status
-> > +		 */
-> > +		end_that_request_last(rq, 1);
-> > +		spin_unlock_irqrestore(q->queue_lock, flags);
-> > +		return;
-> > +	}
-> > +
-> > +
-> > +	wait_for = (cmd->allowed + 1) * cmd->timeout_per_command;
-> >  	INIT_LIST_HEAD(&cmd->eh_entry);
-> >  
-> .....
+On Mon, 2008-02-04 at 10:29 -0800, Linus Torvalds wrote:
 > 
-> > +
-> >  /*
-> >   * Function:    scsi_request_fn()
-> >   *
-> > @@ -1519,7 +1612,23 @@ static void scsi_request_fn(struct reque
-> >  		 * accept it.
-> >  		 */
-> >  		req = elv_next_request(q);
-> > -		if (!req || !scsi_dev_queue_ready(q, sdev))
-> > +		if (!req)
-> > +			break;
-> > +
-> > +		/*
-> > +		 * We do not account for linux blk req in the device
-> > +		 * or host busy accounting because it is not necessarily
-> > +		 * a scsi command that is sent to some object. The lower
-> > +		 * level can translate it into a request/scsi_cmnd, if
-> > +		 * necessary, and then queue that up using REQ_TYPE_BLOCK_PC.
-> > +		 */
-> > +		if (blk_linux_request(req)) {
-> > +			blkdev_dequeue_request(req);
-> > +			scsi_execute_blk_linux_cmd(req);
-> > +			continue;
-> > +		}
-> > +
-> > +		if (!scsi_dev_queue_ready(q, sdev))
-> >  			break;
+> On Mon, 4 Feb 2008, James Bottomley wrote:
+> > 
+> > The way a user space solution should work is to schedule mmapped I/O
+> > from the backing store and then send this mmapped region off for target
+> > I/O.
 > 
-> I think these two pieces are one of the reasons I have not pushed the 
-> patches. I thought the completion and execution pieces here are a little 
-> ugly and seem to just wedge themselves in where they want to be.
+> mmap'ing may avoid the copy, but the overhead of a mmap operation is 
+> quite often much *bigger* than the overhead of a copy operation.
 > 
-> Is there any way to make the insertion of non-scsi commands more common? 
-> Do we have the code for being able to send requests directly to 
-> something like a fc rport done? Could we maybe inject these special 
-> commands to the hw handler using something similar to how bsg would send 
-> non scsi commands to weird objects (objects like rport, sessions, and 
-> not devices we traditionally associated with queues like scsi_devices). 
-> Just a thought with no code :) that is why the ugly code existed still :)
+> Please do not advocate the use of mmap() as a way to avoid memory copies. 
+> It's not realistic. Even if you can do it with a single "mmap()" system 
+> call (which is not at all a given, considering that block devices can 
+> easily be much larger than the available virtual memory space), the fact 
+> is that page table games along with the fault (and even just TLB miss) 
+> overhead is easily more than the cost of copying a page in a nice 
+> streaming manner.
+> 
+> Yes, memory is "slow", but dammit, so is mmap().
+> 
+> > You also have to pull tricks with the mmap region in the case of writes 
+> > to prevent useless data being read in from the backing store.  However, 
+> > none of this involves data copies.
+> 
+> "data copies" is irrelevant. The only thing that matters is performance. 
+> And if avoiding data copies is more costly (or even of a similar cost) 
+> than the copies themselves would have been, there is absolutely no upside, 
+> and only downsides due to extra complexity.
+> 
 
-We sort of do.  The bsg code in scsi_transport_sas to send SMP frames to
-expander devices would be an example of non-scsi commands going via a
-mechanism other than being encapsulated in SCSI.  I don't know if that's
-the complete solution in this case, but you could investigate it.
+The iSER spec (RFC-5046) quotes the following in the TCP case for direct
+data placement:
 
-James
+"  Out-of-order TCP segments in the Traditional iSCSI model have to be
+   stored and reassembled before the iSCSI protocol layer within an end
+   node can place the data in the iSCSI buffers.  This reassembly is
+   required because not every TCP segment is likely to contain an iSCSI
+   header to enable its placement, and TCP itself does not have a
+   built-in mechanism for signaling Upper Level Protocol (ULP) message
+   boundaries to aid placement of out-of-order segments.  This TCP
+   reassembly at high network speeds is quite counter-productive for the
+   following reasons: wasted memory bandwidth in data copying, the need
+   for reassembly memory, wasted CPU cycles in data copying, and the
+   general store-and-forward latency from an application perspective."
+
+While this does not have anything to do directly with the kernel vs. user discussion
+for target mode storage engine, the scaling and latency case is easy enough
+to make if we are talking about scaling TCP for 10 Gb/sec storage fabrics.
+
+> If you want good performance for a service like this, you really generally 
+> *do* need to in kernel space. You can play games in user space, but you're 
+> fooling yourself if you think you can do as well as doing it in the 
+> kernel. And you're *definitely* fooling yourself if you think mmap() 
+> solves performance issues. "Zero-copy" does not equate to "fast". Memory 
+> speeds may be slower that core CPU speeds, but not infinitely so!
+> 
+
+>From looking at this problem from a kernel space perspective for a
+number of years, I would be inclined to believe this is true for
+software and hardware data-path cases.  The benefits of moving various
+control statemachines for something like say traditional iSCSI to
+userspace has always been debateable.  The most obvious ones are things
+like authentication, espically if something more complex than CHAP are
+the obvious case for userspace.  However, I have thought recovery for
+failures caused from communication path (iSCSI connections) or entire
+nexuses (iSCSI sessions) failures was very problematic to expect to have
+to potentially push down IOs state to userspace.
+
+Keeping statemachines for protocol and/or fabric specific statemachines
+(CSM-E and CSM-I from connection recovery in iSCSI and iSER are the
+obvious ones) are the best canidates for residing in kernel space.
+
+> (That said: there *are* alternatives to mmap, like "splice()", that really 
+> do potentially solve some issues without the page table and TLB overheads. 
+> But while splice() avoids the costs of paging, I strongly suspect it would 
+> still have easily measurable latency issues. Switching between user and 
+> kernel space multiple times is definitely not going to be free, although 
+> it's probably not a huge issue if you have big enough requests).
+> 
+
+Most of the SCSI OS storage subsystems that I have worked with in the
+context of iSCSI have used 256 * 512 byte setctor requests, which the
+default traditional iSCSI PDU data payload (MRDSL) being 64k to hit the
+sweet spot with crc32c checksum calculations.  I am assuming this is
+going to be the case for other fabrics as well.
+
+--nab
 
 
