@@ -1,176 +1,97 @@
-From: Boaz Harrosh <bharrosh@panasas.com>
-Subject: [PATCH 1/24][RFC] scsi_eh: Define  new API for sense handling
-Date: Mon,  4 Feb 2008 17:30:34 +0200
-Message-ID: <1202139034-4508-1-git-send-email-bharrosh@panasas.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:49887 "EHLO
-	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1755892AbYBDPg5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 10:36:57 -0500
-In-Reply-To: 47A72A7F.1050301@panasas.com
-References: 47A72A7F.1050301@panasas.com
-Sender: linux-scsi-owner@vger.kernel.org
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH RESEND number 2] libata: eliminate the home grown dma
+	padding in favour of that provided by the block layer
+Date: Mon, 04 Feb 2008 09:43:19 -0600
+Message-ID: <1202139799.3096.11.camel@localhost.localdomain>
+References: <1199138168.3110.12.camel@localhost.localdomain>
+	 <1200698057.3111.68.camel@localhost.localdomain>
+	 <1201894847.3134.59.camel@localhost.localdomain>
+	 <47A37AF3.3030503@garzik.org>
+	 <1201900175.3134.67.camel@localhost.localdomain> <47A52F23.70506@gmail.com>
+	 <1202013174.3187.69.camel@localhost.localdomain>
+	 <47A56F2B.4040904@gmail.com>
+	 <1202049511.3318.13.camel@localhost.localdomain>
+	 <47A5DA5F.3070209@gmail.com>
+	 <1202055156.3318.58.camel@localhost.localdomain>
+	 <47A66A39.7090800@gmail.com>  <47A6D9F2.5060102@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <47A6D9F2.5060102@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tejun Heo <htejun@gmail.com>
+Cc: Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-ide <linux-ide@vger.kernel.org>, Jens Axboe <Jens.Axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>J
-Cc: Andrew Morton <akpm@linux-foundation.org>
 
-  This patch defines a new API for sense handling. All drivers will
-  be converted to this API, before the sense handling implementation will
-  change. API is as follows:
+On Mon, 2008-02-04 at 18:25 +0900, Tejun Heo wrote:
+> Tejun Heo wrote:
+> > Some ATA controllers including SFF BMDMA and libata PIO HSM need the
+> > number of bytes mapped in the sg table.  Yeah, it can be calculated with
+> > a simple macro but it also is a fundamentally confusing dual-sizing
+> > which should be made as clear as possible.  Plus, it can be difficult to
+> > find out when somebody used the wrong thing, so what I'm saying is that
+> > we need to make it easy.  Anyways, please lemme work on it a bit.  I'll
+> > get back to you guys soon.
+> 
+> Okay, here's first draft combined patch.  Only compile tested (expect
+> it to be broken) but it should be functionally equivalent to
+> ata_sg_setup_extra() based implementation albeit with shorter drain
+> buffer size.  Several things to note...
 
-    void scsi_eh_cpy_sense(struct scsi_cmnd *cmd, void* sense,
-        						 unsigned sense_bytes);
-        To be used by drivers, when they have sense-bits
-        and wants to send them to upper layer. Max size
-        need not be a concern, If upper layer does not have
-        enough space it will be automatically truncated.
+I noticed you posted an update ... I'll go over the code in that one.
 
-    u8 *scsi_make_sense(struct scsi_cmnd *cmd);
-        To be used by drivers, and scsi-midlayer. Returns a DMA-able
-        sense buffer. Must be returned by scsi_return_sense(). It should
-        never fail if .pre_allocate_sense && .sense_buffsize in host
-        template where properly set.
-        the buffer is of shost->sense_buffsize long.
+> * fsl last sg check isn't included here.  Will split it out and post
+>   it separately.
+> 
+> * rq->raw_data_len added.  Rationales...
+> 
+>   - All these padding and draining are to prevent controllers from
+>     crapping themselves when data buffer is shorter than it likes it
+>     to be.  Any controller which talks MMC (or SPC for that matter)
+>     should be ready for transfers shorter than buffer so feeding
+>     enlarged buffer size is inherently safter than feeding the length,
+>     so the primary data length field, rq->data_len, contains the
+>     adjusted length.
 
-    void *scsi_return_sense(struct scsi_cmnd *cmd, u8 *sb);
-        Frees and returns the sense to the upper layer,
-        copying only what's necessary.
+Actually, no they don't.  Overrun termination is pretty much standard in
+most HBAs that do MMC (including the strange block one).  Allowing an
+overrun is simply unsafe and a security risk, so all apart from the ATA
+ones allow us to terminate the transaction safely.
 
-    void scsi_eh_reset_sense(struct scsi_cmnd *cmd)
-        Should not be used or necessary.
+>   - raw_data_len can't be easily deduced from data_len.  The other way
+>     is possible but with both aligning and draining and command
+>     filtering, calculating it later is messy.
 
-    const u8 *scsi_sense(struct scsi_cmnd *cmd)
-        Used by ULDs and for inspecting the returned sense, can not
-        be modified. It is only valid after a call to
-        scsi_eh_cpy_sense() or a call to scsi_return_sense(). Before
-        that it will/should return an empty buffer.
+Like I said, it's simply the command size plus the drain buffer which
+you get from the queue.  I'll redo your patches to show how it can be
+done without adding the extra space to every request.
 
-    New members at scsi host template:
-        .sense_buffsize - if a driver calls scsi_make_sense() or
-                  scsi_eh_prep_cmnd(), This value should be none
-                  zero indicating the max sense size, the driver
-                  supports. In most cases it should be
-                  SCSI_SENSE_BUFFERSIZE.
-                  If this value is zero the driver will only call
-                  scsi_eh_cpy_sense().
+> * Draining configuration is done in sr as it's the driver for MMC.  It
+>   can move both ways - either into SCSI midlayer as SPC and other
+>   commands do variable length responses too or into libata if all
+>   non-ATA controllers are happy without such workarounds.  If you ask
+>   me, I'm inclined to move it into SCSI midlayer as the added overhead
+>   is insignificant (especially with drain_needed added) and it won't
+>   break anything (well, theoretically, at least).
 
-        .pre_allocate_sense - if a Driver calls scsi_make_sense()
-                      in .queuecommand for every cmnd, this
-                      should be set to true. In which case
-                      scsi_make_sense() will not fail because
-                      midlayer will fail the command allocation.
-                      If the drivers calls scsi_eh_prep_cmnd()
-                      then sense_buffsize is not Zero but this
-                      here is set to false.
+Let me think about this one.  The only consumer of draining is libata.
+It might make sense to process the drains in sr.c but it certainly
+doesn't make sense to turn them on indiscriminately in there because
+*none* of the SCSI users needs them.
 
-Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
----
- drivers/scsi/scsi.c       |   12 ++++++++++++
- drivers/scsi/scsi_error.c |    7 +++++++
- include/scsi/scsi_eh.h    |   17 +++++++++++++++++
- include/scsi/scsi_host.h  |   15 +++++++++++++++
- 4 files changed, 51 insertions(+), 0 deletions(-)
+> * Padding via alinging seems a bit too hacky to me.  It doesn't even
+>   cover all sg cases.  I think we'll need improvements there, well,
+>   but for the time being, this should do.
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 98cba7d..af29ccc 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -290,6 +290,18 @@ void scsi_put_command(struct scsi_cmnd *cmd)
- }
- EXPORT_SYMBOL(scsi_put_command);
- 
-+u8 *scsi_make_sense(struct scsi_cmnd *cmd)
-+{
-+	return cmd->sense_buffer;
-+}
-+EXPORT_SYMBOL(scsi_make_sense);
-+
-+void scsi_return_sense(struct scsi_cmnd *cmd, u8 *sb)
-+{
-+	BUG_ON(cmd->sense_buffer != sb);
-+}
-+EXPORT_SYMBOL(scsi_return_sense);
-+
- /**
-  * scsi_setup_command_freelist - Setup the command freelist for a scsi host.
-  * @shost: host to allocate the freelist for.
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index 98696ae..dc8cd2b 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -588,6 +588,13 @@ static void scsi_abort_eh_cmnd(struct scsi_cmnd *scmd)
- 				scsi_try_host_reset(scmd);
- }
- 
-+void scsi_eh_cpy_sense(struct scsi_cmnd *cmd, void *sense, unsigned sense_bytes)
-+{
-+	unsigned len = min_t(unsigned, sense_bytes, SCSI_SENSE_BUFFERSIZE);
-+	memcpy(cmd->sense_buffer, sense, len);
-+}
-+EXPORT_SYMBOL(scsi_eh_cpy_sense);
-+
- /**
-  * scsi_eh_prep_cmnd  - Save a scsi command info as part of error recory
-  * @scmd:       SCSI command structure to hijack
-diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
-index 9438ea1..ce84330 100644
---- a/include/scsi/scsi_eh.h
-+++ b/include/scsi/scsi_eh.h
-@@ -87,4 +87,21 @@ extern void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd,
- extern void scsi_eh_restore_cmnd(struct scsi_cmnd* scmd,
- 		struct scsi_eh_save *ses);
- 
-+extern void scsi_eh_cpy_sense(struct scsi_cmnd *cmd, void *sense,
-+		unsigned sense_bytes);
-+
-+extern u8 *scsi_make_sense(struct scsi_cmnd *cmd);
-+extern void scsi_return_sense(struct scsi_cmnd *cmd, u8 *sb);
-+
-+/*FIXME: don't use, it's temporary */
-+static inline void scsi_eh_reset_sense(struct scsi_cmnd *cmd)
-+{
-+	memset(cmd->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-+}
-+
-+static inline const u8 *scsi_sense(struct scsi_cmnd *cmd)
-+{
-+	return cmd->sense_buffer;
-+}
-+
- #endif /* _SCSI_SCSI_EH_H */
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index c2dd31d..f232768 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -443,6 +443,18 @@ struct scsi_host_template {
- 	unsigned ordered_tag:1;
- 
- 	/*
-+	 * IF sense_buffsize != 0 then this bit asks to pre-allocate a sense
-+	 * buffer for each command.
-+	 */
-+	unsigned pre_allocate_sense:1;
-+
-+	/*
-+	 * IF sense_buffsize != 0 then a mem_cache_pool is allocated for the
-+	 * host with buffers of this size, with 1 pre-allocated buffer.
-+	 */
-+	unsigned sense_buffsize;
-+
-+	/*
- 	 * Countdown for host blocking with no commands outstanding
- 	 */
- 	unsigned int max_host_blocked;
-@@ -609,6 +621,9 @@ struct Scsi_Host {
- 	/* Asynchronous scan in progress */
- 	unsigned async_scan:1;
- 
-+	/* actual allocated sense_buffsize for this host */
-+	unsigned sense_buffsize;
-+
- 	/*
- 	 * Optional work queue to be utilized by the transport
- 	 */
--- 
-1.5.3.3
+That's essentially what the dma_aligment parameter was designed for ...
+we can always make the way it's handled differently; I just updated
+block to use what exists already.
+
+> I'll test and report in a few hours.
+
+Great, thanks.
+
+James
+
 
