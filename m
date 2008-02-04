@@ -1,106 +1,69 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 04 Feb 2008 12:22:02 -0600
-Message-ID: <1202149322.3096.66.camel@localhost.localdomain>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
-	 <1201639331.3069.58.camel@localhost.localdomain>
-	 <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>
-	 <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
-	 <1202144767.3096.38.camel@localhost.localdomain>
-	 <47A7488B.4080000@vlnb.net>
-	 <1202145901.3096.49.camel@localhost.localdomain>  <47A751C5.60600@vlnb.net>
+From: "David Somayajulu" <david.somayajulu@qlogic.com>
+Subject: RE: [PATCH 07/12] qla4xxx: add qla4xxx async scan support
+Date: Mon, 4 Feb 2008 10:22:29 -0800
+Message-ID: <0BB3E5E7462EEA4295BC02D49691DC070120BF1F@AVEXCH1.qlogic.org>
+References: <12018082174157-git-send-email-michaelc@cs.wisc.edu>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:46739 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753196AbYBDSWI (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:22:08 -0500
-In-Reply-To: <47A751C5.60600@vlnb.net>
+Received: from avexch1.qlogic.com ([198.70.193.115]:5854 "EHLO
+	avexch1.qlogic.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752369AbYBDSWa convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:22:30 -0500
+Content-class: urn:content-classes:message
+In-Reply-To: <12018082174157-git-send-email-michaelc@cs.wisc.edu>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vladislav Bolkhovitin <vst@vlnb.net>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, Linus Torvalds <torvalds@linux-foundation.org>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: michaelc@cs.wisc.edu, linux-scsi@vger.kernel.org
 
-On Mon, 2008-02-04 at 20:56 +0300, Vladislav Bolkhovitin wrote:
-> James Bottomley wrote:
-> > On Mon, 2008-02-04 at 20:16 +0300, Vladislav Bolkhovitin wrote:
-> > 
-> >>James Bottomley wrote:
-> >>
-> >>>>>>So, James, what is your opinion on the above? Or the overall SCSI target 
-> >>>>>>project simplicity doesn't matter much for you and you think it's fine 
-> >>>>>>to duplicate Linux page cache in the user space to keep the in-kernel 
-> >>>>>>part of the project as small as possible?
-> >>>>>
-> >>>>>
-> >>>>>The answers were pretty much contained here
-> >>>>>
-> >>>>>http://marc.info/?l=linux-scsi&m=120164008302435
-> >>>>>
-> >>>>>and here:
-> >>>>>
-> >>>>>http://marc.info/?l=linux-scsi&m=120171067107293
-> >>>>>
-> >>>>>Weren't they?
-> >>>>
-> >>>>No, sorry, it doesn't look so for me. They are about performance, but 
-> >>>>I'm asking about the overall project's architecture, namely about one 
-> >>>>part of it: simplicity. Particularly, what do you think about 
-> >>>>duplicating Linux page cache in the user space to have zero-copy cached 
-> >>>>I/O? Or can you suggest another architectural solution for that problem 
-> >>>>in the STGT's approach?
-> >>>
-> >>>
-> >>>Isn't that an advantage of a user space solution?  It simply uses the
-> >>>backing store of whatever device supplies the data.  That means it takes
-> >>>advantage of the existing mechanisms for caching.
-> >>
-> >>No, please reread this thread, especially this message: 
-> >>http://marc.info/?l=linux-kernel&m=120169189504361&w=2. This is one of 
-> >>the advantages of the kernel space implementation. The user space 
-> >>implementation has to have data copied between the cache and user space 
-> >>buffer, but the kernel space one can use pages in the cache directly, 
-> >>without extra copy.
-> > 
-> > 
-> > Well, you've said it thrice (the bellman cried) but that doesn't make it
-> > true.
-> > 
-> > The way a user space solution should work is to schedule mmapped I/O
-> > from the backing store and then send this mmapped region off for target
-> > I/O.  For reads, the page gather will ensure that the pages are up to
-> > date from the backing store to the cache before sending the I/O out.
-> > For writes, You actually have to do a msync on the region to get the
-> > data secured to the backing store. 
+Mike Christie wrote:
+> qla4xxx has the old school startup/probe where it finds 
+> presetup sessions
+> in its flash and then attempts to log into them before 
+> returning from the
+> probe. This however, makes it very simple to add a iscsi 
+> class scan finished
+> helper which the driver can use.
 > 
-> James, have you checked how fast is mmaped I/O if work size > size of 
-> RAM? It's several times slower comparing to buffered I/O. It was many 
-> times discussed in LKML and, seems, VM people consider it unavoidable. 
-
-Erm, but if you're using the case of work size > size of RAM, you'll
-find buffered I/O won't help because you don't have the memory for
-buffers either.
-
-> So, using mmaped IO isn't an option for high performance. Plus, mmaped 
-> IO isn't an option for high reliability requirements, since it doesn't 
-> provide a practical way to handle I/O errors.
-
-I think you'll find it does ... the page gather returns -EFAULT if
-there's an I/O error in the gathered region.  msync does something
-similar if there's a write failure.
-
-> > You also have to pull tricks with
-> > the mmap region in the case of writes to prevent useless data being read
-> > in from the backing store.
+> In future patches Dave or I will rip apart the driver to make it more
+> like qla2xxx, but for now this is a very simple two line patch which
+> fixes the problem of trying to figure out when the initial sessions
+> are done being scanned.
 > 
-> Can you be more exact and specify what kind of tricks should be done for 
-> that?
-
-Actually, just avoid touching it seems to do the trick with a recent
-kernel.
-
-James
-
-
+> Signed-off-by: Mike Christie <michaelc@cs.wisc.edu>
+> ---
+>  drivers/scsi/qla4xxx/ql4_os.c |    4 +++-
+>  1 files changed, 3 insertions(+), 1 deletions(-)
+> 
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c 
+> b/drivers/scsi/qla4xxx/ql4_os.c
+> index d4dd149..c3c59d7 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -89,6 +89,8 @@ static struct scsi_host_template 
+> qla4xxx_driver_template = {
+>  	.slave_alloc		= qla4xxx_slave_alloc,
+>  	.slave_destroy		= qla4xxx_slave_destroy,
+>  
+> +	.scan_finished		= iscsi_scan_finished,
+> +
+>  	.this_id		= -1,
+>  	.cmd_per_lun		= 3,
+>  	.use_clustering		= ENABLE_CLUSTERING,
+> @@ -1306,7 +1308,7 @@ static int __devinit 
+> qla4xxx_probe_adapter(struct pci_dev *pdev,
+>  	       qla4xxx_version_str, ha->pdev->device, 
+> pci_name(ha->pdev),
+>  	       ha->host_no, ha->firmware_version[0], 
+> ha->firmware_version[1],
+>  	       ha->patch_number, ha->build_number);
+> -
+> +	scsi_scan_host(host);
+>  	return 0;
+>  
+>  remove_host:
+> -- 
+> 1.5.2.1
+Acked by David Somayajulu <david.somayajulu@qlogic.com>
