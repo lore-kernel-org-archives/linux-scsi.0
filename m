@@ -1,46 +1,24 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [Fwd: 2.6.24 kernel and LIO Target memory mapping]
-Date: Mon, 04 Feb 2008 05:33:52 -0800
-Message-ID: <1202132032.11265.498.camel@haakon2.linux-iscsi.org>
-Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-n/04jwNwQ3y9H6HA9sj3"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp117.sbc.mail.sp1.yahoo.com ([69.147.64.90]:23938 "HELO
-	smtp117.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1753851AbYBDNeU (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 08:34:20 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, CBE-OSS-DEV <cbe-oss-dev@ozlabs.org>, Geoff Levand <geoffrey.le>
-
-
---=-n/04jwNwQ3y9H6HA9sj3
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
-
-Sorry, resend..
-
---=-n/04jwNwQ3y9H6HA9sj3
-Content-Disposition: inline
-Content-Description: Forwarded message - 2.6.24 kernel and LIO Target
-	memory mapping
-Content-Type: message/rfc822
-
-Subject: 2.6.24 kernel and LIO Target memory mapping
 From: "Nicholas A. Bellinger" <nab@kernel.org>
-Reply-To: nab@kernel.org
-To: linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, CBE-OSS-DEV <cbe-oss-dev@ozlabs.org>, Geoff Levand <geoffrey.levand@am.sony.com>, Jens Axboe <jens.axboe@oracle.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Mike Christie <michaelc@cs.wisc.edu>, STGT-Devel <stgt-devel@lists.berlios.de>, Andrew Morton <akpm@osdl.org>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>
-In-Reply-To: <1201958796.11265.415.camel@haakon2.linux-iscsi.org>
+Subject: 2.6.24 kernel and LIO Target memory mapping
+Date: Mon, 04 Feb 2008 05:27:20 -0800
+Message-ID: <1202131640.11265.494.camel@haakon2.linux-iscsi.org>
 References: <e2e108260802010609m12af3990k58a385b8f8598ec7@mail.gmail.com>
 	 <1201877400.11265.311.camel@haakon2.linux-iscsi.org>
 	 <1201958796.11265.415.camel@haakon2.linux-iscsi.org>
-Content-Type: text/plain
-Message-Id: <1202131640.11265.494.camel@haakon2.linux-iscsi.org>
+Reply-To: nab@kernel.org
 Mime-Version: 1.0
-X-Mailer: Evolution 2.10.3 
-Date: Mon, 04 Feb 2008 05:27:23 -0800
+Content-Type: text/plain
 Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp107.sbc.mail.re2.yahoo.com ([68.142.229.98]:37574 "HELO
+	smtp107.sbc.mail.re2.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1751637AbYBDNh4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 08:37:56 -0500
+In-Reply-To: <1201958796.11265.415.camel@haakon2.linux-iscsi.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: linux-iscsi-target-dev@googlegroups.com, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, CBE-OSS-DEV <cbe-oss-dev@ozlabs.org>, Geoff Levand <geoffrey.le>
+Cc: Bart Van Assche <bart.vanassche@gmail.com>
 
 On Sat, 2008-02-02 at 05:26 -0800, Nicholas A. Bellinger wrote: 
 > Hi Bart,
@@ -298,6 +276,4 @@ the new
 > For more options, visit this group at http://groups.google.com/group/linux-iscsi-target-dev?hl=en
 > -~----------~----~----~----~------~----~------~--~---
 > 
-
---=-n/04jwNwQ3y9H6HA9sj3--
 
