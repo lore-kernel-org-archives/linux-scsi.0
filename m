@@ -1,42 +1,73 @@
-From: "J. Bruce Fields" <bfields@fieldses.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 4 Feb 2008 16:01:21 -0500
-Message-ID: <20080204210121.GF18682@fieldses.org>
-References: <47A05CBD.5050803@vlnb.net> <47A7049A.9000105@vlnb.net> <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net> <1202144767.3096.38.camel@localhost.localdomain> <47A7488B.4080000@vlnb.net> <1202145901.3096.49.camel@localhost.localdomain> <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org> <1202151989.11265.576.camel@haakon2.linux-iscsi.org> <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
+From: Luben Tuikov <ltuikov@yahoo.com>
+Subject: Re: [PATCH] [RFC] sd: make error handling more robust
+Date: Mon, 4 Feb 2008 13:02:21 -0800 (PST)
+Message-ID: <134973.94460.qm@web31815.mail.mud.yahoo.com>
+References: <47A72293.8050409@cybernetics.com>
+Reply-To: ltuikov@yahoo.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner+glk-linux-kernel-3=40m.gmane.org-S1755306AbYBDVBv@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from web31815.mail.mud.yahoo.com ([68.142.206.168]:23445 "HELO
+	web31815.mail.mud.yahoo.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with SMTP id S1753094AbYBDVCe (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 16:02:34 -0500
+In-Reply-To: <47A72293.8050409@cybernetics.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tony Battersby <tonyb@cybernetics.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org
 
-On Mon, Feb 04, 2008 at 11:44:31AM -0800, Linus Torvalds wrote:
-...
-> Pure user-space solutions work, but tend to eventually be turned into 
-> kernel-space if they are simple enough and really do have throughput and 
-> latency considerations (eg nfsd), and aren't quite complex and crazy 
-> enough to have a large impedance-matching problem even for basic IO stuff 
-> (eg samba).
-...
-> So just going by what has happened in the past, I'd assume that iSCSI 
-> would eventually turn into "connecting/authentication in user space" with 
-> "data transfers in kernel space". But only if it really does end up 
-> mattering enough. We had a totally user-space NFS daemon for a long time, 
-> and it was perfectly fine until people really started caring.
+--- On Mon, 2/4/08, Tony Battersby <tonyb@cybernetics.com> wrote:
+> I _really_ _really_ hope that you don't believe that I
+> am trying to take
+> credit for your work. If you take another look, my original
+> patch had
+> the following hunk:
+> 
+> +
+> +		/* Make sure that bad_lba is one of the sectors that the
+> +		 * command was trying to access.
+> +		 */
+> +		if (bad_lba < start_lba ||
+> +		    bad_lba >= start_lba + xfer_size / sector_size)
+> +			goto out;
+> +
+> 
+> 
+> Your response patch had the following hunk:
+> 
+> +		if (bad_lba < start_lba)
+> +			goto out;
+> 
+> 
+> So I don't feel that it was dishonest for me to submit
+> this as "my"
+> work. If you were offended, then I apologize.
 
-I'd assumed the move was primarily because of the difficulty of getting
-correct semantics on a shared filesystem--if you're content with
-NFS-only access to your filesystem, then you can probably do everything
-in userspace, but once you start worrying about getting stable
-filehandles, consistent file locking, etc., from a real disk filesystem
-with local users, then you require much closer cooperation from the
-kernel.
+Oh, no, of course not.  The most important thing is
+if it works for you and fixes your problem and makes
+your customers happy (or you if you're a customer).
 
-And I seem to recall being told that sort of thing was the motivation
-more than performance, but I wasn't there (and I haven't seen
-performance comparisons).
+> > I think it would've been much clearer if you had
+> > singled out the problems you were seeing with your
+> > HW and sent a single problem with a single patch per
+> > single email.
+> >
+> >   
+> Agreed. Sometimes it is difficult to predict when something
+> that seems
+> so straightforward will generate so much controversy.
 
---b.
+Nah, maybe a couple of misunderstandings (email tends to
+do that), but it's all good.
+
+I think it would've been so much better for everyone if
+the RAID vendor had simply fixed their code to not
+set VALID when INFORMATION is not valid (spec behaviour).
+Since the bug lies in their code, that would've been
+the proper course of action.  Instead, every other OS
+which uses that RAID HW would have to adjust to this
+RAID FW bug (if they haven't already).  Oh, well.
+
+   Luben
+
