@@ -1,53 +1,39 @@
-From: Roel Kluin <12o3l@tiscali.nl>
-Subject: [PATCH][drivers/scsi/u14-34f.c] duplicate test 'SCpnt->sc_data_direction
- == DMA_FROM_DEVICE'
-Date: Mon, 04 Feb 2008 23:36:44 +0100
-Message-ID: <47A7937C.7040701@tiscali.nl>
+From: Alan Cox <alan@lxorguk.ukuu.org.uk>
+Subject: Re: Integration of SCST in the mainstream Linux kernel
+Date: Mon, 4 Feb 2008 22:43:14 +0000
+Message-ID: <20080204224314.113afe7b@core>
+References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>
+	<1201639331.3069.58.camel@localhost.localdomain>
+	<47A05CBD.5050803@vlnb.net>
+	<47A7049A.9000105@vlnb.net>
+	<1202139015.3096.5.camel@localhost.localdomain>
+	<47A73C86.3060604@vlnb.net>
+	<1202144767.3096.38.camel@localhost.localdomain>
+	<47A7488B.4080000@vlnb.net>
+	<1202145901.3096.49.camel@localhost.localdomain>
+	<alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
+	<1202151989.11265.576.camel@haakon2.linux-iscsi.org>
+	<alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-out1.tiscali.nl ([195.241.79.176]:43531 "EHLO
-	smtp-out1.tiscali.nl" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757031AbYBDWgs (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 17:36:48 -0500
+Received: from outpipe-village-512-1.bc.nu ([81.2.110.250]:48461 "EHLO
+	lxorguk.ukuu.org.uk" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1755610AbYBDWt1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 17:49:27 -0500
+In-Reply-To: <alpine.LFD.1.00.0802041130140.3034@hp.linux-foundation.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: ballabio_dario@emc.com
-Cc: linux-scsi@vger.kernel.org, lkml <linux-kernel@vger.kernel.org>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, James Bottomley <James.Bottomley@HansenPartnership.com>, Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Mike Christie <michaelc@cs.wisc.edu>
 
-It should be like this I guess? this patch was not yet tested, please
-confirm.
---
-Note the duplicate test 'SCpnt->sc_data_direction == DMA_FROM_DEVICE'
+> better. So for example, I personally suspect that ATA-over-ethernet is way 
+> better than some crazy SCSI-over-TCP crap, but I'm biased for simple and 
+> low-level, and against those crazy SCSI people to begin with.
 
-from Documentation/DMA-API.txt:
-DMA_TO_DEVICE         = PCI_DMA_TODEVICE      data is going from the
-                                              memory to the device
-DMA_FROM_DEVICE       = PCI_DMA_FROMDEVICE    data is coming from
-                                              the device to the
+Current ATAoE isn't. It can't support NCQ. A variant that did NCQ and IP
+would probably trash iSCSI for latency if nothing else.
 
-Signed-off-by: Roel Kluin <12o3l@tiscali.nl>
----
-diff --git a/drivers/scsi/u14-34f.c b/drivers/scsi/u14-34f.c
-index 662c004..1e704f9 100644
---- a/drivers/scsi/u14-34f.c
-+++ b/drivers/scsi/u14-34f.c
-@@ -1208,15 +1208,15 @@ static void scsi_to_dev_dir(unsigned int i, unsigned int j) {
-       };
- 
-    struct mscp *cpp;
-    struct scsi_cmnd *SCpnt;
- 
-    cpp = &HD(j)->cp[i]; SCpnt = cpp->SCpnt;
- 
--   if (SCpnt->sc_data_direction == DMA_FROM_DEVICE) {
-+   if (SCpnt->sc_data_direction == DMA_TO_DEVICE) {
-       cpp->xdir = DTD_IN;
-       return;
-       }
-    else if (SCpnt->sc_data_direction == DMA_FROM_DEVICE) {
-       cpp->xdir = DTD_OUT;
-       return;
-       }
 
+Alan
