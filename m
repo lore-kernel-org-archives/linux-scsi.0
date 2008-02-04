@@ -1,89 +1,110 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 1/24][RFC] scsi_eh: Define  new API for sense handling
-Date: Mon, 04 Feb 2008 11:33:28 -0600
-Message-ID: <1202146408.3096.56.camel@localhost.localdomain>
-References: 47A72A7F.1050301@panasas.com  <1202139034-4508-1-git-send-email-bharrosh@panasas.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: Boaz Harrosh <bharrosh@panasas.com>
+Subject: [PATCH 18/24][RFC] eata: Use of scsi_make_sense() API for DMA-able sense buffer
+Date: Mon,  4 Feb 2008 19:29:17 +0200
+Message-ID: <1202146157-5199-1-git-send-email-bharrosh@panasas.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:39600 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752657AbYBDRdd (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:33:33 -0500
-In-Reply-To: <1202139034-4508-1-git-send-email-bharrosh@panasas.com>
+Received: from bzq-219-195-70.pop.bezeqint.net ([62.219.195.70]:55524 "EHLO
+	bh-buildlin2.bhalevy.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752657AbYBDRec (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 12:34:32 -0500
+In-Reply-To: 47A72A7F.1050301@panasas.com
+References: 47A72A7F.1050301@panasas.com
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Boaz Harrosh <bharrosh@panasas.com>
-Cc: FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>, Jeff Garzik <jeff@garzik.org>, linux-scsi <linux-scsi@vger.kernel.org>, Andrew Morton <akpm@linux-foundation.org>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>, Jens Axboe <jens.axboe@oracle.com>J
+Cc: Andrew Morton <akpm@linux-foundation.org>
 
-On Mon, 2008-02-04 at 17:30 +0200, Boaz Harrosh wrote:
-> This patch defines a new API for sense handling. All drivers will
->   be converted to this API, before the sense handling implementation will
->   change. API is as follows:
-> 
->     void scsi_eh_cpy_sense(struct scsi_cmnd *cmd, void* sense,
->         						 unsigned sense_bytes);
->         To be used by drivers, when they have sense-bits
->         and wants to send them to upper layer. Max size
->         need not be a concern, If upper layer does not have
->         enough space it will be automatically truncated.
-> 
->     u8 *scsi_make_sense(struct scsi_cmnd *cmd);
->         To be used by drivers, and scsi-midlayer. Returns a DMA-able
->         sense buffer. Must be returned by scsi_return_sense(). It should
->         never fail if .pre_allocate_sense && .sense_buffsize in host
->         template where properly set.
->         the buffer is of shost->sense_buffsize long.
-> 
->     void *scsi_return_sense(struct scsi_cmnd *cmd, u8 *sb);
->         Frees and returns the sense to the upper layer,
->         copying only what's necessary.
-> 
->     void scsi_eh_reset_sense(struct scsi_cmnd *cmd)
->         Should not be used or necessary.
-> 
->     const u8 *scsi_sense(struct scsi_cmnd *cmd)
->         Used by ULDs and for inspecting the returned sense, can not
->         be modified. It is only valid after a call to
->         scsi_eh_cpy_sense() or a call to scsi_return_sense(). Before
->         that it will/should return an empty buffer.
-> 
->     New members at scsi host template:
->         .sense_buffsize - if a driver calls scsi_make_sense() or
->                   scsi_eh_prep_cmnd(), This value should be none
->                   zero indicating the max sense size, the driver
->                   supports. In most cases it should be
->                   SCSI_SENSE_BUFFERSIZE.
->                   If this value is zero the driver will only call
->                   scsi_eh_cpy_sense().
-> 
->         .pre_allocate_sense - if a Driver calls scsi_make_sense()
->                       in .queuecommand for every cmnd, this
->                       should be set to true. In which case
->                       scsi_make_sense() will not fail because
->                       midlayer will fail the command allocation.
->                       If the drivers calls scsi_eh_prep_cmnd()
->                       then sense_buffsize is not Zero but this
->                       here is set to false.
+  - Use a pre allocated, DMA mapped, sense buffer at each command,
+    Using the scsi_make_sense() API. And scsi_return_sense() when
+    done.
+  - mark this driver as: "need for a pre allocated sense buffer"
+    at host template.
 
-My initial reaction to this is that you're doing too many contortions to
-ensure something we don't particularly care about:  whether we can
-allocate a sense buffer atomically or not.
+Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+---
+ drivers/scsi/eata.c |   20 +++++++++++++-------
+ 1 files changed, 13 insertions(+), 7 deletions(-)
 
-What all this code should be doing is simply allocating the sense buffer
-in scsi_eh_prep_cmnd() using tomo's existing slab (and GFP_ATOMIC) if
-that fails, we need a return from scsi_eh_prep_cmnd() telling us.  At
-that point, the driver should abandon the auto request sense attempt and
-instead just return the CC/UA without the DRIVER_SENSE bit set which
-will trigger the eh to collect the sense for us.
-
-Ideally, doing it this way might mean we could even dump the
-sense_buffer pointer from the command (although I don't see that as
-necessary).
-
-This solves the 99% case without getting into preallocation contortions.
-
-James
-
+diff --git a/drivers/scsi/eata.c b/drivers/scsi/eata.c
+index 8be3d76..2d9e086 100644
+--- a/drivers/scsi/eata.c
++++ b/drivers/scsi/eata.c
+@@ -501,6 +501,7 @@
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsicam.h>
++#include <scsi/scsi_eh.h>
+ 
+ static int eata2x_detect(struct scsi_host_template *);
+ static int eata2x_release(struct Scsi_Host *);
+@@ -524,6 +525,8 @@ static struct scsi_host_template driver_template = {
+ 	.this_id = 7,
+ 	.unchecked_isa_dma = 1,
+ 	.use_clustering = ENABLE_CLUSTERING,
++	.pre_allocate_sense = 1,
++	.sense_buffsize = SCSI_SENSE_BUFFERSIZE,
+ };
+ 
+ #if !defined(__BIG_ENDIAN_BITFIELD) && !defined(__LITTLE_ENDIAN_BITFIELD)
+@@ -801,6 +804,7 @@ struct mscp {
+ 	u_int32_t data_address;	/* If sg=0 Data Address, if sg=1 sglist address */
+ 	u_int32_t sp_dma_addr;	/* Address where sp is DMA'ed when cp completes */
+ 	u_int32_t sense_addr;	/* Address where Sense Data is DMA'ed on error */
++	u8 *sense_buffer;	/* scsi_{make,return}_sense pointer */
+ 
+ 	/* Additional fields begin here. */
+ 	struct scsi_cmnd *SCpnt;
+@@ -1619,9 +1623,9 @@ static void map_dma(unsigned int i, struct hostdata *ha)
+ 	SCpnt = cpp->SCpnt;
+ 	pci_dir = SCpnt->sc_data_direction;
+ 
+-	if (SCpnt->sense_buffer)
+-		cpp->sense_addr =
+-		    H2DEV(pci_map_single(ha->pdev, SCpnt->sense_buffer,
++	cpp->sense_buffer = scsi_make_sense(SCpnt);
++	cpp->sense_addr =
++		    H2DEV(pci_map_single(ha->pdev, cpp->sense_buffer,
+ 			   SCSI_SENSE_BUFFERSIZE, PCI_DMA_FROMDEVICE));
+ 
+ 	cpp->sense_len = SCSI_SENSE_BUFFERSIZE;
+@@ -1651,9 +1655,11 @@ static void unmap_dma(unsigned int i, struct hostdata *ha)
+ 	SCpnt = cpp->SCpnt;
+ 	pci_dir = SCpnt->sc_data_direction;
+ 
+-	if (DEV2H(cpp->sense_addr))
++	if (DEV2H(cpp->sense_addr)) {
+ 		pci_unmap_single(ha->pdev, DEV2H(cpp->sense_addr),
+ 				 DEV2H(cpp->sense_len), PCI_DMA_FROMDEVICE);
++		scsi_return_sense(SCpnt, cpp->sense_buffer);
++	}
+ 
+ 	scsi_dma_unmap(SCpnt);
+ 
+@@ -2428,7 +2434,7 @@ static irqreturn_t ihdlr(int irq, struct Scsi_Host *shost)
+ 		/* Works around a flaw in scsi.c */
+ 		else if (tstatus == CHECK_CONDITION
+ 			 && SCpnt->device->type == TYPE_DISK
+-			 && (SCpnt->sense_buffer[2] & 0xf) == RECOVERED_ERROR)
++			 && (cpp->sense_buffer[2] & 0xf) == RECOVERED_ERROR)
+ 			status = DID_BUS_BUSY << 16;
+ 
+ 		else
+@@ -2440,13 +2446,13 @@ static irqreturn_t ihdlr(int irq, struct Scsi_Host *shost)
+ 
+ 		if (spp->target_status && SCpnt->device->type == TYPE_DISK &&
+ 		    (!(tstatus == CHECK_CONDITION && ha->iocount <= 1000 &&
+-		       (SCpnt->sense_buffer[2] & 0xf) == NOT_READY)))
++		       (cpp->sense_buffer[2] & 0xf) == NOT_READY)))
+ 			printk("%s: ihdlr, target %d.%d:%d, pid %ld, "
+ 			       "target_status 0x%x, sense key 0x%x.\n",
+ 			       ha->board_name,
+ 			       SCpnt->device->channel, SCpnt->device->id,
+ 			       SCpnt->device->lun, SCpnt->serial_number,
+-			       spp->target_status, SCpnt->sense_buffer[2]);
++			       spp->target_status, cpp->sense_buffer[2]);
+ 
+ 		ha->target_to[SCpnt->device->id][SCpnt->device->channel] = 0;
+ 
+-- 
+1.5.3.3
 
