@@ -1,65 +1,44 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: LIO Target iSCSI/SE PS3-Linux / FC8 builds
-Date: Mon, 04 Feb 2008 06:17:03 -0800
-Message-ID: <1202134623.11265.524.camel@haakon2.linux-iscsi.org>
+From: scameron@beardog.cca.cpqcorp.net
+Subject: [patch 1/3] cciss: Don't call pci_free_consistent with irqs disabled
+Date: Mon, 4 Feb 2008 08:31:46 -0600
+Message-ID: <20080204143146.GA3926@beardog.cca.cpqcorp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp121.sbc.mail.sp1.yahoo.com ([69.147.64.94]:47806 "HELO
-	smtp121.sbc.mail.sp1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with SMTP id S1751400AbYBDORc (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 09:17:32 -0500
+Received: from g4t0016.houston.hp.com ([15.201.24.19]:48095 "EHLO
+	g4t0016.houston.hp.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752020AbYBDObr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 09:31:47 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Geoff Levand <geoffrey.levand@am.sony.com>, Geert Uytterhoeven <Geert.Uytterhoeven@sonycom.com>, CBE-OSS-DEV <cbe-oss-dev@ozlabs.org>, linux-scsi <linux-scsi@vger.kernel.org>, Masaka
+To: linux-scsi@vger.kernel.org
+Cc: mike.miller@hp.com, axboe@kernel.dk, scameron@beardog.cca.cpqcorp.net
 
-Greetings all,
 
-I have updated the wiki at:
 
-http://linux-iscsi.org/index.php/Playstation3/iSCSI
+Don't call pci_free_consistent with irqs disabled
+(Was triggering a warning in arch/x86/kernel/pci-dma_32.c
+in dma_free_coherent)
 
-and posted the first LIO target builds on the LIO Cluster:
+Signed-off-by: Stephen M. Cameron <smcameron@beardog.cca.cpqcorp.net>
+---
 
-http://linux-iscsi.org/builds/ps3-linux/
+ linux-2.6.24/drivers/block/cciss_scsi.c |    2 +-
+ 1 files changed, 1 insertion(+), 1 deletion(-)
 
-I will adding the documentation for both LIO SE on PS3-Linux, and the
-FC8 upgrade process, as the latter can still be a bit challenging for
-new users.
-
-Here is the info from the README:
-
-LIO Target iSCSI/SE for PS3-Linux v2.9.0.209 
-
-I) Kernel module package
-
-iscsi-target-module-2.6.24-2.9.0.209-1.powerpc.rpm
-
-This modules are built for ppc64 and built with the toolkit for Fedora Core 8 ppc.
-This is gcc (GCC) 4.1.2 20070925 (Red Hat 4.1.2-33)
-
-This module has been tested with the latest ps3-linux.git and built against
-arch/powerpc/configs/ps3_defconfig.  To use the BD-ROM, your 2.6.24 kernel
-must contain ps3rom-use-128-max-sector.diff.  Please see:
-
-http://git.kernel.org/?p=linux/kernel/git/geoff/ps3-linux.git;a=commit;h=e82112af66a39d11bcb484de9cfa45f0d214c97f
-
-This module package should work with kernel-2.6.24-20080131.ppc64.rpm from
-CELL-Linux-CL_20080201-ADDON.iso, but the BD-ROM will throw an exception without
-ps3rom-use-128-max-sector.diff.  Please see the following link for more
-information about the ADDON CD, and watch for an updated kernel package soon..
-
-http://www.kernel.org/pub/linux/kernel/people/geoff/cell/
-
-II) Userspace packages
-
-iscsi-target-tools-2.9.0.209-1.ppc.rpm
-sbe-mibs-2.9.0.209-1.ppc.rpm
-
-Note that these are 32-bit and built on Fedora Core 8.
-
-Have fun!
-
---nab
-
+diff -puN linux-2.6.24/drivers/block/cciss_scsi.c~fix_pci_free_irq_bug linux-2.6.24/drivers/block/cciss_scsi.c
+--- kernel.org2/linux-2.6.24/drivers/block/cciss_scsi.c~fix_pci_free_irq_bug	2008-02-04 07:52:39.000000000 -0600
++++ kernel.org2-root/linux-2.6.24/drivers/block/cciss_scsi.c	2008-02-04 07:52:39.000000000 -0600
+@@ -1349,9 +1349,9 @@ cciss_unregister_scsi(int ctlr)
+ 	/* set scsi_host to NULL so our detect routine will 
+ 	   find us on register */
+ 	sa->scsi_host = NULL;
++	spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
+ 	scsi_cmd_stack_free(ctlr);
+ 	kfree(sa);
+-	spin_unlock_irqrestore(CCISS_LOCK(ctlr), flags);
+ }
+ 
+ static int 
+_
