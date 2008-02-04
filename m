@@ -1,64 +1,133 @@
-From: Linus Torvalds <torvalds@linux-foundation.org>
-Subject: Re: Integration of SCST in the mainstream Linux kernel
-Date: Mon, 4 Feb 2008 10:29:38 -0800 (PST)
-Message-ID: <alpine.LFD.1.00.0802041018390.3034@hp.linux-foundation.org>
-References: <e2e108260801230622x42045058v926e84c60f2be7f4@mail.gmail.com>  <1201639331.3069.58.camel@localhost.localdomain>  <47A05CBD.5050803@vlnb.net>  <47A7049A.9000105@vlnb.net>  <1202139015.3096.5.camel@localhost.localdomain> <47A73C86.3060604@vlnb.net>
-  <1202144767.3096.38.camel@localhost.localdomain>  <47A7488B.4080000@vlnb.net> <1202145901.3096.49.camel@localhost.localdomain>
+From: "Salyzyn, Mark" <Mark_Salyzyn@adaptec.com>
+Subject: RE: [PATCH 5/24][RFC] dpt_i2o: Use new scsi_eh_cpy_sense()
+Date: Mon, 4 Feb 2008 10:32:43 -0800
+Message-ID: <532ABFBDAAC3A34EB12EBA6CEC2838F439766174@ADPE2K703.adaptec.com>
+References: 47A72A7F.1050301@panasas.com
+ <1202140722-4650-1-git-send-email-bharrosh@panasas.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:59387 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753202AbYBDSaO (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:30:14 -0500
-In-Reply-To: <1202145901.3096.49.camel@localhost.localdomain>
+Received: from ts.adaptec.com ([162.62.93.58]:42041 "EHLO mail-gw3.adaptec.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753011AbYBDScr convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 13:32:47 -0500
+In-Reply-To: <1202140722-4650-1-git-send-email-bharrosh@panasas.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Vladislav Bolkhovitin <vst@vlnb.net>, Bart Van Assche <bart.vanassche@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, linux-scsi@vger.kernel.org, scst-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org
+To: Boaz Harrosh <bharrosh@panasas.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, FUJITA Tomonori <fujita.tomonori@lab.ntt.co.jp>, Christoph Hellwig <hch@infradead.org>
+Cc: Andrew Morton <akpm@linux-foundation.org>
 
+ACK with condition that community accepts the RFC's entire premise.
 
+The removed code that shunted the REQUEST_SENSE was based on the assumption that the sense data in the current scsi command packet was left over from the previous command's execution with a check condition as the scsi command packet is reused to issue the REQUEST_SENSE. For a new, or second from the target's point of view, request sense to the target issued by these older kernels would always return an erased sense. The dpt_i2o driver does not itself maintain the sense history, nor does the Firmware. This behavior, I believe, is not the case for current kernels so the code fragment made little sense (pun not intended). If my historical knowledge is correct, this (now removed) workaround makes no more sense because the scsi layer correctly manages adapters that produce auto-request sense an
+ d does not ever turn around the command and send a second request for sense information.
 
-On Mon, 4 Feb 2008, James Bottomley wrote:
-> 
-> The way a user space solution should work is to schedule mmapped I/O
-> from the backing store and then send this mmapped region off for target
-> I/O.
+Given this understanding, I have no problem with the removed fragment of REQUEST_SENSE shunting. However, I do urge some target error recovery testing, tape drives being the likely type of target affected by this change. I have no such hardware to confirm...
 
-mmap'ing may avoid the copy, but the overhead of a mmap operation is 
-quite often much *bigger* than the overhead of a copy operation.
+Sincerely -- Mark Salyzyn
 
-Please do not advocate the use of mmap() as a way to avoid memory copies. 
-It's not realistic. Even if you can do it with a single "mmap()" system 
-call (which is not at all a given, considering that block devices can 
-easily be much larger than the available virtual memory space), the fact 
-is that page table games along with the fault (and even just TLB miss) 
-overhead is easily more than the cost of copying a page in a nice 
-streaming manner.
-
-Yes, memory is "slow", but dammit, so is mmap().
-
-> You also have to pull tricks with the mmap region in the case of writes 
-> to prevent useless data being read in from the backing store.  However, 
-> none of this involves data copies.
-
-"data copies" is irrelevant. The only thing that matters is performance. 
-And if avoiding data copies is more costly (or even of a similar cost) 
-than the copies themselves would have been, there is absolutely no upside, 
-and only downsides due to extra complexity.
-
-If you want good performance for a service like this, you really generally 
-*do* need to in kernel space. You can play games in user space, but you're 
-fooling yourself if you think you can do as well as doing it in the 
-kernel. And you're *definitely* fooling yourself if you think mmap() 
-solves performance issues. "Zero-copy" does not equate to "fast". Memory 
-speeds may be slower that core CPU speeds, but not infinitely so!
-
-(That said: there *are* alternatives to mmap, like "splice()", that really 
-do potentially solve some issues without the page table and TLB overheads. 
-But while splice() avoids the costs of paging, I strongly suspect it would 
-still have easily measurable latency issues. Switching between user and 
-kernel space multiple times is definitely not going to be free, although 
-it's probably not a huge issue if you have big enough requests).
-
-		Linus
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org
+> [mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Boaz Harrosh
+> Sent: Monday, February 04, 2008 10:59 AM
+> To: James Bottomley; FUJITA Tomonori; Christoph Hellwig; Jens
+> Axboe; Jeff Garzik; linux-scsi
+> Cc: Andrew Morton
+> Subject: [PATCH 5/24][RFC] dpt_i2o: Use new scsi_eh_cpy_sense()
+>
+>   - Abstract away scsi_cmnd->sense_buffer for later removal.
+>
+>   - Removed a filtering out of a REQUEST_SENSE at .queuecommand
+>     In the case of sense beeing clean. This is no longer relevant
+>     since scsi-ml will always send a zero out sense buffer even
+>     on a resend, so this means outside REQUEST_SENSE would never
+>     go through. If this is intended then comment and check should
+>     change.
+>
+> Signed-off-by: Boaz Harrosh <bharrosh@panasas.com>
+> ---
+>  drivers/scsi/dpt_i2o.c |   25 +++++++------------------
+>  1 files changed, 7 insertions(+), 18 deletions(-)
+>
+> diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+> index c9dd839..6ee6fcd 100644
+> --- a/drivers/scsi/dpt_i2o.c
+> +++ b/drivers/scsi/dpt_i2o.c
+> @@ -71,6 +71,7 @@ MODULE_DESCRIPTION("Adaptec I2O RAID Driver");
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_host.h>
+>  #include <scsi/scsi_tcq.h>
+> +#include <scsi/scsi_eh.h>
+>
+>  #include "dpt/dptsig.h"
+>  #include "dpti.h"
+> @@ -385,18 +386,6 @@ static int adpt_queue(struct scsi_cmnd *
+> cmd, void (*done) (struct scsi_cmnd *))
+>         struct adpt_device* pDev = NULL;        /* dpt per
+> device information */
+>
+>         cmd->scsi_done = done;
+> -       /*
+> -        * SCSI REQUEST_SENSE commands will be executed
+> automatically by the
+> -        * Host Adapter for any errors, so they should not be executed
+> -        * explicitly unless the Sense Data is zero
+> indicating that no error
+> -        * occurred.
+> -        */
+> -
+> -       if ((cmd->cmnd[0] == REQUEST_SENSE) &&
+> (cmd->sense_buffer[0] != 0)) {
+> -               cmd->result = (DID_OK << 16);
+> -               cmd->scsi_done(cmd);
+> -               return 0;
+> -       }
+>
+>         pHba = (adpt_hba*)cmd->device->host->hostdata[0];
+>         if (!pHba) {
+> @@ -2226,8 +2215,6 @@ static s32 adpt_i2o_to_scsi(void
+> __iomem *reply, struct scsi_cmnd* cmd)
+>
+>         pHba = (adpt_hba*) cmd->device->host->hostdata[0];
+>
+> -       cmd->sense_buffer[0] = '\0';  // initialize sense
+> valid flag to false
+> -
+>         if(!(reply_flags & MSG_FAIL)) {
+>                 switch(detailed_status & I2O_SCSI_DSC_MASK) {
+>                 case I2O_SCSI_DSC_SUCCESS:
+> @@ -2297,11 +2284,13 @@ static s32 adpt_i2o_to_scsi(void
+> __iomem *reply, struct scsi_cmnd* cmd)
+>                 // copy over the request sense data if it was a check
+>                 // condition status
+>                 if (dev_status == SAM_STAT_CHECK_CONDITION) {
+> -                       u32 len = min(SCSI_SENSE_BUFFERSIZE, 40);
+> +                       u8 sense_buffer[40];
+> +                       u32 len = sizeof(sense_buffer);
+>                         // Copy over the sense data
+> -                       memcpy_fromio(cmd->sense_buffer,
+> (reply+28) , len);
+> -                       if(cmd->sense_buffer[0] == 0x70 /*
+> class 7 */ &&
+> -                          cmd->sense_buffer[2] == DATA_PROTECT ){
+> +                       memcpy_fromio(sense_buffer, (reply+28) , len);
+> +                       scsi_eh_cpy_sense(cmd, sense_buffer, len);
+> +                       if (sense_buffer[0] == 0x70 /* class 7 */ &&
+> +                          sense_buffer[2] == DATA_PROTECT){
+>                                 /* This is to handle an array
+> failed */
+>                                 cmd->result = (DID_TIME_OUT << 16);
+>                                 printk(KERN_WARNING"%s: SCSI
+> Data Protect-Device (%d,%d,%d) hba_status=0x%x,
+> dev_status=0x%x, cmd=0x%x\n",
+> --
+> 1.5.3.3
+>
+> -
+> To unsubscribe from this list: send the line "unsubscribe
+> linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
