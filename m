@@ -1,28 +1,22 @@
-From: bugme-daemon@bugzilla.kernel.org
-Subject: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
-Date: Mon,  4 Feb 2008 00:20:15 -0800 (PST)
-Message-ID: <20080204082015.4D8A5108068@picon.linux-foundation.org>
-References: <bug-9880-11613@http.bugzilla.kernel.org/>
+From: Russell King <rmk@arm.linux.org.uk>
+Subject: Re: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Mon, 4 Feb 2008 08:19:40 +0000
+Message-ID: <20080204081940.GC15955@flint.arm.linux.org.uk>
+References: <20080204030037.6C061108018@picon.linux-foundation.org> <1202097337.3318.143.camel@localhost.localdomain>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.linux-foundation.org ([207.189.120.14]:33731 "EHLO
-	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1752885AbYBDIUR (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 03:20:17 -0500
-Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
-	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m148KF09025916
-	for <linux-scsi@vger.kernel.org>; Mon, 4 Feb 2008 00:20:16 -0800
-In-Reply-To: <bug-9880-11613@http.bugzilla.kernel.org/>
+Received: from caramon.arm.linux.org.uk ([78.32.30.218]:50134 "EHLO
+	caramon.arm.linux.org.uk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753152AbYBDIUW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 4 Feb 2008 03:20:22 -0500
+Content-Disposition: inline
+In-Reply-To: <1202097337.3318.143.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: bugme-daemon@bugzilla.kernel.org, David Brownell <david-b@pacbell.net>, Greg Kroah-Hartman <gregkh@suse.de>, linux-scsi@vger.kernel.org
 
-http://bugzilla.kernel.org/show_bug.cgi?id=9880
-
-
-
-
-
-------- Comment #3 from rmk@arm.linux.org.uk  2008-02-04 00:20 -------
 On Sun, Feb 03, 2008 at 09:55:37PM -0600, James Bottomley wrote:
 > I've cc'd the people responsible for this apparent bit of idiocy.  Since
 > the API addition to dma_alloc_coherent() was the GFP flags so you could
@@ -46,8 +40,7 @@ x86:
  * @mask: The set of cpus to run on.  Must not include the current cpu.
  * @func: The function to run. This must be fast and non-blocking.
  * @info: An arbitrary pointer to pass to the function.
- * @wait: If true, wait (atomically) until function has completed on other
-CPUs. *
+ * @wait: If true, wait (atomically) until function has completed on other CPUs. *
   * Returns 0 on success, else a negative status code.
  *
  * If @wait is true, then returns once @func has returned; otherwise
@@ -76,8 +69,7 @@ Which is more idiotic?
 
 Yes.
 
-
 -- 
-Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
-------- You are receiving this mail because: -------
-You are the assignee for the bug, or are watching the assignee.
+Russell King
+ Linux kernel    2.6 ARM Linux   - http://www.arm.linux.org.uk/
+ maintainer of:
