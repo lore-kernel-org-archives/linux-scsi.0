@@ -1,21 +1,29 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
-Date: Sun, 03 Feb 2008 21:55:37 -0600
-Message-ID: <1202097337.3318.143.camel@localhost.localdomain>
-References: <20080204030037.6C061108018@picon.linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+From: bugme-daemon@bugzilla.kernel.org
+Subject: [Bug 9880] dma_free_coherent in arcmsr when calling areca tools
+Date: Sun,  3 Feb 2008 19:55:54 -0800 (PST)
+Message-ID: <20080204035554.7CCE7108017@picon.linux-foundation.org>
+References: <bug-9880-11613@http.bugzilla.kernel.org/>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from accolon.hansenpartnership.com ([76.243.235.52]:51063 "EHLO
-	accolon.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1754114AbYBDDzo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Feb 2008 22:55:44 -0500
-In-Reply-To: <20080204030037.6C061108018@picon.linux-foundation.org>
+Received: from smtp2.linux-foundation.org ([207.189.120.14]:53114 "EHLO
+	smtp2.linux-foundation.org" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755671AbYBDD4Y (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sun, 3 Feb 2008 22:56:24 -0500
+Received: from picon.linux-foundation.org (picon.linux-foundation.org [207.189.120.79])
+	by smtp2.linux-foundation.org (8.13.5.20060308/8.13.5/Debian-3ubuntu1.1) with ESMTP id m143tsjh018024
+	for <linux-scsi@vger.kernel.org>; Sun, 3 Feb 2008 19:55:55 -0800
+In-Reply-To: <bug-9880-11613@http.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugme-daemon@bugzilla.kernel.org, David Brownell <david-b@pacbell.net>, Russell King <rmk@arm.linux.org.uk>, Greg Kroah-Hartman <gregkh@suse.de>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+
+http://bugzilla.kernel.org/show_bug.cgi?id=9880
+
+
+
+
+
+------- Comment #1 from anonymous@kernel-bugs.osdl.org  2008-02-03 19:55 -------
+Reply-To: James.Bottomley@HansenPartnership.com
 
 
 On Sun, 2008-02-03 at 19:00 -0800, bugme-daemon@bugzilla.kernel.org
@@ -75,13 +83,13 @@ wrote:
 This is here, isn't it:
 
 void dma_free_coherent(struct device *dev, size_t size,
-			 void *vaddr, dma_addr_t bus)
+                         void *vaddr, dma_addr_t bus)
 {
-	WARN_ON(irqs_disabled());	/* for portability */
+        WARN_ON(irqs_disabled());       /* for portability */
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-	if (dma_ops->unmap_single)
-		dma_ops->unmap_single(dev, bus, size, 0);
-	free_pages((unsigned long)vaddr, get_order(size));
+        if (dma_ops->unmap_single)
+                dma_ops->unmap_single(dev, bus, size, 0);
+        free_pages((unsigned long)vaddr, get_order(size));
 }
 
 That's caused by this commit:
@@ -91,7 +99,7 @@ Author: David Brownell <david-b@pacbell.net>
 Date:   Fri Aug 10 13:10:27 2007 -0700
 
     dma_free_coherent() needs irqs enabled (sigh)
-    
+
 I've cc'd the people responsible for this apparent bit of idiocy.  Since
 the API addition to dma_alloc_coherent() was the GFP flags so you could
 call it from interrupt context with GFP_ATOMIC if so desired,
@@ -104,3 +112,7 @@ context on arm, but not dma_free_coherent()?
 James
 
 
+-- 
+Configure bugmail: http://bugzilla.kernel.org/userprefs.cgi?tab=email
+------- You are receiving this mail because: -------
+You are the assignee for the bug, or are watching the assignee.
